@@ -1,0 +1,9 @@
+{
+  "name": "keel",
+  "version-string": "0.1.0",
+  "dependencies": [
+    "cxxopts",
+    "fmt",
+    "catch2"
+  ]
+}

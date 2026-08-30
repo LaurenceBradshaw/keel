@@ -1,0 +1,7 @@
+build/
+vcpkg_installed/
+.cache/
+compile_commands.json
+
+# Generated C output and the binaries built from it
+*.kl.c

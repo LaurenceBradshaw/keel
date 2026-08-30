@@ -1,0 +1,39 @@
+{
+    // Presets mode, not kits. The kit scanner on this machine picks up Windows toolchains from
+    // /mnt/c (clang-cl, MinGW) that have no usable generator under Linux; selecting one produces
+    // "No usable generator found" and leaves the kit menu in a broken state. CMakePresets.json
+    // pins the generator, compilers and vcpkg toolchain in the repo, so none of that applies.
+    "cmake.useCMakePresets": "always",
+    "cmake.configureOnOpen": true,
+    "cmake.exportCompileCommandsFile": true,
+    // CMake Tools is the primary source of IntelliSense config: it knows which target a file
+    // belongs to, so the `#ifdef ENABLE_UNIT_TESTS` blocks light up when keel_tests is the active
+    // target. Note that this setting OVERRIDES compileCommands below - the compile DB is only
+    // consulted when the provider yields nothing.
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    "C_Cpp.default.compileCommands": "${workspaceFolder}/build/debug/compile_commands.json",
+    // Fallbacks for when CMake Tools has not configured yet (fresh clone, or a failed configure).
+    // Without these, cpptools falls back to bare defaults with no include paths and no -std, and
+    // squiggles every standard-library and vcpkg symbol in the project.
+    "C_Cpp.default.compilerPath": "/usr/bin/clang++-18",
+    "C_Cpp.default.cppStandard": "c++20",
+    "C_Cpp.default.cStandard": "c11",
+    "C_Cpp.default.includePath": [
+        "${workspaceFolder}/src",
+        "${workspaceFolder}/build/debug/vcpkg_installed/x64-linux/include"
+    ],
+    // There is no unversioned clang-format on this machine, so cpptools would silently fall back to
+    // its bundled copy and ignore some keys in .clang-format. Point it at the real binary.
+    "C_Cpp.clang_format_path": "/usr/bin/clang-format-18",
+    "[cpp]": {
+        "editor.defaultFormatter": "ms-vscode.cpptools"
+    },
+    "[c]": {
+        "editor.defaultFormatter": "ms-vscode.cpptools"
+    },
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": true,
+    "files.associations": {
+        "*.kl": "cpp"
+    }
+}
