@@ -1,0 +1,31 @@
+Source_file                             1:1-4:1
+  Function_decl                         1:1-1:52    name=bitwise_vs_comparison
+    Named_type                          1:1-1:4     "i32"
+    Param_list                          1:26-1:28   "()"
+    Block                               1:30-1:52
+      Return_stmt                       1:32-1:50
+        Binary_expr                     1:39-1:49   op=&
+          Name_expr                     1:39-1:40   "a"
+          Binary_expr                   1:43-1:49   op===
+            Name_expr                   1:43-1:44   "b"
+            Name_expr                   1:48-1:49   "c"
+  Function_decl                         2:1-2:52    name=shift_vs_additive
+    Named_type                          2:1-2:4     "i32"
+    Param_list                          2:22-2:24   "()"
+    Block                               2:30-2:52
+      Return_stmt                       2:32-2:50
+        Binary_expr                     2:39-2:49   op=<<
+          Name_expr                     2:39-2:40   "a"
+          Binary_expr                   2:44-2:49   op=+
+            Name_expr                   2:44-2:45   "b"
+            Name_expr                   2:48-2:49   "c"
+  Function_decl                         3:1-3:53    name=logical
+    Named_type                          3:1-3:4     "i32"
+    Param_list                          3:12-3:14   "()"
+    Block                               3:30-3:53
+      Return_stmt                       3:32-3:51
+        Binary_expr                     3:39-3:50   op=||
+          Binary_expr                   3:39-3:45   op=&&
+            Name_expr                   3:39-3:40   "a"
+            Name_expr                   3:44-3:45   "b"
+          Name_expr                     3:49-3:50   "c"

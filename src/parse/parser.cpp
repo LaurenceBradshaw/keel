@@ -83,22 +83,164 @@ private:
 
     // Pratt: consumes only operators binding at least as tightly as min_power. Left associativity
     // comes from recursing with power + 1.
-    Node_id parse_expression( u8 min_power );
+    // enclosing is the operator whose recursion we are inside, or End_of_file at the top level.
+    // D16 needs it: a tighter operator is consumed inside the looser one's recursion and never
+    // appears with a Binary_expr on its left.
+    Node_id parse_expression( u8 min_power, Token_kind enclosing = Token_kind::End_of_file );
 
     // Literals, names, unary operators, and `(` for grouping - which returns the inner node
     // unchanged, so the parens leave no trace.
     Node_id parse_prefix();
+
+    void mark_parenthesised( Node_id id );
+    bool is_parenthesised( Node_id id ) const;
 
     std::span<const Token> tokens_;
     u32                    pos_ = 0;
     const Source_manager&  sm_;
     Diagnostics&           diags_;
     Ast                    ast_;
+
+    // Grouping parentheses leave no trace in the tree, so `a & b == c` and `(a & b) == c` produce
+    // the same nodes. D16 needs to tell them apart, and parenthesisation is a parsing fact that
+    // nothing downstream should see - so it is tracked here, indexed by Node_id, not in the AST.
+    std::vector<bool> parenthesised_;
 };
 
-[[maybe_unused]] u8 binding_power( Token_kind kind )
+// Powers are spaced by 10 so a level can be inserted later without renumbering. 0 means "not an
+// infix operator", which is what ends the Pratt loop.
+//
+// Assignment and `++`/`--` are deliberately absent: both are statements (L11, D12), so `if( x = 5 )`
+// and `a[i++]` cannot parse at all rather than needing a special check.
+u8 binding_power( Token_kind kind )
 {
-    return 0;
+    switch( kind )
+    {
+    case Token_kind::Pipe_pipe:
+        return 10;
+
+    case Token_kind::Amp_amp:
+        return 20;
+
+    case Token_kind::Pipe:
+        return 30;
+
+    case Token_kind::Caret:
+        return 40;
+
+    case Token_kind::Amp:
+        return 50;
+
+    case Token_kind::Equal_equal:
+    case Token_kind::Bang_equal:
+        return 60;
+
+    case Token_kind::Less:
+    case Token_kind::Greater:
+    case Token_kind::Less_equal:
+    case Token_kind::Greater_equal:
+        return 70;
+
+    // Looser than `+` and tighter than `<`, as in C. D16 makes the surprising mixes an error
+    // rather than changing this, so no valid C++ silently changes meaning.
+    case Token_kind::Less_less:
+    case Token_kind::Greater_greater:
+        return 80;
+
+    case Token_kind::Plus:
+    case Token_kind::Minus:
+        return 90;
+
+    case Token_kind::Star:
+    case Token_kind::Slash:
+    case Token_kind::Percent:
+        return 100;
+
+    default:
+        return 0;
+    }
+}
+
+// The operator classes D16 refuses to order against each other.
+enum class Operator_class
+{
+    Other,
+    Logical_or,
+    Logical_and,
+    Bitwise,
+    Comparison,
+    Shift,
+    Additive,
+};
+
+Operator_class classify( Token_kind kind )
+{
+    switch( kind )
+    {
+    case Token_kind::Pipe_pipe:
+        return Operator_class::Logical_or;
+
+    case Token_kind::Amp_amp:
+        return Operator_class::Logical_and;
+
+    case Token_kind::Amp:
+    case Token_kind::Pipe:
+    case Token_kind::Caret:
+        return Operator_class::Bitwise;
+
+    case Token_kind::Equal_equal:
+    case Token_kind::Bang_equal:
+    case Token_kind::Less:
+    case Token_kind::Greater:
+    case Token_kind::Less_equal:
+    case Token_kind::Greater_equal:
+        return Operator_class::Comparison;
+
+    case Token_kind::Less_less:
+    case Token_kind::Greater_greater:
+        return Operator_class::Shift;
+
+    case Token_kind::Plus:
+    case Token_kind::Minus:
+        return Operator_class::Additive;
+
+    default:
+        return Operator_class::Other;
+    }
+}
+
+// The pairs C groups in a way people reliably misread (PLAN §6.3 D16). Concretely, every
+// combination below is rejected in both orders unless one side is parenthesised:
+//
+//   bitwise x comparison    a & b == c    a | b != c    a ^ b < c
+//                           a == b & c    a != b | c    a < b ^ c
+//     C reads these as  a & (b == c)  - the mistake Ritchie acknowledged.
+//
+//   shift x additive        a << b + c    a >> b - c
+//                           a + b << c    a - b >> c
+//     C reads these as  a << (b + c)  - shift is looser than `+`, which almost nobody expects.
+//
+//   shift x comparison      a << b < c    a >> b == c
+//                           a < b << c    a == b >> c
+//     C reads these as  (a << b) < c  - correct, but only by luck; the neighbouring case is not.
+//
+//   && x ||                 a && b || c   a || b && c
+//     C reads these as  (a && b) || c  - right, but gcc still warns, and the reader still pauses.
+//
+// Everything else keeps C++ precedence untouched: arithmetic (`1 + 2 * 3`), comparison chains,
+// and same-class runs (`a & b & c`, `a + b + c`) all parse exactly as they do in C++.
+bool needs_parentheses( Token_kind inner, Token_kind outer )
+{
+    const Operator_class a = classify( inner );
+    const Operator_class b = classify( outer );
+
+    const auto pair = []( Operator_class x, Operator_class y, Operator_class p, Operator_class q )
+    { return ( x == p && y == q ) || ( x == q && y == p ); };
+
+    return pair( a, b, Operator_class::Bitwise, Operator_class::Comparison ) ||
+           pair( a, b, Operator_class::Shift, Operator_class::Additive ) ||
+           pair( a, b, Operator_class::Shift, Operator_class::Comparison ) ||
+           pair( a, b, Operator_class::Logical_and, Operator_class::Logical_or );
 }
 
 Parser::Parser( std::span<const Token> tokens, const Source_manager& sm, Diagnostics& diags )
@@ -461,7 +603,21 @@ Node_id Parser::parse_return_stmt()
     return ast_.add( Node_kind::Return_stmt, Span::merge( start, previous().span ), 0, { value } );
 }
 
-Node_id Parser::parse_expression( u8 min_power )
+void Parser::mark_parenthesised( Node_id id )
+{
+    if( parenthesised_.size() <= id.v )
+    {
+        parenthesised_.resize( id.v + 1, false );
+    }
+    parenthesised_[id.v] = true;
+}
+
+bool Parser::is_parenthesised( Node_id id ) const
+{
+    return id.v < parenthesised_.size() && parenthesised_[id.v];
+}
+
+Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing )
 {
     Node_id left = parse_prefix();
 
@@ -475,11 +631,40 @@ Node_id Parser::parse_expression( u8 min_power )
             break;
         }
 
+        // D16 has to look both ways. A looser operator folds into `left` first, so `a && b || c`
+        // reaches `||` with a Binary_expr(&&) on its left. A tighter one never does: in
+        // `a & b == c` the `==` is consumed inside the `&` recursion, which is what `enclosing`
+        // catches. Parenthesised operands are unambiguous by construction.
+        Token_kind conflicting = Token_kind::End_of_file;
+
+        if( needs_parentheses( enclosing, peek().kind ) )
+        {
+            conflicting = enclosing;
+        }
+        else if( ast_.kind( left ) == Node_kind::Binary_expr && !is_parenthesised( left ) &&
+                 needs_parentheses( static_cast<Token_kind>( ast_.aux( left ) ), peek().kind ) )
+        {
+            conflicting = static_cast<Token_kind>( ast_.aux( left ) );
+        }
+
+        if( conflicting != Token_kind::End_of_file )
+        {
+            error_at(
+                Span::merge( ast_.span( left ), peek().span ),
+                fmt::format(
+                    "`{}` and `{}` cannot be mixed without parentheses",
+                    token_kind_spelling( conflicting ),
+                    token_kind_spelling( peek().kind )
+                ),
+                "add parentheses to say which grouping you mean"
+            );
+        }
+
         const Token op = advance();
 
         // Left associativity: recurse one above this operator's power, so an equally tight operator
         // to the right belongs to the *next* iteration rather than becoming our right child.
-        const Node_id right = parse_expression( power + 1 );
+        const Node_id right = parse_expression( power + 1, op.kind );
 
         left = ast_.add(
             Node_kind::Binary_expr,
@@ -517,6 +702,17 @@ Node_id Parser::parse_prefix()
     case Token_kind::Identifier:
         advance();
         return ast_.add( Node_kind::Name_expr, Span::merge( start, previous().span ), previous().symbol.v, {} );
+
+    // Grouping: the inner node is returned unchanged, so the parentheses leave no trace in the
+    // tree. Only D16 needs to know they were there, which is what mark_parenthesised records.
+    case Token_kind::L_paren:
+    {
+        advance();
+        const Node_id inner = parse_expression( 0 );
+        expect( Token_kind::R_paren );
+        mark_parenthesised( inner );
+        return inner;
+    }
 
     // `true` and `false` arrive as keywords, not as a literal token kind, so they need their own
     // case. aux carries the value, since one Node_kind covers both.
@@ -662,6 +858,37 @@ Node_id find_first( const Ast& ast, Node_id from, Node_kind wanted )
     }
 
     return Node_id {};
+}
+
+// Returns the expression of `return <expr>;` in a one-function program.
+Node_id parse_expression_of( const Parsed& p )
+{
+    const Node_id ret = find_first( p.ast(), p.root(), Node_kind::Return_stmt );
+    return ret.is_valid() ? p.child( ret, 0 ) : Node_id {};
+}
+
+// A compact shape rendering: "+(1,*(2,3))". Precedence bugs are invisible in a pass/fail but
+// obvious here.
+std::string shape( const Parsed& p, Node_id id )
+{
+    if( !id.is_valid() )
+    {
+        return "<none>";
+    }
+
+    if( p.kind( id ) == Node_kind::Binary_expr )
+    {
+        return std::string( token_kind_spelling( static_cast<Token_kind>( p.aux( id ) ) ) ) + "(" +
+               shape( p, p.child( id, 0 ) ) + "," + shape( p, p.child( id, 1 ) ) + ")";
+    }
+
+    return std::string( p.text( id ) );
+}
+
+std::string shape_of( std::string_view expression )
+{
+    const Parsed p( std::string( "i32 main() { return " ) + std::string( expression ) + "; }" );
+    return p.errors().empty() ? shape( p, parse_expression_of( p ) ) : "ERROR";
 }
 
 } // namespace
@@ -871,6 +1098,162 @@ TEST_CASE( "parser_name_expression", "[parse]" )
         INFO( p.errors() );
         REQUIRE( p.errors().find( "expected an expression" ) != std::string::npos );
     }
+}
+
+TEST_CASE( "parser_binary_precedence", "[parse]" )
+{
+    struct Case
+    {
+        const char* source;
+        const char* shape;
+    };
+
+    static const Case cases[] = {
+        // Multiplicative binds tighter than additive.
+        { "1 + 2 * 3", "+(1,*(2,3))" },
+        { "1 * 2 + 3", "+(*(1,2),3)" },
+        { "1 + 2 / 3", "+(1,/(2,3))" },
+        { "1 % 2 - 3", "-(%(1,2),3)" },
+
+        // Additive tighter than shift, shift tighter than relational, relational tighter than
+        // equality - each neighbouring pair, in both orders.
+        { "a < b + c", "<(a,+(b,c))" },
+        { "a + b < c", "<(+(a,b),c)" },
+        { "a == b < c", "==(a,<(b,c))" },
+        { "a < b == c", "==(<(a,b),c)" },
+
+        // Equality tighter than bitwise-and, and the bitwise chain & then ^ then |.
+        { "a & b ^ c", "^(&(a,b),c)" },
+        { "a ^ b | c", "|(^(a,b),c)" },
+        { "a | b ^ c", "|(a,^(b,c))" },
+
+        // && tighter than nothing here, but tighter than || - checked under D16 instead.
+        { "a && b && c", "&&(&&(a,b),c)" },
+    };
+
+    for( const Case& c : cases )
+    {
+        INFO( "source: " << c.source );
+        REQUIRE( shape_of( c.source ) == c.shape );
+    }
+}
+
+// The `power + 1` in parse_expression is what makes this left rather than right. Getting it wrong
+// still compiles and still parses - it just computes the wrong answer.
+TEST_CASE( "parser_binary_operators_are_left_associative", "[parse]" )
+{
+    REQUIRE( shape_of( "1 - 2 - 3" ) == "-(-(1,2),3)" );
+    REQUIRE( shape_of( "1 - 2 + 3" ) == "+(-(1,2),3)" );
+    REQUIRE( shape_of( "8 / 4 / 2" ) == "/(/(8,4),2)" );
+    REQUIRE( shape_of( "a % b * c" ) == "*(%(a,b),c)" );
+}
+
+TEST_CASE( "parser_binary_operator_is_recorded_in_aux", "[parse]" )
+{
+    static const Token_kind operators[] = {
+        Token_kind::Pipe_pipe,
+        Token_kind::Amp_amp,
+        Token_kind::Pipe,
+        Token_kind::Caret,
+        Token_kind::Amp,
+        Token_kind::Equal_equal,
+        Token_kind::Bang_equal,
+        Token_kind::Less,
+        Token_kind::Greater,
+        Token_kind::Less_equal,
+        Token_kind::Greater_equal,
+        Token_kind::Less_less,
+        Token_kind::Greater_greater,
+        Token_kind::Plus,
+        Token_kind::Minus,
+        Token_kind::Star,
+        Token_kind::Slash,
+        Token_kind::Percent,
+    };
+
+    for( const Token_kind op : operators )
+    {
+        const std::string source = std::string( "i32 main() { return a " ) + std::string( token_kind_spelling( op ) ) + " b; }";
+        const Parsed      p( source );
+
+        INFO( source << "\n" << p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id expression = parse_expression_of( p );
+        REQUIRE( p.kind( expression ) == Node_kind::Binary_expr );
+        REQUIRE( static_cast<Token_kind>( p.aux( expression ) ) == op );
+        REQUIRE( p.children( expression ).size() == 2 );
+    }
+}
+
+// Grouping returns the inner node unchanged, so the parentheses leave no trace at all.
+TEST_CASE( "parser_grouping_produces_no_node", "[parse]" )
+{
+    REQUIRE( shape_of( "( 1 + 2 )" ) == shape_of( "1 + 2" ) );
+    REQUIRE( shape_of( "( ( ( 7 ) ) )" ) == "7" );
+    REQUIRE( shape_of( "( 1 + 2 ) * 3" ) == "*(+(1,2),3)" );
+    REQUIRE( shape_of( "1 + ( 2 * 3 )" ) == "+(1,*(2,3))" );
+
+    SECTION( "an unclosed group reports once" )
+    {
+        const Parsed p( "i32 main() { return ( 1 + 2; }" );
+        REQUIRE( p.has_errors() );
+        INFO( p.errors() );
+        REQUIRE( p.errors().find( "expected `)`" ) != std::string::npos );
+    }
+}
+
+// PLAN §6.3 D16. Both directions matter: a tighter operator is consumed inside the looser one's
+// recursion and never appears with a Binary_expr on its left, so the two took different paths.
+TEST_CASE( "parser_rejects_ambiguous_operator_mixes", "[parse]" )
+{
+    static const char* rejected[] = {
+        "a & b == c",
+        "a | b != c",
+        "a ^ b < c",
+        "a == b & c",
+        "a != b | c",
+        "a < b ^ c",
+        "a << b + c",
+        "a >> b - c",
+        "a + b << c",
+        "a - b >> c",
+        "a << b < c",
+        "a >> b == c",
+        "a < b << c",
+        "a == b >> c",
+        "a && b || c",
+        "a || b && c",
+    };
+
+    for( const char* source : rejected )
+    {
+        const Parsed p( std::string( "i32 main() { return " ) + source + "; }" );
+
+        INFO( "source: " << source << "\n" << p.errors() );
+        REQUIRE( p.has_errors() );
+        REQUIRE( p.errors().find( "cannot be mixed without parentheses" ) != std::string::npos );
+        REQUIRE( p.error_count() == 1 );
+    }
+}
+
+TEST_CASE( "parser_accepts_the_parenthesised_forms", "[parse]" )
+{
+    REQUIRE( shape_of( "(a & b) == c" ) == "==(&(a,b),c)" );
+    REQUIRE( shape_of( "a & (b == c)" ) == "&(a,==(b,c))" );
+    REQUIRE( shape_of( "(a << b) + c" ) == "+(<<(a,b),c)" );
+    REQUIRE( shape_of( "a << (b + c)" ) == "<<(a,+(b,c))" );
+    REQUIRE( shape_of( "(a && b) || c" ) == "||(&&(a,b),c)" );
+    REQUIRE( shape_of( "a && (b || c)" ) == "&&(a,||(b,c))" );
+}
+
+// Same-class runs and ordinary arithmetic keep C++ precedence untouched.
+TEST_CASE( "parser_leaves_unsurprising_precedence_alone", "[parse]" )
+{
+    REQUIRE( shape_of( "1 + 2 * 3" ) == "+(1,*(2,3))" );
+    REQUIRE( shape_of( "a & b & c" ) == "&(&(a,b),c)" );
+    REQUIRE( shape_of( "a + b + c" ) == "+(+(a,b),c)" );
+    REQUIRE( shape_of( "a < b == c" ) == "==(<(a,b),c)" );
 }
 
 TEST_CASE( "parser_nested_blocks", "[parse]" )

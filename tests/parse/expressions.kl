@@ -1,0 +1,24 @@
+i32 precedence()
+{
+    return 1 + 2 * 3;
+}
+
+i32 associativity()
+{
+    return 1 - 2 - 3;
+}
+
+i32 grouping()
+{
+    return ( 1 + 2 ) * 3;
+}
+
+bool comparison()
+{
+    return a + b < c == d;
+}
+
+i32 bitwise()
+{
+    return a & b ^ c | d;
+}

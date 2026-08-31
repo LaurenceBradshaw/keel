@@ -1,0 +1,19 @@
+error: `&` and `==` cannot be mixed without parentheses
+ --> parse/errors_ambiguous_operators.kl:1:43
+  |
+1 | i32 bitwise_vs_comparison()  { return a & b == c; }
+  |                                           ^^^^ add parentheses to say which grouping you mean
+
+error: `<<` and `+` cannot be mixed without parentheses
+ --> parse/errors_ambiguous_operators.kl:2:44
+  |
+2 | i32 shift_vs_additive()      { return a << b + c; }
+  |                                            ^^^ add parentheses to say which grouping you mean
+
+error: `&&` and `||` cannot be mixed without parentheses
+ --> parse/errors_ambiguous_operators.kl:3:39
+  |
+3 | i32 logical()                { return a && b || c; }
+  |                                       ^^^^^^^^^ add parentheses to say which grouping you mean
+
+3 errors generated
