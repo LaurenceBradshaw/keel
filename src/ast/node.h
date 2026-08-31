@@ -27,6 +27,8 @@ enum class Node_kind : u16
     Bool_literal,
     Name_expr,
     Binary_expr,
+    Call_expr,
+    Arg_list,
 
     Count
 };

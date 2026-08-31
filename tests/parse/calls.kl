@@ -1,0 +1,24 @@
+i32 simple()
+{
+    return f();
+}
+
+i32 arguments()
+{
+    return f( 1, 2, 3 );
+}
+
+i32 nested()
+{
+    return f( g( 1 ), h( 2 + 3 ) );
+}
+
+i32 precedence()
+{
+    return 1 + f( 2 ) * 3;
+}
+
+i32 chained()
+{
+    return f( 1 )( 2 );
+}

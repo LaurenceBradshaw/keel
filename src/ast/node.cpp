@@ -37,6 +37,10 @@ std::string_view node_kind_name( Node_kind kind )
         return "Name_expr";
     case Node_kind::Binary_expr:
         return "Binary_expr";
+    case Node_kind::Call_expr:
+        return "Call_expr";
+    case Node_kind::Arg_list:
+        return "Arg_list";
 
     case Node_kind::Count:
         break;

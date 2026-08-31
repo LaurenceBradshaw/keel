@@ -92,6 +92,8 @@ private:
     // unchanged, so the parens leave no trace.
     Node_id parse_prefix();
 
+    Node_id parse_arg_list();
+
     void mark_parenthesised( Node_id id );
     bool is_parenthesised( Node_id id ) const;
 
@@ -155,6 +157,9 @@ u8 binding_power( Token_kind kind )
     case Token_kind::Slash:
     case Token_kind::Percent:
         return 100;
+
+    case Token_kind::L_paren:
+        return 110; // function call
 
     default:
         return 0;
@@ -631,6 +636,16 @@ Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing )
             break;
         }
 
+        // function call is a special case: it is the only infix operator that does not produce a
+        // Binary_expr node, so it does not need the parentheses check below.
+        if( peek().kind == Token_kind::L_paren )
+        {
+            Node_id args = parse_arg_list();
+
+            left = ast_.add( Node_kind::Call_expr, Span::merge( ast_.span( left ), ast_.span( args ) ), 0, { left, args } );
+            continue;
+        }
+
         // D16 has to look both ways. A looser operator folds into `left` first, so `a && b || c`
         // reaches `||` with a Binary_expr(&&) on its left. A tighter one never does: in
         // `a & b == c` the `==` is consumed inside the `&` recursion, which is what `enclosing`
@@ -736,6 +751,29 @@ Node_id Parser::parse_prefix()
     }
 
     return error_node( start );
+}
+
+Node_id Parser::parse_arg_list()
+{
+    const Span start = peek().span;
+
+    std::vector<Node_id> args;
+
+    if( !expect( Token_kind::L_paren ) )
+    {
+        return ast_.add( Node_kind::Arg_list, start, 0, args );
+    }
+
+    if( !check( Token_kind::R_paren ) )
+    {
+        do
+        {
+            args.push_back( parse_expression( 0 ) );
+        } while( match( Token_kind::Comma ) );
+    }
+
+    expect( Token_kind::R_paren );
+    return ast_.add( Node_kind::Arg_list, Span::merge( start, previous().span ), 0, args );
 }
 
 } // namespace
@@ -880,6 +918,22 @@ std::string shape( const Parsed& p, Node_id id )
     {
         return std::string( token_kind_spelling( static_cast<Token_kind>( p.aux( id ) ) ) ) + "(" +
                shape( p, p.child( id, 0 ) ) + "," + shape( p, p.child( id, 1 ) ) + ")";
+    }
+
+    // "call(f,[1,2])" - the brackets keep the argument list visible as its own node.
+    if( p.kind( id ) == Node_kind::Call_expr )
+    {
+        return "call(" + shape( p, p.child( id, 0 ) ) + "," + shape( p, p.child( id, 1 ) ) + ")";
+    }
+
+    if( p.kind( id ) == Node_kind::Arg_list )
+    {
+        std::string out = "[";
+        for( std::size_t i = 0; i < p.children( id ).size(); ++i )
+        {
+            out += ( i == 0 ? "" : "," ) + shape( p, p.child( id, i ) );
+        }
+        return out + "]";
     }
 
     return std::string( p.text( id ) );
@@ -1205,6 +1259,101 @@ TEST_CASE( "parser_grouping_produces_no_node", "[parse]" )
 
 // PLAN §6.3 D16. Both directions matter: a tighter operator is consumed inside the looser one's
 // recursion and never appears with a Binary_expr on its left, so the two took different paths.
+TEST_CASE( "parser_calls", "[parse]" )
+{
+    struct Case
+    {
+        const char* source;
+        const char* shape;
+    };
+
+    static const Case cases[] = {
+        { "f()", "call(f,[])" },
+        { "f( 1 )", "call(f,[1])" },
+        { "f( 1, 2 )", "call(f,[1,2])" },
+        { "f( 1, 2, 3 )", "call(f,[1,2,3])" },
+
+        // Each argument is a full expression, parsed at power 0 - the commas delimit them.
+        { "f( a + b )", "call(f,[+(a,b)])" },
+        { "f( a, b * c )", "call(f,[a,*(b,c)])" },
+
+        { "f( g( 1 ) )", "call(f,[call(g,[1])])" },
+        { "f( g( 1 ), h( 2 ) )", "call(f,[call(g,[1]),call(h,[2])])" },
+    };
+
+    for( const Case& c : cases )
+    {
+        INFO( "source: " << c.source );
+        REQUIRE( shape_of( c.source ) == c.shape );
+    }
+}
+
+// A call binds tighter than every binary operator, so it is always the operand.
+TEST_CASE( "parser_calls_bind_tightest", "[parse]" )
+{
+    REQUIRE( shape_of( "1 + f( 2 )" ) == "+(1,call(f,[2]))" );
+    REQUIRE( shape_of( "f( 1 ) + 2" ) == "+(call(f,[1]),2)" );
+    REQUIRE( shape_of( "f( 1 ) * g( 2 )" ) == "*(call(f,[1]),call(g,[2]))" );
+    REQUIRE( shape_of( "a + b * f( c )" ) == "+(a,*(b,call(f,[c])))" );
+}
+
+// Chaining falls out of the Pratt loop: after one call, `left` is a Call_expr and the loop goes
+// round again.
+TEST_CASE( "parser_calls_chain", "[parse]" )
+{
+    REQUIRE( shape_of( "f( 1 )( 2 )" ) == "call(call(f,[1]),[2])" );
+    REQUIRE( shape_of( "f()()" ) == "call(call(f,[]),[])" );
+}
+
+TEST_CASE( "parser_call_errors", "[parse]" )
+{
+    SECTION( "a trailing comma is rejected, as in C++" )
+    {
+        const Parsed p( "i32 main() { return f( 1, ); }" );
+        REQUIRE( p.has_errors() );
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+    }
+
+    SECTION( "an unclosed argument list reports once" )
+    {
+        const Parsed p( "i32 main() { return f( 1; }" );
+        REQUIRE( p.has_errors() );
+        INFO( p.errors() );
+        REQUIRE( p.errors().find( "expected `)`" ) != std::string::npos );
+    }
+
+    SECTION( "a missing argument reports once" )
+    {
+        const Parsed p( "i32 main() { return f( , 1 ); }" );
+        REQUIRE( p.has_errors() );
+        INFO( p.errors() );
+        REQUIRE( p.errors().find( "expected an expression" ) != std::string::npos );
+    }
+}
+
+// Call_expr is arity 2 - callee then Arg_list - so the arguments are never spliced in as children.
+TEST_CASE( "parser_call_node_shape", "[parse]" )
+{
+    const Parsed p( "i32 main() { return f( 1, 2 ); }" );
+
+    INFO( p.errors() );
+    REQUIRE_FALSE( p.has_errors() );
+
+    const Node_id call = parse_expression_of( p );
+    REQUIRE( p.kind( call ) == Node_kind::Call_expr );
+    REQUIRE( p.children( call ).size() == 2 );
+    REQUIRE( p.kind( p.child( call, 0 ) ) == Node_kind::Name_expr );
+
+    const Node_id args = p.child( call, 1 );
+    REQUIRE( p.kind( args ) == Node_kind::Arg_list );
+    REQUIRE( p.children( args ).size() == 2 );
+
+    // Arg_list covers both parentheses, matching Param_list.
+    REQUIRE( p.text( args ) == "( 1, 2 )" );
+    REQUIRE( p.text( call ) == "f( 1, 2 )" );
+}
+
 TEST_CASE( "parser_rejects_ambiguous_operator_mixes", "[parse]" )
 {
     static const char* rejected[] = {
