@@ -30,7 +30,7 @@ i32 main()
         y = y + 1;
     }
 
-    for( i32 i = 0; i < 3; i = i + 1 )
+    for( i32 i = 0; i < 3; i++ )
     {
         y = y + i;
     }

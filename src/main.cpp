@@ -1,13 +1,43 @@
-#include "common/version.h"
-
 #include <fmt/core.h>
+#include <fmt/format.h>
 #include <cxxopts.hpp>
-
 #include <filesystem>
+#include <iostream>
+#include <optional>
 #include <string>
+#include <string_view>
+#include "common/diagnostics.h"
+#include "common/interner.h"
+#include "common/source_manager.h"
+#include "common/version.h"
+#include "lex/lexer.h"
 
 // Excluded from the unit-test binary, which provides its own main() via Catch2.
 #ifndef ENABLE_UNIT_TESTS
+namespace
+{
+
+// Escapes the quotes and backslashes a string or char literal token contains, so every dump line
+// stays unambiguously parseable when the golden runner diffs it.
+std::string escape_for_dump( std::string_view text )
+{
+    std::string out;
+    out.reserve( text.size() );
+
+    for( const char c : text )
+    {
+        if( c == '"' || c == '\\' )
+        {
+            out.push_back( '\\' );
+        }
+        out.push_back( c );
+    }
+
+    return out;
+}
+
+} // namespace
+
 int main( int argc, char** argv )
 {
     cxxopts::Options options( "keelc", "The Keel compiler" );
@@ -55,15 +85,44 @@ int main( int argc, char** argv )
         return 2;
     }
 
-    const std::filesystem::path input = args["input"].as<std::string>();
-    if( !std::filesystem::exists( input ) )
+    keel::Source_manager         sm;
+    std::optional<keel::File_id> file_id = sm.load_file( std::filesystem::path( args["input"].as<std::string>() ) );
+
+    if( !file_id )
     {
-        fmt::print( stderr, "keelc: cannot open '{}': no such file\n", input.string() );
+        fmt::print( stderr, "keelc: cannot open '{}'\n", args["input"].as<std::string>() );
         return 2;
     }
 
     // M0 lands here: read the file, lex it, parse it, and honour --dump-tokens / --dump-ast.
-    fmt::print( stderr, "keelc: front end not implemented yet (would compile '{}')\n", input.string() );
-    return 1;
+    keel::Interner           interner;
+    keel::Diagnostics        diagnostics;
+    std::vector<keel::Token> tokens = keel::lex( file_id.value(), sm, interner, diagnostics );
+
+    if( args.count( "dump-tokens" ) )
+    {
+        for( const keel::Token& t : tokens )
+        {
+            keel::Span       span  = t.span;
+            std::string_view text  = sm.text( span );
+            keel::Line_col   start = sm.line_col( span.file, span.start );
+            keel::Line_col   end   = sm.line_col( span.file, span.end );
+            fmt::print(
+                "{:<22} {:<12} \"{}\"\n",
+                keel::token_kind_name( t.kind ),
+                fmt::format( "{}:{}-{}:{}", start.line, start.col, end.line, end.col ),
+                escape_for_dump( text )
+            );
+        }
+    }
+
+    if( args.count( "dump-ast" ) )
+    {
+        fmt::print( "AST dumping not yet implemented\n" );
+    }
+
+    diagnostics.render( sm, std::cerr );
+
+    return diagnostics.has_errors() ? 1 : 0;
 }
 #endif // ENABLE_UNIT_TESTS
