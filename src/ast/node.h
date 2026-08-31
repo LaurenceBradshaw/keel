@@ -21,6 +21,11 @@ enum class Node_kind : u16
     Block,
     Return_stmt,
     Int_literal,
+    Float_literal,
+    String_literal,
+    Char_literal,
+    Bool_literal,
+    Name_expr,
     Binary_expr,
 
     Count

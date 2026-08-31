@@ -1,0 +1,8 @@
+i32 ints()      { return 1_000; }
+i32 hex()       { return 0xFF; }
+i32 binary()    { return 0b1010; }
+f64 floats()    { return 1.5e-3; }
+i32 strings()   { return "hi\n"; }
+i32 chars()     { return '\x41'; }
+bool truth()    { return true; }
+bool untruth()  { return false; }

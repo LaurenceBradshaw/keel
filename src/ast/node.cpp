@@ -25,6 +25,16 @@ std::string_view node_kind_name( Node_kind kind )
         return "Return_stmt";
     case Node_kind::Int_literal:
         return "Int_literal";
+    case Node_kind::Float_literal:
+        return "Float_literal";
+    case Node_kind::String_literal:
+        return "String_literal";
+    case Node_kind::Char_literal:
+        return "Char_literal";
+    case Node_kind::Bool_literal:
+        return "Bool_literal";
+    case Node_kind::Name_expr:
+        return "Name_expr";
     case Node_kind::Binary_expr:
         return "Binary_expr";
 

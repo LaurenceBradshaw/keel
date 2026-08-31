@@ -501,20 +501,45 @@ Node_id Parser::parse_prefix()
     case Token_kind::Int_literal:
         advance();
         return ast_.add( Node_kind::Int_literal, Span::merge( start, previous().span ), 0, {} );
-    // case Token_kind::Float_literal:
-    //     advance();
-    //     return ast_.add( Node_kind::Float_literal, Span::merge( start, previous().span ), 0, {} );
-    // case Token_kind::String_literal:
-    //     advance();
-    //     return ast_.add( Node_kind::String_literal, Span::merge( start, previous().span ), 0, {} );
-    default:
-        // The lexer already reported an Unknown token; do not report it twice.
-        if( !check( Token_kind::Unknown ) )
+
+    case Token_kind::Float_literal:
+        advance();
+        return ast_.add( Node_kind::Float_literal, Span::merge( start, previous().span ), 0, {} );
+
+    case Token_kind::String_literal:
+        advance();
+        return ast_.add( Node_kind::String_literal, Span::merge( start, previous().span ), 0, {} );
+
+    case Token_kind::Char_literal:
+        advance();
+        return ast_.add( Node_kind::Char_literal, Span::merge( start, previous().span ), 0, {} );
+
+    case Token_kind::Identifier:
+        advance();
+        return ast_.add( Node_kind::Name_expr, Span::merge( start, previous().span ), previous().symbol.v, {} );
+
+    // `true` and `false` arrive as keywords, not as a literal token kind, so they need their own
+    // case. aux carries the value, since one Node_kind covers both.
+    case Token_kind::Keyword:
+        if( check_keyword( Keyword::True ) || check_keyword( Keyword::False ) )
         {
-            error_at( peek().span, fmt::format( "expected an expression, found `{}`", found_text() ) );
+            const bool value = check_keyword( Keyword::True );
+            advance();
+            return ast_.add( Node_kind::Bool_literal, Span::merge( start, previous().span ), value ? 1u : 0u, {} );
         }
-        return error_node( start );
+        break;
+
+    default:
+        break;
     }
+
+    // The lexer already reported an Unknown token; do not report it twice.
+    if( !check( Token_kind::Unknown ) )
+    {
+        error_at( peek().span, fmt::format( "expected an expression, found `{}`", found_text() ) );
+    }
+
+    return error_node( start );
 }
 
 } // namespace
@@ -562,6 +587,11 @@ public:
     Node_kind kind( Node_id id ) const
     {
         return ast_.kind( id );
+    }
+
+    u32 aux( Node_id id ) const
+    {
+        return ast_.aux( id );
     }
 
     std::span<const Node_id> children( Node_id id ) const
@@ -728,6 +758,121 @@ TEST_CASE( "parser_return_without_a_value", "[parse]" )
 
 // A compound statement is a statement, as in C++. Without this, synchronise() consumed the inner
 // `{`, the block closed on the inner `}`, and the outer `}` was orphaned at top level.
+TEST_CASE( "parser_literals", "[parse]" )
+{
+    struct Case
+    {
+        const char* expression;
+        Node_kind   kind;
+    };
+
+    static const Case cases[] = {
+        { "42", Node_kind::Int_literal },
+        { "0", Node_kind::Int_literal },
+        { "0xFF", Node_kind::Int_literal },
+        { "0b1010", Node_kind::Int_literal },
+        { "1_000", Node_kind::Int_literal },
+        { "1.5", Node_kind::Float_literal },
+        { "1e10", Node_kind::Float_literal },
+        { "1.5e-3", Node_kind::Float_literal },
+        { "\"\"", Node_kind::String_literal },
+        { "\"hello\"", Node_kind::String_literal },
+        { "'a'", Node_kind::Char_literal },
+        { "'\\n'", Node_kind::Char_literal },
+        { "true", Node_kind::Bool_literal },
+        { "false", Node_kind::Bool_literal },
+    };
+
+    for( const Case& c : cases )
+    {
+        const Parsed p( std::string( "i32 main() { return " ) + c.expression + "; }" );
+
+        INFO( "expression " << c.expression << "\n" << p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id literal = p.child( find_first( p.ast(), p.root(), Node_kind::Return_stmt ), 0 );
+        REQUIRE( literal.is_valid() );
+        REQUIRE( p.kind( literal ) == c.kind );
+        REQUIRE( p.text( literal ) == c.expression );
+        REQUIRE( p.children( literal ).empty() );
+    }
+}
+
+// One Node_kind covers both, so the value has to live in aux - the span text is for humans.
+TEST_CASE( "parser_bool_literal_records_its_value", "[parse]" )
+{
+    const Parsed yes( "i32 main() { return true; }" );
+    const Parsed no( "i32 main() { return false; }" );
+
+    REQUIRE( yes.aux( find_first( yes.ast(), yes.root(), Node_kind::Bool_literal ) ) == 1 );
+    REQUIRE( no.aux( find_first( no.ast(), no.root(), Node_kind::Bool_literal ) ) == 0 );
+}
+
+// Only `true` and `false` are literals; every other keyword must still fail as an expression.
+TEST_CASE( "parser_other_keywords_are_not_literals", "[parse]" )
+{
+    for( const std::string_view keyword : { "if", "while", "struct", "return", "const" } )
+    {
+        const Parsed p( std::string( "i32 main() { return " ) + std::string( keyword ) + "; }" );
+
+        INFO( "keyword " << keyword );
+        REQUIRE( p.has_errors() );
+        REQUIRE( p.errors().find( "expected an expression" ) != std::string::npos );
+    }
+}
+
+TEST_CASE( "parser_name_expression", "[parse]" )
+{
+    SECTION( "an identifier becomes a Name_expr" )
+    {
+        const Parsed p( "i32 main() { return x; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id ret = find_first( p.ast(), p.root(), Node_kind::Name_expr );
+        REQUIRE( ret.is_valid() );
+        REQUIRE( p.text( ret ) == "x" );
+        REQUIRE( p.children( ret ).empty() );
+    }
+
+    // The span alone would be enough to print the name, but the resolver compares Symbol_ids, so
+    // aux has to carry it.
+    SECTION( "the symbol is recorded in aux" )
+    {
+        const Parsed p( "i32 main() { return widget; }" );
+
+        const Node_id name = find_first( p.ast(), p.root(), Node_kind::Name_expr );
+        REQUIRE( Symbol_id { p.aux( name ) }.is_valid() );
+
+        // A different identifier must intern to a different symbol.
+        const Node_id func = p.child( p.root(), 0 );
+        REQUIRE( p.aux( name ) != p.aux( func ) );
+    }
+
+    SECTION( "the same spelling interns to the same symbol" )
+    {
+        const Parsed p( "i32 f( i32 value ) { return value; }" );
+
+        const Node_id param = find_first( p.ast(), p.root(), Node_kind::Param_decl );
+        const Node_id name  = find_first( p.ast(), p.root(), Node_kind::Name_expr );
+
+        REQUIRE( param.is_valid() );
+        REQUIRE( name.is_valid() );
+        REQUIRE( p.aux( param ) == p.aux( name ) );
+    }
+
+    // `if` is Token_kind::Keyword, not Identifier, so it must not slip through as a name.
+    SECTION( "a keyword is not a name" )
+    {
+        const Parsed p( "i32 main() { return if; }" );
+
+        REQUIRE( p.has_errors() );
+        INFO( p.errors() );
+        REQUIRE( p.errors().find( "expected an expression" ) != std::string::npos );
+    }
+}
+
 TEST_CASE( "parser_nested_blocks", "[parse]" )
 {
     SECTION( "adjacent braces" )

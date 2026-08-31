@@ -1,0 +1,17 @@
+Source_file                             1:1-10:1
+  Function_decl                         1:1-4:2     name=identity
+    Named_type                          1:1-1:4     "i32"
+    Param_list                          1:13-1:26
+      Param_decl                        1:15-1:24   name=value
+        Named_type                      1:15-1:18   "i32"
+    Block                               2:1-4:2
+      Return_stmt                       3:5-3:18
+        Name_expr                       3:12-3:17   "value"
+  Function_decl                         6:1-9:2     name=other
+    Named_type                          6:1-6:4     "i32"
+    Param_list                          6:10-6:23
+      Param_decl                        6:12-6:21   name=value
+        Named_type                      6:12-6:15   "i32"
+    Block                               7:1-9:2
+      Return_stmt                       8:5-8:18
+        Name_expr                       8:12-8:17   "value"
