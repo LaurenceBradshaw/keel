@@ -9,13 +9,19 @@ namespace keel
 
 enum class Node_kind : u16
 {
+    // A rule that failed. Returned instead of an invalid Node_id so the tree stays well formed and
+    // arity stays fixed; later passes skip Error subtrees silently.
+    Error,
+
     Source_file,
     Function_decl,
+    Param_decl,
     Named_type,
     Param_list,
     Block,
     Return_stmt,
     Int_literal,
+    Binary_expr,
 
     Count
 };

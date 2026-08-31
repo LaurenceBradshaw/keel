@@ -667,8 +667,12 @@ API exist in Keel, and it will be a full rewrite rather than a port.
 
 ### Debts to pay along the way
 
-- `token_kind_spelling()` — deferred until the parser produced its first error.
-  `expected ';', found ','` needs the source spelling, not `Semicolon`.
+- `expect_keyword()` will need a spelling that `token_kind_spelling()` cannot
+  give. Every keyword shares one `Token_kind::Keyword`, so the spelling function
+  can only answer "keyword" — *which* one lives in `Token::symbol`. A message
+  like `expected \`return\`` therefore has to go through the keyword spelling
+  table in `interner.cpp`, not through `lex/token.cpp`. `error_expected` avoids
+  this today only because it quotes the source text for the *found* half.
 - D1's suggestion table (`int` → `i32`, `double` → `f64`, ...) belongs on sema's
   unknown-type path. Nothing produces that message today.
 - `Interner` should hold its strings in an `Arena` rather than in the map's keys.

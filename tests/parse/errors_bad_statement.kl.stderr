@@ -1,0 +1,5 @@
+error: unexpected character `@`
+ --> parse/errors_bad_statement.kl:3:5
+  |
+3 |     @
+  |     ^

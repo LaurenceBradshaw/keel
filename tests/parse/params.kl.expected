@@ -1,0 +1,11 @@
+Source_file                             1:1-5:1
+  Function_decl                         1:1-4:2     name=add
+    Named_type                          1:1-1:4     "i32"
+    Param_list                          1:8-1:24
+      Param_decl                        1:10-1:15   name=a
+        Named_type                      1:10-1:13   "i32"
+      Param_decl                        1:17-1:22   name=b
+        Named_type                      1:17-1:20   "i32"
+    Block                               2:1-4:2
+      Return_stmt                       3:5-3:14
+        Int_literal                     3:12-3:13   "0"

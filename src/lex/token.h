@@ -93,8 +93,13 @@ enum class Token_kind : u16
     Count
 };
 
-// Stable spelling for --dump-tokens and diagnostics. Never empty.
+// Stable spelling for --dump-tokens and debugging. Never empty.
 std::string_view token_kind_name( Token_kind kind );
+
+// The user-facing spelling, for diagnostics: ";" not "Semicolon". Punctuation returns the
+// characters themselves; kinds with no fixed spelling return a lowercase description ("identifier",
+// "end of file") that reads inside a sentence. Callers add their own quoting.
+std::string_view token_kind_spelling( Token_kind kind );
 
 struct Token
 {

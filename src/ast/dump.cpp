@@ -1,6 +1,7 @@
 #include "ast/dump.h"
 
 #include "common/dump_util.h"
+#include "lex/token.h"
 
 #include <fmt/format.h>
 
@@ -17,7 +18,31 @@ constexpr std::size_t k_kind_width     = 40;
 constexpr std::size_t k_location_width = 12;
 constexpr std::size_t k_indent_step    = 2;
 
-void dump_node( const Ast& ast, const Source_manager& sm, std::ostream& out, Node_id id, std::size_t depth )
+// What aux means depends on the kind, and without it the dump cannot tell `add( i32 a, i32 b )`
+// from `add( i32 b, i32 a )` - both names live in aux, not in any span.
+std::string aux_note( const Ast& ast, const Interner& interner, Node_id id )
+{
+    switch( ast.kind( id ) )
+    {
+    case Node_kind::Function_decl:
+    case Node_kind::Param_decl:
+    {
+        const Symbol_id name { ast.aux( id ) };
+        return name.is_valid() ? fmt::format( "name={}", interner.text( name ) ) : "name=<missing>";
+    }
+
+    case Node_kind::Binary_expr:
+        return fmt::format( "op={}", token_kind_spelling( static_cast<Token_kind>( ast.aux( id ) ) ) );
+
+    // Named_type also carries a Symbol_id, but its span text is already the name.
+    default:
+        return {};
+    }
+}
+
+void dump_node(
+    const Ast& ast, const Source_manager& sm, const Interner& interner, std::ostream& out, Node_id id, std::size_t depth
+)
 {
     const Span     span  = ast.span( id );
     const Line_col start = sm.line_col( span.file, span.start );
@@ -26,19 +51,35 @@ void dump_node( const Ast& ast, const Source_manager& sm, std::ostream& out, Nod
     const std::string label    = std::string( depth * k_indent_step, ' ' ) + std::string( node_kind_name( ast.kind( id ) ) );
     const std::string location = fmt::format( "{}:{}-{}:{}", start.line, start.col, end.line, end.col );
 
-    const auto children = ast.children( id );
+    const auto        children = ast.children( id );
+    const std::string note     = aux_note( ast, interner, id );
 
     // Only leaves show their text: a Function_decl's span covers its whole body, which would print
-    // the entire function on one line.
+    // the entire function on one line. The aux note carries what no span can - names, operators.
+    std::string trailing;
+
     if( children.empty() )
     {
-        out << fmt::format(
-            "{:<{}}{:<{}}\"{}\"\n", label, k_kind_width, location, k_location_width, escape_for_dump( sm.text( span ) )
-        );
+        trailing = fmt::format( "\"{}\"", escape_for_dump( sm.text( span ) ) );
+    }
+
+    if( !note.empty() )
+    {
+        if( !trailing.empty() )
+        {
+            trailing += "  ";
+        }
+        trailing += note;
+    }
+
+    // Padding only when something follows it, so no line ends in whitespace.
+    if( trailing.empty() )
+    {
+        out << fmt::format( "{:<{}}{}\n", label, k_kind_width, location );
     }
     else
     {
-        out << fmt::format( "{:<{}}{}\n", label, k_kind_width, location );
+        out << fmt::format( "{:<{}}{:<{}}{}\n", label, k_kind_width, location, k_location_width, trailing );
     }
 
     // children() points into the Ast's storage and is only valid until the next add(); nothing
@@ -52,20 +93,20 @@ void dump_node( const Ast& ast, const Source_manager& sm, std::ostream& out, Nod
             continue;
         }
 
-        dump_node( ast, sm, out, child, depth + 1 );
+        dump_node( ast, sm, interner, out, child, depth + 1 );
     }
 }
 
 } // namespace
 
-void dump_ast( const Ast& ast, const Source_manager& sm, std::ostream& out )
+void dump_ast( const Ast& ast, const Source_manager& sm, const Interner& interner, std::ostream& out )
 {
     if( !ast.root().is_valid() )
     {
         return;
     }
 
-    dump_node( ast, sm, out, ast.root(), 0 );
+    dump_node( ast, sm, interner, out, ast.root(), 0 );
 }
 
 } // namespace keel
@@ -85,6 +126,7 @@ namespace
 struct Fixture
 {
     Source_manager sm;
+    Interner       interner;
     Ast            ast;
     File_id        file;
 
@@ -101,7 +143,7 @@ struct Fixture
     std::string dump() const
     {
         std::ostringstream out;
-        dump_ast( ast, sm, out );
+        dump_ast( ast, sm, interner, out );
         return out.str();
     }
 };
@@ -137,12 +179,14 @@ TEST_CASE( "dump_ast_exact_format", "[ast][dump]" )
     const Node_id zero     = f.ast.add( Node_kind::Int_literal, f.at( 24, 25 ), 0, {} );
     const Node_id ret      = f.ast.add( Node_kind::Return_stmt, f.at( 17, 26 ), 0, { zero } );
     const Node_id body     = f.ast.add( Node_kind::Block, f.at( 11, 28 ), 0, { ret } );
-    const Node_id func     = f.ast.add( Node_kind::Function_decl, f.at( 0, 28 ), 0, { ret_type, params, body } );
+    // aux must be a real Symbol_id: 0 is not "no name", it is whatever was interned first.
+    const Symbol_id name = f.interner.intern( "main" );
+    const Node_id   func = f.ast.add( Node_kind::Function_decl, f.at( 0, 28 ), name.v, { ret_type, params, body } );
 
     f.ast.set_root( f.ast.add( Node_kind::Source_file, f.at( 0, 29 ), 0, { func } ) );
 
     const std::string expected = "Source_file                             1:1-5:1\n"
-                                 "  Function_decl                         1:1-4:2\n"
+                                 "  Function_decl                         1:1-4:2     name=main\n"
                                  "    Named_type                          1:1-1:4     \"i32\"\n"
                                  "    Param_list                          1:9-1:11    \"()\"\n"
                                  "    Block                               2:1-4:2\n"

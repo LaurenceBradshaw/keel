@@ -1,0 +1,13 @@
+Source_file                             1:1-10:1
+  Function_decl                         1:1-4:2     name=broken
+    Named_type                          1:1-1:4     "i32"
+    Param_list                          1:11-1:13   "()"
+    Block                               2:1-4:2
+      Return_stmt                       3:5-3:13
+        Int_literal                     3:12-3:13   "0"
+  Function_decl                         6:1-9:2     name=fine
+    Named_type                          6:1-6:4     "i32"
+    Param_list                          6:9-6:11    "()"
+    Block                               7:1-9:2
+      Return_stmt                       8:5-8:14
+        Int_literal                     8:12-8:13   "1"

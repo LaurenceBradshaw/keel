@@ -2,6 +2,10 @@
 #
 # Golden-file tests for keelc (docs/PLAN.md §10).
 #
+# Each suite directory holds a FLAGS file naming the compiler flags for that suite - tests/lex/FLAGS
+# is "--dump-tokens", tests/parse/FLAGS is "--dump-ast". A suite without one is an error rather than
+# a silent default, so a new directory cannot quietly test the wrong thing.
+#
 # For every tests/<suite>/*.kl:
 #     stdout   is compared against <name>.kl.expected
 #     stderr   is compared against <name>.kl.stderr   (must be empty if the file is absent)
@@ -91,7 +95,17 @@ check_stream()
 
 for src in "${sources[@]}"; do
     src="${src#./}"
-    "$keelc" --dump-tokens "${src#./}" > "$out" 2> "$err"
+    suite_flags_file="$( dirname "$src" )/FLAGS"
+
+    if [ ! -f "$suite_flags_file" ]; then
+        echo "run_tests.sh: $( dirname "$src" ) has no FLAGS file" >&2
+        exit 2
+    fi
+
+    # Word splitting is wanted here, unlike for filenames: FLAGS holds one or more arguments.
+    read -ra suite_flags < "$suite_flags_file"
+
+    "$keelc" "${suite_flags[@]}" "${src#./}" > "$out" 2> "$err"
     code=$?
 
     problems=0

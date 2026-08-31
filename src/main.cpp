@@ -6,12 +6,14 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include "ast/dump.h"
 #include "common/diagnostics.h"
 #include "common/dump_util.h"
 #include "common/interner.h"
 #include "common/source_manager.h"
 #include "common/version.h"
 #include "lex/lexer.h"
+#include "parse/parser.h"
 
 // Excluded from the unit-test binary, which provides its own main() via Catch2.
 #ifndef ENABLE_UNIT_TESTS
@@ -95,7 +97,8 @@ int main( int argc, char** argv )
 
     if( args.count( "dump-ast" ) )
     {
-        fmt::print( "AST dumping not yet implemented\n" );
+        const keel::Ast ast = keel::parse( tokens, sm, diagnostics );
+        keel::dump_ast( ast, sm, interner, std::cout );
     }
 
     diagnostics.render( sm, std::cerr );

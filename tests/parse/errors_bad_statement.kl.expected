@@ -1,0 +1,8 @@
+Source_file                             1:1-6:1
+  Function_decl                         1:1-5:2     name=main
+    Named_type                          1:1-1:4     "i32"
+    Param_list                          1:9-1:11    "()"
+    Block                               2:1-5:2
+      Error                             3:5-3:6     "@"
+      Return_stmt                       4:5-4:14
+        Int_literal                     4:12-4:13   "0"

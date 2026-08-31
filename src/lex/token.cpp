@@ -128,4 +128,124 @@ std::string_view token_kind_name( Token_kind kind )
     return "Unknown";
 }
 
+std::string_view token_kind_spelling( Token_kind kind )
+{
+    switch( kind )
+    {
+    case Token_kind::End_of_file:
+        return "end of file";
+    case Token_kind::Unknown:
+        return "invalid character";
+    case Token_kind::Identifier:
+        return "identifier";
+    case Token_kind::Keyword:
+        return "keyword";
+    case Token_kind::Int_literal:
+        return "integer literal";
+    case Token_kind::Float_literal:
+        return "floating-point literal";
+    case Token_kind::String_literal:
+        return "string literal";
+    case Token_kind::Char_literal:
+        return "character literal";
+    case Token_kind::L_paren:
+        return "(";
+    case Token_kind::R_paren:
+        return ")";
+    case Token_kind::L_brace:
+        return "{";
+    case Token_kind::R_brace:
+        return "}";
+    case Token_kind::L_bracket:
+        return "[";
+    case Token_kind::R_bracket:
+        return "]";
+    case Token_kind::Semicolon:
+        return ";";
+    case Token_kind::Comma:
+        return ",";
+    case Token_kind::Colon:
+        return ":";
+    case Token_kind::Colon_colon:
+        return "::";
+    case Token_kind::Dot:
+        return ".";
+    case Token_kind::Arrow:
+        return "->";
+    case Token_kind::Plus:
+        return "+";
+    case Token_kind::Minus:
+        return "-";
+    case Token_kind::Star:
+        return "*";
+    case Token_kind::Slash:
+        return "/";
+    case Token_kind::Percent:
+        return "%";
+    case Token_kind::Equal_equal:
+        return "==";
+    case Token_kind::Bang_equal:
+        return "!=";
+    case Token_kind::Less:
+        return "<";
+    case Token_kind::Greater:
+        return ">";
+    case Token_kind::Less_equal:
+        return "<=";
+    case Token_kind::Greater_equal:
+        return ">=";
+    case Token_kind::Amp_amp:
+        return "&&";
+    case Token_kind::Pipe_pipe:
+        return "||";
+    case Token_kind::Bang:
+        return "!";
+    case Token_kind::Amp:
+        return "&";
+    case Token_kind::Pipe:
+        return "|";
+    case Token_kind::Caret:
+        return "^";
+    case Token_kind::Tilde:
+        return "~";
+    case Token_kind::Less_less:
+        return "<<";
+    case Token_kind::Greater_greater:
+        return ">>";
+    case Token_kind::Equal:
+        return "=";
+    case Token_kind::Plus_equal:
+        return "+=";
+    case Token_kind::Minus_equal:
+        return "-=";
+    case Token_kind::Star_equal:
+        return "*=";
+    case Token_kind::Slash_equal:
+        return "/=";
+    case Token_kind::Percent_equal:
+        return "%=";
+    case Token_kind::Amp_equal:
+        return "&=";
+    case Token_kind::Pipe_equal:
+        return "|=";
+    case Token_kind::Caret_equal:
+        return "^=";
+    case Token_kind::Less_less_equal:
+        return "<<=";
+    case Token_kind::Greater_greater_equal:
+        return ">>=";
+    case Token_kind::Question:
+        return "?";
+    case Token_kind::Plus_plus:
+        return "++";
+    case Token_kind::Minus_minus:
+        return "--";
+
+    case Token_kind::Count:
+        break;
+    }
+
+    return "invalid character";
+}
+
 } // namespace keel
