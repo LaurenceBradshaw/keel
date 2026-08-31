@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+#
+# Pre-commit checks. Install once with:
+#
+#     git config core.hooksPath .githooks
+#
+# Runs standalone too: ./.githooks/pre-commit
+# Bypass a single commit with: git commit --no-verify
+#
+# NOTE: this checks the working tree, not the staged snapshot. With unstaged changes present it
+# tests those as well. That is the safe trade for a solo repo - stashing mid-commit is a good way
+# to lose work when something goes wrong.
+
+set -uo pipefail
+
+cd "$( dirname "$0" )/.." || exit 1
+
+if [ -t 1 ]; then
+    red=$'\033[31m'; green=$'\033[32m'; dim=$'\033[2m'; reset=$'\033[0m'
+else
+    red=''; green=''; dim=''; reset=''
+fi
+
+log="$( mktemp )"
+trap 'rm -f "$log"' EXIT
+
+# $1 label, rest: command. Prints pass/fail, dumps output only on failure.
+step()
+{
+    local label="$1"; shift
+    local start; start=$SECONDS
+
+    if "$@" > "$log" 2>&1; then
+        printf '  %spass%s  %-28s %s(%ss)%s\n' "$green" "$reset" "$label" "$dim" "$(( SECONDS - start ))" "$reset"
+        return 0
+    fi
+
+    printf '  %sFAIL%s  %s\n' "$red" "$reset" "$label"
+    sed 's/^/        /' < "$log" | tail -40
+    return 1
+}
+
+# Configure any preset whose build directory is missing, so a fresh clone's first commit works.
+for preset in debug release; do
+    if [ ! -d "build/${preset}" ]; then
+        printf '  %sconfiguring %s...%s\n' "$dim" "$preset" "$reset"
+        cmake --preset "$preset" > /dev/null 2>&1 || {
+            printf '  %sFAIL%s  cmake --preset %s\n' "$red" "$reset" "$preset"
+            exit 1
+        }
+    fi
+done
+
+check_format()
+{
+    local bad=0
+    while IFS= read -r f; do
+        clang-format-18 -style=file:.clang-format "$f" | diff -u "$f" - && continue
+        bad=1
+    done < <( find src -name '*.cpp' -o -name '*.h' )
+    return "$bad"
+}
+
+echo "pre-commit:"
+
+# Cheapest first, and build before the things that need a binary.
+step "clang-format"        check_format                              || exit 1
+step "build (debug)"       cmake --build --preset debug              || exit 1
+step "unit tests"          ./build/debug/bin/keel_tests              || exit 1
+step "golden tests"        ./tests/run_tests.sh ./build/debug/bin/keelc || exit 1
+step "build (release -Werror)" cmake --build --preset release        || exit 1
+
+echo "  ${green}all checks passed${reset}"
