@@ -7,6 +7,7 @@
 #include <string>
 #include <string_view>
 #include "common/diagnostics.h"
+#include "common/dump_util.h"
 #include "common/interner.h"
 #include "common/source_manager.h"
 #include "common/version.h"
@@ -14,30 +15,6 @@
 
 // Excluded from the unit-test binary, which provides its own main() via Catch2.
 #ifndef ENABLE_UNIT_TESTS
-namespace
-{
-
-// Escapes the quotes and backslashes a string or char literal token contains, so every dump line
-// stays unambiguously parseable when the golden runner diffs it.
-std::string escape_for_dump( std::string_view text )
-{
-    std::string out;
-    out.reserve( text.size() );
-
-    for( const char c : text )
-    {
-        if( c == '"' || c == '\\' )
-        {
-            out.push_back( '\\' );
-        }
-        out.push_back( c );
-    }
-
-    return out;
-}
-
-} // namespace
-
 int main( int argc, char** argv )
 {
     cxxopts::Options options( "keelc", "The Keel compiler" );
@@ -111,7 +88,7 @@ int main( int argc, char** argv )
                 "{:<22} {:<12} \"{}\"\n",
                 keel::token_kind_name( t.kind ),
                 fmt::format( "{}:{}-{}:{}", start.line, start.col, end.line, end.col ),
-                escape_for_dump( text )
+                keel::escape_for_dump( text )
             );
         }
     }

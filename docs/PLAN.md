@@ -671,6 +671,11 @@ API exist in Keel, and it will be a full rewrite rather than a port.
   `expected ';', found ','` needs the source spelling, not `Semicolon`.
 - D1's suggestion table (`int` → `i32`, `double` → `f64`, ...) belongs on sema's
   unknown-type path. Nothing produces that message today.
+- `Interner` should hold its strings in an `Arena` rather than in the map's keys.
+  That deletes `Sv_hash` and `std::equal_to<>` — the lookup type becomes the key
+  type again — and drops one heap allocation per symbol. Deferred: it is not a
+  bottleneck and the API does not change, so do it when a profile asks or when
+  the parser has you in there anyway.
 - §3's pipeline diagram still shows a `Resolver` pass; L17's resolution means it
   genuinely stays separate, so the diagram is right — but confirm when the
   parser lands.
