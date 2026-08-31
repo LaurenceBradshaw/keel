@@ -344,7 +344,7 @@ either new notation or a hard error; none silently redefines valid C++.
 
 | # | Divergence | Why it is safe under the §5.1 rule |
 | --- | --- | --- |
-| D1 | Fixed-width primitives only: `i32`, `u64`, `f64`. No `int`, `long`, `char`, `unsigned`. | The C++ spellings are **rejected outright**, with a diagnostic naming the replacement. No silent reinterpretation. |
+| D1 | Fixed-width primitives only: `i32`, `u64`, `f64`. No `int`, `long`, `char`, `unsigned`. | The C++ spellings are **rejected outright**, with a diagnostic naming the replacement. They are *not* reserved words — the lexer treats them as ordinary identifiers, and the suggestion is produced by sema's unknown-type path, which knows it is in type position and so gives a better message than the lexer could. No type name is a keyword: `i32`, `Point` and `Vector<T>` all resolve through one path. |
 | D2 | **Passing by value moves; it does not copy.** Copying is explicit (`b.clone()`). | New notation is impossible here, so the compiler enforces it instead: using a moved-from value is a hard error (§8) pointing at the move. This is the most dangerous divergence and the one M4 exists to police. |
 | D3 | Braces mandatory on every `if`/`while`/`for` body. | Braceless C++ is a parse error, not a reinterpretation. Kills the `goto fail;` class of bug. |
 | D4 | `switch` has no fallthrough, needs no `break`, requires exhaustiveness, and matches sum-type payloads. | Payload patterns (`case Circle( r ):`) are new notation. A `switch` over a plain integer keeps C++ meaning minus fallthrough; missing cases are an error, never a silent skip. |
@@ -640,13 +640,37 @@ API exist in Keel, and it will be a full rewrite rather than a port.
 
 ---
 
-## 15. Immediate next steps
+## 15. Where the work is
 
-1. Set up the C++20 CMake + Ninja build (empty `keelc` that prints a version).
-2. `common/`: arena allocator, string interner, `Span`, `Diagnostics`.
-3. Lexer.
-4. `tests/run_tests.sh` + the first lexer golden tests.
-5. Parser and AST — M0.
+### Done
 
-Start with the lexer this week. The manifesto's open questions answer themselves
-far faster once there is something to compile.
+`common/`: `Span`, `Source_manager`, `Diagnostics`, `Interner`.
+`lex/`: `Token`, the lexer, `--dump-tokens`.
+`tests/`: the golden runner and the `lex/` corpus.
+`keelc` reads a file, lexes it, and reports through `Diagnostics`.
+
+### Next — the back half of M0
+
+1. **`common/Arena`** — bump allocator for variable-length payloads. Nodes
+   themselves live in a `vector` and are referenced by `u32` index (§4); the
+   arena holds the lists a node points at.
+2. **AST node layout** — settle how variable-length child lists are stored
+   (parameters, statements, call arguments) *before* writing the parser. This is
+   the one M0 decision that is expensive to revisit, because every visitor
+   depends on it.
+3. **Parser** — recursive descent for declarations and statements, Pratt for
+   expressions. Two settled rules land here: D15 makes expression statements
+   effectful (which is what resolves L17), and D12 keeps `++`/`--` out of the
+   expression grammar entirely.
+4. **`--dump-ast`** and a `tests/parse/` corpus. The golden runner discovers new
+   directories on its own, so no script changes.
+
+### Debts to pay along the way
+
+- `token_kind_spelling()` — deferred until the parser produced its first error.
+  `expected ';', found ','` needs the source spelling, not `Semicolon`.
+- D1's suggestion table (`int` → `i32`, `double` → `f64`, ...) belongs on sema's
+  unknown-type path. Nothing produces that message today.
+- §3's pipeline diagram still shows a `Resolver` pass; L17's resolution means it
+  genuinely stays separate, so the diagram is right — but confirm when the
+  parser lands.

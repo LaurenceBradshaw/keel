@@ -13,9 +13,8 @@ Interner::Interner()
         "class",    "switch",   "case",    "break",    "continue","const",   "auto",
         "template", "true",     "false",   "import",   "unsafe",
 
-        // Reserved so the lexer can reject them by name (PLAN §6.3 D1, D8, D10).
-        "int",      "long",     "short",   "char",     "signed",  "unsigned","float",
-        "double",   "new",      "delete"
+        // See the Keyword enum: the C++ type names are handled by sema, not reserved here.
+        "new",      "delete"
     };
     // clang-format on
 
@@ -183,20 +182,27 @@ TEST_CASE( "interner_user_identifiers_follow_the_keywords", "[common][interner]"
     REQUIRE_FALSE( in.is_keyword( Symbol_id {} ) ); // the invalid sentinel
 }
 
-// PLAN §6.3 D1: the lexer has to recognise these to say "use `i32` instead" rather than treating
-// them as ordinary identifiers.
-TEST_CASE( "interner_reserves_rejected_cpp_words", "[common][interner]" )
+// PLAN §6.3 D10: `new` and `delete` are operators appearing in expression position, so the parser
+// needs to recognise them.
+TEST_CASE( "interner_reserves_new_and_delete", "[common][interner]" )
+{
+    Interner in;
+
+    REQUIRE( in.is_keyword( in.intern( "new" ) ) );
+    REQUIRE( in.is_keyword( in.intern( "delete" ) ) );
+}
+
+// D1's "use `i32` instead" suggestion lives on sema's unknown-type path, which knows it is in type
+// position. Reserving these here would only produce a worse message from a place with less context.
+TEST_CASE( "interner_does_not_reserve_cpp_type_names", "[common][interner]" )
 {
     Interner in;
 
     for( const std::string_view word : { "int", "long", "short", "char", "signed", "unsigned", "float", "double" } )
     {
         INFO( "word '" << word << "'" );
-        REQUIRE( in.is_keyword( in.intern( word ) ) );
+        REQUIRE_FALSE( in.is_keyword( in.intern( word ) ) );
     }
-
-    REQUIRE( in.is_keyword( in.intern( "new" ) ) );
-    REQUIRE( in.is_keyword( in.intern( "delete" ) ) );
 }
 
 TEST_CASE( "interner_ids_are_dense_and_sequential", "[common][interner]" )

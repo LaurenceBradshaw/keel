@@ -46,15 +46,10 @@ enum class Keyword : u32
     Import,
     Unsafe,
 
-    // Reserved so the lexer can reject them by name (PLAN §6.3 D1, D8, D10).
-    Int,
-    Long,
-    Short,
-    Char,
-    Signed,
-    Unsigned,
-    Float,
-    Double,
+    // Not names but operators, and they appear in expression position where an unknown identifier
+    // gives a far worse message than a keyword the parser can recognise (PLAN §6.3 D10).
+    // The C++ *type* names are deliberately absent: sema suggests the replacement from its
+    // unknown-type path, which knows it is in type position (PLAN §6.3 D1).
     New,
     Delete,
 

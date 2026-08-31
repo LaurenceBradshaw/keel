@@ -854,18 +854,32 @@ TEST_CASE( "lexer_identifier_charset", "[lex]" )
     REQUIRE( lexed.text( 3 ) == "_1_a" );
 }
 
-// PLAN §6.3 D1: the lexer must recognise these to say "use `i32` instead".
-TEST_CASE( "lexer_reserved_cpp_words_are_keywords", "[lex]" )
+// PLAN §6.3 D10: `new` and `delete` appear in expression position, where an unknown identifier
+// produces a far worse message than a keyword the parser can recognise.
+TEST_CASE( "lexer_reserves_new_and_delete", "[lex]" )
 {
-    const Lexed lexed( "int long char unsigned new delete" );
+    const Lexed lexed( "new delete" );
 
-    REQUIRE( lexed.count() == 6 );
-    for( std::size_t i = 0; i < 6; ++i )
+    REQUIRE( lexed.count() == 2 );
+    REQUIRE( lexed.kind( 0 ) == Token_kind::Keyword );
+    REQUIRE( lexed.keyword( 0 ) == Keyword::New );
+    REQUIRE( lexed.kind( 1 ) == Token_kind::Keyword );
+    REQUIRE( lexed.keyword( 1 ) == Keyword::Delete );
+}
+
+// D1's suggestion now lives on sema's unknown-type path, which knows it is in type position. The
+// lexer must therefore treat these as ordinary identifiers - the same path as `i32` and `Point`.
+TEST_CASE( "lexer_cpp_type_names_are_ordinary_identifiers", "[lex]" )
+{
+    const Lexed lexed( "int long short char signed unsigned float double i32 u64 f32 bool void" );
+
+    REQUIRE( lexed.count() == 13 );
+    for( std::size_t i = 0; i < lexed.count(); ++i )
     {
         INFO( "token " << i << " = " << lexed.text( i ) );
-        REQUIRE( lexed.kind( i ) == Token_kind::Keyword );
+        REQUIRE( lexed.kind( i ) == Token_kind::Identifier );
     }
-    REQUIRE( lexed.keyword( 0 ) == Keyword::Int );
+    REQUIRE_FALSE( lexed.has_errors() );
 }
 
 TEST_CASE( "lexer_only_identifiers_and_keywords_carry_symbols", "[lex]" )
