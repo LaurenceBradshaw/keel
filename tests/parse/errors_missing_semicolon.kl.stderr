@@ -3,3 +3,5 @@ error: expected `;`, found `}`
   |
 3 |     return 0
   |             ^
+
+1 error generated

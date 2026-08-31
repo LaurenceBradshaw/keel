@@ -31,10 +31,16 @@ public:
     bool   has_errors() const;
     size_t error_count() const;
 
-    void render( const Source_manager& sm, std::ostream& out ) const;
+    // colour is the caller's decision: render() writes to any ostream, and only the driver knows
+    // whether its destination is a terminal. See colour_supported().
+    void render( const Source_manager& sm, std::ostream& out, bool colour = false ) const;
 
 private:
     std::vector<Diagnostic> items_;
 };
+
+// True when stderr is a terminal and NO_COLOR is unset (https://no-color.org). The golden runner
+// redirects stderr to a file, so its output stays uncoloured with no special handling.
+bool colour_supported();
 
 } // namespace keel

@@ -73,10 +73,25 @@ int main( int argc, char** argv )
         return 2;
     }
 
-    // M0 lands here: read the file, lex it, parse it, and honour --dump-tokens / --dump-ast.
     keel::Interner           interner;
     keel::Diagnostics        diagnostics;
     std::vector<keel::Token> tokens = keel::lex( file_id.value(), sm, interner, diagnostics );
+
+    // Reporting is the same wherever we stop, and each --dump flag stops after its own phase.
+    const auto finish = [&]() -> int
+    {
+        diagnostics.render( sm, std::cerr, keel::colour_supported() );
+
+        if( !diagnostics.has_errors() )
+        {
+            return 0;
+        }
+
+        // A count at the end, so it is obvious whether output was truncated by a pager.
+        const std::size_t count = diagnostics.error_count();
+        fmt::print( stderr, "\n{} error{} generated\n", count, count == 1 ? "" : "s" );
+        return 1;
+    };
 
     if( args.count( "dump-tokens" ) )
     {
@@ -93,16 +108,18 @@ int main( int argc, char** argv )
                 keel::escape_for_dump( text )
             );
         }
+
+        return finish();
     }
+
+    // Parsing is part of compiling, not a debug feature: --dump-ast only controls output.
+    const keel::Ast ast = keel::parse( tokens, sm, diagnostics );
 
     if( args.count( "dump-ast" ) )
     {
-        const keel::Ast ast = keel::parse( tokens, sm, diagnostics );
         keel::dump_ast( ast, sm, interner, std::cout );
     }
 
-    diagnostics.render( sm, std::cerr );
-
-    return diagnostics.has_errors() ? 1 : 0;
+    return finish();
 }
 #endif // ENABLE_UNIT_TESTS

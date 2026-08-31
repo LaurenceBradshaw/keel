@@ -3,38 +3,47 @@ error: leading zeros are not allowed in numeric literals
   |
 1 | 007
   | ^^^ Keel has no octal literals; remove the leading zero
+
 error: digit separator must be between digits
  --> lex/errors_numbers.kl:2:2
   |
 2 | 1_
   |  ^
+
 error: digit separator must be between digits
  --> lex/errors_numbers.kl:3:2
   |
 3 | 1__0
   |  ^
+
 error: hex literal has no digits
  --> lex/errors_numbers.kl:4:1
   |
 4 | 0x
   | ^^ write at least one digit after `0x`
+
 error: binary literal has no digits
  --> lex/errors_numbers.kl:5:1
   |
 5 | 0b
   | ^^ write at least one digit after `0b`
+
 error: unexpected `u` after numeric literal
  --> lex/errors_numbers.kl:6:3
   |
 6 | 42u
   |   ^ literal suffixes are not supported
+
 error: exponent has no digits
  --> lex/errors_numbers.kl:7:2
   |
 7 | 1e
   |  ^ write at least one digit after `e`
+
 error: unexpected `else` after numeric literal
  --> lex/errors_numbers.kl:8:2
   |
 8 | 1else
   |  ^^^^ literal suffixes are not supported
+
+8 errors generated

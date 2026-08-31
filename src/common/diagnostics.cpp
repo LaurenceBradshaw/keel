@@ -1,6 +1,9 @@
 #include "common/diagnostics.h"
 #include <algorithm>
+#include <cstdlib>
 #include <ostream>
+
+#include <unistd.h>
 #include <string>
 
 namespace keel
@@ -10,6 +13,35 @@ namespace
 {
 
 constexpr std::size_t k_tab_width = 4;
+
+// SGR escapes, or empty strings when colour is off, so the rendering code needs no conditionals.
+struct Palette
+{
+    std::string_view severity;
+    std::string_view message;
+    std::string_view gutter;
+    std::string_view reset;
+};
+
+Palette palette_for( Severity severity, bool colour )
+{
+    if( !colour )
+    {
+        return {};
+    }
+
+    std::string_view tint = "\033[1;31m"; // error: bold red
+    if( severity == Severity::Warning )
+    {
+        tint = "\033[1;33m";
+    }
+    else if( severity == Severity::Note )
+    {
+        tint = "\033[1;36m";
+    }
+
+    return Palette { tint, "\033[1m", "\033[1;34m", "\033[0m" };
+}
 
 const char* severity_label( Severity s )
 {
@@ -91,11 +123,24 @@ size_t Diagnostics::error_count() const
     return count;
 }
 
-void Diagnostics::render( const Source_manager& sm, std::ostream& out ) const
+void Diagnostics::render( const Source_manager& sm, std::ostream& out, bool colour ) const
 {
+    bool first = true;
+
     for( const Diagnostic& d : items_ )
     {
-        out << severity_label( d.severity ) << ": " << d.message << "\n";
+        // A blank line between diagnostics: without it the "error:" line butts against the caret
+        // line above and it is ambiguous which snippet a message belongs to. Separator rather than
+        // terminator, so the output does not end in a blank line.
+        if( !first )
+        {
+            out << "\n";
+        }
+        first = false;
+
+        const Palette p = palette_for( d.severity, colour );
+
+        out << p.severity << severity_label( d.severity ) << ": " << p.reset << p.message << d.message << p.reset << "\n";
 
         if( !d.span.is_valid() )
         {
@@ -122,18 +167,26 @@ void Diagnostics::render( const Source_manager& sm, std::ostream& out ) const
         const std::string number = std::to_string( lc.line );
         const std::string gutter( number.size(), ' ' );
 
-        out << gutter << "--> " << f.path << ":" << lc.line << ":" << lc.col << "\n";
-        out << gutter << " |\n";
-        out << number << " | " << line << "\n";
-        out << gutter << " | " << std::string( caret_col, ' ' ) << std::string( caret_len, '^' );
+        out << gutter << p.gutter << "--> " << p.reset << f.path << ":" << lc.line << ":" << lc.col << "\n";
+        out << gutter << p.gutter << " |" << p.reset << "\n";
+        out << p.gutter << number << " | " << p.reset << line << "\n";
+        out << gutter << p.gutter << " | " << p.reset << std::string( caret_col, ' ' ) << p.severity
+            << std::string( caret_len, '^' );
 
         if( !d.help.empty() )
         {
             out << " " << d.help;
         }
 
+        out << p.reset;
+
         out << "\n";
     }
+}
+
+bool colour_supported()
+{
+    return isatty( STDERR_FILENO ) != 0 && std::getenv( "NO_COLOR" ) == nullptr;
 }
 
 } // namespace keel

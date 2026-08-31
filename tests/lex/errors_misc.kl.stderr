@@ -3,13 +3,17 @@ error: Keel has no preprocessor
   |
 1 | #include <stdio.h>
   | ^ use `import` instead of `#include`
+
 error: unexpected character `@`
  --> lex/errors_misc.kl:2:1
   |
 2 | @
   | ^
+
 error: unexpected non-breaking space (U+00A0)
  --> lex/errors_misc.kl:3:2
   |
 3 | a b
   |  ^^ replace it with an ordinary space
+
+3 errors generated
