@@ -1295,6 +1295,10 @@ TEST_CASE( "parser_calls_bind_tightest", "[parse]" )
     REQUIRE( shape_of( "f( 1 ) + 2" ) == "+(call(f,[1]),2)" );
     REQUIRE( shape_of( "f( 1 ) * g( 2 )" ) == "*(call(f,[1]),call(g,[2]))" );
     REQUIRE( shape_of( "a + b * f( c )" ) == "+(a,*(b,call(f,[c])))" );
+
+    // The call sits on the left of the tighter operator, so both relationships apply at once.
+    REQUIRE( shape_of( "1 + f( 5 ) * 3" ) == "+(1,*(call(f,[5]),3))" );
+    REQUIRE( shape_of( "f( 1 ) * 2 + 3" ) == "+(*(call(f,[1]),2),3)" );
 }
 
 // Chaining falls out of the Pratt loop: after one call, `left` is a Call_expr and the loop goes
