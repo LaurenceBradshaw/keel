@@ -1,0 +1,25 @@
+error: unknown escape sequence `\q`
+ --> lex/errors_strings.kl:1:2
+  |
+1 | "\q"
+  |  ^^ valid escapes are \n \t \r \0 \\ \" \' and \xNN
+error: `\x` needs exactly two hex digits
+ --> lex/errors_strings.kl:2:2
+  |
+2 | "\x4"
+  |  ^^ for example `\x41`
+error: unterminated string literal
+ --> lex/errors_strings.kl:3:1
+  |
+3 | "unterminated
+  | ^ add a closing `"`
+error: empty character literal
+ --> lex/errors_strings.kl:4:1
+  |
+4 | ''
+  | ^^ write one character between the quotes
+error: character literal must contain exactly one character
+ --> lex/errors_strings.kl:5:1
+  |
+5 | 'ab'
+  | ^^^^ use a string literal for more than one

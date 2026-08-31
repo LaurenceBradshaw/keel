@@ -1,0 +1,5 @@
+Identifier             2:1-2:2      "a"
+Identifier             3:31-3:32    "b"
+Identifier             4:24-4:25    "c"
+Identifier             5:1-5:2      "d"
+End_of_file            6:1-6:1      ""

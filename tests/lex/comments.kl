@@ -1,0 +1,5 @@
+// a line comment
+a /* a block
+      comment across lines */ b
+/* /* does not nest */ c
+d // trailing at end of file

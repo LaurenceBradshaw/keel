@@ -180,6 +180,7 @@ exists specifically to prevent indefinite bikeshedding.
 | L14 | No exceptions in the language. Errors are `Result` + `?`. |
 | L15 | Naming: `Capitalized_snake_case` types (`String_view`, `Hash_map`), `snake_case` values and functions — the convention already used in `MANIFESTO.md` §12. |
 | L16 | C declaration order (`i32 x`), so type constructors are **postfix**: `T&`, `const T&`, `T*` — as in C++. |
+| L17 | `a * b;` is ambiguous between a pointer declaration and a discarded multiply under C declaration order. Resolved the Java/C# way: **an expression statement must have an effect** (D15), so the discarded-multiply reading is not a legal statement and the parser decides from syntax alone. No symbol-table feedback, so name resolution stays a separate pass after parsing. |
 
 ---
 
@@ -357,6 +358,7 @@ either new notation or a hard error; none silently redefines valid C++.
 | D12 | `++` and `--` are **statements, not expressions**. `i++;` and `for( ...; ...; i++ )` are fine; `x = a[i++]` is a parse error. | Removes the pre/post distinction and every sequencing hazard in one move — `a[i++] = i++` is UB in C++ and is simply not expressible here. Rejects valid C++ outright rather than reinterpreting it. |
 | D13 | Literal syntax: `_` is accepted as a digit separator alongside C++'s `'`; `\x` escapes take **exactly** two hex digits; unknown escapes and multi-character char literals are errors. | The separator is a pure addition — `1'000'000` keeps its C++ meaning. The rest reject what C++ accepts loosely: unbounded `\x` silently overflows, and `'ab'` is implementation-defined in C++. |
 | D14 | A leading zero on a decimal literal is an error: `010` does not compile. | C++ reads it as octal, so `010` is 8 there and would be 10 here. Keel has no octal at all, so accepting it would silently change the value of valid C++ — exactly what §5.1 forbids. Rejected outright with a message naming the cause. |
+| D15 | An expression statement must have an effect: only calls, assignments, and `++`/`--`. `a * b;`, `x.field;` and `arr[3];` are errors. | Rejects only statements that compute a value and discard it — already a bug, and already warned about by C++ (`-Wunused-value`). Java and C# both enumerate the legal statement expressions for exactly this reason. Multiplication inside an expression (`x = a * b;`) is untouched. |
 
 ### 6.4 Not in v0
 
@@ -592,6 +594,7 @@ none of them can block work indefinitely.
 | **Mutable-by-default (C++) or const-by-default (safer)?** L12 currently follows C++, because `i32 y = 0; y = 1;` failing would astonish exactly the developer §5.1 is written for. But "safe by default" is a manifesto core principle, and this is the one place the two goals point in opposite directions. | M2, once real code exists to judge how often `const` gets forgotten |
 | Do we keep `?` for error propagation, or find a spelling from the C family? It is the only construct in the language with no C++ heritage (D6). | M5 |
 | Should `int`/`float`/`double` be accepted as aliases after all (D1), or stay hard errors? Aliases ease the first hour and cost a permanent second spelling for every type. | M1 |
+| `a < b > ( c )` — a call to a generic, or two comparisons? C++ needs `template` disambiguators, Rust needs turbofish (`a::<b>(c)`). D15 does not help: both readings are effectful. | M6 |
 | Do we ever add lifetimes/borrow checking, or is the non-escaping rule permanent? | After M7, with real-program evidence |
 | Are interfaces/traits the only form of polymorphism, or is there virtual dispatch? | M6 (generic bounds force a partial answer) |
 | What exactly is in an `unsafe` block, and what does it permit? | M3 (raw pointers appear in `Buffer`) |
