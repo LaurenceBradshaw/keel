@@ -17,6 +17,11 @@ enum class Node_kind : u16
     Function_decl,
     Param_decl,
     Named_type,
+    Pointer_type,
+    Ref_type,
+    Const_type,
+    Generic_type,
+    Type_arg_list,
     Param_list,
     Block,
     Return_stmt,
@@ -29,6 +34,10 @@ enum class Node_kind : u16
     Binary_expr,
     Call_expr,
     Arg_list,
+    Var_decl,
+    Assign_stmt,
+    Increment_stmt,
+    Expr_stmt,
 
     Count
 };

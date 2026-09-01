@@ -26,12 +26,17 @@ std::string aux_note( const Ast& ast, const Interner& interner, Node_id id )
     {
     case Node_kind::Function_decl:
     case Node_kind::Param_decl:
+    case Node_kind::Var_decl:
     {
         const Symbol_id name { ast.aux( id ) };
         return name.is_valid() ? fmt::format( "name={}", interner.text( name ) ) : "name=<missing>";
     }
 
+    // One node kind covers every operator in each of these, so aux is the only thing that
+    // distinguishes `y = 1` from `y += 1`.
     case Node_kind::Binary_expr:
+    case Node_kind::Assign_stmt:
+    case Node_kind::Increment_stmt:
         return fmt::format( "op={}", token_kind_spelling( static_cast<Token_kind>( ast.aux( id ) ) ) );
 
     // Named_type also carries a Symbol_id, but its span text is already the name.

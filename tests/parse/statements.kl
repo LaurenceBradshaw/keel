@@ -1,0 +1,19 @@
+i32 main()
+{
+    i32  y = 0;
+    auto x = 1;
+    u32* p;
+    u32& r;
+    const i32 c = 2;
+    Vector<Vector<i32>> v;
+
+    y = 1;
+    y += 2;
+    y++;
+    y--;
+
+    f();
+    g( y, 1 + 2 );
+
+    return y;
+}

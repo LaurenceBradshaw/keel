@@ -1,0 +1,4 @@
+i32 no_effect()     { a + b; }
+i32 spaced_pointer() { u32 *p; }
+i32 missing_name()   { auto = 5; }
+i32 not_a_statement() { struct x; }

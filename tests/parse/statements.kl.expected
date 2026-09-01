@@ -1,0 +1,56 @@
+Source_file                             1:1-20:1
+  Function_decl                         1:1-19:2    name=main
+    Named_type                          1:1-1:4     "i32"
+    Param_list                          1:9-1:11    "()"
+    Block                               2:1-19:2
+      Var_decl                          3:5-3:16    name=y
+        Named_type                      3:5-3:8     "i32"
+        Int_literal                     3:14-3:15   "0"
+      Var_decl                          4:5-4:16    name=x
+        <none>                          -
+        Int_literal                     4:14-4:15   "1"
+      Var_decl                          5:5-5:12    name=p
+        Pointer_type                    5:5-5:9
+          Named_type                    5:5-5:8     "u32"
+        <none>                          -
+      Var_decl                          6:5-6:12    name=r
+        Ref_type                        6:5-6:9
+          Named_type                    6:5-6:8     "u32"
+        <none>                          -
+      Var_decl                          7:5-7:21    name=c
+        Const_type                      7:5-7:14
+          Named_type                    7:11-7:14   "i32"
+        Int_literal                     7:19-7:20   "2"
+      Var_decl                          8:5-8:27    name=v
+        Generic_type                    8:5-8:24
+          Named_type                    8:5-8:11    "Vector"
+          Type_arg_list                 8:11-8:24
+            Generic_type                8:12-8:24
+              Named_type                8:12-8:18   "Vector"
+              Type_arg_list             8:18-8:24
+                Named_type              8:19-8:22   "i32"
+        <none>                          -
+      Assign_stmt                       10:5-10:11  op==
+        Name_expr                       10:5-10:6   "y"
+        Int_literal                     10:9-10:10  "1"
+      Assign_stmt                       11:5-11:12  op=+=
+        Name_expr                       11:5-11:6   "y"
+        Int_literal                     11:10-11:11 "2"
+      Increment_stmt                    12:5-12:9   op=++
+        Name_expr                       12:5-12:6   "y"
+      Increment_stmt                    13:5-13:9   op=--
+        Name_expr                       13:5-13:6   "y"
+      Expr_stmt                         15:5-15:9
+        Call_expr                       15:5-15:8
+          Name_expr                     15:5-15:6   "f"
+          Arg_list                      15:6-15:8   "()"
+      Expr_stmt                         16:5-16:19
+        Call_expr                       16:5-16:18
+          Name_expr                     16:5-16:6   "g"
+          Arg_list                      16:6-16:18
+            Name_expr                   16:8-16:9   "y"
+            Binary_expr                 16:11-16:16 op=+
+              Int_literal               16:11-16:12 "1"
+              Int_literal               16:15-16:16 "2"
+      Return_stmt                       18:5-18:14
+        Name_expr                       18:12-18:13 "y"

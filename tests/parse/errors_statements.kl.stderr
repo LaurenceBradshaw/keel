@@ -1,0 +1,25 @@
+error: this expression has no effect
+ --> parse/errors_statements.kl:1:23
+  |
+1 | i32 no_effect()     { a + b; }
+  |                       ^^^^^ assign the result, or remove it
+
+error: `*` must touch the type it modifies
+ --> parse/errors_statements.kl:2:24
+  |
+2 | i32 spaced_pointer() { u32 *p; }
+  |                        ^^^^^^ write `u32* p` to declare a pointer
+
+error: expected `identifier`, found `=`
+ --> parse/errors_statements.kl:3:28
+  |
+3 | i32 missing_name()   { auto = 5; }
+  |                            ^
+
+error: expected a statement, found `struct`
+ --> parse/errors_statements.kl:4:25
+  |
+4 | i32 not_a_statement() { struct x; }
+  |                         ^^^^^^
+
+4 errors generated

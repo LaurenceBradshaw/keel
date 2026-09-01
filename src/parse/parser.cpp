@@ -58,7 +58,7 @@ private:
     void synchronise();
 
     // A failed rule returns this rather than an invalid Node_id, so the tree stays well formed and
-    // arity stays fixed. TODO: needs Node_kind::Error adding to node.h.
+    // arity stays fixed.
     Node_id error_node( Span span );
 
     // --- declarations ---
@@ -77,7 +77,28 @@ private:
 
     Node_id parse_block();
     Node_id parse_statement();
+
+    // Decides whether a statement starting with an identifier is a declaration. A scan, not a trial
+    // parse: it moves the cursor, looks, and puts it back, building no nodes and reporting nothing.
+    // A speculative *parse* would emit diagnostics for guesses that turn out wrong.
+    bool looks_like_declaration();
+
+    // Whether peek() could begin an expression. Keeps "expected a statement" for tokens that
+    // cannot, rather than letting parse_prefix report the vaguer "expected an expression".
+    bool can_start_expression() const;
+
+    // Whether peek() begins exactly where the previous token ended, with no space between. Spans
+    // are byte offsets, so this is the whole test. PLAN §6.3 D17 uses it to bind `*` to the type:
+    // `u32* p` is a pointer declaration, `u32 * p` is a multiplication.
+    bool peek_is_adjacent() const;
+
+    // `Vector<Vector<i32>>` closes with a single `>>` token - the lexer is right to produce it
+    // (lexer_generic_close_is_two_greaters), so the parser splits it here rather than mutating the
+    // token stream. Returns true when one closing `>` was consumed.
+    bool    match_generic_close();
     Node_id parse_return_stmt();
+    Node_id parse_var_decl();
+    Node_id parse_expression_stmt();
 
     // --- expressions ---
 
@@ -102,6 +123,9 @@ private:
     const Source_manager&  sm_;
     Diagnostics&           diags_;
     Ast                    ast_;
+
+    // Half of a `>>` that has already been consumed while closing a generic argument list.
+    u32 pending_greater_ = 0;
 
     // Grouping parentheses leave no trace in the tree, so `a & b == c` and `(a & b) == c` produce
     // the same nodes. D16 needs to tell them apart, and parenthesisation is a parsing fact that
@@ -246,6 +270,28 @@ bool needs_parentheses( Token_kind inner, Token_kind outer )
            pair( a, b, Operator_class::Shift, Operator_class::Additive ) ||
            pair( a, b, Operator_class::Shift, Operator_class::Comparison ) ||
            pair( a, b, Operator_class::Logical_and, Operator_class::Logical_or );
+}
+
+bool is_assignment( Token_kind kind )
+{
+    switch( kind )
+    {
+    case Token_kind::Equal:
+    case Token_kind::Plus_equal:
+    case Token_kind::Minus_equal:
+    case Token_kind::Star_equal:
+    case Token_kind::Slash_equal:
+    case Token_kind::Percent_equal:
+    case Token_kind::Amp_equal:
+    case Token_kind::Pipe_equal:
+    case Token_kind::Caret_equal:
+    case Token_kind::Less_less_equal:
+    case Token_kind::Greater_greater_equal:
+        return true;
+
+    default:
+        return false;
+    }
 }
 
 Parser::Parser( std::span<const Token> tokens, const Source_manager& sm, Diagnostics& diags )
@@ -501,13 +547,94 @@ Node_id Parser::parse_type()
 {
     const Span start = peek().span;
 
+    // A leading const wraps the whole type: `const i32`. looks_like_declaration accepts this, so
+    // parse_type has to as well, or the scan and the parse disagree.
+    const bool leading_const = match_keyword( Keyword::Const );
+
     if( !expect( Token_kind::Identifier ) )
     {
         return error_node( start );
     }
 
-    Symbol_id type = previous().symbol;
-    return ast_.add( Node_kind::Named_type, Span::merge( start, previous().span ), type.v, {} );
+    const Symbol_id name = previous().symbol;
+
+    // The Named_type covers only the identifier: a leading const belongs to the Const_type that
+    // wraps it, not to the name.
+    Node_id type = ast_.add( Node_kind::Named_type, previous().span, name.v, {} );
+
+    // Generic arguments. Nesting works because match_generic_close splits `>>`.
+    if( check( Token_kind::Less ) )
+    {
+        const Span           open = peek().span;
+        std::vector<Node_id> arguments;
+
+        advance();
+
+        if( !check( Token_kind::Greater ) && !check( Token_kind::Greater_greater ) )
+        {
+            do
+            {
+                arguments.push_back( parse_type() );
+            } while( match( Token_kind::Comma ) );
+        }
+
+        if( !match_generic_close() )
+        {
+            error_expected( Token_kind::Greater );
+        }
+
+        const Node_id list = ast_.add( Node_kind::Type_arg_list, Span::merge( open, previous().span ), 0, arguments );
+
+        type = ast_.add( Node_kind::Generic_type, Span::merge( start, previous().span ), 0, { type, list } );
+    }
+
+    if( leading_const )
+    {
+        type = ast_.add( Node_kind::Const_type, Span::merge( start, previous().span ), 0, { type } );
+    }
+
+    while( true )
+    {
+        // A trailing const applies to what precedes it: `i32* const p` is a const pointer.
+        if( match_keyword( Keyword::Const ) )
+        {
+            type = ast_.add( Node_kind::Const_type, Span::merge( start, previous().span ), 0, { type } );
+            continue;
+        }
+
+        if( !check( Token_kind::Star ) && !check( Token_kind::Amp ) )
+        {
+            break;
+        }
+
+        // D17: `*` and `&` belong to the type, so they must touch it. `u32 *p` is rejected rather
+        // than silently read as a multiplication, which is what C's declarator syntax does.
+        const bool       pointer = check( Token_kind::Star );
+        const Token_kind kind    = peek().kind;
+
+        if( !peek_is_adjacent() )
+        {
+            error_at(
+                peek().span,
+                fmt::format( "`{}` must touch the type it modifies", token_kind_spelling( kind ) ),
+                fmt::format(
+                    "write `{}{}` rather than `{} {}`",
+                    sm_.text( ast_.span( type ) ),
+                    token_kind_spelling( kind ),
+                    sm_.text( ast_.span( type ) ),
+                    token_kind_spelling( kind )
+                )
+            );
+        }
+
+        advance();
+
+        type = ast_.add(
+            pointer ? Node_kind::Pointer_type : Node_kind::Ref_type, Span::merge( start, previous().span ), 0, { type }
+        );
+    }
+
+    return type;
 }
 
 Node_id Parser::parse_param()
@@ -560,6 +687,157 @@ Node_id Parser::parse_block()
     return ast_.add( Node_kind::Block, Span::merge( start, previous().span ), 0, statements );
 }
 
+bool Parser::peek_is_adjacent() const
+{
+    return pos_ > 0 && peek().span.file == previous().span.file && peek().span.start == previous().span.end;
+}
+
+bool Parser::match_generic_close()
+{
+    if( pending_greater_ > 0 )
+    {
+        pending_greater_ -= 1;
+        return true;
+    }
+
+    if( match( Token_kind::Greater ) )
+    {
+        return true;
+    }
+
+    if( check( Token_kind::Greater_greater ) )
+    {
+        advance();
+        pending_greater_ = 1;
+        return true;
+    }
+
+    return false;
+}
+
+bool Parser::can_start_expression() const
+{
+    switch( peek().kind )
+    {
+    case Token_kind::Identifier:
+    case Token_kind::Int_literal:
+    case Token_kind::Float_literal:
+    case Token_kind::String_literal:
+    case Token_kind::Char_literal:
+    case Token_kind::L_paren:
+        return true;
+
+    // Unary operators. parse_prefix does not handle all of them yet, but `*p = 1;` is a
+    // statement, so the guard has to let them through.
+    case Token_kind::Minus:
+    case Token_kind::Bang:
+    case Token_kind::Tilde:
+    case Token_kind::Star:
+    case Token_kind::Amp:
+        return true;
+
+    case Token_kind::Keyword:
+        return check_keyword( Keyword::True ) || check_keyword( Keyword::False );
+
+    default:
+        return false;
+    }
+}
+
+bool Parser::looks_like_declaration()
+{
+    // `auto x = ...` is settled by its keyword; the caller checks that before asking.
+    if( !check( Token_kind::Identifier ) && !check_keyword( Keyword::Const ) )
+    {
+        return false;
+    }
+
+    const u32 saved = pos_;
+
+    // A type may open with const: `const i32 x = 0;`.
+    while( match_keyword( Keyword::Const ) )
+    {
+    }
+
+    if( !match( Token_kind::Identifier ) )
+    {
+        pos_ = saved;
+        return false;
+    }
+
+    // Whatever a type can be followed by before the declared name: `Point*`, `const T&`,
+    // `Vector<i32>`. Anything else means this was an expression after all.
+    while( true )
+    {
+        // D17 again: only an adjacent `*`/`&` is part of a type, so `a * b;` is not a declaration
+        // and falls through to being an expression statement, where D15 rejects it.
+        if( ( check( Token_kind::Star ) || check( Token_kind::Amp ) ) && peek_is_adjacent() )
+        {
+            advance();
+            continue;
+        }
+
+        if( match_keyword( Keyword::Const ) )
+        {
+            continue;
+        }
+
+        // A generic argument list. Nesting is counted rather than recursed, because this is only a
+        // scan - `Vector<Vector<i32>>` closes with `>>`, one token carrying two levels.
+        if( check( Token_kind::Less ) )
+        {
+            u32 depth = 0;
+
+            while( !at_end() )
+            {
+                if( match( Token_kind::Less ) )
+                {
+                    depth += 1;
+                }
+                else if( match( Token_kind::Greater ) )
+                {
+                    depth -= 1;
+                }
+                else if( match( Token_kind::Greater_greater ) )
+                {
+                    depth = depth >= 2 ? depth - 2 : 0;
+                }
+                else if( check( Token_kind::Semicolon ) || check( Token_kind::R_brace ) )
+                {
+                    break; // unbalanced - not a type
+                }
+                else
+                {
+                    advance();
+                }
+
+                if( depth == 0 )
+                {
+                    break;
+                }
+            }
+
+            if( depth != 0 )
+            {
+                pos_ = saved;
+                return false;
+            }
+
+            continue;
+        }
+
+        break;
+    }
+
+    // A type is only a declaration if a name follows it. `a * b;` scans a type-shaped `a *` and
+    // then finds `b`, which is why D15 has to make the discarded-multiply reading illegal - see
+    // PLAN §6.3 D15 and L17.
+    const bool declaration = check( Token_kind::Identifier );
+
+    pos_ = saved;
+    return declaration;
+}
+
 Node_id Parser::parse_statement()
 {
     if( check_keyword( Keyword::Return ) )
@@ -570,6 +848,19 @@ Node_id Parser::parse_statement()
     if( check( Token_kind::L_brace ) )
     {
         return parse_block();
+    }
+
+    // The keyword test is free; looks_like_declaration() moves the cursor and puts it back.
+    if( check_keyword( Keyword::Auto ) || looks_like_declaration() )
+    {
+        return parse_var_decl();
+    }
+
+    // Anything that can begin an expression becomes an expression statement; D15 then decides
+    // whether it is one with an effect.
+    if( can_start_expression() )
+    {
+        return parse_expression_stmt();
     }
 
     // Statements are the recovery boundary: this is the one place synchronise() belongs, because
@@ -608,6 +899,95 @@ Node_id Parser::parse_return_stmt()
     return ast_.add( Node_kind::Return_stmt, Span::merge( start, previous().span ), 0, { value } );
 }
 
+Node_id Parser::parse_var_decl()
+{
+    const Span start = peek().span;
+
+    Node_id type;
+    if( check_keyword( Keyword::Auto ) )
+    {
+        advance();         // consume auto
+        type = Node_id {}; // placeholder for type to be inferred later
+    }
+    else
+    {
+        type = parse_type();
+    }
+
+    Symbol_id name;
+    if( check( Token_kind::Identifier ) )
+    {
+        name = advance().symbol;
+    }
+    else
+    {
+        error_expected( Token_kind::Identifier );
+    }
+
+    Node_id value;
+    if( match( Token_kind::Equal ) )
+    {
+        value = parse_expression( 0 );
+    }
+
+    expect( Token_kind::Semicolon );
+    return ast_.add( Node_kind::Var_decl, Span::merge( start, previous().span ), name.v, { type, value } );
+}
+
+Node_id Parser::parse_expression_stmt()
+{
+    const Span    start = peek().span;
+    const Node_id expr  = parse_expression( 0 );
+
+    if( is_assignment( peek().kind ) )
+    {
+        Token   op  = advance();
+        Node_id rhs = parse_expression( 0 );
+        expect( Token_kind::Semicolon );
+        return ast_.add(
+            Node_kind::Assign_stmt, Span::merge( start, previous().span ), static_cast<u32>( op.kind ), { expr, rhs }
+        );
+    }
+
+    if( check( Token_kind::Plus_plus ) || check( Token_kind::Minus_minus ) )
+    {
+        Token op = advance();
+        expect( Token_kind::Semicolon );
+        return ast_.add(
+            Node_kind::Increment_stmt, Span::merge( start, previous().span ), static_cast<u32>( op.kind ), { expr }
+        );
+    }
+
+    if( ast_.kind( expr ) != Node_kind::Call_expr && ast_.kind( expr ) != Node_kind::Error )
+    {
+        // `u32 *ptr;` is what a C++ programmer writes from habit. D17 makes it a multiplication, so
+        // without this it lands on the generic "no effect" message, which explains nothing.
+        const bool looks_like_a_pointer_declaration = ast_.kind( expr ) == Node_kind::Binary_expr &&
+                                                      static_cast<Token_kind>( ast_.aux( expr ) ) == Token_kind::Star &&
+                                                      ast_.kind( ast_.children( expr )[0] ) == Node_kind::Name_expr &&
+                                                      ast_.kind( ast_.children( expr )[1] ) == Node_kind::Name_expr;
+
+        if( looks_like_a_pointer_declaration )
+        {
+            const std::string_view type = sm_.text( ast_.span( ast_.children( expr )[0] ) );
+            const std::string_view name = sm_.text( ast_.span( ast_.children( expr )[1] ) );
+
+            error_at(
+                ast_.span( expr ),
+                "`*` must touch the type it modifies",
+                fmt::format( "write `{}* {}` to declare a pointer", type, name )
+            );
+        }
+        else
+        {
+            error_at( ast_.span( expr ), "this expression has no effect", "assign the result, or remove it" );
+        }
+    }
+
+    expect( Token_kind::Semicolon );
+    return ast_.add( Node_kind::Expr_stmt, Span::merge( start, previous().span ), 0, { expr } );
+}
+
 void Parser::mark_parenthesised( Node_id id )
 {
     if( parenthesised_.size() <= id.v )
@@ -638,7 +1018,7 @@ Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing )
 
         // function call is a special case: it is the only infix operator that does not produce a
         // Binary_expr node, so it does not need the parentheses check below.
-        if( peek().kind == Token_kind::L_paren )
+        if( check( Token_kind::L_paren ) )
         {
             Node_id args = parse_arg_list();
 
@@ -926,6 +1306,16 @@ std::string shape( const Parsed& p, Node_id id )
         return "call(" + shape( p, p.child( id, 0 ) ) + "," + shape( p, p.child( id, 1 ) ) + ")";
     }
 
+    if( p.kind( id ) == Node_kind::Pointer_type )
+    {
+        return shape( p, p.child( id, 0 ) ) + "*";
+    }
+
+    if( p.kind( id ) == Node_kind::Ref_type )
+    {
+        return shape( p, p.child( id, 0 ) ) + "&";
+    }
+
     if( p.kind( id ) == Node_kind::Arg_list )
     {
         std::string out = "[";
@@ -943,6 +1333,13 @@ std::string shape_of( std::string_view expression )
 {
     const Parsed p( std::string( "i32 main() { return " ) + std::string( expression ) + "; }" );
     return p.errors().empty() ? shape( p, parse_expression_of( p ) ) : "ERROR";
+}
+
+// The statement of a one-statement function body.
+Node_id first_statement( const Parsed& p )
+{
+    const Node_id block = find_first( p.ast(), p.root(), Node_kind::Block );
+    return block.is_valid() && !p.children( block ).empty() ? p.child( block, 0 ) : Node_id {};
 }
 
 } // namespace
@@ -1407,6 +1804,338 @@ TEST_CASE( "parser_leaves_unsurprising_precedence_alone", "[parse]" )
     REQUIRE( shape_of( "a & b & c" ) == "&(&(a,b),c)" );
     REQUIRE( shape_of( "a + b + c" ) == "+(+(a,b),c)" );
     REQUIRE( shape_of( "a < b == c" ) == "==(<(a,b),c)" );
+}
+
+TEST_CASE( "parser_variable_declarations", "[parse]" )
+{
+    SECTION( "with an initialiser" )
+    {
+        const Parsed p( "i32 main() { i32 y = 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id decl = first_statement( p );
+        REQUIRE( p.kind( decl ) == Node_kind::Var_decl );
+        REQUIRE( p.children( decl ).size() == 2 );
+        REQUIRE( p.kind( p.child( decl, 0 ) ) == Node_kind::Named_type );
+        REQUIRE( p.kind( p.child( decl, 1 ) ) == Node_kind::Int_literal );
+        REQUIRE( Symbol_id { p.aux( decl ) }.is_valid() );
+    }
+
+    // Fixed arity: always two children, the initialiser slot invalid when absent.
+    SECTION( "without an initialiser" )
+    {
+        const Parsed p( "i32 main() { i32 y; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id decl = first_statement( p );
+        REQUIRE( p.children( decl ).size() == 2 );
+        REQUIRE( p.child( decl, 0 ).is_valid() );
+        REQUIRE_FALSE( p.child( decl, 1 ).is_valid() );
+    }
+
+    // An inferred type is an invalid Node_id, not an Error node - `auto x = 1;` is not a mistake.
+    SECTION( "auto leaves the type slot empty rather than an Error" )
+    {
+        const Parsed p( "i32 main() { auto x = 1; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id decl = first_statement( p );
+        REQUIRE( p.kind( decl ) == Node_kind::Var_decl );
+        REQUIRE_FALSE( p.child( decl, 0 ).is_valid() );
+        REQUIRE( p.kind( p.child( decl, 1 ) ) == Node_kind::Int_literal );
+    }
+
+    // previous() is the `auto` keyword when expect() fails, so an unguarded read would silently
+    // give the variable that symbol as its name. Only `auto` reaches this path: `i32 = 5;` is a
+    // well-formed assignment to a variable called `i32`, since type names are ordinary identifiers.
+    SECTION( "a missing name reports rather than reusing the previous token" )
+    {
+        const Parsed p( "i32 main() { auto = 5; }" );
+
+        REQUIRE( p.has_errors() );
+        INFO( p.errors() );
+        REQUIRE( p.errors().find( "expected `identifier`" ) != std::string::npos );
+    }
+}
+
+TEST_CASE( "parser_assignment_and_increment", "[parse]" )
+{
+    SECTION( "plain assignment" )
+    {
+        const Parsed p( "i32 main() { y = 1; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id stmt = first_statement( p );
+        REQUIRE( p.kind( stmt ) == Node_kind::Assign_stmt );
+        REQUIRE( p.children( stmt ).size() == 2 );
+        REQUIRE( static_cast<Token_kind>( p.aux( stmt ) ) == Token_kind::Equal );
+    }
+
+    // One node kind covers all eleven forms, so aux is the only thing distinguishing them.
+    SECTION( "every compound form is recorded in aux" )
+    {
+        static const Token_kind operators[] = {
+            Token_kind::Equal,
+            Token_kind::Plus_equal,
+            Token_kind::Minus_equal,
+            Token_kind::Star_equal,
+            Token_kind::Slash_equal,
+            Token_kind::Percent_equal,
+            Token_kind::Amp_equal,
+            Token_kind::Pipe_equal,
+            Token_kind::Caret_equal,
+            Token_kind::Less_less_equal,
+            Token_kind::Greater_greater_equal,
+        };
+
+        for( const Token_kind op : operators )
+        {
+            const std::string source = std::string( "i32 main() { y " ) + std::string( token_kind_spelling( op ) ) + " 1; }";
+            const Parsed      p( source );
+
+            INFO( source << "\n" << p.errors() );
+            REQUIRE_FALSE( p.has_errors() );
+
+            const Node_id stmt = first_statement( p );
+            REQUIRE( p.kind( stmt ) == Node_kind::Assign_stmt );
+            REQUIRE( static_cast<Token_kind>( p.aux( stmt ) ) == op );
+        }
+    }
+
+    SECTION( "increment and decrement" )
+    {
+        for( const Token_kind op : { Token_kind::Plus_plus, Token_kind::Minus_minus } )
+        {
+            const Parsed p( std::string( "i32 main() { y " ) + std::string( token_kind_spelling( op ) ) + "; }" );
+
+            INFO( p.errors() );
+            REQUIRE_FALSE( p.has_errors() );
+
+            const Node_id stmt = first_statement( p );
+            REQUIRE( p.kind( stmt ) == Node_kind::Increment_stmt );
+            REQUIRE( p.children( stmt ).size() == 1 );
+            REQUIRE( static_cast<Token_kind>( p.aux( stmt ) ) == op );
+        }
+    }
+
+    // Assignment is a statement, not an operator (L11), which is what makes `if( x = 5 )`
+    // unparseable rather than needing a check.
+    SECTION( "assignment is not an expression" )
+    {
+        const Parsed p( "i32 main() { return y = 1; }" );
+        REQUIRE( p.has_errors() );
+    }
+}
+
+// PLAN §6.3 D15.
+TEST_CASE( "parser_expression_statements_must_have_an_effect", "[parse]" )
+{
+    SECTION( "a call is allowed" )
+    {
+        const Parsed p( "i32 main() { f(); }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.kind( first_statement( p ) ) == Node_kind::Expr_stmt );
+    }
+
+    SECTION( "a discarded value is not" )
+    {
+        for( const char* source : { "a + b;", "y;", "1;", "a < b;" } )
+        {
+            const Parsed p( std::string( "i32 main() { " ) + source + " }" );
+
+            INFO( "source: " << source << "\n" << p.errors() );
+            REQUIRE( p.has_errors() );
+            REQUIRE( p.errors().find( "has no effect" ) != std::string::npos );
+        }
+    }
+
+    SECTION( "an already-failed expression is not reported twice" )
+    {
+        const Parsed p( "i32 main() { f( 1; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+    }
+}
+
+// PLAN §6.3 D17: `*` and `&` bind to the type, so they must touch it.
+TEST_CASE( "parser_pointer_and_reference_types", "[parse]" )
+{
+    SECTION( "adjacent forms parse" )
+    {
+        const Parsed p( "i32 main() { u32* p; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id type = p.child( first_statement( p ), 0 );
+        REQUIRE( p.kind( type ) == Node_kind::Pointer_type );
+        REQUIRE( p.kind( p.child( type, 0 ) ) == Node_kind::Named_type );
+    }
+
+    SECTION( "they nest" )
+    {
+        const Parsed p( "i32 main() { u32** p; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id outer = p.child( first_statement( p ), 0 );
+        REQUIRE( p.kind( outer ) == Node_kind::Pointer_type );
+        REQUIRE( p.kind( p.child( outer, 0 ) ) == Node_kind::Pointer_type );
+    }
+
+    SECTION( "references too" )
+    {
+        const Parsed p( "i32 main() { u32& r; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.kind( p.child( first_statement( p ), 0 ) ) == Node_kind::Ref_type );
+    }
+
+    // The message a C++ programmer's habit produces has to name the fix, not just say "no effect".
+    SECTION( "the spaced form names the fix" )
+    {
+        for( const char* source : { "u32 *p;", "u32 * p;" } )
+        {
+            const Parsed p( std::string( "i32 main() { " ) + source + " }" );
+
+            INFO( "source: " << source << "\n" << p.errors() );
+            REQUIRE( p.has_errors() );
+            REQUIRE( p.errors().find( "must touch the type it modifies" ) != std::string::npos );
+            REQUIRE( p.errors().find( "write `u32* p`" ) != std::string::npos );
+        }
+    }
+
+    SECTION( "a spaced `*` in a parameter or return type is rejected too" )
+    {
+        const Parsed p( "i32 f( u32 *p ) { return 0; }" );
+
+        REQUIRE( p.has_errors() );
+        INFO( p.errors() );
+        REQUIRE( p.errors().find( "must touch the type it modifies" ) != std::string::npos );
+    }
+}
+
+// The scan decides from shape alone - it never asks whether the leading name is a type (L17).
+TEST_CASE( "parser_declaration_versus_expression", "[parse]" )
+{
+    struct Case
+    {
+        const char* source;
+        Node_kind   kind;
+    };
+
+    static const Case cases[] = {
+        { "i32 y = 0;", Node_kind::Var_decl },
+        { "Point p;", Node_kind::Var_decl },
+        { "Point* p;", Node_kind::Var_decl },
+        { "const i32 x = 0;", Node_kind::Var_decl },
+        { "Vector<i32> v;", Node_kind::Var_decl },
+        { "Vector<Vector<i32>> v;", Node_kind::Var_decl },
+        { "auto x = 1;", Node_kind::Var_decl },
+        { "y = 1;", Node_kind::Assign_stmt },
+        { "y++;", Node_kind::Increment_stmt },
+        { "f();", Node_kind::Expr_stmt },
+    };
+
+    for( const Case& c : cases )
+    {
+        const Parsed p( std::string( "i32 main() { " ) + c.source + " }" );
+
+        INFO( "source: " << c.source << "\n" << p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.kind( first_statement( p ) ) == c.kind );
+    }
+}
+
+// Nesting works only because match_generic_close splits the `>>` the lexer produces - see
+// lexer_generic_close_is_two_greaters, which pinned that behaviour before there was a consumer.
+TEST_CASE( "parser_generic_and_qualified_types", "[parse]" )
+{
+    SECTION( "a single argument" )
+    {
+        const Parsed p( "i32 main() { Vector<i32> v; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id type = p.child( first_statement( p ), 0 );
+        REQUIRE( p.kind( type ) == Node_kind::Generic_type );
+        REQUIRE( p.children( type ).size() == 2 );
+        REQUIRE( p.kind( p.child( type, 1 ) ) == Node_kind::Type_arg_list );
+        REQUIRE( p.children( p.child( type, 1 ) ).size() == 1 );
+    }
+
+    SECTION( "several arguments" )
+    {
+        const Parsed p( "i32 main() { Map<i32, Point> m; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id args = p.child( p.child( first_statement( p ), 0 ), 1 );
+        REQUIRE( p.children( args ).size() == 2 );
+    }
+
+    SECTION( "nested, closing with a single >> token" )
+    {
+        const Parsed p( "i32 main() { Vector<Vector<i32>> v; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id outer = p.child( first_statement( p ), 0 );
+        const Node_id inner = p.child( p.child( outer, 1 ), 0 );
+        REQUIRE( p.kind( inner ) == Node_kind::Generic_type );
+    }
+
+    SECTION( "const wraps the type it applies to" )
+    {
+        const Parsed p( "i32 main() { const i32* const q; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id type = p.child( first_statement( p ), 0 );
+        REQUIRE( p.kind( type ) == Node_kind::Const_type );                             // trailing const
+        REQUIRE( p.kind( p.child( type, 0 ) ) == Node_kind::Pointer_type );             // the `*`
+        REQUIRE( p.kind( p.child( p.child( type, 0 ), 0 ) ) == Node_kind::Const_type ); // leading
+
+        // The Named_type covers the identifier only, not the const in front of it.
+        const Node_id named = find_first( p.ast(), first_statement( p ), Node_kind::Named_type );
+        REQUIRE( p.text( named ) == "i32" );
+    }
+
+    SECTION( "an unclosed argument list reports" )
+    {
+        const Parsed p( "i32 main() { Vector<i32 v; }" );
+        REQUIRE( p.has_errors() );
+    }
+}
+
+// can_start_expression keeps the better message for tokens that cannot begin a statement.
+TEST_CASE( "parser_reports_tokens_that_cannot_start_a_statement", "[parse]" )
+{
+    for( const char* source : { "struct x;", ";", "," } )
+    {
+        const Parsed p( std::string( "i32 main() { " ) + source + " }" );
+
+        INFO( "source: " << source << "\n" << p.errors() );
+        REQUIRE( p.has_errors() );
+        REQUIRE( p.errors().find( "expected a statement" ) != std::string::npos );
+    }
 }
 
 TEST_CASE( "parser_nested_blocks", "[parse]" )
