@@ -1,0 +1,39 @@
+// Target program for milestone M1 (docs/PLAN.md §9). Does not compile yet.
+//
+// Keel's surface syntax is C++'s: a C or C++ developer should be able to read this without a
+// tutorial. The semantics underneath are not C++'s - see PLAN.md §6.3 for the full list of
+// divergences. The two that show up here are fixed-width primitives (D1: `i32`, never `int`) and
+// mandatory braces on every control-flow body (D3).
+
+i32 add( i32 a, i32 b )
+{
+    return a + b;
+}
+
+i32 fib( i32 n )
+{
+    if( n < 2 )
+    {
+        return n;
+    }
+
+    return add( fib( n - 1 ), fib( n - 2 ) );
+}
+
+i32 main()
+{
+    auto x = add( 1, 2 );
+    i32  y = 0;
+
+    while( y < x )
+    {
+        y = y + 1;
+    }
+
+    for( i32 i = 0; i < 3; i++ )
+    {
+        y = y + i;
+    }
+
+    return fib( y ) - 8;
+}

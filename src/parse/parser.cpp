@@ -12,6 +12,10 @@ namespace
 
 // Pratt binding power. Higher binds tighter; 0 means "not an infix operator", which ends the loop.
 // `++` and `--` are deliberately absent (PLAN §6.3 D12), so `a[i++]` fails with no special case.
+// Above every binary operator and below a call, so `-a * b` is `(-a) * b` while `-f( x )` is
+// `-(f(x))`. Not part of binding_power: unary operators are prefix, not infix.
+constexpr u8 k_unary_power = 105;
+
 u8 binding_power( Token_kind kind );
 
 class Parser
@@ -98,7 +102,11 @@ private:
     bool    match_generic_close();
     Node_id parse_return_stmt();
     Node_id parse_var_decl();
-    Node_id parse_expression_stmt();
+    Node_id parse_expression_stmt( bool consume_semicolon = true );
+
+    Node_id parse_if_stmt();
+    Node_id parse_while_stmt();
+    Node_id parse_for_stmt();
 
     // --- expressions ---
 
@@ -850,6 +858,21 @@ Node_id Parser::parse_statement()
         return parse_block();
     }
 
+    if( check_keyword( Keyword::If ) )
+    {
+        return parse_if_stmt();
+    }
+
+    if( check_keyword( Keyword::While ) )
+    {
+        return parse_while_stmt();
+    }
+
+    if( check_keyword( Keyword::For ) )
+    {
+        return parse_for_stmt();
+    }
+
     // The keyword test is free; looks_like_declaration() moves the cursor and puts it back.
     if( check_keyword( Keyword::Auto ) || looks_like_declaration() )
     {
@@ -934,31 +957,29 @@ Node_id Parser::parse_var_decl()
     return ast_.add( Node_kind::Var_decl, Span::merge( start, previous().span ), name.v, { type, value } );
 }
 
-Node_id Parser::parse_expression_stmt()
+Node_id Parser::parse_expression_stmt( bool consume_semicolon )
 {
     const Span    start = peek().span;
     const Node_id expr  = parse_expression( 0 );
 
+    Node_kind            kind     = Node_kind::Expr_stmt;
+    u32                  aux      = 0;
+    std::vector<Node_id> children = { expr };
+
     if( is_assignment( peek().kind ) )
     {
-        Token   op  = advance();
-        Node_id rhs = parse_expression( 0 );
-        expect( Token_kind::Semicolon );
-        return ast_.add(
-            Node_kind::Assign_stmt, Span::merge( start, previous().span ), static_cast<u32>( op.kind ), { expr, rhs }
-        );
+        Token op = advance();
+        children.push_back( parse_expression( 0 ) );
+        kind = Node_kind::Assign_stmt;
+        aux  = static_cast<u32>( op.kind );
     }
-
-    if( check( Token_kind::Plus_plus ) || check( Token_kind::Minus_minus ) )
+    else if( check( Token_kind::Plus_plus ) || check( Token_kind::Minus_minus ) )
     {
         Token op = advance();
-        expect( Token_kind::Semicolon );
-        return ast_.add(
-            Node_kind::Increment_stmt, Span::merge( start, previous().span ), static_cast<u32>( op.kind ), { expr }
-        );
+        kind     = Node_kind::Increment_stmt;
+        aux      = static_cast<u32>( op.kind );
     }
-
-    if( ast_.kind( expr ) != Node_kind::Call_expr && ast_.kind( expr ) != Node_kind::Error )
+    else if( ast_.kind( expr ) != Node_kind::Call_expr && ast_.kind( expr ) != Node_kind::Error )
     {
         // `u32 *ptr;` is what a C++ programmer writes from habit. D17 makes it a multiplication, so
         // without this it lands on the generic "no effect" message, which explains nothing.
@@ -984,8 +1005,93 @@ Node_id Parser::parse_expression_stmt()
         }
     }
 
+    if( consume_semicolon )
+    {
+        expect( Token_kind::Semicolon );
+    }
+
+    return ast_.add( kind, Span::merge( start, previous().span ), aux, children );
+}
+
+Node_id Parser::parse_if_stmt()
+{
+    assert( check_keyword( Keyword::If ) );
+
+    const Span start = peek().span;
+    advance();
+
+    expect( Token_kind::L_paren );
+    const Node_id condition = parse_expression( 0 );
+    expect( Token_kind::R_paren );
+
+    const Node_id then_branch = parse_block();
+
+    Node_id else_branch; // invalid when absent
+    if( match_keyword( Keyword::Else ) )
+    {
+        // The one exception to D3: `else if` chains rather than demanding braces.
+        else_branch = check_keyword( Keyword::If ) ? parse_if_stmt() : parse_block();
+    }
+
+    return ast_.add( Node_kind::If_stmt, Span::merge( start, previous().span ), 0, { condition, then_branch, else_branch } );
+}
+
+Node_id Parser::parse_while_stmt()
+{
+    assert( check_keyword( Keyword::While ) );
+
+    const Span start = peek().span;
+    advance();
+    expect( Token_kind::L_paren );
+    const Node_id condition = parse_expression( 0 );
+    expect( Token_kind::R_paren );
+    const Node_id body = parse_block();
+    return ast_.add( Node_kind::While_stmt, Span::merge( start, previous().span ), 0, { condition, body } );
+}
+
+Node_id Parser::parse_for_stmt()
+{
+    assert( check_keyword( Keyword::For ) );
+
+    const Span start = peek().span;
+    advance();
+    expect( Token_kind::L_paren );
+
+    // Init. Both parse_var_decl and parse_expression_stmt consume their own `;` which is exactly
+    // the first semicolon of the header - so neither needs changing
+    Node_id init;
+    if( !match( Token_kind::Semicolon ) )
+    {
+        if( check_keyword( Keyword::Auto ) || looks_like_declaration() )
+        {
+            init = parse_var_decl();
+        }
+        else
+        {
+            init = parse_expression_stmt();
+        }
+    }
+
+    // Condition. An expression, then the second `;`.
+    Node_id condition;
+    if( !check( Token_kind::Semicolon ) )
+    {
+        condition = parse_expression( 0 );
+    }
     expect( Token_kind::Semicolon );
-    return ast_.add( Node_kind::Expr_stmt, Span::merge( start, previous().span ), 0, { expr } );
+
+    // Update. Followed by `)` rather than `;`, which is the one place the statement rules cannot
+    // be reused unchanged - hence the flag. Assignment, increment and D15 all still apply.
+    Node_id update;
+    if( !check( Token_kind::R_paren ) )
+    {
+        update = parse_expression_stmt( false );
+    }
+
+    expect( Token_kind::R_paren );
+    const Node_id body = parse_block();
+
+    return ast_.add( Node_kind::For_stmt, Span::merge( start, previous().span ), 0, { init, condition, update, body } );
 }
 
 void Parser::mark_parenthesised( Node_id id )
@@ -1097,6 +1203,25 @@ Node_id Parser::parse_prefix()
     case Token_kind::Identifier:
         advance();
         return ast_.add( Node_kind::Name_expr, Span::merge( start, previous().span ), previous().symbol.v, {} );
+
+    case Token_kind::Minus:
+    case Token_kind::Bang:
+    case Token_kind::Tilde:
+    case Token_kind::Star:
+    case Token_kind::Amp:
+    {
+        // The operator is captured before the operand is parsed, and the span read after it.
+        const Token op = advance();
+
+        // Recursing at the same power makes unary right-associative, so `- -x` nests. No enclosing
+        // operator is passed: unary is not in D16's classification, and claiming it were would make
+        // `-a << b` a spurious "cannot be mixed" error.
+        const Node_id operand = parse_expression( k_unary_power );
+
+        return ast_.add(
+            Node_kind::Unary_expr, Span::merge( start, previous().span ), static_cast<u32>( op.kind ), { operand }
+        );
+    }
 
     // Grouping: the inner node is returned unchanged, so the parentheses leave no trace in the
     // tree. Only D16 needs to know they were there, which is what mark_parenthesised records.
@@ -1301,6 +1426,12 @@ std::string shape( const Parsed& p, Node_id id )
     }
 
     // "call(f,[1,2])" - the brackets keep the argument list visible as its own node.
+    if( p.kind( id ) == Node_kind::Unary_expr )
+    {
+        return std::string( token_kind_spelling( static_cast<Token_kind>( p.aux( id ) ) ) ) + "(" +
+               shape( p, p.child( id, 0 ) ) + ")";
+    }
+
     if( p.kind( id ) == Node_kind::Call_expr )
     {
         return "call(" + shape( p, p.child( id, 0 ) ) + "," + shape( p, p.child( id, 1 ) ) + ")";
@@ -2135,6 +2266,232 @@ TEST_CASE( "parser_reports_tokens_that_cannot_start_a_statement", "[parse]" )
         INFO( "source: " << source << "\n" << p.errors() );
         REQUIRE( p.has_errors() );
         REQUIRE( p.errors().find( "expected a statement" ) != std::string::npos );
+    }
+}
+
+TEST_CASE( "parser_unary_operators", "[parse]" )
+{
+    SECTION( "each operator is recorded in aux" )
+    {
+        static const Token_kind operators[] = {
+            Token_kind::Minus,
+            Token_kind::Bang,
+            Token_kind::Tilde,
+            Token_kind::Star,
+            Token_kind::Amp,
+        };
+
+        for( const Token_kind op : operators )
+        {
+            const Parsed p( std::string( "i32 main() { return " ) + std::string( token_kind_spelling( op ) ) + "x; }" );
+
+            INFO( token_kind_spelling( op ) << "\n" << p.errors() );
+            REQUIRE_FALSE( p.has_errors() );
+
+            const Node_id expression = parse_expression_of( p );
+            REQUIRE( p.kind( expression ) == Node_kind::Unary_expr );
+            REQUIRE( p.children( expression ).size() == 1 );
+            REQUIRE( static_cast<Token_kind>( p.aux( expression ) ) == op );
+        }
+    }
+
+    // The span used to cover only the operator, because previous() was read in the same argument
+    // list that parsed the operand - and C++ leaves that evaluation order unspecified.
+    SECTION( "the span covers the operand" )
+    {
+        const Parsed p( "i32 main() { return -abc; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id expression = parse_expression_of( p );
+        REQUIRE( p.text( expression ) == "-abc" );
+
+        // A parent must contain its child; the old span did not.
+        REQUIRE( p.ast().span( expression ).contains( p.ast().span( p.child( expression, 0 ) ) ) );
+    }
+
+    // Unary binds tighter than every binary operator but looser than a call.
+    SECTION( "precedence" )
+    {
+        REQUIRE( shape_of( "-a * b" ) == "*(-(a),b)" );
+        REQUIRE( shape_of( "a * -b" ) == "*(a,-(b))" );
+        REQUIRE( shape_of( "-a + b" ) == "+(-(a),b)" );
+        REQUIRE( shape_of( "-f( 1 )" ) == "-(call(f,[1]))" );
+        REQUIRE( shape_of( "!a == b" ) == "==(!(a),b)" );
+    }
+
+    SECTION( "right associative" )
+    {
+        REQUIRE( shape_of( "- -x" ) == "-(-(x))" );
+        REQUIRE( shape_of( "!!x" ) == "!(!(x))" );
+        REQUIRE( shape_of( "-!~x" ) == "-(!(~(x)))" );
+    }
+
+    // Passing the unary operator as `enclosing` would make this a spurious D16 error, since `-`
+    // classifies as Additive and `<<` as Shift.
+    SECTION( "does not trip the D16 mixing check" )
+    {
+        const Parsed p( "i32 main() { return -a << b; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+    }
+
+    SECTION( "dereference works as an assignment target" )
+    {
+        const Parsed p( "i32 main() { *p = 1; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.kind( first_statement( p ) ) == Node_kind::Assign_stmt );
+    }
+}
+
+// --- written before the implementation: these pin the intended shapes ---
+
+TEST_CASE( "parser_if_statement", "[parse]" )
+{
+    SECTION( "without an else, the third child is invalid" )
+    {
+        const Parsed p( "i32 main() { if( x ) { return 1; } }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id stmt = first_statement( p );
+        REQUIRE( p.kind( stmt ) == Node_kind::If_stmt );
+        REQUIRE( p.children( stmt ).size() == 3 );
+        REQUIRE( p.kind( p.child( stmt, 1 ) ) == Node_kind::Block );
+        REQUIRE_FALSE( p.child( stmt, 2 ).is_valid() );
+    }
+
+    SECTION( "with an else" )
+    {
+        const Parsed p( "i32 main() { if( x ) { return 1; } else { return 2; } }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id stmt = first_statement( p );
+        REQUIRE( p.kind( p.child( stmt, 2 ) ) == Node_kind::Block );
+    }
+
+    // The one exception to D3's mandatory braces: `else if` chains rather than nesting a block.
+    SECTION( "else if chains" )
+    {
+        const Parsed p( "i32 main() { if( a ) { return 1; } else if( b ) { return 2; } else { return 3; } }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id outer = first_statement( p );
+        const Node_id inner = p.child( outer, 2 );
+        REQUIRE( p.kind( inner ) == Node_kind::If_stmt );
+        REQUIRE( p.kind( p.child( inner, 2 ) ) == Node_kind::Block );
+    }
+
+    // PLAN §6.3 D3.
+    SECTION( "a braceless body is rejected" )
+    {
+        for( const char* source : { "if( x ) return 1;", "if( x ) { } else return 2;" } )
+        {
+            const Parsed p( std::string( "i32 main() { " ) + source + " }" );
+
+            INFO( "source: " << source << "\n" << p.errors() );
+            REQUIRE( p.has_errors() );
+        }
+    }
+
+    SECTION( "a missing condition reports" )
+    {
+        for( const char* source : { "if x { }", "if( ) { }", "if( x { }" } )
+        {
+            const Parsed p( std::string( "i32 main() { " ) + source + " }" );
+            INFO( "source: " << source << "\n" << p.errors() );
+            REQUIRE( p.has_errors() );
+        }
+    }
+}
+
+TEST_CASE( "parser_while_statement", "[parse]" )
+{
+    SECTION( "condition and body" )
+    {
+        const Parsed p( "i32 main() { while( y < x ) { y++; } }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id stmt = first_statement( p );
+        REQUIRE( p.kind( stmt ) == Node_kind::While_stmt );
+        REQUIRE( p.children( stmt ).size() == 2 );
+        REQUIRE( p.kind( p.child( stmt, 0 ) ) == Node_kind::Binary_expr );
+        REQUIRE( p.kind( p.child( stmt, 1 ) ) == Node_kind::Block );
+    }
+
+    SECTION( "a braceless body is rejected" )
+    {
+        const Parsed p( "i32 main() { while( x ) y++; }" );
+        REQUIRE( p.has_errors() );
+    }
+}
+
+TEST_CASE( "parser_for_statement", "[parse]" )
+{
+    SECTION( "all four clauses" )
+    {
+        const Parsed p( "i32 main() { for( i32 i = 0; i < 3; i++ ) { y = y + i; } }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id stmt = first_statement( p );
+        REQUIRE( p.kind( stmt ) == Node_kind::For_stmt );
+        REQUIRE( p.children( stmt ).size() == 4 );
+        REQUIRE( p.kind( p.child( stmt, 0 ) ) == Node_kind::Var_decl );
+        REQUIRE( p.kind( p.child( stmt, 1 ) ) == Node_kind::Binary_expr );
+        REQUIRE( p.kind( p.child( stmt, 2 ) ) == Node_kind::Increment_stmt );
+        REQUIRE( p.kind( p.child( stmt, 3 ) ) == Node_kind::Block );
+    }
+
+    // Empty clauses keep their slots, so the arity stays fixed.
+    SECTION( "empty clauses" )
+    {
+        const Parsed p( "i32 main() { for( ; ; ) { } }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id stmt = first_statement( p );
+        REQUIRE( p.children( stmt ).size() == 4 );
+        REQUIRE_FALSE( p.child( stmt, 0 ).is_valid() );
+        REQUIRE_FALSE( p.child( stmt, 1 ).is_valid() );
+        REQUIRE_FALSE( p.child( stmt, 2 ).is_valid() );
+        REQUIRE( p.child( stmt, 3 ).is_valid() );
+    }
+
+    SECTION( "an assignment as the init clause" )
+    {
+        const Parsed p( "i32 main() { for( i = 0; i < 3; i++ ) { } }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.kind( p.child( first_statement( p ), 0 ) ) == Node_kind::Assign_stmt );
+    }
+
+    // The update clause is followed by `)`, not `;` - the one place the statement rules cannot be
+    // reused unchanged.
+    SECTION( "the update clause takes no semicolon" )
+    {
+        const Parsed p( "i32 main() { for( ; ; i++; ) { } }" );
+        REQUIRE( p.has_errors() );
+    }
+
+    SECTION( "a braceless body is rejected" )
+    {
+        const Parsed p( "i32 main() { for( ; ; ) y++; }" );
+        REQUIRE( p.has_errors() );
     }
 }
 

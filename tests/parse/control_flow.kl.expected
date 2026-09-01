@@ -1,0 +1,62 @@
+Source_file                             1:1-38:1
+  Function_decl                         1:1-15:2    name=branches
+    Named_type                          1:1-1:4     "i32"
+    Param_list                          1:13-1:22
+      Param_decl                        1:15-1:20   name=x
+        Named_type                      1:15-1:18   "i32"
+    Block                               2:1-15:2
+      If_stmt                           3:5-14:6
+        Binary_expr                     3:9-3:14    op=<
+          Name_expr                     3:9-3:10    "x"
+          Int_literal                   3:13-3:14   "0"
+        Block                           4:5-6:6
+          Return_stmt                   5:9-5:18
+            Int_literal                 5:16-5:17   "0"
+        If_stmt                         7:10-14:6
+          Binary_expr                   7:14-7:20   op===
+            Name_expr                   7:14-7:15   "x"
+            Int_literal                 7:19-7:20   "0"
+          Block                         8:5-10:6
+            Return_stmt                 9:9-9:18
+              Int_literal               9:16-9:17   "1"
+          Block                         12:5-14:6
+            Return_stmt                 13:9-13:18
+              Int_literal               13:16-13:17 "2"
+  Function_decl                         17:1-37:2   name=loops
+    Named_type                          17:1-17:4   "i32"
+    Param_list                          17:10-17:12 "()"
+    Block                               18:1-37:2
+      Var_decl                          19:5-19:15  name=y
+        Named_type                      19:5-19:8   "i32"
+        Int_literal                     19:13-19:14 "0"
+      While_stmt                        21:5-24:6
+        Binary_expr                     21:12-21:18 op=<
+          Name_expr                     21:12-21:13 "y"
+          Int_literal                   21:16-21:18 "10"
+        Block                           22:5-24:6
+          Increment_stmt                23:9-23:13  op=++
+            Name_expr                   23:9-23:10  "y"
+      For_stmt                          26:5-29:6
+        Var_decl                        26:10-26:20 name=i
+          Named_type                    26:10-26:13 "i32"
+          Int_literal                   26:18-26:19 "0"
+        Binary_expr                     26:21-26:26 op=<
+          Name_expr                     26:21-26:22 "i"
+          Int_literal                   26:25-26:26 "3"
+        Increment_stmt                  26:28-26:31 op=++
+          Name_expr                     26:28-26:29 "i"
+        Block                           27:5-29:6
+          Assign_stmt                   28:9-28:19  op==
+            Name_expr                   28:9-28:10  "y"
+            Binary_expr                 28:13-28:18 op=+
+              Name_expr                 28:13-28:14 "y"
+              Name_expr                 28:17-28:18 "i"
+      For_stmt                          31:5-34:6
+        <none>                          -
+        <none>                          -
+        <none>                          -
+        Block                           32:5-34:6
+          Increment_stmt                33:9-33:13  op=--
+            Name_expr                   33:9-33:10  "y"
+      Return_stmt                       36:5-36:14
+        Name_expr                       36:12-36:13 "y"

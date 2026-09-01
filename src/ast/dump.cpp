@@ -35,6 +35,7 @@ std::string aux_note( const Ast& ast, const Interner& interner, Node_id id )
     // One node kind covers every operator in each of these, so aux is the only thing that
     // distinguishes `y = 1` from `y += 1`.
     case Node_kind::Binary_expr:
+    case Node_kind::Unary_expr:
     case Node_kind::Assign_stmt:
     case Node_kind::Increment_stmt:
         return fmt::format( "op={}", token_kind_spelling( static_cast<Token_kind>( ast.aux( id ) ) ) );

@@ -47,6 +47,8 @@ std::string_view node_kind_name( Node_kind kind )
         return "Name_expr";
     case Node_kind::Binary_expr:
         return "Binary_expr";
+    case Node_kind::Unary_expr:
+        return "Unary_expr";
     case Node_kind::Call_expr:
         return "Call_expr";
     case Node_kind::Arg_list:
@@ -59,6 +61,12 @@ std::string_view node_kind_name( Node_kind kind )
         return "Increment_stmt";
     case Node_kind::Expr_stmt:
         return "Expr_stmt";
+    case Node_kind::If_stmt:
+        return "If_stmt";
+    case Node_kind::While_stmt:
+        return "While_stmt";
+    case Node_kind::For_stmt:
+        return "For_stmt";
 
     case Node_kind::Count:
         break;

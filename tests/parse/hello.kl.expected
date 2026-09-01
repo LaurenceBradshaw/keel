@@ -1,0 +1,89 @@
+Source_file                             8:1-40:1
+  Function_decl                         8:1-11:2    name=add
+    Named_type                          8:1-8:4     "i32"
+    Param_list                          8:8-8:24
+      Param_decl                        8:10-8:15   name=a
+        Named_type                      8:10-8:13   "i32"
+      Param_decl                        8:17-8:22   name=b
+        Named_type                      8:17-8:20   "i32"
+    Block                               9:1-11:2
+      Return_stmt                       10:5-10:18
+        Binary_expr                     10:12-10:17 op=+
+          Name_expr                     10:12-10:13 "a"
+          Name_expr                     10:16-10:17 "b"
+  Function_decl                         13:1-21:2   name=fib
+    Named_type                          13:1-13:4   "i32"
+    Param_list                          13:8-13:17
+      Param_decl                        13:10-13:15 name=n
+        Named_type                      13:10-13:13 "i32"
+    Block                               14:1-21:2
+      If_stmt                           15:5-18:6
+        Binary_expr                     15:9-15:14  op=<
+          Name_expr                     15:9-15:10  "n"
+          Int_literal                   15:13-15:14 "2"
+        Block                           16:5-18:6
+          Return_stmt                   17:9-17:18
+            Name_expr                   17:16-17:17 "n"
+        <none>                          -
+      Return_stmt                       20:5-20:46
+        Call_expr                       20:12-20:45
+          Name_expr                     20:12-20:15 "add"
+          Arg_list                      20:15-20:45
+            Call_expr                   20:17-20:29
+              Name_expr                 20:17-20:20 "fib"
+              Arg_list                  20:20-20:29
+                Binary_expr             20:22-20:27 op=-
+                  Name_expr             20:22-20:23 "n"
+                  Int_literal           20:26-20:27 "1"
+            Call_expr                   20:31-20:43
+              Name_expr                 20:31-20:34 "fib"
+              Arg_list                  20:34-20:43
+                Binary_expr             20:36-20:41 op=-
+                  Name_expr             20:36-20:37 "n"
+                  Int_literal           20:40-20:41 "2"
+  Function_decl                         23:1-39:2   name=main
+    Named_type                          23:1-23:4   "i32"
+    Param_list                          23:9-23:11  "()"
+    Block                               24:1-39:2
+      Var_decl                          25:5-25:26  name=x
+        <none>                          -
+        Call_expr                       25:14-25:25
+          Name_expr                     25:14-25:17 "add"
+          Arg_list                      25:17-25:25
+            Int_literal                 25:19-25:20 "1"
+            Int_literal                 25:22-25:23 "2"
+      Var_decl                          26:5-26:16  name=y
+        Named_type                      26:5-26:8   "i32"
+        Int_literal                     26:14-26:15 "0"
+      While_stmt                        28:5-31:6
+        Binary_expr                     28:12-28:17 op=<
+          Name_expr                     28:12-28:13 "y"
+          Name_expr                     28:16-28:17 "x"
+        Block                           29:5-31:6
+          Assign_stmt                   30:9-30:19  op==
+            Name_expr                   30:9-30:10  "y"
+            Binary_expr                 30:13-30:18 op=+
+              Name_expr                 30:13-30:14 "y"
+              Int_literal               30:17-30:18 "1"
+      For_stmt                          33:5-36:6
+        Var_decl                        33:10-33:20 name=i
+          Named_type                    33:10-33:13 "i32"
+          Int_literal                   33:18-33:19 "0"
+        Binary_expr                     33:21-33:26 op=<
+          Name_expr                     33:21-33:22 "i"
+          Int_literal                   33:25-33:26 "3"
+        Increment_stmt                  33:28-33:31 op=++
+          Name_expr                     33:28-33:29 "i"
+        Block                           34:5-36:6
+          Assign_stmt                   35:9-35:19  op==
+            Name_expr                   35:9-35:10  "y"
+            Binary_expr                 35:13-35:18 op=+
+              Name_expr                 35:13-35:14 "y"
+              Name_expr                 35:17-35:18 "i"
+      Return_stmt                       38:5-38:25
+        Binary_expr                     38:12-38:24 op=-
+          Call_expr                     38:12-38:20
+            Name_expr                   38:12-38:15 "fib"
+            Arg_list                    38:15-38:20
+              Name_expr                 38:17-38:18 "y"
+          Int_literal                   38:23-38:24 "8"

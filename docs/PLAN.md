@@ -604,6 +604,7 @@ none of them can block work indefinitely.
 | Does `class` exist at all, or is `struct` the only aggregate? (v0 says struct only) | M7 |
 | Custom allocators / arenas — visible in the type system or not? | M7 |
 | Module granularity: file, directory, or explicit declaration? | M7 |
+| Standard library naming. `MANIFESTO.md` §12 already refuses to mirror `std`, but the specific names are unsettled: one `Hash_map` rather than `map`/`unordered_map`, and a better name than `vector` for a dynamic array. Note the one real trap — `List` reads as a *linked* list to a C++ programmer (it is `List<T>` in C#/Java but `std::list` in C++), so a familiar name would carry the wrong semantics. Not a §6.3 divergence: those cover syntax and semantics the compiler enforces, and no library exists yet. | M7, when the first containers are written in Keel |
 | Compile-time evaluation: how much, and is there reflection? | Post-M7 |
 | ABI stability: is there one at all? | Post-M7 |
 
