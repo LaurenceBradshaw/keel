@@ -1,6 +1,6 @@
 # Keel — Implementation Plan
 
-**Status:** pre-M0. Nothing implemented yet.
+**Status:** M0 complete. `keelc` parses the §6.1 sample to a tree with no errors.
 **Companion document:** `MANIFESTO.md` (the vision doc). This file is the engineering plan.
 
 ---
@@ -645,28 +645,41 @@ API exist in Keel, and it will be a full rewrite rather than a port.
 
 ## 15. Where the work is
 
-### Done
+### M0 — done
 
-`common/`: `Span`, `Source_manager`, `Diagnostics`, `Interner`.
-`lex/`: `Token`, the lexer, `--dump-tokens`.
-`tests/`: the golden runner and the `lex/` corpus.
-`keelc` reads a file, lexes it, and reports through `Diagnostics`.
+| | |
+| --- | --- |
+| `common/` | `Span`, `Source_manager`, `Diagnostics`, `Interner`, `Arena` |
+| `lex/` | `Token`, the lexer, `token_kind_name`/`token_kind_spelling` |
+| `ast/` | `Node`, `Ast`, the dumper |
+| `parse/` | declarations, statements, and expressions with C++ precedence |
+| `tests/` | in-source unit tests plus golden corpora for `lex/` and `parse/` |
+| `keelc` | `--dump-tokens`, `--dump-ast`, spanned diagnostics, error recovery |
 
-### Next — the back half of M0
+`examples/hello.kl` — the §6.1 sample — parses with zero errors, which was M0's
+acceptance criterion. It is pinned as a golden fixture.
 
-1. **`common/Arena`** — bump allocator for variable-length payloads. Nodes
-   themselves live in a `vector` and are referenced by `u32` index (§4); the
-   arena holds the lists a node points at.
-2. **AST node layout** — settle how variable-length child lists are stored
-   (parameters, statements, call arguments) *before* writing the parser. This is
-   the one M0 decision that is expensive to revisit, because every visitor
-   depends on it.
-3. **Parser** — recursive descent for declarations and statements, Pratt for
-   expressions. Two settled rules land here: D15 makes expression statements
-   effectful (which is what resolves L17), and D12 keeps `++`/`--` out of the
-   expression grammar entirely.
-4. **`--dump-ast`** and a `tests/parse/` corpus. The golden runner discovers new
-   directories on its own, so no script changes.
+Rules that landed as code rather than prose: D3 (mandatory braces, enforced for
+free by the body being a block), D12, D13, D15, D16, D17, and L17 — the
+declaration/expression ambiguity is resolved by a speculative *scan* with no
+symbol table, exactly as §5.1 intended.
+
+### Next — M1
+
+Type checking and C emission. The pipeline gains its first pass that asks what a
+program *means* rather than how it is shaped, and `keelc` starts producing
+output rather than dumps.
+
+1. **Resolver** — names to declarations, scope tree. §3 puts this after parsing
+   and L17 keeps it there: nothing about parsing needs a symbol table.
+2. **Type checker** — bidirectional (L5), so a literal's type comes from context
+   and `u32 x = 42;` needs no suffix. This is where D1's suggestion table lives.
+3. **KIR** — the CFG the ownership work needs from M3 onward (§3). Not needed to
+   emit straight-line C, but building it now avoids retrofitting it later.
+4. **C emitter** — §7's rules, three-address form first.
+
+The remaining v0 syntax (`struct`, `enum`, `match`, generics, `?`) is M2 onward;
+none of it is needed for `fib(20)`.
 
 ### Debts to pay along the way
 
@@ -677,12 +690,19 @@ API exist in Keel, and it will be a full rewrite rather than a port.
   table in `interner.cpp`, not through `lex/token.cpp`. `error_expected` avoids
   this today only because it quotes the source text for the *found* half.
 - D1's suggestion table (`int` → `i32`, `double` → `f64`, ...) belongs on sema's
-  unknown-type path. Nothing produces that message today.
+  unknown-type path. Nothing produces that message today, and it is what makes
+  D1's promise real rather than aspirational.
 - `Interner` should hold its strings in an `Arena` rather than in the map's keys.
   That deletes `Sv_hash` and `std::equal_to<>` — the lookup type becomes the key
   type again — and drops one heap allocation per symbol. Deferred: it is not a
-  bottleneck and the API does not change, so do it when a profile asks or when
-  the parser has you in there anyway.
-- §3's pipeline diagram still shows a `Resolver` pass; L17's resolution means it
-  genuinely stays separate, so the diagram is right — but confirm when the
-  parser lands.
+  bottleneck and the API does not change.
+- The `Arena` still has no caller. It earns its place at M6 (monomorphised
+  instances) or in KIR payloads, whichever arrives first.
+- `parse_block` reports twice when the opening brace is missing: it proceeds into
+  its loop and then consumes the enclosing `}`. Bailing out immediately would
+  give one error instead of two.
+- Chained assignment (`a = b = c;`) is not expressible, since assignment is a
+  statement. It currently fails with *expected `;`, found `=`*, which is correct
+  but unhelpful; it deserves either a targeted message or a D-entry.
+- Prefix `++` is unreachable — `can_start_expression` rejects it, so `++i;` says
+  *expected a statement*. D12 left the postfix/prefix choice open; decide it.
