@@ -258,6 +258,26 @@ void Checker::declare_signatures()
             const Type_id param_type      = type_of_annotation( param_type_node );
             record( param, param_type );
         }
+
+        if( interner_.text( Symbol_id { ast_.aux( child ) } ) == "main" )
+        {
+            // return type
+            if( !table_.is_error( return_type ) && return_type != table_.integer( 32, true ) )
+            {
+                error_at(
+                    ast_.span( return_type_node ),
+                    fmt::format( "`main` must return `i32`, but got `{}`", table_.name( return_type ) )
+                );
+            }
+
+            // parameters
+            // Keel currently doesn't support command line args, or arrays,
+            // so `main` must be parameterless.
+            if( !ast_.children( param_list ).empty() )
+            {
+                error_at( ast_.span( param_list ), "`main` must not take any parameters" );
+            }
+        }
     }
 }
 
@@ -1444,7 +1464,7 @@ TEST_CASE( "type_checker_checks_call_arguments", "[sema][types]" )
 
     SECTION( "a call is typed as the return type, and literals adopt the parameter type" )
     {
-        const Typed p( "u64 g( u64 x ) { return x; }\nu64 main() { return g( 7 ); }" );
+        const Typed p( "u64 g( u64 x ) { return x; }\ni32 main() { u64 v = g( 7 ); return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
@@ -1909,6 +1929,82 @@ TEST_CASE( "type_checker_pushes_the_expected_type_through_to_literals", "[sema][
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
+    }
+}
+
+// C's main returns int and the emitted shim calls it with no arguments, so anything else either
+// truncates silently or generates C that will not compile - a cc error pointing at generated code
+// rather than a diagnostic pointing at the program.
+TEST_CASE( "type_checker_constrains_the_signature_of_main", "[sema][types]" )
+{
+    SECTION( "i32 and no parameters is the one accepted form" )
+    {
+        const Typed p( "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "another integer type is rejected" )
+    {
+        const Typed p( "u64 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`main` must return `i32`" ) != std::string::npos );
+    }
+
+    SECTION( "so is void" )
+    {
+        const Typed p( "void main() { }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "parameters are rejected too - the shim passes none" )
+    {
+        const Typed p( "i32 main( i32 n ) { return n; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "parameters" ) != std::string::npos );
+    }
+
+    SECTION( "both wrong reports both" )
+    {
+        const Typed p( "u8 main( i32 n ) { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 2 );
+    }
+
+    // The unknown type is reported by type_of_annotation; saying `main` must return i32 on top of
+    // that would be two messages for one mistake.
+    SECTION( "an unresolved return type reports once, as the unknown type" )
+    {
+        const Typed p( "Widget main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "unknown type" ) != std::string::npos );
+    }
+
+    SECTION( "the rule is about main alone" )
+    {
+        const Typed p( "u64 helper( i32 a, i32 b ) { return 0; }\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // A program without one is a library. The emitter writes no shim, and nothing here objects.
+    SECTION( "no main at all is not an error" )
+    {
+        const Typed p( "u64 helper() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
     }
 }
 
