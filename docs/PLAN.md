@@ -340,7 +340,10 @@ Result<Config, Config_error> load_config( const Path& path )
 ### 6.3 Divergences from C++ — the complete list
 
 This list is the audit surface for the §5.1 containment rule. Every entry is
-either new notation or a hard error; none silently redefines valid C++.
+either new notation or a hard error; none silently redefines valid C++ — with one
+exception, marked `†` in §6.4, where sub-32-bit arithmetic keeps a narrower result
+type than C++'s integral promotion gives. Values agree there until the result
+overflows; what happens then is the open overflow question in §12.
 
 | # | Divergence | Why it is safe under the §5.1 rule |
 | --- | --- | --- |
@@ -348,7 +351,7 @@ either new notation or a hard error; none silently redefines valid C++.
 | D2 | **Passing by value moves; it does not copy.** Copying is explicit (`b.clone()`). | New notation is impossible here, so the compiler enforces it instead: using a moved-from value is a hard error (§8) pointing at the move. This is the most dangerous divergence and the one M4 exists to police. |
 | D3 | Braces mandatory on every `if`/`while`/`for` body. | Braceless C++ is a parse error, not a reinterpretation. Kills the `goto fail;` class of bug. |
 | D4 | `switch` has no fallthrough, needs no `break`, requires exhaustiveness, and matches sum-type payloads. | Payload patterns (`case Circle( r ):`) are new notation. A `switch` over a plain integer keeps C++ meaning minus fallthrough; missing cases are an error, never a silent skip. |
-| D5 | No implicit conversions at all — not narrowing, not int↔float, not int↔bool, not pointer↔bool. | Always a hard error with the required cast in the message. |
+| D5 | No *lossy* implicit conversions. A binary operator widens both operands to the smallest type that losslessly holds both, and is a hard error whenever C++'s own result type would not hold them. Assignment is implicit only where the target holds the source type. int↔bool and pointer↔bool are never implicit. §6.4 has the table. | The second clause makes the §5.1 audit executable: where C++ is lossless Keel agrees with it, and where C++ silently loses information Keel refuses. Lossless widening is not a conversion anyone can get wrong, and requiring a cast for it trains authors to write casts reflexively — which is how the dangerous ones get waved through. **Provisional**: adopted for M1 to unblock the type checker, and expected to be re-judged once real code exists. |
 | D6 | `?` postfix operator for error propagation. | No meaning in C++; pure addition. The one borrow from outside the C family, kept because no C++ notation exists for it. |
 | D7 | `enum class` variants carry payloads. | Payload-free `enum class` behaves exactly as C++. Payloads are new notation. |
 | D8 | No headers, no preprocessor. `import graphics;` — C++20's spelling. | `#include` is a hard error directing to `import`. |
@@ -362,9 +365,60 @@ either new notation or a hard error; none silently redefines valid C++.
 | D16 | Operators whose relative precedence is a known C wart cannot be mixed without parentheses: bitwise (`&` `\|` `^`) with comparison, shift (`<<` `>>`) with arithmetic, and `&&` with `\|\|`. `a & b == c` is a compile error naming both readings. | C reads it as `a & (b == c)` — a mistake Ritchie acknowledged and every compiler warns about. Changing the precedence would silently alter valid C++, which §5.1 forbids; rejecting it fixes the wart *and* satisfies the containment rule, since no accepted program changes meaning. Zig takes the same approach. |
 | D17 | `*` and `&` bind to the **type**, not the name, and must touch it: `u32* p;` declares a pointer, `u32 *p;` is an error. | C's declarator syntax binds them to the name, so `int *p, q;` makes `q` an `int` — a wart every C style guide works around. Adjacency is checked from the token spans, so no lexer change is needed. The rejected form gets a message naming the fix rather than the generic D15 one, since it is exactly what a C++ programmer writes from habit. Independent of D15: `a * b;` remains a useless statement either way. |
 | D18 | Top-level declarations are visible throughout the file, so mutual recursion needs no forward declaration: `even` may call `odd` above it. Inside a function this does **not** apply — statements are sequential, so using a local before its declaration is still an error. | C++ requires a forward declaration at namespace scope; Rust, Java and C# do not. This accepts what C++ rejects and never reinterprets an accepted program, so it is safe under §5.1. The asymmetry between file and block scope is deliberate: declaration order carries no meaning between functions, and every meaning within one. |
-| D19 | A declaration may not shadow another that is still reachable by the same unqualified name. A block local colliding with an enclosing local or with a parameter is an error. Scopes that do **not** carry outer names in — a function body relative to file scope, and later a lambda relative to its enclosing function — are *barriers*, and reusing a name across one is fine: a local may be called `count` alongside a top-level `count()`. | The wart is the *silent* failure: two locals of the same type mean picking the wrong one compiles, runs and returns a bad value. Shadowing a function with a variable is caught immediately by the type checker, so it needs no rule. Java (§6.4) and C# (CS0136) reject exactly this and keep members shadowable for the same reason; C++ allows it and papers over it with `-Wshadow`. File scope is exempt so that adding a top-level function cannot break a function body far above it — action at a distance. Rust's shadowing is same-scope rebinding (`let x = validate(x);`), which we already reject as a duplicate declaration and which this does not revisit. |
+| D19 | A declaration may not shadow another that is still reachable by the same unqualified name. A block local colliding with an enclosing local or with a parameter is an error. Scopes that do **not** carry outer names in — a function body relative to file scope, and later a lambda relative to its enclosing function — are *barriers*, and reusing a name across one is fine: a local may be called `count` alongside a top-level `count()`. | The wart is the *silent* failure: two locals of the same type mean picking the wrong one compiles, runs and returns a bad value. Shadowing a function with a variable is caught immediately by the type checker, so it needs no rule. Java (JLS §6.4) and C# (CS0136) reject exactly this and keep members shadowable for the same reason; C++ allows it and papers over it with `-Wshadow`. File scope is exempt so that adding a top-level function cannot break a function body far above it — action at a distance. Rust's shadowing is same-scope rebinding (`let x = validate(x);`), which we already reject as a duplicate declaration and which this does not revisit. |
 
-### 6.4 Not in v0
+### 6.4 Numeric conversions (D5)
+
+Result type of a binary operator. `--` is a compile error; `†` marks a cell where
+C++ promotes to `i32` and Keel keeps the narrower type.
+
+```
+           i8  i16  i32  i64   u8  u16  u32  u64  f32  f64
+  i8      i8† i16†  i32  i64 i16†  i32   --   --  f32  f64
+  i16    i16† i16†  i32  i64 i16†  i32   --   --  f32  f64
+  i32     i32  i32  i32  i64  i32  i32   --   --   --  f64
+  i64     i64  i64  i64  i64  i64  i64  i64   --   --   --
+  u8     i16† i16†  i32  i64  u8† u16†  u32  u64  f32  f64
+  u16     i32  i32  i32  i64 u16† u16†  u32  u64  f32  f64
+  u32      --   --   --  i64  u32  u32  u32  u64   --  f64
+  u64      --   --   --   --  u64  u64  u64  u64   --   --
+  f32     f32  f32   --   --  f32  f32   --   --  f32  f64
+  f64     f64  f64  f64   --  f64  f64  f64   --  f64  f64
+```
+
+Assignment (`T x = expr`) is implicit exactly where `T` holds the source type:
+
+```
+  i8  -> i16 i32 i64 f32 f64        u8  -> i16 i32 i64 u16 u32 u64 f32 f64
+  i16 -> i32 i64 f32 f64            u16 -> i32 i64 u32 u64 f32 f64
+  i32 -> i64 f64                    u32 -> i64 u64 f64
+  i64 -> (nothing)                  u64 -> (nothing)
+  f32 -> f64                        f64 -> (nothing)
+```
+
+Signed→unsigned and float→int are never implicit. `bool` takes no part: it
+appears only in `&&`, `||`, `==`, `!=` and as a condition.
+
+Three consequences worth stating, since they are what the table is *for*:
+
+- **`T op T` is `T`.** Forced, not chosen: if `u32 + u32` widened to `u64`, then
+  `u32 n = 0; n = n + 1;` would need a cast. Any rule that widens same-type
+  arithmetic makes D5 break assignment for every type but the widest.
+- **Mixed signedness is safe exactly when the signed type is strictly wider.**
+  `i32 + u8` cannot misinterpret anything and C++ agrees; `i32 + u32` is where
+  C++ turns `-1` into 4294967295. Of the 32 mixed-sign pairs, 18 are accepted and
+  14 rejected — and over 400k random comparisons the accepted cells never
+  disagree with exact arithmetic, while the rejected ones disagree 46% of the
+  time in C++.
+- **`i64 + f64` and `f32 + i32` are errors.** C++ accepts both and silently loses
+  precision past the mantissa. This is the table catching a bug C++ does not warn
+  about.
+
+`i8 + u32` is stricter than safety alone requires — `i64` holds both operands
+exactly, but C++ answers `u32`, so accepting it would silently change a valid C++
+program. That cell is the containment rule's cost, not the type system's.
+
+### 6.5 Not in v0
 
 Optionals, traits beyond generic bounds, closures, `namespace`, operator
 overloading, copy constructors, inheritance, virtual dispatch, `Shared<T>`,
@@ -597,7 +651,8 @@ none of them can block work indefinitely.
 | --- | --- |
 | **Mutable-by-default (C++) or const-by-default (safer)?** L12 currently follows C++, because `i32 y = 0; y = 1;` failing would astonish exactly the developer §5.1 is written for. But "safe by default" is a manifesto core principle, and this is the one place the two goals point in opposite directions. | M2, once real code exists to judge how often `const` gets forgotten |
 | Do we keep `?` for error propagation, or find a spelling from the C family? It is the only construct in the language with no C++ heritage (D6). | M5 |
-| **What is a cast?** D5 makes every conversion explicit and promises "the required cast in the message", but no cast syntax exists — not in the grammar, the lexer, or the parser. Until one does, D5's errors name a remedy the language cannot express. C-style `(u64)x` is ambiguous with parenthesised expressions and is itself on §5.1's list of C++ warts; `static_cast<u64>(x)` is unambiguous and familiar but verbose enough to discourage the widening that D5 makes routine. | M1 — the type checker's first error message needs it |
+| **What happens on integer overflow?** D5 is often mistaken for an answer here, and is not: it governs conversions *between* types, not arithmetic *within* one. `u32 a = 0; a - 1;` involves no conversion, so D5 is silent and the result is 4294967295. §7.7's `-fwrapv` currently makes signed overflow wrap silently too — defined, which is better than C++'s UB, but still a wrong answer delivered quietly. The options are the usual three: wrap (status quo, fast, silent), trap in debug builds only (Rust's choice), or separate operators for wrapping arithmetic. A manifesto that claims safety by default cannot leave this at "whatever `-fwrapv` does". D5 now depends on the answer: `T op T` yields `T` (§6.4), so `u8 + u8` can overflow where C++'s promotion to `int` could not — that is the one `†` divergence in the §6.3 audit, and whether it traps or wraps decides whether the divergence is loud or silent. | M2 — before any code with real arithmetic exists to migrate |
+| **What is a cast?** D5 now makes every *lossy* conversion explicit and promises "the required cast in the message", but no cast syntax exists — not in the grammar, the lexer, or the parser. Until one does, D5's errors name a remedy the language cannot express. C-style `(u64)x` is ambiguous with parenthesised expressions and is itself on §5.1's list of C++ warts; `static_cast<u64>(x)` is unambiguous and familiar but verbose enough to discourage the widening that D5 makes routine.  A cast that must state its failure policy — `cast<T>(x)` checked and trapping, `wrap<T>(x)` truncating on purpose — would leave no unqualified cast to reach for, and both spellings are new notation, so §5.1 is satisfied for free. | M1 — the type checker's first error message needs it |
 | Should `int`/`float`/`double` be accepted as aliases after all (D1), or stay hard errors? Aliases ease the first hour and cost a permanent second spelling for every type. | M1 |
 | `a < b > ( c )` — a call to a generic, or two comparisons? C++ needs `template` disambiguators, Rust needs turbofish (`a::<b>(c)`). D15 does not help: both readings are effectful. | M6 |
 | Do we ever add lifetimes/borrow checking, or is the non-escaping rule permanent? | After M7, with real-program evidence |
@@ -683,10 +738,14 @@ output rather than dumps.
    runs, so the fixtures are compared on stderr and exit code rather than stdout.
 2. **Type checker** — next. Bidirectional (L5), so a literal's type comes from
    context and `u32 x = 42;` needs no suffix. This is where D1's suggestion table
-   lives. Decide before writing any of it: how a type is represented — a
-   `Type_id` handle into a type table, mirroring the AST's handles, versus a
-   plain enum while everything is still builtin. The enum is cheaper now and
-   painful at M2 when structs arrive.
+   lives, and D5's §6.4 table is the rule it implements — every cell should be a
+   test, since the table has a hundred of them and two of the three hand
+   derivations of it were wrong. Range-checking a literal against its target
+   (`u8 x = 300;`) needs the literal's value, which does not currently survive
+   lexing — see the debts below. Decide before writing any of it: how a type is
+   represented — a `Type_id` handle into a type table, mirroring the AST's
+   handles, versus a plain enum while everything is still builtin. The enum is
+   cheaper now and painful at M2 when structs arrive.
 3. **C emitter** — §7's rules, three-address form, straight from the AST.
 
 **KIR is not part of M1.** §9 places it at M3, where RAII is what needs a CFG;
