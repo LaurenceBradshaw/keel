@@ -1,0 +1,25 @@
+// Shifts are the one binary operator with no common type: the result is the left operand's, and
+// the right is independent of it. The comparisons against literals are the other half - a literal
+// takes its type from the operand beside it, since no suffix exists to write `0u` (D13).
+u32 popcount( u32 bits )
+{
+    u32 count = 0;
+
+    while( bits != 0 )
+    {
+        count += bits & 1;
+        bits = bits >> 1;
+    }
+
+    return count;
+}
+
+// Self-checking: exit 0 means every answer was right.
+i32 main()
+{
+    if( popcount( 0b1011_0111 ) != 6 ) { return 1; }
+    if( popcount( 0 ) != 0 ) { return 2; }
+    if( popcount( 0xFFFF_FFFF ) != 32 ) { return 3; }
+
+    return 0;
+}

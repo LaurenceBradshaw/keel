@@ -1,0 +1,32 @@
+#include <stdint.h>
+#include <stdbool.h>
+
+int32_t kl__mix__i32_i64_u8( int32_t, int64_t, uint8_t );
+int32_t kl__main__( void );
+
+int32_t kl__mix__i32_i64_u8( int32_t kl_a_2, int64_t kl_b_4, uint8_t kl_c_6 )
+{
+#line 5 "codegen/arithmetic.kl"
+    int64_t kl_t0 = (int64_t) kl_a_2 + (int64_t) kl_b_4;
+    int64_t kl_wide_12 = kl_t0;
+#line 6 "codegen/arithmetic.kl"
+    uint8_t kl_byte_15 = kl_c_6;
+#line 7 "codegen/arithmetic.kl"
+    uint8_t kl_t1 = (uint8_t) kl_byte_15 + (uint8_t) 1;
+    kl_byte_15 = (uint8_t) kl_t1;
+#line 8 "codegen/arithmetic.kl"
+    int32_t kl_t2 = (int32_t) kl_a_2 * (int32_t) 2;
+    return kl_t2;
+}
+
+int32_t kl__main__( void )
+{
+#line 13 "codegen/arithmetic.kl"
+    int32_t kl_t0 = kl__mix__i32_i64_u8( (int32_t) 1, (int64_t) 2, (uint8_t) 3 );
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

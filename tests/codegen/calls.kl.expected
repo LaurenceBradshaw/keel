@@ -1,0 +1,56 @@
+#include <stdint.h>
+#include <stdbool.h>
+
+int32_t kl__g__i32( int32_t );
+int32_t kl__even__i32( int32_t );
+int32_t kl__odd__i32( int32_t );
+int32_t kl__main__( void );
+
+int32_t kl__g__i32( int32_t kl_x_2 )
+{
+#line 3 "codegen/calls.kl"
+    return kl_x_2;
+}
+
+int32_t kl__even__i32( int32_t kl_n_10 )
+{
+#line 5 "codegen/calls.kl"
+    bool kl_t0 = (int32_t) kl_n_10 == (int32_t) 0;
+    if ( kl_t0 )
+    {
+        return 1;
+    }
+    int32_t kl_t1 = (int32_t) kl_n_10 - (int32_t) 1;
+    int32_t kl_t2 = kl__odd__i32( (int32_t) kl_t1 );
+    return kl_t2;
+}
+
+int32_t kl__odd__i32( int32_t kl_n_30 )
+{
+#line 6 "codegen/calls.kl"
+    bool kl_t0 = (int32_t) kl_n_30 == (int32_t) 0;
+    if ( kl_t0 )
+    {
+        return 0;
+    }
+    int32_t kl_t1 = (int32_t) kl_n_30 - (int32_t) 1;
+    int32_t kl_t2 = kl__even__i32( (int32_t) kl_t1 );
+    return kl_t2;
+}
+
+int32_t kl__main__( void )
+{
+#line 10 "codegen/calls.kl"
+    int32_t kl_t0 = kl__g__i32( (int32_t) 1 );
+    int32_t kl_t1 = kl__g__i32( (int32_t) 2 );
+    int32_t kl_t2 = (int32_t) kl_t0 + (int32_t) kl_t1;
+    int32_t kl_t3 = kl__g__i32( (int32_t) kl_t2 );
+    int32_t kl_t4 = kl__even__i32( (int32_t) 4 );
+    int32_t kl_t5 = (int32_t) kl_t3 + (int32_t) kl_t4;
+    return kl_t5;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

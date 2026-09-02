@@ -1,0 +1,19 @@
+// Both loops emit as `while ( true )` with a guarded break: the statements computing a condition
+// have to run on every iteration, which C's own loop headers cannot express.
+i32 main()
+{
+    i32 total = 0;
+
+    for( i32 i = 0; i < 5; i++ )
+    {
+        if( i == 2 ) { total = total + 10; }
+        else { total = total + 1; }
+    }
+
+    while( total > 3 )
+    {
+        total--;
+    }
+
+    return total;
+}

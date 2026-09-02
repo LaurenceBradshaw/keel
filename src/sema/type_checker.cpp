@@ -184,6 +184,9 @@ private:
     void visit_increment( Node_id id );
 
     // Int, Float and Bool literals with nothing to give them a type - the fallback defaults.
+    // Whether context can give this expression a type, rather than it having one of its own.
+    bool is_literal_expression( Node_id id ) const;
+
     Type_id infer_literal( Node_id id );
 
     // The bidirectional half (L5): a literal adopts `expected` when its value fits, which is what
@@ -452,37 +455,19 @@ void Checker::visit_assign( Node_id id )
         return;
     }
 
-    // A compound assignment has to do both halves: combine under §6.4, then store the result back.
-    // `u8 x; x += 1;` works because T op T is T; `u8 x; i32 y; x += y;` combines to i32 and then
-    // has nowhere to put it.
-    const Type_id value_type = infer( value );
+    // A compound assignment is `x = x op y`, so the value is *checked* against the target rather
+    // than inferred. Inferring it would settle a literal on its default type first, and `u8 x;
+    // x += 3;` would then combine u8 with i32 and have nowhere to put the result.
+    //
+    // Checking also subsumes the range rule: whatever holds in the target can be combined with it
+    // and stored back, and whatever does not is rejected here with a clearer message than
+    // "cannot hold the i32 this produces".
+    check( value, target_type );
 
-    if( table_.is_error( value_type ) )
-    {
-        return;
-    }
-
-    const Type_id result = table_.arithmetic_result( target_type, value_type );
-
-    if( !result.is_valid() )
+    if( !table_.is_integer( target_type ) && !table_.is_float( target_type ) )
     {
         error_at(
-            ast_.span( id ),
-            fmt::format(
-                "no operator `{}` for `{}` and `{}`",
-                token_kind_spelling( op ),
-                table_.name( target_type ),
-                table_.name( value_type )
-            )
-        );
-        return;
-    }
-
-    if( !table_.holds( result, target_type ) )
-    {
-        error_at(
-            ast_.span( id ),
-            fmt::format( "`{}` cannot hold the `{}` this produces", table_.name( target_type ), table_.name( result ) )
+            ast_.span( id ), fmt::format( "no operator `{}` for `{}`", token_kind_spelling( op ), table_.name( target_type ) )
         );
     }
 }
@@ -612,6 +597,40 @@ bool Checker::accepts( Operands operands, Type_id type ) const
     return false;
 }
 
+bool Checker::is_literal_expression( Node_id id ) const
+{
+    if( !id.is_valid() )
+    {
+        return false;
+    }
+
+    switch( ast_.kind( id ) )
+    {
+    case Node_kind::Int_literal:
+    case Node_kind::Float_literal:
+    case Node_kind::Bool_literal:
+    case Node_kind::Char_literal:
+        return true;
+
+    case Node_kind::Unary_expr:
+    {
+        // `-5` and `-1.5` are negations of literals, and check_literal pushes the expectation
+        // through the minus.
+        if( static_cast<Token_kind>( ast_.aux( id ) ) != Token_kind::Minus )
+        {
+            return false;
+        }
+
+        const Node_kind operand = ast_.kind( ast_.children( id )[0] );
+
+        return operand == Node_kind::Int_literal || operand == Node_kind::Float_literal;
+    }
+
+    default:
+        return false;
+    }
+}
+
 Type_id Checker::infer_literal( Node_id id )
 {
     switch( ast_.kind( id ) )
@@ -643,10 +662,12 @@ Type_id Checker::check_literal( Node_id id, Type_id expected )
     bool    negative = false;
 
     if( ast_.kind( id ) == Node_kind::Unary_expr && static_cast<Token_kind>( ast_.aux( id ) ) == Token_kind::Minus &&
-        ast_.kind( ast_.children( id )[0] ) == Node_kind::Int_literal )
+        is_literal_expression( ast_.children( id )[0] ) )
     {
-        literal  = ast_.children( id )[0];
-        negative = true;
+        literal = ast_.children( id )[0];
+
+        // Only integers have an asymmetric range. A float's negation cannot take it out of range.
+        negative = ast_.kind( literal ) == Node_kind::Int_literal;
     }
 
     switch( ast_.kind( literal ) )
@@ -822,10 +843,38 @@ Type_id Checker::infer_call( Node_id id )
 Type_id Checker::infer_binary( Node_id id )
 {
     const Token_kind op        = static_cast<Token_kind>( ast_.aux( id ) );
-    const Type_id    lhs_type  = infer( ast_.children( id )[0] );
-    const Type_id    rhs_type  = infer( ast_.children( id )[1] );
+    const Node_id    left      = ast_.children( id )[0];
+    const Node_id    right     = ast_.children( id )[1];
     const Type_id    bool_type = table_.builtin( Type_kind::Bool );
     const Type_id    error     = table_.builtin( Type_kind::Error );
+
+    // A literal has a value, not a type, so the other operand is what gives it one. Inferring both
+    // would settle it on its default first, and `u32 bits; bits != 0` would then compare a u32
+    // with an i32 - which §6.4 rejects, and which no suffix exists to write around (D13). That
+    // would leave unsigned code very nearly unwritable.
+    Type_id lhs_type;
+    Type_id rhs_type;
+
+    if( is_literal_expression( left ) != is_literal_expression( right ) )
+    {
+        const bool literal_on_the_left = is_literal_expression( left );
+
+        const Node_id known_side   = literal_on_the_left ? right : left;
+        const Node_id literal_side = literal_on_the_left ? left : right;
+
+        const Type_id known = infer( known_side );
+
+        // A failed operand gives nothing to adopt, so the literal falls back to its default.
+        const Type_id adopted = table_.is_error( known ) ? infer( literal_side ) : check( literal_side, known );
+
+        lhs_type = literal_on_the_left ? adopted : known;
+        rhs_type = literal_on_the_left ? known : adopted;
+    }
+    else
+    {
+        lhs_type = infer( left );
+        rhs_type = infer( right );
+    }
 
     // An operand that is already wrong was reported where it went wrong. Repeating it here is the
     // cascade the error type exists to prevent - and name() would assert on it besides.
@@ -954,13 +1003,34 @@ Type_id Checker::check( Node_id id, Type_id expected )
 
     case Node_kind::Unary_expr:
         // `-2147483648` only fits an i32 as a negation, so the expectation goes through the minus.
-        if( static_cast<Token_kind>( ast_.aux( id ) ) == Token_kind::Minus &&
-            ast_.kind( ast_.children( id )[0] ) == Node_kind::Int_literal )
+        if( is_literal_expression( id ) )
         {
             return check_literal( id, expected );
         }
 
         break;
+
+    case Node_kind::Binary_expr:
+    {
+        // Neither operand has a type of its own, so there is nothing beside them to adopt from -
+        // the context is all there is. Without this, `u8 x = 'a' + 1;` combines a u8 with an i32
+        // and then has nowhere to put the result.
+        //
+        // Only for operators whose result comes from their operands: a comparison yields bool
+        // whatever it is given, and pushing the expectation into it would be nonsense.
+        const Binary_rule* rule = binary_rule_for( static_cast<Token_kind>( ast_.aux( id ) ) );
+
+        if( rule != nullptr && rule->result == Result::Common && is_literal_expression( ast_.children( id )[0] ) &&
+            is_literal_expression( ast_.children( id )[1] ) )
+        {
+            check( ast_.children( id )[0], expected );
+            check( ast_.children( id )[1], expected );
+
+            return record( id, expected );
+        }
+
+        break;
+    }
 
     default:
         break;
@@ -1661,6 +1731,185 @@ TEST_CASE( "type_checker_rejects_a_string_literal", "[sema][types]" )
     INFO( p.rendered() );
     REQUIRE( p.errors() == 1 );
     REQUIRE( p.rendered().find( "string literals are not supported yet" ) != std::string::npos );
+}
+
+// A compound assignment is `x = x op y`, so the value is checked against the target rather than
+// inferred. Getting that wrong is invisible until something is emitted: `u8 x; x += 3;` reports
+// nothing suspicious, it just settles the literal on i32 and then refuses to store it back.
+TEST_CASE( "type_checker_checks_compound_assignment_against_the_target", "[sema][types]" )
+{
+    SECTION( "a literal adopts the target's type" )
+    {
+        const Typed p( "i32 main() { u8 x = 1; x += 3; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "including at the edge of the target's range" )
+    {
+        const Typed p( "i32 main() { u8 x = 1; x += 255; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a value that does not fit the target is still rejected" )
+    {
+        const Typed p( "i32 main() { u8 x = 1; x += 256; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "and so is a wider variable" )
+    {
+        const Typed p( "i32 main() { u8 x = 1; i32 y = 2; x += y; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "widening the other way is fine" )
+    {
+        const Typed p( "i32 main() { i64 w = 0; i32 a = 2; w += a; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a bool has no arithmetic at all" )
+    {
+        const Typed p( "i32 main() { bool b = true; b += 1; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() >= 1 );
+    }
+}
+
+// A literal takes its type from the operand beside it. Without this, `u32 bits; bits != 0` compares
+// a u32 with an i32 - which §6.4 rejects, and which no suffix exists to write around (D13). Almost
+// no unsigned code would compile.
+TEST_CASE( "type_checker_lets_a_literal_adopt_the_other_operand", "[sema][types]" )
+{
+    SECTION( "comparison against an unsigned variable" )
+    {
+        const Typed p( "i32 main() { u32 bits = 1; while( bits != 0 ) { bits = bits >> 1; } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "on either side" )
+    {
+        const Typed p( "i32 main() { u8 b = 1; if( 0 < b ) { return 1; } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and in arithmetic, not just comparison" )
+    {
+        const Typed p( "i32 main() { u64 n = 1; n = n + 1; n = n & 1; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // Adopting is not the same as ignoring: the value still has to fit what it adopted.
+    SECTION( "a literal that does not fit the adopted type is still rejected" )
+    {
+        const Typed p( "i32 main() { u8 b = 1; if( b == 300 ) { return 1; } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "a negative literal cannot adopt an unsigned type" )
+    {
+        const Typed p( "i32 main() { u32 n = 1; if( n == -1 ) { return 1; } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    // Two literals have nothing to adopt from, so both take their defaults.
+    SECTION( "two literals still take the default type" )
+    {
+        const Typed p( "i32 main() { if( 1 < 2 ) { return 1; } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and a mismatch between two real types is still an error" )
+    {
+        const Typed p( "i32 main() { i32 a = 1; u32 b = 2; if( a < b ) { return 1; } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+}
+
+// The same family as adopting from the operand beside it: a literal has a value, not a type, and
+// every path that can supply one has to. These two were found by writing a program, not by
+// inspecting the checker.
+TEST_CASE( "type_checker_pushes_the_expected_type_through_to_literals", "[sema][types]" )
+{
+    SECTION( "a negated float literal adopts, like a negated integer one" )
+    {
+        const Typed p( "i32 main() { f32 a = -1.5; f64 b = -1.5; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Float_literal, 0 ) ) == "f32" );
+    }
+
+    // Both operands are literals, so there is nothing beside them to adopt from and the context
+    // is all there is.
+    SECTION( "an operation between two literals takes the context's type" )
+    {
+        const Typed p( "i32 main() { u8 x = 'a' + 1; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Binary_expr, 0 ) ) == "u8" );
+    }
+
+    SECTION( "including when the context is a float" )
+    {
+        const Typed p( "i32 main() { f32 x = 1 + 2; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // Adopting is not ignoring: each operand still has to fit what it adopted.
+    SECTION( "an operand that does not fit the adopted type is rejected" )
+    {
+        const Typed p( "i32 main() { u8 x = 'a' + 300; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    // A comparison yields bool whatever it is handed, so pushing the expectation into it would be
+    // nonsense - the operands must still meet each other, not the context.
+    SECTION( "a comparison does not take the context's type" )
+    {
+        const Typed p( "i32 main() { bool b = 1 < 2; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and a non-literal operand still forces a real match" )
+    {
+        const Typed p( "i32 main() { i32 a = 1; u8 x = a + 1; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
 }
 
 } // namespace keel

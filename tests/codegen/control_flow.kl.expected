@@ -1,0 +1,61 @@
+#include <stdint.h>
+#include <stdbool.h>
+
+int32_t kl__main__( void );
+
+int32_t kl__main__( void )
+{
+#line 5 "codegen/control_flow.kl"
+    int32_t kl_total_4 = 0;
+#line 7 "codegen/control_flow.kl"
+    {
+        int32_t kl_i_7 = 0;
+        while ( true )
+        {
+            bool kl_t0 = (int32_t) kl_i_7 < (int32_t) 5;
+            if ( !kl_t0 )
+            {
+                break;
+            }
+#line 8 "codegen/control_flow.kl"
+            {
+#line 9 "codegen/control_flow.kl"
+                bool kl_t1 = (int32_t) kl_i_7 == (int32_t) 2;
+                if ( kl_t1 )
+                {
+                    int32_t kl_t2 = (int32_t) kl_total_4 + (int32_t) 10;
+                    kl_total_4 = (int32_t) kl_t2;
+                }
+                else
+                {
+#line 10 "codegen/control_flow.kl"
+                    int32_t kl_t3 = (int32_t) kl_total_4 + (int32_t) 1;
+                    kl_total_4 = (int32_t) kl_t3;
+                }
+            }
+#line 7 "codegen/control_flow.kl"
+            kl_i_7 = (int32_t) ( kl_i_7 + 1 );
+        }
+    }
+#line 13 "codegen/control_flow.kl"
+    while ( true )
+    {
+        bool kl_t4 = (int32_t) kl_total_4 > (int32_t) 3;
+        if ( !kl_t4 )
+        {
+            break;
+        }
+#line 14 "codegen/control_flow.kl"
+        {
+#line 15 "codegen/control_flow.kl"
+            kl_total_4 = (int32_t) ( kl_total_4 - 1 );
+        }
+    }
+#line 18 "codegen/control_flow.kl"
+    return kl_total_4;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

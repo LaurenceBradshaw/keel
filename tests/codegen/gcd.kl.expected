@@ -1,0 +1,42 @@
+#include <stdint.h>
+#include <stdbool.h>
+
+int32_t kl__gcd__i32_i32( int32_t, int32_t );
+int32_t kl__main__( void );
+
+int32_t kl__gcd__i32_i32( int32_t kl_a_2, int32_t kl_b_4 )
+{
+#line 5 "codegen/gcd.kl"
+    while ( true )
+    {
+        bool kl_t0 = (int32_t) kl_b_4 != (int32_t) 0;
+        if ( !kl_t0 )
+        {
+            break;
+        }
+#line 6 "codegen/gcd.kl"
+        {
+#line 7 "codegen/gcd.kl"
+            int32_t kl_t1 = (int32_t) kl_a_2 % (int32_t) kl_b_4;
+            int32_t kl_remainder_13 = kl_t1;
+#line 8 "codegen/gcd.kl"
+            kl_a_2 = (int32_t) kl_b_4;
+#line 9 "codegen/gcd.kl"
+            kl_b_4 = (int32_t) kl_remainder_13;
+        }
+    }
+#line 12 "codegen/gcd.kl"
+    return kl_a_2;
+}
+
+int32_t kl__main__( void )
+{
+#line 17 "codegen/gcd.kl"
+    int32_t kl_t0 = kl__gcd__i32_i32( (int32_t) 1071, (int32_t) 462 );
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

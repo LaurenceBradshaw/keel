@@ -1,0 +1,51 @@
+#include <stdint.h>
+#include <stdbool.h>
+
+bool kl__positive__i32( int32_t );
+bool kl__both__i32_i32( int32_t, int32_t );
+bool kl__either__i32_i32( int32_t, int32_t );
+int32_t kl__main__( void );
+
+bool kl__positive__i32( int32_t kl_n_2 )
+{
+#line 2 "codegen/short_circuit.kl"
+    bool kl_t0 = (int32_t) kl_n_2 > (int32_t) 0;
+    return kl_t0;
+}
+
+bool kl__both__i32_i32( int32_t kl_a_12, int32_t kl_b_14 )
+{
+#line 4 "codegen/short_circuit.kl"
+    bool kl_t0 = kl__positive__i32( (int32_t) kl_a_12 );
+    bool kl_t1 = kl_t0;
+    if ( kl_t1 )
+    {
+        bool kl_t2 = kl__positive__i32( (int32_t) kl_b_14 );
+        kl_t1 = kl_t2;
+    }
+    return kl_t1;
+}
+
+bool kl__either__i32_i32( int32_t kl_a_30, int32_t kl_b_32 )
+{
+#line 5 "codegen/short_circuit.kl"
+    bool kl_t0 = kl__positive__i32( (int32_t) kl_a_30 );
+    bool kl_t1 = kl_t0;
+    if ( !kl_t1 )
+    {
+        bool kl_t2 = kl__positive__i32( (int32_t) kl_b_32 );
+        kl_t1 = kl_t2;
+    }
+    return kl_t1;
+}
+
+int32_t kl__main__( void )
+{
+#line 7 "codegen/short_circuit.kl"
+    return 0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

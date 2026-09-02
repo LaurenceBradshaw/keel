@@ -1,0 +1,37 @@
+// A literal has a value, not a type. Every line here depends on something supplying one: the
+// operand beside it, the declared type, a parameter, or - where both operands are literals - the
+// context alone. Four of these were compile errors until a program was written that used them.
+i32 takes_u8( u8 v ) { return 0; }
+
+i32 main()
+{
+    f32 a = -1.5;
+    f64 b = -1.5;
+    f64 c = 1;
+    f32 d = 2;
+
+    f32 e = 1.0;
+    f32 f = e + 1.5;
+    f32 g = e * 2;
+
+    u8  h = 'a';
+    u8  i = 'a' + 1;
+
+    u64 j = 1;
+    u64 k = j << 40;
+
+    bool l = !true;
+    i32  m = -( -5 );
+
+    u8  n = 200;
+    u8  o = n - 1;
+
+    i32 p = takes_u8( 3 );
+    u16 q = 1;
+    q += 1;
+
+    if( q == 2 ) { return 0; }
+    if( -1 < 0 ) { return 0; }
+
+    return 0;
+}

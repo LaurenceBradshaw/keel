@@ -1,0 +1,83 @@
+#include <stdint.h>
+#include <stdbool.h>
+
+int32_t kl__takes_u8__u8( uint8_t );
+int32_t kl__main__( void );
+
+int32_t kl__takes_u8__u8( uint8_t kl_v_2 )
+{
+#line 4 "codegen/literal_context.kl"
+    return 0;
+}
+
+int32_t kl__main__( void )
+{
+#line 8 "codegen/literal_context.kl"
+    float kl_t0 = (float) -1.5;
+    float kl_a_13 = kl_t0;
+#line 9 "codegen/literal_context.kl"
+    double kl_t1 = (double) -1.5;
+    double kl_b_17 = kl_t1;
+#line 10 "codegen/literal_context.kl"
+    double kl_c_20 = 1;
+#line 11 "codegen/literal_context.kl"
+    float kl_d_23 = 2;
+#line 13 "codegen/literal_context.kl"
+    float kl_e_26 = 1.0;
+#line 14 "codegen/literal_context.kl"
+    float kl_t2 = (float) kl_e_26 + (float) 1.5;
+    float kl_f_31 = kl_t2;
+#line 15 "codegen/literal_context.kl"
+    float kl_t3 = (float) kl_e_26 * (float) 2;
+    float kl_g_36 = kl_t3;
+#line 17 "codegen/literal_context.kl"
+    uint8_t kl_h_39 = 97;
+#line 18 "codegen/literal_context.kl"
+    uint8_t kl_t4 = (uint8_t) 97 + (uint8_t) 1;
+    uint8_t kl_i_44 = kl_t4;
+#line 20 "codegen/literal_context.kl"
+    uint64_t kl_j_47 = 1;
+#line 21 "codegen/literal_context.kl"
+    uint64_t kl_t5 = (uint64_t) kl_j_47 << (uint64_t) 40;
+    uint64_t kl_k_52 = kl_t5;
+#line 23 "codegen/literal_context.kl"
+    bool kl_t6 = (bool) !true;
+    bool kl_l_56 = kl_t6;
+#line 24 "codegen/literal_context.kl"
+    int32_t kl_t7 = (int32_t) -5;
+    int32_t kl_t8 = (int32_t) -kl_t7;
+    int32_t kl_m_61 = kl_t8;
+#line 26 "codegen/literal_context.kl"
+    uint8_t kl_n_64 = 200;
+#line 27 "codegen/literal_context.kl"
+    uint8_t kl_t9 = (uint8_t) kl_n_64 - (uint8_t) 1;
+    uint8_t kl_o_69 = kl_t9;
+#line 29 "codegen/literal_context.kl"
+    int32_t kl_t10 = kl__takes_u8__u8( (uint8_t) 3 );
+    int32_t kl_p_75 = kl_t10;
+#line 30 "codegen/literal_context.kl"
+    uint16_t kl_q_78 = 1;
+#line 31 "codegen/literal_context.kl"
+    uint16_t kl_t11 = (uint16_t) kl_q_78 + (uint16_t) 1;
+    kl_q_78 = (uint16_t) kl_t11;
+#line 33 "codegen/literal_context.kl"
+    bool kl_t12 = (uint16_t) kl_q_78 == (uint16_t) 2;
+    if ( kl_t12 )
+    {
+        return 0;
+    }
+#line 34 "codegen/literal_context.kl"
+    int32_t kl_t13 = (int32_t) -1;
+    bool kl_t14 = (int32_t) kl_t13 < (int32_t) 0;
+    if ( kl_t14 )
+    {
+        return 0;
+    }
+#line 36 "codegen/literal_context.kl"
+    return 0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

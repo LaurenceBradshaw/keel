@@ -1,0 +1,18 @@
+// Euclid, iteratively. A loop whose condition changes every iteration is the case C's `while (...)`
+// header cannot express once lowering the condition emits statements of its own.
+i32 gcd( i32 a, i32 b )
+{
+    while( b != 0 )
+    {
+        i32 remainder = a % b;
+        a = b;
+        b = remainder;
+    }
+
+    return a;
+}
+
+i32 main()
+{
+    return gcd( 1071, 462 ); // 21
+}

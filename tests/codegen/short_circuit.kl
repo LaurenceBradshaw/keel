@@ -1,0 +1,7 @@
+// `&&` and `||` evaluate their right operand inside a guard, never alongside the left.
+bool positive( i32 n ) { return n > 0; }
+
+bool both( i32 a, i32 b ) { return positive( a ) && positive( b ); }
+bool either( i32 a, i32 b ) { return positive( a ) || positive( b ); }
+
+i32 main() { return 0; }

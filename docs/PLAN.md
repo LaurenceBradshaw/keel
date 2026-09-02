@@ -756,7 +756,29 @@ output rather than dumps.
    target (`u8 x = 300;`) needs the literal's value, which does not currently
    survive lexing — see the debts below; it is the one part of the checker that
    cannot be written yet.
-3. **C emitter** — §7's rules, three-address form, straight from the AST.
+3. **C emitter** — done. `codegen_c/emitter.{h,cpp}` and `mangle.{h,cpp}`,
+   three-address form straight from the AST. `keelc` writes the `.c` beside the
+   executable, keeps it, and invokes `$CC` (or `cc`) with §7.7's flags.
+   `--emit-c` prints it instead, which is what `tests/codegen/` goldens.
+
+   Two emission choices are worth knowing before M3 changes them. **Loops emit
+   as `while ( true )` with a guarded break**, because lowering a condition emits
+   statements and those must run every iteration — C's loop headers cannot hold
+   them. And **`&&` / `||` lower their right operand inside the guard**, which is
+   the only expression that emits control flow. Both are exactly the shapes KIR's
+   basic blocks replace.
+
+**M1 is complete**: `fib(20)` compiles and returns 6765.
+
+Writing the emitter, and then writing real programs to emit, paid for itself
+immediately: between them they exposed four type-checker bugs that 3,300 unit
+assertions had not. All four were the same mistake — `infer` used where `check`
+belonged, so a literal settled on its default type before anything told it what
+was wanted. The worst, `u32 bits; bits != 0`, made unsigned code very nearly
+unwritable, since D13 leaves no suffix to write around it. The lesson is that
+bidirectional checking fails silently in exactly the places nothing looks — compound assignment inferred its right-hand
+side instead of checking it, so `u8 x; x += 3;` settled the literal on `i32` and
+was then refused. Nothing that only inspects the front end can see that.
 
 **KIR is not part of M1.** §9 places it at M3, where RAII is what needs a CFG;
 straight-line C for `fib(20)` does not. Building it earlier would mean designing
@@ -792,6 +814,14 @@ none of it is needed for `fib(20)`.
 - Chained assignment (`a = b = c;`) is not expressible, since assignment is a
   statement. It currently fails with *expected `;`, found `=`*, which is correct
   but unhelpful; it deserves either a targeted message or a D-entry.
+- Float literals are not range-checked. `f32 x = -1e40;` compiles and yields
+  infinity: `check_literal` asks only whether the target is a float, and
+  `Type_table::fits` handles floats only as a mantissa bound on *integer*
+  magnitudes. It wants a `fits_float( f64, Type_id )` beside it.
+- A constant expression that overflows is not caught: `u32 d = 1 - 2;` gives
+  4294967295 rather than an error, because both literals legitimately fit `u32`
+  and nothing folds the subtraction. Catching it needs either constant folding or
+  the §12 overflow decision, and is the same question either way.
 - The resolver skips type annotations entirely, because every type name is
   currently a builtin and there is nothing to bind. M2 must change that: a
   `Named_type` should resolve to its `Struct_decl` through the same `lookup` as

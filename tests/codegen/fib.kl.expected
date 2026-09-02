@@ -1,0 +1,36 @@
+#include <stdint.h>
+#include <stdbool.h>
+
+int32_t kl__fib__i32( int32_t );
+int32_t kl__main__( void );
+
+int32_t kl__fib__i32( int32_t kl_n_2 )
+{
+#line 5 "codegen/fib.kl"
+    bool kl_t0 = (int32_t) kl_n_2 < (int32_t) 2;
+    if ( kl_t0 )
+    {
+#line 7 "codegen/fib.kl"
+        return kl_n_2;
+    }
+#line 10 "codegen/fib.kl"
+    int32_t kl_t1 = (int32_t) kl_n_2 - (int32_t) 1;
+    int32_t kl_t2 = kl__fib__i32( (int32_t) kl_t1 );
+    int32_t kl_t3 = (int32_t) kl_n_2 - (int32_t) 2;
+    int32_t kl_t4 = kl__fib__i32( (int32_t) kl_t3 );
+    int32_t kl_t5 = (int32_t) kl_t2 + (int32_t) kl_t4;
+    return kl_t5;
+}
+
+int32_t kl__main__( void )
+{
+#line 15 "codegen/fib.kl"
+    int32_t kl_t0 = kl__fib__i32( (int32_t) 20 );
+    int32_t kl_t1 = (int32_t) kl_t0 % (int32_t) 256;
+    return kl_t1;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

@@ -1,0 +1,11 @@
+// Every argument becomes an operand before the call is written, so no call is ever nested inside
+// another's argument list. Mutual recursion works because every prototype precedes every body.
+i32 g( i32 x ) { return x; }
+
+i32 even( i32 n ) { if( n == 0 ) { return 1; } return odd( n - 1 ); }
+i32 odd( i32 n )  { if( n == 0 ) { return 0; } return even( n - 1 ); }
+
+i32 main()
+{
+    return g( g( 1 ) + g( 2 ) ) + even( 4 );
+}
