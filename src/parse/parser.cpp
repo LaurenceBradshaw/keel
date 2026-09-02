@@ -51,7 +51,7 @@ private:
     void error_at( Span span, std::string message, std::string help = {} );
 
     // "expected `;`, found `,`".
-    void error_expected( Token_kind kind );
+    void error_expected( Token_kind kind, std::string help = {} );
 
     // What peek() should be called in a message: its source text where it has one, so "found
     // `widget`" rather than "found `identifier`".
@@ -387,14 +387,14 @@ void Parser::error_at( Span span, std::string message, std::string help )
     diags_.error( span, std::move( message ), std::move( help ) );
 }
 
-void Parser::error_expected( Token_kind kind )
+void Parser::error_expected( Token_kind kind, std::string help )
 {
     // Point just past the last token we accepted, not at the one we found. A missing `;` is missing
     // at the end of the previous line, which is where the reader looks - pointing at the `}` on the
     // next line describes the symptom rather than the mistake.
     const Span at = pos_ > 0 ? Span::point( previous().span.file, previous().span.end ) : peek().span;
 
-    error_at( at, fmt::format( "expected `{}`, found `{}`", token_kind_spelling( kind ), found_text() ) );
+    error_at( at, fmt::format( "expected `{}`, found `{}`", token_kind_spelling( kind ), found_text() ), std::move( help ) );
 }
 
 std::string Parser::found_text() const
@@ -520,7 +520,20 @@ Node_id Parser::parse_function_decl()
 
     // No early return on a missing name: keep parsing so the body's errors are reported too.
     const Node_id params = parse_param_list();
-    const Node_id body   = parse_block();
+
+    // A `;` in place of the body is a forward declaration, which D18 makes unnecessary. Return an
+    // Error node rather than a Function_decl: this declares nothing, so letting it through would
+    // also make the real definition below it look like a duplicate. Stopping here likewise keeps
+    // parse_block from reading the following declarations as statements.
+    if( check( Token_kind::Semicolon ) )
+    {
+        error_expected(
+            Token_kind::L_brace, "Keel has no forward declarations: every top-level declaration is visible throughout the file"
+        );
+        return error_node( Span::merge( start, advance().span ) );
+    }
+
+    const Node_id body = parse_block();
 
     // Fixed arity - always these three, even when one of them is an Error node.
     return ast_.add( Node_kind::Function_decl, Span::merge( start, previous().span ), name.v, { return_type, params, body } );
@@ -1835,6 +1848,40 @@ TEST_CASE( "parser_calls_chain", "[parse]" )
 {
     REQUIRE( shape_of( "f( 1 )( 2 )" ) == "call(call(f,[1]),[2])" );
     REQUIRE( shape_of( "f()()" ) == "call(call(f,[]),[])" );
+}
+
+// D18 removed the need for forward declarations, so a `;` where a body belongs is a mistake a C++
+// author makes out of habit. It used to cascade: parse_block carried on and read the declarations
+// that followed as statements.
+TEST_CASE( "parser_rejects_a_forward_declaration", "[parse]" )
+{
+    SECTION( "one error, naming the brace" )
+    {
+        const Parsed p( "i32 odd( i32 n );\ni32 odd( i32 n ) { return n; }\n" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "expected `{`" ) != std::string::npos );
+        REQUIRE( p.errors().find( "no forward declarations" ) != std::string::npos );
+    }
+
+    SECTION( "the declarations after it still parse" )
+    {
+        const Parsed p( "i32 f( i32 n );\ni32 g() { return 1; }\ni32 h() { return 2; }\n" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+
+        // The prototype becomes an Error node, so it declares nothing - the two real functions are
+        // the only Function_decls, and sema will not see a duplicate `f`.
+        std::size_t functions = 0;
+        for( const Node_id decl : p.children( p.root() ) )
+        {
+            functions += p.kind( decl ) == Node_kind::Function_decl ? 1 : 0;
+        }
+
+        REQUIRE( functions == 2 );
+    }
 }
 
 TEST_CASE( "parser_call_errors", "[parse]" )
