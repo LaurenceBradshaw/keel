@@ -1,0 +1,25 @@
+i32 shadows_a_local()
+{
+    i32 x = 1;
+    {
+        i32 x = 2;
+        return x;
+    }
+}
+
+i32 shadows_a_parameter( i32 p )
+{
+    i32 p = 1;
+    return p;
+}
+
+i32 shadows_from_three_levels_out()
+{
+    i32 deep = 1;
+    {
+        {
+            i32 deep = 2;
+            return deep;
+        }
+    }
+}

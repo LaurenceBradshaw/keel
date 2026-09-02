@@ -1,0 +1,10 @@
+i32 main()
+{
+    i32 known = 1;
+    return known + missing;
+}
+
+i32 caller()
+{
+    return no_such_function( 1 );
+}

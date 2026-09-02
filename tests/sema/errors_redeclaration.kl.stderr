@@ -1,0 +1,19 @@
+error: `duplicated` is already declared in this scope
+ --> sema/errors_redeclaration.kl:6:1
+  |
+6 | i32 duplicated()
+  | ^^^^^^^^^^^^^^^^ previous declaration is at: 1:1
+
+error: `p` is already declared in this scope
+  --> sema/errors_redeclaration.kl:11:19
+   |
+11 | i32 twice( i32 p, i32 p )
+   |                   ^^^^^ previous declaration is at: 11:12
+
+error: `local` is already declared in this scope
+  --> sema/errors_redeclaration.kl:14:5
+   |
+14 |     i32 local = 2;
+   |     ^^^^^^^^^^^^^^ previous declaration is at: 13:5
+
+3 errors generated

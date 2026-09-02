@@ -1,0 +1,7 @@
+error: expected `{`, found `;`
+ --> sema/errors_forward_declaration.kl:3:17
+  |
+3 | i32 odd( i32 n );
+  |                 ^ Keel has no forward declarations: every top-level declaration is visible throughout the file
+
+1 error generated

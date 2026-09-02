@@ -1,0 +1,8 @@
+// A prototype is a parse error under D18. It must not also make the definition below look like a
+// duplicate: the parser drops it rather than declaring a name.
+i32 odd( i32 n );
+
+i32 odd( i32 n )
+{
+    return n;
+}

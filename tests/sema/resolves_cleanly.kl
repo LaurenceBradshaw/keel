@@ -1,0 +1,27 @@
+// No diagnostics and no output: the resolver is silent on a well-formed program.
+// Mutual recursion with no forward declaration (D18), and a local reusing a file-scope name (D19).
+i32 count()
+{
+    return 7;
+}
+
+i32 even( i32 n )
+{
+    if( n == 0 ) { return 1; }
+    return odd( n - 1 );
+}
+
+i32 odd( i32 n )
+{
+    if( n == 0 ) { return 0; }
+    return even( n - 1 );
+}
+
+i32 main()
+{
+    i32 count = 0;
+    { i32 inner = count; }
+    { i32 inner = count; }
+    for( i32 i = 0; i < 10; i = i + 1 ) { count = count + i; }
+    return even( count );
+}

@@ -1,0 +1,7 @@
+error: `used_first` is not declared
+ --> sema/errors_use_before_declaration.kl:3:17
+  |
+3 |     i32 later = used_first;
+  |                 ^^^^^^^^^^
+
+1 error generated

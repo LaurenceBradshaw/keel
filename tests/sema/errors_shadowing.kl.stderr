@@ -1,0 +1,19 @@
+error: `x` shadows an outer declaration
+ --> sema/errors_shadowing.kl:5:9
+  |
+5 |         i32 x = 2;
+  |         ^^^^^^^^^^ previous declaration is at: 3:5
+
+error: `p` shadows an outer declaration
+  --> sema/errors_shadowing.kl:12:5
+   |
+12 |     i32 p = 1;
+   |     ^^^^^^^^^^ previous declaration is at: 10:26
+
+error: `deep` shadows an outer declaration
+  --> sema/errors_shadowing.kl:21:13
+   |
+21 |             i32 deep = 2;
+   |             ^^^^^^^^^^^^^ previous declaration is at: 18:5
+
+3 errors generated

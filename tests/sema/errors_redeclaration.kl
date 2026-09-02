@@ -1,0 +1,16 @@
+i32 duplicated()
+{
+    return 1;
+}
+
+i32 duplicated()
+{
+    return 2;
+}
+
+i32 twice( i32 p, i32 p )
+{
+    i32 local = 1;
+    i32 local = 2;
+    return local;
+}

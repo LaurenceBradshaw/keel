@@ -1,0 +1,13 @@
+error: `missing` is not declared
+ --> sema/errors_unknown_name.kl:4:20
+  |
+4 |     return known + missing;
+  |                    ^^^^^^^
+
+error: `no_such_function` is not declared
+ --> sema/errors_unknown_name.kl:9:12
+  |
+9 |     return no_such_function( 1 );
+  |            ^^^^^^^^^^^^^^^^
+
+2 errors generated
