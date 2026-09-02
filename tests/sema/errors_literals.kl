@@ -1,0 +1,9 @@
+// Literal range checking is bidirectional: the target type is what a literal is measured against.
+i32 main()
+{
+    u8  small = 300;
+    i32 low = -2147483649;
+    u32 negative = -1;
+    u64 huge = 18446744073709551616;
+    return 0;
+}

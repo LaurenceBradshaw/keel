@@ -366,6 +366,7 @@ overflows; what happens then is the open overflow question in §12.
 | D17 | `*` and `&` bind to the **type**, not the name, and must touch it: `u32* p;` declares a pointer, `u32 *p;` is an error. | C's declarator syntax binds them to the name, so `int *p, q;` makes `q` an `int` — a wart every C style guide works around. Adjacency is checked from the token spans, so no lexer change is needed. The rejected form gets a message naming the fix rather than the generic D15 one, since it is exactly what a C++ programmer writes from habit. Independent of D15: `a * b;` remains a useless statement either way. |
 | D18 | Top-level declarations are visible throughout the file, so mutual recursion needs no forward declaration: `even` may call `odd` above it. Inside a function this does **not** apply — statements are sequential, so using a local before its declaration is still an error. | C++ requires a forward declaration at namespace scope; Rust, Java and C# do not. This accepts what C++ rejects and never reinterprets an accepted program, so it is safe under §5.1. The asymmetry between file and block scope is deliberate: declaration order carries no meaning between functions, and every meaning within one. |
 | D19 | A declaration may not shadow another that is still reachable by the same unqualified name. A block local colliding with an enclosing local or with a parameter is an error. Scopes that do **not** carry outer names in — a function body relative to file scope, and later a lambda relative to its enclosing function — are *barriers*, and reusing a name across one is fine: a local may be called `count` alongside a top-level `count()`. | The wart is the *silent* failure: two locals of the same type mean picking the wrong one compiles, runs and returns a bad value. Shadowing a function with a variable is caught immediately by the type checker, so it needs no rule. Java (JLS §6.4) and C# (CS0136) reject exactly this and keep members shadowable for the same reason; C++ allows it and papers over it with `-Wshadow`. File scope is exempt so that adding a top-level function cannot break a function body far above it — action at a distance. Rust's shadowing is same-scope rebinding (`let x = validate(x);`), which we already reject as a duplicate declaration and which this does not revisit. |
+| D20 | A character literal is a `u8` holding one byte: `'A'` is 65, `'\xFF'` is 255. A literal spanning more than one byte is an error, so a non-ASCII character needs its bytes written out. String literals lex and parse but have no type at all, and are rejected with a message saying so. | D1 leaves no `char` type to give them, and inventing one for literals alone would be a second spelling for `u8`. Treating a code point as the integer it is means §6.4's range rules apply unchanged: `u8 c = 'a';` and `u32 c = 'a';` both work, `bool c = 'a';` does not, and no new machinery is needed. C++ makes `'a'` an `int` and `'ab'` implementation-defined; both are rejected here rather than reinterpreted. Strings wait because their representation is an M7 question (§9) — choosing `u8*`, a slice or an array now would commit the language before the ownership model exists to judge it. |
 
 ### 6.4 Numeric conversions (D5)
 
@@ -423,7 +424,8 @@ program. That cell is the containment rule's cost, not the type system's.
 Optionals, traits beyond generic bounds, closures, `namespace`, operator
 overloading, copy constructors, inheritance, virtual dispatch, `Shared<T>`,
 `Weak<T>`, concurrency, reflection, coroutines, and any standard library.
-Modules arrive at M7.
+Modules arrive at M7. **String literals** lex and parse but have no type
+(D20); they wait for `String`, which is M7 as well.
 
 ---
 
@@ -736,16 +738,24 @@ output rather than dumps.
    checker's result should take. D18 and D19 landed here. Its golden corpus is
    `tests/sema/`, whose `FLAGS` is empty: with no dump flag the whole pipeline
    runs, so the fixtures are compared on stderr and exit code rather than stdout.
-2. **Type checker** — next. Bidirectional (L5), so a literal's type comes from
-   context and `u32 x = 42;` needs no suffix. This is where D1's suggestion table
-   lives, and D5's §6.4 table is the rule it implements — every cell should be a
-   test, since the table has a hundred of them and two of the three hand
-   derivations of it were wrong. Range-checking a literal against its target
-   (`u8 x = 300;`) needs the literal's value, which does not currently survive
-   lexing — see the debts below. Decide before writing any of it: how a type is
-   represented — a `Type_id` handle into a type table, mirroring the AST's
-   handles, versus a plain enum while everything is still builtin. The enum is
-   cheaper now and painful at M2 when structs arrive.
+2. **Type checker** — in progress. `sema/type.{h,cpp}` is done: `Type_table`
+   interns the builtins behind a `Type_id` handle, and D5's §6.4 rule is four
+   pure functions on it — `holds`, `common`, `cpp_result`, `arithmetic_result` —
+   with the whole table pinned cell by cell in tests. `sema/type_checker.{h,cpp}` is
+   most of the way there: signatures, names, calls, both operator families,
+   assignment, returns and conditions all check, with one function per construct
+   dispatched from `visit`/`infer` and the operator rules held as a table beside
+   them — the shape `parse_*()` and `binding_power()` already use. D1's
+   suggestion table landed on the unknown-type path, so its promise is real
+   rather than aspirational. Literals are bidirectional (L5), so
+   `u32 x = 42;` needs no suffix and `u8 x = 300;` does not compile: the lexer
+   records values into a `Literals` pool that the token's unused `symbol` slot
+   indexes, and `check` measures them against the target type. The negation case
+   is handled explicitly — `-2147483648` is a negation of a value that does not
+   itself fit an `i32`, so the expectation is pushed through the minus. Range-checking a literal against its
+   target (`u8 x = 300;`) needs the literal's value, which does not currently
+   survive lexing — see the debts below; it is the one part of the checker that
+   cannot be written yet.
 3. **C emitter** — §7's rules, three-address form, straight from the AST.
 
 **KIR is not part of M1.** §9 places it at M3, where RAII is what needs a CFG;
@@ -782,13 +792,16 @@ none of it is needed for `fib(20)`.
 - Chained assignment (`a = b = c;`) is not expressible, since assignment is a
   statement. It currently fails with *expected `;`, found `=`*, which is correct
   but unhelpful; it deserves either a targeted message or a D-entry.
-- Literal values do not survive lexing. `Token` carries only kind, span and
-  symbol, and `Int_literal` nodes store `aux = 0`, so the digits the lexer
-  already scanned and validated are recoverable only by re-reading the source
-  text. The type checker needs the value to reject `u8 x = 300;` and the emitter
-  needs it to print. `aux` is a `u32` and so cannot hold an `i64`/`u64`: this
-  wants a literal pool with `aux` as the index. Note that sign lives in a
-  separate `Unary_expr`, so `-2147483648` is a negation of a value that does not
-  itself fit in `i32` — the range check has to happen after the negation.
+- The resolver skips type annotations entirely, because every type name is
+  currently a builtin and there is nothing to bind. M2 must change that: a
+  `Named_type` should resolve to its `Struct_decl` through the same `lookup` as
+  any other name, which gets scoping and D19 shadowing for user types for free.
+  The type table then interns struct types by *declaration* rather than by
+  spelling — `Type_table::by_spelling_` stays the eleven builtins forever, since
+  growing it would be a second name-resolution mechanism with no notion of scope,
+  and two modules declaring `Point` would collide in it. The fully uniform option
+  is to seed the resolver's file scope with the builtins so `from_spelling`
+  disappears; that costs synthetic declarations and buys D1's "one path"
+  literally.
 - Prefix `++` is unreachable — `can_start_expression` rejects it, so `++i;` says
   *expected a statement*. D12 left the postfix/prefix choice open; decide it.

@@ -1,0 +1,25 @@
+error: integer literal is too large
+ --> sema/errors_literals.kl:7:16
+  |
+7 |     u64 huge = 18446744073709551616;
+  |                ^^^^^^^^^^^^^^^^^^^^ the largest value that fits is 18446744073709551615
+
+error: `300` does not fit in `u8`
+ --> sema/errors_literals.kl:4:17
+  |
+4 |     u8  small = 300;
+  |                 ^^^
+
+error: `-2147483649` does not fit in `i32`
+ --> sema/errors_literals.kl:5:15
+  |
+5 |     i32 low = -2147483649;
+  |               ^^^^^^^^^^^
+
+error: `-1` does not fit in `u32`
+ --> sema/errors_literals.kl:6:20
+  |
+6 |     u32 negative = -1;
+  |                    ^^
+
+4 errors generated

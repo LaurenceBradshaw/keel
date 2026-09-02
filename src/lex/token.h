@@ -1,5 +1,6 @@
 #pragma once
 #include "common/interner.h"
+#include "common/literals.h"
 #include "common/span.h"
 
 #include <string_view>
@@ -116,6 +117,13 @@ struct Token
     Keyword keyword() const
     {
         return static_cast<Keyword>( symbol.v );
+    }
+
+    // Valid only for Int_literal and Float_literal. The same slot as `symbol`, which those kinds
+    // do not use - a literal has no name.
+    Literal_id literal() const
+    {
+        return Literal_id { symbol.v };
     }
 };
 

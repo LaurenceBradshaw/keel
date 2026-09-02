@@ -1,0 +1,13 @@
+error: expected `bool`, but got a character literal
+ --> sema/errors_char_and_string.kl:4:14
+  |
+4 |     bool a = 'x';
+  |              ^^^
+
+error: string literals are not supported yet
+ --> sema/errors_char_and_string.kl:5:14
+  |
+5 |     u8   b = "hello";
+  |              ^^^^^^^
+
+2 errors generated

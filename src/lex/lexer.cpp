@@ -1,5 +1,8 @@
 #include "lex/lexer.h"
 
+#include <cerrno>
+#include <cstdlib>
+#include <optional>
 #include <string>
 
 namespace keel
@@ -25,6 +28,16 @@ bool is_hex_digit( char c )
     return is_digit( c ) || ( c >= 'a' && c <= 'f' ) || ( c >= 'A' && c <= 'F' );
 }
 
+u8 hex_value( char c )
+{
+    if( c >= '0' && c <= '9' )
+    {
+        return narrow_cast<u8>( c - '0' );
+    }
+
+    return narrow_cast<u8>( ( c | 0x20 ) - 'a' + 10 ); // lower-case the letter, then offset
+}
+
 bool is_bin_digit( char c )
 {
     return ( c == '0' || c == '1' );
@@ -43,7 +56,7 @@ bool is_ident_continue( char c )
 class Scanner
 {
 public:
-    Scanner( File_id file, const Source_manager& sm, Interner& interner, Diagnostics& diags );
+    Scanner( File_id file, const Source_manager& sm, Interner& interner, Literals& literals, Diagnostics& diags );
 
     std::vector<Token> run();
 
@@ -71,6 +84,14 @@ private:
 
     // Scanners receive the offset of the token's first character, which run() has already consumed.
 
+    // The digits between `start` and pos_, as a value in the pool. `base` is 10, 16 or 2, and the
+    // separators scan_digits walked past are skipped again here. Reports and returns an invalid id
+    // if the digits do not fit a u64.
+    Literal_id intern_integer( u32 start, u32 base );
+
+    // Float text carries separators too, so this strips them before converting.
+    Literal_id intern_float( u32 start );
+
     void scan_identifier_or_keyword( u32 start );
 
     // Delimits only; nothing is converted, so overflow is not a lexer problem.
@@ -88,10 +109,12 @@ private:
 
     // Trailing-identifier guard, then push. report is false when the literal already produced an
     // error, so one mistake gives one message.
-    void finish_number( u32 start, Token_kind kind, bool report );
+    void finish_number( u32 start, Token_kind kind, bool report, Literal_id value );
 
     // Validates the escape but does not decode it; the bytes are produced later, from the span.
-    void scan_escape( u32 start );
+    // The byte the escape denotes, or nothing for one it has reported. Optional rather than 0,
+    // which `\0` legitimately produces. scan_string ignores the value; scan_char needs it.
+    std::optional<u8> scan_escape( u32 start );
 
     void scan_string( u32 start );
 
@@ -103,15 +126,17 @@ private:
 
     File_id            file_;
     Interner&          interner_;
+    Literals&          literals_;
     Diagnostics&       diags_;
     std::string_view   text_;
     u32                pos_ = 0;
     std::vector<Token> out_;
 };
 
-Scanner::Scanner( File_id file, const Source_manager& sm, Interner& interner, Diagnostics& diags )
+Scanner::Scanner( File_id file, const Source_manager& sm, Interner& interner, Literals& literals, Diagnostics& diags )
     : file_( file ),
       interner_( interner ),
+      literals_( literals ),
       diags_( diags ),
       text_( sm.file( file ).text )
 {
@@ -255,6 +280,65 @@ void Scanner::skip_block_comment( u32 start )
     error_at( span_from( start ), "unterminated block comment" );
 }
 
+std::string strip_separators( std::string_view slice )
+{
+    std::string clean;
+    clean.reserve( slice.size() );
+    for( char c : slice )
+    {
+        if( c != '_' && c != '\'' )
+        {
+            clean.push_back( c );
+        }
+    }
+
+    return clean;
+}
+
+Literal_id Scanner::intern_integer( u32 start, u32 base )
+{
+    // Skip the base prefix. strtoull accepts `0x` at base 16 but has no rule for `0b`, so
+    // `0b1010` would otherwise stop at the `b` and evaluate to 0.
+    const u32 digits_start = base == 10 ? start : start + 2;
+
+    if( digits_start >= pos_ )
+    {
+        return Literal_id {}; // `0x` with no digits, already reported by the caller
+    }
+
+    // strip_separators returns by value, and strtoull needs a NUL: a string_view over the source
+    // text would be neither terminated nor still alive.
+    const std::string digits = strip_separators( text_.substr( digits_start, pos_ - digits_start ) );
+
+    errno                          = 0;
+    const unsigned long long value = std::strtoull( digits.c_str(), nullptr, static_cast<int>( base ) );
+
+    if( errno == ERANGE )
+    {
+        error_at( span_from( start ), "integer literal is too large", "the largest value that fits is 18446744073709551615" );
+
+        return Literal_id {};
+    }
+
+    return literals_.add_integer( value );
+}
+
+Literal_id Scanner::intern_float( u32 start )
+{
+    const std::string clean = strip_separators( text_.substr( start, pos_ - start ) );
+
+    errno              = 0;
+    const double value = std::strtod( clean.c_str(), nullptr );
+
+    if( errno == ERANGE )
+    {
+        error_at( span_from( start ), "floating-point literal is out of range for `f64`" );
+        return Literal_id {};
+    }
+
+    return literals_.add_float( value );
+}
+
 void Scanner::scan_identifier_or_keyword( u32 start )
 {
     while( is_ident_continue( peek() ) )
@@ -355,7 +439,7 @@ bool Scanner::scan_exponent( bool& ok )
     return false;
 }
 
-void Scanner::finish_number( u32 start, Token_kind kind, bool report )
+void Scanner::finish_number( u32 start, Token_kind kind, bool report, Literal_id value )
 {
     if( is_ident_start( peek() ) )
     {
@@ -375,7 +459,8 @@ void Scanner::finish_number( u32 start, Token_kind kind, bool report )
         }
     }
 
-    push( kind, start );
+    // The value rides in the token's `symbol` slot, which a literal does not otherwise use.
+    push( kind, start, Symbol_id { value.v } );
 }
 
 void Scanner::scan_number( u32 start )
@@ -392,7 +477,7 @@ void Scanner::scan_number( u32 start )
             error_at( span_from( start ), "hex literal has no digits", "write at least one digit after `0x`" );
         }
 
-        finish_number( start, Token_kind::Int_literal, digits );
+        finish_number( start, Token_kind::Int_literal, digits, intern_integer( start, 16 ) );
         return;
     }
 
@@ -405,7 +490,7 @@ void Scanner::scan_number( u32 start )
             error_at( span_from( start ), "binary literal has no digits", "write at least one digit after `0b`" );
         }
 
-        finish_number( start, Token_kind::Int_literal, digits );
+        finish_number( start, Token_kind::Int_literal, digits, intern_integer( start, 2 ) );
         return;
     }
 
@@ -429,15 +514,17 @@ void Scanner::scan_number( u32 start )
     const bool       exponent = scan_exponent( ok );
     const Token_kind kind     = ( fraction || exponent ) ? Token_kind::Float_literal : Token_kind::Int_literal;
 
-    finish_number( start, kind, ok );
+    const Literal_id value = kind == Token_kind::Int_literal ? intern_integer( start, 10 ) : intern_float( start );
+
+    finish_number( start, kind, ok, value );
 }
 
-void Scanner::scan_escape( u32 start )
+std::optional<u8> Scanner::scan_escape( u32 start )
 {
     // A backslash at end of line or end of file is the caller's unterminated case, not ours.
     if( at_end() || peek() == '\n' )
     {
-        return;
+        return std::nullopt;
     }
 
     const char c = advance();
@@ -445,25 +532,32 @@ void Scanner::scan_escape( u32 start )
     switch( c )
     {
     case 'n':
+        return '\n';
     case 't':
+        return '\t';
     case 'r':
+        return '\r';
     case '0':
+        return 0;
     case '\\':
+        return '\\';
     case '"':
+        return '"';
     case '\'':
-        return;
+        return '\'';
 
     case 'x':
         // Exactly two, unlike C++'s unbounded run, which silently overflows (PLAN §6.3 D13).
         if( is_hex_digit( peek() ) && is_hex_digit( peek( 1 ) ) )
         {
-            advance();
-            advance();
-            return;
+            const char high = advance();
+            const char low  = advance();
+
+            return narrow_cast<u8>( hex_value( high ) * 16 + hex_value( low ) );
         }
 
         error_at( span_from( start ), "`\\x` needs exactly two hex digits", "for example `\\x41`" );
-        return;
+        return std::nullopt;
 
     default:
         error_at(
@@ -471,7 +565,7 @@ void Scanner::scan_escape( u32 start )
             "unknown escape sequence `\\" + std::string( 1, c ) + "`",
             "valid escapes are \\n \\t \\r \\0 \\\\ \\\" \\' and \\xNN"
         );
-        return;
+        return std::nullopt;
     }
 }
 
@@ -504,7 +598,9 @@ void Scanner::scan_string( u32 start )
 
 void Scanner::scan_char( u32 start )
 {
-    u32 count = 0;
+    u32  count = 0;
+    u8   value = 0;
+    bool ok    = true;
 
     while( !at_end() && peek() != '\n' )
     {
@@ -525,7 +621,12 @@ void Scanner::scan_char( u32 start )
                 );
             }
 
-            push( Token_kind::Char_literal, start );
+            // Only a well-formed literal records a value. A reported one carries none, so sema
+            // stays quiet rather than reporting a second time. `ok` matters as well as the count:
+            // a bad escape yields no byte, and 0 would be indistinguishable from `\0`.
+            const Literal_id id = ok && count == 1 ? literals_.add_integer( value ) : Literal_id {};
+
+            push( Token_kind::Char_literal, start, Symbol_id { id.v } );
             return;
         }
 
@@ -533,11 +634,21 @@ void Scanner::scan_char( u32 start )
         {
             const u32 escape = pos_;
             advance();
-            scan_escape( escape );
+
+            if( const std::optional<u8> escaped = scan_escape( escape ) )
+            {
+                value = *escaped;
+            }
+            else
+            {
+                ok = false;
+            }
         }
         else
         {
-            advance();
+            // Through unsigned char: a byte over 127 is negative as a plain char, and `\xFF`
+            // must denote 255 rather than -1.
+            value = static_cast<u8>( static_cast<unsigned char>( advance() ) );
         }
 
         ++count;
@@ -703,9 +814,9 @@ void Scanner::scan_punctuation( char c, u32 start )
 
 } // namespace
 
-std::vector<Token> lex( File_id file, const Source_manager& sm, Interner& interner, Diagnostics& diags )
+std::vector<Token> lex( File_id file, const Source_manager& sm, Interner& interner, Literals& literals, Diagnostics& diags )
 {
-    return Scanner( file, sm, interner, diags ).run();
+    return Scanner( file, sm, interner, literals, diags ).run();
 }
 
 } // namespace keel
@@ -728,7 +839,7 @@ public:
     explicit Lexed( std::string_view source )
     {
         file_   = sm_.add_file( "t.kl", std::string( source ) );
-        tokens_ = lex( file_, sm_, interner_, diags_ );
+        tokens_ = lex( file_, sm_, interner_, literals_, diags_ );
     }
 
     // Excludes the End_of_file token.
@@ -756,6 +867,22 @@ public:
     Keyword keyword( std::size_t i ) const
     {
         return tokens_[i].keyword();
+    }
+
+    // The value the scanner recorded, via the pool the token's Literal_id indexes.
+    u64 integer( std::size_t i ) const
+    {
+        return literals_.integer( tokens_[i].literal() );
+    }
+
+    f64 floating( std::size_t i ) const
+    {
+        return literals_.floating( tokens_[i].literal() );
+    }
+
+    bool has_value( std::size_t i ) const
+    {
+        return tokens_[i].literal().is_valid();
     }
 
     const Token& eof() const
@@ -792,6 +919,7 @@ public:
 private:
     Source_manager     sm_;
     Interner           interner_;
+    Literals           literals_;
     Diagnostics        diags_;
     File_id            file_;
     std::vector<Token> tokens_;
@@ -882,15 +1010,144 @@ TEST_CASE( "lexer_cpp_type_names_are_ordinary_identifiers", "[lex]" )
     REQUIRE_FALSE( lexed.has_errors() );
 }
 
-TEST_CASE( "lexer_only_identifiers_and_keywords_carry_symbols", "[lex]" )
+// The `symbol` slot means different things per token kind: a Symbol_id for identifiers and
+// keywords, a Literal_id for numeric literals. Everything else leaves it empty.
+TEST_CASE( "only_named_and_numeric_tokens_use_the_symbol_slot", "[lex]" )
 {
-    const Lexed lexed( "x if 42 \"s\" ;" );
+    const Lexed lexed( "x if 42 1.5 \"s\" ;" );
 
-    REQUIRE( lexed.symbol( 0 ).is_valid() );
-    REQUIRE( lexed.symbol( 1 ).is_valid() );
-    REQUIRE_FALSE( lexed.symbol( 2 ).is_valid() );
-    REQUIRE_FALSE( lexed.symbol( 3 ).is_valid() );
+    REQUIRE( lexed.symbol( 0 ).is_valid() ); // identifier
+    REQUIRE( lexed.symbol( 1 ).is_valid() ); // keyword
+    REQUIRE( lexed.symbol( 2 ).is_valid() ); // Int_literal   -> a Literal_id
+    REQUIRE( lexed.symbol( 3 ).is_valid() ); // Float_literal -> a Literal_id
     REQUIRE_FALSE( lexed.symbol( 4 ).is_valid() );
+    REQUIRE_FALSE( lexed.symbol( 5 ).is_valid() );
+}
+
+TEST_CASE( "lexer_records_integer_literal_values", "[lex]" )
+{
+    struct Case
+    {
+        std::string_view source;
+        u64              value;
+    };
+
+    static const Case cases[] = {
+        { "0", 0 },
+        { "42", 42 },
+        { "4294967295", 4294967295ull },
+        { "18446744073709551615", 18446744073709551615ull }, // the largest that fits
+        { "1_000_000", 1000000 },
+        { "1'000'000", 1000000 }, // D13 accepts both separators
+        { "0xFF", 255 },
+        { "0xdead_beef", 3735928559ull },
+        { "0b1010", 10 }, // strtoull has no `0b` rule, so the prefix must be skipped
+        { "0b1111_1111", 255 },
+    };
+
+    for( const Case& c : cases )
+    {
+        const Lexed lexed( c.source );
+
+        INFO( c.source );
+        REQUIRE_FALSE( lexed.has_errors() );
+        REQUIRE( lexed.kind( 0 ) == Token_kind::Int_literal );
+        REQUIRE( lexed.has_value( 0 ) );
+        REQUIRE( lexed.integer( 0 ) == c.value );
+    }
+}
+
+TEST_CASE( "lexer_records_float_literal_values", "[lex]" )
+{
+    struct Case
+    {
+        std::string_view source;
+        f64              value;
+    };
+
+    static const Case cases[] = {
+        { "1.5", 1.5 },
+        { "0.0", 0.0 },
+        { "1_000.5", 1000.5 }, // separators must not reach strtod
+        { "1e3", 1000.0 },
+        { "1.5e-2", 0.015 },
+    };
+
+    for( const Case& c : cases )
+    {
+        const Lexed lexed( c.source );
+
+        INFO( c.source );
+        REQUIRE_FALSE( lexed.has_errors() );
+        REQUIRE( lexed.kind( 0 ) == Token_kind::Float_literal );
+        REQUIRE( lexed.floating( 0 ) == c.value );
+    }
+}
+
+// Only the lexer can catch this: by the time sema sees the node the digits are gone.
+TEST_CASE( "lexer_reports_an_integer_literal_that_does_not_fit_u64", "[lex]" )
+{
+    const Lexed lexed( "18446744073709551616" );
+
+    REQUIRE( lexed.has_errors() );
+
+    // No value recorded, so sema knows not to report a second time.
+    REQUIRE_FALSE( lexed.has_value( 0 ) );
+}
+
+// D20: a character literal is the byte it denotes, so the escapes have to produce real values
+// rather than merely be accepted.
+TEST_CASE( "lexer_records_character_literal_values", "[lex]" )
+{
+    struct Case
+    {
+        std::string_view source;
+        u64              value;
+    };
+
+    static const Case cases[] = {
+        { "'A'", 65 },
+        { "'a'", 97 },
+        { "'0'", 48 },
+        { "' '", 32 },
+        { "'\\n'", 10 },
+        { "'\\t'", 9 },
+        { "'\\r'", 13 },
+        { "'\\0'", 0 },
+        { "'\\\\'", 92 },
+        { "'\\''", 39 },
+        { "'\\\"'", 34 },
+        { "'\\x41'", 65 },
+        { "'\\x00'", 0 },
+        { "'\\xff'", 255 },
+        { "'\\xFF'", 255 },
+    };
+
+    for( const Case& c : cases )
+    {
+        const Lexed lexed( c.source );
+
+        INFO( c.source );
+        REQUIRE_FALSE( lexed.has_errors() );
+        REQUIRE( lexed.kind( 0 ) == Token_kind::Char_literal );
+        REQUIRE( lexed.has_value( 0 ) );
+        REQUIRE( lexed.integer( 0 ) == c.value );
+    }
+}
+
+// A reported literal records nothing, so sema stays quiet instead of reporting a second time.
+TEST_CASE( "lexer_records_no_value_for_a_bad_character_literal", "[lex]" )
+{
+    static const std::string_view sources[] = { "''", "'ab'", "'\\q'", "'\\x4'" };
+
+    for( const std::string_view source : sources )
+    {
+        const Lexed lexed( source );
+
+        INFO( source );
+        REQUIRE( lexed.has_errors() );
+        REQUIRE_FALSE( lexed.has_value( 0 ) );
+    }
 }
 
 TEST_CASE( "lexer_skips_whitespace_including_newlines", "[lex]" )

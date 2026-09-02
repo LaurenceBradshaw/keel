@@ -1,0 +1,17 @@
+// Every one of these needs no suffix: the annotation is what gives the literal its type.
+i32 main()
+{
+    u8  a = 255;
+    u32 b = 42;
+    u64 c = 18446744073709551615;
+    i32 d = -2147483648;      // fits only as a negation
+    u64 e = 0b1111_1111;
+    u64 f = 0xdead_beef;
+    f64 g = 1_000.5;
+    bool h = true;
+    u8   i = 'A';             // D20: a code point is the byte it denotes
+    u8   j = '\n';
+    u8   k = '\xFF';
+    u32  l = 'z';             // and fits any integer type wide enough
+    return 0;
+}

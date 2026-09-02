@@ -15,6 +15,7 @@
 #include "lex/lexer.h"
 #include "parse/parser.h"
 #include "sema/resolver.h"
+#include "sema/type_checker.h"
 
 // Excluded from the unit-test binary, which provides its own main() via Catch2.
 #ifndef ENABLE_UNIT_TESTS
@@ -76,7 +77,8 @@ int main( int argc, char** argv )
 
     keel::Interner           interner;
     keel::Diagnostics        diagnostics;
-    std::vector<keel::Token> tokens = keel::lex( file_id.value(), sm, interner, diagnostics );
+    keel::Literals           literals;
+    std::vector<keel::Token> tokens = keel::lex( file_id.value(), sm, interner, literals, diagnostics );
 
     // Reporting is the same wherever we stop, and each --dump flag stops after its own phase.
     const auto finish = [&]() -> int
@@ -124,7 +126,10 @@ int main( int argc, char** argv )
 
     // Resolution is part of compiling, not a debug feature - same reasoning as parsing.
     const keel::Resolution resolution = keel::resolve( ast, sm, interner, diagnostics );
-    (void) resolution;
+
+    // Type checking is part of compiling too - same reasoning as parsing and resolution.
+    const keel::Types types = keel::type_check( ast, resolution, literals, sm, interner, diagnostics );
+    (void) types;
 
     return finish();
 }
