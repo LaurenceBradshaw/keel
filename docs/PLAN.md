@@ -361,6 +361,8 @@ either new notation or a hard error; none silently redefines valid C++.
 | D15 | An expression statement must have an effect: only calls, assignments, and `++`/`--`. `a * b;`, `x.field;` and `arr[3];` are errors. | Rejects only statements that compute a value and discard it — already a bug, and already warned about by C++ (`-Wunused-value`). Java and C# both enumerate the legal statement expressions for exactly this reason. Multiplication inside an expression (`x = a * b;`) is untouched. |
 | D16 | Operators whose relative precedence is a known C wart cannot be mixed without parentheses: bitwise (`&` `\|` `^`) with comparison, shift (`<<` `>>`) with arithmetic, and `&&` with `\|\|`. `a & b == c` is a compile error naming both readings. | C reads it as `a & (b == c)` — a mistake Ritchie acknowledged and every compiler warns about. Changing the precedence would silently alter valid C++, which §5.1 forbids; rejecting it fixes the wart *and* satisfies the containment rule, since no accepted program changes meaning. Zig takes the same approach. |
 | D17 | `*` and `&` bind to the **type**, not the name, and must touch it: `u32* p;` declares a pointer, `u32 *p;` is an error. | C's declarator syntax binds them to the name, so `int *p, q;` makes `q` an `int` — a wart every C style guide works around. Adjacency is checked from the token spans, so no lexer change is needed. The rejected form gets a message naming the fix rather than the generic D15 one, since it is exactly what a C++ programmer writes from habit. Independent of D15: `a * b;` remains a useless statement either way. |
+| D18 | Top-level declarations are visible throughout the file, so mutual recursion needs no forward declaration: `even` may call `odd` above it. Inside a function this does **not** apply — statements are sequential, so using a local before its declaration is still an error. | C++ requires a forward declaration at namespace scope; Rust, Java and C# do not. This accepts what C++ rejects and never reinterprets an accepted program, so it is safe under §5.1. The asymmetry between file and block scope is deliberate: declaration order carries no meaning between functions, and every meaning within one. |
+| D19 | A declaration may not shadow another that is still reachable by the same unqualified name. A block local colliding with an enclosing local or with a parameter is an error. Scopes that do **not** carry outer names in — a function body relative to file scope, and later a lambda relative to its enclosing function — are *barriers*, and reusing a name across one is fine: a local may be called `count` alongside a top-level `count()`. | The wart is the *silent* failure: two locals of the same type mean picking the wrong one compiles, runs and returns a bad value. Shadowing a function with a variable is caught immediately by the type checker, so it needs no rule. Java (§6.4) and C# (CS0136) reject exactly this and keep members shadowable for the same reason; C++ allows it and papers over it with `-Wshadow`. File scope is exempt so that adding a top-level function cannot break a function body far above it — action at a distance. Rust's shadowing is same-scope rebinding (`let x = validate(x);`), which we already reject as a duplicate declaration and which this does not revisit. |
 
 ### 6.4 Not in v0
 
@@ -595,6 +597,7 @@ none of them can block work indefinitely.
 | --- | --- |
 | **Mutable-by-default (C++) or const-by-default (safer)?** L12 currently follows C++, because `i32 y = 0; y = 1;` failing would astonish exactly the developer §5.1 is written for. But "safe by default" is a manifesto core principle, and this is the one place the two goals point in opposite directions. | M2, once real code exists to judge how often `const` gets forgotten |
 | Do we keep `?` for error propagation, or find a spelling from the C family? It is the only construct in the language with no C++ heritage (D6). | M5 |
+| **What is a cast?** D5 makes every conversion explicit and promises "the required cast in the message", but no cast syntax exists — not in the grammar, the lexer, or the parser. Until one does, D5's errors name a remedy the language cannot express. C-style `(u64)x` is ambiguous with parenthesised expressions and is itself on §5.1's list of C++ warts; `static_cast<u64>(x)` is unambiguous and familiar but verbose enough to discourage the widening that D5 makes routine. | M1 — the type checker's first error message needs it |
 | Should `int`/`float`/`double` be accepted as aliases after all (D1), or stay hard errors? Aliases ease the first hour and cost a permanent second spelling for every type. | M1 |
 | `a < b > ( c )` — a call to a generic, or two comparisons? C++ needs `template` disambiguators, Rust needs turbofish (`a::<b>(c)`). D15 does not help: both readings are effectful. | M6 |
 | Do we ever add lifetimes/borrow checking, or is the non-escaping rule permanent? | After M7, with real-program evidence |
@@ -660,23 +663,36 @@ API exist in Keel, and it will be a full rewrite rather than a port.
 acceptance criterion. It is pinned as a golden fixture.
 
 Rules that landed as code rather than prose: D3 (mandatory braces, enforced for
-free by the body being a block), D12, D13, D15, D16, D17, and L17 — the
+free by the body being a block), D12, D13, D15, D16, D17, D18 (whose
+corollary — a prototype is a parse error, not a declaration — is enforced in
+`parse_function_decl`), D19, and L17 — the
 declaration/expression ambiguity is resolved by a speculative *scan* with no
 symbol table, exactly as §5.1 intended.
 
-### Next — M1
+### M1 — in progress
 
 Type checking and C emission. The pipeline gains its first pass that asks what a
 program *means* rather than how it is shaped, and `keelc` starts producing
 output rather than dumps.
 
-1. **Resolver** — names to declarations, scope tree. §3 puts this after parsing
-   and L17 keeps it there: nothing about parsing needs a symbol table.
-2. **Type checker** — bidirectional (L5), so a literal's type comes from context
-   and `u32 x = 42;` needs no suffix. This is where D1's suggestion table lives.
-3. **KIR** — the CFG the ownership work needs from M3 onward (§3). Not needed to
-   emit straight-line C, but building it now avoids retrofitting it later.
-4. **C emitter** — §7's rules, three-address form first.
+1. **Resolver** — *done*. Names to declarations, scope tree. §3 puts this after
+   parsing and L17 keeps it there: nothing about parsing needs a symbol table.
+   `Resolution` is a side table keyed by `Node_id` — the same shape the type
+   checker's result should take. D18 and D19 landed here. Its golden corpus is
+   `tests/sema/`, whose `FLAGS` is empty: with no dump flag the whole pipeline
+   runs, so the fixtures are compared on stderr and exit code rather than stdout.
+2. **Type checker** — next. Bidirectional (L5), so a literal's type comes from
+   context and `u32 x = 42;` needs no suffix. This is where D1's suggestion table
+   lives. Decide before writing any of it: how a type is represented — a
+   `Type_id` handle into a type table, mirroring the AST's handles, versus a
+   plain enum while everything is still builtin. The enum is cheaper now and
+   painful at M2 when structs arrive.
+3. **C emitter** — §7's rules, three-address form, straight from the AST.
+
+**KIR is not part of M1.** §9 places it at M3, where RAII is what needs a CFG;
+straight-line C for `fib(20)` does not. Building it earlier would mean designing
+it against guesses rather than against the drop-placement problem that defines
+it.
 
 The remaining v0 syntax (`struct`, `enum`, `match`, generics, `?`) is M2 onward;
 none of it is needed for `fib(20)`.
@@ -700,9 +716,20 @@ none of it is needed for `fib(20)`.
   instances) or in KIR payloads, whichever arrives first.
 - `parse_block` reports twice when the opening brace is missing: it proceeds into
   its loop and then consumes the enclosing `}`. Bailing out immediately would
-  give one error instead of two.
+  give one error instead of two. Carrying on is deliberate — the statements after
+  a dropped brace are still worth parsing — so the fix is to distinguish a brace
+  that is *missing* from one that was never coming, as `parse_function_decl` now
+  does for `;`.
 - Chained assignment (`a = b = c;`) is not expressible, since assignment is a
   statement. It currently fails with *expected `;`, found `=`*, which is correct
   but unhelpful; it deserves either a targeted message or a D-entry.
+- Literal values do not survive lexing. `Token` carries only kind, span and
+  symbol, and `Int_literal` nodes store `aux = 0`, so the digits the lexer
+  already scanned and validated are recoverable only by re-reading the source
+  text. The type checker needs the value to reject `u8 x = 300;` and the emitter
+  needs it to print. `aux` is a `u32` and so cannot hold an `i64`/`u64`: this
+  wants a literal pool with `aux` as the index. Note that sign lives in a
+  separate `Unary_expr`, so `-2147483648` is a negation of a value that does not
+  itself fit in `i32` — the range check has to happen after the negation.
 - Prefix `++` is unreachable — `can_start_expression` rejects it, so `++i;` says
   *expected a statement*. D12 left the postfix/prefix choice open; decide it.
