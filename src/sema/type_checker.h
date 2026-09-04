@@ -16,9 +16,10 @@ class Types
 {
 public:
     Types() = default;
-    Types( Type_table table, std::vector<Type_id> types )
+    Types( Type_table table, std::vector<Type_id> types, std::vector<Node_id> struct_order )
         : table_( std::move( table ) ),
-          types_( std::move( types ) )
+          types_( std::move( types ) ),
+          struct_order_( std::move( struct_order ) )
     {
     }
 
@@ -33,9 +34,15 @@ public:
         return table_;
     }
 
+    const std::vector<Node_id>& struct_order() const
+    {
+        return struct_order_;
+    }
+
 private:
     Type_table           table_;
     std::vector<Type_id> types_;
+    std::vector<Node_id> struct_order_; // dependencies first, from the DFS post-order
 };
 
 Types type_check( const Ast&, const Resolution&, const Literals&, const Source_manager&, const Interner&, Diagnostics& );

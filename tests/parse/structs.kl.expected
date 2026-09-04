@@ -1,0 +1,63 @@
+Source_file                             2:1-31:1
+  Struct_decl                           2:1-6:3     name=Point
+    Field_decl                          4:5-4:11    name=x
+      Named_type                        4:5-4:8     "f64"
+    Field_decl                          5:5-5:11    name=y
+      Named_type                        5:5-5:8     "f64"
+  Struct_decl                           8:1-8:18    "struct Empty { };"  name=Empty
+  Struct_decl                           10:1-14:3   name=Buffer
+    Field_decl                          12:5-12:13  name=ptr
+      Pointer_type                      12:5-12:8
+        Named_type                      12:5-12:7   "u8"
+    Field_decl                          13:5-13:13  name=len
+      Named_type                        13:5-13:8   "u64"
+  Struct_decl                           16:1-20:3   name=Line
+    Field_decl                          18:5-18:13  name=a
+      Named_type                        18:5-18:10  "Point"
+    Field_decl                          19:5-19:13  name=b
+      Named_type                        19:5-19:10  "Point"
+  Function_decl                         22:1-30:2   name=main
+    Named_type                          22:1-22:4   "i32"
+    Param_list                          22:9-22:11  "()"
+    Block                               23:1-30:2
+      Var_decl                          24:5-24:33  name=a
+        <none>                          -
+        Struct_literal                  24:14-24:32 name=Point
+          Field_init                    24:22-24:25
+            Float_literal               24:22-24:25 "1.0"
+          Field_init                    24:27-24:30
+            Float_literal               24:27-24:30 "2.0"
+      Var_decl                          25:5-25:43  name=b
+        <none>                          -
+        Struct_literal                  25:14-25:42 name=Point
+          Field_init                    25:22-25:30 name=x
+            Float_literal               25:27-25:30 "1.0"
+          Field_init                    25:32-25:40 name=y
+            Float_literal               25:37-25:40 "2.0"
+      Var_decl                          26:5-26:34  name=c
+        <none>                          -
+        Struct_literal                  26:14-26:33 name=Point
+          Field_init                    26:22-26:25
+            Float_literal               26:22-26:25 "1.0"
+          Field_init                    26:27-26:30
+            Float_literal               26:27-26:30 "2.0"
+      Var_decl                          27:5-27:24  name=d
+        <none>                          -
+        Struct_literal                  27:14-27:23 "Empty { }"  name=Empty
+      Var_decl                          28:5-28:62  name=e
+        <none>                          -
+        Struct_literal                  28:14-28:61 name=Line
+          Field_init                    28:21-28:39
+            Struct_literal              28:21-28:39 name=Point
+              Field_init                28:29-28:32
+                Float_literal           28:29-28:32 "1.0"
+              Field_init                28:34-28:37
+                Float_literal           28:34-28:37 "2.0"
+          Field_init                    28:41-28:59
+            Struct_literal              28:41-28:59 name=Point
+              Field_init                28:49-28:52
+                Float_literal           28:49-28:52 "3.0"
+              Field_init                28:54-28:57
+                Float_literal           28:54-28:57 "4.0"
+      Return_stmt                       29:5-29:14
+        Int_literal                     29:12-29:13 "0"

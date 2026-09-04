@@ -1,0 +1,30 @@
+// PLAN §6.2. Fields are children in declaration order, which is also layout order.
+struct Point
+{
+    f64 x;
+    f64 y;
+};
+
+struct Empty { };
+
+struct Buffer
+{
+    u8* ptr;
+    u64 len;
+};
+
+struct Line
+{
+    Point a;
+    Point b;
+};
+
+i32 main()
+{
+    auto a = Point { 1.0, 2.0 };
+    auto b = Point { .x = 1.0, .y = 2.0 };
+    auto c = Point { 1.0, 2.0, };
+    auto d = Empty { };
+    auto e = Line { Point { 1.0, 2.0 }, Point { 3.0, 4.0 } };
+    return 0;
+}

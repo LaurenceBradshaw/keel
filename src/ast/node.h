@@ -42,6 +42,11 @@ enum class Node_kind : u16
     If_stmt,
     While_stmt,
     For_stmt,
+    Struct_decl,
+    Field_decl,
+    Field_expr,
+    Struct_literal,
+    Field_init,
 
     Count
 };

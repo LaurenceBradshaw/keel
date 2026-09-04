@@ -8,7 +8,7 @@ namespace keel
 Type_table::Type_table()
 {
     // Since slot 0 is reserved for "invalid", push a dummy entry
-    types_.push_back( {} );
+    types_.push_back( Type {} );
     composed_.push_back( {} );
 
     error_ = add( { Type_kind::Error, 0, false, Type_id {} }, "<error>" );
@@ -77,6 +77,22 @@ Type_id Type_table::pointer_to( Type_id element )
     const std::string spelling = fmt::format( "{}*", name( element ) );
     const Type_id     id       = add( { Type_kind::Pointer, 0, false, element }, spelling );
     pointers_.emplace( element.v, id );
+    return id;
+}
+
+Type_id Type_table::structure( Node_id declaration, std::string_view name )
+{
+    const auto it = structs_.find( declaration.v );
+
+    if( it != structs_.end() )
+    {
+        return it->second;
+    }
+
+    const Type_id id = add( Type { Type_kind::Struct, 0, false, Type_id {}, declaration }, name );
+
+    structs_.emplace( declaration.v, id );
+
     return id;
 }
 
@@ -213,6 +229,18 @@ Type_id Type_table::cpp_result( Type_id a, Type_id b ) const
         return get( a ).width >= get( b ).width ? a : b;
     }
 
+    // Nothing but a number has a result here. Without this a struct's width of 0 falls into the
+    // promotion below and becomes i32, and the answer is nonsense.
+    if( !is_integer( a ) && !is_float( a ) )
+    {
+        return Type_id {};
+    }
+
+    if( !is_integer( b ) && !is_float( b ) )
+    {
+        return Type_id {};
+    }
+
     // Integral promotion: anything narrower than int becomes i32.
     if( get( a ).width < 32 )
     {
@@ -255,6 +283,15 @@ Type_id Type_table::arithmetic_result( Type_id a, Type_id b ) const
     }
 
     const Type_id c = cpp_result( a, b );
+
+    // cpp_result has no answer for a non-numeric operand. holds() treats an invalid id as an error
+    // and returns true for it, so without this the two checks below would both pass and common()
+    // would hand back the struct type - which is how `p + q` starts compiling.
+    if( !c.is_valid() )
+    {
+        return Type_id {};
+    }
+
     if( !holds( a, c ) || !holds( b, c ) )
     {
         return Type_id {};
@@ -278,6 +315,12 @@ bool Type_table::is_float( Type_id id ) const
 {
     assert( id.is_valid() );
     return get( id ).kind == Type_kind::Float;
+}
+
+bool Type_table::is_struct( Type_id id ) const
+{
+    assert( id.is_valid() );
+    return get( id ).kind == Type_kind::Struct;
 }
 
 bool Type_table::fits( u64 magnitude, bool negative, Type_id type ) const
@@ -793,6 +836,90 @@ TEST_CASE( "type_table_from_spelling_round_trips_every_builtin", "[sema][type]" 
 
         table.pointer_to( table.integer( 8, false ) );
         REQUIRE_FALSE( table.from_spelling( "u8*" ).is_valid() );
+    }
+}
+
+TEST_CASE( "type_table_interns_structs_by_declaration", "[sema][type]" )
+{
+    Type_table table;
+
+    // Node ids stand in for Struct_decl nodes; the table only ever compares them.
+    const Node_id first { 7 };
+    const Node_id second { 11 };
+
+    const Type_id point = table.structure( first, "Point" );
+
+    REQUIRE( point.is_valid() );
+    REQUIRE( table.is_struct( point ) );
+    REQUIRE( table.name( point ) == "Point" );
+    REQUIRE( table.get( point ).declaration == first );
+
+    SECTION( "the same declaration gives the same type" )
+    {
+        REQUIRE( table.structure( first, "Point" ) == point );
+    }
+
+    // The property the whole design turns on: at M7 two modules may each declare `Point`, and they
+    // must not be the same type.
+    SECTION( "two declarations of the same name are two types" )
+    {
+        REQUIRE( table.structure( second, "Point" ) != point );
+    }
+
+    // Struct names are resolved through the resolver, never through by_spelling_, which stays the
+    // eleven builtins forever.
+    SECTION( "a struct name is not a spelling" )
+    {
+        REQUIRE_FALSE( table.from_spelling( "Point" ).is_valid() );
+    }
+
+    SECTION( "a struct is none of the scalar kinds" )
+    {
+        REQUIRE_FALSE( table.is_integer( point ) );
+        REQUIRE_FALSE( table.is_float( point ) );
+        REQUIRE_FALSE( table.is_error( point ) );
+        REQUIRE_FALSE( table.is_struct( table.integer( 32, true ) ) );
+    }
+}
+
+// v0 has no operator overloading and no conversions between struct types, so every one of these
+// must fail. `p + q` compiling is the failure mode to watch for.
+TEST_CASE( "type_table_rejects_struct_conversions_and_arithmetic", "[sema][type]" )
+{
+    Type_table table;
+
+    const Type_id point = table.structure( Node_id { 7 }, "Point" );
+    const Type_id line  = table.structure( Node_id { 11 }, "Line" );
+    const Type_id i32   = table.integer( 32, true );
+
+    SECTION( "holds is identity only" )
+    {
+        REQUIRE( table.holds( point, point ) );
+        REQUIRE_FALSE( table.holds( point, line ) );
+        REQUIRE_FALSE( table.holds( point, i32 ) );
+        REQUIRE_FALSE( table.holds( i32, point ) );
+        REQUIRE_FALSE( table.holds( point, table.builtin( Type_kind::Bool ) ) );
+    }
+
+    SECTION( "there is no arithmetic on a struct" )
+    {
+        REQUIRE_FALSE( table.arithmetic_result( point, point ).is_valid() );
+        REQUIRE_FALSE( table.arithmetic_result( point, line ).is_valid() );
+        REQUIRE_FALSE( table.arithmetic_result( point, i32 ).is_valid() );
+        REQUIRE_FALSE( table.arithmetic_result( i32, point ).is_valid() );
+    }
+
+    SECTION( "and no common type with anything but itself" )
+    {
+        REQUIRE( table.common( point, point ) == point );
+        REQUIRE_FALSE( table.common( point, line ).is_valid() );
+        REQUIRE_FALSE( table.common( point, i32 ).is_valid() );
+    }
+
+    SECTION( "a literal never fits a struct" )
+    {
+        REQUIRE_FALSE( table.fits( 0, false, point ) );
+        REQUIRE_FALSE( table.fits( 42, false, point ) );
     }
 }
 

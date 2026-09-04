@@ -72,7 +72,7 @@ Resolution Resolver::run()
 
     for( const Node_id decl : ast_.children( ast_.root() ) )
     {
-        if( ast_.kind( decl ) == Node_kind::Function_decl )
+        if( ast_.kind( decl ) == Node_kind::Function_decl || ast_.kind( decl ) == Node_kind::Struct_decl )
         {
             declare( Symbol_id { ast_.aux( decl ) }, decl );
         }
@@ -105,12 +105,13 @@ void Resolver::visit( Node_id id )
         return;
     case Node_kind::Function_decl:
         push_scope( Scope_kind::Barrier );
-        // Skip return type for the same reason Node_kind::Var_decl skips its type
+        visit( ast_.children( id )[0] ); // return type
         visit( ast_.children( id )[1] ); // param list
         visit( ast_.children( id )[2] ); // body
         pop_scope();
         return;
     case Node_kind::Param_decl:
+        visit( ast_.children( id )[0] ); // the type annotation, which may name a struct
         declare( Symbol_id { ast_.aux( id ) }, id );
         return;
     case Node_kind::For_stmt:
@@ -122,7 +123,7 @@ void Resolver::visit( Node_id id )
         pop_scope();
         return;
     case Node_kind::Var_decl:
-        // Initialiser first: `i32 x = x;` must not see its own variable
+        visit( ast_.children( id )[0] ); // type
         visit( ast_.children( id )[1] ); // Var_decl arity of 2: type, initialiser
         declare( Symbol_id { ast_.aux( id ) }, id );
         return;
@@ -138,6 +139,79 @@ void Resolver::visit( Node_id id )
         else
         {
             error_at( ast_.span( id ), fmt::format( "`{}` is not declared", interner_.text( name ) ) );
+        }
+
+        return;
+    }
+    case Node_kind::Named_type:
+    {
+        const Node_id decl = lookup( Symbol_id { ast_.aux( id ) } );
+        if( decl.is_valid() )
+        {
+            bindings_[id.v] = decl;
+        }
+
+        return; // Not an error when absent
+    }
+    case Node_kind::Struct_literal:
+    {
+        const Symbol_id name { ast_.aux( id ) };
+        const Node_id   decl = lookup( name );
+
+        if( decl.is_valid() )
+        {
+            bindings_[id.v] = decl;
+        }
+        else
+        {
+            error_at( ast_.span( id ), fmt::format( "`{}` is not declared", interner_.text( name ) ) );
+        }
+
+        // Explicit rather than falling into default: the initialiser values are ordinary
+        // expressions and still need resolving, and a `return` added here for tidiness would
+        // silently stop that happening.
+        for( const Node_id init : ast_.children( id ) )
+        {
+            visit( init );
+        }
+
+        return;
+    }
+    case Node_kind::Struct_decl:
+    {
+        // Fields are a member namespace, not a lexical one, so they are deliberately *not*
+        // declared into scopes_: doing that would put `Point` in scope as a field and let it
+        // shadow the type `Point` inside the same struct body. A local map gives the duplicate
+        // check without the pollution - and without D19's shadowing walk, which does not apply to
+        // members.
+        std::unordered_map<u32, Node_id> fields;
+
+        for( const Node_id field : ast_.children( id ) )
+        {
+            visit( field ); // the field's type annotation still resolves through the normal path
+
+            if( ast_.kind( field ) != Node_kind::Field_decl )
+            {
+                continue;
+            }
+
+            const Symbol_id name { ast_.aux( field ) };
+
+            if( !name.is_valid() )
+            {
+                continue; // the parser already reported the missing name
+            }
+
+            const auto [it, inserted] = fields.try_emplace( name.v, field );
+
+            if( !inserted )
+            {
+                error_at(
+                    ast_.span( field ),
+                    fmt::format( "field `{}` is already declared", interner_.text( name ) ),
+                    previous_declaration_note( it->second )
+                );
+            }
         }
 
         return;
@@ -691,6 +765,142 @@ TEST_CASE( "resolver_reports_an_unknown_call", "[sema][resolve]" )
 
     INFO( p.rendered() );
     REQUIRE( p.errors() == 1 );
+}
+
+TEST_CASE( "resolver_declares_struct_names_at_file_scope", "[sema][resolve]" )
+{
+    SECTION( "a struct is usable as a type" )
+    {
+        const Resolved p( "struct Point { f64 x; }\ni32 f( Point p ) { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+    }
+
+    // D18 again: declaration order carries no meaning between top-level declarations, so the
+    // struct's name has to be collected in the first pass rather than as the walk reaches it.
+    SECTION( "even when declared after the function that uses it" )
+    {
+        const Resolved p( "i32 f( Point p ) { return 0; }\nstruct Point { f64 x; };\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+    }
+
+    SECTION( "a struct name collides with a function name" )
+    {
+        const Resolved p( "i32 Point() { return 0; }\nstruct Point { f64 x; };\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "an unknown type name is left for the checker, not reported here" )
+    {
+        const Resolved p( "i32 f( Widget w ) { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 ); // `i32` has no declaration either; silence is the only option
+    }
+}
+
+TEST_CASE( "resolver_reports_duplicate_fields", "[sema][resolve]" )
+{
+    SECTION( "one message per repeated name, pointing at the first" )
+    {
+        const Resolved p( "struct Point\n{\n    f64 x;\n    f64 x;\n};\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "field `x` is already declared" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "previous declaration is at: 3:" ) != std::string::npos );
+    }
+
+    SECTION( "two repeated names give two messages" )
+    {
+        const Resolved p( "struct P { f64 x; f64 x; f64 y; f64 y; };" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 2 );
+    }
+
+    // Fields are a member namespace: a field may share a name with a local, a function, or a type,
+    // and none of those is a collision.
+    SECTION( "a field does not collide with anything outside the struct" )
+    {
+        const Resolved p( "struct Point { f64 x; };\n"
+                          "i32 count() { return 0; }\n"
+                          "struct Other { f64 x; f64 count; f64 Point; };\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+    }
+
+    // The reverse of the same rule: declaring fields into scopes_ would put `Point` in scope as a
+    // field and shadow the type of the same name in the very next field.
+    SECTION( "a field named after a type does not shadow that type" )
+    {
+        const Resolved p( "struct Point { f64 x; };\nstruct Holder { f64 Point; Point inner; };\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+    }
+}
+
+// The values inside a struct literal are ordinary expressions. This is the property that breaks
+// silently if the Struct_literal case stops visiting its children.
+TEST_CASE( "resolver_resolves_inside_struct_literals", "[sema][resolve]" )
+{
+    SECTION( "the type name binds to its declaration" )
+    {
+        const Resolved p( "struct Point { f64 x; };\ni32 main() { auto q = Point { 1.0 }; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+
+        const Node_id literal = p.nth( Node_kind::Struct_literal, 0 );
+        REQUIRE( p.declaration_of( literal ) == p.nth( Node_kind::Struct_decl, 0 ) );
+    }
+
+    SECTION( "an unknown type is reported" )
+    {
+        const Resolved p( "i32 main() { auto q = Widget { 1.0 }; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "and the initialiser values are resolved too" )
+    {
+        const Resolved p( "struct Point { f64 x; };\ni32 main() { auto q = Point { missing }; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`missing` is not declared" ) != std::string::npos );
+    }
+
+    SECTION( "a name used in a literal binds to its declaration" )
+    {
+        const Resolved p( "struct Point { f64 x; };\ni32 main() { f64 v = 1.0; auto q = Point { v }; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.declaration_of( p.nth( Node_kind::Name_expr, 0 ) ) == p.nth( Node_kind::Var_decl, 0 ) );
+    }
+}
+
+// The field name lives in aux precisely so it is never looked up: `p.x` must not send the resolver
+// hunting for a variable called `x`.
+TEST_CASE( "resolver_does_not_resolve_field_names", "[sema][resolve]" )
+{
+    const Resolved p( "struct Point { f64 x; };\ni32 f( Point p ) { auto v = p.nonexistent; return 0; }\n" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.errors() == 0 ); // whether the field exists is the checker's question
+
+    const Node_id field = p.nth( Node_kind::Field_expr, 0 );
+    REQUIRE( p.declaration_of( p.nth( Node_kind::Name_expr, 0 ) ) == p.nth( Node_kind::Param_decl, 0 ) );
+    REQUIRE( field.is_valid() );
 }
 
 } // namespace keel

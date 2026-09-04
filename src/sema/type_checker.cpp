@@ -3,6 +3,7 @@
 #include "lex/token.h"
 
 #include <algorithm>
+#include <unordered_set>
 
 namespace keel
 {
@@ -167,7 +168,14 @@ private:
     // parameter and return types straight out of types_. Same reason as the resolver's two-pass
     // file scope: mutual recursion (D18) means `even` needs `odd`'s return type.
     void declare_signatures();
+    void declare_signatures_struct_decls();
+    void declare_signatures_field_decls();
+    void declare_signatures_function_decls();
 
+    void order_structs();
+    bool contains_itself( Node_id decl, std::vector<Node_id>& path );
+
+    // The main entry points for visiting and inferring types.
     void    visit( Node_id id ); // statements and declarations
     Type_id infer( Node_id id ); // expression, no expectation
 
@@ -199,6 +207,13 @@ private:
     Type_id infer_binary( Node_id id );
     Type_id infer_unary( Node_id id );
 
+    Node_id find_field( Type_id type, Symbol_id name ) const;
+    Type_id infer_field( Node_id id );
+
+    // A composite constructor, not a value literal: its type is fixed by its name rather than
+    // adopted from context, which is why it has no place in infer_literal.
+    Type_id infer_struct_literal( Node_id id );
+
     bool    accepts( Operands operands, Type_id type ) const;
     Type_id check( Node_id id, Type_id expected ); // expression, with one
     Type_id type_of_annotation( Node_id id );      // Named_type/Pointer_type subtree; invalid for auto
@@ -216,7 +231,8 @@ private:
     Diagnostics&      diags_;
 
     Type_table           table_;
-    std::vector<Type_id> types_; // sized node_count(), invalid-filled, like bindings_ in Resolver
+    std::vector<Type_id> types_;        // sized node_count(), invalid-filled, like bindings_ in Resolver
+    std::vector<Node_id> struct_order_; // dependencies first; also the "already proved acyclic" set
     Type_id              current_return_;
 };
 
@@ -225,10 +241,63 @@ Types Checker::run()
     types_.assign( ast_.node_count(), Type_id {} );
     declare_signatures();
     visit( ast_.root() );
-    return Types( std::move( table_ ), std::move( types_ ) );
+    return Types( std::move( table_ ), std::move( types_ ), std::move( struct_order_ ) );
 }
 
 void Checker::declare_signatures()
+{
+    declare_signatures_struct_decls();
+    declare_signatures_field_decls();
+    order_structs();
+    declare_signatures_function_decls();
+}
+
+void Checker::declare_signatures_struct_decls()
+{
+    for( Node_id child : ast_.children( ast_.root() ) )
+    {
+        if( ast_.kind( child ) == Node_kind::Error )
+        {
+            continue;
+        }
+
+        if( ast_.kind( child ) != Node_kind::Struct_decl )
+        {
+            continue;
+        }
+
+        std::string_view name = interner_.text( Symbol_id { ast_.aux( child ) } );
+        record( child, table_.structure( child, name ) );
+    }
+}
+
+void Checker::declare_signatures_field_decls()
+{
+    for( Node_id child : ast_.children( ast_.root() ) )
+    {
+        if( ast_.kind( child ) == Node_kind::Error )
+        {
+            continue;
+        }
+
+        if( ast_.kind( child ) != Node_kind::Struct_decl )
+        {
+            continue;
+        }
+
+        for( Node_id field : ast_.children( child ) )
+        {
+            if( ast_.kind( field ) != Node_kind::Field_decl )
+            {
+                continue;
+            }
+
+            record( field, type_of_annotation( ast_.children( field )[0] ) );
+        }
+    }
+}
+
+void Checker::declare_signatures_function_decls()
 {
     for( Node_id child : ast_.children( ast_.root() ) )
     {
@@ -279,6 +348,117 @@ void Checker::declare_signatures()
             }
         }
     }
+}
+
+void Checker::order_structs()
+{
+    std::vector<Node_id> cycle_reported {};
+
+    for( Node_id child : ast_.children( ast_.root() ) )
+    {
+        if( ast_.kind( child ) == Node_kind::Error )
+        {
+            continue;
+        }
+
+        if( ast_.kind( child ) != Node_kind::Struct_decl )
+        {
+            continue;
+        }
+
+        bool already_reported = std::find( cycle_reported.begin(), cycle_reported.end(), child ) != cycle_reported.end();
+        if( already_reported )
+        {
+            continue;
+        }
+
+        std::vector<Node_id> path;
+
+        if( contains_itself( child, path ) )
+        {
+            // The route, so the message names how it closes rather than only that it does.
+            std::string route;
+
+            for( const Node_id node : path )
+            {
+                if( !route.empty() )
+                {
+                    route += " -> ";
+                }
+
+                route += interner_.text( Symbol_id { ast_.aux( node ) } );
+            }
+
+            error_at(
+                ast_.span( child ),
+                fmt::format( "`{}` contains itself, so it has no size", interner_.text( Symbol_id { ast_.aux( child ) } ) ),
+                route
+            );
+
+            // Every struct on the cycle is reported by this one message. Without marking them all,
+            // `A -> B -> A` is found again from B and reported twice for one mistake.
+            for( const Node_id node : path )
+            {
+                cycle_reported.push_back( node );
+            }
+        }
+    }
+}
+
+bool Checker::contains_itself( Node_id decl, std::vector<Node_id>& path )
+{
+    // Being in the order *is* being done: a struct lands there only once every struct it contains
+    // has, so membership and "proved acyclic" are the same fact. A linear scan is right here -
+    // this is the number of structs in one file.
+    if( std::find( struct_order_.begin(), struct_order_.end(), decl ) != struct_order_.end() )
+    {
+        return false;
+    }
+
+    path.push_back( decl );
+
+    for( Node_id field : ast_.children( decl ) )
+    {
+        if( ast_.kind( field ) != Node_kind::Field_decl )
+        {
+            continue;
+        }
+
+        // Read back what the field pass recorded. Calling type_of_annotation again would report
+        // every unknown type and D1 suggestion a second time.
+        const Type_id field_type = types_[field.v];
+
+        // A pointer to a struct is finite, so only by-value containment counts - which is what
+        // makes `struct Node { Node* next; }` legal once pointers arrive at M3.
+        if( !field_type.is_valid() || table_.is_error( field_type ) || !table_.is_struct( field_type ) )
+        {
+            continue;
+        }
+
+        const Node_id field_decl = table_.get( field_type ).declaration;
+        if( !field_decl.is_valid() || ast_.kind( field_decl ) != Node_kind::Struct_decl )
+        {
+            continue;
+        }
+
+        if( std::find( path.begin(), path.end(), field_decl ) != path.end() )
+        {
+            path.push_back( field_decl );
+            return true;
+        }
+
+        if( contains_itself( field_decl, path ) )
+        {
+            return true;
+        }
+    }
+
+    // The DFS post-order: every struct after everything it contains, which is exactly the order C
+    // needs for by-value members. A struct on a cycle never reaches here, and never needs to - the
+    // driver stops before emission when anything reported.
+    struct_order_.push_back( decl );
+    path.pop_back();
+    return false;
 }
 
 void Checker::visit( Node_id id )
@@ -371,6 +551,16 @@ void Checker::check_condition( Node_id id )
 
 bool Checker::is_assignable( Node_id id ) const
 {
+    // A field is always assignable. `make().x = 2.0;` writes into a temporary and is therefore
+    // useless, but it is legal C++ - a member of a class prvalue is an xvalue - and rejecting it
+    // would need a notion of value categories that v0 does not otherwise have. D15 does not cover
+    // it either: that rule asks whether an expression *kind* has an effect, and an assignment
+    // always does. Pointless-but-harmless belongs to a future warning, not to the type checker.
+    if( ast_.kind( id ) == Node_kind::Field_expr )
+    {
+        return true; // whether the object has fields at all is infer_field's question
+    }
+
     const Node_id decl = ast_.kind( id ) == Node_kind::Name_expr ? resolution_.declaration_of( id ) : Node_id {};
     return decl.is_valid() && ( ast_.kind( decl ) == Node_kind::Var_decl || ast_.kind( decl ) == Node_kind::Param_decl );
 }
@@ -586,6 +776,12 @@ Type_id Checker::infer( Node_id id )
         // Silence here would make it look accepted.
         error_at( ast_.span( id ), "string literals are not supported yet" );
         return record( id, table_.builtin( Type_kind::Error ) );
+
+    case Node_kind::Field_expr:
+        return infer_field( id );
+
+    case Node_kind::Struct_literal:
+        return infer_struct_literal( id );
 
     default:
         // Every expression not yet given a case of its own - the literals, chiefly, which cannot
@@ -998,6 +1194,177 @@ Type_id Checker::infer_unary( Node_id id )
     return record( id, operand_type );
 }
 
+Node_id Checker::find_field( Type_id type, Symbol_id name ) const
+{
+    const Node_id decl = table_.get( type ).declaration;
+
+    if( !decl.is_valid() )
+    {
+        return Node_id();
+    }
+
+    for( const Node_id field : ast_.children( decl ) )
+    {
+        if( ast_.aux( field ) == name.v )
+        {
+            return field;
+        }
+    }
+
+    return Node_id();
+}
+
+Type_id Checker::infer_field( Node_id id )
+{
+    const Node_id base      = ast_.children( id )[0];
+    const Type_id base_type = infer( base );
+
+    if( table_.is_error( base_type ) )
+    {
+        return record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    if( !table_.is_struct( base_type ) )
+    {
+        error_at( ast_.span( base ), fmt::format( "`{}` has no fields", table_.name( base_type ) ) );
+        return record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    const Node_id decl = find_field( base_type, Symbol_id { ast_.aux( id ) } );
+    if( !decl.is_valid() )
+    {
+        error_at(
+            ast_.span( id ),
+            fmt::format( "`{}` has no field `{}`", table_.name( base_type ), interner_.text( Symbol_id { ast_.aux( id ) } ) )
+        );
+
+        return record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    return record( id, types_[decl.v] );
+}
+
+Type_id Checker::infer_struct_literal( Node_id id )
+{
+    const Type_id error = table_.builtin( Type_kind::Error );
+
+    // The resolver already bound the type name, so there is no scope lookup here - and if it
+    // failed, it reported. Saying so again is the cascade the error type exists to prevent.
+    const Node_id decl = resolution_.declaration_of( id );
+
+    if( !decl.is_valid() || ast_.kind( decl ) != Node_kind::Struct_decl )
+    {
+        for( const Node_id init : ast_.children( id ) )
+        {
+            infer( ast_.children( init )[0] ); // type the values anyway
+        }
+
+        return record( id, error );
+    }
+
+    const std::span<const Node_id> initialisers = ast_.children( id );
+    const std::span<const Node_id> fields       = ast_.children( decl );
+    const std::string_view         struct_name  = interner_.text( Symbol_id { ast_.aux( decl ) } );
+    const Type_id                  result       = types_[decl.v];
+
+    // One convention per literal, as C++20 requires. Two in the same literal is a reader's
+    // problem rather than a parser's.
+    std::size_t named = 0;
+
+    for( const Node_id init : initialisers )
+    {
+        named += Symbol_id { ast_.aux( init ) }.is_valid() ? 1 : 0;
+    }
+
+    if( named != 0 && named != initialisers.size() )
+    {
+        error_at(
+            ast_.span( id ),
+            "an initialiser list is either all positional or all named",
+            "give every field a name, or none of them"
+        );
+    }
+
+    if( named == 0 )
+    {
+        if( initialisers.size() != fields.size() )
+        {
+            error_at(
+                ast_.span( id ),
+                fmt::format(
+                    "`{}` has {} field{}, but {} {} given",
+                    struct_name,
+                    fields.size(),
+                    fields.size() == 1 ? "" : "s",
+                    initialisers.size(),
+                    initialisers.size() == 1 ? "was" : "were"
+                )
+            );
+        }
+
+        // The pairs that line up are checked even when the count is wrong: one missing value
+        // should not hide a type error in the others.
+        const std::size_t shared = std::min( initialisers.size(), fields.size() );
+
+        for( std::size_t i = 0; i < shared; ++i )
+        {
+            // check, never infer - `Point { 1, 2 }` has to let those literals become f64.
+            check( ast_.children( initialisers[i] )[0], types_[fields[i].v] );
+        }
+
+        for( std::size_t i = shared; i < initialisers.size(); ++i )
+        {
+            infer( ast_.children( initialisers[i] )[0] );
+        }
+
+        return record( id, result );
+    }
+
+    std::unordered_map<u32, Node_id> seen;
+
+    for( const Node_id init : initialisers )
+    {
+        const Symbol_id name { ast_.aux( init ) };
+        const Node_id   value = ast_.children( init )[0];
+
+        if( !name.is_valid() )
+        {
+            infer( value ); // the mixing error above already covered this one
+            continue;
+        }
+
+        const Node_id field = find_field( result, name );
+
+        if( !field.is_valid() )
+        {
+            error_at( ast_.span( init ), fmt::format( "`{}` has no field `{}`", struct_name, interner_.text( name ) ) );
+            infer( value );
+            continue;
+        }
+
+        if( !seen.try_emplace( name.v, init ).second )
+        {
+            error_at( ast_.span( init ), fmt::format( "field `{}` is given twice", interner_.text( name ) ) );
+        }
+
+        check( value, types_[field.v] );
+    }
+
+    // Every field that is missing, not just the first: a struct that gained three fields should
+    // say so once rather than over three compiles.
+    for( const Node_id field : fields )
+    {
+        const Symbol_id name { ast_.aux( field ) };
+
+        if( name.is_valid() && seen.find( name.v ) == seen.end() )
+        {
+            error_at( ast_.span( id ), fmt::format( "field `{}` is not initialised", interner_.text( name ) ) );
+        }
+    }
+
+    return record( id, result );
+}
+
 Type_id Checker::check( Node_id id, Type_id expected )
 {
     if( !id.is_valid() )
@@ -1085,6 +1452,26 @@ Type_id Checker::type_of_annotation( Node_id id )
     {
     case Node_kind::Named_type:
     {
+        // Check for user-defined types first
+        const Node_id decl = resolution_.declaration_of( id );
+
+        if( decl.is_valid() )
+        {
+            if( ast_.kind( decl ) != Node_kind::Struct_decl )
+            {
+                // Resolved to a function or variable of the same name.
+                error_at(
+                    ast_.span( id ), fmt::format( "`{}` is not a type", interner_.text( Symbol_id { ast_.aux( id ) } ) )
+                );
+
+                return table_.builtin( Type_kind::Error );
+            }
+
+            return types_[decl.v];
+        }
+
+        // Check for built-in types next
+
         const std::string_view spelling = interner_.text( Symbol_id { ast_.aux( id ) } );
         const Type_id          type     = table_.from_spelling( spelling );
 
@@ -2005,6 +2392,345 @@ TEST_CASE( "type_checker_constrains_the_signature_of_main", "[sema][types]" )
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
+    }
+}
+
+TEST_CASE( "type_checker_types_struct_declarations", "[sema][types]" )
+{
+    SECTION( "a struct is a type, and a field carries its own" )
+    {
+        const Typed p( "struct Point { f64 x; u32 n; };\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Struct_decl, 0 ) ) == "Point" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Field_decl, 0 ) ) == "f64" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Field_decl, 1 ) ) == "u32" );
+    }
+
+    // The field pass has to reach into each struct: fields are children of the Struct_decl, not of
+    // the root, so a loop over the root's children finds none of them and a bad field type becomes
+    // invisible.
+    SECTION( "an unknown field type is reported" )
+    {
+        const Typed p( "struct Point { Widget w; };\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "unknown type `Widget`" ) != std::string::npos );
+    }
+
+    SECTION( "D1 applies to a field type too" )
+    {
+        const Typed p( "struct Point { double x; };\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "f64" ) != std::string::npos );
+    }
+
+    // Struct types must all exist before any field type resolves: `Line` names `Point`, which is
+    // declared below it.
+    SECTION( "a field may name a struct declared later" )
+    {
+        const Typed p( "struct Line { Point a; Point b; };\nstruct Point { f64 x; };\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a struct is usable in a signature" )
+    {
+        const Typed p( "struct Point { f64 x; };\nPoint make( Point p ) { return p; }\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // The resolver binds the name; if it bound to something that is not a struct, that is not a
+    // type however good the spelling looks.
+    SECTION( "a function name is not a type" )
+    {
+        const Typed p( "i32 Point() { return 0; }\ni32 f( Point p ) { return 0; }\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() >= 1 );
+    }
+}
+
+// A struct containing itself by value has infinite size. C's error for this is incomprehensible,
+// and the emitter's topological sort would not terminate.
+TEST_CASE( "type_checker_rejects_recursive_structs", "[sema][types]" )
+{
+    SECTION( "directly" )
+    {
+        const Typed p( "struct Node { Node next; };\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() >= 1 );
+    }
+
+    // Exactly one message: every struct on the cycle is marked when it is found, or the same cycle
+    // is rediscovered from B and reported twice for one mistake.
+    SECTION( "and through another struct, reported once" )
+    {
+        const Typed p( "struct A { B b; };\nstruct B { A a; };\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "a three-struct cycle is also one message" )
+    {
+        const Typed p( "struct A { B b; };\nstruct B { C c; };\nstruct C { A a; };\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    // Containment is what makes it infinite. A chain that does not close is fine however deep.
+    SECTION( "a deep chain that does not close is fine" )
+    {
+        const Typed p( "struct A { f64 x; };\nstruct B { A a; };\nstruct C { B b; };\n"
+                       "struct D { C c; };\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and a struct used twice is not a cycle" )
+    {
+        const Typed p( "struct Point { f64 x; };\nstruct Line { Point a; Point b; };\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+TEST_CASE( "type_checker_types_field_access", "[sema][types]" )
+{
+    SECTION( "a field access has the field's type" )
+    {
+        const Typed p( "struct Point { f64 x; u32 n; };\n"
+                       "f64 get( Point p ) { return p.x; }\n"
+                       "i32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Field_expr, 0 ) ) == "f64" );
+    }
+
+    SECTION( "and is checked against its context" )
+    {
+        const Typed p( "struct Point { f64 x; };\n"
+                       "u32 get( Point p ) { return p.x; }\n"
+                       "i32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() >= 1 );
+    }
+
+    SECTION( "an unknown field is reported" )
+    {
+        const Typed p( "struct Point { f64 x; };\n"
+                       "f64 get( Point p ) { return p.z; }\n"
+                       "i32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "z" ) != std::string::npos );
+    }
+
+    SECTION( "so is a field on something that is not a struct" )
+    {
+        const Typed p( "i32 f( i32 n ) { return n.x; }\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "access chains" )
+    {
+        const Typed p( "struct Point { f64 x; };\n"
+                       "struct Line { Point a; };\n"
+                       "f64 get( Line l ) { return l.a.x; }\n"
+                       "i32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        // The inner access is built first, so nth() sees `l.a` before `l.a.x`.
+        REQUIRE( p.type_name( p.nth( Node_kind::Field_expr, 0 ) ) == "Point" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Field_expr, 1 ) ) == "f64" );
+    }
+
+    // One diagnostic for one mistake: an object that failed to type has nothing to look a field up
+    // in, and saying so again would be the cascade the error type exists to prevent.
+    SECTION( "a field on an unresolved name reports once" )
+    {
+        const Typed p( "i32 main() { auto v = missing.x; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 ); // the resolver already reported the name
+    }
+
+    // Useless - the temporary is discarded - but legal, as it is in C++. Rejecting it would need
+    // value categories, which v0 does not have.
+    SECTION( "a field of a temporary is still assignable" )
+    {
+        const Typed p( "struct Point { f64 x; };\n"
+                       "Point make() { return Point { 1.0 }; }\n"
+                       "i32 main() { make().x = 2.0; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a field is assignable" )
+    {
+        const Typed p( "struct Point { f64 x; };\n"
+                       "f64 bump( Point p ) { p.x = 1.0; return p.x; }\n"
+                       "i32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+TEST_CASE( "type_checker_types_struct_literals", "[sema][types]" )
+{
+    constexpr std::string_view point = "struct Point { f64 x; f64 y; };\n";
+
+    SECTION( "positional initialisers match the fields in order" )
+    {
+        const Typed p( std::string( point ) + "i32 main() { auto q = Point { 1.0, 2.0 }; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Struct_literal, 0 ) ) == "Point" );
+    }
+
+    SECTION( "designated initialisers match by name" )
+    {
+        const Typed p( std::string( point ) + "i32 main() { auto q = Point { .x = 1.0, .y = 2.0 }; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Struct_literal, 0 ) ) == "Point" );
+    }
+
+    // The values are *checked*, not inferred, so a literal adopts the field's type. Inferring
+    // would settle `1` on i32 and then refuse to store it in an f64 field.
+    SECTION( "a value adopts the field's type" )
+    {
+        const Typed p( std::string( point ) + "i32 main() { auto q = Point { 1, 2 }; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Int_literal, 0 ) ) == "f64" );
+    }
+
+    SECTION( "a value that does not fit the field is rejected" )
+    {
+        const Typed p( "struct Small { u8 v; };\ni32 main() { auto q = Small { 300 }; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "and so is one of the wrong type" )
+    {
+        const Typed p( std::string( point ) + "i32 main() { bool b = true; auto q = Point { b, 2.0 }; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() >= 1 );
+    }
+
+    SECTION( "too few and too many both report" )
+    {
+        for( const char* tail :
+             { "i32 main() { auto q = Point { 1.0 }; return 0; }", "i32 main() { auto q = Point { 1.0, 2.0, 3.0 }; return 0; }"
+             } )
+        {
+            const Typed p( std::string( point ) + tail );
+
+            INFO( tail << "\n" << p.rendered() );
+            REQUIRE( p.errors() >= 1 );
+        }
+    }
+
+    SECTION( "an unknown field name is reported" )
+    {
+        const Typed p( std::string( point ) + "i32 main() { auto q = Point { .z = 1.0, .y = 2.0 }; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() >= 1 );
+    }
+
+    SECTION( "a repeated field name is reported" )
+    {
+        const Typed p( std::string( point ) + "i32 main() { auto q = Point { .x = 1.0, .x = 2.0 }; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() >= 1 );
+    }
+
+    // Every field must be given, so adding one to a struct errors at each construction site rather
+    // than silently zeroing.
+    SECTION( "a missing field is reported" )
+    {
+        const Typed p( std::string( point ) + "i32 main() { auto q = Point { .x = 1.0 }; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() >= 1 );
+    }
+
+    // As C++20 forbids. Two conventions in one literal is a reader's problem, not a parser's.
+    SECTION( "positional and designated may not be mixed" )
+    {
+        const Typed p( std::string( point ) + "i32 main() { auto q = Point { 1.0, .y = 2.0 }; return 0; }" );
+
+        INFO( p.rendered() );
+
+        // The message, not just a count: with the mixing rule removed the literal is read as
+        // named, `x` goes uninitialised, and a different error keeps the count above zero.
+        REQUIRE( p.rendered().find( "all positional or all named" ) != std::string::npos );
+    }
+
+    SECTION( "an empty struct takes an empty literal" )
+    {
+        const Typed p( "struct Empty { };\ni32 main() { auto q = Empty { }; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "literals nest" )
+    {
+        const Typed p( "struct Point { f64 x; };\nstruct Line { Point a; Point b; };\n"
+                       "i32 main() { auto l = Line { Point { 1.0 }, Point { 2.0 } }; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and can be passed, returned and assigned" )
+    {
+        const Typed p( "struct Point { f64 x; };\n"
+                       "Point echo( Point p ) { return p; }\n"
+                       "i32 main() { auto a = Point { 1.0 }; auto b = echo( a ); a = b; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "but there is no arithmetic on one" )
+    {
+        const Typed p( "struct Point { f64 x; };\n"
+                       "i32 main() { auto a = Point { 1.0 }; auto b = Point { 2.0 }; auto c = a + b; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() >= 1 );
     }
 }
 

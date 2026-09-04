@@ -1,0 +1,9 @@
+// D22: `.` is the only member-access operator, and binds tighter than every other one.
+i32 main()
+{
+    i32 a = p.x;
+    i32 b = p.x.y;
+    i32 c = f().x;
+    i32 d = p.x + q.y;
+    return 0;
+}

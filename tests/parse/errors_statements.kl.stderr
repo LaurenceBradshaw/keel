@@ -16,10 +16,16 @@ error: expected `identifier`, found `=`
 3 | i32 missing_name()   { auto = 5; }
   |                            ^
 
-error: expected a statement, found `struct`
+error: a struct cannot be declared inside a function
  --> parse/errors_statements.kl:4:25
   |
 4 | i32 not_a_statement() { struct x; }
-  |                         ^^^^^^
+  |                         ^^^^^^ declare it at file scope, where it is visible throughout the file
 
-4 errors generated
+error: expected `{`, found `;`
+ --> parse/errors_statements.kl:4:33
+  |
+4 | i32 not_a_statement() { struct x; }
+  |                                 ^
+
+5 errors generated

@@ -24,6 +24,11 @@ mangle_function( std::string_view module, std::string_view name, std::span<const
     return fmt::format( "kl_{}_{}__{}", module, name, argtypes );
 }
 
+std::string mangle_struct( std::string_view module, std::string_view name )
+{
+    return fmt::format( "kl_{}_{}", module, name );
+}
+
 std::string mangle_local( std::string_view name, u32 declaration )
 {
     // kl_<name>_<node id>

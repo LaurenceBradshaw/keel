@@ -71,10 +71,16 @@ public:
 private:
     // --- structure ---
 
-    void emit_prologue();   // includes, and the fixed-width type contract of §7.8
+    void emit_prologue(); // includes, and the fixed-width type contract of §7.8
+    // §7.4. Types before prototypes, because a signature may name a struct by value. The order
+    // comes from the checker, which computed it while proving there are no cycles.
+    void emit_structs();
+    void emit_struct( Node_id decl );
+
     void emit_prototypes(); // every function, ahead of every body: this is what makes D18 work in C
+    void emit_functions();
     void emit_function( Node_id id );
-    void emit_main_shim( Node_id keel_main ); // C needs a real main(); Keel's is a mangled symbol
+    void emit_main_shim(); // C needs a real main(); Keel's is a mangled symbol
 
     // Built once and used by the prototype, the definition and the shim. A prototype and its
     // definition disagreeing is the mistake C punishes hardest, so they cannot be written twice.
@@ -110,6 +116,22 @@ private:
     std::string lower_binary( Node_id id );
     std::string lower_unary( Node_id id );
     std::string lower_call( Node_id id );
+    std::string lower_field( Node_id id );
+
+    // The C expression naming *where* a value lives, rather than one naming the value itself.
+    // lower() reads: for `p.x` it emits `t = p.x;` and hands back `t`, so assigning to what it
+    // returns writes into the temporary and leaves the struct untouched. Assignment targets and
+    // increment operands go through here instead.
+    std::string lower_place( Node_id id );
+    std::string lower_struct_literal( Node_id id );
+
+    // The Field_decl a name refers to in a struct type. The emitter cannot reach the checker's
+    // copy of this, and needs the declaration node to mangle the C member name.
+    Node_id field_of( Type_id type, Symbol_id name ) const;
+
+    // The C name of a struct or one of its fields.
+    std::string struct_name( Node_id decl ) const;
+    std::string field_name( Node_id field ) const;
     std::string lower_literal( Node_id id );
     std::string lower_name( Node_id id );
 
@@ -142,32 +164,95 @@ private:
 std::string Emitter::run()
 {
     emit_prologue();
+    emit_structs();
     emit_prototypes();
+    emit_functions();
+    emit_main_shim();
 
-    // a body per function decl
-    for( Node_id child : ast_.children( ast_.root() ) )
+    return out_;
+}
+
+void Emitter::emit_structs()
+{
+    // Already in dependency order: the checker's cycle walk is a topological sort, and its
+    // post-order is exactly what C needs for by-value members. Rebuilding the graph here would be
+    // a second implementation of one rule.
+    const std::vector<Node_id>& order = types_.struct_order();
+
+    if( order.empty() )
+    {
+        return;
+    }
+
+    // §7.4's forward declarations. Nothing in v0 needs them - the definitions are already ordered
+    // - but they cost a line each and become necessary the moment a struct holds a pointer to one.
+    for( const Node_id decl : order )
+    {
+        write_line( fmt::format( "{};", struct_name( decl ) ) );
+    }
+
+    write_line( "" );
+
+    for( const Node_id decl : order )
+    {
+        emit_struct( decl );
+    }
+}
+
+void Emitter::emit_struct( Node_id decl )
+{
+    write_line( struct_name( decl ) );
+    write_line( "{" );
+    indent_ += 4;
+
+    for( const Node_id field : ast_.children( decl ) )
+    {
+        if( ast_.kind( field ) != Node_kind::Field_decl )
+        {
+            continue;
+        }
+
+        write_line( fmt::format( "{} {};", c_type( types_.type_of( field ) ), field_name( field ) ) );
+    }
+
+    indent_ -= 4;
+    write_line( "};" );
+    write_line( "" );
+}
+
+void Emitter::emit_functions()
+{
+    for( const Node_id child : ast_.children( ast_.root() ) )
     {
         if( ast_.kind( child ) == Node_kind::Function_decl )
         {
             emit_function( child );
         }
     }
+}
 
-    // A program with no main is a library, not an error for the emitter to raise.
-    for( const Node_id child : ast_.children( ast_.root() ) )
+std::string Emitter::struct_name( Node_id decl ) const
+{
+    return fmt::format( "struct {}", mangle_struct( "", interner_.text( Symbol_id { ast_.aux( decl ) } ) ) );
+}
+
+std::string Emitter::field_name( Node_id field ) const
+{
+    // Mangled like a local: a field called `while` or `int` would otherwise break the generated C.
+    return mangle_local( interner_.text( Symbol_id { ast_.aux( field ) } ), field.v );
+}
+
+Node_id Emitter::field_of( Type_id type, Symbol_id name ) const
+{
+    for( const Node_id field : ast_.children( types_.table().get( type ).declaration ) )
     {
-        if( ast_.kind( child ) != Node_kind::Function_decl )
+        if( ast_.kind( field ) == Node_kind::Field_decl && ast_.aux( field ) == name.v )
         {
-            continue; // aux is only a Symbol_id on a declaration
-        }
-
-        if( interner_.text( Symbol_id { ast_.aux( child ) } ) == "main" )
-        {
-            emit_main_shim( child );
-            break;
+            return field;
         }
     }
-    return out_;
+
+    return Node_id {};
 }
 
 void Emitter::emit_prologue()
@@ -253,10 +338,32 @@ void Emitter::emit_function( Node_id id )
     write_line( "" );
 }
 
-void Emitter::emit_main_shim( Node_id keel_main )
+void Emitter::emit_main_shim()
 {
-    // C needs a real main(). The symbol is derived from the node rather than hardcoded, so that a
-    // main with a different signature calls the function that actually exists.
+    Node_id keel_main;
+
+    for( const Node_id child : ast_.children( ast_.root() ) )
+    {
+        if( ast_.kind( child ) != Node_kind::Function_decl )
+        {
+            continue; // aux is only a Symbol_id on a declaration
+        }
+
+        if( interner_.text( Symbol_id { ast_.aux( child ) } ) == "main" )
+        {
+            keel_main = child;
+            break;
+        }
+    }
+
+    // A program with no main is a library, not an error for the emitter to raise.
+    if( !keel_main.is_valid() )
+    {
+        return;
+    }
+
+    // The symbol is derived from the node rather than hardcoded, so that a main with a different
+    // signature calls the function that actually exists.
     const std::string_view name   = interner_.text( Symbol_id { ast_.aux( keel_main ) } );
     const std::string      symbol = mangle_function( "", name, parameter_types( keel_main ), types_.table() );
 
@@ -362,7 +469,7 @@ void Emitter::emit_assign( Node_id id )
     // Lowered once each, in order. The target is a name today, so lowering it emits nothing - but
     // reusing the operand rather than lowering twice is what keeps that true when M2 brings field
     // access, where lowering does emit statements.
-    const std::string lvalue = lower( target );
+    const std::string lvalue = lower_place( target );
     const std::string rvalue = lower( value );
 
     if( op == Token_kind::Equal )
@@ -509,7 +616,7 @@ void Emitter::emit_increment( Node_id id )
     const Node_id    operand = ast_.children( id )[0];
 
     const Type_id     type   = types_.type_of( operand );
-    const std::string target = lower( operand );
+    const std::string target = lower_place( operand );
 
     // `x++` is `x = x + 1`. C's own `++` would do the same here, but writing it out keeps the
     // conversion explicit and leaves one code path, exactly as compound assignment does.
@@ -551,6 +658,12 @@ std::string Emitter::lower( Node_id id )
 
     case Node_kind::Call_expr:
         return lower_call( id );
+
+    case Node_kind::Field_expr:
+        return lower_field( id );
+
+    case Node_kind::Struct_literal:
+        return lower_struct_literal( id );
 
     default:
         assert( false && "unexpected expression kind" );
@@ -664,6 +777,87 @@ std::string Emitter::lower_call( Node_id id )
     return temp;
 }
 
+std::string Emitter::lower_place( Node_id id )
+{
+    switch( ast_.kind( id ) )
+    {
+    case Node_kind::Name_expr:
+        return lower_name( id ); // a local is already a place; no temporary is involved
+
+    case Node_kind::Field_expr:
+    {
+        const Node_id object = ast_.children( id )[0];
+        const Node_id field  = field_of( types_.type_of( object ), Symbol_id { ast_.aux( id ) } );
+
+        assert( field.is_valid() && "the checker accepted a field that does not exist" );
+
+        return fmt::format( "{}.{}", lower_place( object ), field_name( field ) );
+    }
+
+    default:
+        // Not a place - a call, say. `make().x = 2.0;` is legal and useless, and writing into the
+        // temporary the call produced is exactly what it means.
+        return lower( id );
+    }
+}
+
+std::string Emitter::lower_field( Node_id id )
+{
+    const Node_id     object  = ast_.children( id )[0];
+    const std::string operand = lower( object );
+
+    // The member's C name comes from its *declaration*, not from the access - the same reasoning
+    // as lower_name, where only the declaration's node id matches the name that was emitted.
+    const Node_id field = field_of( types_.type_of( object ), Symbol_id { ast_.aux( id ) } );
+
+    assert( field.is_valid() && "the checker accepted a field that does not exist" );
+
+    const std::string temp = fresh_temp();
+
+    write_line( fmt::format( "{} {} = {}.{};", c_type( types_.type_of( id ) ), temp, operand, field_name( field ) ) );
+
+    return temp;
+}
+
+std::string Emitter::lower_struct_literal( Node_id id )
+{
+    const Type_id                  type         = types_.type_of( id );
+    const std::span<const Node_id> initialisers = ast_.children( id );
+    const std::span<const Node_id> fields       = ast_.children( types_.table().get( type ).declaration );
+
+    // Values first, in source order, and only then the assignments. Designated form may name the
+    // fields out of declaration order, and it is the order they are *written in* that has to be
+    // preserved - which is the whole point of §7.1.
+    std::vector<std::string> values;
+    std::vector<Node_id>     targets;
+
+    for( std::size_t i = 0; i < initialisers.size(); ++i )
+    {
+        const Symbol_id name { ast_.aux( initialisers[i] ) };
+
+        values.push_back( lower( ast_.children( initialisers[i] )[0] ) );
+
+        // The checker has already proved every field is given exactly once and that the two forms
+        // are not mixed, so positional can pair by index and named by lookup.
+        targets.push_back( name.is_valid() ? field_of( type, name ) : fields[i] );
+    }
+
+    // Declared empty, then filled. A C compound literal would fold the values back into one
+    // expression, which is exactly what three-address form exists to avoid.
+    const std::string temp = fresh_temp();
+
+    write_line( fmt::format( "{} {};", c_type( type ), temp ) );
+
+    for( std::size_t i = 0; i < values.size(); ++i )
+    {
+        assert( targets[i].is_valid() && "the checker accepted an initialiser with no field" );
+
+        write_line( fmt::format( "{}.{} = {};", temp, field_name( targets[i] ), values[i] ) );
+    }
+
+    return temp;
+}
+
 std::string Emitter::lower_literal( Node_id id )
 {
     switch( ast_.kind( id ) )
@@ -768,6 +962,9 @@ std::string Emitter::c_type( Type_id type ) const
 
     case Type_kind::Float:
         return described.width == 32 ? "float" : "double";
+
+    case Type_kind::Struct:
+        return struct_name( described.declaration );
 
     default:
         assert( false && "no C spelling for this type" );
@@ -1094,6 +1291,94 @@ TEST_CASE( "emitter_emits_literal_values", "[codegen]" )
     REQUIRE( e.has( "65" ) );  // 'A' is its code point by the time it reaches here
     REQUIRE( e.has( "255" ) ); // and 0xFF is a value, not a spelling
     REQUIRE( e.has( "true" ) );
+}
+
+TEST_CASE( "emitter_emits_structs_in_dependency_order", "[codegen]" )
+{
+    // `Line` is declared first but contains `Point` by value, and C cannot use an incomplete type
+    // for a member. The order comes from the checker, which computed it while proving there was no
+    // cycle - the emitter never builds the graph a second time.
+    const Emitted e( "struct Line { Point a; Point b; };\n"
+                     "struct Point { f64 x; f64 y; };\n"
+                     "i32 main() { return 0; }\n" );
+
+    INFO( e.diagnostics() << e.c() );
+    REQUIRE( e.clean() );
+
+    REQUIRE( e.at( "struct kl__Point\n{" ) < e.at( "struct kl__Line\n{" ) );
+
+    SECTION( "with forward declarations ahead of both" )
+    {
+        REQUIRE( e.has( "struct kl__Point;" ) );
+        REQUIRE( e.at( "struct kl__Line;" ) < e.at( "struct kl__Point\n{" ) );
+    }
+
+    SECTION( "and members named so they cannot collide with C" )
+    {
+        REQUIRE( e.has( "struct kl__Point kl_a" ) );
+    }
+}
+
+// lower() produces a *value*: for `p.x` it emits `t = p.x;` and returns `t`. Assigning to what it
+// returns writes into the temporary and leaves the struct untouched - which compiles, runs, and is
+// silently wrong. Assignment targets go through lower_place() instead.
+TEST_CASE( "emitter_assigns_into_the_field_not_a_copy", "[codegen]" )
+{
+    const Emitted e( "struct Point { f64 x; f64 y; };\n"
+                     "i32 main() { auto p = Point { 0.0, 0.0 }; p.x = 3.0; return 0; }\n" );
+
+    INFO( e.diagnostics() << e.c() );
+    REQUIRE( e.clean() );
+
+    // The write lands on the variable's member, not on a temporary read out of it.
+    REQUIRE( e.has( "kl_p" ) );
+    REQUIRE( e.count( "= (double) 3.0;" ) == 1 );
+    REQUIRE_FALSE( e.has( "kl_t1 = (double) 3.0;" ) );
+}
+
+// Increment has the same place-versus-value problem as assignment: lowering the operand as a value
+// reads the field into a temporary and increments that, leaving the struct untouched.
+TEST_CASE( "emitter_increments_the_field_not_a_copy", "[codegen]" )
+{
+    const Emitted e( "struct Counter { i32 n; };\n"
+                     "i32 main() { auto c = Counter { 0 }; c.n++; return 0; }\n" );
+
+    INFO( e.diagnostics() << e.c() );
+    REQUIRE( e.clean() );
+
+    // Incrementing a place needs no temporary at all. The struct literal uses kl_t0, so a second
+    // one appearing means the operand was read out into a copy and that copy incremented - which
+    // compiles, runs, and leaves the struct unchanged.
+    REQUIRE( e.has( "kl_t0" ) );
+    REQUIRE_FALSE( e.has( "kl_t1" ) );
+    REQUIRE( e.count( "+ 1 );" ) == 1 );
+}
+
+TEST_CASE( "emitter_lowers_struct_literals_to_field_assignments", "[codegen]" )
+{
+    SECTION( "a temporary and one assignment per field, never a compound literal" )
+    {
+        const Emitted e( "struct Point { f64 x; f64 y; };\n"
+                         "i32 main() { auto p = Point { 1.0, 2.0 }; return 0; }\n" );
+
+        INFO( e.diagnostics() << e.c() );
+        REQUIRE( e.clean() );
+        REQUIRE_FALSE( e.has( "){" ) ); // no `(struct kl__Point){ ... }`
+        REQUIRE( e.has( "= 1.0;" ) );
+        REQUIRE( e.has( "= 2.0;" ) );
+    }
+
+    // Named initialisers may be written out of declaration order. The assignments can follow in
+    // any order, but the values must be *evaluated* as written - §7.1's whole purpose.
+    SECTION( "named initialisers keep source order" )
+    {
+        const Emitted e( "struct Point { f64 x; f64 y; };\n"
+                         "i32 main() { auto p = Point { .y = 5.0, .x = 4.0 }; return 0; }\n" );
+
+        INFO( e.diagnostics() << e.c() );
+        REQUIRE( e.clean() );
+        REQUIRE( e.at( "= 5.0;" ) < e.at( "= 4.0;" ) );
+    }
 }
 
 } // namespace keel

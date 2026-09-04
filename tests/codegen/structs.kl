@@ -1,0 +1,54 @@
+// M2's acceptance shape: a Point program computing a distance. `Line` is declared *before* the
+// `Point` it contains by value, so the emitter has to order the definitions itself - C cannot use
+// an incomplete type for a member.
+struct Line
+{
+    Point a;
+    Point b;
+};
+
+struct Point
+{
+    f64 x;
+    f64 y;
+};
+
+f64 abs( f64 v )
+{
+    if( v < 0.0 ) { return 0.0 - v; }
+    return v;
+}
+
+// Manhattan distance, so no square root is needed.
+f64 distance( Line l )
+{
+    return abs( l.b.x - l.a.x ) + abs( l.b.y - l.a.y );
+}
+
+// Self-checking: exit 0 means every answer was right.
+i32 main()
+{
+    auto l = Line { Point { 1.0, 2.0 }, Point { 4.0, 6.0 } };
+
+    if( distance( l ) != 7.0 ) { return 1; }
+
+    // Named initialisers, deliberately out of declaration order: the values must still be
+    // evaluated as written.
+    auto flipped = Line { .b = Point { .y = 2.0, .x = 1.0 }, .a = Point { 4.0, 6.0 } };
+
+    if( distance( flipped ) != 7.0 ) { return 2; }
+
+    auto p = Point { 0.0, 0.0 };
+    p.x = 3.0;
+
+    if( p.x != 3.0 ) { return 3; }
+    if( p.y != 0.0 ) { return 4; }
+
+    // Increment has the same place-versus-value trap as assignment.
+    p.y++;
+    p.y += 2.0;
+
+    if( p.y != 3.0 ) { return 5; }
+
+    return 0;
+}

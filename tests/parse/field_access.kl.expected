@@ -1,0 +1,29 @@
+Source_file                             2:1-10:1
+  Function_decl                         2:1-9:2     name=main
+    Named_type                          2:1-2:4     "i32"
+    Param_list                          2:9-2:11    "()"
+    Block                               3:1-9:2
+      Var_decl                          4:5-4:17    name=a
+        Named_type                      4:5-4:8     "i32"
+        Field_expr                      4:13-4:16   name=x
+          Name_expr                     4:13-4:14   "p"
+      Var_decl                          5:5-5:19    name=b
+        Named_type                      5:5-5:8     "i32"
+        Field_expr                      5:13-5:18   name=y
+          Field_expr                    5:13-5:16   name=x
+            Name_expr                   5:13-5:14   "p"
+      Var_decl                          6:5-6:19    name=c
+        Named_type                      6:5-6:8     "i32"
+        Field_expr                      6:13-6:18   name=x
+          Call_expr                     6:13-6:16
+            Name_expr                   6:13-6:14   "f"
+            Arg_list                    6:14-6:16   "()"
+      Var_decl                          7:5-7:23    name=d
+        Named_type                      7:5-7:8     "i32"
+        Binary_expr                     7:13-7:22   op=+
+          Field_expr                    7:13-7:16   name=x
+            Name_expr                   7:13-7:14   "p"
+          Field_expr                    7:19-7:22   name=y
+            Name_expr                   7:19-7:20   "q"
+      Return_stmt                       8:5-8:14
+        Int_literal                     8:12-8:13   "0"

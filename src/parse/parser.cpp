@@ -71,6 +71,17 @@ private:
     Node_id parse_declaration();
     Node_id parse_function_decl();
     Node_id parse_param_list();
+    Node_id parse_struct_decl();
+    Node_id parse_field_decl();
+
+    // `Point { 0.0, 0.0 }` or `Point { .x = 0.0, .y = 0.0 }`. Entered from parse_prefix once the
+    // identifier is consumed and a `{` is seen behind it.
+    Node_id parse_struct_literal( Span start, Symbol_id type_name );
+
+    // One initialiser. aux carries the field name in the designated form and stays invalid in the
+    // positional one - Symbol_id has its own sentinel, so "no name" is representable rather than
+    // borrowed from a real id.
+    Node_id parse_field_init();
 
     // --- types. `u32*` is a type *expression* and gets nodes of its own. ---
 
@@ -190,8 +201,12 @@ u8 binding_power( Token_kind kind )
     case Token_kind::Percent:
         return 100;
 
-    case Token_kind::L_paren:
-        return 110; // function call
+    // Postfix, and tighter than every operator: `a.x + b.y` is `(a.x) + (b.y)`, and `f().x`
+    // and `p.x.y` chain through the same loop.
+    case Token_kind::L_paren: // function call
+    case Token_kind::Dot:     // field access
+    case Token_kind::Arrow:   // not an operator, but it has to be reached to be rejected (D22)
+        return 110;
 
     default:
         return 0;
@@ -494,6 +509,11 @@ Node_id Parser::parse_declaration()
         return parse_function_decl();
     }
 
+    if( check_keyword( Keyword::Struct ) )
+    {
+        return parse_struct_decl();
+    }
+
     const Span span = peek().span;
     error_at( span, fmt::format( "expected a declaration, found `{}`", found_text() ) );
     synchronise();
@@ -562,6 +582,123 @@ Node_id Parser::parse_param_list()
     expect( Token_kind::R_paren );
 
     return ast_.add( Node_kind::Param_list, Span::merge( start, previous().span ), 0, params );
+}
+
+Node_id Parser::parse_struct_decl()
+{
+    const Span start = peek().span;
+
+    match_keyword( Keyword::Struct );
+
+    // The name is a token, so it goes in aux rather than becoming a child.
+    Symbol_id name;
+    if( expect( Token_kind::Identifier ) )
+    {
+        name = previous().symbol;
+    }
+
+    // Bail rather than carry on: with no brace there is no field list to find, and scanning for
+    // one runs to the next `}` - which belongs to whatever encloses this.
+    if( !expect( Token_kind::L_brace ) )
+    {
+        // `struct x;` is C's opaque forward declaration. Swallow the terminator so it does not
+        // come back as a second complaint about a stray `;`.
+        match( Token_kind::Semicolon );
+
+        return error_node( Span::merge( start, previous().span ) );
+    }
+
+    std::vector<Node_id> fields;
+    while( !check( Token_kind::R_brace ) && !at_end() )
+    {
+        const u32 before = pos_;
+
+        fields.push_back( parse_field_decl() );
+
+        if( pos_ == before )
+        {
+            advance();
+        }
+    }
+
+    expect( Token_kind::R_brace );
+    expect( Token_kind::Semicolon );
+
+    return ast_.add( Node_kind::Struct_decl, Span::merge( start, previous().span ), name.v, fields );
+}
+
+Node_id Parser::parse_field_decl()
+{
+    const Span start = peek().span;
+
+    const Node_id type = parse_type();
+
+    // Same convention as Function_decl: the name is a token, so it goes in aux rather than becoming
+    // a second child.
+    Symbol_id name;
+    if( expect( Token_kind::Identifier ) )
+    {
+        name = previous().symbol;
+    }
+
+    expect( Token_kind::Semicolon );
+
+    return ast_.add( Node_kind::Field_decl, Span::merge( start, previous().span ), name.v, { type } );
+}
+
+Node_id Parser::parse_struct_literal( Span start, Symbol_id type_name )
+{
+    expect( Token_kind::L_brace );
+
+    std::vector<Node_id> initialisers;
+
+    while( !check( Token_kind::R_brace ) && !at_end() )
+    {
+        const u32 before = pos_;
+
+        initialisers.push_back( parse_field_init() );
+
+        // Same guard as parse_block: a rule that reports without advancing would spin here.
+        if( pos_ == before )
+        {
+            advance();
+            continue;
+        }
+
+        // A trailing comma is allowed, unlike in an argument list - C++ permits one in a braced
+        // initialiser and rejects one in a call, and §5.1 says to follow it rather than to be
+        // internally tidy.
+        if( !match( Token_kind::Comma ) )
+        {
+            break;
+        }
+    }
+
+    expect( Token_kind::R_brace );
+
+    return ast_.add( Node_kind::Struct_literal, Span::merge( start, previous().span ), type_name.v, initialisers );
+}
+
+Node_id Parser::parse_field_init()
+{
+    const Span start = peek().span;
+
+    Symbol_id name; // left invalid by the positional form
+
+    if( match( Token_kind::Dot ) )
+    {
+        // Only on success: a failed expect() does not advance, so previous() would be the dot.
+        if( expect( Token_kind::Identifier ) )
+        {
+            name = previous().symbol;
+        }
+
+        expect( Token_kind::Equal );
+    }
+
+    const Node_id value = parse_expression( 0 );
+
+    return ast_.add( Node_kind::Field_init, Span::merge( start, previous().span ), name.v, { value } );
 }
 
 Node_id Parser::parse_type()
@@ -886,6 +1023,26 @@ Node_id Parser::parse_statement()
         return parse_for_stmt();
     }
 
+    // A struct in a function body. Recognised here so it can be consumed whole: synchronise()
+    // would stop at the first `;` *inside* the struct, and everything after it would then be read
+    // as a top-level declaration - one mistake becoming five.
+    if( check_keyword( Keyword::Struct ) )
+    {
+        const Span start = peek().span;
+
+        error_at(
+            start,
+            "a struct cannot be declared inside a function",
+            "declare it at file scope, where it is visible throughout the file"
+        );
+
+        // Parsed for its cursor movement, not its result: the node is not a statement, so an
+        // Error node stands in its place. A malformed struct still reports from in there.
+        parse_struct_decl();
+
+        return error_node( Span::merge( start, previous().span ) );
+    }
+
     // The keyword test is free; looks_like_declaration() moves the cursor and puts it back.
     if( check_keyword( Keyword::Auto ) || looks_like_declaration() )
     {
@@ -1145,6 +1302,38 @@ Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing )
             continue;
         }
 
+        // Field access binds tightest, like a call, and for the same reason produces its own node
+        // rather than a Binary_expr. The field name goes in aux, not into a Name_expr child: it
+        // resolves against the object's type, not through the scope stack, and a child would
+        // invite the resolver to look for a variable called `x` in `p.x`.
+        // D22: `.` reaches through a pointer, so `->` has no work left to do. It is rejected by
+        // name rather than left to lex as `-` then `>`, which would produce a message about
+        // arithmetic - and then recovered *as* the field access it was meant to be. Reporting
+        // without consuming would drop it into the infix path below and build a Binary_expr whose
+        // operator is `->`, which sema would have to reject all over again.
+        const bool arrow = check( Token_kind::Arrow );
+
+        if( arrow || check( Token_kind::Dot ) )
+        {
+            if( arrow )
+            {
+                error_at( peek().span, "`->` is not a Keel operator", "use `.`, which reaches through a pointer" );
+            }
+
+            advance();
+
+            // Only on success: a failed expect() does not advance, so previous() would be the dot
+            // itself and its symbol would become the field's name.
+            Symbol_id name;
+            if( expect( Token_kind::Identifier ) )
+            {
+                name = previous().symbol;
+            }
+
+            left = ast_.add( Node_kind::Field_expr, Span::merge( ast_.span( left ), previous().span ), name.v, { left } );
+            continue;
+        }
+
         // D16 has to look both ways. A looser operator folds into `left` first, so `a && b || c`
         // reaches `||` with a Binary_expr(&&) on its left. A tighter one never does: in
         // `a & b == c` the `==` is consumed inside the `&` recursion, which is what `enclosing`
@@ -1214,8 +1403,21 @@ Node_id Parser::parse_prefix()
         return ast_.add( Node_kind::Char_literal, Span::merge( start, previous().span ), previous().symbol.v, {} );
 
     case Token_kind::Identifier:
+    {
         advance();
-        return ast_.add( Node_kind::Name_expr, Span::merge( start, previous().span ), previous().symbol.v, {} );
+
+        const Symbol_id name = previous().symbol;
+
+        // No ambiguity with a block: a block is a statement and starts with `{`, so an expression
+        // is never followed by one. Rust needs a rule here only because its `if` takes no
+        // parentheses - Keel's conditions end at `)`.
+        if( check( Token_kind::L_brace ) )
+        {
+            return parse_struct_literal( start, name );
+        }
+
+        return ast_.add( Node_kind::Name_expr, Span::merge( start, previous().span ), name.v, {} );
+    }
 
     case Token_kind::Minus:
     case Token_kind::Bang:
@@ -1854,6 +2056,407 @@ TEST_CASE( "parser_calls_chain", "[parse]" )
 // D18 removed the need for forward declarations, so a `;` where a body belongs is a mistake a C++
 // author makes out of habit. It used to cascade: parse_block carried on and read the declarations
 // that followed as statements.
+// PLAN §6.2: `struct Point { f64 x; f64 y; };` - C++'s spelling, trailing semicolon included.
+// PLAN §6.2: `Point { 0.0, 0.0 }`. No ambiguity with a block - Keel's conditions end at `)`, and a
+// block is a statement, so an expression is never directly followed by one.
+TEST_CASE( "parser_parses_struct_literals", "[parse]" )
+{
+    SECTION( "positional initialisers carry no name" )
+    {
+        const Parsed p( "i32 main() { auto q = Point { 1.0, 2.0 }; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id literal = find_first( p.ast(), p.root(), Node_kind::Struct_literal );
+
+        REQUIRE( literal.is_valid() );
+        REQUIRE( Symbol_id { p.aux( literal ) }.is_valid() ); // the type name
+        REQUIRE( p.children( literal ).size() == 2 );
+
+        for( const Node_id init : p.children( literal ) )
+        {
+            REQUIRE( p.kind( init ) == Node_kind::Field_init );
+            REQUIRE_FALSE( Symbol_id { p.aux( init ) }.is_valid() ); // positional: no field name
+            REQUIRE( p.children( init ).size() == 1 );
+        }
+    }
+
+    SECTION( "designated initialisers carry one" )
+    {
+        const Parsed p( "i32 main() { auto q = Point { .x = 1.0, .y = 2.0 }; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id literal = find_first( p.ast(), p.root(), Node_kind::Struct_literal );
+
+        REQUIRE( p.children( literal ).size() == 2 );
+        REQUIRE( Symbol_id { p.aux( p.child( literal, 0 ) ) }.is_valid() );
+        REQUIRE( Symbol_id { p.aux( p.child( literal, 1 ) ) }.is_valid() );
+        REQUIRE( p.aux( p.child( literal, 0 ) ) != p.aux( p.child( literal, 1 ) ) );
+    }
+
+    // C++ permits a trailing comma in a braced initialiser and rejects one in a call. §5.1 says to
+    // follow that rather than be internally consistent with parse_arg_list.
+    SECTION( "a trailing comma is allowed, unlike in an argument list" )
+    {
+        const Parsed p( "i32 main() { auto q = Point { 1.0, 2.0, }; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.children( find_first( p.ast(), p.root(), Node_kind::Struct_literal ) ).size() == 2 );
+    }
+
+    SECTION( "an empty literal" )
+    {
+        const Parsed p( "i32 main() { auto q = Empty { }; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.children( find_first( p.ast(), p.root(), Node_kind::Struct_literal ) ).empty() );
+    }
+
+    SECTION( "literals nest" )
+    {
+        const Parsed p( "i32 main() { auto q = Line { Point { 1.0, 2.0 }, Point { 3.0, 4.0 } }; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id outer = find_first( p.ast(), p.root(), Node_kind::Struct_literal );
+        const Node_id inner = p.child( p.child( outer, 0 ), 0 );
+
+        REQUIRE( p.kind( inner ) == Node_kind::Struct_literal );
+        REQUIRE( p.children( inner ).size() == 2 );
+    }
+
+    // An identifier not followed by `{` is still just a name - the literal path must not swallow
+    // ordinary expressions.
+    SECTION( "a bare identifier is still a name" )
+    {
+        const Parsed p( "i32 main() { i32 y = 1; return y; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::Struct_literal ).is_valid() );
+    }
+
+    SECTION( "malformed initialisers report" )
+    {
+        for( const char* source : {
+                 "i32 main() { auto q = Point { . = 1.0 }; return 0; }", // no field name
+                 "i32 main() { auto q = Point { .x 1.0 }; return 0; }",  // no `=`
+                 "i32 main() { auto q = Point { 1.0 2.0 }; return 0; }", // no comma
+                 "i32 main() { auto q = Point { 1.0, ; return 0; }",     // unterminated
+             } )
+        {
+            const Parsed p( source );
+
+            INFO( "source: " << source << "\n" << p.errors() );
+            REQUIRE( p.has_errors() );
+        }
+    }
+}
+
+TEST_CASE( "parser_parses_field_access", "[parse]" )
+{
+    SECTION( "the name goes in aux, not into a Name_expr child" )
+    {
+        const Parsed p( "i32 main() { return p.x; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id field = find_first( p.ast(), p.root(), Node_kind::Field_expr );
+
+        REQUIRE( field.is_valid() );
+        REQUIRE( p.children( field ).size() == 1 );
+        REQUIRE( p.kind( p.child( field, 0 ) ) == Node_kind::Name_expr ); // the object
+        REQUIRE( Symbol_id { p.aux( field ) }.is_valid() );               // the field's symbol
+        REQUIRE( p.text( field ) == "p.x" );
+    }
+
+    SECTION( "access chains" )
+    {
+        const Parsed p( "i32 main() { return p.x.y; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id outer = find_first( p.ast(), p.root(), Node_kind::Field_expr );
+        REQUIRE( p.kind( p.child( outer, 0 ) ) == Node_kind::Field_expr );
+    }
+
+    SECTION( "and applies to whatever precedes it" )
+    {
+        const Parsed p( "i32 main() { return f().x; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id field = find_first( p.ast(), p.root(), Node_kind::Field_expr );
+        REQUIRE( p.kind( p.child( field, 0 ) ) == Node_kind::Call_expr );
+    }
+
+    // Tighter than every operator, so this is `(a.x) + (b.y)` and not `a.(x + b).y`.
+    SECTION( "it binds tighter than arithmetic" )
+    {
+        const Parsed p( "i32 main() { return a.x + b.y; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id root_expr = find_first( p.ast(), p.root(), Node_kind::Binary_expr );
+
+        REQUIRE( root_expr.is_valid() );
+        REQUIRE( p.kind( p.child( root_expr, 0 ) ) == Node_kind::Field_expr );
+        REQUIRE( p.kind( p.child( root_expr, 1 ) ) == Node_kind::Field_expr );
+    }
+
+    SECTION( "a field name is required after the dot" )
+    {
+        for( const char* source : { "i32 main() { return p.; }", "i32 main() { return p.5; }" } )
+        {
+            const Parsed p( source );
+
+            INFO( "source: " << source << "\n" << p.errors() );
+            REQUIRE( p.has_errors() );
+            REQUIRE( p.errors().find( "expected `identifier`" ) != std::string::npos );
+        }
+    }
+}
+
+// D22. `->` is lexed rather than deleted precisely so it can be rejected by name: removing the
+// token would make `p->x` lex as `-` then `>` and produce a message about arithmetic.
+TEST_CASE( "parser_rejects_the_arrow_operator", "[parse]" )
+{
+    const Parsed p( "i32 main() { return p->x; }" );
+
+    INFO( p.errors() );
+    REQUIRE( p.error_count() == 1 );
+    REQUIRE( p.errors().find( "`->` is not a Keel operator" ) != std::string::npos );
+    REQUIRE( p.errors().find( "use `.`" ) != std::string::npos );
+
+    // Recovery treats it as the field access it was meant to be, so nothing after it cascades.
+    SECTION( "and the access still parses" )
+    {
+        const Node_id field = find_first( p.ast(), p.root(), Node_kind::Field_expr );
+
+        REQUIRE( field.is_valid() );
+        REQUIRE( p.text( field ) == "p->x" );
+    }
+
+    SECTION( "a chain reports once per arrow, not once per token" )
+    {
+        const Parsed chained( "i32 main() { return a->b->c; }" );
+
+        INFO( chained.errors() );
+        REQUIRE( chained.error_count() == 2 );
+    }
+}
+
+TEST_CASE( "parser_parses_a_struct_declaration", "[parse]" )
+{
+    const Parsed p( "struct Point\n{\n    f64 x;\n    f64 y;\n};\n" );
+
+    INFO( p.errors() );
+    REQUIRE_FALSE( p.has_errors() );
+
+    const Node_id decl = p.child( p.root(), 0 );
+    REQUIRE( p.kind( decl ) == Node_kind::Struct_decl );
+    REQUIRE( p.text( decl ).starts_with( "struct Point" ) );
+
+    // Fields are the children, in declaration order - layout is declaration order (§9, M2).
+    REQUIRE( p.children( decl ).size() == 2 );
+    REQUIRE( p.kind( p.child( decl, 0 ) ) == Node_kind::Field_decl );
+    REQUIRE( p.kind( p.child( decl, 1 ) ) == Node_kind::Field_decl );
+
+    // A field carries its name in aux and its type as its one child, exactly like Param_decl.
+    const Node_id first = p.child( decl, 0 );
+    REQUIRE( p.children( first ).size() == 1 );
+    REQUIRE( p.kind( p.child( first, 0 ) ) == Node_kind::Named_type );
+    REQUIRE( p.text( p.child( first, 0 ) ) == "f64" );
+    REQUIRE( p.aux( first ) != p.aux( p.child( decl, 1 ) ) ); // x and y are different symbols
+}
+
+TEST_CASE( "parser_parses_struct_edge_cases", "[parse]" )
+{
+    SECTION( "a struct with no fields" )
+    {
+        const Parsed p( "struct Empty { };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.kind( p.child( p.root(), 0 ) ) == Node_kind::Struct_decl );
+        REQUIRE( p.children( p.child( p.root(), 0 ) ).empty() );
+    }
+
+    SECTION( "one field" )
+    {
+        const Parsed p( "struct Wrapper { i32 value; };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.children( p.child( p.root(), 0 ) ).size() == 1 );
+    }
+
+    SECTION( "a field whose type is another struct" )
+    {
+        const Parsed p( "struct Point { f64 x; };\nstruct Line { Point a; Point b; };\n" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.children( p.root() ).size() == 2 );
+        REQUIRE( p.children( p.child( p.root(), 1 ) ).size() == 2 );
+    }
+
+    SECTION( "a const field type" )
+    {
+        const Parsed p( "struct Fixed { const i32 value; };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.kind( p.child( p.child( p.child( p.root(), 0 ), 0 ), 0 ) ) == Node_kind::Const_type );
+    }
+
+    SECTION( "a pointer field - what M3's Buffer needs" )
+    {
+        const Parsed p( "struct Buffer { u8* ptr; u64 len; };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id field = p.child( p.child( p.root(), 0 ), 0 );
+        REQUIRE( p.kind( p.child( field, 0 ) ) == Node_kind::Pointer_type );
+    }
+
+    SECTION( "a generic field" )
+    {
+        const Parsed p( "struct Holder { Vector<i32> items; };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+    }
+
+    // Duplicate names and shadowed type spellings are sema's business, not the parser's: `i32` is
+    // an ordinary identifier (D1), and a repeated field is the same kind of error as a repeated
+    // parameter.
+    SECTION( "the parser does not judge field names" )
+    {
+        REQUIRE_FALSE( Parsed( "struct P { f64 x; f64 x; };" ).has_errors() );
+        REQUIRE_FALSE( Parsed( "struct P { i32 i32; };" ).has_errors() );
+    }
+
+    SECTION( "the trailing semicolon is required, as in C++" )
+    {
+        const Parsed p( "struct P { f64 x; }\ni32 main() { return 0; }\n" );
+
+        INFO( p.errors() );
+        REQUIRE( p.has_errors() );
+    }
+
+    // Declaration order carries no meaning between top-level declarations (D18), so a struct may
+    // be used by a function above it.
+    SECTION( "a struct declared after the function that uses it" )
+    {
+        const Parsed p( "i32 main() { return 0; }\nstruct Point { f64 x; };\n" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+    }
+}
+
+// Recovery, not just the message: synchronise() alone stops at the first `;` inside the struct,
+// and the rest of the function is then read as top-level declarations.
+TEST_CASE( "parser_reports_a_struct_inside_a_function_once", "[parse]" )
+{
+    const Parsed p( "i32 main()\n{\n    struct Local { i32 x; };\n    return 0;\n}\n" );
+
+    INFO( p.errors() );
+    REQUIRE( p.error_count() == 1 );
+    REQUIRE( p.errors().find( "cannot be declared inside a function" ) != std::string::npos );
+
+    SECTION( "and the rest of the function still parses" )
+    {
+        const Node_id body = p.child( p.child( p.root(), 0 ), 2 );
+
+        REQUIRE( p.kind( body ) == Node_kind::Block );
+
+        bool found_return = false;
+        for( const Node_id stmt : p.children( body ) )
+        {
+            found_return = found_return || p.kind( stmt ) == Node_kind::Return_stmt;
+        }
+
+        REQUIRE( found_return );
+    }
+}
+
+// A malformed one reports its own errors from inside parse_struct_decl, but must still be
+// consumed whole rather than leaving the cursor mid-struct.
+TEST_CASE( "parser_recovers_from_a_malformed_struct_inside_a_function", "[parse]" )
+{
+    const Parsed p( "i32 main()\n{\n    struct Local { i32 };\n    return 0;\n}\n" );
+
+    INFO( p.errors() );
+    REQUIRE( p.has_errors() );
+
+    const Node_id body = p.child( p.child( p.root(), 0 ), 2 );
+
+    bool found_return = false;
+    for( const Node_id stmt : p.children( body ) )
+    {
+        found_return = found_return || p.kind( stmt ) == Node_kind::Return_stmt;
+    }
+
+    REQUIRE( found_return );
+}
+
+TEST_CASE( "parser_reports_malformed_structs", "[parse]" )
+{
+    struct Case
+    {
+        std::string_view source;
+        std::string_view expected;
+    };
+
+    static const Case cases[] = {
+        { "struct { f64 x; };", "expected" },      // no name
+        { "struct Point f64 x; };", "expected" },  // no opening brace
+        { "struct Point { f64 x; ", "expected" },  // unterminated
+        { "struct Point { f64 x };", "expected" }, // field without a semicolon
+        { "struct Point { f64; };", "expected" },  // field without a name
+    };
+
+    for( const Case& c : cases )
+    {
+        const Parsed p( c.source );
+
+        INFO( "source: " << c.source << "\n" << p.errors() );
+        REQUIRE( p.has_errors() );
+        REQUIRE( p.errors().find( c.expected ) != std::string::npos );
+    }
+}
+
+// A malformed struct must not swallow what follows it: recovery is what keeps one mistake from
+// hiding every later one.
+TEST_CASE( "parser_recovers_after_a_malformed_struct", "[parse]" )
+{
+    const Parsed p( "struct Broken { f64 };\ni32 main() { return 0; }\n" );
+
+    INFO( p.errors() );
+    REQUIRE( p.has_errors() );
+
+    bool found_main = false;
+    for( const Node_id decl : p.children( p.root() ) )
+    {
+        found_main = found_main || p.kind( decl ) == Node_kind::Function_decl;
+    }
+
+    REQUIRE( found_main );
+}
+
 TEST_CASE( "parser_rejects_a_forward_declaration", "[parse]" )
 {
     SECTION( "one error, naming the brace" )
@@ -2307,7 +2910,9 @@ TEST_CASE( "parser_generic_and_qualified_types", "[parse]" )
 // can_start_expression keeps the better message for tokens that cannot begin a statement.
 TEST_CASE( "parser_reports_tokens_that_cannot_start_a_statement", "[parse]" )
 {
-    for( const char* source : { "struct x;", ";", "," } )
+    // `struct` is deliberately absent: it has its own message now, since a struct in a function
+    // body is a specific mistake rather than an unrecognisable token.
+    for( const char* source : { ";", ",", ")", "]" } )
     {
         const Parsed p( std::string( "i32 main() { " ) + source + " }" );
 

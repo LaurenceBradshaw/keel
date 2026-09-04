@@ -3,6 +3,7 @@
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include "ast/node.h"
 #include "common/types.h"
 
 namespace keel
@@ -26,14 +27,18 @@ enum class Type_kind : u8
     Int, // signedness is a field, not a kind
     Float,
     Pointer, // M2; element unused before then
+    Struct,  // `declaration` says which one
 };
 
+// Defaulted rather than bare, so a kind that does not use a field can leave it out of the aggregate
+// initialiser - and so adding a field later does not break every existing one.
 struct Type
 {
-    Type_kind kind;
-    u8        width;     // 8/16/32/64 for Int, 32/64 for Float, 0 otherwise
-    bool      is_signed; // only for Int
-    Type_id   element;   // only for Pointer
+    Type_kind kind        = Type_kind::Error;
+    u8        width       = 0;     // 8/16/32/64 for Int, 32/64 for Float, 0 otherwise
+    bool      is_signed   = false; // only for Int
+    Type_id   element     = {};    // only for Pointer
+    Node_id   declaration = {};    // only for Struct; the Struct_decl node that defines it
 };
 
 class Type_table
@@ -46,6 +51,10 @@ public:
     Type_id floating( u8 width ) const;
     Type_id pointer_to( Type_id element ); // interns; same element -> same id
 
+    // Interned by *declaration*, not by name: two modules each declaring `Point` must be two
+    // distinct types. The name is passed in because the table has no Interner of its own.
+    Type_id structure( Node_id declaration, std::string_view name );
+
     const Type&      get( Type_id id ) const;
     std::string_view name( Type_id id ) const; // "i32", "u8*" - for diagnostics
     // The type a source spelling names, or invalid if it names none. Only the eleven a program may
@@ -56,6 +65,7 @@ public:
     bool is_error( Type_id id ) const; // absorbs: checked at the top of most checker branches
     bool is_integer( Type_id id ) const;
     bool is_float( Type_id id ) const;
+    bool is_struct( Type_id id ) const;
 
     // §6.4 assignment: does every value of `from` exist in `to`?
     bool holds( Type_id from, Type_id to ) const;
@@ -88,6 +98,7 @@ private:
     Type_id floats_[2];
 
     std::unordered_map<u32, Type_id> pointers_; // element id -> pointer id
+    std::unordered_map<u32, Type_id> structs_;  // Struct_decl node -> struct type
     std::deque<std::string>          composed_;
 
     std::unordered_map<std::string_view, Type_id>

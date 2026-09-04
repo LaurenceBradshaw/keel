@@ -24,9 +24,21 @@ std::string aux_note( const Ast& ast, const Interner& interner, Node_id id )
 {
     switch( ast.kind( id ) )
     {
+    // A positional Field_init has no name, which is not a mistake - so it prints nothing rather
+    // than <missing>, which would read as one.
+    case Node_kind::Field_init:
+    {
+        const Symbol_id name { ast.aux( id ) };
+        return name.is_valid() ? fmt::format( "name={}", interner.text( name ) ) : std::string {};
+    }
+
     case Node_kind::Function_decl:
     case Node_kind::Param_decl:
     case Node_kind::Var_decl:
+    case Node_kind::Struct_decl:
+    case Node_kind::Field_decl:
+    case Node_kind::Field_expr:
+    case Node_kind::Struct_literal:
     {
         const Symbol_id name { ast.aux( id ) };
         return name.is_valid() ? fmt::format( "name={}", interner.text( name ) ) : "name=<missing>";

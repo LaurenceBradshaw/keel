@@ -67,6 +67,16 @@ std::string_view node_kind_name( Node_kind kind )
         return "While_stmt";
     case Node_kind::For_stmt:
         return "For_stmt";
+    case Node_kind::Struct_decl:
+        return "Struct_decl";
+    case Node_kind::Field_decl:
+        return "Field_decl";
+    case Node_kind::Field_expr:
+        return "Field_expr";
+    case Node_kind::Struct_literal:
+        return "Struct_literal";
+    case Node_kind::Field_init:
+        return "Field_init";
 
     case Node_kind::Count:
         break;

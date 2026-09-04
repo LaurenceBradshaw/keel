@@ -26,4 +26,4 @@ Source_file                             1:1-5:1
     Named_type                          4:1-4:4     "i32"
     Param_list                          4:20-4:22   "()"
     Block                               4:23-4:36
-      Error                             4:25-4:31   "struct"
+      Error                             4:25-4:34   "struct x;"

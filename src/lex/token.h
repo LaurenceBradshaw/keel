@@ -41,7 +41,7 @@ enum class Token_kind : u16
     Colon,       // :
     Colon_colon, // ::
     Dot,         // .
-    Arrow,       // ->  pointer member access
+    Arrow,       // -> lexed only so the parser can reject it by name (D22)
 
     // --- Arithmetic ---
     Plus,    // +
