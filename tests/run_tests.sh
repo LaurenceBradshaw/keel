@@ -147,6 +147,20 @@ if [ "$update" -eq 1 ]; then
     exit 0
 fi
 
+# A suite whose FLAGS stop before emission must leave nothing behind. Nothing above would notice
+# otherwise: a driver that wrongly compiles a --check fixture writes a .c file and an executable,
+# and every stream comparison still passes because neither appears on stdout or stderr.
+stray="$( find . -type f \
+    ! -name '*.kl' ! -name '*.kl.expected' ! -name '*.kl.stderr' ! -name '*.kl.exit' \
+    ! -name FLAGS ! -name run_tests.sh ! -name CMakeLists.txt | sort )"
+
+if [ -n "$stray" ]; then
+    echo
+    echo "  ${red}FAIL${reset}     files left behind by the compiler:"
+    echo "$stray" | sed 's/^/             /'
+    fail=$(( fail + 1 ))
+fi
+
 echo
 echo "${pass} passed, ${fail} failed"
 [ "$fail" -eq 0 ]
