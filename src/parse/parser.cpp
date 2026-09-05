@@ -963,10 +963,12 @@ bool Parser::can_start_expression() const
     case Token_kind::Amp:
         return true;
 
-    // Must agree with parse_prefix's Keyword case, which is the other half of this list.
+    // Must agree with parse_prefix's Keyword case, which is the other half of this list. Three
+    // features in a row have needed both edited together; a keyword missing from here parses fine
+    // in an argument or an initialiser and fails only in statement position.
     case Token_kind::Keyword:
-        return check_keyword( Keyword::True ) || check_keyword( Keyword::False ) || check_keyword( Keyword::Move ) ||
-               check_keyword( Keyword::Out ) || check_keyword( Keyword::Ref );
+        return check_keyword( Keyword::True ) || check_keyword( Keyword::False ) || check_keyword( Keyword::Nullptr ) ||
+               check_keyword( Keyword::Move ) || check_keyword( Keyword::Out ) || check_keyword( Keyword::Ref );
 
     default:
         return false;
@@ -1533,6 +1535,12 @@ Node_id Parser::parse_prefix()
             const bool value = check_keyword( Keyword::True );
             advance();
             return ast_.add( Node_kind::Bool_literal, Span::merge( start, previous().span ), value ? 1u : 0u, {} );
+        }
+
+        if( check_keyword( Keyword::Nullptr ) )
+        {
+            advance();
+            return ast_.add( Node_kind::Null_literal, Span::merge( start, previous().span ), 0, {} );
         }
 
         if( check_keyword( Keyword::Move ) || check_keyword( Keyword::Out ) || check_keyword( Keyword::Ref ) )

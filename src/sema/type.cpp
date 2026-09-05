@@ -324,6 +324,12 @@ bool Type_table::is_struct( Type_id id ) const
     return get( id ).kind == Type_kind::Struct;
 }
 
+bool Type_table::is_pointer( Type_id id ) const
+{
+    assert( id.is_valid() );
+    return get( id ).kind == Type_kind::Pointer;
+}
+
 bool Type_table::fits( u64 magnitude, bool negative, Type_id type ) const
 {
     if( is_error( type ) )
@@ -998,6 +1004,46 @@ TEST_CASE( "type_table_fits_float_checks_range_only", "[sema][type]" )
         REQUIRE_FALSE( table.fits_float( 0.0, table.integer( 64, false ) ) );
         REQUIRE_FALSE( table.fits_float( 1.5, table.builtin( Type_kind::Bool ) ) );
         REQUIRE( table.fits_float( 1.5, table.builtin( Type_kind::Error ) ) ); // absorbs
+    }
+}
+
+TEST_CASE( "type_table_pointers_convert_to_nothing", "[sema][type]" )
+{
+    Type_table table;
+
+    const Type_id i32       = table.integer( 32, true );
+    const Type_id u8        = table.integer( 8, false );
+    const Type_id to_i32    = table.pointer_to( i32 );
+    const Type_id to_u8     = table.pointer_to( u8 );
+    const Type_id to_to_i32 = table.pointer_to( to_i32 );
+
+    REQUIRE( table.is_pointer( to_i32 ) );
+    REQUIRE_FALSE( table.is_pointer( i32 ) );
+    REQUIRE_FALSE( table.is_integer( to_i32 ) );
+    REQUIRE( table.name( to_i32 ) == "i32*" );
+    REQUIRE( table.name( to_to_i32 ) == "i32**" );
+
+    // Identity only. No void*, no pointer-to-integer, no widening between pointee types - a
+    // pointer conversion is exactly the escape hatch a type system exists to refuse.
+    SECTION( "holds is identity only" )
+    {
+        REQUIRE( table.holds( to_i32, to_i32 ) );
+        REQUIRE_FALSE( table.holds( to_i32, to_u8 ) );
+        REQUIRE_FALSE( table.holds( to_u8, to_i32 ) );
+        REQUIRE_FALSE( table.holds( to_i32, to_to_i32 ) );
+        REQUIRE_FALSE( table.holds( to_i32, i32 ) );
+        REQUIRE_FALSE( table.holds( i32, to_i32 ) );
+        REQUIRE_FALSE( table.holds( to_i32, table.integer( 64, false ) ) );
+    }
+
+    // D27: `p + 1` on a single-item pointer is nonsense, not merely unsafe. §6.4 answers nothing
+    // for a pointer, so rejection is the default rather than a rule that had to be added.
+    SECTION( "there is no arithmetic on a pointer" )
+    {
+        REQUIRE_FALSE( table.arithmetic_result( to_i32, i32 ).is_valid() );
+        REQUIRE_FALSE( table.arithmetic_result( to_i32, to_i32 ).is_valid() );
+        REQUIRE_FALSE( table.common( to_i32, to_u8 ).is_valid() );
+        REQUIRE_FALSE( table.fits( 0, false, to_i32 ) );
     }
 }
 

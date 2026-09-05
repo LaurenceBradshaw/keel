@@ -45,6 +45,7 @@ enum class Keyword : u32
     False,
     Import,
     Unsafe,
+    Nullptr,
 
     // Not names but operators, and they appear in expression position where an unknown identifier
     // gives a far worse message than a keyword the parser can recognise (PLAN §6.3 D10).

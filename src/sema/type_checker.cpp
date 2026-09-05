@@ -561,6 +561,11 @@ bool Checker::is_assignable( Node_id id ) const
         return true; // whether the object has fields at all is infer_field's question
     }
 
+    if( ast_.kind( id ) == Node_kind::Unary_expr && static_cast<Token_kind>( ast_.aux( id ) ) == Token_kind::Star )
+    {
+        return true; // `*ptr = 42;` writes through the pointer. Whether ptr *is* one is infer_unary's question
+    }
+
     const Node_id decl = ast_.kind( id ) == Node_kind::Name_expr ? resolution_.declaration_of( id ) : Node_id {};
     return decl.is_valid() && ( ast_.kind( decl ) == Node_kind::Var_decl || ast_.kind( decl ) == Node_kind::Param_decl );
 }
@@ -769,6 +774,7 @@ Type_id Checker::infer( Node_id id )
     case Node_kind::Float_literal:
     case Node_kind::Bool_literal:
     case Node_kind::Char_literal:
+    case Node_kind::Null_literal:
         return infer_literal( id );
 
     case Node_kind::String_literal:
@@ -830,6 +836,7 @@ bool Checker::is_literal_expression( Node_id id ) const
     case Node_kind::Float_literal:
     case Node_kind::Bool_literal:
     case Node_kind::Char_literal:
+    case Node_kind::Null_literal:
         return true;
 
     case Node_kind::Unary_expr:
@@ -866,6 +873,10 @@ Type_id Checker::infer_literal( Node_id id )
 
     case Node_kind::Char_literal:
         return record( id, table_.integer( 8, false ) ); // D20: a code point, so a u8
+
+    case Node_kind::Null_literal:
+        error_at( ast_.span( id ), "cannot infer type of `nullptr`" );
+        return record( id, table_.builtin( Type_kind::Error ) );
 
     default:
         assert( false );
@@ -970,6 +981,19 @@ Type_id Checker::check_literal( Node_id id, Type_id expected )
 
         break;
     }
+    case Node_kind::Null_literal:
+        if( !table_.is_pointer( expected ) )
+        {
+            error_at(
+                ast_.span( id ),
+                fmt::format( "expected `{}`, but got a null literal", table_.name( expected ) ),
+                "a null literal can only be assigned to a pointer"
+            );
+
+            return expected;
+        }
+
+        break;
 
     default:
         return expected; // not a literal after all
@@ -1139,6 +1163,24 @@ Type_id Checker::infer_binary( Node_id id )
         return record( id, error );
     };
 
+    // Pointer equality, which is how a null check is written. Handled before the rule table, whose
+    // operand classes are all numeric or bool. Ordering is deliberately absent: comparing pointers
+    // into different allocations is meaningless, and §6.4 has no row for them.
+    if( table_.is_pointer( lhs_type ) || table_.is_pointer( rhs_type ) )
+    {
+        if( op != Token_kind::Equal_equal && op != Token_kind::Bang_equal )
+        {
+            return reject( {} );
+        }
+
+        if( lhs_type != rhs_type )
+        {
+            return reject( "only pointers of the same type can be compared" );
+        }
+
+        return record( id, bool_type );
+    }
+
     const Binary_rule* rule = binary_rule_for( op );
 
     if( rule == nullptr )
@@ -1184,11 +1226,39 @@ Type_id Checker::infer_unary( Node_id id )
         return record( id, error );
     }
 
+    // Neither of these is in the rule table: that table assumes the result type is the operand's,
+    // and both of these change it.
+    if( op == Token_kind::Amp )
+    {
+        // The operand must be somewhere a value lives. `&f()` names the address of a temporary
+        // that is about to vanish, and `&1` names nothing at all. Asked after infer() so that
+        // errors inside the operand are reported first.
+        if( !is_assignable( ast_.children( id )[0] ) )
+        {
+            error_at( ast_.span( id ), "cannot take the address of this expression", "it does not name a variable" );
+
+            return record( id, error );
+        }
+
+        return record( id, table_.pointer_to( operand_type ) );
+    }
+
+    if( op == Token_kind::Star )
+    {
+        if( !table_.is_pointer( operand_type ) )
+        {
+            error_at( ast_.span( id ), fmt::format( "`{}` cannot be dereferenced", table_.name( operand_type ) ) );
+
+            return record( id, error );
+        }
+
+        return record( id, table_.get( operand_type ).element );
+    }
+
     const Unary_rule* rule = unary_rule_for( op );
 
     if( rule == nullptr )
     {
-        // `*` and `&` arrive with pointers, at M2.
         error_at( ast_.span( id ), fmt::format( "unary `{}` is not supported yet", token_kind_spelling( op ) ) );
         return record( id, error );
     }
@@ -1410,6 +1480,7 @@ Type_id Checker::check( Node_id id, Type_id expected )
     case Node_kind::Float_literal:
     case Node_kind::Bool_literal:
     case Node_kind::Char_literal:
+    case Node_kind::Null_literal:
         return check_literal( id, expected );
 
     case Node_kind::Unary_expr:
@@ -1518,8 +1589,10 @@ Type_id Checker::type_of_annotation( Node_id id )
     case Node_kind::Const_type:
         return type_of_annotation( ast_.children( id )[0] );
 
-    case Node_kind::Generic_type:
     case Node_kind::Pointer_type:
+        return table_.pointer_to( type_of_annotation( ast_.children( id )[0] ) );
+
+    case Node_kind::Generic_type:
     case Node_kind::Ref_type:
         // A diagnostic rather than an assert: these parse, so reaching one is bad input, not a
         // broken invariant, and keelc must not abort on a program someone wrote.
@@ -2852,6 +2925,159 @@ TEST_CASE( "type_checker_rejects_passing_markers_for_now", "[sema][types]" )
         INFO( "source: " << source << "\n" << p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "not supported yet" ) != std::string::npos );
+    }
+}
+
+TEST_CASE( "type_checker_types_pointers", "[sema][types]" )
+{
+    SECTION( "an annotation, an address and a dereference" )
+    {
+        const Typed p( "i32 main() { i32 v = 1; i32* q = &v; i32 w = *q; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Var_decl, 1 ) ) == "i32*" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "i32*" ); // &v
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 1 ) ) == "i32" );  // *q
+    }
+
+    SECTION( "pointers nest" )
+    {
+        const Typed p( "i32 main() { i32 v = 1; i32* q = &v; i32** r = &q; i32 w = **r; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Var_decl, 2 ) ) == "i32**" );
+    }
+
+    SECTION( "and point at structs" )
+    {
+        const Typed p( "struct Point { f64 x; };\n"
+                       "i32 main() { auto s = Point { 1.0 }; Point* q = &s; f64 v = (*q).x; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // The address of a temporary names storage that is about to vanish, and a literal has no
+    // storage at all.
+    SECTION( "the address of something that is not a place is rejected" )
+    {
+        for( const char* tail : { "i32 v = &f(); return 0;", "i32 v = &1; return 0;", "i32 v = &( 1 + 2 ); return 0;" } )
+        {
+            const Typed p( std::string( "i32 f() { return 1; }\ni32 main() { " ) + tail + " }" );
+
+            INFO( tail << "\n" << p.rendered() );
+            REQUIRE( p.errors() >= 1 );
+            REQUIRE( p.rendered().find( "cannot take the address" ) != std::string::npos );
+        }
+    }
+
+    SECTION( "the address of a field is fine - a field is a place" )
+    {
+        const Typed p( "struct Point { f64 x; };\n"
+                       "i32 main() { auto s = Point { 1.0 }; f64* q = &s.x; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "dereferencing something that is not a pointer is rejected" )
+    {
+        const Typed p( "i32 main() { i32 v = 1; i32 w = *v; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "cannot be dereferenced" ) != std::string::npos );
+    }
+
+    SECTION( "writing through a pointer" )
+    {
+        const Typed p( "i32 main() { i32 v = 1; i32* q = &v; *q = 2; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // Identity only: no void*, no conversion between pointee types.
+    SECTION( "pointer types do not convert" )
+    {
+        const Typed p( "i32 main() { i32 v = 1; i32* q = &v; u8* r = q; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "nor to or from an integer" )
+    {
+        const Typed a( "i32 main() { i32 v = 1; i32* q = &v; i64 n = q; return 0; }" );
+        const Typed b( "i32 main() { i64 n = 1; i32* q = n; return 0; }" );
+
+        INFO( a.rendered() << b.rendered() );
+        REQUIRE( a.errors() == 1 );
+        REQUIRE( b.errors() == 1 );
+    }
+
+    // D27. Arithmetic belongs to a many-item pointer, which v0 does not have.
+    SECTION( "there is no pointer arithmetic" )
+    {
+        for( const char* tail : { "i32* r = q + 1;", "i32* r = q - 1;", "i32 n = q * 2;" } )
+        {
+            const Typed p( std::string( "i32 main() { i32 v = 1; i32* q = &v; " ) + tail + " return 0; }" );
+
+            INFO( tail << "\n" << p.rendered() );
+            REQUIRE( p.errors() >= 1 );
+        }
+    }
+
+    SECTION( "a pointer can be passed and returned" )
+    {
+        const Typed p( "i32 read( i32* q ) { return *q; }\n"
+                       "i32 main() { i32 v = 1; return read( &v ); }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// D26: a literal whose type comes from context, exactly like an integer literal.
+TEST_CASE( "type_checker_types_nullptr", "[sema][types]" )
+{
+    SECTION( "it adopts the annotated pointer type" )
+    {
+        const Typed p( "i32 main() { i32* q = nullptr; u8* r = nullptr; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Null_literal, 0 ) ) == "i32*" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Null_literal, 1 ) ) == "u8*" );
+    }
+
+    SECTION( "with no context there is nothing to adopt" )
+    {
+        const Typed p( "i32 main() { auto q = nullptr; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "and it is not a value of any other type" )
+    {
+        for( const char* tail : { "i32 v = nullptr;", "bool b = nullptr;", "f64 d = nullptr;" } )
+        {
+            const Typed p( std::string( "i32 main() { " ) + tail + " return 0; }" );
+
+            INFO( tail << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+        }
+    }
+
+    SECTION( "it can be passed to a pointer parameter" )
+    {
+        const Typed p( "i32 take( i32* q ) { return 0; }\ni32 main() { return take( nullptr ); }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
     }
 }
 

@@ -1,0 +1,112 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Point;
+
+struct kl__Point
+{
+    double kl_x_1;
+    double kl_y_3;
+};
+
+int32_t kl__read__i32p( int32_t* );
+void kl__bump__i32p( int32_t* );
+int32_t kl__main__( void );
+
+int32_t kl__read__i32p( int32_t* kl_q_8 )
+{
+#line 5 "codegen/pointers.kl"
+    int32_t kl_t0 = *kl_q_8;
+    return kl_t0;
+}
+
+void kl__bump__i32p( int32_t* kl_q_18 )
+{
+#line 7 "codegen/pointers.kl"
+    int32_t kl_t0 = *kl_q_18;
+    int32_t kl_t1 = (int32_t) kl_t0 + (int32_t) 1;
+    *kl_q_18 = (int32_t) kl_t1;
+}
+
+int32_t kl__main__( void )
+{
+#line 11 "codegen/pointers.kl"
+    int32_t kl_v_33 = 41;
+#line 12 "codegen/pointers.kl"
+    int32_t* kl_t0 = &kl_v_33;
+    int32_t* kl_q_38 = kl_t0;
+#line 14 "codegen/pointers.kl"
+    int32_t kl_t1 = *kl_q_38;
+    bool kl_t2 = (int32_t) kl_t1 != (int32_t) 41;
+    if ( kl_t2 )
+    {
+        return 1;
+    }
+#line 15 "codegen/pointers.kl"
+    int32_t kl_t3 = kl__read__i32p( (int32_t*) kl_q_38 );
+    bool kl_t4 = (int32_t) kl_t3 != (int32_t) 41;
+    if ( kl_t4 )
+    {
+        return 2;
+    }
+#line 17 "codegen/pointers.kl"
+    kl__bump__i32p( (int32_t*) kl_q_38 );
+#line 18 "codegen/pointers.kl"
+    bool kl_t5 = (int32_t) kl_v_33 != (int32_t) 42;
+    if ( kl_t5 )
+    {
+        return 3;
+    }
+#line 20 "codegen/pointers.kl"
+    *kl_q_38 = (int32_t) 7;
+#line 21 "codegen/pointers.kl"
+    bool kl_t6 = (int32_t) kl_v_33 != (int32_t) 7;
+    if ( kl_t6 )
+    {
+        return 4;
+    }
+#line 23 "codegen/pointers.kl"
+    int32_t** kl_t7 = &kl_q_38;
+    int32_t** kl_r_85 = kl_t7;
+#line 24 "codegen/pointers.kl"
+    int32_t* kl_t8 = *kl_r_85;
+    int32_t kl_t9 = *kl_t8;
+    bool kl_t10 = (int32_t) kl_t9 != (int32_t) 7;
+    if ( kl_t10 )
+    {
+        return 5;
+    }
+#line 26 "codegen/pointers.kl"
+    struct kl__Point kl_t11;
+    kl_t11.kl_x_1 = 1.0;
+    kl_t11.kl_y_3 = 2.0;
+    struct kl__Point kl_s_100 = kl_t11;
+#line 27 "codegen/pointers.kl"
+    double* kl_t12 = &kl_s_100.kl_y_3;
+    double* kl_f_106 = kl_t12;
+#line 28 "codegen/pointers.kl"
+    *kl_f_106 = (double) 9.0;
+#line 29 "codegen/pointers.kl"
+    double kl_t13 = kl_s_100.kl_y_3;
+    bool kl_t14 = (double) kl_t13 != (double) 9.0;
+    if ( kl_t14 )
+    {
+        return 6;
+    }
+#line 31 "codegen/pointers.kl"
+    int32_t* kl_n_122 = NULL;
+#line 32 "codegen/pointers.kl"
+    bool kl_t15 = (int32_t*) kl_n_122 != (int32_t*) NULL;
+    if ( kl_t15 )
+    {
+        return 7;
+    }
+#line 34 "codegen/pointers.kl"
+    return 0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

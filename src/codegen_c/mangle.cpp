@@ -18,7 +18,14 @@ mangle_function( std::string_view module, std::string_view name, std::span<const
             argtypes += '_';
         }
 
-        argtypes += types.name( id );
+        // A type's own spelling is not always a C identifier: `i32*` becomes `i32p`, and `i32**`
+        // becomes `i32pp`. Not injective - a struct genuinely named `i32p` would collide - which
+        // is fine while every type name is a plain word, and wants a length-prefixed scheme when
+        // that stops being true.
+        for( const char c : types.name( id ) )
+        {
+            argtypes += c == '*' ? 'p' : c;
+        }
     }
 
     return fmt::format( "kl_{}_{}__{}", module, name, argtypes );

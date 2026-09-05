@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 int32_t kl__takes_u8__u8( uint8_t );
 int32_t kl__main__( void );

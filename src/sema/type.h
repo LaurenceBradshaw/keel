@@ -66,6 +66,7 @@ public:
     bool is_integer( Type_id id ) const;
     bool is_float( Type_id id ) const;
     bool is_struct( Type_id id ) const;
+    bool is_pointer( Type_id id ) const;
 
     // §6.4 assignment: does every value of `from` exist in `to`?
     bool holds( Type_id from, Type_id to ) const;

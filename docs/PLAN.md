@@ -372,6 +372,8 @@ overflows; what happens then is the open overflow question in §12.
 | D23 | A struct literal must initialise **every** field. `Point { 1.0 }` for a two-field struct is an error, not a zero-fill. | C++ value-initialises the fields you leave out, so adding a field to a struct silently changes what every existing construction site builds. Requiring all of them turns that into a compile error at each site — noisy in the way that finds bugs. This rejects a program C++ accepts, which §5.1 permits outright. Mixing positional and named initialisers is also an error, but that needs no entry of its own: C++20 forbids it too, so Keel is simply following. |
 | D24 | **Mutable by default**, as in C++. `const` is opt-in. | The manifesto's "safe by default" pulls the other way, and this is the one place the two goals genuinely conflict — but mutability is not what makes a program unsafe; aliasing and lifetime are, and those are M3-M4's business. Most values are written more often than they are read once, so const-by-default taxes the common case to annotate the rare one. And `i32 y = 0; y = 1;` failing would astonish exactly the developer §5.1 is written for. |
 | D25 | `int`, `float` and `double` stay **hard errors**, never aliases. | D1's suggestion path is implemented and works: the message names the replacement, so the cost is one compile the first time. Accepting them would buy that same first hour at the price of a permanent second spelling for every type — every reader thereafter has to know both, and every code base picks one by accident. |
+| D26 | `nullptr` is the null pointer, spelled as in C++, and it is a **literal** whose type comes from context: `u8* p = nullptr;` adopts, `auto p = nullptr;` is an error. | The spelling is C++'s because §5.1 has no reason to invent another for an identical concept. Making it a literal rather than a value of some `nullptr_t` reuses `check_literal` wholesale and keeps D5 intact — no conversion happens, the literal simply *becomes* that type, exactly as `42` becomes a `u32`. The `auto` case then falls out as an error for the same reason it does for any literal with nothing to adopt from. |
+| D27 | **No pointer arithmetic on `*T`**, which points at exactly one `T`. Arithmetic belongs to a many-item pointer, `[*]T` in Zig's notation, which v0 does not have. | `p + 1` on a single-item pointer is not dangerous, it is *nonsense*, and a type distinction catches it statically at no cost. Note the performance argument for C's arithmetic does not hold: `*(p + i)` and `p[i]` compile to identical machine code, so what buys speed is the capability of touching raw memory, which survives either spelling. C's implicit scaling by element size is the wart — a named `offset` operation says what it does. §6.4 already answers nothing for a pointer, so rejection is the default rather than a rule to add. `==` and `!=` between two pointers of the **same** type are allowed, since that is how a null check is written; ordering is not, because comparing pointers into different allocations is meaningless. |
 
 ### 6.4 Numeric conversions (D5)
 
@@ -663,7 +665,7 @@ none of them can block work indefinitely.
 | `a < b > ( c )` — a call to a generic, or two comparisons? C++ needs `template` disambiguators, Rust needs turbofish (`a::<b>(c)`). D15 does not help: both readings are effectful. | M6 |
 | Do we ever add lifetimes/borrow checking, or is the non-escaping rule permanent? | After M7, with real-program evidence |
 | Are interfaces/traits the only form of polymorphism, or is there virtual dispatch? | M6 (generic bounds force a partial answer) |
-| What exactly is in an `unsafe` block, and what does it permit? | M3 (raw pointers appear in `Buffer`) |
+| **What exactly is in an `unsafe` block, and what does it permit?** The shape is settled: Rust's model — `unsafe { }` blocks and `unsafe fn` — with Zig's `[*]T` beside it. What remains is the enumerated list. The property that makes Rust's version work, and the one most often misunderstood: **`unsafe` permits operations, it does not disable checks.** Move checking, type checking and D5 all still apply inside one; an unsafe block is not a different language. The two mechanisms are orthogonal rather than overlapping — `p + 1000000` on a `[*]T` is type-correct and catastrophic, so the type says the operation is *meaningful* while `unsafe` says the author *checked the invariant*. D's `@trusted` is deliberately **not** taken: a safe function containing an unsafe block already *is* one, so Rust's two levels encode D's three, and a standalone `@trusted` without D's full `@safe`/`@system` lattice would be an optional marker whose absence means either "safe" or "forgot" — the same defect that keeps `move` out of signatures under D2. | M3, when `Buffer` gives it something concrete to gate |
 | Optionals: `T?`, `Optional<T>`, or a nullable-reference type — and how does it interact with `&`? | M5 |
 | Does `class` exist at all, or is `struct` the only aggregate? (v0 says struct only) | M7 |
 | Custom allocators / arenas — visible in the type system or not? | M7 |
@@ -822,6 +824,13 @@ none of it is needed for `fib(20)`.
 
 ### Ahead of M3
 
+Raw pointers work end to end: `*T` annotations, `&x`, `*p`, writing through a
+pointer, pointers to structs and to pointers, `nullptr` as a context-typed
+literal (D26), and equality against it. No arithmetic and no indexing (D27), and
+no `unsafe` gate yet — that waits for M3, where `Buffer` gives it something
+concrete to gate.
+
+
 `move`, `out` and `ref` lex, parse and dump as one `Marker_expr` whose `aux` says
 which — D2's call-site marker, and the two the §12 arrow question resolved to.
 Sema reports "not supported yet" for all three: `move` has nothing to enforce
@@ -838,6 +847,28 @@ stray `;`.
 
 ### Debts to pay along the way
 
+- `mangle_function` is not injective. Argument types are spelled with `Type_table::name()`, the
+  plain Keel spelling, so `i32*` becomes `i32p` and a struct genuinely named `i32p` collides with
+  it. Two separate improvements are wanted, and only the second is complete:
+  - **A category tag** — `kl_struct_`, `kl_func_`, `kl_local_` — closes collisions *between* the
+    three schemes, which exist today: `mangle_struct( "", "foo__" )` and
+    `mangle_function( "", "foo", {} )` both give `kl__foo__`, and at M7 a module named `foo` makes
+    `mangle_local( "foo", 7 )` and `mangle_struct( "foo", "7" )` both `kl_foo_7`.
+  - **Embedding each argument type's own mangled name** rather than its spelling — so a struct
+    argument reads `kl_struct__Point`, distinct from any builtin's spelling. This makes a collision
+    require a deliberately perverse name, but is still not injective: `_` is the separator and may
+    appear inside a name, so `f( struct A, struct B )` and `f( struct A_kl_struct__B )` still
+    coincide. Only **length-prefixing**, as the Itanium ABI uses (`6Vector3i32`), is injective by
+    construction. M6 forces the question anyway, since `Vector<i32>` contains characters that are
+    not identifier characters at all.
+- `can_start_expression()` and `parse_prefix`'s Keyword case are two halves of one list, and three
+  features in a row have needed both edited together — `true`/`false`, then `move`/`out`/`ref`,
+  then `nullptr`. A keyword missing from the first parses correctly in an argument or an
+  initialiser and fails only in statement position, which is why it keeps getting through. They
+  want to share one predicate.
+- `Node_kind::Null_literal` had to be added to four separate switches - `infer`, `check`,
+  `is_literal_expression` and the emitter's `lower` - and missing any one of them failed silently
+  rather than loudly. A literal kind is currently a five-place edit.
 - `expect_keyword()` will need a spelling that `token_kind_spelling()` cannot
   give. Every keyword shares one `Token_kind::Keyword`, so the spelling function
   can only answer "keyword" — *which* one lives in `Token::symbol`. A message

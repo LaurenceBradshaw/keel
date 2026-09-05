@@ -259,6 +259,7 @@ void Emitter::emit_prologue()
 {
     write_line( "#include <stdint.h>" );
     write_line( "#include <stdbool.h>" );
+    write_line( "#include <stddef.h>" ); // NULL
     write_line( "" );
 }
 
@@ -634,6 +635,7 @@ std::string Emitter::lower( Node_id id )
     case Node_kind::Float_literal:
     case Node_kind::Bool_literal:
     case Node_kind::Char_literal:
+    case Node_kind::Null_literal:
         return lower_literal( id );
 
     case Node_kind::Name_expr:
@@ -712,6 +714,29 @@ std::string Emitter::lower_unary( Node_id id )
 {
     const Token_kind op      = static_cast<Token_kind>( ast_.aux( id ) );
     const Node_id    operand = ast_.children( id )[0];
+
+    // Neither of these goes through the cast-and-apply shape below. `&` wants its operand as a
+    // *place* rather than a value, and `*` produces the pointee, whose type is not the operand's -
+    // so the cast that pattern applies would be wrong in both.
+    if( op == Token_kind::Amp )
+    {
+        const std::string place = lower_place( operand );
+        const std::string taken = fresh_temp();
+
+        write_line( fmt::format( "{} {} = &{};", c_type( types_.type_of( id ) ), taken, place ) );
+
+        return taken;
+    }
+
+    if( op == Token_kind::Star )
+    {
+        const std::string pointer = lower( operand );
+        const std::string read    = fresh_temp();
+
+        write_line( fmt::format( "{} {} = *{};", c_type( types_.type_of( id ) ), read, pointer ) );
+
+        return read;
+    }
 
     const std::string value = lower( operand );
     const std::string temp  = fresh_temp();
@@ -794,11 +819,23 @@ std::string Emitter::lower_place( Node_id id )
         return fmt::format( "{}.{}", lower_place( object ), field_name( field ) );
     }
 
+    case Node_kind::Unary_expr:
+        // `*p` names where a value lives. `&x` does not - an address is a value, and `&x = 1;` is
+        // not a thing - so it falls through to be lowered like any other operand.
+        if( static_cast<Token_kind>( ast_.aux( id ) ) == Token_kind::Star )
+        {
+            return fmt::format( "*{}", lower( ast_.children( id )[0] ) );
+        }
+
+        break;
+
     default:
-        // Not a place - a call, say. `make().x = 2.0;` is legal and useless, and writing into the
-        // temporary the call produced is exactly what it means.
-        return lower( id );
+        break;
     }
+
+    // Not a place - a call, say. `make().x = 2.0;` is legal and useless, and writing into the
+    // temporary the call produced is exactly what it means.
+    return lower( id );
 }
 
 std::string Emitter::lower_field( Node_id id )
@@ -864,6 +901,9 @@ std::string Emitter::lower_literal( Node_id id )
     {
     case Node_kind::Bool_literal:
         return ast_.aux( id ) != 0 ? "true" : "false";
+
+    case Node_kind::Null_literal:
+        return "NULL";
 
     case Node_kind::Float_literal:
     {
@@ -965,6 +1005,9 @@ std::string Emitter::c_type( Type_id type ) const
 
     case Type_kind::Struct:
         return struct_name( described.declaration );
+
+    case Type_kind::Pointer:
+        return fmt::format( "{}*", c_type( described.element ) );
 
     default:
         assert( false && "no C spelling for this type" );
@@ -1378,6 +1421,67 @@ TEST_CASE( "emitter_lowers_struct_literals_to_field_assignments", "[codegen]" )
         INFO( e.diagnostics() << e.c() );
         REQUIRE( e.clean() );
         REQUIRE( e.at( "= 5.0;" ) < e.at( "= 4.0;" ) );
+    }
+}
+
+TEST_CASE( "emitter_emits_pointers", "[codegen]" )
+{
+    SECTION( "the C spelling, however deeply nested" )
+    {
+        const Emitted e( "struct Point { f64 x; };\n"
+                         "i32 f( u8* a, i32** b, Point* c ) { return 0; }\n"
+                         "i32 main() { return 0; }\n" );
+
+        INFO( e.diagnostics() << e.c() );
+        REQUIRE( e.clean() );
+        REQUIRE( e.has( "uint8_t*" ) );
+        REQUIRE( e.has( "int32_t**" ) );
+        REQUIRE( e.has( "struct kl__Point*" ) );
+    }
+
+    SECTION( "address-of and dereference" )
+    {
+        const Emitted e( "i32 main() { i32 v = 1; i32* q = &v; i32 w = *q; return 0; }" );
+
+        INFO( e.diagnostics() << e.c() );
+        REQUIRE( e.clean() );
+        REQUIRE( e.has( "= &kl_v" ) );
+        REQUIRE( e.has( "= *kl_q" ) );
+    }
+
+    // `&` takes its operand as a *place*, so it reaches through the field rather than taking the
+    // address of a temporary copy of it.
+    SECTION( "the address of a field is the field's own" )
+    {
+        const Emitted e( "struct Point { f64 x; };\n"
+                         "i32 main() { auto s = Point { 1.0 }; f64* q = &s.x; return 0; }\n" );
+
+        INFO( e.diagnostics() << e.c() );
+        REQUIRE( e.clean() );
+        REQUIRE( e.has( "= &kl_s" ) );
+    }
+
+    // The same place-versus-value trap as field assignment: lowering the target as a value reads
+    // through the pointer into a temporary and assigns to that, leaving the pointee untouched.
+    SECTION( "writing through a pointer writes through it" )
+    {
+        const Emitted e( "i32 main() { i32 v = 1; i32* q = &v; *q = 2; return 0; }" );
+
+        INFO( e.diagnostics() << e.c() );
+        REQUIRE( e.clean() );
+        REQUIRE( e.has( "*kl_q" ) );
+        REQUIRE( e.count( "= (int32_t) 2;" ) == 1 );
+        REQUIRE_FALSE( e.has( "kl_t2 = (int32_t) 2;" ) );
+    }
+
+    SECTION( "nullptr is NULL, and the header that defines it is included" )
+    {
+        const Emitted e( "i32 main() { i32* q = nullptr; return 0; }" );
+
+        INFO( e.diagnostics() << e.c() );
+        REQUIRE( e.clean() );
+        REQUIRE( e.has( "<stddef.h>" ) );
+        REQUIRE( e.has( "= NULL;" ) );
     }
 }
 

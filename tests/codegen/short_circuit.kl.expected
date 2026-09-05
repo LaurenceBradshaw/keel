@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 bool kl__positive__i32( int32_t );
 bool kl__both__i32_i32( int32_t, int32_t );

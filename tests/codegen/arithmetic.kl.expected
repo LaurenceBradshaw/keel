@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 int32_t kl__mix__i32_i64_u8( int32_t, int64_t, uint8_t );
 int32_t kl__main__( void );
