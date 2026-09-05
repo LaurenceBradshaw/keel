@@ -46,6 +46,20 @@ Token_kind base_operator( Token_kind assignment )
     }
 }
 
+// What `break` and `continue` jump to. A `while` needs neither: the loop is emitted as
+// `while ( true )` with the condition guarded inside, so C's own keywords already mean "leave this
+// loop" and "re-test the condition". A `for` needs a continue target, because its update is
+// emitted after the body and C's `continue` would skip it.
+//
+// break_label is unused today and deliberately here: at M3 `break` has to run the destructors for
+// every scope it leaves, so it becomes a jump to a cleanup label rather than C's keyword.
+struct Loop_targets
+{
+    std::string continue_label; // empty: C's own `continue` is correct
+    std::string break_label;    // empty: C's own `break` is correct
+    bool        continue_used = false;
+};
+
 class Emitter
 {
 public:
@@ -98,6 +112,8 @@ private:
     void emit_while( Node_id id );
     void emit_for( Node_id id );
     void emit_expr_stmt( Node_id id );
+    void emit_break( Node_id id );
+    void emit_continue( Node_id id );
 
     // A loop condition is re-evaluated every iteration, so the statements that compute it must sit
     // *inside* the loop. Emits those plus the guarded break.
@@ -143,6 +159,7 @@ private:
     // --- helpers ---
 
     std::string fresh_temp();
+    std::string fresh_label();
     std::string c_type( Type_id type ) const; // "int32_t", "bool", "void"
 
     void line_directive( Node_id id ); // §7.6
@@ -157,9 +174,12 @@ private:
     const Interner&       interner_;
 
     std::string out_;
-    u32         next_temp_ = 0;
-    u32         indent_    = 0;
-    u32         last_line_ = 0; // so #line is emitted only when it changes
+    u32         next_temp_  = 0;
+    u32         next_label_ = 0;
+    u32         indent_     = 0;
+    u32         last_line_  = 0; // so #line is emitted only when it changes
+
+    std::vector<Loop_targets> loop_stack_; // innermost loop last, for break/continue
 };
 
 std::string Emitter::run()
@@ -333,7 +353,8 @@ void Emitter::emit_prototypes()
 
 void Emitter::emit_function( Node_id id )
 {
-    next_temp_ = 0; // so temporaries read as kl_t0, kl_t1 within each function
+    next_temp_  = 0; // so temporaries read as kl_t0, kl_t1 within each function
+    next_label_ = 0; // so labels read as kl_l0, kl_l1 within each function
 
     write_line( signature( id, true ) );
     emit_block( ast_.children( id )[2] ); // writes its own braces and indents
@@ -414,6 +435,12 @@ void Emitter::emit_statement( Node_id id )
         return;
     case Node_kind::Increment_stmt:
         emit_increment( id );
+        return;
+    case Node_kind::Break_stmt:
+        emit_break( id );
+        return;
+    case Node_kind::Continue_stmt:
+        emit_continue( id );
         return;
     default:
         assert( false && "unexpected statement kind" );
@@ -565,7 +592,9 @@ void Emitter::emit_while( Node_id id )
     indent_ += 4;
 
     emit_loop_condition( ast_.children( id )[0] );
+    loop_stack_.push_back( Loop_targets {} );
     emit_statement( ast_.children( id )[1] );
+    loop_stack_.pop_back();
 
     indent_ -= 4;
     write_line( "}" );
@@ -591,8 +620,21 @@ void Emitter::emit_for( Node_id id )
     write_line( "{" );
     indent_ += 4;
 
+    Loop_targets targets;
+    targets.continue_label = fresh_label();
+    loop_stack_.push_back( targets );
+
     emit_loop_condition( condition );
     emit_statement( body );
+
+    const bool jumped = loop_stack_.back().continue_used;
+    loop_stack_.pop_back();
+
+    if( jumped )
+    {
+        // C11 wants a statement after a label, and `for( ;; )` may leave the update empty.
+        write_line( fmt::format( "{}: ;", targets.continue_label ) );
+    }
 
     // Last, not in C's update slot, for the same reason as the condition. When `continue` arrives
     // it will have to jump here rather than to the top.
@@ -610,6 +652,32 @@ void Emitter::emit_expr_stmt( Node_id id )
     // The statements lower() emits are the whole point; the operand naming the result is
     // discarded. Writing it out would leave `kl_t0;` behind - a no-op C warns about.
     lower( ast_.children( id )[0] );
+}
+
+void Emitter::emit_break( Node_id id )
+{
+    assert( !loop_stack_.empty() && "break outside a loop" );
+
+    // C's own break leaves the enclosing `while( true )`, which is exactly this loop - there is
+    // no switch for it to bind to instead.
+    write_line( "break;" );
+}
+
+void Emitter::emit_continue( Node_id id )
+{
+    assert( !loop_stack_.empty() && "continue outside a loop" );
+
+    Loop_targets& targets = loop_stack_.back();
+
+    if( targets.continue_label.empty() )
+    {
+        // a while: the top of the loop re-tests the condition
+        write_line( "continue;" );
+        return;
+    }
+
+    targets.continue_used = true;
+    write_line( fmt::format( "goto {};", targets.continue_label ) );
 }
 
 void Emitter::emit_increment( Node_id id )
@@ -1003,6 +1071,11 @@ std::string Emitter::lower_short_circuit( Node_id id )
 std::string Emitter::fresh_temp()
 {
     return fmt::format( "kl_t{}", next_temp_++ );
+}
+
+std::string Emitter::fresh_label()
+{
+    return fmt::format( "kl_l{}", next_label_++ );
 }
 
 std::string Emitter::c_type( Type_id type ) const
@@ -1421,6 +1494,126 @@ TEST_CASE( "emitter_increments_the_field_not_a_copy", "[codegen]" )
 // A place is composed into, so it has to be self-contained. `.` binds tighter than unary `*` in C,
 // so an unparenthesised deref means `*( p.next )` - which compiles only when the field happens to
 // be a pointer, and then writes through the wrong one.
+// A loop is emitted as `while ( true )` with the condition guarded inside, so C's own `break`
+// already means "leave this loop" and needs no help. `continue` does: a for's update is emitted
+// *after* the body, so C's `continue` would skip it and the loop would never terminate.
+TEST_CASE( "emitter_emits_break_and_continue", "[codegen][loops]" )
+{
+    SECTION( "break needs no label" )
+    {
+        const Emitted e( "i32 main() { while ( true ) { break; } return 0; }" );
+
+        INFO( e.diagnostics() << e.c() );
+        REQUIRE( e.clean() );
+        REQUIRE_FALSE( e.has( "goto" ) );
+    }
+
+    // Jumping to the top of `while ( true )` re-runs the condition statements, which is exactly
+    // what continue means here.
+    SECTION( "continue in a while is C's own continue" )
+    {
+        const Emitted e( "i32 main() { i32 i = 0; while ( i < 3 ) { i++; continue; } return 0; }" );
+
+        INFO( e.diagnostics() << e.c() );
+        REQUIRE( e.clean() );
+        REQUIRE( e.has( "continue;" ) );
+        REQUIRE_FALSE( e.has( "goto" ) );
+    }
+
+    // The heart of it: the jump has to land *before* the update, not at the top.
+    SECTION( "continue in a for jumps to the update" )
+    {
+        const Emitted e( "i32 main() { for ( i32 i = 0; i < 3; i++ ) { continue; } return 0; }" );
+
+        INFO( e.diagnostics() << e.c() );
+        REQUIRE( e.clean() );
+        REQUIRE( e.has( "goto " ) );
+        REQUIRE( e.has( ": ;" ) ); // C11 wants a statement after a label
+
+        const std::size_t jump   = e.c().find( "goto " );
+        const std::size_t label  = e.c().find( ": ;" );
+        const std::size_t update = e.c().find( "+ 1 );" );
+
+        REQUIRE( jump < label );
+        REQUIRE( label < update );
+    }
+
+    SECTION( "break in a for is still C's own break" )
+    {
+        const Emitted e( "i32 main() { for ( i32 i = 0; i < 3; i++ ) { break; } return 0; }" );
+
+        INFO( e.diagnostics() << e.c() );
+        REQUIRE( e.clean() );
+        REQUIRE_FALSE( e.has( "goto" ) );
+    }
+
+    // -Wunused-label is in -Wall, and the golden runner builds with -Werror. A label emitted for a
+    // loop nothing jumps to would fail that build.
+    SECTION( "a loop with no continue emits no label" )
+    {
+        const Emitted e( "i32 main() { i32 t = 0; for ( i32 i = 0; i < 3; i++ ) { t += i; } return 0; }" );
+
+        INFO( e.diagnostics() << e.c() );
+        REQUIRE( e.clean() );
+        REQUIRE_FALSE( e.has( ": ;" ) );
+        REQUIRE_FALSE( e.has( "goto" ) );
+    }
+
+    SECTION( "and neither does a for whose body only breaks" )
+    {
+        const Emitted e( "i32 main() { for ( i32 i = 0; i < 3; i++ ) { break; } return 0; }" );
+
+        INFO( e.diagnostics() << e.c() );
+        REQUIRE_FALSE( e.has( ": ;" ) );
+    }
+
+    // Each loop gets its own target, so the inner one is what an inner continue jumps to.
+    SECTION( "nested for loops get one label each" )
+    {
+        const Emitted e( "i32 main() {\n"
+                         "  for ( i32 i = 0; i < 3; i++ ) {\n"
+                         "    for ( i32 j = 0; j < 3; j++ ) { continue; }\n"
+                         "    continue;\n"
+                         "  }\n"
+                         "  return 0; }\n" );
+
+        INFO( e.diagnostics() << e.c() );
+        REQUIRE( e.clean() );
+        REQUIRE( e.count( ": ;" ) == 2 );
+        REQUIRE( e.count( "goto " ) == 2 );
+    }
+
+    // Only the inner loop is continued, so only the inner loop needs a label.
+    SECTION( "an outer loop with no continue of its own stays label-free" )
+    {
+        const Emitted e( "i32 main() {\n"
+                         "  for ( i32 i = 0; i < 3; i++ ) {\n"
+                         "    for ( i32 j = 0; j < 3; j++ ) { continue; }\n"
+                         "  }\n"
+                         "  return 0; }\n" );
+
+        INFO( e.diagnostics() << e.c() );
+        REQUIRE( e.clean() );
+        REQUIRE( e.count( ": ;" ) == 1 );
+    }
+
+    // A continue inside a while nested in a for belongs to the while, which needs no label.
+    SECTION( "a while inside a for does not borrow the for's label" )
+    {
+        const Emitted e( "i32 main() {\n"
+                         "  for ( i32 i = 0; i < 3; i++ ) {\n"
+                         "    i32 j = 0;\n"
+                         "    while ( j < 3 ) { j++; continue; }\n"
+                         "  }\n"
+                         "  return 0; }\n" );
+
+        INFO( e.diagnostics() << e.c() );
+        REQUIRE( e.clean() );
+        REQUIRE( e.has( "continue;" ) );
+        REQUIRE_FALSE( e.has( "goto" ) );
+    }
+}
+
 TEST_CASE( "emitter_parenthesises_a_dereferenced_place", "[codegen]" )
 {
     SECTION( "assigning through a pointer to a struct" )

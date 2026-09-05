@@ -883,6 +883,33 @@ none of it is needed for `fib(20)`.
 
 ### Ahead of M3
 
+`break` and `continue` work end to end. The checker scopes a loop-depth counter
+to the loop *body*, so `break` in a bare block, after a loop has closed, or
+inside an `if` that is not itself in a loop are all rejected — and the cases live
+in `visit` explicitly rather than falling through its `default:`, which recurses
+into children and would have let `break;` compile anywhere at all.
+
+The emitter is where the work is. `break` needs nothing: a loop is emitted as
+`while ( true )` with the condition guarded inside, so C's own keyword already
+means "leave this loop", and there is no `switch` for it to bind to instead.
+`continue` splits. In a `while` it is C's own `continue`, which returns to the
+top and re-runs the condition statements — exactly right. In a `for` it must not
+be: the update is emitted *after* the body, so C's `continue` would skip it and
+the loop would never advance. So a `for` emits a label before its update and
+`continue` jumps there.
+
+The label is named eagerly and written lazily — `-Wunused-label` is in `-Wall`
+and the golden runner builds with `-Werror`, so a label nothing targets fails the
+build. The body is emitted before the label's position, so a "was it used" flag
+on the loop stack settles it with no pre-scan. That stack carries a break target
+as well, unused today and deliberately present: at M3 `break` has to run the
+destructors for every scope it leaves, so it becomes a jump to a cleanup label,
+which is the mechanism §7 already commits to.
+
+None of this survives M3 as written — the emitter is re-pointed at KIR, where
+`break` and `continue` are ordinary CFG edges rather than statements. What
+survives is the checker's rule and the shape of the loop stack.
+
 Four larger fixtures now exercise the three features together rather than one at
 a time: `linked_list.kl` (a stack-allocated list, rewired in place through
 pointers), `hashing.kl` (FNV-1a, xorshift32 and an LCG, all built on `wrap`),

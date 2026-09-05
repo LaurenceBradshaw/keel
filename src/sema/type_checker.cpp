@@ -287,6 +287,8 @@ private:
     std::vector<Type_id> types_;        // sized node_count(), invalid-filled, like bindings_ in Resolver
     std::vector<Node_id> struct_order_; // dependencies first; also the "already proved acyclic" set
     Type_id              current_return_;
+
+    u32 loop_depth_ = 0; // for break/continue
 };
 
 Types Checker::run()
@@ -554,6 +556,21 @@ void Checker::visit( Node_id id )
     case Node_kind::Increment_stmt:
         return visit_increment( id );
 
+    case Node_kind::Break_stmt:
+        if( loop_depth_ == 0 )
+        {
+            error_at( ast_.span( id ), "`break` outside a loop body", "`break` can only appear inside a `while` or `for`" );
+        }
+        return;
+    case Node_kind::Continue_stmt:
+        if( loop_depth_ == 0 )
+        {
+            error_at(
+                ast_.span( id ), "`continue` outside a loop body", "`continue` can only appear inside a `while` or `for`"
+            );
+        }
+        return;
+
     default:
         // Source_file, Block, and every statement not yet given a case of its own.
         for( const Node_id child : ast_.children( id ) )
@@ -752,7 +769,9 @@ void Checker::visit_if( Node_id id )
 void Checker::visit_while( Node_id id )
 {
     check_condition( ast_.children( id )[0] );
+    loop_depth_ += 1;
     visit( ast_.children( id )[1] );
+    loop_depth_ -= 1;
 }
 
 void Checker::visit_for( Node_id id )
@@ -763,7 +782,9 @@ void Checker::visit_for( Node_id id )
     visit( ast_.children( id )[0] );
     check_condition( ast_.children( id )[1] );
     visit( ast_.children( id )[2] );
+    loop_depth_ += 1;
     visit( ast_.children( id )[3] );
+    loop_depth_ -= 1;
 }
 
 void Checker::visit_increment( Node_id id )
@@ -3636,6 +3657,115 @@ TEST_CASE( "type_checker_still_reports_a_literal_with_no_context", "[sema][types
         INFO( a.rendered() << b.rendered() );
         REQUIRE( a.clean() );
         REQUIRE( b.clean() );
+    }
+}
+
+// `break` and `continue` are only meaningful inside a loop, and the depth has to be scoped to the
+// *body*: visit()'s default recurses into children rather than asserting, so a missing case here
+// would let `break;` compile anywhere at all rather than failing loudly.
+TEST_CASE( "type_checker_accepts_break_and_continue_inside_a_loop", "[sema][types][loops]" )
+{
+    SECTION( "directly in a while" )
+    {
+        const Typed p( "i32 main() { while ( true ) { break; } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "directly in a for" )
+    {
+        const Typed p( "i32 main() { for ( i32 i = 0; i < 3; i++ ) { continue; } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // The case a naive check misses: the enclosing statement is an if, not a loop.
+    SECTION( "nested inside an if inside a loop" )
+    {
+        const Typed p( "i32 main() { while ( true ) { if ( true ) { break; } } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "in a block inside a loop" )
+    {
+        const Typed p( "i32 main() { while ( true ) { { continue; } } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "nested loops" )
+    {
+        const Typed p( "i32 main() { while ( true ) { for ( i32 i = 0; i < 3; i++ ) { continue; } break; } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+TEST_CASE( "type_checker_rejects_break_and_continue_outside_a_loop", "[sema][types][loops]" )
+{
+    SECTION( "at the top of a function" )
+    {
+        const Typed b( "i32 main() { break; return 0; }" );
+        const Typed c( "i32 main() { continue; return 0; }" );
+
+        INFO( b.rendered() << c.rendered() );
+        REQUIRE( b.errors() == 1 );
+        REQUIRE( c.errors() == 1 );
+        REQUIRE( b.rendered().find( "`break` outside a loop" ) != std::string::npos );
+        REQUIRE( c.rendered().find( "`continue` outside a loop" ) != std::string::npos );
+    }
+
+    SECTION( "in an if that is not inside a loop" )
+    {
+        const Typed p( "i32 main() { if ( true ) { break; } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "in a bare block" )
+    {
+        const Typed p( "i32 main() { { break; } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    // The depth has to come back down, or everything after a loop is wrongly inside one.
+    SECTION( "after the loop has closed" )
+    {
+        const Typed p( "i32 main() { while ( true ) { break; } break; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "after a nested loop has closed" )
+    {
+        const Typed p( "i32 main() { while ( true ) { for ( i32 i = 0; i < 3; i++ ) { break; } } continue; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    // Every loop in a chain must restore the depth, not just the last one.
+    SECTION( "after several loops in sequence" )
+    {
+        const Typed p( "i32 main() {\n"
+                       "  while ( true ) { break; }\n"
+                       "  for ( i32 i = 0; i < 3; i++ ) { break; }\n"
+                       "  while ( true ) { break; }\n"
+                       "  break;\n"
+                       "  return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
     }
 }
 

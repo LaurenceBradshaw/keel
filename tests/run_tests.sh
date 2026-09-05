@@ -18,6 +18,7 @@
 # nothing if nothing runs them.
 #
 #   CC          the C compiler                    (default: cc)
+#   KEEL_RUN_TIMEOUT  seconds a fixture may run   (default: 10)
 #   KEEL_CFLAGS flags for it                      (default: -std=c11 -Wall -Wextra -Werror)
 #   KEEL_ARTIFACTS  where the .c and binaries go  (default: ../build/test-artifacts)
 #
@@ -63,6 +64,7 @@ cflags="${KEEL_CFLAGS:--std=c11 -Wall -Wextra -Werror -Wno-unused-variable -Wno-
 # Deliberately outside tests/: the stray-file check below treats anything in a suite directory as a
 # bug, and that check is worth more than the convenience of building in place.
 artifacts="${KEEL_ARTIFACTS:-../build/test-artifacts}"
+run_timeout="${KEEL_RUN_TIMEOUT:-10}"
 mkdir -p "$artifacts" || exit 2
 
 if [ -t 1 ]; then
@@ -137,9 +139,17 @@ check_run()
     fi
 
     # The program's own output is not compared, only its exit code - but it must not leak into the
-    # message the caller is capturing.
-    "$stem" > "$run_log" 2>&1
+    # message the caller is capturing. Under timeout because a fixture is a real program and a
+    # control-flow bug is an infinite loop: without this the suite hangs instead of failing, which
+    # is the worse of the two by a distance.
+    timeout "$run_timeout" "$stem" > "$run_log" 2>&1
     local ran=$?
+
+    if [ "$ran" -eq 124 ]; then
+        echo "    the program did not finish within ${run_timeout}s"
+        echo "      kept at ${source_c}"
+        return 1
+    fi
 
     local expected_run=0
     [ -f "${src}.run" ] && expected_run="$( cat "${src}.run" )"

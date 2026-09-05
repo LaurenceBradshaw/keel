@@ -50,6 +50,8 @@ enum class Node_kind : u16
     Marker_expr, // `move`, `out`, `ref` - a unary operator that does not change the type of its operand
     Null_literal,
     Cast_expr,
+    Break_stmt,
+    Continue_stmt,
 
     Count
 };

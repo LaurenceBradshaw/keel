@@ -1080,6 +1080,22 @@ Node_id Parser::parse_statement()
         return parse_return_stmt();
     }
 
+    if( check_keyword( Keyword::Break ) )
+    {
+        const Span start = peek().span;
+        advance();
+        expect( Token_kind::Semicolon );
+        return ast_.add( Node_kind::Break_stmt, Span::merge( start, previous().span ), 0, {} );
+    }
+
+    if( check_keyword( Keyword::Continue ) )
+    {
+        const Span start = peek().span;
+        advance();
+        expect( Token_kind::Semicolon );
+        return ast_.add( Node_kind::Continue_stmt, Span::merge( start, previous().span ), 0, {} );
+    }
+
     if( check( Token_kind::L_brace ) )
     {
         return parse_block();
@@ -3558,6 +3574,67 @@ TEST_CASE( "parser_terminates_on_adversarial_input", "[parse]" )
         INFO( "source '" << source << "'" );
         const Parsed p( source );
         REQUIRE( p.root().is_valid() ); // reached only if parsing terminated
+    }
+}
+
+// `break` and `continue` are statements, not expressions, so they are matched before the
+// expression fallback - which is why can_start_expression needs nothing for them. The first
+// feature that has not had to edit both halves of that list.
+TEST_CASE( "parser_parses_break_and_continue", "[parse][loops]" )
+{
+    SECTION( "both, with no children and no aux" )
+    {
+        const Parsed  p( "i32 main() { while ( true ) { break; continue; } return 0; }" );
+        const Node_id brk  = find_first( p.ast(), p.root(), Node_kind::Break_stmt );
+        const Node_id cont = find_first( p.ast(), p.root(), Node_kind::Continue_stmt );
+
+        INFO( p.dump() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( brk.is_valid() );
+        REQUIRE( cont.is_valid() );
+        REQUIRE( p.children( brk ).empty() );
+        REQUIRE( p.children( cont ).empty() );
+    }
+
+    // The span carries the semicolon, so a diagnostic underlines the whole statement.
+    SECTION( "the span covers the whole statement" )
+    {
+        const Parsed  p( "i32 main() { while ( true ) { break; } return 0; }" );
+        const Node_id brk = find_first( p.ast(), p.root(), Node_kind::Break_stmt );
+
+        INFO( p.dump() );
+        REQUIRE( p.text( brk ) == "break;" );
+    }
+
+    SECTION( "in a for body" )
+    {
+        const Parsed p( "i32 main() { for ( i32 i = 0; i < 3; i++ ) { continue; } return 0; }" );
+
+        INFO( p.dump() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( find_first( p.ast(), p.root(), Node_kind::Continue_stmt ).is_valid() );
+    }
+
+    SECTION( "a missing semicolon is reported" )
+    {
+        for( const std::string_view source :
+             { "i32 main() { while ( true ) { break } return 0; }", "i32 main() { while ( true ) { continue } return 0; }" } )
+        {
+            INFO( "source '" << source << "'" );
+            const Parsed p( source );
+
+            REQUIRE( p.root().is_valid() ); // reached only if parsing terminated
+            REQUIRE( p.has_errors() );
+        }
+    }
+
+    // Neither takes an operand, so the keyword must not swallow what follows it.
+    SECTION( "neither takes a value" )
+    {
+        const Parsed p( "i32 main() { while ( true ) { break 1; } return 0; }" );
+
+        INFO( p.dump() );
+        REQUIRE( p.has_errors() );
     }
 }
 

@@ -83,6 +83,10 @@ std::string_view node_kind_name( Node_kind kind )
         return "Null_literal";
     case Node_kind::Cast_expr:
         return "Cast_expr";
+    case Node_kind::Break_stmt:
+        return "Break_stmt";
+    case Node_kind::Continue_stmt:
+        return "Continue_stmt";
 
     case Node_kind::Count:
         break;

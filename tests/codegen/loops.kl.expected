@@ -1,0 +1,366 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+int32_t kl__main__( void );
+
+int32_t kl__main__( void )
+{
+#line 14 "codegen/loops.kl"
+    int32_t kl_sum_4 = 0;
+#line 15 "codegen/loops.kl"
+    int32_t kl_step_7 = 0;
+#line 17 "codegen/loops.kl"
+    while ( true )
+    {
+        if ( !true )
+        {
+            break;
+        }
+#line 18 "codegen/loops.kl"
+        {
+#line 19 "codegen/loops.kl"
+            bool kl_t0 = (int32_t) kl_step_7 == (int32_t) 5;
+            if ( kl_t0 )
+            {
+#line 21 "codegen/loops.kl"
+                break;
+            }
+#line 24 "codegen/loops.kl"
+            int32_t kl_t1 = (int32_t) kl_sum_4 + (int32_t) kl_step_7;
+            kl_sum_4 = (int32_t) kl_t1;
+#line 25 "codegen/loops.kl"
+            kl_step_7 = (int32_t) ( kl_step_7 + 1 );
+        }
+    }
+#line 28 "codegen/loops.kl"
+    bool kl_t2 = (int32_t) kl_sum_4 != (int32_t) 10;
+    if ( kl_t2 )
+    {
+        return 1;
+    }
+#line 29 "codegen/loops.kl"
+    bool kl_t3 = (int32_t) kl_step_7 != (int32_t) 5;
+    if ( kl_t3 )
+    {
+        return 2;
+    }
+#line 32 "codegen/loops.kl"
+    int32_t kl_counted_38 = 0;
+#line 33 "codegen/loops.kl"
+    int32_t kl_value_41 = 0;
+#line 35 "codegen/loops.kl"
+    while ( true )
+    {
+        bool kl_t4 = (int32_t) kl_value_41 < (int32_t) 10;
+        if ( !kl_t4 )
+        {
+            break;
+        }
+#line 36 "codegen/loops.kl"
+        {
+#line 37 "codegen/loops.kl"
+            kl_value_41 = (int32_t) ( kl_value_41 + 1 );
+#line 39 "codegen/loops.kl"
+            int32_t kl_t5 = (int32_t) kl_value_41 % (int32_t) 2;
+            bool kl_t6 = (int32_t) kl_t5 == (int32_t) 0;
+            if ( kl_t6 )
+            {
+#line 41 "codegen/loops.kl"
+                continue;
+            }
+#line 44 "codegen/loops.kl"
+            kl_counted_38 = (int32_t) ( kl_counted_38 + 1 );
+        }
+    }
+#line 47 "codegen/loops.kl"
+    bool kl_t7 = (int32_t) kl_counted_38 != (int32_t) 5;
+    if ( kl_t7 )
+    {
+        return 3;
+    }
+#line 48 "codegen/loops.kl"
+    bool kl_t8 = (int32_t) kl_value_41 != (int32_t) 10;
+    if ( kl_t8 )
+    {
+        return 4;
+    }
+#line 51 "codegen/loops.kl"
+    int32_t kl_visited_75 = 0;
+#line 53 "codegen/loops.kl"
+    {
+        int32_t kl_i_78 = 0;
+        while ( true )
+        {
+            bool kl_t9 = (int32_t) kl_i_78 < (int32_t) 100;
+            if ( !kl_t9 )
+            {
+                break;
+            }
+#line 54 "codegen/loops.kl"
+            {
+#line 55 "codegen/loops.kl"
+                kl_visited_75 = (int32_t) ( kl_visited_75 + 1 );
+#line 57 "codegen/loops.kl"
+                bool kl_t10 = (int32_t) kl_i_78 == (int32_t) 3;
+                if ( kl_t10 )
+                {
+#line 59 "codegen/loops.kl"
+                    break;
+                }
+            }
+#line 53 "codegen/loops.kl"
+            kl_i_78 = (int32_t) ( kl_i_78 + 1 );
+        }
+    }
+#line 63 "codegen/loops.kl"
+    bool kl_t11 = (int32_t) kl_visited_75 != (int32_t) 4;
+    if ( kl_t11 )
+    {
+        return 5;
+    }
+#line 66 "codegen/loops.kl"
+    int32_t kl_odds_103 = 0;
+#line 67 "codegen/loops.kl"
+    int32_t kl_guard_106 = 0;
+#line 69 "codegen/loops.kl"
+    {
+        int32_t kl_i_109 = 0;
+        while ( true )
+        {
+            bool kl_t12 = (int32_t) kl_i_109 < (int32_t) 10;
+            if ( !kl_t12 )
+            {
+                break;
+            }
+#line 70 "codegen/loops.kl"
+            {
+#line 71 "codegen/loops.kl"
+                kl_guard_106 = (int32_t) ( kl_guard_106 + 1 );
+#line 73 "codegen/loops.kl"
+                bool kl_t13 = (int32_t) kl_guard_106 > (int32_t) 100;
+                if ( kl_t13 )
+                {
+#line 75 "codegen/loops.kl"
+                    break;
+                }
+#line 78 "codegen/loops.kl"
+                int32_t kl_t14 = (int32_t) kl_i_109 % (int32_t) 2;
+                bool kl_t15 = (int32_t) kl_t14 == (int32_t) 0;
+                if ( kl_t15 )
+                {
+#line 80 "codegen/loops.kl"
+                    goto kl_l1;
+                }
+#line 83 "codegen/loops.kl"
+                int32_t kl_t16 = (int32_t) kl_odds_103 + (int32_t) kl_i_109;
+                kl_odds_103 = (int32_t) kl_t16;
+            }
+            kl_l1: ;
+#line 69 "codegen/loops.kl"
+            kl_i_109 = (int32_t) ( kl_i_109 + 1 );
+        }
+    }
+#line 86 "codegen/loops.kl"
+    bool kl_t17 = (int32_t) kl_guard_106 > (int32_t) 100;
+    if ( kl_t17 )
+    {
+        return 6;
+    }
+#line 87 "codegen/loops.kl"
+    bool kl_t18 = (int32_t) kl_guard_106 != (int32_t) 10;
+    if ( kl_t18 )
+    {
+        return 7;
+    }
+#line 88 "codegen/loops.kl"
+    bool kl_t19 = (int32_t) kl_odds_103 != (int32_t) 25;
+    if ( kl_t19 )
+    {
+        return 8;
+    }
+#line 91 "codegen/loops.kl"
+    int32_t kl_total_159 = 0;
+#line 92 "codegen/loops.kl"
+    int32_t kl_spins_162 = 0;
+#line 94 "codegen/loops.kl"
+    {
+        int32_t kl_i_165 = 0;
+        while ( true )
+        {
+            bool kl_t20 = (int32_t) kl_i_165 < (int32_t) 4;
+            if ( !kl_t20 )
+            {
+                break;
+            }
+#line 95 "codegen/loops.kl"
+            {
+#line 96 "codegen/loops.kl"
+                {
+                    int32_t kl_j_173 = 0;
+                    while ( true )
+                    {
+                        bool kl_t21 = (int32_t) kl_j_173 < (int32_t) 4;
+                        if ( !kl_t21 )
+                        {
+                            break;
+                        }
+#line 97 "codegen/loops.kl"
+                        {
+#line 98 "codegen/loops.kl"
+                            kl_spins_162 = (int32_t) ( kl_spins_162 + 1 );
+#line 100 "codegen/loops.kl"
+                            bool kl_t22 = (int32_t) kl_spins_162 > (int32_t) 200;
+                            if ( kl_t22 )
+                            {
+#line 102 "codegen/loops.kl"
+                                break;
+                            }
+#line 105 "codegen/loops.kl"
+                            bool kl_t23 = (int32_t) kl_j_173 == (int32_t) 2;
+                            if ( kl_t23 )
+                            {
+#line 107 "codegen/loops.kl"
+                                goto kl_l3;
+                            }
+#line 110 "codegen/loops.kl"
+                            bool kl_t24 = (int32_t) kl_j_173 == (int32_t) 3;
+                            if ( kl_t24 )
+                            {
+#line 112 "codegen/loops.kl"
+                                break;
+                            }
+#line 115 "codegen/loops.kl"
+                            int32_t kl_t25 = (int32_t) kl_total_159 + (int32_t) 1;
+                            kl_total_159 = (int32_t) kl_t25;
+                        }
+                        kl_l3: ;
+#line 96 "codegen/loops.kl"
+                        kl_j_173 = (int32_t) ( kl_j_173 + 1 );
+                    }
+                }
+            }
+#line 94 "codegen/loops.kl"
+            kl_i_165 = (int32_t) ( kl_i_165 + 1 );
+        }
+    }
+#line 119 "codegen/loops.kl"
+    bool kl_t26 = (int32_t) kl_spins_162 > (int32_t) 200;
+    if ( kl_t26 )
+    {
+        return 9;
+    }
+#line 120 "codegen/loops.kl"
+    bool kl_t27 = (int32_t) kl_spins_162 != (int32_t) 16;
+    if ( kl_t27 )
+    {
+        return 10;
+    }
+#line 121 "codegen/loops.kl"
+    bool kl_t28 = (int32_t) kl_total_159 != (int32_t) 8;
+    if ( kl_t28 )
+    {
+        return 11;
+    }
+#line 124 "codegen/loops.kl"
+    int32_t kl_outer_229 = 0;
+#line 126 "codegen/loops.kl"
+    {
+        int32_t kl_i_232 = 0;
+        while ( true )
+        {
+            bool kl_t29 = (int32_t) kl_i_232 < (int32_t) 5;
+            if ( !kl_t29 )
+            {
+                break;
+            }
+#line 127 "codegen/loops.kl"
+            {
+#line 128 "codegen/loops.kl"
+                kl_outer_229 = (int32_t) ( kl_outer_229 + 1 );
+#line 130 "codegen/loops.kl"
+                {
+                    int32_t kl_j_242 = 0;
+                    while ( true )
+                    {
+                        bool kl_t30 = (int32_t) kl_j_242 < (int32_t) 5;
+                        if ( !kl_t30 )
+                        {
+                            break;
+                        }
+#line 131 "codegen/loops.kl"
+                        {
+#line 132 "codegen/loops.kl"
+                            break;
+                        }
+#line 130 "codegen/loops.kl"
+                        kl_j_242 = (int32_t) ( kl_j_242 + 1 );
+                    }
+                }
+            }
+#line 126 "codegen/loops.kl"
+            kl_i_232 = (int32_t) ( kl_i_232 + 1 );
+        }
+    }
+#line 136 "codegen/loops.kl"
+    bool kl_t31 = (int32_t) kl_outer_229 != (int32_t) 5;
+    if ( kl_t31 )
+    {
+        return 12;
+    }
+#line 139 "codegen/loops.kl"
+    int32_t kl_trailing_262 = 0;
+#line 140 "codegen/loops.kl"
+    int32_t kl_rounds_265 = 0;
+#line 142 "codegen/loops.kl"
+    {
+        int32_t kl_i_268 = 0;
+        while ( true )
+        {
+            bool kl_t32 = (int32_t) kl_i_268 < (int32_t) 6;
+            if ( !kl_t32 )
+            {
+                break;
+            }
+#line 143 "codegen/loops.kl"
+            {
+#line 144 "codegen/loops.kl"
+                kl_rounds_265 = (int32_t) ( kl_rounds_265 + 1 );
+#line 146 "codegen/loops.kl"
+                bool kl_t33 = (int32_t) kl_rounds_265 > (int32_t) 60;
+                if ( kl_t33 )
+                {
+#line 148 "codegen/loops.kl"
+                    break;
+                }
+#line 151 "codegen/loops.kl"
+                int32_t kl_t34 = (int32_t) kl_trailing_262 + (int32_t) kl_i_268;
+                kl_trailing_262 = (int32_t) kl_t34;
+#line 152 "codegen/loops.kl"
+                goto kl_l6;
+            }
+            kl_l6: ;
+#line 142 "codegen/loops.kl"
+            kl_i_268 = (int32_t) ( kl_i_268 + 1 );
+        }
+    }
+#line 155 "codegen/loops.kl"
+    bool kl_t35 = (int32_t) kl_rounds_265 != (int32_t) 6;
+    if ( kl_t35 )
+    {
+        return 13;
+    }
+#line 156 "codegen/loops.kl"
+    bool kl_t36 = (int32_t) kl_trailing_262 != (int32_t) 15;
+    if ( kl_t36 )
+    {
+        return 14;
+    }
+#line 158 "codegen/loops.kl"
+    return 0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

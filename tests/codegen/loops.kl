@@ -1,0 +1,159 @@
+// `break` and `continue`. The interesting one is `continue` in a `for`: the update is emitted
+// after the body, so a jump to the top of the loop rather than to the update would never advance
+// the counter and the program would spin forever.
+//
+// Every `for` here therefore carries an independent bound as well as its own condition. A wrong
+// jump exits through the guard and returns a distinct code, so the failure is a wrong answer
+// rather than a hang - and the runner's timeout is only the second line of defence.
+//
+// Every check returns a distinct code, so exit 0 means all of them agreed.
+
+i32 main()
+{
+    // A while loop leaves through break. Nothing else stops it.
+    i32 sum  = 0;
+    i32 step = 0;
+
+    while ( true )
+    {
+        if ( step == 5 )
+        {
+            break;
+        }
+
+        sum += step;
+        step++;
+    }
+
+    if ( sum != 10 ) { return 1; }
+    if ( step != 5 ) { return 2; }
+
+    // A while loop's continue re-tests the condition, which is what C's own continue does here.
+    i32 counted = 0;
+    i32 value   = 0;
+
+    while ( value < 10 )
+    {
+        value++;
+
+        if ( value % 2 == 0 )
+        {
+            continue;
+        }
+
+        counted++;
+    }
+
+    if ( counted != 5 ) { return 3; }
+    if ( value != 10 ) { return 4; }
+
+    // break in a for skips the update, which is correct: the loop is over.
+    i32 visited = 0;
+
+    for ( i32 i = 0; i < 100; i++ )
+    {
+        visited++;
+
+        if ( i == 3 )
+        {
+            break;
+        }
+    }
+
+    if ( visited != 4 ) { return 5; }
+
+    // The one that matters. Skipping the odd values still has to advance i, or the guard trips.
+    i32 odds  = 0;
+    i32 guard = 0;
+
+    for ( i32 i = 0; i < 10; i++ )
+    {
+        guard++;
+
+        if ( guard > 100 )
+        {
+            break;
+        }
+
+        if ( i % 2 == 0 )
+        {
+            continue;
+        }
+
+        odds += i;
+    }
+
+    if ( guard > 100 ) { return 6; }   // the update never ran
+    if ( guard != 10 ) { return 7; }
+    if ( odds != 25 ) { return 8; }
+
+    // Nested, with both statements in the inner loop, so each has to bind to the loop it is in.
+    i32 total  = 0;
+    i32 spins  = 0;
+
+    for ( i32 i = 0; i < 4; i++ )
+    {
+        for ( i32 j = 0; j < 4; j++ )
+        {
+            spins++;
+
+            if ( spins > 200 )
+            {
+                break;
+            }
+
+            if ( j == 2 )
+            {
+                continue;
+            }
+
+            if ( j == 3 )
+            {
+                break;
+            }
+
+            total += 1;
+        }
+    }
+
+    if ( spins > 200 ) { return 9; }
+    if ( spins != 16 ) { return 10; }
+    if ( total != 8 ) { return 11; }
+
+    // An inner break must leave only the inner loop, so the outer one runs its full count.
+    i32 outer = 0;
+
+    for ( i32 i = 0; i < 5; i++ )
+    {
+        outer++;
+
+        for ( i32 j = 0; j < 5; j++ )
+        {
+            break;
+        }
+    }
+
+    if ( outer != 5 ) { return 12; }
+
+    // A continue as the last statement of a body is a no-op, and must still advance the counter.
+    i32 trailing = 0;
+    i32 rounds   = 0;
+
+    for ( i32 i = 0; i < 6; i++ )
+    {
+        rounds++;
+
+        if ( rounds > 60 )
+        {
+            break;
+        }
+
+        trailing += i;
+        continue;
+    }
+
+    if ( rounds != 6 ) { return 13; }
+    if ( trailing != 15 ) { return 14; }
+
+    return 0;
+}
