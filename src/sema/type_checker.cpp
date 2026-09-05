@@ -130,6 +130,54 @@ const Unary_rule* unary_rule_for( Token_kind kind )
     return nullptr;
 }
 
+// What `cast` and `wrap` each mean for a pair of type kinds. They are not one operator with two
+// spellings: `cast` preserves the value, `wrap` keeps the low bits. A conversion that is neither
+// of those things belongs to neither operator.
+//
+// Absent pairs are refused, and the omissions are the point: float to int has no one obvious
+// rounding, int to bool says less than `x != 0` does, and nothing converts to or from a struct.
+enum class Conversion : u8
+{
+    None,
+    Cast_only, // modular arithmetic has no meaning here
+    Both,
+    Unsafe, // a real conversion, but one that needs a gate Keel does not have yet
+};
+
+struct Conversion_rule
+{
+    Type_kind  from;
+    Type_kind  to;
+    Conversion allows;
+};
+
+constexpr Conversion_rule conversion_rules[] = {
+    { Type_kind::Int, Type_kind::Int, Conversion::Both },
+    { Type_kind::Int, Type_kind::Float, Conversion::Cast_only },
+    { Type_kind::Float, Type_kind::Float, Conversion::Cast_only },
+    { Type_kind::Bool, Type_kind::Int, Conversion::Cast_only },
+    { Type_kind::Pointer, Type_kind::Pointer, Conversion::Unsafe },
+};
+
+// Remove when the KIR can emit the check. `cast` is defined to test the value at run time and
+// nothing can do that yet, so a narrowing `cast` would silently truncate - which is `wrap`'s
+// behaviour wearing `cast`'s name. Deleting this and the one branch that reads it is the whole
+// change; no program that compiles today changes meaning when it goes.
+constexpr bool k_narrowing_cast_needs_a_run_time_check = true;
+
+Conversion conversion_for( Type_kind from, Type_kind to )
+{
+    for( const Conversion_rule& rule : conversion_rules )
+    {
+        if( rule.from == from && rule.to == to )
+        {
+            return rule.allows;
+        }
+    }
+
+    return Conversion::None;
+}
+
 // The help line for an operand kind. Empty where the message above it already says enough.
 std::string_view operand_requirement( Operands operands )
 {
@@ -213,6 +261,8 @@ private:
     // A composite constructor, not a value literal: its type is fixed by its name rather than
     // adopted from context, which is why it has no place in infer_literal.
     Type_id infer_struct_literal( Node_id id );
+
+    Type_id infer_cast( Node_id id );
 
     bool    accepts( Operands operands, Type_id type ) const;
     Type_id check( Node_id id, Type_id expected ); // expression, with one
@@ -788,6 +838,9 @@ Type_id Checker::infer( Node_id id )
 
     case Node_kind::Struct_literal:
         return infer_struct_literal( id );
+
+    case Node_kind::Cast_expr:
+        return infer_cast( id );
 
     case Node_kind::Marker_expr:
         error_at( ast_.span( id ), "this expression is not supported yet" );
@@ -1457,6 +1510,93 @@ Type_id Checker::infer_struct_literal( Node_id id )
     }
 
     return record( id, result );
+}
+
+Type_id Checker::infer_cast( Node_id id )
+{
+    const bool    is_cast = static_cast<Keyword>( ast_.aux( id ) ) == Keyword::Cast;
+    const Type_id target  = type_of_annotation( ast_.children( id )[0] );
+    const Node_id operand = ast_.children( id )[1];
+    const Type_id error   = table_.builtin( Type_kind::Error );
+
+    // A literal has a value and no type, so `cast` is the context that gives it one:
+    // `cast<u8>( 300 )` is the ordinary out-of-range error rather than a conversion, and
+    // `cast<f32>( 1 )` is simply an f32 literal. `wrap` must not do this - accepting a value the
+    // target cannot hold is the entire point of it.
+    const bool from_literal = is_cast && !table_.is_error( target ) && is_literal_expression( operand );
+
+    const Type_id value = from_literal ? check( operand, target ) : infer( operand );
+
+    if( table_.is_error( target ) || table_.is_error( value ) )
+    {
+        return record( id, error );
+    }
+
+    // check() has already ruled on the pair, and reported if it was wrong.
+    if( from_literal )
+    {
+        return record( id, target );
+    }
+
+    const std::string_view name = is_cast ? "cast" : "wrap";
+
+    const auto reject = [&]( std::string message, std::string help = {} )
+    {
+        error_at( ast_.span( id ), std::move( message ), std::move( help ) );
+
+        return record( id, error );
+    };
+
+    switch( conversion_for( table_.get( value ).kind, table_.get( target ).kind ) )
+    {
+    case Conversion::None:
+    {
+        std::string help;
+
+        if( table_.is_float( value ) && table_.is_integer( target ) )
+        {
+            help = "rounding is not implied; this needs an explicit rounding function";
+        }
+        else if( table_.is_integer( value ) && target == table_.builtin( Type_kind::Bool ) )
+        {
+            help = "compare it instead, as in `x != 0`";
+        }
+
+        return reject(
+            fmt::format( "`{}` cannot convert `{}` to `{}`", name, table_.name( value ), table_.name( target ) ),
+            std::move( help )
+        );
+    }
+
+    case Conversion::Unsafe:
+        return reject( "converting between pointer types is not supported yet" );
+
+    case Conversion::Cast_only:
+        if( !is_cast )
+        {
+            return reject(
+                fmt::format( "`wrap` cannot convert `{}` to `{}`", table_.name( value ), table_.name( target ) ),
+                "`wrap` keeps the low bits of an integer; use `cast` here"
+            );
+        }
+
+        break;
+
+    case Conversion::Both:
+        // Narrowing is the one place the two operators disagree, and the check that makes `cast`
+        // safe there does not exist yet.
+        if( k_narrowing_cast_needs_a_run_time_check && is_cast && !table_.holds( value, target ) )
+        {
+            return reject(
+                fmt::format( "`cast` cannot narrow `{}` to `{}` yet", table_.name( value ), table_.name( target ) ),
+                fmt::format( "the run-time check is unimplemented; `wrap<{}>` truncates instead", table_.name( target ) )
+            );
+        }
+
+        break;
+    }
+
+    return record( id, target );
 }
 
 Type_id Checker::check( Node_id id, Type_id expected )
@@ -3078,6 +3218,290 @@ TEST_CASE( "type_checker_types_nullptr", "[sema][types]" )
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
+    }
+}
+
+// The conversion table. `cast` preserves the value and `wrap` keeps the low bits, so the two
+// accept genuinely different sets - a cell that both allow, or that neither does, is the
+// interesting part rather than an accident.
+TEST_CASE( "type_checker_allows_the_conversions_in_the_table", "[sema][types][cast]" )
+{
+    SECTION( "cast widens an integer" )
+    {
+        const Typed p( "i32 main() { i32 x = 1; i64 y = cast<i64>( x ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Cast_expr, 0 ) ) == "i64" );
+    }
+
+    SECTION( "cast converts an integer to a float" )
+    {
+        const Typed p( "i32 main() { i32 x = 1; f32 y = cast<f32>( x ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // Precision loss, but a float that cannot hold the value gives an infinity rather than a
+    // plausible wrong number, so this is not the case narrowing is held back for.
+    SECTION( "cast narrows a float" )
+    {
+        const Typed p( "i32 main() { f64 d = 1.5; f32 y = cast<f32>( d ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "cast converts a bool to an integer" )
+    {
+        const Typed p( "i32 main() { bool b = true; i32 y = cast<i32>( b ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "wrap narrows an integer" )
+    {
+        const Typed p( "i32 main() { i32 x = 300; u8 y = wrap<u8>( x ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Cast_expr, 0 ) ) == "u8" );
+    }
+
+    // Losing the sign is exactly what wrap is for, and exactly what cast must refuse.
+    SECTION( "wrap reinterprets the sign" )
+    {
+        const Typed p( "i32 main() { i32 x = 0 - 1; u32 y = wrap<u32>( x ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "wrap widens too, and simply never wraps" )
+    {
+        const Typed p( "i32 main() { i32 x = 1; i64 y = wrap<i64>( x ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+TEST_CASE( "type_checker_rejects_the_conversions_outside_the_table", "[sema][types][cast]" )
+{
+    // No one obvious rounding, so neither operator picks one.
+    SECTION( "neither converts a float to an integer" )
+    {
+        for( const char* tail : { "i32 y = cast<i32>( d );", "i32 y = wrap<i32>( d );" } )
+        {
+            const Typed p( std::string( "i32 main() { f64 d = 1.5; " ) + tail + " return 0; }" );
+
+            INFO( tail << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( "rounding" ) != std::string::npos );
+        }
+    }
+
+    // `x != 0` says it better, and modular arithmetic down to one bit says something else again.
+    SECTION( "neither converts an integer to a bool" )
+    {
+        for( const char* tail : { "bool y = cast<bool>( x );", "bool y = wrap<bool>( x );" } )
+        {
+            const Typed p( std::string( "i32 main() { i32 x = 1; " ) + tail + " return 0; }" );
+
+            INFO( tail << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+        }
+    }
+
+    SECTION( "wrap refuses anything that is not integer to integer" )
+    {
+        for( const char* source :
+             { "i32 main() { i32 x = 1; f32 y = wrap<f32>( x ); return 0; }",
+               "i32 main() { bool b = true; i32 y = wrap<i32>( b ); return 0; }",
+               "i32 main() { f64 d = 1.5; f32 y = wrap<f32>( d ); return 0; }" } )
+        {
+            const Typed p( source );
+
+            INFO( source << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( "`wrap` cannot convert" ) != std::string::npos );
+        }
+    }
+
+    SECTION( "neither touches a struct" )
+    {
+        for( const char* tail : { "i32 y = cast<i32>( p );", "i32 y = wrap<i32>( p );" } )
+        {
+            const Typed p( std::string( "struct P { i32 x; };\ni32 main() { P p = P { 1 }; " ) + tail + " return 0; }" );
+
+            INFO( tail << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+        }
+    }
+
+    SECTION( "converting to a struct is refused too" )
+    {
+        const Typed p( "struct P { i32 x; };\ni32 main() { i32 x = 1; P y = cast<P>( x ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    // A real conversion, held back for the unsafe gate rather than rejected as nonsense - so it
+    // gets its own message.
+    SECTION( "a pointer conversion is not supported yet" )
+    {
+        const Typed p( "i32 main() { i32 x = 1; i32* q = &x; u8* r = cast<u8*>( q ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "not supported yet" ) != std::string::npos );
+    }
+
+    SECTION( "an unknown target type is reported once" )
+    {
+        const Typed p( "i32 main() { i32 x = 1; return cast<Nope>( x ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+}
+
+// Narrowing is the one cell where the two operators disagree, and `cast` is defined to check the
+// value at run time. Nothing can do that yet, so it is refused rather than silently truncating -
+// which would be `wrap`'s behaviour under `cast`'s name. Delete these when the check exists.
+TEST_CASE( "type_checker_holds_back_a_narrowing_cast", "[sema][types][cast]" )
+{
+    SECTION( "narrowing the width" )
+    {
+        const Typed p( "i32 main() { i32 x = 300; u8 y = cast<u8>( x ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "cannot narrow" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "wrap<u8>" ) != std::string::npos );
+    }
+
+    // u32 cannot hold a negative i32, so this narrows even though the widths match.
+    SECTION( "changing the signedness" )
+    {
+        const Typed p( "i32 main() { i32 x = 1; u32 y = cast<u32>( x ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "cannot narrow" ) != std::string::npos );
+    }
+
+    SECTION( "but wrap says the same thing and is allowed" )
+    {
+        const Typed p( "i32 main() { i32 x = 300; u8 y = wrap<u8>( x ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// A literal has a value and no type, so `cast` is the context that gives it one rather than a
+// conversion applied after the fact. `wrap` must not do this: taking a value the target cannot
+// hold is the whole point of it.
+TEST_CASE( "type_checker_gives_a_literal_its_type_from_a_cast", "[sema][types][cast]" )
+{
+    SECTION( "an in-range literal simply becomes the target type" )
+    {
+        const Typed p( "i32 main() { u8 y = cast<u8>( 200 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Int_literal, 0 ) ) == "u8" );
+    }
+
+    // Not "cast cannot narrow": there is nothing to narrow, the literal never had a wider type.
+    SECTION( "an out-of-range literal is a range error" )
+    {
+        const Typed p( "i32 main() { u8 y = cast<u8>( 300 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "does not fit" ) != std::string::npos );
+    }
+
+    SECTION( "an integer literal can be cast to a float" )
+    {
+        const Typed p( "i32 main() { f32 y = cast<f32>( 1 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Int_literal, 0 ) ) == "f32" );
+    }
+
+    SECTION( "a negated literal keeps the asymmetric range" )
+    {
+        const Typed p( "i32 main() { i8 y = cast<i8>( -128 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // The literal is inferred first, then wrapped - so this is 44, not an error.
+    SECTION( "wrap takes the literal at its default type instead" )
+    {
+        const Typed p( "i32 main() { u8 y = wrap<u8>( 300 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Int_literal, 0 ) ) == "i32" );
+    }
+
+    SECTION( "a float literal cannot be cast to an integer either" )
+    {
+        const Typed p( "i32 main() { i32 y = cast<i32>( 1.5 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+}
+
+// The result has a type of its own, so it composes like any other expression - and must not be
+// mistaken for a literal by the code that gives literals their type from context.
+TEST_CASE( "type_checker_uses_a_conversion_as_an_ordinary_expression", "[sema][types][cast]" )
+{
+    SECTION( "as an operand" )
+    {
+        const Typed p( "i32 main() { i32 x = 1; i64 y = cast<i64>( x ) + 1; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Binary_expr, 0 ) ) == "i64" );
+    }
+
+    SECTION( "as an argument" )
+    {
+        const Typed p( "i32 take( u8 v ) { return 0; }\n"
+                       "i32 main() { i32 x = 300; return take( wrap<u8>( x ) ); }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // The result is a value, not a place, so it cannot be assigned through.
+    SECTION( "but it is not assignable" )
+    {
+        const Typed p( "i32 main() { i32 x = 1; cast<i64>( x ) = 2; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "cannot assign to this expression" ) != std::string::npos );
+    }
+
+    SECTION( "the result type is what the annotation says, not the operand's" )
+    {
+        const Typed p( "i32 main() { i32 x = 1; u8 y = wrap<u8>( x ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Cast_expr, 0 ) ) == "u8" );
     }
 }
 

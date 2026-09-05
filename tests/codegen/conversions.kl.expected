@@ -1,0 +1,119 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+int32_t kl__main__( void );
+
+int32_t kl__main__( void )
+{
+#line 7 "codegen/conversions.kl"
+    int32_t kl_big_4 = 300;
+#line 8 "codegen/conversions.kl"
+    uint8_t kl_t0 = (uint8_t) kl_big_4;
+    uint8_t kl_low_9 = kl_t0;
+#line 9 "codegen/conversions.kl"
+    bool kl_t1 = (uint8_t) kl_low_9 != (uint8_t) 44;
+    if ( kl_t1 )
+    {
+        return 1;
+    }
+#line 12 "codegen/conversions.kl"
+    int32_t kl_t2 = (int32_t) 0 - (int32_t) 1;
+    int32_t kl_negative_21 = kl_t2;
+#line 13 "codegen/conversions.kl"
+    uint32_t kl_t3 = (uint32_t) kl_negative_21;
+    uint32_t kl_flipped_26 = kl_t3;
+#line 14 "codegen/conversions.kl"
+    bool kl_t4 = (uint32_t) kl_flipped_26 != (uint32_t) 4294967295;
+    if ( kl_t4 )
+    {
+        return 2;
+    }
+#line 17 "codegen/conversions.kl"
+    uint8_t kl_byte_36 = 200;
+#line 18 "codegen/conversions.kl"
+    int64_t kl_t5 = (int64_t) kl_byte_36;
+    int64_t kl_wide_41 = kl_t5;
+#line 19 "codegen/conversions.kl"
+    bool kl_t6 = (int64_t) kl_wide_41 != (int64_t) 200;
+    if ( kl_t6 )
+    {
+        return 3;
+    }
+#line 22 "codegen/conversions.kl"
+    int32_t kl_small_51 = 7;
+#line 23 "codegen/conversions.kl"
+    int64_t kl_t7 = (int64_t) kl_small_51;
+    int64_t kl_widened_56 = kl_t7;
+#line 24 "codegen/conversions.kl"
+    bool kl_t8 = (int64_t) kl_widened_56 != (int64_t) 7;
+    if ( kl_t8 )
+    {
+        return 4;
+    }
+#line 27 "codegen/conversions.kl"
+    float kl_t9 = (float) kl_small_51;
+    float kl_scaled_68 = kl_t9;
+#line 28 "codegen/conversions.kl"
+    bool kl_t10 = (float) kl_scaled_68 != (float) 7.0;
+    if ( kl_t10 )
+    {
+        return 5;
+    }
+#line 31 "codegen/conversions.kl"
+    double kl_precise_78 = 2.5;
+#line 32 "codegen/conversions.kl"
+    float kl_t11 = (float) kl_precise_78;
+    float kl_rougher_83 = kl_t11;
+#line 33 "codegen/conversions.kl"
+    bool kl_t12 = (float) kl_rougher_83 != (float) 2.5;
+    if ( kl_t12 )
+    {
+        return 6;
+    }
+#line 36 "codegen/conversions.kl"
+    bool kl_yes_93 = true;
+#line 37 "codegen/conversions.kl"
+    bool kl_no_96 = false;
+#line 38 "codegen/conversions.kl"
+    int32_t kl_t13 = (int32_t) kl_yes_93;
+    bool kl_t14 = (int32_t) kl_t13 != (int32_t) 1;
+    if ( kl_t14 )
+    {
+        return 7;
+    }
+#line 39 "codegen/conversions.kl"
+    int32_t kl_t15 = (int32_t) kl_no_96;
+    bool kl_t16 = (int32_t) kl_t15 != (int32_t) 0;
+    if ( kl_t16 )
+    {
+        return 8;
+    }
+#line 42 "codegen/conversions.kl"
+    uint8_t kl_t17 = (uint8_t) 200;
+    uint8_t kl_direct_119 = kl_t17;
+#line 43 "codegen/conversions.kl"
+    bool kl_t18 = (uint8_t) kl_direct_119 != (uint8_t) 200;
+    if ( kl_t18 )
+    {
+        return 9;
+    }
+#line 46 "codegen/conversions.kl"
+    int64_t kl_t19 = (int64_t) kl_small_51;
+    int64_t kl_t20 = (int64_t) kl_byte_36;
+    int64_t kl_t21 = (int64_t) kl_t19 + (int64_t) kl_t20;
+    int64_t kl_total_135 = kl_t21;
+#line 47 "codegen/conversions.kl"
+    bool kl_t22 = (int64_t) kl_total_135 != (int64_t) 207;
+    if ( kl_t22 )
+    {
+        return 10;
+    }
+#line 49 "codegen/conversions.kl"
+    return 0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

@@ -348,7 +348,7 @@ overflows; what happens then is the open overflow question in §12.
 | # | Divergence | Why it is safe under the §5.1 rule |
 | --- | --- | --- |
 | D1 | Fixed-width primitives only: `i32`, `u64`, `f64`. No `int`, `long`, `char`, `unsigned`. | The C++ spellings are **rejected outright**, with a diagnostic naming the replacement. They are *not* reserved words — the lexer treats them as ordinary identifiers, and the suggestion is produced by sema's unknown-type path, which knows it is in type position and so gives a better message than the lexer could. No type name is a keyword: `i32`, `Point` and `Vector<T>` all resolve through one path. |
-| D2 | **A bare by-value pass of an owning type is an error**; transferring ownership is written `consume( move b )`. A type is owning exactly when it has a destructor, directly or through a member: `struct Wrapper { Buffer b; }` is owning, because copying one would copy a `Buffer` and there is nothing to copy it with. That transitivity is forced rather than chosen, and it is Rust's `Copy` rule. A raw pointer owns nothing by itself — an address says nothing about who frees it. The query is a memoised walk over the containment graph M2 already builds and orders. Note the rule's real content is **"is it copyable"**; "has a destructor" is a proxy that coincides only because §6.5 puts copy constructors outside v0. `Weak<T>` will have a destructor and should still be copyable, so this needs restating when copy constructors arrive. Everything else copies exactly as in C++. | The earlier rule made `consume( Buffer b )` a move, which is C++'s syntax for a copy with different semantics — the one divergence §5.1 forbids — and excused it by claiming new notation was impossible. It is not. Copying by default is unavailable too: §6.5 puts copy constructors outside v0, so an owning type cannot be copied at all. That leaves moving silently or rejecting, and §5.1 says reject. The cost is a marker on every move; Rust pays none, but Rust has no C++ copy expectation to fight. **Inert until M3**: no type has a destructor yet, so nothing is owning and nothing changes. |
+| D2 | **A bare by-value pass of an owning type is an error**; transferring ownership is written `consume( move b )`. A type is owning exactly when it has a destructor, directly or through a member: `struct Wrapper { Buffer b; }` is owning, because copying one would copy a `Buffer` and there is nothing to copy it with. That transitivity is forced rather than chosen, and it is Rust's `Copy` rule. A raw pointer owns nothing by itself — an address says nothing about who frees it. The query is a memoised walk over the containment graph M2 already builds and orders. Note the rule's real content is **"is it copyable"**; "has a destructor" is a proxy that coincides only because §6.6 puts copy constructors outside v0. `Weak<T>` will have a destructor and should still be copyable, so this needs restating when copy constructors arrive. Everything else copies exactly as in C++. | The earlier rule made `consume( Buffer b )` a move, which is C++'s syntax for a copy with different semantics — the one divergence §5.1 forbids — and excused it by claiming new notation was impossible. It is not. Copying by default is unavailable too: §6.6 puts copy constructors outside v0, so an owning type cannot be copied at all. That leaves moving silently or rejecting, and §5.1 says reject. The cost is a marker on every move; Rust pays none, but Rust has no C++ copy expectation to fight. **Inert until M3**: no type has a destructor yet, so nothing is owning and nothing changes. |
 | D3 | Braces mandatory on every `if`/`while`/`for` body. | Braceless C++ is a parse error, not a reinterpretation. Kills the `goto fail;` class of bug. |
 | D4 | `switch` has no fallthrough, needs no `break`, requires exhaustiveness, and matches sum-type payloads. | Payload patterns (`case Circle( r ):`) are new notation. A `switch` over a plain integer keeps C++ meaning minus fallthrough; missing cases are an error, never a silent skip. |
 | D5 | No *lossy* implicit conversions. A binary operator widens both operands to the smallest type that losslessly holds both, and is a hard error whenever C++'s own result type would not hold them. Assignment is implicit only where the target holds the source type. int↔bool and pointer↔bool are never implicit. §6.4 has the table. | The second clause makes the §5.1 audit executable: where C++ is lossless Keel agrees with it, and where C++ silently loses information Keel refuses. Lossless widening is not a conversion anyone can get wrong, and requiring a cast for it trains authors to write casts reflexively — which is how the dangerous ones get waved through. **Provisional**: adopted for M1 to unblock the type checker, and expected to be re-judged once real code exists. |
@@ -374,6 +374,7 @@ overflows; what happens then is the open overflow question in §12.
 | D25 | `int`, `float` and `double` stay **hard errors**, never aliases. | D1's suggestion path is implemented and works: the message names the replacement, so the cost is one compile the first time. Accepting them would buy that same first hour at the price of a permanent second spelling for every type — every reader thereafter has to know both, and every code base picks one by accident. |
 | D26 | `nullptr` is the null pointer, spelled as in C++, and it is a **literal** whose type comes from context: `u8* p = nullptr;` adopts, `auto p = nullptr;` is an error. | The spelling is C++'s because §5.1 has no reason to invent another for an identical concept. Making it a literal rather than a value of some `nullptr_t` reuses `check_literal` wholesale and keeps D5 intact — no conversion happens, the literal simply *becomes* that type, exactly as `42` becomes a `u32`. The `auto` case then falls out as an error for the same reason it does for any literal with nothing to adopt from. |
 | D27 | **No pointer arithmetic on `*T`**, which points at exactly one `T`. Arithmetic belongs to a many-item pointer, `[*]T` in Zig's notation, which v0 does not have. | `p + 1` on a single-item pointer is not dangerous, it is *nonsense*, and a type distinction catches it statically at no cost. Note the performance argument for C's arithmetic does not hold: `*(p + i)` and `p[i]` compile to identical machine code, so what buys speed is the capability of touching raw memory, which survives either spelling. C's implicit scaling by element size is the wart — a named `offset` operation says what it does. §6.4 already answers nothing for a pointer, so rejection is the default rather than a rule to add. `==` and `!=` between two pointers of the **same** type are allowed, since that is how a null check is written; ordering is not, because comparing pointers into different allocations is meaningless. |
+| D28 | Conversions are written `cast<T>( x )` and `wrap<T>( x )`, both **keywords**. `cast` preserves the value; `wrap` keeps the low bits. Neither converts float to integer, and neither converts integer to bool. §6.5 has the table. **Narrowing `cast` is refused until the run-time check exists.** | Two spellings rather than one because the failure policy is the interesting part, and an unqualified cast lets an author avoid stating it — which is how C's `(u8)x` silently truncates. Keywords because as identifiers they walk into §12's `a < b > ( c )` ambiguity; as keywords the `<` can only be a bracket. Both spellings are new notation, so §5.1 is satisfied for free. Float to integer is rejected because `cast<i32>( 1.9 )` has no obvious answer — truncate, round, floor and ceil are four operations and C picks one silently; they arrive as library functions at M6. Integer to bool is rejected because `x != 0` says it better and modular arithmetic down to one bit says something else again. Float *rounding* is accepted (`cast<f32>( some_f64 )`), because a float that cannot hold the value gives an infinity rather than a plausible wrong number — the line is that `cast` refuses to turn a value into a *different* value, not that it refuses to lose precision. |
 
 ### 6.4 Numeric conversions (D5)
 
@@ -426,7 +427,39 @@ Three consequences worth stating, since they are what the table is *for*:
 exactly, but C++ answers `u32`, so accepting it would silently change a valid C++
 program. That cell is the containment rule's cost, not the type system's.
 
-### 6.5 Not in v0
+### 6.5 Explicit conversions (D28)
+
+Rows are the source, columns the target. `cast` preserves the value, `wrap`
+keeps the low bits.
+
+| from \ to | int | float | bool | pointer | struct |
+|---|---|---|---|---|---|
+| **int**     | `cast`* / `wrap` | `cast` | — | — | — |
+| **float**   | — | `cast` | — | — | — |
+| **bool**    | `cast` | — | — | — | — |
+| **pointer** | — | — | — | *unsafe* | — |
+| **struct**  | — | — | — | — | — |
+
+`—` is a hard error. `*` marks the one cell held back: a **narrowing** integer
+`cast` (one where the target cannot hold the source type, which includes a
+same-width change of signedness) is refused until the KIR can emit the run-time
+check that makes it safe. `wrap` covers that cell today. Widening `cast` is
+allowed now and does not change meaning when the block goes, so no program that
+compiles today is affected by lifting it.
+
+*unsafe* marks a real conversion held for the `unsafe` gate rather than rejected
+as nonsense, so it gets its own diagnostic.
+
+Two asymmetries are deliberate. `wrap` accepts a widening integer conversion —
+it simply never wraps — so it is total over integer-to-integer rather than
+carrying a rule about which direction is allowed. And `cast` gives a **literal**
+its type from context rather than converting it: `cast<u8>( 300 )` is the
+ordinary out-of-range error and `cast<u8>( 200 )` is simply a `u8` literal, both
+falling out of `check_literal`. `wrap` must not do this — accepting a value the
+target cannot hold is the whole point of it — so `wrap<u8>( 300 )` infers `i32`
+and then wraps to 44.
+
+### 6.6 Not in v0
 
 Optionals, traits beyond generic bounds, closures, `namespace`, operator
 overloading, copy constructors, inheritance, virtual dispatch, `Shared<T>`,
@@ -435,6 +468,7 @@ Modules arrive at M7. **String literals** lex and parse but have no type
 (D20); they wait for `String`, which is M7 as well.
 
 ---
+
 
 ## 7. C backend contract
 
@@ -661,7 +695,7 @@ none of them can block work indefinitely.
 | Do we keep `?` for error propagation, or find a spelling from the C family? It is the only construct in the language with no C++ heritage (D6). | M5 |
 | **What happens on integer overflow?** D5 is often mistaken for an answer here, and is not: it governs conversions *between* types, not arithmetic *within* one. `u32 a = 0; a - 1;` involves no conversion, so D5 is silent and the result is 4294967295. §7.7's `-fwrapv` currently makes signed overflow wrap silently too — defined, which is better than C++'s UB, but still a wrong answer delivered quietly. Underflow is not a separate question: `u32 a = 0; a - 1;` is overflow off the bottom, and one decision covers both. Float underflow to denormals is IEEE's business and is not a trap candidate. The options are wrap (status quo — fast, silent, a wrong answer delivered quietly); trap always (a predicted branch per operation, and some lost vectorisation); trap in debug only, as Rust does (free in production, but tests and production then compute different answers); saturate (surprising, and wrong for a systems language); or trap by default with `+% -% *%` to opt out. **Decided: wrap.** A branch per operation genuinely inhibits auto-vectorisation, and Keel's performance claim makes that a real cost rather than a theoretical one — and wrapping is what every programmer was taught happens. Silence is answered two ways. **Compile-time rejection of constant overflow** — `u32 d = 1 - 2;` is an error rather than 4294967295 — is free, backend-independent, and can land now. **Opt-in runtime checking** is a frontend feature, not a `cc` flag: passing `-fsanitize=signed-integer-overflow` through to `$CC` would work today and evaporate with the backend, which is precisely the coupling §2.2 forbids. The frontend decides where a check belongs and each backend spells it — `__builtin_add_overflow` in C, `llvm.sadd.with.overflow` in LLVM. That makes it **KIR work at M3**: a checked add is an instruction, and building it into the AST-walking emitter first means building it twice. A sanitiser flag pass-through is a fine convenience until then, but it is not the design. With no trapping default there is nothing to opt out of, so `+%` is not needed. Keep `-fwrapv`, so the wrap is defined rather than UB. A manifesto that claims safety by default cannot leave this at "whatever `-fwrapv` does". D5 now depends on the answer: `T op T` yields `T` (§6.4), so `u8 + u8` can overflow where C++'s promotion to `int` could not — that is the one `†` divergence in the §6.3 audit, and whether it traps or wraps decides whether the divergence is loud or silent. | **Decided: wrap.** Constant-overflow rejection lands before M3; runtime checking is KIR work at M3. |
 | **What, if anything, does `->` come to mean?** Free, with nothing assigned. D22 freed the token and the three call-site markers it was a candidate for are keywords instead: `move x` (transfers, D2), `out x` (the callee assigns it, and it need not be initialised first) and `ref x` (initialised, and may be modified) — C#'s distinction, which earns both. `->` stays a hard error naming `.`, and the token stays lexed so that error can be given by name. Rejected along the way: `socket -> connection` as a move expression (competes with `=`); a state-machine DSL (a domain feature in a language about ownership, and M5's exhaustive `switch` already makes illegal transitions a compile error); and scope injection, `user -> { greet( name ) }` — Pascal's and JavaScript's `with`, which JS deprecated in strict mode because you cannot tell a field from a local and adding a field silently changes the meaning of code that already compiled. That is D19's action-at-a-distance with a larger blast radius. | No deadline — it costs nothing to leave free |
-| **What is a cast?** D5 now makes every *lossy* conversion explicit and promises "the required cast in the message", but no cast syntax exists — not in the grammar, the lexer, or the parser. Until one does, D5's errors name a remedy the language cannot express. C-style `(u64)x` is ambiguous with parenthesised expressions and is itself on §5.1's list of C++ warts; `static_cast<u64>(x)` is unambiguous and familiar but verbose enough to discourage the widening that D5 makes routine.  A cast that must state its failure policy — `cast<T>(x)` checked and trapping, `wrap<T>(x)` truncating on purpose — leaves no unqualified cast to reach for, and both spellings are new notation, so §5.1 is satisfied for free. Both must be **keywords**: as ordinary identifiers, `cast<u32>(x)` walks straight into the `a < b > (c)` ambiguity below. The parser needs nothing new — match_generic_close already splits `>>`. The line to draw: **`cast` handles conversions with one obvious meaning, and anything with a choice gets a name.** So `cast<f64>( some_i64 )` is allowed — it loses precision, but there is only one thing it can mean — while **float to integer is rejected outright**, because `cast<i32>( 1.9 )` has no obvious answer: truncate, round, floor and ceil are four different operations and C picks one of them silently. Those arrive as library functions at M6, once generics can express them; nothing in v0 converts a float to an integer, so this costs nothing now and burns no keywords. | M1 — the type checker's first error message needs it |
+| ~~**What is a cast?**~~ **Answered — D28.** `cast<T>( x )` preserves the value, `wrap<T>( x )` keeps the low bits, both keywords, table in §6.5. What remains open is narrower: `cast` is *defined* to check the value at run time and nothing can do that yet, so narrowing `cast` is refused rather than silently truncating. See the debt in §15. | M1 — done |
 | `a < b > ( c )` — a call to a generic, or two comparisons? C++ needs `template` disambiguators, Rust needs turbofish (`a::<b>(c)`). D15 does not help: both readings are effectful. | M6 |
 | Do we ever add lifetimes/borrow checking, or is the non-escaping rule permanent? | After M7, with real-program evidence |
 | Are interfaces/traits the only form of polymorphism, or is there virtual dispatch? | M6 (generic bounds force a partial answer) |
@@ -824,6 +858,13 @@ none of it is needed for `fib(20)`.
 
 ### Ahead of M3
 
+`cast` and `wrap` work end to end (D28, table in §6.5): both parse as one
+`Cast_expr` whose `aux` says which and whose children are the target type and
+the operand, the checker enforces the table, and the emitter lowers each to a C
+cast in three-address form. Narrowing `cast` is refused for now — see the debts.
+`wrap` covers that cell, and `tests/codegen/conversions.kl` checks the wrapping
+arithmetic at run time rather than only pinning the emitted C.
+
 Raw pointers work end to end: `*T` annotations, `&x`, `*p`, writing through a
 pointer, pointers to structs and to pointers, `nullptr` as a context-typed
 literal (D26), and equality against it. No arithmetic and no indexing (D27), and
@@ -846,6 +887,15 @@ the cost is one diagnostic naming the problem rather than a confusing one about 
 stray `;`.
 
 ### Debts to pay along the way
+
+- **Narrowing `cast` is blocked, not implemented.** D28 defines `cast` as checking the value at
+  run time and trapping when it does not fit, and nothing in the pipeline can emit that check yet.
+  Rather than let a narrowing `cast` silently truncate — which is `wrap`'s behaviour wearing
+  `cast`'s name, exactly the silent wrong answer D5 exists to remove — the checker refuses it. The
+  block is one named constant, `k_narrowing_cast_needs_a_run_time_check` in `type_checker.cpp`,
+  and the single branch that reads it; deleting both is the whole change once the KIR can trap.
+  Nothing that compiles today changes meaning when it goes, because the cell is currently empty.
+  The three tests under `type_checker_holds_back_a_narrowing_cast` go at the same time.
 
 - `mangle_function` is not injective. Argument types are spelled with `Type_table::name()`, the
   plain Keel spelling, so `i32*` becomes `i32p` and a struct genuinely named `i32p` collides with

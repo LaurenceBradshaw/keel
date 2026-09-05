@@ -81,6 +81,8 @@ std::string_view node_kind_name( Node_kind kind )
         return "Marker_expr";
     case Node_kind::Null_literal:
         return "Null_literal";
+    case Node_kind::Cast_expr:
+        return "Cast_expr";
 
     case Node_kind::Count:
         break;

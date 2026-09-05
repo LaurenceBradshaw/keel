@@ -11,13 +11,13 @@ Interner::Interner()
     static constexpr std::string_view k_keyword_spellings[] = {
         "if",       "else",     "while",   "for",      "return",  "struct",  "enum",
         "class",    "switch",   "case",    "break",    "continue","const",   "auto",
-        "template", "true",     "false",   "import",   "unsafe", "nullptr",
+        "template", "true",     "false",   "import",   "unsafe",  "nullptr",
 
         // See the Keyword enum: the C++ type names are handled by sema, not reserved here.
         "new",      "delete",
 
         // New Keel keywords
-        "move",     "out",      "ref",
+        "move",     "out",      "ref",     "cast",     "wrap"
     };
     // clang-format on
 

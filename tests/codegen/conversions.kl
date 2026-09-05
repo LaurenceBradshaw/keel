@@ -1,0 +1,50 @@
+// cast and wrap, checked at run time: every branch returns a distinct code, so exit 0 means the
+// generated C agreed with the checker on all of them.
+
+i32 main()
+{
+    // wrap keeps the low bits. 300 is 0b1_0010_1100, so a u8 sees 44.
+    i32 big = 300;
+    u8  low = wrap<u8>( big );
+    if ( low != 44 ) { return 1; }
+
+    // Reinterpreting the sign is wrap's other job, and the one cast must refuse.
+    i32 negative = 0 - 1;
+    u32 flipped  = wrap<u32>( negative );
+    if ( flipped != 4294967295 ) { return 2; }
+
+    // Wrapping to a wider type never actually wraps.
+    u8  byte = 200;
+    i64 wide = wrap<i64>( byte );
+    if ( wide != 200 ) { return 3; }
+
+    // cast widens, and the value survives.
+    i32 small   = 7;
+    i64 widened = cast<i64>( small );
+    if ( widened != 7 ) { return 4; }
+
+    // Integer to float.
+    f32 scaled = cast<f32>( small );
+    if ( scaled != 7.0 ) { return 5; }
+
+    // Float to float, losing precision but not the magnitude.
+    f64 precise = 2.5;
+    f32 rougher = cast<f32>( precise );
+    if ( rougher != 2.5 ) { return 6; }
+
+    // bool to integer is exactly 0 or 1.
+    bool yes = true;
+    bool no  = false;
+    if ( cast<i32>( yes ) != 1 ) { return 7; }
+    if ( cast<i32>( no ) != 0 ) { return 8; }
+
+    // A literal takes its type from the cast rather than being converted after the fact.
+    u8 direct = cast<u8>( 200 );
+    if ( direct != 200 ) { return 9; }
+
+    // The result composes like any other expression.
+    i64 total = cast<i64>( small ) + wrap<i64>( byte );
+    if ( total != 207 ) { return 10; }
+
+    return 0;
+}

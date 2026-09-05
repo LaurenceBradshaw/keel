@@ -1,0 +1,24 @@
+// Every cell the conversion table refuses, and the narrowing cast that is held back until the
+// run-time check exists. One diagnostic each.
+struct Point { i32 x; };
+
+i32 main()
+{
+    i32   whole = 1;
+    f64   real = 1.5;
+    bool  flag = true;
+    i32*  address = &whole;
+    Point origin = Point { 0 };
+
+    i32 rounded = cast<i32>( real );
+    i32 tested = cast<bool>( whole );
+    f32 promoted = wrap<f32>( whole );
+    i32 counted = wrap<i32>( flag );
+    u8* recast = cast<u8*>( address );
+    i32 flattened = cast<i32>( origin );
+    u8  narrowed = cast<u8>( whole );
+    u32 resigned = cast<u32>( whole );
+    u8  overlarge = cast<u8>( 300 );
+
+    return 0;
+}

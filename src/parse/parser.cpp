@@ -968,7 +968,8 @@ bool Parser::can_start_expression() const
     // in an argument or an initialiser and fails only in statement position.
     case Token_kind::Keyword:
         return check_keyword( Keyword::True ) || check_keyword( Keyword::False ) || check_keyword( Keyword::Nullptr ) ||
-               check_keyword( Keyword::Move ) || check_keyword( Keyword::Out ) || check_keyword( Keyword::Ref );
+               check_keyword( Keyword::Move ) || check_keyword( Keyword::Out ) || check_keyword( Keyword::Ref ) ||
+               check_keyword( Keyword::Cast ) || check_keyword( Keyword::Wrap );
 
     default:
         return false;
@@ -1541,6 +1542,32 @@ Node_id Parser::parse_prefix()
         {
             advance();
             return ast_.add( Node_kind::Null_literal, Span::merge( start, previous().span ), 0, {} );
+        }
+
+        if( check_keyword( Keyword::Cast ) || check_keyword( Keyword::Wrap ) )
+        {
+            // aux carries which of the two, the way Marker_expr does: one node kind, and sema
+            // reads the operator back off it.
+            const Keyword which = peek().keyword();
+            advance();
+
+            expect( Token_kind::Less );
+            const Node_id type = parse_type();
+
+            // Not expect( Greater ): `wrap<Vector<i32>>( x )` closes with `>>`, and this is the
+            // helper that splits it.
+            if( !match_generic_close() )
+            {
+                error_expected( Token_kind::Greater );
+            }
+
+            expect( Token_kind::L_paren );
+            const Node_id operand = parse_expression( 0 );
+            expect( Token_kind::R_paren );
+
+            return ast_.add(
+                Node_kind::Cast_expr, Span::merge( start, previous().span ), static_cast<u32>( which ), { type, operand }
+            );
         }
 
         if( check_keyword( Keyword::Move ) || check_keyword( Keyword::Out ) || check_keyword( Keyword::Ref ) )
@@ -3540,6 +3567,104 @@ TEST_CASE( "parser_reports_each_mistake_once", "[parse]" )
 
     INFO( p.errors() );
     REQUIRE( p.error_count() == 1 );
+}
+
+// `cast` and `wrap` are keywords precisely so the `<` that follows can only be a bracket. As
+// identifiers they would inherit C++'s `a < b > ( c )` ambiguity, which is the reason for the
+// choice - so the shape of what they parse into is worth pinning.
+TEST_CASE( "parser_parses_cast_and_wrap", "[parse]" )
+{
+    SECTION( "children are the type then the operand" )
+    {
+        const Parsed  p( "i32 main() { return cast<i64>( x ); }" );
+        const Node_id conversion = find_first( p.ast(), p.root(), Node_kind::Cast_expr );
+
+        INFO( p.dump() );
+        REQUIRE( !p.has_errors() );
+        REQUIRE( conversion.is_valid() );
+        REQUIRE( p.children( conversion ).size() == 2 );
+        REQUIRE( p.kind( p.child( conversion, 0 ) ) == Node_kind::Named_type );
+        REQUIRE( p.kind( p.child( conversion, 1 ) ) == Node_kind::Name_expr );
+    }
+
+    // One node kind covers both, so aux is the only thing that tells them apart. With it left at
+    // zero every `wrap` would check and lower as a `cast`.
+    SECTION( "aux records which operator it was" )
+    {
+        const Parsed  c( "i32 main() { return cast<i64>( x ); }" );
+        const Parsed  w( "i32 main() { return wrap<i64>( x ); }" );
+        const Node_id from_cast = find_first( c.ast(), c.root(), Node_kind::Cast_expr );
+        const Node_id from_wrap = find_first( w.ast(), w.root(), Node_kind::Cast_expr );
+
+        REQUIRE( c.aux( from_cast ) == static_cast<u32>( Keyword::Cast ) );
+        REQUIRE( w.aux( from_wrap ) == static_cast<u32>( Keyword::Wrap ) );
+        REQUIRE( c.aux( from_cast ) != w.aux( from_wrap ) );
+    }
+
+    SECTION( "a pointer target keeps its star" )
+    {
+        const Parsed  p( "i32 main() { return cast<i32*>( x ); }" );
+        const Node_id conversion = find_first( p.ast(), p.root(), Node_kind::Cast_expr );
+
+        INFO( p.dump() );
+        REQUIRE( !p.has_errors() );
+        REQUIRE( p.kind( p.child( conversion, 0 ) ) == Node_kind::Pointer_type );
+    }
+
+    // match_generic_close, not expect( Greater ): the lexer hands over one `>>` token here.
+    SECTION( "a nested target closes on >>" )
+    {
+        const Parsed  p( "i32 main() { return cast<Vector<i32>>( x ); }" );
+        const Node_id conversion = find_first( p.ast(), p.root(), Node_kind::Cast_expr );
+
+        INFO( p.dump() );
+        REQUIRE( !p.has_errors() );
+        REQUIRE( p.kind( p.child( conversion, 0 ) ) == Node_kind::Generic_type );
+    }
+
+    // The parens belong to the operator, so this is not a call and `.x` applies to the result.
+    SECTION( "postfix still applies to the result" )
+    {
+        const Parsed p( "i32 main() { return cast<Point>( q ).x; }" );
+
+        INFO( p.dump() );
+        REQUIRE( !p.has_errors() );
+
+        const Node_id field = find_first( p.ast(), p.root(), Node_kind::Field_expr );
+
+        REQUIRE( field.is_valid() );
+        REQUIRE( p.kind( p.child( field, 0 ) ) == Node_kind::Cast_expr );
+    }
+
+    // can_start_expression gates statement position, and it is the half that keeps being forgotten
+    // when the other half gains a keyword. A conversion really has no effect, so the message that
+    // survives is that one - not "expected a statement", which is what a missing keyword gives.
+    SECTION( "it can open a statement" )
+    {
+        const Parsed p( "i32 main() { wrap<u8>( x ); return 0; }" );
+
+        INFO( p.errors() );
+
+        REQUIRE( find_first( p.ast(), p.root(), Node_kind::Cast_expr ).is_valid() );
+        REQUIRE( p.errors().find( "no effect" ) != std::string::npos );
+        REQUIRE( p.errors().find( "expected a statement" ) == std::string::npos );
+    }
+
+    SECTION( "a missing type list is an error, not a hang" )
+    {
+        for( const std::string_view source :
+             { "i32 main() { return cast( x ); }",
+               "i32 main() { return cast<i32( x ); }",
+               "i32 main() { return wrap<>( x ); }",
+               "i32 main() { return cast<i32> x; }" } )
+        {
+            INFO( "source '" << source << "'" );
+            const Parsed p( source );
+
+            REQUIRE( p.root().is_valid() ); // reached only if parsing terminated
+            REQUIRE( p.has_errors() );
+        }
+    }
 }
 
 } // namespace keel

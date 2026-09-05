@@ -58,6 +58,8 @@ enum class Keyword : u32
     Move,
     Out,
     Ref,
+    Cast,
+    Wrap,
 
     Count
 };

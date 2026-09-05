@@ -117,6 +117,7 @@ private:
     std::string lower_unary( Node_id id );
     std::string lower_call( Node_id id );
     std::string lower_field( Node_id id );
+    std::string lower_cast( Node_id id );
 
     // The C expression naming *where* a value lives, rather than one naming the value itself.
     // lower() reads: for `p.x` it emits `t = p.x;` and hands back `t`, so assigning to what it
@@ -667,6 +668,9 @@ std::string Emitter::lower( Node_id id )
     case Node_kind::Struct_literal:
         return lower_struct_literal( id );
 
+    case Node_kind::Cast_expr:
+        return lower_cast( id );
+
     default:
         assert( false && "unexpected expression kind" );
         return {};
@@ -852,6 +856,20 @@ std::string Emitter::lower_field( Node_id id )
     const std::string temp = fresh_temp();
 
     write_line( fmt::format( "{} {} = {}.{};", c_type( types_.type_of( id ) ), temp, operand, field_name( field ) ) );
+
+    return temp;
+}
+
+std::string Emitter::lower_cast( Node_id id )
+{
+    // [0] is the type annotation, [1] the operand.
+    const Type_id     target  = types_.type_of( id );
+    const Node_id     operand = ast_.children( id )[1];
+    const std::string value   = lower( operand );
+
+    const std::string temp = fresh_temp();
+
+    write_line( fmt::format( "{} {} = ({}) {};", c_type( target ), temp, c_type( target ), value ) );
 
     return temp;
 }
