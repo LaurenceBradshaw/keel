@@ -820,6 +820,22 @@ it.
 The remaining v0 syntax (`struct`, `enum`, `match`, generics, `?`) is M2 onward;
 none of it is needed for `fib(20)`.
 
+### Ahead of M3
+
+`move`, `out` and `ref` lex, parse and dump as one `Marker_expr` whose `aux` says
+which — D2's call-site marker, and the two the §12 arrow question resolved to.
+Sema reports "not supported yet" for all three: `move` has nothing to enforce
+until a type has a destructor, and `ref`/`out` have nothing to mean until
+references exist. Their **signature** forms are deliberately unwritten —
+`Param_decl` is `aux = name, children = { type }`, with nowhere to put a passing
+mode, and choosing one before M4 defines what `ref` and `out` do would be picking
+a spelling with nothing to check it against.
+
+Taking those three keywords costs `out` and `ref` as identifiers, both of which
+are legal C++ and common names. §5.1 permits it — rejecting is always safe — and
+the cost is one diagnostic naming the problem rather than a confusing one about a
+stray `;`.
+
 ### Debts to pay along the way
 
 - `expect_keyword()` will need a spelling that `token_kind_spelling()` cannot
@@ -828,6 +844,12 @@ none of it is needed for `fib(20)`.
   like `expected \`return\`` therefore has to go through the keyword spelling
   table in `interner.cpp`, not through `lex/token.cpp`. `error_expected` avoids
   this today only because it quotes the source text for the *found* half.
+- `found_text()` returns a formatted message fragment, not raw text: source text
+  quoted, end-of-file as prose. Its name says otherwise, and a call site added
+  later that supplies its own backticks would double-quote with nothing to catch
+  it. `expectation()` beside it draws the same distinction for the expected half —
+  punctuation is quoted because it is what the author would type, a category is
+  prose because "identifier" is not something you can write.
 - `Interner` should hold its strings in an `Arena` rather than in the map's keys.
   That deletes `Sv_hash` and `std::equal_to<>` — the lookup type becomes the key
   type again — and drops one heap allocation per symbol. Deferred: it is not a

@@ -47,6 +47,7 @@ enum class Node_kind : u16
     Field_expr,
     Struct_literal,
     Field_init,
+    Marker_expr, // `move`, `out`, `ref` - a unary operator that does not change the type of its operand
 
     Count
 };

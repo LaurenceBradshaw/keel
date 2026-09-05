@@ -52,6 +52,12 @@ std::string aux_note( const Ast& ast, const Interner& interner, Node_id id )
     case Node_kind::Increment_stmt:
         return fmt::format( "op={}", token_kind_spelling( static_cast<Token_kind>( ast.aux( id ) ) ) );
 
+    case Node_kind::Marker_expr:
+    {
+        std::string_view marker = interner.text( Symbol_id { ast.aux( id ) } );
+        return fmt::format( "marker={}", marker );
+    }
+
     // Named_type also carries a Symbol_id, but its span text is already the name.
     default:
         return {};

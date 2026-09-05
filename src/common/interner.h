@@ -53,6 +53,11 @@ enum class Keyword : u32
     New,
     Delete,
 
+    // New Keel keywords
+    Move,
+    Out,
+    Ref,
+
     Count
 };
 

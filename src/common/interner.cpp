@@ -14,7 +14,10 @@ Interner::Interner()
         "template", "true",     "false",   "import",   "unsafe",
 
         // See the Keyword enum: the C++ type names are handled by sema, not reserved here.
-        "new",      "delete"
+        "new",      "delete",
+
+        // New Keel keywords
+        "move",     "out",      "ref",
     };
     // clang-format on
 

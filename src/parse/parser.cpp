@@ -53,6 +53,10 @@ private:
     // "expected `;`, found `,`".
     void error_expected( Token_kind kind, std::string help = {} );
 
+    // A declared name, or nothing plus a report. A keyword found here was meant as the name, so it
+    // is consumed as well: leaving it in place trips every rule after this one.
+    Symbol_id expect_name();
+
     // What peek() should be called in a message: its source text where it has one, so "found
     // `widget`" rather than "found `identifier`".
     std::string found_text() const;
@@ -157,6 +161,34 @@ private:
 //
 // Assignment and `++`/`--` are deliberately absent: both are statements (L11, D12), so `if( x = 5 )`
 // and `a[i++]` cannot parse at all rather than needing a special check.
+// How a token kind reads in "expected ...". Punctuation is quoted because it is what the author
+// would type; a category is prose with its own article, because "identifier" is not something you
+// can write.
+std::string expectation( Token_kind kind )
+{
+    switch( kind )
+    {
+    case Token_kind::Identifier:
+        return "an identifier";
+    case Token_kind::Int_literal:
+        return "an integer literal";
+    case Token_kind::Float_literal:
+        return "a floating-point literal";
+    case Token_kind::String_literal:
+        return "a string literal";
+    case Token_kind::Char_literal:
+        return "a character literal";
+    case Token_kind::Keyword:
+        return "a keyword";
+    case Token_kind::End_of_file:
+        return "end of file";
+    case Token_kind::Unknown:
+        return "a valid character";
+    default:
+        return fmt::format( "`{}`", token_kind_spelling( kind ) );
+    }
+}
+
 u8 binding_power( Token_kind kind )
 {
     switch( kind )
@@ -409,17 +441,42 @@ void Parser::error_expected( Token_kind kind, std::string help )
     // next line describes the symptom rather than the mistake.
     const Span at = pos_ > 0 ? Span::point( previous().span.file, previous().span.end ) : peek().span;
 
-    error_at( at, fmt::format( "expected `{}`, found `{}`", token_kind_spelling( kind ), found_text() ), std::move( help ) );
+    // A keyword where a name was wanted is worth saying out loud. `out`, `ref` and `move` are
+    // ordinary identifiers in C++, so a program can arrive here without its author suspecting that
+    // the name is the problem.
+    if( help.empty() && kind == Token_kind::Identifier && check( Token_kind::Keyword ) )
+    {
+        help = fmt::format( "{} is a keyword, so it cannot be used as a name", found_text() );
+    }
+
+    error_at( at, fmt::format( "expected {}, found {}", expectation( kind ), found_text() ), std::move( help ) );
+}
+
+Symbol_id Parser::expect_name()
+{
+    if( expect( Token_kind::Identifier ) )
+    {
+        return previous().symbol;
+    }
+
+    if( check( Token_kind::Keyword ) )
+    {
+        advance();
+    }
+
+    return Symbol_id {};
 }
 
 std::string Parser::found_text() const
 {
+    // Quoted, because it is text the author actually wrote - except at the end of the file, where
+    // there is nothing to quote and "found `end of file`" reads as though they typed that.
     if( peek().kind == Token_kind::End_of_file )
     {
         return std::string( token_kind_spelling( Token_kind::End_of_file ) );
     }
 
-    return std::string( sm_.text( peek().span ) );
+    return fmt::format( "`{}`", sm_.text( peek().span ) );
 }
 
 void Parser::synchronise()
@@ -515,7 +572,7 @@ Node_id Parser::parse_declaration()
     }
 
     const Span span = peek().span;
-    error_at( span, fmt::format( "expected a declaration, found `{}`", found_text() ) );
+    error_at( span, fmt::format( "expected a declaration, found {}", found_text() ) );
     synchronise();
 
     return error_node( span );
@@ -528,15 +585,7 @@ Node_id Parser::parse_function_decl()
     const Node_id return_type = parse_type();
 
     // The name is a token, not a subtree, so it goes in aux rather than becoming a fourth child.
-    Symbol_id name;
-    if( check( Token_kind::Identifier ) )
-    {
-        name = advance().symbol;
-    }
-    else
-    {
-        error_expected( Token_kind::Identifier );
-    }
+    const Symbol_id name = expect_name();
 
     // No early return on a missing name: keep parsing so the body's errors are reported too.
     const Node_id params = parse_param_list();
@@ -556,6 +605,15 @@ Node_id Parser::parse_function_decl()
     const Node_id body = parse_block();
 
     // Fixed arity - always these three, even when one of them is an Error node.
+    // A declaration with no name is not one: sema reads every declaration's name to report
+    // about it, so handing one over means a keyword or a missing identifier crashes a pass
+    // that had no reason to expect it. Everything inside was still parsed, so the errors in
+    // there are already reported.
+    if( !name.is_valid() )
+    {
+        return error_node( Span::merge( start, previous().span ) );
+    }
+
     return ast_.add( Node_kind::Function_decl, Span::merge( start, previous().span ), name.v, { return_type, params, body } );
 }
 
@@ -591,11 +649,7 @@ Node_id Parser::parse_struct_decl()
     match_keyword( Keyword::Struct );
 
     // The name is a token, so it goes in aux rather than becoming a child.
-    Symbol_id name;
-    if( expect( Token_kind::Identifier ) )
-    {
-        name = previous().symbol;
-    }
+    const Symbol_id name = expect_name();
 
     // Bail rather than carry on: with no brace there is no field list to find, and scanning for
     // one runs to the next `}` - which belongs to whatever encloses this.
@@ -624,6 +678,15 @@ Node_id Parser::parse_struct_decl()
     expect( Token_kind::R_brace );
     expect( Token_kind::Semicolon );
 
+    // A declaration with no name is not one: sema reads every declaration's name to report
+    // about it, so handing one over means a keyword or a missing identifier crashes a pass
+    // that had no reason to expect it. Everything inside was still parsed, so the errors in
+    // there are already reported.
+    if( !name.is_valid() )
+    {
+        return error_node( Span::merge( start, previous().span ) );
+    }
+
     return ast_.add( Node_kind::Struct_decl, Span::merge( start, previous().span ), name.v, fields );
 }
 
@@ -635,13 +698,18 @@ Node_id Parser::parse_field_decl()
 
     // Same convention as Function_decl: the name is a token, so it goes in aux rather than becoming
     // a second child.
-    Symbol_id name;
-    if( expect( Token_kind::Identifier ) )
-    {
-        name = previous().symbol;
-    }
+    const Symbol_id name = expect_name();
 
     expect( Token_kind::Semicolon );
+
+    // A declaration with no name is not one: sema reads every declaration's name to report
+    // about it, so handing one over means a keyword or a missing identifier crashes a pass
+    // that had no reason to expect it. Everything inside was still parsed, so the errors in
+    // there are already reported.
+    if( !name.is_valid() )
+    {
+        return error_node( Span::merge( start, previous().span ) );
+    }
 
     return ast_.add( Node_kind::Field_decl, Span::merge( start, previous().span ), name.v, { type } );
 }
@@ -803,14 +871,15 @@ Node_id Parser::parse_param()
 
     // Same convention as Function_decl: the name is a token, so it goes in aux rather than becoming
     // a second child.
-    Symbol_id name;
-    if( check( Token_kind::Identifier ) )
+    const Symbol_id name = expect_name();
+
+    // A declaration with no name is not one: sema reads every declaration's name to report
+    // about it, so handing one over means a keyword or a missing identifier crashes a pass
+    // that had no reason to expect it. Everything inside was still parsed, so the errors in
+    // there are already reported.
+    if( !name.is_valid() )
     {
-        name = advance().symbol;
-    }
-    else
-    {
-        error_expected( Token_kind::Identifier );
+        return error_node( Span::merge( start, previous().span ) );
     }
 
     return ast_.add( Node_kind::Param_decl, Span::merge( start, previous().span ), name.v, { type } );
@@ -894,8 +963,10 @@ bool Parser::can_start_expression() const
     case Token_kind::Amp:
         return true;
 
+    // Must agree with parse_prefix's Keyword case, which is the other half of this list.
     case Token_kind::Keyword:
-        return check_keyword( Keyword::True ) || check_keyword( Keyword::False );
+        return check_keyword( Keyword::True ) || check_keyword( Keyword::False ) || check_keyword( Keyword::Move ) ||
+               check_keyword( Keyword::Out ) || check_keyword( Keyword::Ref );
 
     default:
         return false;
@@ -990,7 +1061,10 @@ bool Parser::looks_like_declaration()
     // A type is only a declaration if a name follows it. `a * b;` scans a type-shaped `a *` and
     // then finds `b`, which is why D15 has to make the discarded-multiply reading illegal - see
     // PLAN §6.3 D15 and L17.
-    const bool declaration = check( Token_kind::Identifier );
+    // A keyword here is a name that cannot be one - `i32 out = 1;`. Nothing valid has a type
+    // followed by a keyword, so taking the declaration path costs nothing and lets parse_var_decl
+    // report the real problem rather than a stray `;`.
+    const bool declaration = check( Token_kind::Identifier ) || check( Token_kind::Keyword );
 
     pos_ = saved;
     return declaration;
@@ -1063,7 +1137,7 @@ Node_id Parser::parse_statement()
     // A poisoned token: the lexer already reported it, so a second message here would be noise.
     if( !check( Token_kind::Unknown ) )
     {
-        error_at( span, fmt::format( "expected a statement, found `{}`", found_text() ) );
+        error_at( span, fmt::format( "expected a statement, found {}", found_text() ) );
     }
 
     synchronise();
@@ -1107,15 +1181,7 @@ Node_id Parser::parse_var_decl()
         type = parse_type();
     }
 
-    Symbol_id name;
-    if( check( Token_kind::Identifier ) )
-    {
-        name = advance().symbol;
-    }
-    else
-    {
-        error_expected( Token_kind::Identifier );
-    }
+    const Symbol_id name = expect_name();
 
     Node_id value;
     if( match( Token_kind::Equal ) )
@@ -1124,6 +1190,15 @@ Node_id Parser::parse_var_decl()
     }
 
     expect( Token_kind::Semicolon );
+    // A declaration with no name is not one: sema reads every declaration's name to report
+    // about it, so handing one over means a keyword or a missing identifier crashes a pass
+    // that had no reason to expect it. Everything inside was still parsed, so the errors in
+    // there are already reported.
+    if( !name.is_valid() )
+    {
+        return error_node( Span::merge( start, previous().span ) );
+    }
+
     return ast_.add( Node_kind::Var_decl, Span::merge( start, previous().span ), name.v, { type, value } );
 }
 
@@ -1452,14 +1527,25 @@ Node_id Parser::parse_prefix()
     // `true` and `false` arrive as keywords, not as a literal token kind, so they need their own
     // case. aux carries the value, since one Node_kind covers both.
     case Token_kind::Keyword:
+    {
         if( check_keyword( Keyword::True ) || check_keyword( Keyword::False ) )
         {
             const bool value = check_keyword( Keyword::True );
             advance();
             return ast_.add( Node_kind::Bool_literal, Span::merge( start, previous().span ), value ? 1u : 0u, {} );
         }
-        break;
 
+        if( check_keyword( Keyword::Move ) || check_keyword( Keyword::Out ) || check_keyword( Keyword::Ref ) )
+        {
+            const Keyword marker = peek().keyword();
+            advance();
+            const Node_id operand = parse_expression( k_unary_power );
+            return ast_.add(
+                Node_kind::Marker_expr, Span::merge( start, previous().span ), static_cast<u32>( marker ), { operand }
+            );
+        }
+        break;
+    }
     default:
         break;
     }
@@ -1467,7 +1553,7 @@ Node_id Parser::parse_prefix()
     // The lexer already reported an Unknown token; do not report it twice.
     if( !check( Token_kind::Unknown ) )
     {
-        error_at( peek().span, fmt::format( "expected an expression, found `{}`", found_text() ) );
+        error_at( peek().span, fmt::format( "expected an expression, found {}", found_text() ) );
     }
 
     return error_node( start );
@@ -2159,6 +2245,172 @@ TEST_CASE( "parser_parses_struct_literals", "[parse]" )
     }
 }
 
+// `move x`, `out x`, `ref x`. One node kind: they are syntactically identical, and aux carries
+// which one, the way Binary_expr carries its operator.
+// `move`, `out` and `ref` are ordinary identifiers in C++, so a program can arrive here without
+// its author suspecting the *name* is the problem.
+TEST_CASE( "parser_explains_a_keyword_used_as_a_name", "[parse]" )
+{
+    static const char* sources[] = {
+        "i32 ref() { return 0; }",               // a function
+        "struct move { i32 x; };",               // a struct
+        "struct S { i32 move; };",               // a field
+        "i32 f( i32 ref ) { return 0; }",        // a parameter
+        "i32 main() { i32 out = 1; return 0; }", // a local
+    };
+
+    for( const char* source : sources )
+    {
+        const Parsed p( source );
+
+        INFO( "source: " << source << "\n" << p.errors() );
+
+        // One message per mistake: the keyword is consumed as the name it was meant to be, so it
+        // does not go on to trip every rule after it.
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "is a keyword, so it cannot be used as a name" ) != std::string::npos );
+    }
+}
+
+// Sema reads every declaration's name to report about it, so one without a name must not reach it.
+// `i32 () { return 0; }` used to abort inside Interner::text.
+TEST_CASE( "parser_makes_a_nameless_declaration_an_error_node", "[parse]" )
+{
+    static const char* sources[] = {
+        "i32 () { return 0; }",
+        "struct { i32 x; };",
+        "struct S { i32 ; };",
+        "i32 main() { auto = 5; return 0; }",
+    };
+
+    for( const char* source : sources )
+    {
+        const Parsed p( source );
+
+        INFO( "source: " << source << "\n" << p.errors() );
+        REQUIRE( p.has_errors() );
+
+        // Nothing anywhere in the tree claims to be a declaration without a name.
+        for( u32 i = 0; i < p.ast().node_count(); ++i )
+        {
+            const Node_id   id   = Node_id { i };
+            const Node_kind kind = p.kind( id );
+
+            const bool declares_a_name = kind == Node_kind::Function_decl || kind == Node_kind::Struct_decl ||
+                                         kind == Node_kind::Var_decl || kind == Node_kind::Field_decl ||
+                                         kind == Node_kind::Param_decl;
+
+            if( declares_a_name )
+            {
+                INFO( "node " << i );
+                REQUIRE( Symbol_id { p.aux( id ) }.is_valid() );
+            }
+        }
+    }
+}
+
+TEST_CASE( "parser_parses_passing_markers", "[parse]" )
+{
+    struct Case
+    {
+        std::string_view source;
+        Keyword          marker;
+    };
+
+    static const Case cases[] = {
+        { "i32 main() { return f( move b ); }", Keyword::Move },
+        { "i32 main() { return f( out b ); }", Keyword::Out },
+        { "i32 main() { return f( ref b ); }", Keyword::Ref },
+    };
+
+    for( const Case& c : cases )
+    {
+        const Parsed p( c.source );
+
+        INFO( "source: " << c.source << "\n" << p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id marker = find_first( p.ast(), p.root(), Node_kind::Marker_expr );
+
+        REQUIRE( marker.is_valid() );
+        REQUIRE( p.aux( marker ) == static_cast<u32>( c.marker ) );
+        REQUIRE( p.children( marker ).size() == 1 );
+        REQUIRE( p.kind( p.child( marker, 0 ) ) == Node_kind::Name_expr );
+    }
+}
+
+TEST_CASE( "parser_binds_passing_markers_like_a_unary_operator", "[parse]" )
+{
+    // `.` is tighter than any unary operator, so the marker takes the whole access.
+    SECTION( "field access binds tighter" )
+    {
+        const Parsed p( "i32 main() { return f( move a.b ); }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id marker = find_first( p.ast(), p.root(), Node_kind::Marker_expr );
+        REQUIRE( p.kind( p.child( marker, 0 ) ) == Node_kind::Field_expr );
+    }
+
+    // ...and arithmetic is looser, so the marker takes only the left operand.
+    SECTION( "arithmetic binds looser" )
+    {
+        const Parsed p( "i32 main() { return f( move a + b ); }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id sum = find_first( p.ast(), p.root(), Node_kind::Binary_expr );
+
+        REQUIRE( sum.is_valid() );
+        REQUIRE( p.kind( p.child( sum, 0 ) ) == Node_kind::Marker_expr );
+    }
+}
+
+// A marker is a prefix expression, not an argument decoration: `move` is legal wherever a value
+// is, and restricting it to argument lists is sema's job rather than the grammar's.
+TEST_CASE( "parser_accepts_markers_outside_argument_lists", "[parse]" )
+{
+    for( const char* source : {
+             "i32 main() { i32 c = move b; return 0; }",
+             "i32 main() { return move b; }",
+             "i32 main() { b = move c; return 0; }",
+         } )
+    {
+        const Parsed p( source );
+
+        INFO( "source: " << source << "\n" << p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( find_first( p.ast(), p.root(), Node_kind::Marker_expr ).is_valid() );
+    }
+}
+
+// can_start_expression() gates statement position only - argument lists and initialisers reach
+// parse_prefix directly. Without the markers listed there, `move b;` is "expected a statement,
+// found `move`" rather than D15 explaining that the statement does nothing.
+TEST_CASE( "parser_reaches_a_marker_in_statement_position", "[parse]" )
+{
+    const Parsed p( "i32 main() { move b; return 0; }" );
+
+    INFO( p.errors() );
+
+    REQUIRE( find_first( p.ast(), p.root(), Node_kind::Marker_expr ).is_valid() );
+    REQUIRE( p.errors().find( "no effect" ) != std::string::npos );
+    REQUIRE( p.errors().find( "expected a statement" ) == std::string::npos );
+}
+
+TEST_CASE( "parser_reports_a_marker_with_no_operand", "[parse]" )
+{
+    for( const char* source : { "i32 main() { return f( move ); }", "i32 main() { return move; }" } )
+    {
+        const Parsed p( source );
+
+        INFO( "source: " << source << "\n" << p.errors() );
+        REQUIRE( p.has_errors() );
+    }
+}
+
 TEST_CASE( "parser_parses_field_access", "[parse]" )
 {
     SECTION( "the name goes in aux, not into a Name_expr child" )
@@ -2222,7 +2474,7 @@ TEST_CASE( "parser_parses_field_access", "[parse]" )
 
             INFO( "source: " << source << "\n" << p.errors() );
             REQUIRE( p.has_errors() );
-            REQUIRE( p.errors().find( "expected `identifier`" ) != std::string::npos );
+            REQUIRE( p.errors().find( "expected an identifier" ) != std::string::npos );
         }
     }
 }
@@ -2642,7 +2894,7 @@ TEST_CASE( "parser_variable_declarations", "[parse]" )
 
         REQUIRE( p.has_errors() );
         INFO( p.errors() );
-        REQUIRE( p.errors().find( "expected `identifier`" ) != std::string::npos );
+        REQUIRE( p.errors().find( "expected an identifier" ) != std::string::npos );
     }
 }
 

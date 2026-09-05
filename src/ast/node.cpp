@@ -77,6 +77,8 @@ std::string_view node_kind_name( Node_kind kind )
         return "Struct_literal";
     case Node_kind::Field_init:
         return "Field_init";
+    case Node_kind::Marker_expr:
+        return "Marker_expr";
 
     case Node_kind::Count:
         break;

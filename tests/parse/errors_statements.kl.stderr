@@ -10,7 +10,7 @@ error: `*` must touch the type it modifies
 2 | i32 spaced_pointer() { u32 *p; }
   |                        ^^^^^^ write `u32* p` to declare a pointer
 
-error: expected `identifier`, found `=`
+error: expected an identifier, found `=`
  --> parse/errors_statements.kl:3:28
   |
 3 | i32 missing_name()   { auto = 5; }

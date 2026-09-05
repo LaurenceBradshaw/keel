@@ -783,6 +783,10 @@ Type_id Checker::infer( Node_id id )
     case Node_kind::Struct_literal:
         return infer_struct_literal( id );
 
+    case Node_kind::Marker_expr:
+        error_at( ast_.span( id ), "this expression is not supported yet" );
+        return record( id, table_.builtin( Type_kind::Error ) );
+
     default:
         // Every expression not yet given a case of its own - the literals, chiefly, which cannot
         // be typed until their values survive lexing. Children are still typed, so a mistake
@@ -2830,6 +2834,24 @@ TEST_CASE( "type_checker_range_checks_float_literals", "[sema][types]" )
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
+    }
+}
+
+// Parsed, but with no meaning until M3 gives types destructors and M4 gives them references.
+// Silence here would make them look accepted.
+TEST_CASE( "type_checker_rejects_passing_markers_for_now", "[sema][types]" )
+{
+    for( const char* source : {
+             "i32 g( i32 a ) { return a; }\ni32 main() { i32 b = 1; return g( move b ); }\n",
+             "i32 g( i32 a ) { return a; }\ni32 main() { i32 b = 1; return g( ref b ); }\n",
+             "i32 g( i32 a ) { return a; }\ni32 main() { i32 b = 1; return g( out b ); }\n",
+         } )
+    {
+        const Typed p( source );
+
+        INFO( "source: " << source << "\n" << p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "not supported yet" ) != std::string::npos );
     }
 }
 

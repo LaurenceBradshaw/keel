@@ -1,0 +1,12 @@
+// `move x`, `out x`, `ref x`. One node kind, with aux naming which - they are syntactically
+// identical and differ only in what sema will make of them.
+i32 main()
+{
+    i32 a = f( move b );
+    i32 c = f( out b );
+    i32 d = f( ref b );
+    i32 e = f( move b.field );   // `.` binds tighter
+    i32 g = f( move b + c );     // arithmetic binds looser
+    i32 h = move b;              // not only in argument lists
+    return 0;
+}
