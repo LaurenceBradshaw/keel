@@ -72,7 +72,8 @@ Resolution Resolver::run()
 
     for( const Node_id decl : ast_.children( ast_.root() ) )
     {
-        if( ast_.kind( decl ) == Node_kind::Function_decl || ast_.kind( decl ) == Node_kind::Struct_decl )
+        if( ast_.kind( decl ) == Node_kind::Function_decl || ast_.kind( decl ) == Node_kind::Struct_decl ||
+            ast_.kind( decl ) == Node_kind::Var_decl )
         {
             declare( Symbol_id { ast_.aux( decl ) }, decl );
         }
@@ -95,6 +96,22 @@ void Resolver::visit( Node_id id )
     {
     case Node_kind::Error:
         return; // already reported; resolving inside it only cascades
+    case Node_kind::Source_file:
+        for( const Node_id decl : ast_.children( id ) )
+        {
+            // Declared already by the pre-pass. Going through the Var_decl case would declare it a
+            // second time and report it against itself. Functions and structs do not hit this
+            // because their cases do not declare - only Var_decl does.
+            if( ast_.kind( decl ) == Node_kind::Var_decl )
+            {
+                visit( ast_.children( decl )[0] ); // the type annotation
+                visit( ast_.children( decl )[1] ); // the initialiser
+                continue;
+            }
+
+            visit( decl );
+        }
+        return;
     case Node_kind::Block:
         push_scope();
         for( const Node_id child : ast_.children( id ) )
@@ -901,6 +918,93 @@ TEST_CASE( "resolver_does_not_resolve_field_names", "[sema][resolve]" )
     const Node_id field = p.nth( Node_kind::Field_expr, 0 );
     REQUIRE( p.declaration_of( p.nth( Node_kind::Name_expr, 0 ) ) == p.nth( Node_kind::Param_decl, 0 ) );
     REQUIRE( field.is_valid() );
+}
+
+// D18: every top-level declaration is visible throughout the file, so a global is usable above the
+// line that declares it, exactly as a function is.
+TEST_CASE( "resolver_declares_globals_at_file_scope", "[sema][resolve][globals]" )
+{
+    SECTION( "a use inside a function resolves to it" )
+    {
+        const Resolved p( "i32 counter = 1;\ni32 main() { return counter; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.declaration_of( p.nth( Node_kind::Name_expr, 0 ) ) == p.nth( Node_kind::Var_decl, 0 ) );
+    }
+
+    SECTION( "even when the function is written above it" )
+    {
+        const Resolved p( "i32 main() { return counter; }\ni32 counter = 1;\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.declaration_of( p.nth( Node_kind::Name_expr, 0 ) ) == p.nth( Node_kind::Var_decl, 0 ) );
+    }
+
+    // The trap: a global is declared once by the file-scope pre-pass, and visit() must not declare
+    // it a second time. If it does, every global reports "already declared" against itself.
+    SECTION( "a global is not declared twice against itself" )
+    {
+        const Resolved p( "i32 counter = 1;\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.rendered().find( "already declared" ) == std::string::npos );
+    }
+
+    SECTION( "several globals coexist" )
+    {
+        const Resolved p( "i32 first = 1;\ni32 second = 2;\ni32 main() { return first + second; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a global and a function may not share a name" )
+    {
+        const Resolved p( "i32 thing = 1;\ni32 thing() { return 0; }\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "already declared" ) != std::string::npos );
+    }
+
+    SECTION( "nor may two globals" )
+    {
+        const Resolved p( "i32 thing = 1;\ni32 thing = 2;\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    // A local of the same name shadows it, and D19's barrier rules are unchanged by the global
+    // living in the file scope.
+    SECTION( "a local shadows a global" )
+    {
+        const Resolved p( "i32 counter = 1;\ni32 main() { i32 counter = 2; return counter; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.declaration_of( p.nth( Node_kind::Name_expr, 0 ) ) == p.nth( Node_kind::Var_decl, 1 ) );
+    }
+
+    SECTION( "a parameter shadows a global too" )
+    {
+        const Resolved p( "i32 counter = 1;\ni32 take( i32 counter ) { return counter; }\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.declaration_of( p.nth( Node_kind::Name_expr, 0 ) ) == p.nth( Node_kind::Param_decl, 0 ) );
+    }
+
+    SECTION( "and its address can be taken" )
+    {
+        const Resolved p( "i32 counter = 1;\ni32* get() { return &counter; }\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
 }
 
 } // namespace keel

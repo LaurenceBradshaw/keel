@@ -1,0 +1,236 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+int32_t kl_counter_2 = 1;
+uint8_t kl_small_5 = 200;
+double kl_ratio_8 = 1.5;
+bool kl_ready_11 = true;
+int32_t kl_below_15 = -1;
+int32_t kl_blank_17;
+int32_t kl_later_20 = 7;
+
+int32_t kl__read_counter__( void );
+void kl__bump__( void );
+int32_t kl__read_later__( void );
+int32_t* kl__address_of_counter__( void );
+int32_t kl__shadowed__i32( int32_t );
+int32_t kl__main__( void );
+
+int32_t kl__read_counter__( void )
+{
+#line 25 "codegen/globals.kl"
+    return kl_counter_2;
+}
+
+void kl__bump__( void )
+{
+#line 31 "codegen/globals.kl"
+    int32_t kl_t0 = (int32_t) kl_counter_2 + (int32_t) 1;
+    kl_counter_2 = (int32_t) kl_t0;
+}
+
+int32_t kl__read_later__( void )
+{
+#line 36 "codegen/globals.kl"
+    return kl_later_20;
+}
+
+int32_t* kl__address_of_counter__( void )
+{
+#line 43 "codegen/globals.kl"
+    int32_t* kl_t0 = &kl_counter_2;
+    return kl_t0;
+}
+
+int32_t kl__shadowed__i32( int32_t kl_counter_50 )
+{
+#line 49 "codegen/globals.kl"
+    return kl_counter_50;
+}
+
+int32_t kl__main__( void )
+{
+#line 54 "codegen/globals.kl"
+    bool kl_t0 = (int32_t) kl_counter_2 != (int32_t) 1;
+    if ( kl_t0 )
+    {
+        return 1;
+    }
+#line 55 "codegen/globals.kl"
+    bool kl_t1 = (uint8_t) kl_small_5 != (uint8_t) 200;
+    if ( kl_t1 )
+    {
+        return 2;
+    }
+#line 56 "codegen/globals.kl"
+    bool kl_t2 = (double) kl_ratio_8 != (double) 1.5;
+    if ( kl_t2 )
+    {
+        return 3;
+    }
+#line 57 "codegen/globals.kl"
+    bool kl_t3 = (bool) !kl_ready_11;
+    if ( kl_t3 )
+    {
+        return 4;
+    }
+#line 58 "codegen/globals.kl"
+    int32_t kl_t4 = (int32_t) -1;
+    bool kl_t5 = (int32_t) kl_below_15 != (int32_t) kl_t4;
+    if ( kl_t5 )
+    {
+        return 5;
+    }
+#line 59 "codegen/globals.kl"
+    bool kl_t6 = (int32_t) kl_blank_17 != (int32_t) 0;
+    if ( kl_t6 )
+    {
+        return 6;
+    }
+#line 60 "codegen/globals.kl"
+    bool kl_t7 = (int32_t) kl_later_20 != (int32_t) 7;
+    if ( kl_t7 )
+    {
+        return 7;
+    }
+#line 62 "codegen/globals.kl"
+    int32_t kl_t8 = kl__read_counter__(  );
+    bool kl_t9 = (int32_t) kl_t8 != (int32_t) 1;
+    if ( kl_t9 )
+    {
+        return 8;
+    }
+#line 63 "codegen/globals.kl"
+    int32_t kl_t10 = kl__read_later__(  );
+    bool kl_t11 = (int32_t) kl_t10 != (int32_t) 7;
+    if ( kl_t11 )
+    {
+        return 9;
+    }
+#line 66 "codegen/globals.kl"
+    kl__bump__(  );
+#line 67 "codegen/globals.kl"
+    bool kl_t12 = (int32_t) kl_counter_2 != (int32_t) 2;
+    if ( kl_t12 )
+    {
+        return 10;
+    }
+#line 68 "codegen/globals.kl"
+    int32_t kl_t13 = kl__read_counter__(  );
+    bool kl_t14 = (int32_t) kl_t13 != (int32_t) 2;
+    if ( kl_t14 )
+    {
+        return 11;
+    }
+#line 70 "codegen/globals.kl"
+    kl__bump__(  );
+#line 71 "codegen/globals.kl"
+    kl__bump__(  );
+#line 72 "codegen/globals.kl"
+    bool kl_t15 = (int32_t) kl_counter_2 != (int32_t) 4;
+    if ( kl_t15 )
+    {
+        return 12;
+    }
+#line 75 "codegen/globals.kl"
+    kl_counter_2 = (int32_t) 10;
+#line 76 "codegen/globals.kl"
+    int32_t kl_t16 = kl__read_counter__(  );
+    bool kl_t17 = (int32_t) kl_t16 != (int32_t) 10;
+    if ( kl_t17 )
+    {
+        return 13;
+    }
+#line 80 "codegen/globals.kl"
+    int32_t* kl_t18 = kl__address_of_counter__(  );
+    ( *kl_t18 ) = (int32_t) 20;
+#line 81 "codegen/globals.kl"
+    bool kl_t19 = (int32_t) kl_counter_2 != (int32_t) 20;
+    if ( kl_t19 )
+    {
+        return 14;
+    }
+#line 83 "codegen/globals.kl"
+    int32_t* kl_t20 = kl__address_of_counter__(  );
+    int32_t* kl_held_190 = kl_t20;
+#line 85 "codegen/globals.kl"
+    ( *kl_held_190 ) = (int32_t) 30;
+#line 86 "codegen/globals.kl"
+    bool kl_t21 = (int32_t) kl_counter_2 != (int32_t) 30;
+    if ( kl_t21 )
+    {
+        return 15;
+    }
+#line 87 "codegen/globals.kl"
+    int32_t kl_t22 = *kl_held_190;
+    bool kl_t23 = (int32_t) kl_t22 != (int32_t) 30;
+    if ( kl_t23 )
+    {
+        return 16;
+    }
+#line 90 "codegen/globals.kl"
+    int32_t kl_shadow_check_212 = 0;
+#line 92 "codegen/globals.kl"
+    {
+#line 93 "codegen/globals.kl"
+        int32_t kl_counter_215 = 99;
+#line 94 "codegen/globals.kl"
+        kl_shadow_check_212 = (int32_t) kl_counter_215;
+    }
+#line 97 "codegen/globals.kl"
+    bool kl_t24 = (int32_t) kl_shadow_check_212 != (int32_t) 99;
+    if ( kl_t24 )
+    {
+        return 17;
+    }
+#line 98 "codegen/globals.kl"
+    bool kl_t25 = (int32_t) kl_counter_2 != (int32_t) 30;
+    if ( kl_t25 )
+    {
+        return 18;
+    }
+#line 101 "codegen/globals.kl"
+    int32_t kl_t26 = kl__shadowed__i32( (int32_t) 5 );
+    bool kl_t27 = (int32_t) kl_t26 != (int32_t) 5;
+    if ( kl_t27 )
+    {
+        return 19;
+    }
+#line 102 "codegen/globals.kl"
+    bool kl_t28 = (int32_t) kl_counter_2 != (int32_t) 30;
+    if ( kl_t28 )
+    {
+        return 20;
+    }
+#line 105 "codegen/globals.kl"
+    kl_small_5 = (uint8_t) 255;
+#line 106 "codegen/globals.kl"
+    bool kl_t29 = (uint8_t) kl_small_5 != (uint8_t) 255;
+    if ( kl_t29 )
+    {
+        return 21;
+    }
+#line 108 "codegen/globals.kl"
+    kl_ready_11 = (bool) false;
+#line 109 "codegen/globals.kl"
+    if ( kl_ready_11 )
+    {
+        return 22;
+    }
+#line 111 "codegen/globals.kl"
+    kl_ratio_8 = (double) 2.5;
+#line 112 "codegen/globals.kl"
+    bool kl_t30 = (double) kl_ratio_8 != (double) 2.5;
+    if ( kl_t30 )
+    {
+        return 23;
+    }
+#line 114 "codegen/globals.kl"
+    return 0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

@@ -219,6 +219,7 @@ private:
     void declare_signatures_struct_decls();
     void declare_signatures_field_decls();
     void declare_signatures_function_decls();
+    void declare_signatures_global_decls();
 
     void order_structs();
     bool contains_itself( Node_id decl, std::vector<Node_id>& path );
@@ -238,6 +239,7 @@ private:
     void visit_while( Node_id id );
     void visit_for( Node_id id );
     void visit_increment( Node_id id );
+    void visit_global( Node_id id );
 
     // Int, Float and Bool literals with nothing to give them a type - the fallback defaults.
     // Whether context can give this expression a type, rather than it having one of its own.
@@ -305,6 +307,7 @@ void Checker::declare_signatures()
     declare_signatures_field_decls();
     order_structs();
     declare_signatures_function_decls();
+    declare_signatures_global_decls();
 }
 
 void Checker::declare_signatures_struct_decls()
@@ -402,6 +405,26 @@ void Checker::declare_signatures_function_decls()
                 error_at( ast_.span( param_list ), "`main` must not take any parameters" );
             }
         }
+    }
+}
+
+void Checker::declare_signatures_global_decls()
+{
+    for( Node_id child : ast_.children( ast_.root() ) )
+    {
+        if( ast_.kind( child ) == Node_kind::Error )
+        {
+            continue;
+        }
+
+        if( ast_.kind( child ) != Node_kind::Var_decl )
+        {
+            continue;
+        }
+
+        const Node_id var_type_node = ast_.children( child )[0];
+        const Type_id var_type      = type_of_annotation( var_type_node );
+        record( child, var_type );
     }
 }
 
@@ -528,6 +551,26 @@ void Checker::visit( Node_id id )
     case Node_kind::Error:
         return;
 
+    case Node_kind::Source_file:
+    {
+        for( const Node_id child : ast_.children( id ) )
+        {
+            // A file-scope variable is checked differently from a local: its type came from the
+            // signature pass, and its initialiser must be a literal. Everything else - functions
+            // above all - takes the ordinary path, which is what this case replaced when it took
+            // over from the recursing default.
+            if( ast_.kind( child ) == Node_kind::Var_decl )
+            {
+                visit_global( child );
+                continue;
+            }
+
+            visit( child );
+        }
+
+        return;
+    }
+
     case Node_kind::Expr_stmt:
         infer( ast_.children( id )[0] );
         return; // discard the result. D15 already made effectless expressions a parse error
@@ -572,7 +615,7 @@ void Checker::visit( Node_id id )
         return;
 
     default:
-        // Source_file, Block, and every statement not yet given a case of its own.
+        // Block, and every statement not yet given a case of its own.
         for( const Node_id child : ast_.children( id ) )
         {
             visit( child );
@@ -818,6 +861,41 @@ void Checker::visit_increment( Node_id id )
             ast_.span( id ), fmt::format( "no operator `{}` for `{}`", token_kind_spelling( op ), table_.name( operand_type ) )
         );
     }
+}
+
+void Checker::visit_global( Node_id id )
+{
+    const Type_id type = types_[id.v];
+    const Node_id init = ast_.children( id )[1];
+
+    if( table_.is_error( type ) )
+    {
+        return;
+    }
+
+    // A struct literal lowers to a temporary and field assignments, and there is nowhere at C file
+    // scope to put those. Checked before the initialiser so `Point origin;` is caught too.
+    if( table_.is_struct( type ) )
+    {
+        error_at( ast_.span( id ), "a struct cannot be a file-scope variable yet" );
+        return;
+    }
+
+    if( !init.is_valid() )
+    {
+        return; // zero, which C guarantees for file-scope storage
+    }
+
+    if( !is_literal_expression( init ) )
+    {
+        error_at(
+            ast_.span( init ), "a file-scope initialiser must be a literal", "a computed value would have to run before main"
+        );
+
+        return;
+    }
+
+    check( init, type ); // range checking, and the literal adopts the declared type
 }
 
 Type_id Checker::infer( Node_id id )
@@ -3766,6 +3844,144 @@ TEST_CASE( "type_checker_rejects_break_and_continue_outside_a_loop", "[sema][typ
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
+    }
+}
+
+// A file-scope initialiser must be a literal. Not because anything cannot be computed, but because
+// there is no constant folder: the restriction is the honest statement of what the compiler can
+// actually evaluate, and widening it later breaks nothing that compiles under it.
+//
+// It also removes two problems outright. A global cannot name another global, so initialisation
+// order never exists as a question; and no global can hold a type with a destructor, so M3 never
+// has to sequence global teardown.
+TEST_CASE( "type_checker_accepts_a_literal_initialised_global", "[sema][types][globals]" )
+{
+    SECTION( "an integer, taking its type from the annotation" )
+    {
+        const Typed p( "u8 small = 200;\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Int_literal, 0 ) ) == "u8" );
+    }
+
+    SECTION( "the other literal kinds" )
+    {
+        for( const char* head : { "f64 ratio = 1.5;", "bool ready = true;", "u8 letter = 'a';", "i32* address = nullptr;" } )
+        {
+            const Typed p( std::string( head ) + "\ni32 main() { return 0; }\n" );
+
+            INFO( head << "\n" << p.rendered() );
+            REQUIRE( p.clean() );
+        }
+    }
+
+    SECTION( "a negated literal" )
+    {
+        const Typed p( "i32 below = -1;\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "with no initialiser at all" )
+    {
+        const Typed p( "i32 counter;\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // The type has to be recorded before any body is checked, or a function using a global sees
+    // nothing there.
+    SECTION( "a function may use it, and gets its type" )
+    {
+        const Typed p( "u8 small = 200;\nu8 read() { return small; }\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Name_expr, 0 ) ) == "u8" );
+    }
+
+    SECTION( "including one written above it" )
+    {
+        const Typed p( "u8 read() { return small; }\nu8 small = 200;\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "range checking still applies" )
+    {
+        const Typed p( "u8 small = 300;\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "does not fit" ) != std::string::npos );
+    }
+
+    SECTION( "and so does the type of the literal" )
+    {
+        const Typed p( "i32 whole = 1.5;\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+}
+
+TEST_CASE( "type_checker_rejects_a_computed_global_initialiser", "[sema][types][globals]" )
+{
+    // `1 + 1` is obviously constant and is still refused: there is no constant folder, and
+    // pretending otherwise would mean writing one to answer this question.
+    SECTION( "arithmetic" )
+    {
+        const Typed p( "i32 total = 1 + 1;\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "a call" )
+    {
+        const Typed p( "i32 make() { return 1; }\ni32 total = make();\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    // This is the one the rule exists for: allowing it is the static initialisation order fiasco.
+    SECTION( "another global" )
+    {
+        const Typed p( "i32 first = 1;\ni32 second = first;\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "the address of another global" )
+    {
+        const Typed p( "i32 first = 1;\ni32* second = &first;\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    // Not a constant-folding question: a struct literal lowers to a temporary and field
+    // assignments, which cannot appear at C file scope.
+    SECTION( "a struct literal" )
+    {
+        const Typed p( "struct Point { i32 x; };\nPoint origin = Point { 0 };\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() >= 1 );
+    }
+
+    SECTION( "and a struct-typed global at all" )
+    {
+        const Typed p( "struct Point { i32 x; };\nPoint origin;\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() >= 1 );
     }
 }
 

@@ -95,6 +95,7 @@ private:
     void emit_functions();
     void emit_function( Node_id id );
     void emit_main_shim(); // C needs a real main(); Keel's is a mangled symbol
+    void emit_globals();
 
     // Built once and used by the prototype, the definition and the shim. A prototype and its
     // definition disagreeing is the mistake C punishes hardest, so they cannot be written twice.
@@ -150,6 +151,9 @@ private:
     std::string struct_name( Node_id decl ) const;
     std::string field_name( Node_id field ) const;
     std::string lower_literal( Node_id id );
+
+    // A file-scope initialiser, which must produce no statements - see emit_globals.
+    std::string constant_text( Node_id id );
     std::string lower_name( Node_id id );
 
     // `&&` and `||` cannot be an operation over two lowered operands: the right side must not run
@@ -186,6 +190,7 @@ std::string Emitter::run()
 {
     emit_prologue();
     emit_structs();
+    emit_globals();
     emit_prototypes();
     emit_functions();
     emit_main_shim();
@@ -396,6 +401,54 @@ void Emitter::emit_main_shim()
     write_line( fmt::format( "return (int) {}();", symbol ) );
     indent_ -= 4;
     write_line( "}" );
+}
+
+// Not emit_var_decl: that lowers its initialiser with lower(), which emits whatever statements the
+// value needs first. Inside a function those go above the declaration; at file scope there is
+// nowhere to put them. The checker's literal-only rule is what makes this safe, and this is the
+// place that depends on it.
+void Emitter::emit_globals()
+{
+    bool any = false;
+
+    for( const Node_id child : ast_.children( ast_.root() ) )
+    {
+        if( ast_.kind( child ) != Node_kind::Var_decl )
+        {
+            continue;
+        }
+
+        const Type_id     type = types_.type_of( child );
+        const std::string name = mangle_local( interner_.text( Symbol_id { ast_.aux( child ) } ), child.v );
+        const Node_id     init = ast_.children( child )[1];
+
+        // No initialiser is zero, which C guarantees for file-scope storage - so nothing is
+        // written rather than a zero invented here.
+        write_line(
+            init.is_valid() ? fmt::format( "{} {} = {};", c_type( type ), name, constant_text( init ) )
+                            : fmt::format( "{} {};", c_type( type ), name )
+        );
+
+        any = true;
+    }
+
+    if( any )
+    {
+        write_line( "" );
+    }
+}
+
+// A negated literal is a Unary_expr rather than a literal node, and lower_literal asserts on one.
+// lower() is not the answer either - it would emit a temporary, which is the thing file scope
+// cannot hold.
+std::string Emitter::constant_text( Node_id id )
+{
+    if( ast_.kind( id ) == Node_kind::Unary_expr )
+    {
+        return fmt::format( "-{}", lower_literal( ast_.children( id )[0] ) );
+    }
+
+    return lower_literal( id );
 }
 
 void Emitter::emit_statement( Node_id id )

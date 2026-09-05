@@ -102,6 +102,11 @@ private:
     // A speculative *parse* would emit diagnostics for guesses that turn out wrong.
     bool looks_like_declaration();
 
+    // Scans a type followed by the declared name, leaving pos_ just after that name. Shared by
+    // looks_like_declaration, which only wants the answer, and parse_declaration, which needs to
+    // see what follows the name.
+    bool scan_type_and_name();
+
     // Whether peek() could begin an expression. Keeps "expected a statement" for tokens that
     // cannot, rather than letting parse_prefix report the vaguer "expected an expression".
     bool can_start_expression() const;
@@ -559,16 +564,25 @@ Node_id Parser::parse_source_file()
 
 Node_id Parser::parse_declaration()
 {
-    // Only functions exist yet. This will dispatch on `struct`, `enum` and `import`, and will need
-    // lookahead past the name to tell `i32 f() {}` from `i32 x = 5;`.
-    if( check( Token_kind::Identifier ) )
-    {
-        return parse_function_decl();
-    }
-
     if( check_keyword( Keyword::Struct ) )
     {
         return parse_struct_decl();
+    }
+
+    // A function and a file-scope variable both open with a type and a name; only what follows the
+    // name separates them. `(` opens a parameter list, anything else belongs to a variable.
+    //
+    // A failed scan takes the variable path deliberately: `i32 = 1;` is a variable missing its
+    // name, and parse_var_decl says so, where parse_function_decl would complain about a missing
+    // `(` instead.
+    if( check( Token_kind::Identifier ) || check_keyword( Keyword::Const ) )
+    {
+        const u32  saved    = pos_;
+        const bool function = scan_type_and_name() && check( Token_kind::L_paren );
+
+        pos_ = saved;
+
+        return function ? parse_function_decl() : parse_var_decl();
     }
 
     const Span span = peek().span;
@@ -984,6 +998,18 @@ bool Parser::looks_like_declaration()
         return false;
     }
 
+    const u32  saved = pos_;
+    const bool found = scan_type_and_name();
+
+    pos_ = saved;
+    return found;
+}
+
+// Leaves pos_ just after the declared name when it finds one, and restores it otherwise - so a
+// caller wanting only the answer can ignore the cursor, and one wanting to see what follows the
+// name restores it itself.
+bool Parser::scan_type_and_name()
+{
     const u32 saved = pos_;
 
     // A type may open with const: `const i32 x = 0;`.
@@ -1067,10 +1093,14 @@ bool Parser::looks_like_declaration()
     // A keyword here is a name that cannot be one - `i32 out = 1;`. Nothing valid has a type
     // followed by a keyword, so taking the declaration path costs nothing and lets parse_var_decl
     // report the real problem rather than a stray `;`.
-    const bool declaration = check( Token_kind::Identifier ) || check( Token_kind::Keyword );
+    if( !check( Token_kind::Identifier ) && !check( Token_kind::Keyword ) )
+    {
+        pos_ = saved;
+        return false;
+    }
 
-    pos_ = saved;
-    return declaration;
+    advance(); // past the name, so a caller can see what comes after it
+    return true;
 }
 
 Node_id Parser::parse_statement()
@@ -3635,6 +3665,99 @@ TEST_CASE( "parser_parses_break_and_continue", "[parse][loops]" )
 
         INFO( p.dump() );
         REQUIRE( p.has_errors() );
+    }
+}
+
+// At file scope a function and a variable both open with a type and a name; only what follows
+// the name tells them apart. Getting that wrong in either direction is silent - a variable read as
+// a function, or a function read as a variable - so both sides are pinned.
+TEST_CASE( "parser_parses_file_scope_variables", "[parse][globals]" )
+{
+    SECTION( "a variable with an initialiser" )
+    {
+        const Parsed  p( "i32 counter = 1;" );
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Var_decl );
+
+        INFO( p.dump() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( decl.is_valid() );
+        REQUIRE( p.kind( p.child( decl, 0 ) ) == Node_kind::Named_type );
+        REQUIRE( p.kind( p.child( decl, 1 ) ) == Node_kind::Int_literal );
+    }
+
+    SECTION( "and one without" )
+    {
+        const Parsed p( "i32 counter;" );
+
+        INFO( p.dump() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( find_first( p.ast(), p.root(), Node_kind::Var_decl ).is_valid() );
+    }
+
+    // The other side of the same decision: `(` after the name still means a function.
+    SECTION( "a function is still a function" )
+    {
+        const Parsed p( "i32 main() { return 0; }" );
+
+        INFO( p.dump() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( find_first( p.ast(), p.root(), Node_kind::Function_decl ).is_valid() );
+        REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::Var_decl ).is_valid() );
+    }
+
+    SECTION( "a pointer type" )
+    {
+        const Parsed  p( "i32* address = nullptr;" );
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Var_decl );
+
+        INFO( p.dump() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.kind( p.child( decl, 0 ) ) == Node_kind::Pointer_type );
+    }
+
+    // const still parses at file scope, even though nothing enforces it yet.
+    SECTION( "a const type" )
+    {
+        const Parsed  p( "const i32 fixed = 5;" );
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Var_decl );
+
+        INFO( p.dump() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( decl.is_valid() );
+    }
+
+    SECTION( "several, mixed with functions and structs" )
+    {
+        const Parsed p( "i32 first = 1;\n"
+                        "struct Point { i32 x; };\n"
+                        "i32 second = 2;\n"
+                        "i32 main() { return first; }\n"
+                        "i32 third = 3;\n" );
+
+        INFO( p.dump() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.children( p.root() ).size() == 5 );
+    }
+
+    SECTION( "a missing semicolon is reported" )
+    {
+        const Parsed p( "i32 counter = 1" );
+
+        REQUIRE( p.root().is_valid() ); // reached only if parsing terminated
+        REQUIRE( p.has_errors() );
+    }
+
+    // The scan must put the cursor back when it does not find a declaration.
+    SECTION( "junk at file scope still reports once" )
+    {
+        for( const std::string_view source : { "= 1;", "i32 = 1;", "i32;", "1 + 1;" } )
+        {
+            INFO( "source '" << source << "'" );
+            const Parsed p( source );
+
+            REQUIRE( p.root().is_valid() );
+            REQUIRE( p.has_errors() );
+        }
     }
 }
 

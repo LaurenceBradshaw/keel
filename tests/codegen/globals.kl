@@ -1,0 +1,115 @@
+// File-scope variables. Their initialisers must be literals, which is what makes them emittable as
+// C file-scope initialisers directly - and what removes initialisation order as a question, since
+// no global can name another one.
+//
+// Mutable, per D24. The interesting case is the last group: a pointer returned from a function,
+// written through, and the change observed back at the global itself.
+//
+// Every check returns a distinct code, so exit 0 means all of them agreed.
+
+i32 counter = 1;
+u8  small   = 200;
+f64 ratio   = 1.5;
+bool ready  = true;
+i32 below   = -1;
+
+// No initialiser: zero, as C guarantees for file-scope storage.
+i32 blank;
+
+// Declared after the functions that use it, because every top-level declaration is visible
+// throughout the file.
+i32 later = 7;
+
+i32 read_counter()
+{
+    return counter;
+}
+
+// Written from inside a function, and the change outlives the call.
+void bump()
+{
+    counter += 1;
+}
+
+i32 read_later()
+{
+    return later;
+}
+
+// The address of a global is an ordinary pointer, so this is the same `*get() = v` shape a local
+// supports - except the storage outlives every frame.
+i32* address_of_counter()
+{
+    return &counter;
+}
+
+// A parameter of the same name shadows the global rather than colliding with it.
+i32 shadowed( i32 counter )
+{
+    return counter;
+}
+
+i32 main()
+{
+    if ( counter != 1 ) { return 1; }
+    if ( small != 200 ) { return 2; }
+    if ( ratio != 1.5 ) { return 3; }
+    if ( !ready ) { return 4; }
+    if ( below != -1 ) { return 5; }
+    if ( blank != 0 ) { return 6; }
+    if ( later != 7 ) { return 7; }
+
+    if ( read_counter() != 1 ) { return 8; }
+    if ( read_later() != 7 ) { return 9; }
+
+    // A write from inside a function is visible outside it.
+    bump();
+    if ( counter != 2 ) { return 10; }
+    if ( read_counter() != 2 ) { return 11; }
+
+    bump();
+    bump();
+    if ( counter != 4 ) { return 12; }
+
+    // Written directly.
+    counter = 10;
+    if ( read_counter() != 10 ) { return 13; }
+
+    // And through a returned pointer, which is the case a local cannot support: the storage is
+    // still there after address_of_counter has returned.
+    *address_of_counter() = 20;
+    if ( counter != 20 ) { return 14; }
+
+    i32* held = address_of_counter();
+
+    *held = 30;
+    if ( counter != 30 ) { return 15; }
+    if ( *held != 30 ) { return 16; }
+
+    // A local shadows the global for the rest of the block, and the global is unchanged by it.
+    i32 shadow_check = 0;
+
+    {
+        i32 counter = 99;
+        shadow_check = counter;
+    }
+
+    if ( shadow_check != 99 ) { return 17; }
+    if ( counter != 30 ) { return 18; }
+
+    // A parameter shadows it too.
+    if ( shadowed( 5 ) != 5 ) { return 19; }
+    if ( counter != 30 ) { return 20; }
+
+    // Globals of other types are writable in the same way.
+    small = 255;
+    if ( small != 255 ) { return 21; }
+
+    ready = false;
+    if ( ready ) { return 22; }
+
+    ratio = 2.5;
+    if ( ratio != 2.5 ) { return 23; }
+
+    return 0;
+}

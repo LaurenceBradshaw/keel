@@ -883,6 +883,34 @@ none of it is needed for `fib(20)`.
 
 ### Ahead of M3
 
+File-scope variables work end to end. Their initialisers must be **literals** —
+not because nothing else could be computed, but because there is no constant
+folder, and that is the honest statement of what the compiler can evaluate. The
+restriction removes two problems rather than deferring them: a global cannot
+name another global, so initialisation order never exists as a question, and no
+global can hold a type with a destructor, so M3 never has to sequence global
+teardown. It widens later to "folds to a constant" as a one-predicate swap once
+constant-overflow rejection builds the folder, and nothing compiling under the
+narrow rule changes meaning when it does.
+
+The parser tells a function from a variable by scanning past the type and name
+and looking for `(`; a failed scan takes the variable path deliberately, so
+`i32 = 1;` reports a missing name rather than a missing parameter list. Reading
+a global needed no emitter change at all — `lower_name` already mangles from the
+declaration node, and a global's declaration is a `Var_decl` like any other.
+Writing one needed `emit_globals` to use `lower_literal` rather than `lower`,
+because `lower` emits the statements a value needs first and file scope has
+nowhere to put them.
+
+Two traps, both from the same shape: a `Source_file` case added to a `visit`
+whose `default:` used to recurse must **keep recursing** for everything it does
+not handle. In the resolver, omitting the pre-pass exclusion makes every global
+report "already declared" against itself. In the type checker, omitting the
+fallthrough silently stops every function body from being checked at all — a
+program with three mistakes in `main` reported one, from the resolver. Both are
+the recurring lesson: a switch that replaces a recursing default inherits the
+obligation to recurse.
+
 `break` and `continue` work end to end. The checker scopes a loop-depth counter
 to the loop *body*, so `break` in a bare block, after a loop has closed, or
 inside an `if` that is not itself in a loop are all rejected — and the cases live
@@ -970,6 +998,27 @@ reported both the unknown name and a second line about the literal. The rule is
 that the *cause* is the diagnostic worth printing.
 
 ### Debts to pay along the way
+
+- **`const` is parsed and discarded.** `type_of_annotation` unwraps `Const_type` and returns the
+  inner type, and `Type` carries no const bit, so every one of these compiles today: assigning to
+  a `const` local, incrementing one, compound-assigning one, assigning to a `const` parameter,
+  writing through a `const T*`, and mutating a field of a `const` struct.
+
+  This is a live **§5.1 violation**, and one of the worse shapes of it: `const i32 x = 1; x = 2;`
+  is identical syntax to C++ with the opposite meaning, silently — a reader writes `const` and
+  believes it. §5.1's own prescription would be to reject the keyword outright until it is
+  enforced, which is cheap; that was considered and deliberately declined, on the grounds that the
+  churn is not worth paying twice.
+
+  The enforcement belongs at **M4**, where `const T&` and `T&` parameters arrive: the moment
+  pointers are involved the change stops being one bit on `Type` and becomes a decision about
+  `const i32*` versus `i32* const`, which is entangled with references. Until then this is a known
+  hole, not an oversight.
+
+  One consequence to respect meanwhile: **do not emit C `const`** for anything, including a
+  `const` global. A Keel-legal write would then fail in `cc` against generated code, and the
+  golden runner's `-Werror` build would surface it as `assignment of read-only variable
+  'kl_c_1'` — the C compiler doing the checking Keel declined to do, with the worse message.
 
 - **Narrowing `cast` is blocked, not implemented.** D28 defines `cast` as checking the value at
   run time and trapping when it does not fit, and nothing in the pipeline can emit that check yet.
