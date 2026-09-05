@@ -718,7 +718,7 @@ none of them can block work indefinitely.
 | Question | Decide by |
 | --- | --- |
 | Do we keep `?` for error propagation, or find a spelling from the C family? It is the only construct in the language with no C++ heritage (D6). | M5 |
-| **What happens on integer overflow?** D5 is often mistaken for an answer here, and is not: it governs conversions *between* types, not arithmetic *within* one. `u32 a = 0; a - 1;` involves no conversion, so D5 is silent and the result is 4294967295. §7.7's `-fwrapv` currently makes signed overflow wrap silently too — defined, which is better than C++'s UB, but still a wrong answer delivered quietly. Underflow is not a separate question: `u32 a = 0; a - 1;` is overflow off the bottom, and one decision covers both. Float underflow to denormals is IEEE's business and is not a trap candidate. The options are wrap (status quo — fast, silent, a wrong answer delivered quietly); trap always (a predicted branch per operation, and some lost vectorisation); trap in debug only, as Rust does (free in production, but tests and production then compute different answers); saturate (surprising, and wrong for a systems language); or trap by default with `+% -% *%` to opt out. **Decided: wrap.** A branch per operation genuinely inhibits auto-vectorisation, and Keel's performance claim makes that a real cost rather than a theoretical one — and wrapping is what every programmer was taught happens. Silence is answered two ways. **Compile-time rejection of constant overflow** — `u32 d = 1 - 2;` is an error rather than 4294967295 — is free, backend-independent, and can land now. **Opt-in runtime checking** is a frontend feature, not a `cc` flag: passing `-fsanitize=signed-integer-overflow` through to `$CC` would work today and evaporate with the backend, which is precisely the coupling §2.2 forbids. The frontend decides where a check belongs and each backend spells it — `__builtin_add_overflow` in C, `llvm.sadd.with.overflow` in LLVM. That makes it **KIR work at M3**: a checked add is an instruction, and building it into the AST-walking emitter first means building it twice. A sanitiser flag pass-through is a fine convenience until then, but it is not the design. With no trapping default there is nothing to opt out of, so `+%` is not needed. Keep `-fwrapv`, so the wrap is defined rather than UB. A manifesto that claims safety by default cannot leave this at "whatever `-fwrapv` does". D5 now depends on the answer: `T op T` yields `T` (§6.4), so `u8 + u8` can overflow where C++'s promotion to `int` could not — that is the one `†` divergence in the §6.3 audit, and whether it traps or wraps decides whether the divergence is loud or silent. | **Decided: wrap.** Constant-overflow rejection lands before M3; runtime checking is KIR work at M3. |
+| **What happens on integer overflow?** D5 is often mistaken for an answer here, and is not: it governs conversions *between* types, not arithmetic *within* one. `u32 a = 0; a - 1;` involves no conversion, so D5 is silent and the result is 4294967295. §7.7's `-fwrapv` currently makes signed overflow wrap silently too — defined, which is better than C++'s UB, but still a wrong answer delivered quietly. Underflow is not a separate question: `u32 a = 0; a - 1;` is overflow off the bottom, and one decision covers both. Float underflow to denormals is IEEE's business and is not a trap candidate. The options are wrap (status quo — fast, silent, a wrong answer delivered quietly); trap always (a predicted branch per operation, and some lost vectorisation); trap in debug only, as Rust does (free in production, but tests and production then compute different answers); saturate (surprising, and wrong for a systems language); or trap by default with `+% -% *%` to opt out. **Decided: wrap.** A branch per operation genuinely inhibits auto-vectorisation, and Keel's performance claim makes that a real cost rather than a theoretical one — and wrapping is what every programmer was taught happens. Silence is answered two ways. **Compile-time rejection of constant overflow** — `u32 d = 1 - 2;` is an error rather than 4294967295 — is free, backend-independent, and can land now. **Opt-in runtime checking** is a frontend feature, not a `cc` flag: passing `-fsanitize=signed-integer-overflow` through to `$CC` would work today and evaporate with the backend, which is precisely the coupling §2.2 forbids. The frontend decides where a check belongs and each backend spells it — `__builtin_add_overflow` in C, `llvm.sadd.with.overflow` in LLVM. That makes it **KIR work at M3**: a checked add is an instruction, and building it into the AST-walking emitter first means building it twice. A sanitiser flag pass-through is a fine convenience until then, but it is not the design. With no trapping default there is nothing to opt out of, so `+%` is not needed. Keep `-fwrapv`, so the wrap is defined rather than UB. A manifesto that claims safety by default cannot leave this at "whatever `-fwrapv` does". D5 now depends on the answer: `T op T` yields `T` (§6.4), so `u8 + u8` can overflow where C++'s promotion to `int` could not — that is the one `†` divergence in the §6.3 audit, and whether it traps or wraps decides whether the divergence is loud or silent. | **Decided: wrap.** Constant-overflow rejection is **done**; runtime checking is KIR work at M3. |
 | **What, if anything, does `->` come to mean?** Free, with nothing assigned. D22 freed the token and the three call-site markers it was a candidate for are keywords instead: `move x` (transfers, D2), `out x` (the callee assigns it, and it need not be initialised first) and `ref x` (initialised, and may be modified) — C#'s distinction, which earns both. `->` stays a hard error naming `.`, and the token stays lexed so that error can be given by name. Rejected along the way: `socket -> connection` as a move expression (competes with `=`); a state-machine DSL (a domain feature in a language about ownership, and M5's exhaustive `switch` already makes illegal transitions a compile error); and scope injection, `user -> { greet( name ) }` — Pascal's and JavaScript's `with`, which JS deprecated in strict mode because you cannot tell a field from a local and adding a field silently changes the meaning of code that already compiled. That is D19's action-at-a-distance with a larger blast radius. | No deadline — it costs nothing to leave free |
 | ~~**What is a cast?**~~ **Answered — D28.** `cast<T>( x )` preserves the value, `wrap<T>( x )` keeps the low bits, both keywords, table in §6.5. What remains open is narrower: `cast` is *defined* to check the value at run time and nothing can do that yet, so narrowing `cast` is refused rather than silently truncating. See the debt in §15. | M1 — done |
 | `a < b > ( c )` — a call to a generic, or two comparisons? C++ needs `template` disambiguators, Rust needs turbofish (`a::<b>(c)`). D15 does not help: both readings are effectful. | M6 |
@@ -882,6 +882,60 @@ The remaining v0 syntax (`struct`, `enum`, `match`, generics, `?`) is M2 onward;
 none of it is needed for `fib(20)`.
 
 ### Ahead of M3
+
+With the folder in place the file-scope initialiser rule widened from "a
+literal" to "a constant expression": `i32 seconds_per_hour = 60 * 60;` and
+`u32 all_ones = wrap<u32>( 0 - 1 );` now work. The emitter needed no folding for
+it — C accepts an arithmetic constant expression at file scope too, so
+`constant_text` *prints* the tree with the same operand casts `lower_binary`
+uses, and nothing has to run before main. The two agree on the answer because
+constant rejection has already proved the result fits, so C's wider
+intermediates cannot reach a different one; and C truncates division toward zero
+and takes the remainder's sign from the dividend, which is what the folder's
+sign-magnitude arithmetic does on its own.
+
+`&&` and `||` stay out. Their ordinary lowering emits control flow, and keeping
+them out means the file-scope path never has to answer whether printing both
+sides is sound. They buy nothing in an initialiser.
+
+Constant overflow is rejected at compile time. §12 decided arithmetic *wraps*
+at run time, which leaves the case where the answer is known before the program
+runs — and wrapping it there is a wrong answer delivered in silence. A small
+folder over literal arithmetic answers what an expression's value is, and the
+value is measured against the type **the operation happens in**, at every node
+rather than only at the end: `i32 d = 2000000000 + 2000000000 - 2000000000;`
+fits an i32 comfortably and the addition on the way does not.
+
+Three things it catches beyond overflow proper, all undefined behaviour in C
+rather than merely wrong: division and remainder by a constant zero, and a shift
+count that is not less than the width. Float constants are folded too, where an
+infinity from finite operands is the same failure — `fits_float` answers true
+unconditionally for f64, so the finiteness test is what catches it.
+
+Only `+ - * / % << >>` fold. `&`, `|`, `^` and `~` cannot take a value outside
+the type their operands came from, so there is nothing for them to overflow and
+"not constant" is the correct answer for them rather than a shortcut. The folder
+carries `overflowed` separately from `constant`, because
+`18446744073709551615 * 2` is entirely constant and has left what u64 can carry
+— collapsing the two would let the largest constants through in silence, which
+is backwards. `const` variables are deliberately not constants: that needs
+`const` to be enforced, which is M4.
+
+Deliberate wrapping keeps its spelling, and needed no special case:
+`wrap<u32>( 0 - 1 )` is legal because `wrap` **infers** its operand instead of
+pushing the target type in, so the fold happens in i32 where -1 fits.
+`cast<u32>( 0 - 1 )` pushes the type in and is correctly refused. The two
+operators already disagreed in exactly the right way — that falls out of D28.
+
+This is **not** constant folding for codegen. The emitter still emits `1 - 2`;
+the value is computed only to decide whether to complain. The optimisation is
+KIR's, later.
+
+Doing it turned up a fourth instance of the inferring-where-checking-belonged
+family: a shift's result type is its *left* operand's (§6.4), and no expectation
+flowed there, so `u32 d = 1 << 4;` settled the literal on i32 and was then
+refused for being one. Fixed with the shift work, since the shift rule would
+otherwise have been measuring against the wrong type.
 
 File-scope variables work end to end. Their initialisers must be **literals** —
 not because nothing else could be computed, but because there is no constant

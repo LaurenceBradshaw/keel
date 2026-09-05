@@ -1,0 +1,25 @@
+// A constant whose value is already known cannot be allowed to wrap silently: §12 decided that
+// arithmetic wraps at run time, and this is the case where the answer exists before the program
+// does. Division by zero and an out-of-range shift are undefined in C rather than merely wrong,
+// and are just as knowable.
+i32 main()
+{
+    u32 below = 1 - 2;
+    u8  over = 200 + 100;
+    i32 wide = 2000000000 * 2;
+    i32 midway = 2000000000 + 2000000000 - 2000000000;
+    u64 enormous = 18446744073709551615 * 2;
+
+    i32 divided = 1 / 0;
+    i32 remainder = 1 % 0;
+    i32 computed = 1 / ( 3 - 3 );
+    f64 real = 1.0 / 0.0;
+
+    i32 shifted = 1 << 40;
+    u32 exact = 1 << 32;
+    i32 backwards = 1 << -1;
+
+    f32 huge = 1e30 * 1e30;
+
+    return 0;
+}

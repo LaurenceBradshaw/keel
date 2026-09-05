@@ -3,6 +3,9 @@
 #include "lex/token.h"
 
 #include <algorithm>
+#include <cmath>
+#include <limits>
+#include <optional>
 #include <unordered_set>
 
 namespace keel
@@ -178,6 +181,69 @@ Conversion conversion_for( Type_kind from, Type_kind to )
     return Conversion::None;
 }
 
+// A folded constant, in the sign-magnitude pair fits() already takes. §12 decided that arithmetic
+// wraps at run time; a constant is the case where the answer is known before the program runs, and
+// wrapping it there would be a wrong answer delivered in silence.
+//
+// `overflowed` is not the same as not being constant: `18446744073709551615 * 2` is entirely
+// constant and has left what u64 can carry, which overflows every Keel type there is. Losing that
+// distinction would let the largest constants through in silence, which is backwards.
+struct Constant
+{
+    u64  magnitude = 0;
+    bool negative  = false;
+};
+
+struct Folded
+{
+    bool     constant   = false;
+    bool     overflowed = false;
+    Constant value;
+};
+
+constexpr Folded not_constant()
+{
+    return Folded {};
+}
+
+constexpr Folded too_large()
+{
+    return Folded { true, true, Constant {} };
+}
+
+// Zero has no sign. Without this `0 - 0` folds to a negative zero, which no type holds.
+constexpr Folded folded( u64 magnitude, bool negative )
+{
+    return Folded { true, false, Constant { magnitude, magnitude == 0 ? false : negative } };
+}
+
+Folded add_constants( Constant a, Constant b )
+{
+    if( a.negative == b.negative )
+    {
+        if( a.magnitude > std::numeric_limits<u64>::max() - b.magnitude )
+        {
+            return too_large();
+        }
+
+        return folded( a.magnitude + b.magnitude, a.negative );
+    }
+
+    // Opposite signs: the larger magnitude decides both the size and the sign of the answer.
+    return a.magnitude >= b.magnitude ? folded( a.magnitude - b.magnitude, a.negative )
+                                      : folded( b.magnitude - a.magnitude, b.negative );
+}
+
+Folded multiply_constants( Constant a, Constant b )
+{
+    if( a.magnitude != 0 && b.magnitude > std::numeric_limits<u64>::max() / a.magnitude )
+    {
+        return too_large();
+    }
+
+    return folded( a.magnitude * b.magnitude, a.negative != b.negative );
+}
+
 // The help line for an operand kind. Empty where the message above it already says enough.
 std::string_view operand_requirement( Operands operands )
 {
@@ -245,6 +311,9 @@ private:
     // Whether context can give this expression a type, rather than it having one of its own.
     bool is_literal_expression( Node_id id ) const;
 
+    // What may initialise a file-scope variable: what C also accepts as a constant expression.
+    bool is_constant_expression( Node_id id ) const;
+
     Type_id infer_literal( Node_id id );
 
     // The bidirectional half (L5): a literal adopts `expected` when its value fits, which is what
@@ -265,6 +334,14 @@ private:
     Type_id infer_struct_literal( Node_id id );
 
     Type_id infer_cast( Node_id id );
+
+    // Constant rejection (§12). fold_* answer what an expression's value is when it is made only
+    // of literals; check_constant decides whether that value can exist in the type the operation
+    // happens in, and record_constant is the two together.
+    Folded             fold_integer( Node_id id ) const;
+    std::optional<f64> fold_float( Node_id id ) const;
+    bool               check_constant( Node_id id, Type_id type );
+    Type_id            record_constant( Node_id id, Type_id type );
 
     // Walks an expression only for the errors inside it, in a context that has already failed.
     void absorb( Node_id id );
@@ -886,10 +963,12 @@ void Checker::visit_global( Node_id id )
         return; // zero, which C guarantees for file-scope storage
     }
 
-    if( !is_literal_expression( init ) )
+    if( !is_constant_expression( init ) )
     {
         error_at(
-            ast_.span( init ), "a file-scope initialiser must be a literal", "a computed value would have to run before main"
+            ast_.span( init ),
+            "a file-scope initialiser must be a constant expression",
+            "it may use literals and arithmetic over them, but nothing that has to run"
         );
 
         return;
@@ -1007,6 +1086,63 @@ bool Checker::is_literal_expression( Node_id id ) const
 
         return operand == Node_kind::Int_literal || operand == Node_kind::Float_literal;
     }
+
+    default:
+        return false;
+    }
+}
+
+// A file-scope initialiser has to be something C will accept as a constant expression too, since
+// that is what lets the emitter print it rather than needing code to run before main. Literals and
+// arithmetic over them qualify; anything that loads, calls or takes an address does not.
+//
+// `&&` and `||` are excluded deliberately. Their ordinary lowering emits control flow - the right
+// side must not run unless the left demands it - and keeping them out means the file-scope path
+// never has to answer whether printing both sides is sound. They buy nothing in an initialiser.
+bool Checker::is_constant_expression( Node_id id ) const
+{
+    if( !id.is_valid() )
+    {
+        return false;
+    }
+
+    switch( ast_.kind( id ) )
+    {
+    case Node_kind::Int_literal:
+    case Node_kind::Float_literal:
+    case Node_kind::Bool_literal:
+    case Node_kind::Char_literal:
+    case Node_kind::Null_literal:
+        return true;
+
+    case Node_kind::Unary_expr:
+        // `&x` is an address and `*p` a load; neither is a value known here.
+        switch( static_cast<Token_kind>( ast_.aux( id ) ) )
+        {
+        case Token_kind::Minus:
+        case Token_kind::Plus:
+        case Token_kind::Tilde:
+        case Token_kind::Bang:
+            return is_constant_expression( ast_.children( id )[0] );
+
+        default:
+            return false;
+        }
+
+    case Node_kind::Binary_expr:
+    {
+        const Token_kind op = static_cast<Token_kind>( ast_.aux( id ) );
+
+        if( op == Token_kind::Amp_amp || op == Token_kind::Pipe_pipe )
+        {
+            return false;
+        }
+
+        return is_constant_expression( ast_.children( id )[0] ) && is_constant_expression( ast_.children( id )[1] );
+    }
+
+    case Node_kind::Cast_expr:
+        return is_constant_expression( ast_.children( id )[1] );
 
     default:
         return false;
@@ -1358,7 +1494,7 @@ Type_id Checker::infer_binary( Node_id id )
 
     if( rule->result == Result::Left )
     {
-        return record( id, lhs_type );
+        return record_constant( id, lhs_type );
     }
 
     const Type_id common = table_.arithmetic_result( lhs_type, rhs_type );
@@ -1368,7 +1504,7 @@ Type_id Checker::infer_binary( Node_id id )
         return reject( {} );
     }
 
-    return record( id, rule->result == Result::Bool ? bool_type : common );
+    return record_constant( id, rule->result == Result::Bool ? bool_type : common );
 }
 
 Type_id Checker::infer_unary( Node_id id )
@@ -1441,7 +1577,7 @@ Type_id Checker::infer_unary( Node_id id )
         return reject( "negation needs a signed type" );
     }
 
-    return record( id, operand_type );
+    return record_constant( id, operand_type );
 }
 
 Node_id Checker::find_field( Type_id type, Symbol_id name ) const
@@ -1748,10 +1884,38 @@ Type_id Checker::check( Node_id id, Type_id expected )
         if( rule != nullptr && rule->result == Result::Common && is_literal_expression( ast_.children( id )[0] ) &&
             is_literal_expression( ast_.children( id )[1] ) )
         {
+            const std::size_t before = diags_.error_count();
+
             check( ast_.children( id )[0], expected );
             check( ast_.children( id )[1], expected );
 
-            return record( id, expected );
+            // An operand that did not fit has already been reported, and it is the cause. Folding
+            // the whole thing would say the same thing again with a different number: `i8 d = 0 -
+            // 200;` would complain about `200` and then about `-200`.
+            if( diags_.error_count() != before )
+            {
+                return record( id, expected );
+            }
+
+            return record_constant( id, expected );
+        }
+
+        // A shift's result type is its *left* operand's (§6.4), so that is the only operand an
+        // expectation flows into - the count is a width, not a value in the same type. Without
+        // this `u32 d = 1 << 4;` settles the literal on i32 and is then refused for being one.
+        if( rule != nullptr && rule->result == Result::Left && is_literal_expression( ast_.children( id )[0] ) )
+        {
+            const std::size_t before = diags_.error_count();
+
+            check( ast_.children( id )[0], expected );
+            infer( ast_.children( id )[1] );
+
+            if( diags_.error_count() != before )
+            {
+                return record( id, expected );
+            }
+
+            return record_constant( id, expected );
         }
 
         break;
@@ -1846,6 +2010,304 @@ Type_id Checker::type_of_annotation( Node_id id )
         // Error nodes, and anything the parser puts in type position that is not a type.
         return table_.builtin( Type_kind::Error );
     }
+}
+
+// Only + - * / % << >> fold. `&`, `|`, `^` and `~` cannot take a value outside the type their
+// operands came from, so there is nothing for them to overflow and nothing here to check - saying
+// "not constant" for those is the correct answer, not a shortcut.
+Folded Checker::fold_integer( Node_id id ) const
+{
+    if( !id.is_valid() )
+    {
+        return not_constant();
+    }
+
+    // A node already reported as wrong contributes nothing. Folding through it would report the
+    // same mistake again from every operation that encloses it.
+    //
+    // is_valid() first, and it is not redundant: is_error() answers true for an unrecorded type
+    // too, and the node being folded is unrecorded by definition - record_constant runs before the
+    // record. Without this the guard rejects every node it is asked about.
+    if( id.v < types_.size() && types_[id.v].is_valid() && table_.is_error( types_[id.v] ) )
+    {
+        return not_constant();
+    }
+
+    switch( ast_.kind( id ) )
+    {
+    case Node_kind::Char_literal: // a code point is an integer value
+    case Node_kind::Int_literal:
+    {
+        const Literal_id value { ast_.aux( id ) };
+
+        // A literal the lexer could not scan has no value recorded. It reported there.
+        return value.is_valid() ? folded( literals_.integer( value ), false ) : not_constant();
+    }
+
+    case Node_kind::Unary_expr:
+    {
+        const Folded operand = fold_integer( ast_.children( id )[0] );
+
+        if( !operand.constant || operand.overflowed )
+        {
+            return operand;
+        }
+
+        switch( static_cast<Token_kind>( ast_.aux( id ) ) )
+        {
+        case Token_kind::Minus:
+            return folded( operand.value.magnitude, !operand.value.negative );
+
+        case Token_kind::Plus:
+            return operand;
+
+        default:
+            return not_constant();
+        }
+    }
+
+    case Node_kind::Binary_expr:
+    {
+        const Folded left  = fold_integer( ast_.children( id )[0] );
+        const Folded right = fold_integer( ast_.children( id )[1] );
+
+        if( !left.constant || !right.constant )
+        {
+            return not_constant();
+        }
+
+        if( left.overflowed || right.overflowed )
+        {
+            return too_large();
+        }
+
+        const Constant a = left.value;
+        const Constant b = right.value;
+
+        switch( static_cast<Token_kind>( ast_.aux( id ) ) )
+        {
+        case Token_kind::Plus:
+            return add_constants( a, b );
+
+        case Token_kind::Minus:
+            return add_constants( a, Constant { b.magnitude, b.magnitude != 0 && !b.negative } );
+
+        case Token_kind::Star:
+            return multiply_constants( a, b );
+
+        // Division truncates toward zero, and the remainder takes the sign of the dividend - which
+        // is what sign-magnitude does on its own. check_constant reports the zero divisor.
+        case Token_kind::Slash:
+            return b.magnitude == 0 ? not_constant() : folded( a.magnitude / b.magnitude, a.negative != b.negative );
+
+        case Token_kind::Percent:
+            return b.magnitude == 0 ? not_constant() : folded( a.magnitude % b.magnitude, a.negative );
+
+        case Token_kind::Less_less:
+            // An out-of-range count is reported by check_constant; 1ull << 64 is undefined here
+            // too, so the guard protects the compiler as much as the program.
+            if( b.negative || b.magnitude >= 64 )
+            {
+                return not_constant();
+            }
+
+            return multiply_constants( a, Constant { 1ull << b.magnitude, false } );
+
+        case Token_kind::Greater_greater:
+            if( b.negative || b.magnitude >= 64 || a.negative )
+            {
+                return not_constant();
+            }
+
+            return folded( a.magnitude >> b.magnitude, false );
+
+        default:
+            return not_constant();
+        }
+    }
+
+    default:
+        return not_constant();
+    }
+}
+
+std::optional<f64> Checker::fold_float( Node_id id ) const
+{
+    // is_valid() first, for the same reason as fold_integer: an unrecorded type reads as an error.
+    if( !id.is_valid() || ( id.v < types_.size() && types_[id.v].is_valid() && table_.is_error( types_[id.v] ) ) )
+    {
+        return std::nullopt;
+    }
+
+    switch( ast_.kind( id ) )
+    {
+    case Node_kind::Float_literal:
+    {
+        const Literal_id value { ast_.aux( id ) };
+
+        return value.is_valid() ? std::optional<f64>( literals_.floating( value ) ) : std::nullopt;
+    }
+
+    case Node_kind::Unary_expr:
+    {
+        const std::optional<f64> operand = fold_float( ast_.children( id )[0] );
+
+        if( !operand )
+        {
+            return std::nullopt;
+        }
+
+        switch( static_cast<Token_kind>( ast_.aux( id ) ) )
+        {
+        case Token_kind::Minus:
+            return -*operand;
+
+        case Token_kind::Plus:
+            return operand;
+
+        default:
+            return std::nullopt;
+        }
+    }
+
+    case Node_kind::Binary_expr:
+    {
+        const std::optional<f64> left  = fold_float( ast_.children( id )[0] );
+        const std::optional<f64> right = fold_float( ast_.children( id )[1] );
+
+        if( !left || !right )
+        {
+            return std::nullopt;
+        }
+
+        switch( static_cast<Token_kind>( ast_.aux( id ) ) )
+        {
+        case Token_kind::Plus:
+            return *left + *right;
+
+        case Token_kind::Minus:
+            return *left - *right;
+
+        case Token_kind::Star:
+            return *left * *right;
+
+        case Token_kind::Slash:
+            return *right == 0.0 ? std::nullopt : std::optional<f64>( *left / *right );
+
+        default:
+            return std::nullopt;
+        }
+    }
+
+    default:
+        return std::nullopt;
+    }
+}
+
+bool Checker::check_constant( Node_id id, Type_id type )
+{
+    const bool integer  = table_.is_integer( type );
+    const bool floating = table_.is_float( type );
+
+    if( !integer && !floating )
+    {
+        return true; // bool, pointers, structs: nothing here can overflow
+    }
+
+    // These two are about the operator rather than the value, so they apply even when what is
+    // being divided or shifted is not itself a constant.
+    if( ast_.kind( id ) == Node_kind::Binary_expr )
+    {
+        const Token_kind op    = static_cast<Token_kind>( ast_.aux( id ) );
+        const Node_id    right = ast_.children( id )[1];
+
+        if( op == Token_kind::Slash || op == Token_kind::Percent )
+        {
+            const Folded divisor = fold_integer( right );
+
+            const bool zero = integer ? ( divisor.constant && !divisor.overflowed && divisor.value.magnitude == 0 )
+                                      : ( fold_float( right ).value_or( 1.0 ) == 0.0 );
+
+            if( zero )
+            {
+                error_at( ast_.span( id ), op == Token_kind::Percent ? "remainder by zero" : "division by zero" );
+                return false;
+            }
+        }
+
+        if( op == Token_kind::Less_less || op == Token_kind::Greater_greater )
+        {
+            const Folded count = fold_integer( right );
+            const u8     width = table_.get( type ).width;
+
+            if( count.constant && ( count.overflowed || count.value.negative || count.value.magnitude >= width ) )
+            {
+                error_at(
+                    ast_.span( right ),
+                    "the shift count is out of range",
+                    fmt::format(
+                        "`{}` is {} bits wide, so the count must be between 0 and {}", table_.name( type ), width, width - 1
+                    )
+                );
+
+                return false;
+            }
+        }
+    }
+
+    if( floating )
+    {
+        const std::optional<f64> value = fold_float( id );
+
+        // An infinity from finite operands is an overflow, and f64 has no range check of its own
+        // to catch it.
+        if( value && ( !std::isfinite( *value ) || !table_.fits_float( *value, type ) ) )
+        {
+            error_at( ast_.span( id ), fmt::format( "`{}` does not fit in `{}`", *value, table_.name( type ) ) );
+            return false;
+        }
+
+        return true;
+    }
+
+    const Folded value = fold_integer( id );
+
+    if( !value.constant )
+    {
+        return true;
+    }
+
+    if( value.overflowed )
+    {
+        error_at( ast_.span( id ), fmt::format( "this constant does not fit in `{}`", table_.name( type ) ) );
+        return false;
+    }
+
+    if( !table_.fits( value.value.magnitude, value.value.negative, type ) )
+    {
+        error_at(
+            ast_.span( id ),
+            fmt::format(
+                "`{}{}` does not fit in `{}`", value.value.negative ? "-" : "", value.value.magnitude, table_.name( type )
+            )
+        );
+
+        return false;
+    }
+
+    return true;
+}
+
+// Recording the error type on a rejected constant is what stops the enclosing operation folding
+// through it and reporting the same mistake again.
+Type_id Checker::record_constant( Node_id id, Type_id type )
+{
+    if( !check_constant( id, type ) )
+    {
+        return record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    return record( id, type );
 }
 
 // A literal is skipped: there is nothing inside one to be wrong, and its only complaint is that
@@ -3929,18 +4391,73 @@ TEST_CASE( "type_checker_accepts_a_literal_initialised_global", "[sema][types][g
     }
 }
 
-TEST_CASE( "type_checker_rejects_a_computed_global_initialiser", "[sema][types][globals]" )
+// The rule is what the compiler can actually evaluate, and since the constant folder landed that
+// is more than a bare literal. C accepts arithmetic constant expressions at file scope too, so the
+// emitter can print the expression rather than needing a value computed for it.
+TEST_CASE( "type_checker_accepts_a_constant_expression_global", "[sema][types][globals][constants]" )
 {
-    // `1 + 1` is obviously constant and is still refused: there is no constant folder, and
-    // pretending otherwise would mean writing one to answer this question.
     SECTION( "arithmetic" )
     {
-        const Typed p( "i32 total = 1 + 1;\ni32 main() { return 0; }\n" );
+        const Typed p( "i32 limit = 60 * 60;\ni32 main() { return limit; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "the operators that fold, and the ones that cannot overflow" )
+    {
+        for( const char* head :
+             { "i32 a = 1 + 2 * 3;",
+               "i32 b = ( 1 + 2 ) * 3;",
+               "u8  c = 255 & 15;",
+               "u32 d = 1 << 4;",
+               "i32 e = ~0;",
+               "i32 f = -( 3 * 3 );",
+               "i32 g = 7 % 3;",
+               "f64 h = 1.5 * 2.0;",
+               "bool i = 1 < 2;" } )
+        {
+            const Typed p( std::string( head ) + "\ni32 main() { return 0; }\n" );
+
+            INFO( head << "\n" << p.rendered() );
+            REQUIRE( p.clean() );
+        }
+    }
+
+    // The idiom for a deliberately wrapped constant, now writable where it is most wanted.
+    SECTION( "a wrap, which is how an all-ones mask is spelled" )
+    {
+        const Typed p( "u32 mask = wrap<u32>( 0 - 1 );\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // Constant rejection applies at file scope exactly as it does anywhere else.
+    SECTION( "and it is still measured against the type" )
+    {
+        for( const char* head : { "u8 over = 200 + 100;", "i32 wide = 2000000000 * 2;", "i32 bad = 1 / 0;" } )
+        {
+            const Typed p( std::string( head ) + "\ni32 main() { return 0; }\n" );
+
+            INFO( head << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+        }
+    }
+
+    // Short-circuit operators emit control flow, which file scope has nowhere to put - so they are
+    // outside the rule however constant their operands are.
+    SECTION( "but not the short-circuit operators" )
+    {
+        const Typed p( "bool ready = true && false;\ni32 main() { return 0; }\n" );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
     }
+}
 
+TEST_CASE( "type_checker_rejects_a_computed_global_initialiser", "[sema][types][globals]" )
+{
     SECTION( "a call" )
     {
         const Typed p( "i32 make() { return 1; }\ni32 total = make();\ni32 main() { return 0; }\n" );
@@ -3982,6 +4499,347 @@ TEST_CASE( "type_checker_rejects_a_computed_global_initialiser", "[sema][types][
 
         INFO( p.rendered() );
         REQUIRE( p.errors() >= 1 );
+    }
+}
+
+// §12 decided that arithmetic *wraps* at run time. That leaves the constant case, where the answer
+// is known and wrapping it is a wrong answer delivered in silence - so a constant that does not fit
+// the type its operation happens in is rejected. The value is folded only to decide whether to
+// complain; nothing about what gets emitted changes.
+TEST_CASE( "type_checker_rejects_constant_overflow", "[sema][types][constants]" )
+{
+    SECTION( "unsigned subtraction below zero" )
+    {
+        const Typed p( "i32 main() { u32 d = 1 - 2; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`-1` does not fit in `u32`" ) != std::string::npos );
+    }
+
+    SECTION( "addition past the top" )
+    {
+        const Typed p( "i32 main() { u8 d = 200 + 100; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`300` does not fit in `u8`" ) != std::string::npos );
+    }
+
+    SECTION( "multiplication past the top" )
+    {
+        const Typed p( "i32 main() { i32 d = 2000000000 * 2; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`4000000000` does not fit in `i32`" ) != std::string::npos );
+    }
+
+    SECTION( "and below the bottom of a signed type" )
+    {
+        const Typed p( "i32 main() { i8 d = 0 - 200; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    // The value has to be measured at every step, not only at the end: this one fits an i32
+    // comfortably, and the addition on the way does not. §6.4 says the operation happens in the
+    // common type, so that is the type each step is measured against.
+    SECTION( "an intermediate result that does not fit" )
+    {
+        const Typed p( "i32 main() { i32 d = 2000000000 + 2000000000 - 2000000000; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`4000000000` does not fit in `i32`" ) != std::string::npos );
+    }
+
+    SECTION( "a negated constant" )
+    {
+        const Typed p( "i32 main() { u8 d = -( 1 + 1 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "a float constant that overflows to infinity" )
+    {
+        const Typed p( "i32 main() { f32 d = 1e30 * 1e30; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "does not fit in `f32`" ) != std::string::npos );
+    }
+}
+
+// Undefined behaviour in C rather than merely a wrong answer, and trivially known here.
+TEST_CASE( "type_checker_rejects_a_constant_divide_by_zero", "[sema][types][constants]" )
+{
+    SECTION( "division" )
+    {
+        const Typed p( "i32 main() { i32 d = 1 / 0; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "division by zero" ) != std::string::npos );
+    }
+
+    SECTION( "remainder" )
+    {
+        const Typed p( "i32 main() { i32 d = 1 % 0; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "remainder by zero" ) != std::string::npos );
+    }
+
+    SECTION( "a divisor that computes to zero" )
+    {
+        const Typed p( "i32 main() { i32 d = 1 / ( 3 - 3 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    // IEEE would make this an infinity rather than undefined, but v0 has no way to write an
+    // infinity deliberately, so a constant zero divisor is a mistake whatever the type. One rule
+    // rather than an exception that exists only to admit a value nothing can name.
+    SECTION( "float division by zero as well" )
+    {
+        const Typed p( "i32 main() { f64 d = 1.0 / 0.0; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "division by zero" ) != std::string::npos );
+    }
+
+    SECTION( "and a runtime divisor is not the checker's business" )
+    {
+        const Typed p( "i32 main() { i32 z = 0; i32 d = 1 / z; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// Shifting by the width or more has no defined result in C. The count is usually a constant, so
+// this is usually knowable.
+TEST_CASE( "type_checker_rejects_a_constant_shift_past_the_width", "[sema][types][constants]" )
+{
+    SECTION( "wider than the type" )
+    {
+        const Typed p( "i32 main() { i32 d = 1 << 40; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "shift" ) != std::string::npos );
+    }
+
+    SECTION( "exactly the width" )
+    {
+        const Typed p( "i32 main() { u32 d = 1 << 32; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "a negative count" )
+    {
+        const Typed p( "i32 main() { i32 d = 1 << -1; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "one less than the width is fine" )
+    {
+        const Typed p( "i32 main() { u32 d = 1 << 31; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // 1 << 31 does not fit a signed i32, which is the overflow rule rather than the shift rule.
+    SECTION( "but it must still fit the type" )
+    {
+        const Typed p( "i32 main() { i32 d = 1 << 31; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "a runtime count is not rejected" )
+    {
+        const Typed p( "i32 main() { u32 n = 40; u32 d = 1 << n; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// The divisor and the count are constants even when the value being divided or shifted is not, and
+// these are the cases worth catching most: a mistake in an expression that otherwise looks like
+// ordinary running code. They reach infer_binary rather than check()'s literal branches, which is a
+// separate path through the same rule.
+TEST_CASE( "type_checker_rejects_a_constant_divisor_of_a_runtime_value", "[sema][types][constants]" )
+{
+    SECTION( "division" )
+    {
+        const Typed p( "i32 main() { i32 f = 3; i32 d = f / 0; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "division by zero" ) != std::string::npos );
+    }
+
+    SECTION( "remainder" )
+    {
+        const Typed p( "i32 main() { u32 f = 3; u32 d = f % 0; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "remainder by zero" ) != std::string::npos );
+    }
+
+    SECTION( "a shift count past the width" )
+    {
+        const Typed p( "i32 main() { u32 f = 3; u32 d = f << 40; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "shift count" ) != std::string::npos );
+    }
+
+    // The width is the *left* operand's, so a narrow type has a correspondingly small limit.
+    SECTION( "measured against the type being shifted, not i32" )
+    {
+        const Typed p( "i32 main() { u8 f = 3; u8 d = f << 9; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "and a count inside the width is fine" )
+    {
+        const Typed p( "i32 main() { u32 f = 3; u32 d = f << 4; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// A shift's result type is its *left* operand's (§6.4), so that is where an expectation has to
+// flow. Without this `u32 d = 1 << 4;` combines an i32 with a u32 and is refused - the fourth
+// instance of inferring where checking belonged.
+TEST_CASE( "type_checker_pushes_an_expectation_through_a_shift", "[sema][types][constants]" )
+{
+    SECTION( "the left operand adopts the target type" )
+    {
+        const Typed p( "i32 main() { u32 d = 1 << 4; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Int_literal, 0 ) ) == "u32" );
+    }
+
+    SECTION( "for narrow types too" )
+    {
+        const Typed p( "i32 main() { u8 d = 1 << 4; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // The count is independent of the shifted type, so it keeps inferring on its own.
+    SECTION( "the count is not forced to the same type" )
+    {
+        const Typed p( "i32 main() { u8 n = 4; u8 d = 1 << n; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and a right shift behaves the same" )
+    {
+        const Typed p( "i32 main() { u32 d = 256 >> 4; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// The rule must not reach past constants, and must not refuse arithmetic that is simply correct.
+TEST_CASE( "type_checker_allows_constants_that_fit", "[sema][types][constants]" )
+{
+    SECTION( "ordinary arithmetic" )
+    {
+        for( const char* body :
+             { "i32 d = 2 + 3;",
+               "u8 d = 200 + 55;",
+               "i32 d = 1 - 2;",
+               "i32 d = 6 / 3;",
+               "i32 d = 7 % 3;",
+               "u8 d = 255 & 15;",
+               "i32 d = ~0;",
+               "i32 d = -2147483648;",
+               "u64 d = 4294967295 * 2;" } )
+        {
+            const Typed p( std::string( "i32 main() { " ) + body + " return 0; }" );
+
+            INFO( body << "\n" << p.rendered() );
+            REQUIRE( p.clean() );
+        }
+    }
+
+    // A value that leaves u64 entirely is an overflow of every Keel type, so it is still refused -
+    // the folder running out of room is not a reason to stay quiet.
+    SECTION( "past what u64 can hold" )
+    {
+        const Typed p( "i32 main() { u64 d = 18446744073709551615 * 2; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "nothing involving a variable is folded" )
+    {
+        for( const char* body :
+             { "u8 a = 200; u8 d = a + a;", "i32 a = 2000000000; i32 d = a * 2;", "u32 a = 1; u32 d = a - 2;" } )
+        {
+            const Typed p( std::string( "i32 main() { " ) + body + " return 0; }" );
+
+            INFO( body << "\n" << p.rendered() );
+            REQUIRE( p.clean() );
+        }
+    }
+
+    // `wrap` infers its operand rather than pushing the target type in, so the fold happens in i32
+    // where -1 fits. That is the opt-out for deliberate wrapping, and it falls out of D28 rather
+    // than being a special case here.
+    SECTION( "wrap is the way to ask for it deliberately" )
+    {
+        const Typed p( "i32 main() { u32 mask = wrap<u32>( 0 - 1 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // cast pushes the type in, so the constant is measured against u32 and refused.
+    SECTION( "and cast is not" )
+    {
+        const Typed p( "i32 main() { u32 mask = cast<u32>( 0 - 1 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "comparisons cannot overflow and are left alone" )
+    {
+        const Typed p( "i32 main() { if ( 200 + 100 > 0 ) { return 1; } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
     }
 }
 

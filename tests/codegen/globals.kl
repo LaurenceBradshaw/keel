@@ -20,6 +20,23 @@ i32 blank;
 // throughout the file.
 i32 later = 7;
 
+// Computed, not merely written. C accepts an arithmetic constant expression at file scope, so
+// these need no code to run before main - and the constant checker has already proved each one
+// fits, so C's own wider intermediates cannot disagree about the answer.
+i32 seconds_per_hour = 60 * 60;
+i32 precedence       = 1 + 2 * 3;
+i32 grouped          = ( 1 + 2 ) * 3;
+u8  masked           = 255 & 15;
+u32 shifted          = 1 << 4;
+i32 flipped          = ~0;
+i32 negated          = -( 3 * 3 );
+i32 remainder        = 7 % 3;
+f64 scaled           = 1.5 * 2.0;
+bool compared        = 1 < 2;
+
+// The all-ones idiom: `wrap` asks for the wrapping deliberately, where `cast` would refuse it.
+u32 all_ones = wrap<u32>( 0 - 1 );
+
 i32 read_counter()
 {
     return counter;
@@ -110,6 +127,23 @@ i32 main()
 
     ratio = 2.5;
     if ( ratio != 2.5 ) { return 23; }
+
+    // Computed initialisers, evaluated before main ever runs.
+    if ( seconds_per_hour != 3600 ) { return 24; }
+    if ( precedence != 7 ) { return 25; }
+    if ( grouped != 9 ) { return 26; }
+    if ( masked != 15 ) { return 27; }
+    if ( shifted != 16 ) { return 28; }
+    if ( flipped != -1 ) { return 29; }
+    if ( negated != -9 ) { return 30; }
+    if ( remainder != 1 ) { return 31; }
+    if ( scaled != 3.0 ) { return 32; }
+    if ( !compared ) { return 33; }
+    if ( all_ones != 4294967295 ) { return 34; }
+
+    // And they are ordinary mutable globals, not constants baked into their uses.
+    seconds_per_hour = 1;
+    if ( seconds_per_hour != 1 ) { return 35; }
 
     return 0;
 }

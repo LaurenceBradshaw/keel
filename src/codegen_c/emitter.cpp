@@ -438,17 +438,51 @@ void Emitter::emit_globals()
     }
 }
 
-// A negated literal is a Unary_expr rather than a literal node, and lower_literal asserts on one.
-// lower() is not the answer either - it would emit a temporary, which is the thing file scope
-// cannot hold.
+// The C spelling of a file-scope initialiser. C accepts an arithmetic constant expression there, so
+// this prints the expression rather than computing a value for it. lower() is not an option: it
+// emits the statements a value needs first, and file scope has nowhere to put them.
+//
+// The operand casts mirror lower_binary's, and for the same reason - §6.4's conversions are not
+// C's, so the operands are spelled at the type the operation happens in. C's own intermediates are
+// wider, but the constant checker has already proved the result fits, so they cannot disagree
+// about the answer.
 std::string Emitter::constant_text( Node_id id )
 {
-    if( ast_.kind( id ) == Node_kind::Unary_expr )
+    switch( ast_.kind( id ) )
     {
-        return fmt::format( "-{}", lower_literal( ast_.children( id )[0] ) );
+    case Node_kind::Unary_expr:
+        return fmt::format(
+            "{}( {} )",
+            token_kind_spelling( static_cast<Token_kind>( ast_.aux( id ) ) ),
+            constant_text( ast_.children( id )[0] )
+        );
+
+    case Node_kind::Binary_expr:
+    {
+        const Node_id left  = ast_.children( id )[0];
+        const Node_id right = ast_.children( id )[1];
+
+        // A shift takes no common type: its result is the left operand's, which is why
+        // arithmetic_result has no answer for it.
+        const Type_id common       = types_.table().arithmetic_result( types_.type_of( left ), types_.type_of( right ) );
+        const Type_id operand_type = common.is_valid() ? common : types_.type_of( left );
+
+        return fmt::format(
+            "( ({}) {} {} ({}) {} )",
+            c_type( operand_type ),
+            constant_text( left ),
+            token_kind_spelling( static_cast<Token_kind>( ast_.aux( id ) ) ),
+            c_type( operand_type ),
+            constant_text( right )
+        );
     }
 
-    return lower_literal( id );
+    case Node_kind::Cast_expr:
+        return fmt::format( "( ({}) {} )", c_type( types_.type_of( id ) ), constant_text( ast_.children( id )[1] ) );
+
+    default:
+        return lower_literal( id );
+    }
 }
 
 void Emitter::emit_statement( Node_id id )
@@ -1664,6 +1698,73 @@ TEST_CASE( "emitter_emits_break_and_continue", "[codegen][loops]" )
         REQUIRE( e.clean() );
         REQUIRE( e.has( "continue;" ) );
         REQUIRE_FALSE( e.has( "goto" ) );
+    }
+}
+
+// A file-scope initialiser is printed, not lowered: lower() emits the statements a value needs
+// first, and file scope has nowhere to put them. C accepts an arithmetic constant expression there,
+// which is what makes printing enough.
+TEST_CASE( "emitter_emits_globals_without_statements", "[codegen][globals]" )
+{
+    SECTION( "a literal" )
+    {
+        const Emitted e( "i32 counter = 1;\ni32 main() { return counter; }\n" );
+
+        INFO( e.diagnostics() << e.c() );
+        REQUIRE( e.clean() );
+        REQUIRE( e.has( "= 1;" ) );
+    }
+
+    // A negated literal is a Unary_expr, not a literal node.
+    SECTION( "a negated literal" )
+    {
+        const Emitted e( "i32 below = -1;\ni32 main() { return below; }\n" );
+
+        INFO( e.diagnostics() << e.c() );
+        REQUIRE( e.clean() );
+        REQUIRE( e.has( "-( 1 )" ) );
+    }
+
+    SECTION( "no initialiser emits no `=`, so C zero-initialises" )
+    {
+        const Emitted e( "i32 blank;\ni32 main() { return blank; }\n" );
+
+        INFO( e.diagnostics() << e.c() );
+        REQUIRE( e.clean() );
+        REQUIRE( e.has( "kl_blank" ) );
+        REQUIRE_FALSE( e.has( "kl_blank_1 =" ) );
+    }
+
+    // The whole point: an expression, and not one temporary anywhere near it.
+    SECTION( "an arithmetic constant expression" )
+    {
+        const Emitted e( "i32 limit = 60 * 60;\ni32 main() { return limit; }\n" );
+
+        INFO( e.diagnostics() << e.c() );
+        REQUIRE( e.clean() );
+        REQUIRE( e.has( "(int32_t) 60 * (int32_t) 60" ) );
+
+        // A temporary before the first function would not be inside any function at all.
+        REQUIRE( e.c().find( "kl_t0" ) > e.c().find( "kl__main__" ) );
+    }
+
+    SECTION( "nested, keeping the grouping" )
+    {
+        const Emitted e( "i32 grouped = ( 1 + 2 ) * 3;\ni32 main() { return grouped; }\n" );
+
+        INFO( e.diagnostics() << e.c() );
+        REQUIRE( e.clean() );
+        REQUIRE( e.has( "( (int32_t) 1 + (int32_t) 2 )" ) );
+    }
+
+    SECTION( "and a cast, which is how a wrapped constant is written" )
+    {
+        const Emitted e( "u32 all_ones = wrap<u32>( 0 - 1 );\ni32 main() { return 0; }\n" );
+
+        INFO( e.diagnostics() << e.c() );
+        REQUIRE( e.clean() );
+        REQUIRE( e.has( "(uint32_t)" ) );
+        REQUIRE_FALSE( e.has( "kl_t" ) );
     }
 }
 
