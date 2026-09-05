@@ -898,6 +898,7 @@ Type_id Checker::check_literal( Node_id id, Type_id expected )
         break;
 
     case Node_kind::Float_literal:
+    {
         if( !table_.is_float( expected ) )
         {
             error_at(
@@ -909,7 +910,26 @@ Type_id Checker::check_literal( Node_id id, Type_id expected )
             return expected;
         }
 
+        const Literal_id value = Literal_id { ast_.aux( literal ) };
+
+        // A literal the lexer could not scan has no value recorded. It reported there.
+        if( value.is_valid() && !table_.fits_float( literals_.floating( value ), expected ) )
+        {
+            error_at(
+                ast_.span( id ),
+                fmt::format(
+                    "`{}{}` does not fit in `{}`",
+                    literal == id ? "" : "-", // the sign lives in the Unary_expr, not in the value
+                    literals_.floating( value ),
+                    table_.name( expected )
+                )
+            );
+
+            return expected;
+        }
+
         break;
+    }
 
     case Node_kind::Char_literal: // a code point is an integer value, measured the same way
     case Node_kind::Int_literal:
@@ -2731,6 +2751,85 @@ TEST_CASE( "type_checker_types_struct_literals", "[sema][types]" )
 
         INFO( p.rendered() );
         REQUIRE( p.errors() >= 1 );
+    }
+}
+
+// The same rule integer literals get: a value is measured against the type it is being given.
+TEST_CASE( "type_checker_range_checks_float_literals", "[sema][types]" )
+{
+    SECTION( "a value beyond f32's range is rejected" )
+    {
+        const Typed p( "i32 main() { f32 x = 1e40; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "does not fit in `f32`" ) != std::string::npos );
+    }
+
+    // The sign lives in the Unary_expr, not in the recorded value, so the message has to put it
+    // back or it names a number the author did not write.
+    SECTION( "and the message keeps the sign" )
+    {
+        const Typed p( "i32 main() { f32 x = -1e40; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`-1e+40`" ) != std::string::npos );
+    }
+
+    SECTION( "a value at the edge is accepted" )
+    {
+        const Typed p( "i32 main() { f32 x = 3.4e38; f32 y = -3.4e38; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "an inexact value is accepted - range is not representability" )
+    {
+        const Typed p( "i32 main() { f32 x = 0.1; f32 y = 1e-50; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "f64 takes anything the lexer let through" )
+    {
+        const Typed p( "i32 main() { f64 x = 1e300; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // Reported by the lexer, which is the only place the digits still exist. Sema records no value
+    // for it and must not report a second time.
+    SECTION( "a value beyond f64 reports exactly once, from the lexer" )
+    {
+        const Typed p( "i32 main() { f64 x = 1e400; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.rendered().find( "out of range" ) != std::string::npos );
+    }
+
+    // This regressed when fits_float replaced the is_float() guard: every float-into-integer
+    // assignment silently compiled.
+    SECTION( "a float literal still cannot be given to an integer" )
+    {
+        const Typed p( "i32 main() { i32 x = 1.5; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "floating-point literal" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "cannot be an integer" ) != std::string::npos );
+    }
+
+    SECTION( "nor to a bool" )
+    {
+        const Typed p( "i32 main() { bool b = 1.5; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
     }
 }
 

@@ -1,6 +1,7 @@
 #include "sema/type.h"
 #include <fmt/format.h>
 #include <cassert>
+#include <cmath>
 #include <limits>
 
 namespace keel
@@ -364,6 +365,30 @@ bool Type_table::fits( u64 magnitude, bool negative, Type_id type ) const
     }
 
     return magnitude <= max;
+}
+
+bool Type_table::fits_float( f64 value, Type_id type ) const
+{
+    if( is_error( type ) )
+    {
+        return true;
+    }
+
+    if( !is_float( type ) )
+    {
+        return false;
+    }
+
+    // f64 always fits: the lexer rejected anything strtod could not hold and recorded no value.
+    if( get( type ).width == 64 )
+    {
+        return true;
+    }
+
+    // Range only. Precision loss is not range failure - 0.1 is inexact in every binary float, and
+    // rejecting inexactness would reject nearly every literal written. Underflow to a denormal or
+    // to zero is IEEE working as specified.
+    return std::abs( value ) <= static_cast<f64>( std::numeric_limits<f32>::max() );
 }
 
 Type_id Type_table::default_integer() const
@@ -920,6 +945,59 @@ TEST_CASE( "type_table_rejects_struct_conversions_and_arithmetic", "[sema][type]
     {
         REQUIRE_FALSE( table.fits( 0, false, point ) );
         REQUIRE_FALSE( table.fits( 42, false, point ) );
+    }
+}
+
+// Range only, and the two things it must *not* reject are the point: rejecting inexactness would
+// reject nearly every float literal ever written.
+TEST_CASE( "type_table_fits_float_checks_range_only", "[sema][type]" )
+{
+    const Type_table table;
+
+    const Type_id f32_type = table.floating( 32 );
+    const Type_id f64_type = table.floating( 64 );
+
+    SECTION( "a value beyond f32's range does not fit" )
+    {
+        REQUIRE_FALSE( table.fits_float( 1e40, f32_type ) );
+        REQUIRE_FALSE( table.fits_float( -1e40, f32_type ) );
+    }
+
+    SECTION( "one at the edge does" )
+    {
+        REQUIRE( table.fits_float( 3.4e38, f32_type ) );
+        REQUIRE( table.fits_float( -3.4e38, f32_type ) );
+        REQUIRE( table.fits_float( 0.0, f32_type ) );
+    }
+
+    // 0.1 is inexact in every binary float. Range and representability are different questions,
+    // and only the first is checked - exactly as fits() checks an integer's range, not whether it
+    // round-trips.
+    SECTION( "an inexact value fits" )
+    {
+        REQUIRE( table.fits_float( 0.1, f32_type ) );
+        REQUIRE( table.fits_float( 0.1, f64_type ) );
+    }
+
+    // Underflow to a denormal or to zero is IEEE working as specified, not a range failure.
+    SECTION( "so does one that underflows" )
+    {
+        REQUIRE( table.fits_float( 1e-50, f32_type ) );
+    }
+
+    // The lexer already rejected anything strtod could not hold, and recorded no value for it.
+    SECTION( "f64 always fits" )
+    {
+        REQUIRE( table.fits_float( 1e300, f64_type ) );
+        REQUIRE( table.fits_float( -1e300, f64_type ) );
+    }
+
+    SECTION( "and a float value never fits a non-float type" )
+    {
+        REQUIRE_FALSE( table.fits_float( 1.5, table.integer( 32, true ) ) );
+        REQUIRE_FALSE( table.fits_float( 0.0, table.integer( 64, false ) ) );
+        REQUIRE_FALSE( table.fits_float( 1.5, table.builtin( Type_kind::Bool ) ) );
+        REQUIRE( table.fits_float( 1.5, table.builtin( Type_kind::Error ) ) ); // absorbs
     }
 }
 

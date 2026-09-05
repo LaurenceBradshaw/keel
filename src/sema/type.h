@@ -83,6 +83,10 @@ public:
     // literal 5, so the magnitude always arrives unsigned and the range check happens after it.
     bool fits( u64 magnitude, bool negative, Type_id type ) const;
 
+    // A float literal arrives as a value, not as a magnitude and a sign: negation cannot take a
+    // float out of range, so there is no asymmetry to account for.
+    bool fits_float( f64 value, Type_id type ) const;
+
     // What an unsuffixed literal becomes with no context to give it a type.
     Type_id default_integer() const;
     Type_id default_float() const;
