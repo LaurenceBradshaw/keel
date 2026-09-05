@@ -1,0 +1,179 @@
+// Structs passed and returned by value, nested one inside another, and the one place a cast is
+// forced by the arithmetic rather than by taste: an i32 width times an i32 height does not fit an
+// i32, so both widen to i64 first.
+//
+// Float values are all exactly representable in binary, so the comparisons are exact rather than
+// approximate. Every check returns a distinct code, so exit 0 means all of them agreed.
+
+struct Vec2
+{
+    f64 x;
+    f64 y;
+};
+
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+// A half-open rectangle: `low` is inside, `high` is not. Nested by value, so Point has to be
+// emitted before Rect - which is what the struct ordering pass is for.
+struct Rect
+{
+    Point low;
+    Point high;
+};
+
+Vec2 add( Vec2 a, Vec2 b )
+{
+    return Vec2 { a.x + b.x, a.y + b.y };
+}
+
+Vec2 scale( Vec2 v, f64 factor )
+{
+    return Vec2 { v.x * factor, v.y * factor };
+}
+
+f64 dot( Vec2 a, Vec2 b )
+{
+    return a.x * b.x + a.y * b.y;
+}
+
+// No square root in v0, so the squared length is the honest thing to return.
+f64 length_squared( Vec2 v )
+{
+    return dot( v, v );
+}
+
+i32 smaller( i32 a, i32 b )
+{
+    if ( a < b )
+    {
+        return a;
+    }
+
+    return b;
+}
+
+i32 larger( i32 a, i32 b )
+{
+    if ( a > b )
+    {
+        return a;
+    }
+
+    return b;
+}
+
+// Empty when either extent has collapsed. `high` below `low` counts as empty too, which is what
+// makes an intersection that misses well defined rather than nonsense.
+bool is_empty( Rect r )
+{
+    return r.high.x <= r.low.x || r.high.y <= r.low.y;
+}
+
+// The product overflows i32 for any rectangle bigger than about 46000 a side, so the widening
+// happens before the multiply and not after. Casting the result would be too late - the overflow
+// would already have happened, and in C signed overflow is undefined rather than merely wrong.
+i64 area( Rect r )
+{
+    if ( is_empty( r ) )
+    {
+        return 0;
+    }
+
+    i64 width  = cast<i64>( r.high.x - r.low.x );
+    i64 height = cast<i64>( r.high.y - r.low.y );
+
+    return width * height;
+}
+
+bool contains( Rect r, Point p )
+{
+    return p.x >= r.low.x && p.x < r.high.x && p.y >= r.low.y && p.y < r.high.y;
+}
+
+// Overlap on both axes, tested without building the intersection first.
+bool overlaps( Rect a, Rect b )
+{
+    return a.low.x < b.high.x && b.low.x < a.high.x && a.low.y < b.high.y && b.low.y < a.high.y;
+}
+
+// The intersection of two rectangles, which may be empty. Returned by value, nested struct and
+// all.
+Rect intersection( Rect a, Rect b )
+{
+    Point low  = Point { larger( a.low.x, b.low.x ), larger( a.low.y, b.low.y ) };
+    Point high = Point { smaller( a.high.x, b.high.x ), smaller( a.high.y, b.high.y ) };
+
+    return Rect { low, high };
+}
+
+i32 main()
+{
+    Vec2 a = Vec2 { 1.5, 2.0 };
+    Vec2 b = Vec2 { 3.0, 4.0 };
+
+    if ( dot( a, b ) != 12.5 ) { return 1; }
+    if ( length_squared( Vec2 { 3.0, 4.0 } ) != 25.0 ) { return 2; }
+
+    Vec2 sum = add( a, b );
+
+    if ( sum.x != 4.5 ) { return 3; }
+    if ( sum.y != 6.0 ) { return 4; }
+
+    Vec2 doubled = scale( a, 2.0 );
+
+    if ( doubled.x != 3.0 ) { return 5; }
+    if ( doubled.y != 4.0 ) { return 6; }
+
+    // The argument is a temporary, and the result feeds straight into another call.
+    if ( dot( scale( a, 2.0 ), Vec2 { 1.0, 0.5 } ) != 5.0 ) { return 7; }
+
+    Rect unit = Rect { Point { 0, 0 }, Point { 4, 3 } };
+
+    if ( area( unit ) != 12 ) { return 8; }
+    if ( is_empty( unit ) ) { return 9; }
+
+    // Half open: the low corner is in, the high corner is not.
+    if ( !contains( unit, Point { 0, 0 } ) ) { return 10; }
+    if ( contains( unit, Point { 4, 3 } ) ) { return 11; }
+    if ( !contains( unit, Point { 3, 2 } ) ) { return 12; }
+    if ( contains( unit, Point { -1, 1 } ) ) { return 13; }
+
+    // Designated form, naming the fields out of declaration order.
+    Rect offset = Rect { .high = Point { 6, 5 }, .low = Point { 2, 1 } };
+
+    if ( area( offset ) != 16 ) { return 14; }
+
+    if ( !overlaps( unit, offset ) ) { return 15; }
+
+    Rect shared = intersection( unit, offset );
+
+    if ( shared.low.x != 2 ) { return 16; }
+    if ( shared.low.y != 1 ) { return 17; }
+    if ( shared.high.x != 4 ) { return 18; }
+    if ( shared.high.y != 3 ) { return 19; }
+    if ( area( shared ) != 4 ) { return 20; }
+
+    // Two rectangles that miss each other intersect to something empty, not to something negative.
+    Rect far  = Rect { Point { 100, 100 }, Point { 110, 110 } };
+    Rect none = intersection( unit, far );
+
+    if ( overlaps( unit, far ) ) { return 21; }
+    if ( !is_empty( none ) ) { return 22; }
+    if ( area( none ) != 0 ) { return 23; }
+
+    // The reason area returns i64: this product is 10000000000, and an i32 stops at 2147483647.
+    Rect huge = Rect { Point { 0, 0 }, Point { 100000, 100000 } };
+
+    if ( area( huge ) != 10000000000 ) { return 24; }
+
+    // Intersecting a rectangle with itself gives it back.
+    Rect itself = intersection( unit, unit );
+
+    if ( area( itself ) != area( unit ) ) { return 25; }
+
+    return 0;
+}

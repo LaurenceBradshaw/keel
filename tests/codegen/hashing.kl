@@ -1,0 +1,139 @@
+// Modular integer arithmetic: the place `wrap` earns its keep. FNV-1a, xorshift32 and an LCG all
+// depend on values wrapping rather than trapping, and on narrowing a wide word to a byte without
+// that being a mistake.
+//
+// The expected values are the standard ones for these algorithms, so a wrong answer here means the
+// emitted C disagreed with the algorithm rather than with a number invented for the test. Every
+// check returns a distinct code, so exit 0 means all of them agreed.
+
+// One step of FNV-1a: mix the byte in, then multiply by the prime. The multiply is expected to
+// overflow constantly - that is what makes it a hash.
+u64 fnv_byte( u64 hash, u8 value )
+{
+    u64 mixed = hash ^ cast<u64>( value );
+
+    return mixed * 1099511628211;
+}
+
+// Four steps, least significant byte first. `wrap` is the whole point: each shift leaves the byte
+// wanted in the low bits and everything above it is meant to be discarded.
+u64 fnv_u32( u64 hash, u32 value )
+{
+    u64 result = fnv_byte( hash, wrap<u8>( value ) );
+
+    result = fnv_byte( result, wrap<u8>( value >> 8 ) );
+    result = fnv_byte( result, wrap<u8>( value >> 16 ) );
+    result = fnv_byte( result, wrap<u8>( value >> 24 ) );
+
+    return result;
+}
+
+u64 fnv_basis()
+{
+    return 14695981039346656037;
+}
+
+// Marsaglia's xorshift32. Every shift-and-xor stays inside 32 bits, so the left shifts discard
+// their high bits by design.
+u32 xorshift( u32 state )
+{
+    u32 x = state;
+
+    x = x ^ ( x << 13 );
+    x = x ^ ( x >> 17 );
+    x = x ^ ( x << 5 );
+
+    return x;
+}
+
+// A linear congruential generator: the multiply overflows u32 on almost every step, and the low
+// bits that survive are the output.
+u32 lcg( u32 state )
+{
+    return state * 1103515245 + 12345;
+}
+
+// Sum of squares, deliberately past what u32 holds. The exact answer for 1..3000 is 9004500500,
+// which is 414565908 once the high bits are gone.
+u32 checksum( u32 limit )
+{
+    u32 total = 0;
+
+    for ( u32 i = 1; i <= limit; i++ )
+    {
+        total += i * i;
+    }
+
+    return total;
+}
+
+i32 main()
+{
+    // Single words, hashed from the standard offset basis.
+    if ( fnv_u32( fnv_basis(), 305419896 ) != 14758243562650612581 ) { return 1; }
+    if ( fnv_u32( fnv_basis(), 3735928559 ) != 11839450912400667691 ) { return 2; }
+    if ( fnv_u32( fnv_basis(), 0 ) != 5558979605539197941 ) { return 3; }
+
+    // Chaining: the hash of a sequence is each step fed the previous result.
+    u64 chained = fnv_u32( fnv_u32( fnv_basis(), 305419896 ), 3735928559 );
+
+    if ( chained != 14850141105429098347 ) { return 4; }
+
+    // A bucket index is where a hash actually gets used.
+    if ( chained % 16 != 11 ) { return 5; }
+
+    // The same input twice is the same hash, and one bit of difference is not.
+    if ( fnv_u32( fnv_basis(), 7 ) != fnv_u32( fnv_basis(), 7 ) ) { return 6; }
+    if ( fnv_u32( fnv_basis(), 0 ) == fnv_u32( fnv_basis(), 1 ) ) { return 7; }
+
+    // Five steps of xorshift32 from a seed of 1.
+    u32 state = 1;
+
+    state = xorshift( state );
+    if ( state != 270369 ) { return 8; }
+
+    state = xorshift( state );
+    if ( state != 67634689 ) { return 9; }
+
+    state = xorshift( state );
+    if ( state != 2647435461 ) { return 10; }
+
+    state = xorshift( state );
+    if ( state != 307599695 ) { return 11; }
+
+    state = xorshift( state );
+    if ( state != 2398689233 ) { return 12; }
+
+    // The LCG, whose multiply overflows on the first step.
+    u32 seeded = lcg( 42 );
+
+    if ( seeded != 3397979675 ) { return 13; }
+
+    seeded = lcg( seeded );
+    if ( seeded != 3263785912 ) { return 14; }
+
+    // Under the limit nothing wraps, and the exact sum survives.
+    if ( checksum( 2000 ) != 2668667000 ) { return 15; }
+
+    // Over it, the wrapped answer is the one that comes back.
+    if ( checksum( 3000 ) != 414565908 ) { return 16; }
+
+    // A byte taken out of a word, which is the narrowing `cast` refuses and `wrap` is for.
+    u32 packed = 3735928559;
+
+    if ( wrap<u8>( packed ) != 239 ) { return 17; }
+    if ( wrap<u8>( packed >> 8 ) != 190 ) { return 18; }
+    if ( wrap<u8>( packed >> 16 ) != 173 ) { return 19; }
+    if ( wrap<u8>( packed >> 24 ) != 222 ) { return 20; }
+
+    // Reassembling those bytes gives the word back, which proves nothing was lost between them.
+    u32 rebuilt = cast<u32>( wrap<u8>( packed >> 24 ) );
+
+    rebuilt = ( rebuilt << 8 ) | cast<u32>( wrap<u8>( packed >> 16 ) );
+    rebuilt = ( rebuilt << 8 ) | cast<u32>( wrap<u8>( packed >> 8 ) );
+    rebuilt = ( rebuilt << 8 ) | cast<u32>( wrap<u8>( packed ) );
+
+    if ( rebuilt != packed ) { return 21; }
+
+    return 0;
+}

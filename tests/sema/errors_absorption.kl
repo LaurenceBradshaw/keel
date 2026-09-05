@@ -1,0 +1,30 @@
+// One mistake, one diagnostic. Each line below is a single error, and the literal sitting beside
+// the failure must not add a second complaint about having no type - the error already shown is
+// the cause, and `nullptr` is the only literal with no default to fall back on.
+struct Point { i32* address; };
+
+i32* identity( i32* q )
+{
+    return q;
+}
+
+void nothing()
+{
+    return nullptr;
+}
+
+i32 main()
+{
+    i32 value = 1;
+
+    if ( missing() != nullptr ) { return 1; }
+    if ( nullptr != missing() ) { return 2; }
+
+    identity( &value ) = nullptr;
+    undeclared = nullptr;
+
+    // Two errors here, but two facts: the name is wrong, and so the real field went uninitialised.
+    auto p = Point { .wrong = nullptr };
+
+    return 0;
+}

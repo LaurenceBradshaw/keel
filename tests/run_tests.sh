@@ -11,6 +11,16 @@
 #     stderr   is compared against <name>.kl.stderr   (must be empty if the file is absent)
 #     exit code is compared against <name>.kl.exit    (must be 0 if the file is absent)
 #
+# A suite holding a RUN file goes one step further: stdout is treated as C, compiled with $CC, and
+# executed, and the program's exit code is compared against <name>.kl.run (0 if the file is
+# absent). Without this a golden diff can only say the emitted C is unchanged, never that it is
+# correct - and the codegen fixtures are written to check their own answers, which is worth
+# nothing if nothing runs them.
+#
+#   CC          the C compiler                    (default: cc)
+#   KEEL_CFLAGS flags for it                      (default: -std=c11 -Wall -Wextra -Werror)
+#   KEEL_ARTIFACTS  where the .c and binaries go  (default: ../build/test-artifacts)
+#
 #   run_tests.sh <path-to-keelc>            check
 #   run_tests.sh <path-to-keelc> --update   rewrite every expectation from current behaviour
 #
@@ -42,6 +52,18 @@ fi
 
 # Paths appear in diagnostics, so run from tests/ to keep them stable regardless of caller cwd.
 cd "$( dirname "$0" )" || exit 2
+
+cc="${CC:-cc}"
+# -Werror, because a warning in emitted C is the compiler saying the code means something other
+# than intended - that is the whole reason for building it here. The unused-* family is excluded:
+# a local the Keel program never reads becomes a local the C program never reads, which is faithful
+# emission rather than a fault, and no amount of it can change what the program computes.
+cflags="${KEEL_CFLAGS:--std=c11 -Wall -Wextra -Werror -Wno-unused-variable -Wno-unused-parameter -Wno-unused-but-set-variable}"
+
+# Deliberately outside tests/: the stray-file check below treats anything in a suite directory as a
+# bug, and that check is worth more than the convenience of building in place.
+artifacts="${KEEL_ARTIFACTS:-../build/test-artifacts}"
+mkdir -p "$artifacts" || exit 2
 
 if [ -t 1 ]; then
     red=$'\033[31m'; green=$'\033[32m'; dim=$'\033[2m'; reset=$'\033[0m'
@@ -93,6 +115,54 @@ check_stream()
     return 0
 }
 
+# Builds and runs the C on stdout. Only suites with a RUN marker reach this: for the others stdout
+# is a token or AST dump, and handing that to a C compiler would be nonsense.
+# $1 the fixture path  -> echoes any problem, and leaves the .c behind when there is one
+check_run()
+{
+    local src="$1"
+    local stem="${artifacts}/$( echo "${src%.kl}" | tr '/' '_' )"
+    local source_c="${stem}.c"
+    local build_log="${stem}.cc.log"
+    local run_log="${stem}.run.log"
+
+    cp "$out" "$source_c"
+
+    # Unquoted on purpose: cflags is a list of arguments, not one.
+    if ! $cc $cflags -o "$stem" "$source_c" > "$build_log" 2>&1; then
+        echo "    the emitted C did not compile:"
+        sed 's/^/      /' < "$build_log"
+        echo "      kept at ${source_c}"
+        return 1
+    fi
+
+    # The program's own output is not compared, only its exit code - but it must not leak into the
+    # message the caller is capturing.
+    "$stem" > "$run_log" 2>&1
+    local ran=$?
+
+    local expected_run=0
+    [ -f "${src}.run" ] && expected_run="$( cat "${src}.run" )"
+
+    if [ "$update" -eq 1 ]; then
+        if [ "$ran" -ne 0 ]; then
+            echo "$ran" > "${src}.run"
+        else
+            rm -f "${src}.run"
+        fi
+
+        return 0
+    fi
+
+    if [ "$ran" -ne "$expected_run" ]; then
+        echo "    the program exited ${ran}, expected ${expected_run}"
+        echo "      kept at ${source_c}"
+        return 1
+    fi
+
+    return 0
+}
+
 for src in "${sources[@]}"; do
     src="${src#./}"
     suite_flags_file="$( dirname "$src" )/FLAGS"
@@ -125,6 +195,12 @@ for src in "${sources[@]}"; do
         elif [ "$code" -ne "$expected_code" ]; then
             echo "    exit code: expected ${expected_code}, got ${code}"
         fi
+
+        # Only when keelc succeeded: there is no C to build otherwise, and the failure above
+        # already says so.
+        if [ -f "$( dirname "$src" )/RUN" ] && [ "$code" -eq 0 ]; then
+            check_run "$src"
+        fi
     )"
 
     [ -n "$messages" ] && problems=1
@@ -152,7 +228,8 @@ fi
 # and every stream comparison still passes because neither appears on stdout or stderr.
 stray="$( find . -type f \
     ! -name '*.kl' ! -name '*.kl.expected' ! -name '*.kl.stderr' ! -name '*.kl.exit' \
-    ! -name FLAGS ! -name run_tests.sh ! -name CMakeLists.txt | sort )"
+    ! -name '*.kl.run' \
+    ! -name FLAGS ! -name RUN ! -name run_tests.sh ! -name CMakeLists.txt | sort )"
 
 if [ -n "$stray" ]; then
     echo

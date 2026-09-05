@@ -826,9 +826,12 @@ std::string Emitter::lower_place( Node_id id )
     case Node_kind::Unary_expr:
         // `*p` names where a value lives. `&x` does not - an address is a value, and `&x = 1;` is
         // not a thing - so it falls through to be lowered like any other operand.
+        //
+        // Parenthesised because a place is composed into: `.` binds tighter than unary `*` in C,
+        // so the Field_expr case above would build `*p.next`, which means `*( p.next )`.
         if( static_cast<Token_kind>( ast_.aux( id ) ) == Token_kind::Star )
         {
-            return fmt::format( "*{}", lower( ast_.children( id )[0] ) );
+            return fmt::format( "( *{} )", lower( ast_.children( id )[0] ) );
         }
 
         break;
@@ -1413,6 +1416,51 @@ TEST_CASE( "emitter_increments_the_field_not_a_copy", "[codegen]" )
     REQUIRE( e.has( "kl_t0" ) );
     REQUIRE_FALSE( e.has( "kl_t1" ) );
     REQUIRE( e.count( "+ 1 );" ) == 1 );
+}
+
+// A place is composed into, so it has to be self-contained. `.` binds tighter than unary `*` in C,
+// so an unparenthesised deref means `*( p.next )` - which compiles only when the field happens to
+// be a pointer, and then writes through the wrong one.
+TEST_CASE( "emitter_parenthesises_a_dereferenced_place", "[codegen]" )
+{
+    SECTION( "assigning through a pointer to a struct" )
+    {
+        const Emitted e( "struct Cell { i32 n; };\n"
+                         "i32 main() { auto c = Cell { 0 }; Cell* p = &c; (*p).n = 7; return 0; }\n" );
+
+        INFO( e.diagnostics() << e.c() );
+        REQUIRE( e.clean() );
+
+        // The member is selected from a bracketed deref. In the buggy form the character before
+        // `.kl_n` is the end of the pointer's own name, so this substring never appears.
+        REQUIRE( e.has( ").kl_n" ) );
+        REQUIRE( e.has( "( *kl_p" ) );
+    }
+
+    // The field being a pointer is the case that compiles anyway and silently does the wrong
+    // thing, so it is the one worth pinning.
+    SECTION( "a pointer field, which would otherwise compile and misbehave" )
+    {
+        const Emitted e( "struct Node { i32 v; Node* next; };\n"
+                         "i32 main() { auto a = Node { 1, nullptr }; Node* p = &a;\n"
+                         "             (*p).next = nullptr; return 0; }\n" );
+
+        INFO( e.diagnostics() << e.c() );
+        REQUIRE( e.clean() );
+
+        // The deref must be bracketed before the member is selected.
+        REQUIRE( e.has( "( *kl_p" ) );
+    }
+
+    SECTION( "compound assignment and increment build the same place" )
+    {
+        const Emitted e( "struct Cell { i32 n; };\n"
+                         "i32 main() { auto c = Cell { 0 }; Cell* p = &c; (*p).n += 2; (*p).n++; return 0; }\n" );
+
+        INFO( e.diagnostics() << e.c() );
+        REQUIRE( e.clean() );
+        REQUIRE( e.count( "( *kl_p" ) >= 3 ); // read and write for +=, then the increment
+    }
 }
 
 TEST_CASE( "emitter_lowers_struct_literals_to_field_assignments", "[codegen]" )

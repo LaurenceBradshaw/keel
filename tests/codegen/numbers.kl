@@ -1,0 +1,237 @@
+// Integer algorithms, written the way v0 forces them: no float ever stands in for an integer,
+// because `cast` refuses float to integer outright. An integer square root is therefore a real
+// integer square root rather than a rounded call to a library.
+//
+// The mutual recursion here needs no forward declaration - signatures are collected in a pass of
+// their own before any body is checked - and unlike calls.kl it returns bool, so the recursion and
+// the condition are the same value.
+//
+// Every check returns a distinct code, so exit 0 means all of them agreed.
+
+// Deliberately the slow definition: each calls the other, so neither can be checked without the
+// other's signature already being known.
+bool is_even( i32 n )
+{
+    if ( n == 0 )
+    {
+        return true;
+    }
+
+    return is_odd( n - 1 );
+}
+
+bool is_odd( i32 n )
+{
+    if ( n == 0 )
+    {
+        return false;
+    }
+
+    return is_even( n - 1 );
+}
+
+// Newton's method on integers. The iteration converges from above, so it stops as soon as the
+// estimate stops falling - and the result is the floor of the true root, never one past it.
+i32 isqrt( i32 value )
+{
+    if ( value < 2 )
+    {
+        return value;
+    }
+
+    i32 estimate = value;
+    i32 next     = ( estimate + value / estimate ) / 2;
+
+    while ( next < estimate )
+    {
+        estimate = next;
+        next     = ( estimate + value / estimate ) / 2;
+    }
+
+    return estimate;
+}
+
+// Trial division up to the square root, which is why isqrt is worth having: without it the bound
+// would be a multiplication inside the loop.
+bool is_prime( i32 n )
+{
+    if ( n < 2 )
+    {
+        return false;
+    }
+
+    if ( n % 2 == 0 )
+    {
+        return n == 2;
+    }
+
+    i32 bound   = isqrt( n );
+    i32 divisor = 3;
+
+    while ( divisor <= bound )
+    {
+        if ( n % divisor == 0 )
+        {
+            return false;
+        }
+
+        divisor += 2;
+    }
+
+    return true;
+}
+
+i32 count_primes( i32 limit )
+{
+    i32 found = 0;
+
+    for ( i32 n = 2; n < limit; n++ )
+    {
+        if ( is_prime( n ) )
+        {
+            found++;
+        }
+    }
+
+    return found;
+}
+
+// u64 because the sequence climbs well above its starting point - 27 peaks at 9232 - and a
+// starting value near the top of i32 would overflow on the very first 3n+1.
+i32 collatz_steps( u64 start )
+{
+    u64 value = start;
+    i32 steps = 0;
+
+    while ( value != 1 )
+    {
+        if ( value % 2 == 0 )
+        {
+            value = value / 2;
+        }
+        else
+        {
+            value = 3 * value + 1;
+        }
+
+        steps++;
+    }
+
+    return steps;
+}
+
+// The highest value the sequence reaches, which is the part that decides how wide the type has
+// to be.
+u64 collatz_peak( u64 start )
+{
+    u64 value = start;
+    u64 peak  = start;
+
+    while ( value != 1 )
+    {
+        if ( value % 2 == 0 )
+        {
+            value = value / 2;
+        }
+        else
+        {
+            value = 3 * value + 1;
+        }
+
+        if ( value > peak )
+        {
+            peak = value;
+        }
+    }
+
+    return peak;
+}
+
+i32 digit_sum( i32 n )
+{
+    i32 rest  = n;
+    i32 total = 0;
+
+    while ( rest > 0 )
+    {
+        total += rest % 10;
+        rest = rest / 10;
+    }
+
+    return total;
+}
+
+i32 reverse_digits( i32 n )
+{
+    i32 rest     = n;
+    i32 reversed = 0;
+
+    while ( rest > 0 )
+    {
+        reversed = reversed * 10 + rest % 10;
+        rest     = rest / 10;
+    }
+
+    return reversed;
+}
+
+bool is_palindrome( i32 n )
+{
+    return reverse_digits( n ) == n;
+}
+
+// 20! is the largest that fits a u64; 21! does not, which is why the parameter is bounded rather
+// than trusted.
+u64 factorial( u32 n )
+{
+    u64 total = 1;
+
+    for ( u32 i = 2; i <= n; i++ )
+    {
+        total = total * cast<u64>( i );
+    }
+
+    return total;
+}
+
+i32 main()
+{
+    // Mutual recursion, in both directions and down to the base case.
+    if ( !is_even( 0 ) ) { return 1; }
+    if ( is_odd( 0 ) ) { return 2; }
+    if ( !is_even( 10 ) ) { return 3; }
+    if ( !is_odd( 7 ) ) { return 4; }
+    if ( is_even( 7 ) ) { return 5; }
+
+    // The floor of the root, including the cases just below and just above a perfect square.
+    if ( isqrt( 0 ) != 0 ) { return 6; }
+    if ( isqrt( 1 ) != 1 ) { return 7; }
+    if ( isqrt( 3 ) != 1 ) { return 8; }
+    if ( isqrt( 4 ) != 2 ) { return 9; }
+    if ( isqrt( 999999 ) != 999 ) { return 10; }
+    if ( isqrt( 1000000 ) != 1000 ) { return 11; }
+
+    if ( is_prime( 1 ) ) { return 12; }
+    if ( !is_prime( 2 ) ) { return 13; }
+    if ( !is_prime( 97 ) ) { return 14; }
+    if ( is_prime( 91 ) ) { return 15; }   // 7 * 13, the one trial division has to reach for
+    if ( count_primes( 100 ) != 25 ) { return 16; }
+    if ( count_primes( 1000 ) != 168 ) { return 17; }
+
+    if ( collatz_steps( 1 ) != 0 ) { return 18; }
+    if ( collatz_steps( 27 ) != 111 ) { return 19; }
+    if ( collatz_steps( 97 ) != 118 ) { return 20; }
+    if ( collatz_peak( 27 ) != 9232 ) { return 21; }
+
+    if ( digit_sum( 98765 ) != 35 ) { return 22; }
+    if ( digit_sum( 0 ) != 0 ) { return 23; }
+    if ( reverse_digits( 12345 ) != 54321 ) { return 24; }
+    if ( !is_palindrome( 12321 ) ) { return 25; }
+    if ( is_palindrome( 12345 ) ) { return 26; }
+
+    if ( factorial( 0 ) != 1 ) { return 27; }
+    if ( factorial( 10 ) != 3628800 ) { return 28; }
+    if ( factorial( 20 ) != 2432902008176640000 ) { return 29; }
+
+    return 0;
+}

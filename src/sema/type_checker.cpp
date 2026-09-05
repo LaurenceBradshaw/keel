@@ -264,6 +264,9 @@ private:
 
     Type_id infer_cast( Node_id id );
 
+    // Walks an expression only for the errors inside it, in a context that has already failed.
+    void absorb( Node_id id );
+
     bool    accepts( Operands operands, Type_id type ) const;
     Type_id check( Node_id id, Type_id expected ); // expression, with one
     Type_id type_of_annotation( Node_id id );      // Named_type/Pointer_type subtree; invalid for auto
@@ -641,7 +644,7 @@ void Checker::visit_return( Node_id id )
     if( current_return_ == void_type )
     {
         // Typed anyway: a mistake inside the expression is still a mistake worth reporting.
-        infer( value );
+        absorb( value );
         error_at( ast_.span( value ), "a `void` function cannot return a value" );
         return;
     }
@@ -701,8 +704,8 @@ void Checker::visit_assign( Node_id id )
             error_at( ast_.span( target ), "cannot assign to this expression" );
         }
 
-        infer( target );
-        infer( value );
+        absorb( target );
+        absorb( value );
         return;
     }
 
@@ -710,7 +713,7 @@ void Checker::visit_assign( Node_id id )
 
     if( table_.is_error( target_type ) )
     {
-        infer( value ); // absorb, but do not leave the value untyped
+        absorb( value );
         return;
     }
 
@@ -1181,8 +1184,9 @@ Type_id Checker::infer_binary( Node_id id )
 
         const Type_id known = infer( known_side );
 
-        // A failed operand gives nothing to adopt, so the literal falls back to its default.
-        const Type_id adopted = table_.is_error( known ) ? infer( literal_side ) : check( literal_side, known );
+        // A failed operand gives nothing to adopt, and check() absorbs an error expectation - so
+        // the literal is carried along rather than asked to invent a type it has no basis for.
+        const Type_id adopted = check( literal_side, known );
 
         lhs_type = literal_on_the_left ? adopted : known;
         rhs_type = literal_on_the_left ? known : adopted;
@@ -1476,7 +1480,7 @@ Type_id Checker::infer_struct_literal( Node_id id )
 
         if( !name.is_valid() )
         {
-            infer( value ); // the mixing error above already covered this one
+            absorb( value ); // the mixing error above already covered this one
             continue;
         }
 
@@ -1485,7 +1489,7 @@ Type_id Checker::infer_struct_literal( Node_id id )
         if( !field.is_valid() )
         {
             error_at( ast_.span( init ), fmt::format( "`{}` has no field `{}`", struct_name, interner_.text( name ) ) );
-            infer( value );
+            absorb( value );
             continue;
         }
 
@@ -1608,7 +1612,7 @@ Type_id Checker::check( Node_id id, Type_id expected )
 
     if( table_.is_error( expected ) )
     {
-        infer( id );
+        absorb( id );
         return expected;
     }
 
@@ -1742,6 +1746,17 @@ Type_id Checker::type_of_annotation( Node_id id )
     default:
         // Error nodes, and anything the parser puts in type position that is not a type.
         return table_.builtin( Type_kind::Error );
+    }
+}
+
+// A literal is skipped: there is nothing inside one to be wrong, and its only complaint is that
+// nothing told it what type to be - which is exactly what the error that got us here already
+// explains. Inferring it anyway is how one mistake produces two diagnostics.
+void Checker::absorb( Node_id id )
+{
+    if( id.is_valid() && !is_literal_expression( id ) )
+    {
+        infer( id );
     }
 }
 
@@ -3502,6 +3517,125 @@ TEST_CASE( "type_checker_uses_a_conversion_as_an_ordinary_expression", "[sema][t
         INFO( p.rendered() );
         REQUIRE( p.clean() );
         REQUIRE( p.type_name( p.nth( Node_kind::Cast_expr, 0 ) ) == "u8" );
+    }
+}
+
+// One mistake, one diagnostic. A literal has a value and no type, so in a context that has already
+// failed there is nothing for it to adopt from - and asking it anyway makes it report that, on top
+// of the error that is the actual cause. `nullptr` is the one that shows this, because it is the
+// only literal with no default type to fall back on.
+TEST_CASE( "type_checker_absorbs_a_literal_beside_a_failed_operand", "[sema][types]" )
+{
+    SECTION( "comparison, literal on the right" )
+    {
+        const Typed p( "i32 main() { if ( nope() != nullptr ) { return 1; } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "cannot infer type of" ) == std::string::npos );
+        REQUIRE( p.rendered().find( "`nope` is not declared" ) != std::string::npos );
+    }
+
+    // The operand order must not change which diagnostics appear.
+    SECTION( "comparison, literal on the left" )
+    {
+        const Typed p( "i32 main() { if ( nullptr != nope() ) { return 1; } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "cannot infer type of" ) == std::string::npos );
+    }
+
+    SECTION( "assigning to something that is not a place" )
+    {
+        const Typed p( "i32* get( i32* q ) { return q; }\n"
+                       "i32 main() { i32 x = 1; get( &x ) = nullptr; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "cannot assign to this expression" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "cannot infer type of" ) == std::string::npos );
+    }
+
+    SECTION( "assigning to a name that does not resolve" )
+    {
+        const Typed p( "i32 main() { nope = nullptr; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "cannot infer type of" ) == std::string::npos );
+    }
+
+    SECTION( "returning a value from a void function" )
+    {
+        const Typed p( "void f() { return nullptr; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "cannot infer type of" ) == std::string::npos );
+    }
+
+    SECTION( "an initialiser for a field that does not exist" )
+    {
+        const Typed p( "struct P { i32* q; };\ni32 main() { auto p = P { .bad = nullptr }; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "cannot infer type of" ) == std::string::npos );
+
+        // Two errors, but two *facts*: the name is wrong, and so the real field went uninitialised.
+        REQUIRE( p.errors() == 2 );
+        REQUIRE( p.rendered().find( "has no field `bad`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "field `q` is not initialised" ) != std::string::npos );
+    }
+}
+
+// The other half of absorbing: a literal that genuinely has nothing to adopt from still has to say
+// so, and one that is simply out of range must not be waved through. Absorbing too eagerly would
+// silence both.
+TEST_CASE( "type_checker_still_reports_a_literal_with_no_context", "[sema][types]" )
+{
+    SECTION( "auto has nothing to give a null literal" )
+    {
+        const Typed p( "i32 main() { auto p = nullptr; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "cannot infer type of `nullptr`" ) != std::string::npos );
+    }
+
+    SECTION( "a null literal against a real type is still wrong" )
+    {
+        const Typed p( "i32 main() { i32 v = nullptr; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "range checking survives" )
+    {
+        const Typed p( "i32 main() { u8 x = 300; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "does not fit" ) != std::string::npos );
+    }
+
+    SECTION( "a literal target is still not assignable" )
+    {
+        const Typed p( "i32 main() { 1 = 2; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "cannot assign to this expression" ) != std::string::npos );
+    }
+
+    // The reason infer_binary pushes the expectation at all: without it these compare a u32 or a u8
+    // against an i32, which §6.4 rejects and no suffix can write around.
+    SECTION( "and a literal beside a good operand still adopts from it" )
+    {
+        const Typed a( "i32 main() { u32 bits = 3; if ( bits != 0 ) { return 1; } return 0; }" );
+        const Typed b( "i32 main() { u8 i = 97 + 1; return 0; }" );
+
+        INFO( a.rendered() << b.rendered() );
+        REQUIRE( a.clean() );
+        REQUIRE( b.clean() );
     }
 }
 

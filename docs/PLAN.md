@@ -609,6 +609,31 @@ Every compiler works this way (rustc's UI tests, clang's `lit`/FileCheck). A
 50-line shell runner is sufficient; do not adopt a framework. `tests/` holds
 only `.kl` files and expectations — no C++ lives there.
 
+A suite holding a `RUN` file does not stop at the diff: its stdout is treated as
+C, compiled with `$CC`, and executed, and the program's exit code is compared
+against `<name>.kl.run` (0 when the file is absent). `tests/codegen/` has one.
+
+This matters because a golden diff can only say the emitted C is *unchanged*,
+never that it is *correct*, and the codegen fixtures are written to check their
+own answers — each result is compared in Keel and a wrong one returns a distinct
+code — which is worth nothing if nothing runs them. Both halves have already
+earned their keep: the `( *p ).field` miscompile produced C that `diff` was
+perfectly happy with and `cc` rejected outright, and a fixture deliberately
+given a wrong expected value, with its golden regenerated to match, passes the
+diff and is caught only by its exit code.
+
+The C is built with `-Werror`, because a warning in generated code is the
+compiler saying it means something other than intended. The `unused-*` family is
+excluded: a local the Keel program never reads becomes a local the C program
+never reads, which is faithful emission rather than a fault. `CC`, `KEEL_CFLAGS`
+and `KEEL_ARTIFACTS` override the compiler, its flags, and where the `.c` and
+binaries are kept — outside `tests/`, so the stray-file check stays meaningful,
+and left behind on failure so a bad one can be read.
+
+The older fixtures (`fib`, `gcd`, `calls`, `arithmetic`, `control_flow`) predate
+the self-checking convention and return a computed value instead, which is why
+each has a `.kl.run` recording it.
+
 **A bug fix without a regression test — in either suite — does not count as
 fixed.**
 
@@ -858,6 +883,25 @@ none of it is needed for `fib(20)`.
 
 ### Ahead of M3
 
+Four larger fixtures now exercise the three features together rather than one at
+a time: `linked_list.kl` (a stack-allocated list, rewired in place through
+pointers), `hashing.kl` (FNV-1a, xorshift32 and an LCG, all built on `wrap`),
+`geometry.kl` (structs nested and passed by value, with the one cast the
+arithmetic forces — an i32 width times an i32 height needs i64), and
+`numbers.kl` (integer-only algorithms, including an integer square root written
+as one *because* `cast` refuses float to integer). Their expected values are the
+standard ones for those algorithms, computed independently, so a wrong answer
+means the compiler disagreed with the algorithm rather than with a number
+invented to match it.
+
+Writing them immediately found a **miscompile**: `( *p ).field` as an assignment
+target lowered to `*p.field`, and `.` binds tighter than unary `*` in C, so that
+means `*( p.field )`. Every existing fixture had used a deref *or* a field
+access as a place, never one composed into the other, so nothing caught it — and
+where the field is itself a pointer the wrong form still compiles. This is the
+same lesson §15 already records twice: the front end's assertions cannot see
+what the back end gets wrong, and only real programs go looking.
+
 `cast` and `wrap` work end to end (D28, table in §6.5): both parse as one
 `Cast_expr` whose `aux` says which and whose children are the target type and
 the operand, the checker enforces the table, and the emitter lowers each to a C
@@ -885,6 +929,18 @@ Taking those three keywords costs `out` and `ref` as identifiers, both of which
 are legal C++ and common names. §5.1 permits it — rejecting is always safe — and
 the cost is one diagnostic naming the problem rather than a confusing one about a
 stray `;`.
+
+Error-type absorption now covers literals as well as nodes. Six places walked an
+expression purely to surface the errors *inside* it, in a context that had
+already failed — `check`'s error-expected guard, `infer_binary`'s literal
+adoption, three in `visit_assign`, one in `visit_return`, one in
+`infer_struct_literal`. All of them now go through `Checker::absorb`, which
+skips a literal: there is nothing inside one to be wrong, and its only possible
+complaint is that nothing told it what type to be, which is exactly what the
+error that got us there already said. `nullptr` was where this showed, being the
+only literal with no default type to fall back on, so `missing() != nullptr`
+reported both the unknown name and a second line about the literal. The rule is
+that the *cause* is the diagnostic worth printing.
 
 ### Debts to pay along the way
 

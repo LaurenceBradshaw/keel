@@ -1,0 +1,326 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+uint64_t kl__fnv_byte__u64_u8( uint64_t, uint8_t );
+uint64_t kl__fnv_u32__u64_u32( uint64_t, uint32_t );
+uint64_t kl__fnv_basis__( void );
+uint32_t kl__xorshift__u32( uint32_t );
+uint32_t kl__lcg__u32( uint32_t );
+uint32_t kl__checksum__u32( uint32_t );
+int32_t kl__main__( void );
+
+uint64_t kl__fnv_byte__u64_u8( uint64_t kl_hash_2, uint8_t kl_value_4 )
+{
+#line 13 "codegen/hashing.kl"
+    uint64_t kl_t0 = (uint64_t) kl_value_4;
+    uint64_t kl_t1 = (uint64_t) kl_hash_2 ^ (uint64_t) kl_t0;
+    uint64_t kl_mixed_12 = kl_t1;
+#line 15 "codegen/hashing.kl"
+    uint64_t kl_t2 = (uint64_t) kl_mixed_12 * (uint64_t) 1099511628211;
+    return kl_t2;
+}
+
+uint64_t kl__fnv_u32__u64_u32( uint64_t kl_hash_21, uint32_t kl_value_23 )
+{
+#line 22 "codegen/hashing.kl"
+    uint8_t kl_t0 = (uint8_t) kl_value_23;
+    uint64_t kl_t1 = kl__fnv_byte__u64_u8( (uint64_t) kl_hash_21, (uint8_t) kl_t0 );
+    uint64_t kl_result_33 = kl_t1;
+#line 24 "codegen/hashing.kl"
+    uint32_t kl_t2 = (uint32_t) kl_value_23 >> (uint32_t) 8;
+    uint8_t kl_t3 = (uint8_t) kl_t2;
+    uint64_t kl_t4 = kl__fnv_byte__u64_u8( (uint64_t) kl_result_33, (uint8_t) kl_t3 );
+    kl_result_33 = (uint64_t) kl_t4;
+#line 25 "codegen/hashing.kl"
+    uint32_t kl_t5 = (uint32_t) kl_value_23 >> (uint32_t) 16;
+    uint8_t kl_t6 = (uint8_t) kl_t5;
+    uint64_t kl_t7 = kl__fnv_byte__u64_u8( (uint64_t) kl_result_33, (uint8_t) kl_t6 );
+    kl_result_33 = (uint64_t) kl_t7;
+#line 26 "codegen/hashing.kl"
+    uint32_t kl_t8 = (uint32_t) kl_value_23 >> (uint32_t) 24;
+    uint8_t kl_t9 = (uint8_t) kl_t8;
+    uint64_t kl_t10 = kl__fnv_byte__u64_u8( (uint64_t) kl_result_33, (uint8_t) kl_t9 );
+    kl_result_33 = (uint64_t) kl_t10;
+#line 28 "codegen/hashing.kl"
+    return kl_result_33;
+}
+
+uint64_t kl__fnv_basis__( void )
+{
+#line 33 "codegen/hashing.kl"
+    return 14695981039346656037ull;
+}
+
+uint32_t kl__xorshift__u32( uint32_t kl_state_79 )
+{
+#line 40 "codegen/hashing.kl"
+    uint32_t kl_x_83 = kl_state_79;
+#line 42 "codegen/hashing.kl"
+    uint32_t kl_t0 = (uint32_t) kl_x_83 << (uint32_t) 13;
+    uint32_t kl_t1 = (uint32_t) kl_x_83 ^ (uint32_t) kl_t0;
+    kl_x_83 = (uint32_t) kl_t1;
+#line 43 "codegen/hashing.kl"
+    uint32_t kl_t2 = (uint32_t) kl_x_83 >> (uint32_t) 17;
+    uint32_t kl_t3 = (uint32_t) kl_x_83 ^ (uint32_t) kl_t2;
+    kl_x_83 = (uint32_t) kl_t3;
+#line 44 "codegen/hashing.kl"
+    uint32_t kl_t4 = (uint32_t) kl_x_83 << (uint32_t) 5;
+    uint32_t kl_t5 = (uint32_t) kl_x_83 ^ (uint32_t) kl_t4;
+    kl_x_83 = (uint32_t) kl_t5;
+#line 46 "codegen/hashing.kl"
+    return kl_x_83;
+}
+
+uint32_t kl__lcg__u32( uint32_t kl_state_111 )
+{
+#line 53 "codegen/hashing.kl"
+    uint32_t kl_t0 = (uint32_t) kl_state_111 * (uint32_t) 1103515245;
+    uint32_t kl_t1 = (uint32_t) kl_t0 + (uint32_t) 12345;
+    return kl_t1;
+}
+
+uint32_t kl__checksum__u32( uint32_t kl_limit_123 )
+{
+#line 60 "codegen/hashing.kl"
+    uint32_t kl_total_127 = 0;
+#line 62 "codegen/hashing.kl"
+    {
+        uint32_t kl_i_130 = 1;
+        while ( true )
+        {
+            bool kl_t0 = (uint32_t) kl_i_130 <= (uint32_t) kl_limit_123;
+            if ( !kl_t0 )
+            {
+                break;
+            }
+#line 63 "codegen/hashing.kl"
+            {
+#line 64 "codegen/hashing.kl"
+                uint32_t kl_t1 = (uint32_t) kl_i_130 * (uint32_t) kl_i_130;
+                uint32_t kl_t2 = (uint32_t) kl_total_127 + (uint32_t) kl_t1;
+                kl_total_127 = (uint32_t) kl_t2;
+            }
+#line 62 "codegen/hashing.kl"
+            kl_i_130 = (uint32_t) ( kl_i_130 + 1 );
+        }
+    }
+#line 67 "codegen/hashing.kl"
+    return kl_total_127;
+}
+
+int32_t kl__main__( void )
+{
+#line 73 "codegen/hashing.kl"
+    uint64_t kl_t0 = kl__fnv_basis__(  );
+    uint64_t kl_t1 = kl__fnv_u32__u64_u32( (uint64_t) kl_t0, (uint32_t) 305419896 );
+    bool kl_t2 = (uint64_t) kl_t1 != (uint64_t) 14758243562650612581ull;
+    if ( kl_t2 )
+    {
+        return 1;
+    }
+#line 74 "codegen/hashing.kl"
+    uint64_t kl_t3 = kl__fnv_basis__(  );
+    uint64_t kl_t4 = kl__fnv_u32__u64_u32( (uint64_t) kl_t3, (uint32_t) 3735928559 );
+    bool kl_t5 = (uint64_t) kl_t4 != (uint64_t) 11839450912400667691ull;
+    if ( kl_t5 )
+    {
+        return 2;
+    }
+#line 75 "codegen/hashing.kl"
+    uint64_t kl_t6 = kl__fnv_basis__(  );
+    uint64_t kl_t7 = kl__fnv_u32__u64_u32( (uint64_t) kl_t6, (uint32_t) 0 );
+    bool kl_t8 = (uint64_t) kl_t7 != (uint64_t) 5558979605539197941;
+    if ( kl_t8 )
+    {
+        return 3;
+    }
+#line 78 "codegen/hashing.kl"
+    uint64_t kl_t9 = kl__fnv_basis__(  );
+    uint64_t kl_t10 = kl__fnv_u32__u64_u32( (uint64_t) kl_t9, (uint32_t) 305419896 );
+    uint64_t kl_t11 = kl__fnv_u32__u64_u32( (uint64_t) kl_t10, (uint32_t) 3735928559 );
+    uint64_t kl_chained_200 = kl_t11;
+#line 80 "codegen/hashing.kl"
+    bool kl_t12 = (uint64_t) kl_chained_200 != (uint64_t) 14850141105429098347ull;
+    if ( kl_t12 )
+    {
+        return 4;
+    }
+#line 83 "codegen/hashing.kl"
+    uint64_t kl_t13 = (uint64_t) kl_chained_200 % (uint64_t) 16;
+    bool kl_t14 = (uint64_t) kl_t13 != (uint64_t) 11;
+    if ( kl_t14 )
+    {
+        return 5;
+    }
+#line 86 "codegen/hashing.kl"
+    uint64_t kl_t15 = kl__fnv_basis__(  );
+    uint64_t kl_t16 = kl__fnv_u32__u64_u32( (uint64_t) kl_t15, (uint32_t) 7 );
+    uint64_t kl_t17 = kl__fnv_basis__(  );
+    uint64_t kl_t18 = kl__fnv_u32__u64_u32( (uint64_t) kl_t17, (uint32_t) 7 );
+    bool kl_t19 = (uint64_t) kl_t16 != (uint64_t) kl_t18;
+    if ( kl_t19 )
+    {
+        return 6;
+    }
+#line 87 "codegen/hashing.kl"
+    uint64_t kl_t20 = kl__fnv_basis__(  );
+    uint64_t kl_t21 = kl__fnv_u32__u64_u32( (uint64_t) kl_t20, (uint32_t) 0 );
+    uint64_t kl_t22 = kl__fnv_basis__(  );
+    uint64_t kl_t23 = kl__fnv_u32__u64_u32( (uint64_t) kl_t22, (uint32_t) 1 );
+    bool kl_t24 = (uint64_t) kl_t21 == (uint64_t) kl_t23;
+    if ( kl_t24 )
+    {
+        return 7;
+    }
+#line 90 "codegen/hashing.kl"
+    uint32_t kl_state_257 = 1;
+#line 92 "codegen/hashing.kl"
+    uint32_t kl_t25 = kl__xorshift__u32( (uint32_t) kl_state_257 );
+    kl_state_257 = (uint32_t) kl_t25;
+#line 93 "codegen/hashing.kl"
+    bool kl_t26 = (uint32_t) kl_state_257 != (uint32_t) 270369;
+    if ( kl_t26 )
+    {
+        return 8;
+    }
+#line 95 "codegen/hashing.kl"
+    uint32_t kl_t27 = kl__xorshift__u32( (uint32_t) kl_state_257 );
+    kl_state_257 = (uint32_t) kl_t27;
+#line 96 "codegen/hashing.kl"
+    bool kl_t28 = (uint32_t) kl_state_257 != (uint32_t) 67634689;
+    if ( kl_t28 )
+    {
+        return 9;
+    }
+#line 98 "codegen/hashing.kl"
+    uint32_t kl_t29 = kl__xorshift__u32( (uint32_t) kl_state_257 );
+    kl_state_257 = (uint32_t) kl_t29;
+#line 99 "codegen/hashing.kl"
+    bool kl_t30 = (uint32_t) kl_state_257 != (uint32_t) 2647435461;
+    if ( kl_t30 )
+    {
+        return 10;
+    }
+#line 101 "codegen/hashing.kl"
+    uint32_t kl_t31 = kl__xorshift__u32( (uint32_t) kl_state_257 );
+    kl_state_257 = (uint32_t) kl_t31;
+#line 102 "codegen/hashing.kl"
+    bool kl_t32 = (uint32_t) kl_state_257 != (uint32_t) 307599695;
+    if ( kl_t32 )
+    {
+        return 11;
+    }
+#line 104 "codegen/hashing.kl"
+    uint32_t kl_t33 = kl__xorshift__u32( (uint32_t) kl_state_257 );
+    kl_state_257 = (uint32_t) kl_t33;
+#line 105 "codegen/hashing.kl"
+    bool kl_t34 = (uint32_t) kl_state_257 != (uint32_t) 2398689233;
+    if ( kl_t34 )
+    {
+        return 12;
+    }
+#line 108 "codegen/hashing.kl"
+    uint32_t kl_t35 = kl__lcg__u32( (uint32_t) 42 );
+    uint32_t kl_seeded_328 = kl_t35;
+#line 110 "codegen/hashing.kl"
+    bool kl_t36 = (uint32_t) kl_seeded_328 != (uint32_t) 3397979675;
+    if ( kl_t36 )
+    {
+        return 13;
+    }
+#line 112 "codegen/hashing.kl"
+    uint32_t kl_t37 = kl__lcg__u32( (uint32_t) kl_seeded_328 );
+    kl_seeded_328 = (uint32_t) kl_t37;
+#line 113 "codegen/hashing.kl"
+    bool kl_t38 = (uint32_t) kl_seeded_328 != (uint32_t) 3263785912;
+    if ( kl_t38 )
+    {
+        return 14;
+    }
+#line 116 "codegen/hashing.kl"
+    uint32_t kl_t39 = kl__checksum__u32( (uint32_t) 2000 );
+    bool kl_t40 = (uint32_t) kl_t39 != (uint32_t) 2668667000;
+    if ( kl_t40 )
+    {
+        return 15;
+    }
+#line 119 "codegen/hashing.kl"
+    uint32_t kl_t41 = kl__checksum__u32( (uint32_t) 3000 );
+    bool kl_t42 = (uint32_t) kl_t41 != (uint32_t) 414565908;
+    if ( kl_t42 )
+    {
+        return 16;
+    }
+#line 122 "codegen/hashing.kl"
+    uint32_t kl_packed_371 = 3735928559;
+#line 124 "codegen/hashing.kl"
+    uint8_t kl_t43 = (uint8_t) kl_packed_371;
+    bool kl_t44 = (uint8_t) kl_t43 != (uint8_t) 239;
+    if ( kl_t44 )
+    {
+        return 17;
+    }
+#line 125 "codegen/hashing.kl"
+    uint32_t kl_t45 = (uint32_t) kl_packed_371 >> (uint32_t) 8;
+    uint8_t kl_t46 = (uint8_t) kl_t45;
+    bool kl_t47 = (uint8_t) kl_t46 != (uint8_t) 190;
+    if ( kl_t47 )
+    {
+        return 18;
+    }
+#line 126 "codegen/hashing.kl"
+    uint32_t kl_t48 = (uint32_t) kl_packed_371 >> (uint32_t) 16;
+    uint8_t kl_t49 = (uint8_t) kl_t48;
+    bool kl_t50 = (uint8_t) kl_t49 != (uint8_t) 173;
+    if ( kl_t50 )
+    {
+        return 19;
+    }
+#line 127 "codegen/hashing.kl"
+    uint32_t kl_t51 = (uint32_t) kl_packed_371 >> (uint32_t) 24;
+    uint8_t kl_t52 = (uint8_t) kl_t51;
+    bool kl_t53 = (uint8_t) kl_t52 != (uint8_t) 222;
+    if ( kl_t53 )
+    {
+        return 20;
+    }
+#line 130 "codegen/hashing.kl"
+    uint32_t kl_t54 = (uint32_t) kl_packed_371 >> (uint32_t) 24;
+    uint8_t kl_t55 = (uint8_t) kl_t54;
+    uint32_t kl_t56 = (uint32_t) kl_t55;
+    uint32_t kl_rebuilt_422 = kl_t56;
+#line 132 "codegen/hashing.kl"
+    uint32_t kl_t57 = (uint32_t) kl_rebuilt_422 << (uint32_t) 8;
+    uint32_t kl_t58 = (uint32_t) kl_packed_371 >> (uint32_t) 16;
+    uint8_t kl_t59 = (uint8_t) kl_t58;
+    uint32_t kl_t60 = (uint32_t) kl_t59;
+    uint32_t kl_t61 = (uint32_t) kl_t57 | (uint32_t) kl_t60;
+    kl_rebuilt_422 = (uint32_t) kl_t61;
+#line 133 "codegen/hashing.kl"
+    uint32_t kl_t62 = (uint32_t) kl_rebuilt_422 << (uint32_t) 8;
+    uint32_t kl_t63 = (uint32_t) kl_packed_371 >> (uint32_t) 8;
+    uint8_t kl_t64 = (uint8_t) kl_t63;
+    uint32_t kl_t65 = (uint32_t) kl_t64;
+    uint32_t kl_t66 = (uint32_t) kl_t62 | (uint32_t) kl_t65;
+    kl_rebuilt_422 = (uint32_t) kl_t66;
+#line 134 "codegen/hashing.kl"
+    uint32_t kl_t67 = (uint32_t) kl_rebuilt_422 << (uint32_t) 8;
+    uint8_t kl_t68 = (uint8_t) kl_packed_371;
+    uint32_t kl_t69 = (uint32_t) kl_t68;
+    uint32_t kl_t70 = (uint32_t) kl_t67 | (uint32_t) kl_t69;
+    kl_rebuilt_422 = (uint32_t) kl_t70;
+#line 136 "codegen/hashing.kl"
+    bool kl_t71 = (uint32_t) kl_rebuilt_422 != (uint32_t) kl_packed_371;
+    if ( kl_t71 )
+    {
+        return 21;
+    }
+#line 138 "codegen/hashing.kl"
+    return 0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

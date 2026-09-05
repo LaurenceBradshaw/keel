@@ -1,0 +1,400 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Node;
+
+struct kl__Node
+{
+    int32_t kl_value_1;
+    struct kl__Node* kl_next_4;
+};
+
+int32_t kl__length__Nodep( struct kl__Node* );
+int32_t kl__sum__Nodep( struct kl__Node* );
+int32_t kl__largest__Nodep( struct kl__Node* );
+int32_t kl__at__Nodep_i32_i32( struct kl__Node*, int32_t, int32_t );
+struct kl__Node* kl__tail__Nodep( struct kl__Node* );
+struct kl__Node* kl__reverse__Nodep( struct kl__Node* );
+int32_t kl__main__( void );
+
+int32_t kl__length__Nodep( struct kl__Node* kl_head_9 )
+{
+#line 17 "codegen/linked_list.kl"
+    int32_t kl_count_13 = 0;
+#line 18 "codegen/linked_list.kl"
+    struct kl__Node* kl_step_17 = kl_head_9;
+#line 20 "codegen/linked_list.kl"
+    while ( true )
+    {
+        bool kl_t0 = (struct kl__Node*) kl_step_17 != (struct kl__Node*) NULL;
+        if ( !kl_t0 )
+        {
+            break;
+        }
+#line 21 "codegen/linked_list.kl"
+        {
+#line 22 "codegen/linked_list.kl"
+            kl_count_13 = (int32_t) ( kl_count_13 + 1 );
+#line 23 "codegen/linked_list.kl"
+            struct kl__Node kl_t1 = *kl_step_17;
+            struct kl__Node* kl_t2 = kl_t1.kl_next_4;
+            kl_step_17 = (struct kl__Node*) kl_t2;
+        }
+    }
+#line 26 "codegen/linked_list.kl"
+    return kl_count_13;
+}
+
+int32_t kl__sum__Nodep( struct kl__Node* kl_head_37 )
+{
+#line 31 "codegen/linked_list.kl"
+    int32_t kl_total_41 = 0;
+#line 32 "codegen/linked_list.kl"
+    struct kl__Node* kl_step_45 = kl_head_37;
+#line 34 "codegen/linked_list.kl"
+    while ( true )
+    {
+        bool kl_t0 = (struct kl__Node*) kl_step_45 != (struct kl__Node*) NULL;
+        if ( !kl_t0 )
+        {
+            break;
+        }
+#line 35 "codegen/linked_list.kl"
+        {
+#line 36 "codegen/linked_list.kl"
+            struct kl__Node kl_t1 = *kl_step_45;
+            int32_t kl_t2 = kl_t1.kl_value_1;
+            int32_t kl_t3 = (int32_t) kl_total_41 + (int32_t) kl_t2;
+            kl_total_41 = (int32_t) kl_t3;
+#line 37 "codegen/linked_list.kl"
+            struct kl__Node kl_t4 = *kl_step_45;
+            struct kl__Node* kl_t5 = kl_t4.kl_next_4;
+            kl_step_45 = (struct kl__Node*) kl_t5;
+        }
+    }
+#line 40 "codegen/linked_list.kl"
+    return kl_total_41;
+}
+
+int32_t kl__largest__Nodep( struct kl__Node* kl_head_68 )
+{
+#line 47 "codegen/linked_list.kl"
+    struct kl__Node kl_t0 = *kl_head_68;
+    int32_t kl_t1 = kl_t0.kl_value_1;
+    int32_t kl_best_74 = kl_t1;
+#line 48 "codegen/linked_list.kl"
+    struct kl__Node kl_t2 = *kl_head_68;
+    struct kl__Node* kl_t3 = kl_t2.kl_next_4;
+    struct kl__Node* kl_step_80 = kl_t3;
+#line 50 "codegen/linked_list.kl"
+    while ( true )
+    {
+        bool kl_t4 = (struct kl__Node*) kl_step_80 != (struct kl__Node*) NULL;
+        if ( !kl_t4 )
+        {
+            break;
+        }
+#line 51 "codegen/linked_list.kl"
+        {
+#line 52 "codegen/linked_list.kl"
+            struct kl__Node kl_t5 = *kl_step_80;
+            int32_t kl_t6 = kl_t5.kl_value_1;
+            bool kl_t7 = (int32_t) kl_t6 > (int32_t) kl_best_74;
+            if ( kl_t7 )
+            {
+#line 54 "codegen/linked_list.kl"
+                struct kl__Node kl_t8 = *kl_step_80;
+                int32_t kl_t9 = kl_t8.kl_value_1;
+                kl_best_74 = (int32_t) kl_t9;
+            }
+#line 57 "codegen/linked_list.kl"
+            struct kl__Node kl_t10 = *kl_step_80;
+            struct kl__Node* kl_t11 = kl_t10.kl_next_4;
+            kl_step_80 = (struct kl__Node*) kl_t11;
+        }
+    }
+#line 60 "codegen/linked_list.kl"
+    return kl_best_74;
+}
+
+int32_t kl__at__Nodep_i32_i32( struct kl__Node* kl_head_110, int32_t kl_index_112, int32_t kl_fallback_114 )
+{
+#line 66 "codegen/linked_list.kl"
+    struct kl__Node* kl_step_119 = kl_head_110;
+#line 67 "codegen/linked_list.kl"
+    int32_t kl_passed_122 = 0;
+#line 69 "codegen/linked_list.kl"
+    while ( true )
+    {
+        bool kl_t0 = (struct kl__Node*) kl_step_119 != (struct kl__Node*) NULL;
+        if ( !kl_t0 )
+        {
+            break;
+        }
+#line 70 "codegen/linked_list.kl"
+        {
+#line 71 "codegen/linked_list.kl"
+            bool kl_t1 = (int32_t) kl_passed_122 == (int32_t) kl_index_112;
+            if ( kl_t1 )
+            {
+#line 73 "codegen/linked_list.kl"
+                struct kl__Node kl_t2 = *kl_step_119;
+                int32_t kl_t3 = kl_t2.kl_value_1;
+                return kl_t3;
+            }
+#line 76 "codegen/linked_list.kl"
+            kl_passed_122 = (int32_t) ( kl_passed_122 + 1 );
+#line 77 "codegen/linked_list.kl"
+            struct kl__Node kl_t4 = *kl_step_119;
+            struct kl__Node* kl_t5 = kl_t4.kl_next_4;
+            kl_step_119 = (struct kl__Node*) kl_t5;
+        }
+    }
+#line 80 "codegen/linked_list.kl"
+    return kl_fallback_114;
+}
+
+struct kl__Node* kl__tail__Nodep( struct kl__Node* kl_head_152 )
+{
+#line 87 "codegen/linked_list.kl"
+    struct kl__Node* kl_step_157 = kl_head_152;
+#line 89 "codegen/linked_list.kl"
+    bool kl_t0 = (struct kl__Node*) kl_step_157 == (struct kl__Node*) NULL;
+    if ( kl_t0 )
+    {
+#line 91 "codegen/linked_list.kl"
+        return NULL;
+    }
+#line 94 "codegen/linked_list.kl"
+    while ( true )
+    {
+        struct kl__Node kl_t1 = *kl_step_157;
+        struct kl__Node* kl_t2 = kl_t1.kl_next_4;
+        bool kl_t3 = (struct kl__Node*) kl_t2 != (struct kl__Node*) NULL;
+        if ( !kl_t3 )
+        {
+            break;
+        }
+#line 95 "codegen/linked_list.kl"
+        {
+#line 96 "codegen/linked_list.kl"
+            struct kl__Node kl_t4 = *kl_step_157;
+            struct kl__Node* kl_t5 = kl_t4.kl_next_4;
+            kl_step_157 = (struct kl__Node*) kl_t5;
+        }
+    }
+#line 99 "codegen/linked_list.kl"
+    return kl_step_157;
+}
+
+struct kl__Node* kl__reverse__Nodep( struct kl__Node* kl_head_185 )
+{
+#line 106 "codegen/linked_list.kl"
+    struct kl__Node* kl_earlier_190 = NULL;
+#line 107 "codegen/linked_list.kl"
+    struct kl__Node* kl_current_194 = kl_head_185;
+#line 109 "codegen/linked_list.kl"
+    while ( true )
+    {
+        bool kl_t0 = (struct kl__Node*) kl_current_194 != (struct kl__Node*) NULL;
+        if ( !kl_t0 )
+        {
+            break;
+        }
+#line 110 "codegen/linked_list.kl"
+        {
+#line 111 "codegen/linked_list.kl"
+            struct kl__Node kl_t1 = *kl_current_194;
+            struct kl__Node* kl_t2 = kl_t1.kl_next_4;
+            struct kl__Node* kl_following_203 = kl_t2;
+#line 113 "codegen/linked_list.kl"
+            ( *kl_current_194 ).kl_next_4 = (struct kl__Node*) kl_earlier_190;
+#line 114 "codegen/linked_list.kl"
+            kl_earlier_190 = (struct kl__Node*) kl_current_194;
+#line 115 "codegen/linked_list.kl"
+            kl_current_194 = (struct kl__Node*) kl_following_203;
+        }
+    }
+#line 118 "codegen/linked_list.kl"
+    return kl_earlier_190;
+}
+
+int32_t kl__main__( void )
+{
+#line 124 "codegen/linked_list.kl"
+    struct kl__Node kl_t0;
+    kl_t0.kl_value_1 = 5;
+    kl_t0.kl_next_4 = NULL;
+    struct kl__Node kl_fifth_229 = kl_t0;
+#line 125 "codegen/linked_list.kl"
+    struct kl__Node* kl_t1 = &kl_fifth_229;
+    struct kl__Node kl_t2;
+    kl_t2.kl_value_1 = 4;
+    kl_t2.kl_next_4 = kl_t1;
+    struct kl__Node kl_fourth_237 = kl_t2;
+#line 126 "codegen/linked_list.kl"
+    struct kl__Node* kl_t3 = &kl_fourth_237;
+    struct kl__Node kl_t4;
+    kl_t4.kl_value_1 = 3;
+    kl_t4.kl_next_4 = kl_t3;
+    struct kl__Node kl_third_245 = kl_t4;
+#line 127 "codegen/linked_list.kl"
+    struct kl__Node* kl_t5 = &kl_third_245;
+    struct kl__Node kl_t6;
+    kl_t6.kl_value_1 = 2;
+    kl_t6.kl_next_4 = kl_t5;
+    struct kl__Node kl_second_253 = kl_t6;
+#line 128 "codegen/linked_list.kl"
+    struct kl__Node* kl_t7 = &kl_second_253;
+    struct kl__Node kl_t8;
+    kl_t8.kl_value_1 = 1;
+    kl_t8.kl_next_4 = kl_t7;
+    struct kl__Node kl_first_261 = kl_t8;
+#line 130 "codegen/linked_list.kl"
+    struct kl__Node* kl_t9 = &kl_first_261;
+    struct kl__Node* kl_head_266 = kl_t9;
+#line 132 "codegen/linked_list.kl"
+    int32_t kl_t10 = kl__length__Nodep( (struct kl__Node*) kl_head_266 );
+    bool kl_t11 = (int32_t) kl_t10 != (int32_t) 5;
+    if ( kl_t11 )
+    {
+        return 1;
+    }
+#line 133 "codegen/linked_list.kl"
+    int32_t kl_t12 = kl__sum__Nodep( (struct kl__Node*) kl_head_266 );
+    bool kl_t13 = (int32_t) kl_t12 != (int32_t) 15;
+    if ( kl_t13 )
+    {
+        return 2;
+    }
+#line 134 "codegen/linked_list.kl"
+    int32_t kl_t14 = kl__largest__Nodep( (struct kl__Node*) kl_head_266 );
+    bool kl_t15 = (int32_t) kl_t14 != (int32_t) 5;
+    if ( kl_t15 )
+    {
+        return 3;
+    }
+#line 135 "codegen/linked_list.kl"
+    int32_t kl_t16 = kl__at__Nodep_i32_i32( (struct kl__Node*) kl_head_266, (int32_t) 0, (int32_t) 0 );
+    bool kl_t17 = (int32_t) kl_t16 != (int32_t) 1;
+    if ( kl_t17 )
+    {
+        return 4;
+    }
+#line 136 "codegen/linked_list.kl"
+    int32_t kl_t18 = kl__at__Nodep_i32_i32( (struct kl__Node*) kl_head_266, (int32_t) 4, (int32_t) 0 );
+    bool kl_t19 = (int32_t) kl_t18 != (int32_t) 5;
+    if ( kl_t19 )
+    {
+        return 5;
+    }
+#line 137 "codegen/linked_list.kl"
+    int32_t kl_t20 = kl__at__Nodep_i32_i32( (struct kl__Node*) kl_head_266, (int32_t) 9, (int32_t) 99 );
+    bool kl_t21 = (int32_t) kl_t20 != (int32_t) 99;
+    if ( kl_t21 )
+    {
+        return 6;
+    }
+#line 140 "codegen/linked_list.kl"
+    int32_t kl_t22 = kl__length__Nodep( (struct kl__Node*) NULL );
+    bool kl_t23 = (int32_t) kl_t22 != (int32_t) 0;
+    if ( kl_t23 )
+    {
+        return 7;
+    }
+#line 141 "codegen/linked_list.kl"
+    int32_t kl_t24 = kl__sum__Nodep( (struct kl__Node*) NULL );
+    bool kl_t25 = (int32_t) kl_t24 != (int32_t) 0;
+    if ( kl_t25 )
+    {
+        return 8;
+    }
+#line 143 "codegen/linked_list.kl"
+    struct kl__Node* kl_t26 = kl__reverse__Nodep( (struct kl__Node*) kl_head_266 );
+    kl_head_266 = (struct kl__Node*) kl_t26;
+#line 145 "codegen/linked_list.kl"
+    int32_t kl_t27 = kl__length__Nodep( (struct kl__Node*) kl_head_266 );
+    bool kl_t28 = (int32_t) kl_t27 != (int32_t) 5;
+    if ( kl_t28 )
+    {
+        return 9;
+    }
+#line 146 "codegen/linked_list.kl"
+    int32_t kl_t29 = kl__sum__Nodep( (struct kl__Node*) kl_head_266 );
+    bool kl_t30 = (int32_t) kl_t29 != (int32_t) 15;
+    if ( kl_t30 )
+    {
+        return 10;
+    }
+#line 147 "codegen/linked_list.kl"
+    int32_t kl_t31 = kl__at__Nodep_i32_i32( (struct kl__Node*) kl_head_266, (int32_t) 0, (int32_t) 0 );
+    bool kl_t32 = (int32_t) kl_t31 != (int32_t) 5;
+    if ( kl_t32 )
+    {
+        return 11;
+    }
+#line 148 "codegen/linked_list.kl"
+    int32_t kl_t33 = kl__at__Nodep_i32_i32( (struct kl__Node*) kl_head_266, (int32_t) 4, (int32_t) 0 );
+    bool kl_t34 = (int32_t) kl_t33 != (int32_t) 1;
+    if ( kl_t34 )
+    {
+        return 12;
+    }
+#line 151 "codegen/linked_list.kl"
+    struct kl__Node* kl_t35 = kl__reverse__Nodep( (struct kl__Node*) kl_head_266 );
+    kl_head_266 = (struct kl__Node*) kl_t35;
+#line 153 "codegen/linked_list.kl"
+    int32_t kl_t36 = kl__at__Nodep_i32_i32( (struct kl__Node*) kl_head_266, (int32_t) 0, (int32_t) 0 );
+    bool kl_t37 = (int32_t) kl_t36 != (int32_t) 1;
+    if ( kl_t37 )
+    {
+        return 13;
+    }
+#line 154 "codegen/linked_list.kl"
+    int32_t kl_t38 = kl__at__Nodep_i32_i32( (struct kl__Node*) kl_head_266, (int32_t) 4, (int32_t) 0 );
+    bool kl_t39 = (int32_t) kl_t38 != (int32_t) 5;
+    if ( kl_t39 )
+    {
+        return 14;
+    }
+#line 155 "codegen/linked_list.kl"
+    int32_t kl_t40 = kl__length__Nodep( (struct kl__Node*) kl_head_266 );
+    bool kl_t41 = (int32_t) kl_t40 != (int32_t) 5;
+    if ( kl_t41 )
+    {
+        return 15;
+    }
+#line 158 "codegen/linked_list.kl"
+    struct kl__Node* kl_t42 = kl__tail__Nodep( (struct kl__Node*) kl_head_266 );
+    struct kl__Node kl_t43 = *kl_t42;
+    int32_t kl_t44 = kl_t43.kl_value_1;
+    bool kl_t45 = (int32_t) kl_t44 != (int32_t) 5;
+    if ( kl_t45 )
+    {
+        return 16;
+    }
+#line 159 "codegen/linked_list.kl"
+    struct kl__Node* kl_t46 = kl__tail__Nodep( (struct kl__Node*) kl_head_266 );
+    struct kl__Node kl_t47 = *kl_t46;
+    struct kl__Node* kl_t48 = kl_t47.kl_next_4;
+    bool kl_t49 = (struct kl__Node*) kl_t48 != (struct kl__Node*) NULL;
+    if ( kl_t49 )
+    {
+        return 17;
+    }
+#line 160 "codegen/linked_list.kl"
+    struct kl__Node* kl_t50 = kl__tail__Nodep( (struct kl__Node*) NULL );
+    bool kl_t51 = (struct kl__Node*) kl_t50 != (struct kl__Node*) NULL;
+    if ( kl_t51 )
+    {
+        return 18;
+    }
+#line 162 "codegen/linked_list.kl"
+    return 0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

@@ -1,0 +1,557 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+bool kl__is_even__i32( int32_t );
+bool kl__is_odd__i32( int32_t );
+int32_t kl__isqrt__i32( int32_t );
+bool kl__is_prime__i32( int32_t );
+int32_t kl__count_primes__i32( int32_t );
+int32_t kl__collatz_steps__u64( uint64_t );
+uint64_t kl__collatz_peak__u64( uint64_t );
+int32_t kl__digit_sum__i32( int32_t );
+int32_t kl__reverse_digits__i32( int32_t );
+bool kl__is_palindrome__i32( int32_t );
+uint64_t kl__factorial__u32( uint32_t );
+int32_t kl__main__( void );
+
+bool kl__is_even__i32( int32_t kl_n_2 )
+{
+#line 15 "codegen/numbers.kl"
+    bool kl_t0 = (int32_t) kl_n_2 == (int32_t) 0;
+    if ( kl_t0 )
+    {
+#line 17 "codegen/numbers.kl"
+        return true;
+    }
+#line 20 "codegen/numbers.kl"
+    int32_t kl_t1 = (int32_t) kl_n_2 - (int32_t) 1;
+    bool kl_t2 = kl__is_odd__i32( (int32_t) kl_t1 );
+    return kl_t2;
+}
+
+bool kl__is_odd__i32( int32_t kl_n_22 )
+{
+#line 25 "codegen/numbers.kl"
+    bool kl_t0 = (int32_t) kl_n_22 == (int32_t) 0;
+    if ( kl_t0 )
+    {
+#line 27 "codegen/numbers.kl"
+        return false;
+    }
+#line 30 "codegen/numbers.kl"
+    int32_t kl_t1 = (int32_t) kl_n_22 - (int32_t) 1;
+    bool kl_t2 = kl__is_even__i32( (int32_t) kl_t1 );
+    return kl_t2;
+}
+
+int32_t kl__isqrt__i32( int32_t kl_value_42 )
+{
+#line 37 "codegen/numbers.kl"
+    bool kl_t0 = (int32_t) kl_value_42 < (int32_t) 2;
+    if ( kl_t0 )
+    {
+#line 39 "codegen/numbers.kl"
+        return kl_value_42;
+    }
+#line 42 "codegen/numbers.kl"
+    int32_t kl_estimate_53 = kl_value_42;
+#line 43 "codegen/numbers.kl"
+    int32_t kl_t1 = (int32_t) kl_value_42 / (int32_t) kl_estimate_53;
+    int32_t kl_t2 = (int32_t) kl_estimate_53 + (int32_t) kl_t1;
+    int32_t kl_t3 = (int32_t) kl_t2 / (int32_t) 2;
+    int32_t kl_next_62 = kl_t3;
+#line 45 "codegen/numbers.kl"
+    while ( true )
+    {
+        bool kl_t4 = (int32_t) kl_next_62 < (int32_t) kl_estimate_53;
+        if ( !kl_t4 )
+        {
+            break;
+        }
+#line 46 "codegen/numbers.kl"
+        {
+#line 47 "codegen/numbers.kl"
+            kl_estimate_53 = (int32_t) kl_next_62;
+#line 48 "codegen/numbers.kl"
+            int32_t kl_t5 = (int32_t) kl_value_42 / (int32_t) kl_estimate_53;
+            int32_t kl_t6 = (int32_t) kl_estimate_53 + (int32_t) kl_t5;
+            int32_t kl_t7 = (int32_t) kl_t6 / (int32_t) 2;
+            kl_next_62 = (int32_t) kl_t7;
+        }
+    }
+#line 51 "codegen/numbers.kl"
+    return kl_estimate_53;
+}
+
+bool kl__is_prime__i32( int32_t kl_n_86 )
+{
+#line 58 "codegen/numbers.kl"
+    bool kl_t0 = (int32_t) kl_n_86 < (int32_t) 2;
+    if ( kl_t0 )
+    {
+#line 60 "codegen/numbers.kl"
+        return false;
+    }
+#line 63 "codegen/numbers.kl"
+    int32_t kl_t1 = (int32_t) kl_n_86 % (int32_t) 2;
+    bool kl_t2 = (int32_t) kl_t1 == (int32_t) 0;
+    if ( kl_t2 )
+    {
+#line 65 "codegen/numbers.kl"
+        bool kl_t3 = (int32_t) kl_n_86 == (int32_t) 2;
+        return kl_t3;
+    }
+#line 68 "codegen/numbers.kl"
+    int32_t kl_t4 = kl__isqrt__i32( (int32_t) kl_n_86 );
+    int32_t kl_bound_111 = kl_t4;
+#line 69 "codegen/numbers.kl"
+    int32_t kl_divisor_114 = 3;
+#line 71 "codegen/numbers.kl"
+    while ( true )
+    {
+        bool kl_t5 = (int32_t) kl_divisor_114 <= (int32_t) kl_bound_111;
+        if ( !kl_t5 )
+        {
+            break;
+        }
+#line 72 "codegen/numbers.kl"
+        {
+#line 73 "codegen/numbers.kl"
+            int32_t kl_t6 = (int32_t) kl_n_86 % (int32_t) kl_divisor_114;
+            bool kl_t7 = (int32_t) kl_t6 == (int32_t) 0;
+            if ( kl_t7 )
+            {
+#line 75 "codegen/numbers.kl"
+                return false;
+            }
+#line 78 "codegen/numbers.kl"
+            int32_t kl_t8 = (int32_t) kl_divisor_114 + (int32_t) 2;
+            kl_divisor_114 = (int32_t) kl_t8;
+        }
+    }
+#line 81 "codegen/numbers.kl"
+    return true;
+}
+
+int32_t kl__count_primes__i32( int32_t kl_limit_138 )
+{
+#line 86 "codegen/numbers.kl"
+    int32_t kl_found_142 = 0;
+#line 88 "codegen/numbers.kl"
+    {
+        int32_t kl_n_145 = 2;
+        while ( true )
+        {
+            bool kl_t0 = (int32_t) kl_n_145 < (int32_t) kl_limit_138;
+            if ( !kl_t0 )
+            {
+                break;
+            }
+#line 89 "codegen/numbers.kl"
+            {
+#line 90 "codegen/numbers.kl"
+                bool kl_t1 = kl__is_prime__i32( (int32_t) kl_n_145 );
+                if ( kl_t1 )
+                {
+#line 92 "codegen/numbers.kl"
+                    kl_found_142 = (int32_t) ( kl_found_142 + 1 );
+                }
+            }
+#line 88 "codegen/numbers.kl"
+            kl_n_145 = (int32_t) ( kl_n_145 + 1 );
+        }
+    }
+#line 96 "codegen/numbers.kl"
+    return kl_found_142;
+}
+
+int32_t kl__collatz_steps__u64( uint64_t kl_start_167 )
+{
+#line 103 "codegen/numbers.kl"
+    uint64_t kl_value_171 = kl_start_167;
+#line 104 "codegen/numbers.kl"
+    int32_t kl_steps_174 = 0;
+#line 106 "codegen/numbers.kl"
+    while ( true )
+    {
+        bool kl_t0 = (uint64_t) kl_value_171 != (uint64_t) 1;
+        if ( !kl_t0 )
+        {
+            break;
+        }
+#line 107 "codegen/numbers.kl"
+        {
+#line 108 "codegen/numbers.kl"
+            uint64_t kl_t1 = (uint64_t) kl_value_171 % (uint64_t) 2;
+            bool kl_t2 = (uint64_t) kl_t1 == (uint64_t) 0;
+            if ( kl_t2 )
+            {
+#line 110 "codegen/numbers.kl"
+                uint64_t kl_t3 = (uint64_t) kl_value_171 / (uint64_t) 2;
+                kl_value_171 = (uint64_t) kl_t3;
+            }
+            else
+            {
+#line 114 "codegen/numbers.kl"
+                uint64_t kl_t4 = (uint64_t) 3 * (uint64_t) kl_value_171;
+                uint64_t kl_t5 = (uint64_t) kl_t4 + (uint64_t) 1;
+                kl_value_171 = (uint64_t) kl_t5;
+            }
+#line 117 "codegen/numbers.kl"
+            kl_steps_174 = (int32_t) ( kl_steps_174 + 1 );
+        }
+    }
+#line 120 "codegen/numbers.kl"
+    return kl_steps_174;
+}
+
+uint64_t kl__collatz_peak__u64( uint64_t kl_start_208 )
+{
+#line 127 "codegen/numbers.kl"
+    uint64_t kl_value_212 = kl_start_208;
+#line 128 "codegen/numbers.kl"
+    uint64_t kl_peak_215 = kl_start_208;
+#line 130 "codegen/numbers.kl"
+    while ( true )
+    {
+        bool kl_t0 = (uint64_t) kl_value_212 != (uint64_t) 1;
+        if ( !kl_t0 )
+        {
+            break;
+        }
+#line 131 "codegen/numbers.kl"
+        {
+#line 132 "codegen/numbers.kl"
+            uint64_t kl_t1 = (uint64_t) kl_value_212 % (uint64_t) 2;
+            bool kl_t2 = (uint64_t) kl_t1 == (uint64_t) 0;
+            if ( kl_t2 )
+            {
+#line 134 "codegen/numbers.kl"
+                uint64_t kl_t3 = (uint64_t) kl_value_212 / (uint64_t) 2;
+                kl_value_212 = (uint64_t) kl_t3;
+            }
+            else
+            {
+#line 138 "codegen/numbers.kl"
+                uint64_t kl_t4 = (uint64_t) 3 * (uint64_t) kl_value_212;
+                uint64_t kl_t5 = (uint64_t) kl_t4 + (uint64_t) 1;
+                kl_value_212 = (uint64_t) kl_t5;
+            }
+#line 141 "codegen/numbers.kl"
+            bool kl_t6 = (uint64_t) kl_value_212 > (uint64_t) kl_peak_215;
+            if ( kl_t6 )
+            {
+#line 143 "codegen/numbers.kl"
+                kl_peak_215 = (uint64_t) kl_value_212;
+            }
+        }
+    }
+#line 147 "codegen/numbers.kl"
+    return kl_peak_215;
+}
+
+int32_t kl__digit_sum__i32( int32_t kl_n_255 )
+{
+#line 152 "codegen/numbers.kl"
+    int32_t kl_rest_259 = kl_n_255;
+#line 153 "codegen/numbers.kl"
+    int32_t kl_total_262 = 0;
+#line 155 "codegen/numbers.kl"
+    while ( true )
+    {
+        bool kl_t0 = (int32_t) kl_rest_259 > (int32_t) 0;
+        if ( !kl_t0 )
+        {
+            break;
+        }
+#line 156 "codegen/numbers.kl"
+        {
+#line 157 "codegen/numbers.kl"
+            int32_t kl_t1 = (int32_t) kl_rest_259 % (int32_t) 10;
+            int32_t kl_t2 = (int32_t) kl_total_262 + (int32_t) kl_t1;
+            kl_total_262 = (int32_t) kl_t2;
+#line 158 "codegen/numbers.kl"
+            int32_t kl_t3 = (int32_t) kl_rest_259 / (int32_t) 10;
+            kl_rest_259 = (int32_t) kl_t3;
+        }
+    }
+#line 161 "codegen/numbers.kl"
+    return kl_total_262;
+}
+
+int32_t kl__reverse_digits__i32( int32_t kl_n_284 )
+{
+#line 166 "codegen/numbers.kl"
+    int32_t kl_rest_288 = kl_n_284;
+#line 167 "codegen/numbers.kl"
+    int32_t kl_reversed_291 = 0;
+#line 169 "codegen/numbers.kl"
+    while ( true )
+    {
+        bool kl_t0 = (int32_t) kl_rest_288 > (int32_t) 0;
+        if ( !kl_t0 )
+        {
+            break;
+        }
+#line 170 "codegen/numbers.kl"
+        {
+#line 171 "codegen/numbers.kl"
+            int32_t kl_t1 = (int32_t) kl_reversed_291 * (int32_t) 10;
+            int32_t kl_t2 = (int32_t) kl_rest_288 % (int32_t) 10;
+            int32_t kl_t3 = (int32_t) kl_t1 + (int32_t) kl_t2;
+            kl_reversed_291 = (int32_t) kl_t3;
+#line 172 "codegen/numbers.kl"
+            int32_t kl_t4 = (int32_t) kl_rest_288 / (int32_t) 10;
+            kl_rest_288 = (int32_t) kl_t4;
+        }
+    }
+#line 175 "codegen/numbers.kl"
+    return kl_reversed_291;
+}
+
+bool kl__is_palindrome__i32( int32_t kl_n_317 )
+{
+#line 180 "codegen/numbers.kl"
+    int32_t kl_t0 = kl__reverse_digits__i32( (int32_t) kl_n_317 );
+    bool kl_t1 = (int32_t) kl_t0 == (int32_t) kl_n_317;
+    return kl_t1;
+}
+
+uint64_t kl__factorial__u32( uint32_t kl_n_330 )
+{
+#line 187 "codegen/numbers.kl"
+    uint64_t kl_total_334 = 1;
+#line 189 "codegen/numbers.kl"
+    {
+        uint32_t kl_i_337 = 2;
+        while ( true )
+        {
+            bool kl_t0 = (uint32_t) kl_i_337 <= (uint32_t) kl_n_330;
+            if ( !kl_t0 )
+            {
+                break;
+            }
+#line 190 "codegen/numbers.kl"
+            {
+#line 191 "codegen/numbers.kl"
+                uint64_t kl_t1 = (uint64_t) kl_i_337;
+                uint64_t kl_t2 = (uint64_t) kl_total_334 * (uint64_t) kl_t1;
+                kl_total_334 = (uint64_t) kl_t2;
+            }
+#line 189 "codegen/numbers.kl"
+            kl_i_337 = (uint32_t) ( kl_i_337 + 1 );
+        }
+    }
+#line 194 "codegen/numbers.kl"
+    return kl_total_334;
+}
+
+int32_t kl__main__( void )
+{
+#line 200 "codegen/numbers.kl"
+    bool kl_t0 = kl__is_even__i32( (int32_t) 0 );
+    bool kl_t1 = (bool) !kl_t0;
+    if ( kl_t1 )
+    {
+        return 1;
+    }
+#line 201 "codegen/numbers.kl"
+    bool kl_t2 = kl__is_odd__i32( (int32_t) 0 );
+    if ( kl_t2 )
+    {
+        return 2;
+    }
+#line 202 "codegen/numbers.kl"
+    bool kl_t3 = kl__is_even__i32( (int32_t) 10 );
+    bool kl_t4 = (bool) !kl_t3;
+    if ( kl_t4 )
+    {
+        return 3;
+    }
+#line 203 "codegen/numbers.kl"
+    bool kl_t5 = kl__is_odd__i32( (int32_t) 7 );
+    bool kl_t6 = (bool) !kl_t5;
+    if ( kl_t6 )
+    {
+        return 4;
+    }
+#line 204 "codegen/numbers.kl"
+    bool kl_t7 = kl__is_even__i32( (int32_t) 7 );
+    if ( kl_t7 )
+    {
+        return 5;
+    }
+#line 207 "codegen/numbers.kl"
+    int32_t kl_t8 = kl__isqrt__i32( (int32_t) 0 );
+    bool kl_t9 = (int32_t) kl_t8 != (int32_t) 0;
+    if ( kl_t9 )
+    {
+        return 6;
+    }
+#line 208 "codegen/numbers.kl"
+    int32_t kl_t10 = kl__isqrt__i32( (int32_t) 1 );
+    bool kl_t11 = (int32_t) kl_t10 != (int32_t) 1;
+    if ( kl_t11 )
+    {
+        return 7;
+    }
+#line 209 "codegen/numbers.kl"
+    int32_t kl_t12 = kl__isqrt__i32( (int32_t) 3 );
+    bool kl_t13 = (int32_t) kl_t12 != (int32_t) 1;
+    if ( kl_t13 )
+    {
+        return 8;
+    }
+#line 210 "codegen/numbers.kl"
+    int32_t kl_t14 = kl__isqrt__i32( (int32_t) 4 );
+    bool kl_t15 = (int32_t) kl_t14 != (int32_t) 2;
+    if ( kl_t15 )
+    {
+        return 9;
+    }
+#line 211 "codegen/numbers.kl"
+    int32_t kl_t16 = kl__isqrt__i32( (int32_t) 999999 );
+    bool kl_t17 = (int32_t) kl_t16 != (int32_t) 999;
+    if ( kl_t17 )
+    {
+        return 10;
+    }
+#line 212 "codegen/numbers.kl"
+    int32_t kl_t18 = kl__isqrt__i32( (int32_t) 1000000 );
+    bool kl_t19 = (int32_t) kl_t18 != (int32_t) 1000;
+    if ( kl_t19 )
+    {
+        return 11;
+    }
+#line 214 "codegen/numbers.kl"
+    bool kl_t20 = kl__is_prime__i32( (int32_t) 1 );
+    if ( kl_t20 )
+    {
+        return 12;
+    }
+#line 215 "codegen/numbers.kl"
+    bool kl_t21 = kl__is_prime__i32( (int32_t) 2 );
+    bool kl_t22 = (bool) !kl_t21;
+    if ( kl_t22 )
+    {
+        return 13;
+    }
+#line 216 "codegen/numbers.kl"
+    bool kl_t23 = kl__is_prime__i32( (int32_t) 97 );
+    bool kl_t24 = (bool) !kl_t23;
+    if ( kl_t24 )
+    {
+        return 14;
+    }
+#line 217 "codegen/numbers.kl"
+    bool kl_t25 = kl__is_prime__i32( (int32_t) 91 );
+    if ( kl_t25 )
+    {
+        return 15;
+    }
+#line 218 "codegen/numbers.kl"
+    int32_t kl_t26 = kl__count_primes__i32( (int32_t) 100 );
+    bool kl_t27 = (int32_t) kl_t26 != (int32_t) 25;
+    if ( kl_t27 )
+    {
+        return 16;
+    }
+#line 219 "codegen/numbers.kl"
+    int32_t kl_t28 = kl__count_primes__i32( (int32_t) 1000 );
+    bool kl_t29 = (int32_t) kl_t28 != (int32_t) 168;
+    if ( kl_t29 )
+    {
+        return 17;
+    }
+#line 221 "codegen/numbers.kl"
+    int32_t kl_t30 = kl__collatz_steps__u64( (uint64_t) 1 );
+    bool kl_t31 = (int32_t) kl_t30 != (int32_t) 0;
+    if ( kl_t31 )
+    {
+        return 18;
+    }
+#line 222 "codegen/numbers.kl"
+    int32_t kl_t32 = kl__collatz_steps__u64( (uint64_t) 27 );
+    bool kl_t33 = (int32_t) kl_t32 != (int32_t) 111;
+    if ( kl_t33 )
+    {
+        return 19;
+    }
+#line 223 "codegen/numbers.kl"
+    int32_t kl_t34 = kl__collatz_steps__u64( (uint64_t) 97 );
+    bool kl_t35 = (int32_t) kl_t34 != (int32_t) 118;
+    if ( kl_t35 )
+    {
+        return 20;
+    }
+#line 224 "codegen/numbers.kl"
+    uint64_t kl_t36 = kl__collatz_peak__u64( (uint64_t) 27 );
+    bool kl_t37 = (uint64_t) kl_t36 != (uint64_t) 9232;
+    if ( kl_t37 )
+    {
+        return 21;
+    }
+#line 226 "codegen/numbers.kl"
+    int32_t kl_t38 = kl__digit_sum__i32( (int32_t) 98765 );
+    bool kl_t39 = (int32_t) kl_t38 != (int32_t) 35;
+    if ( kl_t39 )
+    {
+        return 22;
+    }
+#line 227 "codegen/numbers.kl"
+    int32_t kl_t40 = kl__digit_sum__i32( (int32_t) 0 );
+    bool kl_t41 = (int32_t) kl_t40 != (int32_t) 0;
+    if ( kl_t41 )
+    {
+        return 23;
+    }
+#line 228 "codegen/numbers.kl"
+    int32_t kl_t42 = kl__reverse_digits__i32( (int32_t) 12345 );
+    bool kl_t43 = (int32_t) kl_t42 != (int32_t) 54321;
+    if ( kl_t43 )
+    {
+        return 24;
+    }
+#line 229 "codegen/numbers.kl"
+    bool kl_t44 = kl__is_palindrome__i32( (int32_t) 12321 );
+    bool kl_t45 = (bool) !kl_t44;
+    if ( kl_t45 )
+    {
+        return 25;
+    }
+#line 230 "codegen/numbers.kl"
+    bool kl_t46 = kl__is_palindrome__i32( (int32_t) 12345 );
+    if ( kl_t46 )
+    {
+        return 26;
+    }
+#line 232 "codegen/numbers.kl"
+    uint64_t kl_t47 = kl__factorial__u32( (uint32_t) 0 );
+    bool kl_t48 = (uint64_t) kl_t47 != (uint64_t) 1;
+    if ( kl_t48 )
+    {
+        return 27;
+    }
+#line 233 "codegen/numbers.kl"
+    uint64_t kl_t49 = kl__factorial__u32( (uint32_t) 10 );
+    bool kl_t50 = (uint64_t) kl_t49 != (uint64_t) 3628800;
+    if ( kl_t50 )
+    {
+        return 28;
+    }
+#line 234 "codegen/numbers.kl"
+    uint64_t kl_t51 = kl__factorial__u32( (uint32_t) 20 );
+    bool kl_t52 = (uint64_t) kl_t51 != (uint64_t) 2432902008176640000;
+    if ( kl_t52 )
+    {
+        return 29;
+    }
+#line 236 "codegen/numbers.kl"
+    return 0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

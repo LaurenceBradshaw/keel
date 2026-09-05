@@ -1,0 +1,163 @@
+// A singly linked list built entirely on the stack: every node is a local and the links are raw
+// pointers into the frame. Exercises pointers to structs, `(*p).field` on both sides of an
+// assignment, nullptr as a terminator, functions taking and returning pointers, and rewiring
+// links in place.
+//
+// Every check returns a distinct code, so exit 0 means all of them agreed.
+
+struct Node
+{
+    i32   value;
+    Node* next;
+};
+
+// A null head is an empty list, which is why the loop tests before it dereferences.
+i32 length( Node* head )
+{
+    i32   count = 0;
+    Node* step  = head;
+
+    while ( step != nullptr )
+    {
+        count++;
+        step = (*step).next;
+    }
+
+    return count;
+}
+
+i32 sum( Node* head )
+{
+    i32   total = 0;
+    Node* step  = head;
+
+    while ( step != nullptr )
+    {
+        total += (*step).value;
+        step = (*step).next;
+    }
+
+    return total;
+}
+
+// Undefined on an empty list, so the caller keeps that promise. The first value seeds the running
+// maximum rather than a sentinel, which would have to be a type-specific minimum.
+i32 largest( Node* head )
+{
+    i32   best = (*head).value;
+    Node* step = (*head).next;
+
+    while ( step != nullptr )
+    {
+        if ( (*step).value > best )
+        {
+            best = (*step).value;
+        }
+
+        step = (*step).next;
+    }
+
+    return best;
+}
+
+// The value at a position, or the fallback when the list is shorter than that.
+i32 at( Node* head, i32 index, i32 fallback )
+{
+    Node* step   = head;
+    i32   passed = 0;
+
+    while ( step != nullptr )
+    {
+        if ( passed == index )
+        {
+            return (*step).value;
+        }
+
+        passed++;
+        step = (*step).next;
+    }
+
+    return fallback;
+}
+
+// The last node, or null for an empty list. Returning a pointer is what makes the terminator
+// checkable from outside.
+Node* tail( Node* head )
+{
+    Node* step = head;
+
+    if ( step == nullptr )
+    {
+        return nullptr;
+    }
+
+    while ( (*step).next != nullptr )
+    {
+        step = (*step).next;
+    }
+
+    return step;
+}
+
+// Reverses the links in place and hands back the new head. The saved `following` is why this
+// works: the link it needs is overwritten a line later.
+Node* reverse( Node* head )
+{
+    Node* earlier = nullptr;
+    Node* current = head;
+
+    while ( current != nullptr )
+    {
+        Node* following = (*current).next;
+
+        (*current).next = earlier;
+        earlier         = current;
+        current         = following;
+    }
+
+    return earlier;
+}
+
+i32 main()
+{
+    // Built back to front, so each node can point at one that already exists.
+    Node fifth  = Node { 5, nullptr };
+    Node fourth = Node { 4, &fifth };
+    Node third  = Node { 3, &fourth };
+    Node second = Node { 2, &third };
+    Node first  = Node { 1, &second };
+
+    Node* head = &first;
+
+    if ( length( head ) != 5 ) { return 1; }
+    if ( sum( head ) != 15 ) { return 2; }
+    if ( largest( head ) != 5 ) { return 3; }
+    if ( at( head, 0, 0 ) != 1 ) { return 4; }
+    if ( at( head, 4, 0 ) != 5 ) { return 5; }
+    if ( at( head, 9, 99 ) != 99 ) { return 6; }
+
+    // An empty list is a null head, not a special case.
+    if ( length( nullptr ) != 0 ) { return 7; }
+    if ( sum( nullptr ) != 0 ) { return 8; }
+
+    head = reverse( head );
+
+    if ( length( head ) != 5 ) { return 9; }
+    if ( sum( head ) != 15 ) { return 10; }
+    if ( at( head, 0, 0 ) != 5 ) { return 11; }
+    if ( at( head, 4, 0 ) != 1 ) { return 12; }
+
+    // Reversing twice is the identity, and proves the rewiring left no node stranded.
+    head = reverse( head );
+
+    if ( at( head, 0, 0 ) != 1 ) { return 13; }
+    if ( at( head, 4, 0 ) != 5 ) { return 14; }
+    if ( length( head ) != 5 ) { return 15; }
+
+    // The list still terminates after two rewirings, and its end is the value it started with.
+    if ( (*tail( head )).value != 5 ) { return 16; }
+    if ( (*tail( head )).next != nullptr ) { return 17; }
+    if ( tail( nullptr ) != nullptr ) { return 18; }
+
+    return 0;
+}
