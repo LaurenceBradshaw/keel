@@ -1,0 +1,53 @@
+// A struct literal is a temporary plus one assignment per field. There is no aggregate rvalue -
+// dropping Struct_init from the enum is what makes source order fall out of statement order, where
+// the C emitter needed two phases because it was building a single expression.
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+struct Wide
+{
+    i64 value;
+};
+
+struct Outer
+{
+    Point inner;
+};
+
+Point designated()
+{
+    return Point { .x = 1, .y = 2 };
+}
+
+// Positional form names no field, so the i-th initialiser fills the i-th field.
+Point positional()
+{
+    return Point { 1, 2 };
+}
+
+// §7.1: the order the fields are *written* is the order they run, even when that is not the order
+// they were declared in.
+Point out_of_order()
+{
+    return Point { .y = 2, .x = 1 };
+}
+
+// A value widens to reach its field, the same as an argument reaching a parameter.
+Wide widened( u8 small )
+{
+    return Wide { .value = small };
+}
+
+// A nested literal builds its own temporary first, then is copied into the field.
+Outer nested()
+{
+    return Outer { Point { 1, 2 } };
+}
+
+i32 main()
+{
+    return 0;
+}

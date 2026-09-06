@@ -1,0 +1,55 @@
+fn read_back {
+    let _0: i32; // return slot
+    let _1: i32; // x
+    let _2: i32; // y
+
+    bb0:
+        _1 = const 1
+        _2 = const 2
+        _0 = copy _1
+        return
+}
+fn inferred {
+    let _0: i32; // return slot
+    let _1: i32; // value
+
+    bb0:
+        _1 = const 200
+        _0 = copy _1
+        return
+}
+fn uninitialised {
+    let _0: i32; // return slot
+    let _1: i32; // x
+
+    bb0:
+        _0 = const 0
+        return
+}
+fn parameter_read {
+    let _0: i32; // return slot
+    let _1: i32; // parameter a
+    let _2: i32; // parameter b
+
+    bb0:
+        _0 = copy _2
+        return
+}
+fn nested {
+    let _0: i32; // return slot
+    let _1: i32; // x
+    let _2: i32; // y
+
+    bb0:
+        _1 = const 1
+        _2 = const 2
+        _0 = copy _1
+        return
+}
+fn main {
+    let _0: i32; // return slot
+
+    bb0:
+        _0 = const 0
+        return
+}

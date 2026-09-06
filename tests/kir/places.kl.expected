@@ -1,0 +1,99 @@
+fn read_field {
+    let _0: i32; // return slot
+    let _1: Point; // parameter p
+
+    bb0:
+        _0 = copy _1.x
+        return
+}
+fn read_nested {
+    let _0: i32; // return slot
+    let _1: Nested; // parameter n
+
+    bb0:
+        _0 = copy _1.inner.y
+        return
+}
+fn read_through_pointer {
+    let _0: i32; // return slot
+    let _1: i32*; // parameter q
+
+    bb0:
+        _0 = copy (*_1)
+        return
+}
+fn field_through_pointer {
+    let _0: i32; // return slot
+    let _1: Node*; // parameter p
+
+    bb0:
+        _0 = copy (*_1).value
+        return
+}
+fn write_through_places {
+    let _0: void; // return slot
+    let _1: i32*; // parameter q
+    let _2: Node*; // parameter p
+
+    bb0:
+        (*_1) = const 1
+        (*_2).value = const 2
+        (*_2).next = copy _2
+        return
+}
+fn address_of_local {
+    let _0: i32*; // return slot
+    let _1: i32; // x
+    let _2: i32*;
+
+    bb0:
+        _1 = const 1
+        _2 = &_1
+        _0 = copy _2
+        return
+}
+fn address_of_field {
+    let _0: i32*; // return slot
+    let _1: Point; // parameter p
+    let _2: i32*;
+
+    bb0:
+        _2 = &_1.x
+        _0 = copy _2
+        return
+}
+fn widen {
+    let _0: i64; // return slot
+    let _1: i32; // parameter v
+    let _2: i64;
+
+    bb0:
+        _2 = copy _1 as i64
+        _0 = copy _2
+        return
+}
+fn narrow {
+    let _0: u8; // return slot
+    let _1: i32; // parameter v
+    let _2: u8;
+
+    bb0:
+        _2 = copy _1 as u8
+        _0 = copy _2
+        return
+}
+fn unchanged {
+    let _0: i32; // return slot
+    let _1: i32; // parameter v
+
+    bb0:
+        _0 = copy _1
+        return
+}
+fn main {
+    let _0: i32; // return slot
+
+    bb0:
+        _0 = const 0
+        return
+}

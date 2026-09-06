@@ -1,5 +1,6 @@
 #include "codegen_c/emitter.h"
 #include "codegen_c/mangle.h"
+#include "codegen_c/spelling.h"
 #include "lex/token.h"
 
 #include <fmt/format.h>
@@ -11,40 +12,6 @@ namespace keel
 {
 namespace
 {
-
-// The operation a compound assignment performs: `+=` is `+`, applied and stored back. The emitter
-// expands it rather than emitting C's own `+=`, so that the conversions stay explicit and one code
-// path computes the result - C's compound assignment has conversion rules of its own, and they are
-// not §6.4's.
-Token_kind base_operator( Token_kind assignment )
-{
-    switch( assignment )
-    {
-    case Token_kind::Plus_equal:
-        return Token_kind::Plus;
-    case Token_kind::Minus_equal:
-        return Token_kind::Minus;
-    case Token_kind::Star_equal:
-        return Token_kind::Star;
-    case Token_kind::Slash_equal:
-        return Token_kind::Slash;
-    case Token_kind::Percent_equal:
-        return Token_kind::Percent;
-    case Token_kind::Amp_equal:
-        return Token_kind::Amp;
-    case Token_kind::Pipe_equal:
-        return Token_kind::Pipe;
-    case Token_kind::Caret_equal:
-        return Token_kind::Caret;
-    case Token_kind::Less_less_equal:
-        return Token_kind::Less_less;
-    case Token_kind::Greater_greater_equal:
-        return Token_kind::Greater_greater;
-    default:
-        assert( false && "not a compound assignment" );
-        return assignment;
-    }
-}
 
 // What `break` and `continue` jump to. A `while` needs neither: the loop is emitted as
 // `while ( true )` with the condition guarded inside, so C's own keywords already mean "leave this
@@ -76,7 +43,8 @@ public:
           types_( types ),
           literals_( literals ),
           sm_( sm ),
-          interner_( interner )
+          interner_( interner ),
+          spelling_( Spelling { ast, types, literals, interner } )
     {
     }
 
@@ -150,10 +118,9 @@ private:
     // The C name of a struct or one of its fields.
     std::string struct_name( Node_id decl ) const;
     std::string field_name( Node_id field ) const;
-    std::string lower_literal( Node_id id );
 
     // A file-scope initialiser, which must produce no statements - see emit_globals.
-    std::string constant_text( Node_id id );
+    std::string lower_literal( Node_id id ); // the AST emitter's own path; dies with this file
     std::string lower_name( Node_id id );
 
     // `&&` and `||` cannot be an operation over two lowered operands: the right side must not run
@@ -184,6 +151,11 @@ private:
     u32         last_line_  = 0; // so #line is emitted only when it changes
 
     std::vector<Loop_targets> loop_stack_; // innermost loop last, for break/continue
+
+    // The C spelling layer, shared with the KIR emitter. The methods below that carry these names
+    // are forwarders: the call sites are untouched, so a golden diff would mean the move changed
+    // behaviour rather than the sites being rewritten.
+    Spelling spelling_;
 };
 
 std::string Emitter::run()
@@ -259,13 +231,12 @@ void Emitter::emit_functions()
 
 std::string Emitter::struct_name( Node_id decl ) const
 {
-    return fmt::format( "struct {}", mangle_struct( "", interner_.text( Symbol_id { ast_.aux( decl ) } ) ) );
+    return spelling_.structure( decl );
 }
 
 std::string Emitter::field_name( Node_id field ) const
 {
-    // Mangled like a local: a field called `while` or `int` would otherwise break the generated C.
-    return mangle_local( interner_.text( Symbol_id { ast_.aux( field ) } ), field.v );
+    return spelling_.field( field );
 }
 
 Node_id Emitter::field_of( Type_id type, Symbol_id name ) const
@@ -305,39 +276,13 @@ std::vector<Type_id> Emitter::parameter_types( Node_id function ) const
 
 std::string Emitter::signature( Node_id function, bool with_names ) const
 {
-    const std::vector<Type_id>     params = parameter_types( function );
-    const std::span<const Node_id> nodes  = ast_.children( ast_.children( function )[1] );
-
-    std::string rendered;
-
-    for( std::size_t i = 0; i < params.size(); ++i )
-    {
-        if( i != 0 )
-        {
-            rendered += ", ";
-        }
-
-        rendered += c_type( params[i] );
-
-        if( with_names )
-        {
-            rendered += ' ';
-            rendered += mangle_local( interner_.text( Symbol_id { ast_.aux( nodes[i] ) } ), nodes[i].v );
-        }
-    }
-
-    if( rendered.empty() )
-    {
-        rendered = "void"; // C11: an empty list is a prototype that says nothing about arity
-    }
-
-    const std::string_view name = interner_.text( Symbol_id { ast_.aux( function ) } );
+    const std::string params = with_names ? spelling_.parameter_list( function ) : spelling_.parameter_types( function );
 
     return fmt::format(
         "{} {}( {} )",
         c_type( types_.type_of( function ) ), // the return type lives on the declaration
-        mangle_function( "", name, params, types_.table() ),
-        rendered
+        spelling_.function( function ),
+        params
     );
 }
 
@@ -392,8 +337,7 @@ void Emitter::emit_main_shim()
 
     // The symbol is derived from the node rather than hardcoded, so that a main with a different
     // signature calls the function that actually exists.
-    const std::string_view name   = interner_.text( Symbol_id { ast_.aux( keel_main ) } );
-    const std::string      symbol = mangle_function( "", name, parameter_types( keel_main ), types_.table() );
+    const std::string symbol = spelling_.function( keel_main );
 
     write_line( "int main( void )" );
     write_line( "{" );
@@ -418,16 +362,7 @@ void Emitter::emit_globals()
             continue;
         }
 
-        const Type_id     type = types_.type_of( child );
-        const std::string name = mangle_local( interner_.text( Symbol_id { ast_.aux( child ) } ), child.v );
-        const Node_id     init = ast_.children( child )[1];
-
-        // No initialiser is zero, which C guarantees for file-scope storage - so nothing is
-        // written rather than a zero invented here.
-        write_line(
-            init.is_valid() ? fmt::format( "{} {} = {};", c_type( type ), name, constant_text( init ) )
-                            : fmt::format( "{} {};", c_type( type ), name )
-        );
+        write_line( spelling_.global_definition( child ) );
 
         any = true;
     }
@@ -442,49 +377,6 @@ void Emitter::emit_globals()
 // this prints the expression rather than computing a value for it. lower() is not an option: it
 // emits the statements a value needs first, and file scope has nowhere to put them.
 //
-// The operand casts mirror lower_binary's, and for the same reason - §6.4's conversions are not
-// C's, so the operands are spelled at the type the operation happens in. C's own intermediates are
-// wider, but the constant checker has already proved the result fits, so they cannot disagree
-// about the answer.
-std::string Emitter::constant_text( Node_id id )
-{
-    switch( ast_.kind( id ) )
-    {
-    case Node_kind::Unary_expr:
-        return fmt::format(
-            "{}( {} )",
-            token_kind_spelling( static_cast<Token_kind>( ast_.aux( id ) ) ),
-            constant_text( ast_.children( id )[0] )
-        );
-
-    case Node_kind::Binary_expr:
-    {
-        const Node_id left  = ast_.children( id )[0];
-        const Node_id right = ast_.children( id )[1];
-
-        // A shift takes no common type: its result is the left operand's, which is why
-        // arithmetic_result has no answer for it.
-        const Type_id common       = types_.table().arithmetic_result( types_.type_of( left ), types_.type_of( right ) );
-        const Type_id operand_type = common.is_valid() ? common : types_.type_of( left );
-
-        return fmt::format(
-            "( ({}) {} {} ({}) {} )",
-            c_type( operand_type ),
-            constant_text( left ),
-            token_kind_spelling( static_cast<Token_kind>( ast_.aux( id ) ) ),
-            c_type( operand_type ),
-            constant_text( right )
-        );
-    }
-
-    case Node_kind::Cast_expr:
-        return fmt::format( "( ({}) {} )", c_type( types_.type_of( id ) ), constant_text( ast_.children( id )[1] ) );
-
-    default:
-        return lower_literal( id );
-    }
-}
-
 void Emitter::emit_statement( Node_id id )
 {
     if( !id.is_valid() )
@@ -921,8 +813,8 @@ std::string Emitter::lower_call( Node_id id )
 
     // A callee is a function, not a value. lower_name() would resolve it to a *local's* mangling,
     // which is a different name entirely - and one that does not exist.
-    const std::vector<Type_id> params = parameter_types( decl );
-    const std::string symbol = mangle_function( "", interner_.text( Symbol_id { ast_.aux( decl ) } ), params, types_.table() );
+    const std::vector<Type_id> params = parameter_types( decl ); // still needed, for the argument casts
+    const std::string          symbol = spelling_.function( decl );
 
     // Call_expr's children are { callee, arg_list }: the arguments are one level further down.
     const std::span<const Node_id> arguments = ast_.children( ast_.children( id )[1] );
@@ -1085,14 +977,7 @@ std::string Emitter::lower_literal( Node_id id )
     {
         // fmt's default is the shortest form that round-trips. A value like 1.0 prints as "1",
         // which C would read as an int, so it needs a point putting back.
-        std::string text = fmt::format( "{}", literals_.floating( Literal_id { ast_.aux( id ) } ) );
-
-        if( text.find( '.' ) == std::string::npos && text.find( 'e' ) == std::string::npos )
-        {
-            text += ".0";
-        }
-
-        return text;
+        return c_float( literals_.floating( Literal_id { ast_.aux( id ) } ) );
     }
 
     case Node_kind::Int_literal:
@@ -1102,9 +987,7 @@ std::string Emitter::lower_literal( Node_id id )
         // 2147483648, and casting that to int32_t first would overflow before the minus ran. The
         // temporary each operation writes into carries an explicit C type, so the value is pinned
         // there instead. The suffix only stops C choosing a signed type too narrow to hold it.
-        const u64 value = literals_.integer( Literal_id { ast_.aux( id ) } );
-
-        return value > 9223372036854775807ull ? fmt::format( "{}ull", value ) : fmt::format( "{}", value );
+        return c_integer( literals_.integer( Literal_id { ast_.aux( id ) } ) );
     }
 
     default:
@@ -1167,33 +1050,7 @@ std::string Emitter::fresh_label()
 
 std::string Emitter::c_type( Type_id type ) const
 {
-    const Type& described = types_.table().get( type );
-
-    switch( described.kind )
-    {
-    case Type_kind::Void:
-        return "void";
-
-    case Type_kind::Bool:
-        return "bool"; // <stdbool.h>'s, per §7.8
-
-    case Type_kind::Int:
-        // §7.8: exact-width types, never C's own, whose sizes are a platform question.
-        return fmt::format( "{}int{}_t", described.is_signed ? "" : "u", described.width );
-
-    case Type_kind::Float:
-        return described.width == 32 ? "float" : "double";
-
-    case Type_kind::Struct:
-        return struct_name( described.declaration );
-
-    case Type_kind::Pointer:
-        return fmt::format( "{}*", c_type( described.element ) );
-
-    default:
-        assert( false && "no C spelling for this type" );
-        return "void";
-    }
+    return spelling_.type( type );
 }
 
 void Emitter::line_directive( Node_id id )

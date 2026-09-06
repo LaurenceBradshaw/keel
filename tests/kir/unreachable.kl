@@ -1,0 +1,7 @@
+// Statements after a return cannot run. Lowering them would put statements into a block that
+// already has a terminator, so they are dropped - the second constant never appears below.
+i32 main()
+{
+    return 1;
+    return 2;
+}

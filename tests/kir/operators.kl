@@ -1,0 +1,64 @@
+// Three-address form. Every operation lands in a named local, and the order the temporaries are
+// filled is the order the operands were evaluated - which is §7.1's guarantee made structural
+// rather than left as a rule for a backend to honour.
+i32 nested( i32 a, i32 b, i32 c )
+{
+    return a + b * c;
+}
+
+// §6.4 says an operation happens at the common type of its operands. Making that a conversion in
+// the IR is what lets a backend read KIR without re-deriving the table - and it is what an LLVM
+// backend would require of an add anyway.
+i64 widened( u8 small, i64 wide )
+{
+    return small + wide;
+}
+
+// The case the AST cannot answer alone: the node's type is bool, while the operands still meet at
+// i32. Nothing records that meeting point, so the lowerer computes it.
+bool compared( u8 small, i32 wide )
+{
+    return small < wide;
+}
+
+// A shift's operands do not meet. The result is the left one's type and the count is a width, so
+// no conversion is inserted for it.
+u32 shifted( u32 value, u8 count )
+{
+    return value << count;
+}
+
+// Operands already at one type need no conversion at all, which is the common case: a literal has
+// already adopted its type from the checker.
+i32 unchanged( i32 a, i32 b )
+{
+    return a + b;
+}
+
+i32 unary_operators( i32 a, bool flag, u32 bits )
+{
+    i32  negated = -a;
+    bool flipped = !flag;
+    u32  inverted = ~bits;
+
+    return negated;
+}
+
+// `x += 3` is `x = x + 3`, and `x++` is the same shape. Both happen at the target's type - the
+// checker records nothing on a statement, so there is no other type to read.
+i32 assignments()
+{
+    u8 x = 1;
+
+    x = 2;
+    x += 3;
+    x++;
+    x--;
+
+    return 0;
+}
+
+i32 main()
+{
+    return 0;
+}

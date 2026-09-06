@@ -1,0 +1,22 @@
+// The three shapes a return takes. A void function's body may simply end, and the lowerer still
+// has to terminate the block or the function does not verify - nothing checks that a non-void
+// function returns on every path yet, since that needs the CFG being built here.
+void bare()
+{
+    return;
+}
+
+void falls_off_the_end()
+{
+}
+
+// A literal takes its type from context, so the return slot is a u8 and so is the constant.
+u8 narrow()
+{
+    return 200;
+}
+
+i32 main()
+{
+    return 0;
+}

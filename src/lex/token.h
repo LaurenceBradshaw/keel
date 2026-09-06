@@ -102,6 +102,12 @@ std::string_view token_kind_name( Token_kind kind );
 // "end of file") that reads inside a sentence. Callers add their own quoting.
 std::string_view token_kind_spelling( Token_kind kind );
 
+// The operation a compound assignment performs: `+=` is `+`, applied and stored back. The emitter
+// expands it rather than emitting C's own `+=`, so that the conversions stay explicit and one code
+// path computes the result - C's compound assignment has conversion rules of its own, and they are
+// not §6.4's.
+Token_kind base_operator( Token_kind assignment );
+
 struct Token
 {
     Token_kind kind;

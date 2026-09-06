@@ -1,0 +1,7 @@
+fn main {
+    let _0: i32; // return slot
+
+    bb0:
+        _0 = const 0
+        return
+}

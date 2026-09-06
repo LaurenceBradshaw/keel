@@ -140,6 +140,125 @@ moved its borrow checker off the AST onto MIR.
 So: lower to a CFG **before** doing any lifetime work. KIR is not optional
 sophistication; it is the thing that makes RAII implementable at all.
 
+### 3.1 KIR's shape
+
+**Not SSA.** Rust's MIR is not, and for what §8 specifies that is correct rather
+than a compromise: the analysis tracks whether a *named local* is initialised or
+moved at each point, which is a per-local lattice over the CFG. SSA renames every
+assignment apart and would obscure exactly the thing being tracked, at the price
+of phi nodes and dominance frontiers. If an LLVM backend ever wants SSA, LLVM's
+own `mem2reg` produces it from allocas — the standard path, and free to us.
+
+Two simplifications Keel gets that Rust does not, both taken deliberately:
+
+- **No unwinding** (L14). In MIR every call is a *terminator* carrying an unwind
+  edge. With no exceptions a call is an ordinary statement, blocks stay long and
+  straight, and cleanup-on-unwind does not exist.
+- **No lifetimes** (§8). The structural reference rule means no region
+  inference, so a place needs no provenance and the dataflow is a bitset per
+  local.
+
+The vocabulary is five types. The value/place split is the one the C emitter
+already discovered the hard way, as `lower` versus `lower_place`:
+
+```
+Place      a local, plus a projection path        x, p.y, (*q).z
+Operand    Copy(Place) | Move(Place) | Constant   Move is where M4's checking hangs
+Rvalue     Use | Binary | Unary | Cast | Call | Address_of | Struct_init
+Statement  Assign(Place, Rvalue) | Drop(Place) | Storage_live/dead(Local)
+Terminator Goto | Branch(Operand, Block, Block) | Return | Unreachable
+Function   locals[] + blocks[];  Block = statements[] + exactly one terminator
+```
+
+Every statement and terminator carries a `Span` (§4), and every local a
+`Type_id`. Each later milestone adds **one variant**, not a mechanism: `Drop`
+and `Set_drop_flag` at M3, meaning for `Move` at M4, `Terminator::Switch` at M5,
+`Rvalue::Checked_binary` for §12's runtime overflow checks, and a second
+consumer of `Function` for an LLVM backend.
+
+### 3.2 Keeping KIR from becoming another 2,000-line file
+
+`sema/type_checker.cpp` reached 2,350 lines of code because **`Checker` is a
+file-local class, and a class cannot span translation units**. Every
+responsibility it gained — annotation resolution, the operator tables, the
+constant folder, some twenty-five `visit_*`/`infer_*` methods — had to become a
+private method in that one file. The in-source test convention then doubles it.
+The size is a consequence of the organising unit, not of sprawl.
+
+So KIR is organised the other way round, and this is the rule that matters:
+
+> **A pass is a free function over the IR, not a method on a class.**
+> Adding a pass adds a file, and cannot grow an existing one.
+
+With `kir.h` holding data types and no logic, and payloads in side tables rather
+than inline, the layout follows §11's reserved directories:
+
+```
+src/ir/
+  kir.h          the vocabulary; no logic
+  kir.cpp        accessors, arena
+  builder.h/cpp  allocate locals and blocks, emit, wire terminators
+  lower.h/cpp    typed AST -> KIR            the only large one
+  print.h/cpp    --dump-kir, and the golden format
+  verify.h/cpp   structural invariants
+src/check/
+  dataflow.h     the generic fixpoint; an analysis is a lattice + transfer function
+  initialised.cpp
+  drop.cpp
+```
+
+`verify` is worth having from the first commit rather than later: a malformed
+CFG otherwise surfaces as a wrong program instead of a failed assertion, and it
+is what makes the `--dump-kir` goldens worth trusting.
+
+### 3.3 The order to build it in
+
+M3 is where §13 warns that silent breakage compounds, so the path is chosen so
+that only the last step changes what any program means.
+
+1. `kir.h`, the builder, the printer, `--dump-kir`. Nothing consumes it; golden
+   fixtures pin the dump.
+2. Lower straight-line code — the `fib`/`gcd` subset. Still nothing consumes it.
+3. A KIR -> C emitter behind a flag. The existing codegen goldens are then an
+   equivalence check across both paths: the runner already compiles and executes
+   each fixture, so "same exit code either way" is mechanical.
+4. Flip the default; delete the AST emitter.
+5. **Then** M3 proper: destructors, drop placement, cleanup edges.
+
+**Steps 1 and 2 are done.** `kir.h`, the builder, the printer, `verify`,
+`--dump-kir`, and a lowerer covering the whole v0 language: literals, locals and
+names, operators, assignment and increment, `if`, `while`, `for`, `break`,
+`continue`, `&&`/`||`, calls, casts, places (fields, derefs, and paths through
+both), `&`, and struct literals. All 43 lowerable fixtures in the corpus lower
+and pass `verify`; the other 29 fail the front end deliberately. `--dump-kir`
+runs the verifier on every function it prints, so the whole corpus sits behind it.
+
+Three things the lowering made concrete, each of which the C emitter had to work
+harder for:
+
+- **`break` and `continue` are edges.** No generated labels, no
+  emit-the-label-only-if-used, no `-Wunused-label` to design around. That whole
+  mechanism in `emitter.cpp` has no counterpart here.
+- **Conversions are explicit.** §6.4's widening is a `Cast` rvalue rather than
+  something a backend re-derives, which is also what an LLVM backend requires of
+  an `add`. The case that forces it is a comparison, whose recorded type is
+  `bool` while its operands still meet at their common type - a fact written
+  nowhere in the AST.
+- **A place is a local plus a path.** `( *p ).next` is one place with two
+  projections rather than a chain of copies, which is what lets M4 ask whether
+  that field specifically was moved out of.
+
+Two debts the lowering opened, both small and both recorded here rather than in
+the code: `Rvalue_kind::Cast` does not distinguish `cast` from `wrap`, which is
+harmless while narrowing `cast` is rejected outright and becomes real when M3
+can trap; and a file-scope variable has no representation, because `Place` is
+always rooted in a `Local_id`.
+
+Steps 1-4 are a refactor with a mechanical correctness check. What survives from
+the current emitter is its C-spelling layer — `c_type`, the mangling, literal
+spelling, struct emission and ordering; what it loses is its dispatch structure,
+which KIR replaces.
+
 ---
 
 ## 4. Core data structure decisions
@@ -1052,6 +1171,44 @@ reported both the unknown name and a second line about the literal. The rule is
 that the *cause* is the diagnostic worth printing.
 
 ### Debts to pay along the way
+
+- **A global's initialiser should be folded to a value in the front end, not printed as an
+  expression by each backend.** Today `Spelling::constant_expression` walks the AST and prints C,
+  which works because C accepts an arithmetic constant expression at file scope.
+
+  It cannot be lowered into KIR as things stand, and the reason is structural rather than
+  incidental: KIR is three-address form, so `60 * 60` becomes a statement writing into a temporary,
+  and a C file-scope initialiser must be one expression with nowhere to put one. LLVM answers this
+  with a separate `Constant` sub-language that is explicitly not an `Instruction`; adding the
+  equivalent to KIR would be a second representation rather than a unification.
+
+  The better destination is clang's: **evaluate it in the front end and record the value.** Most of
+  the machinery exists - `fold_integer` and `fold_float` were written for constant-overflow
+  rejection, and D-rule already requires a global's initialiser to be a constant expression, so
+  folding is always possible in principle. It would delete the expression printer from every
+  backend and make an LLVM backend's globals a `ConstantInt` rather than a tree to translate.
+
+  Two gaps to close first: the folder returns "not constant" for `&`, `|`, `^` and `~` because
+  those cannot overflow and it was written to detect overflow rather than to evaluate; and there is
+  nowhere to record the result, which wants a small value type on `Types`.
+
+  **Wanted sooner rather than later**, but after the KIR backend lands - it removes backend code,
+  so doing it while a second backend is half-written would mean writing what it deletes.
+
+- **Four files have grown past what one file should hold.** Code lines, excluding the in-source
+  tests that roughly double each: `sema/type_checker.cpp` 2350, `parse/parser.cpp` 1675,
+  `codegen_c/emitter.cpp` 1247, `lex/lexer.cpp` 824.
+
+  The mechanism is identified in §3.2 and is not sprawl: each is built around a **file-local class**
+  — `Checker`, `Parser`, `Emitter` — and a class cannot span translation units, so every new
+  responsibility becomes another private method in the same file. The tests then double it.
+
+  KIR is being built the other way round (§3.2) to avoid repeating it, which also makes it the
+  natural moment to judge whether the free-function-pass discipline is actually pleasanter to work
+  in before retrofitting it. **To be revisited after KIR lands**, when there is evidence rather
+  than preference. The likely shapes: split `type_checker.cpp` along its seams — annotation
+  resolution, the operator tables, the constant folder — into free functions over `Ast` and
+  `Type_table`; and split the parser by grammar section. Neither should be attempted mid-M3.
 
 - **`const` is parsed and discarded.** `type_of_annotation` unwraps `Const_type` and returns the
   inner type, and `Type` carries no const bit, so every one of these compiles today: assigning to

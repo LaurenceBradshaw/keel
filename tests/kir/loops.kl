@@ -1,0 +1,106 @@
+// A loop's header is a fresh block, not the one being left: the condition is re-evaluated every
+// iteration, so the back edge targets it - and everything before the loop would re-run if it did
+// not. That leading `goto -> header` is what makes the cycle a cycle.
+i32 counted( i32 n )
+{
+    i32 total = 0;
+
+    while ( total < n )
+    {
+        total = total + 1;
+    }
+
+    return total;
+}
+
+// A for is a while plus a latch: the block holding the update, and what `continue` targets. In the
+// C emitter this needed a generated label, a used-flag, and care about -Wunused-label, because C's
+// own `continue` would have skipped the update. Here it is an edge to a block, and that is all.
+i32 stepped( i32 n )
+{
+    i32 total = 0;
+
+    for ( i32 i = 0; i < n; i++ )
+    {
+        continue;
+    }
+
+    return total;
+}
+
+// Both loop targets are allocated only when something reaches them: a block nothing jumps to is
+// unreachable, and the verifier rejects one.
+//
+// No condition means no false edge, so this loop has no exit block at all.
+void never_finishes()
+{
+    for ( ; ; )
+    {
+        i32 x = 1;
+    }
+}
+
+// A break is what gives that one an exit - and being unconditional, nothing falls into a latch, so
+// no update block exists either.
+void leaves_immediately()
+{
+    for ( ; ; )
+    {
+        break;
+    }
+}
+
+// Nothing can reach the update of a loop whose body always returns, so the latch is never built.
+i32 returns_from_the_body( i32 n )
+{
+    for ( i32 i = 0; i < n; i++ )
+    {
+        return i;
+    }
+
+    return 0;
+}
+
+// break and continue bind to the innermost loop, which falls out of the stack rather than needing
+// a rule: the inner continue runs the inner update, and the inner break leaves only the inner loop.
+i32 nested( i32 n )
+{
+    while ( n > 0 )
+    {
+        for ( i32 i = 0; i < n; i++ )
+        {
+            if ( i == 2 )
+            {
+                break;
+            }
+
+            continue;
+        }
+
+        n = n - 1;
+    }
+
+    return 0;
+}
+
+// The arm terminates itself, so the enclosing if does not terminate it a second time - and what
+// follows the break is unreachable, so it is dropped.
+i32 conditional_break( i32 n )
+{
+    while ( true )
+    {
+        if ( n > 0 )
+        {
+            break;
+        }
+
+        n = n + 1;
+    }
+
+    return n;
+}
+
+i32 main()
+{
+    return 0;
+}

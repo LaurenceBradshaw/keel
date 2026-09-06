@@ -1,0 +1,40 @@
+// `&&` and `||` are not operators over two operands: the right side must not run unless the left
+// demands it. Lowering them as ordinary binaries would evaluate both, which is invisible for
+// parameters and wrong for anything with an effect.
+//
+// The result is a local because it is written on both paths and read after the join. It is the one
+// place so far where a local exists purely to merge two paths - an SSA IR would use a phi node
+// here, which is what KIR chose not to have.
+bool conjunction( bool a, bool b )
+{
+    return a && b;
+}
+
+// The only difference: the branch targets swap. `||` evaluates the right side when the left is
+// false.
+bool disjunction( bool a, bool b )
+{
+    return a || b;
+}
+
+// A nested one leaves the cursor in its own join block, so the outer jump comes from wherever
+// lowering ended up rather than from the block it started in.
+bool nested( bool a, bool b, bool c )
+{
+    return a && ( b && c );
+}
+
+i32 in_a_condition( bool a, bool b )
+{
+    if ( a && b )
+    {
+        return 1;
+    }
+
+    return 0;
+}
+
+i32 main()
+{
+    return 0;
+}

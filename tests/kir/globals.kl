@@ -1,0 +1,47 @@
+// A file-scope variable has no slot in the frame - it outlives every one - so a place is rooted in
+// either a local or a global. Everything above the root is unchanged: the same projections, the
+// same copies, the same assignments. Globals print by name where a local prints as _N, so the two
+// are distinguishable with no extra syntax.
+i32 counter = 1;
+i32 limit   = 10;
+
+i32 read()
+{
+    return counter;
+}
+
+void write()
+{
+    counter = 2;
+}
+
+// Read and written in one statement, at the global's own type.
+void accumulate()
+{
+    counter += 3;
+}
+
+// The root travels with the projections: field() and deref() build their result from the base, so
+// a place that started global stays global.
+i32* address()
+{
+    return &counter;
+}
+
+// A local of the same name shadows it, and the read finds the local.
+i32 shadowed()
+{
+    i32 counter = 5;
+
+    return counter;
+}
+
+i32 both()
+{
+    return counter + limit;
+}
+
+i32 main()
+{
+    return 0;
+}

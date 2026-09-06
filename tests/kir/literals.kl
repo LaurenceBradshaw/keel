@@ -1,0 +1,43 @@
+// Every literal kind reaches KIR as a constant. Two of them carry no Literal_id in the AST and
+// have to make one: a bool's value is in aux directly, and `nullptr` records nothing at all - so
+// reading aux as a Literal_id would give the invalid sentinel, which the verifier rejects.
+i32 whole()
+{
+    return 7;
+}
+
+f64 fractional()
+{
+    return 1.5;
+}
+
+bool affirmative()
+{
+    return true;
+}
+
+bool negative()
+{
+    return false;
+}
+
+u8 character()
+{
+    return 'a';
+}
+
+i32* nothing()
+{
+    return nullptr;
+}
+
+// A literal takes its type from context, so this constant is a u8 and so is the slot it goes in.
+u8 narrowed()
+{
+    return 200;
+}
+
+i32 main()
+{
+    return 0;
+}

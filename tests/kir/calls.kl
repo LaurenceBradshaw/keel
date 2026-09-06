@@ -1,0 +1,78 @@
+// Three-address form removes nesting: every argument is an operand before the call is recorded, so
+// a call never sits inside another's argument list. The order those operands are produced is the
+// order the arguments were written - §7.1's guarantee, and what C leaves unspecified.
+i32 two( i32 a, i32 b )
+{
+    return a;
+}
+
+i32 ordered( i32 x )
+{
+    return two( x + 1, x + 2 );
+}
+
+// The conversion is to the *parameter's* type. An argument's own type is not that: §6.4 may have
+// widened it on the way in, and reading the type off the argument makes every conversion a no-op -
+// silently, because the call still looks right.
+i64 wide( i64 v )
+{
+    return v;
+}
+
+i64 widened( u8 small )
+{
+    return wide( small );
+}
+
+// An inner call becomes a statement of its own, and its temporary is what the outer one reads.
+i32 nested( i32 v )
+{
+    return two( two( v, v ), v );
+}
+
+// Recursion needs nothing special - the callee is a Node_id the checker already resolved.
+i32 fib( i32 n )
+{
+    if ( n < 2 )
+    {
+        return n;
+    }
+
+    return fib( n - 1 ) + fib( n - 2 );
+}
+
+// Mutual recursion works for the same reason: both signatures were known before either body.
+bool even( i32 n )
+{
+    if ( n == 0 )
+    {
+        return true;
+    }
+
+    return odd( n - 1 );
+}
+
+bool odd( i32 n )
+{
+    if ( n == 0 )
+    {
+        return false;
+    }
+
+    return even( n - 1 );
+}
+
+// A void call still assigns, to a local nothing reads. Keeping Assign total is worth more than
+// avoiding it: an optional destination would mean every consumer handling a statement that writes
+// nowhere. A backend emits the call and drops the assignment.
+void nothing()
+{
+    return;
+}
+
+i32 main()
+{
+    nothing();
+
+    return 0;
+}

@@ -1,0 +1,110 @@
+fn both_arms {
+    let _0: i32; // return slot
+    let _1: bool; // parameter c
+    let _2: i32; // x
+
+    bb0:
+        _2 = const 0
+        branch copy _1 -> bb1, bb2
+
+    bb1:
+        _2 = const 1
+        goto -> bb3
+
+    bb2:
+        _2 = const 2
+        goto -> bb3
+
+    bb3:
+        _0 = copy _2
+        return
+}
+fn no_else {
+    let _0: i32; // return slot
+    let _1: bool; // parameter c
+    let _2: i32; // x
+
+    bb0:
+        _2 = const 0
+        branch copy _1 -> bb1, bb2
+
+    bb1:
+        _2 = const 1
+        goto -> bb3
+
+    bb2:
+        goto -> bb3
+
+    bb3:
+        _0 = copy _2
+        return
+}
+fn both_return {
+    let _0: i32; // return slot
+    let _1: bool; // parameter c
+
+    bb0:
+        branch copy _1 -> bb1, bb2
+
+    bb1:
+        _0 = const 1
+        return
+
+    bb2:
+        _0 = const 2
+        return
+}
+fn one_returns {
+    let _0: i32; // return slot
+    let _1: bool; // parameter c
+    let _2: i32; // x
+
+    bb0:
+        _2 = const 0
+        branch copy _1 -> bb1, bb2
+
+    bb1:
+        _0 = const 1
+        return
+
+    bb2:
+        _2 = const 2
+        goto -> bb3
+
+    bb3:
+        _0 = copy _2
+        return
+}
+fn chained {
+    let _0: i32; // return slot
+    let _1: i32; // parameter n
+    let _2: bool;
+    let _3: bool;
+
+    bb0:
+        _2 = copy _1 == const 0
+        branch copy _2 -> bb1, bb2
+
+    bb1:
+        _0 = const 1
+        return
+
+    bb2:
+        _3 = copy _1 == const 1
+        branch copy _3 -> bb3, bb4
+
+    bb3:
+        _0 = const 2
+        return
+
+    bb4:
+        _0 = const 3
+        return
+}
+fn main {
+    let _0: i32; // return slot
+
+    bb0:
+        _0 = const 0
+        return
+}

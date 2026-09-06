@@ -15,6 +15,10 @@
 #include "common/interner.h"
 #include "common/source_manager.h"
 #include "common/version.h"
+#include "codegen_c/emit_kir.h"
+#include "ir/lower.h"
+#include "ir/print.h"
+#include "ir/verify.h"
 #include "lex/lexer.h"
 #include "parse/parser.h"
 #include "sema/resolver.h"
@@ -31,6 +35,8 @@ int main( int argc, char** argv )
         ( "o,output",      "Write the executable here (default: the input's stem)", cxxopts::value<std::string>() )
         ( "dump-tokens",   "Print the token stream and stop" )
         ( "dump-ast",      "Print the parsed AST and stop" )
+        ( "dump-kir",      "Print the lowered KIR and stop" )
+        ( "emit-c-from-kir", "Print C generated from KIR rather than from the AST, and stop" )
         ( "emit-c",        "Print the generated C and stop" )
         ( "check",         "Run the front end and report diagnostics, emitting nothing" )
         ( "v,version",     "Print version information and exit" )
@@ -146,6 +152,46 @@ int main( int argc, char** argv )
     // diagnostics-only test wants, and it leaves no artefacts behind.
     if( args.count( "check" ) )
     {
+        return finish();
+    }
+
+    // Additive: the C path below is untouched, and nothing consumes KIR yet. This is what makes
+    // each step of the lowerer visible as it lands (PLAN §3.3).
+    if( args.count( "dump-kir" ) )
+    {
+        bool well_formed = true;
+
+        for( const keel::Function& function : keel::lower( ast, resolution, types, literals, interner ) )
+        {
+            std::cout << keel::print( function, ast, types.table(), literals, interner );
+
+            // A malformed function is a bug in the lowerer, not in the program - so it goes to
+            // stderr as an internal error rather than through Diagnostics. Running it here is what
+            // puts every fixture in the corpus behind the verifier.
+            for( const std::string& problem : keel::verify( function ) )
+            {
+                fmt::print( stderr, "keelc: internal error: malformed KIR: {}\n", problem );
+                well_formed = false;
+            }
+        }
+
+        if( !well_formed )
+        {
+            return 1;
+        }
+
+        return finish();
+    }
+
+    // The second backend, behind its own flag so the first is untouched while it is unproven.
+    // PLAN §3.3 step 3: the existing codegen fixtures compare the two by exit code, which is a
+    // real equivalence check rather than a text diff.
+    if( args.count( "emit-c-from-kir" ) )
+    {
+        std::cout << keel::emit_c_from_kir(
+            keel::lower( ast, resolution, types, literals, interner ), ast, types, literals, sm, interner
+        );
+
         return finish();
     }
 

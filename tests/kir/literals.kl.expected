@@ -1,0 +1,56 @@
+fn whole {
+    let _0: i32; // return slot
+
+    bb0:
+        _0 = const 7
+        return
+}
+fn fractional {
+    let _0: f64; // return slot
+
+    bb0:
+        _0 = const 1.5
+        return
+}
+fn affirmative {
+    let _0: bool; // return slot
+
+    bb0:
+        _0 = const 1
+        return
+}
+fn negative {
+    let _0: bool; // return slot
+
+    bb0:
+        _0 = const 0
+        return
+}
+fn character {
+    let _0: u8; // return slot
+
+    bb0:
+        _0 = const 97
+        return
+}
+fn nothing {
+    let _0: i32*; // return slot
+
+    bb0:
+        _0 = const 0
+        return
+}
+fn narrowed {
+    let _0: u8; // return slot
+
+    bb0:
+        _0 = const 200
+        return
+}
+fn main {
+    let _0: i32; // return slot
+
+    bb0:
+        _0 = const 0
+        return
+}

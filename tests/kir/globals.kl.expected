@@ -1,0 +1,55 @@
+fn read {
+    let _0: i32; // return slot
+
+    bb0:
+        _0 = copy counter
+        return
+}
+fn write {
+    let _0: void; // return slot
+
+    bb0:
+        counter = const 2
+        return
+}
+fn accumulate {
+    let _0: void; // return slot
+
+    bb0:
+        counter = copy counter + const 3
+        return
+}
+fn address {
+    let _0: i32*; // return slot
+    let _1: i32*;
+
+    bb0:
+        _1 = &counter
+        _0 = copy _1
+        return
+}
+fn shadowed {
+    let _0: i32; // return slot
+    let _1: i32; // counter
+
+    bb0:
+        _1 = const 5
+        _0 = copy _1
+        return
+}
+fn both {
+    let _0: i32; // return slot
+    let _1: i32;
+
+    bb0:
+        _1 = copy counter + copy limit
+        _0 = copy _1
+        return
+}
+fn main {
+    let _0: i32; // return slot
+
+    bb0:
+        _0 = const 0
+        return
+}

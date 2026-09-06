@@ -1,0 +1,49 @@
+// A declaration becomes a local, and a name that refers to it becomes a read of that local. The
+// map from declaration to local is the lowerer's only state beyond the builder, and this is what
+// it buys: `x` on the last line comes back to _1, not to a second copy of it.
+i32 read_back()
+{
+    i32 x = 1;
+    i32 y = 2;
+
+    return x;
+}
+
+// auto takes the type the checker settled on, so nothing here has to infer it a second time.
+i32 inferred()
+{
+    auto value = 200;
+
+    return value;
+}
+
+// Declared and never assigned. The local exists; nothing is written to it.
+i32 uninitialised()
+{
+    i32 x;
+
+    return 0;
+}
+
+i32 parameter_read( i32 a, i32 b )
+{
+    return b;
+}
+
+// A nested scope gets its own local rather than reusing storage, and the read afterwards still
+// finds the outer one.
+i32 nested()
+{
+    i32 x = 1;
+
+    {
+        i32 y = 2;
+    }
+
+    return x;
+}
+
+i32 main()
+{
+    return 0;
+}

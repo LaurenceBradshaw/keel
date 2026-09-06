@@ -1,0 +1,83 @@
+// A place is a local plus a path, not a local plus a chain of copies. `(*p).v` is one place with
+// two projections, so a later move check can ask whether that field specifically was moved out of -
+// which is the reason Place carries a path at all.
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+struct Nested
+{
+    Point inner;
+};
+
+struct Node
+{
+    i32   value;
+    Node* next;
+};
+
+// Reading a place is a copy of it. No temporary: a place is already readable.
+i32 read_field( Point p )
+{
+    return p.x;
+}
+
+i32 read_nested( Nested n )
+{
+    return n.inner.y;
+}
+
+i32 read_through_pointer( i32* q )
+{
+    return *q;
+}
+
+// One place with two projections, and no intermediate local at all.
+i32 field_through_pointer( Node* p )
+{
+    return (*p).value;
+}
+
+// Writes go straight into the place rather than into a copy of it.
+void write_through_places( i32* q, Node* p )
+{
+    *q = 1;
+    (*p).value = 2;
+    (*p).next = p;
+}
+
+// Taking an address is not reading what is there, so the operand is a place rather than a value.
+i32* address_of_local()
+{
+    i32 x = 1;
+
+    return &x;
+}
+
+i32* address_of_field( Point p )
+{
+    return &p.x;
+}
+
+// A cast is the conversion rvalue, and one to the type an operand already has emits nothing.
+i64 widen( i32 v )
+{
+    return cast<i64>( v );
+}
+
+u8 narrow( i32 v )
+{
+    return wrap<u8>( v );
+}
+
+i32 unchanged( i32 v )
+{
+    return cast<i32>( v );
+}
+
+i32 main()
+{
+    return 0;
+}

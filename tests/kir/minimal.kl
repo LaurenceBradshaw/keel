@@ -1,0 +1,7 @@
+// The smallest function there is: the return slot, one block, and a terminator. Every convention
+// KIR is built on is visible here - block 0 is the entry, local 0 is what `return` returns, and
+// the terminator carries no value.
+i32 main()
+{
+    return 0;
+}

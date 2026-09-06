@@ -1,0 +1,61 @@
+fn designated {
+    let _0: Point; // return slot
+    let _1: Point;
+
+    bb0:
+        _1.x = const 1
+        _1.y = const 2
+        _0 = copy _1
+        return
+}
+fn positional {
+    let _0: Point; // return slot
+    let _1: Point;
+
+    bb0:
+        _1.x = const 1
+        _1.y = const 2
+        _0 = copy _1
+        return
+}
+fn out_of_order {
+    let _0: Point; // return slot
+    let _1: Point;
+
+    bb0:
+        _1.y = const 2
+        _1.x = const 1
+        _0 = copy _1
+        return
+}
+fn widened {
+    let _0: Wide; // return slot
+    let _1: u8; // parameter small
+    let _2: Wide;
+    let _3: i64;
+
+    bb0:
+        _3 = copy _1 as i64
+        _2.value = copy _3
+        _0 = copy _2
+        return
+}
+fn nested {
+    let _0: Outer; // return slot
+    let _1: Outer;
+    let _2: Point;
+
+    bb0:
+        _2.x = const 1
+        _2.y = const 2
+        _1.inner = copy _2
+        _0 = copy _1
+        return
+}
+fn main {
+    let _0: i32; // return slot
+
+    bb0:
+        _0 = const 0
+        return
+}

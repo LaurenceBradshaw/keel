@@ -1,0 +1,17 @@
+fn take {
+    let _0: i32; // return slot
+    let _1: i32; // parameter first
+    let _2: u8; // parameter second
+    let _3: f64; // parameter third
+
+    bb0:
+        _0 = const 1
+        return
+}
+fn main {
+    let _0: i32; // return slot
+
+    bb0:
+        _0 = const 0
+        return
+}

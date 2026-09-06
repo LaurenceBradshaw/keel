@@ -248,4 +248,34 @@ std::string_view token_kind_spelling( Token_kind kind )
     return "invalid character";
 }
 
+Token_kind base_operator( Token_kind assignment )
+{
+    switch( assignment )
+    {
+    case Token_kind::Plus_equal:
+        return Token_kind::Plus;
+    case Token_kind::Minus_equal:
+        return Token_kind::Minus;
+    case Token_kind::Star_equal:
+        return Token_kind::Star;
+    case Token_kind::Slash_equal:
+        return Token_kind::Slash;
+    case Token_kind::Percent_equal:
+        return Token_kind::Percent;
+    case Token_kind::Amp_equal:
+        return Token_kind::Amp;
+    case Token_kind::Pipe_equal:
+        return Token_kind::Pipe;
+    case Token_kind::Caret_equal:
+        return Token_kind::Caret;
+    case Token_kind::Less_less_equal:
+        return Token_kind::Less_less;
+    case Token_kind::Greater_greater_equal:
+        return Token_kind::Greater_greater;
+    default:
+        assert( false && "not a compound assignment" );
+        return assignment;
+    }
+}
+
 } // namespace keel

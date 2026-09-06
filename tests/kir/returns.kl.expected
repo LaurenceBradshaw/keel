@@ -1,0 +1,26 @@
+fn bare {
+    let _0: void; // return slot
+
+    bb0:
+        return
+}
+fn falls_off_the_end {
+    let _0: void; // return slot
+
+    bb0:
+        return
+}
+fn narrow {
+    let _0: u8; // return slot
+
+    bb0:
+        _0 = const 200
+        return
+}
+fn main {
+    let _0: i32; // return slot
+
+    bb0:
+        _0 = const 0
+        return
+}
