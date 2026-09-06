@@ -5,25 +5,35 @@
 int32_t kl__mix__i32_i64_u8( int32_t, int64_t, uint8_t );
 int32_t kl__main__( void );
 
-int32_t kl__mix__i32_i64_u8( int32_t kl_a_2, int64_t kl_b_4, uint8_t kl_c_6 )
+int32_t kl__mix__i32_i64_u8( int32_t kl_a_1, int64_t kl_b_2, uint8_t kl_c_3 )
 {
+    int32_t kl_t0;
+    int64_t kl_wide_4;
+    int64_t kl_t5;
+    int64_t kl_t6;
+    uint8_t kl_byte_7;
+    int32_t kl_t8;
 #line 5 "codegen/arithmetic.kl"
-    int64_t kl_t0 = (int64_t) kl_a_2 + (int64_t) kl_b_4;
-    int64_t kl_wide_12 = kl_t0;
+    kl_t5 = ( int64_t ) kl_a_1;
+    kl_t6 = kl_t5 + kl_b_2;
+    kl_wide_4 = kl_t6;
 #line 6 "codegen/arithmetic.kl"
-    uint8_t kl_byte_15 = kl_c_6;
+    kl_byte_7 = kl_c_3;
 #line 7 "codegen/arithmetic.kl"
-    uint8_t kl_t1 = (uint8_t) kl_byte_15 + (uint8_t) 1;
-    kl_byte_15 = (uint8_t) kl_t1;
+    kl_byte_7 = kl_byte_7 + 1;
 #line 8 "codegen/arithmetic.kl"
-    int32_t kl_t2 = (int32_t) kl_a_2 * (int32_t) 2;
-    return kl_t2;
+    kl_t8 = kl_a_1 * 2;
+    kl_t0 = kl_t8;
+    return kl_t0;
 }
 
 int32_t kl__main__( void )
 {
+    int32_t kl_t0;
+    int32_t kl_t1;
 #line 13 "codegen/arithmetic.kl"
-    int32_t kl_t0 = kl__mix__i32_i64_u8( (int32_t) 1, (int64_t) 2, (uint8_t) 3 );
+    kl_t1 = kl__mix__i32_i64_u8( 1, 2, 3 );
+    kl_t0 = kl_t1;
     return kl_t0;
 }
 

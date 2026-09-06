@@ -5,58 +5,76 @@
 uint32_t kl__popcount__u32( uint32_t );
 int32_t kl__main__( void );
 
-uint32_t kl__popcount__u32( uint32_t kl_bits_2 )
+uint32_t kl__popcount__u32( uint32_t kl_bits_1 )
 {
+    uint32_t kl_t0;
+    uint32_t kl_count_2;
+    bool kl_t3;
+    uint32_t kl_t4;
+    uint32_t kl_t5;
 #line 6 "codegen/popcount.kl"
-    uint32_t kl_count_6 = 0;
+    kl_count_2 = 0;
+    goto bb1;
+    bb1:
 #line 8 "codegen/popcount.kl"
-    while ( true )
-    {
-        bool kl_t0 = (uint32_t) kl_bits_2 != (uint32_t) 0;
-        if ( !kl_t0 )
-        {
-            break;
-        }
-#line 9 "codegen/popcount.kl"
-        {
+    kl_t3 = kl_bits_1 != 0;
+    if ( kl_t3 ) goto bb2; else goto bb3;
+    bb2:
 #line 10 "codegen/popcount.kl"
-            uint32_t kl_t1 = (uint32_t) kl_bits_2 & (uint32_t) 1;
-            uint32_t kl_t2 = (uint32_t) kl_count_6 + (uint32_t) kl_t1;
-            kl_count_6 = (uint32_t) kl_t2;
+    kl_t4 = kl_bits_1 & 1;
+    kl_count_2 = kl_count_2 + kl_t4;
 #line 11 "codegen/popcount.kl"
-            uint32_t kl_t3 = (uint32_t) kl_bits_2 >> (uint32_t) 1;
-            kl_bits_2 = (uint32_t) kl_t3;
-        }
-    }
+    kl_t5 = kl_bits_1 >> 1;
+    kl_bits_1 = kl_t5;
+    goto bb1;
+    bb3:
 #line 14 "codegen/popcount.kl"
-    return kl_count_6;
+    kl_t0 = kl_count_2;
+    return kl_t0;
 }
 
 int32_t kl__main__( void )
 {
+    int32_t kl_t0;
+    uint32_t kl_t1;
+    bool kl_t2;
+    uint32_t kl_t3;
+    bool kl_t4;
+    uint32_t kl_t5;
+    bool kl_t6;
 #line 20 "codegen/popcount.kl"
-    uint32_t kl_t0 = kl__popcount__u32( (uint32_t) 183 );
-    bool kl_t1 = (uint32_t) kl_t0 != (uint32_t) 6;
-    if ( kl_t1 )
-    {
-        return 1;
-    }
+    kl_t1 = kl__popcount__u32( 183 );
+    kl_t2 = kl_t1 != 6;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+    goto bb3;
+    bb3:
 #line 21 "codegen/popcount.kl"
-    uint32_t kl_t2 = kl__popcount__u32( (uint32_t) 0 );
-    bool kl_t3 = (uint32_t) kl_t2 != (uint32_t) 0;
-    if ( kl_t3 )
-    {
-        return 2;
-    }
+    kl_t3 = kl__popcount__u32( 0 );
+    kl_t4 = kl_t3 != 0;
+    if ( kl_t4 ) goto bb4; else goto bb5;
+    bb4:
+    kl_t0 = 2;
+    return kl_t0;
+    bb5:
+    goto bb6;
+    bb6:
 #line 22 "codegen/popcount.kl"
-    uint32_t kl_t4 = kl__popcount__u32( (uint32_t) 4294967295 );
-    bool kl_t5 = (uint32_t) kl_t4 != (uint32_t) 32;
-    if ( kl_t5 )
-    {
-        return 3;
-    }
+    kl_t5 = kl__popcount__u32( 4294967295 );
+    kl_t6 = kl_t5 != 32;
+    if ( kl_t6 ) goto bb7; else goto bb8;
+    bb7:
+    kl_t0 = 3;
+    return kl_t0;
+    bb8:
+    goto bb9;
+    bb9:
 #line 24 "codegen/popcount.kl"
-    return 0;
+    kl_t0 = 0;
+    return kl_t0;
 }
 
 int main( void )

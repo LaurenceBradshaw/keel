@@ -19,13 +19,9 @@ struct Spelling
     std::string structure( Node_id declaration ) const;
     std::string field( Node_id declaration ) const;
     std::string function( Node_id declaration ) const;
-    // The types alone: `int32_t, uint8_t`. What a prototype needs, and all a KIR definition can
-    // use - KIR names its parameters by Local_id, not by the declaration node.
+    // The types alone: `int32_t, uint8_t`. That is all a prototype needs, and all a definition can
+    // use - the body names its parameters by Local_id, so nothing here may name them at all.
     std::string parameter_types( Node_id declaration ) const;
-
-    // Types and names, keyed on the Param_decl nodes: `int32_t kl_a_7`. Only an AST-driven
-    // definition can use these names, because only an AST walk produces the matching uses.
-    std::string parameter_list( Node_id declaration ) const;
 
     // A file-scope variable's whole definition. Its initialiser stays an expression rather than a
     // value: a C file-scope initialiser must be one constant expression, and there is nowhere at
@@ -38,8 +34,9 @@ private:
 public:
 };
 
-// The two rules both constant spellers need. The dispatch above them differs - the AST emitter
-// switches on the node kind, the KIR one on the type - but these do not.
+// The two rules both constant spellers need. The dispatch above them differs - a global's
+// initialiser is still an AST expression and switches on the node kind, while a KIR operand
+// carries a Literal_id and a type and switches on the type - but these do not.
 
 // fmt's default is the shortest form that round-trips, and a value like 1.0 prints as "1", which C
 // would read as an int.

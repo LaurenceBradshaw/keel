@@ -21,111 +21,140 @@ double kl__abs__f64( double );
 double kl__distance__Line( struct kl__Line );
 int32_t kl__main__( void );
 
-double kl__abs__f64( double kl_v_12 )
+double kl__abs__f64( double kl_v_1 )
 {
+    double kl_t0;
+    bool kl_t2;
+    double kl_t3;
 #line 18 "codegen/structs.kl"
-    bool kl_t0 = (double) kl_v_12 < (double) 0.0;
-    if ( kl_t0 )
-    {
-        double kl_t1 = (double) 0.0 - (double) kl_v_12;
-        return kl_t1;
-    }
+    kl_t2 = kl_v_1 < 0.0;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t3 = 0.0 - kl_v_1;
+    kl_t0 = kl_t3;
+    return kl_t0;
+    bb2:
+    goto bb3;
+    bb3:
 #line 19 "codegen/structs.kl"
-    return kl_v_12;
+    kl_t0 = kl_v_1;
+    return kl_t0;
 }
 
-double kl__distance__Line( struct kl__Line kl_l_29 )
+double kl__distance__Line( struct kl__Line kl_l_1 )
 {
+    double kl_t0;
+    double kl_t2;
+    double kl_t3;
+    double kl_t4;
+    double kl_t5;
+    double kl_t6;
 #line 25 "codegen/structs.kl"
-    struct kl__Point kl_t0 = kl_l_29.kl_b_3;
-    double kl_t1 = kl_t0.kl_x_6;
-    struct kl__Point kl_t2 = kl_l_29.kl_a_1;
-    double kl_t3 = kl_t2.kl_x_6;
-    double kl_t4 = (double) kl_t1 - (double) kl_t3;
-    double kl_t5 = kl__abs__f64( (double) kl_t4 );
-    struct kl__Point kl_t6 = kl_l_29.kl_b_3;
-    double kl_t7 = kl_t6.kl_y_8;
-    struct kl__Point kl_t8 = kl_l_29.kl_a_1;
-    double kl_t9 = kl_t8.kl_y_8;
-    double kl_t10 = (double) kl_t7 - (double) kl_t9;
-    double kl_t11 = kl__abs__f64( (double) kl_t10 );
-    double kl_t12 = (double) kl_t5 + (double) kl_t11;
-    return kl_t12;
+    kl_t2 = kl_l_1.kl_b_3.kl_x_6 - kl_l_1.kl_a_1.kl_x_6;
+    kl_t3 = kl__abs__f64( kl_t2 );
+    kl_t4 = kl_l_1.kl_b_3.kl_y_8 - kl_l_1.kl_a_1.kl_y_8;
+    kl_t5 = kl__abs__f64( kl_t4 );
+    kl_t6 = kl_t3 + kl_t5;
+    kl_t0 = kl_t6;
+    return kl_t0;
 }
 
 int32_t kl__main__( void )
 {
-#line 31 "codegen/structs.kl"
-    struct kl__Point kl_t0;
-    kl_t0.kl_x_6 = 1.0;
-    kl_t0.kl_y_8 = 2.0;
-    struct kl__Point kl_t1;
-    kl_t1.kl_x_6 = 4.0;
-    kl_t1.kl_y_8 = 6.0;
+    int32_t kl_t0;
+    struct kl__Line kl_l_1;
     struct kl__Line kl_t2;
-    kl_t2.kl_a_1 = kl_t0;
-    kl_t2.kl_b_3 = kl_t1;
-    struct kl__Line kl_l_70 = kl_t2;
-#line 33 "codegen/structs.kl"
-    double kl_t3 = kl__distance__Line( (struct kl__Line) kl_l_70 );
-    bool kl_t4 = (double) kl_t3 != (double) 7.0;
-    if ( kl_t4 )
-    {
-        return 1;
-    }
-#line 37 "codegen/structs.kl"
-    struct kl__Point kl_t5;
-    kl_t5.kl_y_8 = 2.0;
-    kl_t5.kl_x_6 = 1.0;
-    struct kl__Point kl_t6;
-    kl_t6.kl_x_6 = 4.0;
-    kl_t6.kl_y_8 = 6.0;
-    struct kl__Line kl_t7;
-    kl_t7.kl_b_3 = kl_t5;
-    kl_t7.kl_a_1 = kl_t6;
-    struct kl__Line kl_flipped_94 = kl_t7;
-#line 39 "codegen/structs.kl"
-    double kl_t8 = kl__distance__Line( (struct kl__Line) kl_flipped_94 );
-    bool kl_t9 = (double) kl_t8 != (double) 7.0;
-    if ( kl_t9 )
-    {
-        return 2;
-    }
-#line 41 "codegen/structs.kl"
+    struct kl__Point kl_t3;
+    struct kl__Point kl_t4;
+    double kl_t5;
+    bool kl_t6;
+    struct kl__Line kl_flipped_7;
+    struct kl__Line kl_t8;
+    struct kl__Point kl_t9;
     struct kl__Point kl_t10;
-    kl_t10.kl_x_6 = 0.0;
-    kl_t10.kl_y_8 = 0.0;
-    struct kl__Point kl_p_110 = kl_t10;
+    double kl_t11;
+    bool kl_t12;
+    struct kl__Point kl_p_13;
+    struct kl__Point kl_t14;
+    bool kl_t15;
+    bool kl_t16;
+    bool kl_t17;
+#line 31 "codegen/structs.kl"
+    kl_t3.kl_x_6 = 1.0;
+    kl_t3.kl_y_8 = 2.0;
+    kl_t2.kl_a_1 = kl_t3;
+    kl_t4.kl_x_6 = 4.0;
+    kl_t4.kl_y_8 = 6.0;
+    kl_t2.kl_b_3 = kl_t4;
+    kl_l_1 = kl_t2;
+#line 33 "codegen/structs.kl"
+    kl_t5 = kl__distance__Line( kl_l_1 );
+    kl_t6 = kl_t5 != 7.0;
+    if ( kl_t6 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+    goto bb3;
+    bb3:
+#line 37 "codegen/structs.kl"
+    kl_t9.kl_y_8 = 2.0;
+    kl_t9.kl_x_6 = 1.0;
+    kl_t8.kl_b_3 = kl_t9;
+    kl_t10.kl_x_6 = 4.0;
+    kl_t10.kl_y_8 = 6.0;
+    kl_t8.kl_a_1 = kl_t10;
+    kl_flipped_7 = kl_t8;
+#line 39 "codegen/structs.kl"
+    kl_t11 = kl__distance__Line( kl_flipped_7 );
+    kl_t12 = kl_t11 != 7.0;
+    if ( kl_t12 ) goto bb4; else goto bb5;
+    bb4:
+    kl_t0 = 2;
+    return kl_t0;
+    bb5:
+    goto bb6;
+    bb6:
+#line 41 "codegen/structs.kl"
+    kl_t14.kl_x_6 = 0.0;
+    kl_t14.kl_y_8 = 0.0;
+    kl_p_13 = kl_t14;
 #line 42 "codegen/structs.kl"
-    kl_p_110.kl_x_6 = (double) 3.0;
+    kl_p_13.kl_x_6 = 3.0;
 #line 44 "codegen/structs.kl"
-    double kl_t11 = kl_p_110.kl_x_6;
-    bool kl_t12 = (double) kl_t11 != (double) 3.0;
-    if ( kl_t12 )
-    {
-        return 3;
-    }
+    kl_t15 = kl_p_13.kl_x_6 != 3.0;
+    if ( kl_t15 ) goto bb7; else goto bb8;
+    bb7:
+    kl_t0 = 3;
+    return kl_t0;
+    bb8:
+    goto bb9;
+    bb9:
 #line 45 "codegen/structs.kl"
-    double kl_t13 = kl_p_110.kl_y_8;
-    bool kl_t14 = (double) kl_t13 != (double) 0.0;
-    if ( kl_t14 )
-    {
-        return 4;
-    }
+    kl_t16 = kl_p_13.kl_y_8 != 0.0;
+    if ( kl_t16 ) goto bb10; else goto bb11;
+    bb10:
+    kl_t0 = 4;
+    return kl_t0;
+    bb11:
+    goto bb12;
+    bb12:
 #line 48 "codegen/structs.kl"
-    kl_p_110.kl_y_8 = (double) ( kl_p_110.kl_y_8 + 1 );
+    kl_p_13.kl_y_8 = kl_p_13.kl_y_8 + 1.0;
 #line 49 "codegen/structs.kl"
-    double kl_t15 = (double) kl_p_110.kl_y_8 + (double) 2.0;
-    kl_p_110.kl_y_8 = (double) kl_t15;
+    kl_p_13.kl_y_8 = kl_p_13.kl_y_8 + 2.0;
 #line 51 "codegen/structs.kl"
-    double kl_t16 = kl_p_110.kl_y_8;
-    bool kl_t17 = (double) kl_t16 != (double) 3.0;
-    if ( kl_t17 )
-    {
-        return 5;
-    }
+    kl_t17 = kl_p_13.kl_y_8 != 3.0;
+    if ( kl_t17 ) goto bb13; else goto bb14;
+    bb13:
+    kl_t0 = 5;
+    return kl_t0;
+    bb14:
+    goto bb15;
+    bb15:
 #line 53 "codegen/structs.kl"
-    return 0;
+    kl_t0 = 0;
+    return kl_t0;
 }
 
 int main( void )

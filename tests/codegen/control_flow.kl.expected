@@ -6,54 +6,55 @@ int32_t kl__main__( void );
 
 int32_t kl__main__( void )
 {
+    int32_t kl_t0;
+    int32_t kl_total_1;
+    int32_t kl_i_2;
+    bool kl_t3;
+    bool kl_t4;
+    int32_t kl_t5;
+    int32_t kl_t6;
+    bool kl_t7;
 #line 5 "codegen/control_flow.kl"
-    int32_t kl_total_4 = 0;
+    kl_total_1 = 0;
 #line 7 "codegen/control_flow.kl"
-    {
-        int32_t kl_i_7 = 0;
-        while ( true )
-        {
-            bool kl_t0 = (int32_t) kl_i_7 < (int32_t) 5;
-            if ( !kl_t0 )
-            {
-                break;
-            }
-#line 8 "codegen/control_flow.kl"
-            {
+    kl_i_2 = 0;
+    goto bb1;
+    bb1:
+    kl_t3 = kl_i_2 < 5;
+    if ( kl_t3 ) goto bb2; else goto bb3;
+    bb2:
 #line 9 "codegen/control_flow.kl"
-                bool kl_t1 = (int32_t) kl_i_7 == (int32_t) 2;
-                if ( kl_t1 )
-                {
-                    int32_t kl_t2 = (int32_t) kl_total_4 + (int32_t) 10;
-                    kl_total_4 = (int32_t) kl_t2;
-                }
-                else
-                {
+    kl_t4 = kl_i_2 == 2;
+    if ( kl_t4 ) goto bb4; else goto bb5;
+    bb3:
+    goto bb8;
+    bb4:
+    kl_t5 = kl_total_1 + 10;
+    kl_total_1 = kl_t5;
+    goto bb6;
+    bb5:
 #line 10 "codegen/control_flow.kl"
-                    int32_t kl_t3 = (int32_t) kl_total_4 + (int32_t) 1;
-                    kl_total_4 = (int32_t) kl_t3;
-                }
-            }
+    kl_t6 = kl_total_1 + 1;
+    kl_total_1 = kl_t6;
+    goto bb6;
+    bb6:
+    goto bb7;
+    bb7:
 #line 7 "codegen/control_flow.kl"
-            kl_i_7 = (int32_t) ( kl_i_7 + 1 );
-        }
-    }
+    kl_i_2 = kl_i_2 + 1;
+    goto bb1;
+    bb8:
 #line 13 "codegen/control_flow.kl"
-    while ( true )
-    {
-        bool kl_t4 = (int32_t) kl_total_4 > (int32_t) 3;
-        if ( !kl_t4 )
-        {
-            break;
-        }
-#line 14 "codegen/control_flow.kl"
-        {
+    kl_t7 = kl_total_1 > 3;
+    if ( kl_t7 ) goto bb9; else goto bb10;
+    bb9:
 #line 15 "codegen/control_flow.kl"
-            kl_total_4 = (int32_t) ( kl_total_4 - 1 );
-        }
-    }
+    kl_total_1 = kl_total_1 - 1;
+    goto bb8;
+    bb10:
 #line 18 "codegen/control_flow.kl"
-    return kl_total_4;
+    kl_t0 = kl_total_1;
+    return kl_t0;
 }
 
 int main( void )

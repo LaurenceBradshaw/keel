@@ -1195,13 +1195,19 @@ that the *cause* is the diagnostic worth printing.
   **Wanted sooner rather than later**, but after the KIR backend lands - it removes backend code,
   so doing it while a second backend is half-written would mean writing what it deletes.
 
-- **Four files have grown past what one file should hold.** Code lines, excluding the in-source
+- **Three files have grown past what one file should hold.** Code lines, excluding the in-source
   tests that roughly double each: `sema/type_checker.cpp` 2350, `parse/parser.cpp` 1675,
-  `codegen_c/emitter.cpp` 1247, `lex/lexer.cpp` 824.
+  `lex/lexer.cpp` 824. `ir/lower.cpp` at 768 is the one to watch.
 
   The mechanism is identified in §3.2 and is not sprawl: each is built around a **file-local class**
-  — `Checker`, `Parser`, `Emitter` — and a class cannot span translation units, so every new
-  responsibility becomes another private method in the same file. The tests then double it.
+  — `Checker`, `Parser` — and a class cannot span translation units, so every new responsibility
+  becomes another private method in the same file. The tests then double it.
+
+  `codegen_c/emitter.cpp` was a fourth at 1247 and is gone: KIR replaced it with `emit_kir.cpp` at
+  540 and `spelling.cpp` at 207, because the lowerer had already done the conversions, the
+  short-circuits, the loop labels and the temporaries. That is evidence for the §3.2 discipline
+  rather than proof of it — the win came from moving work earlier in the pipeline as much as from
+  how the files are laid out.
 
   KIR is being built the other way round (§3.2) to avoid repeating it, which also makes it the
   natural moment to judge whether the free-function-pass discipline is actually pleasanter to work

@@ -348,7 +348,8 @@ void Kir_emitter::emit_function( const Function& function )
 
     // Parameters named from KIR locals 1..parameter_count, NOT from Param_decl nodes: the body
     // names them by Local_id, and prototype() deliberately emits no names, so the two can never
-    // disagree. parameter_list() would name them from the AST and quietly not match.
+    // disagree - nothing may name them from the Param_decl nodes, which is why parameter_types()
+    // spells types only.
     std::string params;
 
     for( u32 i = 1; i <= function.parameter_count; ++i )

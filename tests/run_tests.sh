@@ -239,7 +239,7 @@ fi
 stray="$( find . -type f \
     ! -name '*.kl' ! -name '*.kl.expected' ! -name '*.kl.stderr' ! -name '*.kl.exit' \
     ! -name '*.kl.run' \
-    ! -name FLAGS ! -name RUN ! -name run_tests.sh ! -name compare_backends.sh ! -name CMakeLists.txt | sort )"
+    ! -name FLAGS ! -name RUN ! -name run_tests.sh ! -name CMakeLists.txt | sort )"
 
 if [ -n "$stray" ]; then
     echo

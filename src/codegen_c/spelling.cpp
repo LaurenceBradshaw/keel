@@ -75,11 +75,8 @@ std::string Spelling::function( Node_id declaration ) const
 
 std::string Spelling::parameter_types( Node_id declaration ) const
 {
-    const bool with_names = false;
 
     std::vector<Type_id> params = parameter_types_vector( ast, types, declaration );
-
-    const std::span<const Node_id> nodes = ast.children( ast.children( declaration )[1] );
 
     std::string rendered;
 
@@ -91,12 +88,6 @@ std::string Spelling::parameter_types( Node_id declaration ) const
         }
 
         rendered += type( params[i] );
-
-        if( with_names )
-        {
-            rendered += ' ';
-            rendered += mangle_local( interner.text( Symbol_id { ast.aux( nodes[i] ) } ), nodes[i].v );
-        }
     }
 
     if( rendered.empty() )
@@ -122,28 +113,6 @@ std::string c_float( f64 value )
 std::string c_integer( u64 value )
 {
     return value > 9223372036854775807ull ? fmt::format( "{}ull", value ) : fmt::format( "{}", value );
-}
-
-std::string Spelling::parameter_list( Node_id declaration ) const
-{
-    const std::vector<Type_id>     params = parameter_types_vector( ast, types, declaration );
-    const std::span<const Node_id> nodes  = ast.children( ast.children( declaration )[1] );
-
-    std::string rendered;
-
-    for( std::size_t i = 0; i < params.size(); ++i )
-    {
-        if( i != 0 )
-        {
-            rendered += ", ";
-        }
-
-        rendered += fmt::format(
-            "{} {}", type( params[i] ), mangle_local( interner.text( Symbol_id { ast.aux( nodes[i] ) } ), nodes[i].v )
-        );
-    }
-
-    return rendered.empty() ? "void" : rendered;
 }
 
 namespace

@@ -10,7 +10,6 @@
 #include <string_view>
 #include "ast/dump.h"
 #include "codegen_c/emit_kir.h"
-#include "codegen_c/emitter.h"
 #include "common/diagnostics.h"
 #include "common/dump_util.h"
 #include "common/interner.h"
@@ -36,7 +35,6 @@ int main( int argc, char** argv )
         ( "dump-tokens",   "Print the token stream and stop" )
         ( "dump-ast",      "Print the parsed AST and stop" )
         ( "dump-kir",      "Print the lowered KIR and stop" )
-        ( "emit-c-from-kir", "Print C generated from KIR rather than from the AST, and stop" )
         ( "emit-c",        "Print the generated C and stop" )
         ( "check",         "Run the front end and report diagnostics, emitting nothing" )
         ( "v,version",     "Print version information and exit" )
@@ -183,19 +181,8 @@ int main( int argc, char** argv )
         return finish();
     }
 
-    // The second backend, behind its own flag so the first is untouched while it is unproven.
-    // PLAN §3.3 step 3: the existing codegen fixtures compare the two by exit code, which is a
-    // real equivalence check rather than a text diff.
-    if( args.count( "emit-c-from-kir" ) )
-    {
-        std::cout << keel::emit_c_from_kir(
-            keel::lower( ast, resolution, types, literals, interner ), ast, types, literals, sm, interner
-        );
-
-        return finish();
-    }
-
-    const std::string generated = keel::emit_c( ast, resolution, types, literals, sm, interner );
+    const std::string generated =
+        keel::emit_c_from_kir( keel::lower( ast, resolution, types, literals, interner ), ast, types, literals, sm, interner );
 
     if( args.count( "emit-c" ) )
     {
