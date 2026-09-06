@@ -9,13 +9,13 @@
 #include <string>
 #include <string_view>
 #include "ast/dump.h"
+#include "codegen_c/emit_kir.h"
 #include "codegen_c/emitter.h"
 #include "common/diagnostics.h"
 #include "common/dump_util.h"
 #include "common/interner.h"
 #include "common/source_manager.h"
 #include "common/version.h"
-#include "codegen_c/emit_kir.h"
 #include "ir/lower.h"
 #include "ir/print.h"
 #include "ir/verify.h"
