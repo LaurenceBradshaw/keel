@@ -82,7 +82,7 @@ Kir_emitter::Kir_emitter(
       literals_( literals ),
       sm_( sm ),
       interner_( interner ),
-      spelling_( Spelling { ast, types, literals, interner } )
+      spelling_( Spelling { ast, types, interner } )
 {
 }
 

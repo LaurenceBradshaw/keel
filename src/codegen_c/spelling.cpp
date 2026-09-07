@@ -115,92 +115,45 @@ std::string c_integer( u64 value )
     return value > 9223372036854775807ull ? fmt::format( "{}ull", value ) : fmt::format( "{}", value );
 }
 
-namespace
-{
-
-// A literal spelled for C. Distinct from a KIR constant, which carries a Literal_id and a type
-// rather than a node - so that one switches on the type where this switches on the node kind.
-std::string literal_text( const Ast& ast, const Literals& literals, Node_id node )
-{
-    switch( ast.kind( node ) )
-    {
-    case Node_kind::Bool_literal:
-        return ast.aux( node ) != 0 ? "true" : "false";
-
-    case Node_kind::Null_literal:
-        return "NULL";
-
-    case Node_kind::Float_literal:
-        return c_float( literals.floating( Literal_id { ast.aux( node ) } ) );
-
-    // Deliberately *not* cast to the literal's own type. `-2147483648` is a negation of
-    // 2147483648, and casting that first would overflow before the minus ran; the place the value
-    // lands in carries the explicit C type instead.
-    case Node_kind::Int_literal:
-    case Node_kind::Char_literal:
-        return c_integer( literals.integer( Literal_id { ast.aux( node ) } ) );
-
-    default:
-        assert( false && "not a literal" );
-        return {};
-    }
-}
-
-} // namespace
-
-// Printed as an expression rather than folded to a value, because C accepts an arithmetic constant
-// expression at file scope and nothing there can hold a temporary. The operand casts mirror the
-// emitters' - §6.4's conversions are not C's - and constant rejection has already proved the result
-// fits, so C's wider intermediates cannot disagree about the answer.
-std::string Spelling::constant_expression( Node_id node ) const
-{
-    switch( ast.kind( node ) )
-    {
-    case Node_kind::Unary_expr:
-        return fmt::format(
-            "{}( {} )",
-            token_kind_spelling( static_cast<Token_kind>( ast.aux( node ) ) ),
-            constant_expression( ast.children( node )[0] )
-        );
-
-    case Node_kind::Binary_expr:
-    {
-        const Node_id left  = ast.children( node )[0];
-        const Node_id right = ast.children( node )[1];
-
-        // A shift takes no common type: its result is the left operand's, which is why
-        // arithmetic_result has no answer for one.
-        const Type_id common  = types.table().arithmetic_result( types.type_of( left ), types.type_of( right ) );
-        const Type_id operand = common.is_valid() ? common : types.type_of( left );
-
-        return fmt::format(
-            "( ({}) {} {} ({}) {} )",
-            type( operand ),
-            constant_expression( left ),
-            token_kind_spelling( static_cast<Token_kind>( ast.aux( node ) ) ),
-            type( operand ),
-            constant_expression( right )
-        );
-    }
-
-    case Node_kind::Cast_expr:
-        return fmt::format( "( ({}) {} )", type( types.type_of( node ) ), constant_expression( ast.children( node )[1] ) );
-
-    default:
-        return literal_text( ast, literals, node );
-    }
-}
-
 std::string Spelling::global_definition( Node_id declaration ) const
 {
     const Type_id     variable = types.type_of( declaration );
     const std::string name     = mangle_local( interner.text( Symbol_id { ast.aux( declaration ) } ), declaration.v );
-    const Node_id     init     = ast.children( declaration )[1];
+
+    // The checker evaluated the initialiser; this prints the value. It used to print the expression
+    // instead, which meant a backend re-deriving §6.4's conversions in its own spelling of the tree
+    // - and an LLVM backend would have had to translate that tree rather than emit a ConstantInt.
+    const std::optional<Constant_value> value = types.constant_of( declaration );
 
     // No initialiser is zero, which C guarantees for file-scope storage - so nothing is written
     // rather than a zero invented here.
-    return init.is_valid() ? fmt::format( "{} {} = {};", type( variable ), name, constant_expression( init ) )
-                           : fmt::format( "{} {};", type( variable ), name );
+    if( !value )
+    {
+        return fmt::format( "{} {};", type( variable ), name );
+    }
+
+    const Type_table& table = types.table();
+
+    std::string text;
+
+    if( value->kind == Constant_value::Kind::Float )
+    {
+        text = c_float( value->floating );
+    }
+    else if( table.is_pointer( variable ) )
+    {
+        text = "NULL"; // the only pointer constant there is, and it folded to zero
+    }
+    else if( variable == table.builtin( Type_kind::Bool ) )
+    {
+        text = value->magnitude != 0 ? "true" : "false";
+    }
+    else
+    {
+        text = fmt::format( "{}{}", value->negative ? "-" : "", c_integer( value->magnitude ) );
+    }
+
+    return fmt::format( "{} {} = {};", type( variable ), name, text );
 }
 
 } // namespace keel

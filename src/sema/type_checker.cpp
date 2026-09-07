@@ -6,6 +6,7 @@
 #include <cmath>
 #include <limits>
 #include <optional>
+#include <unordered_map>
 #include <unordered_set>
 
 namespace keel
@@ -217,6 +218,51 @@ constexpr Folded folded( u64 magnitude, bool negative )
     return Folded { true, false, Constant { magnitude, magnitude == 0 ? false : negative } };
 }
 
+// Bitwise operators are defined on the *representation*, and sign-magnitude has no bit pattern of
+// its own - so folding one means converting to two's complement in the type's width, operating,
+// and converting back. That is why these need the type where the arithmetic ones do not.
+u64 to_bits( Constant value, u8 width )
+{
+    const u64 mask = width == 64 ? ~0ull : ( 1ull << width ) - 1;
+
+    return ( value.negative ? ~value.magnitude + 1 : value.magnitude ) & mask;
+}
+
+Folded from_bits( u64 bits, u8 width, bool is_signed )
+{
+    const u64 mask = width == 64 ? ~0ull : ( 1ull << width ) - 1;
+
+    bits &= mask;
+
+    // The sign bit is only a sign in a signed type. In an unsigned one the same pattern is just a
+    // large positive value, which is why ~0 is -1 as an i32 and the maximum as a u32.
+    const u64 sign = width == 64 ? 1ull << 63 : 1ull << ( width - 1 );
+
+    if( is_signed && ( bits & sign ) != 0 )
+    {
+        return folded( ( ~bits + 1 ) & mask, true );
+    }
+
+    return folded( bits, false );
+}
+
+// Negative sorts below positive whatever the magnitudes; within one sign the magnitude decides,
+// reversed when both are negative.
+bool less_than( Constant a, Constant b )
+{
+    if( a.negative != b.negative )
+    {
+        return a.negative;
+    }
+
+    return a.negative ? a.magnitude > b.magnitude : a.magnitude < b.magnitude;
+}
+
+bool equals( Constant a, Constant b )
+{
+    return a.magnitude == b.magnitude && a.negative == b.negative;
+}
+
 Folded add_constants( Constant a, Constant b )
 {
     if( a.negative == b.negative )
@@ -338,7 +384,10 @@ private:
     // Constant rejection (§12). fold_* answer what an expression's value is when it is made only
     // of literals; check_constant decides whether that value can exist in the type the operation
     // happens in, and record_constant is the two together.
-    Folded             fold_integer( Node_id id ) const;
+    // `known` is the type the caller already settled on. check_constant runs *before* the node's
+    // own type is recorded, so without it the operators that need a width - the bitwise ones, `~`
+    // and a cast - fold to nothing exactly where overflow is being checked.
+    Folded             fold_integer( Node_id id, Type_id known = Type_id {} ) const;
     std::optional<f64> fold_float( Node_id id ) const;
     bool               check_constant( Node_id id, Type_id type );
     Type_id            record_constant( Node_id id, Type_id type );
@@ -368,6 +417,10 @@ private:
     Type_id              current_return_;
 
     u32 loop_depth_ = 0; // for break/continue
+
+    // One per file-scope initialiser. Every accepted one must fold - the rule already requires a
+    // constant expression - so a missing entry is an internal error, not a user's mistake.
+    std::unordered_map<u32, Constant_value> constants_;
 };
 
 Types Checker::run()
@@ -375,7 +428,7 @@ Types Checker::run()
     types_.assign( ast_.node_count(), Type_id {} );
     declare_signatures();
     visit( ast_.root() );
-    return Types( std::move( table_ ), std::move( types_ ), std::move( struct_order_ ) );
+    return Types( std::move( table_ ), std::move( types_ ), std::move( struct_order_ ), std::move( constants_ ) );
 }
 
 void Checker::declare_signatures()
@@ -975,6 +1028,28 @@ void Checker::visit_global( Node_id id )
     }
 
     check( init, type ); // range checking, and the literal adopts the declared type
+
+    // Evaluated here rather than printed as an expression by the backend. The rule already says
+    // this is a constant expression, so the value exists; computing it once is what lets a backend
+    // emit a literal instead of re-deriving §6.4's conversions in its own spelling of the tree.
+    if( table_.is_float( type ) )
+    {
+        if( const std::optional<f64> value = fold_float( init ) )
+        {
+            constants_.emplace( id.v, Constant_value { Constant_value::Kind::Float, 0, false, *value } );
+        }
+
+        return;
+    }
+
+    const Folded value = fold_integer( init );
+
+    if( value.constant && !value.overflowed )
+    {
+        constants_.emplace(
+            id.v, Constant_value { Constant_value::Kind::Integer, value.value.magnitude, value.value.negative, 0.0 }
+        );
+    }
 }
 
 Type_id Checker::infer( Node_id id )
@@ -2015,8 +2090,13 @@ Type_id Checker::type_of_annotation( Node_id id )
 // Only + - * / % << >> fold. `&`, `|`, `^` and `~` cannot take a value outside the type their
 // operands came from, so there is nothing for them to overflow and nothing here to check - saying
 // "not constant" for those is the correct answer, not a shortcut.
-Folded Checker::fold_integer( Node_id id ) const
+Folded Checker::fold_integer( Node_id id, Type_id known ) const
 {
+    // Only the node being folded needs the hint: its children were checked first, so their own
+    // types are recorded by the time the recursion reaches them.
+    const auto width_type = [&]() -> Type_id
+    { return known.is_valid() ? known : ( id.v < types_.size() ? types_[id.v] : Type_id {} ); };
+
     if( !id.is_valid() )
     {
         return not_constant();
@@ -2044,6 +2124,14 @@ Folded Checker::fold_integer( Node_id id ) const
         return value.is_valid() ? folded( literals_.integer( value ), false ) : not_constant();
     }
 
+    // Neither carries a Literal_id: a bool's value is in aux, and `nullptr` records nothing at
+    // all. Both are integers here, which is also how the lowerer spells them.
+    case Node_kind::Bool_literal:
+        return folded( ast_.aux( id ) != 0 ? 1 : 0, false );
+
+    case Node_kind::Null_literal:
+        return folded( 0, false );
+
     case Node_kind::Unary_expr:
     {
         const Folded operand = fold_integer( ast_.children( id )[0] );
@@ -2061,9 +2149,46 @@ Folded Checker::fold_integer( Node_id id ) const
         case Token_kind::Plus:
             return operand;
 
+        case Token_kind::Tilde:
+        {
+            const Type_id operation = width_type();
+
+            if( !operation.is_valid() || !table_.is_integer( operation ) )
+            {
+                return not_constant();
+            }
+
+            const Type& described = table_.get( operation );
+
+            return from_bits( ~to_bits( operand.value, described.width ), described.width, described.is_signed );
+        }
+
         default:
             return not_constant();
         }
+    }
+
+    // Either a widening `cast` or a `wrap` - narrowing `cast` is refused until there is something
+    // to trap with - so this is a reduction modulo the target's width either way.
+    case Node_kind::Cast_expr:
+    {
+        const Folded operand = fold_integer( ast_.children( id )[1] );
+
+        if( !operand.constant || operand.overflowed )
+        {
+            return operand;
+        }
+
+        const Type_id target = width_type();
+
+        if( !target.is_valid() || !table_.is_integer( target ) )
+        {
+            return not_constant();
+        }
+
+        const Type& described = table_.get( target );
+
+        return from_bits( to_bits( operand.value, described.width ), described.width, described.is_signed );
     }
 
     case Node_kind::Binary_expr:
@@ -2120,6 +2245,51 @@ Folded Checker::fold_integer( Node_id id ) const
             }
 
             return folded( a.magnitude >> b.magnitude, false );
+
+        // A comparison yields bool, which is the integer 0 or 1 here.
+        case Token_kind::Less:
+            return folded( less_than( a, b ) ? 1 : 0, false );
+
+        case Token_kind::Greater:
+            return folded( less_than( b, a ) ? 1 : 0, false );
+
+        case Token_kind::Less_equal:
+            return folded( less_than( b, a ) ? 0 : 1, false );
+
+        case Token_kind::Greater_equal:
+            return folded( less_than( a, b ) ? 0 : 1, false );
+
+        case Token_kind::Equal_equal:
+            return folded( equals( a, b ) ? 1 : 0, false );
+
+        case Token_kind::Bang_equal:
+            return folded( equals( a, b ) ? 0 : 1, false );
+
+        case Token_kind::Amp:
+        case Token_kind::Pipe:
+        case Token_kind::Caret:
+        {
+            // The width the operation happens in, which the node carries. Without it there is no
+            // bit pattern to work on.
+            const Type_id operation = width_type();
+
+            if( !operation.is_valid() || !table_.is_integer( operation ) )
+            {
+                return not_constant();
+            }
+
+            const Type& described  = table_.get( operation );
+            const u64   left_bits  = to_bits( a, described.width );
+            const u64   right_bits = to_bits( b, described.width );
+
+            const Token_kind op = static_cast<Token_kind>( ast_.aux( id ) );
+
+            const u64 result = op == Token_kind::Amp    ? left_bits & right_bits
+                               : op == Token_kind::Pipe ? left_bits | right_bits
+                                                        : left_bits ^ right_bits;
+
+            return from_bits( result, described.width, described.is_signed );
+        }
 
         default:
             return not_constant();
@@ -2270,7 +2440,9 @@ bool Checker::check_constant( Node_id id, Type_id type )
         return true;
     }
 
-    const Folded value = fold_integer( id );
+    // The type is passed in: this runs before the node's own is recorded, and the operators that
+    // need a width would otherwise fold to nothing exactly where overflow is being checked.
+    const Folded value = fold_integer( id, type );
 
     if( !value.constant )
     {
@@ -2397,6 +2569,16 @@ public:
     {
         const Type_id type = types_.type_of( id );
         return type.is_valid() ? types_.table().name( type ) : "<none>";
+    }
+
+    Node_id child( Node_id parent, std::size_t index ) const
+    {
+        return ast_.children( parent )[index];
+    }
+
+    std::optional<Constant_value> constant_of( Node_id node ) const
+    {
+        return types_.constant_of( node );
     }
 
     Node_id nth( Node_kind kind, std::size_t index ) const
@@ -4841,6 +5023,210 @@ TEST_CASE( "type_checker_allows_constants_that_fit", "[sema][types][constants]" 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
     }
+}
+
+// The folder was written to *detect* overflow, so it answered "not constant" for every operator
+// that cannot overflow. Evaluating a global's initialiser needs it to answer properly, and the
+// constant-overflow rule gets wider for free: `~0 + 1` is not checked today because the `~` stops
+// the fold before the addition is reached.
+TEST_CASE( "type_checker_folds_bitwise_operators", "[sema][types][constants][fold]" )
+{
+    // Bitwise operators are defined on the representation, so folding one means going to two's
+    // complement in the type's width and back. Sign-magnitude has no bit pattern of its own.
+    SECTION( "and, or, xor on positive values" )
+    {
+        for( const char* body :
+             { "u8 d = 255 & 15; if ( d != 15 ) { return 1; }",
+               "u8 d = 240 | 15; if ( d != 255 ) { return 1; }",
+               "u8 d = 255 ^ 15; if ( d != 240 ) { return 1; }" } )
+        {
+            const Typed p( std::string( "i32 main() { " ) + body + " return 0; }" );
+
+            INFO( body << "\n" << p.rendered() );
+            REQUIRE( p.clean() );
+        }
+    }
+
+    // The round trip a sign bug breaks: ~0 is -1 in every signed width. Asserted on the *value*
+    // rather than on cleanliness, because ignoring the sign bit still produces a clean program -
+    // just one holding 4294967295.
+    SECTION( "complement of zero is negative one" )
+    {
+        const Typed p( "i32 flipped = ~0;\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::optional<Constant_value> value = p.constant_of( p.nth( Node_kind::Var_decl, 0 ) );
+
+        REQUIRE( value.has_value() );
+        REQUIRE( value->negative );
+        REQUIRE( value->magnitude == 1 );
+    }
+
+    // The same pattern in an unsigned type is the maximum, not minus one - which is the whole
+    // reason from_bits needs the signedness and not just the width.
+    SECTION( "and the maximum in an unsigned one" )
+    {
+        const Typed p( "u32 all_ones = wrap<u32>( ~0 );\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::optional<Constant_value> value = p.constant_of( p.nth( Node_kind::Var_decl, 0 ) );
+
+        REQUIRE( value.has_value() );
+        REQUIRE_FALSE( value->negative );
+        REQUIRE( value->magnitude == 4294967295ull );
+    }
+
+    // ~0 does not fit an unsigned type as -1, but as a bit pattern it is the maximum. The width is
+    // what decides, which is why the fold needs the type rather than just the value.
+    SECTION( "complement in an unsigned type is the maximum" )
+    {
+        const Typed p( "i32 main() { u8 d = ~0; return 0; }" );
+
+        INFO( p.rendered() );
+
+        // -1 does not fit u8, so this is refused - and it is the *fold* that knows, not the parser.
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "and on negative values, through the sign conversion" )
+    {
+        const Typed p( "i32 main() { i32 d = -1 & 255; if ( d != 255 ) { return 1; } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // The point of folding these at all: a bitwise operand no longer stops the fold, so the value
+    // reaches the enclosing operation.
+    SECTION( "a bitwise operand no longer stops the fold" )
+    {
+        const Typed p( "i32 main() { u8 d = 255 & 255; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // Nested here is still refused for an unrelated reason: check() pushes an expectation into a
+    // binary only when both operands are literal expressions, and a Binary_expr is not one - so
+    // `( 255 & 255 )` settles on i32 before the addition. That is the inferring-where-checking-
+    // belonged family again, and widening is_literal_expression would fix it.
+    SECTION( "though a nested one is still refused, for a different reason" )
+    {
+        const Typed p( "i32 main() { u8 d = ( 255 & 255 ) + 1; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+}
+
+TEST_CASE( "type_checker_folds_comparisons", "[sema][types][constants][fold]" )
+{
+    SECTION( "producing a bool" )
+    {
+        for( const char* body :
+             { "bool d = 1 < 2; if ( !d ) { return 1; }",
+               "bool d = 2 < 1; if ( d ) { return 1; }",
+               "bool d = 2 == 2; if ( !d ) { return 1; }",
+               "bool d = 2 != 2; if ( d ) { return 1; }" } )
+        {
+            const Typed p( std::string( "i32 main() { " ) + body + " return 0; }" );
+
+            INFO( body << "\n" << p.rendered() );
+            REQUIRE( p.clean() );
+        }
+    }
+
+    // Negative sorts below positive whatever the magnitudes, which sign-magnitude does not give
+    // for free.
+    SECTION( "with a negative operand" )
+    {
+        const Typed p( "i32 main() { bool d = -5 < 1; if ( !d ) { return 1; } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// A cast reaching the folder is either a widening `cast` or a `wrap` - narrowing `cast` is refused
+// by the checker until there is something to trap with - so folding one is reducing modulo the
+// target's width, which is the same machinery the bitwise operators need.
+TEST_CASE( "type_checker_folds_casts", "[sema][types][constants][fold]" )
+{
+    SECTION( "a widening cast keeps the value" )
+    {
+        const Typed p( "i32 main() { i64 d = cast<i64>( 7 ); if ( d != 7 ) { return 1; } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // The all-ones idiom, and the one that exercises the sign conversion in both directions.
+    SECTION( "a wrap reduces modulo the width" )
+    {
+        const Typed p( "i32 main() { u32 d = wrap<u32>( 0 - 1 ); if ( d != 4294967295 ) { return 1; } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and a narrowing wrap keeps the low bits" )
+    {
+        const Typed p( "i32 main() { u8 d = wrap<u8>( 300 ); if ( d != 44 ) { return 1; } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// Every accepted file-scope initialiser must fold, because the rule already requires it to be a
+// constant expression. A failure here is an internal error rather than a user one, which is a
+// stronger invariant than the expression printer it replaces.
+TEST_CASE( "type_checker_records_a_value_for_every_global", "[sema][types][constants][fold]" )
+{
+    const Typed p( "i32  counter = 1;\n"
+                   "f64  ratio = 1.5;\n"
+                   "bool ready = true;\n"
+                   "i32  below = -1;\n"
+                   "i32  computed = 60 * 60;\n"
+                   "u8   masked = 255 & 15;\n"
+                   "u32  shifted = 1 << 4;\n"
+                   "i32  flipped = ~0;\n"
+                   "bool compared = 1 < 2;\n"
+                   "u32  all_ones = wrap<u32>( 0 - 1 );\n"
+                   "i32* nothing = nullptr;\n"
+                   "i32  blank;\n"
+                   "i32 main() { return 0; }\n" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    // One per global with an initialiser; `blank` has none and needs no value.
+    std::size_t recorded = 0;
+
+    for( u32 i = 0; i < 12; ++i )
+    {
+        const Node_id global = p.nth( Node_kind::Var_decl, i );
+
+        if( !global.is_valid() )
+        {
+            break;
+        }
+
+        const Node_id init = p.child( global, 1 );
+
+        if( init.is_valid() )
+        {
+            INFO( "global " << i );
+            REQUIRE( p.constant_of( global ).has_value() );
+            recorded += 1;
+        }
+    }
+
+    REQUIRE( recorded == 11 );
 }
 
 } // namespace keel
