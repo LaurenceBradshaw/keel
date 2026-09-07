@@ -25,7 +25,6 @@ public:
     std::string run();
 
 private:
-    void write( std::string_view text );
     void write_line( std::string_view text );
     void line_directive( Span span );
 
@@ -96,11 +95,6 @@ std::string Kir_emitter::run()
     emit_main_shim();
 
     return out_;
-}
-
-void Kir_emitter::write( std::string_view text )
-{
-    out_ += text;
 }
 
 void Kir_emitter::write_line( std::string_view text )
@@ -274,12 +268,12 @@ bool Kir_emitter::assigns_to_void( const Place& target ) const
 
 void Kir_emitter::emit_statement( const Statement& statement )
 {
-    line_directive( statement.span );
 
     switch( statement.kind )
     {
     case Statement_kind::Assign:
     {
+        line_directive( statement.span );
         const std::string value = rvalue( statement.value );
 
         // A void local is not declared, so there is nothing to assign into - the call is the whole

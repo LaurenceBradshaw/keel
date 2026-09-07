@@ -4,9 +4,13 @@ fn read_back {
     let _2: i32; // y
 
     bb0:
+        storage_live _1
         _1 = const 1
+        storage_live _2
         _2 = const 2
         _0 = copy _1
+        storage_dead _2
+        storage_dead _1
         return
 }
 fn inferred {
@@ -14,8 +18,10 @@ fn inferred {
     let _1: i32; // value
 
     bb0:
+        storage_live _1
         _1 = const 200
         _0 = copy _1
+        storage_dead _1
         return
 }
 fn uninitialised {
@@ -23,7 +29,9 @@ fn uninitialised {
     let _1: i32; // x
 
     bb0:
+        storage_live _1
         _0 = const 0
+        storage_dead _1
         return
 }
 fn parameter_read {
@@ -41,9 +49,13 @@ fn nested {
     let _2: i32; // y
 
     bb0:
+        storage_live _1
         _1 = const 1
+        storage_live _2
         _2 = const 2
+        storage_dead _2
         _0 = copy _1
+        storage_dead _1
         return
 }
 fn main {

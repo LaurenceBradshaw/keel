@@ -4,6 +4,7 @@ fn both_arms {
     let _2: i32; // x
 
     bb0:
+        storage_live _2
         _2 = const 0
         branch copy _1 -> bb1, bb2
 
@@ -17,6 +18,7 @@ fn both_arms {
 
     bb3:
         _0 = copy _2
+        storage_dead _2
         return
 }
 fn no_else {
@@ -25,6 +27,7 @@ fn no_else {
     let _2: i32; // x
 
     bb0:
+        storage_live _2
         _2 = const 0
         branch copy _1 -> bb1, bb2
 
@@ -37,6 +40,7 @@ fn no_else {
 
     bb3:
         _0 = copy _2
+        storage_dead _2
         return
 }
 fn both_return {
@@ -60,11 +64,13 @@ fn one_returns {
     let _2: i32; // x
 
     bb0:
+        storage_live _2
         _2 = const 0
         branch copy _1 -> bb1, bb2
 
     bb1:
         _0 = const 1
+        storage_dead _2
         return
 
     bb2:
@@ -73,6 +79,7 @@ fn one_returns {
 
     bb3:
         _0 = copy _2
+        storage_dead _2
         return
 }
 fn chained {

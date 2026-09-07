@@ -56,22 +56,22 @@ TEST_CASE( "mangle_function_spells_the_signature", "[codegen][mangle]" )
 {
     const Type_table table;
 
-    const Type_id              i32 = table.integer( 32, true );
-    const Type_id              u8  = table.integer( 8, false );
+    const Type_id              signed32  = table.integer( 32, true );
+    const Type_id              unsigned8 = table.integer( 8, false );
     std::vector<Type_id>       none;
-    const std::vector<Type_id> two   = { i32, i32 };
-    const std::vector<Type_id> mixed = { u8, table.floating( 64 ) };
+    const std::vector<Type_id> two   = { signed32, signed32 };
+    const std::vector<Type_id> mixed = { unsigned8, table.floating( 64 ) };
 
     // The module is empty until M7, which leaves the doubled underscore in place.
     REQUIRE( mangle_function( "", "main", none, table ) == "kl__main__" );
     REQUIRE( mangle_function( "", "add", two, table ) == "kl__add__i32_i32" );
     REQUIRE( mangle_function( "", "f", mixed, table ) == "kl__f__u8_f64" );
-    REQUIRE( mangle_function( "math", "abs", { &i32, 1 }, table ) == "kl_math_abs__i32" );
+    REQUIRE( mangle_function( "math", "abs", { &signed32, 1 }, table ) == "kl_math_abs__i32" );
 
     SECTION( "the parameter types are what make two names differ" )
     {
-        REQUIRE( mangle_function( "", "f", { &i32, 1 }, table ) != mangle_function( "", "f", { &u8, 1 }, table ) );
-        REQUIRE( mangle_function( "", "f", none, table ) != mangle_function( "", "f", { &i32, 1 }, table ) );
+        REQUIRE( mangle_function( "", "f", { &signed32, 1 }, table ) != mangle_function( "", "f", { &unsigned8, 1 }, table ) );
+        REQUIRE( mangle_function( "", "f", none, table ) != mangle_function( "", "f", { &signed32, 1 }, table ) );
     }
 
     // §7.5's reason for existing: a user function called `while` or `printf` must not become one.

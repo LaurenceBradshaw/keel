@@ -1,0 +1,163 @@
+// Storage markers bound a local's live range. Nothing reads them yet - they exist so that drop
+// elaboration has an anchor to hang a destructor call on, and so the scope-exit machinery it needs
+// is built and proven against something a reader can check by eye.
+//
+// A declared local is bracketed: live before its initialiser can assign into it, dead at the end of
+// the scope it was declared in. Parameters and the return slot get neither - they are live on entry
+// and dead on exit by construction - and neither do temporaries, which have no scope to leave.
+i32 bracketed()
+{
+    i32 x = 1;
+    return x;
+}
+
+// Reverse declaration order at scope exit. This is not cosmetic: it is the order destructors run in,
+// so the order the markers come out in is the order the drops will.
+i32 reverse_order()
+{
+    i32 a = 1;
+    i32 b = 2;
+    i32 c = 3;
+
+    return a + b + c;
+}
+
+// A nested scope ends at its brace, not at the end of the function. The statement after the block
+// is already outside it, so the inner marker has to land before that statement and not after.
+i32 nested_scope()
+{
+    i32 x = 1;
+
+    {
+        i32 y = 2;
+        x = y;
+    }
+
+    x = 3;
+    return x;
+}
+
+// An empty scope is bookkeeping and produces nothing.
+i32 empty_scope()
+{
+    {
+    }
+
+    return 0;
+}
+
+// The ordering trap on a return: the value has to be read out of the local before the local's
+// storage ends. Get this backwards and, once these are drops rather than markers, the return reads
+// something that has already been destroyed.
+i32 value_before_storage_ends( i32 n )
+{
+    i32 total = n + 1;
+    return total;
+}
+
+// A return leaves every enclosing scope at once, innermost first - not only the one it stands in.
+i32 early_return( i32 n )
+{
+    i32 outer = n;
+
+    {
+        i32 inner = 1;
+
+        if ( n > 0 )
+        {
+            return inner;
+        }
+    }
+
+    return outer;
+}
+
+// A local declared in a loop body is bracketed inside the loop, so its storage ends on the back
+// edge and begins again on the next iteration.
+i32 loop_body( i32 n )
+{
+    i32 total = 0;
+
+    while ( n > 0 )
+    {
+        i32 step = n;
+
+        total = total + step;
+        n     = n - 1;
+    }
+
+    return total;
+}
+
+// break is an exit path like any other: everything between it and the loop ends, innermost first.
+i32 break_from_nested()
+{
+    while ( true )
+    {
+        i32 x = 1;
+
+        {
+            i32 y = 2;
+
+            if ( y > x )
+            {
+                break;
+            }
+        }
+    }
+
+    return 0;
+}
+
+// The case most likely to be got wrong. A for's init lives in a scope wrapping the whole statement,
+// so `continue` has to unwind the body but stop short of it - `i` survives into the next iteration
+// where `x` does not. `break` leaves that scope too, so it is where `i` finally dies.
+i32 for_init_scope( i32 n )
+{
+    for ( i32 i = 0; i < n; i++ )
+    {
+        i32 x = i;
+
+        if ( x > 2 )
+        {
+            break;
+        }
+
+        continue;
+    }
+
+    return 0;
+}
+
+// Every exit path in one function: falling off the end of the body, breaking out of a nested scope,
+// and returning from one.
+i32 every_exit( i32 n )
+{
+    i32 total = 0;
+
+    for ( i32 i = 0; i < n; i++ )
+    {
+        i32 step = i;
+
+        if ( step == 3 )
+        {
+            i32 inner = 1;
+            total     = total + inner;
+            break;
+        }
+
+        if ( step == 4 )
+        {
+            return total;
+        }
+
+        total = total + step;
+    }
+
+    return total;
+}
+
+i32 main()
+{
+    return 0;
+}

@@ -41,6 +41,7 @@ private:
     {
         Block_id break_target;    // the exit block
         Block_id continue_target; // a while re-tests at the header; a for runs its update first
+        u32      depth;
     };
 
     // Allocated on demand, because a block nothing jumps to is unreachable and verify rejects one.
@@ -55,6 +56,11 @@ private:
     // The type an operation happens in, and the conversion that puts an operand there. See §6.4.
     Type_id operation_type( Node_id node ) const;
     Operand converted( Operand operand, Type_id to, Span span );
+
+    u32  scope_depth() const;
+    void push_scope();
+    void pop_scope( Span span );
+    void unwind_to( u32 depth, Span span );
 
     const Ast& ast_;
 
@@ -71,6 +77,8 @@ private:
     Builder                           builder_;
     std::unordered_map<u32, Local_id> locals_;
     std::vector<Loop_targets>         loops_; // innermost last, so break and continue bind to it
+    std::vector<Local_id>             scope_locals_;
+    std::vector<u32>                  scope_marks_;
 };
 
 Lowering::Lowering(
@@ -172,6 +180,37 @@ Operand Lowering::converted( Operand operand, Type_id to, Span span )
     }
 
     return copy( builder_.place( builder_.into_temp( cast_to( operand, to ), to, span ) ), to );
+}
+
+u32 Lowering::scope_depth() const
+{
+    return static_cast<u32>( scope_marks_.size() );
+}
+
+void Lowering::push_scope()
+{
+    scope_marks_.push_back( static_cast<u32>( scope_locals_.size() ) );
+}
+
+void Lowering::pop_scope( Span span )
+{
+    unwind_to( scope_depth() - 1, span );
+    scope_locals_.resize( scope_marks_.back() );
+    scope_marks_.pop_back();
+}
+
+void Lowering::unwind_to( u32 depth, Span span )
+{
+    // A break or return already left this block; nothing after its terminator can run.
+    if( builder_.is_terminated() )
+    {
+        return;
+    }
+
+    for( std::size_t i = scope_locals_.size(); i > scope_marks_[depth]; --i )
+    {
+        builder_.storage_dead( scope_locals_[i - 1], span );
+    }
 }
 
 Block_id Lowering::break_target()
@@ -466,6 +505,7 @@ void Lowering::lower_statement( Node_id id )
     switch( ast_.kind( id ) )
     {
     case Node_kind::Block:
+        push_scope();
         for( const Node_id child : ast_.children( id ) )
         {
             // Everything after a return in the same block is unreachable. Dropping it here is what
@@ -477,6 +517,7 @@ void Lowering::lower_statement( Node_id id )
 
             lower_statement( child );
         }
+        pop_scope( ast_.span( id ) );
         return;
     case Node_kind::Return_stmt:
     {
@@ -485,6 +526,7 @@ void Lowering::lower_statement( Node_id id )
         {
             builder_.assign( builder_.place( k_return_slot ), use( lower_expression( value ) ), ast_.span( id ) );
         }
+        unwind_to( 0, ast_.span( id ) ); // everything in the function is dead after a return
 
         builder_.terminate_return( ast_.span( id ) );
         return;
@@ -499,6 +541,8 @@ void Lowering::lower_statement( Node_id id )
             const Local_id  local = builder_.add_local( type, span, name );
 
             locals_.emplace( id.v, local );
+            builder_.storage_live( local, span );
+            scope_locals_.push_back( local );
 
             const Node_id init = ast_.children( id )[1];
             if( init.is_valid() )
@@ -630,7 +674,7 @@ void Lowering::lower_statement( Node_id id )
         builder_.terminate_goto( header, span );
 
         // A while has no update, so continue re-tests immediately.
-        loops_.push_back( Loop_targets { Block_id {}, header } );
+        loops_.push_back( Loop_targets { Block_id {}, header, scope_depth() } );
 
         builder_.switch_to( header );
 
@@ -665,6 +709,8 @@ void Lowering::lower_statement( Node_id id )
         const Node_id body      = ast_.children( id )[3];
         const Span    span      = ast_.span( id );
 
+        push_scope();
+
         // The init runs once, in the block being left.
         if( init.is_valid() )
         {
@@ -678,7 +724,7 @@ void Lowering::lower_statement( Node_id id )
 
         // The latch is left invalid: it holds the update and is what continue targets, and a body
         // that always returns reaches neither.
-        loops_.push_back( Loop_targets {} );
+        loops_.push_back( Loop_targets { Block_id {}, Block_id {}, scope_depth() } );
 
         builder_.switch_to( header );
 
@@ -726,16 +772,20 @@ void Lowering::lower_statement( Node_id id )
             builder_.switch_to( exit );
         }
 
+        pop_scope( span );
+
         return;
     }
 
     // One edge each. The checker already rejected either outside a loop, so the asserts in the
     // target helpers document that rather than handle it.
     case Node_kind::Break_stmt:
+        unwind_to( loops_.back().depth, ast_.span( id ) );
         builder_.terminate_goto( break_target(), ast_.span( id ) );
         return;
 
     case Node_kind::Continue_stmt:
+        unwind_to( loops_.back().depth, ast_.span( id ) );
         builder_.terminate_goto( continue_target(), ast_.span( id ) );
         return;
 
@@ -1534,7 +1584,7 @@ TEST_CASE( "lower_builds_a_while", "[ir][lower][loops]" )
 
     // The header is a fresh block, not the one being left: the condition re-runs every iteration,
     // so the back edge targets it, and anything before the loop would re-run if it did not.
-    REQUIRE( text.find( "bb0:\n        _2 = const 0\n        goto -> bb1" ) != std::string::npos );
+    REQUIRE( text.find( "bb0:\n        storage_live _2\n        _2 = const 0\n        goto -> bb1" ) != std::string::npos );
     REQUIRE( text.find( "branch copy _3 -> bb2, bb3" ) != std::string::npos );
     REQUIRE( text.find( "goto -> bb1" ) != std::string::npos ); // the back edge
 
@@ -1591,7 +1641,7 @@ TEST_CASE( "lower_builds_a_for", "[ir][lower][loops]" )
         const std::string text = p.text( 0 );
 
         INFO( text );
-        REQUIRE( text.find( "bb0:\n        _2 = const 0" ) != std::string::npos );
+        REQUIRE( text.find( "bb0:\n        storage_live _2\n        _2 = const 0" ) != std::string::npos );
     }
 }
 
@@ -1997,6 +2047,300 @@ TEST_CASE( "lower_roots_places_in_globals", "[ir][lower][globals]" )
         INFO( text );
         REQUIRE( text.find( "_0 = copy _1" ) != std::string::npos ); // the local, not the global
     }
+}
+
+namespace
+{
+
+// The three helpers below exist because a marker test is about *order*, not about which number a
+// local happens to have. Asserting on `_3` breaks the moment a temporary appears earlier in the
+// function, which is exactly the kind of edit these tests must survive.
+
+// Where a line appears, so one can be asserted to precede another.
+std::size_t at( const std::string& text, std::string_view needle )
+{
+    const std::size_t index = text.find( needle );
+    REQUIRE( index != std::string::npos );
+    return index;
+}
+
+// How many times a marker appears - the only way to say "this local dies exactly once".
+std::size_t count( const std::string& text, std::string_view needle )
+{
+    std::size_t total = 0;
+    for( std::size_t i = text.find( needle ); i != std::string::npos; i = text.find( needle, i + 1 ) )
+    {
+        ++total;
+    }
+    return total;
+}
+
+// The dump names every local in a trailing comment, so a test can ask for "x" and get "_3".
+std::string local_of( const std::string& text, std::string_view name )
+{
+    const std::string needle = fmt::format( "; // {}\n", name );
+    const std::size_t end    = text.find( needle );
+    REQUIRE( end != std::string::npos );
+
+    const std::size_t line = text.rfind( "let ", end );
+    REQUIRE( line != std::string::npos );
+
+    const std::size_t start = line + 4;
+    return text.substr( start, text.find( ':', start ) - start );
+}
+
+constexpr std::string_view k_return = "\n        return";
+
+} // namespace
+
+TEST_CASE( "lower_brackets_a_local_with_storage_markers", "[ir][lower][storage]" )
+{
+    Lowered p( "i32 main() { i32 x = 1; return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.text();
+    INFO( text );
+
+    const std::string x = local_of( text, "x" );
+
+    // Live before the initialiser can assign into it, dead before the block ends.
+    REQUIRE( at( text, "storage_live " + x ) < at( text, x + " = const 1" ) );
+    REQUIRE( at( text, x + " = const 1" ) < at( text, "storage_dead " + x ) );
+    REQUIRE( at( text, "storage_dead " + x ) < at( text, k_return ) );
+    REQUIRE( verify( p.functions[0] ).empty() );
+}
+
+TEST_CASE( "lower_ends_a_scope_in_reverse_declaration_order", "[ir][lower][storage]" )
+{
+    Lowered p( "i32 main() { i32 a = 1; i32 b = 2; i32 c = 3; return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.text();
+    INFO( text );
+
+    // Reverse declaration order, which is the order destructors have to run in - so getting it
+    // right here is what drop elaboration inherits.
+    REQUIRE( at( text, "storage_dead " + local_of( text, "c" ) ) < at( text, "storage_dead " + local_of( text, "b" ) ) );
+    REQUIRE( at( text, "storage_dead " + local_of( text, "b" ) ) < at( text, "storage_dead " + local_of( text, "a" ) ) );
+    REQUIRE( verify( p.functions[0] ).empty() );
+}
+
+TEST_CASE( "lower_gives_no_storage_markers_to_parameters", "[ir][lower][storage]" )
+{
+    Lowered p( "i32 add( i32 a, i32 b ) { return a + b; }\ni32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.text();
+    INFO( text );
+
+    // A parameter is live on entry and dead on exit by construction, so it carries no marker -
+    // and neither does the return slot.
+    REQUIRE( text.find( "storage_live " + local_of( text, "parameter a" ) ) == std::string::npos );
+    REQUIRE( text.find( "storage_dead " + local_of( text, "parameter a" ) ) == std::string::npos );
+    REQUIRE( text.find( "storage_live " + local_of( text, "parameter b" ) ) == std::string::npos );
+    REQUIRE( text.find( "storage_live _0" ) == std::string::npos );
+    REQUIRE( verify( p.functions[0] ).empty() );
+}
+
+TEST_CASE( "lower_gives_no_storage_markers_to_temporaries", "[ir][lower][storage]" )
+{
+    Lowered p( "i32 main() { i32 x = 1 + 2; return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.text();
+    INFO( text );
+
+    // Markers bracket declared locals only. A temporary has no name, no scope and no destructor to
+    // schedule; whether an owning value can live in one is an M3 question, not this one.
+    REQUIRE( count( text, "storage_live" ) == 1 );
+    REQUIRE( count( text, "storage_dead" ) == 1 );
+    REQUIRE( at( text, "storage_live " + local_of( text, "x" ) ) != std::string::npos );
+}
+
+TEST_CASE( "lower_ends_an_inner_scope_at_its_closing_brace", "[ir][lower][storage]" )
+{
+    Lowered p( "i32 main() { i32 x = 1; { i32 y = 2; } x = 3; return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.text();
+    INFO( text );
+
+    const std::string x = local_of( text, "x" );
+    const std::string y = local_of( text, "y" );
+
+    // The inner local dies at the brace, not at the end of the function: the statement after the
+    // block is already outside its scope.
+    REQUIRE( at( text, "storage_dead " + y ) < at( text, x + " = const 3" ) );
+    REQUIRE( at( text, x + " = const 3" ) < at( text, "storage_dead " + x ) );
+    REQUIRE( verify( p.functions[0] ).empty() );
+}
+
+TEST_CASE( "lower_emits_no_markers_for_a_scope_with_no_declarations", "[ir][lower][storage]" )
+{
+    Lowered p( "i32 main() { { } return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.text();
+    INFO( text );
+
+    // An empty scope is bookkeeping, not output.
+    REQUIRE( count( text, "storage_" ) == 0 );
+    REQUIRE( verify( p.functions[0] ).empty() );
+}
+
+TEST_CASE( "lower_computes_a_return_value_before_ending_storage", "[ir][lower][storage]" )
+{
+    Lowered p( "i32 main() { i32 x = 7; return x; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.text();
+    INFO( text );
+
+    const std::string x = local_of( text, "x" );
+
+    // The ordering trap: unwind before the value is read and the return reads storage that has
+    // already ended. Once these are drops rather than markers, that is a use-after-free.
+    REQUIRE( at( text, "_0 = copy " + x ) < at( text, "storage_dead " + x ) );
+    REQUIRE( at( text, "storage_dead " + x ) < at( text, k_return ) );
+    REQUIRE( verify( p.functions[0] ).empty() );
+}
+
+TEST_CASE( "lower_ends_every_scope_on_an_early_return", "[ir][lower][storage]" )
+{
+    Lowered p( "i32 f() { i32 x = 1; { i32 y = 2; return 0; } }\ni32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.text();
+    INFO( text );
+
+    // A return leaves every enclosing scope at once, innermost first - not just the one it stands in.
+    REQUIRE( at( text, "storage_dead " + local_of( text, "y" ) ) < at( text, "storage_dead " + local_of( text, "x" ) ) );
+    REQUIRE( at( text, "storage_dead " + local_of( text, "x" ) ) < at( text, k_return ) );
+    REQUIRE( verify( p.functions[0] ).empty() );
+}
+
+TEST_CASE( "lower_ends_the_loop_body_scope_once_per_iteration", "[ir][lower][storage]" )
+{
+    Lowered p( "i32 f( i32 n ) { i32 total = 0; while ( n > 0 ) { i32 step = n; n = n - 1; } return total; }\n"
+               "i32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.text();
+    INFO( text );
+
+    const std::string step  = local_of( text, "step" );
+    const std::string total = local_of( text, "total" );
+
+    // The body's local is bracketed inside the loop, so its storage ends on the back edge and
+    // begins again on the next iteration. The enclosing local is untouched by that.
+    REQUIRE( at( text, "storage_live " + step ) < at( text, "storage_dead " + step ) );
+    REQUIRE( count( text, "storage_dead " + step ) == 1 );
+    REQUIRE( count( text, "storage_dead " + total ) == 1 );
+    REQUIRE( at( text, "storage_dead " + step ) < at( text, "storage_dead " + total ) );
+    REQUIRE( verify( p.functions[0] ).empty() );
+}
+
+TEST_CASE( "lower_ends_inner_scopes_on_break", "[ir][lower][storage]" )
+{
+    Lowered p( "i32 f() { while ( true ) { i32 x = 1; { i32 y = 2; break; } } return 0; }\ni32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.text();
+    INFO( text );
+
+    // A break is an exit path like any other: everything between it and the loop ends, innermost
+    // first. Nothing else reaches the end of this body, so each dies exactly once.
+    REQUIRE( at( text, "storage_dead " + local_of( text, "y" ) ) < at( text, "storage_dead " + local_of( text, "x" ) ) );
+    REQUIRE( count( text, "storage_dead " + local_of( text, "y" ) ) == 1 );
+    REQUIRE( count( text, "storage_dead " + local_of( text, "x" ) ) == 1 );
+    REQUIRE( verify( p.functions[0] ).empty() );
+}
+
+TEST_CASE( "lower_keeps_a_for_init_alive_across_continue", "[ir][lower][storage]" )
+{
+    Lowered p( "i32 f() { for ( i32 i = 0; true; ) { i32 x = 1; continue; } return 0; }\ni32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.text();
+    INFO( text );
+
+    const std::string i = local_of( text, "i" );
+    const std::string x = local_of( text, "x" );
+
+    // The case most likely to be got wrong. `continue` unwinds the body but stops short of the
+    // scope holding the init - `i` has to survive into the next iteration. `x` does not.
+    REQUIRE( count( text, "storage_dead " + x ) == 1 );
+    REQUIRE( count( text, "storage_dead " + i ) == 1 );
+    REQUIRE( at( text, "storage_dead " + x ) < at( text, "storage_dead " + i ) );
+    REQUIRE( verify( p.functions[0] ).empty() );
+}
+
+TEST_CASE( "lower_ends_a_for_init_on_break", "[ir][lower][storage]" )
+{
+    Lowered p( "i32 f() { for ( i32 i = 0; true; ) { break; } return 0; }\ni32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.text();
+    INFO( text );
+
+    const std::string i = local_of( text, "i" );
+
+    // Where `continue` stops short of the init's scope, `break` leaves it - so the init dies on
+    // the break edge, and the loop having no other exit means it dies exactly once.
+    REQUIRE( count( text, "storage_dead " + i ) == 1 );
+    REQUIRE( at( text, "storage_live " + i ) < at( text, "storage_dead " + i ) );
+    REQUIRE( verify( p.functions[0] ).empty() );
+}
+
+TEST_CASE( "lower_keeps_every_function_verifiable_with_markers", "[ir][lower][storage]" )
+{
+    Lowered p( "i32 f( i32 n ) {\n"
+               "    i32 total = 0;\n"
+               "    for ( i32 i = 0; i < n; i++ )\n"
+               "    {\n"
+               "        i32 step = i;\n"
+               "        if ( step == 3 ) { i32 inner = 1; break; }\n"
+               "        if ( step == 4 ) { return total; }\n"
+               "        total = total + step;\n"
+               "    }\n"
+               "    return total;\n"
+               "}\n"
+               "i32 main() { return 0; }\n" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.text();
+    INFO( text );
+
+    // Every exit path in one function: fall through, break out of a nested scope, and return from
+    // one. verify() checks that no marker names a projection and that no block is unreachable.
+    REQUIRE( verify( p.functions[0] ).empty() );
+    REQUIRE( count( text, "storage_live " + local_of( text, "step" ) ) == 1 );
 }
 
 } // namespace keel

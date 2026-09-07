@@ -47,9 +47,11 @@ fn address_of_local {
     let _2: i32*;
 
     bb0:
+        storage_live _1
         _1 = const 1
         _2 = &_1
         _0 = copy _2
+        storage_dead _1
         return
 }
 fn address_of_field {

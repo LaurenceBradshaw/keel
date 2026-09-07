@@ -1204,6 +1204,38 @@ only literal with no default type to fall back on, so `missing() != nullptr`
 reported both the unknown name and a second line about the literal. The rule is
 that the *cause* is the diagnostic worth printing.
 
+**Storage markers are emitted.** `Storage_live`/`Storage_dead` existed in `kir.h`
+from the start and the verifier and printer handled them, but nothing produced
+one. The lowerer now brackets every declared local, which is the first piece of
+M3 proper: the markers are not instructions — the C backend skips them and
+declares every local up front — they exist so drop elaboration has an anchor,
+and so the scope-exit machinery it needs is built and proven against something a
+reader can check by eye.
+
+The scope stack is flat with marks (`scope_locals_` plus `scope_marks_`) rather
+than a stack of vectors, because the operation wanted is not "pop one scope" but
+**unwind to a depth**: `return` unwinds to zero and `break`/`continue` unwind to
+the depth recorded on `Loop_targets`. Markers come out in reverse declaration
+order, which is not cosmetic — it is the order destructors run in, so drop
+elaboration inherits it by reusing the same loop. Parameters, the return slot and
+temporaries get no markers: the first two are live on entry and dead on exit by
+construction, and a temporary has no scope to leave. Whether an owning value can
+live in a temporary — `consume( make_buffer() )` — is a real question, and it
+belongs to drop elaboration rather than here.
+
+Two things went wrong, and both are worth recording because drops will meet them
+again. **A `break` must not unwind the loop's own scope.** The exit block is a
+join reached by both the break edge and the condition's false edge, and the local
+is live on the second, so the exit block has to end it — which means ending it on
+the break edge too produces two. Since the exit block is emitted before the
+scope is popped, a break edge never actually leaves that scope, so `break` and
+`continue` unwind exactly the same set and one depth field suffices. The general
+form of that rule is what MIR needs drop flags for: **one drop at the join, not
+one per predecessor**. And the C backend emitted its `#line` directive before
+dispatching on statement kind, so a skipped marker left a directive with nothing
+under it; the skip has to come first. That was caught by the codegen goldens
+moving when they should not have — the useful kind of golden failure.
+
 ### Debts to pay along the way
 
 - **Three files have grown past what one file should hold.** Code lines, excluding the in-source

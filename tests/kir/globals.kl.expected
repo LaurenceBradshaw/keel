@@ -33,8 +33,10 @@ fn shadowed {
     let _1: i32; // counter
 
     bb0:
+        storage_live _1
         _1 = const 5
         _0 = copy _1
+        storage_dead _1
         return
 }
 fn both {
