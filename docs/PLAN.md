@@ -295,7 +295,7 @@ exists specifically to prevent indefinite bikeshedding.
 | L10 | Golden-file tests from the first commit. |
 | L11 | **Surface syntax is C++'s** (§5.1). Statement-oriented, explicit `return`, no expression-blocks. |
 | L12 | Mutable by default; `const` for immutable — as in C++. See §12; this is the sharpest familiarity-vs-safety trade in the design. |
-| L13 | One aggregate kind: `struct`. No classes, no inheritance, no virtual dispatch in v0. |
+| L13 | **Two aggregate kinds** (D29). A `struct` is a transparent aggregate: all fields public, trivially copyable, no destructor, no owning members. A `class` has invariants: fields private by default, may own resources, may have a constructor and a destructor, and is moved rather than copied. Neither inherits and neither is virtual in v0. |
 | L14 | No exceptions in the language. Errors are `Result` + `?`. |
 | L15 | Naming: `Capitalized_snake_case` types (`String_view`, `Hash_map`), `snake_case` values and functions — the convention already used in `MANIFESTO.md` §12. |
 | L16 | C declaration order (`i32 x`), so type constructors are **postfix**: `T&`, `const T&`, `T*` — as in C++. |
@@ -397,8 +397,8 @@ Point origin()
     return Point { 0.0, 0.0 };
 }
 
-// --- M3: RAII. The destructor is spelled exactly as in C++. ---
-struct Buffer
+// --- M3: RAII. Owning types are classes (D29); the destructor is spelled as in C++. ---
+class Buffer
 {
     u8* ptr;
     u64 len;
@@ -415,19 +415,19 @@ struct Buffer
     }
 };
 
-// --- M4: ownership through the existing C++ parameter notation ---
-void consume( Buffer b );           // by value: MOVES. The caller's b is dead afterwards.
-u64  inspect( const Buffer& b );    // shared borrow; may not escape (§8)
-void grow( Buffer& b );             // mutable borrow; may not escape
+// --- M4: ownership through call-site markers (D2, D31) ---
+void consume( Buffer b );           // called as consume( move b ) - b is dead afterwards
+u64  inspect( Buffer b );           // called as inspect( b )      - read-only borrow, may not escape (§8)
+void grow( Buffer& b );             // called as grow( ref b )     - mutable borrow, may not escape
 
-// --- M5: sum types. `enum class` gains payloads; `switch` gains destructuring. ---
-enum class Shape
+// --- M5: sum types. `enum` gains payloads; `switch` gains destructuring. ---
+enum Shape
 {
     Circle( f64 radius ),
     Rect( f64 width, f64 height )
 };
 
-f64 area( const Shape& s )
+f64 area( Shape s )
 {
     switch( s )
     {
@@ -467,12 +467,12 @@ overflows; what happens then is the open overflow question in §12.
 | # | Divergence | Why it is safe under the §5.1 rule |
 | --- | --- | --- |
 | D1 | Fixed-width primitives only: `i32`, `u64`, `f64`. No `int`, `long`, `char`, `unsigned`. | The C++ spellings are **rejected outright**, with a diagnostic naming the replacement. They are *not* reserved words — the lexer treats them as ordinary identifiers, and the suggestion is produced by sema's unknown-type path, which knows it is in type position and so gives a better message than the lexer could. No type name is a keyword: `i32`, `Point` and `Vector<T>` all resolve through one path. |
-| D2 | **A bare by-value pass of an owning type is an error**; transferring ownership is written `consume( move b )`. A type is owning exactly when it has a destructor, directly or through a member: `struct Wrapper { Buffer b; }` is owning, because copying one would copy a `Buffer` and there is nothing to copy it with. That transitivity is forced rather than chosen, and it is Rust's `Copy` rule. A raw pointer owns nothing by itself — an address says nothing about who frees it. The query is a memoised walk over the containment graph M2 already builds and orders. Note the rule's real content is **"is it copyable"**; "has a destructor" is a proxy that coincides only because §6.6 puts copy constructors outside v0. `Weak<T>` will have a destructor and should still be copyable, so this needs restating when copy constructors arrive. Everything else copies exactly as in C++. | The earlier rule made `consume( Buffer b )` a move, which is C++'s syntax for a copy with different semantics — the one divergence §5.1 forbids — and excused it by claiming new notation was impossible. It is not. Copying by default is unavailable too: §6.6 puts copy constructors outside v0, so an owning type cannot be copied at all. That leaves moving silently or rejecting, and §5.1 says reject. The cost is a marker on every move; Rust pays none, but Rust has no C++ copy expectation to fight. **Inert until M3**: no type has a destructor yet, so nothing is owning and nothing changes. |
+| D2 | **Ownership transfers only where the call site says `move`**: `consume( move b )`. A bare argument never transfers — for a `class` it is a read-only borrow, for a `struct` a copy (D31). A type is **owning** exactly when it has a destructor, directly or through a member: `class Wrapper { Buffer b; }` is owning, because destroying one destroys a `Buffer`. That transitivity is forced rather than chosen, and it is Rust's `Copy` rule. A raw pointer owns nothing by itself — an address says nothing about who frees it. The query is a memoised walk over the containment graph M2 already builds and orders, and D29 reuses it unchanged: `struct` is legal exactly when the type is **not** owning. Note the rule's real content is **"is it copyable"**; "has a destructor" is a proxy that coincides only because §6.6 puts copy constructors outside v0. `Weak<T>` will have a destructor and should still be copyable, so this needs restating when copy constructors arrive. | The earlier rule made `consume( Buffer b )` a move — C++'s syntax for a copy, carrying different semantics, which is the one divergence §5.1 forbids. A marker at the call site fixes that. D31 then closes the hole it left: with copy constructors outside v0 a class cannot be copied at all, so a bare argument had no meaning available to it except *borrow*. The cost is a marker on every transfer; Rust pays none, but Rust has no C++ copy expectation to fight. **Inert until M3**: no type has a destructor yet, so nothing is owning and nothing changes. |
 | D3 | Braces mandatory on every `if`/`while`/`for` body. | Braceless C++ is a parse error, not a reinterpretation. Kills the `goto fail;` class of bug. |
 | D4 | `switch` has no fallthrough, needs no `break`, requires exhaustiveness, and matches sum-type payloads. | Payload patterns (`case Circle( r ):`) are new notation. A `switch` over a plain integer keeps C++ meaning minus fallthrough; missing cases are an error, never a silent skip. |
 | D5 | No *lossy* implicit conversions. A binary operator widens both operands to the smallest type that losslessly holds both, and is a hard error whenever C++'s own result type would not hold them. Assignment is implicit only where the target holds the source type. int↔bool and pointer↔bool are never implicit. §6.4 has the table. | The second clause makes the §5.1 audit executable: where C++ is lossless Keel agrees with it, and where C++ silently loses information Keel refuses. Lossless widening is not a conversion anyone can get wrong, and requiring a cast for it trains authors to write casts reflexively — which is how the dangerous ones get waved through. **Provisional**: adopted for M1 to unblock the type checker, and expected to be re-judged once real code exists. |
 | D6 | `?` postfix operator for error propagation. | No meaning in C++; pure addition. The one borrow from outside the C family, kept because no C++ notation exists for it. |
-| D7 | `enum class` variants carry payloads. | Payload-free `enum class` behaves exactly as C++. Payloads are new notation. |
+| D7 | `enum` variants carry payloads. | A payload-free `enum` behaves exactly as C++'s `enum class`, which D30 makes the only spelling. Payloads are new notation. |
 | D8 | No headers, no preprocessor. `import graphics;` — C++20's spelling. | `#include` is a hard error directing to `import`. |
 | D9 | Reading an uninitialised variable is a compile error. | Strictly rejects programs C++ accepts; never changes the meaning of an accepted one. |
 | D10 | No `new`/`delete` in safe code; `Owned<T>`, `Shared<T>`, `Weak<T>` instead. | `new` and `delete` are hard errors outside `unsafe`. |
@@ -494,6 +494,10 @@ overflows; what happens then is the open overflow question in §12.
 | D26 | `nullptr` is the null pointer, spelled as in C++, and it is a **literal** whose type comes from context: `u8* p = nullptr;` adopts, `auto p = nullptr;` is an error. | The spelling is C++'s because §5.1 has no reason to invent another for an identical concept. Making it a literal rather than a value of some `nullptr_t` reuses `check_literal` wholesale and keeps D5 intact — no conversion happens, the literal simply *becomes* that type, exactly as `42` becomes a `u32`. The `auto` case then falls out as an error for the same reason it does for any literal with nothing to adopt from. |
 | D27 | **No pointer arithmetic on `*T`**, which points at exactly one `T`. Arithmetic belongs to a many-item pointer, `[*]T` in Zig's notation, which v0 does not have. | `p + 1` on a single-item pointer is not dangerous, it is *nonsense*, and a type distinction catches it statically at no cost. Note the performance argument for C's arithmetic does not hold: `*(p + i)` and `p[i]` compile to identical machine code, so what buys speed is the capability of touching raw memory, which survives either spelling. C's implicit scaling by element size is the wart — a named `offset` operation says what it does. §6.4 already answers nothing for a pointer, so rejection is the default rather than a rule to add. `==` and `!=` between two pointers of the **same** type are allowed, since that is how a null check is written; ordering is not, because comparing pointers into different allocations is meaningless. |
 | D28 | Conversions are written `cast<T>( x )` and `wrap<T>( x )`, both **keywords**. `cast` preserves the value; `wrap` keeps the low bits. Neither converts float to integer, and neither converts integer to bool. §6.5 has the table. **Narrowing `cast` is refused until the run-time check exists.** | Two spellings rather than one because the failure policy is the interesting part, and an unqualified cast lets an author avoid stating it — which is how C's `(u8)x` silently truncates. Keywords because as identifiers they walk into §12's `a < b > ( c )` ambiguity; as keywords the `<` can only be a bracket. Both spellings are new notation, so §5.1 is satisfied for free. Float to integer is rejected because `cast<i32>( 1.9 )` has no obvious answer — truncate, round, floor and ceil are four operations and C picks one silently; they arrive as library functions at M6. Integer to bool is rejected because `x != 0` says it better and modular arithmetic down to one bit says something else again. Float *rounding* is accepted (`cast<f32>( some_f64 )`), because a float that cannot hold the value gives an infinity rather than a plausible wrong number — the line is that `cast` refuses to turn a value into a *different* value, not that it refuses to lose precision. |
+| D29 | **Two aggregate kinds, split by one principle: a `struct` is a type whose representation is its interface; a `class` is a type whose interface hides its representation.** A `struct` has all fields public, is trivially copyable, may not have a destructor, and may not contain an owning member (transitively); it is built from a struct literal (D23). A `class` has fields private by default, may own resources, may have a constructor and a destructor, is moved rather than copied, and is built by a constructor. **Both may have methods.** Neither inherits and neither is virtual in v0. A `struct` with a destructor, and a `struct` with a `private:` label, are hard errors naming `class` as the fix. | C++ has two keywords for one job — the only difference is default access, kept so that C headers would compile — and Keel pays no C-compatibility tax, so the second word is free to earn its keep. The line is drawn at **trivial copyability** rather than at "may have methods", because only the first has semantic consequences: a trivially copyable type cannot have a destructor (copy plus destructor is a double free, which is why Rust makes `Copy` and `Drop` mutually exclusive), is never moved, and never enters §8's drop analysis. "May have methods" has no consequences at all, and the motivating examples for restricting it — `Node_id::is_valid()` — need them anyway. The two initialisation syntaxes stop competing as a side effect: literals belong to structs, constructors to classes, so `Buffer { ... }` versus `Buffer( 16 )` never has to be disambiguated. Enforcement is free: `struct` is legal exactly when D2's owning query says no. Safe under §5.1 because both rejected spellings are errors rather than reinterpretations. Prior art cuts both ways and is worth recording: the languages that keep two aggregate keywords (C#, Swift, D) split on value-versus-reference semantics, and the C++ successors that exist (Carbon, Cpp2, Hylo) collapse to one kind. This splits on copyability, which is the ownership-language analogue of the first — Keel has no garbage collector, so "reference type" has nothing to mean. |
+| D30 | **One `enum` keyword**, carrying `enum class`'s semantics: scoped (`Shape::Circle`), with no implicit conversion to an integer. The underlying type is spelled as in C++: `enum Shape : u8 { ... }`. `enum class E` is a hard error saying to drop the `class`. | The same C-compatibility tax as D29, with the opposite answer, and the asymmetry is the point: `struct`/`class` are two words for one job, so the job gets split; `enum`/`enum class` are two words for one job where only one of them does it correctly, so there is nothing to split. C++'s plain `enum` leaked its variant names into the enclosing scope and converted implicitly to `int`; both were mistakes, `enum class` fixed them in C++11, and the broken spelling survives only for C. Safe under §5.1 because every point where the two meanings diverge is an error rather than a reinterpretation: `Shape s = Circle;` is an unknown name, and `i32 x = Circle;` and `if ( s == 0 )` have no conversion to reach for. Rejecting `enum class` follows D22's pattern — keep the spelling recognised so the diagnostic can name the fix. **Open at M5**: a payload-carrying variant can hold an owning type, so an `enum` inherits D29's question of which kind it is. |
+| D31 | **Argument passing has four forms, and the call site always says which.** Bare `f( x )` — the callee gets a copy it owns if `x` is a `struct`, a read-only borrow if `x` is a `class`; either way the caller's object is alive and unchanged afterwards. `f( ref x )` — a mutable borrow. `f( out x )` — uninitialised, and the callee must assign it. `f( move x )` — the callee owns it and `x` is dead afterwards: for a `class` because the resource left, for a `struct` because the author said so. `const T&` does **not** survive as a parameter spelling, because a bare argument already means it. **The same rule governs initialisation and assignment, not just arguments**: `Buffer b = a;` is a hard error naming `Buffer b = move a;` as the fix, and so is `b = a;` between two existing classes. A `return` is the one exempt position — `return b;` needs no marker, because `b` is going out of scope regardless and there is no later use for the marker to warn about. | One principle generates the whole table: **you may modify what you own.** A bare `struct` parameter is a copy you own, so it is mutable — which is also exactly what C++ does, so this costs no audit row and keeps `i32 factorial( i32 n ) { ... n--; }` legal. A bare `class` parameter is a borrow you do not own, so it is not; that is forced rather than chosen, because copying a class needs a copy constructor and §6.6 puts those outside v0, leaving *borrow* as the only meaning available. The uniformity that matters is caller-side and holds in both rows — after a bare argument the object is alive and unchanged — so reading a call site never requires knowing the kind. The variation is callee-side, concerns a type named on the same line under L6, and surfaces as a compile error rather than a silent difference in meaning. The result is C#'s behaviour for value and reference types, arrived at from ownership rather than from a garbage collector. `move` on a `struct` copies the bytes and marks the source dead in the checker: an assertion, not a transfer, which keeps the keyword's user-visible meaning identical across kinds and costs almost nothing, since structs are already in §8's dataflow for the `Uninitialised -> Live` half and drop elaboration still never looks at one. **Obligation at M6**: a generic that mutates a bare parameter is legal only when `T` is a `struct`, so definition-checked generics (D11) need a bound that permits it — `is_trivially_copyable`, alongside `is_numeric` and the rest — rather than deferring the error to the instantiation site as C++ does. The initialisation case is where the rule earns most: C++ would call a copy constructor for `Buffer b = a;`, and with none available the two remaining readings are to move silently — leaving `a` dead with nothing in the source saying so — or to bind `b` as a reference to `a`, which is worse, because two names would own one resource and the second destructor would be a double free. Rejecting is the only safe answer, and it rejects valid C++ outright rather than reinterpreting it, which §5.1 permits. Note that `b = move a;` must also destroy whatever `b` held first; that is drop elaboration's job at M3, not a separate rule. **The marker appears in the signature as well as at the call site**, and the two must agree: `void consume( move Buffer b )` is called as `consume( move b )`, `void grow( ref Buffer b )` as `grow( ref b )`, `void init( out Buffer b )` as `init( out b )`, and an unmarked parameter as `inspect( b )`. This is forced: with `const T&` gone, `void consume( Buffer b )` and `void inspect( Buffer b )` would otherwise be indistinguishable, and the callee has to know whether it owns its argument. Marking both sides is C#'s design rather than C++'s, and it removes `&` from parameter lists entirely — a reference type still exists (L16), but a parameter never spells one, because each of the three things `&` was doing in a C++ signature now has its own keyword. The redundancy is only apparent: the signature states the contract and the call site acknowledges it, which is the whole point of D2 — a reader of the call site should not have to find the declaration to learn that a variable just died. |
+
 
 ### 6.4 Numeric conversions (D5)
 
@@ -583,7 +587,11 @@ and then wraps to 44.
 Optionals, traits beyond generic bounds, closures, `namespace`, operator
 overloading, copy constructors, inheritance, virtual dispatch, `Shared<T>`,
 `Weak<T>`, concurrency, reflection, coroutines, and any standard library.
-Modules arrive at M7. **String literals** lex and parse but have no type
+**Unions are a decided non-goal, not a deferral**: a union is only safe when the
+tag is maintained by hand and correct every time, and the one legitimate use of
+one — a tagged variant — is what M5's payload-carrying `enum` (D7, D30) is, with
+the tag maintained by the compiler and `switch` exhaustiveness checked.
+Modules arrive at M7. **Reflection** is listed here for v0 only — §12 records its direction: compile-time reflection, yes; runtime reflection, never. **String literals** lex and parse but have no type
 (D20); they wait for `String`, which is M7 as well.
 
 ---
@@ -678,7 +686,7 @@ milestone is complete until its acceptance program is a passing golden test.
 | **M2** | Structs, value semantics, field access, struct literals, by-value passing and returning. | A `Point` program computing a distance. | Type layout, declaration ordering |
 | **M3** | KIR + CFG. Constructors and `~Dtor()`. Scope-exit `goto` cleanup. | A `Buffer` with `~Buffer()` frees exactly once, at the right place, including on early `return`. Verify under valgrind/ASan. | **RAII — the core of the language** |
 | **M4** | Move checking, `const T&` / `T&` params, the non-escaping rule, drop flags. Enforcement of D2. | Use-after-move is a compile error with a good message; a conditionally-moved value drops correctly. | Ownership, dataflow analysis |
-| **M5** | Payload-carrying `enum class`, `switch` destructuring, exhaustiveness checking. | The `Shape`/`area` sample. Non-exhaustive `switch` is a compile error naming the missing variant. | Sum types, tagged unions |
+| **M5** | Payload-carrying `enum` (D30), `switch` destructuring, exhaustiveness checking. | The `Shape`/`area` sample. Non-exhaustive `switch` is a compile error naming the missing variant. | Sum types, tagged variants |
 | **M6** | `template<C T>` generics, monomorphisation worklist, name mangling with type args. | `max<i32>` and `max<f64>` both work; a generic `Box<T>` with a destructor drops correctly. | Instantiation, mangling |
 | **M7** | Modules (`import`), multi-file compilation, then begin `Vector` and `String` **in Keel**. | A two-module program. Then a `Vector<i32>` that grows and frees. | **Whether the design actually works** |
 
@@ -845,11 +853,11 @@ none of them can block work indefinitely.
 | Are interfaces/traits the only form of polymorphism, or is there virtual dispatch? | M6 (generic bounds force a partial answer) |
 | **What exactly is in an `unsafe` block, and what does it permit?** The shape is settled: Rust's model — `unsafe { }` blocks and `unsafe fn` — with Zig's `[*]T` beside it. What remains is the enumerated list. The property that makes Rust's version work, and the one most often misunderstood: **`unsafe` permits operations, it does not disable checks.** Move checking, type checking and D5 all still apply inside one; an unsafe block is not a different language. The two mechanisms are orthogonal rather than overlapping — `p + 1000000` on a `[*]T` is type-correct and catastrophic, so the type says the operation is *meaningful* while `unsafe` says the author *checked the invariant*. D's `@trusted` is deliberately **not** taken: a safe function containing an unsafe block already *is* one, so Rust's two levels encode D's three, and a standalone `@trusted` without D's full `@safe`/`@system` lattice would be an optional marker whose absence means either "safe" or "forgot" — the same defect that keeps `move` out of signatures under D2. | M3, when `Buffer` gives it something concrete to gate |
 | Optionals: `T?`, `Optional<T>`, or a nullable-reference type — and how does it interact with `&`? | M5 |
-| Does `class` exist at all, or is `struct` the only aggregate? (v0 says struct only) | M7 |
+| ~~Does `class` exist at all, or is `struct` the only aggregate?~~ **Answered — D29.** Both exist, split at trivial copyability: `struct` is a transparent aggregate that cannot own, `class` is a type with invariants that can. Answered early, at M3 rather than M7, because the cost is asymmetric — one keyword now, versus a breaking change to every program that declared a `struct` that should have been a `class`. | M3 — decided |
 | Custom allocators / arenas — visible in the type system or not? | M7 |
 | Module granularity: file, directory, or explicit declaration? | M7 |
 | Standard library naming. `MANIFESTO.md` §12 already refuses to mirror `std`, but the specific names are unsettled: one `Hash_map` rather than `map`/`unordered_map`, and a better name than `vector` for a dynamic array. Note the one real trap — `List` reads as a *linked* list to a C++ programmer (it is `List<T>` in C#/Java but `std::list` in C++), so a familiar name would carry the wrong semantics. Not a §6.3 divergence: those cover syntax and semantics the compiler enforces, and no library exists yet. | M7, when the first containers are written in Keel |
-| Compile-time evaluation: how much, and is there reflection? | Post-M7 |
+| **Compile-time evaluation: how much, and is there reflection?** **Direction decided: yes, and compile-time only.** The word usually evokes C#'s runtime reflection — `typeof( T ).GetProperties()` — and that is the one version Keel cannot afford: it requires type metadata for every type in every binary, which is the cost §4's *No RTTI* already refuses. Compile-time reflection has neither problem, and both motivating uses are compile-time by nature. **A testing framework in the standard library** needs to enumerate test functions and report their names, which is discovery over the program's own declarations: Zig builds this into the language (`test "name" { }`) with `@typeInfo` for the general case, D has `__traits`, and Rust reaches the same place from the other side with derive macros — compile-time code generation rather than reflection proper. **`enum` to string** is the canonical example, and the one C++ programmers have wanted for twenty years; C++26's `std::meta` finally delivers it. In Keel it lowers to a generated static table — the variant names are known at compile time, the enum is closed and scoped (D30), and the run-time cost is one array index. Because both uses are pure code generation, nothing need survive into the binary that the program does not use. What stays open is the surface — a `@` builtin as in Zig, a `__traits`-style call, or attributes as in Rust — and how much general compile-time evaluation sits underneath it. M5 must land first: payload-carrying variants change what printing a value even means. | Surface post-M5; the framework needs the standard library, so **M7** |
 | ABI stability: is there one at all? | Post-M7 |
 
 ---
@@ -1017,6 +1025,32 @@ sign-magnitude arithmetic does on its own.
 them out means the file-scope path never has to answer whether printing both
 sides is sound. They buy nothing in an initialiser.
 
+A file-scope initialiser is now **evaluated by the checker**, not printed as an
+expression by the backend. `Types::constant_of` carries the value and
+`global_definition` emits a literal, which deleted the last place a backend
+walked an AST expression - and is what makes an LLVM backend's globals a
+`ConstantInt` rather than a tree to translate. It also settles the question KIR
+could not answer: three-address form has nowhere at file scope to put a
+temporary, so a constant expression can never be lowered into it. LLVM answers
+this with a separate `Constant` sub-language; evaluating in the front end, as
+clang does, avoids needing one.
+
+The folder became a real evaluator to do it. It had been written to *detect*
+overflow, so it answered "not constant" for every operator that cannot overflow;
+it now folds comparisons, `&`, `|`, `^`, `~` and casts. The last four needed
+`to_bits`/`from_bits` - sign-magnitude to two's complement in the type's width
+and back - because a bitwise operator is defined on the representation and
+sign-magnitude has no bit pattern of its own. That machinery is what §12's
+runtime overflow checking will want at M3 for the cases it can discharge
+statically.
+
+Doing it exposed a defect the goldens caught and the unit tests did not:
+`fold_integer` read the node's recorded type for the width, but `check_constant`
+runs *before* that type is recorded - so every width-dependent operator folded to
+nothing exactly where overflow was being checked. The type is now passed in by
+the caller that already knows it; only the outermost node needs the hint, since
+the children were checked first.
+
 Constant overflow is rejected at compile time. §12 decided arithmetic *wraps*
 at run time, which leaves the case where the answer is known before the program
 runs — and wrapping it there is a wrong answer delivered in silence. A small
@@ -1171,29 +1205,6 @@ reported both the unknown name and a second line about the literal. The rule is
 that the *cause* is the diagnostic worth printing.
 
 ### Debts to pay along the way
-
-- **A global's initialiser should be folded to a value in the front end, not printed as an
-  expression by each backend.** Today `Spelling::constant_expression` walks the AST and prints C,
-  which works because C accepts an arithmetic constant expression at file scope.
-
-  It cannot be lowered into KIR as things stand, and the reason is structural rather than
-  incidental: KIR is three-address form, so `60 * 60` becomes a statement writing into a temporary,
-  and a C file-scope initialiser must be one expression with nowhere to put one. LLVM answers this
-  with a separate `Constant` sub-language that is explicitly not an `Instruction`; adding the
-  equivalent to KIR would be a second representation rather than a unification.
-
-  The better destination is clang's: **evaluate it in the front end and record the value.** Most of
-  the machinery exists - `fold_integer` and `fold_float` were written for constant-overflow
-  rejection, and D-rule already requires a global's initialiser to be a constant expression, so
-  folding is always possible in principle. It would delete the expression printer from every
-  backend and make an LLVM backend's globals a `ConstantInt` rather than a tree to translate.
-
-  Two gaps to close first: the folder returns "not constant" for `&`, `|`, `^` and `~` because
-  those cannot overflow and it was written to detect overflow rather than to evaluate; and there is
-  nowhere to record the result, which wants a small value type on `Types`.
-
-  **Wanted sooner rather than later**, but after the KIR backend lands - it removes backend code,
-  so doing it while a second backend is half-written would mean writing what it deletes.
 
 - **Three files have grown past what one file should hold.** Code lines, excluding the in-source
   tests that roughly double each: `sema/type_checker.cpp` 2350, `parse/parser.cpp` 1675,
