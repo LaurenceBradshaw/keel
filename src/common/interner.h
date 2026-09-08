@@ -60,6 +60,7 @@ enum class Keyword : u32
     Ref,
     Cast,
     Wrap,
+    This,
 
     Count
 };

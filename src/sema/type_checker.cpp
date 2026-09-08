@@ -337,6 +337,7 @@ private:
     void declare_signatures_struct_decls();
     void declare_signatures_field_decls();
     void declare_signatures_function_decls();
+    void declare_signatures_destructor_decls();
     void declare_signatures_global_decls();
 
     void order_structs();
@@ -451,6 +452,7 @@ Types Checker::run()
 void Checker::declare_signatures()
 {
     declare_signatures_struct_decls();
+    declare_signatures_destructor_decls();
     declare_signatures_field_decls();
     order_structs();
     check_aggregate_members();
@@ -553,6 +555,35 @@ void Checker::declare_signatures_function_decls()
             if( !ast_.children( param_list ).empty() )
             {
                 error_at( ast_.span( param_list ), "`main` must not take any parameters" );
+            }
+        }
+    }
+}
+
+void Checker::declare_signatures_destructor_decls()
+{
+    for( Node_id child : ast_.children( ast_.root() ) )
+    {
+        if( !is_aggregate( ast_.kind( child ) ) )
+        {
+            continue;
+        }
+
+        for( Node_id member : ast_.children( child ) )
+        {
+            if( ast_.kind( member ) != Node_kind::Destructor_decl )
+            {
+                continue;
+            }
+
+            // A destructor returns nothing, so unlike a function there is no annotation to read.
+            record( member, table_.builtin( Type_kind::Void ) );
+
+            for( Node_id param : ast_.children( ast_.children( member )[1] ) )
+            {
+                const Node_id param_type_node = ast_.children( param )[0];
+                const Type_id param_type      = type_of_annotation( param_type_node );
+                record( param, param_type );
             }
         }
     }
@@ -889,6 +920,7 @@ void Checker::visit( Node_id id )
         return; // discard the result. D15 already made effectless expressions a parse error
 
     case Node_kind::Function_decl:
+    case Node_kind::Destructor_decl:
         return visit_function( id );
 
     case Node_kind::Return_stmt:
@@ -993,7 +1025,20 @@ bool Checker::is_assignable( Node_id id ) const
     }
 
     const Node_id decl = ast_.kind( id ) == Node_kind::Name_expr ? resolution_.declaration_of( id ) : Node_id {};
-    return decl.is_valid() && ( ast_.kind( decl ) == Node_kind::Var_decl || ast_.kind( decl ) == Node_kind::Param_decl );
+    if( !decl.is_valid() )
+    {
+        return false;
+    }
+
+    // C++ forbids it, and `this` is an ordinary parameter here - which is what makes everything
+    // else free, and is exactly why this one case has to be written down.
+    if( ast_.kind( decl ) == Node_kind::Param_decl && Symbol_id { ast_.aux( decl ) } == Interner::keyword( Keyword::This ) )
+    {
+        return false;
+    }
+
+    return ast_.kind( decl ) == Node_kind::Var_decl || ast_.kind( decl ) == Node_kind::Param_decl ||
+           ast_.kind( decl ) == Node_kind::Field_decl;
 }
 
 void Checker::visit_return( Node_id id )
@@ -1075,6 +1120,15 @@ void Checker::visit_assign( Node_id id )
         if( ast_.kind( target ) != Node_kind::Name_expr )
         {
             error_at( ast_.span( target ), "cannot assign to this expression" );
+        }
+
+        // `this` is the exception to the rule above: it resolves, so infer_name says nothing, and
+        // the guard there stays quiet because it is a Name_expr. Nothing else would report it.
+        const Node_id decl = resolution_.declaration_of( target );
+        if( decl.is_valid() && ast_.kind( decl ) == Node_kind::Param_decl &&
+            Symbol_id { ast_.aux( decl ) } == Interner::keyword( Keyword::This ) )
+        {
+            error_at( ast_.span( target ), "`this` is immutable" );
         }
 
         absorb( target );
@@ -1868,18 +1922,21 @@ Type_id Checker::infer_field( Node_id id )
         return record( id, table_.builtin( Type_kind::Error ) );
     }
 
-    if( !table_.is_struct( base_type ) )
+    // D22: `.` reaches through a pointer, so a pointer-to-struct base is the struct.
+    const Type_id object_type = table_.is_pointer( base_type ) ? table_.get( base_type ).element : base_type;
+
+    if( !table_.is_struct( object_type ) )
     {
-        error_at( ast_.span( base ), fmt::format( "`{}` has no fields", table_.name( base_type ) ) );
+        error_at( ast_.span( base ), fmt::format( "`{}` has no fields", table_.name( object_type ) ) );
         return record( id, table_.builtin( Type_kind::Error ) );
     }
 
-    const Node_id decl = find_field( base_type, Symbol_id { ast_.aux( id ) } );
+    const Node_id decl = find_field( object_type, Symbol_id { ast_.aux( id ) } );
     if( !decl.is_valid() )
     {
         error_at(
             ast_.span( id ),
-            fmt::format( "`{}` has no field `{}`", table_.name( base_type ), interner_.text( Symbol_id { ast_.aux( id ) } ) )
+            fmt::format( "`{}` has no field `{}`", table_.name( object_type ), interner_.text( Symbol_id { ast_.aux( id ) } ) )
         );
 
         return record( id, table_.builtin( Type_kind::Error ) );
@@ -5622,6 +5679,83 @@ TEST_CASE( "type_checker_rejects_an_owning_member_in_a_struct", "[sema][aggregat
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 2 );
+    }
+}
+
+// The destructor body is typed like any function body. `this` needs no rule of its own: it is a
+// parameter with an annotation, so the ordinary path types it.
+TEST_CASE( "type_checker_types_a_destructor_body", "[sema][types][aggregates]" )
+{
+    SECTION( "a bare field has the field's type" )
+    {
+        const Typed p( "class Buffer { u8* ptr; u64 len; ~Buffer() { len = 0; } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Name_expr, 0 ) ) == "u64" );
+    }
+
+    SECTION( "`this` is a pointer to the enclosing type" )
+    {
+        const Typed p( "class Buffer { u8* ptr; ~Buffer() { this.ptr = nullptr; } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Name_expr, 0 ) ) == "Buffer*" );
+    }
+
+    // D22 already makes `.` reach through a pointer, so `this.ptr` needs no rule either.
+    SECTION( "`this.field` has the field's type" )
+    {
+        const Typed p( "class Buffer { u64 len; ~Buffer() { this.len = 0; } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Field_expr, 0 ) ) == "u64" );
+    }
+
+    SECTION( "a field's type is still checked against what is assigned" )
+    {
+        const Typed p( "class Buffer { u64 len; ~Buffer() { len = nullptr; } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    // C++ forbids it, and a pointer parameter would otherwise accept it silently.
+    SECTION( "`this` cannot be assigned" )
+    {
+        const Typed p( "class Buffer { u8* ptr; ~Buffer() { this = nullptr; } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "a destructor returns nothing" )
+    {
+        const Typed p( "class Buffer { u8* ptr; ~Buffer() { return 1; } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    SECTION( "a bare `return` is fine" )
+    {
+        const Typed p( "class Buffer { u8* ptr; ~Buffer() { return; } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "calling a free function from a destructor works" )
+    {
+        const Typed p( "void release( u8* p ) { }\n"
+                       "class Buffer { u8* ptr; ~Buffer() { release( ptr ); } };\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
     }
 }
 

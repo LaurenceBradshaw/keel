@@ -74,10 +74,10 @@ private:
     Node_id parse_source_file();
     Node_id parse_declaration();
     Node_id parse_function_decl();
-    Node_id parse_param_list();
+    Node_id parse_param_list( Node_id leading = Node_id {} );
     Node_id parse_aggregate_decl();
     Node_id parse_field_decl();
-    Node_id parse_destructor_decl();
+    Node_id parse_destructor_decl( Symbol_id enclosing );
 
     // `Point { 0.0, 0.0 }` or `Point { .x = 0.0, .y = 0.0 }`. Entered from parse_prefix once the
     // identifier is consumed and a `{` is seen behind it.
@@ -632,11 +632,16 @@ Node_id Parser::parse_function_decl()
     return ast_.add( Node_kind::Function_decl, Span::merge( start, previous().span ), name.v, { return_type, params, body } );
 }
 
-Node_id Parser::parse_param_list()
+Node_id Parser::parse_param_list( Node_id leading )
 {
     const Span start = peek().span;
 
     std::vector<Node_id> params;
+
+    if( leading.is_valid() )
+    {
+        params.push_back( leading );
+    }
 
     if( !expect( Token_kind::L_paren ) )
     {
@@ -683,7 +688,7 @@ Node_id Parser::parse_aggregate_decl()
     {
         const u32 before = pos_;
 
-        members.push_back( check( Token_kind::Tilde ) ? parse_destructor_decl() : parse_field_decl() );
+        members.push_back( check( Token_kind::Tilde ) ? parse_destructor_decl( name ) : parse_field_decl() );
 
         if( pos_ == before )
         {
@@ -732,7 +737,7 @@ Node_id Parser::parse_field_decl()
     return ast_.add( Node_kind::Field_decl, Span::merge( start, previous().span ), name.v, { type } );
 }
 
-Node_id Parser::parse_destructor_decl()
+Node_id Parser::parse_destructor_decl( Symbol_id enclosing )
 {
     const Span start = peek().span;
 
@@ -740,10 +745,19 @@ Node_id Parser::parse_destructor_decl()
 
     const Symbol_id name = expect_name();
 
-    // Parsed rather than rejected on sight, so a stray parameter does not desynchronise the body.
-    const Node_id params = parse_param_list();
+    // C++ writes `this` implicitly; Keel writes it down. As an ordinary parameter it needs no
+    // special case in the resolver, the checker, mangling or lowering - it is simply parameter 0.
+    const Node_id receiver = ast_.add(
+        Node_kind::Param_decl,
+        start,
+        Interner::keyword( Keyword::This ).v,
+        { ast_.add( Node_kind::Pointer_type, start, 0, { ast_.add( Node_kind::Named_type, start, enclosing.v, {} ) } ) }
+    );
 
-    if( !ast_.children( params ).empty() )
+    // Parsed rather than rejected on sight, so a stray parameter does not desynchronise the body.
+    const Node_id params = parse_param_list( receiver );
+
+    if( ast_.children( params ).size() > 1 ) // only receiver is implicitly allowed.
     {
         error_at( ast_.span( params ), "destructors take no parameters" );
     }
@@ -1021,7 +1035,7 @@ bool Parser::can_start_expression() const
     case Token_kind::Keyword:
         return check_keyword( Keyword::True ) || check_keyword( Keyword::False ) || check_keyword( Keyword::Nullptr ) ||
                check_keyword( Keyword::Move ) || check_keyword( Keyword::Out ) || check_keyword( Keyword::Ref ) ||
-               check_keyword( Keyword::Cast ) || check_keyword( Keyword::Wrap );
+               check_keyword( Keyword::Cast ) || check_keyword( Keyword::Wrap ) || check_keyword( Keyword::This );
 
     default:
         return false;
@@ -1663,6 +1677,13 @@ Node_id Parser::parse_prefix()
                 Node_kind::Marker_expr, Span::merge( start, previous().span ), static_cast<u32>( marker ), { operand }
             );
         }
+
+        if( check_keyword( Keyword::This ) )
+        {
+            advance();
+            return ast_.add( Node_kind::Name_expr, previous().span, Interner::keyword( Keyword::This ).v, {} );
+        }
+
         break;
     }
     default:
@@ -3995,7 +4016,15 @@ TEST_CASE( "parser_parses_destructors", "[parse][aggregates]" )
         REQUIRE( p.children( dtor ).size() == 3 );
         REQUIRE_FALSE( p.child( dtor, 0 ).is_valid() ); // no return type
         REQUIRE( p.kind( p.child( dtor, 1 ) ) == Node_kind::Param_list );
-        REQUIRE( p.children( p.child( dtor, 1 ) ).empty() );
+
+        // C++ writes `this` implicitly; Keel writes it down, so every later pass sees an ordinary
+        // parameter rather than a concept it has to know about.
+        REQUIRE( p.children( p.child( dtor, 1 ) ).size() == 1 );
+
+        const Node_id receiver = p.child( p.child( dtor, 1 ), 0 );
+
+        REQUIRE( p.kind( receiver ) == Node_kind::Param_decl );
+        REQUIRE( p.kind( p.child( receiver, 0 ) ) == Node_kind::Pointer_type );
         REQUIRE( p.kind( p.child( dtor, 2 ) ) == Node_kind::Block );
     }
 
@@ -4077,12 +4106,38 @@ TEST_CASE( "parser_parses_destructors", "[parse][aggregates]" )
         REQUIRE( p.has_errors() );
     }
 
-    SECTION( "a destructor takes no parameters" )
+    SECTION( "a destructor takes no parameters of its own" )
     {
         const Parsed p( "class Buffer { ~Buffer( i32 n ) { } };" );
 
         INFO( p.dump() );
         REQUIRE( p.has_errors() );
+    }
+
+    // The receiver is the enclosing type's, not the name written after the `~`. Getting this wrong
+    // would put a second, confusing error behind the mismatch diagnostic.
+    SECTION( "a mismatched destructor still receives the enclosing type" )
+    {
+        const Parsed  p( "class Buffer { ~Wrong() { } };" );
+        const Node_id dtor     = find_first( p.ast(), p.root(), Node_kind::Destructor_decl );
+        const Node_id receiver = p.child( p.child( dtor, 1 ), 0 );
+        const Node_id named    = p.child( p.child( receiver, 0 ), 0 );
+
+        INFO( p.dump() );
+        REQUIRE( p.kind( named ) == Node_kind::Named_type );
+        REQUIRE( p.aux( named ) == p.aux( find_first( p.ast(), p.root(), Node_kind::Class_decl ) ) );
+    }
+
+    // A keyword, so `i32 this = 1;` and a field named `this` are not expressible.
+    SECTION( "`this` in the body resolves through the ordinary name path" )
+    {
+        const Parsed  p( "class Buffer { u8* ptr; ~Buffer() { this.ptr = nullptr; } };" );
+        const Node_id field = find_first( p.ast(), p.root(), Node_kind::Field_expr );
+
+        INFO( p.dump() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( field.is_valid() );
+        REQUIRE( p.kind( p.child( field, 0 ) ) == Node_kind::Name_expr );
     }
 
     SECTION( "a nameless destructor is an error rather than a nameless declaration" )

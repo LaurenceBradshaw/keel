@@ -17,7 +17,7 @@ Interner::Interner()
         "new",      "delete",
 
         // New Keel keywords
-        "move",     "out",      "ref",     "cast",     "wrap"
+        "move",     "out",      "ref",     "cast",     "wrap",    "this"
     };
     // clang-format on
 

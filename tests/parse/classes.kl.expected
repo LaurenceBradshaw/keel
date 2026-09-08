@@ -7,7 +7,10 @@ Source_file                             4:1-66:1
       Named_type                        7:5-7:8     "u64"
     Destructor_decl                     9:5-12:6    name=Buffer
       <none>                            -
-      Param_list                        9:12-9:14   "()"
+      Param_list                        9:12-9:14
+        Param_decl                      9:5-9:6     name=this
+          Pointer_type                  9:5-9:6
+            Named_type                  9:5-9:6     "~"  name=Buffer
       Block                             10:5-12:6
         Expr_stmt                       11:9-11:24
           Call_expr                     11:9-11:23
@@ -21,7 +24,10 @@ Source_file                             4:1-66:1
   Class_decl                            25:1-32:3   name=Reordered
     Destructor_decl                     27:5-29:6   name=Reordered
       <none>                            -
-      Param_list                        27:15-27:17 "()"
+      Param_list                        27:15-27:17
+        Param_decl                      27:5-27:6   name=this
+          Pointer_type                  27:5-27:6
+            Named_type                  27:5-27:6   "~"  name=Reordered
       Block                             28:5-29:6   "{
     }"
     Field_decl                          31:5-31:13  name=ptr
@@ -34,7 +40,10 @@ Source_file                             4:1-66:1
       Named_type                        39:5-39:8   "f64"
     Destructor_decl                     41:5-43:6   name=Point
       <none>                            -
-      Param_list                        41:11-41:13 "()"
+      Param_list                        41:11-41:13
+        Param_decl                      41:5-41:6   name=this
+          Pointer_type                  41:5-41:6
+            Named_type                  41:5-41:6   "~"  name=Point
       Block                             42:5-43:6   "{
     }"
   Class_decl                            48:1-55:3   name=Mismatched
@@ -43,7 +52,10 @@ Source_file                             4:1-66:1
         Named_type                      50:5-50:7   "u8"
     Destructor_decl                     52:5-54:6   name=Wrong
       <none>                            -
-      Param_list                        52:11-52:13 "()"
+      Param_list                        52:11-52:13
+        Param_decl                      52:5-52:6   name=this
+          Pointer_type                  52:5-52:6
+            Named_type                  52:5-52:6   "~"  name=Mismatched
       Block                             53:5-54:6   "{
     }"
   Function_decl                         57:1-59:2   name=release

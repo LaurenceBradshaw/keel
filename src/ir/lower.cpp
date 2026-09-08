@@ -473,7 +473,24 @@ Place Lowering::lower_place( Node_id id )
             const Node_id   object      = ast_.children( id )[0];
             const Type_id   object_type = types_.type_of( object );
             const Symbol_id name        = Symbol_id { ast_.aux( id ) };
-            return builder_.field( lower_place( ast_.children( id )[0] ), field_of( object_type, name ) );
+
+            // D22: `.` reaches through a pointer, so `p.x` is the implicit form of `( *p ).x` and
+            // lowers to the same two projections. It takes the pointer's *value* rather than its
+            // place - the Star case below is the same shape, written out.
+            if( types_.table().is_pointer( object_type ) )
+            {
+                const Operand pointer = lower_expression( object );
+                const Span    span    = ast_.span( id );
+
+                const Place base = pointer.kind == Operand_kind::Constant
+                                       ? builder_.place( builder_.into_temp( use( pointer ), pointer.type, span ) )
+                                       : pointer.place;
+
+                // The pointee, not the pointer: the field lives on what is pointed at.
+                return builder_.field( builder_.deref( base ), field_of( types_.table().get( object_type ).element, name ) );
+            }
+
+            return builder_.field( lower_place( object ), field_of( object_type, name ) );
         }
     case Node_kind::Unary_expr: // Star only; Amp is not a place
     {

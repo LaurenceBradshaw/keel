@@ -20,7 +20,7 @@ constexpr std::size_t k_indent_step    = 2;
 
 // What aux means depends on the kind, and without it the dump cannot tell `add( i32 a, i32 b )`
 // from `add( i32 b, i32 a )` - both names live in aux, not in any span.
-std::string aux_note( const Ast& ast, const Interner& interner, Node_id id )
+std::string aux_note( const Ast& ast, const Interner& interner, Node_id id, std::string_view span_text )
 {
     switch( ast.kind( id ) )
     {
@@ -60,7 +60,15 @@ std::string aux_note( const Ast& ast, const Interner& interner, Node_id id )
         return fmt::format( "marker={}", marker );
     }
 
-    // Named_type also carries a Symbol_id, but its span text is already the name.
+    // A Named_type's span text is normally the name, so saying it twice is noise. It is not always:
+    // the parser synthesises one for a destructor's `this`, spanning the `~` it stands for, and
+    // there the name is exactly what no span carries - which is what this column is for.
+    case Node_kind::Named_type:
+    {
+        const std::string_view name = interner.text( Symbol_id { ast.aux( id ) } );
+        return name == span_text ? std::string {} : fmt::format( "name={}", name );
+    }
+
     default:
         return {};
     }
@@ -77,8 +85,7 @@ void dump_node(
     const std::string label    = std::string( depth * k_indent_step, ' ' ) + std::string( node_kind_name( ast.kind( id ) ) );
     const std::string location = fmt::format( "{}:{}-{}:{}", start.line, start.col, end.line, end.col );
 
-    const auto        children = ast.children( id );
-    const std::string note     = aux_note( ast, interner, id );
+    const auto children = ast.children( id );
 
     // Only leaves show their text: a Function_decl's span covers its whole body, which would print
     // the entire function on one line. The aux note carries what no span can - names, operators.
@@ -88,6 +95,8 @@ void dump_node(
     {
         trailing = fmt::format( "\"{}\"", escape_for_dump( sm.text( span ) ) );
     }
+
+    const std::string note = aux_note( ast, interner, id, children.empty() ? sm.text( span ) : std::string_view {} );
 
     if( !note.empty() )
     {
@@ -190,7 +199,8 @@ TEST_CASE( "dump_ast_prints_a_leaf", "[ast][dump]" )
 {
     Fixture f( "i32" );
 
-    f.ast.set_root( f.ast.add( Node_kind::Named_type, f.at( 0, 3 ), 0, {} ) );
+    // A real Symbol_id, not 0: aux is the type's name, and 0 is whatever was interned first.
+    f.ast.set_root( f.ast.add( Node_kind::Named_type, f.at( 0, 3 ), f.interner.intern( "i32" ).v, {} ) );
 
     REQUIRE( f.dump() == "Named_type                              1:1-1:4     \"i32\"\n" );
 }
@@ -200,7 +210,7 @@ TEST_CASE( "dump_ast_exact_format", "[ast][dump]" )
 {
     Fixture f( "i32 main()\n{\n    return 0;\n}\n" );
 
-    const Node_id ret_type = f.ast.add( Node_kind::Named_type, f.at( 0, 3 ), 0, {} );
+    const Node_id ret_type = f.ast.add( Node_kind::Named_type, f.at( 0, 3 ), f.interner.intern( "i32" ).v, {} );
     const Node_id params   = f.ast.add( Node_kind::Param_list, f.at( 8, 10 ), 0, {} );
     const Node_id zero     = f.ast.add( Node_kind::Int_literal, f.at( 24, 25 ), 0, {} );
     const Node_id ret      = f.ast.add( Node_kind::Return_stmt, f.at( 17, 26 ), 0, { zero } );
@@ -245,7 +255,7 @@ TEST_CASE( "dump_ast_shows_text_for_leaves_only", "[ast][dump]" )
 {
     Fixture f( "i32 main()" );
 
-    const Node_id type = f.ast.add( Node_kind::Named_type, f.at( 0, 3 ), 0, {} );
+    const Node_id type = f.ast.add( Node_kind::Named_type, f.at( 0, 3 ), f.interner.intern( "i32" ).v, {} );
     f.ast.set_root( f.ast.add( Node_kind::Function_decl, f.at( 0, 10 ), 0, { type } ) );
 
     const std::string out = f.dump();

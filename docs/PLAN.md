@@ -1319,6 +1319,50 @@ the release build's `-Werror` rejects. Saying "at one span, keep emission order"
 in the comparator is clearer than leaving it implicit in the algorithm anyway —
 at an identical span the pass order really is the causal one.
 
+**`this` exists, and a destructor body sees its fields.** `this` is a keyword, and
+the parser turns it into an ordinary `Param_decl` typed `T*` at the front of the
+destructor's parameter list — C++ writes it implicitly, Keel writes it down. That
+one choice is why nothing downstream needed a concept for it: the resolver
+declares it like any parameter, the checker types it from its annotation, and it
+will be local 1 when lowering arrives. `this` in expression position is a plain
+`Name_expr` carrying the keyword's `Symbol_id`, and because keywords share the
+symbol space with identifiers the ordinary lookup finds the parameter. There is no
+`this` case anywhere in sema.
+
+The member scope was not where it first looked. Two requirements pull apart: a
+parameter must beat a field at lookup, as in C++, which puts the field scope
+*below* the destructor's barrier; but `declare`'s shadowing walk stops at that
+barrier, so it can never see the fields from inside the body. They cannot both be
+one mechanism, so D19's member clause is an **explicit check** against a field-name
+set the resolver carries, and the scope exists only for lookup. The fields also go
+into it directly rather than through `declare`, because that walk reads a barrier
+scope's *names* before noticing it is a barrier — so a field sharing a name with a
+top-level declaration would have been reported as a shadow.
+
+**D22 turned out to be unimplemented.** *"`.` reaches through a pointer"* has been
+recorded since M1 and `infer_field` required a struct outright, so only `( *p ).x`
+ever worked — which is why every fixture is written that way and why nobody
+noticed. `this` is a `Buffer*`, so `this.ptr` was the first thing to need it. The
+checker now unwraps one level, and `lower_place` takes the pointer's value,
+dereferences, then projects — the same shape as unary `*`, which `p.x` is the
+implicit form of. No golden moved, since the explicit spelling takes the unchanged
+path.
+
+The AST dump needed one adjustment for the same reason. It had assumed a
+`Named_type`'s span text is always its name, which the synthetic receiver breaks —
+its span is the `~` it stands for. Annotating every `Named_type` would have printed
+`"f64"  name=f64` across twenty-one fixtures to fix one synthetic case, so the
+annotation appears only when it differs from the span text, which is what that
+column is documented to be for: what no span can carry. Doing it surfaced two dump
+fixtures building a `Named_type` with `aux = 0` — the very mistake the comment
+beside them warns about, since `Symbol_id` 0 is `Keyword::If` rather than "no name".
+
+One bug worth recording because it explains a symptom seen all week: a diagnostic
+added for `this` called `Ast::kind` on the result of `declaration_of` without
+checking it, so `1 = 2;` aborted the compiler. Catch2 reports a *partial* count on
+SIGABRT, so the suite appeared to shrink from 358 cases to 111 rather than
+reporting a failure — a red run that looks like a smaller green one.
+
 ### Debts to pay along the way
 
 - **D29 is only half implemented at M3, deliberately.** The entry specifies four

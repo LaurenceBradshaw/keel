@@ -1,6 +1,7 @@
 #include "sema/resolver.h"
 #include <fmt/format.h>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace keel
 {
@@ -53,6 +54,10 @@ private:
 
     std::vector<Node_id> bindings_;
     std::vector<Scope>   scopes_;
+
+    // The enclosing aggregate's field names, for D19's member clause. Empty outside a member body,
+    // so the check it drives costs one lookup per declaration everywhere else.
+    std::unordered_set<Symbol_id> current_fields_;
 };
 
 void Resolver::error_at( Span span, std::string message, std::string help )
@@ -120,9 +125,10 @@ void Resolver::visit( Node_id id )
         }
         pop_scope();
         return;
+    case Node_kind::Destructor_decl:
     case Node_kind::Function_decl:
         push_scope( Scope_kind::Barrier );
-        visit( ast_.children( id )[0] ); // return type
+        visit( ast_.children( id )[0] ); // return type; invalid for Destructor_decl
         visit( ast_.children( id )[1] ); // param list
         visit( ast_.children( id )[2] ); // body
         pop_scope();
@@ -197,21 +203,26 @@ void Resolver::visit( Node_id id )
     case Node_kind::Class_decl:
     case Node_kind::Struct_decl:
     {
-        // Fields are a member namespace, not a lexical one, so they are deliberately *not*
-        // declared into scopes_: doing that would put `Point` in scope as a field and let it
-        // shadow the type `Point` inside the same struct body. A local map gives the duplicate
-        // check without the pollution - and without D19's shadowing walk, which does not apply to
-        // members.
+        // Fields are a member namespace, not a lexical one, so for the struct body itself they are
+        // deliberately *not* in scopes_: doing that would put `Point` in scope as a field and let
+        // it shadow the type `Point` while the fields' own annotations are being resolved. A local
+        // map gives the duplicate check without the pollution, and without D19's shadowing walk,
+        // which does not apply between members.
+        //
+        // A destructor body is the exception, and gets them in a scope of its own below - no
+        // annotation is ever inside it, so the hazard above cannot arise there. Two passes rather
+        // than one, because declaration order carries meaning inside a function body and none
+        // between members: a field written after the destructor must still be visible in it.
         std::unordered_map<u32, Node_id> members;
 
         for( const Node_id field : ast_.children( id ) )
         {
-            visit( field ); // the field's type annotation still resolves through the normal path
-
             if( ast_.kind( field ) != Node_kind::Field_decl )
             {
                 continue;
             }
+
+            visit( field ); // the field's type annotation still resolves through the normal path
 
             const Symbol_id name { ast_.aux( field ) };
 
@@ -231,6 +242,32 @@ void Resolver::visit( Node_id id )
                 );
             }
         }
+
+        push_scope();
+
+        for( const auto& [name, decl] : members )
+        {
+            // Straight into the scope rather than through declare(): members are not lexical,
+            // duplicates were already reported above, and declare()'s walk reads a barrier scope's
+            // names before noticing it is a barrier - so it would call a field that happens to
+            // share a top-level name a shadow. The set beside it is what D19's member clause reads.
+            scopes_.back().names.emplace( Symbol_id { name }, decl );
+            current_fields_.insert( Symbol_id { name } );
+        }
+
+        for( const Node_id member : ast_.children( id ) )
+        {
+            if( ast_.kind( member ) == Node_kind::Destructor_decl )
+            {
+                visit( member );
+            }
+        }
+
+        // clear() rather than restoring an enclosing set, because an aggregate cannot nest inside
+        // another - parse_aggregate_decl's member loop accepts only fields and destructors. If that
+        // ever changes this has to become a save and restore.
+        current_fields_.clear();
+        pop_scope();
 
         return;
     }
@@ -272,6 +309,21 @@ void Resolver::declare( Symbol_id name, Node_id decl )
             ast_.span( decl ),
             fmt::format( "`{}` is already declared in this scope", interner_.text( name ) ),
             previous_declaration_note( it->second )
+        );
+        return;
+    }
+
+    // D19: a field may be shadowed by a parameter, never by a local. A parameter naming the field
+    // it initialises is forced and idiomatic; a local collision is chosen, and is exactly the
+    // silent-wrong-value hazard this rule exists to kill. Checked here rather than through the
+    // scope walk because the field scope sits below the member body's barrier - it has to, so a
+    // parameter wins the lookup - and the walk stops at that barrier.
+    if( ast_.kind( decl ) != Node_kind::Param_decl && current_fields_.contains( name ) )
+    {
+        error_at(
+            ast_.span( decl ),
+            fmt::format( "`{}` shadows a field", interner_.text( name ) ),
+            "a local may not take a field's name"
         );
         return;
     }
@@ -1002,6 +1054,89 @@ TEST_CASE( "resolver_declares_globals_at_file_scope", "[sema][resolve][globals]"
     SECTION( "and its address can be taken" )
     {
         const Resolved p( "i32 counter = 1;\ni32* get() { return &counter; }\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// A destructor body sees the fields unqualified, as C++ does. The scope goes up on entering the
+// body and down on leaving it, so no field's own type annotation ever sees it - which is what the
+// Class_decl case above warns about when it keeps members out of scopes_.
+TEST_CASE( "resolver_puts_fields_in_scope_inside_a_destructor", "[sema][resolve][aggregates]" )
+{
+    SECTION( "a bare field name binds to the field" )
+    {
+        const Resolved p( "class Buffer { u8* ptr; ~Buffer() { ptr = nullptr; } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.declaration_of( p.nth( Node_kind::Name_expr, 0 ) ) == p.nth( Node_kind::Field_decl, 0 ) );
+    }
+
+    // Declaration order carries no meaning between members, only within a function body, so a field
+    // written after the destructor is still visible inside it.
+    SECTION( "a field declared after the destructor is still visible" )
+    {
+        const Resolved p( "class Buffer { ~Buffer() { ptr = nullptr; } u8* ptr; };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "`this` binds to the synthesised parameter" )
+    {
+        const Resolved p( "class Buffer { u8* ptr; ~Buffer() { this.ptr = nullptr; } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.declaration_of( p.nth( Node_kind::Name_expr, 0 ) ) == p.nth( Node_kind::Param_decl, 0 ) );
+    }
+
+    SECTION( "the scope does not leak past the body" )
+    {
+        const Resolved p( "class Buffer { u8* ptr; ~Buffer() { } };\ni32 main() { ptr = nullptr; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    SECTION( "one class's fields are not visible in another's destructor" )
+    {
+        const Resolved p( "class A { u8* only_in_a; ~A() { } };\n"
+                          "class B { u8* ptr; ~B() { only_in_a = nullptr; } };\n"
+                          "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+}
+
+// D19: members are shadowable by a parameter but never by a local. A destructor has no parameters
+// of its own, so only the restrictive half is reachable until constructors arrive.
+TEST_CASE( "resolver_rejects_a_local_shadowing_a_field", "[sema][resolve][aggregates]" )
+{
+    SECTION( "a local may not take a field's name" )
+    {
+        const Resolved p( "class Buffer { u64 len; ~Buffer() { u64 len = 0; } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "a different name is fine" )
+    {
+        const Resolved p( "class Buffer { u64 len; ~Buffer() { u64 count = 0; } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // File scope is a barrier, and members do not change that: a field may share a top-level name.
+    SECTION( "a field may share a name with a top-level declaration" )
+    {
+        const Resolved p( "i32 count = 0;\nclass Buffer { u64 count; ~Buffer() { } };\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
