@@ -72,8 +72,8 @@ Resolution Resolver::run()
 
     for( const Node_id decl : ast_.children( ast_.root() ) )
     {
-        if( ast_.kind( decl ) == Node_kind::Function_decl || ast_.kind( decl ) == Node_kind::Struct_decl ||
-            ast_.kind( decl ) == Node_kind::Var_decl )
+        if( ast_.kind( decl ) == Node_kind::Function_decl || ast_.kind( decl ) == Node_kind::Var_decl ||
+            is_aggregate( ast_.kind( decl ) ) )
         {
             declare( Symbol_id { ast_.aux( decl ) }, decl );
         }
@@ -194,6 +194,7 @@ void Resolver::visit( Node_id id )
 
         return;
     }
+    case Node_kind::Class_decl:
     case Node_kind::Struct_decl:
     {
         // Fields are a member namespace, not a lexical one, so they are deliberately *not*
@@ -201,7 +202,7 @@ void Resolver::visit( Node_id id )
         // shadow the type `Point` inside the same struct body. A local map gives the duplicate
         // check without the pollution - and without D19's shadowing walk, which does not apply to
         // members.
-        std::unordered_map<u32, Node_id> fields;
+        std::unordered_map<u32, Node_id> members;
 
         for( const Node_id field : ast_.children( id ) )
         {
@@ -219,7 +220,7 @@ void Resolver::visit( Node_id id )
                 continue; // the parser already reported the missing name
             }
 
-            const auto [it, inserted] = fields.try_emplace( name.v, field );
+            const auto [it, inserted] = members.try_emplace( name.v, field );
 
             if( !inserted )
             {

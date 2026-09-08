@@ -127,8 +127,50 @@ void Diagnostics::render( const Source_manager& sm, std::ostream& out, bool colo
 {
     bool first = true;
 
-    for( const Diagnostic& d : items_ )
+    // Source order, not emission order. Emission order is pass structure - the lexer speaks before
+    // the checker - and carries no meaning for the reader, because absorption already guarantees
+    // every diagnostic is an independent mistake rather than a consequence of one above it. If that
+    // ever stops being true, this sort goes with it.
+    //
+    // Indices rather than the items themselves so render() stays const: every caller holds a
+    // Diagnostics by const reference. Within one file a byte offset orders identically to
+    // (line, column), both being derived from it, so there is nothing to look up.
+    std::vector<u32> ordered( items_.size() );
+
+    for( u32 i = 0; i < items_.size(); ++i )
     {
+        ordered[i] = i;
+    }
+
+    std::sort(
+        ordered.begin(),
+        ordered.end(),
+        [this]( u32 a, u32 b )
+        {
+            const Span& x = items_[a].span;
+            const Span& y = items_[b].span;
+
+            if( x.file != y.file )
+            {
+                return x.file < y.file;
+            }
+
+            if( x.start != y.start )
+            {
+                return x.start < y.start;
+            }
+
+            // Two at one span keep emission order - there the pass order is the causal one. Said
+            // here rather than by stable_sort, whose libstdc++ implementation reaches for a
+            // deprecated temporary buffer.
+            return a < b;
+        }
+    );
+
+    for( const u32 index : ordered )
+    {
+        const Diagnostic& d = items_[index];
+
         // A blank line between diagnostics: without it the "error:" line butts against the caret
         // line above and it is ambiguous which snippet a message belongs to. Separator rather than
         // terminator, so the output does not end in a blank line.
@@ -399,18 +441,48 @@ TEST_CASE( "diagnostics_help_omitted_when_absent", "[common][diagnostics]" )
     REQUIRE( caret->back() == '^' );
 }
 
-TEST_CASE( "diagnostics_render_preserves_insertion_order", "[common][diagnostics]" )
+// Emission order is pass structure - the lexer speaks before the checker - and carries no meaning
+// for the reader, because absorption already guarantees each diagnostic is an independent mistake
+// rather than a consequence of one above it. So they render in source order instead.
+TEST_CASE( "diagnostics_render_in_source_order", "[common][diagnostics]" )
 {
     Source_manager sm;
     const File_id  f = sm.add_file( "a.kl", "i32 x;\ni32 y;\n" );
 
-    Diagnostics diags;
-    diags.error( Span { f, 11, 12 }, "second reported" );
-    diags.error( Span { f, 4, 5 }, "first reported" );
+    SECTION( "a later span reported first still renders second" )
+    {
+        Diagnostics diags;
+        diags.error( Span { f, 11, 12 }, "further down" );
+        diags.error( Span { f, 4, 5 }, "higher up" );
 
-    const std::string out = render_to_string( diags, sm );
+        const std::string out = render_to_string( diags, sm );
 
-    REQUIRE( out.find( "second reported" ) < out.find( "first reported" ) );
+        REQUIRE( out.find( "higher up" ) < out.find( "further down" ) );
+    }
+
+    // The one place emission order is causal: at an identical span, the pass that ran first is
+    // the one that found the cause.
+    SECTION( "two at one span keep emission order" )
+    {
+        Diagnostics diags;
+        diags.error( Span { f, 4, 5 }, "reported first" );
+        diags.error( Span { f, 4, 5 }, "reported second" );
+
+        const std::string out = render_to_string( diags, sm );
+
+        REQUIRE( out.find( "reported first" ) < out.find( "reported second" ) );
+    }
+
+    // render() is const and orders a local index vector, so it must not depend on having been
+    // called before - which is the whole reason it does not sort items_ in place.
+    SECTION( "rendering twice gives the same output" )
+    {
+        Diagnostics diags;
+        diags.error( Span { f, 11, 12 }, "further down" );
+        diags.error( Span { f, 4, 5 }, "higher up" );
+
+        REQUIRE( render_to_string( diags, sm ) == render_to_string( diags, sm ) );
+    }
 }
 
 TEST_CASE( "diagnostics_render_names_the_right_file", "[common][diagnostics]" )

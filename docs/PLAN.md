@@ -484,7 +484,7 @@ overflows; what happens then is the open overflow question in §12.
 | D16 | Operators whose relative precedence is a known C wart cannot be mixed without parentheses: bitwise (`&` `\|` `^`) with comparison, shift (`<<` `>>`) with arithmetic, and `&&` with `\|\|`. `a & b == c` is a compile error naming both readings. | C reads it as `a & (b == c)` — a mistake Ritchie acknowledged and every compiler warns about. Changing the precedence would silently alter valid C++, which §5.1 forbids; rejecting it fixes the wart *and* satisfies the containment rule, since no accepted program changes meaning. Zig takes the same approach. |
 | D17 | `*` and `&` bind to the **type**, not the name, and must touch it: `u32* p;` declares a pointer, `u32 *p;` is an error. | C's declarator syntax binds them to the name, so `int *p, q;` makes `q` an `int` — a wart every C style guide works around. Adjacency is checked from the token spans, so no lexer change is needed. The rejected form gets a message naming the fix rather than the generic D15 one, since it is exactly what a C++ programmer writes from habit. Independent of D15: `a * b;` remains a useless statement either way. |
 | D18 | Top-level declarations are visible throughout the file, so mutual recursion needs no forward declaration: `even` may call `odd` above it. Inside a function this does **not** apply — statements are sequential, so using a local before its declaration is still an error. | C++ requires a forward declaration at namespace scope; Rust, Java and C# do not. This accepts what C++ rejects and never reinterprets an accepted program, so it is safe under §5.1. The asymmetry between file and block scope is deliberate: declaration order carries no meaning between functions, and every meaning within one. |
-| D19 | A declaration may not shadow another that is still reachable by the same unqualified name. A block local colliding with an enclosing local or with a parameter is an error. Scopes that do **not** carry outer names in — a function body relative to file scope, and later a lambda relative to its enclosing function — are *barriers*, and reusing a name across one is fine: a local may be called `count` alongside a top-level `count()`. | The wart is the *silent* failure: two locals of the same type mean picking the wrong one compiles, runs and returns a bad value. Shadowing a function with a variable is caught immediately by the type checker, so it needs no rule. Java (JLS §6.4) and C# (CS0136) reject exactly this and keep members shadowable for the same reason; C++ allows it and papers over it with `-Wshadow`. File scope is exempt so that adding a top-level function cannot break a function body far above it — action at a distance. Rust's shadowing is same-scope rebinding (`let x = validate(x);`), which we already reject as a duplicate declaration and which this does not revisit. |
+| D19 | A declaration may not shadow another that is still reachable by the same unqualified name. A block local colliding with an enclosing local or with a parameter is an error. Scopes that do **not** carry outer names in — a function body relative to file scope, and later a lambda relative to its enclosing function — are *barriers*, and reusing a name across one is fine: a local may be called `count` alongside a top-level `count()`. **Fields are visible unqualified inside a member body, and may be shadowed by a parameter but never by a local.** `Buffer( u64 len ) { this.len = len; }` is legal; `~Buffer() { u64 len = 0; }` against a field `len` is not. | The wart is the *silent* failure: two locals of the same type mean picking the wrong one compiles, runs and returns a bad value. Shadowing a function with a variable is caught immediately by the type checker, so it needs no rule. Java (JLS §6.4) and C# (CS0136) reject exactly this and keep members shadowable for the same reason; C++ allows it and papers over it with `-Wshadow`. File scope is exempt so that adding a top-level function cannot break a function body far above it — action at a distance. Rust's shadowing is same-scope rebinding (`let x = validate(x);`), which we already reject as a duplicate declaration and which this does not revisit. The member clause draws the line at whether the shadow was *forced*. A constructor parameter naming the field it initialises is the one place C++ programmers shadow constantly, and every alternative is worse — `new_len`, `len_`, a convention nobody agrees on — so it is allowed, with `this.len` as the disambiguation they already write. A local has no such excuse: nothing forces the collision, so it is exactly the silent-wrong-value hazard this entry exists to kill. Slotting members into the same rule keeps one sentence rather than an exception carved beside it. Stricter than C++, which permits both and papers over it with `-Wshadow`, and safe under §5.1 because it rejects rather than reinterprets. **Inert until constructors**: a destructor's only parameter is `this`, which is a keyword and cannot collide with a field, so until member functions take arguments only the restrictive half is reachable. |
 | D20 | A character literal is a `u8` holding one byte: `'A'` is 65, `'\xFF'` is 255. A literal spanning more than one byte is an error, so a non-ASCII character needs its bytes written out. String literals lex and parse but have no type at all, and are rejected with a message saying so. | D1 leaves no `char` type to give them, and inventing one for literals alone would be a second spelling for `u8`. Treating a code point as the integer it is means §6.4's range rules apply unchanged: `u8 c = 'a';` and `u32 c = 'a';` both work, `bool c = 'a';` does not, and no new machinery is needed. C++ makes `'a'` an `int` and `'ab'` implementation-defined; both are rejected here rather than reinterpreted. Strings wait because their representation is an M7 question (§9) — choosing `u8*`, a slice or an array now would commit the language before the ownership model exists to judge it. |
 | D21 | `main` returns `i32` and takes no parameters. Any other signature is a hard error. | C's `main` returns `int`, so a wider or narrower return type would either truncate in the emitted shim or fail to convert at all — and the shim calls `main` with no arguments, so a parameter would generate C that does not compile: a `cc` error pointing at generated code instead of a diagnostic pointing at the program. Command-line arguments wait for arrays and modules (M7), at which point this entry is what has to change. A program with no `main` is a library and stays legal. |
 | D22 | `.` is the only member-access operator, and reaches through a pointer. `->` is a hard error naming `.` as the replacement. | C++ needs both because `.` on a pointer means nothing there; a language designed now does not. The decisive reason is generics (M6): `template<C T> ... thing.x` works whether `T` is a value, a borrow or a pointer, where `->` would force the template's author to know which. `->` distinguishes less than it appears to even in C++ — `.` on a reference is already spelled like `.` on a value — and L6 makes every signature fully annotated, so the declaration is in view. §5.1 constrains neither direction here, unusually: `.` on a pointer is a C++ error, so accepting it only adds meaning. The `Arrow` token is **kept** so the parser can reject it by name; deleting it would lex `p->x` as `-` then `>` and produce a message about arithmetic. |
@@ -1236,7 +1236,115 @@ dispatching on statement kind, so a skipped marker left a directive with nothing
 under it; the skip has to come first. That was caught by the codegen goldens
 moving when they should not have — the useful kind of golden failure.
 
+**`class` and destructors parse.** D29's first slice is in the parser, and two
+shape decisions carry it. `Struct_decl` and `Class_decl` are **separate node
+kinds** with an `is_aggregate` predicate beside them, because the two differ in
+rules and not in shape — field layout, containment ordering, member resolution
+and C emission all treat them identically, and only the rule checks read the
+kind directly. Eight sites that compared against `Struct_decl` now ask the
+predicate, so a third aggregate would be one edit rather than eight. The
+alternative — one kind with a flag — had nowhere to put it: `aux` is a whole
+`u32` holding the name, and packing a bit beside a `Symbol_id` is a trap waiting
+on a program with enough symbols.
+
+`Destructor_decl` is shaped as a `Function_decl` **minus its return type**, with
+an always-invalid first child holding that place: `{ <none>, Param_list, Block }`.
+That buys the thing that matters at lowering — `lower()` scans every node
+linearly for a function, so a destructor nested inside a class body is found by
+the same loop and read from the same indices, with no traversal change and no
+second layout for any function-shaped pass to learn. `aux` carries the name
+written after the `~` rather than the enclosing type's, so `~Wrong()` inside
+`class Buffer` is a comparison the checker makes rather than a parse failure.
+
+The parser deliberately accepts more than D29 allows: `~Point()` on a `struct`
+parses, and so does a mismatched name. Both are the checker's to reject, because
+the parser has no business knowing D29 and a parse error would give a worse
+message than one naming `class` as the fix. `Tilde` needed no lexer work — it
+was already the bitwise-NOT token, and it cannot start a field, so one token of
+lookahead separates the two member shapes with no backtracking.
+
+**D29's rules and D2's owning query are enforced.** Three checker passes, split
+out rather than folded into the existing ones because the third cannot run
+before the second has: `check_aggregate_members` (a struct may not have a
+destructor; the name after the `~` must match; there may be only one),
+`compute_owning`, and `check_struct_ownership`.
+
+The query cost almost nothing, because the graph was already there.
+`contains_itself` walks exactly what D2 describes — by-value aggregate members,
+skipping pointers, since *"a pointer to a struct is finite"* — so the rule that a
+raw pointer owns nothing arrived for free rather than as a case. And
+`struct_order_` is a DFS post-order, dependencies first, so `compute_owning` is a
+**single forward pass**: every aggregate is reached after everything it contains,
+which makes a member's answer already known and leaves no recursion, no
+memoisation and no cycle handling to write. A type on a cycle never enters the
+order and never needs to, `order_structs` having already reported it.
+
+The answer is recorded in `Types` beside the folded constants, keyed by `Type_id`
+for the caller and by declaration `Node_id` in storage, because drop elaboration
+runs on KIR long after the checker has returned. D2's own note that it is *inert
+until M3* is now testable rather than asserted: no existing fixture has a
+destructor, so `owning_` is empty for all of them and not one of the 74 goldens
+moved.
+
+One diagnostic per mistake, which needed two suppressions rather than one. A
+struct with a destructor silences both the name and duplicate rules on that
+declaration, and silences the ownership pass entirely — `struct Bad { Buffer b;
+~Bad() { } };` is one decision to reverse, not three. An owning *field*, though,
+is reported once per field, because each is a separate edit.
+
+**Diagnostics render in source order.** They had been rendering in emission
+order, which is pass structure — the lexer speaks before the resolver speaks
+before the checker — and the driver runs all three before rendering once, so a
+file with several kinds of mistake came out shuffled. `errors_literals` was the
+clearest case: four range errors on consecutive lines, rendered `7, 4, 5, 6`,
+because one of them was the lexer's and three were the checker's.
+
+The question worth asking first was whether emission order was *telling* the
+reader something — cause before consequence is worth preserving even when it
+reads out of order. It is not, and the reason is a property the code already
+has: **error-type absorption exists so that every diagnostic is an independent
+mistake** rather than a consequence of one above it. A diagnostic that were only
+meaningful because of an earlier one is exactly what absorption suppresses. With
+no causal chain to preserve, emission order is an implementation detail the
+reader should not have to know, and source order is strictly better. The sort
+carries that reasoning in a comment, because it stops being correct the moment
+Keel starts emitting consequence diagnostics deliberately.
+
+Two mechanical notes. It sorts a local index vector rather than `items_`, so
+`render` stays `const` — every caller holds a `Diagnostics` by const reference —
+and rendering twice gives the same answer. And it is `std::sort` with an explicit
+tiebreak on the emission index rather than `std::stable_sort`: same result, but
+libstdc++'s `stable_sort` reaches for a deprecated `get_temporary_buffer`, which
+the release build's `-Werror` rejects. Saying "at one span, keep emission order"
+in the comparator is clearer than leaving it implicit in the algorithm anyway —
+at an identical span the pass order really is the causal one.
+
 ### Debts to pay along the way
+
+- **D29 is only half implemented at M3, deliberately.** The entry specifies four
+  differences between a `struct` and a `class`; M3's acceptance test — a `Buffer`
+  freeing exactly once, including on early `return` — needs two of them. A `class`
+  may have a destructor and a `struct` may not, and a `struct` may not contain an
+  owning member: both are drop machinery, and the second *is* D2's owning query,
+  which drop elaboration needs regardless. The other two defer, and each leaves a
+  gap worth naming rather than discovering later.
+
+  **Constructors.** D29 says a `class` is built by a constructor and a `struct`
+  from a literal, which is what stops the two initialisation syntaxes competing.
+  Until constructors exist a `class` has no other way to be built, so the struct
+  literal has to work on one — a temporary and explicit exception to D29, not an
+  oversight. Closing it means deciding the call syntax and making the literal form
+  an error on a type that has a constructor.
+
+  **Access control.** Fields are private by default in a `class`, and that needs
+  member lookup to carry visibility — a resolver feature, with nothing in M3
+  depending on it. Until then a class's fields are public in effect, and
+  `struct` versus `class` is distinguishable by what it may *contain* rather than
+  by what may reach into it.
+
+  Neither gap is load-bearing for M3, and both are cheap to add once the drop
+  machinery is proven. Recording them here keeps §6.3's audit honest: D29 as
+  written is not yet what the compiler enforces.
 
 - **Three files have grown past what one file should hold.** Code lines, excluding the in-source
   tests that roughly double each: `sema/type_checker.cpp` 2350, `parse/parser.cpp` 1675,

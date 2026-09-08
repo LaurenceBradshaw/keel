@@ -1,0 +1,65 @@
+// PLAN D29. A struct and a class have the same shape and different rules, so the parser records
+// only which keyword was written. Every rule about which may hold what belongs to the checker,
+// which can name `class` as the fix rather than failing to parse.
+class Buffer
+{
+    u8* ptr;
+    u64 len;
+
+    ~Buffer()
+    {
+        release( ptr );
+    }
+};
+
+// A class need not have a destructor - D29's line is what it *may* hold, not what it must.
+class Handle
+{
+    u64 value;
+};
+
+class Empty { };
+
+// Members are children in declaration order whichever kind they are, and a destructor may precede
+// the fields as easily as follow them.
+class Reordered
+{
+    ~Reordered()
+    {
+    }
+
+    u8* ptr;
+};
+
+// A destructor on a struct parses. Rejecting it is the checker's job: the parser has no business
+// knowing D29, and a parse error would give a worse message than one naming the fix.
+struct Point
+{
+    f64 x;
+    f64 y;
+
+    ~Point()
+    {
+    }
+};
+
+// A mismatched name parses too, for the same reason - aux carries what was written after the `~`
+// so the checker can compare it against the enclosing declaration.
+class Mismatched
+{
+    u8* ptr;
+
+    ~Wrong()
+    {
+    }
+};
+
+void release( u8* p )
+{
+}
+
+i32 main()
+{
+    auto h = Handle { 1 };
+    return 0;
+}

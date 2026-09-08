@@ -13,6 +13,8 @@ std::string_view node_kind_name( Node_kind kind )
         return "Source_file";
     case Node_kind::Function_decl:
         return "Function_decl";
+    case Node_kind::Destructor_decl:
+        return "Destructor_decl";
     case Node_kind::Param_decl:
         return "Param_decl";
     case Node_kind::Named_type:
@@ -69,6 +71,8 @@ std::string_view node_kind_name( Node_kind kind )
         return "For_stmt";
     case Node_kind::Struct_decl:
         return "Struct_decl";
+    case Node_kind::Class_decl:
+        return "Class_decl";
     case Node_kind::Field_decl:
         return "Field_decl";
     case Node_kind::Field_expr:

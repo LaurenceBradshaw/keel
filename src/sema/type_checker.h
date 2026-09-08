@@ -1,6 +1,7 @@
 #pragma once
 #include <optional>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 #include "ast/ast.h"
 #include "ast/node.h"
@@ -39,12 +40,14 @@ public:
         Type_table                              table,
         std::vector<Type_id>                    types,
         std::vector<Node_id>                    struct_order,
-        std::unordered_map<u32, Constant_value> constants
+        std::unordered_map<u32, Constant_value> constants,
+        std::unordered_set<u32>                 owning
     )
         : table_( std::move( table ) ),
           types_( std::move( types ) ),
           struct_order_( std::move( struct_order ) ),
-          constants_( std::move( constants ) )
+          constants_( std::move( constants ) ),
+          owning_( std::move( owning ) )
     {
     }
 
@@ -73,11 +76,27 @@ public:
         return struct_order_;
     }
 
+    // D2: a type owns when it has a destructor, directly or through a by-value member. Recorded
+    // rather than recomputed because drop elaboration runs on KIR, after the checker has gone.
+    // Keyed by Type_id because that is what every caller holds; the set below stores declarations.
+    bool is_owning( Type_id type ) const
+    {
+        if( !type.is_valid() || !table_.is_struct( type ) )
+        {
+            return false;
+        }
+
+        const Node_id decl = table_.get( type ).declaration;
+
+        return decl.is_valid() && owning_.contains( decl.v );
+    }
+
 private:
     Type_table                              table_;
     std::vector<Type_id>                    types_;
     std::vector<Node_id>                    struct_order_;
     std::unordered_map<u32, Constant_value> constants_; // dependencies first, from the DFS post-order
+    std::unordered_set<u32>                 owning_;
 };
 
 Types type_check( const Ast&, const Resolution&, const Literals&, const Source_manager&, const Interner&, Diagnostics& );

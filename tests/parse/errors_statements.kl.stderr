@@ -16,7 +16,7 @@ error: expected an identifier, found `=`
 3 | i32 missing_name()   { auto = 5; }
   |                            ^
 
-error: a struct cannot be declared inside a function
+error: a struct or a class cannot be declared inside a function
  --> parse/errors_statements.kl:4:25
   |
 4 | i32 not_a_statement() { struct x; }

@@ -15,6 +15,7 @@ enum class Node_kind : u16
 
     Source_file,
     Function_decl,
+    Destructor_decl,
     Param_decl,
     Named_type,
     Pointer_type,
@@ -43,6 +44,7 @@ enum class Node_kind : u16
     While_stmt,
     For_stmt,
     Struct_decl,
+    Class_decl,
     Field_decl,
     Field_expr,
     Struct_literal,
@@ -71,6 +73,19 @@ struct Node_id
 // The enum spelling, for --dump-ast and debugging. A switch with no default, so -Wswitch turns a
 // forgotten kind into a release build failure.
 std::string_view node_kind_name( Node_kind kind );
+
+// D29: a struct and a class differ in rules, not shape. Field layout, containment ordering and C
+// emission treat them identically; only the rule checks read the kind directly.
+constexpr bool is_aggregate( Node_kind kind )
+{
+    return kind == Node_kind::Struct_decl || kind == Node_kind::Class_decl;
+}
+
+// A destructor is a Function_decl minus its return type, so one scan finds both.
+constexpr bool is_function_like( Node_kind kind )
+{
+    return kind == Node_kind::Function_decl || kind == Node_kind::Destructor_decl;
+}
 
 struct Node
 {

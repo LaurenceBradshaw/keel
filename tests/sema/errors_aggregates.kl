@@ -1,0 +1,71 @@
+// PLAN D29. A struct is a transparent aggregate and a class is a type with invariants; the line is
+// trivial copyability, and a destructor is what breaks it. Each mistake below is one diagnostic.
+class Buffer
+{
+    u8* ptr;
+
+    ~Buffer()
+    {
+    }
+};
+
+// A destructor is what makes a type owning, so a struct cannot have one.
+struct Bad_struct
+{
+    i32 x;
+
+    ~Bad_struct()
+    {
+    }
+};
+
+// Nor can it contain one, transitively - destroying it would destroy the member.
+struct Holds_owning
+{
+    Buffer b;
+};
+
+class Wrapper
+{
+    Buffer inner;
+};
+
+struct Holds_transitively
+{
+    Wrapper w;
+};
+
+// A pointer owns nothing, so this one is legal.
+struct Holds_a_pointer
+{
+    Buffer* p;
+};
+
+// The name after the `~` must be the enclosing type's.
+class Mismatched
+{
+    u8* ptr;
+
+    ~Wrong()
+    {
+    }
+};
+
+// And there may be only one.
+class Twice
+{
+    u8* ptr;
+
+    ~Twice()
+    {
+    }
+
+    ~Twice()
+    {
+    }
+};
+
+i32 main()
+{
+    return 0;
+}

@@ -1,0 +1,67 @@
+Source_file                             4:1-66:1
+  Class_decl                            4:1-13:3    name=Buffer
+    Field_decl                          6:5-6:13    name=ptr
+      Pointer_type                      6:5-6:8
+        Named_type                      6:5-6:7     "u8"
+    Field_decl                          7:5-7:13    name=len
+      Named_type                        7:5-7:8     "u64"
+    Destructor_decl                     9:5-12:6    name=Buffer
+      <none>                            -
+      Param_list                        9:12-9:14   "()"
+      Block                             10:5-12:6
+        Expr_stmt                       11:9-11:24
+          Call_expr                     11:9-11:23
+            Name_expr                   11:9-11:16  "release"
+            Arg_list                    11:16-11:23
+              Name_expr                 11:18-11:21 "ptr"
+  Class_decl                            16:1-19:3   name=Handle
+    Field_decl                          18:5-18:15  name=value
+      Named_type                        18:5-18:8   "u64"
+  Class_decl                            21:1-21:17  "class Empty { };"  name=Empty
+  Class_decl                            25:1-32:3   name=Reordered
+    Destructor_decl                     27:5-29:6   name=Reordered
+      <none>                            -
+      Param_list                        27:15-27:17 "()"
+      Block                             28:5-29:6   "{
+    }"
+    Field_decl                          31:5-31:13  name=ptr
+      Pointer_type                      31:5-31:8
+        Named_type                      31:5-31:7   "u8"
+  Struct_decl                           36:1-44:3   name=Point
+    Field_decl                          38:5-38:11  name=x
+      Named_type                        38:5-38:8   "f64"
+    Field_decl                          39:5-39:11  name=y
+      Named_type                        39:5-39:8   "f64"
+    Destructor_decl                     41:5-43:6   name=Point
+      <none>                            -
+      Param_list                        41:11-41:13 "()"
+      Block                             42:5-43:6   "{
+    }"
+  Class_decl                            48:1-55:3   name=Mismatched
+    Field_decl                          50:5-50:13  name=ptr
+      Pointer_type                      50:5-50:8
+        Named_type                      50:5-50:7   "u8"
+    Destructor_decl                     52:5-54:6   name=Wrong
+      <none>                            -
+      Param_list                        52:11-52:13 "()"
+      Block                             53:5-54:6   "{
+    }"
+  Function_decl                         57:1-59:2   name=release
+    Named_type                          57:1-57:5   "void"
+    Param_list                          57:13-57:22
+      Param_decl                        57:15-57:20 name=p
+        Pointer_type                    57:15-57:18
+          Named_type                    57:15-57:17 "u8"
+    Block                               58:1-59:2   "{
+}"
+  Function_decl                         61:1-65:2   name=main
+    Named_type                          61:1-61:4   "i32"
+    Param_list                          61:9-61:11  "()"
+    Block                               62:1-65:2
+      Var_decl                          63:5-63:27  name=h
+        <none>                          -
+        Struct_literal                  63:14-63:26 name=Handle
+          Field_init                    63:23-63:24
+            Int_literal                 63:23-63:24 "1"
+      Return_stmt                       64:5-64:14
+        Int_literal                     64:12-64:13 "0"

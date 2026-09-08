@@ -1,3 +1,9 @@
+error: a `void` function cannot return a value
+  --> sema/errors_absorption.kl:13:12
+   |
+13 |     return nullptr;
+   |            ^^^^^^^
+
 error: `missing` is not declared
   --> sema/errors_absorption.kl:20:10
    |
@@ -10,34 +16,28 @@ error: `missing` is not declared
 21 |     if ( nullptr != missing() ) { return 2; }
    |                     ^^^^^^^
 
-error: `undeclared` is not declared
-  --> sema/errors_absorption.kl:24:5
-   |
-24 |     undeclared = nullptr;
-   |     ^^^^^^^^^^
-
-error: a `void` function cannot return a value
-  --> sema/errors_absorption.kl:13:12
-   |
-13 |     return nullptr;
-   |            ^^^^^^^
-
 error: cannot assign to this expression
   --> sema/errors_absorption.kl:23:5
    |
 23 |     identity( &value ) = nullptr;
    |     ^^^^^^^^^^^^^^^^^^
 
-error: `Point` has no field `wrong`
-  --> sema/errors_absorption.kl:27:22
+error: `undeclared` is not declared
+  --> sema/errors_absorption.kl:24:5
    |
-27 |     auto p = Point { .wrong = nullptr };
-   |                      ^^^^^^^^^^^^^^^^
+24 |     undeclared = nullptr;
+   |     ^^^^^^^^^^
 
 error: field `address` is not initialised
   --> sema/errors_absorption.kl:27:14
    |
 27 |     auto p = Point { .wrong = nullptr };
    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: `Point` has no field `wrong`
+  --> sema/errors_absorption.kl:27:22
+   |
+27 |     auto p = Point { .wrong = nullptr };
+   |                      ^^^^^^^^^^^^^^^^
 
 7 errors generated

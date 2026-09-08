@@ -75,8 +75,9 @@ private:
     Node_id parse_declaration();
     Node_id parse_function_decl();
     Node_id parse_param_list();
-    Node_id parse_struct_decl();
+    Node_id parse_aggregate_decl();
     Node_id parse_field_decl();
+    Node_id parse_destructor_decl();
 
     // `Point { 0.0, 0.0 }` or `Point { .x = 0.0, .y = 0.0 }`. Entered from parse_prefix once the
     // identifier is consumed and a `{` is seen behind it.
@@ -564,9 +565,9 @@ Node_id Parser::parse_source_file()
 
 Node_id Parser::parse_declaration()
 {
-    if( check_keyword( Keyword::Struct ) )
+    if( check_keyword( Keyword::Struct ) || check_keyword( Keyword::Class ) )
     {
-        return parse_struct_decl();
+        return parse_aggregate_decl();
     }
 
     // A function and a file-scope variable both open with a type and a name; only what follows the
@@ -656,11 +657,12 @@ Node_id Parser::parse_param_list()
     return ast_.add( Node_kind::Param_list, Span::merge( start, previous().span ), 0, params );
 }
 
-Node_id Parser::parse_struct_decl()
+Node_id Parser::parse_aggregate_decl()
 {
-    const Span start = peek().span;
+    const Span start    = peek().span;
+    const bool is_class = match_keyword( Keyword::Class );
 
-    match_keyword( Keyword::Struct );
+    match_keyword( is_class ? Keyword::Class : Keyword::Struct );
 
     // The name is a token, so it goes in aux rather than becoming a child.
     const Symbol_id name = expect_name();
@@ -676,12 +678,12 @@ Node_id Parser::parse_struct_decl()
         return error_node( Span::merge( start, previous().span ) );
     }
 
-    std::vector<Node_id> fields;
+    std::vector<Node_id> members;
     while( !check( Token_kind::R_brace ) && !at_end() )
     {
         const u32 before = pos_;
 
-        fields.push_back( parse_field_decl() );
+        members.push_back( check( Token_kind::Tilde ) ? parse_destructor_decl() : parse_field_decl() );
 
         if( pos_ == before )
         {
@@ -701,7 +703,9 @@ Node_id Parser::parse_struct_decl()
         return error_node( Span::merge( start, previous().span ) );
     }
 
-    return ast_.add( Node_kind::Struct_decl, Span::merge( start, previous().span ), name.v, fields );
+    return ast_.add(
+        is_class ? Node_kind::Class_decl : Node_kind::Struct_decl, Span::merge( start, previous().span ), name.v, members
+    );
 }
 
 Node_id Parser::parse_field_decl()
@@ -726,6 +730,40 @@ Node_id Parser::parse_field_decl()
     }
 
     return ast_.add( Node_kind::Field_decl, Span::merge( start, previous().span ), name.v, { type } );
+}
+
+Node_id Parser::parse_destructor_decl()
+{
+    const Span start = peek().span;
+
+    expect( Token_kind::Tilde );
+
+    const Symbol_id name = expect_name();
+
+    // Parsed rather than rejected on sight, so a stray parameter does not desynchronise the body.
+    const Node_id params = parse_param_list();
+
+    if( !ast_.children( params ).empty() )
+    {
+        error_at( ast_.span( params ), "destructors take no parameters" );
+    }
+
+    const Node_id body = parse_block();
+
+    // Same rule as every other declaration: sema reads a name to report about it, so a nameless one
+    // crashes a pass that had no reason to expect it.
+    if( !name.is_valid() )
+    {
+        return error_node( Span::merge( start, previous().span ) );
+    }
+
+    return ast_.add( // no return type in children
+        Node_kind::Destructor_decl,
+        Span::merge( start, previous().span ),
+        name.v,
+        { Node_id {}, params, body }
+
+    );
 }
 
 Node_id Parser::parse_struct_literal( Span start, Symbol_id type_name )
@@ -1149,19 +1187,19 @@ Node_id Parser::parse_statement()
     // A struct in a function body. Recognised here so it can be consumed whole: synchronise()
     // would stop at the first `;` *inside* the struct, and everything after it would then be read
     // as a top-level declaration - one mistake becoming five.
-    if( check_keyword( Keyword::Struct ) )
+    if( check_keyword( Keyword::Struct ) || check_keyword( Keyword::Class ) )
     {
         const Span start = peek().span;
 
         error_at(
             start,
-            "a struct cannot be declared inside a function",
+            "a struct or a class cannot be declared inside a function",
             "declare it at file scope, where it is visible throughout the file"
         );
 
         // Parsed for its cursor movement, not its result: the node is not a statement, so an
         // Error node stands in its place. A malformed struct still reports from in there.
-        parse_struct_decl();
+        parse_aggregate_decl();
 
         return error_node( Span::merge( start, previous().span ) );
     }
@@ -3864,6 +3902,220 @@ TEST_CASE( "parser_parses_cast_and_wrap", "[parse]" )
             REQUIRE( p.root().is_valid() ); // reached only if parsing terminated
             REQUIRE( p.has_errors() );
         }
+    }
+}
+
+// D29 gives a struct and a class different rules and the same shape, so the parser's job is only
+// to record which keyword was written and to accept a destructor as a member. Every rule about
+// which may have one belongs to the checker, which can say why.
+TEST_CASE( "parser_parses_class_declarations", "[parse][aggregates]" )
+{
+    SECTION( "a class is its own node kind, holding the same fields a struct would" )
+    {
+        const Parsed  p( "class Buffer { u8* ptr; u64 len; };" );
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Class_decl );
+
+        INFO( p.dump() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( decl.is_valid() );
+        REQUIRE( p.children( decl ).size() == 2 );
+        REQUIRE( p.kind( p.child( decl, 0 ) ) == Node_kind::Field_decl );
+        REQUIRE( p.kind( p.child( decl, 1 ) ) == Node_kind::Field_decl );
+    }
+
+    SECTION( "a struct is unchanged" )
+    {
+        const Parsed p( "struct Point { i32 x; i32 y; };" );
+
+        INFO( p.dump() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( find_first( p.ast(), p.root(), Node_kind::Struct_decl ).is_valid() );
+        REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::Class_decl ).is_valid() );
+    }
+
+    // The predicate is what keeps the passes that treat the two identically - field layout,
+    // containment ordering, C emission - at one edit site rather than ten.
+    SECTION( "is_aggregate covers both and nothing else" )
+    {
+        REQUIRE( is_aggregate( Node_kind::Struct_decl ) );
+        REQUIRE( is_aggregate( Node_kind::Class_decl ) );
+        REQUIRE_FALSE( is_aggregate( Node_kind::Field_decl ) );
+        REQUIRE_FALSE( is_aggregate( Node_kind::Function_decl ) );
+    }
+
+    SECTION( "the name goes in aux, as a struct's does" )
+    {
+        const Parsed p( "class Buffer { u8* ptr; };\nstruct Point { i32 x; };" );
+
+        const Node_id cls = find_first( p.ast(), p.root(), Node_kind::Class_decl );
+        const Node_id str = find_first( p.ast(), p.root(), Node_kind::Struct_decl );
+
+        INFO( p.dump() );
+        REQUIRE( Symbol_id { p.aux( cls ) }.is_valid() );
+        REQUIRE( Symbol_id { p.aux( str ) }.is_valid() );
+        REQUIRE( p.aux( cls ) != p.aux( str ) );
+    }
+
+    // `class x;` is C++'s forward declaration and Keel has no answer for it yet. The struct path
+    // already swallows the terminator so it does not come back as a stray `;`; the class path
+    // must not diverge.
+    SECTION( "a body-less class is an error, and eats its semicolon" )
+    {
+        const Parsed p( "class Buffer;" );
+
+        INFO( p.dump() );
+        REQUIRE( p.has_errors() );
+        REQUIRE( p.error_count() == 1 );
+    }
+
+    SECTION( "an empty class body is legal" )
+    {
+        const Parsed  p( "class Empty { };" );
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Class_decl );
+
+        INFO( p.dump() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.children( decl ).empty() );
+    }
+}
+
+// A destructor is shaped exactly like a Function_decl minus its return type, so that lower()'s
+// linear scan finds one nested in a class body and reads its parameters and body from the same
+// indices. The always-invalid first child is what buys that.
+TEST_CASE( "parser_parses_destructors", "[parse][aggregates]" )
+{
+    SECTION( "shaped like a function, with no return type" )
+    {
+        const Parsed  p( "class Buffer { u8* ptr; ~Buffer() { } };" );
+        const Node_id dtor = find_first( p.ast(), p.root(), Node_kind::Destructor_decl );
+
+        INFO( p.dump() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( dtor.is_valid() );
+        REQUIRE( p.children( dtor ).size() == 3 );
+        REQUIRE_FALSE( p.child( dtor, 0 ).is_valid() ); // no return type
+        REQUIRE( p.kind( p.child( dtor, 1 ) ) == Node_kind::Param_list );
+        REQUIRE( p.children( p.child( dtor, 1 ) ).empty() );
+        REQUIRE( p.kind( p.child( dtor, 2 ) ) == Node_kind::Block );
+    }
+
+    SECTION( "is_function_like covers it alongside a function" )
+    {
+        REQUIRE( is_function_like( Node_kind::Function_decl ) );
+        REQUIRE( is_function_like( Node_kind::Destructor_decl ) );
+        REQUIRE_FALSE( is_function_like( Node_kind::Class_decl ) );
+        REQUIRE_FALSE( is_function_like( Node_kind::Field_decl ) );
+    }
+
+    // aux carries the name written after the `~`, so the checker can reject `~Wrong()` by
+    // comparing it against the enclosing declaration rather than failing to parse.
+    SECTION( "aux is the name after the tilde" )
+    {
+        const Parsed p( "class Buffer { ~Buffer() { } };" );
+
+        const Node_id cls  = find_first( p.ast(), p.root(), Node_kind::Class_decl );
+        const Node_id dtor = find_first( p.ast(), p.root(), Node_kind::Destructor_decl );
+
+        INFO( p.dump() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.aux( dtor ) == p.aux( cls ) );
+    }
+
+    SECTION( "a mismatched name still parses - the checker is what rejects it" )
+    {
+        const Parsed p( "class Buffer { ~Wrong() { } };" );
+
+        const Node_id cls  = find_first( p.ast(), p.root(), Node_kind::Class_decl );
+        const Node_id dtor = find_first( p.ast(), p.root(), Node_kind::Destructor_decl );
+
+        INFO( p.dump() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( dtor.is_valid() );
+        REQUIRE( p.aux( dtor ) != p.aux( cls ) );
+    }
+
+    // The parser has no business knowing D29's rules, and a parse error here would give a worse
+    // message than the checker's, which can name `class` as the fix.
+    SECTION( "a destructor on a struct parses" )
+    {
+        const Parsed p( "struct Point { i32 x; ~Point() { } };" );
+
+        INFO( p.dump() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( find_first( p.ast(), p.root(), Node_kind::Destructor_decl ).is_valid() );
+    }
+
+    SECTION( "the body is a real block" )
+    {
+        const Parsed  p( "void release( u8* p ) { }\nclass Buffer { u8* ptr; ~Buffer() { release( ptr ); } };" );
+        const Node_id dtor = find_first( p.ast(), p.root(), Node_kind::Destructor_decl );
+
+        INFO( p.dump() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( find_first( p.ast(), p.child( dtor, 2 ), Node_kind::Call_expr ).is_valid() );
+    }
+
+    SECTION( "fields may follow a destructor as well as precede it" )
+    {
+        const Parsed  p( "class Buffer { ~Buffer() { } u8* ptr; };" );
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Class_decl );
+
+        INFO( p.dump() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.children( decl ).size() == 2 );
+        REQUIRE( p.kind( p.child( decl, 0 ) ) == Node_kind::Destructor_decl );
+        REQUIRE( p.kind( p.child( decl, 1 ) ) == Node_kind::Field_decl );
+    }
+
+    // C++ requires the parens and §5.1 keeps them: an empty parameter list that differed from
+    // C++'s would be a divergence with nothing behind it.
+    SECTION( "the parentheses are required" )
+    {
+        const Parsed p( "class Buffer { ~Buffer { } };" );
+
+        INFO( p.dump() );
+        REQUIRE( p.has_errors() );
+    }
+
+    SECTION( "a destructor takes no parameters" )
+    {
+        const Parsed p( "class Buffer { ~Buffer( i32 n ) { } };" );
+
+        INFO( p.dump() );
+        REQUIRE( p.has_errors() );
+    }
+
+    SECTION( "a nameless destructor is an error rather than a nameless declaration" )
+    {
+        const Parsed p( "class Buffer { ~() { } };" );
+
+        INFO( p.dump() );
+        REQUIRE( p.has_errors() );
+        REQUIRE( p.root().is_valid() ); // reached only if parsing terminated
+    }
+
+    // The member loop advances on no progress so that garbage cannot spin it. A malformed
+    // destructor is the new way to produce no progress, so it has to be pinned.
+    SECTION( "a malformed destructor terminates the member loop" )
+    {
+        for( const std::string_view source :
+             { "class Buffer { ~ };", "class Buffer { ~Buffer( };", "class Buffer { ~Buffer() };", "class Buffer { ~~ };" } )
+        {
+            INFO( "source '" << source << "'" );
+            const Parsed p( source );
+
+            REQUIRE( p.root().is_valid() ); // reached only if parsing terminated
+            REQUIRE( p.has_errors() );
+        }
+    }
+
+    SECTION( "the span covers the whole destructor" )
+    {
+        const Parsed  p( "class Buffer { ~Buffer() { } };" );
+        const Node_id dtor = find_first( p.ast(), p.root(), Node_kind::Destructor_decl );
+
+        INFO( p.dump() );
+        REQUIRE( p.text( dtor ) == "~Buffer() { }" );
     }
 }
 

@@ -1,13 +1,13 @@
 #include "sema/type_checker.h"
 #include <fmt/format.h>
-#include "lex/token.h"
-
 #include <algorithm>
 #include <cmath>
 #include <limits>
 #include <optional>
 #include <unordered_map>
 #include <unordered_set>
+#include "common/source_manager.h"
+#include "lex/token.h"
 
 namespace keel
 {
@@ -311,11 +311,17 @@ class Checker
 {
 public:
     Checker(
-        const Ast& ast, const Interner& interner, const Resolution& resolution, const Literals& literals, Diagnostics& diags
+        const Ast&            ast,
+        const Interner&       interner,
+        const Resolution&     resolution,
+        const Source_manager& source_manager,
+        const Literals&       literals,
+        Diagnostics&          diags
     )
         : ast_( ast ),
           interner_( interner ),
           resolution_( resolution ),
+          sm_( source_manager ),
           literals_( literals ),
           diags_( diags )
     {
@@ -335,6 +341,13 @@ private:
 
     void order_structs();
     bool contains_itself( Node_id decl, std::vector<Node_id>& path );
+
+    // D29's rules, split out because check_struct_ownership cannot run before compute_owning has.
+    void check_aggregate_members();
+    void compute_owning();
+    void check_struct_ownership();
+
+    bool has_destructor( Node_id decl ) const;
 
     // The main entry points for visiting and inferring types.
     void    visit( Node_id id ); // statements and declarations
@@ -405,16 +418,18 @@ private:
 
     void error_at( Span span, std::string message, std::string help = {} );
 
-    const Ast&        ast_;
-    const Interner&   interner_;
-    const Resolution& resolution_;
-    const Literals&   literals_;
-    Diagnostics&      diags_;
+    const Ast&            ast_;
+    const Interner&       interner_;
+    const Resolution&     resolution_;
+    const Source_manager& sm_;
+    const Literals&       literals_;
+    Diagnostics&          diags_;
 
-    Type_table           table_;
-    std::vector<Type_id> types_;        // sized node_count(), invalid-filled, like bindings_ in Resolver
-    std::vector<Node_id> struct_order_; // dependencies first; also the "already proved acyclic" set
-    Type_id              current_return_;
+    Type_table              table_;
+    std::vector<Type_id>    types_;        // sized node_count(), invalid-filled, like bindings_ in Resolver
+    std::vector<Node_id>    struct_order_; // dependencies first; also the "already proved acyclic" set
+    std::unordered_set<u32> owning_;       // filled by compute_owning, handed to Types
+    Type_id                 current_return_;
 
     u32 loop_depth_ = 0; // for break/continue
 
@@ -428,7 +443,9 @@ Types Checker::run()
     types_.assign( ast_.node_count(), Type_id {} );
     declare_signatures();
     visit( ast_.root() );
-    return Types( std::move( table_ ), std::move( types_ ), std::move( struct_order_ ), std::move( constants_ ) );
+    return Types(
+        std::move( table_ ), std::move( types_ ), std::move( struct_order_ ), std::move( constants_ ), std::move( owning_ )
+    );
 }
 
 void Checker::declare_signatures()
@@ -436,6 +453,9 @@ void Checker::declare_signatures()
     declare_signatures_struct_decls();
     declare_signatures_field_decls();
     order_structs();
+    check_aggregate_members();
+    compute_owning();
+    check_struct_ownership();
     declare_signatures_function_decls();
     declare_signatures_global_decls();
 }
@@ -449,7 +469,7 @@ void Checker::declare_signatures_struct_decls()
             continue;
         }
 
-        if( ast_.kind( child ) != Node_kind::Struct_decl )
+        if( !is_aggregate( ast_.kind( child ) ) )
         {
             continue;
         }
@@ -468,7 +488,7 @@ void Checker::declare_signatures_field_decls()
             continue;
         }
 
-        if( ast_.kind( child ) != Node_kind::Struct_decl )
+        if( !is_aggregate( ast_.kind( child ) ) )
         {
             continue;
         }
@@ -569,7 +589,7 @@ void Checker::order_structs()
             continue;
         }
 
-        if( ast_.kind( child ) != Node_kind::Struct_decl )
+        if( !is_aggregate( ast_.kind( child ) ) )
         {
             continue;
         }
@@ -644,7 +664,7 @@ bool Checker::contains_itself( Node_id decl, std::vector<Node_id>& path )
         }
 
         const Node_id field_decl = table_.get( field_type ).declaration;
-        if( !field_decl.is_valid() || ast_.kind( field_decl ) != Node_kind::Struct_decl )
+        if( !field_decl.is_valid() || !is_aggregate( ast_.kind( field_decl ) ) )
         {
             continue;
         }
@@ -666,6 +686,169 @@ bool Checker::contains_itself( Node_id decl, std::vector<Node_id>& path )
     // driver stops before emission when anything reported.
     struct_order_.push_back( decl );
     path.pop_back();
+    return false;
+}
+
+void Checker::check_aggregate_members()
+{
+    for( const Node_id decl : ast_.children( ast_.root() ) )
+    {
+        if( !is_aggregate( ast_.kind( decl ) ) )
+        {
+            continue;
+        }
+
+        const Symbol_id type_name { ast_.aux( decl ) };
+        Node_id         first_dtor {};
+
+        for( const Node_id member : ast_.children( decl ) )
+        {
+            if( ast_.kind( member ) != Node_kind::Destructor_decl )
+            {
+                continue;
+            }
+
+            // One mistake, one diagnostic: a struct with a destructor is a single decision, so
+            // the name and duplicate rules stay quiet about it.
+            if( ast_.kind( decl ) == Node_kind::Struct_decl )
+            {
+                error_at(
+                    ast_.span( member ), "a struct cannot have a destructor", "use `class` if this type owns a resource"
+                );
+                break;
+            }
+
+            if( first_dtor.is_valid() )
+            {
+                const Span     span = ast_.span( first_dtor );
+                const Line_col loc  = sm_.line_col( span.file, span.start );
+
+                std::string prev_decl = fmt::format( "previous declaration is at: {}:{}", loc.line, loc.col );
+                error_at(
+                    ast_.span( member ), fmt::format( "`{}` already has a destructor", interner_.text( type_name ) ), prev_decl
+                );
+                continue;
+            }
+
+            first_dtor = member;
+
+            const Symbol_id written { ast_.aux( member ) };
+
+            if( written.is_valid() && written != type_name )
+            {
+                error_at(
+                    ast_.span( member ),
+                    fmt::format( "`~{}` does not name the enclosing type", interner_.text( written ) ),
+                    fmt::format( "write `~{}`", interner_.text( type_name ) )
+                );
+            }
+        }
+    }
+}
+
+void Checker::compute_owning()
+{
+    // struct_order_ is the DFS post-order, so every aggregate arrives after everything it
+    // contains: a member's answer is always already in owning_ by the time its owner is reached.
+    // That is what makes one forward pass enough, with no recursion and no memo. A cycle never
+    // enters the order, so it is absent here - order_structs already reported it.
+    for( const Node_id decl : struct_order_ )
+    {
+        bool owns = has_destructor( decl );
+
+        for( const Node_id field : ast_.children( decl ) )
+        {
+            if( owns )
+            {
+                break;
+            }
+
+            if( ast_.kind( field ) != Node_kind::Field_decl )
+            {
+                continue;
+            }
+
+            // Same guards as contains_itself: a pointer to an owning type owns nothing, because
+            // an address says nothing about who frees it.
+            const Type_id field_type = types_[field.v];
+
+            if( !field_type.is_valid() || table_.is_error( field_type ) || !table_.is_struct( field_type ) )
+            {
+                continue;
+            }
+
+            const Node_id field_decl = table_.get( field_type ).declaration;
+
+            owns = field_decl.is_valid() && owning_.contains( field_decl.v );
+        }
+
+        if( owns )
+        {
+            owning_.insert( decl.v );
+        }
+    }
+}
+
+void Checker::check_struct_ownership()
+{
+    for( const Node_id decl : ast_.children( ast_.root() ) )
+    {
+        if( ast_.kind( decl ) != Node_kind::Struct_decl )
+        {
+            continue;
+        }
+
+        // Already reported by check_aggregate_members, and it is one decision to fix.
+        if( has_destructor( decl ) )
+        {
+            continue;
+        }
+
+        for( const Node_id field : ast_.children( decl ) )
+        {
+            if( ast_.kind( field ) != Node_kind::Field_decl )
+            {
+                continue;
+            }
+
+            const Type_id field_type = types_[field.v];
+
+            if( !field_type.is_valid() || table_.is_error( field_type ) )
+            {
+                continue;
+            }
+
+            // One per field: each is a separate place the author has to change.
+            const Node_id field_decl = table_.get( field_type ).declaration;
+            if( field_decl.is_valid() && owning_.contains( field_decl.v ) )
+            {
+                error_at(
+                    ast_.span( field ),
+                    fmt::format(
+                        "a struct cannot contain `{}`, which {}",
+                        table_.name( field_type ),
+                        has_destructor( field_decl ) ? "which has a destructor" : "which owns a resource"
+                    ),
+                    fmt::format(
+                        "a struct is copied freely, so declare `{}` as a class if it owns this",
+                        interner_.text( Symbol_id { ast_.aux( decl ) } )
+                    )
+                );
+            }
+        }
+    }
+}
+
+bool Checker::has_destructor( Node_id decl ) const
+{
+    for( const Node_id member : ast_.children( decl ) )
+    {
+        if( ast_.kind( member ) == Node_kind::Destructor_decl )
+        {
+            return true;
+        }
+    }
+
     return false;
 }
 
@@ -1713,7 +1896,7 @@ Type_id Checker::infer_struct_literal( Node_id id )
     // failed, it reported. Saying so again is the cascade the error type exists to prevent.
     const Node_id decl = resolution_.declaration_of( id );
 
-    if( !decl.is_valid() || ast_.kind( decl ) != Node_kind::Struct_decl )
+    if( !decl.is_valid() || !is_aggregate( ast_.kind( decl ) ) )
     {
         for( const Node_id init : ast_.children( id ) )
         {
@@ -2034,7 +2217,7 @@ Type_id Checker::type_of_annotation( Node_id id )
 
         if( decl.is_valid() )
         {
-            if( ast_.kind( decl ) != Node_kind::Struct_decl )
+            if( !is_aggregate( ast_.kind( decl ) ) )
             {
                 // Resolved to a function or variable of the same name.
                 error_at(
@@ -2507,15 +2690,15 @@ void Checker::error_at( Span span, std::string message, std::string help )
 } // namespace
 
 Types type_check(
-    const Ast&        ast,
-    const Resolution& resolution,
-    const Literals&   literals,
-    const Source_manager&, // not needed yet; kept so the pass signatures match
-    const Interner& interner,
-    Diagnostics&    diags
+    const Ast&            ast,
+    const Resolution&     resolution,
+    const Literals&       literals,
+    const Source_manager& sm, // not needed yet; kept so the pass signatures match
+    const Interner&       interner,
+    Diagnostics&          diags
 )
 {
-    return Checker( ast, interner, resolution, literals, diags ).run();
+    return Checker( ast, interner, resolution, sm, literals, diags ).run();
 }
 
 } // namespace keel
@@ -2579,6 +2762,11 @@ public:
     std::optional<Constant_value> constant_of( Node_id node ) const
     {
         return types_.constant_of( node );
+    }
+
+    const Types& types() const
+    {
+        return types_;
     }
 
     Node_id nth( Node_kind kind, std::size_t index ) const
@@ -5227,6 +5415,214 @@ TEST_CASE( "type_checker_records_a_value_for_every_global", "[sema][types][const
     }
 
     REQUIRE( recorded == 11 );
+}
+
+// D29 draws the struct/class line at trivial copyability, and a destructor is what breaks it: copy
+// plus destructor is a double free. The parser accepts one on either kind so that the message can
+// name `class` as the fix rather than being a syntax error.
+TEST_CASE( "type_checker_rejects_a_destructor_on_a_struct", "[sema][aggregates]" )
+{
+    SECTION( "a struct with a destructor is rejected" )
+    {
+        const Typed p( "struct Point { i32 x; ~Point() { } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.rendered().find( "cannot have a destructor" ) != std::string::npos );
+    }
+
+    // One mistake, one diagnostic - the rest of the declaration is well formed and must not be
+    // re-reported as a consequence of the destructor.
+    SECTION( "and reported once" )
+    {
+        const Typed p( "struct Point { i32 x; i32 y; ~Point() { } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "a class with one is accepted" )
+    {
+        const Typed p( "class Buffer { u8* ptr; ~Buffer() { } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a class without one is accepted" )
+    {
+        const Typed p( "class Handle { u64 value; };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// aux carries what was written after the `~`, so a mismatch is a comparison rather than a parse
+// failure - which is what lets the message name the type that was meant.
+TEST_CASE( "type_checker_checks_destructor_names", "[sema][aggregates]" )
+{
+    SECTION( "a name that does not match the enclosing type is rejected" )
+    {
+        const Typed p( "class Buffer { u8* ptr; ~Wrong() { } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "a matching name is accepted" )
+    {
+        const Typed p( "class Buffer { u8* ptr; ~Buffer() { } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // The resolver's duplicate-member check skips everything that is not a Field_decl, so a second
+    // destructor reaches here unreported and needs its own rule.
+    SECTION( "two destructors are rejected once" )
+    {
+        const Typed p( "class Buffer { u8* ptr; ~Buffer() { } ~Buffer() { } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.errors() == 1 );
+    }
+}
+
+// D2: a type is owning exactly when it has a destructor, directly or through a by-value member.
+// The answer is recorded rather than recomputed because drop elaboration runs on KIR, long after
+// the checker has finished.
+TEST_CASE( "type_checker_computes_the_owning_query", "[sema][aggregates][owning]" )
+{
+    const auto owning = []( const Typed& p, std::size_t nth_decl )
+    { return p.types().is_owning( p.types().type_of( p.nth( Node_kind::Class_decl, nth_decl ) ) ); };
+
+    SECTION( "a class with a destructor owns; one without does not" )
+    {
+        const Typed p( "class Buffer { u8* ptr; ~Buffer() { } };\n"
+                       "class Handle { u64 value; };\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( owning( p, 0 ) );
+        REQUIRE_FALSE( owning( p, 1 ) );
+    }
+
+    SECTION( "a struct never owns - it cannot hold anything that does" )
+    {
+        const Typed p( "struct Point { i32 x; i32 y; };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE_FALSE( p.types().is_owning( p.types().type_of( p.nth( Node_kind::Struct_decl, 0 ) ) ) );
+    }
+
+    // The transitivity is forced rather than chosen: destroying a Wrapper destroys its Buffer, so
+    // there is no way for it not to own.
+    SECTION( "owning is transitive through a by-value member" )
+    {
+        const Typed p( "class Buffer { u8* ptr; ~Buffer() { } };\n"
+                       "class Wrapper { Buffer inner; };\n"
+                       "class Outer { Wrapper w; };\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( owning( p, 1 ) );
+        REQUIRE( owning( p, 2 ) );
+    }
+
+    // An address says nothing about who frees it, so a pointer breaks the chain.
+    SECTION( "a pointer to an owning type does not own" )
+    {
+        const Typed p( "class Buffer { u8* ptr; ~Buffer() { } };\n"
+                       "class Holder { Buffer* p; };\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE_FALSE( owning( p, 1 ) );
+    }
+
+    SECTION( "a builtin never owns" )
+    {
+        const Typed p( "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.types().is_owning( p.types().table().integer( 32, true ) ) );
+    }
+}
+
+// The rule that makes `struct` mean something: it is legal exactly when D2's owning query says no,
+// so the check costs one call rather than any new machinery.
+TEST_CASE( "type_checker_rejects_an_owning_member_in_a_struct", "[sema][aggregates][owning]" )
+{
+    SECTION( "a struct holding a class with a destructor is rejected" )
+    {
+        const Typed p( "class Buffer { u8* ptr; ~Buffer() { } };\n"
+                       "struct Holder { Buffer b; };\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "transitively, through a class that only contains one" )
+    {
+        const Typed p( "class Buffer { u8* ptr; ~Buffer() { } };\n"
+                       "class Wrapper { Buffer inner; };\n"
+                       "struct Holder { Wrapper w; };\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "a pointer to one is fine - it owns nothing" )
+    {
+        const Typed p( "class Buffer { u8* ptr; ~Buffer() { } };\n"
+                       "struct Holder { Buffer* p; };\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a class holding one is fine" )
+    {
+        const Typed p( "class Buffer { u8* ptr; ~Buffer() { } };\n"
+                       "class Wrapper { Buffer inner; };\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a struct holding a non-owning class is fine" )
+    {
+        const Typed p( "class Handle { u64 value; };\n"
+                       "struct Holder { Handle h; };\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // Every field is reported, because each is a separate place the author has to change.
+    SECTION( "two owning fields are two diagnostics" )
+    {
+        const Typed p( "class Buffer { u8* ptr; ~Buffer() { } };\n"
+                       "struct Holder { Buffer a; Buffer b; };\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 2 );
+    }
 }
 
 } // namespace keel
