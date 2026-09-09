@@ -92,6 +92,7 @@ private:
     // --- types. `u32*` is a type *expression* and gets nodes of its own. ---
 
     Node_id parse_type();
+    Node_id parse_type_with_mode();
     Node_id parse_param();
 
     // --- statements ---
@@ -923,41 +924,59 @@ Node_id Parser::parse_type()
             break;
         }
 
-        // D17: `*` and `&` belong to the type, so they must touch it. `u32 *p` is rejected rather
-        // than silently read as a multiplication, which is what C's declarator syntax does.
-        const bool       pointer = check( Token_kind::Star );
-        const Token_kind kind    = peek().kind;
+        // D32: `&` means address-of and nothing else. Reported before D17's adjacency check below,
+        // or `i32 &r` would give two diagnostics for one mistake - and the first of them would be
+        // advice about how to space a spelling that no longer exists.
+        if( check( Token_kind::Amp ) )
+        {
+            error_at( peek().span, "`&` is not a type", "write `ref T` for a reference binding" );
+            advance();
+            continue;
+        }
 
+        // D17: `*` belongs to the type, so it must touch it. `u32 *p` is rejected rather than
+        // silently read as a multiplication, which is what C's declarator syntax does. `&` is no
+        // longer among them, which is why this reads as one token rather than two.
         if( !peek_is_adjacent() )
         {
             error_at(
                 peek().span,
-                fmt::format( "`{}` must touch the type it modifies", token_kind_spelling( kind ) ),
-                fmt::format(
-                    "write `{}{}` rather than `{} {}`",
-                    sm_.text( ast_.span( type ) ),
-                    token_kind_spelling( kind ),
-                    sm_.text( ast_.span( type ) ),
-                    token_kind_spelling( kind )
-                )
+                "`*` must touch the type it modifies",
+                fmt::format( "write `{}*` rather than `{} *`", sm_.text( ast_.span( type ) ), sm_.text( ast_.span( type ) ) )
             );
         }
 
         advance();
 
-        type = ast_.add(
-            pointer ? Node_kind::Pointer_type : Node_kind::Ref_type, Span::merge( start, previous().span ), 0, { type }
-        );
+        type = ast_.add( Node_kind::Pointer_type, Span::merge( start, previous().span ), 0, { type } );
     }
 
     return type;
+}
+
+Node_id Parser::parse_type_with_mode()
+{
+    const Span start = peek().span;
+
+    if( !check_keyword( Keyword::Move ) && !check_keyword( Keyword::Ref ) && !check_keyword( Keyword::Out ) )
+    {
+        return parse_type();
+    }
+
+    const Keyword mode = peek().keyword();
+    advance();
+
+    return ast_.add( Node_kind::Mode_type, Span::merge( start, previous().span ), static_cast<u32>( mode ), { parse_type() } );
 }
 
 Node_id Parser::parse_param()
 {
     const Span start = peek().span;
 
-    const Node_id type = parse_type();
+    // D31: the marker appears in the signature as well as at the call site, and the two must agree.
+    // Wrapped around the type rather than stored on the Param_decl, because aux already holds the
+    // name and this is the shape Ref_type had - one node in type position, generalised.
+    Node_id type = parse_type_with_mode();
 
     // Same convention as Function_decl: the name is a token, so it goes in aux rather than becoming
     // a second child.
@@ -1351,23 +1370,40 @@ Node_id Parser::parse_expression_stmt( bool consume_semicolon )
     }
     else if( ast_.kind( expr ) != Node_kind::Call_expr && ast_.kind( expr ) != Node_kind::Error )
     {
-        // `u32 *ptr;` is what a C++ programmer writes from habit. D17 makes it a multiplication, so
-        // without this it lands on the generic "no effect" message, which explains nothing.
-        const bool looks_like_a_pointer_declaration = ast_.kind( expr ) == Node_kind::Binary_expr &&
-                                                      static_cast<Token_kind>( ast_.aux( expr ) ) == Token_kind::Star &&
-                                                      ast_.kind( ast_.children( expr )[0] ) == Node_kind::Name_expr &&
-                                                      ast_.kind( ast_.children( expr )[1] ) == Node_kind::Name_expr;
+        // `u32 *ptr;` and `u32 &r;` are what a C++ programmer writes from habit, and neither reaches
+        // the type parser: the first is a multiplication under D17, the second a bitwise and now
+        // that D32 has taken `&` out of type position. Without this both land on the generic "no
+        // effect" message, which explains nothing.
+        const Token_kind op =
+            ast_.kind( expr ) == Node_kind::Binary_expr ? static_cast<Token_kind>( ast_.aux( expr ) ) : Token_kind::Unknown;
 
-        if( looks_like_a_pointer_declaration )
+        const bool looks_like_a_declaration = ( op == Token_kind::Star || op == Token_kind::Amp ) &&
+                                              ast_.kind( ast_.children( expr )[0] ) == Node_kind::Name_expr &&
+                                              ast_.kind( ast_.children( expr )[1] ) == Node_kind::Name_expr;
+
+        if( looks_like_a_declaration )
         {
             const std::string_view type = sm_.text( ast_.span( ast_.children( expr )[0] ) );
             const std::string_view name = sm_.text( ast_.span( ast_.children( expr )[1] ) );
 
-            error_at(
-                ast_.span( expr ),
-                "`*` must touch the type it modifies",
-                fmt::format( "write `{}* {}` to declare a pointer", type, name )
-            );
+            // Different rules, so different messages: `*` is a spacing mistake, `&` is a spelling
+            // that no longer exists.
+            if( op == Token_kind::Star )
+            {
+                error_at(
+                    ast_.span( expr ),
+                    "`*` must touch the type it modifies",
+                    fmt::format( "write `{}* {}` to declare a pointer", type, name )
+                );
+            }
+            else
+            {
+                error_at(
+                    ast_.span( expr ),
+                    "`&` is not a type",
+                    fmt::format( "write `ref {} {}` for a reference binding", type, name )
+                );
+            }
         }
         else
         {
@@ -1933,11 +1969,6 @@ std::string shape( const Parsed& p, Node_id id )
     if( p.kind( id ) == Node_kind::Pointer_type )
     {
         return shape( p, p.child( id, 0 ) ) + "*";
-    }
-
-    if( p.kind( id ) == Node_kind::Ref_type )
-    {
-        return shape( p, p.child( id, 0 ) ) + "&";
     }
 
     if( p.kind( id ) == Node_kind::Arg_list )
@@ -3239,13 +3270,27 @@ TEST_CASE( "parser_pointer_and_reference_types", "[parse]" )
         REQUIRE( p.kind( p.child( outer, 0 ) ) == Node_kind::Pointer_type );
     }
 
-    SECTION( "references too" )
+    // D32: `&` is address-of and nothing else, so `T&` is a hard error naming the replacement -
+    // and exactly one error, not two, because the adjacency rule no longer applies to it.
+    SECTION( "`T&` names `ref T` as the replacement" )
     {
         const Parsed p( "i32 main() { u32& r; }" );
 
         INFO( p.errors() );
-        REQUIRE_FALSE( p.has_errors() );
-        REQUIRE( p.kind( p.child( first_statement( p ), 0 ) ) == Node_kind::Ref_type );
+        REQUIRE( p.has_errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "`&` is not a type" ) != std::string::npos );
+        REQUIRE( p.errors().find( "write `ref T`" ) != std::string::npos );
+    }
+
+    // The spaced form is the one that would have collected a second, useless diagnostic.
+    SECTION( "and the spaced form says the same thing, once" )
+    {
+        const Parsed p( "i32 main() { u32 & r; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "`&` is not a type" ) != std::string::npos );
     }
 
     // The message a C++ programmer's habit produces has to name the fix, not just say "no effect".

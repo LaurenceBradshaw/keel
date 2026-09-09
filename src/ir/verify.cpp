@@ -145,6 +145,15 @@ void check_statements( const Function& func, std::vector<std::string>& errors )
             break;
 
         case Statement_kind::Drop:
+            // A flag the pass wired to the wrong local is exactly the mistake a rebuilt statement
+            // vector invites, and it is silent everywhere else.
+            if( statement.drop_flag.is_valid() && statement.drop_flag.v >= func.locals.size() )
+            {
+                errors.push_back(
+                    fmt::format( "{}: drop flag names local {} of {}", where, statement.drop_flag.v, func.locals.size() )
+                );
+            }
+
             break;
         }
     }

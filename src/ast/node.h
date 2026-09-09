@@ -20,7 +20,7 @@ enum class Node_kind : u16
     Param_decl,
     Named_type,
     Pointer_type,
-    Ref_type,
+    Mode_type,
     Const_type,
     Generic_type,
     Type_arg_list,

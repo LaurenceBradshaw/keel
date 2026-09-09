@@ -1,0 +1,112 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Owned;
+
+struct kl__Owned
+{
+    uint64_t kl_id_12;
+};
+
+int32_t kl_live_1;
+
+void kl__release__( void );
+void kl__Owned__Ownedp_u64( struct kl__Owned*, uint64_t );
+void kl__Owned__dtor( struct kl__Owned* );
+void kl__consume__Owned( struct kl__Owned );
+int32_t kl__run__i32( int32_t );
+int32_t kl__main__( void );
+
+void kl__release__( void )
+{
+    int32_t kl_t1;
+#line 9 "codegen/drop_flags.kl"
+    kl_t1 = kl_live_1 - 1;
+    kl_live_1 = kl_t1;
+    return;
+}
+
+void kl__Owned__Ownedp_u64( struct kl__Owned* kl_this_1, uint64_t kl_n_2 )
+{
+    int32_t kl_t3;
+#line 18 "codegen/drop_flags.kl"
+    ( *kl_this_1 ).kl_id_12 = kl_n_2;
+#line 19 "codegen/drop_flags.kl"
+    kl_t3 = kl_live_1 + 1;
+    kl_live_1 = kl_t3;
+    return;
+}
+
+void kl__Owned__dtor( struct kl__Owned* kl_this_1 )
+{
+#line 24 "codegen/drop_flags.kl"
+    kl__release__(  );
+    return;
+}
+
+void kl__consume__Owned( struct kl__Owned kl_o_1 )
+{
+#line 30 "codegen/drop_flags.kl"
+    kl__Owned__dtor( &kl_o_1 );
+    return;
+}
+
+int32_t kl__run__i32( int32_t kl_c_1 )
+{
+    int32_t kl_t0;
+    struct kl__Owned kl_o_2;
+    struct kl__Owned* kl_t3;
+    bool kl_t5;
+    bool kl_t7;
+#line 37 "codegen/drop_flags.kl"
+    kl_t7 = false;
+    kl_t3 = &kl_o_2;
+    kl_t7 = true;
+    kl__Owned__Ownedp_u64( kl_t3, 1 );
+#line 39 "codegen/drop_flags.kl"
+    kl_t5 = kl_c_1 == 0;
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb1:
+#line 41 "codegen/drop_flags.kl"
+    kl__consume__Owned( kl_o_2 );
+    kl_t7 = false;
+    goto bb3;
+    bb2:
+    goto bb3;
+    bb3:
+#line 44 "codegen/drop_flags.kl"
+    kl_t0 = 0;
+    if ( kl_t7 ) kl__Owned__dtor( &kl_o_2 );
+    kl_t7 = false;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_t1;
+    int32_t kl_after_kept_2;
+    int32_t kl_t3;
+    int32_t kl_after_moved_4;
+    int32_t kl_t5;
+    int32_t kl_t6;
+#line 51 "codegen/drop_flags.kl"
+    kl_t1 = kl__run__i32( 1 );
+#line 52 "codegen/drop_flags.kl"
+    kl_after_kept_2 = kl_live_1;
+#line 56 "codegen/drop_flags.kl"
+    kl_t3 = kl__run__i32( 0 );
+#line 57 "codegen/drop_flags.kl"
+    kl_after_moved_4 = kl_live_1;
+#line 60 "codegen/drop_flags.kl"
+    kl_t5 = kl_after_kept_2 * 10;
+    kl_t6 = kl_t5 + kl_after_moved_4;
+    kl_t0 = kl_t6;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

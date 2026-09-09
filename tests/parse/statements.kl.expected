@@ -13,9 +13,10 @@ Source_file                             1:1-20:1
         Pointer_type                    5:5-5:9
           Named_type                    5:5-5:8     "u32"
         <none>                          -
-      Var_decl                          6:5-6:12    name=r
-        Ref_type                        6:5-6:9
-          Named_type                    6:5-6:8     "u32"
+      Var_decl                          6:5-6:14    name=pp
+        Pointer_type                    6:5-6:10
+          Pointer_type                  6:5-6:9
+            Named_type                  6:5-6:8     "u32"
         <none>                          -
       Var_decl                          7:5-7:21    name=c
         Const_type                      7:5-7:14

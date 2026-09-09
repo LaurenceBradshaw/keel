@@ -1,0 +1,61 @@
+// PLAN §7. A value moved on only some paths cannot be dropped unconditionally, so it gets a hidden
+// bool: false while its storage is empty, true once it holds something, false again once moved, and
+// tested at the drop. The flag records what happened rather than what statically might have, which
+// is why it is exact on every path and needs no analysis.
+i32 live;
+
+void release()
+{
+    live = live - 1;
+}
+
+class Owned
+{
+    u64 id;
+
+    Owned( u64 n )
+    {
+        id = n;
+        live = live + 1;
+    }
+
+    ~Owned()
+    {
+        release();
+    }
+};
+
+// D31: the marker is in the signature as well as at the call, and the two must agree. Owning it
+// is what makes the callee responsible for dropping it.
+void consume( move Owned o )
+{
+}
+
+// Moved when c is 0, kept otherwise. The same code, and the drop has to make opposite decisions.
+i32 run( i32 c )
+{
+    Owned o = Owned( 1 );
+
+    if ( c == 0 )
+    {
+        consume( move o );
+    }
+
+    return 0;
+}
+
+i32 main()
+{
+    // Not moved: the flag is still set at the scope exit, so the destructor runs and live returns
+    // to 0.
+    run( 1 );
+    i32 after_kept = live;
+
+    // Moved: the flag is clear, so the caller does not drop it - and the callee does, because it
+    // owns what it was given. Freed exactly once on this path too, by the other party.
+    run( 0 );
+    i32 after_moved = live;
+
+    // 0 * 10 + 0.
+    return after_kept * 10 + after_moved;
+}

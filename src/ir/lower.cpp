@@ -102,9 +102,12 @@ private:
     Builder                           builder_;
     std::unordered_map<u32, Local_id> locals_;
     Local_id                          receiver_ {}; // A destructor's synthesised `this`. Invalid in a plain function.
-    std::vector<Loop_targets>         loops_;       // innermost last, so break and continue bind to it
-    std::vector<Local_id>             scope_locals_;
-    std::vector<u32>                  scope_marks_;
+    // Parameters the callee owns, and therefore drops. Collected in the constructor and put in a
+    // scope by run(), because scope_locals_ has no scope to go into until then.
+    std::vector<Local_id>     owned_parameters_;
+    std::vector<Loop_targets> loops_; // innermost last, so break and continue bind to it
+    std::vector<Local_id>     scope_locals_;
+    std::vector<u32>          scope_marks_;
 };
 
 Lowering::Lowering(
@@ -136,6 +139,14 @@ Lowering::Lowering(
             const Local_id  local = builder_.add_parameter( type, span, name );
             locals_.emplace( param.v, local );
 
+            const Node_id annotation = ast_.children( param )[0];
+
+            if( ast_.kind( annotation ) == Node_kind::Mode_type &&
+                static_cast<Keyword>( ast_.aux( annotation ) ) == Keyword::Move )
+            {
+                owned_parameters_.push_back( local );
+            }
+
             // The parser puts the receiver first, and it is what a bare field name is reached
             // through. Captured from the walk rather than assumed to be local 1, so it survives
             // anything that adds a local before this runs.
@@ -149,13 +160,27 @@ Lowering::Lowering(
 
 Function Lowering::run()
 {
+    const Span span = ast_.span( declaration_ );
+
+    // An owned parameter is dropped like a local, in a scope *enclosing* the body - which is what
+    // makes `return`'s unwind_to( 0 ) reach it, since depth 0 is this scope's mark rather than the
+    // body's. Pushed after the mark so the parameters sit above it.
+    push_scope();
+
+    for( const Local_id parameter : owned_parameters_ )
+    {
+        scope_locals_.push_back( parameter );
+    }
+
     lower_statement( ast_.children( declaration_ )[2] ); // the body block
 
-    // A body that falls off the end still has to terminate, or verify rejects the function. Nothing
-    // checks that a non-void function returns on every path yet - that needs the CFG this is building.
+    // The fall-off-the-end path: a `return` has already unwound to 0, and unwind_to is a no-op on a
+    // terminated block, so this only fires where nothing returned.
+    pop_scope( span );
+
     if( !builder_.is_terminated() )
     {
-        builder_.terminate_return( ast_.span( declaration_ ) );
+        builder_.terminate_return( span );
     }
 
     return builder_.finish();
@@ -635,30 +660,30 @@ Place Lowering::lower_place( Node_id id )
         // read of it.
         return place_for( resolution_.declaration_of( id ) );
     case Node_kind::Field_expr:
+    {
         // The field's declaration, found on the object's struct type - same lookup as the emitter does.
+        const Node_id   object      = ast_.children( id )[0];
+        const Type_id   object_type = types_.type_of( object );
+        const Symbol_id name        = Symbol_id { ast_.aux( id ) };
+
+        // D22: `.` reaches through a pointer, so `p.x` is the implicit form of `( *p ).x` and
+        // lowers to the same two projections. It takes the pointer's *value* rather than its
+        // place - the Star case below is the same shape, written out.
+        if( types_.table().is_pointer( object_type ) )
         {
-            const Node_id   object      = ast_.children( id )[0];
-            const Type_id   object_type = types_.type_of( object );
-            const Symbol_id name        = Symbol_id { ast_.aux( id ) };
+            const Operand pointer = lower_expression( object );
+            const Span    span    = ast_.span( id );
 
-            // D22: `.` reaches through a pointer, so `p.x` is the implicit form of `( *p ).x` and
-            // lowers to the same two projections. It takes the pointer's *value* rather than its
-            // place - the Star case below is the same shape, written out.
-            if( types_.table().is_pointer( object_type ) )
-            {
-                const Operand pointer = lower_expression( object );
-                const Span    span    = ast_.span( id );
+            const Place base = pointer.kind == Operand_kind::Constant
+                                   ? builder_.place( builder_.into_temp( use( pointer ), pointer.type, span ) )
+                                   : pointer.place;
 
-                const Place base = pointer.kind == Operand_kind::Constant
-                                       ? builder_.place( builder_.into_temp( use( pointer ), pointer.type, span ) )
-                                       : pointer.place;
-
-                // The pointee, not the pointer: the field lives on what is pointed at.
-                return builder_.field( builder_.deref( base ), field_of( types_.table().get( object_type ).element, name ) );
-            }
-
-            return builder_.field( lower_place( object ), field_of( object_type, name ) );
+            // The pointee, not the pointer: the field lives on what is pointed at.
+            return builder_.field( builder_.deref( base ), field_of( types_.table().get( object_type ).element, name ) );
         }
+
+        return builder_.field( lower_place( object ), field_of( object_type, name ) );
+    }
     case Node_kind::Unary_expr: // Star only; Amp is not a place
     {
         if( static_cast<Token_kind>( ast_.aux( id ) ) == Token_kind::Amp )
@@ -719,29 +744,27 @@ void Lowering::lower_var( Node_id id )
 {
     // Children are { type, init }. aux is the Symbol_id of the name, which is what the checker
     // recorded in the resolution for a Name_expr that refers to this declaration.
+    const Type_id   type  = types_.type_of( id );
+    const Span      span  = ast_.span( id );
+    const Symbol_id name  = Symbol_id { ast_.aux( id ) };
+    const Local_id  local = builder_.add_local( type, span, name );
+
+    locals_.emplace( id.v, local );
+    builder_.storage_live( local, span );
+    scope_locals_.push_back( local );
+
+    const Node_id init = ast_.children( id )[1];
+    if( init.is_valid() )
     {
-        const Type_id   type  = types_.type_of( id );
-        const Span      span  = ast_.span( id );
-        const Symbol_id name  = Symbol_id { ast_.aux( id ) };
-        const Local_id  local = builder_.add_local( type, span, name );
-
-        locals_.emplace( id.v, local );
-        builder_.storage_live( local, span );
-        scope_locals_.push_back( local );
-
-        const Node_id init = ast_.children( id )[1];
-        if( init.is_valid() )
+        // Constructed in place. Going via a temporary and copying would make two of an
+        // owning type where the program said one, and only one of them would be dropped.
+        if( is_construction( init ) )
         {
-            // Constructed in place. Going via a temporary and copying would make two of an
-            // owning type where the program said one, and only one of them would be dropped.
-            if( is_construction( init ) )
-            {
-                lower_construction( builder_.place( local ), init );
-            }
-            else
-            {
-                builder_.assign( builder_.place( local ), use( lower_expression( init ) ), span );
-            }
+            lower_construction( builder_.place( local ), init );
+        }
+        else
+        {
+            builder_.assign( builder_.place( local ), use( lower_expression( init ) ), span );
         }
     }
     return;
@@ -2756,18 +2779,19 @@ TEST_CASE( "lower_reads_a_move_as_a_move", "[ir][lower][move]" )
         REQUIRE( text.find( "_2 = move _1" ) != std::string::npos );
     }
 
-    // A place, not a local: the projection has to survive, or the dataflow could only ever track
-    // whole variables.
-    SECTION( "a field keeps its projection" )
+    // A whole object, which is the only thing that can be moved: a field on its own would leave
+    // the object partly moved, and the checker refuses it.
+    SECTION( "a whole struct" )
     {
         Lowered p( "struct Point { i32 x; i32 y; };\n"
-                   "i32 main() { Point q = Point { 1, 2 }; i32 a = move q.x; return a; }" );
+                   "void f( Point p ) { }\n"
+                   "i32 main() { Point q = Point { 1, 2 }; f( move q ); return 0; }" );
 
-        const std::string text = p.text( 0 );
+        const std::string text = p.text( 1 );
 
         INFO( text );
         REQUIRE( p.clean() );
-        REQUIRE( text.find( "move _1.x" ) != std::string::npos );
+        REQUIRE( text.find( "call f(move _1)" ) != std::string::npos );
     }
 
     SECTION( "every function still verifies" )

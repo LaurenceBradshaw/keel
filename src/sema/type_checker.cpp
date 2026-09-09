@@ -375,6 +375,14 @@ private:
     // so "the first" and "the only" coincide once check_aggregate_members has run.
     Node_id find_member( Node_id decl, Node_kind kind ) const;
 
+    // The same question Types::is_owning answers, asked before there is a Types to ask - the result
+    // is not assembled until run() returns.
+    bool is_owning_type( Type_id type ) const;
+
+    // Bare is Keyword::Count, which is not a keyword anyone can write - so "no mode" needs no separate
+    // answer and every caller compares the same way.
+    Keyword parameter_mode( Node_id param ) const;
+
     std::string previous_declaration_note( Node_id previous ) const;
 
     // The main entry points for visiting and inferring types.
@@ -752,6 +760,18 @@ bool Checker::contains_itself( Node_id decl, std::vector<Node_id>& path )
     return false;
 }
 
+bool Checker::is_owning_type( Type_id type ) const
+{
+    if( !type.is_valid() || table_.is_error( type ) || !table_.is_struct( type ) )
+    {
+        return false;
+    }
+
+    const Node_id declaration = table_.get( type ).declaration;
+
+    return declaration.is_valid() && owning_.contains( declaration.v );
+}
+
 Node_id Checker::find_member( Node_id decl, Node_kind kind ) const
 {
     for( const Node_id member : ast_.children( decl ) )
@@ -763,6 +783,13 @@ Node_id Checker::find_member( Node_id decl, Node_kind kind ) const
     }
 
     return Node_id {};
+}
+
+Keyword Checker::parameter_mode( Node_id param ) const
+{
+    const Node_id annotation = ast_.children( param )[0];
+
+    return ast_.kind( annotation ) == Node_kind::Mode_type ? static_cast<Keyword>( ast_.aux( annotation ) ) : Keyword::Count;
 }
 
 std::string Checker::previous_declaration_note( Node_id previous ) const
@@ -1789,6 +1816,31 @@ Type_id Checker::infer_call( Node_id id )
     for( std::size_t i = 0; i < shared; ++i )
     {
         check( arguments[i], types_[params[i].v] );
+
+        // D2: transfer is visible at the call *and* in the signature, and neither alone is enough -
+        // a reader of one should never have to find the other.
+        const Keyword wanted = parameter_mode( params[i] );
+        const Keyword given  = ast_.kind( arguments[i] ) == Node_kind::Marker_expr
+                                   ? static_cast<Keyword>( ast_.aux( arguments[i] ) )
+                                   : Keyword::Count;
+
+        // Only an owning type has anything for the signature to say. For everything else a bare
+        // argument is a copy and `move` is the caller's own assertion that the source is dead
+        // afterwards (D31) - which the callee neither sees nor cares about, so demanding the two
+        // agree would make the marker mean something different depending on the type.
+        if( wanted == given || !is_owning_type( types_[params[i].v] ) )
+        {
+            continue;
+        }
+
+        if( wanted == Keyword::Move )
+        {
+            error_at( ast_.span( arguments[i] ), fmt::format( "`{}` takes ownership of this argument", name ), "write `move`" );
+        }
+        else if( given == Keyword::Move )
+        {
+            error_at( ast_.span( arguments[i] ), fmt::format( "`{}` borrows this argument", name ), "remove `move`" );
+        }
     }
 
     for( std::size_t i = shared; i < arguments.size(); ++i )
@@ -2295,11 +2347,31 @@ Type_id Checker::infer_marker( Node_id id )
 
     const Type_id value = infer( operand );
 
-    // `move` names something that lives somewhere: it makes the source dead, and a temporary has
-    // no source to kill. is_assignable already answers "is this a place", for the same reason.
-    if( !is_assignable( operand ) )
+    // A field on its own is refused rather than lumped in with the rest, because the reason is
+    // different and so is the fix: moving one would leave the object partly moved, and its own
+    // scope exit would then drop a field that has already gone. Tracking that needs per-field drop
+    // flags, so this is a restriction to lift when they exist rather than a rule to keep.
+    if( ast_.kind( operand ) == Node_kind::Field_expr )
     {
-        error_at( ast_.span( operand ), "only a variable or a field can be moved" );
+        error_at(
+            ast_.span( operand ),
+            "a field cannot be moved on its own",
+            "moving it would leave the object partly moved - move the whole object instead"
+        );
+        return record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    // Everything else must be a plain named local or parameter. Deliberately stricter than
+    // is_assignable, which also accepts `*p`: that names something this function does not own, so
+    // moving out of it leaves a hole nothing tracks. The rule and the analysis then agree by
+    // construction - the dataflow tracks whole locals, and nothing else can be moved.
+    const Node_id decl = ast_.kind( operand ) == Node_kind::Name_expr ? resolution_.declaration_of( operand ) : Node_id {};
+    const bool    named =
+        decl.is_valid() && ( ast_.kind( decl ) == Node_kind::Var_decl || ast_.kind( decl ) == Node_kind::Param_decl );
+
+    if( !named )
+    {
+        error_at( ast_.span( operand ), "only a variable can be moved" );
         return record( id, table_.builtin( Type_kind::Error ) );
     }
 
@@ -2467,8 +2539,25 @@ Type_id Checker::type_of_annotation( Node_id id )
     case Node_kind::Pointer_type:
         return table_.pointer_to( type_of_annotation( ast_.children( id )[0] ) );
 
+    // D31/D32: a mode is not a type. It is unwrapped here and nowhere else, so what gets recorded
+    // on the declaration is the underlying type and nothing downstream meets the wrapper - anything
+    // needing the mode reads it back off the annotation, which is what parameter_mode does.
+    case Node_kind::Mode_type:
+    {
+        const Keyword mode = static_cast<Keyword>( ast_.aux( id ) );
+
+        // `move` needs nothing more than this; ref and out wait on D32's binding modes and the
+        // non-escaping rule.
+        if( mode != Keyword::Move )
+        {
+            error_at( ast_.span( id ), "this parameter mode is not supported yet" );
+            return table_.builtin( Type_kind::Error );
+        }
+
+        return type_of_annotation( ast_.children( id )[0] );
+    }
+
     case Node_kind::Generic_type:
-    case Node_kind::Ref_type:
         // A diagnostic rather than an assert: these parse, so reaching one is bad input, not a
         // broken invariant, and keelc must not abort on a program someone wrote.
         error_at( ast_.span( id ), "this type is not supported yet" );
@@ -6097,10 +6186,34 @@ TEST_CASE( "type_checker_types_a_move", "[sema][move]" )
         REQUIRE( p.clean() );
     }
 
-    SECTION( "a field can be moved" )
+    // A field on its own is refused: moving it would leave the object partly moved, and the
+    // object's own scope exit would then drop a field that has already gone. A restriction to lift
+    // when per-field drop flags exist, not a rule to keep.
+    SECTION( "a field cannot be moved on its own" )
     {
         const Typed p( "struct Point { i32 x; i32 y; };\n"
                        "i32 main() { Point q = Point { 1, 2 }; i32 a = move q.x; return a; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.rendered().find( "a field cannot be moved on its own" ) != std::string::npos );
+    }
+
+    // Nor through a pointer: `*p` names something this function does not own, so moving out of it
+    // leaves a hole nothing tracks.
+    SECTION( "nor a pointee" )
+    {
+        const Typed p( "i32 main() { i32 a = 1; i32* p = &a; i32 b = move *p; return b; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    SECTION( "moving the whole object is how you do it" )
+    {
+        const Typed p( "struct Point { i32 x; i32 y; };\n"
+                       "void f( Point p ) { }\n"
+                       "i32 main() { Point q = Point { 1, 2 }; f( move q ); return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
@@ -6121,7 +6234,7 @@ TEST_CASE( "type_checker_types_a_move", "[sema][move]" )
     SECTION( "an owning type can be moved" )
     {
         const Typed p( "class Buffer { u64 len; ~Buffer() { } };\n"
-                       "void f( Buffer b ) { }\n"
+                       "void f( move Buffer b ) { }\n"
                        "i32 main() { Buffer b = Buffer { 1 }; f( move b ); return 0; }" );
 
         INFO( p.rendered() );
@@ -6168,7 +6281,7 @@ TEST_CASE( "type_checker_rejects_moving_a_non_place", "[sema][move]" )
 
         INFO( p.rendered() );
         REQUIRE_FALSE( p.clean() );
-        REQUIRE( p.rendered().find( "only a variable or a field can be moved" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "only a variable can be moved" ) != std::string::npos );
     }
 
     // The old reading stays available, and has to be written down.

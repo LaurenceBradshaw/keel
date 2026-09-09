@@ -1,0 +1,31 @@
+error: `a` is used after it was moved
+  --> sema/errors_moves.kl:12:5
+   |
+12 |     sink( a );
+   |     ^^^^^^^^^ moved at 11:5
+
+error: `a` is used after it was moved
+  --> sema/errors_moves.kl:22:5
+   |
+22 |     sink( move a );
+   |     ^^^^^^^^^^^^^^ moved at 21:5
+
+error: `a` may already have been moved
+  --> sema/errors_moves.kl:38:5
+   |
+38 |     sink( a );
+   |     ^^^^^^^^^ moved at 35:9 on some path to here
+
+error: `a` is used after it was moved
+  --> sema/errors_moves.kl:56:5
+   |
+56 |     sink( a );
+   |     ^^^^^^^^^ moved at 49:9
+
+error: `a` may already have been moved
+  --> sema/errors_moves.kl:68:9
+   |
+68 |         sink( move a );
+   |         ^^^^^^^^^^^^^^ moved at 68:9 on some path to here
+
+5 errors generated

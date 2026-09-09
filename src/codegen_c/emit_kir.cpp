@@ -291,10 +291,18 @@ void Kir_emitter::emit_statement( const Statement& statement )
 
     // By address, because a destructor takes the receiver as a pointer.
     case Statement_kind::Drop:
+    {
+
         line_directive( statement.span );
-        write_line( fmt::format( "{}( &{} );", spelling_.destructor_of( type_of( statement.place ) ), place( statement.place ) )
+        const std::string call =
+            fmt::format( "{}( &{} );", spelling_.destructor_of( type_of( statement.place ) ), place( statement.place ) );
+
+        // The flag is the whole of what a conditional drop costs in C.
+        write_line(
+            statement.drop_flag.is_valid() ? fmt::format( "if ( {} ) {}", local_name( statement.drop_flag.v ), call ) : call
         );
         return;
+    }
 
     // The storage markers describe scopes for the drop pass rather than instructions - KIR has no
     // scoping, and every local is declared up front. Skipped before the line directive, which would

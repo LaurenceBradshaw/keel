@@ -9,6 +9,8 @@
 #include <string>
 #include <string_view>
 #include "ast/dump.h"
+#include "check/drop_flags.h"
+#include "check/move_check.h"
 #include "codegen_c/emit_kir.h"
 #include "common/diagnostics.h"
 #include "common/dump_util.h"
@@ -25,6 +27,46 @@
 
 // Excluded from the unit-test binary, which provides its own main() via Catch2.
 #ifndef ENABLE_UNIT_TESTS
+namespace
+{
+
+// check_moves reports spans and a Local_id; the wording is the driver's, because this is the only
+// place with an Interner to turn that local into a name. Diagnostics carries one span and a help
+// string rather than a second underlined snippet, so the move site becomes a line:col in the help -
+// the shape the resolver's previous-declaration note already uses.
+void report_move_errors(
+    const std::vector<keel::Function>& functions,
+    const keel::Source_manager&        sm,
+    const keel::Interner&              interner,
+    keel::Diagnostics&                 diagnostics
+)
+{
+    for( const keel::Function& function : functions )
+    {
+        for( const keel::Move_error& error : keel::check_moves( function ) )
+        {
+            const keel::Symbol_id name = function.locals[error.local.v].name;
+
+            // Only a named local can be moved, so a temporary never reaches here.
+            assert( name.is_valid() && "a move error names a local the author wrote" );
+
+            const keel::Line_col at = sm.line_col( error.moved.file, error.moved.start );
+
+            // The two must read differently: `maybe` is the compiler refusing an ambiguity rather
+            // than reporting a certainty, and that is the whole reason the state exists.
+            diagnostics.error(
+                error.use,
+                error.maybe ? fmt::format( "`{}` may already have been moved", interner.text( name ) )
+                            : fmt::format( "`{}` is used after it was moved", interner.text( name ) ),
+                error.maybe ? fmt::format( "moved at {}:{} on some path to here", at.line, at.col )
+                            : fmt::format( "moved at {}:{}", at.line, at.col )
+            );
+        }
+    }
+}
+
+} // namespace
+
 int main( int argc, char** argv )
 {
     cxxopts::Options options( "keelc", "The Keel compiler" );
@@ -146,6 +188,33 @@ int main( int argc, char** argv )
         return finish();
     }
 
+    // Lowered once, for everything downstream: the move check, --dump-kir and the emitter all read
+    // the same functions rather than each lowering a copy of its own.
+    std::vector<keel::Function> functions = keel::lower( ast, resolution, types, literals, interner );
+
+    // Move checking is part of the front end, not of emission: --check is what an editor wants, and
+    // an editor wants use-after-move underlined. Which is why this runs above that early return
+    // rather than beside the emitter.
+    report_move_errors( functions, sm, interner, diagnostics );
+
+    if( diagnostics.has_errors() )
+    {
+        return finish();
+    }
+
+    // Built once rather than per function: the two literals are interned, so asking for them each
+    // time would add one entry per function that moves anything.
+    const keel::Flag_vocabulary flag_vocabulary {
+        .bool_type     = types.table().builtin( keel::Type_kind::Bool ),
+        .false_literal = literals.add_integer( 0 ),
+        .true_literal  = literals.add_integer( 1 )
+    };
+
+    for( keel::Function& function : functions )
+    {
+        keel::elaborate_drops( function, flag_vocabulary );
+    }
+
     // Everything the front end can say has been said by here. --check is what an editor or a
     // diagnostics-only test wants, and it leaves no artefacts behind.
     if( args.count( "check" ) )
@@ -159,7 +228,7 @@ int main( int argc, char** argv )
     {
         bool well_formed = true;
 
-        for( const keel::Function& function : keel::lower( ast, resolution, types, literals, interner ) )
+        for( const keel::Function& function : functions )
         {
             std::cout << keel::print( function, ast, types.table(), literals, interner );
 
@@ -181,8 +250,7 @@ int main( int argc, char** argv )
         return finish();
     }
 
-    const std::string generated =
-        keel::emit_c_from_kir( keel::lower( ast, resolution, types, literals, interner ), ast, types, literals, sm, interner );
+    const std::string generated = keel::emit_c_from_kir( functions, ast, types, literals, sm, interner );
 
     if( args.count( "emit-c" ) )
     {

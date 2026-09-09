@@ -23,8 +23,8 @@ std::string_view node_kind_name( Node_kind kind )
         return "Named_type";
     case Node_kind::Pointer_type:
         return "Pointer_type";
-    case Node_kind::Ref_type:
-        return "Ref_type";
+    case Node_kind::Mode_type:
+        return "Mode_type";
     case Node_kind::Const_type:
         return "Const_type";
     case Node_kind::Generic_type:

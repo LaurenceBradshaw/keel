@@ -1574,11 +1574,206 @@ The framing that makes this feel right rather than arbitrary: **a marker is not 
 operator, it is an annotation on a whole argument.** Unary precedence was the
 accident.
 
+**`move` applies only to a plain named variable or parameter.** A field on its own -
+`move w.inner` - is refused, and not merely because tracking it is hard. The object
+still has a scope exit, and drop elaboration emits a drop for its owning fields, so
+a partly-moved object would free a field that has already gone. Making that correct
+needs **per-field drop flags**, which is the move-path machinery Rust's MIR carries.
+So this is a case the compiler currently *cannot* handle rather than one it declines
+to track, and refusing it is a restriction - liftable later without breaking a single
+program that compiles today. `move *p` goes the same way and for the same reason: it
+names something this function does not own. The payoff is that the language rule and
+the analysis agree **by construction** rather than by approximation, because the
+dataflow tracks whole locals and nothing else can be moved.
+
+The alternatives were both worse. Marking the root local moved is conservative and
+turns `move q.x; use q.y` into a false error, which blocks valid programs; ignoring
+projected moves silently misses `move q.x; use q.x`. A restriction is the only
+option that is neither wrong nor lenient.
+
 After this, `move a` compiles, lowers, and **means nothing** - `a` is still
 readable. That is the point: it gives the dataflow something real to read before
 the dataflow exists.
 
+**The move dataflow.** `check/move_check.cpp`, §8's lattice over the KIR CFG, and
+the first thing in that directory. Its header is two names - `Move_error` and
+`check_moves( const Function& )` - and everything else is file-local: `verify()`'s
+shape, and the reason it can be tested by handing it a function and nothing else.
+
+Four things about it are load-bearing rather than incidental.
+
+**It reports on a second walk, not during the fixpoint.** A block on a back edge is
+transferred several times; reporting inside that loop would emit one error per
+visit. Both walks share `transfer_block`, distinguished only by whether the
+`errors` pointer is null, so they cannot drift.
+
+**`Uninitialised` is the bottom, not a fourth peer.** Joining it with anything
+yields the other side, which is what lets every block start empty and be filled by
+its predecessors - and is what makes the worklist converge from below.
+
+**The worklist pushes into successors rather than pulling from predecessors**, so no
+predecessor map is needed at all. Termination is four states, a join that never
+moves a local back down the lattice, and finitely many blocks.
+
+**Span joins are deterministic.** Two paths can agree a local is moved and disagree
+about where; picking by worklist order would make the message depend on scheduling.
+It takes the earlier span.
+
+Two of the tests were wrong in ways worth keeping. `a = move a + 1` is now
+`move ( a + 1 )` after the precedence fix, so the self-assignment case has to be
+written `( move a ) + 1` - the same trap the precedence change was made to expose,
+found in my own test. And a loop containing both a move and a later read reports
+**two** errors, not one: the read sees what the move killed, and the move sees what
+the back edge left moved. Both are real, and the property worth pinning is that
+neither site is reported twice, which the test now checks by comparing spans rather
+than counting.
+
+**Operand spans: not yet, and here is the trigger.** KIR operands carry no span, so
+every argument of a call reports at the statement. Measured rather than guessed:
+`two( a, b )` after `two( move a, move b )` gives two errors whose `use` and `moved`
+spans are *identical*, leaving the variable's name in the message as the only thing
+telling them apart. That is imprecise rather than wrong. Adding `Span` to `Operand`
+would fix it in one place - `Rvalue::a`, `Rvalue::b`, `Terminator::condition` and
+`Function::operands` are all `Operand`, so no other struct changes - but it costs 12
+bytes there and 24 on every `Statement`, which kir.h already flags as 100 bytes with
+a TODO to move rvalues to a side table. **Do it when that refactor happens**: the
+layout is being touched anyway, and 72 bytes leave as 12 arrive.
+
+**Use-after-move is a compile error.** Half of M4's acceptance, and the wiring
+turned up a structural problem worth fixing on the way: `lower()` was being called
+**twice**, once for `--dump-kir` and once for the emitter - two sources of truth for
+the same lowering, agreeing by coincidence. It is hoisted, and the move check,
+`--dump-kir` and the emitter now read the same functions.
+
+**The check runs above the `--check` early return**, which is the one real decision
+here. Move checking is part of the front end rather than of emission: `--check` is
+what an editor wants, and an editor wants use-after-move underlined. The cost is
+that `--dump-kir` now refuses a program with a move error, which is consistent - it
+is a compile error like any other - but does remove the ability to dump the KIR of a
+program you are debugging the move checker against.
+
+`Diagnostics` carries one span and a help string, not a second underlined snippet,
+so the move site renders as a `line:col` in the help - the shape the resolver's
+previous-declaration note already uses. And the errors need no sorting of their own:
+`check_moves` returns them in block order, which is not source order, but diagnostics
+are sorted by span at render time. That sort earning its keep in a case it was not
+written for is a good sign it was the right change.
+
+The two messages are deliberately different, because `Maybe_moved` exists to say the
+compiler is refusing an ambiguity rather than reporting a certainty:
+
+    error: `a` is used after it was moved
+     --> t.kl:7:5
+      |
+    7 |     sink( a );
+      |     ^^^^^^^^^ moved at 6:5
+
+    error: `a` may already have been moved
+       |     sink( a );
+       |     ^^^^^^^^^ moved at 10:9 on some path to here
+
+`tests/sema/errors_moves.kl` covers five failing shapes and **three passing ones** -
+the arm that did not move, a local assigned again after being moved, and
+`a = ( move a ) + 1`. Without those the fixture would not show the analysis is doing
+anything more than refusing every program that says `move`. The subtlest case comes
+out right on its own: a move inside a loop body is reported as a *maybe*, because the
+header joins "first entry, live" with "back edge, moved" - correct, since the first
+iteration is fine and later ones are not.
+
+**Drop flags.** The other half of M4's acceptance, and smaller than expected once
+one thing was clear: **a drop flag needs no dataflow.** It is a runtime value - false
+while storage is empty, true once the local holds something, false again once moved -
+so it records what *happened* rather than what statically might have, and is exact on
+every path by construction. `move_check`'s lattice answers a different question, for
+diagnostics. Rust uses dataflow here only to *eliminate* flags it can prove
+unnecessary, which §7 explicitly says not to attempt first.
+
+**The flag rides on the `Drop` statement rather than becoming control flow.** MIR
+splits the block and branches; that means new blocks, reachability implications, and a
+CFG that stops matching the source. A `Local_id drop_flag` on the statement is four
+bytes and leaves the graph alone - the backend emits the `if`, which it was going to
+have to do either way. Consistent with §3.1 already making drops statements rather
+than terminators, since there is no unwinding to make them diverge.
+
+Three things came out of building it.
+
+**A constructed local is never an `Assign` target**, so keying "now initialised" off
+assignment left the flag false and the drop unreachable. `Owned o = Owned( 1 );` lowers
+to `_3 = &_2` and a call writing through `_3`. Taking a local's address is therefore
+what marks it live. The looseness is deliberate and bounded: `Owned o; Owned* p = &o;`
+marks an uninitialised local as needing a drop, which is exactly what happens today
+without flags, so it is no worse than the status quo for a program D9 will reject.
+
+**A flag guards a drop, so a local with no drop needs none.** Flagging on "was moved"
+alone gave every `move` of an `i32` a bool and four assignments guarding nothing -
+caught because `kir/calls.kl` moved when it had no business to. The set is moved *and*
+dropped.
+
+**`for_each_operand` moved into `kir.h`.** It was about to be written a second time,
+having already been inlined into `move_check`'s `read_rvalue`. Where operands live is
+vocabulary, not policy, and this is the third two-sources-of-truth of the milestone
+after `lower()` being called twice and the prototype loop walking the AST.
+
+`tests/codegen/drop_flags.kl` runs the same function down both paths. Kept: the flag is
+still set, the destructor runs, `live` returns to 0. Moved: the flag is clear, the
+caller does not drop - and `live` stays 1, because ownership went to the callee and a
+callee does not yet drop its parameter. That 1 is the D2 debt, asserted rather than
+worked around, so the fixture's answer will change to 0 by itself the day that lands.
+
+**M4's acceptance is met.** D31's `move` parameter closes it, and the two halves were
+inseparable: making a callee drop its parameter *without* modes would double-free
+every bare pass, because the caller drops too. So the mode had to come first, and it
+brings D2's enforcement with it - a bare argument is a borrow, so there is nothing to
+enforce, and a transfer cannot be silent because the signature has to say so as well.
+
+`Ref_type` became **`Mode_type`** rather than a new node kind: the same shape - a node
+in type position wrapping a type - generalised from one keyword to three, with the
+keyword in `aux`. That mirrors `Marker_expr` at the call site exactly, one node on
+each side of the call carrying the same three keywords. It is unwrapped in
+`type_of_annotation` and nowhere else, so the declaration records the underlying type
+and nothing downstream meets the wrapper.
+
+**The agreement rule applies only to owning types.** Requiring it everywhere made
+`sink( move a )` on an `i32` an error - caught immediately by three existing fixtures.
+For a non-owning type a bare argument is a copy and `move` is the caller's own
+assertion that the source is dead afterwards (D31), which the callee neither sees nor
+cares about. Demanding the two agree would have made the marker mean something
+different depending on the type, which is exactly what D31 was written to avoid.
+
+**An owned parameter is dropped by a scope enclosing the body.** Not by the
+constructor's parameter walk, which was the obvious place and is wrong: `scope_marks_`
+is empty until a scope is pushed, so the body's own `push_scope()` would record its
+mark *above* the parameters and `return`'s `unwind_to( 0 )` would never reach them.
+`run()` pushes a scope first, puts the owned parameters in it, and pops it after the
+body - which also covers the fall-off-the-end path, since `unwind_to` is a no-op on a
+block a `return` already terminated.
+
+`tests/codegen/drop_flags.kl` now exits **0**, and its `.run` file is gone - the runner
+takes an absent one as zero. Freed exactly once on both paths: by the caller when the
+move did not happen, by the callee when it did. Clean under `KEEL_VALGRIND=1`.
+
+Two diagnostics improved on the way. D32 takes `&` out of type position, and the
+adjacency check was firing first - so `i32 &r` gave two errors for one mistake, the
+first of them advice about how to space a spelling that no longer exists. And neither
+`u32 &r;` nor `u32 & r;` reaches the type parser at all, because L17 scans them as a
+bitwise and; the D17 path that already rescued `u32 *p;` from the generic
+"no effect" message now covers `&` too, so all three spacings name `ref T`.
+
 ### Debts to pay along the way
+
+- **A bare parameter of an owning type is not yet a borrow.** D31 says it is a *read-only* borrow,
+  and neither half holds. `void f( Buffer b ) { b.len = 5; }` is accepted, where it should be an
+  error. And at C level the parameter is a struct copy rather than an address, so two objects hold
+  the same resource for the duration of the call - benign only because exactly one of them drops it.
+  Both halves are one fix: pass by pointer and reject writes through it. Until then the semantics
+  are right by accident rather than by construction.
+
+- **An owning temporary still leaks, and the hole is now narrower than it was.** `f( B( 1 ) )` with
+  a bare parameter exits with the resource unfreed, because nothing drops a temporary. What has
+  changed is that a temporary can no longer reach a `move` parameter at all - `move` requires a
+  plain named variable - so the leak is confined to borrow parameters, and `consume( Buffer( 16 ) )`
+  is simply not expressible. That restriction is worth lifting eventually, and needs the
+  temporary-lifetime rule §8 already owes for `const ref` returns. One answer serves both.
 
 - **D2 stopped being inert at M3, and is not enforced.** Its entry says *"inert until M3: no type
   has a destructor yet, so nothing is owning and nothing changes"*. Destructors now exist, so that

@@ -121,8 +121,12 @@ struct Printer
         case Statement_kind::Assign:
             return fmt::format( "{} = {}", place( statement.place ), rvalue( statement.value ) );
 
+        // `drop _1 if _7` when the local can have been moved out of, plain otherwise - so a dump of a
+        // function that moves nothing looks exactly as it did before drop flags existed.
         case Statement_kind::Drop:
-            return fmt::format( "drop {}", place( statement.place ) );
+            return statement.drop_flag.is_valid()
+                       ? fmt::format( "drop {} if _{}", place( statement.place ), statement.drop_flag.v )
+                       : fmt::format( "drop {}", place( statement.place ) );
 
         case Statement_kind::Storage_live:
             return fmt::format( "storage_live {}", place( statement.place ) );

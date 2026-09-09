@@ -135,13 +135,19 @@ enum class Statement_kind : u8
     Storage_dead,
 };
 
-// TODO: Currently 100 bytes, of which 72 are rvalue, moving rvalues to a side table later.
+// TODO: Currently 100 bytes, of which 72 are rvalue. Move rvalues to a side table, and give
+// `Operand` a `Span` in the same change: operands carry none today, so every argument of a call
+// reports at the statement - `two( a, b )` after `two( move a, move b )` gives two move errors with
+// identical carets, told apart only by the name in the message. One field on Operand fixes all four
+// places one appears (Rvalue::a, Rvalue::b, Terminator::condition, Function::operands), but it costs
+// 12 bytes there and 24 here, which is worth paying only once 72 are leaving anyway.
 struct Statement
 {
     Statement_kind kind = Statement_kind::Assign;
     Span           span {};
-    Place          place {}; // assigned to by Assign, dropped by Drop
-    Rvalue         value {}; // Assign only
+    Place          place {};     // assigned to by Assign, dropped by Drop
+    Rvalue         value {};     // Assign only
+    Local_id       drop_flag {}; // Drop only: invalid means drop unconditionally
 };
 
 enum class Terminator_kind : u8
@@ -187,6 +193,24 @@ struct Function
 // they leave every field a kind does not mean at its declared default, they name what is being set
 // so a helper that forgets its own argument is visible, and -Wmissing-field-initializers does not
 // fire on them - which a partial positional init does, and the release build treats as an error.
+
+// Every operand an rvalue reads: `a` and `b` cover Use, Binary, Unary and Cast, and the argument
+// range covers Call. Visiting all of them needs no switch, because an Rvalue leaves the operands its
+// kind does not use at their Constant default - which is the point of that default above.
+//
+// Here rather than in a pass, because more than one pass needs it and "where operands live" is not a
+// fact any of them should own privately.
+template <typename Fn>
+void for_each_operand( const Function& func, const Rvalue& value, Fn fn )
+{
+    fn( value.a );
+    fn( value.b );
+
+    for( u32 i = 0; i < value.argument_count; ++i )
+    {
+        fn( func.operands[value.first_argument + i] );
+    }
+}
 
 inline Operand copy( Place place, Type_id type )
 {
