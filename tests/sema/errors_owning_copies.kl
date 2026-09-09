@@ -1,0 +1,84 @@
+// PLAN D31. An owning value is transferred, not copied, and the transfer is written down - in an
+// initialiser and an assignment as much as at a call. Its own fixture rather than part of
+// errors_moves.kl, because these are type errors: the driver stops before lowering when one is
+// reported, so the move analysis would never run and its diagnostics would vanish from that file.
+class Owned
+{
+    u64 id;
+
+    Owned( u64 n )
+    {
+        id = n;
+    }
+
+    ~Owned()
+    {
+    }
+};
+
+i32 copies()
+{
+    Owned a = Owned( 1 );
+    Owned c = a;
+
+    return 0;
+}
+
+i32 infers()
+{
+    Owned a = Owned( 1 );
+    auto  c = a;
+
+    return 0;
+}
+
+i32 assigns()
+{
+    Owned a = Owned( 1 );
+    Owned c = Owned( 2 );
+
+    c = a;
+
+    return 0;
+}
+
+// Everything below is accepted, and the fixture would be worth much less without it: it is what
+// shows the rule is not simply refusing every use of an owning type.
+
+i32 transfers()
+{
+    Owned a = Owned( 1 );
+    Owned c = move a;
+
+    return 0;
+}
+
+// A temporary has no other owner, so handing it over is the only thing that can happen to it, and
+// no variable is left behind for a reader to wonder about.
+i32 temporaries()
+{
+    Owned d = Owned( 3 );
+
+    d = Owned( 4 );
+
+    return 0;
+}
+
+// Copying is what a non-owning type is for.
+struct Point
+{
+    i32 x;
+};
+
+i32 plain()
+{
+    Point a = Point { 1 };
+    Point c = a;
+
+    return c.x;
+}
+
+i32 main()
+{
+    return 0;
+}

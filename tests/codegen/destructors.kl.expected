@@ -118,10 +118,15 @@ int32_t kl__early__i32( int32_t kl_n_1 )
     struct kl__Buffer kl_b_2;
     struct kl__Buffer kl_t3;
     bool kl_t4;
+    bool kl_t5;
 #line 80 "codegen/destructors.kl"
     kl_t3.kl_ptr_16 = NULL;
+    kl_t5 = true;
     kl_t3.kl_len_18 = 0;
+    kl_t5 = true;
     kl_b_2 = kl_t3;
+    kl_t5 = false;
+    if ( kl_t5 ) kl__Buffer__dtor( &kl_t3 );
 #line 82 "codegen/destructors.kl"
     kl_t4 = kl_n_1 == 0;
     if ( kl_t4 ) goto bb1; else goto bb2;
@@ -160,6 +165,10 @@ int32_t kl__main__( void )
     int32_t kl_t16;
     int32_t kl_t17;
     int32_t kl_t18;
+    bool kl_t19;
+    bool kl_t20;
+    bool kl_t21;
+    bool kl_t22;
 #line 92 "codegen/destructors.kl"
     kl_t2.kl_x_92 = 3;
     kl_t2.kl_y_94 = 4;
@@ -169,15 +178,26 @@ int32_t kl__main__( void )
     kl_h_3 = kl_t4;
 #line 97 "codegen/destructors.kl"
     kl_t6.kl_ptr_16 = NULL;
+    kl_t19 = true;
     kl_t6.kl_len_18 = 0;
+    kl_t19 = true;
     kl_b_5 = kl_t6;
+    kl_t19 = false;
+    if ( kl_t19 ) kl__Buffer__dtor( &kl_t6 );
 #line 96 "codegen/destructors.kl"
     kl__Buffer__dtor( &kl_b_5 );
 #line 102 "codegen/destructors.kl"
     kl_t9.kl_ptr_16 = NULL;
+    kl_t21 = true;
     kl_t9.kl_len_18 = 0;
+    kl_t21 = true;
     kl_t8.kl_inner_97 = kl_t9;
+    kl_t21 = false;
+    kl_t20 = true;
     kl_w_7 = kl_t8;
+    kl_t20 = false;
+    if ( kl_t21 ) kl__Buffer__dtor( &kl_t9 );
+    if ( kl_t20 ) kl__Buffer__dtor( &kl_t8.kl_inner_97 );
 #line 101 "codegen/destructors.kl"
     kl__Buffer__dtor( &kl_w_7.kl_inner_97 );
 #line 106 "codegen/destructors.kl"
@@ -190,8 +210,12 @@ int32_t kl__main__( void )
     bb2:
 #line 109 "codegen/destructors.kl"
     kl_t13.kl_ptr_16 = NULL;
+    kl_t22 = true;
     kl_t13.kl_len_18 = 0;
+    kl_t22 = true;
     kl_b_12 = kl_t13;
+    kl_t22 = false;
+    if ( kl_t22 ) kl__Buffer__dtor( &kl_t13 );
 #line 110 "codegen/destructors.kl"
     kl_t14 = kl_i_10 + 1;
     kl_i_10 = kl_t14;

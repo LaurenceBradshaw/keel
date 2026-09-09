@@ -379,6 +379,10 @@ private:
     // is not assembled until run() returns.
     bool is_owning_type( Type_id type ) const;
 
+    // D31's initialisation and assignment clause: an owning value transfers rather than copies, and
+    // the transfer is written down.
+    void check_owning_source( Node_id value, Type_id type );
+
     // Bare is Keyword::Count, which is not a keyword anyone can write - so "no mode" needs no separate
     // answer and every caller compares the same way.
     Keyword parameter_mode( Node_id param ) const;
@@ -770,6 +774,28 @@ bool Checker::is_owning_type( Type_id type ) const
     const Node_id declaration = table_.get( type ).declaration;
 
     return declaration.is_valid() && owning_.contains( declaration.v );
+}
+
+void Checker::check_owning_source( Node_id value, Type_id type )
+{
+    if( !value.is_valid() || !is_owning_type( type ) || ast_.kind( value ) == Node_kind::Marker_expr )
+    {
+        return;
+    }
+
+    // A temporary needs no marker: it has no other owner, so handing it over is the only thing that
+    // can happen to it and there is no variable left behind for a reader to wonder about.
+    // is_assignable is exactly the "names a place" test, which is what distinguishes the two.
+    if( !is_assignable( value ) )
+    {
+        return;
+    }
+
+    error_at(
+        ast_.span( value ),
+        "an owning value is transferred, not copied",
+        fmt::format( "write `move {}`", sm_.text( ast_.span( value ) ) )
+    );
 }
 
 Node_id Checker::find_member( Node_id decl, Node_kind kind ) const
@@ -1178,11 +1204,13 @@ void Checker::visit_var( Node_id id )
         if( init.is_valid() )
         {
             check( init, type );
+            check_owning_source( init, type );
         }
     }
     else if( init.is_valid() )
     {
         type = infer( init ); // `auto`: L6's one form of inference
+        check_owning_source( init, type );
     }
     else
     {
@@ -1238,6 +1266,7 @@ void Checker::visit_assign( Node_id id )
     if( op == Token_kind::Equal )
     {
         check( value, target_type );
+        check_owning_source( value, target_type );
         return;
     }
 
@@ -2369,9 +2398,21 @@ Type_id Checker::infer_marker( Node_id id )
     const bool    named =
         decl.is_valid() && ( ast_.kind( decl ) == Node_kind::Var_decl || ast_.kind( decl ) == Node_kind::Param_decl );
 
-    if( !named )
+    // Same reason as the field above: `*p` names something this function does not own, so moving
+    // out of it leaves a hole nothing tracks.
+    if( ast_.kind( operand ) == Node_kind::Unary_expr && static_cast<Token_kind>( ast_.aux( operand ) ) == Token_kind::Star )
     {
-        error_at( ast_.span( operand ), "only a variable can be moved" );
+        error_at( ast_.span( operand ), "a pointee cannot be moved", "move the variable it points into instead" );
+        return record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    // A named variable, or a temporary this scope owns. The second is what makes
+    // `consume( move Buffer( 16 ) )` expressible: the temporary is built in the caller's frame and
+    // handed over, so a transfer genuinely happens and D2 wants it marked - even though no variable
+    // is left behind for a use-after-move to catch.
+    if( !named && !is_owning_type( value ) )
+    {
+        error_at( ast_.span( operand ), "only a variable or an owned temporary can be moved" );
         return record( id, table_.builtin( Type_kind::Error ) );
     }
 
@@ -6281,7 +6322,7 @@ TEST_CASE( "type_checker_rejects_moving_a_non_place", "[sema][move]" )
 
         INFO( p.rendered() );
         REQUIRE_FALSE( p.clean() );
-        REQUIRE( p.rendered().find( "only a variable can be moved" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "only a variable or an owned temporary can be moved" ) != std::string::npos );
     }
 
     // The old reading stays available, and has to be written down.
@@ -6307,6 +6348,69 @@ TEST_CASE( "type_checker_rejects_ref_and_out_for_now", "[sema][move]" )
         INFO( "source: " << source << "\n" << p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "not supported yet" ) != std::string::npos );
+    }
+}
+
+// D31: an owning value is transferred, not copied, and the transfer is written down - in an
+// initialiser and an assignment as much as at a call. Without this the lowerer moves it anyway,
+// which frees exactly once but does it silently, and a silent transfer is the one thing D2 exists
+// to prevent.
+TEST_CASE( "type_checker_requires_move_when_copying_an_owning_value", "[sema][move]" )
+{
+    constexpr std::string_view owning = "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n";
+
+    SECTION( "an initialiser from a named variable" )
+    {
+        const Typed p( std::string( owning ) + "i32 main() { B a = B( 1 ); B c = a; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "write `move a`" ) != std::string::npos );
+    }
+
+    SECTION( "an assignment from a named variable" )
+    {
+        const Typed p( std::string( owning ) + "i32 main() { B a = B( 1 ); B c = B( 2 ); c = a; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "with the marker it is accepted" )
+    {
+        const Typed p( std::string( owning ) + "i32 main() { B a = B( 1 ); B c = move a; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // A temporary has no other owner, so handing it over is the only thing that can happen to it -
+    // and there is no variable left behind for a reader to wonder about.
+    SECTION( "a temporary needs no marker" )
+    {
+        const Typed p( std::string( owning ) + "i32 main() { B a = B( 1 ); a = B( 2 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and `auto` is checked the same way" )
+    {
+        const Typed p( std::string( owning ) + "i32 main() { B a = B( 1 ); auto c = a; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    // Nothing changes for a type that owns nothing: copying one is what it is for.
+    SECTION( "a non-owning value copies freely" )
+    {
+        const Typed p( "struct P { i32 x; };\ni32 main() { P a = P { 1 }; P c = a; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
     }
 }
 

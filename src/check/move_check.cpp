@@ -151,9 +151,11 @@ void transfer_block( const Function& func, u32 block, Flow& flow, std::vector<Mo
             // // `_1 = move _1 + 1` reads _1 and then re-initialises it, and is legal
             read_rvalue( func, statement.value, statement.span, flow, errors );
 
-            // Only an unprojected local target says the whole local is live again. `_1.x = ...`
-            // says nothing about whether _1 as a whole is still there.
-            if( !statement.place.is_global() && statement.place.num_projections == 0 )
+            // A projected target counts too: nothing can be partially moved, so `_1.x = ...` is a
+            // step in building _1 rather than a write into a half-moved object. Without this a
+            // struct literal is never Live - it is assembled entirely through projections - so in a
+            // loop its temporary reports a false use-after-move on the second iteration.
+            if( !statement.place.is_global() )
             {
                 flow.state[statement.place.local.v]    = State::Live;
                 flow.moved_at[statement.place.local.v] = Span {};

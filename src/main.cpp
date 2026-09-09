@@ -47,8 +47,10 @@ void report_move_errors(
         {
             const keel::Symbol_id name = function.locals[error.local.v].name;
 
-            // Only a named local can be moved, so a temporary never reaches here.
-            assert( name.is_valid() && "a move error names a local the author wrote" );
+            // A temporary can be moved too - the lowerer synthesises one wherever an owning value
+            // is handed over - so a move error does not always name something the author wrote.
+            const std::string subject =
+                name.is_valid() ? fmt::format( "`{}`", interner.text( name ) ) : std::string( "this value" );
 
             const keel::Line_col at = sm.line_col( error.moved.file, error.moved.start );
 
@@ -56,8 +58,8 @@ void report_move_errors(
             // than reporting a certainty, and that is the whole reason the state exists.
             diagnostics.error(
                 error.use,
-                error.maybe ? fmt::format( "`{}` may already have been moved", interner.text( name ) )
-                            : fmt::format( "`{}` is used after it was moved", interner.text( name ) ),
+                error.maybe ? fmt::format( "{} may already have been moved", subject )
+                            : fmt::format( "{} is used after it was moved", subject ),
                 error.maybe ? fmt::format( "moved at {}:{} on some path to here", at.line, at.col )
                             : fmt::format( "moved at {}:{}", at.line, at.col )
             );

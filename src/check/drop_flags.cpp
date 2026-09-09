@@ -14,8 +14,7 @@ using Flag_map = std::vector<Local_id>;
 // whole local, so nothing else needs tracking.
 Local_id flag_of( const Flag_map& flags, const Place& place )
 {
-    // Nothing but a whole local can be moved, so nothing else needs a flag.
-    if( place.is_global() || place.num_projections != 0 )
+    if( place.is_global() )
     {
         return Local_id {};
     }
@@ -56,7 +55,10 @@ std::vector<bool> locals_needing_flags( const Function& func )
 
     for( const Statement& statement : func.statements )
     {
-        if( statement.kind == Statement_kind::Drop && !statement.place.is_global() && statement.place.num_projections == 0 )
+        // Projections count: a compound with no destructor of its own has its drop expanded into
+        // per-field drops, so `drop _8.inner` is how `_8` is dropped. Requiring an unprojected drop
+        // here left such a local unflagged, and moving it out then freed the field twice.
+        if( statement.kind == Statement_kind::Drop && !statement.place.is_global() )
         {
             dropped[statement.place.local.v] = true;
         }

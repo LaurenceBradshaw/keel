@@ -1,0 +1,19 @@
+error: an owning value is transferred, not copied
+  --> sema/errors_owning_copies.kl:22:15
+   |
+22 |     Owned c = a;
+   |               ^ write `move a`
+
+error: an owning value is transferred, not copied
+  --> sema/errors_owning_copies.kl:30:15
+   |
+30 |     auto  c = a;
+   |               ^ write `move a`
+
+error: an owning value is transferred, not copied
+  --> sema/errors_owning_copies.kl:40:9
+   |
+40 |     c = a;
+   |         ^ write `move a`
+
+3 errors generated

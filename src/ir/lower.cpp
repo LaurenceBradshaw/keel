@@ -74,12 +74,18 @@ private:
     // The type an operation happens in, and the conversion that puts an operand there. See §6.4.
     Type_id operation_type( Node_id node ) const;
     Operand converted( Operand operand, Type_id to, Span span );
+    Operand moved_if_owning( Operand operand ) const;
+
+    bool is_move_parameter( Node_id param ) const;
 
     u32  scope_depth() const;
     void push_scope();
     void pop_scope( Span span );
     void unwind_to( u32 depth, Span span );
     void drop_place( Place place, Type_id type, Span span );
+    // Drops what the statement built, in reverse order, and clears the list. Reverse for the same
+    // reason locals unwind in reverse: it is the order destructors run in.
+    void drop_statement_temporaries( Span span );
     // A call whose callee names a type rather than a function.
     bool is_construction( Node_id id ) const;
 
@@ -104,7 +110,12 @@ private:
     Local_id                          receiver_ {}; // A destructor's synthesised `this`. Invalid in a plain function.
     // Parameters the callee owns, and therefore drops. Collected in the constructor and put in a
     // scope by run(), because scope_locals_ has no scope to go into until then.
-    std::vector<Local_id>     owned_parameters_;
+    std::vector<Local_id> owned_parameters_;
+    // Owning temporaries built by the statement being lowered. They have an owner - the caller -
+    // and therefore a drop, and the right moment for it is the end of the statement, which is after
+    // every use of them within it.
+    std::vector<Local_id> statement_temporaries_;
+
     std::vector<Loop_targets> loops_; // innermost last, so break and continue bind to it
     std::vector<Local_id>     scope_locals_;
     std::vector<u32>          scope_marks_;
@@ -139,10 +150,7 @@ Lowering::Lowering(
             const Local_id  local = builder_.add_parameter( type, span, name );
             locals_.emplace( param.v, local );
 
-            const Node_id annotation = ast_.children( param )[0];
-
-            if( ast_.kind( annotation ) == Node_kind::Mode_type &&
-                static_cast<Keyword>( ast_.aux( annotation ) ) == Keyword::Move )
+            if( is_move_parameter( param ) )
             {
                 owned_parameters_.push_back( local );
             }
@@ -248,6 +256,23 @@ Operand Lowering::converted( Operand operand, Type_id to, Span span )
     return copy( builder_.place( builder_.into_temp( cast_to( operand, to ), to, span ) ), to );
 }
 
+Operand Lowering::moved_if_owning( Operand operand ) const
+{
+    if( operand.kind != Operand_kind::Copy || !types_.is_owning( operand.type ) )
+    {
+        return operand;
+    }
+
+    return move( operand.place, operand.type );
+}
+
+bool Lowering::is_move_parameter( Node_id param ) const
+{
+    const Node_id annotation = ast_.children( param )[0];
+
+    return ast_.kind( annotation ) == Node_kind::Mode_type && static_cast<Keyword>( ast_.aux( annotation ) ) == Keyword::Move;
+}
+
 u32 Lowering::scope_depth() const
 {
     return static_cast<u32>( scope_marks_.size() );
@@ -312,6 +337,18 @@ void Lowering::drop_place( Place place, Type_id type, Span span )
             drop_place( builder_.field( place, member ), types_.type_of( member ), span );
         }
     }
+}
+
+void Lowering::drop_statement_temporaries( Span span )
+{
+    for( std::size_t i = statement_temporaries_.size(); i > 0; --i )
+    {
+        const Local_id temporary = statement_temporaries_[i - 1];
+
+        drop_place( builder_.place( temporary ), builder_.type_of( temporary ), span );
+    }
+
+    statement_temporaries_.clear();
 }
 
 bool Lowering::is_construction( Node_id id ) const
@@ -453,6 +490,11 @@ Operand Lowering::lower_struct_literal( Node_id id )
     const Span     span = ast_.span( id );
     const Local_id temp = builder_.add_local( type, span );
 
+    if( types_.is_owning( type ) )
+    {
+        statement_temporaries_.push_back( temp );
+    }
+
     // Positional form names no field, so the i-th initialiser fills the i-th field. The two
     // forms cannot be mixed - the checker rejects that - so an index is enough here.
     const std::span<const Node_id> fields = ast_.children( types_.table().get( type ).declaration );
@@ -472,7 +514,9 @@ Operand Lowering::lower_struct_literal( Node_id id )
 
         builder_.assign(
             builder_.field( builder_.place( temp ), field ),
-            use( converted( value, types_.type_of( field ), ast_.span( initialiser ) ) ),
+            // Moved, not copied, when the field owns something: a copy would leave the temporary
+            // and the field holding one resource between them, and both would be dropped.
+            use( moved_if_owning( converted( value, types_.type_of( field ), ast_.span( initialiser ) ) ) ),
             ast_.span( initialiser )
         );
 
@@ -551,6 +595,11 @@ Operand Lowering::lower_call( Node_id id )
         const Type_id  type  = types_.type_of( id );
         const Local_id local = builder_.add_local( type, ast_.span( id ) );
 
+        if( types_.is_owning( type ) )
+        {
+            statement_temporaries_.push_back( local );
+        }
+
         lower_construction( builder_.place( local ), id );
 
         return copy( builder_.place( local ), type );
@@ -583,6 +632,15 @@ Operand Lowering::lower_call( Node_id id )
     for( std::size_t i = 0; i < operands.size(); ++i )
     {
         operands[i] = converted( operands[i], types_.type_of( parameters[i] ), ast_.span( arguments[i] ) );
+
+        // The parameter's mode rather than what was written at the call: KIR records what
+        // happens. Today they coincide, because the checker requires the marker - but the
+        // invariant is what stops the caller's end-of-statement drop firing on something it
+        // handed away.
+        if( is_move_parameter( parameters[i] ) )
+        {
+            operands[i] = moved_if_owning( operands[i] );
+        }
     }
 
     const u32 first = builder_.add_operands( operands );
@@ -641,7 +699,26 @@ Operand Lowering::lower_expression( Node_id id )
     case Node_kind::Field_expr:
         return copy( lower_place( id ), types_.type_of( id ) );
     case Node_kind::Marker_expr:
-        return move( lower_place( ast_.children( id )[0] ), types_.type_of( id ) );
+    {
+        const Node_id operand = ast_.children( id )[0];
+        const Type_id type    = types_.type_of( id );
+
+        // A named variable is already a place, and moving it empties that place. A temporary is
+        // not: it has to be built somewhere before it can be handed over. lower_expression puts it
+        // in a local of its own and registers it as a statement temporary, so if the transfer never
+        // happens the caller still drops it - and if it does, the move clears the flag and the
+        // caller's drop is skipped.
+        if( ast_.kind( operand ) == Node_kind::Name_expr )
+        {
+            return move( lower_place( operand ), type );
+        }
+
+        const Operand built = lower_expression( operand );
+
+        assert( built.kind != Operand_kind::Constant && "the checker rejects moving anything without a place" );
+
+        return move( built.place, type );
+    }
     default:
         // Names the construct rather than the category: while the lowerer is incomplete this is
         // the message that says what to write next, and it costs nothing once it is complete.
@@ -730,13 +807,19 @@ void Lowering::lower_block( Node_id id )
 void Lowering::lower_return( Node_id id )
 {
     const Node_id value = ast_.children( id )[0]; // invalid for a bare `return;`
+    const Span    span  = ast_.span( id );
     if( value.is_valid() )
     {
-        builder_.assign( builder_.place( k_return_slot ), use( lower_expression( value ) ), ast_.span( id ) );
+        // Returning transfers ownership out of the function, so the value is read as a move: without
+        // it the callee's scope exit drops what the caller now holds. §8 exempts `return` from
+        // needing a written marker precisely because the transfer is unambiguous here - there is no
+        // later use for one to warn about.
+        builder_.assign( builder_.place( k_return_slot ), use( moved_if_owning( lower_expression( value ) ) ), span );
     }
-    unwind_to( 0, ast_.span( id ) ); // everything in the function is dead after a return
+    drop_statement_temporaries( span );
+    unwind_to( 0, span ); // everything in the function is dead after a return
 
-    builder_.terminate_return( ast_.span( id ) );
+    builder_.terminate_return( span );
     return;
 }
 
@@ -764,20 +847,28 @@ void Lowering::lower_var( Node_id id )
         }
         else
         {
-            builder_.assign( builder_.place( local ), use( lower_expression( init ) ), span );
+            // An owning value is never copied: the copy would share the resource, and both would be
+            // dropped. Where the source is a temporary that is exactly right - it has no other
+            // owner. Where it is a named variable D31 requires a written `move`, which is not yet
+            // enforced, so this moves silently rather than double-freeing.
+            builder_.assign( builder_.place( local ), use( moved_if_owning( lower_expression( init ) ) ), span );
         }
     }
-    return;
+    drop_statement_temporaries( span );
 }
 
 void Lowering::lower_assign( Node_id id )
 {
+    const Span       span   = ast_.span( id );
     const Place      target = lower_place( ast_.children( id )[0] );
     const Operand    value  = lower_expression( ast_.children( id )[1] );
     const Token_kind op     = static_cast<Token_kind>( ast_.aux( id ) );
     if( op == Token_kind::Equal )
     {
-        builder_.assign( target, use( value ), ast_.span( id ) );
+        // Same reason as an initialiser: an owning value is never copied, or both copies would be
+        // dropped. A compound assignment cannot reach here for one - arithmetic on an owning type
+        // has no meaning.
+        builder_.assign( target, use( moved_if_owning( value ) ), ast_.span( id ) );
     }
     else
     {
@@ -788,14 +879,13 @@ void Lowering::lower_assign( Node_id id )
         // also the type the checker measured the value against, so the two agree by
         // construction.
         const Type_id type = types_.type_of( ast_.children( id )[0] );
-        const Span    span = ast_.span( id );
 
         const Operand left  = copy( target, type );
         const Operand right = converted( value, type, span );
 
         builder_.assign( target, binary( base_operator( op ), left, right, type ), span );
     }
-    return;
+    drop_statement_temporaries( span );
 }
 
 void Lowering::lower_increment( Node_id id )
@@ -814,7 +904,7 @@ void Lowering::lower_increment( Node_id id )
 
     // The target's type again, for the same reason: a statement carries none of its own.
     builder_.assign( target, binary( base_op, left, right, target_type ), ast_.span( id ) );
-    return;
+    drop_statement_temporaries( ast_.span( id ) );
 }
 
 void Lowering::lower_if( Node_id id )
@@ -829,6 +919,8 @@ void Lowering::lower_if( Node_id id )
 
     const Block_id then_block = builder_.add_block();
     const Block_id else_block = builder_.add_block();
+
+    drop_statement_temporaries( span );
 
     builder_.terminate_branch( test, then_block, else_block, span );
 
@@ -899,6 +991,8 @@ void Lowering::lower_while( Node_id id )
     // moved on to. The back edge still targets the header, so the whole condition re-runs.
     const Operand test = lower_expression( condition );
 
+    drop_statement_temporaries( span );
+
     builder_.terminate_branch( test, body_block, break_target(), span );
 
     builder_.switch_to( body_block );
@@ -944,6 +1038,8 @@ void Lowering::lower_for( Node_id id )
     loops_.push_back( Loop_targets { Block_id {}, Block_id {}, scope_depth() } );
 
     builder_.switch_to( header );
+
+    drop_statement_temporaries( span );
 
     if( condition.is_valid() )
     {
@@ -996,6 +1092,10 @@ void Lowering::lower_for( Node_id id )
 
 void Lowering::lower_statement( Node_id id )
 {
+    // Every statement that builds a temporary drops it before finishing, so by the time the next
+    // one starts the list is empty. Cheaper to assert than to find a leak in a golden later.
+    assert( statement_temporaries_.empty() && "a statement left an owning temporary undropped" );
+
     // A table of contents: what a statement can be, and nothing about how any of them lowers. The
     // shape the checker's visit_* already uses, and the reason a construct can grow without the
     // switch growing with it.
@@ -1029,6 +1129,7 @@ void Lowering::lower_statement( Node_id id )
     case Node_kind::Expr_stmt:
         // Discard the operand. D15 means the only thing that reaches here is a call.
         lower_expression( ast_.children( id )[0] );
+        drop_statement_temporaries( ast_.span( id ) );
         return;
 
     // One edge each. The checker already rejected either outside a loop, so the asserts in the

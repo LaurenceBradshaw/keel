@@ -1759,6 +1759,67 @@ first of them advice about how to space a spelling that no longer exists. And ne
 bitwise and; the D17 path that already rescued `u32 *p;` from the generic
 "no effect" message now covers `&` too, so all three spacings name `ref T`.
 
+**An owning value is never copied.** Chasing the temporary leak turned up a
+**double free** that had been shipping: `B make() { B b = ...; return b; }` freed
+twice, because `_0 = copy _1` copied the resource out and then the callee's scope
+exit dropped `_1`. Once one of these is found the rest follow from the same
+sentence, and there were four:
+
+- **`return`** transfers out, so the value is read as a move. §8 exempts `return`
+  from a written marker because there is no later use for one to warn about.
+- **An initialiser and an assignment** do too, where the source is a temporary -
+  which is the common case, since D31 requires a written `move` from a named one.
+- **A struct literal's fields**: `Wrapper { Buffer { ... } }` copied the inner
+  temporary into the field, leaving both holding one resource and both dropping it.
+- **A `move` parameter** takes its argument by move whatever the syntax said, so KIR
+  records what happens rather than what was written.
+
+The general rule, and the one to reach for when the next case appears: **any read of
+an owning value that transfers ownership is a move, and the lowerer is what knows
+which reads those are.**
+
+Three consequential fixes came with it.
+
+**A projected assignment initialises the whole local.** Nothing can be partially
+moved, so `_2.p = x` is a step in *building* `_2`. Both passes had been ignoring
+projected targets, which meant a struct literal - assembled entirely through
+projections - was never `Live`, so in a loop its temporary reported a false
+use-after-move on the second iteration and its drop flag never came back on.
+
+**A projected *drop* counts as dropping the local.** A compound with no destructor
+of its own has its drop expanded into per-field drops, so `drop _8.inner` is how
+`_8` is dropped. Requiring an unprojected drop left such a local unflagged, and
+moving it out then freed the field twice.
+
+**A temporary can be moved, so a move error need not name anything the author
+wrote.** `report_move_errors` asserted otherwise and aborted the compiler; it now
+says "this value" when the local is unnamed.
+
+`consume( move Buffer( 16 ) )` also needed the lowerer to materialise the temporary
+before moving it - `Marker_expr` was calling `lower_place` on a construction, which
+is not a place.
+
+Every fixture's exit code is unchanged; only `codegen/destructors.kl`'s emitted C
+moved, gaining the flags and drops that make it correct rather than accidentally
+balanced. Clean under `KEEL_VALGRIND=1`.
+
+**D31's initialisation and assignment clause is enforced.** `Buffer b2 = b1;` from a
+named owning local is now an error naming `move b1`, in an initialiser, an `auto`
+initialiser and an assignment alike. It was the last place a transfer could happen
+without being written down - the lowerer moved it anyway, so it freed exactly once,
+but silently, and a silent transfer is the one thing D2 exists to prevent.
+
+The rule needs no new machinery: `is_assignable` is already exactly the "names a
+place" test, which is what separates a named source from a temporary. A temporary
+needs no marker because it has no other owner and leaves no variable behind for a
+reader to wonder about - the same reasoning that lets `return` go unmarked.
+
+It needed its own fixture rather than a section of `errors_moves.kl`, and the reason
+is worth recording: these are **type** errors, so the driver stops before lowering
+when one is reported, and the move analysis never runs. Adding them to that file
+silently deleted its five move diagnostics from the golden. One fixture per pass,
+where a pass can gate the one after it.
+
 ### Debts to pay along the way
 
 - **A bare parameter of an owning type is not yet a borrow.** D31 says it is a *read-only* borrow,
