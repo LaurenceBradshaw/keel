@@ -1,0 +1,67 @@
+fn Buffer {
+    let _0: void; // return slot
+    let _1: Buffer*; // parameter this
+    let _2: u64; // parameter n
+    let _3: u64;
+
+    bb0:
+        (*_1).len = copy _2
+        _3 = copy _2 + copy _2
+        (*_1).capacity = copy _3
+        return
+}
+fn Shadowed {
+    let _0: void; // return slot
+    let _1: Shadowed*; // parameter this
+    let _2: u64; // parameter len
+
+    bb0:
+        (*_1).len = copy _2
+        return
+}
+fn Owned {
+    let _0: void; // return slot
+    let _1: Owned*; // parameter this
+    let _2: u64; // parameter n
+
+    bb0:
+        (*_1).len = copy _2
+        return
+}
+fn ~Owned {
+    let _0: void; // return slot
+    let _1: Owned*; // parameter this
+
+    bb0:
+        (*_1).len = const 0
+        return
+}
+fn main {
+    let _0: i32; // return slot
+    let _1: Buffer; // b
+    let _2: Buffer*;
+    let _3: void;
+    let _4: Shadowed; // s
+    let _5: Shadowed*;
+    let _6: void;
+    let _7: Owned; // o
+    let _8: Owned*;
+    let _9: void;
+
+    bb0:
+        storage_live _1
+        _2 = &_1
+        _3 = call Buffer(copy _2, const 4)
+        storage_live _4
+        _5 = &_4
+        _6 = call Shadowed(copy _5, const 7)
+        storage_live _7
+        _8 = &_7
+        _9 = call Owned(copy _8, const 1)
+        drop _7
+        storage_dead _7
+        _0 = const 0
+        storage_dead _4
+        storage_dead _1
+        return
+}

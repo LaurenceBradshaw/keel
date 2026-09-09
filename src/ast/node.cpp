@@ -15,6 +15,8 @@ std::string_view node_kind_name( Node_kind kind )
         return "Function_decl";
     case Node_kind::Destructor_decl:
         return "Destructor_decl";
+    case Node_kind::Constructor_decl:
+        return "Constructor_decl";
     case Node_kind::Param_decl:
         return "Param_decl";
     case Node_kind::Named_type:

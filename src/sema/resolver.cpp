@@ -126,6 +126,7 @@ void Resolver::visit( Node_id id )
         pop_scope();
         return;
     case Node_kind::Destructor_decl:
+    case Node_kind::Constructor_decl:
     case Node_kind::Function_decl:
         push_scope( Scope_kind::Barrier );
         visit( ast_.children( id )[0] ); // return type; invalid for Destructor_decl
@@ -257,7 +258,7 @@ void Resolver::visit( Node_id id )
 
         for( const Node_id member : ast_.children( id ) )
         {
-            if( ast_.kind( member ) == Node_kind::Destructor_decl )
+            if( is_function_like( ast_.kind( member ) ) )
             {
                 visit( member );
             }
@@ -1140,6 +1141,67 @@ TEST_CASE( "resolver_rejects_a_local_shadowing_a_field", "[sema][resolve][aggreg
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
+    }
+}
+
+// A constructor body sees the fields exactly as a destructor does - and unlike a destructor it has
+// parameters of its own, which is what finally makes D19's member clause reachable.
+TEST_CASE( "resolver_puts_fields_in_scope_inside_a_constructor", "[sema][resolve][aggregates]" )
+{
+    SECTION( "a bare field name binds to the field" )
+    {
+        const Resolved p( "class Buffer { u64 len; Buffer( u64 n ) { len = n; } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a field declared after the constructor is still visible" )
+    {
+        const Resolved p( "class Buffer { Buffer( u64 n ) { len = n; } u64 len; };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "`this` binds to the synthesised parameter" )
+    {
+        const Resolved p( "class Buffer { u64 len; Buffer( u64 n ) { this.len = n; } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// D19's member clause, live for the first time: a parameter naming the field it initialises is the
+// one place the shadow is forced, and `this.len` is how C++ programmers already disambiguate it.
+TEST_CASE( "resolver_lets_a_parameter_shadow_a_field", "[sema][resolve][aggregates]" )
+{
+    SECTION( "a parameter may take a field's name" )
+    {
+        const Resolved p( "class Buffer { u64 len; Buffer( u64 len ) { this.len = len; } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // The bare name is the parameter, not the field: the parameter scope sits above the field one.
+    SECTION( "the bare name resolves to the parameter" )
+    {
+        const Resolved p( "class Buffer { u64 len; Buffer( u64 len ) { this.len = len; } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.declaration_of( p.nth( Node_kind::Name_expr, 1 ) ) == p.nth( Node_kind::Param_decl, 1 ) );
+    }
+
+    SECTION( "a local still may not" )
+    {
+        const Resolved p( "class Buffer { u64 len; Buffer( u64 n ) { u64 len = n; } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.errors() == 1 );
     }
 }
 

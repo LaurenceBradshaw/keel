@@ -5,11 +5,10 @@
 namespace keel
 {
 
-std::string
-mangle_function( std::string_view module, std::string_view name, std::span<const Type_id> params, const Type_table& types )
+namespace
 {
-    // kl_<module>_<name>__<argtypes>
-
+std::string construct_arg_string( std::span<const Type_id> params, const Type_table& types )
+{
     std::string argtypes;
     for( const Type_id id : params )
     {
@@ -28,6 +27,17 @@ mangle_function( std::string_view module, std::string_view name, std::span<const
         }
     }
 
+    return argtypes;
+}
+} // namespace
+
+std::string
+mangle_function( std::string_view module, std::string_view name, std::span<const Type_id> params, const Type_table& types )
+{
+    // kl_<module>_<name>__<argtypes>
+
+    std::string argtypes = construct_arg_string( params, types );
+
     return fmt::format( "kl_{}_{}__{}", module, name, argtypes );
 }
 
@@ -39,6 +49,15 @@ std::string mangle_struct( std::string_view module, std::string_view name )
 std::string mangle_destructor( std::string_view module, std::string_view type_name )
 {
     return fmt::format( "kl_{}_{}__dtor", module, type_name );
+}
+
+std::string mangle_constructor(
+    std::string_view module, std::string_view type_name, std::span<const Type_id> params, const Type_table& types
+)
+{
+    std::string argtypes = construct_arg_string( params, types );
+
+    return fmt::format( "kl_{}_{}__{}__ctor", module, type_name, argtypes );
 }
 
 std::string mangle_local( std::string_view name, u32 declaration )

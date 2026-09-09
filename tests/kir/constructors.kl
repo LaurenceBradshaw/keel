@@ -1,0 +1,54 @@
+// PLAN D29. A constructor lowers to an ordinary KIR function whose first parameter is the receiver,
+// exactly as a destructor does. What is new is the call: it returns nothing and writes through
+// `this`, so an initialisation is a call taking the local's address rather than an assignment.
+class Buffer
+{
+    u64 len;
+    u64 capacity;
+
+    Buffer( u64 n )
+    {
+        len = n;
+        capacity = n + n;
+    }
+};
+
+// D19's member clause, reachable for the first time: a parameter may take a field's name, and
+// `this.len` is how the two are told apart.
+class Shadowed
+{
+    u64 len;
+
+    Shadowed( u64 len )
+    {
+        this.len = len;
+    }
+};
+
+// Construction and destruction together - the pair M3 exists to deliver.
+class Owned
+{
+    u64 len;
+
+    Owned( u64 n )
+    {
+        len = n;
+    }
+
+    ~Owned()
+    {
+        len = 0;
+    }
+};
+
+i32 main()
+{
+    Buffer b = Buffer( 4 );
+    Shadowed s = Shadowed( 7 );
+
+    {
+        Owned o = Owned( 1 );
+    }
+
+    return 0;
+}

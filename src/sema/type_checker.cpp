@@ -337,7 +337,7 @@ private:
     void declare_signatures_struct_decls();
     void declare_signatures_field_decls();
     void declare_signatures_function_decls();
-    void declare_signatures_destructor_decls();
+    void declare_signatures_member_functions();
     void declare_signatures_global_decls();
 
     void order_structs();
@@ -349,6 +349,12 @@ private:
     void check_struct_ownership();
 
     bool has_destructor( Node_id decl ) const;
+
+    // The first member of a kind, or invalid. Constructors and destructors are both at most one,
+    // so "the first" and "the only" coincide once check_aggregate_members has run.
+    Node_id find_member( Node_id decl, Node_kind kind ) const;
+
+    std::string previous_declaration_note( Node_id previous ) const;
 
     // The main entry points for visiting and inferring types.
     void    visit( Node_id id ); // statements and declarations
@@ -452,7 +458,7 @@ Types Checker::run()
 void Checker::declare_signatures()
 {
     declare_signatures_struct_decls();
-    declare_signatures_destructor_decls();
+    declare_signatures_member_functions();
     declare_signatures_field_decls();
     order_structs();
     check_aggregate_members();
@@ -560,7 +566,7 @@ void Checker::declare_signatures_function_decls()
     }
 }
 
-void Checker::declare_signatures_destructor_decls()
+void Checker::declare_signatures_member_functions()
 {
     for( Node_id child : ast_.children( ast_.root() ) )
     {
@@ -571,7 +577,7 @@ void Checker::declare_signatures_destructor_decls()
 
         for( Node_id member : ast_.children( child ) )
         {
-            if( ast_.kind( member ) != Node_kind::Destructor_decl )
+            if( !is_function_like( ast_.kind( member ) ) )
             {
                 continue;
             }
@@ -720,6 +726,45 @@ bool Checker::contains_itself( Node_id decl, std::vector<Node_id>& path )
     return false;
 }
 
+namespace
+{
+// A constructor and a destructor obey the same three rules and differ only in spelling, so the
+// rules are written once over a description of the kind rather than twice over the kinds.
+struct Member_kind
+{
+    Node_kind        node;
+    std::string_view noun;   // "constructor"
+    std::string_view prefix; // written before the name: "" or "~"
+    std::string_view remedy; // what to do instead, when a struct declares one
+};
+
+constexpr Member_kind k_member_kinds[] = {
+    { Node_kind::Constructor_decl, "constructor", "", "use `class`, or build this from a literal" },
+    { Node_kind::Destructor_decl, "destructor", "~", "use `class` if this type owns a resource" },
+};
+} // namespace
+
+Node_id Checker::find_member( Node_id decl, Node_kind kind ) const
+{
+    for( const Node_id member : ast_.children( decl ) )
+    {
+        if( ast_.kind( member ) == kind )
+        {
+            return member;
+        }
+    }
+
+    return Node_id {};
+}
+
+std::string Checker::previous_declaration_note( Node_id previous ) const
+{
+    const Span     span = ast_.span( previous );
+    const Line_col loc  = sm_.line_col( span.file, span.start );
+
+    return fmt::format( "previous declaration is at: {}:{}", loc.line, loc.col );
+}
+
 void Checker::check_aggregate_members()
 {
     for( const Node_id decl : ast_.children( ast_.root() ) )
@@ -729,49 +774,54 @@ void Checker::check_aggregate_members()
             continue;
         }
 
-        const Symbol_id type_name { ast_.aux( decl ) };
-        Node_id         first_dtor {};
+        const bool             on_a_struct = ast_.kind( decl ) == Node_kind::Struct_decl;
+        const Symbol_id        type_name { ast_.aux( decl ) };
+        const std::string_view type_text = interner_.text( type_name );
 
-        for( const Node_id member : ast_.children( decl ) )
+        for( const Member_kind& kind : k_member_kinds )
         {
-            if( ast_.kind( member ) != Node_kind::Destructor_decl )
+            Node_id first {};
+
+            for( const Node_id member : ast_.children( decl ) )
             {
-                continue;
-            }
+                if( ast_.kind( member ) != kind.node )
+                {
+                    continue;
+                }
 
-            // One mistake, one diagnostic: a struct with a destructor is a single decision, so
-            // the name and duplicate rules stay quiet about it.
-            if( ast_.kind( decl ) == Node_kind::Struct_decl )
-            {
-                error_at(
-                    ast_.span( member ), "a struct cannot have a destructor", "use `class` if this type owns a resource"
-                );
-                break;
-            }
+                // One mistake, one diagnostic: declaring one of these on a struct is a single
+                // decision to reverse, so the name and duplicate rules stay quiet about it.
+                if( on_a_struct )
+                {
+                    error_at(
+                        ast_.span( member ), fmt::format( "a struct cannot have a {}", kind.noun ), std::string( kind.remedy )
+                    );
+                    break;
+                }
 
-            if( first_dtor.is_valid() )
-            {
-                const Span     span = ast_.span( first_dtor );
-                const Line_col loc  = sm_.line_col( span.file, span.start );
+                if( first.is_valid() )
+                {
+                    // Overloading is outside v0 (§6.6), so a second one has nothing to tell it apart.
+                    error_at(
+                        ast_.span( member ),
+                        fmt::format( "`{}` already has a {}", type_text, kind.noun ),
+                        previous_declaration_note( first )
+                    );
+                    continue;
+                }
 
-                std::string prev_decl = fmt::format( "previous declaration is at: {}:{}", loc.line, loc.col );
-                error_at(
-                    ast_.span( member ), fmt::format( "`{}` already has a destructor", interner_.text( type_name ) ), prev_decl
-                );
-                continue;
-            }
+                first = member;
 
-            first_dtor = member;
+                const Symbol_id written { ast_.aux( member ) };
 
-            const Symbol_id written { ast_.aux( member ) };
-
-            if( written.is_valid() && written != type_name )
-            {
-                error_at(
-                    ast_.span( member ),
-                    fmt::format( "`~{}` does not name the enclosing type", interner_.text( written ) ),
-                    fmt::format( "write `~{}`", interner_.text( type_name ) )
-                );
+                if( written.is_valid() && written != type_name )
+                {
+                    error_at(
+                        ast_.span( member ),
+                        fmt::format( "`{}{}` does not name the enclosing type", kind.prefix, interner_.text( written ) ),
+                        fmt::format( "write `{}{}`", kind.prefix, type_text )
+                    );
+                }
             }
         }
     }
@@ -921,6 +971,7 @@ void Checker::visit( Node_id id )
 
     case Node_kind::Function_decl:
     case Node_kind::Destructor_decl:
+    case Node_kind::Constructor_decl:
         return visit_function( id );
 
     case Node_kind::Return_stmt:
@@ -1664,14 +1715,43 @@ Type_id Checker::infer_call( Node_id id )
 
     const std::string_view name = interner_.text( Symbol_id { ast_.aux( callee ) } );
 
-    if( ast_.kind( decl ) != Node_kind::Function_decl )
+    // What the arguments are checked against, what the call produces, and how many leading
+    // parameters are not the author's to supply. For a plain function all three are the obvious
+    // answers; a construction is where they come apart.
+    Node_id callable        = decl;
+    Type_id result          = types_[decl.v];
+    u32     implicit_params = 0;
+
+    if( is_aggregate( ast_.kind( decl ) ) )
+    {
+        // `Buffer( 16 )` names a type, not a function: the arguments belong to its constructor, but
+        // the result is the type itself - a constructor returns nothing and writes through `this`.
+        callable = find_member( decl, Node_kind::Constructor_decl );
+
+        if( !callable.is_valid() )
+        {
+            error_at(
+                ast_.span( callee ),
+                fmt::format( "`{}` has no constructor", name ),
+                fmt::format( "build it from a literal: `{} {{ ... }}`", name )
+            );
+            type_the_arguments_anyway();
+            return record( id, table_.builtin( Type_kind::Error ) );
+        }
+
+        // The receiver is an ordinary first parameter, so skipping it here is what stops every
+        // call site owing an extra argument.
+        implicit_params = 1;
+    }
+    else if( ast_.kind( decl ) != Node_kind::Function_decl )
     {
         error_at( ast_.span( callee ), fmt::format( "`{}` is not callable", name ) );
         type_the_arguments_anyway();
         return record( id, table_.builtin( Type_kind::Error ) );
     }
 
-    const std::span<const Node_id> params    = ast_.children( ast_.children( decl )[1] );
+    const std::span<const Node_id> declared  = ast_.children( ast_.children( callable )[1] );
+    const std::span<const Node_id> params    = declared.subspan( implicit_params );
     const std::span<const Node_id> arguments = ast_.children( args );
 
     if( params.size() != arguments.size() )
@@ -1704,7 +1784,7 @@ Type_id Checker::infer_call( Node_id id )
         infer( arguments[i] );
     }
 
-    return record( id, types_[decl.v] );
+    return record( id, result );
 }
 
 Type_id Checker::infer_binary( Node_id id )
@@ -1961,6 +2041,29 @@ Type_id Checker::infer_struct_literal( Node_id id )
         }
 
         return record( id, error );
+    }
+
+    // D29: a class with a constructor is built by calling it. That is what stops the two
+    // initialisation syntaxes competing for one type, and it is the rule the struct-literal-on-a-
+    // class exception was standing in for until constructors existed.
+    if( find_member( decl, Node_kind::Constructor_decl ).is_valid() )
+    {
+        const std::string_view name = interner_.text( Symbol_id { ast_.aux( decl ) } );
+
+        error_at(
+            ast_.span( id ),
+            fmt::format( "`{}` has a constructor, so it cannot be built from a literal", name ),
+            fmt::format( "write `{}( ... )`", name )
+        );
+
+        for( const Node_id init : ast_.children( id ) )
+        {
+            infer( ast_.children( init )[0] );
+        }
+
+        // The declared type rather than the error type: the mistake is how it was built, not what
+        // it is, so a cascade at the assignment would say nothing new.
+        return record( id, types_[decl.v] );
     }
 
     const std::span<const Node_id> initialisers = ast_.children( id );
@@ -5788,6 +5891,155 @@ TEST_CASE( "type_checker_types_a_destructor_body", "[sema][types][aggregates]" )
         const Typed p( "void release( u8* p ) { }\n"
                        "class Buffer { u8* ptr; ~Buffer() { release( ptr ); } };\n"
                        "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// D29: a class is built by a constructor and a struct from a literal, which is what stops the two
+// initialisation syntaxes competing. The parser accepts one on either kind so the message can name
+// the fix rather than being a syntax error.
+TEST_CASE( "type_checker_checks_constructor_declarations", "[sema][aggregates]" )
+{
+    SECTION( "a struct with a constructor is rejected" )
+    {
+        const Typed p( "struct Point { i32 x; Point( i32 a ) { x = a; } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "a class with one is accepted" )
+    {
+        const Typed p( "class Buffer { u64 len; Buffer( u64 n ) { len = n; } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a name that does not match the enclosing type is rejected" )
+    {
+        const Typed p( "class Buffer { u64 len; Wrong( u64 n ) { len = n; } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    // §6.6 puts overloading outside v0, so a second one has nothing to distinguish it.
+    SECTION( "two constructors are rejected once" )
+    {
+        const Typed p( "class Buffer { u64 len; Buffer( u64 n ) { } Buffer( i32 m ) { } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "a constructor beside a destructor is fine" )
+    {
+        const Typed p( "class Buffer { u64 len; Buffer( u64 n ) { len = n; } ~Buffer() { } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "the body is type checked" )
+    {
+        const Typed p( "class Buffer { u64 len; Buffer( u64 n ) { len = nullptr; } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    SECTION( "a constructor returns nothing" )
+    {
+        const Typed p( "class Buffer { u64 len; Buffer( u64 n ) { return 1; } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+}
+
+// `Buffer( 16 )` is a Call_expr whose callee names a type rather than a function. Its result is the
+// type itself, and its parameters are the constructor's with the receiver skipped.
+TEST_CASE( "type_checker_types_a_constructor_call", "[sema][aggregates]" )
+{
+    SECTION( "the call has the class's type" )
+    {
+        const Typed p( "class Buffer { u64 len; Buffer( u64 n ) { len = n; } };\n"
+                       "i32 main() { Buffer b = Buffer( 16 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Call_expr, 0 ) ) == "Buffer" );
+    }
+
+    // The receiver is a parameter like any other, so forgetting to skip it would demand an extra
+    // argument at every call site.
+    SECTION( "the receiver is not one of the arguments" )
+    {
+        const Typed p( "class Buffer { u64 len; Buffer( u64 n ) { len = n; } };\n"
+                       "i32 main() { Buffer b = Buffer( 16, 1 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    SECTION( "too few arguments is an error" )
+    {
+        const Typed p( "class Buffer { u64 len; Buffer( u64 n ) { len = n; } };\n"
+                       "i32 main() { Buffer b = Buffer(); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    SECTION( "an argument is checked against the parameter" )
+    {
+        const Typed p( "class Buffer { u64 len; Buffer( u64 n ) { len = n; } };\n"
+                       "i32 main() { Buffer b = Buffer( nullptr ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    SECTION( "a class without a constructor is not callable" )
+    {
+        const Typed p( "class Handle { u64 value; };\ni32 main() { Handle h = Handle( 1 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+}
+
+// The other half of D29's rule, and the entry that comes out of the debts list: with a constructor
+// to build it, the literal form stops being a class's only way in.
+TEST_CASE( "type_checker_rejects_a_literal_for_a_constructed_class", "[sema][aggregates]" )
+{
+    SECTION( "a literal is rejected when the class has a constructor" )
+    {
+        const Typed p( "class Buffer { u64 len; Buffer( u64 n ) { len = n; } };\n"
+                       "i32 main() { Buffer b = Buffer { 16 }; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "and accepted when it has none" )
+    {
+        const Typed p( "class Handle { u64 value; };\ni32 main() { Handle h = Handle { 1 }; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a struct is unaffected" )
+    {
+        const Typed p( "struct Point { i32 x; i32 y; };\ni32 main() { Point q = Point { 1, 2 }; return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );

@@ -1,0 +1,74 @@
+// M3's acceptance, as far as v0 can state it: a class acquires in its constructor and releases in
+// its destructor, and the release happens exactly once on every path out. There is no allocator
+// yet - the runtime is deferred - so the resource is a counter, which is enough to check placement.
+// The compiled program's exit code is the assertion; run it under KEEL_VALGRIND=1 as well.
+i32 live;
+
+class Owned
+{
+    u64 id;
+
+    // Acquire. Without a runtime this is a counter rather than an allocation, but it is a
+    // statement in the body either way, which is the whole of what the constructor delivers.
+    Owned( u64 n )
+    {
+        id = n;
+        live = live + 1;
+    }
+
+    // Release.
+    ~Owned()
+    {
+        live = live - 1;
+    }
+};
+
+// A parameter may shadow the field it initialises; `this.id` disambiguates.
+class Shadowed
+{
+    i32 id;
+
+    Shadowed( i32 id )
+    {
+        this.id = id;
+    }
+};
+
+// Balanced on the early path as well as the late one.
+i32 early( i32 n )
+{
+    Owned o = Owned( 1 );
+
+    if ( n == 0 )
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
+i32 main()
+{
+    // One in, one out.
+    {
+        Owned a = Owned( 1 );
+    }
+
+    // Once per iteration.
+    i32 i = 0;
+    while ( i < 4 )
+    {
+        Owned b = Owned( 2 );
+        i = i + 1;
+    }
+
+    early( 0 );
+    early( 1 );
+
+    // The constructor really ran: the field holds what was passed, through the shadowed parameter.
+    Shadowed s = Shadowed( 9 );
+
+    // `live` is 0 if every constructor was matched by exactly one destructor.
+    // 33 + 0 + 9 = 42.
+    return 33 + live + s.id;
+}

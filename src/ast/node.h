@@ -16,6 +16,7 @@ enum class Node_kind : u16
     Source_file,
     Function_decl,
     Destructor_decl,
+    Constructor_decl,
     Param_decl,
     Named_type,
     Pointer_type,
@@ -84,7 +85,7 @@ constexpr bool is_aggregate( Node_kind kind )
 // A destructor is a Function_decl minus its return type, so one scan finds both.
 constexpr bool is_function_like( Node_kind kind )
 {
-    return kind == Node_kind::Function_decl || kind == Node_kind::Destructor_decl;
+    return kind == Node_kind::Function_decl || kind == Node_kind::Destructor_decl || kind == Node_kind::Constructor_decl;
 }
 
 struct Node

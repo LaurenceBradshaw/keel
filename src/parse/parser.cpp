@@ -78,6 +78,7 @@ private:
     Node_id parse_aggregate_decl();
     Node_id parse_field_decl();
     Node_id parse_destructor_decl( Symbol_id enclosing );
+    Node_id parse_constructor_decl( Symbol_id enclosing );
 
     // `Point { 0.0, 0.0 }` or `Point { .x = 0.0, .y = 0.0 }`. Entered from parse_prefix once the
     // identifier is consumed and a `{` is seen behind it.
@@ -146,6 +147,8 @@ private:
 
     void mark_parenthesised( Node_id id );
     bool is_parenthesised( Node_id id ) const;
+
+    Node_id synthesise_receiver( Symbol_id enclosing, Span span );
 
     std::span<const Token> tokens_;
     u32                    pos_ = 0;
@@ -688,7 +691,14 @@ Node_id Parser::parse_aggregate_decl()
     {
         const u32 before = pos_;
 
-        members.push_back( check( Token_kind::Tilde ) ? parse_destructor_decl( name ) : parse_field_decl() );
+        const bool is_destructor  = check( Token_kind::Tilde );
+        const bool is_constructor = check( Token_kind::Identifier ) && peek( 1 ).kind == Token_kind::L_paren;
+
+        members.push_back(
+            is_destructor    ? parse_destructor_decl( name )
+            : is_constructor ? parse_constructor_decl( name )
+                             : parse_field_decl()
+        );
 
         if( pos_ == before )
         {
@@ -747,13 +757,7 @@ Node_id Parser::parse_destructor_decl( Symbol_id enclosing )
 
     // C++ writes `this` implicitly; Keel writes it down. As an ordinary parameter it needs no
     // special case in the resolver, the checker, mangling or lowering - it is simply parameter 0.
-    const Node_id receiver = ast_.add(
-        Node_kind::Param_decl,
-        start,
-        Interner::keyword( Keyword::This ).v,
-        { ast_.add( Node_kind::Pointer_type, start, 0, { ast_.add( Node_kind::Named_type, start, enclosing.v, {} ) } ) }
-    );
-
+    const Node_id receiver = synthesise_receiver( enclosing, start );
     // Parsed rather than rejected on sight, so a stray parameter does not desynchronise the body.
     const Node_id params = parse_param_list( receiver );
 
@@ -778,6 +782,25 @@ Node_id Parser::parse_destructor_decl( Symbol_id enclosing )
         { Node_id {}, params, body }
 
     );
+}
+
+Node_id Parser::parse_constructor_decl( Symbol_id enclosing )
+{
+    const Span      start = peek().span;
+    const Symbol_id name  = expect_name();
+
+    // Same receiver the destructor gets, and for the same reason: as an ordinary parameter it
+    // needs no special case in any later pass.
+    const Node_id receiver = synthesise_receiver( enclosing, start );
+    const Node_id params   = parse_param_list( receiver );
+    const Node_id body     = parse_block();
+
+    if( !name.is_valid() )
+    {
+        return error_node( Span::merge( start, previous().span ) );
+    }
+
+    return ast_.add( Node_kind::Constructor_decl, Span::merge( start, previous().span ), name.v, { Node_id {}, params, body } );
 }
 
 Node_id Parser::parse_struct_literal( Span start, Symbol_id type_name )
@@ -1452,6 +1475,16 @@ void Parser::mark_parenthesised( Node_id id )
 bool Parser::is_parenthesised( Node_id id ) const
 {
     return id.v < parenthesised_.size() && parenthesised_[id.v];
+}
+
+Node_id Parser::synthesise_receiver( Symbol_id enclosing, Span span )
+{
+    return ast_.add(
+        Node_kind::Param_decl,
+        span,
+        Interner::keyword( Keyword::This ).v,
+        { ast_.add( Node_kind::Pointer_type, span, 0, { ast_.add( Node_kind::Named_type, span, enclosing.v, {} ) } ) }
+    );
 }
 
 Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing )
@@ -4171,6 +4204,133 @@ TEST_CASE( "parser_parses_destructors", "[parse][aggregates]" )
 
         INFO( p.dump() );
         REQUIRE( p.text( dtor ) == "~Buffer() { }" );
+    }
+}
+
+// A constructor is decided on shape, not on name: `Identifier (` cannot be a field, which is
+// `Type name;`. Keying on the name instead would send `Wrong( u64 n ) {}` to parse_field_decl and
+// produce nonsense rather than the mismatch diagnostic the checker gives it.
+TEST_CASE( "parser_parses_constructors", "[parse][aggregates]" )
+{
+    SECTION( "shaped like a function, with no return type" )
+    {
+        const Parsed  p( "class Buffer { u64 len; Buffer( u64 n ) { len = n; } };" );
+        const Node_id ctor = find_first( p.ast(), p.root(), Node_kind::Constructor_decl );
+
+        INFO( p.dump() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( ctor.is_valid() );
+        REQUIRE( p.children( ctor ).size() == 3 );
+        REQUIRE_FALSE( p.child( ctor, 0 ).is_valid() ); // no return type
+        REQUIRE( p.kind( p.child( ctor, 1 ) ) == Node_kind::Param_list );
+        REQUIRE( p.kind( p.child( ctor, 2 ) ) == Node_kind::Block );
+    }
+
+    SECTION( "is_function_like covers it" )
+    {
+        REQUIRE( is_function_like( Node_kind::Constructor_decl ) );
+        REQUIRE_FALSE( is_aggregate( Node_kind::Constructor_decl ) );
+    }
+
+    // The receiver is first, then the author's own parameters - unlike a destructor, which may
+    // have none of its own.
+    SECTION( "the receiver comes first, then the declared parameters" )
+    {
+        const Parsed  p( "class Buffer { u64 len; Buffer( u64 n, i32 flag ) { } };" );
+        const Node_id ctor     = find_first( p.ast(), p.root(), Node_kind::Constructor_decl );
+        const Node_id params   = p.child( ctor, 1 );
+        const Node_id receiver = p.child( params, 0 );
+
+        INFO( p.dump() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.children( params ).size() == 3 );
+        REQUIRE( p.kind( p.child( receiver, 0 ) ) == Node_kind::Pointer_type );
+    }
+
+    SECTION( "no parameters of its own is fine" )
+    {
+        const Parsed  p( "class Buffer { u64 len; Buffer() { len = 0; } };" );
+        const Node_id ctor = find_first( p.ast(), p.root(), Node_kind::Constructor_decl );
+
+        INFO( p.dump() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.children( p.child( ctor, 1 ) ).size() == 1 ); // just the receiver
+    }
+
+    SECTION( "a field is still a field" )
+    {
+        const Parsed  p( "class Buffer { u64 len; u8* ptr; };" );
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Class_decl );
+
+        INFO( p.dump() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.children( decl ).size() == 2 );
+        REQUIRE( p.kind( p.child( decl, 0 ) ) == Node_kind::Field_decl );
+        REQUIRE( p.kind( p.child( decl, 1 ) ) == Node_kind::Field_decl );
+    }
+
+    // Decided on shape, so this parses and the checker reports it - the same treatment `~Wrong()`
+    // gets, and for the same reason.
+    SECTION( "a mismatched name still parses" )
+    {
+        const Parsed  p( "class Buffer { u64 len; Wrong( u64 n ) { } };" );
+        const Node_id ctor = find_first( p.ast(), p.root(), Node_kind::Constructor_decl );
+
+        INFO( p.dump() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( ctor.is_valid() );
+        REQUIRE( p.aux( ctor ) != p.aux( find_first( p.ast(), p.root(), Node_kind::Class_decl ) ) );
+    }
+
+    SECTION( "the receiver is the enclosing type even when the name is wrong" )
+    {
+        const Parsed  p( "class Buffer { u64 len; Wrong( u64 n ) { } };" );
+        const Node_id ctor     = find_first( p.ast(), p.root(), Node_kind::Constructor_decl );
+        const Node_id receiver = p.child( p.child( ctor, 1 ), 0 );
+        const Node_id named    = p.child( p.child( receiver, 0 ), 0 );
+
+        INFO( p.dump() );
+        REQUIRE( p.aux( named ) == p.aux( find_first( p.ast(), p.root(), Node_kind::Class_decl ) ) );
+    }
+
+    SECTION( "a constructor on a struct parses - the checker is what rejects it" )
+    {
+        const Parsed p( "struct Point { i32 x; Point( i32 a ) { x = a; } };" );
+
+        INFO( p.dump() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( find_first( p.ast(), p.root(), Node_kind::Constructor_decl ).is_valid() );
+    }
+
+    SECTION( "it may sit before the fields, and beside a destructor" )
+    {
+        const Parsed  p( "class Buffer { Buffer( u64 n ) { } ~Buffer() { } u64 len; };" );
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Class_decl );
+
+        INFO( p.dump() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.children( decl ).size() == 3 );
+        REQUIRE( p.kind( p.child( decl, 0 ) ) == Node_kind::Constructor_decl );
+        REQUIRE( p.kind( p.child( decl, 1 ) ) == Node_kind::Destructor_decl );
+        REQUIRE( p.kind( p.child( decl, 2 ) ) == Node_kind::Field_decl );
+    }
+
+    // The member loop advances on no progress so that garbage cannot spin it, and a malformed
+    // constructor is a new way to make none.
+    SECTION( "a malformed constructor terminates the member loop" )
+    {
+        for( const std::string_view source :
+             { "class Buffer { Buffer( };",
+               "class Buffer { Buffer() };",
+               "class Buffer { Buffer( u64 ) { } };",
+               "class Buffer { Buffer( u64 n ) };" } )
+        {
+            INFO( "source '" << source << "'" );
+            const Parsed p( source );
+
+            REQUIRE( p.root().is_valid() ); // reached only if parsing terminated
+            REQUIRE( p.has_errors() );
+        }
     }
 }
 

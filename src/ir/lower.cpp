@@ -63,6 +63,12 @@ private:
     void pop_scope( Span span );
     void unwind_to( u32 depth, Span span );
     void drop_place( Place place, Type_id type, Span span );
+    // A call whose callee names a type rather than a function.
+    bool is_construction( Node_id id ) const;
+
+    // Runs a construct with `target`'s address as its receiver. Not an expression: a constructor
+    // returns nothing and writes through the pointer it is handed.
+    void lower_construction( Place target, Node_id call_expr );
 
     const Ast& ast_;
 
@@ -116,7 +122,7 @@ Lowering::Lowering(
             // The parser puts the receiver first, and it is what a bare field name is reached
             // through. Captured from the walk rather than assumed to be local 1, so it survives
             // anything that adds a local before this runs.
-            if( !receiver_.is_valid() && ast_.kind( declaration ) == Node_kind::Destructor_decl )
+            if( !receiver_.is_valid() && ast_.kind( declaration ) != Node_kind::Function_decl )
             {
                 receiver_ = local;
             }
@@ -264,6 +270,71 @@ void Lowering::drop_place( Place place, Type_id type, Span span )
             drop_place( builder_.field( place, member ), types_.type_of( member ), span );
         }
     }
+}
+
+bool Lowering::is_construction( Node_id id ) const
+{
+    if( ast_.kind( id ) != Node_kind::Call_expr )
+    {
+        return false;
+    }
+
+    const Node_id decl = resolution_.declaration_of( ast_.children( id )[0] );
+
+    return decl.is_valid() && is_aggregate( ast_.kind( decl ) );
+}
+
+void Lowering::lower_construction( Place target, Node_id call_expr )
+{
+    const Span    span      = ast_.span( call_expr );
+    const Node_id aggregate = resolution_.declaration_of( ast_.children( call_expr )[0] );
+
+    Node_id constructor {};
+
+    for( const Node_id member : ast_.children( aggregate ) )
+    {
+        if( ast_.kind( member ) == Node_kind::Constructor_decl )
+        {
+            constructor = member;
+            break;
+        }
+    }
+
+    assert( constructor.is_valid() && "the checker rejects constructing a type that has none" );
+
+    const std::span<const Node_id> parameters = ast_.children( ast_.children( constructor )[1] );
+    const std::span<const Node_id> arguments  = ast_.children( ast_.children( call_expr )[1] );
+
+    // Parameter 0 is the receiver, and the signature pass already recorded its type as `t*` - so
+    // there is no pointer type to build here, only one to read.
+    const Type_id receiver_type = types_.type_of( parameters[0] );
+
+    std::vector<Operand> operands;
+
+    operands.reserve( arguments.size() + 1 );
+    operands.push_back(
+        copy( builder_.place( builder_.into_temp( address_of( target, receiver_type ), receiver_type, span ) ), receiver_type )
+    );
+
+    // Two loops, as a plain call has, and for the same reason: every argument is lowered before any
+    // is converted, so the statements come out in the order they were written (§7.1).
+    for( const Node_id argument : arguments )
+    {
+        operands.push_back( lower_expression( argument ) );
+    }
+
+    for( std::size_t i = 0; i < arguments.size(); ++i )
+    {
+        const Type_id param_type = types_.type_of( parameters[i + 1] );
+        operands[i + 1]          = converted( operands[i + 1], param_type, ast_.span( arguments[i] ) );
+    }
+
+    const u32     first = builder_.add_operands( operands );
+    const Type_id type  = types_.type_of( constructor ); // void
+
+    // The result is discarded, but Assign stays total: a void local is what the backend drops the
+    // assignment from, leaving the bare call.
+    builder_.into_temp( call( constructor, first, static_cast<u32>( operands.size() ), type ), type, span );
 }
 
 Block_id Lowering::break_target()
@@ -452,6 +523,18 @@ Operand Lowering::lower_expression( Node_id id )
     }
     case Node_kind::Call_expr:
     {
+        // In value position there is no destination, so it constructs into a temporary. Nothing
+        // drops that temporary - the same hole an owning struct literal already has, and no new one.
+        if( is_construction( id ) )
+        {
+            const Type_id  type  = types_.type_of( id );
+            const Local_id local = builder_.add_local( type, ast_.span( id ) );
+
+            lower_construction( builder_.place( local ), id );
+
+            return copy( builder_.place( local ), type );
+        }
+
         const Node_id callee = resolution_.declaration_of( ast_.children( id )[0] );
         assert(
             callee.is_valid() && ast_.kind( callee ) == Node_kind::Function_decl &&
@@ -617,7 +700,16 @@ void Lowering::lower_statement( Node_id id )
             const Node_id init = ast_.children( id )[1];
             if( init.is_valid() )
             {
-                builder_.assign( builder_.place( local ), use( lower_expression( init ) ), span );
+                // Constructed in place. Going via a temporary and copying would make two of an
+                // owning type where the program said one, and only one of them would be dropped.
+                if( is_construction( init ) )
+                {
+                    lower_construction( builder_.place( local ), init );
+                }
+                else
+                {
+                    builder_.assign( builder_.place( local ), use( lower_expression( init ) ), span );
+                }
             }
         }
         return;
@@ -2494,6 +2586,67 @@ TEST_CASE( "lower_lowers_a_destructor", "[ir][lower][aggregates]" )
         REQUIRE( p.clean() );
         REQUIRE( text.find( "storage_live" ) != std::string::npos );
         REQUIRE( text.find( "storage_live _1" ) == std::string::npos ); // never the receiver
+    }
+}
+
+// A constructor lowers like a destructor - an ordinary Function whose first parameter is the
+// receiver - but its *call* is a new shape: it returns nothing and writes through `this`, so an
+// initialisation is a call taking the local's address rather than an assignment.
+TEST_CASE( "lower_lowers_a_constructor", "[ir][lower][aggregates]" )
+{
+    SECTION( "it becomes a function, receiver first" )
+    {
+        Lowered p( "class Buffer { u64 len; Buffer( u64 n ) { len = n; } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.functions.size() == 2 );
+        REQUIRE( p.functions[0].parameter_count == 2 ); // `this` and `n`
+        REQUIRE( verify( p.functions[0] ).empty() );
+    }
+
+    SECTION( "the body writes through the receiver" )
+    {
+        Lowered p( "class Buffer { u64 len; Buffer( u64 n ) { len = n; } };\ni32 main() { return 0; }" );
+
+        const std::string text = p.text( 0 );
+
+        INFO( text );
+        REQUIRE( text.find( "(*_1).len = copy _2" ) != std::string::npos );
+    }
+
+    // Not an assignment: there is no value to assign, because the constructor writes through the
+    // pointer it is given.
+    SECTION( "an initialisation is a call taking the local's address" )
+    {
+        Lowered p( "class Buffer { u64 len; Buffer( u64 n ) { len = n; } };\n"
+                   "i32 main() { Buffer b = Buffer( 16 ); return 0; }" );
+
+        const std::string text = p.text( 1 );
+
+        INFO( text );
+        REQUIRE( p.clean() );
+        REQUIRE( text.find( "storage_live _1" ) != std::string::npos );
+        REQUIRE( text.find( "&_1" ) != std::string::npos );
+        REQUIRE( text.find( "call" ) != std::string::npos );
+        REQUIRE( verify( p.functions[1] ).empty() );
+    }
+
+    SECTION( "a constructed local is still dropped at scope exit" )
+    {
+        Lowered p( "class Buffer { u64 len; Buffer( u64 n ) { len = n; } ~Buffer() { } };\n"
+                   "i32 main() { { Buffer b = Buffer( 16 ); } return 0; }" );
+
+        const std::string text = p.text( 2 );
+
+        INFO( text );
+        REQUIRE( p.clean() );
+        REQUIRE( text.find( "drop _1" ) != std::string::npos );
+
+        for( const Function& function : p.functions )
+        {
+            REQUIRE( verify( function ).empty() );
+        }
     }
 }
 

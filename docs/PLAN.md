@@ -857,6 +857,7 @@ none of them can block work indefinitely.
 | Custom allocators / arenas — visible in the type system or not? | M7 |
 | Module granularity: file, directory, or explicit declaration? | M7 |
 | Standard library naming. `MANIFESTO.md` §12 already refuses to mirror `std`, but the specific names are unsettled: one `Hash_map` rather than `map`/`unordered_map`, and a better name than `vector` for a dynamic array. Note the one real trap — `List` reads as a *linked* list to a C++ programmer (it is `List<T>` in C#/Java but `std::list` in C++), so a familiar name would carry the wrong semantics. Not a §6.3 divergence: those cover syntax and semantics the compiler enforces, and no library exists yet. | M7, when the first containers are written in Keel |
+| **What does the runtime look like, and how does Keel call into it?** §7 promises a `runtime/kl_rt.{h,c}` under 200 lines for allocation, abort/panic and `print`, and none of it exists - no Keel program can allocate anything. **Deferred past M3**, deliberately: M3's acceptance names freeing, but what makes drop placement hard is *where*, and that is proven by a fixture whose destructor increments a counter on every path out, early `return` included. The blocker underneath is that Keel cannot declare what it does not define - a body-less function is a parse error, D18's corollary - so an FFI declaration has no spelling. The likely answer is **`extern`**, which keeps that corollary intact (a bare prototype stays an error, with `extern` as the fix it names) and should mean what C++'s `extern "C"` means, **including suppressing mangling**: `kl_rt_alloc` has to emit under its own name. Four sub-questions, with leanings rather than answers. **Is an `extern` call `unsafe`?** Probably, as Rust's `unsafe extern` - the FFI boundary is where the assertion belongs, and being the safe wrapper over it is the point of `Buffer`. That contradicts §6.2's sample, which calls `kl_rt_alloc` bare, so the sample changes when this lands; to be reviewed rather than assumed. **What does allocation return?** Spelled `alloc<f64>( count )` - a keyword in D28's mould rather than a generic, so the `<` can only be a bracket, and the element type gives the compiler the size, so no `sizeof` is needed. Its type is `[*]f64`, which means this waits on the many-item pointer D27 leaves out of v0: the spelling is settled, the prerequisite is not. **What does failure do?** `nullptr` for now, which D26 already makes adopt from context, replaced by `Result` at M5. Nothing forces the check until then, and that is the stopgap's whole cost. **What can `print` print?** Nothing worth having - D20 leaves string literals with no type until `String` arrives - so it waits for M7 alongside them rather than shipping an integers-only version that has to be unbuilt. **And what language is it written in?** A thin C floor, with the runtime proper in Keel above it - the same instinct that already puts `Vector` and `String` in Keel at M7. That is what every comparable language converges on: Rust's `std` is Rust over libc, Zig's is Zig over a small `os` layer, D's druntime is D over a little C. Nobody writes a runtime in C by preference; they write it in their own language over the smallest floor they can manage. Raw syscalls, as Go and Zig do, buy static binaries free of libc versioning - genuinely appealing, and rejected here for two reasons: per-architecture assembly stubs, and that reaching them from generated C means `__asm__` blocks, which couples the C backend to one compiler's extensions and is exactly what §2.2 forbids. libc is the right floor for v0. Note also that with `alloc<T>` a keyword, the backend could simply spell it `malloc` and no runtime file would be needed at all - cheaper than `extern`, but it bakes an allocation policy into the compiler, sits badly beside D10's `Owned<T>` direction, and gets unbuilt at M6. `extern` costs more and is never thrown away, because it is also how Keel talks to any C library. | M4 at the earliest; `print` waits for M7 |
 | **Compile-time evaluation: how much, and is there reflection?** **Direction decided: yes, and compile-time only.** The word usually evokes C#'s runtime reflection — `typeof( T ).GetProperties()` — and that is the one version Keel cannot afford: it requires type metadata for every type in every binary, which is the cost §4's *No RTTI* already refuses. Compile-time reflection has neither problem, and both motivating uses are compile-time by nature. **A testing framework in the standard library** needs to enumerate test functions and report their names, which is discovery over the program's own declarations: Zig builds this into the language (`test "name" { }`) with `@typeInfo` for the general case, D has `__traits`, and Rust reaches the same place from the other side with derive macros — compile-time code generation rather than reflection proper. **`enum` to string** is the canonical example, and the one C++ programmers have wanted for twenty years; C++26's `std::meta` finally delivers it. In Keel it lowers to a generated static table — the variant names are known at compile time, the enum is closed and scoped (D30), and the run-time cost is one array index. Because both uses are pure code generation, nothing need survive into the binary that the program does not use. What stays open is the surface — a `@` builtin as in Zig, a `__traits`-style call, or attributes as in Rust — and how much general compile-time evaluation sits underneath it. M5 must land first: payload-carrying variants change what printing a value even means. | Surface post-M5; the framework needs the standard library, so **M7** |
 | ABI stability: is there one at all? | Post-M7 |
 
@@ -1452,7 +1453,72 @@ program's own stdout, so it could not be tested for directly. It now writes its 
 non-empty file is the failure. Confirmed by deliberately writing through a null
 pointer: silent before, `Invalid write of size 1` after.
 
+**Constructors, and M3's acceptance.** A constructor is a `Constructor_decl` with
+`Function_decl`'s arity and a synthesised `this`, so it reuses everything the
+destructor built: `is_function_like` puts it in `lower()`'s scan, the member scope
+puts the fields in its body, and the signature pass types its parameters. What is
+new is the **call**, and it is the one place the shape genuinely differs. A
+constructor returns nothing and writes through its receiver, so
+`Buffer b = Buffer( 16 );` is not an assignment - it is a void call taking `&b`:
+
+    storage_live _1
+    _2 = &_1
+    _3 = call Buffer(copy _2, const 4)
+
+Constructing into a temporary and copying would have been simpler and wrong: for
+an owning type it makes two where the program said one, and only one is dropped.
+
+Three things fell out that are worth recording. **The receiver capture was keyed
+on `Destructor_decl`**, so a constructor's `this` was invalid and every field write
+addressed local `0xFFFFFFFF` - caught immediately because the dump prints the id.
+The test is now "not a free function" rather than a list of kinds. **`infer_call`
+had conflated three things** that a construction pulls apart: what the arguments
+are checked against (the constructor), what the call produces (the type, not the
+constructor's `void`), and how many leading parameters the author does not supply
+(one - the receiver is an ordinary parameter, so failing to skip it would make
+every call site owe an extra argument). **`check_aggregate_members` is now table
+driven**: a constructor and a destructor obey the same three rules - not on a
+struct, name must match, at most one - and differ only in a noun and a `~`, so the
+rules are written once over a description of the kind.
+
+D29's temporary exception is closed: a class with a constructor rejects the literal
+form, naming `Buffer( ... )` as the fix, and returns the declared type rather than
+the error type so the assignment does not cascade a second complaint.
+
+**M3's acceptance now runs.** `tests/codegen/constructors.kl` acquires in a
+constructor and releases in a destructor across a plain scope, four loop
+iterations, and both exit paths of an early `return`, and exits 42 - which is 33
+plus a counter that is zero only if every constructor was matched by exactly one
+destructor, plus a field proving the constructor body ran through a parameter that
+shadows it. Clean under `KEEL_VALGRIND=1`. The resource is a counter rather than an
+allocation because the runtime is deferred (§12), and what that costs is precisely
+what valgrind would otherwise be checking - placement is proven, freeing is
+simulated.
+
 ### Debts to pay along the way
+
+- **D2 stopped being inert at M3, and is not enforced.** Its entry says *"inert until M3: no type
+  has a destructor yet, so nothing is owning and nothing changes"*. Destructors now exist, so that
+  sentence has expired. Two defects follow, and they are one expression and one fix:
+
+  ```keel
+  void consume( Owned o ) { }
+  consume( Owned( 1 ) );          // live == 1 at exit: the destructor never runs
+  ```
+
+  **The temporary is never dropped.** `Owned( 1 )` constructs into a local that is not in
+  `scope_locals_`, so nothing ends its storage and `drop_place` never sees it. C++'s answer is
+  destruction at the end of the full expression; Keel has no rule yet.
+
+  **And the argument is a bare by-value pass of an owning type**, which D2 says is an error
+  requiring `move`. It currently copies.
+
+  Fixing the leak *alone* would be worse than leaving it: if the temporary were destroyed at
+  end-of-statement while the callee's copy were also dropped, a leak becomes a double free. It is
+  benign today only because parameters are not dropped either — every path errs toward not freeing,
+  which is the safe direction to be wrong in. Both belong to **M4**, whose row is exactly this work,
+  and which the milestone table already calls *"where we learn whether the ownership model is
+  real"*.
 
 - **D29 is only half implemented at M3, deliberately.** The entry specifies four
   differences between a `struct` and a `class`; M3's acceptance test — a `Buffer`
@@ -1462,12 +1528,17 @@ pointer: silent before, `Invalid write of size 1` after.
   which drop elaboration needs regardless. The other two defer, and each leaves a
   gap worth naming rather than discovering later.
 
-  **Constructors.** D29 says a `class` is built by a constructor and a `struct`
-  from a literal, which is what stops the two initialisation syntaxes competing.
-  Until constructors exist a `class` has no other way to be built, so the struct
-  literal has to work on one — a temporary and explicit exception to D29, not an
-  oversight. Closing it means deciding the call syntax and making the literal form
-  an error on a type that has a constructor.
+  **Constructors — no longer deferred.** They are being taken before M3 closes,
+  scoped to what M3 needs: a parameter list, a body that runs at initialisation,
+  and fields set from it. Nothing more. The argument that settled it is that the
+  *acquisition* half of RAII is only ever a statement in the body, so proving the
+  body runs proves the mechanism — that the statement cannot yet call an allocator
+  is the runtime's gap, not the constructor's. Until they land, a `class` has no
+  other way to be built, so the struct literal works on one: a temporary and
+  explicit exception to D29, and already the cause of one bug, where
+  `infer_struct_literal` counted a destructor as a field. Closing it means deciding
+  the call syntax and making the literal form an error on a type that has a
+  constructor.
 
   **Access control.** Fields are private by default in a `class`, and that needs
   member lookup to carry visibility — a resolver feature, with nothing in M3
