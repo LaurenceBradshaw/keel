@@ -17,6 +17,11 @@ struct Spelling
     std::string structure( Node_id declaration ) const;
     std::string field( Node_id declaration ) const;
     std::string function( Node_id declaration ) const;
+
+    // The symbol a Drop calls. A Drop always names a type with a destructor of its own - the
+    // lowerer expands a compound into per-field drops - so a type without one is a lowering bug
+    // rather than a case to handle.
+    std::string destructor_of( Type_id type ) const;
     // The types alone: `int32_t, uint8_t`. That is all a prototype needs, and all a definition can
     // use - the body names its parameters by Local_id, so nothing here may name them at all.
     std::string parameter_types( Node_id declaration ) const;

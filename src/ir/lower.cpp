@@ -4,6 +4,7 @@
 
 #include <fmt/format.h>
 #include <vector>
+#include "ast/node.h"
 #include "ir/builder.h"
 
 namespace keel
@@ -61,6 +62,7 @@ private:
     void push_scope();
     void pop_scope( Span span );
     void unwind_to( u32 depth, Span span );
+    void drop_place( Place place, Type_id type, Span span );
 
     const Ast& ast_;
 
@@ -76,7 +78,8 @@ private:
 
     Builder                           builder_;
     std::unordered_map<u32, Local_id> locals_;
-    std::vector<Loop_targets>         loops_; // innermost last, so break and continue bind to it
+    Local_id                          receiver_ {}; // A destructor's synthesised `this`. Invalid in a plain function.
+    std::vector<Loop_targets>         loops_;       // innermost last, so break and continue bind to it
     std::vector<Local_id>             scope_locals_;
     std::vector<u32>                  scope_marks_;
 };
@@ -109,6 +112,14 @@ Lowering::Lowering(
             const Symbol_id name  = Symbol_id { ast_.aux( param ) };
             const Local_id  local = builder_.add_parameter( type, span, name );
             locals_.emplace( param.v, local );
+
+            // The parser puts the receiver first, and it is what a bare field name is reached
+            // through. Captured from the walk rather than assumed to be local 1, so it survives
+            // anything that adds a local before this runs.
+            if( !receiver_.is_valid() && ast_.kind( declaration ) == Node_kind::Destructor_decl )
+            {
+                receiver_ = local;
+            }
         }
     }
 }
@@ -134,6 +145,13 @@ Place Lowering::place_for( Node_id declaration )
     if( local != locals_.end() )
     {
         return builder_.place( local->second );
+    }
+
+    // A bare field is `this.field` - D22's reach through the receiver, written implicitly - so it
+    // lowers to the same two projections the explicit spelling produces.
+    if( ast_.kind( declaration ) == Node_kind::Field_decl )
+    {
+        return builder_.field( builder_.deref( builder_.place( receiver_ ) ), declaration );
     }
 
     // Anything else that resolves to a Var_decl is at file scope: a function-local one is in the
@@ -209,7 +227,42 @@ void Lowering::unwind_to( u32 depth, Span span )
 
     for( std::size_t i = scope_locals_.size(); i > scope_marks_[depth]; --i )
     {
-        builder_.storage_dead( scope_locals_[i - 1], span );
+        const Local_id local = scope_locals_[i - 1];
+
+        drop_place( builder_.place( local ), builder_.type_of( local ), span );
+        builder_.storage_dead( local, span );
+    }
+}
+
+void Lowering::drop_place( Place place, Type_id type, Span span )
+{
+    if( !types_.is_owning( type ) )
+    {
+        return;
+    }
+
+    const Node_id decl = types_.table().get( type ).declaration;
+
+    // Its own destructor first, then its members.
+    for( const Node_id member : ast_.children( decl ) )
+    {
+        if( ast_.kind( member ) == Node_kind::Destructor_decl )
+        {
+            builder_.drop( place, span );
+            break;
+        }
+    }
+
+    // Reverse declaration order.
+    const auto members = ast_.children( decl );
+    for( std::size_t i = members.size(); i > 0; --i )
+    {
+        const Node_id member = members[i - 1];
+
+        if( ast_.kind( member ) == Node_kind::Field_decl )
+        {
+            drop_place( builder_.field( place, member ), types_.type_of( member ), span );
+        }
     }
 }
 
@@ -821,7 +874,7 @@ lower( const Ast& ast, const Resolution& resolution, const Types& types, Literal
 
     for( Node_id id { 0 }; id.v < ast.node_count(); ++id.v )
     {
-        if( ast.kind( id ) == Node_kind::Function_decl )
+        if( is_function_like( ast.kind( id ) ) )
         {
             Lowering lowering( id, ast, resolution, types, literals, interner );
             functions.push_back( lowering.run() );
@@ -2358,6 +2411,90 @@ TEST_CASE( "lower_keeps_every_function_verifiable_with_markers", "[ir][lower][st
     // one. verify() checks that no marker names a projection and that no block is unreachable.
     REQUIRE( verify( p.functions[0] ).empty() );
     REQUIRE( count( text, "storage_live " + local_of( text, "step" ) ) == 1 );
+}
+
+// A destructor is a Function like any other: its declaration is a Destructor_decl rather than a
+// Function_decl, and everything else - the return slot, the parameter walk, the body at children[2]
+// - is the shape run() already handles. Nothing in KIR knows what a destructor is.
+TEST_CASE( "lower_lowers_a_destructor", "[ir][lower][aggregates]" )
+{
+    SECTION( "it becomes a function, with `this` as its only parameter" )
+    {
+        Lowered p( "class Buffer { u8* ptr; ~Buffer() { } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.functions.size() == 2 ); // the destructor and main
+        REQUIRE( p.functions[0].parameter_count == 1 );
+        REQUIRE( verify( p.functions[0] ).empty() );
+
+        // Printed with the tilde: aux holds the type's name, so `fn Buffer` would read as a free
+        // function of that name rather than as the destructor.
+        REQUIRE( p.text( 0 ).find( "fn ~Buffer {" ) != std::string::npos );
+    }
+
+    SECTION( "a class without one produces no function" )
+    {
+        Lowered p( "class Handle { u64 value; };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.functions.size() == 1 );
+    }
+
+    // A bare field is `this.field`, so it lowers to the same two projections - a deref of the
+    // receiver, then the field. The implicit and explicit spellings must not diverge.
+    SECTION( "a bare field and `this.field` lower identically" )
+    {
+        Lowered bare( "class Buffer { u64 len; ~Buffer() { len = 1; } };\ni32 main() { return 0; }" );
+        Lowered qualified( "class Buffer { u64 len; ~Buffer() { this.len = 1; } };\ni32 main() { return 0; }" );
+
+        INFO( bare.rendered() << qualified.rendered() );
+        REQUIRE( bare.clean() );
+        REQUIRE( qualified.clean() );
+        REQUIRE( bare.text( 0 ) == qualified.text( 0 ) );
+    }
+
+    SECTION( "the field is reached through the receiver, not from a local" )
+    {
+        Lowered p( "class Buffer { u64 len; ~Buffer() { len = 1; } };\ni32 main() { return 0; }" );
+
+        const std::string text = p.text( 0 );
+
+        INFO( text );
+        REQUIRE( p.clean() );
+        REQUIRE( text.find( "(*_1).len = const 1" ) != std::string::npos );
+        REQUIRE( verify( p.functions[0] ).empty() );
+    }
+
+    SECTION( "reading a field works too" )
+    {
+        Lowered p( "void release( u8* p ) { }\n"
+                   "class Buffer { u8* ptr; ~Buffer() { release( ptr ); } };\n"
+                   "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        for( const Function& function : p.functions )
+        {
+            REQUIRE( verify( function ).empty() );
+        }
+    }
+
+    // The storage markers do not bracket a field: it is not a local, and its lifetime is the
+    // object's. Only what the body itself declares gets one.
+    SECTION( "a local inside a destructor is bracketed, a field is not" )
+    {
+        Lowered p( "class Buffer { u64 len; ~Buffer() { u64 seen = 0; } };\ni32 main() { return 0; }" );
+
+        const std::string text = p.text( 0 );
+
+        INFO( text );
+        REQUIRE( p.clean() );
+        REQUIRE( text.find( "storage_live" ) != std::string::npos );
+        REQUIRE( text.find( "storage_live _1" ) == std::string::npos ); // never the receiver
+    }
 }
 
 } // namespace keel

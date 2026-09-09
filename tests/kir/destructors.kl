@@ -1,0 +1,56 @@
+// PLAN D29 and D2. A destructor lowers to an ordinary KIR function whose first parameter is the
+// receiver the parser synthesised, so nothing in KIR knows what a destructor is. Nothing calls one
+// yet - that is drop elaboration's job.
+class Buffer
+{
+    u8* ptr;
+    u64 len;
+
+    ~Buffer()
+    {
+        release( ptr );
+    }
+};
+
+// A bare field is `this.field`: a deref of the receiver, then the field. Both spellings lower to
+// the same two projections.
+class Counter
+{
+    u64 count;
+
+    ~Counter()
+    {
+        count = 0;
+        this.count = 1;
+    }
+};
+
+// A local inside a destructor is bracketed by storage markers; a field never is, because its
+// lifetime is the object's rather than the body's.
+class Scoped
+{
+    u64 len;
+
+    ~Scoped()
+    {
+        u64 seen = len;
+        {
+            u64 inner = 1;
+        }
+    }
+};
+
+// A class need not have one.
+class Handle
+{
+    u64 value;
+};
+
+void release( u8* p )
+{
+}
+
+i32 main()
+{
+    return 0;
+}

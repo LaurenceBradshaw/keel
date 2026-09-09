@@ -1,0 +1,118 @@
+// PLAN D29. A destructor emits as an ordinary C function taking the receiver the parser
+// synthesised. Nothing calls one yet - drop elaboration is what inserts the calls - so what this
+// fixture proves is that the C is valid: it is compiled with -Werror and run.
+i32 released;
+
+void release( u8* p )
+{
+    released = released + 1;
+}
+
+// The plain shape: a field read, passed to a free function.
+class Buffer
+{
+    u8* ptr;
+    u64 len;
+
+    ~Buffer()
+    {
+        release( ptr );
+    }
+};
+
+// Both spellings of a field, and a write as well as a read.
+class Counter
+{
+    u64 count;
+
+    ~Counter()
+    {
+        count = count + 1;
+        this.count = this.count + 1;
+    }
+};
+
+// Control flow inside a destructor body, including an early return - the case where the emitted C
+// needs its blocks and gotos to be well formed rather than merely present.
+class Guarded
+{
+    u64 len;
+    u8* ptr;
+
+    ~Guarded()
+    {
+        if ( len == 0 )
+        {
+            return;
+        }
+
+        u64 i = 0;
+        while ( i < len )
+        {
+            release( ptr );
+            i = i + 1;
+        }
+    }
+};
+
+// A class need not have one, and a struct may never have one.
+class Handle
+{
+    u64 value;
+};
+
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+// Owning through a member, with no destructor of its own: dropping one must still free the Buffer,
+// which is what makes drop elaboration expand rather than call a `~Wrapper` that does not exist.
+class Wrapper
+{
+    Buffer inner;
+};
+
+// Exactly once, on every path out - including the early one.
+i32 early( i32 n )
+{
+    Buffer b = Buffer { nullptr, 0 };
+
+    if ( n == 0 )
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
+i32 main()
+{
+    Point p = Point { 3, 4 };
+    Handle h = Handle { 7 };
+
+    // A plain scope: the destructor runs at its end, not at the end of main.
+    {
+        Buffer b = Buffer { nullptr, 0 };
+    }
+
+    // Through a member.
+    {
+        Wrapper w = Wrapper { Buffer { nullptr, 0 } };
+    }
+
+    // Once per iteration.
+    i32 i = 0;
+    while ( i < 3 )
+    {
+        Buffer b = Buffer { nullptr, 0 };
+        i = i + 1;
+    }
+
+    early( 0 );
+    early( 1 );
+
+    // 1 + 1 + 3 + 1 + 1 = 7, and p.x + p.y = 7.
+    return p.x + p.y + released;
+}

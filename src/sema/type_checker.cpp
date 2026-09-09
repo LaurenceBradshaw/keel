@@ -1964,9 +1964,21 @@ Type_id Checker::infer_struct_literal( Node_id id )
     }
 
     const std::span<const Node_id> initialisers = ast_.children( id );
-    const std::span<const Node_id> fields       = ast_.children( decl );
-    const std::string_view         struct_name  = interner_.text( Symbol_id { ast_.aux( decl ) } );
-    const Type_id                  result       = types_[decl.v];
+
+    // Fields, not members: a destructor is a child of the declaration too, and counting it would
+    // demand an extra initialiser and misalign every positional one after it.
+    std::vector<Node_id> fields;
+
+    for( const Node_id member : ast_.children( decl ) )
+    {
+        if( ast_.kind( member ) == Node_kind::Field_decl )
+        {
+            fields.push_back( member );
+        }
+    }
+
+    const std::string_view struct_name = interner_.text( Symbol_id { ast_.aux( decl ) } );
+    const Type_id          result      = types_[decl.v];
 
     // One convention per literal, as C++20 requires. Two in the same literal is a reader's
     // problem rather than a parser's.
@@ -5648,6 +5660,29 @@ TEST_CASE( "type_checker_rejects_an_owning_member_in_a_struct", "[sema][aggregat
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
+    }
+
+    // A destructor is a child of the declaration alongside the fields, so anything counting
+    // children counts it too - which demanded an extra initialiser and misaligned every positional
+    // one after it. The literal form on a class is D29's temporary exception until constructors
+    // exist, so it is exactly the path with no other coverage.
+    SECTION( "a destructor is not counted as a field by a struct literal" )
+    {
+        const Typed p( "class Buffer { u8* ptr; ~Buffer() { } };\n"
+                       "i32 main() { Buffer b = Buffer { nullptr }; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and a genuinely wrong count still reports the field count, not the member count" )
+    {
+        const Typed p( "class Buffer { u8* ptr; u64 len; ~Buffer() { } };\n"
+                       "i32 main() { Buffer b = Buffer { nullptr }; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.rendered().find( "has 2 fields" ) != std::string::npos );
     }
 
     SECTION( "a class holding one is fine" )

@@ -69,8 +69,29 @@ std::string Spelling::field( Node_id declaration ) const
 
 std::string Spelling::function( Node_id declaration ) const
 {
+    if( ast.kind( declaration ) == Node_kind::Destructor_decl )
+    {
+        return mangle_destructor( "", interner.text( Symbol_id { ast.aux( declaration ) } ) );
+    }
+
     std::vector<Type_id> params = parameter_types_vector( ast, types, declaration );
     return mangle_function( "", interner.text( Symbol_id { ast.aux( declaration ) } ), params, types.table() );
+}
+
+std::string Spelling::destructor_of( Type_id type ) const
+{
+    const Node_id declaration = types.table().get( type ).declaration;
+
+    for( const Node_id member : ast.children( declaration ) )
+    {
+        if( ast.kind( member ) == Node_kind::Destructor_decl )
+        {
+            return function( member );
+        }
+    }
+
+    assert( false && "a Drop names a type with no destructor of its own" );
+    return {};
 }
 
 std::string Spelling::parameter_types( Node_id declaration ) const

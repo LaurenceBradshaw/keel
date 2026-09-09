@@ -175,8 +175,14 @@ print( const Function& func, const Ast& ast, const Type_table& types, const Lite
 {
     const Printer printer { func, ast, types, literals, interner };
 
-    std::string out =
-        fmt::format( "fn {} {{\n", func.declaration.is_valid() ? printer.name_of( func.declaration ) : "<unnamed>" );
+    // A destructor prints as `~Buffer`, the way it is written. Its aux holds the *type's* name, so
+    // without the tilde it is indistinguishable from a free function of the same name - and unlike
+    // name_of, which globals, fields and callees also use, this is the one place that matters.
+    const bool destructor = func.declaration.is_valid() && ast.kind( func.declaration ) == Node_kind::Destructor_decl;
+
+    std::string out = fmt::format(
+        "fn {}{} {{\n", destructor ? "~" : "", func.declaration.is_valid() ? printer.name_of( func.declaration ) : "<unnamed>"
+    );
 
     for( u32 i = 0; i < func.locals.size(); ++i )
     {

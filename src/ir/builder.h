@@ -30,6 +30,8 @@ public:
     Place field( Place base, Node_id field_decl );
     Place deref( Place base );
 
+    Type_id type_of( Local_id id ) const;
+
 private:
     // The shared half of field() and deref(): copy the base's projections to the end of the table,
     // append one, and return a place over the copy.

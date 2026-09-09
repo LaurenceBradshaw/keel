@@ -19,6 +19,9 @@
 #
 #   CC          the C compiler                    (default: cc)
 #   KEEL_RUN_TIMEOUT  seconds a fixture may run   (default: 10)
+#   KEEL_VALGRIND=1   run each fixture under valgrind too, failing on any error it reports.
+#                     M3's acceptance is that a destructor frees exactly once, which a golden
+#                     exit code cannot see - a double free or a leak both still exit 0.
 #   KEEL_CFLAGS flags for it                      (default: -std=c11 -Wall -Wextra -Werror)
 #   KEEL_ARTIFACTS  where the .c and binaries go  (default: ../build/test-artifacts)
 #
@@ -65,6 +68,10 @@ cflags="${KEEL_CFLAGS:--std=c11 -Wall -Wextra -Werror -Wno-unused-variable -Wno-
 # bug, and that check is worth more than the convenience of building in place.
 artifacts="${KEEL_ARTIFACTS:-../build/test-artifacts}"
 run_timeout="${KEEL_RUN_TIMEOUT:-10}"
+
+# Off by default: it multiplies the suite's runtime, and most fixtures allocate nothing for it to
+# check. Turned on it is what makes "frees exactly once" a checked claim rather than an inspected one.
+valgrind_run="${KEEL_VALGRIND:-}"
 mkdir -p "$artifacts" || exit 2
 
 if [ -t 1 ]; then
@@ -142,8 +149,26 @@ check_run()
     # message the caller is capturing. Under timeout because a fixture is a real program and a
     # control-flow bug is an infinite loop: without this the suite hangs instead of failing, which
     # is the worse of the two by a distance.
-    timeout "$run_timeout" "$stem" > "$run_log" 2>&1
+    local vg_log="${stem}.vg.log"
+
+    if [ -n "$valgrind_run" ]; then
+        # Its own log, and judged by that rather than by an exit code: a program killed by a signal
+        # reports the signal, not --error-exitcode, so a segfault would otherwise slip through. With
+        # -q the file stays empty unless valgrind has something to say.
+        rm -f "$vg_log"
+        timeout "$run_timeout" valgrind -q --leak-check=full --log-file="$vg_log" "$stem" > "$run_log" 2>&1
+    else
+        timeout "$run_timeout" "$stem" > "$run_log" 2>&1
+    fi
+
     local ran=$?
+
+    if [ -n "$valgrind_run" ] && [ -s "$vg_log" ]; then
+        echo "    valgrind reported an error:"
+        sed 's/^/      /' < "$vg_log" | head -20
+        echo "      kept at ${source_c}"
+        return 1
+    fi
 
     if [ "$ran" -eq 124 ]; then
         echo "    the program did not finish within ${run_timeout}s"

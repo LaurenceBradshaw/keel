@@ -1,0 +1,47 @@
+fn ~Buffer {
+    let _0: void; // return slot
+    let _1: Buffer*; // parameter this
+    let _2: void;
+
+    bb0:
+        _2 = call release(copy (*_1).ptr)
+        return
+}
+fn ~Counter {
+    let _0: void; // return slot
+    let _1: Counter*; // parameter this
+
+    bb0:
+        (*_1).count = const 0
+        (*_1).count = const 1
+        return
+}
+fn ~Scoped {
+    let _0: void; // return slot
+    let _1: Scoped*; // parameter this
+    let _2: u64; // seen
+    let _3: u64; // inner
+
+    bb0:
+        storage_live _2
+        _2 = copy (*_1).len
+        storage_live _3
+        _3 = const 1
+        storage_dead _3
+        storage_dead _2
+        return
+}
+fn release {
+    let _0: void; // return slot
+    let _1: u8*; // parameter p
+
+    bb0:
+        return
+}
+fn main {
+    let _0: i32; // return slot
+
+    bb0:
+        _0 = const 0
+        return
+}

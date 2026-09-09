@@ -1363,6 +1363,95 @@ checking it, so `1 = 2;` aborted the compiler. Catch2 reports a *partial* count 
 SIGABRT, so the suite appeared to shrink from 358 cases to 111 rather than
 reporting a failure — a red run that looks like a smaller green one.
 
+**Destructors lower.** A destructor becomes an ordinary KIR `Function` whose
+`declaration` happens to be a `Destructor_decl`, and nothing in KIR knows what a
+destructor is. Almost all of it was free, which is the synthetic-receiver decision
+paying out: the constructor's parameter walk turns `this` into local 1 with no
+change, `run()` lowers `children[2]` for both kinds, and the return slot is already
+`void` because the signature pass recorded it. Three things were needed — the
+linear scan in `lower()` asking `is_function_like`, `place_for` learning that a
+name bound to a `Field_decl` is `field( deref( receiver ), field )`, and a symbol
+to emit under.
+
+That last one is why the receiver is captured from the parameter walk rather than
+assumed to be local 1: the assumption is true today and would break silently the
+day anything adds a local before the walk runs.
+
+`Spelling::function` branches on the declaration kind rather than gaining a second
+method, so the backend can hold a `Function` and ask for its symbol without knowing
+which kind produced it. `mangle_destructor` spells `kl_<module>_<Type>__dtor`,
+putting the marker where argtypes go — the same non-injectivity §7.5 already
+carries, and the same fix when it matters.
+
+The prototype loop was walking the AST's top-level declarations while the
+definition loop walked `functions_`, which had been two sources of truth agreeing
+by coincidence. A destructor is nested inside its class, so the coincidence ended:
+the body was emitted with no prior declaration. Both now read `functions_`.
+
+Proof it is real rather than merely well-formed: `tests/codegen/destructors.kl`
+carries three destructor shapes - a field read passed to a call, both spellings of a
+field written, and control flow with an early return and a loop - and the suite
+compiles its output with `-Werror` and runs it. Emitted as
+`void kl__Buffer__dtor( struct kl__Buffer* kl_this_1 )`. The exit code proves only
+that the program links and runs today; when drop elaboration lands, the fixture's
+`released` flag becoming 1 is what it should assert instead.
+**Nothing calls one yet** - that is drop elaboration, which needs the dataflow first.
+
+The KIR dump prints one as `fn ~Buffer`. Its `aux` is the *type's* name, so without the tilde it
+reads as a free function of that name - and the tilde goes at the header rather than in `name_of`,
+which globals, fields and callees share and where it would be wrong.
+
+**Drops are emitted at scope exit.** The rule is one line — wherever `storage_dead`
+ends an owning local, drop it first — and it works because `unwind_to` is the
+single place any `storage_dead` comes from, so early `return`, `break`, `continue`
+and normal fall-through are covered by construction rather than by four cases. That
+is the storage-marker step paying for itself: the hard part was the scope
+machinery, and it was already done and already pinned by `tests/kir/storage.kl`.
+
+It is unconditional, which is only correct because **move checking is M4**. Nothing
+can be moved yet, so no local is ever `MaybeMoved` and no drop flag is needed. When
+that changes the placement becomes an analysis and earns a pass of its own; today
+re-deriving it over the finished CFG would be structure invented ahead of the need.
+
+`Statement_kind::Drop` deliberately means **"call this place's own destructor"**
+rather than MIR's "destroy this place". The lowerer expands a compound into
+per-field drops before emitting any, so `class Wrapper { Buffer inner; }` — owning
+through a member with no `~Wrapper` — lowers to `drop _3.inner` rather than a call
+to a function that does not exist. The narrower meaning is what makes every actual
+free visible in the dump, which is what M3's acceptance is about. Three locals are
+deliberately never dropped: parameters (a bare class parameter is a borrow under
+D31), the return slot (moved out), and temporaries (`into_temp` does not enter
+`scope_locals_`). The last is a real hole, currently benign because it leaks rather
+than double-frees, and it closes when M4 gives passing an owner a meaning.
+
+Doing it found a bug that had been there since destructors became members:
+`infer_struct_literal` took `ast_.children( decl )` as the field list, so a
+destructor counted as a field — demanding an extra initialiser and misaligning
+every positional one after it. Nothing caught it because no test built a class with
+a destructor from a literal, and that spelling is only reachable at all because
+D29's constructor half is deferred.
+
+Two notes on the harness. `run_tests.sh --update` rewrites a suite's `.run` file as
+well as its `.expected`, so it will happily bless a wrong exit code — the exit
+assertion has to be checked by perturbing it, not by watching the suite pass. And
+**ASan cannot run the generated program in this environment**: it loops on
+`DEADLYSIGNAL`, the known WSL2 ASLR interaction, and `vm.mmap_rnd_bits` is not
+writable. `build/asan` still sanitises `keelc` itself. M3's acceptance names
+*valgrind or ASan*, and valgrind runs the generated program clean.
+
+**The golden runner can run fixtures under valgrind**, with `KEEL_VALGRIND=1`. Off
+by default because it roughly doubles the suite (4s to 9s) and most fixtures
+allocate nothing for it to check. It exists because an exit code cannot see M3's
+acceptance: a double free and a leak both still exit 0.
+
+Two things had to be got right, and the first attempt got neither. Judging it by
+`--error-exitcode` misses a program killed by a signal, which reports the signal
+instead — so a segfault passed. And valgrind's output shared the run log with the
+program's own stdout, so it could not be tested for directly. It now writes its own
+`--log-file`, which `-q` leaves empty unless there is something to say, and a
+non-empty file is the failure. Confirmed by deliberately writing through a null
+pointer: silent before, `Invalid write of size 1` after.
+
 ### Debts to pay along the way
 
 - **D29 is only half implemented at M3, deliberately.** The entry specifies four

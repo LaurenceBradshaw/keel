@@ -36,6 +36,11 @@ std::string mangle_struct( std::string_view module, std::string_view name )
     return fmt::format( "kl_{}_{}", module, name );
 }
 
+std::string mangle_destructor( std::string_view module, std::string_view type_name )
+{
+    return fmt::format( "kl_{}_{}__dtor", module, type_name );
+}
+
 std::string mangle_local( std::string_view name, u32 declaration )
 {
     // kl_<name>_<node id>

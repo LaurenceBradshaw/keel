@@ -44,8 +44,11 @@ private:
     // A void local is never declared: C has no such object, and nothing reads one. Testing the
     // *kind* rather than is_valid() - a void local's Type_id is perfectly valid, it just names the
     // one type C cannot hold.
-    bool        is_void( Type_id type ) const;
-    bool        assigns_to_void( const Place& place ) const;
+    bool is_void( Type_id type ) const;
+    bool assigns_to_void( const Place& place ) const;
+    // A place's type, walked the same way place() walks its text. Drop needs it to name the
+    // destructor to call.
+    Type_id     type_of( const Place& place ) const;
     std::string place( const Place& place ) const;
     std::string constant( Literal_id literal, Type_id type ) const;
     std::string operand( const Operand& operand ) const;
@@ -200,12 +203,10 @@ void Kir_emitter::emit_prototypes()
 {
     // Every signature ahead of every body: C has no equivalent of D18, so this is what lets
     // `even` call `odd` from above it.
-    for( const Node_id child : ast_.children( ast_.root() ) )
+    for( const Function& function : functions_ )
     {
-        if( ast_.kind( child ) == Node_kind::Function_decl )
-        {
-            write_line( prototype( child ) + ";" );
-        }
+
+        write_line( prototype( function.declaration ) + ";" );
     }
 
     write_line( "" );
@@ -288,9 +289,16 @@ void Kir_emitter::emit_statement( const Statement& statement )
         return;
     }
 
-    // Nothing yet: Drop is M3's, and the storage markers describe scopes for the drop pass rather
-    // than instructions - KIR has no scoping, and every local is declared up front.
+    // By address, because a destructor takes the receiver as a pointer.
     case Statement_kind::Drop:
+        line_directive( statement.span );
+        write_line( fmt::format( "{}( &{} );", spelling_.destructor_of( type_of( statement.place ) ), place( statement.place ) )
+        );
+        return;
+
+    // The storage markers describe scopes for the drop pass rather than instructions - KIR has no
+    // scoping, and every local is declared up front. Skipped before the line directive, which would
+    // otherwise be left with nothing under it.
     case Statement_kind::Storage_live:
     case Statement_kind::Storage_dead:
         return;
@@ -416,6 +424,22 @@ std::string Kir_emitter::local_name( u32 index ) const
     const Local& local = current_->locals[index];
 
     return local.name.is_valid() ? mangle_local( interner_.text( local.name ), index ) : fmt::format( "kl_t{}", index );
+}
+
+Type_id Kir_emitter::type_of( const Place& place ) const
+{
+    Type_id type = place.is_global() ? types_.type_of( place.global ) : current_->locals[place.local.v].type;
+
+    for( u32 i = 0; i < place.num_projections; ++i )
+    {
+        const Projection& proj = current_->projections[place.first_projection + i];
+
+        // Deref is the pointee; Field is the field's own recorded type. Mirrors place()'s walk, and
+        // has to stay in step with it.
+        type = proj.kind == Projection_kind::Deref ? types_.table().get( type ).element : types_.type_of( proj.field );
+    }
+
+    return type;
 }
 
 std::string Kir_emitter::place( const Place& place ) const

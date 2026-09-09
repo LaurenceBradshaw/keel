@@ -66,6 +66,12 @@ Place Builder::deref( Place base )
     return projected( base, Projection { Projection_kind::Deref, Node_id {} } );
 }
 
+Type_id Builder::type_of( Local_id id ) const
+{
+    assert( id.v < function_.locals.size() && "type_of on a local that does not exist" );
+    return function_.locals[id.v].type;
+}
+
 // Projections live in one table addressed by (first, count), so a place's own must be contiguous -
 // and base's may sit anywhere. Copy base's to the end, append the new one, and return a place over
 // the copy. The root comes across with it, which is what keeps `counter.x` rooted in the global.

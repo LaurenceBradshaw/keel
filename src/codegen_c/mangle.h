@@ -18,6 +18,10 @@ namespace keel
 std::string
 mangle_function( std::string_view module, std::string_view name, std::span<const Type_id> params, const Type_table& types );
 std::string mangle_struct( std::string_view module, std::string_view name );
+// `kl_<module>_<Type>__dtor`. The suffix sits where argtypes go, so nothing collides with it short
+// of a function taking a parameter of a type named `dtor`, which L15's naming rules out. Same
+// non-injectivity the scheme already has, and the same fix when it matters: length prefixes.
+std::string mangle_destructor( std::string_view module, std::string_view type_name );
 
 // A local or parameter. The declaration's node id disambiguates: a Keel program may legitimately
 // contain both `x` and `kl_x`, which would otherwise become the same C identifier.
