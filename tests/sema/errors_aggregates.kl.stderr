@@ -4,13 +4,13 @@ error: a struct cannot have a destructor
 17 |     ~Bad_struct()
    |     ^^^^^^^^^^^^^ use `class` if this type owns a resource
 
-error: a struct cannot contain `Buffer`, which which has a destructor
+error: a struct cannot contain `Buffer`, which has a destructor
   --> sema/errors_aggregates.kl:25:5
    |
 25 |     Buffer b;
    |     ^^^^^^^^^ a struct is copied freely, so declare `Holds_owning` as a class if it owns this
 
-error: a struct cannot contain `Wrapper`, which which owns a resource
+error: a struct cannot contain `Wrapper`, which owns a resource
   --> sema/errors_aggregates.kl:35:5
    |
 35 |     Wrapper w;

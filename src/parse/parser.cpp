@@ -142,6 +142,7 @@ private:
     // Literals, names, unary operators, and `(` for grouping - which returns the inner node
     // unchanged, so the parens leave no trace.
     Node_id parse_prefix();
+    Node_id parse_keyword_prefix( Span start );
 
     Node_id parse_arg_list();
 
@@ -1589,6 +1590,71 @@ Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing )
     return left;
 }
 
+// The keyword-headed expressions: literals with no digits, the three call-site markers, and the
+// two conversions. Split out because it is the only case here with real branching - the rest of
+// parse_prefix is one line per token kind.
+Node_id Parser::parse_keyword_prefix( Span start )
+{
+    if( check_keyword( Keyword::True ) || check_keyword( Keyword::False ) )
+    {
+        const bool value = check_keyword( Keyword::True );
+        advance();
+        return ast_.add( Node_kind::Bool_literal, Span::merge( start, previous().span ), value ? 1u : 0u, {} );
+    }
+
+    if( check_keyword( Keyword::Nullptr ) )
+    {
+        advance();
+        return ast_.add( Node_kind::Null_literal, Span::merge( start, previous().span ), 0, {} );
+    }
+
+    if( check_keyword( Keyword::Cast ) || check_keyword( Keyword::Wrap ) )
+    {
+        // aux carries which of the two, the way Marker_expr does: one node kind, and sema
+        // reads the operator back off it.
+        const Keyword which = peek().keyword();
+        advance();
+
+        expect( Token_kind::Less );
+        const Node_id type = parse_type();
+
+        // Not expect( Greater ): `wrap<Vector<i32>>( x )` closes with `>>`, and this is the
+        // helper that splits it.
+        if( !match_generic_close() )
+        {
+            error_expected( Token_kind::Greater );
+        }
+
+        expect( Token_kind::L_paren );
+        const Node_id operand = parse_expression( 0 );
+        expect( Token_kind::R_paren );
+
+        return ast_.add(
+            Node_kind::Cast_expr, Span::merge( start, previous().span ), static_cast<u32>( which ), { type, operand }
+        );
+    }
+
+    if( check_keyword( Keyword::Move ) || check_keyword( Keyword::Out ) || check_keyword( Keyword::Ref ) )
+    {
+        const Keyword marker = peek().keyword();
+        advance();
+        const Node_id operand = parse_expression( k_unary_power );
+        return ast_.add(
+            Node_kind::Marker_expr, Span::merge( start, previous().span ), static_cast<u32>( marker ), { operand }
+        );
+    }
+
+    if( check_keyword( Keyword::This ) )
+    {
+        advance();
+        return ast_.add( Node_kind::Name_expr, previous().span, Interner::keyword( Keyword::This ).v, {} );
+    }
+
+    // Not a keyword that starts an expression. Invalid rather than a diagnostic, so the caller
+    // reports it on the same path an unknown token takes - one message, in one place.
+    return Node_id {};
+}
+
 Node_id Parser::parse_prefix()
 {
     const Span start = peek().span;
@@ -1662,62 +1728,14 @@ Node_id Parser::parse_prefix()
     // case. aux carries the value, since one Node_kind covers both.
     case Token_kind::Keyword:
     {
-        if( check_keyword( Keyword::True ) || check_keyword( Keyword::False ) )
+        const Node_id keyword_expression = parse_keyword_prefix( start );
+
+        if( keyword_expression.is_valid() )
         {
-            const bool value = check_keyword( Keyword::True );
-            advance();
-            return ast_.add( Node_kind::Bool_literal, Span::merge( start, previous().span ), value ? 1u : 0u, {} );
+            return keyword_expression;
         }
 
-        if( check_keyword( Keyword::Nullptr ) )
-        {
-            advance();
-            return ast_.add( Node_kind::Null_literal, Span::merge( start, previous().span ), 0, {} );
-        }
-
-        if( check_keyword( Keyword::Cast ) || check_keyword( Keyword::Wrap ) )
-        {
-            // aux carries which of the two, the way Marker_expr does: one node kind, and sema
-            // reads the operator back off it.
-            const Keyword which = peek().keyword();
-            advance();
-
-            expect( Token_kind::Less );
-            const Node_id type = parse_type();
-
-            // Not expect( Greater ): `wrap<Vector<i32>>( x )` closes with `>>`, and this is the
-            // helper that splits it.
-            if( !match_generic_close() )
-            {
-                error_expected( Token_kind::Greater );
-            }
-
-            expect( Token_kind::L_paren );
-            const Node_id operand = parse_expression( 0 );
-            expect( Token_kind::R_paren );
-
-            return ast_.add(
-                Node_kind::Cast_expr, Span::merge( start, previous().span ), static_cast<u32>( which ), { type, operand }
-            );
-        }
-
-        if( check_keyword( Keyword::Move ) || check_keyword( Keyword::Out ) || check_keyword( Keyword::Ref ) )
-        {
-            const Keyword marker = peek().keyword();
-            advance();
-            const Node_id operand = parse_expression( k_unary_power );
-            return ast_.add(
-                Node_kind::Marker_expr, Span::merge( start, previous().span ), static_cast<u32>( marker ), { operand }
-            );
-        }
-
-        if( check_keyword( Keyword::This ) )
-        {
-            advance();
-            return ast_.add( Node_kind::Name_expr, previous().span, Interner::keyword( Keyword::This ).v, {} );
-        }
-
-        break;
+        break; // an unrecognised keyword falls through to the message below
     }
     default:
         break;

@@ -307,6 +307,24 @@ std::string_view operand_requirement( Operands operands )
     return {};
 }
 
+namespace
+{
+// A constructor and a destructor obey the same three rules and differ only in spelling, so the
+// rules are written once over a description of the kind rather than twice over the kinds.
+struct Member_kind
+{
+    Node_kind        node;
+    std::string_view noun;   // "constructor"
+    std::string_view prefix; // written before the name: "" or "~"
+    std::string_view remedy; // what to do instead, when a struct declares one
+};
+
+constexpr Member_kind k_member_kinds[] = {
+    { Node_kind::Constructor_decl, "constructor", "", "use `class`, or build this from a literal" },
+    { Node_kind::Destructor_decl, "destructor", "~", "use `class` if this type owns a resource" },
+};
+} // namespace
+
 class Checker
 {
 public:
@@ -342,11 +360,14 @@ private:
 
     void order_structs();
     bool contains_itself( Node_id decl, std::vector<Node_id>& path );
+    void report_containment_cycle( Node_id decl, const std::vector<Node_id>& path );
 
     // D29's rules, split out because check_struct_ownership cannot run before compute_owning has.
     void check_aggregate_members();
     void compute_owning();
     void check_struct_ownership();
+    void check_struct_fields_are_not_owning( Node_id decl );
+    void check_member_kind( Node_id decl, const Member_kind& kind );
 
     bool has_destructor( Node_id decl ) const;
 
@@ -639,35 +660,39 @@ void Checker::order_structs()
 
         std::vector<Node_id> path;
 
-        if( contains_itself( child, path ) )
+        if( !contains_itself( child, path ) )
         {
-            // The route, so the message names how it closes rather than only that it does.
-            std::string route;
-
-            for( const Node_id node : path )
-            {
-                if( !route.empty() )
-                {
-                    route += " -> ";
-                }
-
-                route += interner_.text( Symbol_id { ast_.aux( node ) } );
-            }
-
-            error_at(
-                ast_.span( child ),
-                fmt::format( "`{}` contains itself, so it has no size", interner_.text( Symbol_id { ast_.aux( child ) } ) ),
-                route
-            );
-
-            // Every struct on the cycle is reported by this one message. Without marking them all,
-            // `A -> B -> A` is found again from B and reported twice for one mistake.
-            for( const Node_id node : path )
-            {
-                cycle_reported.push_back( node );
-            }
+            continue;
         }
+
+        report_containment_cycle( child, path );
+
+        // Every aggregate on the cycle is reported by that one message. Without marking them all,
+        // `A -> B -> A` is found again from B and reported twice for one mistake.
+        cycle_reported.insert( cycle_reported.end(), path.begin(), path.end() );
     }
+}
+
+void Checker::report_containment_cycle( Node_id decl, const std::vector<Node_id>& path )
+{
+    // The route, so the message names how the cycle closes rather than only that it does.
+    std::string route;
+
+    for( const Node_id node : path )
+    {
+        if( !route.empty() )
+        {
+            route += " -> ";
+        }
+
+        route += interner_.text( Symbol_id { ast_.aux( node ) } );
+    }
+
+    error_at(
+        ast_.span( decl ),
+        fmt::format( "`{}` contains itself, so it has no size", interner_.text( Symbol_id { ast_.aux( decl ) } ) ),
+        route
+    );
 }
 
 bool Checker::contains_itself( Node_id decl, std::vector<Node_id>& path )
@@ -726,24 +751,6 @@ bool Checker::contains_itself( Node_id decl, std::vector<Node_id>& path )
     return false;
 }
 
-namespace
-{
-// A constructor and a destructor obey the same three rules and differ only in spelling, so the
-// rules are written once over a description of the kind rather than twice over the kinds.
-struct Member_kind
-{
-    Node_kind        node;
-    std::string_view noun;   // "constructor"
-    std::string_view prefix; // written before the name: "" or "~"
-    std::string_view remedy; // what to do instead, when a struct declares one
-};
-
-constexpr Member_kind k_member_kinds[] = {
-    { Node_kind::Constructor_decl, "constructor", "", "use `class`, or build this from a literal" },
-    { Node_kind::Destructor_decl, "destructor", "~", "use `class` if this type owns a resource" },
-};
-} // namespace
-
 Node_id Checker::find_member( Node_id decl, Node_kind kind ) const
 {
     for( const Node_id member : ast_.children( decl ) )
@@ -774,55 +781,58 @@ void Checker::check_aggregate_members()
             continue;
         }
 
-        const bool             on_a_struct = ast_.kind( decl ) == Node_kind::Struct_decl;
-        const Symbol_id        type_name { ast_.aux( decl ) };
-        const std::string_view type_text = interner_.text( type_name );
-
         for( const Member_kind& kind : k_member_kinds )
         {
-            Node_id first {};
+            check_member_kind( decl, kind );
+        }
+    }
+}
 
-            for( const Node_id member : ast_.children( decl ) )
-            {
-                if( ast_.kind( member ) != kind.node )
-                {
-                    continue;
-                }
+void Checker::check_member_kind( Node_id decl, const Member_kind& kind )
+{
+    const bool             on_a_struct = ast_.kind( decl ) == Node_kind::Struct_decl;
+    const Symbol_id        type_name { ast_.aux( decl ) };
+    const std::string_view type_text = interner_.text( type_name );
 
-                // One mistake, one diagnostic: declaring one of these on a struct is a single
-                // decision to reverse, so the name and duplicate rules stay quiet about it.
-                if( on_a_struct )
-                {
-                    error_at(
-                        ast_.span( member ), fmt::format( "a struct cannot have a {}", kind.noun ), std::string( kind.remedy )
-                    );
-                    break;
-                }
+    Node_id first {};
 
-                if( first.is_valid() )
-                {
-                    // Overloading is outside v0 (§6.6), so a second one has nothing to tell it apart.
-                    error_at(
-                        ast_.span( member ),
-                        fmt::format( "`{}` already has a {}", type_text, kind.noun ),
-                        previous_declaration_note( first )
-                    );
-                    continue;
-                }
+    for( const Node_id member : ast_.children( decl ) )
+    {
+        if( ast_.kind( member ) != kind.node )
+        {
+            continue;
+        }
 
-                first = member;
+        // One mistake, one diagnostic: declaring one of these on a struct is a single decision to
+        // reverse, so the name and duplicate rules stay quiet about it.
+        if( on_a_struct )
+        {
+            error_at( ast_.span( member ), fmt::format( "a struct cannot have a {}", kind.noun ), std::string( kind.remedy ) );
+            return;
+        }
 
-                const Symbol_id written { ast_.aux( member ) };
+        if( first.is_valid() )
+        {
+            // Overloading is outside v0 (§6.6), so a second one has nothing to tell it apart.
+            error_at(
+                ast_.span( member ),
+                fmt::format( "`{}` already has a {}", type_text, kind.noun ),
+                previous_declaration_note( first )
+            );
+            continue;
+        }
 
-                if( written.is_valid() && written != type_name )
-                {
-                    error_at(
-                        ast_.span( member ),
-                        fmt::format( "`{}{}` does not name the enclosing type", kind.prefix, interner_.text( written ) ),
-                        fmt::format( "write `{}{}`", kind.prefix, type_text )
-                    );
-                }
-            }
+        first = member;
+
+        const Symbol_id written { ast_.aux( member ) };
+
+        if( written.is_valid() && written != type_name )
+        {
+            error_at(
+                ast_.span( member ),
+                fmt::format( "`{}{}` does not name the enclosing type", kind.prefix, interner_.text( written ) ),
+                fmt::format( "write `{}{}`", kind.prefix, type_text )
+            );
         }
     }
 }
@@ -874,49 +884,51 @@ void Checker::check_struct_ownership()
 {
     for( const Node_id decl : ast_.children( ast_.root() ) )
     {
-        if( ast_.kind( decl ) != Node_kind::Struct_decl )
+        // A struct with a destructor of its own is already reported by check_aggregate_members,
+        // and it is one decision to reverse rather than two.
+        if( ast_.kind( decl ) == Node_kind::Struct_decl && !has_destructor( decl ) )
+        {
+            check_struct_fields_are_not_owning( decl );
+        }
+    }
+}
+
+void Checker::check_struct_fields_are_not_owning( Node_id decl )
+{
+    for( const Node_id field : ast_.children( decl ) )
+    {
+        if( ast_.kind( field ) != Node_kind::Field_decl )
         {
             continue;
         }
 
-        // Already reported by check_aggregate_members, and it is one decision to fix.
-        if( has_destructor( decl ) )
+        const Type_id field_type = types_[field.v];
+
+        if( !field_type.is_valid() || table_.is_error( field_type ) )
         {
             continue;
         }
 
-        for( const Node_id field : ast_.children( decl ) )
+        const Node_id field_decl = table_.get( field_type ).declaration;
+
+        if( !field_decl.is_valid() || !owning_.contains( field_decl.v ) )
         {
-            if( ast_.kind( field ) != Node_kind::Field_decl )
-            {
-                continue;
-            }
-
-            const Type_id field_type = types_[field.v];
-
-            if( !field_type.is_valid() || table_.is_error( field_type ) )
-            {
-                continue;
-            }
-
-            // One per field: each is a separate place the author has to change.
-            const Node_id field_decl = table_.get( field_type ).declaration;
-            if( field_decl.is_valid() && owning_.contains( field_decl.v ) )
-            {
-                error_at(
-                    ast_.span( field ),
-                    fmt::format(
-                        "a struct cannot contain `{}`, which {}",
-                        table_.name( field_type ),
-                        has_destructor( field_decl ) ? "which has a destructor" : "which owns a resource"
-                    ),
-                    fmt::format(
-                        "a struct is copied freely, so declare `{}` as a class if it owns this",
-                        interner_.text( Symbol_id { ast_.aux( decl ) } )
-                    )
-                );
-            }
+            continue;
         }
+
+        // One per field: each is a separate place the author has to change.
+        error_at(
+            ast_.span( field ),
+            fmt::format(
+                "a struct cannot contain `{}`, which {}",
+                table_.name( field_type ),
+                has_destructor( field_decl ) ? "has a destructor" : "owns a resource"
+            ),
+            fmt::format(
+                "a struct is copied freely, so declare `{}` as a class if it owns this",
+                interner_.text( Symbol_id { ast_.aux( decl ) } )
+            )
+        );
     }
 }
 

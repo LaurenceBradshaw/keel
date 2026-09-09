@@ -32,8 +32,25 @@ private:
     Node_id field_of( Type_id type, Symbol_id name ) const;
 
     Operand lower_expression( Node_id id ); // produces a value
-    Place   lower_place( Node_id id );      // names where a value lives
-    void    lower_statement( Node_id id );  // emits, produces nothing
+
+    // One per construct, dispatched from lower_expression. The small cases stay inline there:
+    // extracting a two-line literal would cost a name and buy nothing.
+    Operand lower_struct_literal( Node_id id );
+    Operand lower_binary( Node_id id );
+    Operand lower_unary( Node_id id );
+    Operand lower_call( Node_id id );
+    Place   lower_place( Node_id id );     // names where a value lives
+    void    lower_statement( Node_id id ); // emits, produces nothing
+
+    // One per construct, dispatched from lower_statement - the shape visit_* uses next door.
+    void lower_block( Node_id id );
+    void lower_return( Node_id id );
+    void lower_var( Node_id id );
+    void lower_assign( Node_id id );
+    void lower_increment( Node_id id );
+    void lower_if( Node_id id );
+    void lower_while( Node_id id );
+    void lower_for( Node_id id );
 
     // Where `break` and `continue` jump to. In KIR these are plain edges - no labels, no
     // emit-the-label-only-if-used, and no -Wunused-label to design around. That is the whole of
@@ -402,6 +419,163 @@ Operand Lowering::lower_short_circuit( Node_id id )
     return copy( builder_.place( result ), type );
 }
 
+Operand Lowering::lower_struct_literal( Node_id id )
+{
+    // A temporary, then one assignment per field. Lowered and assigned in a single pass, so the
+    // order the fields are *written* is the order they run - which is what §7.1 asks for, and
+    // what the C emitter needed two phases to achieve because it was building one expression.
+    const Type_id  type = types_.type_of( id );
+    const Span     span = ast_.span( id );
+    const Local_id temp = builder_.add_local( type, span );
+
+    // Positional form names no field, so the i-th initialiser fills the i-th field. The two
+    // forms cannot be mixed - the checker rejects that - so an index is enough here.
+    const std::span<const Node_id> fields = ast_.children( types_.table().get( type ).declaration );
+
+    std::size_t index = 0;
+
+    for( const Node_id initialiser : ast_.children( id ) )
+    {
+        const Symbol_id name  = Symbol_id { ast_.aux( initialiser ) };
+        const Node_id   field = name.is_valid() ? field_of( type, name ) : fields[index];
+
+        assert( field.is_valid() && "checker should have rejected an unknown field" );
+
+        // §6.4 may have widened the value to reach the field, the same as an argument reaching
+        // a parameter. Saying so here is what keeps a backend from re-deriving it.
+        const Operand value = lower_expression( ast_.children( initialiser )[0] );
+
+        builder_.assign(
+            builder_.field( builder_.place( temp ), field ),
+            use( converted( value, types_.type_of( field ), ast_.span( initialiser ) ) ),
+            ast_.span( initialiser )
+        );
+
+        index += 1;
+    }
+
+    return copy( builder_.place( temp ), type );
+}
+
+Operand Lowering::lower_binary( Node_id id )
+{
+    const Token_kind op = static_cast<Token_kind>( ast_.aux( id ) );
+
+    // Not operations over two operands - the right side may not run at all - so they take a
+    // different path entirely. Lowering them here would evaluate both sides unconditionally.
+    if( op == Token_kind::Amp_amp || op == Token_kind::Pipe_pipe )
+    {
+        return lower_short_circuit( id );
+    }
+
+    const Span    span      = ast_.span( id );
+    const Type_id operation = operation_type( id );
+
+    // Both operands are lowered before either is converted: lowering is what can have effects,
+    // so its order is §7.1's order, and the conversions are pure and can follow.
+    const Operand raw_left  = lower_expression( ast_.children( id )[0] );
+    const Operand raw_right = lower_expression( ast_.children( id )[1] );
+
+    // A shift's count keeps its own type - it is a width, not a value meeting the left operand.
+    const bool is_shift = op == Token_kind::Less_less || op == Token_kind::Greater_greater;
+
+    const Operand left  = converted( raw_left, operation, span );
+    const Operand right = is_shift ? raw_right : converted( raw_right, operation, span );
+
+    // The type the operation *produces*, which for a comparison is bool.
+    const Type_id type = types_.type_of( id );
+
+    return copy( builder_.place( builder_.into_temp( binary( op, left, right, type ), type, span ) ), type );
+}
+
+Operand Lowering::lower_unary( Node_id id )
+{
+    const Token_kind op   = static_cast<Token_kind>( ast_.aux( id ) );
+    const Type_id    type = types_.type_of( id );
+    const Span       span = ast_.span( id );
+
+    // Both of these are settled before the operand is lowered, because neither reads it the
+    // way an arithmetic operator does: `*p` names a place, and `&x` wants where x lives rather
+    // than what is in it. Lowering the operand as an expression first would read it, and for
+    // `&*get()` would run the call twice.
+    if( op == Token_kind::Star )
+    {
+        return copy( lower_place( id ), type );
+    }
+
+    if( op == Token_kind::Amp )
+    {
+        // A place, not an operand - which is why verify's Address_of case looks at a.place and
+        // ignores the operand's kind.
+        const Rvalue address = address_of( lower_place( ast_.children( id )[0] ), type );
+
+        return copy( builder_.place( builder_.into_temp( address, type, span ) ), type );
+    }
+
+    const Operand a = lower_expression( ast_.children( id )[0] );
+
+    return copy( builder_.place( builder_.into_temp( unary( op, a, type ), type, span ) ), type );
+}
+
+Operand Lowering::lower_call( Node_id id )
+{
+    // In value position there is no destination, so it constructs into a temporary. Nothing
+    // drops that temporary - the same hole an owning struct literal already has, and no new one.
+    if( is_construction( id ) )
+    {
+        const Type_id  type  = types_.type_of( id );
+        const Local_id local = builder_.add_local( type, ast_.span( id ) );
+
+        lower_construction( builder_.place( local ), id );
+
+        return copy( builder_.place( local ), type );
+    }
+
+    const Node_id callee = resolution_.declaration_of( ast_.children( id )[0] );
+    assert(
+        callee.is_valid() && ast_.kind( callee ) == Node_kind::Function_decl &&
+        "checker should have rejected an unresolved call"
+    );
+    const std::span<const Node_id> arguments = ast_.children( ast_.children( id )[1] ); // the Arg_list's children
+
+    // The *parameter* types, from the callee's Param_list. An argument's own type is not the
+    // same thing: §6.4 may have widened it to reach the parameter, and reading the type off
+    // the argument would make every conversion a no-op.
+    const std::span<const Node_id> parameters = ast_.children( ast_.children( callee )[1] );
+
+    // Every argument is lowered before any is converted, so the order the statements come out
+    // in is the order the arguments were written - which is what §7.1 guarantees and C leaves
+    // unspecified.
+    std::vector<Operand> operands;
+
+    operands.reserve( arguments.size() );
+
+    for( const Node_id argument : arguments )
+    {
+        operands.push_back( lower_expression( argument ) );
+    }
+
+    for( std::size_t i = 0; i < operands.size(); ++i )
+    {
+        operands[i] = converted( operands[i], types_.type_of( parameters[i] ), ast_.span( arguments[i] ) );
+    }
+
+    const u32 first = builder_.add_operands( operands );
+
+    // A void call still assigns, to a local of type void that nothing reads. Keeping Assign
+    // total is worth more than avoiding it: an optional destination would mean every consumer
+    // handling a statement that writes nowhere. It is what MIR does with the unit type, and a
+    // backend spells it by emitting the call and dropping the assignment.
+    const Type_id type = types_.type_of( id );
+
+    return copy(
+        builder_.place(
+            builder_.into_temp( call( callee, first, static_cast<u32>( operands.size() ), type ), type, ast_.span( id ) )
+        ),
+        type
+    );
+}
+
 Operand Lowering::lower_expression( Node_id id )
 {
     switch( ast_.kind( id ) )
@@ -427,158 +601,13 @@ Operand Lowering::lower_expression( Node_id id )
         return constant( literal, types_.type_of( id ) );
     }
     case Node_kind::Struct_literal:
-    {
-        // A temporary, then one assignment per field. Lowered and assigned in a single pass, so the
-        // order the fields are *written* is the order they run - which is what §7.1 asks for, and
-        // what the C emitter needed two phases to achieve because it was building one expression.
-        const Type_id  type = types_.type_of( id );
-        const Span     span = ast_.span( id );
-        const Local_id temp = builder_.add_local( type, span );
-
-        // Positional form names no field, so the i-th initialiser fills the i-th field. The two
-        // forms cannot be mixed - the checker rejects that - so an index is enough here.
-        const std::span<const Node_id> fields = ast_.children( types_.table().get( type ).declaration );
-
-        std::size_t index = 0;
-
-        for( const Node_id initialiser : ast_.children( id ) )
-        {
-            const Symbol_id name  = Symbol_id { ast_.aux( initialiser ) };
-            const Node_id   field = name.is_valid() ? field_of( type, name ) : fields[index];
-
-            assert( field.is_valid() && "checker should have rejected an unknown field" );
-
-            // §6.4 may have widened the value to reach the field, the same as an argument reaching
-            // a parameter. Saying so here is what keeps a backend from re-deriving it.
-            const Operand value = lower_expression( ast_.children( initialiser )[0] );
-
-            builder_.assign(
-                builder_.field( builder_.place( temp ), field ),
-                use( converted( value, types_.type_of( field ), ast_.span( initialiser ) ) ),
-                ast_.span( initialiser )
-            );
-
-            index += 1;
-        }
-
-        return copy( builder_.place( temp ), type );
-    }
+        return lower_struct_literal( id );
     case Node_kind::Binary_expr:
-    {
-        const Token_kind op = static_cast<Token_kind>( ast_.aux( id ) );
-
-        // Not operations over two operands - the right side may not run at all - so they take a
-        // different path entirely. Lowering them here would evaluate both sides unconditionally.
-        if( op == Token_kind::Amp_amp || op == Token_kind::Pipe_pipe )
-        {
-            return lower_short_circuit( id );
-        }
-
-        const Span    span      = ast_.span( id );
-        const Type_id operation = operation_type( id );
-
-        // Both operands are lowered before either is converted: lowering is what can have effects,
-        // so its order is §7.1's order, and the conversions are pure and can follow.
-        const Operand raw_left  = lower_expression( ast_.children( id )[0] );
-        const Operand raw_right = lower_expression( ast_.children( id )[1] );
-
-        // A shift's count keeps its own type - it is a width, not a value meeting the left operand.
-        const bool is_shift = op == Token_kind::Less_less || op == Token_kind::Greater_greater;
-
-        const Operand left  = converted( raw_left, operation, span );
-        const Operand right = is_shift ? raw_right : converted( raw_right, operation, span );
-
-        // The type the operation *produces*, which for a comparison is bool.
-        const Type_id type = types_.type_of( id );
-
-        return copy( builder_.place( builder_.into_temp( binary( op, left, right, type ), type, span ) ), type );
-    }
+        return lower_binary( id );
     case Node_kind::Unary_expr:
-    {
-        const Token_kind op   = static_cast<Token_kind>( ast_.aux( id ) );
-        const Type_id    type = types_.type_of( id );
-        const Span       span = ast_.span( id );
-
-        // Both of these are settled before the operand is lowered, because neither reads it the
-        // way an arithmetic operator does: `*p` names a place, and `&x` wants where x lives rather
-        // than what is in it. Lowering the operand as an expression first would read it, and for
-        // `&*get()` would run the call twice.
-        if( op == Token_kind::Star )
-        {
-            return copy( lower_place( id ), type );
-        }
-
-        if( op == Token_kind::Amp )
-        {
-            // A place, not an operand - which is why verify's Address_of case looks at a.place and
-            // ignores the operand's kind.
-            const Rvalue address = address_of( lower_place( ast_.children( id )[0] ), type );
-
-            return copy( builder_.place( builder_.into_temp( address, type, span ) ), type );
-        }
-
-        const Operand a = lower_expression( ast_.children( id )[0] );
-
-        return copy( builder_.place( builder_.into_temp( unary( op, a, type ), type, span ) ), type );
-    }
+        return lower_unary( id );
     case Node_kind::Call_expr:
-    {
-        // In value position there is no destination, so it constructs into a temporary. Nothing
-        // drops that temporary - the same hole an owning struct literal already has, and no new one.
-        if( is_construction( id ) )
-        {
-            const Type_id  type  = types_.type_of( id );
-            const Local_id local = builder_.add_local( type, ast_.span( id ) );
-
-            lower_construction( builder_.place( local ), id );
-
-            return copy( builder_.place( local ), type );
-        }
-
-        const Node_id callee = resolution_.declaration_of( ast_.children( id )[0] );
-        assert(
-            callee.is_valid() && ast_.kind( callee ) == Node_kind::Function_decl &&
-            "checker should have rejected an unresolved call"
-        );
-        const std::span<const Node_id> arguments = ast_.children( ast_.children( id )[1] ); // the Arg_list's children
-
-        // The *parameter* types, from the callee's Param_list. An argument's own type is not the
-        // same thing: §6.4 may have widened it to reach the parameter, and reading the type off
-        // the argument would make every conversion a no-op.
-        const std::span<const Node_id> parameters = ast_.children( ast_.children( callee )[1] );
-
-        // Every argument is lowered before any is converted, so the order the statements come out
-        // in is the order the arguments were written - which is what §7.1 guarantees and C leaves
-        // unspecified.
-        std::vector<Operand> operands;
-
-        operands.reserve( arguments.size() );
-
-        for( const Node_id argument : arguments )
-        {
-            operands.push_back( lower_expression( argument ) );
-        }
-
-        for( std::size_t i = 0; i < operands.size(); ++i )
-        {
-            operands[i] = converted( operands[i], types_.type_of( parameters[i] ), ast_.span( arguments[i] ) );
-        }
-
-        const u32 first = builder_.add_operands( operands );
-
-        // A void call still assigns, to a local of type void that nothing reads. Keeping Assign
-        // total is worth more than avoiding it: an optional destination would mean every consumer
-        // handling a statement that writes nowhere. It is what MIR does with the unit type, and a
-        // backend spells it by emitting the call and dropping the assignment.
-        const Type_id type = types_.type_of( id );
-
-        return copy(
-            builder_.place(
-                builder_.into_temp( call( callee, first, static_cast<u32>( operands.size() ), type ), type, ast_.span( id ) )
-            ),
-            type
-        );
-    }
+        return lower_call( id );
     case Node_kind::Cast_expr:
         // TODO: distinguish between cast and wrap.
         return converted( lower_expression( ast_.children( id )[1] ), types_.type_of( id ), ast_.span( id ) );
@@ -653,291 +682,329 @@ Place Lowering::lower_place( Node_id id )
     }
 }
 
+void Lowering::lower_block( Node_id id )
+{
+    push_scope();
+    for( const Node_id child : ast_.children( id ) )
+    {
+        // Everything after a return in the same block is unreachable. Dropping it here is what
+        // keeps statements from landing in a terminated block.
+        if( builder_.is_terminated() )
+        {
+            break;
+        }
+
+        lower_statement( child );
+    }
+    pop_scope( ast_.span( id ) );
+    return;
+}
+
+void Lowering::lower_return( Node_id id )
+{
+    const Node_id value = ast_.children( id )[0]; // invalid for a bare `return;`
+    if( value.is_valid() )
+    {
+        builder_.assign( builder_.place( k_return_slot ), use( lower_expression( value ) ), ast_.span( id ) );
+    }
+    unwind_to( 0, ast_.span( id ) ); // everything in the function is dead after a return
+
+    builder_.terminate_return( ast_.span( id ) );
+    return;
+}
+
+void Lowering::lower_var( Node_id id )
+{
+    // Children are { type, init }. aux is the Symbol_id of the name, which is what the checker
+    // recorded in the resolution for a Name_expr that refers to this declaration.
+    {
+        const Type_id   type  = types_.type_of( id );
+        const Span      span  = ast_.span( id );
+        const Symbol_id name  = Symbol_id { ast_.aux( id ) };
+        const Local_id  local = builder_.add_local( type, span, name );
+
+        locals_.emplace( id.v, local );
+        builder_.storage_live( local, span );
+        scope_locals_.push_back( local );
+
+        const Node_id init = ast_.children( id )[1];
+        if( init.is_valid() )
+        {
+            // Constructed in place. Going via a temporary and copying would make two of an
+            // owning type where the program said one, and only one of them would be dropped.
+            if( is_construction( init ) )
+            {
+                lower_construction( builder_.place( local ), init );
+            }
+            else
+            {
+                builder_.assign( builder_.place( local ), use( lower_expression( init ) ), span );
+            }
+        }
+    }
+    return;
+}
+
+void Lowering::lower_assign( Node_id id )
+{
+    const Place      target = lower_place( ast_.children( id )[0] );
+    const Operand    value  = lower_expression( ast_.children( id )[1] );
+    const Token_kind op     = static_cast<Token_kind>( ast_.aux( id ) );
+    if( op == Token_kind::Equal )
+    {
+        builder_.assign( target, use( value ), ast_.span( id ) );
+    }
+    else
+    {
+        // `x += 3` is `x = x + 3`: read the target, combine, store back.
+        //
+        // The operation happens at the *target's* type, not at types_.type_of( id ) - the
+        // checker records nothing on a statement, so that would be an invalid Type_id. It is
+        // also the type the checker measured the value against, so the two agree by
+        // construction.
+        const Type_id type = types_.type_of( ast_.children( id )[0] );
+        const Span    span = ast_.span( id );
+
+        const Operand left  = copy( target, type );
+        const Operand right = converted( value, type, span );
+
+        builder_.assign( target, binary( base_operator( op ), left, right, type ), span );
+    }
+    return;
+}
+
+void Lowering::lower_increment( Node_id id )
+{
+    const Place      target      = lower_place( ast_.children( id )[0] );
+    const Type_id    target_type = types_.type_of( ast_.children( id )[0] );
+    const Token_kind op          = static_cast<Token_kind>( ast_.aux( id ) );
+    const Token_kind base_op     = op == Token_kind::Plus_plus ? Token_kind::Plus : Token_kind::Minus;
+    const Operand    left        = copy( target, target_type );
+    // Into the table the *type* will be read from. Literals live in two tables and an operand
+    // says which by its type, so an integer 1 typed f64 sends every reader to the float table
+    // at that index - a valid Literal_id naming an unrelated value.
+    const Literal_id one = types_.table().is_float( target_type ) ? literals_.add_float( 1.0 ) : literals_.add_integer( 1 );
+
+    const Operand right = constant( one, target_type );
+
+    // The target's type again, for the same reason: a statement carries none of its own.
+    builder_.assign( target, binary( base_op, left, right, target_type ), ast_.span( id ) );
+    return;
+}
+
+void Lowering::lower_if( Node_id id )
+{
+    const Node_id condition   = ast_.children( id )[0];
+    const Node_id then_branch = ast_.children( id )[1];
+    const Node_id else_branch = ast_.children( id )[2]; // invalid when absent
+    const Span    span        = ast_.span( id );
+
+    // Before the blocks: whatever the condition emits belongs to the block being left.
+    const Operand test = lower_expression( condition );
+
+    const Block_id then_block = builder_.add_block();
+    const Block_id else_block = builder_.add_block();
+
+    builder_.terminate_branch( test, then_block, else_block, span );
+
+    // Allocated only when an arm actually falls out of the `if`. When both arms return there
+    // is nothing to join, and a block created anyway would be unreachable - which verify
+    // rejects, correctly. Blocks are indices, so one built by mistake cannot be taken back.
+    Block_id join;
+
+    const auto leave = [&]()
+    {
+        if( builder_.is_terminated() )
+        {
+            return; // the arm ended in a return of its own
+        }
+
+        if( !join.is_valid() )
+        {
+            join = builder_.add_block();
+        }
+
+        builder_.terminate_goto( join, span );
+    };
+
+    builder_.switch_to( then_block );
+    lower_statement( then_branch );
+    leave();
+
+    // An absent else is still a block: it is where the branch's false edge goes, and with no
+    // statements in it, it is what forces the join to exist.
+    builder_.switch_to( else_block );
+
+    if( else_branch.is_valid() )
+    {
+        lower_statement( else_branch );
+    }
+
+    leave();
+
+    // No join means both arms terminated, so the `if` did too. The enclosing Block loop reads
+    // is_terminated() and stops, which is what drops the statements after it.
+    if( join.is_valid() )
+    {
+        builder_.switch_to( join );
+    }
+
+    return;
+}
+
+void Lowering::lower_while( Node_id id )
+{
+    const Node_id condition = ast_.children( id )[0];
+    const Node_id body      = ast_.children( id )[1];
+    const Span    span      = ast_.span( id );
+
+    // A fresh block, not the one being left: the condition is re-evaluated every iteration, so
+    // the back edge targets it - and everything before the loop would re-run if it did not.
+    const Block_id header     = builder_.add_block();
+    const Block_id body_block = builder_.add_block();
+
+    builder_.terminate_goto( header, span );
+
+    // A while has no update, so continue re-tests immediately.
+    loops_.push_back( Loop_targets { Block_id {}, header, scope_depth() } );
+
+    builder_.switch_to( header );
+
+    // terminate_branch acts on the *current* block, which a `&&` in the condition may have
+    // moved on to. The back edge still targets the header, so the whole condition re-runs.
+    const Operand test = lower_expression( condition );
+
+    builder_.terminate_branch( test, body_block, break_target(), span );
+
+    builder_.switch_to( body_block );
+    lower_statement( body );
+
+    // A body ending in break, continue or return has terminated itself already.
+    if( !builder_.is_terminated() )
+    {
+        builder_.terminate_goto( header, span );
+    }
+
+    const Block_id exit = loops_.back().break_target;
+
+    loops_.pop_back();
+
+    builder_.switch_to( exit ); // a condition always has a false edge, so this always exists
+    return;
+}
+
+void Lowering::lower_for( Node_id id )
+{
+    const Node_id init      = ast_.children( id )[0];
+    const Node_id condition = ast_.children( id )[1];
+    const Node_id update    = ast_.children( id )[2];
+    const Node_id body      = ast_.children( id )[3];
+    const Span    span      = ast_.span( id );
+
+    push_scope();
+
+    // The init runs once, in the block being left.
+    if( init.is_valid() )
+    {
+        lower_statement( init );
+    }
+
+    const Block_id header     = builder_.add_block();
+    const Block_id body_block = builder_.add_block();
+
+    builder_.terminate_goto( header, span );
+
+    // The latch is left invalid: it holds the update and is what continue targets, and a body
+    // that always returns reaches neither.
+    loops_.push_back( Loop_targets { Block_id {}, Block_id {}, scope_depth() } );
+
+    builder_.switch_to( header );
+
+    if( condition.is_valid() )
+    {
+        builder_.terminate_branch( lower_expression( condition ), body_block, break_target(), span );
+    }
+    else
+    {
+        // `for( ; ; )` has no false edge, so it has no exit unless a break asks for one.
+        builder_.terminate_goto( body_block, span );
+    }
+
+    builder_.switch_to( body_block );
+    lower_statement( body );
+
+    if( !builder_.is_terminated() )
+    {
+        builder_.terminate_goto( continue_target(), span );
+    }
+
+    const Block_id latch = loops_.back().continue_target;
+    const Block_id exit  = loops_.back().break_target;
+
+    loops_.pop_back();
+
+    // Only if something reaches it. Nothing can run the update of a loop whose body always
+    // returns and which nothing continues.
+    if( latch.is_valid() )
+    {
+        builder_.switch_to( latch );
+
+        if( update.is_valid() )
+        {
+            lower_statement( update );
+        }
+
+        builder_.terminate_goto( header, span );
+    }
+
+    // No exit means the loop never finishes. The enclosing Block loop reads is_terminated()
+    // and drops what follows, which is correct - nothing after it can run.
+    if( exit.is_valid() )
+    {
+        builder_.switch_to( exit );
+    }
+
+    pop_scope( span );
+
+    return;
+}
+
 void Lowering::lower_statement( Node_id id )
 {
+    // A table of contents: what a statement can be, and nothing about how any of them lowers. The
+    // shape the checker's visit_* already uses, and the reason a construct can grow without the
+    // switch growing with it.
     switch( ast_.kind( id ) )
     {
     case Node_kind::Block:
-        push_scope();
-        for( const Node_id child : ast_.children( id ) )
-        {
-            // Everything after a return in the same block is unreachable. Dropping it here is what
-            // keeps statements from landing in a terminated block.
-            if( builder_.is_terminated() )
-            {
-                break;
-            }
+        return lower_block( id );
 
-            lower_statement( child );
-        }
-        pop_scope( ast_.span( id ) );
-        return;
     case Node_kind::Return_stmt:
-    {
-        const Node_id value = ast_.children( id )[0]; // invalid for a bare `return;`
-        if( value.is_valid() )
-        {
-            builder_.assign( builder_.place( k_return_slot ), use( lower_expression( value ) ), ast_.span( id ) );
-        }
-        unwind_to( 0, ast_.span( id ) ); // everything in the function is dead after a return
+        return lower_return( id );
 
-        builder_.terminate_return( ast_.span( id ) );
-        return;
-    }
     case Node_kind::Var_decl:
-        // Children are { type, init }. aux is the Symbol_id of the name, which is what the checker
-        // recorded in the resolution for a Name_expr that refers to this declaration.
-        {
-            const Type_id   type  = types_.type_of( id );
-            const Span      span  = ast_.span( id );
-            const Symbol_id name  = Symbol_id { ast_.aux( id ) };
-            const Local_id  local = builder_.add_local( type, span, name );
-
-            locals_.emplace( id.v, local );
-            builder_.storage_live( local, span );
-            scope_locals_.push_back( local );
-
-            const Node_id init = ast_.children( id )[1];
-            if( init.is_valid() )
-            {
-                // Constructed in place. Going via a temporary and copying would make two of an
-                // owning type where the program said one, and only one of them would be dropped.
-                if( is_construction( init ) )
-                {
-                    lower_construction( builder_.place( local ), init );
-                }
-                else
-                {
-                    builder_.assign( builder_.place( local ), use( lower_expression( init ) ), span );
-                }
-            }
-        }
-        return;
+        return lower_var( id );
 
     case Node_kind::Assign_stmt:
-    {
-        const Place      target = lower_place( ast_.children( id )[0] );
-        const Operand    value  = lower_expression( ast_.children( id )[1] );
-        const Token_kind op     = static_cast<Token_kind>( ast_.aux( id ) );
-        if( op == Token_kind::Equal )
-        {
-            builder_.assign( target, use( value ), ast_.span( id ) );
-        }
-        else
-        {
-            // `x += 3` is `x = x + 3`: read the target, combine, store back.
-            //
-            // The operation happens at the *target's* type, not at types_.type_of( id ) - the
-            // checker records nothing on a statement, so that would be an invalid Type_id. It is
-            // also the type the checker measured the value against, so the two agree by
-            // construction.
-            const Type_id type = types_.type_of( ast_.children( id )[0] );
-            const Span    span = ast_.span( id );
+        return lower_assign( id );
 
-            const Operand left  = copy( target, type );
-            const Operand right = converted( value, type, span );
-
-            builder_.assign( target, binary( base_operator( op ), left, right, type ), span );
-        }
-        return;
-    }
     case Node_kind::Increment_stmt:
-    {
-        const Place      target      = lower_place( ast_.children( id )[0] );
-        const Type_id    target_type = types_.type_of( ast_.children( id )[0] );
-        const Token_kind op          = static_cast<Token_kind>( ast_.aux( id ) );
-        const Token_kind base_op     = op == Token_kind::Plus_plus ? Token_kind::Plus : Token_kind::Minus;
-        const Operand    left        = copy( target, target_type );
-        // Into the table the *type* will be read from. Literals live in two tables and an operand
-        // says which by its type, so an integer 1 typed f64 sends every reader to the float table
-        // at that index - a valid Literal_id naming an unrelated value.
-        const Literal_id one = types_.table().is_float( target_type ) ? literals_.add_float( 1.0 ) : literals_.add_integer( 1 );
+        return lower_increment( id );
 
-        const Operand right = constant( one, target_type );
+    case Node_kind::If_stmt:
+        return lower_if( id );
 
-        // The target's type again, for the same reason: a statement carries none of its own.
-        builder_.assign( target, binary( base_op, left, right, target_type ), ast_.span( id ) );
-        return;
-    }
+    case Node_kind::While_stmt:
+        return lower_while( id );
+
+    case Node_kind::For_stmt:
+        return lower_for( id );
+
+    // Small enough to read here. Extracting them would cost a name and buy nothing.
     case Node_kind::Expr_stmt:
         // Discard the operand. D15 means the only thing that reaches here is a call.
         lower_expression( ast_.children( id )[0] );
         return;
-    case Node_kind::If_stmt:
-    {
-        const Node_id condition   = ast_.children( id )[0];
-        const Node_id then_branch = ast_.children( id )[1];
-        const Node_id else_branch = ast_.children( id )[2]; // invalid when absent
-        const Span    span        = ast_.span( id );
-
-        // Before the blocks: whatever the condition emits belongs to the block being left.
-        const Operand test = lower_expression( condition );
-
-        const Block_id then_block = builder_.add_block();
-        const Block_id else_block = builder_.add_block();
-
-        builder_.terminate_branch( test, then_block, else_block, span );
-
-        // Allocated only when an arm actually falls out of the `if`. When both arms return there
-        // is nothing to join, and a block created anyway would be unreachable - which verify
-        // rejects, correctly. Blocks are indices, so one built by mistake cannot be taken back.
-        Block_id join;
-
-        const auto leave = [&]()
-        {
-            if( builder_.is_terminated() )
-            {
-                return; // the arm ended in a return of its own
-            }
-
-            if( !join.is_valid() )
-            {
-                join = builder_.add_block();
-            }
-
-            builder_.terminate_goto( join, span );
-        };
-
-        builder_.switch_to( then_block );
-        lower_statement( then_branch );
-        leave();
-
-        // An absent else is still a block: it is where the branch's false edge goes, and with no
-        // statements in it, it is what forces the join to exist.
-        builder_.switch_to( else_block );
-
-        if( else_branch.is_valid() )
-        {
-            lower_statement( else_branch );
-        }
-
-        leave();
-
-        // No join means both arms terminated, so the `if` did too. The enclosing Block loop reads
-        // is_terminated() and stops, which is what drops the statements after it.
-        if( join.is_valid() )
-        {
-            builder_.switch_to( join );
-        }
-
-        return;
-    }
-    case Node_kind::While_stmt:
-    {
-        const Node_id condition = ast_.children( id )[0];
-        const Node_id body      = ast_.children( id )[1];
-        const Span    span      = ast_.span( id );
-
-        // A fresh block, not the one being left: the condition is re-evaluated every iteration, so
-        // the back edge targets it - and everything before the loop would re-run if it did not.
-        const Block_id header     = builder_.add_block();
-        const Block_id body_block = builder_.add_block();
-
-        builder_.terminate_goto( header, span );
-
-        // A while has no update, so continue re-tests immediately.
-        loops_.push_back( Loop_targets { Block_id {}, header, scope_depth() } );
-
-        builder_.switch_to( header );
-
-        // terminate_branch acts on the *current* block, which a `&&` in the condition may have
-        // moved on to. The back edge still targets the header, so the whole condition re-runs.
-        const Operand test = lower_expression( condition );
-
-        builder_.terminate_branch( test, body_block, break_target(), span );
-
-        builder_.switch_to( body_block );
-        lower_statement( body );
-
-        // A body ending in break, continue or return has terminated itself already.
-        if( !builder_.is_terminated() )
-        {
-            builder_.terminate_goto( header, span );
-        }
-
-        const Block_id exit = loops_.back().break_target;
-
-        loops_.pop_back();
-
-        builder_.switch_to( exit ); // a condition always has a false edge, so this always exists
-        return;
-    }
-
-    case Node_kind::For_stmt:
-    {
-        const Node_id init      = ast_.children( id )[0];
-        const Node_id condition = ast_.children( id )[1];
-        const Node_id update    = ast_.children( id )[2];
-        const Node_id body      = ast_.children( id )[3];
-        const Span    span      = ast_.span( id );
-
-        push_scope();
-
-        // The init runs once, in the block being left.
-        if( init.is_valid() )
-        {
-            lower_statement( init );
-        }
-
-        const Block_id header     = builder_.add_block();
-        const Block_id body_block = builder_.add_block();
-
-        builder_.terminate_goto( header, span );
-
-        // The latch is left invalid: it holds the update and is what continue targets, and a body
-        // that always returns reaches neither.
-        loops_.push_back( Loop_targets { Block_id {}, Block_id {}, scope_depth() } );
-
-        builder_.switch_to( header );
-
-        if( condition.is_valid() )
-        {
-            builder_.terminate_branch( lower_expression( condition ), body_block, break_target(), span );
-        }
-        else
-        {
-            // `for( ; ; )` has no false edge, so it has no exit unless a break asks for one.
-            builder_.terminate_goto( body_block, span );
-        }
-
-        builder_.switch_to( body_block );
-        lower_statement( body );
-
-        if( !builder_.is_terminated() )
-        {
-            builder_.terminate_goto( continue_target(), span );
-        }
-
-        const Block_id latch = loops_.back().continue_target;
-        const Block_id exit  = loops_.back().break_target;
-
-        loops_.pop_back();
-
-        // Only if something reaches it. Nothing can run the update of a loop whose body always
-        // returns and which nothing continues.
-        if( latch.is_valid() )
-        {
-            builder_.switch_to( latch );
-
-            if( update.is_valid() )
-            {
-                lower_statement( update );
-            }
-
-            builder_.terminate_goto( header, span );
-        }
-
-        // No exit means the loop never finishes. The enclosing Block loop reads is_terminated()
-        // and drops what follows, which is correct - nothing after it can run.
-        if( exit.is_valid() )
-        {
-            builder_.switch_to( exit );
-        }
-
-        pop_scope( span );
-
-        return;
-    }
 
     // One edge each. The checker already rejected either outside a loop, so the asserts in the
     // target helpers document that rather than handle it.
