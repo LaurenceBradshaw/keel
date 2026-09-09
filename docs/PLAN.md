@@ -298,7 +298,7 @@ exists specifically to prevent indefinite bikeshedding.
 | L13 | **Two aggregate kinds** (D29). A `struct` is a transparent aggregate: all fields public, trivially copyable, no destructor, no owning members. A `class` has invariants: fields private by default, may own resources, may have a constructor and a destructor, and is moved rather than copied. Neither inherits and neither is virtual in v0. |
 | L14 | No exceptions in the language. Errors are `Result` + `?`. |
 | L15 | Naming: `Capitalized_snake_case` types (`String_view`, `Hash_map`), `snake_case` values and functions — the convention already used in `MANIFESTO.md` §12. |
-| L16 | C declaration order (`i32 x`), so type constructors are **postfix**: `T&`, `const T&`, `T*` — as in C++. |
+| L16 | C declaration order (`i32 x`), so type constructors are **postfix**: `T*`. References are not among them — `ref` is a binding mode written in front of the type (D32), so `T*` is the only one left and `&` means address-of and nothing else. |
 | L17 | `a * b;` is ambiguous between a pointer declaration and a discarded multiply under C declaration order. Resolved the Java/C# way: **an expression statement must have an effect** (D15), so the discarded-multiply reading is not a legal statement and the parser decides from syntax alone. No symbol-table feedback, so name resolution stays a separate pass after parsing. |
 
 ---
@@ -498,6 +498,8 @@ overflows; what happens then is the open overflow question in §12.
 | D30 | **One `enum` keyword**, carrying `enum class`'s semantics: scoped (`Shape::Circle`), with no implicit conversion to an integer. The underlying type is spelled as in C++: `enum Shape : u8 { ... }`. `enum class E` is a hard error saying to drop the `class`. | The same C-compatibility tax as D29, with the opposite answer, and the asymmetry is the point: `struct`/`class` are two words for one job, so the job gets split; `enum`/`enum class` are two words for one job where only one of them does it correctly, so there is nothing to split. C++'s plain `enum` leaked its variant names into the enclosing scope and converted implicitly to `int`; both were mistakes, `enum class` fixed them in C++11, and the broken spelling survives only for C. Safe under §5.1 because every point where the two meanings diverge is an error rather than a reinterpretation: `Shape s = Circle;` is an unknown name, and `i32 x = Circle;` and `if ( s == 0 )` have no conversion to reach for. Rejecting `enum class` follows D22's pattern — keep the spelling recognised so the diagnostic can name the fix. **Open at M5**: a payload-carrying variant can hold an owning type, so an `enum` inherits D29's question of which kind it is. |
 | D31 | **Argument passing has four forms, and the call site always says which.** Bare `f( x )` — the callee gets a copy it owns if `x` is a `struct`, a read-only borrow if `x` is a `class`; either way the caller's object is alive and unchanged afterwards. `f( ref x )` — a mutable borrow. `f( out x )` — uninitialised, and the callee must assign it. `f( move x )` — the callee owns it and `x` is dead afterwards: for a `class` because the resource left, for a `struct` because the author said so. `const T&` does **not** survive as a parameter spelling, because a bare argument already means it. **The same rule governs initialisation and assignment, not just arguments**: `Buffer b = a;` is a hard error naming `Buffer b = move a;` as the fix, and so is `b = a;` between two existing classes. A `return` is the one exempt position — `return b;` needs no marker, because `b` is going out of scope regardless and there is no later use for the marker to warn about. | One principle generates the whole table: **you may modify what you own.** A bare `struct` parameter is a copy you own, so it is mutable — which is also exactly what C++ does, so this costs no audit row and keeps `i32 factorial( i32 n ) { ... n--; }` legal. A bare `class` parameter is a borrow you do not own, so it is not; that is forced rather than chosen, because copying a class needs a copy constructor and §6.6 puts those outside v0, leaving *borrow* as the only meaning available. The uniformity that matters is caller-side and holds in both rows — after a bare argument the object is alive and unchanged — so reading a call site never requires knowing the kind. The variation is callee-side, concerns a type named on the same line under L6, and surfaces as a compile error rather than a silent difference in meaning. The result is C#'s behaviour for value and reference types, arrived at from ownership rather than from a garbage collector. `move` on a `struct` copies the bytes and marks the source dead in the checker: an assertion, not a transfer, which keeps the keyword's user-visible meaning identical across kinds and costs almost nothing, since structs are already in §8's dataflow for the `Uninitialised -> Live` half and drop elaboration still never looks at one. **Obligation at M6**: a generic that mutates a bare parameter is legal only when `T` is a `struct`, so definition-checked generics (D11) need a bound that permits it — `is_trivially_copyable`, alongside `is_numeric` and the rest — rather than deferring the error to the instantiation site as C++ does. The initialisation case is where the rule earns most: C++ would call a copy constructor for `Buffer b = a;`, and with none available the two remaining readings are to move silently — leaving `a` dead with nothing in the source saying so — or to bind `b` as a reference to `a`, which is worse, because two names would own one resource and the second destructor would be a double free. Rejecting is the only safe answer, and it rejects valid C++ outright rather than reinterpreting it, which §5.1 permits. Note that `b = move a;` must also destroy whatever `b` held first; that is drop elaboration's job at M3, not a separate rule. **The marker appears in the signature as well as at the call site**, and the two must agree: `void consume( move Buffer b )` is called as `consume( move b )`, `void grow( ref Buffer b )` as `grow( ref b )`, `void init( out Buffer b )` as `init( out b )`, and an unmarked parameter as `inspect( b )`. This is forced: with `const T&` gone, `void consume( Buffer b )` and `void inspect( Buffer b )` would otherwise be indistinguishable, and the callee has to know whether it owns its argument. Marking both sides is C#'s design rather than C++'s, and it removes `&` from parameter lists entirely — a reference type still exists (L16), but a parameter never spells one, because each of the three things `&` was doing in a C++ signature now has its own keyword. The redundancy is only apparent: the signature states the contract and the call site acknowledges it, which is the whole point of D2 — a reader of the call site should not have to find the declaration to learn that a variable just died. |
 
+| D32 | **`ref` is a binding mode, not a type.** `ref T x` and `const ref T x` replace `T&` and `const T&` in every position — parameter, local binding, and return. `T&` in type position is a hard error naming `ref T`. `&` therefore means address-of and nothing else, and `T*` is the only postfix type constructor left (L16). A `ref` binding is **initialised at its declaration and never reseated**. | Two spellings for one concept is the redundancy D25 and D30 already refuse, and D31 had removed `const T&` from parameters — where the great majority of references appear — leaving `T&` alive only for local bindings. Finishing it costs little more and stops the language carrying both. The reframe is what earns it: as a *type*, §8's rule that a reference may not live in a struct is a restriction needing a diagnostic; as a **mode**, a field simply is not a binding and the rule disappears into the grammar. Reading order improves too — `const ref i32` has one order where C++ has `const i32&` and `i32 const&` meaning the same thing. Prefix does not violate L16, because a mode is not a type constructor. Taken at M4 rather than later because references were still *unimplemented* — `Ref_type` parsed and the checker said "not supported yet" — so the change cost a parser branch and an enum entry rather than a migration. `Ref_type` accordingly becomes a flag on `Param_decl`/`Var_decl` rather than a node wrapping a type. The §5.1 cost is real and is the largest departure in spelling the language has taken: `i32& r` is idiomatic C++ and becomes a syntax error. §5.1 permits rejecting outright, and the diagnostic names the replacement. **Open**: whether the receiver becomes `ref T` rather than `T*`, which would let it obey these rules uniformly instead of being a pointer D22 has to reach through. |
+
 
 ### 6.4 Numeric conversions (D5)
 
@@ -654,11 +656,40 @@ correct RAII — most of manifesto §3.6, for a fraction of the work.
 References obey one blunt structural rule instead:
 
 > A reference may appear as a function parameter or a local binding.
-> It may **not** be stored in a struct, returned from a function, or captured.
+> It may **not** be stored in a struct or captured. It may be **returned only as a
+> `const ref` derived from one of the function's own reference parameters** — the
+> receiver counts as one, so a method may return a reference into its object.
 
 This makes dangling references unrepresentable by construction rather than by
 analysis. It is roughly Hylo's (formerly Val) approach, and it is a defensible
-permanent design, not merely a shortcut. Rust's borrow checker is the single
+permanent design, not merely a shortcut.
+
+**Why returning one needs no lifetimes.** D32 makes a `ref` binding initialised at
+its declaration and never reseated, and that single property carries the whole
+argument. Everything nameable at a binding's declaration lives in an
+enclosing-or-same scope: in the same scope it was declared *earlier*, so it is
+destroyed *later*, and in an enclosing scope later still. Therefore **anything
+alive at a call site outlives any `ref` binding declared at that call site** — and
+it does not matter which parameter the result derived from, because all of them
+outlive it. The question Rust answers with lifetime parameters, and which was the
+reason to consider refusing a function more than one reference parameter, simply
+does not arise here. Keel is stronger than Rust on this one point precisely
+because it gave up reseating. What remains is a syntactic check with no dataflow:
+trace the returned expression to its root and require a reference parameter, not a
+local, a by-value parameter, or a temporary.
+
+The honest cost of allowing it: dangling then stops being *unrepresentable* for
+returns and becomes *rejected*. The check is one pass and cheap, but it is a check,
+and this paragraph is where that concession is recorded.
+
+**The hole is temporaries.** `const ref A r = pick( make_a(), b );` binds into a
+value with no scope of its own — C++'s famous case, where binding a `const T&`
+directly to a temporary extends its life but binding through a call does not. The
+options are to extend the temporary to the binding's scope, to reject passing one
+where the result is bound by reference, or to give temporaries the enclosing
+scope's lifetime outright. **This is the same decision drop placement already
+owes**: an owning temporary is currently never dropped (see the debts), and M4 needs
+a temporary-lifetime rule for that regardless. One answer serves both. Rust's borrow checker is the single
 hardest part of Rust and non-lexical lifetimes took years; attempting it as a
 first compiler project is how this repository dies.
 
@@ -685,7 +716,7 @@ milestone is complete until its acceptance program is a passing golden test.
 | **M1** | Integers, bools, C-style function and variable declarations, `auto`, `if`, `while`, `for`, calls, arithmetic. Type check + emit C. | `fib(20)` compiles and returns the right exit code. | The whole pipeline works end to end |
 | **M2** | Structs, value semantics, field access, struct literals, by-value passing and returning. | A `Point` program computing a distance. | Type layout, declaration ordering |
 | **M3** | KIR + CFG. Constructors and `~Dtor()`. Scope-exit `goto` cleanup. | A `Buffer` with `~Buffer()` frees exactly once, at the right place, including on early `return`. Verify under valgrind/ASan. | **RAII — the core of the language** |
-| **M4** | Move checking, `const T&` / `T&` params, the non-escaping rule, drop flags. Enforcement of D2. | Use-after-move is a compile error with a good message; a conditionally-moved value drops correctly. | Ownership, dataflow analysis |
+| **M4** | Move checking, `ref`/`out` bindings (D32), the non-escaping rule, drop flags. Enforcement of D2. | Use-after-move is a compile error with a good message; a conditionally-moved value drops correctly. | Ownership, dataflow analysis |
 | **M5** | Payload-carrying `enum` (D30), `switch` destructuring, exhaustiveness checking. | The `Shape`/`area` sample. Non-exhaustive `switch` is a compile error naming the missing variant. | Sum types, tagged variants |
 | **M6** | `template<C T>` generics, monomorphisation worklist, name mangling with type args. | `max<i32>` and `max<f64>` both work; a generic `Box<T>` with a destructor drops correctly. | Instantiation, mangling |
 | **M7** | Modules (`import`), multi-file compilation, then begin `Vector` and `String` **in Keel**. | A two-module program. Then a `Vector<i32>` that grows and frees. | **Whether the design actually works** |
@@ -1494,6 +1525,58 @@ shadows it. Clean under `KEEL_VALGRIND=1`. The resource is a counter rather than
 allocation because the runtime is deferred (§12), and what that costs is precisely
 what valgrind would otherwise be checking - placement is proven, freeing is
 simulated.
+
+### M4 — in progress
+
+**`move` reaches KIR.** The first step was not the dataflow: `move x` parsed into a
+`Marker_expr` that the checker rejected outright, so nothing in the compiler ever
+produced `Operand_kind::Move` and an analysis would have had nothing to read. The
+plumbing came first.
+
+It cost two cases. The checker types a `move` as its operand's type and requires
+that operand to be a **place** - reusing `is_assignable` rather than writing a
+second answer to "is this a place", so the two cannot drift on what counts as one.
+The lowerer reads that place with `move()` instead of `copy()`. `ref` and `out`
+still report, in their own words, that they wait on D32's binding modes.
+
+Two properties worth recording. `move` is legal on **any** type and in **any**
+expression position - D31 makes it an assertion on a struct rather than a transfer,
+and governs initialisation and assignment as well as arguments - so neither a
+kind check nor a position check belongs here. And because the C backend already
+maps `Move` and `Copy` to the same text (a move *is* a byte copy there),
+**nothing observable changed**: all 79 goldens passed untouched, which is the whole
+test that this step did what it claimed and no more.
+
+**A marker binds to the whole argument, not as a unary operator.** It had been
+parsed at unary power, so `f( move a + 1 )` was `f( ( move a ) + 1 )` - and the
+dump made the consequence plain:
+
+    _2 = move _1 + const 1
+    _3 = call f(copy _2)
+
+The argument reaches the callee **by copy**, and the `move` at the call site
+describes a subexpression consumed before the call happens. That defeats the one
+thing D2 exists to guarantee: *a reader of the call site should not have to find
+the declaration to learn that a variable just died.* `ref` and `out` make it
+plainer still - a mutable borrow of a sum is not a reading of anything.
+
+The cause is an asymmetry with D28: `cast<T>( x )` has mandatory parentheses and
+cannot have this problem, while D2 chose `move x` over `move( x )` because the
+latter reads like a call. The fix is to parse the operand at the lowest power
+rather than unary power, so the marker takes the expression to its boundary. The
+surprising form then hits the place check that already exists - *only a variable or
+a field can be moved*, with the caret on `a + 1` - and no new rule is needed.
+Everything useful still parses, because postfix and prefix both bind tighter:
+`move a.b.c` and `move *p` take the whole place. `( move a ) + 1` remains available
+for anyone who means it, and now has to be written down.
+
+The framing that makes this feel right rather than arbitrary: **a marker is not an
+operator, it is an annotation on a whole argument.** Unary precedence was the
+accident.
+
+After this, `move a` compiles, lowers, and **means nothing** - `a` is still
+readable. That is the point: it gives the dataflow something real to read before
+the dataflow exists.
 
 ### Debts to pay along the way
 

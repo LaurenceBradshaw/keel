@@ -37,10 +37,10 @@ Source_file                             3:1-13:1
         Call_expr                       9:13-9:28
           Name_expr                     9:13-9:14   "f"
           Arg_list                      9:14-9:28
-            Binary_expr                 9:16-9:26   op=+
-              Marker_expr               9:16-9:22   marker=move
+            Marker_expr                 9:16-9:26   marker=move
+              Binary_expr               9:21-9:26   op=+
                 Name_expr               9:21-9:22   "b"
-              Name_expr                 9:25-9:26   "c"
+                Name_expr               9:25-9:26   "c"
       Var_decl                          10:5-10:20  name=h
         Named_type                      10:5-10:8   "i32"
         Marker_expr                     10:13-10:19 marker=move

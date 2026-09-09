@@ -421,6 +421,7 @@ private:
     Type_id infer_struct_literal( Node_id id );
 
     Type_id infer_cast( Node_id id );
+    Type_id infer_marker( Node_id id );
 
     // Constant rejection (§12). fold_* answer what an expression's value is when it is made only
     // of literals; check_constant decides whether that value can exist in the type the operation
@@ -1399,8 +1400,7 @@ Type_id Checker::infer( Node_id id )
         return infer_cast( id );
 
     case Node_kind::Marker_expr:
-        error_at( ast_.span( id ), "this expression is not supported yet" );
-        return record( id, table_.builtin( Type_kind::Error ) );
+        return infer_marker( id );
 
     default:
         // Every expression not yet given a case of its own - the literals, chiefly, which cannot
@@ -2278,6 +2278,32 @@ Type_id Checker::infer_cast( Node_id id )
     }
 
     return record( id, target );
+}
+
+Type_id Checker::infer_marker( Node_id id )
+{
+    const Keyword marker  = static_cast<Keyword>( ast_.aux( id ) );
+    const Node_id operand = ast_.children( id )[0];
+
+    // ref and out are D31's other two call-site markers, and need the binding modes D32 describes.
+    if( marker != Keyword::Move )
+    {
+        error_at( ast_.span( id ), fmt::format( "argument not supported yet" ) );
+        absorb( operand );
+        return record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    const Type_id value = infer( operand );
+
+    // `move` names something that lives somewhere: it makes the source dead, and a temporary has
+    // no source to kill. is_assignable already answers "is this a place", for the same reason.
+    if( !is_assignable( operand ) )
+    {
+        error_at( ast_.span( operand ), "only a variable or a field can be moved" );
+        return record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    return record( id, value );
 }
 
 Type_id Checker::check( Node_id id, Type_id expected )
@@ -4180,24 +4206,6 @@ TEST_CASE( "type_checker_range_checks_float_literals", "[sema][types]" )
     }
 }
 
-// Parsed, but with no meaning until M3 gives types destructors and M4 gives them references.
-// Silence here would make them look accepted.
-TEST_CASE( "type_checker_rejects_passing_markers_for_now", "[sema][types]" )
-{
-    for( const char* source : {
-             "i32 g( i32 a ) { return a; }\ni32 main() { i32 b = 1; return g( move b ); }\n",
-             "i32 g( i32 a ) { return a; }\ni32 main() { i32 b = 1; return g( ref b ); }\n",
-             "i32 g( i32 a ) { return a; }\ni32 main() { i32 b = 1; return g( out b ); }\n",
-         } )
-    {
-        const Typed p( source );
-
-        INFO( "source: " << source << "\n" << p.rendered() );
-        REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "not supported yet" ) != std::string::npos );
-    }
-}
-
 TEST_CASE( "type_checker_types_pointers", "[sema][types]" )
 {
     SECTION( "an annotation, an address and a dereference" )
@@ -6055,6 +6063,137 @@ TEST_CASE( "type_checker_rejects_a_literal_for_a_constructed_class", "[sema][agg
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
+    }
+}
+
+// D2's marker. It records that the author asked for a transfer; what that *means* is the dataflow's,
+// and until that exists a moved-from value is still readable. The keyword is legal on any type -
+// D31 makes it an assertion on a struct rather than a transfer - and in any expression position,
+// because the same rule governs initialisation and assignment as well as arguments.
+TEST_CASE( "type_checker_types_a_move", "[sema][move]" )
+{
+    SECTION( "the marker has its operand's type" )
+    {
+        const Typed p( "void f( i32 x ) { }\ni32 main() { i32 a = 1; f( move a ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Marker_expr, 0 ) ) == "i32" );
+    }
+
+    SECTION( "in an initialiser" )
+    {
+        const Typed p( "i32 main() { i32 a = 1; i32 b = move a; return b; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "in an assignment" )
+    {
+        const Typed p( "i32 main() { i32 a = 1; i32 b = 2; b = move a; return b; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a field can be moved" )
+    {
+        const Typed p( "struct Point { i32 x; i32 y; };\n"
+                       "i32 main() { Point q = Point { 1, 2 }; i32 a = move q.x; return a; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // Legal on a struct, where it is an assertion rather than a transfer: the bytes are copied and
+    // the source is marked dead. One user-visible meaning across both kinds.
+    SECTION( "a non-owning type can be moved" )
+    {
+        const Typed p( "struct Point { i32 x; };\n"
+                       "void f( Point p ) { }\n"
+                       "i32 main() { Point q = Point { 1 }; f( move q ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "an owning type can be moved" )
+    {
+        const Typed p( "class Buffer { u64 len; ~Buffer() { } };\n"
+                       "void f( Buffer b ) { }\n"
+                       "i32 main() { Buffer b = Buffer { 1 }; f( move b ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// `move` makes its source dead, so it needs a source to kill. is_assignable already answers "is
+// this a place", which keeps move and assignment from drifting apart on what counts as one.
+TEST_CASE( "type_checker_rejects_moving_a_non_place", "[sema][move]" )
+{
+    SECTION( "a literal has nowhere to be moved from" )
+    {
+        const Typed p( "void f( i32 x ) { }\ni32 main() { f( move 1 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "nor does a call result" )
+    {
+        const Typed p( "i32 g() { return 1; }\nvoid f( i32 x ) { }\ni32 main() { f( move g() ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    SECTION( "nor an arithmetic expression" )
+    {
+        const Typed p( "void f( i32 x ) { }\ni32 main() { i32 a = 1; f( move ( a + 1 ) ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    // A marker annotates a whole argument rather than binding as an operator, so it takes the
+    // expression to the boundary and this is `move ( a + 1 )`. Under unary binding it would be
+    // `( move a ) + 1`, which passes the *sum* by copy - leaving a `move` at the call site saying
+    // nothing about what the callee receives, which is the one thing D2 exists to guarantee.
+    SECTION( "a marker takes the whole argument, not just the first operand" )
+    {
+        const Typed p( "void f( i32 x ) { }\ni32 main() { i32 a = 1; f( move a + 1 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.rendered().find( "only a variable or a field can be moved" ) != std::string::npos );
+    }
+
+    // The old reading stays available, and has to be written down.
+    SECTION( "parentheses restore it" )
+    {
+        const Typed p( "void f( i32 x ) { }\ni32 main() { i32 a = 1; f( ( move a ) + 1 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// The other two markers wait for D32's binding modes. They should say so in their own words rather
+// than share `move`'s path.
+TEST_CASE( "type_checker_rejects_ref_and_out_for_now", "[sema][move]" )
+{
+    for( const char* source :
+         { "void f( i32 x ) { }\ni32 main() { i32 a = 1; f( ref a ); return 0; }",
+           "void f( i32 x ) { }\ni32 main() { i32 a = 1; f( out a ); return 0; }" } )
+    {
+        const Typed p( source );
+
+        INFO( "source: " << source << "\n" << p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "not supported yet" ) != std::string::npos );
     }
 }
 

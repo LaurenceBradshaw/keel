@@ -615,6 +615,8 @@ Operand Lowering::lower_expression( Node_id id )
     // the whole of what lower_place buys in value position.
     case Node_kind::Field_expr:
         return copy( lower_place( id ), types_.type_of( id ) );
+    case Node_kind::Marker_expr:
+        return move( lower_place( ast_.children( id )[0] ), types_.type_of( id ) );
     default:
         // Names the construct rather than the category: while the lowerer is incomplete this is
         // the message that says what to write next, and it costs nothing once it is complete.
@@ -2709,6 +2711,68 @@ TEST_CASE( "lower_lowers_a_constructor", "[ir][lower][aggregates]" )
         INFO( text );
         REQUIRE( p.clean() );
         REQUIRE( text.find( "drop _1" ) != std::string::npos );
+
+        for( const Function& function : p.functions )
+        {
+            REQUIRE( verify( function ).empty() );
+        }
+    }
+}
+
+// The whole of what `move` costs in KIR: the same place, read with Move instead of Copy. Nothing
+// downstream distinguishes them yet - the C backend emits identical text, because a move *is* a
+// byte copy there - so this changes the dump and nothing else.
+TEST_CASE( "lower_reads_a_move_as_a_move", "[ir][lower][move]" )
+{
+    SECTION( "an argument" )
+    {
+        Lowered p( "void f( i32 x ) { }\ni32 main() { i32 a = 1; f( move a ); return 0; }" );
+
+        const std::string text = p.text( 1 );
+
+        INFO( text );
+        REQUIRE( p.clean() );
+        REQUIRE( text.find( "call f(move _1)" ) != std::string::npos );
+    }
+
+    SECTION( "and without the marker it is still a copy" )
+    {
+        Lowered p( "void f( i32 x ) { }\ni32 main() { i32 a = 1; f( a ); return 0; }" );
+
+        const std::string text = p.text( 1 );
+
+        INFO( text );
+        REQUIRE( text.find( "call f(copy _1)" ) != std::string::npos );
+    }
+
+    SECTION( "an initialiser" )
+    {
+        Lowered p( "i32 main() { i32 a = 1; i32 b = move a; return b; }" );
+
+        const std::string text = p.text( 0 );
+
+        INFO( text );
+        REQUIRE( p.clean() );
+        REQUIRE( text.find( "_2 = move _1" ) != std::string::npos );
+    }
+
+    // A place, not a local: the projection has to survive, or the dataflow could only ever track
+    // whole variables.
+    SECTION( "a field keeps its projection" )
+    {
+        Lowered p( "struct Point { i32 x; i32 y; };\n"
+                   "i32 main() { Point q = Point { 1, 2 }; i32 a = move q.x; return a; }" );
+
+        const std::string text = p.text( 0 );
+
+        INFO( text );
+        REQUIRE( p.clean() );
+        REQUIRE( text.find( "move _1.x" ) != std::string::npos );
+    }
+
+    SECTION( "every function still verifies" )
+    {
+        Lowered p( "void f( i32 x ) { }\ni32 main() { i32 a = 1; f( move a ); return 0; }" );
 
         for( const Function& function : p.functions )
         {

@@ -1638,7 +1638,7 @@ Node_id Parser::parse_keyword_prefix( Span start )
     {
         const Keyword marker = peek().keyword();
         advance();
-        const Node_id operand = parse_expression( k_unary_power );
+        const Node_id operand = parse_expression( 0 );
         return ast_.add(
             Node_kind::Marker_expr, Span::merge( start, previous().span ), static_cast<u32>( marker ), { operand }
         );
@@ -2530,10 +2530,14 @@ TEST_CASE( "parser_parses_passing_markers", "[parse]" )
     }
 }
 
-TEST_CASE( "parser_binds_passing_markers_like_a_unary_operator", "[parse]" )
+// A marker annotates a whole argument rather than binding as an operator, so it takes the
+// expression up to the boundary. Under unary binding `f( move a + b )` would be `( move a ) + b`,
+// which passes the *sum* by copy - leaving a `move` at the call site saying nothing about what the
+// callee receives, which is the one thing D2 exists to guarantee. Whether the operand is a place
+// is sema's question, not the grammar's.
+TEST_CASE( "parser_binds_a_passing_marker_to_the_whole_argument", "[parse]" )
 {
-    // `.` is tighter than any unary operator, so the marker takes the whole access.
-    SECTION( "field access binds tighter" )
+    SECTION( "field access is part of it" )
     {
         const Parsed p( "i32 main() { return f( move a.b ); }" );
 
@@ -2544,10 +2548,25 @@ TEST_CASE( "parser_binds_passing_markers_like_a_unary_operator", "[parse]" )
         REQUIRE( p.kind( p.child( marker, 0 ) ) == Node_kind::Field_expr );
     }
 
-    // ...and arithmetic is looser, so the marker takes only the left operand.
-    SECTION( "arithmetic binds looser" )
+    // The marker contains the sum rather than being its left operand. Sema then rejects it, since
+    // a sum is not a place - which is the whole diagnostic this parse buys.
+    SECTION( "so is arithmetic" )
     {
         const Parsed p( "i32 main() { return f( move a + b ); }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id marker = find_first( p.ast(), p.root(), Node_kind::Marker_expr );
+
+        REQUIRE( marker.is_valid() );
+        REQUIRE( p.kind( p.child( marker, 0 ) ) == Node_kind::Binary_expr );
+    }
+
+    // Parentheses are how the other reading is written, and it has to be written.
+    SECTION( "parentheses give back the operand reading" )
+    {
+        const Parsed p( "i32 main() { return f( ( move a ) + b ); }" );
 
         INFO( p.errors() );
         REQUIRE_FALSE( p.has_errors() );
@@ -2559,8 +2578,8 @@ TEST_CASE( "parser_binds_passing_markers_like_a_unary_operator", "[parse]" )
     }
 }
 
-// A marker is a prefix expression, not an argument decoration: `move` is legal wherever a value
-// is, and restricting it to argument lists is sema's job rather than the grammar's.
+// `move` is legal wherever a value is - D31 governs initialisation and assignment as well as
+// arguments - so restricting it to argument lists is not the grammar's job.
 TEST_CASE( "parser_accepts_markers_outside_argument_lists", "[parse]" )
 {
     for( const char* source : {

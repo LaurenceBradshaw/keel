@@ -70,9 +70,21 @@ void nothing()
     return;
 }
 
+// D2's marker. It reads the same place a bare argument would, with Move instead of Copy - the
+// whole of what it costs in KIR. What it *means* is the dataflow's; until that exists the source
+// is still readable, and the C backend emits identical text either way.
+void takes( i32 x )
+{
+    return;
+}
+
 i32 main()
 {
     nothing();
+
+    i32 a = 1;
+    takes( a );
+    takes( move a );
 
     return 0;
 }

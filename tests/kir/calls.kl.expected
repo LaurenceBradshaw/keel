@@ -137,12 +137,27 @@ fn nothing {
     bb0:
         return
 }
+fn takes {
+    let _0: void; // return slot
+    let _1: i32; // parameter x
+
+    bb0:
+        return
+}
 fn main {
     let _0: i32; // return slot
     let _1: void;
+    let _2: i32; // a
+    let _3: void;
+    let _4: void;
 
     bb0:
         _1 = call nothing()
+        storage_live _2
+        _2 = const 1
+        _3 = call takes(copy _2)
+        _4 = call takes(move _2)
         _0 = const 0
+        storage_dead _2
         return
 }
