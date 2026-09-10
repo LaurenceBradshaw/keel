@@ -1,0 +1,37 @@
+error: a returned reference must borrow from a parameter
+  --> sema/errors_const_ref_return.kl:22:12
+   |
+22 |     return v;
+   |            ^ anything else here dies when this function returns
+
+error: a returned reference must borrow from a parameter
+  --> sema/errors_const_ref_return.kl:29:12
+   |
+29 |     return n;
+   |            ^ anything else here dies when this function returns
+
+error: a returned reference must borrow from a parameter
+  --> sema/errors_const_ref_return.kl:34:12
+   |
+34 |     return make();
+   |            ^^^^^^ anything else here dies when this function returns
+
+error: a returned reference must borrow from a parameter
+  --> sema/errors_const_ref_return.kl:41:12
+   |
+41 |     return v.x;
+   |            ^^^ anything else here dies when this function returns
+
+error: a returned reference must borrow from a parameter
+  --> sema/errors_const_ref_return.kl:50:12
+   |
+50 |     return r;
+   |            ^ anything else here dies when this function returns
+
+error: only a `const ref` may be returned
+  --> sema/errors_const_ref_return.kl:54:1
+   |
+54 | ref i32 returns_a_mutable_ref( ref i32 a )
+   | ^^^ write `const ref i32`
+
+6 errors generated

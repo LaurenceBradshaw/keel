@@ -1,0 +1,38 @@
+// PLAN §8. A `const ref` return travels as an address like every other binding: the return slot
+// holds a pointer, and `return a` hands back the address the parameter already holds rather than a
+// read of what is there. At the caller the result is already an address, so binding takes it as it
+// comes and copying derefs it.
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+const ref i32 picks( const ref i32 a, const ref i32 b )
+{
+    if( a > b )
+    {
+        return a;
+    }
+
+    return b;
+}
+
+const ref i32 gets( const ref Point p )
+{
+    return p.y;
+}
+
+i32 main()
+{
+    i32 x = 1;
+    i32 y = 2;
+
+    const ref i32 bound = picks( x, y );
+
+    Point v = Point { 3, 4 };
+
+    i32 copied = gets( v );
+
+    return bound + copied;
+}

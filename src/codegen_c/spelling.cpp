@@ -94,6 +94,11 @@ std::string Spelling::destructor_of( Type_id type ) const
     return {};
 }
 
+std::string Spelling::return_type( Node_id declaration ) const
+{
+    return type( binding_type( ast, types, declaration ) );
+}
+
 std::string Spelling::parameter_types( Node_id declaration ) const
 {
 

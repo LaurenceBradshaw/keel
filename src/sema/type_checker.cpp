@@ -406,6 +406,7 @@ private:
     void visit_function( Node_id id );
     void check_condition( Node_id id ); // if/while/for all want the same message
     bool is_assignable( Node_id id ) const;
+    bool returns_a_binding( Node_id decl ) const;
     void visit_return( Node_id id );
     void visit_var( Node_id id );
     void visit_assign( Node_id id );
@@ -480,6 +481,7 @@ private:
     std::vector<Node_id>    struct_order_; // dependencies first; also the "already proved acyclic" set
     std::unordered_set<u32> owning_;       // filled by compute_owning, handed to Types
     Type_id                 current_return_;
+    Node_id                 current_function_; // whose annotation the escape rule reads
 
     u32 loop_depth_ = 0; // for break/continue
 
@@ -587,6 +589,24 @@ void Checker::declare_signatures_function_decls()
         const Node_id return_type_node = ast_.children( child )[0];
         const Type_id return_type      = type_of_annotation( return_type_node );
         record( child, return_type );
+
+        // §8 allows exactly one reference return, and only the read-only one: a mutable one would
+        // let a caller write through a reference it never asked for.
+        if( is_ref_parameter( ast_, child ) && !table_.is_error( return_type ) )
+        {
+            if( !is_const_binding( ast_, child ) )
+            {
+                error_at(
+                    ast_.span( return_type_node ),
+                    "only a `const ref` may be returned",
+                    fmt::format( "write `const ref {}`", table_.name( return_type ) )
+                );
+            }
+            else
+            {
+                record_binding_address( return_type_node, return_type );
+            }
+        }
 
         const Node_id param_list = ast_.children( child )[1];
         for( Node_id param : ast_.children( param_list ) )
@@ -1216,11 +1236,14 @@ void Checker::visit_function( Node_id id )
     //
     // Saved and restored rather than plainly assigned: M6 brings lambdas, and a nested one would
     // otherwise leave the enclosing function checking its returns against the wrong type.
-    const Type_id enclosing_return = current_return_;
+    const Type_id enclosing_return   = current_return_;
+    const Node_id enclosing_function = current_function_;
 
-    current_return_ = types_[id.v];
+    current_return_   = types_[id.v];
+    current_function_ = id;
     visit( ast_.children( id )[2] );
-    current_return_ = enclosing_return;
+    current_return_   = enclosing_return;
+    current_function_ = enclosing_function;
 }
 
 void Checker::check_condition( Node_id id )
@@ -1247,8 +1270,35 @@ void Checker::check_condition( Node_id id )
     );
 }
 
+// The address is recorded on the annotation exactly when a declaration is a borrow - the same
+// invariant is_borrowed_binding reads, asked from inside the checker where `Types` is not built
+// yet. Answers for a parameter as readily as for a function: children[0] is the annotation for
+// both, so "returns a binding" and "is a borrow" are one question asked of different nodes.
+bool Checker::returns_a_binding( Node_id decl ) const
+{
+    if( !decl.is_valid() )
+    {
+        return false;
+    }
+
+    const Node_id annotation = ast_.children( decl )[0];
+
+    return annotation.is_valid() && types_[annotation.v].is_valid();
+}
+
 bool Checker::is_assignable( Node_id id ) const
 {
+    // A call returning `const ref` names something that was alive at the call site, so it is a
+    // place - and by §8's argument it outlives any binding declared there. An ordinary call is not:
+    // its result has no scope of its own, which is the temporaries hole §8 records and which this
+    // deliberately leaves shut.
+    if( ast_.kind( id ) == Node_kind::Call_expr )
+    {
+        const Node_id callee = resolution_.declaration_of( ast_.children( id )[0] );
+
+        return callee.is_valid() && ast_.kind( callee ) == Node_kind::Function_decl && returns_a_binding( callee );
+    }
+
     // A field is always assignable. `make().x = 2.0;` writes into a temporary and is therefore
     // useless, but it is legal C++ - a member of a class prvalue is an xvalue - and rejecting it
     // would need a notion of value categories that v0 does not otherwise have. D15 does not cover
@@ -1308,6 +1358,25 @@ void Checker::visit_return( Node_id id )
     }
 
     check( value, current_return_ );
+
+    // §8's non-escaping rule. A `ref` binding is initialised at its declaration and never reseated,
+    // so everything nameable at a call site outlives any binding declared there - which is why
+    // *which* parameter the result came from does not matter, and why this needs no dataflow.
+    // Syntactic: trace the returned expression to its root and require a parameter that travels by
+    // address. A bare parameter of an owning type is one, since the caller owns the object.
+    if( returns_a_binding( current_function_ ) )
+    {
+        const Node_id root = place_root( value );
+
+        if( !root.is_valid() || ast_.kind( root ) != Node_kind::Param_decl || !returns_a_binding( root ) )
+        {
+            error_at(
+                ast_.span( value ),
+                "a returned reference must borrow from a parameter",
+                "anything else here dies when this function returns"
+            );
+        }
+    }
 
     // The predicate rather than check_not_borrowed: that one reports about *modifying*, and nothing
     // is being modified here. Gated on the return type owning something, because that is the whole
@@ -3342,7 +3411,13 @@ bool is_borrowed_binding( const Ast& ast, const Types& types, Node_id decl )
 
 bool is_const_binding( const Ast& ast, Node_id decl )
 {
-    if( !decl.is_valid() || ( ast.kind( decl ) != Node_kind::Var_decl && ast.kind( decl ) != Node_kind::Param_decl ) )
+    // A return type is a binding position too, and a Function_decl's children[0] is its annotation
+    // exactly as a variable's is - which is what lets §8's rule ask this question of a function.
+    const bool declares_a_binding =
+        decl.is_valid() && ( ast.kind( decl ) == Node_kind::Var_decl || ast.kind( decl ) == Node_kind::Param_decl ||
+                             ast.kind( decl ) == Node_kind::Function_decl );
+
+    if( !declares_a_binding )
     {
         return false;
     }
@@ -7570,6 +7645,174 @@ TEST_CASE( "type_checker_checks_a_const_ref_binding", "[sema][constref]" )
     }
 
     SECTION( "and still cannot bind to a temporary" )
+    {
+        const Typed p( "i32 make() { return 1; }\ni32 main() { const ref i32 r = make(); return r; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "needs a variable to bind to" ) != std::string::npos );
+    }
+}
+
+// PLAN §8. A reference may be returned only as a `const ref` derived from one of the function's own
+// reference parameters. That makes dangling representable but rejected rather than impossible, and
+// the check is syntactic with no dataflow: trace the returned expression to its root and require a
+// parameter that travels by address.
+//
+// Why no lifetimes are needed: a `ref` binding is initialised at its declaration and never
+// reseated, so everything nameable at a call site outlives any binding declared there. It does not
+// matter which parameter the result came from, because all of them outlive it - which is the
+// question Rust answers with lifetime parameters and Keel does not have to ask.
+TEST_CASE( "type_checker_accepts_a_const_ref_return_from_a_parameter", "[sema][escape]" )
+{
+    SECTION( "from a const ref parameter" )
+    {
+        const Typed p( "const ref i32 pick( const ref i32 a, const ref i32 b ) { return a; }\n"
+                       "i32 main() { i32 x = 1; i32 y = 2; return pick( x, y ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // Which one it came from is exactly what does not matter, and a second parameter is the case
+    // that would need a lifetime parameter in Rust.
+    SECTION( "or from either of two" )
+    {
+        const Typed p( "const ref i32 pick( const ref i32 a, const ref i32 b ) { if( a > b ) { return a; } return b; }\n"
+                       "i32 main() { i32 x = 1; i32 y = 2; return pick( x, y ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "from a mutable ref parameter" )
+    {
+        const Typed p( "const ref i32 look( ref i32 a ) { return a; }\n"
+                       "i32 main() { i32 x = 1; return look( ref x ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "through a field of one" )
+    {
+        const Typed p( "struct P { i32 x; };\nconst ref i32 get( const ref P p ) { return p.x; }\n"
+                       "i32 main() { P v = P { 1 }; return get( v ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // A bare parameter of an owning type is already a read-only borrow, so it is a reference
+    // parameter for this rule too - the caller owns the object and outlives the call.
+    SECTION( "and from a bare owning parameter, which is one" )
+    {
+        const Typed p( "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+                       "const ref u64 peek( B b ) { return b.n; }\n"
+                       "i32 main() { B a = B( 1 ); return wrap<i32>( peek( a ) ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+TEST_CASE( "type_checker_refuses_an_escaping_reference", "[sema][escape]" )
+{
+    SECTION( "a local dies when the function returns" )
+    {
+        const Typed p( "const ref i32 bad() { i32 v = 1; return v; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "must borrow from a parameter" ) != std::string::npos );
+    }
+
+    // A by-value parameter is the callee's own copy, so it dies with the frame exactly as a local
+    // does. This is the case that reads as safe and is not.
+    SECTION( "and so does a by-value parameter" )
+    {
+        const Typed p( "const ref i32 bad( i32 n ) { return n; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "must borrow from a parameter" ) != std::string::npos );
+    }
+
+    SECTION( "a temporary has no scope to outlive the call" )
+    {
+        const Typed p( "i32 make() { return 1; }\nconst ref i32 bad() { return make(); }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "a field of a local is still local" )
+    {
+        const Typed p( "struct P { i32 x; };\nconst ref i32 bad() { P v = P { 1 }; return v.x; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    // Conservative and deliberately so: the rule traces the returned *expression*, and a local
+    // binding is not a parameter however safe its referent happens to be. Relaxing this is
+    // additive, so it waits for a program that wants it.
+    SECTION( "and a local ref binding is not a parameter, even when its referent would be safe" )
+    {
+        const Typed p( "const ref i32 bad( const ref i32 a ) { const ref i32 r = a; return r; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+}
+
+// Only `const ref` may be returned. A mutable one would let a caller write through a reference it
+// never asked for, and §8 gives up reseating in exchange for needing no lifetimes - not mutability
+// through a returned binding.
+TEST_CASE( "type_checker_refuses_a_mutable_ref_return", "[sema][escape]" )
+{
+    const Typed p( "ref i32 bad( ref i32 a ) { return a; }\ni32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE_FALSE( p.clean() );
+    REQUIRE( p.rendered().find( "only a `const ref` may be returned" ) != std::string::npos );
+}
+
+// The result names something that was alive at the call site, so it outlives any binding declared
+// there - the same argument that makes the whole rule work, applied at the caller.
+TEST_CASE( "type_checker_binds_the_result_of_a_const_ref_return", "[sema][escape]" )
+{
+    constexpr std::string_view pick = "const ref i32 pick( const ref i32 a ) { return a; }\n";
+
+    SECTION( "it may be bound" )
+    {
+        const Typed p( std::string( pick ) + "i32 main() { i32 x = 1; const ref i32 r = pick( x ); return r; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and it may be copied" )
+    {
+        const Typed p( std::string( pick ) + "i32 main() { i32 x = 1; i32 v = pick( x ); return v; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // It is a `const ref`, so the binding it makes is read-only like any other.
+    SECTION( "but not written through" )
+    {
+        const Typed p( std::string( pick ) + "i32 main() { i32 x = 1; const ref i32 r = pick( x ); r = 5; return x; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`r` is `const`" ) != std::string::npos );
+    }
+
+    // The contrast that keeps the temporaries hole shut: an ordinary call returns a value with no
+    // scope of its own, and binding to one is still refused.
+    SECTION( "and an ordinary call is still not a place" )
     {
         const Typed p( "i32 make() { return 1; }\ni32 main() { const ref i32 r = make(); return r; }" );
 

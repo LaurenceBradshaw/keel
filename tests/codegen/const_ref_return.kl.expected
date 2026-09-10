@@ -1,0 +1,89 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Point;
+
+struct kl__Point
+{
+    int32_t kl_x_1;
+    int32_t kl_y_3;
+};
+
+int32_t* kl__picks__i32p_i32p( int32_t*, int32_t* );
+int32_t* kl__gets__Pointp( struct kl__Point* );
+int32_t kl__main__( void );
+
+int32_t* kl__picks__i32p_i32p( int32_t* kl_a_1, int32_t* kl_b_2 )
+{
+    int32_t* kl_t0;
+    bool kl_t3;
+#line 14 "codegen/const_ref_return.kl"
+    kl_t3 = ( *kl_a_1 ) > ( *kl_b_2 );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 16 "codegen/const_ref_return.kl"
+    kl_t0 = &( *kl_a_1 );
+    return kl_t0;
+    bb2:
+    goto bb3;
+    bb3:
+#line 19 "codegen/const_ref_return.kl"
+    kl_t0 = &( *kl_b_2 );
+    return kl_t0;
+}
+
+int32_t* kl__gets__Pointp( struct kl__Point* kl_p_1 )
+{
+    int32_t* kl_t0;
+#line 24 "codegen/const_ref_return.kl"
+    kl_t0 = &( *kl_p_1 ).kl_y_3;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_x_1;
+    int32_t kl_y_2;
+    int32_t* kl_bound_3;
+    int32_t* kl_t4;
+    int32_t* kl_t5;
+    int32_t* kl_t6;
+    struct kl__Point kl_v_7;
+    struct kl__Point kl_t8;
+    int32_t kl_copied_9;
+    struct kl__Point* kl_t10;
+    int32_t* kl_t11;
+    int32_t kl_t12;
+#line 29 "codegen/const_ref_return.kl"
+    kl_x_1 = 10;
+#line 30 "codegen/const_ref_return.kl"
+    kl_y_2 = 20;
+#line 33 "codegen/const_ref_return.kl"
+    kl_t4 = &kl_x_1;
+    kl_t5 = &kl_y_2;
+    kl_t6 = kl__picks__i32p_i32p( kl_t4, kl_t5 );
+    kl_bound_3 = &( *kl_t6 );
+#line 35 "codegen/const_ref_return.kl"
+    kl_t8.kl_x_1 = 3;
+    kl_t8.kl_y_3 = 7;
+    kl_v_7 = kl_t8;
+#line 39 "codegen/const_ref_return.kl"
+    kl_t10 = &kl_v_7;
+    kl_t11 = kl__gets__Pointp( kl_t10 );
+    kl_copied_9 = ( *kl_t11 );
+#line 44 "codegen/const_ref_return.kl"
+    kl_y_2 = 50;
+#line 45 "codegen/const_ref_return.kl"
+    kl_v_7.kl_y_3 = 99;
+#line 47 "codegen/const_ref_return.kl"
+    kl_t12 = ( *kl_bound_3 ) + kl_copied_9;
+    kl_t0 = kl_t12;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

@@ -1,0 +1,48 @@
+// PLAN §8. A returned `const ref` names something the *caller* owns, and the exit code is the only
+// thing that can say so. Both sources below are written after the calls have returned, and the two
+// halves of the answer have to disagree about whether that is visible: the binding must see the new
+// value, and the copy must not. Returning by value gets the first wrong; binding both gets the
+// second wrong.
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+const ref i32 picks( const ref i32 a, const ref i32 b )
+{
+    if( a > b )
+    {
+        return a;
+    }
+
+    return b;
+}
+
+const ref i32 gets( const ref Point p )
+{
+    return p.y;
+}
+
+i32 main()
+{
+    i32 x = 10;
+    i32 y = 20;
+
+    // The binding names `y` itself, in main's own frame.
+    const ref i32 bound = picks( x, y );
+
+    Point v = Point { 3, 7 };
+
+    // The other thing a caller may do with the result: read through it once into a value of its
+    // own. `copied` is an `i32`, so it is a copy of `v.y` and stops tracking it here.
+    i32 copied = gets( v );
+
+    // Both sources are written *after* the calls returned, and the two halves must disagree about
+    // whether that is visible. `bound` names `y`, so it sees 50; `copied` took a copy of `v.y`, so
+    // it stays 7. A returned copy would make the first wrong, and a binding the second.
+    y   = 50;
+    v.y = 99;
+
+    return bound + copied; // 50 + 7
+}

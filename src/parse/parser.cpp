@@ -585,7 +585,9 @@ Node_id Parser::parse_declaration()
     // A failed scan takes the variable path deliberately: `i32 = 1;` is a variable missing its
     // name, and parse_var_decl says so, where parse_function_decl would complain about a missing
     // `(` instead.
-    if( check( Token_kind::Identifier ) || check_keyword( Keyword::Const ) )
+    // A mode may open one too: `const ref T f( ... )` and `ref T f( ... )` are declarations, and
+    // scan_type_and_name below steps over the mode to find the name.
+    if( check( Token_kind::Identifier ) || check_keyword( Keyword::Const ) || at_mode_keyword() )
     {
         const u32  saved    = pos_;
         const bool function = scan_type_and_name() && check( Token_kind::L_paren );
@@ -606,7 +608,7 @@ Node_id Parser::parse_function_decl()
 {
     const Span start = peek().span;
 
-    const Node_id return_type = parse_type();
+    const Node_id return_type = parse_type_with_mode();
 
     // The name is a token, not a subtree, so it goes in aux rather than becoming a fourth child.
     const Symbol_id name = expect_name();
@@ -1166,6 +1168,14 @@ bool Parser::scan_type_and_name()
     // A type may open with const: `const i32 x = 0;`.
     while( match_keyword( Keyword::Const ) )
     {
+    }
+
+    // ...and then with a mode: `const ref T r`, `ref T r`. Here rather than only in
+    // looks_like_binding because parse_declaration scans with this too, and a `const ref` return
+    // type has to be recognised as a function before its `(` is ever reached.
+    if( at_mode_keyword() )
+    {
+        advance();
     }
 
     if( !match( Token_kind::Identifier ) )
@@ -4585,6 +4595,50 @@ TEST_CASE( "parser_parses_a_const_ref", "[parse]" )
         REQUIRE( p.has_errors() );
         REQUIRE( p.errors().find( "const ref" ) != std::string::npos );
     }
+}
+
+// PLAN D32 and §8. A return type is a binding position like any other, so `const ref T` is spelled
+// there the same way and builds the same Const_type( Mode_type( T ) ).
+TEST_CASE( "parser_parses_a_const_ref_return", "[parse]" )
+{
+    SECTION( "the return type carries the mode" )
+    {
+        const Parsed p( "const ref i32 pick( const ref i32 a ) { return a; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id fn = find_first( p.ast(), p.root(), Node_kind::Function_decl );
+
+        REQUIRE( fn.is_valid() );
+
+        const Node_id annotation = p.child( fn, 0 );
+
+        REQUIRE( p.kind( annotation ) == Node_kind::Const_type );
+        REQUIRE( p.kind( p.child( annotation, 0 ) ) == Node_kind::Mode_type );
+        REQUIRE( p.aux( p.child( annotation, 0 ) ) == static_cast<u32>( Keyword::Ref ) );
+    }
+
+    // A plain `ref` return parses, so sema can say only a `const ref` may be returned rather than
+    // the parser producing a cascade about an unexpected keyword.
+    SECTION( "and a plain ref return parses, to be rejected later" )
+    {
+        const Parsed p( "ref i32 pick( ref i32 a ) { return a; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+    }
+}
+
+// §8: a reference may not be stored in a struct. D32 makes that disappear into the grammar rather
+// than needing a rule - a field is not a binding, so there is nowhere for a mode to go, and `ref`
+// in field position is simply not a name.
+TEST_CASE( "parser_refuses_a_reference_field", "[parse]" )
+{
+    const Parsed p( "struct S { ref i32 r; };\ni32 main() { return 0; }" );
+
+    INFO( p.errors() );
+    REQUIRE( p.has_errors() );
 }
 
 } // namespace keel

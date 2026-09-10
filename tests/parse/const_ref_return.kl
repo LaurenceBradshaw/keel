@@ -1,0 +1,32 @@
+// PLAN §8. A return type is a binding position like any other, so `const ref T` is spelled there
+// the same way and builds the same Const_type( Mode_type( T ) ). A plain `ref` return parses too,
+// so sema can say only a `const ref` may be returned rather than the parser producing a cascade.
+struct Point
+{
+    i32 x;
+};
+
+const ref i32 picks( const ref i32 a, const ref i32 b )
+{
+    if( a > b )
+    {
+        return a;
+    }
+
+    return b;
+}
+
+const ref i32 gets( const ref Point p )
+{
+    return p.x;
+}
+
+ref i32 mutable_return( ref i32 a )
+{
+    return a;
+}
+
+i32 main()
+{
+    return 0;
+}

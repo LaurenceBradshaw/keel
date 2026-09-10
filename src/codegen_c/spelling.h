@@ -26,6 +26,11 @@ struct Spelling
     // use - the body names its parameters by Local_id, so nothing here may name them at all.
     std::string parameter_types( Node_id declaration ) const;
 
+    // What C sees a function hand back. Not the declared type when the function returns a binding:
+    // that travels as an address, so the definition, the prototype and the KIR return slot must all
+    // say the pointer or C is told one thing and given another.
+    std::string return_type( Node_id declaration ) const;
+
     // A file-scope variable's whole definition. Its initialiser stays an expression rather than a
     // value: a C file-scope initialiser must be one constant expression, and there is nowhere at
     // file scope to put the temporaries three-address form would need.

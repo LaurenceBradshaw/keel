@@ -140,7 +140,7 @@ Lowering::Lowering(
       literals_( literals ),
       interner_( interner ),
       declaration_( declaration ),
-      builder_( declaration, types.type_of( declaration ), ast_.span( declaration ) ),
+      builder_( declaration, binding_type( ast, types, declaration ), ast_.span( declaration ) ),
       locals_()
 {
     // walk ast_.children( declaration )[1] - the Param_list - and for each Param_decl, add_parameter() and record the Local_id
@@ -665,12 +665,18 @@ Operand Lowering::lower_call( Node_id id )
     // backend spells it by emitting the call and dropping the assignment.
     const Type_id type = types_.type_of( id );
 
-    return copy(
-        builder_.place(
-            builder_.into_temp( call( callee, first, static_cast<u32>( operands.size() ), type ), type, ast_.span( id ) )
-        ),
-        type
+    // A callee that returns a binding hands back an address, so the call's own type is that pointer
+    // and so is the temporary holding it - `type` above is the language type, `T`, and the two
+    // differ only here. Dereferencing once is what makes both uses at the call site fall out: a
+    // copy reads `(*_t)`, and a binding takes `&(*_t)`, which is `_t` again.
+    const bool    binding     = is_borrowed_binding( ast_, types_, callee );
+    const Type_id result_type = binding ? binding_type( ast_, types_, callee ) : type;
+
+    const Local_id result = builder_.into_temp(
+        call( callee, first, static_cast<u32>( operands.size() ), result_type ), result_type, ast_.span( id )
     );
+
+    return copy( binding ? builder_.deref( builder_.place( result ) ) : builder_.place( result ), type );
 }
 
 Operand Lowering::lower_expression( Node_id id )
@@ -793,6 +799,17 @@ Place Lowering::lower_place( Node_id id )
 
         return builder_.deref( base );
     }
+    case Node_kind::Call_expr:
+    {
+        // Only a binding-returning call reaches here; the checker rejects any other call in place
+        // position, so an operand without a place would be an internal error.
+        const Operand result = lower_expression( id );
+
+        assert( result.kind != Operand_kind::Constant && "a call in place position returns a binding" );
+
+        return result.place;
+    }
+
     default:
         fmt::print( stderr, "keelc: cannot lower {} as a place yet\n", node_kind_name( ast_.kind( id ) ) );
         assert( false && "place kind not lowered yet" );
@@ -828,7 +845,18 @@ void Lowering::lower_return( Node_id id )
         // it the callee's scope exit drops what the caller now holds. §8 exempts `return` from
         // needing a written marker precisely because the transfer is unambiguous here - there is no
         // later use for one to warn about.
-        builder_.assign( builder_.place( k_return_slot ), use( moved_if_owning( lower_expression( value ) ) ), span );
+        if( is_borrowed_binding( ast_, types_, declaration_ ) )
+        {
+            // The address, not a read of it: a read would return a copy of the referent and the
+            // form would buy nothing.
+            const Type_id address = binding_type( ast_, types_, declaration_ );
+
+            builder_.assign( builder_.place( k_return_slot ), address_of( lower_place( value ), address ), span );
+        }
+        else
+        {
+            builder_.assign( builder_.place( k_return_slot ), use( moved_if_owning( lower_expression( value ) ) ), span );
+        }
     }
     drop_statement_temporaries( span );
     unwind_to( 0, span ); // everything in the function is dead after a return
@@ -3284,6 +3312,83 @@ TEST_CASE( "lower_borrows_a_class_by_const_ref", "[ir][lower][constref]" )
     REQUIRE( text.find( "= &_1" ) != std::string::npos );
     REQUIRE( text.find( "move" ) == std::string::npos );
     REQUIRE( text.find( "drop _1" ) != std::string::npos );
+}
+
+// PLAN §8. A `const ref` return travels as an address, like every other binding: the return slot
+// holds a pointer, and `return a` hands back the address the parameter already holds rather than a
+// read of what is there.
+TEST_CASE( "lower_returns_a_const_ref_as_an_address", "[ir][lower][escape]" )
+{
+    Lowered p( "const ref i32 pick( const ref i32 a ) { return a; }\n"
+               "i32 main() { i32 x = 1; return pick( x ); }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string callee = p.named( "pick" );
+
+    INFO( callee );
+    REQUIRE( callee.find( "let _0: i32*; // return slot" ) != std::string::npos );
+    REQUIRE( callee.find( "let _1: i32*; // parameter a" ) != std::string::npos );
+
+    // The address, not a read of it - a read would return a copy of the referent and the form
+    // would buy nothing. It comes out as `&(*_1)` rather than `copy _1` because the parameter is
+    // itself a binding, so lower_place derefs it and the address is taken straight back: the same
+    // round trip forwarding a borrow already prints, and one a C compiler folds for free.
+    REQUIRE( callee.find( "_0 = &(*_1)" ) != std::string::npos );
+}
+
+// A field of a parameter is where the form earns its keep, and the address is of the projection.
+TEST_CASE( "lower_returns_a_const_ref_to_a_field", "[ir][lower][escape]" )
+{
+    Lowered p( "struct P { i32 x; };\n"
+               "const ref i32 get( const ref P p ) { return p.x; }\n"
+               "i32 main() { P v = P { 1 }; return get( v ); }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string callee = p.named( "get" );
+
+    INFO( callee );
+    REQUIRE( callee.find( "= &(*_1).x" ) != std::string::npos );
+}
+
+// At the caller the result is already an address, so binding takes it directly and copying derefs
+// it. Those are the two things a caller can do with one.
+TEST_CASE( "lower_uses_the_result_of_a_const_ref_return", "[ir][lower][escape]" )
+{
+    SECTION( "binding takes the pointer as it comes" )
+    {
+        Lowered p( "const ref i32 pick( const ref i32 a ) { return a; }\n"
+                   "i32 main() { i32 x = 1; const ref i32 r = pick( x ); return r; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string text = p.named( "main" );
+
+        INFO( text );
+        REQUIRE( text.find( "; // r" ) != std::string::npos );
+
+        // Reading through it derefs, which is what says the binding holds an address rather than a
+        // copy of the value.
+        REQUIRE( text.find( "copy (*_" ) != std::string::npos );
+    }
+
+    SECTION( "and copying derefs it" )
+    {
+        Lowered p( "const ref i32 pick( const ref i32 a ) { return a; }\n"
+                   "i32 main() { i32 x = 1; i32 v = pick( x ); return v; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string text = p.named( "main" );
+
+        INFO( text );
+        REQUIRE( text.find( "copy (*_" ) != std::string::npos );
+    }
 }
 
 } // namespace keel

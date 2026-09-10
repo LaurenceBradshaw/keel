@@ -660,6 +660,19 @@ References obey one blunt structural rule instead:
 > `const ref` derived from one of the function's own reference parameters** — the
 > receiver counts as one, so a method may return a reference into its object.
 
+**What "reference parameter" means, now that it is implemented.** A parameter that
+travels by address: `ref T`, `const ref T`, and a *bare* parameter of an owning type,
+which D31 makes a read-only borrow. The last is a widening of the sentence above,
+which was written before bare owning parameters became borrows — it is the consistent
+reading, because the caller owns the object and outlives the call exactly as it does
+for an explicit `ref`. A **local `ref` binding does not count**, even where its referent
+is itself a parameter and the return would be safe: the rule traces the returned
+*expression* to its root, and a binding is not a parameter. That conservatism is
+deliberate and relaxing it is additive. **The receiver clause is not implemented** —
+`this` is a `T*` passed by value rather than a binding, so it fails the test; nothing
+can reach the case yet, because a constructor and a destructor are the only methods and
+neither returns anything. It becomes real when methods do.
+
 This makes dangling references unrepresentable by construction rather than by
 analysis. It is roughly Hylo's (formerly Val) approach, and it is a defensible
 permanent design, not merely a shortcut.
@@ -2016,7 +2029,66 @@ as `total * 10 + freed` = 261, and an exit code is a byte - 261 & 0xFF is 5, whi
 number the fixture could plausibly have meant. Encodings there have to fit in 255 with
 the halves in ranges that cannot carry into each other.
 
+**`const ref` returns and the non-escaping rule, which finishes `ref`.** §8's argument
+survived contact with the implementation intact: the check is **one syntactic test with
+no dataflow** - trace the returned expression to its root and require a parameter that
+travels by address. There is no lifetime, no region, no borrow graph. Two `const ref`
+parameters and a `return` of either is clean, which is precisely the case Rust needs a
+lifetime parameter for, and it costs nothing here because *all* of them outlive any
+binding declared at the call site.
+
+The binding model carried through unchanged for a third position. A function's recorded
+type stays `T`; the address `T*` goes on the **return annotation**, which is
+`children[decl][0]` for a `Function_decl` exactly as it is for a variable - so
+`binding_type` and `is_borrowed_binding` answered for functions with no new code, and
+the KIR return slot, the C prototype and the C definition all read the one fact.
+
+At the caller the result is a pointer in KIR and a `T` in the language. That is resolved
+**once**, in `lower_call`, by dereferencing immediately - after which both uses fall out
+of machinery that already existed: a copy reads `(*_t)`, and a binding takes `&(*_t)`,
+which is `_t` again. `is_assignable` gained one branch so a binding-returning call
+counts as a place, which is what makes `const ref i32 r = pick( x, y );` legal. An
+ordinary call still does not, so **§8's temporaries hole stays shut** - the result of a
+plain call has no scope of its own, and binding to one is still refused.
+
+Only `const ref` may be returned. A mutable one would hand a caller write access to
+something it never asked to lend, and §8 gave up reseating in exchange for needing no
+lifetimes - not in exchange for mutability through a returned binding.
+
+Four things this cost that the walkthrough had wrong, all of the same shape - claiming a
+predicate would answer for a new node kind without checking:
+
+- **`is_const_binding` had a kind guard** listing `Var_decl` and `Param_decl`, so every
+  `const ref` return reported *only a `const ref` may be returned*. A return type is a
+  binding position, so `Function_decl` belongs in that list.
+- **`parse_declaration`'s entry guard** admitted only an identifier or `const`, so
+  `ref T f()` never reached the declaration path at all - four cascading parse errors in
+  place of the one sema message. Fixing the *scanner* was not enough; the guard above it
+  had to widen too.
+- **The emitter did need changing.** The definition and the prototype both spelled the
+  return type from the declaration's recorded type, so C was told `int32_t` and handed
+  `int32_t*`. `Spelling::return_type` now owns that, next to `parameter_types`, where
+  "a binding travels by address" already lived.
+- `returns_a_binding` and `current_function_` simply did not exist.
+
+A note on the KIR: `return a` from a binding parameter prints `_0 = &(*_1)` rather than
+`copy _1`. `lower_place` derefs the binding and the address is taken straight back - the
+same round trip forwarding a borrow already prints, and one any C compiler folds. Not
+worth a peephole; worth knowing before reading a dump and thinking something is wrong.
+
+**M4's reference work is complete**: `ref` and `const ref` parameters, `ref` and
+`const ref` local bindings, `const` throughout, the read-only borrow, and now returns
+and the non-escaping rule. `out` is all that remains.
+
 ### Debts to pay along the way
+
+- **The receiver is not a reference parameter.** §8 says a method may return a reference into its
+  own object, and it cannot: `this` is a `T*` passed by value rather than a binding, so it fails
+  the by-address test the rule uses. Nothing reaches the case today, because a constructor and a
+  destructor are the only methods and neither returns anything - so this is a trap laid for
+  whoever adds methods rather than a bug now. D32 already notes that making `this` spell `ref T`
+  is a change of spelling rather than of design; doing that fixes this for free.
+
 
 - **A pointer to const has no spelling, and `[*]T` is when that stops being affordable.** `const`
   binds the name, so `const i32* p` is refused. For one value `const ref T` covers it; for a

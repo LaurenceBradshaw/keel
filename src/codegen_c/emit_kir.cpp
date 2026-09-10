@@ -369,7 +369,7 @@ void Kir_emitter::emit_function( const Function& function )
 
     write_line( fmt::format(
         "{} {}( {} )",
-        spelling_.type( types_.type_of( function.declaration ) ),
+        spelling_.return_type( function.declaration ),
         spelling_.function( function.declaration ), // the mangled symbol, matching the prototype
         params.empty() ? "void" : params
     ) );
@@ -421,7 +421,7 @@ std::string Kir_emitter::prototype( Node_id decl ) const
 
     return fmt::format(
         "{} {}( {} )",
-        spelling_.type( types_.type_of( decl ) ), // the return type lives on the declaration
+        spelling_.return_type( decl ), // on the declaration, and a pointer when it returns a binding
         spelling_.function( decl ),
         params
     );

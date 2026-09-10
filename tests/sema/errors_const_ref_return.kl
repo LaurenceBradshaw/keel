@@ -1,0 +1,117 @@
+// PLAN §8. A reference may be returned only as a `const ref` derived from one of the function's own
+// reference parameters. The check is syntactic with no dataflow: trace the returned expression to
+// its root and require a parameter that travels by address.
+//
+// Why no lifetimes are needed: a `ref` binding is initialised at its declaration and never
+// reseated, so everything nameable at a call site outlives any binding declared there. Which
+// parameter the result came from does not matter, because all of them outlive it.
+struct Point
+{
+    i32 x;
+};
+
+i32 make()
+{
+    return 1;
+}
+
+const ref i32 returns_a_local()
+{
+    i32 v = 1;
+
+    return v;
+}
+
+// The callee's own copy, so it dies with the frame exactly as a local does. This is the case that
+// reads as safe and is not.
+const ref i32 returns_a_by_value_parameter( i32 n )
+{
+    return n;
+}
+
+const ref i32 returns_a_temporary()
+{
+    return make();
+}
+
+const ref i32 returns_a_field_of_a_local()
+{
+    Point v = Point { 1 };
+
+    return v.x;
+}
+
+// Conservative and deliberately so: the rule traces the returned *expression*, and a local binding
+// is not a parameter however safe its referent happens to be.
+const ref i32 returns_a_local_binding( const ref i32 a )
+{
+    const ref i32 r = a;
+
+    return r;
+}
+
+// A mutable one would let a caller write through a reference it never asked for.
+ref i32 returns_a_mutable_ref( ref i32 a )
+{
+    return a;
+}
+
+// Everything below is accepted, and the fixture would be worth much less without it.
+
+const ref i32 picks( const ref i32 a, const ref i32 b )
+{
+    if( a > b )
+    {
+        return a;
+    }
+
+    return b;
+}
+
+const ref i32 gets( const ref Point p )
+{
+    return p.x;
+}
+
+const ref i32 looks( ref i32 a )
+{
+    return a;
+}
+
+class B
+{
+    u64 n;
+
+    B( u64 x )
+    {
+        n = x;
+    }
+
+    ~B()
+    {
+    }
+};
+
+// A bare parameter of an owning type is already a read-only borrow, so it is a reference parameter
+// for this rule too.
+const ref u64 peeks( B b )
+{
+    return b.n;
+}
+
+i32 uses_the_result()
+{
+    i32 x = 1;
+    i32 y = 2;
+
+    const ref i32 bound = picks( x, y );
+
+    i32 copied = picks( x, y );
+
+    return bound + copied;
+}
+
+i32 main()
+{
+    return 0;
+}

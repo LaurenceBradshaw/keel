@@ -1,0 +1,71 @@
+fn picks {
+    let _0: i32*; // return slot
+    let _1: i32*; // parameter a
+    let _2: i32*; // parameter b
+    let _3: bool;
+
+    bb0:
+        _3 = copy (*_1) > copy (*_2)
+        branch copy _3 -> bb1, bb2
+
+    bb1:
+        _0 = &(*_1)
+        return
+
+    bb2:
+        goto -> bb3
+
+    bb3:
+        _0 = &(*_2)
+        return
+}
+fn gets {
+    let _0: i32*; // return slot
+    let _1: Point*; // parameter p
+
+    bb0:
+        _0 = &(*_1).y
+        return
+}
+fn main {
+    let _0: i32; // return slot
+    let _1: i32; // x
+    let _2: i32; // y
+    let _3: i32*; // bound
+    let _4: i32*;
+    let _5: i32*;
+    let _6: i32*;
+    let _7: Point; // v
+    let _8: Point;
+    let _9: i32; // copied
+    let _10: Point*;
+    let _11: i32*;
+    let _12: i32;
+
+    bb0:
+        storage_live _1
+        _1 = const 1
+        storage_live _2
+        _2 = const 2
+        storage_live _3
+        _4 = &_1
+        _5 = &_2
+        _6 = call picks(copy _4, copy _5)
+        _3 = &(*_6)
+        storage_live _7
+        _8.x = const 3
+        _8.y = const 4
+        _7 = copy _8
+        storage_live _9
+        _10 = &_7
+        _11 = call gets(copy _10)
+        _9 = copy (*_11)
+        _12 = copy (*_3) + copy _9
+        _0 = copy _12
+        storage_dead _9
+        storage_dead _7
+        storage_dead _3
+        storage_dead _2
+        storage_dead _1
+        return
+}
