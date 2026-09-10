@@ -1,0 +1,95 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Point;
+
+struct kl__Point
+{
+    int32_t kl_x_1;
+};
+
+void kl__bump__i32p( int32_t* );
+void kl__twice__i32p( int32_t* );
+void kl__slide__Pointp( struct kl__Point* );
+void kl__through__i32p( int32_t* );
+int32_t kl__main__( void );
+
+void kl__bump__i32p( int32_t* kl_n_1 )
+{
+    int32_t kl_t2;
+#line 11 "codegen/refs.kl"
+    kl_t2 = ( *kl_n_1 ) + 1;
+    ( *kl_n_1 ) = kl_t2;
+    return;
+}
+
+void kl__twice__i32p( int32_t* kl_n_1 )
+{
+    int32_t* kl_t2;
+    int32_t* kl_t4;
+#line 17 "codegen/refs.kl"
+    kl_t2 = &( *kl_n_1 );
+    kl__bump__i32p( kl_t2 );
+#line 18 "codegen/refs.kl"
+    kl_t4 = &( *kl_n_1 );
+    kl__bump__i32p( kl_t4 );
+    return;
+}
+
+void kl__slide__Pointp( struct kl__Point* kl_p_1 )
+{
+    int32_t* kl_t2;
+#line 23 "codegen/refs.kl"
+    kl_t2 = &( *kl_p_1 ).kl_x_1;
+    kl__bump__i32p( kl_t2 );
+    return;
+}
+
+void kl__through__i32p( int32_t* kl_q_1 )
+{
+    int32_t* kl_t2;
+#line 29 "codegen/refs.kl"
+    kl_t2 = &( *kl_q_1 );
+    kl__bump__i32p( kl_t2 );
+    return;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_x_1;
+    int32_t* kl_t2;
+    int32_t* kl_t4;
+    int32_t* kl_t6;
+    struct kl__Point kl_p_8;
+    struct kl__Point kl_t9;
+    struct kl__Point* kl_t10;
+    int32_t kl_t12;
+#line 34 "codegen/refs.kl"
+    kl_x_1 = 0;
+#line 36 "codegen/refs.kl"
+    kl_t2 = &kl_x_1;
+    kl__bump__i32p( kl_t2 );
+#line 37 "codegen/refs.kl"
+    kl_t4 = &kl_x_1;
+    kl__twice__i32p( kl_t4 );
+#line 38 "codegen/refs.kl"
+    kl_t6 = &kl_x_1;
+    kl__through__i32p( kl_t6 );
+#line 40 "codegen/refs.kl"
+    kl_t9.kl_x_1 = 10;
+    kl_p_8 = kl_t9;
+#line 42 "codegen/refs.kl"
+    kl_t10 = &kl_p_8;
+    kl__slide__Pointp( kl_t10 );
+#line 44 "codegen/refs.kl"
+    kl_t12 = kl_x_1 + kl_p_8.kl_x_1;
+    kl_t0 = kl_t12;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

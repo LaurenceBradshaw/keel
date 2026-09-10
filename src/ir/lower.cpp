@@ -41,6 +41,7 @@ private:
     Operand lower_call( Node_id id );
     Place   lower_place( Node_id id );     // names where a value lives
     void    lower_statement( Node_id id ); // emits, produces nothing
+    Operand lower_argument( Node_id argument, Node_id parameter );
 
     // One per construct, dispatched from lower_statement - the shape visit_* uses next door.
     void lower_block( Node_id id );
@@ -110,7 +111,9 @@ private:
     Local_id                          receiver_ {}; // A destructor's synthesised `this`. Invalid in a plain function.
     // Parameters the callee owns, and therefore drops. Collected in the constructor and put in a
     // scope by run(), because scope_locals_ has no scope to go into until then.
-    std::vector<Local_id> owned_parameters_;
+    std::vector<Local_id>   owned_parameters_;
+    std::unordered_set<u32> ref_parameters_; // Param_decl ids whose local holds an address
+
     // Owning temporaries built by the statement being lowered. They have an owner - the caller -
     // and therefore a drop, and the right moment for it is the end of the statement, which is after
     // every use of them within it.
@@ -144,11 +147,16 @@ Lowering::Lowering(
     {
         if( ast_.kind( param ) == Node_kind::Param_decl )
         {
-            const Type_id   type  = types_.type_of( param );
+            const Type_id   type  = parameter_type( ast_, types_, param );
             const Span      span  = ast_.span( param );
             const Symbol_id name  = Symbol_id { ast_.aux( param ) };
             const Local_id  local = builder_.add_parameter( type, span, name );
             locals_.emplace( param.v, local );
+
+            if( is_ref_parameter( ast_, param ) )
+            {
+                ref_parameters_.insert( param.v );
+            }
 
             if( is_move_parameter( param ) )
             {
@@ -200,7 +208,11 @@ Place Lowering::place_for( Node_id declaration )
 
     if( local != locals_.end() )
     {
-        return builder_.place( local->second );
+        const Place base = builder_.place( local->second );
+
+        // D32: the name means the referent, not the address. Same deref the receiver already goes
+        // through, which is why no consumer of KIR needs to know a ref binding exists.
+        return ref_parameters_.contains( declaration.v ) ? builder_.deref( base ) : base;
     }
 
     // A bare field is `this.field` - D22's reach through the receiver, written implicitly - so it
@@ -624,14 +636,14 @@ Operand Lowering::lower_call( Node_id id )
 
     operands.reserve( arguments.size() );
 
-    for( const Node_id argument : arguments )
+    for( std::size_t i = 0; i < arguments.size(); ++i )
     {
-        operands.push_back( lower_expression( argument ) );
+        operands.push_back( lower_argument( arguments[i], parameters[i] ) );
     }
 
     for( std::size_t i = 0; i < operands.size(); ++i )
     {
-        operands[i] = converted( operands[i], types_.type_of( parameters[i] ), ast_.span( arguments[i] ) );
+        operands[i] = converted( operands[i], parameter_type( ast_, types_, parameters[i] ), ast_.span( arguments[i] ) );
 
         // The parameter's mode rather than what was written at the call: KIR records what
         // happens. Today they coincide, because the checker requires the marker - but the
@@ -1148,6 +1160,24 @@ void Lowering::lower_statement( Node_id id )
         fmt::print( stderr, "keelc: cannot lower {} as a statement yet\n", node_kind_name( ast_.kind( id ) ) );
         assert( false && "statement kind not lowered yet" );
     }
+}
+
+Operand Lowering::lower_argument( Node_id argument, Node_id parameter )
+{
+    if( !is_ref_parameter( ast_, parameter ) )
+    {
+        return lower_expression( argument );
+    }
+
+    // The marker is stepped through rather than lowered: `ref` says how the argument travels, and
+    // has no value of its own to produce. The checker has already required it to be here.
+    assert( ast_.kind( argument ) == Node_kind::Marker_expr && "the checker requires the markers to agree" );
+
+    const Type_id address = parameter_type( ast_, types_, parameter );
+    const Span    span    = ast_.span( argument );
+    const Place   place   = lower_place( ast_.children( argument )[0] );
+
+    return copy( builder_.place( builder_.into_temp( address_of( place, address ), address, span ) ), address );
 }
 
 } // namespace
@@ -2904,6 +2934,96 @@ TEST_CASE( "lower_reads_a_move_as_a_move", "[ir][lower][move]" )
             REQUIRE( verify( function ).empty() );
         }
     }
+}
+
+// PLAN D32. In KIR a ref binding is a pointer local and every use of the name is a deref - exactly
+// the shape the receiver already has. That is what keeps the mode out of every pass below sema:
+// verify, the move analysis and drop elaboration all see an ordinary pointer.
+TEST_CASE( "lower_binds_a_ref_parameter_through_a_pointer", "[ir][lower][ref]" )
+{
+    Lowered p( "void bump( ref i32 n ) { n = n + 1; }\ni32 main() { i32 x = 1; bump( ref x ); return x; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.text( 0 );
+
+    INFO( text );
+    REQUIRE( text.find( "let _1: i32*; // parameter n" ) != std::string::npos );
+
+    // Both ends of the assignment go through the binding: reading the name and writing to it are
+    // the same place, which is the one thing a mode that is not a type has to get right. The
+    // binary lands in a temporary on the way, as every other assignment of one already does.
+    REQUIRE( text.find( "_2 = copy (*_1) + const 1" ) != std::string::npos );
+    REQUIRE( text.find( "(*_1) = copy _2" ) != std::string::npos );
+}
+
+TEST_CASE( "lower_passes_a_ref_argument_as_an_address", "[ir][lower][ref]" )
+{
+    Lowered p( "void bump( ref i32 n ) { n = n + 1; }\ni32 main() { i32 x = 1; bump( ref x ); return x; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.text( 1 );
+
+    INFO( text );
+
+    // The address goes into a temporary first, because an operand carries a place and not an
+    // rvalue - the same step the synthesised destructor call already takes.
+    REQUIRE( text.find( "_2 = &_1" ) != std::string::npos );
+    REQUIRE( text.find( "call bump(copy _2)" ) != std::string::npos );
+
+    // And the caller's own local is untouched: a borrow is not a transfer, so nothing here is a
+    // move and nothing is dropped.
+    REQUIRE( text.find( "move" ) == std::string::npos );
+}
+
+// Passing a binding on is `&(*_1)` - the address it already holds. Worth a case of its own because
+// it is the one place lower_place runs on a name that is itself a ref.
+TEST_CASE( "lower_forwards_a_ref_binding", "[ir][lower][ref]" )
+{
+    Lowered p( "void bump( ref i32 n ) { n = n + 1; }\n"
+               "void twice( ref i32 n ) { bump( ref n ); bump( ref n ); }\n"
+               "i32 main() { i32 x = 1; twice( ref x ); return x; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.text( 1 );
+
+    INFO( text );
+    REQUIRE( text.find( "= &(*_1)" ) != std::string::npos );
+}
+
+// A class travels the same way, and the field reached through the binding is the caller's field.
+// Nothing about the parameter is owning - its local is a pointer - so no drop is elaborated for it.
+TEST_CASE( "lower_lends_a_class_by_ref", "[ir][lower][ref]" )
+{
+    Lowered p( "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+               "void grow( ref B b ) { b.n = b.n + 1; }\n"
+               "i32 main() { B a = B( 1 ); grow( ref a ); return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    // Found by name rather than by index: a class contributes its constructor and destructor to the
+    // same list, and which order they land in is not what this case is about.
+    std::string text;
+
+    for( std::size_t i = 0; i < p.functions.size(); ++i )
+    {
+        if( p.text( i ).starts_with( "fn grow" ) )
+        {
+            text = p.text( i );
+        }
+    }
+
+    INFO( text );
+    REQUIRE_FALSE( text.empty() );
+    REQUIRE( text.find( "let _1: B*; // parameter b" ) != std::string::npos );
+    REQUIRE( text.find( "(*_1).n =" ) != std::string::npos );
+    REQUIRE( text.find( "drop" ) == std::string::npos );
 }
 
 } // namespace keel

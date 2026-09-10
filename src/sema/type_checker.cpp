@@ -1853,16 +1853,47 @@ Type_id Checker::infer_call( Node_id id )
                                    ? static_cast<Keyword>( ast_.aux( arguments[i] ) )
                                    : Keyword::Count;
 
-        // Only an owning type has anything for the signature to say. For everything else a bare
-        // argument is a copy and `move` is the caller's own assertion that the source is dead
-        // afterwards (D31) - which the callee neither sees nor cares about, so demanding the two
-        // agree would make the marker mean something different depending on the type.
-        if( wanted == given || !is_owning_type( types_[params[i].v] ) )
+        // A ref binds to the caller's object itself, so there is no conversion step for a widened
+        // copy to live in: `ref u8` and `ref i32` are different bindings, not convertible ones.
+        // Above the agreement check, because agreeing is this rule's precondition rather than its
+        // exit - and it wants both sides, so one missing marker does not report twice.
+        if( wanted == Keyword::Ref && given == Keyword::Ref && !table_.is_error( types_[arguments[i].v] ) &&
+            types_[arguments[i].v] != types_[params[i].v] )
+        {
+            error_at(
+                ast_.span( arguments[i] ),
+                fmt::format(
+                    "cannot borrow `{}` as `ref {}`", table_.name( types_[arguments[i].v] ), table_.name( types_[params[i].v] )
+                ),
+                "a borrow is the variable itself, so its type must match exactly"
+            );
+        }
+
+        if( wanted == given )
         {
             continue;
         }
 
-        if( wanted == Keyword::Move )
+        // The exemption is narrow and belongs only to `move`: on a non-owning type it is the
+        // caller's own assertion that the source is dead afterwards, which the callee never sees.
+        // `ref` changes what the callee is holding, at every type.
+        const bool about_ownership =
+            ( wanted == Keyword::Count || wanted == Keyword::Move ) && ( given == Keyword::Count || given == Keyword::Move );
+
+        if( about_ownership && !is_owning_type( types_[params[i].v] ) )
+        {
+            continue;
+        }
+
+        if( wanted == Keyword::Ref )
+        {
+            error_at( ast_.span( arguments[i] ), fmt::format( "`{}` may modify this argument", name ), "write `ref`" );
+        }
+        else if( given == Keyword::Ref )
+        {
+            error_at( ast_.span( arguments[i] ), fmt::format( "`{}` does not modify this argument", name ), "remove `ref`" );
+        }
+        else if( wanted == Keyword::Move )
         {
             error_at( ast_.span( arguments[i] ), fmt::format( "`{}` takes ownership of this argument", name ), "write `move`" );
         }
@@ -2366,12 +2397,27 @@ Type_id Checker::infer_marker( Node_id id )
     const Keyword marker  = static_cast<Keyword>( ast_.aux( id ) );
     const Node_id operand = ast_.children( id )[0];
 
-    // ref and out are D31's other two call-site markers, and need the binding modes D32 describes.
-    if( marker != Keyword::Move )
+    if( marker == Keyword::Out )
     {
-        error_at( ast_.span( id ), fmt::format( "argument not supported yet" ) );
+        error_at( ast_.span( id ), "`out` is not supported yet" );
         absorb( operand );
         return record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    // `ref` lends a place the callee may write through, so it needs one that is writable.
+    // is_assignable is that question already: what may be assigned is exactly what may be lent, and
+    // reusing it is what stops the two drifting apart.
+    if( marker == Keyword::Ref )
+    {
+        const Type_id value = infer( operand );
+
+        if( !is_assignable( operand ) )
+        {
+            error_at( ast_.span( operand ), "`ref` needs a variable to borrow" );
+            return record( id, table_.builtin( Type_kind::Error ) );
+        }
+
+        return record( id, value );
     }
 
     const Type_id value = infer( operand );
@@ -2587,15 +2633,23 @@ Type_id Checker::type_of_annotation( Node_id id )
     {
         const Keyword mode = static_cast<Keyword>( ast_.aux( id ) );
 
-        // `move` needs nothing more than this; ref and out wait on D32's binding modes and the
-        // non-escaping rule.
-        if( mode != Keyword::Move )
+        if( mode == Keyword::Out )
         {
-            error_at( ast_.span( id ), "this parameter mode is not supported yet" );
+            error_at( ast_.span( id ), "`out` is not supported yet" );
             return table_.builtin( Type_kind::Error );
         }
 
-        return type_of_annotation( ast_.children( id )[0] );
+        const Type_id inner = type_of_annotation( ast_.children( id )[0] );
+
+        // D32: the binding is the referent, so the declaration keeps `T` and every use in the body
+        // is an ordinary `T`. The address it travels as goes on the annotation, which nothing else
+        // types - lowering and the emitter read it back from there.
+        if( mode == Keyword::Ref )
+        {
+            record( id, table_.pointer_to( inner ) );
+        }
+
+        return inner;
     }
 
     case Node_kind::Generic_type:
@@ -3039,6 +3093,18 @@ Types type_check(
 )
 {
     return Checker( ast, interner, resolution, sm, literals, diags ).run();
+}
+
+Type_id parameter_type( const Ast& ast, const Types& types, Node_id param )
+{
+    return is_ref_parameter( ast, param ) ? types.type_of( ast.children( param )[0] ) : types.type_of( param );
+}
+
+bool is_ref_parameter( const Ast& ast, Node_id param )
+{
+    const Node_id annotation = ast.children( param )[0];
+
+    return ast.kind( annotation ) == Node_kind::Mode_type && static_cast<Keyword>( ast.aux( annotation ) ) == Keyword::Ref;
 }
 
 } // namespace keel
@@ -6335,20 +6401,15 @@ TEST_CASE( "type_checker_rejects_moving_a_non_place", "[sema][move]" )
     }
 }
 
-// The other two markers wait for D32's binding modes. They should say so in their own words rather
-// than share `move`'s path.
-TEST_CASE( "type_checker_rejects_ref_and_out_for_now", "[sema][move]" )
+// `out` waits on definite assignment in the callee. It should say so in its own words rather than
+// share `move`'s path, and one error rather than two - the marker is the only thing wrong here.
+TEST_CASE( "type_checker_rejects_out_for_now", "[sema][move]" )
 {
-    for( const char* source :
-         { "void f( i32 x ) { }\ni32 main() { i32 a = 1; f( ref a ); return 0; }",
-           "void f( i32 x ) { }\ni32 main() { i32 a = 1; f( out a ); return 0; }" } )
-    {
-        const Typed p( source );
+    const Typed p( "void f( i32 x ) { }\ni32 main() { i32 a = 1; f( out a ); return 0; }" );
 
-        INFO( "source: " << source << "\n" << p.rendered() );
-        REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "not supported yet" ) != std::string::npos );
-    }
+    INFO( p.rendered() );
+    REQUIRE( p.errors() == 1 );
+    REQUIRE( p.rendered().find( "not supported yet" ) != std::string::npos );
 }
 
 // D31: an owning value is transferred, not copied, and the transfer is written down - in an
@@ -6412,6 +6473,134 @@ TEST_CASE( "type_checker_requires_move_when_copying_an_owning_value", "[sema][mo
         INFO( p.rendered() );
         REQUIRE( p.clean() );
     }
+}
+
+// PLAN D32. `ref` is a binding mode, not a type: the declaration keeps `T`, so every use inside the
+// body is an ordinary `T`. The address it travels as goes on the annotation, which nothing else
+// records a type on - and which is what lowering and the emitter read back.
+TEST_CASE( "type_checker_types_a_ref_parameter_as_its_referent", "[sema][ref]" )
+{
+    const Typed p( "void bump( ref i32 n ) { n = n + 1; }\ni32 main() { i32 x = 1; bump( ref x ); return x; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    // An i32 and not a pointer - `n = n + 1` above would not have typed otherwise.
+    REQUIRE( p.type_name( p.nth( Node_kind::Param_decl, 0 ) ) == "i32" );
+    REQUIRE( p.type_name( p.nth( Node_kind::Mode_type, 0 ) ) == "i32*" );
+}
+
+// The same mechanism reaches a class, which is what makes it worth having: a borrow is the only
+// thing §6.6 leaves available for passing one without giving it away.
+TEST_CASE( "type_checker_lends_a_class_by_ref", "[sema][ref]" )
+{
+    const Typed p( "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+                   "void grow( ref B b ) { b.n = b.n + 1; }\n"
+                   "i32 main() { B a = B( 1 ); grow( ref a ); return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+    REQUIRE( p.type_name( p.nth( Node_kind::Mode_type, 0 ) ) == "B*" );
+}
+
+TEST_CASE( "type_checker_requires_the_ref_marker_at_the_call", "[sema][ref]" )
+{
+    constexpr std::string_view bump = "void bump( ref i32 n ) { n = n + 1; }\n";
+
+    // D2: a reader of the call site should never have to find the declaration to learn that the
+    // callee may write through the argument. Note the type owns nothing - unlike `move`, `ref` is
+    // not exempt there, because it changes what the callee is holding whatever the type is.
+    SECTION( "a bare argument is refused" )
+    {
+        const Typed p( std::string( bump ) + "i32 main() { i32 x = 1; bump( x ); return x; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "write `ref`" ) != std::string::npos );
+    }
+
+    SECTION( "a marker the signature does not ask for is refused" )
+    {
+        const Typed p( "void plain( i32 n ) { }\ni32 main() { i32 x = 1; plain( ref x ); return x; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.rendered().find( "remove `ref`" ) != std::string::npos );
+    }
+
+    // The exemption that remains is `move` on a non-owning type: it is the caller's own assertion
+    // that the source is dead afterwards, which the callee neither sees nor cares about.
+    SECTION( "move on a non-owning type is still exempt" )
+    {
+        const Typed p( "void plain( i32 n ) { }\ni32 main() { i32 x = 1; plain( move x ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "with the marker it is accepted" )
+    {
+        const Typed p( std::string( bump ) + "i32 main() { i32 x = 1; bump( ref x ); return x; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+TEST_CASE( "type_checker_requires_a_place_for_a_ref_argument", "[sema][ref]" )
+{
+    constexpr std::string_view bump = "void bump( ref i32 n ) { n = n + 1; }\n";
+
+    SECTION( "a literal has no place to lend" )
+    {
+        const Typed p( std::string( bump ) + "i32 main() { bump( ref 1 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.rendered().find( "`ref` needs a variable to borrow" ) != std::string::npos );
+    }
+
+    // Unlike a move, a borrow leaves nothing partly gone, so a field needs no restriction of its
+    // own - which is the whole reason is_assignable is the test rather than a stricter one.
+    SECTION( "a field can be lent" )
+    {
+        const Typed p(
+            "struct P { i32 x; };\n" + std::string( bump ) + "i32 main() { P p = P { 1 }; bump( ref p.x ); return p.x; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and so can a pointee" )
+    {
+        const Typed p( std::string( bump ) + "i32 main() { i32 x = 1; i32* q = &x; bump( ref *q ); return x; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // A binding is the caller's object itself, so there is no conversion step for a widened copy to
+    // live in. §6.4 would happily widen the argument, and the callee would then write into a
+    // temporary nobody reads.
+    SECTION( "a ref argument is not widened to reach the parameter" )
+    {
+        const Typed p( std::string( bump ) + "i32 main() { u8 x = 1; bump( ref x ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+}
+
+// `out` needs definite assignment in the callee, which is §8's lattice read from the Uninitialised
+// end rather than the Moved one. Until that exists it is refused rather than half-supported.
+TEST_CASE( "type_checker_still_refuses_out", "[sema][ref]" )
+{
+    const Typed p( "void init( out i32 n ) { n = 1; }\ni32 main() { i32 x = 0; init( out x ); return x; }" );
+
+    INFO( p.rendered() );
+    REQUIRE_FALSE( p.clean() );
 }
 
 } // namespace keel

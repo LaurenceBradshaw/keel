@@ -498,7 +498,7 @@ overflows; what happens then is the open overflow question in §12.
 | D30 | **One `enum` keyword**, carrying `enum class`'s semantics: scoped (`Shape::Circle`), with no implicit conversion to an integer. The underlying type is spelled as in C++: `enum Shape : u8 { ... }`. `enum class E` is a hard error saying to drop the `class`. | The same C-compatibility tax as D29, with the opposite answer, and the asymmetry is the point: `struct`/`class` are two words for one job, so the job gets split; `enum`/`enum class` are two words for one job where only one of them does it correctly, so there is nothing to split. C++'s plain `enum` leaked its variant names into the enclosing scope and converted implicitly to `int`; both were mistakes, `enum class` fixed them in C++11, and the broken spelling survives only for C. Safe under §5.1 because every point where the two meanings diverge is an error rather than a reinterpretation: `Shape s = Circle;` is an unknown name, and `i32 x = Circle;` and `if ( s == 0 )` have no conversion to reach for. Rejecting `enum class` follows D22's pattern — keep the spelling recognised so the diagnostic can name the fix. **Open at M5**: a payload-carrying variant can hold an owning type, so an `enum` inherits D29's question of which kind it is. |
 | D31 | **Argument passing has four forms, and the call site always says which.** Bare `f( x )` — the callee gets a copy it owns if `x` is a `struct`, a read-only borrow if `x` is a `class`; either way the caller's object is alive and unchanged afterwards. `f( ref x )` — a mutable borrow. `f( out x )` — uninitialised, and the callee must assign it. `f( move x )` — the callee owns it and `x` is dead afterwards: for a `class` because the resource left, for a `struct` because the author said so. `const T&` does **not** survive as a parameter spelling, because a bare argument already means it. **The same rule governs initialisation and assignment, not just arguments**: `Buffer b = a;` is a hard error naming `Buffer b = move a;` as the fix, and so is `b = a;` between two existing classes. A `return` is the one exempt position — `return b;` needs no marker, because `b` is going out of scope regardless and there is no later use for the marker to warn about. | One principle generates the whole table: **you may modify what you own.** A bare `struct` parameter is a copy you own, so it is mutable — which is also exactly what C++ does, so this costs no audit row and keeps `i32 factorial( i32 n ) { ... n--; }` legal. A bare `class` parameter is a borrow you do not own, so it is not; that is forced rather than chosen, because copying a class needs a copy constructor and §6.6 puts those outside v0, leaving *borrow* as the only meaning available. The uniformity that matters is caller-side and holds in both rows — after a bare argument the object is alive and unchanged — so reading a call site never requires knowing the kind. The variation is callee-side, concerns a type named on the same line under L6, and surfaces as a compile error rather than a silent difference in meaning. The result is C#'s behaviour for value and reference types, arrived at from ownership rather than from a garbage collector. `move` on a `struct` copies the bytes and marks the source dead in the checker: an assertion, not a transfer, which keeps the keyword's user-visible meaning identical across kinds and costs almost nothing, since structs are already in §8's dataflow for the `Uninitialised -> Live` half and drop elaboration still never looks at one. **Obligation at M6**: a generic that mutates a bare parameter is legal only when `T` is a `struct`, so definition-checked generics (D11) need a bound that permits it — `is_trivially_copyable`, alongside `is_numeric` and the rest — rather than deferring the error to the instantiation site as C++ does. The initialisation case is where the rule earns most: C++ would call a copy constructor for `Buffer b = a;`, and with none available the two remaining readings are to move silently — leaving `a` dead with nothing in the source saying so — or to bind `b` as a reference to `a`, which is worse, because two names would own one resource and the second destructor would be a double free. Rejecting is the only safe answer, and it rejects valid C++ outright rather than reinterpreting it, which §5.1 permits. Note that `b = move a;` must also destroy whatever `b` held first; that is drop elaboration's job at M3, not a separate rule. **The marker appears in the signature as well as at the call site**, and the two must agree: `void consume( move Buffer b )` is called as `consume( move b )`, `void grow( ref Buffer b )` as `grow( ref b )`, `void init( out Buffer b )` as `init( out b )`, and an unmarked parameter as `inspect( b )`. This is forced: with `const T&` gone, `void consume( Buffer b )` and `void inspect( Buffer b )` would otherwise be indistinguishable, and the callee has to know whether it owns its argument. Marking both sides is C#'s design rather than C++'s, and it removes `&` from parameter lists entirely — a reference type still exists (L16), but a parameter never spells one, because each of the three things `&` was doing in a C++ signature now has its own keyword. The redundancy is only apparent: the signature states the contract and the call site acknowledges it, which is the whole point of D2 — a reader of the call site should not have to find the declaration to learn that a variable just died. |
 
-| D32 | **`ref` is a binding mode, not a type.** `ref T x` and `const ref T x` replace `T&` and `const T&` in every position — parameter, local binding, and return. `T&` in type position is a hard error naming `ref T`. `&` therefore means address-of and nothing else, and `T*` is the only postfix type constructor left (L16). A `ref` binding is **initialised at its declaration and never reseated**. | Two spellings for one concept is the redundancy D25 and D30 already refuse, and D31 had removed `const T&` from parameters — where the great majority of references appear — leaving `T&` alive only for local bindings. Finishing it costs little more and stops the language carrying both. The reframe is what earns it: as a *type*, §8's rule that a reference may not live in a struct is a restriction needing a diagnostic; as a **mode**, a field simply is not a binding and the rule disappears into the grammar. Reading order improves too — `const ref i32` has one order where C++ has `const i32&` and `i32 const&` meaning the same thing. Prefix does not violate L16, because a mode is not a type constructor. Taken at M4 rather than later because references were still *unimplemented* — `Ref_type` parsed and the checker said "not supported yet" — so the change cost a parser branch and an enum entry rather than a migration. `Ref_type` accordingly becomes a flag on `Param_decl`/`Var_decl` rather than a node wrapping a type. The §5.1 cost is real and is the largest departure in spelling the language has taken: `i32& r` is idiomatic C++ and becomes a syntax error. §5.1 permits rejecting outright, and the diagnostic names the replacement. **Open**: whether the receiver becomes `ref T` rather than `T*`, which would let it obey these rules uniformly instead of being a pointer D22 has to reach through. |
+| D32 | **`ref` is a binding mode, not a type.** `ref T x` and `const ref T x` replace `T&` and `const T&` in every position — parameter, local binding, and return. `T&` in type position is a hard error naming `ref T`. `&` therefore means address-of and nothing else, and `T*` is the only postfix type constructor left (L16). A `ref` binding is **initialised at its declaration and never reseated**. | Two spellings for one concept is the redundancy D25 and D30 already refuse, and D31 had removed `const T&` from parameters — where the great majority of references appear — leaving `T&` alive only for local bindings. Finishing it costs little more and stops the language carrying both. The reframe is what earns it: as a *type*, §8's rule that a reference may not live in a struct is a restriction needing a diagnostic; as a **mode**, a field simply is not a binding and the rule disappears into the grammar. Reading order improves too — `const ref i32` has one order where C++ has `const i32&` and `i32 const&` meaning the same thing. Prefix does not violate L16, because a mode is not a type constructor. Taken at M4 rather than later because references were still *unimplemented* — `Ref_type` parsed and the checker said "not supported yet" — so the change cost a parser branch and an enum entry rather than a migration. `Ref_type` accordingly becomes a flag on `Param_decl`/`Var_decl` rather than a node wrapping a type. The §5.1 cost is real and is the largest departure in spelling the language has taken: `i32& r` is idiomatic C++ and becomes a syntax error. §5.1 permits rejecting outright, and the diagnostic names the replacement. **Answered by the implementation**: the receiver and a `ref` parameter are one mechanism - a pointer local that `place_for` derefs - so making `this` spell `ref T` is now a change of spelling rather than of design, and can wait for whoever wants to write it. |
 
 
 ### 6.4 Numeric conversions (D5)
@@ -1820,14 +1820,70 @@ when one is reported, and the move analysis never runs. Adding them to that file
 silently deleted its five move diagnostics from the golden. One fixture per pass,
 where a pass can gate the one after it.
 
+**D32's `ref` arrives as a parameter mode.** `void bump( ref i32 n )`, called as
+`bump( ref n )`, and inside the body `n` is an ordinary `i32` in every position -
+`n = n + 1`, `n.field`, `&n`. A class travels the same way, which is what finally
+makes one passable without giving it away: with copy constructors outside §6.6, a
+borrow was the only meaning available and there was no spelling for it.
+
+The decision that shaped the implementation: **the declaration records `T`, not
+`T*`.** D32 forces it - a mode is not a type, so `ref i32 n` has to support
+`n = n + 1` rather than `*n = *n + 1`. The pointer exists only below sema.
+
+That left lowering needing a `T*` id it cannot make: `Types::table()` hands out a
+`const Type_table&` and `pointer_to` interns. So the checker records the address
+type **on the `Mode_type` annotation node**, which nothing else types - one free
+slot with exactly one meaning, *what this binding travels as*. `parameter_type()`
+is the single reader, shared by lowering and by the emitter's `parameter_types_vector`,
+because the local, the prototype and the mangled name must all agree or C sees a
+definition that does not match its own declaration.
+
+Below sema nothing knows the mode exists. The local is a pointer, `place_for`
+derefs it, and that one line is what makes every use work at once - reads, writes,
+fields, and forwarding, since `lower_place` is where all four already met. It is
+the shape the receiver has had since D22, so **D32's open question answers itself**:
+`this` and a `ref` parameter are now the same mechanism, and making the receiver
+`ref T` would be a spelling change rather than a design one. verify, the move
+analysis and drop elaboration needed nothing - a borrow's local is a pointer, so it
+is not owning, so it is never dropped.
+
+Two rules the agreement check needed. It had been exempting any disagreement on a
+non-owning type, which is right for `move` - the caller's own assertion that the
+source is dead, which the callee never sees - and wrong for `ref`, which changes
+what the callee is holding whatever the type is. And a `ref` argument is **not
+converted**: a binding is the caller's object itself, so there is no conversion step
+for a widened copy to live in, and `bump( ref my_u8 )` against `ref i32` would
+otherwise have the callee writing 32 bits through an 8-bit place. That check has to
+sit *above* the agreement test rather than below it, because both sides agreeing is
+its precondition, not its exit - the first version sat below and could never fire.
+
+`is_assignable` is the test for what may be lent, deliberately the same one that
+says what may be assigned, so the two cannot drift. It is looser than `move`'s:
+a field and a pointee can both be borrowed, because unlike a move a borrow leaves
+nothing partly gone.
+
+`out` is still refused. It needs definite assignment in the callee, which is §8's
+lattice read from the `Uninitialised` end rather than the `Moved` one - a second
+analysis rather than a second keyword.
+
+No existing golden moved, which is the claim worth keeping: `ref` added a spelling
+and took nothing away.
+
+**Noted for whenever overloading arrives:** `void f( ref i32 n )` and
+`void f( i32* n )` mangle identically, both to `i32p`. Harmless in v0, where a
+second `f` is a redeclaration caught by name long before mangling matters, but the
+mangler will need to distinguish a borrow from a pointer the day two functions may
+share a name.
+
 ### Debts to pay along the way
 
 - **A bare parameter of an owning type is not yet a borrow.** D31 says it is a *read-only* borrow,
   and neither half holds. `void f( Buffer b ) { b.len = 5; }` is accepted, where it should be an
   error. And at C level the parameter is a struct copy rather than an address, so two objects hold
   the same resource for the duration of the call - benign only because exactly one of them drops it.
-  Both halves are one fix: pass by pointer and reject writes through it. Until then the semantics
-  are right by accident rather than by construction.
+  Both halves are one fix: pass by pointer and reject writes through it. The first half is no longer
+  work - `ref` built exactly that path, so a bare owning parameter is a `ref` parameter with
+  mutability withheld, and what remains is deciding it and making `is_assignable` say no.
 
 - **An owning temporary still leaks, and the hole is now narrower than it was.** `f( B( 1 ) )` with
   a bare parameter exits with the resource unfreed, because nothing drops a temporary. What has

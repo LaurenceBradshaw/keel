@@ -1,0 +1,97 @@
+// PLAN D31/D32. The marker appears in the signature and at the call site and the two must agree.
+// Unlike `move`, `ref` is not exempt on a type that owns nothing: `move` is the caller's own
+// assertion that the source is dead afterwards, which the callee never sees, while `ref` changes
+// what the callee is holding whatever the type is.
+struct Point
+{
+    i32 x;
+};
+
+void bump( ref i32 n )
+{
+    n = n + 1;
+}
+
+void plain( i32 n )
+{
+}
+
+i32 missing_marker()
+{
+    i32 x = 1;
+
+    bump( x );
+
+    return x;
+}
+
+i32 marker_not_asked_for()
+{
+    i32 x = 1;
+
+    plain( ref x );
+
+    return x;
+}
+
+i32 not_a_place()
+{
+    bump( ref 1 );
+
+    return 0;
+}
+
+// A binding is the caller's object itself, so there is no conversion step for a widened copy to
+// live in: `ref u8` and `ref i32` are different bindings, not convertible ones. Without this the
+// callee would write into a temporary nobody reads.
+i32 not_convertible()
+{
+    u8 x = 1;
+
+    bump( ref x );
+
+    return 0;
+}
+
+// `out` needs definite assignment in the callee, which is §8's lattice read from the Uninitialised
+// end. Refused rather than half-supported until that exists.
+void init( out i32 n )
+{
+    n = 1;
+}
+
+// Everything below is accepted, and the fixture would be worth much less without it: it is what
+// shows the rule is not simply refusing every marker it meets.
+
+i32 lends_a_field()
+{
+    Point p = Point { 1 };
+
+    bump( ref p.x );
+
+    return p.x;
+}
+
+i32 lends_a_pointee()
+{
+    i32 x = 1;
+    i32* q = &x;
+
+    bump( ref *q );
+
+    return x;
+}
+
+i32 still_exempt()
+{
+    i32 x = 1;
+
+    plain( move x );
+
+    return 0;
+}
+
+i32 main()
+{
+    return 0;
+}

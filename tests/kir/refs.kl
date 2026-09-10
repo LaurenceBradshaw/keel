@@ -1,0 +1,41 @@
+// PLAN D32. A ref binding is a pointer local and every use of the name is a deref - the same shape
+// `this` already has, which is why nothing below sema needs to know the mode exists. At the call
+// the address goes into a temporary first, because an operand carries a place and not an rvalue.
+void bump( ref i32 n )
+{
+    n = n + 1;
+}
+
+// Passing a binding on is `&(*_1)`: the address it already holds, taken back out of the deref that
+// every use of the name goes through.
+void twice( ref i32 n )
+{
+    bump( ref n );
+    bump( ref n );
+}
+
+struct Point
+{
+    i32 x;
+};
+
+// A field can be lent on its own. Unlike a move, a borrow leaves nothing partly gone, so the place
+// needs no restriction beyond naming one.
+void slide( ref Point p )
+{
+    bump( ref p.x );
+}
+
+i32 main()
+{
+    i32 x = 1;
+
+    bump( ref x );
+    twice( ref x );
+
+    Point p = Point { 10 };
+
+    slide( ref p );
+
+    return x + p.x;
+}

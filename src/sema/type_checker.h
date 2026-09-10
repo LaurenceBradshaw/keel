@@ -101,4 +101,9 @@ private:
 
 Types type_check( const Ast&, const Resolution&, const Literals&, const Source_manager&, const Interner&, Diagnostics& );
 
+// What a parameter is actually passed as: its own type, except a `ref` binding, which travels as
+// an address. Shared because lowering, the prototype and the mangled name must all agree.
+Type_id parameter_type( const Ast& ast, const Types& types, Node_id param );
+bool    is_ref_parameter( const Ast& ast, Node_id param );
+
 } // namespace keel

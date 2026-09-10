@@ -1,0 +1,45 @@
+// PLAN D31/D32. A `ref` parameter is a mutable borrow: the callee writes through the binding and
+// the caller sees it. A by-value parameter would leave every count below at its starting value, so
+// the exit code is what makes the borrow a checked claim rather than an inspected one.
+struct Point
+{
+    i32 x;
+};
+
+void bump( ref i32 n )
+{
+    n = n + 1;
+}
+
+// The binding is forwarded, not re-taken: `bump` writes into the caller of *this* function.
+void twice( ref i32 n )
+{
+    bump( ref n );
+    bump( ref n );
+}
+
+void slide( ref Point p )
+{
+    bump( ref p.x );
+}
+
+// A borrow through a pointer reaches the same object the pointer does.
+void through( i32* q )
+{
+    bump( ref *q );
+}
+
+i32 main()
+{
+    i32 x = 0;
+
+    bump( ref x );   // 1
+    twice( ref x );  // 3
+    through( &x );   // 4
+
+    Point p = Point { 10 };
+
+    slide( ref p );  // 11
+
+    return x + p.x;  // 15
+}
