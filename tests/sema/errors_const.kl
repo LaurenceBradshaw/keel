@@ -1,0 +1,180 @@
+// PLAN D32's shape applied to const: `ref` is a binding mode, `const` is a binding property. Both
+// are about the name rather than the data, which is what lets this reuse the read-only machinery
+// the borrow rule already has instead of putting constness into the type.
+struct P
+{
+    i32 x;
+};
+
+struct Outer
+{
+    P inner;
+};
+
+struct Holder
+{
+    P* q;
+};
+
+const i32 g = 1;
+
+i32 assigns_a_global()
+{
+    g = 2;
+
+    return g;
+}
+
+i32 assigns_a_parameter( const i32 n )
+{
+    n = 2;
+
+    return n;
+}
+
+i32 assigns_a_local()
+{
+    const i32 k = 1;
+
+    k = 2;
+
+    return k;
+}
+
+// Each reaches assignability by its own route, so each needs its own case.
+i32 increments_a_local()
+{
+    const i32 k = 1;
+
+    k++;
+
+    return k;
+}
+
+i32 compound_assigns_a_local()
+{
+    const i32 k = 1;
+
+    k += 2;
+
+    return k;
+}
+
+// The walk is the borrow rule's: a field path of any depth roots in the declaration.
+i32 writes_a_field()
+{
+    const P p = P { 1 };
+
+    p.x = 5;
+
+    return p.x;
+}
+
+i32 writes_a_nested_field()
+{
+    const Outer o = Outer { P { 1 } };
+
+    o.inner.x = 5;
+
+    return 0;
+}
+
+// `const` attaches to the name, so `i32* const q` is a const *binding*. Reseating it is refused;
+// writing through it is not, which is exactly what C++ means by the spelling.
+i32 reseats_a_const_pointer()
+{
+    i32 y = 1;
+    i32 z = 2;
+
+    i32* const q = &y;
+
+    q = &z;
+
+    return y;
+}
+
+// A promise about data nobody named here, which needs constness in the type. Refused rather than
+// quietly given the other meaning: silently reinterpreting valid C++ is what §5.1 forbids.
+i32 declares_a_pointer_to_const()
+{
+    i32 y = 1;
+
+    const i32* q = &y;
+
+    return *q;
+}
+
+void grow( ref i32 n )
+{
+    n = n + 1;
+}
+
+// Both routes into a mutable binding are the same question, so both are refused.
+i32 launders_through_a_binding()
+{
+    const i32 k = 1;
+
+    ref i32 r = k;
+
+    return k;
+}
+
+i32 launders_through_an_argument()
+{
+    const i32 k = 1;
+
+    grow( ref k );
+
+    return k;
+}
+
+// A field is not a binding, so `const` has nothing to attach to. A write-once field waits on
+// definite assignment over a constructor body - the same analysis `out` needs.
+struct HasConstField
+{
+    const i32 x;
+};
+
+// Everything below is accepted, and the fixture would be worth much less without it: it is what
+// shows the rule refuses writing a const rather than mentioning one.
+
+i32 reads_and_initialises()
+{
+    const i32 k = 1;
+
+    i32 y = k + 1;
+
+    return y;
+}
+
+// Shallow, the way C++'s const is: what a pointer points at was never named by this declaration.
+i32 writes_through_a_pointer_it_holds()
+{
+    P v = P { 1 };
+
+    const Holder h = Holder { &v };
+
+    h.q.x = 5;
+
+    return v.x;
+}
+
+i32 writes_through_a_const_pointer()
+{
+    i32 y = 1;
+
+    i32* const q = &y;
+
+    *q = 5;
+
+    return y;
+}
+
+i32 main()
+{
+    i32 k = 1;
+
+    k = 2;
+
+    return k;
+}

@@ -1,0 +1,73 @@
+error: `g` is `const`
+  --> sema/errors_const.kl:23:5
+   |
+23 |     g = 2;
+   |     ^ remove `const` to modify it
+
+error: `n` is `const`
+  --> sema/errors_const.kl:30:5
+   |
+30 |     n = 2;
+   |     ^ remove `const` to modify it
+
+error: `k` is `const`
+  --> sema/errors_const.kl:39:5
+   |
+39 |     k = 2;
+   |     ^ remove `const` to modify it
+
+error: `k` is `const`
+  --> sema/errors_const.kl:49:5
+   |
+49 |     k++;
+   |     ^ remove `const` to modify it
+
+error: `k` is `const`
+  --> sema/errors_const.kl:58:5
+   |
+58 |     k += 2;
+   |     ^ remove `const` to modify it
+
+error: `p` is `const`
+  --> sema/errors_const.kl:68:5
+   |
+68 |     p.x = 5;
+   |     ^^^ remove `const` to modify it
+
+error: `o` is `const`
+  --> sema/errors_const.kl:77:5
+   |
+77 |     o.inner.x = 5;
+   |     ^^^^^^^^^ remove `const` to modify it
+
+error: `q` is `const`
+  --> sema/errors_const.kl:91:5
+   |
+91 |     q = &z;
+   |     ^ remove `const` to modify it
+
+error: a pointer to `const` is not supported yet
+   --> sema/errors_const.kl:102:5
+    |
+102 |     const i32* q = &y;
+    |     ^^^^^^^^^ `const` applies to the binding; write `const ref T` to borrow one value read-only
+
+error: `k` is `const`
+   --> sema/errors_const.kl:117:17
+    |
+117 |     ref i32 r = k;
+    |                 ^ remove `const` to modify it
+
+error: `k` is `const`
+   --> sema/errors_const.kl:126:15
+    |
+126 |     grow( ref k );
+    |               ^ remove `const` to modify it
+
+error: a field cannot be `const` yet
+   --> sema/errors_const.kl:135:5
+    |
+135 |     const i32 x;
+    |     ^^^^^^^^^ it would have to be written exactly once, during construction, and nothing checks that
+
+12 errors generated

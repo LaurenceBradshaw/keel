@@ -1,0 +1,55 @@
+// PLAN D32's shape applied to const: it is a property of the binding, so it is a rule the checker
+// enforces and nothing below sema knows about. This fixture is the claim that nothing below sema
+// changed - a const binding is an ordinary local with ordinary storage, and the exit code says the
+// values it holds are the ones that were written.
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+const i32 scale = 10;
+
+i32 doubled( const i32 n )
+{
+    return n + n;
+}
+
+// Writing through a const *binding* is allowed: the pointer is what is const, not the pointee.
+i32 through_a_const_pointer( i32 seed )
+{
+    i32 v = seed;
+
+    i32* const q = &v;
+
+    *q = *q + 1;
+
+    return v;
+}
+
+// The walk stops at a pointer, so a const struct holding one still reaches what it points at.
+i32 through_a_field_pointer()
+{
+    Point v = Point { 1, 2 };
+
+    ref i32 r = v.y;
+
+    r = r + 5;
+
+    return v.y;
+}
+
+i32 main()
+{
+    const i32 base = 3;
+
+    const Point p = Point { 4, 5 };
+
+    i32 total = doubled( base );  // 6
+    total = total + p.x + p.y;    // 6 + 9 = 15
+    total = total + scale;        // 25
+    total = total + through_a_const_pointer( 6 );  // 25 + 7 = 32
+    total = total + through_a_field_pointer();     // 32 + 7 = 39
+
+    return total;
+}

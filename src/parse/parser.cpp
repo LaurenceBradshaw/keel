@@ -962,7 +962,16 @@ Node_id Parser::parse_type_with_mode()
 {
     const Span start = peek().span;
 
-    if( !check_keyword( Keyword::Move ) && !check_keyword( Keyword::Ref ) && !check_keyword( Keyword::Out ) )
+    // `const ref T`, in that order and only that order. Looked for before the mode so the const
+    // ends up outermost, which is what makes it the *binding* that is const rather than the type.
+    const bool leading_const = check_keyword( Keyword::Const ) && peek( 1 ).keyword() == Keyword::Ref;
+
+    if( leading_const )
+    {
+        advance();
+    }
+
+    if( !at_mode_keyword() )
     {
         return parse_type();
     }
@@ -970,7 +979,27 @@ Node_id Parser::parse_type_with_mode()
     const Keyword mode = peek().keyword();
     advance();
 
-    return ast_.add( Node_kind::Mode_type, Span::merge( start, previous().span ), static_cast<u32>( mode ), { parse_type() } );
+    // D32 gives one order. Without this, `ref const T` falls through to parse_type's leading-const
+    // branch and becomes Mode_type( Const_type( T ) ) - an inner const, which the checker reports as
+    // "a pointer to `const` is not supported yet": the right refusal for the wrong reason.
+    if( check_keyword( Keyword::Const ) )
+    {
+        error_at(
+            peek().span, "`const` comes before the mode", fmt::format( "write `const {} T`", sm_.text( previous().span ) )
+        );
+
+        advance();
+    }
+
+    Node_id type =
+        ast_.add( Node_kind::Mode_type, Span::merge( start, previous().span ), static_cast<u32>( mode ), { parse_type() } );
+
+    if( leading_const )
+    {
+        type = ast_.add( Node_kind::Const_type, Span::merge( start, previous().span ), 0, { type } );
+    }
+
+    return type;
 }
 
 Node_id Parser::parse_param()
@@ -1106,13 +1135,21 @@ bool Parser::looks_like_declaration()
 
 bool Parser::looks_like_binding()
 {
+    const u32 saved = pos_;
+
+    // `const ref T r` - the const leads, so it is stepped over before the mode is looked for.
+    // Restored on every path, so a `const i32 x` that is not a binding still reaches
+    // looks_like_declaration exactly as it did.
+    match_keyword( Keyword::Const );
+
     if( !at_mode_keyword() )
     {
+        pos_ = saved;
         return false;
     }
 
-    const u32 saved = pos_;
     advance(); // the mode
+
     const bool found = scan_type_and_name();
 
     pos_ = saved;
@@ -4493,6 +4530,60 @@ TEST_CASE( "parser_parses_a_ref_binding", "[parse]" )
 
         REQUIRE( var.is_valid() );
         REQUIRE( p.aux( p.child( var, 0 ) ) == static_cast<u32>( Keyword::Move ) );
+    }
+}
+
+// PLAN D32. `const ref T` is the read-only borrow, and it is spelled in one order - `const ref i32`
+// where C++ has `const i32&` and `i32 const&` meaning the same thing. The const wraps the mode, so
+// the annotation is Const_type( Mode_type( T ) ) and every question about the mode has to see
+// through one layer.
+TEST_CASE( "parser_parses_a_const_ref", "[parse]" )
+{
+    SECTION( "as a parameter" )
+    {
+        const Parsed p( "i32 peek( const ref i32 n ) { return n; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id param = find_first( p.ast(), p.root(), Node_kind::Param_decl );
+
+        REQUIRE( param.is_valid() );
+
+        const Node_id annotation = p.child( param, 0 );
+
+        REQUIRE( p.kind( annotation ) == Node_kind::Const_type );
+
+        const Node_id mode = p.child( annotation, 0 );
+
+        REQUIRE( p.kind( mode ) == Node_kind::Mode_type );
+        REQUIRE( p.aux( mode ) == static_cast<u32>( Keyword::Ref ) );
+        REQUIRE( p.kind( p.child( mode, 0 ) ) == Node_kind::Named_type );
+    }
+
+    SECTION( "as a local binding" )
+    {
+        const Parsed p( "void f( i32 x ) { const ref i32 r = x; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id var = find_first( p.ast(), p.root(), Node_kind::Var_decl );
+
+        REQUIRE( var.is_valid() );
+        REQUIRE( p.kind( p.child( var, 0 ) ) == Node_kind::Const_type );
+        REQUIRE( p.kind( p.child( p.child( var, 0 ), 0 ) ) == Node_kind::Mode_type );
+    }
+
+    // One order, so the other is a hard error naming the replacement rather than a second spelling
+    // of the same thing - the redundancy D25, D30 and D32 all refuse.
+    SECTION( "and the other order is refused" )
+    {
+        const Parsed p( "i32 peek( ref const i32 n ) { return n; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.has_errors() );
+        REQUIRE( p.errors().find( "const ref" ) != std::string::npos );
     }
 }
 

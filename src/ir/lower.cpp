@@ -3225,5 +3225,66 @@ TEST_CASE( "lower_never_drops_a_ref_binding", "[ir][lower][binding]" )
     REQUIRE( text.find( "move" ) == std::string::npos );
 }
 
+// PLAN D32. `const ref` travels by address exactly as `ref` does - the const half is a rule the
+// checker enforces and nothing below sema knows about, so KIR shows the two as one shape.
+TEST_CASE( "lower_passes_a_const_ref_parameter_by_address", "[ir][lower][constref]" )
+{
+    Lowered p( "struct P { i32 x; };\n"
+               "i32 peek( const ref P p ) { return p.x; }\n"
+               "i32 main() { P v = P { 1 }; return peek( v ); }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string callee = p.named( "peek" );
+
+    INFO( callee );
+    REQUIRE( callee.find( "let _1: P*; // parameter p" ) != std::string::npos );
+    REQUIRE( callee.find( "copy (*_1).x" ) != std::string::npos );
+
+    // The win this form exists for: a struct that would have been copied is borrowed instead. The
+    // claim is about what travels, not which temporary holds it - the struct literal takes an index
+    // of its own, so naming one here would pin the wrong thing.
+    const std::string caller = p.named( "main" );
+
+    INFO( caller );
+    REQUIRE( caller.find( "= &_1" ) != std::string::npos );
+    REQUIRE( caller.find( "call peek(copy _1)" ) == std::string::npos );
+}
+
+TEST_CASE( "lower_binds_a_const_ref_local_to_an_address", "[ir][lower][constref]" )
+{
+    Lowered p( "i32 main() { i32 x = 1; const ref i32 r = x; return r + 1; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.named( "main" );
+
+    INFO( text );
+    REQUIRE( text.find( "let _2: i32*; // r" ) != std::string::npos );
+    REQUIRE( text.find( "_2 = &_1" ) != std::string::npos );
+    REQUIRE( text.find( "copy (*_2)" ) != std::string::npos );
+}
+
+// A class passed by `const ref` is borrowed, not copied - which for an owning type is the
+// difference between one destructor run and two. Nothing is moved and the caller still drops.
+TEST_CASE( "lower_borrows_a_class_by_const_ref", "[ir][lower][constref]" )
+{
+    Lowered p( "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+               "u64 peek( const ref B b ) { return b.n; }\n"
+               "i32 main() { B a = B( 1 ); return wrap<i32>( peek( a ) ); }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.named( "main" );
+
+    INFO( text );
+    REQUIRE( text.find( "= &_1" ) != std::string::npos );
+    REQUIRE( text.find( "move" ) == std::string::npos );
+    REQUIRE( text.find( "drop _1" ) != std::string::npos );
+}
+
 } // namespace keel
 #endif

@@ -1,0 +1,118 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Point;
+
+struct kl__Point
+{
+    int32_t kl_x_1;
+    int32_t kl_y_3;
+};
+
+int32_t kl_scale_8 = 10;
+
+int32_t kl__doubled__i32( int32_t );
+int32_t kl__through_a_const_pointer__i32( int32_t );
+int32_t kl__through_a_field_pointer__( void );
+int32_t kl__main__( void );
+
+int32_t kl__doubled__i32( int32_t kl_n_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t2;
+#line 15 "codegen/const_bindings.kl"
+    kl_t2 = kl_n_1 + kl_n_1;
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+int32_t kl__through_a_const_pointer__i32( int32_t kl_seed_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_v_2;
+    int32_t* kl_q_3;
+    int32_t* kl_t4;
+    int32_t kl_t5;
+#line 21 "codegen/const_bindings.kl"
+    kl_v_2 = kl_seed_1;
+#line 23 "codegen/const_bindings.kl"
+    kl_t4 = &kl_v_2;
+    kl_q_3 = kl_t4;
+#line 25 "codegen/const_bindings.kl"
+    kl_t5 = ( *kl_q_3 ) + 1;
+    ( *kl_q_3 ) = kl_t5;
+#line 27 "codegen/const_bindings.kl"
+    kl_t0 = kl_v_2;
+    return kl_t0;
+}
+
+int32_t kl__through_a_field_pointer__( void )
+{
+    int32_t kl_t0;
+    struct kl__Point kl_v_1;
+    struct kl__Point kl_t2;
+    int32_t* kl_r_3;
+    int32_t kl_t4;
+#line 33 "codegen/const_bindings.kl"
+    kl_t2.kl_x_1 = 1;
+    kl_t2.kl_y_3 = 2;
+    kl_v_1 = kl_t2;
+#line 35 "codegen/const_bindings.kl"
+    kl_r_3 = &kl_v_1.kl_y_3;
+#line 37 "codegen/const_bindings.kl"
+    kl_t4 = ( *kl_r_3 ) + 5;
+    ( *kl_r_3 ) = kl_t4;
+#line 39 "codegen/const_bindings.kl"
+    kl_t0 = kl_v_1.kl_y_3;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_base_1;
+    struct kl__Point kl_p_2;
+    struct kl__Point kl_t3;
+    int32_t kl_total_4;
+    int32_t kl_t5;
+    int32_t kl_t6;
+    int32_t kl_t7;
+    int32_t kl_t8;
+    int32_t kl_t9;
+    int32_t kl_t10;
+    int32_t kl_t11;
+    int32_t kl_t12;
+#line 44 "codegen/const_bindings.kl"
+    kl_base_1 = 3;
+#line 46 "codegen/const_bindings.kl"
+    kl_t3.kl_x_1 = 4;
+    kl_t3.kl_y_3 = 5;
+    kl_p_2 = kl_t3;
+#line 48 "codegen/const_bindings.kl"
+    kl_t5 = kl__doubled__i32( kl_base_1 );
+    kl_total_4 = kl_t5;
+#line 49 "codegen/const_bindings.kl"
+    kl_t6 = kl_total_4 + kl_p_2.kl_x_1;
+    kl_t7 = kl_t6 + kl_p_2.kl_y_3;
+    kl_total_4 = kl_t7;
+#line 50 "codegen/const_bindings.kl"
+    kl_t8 = kl_total_4 + kl_scale_8;
+    kl_total_4 = kl_t8;
+#line 51 "codegen/const_bindings.kl"
+    kl_t9 = kl__through_a_const_pointer__i32( 6 );
+    kl_t10 = kl_total_4 + kl_t9;
+    kl_total_4 = kl_t10;
+#line 52 "codegen/const_bindings.kl"
+    kl_t11 = kl__through_a_field_pointer__(  );
+    kl_t12 = kl_total_4 + kl_t11;
+    kl_total_4 = kl_t12;
+#line 54 "codegen/const_bindings.kl"
+    kl_t0 = kl_total_4;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

@@ -1,0 +1,35 @@
+// PLAN D32. `const ref` travels by address exactly as `ref` does. The const half is a rule the
+// checker enforces and nothing below sema knows about, so KIR shows the two borrows as one shape -
+// which is the point: a read-only borrow is not a third calling convention.
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+i32 sums( const ref Point p )
+{
+    return p.x + p.y;
+}
+
+// Forwarding needs no marker at either hop, and is `&(*_1)`: the address the binding already holds.
+i32 forwards( const ref Point p )
+{
+    return sums( p );
+}
+
+i32 binds_a_local()
+{
+    i32 x = 1;
+
+    const ref i32 r = x;
+
+    return r + 1;
+}
+
+i32 main()
+{
+    Point v = Point { 1, 2 };
+
+    return forwards( v );
+}

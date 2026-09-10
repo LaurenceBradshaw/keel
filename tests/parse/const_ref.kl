@@ -1,0 +1,23 @@
+// PLAN D32. `const ref T` is the read-only borrow, spelled in one order - where C++ has
+// `const i32&` and `i32 const&` meaning the same thing, Keel has one. The const wraps the mode, so
+// the annotation is Const_type( Mode_type( T ) ) and every question about the mode sees through a
+// layer.
+struct Point
+{
+    i32 x;
+};
+
+i32 as_a_parameter( const ref Point p )
+{
+    return p.x;
+}
+
+void as_a_local( i32 x )
+{
+    const ref i32 r = x;
+}
+
+i32 main()
+{
+    return 0;
+}

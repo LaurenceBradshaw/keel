@@ -1,0 +1,70 @@
+// PLAN D31/D32. `const ref T` is the read-only borrow: by address like `ref`, unwritable like
+// `const`. For a struct it is what makes passing a large one read-only without copying
+// expressible - D31 had deleted `const T&` on the grounds that a bare argument already meant it,
+// which is true of a `class` and false of a `struct`, where bare is a copy.
+//
+// The exit code carries both halves: 1 destructor run in the hundreds, and 26 read back through the
+// borrows below it. A class borrowed by `const ref` must be destroyed once, not twice.
+u64 freed = 0;
+
+class B
+{
+    u64 n;
+
+    B( u64 x )
+    {
+        n = x;
+    }
+
+    ~B()
+    {
+        freed = freed + 1;
+    }
+};
+
+struct Big
+{
+    i32 a;
+    i32 b;
+    i32 c;
+};
+
+u64 peek( const ref B b )
+{
+    return b.n;
+}
+
+// Forwarding a read-only borrow needs no marker at either hop.
+u64 forward( const ref B b )
+{
+    return peek( b );
+}
+
+i32 sum( const ref Big g )
+{
+    return g.a + g.b + g.c;
+}
+
+i32 main()
+{
+    i32 total = 0;
+
+    {
+        B a = B( 5 );
+
+        total = total + wrap<i32>( forward( a ) ); // 5
+    } // one destructor run, for one object
+
+    Big g = Big { 1, 2, 3 };
+
+    total = total + sum( g ); // 11
+
+    // A read-only borrow is exactly what a const variable is for.
+    const Big frozen = Big { 4, 5, 6 };
+
+    total = total + sum( frozen ); // 26
+
+    // freed in the hundreds, total below it: an exit code is only a byte, so the two halves have
+    // to share one without carrying into each other.
+    return wrap<i32>( freed ) * 100 + total;
+}

@@ -1,0 +1,144 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__B;
+struct kl__Big;
+
+struct kl__B
+{
+    uint64_t kl_n_4;
+};
+
+struct kl__Big
+{
+    int32_t kl_a_29;
+    int32_t kl_b_31;
+    int32_t kl_c_33;
+};
+
+uint64_t kl_freed_2 = 0;
+
+void kl__B__Bp_u64( struct kl__B*, uint64_t );
+void kl__B__dtor( struct kl__B* );
+uint64_t kl__peek__Bp( struct kl__B* );
+uint64_t kl__forward__Bp( struct kl__B* );
+int32_t kl__sum__Bigp( struct kl__Big* );
+int32_t kl__main__( void );
+
+void kl__B__Bp_u64( struct kl__B* kl_this_1, uint64_t kl_x_2 )
+{
+#line 16 "codegen/const_ref.kl"
+    ( *kl_this_1 ).kl_n_4 = kl_x_2;
+    return;
+}
+
+void kl__B__dtor( struct kl__B* kl_this_1 )
+{
+    uint64_t kl_t2;
+#line 21 "codegen/const_ref.kl"
+    kl_t2 = kl_freed_2 + 1;
+    kl_freed_2 = kl_t2;
+    return;
+}
+
+uint64_t kl__peek__Bp( struct kl__B* kl_b_1 )
+{
+    uint64_t kl_t0;
+#line 34 "codegen/const_ref.kl"
+    kl_t0 = ( *kl_b_1 ).kl_n_4;
+    return kl_t0;
+}
+
+uint64_t kl__forward__Bp( struct kl__B* kl_b_1 )
+{
+    uint64_t kl_t0;
+    struct kl__B* kl_t2;
+    uint64_t kl_t3;
+#line 40 "codegen/const_ref.kl"
+    kl_t2 = &( *kl_b_1 );
+    kl_t3 = kl__peek__Bp( kl_t2 );
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+int32_t kl__sum__Bigp( struct kl__Big* kl_g_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t2;
+    int32_t kl_t3;
+#line 45 "codegen/const_ref.kl"
+    kl_t2 = ( *kl_g_1 ).kl_a_29 + ( *kl_g_1 ).kl_b_31;
+    kl_t3 = kl_t2 + ( *kl_g_1 ).kl_c_33;
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_total_1;
+    struct kl__B kl_a_2;
+    struct kl__B* kl_t3;
+    struct kl__B* kl_t5;
+    uint64_t kl_t6;
+    int32_t kl_t7;
+    int32_t kl_t8;
+    struct kl__Big kl_g_9;
+    struct kl__Big kl_t10;
+    struct kl__Big* kl_t11;
+    int32_t kl_t12;
+    int32_t kl_t13;
+    struct kl__Big kl_frozen_14;
+    struct kl__Big kl_t15;
+    struct kl__Big* kl_t16;
+    int32_t kl_t17;
+    int32_t kl_t18;
+    int32_t kl_t19;
+    int32_t kl_t20;
+    int32_t kl_t21;
+#line 50 "codegen/const_ref.kl"
+    kl_total_1 = 0;
+#line 53 "codegen/const_ref.kl"
+    kl_t3 = &kl_a_2;
+    kl__B__Bp_u64( kl_t3, 5 );
+#line 55 "codegen/const_ref.kl"
+    kl_t5 = &kl_a_2;
+    kl_t6 = kl__forward__Bp( kl_t5 );
+    kl_t7 = ( int32_t ) kl_t6;
+    kl_t8 = kl_total_1 + kl_t7;
+    kl_total_1 = kl_t8;
+#line 52 "codegen/const_ref.kl"
+    kl__B__dtor( &kl_a_2 );
+#line 58 "codegen/const_ref.kl"
+    kl_t10.kl_a_29 = 1;
+    kl_t10.kl_b_31 = 2;
+    kl_t10.kl_c_33 = 3;
+    kl_g_9 = kl_t10;
+#line 60 "codegen/const_ref.kl"
+    kl_t11 = &kl_g_9;
+    kl_t12 = kl__sum__Bigp( kl_t11 );
+    kl_t13 = kl_total_1 + kl_t12;
+    kl_total_1 = kl_t13;
+#line 63 "codegen/const_ref.kl"
+    kl_t15.kl_a_29 = 4;
+    kl_t15.kl_b_31 = 5;
+    kl_t15.kl_c_33 = 6;
+    kl_frozen_14 = kl_t15;
+#line 65 "codegen/const_ref.kl"
+    kl_t16 = &kl_frozen_14;
+    kl_t17 = kl__sum__Bigp( kl_t16 );
+    kl_t18 = kl_total_1 + kl_t17;
+    kl_total_1 = kl_t18;
+#line 69 "codegen/const_ref.kl"
+    kl_t19 = ( int32_t ) kl_freed_2;
+    kl_t20 = kl_t19 * 100;
+    kl_t21 = kl_t20 + kl_total_1;
+    kl_t0 = kl_t21;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

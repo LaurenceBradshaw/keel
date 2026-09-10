@@ -1,0 +1,37 @@
+error: `p` is `const`
+  --> sema/errors_const_ref.kl:16:5
+   |
+16 |     p.x = 5;
+   |     ^^^ remove `const` to modify it
+
+error: `r` is `const`
+  --> sema/errors_const_ref.kl:27:5
+   |
+27 |     r = 5;
+   |     ^ remove `const` to modify it
+
+error: a `ref` binding must be initialised
+  --> sema/errors_const_ref.kl:34:5
+   |
+34 |     const ref i32 r;
+   |     ^^^^^^^^^^^^^^^^ write `ref T r = x;`
+
+error: a `ref` binding needs a variable to bind to
+  --> sema/errors_const_ref.kl:41:23
+   |
+41 |     const ref i32 r = make();
+   |                       ^^^^^^
+
+error: `reads` does not modify this argument
+  --> sema/errors_const_ref.kl:57:19
+   |
+57 |     return reads( ref v );
+   |                   ^^^^^ remove `ref`
+
+error: `v` is `const`
+  --> sema/errors_const_ref.kl:70:15
+   |
+70 |     grow( ref v );
+   |               ^ remove `const` to modify it
+
+6 errors generated

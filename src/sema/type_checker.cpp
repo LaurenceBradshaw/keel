@@ -390,7 +390,7 @@ private:
 
     Node_id place_root( Node_id id ) const;
     bool    is_borrow_binding( Node_id decl ) const;
-    bool    check_not_borrowed( Node_id target );
+    bool    check_writable( Node_id target );
 
     // Bare is Keyword::Count, which is not a keyword anyone can write - so "no mode" needs no separate
     // answer and every caller compares the same way.
@@ -459,8 +459,8 @@ private:
     void absorb( Node_id id );
 
     bool    accepts( Operands operands, Type_id type ) const;
-    Type_id check( Node_id id, Type_id expected ); // expression, with one
-    Type_id type_of_annotation( Node_id id );      // Named_type/Pointer_type subtree; invalid for auto
+    Type_id check( Node_id id, Type_id expected );                   // expression, with one
+    Type_id type_of_annotation( Node_id id, bool outermost = true ); // Named_type/Pointer_type subtree; invalid for auto
 
     // Writes the node's type and returns it. Every infer branch ends in one of these, so that
     // forgetting to record a type is hard rather than silent.
@@ -550,6 +550,19 @@ void Checker::declare_signatures_field_decls()
             if( ast_.kind( field ) != Node_kind::Field_decl )
             {
                 continue;
+            }
+
+            const Node_id annotation = ast_.children( field )[0];
+
+            // A field is not a binding, so `const` has nothing to attach to. Rejected rather than
+            // ignored - a keyword that silently does nothing is worse than not having one.
+            if( ast_.kind( annotation ) == Node_kind::Const_type )
+            {
+                error_at(
+                    ast_.span( annotation ),
+                    "a field cannot be `const` yet",
+                    "it would have to be written exactly once, during construction, and nothing checks that"
+                );
             }
 
             record( field, type_of_annotation( ast_.children( field )[0] ) );
@@ -870,26 +883,42 @@ bool Checker::is_borrow_binding( Node_id decl ) const
            is_owning_type( types_[decl.v] );
 }
 
-// D31: a bare parameter of an owning type is a *read-only* borrow. The caller still owns it and
-// still destroys it, so a write here changes something the callee was only lent.
-bool Checker::check_not_borrowed( Node_id target )
+// D31/D32: what may be written. A `const` declaration says so itself; a borrow is read-only because
+// someone else owns it - different reasons, so different messages and different fixes.
+bool Checker::check_writable( Node_id target )
 {
     const Node_id root = place_root( target );
 
-    if( !is_borrow_binding( root ) )
+    if( !root.is_valid() )
     {
         return true;
     }
 
-    const std::string_view name = interner_.text( Symbol_id { ast_.aux( root ) } );
+    if( is_const_binding( ast_, root ) )
+    {
+        error_at(
+            ast_.span( target ),
+            fmt::format( "`{}` is `const`", interner_.text( Symbol_id { ast_.aux( root ) } ) ),
+            "remove `const` to modify it"
+        );
 
-    error_at(
-        ast_.span( target ),
-        fmt::format( "`{}` is borrowed, so it cannot be modified", name ),
-        fmt::format( "take it as `ref {} {}` to modify it", table_.name( types_[root.v] ), name )
-    );
+        return false;
+    }
 
-    return false;
+    if( is_borrow_binding( root ) )
+    {
+        const std::string_view name = interner_.text( Symbol_id { ast_.aux( root ) } );
+
+        error_at(
+            ast_.span( target ),
+            fmt::format( "`{}` is borrowed, so it cannot be modified", name ),
+            fmt::format( "take it as `ref {} {}` to modify it", table_.name( types_[root.v] ), name )
+        );
+
+        return false;
+    }
+
+    return true;
 }
 
 Node_id Checker::find_member( Node_id decl, Node_kind kind ) const
@@ -907,7 +936,7 @@ Node_id Checker::find_member( Node_id decl, Node_kind kind ) const
 
 Keyword Checker::parameter_mode( Node_id param ) const
 {
-    const Node_id annotation = ast_.children( param )[0];
+    const Node_id annotation = unwrap_const( ast_, ast_.children( param )[0] );
 
     return ast_.kind( annotation ) == Node_kind::Mode_type ? static_cast<Keyword>( ast_.aux( annotation ) ) : Keyword::Count;
 }
@@ -1295,8 +1324,9 @@ void Checker::visit_var( Node_id id )
     // initialiser means the variable is only declared.
     const Node_id annotation = ast_.children( id )[0];
     const Node_id init       = ast_.children( id )[1];
-    const Keyword mode       = annotation.is_valid() && ast_.kind( annotation ) == Node_kind::Mode_type
-                                   ? static_cast<Keyword>( ast_.aux( annotation ) )
+    const Node_id spelled    = unwrap_const( ast_, annotation );
+    const Keyword mode       = spelled.is_valid() && ast_.kind( spelled ) == Node_kind::Mode_type
+                                   ? static_cast<Keyword>( ast_.aux( spelled ) )
                                    : Keyword::Count;
 
     Type_id type = type_of_annotation( annotation );
@@ -1359,8 +1389,9 @@ void Checker::visit_var( Node_id id )
                 "a borrow is the variable itself, so its type must match exactly"
             );
         }
-        // A mutable binding to something held read-only would launder the borrow.
-        else if( check_not_borrowed( init ) )
+        // Only a *mutable* binding would launder a read-only one. A `const ref` onto a const is
+        // exactly what the const half buys, so it skips the test rather than failing it.
+        else if( is_const_binding( ast_, id ) || check_writable( init ) )
         {
             record_binding_address( annotation, type );
         }
@@ -1413,7 +1444,7 @@ void Checker::visit_assign( Node_id id )
 
     // After infer(), not before it: place_root has to ask whether a field's object is a pointer,
     // and nothing has typed it until here.
-    if( !check_not_borrowed( target ) )
+    if( !check_writable( target ) )
     {
         absorb( value );
         return;
@@ -1498,7 +1529,7 @@ void Checker::visit_increment( Node_id id )
         return;
     }
 
-    if( !check_not_borrowed( operand ) )
+    if( !check_writable( operand ) )
     {
         return;
     }
@@ -2009,7 +2040,10 @@ Type_id Checker::infer_call( Node_id id )
 
         // D2: transfer is visible at the call *and* in the signature, and neither alone is enough -
         // a reader of one should never have to find the other.
-        const Keyword wanted = parameter_mode( params[i] );
+        // What a marker announces is that something happens to the caller's variable. `const ref` is
+        // the one mode where nothing does - alive and unchanged afterwards, exactly like a bare
+        // argument - so it sits with bare rather than with `ref`, and takes no marker at the call.
+        const Keyword wanted = is_const_binding( ast_, params[i] ) ? Keyword::Count : parameter_mode( params[i] );
         const Keyword given  = ast_.kind( arguments[i] ) == Node_kind::Marker_expr
                                    ? static_cast<Keyword>( ast_.aux( arguments[i] ) )
                                    : Keyword::Count;
@@ -2581,7 +2615,7 @@ Type_id Checker::infer_marker( Node_id id )
         // You cannot lend mutably what you hold read-only. check_not_borrowed has already named the
         // variable and what to write, so a second sentence would be a second diagnostic for one
         // mistake.
-        if( !check_not_borrowed( operand ) )
+        if( !check_writable( operand ) )
         {
             return record( id, table_.builtin( Type_kind::Error ) );
         }
@@ -2752,7 +2786,7 @@ Type_id Checker::check( Node_id id, Type_id expected )
     return expected;
 }
 
-Type_id Checker::type_of_annotation( Node_id id )
+Type_id Checker::type_of_annotation( Node_id id, bool outermost )
 {
     // An invalid Node_id is `auto`, not a mistake - the parser writes one deliberately.
     if( !id.is_valid() )
@@ -2804,10 +2838,31 @@ Type_id Checker::type_of_annotation( Node_id id )
     }
 
     case Node_kind::Const_type:
-        return type_of_annotation( ast_.children( id )[0] );
+        // `const` binds the declaration, not the data. One that is not outermost is a pointer to
+        // const - `const i32* p` - which needs constness in the type rather than on the binding.
+        // Rejected rather than quietly given the other meaning: silently reinterpreting valid C++
+        // is the one divergence §5.1 forbids.
+        if( !outermost )
+        {
+            error_at(
+                ast_.span( id ),
+                "a pointer to `const` is not supported yet",
+                "`const` applies to the binding; write `const ref T` to borrow one value read-only"
+            );
+
+            return table_.builtin( Type_kind::Error );
+        }
+
+        return type_of_annotation( ast_.children( id )[0], false );
 
     case Node_kind::Pointer_type:
-        return table_.pointer_to( type_of_annotation( ast_.children( id )[0] ) );
+    {
+        const Type_id element = type_of_annotation( ast_.children( id )[0], false );
+
+        // Poison propagates rather than being wrapped: `<error>*` is not the error type, so check()
+        // would not absorb it and one bad annotation would report twice.
+        return table_.is_error( element ) ? element : table_.pointer_to( element );
+    }
 
     // D31/D32: a mode is not a type. It is unwrapped here and nowhere else, so what gets recorded
     // on the declaration is the underlying type and nothing downstream meets the wrapper - anything
@@ -2822,7 +2877,7 @@ Type_id Checker::type_of_annotation( Node_id id )
             return table_.builtin( Type_kind::Error );
         }
 
-        const Type_id inner = type_of_annotation( ast_.children( id )[0] );
+        const Type_id inner = type_of_annotation( ast_.children( id )[0], false );
 
         return inner;
     }
@@ -3272,7 +3327,7 @@ Types type_check(
 
 bool is_ref_parameter( const Ast& ast, Node_id param )
 {
-    const Node_id annotation = ast.children( param )[0];
+    const Node_id annotation = unwrap_const( ast, ast.children( param )[0] );
 
     return ast.kind( annotation ) == Node_kind::Mode_type && static_cast<Keyword>( ast.aux( annotation ) ) == Keyword::Ref;
 }
@@ -3285,9 +3340,26 @@ bool is_borrowed_binding( const Ast& ast, const Types& types, Node_id decl )
     return annotation.is_valid() && types.type_of( annotation ).is_valid();
 }
 
+bool is_const_binding( const Ast& ast, Node_id decl )
+{
+    if( !decl.is_valid() || ( ast.kind( decl ) != Node_kind::Var_decl && ast.kind( decl ) != Node_kind::Param_decl ) )
+    {
+        return false;
+    }
+
+    const Node_id annotation = ast.children( decl )[0];
+    return annotation.is_valid() && ast.kind( annotation ) == Node_kind::Const_type;
+}
+
 Type_id binding_type( const Ast& ast, const Types& types, Node_id param )
 {
     return is_borrowed_binding( ast, types, param ) ? types.type_of( ast.children( param )[0] ) : types.type_of( param );
+}
+
+Node_id unwrap_const( const Ast& ast, Node_id annotation )
+{
+    return annotation.is_valid() && ast.kind( annotation ) == Node_kind::Const_type ? ast.children( annotation )[0]
+                                                                                    : annotation;
 }
 
 } // namespace keel
@@ -7179,6 +7251,331 @@ TEST_CASE( "type_checker_does_not_treat_a_ref_binding_as_a_transfer", "[sema][bi
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "`b` is borrowed" ) != std::string::npos );
+    }
+}
+
+// PLAN D32's shape applied to const: `ref` is a binding mode, `const` is a binding property. Both
+// are about the name rather than the data, which is what lets this reuse the read-only machinery
+// the borrow rule already has instead of putting constness into the type.
+TEST_CASE( "type_checker_enforces_const_on_a_binding", "[sema][const]" )
+{
+    SECTION( "a local cannot be assigned" )
+    {
+        const Typed p( "i32 main() { const i32 k = 1; k = 2; return k; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`k` is `const`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "remove `const` to modify it" ) != std::string::npos );
+    }
+
+    // Its own route to assignability, so its own case - exactly as the borrow rule needed.
+    SECTION( "nor incremented" )
+    {
+        const Typed p( "i32 main() { const i32 k = 1; k++; return k; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "nor compound-assigned" )
+    {
+        const Typed p( "i32 main() { const i32 k = 1; k += 2; return k; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "a parameter cannot be assigned" )
+    {
+        const Typed p( "i32 f( const i32 n ) { n = 2; return n; }\ni32 main() { return f( 1 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`n` is `const`" ) != std::string::npos );
+    }
+
+    SECTION( "and neither can a global" )
+    {
+        const Typed p( "const i32 g = 1;\ni32 main() { g = 2; return g; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    // Initialising is not modifying, and reading is what a const is for. Without these the rule
+    // could be refusing every mention of the name and no section above would notice.
+    SECTION( "but it may be initialised and read" )
+    {
+        const Typed p( "i32 main() { const i32 k = 1; i32 y = k + 1; return y; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and a non-const local of the same type is unaffected" )
+    {
+        const Typed p( "i32 main() { i32 k = 1; k = 2; return k; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// The same walk the borrow rule uses: a field path of any depth roots in the declaration, and the
+// walk stops at a pointer because what a pointer points at was never named by this declaration.
+// That is C++'s shallow const, reached from bindings rather than inherited.
+TEST_CASE( "type_checker_reaches_const_through_fields", "[sema][const]" )
+{
+    SECTION( "a field of a const struct cannot be written" )
+    {
+        const Typed p( "struct P { i32 x; };\ni32 main() { const P p = P { 1 }; p.x = 5; return p.x; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`p` is `const`" ) != std::string::npos );
+    }
+
+    SECTION( "nor a nested one" )
+    {
+        const Typed p( "struct Inner { i32 x; };\nstruct Outer { Inner i; };\n"
+                       "i32 main() { const Outer o = Outer { Inner { 1 } }; o.i.x = 5; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`o` is `const`" ) != std::string::npos );
+    }
+
+    SECTION( "but the walk stops at a pointer it holds" )
+    {
+        const Typed p( "struct P { i32 x; };\nstruct H { P* q; };\n"
+                       "i32 main() { P v = P { 1 }; const H h = H { &v }; h.q.x = 5; return v.x; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// `const` attaches to the name, so `i32* const p` - a const *binding* holding a pointer - is
+// expressible and means exactly what C++ means by it.
+TEST_CASE( "type_checker_gives_a_const_pointer_its_c_meaning", "[sema][const]" )
+{
+    SECTION( "the pointer cannot be reseated" )
+    {
+        const Typed p( "i32 main() { i32 y = 1; i32 z = 2; i32* const q = &y; q = &z; return y; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`q` is `const`" ) != std::string::npos );
+    }
+
+    SECTION( "but writing through it is allowed" )
+    {
+        const Typed p( "i32 main() { i32 y = 1; i32* const q = &y; *q = 5; return y; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// A pointer to const is a promise about data nobody named here, which needs constness in the type
+// rather than on the binding. Refused rather than quietly given the other meaning: silently
+// reinterpreting valid C++ is the one divergence §5.1 forbids.
+TEST_CASE( "type_checker_refuses_a_pointer_to_const", "[sema][const]" )
+{
+    const Typed p( "i32 main() { i32 y = 1; const i32* q = &y; return *q; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.rendered().find( "a pointer to `const` is not supported yet" ) != std::string::npos );
+
+    // Exactly one. `<error>*` is not the error type, so wrapping the poison rather than propagating
+    // it made one bad annotation report twice.
+    REQUIRE( p.errors() == 1 );
+}
+
+// A const binding may not be laundered into a mutable one - and both routes are the same question,
+// which is why extending check_writable made them both work with nothing written for either.
+TEST_CASE( "type_checker_refuses_to_launder_a_const", "[sema][const]" )
+{
+    SECTION( "not through a ref binding" )
+    {
+        const Typed p( "i32 main() { const i32 k = 1; ref i32 r = k; r = 5; return k; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`k` is `const`" ) != std::string::npos );
+    }
+
+    SECTION( "and not through a ref argument" )
+    {
+        const Typed p( "void grow( ref i32 n ) { n = n + 1; }\ni32 main() { const i32 k = 1; grow( ref k ); return k; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`k` is `const`" ) != std::string::npos );
+    }
+}
+
+// A field is not a binding, so `const` has nothing to attach to under this model. A write-once
+// field is a feature waiting on definite assignment over a constructor body - the same analysis
+// `out` needs - so the message says "yet" rather than pretending it is a rule of the language.
+TEST_CASE( "type_checker_refuses_const_on_a_field_for_now", "[sema][const]" )
+{
+    const Typed p( "struct P { const i32 x; };\ni32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.errors() == 1 );
+    REQUIRE( p.rendered().find( "a field cannot be `const` yet" ) != std::string::npos );
+}
+
+// PLAN D31/D32. `const ref T` is the read-only borrow: it travels by address like `ref`, and is
+// unwritable like `const`. Neither half is new - both predicates already existed - and putting them
+// together is what finally makes passing a large struct read-only without copying expressible.
+//
+// D31 said `const T&` did not survive "because a bare argument already means it". That is true of a
+// `class` and false of a `struct`, where bare is a copy - so this is a genuinely new parameter form
+// rather than a second spelling of one.
+TEST_CASE( "type_checker_accepts_a_const_ref_parameter", "[sema][constref]" )
+{
+    constexpr std::string_view point = "struct P { i32 x; };\n";
+
+    SECTION( "it is typed as its referent" )
+    {
+        const Typed p( std::string( point ) + "i32 peek( const ref P p ) { return p.x; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        // A P and not a pointer, or `p.x` above would have needed D22's reach-through.
+        REQUIRE( p.type_name( p.nth( Node_kind::Param_decl, 0 ) ) == "P" );
+
+        // The address goes on the *outermost* node of the annotation, which for `const ref` is the
+        // Const_type - that is the node is_borrowed_binding reads, and putting it on the Mode_type
+        // underneath would leave the binding looking like an ordinary parameter.
+        REQUIRE( p.type_name( p.nth( Node_kind::Const_type, 0 ) ) == "P*" );
+    }
+
+    SECTION( "and it may not be written through" )
+    {
+        const Typed p( std::string( point ) + "i32 peek( const ref P p ) { p.x = 5; return p.x; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`p` is `const`" ) != std::string::npos );
+    }
+}
+
+// The marker at a call site announces that something happens to the caller's variable. With
+// `const ref` nothing does - it is alive and unchanged afterwards, exactly like a bare argument -
+// so by D31's own argument there is no marker to write.
+TEST_CASE( "type_checker_takes_no_marker_for_a_const_ref", "[sema][constref]" )
+{
+    constexpr std::string_view peek = "struct P { i32 x; };\ni32 peek( const ref P p ) { return p.x; }\n";
+
+    SECTION( "a bare argument is what it wants" )
+    {
+        const Typed p( std::string( peek ) + "i32 main() { P v = P { 1 }; return peek( v ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and `ref` at the call is refused" )
+    {
+        const Typed p( std::string( peek ) + "i32 main() { P v = P { 1 }; return peek( ref v ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "does not modify this argument" ) != std::string::npos );
+    }
+
+    // A const argument is exactly what a read-only borrow is for, and passing one must not be the
+    // laundering the mutable borrow refuses.
+    SECTION( "a const variable may be passed" )
+    {
+        const Typed p( std::string( peek ) + "i32 main() { const P v = P { 1 }; return peek( v ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // The contrast that gives the case above its meaning.
+    SECTION( "where a mutable borrow of the same variable is not" )
+    {
+        const Typed p( "struct P { i32 x; };\nvoid grow( ref P p ) { p.x = 1; }\n"
+                       "i32 main() { const P v = P { 1 }; grow( ref v ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`v` is `const`" ) != std::string::npos );
+    }
+}
+
+TEST_CASE( "type_checker_checks_a_const_ref_binding", "[sema][constref]" )
+{
+    SECTION( "writing through it is refused" )
+    {
+        const Typed p( "i32 main() { i32 x = 1; const ref i32 r = x; r = 5; return x; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`r` is `const`" ) != std::string::npos );
+    }
+
+    SECTION( "but reading through it is not" )
+    {
+        const Typed p( "i32 main() { i32 x = 1; const ref i32 r = x; return r + 1; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // The whole point of the const half: a read-only binding may be taken onto something held
+    // read-only, where a mutable one may not.
+    SECTION( "it may bind to a const" )
+    {
+        const Typed p( "i32 main() { const i32 k = 1; const ref i32 r = k; return r; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "where a mutable binding may not" )
+    {
+        const Typed p( "i32 main() { const i32 k = 1; ref i32 r = k; return r; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    // The referent is unaffected: `const` is a property of *this* name, not of the variable it
+    // was taken onto.
+    SECTION( "and the referent stays writable in its own right" )
+    {
+        const Typed p( "i32 main() { i32 x = 1; const ref i32 r = x; x = 5; return r; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // Every rule the mutable binding has still applies - a binding is initialised at its
+    // declaration and never bound to a temporary, whichever half of the spelling it carries.
+    SECTION( "it must still be initialised" )
+    {
+        const Typed p( "i32 main() { const ref i32 r; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "must be initialised" ) != std::string::npos );
+    }
+
+    SECTION( "and still cannot bind to a temporary" )
+    {
+        const Typed p( "i32 make() { return 1; }\ni32 main() { const ref i32 r = make(); return r; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "needs a variable to bind to" ) != std::string::npos );
     }
 }
 

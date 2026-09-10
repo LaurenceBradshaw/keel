@@ -105,6 +105,10 @@ Types type_check( const Ast&, const Resolution&, const Literals&, const Source_m
 // an address. Shared because lowering, the prototype and the mangled name must all agree.
 bool    is_ref_parameter( const Ast& ast, Node_id param );
 bool    is_borrowed_binding( const Ast& ast, const Types& types, Node_id decl );
+bool    is_const_binding( const Ast& ast, Node_id decl );
 Type_id binding_type( const Ast& ast, const Types& types, Node_id decl );
+// `const ref T` wraps the mode: Const_type( Mode_type( T ) ). Every question about a mode goes
+// through here, so adding the spelling cannot quietly turn a `const ref` into a bare parameter.
+Node_id unwrap_const( const Ast& ast, Node_id annotation );
 
 } // namespace keel
