@@ -1,0 +1,112 @@
+// PLAN D31. `out` is the fourth marker: the callee assigns the caller's variable, and both sides
+// say so. The *type* errors only - definite assignment lives in errors_out_assignment.kl, because
+// it is reported after lowering and a type error here would stop the driver before it ran.
+struct Point
+{
+    i32 x;
+};
+
+void init( out i32 n )
+{
+    n = 1;
+}
+
+// Assigning destroys nothing, so an owning `out` parameter would leak whatever the caller already
+// held. Refused until the caller emits a drop before the call.
+class B
+{
+    u64 n;
+
+    B( u64 x )
+    {
+        n = x;
+    }
+
+    ~B()
+    {
+    }
+};
+
+void owning( out B b )
+{
+}
+
+i32 no_variable()
+{
+    init( out 1 );
+
+    return 0;
+}
+
+i32 writes_a_const()
+{
+    const i32 k = 1;
+
+    init( out k );
+
+    return k;
+}
+
+i32 missing_marker()
+{
+    i32 x = 0;
+
+    init( x );
+
+    return x;
+}
+
+i32 local_mode()
+{
+    out i32 x = 1;
+
+    return x;
+}
+
+// Everything below is accepted, and the fixture would be worth much less without it.
+
+void both_arms( out i32 n, i32 c )
+{
+    if( c == 0 )
+    {
+        n = 1;
+    }
+    else
+    {
+        n = 2;
+    }
+}
+
+void before_the_branch( out i32 n, i32 c )
+{
+    n = 0;
+
+    if( c == 0 )
+    {
+        n = 1;
+    }
+}
+
+// Forwarding: the callee's promise to assign is what the marker at that call site means.
+void forwards( out i32 n )
+{
+    init( out n );
+}
+
+void builds( out Point p )
+{
+    p.x = 1;
+}
+
+i32 main()
+{
+    i32 x = 0;
+
+    forwards( out x );
+
+    Point v = Point { 0 };
+
+    builds( out v );
+
+    return x + v.x;
+}

@@ -1,0 +1,119 @@
+// PLAN D31. "The callee must assign it" is a promise to the caller rather than advice, so a path
+// that returns without writing an `out` parameter is an error. A *must* analysis - assigned on
+// every path - which is why it is a pass of its own: §8's move lattice has Uninitialised as its
+// join identity, so there `Live` joined with `Uninitialised` is `Live`, and a value assigned on one
+// branch would look assigned on all of them.
+//
+// Its own fixture, and the reason is the one already recorded for errors_owning_copies.kl: these
+// are reported after lowering, so a *type* error anywhere in the file stops the driver before this
+// pass ever runs and every diagnostic below vanishes from the golden.
+void never( out i32 n )
+{
+}
+
+void one_arm_only( out i32 n, i32 c )
+{
+    if( c == 0 )
+    {
+        n = 1;
+    }
+}
+
+// The case a *may* analysis gets wrong: the body assigns it, and the loop can still run zero times.
+void loop_body_only( out i32 n, i32 c )
+{
+    while( c > 0 )
+    {
+        n = 1;
+        c = c - 1;
+    }
+}
+
+void early_return( out i32 n, i32 c )
+{
+    if( c == 0 )
+    {
+        return;
+    }
+
+    n = 1;
+}
+
+// One error per parameter, not one per function.
+void two_of_them( out i32 a, out i32 b )
+{
+    a = 1;
+}
+
+// Everything below is accepted, and the fixture would be worth much less without it.
+
+void init( out i32 n )
+{
+    n = 1;
+}
+
+void both_arms( out i32 n, i32 c )
+{
+    if( c == 0 )
+    {
+        n = 1;
+    }
+    else
+    {
+        n = 2;
+    }
+}
+
+void before_the_branch( out i32 n, i32 c )
+{
+    n = 0;
+
+    if( c == 0 )
+    {
+        n = 1;
+    }
+}
+
+// Before a loop, which may run zero times and so cannot be relied on.
+void before_the_loop( out i32 n, i32 c )
+{
+    n = 0;
+
+    while( n < c )
+    {
+        n = n + 1;
+    }
+}
+
+// Forwarding: the callee's promise to assign is what the marker at that call site means.
+void forwards( out i32 n )
+{
+    init( out n );
+}
+
+// The pass asks whether a place was written, never what was written into it. An `out` parameter of
+// pointer type is where that shows: `nullptr` satisfies it as completely as a real address would,
+// because "the callee assigned it" is the whole of what `out` promises.
+void to_null( out i32* p )
+{
+    p = nullptr;
+}
+
+// And the consequence, deliberate rather than missed: a raw pointer is outside §8's structural
+// rule, so this hands back the address of a local and nothing objects. `ref` is the spelling that
+// cannot dangle; `T*` is the one that can.
+void escapes( out i32* p )
+{
+    i32 local = 7;
+
+    p = &local;
+}
+
+i32 main()
+{
+    i32 x = 0;
+
+    forwards( out x );
+
+    return x;
+}

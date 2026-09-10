@@ -1,0 +1,31 @@
+error: `n` is never assigned
+  --> sema/errors_out_assignment.kl:10:1
+   |
+10 | void never( out i32 n )
+   | ^^^^^^^^^^^^^^^^^^^^^^^ an `out` parameter is the callee's promise to assign it
+
+error: `n` is not assigned on every path out of this function
+  --> sema/errors_out_assignment.kl:14:1
+   |
+14 | void one_arm_only( out i32 n, i32 c )
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ an `out` parameter is the callee's promise to assign it
+
+error: `n` is not assigned on every path out of this function
+  --> sema/errors_out_assignment.kl:23:1
+   |
+23 | void loop_body_only( out i32 n, i32 c )
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ an `out` parameter is the callee's promise to assign it
+
+error: `n` is never assigned
+  --> sema/errors_out_assignment.kl:36:9
+   |
+36 |         return;
+   |         ^^^^^^^ an `out` parameter is the callee's promise to assign it
+
+error: `b` is never assigned
+  --> sema/errors_out_assignment.kl:43:1
+   |
+43 | void two_of_them( out i32 a, out i32 b )
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ an `out` parameter is the callee's promise to assign it
+
+5 errors generated

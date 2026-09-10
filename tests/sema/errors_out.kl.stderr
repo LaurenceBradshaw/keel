@@ -1,0 +1,31 @@
+error: `out` is not supported for a type that owns a resource yet
+  --> sema/errors_out.kl:30:14
+   |
+30 | void owning( out B b )
+   |              ^^^ the value already there would be overwritten without being destroyed
+
+error: `out` needs a variable to assign to
+  --> sema/errors_out.kl:36:15
+   |
+36 |     init( out 1 );
+   |               ^
+
+error: `k` is `const`
+  --> sema/errors_out.kl:45:15
+   |
+45 |     init( out k );
+   |               ^ remove `const` to modify it
+
+error: `init` assigns this argument
+  --> sema/errors_out.kl:54:11
+   |
+54 |     init( x );
+   |           ^ write `out`
+
+error: `out` is not a binding mode
+  --> sema/errors_out.kl:61:5
+   |
+61 |     out i32 x = 1;
+   |     ^^^ `out` is how a callee assigns a caller's variable; write the type on its own
+
+5 errors generated

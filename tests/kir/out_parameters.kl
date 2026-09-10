@@ -1,0 +1,43 @@
+// PLAN D31. An `out` parameter travels by address exactly as a borrow does: the local is a pointer
+// and every use of the name is a deref. What separates the two is only when the referent may be
+// read, which is a rule the checker enforces and the graph does not record.
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+void init( out i32 n )
+{
+    n = 1;
+}
+
+void divide( i32 a, i32 b, out i32 quotient, out i32 remainder )
+{
+    quotient  = a / b;
+    remainder = a - quotient * b;
+}
+
+void build( out Point p )
+{
+    p.x = 1;
+    p.y = 2;
+}
+
+i32 main()
+{
+    i32 n = 0;
+
+    init( out n );
+
+    i32 q = 0;
+    i32 r = 0;
+
+    divide( 17, 5, out q, out r );
+
+    Point v = Point { 0, 0 };
+
+    build( out v );
+
+    return n + q + r + v.x + v.y;
+}

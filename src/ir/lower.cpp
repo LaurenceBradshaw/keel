@@ -3396,5 +3396,56 @@ TEST_CASE( "lower_uses_the_result_of_a_const_ref_return", "[ir][lower][escape]" 
     }
 }
 
+// PLAN D31. An `out` parameter travels by address exactly as a borrow does - the local is a pointer
+// and every use of the name is a deref. What KIR records on top is which locals arrive empty,
+// because nothing in the graph says so: the pointer itself is perfectly valid, and it is the
+// referent that has not been written.
+TEST_CASE( "lower_passes_an_out_parameter_by_address", "[ir][lower][out]" )
+{
+    Lowered p( "void init( out i32 n ) { n = 1; }\ni32 main() { i32 x = 0; init( out x ); return x; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string callee = p.named( "init" );
+
+    INFO( callee );
+    REQUIRE( callee.find( "let _1: i32*; // parameter n" ) != std::string::npos );
+    REQUIRE( callee.find( "(*_1) = const 1" ) != std::string::npos );
+
+    const std::string caller = p.named( "main" );
+
+    INFO( caller );
+    REQUIRE( caller.find( "= &_1" ) != std::string::npos );
+}
+
+TEST_CASE( "lower_records_which_parameters_are_out", "[ir][lower][out]" )
+{
+    Lowered p( "void init( i32 a, out i32 b, out i32 c ) { b = a; c = a; }\n"
+               "i32 main() { i32 x = 0; i32 y = 0; init( 1, out x, out y ); return x + y; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    // Locals 1..parameter_count in declaration order, so `b` is _2 and `c` is _3. Recorded rather
+    // than inferred: assign_check has no other way to know which locals start empty.
+    const Function& init = p.functions[0];
+
+    REQUIRE( init.out_parameters.size() == 2 );
+    REQUIRE( init.out_parameters[0] == Local_id { 2 } );
+    REQUIRE( init.out_parameters[1] == Local_id { 3 } );
+}
+
+// A function with none records none, which is what lets assign_check leave every existing function
+// alone without walking it.
+TEST_CASE( "lower_records_no_out_parameters_where_there_are_none", "[ir][lower][out]" )
+{
+    Lowered p( "i32 add( i32 a, i32 b ) { return a + b; }\ni32 main() { return add( 1, 2 ); }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+    REQUIRE( p.functions[0].out_parameters.empty() );
+}
+
 } // namespace keel
 #endif

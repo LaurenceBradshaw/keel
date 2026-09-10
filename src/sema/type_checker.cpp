@@ -7868,5 +7868,87 @@ TEST_CASE( "type_checker_binds_the_result_of_a_const_ref_return", "[sema][escape
     }
 }
 
+// PLAN D31. `out` is the fourth marker: the callee assigns the caller's variable, and both sides
+// say so. It travels by address like `ref`, and what separates them is only when it may be read -
+// which is assign_check's question, not one the type checker can answer.
+TEST_CASE( "type_checker_checks_an_out_argument", "[sema][out]" )
+{
+    constexpr std::string_view init = "void init( out i32 n ) { n = 1; }\n";
+
+    SECTION( "it needs a variable to assign to" )
+    {
+        const Typed p( std::string( init ) + "i32 main() { init( out 1 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`out` needs a variable to assign to" ) != std::string::npos );
+    }
+
+    // The callee writes through it, so the same rule that stops `ref` laundering a const stops
+    // `out` doing it - one test, reused, which is why check_writable is shared.
+    SECTION( "and one that may be written" )
+    {
+        const Typed p( std::string( init ) + "i32 main() { const i32 k = 1; init( out k ); return k; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`k` is `const`" ) != std::string::npos );
+    }
+
+    SECTION( "the marker is required at the call" )
+    {
+        const Typed p( std::string( init ) + "i32 main() { i32 x = 0; init( x ); return x; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "write `out`" ) != std::string::npos );
+    }
+
+    SECTION( "a field may be assigned through" )
+    {
+        const Typed p(
+            "struct P { i32 x; };\n" + std::string( init ) + "i32 main() { P v = P { 0 }; init( out v.x ); return v.x; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// An `out` parameter is written by definition, so it is not a read-only borrow - and the predicate
+// that decides that asks for the *mode*, which is why a bare owning parameter and an `out` one do
+// not collide despite both travelling by address.
+TEST_CASE( "type_checker_lets_a_callee_write_an_out_parameter", "[sema][out]" )
+{
+    const Typed p( "void init( out i32 n ) { n = 1; n = n + 1; }\ni32 main() { i32 x = 0; init( out x ); return x; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+}
+
+// Assigning an `out` parameter destroys nothing, so an owning one would leak whatever the caller
+// was already holding. Refused until the caller emits a drop before the call.
+TEST_CASE( "type_checker_refuses_an_owning_out_parameter", "[sema][out]" )
+{
+    const Typed p( "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+                   "void init( out B b ) { }\ni32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE_FALSE( p.clean() );
+    REQUIRE( p.rendered().find( "owns a resource" ) != std::string::npos );
+}
+
+// A local is not a parameter, so neither parameter mode means anything on one - and the two want
+// different helps, because `move` is about who owns the value and `out` about who writes it.
+TEST_CASE( "type_checker_refuses_out_on_a_local", "[sema][out]" )
+{
+    const Typed p( "i32 main() { out i32 x = 1; return x; }" );
+
+    INFO( p.rendered() );
+    REQUIRE_FALSE( p.clean() );
+    REQUIRE( p.rendered().find( "`out` is not a binding mode" ) != std::string::npos );
+    REQUIRE( p.rendered().find( "how a callee assigns a caller's variable" ) != std::string::npos );
+}
+
 } // namespace keel
 #endif

@@ -1,0 +1,68 @@
+// PLAN D31. `out` is how a callee assigns a caller's variable, and the exit code is what says the
+// caller actually sees it: every value below starts at zero and is written only by a callee. A
+// by-value parameter would leave the whole answer at zero.
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+void divide( i32 a, i32 b, out i32 quotient, out i32 remainder )
+{
+    quotient  = a / b;
+    remainder = a - quotient * b;
+}
+
+// Assigned on both arms, which is what the definite-assignment pass requires - and the arms
+// disagree, so the exit code also says the right one ran.
+void classify( i32 n, out i32 sign )
+{
+    if( n < 0 )
+    {
+        sign = 0;
+    }
+    else
+    {
+        sign = 7;
+    }
+}
+
+void build( i32 seed, out Point p )
+{
+    p.x = seed;
+    p.y = seed + 1;
+}
+
+// An `out` parameter passed straight on: the address is forwarded, so the innermost callee writes
+// the outermost caller's variable.
+void forward( out i32 n )
+{
+    init( out n );
+}
+
+void init( out i32 n )
+{
+    n = 3;
+}
+
+i32 main()
+{
+    i32 q = 0;
+    i32 r = 0;
+
+    divide( 17, 5, out q, out r ); // 3, 2
+
+    i32 sign = 0;
+
+    classify( 1, out sign ); // 7
+
+    Point v = Point { 0, 0 };
+
+    build( 10, out v ); // 10, 11
+
+    i32 f = 0;
+
+    forward( out f ); // 3
+
+    return q + r + sign + v.x + v.y + f; // 3 + 2 + 7 + 10 + 11 + 3
+}

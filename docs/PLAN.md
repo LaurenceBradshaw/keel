@@ -673,6 +673,13 @@ deliberate and relaxing it is additive. **The receiver clause is not implemented
 can reach the case yet, because a constructor and a destructor are the only methods and
 neither returns anything. It becomes real when methods do.
 
+**Raw pointers are outside this rule, and that is the point.** `ref` is the spelling
+that cannot dangle; `T*` is the one that can. `void escapes( out i32* p ) { i32 v = 7;
+p = &v; }` compiles, and nothing here objects — D2 already says an address tells you
+nothing about who owns what is at the other end, and §8 adds that it tells you nothing
+about how long that thing lives either. A language with a checked reference and an
+unchecked pointer has to say which is which somewhere, and this is where.
+
 This makes dangling references unrepresentable by construction rather than by
 analysis. It is roughly Hylo's (formerly Val) approach, and it is a defensible
 permanent design, not merely a shortcut.
@@ -2103,29 +2110,6 @@ and the non-escaping rule. `out` is all that remains.
   is dropped after the statement - but the restriction is worth lifting, and needs the
   temporary-lifetime rule §8 already owes for `const ref` returns. One answer serves both.
 
-- **D2 stopped being inert at M3, and is not enforced.** Its entry says *"inert until M3: no type
-  has a destructor yet, so nothing is owning and nothing changes"*. Destructors now exist, so that
-  sentence has expired. Two defects follow, and they are one expression and one fix:
-
-  ```keel
-  void consume( Owned o ) { }
-  consume( Owned( 1 ) );          // live == 1 at exit: the destructor never runs
-  ```
-
-  **The temporary is never dropped.** `Owned( 1 )` constructs into a local that is not in
-  `scope_locals_`, so nothing ends its storage and `drop_place` never sees it. C++'s answer is
-  destruction at the end of the full expression; Keel has no rule yet.
-
-  **And the argument is a bare by-value pass of an owning type**, which D2 says is an error
-  requiring `move`. It currently copies.
-
-  Fixing the leak *alone* would be worse than leaving it: if the temporary were destroyed at
-  end-of-statement while the callee's copy were also dropped, a leak becomes a double free. It is
-  benign today only because parameters are not dropped either — every path errs toward not freeing,
-  which is the safe direction to be wrong in. Both belong to **M4**, whose row is exactly this work,
-  and which the milestone table already calls *"where we learn whether the ownership model is
-  real"*.
-
 - **D29 is only half implemented at M3, deliberately.** The entry specifies four
   differences between a `struct` and a `class`; M3's acceptance test — a `Buffer`
   freeing exactly once, including on early `return` — needs two of them. A `class`
@@ -2176,27 +2160,6 @@ and the non-escaping rule. `out` is all that remains.
   than preference. The likely shapes: split `type_checker.cpp` along its seams — annotation
   resolution, the operator tables, the constant folder — into free functions over `Ast` and
   `Type_table`; and split the parser by grammar section. Neither should be attempted mid-M3.
-
-- **`const` is parsed and discarded.** `type_of_annotation` unwraps `Const_type` and returns the
-  inner type, and `Type` carries no const bit, so every one of these compiles today: assigning to
-  a `const` local, incrementing one, compound-assigning one, assigning to a `const` parameter,
-  writing through a `const T*`, and mutating a field of a `const` struct.
-
-  This is a live **§5.1 violation**, and one of the worse shapes of it: `const i32 x = 1; x = 2;`
-  is identical syntax to C++ with the opposite meaning, silently — a reader writes `const` and
-  believes it. §5.1's own prescription would be to reject the keyword outright until it is
-  enforced, which is cheap; that was considered and deliberately declined, on the grounds that the
-  churn is not worth paying twice.
-
-  The enforcement belongs at **M4**, where `const T&` and `T&` parameters arrive: the moment
-  pointers are involved the change stops being one bit on `Type` and becomes a decision about
-  `const i32*` versus `i32* const`, which is entangled with references. Until then this is a known
-  hole, not an oversight.
-
-  One consequence to respect meanwhile: **do not emit C `const`** for anything, including a
-  `const` global. A Keel-legal write would then fail in `cc` against generated code, and the
-  golden runner's `-Werror` build would surface it as `assignment of read-only variable
-  'kl_c_1'` — the C compiler doing the checking Keel declined to do, with the worse message.
 
 - **Narrowing `cast` is blocked, not implemented.** D28 defines `cast` as checking the value at
   run time and trapping when it does not fit, and nothing in the pipeline can emit that check yet.
