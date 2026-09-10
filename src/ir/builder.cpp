@@ -19,6 +19,11 @@ Local_id Builder::add_parameter( Type_id type, Span span, Symbol_id name )
     return Local_id { static_cast<u32>( function_.locals.size() - 1 ) };
 }
 
+void Builder::mark_out_parameter( Local_id local )
+{
+    function_.out_parameters.push_back( local );
+}
+
 Local_id Builder::add_local( Type_id type, Span span, Symbol_id name )
 {
     function_.locals.push_back( Local { .type = type, .span = span, .name = name } );

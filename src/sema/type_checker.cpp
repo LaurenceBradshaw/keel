@@ -712,7 +712,13 @@ void Checker::record_borrowed_parameters()
         // read-only one, and that one is forced rather than chosen - a class cannot be copied, so
         // borrowing is the only meaning left for it. `move` is neither: the callee owns what it is
         // given and destroys it, so it travels by value like any other owned local.
-        if( mode != Keyword::Ref && !( mode == Keyword::Count && is_owning_type( type ) ) )
+        // `out` travels by address for the same reason `ref` does - the callee writes into the
+        // caller's place. What separates them is only when it may be read, which is the analysis
+        // in assign_check rather than anything here.
+        const bool by_address =
+            mode == Keyword::Ref || mode == Keyword::Out || ( mode == Keyword::Count && is_owning_type( type ) );
+
+        if( !by_address )
         {
             continue;
         }
@@ -956,9 +962,7 @@ Node_id Checker::find_member( Node_id decl, Node_kind kind ) const
 
 Keyword Checker::parameter_mode( Node_id param ) const
 {
-    const Node_id annotation = unwrap_const( ast_, ast_.children( param )[0] );
-
-    return ast_.kind( annotation ) == Node_kind::Mode_type ? static_cast<Keyword>( ast_.aux( annotation ) ) : Keyword::Count;
+    return keel::parameter_mode( ast_, param );
 }
 
 std::string Checker::previous_declaration_note( Node_id previous ) const
@@ -1427,12 +1431,16 @@ void Checker::visit_var( Node_id id )
         type = table_.builtin( Type_kind::Error );
     }
 
-    if( mode == Keyword::Move )
+    // Both are modes a *parameter* carries, and neither says anything a local could mean - so the
+    // message is shared and the help is not, because the reason differs: `move` is about who owns
+    // the value, `out` about who writes it.
+    if( mode == Keyword::Move || mode == Keyword::Out )
     {
         error_at(
             ast_.span( annotation ),
-            "`move` is not a binding mode",
-            "a local already owns what it holds; write the type on its own"
+            fmt::format( "`{}` is not a binding mode", interner_.text( interner_.keyword( mode ) ) ),
+            mode == Keyword::Move ? "a local already owns what it holds; write the type on its own"
+                                  : "`out` is how a callee assigns a caller's variable; write the type on its own"
         );
     }
     else if( mode == Keyword::Ref && !table_.is_error( type ) )
@@ -2165,6 +2173,14 @@ Type_id Checker::infer_call( Node_id id )
         {
             error_at( ast_.span( arguments[i] ), fmt::format( "`{}` borrows this argument", name ), "remove `move`" );
         }
+        else if( wanted == Keyword::Out )
+        {
+            error_at( ast_.span( arguments[i] ), fmt::format( "`{}` assigns this argument", name ), "write `out`" );
+        }
+        else if( given == Keyword::Out )
+        {
+            error_at( ast_.span( arguments[i] ), fmt::format( "`{}` does not assign this argument", name ), "remove `out`" );
+        }
     }
 
     for( std::size_t i = shared; i < arguments.size(); ++i )
@@ -2661,11 +2677,24 @@ Type_id Checker::infer_marker( Node_id id )
     const Keyword marker  = static_cast<Keyword>( ast_.aux( id ) );
     const Node_id operand = ast_.children( id )[0];
 
+    // `out` assigns through the place, so it needs one, and one that may be written. Same test as
+    // `ref` for the same reason: what may be assigned is exactly what may be lent for assignment.
     if( marker == Keyword::Out )
     {
-        error_at( ast_.span( id ), "`out` is not supported yet" );
-        absorb( operand );
-        return record( id, table_.builtin( Type_kind::Error ) );
+        const Type_id value = infer( operand );
+
+        if( !is_assignable( operand ) )
+        {
+            error_at( ast_.span( operand ), "`out` needs a variable to assign to" );
+            return record( id, table_.builtin( Type_kind::Error ) );
+        }
+
+        if( !check_writable( operand ) )
+        {
+            return record( id, table_.builtin( Type_kind::Error ) );
+        }
+
+        return record( id, value );
     }
 
     // `ref` lends a place the callee may write through, so it needs one that is writable.
@@ -2940,13 +2969,21 @@ Type_id Checker::type_of_annotation( Node_id id, bool outermost )
     {
         const Keyword mode = static_cast<Keyword>( ast_.aux( id ) );
 
-        if( mode == Keyword::Out )
+        const Type_id inner = type_of_annotation( ast_.children( id )[0], false );
+
+        // An `out` parameter is assigned without its old value being destroyed, so an owning one
+        // would leak whatever the caller was already holding. Refused until the caller emits a
+        // drop before the call - which drop flags could do, but is its own piece of work.
+        if( mode == Keyword::Out && is_owning_type( inner ) )
         {
-            error_at( ast_.span( id ), "`out` is not supported yet" );
+            error_at(
+                ast_.span( id ),
+                "`out` is not supported for a type that owns a resource yet",
+                "the value already there would be overwritten without being destroyed"
+            );
+
             return table_.builtin( Type_kind::Error );
         }
-
-        const Type_id inner = type_of_annotation( ast_.children( id )[0], false );
 
         return inner;
     }
@@ -3392,6 +3429,15 @@ Types type_check(
 )
 {
     return Checker( ast, interner, resolution, sm, literals, diags ).run();
+}
+
+Keyword parameter_mode( const Ast& ast, Node_id decl )
+{
+    const Node_id annotation = unwrap_const( ast, ast.children( decl )[0] );
+
+    return annotation.is_valid() && ast.kind( annotation ) == Node_kind::Mode_type
+               ? static_cast<Keyword>( ast.aux( annotation ) )
+               : Keyword::Count;
 }
 
 bool is_ref_parameter( const Ast& ast, Node_id param )
@@ -6731,15 +6777,15 @@ TEST_CASE( "type_checker_rejects_moving_a_non_place", "[sema][move]" )
     }
 }
 
-// `out` waits on definite assignment in the callee. It should say so in its own words rather than
-// share `move`'s path, and one error rather than two - the marker is the only thing wrong here.
-TEST_CASE( "type_checker_rejects_out_for_now", "[sema][move]" )
+// The marker and the signature must agree for `out` as for the rest, and one error rather than
+// two - the marker is the only thing wrong here.
+TEST_CASE( "type_checker_requires_the_out_marker_to_agree", "[sema][out]" )
 {
     const Typed p( "void f( i32 x ) { }\ni32 main() { i32 a = 1; f( out a ); return 0; }" );
 
     INFO( p.rendered() );
     REQUIRE( p.errors() == 1 );
-    REQUIRE( p.rendered().find( "not supported yet" ) != std::string::npos );
+    REQUIRE( p.rendered().find( "does not assign this argument" ) != std::string::npos );
 }
 
 // D31: an owning value is transferred, not copied, and the transfer is written down - in an
@@ -6923,14 +6969,14 @@ TEST_CASE( "type_checker_requires_a_place_for_a_ref_argument", "[sema][ref]" )
     }
 }
 
-// `out` needs definite assignment in the callee, which is §8's lattice read from the Uninitialised
-// end rather than the Moved one. Until that exists it is refused rather than half-supported.
-TEST_CASE( "type_checker_still_refuses_out", "[sema][ref]" )
+// The whole of `out` in one program: the callee assigns through the parameter, the call site says
+// so, and the definite-assignment pass is satisfied because every path writes it.
+TEST_CASE( "type_checker_accepts_out", "[sema][out]" )
 {
     const Typed p( "void init( out i32 n ) { n = 1; }\ni32 main() { i32 x = 0; init( out x ); return x; }" );
 
     INFO( p.rendered() );
-    REQUIRE_FALSE( p.clean() );
+    REQUIRE( p.clean() );
 }
 
 // PLAN D31. A bare parameter of an owning type is a *read-only* borrow: the caller still owns it

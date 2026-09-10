@@ -180,8 +180,12 @@ struct Block
 // parameters, in declaration order.
 struct Function
 {
-    Node_id                 declaration {};
-    u32                     parameter_count = 0;
+    Node_id declaration {};
+    u32     parameter_count = 0;
+    // Which parameters arrive uninitialised. Nothing else in KIR says so - an `out` parameter's
+    // local holds a valid address, and it is the referent that is empty - so the analysis that
+    // needs it cannot work it out from the graph.
+    std::vector<Local_id>   out_parameters;
     std::vector<Local>      locals;
     std::vector<Block>      blocks;
     std::vector<Statement>  statements;

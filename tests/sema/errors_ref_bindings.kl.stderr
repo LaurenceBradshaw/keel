@@ -28,11 +28,11 @@ error: `move` is not a binding mode
 45 |     move i32 m = 1;
    |     ^^^^ a local already owns what it holds; write the type on its own
 
-error: `out` is not supported yet
+error: `out` is not a binding mode
   --> sema/errors_ref_bindings.kl:52:5
    |
 52 |     out i32 o = 1;
-   |     ^^^
+   |     ^^^ `out` is how a callee assigns a caller's variable; write the type on its own
 
 error: `b` is borrowed, so it cannot be modified
   --> sema/errors_ref_bindings.kl:74:15

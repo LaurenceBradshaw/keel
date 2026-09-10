@@ -160,6 +160,11 @@ Lowering::Lowering(
                 borrowed_bindings_.insert( param.v );
             }
 
+            if( parameter_mode( ast_, param ) == Keyword::Out )
+            {
+                builder_.mark_out_parameter( local );
+            }
+
             if( is_move_parameter( param ) )
             {
                 owned_parameters_.push_back( local );

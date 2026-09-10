@@ -22,10 +22,4 @@ error: cannot borrow `u8` as `ref i32`
 51 |     bump( ref x );
    |           ^^^^^ a borrow is the variable itself, so its type must match exactly
 
-error: `out` is not supported yet
-  --> sema/errors_refs.kl:58:12
-   |
-58 | void init( out i32 n )
-   |            ^^^
-
-5 errors generated
+4 errors generated

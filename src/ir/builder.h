@@ -18,6 +18,10 @@ public:
     Builder( Node_id declaration, Type_id return_type, Span span );
 
     Local_id add_parameter( Type_id type, Span span, Symbol_id name );
+
+    // An `out` parameter's local holds a valid address; it is the *referent* that starts empty, and
+    // nothing else in KIR says so. Recorded here because the lowerer is the only thing that knows.
+    void     mark_out_parameter( Local_id local );
     Local_id add_local( Type_id type, Span span, Symbol_id name = {} );
 
     Block_id add_block();

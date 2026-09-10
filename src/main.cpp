@@ -9,6 +9,7 @@
 #include <string>
 #include <string_view>
 #include "ast/dump.h"
+#include "check/assign_check.h"
 #include "check/drop_flags.h"
 #include "check/move_check.h"
 #include "codegen_c/emit_kir.h"
@@ -62,6 +63,39 @@ void report_move_errors(
                             : fmt::format( "{} is used after it was moved", subject ),
                 error.maybe ? fmt::format( "moved at {}:{} on some path to here", at.line, at.col )
                             : fmt::format( "moved at {}:{}", at.line, at.col )
+            );
+        }
+    }
+}
+
+// D31: an `out` parameter is one the callee assigns, and "the callee must assign it" is a promise
+// to the caller rather than advice - so a path that returns without writing one is an error. Same
+// shape as report_move_errors above, and for the same reason: the pass reports spans and a
+// Local_id, and this is the only place with an Interner to name it.
+void report_unassigned_errors(
+    const std::vector<keel::Function>& functions, const keel::Interner& interner, keel::Diagnostics& diagnostics
+)
+{
+    for( const keel::Function& function : functions )
+    {
+        for( const keel::Unassigned_error& error : keel::check_assignment( function ) )
+        {
+            const keel::Symbol_id name = function.locals[error.local.v].name;
+
+            // An `out` parameter always has one, unlike a moved temporary - but reading it from the
+            // same place keeps the two reporters saying the same thing about the same field.
+            const std::string subject =
+                name.is_valid() ? fmt::format( "`{}`", interner.text( name ) ) : std::string( "this parameter" );
+
+            // The two read differently on purpose: one is a path the author missed, the other is a
+            // parameter they never wrote to at all. Neither says "this `return`", because the
+            // caret is the *function* when the path that misses it is the fall off the end - which
+            // is the common case, and the one where naming a return would point at nothing.
+            diagnostics.error(
+                error.at,
+                error.maybe ? fmt::format( "{} is not assigned on every path out of this function", subject )
+                            : fmt::format( "{} is never assigned", subject ),
+                "an `out` parameter is the callee's promise to assign it"
             );
         }
     }
@@ -198,6 +232,7 @@ int main( int argc, char** argv )
     // an editor wants use-after-move underlined. Which is why this runs above that early return
     // rather than beside the emitter.
     report_move_errors( functions, sm, interner, diagnostics );
+    report_unassigned_errors( functions, interner, diagnostics );
 
     if( diagnostics.has_errors() )
     {
