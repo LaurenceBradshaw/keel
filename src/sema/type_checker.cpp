@@ -358,6 +358,10 @@ private:
     void declare_signatures_member_functions();
     void declare_signatures_global_decls();
 
+    // D31: which parameters travel by address. Its own pass because the owning query is only
+    // answered after compute_owning, by which time both parameter loops have already run.
+    void record_borrowed_parameters();
+
     void order_structs();
     bool contains_itself( Node_id decl, std::vector<Node_id>& path );
     void report_containment_cycle( Node_id decl, const std::vector<Node_id>& path );
@@ -382,6 +386,10 @@ private:
     // D31's initialisation and assignment clause: an owning value transfers rather than copies, and
     // the transfer is written down.
     void check_owning_source( Node_id value, Type_id type );
+
+    Node_id place_root( Node_id id ) const;
+    bool    is_borrow_binding( Node_id decl ) const;
+    bool    check_not_borrowed( Node_id target );
 
     // Bare is Keyword::Count, which is not a keyword anyone can write - so "no mode" needs no separate
     // answer and every caller compares the same way.
@@ -500,6 +508,7 @@ void Checker::declare_signatures()
     check_struct_ownership();
     declare_signatures_function_decls();
     declare_signatures_global_decls();
+    record_borrowed_parameters();
 }
 
 void Checker::declare_signatures_struct_decls()
@@ -646,6 +655,35 @@ void Checker::declare_signatures_global_decls()
         const Node_id var_type_node = ast_.children( child )[0];
         const Type_id var_type      = type_of_annotation( var_type_node );
         record( child, var_type );
+    }
+}
+
+void Checker::record_borrowed_parameters()
+{
+    // A flat walk rathr than one over root's children: parameters live under functions,
+    // constructors, and destructors alike, and a walk that names its containers can miss one.
+    for( u32 i = 0; i < ast_.node_count(); ++i )
+    {
+        Node_id param { i };
+
+        if( ast_.kind( param ) != Node_kind::Param_decl )
+        {
+            continue;
+        }
+
+        const Type_id type = types_[param.v];
+        const Keyword mode = parameter_mode( param );
+
+        // D31's two borrows. `ref` is the mutable one; a *bare* parameter of an owning type is the
+        // read-only one, and that one is forced rather than chosen - a class cannot be copied, so
+        // borrowing is the only meaning left for it. `move` is neither: the callee owns what it is
+        // given and destroys it, so it travels by value like any other owned local.
+        if( mode != Keyword::Ref && !( mode == Keyword::Count && is_owning_type( type ) ) )
+        {
+            continue;
+        }
+
+        record( ast_.children( param )[0], table_.pointer_to( type ) );
     }
 }
 
@@ -796,6 +834,56 @@ void Checker::check_owning_source( Node_id value, Type_id type )
         "an owning value is transferred, not copied",
         fmt::format( "write `move {}`", sm_.text( ast_.span( value ) ) )
     );
+}
+
+Node_id Checker::place_root( Node_id id ) const
+{
+    while( ast_.kind( id ) == Node_kind::Field_expr )
+    {
+        const Node_id object = ast_.children( id )[0];
+
+        // D22 reaches through a pointer, and past one the borrow says nothing: what a pointer
+        // points at was never part of the object that was lent. The same shallowness `const` has
+        // in C++, arrived at the same way - the pointer is what is borrowed, not the pointee.
+        if( table_.is_pointer( types_[object.v] ) )
+        {
+            return Node_id {};
+        }
+
+        id = object;
+    }
+
+    return ast_.kind( id ) == Node_kind::Name_expr ? resolution_.declaration_of( id ) : Node_id {};
+}
+
+// Bare and owning: the read-only borrow. `move` is not one - the callee owns what it was given -
+// and `ref` is the mutable borrow, which every question here is asked in contrast to.
+bool Checker::is_borrow_binding( Node_id decl ) const
+{
+    return decl.is_valid() && ast_.kind( decl ) == Node_kind::Param_decl && parameter_mode( decl ) == Keyword::Count &&
+           is_owning_type( types_[decl.v] );
+}
+
+// D31: a bare parameter of an owning type is a *read-only* borrow. The caller still owns it and
+// still destroys it, so a write here changes something the callee was only lent.
+bool Checker::check_not_borrowed( Node_id target )
+{
+    const Node_id root = place_root( target );
+
+    if( !is_borrow_binding( root ) )
+    {
+        return true;
+    }
+
+    const std::string_view name = interner_.text( Symbol_id { ast_.aux( root ) } );
+
+    error_at(
+        ast_.span( target ),
+        fmt::format( "`{}` is borrowed, so it cannot be modified", name ),
+        fmt::format( "take it as `ref {} {}` to modify it", table_.name( types_[root.v] ), name )
+    );
+
+    return false;
 }
 
 Node_id Checker::find_member( Node_id decl, Node_kind kind ) const
@@ -1185,6 +1273,14 @@ void Checker::visit_return( Node_id id )
     }
 
     check( value, current_return_ );
+
+    // The predicate rather than check_not_borrowed: that one reports about *modifying*, and nothing
+    // is being modified here. Gated on the return type owning something, because that is the whole
+    // hazard - the caller destroys the borrow too, so returning it frees one resource twice.
+    if( is_owning_type( current_return_ ) && is_borrow_binding( place_root( value ) ) )
+    {
+        error_at( ast_.span( value ), "cannot return a borrowed value", "the caller still owns it" );
+    }
 }
 
 void Checker::visit_var( Node_id id )
@@ -1258,6 +1354,14 @@ void Checker::visit_assign( Node_id id )
     const Type_id target_type = infer( target );
 
     if( table_.is_error( target_type ) )
+    {
+        absorb( value );
+        return;
+    }
+
+    // After infer(), not before it: place_root has to ask whether a field's object is a pointer,
+    // and nothing has typed it until here.
+    if( !check_not_borrowed( target ) )
     {
         absorb( value );
         return;
@@ -1338,6 +1442,11 @@ void Checker::visit_increment( Node_id id )
     const Type_id operand_type = infer( operand );
 
     if( table_.is_error( operand_type ) )
+    {
+        return;
+    }
+
+    if( !check_not_borrowed( operand ) )
     {
         return;
     }
@@ -2417,6 +2526,14 @@ Type_id Checker::infer_marker( Node_id id )
             return record( id, table_.builtin( Type_kind::Error ) );
         }
 
+        // You cannot lend mutably what you hold read-only. check_not_borrowed has already named the
+        // variable and what to write, so a second sentence would be a second diagnostic for one
+        // mistake.
+        if( !check_not_borrowed( operand ) )
+        {
+            return record( id, table_.builtin( Type_kind::Error ) );
+        }
+
         return record( id, value );
     }
 
@@ -2443,6 +2560,20 @@ Type_id Checker::infer_marker( Node_id id )
     const Node_id decl = ast_.kind( operand ) == Node_kind::Name_expr ? resolution_.declaration_of( operand ) : Node_id {};
     const bool    named =
         decl.is_valid() && ( ast_.kind( decl ) == Node_kind::Var_decl || ast_.kind( decl ) == Node_kind::Param_decl );
+
+    if( is_borrow_binding( decl ) )
+    {
+        error_at(
+            ast_.span( operand ),
+            "cannot move out of a borrow",
+            fmt::format(
+                "take it as `move {} {}` to own it",
+                table_.name( types_[decl.v] ),
+                interner_.text( Symbol_id { ast_.aux( decl ) } )
+            )
+        );
+        return record( id, table_.builtin( Type_kind::Error ) );
+    }
 
     // Same reason as the field above: `*p` names something this function does not own, so moving
     // out of it leaves a hole nothing tracks.
@@ -2640,14 +2771,6 @@ Type_id Checker::type_of_annotation( Node_id id )
         }
 
         const Type_id inner = type_of_annotation( ast_.children( id )[0] );
-
-        // D32: the binding is the referent, so the declaration keeps `T` and every use in the body
-        // is an ordinary `T`. The address it travels as goes on the annotation, which nothing else
-        // types - lowering and the emitter read it back from there.
-        if( mode == Keyword::Ref )
-        {
-            record( id, table_.pointer_to( inner ) );
-        }
 
         return inner;
     }
@@ -3095,16 +3218,21 @@ Types type_check(
     return Checker( ast, interner, resolution, sm, literals, diags ).run();
 }
 
-Type_id parameter_type( const Ast& ast, const Types& types, Node_id param )
-{
-    return is_ref_parameter( ast, param ) ? types.type_of( ast.children( param )[0] ) : types.type_of( param );
-}
-
 bool is_ref_parameter( const Ast& ast, Node_id param )
 {
     const Node_id annotation = ast.children( param )[0];
 
     return ast.kind( annotation ) == Node_kind::Mode_type && static_cast<Keyword>( ast.aux( annotation ) ) == Keyword::Ref;
+}
+
+bool is_borrowed_parameter( const Ast& ast, const Types& types, Node_id param )
+{
+    return types.type_of( ast.children( param )[0] ).is_valid();
+}
+
+Type_id parameter_type( const Ast& ast, const Types& types, Node_id param )
+{
+    return is_borrowed_parameter( ast, types, param ) ? types.type_of( ast.children( param )[0] ) : types.type_of( param );
 }
 
 } // namespace keel
@@ -6601,6 +6729,250 @@ TEST_CASE( "type_checker_still_refuses_out", "[sema][ref]" )
 
     INFO( p.rendered() );
     REQUIRE_FALSE( p.clean() );
+}
+
+// PLAN D31. A bare parameter of an owning type is a *read-only* borrow: the caller still owns it
+// and still destroys it, so the callee may look and must not touch. It is forced rather than
+// chosen - a class cannot be copied while §6.6 keeps copy constructors out of v0, so borrowing is
+// the only meaning a bare argument has left.
+TEST_CASE( "type_checker_makes_a_bare_owning_parameter_read_only", "[sema][borrow]" )
+{
+    constexpr std::string_view owning = "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n";
+
+    SECTION( "a field of it cannot be assigned" )
+    {
+        const Typed p( std::string( owning ) + "u64 f( B b ) { b.n = 5; return 0; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`b` is borrowed, so it cannot be modified" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "take it as `ref B b` to modify it" ) != std::string::npos );
+    }
+
+    SECTION( "nor compound-assigned" )
+    {
+        const Typed p( std::string( owning ) + "u64 f( B b ) { b.n += 5; return 0; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    // Its own case because `++` reaches assignability by a different route, and a `u64` field
+    // typechecks perfectly well - nothing else would have stopped it.
+    SECTION( "nor incremented" )
+    {
+        const Typed p( std::string( owning ) + "u64 f( B b ) { b.n++; return 0; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "and the binding itself cannot be assigned" )
+    {
+        const Typed p( std::string( owning ) + "u64 f( B b ) { b = B( 2 ); return 0; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "is borrowed" ) != std::string::npos );
+    }
+
+    SECTION( "reading it is what it is for" )
+    {
+        const Typed p( std::string( owning ) + "u64 f( B b ) { return b.n; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // The walk is a loop, not one step: a path of any depth still roots in the borrow.
+    SECTION( "a nested field is refused too" )
+    {
+        const Typed p( "struct P { i32 x; };\nclass W { P p; ~W() { } };\n"
+                       "i32 f( W w ) { w.p.x = 5; return 0; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`w` is borrowed" ) != std::string::npos );
+    }
+
+    // Shallow, the way `const` is in C++, and for the same reason: what a pointer points at was
+    // never part of the object that was lent. The borrow covers the pointer, not the pointee.
+    SECTION( "but writing through a pointer it holds is allowed" )
+    {
+        const Typed p( "class B { i32* q; ~B() { } };\n"
+                       "i32 f( B b ) { *b.q = 5; return 0; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "including through D22's implicit reach" )
+    {
+        const Typed p( "struct P { i32 x; };\nclass B { P* q; ~B() { } };\n"
+                       "i32 f( B b ) { b.q.x = 5; return 0; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // A local owns what it holds, so none of this touches it. Without this case the rule could be
+    // refusing every write to an owning type and the section above would not notice.
+    SECTION( "and a local of the same type is unaffected" )
+    {
+        const Typed p( std::string( owning ) + "i32 main() { B a = B( 1 ); a.n = 5; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// Three ways to give away what you were lent, and each has its own reason to be refused. Returning
+// one is the sharpest: `B pass( B b ) { return b; }` freed one resource twice before this existed.
+TEST_CASE( "type_checker_refuses_to_transfer_a_borrow", "[sema][borrow]" )
+{
+    constexpr std::string_view owning = "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n";
+
+    SECTION( "it cannot be moved" )
+    {
+        const Typed p(
+            std::string( owning ) + "void consume( move B b ) { }\nvoid f( B b ) { consume( move b ); }\n"
+                                    "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "cannot move out of a borrow" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "take it as `move B b` to own it" ) != std::string::npos );
+    }
+
+    SECTION( "it cannot be lent mutably" )
+    {
+        const Typed p(
+            std::string( owning ) + "void grow( ref B b ) { b.n = 1; }\nvoid f( B b ) { grow( ref b ); }\n"
+                                    "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`b` is borrowed" ) != std::string::npos );
+    }
+
+    SECTION( "and it cannot be returned" )
+    {
+        const Typed p( std::string( owning ) + "B pass( B b ) { return b; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "cannot return a borrowed value" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "the caller still owns it" ) != std::string::npos );
+    }
+
+    // The gate is that the *return type* owns something. Reading a value out of a borrow and
+    // returning that copies nothing anyone else holds.
+    SECTION( "though a value read out of it can be" )
+    {
+        const Typed p( std::string( owning ) + "u64 f( B b ) { return b.n; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // Lending on what you were lent needs no marker and no copy - the address is simply forwarded.
+    SECTION( "and it can be passed on as a borrow" )
+    {
+        const Typed p(
+            std::string( owning ) + "u64 peek( B b ) { return b.n; }\nu64 f( B b ) { return peek( b ); }\n"
+                                    "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// A `move` parameter is not a borrow: the callee owns what it was given, so it is mutable, movable
+// and dropped there. Its own case because the first version of this rule classified one as a
+// borrow, which silently took the drop flag off every conditionally-moved local.
+TEST_CASE( "type_checker_leaves_a_move_parameter_owned", "[sema][borrow]" )
+{
+    constexpr std::string_view owning = "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n";
+
+    SECTION( "it can be modified" )
+    {
+        const Typed p( std::string( owning ) + "void own( move B b ) { b.n = 99; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "it can be moved on" )
+    {
+        const Typed p(
+            std::string( owning ) + "void take( move B b ) { }\nvoid own( move B b ) { take( move b ); }\n"
+                                    "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and it can be returned" )
+    {
+        const Typed p( std::string( owning ) + "B own( move B b ) { return b; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// A `ref` parameter is the mutable borrow, so it is the contrast that gives the bare one meaning.
+TEST_CASE( "type_checker_leaves_a_ref_parameter_writable", "[sema][borrow]" )
+{
+    const Typed p( "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+                   "void grow( ref B b ) { b.n = b.n + 1; }\ni32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+}
+
+// The receiver is a pointer rather than a borrow binding, so writing through it is untouched -
+// which is what keeps every destructor written so far compiling.
+TEST_CASE( "type_checker_leaves_the_receiver_alone", "[sema][borrow]" )
+{
+    const Typed p( "class C { u64 n; C( u64 x ) { n = x; } ~C() { n = 0; } };\ni32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+}
+
+// A constructor's parameters are declared by a pass that runs *before* compute_owning, which is
+// exactly why the borrow rule is a pass of its own. Without that they would never be borrows.
+TEST_CASE( "type_checker_borrows_in_a_member_function_too", "[sema][borrow]" )
+{
+    constexpr std::string_view owning = "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n";
+
+    SECTION( "a constructor may read one" )
+    {
+        const Typed p(
+            std::string( owning ) + "class W { u64 m; W( B b ) { m = b.n; } ~W() { } };\n"
+                                    "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and may not write one" )
+    {
+        const Typed p(
+            std::string( owning ) + "class W { u64 m; W( B b ) { b.n = 1; m = 0; } ~W() { } };\n"
+                                    "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`b` is borrowed" ) != std::string::npos );
+    }
 }
 
 } // namespace keel

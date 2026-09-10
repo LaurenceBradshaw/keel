@@ -1,0 +1,58 @@
+// PLAN D31. A bare parameter of an owning type is a read-only borrow: the caller still owns it and
+// still destroys it. The exit code carries both halves - the values read back through the borrows,
+// and the number of destructor runs - and the point is that the second equals the number of objects
+// constructed. A by-value parameter would copy the class and free one resource twice, which is
+// exactly what `pass( a )` did before this rule existed and what no golden `.expected` can see.
+u64 freed = 0;
+
+class B
+{
+    u64 n;
+
+    B( u64 x )
+    {
+        n = x;
+    }
+
+    ~B()
+    {
+        freed = freed + 1;
+    }
+};
+
+u64 peek( B b )
+{
+    return b.n;
+}
+
+// A borrow passed on is still the same object: no copy at either hop.
+u64 forward( B b )
+{
+    return peek( b );
+}
+
+// Owned rather than borrowed, so this is where it is destroyed.
+void own( move B b )
+{
+}
+
+i32 main()
+{
+    u64 total = 0;
+
+    {
+        B a = B( 1 );
+
+        total = total + peek( a );
+        total = total + forward( a );
+    } // one destructor run, for one object
+
+    total = total + peek( B( 2 ) ); // the temporary is dropped after the statement: two
+
+    B c = B( 3 );
+
+    own( move c ); // destroyed in the callee, not here: three
+
+    // total is 1 + 1 + 2 = 4, and three objects were constructed and destroyed exactly once each.
+    return wrap<i32>( total * 10 + freed );
+}

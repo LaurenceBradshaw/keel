@@ -1,0 +1,48 @@
+// PLAN D31. A bare parameter of an owning type travels by address, exactly as `ref` does: the local
+// is a pointer and every use of the name is a deref. KIR shows the two borrows as one shape,
+// because what separates them is entirely what the checker permits through each.
+class B
+{
+    u64 n;
+
+    B( u64 x )
+    {
+        n = x;
+    }
+
+    ~B()
+    {
+    }
+};
+
+u64 peek( B b )
+{
+    return b.n;
+}
+
+// Forwarding is `&(*_1)`: the address the binding already holds, taken back out of the deref that
+// every use of the name goes through. No copy at either hop.
+u64 forward( B b )
+{
+    return peek( b );
+}
+
+// A `move` parameter is owned rather than borrowed, so it stays a value and the callee drops it.
+void own( move B b )
+{
+}
+
+i32 main()
+{
+    B a = B( 1 );
+
+    u64 seen = forward( a );
+
+    // The temporary has no place until it is built, so it takes the other path through the
+    // argument lowering - and is still dropped afterwards.
+    seen = seen + peek( B( 2 ) );
+
+    own( move B( 3 ) );
+
+    return wrap<i32>( seen );
+}

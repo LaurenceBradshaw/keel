@@ -1875,21 +1875,64 @@ second `f` is a redeclaration caught by name long before mangling matters, but t
 mangler will need to distinguish a borrow from a pointer the day two functions may
 share a name.
 
+**A bare parameter of an owning type is a read-only borrow.** D31's last unimplemented
+row, and it was not a missing feature but a **double free that had been shipping**:
+
+    B pass( B b ) { return b; }
+
+freed one resource twice. The KIR said why - `_5 = call pass(copy _1)`, a struct copy
+of an owning value, which is the one thing *an owning value is never copied* forbids.
+Two `B`s then held one resource and both were dropped. `void f( Buffer b ) { b.len = 5; }`
+was accepted for the same reason.
+
+`ref` had already built the by-address path, so most of this was wiring it to a second
+predicate. What it needed of its own was the **read-only** half.
+
+Three things worth keeping.
+
+**The rule is a pass of its own** because `is_owning_type` only answers after
+`compute_owning`, and `declare_signatures_member_functions` runs *before* it - so a
+constructor's parameters would never have been borrows. `record_borrowed_parameters`
+runs last and establishes one invariant: **the annotation node carries a type exactly
+when the parameter travels by address.** `parameter_type` is then the only reader and
+no longer asks about modes at all.
+
+**A borrow is *bare* and owning.** The first version of the predicate asked only
+`!is_ref_parameter && is_owning_type`, which classifies a `move` parameter as a
+borrow - it would have travelled by address and never been dropped by the callee.
+`drop_flags_guards_a_conditionally_moved_local` caught it. Both the pass and
+`is_borrow_binding` now test `parameter_mode() == Keyword::Count`: `ref` is the
+mutable borrow, `move` is not a borrow at all, and bare-and-owning is the read-only one.
+
+**`is_assignable` was left alone.** It answers *is this a place*, which a borrow is,
+and `check_owning_source` and `infer_marker` depend on that reading. *May I write here*
+is a second question with its own walk: `place_root` follows a field path to the
+variable it roots in and **stops at a pointer**, because what a pointer points at was
+never part of the object that was lent. That is C++'s shallow `const`, arrived at from
+ownership rather than inherited.
+
+The refusals are four, and they are the four ways to give away what you were lent:
+write to it, move it, lend it mutably, return it. Returning is gated on the *return
+type* owning something - reading a value out of a borrow and returning that copies
+nothing anyone else holds. The write check runs **after** the target is inferred,
+because `place_root` has to ask whether a field's object is a pointer and nothing has
+typed it before then.
+
+`u64 forward( B b ) { return peek( b ); }` needs no marker and no copy: the address is
+simply forwarded, and lowering emits `&(*_1)`. No existing golden moved.
+
+**Correcting an earlier entry:** the debt below used to record that an owning temporary
+still leaks in `f( B( 1 ) )`. It does not - `statement_temporaries_` emits the drop, and
+`tests/codegen/borrows.kl` exits 43, whose second digit is three destructor runs for
+three constructed objects. That entry has been narrowed to what is actually still true,
+and the *bare parameter is not yet a borrow* debt beside it is now paid and removed.
+
 ### Debts to pay along the way
 
-- **A bare parameter of an owning type is not yet a borrow.** D31 says it is a *read-only* borrow,
-  and neither half holds. `void f( Buffer b ) { b.len = 5; }` is accepted, where it should be an
-  error. And at C level the parameter is a struct copy rather than an address, so two objects hold
-  the same resource for the duration of the call - benign only because exactly one of them drops it.
-  Both halves are one fix: pass by pointer and reject writes through it. The first half is no longer
-  work - `ref` built exactly that path, so a bare owning parameter is a `ref` parameter with
-  mutability withheld, and what remains is deciding it and making `is_assignable` say no.
-
-- **An owning temporary still leaks, and the hole is now narrower than it was.** `f( B( 1 ) )` with
-  a bare parameter exits with the resource unfreed, because nothing drops a temporary. What has
-  changed is that a temporary can no longer reach a `move` parameter at all - `move` requires a
-  plain named variable - so the leak is confined to borrow parameters, and `consume( Buffer( 16 ) )`
-  is simply not expressible. That restriction is worth lifting eventually, and needs the
+- **`consume( Buffer( 16 ) )` is still not expressible.** `move` requires a plain named variable,
+  so a temporary cannot reach a `move` parameter without a `move` marker written on the
+  construction itself. The leak this entry used to record is gone - a temporary handed to a borrow
+  is dropped after the statement - but the restriction is worth lifting, and needs the
   temporary-lifetime rule §8 already owes for `const ref` returns. One answer serves both.
 
 - **D2 stopped being inert at M3, and is not enforced.** Its entry says *"inert until M3: no type

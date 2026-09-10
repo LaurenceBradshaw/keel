@@ -1,0 +1,94 @@
+fn B {
+    let _0: void; // return slot
+    let _1: B*; // parameter this
+    let _2: u64; // parameter x
+
+    bb0:
+        (*_1).n = copy _2
+        return
+}
+fn ~B {
+    let _0: void; // return slot
+    let _1: B*; // parameter this
+
+    bb0:
+        return
+}
+fn peek {
+    let _0: u64; // return slot
+    let _1: B*; // parameter b
+
+    bb0:
+        _0 = copy (*_1).n
+        return
+}
+fn forward {
+    let _0: u64; // return slot
+    let _1: B*; // parameter b
+    let _2: B*;
+    let _3: u64;
+
+    bb0:
+        _2 = &(*_1)
+        _3 = call peek(copy _2)
+        _0 = copy _3
+        return
+}
+fn own {
+    let _0: void; // return slot
+    let _1: B; // parameter b
+
+    bb0:
+        drop _1
+        storage_dead _1
+        return
+}
+fn main {
+    let _0: i32; // return slot
+    let _1: B; // a
+    let _2: B*;
+    let _3: void;
+    let _4: u64; // seen
+    let _5: B*;
+    let _6: u64;
+    let _7: B;
+    let _8: B*;
+    let _9: void;
+    let _10: B*;
+    let _11: u64;
+    let _12: u64;
+    let _13: B;
+    let _14: B*;
+    let _15: void;
+    let _16: void;
+    let _17: i32;
+    let _18: bool;
+
+    bb0:
+        storage_live _1
+        _2 = &_1
+        _3 = call B(copy _2, const 1)
+        storage_live _4
+        _5 = &_1
+        _6 = call forward(copy _5)
+        _4 = copy _6
+        _8 = &_7
+        _9 = call B(copy _8, const 2)
+        _10 = &_7
+        _11 = call peek(copy _10)
+        _12 = copy _4 + copy _11
+        _4 = copy _12
+        drop _7
+        _14 = &_13
+        _18 = const 1
+        _15 = call B(copy _14, const 3)
+        _16 = call own(move _13)
+        _18 = const 0
+        drop _13 if _18
+        _17 = copy _4 as i32
+        _0 = copy _17
+        storage_dead _4
+        drop _1
+        storage_dead _1
+        return
+}

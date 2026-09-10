@@ -1,0 +1,49 @@
+error: `b` is borrowed, so it cannot be modified
+  --> sema/errors_borrows.kl:35:5
+   |
+35 |     b.n = 5;
+   |     ^^^ take it as `ref B b` to modify it
+
+error: `b` is borrowed, so it cannot be modified
+  --> sema/errors_borrows.kl:42:5
+   |
+42 |     b.n += 5;
+   |     ^^^ take it as `ref B b` to modify it
+
+error: `b` is borrowed, so it cannot be modified
+  --> sema/errors_borrows.kl:51:5
+   |
+51 |     b.n++;
+   |     ^^^ take it as `ref B b` to modify it
+
+error: `b` is borrowed, so it cannot be modified
+  --> sema/errors_borrows.kl:58:5
+   |
+58 |     b = B( 2 );
+   |     ^ take it as `ref B b` to modify it
+
+error: `w` is borrowed, so it cannot be modified
+  --> sema/errors_borrows.kl:66:5
+   |
+66 |     w.p.x = 5;
+   |     ^^^^^ take it as `ref W w` to modify it
+
+error: cannot move out of a borrow
+  --> sema/errors_borrows.kl:77:19
+   |
+77 |     consume( move b );
+   |                   ^ take it as `move B b` to own it
+
+error: `b` is borrowed, so it cannot be modified
+  --> sema/errors_borrows.kl:89:15
+   |
+89 |     grow( ref b );
+   |               ^ take it as `ref B b` to modify it
+
+error: cannot return a borrowed value
+  --> sema/errors_borrows.kl:98:12
+   |
+98 |     return b;
+   |            ^ the caller still owns it
+
+8 errors generated

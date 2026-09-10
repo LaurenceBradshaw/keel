@@ -1,0 +1,156 @@
+// PLAN D31. A bare parameter of an owning type is a *read-only* borrow: the caller still owns it
+// and still destroys it, so the callee may look and must not touch. It is forced rather than
+// chosen - a class cannot be copied while copy constructors sit outside v0, so borrowing is the
+// only meaning a bare argument has left.
+struct P
+{
+    i32 x;
+};
+
+class B
+{
+    u64 n;
+
+    B( u64 x )
+    {
+        n = x;
+    }
+
+    ~B()
+    {
+    }
+};
+
+class W
+{
+    P p;
+
+    ~W()
+    {
+    }
+};
+
+i32 writes_a_field( B b )
+{
+    b.n = 5;
+
+    return 0;
+}
+
+i32 compound_assigns( B b )
+{
+    b.n += 5;
+
+    return 0;
+}
+
+// `++` reaches assignability by its own route, and a `u64` field types perfectly well - nothing
+// else here would have stopped it.
+i32 increments( B b )
+{
+    b.n++;
+
+    return 0;
+}
+
+i32 assigns_the_binding( B b )
+{
+    b = B( 2 );
+
+    return 0;
+}
+
+// The walk is a loop rather than one step: a path of any depth still roots in the borrow.
+i32 writes_a_nested_field( W w )
+{
+    w.p.x = 5;
+
+    return 0;
+}
+
+void consume( move B b )
+{
+}
+
+i32 moves_it( B b )
+{
+    consume( move b );
+
+    return 0;
+}
+
+void grow( ref B b )
+{
+    b.n = 1;
+}
+
+i32 lends_it_mutably( B b )
+{
+    grow( ref b );
+
+    return 0;
+}
+
+// The sharpest of the three: this freed one resource twice before the rule existed, because the
+// return copied an owning value the caller was still going to destroy.
+B returns_it( B b )
+{
+    return b;
+}
+
+// Everything below is accepted, and the fixture would be worth much less without it: it is what
+// shows the rule refuses giving the borrow away rather than every use of an owning type.
+
+u64 reads_a_field( B b )
+{
+    return b.n;
+}
+
+// The return type owns nothing, so a value read out of the borrow leaves with no one else holding it.
+u64 returns_a_field( B b )
+{
+    return b.n;
+}
+
+// Lending on what you were lent needs no marker and no copy: the address is simply forwarded.
+u64 passes_it_on( B b )
+{
+    return reads_a_field( b );
+}
+
+// Shallow, the way `const` is in C++, and for the same reason: what a pointer points at was never
+// part of the object that was lent.
+class Holder
+{
+    P* q;
+
+    ~Holder()
+    {
+    }
+};
+
+i32 writes_through_a_pointer_it_holds( Holder h )
+{
+    h.q.x = 5;
+
+    return 0;
+}
+
+// A `move` parameter is not a borrow - the callee owns what it was given - so all three transfers
+// stay legal through one.
+B owns_it( move B b )
+{
+    b.n = 99;
+
+    return b;
+}
+
+// And a local owns what it holds, so none of this touches one.
+i32 main()
+{
+    B a = B( 1 );
+
+    a.n = 5;
+
+    return 0;
+}

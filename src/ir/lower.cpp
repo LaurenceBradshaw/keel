@@ -43,6 +43,8 @@ private:
     void    lower_statement( Node_id id ); // emits, produces nothing
     Operand lower_argument( Node_id argument, Node_id parameter );
 
+    Operand address_operand( Place place, Type_id type, Span span );
+
     // One per construct, dispatched from lower_statement - the shape visit_* uses next door.
     void lower_block( Node_id id );
     void lower_return( Node_id id );
@@ -112,7 +114,7 @@ private:
     // Parameters the callee owns, and therefore drops. Collected in the constructor and put in a
     // scope by run(), because scope_locals_ has no scope to go into until then.
     std::vector<Local_id>   owned_parameters_;
-    std::unordered_set<u32> ref_parameters_; // Param_decl ids whose local holds an address
+    std::unordered_set<u32> borrowed_parameters_; // Param_decl ids whose local holds an address
 
     // Owning temporaries built by the statement being lowered. They have an owner - the caller -
     // and therefore a drop, and the right moment for it is the end of the statement, which is after
@@ -153,9 +155,9 @@ Lowering::Lowering(
             const Local_id  local = builder_.add_parameter( type, span, name );
             locals_.emplace( param.v, local );
 
-            if( is_ref_parameter( ast_, param ) )
+            if( is_borrowed_parameter( ast_, types_, param ) )
             {
-                ref_parameters_.insert( param.v );
+                borrowed_parameters_.insert( param.v );
             }
 
             if( is_move_parameter( param ) )
@@ -212,7 +214,7 @@ Place Lowering::place_for( Node_id declaration )
 
         // D32: the name means the referent, not the address. Same deref the receiver already goes
         // through, which is why no consumer of KIR needs to know a ref binding exists.
-        return ref_parameters_.contains( declaration.v ) ? builder_.deref( base ) : base;
+        return borrowed_parameters_.contains( declaration.v ) ? builder_.deref( base ) : base;
     }
 
     // A bare field is `this.field` - D22's reach through the receiver, written implicitly - so it
@@ -1164,20 +1166,33 @@ void Lowering::lower_statement( Node_id id )
 
 Operand Lowering::lower_argument( Node_id argument, Node_id parameter )
 {
-    if( !is_ref_parameter( ast_, parameter ) )
+    if( !is_borrowed_parameter( ast_, types_, parameter ) )
     {
         return lower_expression( argument );
     }
 
-    // The marker is stepped through rather than lowered: `ref` says how the argument travels, and
-    // has no value of its own to produce. The checker has already required it to be here.
-    assert( ast_.kind( argument ) == Node_kind::Marker_expr && "the checker requires the markers to agree" );
-
     const Type_id address = parameter_type( ast_, types_, parameter );
     const Span    span    = ast_.span( argument );
-    const Place   place   = lower_place( ast_.children( argument )[0] );
 
-    return copy( builder_.place( builder_.into_temp( address_of( place, address ), address, span ) ), address );
+    // `ref x` is stepped through: the marker says how the argument travels and has no value of its
+    // own to produce. A bare borrow has no marker to step through, and a temporary has no place
+    // until it is built - so both go through lower_expression and the address is taken of
+    // wherever it landed, which is also what drops the temporary afterwards.
+    if( ast_.kind( argument ) == Node_kind::Marker_expr )
+    {
+        return address_operand( lower_place( ast_.children( argument )[0] ), address, span );
+    }
+
+    const Operand value = lower_expression( argument );
+
+    assert( value.kind != Operand_kind::Constant && "an owning value is never a constant" );
+
+    return address_operand( value.place, address, span );
+}
+
+Operand Lowering::address_operand( Place place, Type_id type, Span span )
+{
+    return copy( builder_.place( builder_.into_temp( address_of( place, type ), type, span ) ), type );
 }
 
 } // namespace
@@ -1259,6 +1274,23 @@ struct Lowered
     std::string text( std::size_t index = 0 )
     {
         return print( functions[index], ast, types.table(), literals, interner );
+    }
+
+    // By name rather than by index: a class contributes its constructor and destructor to the same
+    // list, and which order those land in is not what any case asking for a function is about.
+    std::string named( std::string_view name )
+    {
+        const std::string prefix = fmt::format( "fn {} ", name );
+
+        for( std::size_t i = 0; i < functions.size(); ++i )
+        {
+            if( text( i ).starts_with( prefix ) )
+            {
+                return text( i );
+            }
+        }
+
+        return {};
     }
 };
 
@@ -3007,23 +3039,115 @@ TEST_CASE( "lower_lends_a_class_by_ref", "[ir][lower][ref]" )
     INFO( p.rendered() );
     REQUIRE( p.clean() );
 
-    // Found by name rather than by index: a class contributes its constructor and destructor to the
-    // same list, and which order they land in is not what this case is about.
-    std::string text;
-
-    for( std::size_t i = 0; i < p.functions.size(); ++i )
-    {
-        if( p.text( i ).starts_with( "fn grow" ) )
-        {
-            text = p.text( i );
-        }
-    }
+    const std::string text = p.named( "grow" );
 
     INFO( text );
     REQUIRE_FALSE( text.empty() );
     REQUIRE( text.find( "let _1: B*; // parameter b" ) != std::string::npos );
     REQUIRE( text.find( "(*_1).n =" ) != std::string::npos );
     REQUIRE( text.find( "drop" ) == std::string::npos );
+}
+
+// PLAN D31. A bare parameter of an owning type travels by address, exactly as `ref` does: the local
+// is a pointer and every use of the name is a deref. KIR shows the two borrows as one shape,
+// because the difference between them is entirely what the checker permits through each.
+TEST_CASE( "lower_passes_a_bare_owning_parameter_by_address", "[ir][lower][borrow]" )
+{
+    Lowered p( "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+               "u64 peek( B b ) { return b.n; }\n"
+               "i32 main() { B a = B( 1 ); return wrap<i32>( peek( a ) ); }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.named( "peek" );
+
+    INFO( text );
+    REQUIRE_FALSE( text.empty() );
+    REQUIRE( text.find( "let _1: B*; // parameter b" ) != std::string::npos );
+    REQUIRE( text.find( "copy (*_1).n" ) != std::string::npos );
+}
+
+TEST_CASE( "lower_borrows_at_the_call_without_moving", "[ir][lower][borrow]" )
+{
+    Lowered p( "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+               "u64 peek( B b ) { return b.n; }\n"
+               "i32 main() { B a = B( 1 ); return wrap<i32>( peek( a ) ); }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.named( "main" );
+
+    INFO( text );
+    REQUIRE( text.find( "= &_1" ) != std::string::npos );
+
+    // The two halves that make it a borrow: nothing is moved, and the caller still drops. Before
+    // this, the argument was `copy _1` - a struct copy of an owning value, which is the one thing
+    // "an owning value is never copied" forbids, and which freed the resource twice.
+    REQUIRE( text.find( "move" ) == std::string::npos );
+    REQUIRE( text.find( "drop _1" ) != std::string::npos );
+}
+
+// A temporary has no place until it is built, so it takes the other path through lower_argument -
+// and the address being taken of where it landed is also what leaves it registered for the drop.
+TEST_CASE( "lower_drops_a_borrowed_temporary", "[ir][lower][borrow]" )
+{
+    Lowered p( "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+               "u64 peek( B b ) { return b.n; }\n"
+               "i32 main() { return wrap<i32>( peek( B( 1 ) ) ); }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.named( "main" );
+
+    INFO( text );
+    REQUIRE( text.find( "= &_1" ) != std::string::npos );
+    REQUIRE( text.find( "drop _1" ) != std::string::npos );
+}
+
+// Forwarding is `&(*_1)`: the address the binding already holds, taken back out of the deref that
+// every use of the name goes through. No copy at either hop.
+TEST_CASE( "lower_forwards_a_bare_borrow", "[ir][lower][borrow]" )
+{
+    Lowered p( "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+               "u64 peek( B b ) { return b.n; }\n"
+               "u64 forward( B b ) { return peek( b ); }\n"
+               "i32 main() { B a = B( 1 ); return wrap<i32>( forward( a ) ); }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.named( "forward" );
+
+    INFO( text );
+    REQUIRE( text.find( "let _1: B*; // parameter b" ) != std::string::npos );
+    REQUIRE( text.find( "= &(*_1)" ) != std::string::npos );
+}
+
+// The regression the borrow rule broke once, and the reason it tests the *mode* rather than only
+// the type: a `move` parameter is owned, so it stays a value and the callee is what drops it.
+TEST_CASE( "lower_keeps_a_move_parameter_by_value", "[ir][lower][borrow]" )
+{
+    Lowered p( "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+               "void own( move B b ) { }\n"
+               "i32 main() { own( move B( 1 ) ); return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string callee = p.named( "own" );
+
+    INFO( callee );
+    REQUIRE( callee.find( "let _1: B; // parameter b" ) != std::string::npos );
+    REQUIRE( callee.find( "drop _1" ) != std::string::npos );
+
+    // And the caller hands it over rather than lending it, so nothing is dropped twice.
+    const std::string caller = p.named( "main" );
+
+    INFO( caller );
+    REQUIRE( caller.find( "move" ) != std::string::npos );
 }
 
 } // namespace keel
