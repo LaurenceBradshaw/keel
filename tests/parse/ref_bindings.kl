@@ -1,0 +1,31 @@
+// PLAN D32. `ref` is a binding mode in every position, so it opens a local declaration as well as a
+// parameter. It needs no lookahead the way a type name does: as an expression a bare marker has no
+// effect and D15 rejects it, so a mode keyword at the start of a statement is always a declaration.
+void statement_position( i32 x )
+{
+    ref i32 r = x;
+
+    r = 5;
+}
+
+// The `for` initialiser is the second place a declaration may start, and the two have needed
+// editing together before.
+void for_initialiser( i32 x )
+{
+    for( ref i32 r = x; r < 10; r++ )
+    {
+    }
+}
+
+// `move` and `out` parse here too, so sema can say what a mode means in this position rather than
+// the parser producing a cascade about an unexpected keyword.
+void other_modes()
+{
+    move i32 m = 1;
+    out i32 o = 2;
+}
+
+i32 main()
+{
+    return 0;
+}

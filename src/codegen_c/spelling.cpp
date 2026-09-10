@@ -19,7 +19,7 @@ std::vector<Type_id> parameter_types_vector( const Ast& ast, const Types& types,
     {
         // The type is recorded on the Param_decl itself, by declare_signatures - not on the type
         // annotation beneath it, which is never typed.
-        params.push_back( parameter_type( ast, types, param ) );
+        params.push_back( binding_type( ast, types, param ) );
     }
 
     return params;

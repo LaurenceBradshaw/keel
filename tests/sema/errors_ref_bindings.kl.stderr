@@ -1,0 +1,43 @@
+error: a `ref` binding must be initialised
+  --> sema/errors_ref_bindings.kl:12:5
+   |
+12 |     ref i32 r;
+   |     ^^^^^^^^^^ write `ref T r = x;`
+
+error: a `ref` binding needs a variable to bind to
+  --> sema/errors_ref_bindings.kl:19:17
+   |
+19 |     ref i32 r = make();
+   |                 ^^^^^^
+
+error: a `ref` binding needs a variable to bind to
+  --> sema/errors_ref_bindings.kl:26:17
+   |
+26 |     ref i32 r = 1;
+   |                 ^
+
+error: cannot borrow `u8` as `ref i32`
+  --> sema/errors_ref_bindings.kl:36:17
+   |
+36 |     ref i32 r = x;
+   |                 ^ a borrow is the variable itself, so its type must match exactly
+
+error: `move` is not a binding mode
+  --> sema/errors_ref_bindings.kl:45:5
+   |
+45 |     move i32 m = 1;
+   |     ^^^^ a local already owns what it holds; write the type on its own
+
+error: `out` is not supported yet
+  --> sema/errors_ref_bindings.kl:52:5
+   |
+52 |     out i32 o = 1;
+   |     ^^^
+
+error: `b` is borrowed, so it cannot be modified
+  --> sema/errors_ref_bindings.kl:74:15
+   |
+74 |     ref B r = b;
+   |               ^ take it as `ref B b` to modify it
+
+7 errors generated

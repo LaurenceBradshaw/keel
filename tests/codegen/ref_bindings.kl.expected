@@ -1,0 +1,84 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Point;
+
+struct kl__Point
+{
+    int32_t kl_x_1;
+    int32_t kl_y_3;
+};
+
+void kl__bump_twice__i32p( int32_t* );
+int32_t kl__main__( void );
+
+void kl__bump_twice__i32p( int32_t* kl_n_1 )
+{
+    int32_t* kl_inner_2;
+    int32_t kl_t3;
+    int32_t kl_t4;
+#line 14 "codegen/ref_bindings.kl"
+    kl_inner_2 = &( *kl_n_1 );
+#line 16 "codegen/ref_bindings.kl"
+    kl_t3 = ( *kl_inner_2 ) + 1;
+    ( *kl_inner_2 ) = kl_t3;
+#line 17 "codegen/ref_bindings.kl"
+    kl_t4 = ( *kl_inner_2 ) + 1;
+    ( *kl_inner_2 ) = kl_t4;
+    return;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_a_1;
+    int32_t* kl_r_2;
+    int32_t kl_t3;
+    int32_t* kl_t4;
+    struct kl__Point kl_p_6;
+    struct kl__Point kl_t7;
+    int32_t* kl_q_8;
+    int32_t kl_t9;
+    int32_t* kl_addr_10;
+    int32_t* kl_t11;
+    int32_t* kl_through_12;
+    int32_t kl_t13;
+    int32_t kl_t14;
+#line 22 "codegen/ref_bindings.kl"
+    kl_a_1 = 1;
+#line 24 "codegen/ref_bindings.kl"
+    kl_r_2 = &kl_a_1;
+#line 26 "codegen/ref_bindings.kl"
+    kl_t3 = ( *kl_r_2 ) + 10;
+    ( *kl_r_2 ) = kl_t3;
+#line 28 "codegen/ref_bindings.kl"
+    kl_t4 = &kl_a_1;
+    kl__bump_twice__i32p( kl_t4 );
+#line 30 "codegen/ref_bindings.kl"
+    kl_t7.kl_x_1 = 2;
+    kl_t7.kl_y_3 = 3;
+    kl_p_6 = kl_t7;
+#line 32 "codegen/ref_bindings.kl"
+    kl_q_8 = &kl_p_6.kl_y_3;
+#line 34 "codegen/ref_bindings.kl"
+    kl_t9 = ( *kl_q_8 ) + 20;
+    ( *kl_q_8 ) = kl_t9;
+#line 36 "codegen/ref_bindings.kl"
+    kl_t11 = &kl_a_1;
+    kl_addr_10 = kl_t11;
+#line 38 "codegen/ref_bindings.kl"
+    kl_through_12 = &( *kl_addr_10 );
+#line 40 "codegen/ref_bindings.kl"
+    kl_t13 = ( *kl_through_12 ) + 100;
+    ( *kl_through_12 ) = kl_t13;
+#line 42 "codegen/ref_bindings.kl"
+    kl_t14 = kl_a_1 + kl_p_6.kl_y_3;
+    kl_t0 = kl_t14;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

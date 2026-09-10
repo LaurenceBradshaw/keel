@@ -1,0 +1,43 @@
+// PLAN D32. A `ref` local binds to a place at its declaration and never reseats, so writing through
+// the binding writes the original. Only the exit code can see that: a binding that copied instead
+// would leave every value below at the number it started with.
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+// Binding inside a borrow: `inner` holds the address `n` already holds, so both hops reach the
+// caller's variable.
+void bump_twice( ref i32 n )
+{
+    ref i32 inner = n;
+
+    inner = inner + 1;
+    inner = inner + 1;
+}
+
+i32 main()
+{
+    i32 a = 1;
+
+    ref i32 r = a;
+
+    r = r + 10; // a is 11
+
+    bump_twice( ref a ); // a is 13
+
+    Point p = Point { 2, 3 };
+
+    ref i32 q = p.y;
+
+    q = q + 20; // p.y is 23
+
+    i32* addr = &a;
+
+    ref i32 through = *addr;
+
+    through = through + 100; // a is 113
+
+    return a + p.y; // 113 + 23
+}

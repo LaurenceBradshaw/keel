@@ -361,6 +361,7 @@ private:
     // D31: which parameters travel by address. Its own pass because the owning query is only
     // answered after compute_owning, by which time both parameter loops have already run.
     void record_borrowed_parameters();
+    void record_binding_address( Node_id annotation, Type_id type );
 
     void order_structs();
     bool contains_itself( Node_id decl, std::vector<Node_id>& path );
@@ -683,8 +684,13 @@ void Checker::record_borrowed_parameters()
             continue;
         }
 
-        record( ast_.children( param )[0], table_.pointer_to( type ) );
+        record_binding_address( ast_.children( param )[0], type );
     }
+}
+
+void Checker::record_binding_address( Node_id annotation, Type_id type )
+{
+    record( annotation, table_.pointer_to( type ) );
 }
 
 void Checker::order_structs()
@@ -1289,6 +1295,9 @@ void Checker::visit_var( Node_id id )
     // initialiser means the variable is only declared.
     const Node_id annotation = ast_.children( id )[0];
     const Node_id init       = ast_.children( id )[1];
+    const Keyword mode       = annotation.is_valid() && ast_.kind( annotation ) == Node_kind::Mode_type
+                                   ? static_cast<Keyword>( ast_.aux( annotation ) )
+                                   : Keyword::Count;
 
     Type_id type = type_of_annotation( annotation );
 
@@ -1300,7 +1309,12 @@ void Checker::visit_var( Node_id id )
         if( init.is_valid() )
         {
             check( init, type );
-            check_owning_source( init, type );
+            // Not for a binding: `ref B r = a;` copies nothing and gives nothing away, so D31 has
+            // no transfer to ask about. Only the `auto` path below can skip the test outright.
+            if( mode != Keyword::Ref )
+            {
+                check_owning_source( init, type );
+            }
         }
     }
     else if( init.is_valid() )
@@ -1312,6 +1326,44 @@ void Checker::visit_var( Node_id id )
     {
         error_at( ast_.span( id ), "`auto` needs an initialiser to infer from" );
         type = table_.builtin( Type_kind::Error );
+    }
+
+    if( mode == Keyword::Move )
+    {
+        error_at(
+            ast_.span( annotation ),
+            "`move` is not a binding mode",
+            "a local already owns what it holds; write the type on its own"
+        );
+    }
+    else if( mode == Keyword::Ref && !table_.is_error( type ) )
+    {
+        // A binding is initialised at its declaration and never reseated - which is the whole of
+        // why returning one needs no lifetimes, so it is not an optional half of the rule.
+        if( !init.is_valid() )
+        {
+            error_at( ast_.span( id ), "a `ref` binding must be initialised", "write `ref T r = x;`" );
+        }
+        // Not a temporary: the referent has to outlive the binding, and everything that names a
+        // place was declared before this line and so outlives it. A temporary is the one thing
+        // that would not, and refusing it is what keeps the rule free of any analysis.
+        else if( !is_assignable( init ) )
+        {
+            error_at( ast_.span( init ), "a `ref` binding needs a variable to bind to" );
+        }
+        else if( types_[init.v] != type )
+        {
+            error_at(
+                ast_.span( init ),
+                fmt::format( "cannot borrow `{}` as `ref {}`", table_.name( types_[init.v] ), table_.name( type ) ),
+                "a borrow is the variable itself, so its type must match exactly"
+            );
+        }
+        // A mutable binding to something held read-only would launder the borrow.
+        else if( check_not_borrowed( init ) )
+        {
+            record_binding_address( annotation, type );
+        }
     }
 
     record( id, type );
@@ -3225,14 +3277,17 @@ bool is_ref_parameter( const Ast& ast, Node_id param )
     return ast.kind( annotation ) == Node_kind::Mode_type && static_cast<Keyword>( ast.aux( annotation ) ) == Keyword::Ref;
 }
 
-bool is_borrowed_parameter( const Ast& ast, const Types& types, Node_id param )
+bool is_borrowed_binding( const Ast& ast, const Types& types, Node_id decl )
 {
-    return types.type_of( ast.children( param )[0] ).is_valid();
+    const Node_id annotation = ast.children( decl )[0];
+
+    // `auto` has no annotation node at all, so guard before asking.
+    return annotation.is_valid() && types.type_of( annotation ).is_valid();
 }
 
-Type_id parameter_type( const Ast& ast, const Types& types, Node_id param )
+Type_id binding_type( const Ast& ast, const Types& types, Node_id param )
 {
-    return is_borrowed_parameter( ast, types, param ) ? types.type_of( ast.children( param )[0] ) : types.type_of( param );
+    return is_borrowed_binding( ast, types, param ) ? types.type_of( ast.children( param )[0] ) : types.type_of( param );
 }
 
 } // namespace keel
@@ -6968,6 +7023,158 @@ TEST_CASE( "type_checker_borrows_in_a_member_function_too", "[sema][borrow]" )
             std::string( owning ) + "class W { u64 m; W( B b ) { b.n = 1; m = 0; } ~W() { } };\n"
                                     "i32 main() { return 0; }"
         );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`b` is borrowed" ) != std::string::npos );
+    }
+}
+
+// PLAN D32. A `ref` local is the same binding mode in a second position: the declaration keeps `T`,
+// so every use of the name is an ordinary `T`, and the address it holds lives on the annotation.
+//
+// It needs no analysis to be safe. A binding is initialised at its declaration and never reseated,
+// so its referent was declared before it - same scope or an enclosing one - and therefore outlives
+// it. The one escape is binding to a temporary, and one rule below refuses that.
+TEST_CASE( "type_checker_binds_a_ref_local_to_its_referent", "[sema][binding]" )
+{
+    const Typed p( "i32 main() { i32 x = 1; ref i32 r = x; r = r + 1; return x; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    // An i32 and not a pointer, or `r = r + 1` above would not have typed.
+    REQUIRE( p.type_name( p.nth( Node_kind::Var_decl, 1 ) ) == "i32" );
+    REQUIRE( p.type_name( p.nth( Node_kind::Mode_type, 0 ) ) == "i32*" );
+}
+
+TEST_CASE( "type_checker_checks_a_ref_binding", "[sema][binding]" )
+{
+    SECTION( "it must be initialised" )
+    {
+        const Typed p( "i32 main() { i32 x = 1; ref i32 r; return x; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "must be initialised" ) != std::string::npos );
+    }
+
+    // The referent has to outlive the binding. Everything that names a place was declared before
+    // this line and so does; a temporary is the one thing that would not.
+    SECTION( "a call result is not a place to bind to" )
+    {
+        const Typed p( "i32 make() { return 1; }\ni32 main() { ref i32 r = make(); return r; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "needs a variable to bind to" ) != std::string::npos );
+    }
+
+    SECTION( "nor is a literal" )
+    {
+        const Typed p( "i32 main() { ref i32 r = 1; return r; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    // Same reason a `ref` argument is not converted: the binding is the variable itself, so there
+    // is no conversion step for a widened copy to live in.
+    SECTION( "and the type must match exactly" )
+    {
+        const Typed p( "i32 main() { u8 x = 1; ref i32 r = x; return r; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.rendered().find( "cannot borrow `u8` as `ref i32`" ) != std::string::npos );
+    }
+
+    SECTION( "`move` is not a binding mode" )
+    {
+        const Typed p( "i32 main() { move i32 x = 1; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.rendered().find( "not a binding mode" ) != std::string::npos );
+    }
+
+    SECTION( "and `out` still waits" )
+    {
+        const Typed p( "i32 main() { out i32 x = 1; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+}
+
+// Anything that names a place can be bound, which is the same test `ref` at a call site uses -
+// deliberately, so the two cannot drift apart.
+TEST_CASE( "type_checker_binds_a_ref_local_to_any_place", "[sema][binding]" )
+{
+    SECTION( "a field" )
+    {
+        const Typed p( "struct P { i32 x; };\ni32 main() { P p = P { 1 }; ref i32 r = p.x; r = 5; return p.x; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a pointee" )
+    {
+        const Typed p( "i32 main() { i32 x = 1; i32* q = &x; ref i32 r = *q; r = 5; return x; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a parameter" )
+    {
+        const Typed p( "i32 f( i32 x ) { ref i32 r = x; r = 5; return x; }\ni32 main() { return f( 1 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // A binding onto a binding: `r` is an ordinary `i32` by the time this line reads it, so
+    // nothing here is special-cased.
+    SECTION( "and another ref binding" )
+    {
+        const Typed p( "void f( ref i32 n ) { ref i32 r = n; r = 5; }\ni32 main() { i32 x = 1; f( ref x ); return x; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// The interaction worth pinning: a `ref` binding to an owning local is *not* a transfer, so D31's
+// "an owning value is transferred, not copied" must not fire on it. Nothing is copied and nothing
+// is given away - which is exactly what a borrow is for.
+TEST_CASE( "type_checker_does_not_treat_a_ref_binding_as_a_transfer", "[sema][binding]" )
+{
+    constexpr std::string_view owning = "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n";
+
+    SECTION( "no `move` is demanded" )
+    {
+        const Typed p( std::string( owning ) + "i32 main() { B a = B( 1 ); ref B r = a; r.n = 5; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // And the contrast that gives it meaning: without the mode, the same line is a copy and D31
+    // rejects it.
+    SECTION( "where a plain local of the same type still needs one" )
+    {
+        const Typed p( std::string( owning ) + "i32 main() { B a = B( 1 ); B c = a; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    // A mutable binding onto something held read-only would launder the borrow.
+    SECTION( "and a read-only borrow cannot be bound mutably" )
+    {
+        const Typed p( std::string( owning ) + "i32 f( B b ) { ref B r = b; return 0; }\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );

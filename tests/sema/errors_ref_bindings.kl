@@ -1,0 +1,122 @@
+// PLAN D32. A `ref` binding is initialised at its declaration and never reseated. That is what
+// makes it safe with no lifetime analysis: the referent was declared before the binding, so it is
+// in the same scope or an enclosing one and outlives it. A temporary is the one thing that would
+// not, and binding to one is refused here rather than tracked.
+i32 make()
+{
+    return 1;
+}
+
+i32 uninitialised()
+{
+    ref i32 r;
+
+    return 0;
+}
+
+i32 binds_a_call_result()
+{
+    ref i32 r = make();
+
+    return r;
+}
+
+i32 binds_a_literal()
+{
+    ref i32 r = 1;
+
+    return r;
+}
+
+// The binding is the variable itself, so there is no conversion step for a widened copy to live in.
+i32 binds_a_narrower_type()
+{
+    u8 x = 1;
+
+    ref i32 r = x;
+
+    return r;
+}
+
+// A local already owns what it holds, and `out` needs definite assignment in a callee - neither is
+// a binding mode.
+i32 uses_move()
+{
+    move i32 m = 1;
+
+    return m;
+}
+
+i32 uses_out()
+{
+    out i32 o = 1;
+
+    return o;
+}
+
+class B
+{
+    u64 n;
+
+    B( u64 x )
+    {
+        n = x;
+    }
+
+    ~B()
+    {
+    }
+};
+
+// A mutable binding onto something held read-only would launder the borrow.
+i32 rebinds_a_read_only_borrow( B b )
+{
+    ref B r = b;
+
+    return 0;
+}
+
+// Everything below is accepted, and the fixture would be worth much less without it.
+
+struct Point
+{
+    i32 x;
+};
+
+i32 binds_places()
+{
+    i32 a = 1;
+
+    ref i32 r = a;
+
+    Point p = Point { 2 };
+
+    ref i32 field = p.x;
+
+    i32* addr = &a;
+
+    ref i32 pointee = *addr;
+
+    r       = 5;
+    field   = 6;
+    pointee = 7;
+
+    return a + p.x;
+}
+
+// Binding an owning local is a borrow, not a transfer, so D31 demands no `move` for it.
+i32 binds_an_owning_local()
+{
+    B a = B( 1 );
+
+    ref B r = a;
+
+    r.n = 5;
+
+    return 0;
+}
+
+i32 main()
+{
+    return 0;
+}

@@ -1927,7 +1927,55 @@ still leaks in `f( B( 1 ) )`. It does not - `statement_temporaries_` emits the d
 three constructed objects. That entry has been narrowed to what is actually still true,
 and the *bare parameter is not yet a borrow* debt beside it is now paid and removed.
 
+**D32's `ref` reaches its second position: local bindings.** `ref i32 r = x;`, and
+inside the body `r` is an ordinary `i32` - the same split the parameter already had, so
+the checker and the lowerer needed one predicate each rather than a second mechanism.
+`is_borrowed_parameter`/`parameter_type` became `is_borrowed_binding`/`binding_type`,
+because the invariant they read - *the annotation carries the address type exactly when
+this is a borrow* - was never about parameters. A `Var_decl`'s children are
+`{ type, init }`, so the annotation is `children[0]` there too and the same pair works
+unchanged.
+
+**It needs no analysis to be safe, and that is the whole design.** A binding is
+initialised at its declaration and never reseated, so its referent was declared *before*
+it - same scope or an enclosing one - and therefore outlives it. That is §8's
+no-lifetimes argument applied to locals, and it holds by construction rather than by
+checking. The single escape is binding to a temporary, and one rule refuses it:
+`is_assignable`, the same "names a place" test a `ref` argument already uses, so the two
+cannot drift apart.
+
+Four rules in `visit_var`: it must be initialised, it must bind to a place, the type
+must match exactly (a binding is the variable itself, so there is no conversion step for
+a widened copy to live in), and it may not rebind something held read-only.
+
+Three things this cost that were not obvious.
+
+**Binding is not a transfer.** `check_owning_source` fired on `ref B r = a;` and demanded
+`move a`. Nothing is copied and nothing is given away - which is what a borrow *is* - so
+the mode has to be consulted before D31's question is asked at all.
+
+**A mode keyword does not, by itself, start a declaration.** `move i32 x = 1;` should be
+a declaration so sema can say *`move` is not a binding mode*; `move b;` should stay an
+expression so D15 can say *this statement has no effect*. Deciding on the first token
+gets one of them wrong whichever way it is written, and the first attempt turned `move b;`
+into a parse error about a missing identifier. `looks_like_binding` scans for a type and
+a name and restores the cursor, which is what `looks_like_declaration` beside it has
+always done.
+
+**`const` is inert everywhere in Keel.** `const i32 x = 1; x = 2;` compiles clean today,
+which is why `const ref` is not in this step: it would be the first place `const` meant
+anything, and that is a language decision rather than a wiring job. It is also the real
+prerequisite for `const ref` returns.
+
 ### Debts to pay along the way
+
+- **`const` means nothing.** It parses, `type_of_annotation` unwraps it, and no pass looks at it
+  again: `const i32 x = 1; x = 2;` compiles clean. Nothing has needed it yet, which is why it went
+  unnoticed - but D32 spells the read-only binding `const ref T`, so the next reference feature
+  cannot be written until `const` is enforced. Cheapest at the same place the borrow rule already
+  lives: `is_borrow_binding` answers *may I write here*, and a `const` declaration is another
+  answer of no.
+
 
 - **`consume( Buffer( 16 ) )` is still not expressible.** `move` requires a plain named variable,
   so a temporary cannot reach a `move` parameter without a `move` marker written on the

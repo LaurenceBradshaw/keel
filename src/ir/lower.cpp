@@ -114,7 +114,7 @@ private:
     // Parameters the callee owns, and therefore drops. Collected in the constructor and put in a
     // scope by run(), because scope_locals_ has no scope to go into until then.
     std::vector<Local_id>   owned_parameters_;
-    std::unordered_set<u32> borrowed_parameters_; // Param_decl ids whose local holds an address
+    std::unordered_set<u32> borrowed_bindings_; // Param_decl ids whose local holds an address
 
     // Owning temporaries built by the statement being lowered. They have an owner - the caller -
     // and therefore a drop, and the right moment for it is the end of the statement, which is after
@@ -149,15 +149,15 @@ Lowering::Lowering(
     {
         if( ast_.kind( param ) == Node_kind::Param_decl )
         {
-            const Type_id   type  = parameter_type( ast_, types_, param );
+            const Type_id   type  = binding_type( ast_, types_, param );
             const Span      span  = ast_.span( param );
             const Symbol_id name  = Symbol_id { ast_.aux( param ) };
             const Local_id  local = builder_.add_parameter( type, span, name );
             locals_.emplace( param.v, local );
 
-            if( is_borrowed_parameter( ast_, types_, param ) )
+            if( is_borrowed_binding( ast_, types_, param ) )
             {
-                borrowed_parameters_.insert( param.v );
+                borrowed_bindings_.insert( param.v );
             }
 
             if( is_move_parameter( param ) )
@@ -214,7 +214,7 @@ Place Lowering::place_for( Node_id declaration )
 
         // D32: the name means the referent, not the address. Same deref the receiver already goes
         // through, which is why no consumer of KIR needs to know a ref binding exists.
-        return borrowed_parameters_.contains( declaration.v ) ? builder_.deref( base ) : base;
+        return borrowed_bindings_.contains( declaration.v ) ? builder_.deref( base ) : base;
     }
 
     // A bare field is `this.field` - D22's reach through the receiver, written implicitly - so it
@@ -645,7 +645,7 @@ Operand Lowering::lower_call( Node_id id )
 
     for( std::size_t i = 0; i < operands.size(); ++i )
     {
-        operands[i] = converted( operands[i], parameter_type( ast_, types_, parameters[i] ), ast_.span( arguments[i] ) );
+        operands[i] = converted( operands[i], binding_type( ast_, types_, parameters[i] ), ast_.span( arguments[i] ) );
 
         // The parameter's mode rather than what was written at the call: KIR records what
         // happens. Today they coincide, because the checker requires the marker - but the
@@ -841,30 +841,41 @@ void Lowering::lower_var( Node_id id )
 {
     // Children are { type, init }. aux is the Symbol_id of the name, which is what the checker
     // recorded in the resolution for a Name_expr that refers to this declaration.
-    const Type_id   type  = types_.type_of( id );
-    const Span      span  = ast_.span( id );
-    const Symbol_id name  = Symbol_id { ast_.aux( id ) };
-    const Local_id  local = builder_.add_local( type, span, name );
+    const Span      span     = ast_.span( id );
+    const Symbol_id name     = Symbol_id { ast_.aux( id ) };
+    const bool      borrowed = is_borrowed_binding( ast_, types_, id );
+    const Type_id   type     = borrowed ? binding_type( ast_, types_, id ) : types_.type_of( id );
+    const Local_id  local    = builder_.add_local( type, span, name );
 
     locals_.emplace( id.v, local );
     builder_.storage_live( local, span );
     scope_locals_.push_back( local );
+    if( borrowed )
+    {
+        borrowed_bindings_.insert( id.v );
+    }
 
     const Node_id init = ast_.children( id )[1];
     if( init.is_valid() )
     {
-        // Constructed in place. Going via a temporary and copying would make two of an
-        // owning type where the program said one, and only one of them would be dropped.
-        if( is_construction( init ) )
+        // A binding stores the address, so the initialiser is lowered as a place rather than read.
+        // Nothing else about the local changes: it is storage_live like any other, and a pointer
+        // owns nothing, so no drop is elaborated for it.
+        if( borrowed )
         {
+            builder_.assign( builder_.place( local ), address_of( lower_place( init ), type ), span );
+        }
+        else if( is_construction( init ) )
+        {
+            // Constructed in place. Going via a temporary and copying would make two of an
+            // owning type where the program said one, and only one of them would be dropped.
             lower_construction( builder_.place( local ), init );
         }
         else
         {
             // An owning value is never copied: the copy would share the resource, and both would be
             // dropped. Where the source is a temporary that is exactly right - it has no other
-            // owner. Where it is a named variable D31 requires a written `move`, which is not yet
-            // enforced, so this moves silently rather than double-freeing.
+            // owner.
             builder_.assign( builder_.place( local ), use( moved_if_owning( lower_expression( init ) ) ), span );
         }
     }
@@ -1166,12 +1177,12 @@ void Lowering::lower_statement( Node_id id )
 
 Operand Lowering::lower_argument( Node_id argument, Node_id parameter )
 {
-    if( !is_borrowed_parameter( ast_, types_, parameter ) )
+    if( !is_borrowed_binding( ast_, types_, parameter ) )
     {
         return lower_expression( argument );
     }
 
-    const Type_id address = parameter_type( ast_, types_, parameter );
+    const Type_id address = binding_type( ast_, types_, parameter );
     const Span    span    = ast_.span( argument );
 
     // `ref x` is stepped through: the marker says how the argument travels and has no value of its
@@ -3148,6 +3159,70 @@ TEST_CASE( "lower_keeps_a_move_parameter_by_value", "[ir][lower][borrow]" )
 
     INFO( caller );
     REQUIRE( caller.find( "move" ) != std::string::npos );
+}
+
+// PLAN D32. A `ref` local is a pointer local holding an address, and every use of the name is a
+// deref of it - the same shape a `ref` parameter and the receiver already have. The initialiser is
+// lowered as a *place* rather than read, which is the only thing that distinguishes it.
+TEST_CASE( "lower_binds_a_ref_local_to_an_address", "[ir][lower][binding]" )
+{
+    Lowered p( "i32 main() { i32 x = 1; ref i32 r = x; r = 5; return x; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.named( "main" );
+
+    INFO( text );
+    REQUIRE( text.find( "let _2: i32*; // r" ) != std::string::npos );
+    REQUIRE( text.find( "_2 = &_1" ) != std::string::npos );
+
+    // Writing through the binding reaches the referent, and reading `x` afterwards reads the same
+    // place - which is what makes the exit code of the codegen fixture mean anything.
+    REQUIRE( text.find( "(*_2) = const 5" ) != std::string::npos );
+    REQUIRE( text.find( "_0 = copy _1" ) != std::string::npos );
+}
+
+TEST_CASE( "lower_binds_a_ref_local_to_a_field", "[ir][lower][binding]" )
+{
+    Lowered p( "struct P { i32 x; };\ni32 main() { P p = P { 1 }; ref i32 r = p.x; r = 5; return p.x; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.named( "main" );
+
+    INFO( text );
+    REQUIRE( text.find( "= &_1.x" ) != std::string::npos );
+}
+
+// A binding owns nothing, so no drop is elaborated for it - the local it points at is dropped
+// exactly once, by the scope that declared it.
+TEST_CASE( "lower_never_drops_a_ref_binding", "[ir][lower][binding]" )
+{
+    Lowered p( "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+               "i32 main() { B a = B( 1 ); ref B r = a; r.n = 5; return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.named( "main" );
+
+    INFO( text );
+    REQUIRE( text.find( "drop _1" ) != std::string::npos );
+
+    // Exactly one drop. Counting the word rather than naming the local is what would catch a
+    // second one appearing on the binding.
+    std::size_t drops = 0;
+    for( std::size_t at = text.find( "drop " ); at != std::string::npos; at = text.find( "drop ", at + 1 ) )
+    {
+        ++drops;
+    }
+
+    REQUIRE( drops == 1 );
+
+    // Nothing is moved either: binding is not a transfer.
+    REQUIRE( text.find( "move" ) == std::string::npos );
 }
 
 } // namespace keel

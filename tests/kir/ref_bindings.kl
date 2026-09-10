@@ -1,0 +1,42 @@
+// PLAN D32. A `ref` local is a pointer local holding an address, and every use of the name is a
+// deref of it - the same shape a `ref` parameter and the receiver already have. What distinguishes
+// it is only that the initialiser is lowered as a *place* rather than read.
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+i32 binds_a_local()
+{
+    i32 a = 1;
+
+    ref i32 r = a;
+
+    r = 5;
+
+    return a;
+}
+
+i32 binds_a_field( Point p )
+{
+    ref i32 r = p.y;
+
+    r = 5;
+
+    return p.y;
+}
+
+// A binding onto a binding: by the time this line reads `n` it is an ordinary `i32`, so the
+// address taken is the one `n` already holds.
+void binds_a_binding( ref i32 n )
+{
+    ref i32 inner = n;
+
+    inner = 5;
+}
+
+i32 main()
+{
+    return 0;
+}

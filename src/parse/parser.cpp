@@ -105,6 +105,8 @@ private:
     // A speculative *parse* would emit diagnostics for guesses that turn out wrong.
     bool looks_like_declaration();
 
+    bool looks_like_binding();
+
     // Scans a type followed by the declared name, leaving pos_ just after that name. Shared by
     // looks_like_declaration, which only wants the answer, and parse_declaration, which needs to
     // see what follows the name.
@@ -151,6 +153,8 @@ private:
     bool is_parenthesised( Node_id id ) const;
 
     Node_id synthesise_receiver( Symbol_id enclosing, Span span );
+
+    bool at_mode_keyword() const;
 
     std::span<const Token> tokens_;
     u32                    pos_ = 0;
@@ -1100,6 +1104,21 @@ bool Parser::looks_like_declaration()
     return found;
 }
 
+bool Parser::looks_like_binding()
+{
+    if( !at_mode_keyword() )
+    {
+        return false;
+    }
+
+    const u32 saved = pos_;
+    advance(); // the mode
+    const bool found = scan_type_and_name();
+
+    pos_ = saved;
+    return found;
+}
+
 // Leaves pos_ just after the declared name when it finds one, and restores it otherwise - so a
 // caller wanting only the answer can ignore the cursor, and one wanting to see what follows the
 // name restores it itself.
@@ -1262,7 +1281,7 @@ Node_id Parser::parse_statement()
     }
 
     // The keyword test is free; looks_like_declaration() moves the cursor and puts it back.
-    if( check_keyword( Keyword::Auto ) || looks_like_declaration() )
+    if( check_keyword( Keyword::Auto ) || looks_like_binding() || looks_like_declaration() )
     {
         return parse_var_decl();
     }
@@ -1322,7 +1341,7 @@ Node_id Parser::parse_var_decl()
     }
     else
     {
-        type = parse_type();
+        type = parse_type_with_mode();
     }
 
     const Symbol_id name = expect_name();
@@ -1468,7 +1487,7 @@ Node_id Parser::parse_for_stmt()
     Node_id init;
     if( !match( Token_kind::Semicolon ) )
     {
-        if( check_keyword( Keyword::Auto ) || looks_like_declaration() )
+        if( check_keyword( Keyword::Auto ) || looks_like_binding() || looks_like_declaration() )
         {
             init = parse_var_decl();
         }
@@ -1522,6 +1541,11 @@ Node_id Parser::synthesise_receiver( Symbol_id enclosing, Span span )
         Interner::keyword( Keyword::This ).v,
         { ast_.add( Node_kind::Pointer_type, span, 0, { ast_.add( Node_kind::Named_type, span, enclosing.v, {} ) } ) }
     );
+}
+
+bool Parser::at_mode_keyword() const
+{
+    return check_keyword( Keyword::Move ) || check_keyword( Keyword::Ref ) || check_keyword( Keyword::Out );
 }
 
 Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing )
@@ -4413,6 +4437,62 @@ TEST_CASE( "parser_parses_constructors", "[parse][aggregates]" )
             REQUIRE( p.root().is_valid() ); // reached only if parsing terminated
             REQUIRE( p.has_errors() );
         }
+    }
+}
+
+// PLAN D32. `ref` is a binding mode in every position, so it opens a local declaration as well as a
+// parameter. It needs no lookahead the way a type name does: as an expression a bare marker has no
+// effect and D15 rejects it, so `ref` at the start of a statement is always a declaration.
+TEST_CASE( "parser_parses_a_ref_binding", "[parse]" )
+{
+    SECTION( "in statement position" )
+    {
+        const Parsed p( "void f( i32 x ) { ref i32 r = x; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id var = find_first( p.ast(), p.root(), Node_kind::Var_decl );
+
+        REQUIRE( var.is_valid() );
+
+        // The mode wraps the type, exactly as it does on a parameter - one node kind for both,
+        // which is what keeps sema from having to ask where a binding was declared.
+        const Node_id annotation = p.child( var, 0 );
+
+        REQUIRE( p.kind( annotation ) == Node_kind::Mode_type );
+        REQUIRE( p.aux( annotation ) == static_cast<u32>( Keyword::Ref ) );
+        REQUIRE( p.kind( p.child( annotation, 0 ) ) == Node_kind::Named_type );
+    }
+
+    // The `for` init is the second place a declaration may start, and the two have needed editing
+    // together before.
+    SECTION( "in a for initialiser" )
+    {
+        const Parsed p( "void f( i32 x ) { for( ref i32 r = x; r < 10; r++ ) { } }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id var = find_first( p.ast(), p.root(), Node_kind::Var_decl );
+
+        REQUIRE( var.is_valid() );
+        REQUIRE( p.kind( p.child( var, 0 ) ) == Node_kind::Mode_type );
+    }
+
+    // `move` and `out` reach sema rather than failing here, so the message can say what a mode
+    // means in this position instead of being a parse error about an unexpected keyword.
+    SECTION( "and the other modes parse, to be rejected later" )
+    {
+        const Parsed p( "i32 main() { move i32 x = 1; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id var = find_first( p.ast(), p.root(), Node_kind::Var_decl );
+
+        REQUIRE( var.is_valid() );
+        REQUIRE( p.aux( p.child( var, 0 ) ) == static_cast<u32>( Keyword::Move ) );
     }
 }
 
