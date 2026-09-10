@@ -90,7 +90,7 @@ Flag_map allocate_flags( Function& func, const std::vector<bool>& moved, const F
         // borrows the local's span so a diagnostic about it points somewhere the author recognises.
         const Span span = func.locals[local].span;
 
-        flags[local] = Local_id { static_cast<u32>( func.locals.size() ) };
+        flags[local] = Local_id { narrow_cast<u32>( func.locals.size() ) };
         func.locals.push_back( Local { .type = vocabulary.bool_type, .span = span } );
     }
 
@@ -192,7 +192,7 @@ void rewrite_statements( Function& func, const Flag_map& flags, const Flag_vocab
         // vector, and overwriting first_statement first would make it index the wrong statements.
         const u32 old_first = block.first_statement;
         const u32 count     = block.statement_count;
-        const u32 new_first = static_cast<u32>( rebuilt.size() );
+        const u32 new_first = narrow_cast<u32>( rebuilt.size() );
 
         for( u32 i = 0; i < count; ++i )
         {
@@ -221,7 +221,7 @@ void rewrite_statements( Function& func, const Flag_map& flags, const Flag_vocab
         }
 
         block.first_statement = new_first;
-        block.statement_count = static_cast<u32>( rebuilt.size() ) - new_first;
+        block.statement_count = narrow_cast<u32>( rebuilt.size() ) - new_first;
     }
 
     func.statements = std::move( rebuilt );

@@ -16,7 +16,7 @@ Local_id Builder::add_parameter( Type_id type, Span span, Symbol_id name )
     assert( function_.locals.size() == function_.parameter_count + 1 && "parameter count must match locals" );
     function_.locals.push_back( Local { .type = type, .span = span, .name = name } );
     function_.parameter_count += 1;
-    return Local_id { static_cast<u32>( function_.locals.size() - 1 ) };
+    return Local_id { narrow_cast<u32>( function_.locals.size() - 1 ) };
 }
 
 void Builder::mark_out_parameter( Local_id local )
@@ -27,14 +27,14 @@ void Builder::mark_out_parameter( Local_id local )
 Local_id Builder::add_local( Type_id type, Span span, Symbol_id name )
 {
     function_.locals.push_back( Local { .type = type, .span = span, .name = name } );
-    return Local_id { static_cast<u32>( function_.locals.size() - 1 ) };
+    return Local_id { narrow_cast<u32>( function_.locals.size() - 1 ) };
 }
 
 Block_id Builder::add_block()
 {
     function_.blocks.push_back( Block {} );
     pending_.push_back( {} );
-    return Block_id { static_cast<u32>( function_.blocks.size() - 1 ) };
+    return Block_id { narrow_cast<u32>( function_.blocks.size() - 1 ) };
 }
 
 void Builder::switch_to( Block_id block )
@@ -82,7 +82,7 @@ Type_id Builder::type_of( Local_id id ) const
 // the copy. The root comes across with it, which is what keeps `counter.x` rooted in the global.
 Place Builder::projected( Place base, Projection projection )
 {
-    const u32 first = static_cast<u32>( function_.projections.size() );
+    const u32 first = narrow_cast<u32>( function_.projections.size() );
 
     for( u32 i = 0; i < base.num_projections; ++i )
     {
@@ -154,7 +154,7 @@ bool Builder::is_terminated() const
 
 u32 Builder::add_operands( std::span<const Operand> operands )
 {
-    const u32 first = static_cast<u32>( function_.operands.size() );
+    const u32 first = narrow_cast<u32>( function_.operands.size() );
     function_.operands.insert( function_.operands.end(), operands.begin(), operands.end() );
     return first;
 }
@@ -169,8 +169,8 @@ Function Builder::finish()
         const std::vector<Statement>& block_statements = pending_[i];
         Block&                        block            = function_.blocks[i];
 
-        block.first_statement = static_cast<u32>( function_.statements.size() );
-        block.statement_count = static_cast<u32>( block_statements.size() );
+        block.first_statement = narrow_cast<u32>( function_.statements.size() );
+        block.statement_count = narrow_cast<u32>( block_statements.size() );
 
         function_.statements.insert( function_.statements.end(), block_statements.begin(), block_statements.end() );
     }

@@ -411,7 +411,7 @@ Type_id Type_table::add( const Type& type, std::string_view name )
 {
     types_.push_back( type );
     composed_.emplace_back( name );
-    return Type_id { static_cast<u32>( types_.size() - 1 ) };
+    return Type_id { narrow_cast<u32>( types_.size() - 1 ) };
 }
 
 u8 Type_table::width_index( u8 width )
@@ -446,7 +446,7 @@ constexpr std::string_view scalars[] = { "i8", "i16", "i32", "i64", "u8", "u16",
 
 Type_id named( const Type_table& t, std::string_view name )
 {
-    const u8 width = name.size() == 2 ? 8 : static_cast<u8>( ( name[1] - '0' ) * 10 + ( name[2] - '0' ) );
+    const u8 width = name.size() == 2 ? 8 : narrow_cast<u8>( ( name[1] - '0' ) * 10 + ( name[2] - '0' ) );
 
     return name[0] == 'f' ? t.floating( width ) : t.integer( width, name[0] == 'i' );
 }

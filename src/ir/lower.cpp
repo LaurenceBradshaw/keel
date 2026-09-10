@@ -294,12 +294,12 @@ bool Lowering::is_move_parameter( Node_id param ) const
 
 u32 Lowering::scope_depth() const
 {
-    return static_cast<u32>( scope_marks_.size() );
+    return narrow_cast<u32>( scope_marks_.size() );
 }
 
 void Lowering::push_scope()
 {
-    scope_marks_.push_back( static_cast<u32>( scope_locals_.size() ) );
+    scope_marks_.push_back( narrow_cast<u32>( scope_locals_.size() ) );
 }
 
 void Lowering::pop_scope( Span span )
@@ -432,7 +432,7 @@ void Lowering::lower_construction( Place target, Node_id call_expr )
 
     // The result is discarded, but Assign stays total: a void local is what the backend drops the
     // assignment from, leaving the bare call.
-    builder_.into_temp( call( constructor, first, static_cast<u32>( operands.size() ), type ), type, span );
+    builder_.into_temp( call( constructor, first, narrow_cast<u32>( operands.size() ), type ), type, span );
 }
 
 Block_id Lowering::break_target()
@@ -678,7 +678,7 @@ Operand Lowering::lower_call( Node_id id )
     const Type_id result_type = binding ? binding_type( ast_, types_, callee ) : type;
 
     const Local_id result = builder_.into_temp(
-        call( callee, first, static_cast<u32>( operands.size() ), result_type ), result_type, ast_.span( id )
+        call( callee, first, narrow_cast<u32>( operands.size() ), result_type ), result_type, ast_.span( id )
     );
 
     return copy( binding ? builder_.deref( builder_.place( result ) ) : builder_.place( result ), type );
