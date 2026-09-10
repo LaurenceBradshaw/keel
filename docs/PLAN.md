@@ -2087,7 +2087,74 @@ worth a peephole; worth knowing before reading a dump and thinking something is 
 `const ref` local bindings, `const` throughout, the read-only borrow, and now returns
 and the non-escaping rule. `out` is all that remains.
 
+**`out`, which finishes M4.** The callee assigns the caller's variable, both sides say
+so, and *"the callee must assign it"* is a promise rather than advice - so a path that
+returns without writing one is an error.
+
+**It is not §8's analysis, and that is the finding worth keeping.** The move lattice has
+`Uninitialised` as its **join identity**, chosen deliberately so a block can start empty
+and be filled by its predecessors: `join( Live, Uninitialised )` is `Live`. That is a
+*may* analysis. Definite assignment is a *must* analysis - assigned on **every** path -
+and needs intersection, where the identity is "assigned" and merging can only lower it.
+Bending §8's lattice to answer both would have broken move checking, so `out` gets
+`check_assignment`, a second pass over the same CFG with the opposite lattice. The
+duplication is the ~20-line worklist skeleton, not a rule.
+
+Two bits per local. `always` is the answer; `ever` exists only so the diagnostic can
+distinguish *never assigned* from *not assigned on every path*, which are different
+mistakes and deserve different sentences. The subtle one is `reached`: a block the
+worklist has not visited yet holds the identity - all assigned - and intersecting with
+that would be a lie, so it is skipped until something reaches it.
+
+**The state tracked is the referent, not the local.** An `out` parameter travels by
+address, so its KIR local holds a perfectly valid pointer; what is empty is `(*_1)`.
+Recording "has the referent been written" as the local's own state is a small abuse that
+costs nothing, because `transfer_block` already treats a projected assign as
+initialising the whole local - so `(*_1) = ...` sets it with no new code. KIR gained
+`Function::out_parameters` because nothing in the graph says which locals start empty,
+and the lowerer is the only thing that knows.
+
+**Taking a place's address counts as assigning it.** Without this rule
+`void forward( out i32 n ) { init( out n ); }` reports *never assigned* - the call
+lowers to `&n`, and forwarding is the natural way to write an `out` wrapper. The
+analysis cannot see through a pointer, which is the same shallowness `place_root`
+already has, and it errs in the direction a *must* analysis must: it can miss a mistake,
+never invent one. The cost is that a `const ref` argument counts too. The real fix is
+for KIR to record which arguments are `out`, and it can wait for something that needs it.
+
+**`out` is restricted to types that own nothing.** Assigning one destroys nothing, so an
+owning `out` parameter would leak whatever the caller was already holding. Lifting it
+needs the caller to emit a drop before the call, which drop flags could do - a separate
+piece of work, and refusing with a diagnostic that says why is the honest interim.
+
+Two things the tests pinned that are *deliberate*, so that changing either is a decision
+rather than a bug fix:
+
+- **Partial struct initialisation satisfies it.** Writing `p.x` and not `p.y` passes,
+  because the analysis is per local. Same granularity problem that stops a field being
+  moved on its own, and it wants the same answer whenever either is addressed.
+- **A raw pointer may escape.** `void escapes( out i32* p ) { i32 v = 7; p = &v; }`
+  compiles. §8 now says so outright: `ref` is the spelling that cannot dangle, `T*` is
+  the one that can, and a language with both has to say which is which somewhere.
+
+**The fixture had to be split by pass, for the second time.** `errors_out.kl` reported
+five errors and silently lost four: type errors stop the driver before lowering, so
+`check_assignment` never ran. The rule was already recorded for `errors_owning_copies.kl`
+and was worth recording twice - one fixture per pass, wherever a pass can gate the one
+after it.
+
 ### Debts to pay along the way
+
+- **`out` cannot take a type that owns a resource.** Assigning one destroys nothing, so it would
+  leak whatever the caller already held. The fix is a conditional drop of the argument's place
+  before the call, which drop flags already know how to emit - the machinery exists, nothing has
+  wired it. Until then the diagnostic says why rather than pretending the mode does not exist.
+
+- **Definite assignment is per local, so a struct `out` parameter may be left half-written.**
+  `p.x = 1` satisfies it while `p.y` stays untouched. Per-field state fixes this and the
+  neighbouring restriction that a field cannot be moved on its own; neither is worth it alone, and
+  together they are one change.
+
 
 - **The receiver is not a reference parameter.** §8 says a method may return a reference into its
   own object, and it cannot: `this` is a `T*` passed by value rather than a binding, so it fails
