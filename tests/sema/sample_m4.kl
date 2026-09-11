@@ -1,0 +1,45 @@
+// PLAN §6.2's M4 section: ownership through call-site markers (D2, D31), and D32's binding modes.
+//
+// These three signatures are why these fixtures exist. They were written before D31 required the
+// marker in the signature and before D32 made `Buffer&` a hard error, and the sample carried the
+// old spelling for two milestones because nothing compiled it.
+class Buffer
+{
+    u64 len;
+
+    Buffer( u64 n )
+    {
+        len = n;
+    }
+
+    ~Buffer()
+    {
+    }
+};
+
+void consume( move Buffer b )      // called as consume( move b ) - b is dead afterwards
+{
+}
+
+u64 inspect( Buffer b )            // called as inspect( b )      - read-only borrow, may not escape
+{
+    return b.len;
+}
+
+void grow( ref Buffer b )          // called as grow( ref b )     - mutable borrow, may not escape
+{
+    b.len = b.len + 1;
+}
+
+i32 main()
+{
+    Buffer b = Buffer( 4 );
+
+    grow( ref b );
+
+    u64 seen = inspect( b );
+
+    consume( move b );
+
+    return wrap<i32>( seen );
+}

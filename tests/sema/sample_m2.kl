@@ -1,0 +1,23 @@
+// PLAN §6.2's M2 section: structs and value semantics.
+struct Point
+{
+    f64 x;
+    f64 y;
+};
+
+Point origin()
+{
+    return Point { 0.0, 0.0 };
+}
+
+i32 main()
+{
+    Point p = origin();
+
+    if( p.x == 0.0 )
+    {
+        return 0;
+    }
+
+    return 1;
+}

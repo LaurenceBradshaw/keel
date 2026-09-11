@@ -1,0 +1,29 @@
+// PLAN §6.2's M3 section: RAII. Owning types are classes (D29); the destructor is spelled as in
+// C++. The body is a counter rather than an allocation because the runtime is M5.5 - the sample in
+// the PLAN says `u8* ptr` and cannot free it either.
+u64 live = 0;
+
+class Buffer
+{
+    u64 len;
+
+    Buffer( u64 n )
+    {
+        len  = n;
+        live = live + 1;
+    }
+
+    ~Buffer()
+    {
+        live = live - 1;
+    }
+};
+
+i32 main()
+{
+    {
+        Buffer b = Buffer( 16 );
+    }
+
+    return wrap<i32>( live );
+}

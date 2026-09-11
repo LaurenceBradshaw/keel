@@ -1,0 +1,32 @@
+// PLAN §6.1, verbatim. M0's acceptance is that this parses; M1's is that it compiles.
+//
+// This file and its siblings exist because the samples in the PLAN are the first thing a reader
+// sees and were the only part of the document with nothing compiling them - which is exactly how
+// the M4 sample came to be written in a spelling D32 had made a hard error.
+i32 add( i32 a, i32 b )
+{
+    return a + b;
+}
+
+i32 main()
+{
+    auto x = add( 1, 2 );
+    i32  y = 0;
+
+    while( y < x )
+    {
+        y = y + 1;
+    }
+
+    for( i32 i = 0; i < 3; i++ )
+    {
+        y = y + i;
+    }
+
+    if( y == 6 )
+    {
+        return 0;
+    }
+
+    return 1;
+}
