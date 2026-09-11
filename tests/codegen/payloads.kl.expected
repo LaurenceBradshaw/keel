@@ -1,0 +1,189 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Shape
+{
+    int32_t tag;
+    double kl_radius_1;
+    double kl_width_4;
+    double kl_height_6;
+};
+
+struct kl__Slot
+{
+    int32_t tag;
+    int32_t kl_value_12;
+};
+
+double kl__area__Shape( struct kl__Shape );
+int32_t kl__unwrap__Slot_i32( struct kl__Slot, int32_t );
+int32_t kl__main__( void );
+
+double kl__area__Shape( struct kl__Shape kl_s_1 )
+{
+    double kl_t0;
+    bool kl_t2;
+    double kl_r_3;
+    double kl_t4;
+    double kl_t5;
+    bool kl_t6;
+    double kl_w_7;
+    double kl_h_8;
+    double kl_t9;
+#line 23 "codegen/payloads.kl"
+    kl_t2 = kl_s_1.tag == 0;
+    if ( kl_t2 ) goto bb2; else goto bb3;
+    bb1:
+#line 28 "codegen/payloads.kl"
+    kl_t0 = 0.0;
+    return kl_t0;
+    bb2:
+#line 23 "codegen/payloads.kl"
+    kl_r_3 = kl_s_1.kl_radius_1;
+#line 24 "codegen/payloads.kl"
+    kl_t4 = 3.0 * kl_r_3;
+    kl_t5 = kl_t4 * kl_r_3;
+    kl_t0 = kl_t5;
+    return kl_t0;
+    bb3:
+#line 25 "codegen/payloads.kl"
+    kl_t6 = kl_s_1.tag == 1;
+    if ( kl_t6 ) goto bb4; else goto bb5;
+    bb4:
+    kl_w_7 = kl_s_1.kl_width_4;
+    kl_h_8 = kl_s_1.kl_height_6;
+#line 26 "codegen/payloads.kl"
+    kl_t9 = kl_w_7 * kl_h_8;
+    kl_t0 = kl_t9;
+    return kl_t0;
+    bb5:
+    goto bb1;
+}
+
+int32_t kl__unwrap__Slot_i32( struct kl__Slot kl_s_1, int32_t kl_fallback_2 )
+{
+    int32_t kl_t0;
+    bool kl_t3;
+    int32_t kl_v_4;
+#line 36 "codegen/payloads.kl"
+    kl_t3 = kl_s_1.tag == 1;
+    if ( kl_t3 ) goto bb2; else goto bb3;
+    bb1:
+#line 39 "codegen/payloads.kl"
+    kl_t0 = kl_fallback_2;
+    return kl_t0;
+    bb2:
+#line 36 "codegen/payloads.kl"
+    kl_v_4 = kl_s_1.kl_value_12;
+#line 37 "codegen/payloads.kl"
+    kl_t0 = kl_v_4;
+    return kl_t0;
+    bb3:
+    goto bb1;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_total_1;
+    struct kl__Shape kl_t2;
+    double kl_t3;
+    bool kl_t4;
+    struct kl__Shape kl_t5;
+    double kl_t6;
+    bool kl_t7;
+    struct kl__Shape kl_t8;
+    double kl_t9;
+    bool kl_t10;
+    struct kl__Slot kl_t11;
+    int32_t kl_t12;
+    bool kl_t13;
+    struct kl__Slot kl_t14;
+    int32_t kl_t15;
+    bool kl_t16;
+    struct kl__Slot kl_t17;
+    int32_t kl_t18;
+    int32_t kl_t19;
+    struct kl__Slot kl_t20;
+    int32_t kl_t21;
+    int32_t kl_t22;
+#line 45 "codegen/payloads.kl"
+    kl_total_1 = 0;
+#line 49 "codegen/payloads.kl"
+    kl_t2.tag = 1;
+    kl_t2.kl_width_4 = 2.0;
+    kl_t2.kl_height_6 = 5.0;
+    kl_t3 = kl__area__Shape( kl_t2 );
+    kl_t4 = kl_t3 != 10.0;
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = 10;
+    return kl_t0;
+    bb2:
+    goto bb3;
+    bb3:
+#line 50 "codegen/payloads.kl"
+    kl_t5.tag = 0;
+    kl_t5.kl_radius_1 = 2.0;
+    kl_t6 = kl__area__Shape( kl_t5 );
+    kl_t7 = kl_t6 != 12.0;
+    if ( kl_t7 ) goto bb4; else goto bb5;
+    bb4:
+    kl_t0 = 11;
+    return kl_t0;
+    bb5:
+    goto bb6;
+    bb6:
+#line 51 "codegen/payloads.kl"
+    kl_t8.tag = 2;
+    kl_t9 = kl__area__Shape( kl_t8 );
+    kl_t10 = kl_t9 != 0.0;
+    if ( kl_t10 ) goto bb7; else goto bb8;
+    bb7:
+    kl_t0 = 12;
+    return kl_t0;
+    bb8:
+    goto bb9;
+    bb9:
+#line 55 "codegen/payloads.kl"
+    kl_t11.tag = 1;
+    kl_t11.kl_value_12 = 7;
+    kl_t12 = kl__unwrap__Slot_i32( kl_t11, 99 );
+    kl_t13 = kl_t12 != 7;
+    if ( kl_t13 ) goto bb10; else goto bb11;
+    bb10:
+    kl_t0 = 20;
+    return kl_t0;
+    bb11:
+    goto bb12;
+    bb12:
+#line 56 "codegen/payloads.kl"
+    kl_t14.tag = 0;
+    kl_t15 = kl__unwrap__Slot_i32( kl_t14, 99 );
+    kl_t16 = kl_t15 != 99;
+    if ( kl_t16 ) goto bb13; else goto bb14;
+    bb13:
+    kl_t0 = 21;
+    return kl_t0;
+    bb14:
+    goto bb15;
+    bb15:
+#line 58 "codegen/payloads.kl"
+    kl_t17.tag = 1;
+    kl_t17.kl_value_12 = 5;
+    kl_t18 = kl__unwrap__Slot_i32( kl_t17, 0 );
+    kl_t19 = kl_t18 * 10;
+    kl_t20.tag = 0;
+    kl_t21 = kl__unwrap__Slot_i32( kl_t20, 3 );
+    kl_t22 = kl_t19 + kl_t21;
+    kl_total_1 = kl_t22;
+#line 60 "codegen/payloads.kl"
+    kl_t0 = kl_total_1;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

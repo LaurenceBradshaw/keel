@@ -48,6 +48,10 @@ struct Printer
             case Projection_kind::Field:
                 text = fmt::format( "{}.{}", text, name_of( projection.field ) );
                 break;
+
+            case Projection_kind::Tag:
+                text = fmt::format( "{}.tag", text );
+                break;
             }
         }
 

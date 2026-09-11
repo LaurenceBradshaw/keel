@@ -1,0 +1,34 @@
+// PLAN D7. A variant carries a payload: `Circle( f64 radius )`. The payload fields reuse Field_decl
+// - a name and a type is exactly what one is - so every rule the checker already has for a field
+// applies to a payload without being written twice.
+//
+// A `case` that destructures is a **pattern**, not an expression: its arguments are names being
+// *bound*, so the parser builds bindings directly rather than letting them reach the resolver,
+// which would look for variables that do not exist yet.
+enum Shape
+{
+    Circle( f64 radius ),
+    Rect( f64 width, f64 height ),
+    Dot
+};
+
+f64 area( Shape s )
+{
+    switch( s )
+    {
+        case Shape::Circle( r ):
+            return r;
+        case Shape::Rect( w, h ):
+            return w * h;
+        case Shape::Dot:
+            return 0.0;
+    }
+}
+
+i32 main()
+{
+    Shape a = Shape::Circle( 1.0 );
+    Shape b = Shape::Dot;
+
+    return 0;
+}

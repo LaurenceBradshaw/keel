@@ -30,6 +30,7 @@ private:
 
     void emit_prologue();
     void emit_structs();
+    void emit_enums();
     void emit_globals();
     void emit_prototypes();
     void emit_functions();
@@ -92,6 +93,7 @@ std::string Kir_emitter::run()
 {
     emit_prologue();
     emit_structs();
+    emit_enums();
     emit_globals();
     emit_prototypes();
     emit_functions();
@@ -132,6 +134,42 @@ void Kir_emitter::emit_prologue()
     write_line( "#include <stdbool.h>" );
     write_line( "#include <stddef.h>" ); // NULL
     write_line( "" );
+}
+
+// D7. An enum that carries payloads is a struct in C: a tag saying which variant is live, then
+// every payload field of every variant side by side.
+//
+// Side by side rather than in a union, which is what a tagged variant would normally be. The field
+// names are already mangled with their node id, so two variants cannot collide, and the only cost
+// is the space a union would have saved - invisible, because nothing guarantees an enum's layout
+// and no FFI can see one. Moving to a union later is a change to this function and nothing else.
+void Kir_emitter::emit_enums()
+{
+    for( const Node_id decl : ast_.children( ast_.root() ) )
+    {
+        if( ast_.kind( decl ) != Node_kind::Enum_decl || !enum_has_payload( ast_, decl ) )
+        {
+            continue;
+        }
+
+        write_line( spelling_.structure( decl ) );
+        write_line( "{" );
+        indent_ += 4;
+
+        write_line( fmt::format( "{} tag;", spelling_.type( types_.table().get( types_.type_of( decl ) ).element ) ) );
+
+        for( const Node_id variant : ast_.children( decl ).subspan( 1 ) )
+        {
+            for( const Node_id field : ast_.children( variant ) )
+            {
+                write_line( fmt::format( "{} {};", spelling_.type( types_.type_of( field ) ), spelling_.field( field ) ) );
+            }
+        }
+
+        indent_ -= 4;
+        write_line( "};" );
+        write_line( "" );
+    }
 }
 
 void Kir_emitter::emit_structs()
@@ -442,9 +480,10 @@ Type_id Kir_emitter::type_of( const Place& place ) const
     {
         const Projection& proj = current_->projections[place.first_projection + i];
 
-        // Deref is the pointee; Field is the field's own recorded type. Mirrors place()'s walk, and
-        // has to stay in step with it.
-        type = proj.kind == Projection_kind::Deref ? types_.table().get( type ).element : types_.type_of( proj.field );
+        // Deref is the pointee, Field is the field's own recorded type, and a Tag is the enum's
+        // underlying integer - which is also `element` for an enum, so the two share a branch.
+        // Mirrors place()'s walk, and has to stay in step with it.
+        type = proj.kind == Projection_kind::Field ? types_.type_of( proj.field ) : types_.table().get( type ).element;
     }
 
     return type;
@@ -467,6 +506,9 @@ std::string Kir_emitter::place( const Place& place ) const
             break;
         case Projection_kind::Field:
             text = fmt::format( "{}.{}", text, spelling_.field( proj.field ) );
+            break;
+        case Projection_kind::Tag:
+            text = fmt::format( "{}.tag", text );
             break;
         }
     }

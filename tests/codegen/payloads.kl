@@ -1,0 +1,61 @@
+// PLAN D7. A variant carries a payload, and `switch` is the only way to read one - which makes the
+// exit code the only way to check it. Every number below comes out of a payload that was written by
+// a construction and read back through a pattern, so a tag written to the wrong field, or a binding
+// reading the wrong variant's, changes the answer.
+enum Shape
+{
+    Circle( f64 radius ),
+    Rect( f64 width, f64 height ),
+    Dot
+};
+
+// Mixed payload and payload-free, which is the shape `Optional` and `Result` both need.
+enum Slot
+{
+    Empty,
+    Taken( i32 value )
+};
+
+f64 area( Shape s )
+{
+    switch( s )
+    {
+        case Shape::Circle( r ):
+            return 3.0 * r * r;
+        case Shape::Rect( w, h ):
+            return w * h;
+        case Shape::Dot:
+            return 0.0;
+    }
+}
+
+i32 unwrap( Slot s, i32 fallback )
+{
+    switch( s )
+    {
+        case Slot::Taken( v ):
+            return v;
+        case Slot::Empty:
+            return fallback;
+    }
+}
+
+i32 main()
+{
+    i32 total = 0;
+
+    // Two fields, read back in the order they were written - a swap here would give 12 either way,
+    // so the sides differ.
+    if( area( Shape::Rect( 2.0, 5.0 ) ) != 10.0 ) { return 10; }
+    if( area( Shape::Circle( 2.0 ) ) != 12.0 )    { return 11; }
+    if( area( Shape::Dot ) != 0.0 )               { return 12; }
+
+    // A payload-free variant of an enum that has payloads elsewhere still carries a tag, and the
+    // arm for it must not read a payload that was never written.
+    if( unwrap( Slot::Taken( 7 ), 99 ) != 7 )  { return 20; }
+    if( unwrap( Slot::Empty, 99 ) != 99 )      { return 21; }
+
+    total = unwrap( Slot::Taken( 5 ), 0 ) * 10 + unwrap( Slot::Empty, 3 );
+
+    return total; // 5 * 10 + 3
+}

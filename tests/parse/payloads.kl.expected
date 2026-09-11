@@ -1,0 +1,62 @@
+Source_file                             8:1-35:1
+  Enum_decl                             8:1-13:3    name=Shape
+    <none>                              -
+    Variant_decl                        10:5-10:25  name=Circle
+      Field_decl                        10:13-10:23 name=radius
+        Named_type                      10:13-10:16 "f64"
+    Variant_decl                        11:5-11:34  name=Rect
+      Field_decl                        11:11-11:20 name=width
+        Named_type                      11:11-11:14 "f64"
+      Field_decl                        11:22-11:32 name=height
+        Named_type                      11:22-11:25 "f64"
+    Variant_decl                        12:5-12:8   "Dot"  name=Dot
+  Function_decl                         15:1-26:2   name=area
+    Named_type                          15:1-15:4   "f64"
+    Param_list                          15:9-15:20
+      Param_decl                        15:11-15:18 name=s
+        Named_type                      15:11-15:16 "Shape"
+    Block                               16:1-26:2
+      Switch_stmt                       17:5-25:6
+        Name_expr                       17:13-17:14 "s"
+        Case_arm                        19:9-20:22
+          Variant_pattern               19:14-19:32
+            Path_expr                   19:14-19:27 name=Circle
+              Name_expr                 19:14-19:19 "Shape"
+            Binding_decl                19:29-19:30 "r"
+          Block                         20:13-20:22
+            Return_stmt                 20:13-20:22
+              Name_expr                 20:20-20:21 "r"
+        Case_arm                        21:9-22:26
+          Variant_pattern               21:14-21:33
+            Path_expr                   21:14-21:25 name=Rect
+              Name_expr                 21:14-21:19 "Shape"
+            Binding_decl                21:27-21:28 "w"
+            Binding_decl                21:30-21:31 "h"
+          Block                         22:13-22:26
+            Return_stmt                 22:13-22:26
+              Binary_expr               22:20-22:25 op=*
+                Name_expr               22:20-22:21 "w"
+                Name_expr               22:24-22:25 "h"
+        Case_arm                        23:9-24:24
+          Path_expr                     23:14-23:24 name=Dot
+            Name_expr                   23:14-23:19 "Shape"
+          Block                         24:13-24:24
+            Return_stmt                 24:13-24:24
+              Float_literal             24:20-24:23 "0.0"
+  Function_decl                         28:1-34:2   name=main
+    Named_type                          28:1-28:4   "i32"
+    Param_list                          28:9-28:11  "()"
+    Block                               29:1-34:2
+      Var_decl                          30:5-30:36  name=a
+        Named_type                      30:5-30:10  "Shape"
+        Call_expr                       30:15-30:35
+          Path_expr                     30:15-30:28 name=Circle
+            Name_expr                   30:15-30:20 "Shape"
+          Arg_list                      30:28-30:35
+            Float_literal               30:30-30:33 "1.0"
+      Var_decl                          31:5-31:26  name=b
+        Named_type                      31:5-31:10  "Shape"
+        Path_expr                       31:15-31:25 name=Dot
+          Name_expr                     31:15-31:20 "Shape"
+      Return_stmt                       33:5-33:14
+        Int_literal                     33:12-33:13 "0"

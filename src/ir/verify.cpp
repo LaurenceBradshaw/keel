@@ -233,9 +233,10 @@ void check_projections( const Function& func, std::vector<std::string>& errors )
             break;
 
         case Projection_kind::Deref:
+        case Projection_kind::Tag:
             if( projection.field.is_valid() )
             {
-                errors.push_back( fmt::format( "projection {}: a deref carries no field", i ) );
+                errors.push_back( fmt::format( "projection {}: this kind carries no field", i ) );
             }
 
             break;

@@ -115,3 +115,69 @@ i32 main()
 
     return 0;
 }
+
+// D7. A payload variant is not a value until it has one, and a payload-free one is not a function.
+enum Shape
+{
+    Circle( f64 radius ),
+    Dot
+};
+
+i32 omits_the_payload()
+{
+    Shape s = Shape::Circle;
+
+    return 0;
+}
+
+i32 supplies_one_that_is_not_wanted()
+{
+    Shape s = Shape::Dot( 1.0 );
+
+    return 0;
+}
+
+i32 binds_too_few( Shape s )
+{
+    switch( s )
+    {
+        case Shape::Circle():
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+i32 writes_a_binding( Shape s )
+{
+    switch( s )
+    {
+        case Shape::Circle( r ):
+            r = 2.0;
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+// D30's first cut: destroying an enum means destroying only the active variant, which needs a
+// destructor that switches on the tag - the first run-time-dependent destructor in the language.
+class Owned
+{
+    u64 n;
+
+    Owned( u64 x )
+    {
+        n = x;
+    }
+
+    ~Owned()
+    {
+    }
+};
+
+enum Holder
+{
+    Full( Owned value ),
+    Vacant
+};

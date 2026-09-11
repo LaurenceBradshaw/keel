@@ -106,6 +106,12 @@ Types type_check( const Ast&, const Resolution&, const Literals&, const Source_m
 bool is_ref_parameter( const Ast& ast, Node_id param );
 // The mode a declaration was written with, or Keyword::Count for none. The one reader of a
 // Mode_type's aux: three separate copies of this test existed before it, and a fourth was about to.
+// D7: whether any variant carries a payload. That one answer decides the representation - a
+// payload-free enum is its underlying integer, and one with payloads is a struct holding a tag and
+// every payload field. Shared because lowering and the emitter must agree, and disagreeing would
+// mean writing a tag into something that has none.
+bool enum_has_payload( const Ast& ast, Node_id enum_decl );
+
 Keyword parameter_mode( const Ast& ast, Node_id decl );
 
 bool    is_borrowed_binding( const Ast& ast, const Types& types, Node_id decl );

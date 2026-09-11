@@ -39,6 +39,9 @@ private:
     Operand lower_binary( Node_id id );
     Operand lower_unary( Node_id id );
     Operand lower_call( Node_id id );
+    Operand lower_variant_construction( Node_id id );
+    Operand lower_empty_variant( Node_id id );
+    void    bind_variant_pattern( Place matched, Node_id label );
     Place   lower_place( Node_id id );     // names where a value lives
     void    lower_statement( Node_id id ); // emits, produces nothing
     Operand lower_argument( Node_id argument, Node_id parameter );
@@ -607,8 +610,113 @@ Operand Lowering::lower_unary( Node_id id )
     return copy( builder_.place( builder_.into_temp( unary( op, a, type ), type, span ) ), type );
 }
 
+// D7. `Shape::Circle( 1.0 )` builds a value: write the tag, then each payload field. The same shape
+// as a struct literal, and for the same reason - a constructed enum is assembled in place rather
+// than copied in from somewhere.
+// A variant with no payload, in an enum that has them elsewhere: still a struct, so it is a local
+// with its tag written and nothing else.
+// D7. `case Shape::Circle( r ):` gives `r` a local holding a copy of the payload field. A copy
+// because the first cut refuses owning payloads, so there is nothing a borrow would protect; when
+// they arrive this becomes an address and the local becomes a binding, which is why the checker
+// already refuses to write through one.
+void Lowering::bind_variant_pattern( Place matched, Node_id label )
+{
+    if( ast_.kind( label ) != Node_kind::Variant_pattern )
+    {
+        return;
+    }
+
+    const std::span<const Node_id> parts    = ast_.children( label );
+    const std::span<const Node_id> bindings = parts.subspan( 1 );
+
+    const Type_id enum_type = types_.type_of( parts[0] );
+    const Node_id decl      = types_.table().get( enum_type ).declaration;
+
+    const std::optional<Constant_value> ordinal = types_.constant_of( parts[0] );
+
+    assert( ordinal.has_value() && "the checker records an ordinal for every variant it accepts" );
+
+    const Node_id variant = ast_.children( decl ).subspan( 1 )[static_cast<std::size_t>( ordinal->magnitude )];
+
+    const std::span<const Node_id> payload = ast_.children( variant );
+
+    for( std::size_t i = 0; i < bindings.size() && i < payload.size(); ++i )
+    {
+        const Type_id  field_type = types_.type_of( payload[i] );
+        const Span     span       = ast_.span( bindings[i] );
+        const Local_id local      = builder_.add_local( field_type, span, Symbol_id { ast_.aux( bindings[i] ) } );
+
+        locals_.emplace( bindings[i].v, local );
+
+        builder_.storage_live( local, span );
+        builder_.assign( builder_.place( local ), use( copy( builder_.field( matched, payload[i] ), field_type ) ), span );
+    }
+}
+
+Operand Lowering::lower_empty_variant( Node_id id )
+{
+    const Type_id type = types_.type_of( id );
+    const Span    span = ast_.span( id );
+
+    const Local_id local = builder_.add_local( type, span );
+    const Place    place = builder_.place( local );
+
+    const std::optional<Constant_value> ordinal = types_.constant_of( id );
+
+    assert( ordinal.has_value() && "the checker records an ordinal for every variant it accepts" );
+
+    const Type_id tag_type = types_.table().get( type ).element;
+
+    builder_.assign( builder_.tag( place ), use( constant( literals_.add_integer( ordinal->magnitude ), tag_type ) ), span );
+
+    return copy( place, type );
+}
+
+Operand Lowering::lower_variant_construction( Node_id id )
+{
+    const Node_id                  path      = ast_.children( id )[0];
+    const std::span<const Node_id> arguments = ast_.children( ast_.children( id )[1] );
+    const Type_id                  type      = types_.type_of( id );
+    const Span                     span      = ast_.span( id );
+
+    const Local_id local = builder_.add_local( type, span );
+    const Place    place = builder_.place( local );
+
+    // The ordinal the checker recorded on the path, which is the same number a payload-free variant
+    // lowers to on its own.
+    const std::optional<Constant_value> ordinal = types_.constant_of( path );
+
+    assert( ordinal.has_value() && "the checker records an ordinal for every variant it accepts" );
+
+    const Type_id tag_type = types_.table().get( type ).element;
+
+    builder_.assign( builder_.tag( place ), use( constant( literals_.add_integer( ordinal->magnitude ), tag_type ) ), span );
+
+    // The payload fields, in declaration order - which is the order the arguments were checked in.
+    const Node_id decl    = types_.table().get( type ).declaration;
+    const Node_id variant = ast_.children( decl ).subspan( 1 )[static_cast<std::size_t>( ordinal->magnitude )];
+
+    const std::span<const Node_id> payload = ast_.children( variant );
+
+    for( std::size_t i = 0; i < arguments.size() && i < payload.size(); ++i )
+    {
+        const Operand value = converted( lower_expression( arguments[i] ), types_.type_of( payload[i] ), span );
+
+        builder_.assign( builder_.field( place, payload[i] ), use( value ), span );
+    }
+
+    return copy( place, type );
+}
+
 Operand Lowering::lower_call( Node_id id )
 {
+    // D7: a call whose callee is a path is a variant being constructed, not a function being
+    // called. Checked first, because everything below reaches for a Function_decl.
+    if( ast_.kind( ast_.children( id )[0] ) == Node_kind::Path_expr )
+    {
+        return lower_variant_construction( id );
+    }
+
     // In value position there is no destination, so it constructs into a temporary. Nothing
     // drops that temporary - the same hole an owning struct literal already has, and no new one.
     if( is_construction( id ) )
@@ -765,6 +873,15 @@ Operand Lowering::lower_expression( Node_id id )
     }
     case Node_kind::Path_expr:
     {
+        // D7: a payload enum is a struct, so a bare path names a variant with no payload and has to
+        // be built rather than named. The checker has already refused a bare path to a variant that
+        // carries one.
+        if( types_.table().is_enum( types_.type_of( id ) ) &&
+            enum_has_payload( ast_, types_.table().get( types_.type_of( id ) ).declaration ) )
+        {
+            return lower_empty_variant( id );
+        }
+
         // The variant's *ordinal*, which the checker recorded as a constant. aux holds its name, so
         // reading that here would emit an interner index as the enum's value - which would compile,
         // run, and be wrong in a way no golden would show.
@@ -1014,15 +1131,43 @@ void Lowering::lower_case_test( Operand scrutinee, Node_id label, Block_id body 
     const Span    span    = ast_.span( label );
     const Type_id boolean = types_.table().builtin( Type_kind::Bool );
 
+    // What a label compares against. A variant is its *ordinal*, taken from what the checker
+    // recorded rather than lowered - lowering a path to a payload enum would build a whole struct,
+    // and the scrutinee here is already just the tag.
+    const auto value_of = [&]( Node_id bound ) -> Operand
+    {
+        const Type_id bound_type = types_.type_of( bound );
+
+        if( ast_.kind( bound ) == Node_kind::Path_expr && types_.table().is_enum( bound_type ) &&
+            enum_has_payload( ast_, types_.table().get( bound_type ).declaration ) )
+        {
+            const std::optional<Constant_value> ordinal = types_.constant_of( bound );
+
+            assert( ordinal.has_value() && "the checker records an ordinal for every variant it accepts" );
+
+            return constant( literals_.add_integer( ordinal->magnitude ), types_.table().get( bound_type ).element );
+        }
+
+        return lower_expression( bound );
+    };
+
     const auto branch_on = [&]( Token_kind op, Node_id bound, Block_id on_true )
     {
-        const Operand  value = lower_expression( bound );
+        const Operand  value = value_of( bound );
         const Local_id test  = builder_.into_temp( binary( op, scrutinee, value, boolean ), boolean, span );
         const Block_id next  = builder_.add_block();
 
         builder_.terminate_branch( copy( builder_.place( test ), boolean ), on_true, next, span );
         builder_.switch_to( next );
     };
+
+    // A pattern's test is its path: the bindings are written inside the arm, once the test has
+    // already said which variant is live.
+    if( ast_.kind( label ) == Node_kind::Variant_pattern )
+    {
+        branch_on( Token_kind::Equal_equal, ast_.children( label )[0], body );
+        return;
+    }
 
     if( ast_.kind( label ) != Node_kind::Range_expr )
     {
@@ -1052,7 +1197,22 @@ void Lowering::lower_switch( Node_id id )
     const std::span<const Node_id> children = ast_.children( id );
     const Span                     span     = ast_.span( id );
 
-    const Operand scrutinee = lower_expression( children[0] );
+    Operand scrutinee = lower_expression( children[0] );
+
+    // D7: a payload enum is a struct, so what a label compares against is its *tag*. Read once here
+    // alongside the scrutinee, so the arms below are unchanged - they still compare one operand
+    // against one constant, and never learn that payloads exist.
+    const bool payloads =
+        types_.table().is_enum( scrutinee.type ) && enum_has_payload( ast_, types_.table().get( scrutinee.type ).declaration );
+
+    const Place matched = scrutinee.place;
+
+    if( payloads )
+    {
+        const Type_id tag_type = types_.table().get( scrutinee.type ).element;
+
+        scrutinee = copy( builder_.tag( matched ), tag_type );
+    }
 
     drop_statement_temporaries( span );
 
@@ -1118,10 +1278,19 @@ void Lowering::lower_switch( Node_id id )
         }
 
         // The block the last false edge left us in, so the arms chain without any block needing to
-        // know its successor before that successor exists.
+        // know its successor before that successor exists. Captured before switching away from it.
         const Block_id resume = builder_.current();
 
         builder_.switch_to( body );
+
+        // D7: a pattern's bindings are written at the top of the arm's own block, before anything
+        // in it runs - so the names are live exactly where the resolver put them in scope, and
+        // nowhere else.
+        for( const Node_id label : labels )
+        {
+            bind_variant_pattern( matched, label );
+        }
+
         lower_statement( arm_children.back() );
         leave();
 
@@ -3817,6 +3986,87 @@ TEST_CASE( "lower_compares_a_float_range_as_floats", "[ir][lower][range]" )
     INFO( text );
     REQUIRE( text.find( "let _1: f64; // parameter x" ) != std::string::npos );
     REQUIRE( text.find( ">= const 1" ) != std::string::npos );
+}
+
+// PLAN D7. Two representations, chosen by whether any variant carries a payload. A payload-free
+// enum stays its underlying integer - which is what keeps every existing enum unchanged - and one
+// with payloads becomes a struct holding a tag and the payload fields.
+TEST_CASE( "lower_gives_a_payload_enum_a_tag", "[ir][lower][payload]" )
+{
+    Lowered p( "enum Shape { Circle( f64 radius ), Dot };\n"
+               "i32 main() { Shape s = Shape::Circle( 2.0 ); return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.named( "main" );
+
+    INFO( text );
+
+    // The tag, then the payload - assembled in place rather than copied in from somewhere, the same
+    // shape a struct literal has.
+    REQUIRE( text.find( ".tag = const 0" ) != std::string::npos );
+    REQUIRE( text.find( ".radius = const 2" ) != std::string::npos );
+}
+
+// A variant with no payload, in an enum that has them elsewhere, is still a struct: its tag is
+// written and nothing else.
+TEST_CASE( "lower_builds_a_payload_free_variant_of_a_payload_enum", "[ir][lower][payload]" )
+{
+    Lowered p( "enum Shape { Circle( f64 radius ), Dot };\n"
+               "i32 main() { Shape s = Shape::Dot; return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.named( "main" );
+
+    INFO( text );
+    REQUIRE( text.find( ".tag = const 1" ) != std::string::npos );
+}
+
+// And an enum with no payloads anywhere keeps the old representation exactly - no tag, no struct,
+// just the ordinal. This is the case that would break every existing enum if it changed.
+TEST_CASE( "lower_leaves_a_payload_free_enum_as_an_integer", "[ir][lower][payload]" )
+{
+    Lowered p( "enum Colour { Red, Green };\ni32 main() { Colour c = Colour::Green; return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.named( "main" );
+
+    INFO( text );
+    REQUIRE( text.find( "_1 = const 1" ) != std::string::npos );
+    REQUIRE( text.find( ".tag" ) == std::string::npos );
+}
+
+TEST_CASE( "lower_switches_on_the_tag_and_binds_the_payload", "[ir][lower][payload]" )
+{
+    Lowered p( "enum Shape { Circle( f64 radius ), Rect( f64 w, f64 h ), Dot };\n"
+               "f64 area( Shape s ) { switch( s ) {"
+               " case Shape::Circle( r ): return r;"
+               " case Shape::Rect( w, h ): return w * h;"
+               " case Shape::Dot: return 0.0; } }\n"
+               "i32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.named( "area" );
+
+    INFO( text );
+
+    // The tag is what a label compares against, and it is read once - the arms never learn that
+    // payloads exist, because what they are handed is one operand and one constant as before.
+    REQUIRE( text.find( ".tag == const 0" ) != std::string::npos );
+    REQUIRE( text.find( ".tag == const 1" ) != std::string::npos );
+
+    // The bindings are locals holding a copy of the field, written at the top of the arm's own
+    // block so the names are live exactly where the resolver put them in scope.
+    REQUIRE( text.find( "// r" ) != std::string::npos );
+    REQUIRE( text.find( "// w" ) != std::string::npos );
+    REQUIRE( text.find( "// h" ) != std::string::npos );
 }
 
 } // namespace keel

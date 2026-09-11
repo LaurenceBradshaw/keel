@@ -70,4 +70,34 @@ error: `::` needs the name of an `enum` on its left
 92 |     i32 n = Colour::Red::Green;
    |             ^^^^^^^^^^^
 
-12 errors generated
+error: `Circle` carries a payload
+   --> sema/errors_enums.kl:128:15
+    |
+128 |     Shape s = Shape::Circle;
+    |               ^^^^^^^^^^^^^ write `Shape::Circle( ... )` with a value for each field
+
+error: `Dot` carries no payload
+   --> sema/errors_enums.kl:135:15
+    |
+135 |     Shape s = Shape::Dot( 1.0 );
+    |               ^^^^^^^^^^^^^^^^^ write it without arguments
+
+error: `Circle` carries 1 value, but 0 were bound
+   --> sema/errors_enums.kl:144:14
+    |
+144 |         case Shape::Circle():
+    |              ^^^^^^^^^^^^^^^ bind a name for each field of the payload
+
+error: `r` is bound by a pattern, so it cannot be modified
+   --> sema/errors_enums.kl:156:13
+    |
+156 |             r = 2.0;
+    |             ^ it names part of the value being matched, which the `switch` does not own
+
+error: a variant cannot carry `Owned`, which owns a resource
+   --> sema/errors_enums.kl:181:11
+    |
+181 |     Full( Owned value ),
+    |           ^^^^^^^^^^^ destroying an enum means destroying only the active variant, which is not implemented yet
+
+17 errors generated

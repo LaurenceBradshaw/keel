@@ -34,6 +34,10 @@ public:
     Place field( Place base, Node_id field_decl );
     Place deref( Place base );
 
+    // D7: the discriminant. A payload enum is a struct in C, and this is the field that says which
+    // variant is live - the only part of one a `switch` reads without a pattern.
+    Place tag( Place base );
+
     Type_id type_of( Local_id id ) const;
 
 private:

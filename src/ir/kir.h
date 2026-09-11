@@ -60,7 +60,8 @@ struct Local
 enum class Projection_kind : u8
 {
     Field,
-    Deref
+    Deref,
+    Tag // D7: the discriminant of an enum that carries payloads; `field` is unused
 };
 
 struct Projection

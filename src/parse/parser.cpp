@@ -795,7 +795,41 @@ Node_id Parser::parse_variant_decl()
 {
     const Span      start = peek().span;
     const Symbol_id name  = expect_name();
-    return ast_.add( Node_kind::Variant_decl, Span::merge( start, previous().span ), name.v, {} );
+
+    // D7: a variant may carry a payload, `Circle( f64 radius )`. The fields reuse Field_decl - a
+    // name and a type is exactly what one is - so every rule the checker already has for a field
+    // applies to a payload without being written twice. They are comma-separated rather than
+    // semicolon-terminated, because a payload reads as a parameter list and is one.
+    std::vector<Node_id> payload;
+
+    if( match( Token_kind::L_paren ) )
+    {
+        while( !check( Token_kind::R_paren ) && !at_end() )
+        {
+            const u32       before      = pos_;
+            const Span      field_start = peek().span;
+            const Node_id   type        = parse_type();
+            const Symbol_id field_name  = expect_name();
+
+            payload.push_back(
+                ast_.add( Node_kind::Field_decl, Span::merge( field_start, previous().span ), field_name.v, { type } )
+            );
+
+            if( !check( Token_kind::R_paren ) )
+            {
+                expect( Token_kind::Comma );
+            }
+
+            if( pos_ == before )
+            {
+                advance();
+            }
+        }
+
+        expect( Token_kind::R_paren );
+    }
+
+    return ast_.add( Node_kind::Variant_decl, Span::merge( start, previous().span ), name.v, payload );
 }
 
 Node_id Parser::parse_field_decl()
@@ -1693,6 +1727,38 @@ Node_id Parser::parse_switch_stmt()
             else
             {
                 const Node_id lower = parse_expression( 0 );
+
+                // D7: `case Shape::Circle( r ):` binds names rather than reading them. The
+                // postfix loop has already folded the `(` into a Call_expr, so the pattern is
+                // recovered from that rather than parsed with a lower binding power - which would
+                // also stop `::`, since both are 110.
+                //
+                // Converting here is what keeps the bindings away from the resolver: as Name_exprs
+                // they would be looked up, and it would report about variables that do not exist
+                // instead of about the pattern.
+                if( ast_.kind( lower ) == Node_kind::Call_expr &&
+                    ast_.kind( ast_.children( lower )[0] ) == Node_kind::Path_expr )
+                {
+                    std::vector<Node_id> parts { ast_.children( lower )[0] };
+
+                    for( const Node_id argument : ast_.children( ast_.children( lower )[1] ) )
+                    {
+                        if( ast_.kind( argument ) != Node_kind::Name_expr )
+                        {
+                            error_at(
+                                ast_.span( argument ), "a pattern binds names", "write a name for each field of the payload"
+                            );
+                            continue;
+                        }
+
+                        parts.push_back( ast_.add( Node_kind::Binding_decl, ast_.span( argument ), ast_.aux( argument ), {} ) );
+                    }
+
+                    children.push_back( ast_.add( Node_kind::Variant_pattern, ast_.span( lower ), 0, parts ) );
+
+                    expect( Token_kind::Colon );
+                    continue;
+                }
 
                 // D34: a range is syntax and lives only here, so it is parsed where it is legal
                 // rather than in the expression grammar - which would make `i32 x = 1..5;` parse
@@ -5001,6 +5067,89 @@ TEST_CASE( "parser_parses_a_switch", "[parse]" )
 
         INFO( p.errors() );
         REQUIRE( p.errors().find( "not inside a `case`" ) != std::string::npos );
+    }
+}
+
+// PLAN D7. A variant carries a payload: `Circle( f64 radius )`. The payload fields reuse Field_decl
+// - a name and a type is exactly what one is - so the checker's field machinery applies unchanged.
+TEST_CASE( "parser_parses_a_payload_variant", "[parse]" )
+{
+    SECTION( "one field" )
+    {
+        const Parsed p( "enum Shape { Circle( f64 radius ) };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id variant = find_first( p.ast(), p.root(), Node_kind::Variant_decl );
+
+        REQUIRE( variant.is_valid() );
+        REQUIRE( p.children( variant ).size() == 1 );
+        REQUIRE( p.kind( p.child( variant, 0 ) ) == Node_kind::Field_decl );
+    }
+
+    SECTION( "several fields" )
+    {
+        const Parsed p( "enum Shape { Rect( f64 width, f64 height ) };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.children( find_first( p.ast(), p.root(), Node_kind::Variant_decl ) ).size() == 2 );
+    }
+
+    // Mixed is the shape `Optional` and `Result` both need, so it is the case that matters most.
+    SECTION( "and mixed with payload-free variants" )
+    {
+        const Parsed p( "enum Optional { None, Some( i32 value ) };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Enum_decl );
+
+        REQUIRE( p.children( decl ).size() == 3 ); // the underlying type, then two variants
+        REQUIRE( p.children( p.child( decl, 1 ) ).empty() );
+        REQUIRE( p.children( p.child( decl, 2 ) ).size() == 1 );
+    }
+}
+
+// A `case` label that destructures is a **pattern**, not an expression: its arguments are names
+// being *bound*, and parsing them as expressions would send the resolver looking for variables that
+// do not exist yet. So the parser builds bindings directly, where it knows it is in a pattern.
+TEST_CASE( "parser_parses_a_variant_pattern", "[parse]" )
+{
+    SECTION( "binding the payload" )
+    {
+        const Parsed p( "i32 main() { switch( s ) { case Shape::Circle( r ): return 1; default: return 0; } }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id pattern = find_first( p.ast(), p.root(), Node_kind::Variant_pattern );
+
+        REQUIRE( pattern.is_valid() );
+        REQUIRE( p.children( pattern ).size() == 2 ); // the path, then one binding
+        REQUIRE( p.kind( p.child( pattern, 0 ) ) == Node_kind::Path_expr );
+        REQUIRE( p.kind( p.child( pattern, 1 ) ) == Node_kind::Binding_decl );
+    }
+
+    SECTION( "binding several" )
+    {
+        const Parsed p( "i32 main() { switch( s ) { case Shape::Rect( w, h ): return 1; default: return 0; } }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.children( find_first( p.ast(), p.root(), Node_kind::Variant_pattern ) ).size() == 3 );
+    }
+
+    // A payload-free label stays a plain path, so nothing that already works changes shape.
+    SECTION( "and a payload-free label is still a path" )
+    {
+        const Parsed p( "i32 main() { switch( s ) { case Colour::Red: return 1; default: return 0; } }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::Variant_pattern ).is_valid() );
     }
 }
 

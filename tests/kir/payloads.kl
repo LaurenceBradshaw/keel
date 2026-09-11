@@ -1,0 +1,51 @@
+// PLAN D7. Two representations, chosen by whether any variant carries a payload. A payload-free
+// enum stays its underlying integer, which is what keeps every enum written before this unchanged;
+// one with payloads becomes a struct holding a tag and the payload fields side by side.
+//
+// A label compares against the *tag*, read once alongside the scrutinee - so the arms are unchanged
+// and never learn that payloads exist. A pattern's bindings are locals written at the top of the
+// arm's own block, which is where the resolver put the names in scope.
+enum Shape
+{
+    Circle( f64 radius ),
+    Rect( f64 width, f64 height ),
+    Dot
+};
+
+// No payload anywhere: still an integer, still compared directly.
+enum Colour
+{
+    Red,
+    Green
+};
+
+f64 area( Shape s )
+{
+    switch( s )
+    {
+        case Shape::Circle( r ):
+            return r;
+        case Shape::Rect( w, h ):
+            return w * h;
+        case Shape::Dot:
+            return 0.0;
+    }
+}
+
+i32 code( Colour c )
+{
+    switch( c )
+    {
+        case Colour::Red:
+            return 1;
+        case Colour::Green:
+            return 2;
+    }
+}
+
+i32 main()
+{
+    Shape s = Shape::Rect( 1.0, 2.0 );
+
+    return 0;
+}

@@ -403,6 +403,7 @@ private:
     void check_aggregate_members();
     void compute_owning();
     void check_struct_ownership();
+    void check_enum_payloads();
     void check_struct_fields_are_not_owning( Node_id decl );
     void check_member_kind( Node_id decl, const Member_kind& kind );
 
@@ -445,6 +446,7 @@ private:
     void               visit_if( Node_id id );
     void               visit_switch( Node_id id );
     void               check_enum_switch( Node_id id, Type_id type, bool& has_default );
+    void               check_variant_pattern( Node_id pattern, Type_id type, std::vector<Node_id>& covered );
     void               check_numeric_switch( Node_id id, Type_id type, bool& has_default );
     std::optional<i64> fold_bound( Node_id bound, Type_id expected );
     void               visit_while( Node_id id );
@@ -482,6 +484,7 @@ private:
     Type_id infer_marker( Node_id id );
 
     Type_id infer_path( Node_id id );
+    Type_id infer_variant_construction( Node_id id );
 
     // Constant rejection (§12). fold_* answer what an expression's value is when it is made only
     // of literals; check_constant decides whether that value can exist in the type the operation
@@ -519,7 +522,12 @@ private:
     std::vector<Node_id>    struct_order_; // dependencies first; also the "already proved acyclic" set
     std::unordered_set<u32> owning_;       // filled by compute_owning, handed to Types
     Type_id                 current_return_;
-    Node_id                 current_function_; // whose annotation the escape rule reads
+
+    // Set while the callee of a call is being inferred, so infer_path can tell `Shape::Circle` the
+    // expression from `Shape::Circle( 1.0 )` the construction. One flag rather than a second entry
+    // point, because everything else about reaching the variant is identical.
+    bool    constructing_ = false;
+    Node_id current_function_; // whose annotation the escape rule reads
 
     u32 loop_depth_ = 0; // for break/continue
 
@@ -540,14 +548,19 @@ Types Checker::run()
 
 void Checker::declare_signatures()
 {
-    declare_signatures_enum_decls();
     declare_signatures_struct_decls();
+
+    // After the struct pass: a payload field may name a struct or a class, and its annotation is
+    // resolved here. Before everything else, because a parameter, a field or a global may name an
+    // enum in turn.
+    declare_signatures_enum_decls();
     declare_signatures_member_functions();
     declare_signatures_field_decls();
     order_structs();
     check_aggregate_members();
     compute_owning();
     check_struct_ownership();
+    check_enum_payloads();
     declare_signatures_function_decls();
     declare_signatures_global_decls();
     record_borrowed_parameters();
@@ -793,6 +806,31 @@ void Checker::declare_signatures_enum_decls()
         for( const Node_id variant : ast_.children( child ).subspan( 1 ) )
         {
             record( variant, type );
+
+            // D7: a variant's children are its payload fields, and they are Field_decls - so this
+            // is the same recording declare_signatures_field_decls does for a struct.
+            std::unordered_set<u32> fields;
+
+            for( const Node_id field : ast_.children( variant ) )
+            {
+                const Type_id field_type = type_of_annotation( ast_.children( field )[0] );
+
+                record( field, field_type );
+
+                const Symbol_id field_name { ast_.aux( field ) };
+
+                if( !fields.insert( field_name.v ).second )
+                {
+                    error_at(
+                        ast_.span( field ),
+                        fmt::format(
+                            "`{}` already has a field `{}`",
+                            interner_.text( Symbol_id { ast_.aux( variant ) } ),
+                            interner_.text( field_name )
+                        )
+                    );
+                }
+            }
         }
     }
 }
@@ -1025,6 +1063,23 @@ bool Checker::check_writable( Node_id target )
         return true;
     }
 
+    // D7: a pattern binding is read-only. Today the payload is copied, so writing it would change
+    // nothing anyone could observe; when owning payloads arrive it becomes a borrow, and writing
+    // through it would be writing into a value the enum still owns. Refusing now means that change
+    // is invisible rather than breaking.
+    if( root.is_valid() && ast_.kind( root ) == Node_kind::Binding_decl )
+    {
+        error_at(
+            ast_.span( target ),
+            fmt::format(
+                "`{}` is bound by a pattern, so it cannot be modified", interner_.text( Symbol_id { ast_.aux( root ) } )
+            ),
+            "it names part of the value being matched, which the `switch` does not own"
+        );
+
+        return false;
+    }
+
     if( is_const_binding( ast_, root ) )
     {
         error_at(
@@ -1139,6 +1194,41 @@ void Checker::check_member_kind( Node_id decl, const Member_kind& kind )
                 fmt::format( "`{}{}` does not name the enclosing type", kind.prefix, interner_.text( written ) ),
                 fmt::format( "write `{}{}`", kind.prefix, type_text )
             );
+        }
+    }
+}
+
+// D30's first cut. Destroying an enum means destroying only the *active* variant, chosen at run
+// time - which needs a destructor that switches on the tag, and is the first run-time-dependent
+// destructor the language would have. Until that exists an owning payload would leak on every path
+// that did not construct it, so it is refused here rather than mis-destroyed there.
+//
+// Its own pass because is_owning_type only answers after compute_owning, which runs after the pass
+// that declares enums - the same ordering that made record_borrowed_parameters a pass of its own.
+void Checker::check_enum_payloads()
+{
+    for( const Node_id decl : ast_.children( ast_.root() ) )
+    {
+        if( ast_.kind( decl ) != Node_kind::Enum_decl )
+        {
+            continue;
+        }
+
+        for( const Node_id variant : ast_.children( decl ).subspan( 1 ) )
+        {
+            for( const Node_id field : ast_.children( variant ) )
+            {
+                if( !is_owning_type( types_[field.v] ) )
+                {
+                    continue;
+                }
+
+                error_at(
+                    ast_.span( field ),
+                    fmt::format( "a variant cannot carry `{}`, which owns a resource", table_.name( types_[field.v] ) ),
+                    "destroying an enum means destroying only the active variant, which is not implemented yet"
+                );
+            }
         }
     }
 }
@@ -1439,8 +1529,10 @@ bool Checker::is_assignable( Node_id id ) const
         return false;
     }
 
+    // A pattern binding names a place like the rest. Whether it may be *written* is
+    // check_writable's question, and it answers no - which is the same split `const` uses.
     return ast_.kind( decl ) == Node_kind::Var_decl || ast_.kind( decl ) == Node_kind::Param_decl ||
-           ast_.kind( decl ) == Node_kind::Field_decl;
+           ast_.kind( decl ) == Node_kind::Field_decl || ast_.kind( decl ) == Node_kind::Binding_decl;
 }
 
 void Checker::visit_return( Node_id id )
@@ -1719,6 +1811,83 @@ void Checker::visit_switch( Node_id id )
 
 // Coverage as a vector indexed by ordinal, which is what makes a gap nameable: the missing variants
 // are the entries nothing wrote to.
+// D7. `case Shape::Circle( r ):` covers `Circle` and binds `r` to its payload. The binding is
+// read-only: today the payload is copied, and when owning payloads arrive it becomes a borrow - at
+// which point writing through it would be writing into a value the enum still owns.
+void Checker::check_variant_pattern( Node_id pattern, Type_id type, std::vector<Node_id>& covered )
+{
+    const std::span<const Node_id> parts    = ast_.children( pattern );
+    const Node_id                  path     = parts[0];
+    const std::span<const Node_id> bindings = parts.subspan( 1 );
+
+    // The same flag construction uses: the payload is coming, so the bare form is not incomplete.
+    constructing_           = true;
+    const Type_id path_type = infer( path );
+    constructing_           = false;
+
+    if( table_.is_error( path_type ) )
+    {
+        return;
+    }
+
+    if( path_type != type )
+    {
+        error_at( ast_.span( path ), fmt::format( "a `case` label must be a variant of `{}`", table_.name( type ) ) );
+        return;
+    }
+
+    const auto ordinal = constants_.find( path.v );
+
+    if( ordinal == constants_.end() || ordinal->second.magnitude >= covered.size() )
+    {
+        return;
+    }
+
+    const std::size_t index = static_cast<std::size_t>( ordinal->second.magnitude );
+
+    if( covered[index].is_valid() )
+    {
+        error_at(
+            ast_.span( path ),
+            fmt::format( "`{}` is already covered", interner_.text( Symbol_id { ast_.aux( path ) } ) ),
+            previous_declaration_note( covered[index] )
+        );
+
+        return;
+    }
+
+    covered[index] = path;
+
+    const Node_id                  decl    = table_.get( type ).declaration;
+    const Node_id                  variant = ast_.children( decl ).subspan( 1 )[index];
+    const std::span<const Node_id> payload = ast_.children( variant );
+
+    if( payload.size() != bindings.size() )
+    {
+        error_at(
+            ast_.span( pattern ),
+            fmt::format(
+                "`{}` carries {} value{}, but {} {} bound",
+                interner_.text( Symbol_id { ast_.aux( variant ) } ),
+                payload.size(),
+                payload.size() == 1 ? "" : "s",
+                bindings.size(),
+                bindings.size() == 1 ? "was" : "were"
+            ),
+            payload.empty() ? "write it without a pattern" : "bind a name for each field of the payload"
+        );
+    }
+
+    // Each binding takes its field's type. The resolver has already put them in the arm's scope,
+    // so all that is left here is to say what they hold.
+    const std::size_t shared = std::min( payload.size(), bindings.size() );
+
+    for( std::size_t i = 0; i < shared; ++i )
+    {
+        record( bindings[i], types_[payload[i].v] );
+    }
+}
+
 void Checker::check_enum_switch( Node_id id, Type_id type, bool& has_default )
 {
     const std::span<const Node_id> children = ast_.children( id );
@@ -1739,6 +1908,15 @@ void Checker::check_enum_switch( Node_id id, Type_id type, bool& has_default )
         // The last child is the body; everything before it is a label.
         for( const Node_id label : arm_children.subspan( 0, arm_children.size() - 1 ) )
         {
+            // D7: a pattern names a variant *and* binds its payload. The path inside it is what
+            // covers the variant, so coverage is asked of that and the bindings are declared into
+            // the arm's scope - which is why the body is visited after this rather than before.
+            if( ast_.kind( label ) == Node_kind::Variant_pattern )
+            {
+                check_variant_pattern( label, type, covered );
+                continue;
+            }
+
             // D34's ranges are over numbers. A range of variants would need declaration order to be
             // an *ordering*, which is exactly what enum comparison already refuses to treat it as.
             if( ast_.kind( label ) == Node_kind::Range_expr )
@@ -2452,6 +2630,14 @@ Type_id Checker::infer_call( Node_id id )
     const Node_id callee = ast_.children( id )[0];
     const Node_id args   = ast_.children( id )[1];
 
+    // D7: `Shape::Circle( 1.0 )` constructs a variant. Handled before the ordinary call path
+    // because the callee is a Path_expr rather than a name, and because what it checks the
+    // arguments against is a *payload* rather than a parameter list.
+    if( ast_.kind( callee ) == Node_kind::Path_expr )
+    {
+        return infer_variant_construction( id );
+    }
+
     // v0 has no function pointers, so anything but a plain name in call position has no
     // declaration to find.
     const Node_id decl = ast_.kind( callee ) == Node_kind::Name_expr ? resolution_.declaration_of( callee ) : Node_id {};
@@ -2836,6 +3022,84 @@ Node_id Checker::find_field( Type_id type, Symbol_id name ) const
 // D30: a variant is reached only through its enum - `Colour::Red`, never a bare `Red`. The
 // qualifier resolves through the ordinary name path, and the variant is looked up against the
 // enum's declaration here, which is exactly what infer_field below does against a struct's.
+// D7. `Shape::Circle( 1.0 )`: the variant names the shape of the payload, so the arguments are
+// checked against its fields exactly as a call's are checked against a parameter list. The result
+// is the *enum*, never the payload - a constructed variant is a Shape, and which one it is is a
+// question only `switch` may ask.
+Type_id Checker::infer_variant_construction( Node_id id )
+{
+    const Node_id                  path      = ast_.children( id )[0];
+    const std::span<const Node_id> arguments = ast_.children( ast_.children( id )[1] );
+
+    // Tells infer_path the payload is coming, so it does not report the bare form as incomplete.
+    constructing_        = true;
+    const Type_id result = infer( path );
+    constructing_        = false;
+
+    if( table_.is_error( result ) )
+    {
+        for( const Node_id argument : arguments )
+        {
+            infer( argument );
+        }
+
+        return record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    // infer_path recorded the ordinal, which is how the variant is found again without a second
+    // name lookup.
+    const Node_id                  decl     = table_.get( result ).declaration;
+    const auto                     ordinal  = constants_.find( path.v );
+    const std::span<const Node_id> variants = ast_.children( decl ).subspan( 1 );
+
+    if( ordinal == constants_.end() || ordinal->second.magnitude >= variants.size() )
+    {
+        return record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    const Node_id                  variant = variants[static_cast<std::size_t>( ordinal->second.magnitude )];
+    const std::span<const Node_id> payload = ast_.children( variant );
+
+    if( payload.empty() )
+    {
+        error_at(
+            ast_.span( id ),
+            fmt::format( "`{}` carries no payload", interner_.text( Symbol_id { ast_.aux( variant ) } ) ),
+            "write it without arguments"
+        );
+    }
+    else if( payload.size() != arguments.size() )
+    {
+        error_at(
+            ast_.span( ast_.children( id )[1] ),
+            fmt::format(
+                "`{}` carries {} value{}, but {} {} given",
+                interner_.text( Symbol_id { ast_.aux( variant ) } ),
+                payload.size(),
+                payload.size() == 1 ? "" : "s",
+                arguments.size(),
+                arguments.size() == 1 ? "was" : "were"
+            )
+        );
+    }
+
+    // The pairs that do line up are checked even when the count is wrong: one missing value should
+    // not hide a type error in the others.
+    const std::size_t shared = std::min( payload.size(), arguments.size() );
+
+    for( std::size_t i = 0; i < shared; ++i )
+    {
+        check( arguments[i], types_[payload[i].v] );
+    }
+
+    for( std::size_t i = shared; i < arguments.size(); ++i )
+    {
+        infer( arguments[i] );
+    }
+
+    return record( id, result );
+}
+
 Type_id Checker::infer_path( Node_id id )
 {
     const Node_id   qualifier = ast_.children( id )[0];
@@ -2879,6 +3143,23 @@ Type_id Checker::infer_path( Node_id id )
         // The ordinal, recorded where the constant folder already puts values - a variant *is* a
         // constant expression. Lowering needs the number, and aux holds the name.
         constants_[id.v] = Constant_value { .kind = Constant_value::Kind::Integer, .magnitude = i };
+
+        // D7: a variant with a payload is not a value until it has one. `Shape::Circle` alone is
+        // as incomplete as a struct literal with no fields, and saying so here is better than
+        // letting it type as a Shape and produce garbage in the payload.
+        //
+        // infer_call handles the complete form and reaches the variant through this same walk, so
+        // it sets `constructing_` first to say the payload is coming.
+        if( !ast_.children( variants[i] ).empty() && !constructing_ )
+        {
+            error_at(
+                ast_.span( id ),
+                fmt::format( "`{}` carries a payload", interner_.text( name ) ),
+                fmt::format( "write `{}( ... )` with a value for each field", sm_.text( ast_.span( id ) ) )
+            );
+
+            return record( id, table_.builtin( Type_kind::Error ) );
+        }
 
         return record( id, types_[decl.v] );
     }
@@ -3926,6 +4207,20 @@ Types type_check(
 )
 {
     return Checker( ast, interner, resolution, sm, literals, diags ).run();
+}
+
+bool enum_has_payload( const Ast& ast, Node_id enum_decl )
+{
+    // From 1: child 0 is the underlying type.
+    for( const Node_id variant : ast.children( enum_decl ).subspan( 1 ) )
+    {
+        if( !ast.children( variant ).empty() )
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 Keyword parameter_mode( const Ast& ast, Node_id decl )
@@ -8850,6 +9145,163 @@ TEST_CASE( "type_checker_switches_on_a_float_by_range_only", "[sema][range]" )
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "a single value cannot be matched against a `f64`" ) != std::string::npos );
     }
+}
+
+// PLAN D7. A payload variant is constructed by calling it: `Shape::Circle( 1.0 )`. The variant
+// names the shape of the payload, so the call is checked against the payload fields exactly as a
+// call is checked against a parameter list.
+TEST_CASE( "type_checker_constructs_a_payload_variant", "[sema][payload]" )
+{
+    constexpr std::string_view shape = "enum Shape { Circle( f64 radius ), Rect( f64 w, f64 h ), Dot };\n";
+
+    SECTION( "with the right arguments" )
+    {
+        const Typed p( std::string( shape ) + "i32 main() { Shape s = Shape::Circle( 1.0 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and the result is the enum, not the payload" )
+    {
+        const Typed p( std::string( shape ) + "i32 main() { Shape s = Shape::Rect( 1.0, 2.0 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "the wrong count is refused" )
+    {
+        const Typed p( std::string( shape ) + "i32 main() { Shape s = Shape::Rect( 1.0 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    SECTION( "the wrong type is refused" )
+    {
+        const Typed p( std::string( shape ) + "i32 main() { Shape s = Shape::Circle( true ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    // The two halves of the same rule: a payload variant is not a value, and a payload-free one is
+    // not a function.
+    SECTION( "a payload variant needs its arguments" )
+    {
+        const Typed p( std::string( shape ) + "i32 main() { Shape s = Shape::Circle; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "`Circle` carries a payload" ) != std::string::npos );
+    }
+
+    SECTION( "and a payload-free one takes none" )
+    {
+        const Typed p( std::string( shape ) + "i32 main() { Shape s = Shape::Dot( 1.0 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "`Dot` carries no payload" ) != std::string::npos );
+    }
+}
+
+// D30's first cut. Destroying an enum means destroying only the *active* variant, which needs a
+// destructor that switches on the tag - the first run-time-dependent destructor in the language.
+// Until that exists, an owning payload would leak or double-free, so it is refused.
+TEST_CASE( "type_checker_refuses_an_owning_payload_for_now", "[sema][payload]" )
+{
+    const Typed p( "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+                   "enum Holder { Full( B value ), Empty };\ni32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE_FALSE( p.clean() );
+    REQUIRE( p.rendered().find( "owns a resource" ) != std::string::npos );
+}
+
+// A pattern binds the payload by name. The binding is read-only: when owning payloads arrive it
+// becomes a borrow, and writing through it would then be writing into a value the enum still owns.
+TEST_CASE( "type_checker_binds_a_variant_pattern", "[sema][payload]" )
+{
+    constexpr std::string_view shape = "enum Shape { Circle( f64 radius ), Rect( f64 w, f64 h ), Dot };\n";
+
+    SECTION( "the binding has the payload's type" )
+    {
+        const Typed p(
+            std::string( shape ) + "f64 area( Shape s ) { switch( s ) {"
+                                   " case Shape::Circle( r ): return r * r;"
+                                   " case Shape::Rect( w, h ): return w * h;"
+                                   " case Shape::Dot: return 0.0; } }\n"
+                                   "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "the wrong number of bindings is refused" )
+    {
+        const Typed p(
+            std::string( shape ) + "f64 area( Shape s ) { switch( s ) {"
+                                   " case Shape::Rect( w ): return w;"
+                                   " default: return 0.0; } }\n"
+                                   "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    SECTION( "a pattern on a payload-free variant is refused" )
+    {
+        const Typed p(
+            std::string( shape ) + "f64 area( Shape s ) { switch( s ) {"
+                                   " case Shape::Dot( x ): return x;"
+                                   " default: return 0.0; } }\n"
+                                   "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    // The binding is scoped to its arm, which is what stops one arm reading another's payload.
+    SECTION( "a binding does not escape its arm" )
+    {
+        const Typed p(
+            std::string( shape ) + "f64 area( Shape s ) { switch( s ) {"
+                                   " case Shape::Circle( r ): return 0.0;"
+                                   " default: return r; } }\n"
+                                   "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "`r` is not declared" ) != std::string::npos );
+    }
+
+    SECTION( "and it is read-only" )
+    {
+        const Typed p(
+            std::string( shape ) + "f64 area( Shape s ) { switch( s ) {"
+                                   " case Shape::Circle( r ): r = 2.0; return r;"
+                                   " default: return 0.0; } }\n"
+                                   "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+}
+
+// Exhaustiveness does not change: a payload variant is covered by naming it, with or without a
+// pattern, and the missing-variant message names it the same way.
+TEST_CASE( "type_checker_counts_payload_variants_for_exhaustiveness", "[sema][payload]" )
+{
+    const Typed p( "enum Shape { Circle( f64 radius ), Dot };\n"
+                   "f64 area( Shape s ) { switch( s ) { case Shape::Dot: return 0.0; } }\n"
+                   "i32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.rendered().find( "missing `Circle`" ) != std::string::npos );
 }
 
 } // namespace keel

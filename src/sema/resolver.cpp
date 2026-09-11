@@ -201,20 +201,63 @@ void Resolver::visit( Node_id id )
 
         return;
     }
+    case Node_kind::Case_arm:
+    {
+        // The arm is the scope, not its body: a pattern's bindings are written *outside* the
+        // block - `case Shape::Circle( r ):` - and have to be in scope inside it. One scope over
+        // both is what makes `r` visible in the body and invisible in the next arm.
+        push_scope();
+
+        const std::span<const Node_id> parts = ast_.children( id );
+
+        for( const Node_id label : parts.subspan( 0, parts.size() - 1 ) )
+        {
+            if( ast_.kind( label ) != Node_kind::Variant_pattern )
+            {
+                visit( label );
+                continue;
+            }
+
+            // The path resolves like any other; the bindings are declarations rather than uses.
+            const std::span<const Node_id> pattern = ast_.children( label );
+
+            visit( pattern[0] );
+
+            for( const Node_id binding : pattern.subspan( 1 ) )
+            {
+                declare( Symbol_id { ast_.aux( binding ) }, binding );
+            }
+        }
+
+        visit( parts.back() );
+        pop_scope();
+        return;
+    }
     case Node_kind::Enum_decl:
     {
         // Child 0 is the underlying type and is invalid when unwritten, so it cannot go through
         // the default walk - visit() asserts on an invalid id, which is the same convention
         // Var_decl follows for its two optional children.
         //
-        // The variants are deliberately not visited. D30 gives them enum-class scoping, so they
-        // enter no lexical scope at all: `Colour::Red` is looked up against the enum's own type in
-        // the checker, exactly as a field name is, and a bare `Red` should stay undeclared.
-        const Node_id annotation = ast_.children( id )[0];
+        // The variant *names* are deliberately not declared. D30 gives them enum-class scoping, so
+        // they enter no lexical scope at all: `Colour::Red` is looked up against the enum's own
+        // type in the checker, exactly as a field name is, and a bare `Red` stays undeclared.
+        //
+        // Their payload fields still have to be *visited*, though: `Circle( Point centre )` names a
+        // type, and nothing else will resolve it.
+        const std::span<const Node_id> children = ast_.children( id );
 
-        if( annotation.is_valid() )
+        if( children[0].is_valid() )
         {
-            visit( annotation );
+            visit( children[0] );
+        }
+
+        for( const Node_id variant : children.subspan( 1 ) )
+        {
+            for( const Node_id field : ast_.children( variant ) )
+            {
+                visit( ast_.children( field )[0] );
+            }
         }
 
         return;
