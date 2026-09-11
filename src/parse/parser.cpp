@@ -1692,7 +1692,23 @@ Node_id Parser::parse_switch_stmt()
             }
             else
             {
-                children.push_back( parse_expression( 0 ) );
+                const Node_id lower = parse_expression( 0 );
+
+                // D34: a range is syntax and lives only here, so it is parsed where it is legal
+                // rather than in the expression grammar - which would make `i32 x = 1..5;` parse
+                // and need a diagnostic to un-parse it.
+                if( match( Token_kind::Dot_dot ) )
+                {
+                    const Node_id upper = parse_expression( 0 );
+
+                    children.push_back( ast_.add(
+                        Node_kind::Range_expr, Span::merge( ast_.span( lower ), ast_.span( upper ) ), 0, { lower, upper }
+                    ) );
+                }
+                else
+                {
+                    children.push_back( lower );
+                }
             }
 
             expect( Token_kind::Colon );

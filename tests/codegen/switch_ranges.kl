@@ -1,0 +1,59 @@
+// PLAN D34. A `case` range is half-open: `1..5` matches 1, 2, 3 and 4. That is a decision only an
+// exit code can check - the emitted C for `<` and `<=` differs by one character, and a golden
+// comparing text would record either as correct.
+//
+// Bounds are always integers, whatever the scrutinee is: `..` has one meaning, and the meaning
+// slicing will need is an integer one. So a float scrutinee buckets by integer boundaries.
+i32 bucket( i32 n )
+{
+    switch( n )
+    {
+        case 1..5:
+            return 1;
+        case 5..10:
+        case 20:
+            return 2;
+        default:
+            return 3;
+    }
+}
+
+// Over a float only ranges are allowed - exact equality against one is the mistake every float
+// guide opens with, and a `case` is the one place it would look deliberate.
+i32 grade( f64 x )
+{
+    switch( x )
+    {
+        case 0..1:
+            return 1;
+        case 1..10:
+            return 2;
+        default:
+            return 3;
+    }
+}
+
+i32 main()
+{
+    i32 total = 0;
+
+    // The boundaries are the whole point: 4 is inside `1..5`, 5 is not.
+    if( bucket( 0 ) != 3 )  { return 10; }
+    if( bucket( 1 ) != 1 )  { return 11; }
+    if( bucket( 4 ) != 1 )  { return 12; }
+    if( bucket( 5 ) != 2 )  { return 13; }
+    if( bucket( 9 ) != 2 )  { return 14; }
+    if( bucket( 10 ) != 3 ) { return 15; }
+    if( bucket( 20 ) != 2 ) { return 16; }
+
+    // A float lands in a bucket by the same comparisons, and 0.5 is inside `0..1`.
+    if( grade( 0.5 ) != 1 )  { return 20; }
+    if( grade( 1.0 ) != 2 )  { return 21; }
+    if( grade( 9.75 ) != 2 ) { return 22; }
+    if( grade( 10.0 ) != 3 ) { return 23; }
+    if( grade( -1.0 ) != 3 ) { return 24; }
+
+    total = bucket( 3 ) * 100 + bucket( 7 ) * 10 + grade( 0.25 );
+
+    return total; // 1*100 + 2*10 + 1
+}

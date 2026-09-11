@@ -50,6 +50,8 @@ std::string_view token_kind_name( Token_kind kind )
         return "Colon_colon";
     case Token_kind::Dot:
         return "Dot";
+    case Token_kind::Dot_dot:
+        return "Dot_dot";
     case Token_kind::Arrow:
         return "Arrow";
     case Token_kind::Plus:
@@ -170,6 +172,8 @@ std::string_view token_kind_spelling( Token_kind kind )
         return "::";
     case Token_kind::Dot:
         return ".";
+    case Token_kind::Dot_dot:
+        return "..";
     case Token_kind::Arrow:
         return "->";
     case Token_kind::Plus:

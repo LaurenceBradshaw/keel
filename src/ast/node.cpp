@@ -103,6 +103,8 @@ std::string_view node_kind_name( Node_kind kind )
         return "Switch_stmt";
     case Node_kind::Case_arm:
         return "Case_arm";
+    case Node_kind::Range_expr:
+        return "Range_expr";
 
     case Node_kind::Count:
         break;

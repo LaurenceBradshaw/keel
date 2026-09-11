@@ -53,6 +53,7 @@ private:
     void lower_increment( Node_id id );
     void lower_if( Node_id id );
     void lower_switch( Node_id id );
+    void lower_case_test( Operand scrutinee, Node_id label, Block_id body );
     void lower_while( Node_id id );
     void lower_for( Node_id id );
 
@@ -695,9 +696,26 @@ Operand Lowering::lower_expression( Node_id id )
         return copy( place_for( decl ), types_.type_of( id ) );
     }
     case Node_kind::Int_literal:
-    case Node_kind::Float_literal:
     case Node_kind::Char_literal:
+    {
         // aux is the Literal_id, and the checker recorded the type context gave it.
+        const Type_id type = types_.type_of( id );
+
+        // An integer literal in float context. §6.4 lets a literal adopt the type context gives
+        // it, so `f64 x = 1;` is legal - but the value sits in the integer pool, and everything
+        // downstream reads a float constant out of the float pool. Converted here, where the
+        // checker's decision becomes a concrete value; without it the emitter asks Literals for a
+        // float it never stored, and the compiler aborts on a program that type-checked.
+        if( types_.table().is_float( type ) )
+        {
+            const u64 magnitude = literals_.integer( Literal_id { ast_.aux( id ) } );
+
+            return constant( literals_.add_float( static_cast<f64>( magnitude ) ), type );
+        }
+
+        return constant( Literal_id { ast_.aux( id ) }, type );
+    }
+    case Node_kind::Float_literal:
         return constant( Literal_id { ast_.aux( id ) }, types_.type_of( id ) );
     case Node_kind::Null_literal:
         // Unlike the other literals, aux carries no Literal_id - the parser records nothing for
@@ -984,11 +1002,55 @@ void Lowering::lower_increment( Node_id id )
 // Stacked labels are an OR, and an OR of equalities is a chain of branches whose false edge is the
 // next label rather than the next arm. The checker has already proved the set is exhaustive or has
 // a `default`, so the last false edge is never a hole.
+// One label's test. Leaves the builder in the block a *failed* test falls into, which is the
+// contract lower_switch's chain is built on: the next label, the next arm, or the fallback goto.
+//
+// A range is two comparisons, and there is no conjunction in KIR to hold them - `&&` short-circuits
+// and the lowerer already builds that out of blocks. So a range is one more link in the same chain:
+// `low <= x` failing leaves the arm exactly as a failed equality does, and succeeding falls into a
+// block that tests `x < high`. No new rvalue, and nothing downstream learns that ranges exist.
+void Lowering::lower_case_test( Operand scrutinee, Node_id label, Block_id body )
+{
+    const Span    span    = ast_.span( label );
+    const Type_id boolean = types_.table().builtin( Type_kind::Bool );
+
+    const auto branch_on = [&]( Token_kind op, Node_id bound, Block_id on_true )
+    {
+        const Operand  value = lower_expression( bound );
+        const Local_id test  = builder_.into_temp( binary( op, scrutinee, value, boolean ), boolean, span );
+        const Block_id next  = builder_.add_block();
+
+        builder_.terminate_branch( copy( builder_.place( test ), boolean ), on_true, next, span );
+        builder_.switch_to( next );
+    };
+
+    if( ast_.kind( label ) != Node_kind::Range_expr )
+    {
+        branch_on( Token_kind::Equal_equal, label, body );
+        return;
+    }
+
+    // D34: half-open, so the upper bound is `<` and not `<=`. The lower test's true edge is the
+    // upper test rather than the body, which is what makes the pair a conjunction.
+    const Block_id in_range = builder_.add_block();
+
+    branch_on( Token_kind::Greater_equal, ast_.children( label )[0], in_range );
+
+    const Block_id resume = builder_.current();
+
+    builder_.switch_to( in_range );
+    branch_on( Token_kind::Less, ast_.children( label )[1], body );
+
+    // The upper test failing must land where the lower test's failure lands, so the arm has one
+    // exit and the chain stays a chain.
+    builder_.terminate_goto( resume, span );
+    builder_.switch_to( resume );
+}
+
 void Lowering::lower_switch( Node_id id )
 {
     const std::span<const Node_id> children = ast_.children( id );
     const Span                     span     = ast_.span( id );
-    const Type_id                  boolean  = types_.table().builtin( Type_kind::Bool );
 
     const Operand scrutinee = lower_expression( children[0] );
 
@@ -1052,17 +1114,7 @@ void Lowering::lower_switch( Node_id id )
 
         for( const Node_id label : labels )
         {
-            const Span     label_span = ast_.span( label );
-            const Operand  value      = lower_expression( label );
-            const Local_id test =
-                builder_.into_temp( binary( Token_kind::Equal_equal, scrutinee, value, boolean ), boolean, label_span );
-
-            // The next label of this arm, or the next arm's first test - a block either way, and
-            // the last one is where the fallback goto is emitted below.
-            const Block_id next = builder_.add_block();
-
-            builder_.terminate_branch( copy( builder_.place( test ), boolean ), body, next, label_span );
-            builder_.switch_to( next );
+            lower_case_test( scrutinee, label, body );
         }
 
         // The block the last false edge left us in, so the arms chain without any block needing to
@@ -3693,6 +3745,78 @@ TEST_CASE( "lower_reads_the_scrutinee_once", "[ir][lower][switch]" )
     }
 
     REQUIRE( calls == 1 );
+}
+
+// §6.4 lets a literal adopt the type context gives it, so `f64 x = 1;` type-checks - and until
+// this was found, it then **aborted the compiler**: the value sits in the integer pool and the
+// emitter asked Literals for a float it never stored. Found through a float range label, whose
+// bounds are integers by D34, but it was never about ranges.
+TEST_CASE( "lower_converts_an_integer_literal_in_float_context", "[ir][lower]" )
+{
+    Lowered p( "i32 main() { f64 x = 1; f32 y = 2; return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.named( "main" );
+
+    INFO( text );
+    REQUIRE( text.find( "let _1: f64; // x" ) != std::string::npos );
+    REQUIRE( text.find( "let _2: f32; // y" ) != std::string::npos );
+}
+
+// PLAN D34. A range is two comparisons, and there is no conjunction in KIR to hold them - `&&`
+// short-circuits and the lowerer builds that out of blocks. So a range is one more link in the
+// chain a stacked label list already builds, and nothing downstream learns that ranges exist.
+TEST_CASE( "lower_turns_a_range_label_into_two_comparisons", "[ir][lower][range]" )
+{
+    Lowered p( "i32 f( i32 n ) { switch( n ) { case 1..5: return 1; default: return 0; } }\ni32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.named( "f" );
+
+    INFO( text );
+
+    // Half-open: `>=` on the lower bound and `<` on the upper. A `<=` here would be an off-by-one
+    // that every checker test above would still pass.
+    REQUIRE( text.find( ">= const 1" ) != std::string::npos );
+    REQUIRE( text.find( "< const 5" ) != std::string::npos );
+    REQUIRE( text.find( "<= const 5" ) == std::string::npos );
+}
+
+// Mixing a range and a value in one stacked arm needs no special handling: a label list is already
+// an OR, and the range is one more link in it.
+TEST_CASE( "lower_stacks_a_range_with_a_value", "[ir][lower][range]" )
+{
+    Lowered p( "i32 f( i32 n ) { switch( n ) { case 1..5: case 20: return 1; default: return 0; } }\n"
+               "i32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.named( "f" );
+
+    INFO( text );
+    REQUIRE( text.find( ">= const 1" ) != std::string::npos );
+    REQUIRE( text.find( "== const 20" ) != std::string::npos );
+}
+
+// Over a float the comparisons are against floats, because the bound is checked against the
+// scrutinee's type rather than carried as an integer into codegen.
+TEST_CASE( "lower_compares_a_float_range_as_floats", "[ir][lower][range]" )
+{
+    Lowered p( "i32 f( f64 x ) { switch( x ) { case 1..5: return 1; default: return 0; } }\ni32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.named( "f" );
+
+    INFO( text );
+    REQUIRE( text.find( "let _1: f64; // parameter x" ) != std::string::npos );
+    REQUIRE( text.find( ">= const 1" ) != std::string::npos );
 }
 
 } // namespace keel

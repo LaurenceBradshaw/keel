@@ -687,7 +687,7 @@ void Scanner::scan_punctuation( char c, u32 start )
         push( Token_kind::Comma, start );
         return;
     case '.':
-        push( Token_kind::Dot, start );
+        push( match( '.' ) ? Token_kind::Dot_dot : Token_kind::Dot, start );
         return;
     case '~':
         push( Token_kind::Tilde, start );
@@ -1259,6 +1259,7 @@ TEST_CASE( "lexer_maximal_munch", "[lex]" )
         { "~", Token_kind::Tilde },
         { "?", Token_kind::Question },
         { ".", Token_kind::Dot },
+        { "..", Token_kind::Dot_dot },
         { "(", Token_kind::L_paren },
         { ")", Token_kind::R_paren },
         { "{", Token_kind::L_brace },
@@ -1319,10 +1320,27 @@ TEST_CASE( "lexer_number_boundaries", "[lex]" )
         REQUIRE( lexed.kind( 2 ) == Token_kind::Identifier );
     }
 
+    // `1..2` is three tokens, not a float followed by a fraction: the float scan declines a `.`
+    // that is not followed by a digit, and `..` is then maximal-munched by scan_punctuation. No
+    // lookahead in scan_number is needed for this, and one written there would be a second place
+    // that knows how a number ends.
     SECTION( "range-looking input keeps both dots" )
     {
-        const Lexed lexed( "1..2" );
-        REQUIRE( lexed.count() == 4 );
+        const Lexed lexed( "1..2" ); // count() excludes the End_of_file token
+
+        REQUIRE( lexed.count() == 3 );
+        REQUIRE( lexed.kind( 0 ) == Token_kind::Int_literal );
+        REQUIRE( lexed.kind( 1 ) == Token_kind::Dot_dot );
+        REQUIRE( lexed.kind( 2 ) == Token_kind::Int_literal );
+    }
+
+    // The neighbouring case, which is what the guard above must not break.
+    SECTION( "a real fraction is still one token" )
+    {
+        const Lexed lexed( "1.5" );
+
+        REQUIRE( lexed.count() == 1 );
+        REQUIRE( lexed.kind( 0 ) == Token_kind::Float_literal );
     }
 }
 

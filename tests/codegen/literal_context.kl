@@ -30,8 +30,19 @@ i32 main()
     u16 q = 1;
     q += 1;
 
-    if( q == 2 ) { return 0; }
-    if( -1 < 0 ) { return 0; }
+    if( q != 2 ) { return 90; }
+    if( -1 >= 0 ) { return 91; }
 
-    return 0;
+    // Checked rather than merely emitted. Three of the values above were *wrong* in this file's
+    // golden for as long as it existed - `f64 c = 1;` emitted 1.5 - because an integer literal in
+    // float context kept its value in the integer pool and the emitter read the float pool at that
+    // index. Comparing the emitted text could never see it; the golden had recorded the bug as
+    // correct. An exit code can, which is why this fixture now has one.
+    if( c != 1.0 ) { return 10; }
+    if( d != 2.0 ) { return 11; }
+    if( g != 2.0 ) { return 12; }
+    if( f != 2.5 ) { return 13; }
+    if( a != -1.5 ) { return 14; }
+
+    return wrap<i32>( h ) + wrap<i32>( i ) + wrap<i32>( o ) + m;
 }

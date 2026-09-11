@@ -1,0 +1,274 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+int32_t kl__bucket__i32( int32_t );
+int32_t kl__grade__f64( double );
+int32_t kl__main__( void );
+
+int32_t kl__bucket__i32( int32_t kl_n_1 )
+{
+    int32_t kl_t0;
+    bool kl_t2;
+    bool kl_t3;
+    bool kl_t4;
+    bool kl_t5;
+    bool kl_t6;
+#line 11 "codegen/switch_ranges.kl"
+    kl_t2 = kl_n_1 >= 1;
+    if ( kl_t2 ) goto bb3; else goto bb4;
+    bb1:
+#line 17 "codegen/switch_ranges.kl"
+    kl_t0 = 3;
+    return kl_t0;
+    bb2:
+#line 12 "codegen/switch_ranges.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb3:
+#line 11 "codegen/switch_ranges.kl"
+    kl_t3 = kl_n_1 < 5;
+    if ( kl_t3 ) goto bb2; else goto bb5;
+    bb4:
+#line 13 "codegen/switch_ranges.kl"
+    kl_t4 = kl_n_1 >= 5;
+    if ( kl_t4 ) goto bb7; else goto bb8;
+    bb5:
+    goto bb4;
+    bb6:
+#line 15 "codegen/switch_ranges.kl"
+    kl_t0 = 2;
+    return kl_t0;
+    bb7:
+#line 13 "codegen/switch_ranges.kl"
+    kl_t5 = kl_n_1 < 10;
+    if ( kl_t5 ) goto bb6; else goto bb9;
+    bb8:
+#line 14 "codegen/switch_ranges.kl"
+    kl_t6 = kl_n_1 == 20;
+    if ( kl_t6 ) goto bb6; else goto bb10;
+    bb9:
+    goto bb8;
+    bb10:
+    goto bb1;
+}
+
+int32_t kl__grade__f64( double kl_x_1 )
+{
+    int32_t kl_t0;
+    bool kl_t2;
+    bool kl_t3;
+    bool kl_t4;
+    bool kl_t5;
+#line 27 "codegen/switch_ranges.kl"
+    kl_t2 = kl_x_1 >= 0.0;
+    if ( kl_t2 ) goto bb3; else goto bb4;
+    bb1:
+#line 32 "codegen/switch_ranges.kl"
+    kl_t0 = 3;
+    return kl_t0;
+    bb2:
+#line 28 "codegen/switch_ranges.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb3:
+#line 27 "codegen/switch_ranges.kl"
+    kl_t3 = kl_x_1 < 1.0;
+    if ( kl_t3 ) goto bb2; else goto bb5;
+    bb4:
+#line 29 "codegen/switch_ranges.kl"
+    kl_t4 = kl_x_1 >= 1.0;
+    if ( kl_t4 ) goto bb7; else goto bb8;
+    bb5:
+    goto bb4;
+    bb6:
+#line 30 "codegen/switch_ranges.kl"
+    kl_t0 = 2;
+    return kl_t0;
+    bb7:
+#line 29 "codegen/switch_ranges.kl"
+    kl_t5 = kl_x_1 < 10.0;
+    if ( kl_t5 ) goto bb6; else goto bb9;
+    bb8:
+    goto bb1;
+    bb9:
+    goto bb8;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_total_1;
+    int32_t kl_t2;
+    bool kl_t3;
+    int32_t kl_t4;
+    bool kl_t5;
+    int32_t kl_t6;
+    bool kl_t7;
+    int32_t kl_t8;
+    bool kl_t9;
+    int32_t kl_t10;
+    bool kl_t11;
+    int32_t kl_t12;
+    bool kl_t13;
+    int32_t kl_t14;
+    bool kl_t15;
+    int32_t kl_t16;
+    bool kl_t17;
+    int32_t kl_t18;
+    bool kl_t19;
+    int32_t kl_t20;
+    bool kl_t21;
+    int32_t kl_t22;
+    bool kl_t23;
+    double kl_t24;
+    int32_t kl_t25;
+    bool kl_t26;
+    int32_t kl_t27;
+    int32_t kl_t28;
+    int32_t kl_t29;
+    int32_t kl_t30;
+    int32_t kl_t31;
+    int32_t kl_t32;
+    int32_t kl_t33;
+#line 38 "codegen/switch_ranges.kl"
+    kl_total_1 = 0;
+#line 41 "codegen/switch_ranges.kl"
+    kl_t2 = kl__bucket__i32( 0 );
+    kl_t3 = kl_t2 != 3;
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = 10;
+    return kl_t0;
+    bb2:
+    goto bb3;
+    bb3:
+#line 42 "codegen/switch_ranges.kl"
+    kl_t4 = kl__bucket__i32( 1 );
+    kl_t5 = kl_t4 != 1;
+    if ( kl_t5 ) goto bb4; else goto bb5;
+    bb4:
+    kl_t0 = 11;
+    return kl_t0;
+    bb5:
+    goto bb6;
+    bb6:
+#line 43 "codegen/switch_ranges.kl"
+    kl_t6 = kl__bucket__i32( 4 );
+    kl_t7 = kl_t6 != 1;
+    if ( kl_t7 ) goto bb7; else goto bb8;
+    bb7:
+    kl_t0 = 12;
+    return kl_t0;
+    bb8:
+    goto bb9;
+    bb9:
+#line 44 "codegen/switch_ranges.kl"
+    kl_t8 = kl__bucket__i32( 5 );
+    kl_t9 = kl_t8 != 2;
+    if ( kl_t9 ) goto bb10; else goto bb11;
+    bb10:
+    kl_t0 = 13;
+    return kl_t0;
+    bb11:
+    goto bb12;
+    bb12:
+#line 45 "codegen/switch_ranges.kl"
+    kl_t10 = kl__bucket__i32( 9 );
+    kl_t11 = kl_t10 != 2;
+    if ( kl_t11 ) goto bb13; else goto bb14;
+    bb13:
+    kl_t0 = 14;
+    return kl_t0;
+    bb14:
+    goto bb15;
+    bb15:
+#line 46 "codegen/switch_ranges.kl"
+    kl_t12 = kl__bucket__i32( 10 );
+    kl_t13 = kl_t12 != 3;
+    if ( kl_t13 ) goto bb16; else goto bb17;
+    bb16:
+    kl_t0 = 15;
+    return kl_t0;
+    bb17:
+    goto bb18;
+    bb18:
+#line 47 "codegen/switch_ranges.kl"
+    kl_t14 = kl__bucket__i32( 20 );
+    kl_t15 = kl_t14 != 2;
+    if ( kl_t15 ) goto bb19; else goto bb20;
+    bb19:
+    kl_t0 = 16;
+    return kl_t0;
+    bb20:
+    goto bb21;
+    bb21:
+#line 50 "codegen/switch_ranges.kl"
+    kl_t16 = kl__grade__f64( 0.5 );
+    kl_t17 = kl_t16 != 1;
+    if ( kl_t17 ) goto bb22; else goto bb23;
+    bb22:
+    kl_t0 = 20;
+    return kl_t0;
+    bb23:
+    goto bb24;
+    bb24:
+#line 51 "codegen/switch_ranges.kl"
+    kl_t18 = kl__grade__f64( 1.0 );
+    kl_t19 = kl_t18 != 2;
+    if ( kl_t19 ) goto bb25; else goto bb26;
+    bb25:
+    kl_t0 = 21;
+    return kl_t0;
+    bb26:
+    goto bb27;
+    bb27:
+#line 52 "codegen/switch_ranges.kl"
+    kl_t20 = kl__grade__f64( 9.75 );
+    kl_t21 = kl_t20 != 2;
+    if ( kl_t21 ) goto bb28; else goto bb29;
+    bb28:
+    kl_t0 = 22;
+    return kl_t0;
+    bb29:
+    goto bb30;
+    bb30:
+#line 53 "codegen/switch_ranges.kl"
+    kl_t22 = kl__grade__f64( 10.0 );
+    kl_t23 = kl_t22 != 3;
+    if ( kl_t23 ) goto bb31; else goto bb32;
+    bb31:
+    kl_t0 = 23;
+    return kl_t0;
+    bb32:
+    goto bb33;
+    bb33:
+#line 54 "codegen/switch_ranges.kl"
+    kl_t24 = -1.0;
+    kl_t25 = kl__grade__f64( kl_t24 );
+    kl_t26 = kl_t25 != 3;
+    if ( kl_t26 ) goto bb34; else goto bb35;
+    bb34:
+    kl_t0 = 24;
+    return kl_t0;
+    bb35:
+    goto bb36;
+    bb36:
+#line 56 "codegen/switch_ranges.kl"
+    kl_t27 = kl__bucket__i32( 3 );
+    kl_t28 = kl_t27 * 100;
+    kl_t29 = kl__bucket__i32( 7 );
+    kl_t30 = kl_t29 * 10;
+    kl_t31 = kl_t28 + kl_t30;
+    kl_t32 = kl__grade__f64( 0.25 );
+    kl_t33 = kl_t31 + kl_t32;
+    kl_total_1 = kl_t33;
+#line 58 "codegen/switch_ranges.kl"
+    kl_t0 = kl_total_1;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

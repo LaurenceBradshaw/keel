@@ -195,6 +195,16 @@ struct Constant
     bool negative  = false;
 };
 
+// PLAN D34. A `case` label over a number is an interval, half-open: `case 3:` is [3, 4) and
+// `case 1..5:` is [1, 5). One representation for both is what makes overlap a single pairwise walk
+// rather than three cases - value/value, value/range and range/range.
+struct Interval
+{
+    i64     low  = 0;
+    i64     high = 0; // exclusive
+    Node_id label {};
+};
+
 struct Folded
 {
     bool     constant   = false;
@@ -425,19 +435,22 @@ private:
     Type_id infer( Node_id id ); // expression, no expectation
 
     // One per construct, dispatched from visit and infer - the shape parse_*() uses next door.
-    void visit_function( Node_id id );
-    void check_condition( Node_id id ); // if/while/for all want the same message
-    bool is_assignable( Node_id id ) const;
-    bool returns_a_binding( Node_id decl ) const;
-    void visit_return( Node_id id );
-    void visit_var( Node_id id );
-    void visit_assign( Node_id id );
-    void visit_if( Node_id id );
-    void visit_switch( Node_id id );
-    void visit_while( Node_id id );
-    void visit_for( Node_id id );
-    void visit_increment( Node_id id );
-    void visit_global( Node_id id );
+    void               visit_function( Node_id id );
+    void               check_condition( Node_id id ); // if/while/for all want the same message
+    bool               is_assignable( Node_id id ) const;
+    bool               returns_a_binding( Node_id decl ) const;
+    void               visit_return( Node_id id );
+    void               visit_var( Node_id id );
+    void               visit_assign( Node_id id );
+    void               visit_if( Node_id id );
+    void               visit_switch( Node_id id );
+    void               check_enum_switch( Node_id id, Type_id type, bool& has_default );
+    void               check_numeric_switch( Node_id id, Type_id type, bool& has_default );
+    std::optional<i64> fold_bound( Node_id bound, Type_id expected );
+    void               visit_while( Node_id id );
+    void               visit_for( Node_id id );
+    void               visit_increment( Node_id id );
+    void               visit_global( Node_id id );
 
     // Int, Float and Bool literals with nothing to give them a type - the fallback defaults.
     // Whether context can give this expression a type, rather than it having one of its own.
@@ -1650,6 +1663,13 @@ void Checker::visit_assign( Node_id id )
 // worth having over a chain of `if`s: adding a variant later breaks exactly the switches that
 // should be revisited. Which is also why a `default` on a fully covered enum is refused - it would
 // silently absorb the new variant and take the guarantee away.
+// PLAN D7/D30/D34. Exhaustiveness is the whole reason `switch` is worth having over a chain of
+// `if`s: adding a variant later breaks exactly the switches that should be revisited.
+//
+// Two scrutinee kinds with two coverage strategies, and the difference is decidability. An enum has
+// finitely many variants, so coverage is a vector indexed by ordinal and a gap can be named. A
+// number has 2^32 or more values, so coverage is a set of intervals that can be checked for overlap
+// but never proved complete - which is why `default` is required there and optional here.
 void Checker::visit_switch( Node_id id )
 {
     const std::span<const Node_id> children  = ast_.children( id );
@@ -1672,17 +1692,36 @@ void Checker::visit_switch( Node_id id )
         return;
     }
 
-    if( !table_.is_enum( type ) )
+    const bool numeric = table_.is_integer( type ) || table_.is_float( type );
+
+    if( !table_.is_enum( type ) && !numeric )
     {
         error_at(
             ast_.span( scrutinee ),
-            fmt::format( "`switch` needs an `enum`, but this is a `{}`", table_.name( type ) ),
-            "an integer scrutinee is not supported yet"
+            fmt::format( "`switch` needs an `enum` or a number, but this is a `{}`", table_.name( type ) )
         );
 
         visit_bodies();
         return;
     }
+
+    bool has_default = false;
+
+    if( numeric )
+    {
+        check_numeric_switch( id, type, has_default );
+    }
+    else
+    {
+        check_enum_switch( id, type, has_default );
+    }
+}
+
+// Coverage as a vector indexed by ordinal, which is what makes a gap nameable: the missing variants
+// are the entries nothing wrote to.
+void Checker::check_enum_switch( Node_id id, Type_id type, bool& has_default )
+{
+    const std::span<const Node_id> children = ast_.children( id );
 
     // From 1: child 0 of an Enum_decl is its underlying type.
     const Node_id                  decl     = table_.get( type ).declaration;
@@ -1690,8 +1729,6 @@ void Checker::visit_switch( Node_id id )
 
     // The label that covered each ordinal, so a duplicate can point at the first one.
     std::vector<Node_id> covered( variants.size(), Node_id {} );
-
-    bool has_default = false;
 
     for( const Node_id arm : children.subspan( 1 ) )
     {
@@ -1702,6 +1739,19 @@ void Checker::visit_switch( Node_id id )
         // The last child is the body; everything before it is a label.
         for( const Node_id label : arm_children.subspan( 0, arm_children.size() - 1 ) )
         {
+            // D34's ranges are over numbers. A range of variants would need declaration order to be
+            // an *ordering*, which is exactly what enum comparison already refuses to treat it as.
+            if( ast_.kind( label ) == Node_kind::Range_expr )
+            {
+                error_at(
+                    ast_.span( label ),
+                    "a range cannot name variants",
+                    "the order variants were declared in is not an ordering; list them instead"
+                );
+
+                continue;
+            }
+
             const Type_id label_type = infer( label );
 
             if( table_.is_error( label_type ) )
@@ -1766,13 +1816,162 @@ void Checker::visit_switch( Node_id id )
     }
 
     // D15's shape: a construct with no effect is an error rather than a warning. A `default` here
-    // can never run, and leaving it would mean a variant added later lands in it silently.
+    // can never run, and leaving it would mean a variant added later lands in it silently - which
+    // is the guarantee the whole construct exists for.
     if( missing.empty() && has_default )
     {
         error_at(
             ast_.span( id ),
             fmt::format( "every variant of `{}` is covered, so `default` can never run", table_.name( type ) ),
             "remove it, so that adding a variant later is a compile error here"
+        );
+    }
+}
+
+// A `case` bound is always an integer, whatever the scrutinee is - D34 gives `..` one meaning, and
+// the meaning it will need for slicing is an integer one. So `case 1..5:` reads the same over an
+// `f64` as over an `i32`, and `1.5..7.3` has no spelling.
+std::optional<i64> Checker::fold_bound( Node_id bound, Type_id scrutinee )
+{
+    // Types the bound as well as reading it: fold_integer only folds, and lowering needs the node
+    // to carry a type. Against the *scrutinee's* type, so `case 1..5:` over an `f64` compares
+    // against 1.0 and 5.0 rather than needing a cast nobody wrote.
+    check( bound, scrutinee );
+
+    const Folded folded = fold_integer( bound );
+
+    if( !folded.constant )
+    {
+        error_at(
+            ast_.span( bound ),
+            "a `case` label must be known at compile time",
+            "a `switch` decides which arm runs by comparing constants"
+        );
+
+        return std::nullopt;
+    }
+
+    // The interval arithmetic below is signed, and a label at the very top of `u64` is not worth
+    // widening it for - saying so is better than being quietly wrong about the overlap.
+    if( folded.overflowed || folded.value.magnitude > static_cast<u64>( std::numeric_limits<i64>::max() ) )
+    {
+        error_at( ast_.span( bound ), "this `case` label is too large to check for overlap" );
+        return std::nullopt;
+    }
+
+    const i64 magnitude = static_cast<i64>( folded.value.magnitude );
+
+    return folded.value.negative ? -magnitude : magnitude;
+}
+
+// Coverage as a set of half-open intervals. Overlap is decidable and reported; completeness is not,
+// so `default` is required rather than inferred.
+void Checker::check_numeric_switch( Node_id id, Type_id type, bool& has_default )
+{
+    const std::span<const Node_id> children = ast_.children( id );
+    const bool                     floating = table_.is_float( type );
+
+    std::vector<Interval> covered;
+
+    for( const Node_id arm : children.subspan( 1 ) )
+    {
+        has_default = has_default || ast_.aux( arm ) == 1;
+
+        const std::span<const Node_id> arm_children = ast_.children( arm );
+
+        for( const Node_id label : arm_children.subspan( 0, arm_children.size() - 1 ) )
+        {
+            const bool is_range = ast_.kind( label ) == Node_kind::Range_expr;
+
+            // Exact equality against a float is the mistake every float guide opens with, and a
+            // `case` is the one place it would look deliberate. A range says what was meant.
+            if( floating && !is_range )
+            {
+                error_at(
+                    ast_.span( label ),
+                    fmt::format( "a single value cannot be matched against a `{}`", table_.name( type ) ),
+                    "comparing floats for equality is rarely what is meant; write a range, as in `case 1..2:`"
+                );
+
+                continue;
+            }
+
+            Interval interval { .label = label };
+
+            if( is_range )
+            {
+                const std::optional<i64> low  = fold_bound( ast_.children( label )[0], type );
+                const std::optional<i64> high = fold_bound( ast_.children( label )[1], type );
+
+                if( !low.has_value() || !high.has_value() )
+                {
+                    continue;
+                }
+
+                // Half-open, so `low == high` is empty and `low > high` is backwards. Both are
+                // certainly a mistake, and both are visible without running anything - which is the
+                // whole of what D34 asks the checker to catch.
+                if( *low >= *high )
+                {
+                    error_at(
+                        ast_.span( label ),
+                        fmt::format( "`{}..{}` matches nothing", *low, *high ),
+                        *low == *high ? "a range excludes its upper bound, so this one is empty"
+                                      : "a range runs upwards; the lower bound comes first"
+                    );
+
+                    continue;
+                }
+
+                interval.low  = *low;
+                interval.high = *high;
+            }
+            else
+            {
+                const std::optional<i64> value = fold_bound( label, type );
+
+                if( !value.has_value() )
+                {
+                    continue;
+                }
+
+                // A single value is the interval it covers, so everything below treats the two the
+                // same.
+                interval.low  = *value;
+                interval.high = *value + 1;
+            }
+
+            // Pairwise rather than sorted: a `switch` has a handful of arms, and reporting against
+            // the label that was written first needs the source order anyway.
+            const auto clash = std::find_if(
+                covered.begin(),
+                covered.end(),
+                [&]( const Interval& other ) { return interval.low < other.high && other.low < interval.high; }
+            );
+
+            if( clash != covered.end() )
+            {
+                error_at(
+                    ast_.span( label ), "this `case` overlaps an earlier one", previous_declaration_note( clash->label )
+                );
+
+                continue;
+            }
+
+            covered.push_back( interval );
+        }
+
+        visit( arm_children.back() );
+    }
+
+    // No completeness check and no dead-`default` rule: neither is decidable over a number, and a
+    // `default` that looks redundant here cannot be proved so.
+    if( !has_default )
+    {
+        error_at(
+            ast_.span( id ),
+            fmt::format( "a `switch` over `{}` needs a `default`", table_.name( type ) ),
+            "its values cannot all be listed, so there is no other way to be exhaustive"
         );
     }
 }
@@ -8507,24 +8706,150 @@ TEST_CASE( "type_checker_checks_switch_labels", "[sema][switch]" )
     }
 }
 
-// Integers wait for D34's range labels: exhaustiveness over 2^32 values is not provable, so an
-// integer scrutinee needs `default` to mean anything, and that is a slice of its own.
-TEST_CASE( "type_checker_refuses_a_non_enum_scrutinee", "[sema][switch]" )
+// An enum or a number. A `bool` has two values and an `if`, so a switch over one buys nothing and
+// would need a `default` or both labels - which is an `if` spelled at length.
+TEST_CASE( "type_checker_refuses_a_scrutinee_that_is_neither", "[sema][switch]" )
 {
-    const Typed p( "i32 f( i32 n ) { switch( n ) { default: return 1; } }\ni32 main() { return 0; }" );
+    const Typed p( "i32 f( bool b ) { switch( b ) { default: return 1; } }\ni32 main() { return 0; }" );
 
     INFO( p.rendered() );
-    REQUIRE( p.rendered().find( "`switch` needs an `enum`" ) != std::string::npos );
+    REQUIRE( p.rendered().find( "`switch` needs an `enum` or a number" ) != std::string::npos );
 }
 
 // A mistake in the scrutinee must not hide the mistakes inside the arms - one compile should report
 // all of them.
 TEST_CASE( "type_checker_checks_arm_bodies_even_when_the_scrutinee_is_wrong", "[sema][switch]" )
 {
-    const Typed p( "i32 f( i32 n ) { switch( n ) { default: i32 x = true; return 1; } }\ni32 main() { return 0; }" );
+    const Typed p( "i32 f( bool b ) { switch( b ) { default: i32 x = true; return 1; } }\ni32 main() { return 0; }" );
 
     INFO( p.rendered() );
     REQUIRE( p.errors() >= 2 );
+}
+
+// PLAN D34. Over a number, coverage is a set of **half-open** intervals: `case 3:` is [3, 4) and
+// `case 1..5:` is [1, 5). One representation for both is what makes overlap a single pairwise walk,
+// and what makes a value label and a range label indistinguishable to everything downstream.
+TEST_CASE( "type_checker_checks_a_numeric_switch", "[sema][range]" )
+{
+    SECTION( "an integer scrutinee is accepted with a default" )
+    {
+        const Typed p( "i32 f( i32 n ) { switch( n ) { case 1: return 1; default: return 0; } }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // Completeness over 2^32 values is not provable, so `default` is required rather than inferred -
+    // which is the one place a numeric switch differs from an enum one in kind rather than degree.
+    SECTION( "and required to have one" )
+    {
+        const Typed p( "i32 f( i32 n ) { switch( n ) { case 1: return 1; } return 0; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "needs a `default`" ) != std::string::npos );
+    }
+
+    // And the dead-`default` rule deliberately does *not* apply: nothing can prove the intervals
+    // cover the type, so no `default` over a number is ever provably unreachable.
+    SECTION( "a default is never dead over a number" )
+    {
+        const Typed p( "i32 f( i32 n ) { switch( n ) { case 0..256: return 1; default: return 0; } }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+TEST_CASE( "type_checker_checks_range_labels", "[sema][range]" )
+{
+    SECTION( "a backwards range is refused" )
+    {
+        const Typed p( "i32 f( i32 n ) { switch( n ) { case 5..1: return 1; default: return 0; } }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`5..1` matches nothing" ) != std::string::npos );
+    }
+
+    // Half-open, so equal bounds exclude everything. Its own message, because the fix differs: this
+    // one is off by one rather than the wrong way round.
+    SECTION( "and so is an empty one" )
+    {
+        const Typed p( "i32 f( i32 n ) { switch( n ) { case 3..3: return 1; default: return 0; } }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "excludes its upper bound" ) != std::string::npos );
+    }
+
+    SECTION( "an overlap names the earlier label" )
+    {
+        const Typed p( "i32 f( i32 n ) { switch( n ) { case 1..10: return 1; case 5: return 2; default: return 0; } }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "overlaps an earlier one" ) != std::string::npos );
+    }
+
+    // Half-open is what makes these two *not* overlap, and it is the boundary an off-by-one would
+    // land on - so it is worth a case of its own rather than trusting the one above.
+    SECTION( "but touching ranges do not overlap" )
+    {
+        const Typed p( "i32 f( i32 n ) { switch( n ) { case 1..5: return 1; case 5..10: return 2; default: return 0; } }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a label must be a constant" )
+    {
+        const Typed p( "i32 f( i32 n, i32 m ) { switch( n ) { case m: return 1; default: return 0; } }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "known at compile time" ) != std::string::npos );
+    }
+
+    // D34 gives `..` one meaning everywhere, and the meaning slicing will need is an integer one.
+    // A range of variants would additionally need declaration order to be an ordering, which enum
+    // comparison already refuses to treat it as.
+    SECTION( "a range cannot name variants" )
+    {
+        const Typed p( "enum Colour { Red, Green };\n"
+                       "i32 f( Colour c ) { switch( c ) { case Colour::Red..Colour::Green: return 1; default: return 0; } }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "a range cannot name variants" ) != std::string::npos );
+    }
+}
+
+// A float scrutinee takes ranges and refuses single values. Exact equality against a float is the
+// mistake every float guide opens with, and a `case` is the one place it would look deliberate;
+// a range says what was meant. The bounds stay integers either way - `..` has one meaning.
+TEST_CASE( "type_checker_switches_on_a_float_by_range_only", "[sema][range]" )
+{
+    SECTION( "a range bucket is accepted" )
+    {
+        const Typed p( "i32 f( f64 x ) { switch( x ) { case 0..1: return 1; case 1..10: return 2; default: return 3; } }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a single value is refused" )
+    {
+        const Typed p( "i32 f( f64 x ) { switch( x ) { case 3: return 1; default: return 0; } }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "a single value cannot be matched against a `f64`" ) != std::string::npos );
+    }
 }
 
 } // namespace keel

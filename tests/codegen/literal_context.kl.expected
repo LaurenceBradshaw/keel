@@ -47,6 +47,18 @@ int32_t kl__main__( void )
     bool kl_t29;
     int32_t kl_t30;
     bool kl_t31;
+    bool kl_t32;
+    bool kl_t33;
+    bool kl_t34;
+    bool kl_t35;
+    float kl_t36;
+    bool kl_t37;
+    int32_t kl_t38;
+    int32_t kl_t39;
+    int32_t kl_t40;
+    int32_t kl_t41;
+    int32_t kl_t42;
+    int32_t kl_t43;
 #line 8 "codegen/literal_context.kl"
     kl_t2 = -1.5;
     kl_a_1 = kl_t2;
@@ -54,16 +66,16 @@ int32_t kl__main__( void )
     kl_t4 = -1.5;
     kl_b_3 = kl_t4;
 #line 10 "codegen/literal_context.kl"
-    kl_c_5 = 1.5;
+    kl_c_5 = 1.0;
 #line 11 "codegen/literal_context.kl"
-    kl_d_6 = 1.0;
+    kl_d_6 = 2.0;
 #line 13 "codegen/literal_context.kl"
     kl_e_7 = 1.0;
 #line 14 "codegen/literal_context.kl"
     kl_t9 = kl_e_7 + 1.5;
     kl_f_8 = kl_t9;
 #line 15 "codegen/literal_context.kl"
-    kl_t11 = kl_e_7 * 1.5;
+    kl_t11 = kl_e_7 * 2.0;
     kl_g_10 = kl_t11;
 #line 17 "codegen/literal_context.kl"
     kl_h_12 = 97;
@@ -95,26 +107,78 @@ int32_t kl__main__( void )
 #line 31 "codegen/literal_context.kl"
     kl_q_28 = kl_q_28 + 1;
 #line 33 "codegen/literal_context.kl"
-    kl_t29 = kl_q_28 == 2;
+    kl_t29 = kl_q_28 != 2;
     if ( kl_t29 ) goto bb1; else goto bb2;
     bb1:
-    kl_t0 = 0;
+    kl_t0 = 90;
     return kl_t0;
     bb2:
     goto bb3;
     bb3:
 #line 34 "codegen/literal_context.kl"
     kl_t30 = -1;
-    kl_t31 = kl_t30 < 0;
+    kl_t31 = kl_t30 >= 0;
     if ( kl_t31 ) goto bb4; else goto bb5;
     bb4:
-    kl_t0 = 0;
+    kl_t0 = 91;
     return kl_t0;
     bb5:
     goto bb6;
     bb6:
-#line 36 "codegen/literal_context.kl"
-    kl_t0 = 0;
+#line 41 "codegen/literal_context.kl"
+    kl_t32 = kl_c_5 != 1.0;
+    if ( kl_t32 ) goto bb7; else goto bb8;
+    bb7:
+    kl_t0 = 10;
+    return kl_t0;
+    bb8:
+    goto bb9;
+    bb9:
+#line 42 "codegen/literal_context.kl"
+    kl_t33 = kl_d_6 != 2.0;
+    if ( kl_t33 ) goto bb10; else goto bb11;
+    bb10:
+    kl_t0 = 11;
+    return kl_t0;
+    bb11:
+    goto bb12;
+    bb12:
+#line 43 "codegen/literal_context.kl"
+    kl_t34 = kl_g_10 != 2.0;
+    if ( kl_t34 ) goto bb13; else goto bb14;
+    bb13:
+    kl_t0 = 12;
+    return kl_t0;
+    bb14:
+    goto bb15;
+    bb15:
+#line 44 "codegen/literal_context.kl"
+    kl_t35 = kl_f_8 != 2.5;
+    if ( kl_t35 ) goto bb16; else goto bb17;
+    bb16:
+    kl_t0 = 13;
+    return kl_t0;
+    bb17:
+    goto bb18;
+    bb18:
+#line 45 "codegen/literal_context.kl"
+    kl_t36 = -1.5;
+    kl_t37 = kl_a_1 != kl_t36;
+    if ( kl_t37 ) goto bb19; else goto bb20;
+    bb19:
+    kl_t0 = 14;
+    return kl_t0;
+    bb20:
+    goto bb21;
+    bb21:
+#line 47 "codegen/literal_context.kl"
+    kl_t38 = ( int32_t ) kl_h_12;
+    kl_t39 = ( int32_t ) kl_i_13;
+    kl_t40 = kl_t38 + kl_t39;
+    kl_t41 = ( int32_t ) kl_o_24;
+    kl_t42 = kl_t40 + kl_t41;
+    kl_t43 = kl_t42 + kl_m_20;
+    kl_t0 = kl_t43;
     return kl_t0;
 }
 

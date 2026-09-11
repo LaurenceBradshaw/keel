@@ -60,6 +60,7 @@ enum class Node_kind : u16
     Continue_stmt,
     Switch_stmt, // children: scrutinee, then Case_arms in source order
     Case_arm,    // children: the labels (Path_exprs), then the body Block; aux is 1 for `default`
+    Range_expr,  // `1..5`, half-open; children are the two bounds
 
     Count
 };

@@ -16,16 +16,58 @@ error: every variant of `Colour` is covered, so `default` can never run
 38 |     switch( c )
    |     ^^^^^^^^^^^ remove it, so that adding a variant later is a compile error here
 
-error: `switch` needs an `enum`, but this is a `i32`
-  --> sema/errors_switch.kl:55:13
+error: `switch` needs an `enum` or a number, but this is a `bool`
+  --> sema/errors_switch.kl:54:13
    |
-55 |     switch( n )
-   |             ^ an integer scrutinee is not supported yet
+54 |     switch( b )
+   |             ^
+
+error: a `switch` over `i32` needs a `default`
+  --> sema/errors_switch.kl:65:5
+   |
+65 |     switch( n )
+   |     ^^^^^^^^^^^ its values cannot all be listed, so there is no other way to be exhaustive
+
+error: `5..1` matches nothing
+  --> sema/errors_switch.kl:78:14
+   |
+78 |         case 5..1:
+   |              ^^^^ a range runs upwards; the lower bound comes first
+
+error: `3..3` matches nothing
+  --> sema/errors_switch.kl:90:14
+   |
+90 |         case 3..3:
+   |              ^^^^ a range excludes its upper bound, so this one is empty
+
+error: this `case` overlaps an earlier one
+   --> sema/errors_switch.kl:103:14
+    |
+103 |         case 5:
+    |              ^ previous declaration is at: 101:14
+
+error: a `case` label must be known at compile time
+   --> sema/errors_switch.kl:114:14
+    |
+114 |         case m:
+    |              ^ a `switch` decides which arm runs by comparing constants
+
+error: a range cannot name variants
+   --> sema/errors_switch.kl:127:14
+    |
+127 |         case Colour::Red..Colour::Green:
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^ the order variants were declared in is not an ordering; list them instead
+
+error: a single value cannot be matched against a `f64`
+   --> sema/errors_switch.kl:140:14
+    |
+140 |         case 3:
+    |              ^ comparing floats for equality is rarely what is meant; write a range, as in `case 1..2:`
 
 error: a `case` label must be a variant of `Colour`
-  --> sema/errors_switch.kl:66:14
-   |
-66 |         case 1:
-   |              ^
+   --> sema/errors_switch.kl:151:14
+    |
+151 |         case 1:
+    |              ^
 
-5 errors generated
+12 errors generated
