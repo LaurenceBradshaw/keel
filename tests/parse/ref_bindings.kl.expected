@@ -6,7 +6,7 @@ Source_file                             4:1-32:1
         Named_type                      4:26-4:29   "i32"
     Block                               5:1-9:2
       Var_decl                          6:5-6:19    name=r
-        Mode_type                       6:5-6:8
+        Mode_type                       6:5-6:8     mode=ref
           Named_type                    6:9-6:12    "i32"
         Name_expr                       6:17-6:18   "x"
       Assign_stmt                       8:5-8:11    op==
@@ -20,7 +20,7 @@ Source_file                             4:1-32:1
     Block                               14:1-18:2
       For_stmt                          15:5-17:6
         Var_decl                        15:10-15:24 name=r
-          Mode_type                     15:10-15:13
+          Mode_type                     15:10-15:13 mode=ref
             Named_type                  15:14-15:17 "i32"
           Name_expr                     15:22-15:23 "x"
         Binary_expr                     15:25-15:31 op=<
@@ -35,11 +35,11 @@ Source_file                             4:1-32:1
     Param_list                          22:17-22:19 "()"
     Block                               23:1-26:2
       Var_decl                          24:5-24:20  name=m
-        Mode_type                       24:5-24:9
+        Mode_type                       24:5-24:9   mode=move
           Named_type                    24:10-24:13 "i32"
         Int_literal                     24:18-24:19 "1"
       Var_decl                          25:5-25:19  name=o
-        Mode_type                       25:5-25:8
+        Mode_type                       25:5-25:8   mode=out
           Named_type                    25:9-25:12  "i32"
         Int_literal                     25:17-25:18 "2"
   Function_decl                         28:1-31:2   name=main

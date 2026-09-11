@@ -119,7 +119,8 @@ private:
     // Parameters the callee owns, and therefore drops. Collected in the constructor and put in a
     // scope by run(), because scope_locals_ has no scope to go into until then.
     std::vector<Local_id>   owned_parameters_;
-    std::unordered_set<u32> borrowed_bindings_; // Param_decl ids whose local holds an address
+    std::unordered_set<u32> borrowed_bindings_;       // Param_decl ids whose local holds an address
+    Node_id                 receiver_declaration_ {}; // the Param_decl, so place_for can be reused for it
 
     // Owning temporaries built by the statement being lowered. They have an owner - the caller -
     // and therefore a drop, and the right moment for it is the end of the statement, which is after
@@ -180,7 +181,8 @@ Lowering::Lowering(
             // anything that adds a local before this runs.
             if( !receiver_.is_valid() && ast_.kind( declaration ) != Node_kind::Function_decl )
             {
-                receiver_ = local;
+                receiver_             = local;
+                receiver_declaration_ = param;
             }
         }
     }
@@ -231,7 +233,7 @@ Place Lowering::place_for( Node_id declaration )
     // lowers to the same two projections the explicit spelling produces.
     if( ast_.kind( declaration ) == Node_kind::Field_decl )
     {
-        return builder_.field( builder_.deref( builder_.place( receiver_ ) ), declaration );
+        return builder_.field( place_for( receiver_declaration_ ), declaration );
     }
 
     // Anything else that resolves to a Var_decl is at file scope: a function-local one is in the
@@ -408,9 +410,7 @@ void Lowering::lower_construction( Place target, Node_id call_expr )
     const std::span<const Node_id> parameters = ast_.children( ast_.children( constructor )[1] );
     const std::span<const Node_id> arguments  = ast_.children( ast_.children( call_expr )[1] );
 
-    // Parameter 0 is the receiver, and the signature pass already recorded its type as `t*` - so
-    // there is no pointer type to build here, only one to read.
-    const Type_id receiver_type = types_.type_of( parameters[0] );
+    const Type_id receiver_type = binding_type( ast_, types_, parameters[0] );
 
     std::vector<Operand> operands;
 

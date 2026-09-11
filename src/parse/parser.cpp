@@ -155,7 +155,7 @@ private:
     void mark_parenthesised( Node_id id );
     bool is_parenthesised( Node_id id ) const;
 
-    Node_id synthesise_receiver( Symbol_id enclosing, Span span );
+    Node_id synthesise_receiver( Symbol_id enclosing, Span span, bool is_const );
 
     bool at_mode_keyword() const;
 
@@ -866,7 +866,7 @@ Node_id Parser::parse_destructor_decl( Symbol_id enclosing )
 
     // C++ writes `this` implicitly; Keel writes it down. As an ordinary parameter it needs no
     // special case in the resolver, the checker, mangling or lowering - it is simply parameter 0.
-    const Node_id receiver = synthesise_receiver( enclosing, start );
+    const Node_id receiver = synthesise_receiver( enclosing, start, false );
     // Parsed rather than rejected on sight, so a stray parameter does not desynchronise the body.
     const Node_id params = parse_param_list( receiver );
 
@@ -900,7 +900,7 @@ Node_id Parser::parse_constructor_decl( Symbol_id enclosing )
 
     // Same receiver the destructor gets, and for the same reason: as an ordinary parameter it
     // needs no special case in any later pass.
-    const Node_id receiver = synthesise_receiver( enclosing, start );
+    const Node_id receiver = synthesise_receiver( enclosing, start, false );
     const Node_id params   = parse_param_list( receiver );
     const Node_id body     = parse_block();
 
@@ -1841,14 +1841,16 @@ bool Parser::is_parenthesised( Node_id id ) const
     return id.v < parenthesised_.size() && parenthesised_[id.v];
 }
 
-Node_id Parser::synthesise_receiver( Symbol_id enclosing, Span span )
+// D32: the receiver is a binding, not a pointer. `ref T` when the method may write the object,
+// `const ref T` when it may not, which is what a trailing `const` on the method says. Built out of
+// the same nodes a written parameter would be, so nothing downstream learns it was synthesised.
+Node_id Parser::synthesise_receiver( Symbol_id enclosing, Span span, bool is_const )
 {
-    return ast_.add(
-        Node_kind::Param_decl,
-        span,
-        Interner::keyword( Keyword::This ).v,
-        { ast_.add( Node_kind::Pointer_type, span, 0, { ast_.add( Node_kind::Named_type, span, enclosing.v, {} ) } ) }
-    );
+    const Node_id named = ast_.add( Node_kind::Named_type, span, enclosing.v, {} );
+    const Node_id mode  = ast_.add( Node_kind::Mode_type, span, static_cast<u32>( Keyword::Ref ), { named } );
+    const Node_id type  = is_const ? ast_.add( Node_kind::Const_type, span, 0, { mode } ) : mode;
+
+    return ast_.add( Node_kind::Param_decl, span, Interner::keyword( Keyword::This ).v, { type } );
 }
 
 bool Parser::at_mode_keyword() const
@@ -4487,7 +4489,7 @@ TEST_CASE( "parser_parses_destructors", "[parse][aggregates]" )
         const Node_id receiver = p.child( p.child( dtor, 1 ), 0 );
 
         REQUIRE( p.kind( receiver ) == Node_kind::Param_decl );
-        REQUIRE( p.kind( p.child( receiver, 0 ) ) == Node_kind::Pointer_type );
+        REQUIRE( p.kind( p.child( receiver, 0 ) ) == Node_kind::Mode_type );
         REQUIRE( p.kind( p.child( dtor, 2 ) ) == Node_kind::Block );
     }
 
@@ -4674,7 +4676,7 @@ TEST_CASE( "parser_parses_constructors", "[parse][aggregates]" )
         INFO( p.dump() );
         REQUIRE_FALSE( p.has_errors() );
         REQUIRE( p.children( params ).size() == 3 );
-        REQUIRE( p.kind( p.child( receiver, 0 ) ) == Node_kind::Pointer_type );
+        REQUIRE( p.kind( p.child( receiver, 0 ) ) == Node_kind::Mode_type );
     }
 
     SECTION( "no parameters of its own is fine" )

@@ -7,7 +7,7 @@ Source_file                             5:1-24:1
     Param_list                          10:19-10:40
       Param_decl                        10:21-10:38 name=p
         Const_type                      10:21-10:36
-          Mode_type                     10:21-10:30
+          Mode_type                     10:21-10:30 mode=ref
             Named_type                  10:31-10:36 "Point"
     Block                               11:1-13:2
       Return_stmt                       12:5-12:16
@@ -21,7 +21,7 @@ Source_file                             5:1-24:1
     Block                               16:1-18:2
       Var_decl                          17:5-17:25  name=r
         Const_type                      17:5-17:18
-          Mode_type                     17:5-17:14
+          Mode_type                     17:5-17:14  mode=ref
             Named_type                  17:15-17:18 "i32"
         Name_expr                       17:23-17:24 "x"
   Function_decl                         20:1-23:2   name=main

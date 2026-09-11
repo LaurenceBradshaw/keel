@@ -72,6 +72,12 @@ std::string aux_note( const Ast& ast, const Interner& interner, Node_id id, std:
         return name == span_text ? std::string {} : fmt::format( "name={}", name );
     }
 
+    case Node_kind::Mode_type:
+    {
+        const std::string_view mode = interner.text( Symbol_id { ast.aux( id ) } );
+        return fmt::format( "mode={}", mode );
+    }
+
     default:
         return {};
     }

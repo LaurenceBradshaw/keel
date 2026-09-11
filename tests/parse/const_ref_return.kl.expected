@@ -4,16 +4,16 @@ Source_file                             4:1-33:1
       Named_type                        6:5-6:8     "i32"
   Function_decl                         9:1-17:2    name=picks
     Const_type                          9:1-9:14
-      Mode_type                         9:1-9:10
+      Mode_type                         9:1-9:10    mode=ref
         Named_type                      9:11-9:14   "i32"
     Param_list                          9:20-9:56
       Param_decl                        9:22-9:37   name=a
         Const_type                      9:22-9:35
-          Mode_type                     9:22-9:31
+          Mode_type                     9:22-9:31   mode=ref
             Named_type                  9:32-9:35   "i32"
       Param_decl                        9:39-9:54   name=b
         Const_type                      9:39-9:52
-          Mode_type                     9:39-9:48
+          Mode_type                     9:39-9:48   mode=ref
             Named_type                  9:49-9:52   "i32"
     Block                               10:1-17:2
       If_stmt                           11:5-14:6
@@ -28,23 +28,23 @@ Source_file                             4:1-33:1
         Name_expr                       16:12-16:13 "b"
   Function_decl                         19:1-22:2   name=gets
     Const_type                          19:1-19:14
-      Mode_type                         19:1-19:10
+      Mode_type                         19:1-19:10  mode=ref
         Named_type                      19:11-19:14 "i32"
     Param_list                          19:19-19:40
       Param_decl                        19:21-19:38 name=p
         Const_type                      19:21-19:36
-          Mode_type                     19:21-19:30
+          Mode_type                     19:21-19:30 mode=ref
             Named_type                  19:31-19:36 "Point"
     Block                               20:1-22:2
       Return_stmt                       21:5-21:16
         Field_expr                      21:12-21:15 name=x
           Name_expr                     21:12-21:13 "p"
   Function_decl                         24:1-27:2   name=mutable_return
-    Mode_type                           24:1-24:4
+    Mode_type                           24:1-24:4   mode=ref
       Named_type                        24:5-24:8   "i32"
     Param_list                          24:23-24:36
       Param_decl                        24:25-24:34 name=a
-        Mode_type                       24:25-24:28
+        Mode_type                       24:25-24:28 mode=ref
           Named_type                    24:29-24:32 "i32"
     Block                               25:1-27:2
       Return_stmt                       26:5-26:14

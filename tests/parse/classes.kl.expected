@@ -9,7 +9,7 @@ Source_file                             4:1-66:1
       <none>                            -
       Param_list                        9:12-9:14
         Param_decl                      9:5-9:6     name=this
-          Pointer_type                  9:5-9:6
+          Mode_type                     9:5-9:6     mode=ref
             Named_type                  9:5-9:6     "~"  name=Buffer
       Block                             10:5-12:6
         Expr_stmt                       11:9-11:24
@@ -26,7 +26,7 @@ Source_file                             4:1-66:1
       <none>                            -
       Param_list                        27:15-27:17
         Param_decl                      27:5-27:6   name=this
-          Pointer_type                  27:5-27:6
+          Mode_type                     27:5-27:6   mode=ref
             Named_type                  27:5-27:6   "~"  name=Reordered
       Block                             28:5-29:6   "{
     }"
@@ -42,7 +42,7 @@ Source_file                             4:1-66:1
       <none>                            -
       Param_list                        41:11-41:13
         Param_decl                      41:5-41:6   name=this
-          Pointer_type                  41:5-41:6
+          Mode_type                     41:5-41:6   mode=ref
             Named_type                  41:5-41:6   "~"  name=Point
       Block                             42:5-43:6   "{
     }"
@@ -54,7 +54,7 @@ Source_file                             4:1-66:1
       <none>                            -
       Param_list                        52:11-52:13
         Param_decl                      52:5-52:6   name=this
-          Pointer_type                  52:5-52:6
+          Mode_type                     52:5-52:6   mode=ref
             Named_type                  52:5-52:6   "~"  name=Mismatched
       Block                             53:5-54:6   "{
     }"

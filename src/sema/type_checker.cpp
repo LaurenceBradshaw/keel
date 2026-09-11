@@ -7217,13 +7217,13 @@ TEST_CASE( "type_checker_types_a_destructor_body", "[sema][types][aggregates]" )
         REQUIRE( p.type_name( p.nth( Node_kind::Name_expr, 0 ) ) == "u64" );
     }
 
-    SECTION( "`this` is a pointer to the enclosing type" )
+    SECTION( "`this` is a reference to the enclosing type" )
     {
         const Typed p( "class Buffer { u8* ptr; ~Buffer() { this.ptr = nullptr; } };\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.type_name( p.nth( Node_kind::Name_expr, 0 ) ) == "Buffer*" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Name_expr, 0 ) ) == "Buffer" );
     }
 
     // D22 already makes `.` reach through a pointer, so `this.ptr` needs no rule either.
