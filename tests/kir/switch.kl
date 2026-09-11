@@ -1,0 +1,42 @@
+// PLAN D30. A switch is a chain of equality tests, so KIR gains nothing for it - which is the claim
+// this fixture records: verify, the move analysis and drop elaboration all keep working with no
+// case added for a construct none of them has heard of.
+//
+// The scrutinee is read once, before any block exists. Stacked labels are two tests reaching one
+// body, which shows here as two branches naming the same true-target.
+enum Colour
+{
+    Red,
+    Green,
+    Blue
+};
+
+i32 chain( Colour c )
+{
+    switch( c )
+    {
+        case Colour::Red:
+            return 1;
+        case Colour::Green:
+            return 2;
+        default:
+            return 3;
+    }
+}
+
+i32 stacked( Colour c )
+{
+    switch( c )
+    {
+        case Colour::Red:
+        case Colour::Blue:
+            return 1;
+        default:
+            return 2;
+    }
+}
+
+i32 main()
+{
+    return 0;
+}

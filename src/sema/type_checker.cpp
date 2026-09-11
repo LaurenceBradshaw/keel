@@ -311,6 +311,27 @@ namespace
 {
 // A constructor and a destructor obey the same three rules and differ only in spelling, so the
 // rules are written once over a description of the kind rather than twice over the kinds.
+// "`A`", "`A` and `B`", "`A`, `B` and `C`" - a list a person would read aloud. Worth the twelve
+// lines because the message it builds, naming the variants a `switch` has missed, is the one
+// exhaustiveness checking exists to produce: "not exhaustive" would leave the author to work out
+// which, which is the work the compiler just did.
+std::string quoted_list( std::span<const std::string_view> names )
+{
+    std::string text;
+
+    for( std::size_t i = 0; i < names.size(); ++i )
+    {
+        if( i != 0 )
+        {
+            text += i + 1 == names.size() ? " and " : ", ";
+        }
+
+        text += fmt::format( "`{}`", names[i] );
+    }
+
+    return text;
+}
+
 struct Member_kind
 {
     Node_kind        node;
@@ -412,6 +433,7 @@ private:
     void visit_var( Node_id id );
     void visit_assign( Node_id id );
     void visit_if( Node_id id );
+    void visit_switch( Node_id id );
     void visit_while( Node_id id );
     void visit_for( Node_id id );
     void visit_increment( Node_id id );
@@ -1269,6 +1291,9 @@ void Checker::visit( Node_id id )
     case Node_kind::If_stmt:
         return visit_if( id );
 
+    case Node_kind::Switch_stmt:
+        return visit_switch( id );
+
     case Node_kind::While_stmt:
         return visit_while( id );
 
@@ -1617,6 +1642,137 @@ void Checker::visit_assign( Node_id id )
     {
         error_at(
             ast_.span( id ), fmt::format( "no operator `{}` for `{}`", token_kind_spelling( op ), table_.name( target_type ) )
+        );
+    }
+}
+
+// PLAN D7/D30. A `switch` is exhaustive or it has a `default`, and that is the whole reason it is
+// worth having over a chain of `if`s: adding a variant later breaks exactly the switches that
+// should be revisited. Which is also why a `default` on a fully covered enum is refused - it would
+// silently absorb the new variant and take the guarantee away.
+void Checker::visit_switch( Node_id id )
+{
+    const std::span<const Node_id> children  = ast_.children( id );
+    const Node_id                  scrutinee = children[0];
+    const Type_id                  type      = infer( scrutinee );
+
+    // Every arm body is visited whatever the scrutinee turned out to be: one mistake there should
+    // not hide every mistake inside the arms.
+    const auto visit_bodies = [&]()
+    {
+        for( const Node_id arm : children.subspan( 1 ) )
+        {
+            visit( ast_.children( arm ).back() );
+        }
+    };
+
+    if( table_.is_error( type ) )
+    {
+        visit_bodies();
+        return;
+    }
+
+    if( !table_.is_enum( type ) )
+    {
+        error_at(
+            ast_.span( scrutinee ),
+            fmt::format( "`switch` needs an `enum`, but this is a `{}`", table_.name( type ) ),
+            "an integer scrutinee is not supported yet"
+        );
+
+        visit_bodies();
+        return;
+    }
+
+    // From 1: child 0 of an Enum_decl is its underlying type.
+    const Node_id                  decl     = table_.get( type ).declaration;
+    const std::span<const Node_id> variants = ast_.children( decl ).subspan( 1 );
+
+    // The label that covered each ordinal, so a duplicate can point at the first one.
+    std::vector<Node_id> covered( variants.size(), Node_id {} );
+
+    bool has_default = false;
+
+    for( const Node_id arm : children.subspan( 1 ) )
+    {
+        has_default = has_default || ast_.aux( arm ) == 1;
+
+        const std::span<const Node_id> arm_children = ast_.children( arm );
+
+        // The last child is the body; everything before it is a label.
+        for( const Node_id label : arm_children.subspan( 0, arm_children.size() - 1 ) )
+        {
+            const Type_id label_type = infer( label );
+
+            if( table_.is_error( label_type ) )
+            {
+                continue;
+            }
+
+            if( label_type != type )
+            {
+                error_at( ast_.span( label ), fmt::format( "a `case` label must be a variant of `{}`", table_.name( type ) ) );
+
+                continue;
+            }
+
+            // infer_path recorded the ordinal, which is what makes coverage a vector index rather
+            // than a search.
+            const auto value = constants_.find( label.v );
+
+            if( value == constants_.end() || value->second.magnitude >= covered.size() )
+            {
+                continue;
+            }
+
+            const std::size_t ordinal = static_cast<std::size_t>( value->second.magnitude );
+
+            if( covered[ordinal].is_valid() )
+            {
+                error_at(
+                    ast_.span( label ),
+                    fmt::format( "`{}` is already covered", interner_.text( Symbol_id { ast_.aux( label ) } ) ),
+                    previous_declaration_note( covered[ordinal] )
+                );
+
+                continue;
+            }
+
+            covered[ordinal] = label;
+        }
+
+        visit( arm_children.back() );
+    }
+
+    // Named rather than counted: "missing `Green` and `Blue`" is the diagnostic this whole feature
+    // exists to produce, and "not exhaustive" would leave the author to work it out.
+    std::vector<std::string_view> missing;
+
+    for( std::size_t i = 0; i < variants.size(); ++i )
+    {
+        if( !covered[i].is_valid() )
+        {
+            missing.push_back( interner_.text( Symbol_id { ast_.aux( variants[i] ) } ) );
+        }
+    }
+
+    if( !missing.empty() && !has_default )
+    {
+        error_at(
+            ast_.span( id ),
+            fmt::format( "`switch` does not cover every variant of `{}`", table_.name( type ) ),
+            fmt::format( "missing {}", quoted_list( missing ) )
+        );
+    }
+
+    // D15's shape: a construct with no effect is an error rather than a warning. A `default` here
+    // can never run, and leaving it would mean a variant added later lands in it silently.
+    if( missing.empty() && has_default )
+    {
+        error_at(
+            ast_.span( id ),
+            fmt::format( "every variant of `{}` is covered, so `default` can never run", table_.name( type ) ),
+            "remove it, so that adding a variant later is a compile error here"
         );
     }
 }
@@ -8245,6 +8401,130 @@ TEST_CASE( "type_checker_passes_an_enum_like_any_other_type", "[sema][enum]" )
 
     INFO( p.rendered() );
     REQUIRE( p.clean() );
+}
+
+// PLAN D7/D30. Exhaustiveness is the whole reason `switch` is worth having over a chain of `if`s:
+// adding a variant later breaks exactly the switches that should be revisited. Which is also why a
+// `default` on a fully covered enum is refused - it would absorb the new variant silently and take
+// the guarantee away.
+TEST_CASE( "type_checker_requires_a_switch_to_be_exhaustive", "[sema][switch]" )
+{
+    constexpr std::string_view colour = "enum Colour { Red, Green, Blue };\n";
+
+    SECTION( "covering every variant is accepted" )
+    {
+        const Typed p(
+            std::string( colour ) + "i32 f( Colour c ) { switch( c ) { case Colour::Red: return 1;"
+                                    " case Colour::Green: return 2; case Colour::Blue: return 3; } return 0; }\n"
+                                    "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // Named rather than counted: working out *which* is the work the compiler has just done, and
+    // "not exhaustive" would hand it back to the author.
+    SECTION( "a gap names the variants that are missing" )
+    {
+        const Typed p(
+            std::string( colour ) + "i32 f( Colour c ) { switch( c ) { case Colour::Red: return 1; } return 0; }\n"
+                                    "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "does not cover every variant of `Colour`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "missing `Green` and `Blue`" ) != std::string::npos );
+    }
+
+    SECTION( "and `default` fills it" )
+    {
+        const Typed p(
+            std::string( colour ) + "i32 f( Colour c ) { switch( c ) { case Colour::Red: return 1;"
+                                    " default: return 0; } }\n"
+                                    "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "but a `default` that can never run is refused" )
+    {
+        const Typed p(
+            std::string( colour ) + "i32 f( Colour c ) { switch( c ) { case Colour::Red: return 1;"
+                                    " case Colour::Green: return 2; case Colour::Blue: return 3;"
+                                    " default: return 0; } }\n"
+                                    "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`default` can never run" ) != std::string::npos );
+    }
+}
+
+TEST_CASE( "type_checker_checks_switch_labels", "[sema][switch]" )
+{
+    constexpr std::string_view colour = "enum Colour { Red, Green };\n";
+
+    SECTION( "a duplicate label points at the first" )
+    {
+        const Typed p(
+            std::string( colour ) + "i32 f( Colour c ) { switch( c ) { case Colour::Red: return 1;"
+                                    " case Colour::Red: return 2; default: return 0; } }\n"
+                                    "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`Red` is already covered" ) != std::string::npos );
+    }
+
+    SECTION( "a label of the wrong type is refused" )
+    {
+        const Typed p(
+            std::string( colour ) + "i32 f( Colour c ) { switch( c ) { case 1: return 1; default: return 0; } }\n"
+                                    "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "must be a variant of `Colour`" ) != std::string::npos );
+    }
+
+    // Stacked labels are one arm, so covering the set across two labels is still exhaustive.
+    SECTION( "stacked labels each count towards coverage" )
+    {
+        const Typed p(
+            std::string( colour ) + "i32 f( Colour c ) { switch( c ) { case Colour::Red:"
+                                    " case Colour::Green: return 1; } return 0; }\n"
+                                    "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// Integers wait for D34's range labels: exhaustiveness over 2^32 values is not provable, so an
+// integer scrutinee needs `default` to mean anything, and that is a slice of its own.
+TEST_CASE( "type_checker_refuses_a_non_enum_scrutinee", "[sema][switch]" )
+{
+    const Typed p( "i32 f( i32 n ) { switch( n ) { default: return 1; } }\ni32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.rendered().find( "`switch` needs an `enum`" ) != std::string::npos );
+}
+
+// A mistake in the scrutinee must not hide the mistakes inside the arms - one compile should report
+// all of them.
+TEST_CASE( "type_checker_checks_arm_bodies_even_when_the_scrutinee_is_wrong", "[sema][switch]" )
+{
+    const Typed p( "i32 f( i32 n ) { switch( n ) { default: i32 x = true; return 1; } }\ni32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.errors() >= 2 );
 }
 
 } // namespace keel

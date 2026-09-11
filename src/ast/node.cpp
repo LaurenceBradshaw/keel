@@ -99,6 +99,10 @@ std::string_view node_kind_name( Node_kind kind )
         return "Break_stmt";
     case Node_kind::Continue_stmt:
         return "Continue_stmt";
+    case Node_kind::Switch_stmt:
+        return "Switch_stmt";
+    case Node_kind::Case_arm:
+        return "Case_arm";
 
     case Node_kind::Count:
         break;

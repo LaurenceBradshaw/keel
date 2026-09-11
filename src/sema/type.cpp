@@ -90,7 +90,9 @@ Type_id Type_table::enumeration( Node_id declaration, std::string_view name, Typ
         return it->second;
     }
 
-    const Type_id id = add( Type { Type_kind::Enum, 0, false, underlying }, name );
+    // The declaration is carried the way a struct's is: it is how a consumer gets from the type
+    // back to the variants, which is what exhaustiveness checking walks.
+    const Type_id id = add( Type { Type_kind::Enum, 0, false, underlying, declaration }, name );
     enums_.emplace( declaration.v, id );
     return id;
 }

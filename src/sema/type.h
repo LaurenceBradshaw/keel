@@ -39,7 +39,7 @@ struct Type
     u8        width       = 0;     // 8/16/32/64 for Int, 32/64 for Float, 0 otherwise
     bool      is_signed   = false; // only for Int
     Type_id   element     = {};    // For Pointer and Enum
-    Node_id   declaration = {};    // only for Struct; the Struct_decl node that defines it
+    Node_id   declaration = {};    // for Struct and Enum; the node that defines it
 };
 
 class Type_table

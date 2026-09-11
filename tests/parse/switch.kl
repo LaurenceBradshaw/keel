@@ -1,0 +1,42 @@
+// PLAN D7. An arm holds its own labels, which is what makes stacking fall out of the grammar
+// rather than needing a fallthrough rule: the parser takes labels until something that is not one
+// appears, and they all attach to one arm. Falling out of a non-empty arm cannot be expressed.
+//
+// An arm body has no braces of its own - D3's rule is about control-flow bodies, and a label group
+// is not one - but is wrapped in a Block so every consumer treats it like any other.
+enum Colour
+{
+    Red,
+    Green,
+    Blue
+};
+
+i32 stacked( Colour c )
+{
+    switch( c )
+    {
+        case Colour::Red:
+        case Colour::Green:
+            return 1;
+        default:
+            return 2;
+    }
+}
+
+i32 one_per_arm( Colour c )
+{
+    switch( c )
+    {
+        case Colour::Red:
+            return 1;
+        case Colour::Green:
+            return 2;
+        case Colour::Blue:
+            return 3;
+    }
+}
+
+i32 main()
+{
+    return 0;
+}

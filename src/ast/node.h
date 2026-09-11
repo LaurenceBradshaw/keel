@@ -58,6 +58,8 @@ enum class Node_kind : u16
     Cast_expr,
     Break_stmt,
     Continue_stmt,
+    Switch_stmt, // children: scrutinee, then Case_arms in source order
+    Case_arm,    // children: the labels (Path_exprs), then the body Block; aux is 1 for `default`
 
     Count
 };

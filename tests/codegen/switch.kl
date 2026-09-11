@@ -1,0 +1,56 @@
+// PLAN D7/D30. Every arm returns a different number, so the exit code says which one ran - which is
+// the only way to see that stacked labels share a body rather than the second one being dropped,
+// and that `default` catches exactly what no label named.
+enum Colour
+{
+    Red,
+    Green,
+    Blue,
+    Violet
+};
+
+// Red and Green stacked; Blue on its own; Violet reaching the default.
+i32 weight( Colour c )
+{
+    switch( c )
+    {
+        case Colour::Red:
+        case Colour::Green:
+            return 1;
+        case Colour::Blue:
+            return 10;
+        default:
+            return 100;
+    }
+}
+
+// No default, and every variant named - so adding a variant to Colour makes this stop compiling,
+// which is the guarantee the whole construct exists for.
+i32 exhaustive( Colour c )
+{
+    switch( c )
+    {
+        case Colour::Red:
+            return 1;
+        case Colour::Green:
+            return 2;
+        case Colour::Blue:
+            return 3;
+        case Colour::Violet:
+            return 4;
+    }
+}
+
+i32 main()
+{
+    i32 total = 0;
+
+    total = total + weight( Colour::Red );    // 1
+    total = total + weight( Colour::Green );  // 1   -> 2, and a shared body means both land here
+    total = total + weight( Colour::Blue );   // 10  -> 12
+    total = total + weight( Colour::Violet ); // 100 -> 112
+
+    total = total + exhaustive( Colour::Violet ); // 4 -> 116
+
+    return total;
+}

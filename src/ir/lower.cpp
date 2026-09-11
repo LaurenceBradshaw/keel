@@ -52,6 +52,7 @@ private:
     void lower_assign( Node_id id );
     void lower_increment( Node_id id );
     void lower_if( Node_id id );
+    void lower_switch( Node_id id );
     void lower_while( Node_id id );
     void lower_for( Node_id id );
 
@@ -976,6 +977,121 @@ void Lowering::lower_increment( Node_id id )
     drop_statement_temporaries( ast_.span( id ) );
 }
 
+// PLAN D30. A `switch` is a chain of equality tests, so KIR gains nothing for it: this is
+// lower_if's plumbing repeated per arm. The scrutinee is read **once**, before any block exists -
+// re-reading it per test would evaluate a call scrutinee once per arm.
+//
+// Stacked labels are an OR, and an OR of equalities is a chain of branches whose false edge is the
+// next label rather than the next arm. The checker has already proved the set is exhaustive or has
+// a `default`, so the last false edge is never a hole.
+void Lowering::lower_switch( Node_id id )
+{
+    const std::span<const Node_id> children = ast_.children( id );
+    const Span                     span     = ast_.span( id );
+    const Type_id                  boolean  = types_.table().builtin( Type_kind::Bool );
+
+    const Operand scrutinee = lower_expression( children[0] );
+
+    drop_statement_temporaries( span );
+
+    Block_id join;
+
+    const auto leave = [&]()
+    {
+        if( builder_.is_terminated() )
+        {
+            return; // the arm ended in a return of its own
+        }
+
+        if( !join.is_valid() )
+        {
+            join = builder_.add_block();
+        }
+
+        builder_.terminate_goto( join, span );
+    };
+
+    // One arm is the fallback: where every test's final false edge goes, tested for nothing itself.
+    // It is the `default` when there is one - held aside rather than reordered, so the arms keep
+    // their spans - and **the last arm when there is not**.
+    //
+    // That second case is what makes an exhaustive switch generate honest C. The checker has
+    // already proved the labels cover the enum, so reaching the end of the tests means the last
+    // arm; giving it a test anyway would leave a path that returns nothing, which C cannot see is
+    // impossible and reports as a possibly-uninitialised return value. It also drops one
+    // comparison per switch, which is the same thing a real backend does with a jump table's
+    // default.
+    Node_id fallback;
+
+    for( const Node_id arm : children.subspan( 1 ) )
+    {
+        if( ast_.aux( arm ) == 1 )
+        {
+            fallback = arm;
+        }
+    }
+
+    if( !fallback.is_valid() && children.size() > 1 )
+    {
+        fallback = children.back();
+    }
+
+    const Block_id fallback_block = fallback.is_valid() ? builder_.add_block() : Block_id {};
+
+    for( const Node_id arm : children.subspan( 1 ) )
+    {
+        if( arm == fallback )
+        {
+            continue;
+        }
+
+        const std::span<const Node_id> arm_children = ast_.children( arm );
+        const std::span<const Node_id> labels       = arm_children.subspan( 0, arm_children.size() - 1 );
+
+        const Block_id body = builder_.add_block();
+
+        for( const Node_id label : labels )
+        {
+            const Span     label_span = ast_.span( label );
+            const Operand  value      = lower_expression( label );
+            const Local_id test =
+                builder_.into_temp( binary( Token_kind::Equal_equal, scrutinee, value, boolean ), boolean, label_span );
+
+            // The next label of this arm, or the next arm's first test - a block either way, and
+            // the last one is where the fallback goto is emitted below.
+            const Block_id next = builder_.add_block();
+
+            builder_.terminate_branch( copy( builder_.place( test ), boolean ), body, next, label_span );
+            builder_.switch_to( next );
+        }
+
+        // The block the last false edge left us in, so the arms chain without any block needing to
+        // know its successor before that successor exists.
+        const Block_id resume = builder_.current();
+
+        builder_.switch_to( body );
+        lower_statement( arm_children.back() );
+        leave();
+
+        builder_.switch_to( resume );
+    }
+
+    // Every test has failed by the time control reaches here.
+    if( fallback.is_valid() )
+    {
+        builder_.terminate_goto( fallback_block, span );
+        builder_.switch_to( fallback_block );
+        lower_statement( ast_.children( fallback ).back() );
+    }
+
+    leave();
+
+    if( join.is_valid() )
+    {
+        builder_.switch_to( join );
+    }
+}
+
 void Lowering::lower_if( Node_id id )
 {
     const Node_id condition   = ast_.children( id )[0];
@@ -1184,6 +1300,9 @@ void Lowering::lower_statement( Node_id id )
 
     case Node_kind::Increment_stmt:
         return lower_increment( id );
+
+    case Node_kind::Switch_stmt:
+        return lower_switch( id );
 
     case Node_kind::If_stmt:
         return lower_if( id );
@@ -3495,6 +3614,85 @@ TEST_CASE( "lower_compares_enums_as_integers", "[ir][lower][enum]" )
 
     INFO( text );
     REQUIRE( text.find( "copy _1 == const 1" ) != std::string::npos );
+}
+
+// PLAN D30. A switch is a chain of equality tests, so KIR gains nothing for it - which is the claim
+// worth checking, because it means verify, the move analysis and drop elaboration all keep working
+// with no case added for a construct they have never heard of.
+TEST_CASE( "lower_turns_a_switch_into_a_branch_chain", "[ir][lower][switch]" )
+{
+    Lowered p( "enum Colour { Red, Green, Blue };\n"
+               "i32 f( Colour c ) { switch( c ) { case Colour::Red: return 1; case Colour::Green: return 2;"
+               " default: return 3; } }\n"
+               "i32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.named( "f" );
+
+    INFO( text );
+    REQUIRE( text.find( "== const 0" ) != std::string::npos );
+    REQUIRE( text.find( "== const 1" ) != std::string::npos );
+
+    // Nothing new in the IR: a switch is branches and gotos, which every pass already handles.
+    REQUIRE( text.find( "switch" ) == std::string::npos );
+}
+
+// Stacked labels are an OR, and an OR of equalities is two tests reaching one body. Checking that
+// both branch to the *same* block is what distinguishes a shared arm from two copies of it.
+TEST_CASE( "lower_points_stacked_labels_at_one_body", "[ir][lower][switch]" )
+{
+    Lowered p( "enum Colour { Red, Green, Blue };\n"
+               "i32 f( Colour c ) { switch( c ) { case Colour::Red: case Colour::Green: return 1;"
+               " default: return 3; } }\n"
+               "i32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.named( "f" );
+
+    INFO( text );
+
+    // Both tests name the same true-target. Read out of the dump rather than assumed, so a change
+    // that duplicated the body would fail here rather than merely emitting more code.
+    const std::size_t first  = text.find( "branch copy " );
+    const std::size_t second = text.find( "branch copy ", first + 1 );
+
+    REQUIRE( first != std::string::npos );
+    REQUIRE( second != std::string::npos );
+
+    const std::string first_target  = text.substr( text.find( "-> ", first ) + 3, 3 );
+    const std::string second_target = text.substr( text.find( "-> ", second ) + 3, 3 );
+
+    REQUIRE( first_target == second_target );
+}
+
+// The scrutinee is read once, before any block exists. A call scrutinee re-read per test would run
+// the call once per arm - the kind of bug that produces right answers until the call has an effect.
+TEST_CASE( "lower_reads_the_scrutinee_once", "[ir][lower][switch]" )
+{
+    Lowered p( "enum Colour { Red, Green };\n"
+               "Colour pick() { return Colour::Red; }\n"
+               "i32 f() { switch( pick() ) { case Colour::Red: return 1; case Colour::Green: return 2; } }\n"
+               "i32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.named( "f" );
+
+    INFO( text );
+
+    std::size_t calls = 0;
+
+    for( std::size_t at = text.find( "call pick" ); at != std::string::npos; at = text.find( "call pick", at + 1 ) )
+    {
+        ++calls;
+    }
+
+    REQUIRE( calls == 1 );
 }
 
 } // namespace keel

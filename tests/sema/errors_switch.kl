@@ -1,0 +1,115 @@
+// PLAN D7/D30. Exhaustiveness is the whole reason `switch` is worth having over a chain of `if`s:
+// adding a variant later breaks exactly the switches that should be revisited. Which is also why a
+// `default` on a fully covered enum is refused - it would absorb the new variant silently and take
+// the guarantee away.
+enum Colour
+{
+    Red,
+    Green,
+    Blue
+};
+
+i32 leaves_a_gap( Colour c )
+{
+    switch( c )
+    {
+        case Colour::Red:
+            return 1;
+    }
+
+    return 0;
+}
+
+i32 covers_twice( Colour c )
+{
+    switch( c )
+    {
+        case Colour::Red:
+            return 1;
+        case Colour::Red:
+            return 2;
+        default:
+            return 0;
+    }
+}
+
+i32 has_a_dead_default( Colour c )
+{
+    switch( c )
+    {
+        case Colour::Red:
+            return 1;
+        case Colour::Green:
+            return 2;
+        case Colour::Blue:
+            return 3;
+        default:
+            return 0;
+    }
+}
+
+// Integers wait for D34's range labels: exhaustiveness over 2^32 values is not provable, so an
+// integer scrutinee needs `default` to mean anything, and that is a slice of its own.
+i32 switches_on_an_integer( i32 n )
+{
+    switch( n )
+    {
+        default:
+            return 1;
+    }
+}
+
+i32 labels_the_wrong_type( Colour c )
+{
+    switch( c )
+    {
+        case 1:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+// Everything below is accepted, and the fixture would be worth much less without it.
+
+i32 covers_everything( Colour c )
+{
+    switch( c )
+    {
+        case Colour::Red:
+            return 1;
+        case Colour::Green:
+            return 2;
+        case Colour::Blue:
+            return 3;
+    }
+}
+
+// Stacked labels are one arm, and each still counts towards coverage.
+i32 stacks( Colour c )
+{
+    switch( c )
+    {
+        case Colour::Red:
+        case Colour::Green:
+            return 1;
+        case Colour::Blue:
+            return 2;
+    }
+}
+
+i32 fills_the_gap( Colour c )
+{
+    switch( c )
+    {
+        case Colour::Red:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+i32 main()
+{
+    return 0;
+}

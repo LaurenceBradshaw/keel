@@ -134,6 +134,7 @@ private:
     Node_id parse_if_stmt();
     Node_id parse_while_stmt();
     Node_id parse_for_stmt();
+    Node_id parse_switch_stmt();
 
     // --- expressions ---
 
@@ -1363,6 +1364,11 @@ Node_id Parser::parse_statement()
         return parse_if_stmt();
     }
 
+    if( check_keyword( Keyword::Switch ) )
+    {
+        return parse_switch_stmt();
+    }
+
     if( check_keyword( Keyword::While ) )
     {
         return parse_while_stmt();
@@ -1630,6 +1636,113 @@ Node_id Parser::parse_for_stmt()
     const Node_id body = parse_block();
 
     return ast_.add( Node_kind::For_stmt, Span::merge( start, previous().span ), 0, { init, condition, update, body } );
+}
+
+Node_id Parser::parse_switch_stmt()
+{
+    // `switch( e )` then a braced list of arms. The parenthesised scrutinee is C++'s spelling, and
+    // D3's mandatory braces apply to the switch body as to every other control-flow construct -
+    // but *not* to an arm, which is a label group rather than a body.
+    assert( check_keyword( Keyword::Switch ) );
+
+    const Span start = peek().span;
+
+    advance();
+
+    expect( Token_kind::L_paren );
+
+    const Node_id scrutinee = parse_expression( 0 );
+
+    expect( Token_kind::R_paren );
+    expect( Token_kind::L_brace );
+
+    // Child 0 is the scrutinee; the arms follow in source order.
+    std::vector<Node_id> arms { scrutinee };
+
+    bool seen_default = false;
+
+    while( !check( Token_kind::R_brace ) && !at_end() )
+    {
+        const u32  before    = pos_;
+        const Span arm_start = peek().span;
+
+        // Labels first, as many as are stacked. An arm ends when something that is not a label
+        // appears, which is what makes `case A: case B:` share one body with no fallthrough rule
+        // to write - and what makes falling out of a non-empty arm impossible to express.
+        std::vector<Node_id> children;
+
+        bool is_default = false;
+
+        while( check_keyword( Keyword::Case ) || check_keyword( Keyword::Default ) )
+        {
+            const bool labels_default = check_keyword( Keyword::Default );
+            const Span label_span     = peek().span;
+
+            advance();
+
+            if( labels_default )
+            {
+                if( seen_default )
+                {
+                    error_at( label_span, "a `switch` has only one `default`" );
+                }
+
+                seen_default = true;
+                is_default   = true;
+            }
+            else
+            {
+                children.push_back( parse_expression( 0 ) );
+            }
+
+            expect( Token_kind::Colon );
+        }
+
+        if( children.empty() && !is_default )
+        {
+            error_at(
+                peek().span,
+                "this statement is not inside a `case`",
+                "every statement in a `switch` belongs to an arm; add a `case` or `default` above it"
+            );
+        }
+
+        // The body is the statements up to the next label, wrapped in a Block so that scoping and
+        // lowering treat an arm like any other. Synthesised rather than parsed: an arm has no
+        // braces of its own, and giving it a Block anyway is what keeps every consumer from having
+        // to special-case a bare statement list.
+        const Span body_start = peek().span;
+
+        std::vector<Node_id> statements;
+
+        while( !check( Token_kind::R_brace ) && !at_end() && !check_keyword( Keyword::Case ) &&
+               !check_keyword( Keyword::Default ) )
+        {
+            const u32 statement_before = pos_;
+
+            statements.push_back( parse_statement() );
+
+            if( pos_ == statement_before )
+            {
+                advance();
+            }
+        }
+
+        children.push_back( ast_.add( Node_kind::Block, Span::merge( body_start, previous().span ), 0, statements ) );
+
+        arms.push_back(
+            ast_.add( Node_kind::Case_arm, Span::merge( arm_start, previous().span ), is_default ? 1u : 0u, children )
+        );
+
+        if( pos_ == before )
+        {
+            advance();
+        }
+    }
+
+    expect( Token_kind::R_brace );
+
+    return ast_.add( Node_kind::Switch_stmt, Span::merge( start, previous().span ), 0, arms );
 }
 
 void Parser::mark_parenthesised( Node_id id )
@@ -4809,6 +4922,69 @@ TEST_CASE( "parser_parses_a_path", "[parse]" )
 
         REQUIRE( compare.is_valid() );
         REQUIRE( p.kind( p.child( compare, 0 ) ) == Node_kind::Path_expr );
+    }
+}
+
+// PLAN D7. An arm holds its own labels, which is what makes stacking fall out of the grammar: the
+// parser takes labels until something that is not one appears, and they all attach to one arm. No
+// fallthrough rule has to be written, and falling out of a non-empty arm cannot be expressed.
+TEST_CASE( "parser_parses_a_switch", "[parse]" )
+{
+    SECTION( "stacked labels share one arm" )
+    {
+        const Parsed p( "i32 main() { switch( c ) { case A::X: case A::Y: return 1; default: return 2; } }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id sw = find_first( p.ast(), p.root(), Node_kind::Switch_stmt );
+
+        REQUIRE( sw.is_valid() );
+        REQUIRE( p.children( sw ).size() == 3 ); // the scrutinee and two arms
+
+        // Two labels then the body, so three children - and the body is a Block even though the
+        // arm had no braces, so every consumer treats it like any other.
+        const Node_id first = p.child( sw, 1 );
+
+        REQUIRE( p.kind( first ) == Node_kind::Case_arm );
+        REQUIRE( p.aux( first ) == 0 );
+        REQUIRE( p.children( first ).size() == 3 );
+        REQUIRE( p.kind( p.child( first, 0 ) ) == Node_kind::Path_expr );
+        REQUIRE( p.kind( p.child( first, 1 ) ) == Node_kind::Path_expr );
+        REQUIRE( p.kind( p.child( first, 2 ) ) == Node_kind::Block );
+    }
+
+    // `default` is the same arm with no labels, flagged in aux - a third node kind would mean every
+    // consumer switching over two things that behave identically.
+    SECTION( "default is an arm with no labels" )
+    {
+        const Parsed p( "i32 main() { switch( c ) { default: return 2; } }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id arm = find_first( p.ast(), p.root(), Node_kind::Case_arm );
+
+        REQUIRE( p.aux( arm ) == 1 );
+        REQUIRE( p.children( arm ).size() == 1 ); // the body alone
+        REQUIRE( p.kind( p.child( arm, 0 ) ) == Node_kind::Block );
+    }
+
+    SECTION( "a second default is refused" )
+    {
+        const Parsed p( "i32 main() { switch( c ) { default: return 1; default: return 2; } }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.errors().find( "only one `default`" ) != std::string::npos );
+    }
+
+    // Without this a stray statement would silently become part of the previous arm, or of none.
+    SECTION( "a statement before any label is refused" )
+    {
+        const Parsed p( "i32 main() { switch( c ) { return 1; } }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.errors().find( "not inside a `case`" ) != std::string::npos );
     }
 }
 

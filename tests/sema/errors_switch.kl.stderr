@@ -1,0 +1,31 @@
+error: `switch` does not cover every variant of `Colour`
+  --> sema/errors_switch.kl:14:5
+   |
+14 |     switch( c )
+   |     ^^^^^^^^^^^ missing `Green` and `Blue`
+
+error: `Red` is already covered
+  --> sema/errors_switch.kl:29:14
+   |
+29 |         case Colour::Red:
+   |              ^^^^^^^^^^^ previous declaration is at: 27:14
+
+error: every variant of `Colour` is covered, so `default` can never run
+  --> sema/errors_switch.kl:38:5
+   |
+38 |     switch( c )
+   |     ^^^^^^^^^^^ remove it, so that adding a variant later is a compile error here
+
+error: `switch` needs an `enum`, but this is a `i32`
+  --> sema/errors_switch.kl:55:13
+   |
+55 |     switch( n )
+   |             ^ an integer scrutinee is not supported yet
+
+error: a `case` label must be a variant of `Colour`
+  --> sema/errors_switch.kl:66:14
+   |
+66 |         case 1:
+   |              ^
+
+5 errors generated

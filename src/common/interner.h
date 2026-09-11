@@ -36,6 +36,7 @@ enum class Keyword : u32
     Class,
     Switch,
     Case,
+    Default,
     Break,
     Continue,
     Const,
