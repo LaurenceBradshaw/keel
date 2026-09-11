@@ -1,0 +1,73 @@
+error: an `enum` must be backed by an integer, but `bool` is not one
+  --> sema/errors_enums.kl:17:15
+   |
+17 | enum Backed : bool
+   |               ^^^^
+
+error: `Repeats` already has a variant `P`
+  --> sema/errors_enums.kl:26:5
+   |
+26 |     P
+   |     ^
+
+error: `Red` is not declared
+  --> sema/errors_enums.kl:36:16
+   |
+36 |     Colour c = Red;
+   |                ^^^
+
+error: expected `i32`, but got `Colour`
+  --> sema/errors_enums.kl:43:13
+   |
+43 |     i32 n = Colour::Red;
+   |             ^^^^^^^^^^^
+
+error: expected `Colour`, but got an integer literal
+  --> sema/errors_enums.kl:50:16
+   |
+50 |     Colour c = 0;
+   |                ^
+
+error: no operator `+` for `Colour` and `Colour`
+  --> sema/errors_enums.kl:57:13
+   |
+57 |     i32 n = Colour::Red + 1;
+   |             ^^^^^^^^^^^^^^^
+
+error: expected `Colour`, but got an integer literal
+  --> sema/errors_enums.kl:57:27
+   |
+57 |     i32 n = Colour::Red + 1;
+   |                           ^
+
+error: no operator `==` for `Colour` and `Other`
+  --> sema/errors_enums.kl:64:14
+   |
+64 |     bool b = Colour::Red == Other::A;
+   |              ^^^^^^^^^^^^^^^^^^^^^^^ only values of the same `enum` can be compared
+
+error: no operator `<` for `Colour` and `Colour`
+  --> sema/errors_enums.kl:71:14
+   |
+71 |     bool b = Colour::Red < Colour::Green;
+   |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: `Colour` has no variant `Purple`
+  --> sema/errors_enums.kl:78:16
+   |
+78 |     Colour c = Colour::Purple;
+   |                ^^^^^^^^^^^^^^
+
+error: `Point` is not an `enum`
+  --> sema/errors_enums.kl:85:13
+   |
+85 |     i32 n = Point::x;
+   |             ^^^^^ `::` reaches a variant, and only an `enum` has them
+
+error: `::` needs the name of an `enum` on its left
+  --> sema/errors_enums.kl:92:13
+   |
+92 |     i32 n = Colour::Red::Green;
+   |             ^^^^^^^^^^^
+
+12 errors generated

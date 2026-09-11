@@ -1,0 +1,117 @@
+// PLAN D30. `enum class` semantics without the `class`. Most of what is refused below is refused by
+// a rule that already existed - holds() has no branch reaching an integer from an enum, the
+// arithmetic table has no row for one, and the variants enter no lexical scope - so this fixture is
+// as much a record of what is *absent* as of what was written.
+enum Colour
+{
+    Red,
+    Green
+};
+
+enum Other
+{
+    A,
+    B
+};
+
+enum Backed : bool
+{
+    X
+};
+
+enum Repeats
+{
+    P,
+    Q,
+    P
+};
+
+struct Point
+{
+    i32 x;
+};
+
+i32 leaks_a_variant()
+{
+    Colour c = Red;
+
+    return 0;
+}
+
+i32 converts_to_an_integer()
+{
+    i32 n = Colour::Red;
+
+    return n;
+}
+
+i32 converts_from_an_integer()
+{
+    Colour c = 0;
+
+    return 0;
+}
+
+i32 does_arithmetic()
+{
+    i32 n = Colour::Red + 1;
+
+    return n;
+}
+
+i32 compares_across_enums()
+{
+    bool b = Colour::Red == Other::A;
+
+    return 0;
+}
+
+i32 orders_variants()
+{
+    bool b = Colour::Red < Colour::Green;
+
+    return 0;
+}
+
+i32 names_a_missing_variant()
+{
+    Colour c = Colour::Purple;
+
+    return 0;
+}
+
+i32 qualifies_a_non_enum()
+{
+    i32 n = Point::x;
+
+    return n;
+}
+
+i32 qualifies_something_that_is_not_a_name()
+{
+    i32 n = Colour::Red::Green;
+
+    return n;
+}
+
+// Everything below is accepted, and the fixture would be worth much less without it: it is what
+// shows the rules refuse conversions and arithmetic rather than every use of an enum.
+
+Colour flip( Colour c )
+{
+    if( c == Colour::Red )
+    {
+        return Colour::Green;
+    }
+
+    return Colour::Red;
+}
+
+i32 main()
+{
+    Colour c = flip( Colour::Red );
+
+    bool same = c == Colour::Green;
+
+    return 0;
+}

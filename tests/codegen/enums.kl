@@ -1,0 +1,69 @@
+// PLAN D30. An enum is spelled in C as its underlying integer, and a variant as its ordinal. The
+// exit code is what says those ordinals are the declaration positions and not some other number:
+// the first version of the lowering emitted the variant's *name* symbol, which compiled and ran and
+// was wrong in a way no golden could show, because the golden would have recorded the wrong values.
+enum Colour : u8
+{
+    Red,      // 0
+    Green,    // 1
+    Blue      // 2
+};
+
+enum Direction
+{
+    North,    // 0
+    East,     // 1
+    South,    // 2
+    West      // 3
+};
+
+// Equality is the only operation D30 leaves an enum, so a lookup is a chain of it.
+i32 weight( Colour c )
+{
+    if( c == Colour::Red )
+    {
+        return 1;
+    }
+
+    if( c == Colour::Green )
+    {
+        return 10;
+    }
+
+    return 100;
+}
+
+Colour turn( Colour c )
+{
+    if( c == Colour::Red )
+    {
+        return Colour::Blue;
+    }
+
+    return Colour::Red;
+}
+
+i32 heading( Direction d )
+{
+    if( d == Direction::West )
+    {
+        return 7;
+    }
+
+    return 0;
+}
+
+i32 main()
+{
+    Colour c = Colour::Green;
+
+    i32 total = weight( c );          // 10
+
+    total = total + weight( turn( c ) ); // turn( Green ) is Red: 1  -> 11
+
+    total = total + weight( Colour::Blue ); // 100 -> 111
+
+    total = total + heading( Direction::West ); // 7 -> 118
+
+    return total;
+}

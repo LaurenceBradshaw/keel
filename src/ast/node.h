@@ -46,6 +46,9 @@ enum class Node_kind : u16
     For_stmt,
     Struct_decl,
     Class_decl,
+    Enum_decl,    // aux is the name; children are Variant_decls, then the underlying type if written
+    Variant_decl, // aux is the name; no children until payloads (D7)
+    Path_expr,    // `Colour::Red`; aux is the variant name, child 0 is the qualifier
     Field_decl,
     Field_expr,
     Struct_literal,

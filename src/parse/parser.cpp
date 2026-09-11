@@ -76,6 +76,8 @@ private:
     Node_id parse_function_decl();
     Node_id parse_param_list( Node_id leading = Node_id {} );
     Node_id parse_aggregate_decl();
+    Node_id parse_enum_decl();
+    Node_id parse_variant_decl();
     Node_id parse_field_decl();
     Node_id parse_destructor_decl( Symbol_id enclosing );
     Node_id parse_constructor_decl( Symbol_id enclosing );
@@ -250,9 +252,10 @@ u8 binding_power( Token_kind kind )
 
     // Postfix, and tighter than every operator: `a.x + b.y` is `(a.x) + (b.y)`, and `f().x`
     // and `p.x.y` chain through the same loop.
-    case Token_kind::L_paren: // function call
-    case Token_kind::Dot:     // field access
-    case Token_kind::Arrow:   // not an operator, but it has to be reached to be rejected (D22)
+    case Token_kind::L_paren:     // function call
+    case Token_kind::Dot:         // field access
+    case Token_kind::Colon_colon: // scope resolution
+    case Token_kind::Arrow:       // not an operator, but it has to be reached to be rejected (D22)
         return 110;
 
     default:
@@ -579,6 +582,11 @@ Node_id Parser::parse_declaration()
         return parse_aggregate_decl();
     }
 
+    if( check_keyword( Keyword::Enum ) )
+    {
+        return parse_enum_decl();
+    }
+
     // A function and a file-scope variable both open with a type and a name; only what follows the
     // name separates them. `(` opens a parameter list, anything else belongs to a variable.
     //
@@ -729,6 +737,64 @@ Node_id Parser::parse_aggregate_decl()
     return ast_.add(
         is_class ? Node_kind::Class_decl : Node_kind::Struct_decl, Span::merge( start, previous().span ), name.v, members
     );
+}
+
+Node_id Parser::parse_enum_decl()
+{
+    const Span start = peek().span;
+    match_keyword( Keyword::Enum );
+
+    // D30: one `enum` keyword. `enum class E` is recognised so the diagnostic can name the fix,
+    // which is D22's pattern for `->`.
+    if( check_keyword( Keyword::Class ) )
+    {
+        error_at( peek().span, "`enum class` is not a spelling in Keel", "write `enum` - it already means this" );
+        advance();
+    }
+
+    const Symbol_id name = expect_name();
+
+    // D30: the underlying type is spelled as in C++. parse_type() rather than a bare name, so
+    // `enum E : Colour` is a *sema* error about the type rather than a parse error about a token.
+    const Node_id underlying = match( Token_kind::Colon ) ? parse_type() : Node_id {};
+
+    expect( Token_kind::L_brace );
+
+    // Child 0 is the underlying type and is invalid when unwritten, which is the convention
+    // Var_decl already uses for a missing annotation - so the variants start at 1 and a consumer
+    // never has to ask which kind the last child is.
+    std::vector<Node_id> members { underlying };
+    while( !check( Token_kind::R_brace ) && !at_end() )
+    {
+        const u32 before = pos_;
+
+        members.push_back( parse_variant_decl() );
+
+        if( !check( Token_kind::R_brace ) )
+        {
+            expect( Token_kind::Comma );
+        }
+        else if( check( Token_kind::Comma ) )
+        {
+            advance();
+        }
+
+        if( pos_ == before )
+        {
+            advance();
+        }
+    }
+
+    expect( Token_kind::R_brace );
+    expect( Token_kind::Semicolon );
+    return ast_.add( Node_kind::Enum_decl, Span::merge( start, previous().span ), name.v, members );
+}
+
+Node_id Parser::parse_variant_decl()
+{
+    const Span      start = peek().span;
+    const Symbol_id name  = expect_name();
+    return ast_.add( Node_kind::Variant_decl, Span::merge( start, previous().span ), name.v, {} );
 }
 
 Node_id Parser::parse_field_decl()
@@ -1648,6 +1714,22 @@ Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing )
             }
 
             left = ast_.add( Node_kind::Field_expr, Span::merge( ast_.span( left ), previous().span ), name.v, { left } );
+            continue;
+        }
+
+        if( check( Token_kind::Colon_colon ) )
+        {
+            advance();
+
+            // Only on success: a failed expect() does not advance, so previous() would be the `::`
+            // itself and its symbol would become the field's name.
+            Symbol_id name;
+            if( expect( Token_kind::Identifier ) )
+            {
+                name = previous().symbol;
+            }
+
+            left = ast_.add( Node_kind::Path_expr, Span::merge( ast_.span( left ), previous().span ), name.v, { left } );
             continue;
         }
 
@@ -4639,6 +4721,95 @@ TEST_CASE( "parser_refuses_a_reference_field", "[parse]" )
 
     INFO( p.errors() );
     REQUIRE( p.has_errors() );
+}
+
+// PLAN D30. One `enum` keyword carrying `enum class` semantics. The underlying type is child 0 and
+// is invalid when unwritten - the convention Var_decl already uses for a missing annotation, so
+// the variants start at 1 and no consumer has to ask which kind the last child is.
+TEST_CASE( "parser_parses_an_enum", "[parse]" )
+{
+    SECTION( "with an underlying type" )
+    {
+        const Parsed p( "enum Colour : u8 { Red, Green, Blue };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Enum_decl );
+
+        REQUIRE( decl.is_valid() );
+        REQUIRE( p.children( decl ).size() == 4 ); // the type, then three variants
+        REQUIRE( p.kind( p.child( decl, 0 ) ) == Node_kind::Named_type );
+        REQUIRE( p.kind( p.child( decl, 1 ) ) == Node_kind::Variant_decl );
+        REQUIRE( p.kind( p.child( decl, 3 ) ) == Node_kind::Variant_decl );
+    }
+
+    SECTION( "without one, leaving child 0 invalid" )
+    {
+        const Parsed p( "enum Colour { Red, Green };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Enum_decl );
+
+        REQUIRE( p.children( decl ).size() == 3 );
+        REQUIRE_FALSE( p.child( decl, 0 ).is_valid() );
+        REQUIRE( p.kind( p.child( decl, 1 ) ) == Node_kind::Variant_decl );
+    }
+
+    SECTION( "and a trailing comma is allowed" )
+    {
+        const Parsed p( "enum Colour { Red, Green, };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.children( find_first( p.ast(), p.root(), Node_kind::Enum_decl ) ).size() == 3 );
+    }
+
+    // D30 keeps the spelling recognised so the diagnostic can name the fix, which is D22's pattern
+    // for `->`: a rejected spelling that lexes is worth more than one that does not.
+    SECTION( "`enum class` names its replacement" )
+    {
+        const Parsed p( "enum class Colour { Red };" );
+
+        INFO( p.errors() );
+        REQUIRE( p.has_errors() );
+        REQUIRE( p.errors().find( "write `enum`" ) != std::string::npos );
+    }
+}
+
+// `Colour::Red` is a postfix operator binding as tightly as `.`, and the variant name goes in aux
+// for the same reason a field's does: it resolves against the enum, not through the scope stack.
+TEST_CASE( "parser_parses_a_path", "[parse]" )
+{
+    SECTION( "the variant is in aux and the qualifier is the child" )
+    {
+        const Parsed p( "i32 main() { return Colour::Red; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id path = find_first( p.ast(), p.root(), Node_kind::Path_expr );
+
+        REQUIRE( path.is_valid() );
+        REQUIRE( p.children( path ).size() == 1 );
+        REQUIRE( p.kind( p.child( path, 0 ) ) == Node_kind::Name_expr );
+    }
+
+    // Tighter than every operator, so the comparison sees the whole path rather than the qualifier.
+    SECTION( "and it binds tighter than a comparison" )
+    {
+        const Parsed p( "i32 main() { return Colour::Red == c; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id compare = find_first( p.ast(), p.root(), Node_kind::Binary_expr );
+
+        REQUIRE( compare.is_valid() );
+        REQUIRE( p.kind( p.child( compare, 0 ) ) == Node_kind::Path_expr );
+    }
 }
 
 } // namespace keel

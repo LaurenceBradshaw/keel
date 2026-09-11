@@ -1,0 +1,29 @@
+// PLAN D30. One `enum` keyword carrying `enum class` semantics. The underlying type is child 0 and
+// is invalid when unwritten, which is the convention Var_decl already uses for a missing
+// annotation - so the variants start at child 1 and no consumer has to ask which kind the last
+// child is.
+enum Colour : u8
+{
+    Red,
+    Green,
+    Blue
+};
+
+// No underlying type written: child 0 is invalid and the default is i32, which is what C++ gives a
+// plain enum. D30 changed what the keyword means, not its arithmetic.
+enum Direction
+{
+    North,
+    South,
+};
+
+// `Colour::Red` is postfix and binds as tightly as `.`, so a comparison sees the whole path.
+bool is_warm( Colour c )
+{
+    return c == Colour::Red;
+}
+
+i32 main()
+{
+    return 0;
+}

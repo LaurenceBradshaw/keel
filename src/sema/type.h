@@ -28,6 +28,7 @@ enum class Type_kind : u8
     Float,
     Pointer, // M2; element unused before then
     Struct,  // `declaration` says which one
+    Enum,
 };
 
 // Defaulted rather than bare, so a kind that does not use a field can leave it out of the aggregate
@@ -37,7 +38,7 @@ struct Type
     Type_kind kind        = Type_kind::Error;
     u8        width       = 0;     // 8/16/32/64 for Int, 32/64 for Float, 0 otherwise
     bool      is_signed   = false; // only for Int
-    Type_id   element     = {};    // only for Pointer
+    Type_id   element     = {};    // For Pointer and Enum
     Node_id   declaration = {};    // only for Struct; the Struct_decl node that defines it
 };
 
@@ -50,6 +51,7 @@ public:
     Type_id integer( u8 width, bool is_signed ) const;
     Type_id floating( u8 width ) const;
     Type_id pointer_to( Type_id element ); // interns; same element -> same id
+    Type_id enumeration( Node_id declaration, std::string_view name, Type_id underlying );
 
     // Interned by *declaration*, not by name: two modules each declaring `Point` must be two
     // distinct types. The name is passed in because the table has no Interner of its own.
@@ -66,6 +68,7 @@ public:
     bool is_integer( Type_id id ) const;
     bool is_float( Type_id id ) const;
     bool is_struct( Type_id id ) const;
+    bool is_enum( Type_id id ) const;
     bool is_pointer( Type_id id ) const;
 
     // §6.4 assignment: does every value of `from` exist in `to`?
@@ -104,6 +107,7 @@ private:
 
     std::unordered_map<u32, Type_id> pointers_; // element id -> pointer id
     std::unordered_map<u32, Type_id> structs_;  // Struct_decl node -> struct type
+    std::unordered_map<u32, Type_id> enums_;    // Enum_decl node -> enum type
     std::deque<std::string>          composed_;
 
     std::unordered_map<std::string_view, Type_id>

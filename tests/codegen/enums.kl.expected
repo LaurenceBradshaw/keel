@@ -1,0 +1,117 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+int32_t kl__weight__Colour( uint8_t );
+uint8_t kl__turn__Colour( uint8_t );
+int32_t kl__heading__Direction( int32_t );
+int32_t kl__main__( void );
+
+int32_t kl__weight__Colour( uint8_t kl_c_1 )
+{
+    int32_t kl_t0;
+    bool kl_t2;
+    bool kl_t3;
+#line 23 "codegen/enums.kl"
+    kl_t2 = kl_c_1 == 0;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 25 "codegen/enums.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+    goto bb3;
+    bb3:
+#line 28 "codegen/enums.kl"
+    kl_t3 = kl_c_1 == 1;
+    if ( kl_t3 ) goto bb4; else goto bb5;
+    bb4:
+#line 30 "codegen/enums.kl"
+    kl_t0 = 10;
+    return kl_t0;
+    bb5:
+    goto bb6;
+    bb6:
+#line 33 "codegen/enums.kl"
+    kl_t0 = 100;
+    return kl_t0;
+}
+
+uint8_t kl__turn__Colour( uint8_t kl_c_1 )
+{
+    uint8_t kl_t0;
+    bool kl_t2;
+#line 38 "codegen/enums.kl"
+    kl_t2 = kl_c_1 == 0;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 40 "codegen/enums.kl"
+    kl_t0 = 2;
+    return kl_t0;
+    bb2:
+    goto bb3;
+    bb3:
+#line 43 "codegen/enums.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int32_t kl__heading__Direction( int32_t kl_d_1 )
+{
+    int32_t kl_t0;
+    bool kl_t2;
+#line 48 "codegen/enums.kl"
+    kl_t2 = kl_d_1 == 3;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 50 "codegen/enums.kl"
+    kl_t0 = 7;
+    return kl_t0;
+    bb2:
+    goto bb3;
+    bb3:
+#line 53 "codegen/enums.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    uint8_t kl_c_1;
+    int32_t kl_total_2;
+    int32_t kl_t3;
+    uint8_t kl_t4;
+    int32_t kl_t5;
+    int32_t kl_t6;
+    int32_t kl_t7;
+    int32_t kl_t8;
+    int32_t kl_t9;
+    int32_t kl_t10;
+#line 58 "codegen/enums.kl"
+    kl_c_1 = 1;
+#line 60 "codegen/enums.kl"
+    kl_t3 = kl__weight__Colour( kl_c_1 );
+    kl_total_2 = kl_t3;
+#line 62 "codegen/enums.kl"
+    kl_t4 = kl__turn__Colour( kl_c_1 );
+    kl_t5 = kl__weight__Colour( kl_t4 );
+    kl_t6 = kl_total_2 + kl_t5;
+    kl_total_2 = kl_t6;
+#line 64 "codegen/enums.kl"
+    kl_t7 = kl__weight__Colour( 2 );
+    kl_t8 = kl_total_2 + kl_t7;
+    kl_total_2 = kl_t8;
+#line 66 "codegen/enums.kl"
+    kl_t9 = kl__heading__Direction( 3 );
+    kl_t10 = kl_total_2 + kl_t9;
+    kl_total_2 = kl_t10;
+#line 68 "codegen/enums.kl"
+    kl_t0 = kl_total_2;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

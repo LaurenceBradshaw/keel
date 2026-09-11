@@ -1,0 +1,27 @@
+// PLAN D30. A variant lowers to its ordinal - its position in the declaration - and the local keeps
+// the enum's own type rather than the underlying integer, because KIR is what the emitter reads and
+// the width comes from the enum.
+enum Colour : u8
+{
+    Red,
+    Green,
+    Blue
+};
+
+bool is_green( Colour c )
+{
+    return c == Colour::Green;
+}
+
+i32 main()
+{
+    Colour a = Colour::Red;
+    Colour b = Colour::Blue;
+
+    if( is_green( a ) )
+    {
+        return 1;
+    }
+
+    return 0;
+}

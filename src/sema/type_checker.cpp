@@ -357,6 +357,7 @@ private:
     void declare_signatures_function_decls();
     void declare_signatures_member_functions();
     void declare_signatures_global_decls();
+    void declare_signatures_enum_decls();
 
     // D31: which parameters travel by address. Its own pass because the owning query is only
     // answered after compute_owning, by which time both parameter loops have already run.
@@ -445,6 +446,8 @@ private:
     Type_id infer_cast( Node_id id );
     Type_id infer_marker( Node_id id );
 
+    Type_id infer_path( Node_id id );
+
     // Constant rejection (§12). fold_* answer what an expression's value is when it is made only
     // of literals; check_constant decides whether that value can exist in the type the operation
     // happens in, and record_constant is the two together.
@@ -502,6 +505,7 @@ Types Checker::run()
 
 void Checker::declare_signatures()
 {
+    declare_signatures_enum_decls();
     declare_signatures_struct_decls();
     declare_signatures_member_functions();
     declare_signatures_field_decls();
@@ -689,6 +693,72 @@ void Checker::declare_signatures_global_decls()
         const Node_id var_type_node = ast_.children( child )[0];
         const Type_id var_type      = type_of_annotation( var_type_node );
         record( child, var_type );
+    }
+}
+
+void Checker::declare_signatures_enum_decls()
+{
+    for( Node_id child : ast_.children( ast_.root() ) )
+    {
+        if( ast_.kind( child ) == Node_kind::Error )
+        {
+            continue;
+        }
+
+        if( ast_.kind( child ) != Node_kind::Enum_decl )
+        {
+            continue;
+        }
+
+        const std::string_view name = interner_.text( Symbol_id { ast_.aux( child ) } );
+
+        // Child 0 is the underlying type, invalid when unwritten. i32 by default, which is what
+        // C++ gives a plain enum - D30 changed the semantics of the keyword, not its arithmetic.
+        const Node_id annotation = ast_.children( child )[0];
+        Type_id       underlying = annotation.is_valid() ? type_of_annotation( annotation ) : table_.integer( 32, true );
+
+        // Only an integer can count variants. Absorbed to i32 on failure so the enum still gets a
+        // type and every use of it reports about itself rather than about this line again.
+        if( !table_.is_integer( underlying ) && !table_.is_error( underlying ) )
+        {
+            error_at(
+                ast_.span( annotation ),
+                fmt::format( "an `enum` must be backed by an integer, but `{}` is not one", table_.name( underlying ) )
+            );
+
+            underlying = table_.integer( 32, true );
+        }
+
+        const Type_id type = table_.enumeration( child, name, underlying );
+
+        record( child, type );
+
+        // Reported per repeat rather than once, the same shape check_aggregate_members uses for a
+        // field: three collisions should say so in one compile rather than over three.
+        std::unordered_set<u32> seen;
+
+        for( const Node_id variant : ast_.children( child ).subspan( 1 ) )
+        {
+            const Symbol_id variant_name { ast_.aux( variant ) };
+
+            if( !seen.insert( variant_name.v ).second )
+            {
+                error_at(
+                    ast_.span( variant ), fmt::format( "`{}` already has a variant `{}`", name, interner_.text( variant_name ) )
+                );
+            }
+        }
+
+        // The *enum* type, never the underlying one. D30's "no implicit conversion to an integer"
+        // is enforced by this line and by the absence of a conversion rule for Enum anywhere else:
+        // if a variant typed as i32, `i32 x = Colour::Red;` would compile and the entry would be a
+        // comment rather than a rule.
+        // From 1: child 0 is the underlying type, and is invalid when unwritten - kind() asserts
+        // on an invalid id rather than returning something to test against.
+        for( const Node_id variant : ast_.children( child ).subspan( 1 ) )
+        {
+            record( variant, type );
+        }
     }
 }
 
@@ -1718,6 +1788,9 @@ Type_id Checker::infer( Node_id id )
     case Node_kind::Field_expr:
         return infer_field( id );
 
+    case Node_kind::Path_expr:
+        return infer_path( id );
+
     case Node_kind::Struct_literal:
         return infer_struct_literal( id );
 
@@ -2251,10 +2324,16 @@ Type_id Checker::infer_binary( Node_id id )
         return record( id, error );
     };
 
-    // Pointer equality, which is how a null check is written. Handled before the rule table, whose
-    // operand classes are all numeric or bool. Ordering is deliberately absent: comparing pointers
-    // into different allocations is meaningless, and §6.4 has no row for them.
-    if( table_.is_pointer( lhs_type ) || table_.is_pointer( rhs_type ) )
+    // Pointer and enum equality, which the rule table cannot express - its operand classes are all
+    // numeric or bool. For a pointer this is how a null check is written; for an enum it is the
+    // only operation there is, since D30 leaves a variant with no conversion to reach arithmetic
+    // through. Ordering is deliberately absent from both: comparing pointers into different
+    // allocations is meaningless, and an enum's variants are names rather than magnitudes - the
+    // declaration order they happen to have is not an ordering anyone wrote down.
+    const bool compares_by_identity = table_.is_pointer( lhs_type ) || table_.is_pointer( rhs_type ) ||
+                                      table_.is_enum( lhs_type ) || table_.is_enum( rhs_type );
+
+    if( compares_by_identity )
     {
         if( op != Token_kind::Equal_equal && op != Token_kind::Bang_equal )
         {
@@ -2263,7 +2342,10 @@ Type_id Checker::infer_binary( Node_id id )
 
         if( lhs_type != rhs_type )
         {
-            return reject( "only pointers of the same type can be compared" );
+            return reject(
+                table_.is_enum( lhs_type ) || table_.is_enum( rhs_type ) ? "only values of the same `enum` can be compared"
+                                                                         : "only pointers of the same type can be compared"
+            );
         }
 
         return record( id, bool_type );
@@ -2394,6 +2476,64 @@ Node_id Checker::find_field( Type_id type, Symbol_id name ) const
     }
 
     return Node_id();
+}
+
+// D30: a variant is reached only through its enum - `Colour::Red`, never a bare `Red`. The
+// qualifier resolves through the ordinary name path, and the variant is looked up against the
+// enum's declaration here, which is exactly what infer_field below does against a struct's.
+Type_id Checker::infer_path( Node_id id )
+{
+    const Node_id   qualifier = ast_.children( id )[0];
+    const Symbol_id name { ast_.aux( id ) };
+
+    const Node_id decl = ast_.kind( qualifier ) == Node_kind::Name_expr ? resolution_.declaration_of( qualifier ) : Node_id {};
+
+    // An unresolved qualifier was already reported by the resolver; anything else is not a name at
+    // all, and `f()::x` deserves its own complaint rather than a second one about the name.
+    if( !decl.is_valid() )
+    {
+        if( ast_.kind( qualifier ) != Node_kind::Name_expr )
+        {
+            error_at( ast_.span( qualifier ), "`::` needs the name of an `enum` on its left" );
+        }
+
+        return record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    if( ast_.kind( decl ) != Node_kind::Enum_decl )
+    {
+        error_at(
+            ast_.span( qualifier ),
+            fmt::format( "`{}` is not an `enum`", interner_.text( Symbol_id { ast_.aux( qualifier ) } ) ),
+            "`::` reaches a variant, and only an `enum` has them"
+        );
+
+        return record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    // From 1: child 0 is the underlying type.
+    const std::span<const Node_id> variants = ast_.children( decl ).subspan( 1 );
+
+    for( std::size_t i = 0; i < variants.size(); ++i )
+    {
+        if( Symbol_id { ast_.aux( variants[i] ) } != name )
+        {
+            continue;
+        }
+
+        // The ordinal, recorded where the constant folder already puts values - a variant *is* a
+        // constant expression. Lowering needs the number, and aux holds the name.
+        constants_[id.v] = Constant_value { .kind = Constant_value::Kind::Integer, .magnitude = i };
+
+        return record( id, types_[decl.v] );
+    }
+
+    error_at(
+        ast_.span( id ),
+        fmt::format( "`{}` has no variant `{}`", interner_.text( Symbol_id { ast_.aux( decl ) } ), interner_.text( name ) )
+    );
+
+    return record( id, table_.builtin( Type_kind::Error ) );
 }
 
 Type_id Checker::infer_field( Node_id id )
@@ -2901,7 +3041,9 @@ Type_id Checker::type_of_annotation( Node_id id, bool outermost )
 
         if( decl.is_valid() )
         {
-            if( !is_aggregate( ast_.kind( decl ) ) )
+            // An enum names a type as much as an aggregate does. Not folded into is_aggregate(),
+            // which gates the struct/class member rules and has no business answering this.
+            if( !is_aggregate( ast_.kind( decl ) ) && ast_.kind( decl ) != Node_kind::Enum_decl )
             {
                 // Resolved to a function or variable of the same name.
                 error_at(
@@ -7948,6 +8090,161 @@ TEST_CASE( "type_checker_refuses_out_on_a_local", "[sema][out]" )
     REQUIRE_FALSE( p.clean() );
     REQUIRE( p.rendered().find( "`out` is not a binding mode" ) != std::string::npos );
     REQUIRE( p.rendered().find( "how a callee assigns a caller's variable" ) != std::string::npos );
+}
+
+// PLAN D30. An enum is a type of its own, and a variant has that type - never the underlying
+// integer. That one recording is what makes every rejection below fall out of rules that already
+// existed rather than needing new ones.
+TEST_CASE( "type_checker_types_an_enum_and_its_variants", "[sema][enum]" )
+{
+    const Typed p( "enum Colour : u8 { Red, Green, Blue };\ni32 main() { Colour c = Colour::Green; return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+    REQUIRE( p.type_name( p.nth( Node_kind::Enum_decl, 0 ) ) == "Colour" );
+    REQUIRE( p.type_name( p.nth( Node_kind::Variant_decl, 0 ) ) == "Colour" );
+    REQUIRE( p.type_name( p.nth( Node_kind::Path_expr, 0 ) ) == "Colour" );
+}
+
+TEST_CASE( "type_checker_checks_an_enum_declaration", "[sema][enum]" )
+{
+    SECTION( "the underlying type defaults to i32" )
+    {
+        const Typed p( "enum Colour { Red };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and must be an integer when written" )
+    {
+        const Typed p( "enum Colour : bool { Red };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "must be backed by an integer" ) != std::string::npos );
+    }
+
+    SECTION( "duplicate variants are refused, once each" )
+    {
+        const Typed p( "enum Colour { Red, Green, Red, Red };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 2 );
+        REQUIRE( p.rendered().find( "already has a variant `Red`" ) != std::string::npos );
+    }
+}
+
+TEST_CASE( "type_checker_checks_a_path", "[sema][enum]" )
+{
+    constexpr std::string_view colour = "enum Colour { Red, Green };\n";
+
+    SECTION( "an unknown variant is refused" )
+    {
+        const Typed p( std::string( colour ) + "i32 main() { Colour c = Colour::Purple; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "`Colour` has no variant `Purple`" ) != std::string::npos );
+    }
+
+    SECTION( "a qualifier that is not an enum is refused" )
+    {
+        const Typed p( "struct P { i32 x; };\ni32 main() { i32 n = P::x; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "is not an `enum`" ) != std::string::npos );
+    }
+
+    SECTION( "and `::` needs a name on its left" )
+    {
+        const Typed p( std::string( colour ) + "i32 main() { i32 n = Colour::Red::Green; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "needs the name of an `enum` on its left" ) != std::string::npos );
+    }
+}
+
+// The heart of D30: `enum class` semantics without the `class`. Each of these is rejected by a rule
+// that already existed - holds() has no branch reaching an integer from an enum, the arithmetic
+// table has no row for one, and the variants enter no lexical scope - so the entry is enforced by
+// what is absent as much as by what is written.
+TEST_CASE( "type_checker_gives_an_enum_enum_class_semantics", "[sema][enum]" )
+{
+    constexpr std::string_view colour = "enum Colour { Red, Green };\n";
+
+    SECTION( "variants do not leak into the enclosing scope" )
+    {
+        const Typed p( std::string( colour ) + "i32 main() { Colour c = Red; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "`Red` is not declared" ) != std::string::npos );
+    }
+
+    SECTION( "there is no conversion to an integer" )
+    {
+        const Typed p( std::string( colour ) + "i32 main() { i32 n = Colour::Red; return n; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    SECTION( "nor from one" )
+    {
+        const Typed p( std::string( colour ) + "i32 main() { Colour c = 0; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    SECTION( "and no arithmetic" )
+    {
+        const Typed p( std::string( colour ) + "i32 main() { i32 n = Colour::Red + 1; return n; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+}
+
+// Equality only, and only within one enum. Ordering is absent deliberately: variants are names
+// rather than magnitudes, so the order they were declared in is not an order anyone wrote down.
+TEST_CASE( "type_checker_compares_enums_by_identity", "[sema][enum]" )
+{
+    SECTION( "two values of one enum compare" )
+    {
+        const Typed p( "enum Colour { Red, Green };\n"
+                       "i32 main() { Colour c = Colour::Red; bool b = c == Colour::Green; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "two different enums do not" )
+    {
+        const Typed p( "enum A { X };\nenum B { Y };\ni32 main() { bool b = A::X == B::Y; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "only values of the same `enum` can be compared" ) != std::string::npos );
+    }
+
+    SECTION( "and ordering is not defined" )
+    {
+        const Typed p( "enum Colour { Red, Green };\ni32 main() { bool b = Colour::Red < Colour::Green; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+}
+
+// An enum is an ordinary type in every position that does not care what it holds.
+TEST_CASE( "type_checker_passes_an_enum_like_any_other_type", "[sema][enum]" )
+{
+    const Typed p( "enum Colour { Red, Green };\n"
+                   "Colour flip( Colour c ) { if( c == Colour::Red ) { return Colour::Green; } return Colour::Red; }\n"
+                   "i32 main() { Colour c = flip( Colour::Red ); return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
 }
 
 } // namespace keel

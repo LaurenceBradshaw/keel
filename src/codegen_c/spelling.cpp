@@ -51,6 +51,12 @@ std::string Spelling::type( Type_id type ) const
     case Type_kind::Pointer:
         return fmt::format( "{}*", this->type( described.element ) );
 
+    // The underlying integer, not a C `enum`. C's enum has an implementation-defined type, and by
+    // the time anything reaches here Keel has already erased the distinction the tag existed for -
+    // so a C enum would buy nothing and cost a platform question.
+    case Type_kind::Enum:
+        return this->type( described.element );
+
     default:
         assert( false && "no C spelling for this type" );
         return "void";

@@ -744,6 +744,17 @@ Operand Lowering::lower_expression( Node_id id )
 
         return move( built.place, type );
     }
+    case Node_kind::Path_expr:
+    {
+        // The variant's *ordinal*, which the checker recorded as a constant. aux holds its name, so
+        // reading that here would emit an interner index as the enum's value - which would compile,
+        // run, and be wrong in a way no golden would show.
+        const std::optional<Constant_value> value = types_.constant_of( id );
+
+        assert( value.has_value() && "the checker records an ordinal for every variant it accepts" );
+
+        return constant( literals_.add_integer( value->magnitude ), types_.type_of( id ) );
+    }
     default:
         // Names the construct rather than the category: while the lowerer is incomplete this is
         // the message that says what to write next, and it costs nothing once it is complete.
@@ -3445,6 +3456,45 @@ TEST_CASE( "lower_records_no_out_parameters_where_there_are_none", "[ir][lower][
     INFO( p.rendered() );
     REQUIRE( p.clean() );
     REQUIRE( p.functions[0].out_parameters.empty() );
+}
+
+// PLAN D30. A variant lowers to its **ordinal** - its position in the declaration. The first
+// version of this read `aux`, which holds the variant's *name*, and emitted an interner index as
+// the enum's value: it compiled, it ran, and every number was wrong. A golden would have recorded
+// those numbers as correct, which is why this case checks the values themselves.
+TEST_CASE( "lower_gives_a_variant_its_ordinal", "[ir][lower][enum]" )
+{
+    Lowered p( "enum Colour : u8 { Red, Green, Blue };\n"
+               "i32 main() { Colour a = Colour::Red; Colour b = Colour::Green; Colour c = Colour::Blue; return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.named( "main" );
+
+    INFO( text );
+    REQUIRE( text.find( "_1 = const 0" ) != std::string::npos );
+    REQUIRE( text.find( "_2 = const 1" ) != std::string::npos );
+    REQUIRE( text.find( "_3 = const 2" ) != std::string::npos );
+
+    // And the local keeps the enum's own type, not the underlying integer: KIR is what the C
+    // emitter reads, and the width comes from the enum rather than from the literal.
+    REQUIRE( text.find( "let _1: Colour;" ) != std::string::npos );
+}
+
+TEST_CASE( "lower_compares_enums_as_integers", "[ir][lower][enum]" )
+{
+    Lowered p( "enum Colour { Red, Green };\n"
+               "bool is_green( Colour c ) { return c == Colour::Green; }\n"
+               "i32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.named( "is_green" );
+
+    INFO( text );
+    REQUIRE( text.find( "copy _1 == const 1" ) != std::string::npos );
 }
 
 } // namespace keel

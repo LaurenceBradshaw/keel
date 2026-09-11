@@ -81,6 +81,20 @@ Type_id Type_table::pointer_to( Type_id element )
     return id;
 }
 
+Type_id Type_table::enumeration( Node_id declaration, std::string_view name, Type_id underlying )
+{
+    const auto it = enums_.find( declaration.v );
+
+    if( it != enums_.end() )
+    {
+        return it->second;
+    }
+
+    const Type_id id = add( Type { Type_kind::Enum, 0, false, underlying }, name );
+    enums_.emplace( declaration.v, id );
+    return id;
+}
+
 Type_id Type_table::structure( Node_id declaration, std::string_view name )
 {
     const auto it = structs_.find( declaration.v );
@@ -163,7 +177,11 @@ bool Type_table::holds( Type_id from, Type_id to ) const
         return t.width >= f.width;
     }
 
-    return false; // float -> int, and every pair of unrelated kinds
+    // float -> int, and every pair of unrelated kinds - which is where **D30 is enforced**. An
+    // enum reaches an integer through no branch above, so `i32 x = Colour::Red;` is rejected by
+    // there being nothing here to accept it. Adding a case would be undoing the decision, not
+    // completing the function.
+    return false;
 }
 
 Type_id Type_table::common( Type_id a, Type_id b ) const
@@ -322,6 +340,12 @@ bool Type_table::is_struct( Type_id id ) const
 {
     assert( id.is_valid() );
     return get( id ).kind == Type_kind::Struct;
+}
+
+bool Type_table::is_enum( Type_id id ) const
+{
+    assert( id.is_valid() );
+    return get( id ).kind == Type_kind::Enum;
 }
 
 bool Type_table::is_pointer( Type_id id ) const

@@ -1,0 +1,39 @@
+fn is_green {
+    let _0: bool; // return slot
+    let _1: Colour; // parameter c
+    let _2: bool;
+
+    bb0:
+        _2 = copy _1 == const 1
+        _0 = copy _2
+        return
+}
+fn main {
+    let _0: i32; // return slot
+    let _1: Colour; // a
+    let _2: Colour; // b
+    let _3: bool;
+
+    bb0:
+        storage_live _1
+        _1 = const 0
+        storage_live _2
+        _2 = const 2
+        _3 = call is_green(copy _1)
+        branch copy _3 -> bb1, bb2
+
+    bb1:
+        _0 = const 1
+        storage_dead _2
+        storage_dead _1
+        return
+
+    bb2:
+        goto -> bb3
+
+    bb3:
+        _0 = const 0
+        storage_dead _2
+        storage_dead _1
+        return
+}

@@ -75,6 +75,12 @@ std::string_view node_kind_name( Node_kind kind )
         return "Struct_decl";
     case Node_kind::Class_decl:
         return "Class_decl";
+    case Node_kind::Enum_decl:
+        return "Enum_decl";
+    case Node_kind::Variant_decl:
+        return "Variant_decl";
+    case Node_kind::Path_expr:
+        return "Path_expr";
     case Node_kind::Field_decl:
         return "Field_decl";
     case Node_kind::Field_expr:

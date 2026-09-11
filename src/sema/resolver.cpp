@@ -78,7 +78,7 @@ Resolution Resolver::run()
     for( const Node_id decl : ast_.children( ast_.root() ) )
     {
         if( ast_.kind( decl ) == Node_kind::Function_decl || ast_.kind( decl ) == Node_kind::Var_decl ||
-            is_aggregate( ast_.kind( decl ) ) )
+            ast_.kind( decl ) == Node_kind::Enum_decl || is_aggregate( ast_.kind( decl ) ) )
         {
             declare( Symbol_id { ast_.aux( decl ) }, decl );
         }
@@ -197,6 +197,24 @@ void Resolver::visit( Node_id id )
         for( const Node_id init : ast_.children( id ) )
         {
             visit( init );
+        }
+
+        return;
+    }
+    case Node_kind::Enum_decl:
+    {
+        // Child 0 is the underlying type and is invalid when unwritten, so it cannot go through
+        // the default walk - visit() asserts on an invalid id, which is the same convention
+        // Var_decl follows for its two optional children.
+        //
+        // The variants are deliberately not visited. D30 gives them enum-class scoping, so they
+        // enter no lexical scope at all: `Colour::Red` is looked up against the enum's own type in
+        // the checker, exactly as a field name is, and a bare `Red` should stay undeclared.
+        const Node_id annotation = ast_.children( id )[0];
+
+        if( annotation.is_valid() )
+        {
+            visit( annotation );
         }
 
         return;
