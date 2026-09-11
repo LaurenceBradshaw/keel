@@ -127,6 +127,7 @@ void Resolver::visit( Node_id id )
         return;
     case Node_kind::Destructor_decl:
     case Node_kind::Constructor_decl:
+    case Node_kind::Method_decl:
     case Node_kind::Function_decl:
         push_scope( Scope_kind::Barrier );
         visit( ast_.children( id )[0] ); // return type; invalid for Destructor_decl
@@ -300,6 +301,38 @@ void Resolver::visit( Node_id id )
                 error_at(
                     ast_.span( field ),
                     fmt::format( "field `{}` is already declared", interner_.text( name ) ),
+                    previous_declaration_note( it->second )
+                );
+            }
+        }
+
+        // Methods join the member scope, so a sibling is callable by bare name: `add( by )` rather
+        // than `this.add( by )`, which is what C++ does and what any real class needs - a type whose
+        // methods have to qualify each other is tiring to write long before it is large.
+        //
+        // A second loop rather than a branch in the one above, because a method's own annotations
+        // are resolved when its body is visited below, not here.
+        for( const Node_id member : ast_.children( id ) )
+        {
+            if( ast_.kind( member ) != Node_kind::Method_decl )
+            {
+                continue;
+            }
+
+            const Symbol_id name { ast_.aux( member ) };
+
+            if( !name.is_valid() )
+            {
+                continue;
+            }
+
+            const auto [it, inserted] = members.try_emplace( name.v, member );
+
+            if( !inserted )
+            {
+                error_at(
+                    ast_.span( member ),
+                    fmt::format( "`{}` is already declared", interner_.text( name ) ),
                     previous_declaration_note( it->second )
                 );
             }

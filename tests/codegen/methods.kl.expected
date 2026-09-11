@@ -1,0 +1,237 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Counter;
+struct kl__Owned;
+
+struct kl__Counter
+{
+    int32_t kl_value_1;
+};
+
+struct kl__Owned
+{
+    uint64_t kl_n_84;
+};
+
+uint64_t kl_freed_82 = 0;
+
+int32_t kl__read__Counterp( struct kl__Counter* );
+void kl__add__Counterp_i32( struct kl__Counter*, int32_t );
+void kl__twice__Counterp_i32( struct kl__Counter*, int32_t );
+int32_t kl__doubled__Counterp( struct kl__Counter* );
+int32_t kl__through_a_pointer__Counterp( struct kl__Counter* );
+void kl__Owned__Ownedp_u64( struct kl__Owned*, uint64_t );
+void kl__Owned__dtor( struct kl__Owned* );
+uint64_t kl__read__Ownedp( struct kl__Owned* );
+void kl__add__Ownedp_u64( struct kl__Owned*, uint64_t );
+void kl__twice__Ownedp_u64( struct kl__Owned*, uint64_t );
+int32_t kl__main__( void );
+
+int32_t kl__read__Counterp( struct kl__Counter* kl_this_1 )
+{
+    int32_t kl_t0;
+#line 11 "codegen/methods.kl"
+    kl_t0 = ( *kl_this_1 ).kl_value_1;
+    return kl_t0;
+}
+
+void kl__add__Counterp_i32( struct kl__Counter* kl_this_1, int32_t kl_by_2 )
+{
+    int32_t kl_t3;
+#line 16 "codegen/methods.kl"
+    kl_t3 = ( *kl_this_1 ).kl_value_1 + kl_by_2;
+    ( *kl_this_1 ).kl_value_1 = kl_t3;
+    return;
+}
+
+void kl__twice__Counterp_i32( struct kl__Counter* kl_this_1, int32_t kl_by_2 )
+{
+#line 23 "codegen/methods.kl"
+    kl__add__Counterp_i32( kl_this_1, kl_by_2 );
+#line 24 "codegen/methods.kl"
+    kl__add__Counterp_i32( kl_this_1, kl_by_2 );
+    return;
+}
+
+int32_t kl__doubled__Counterp( struct kl__Counter* kl_this_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t2;
+    int32_t kl_t3;
+    int32_t kl_t4;
+#line 30 "codegen/methods.kl"
+    kl_t2 = kl__read__Counterp( kl_this_1 );
+    kl_t3 = kl__read__Counterp( kl_this_1 );
+    kl_t4 = kl_t2 + kl_t3;
+    kl_t0 = kl_t4;
+    return kl_t0;
+}
+
+int32_t kl__through_a_pointer__Counterp( struct kl__Counter* kl_c_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t3;
+#line 38 "codegen/methods.kl"
+    kl__add__Counterp_i32( kl_c_1, 100 );
+#line 40 "codegen/methods.kl"
+    kl_t3 = kl__read__Counterp( kl_c_1 );
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+void kl__Owned__Ownedp_u64( struct kl__Owned* kl_this_1, uint64_t kl_start_2 )
+{
+#line 54 "codegen/methods.kl"
+    ( *kl_this_1 ).kl_n_84 = kl_start_2;
+    return;
+}
+
+void kl__Owned__dtor( struct kl__Owned* kl_this_1 )
+{
+    uint64_t kl_t2;
+#line 59 "codegen/methods.kl"
+    kl_t2 = kl_freed_82 + 1;
+    kl_freed_82 = kl_t2;
+    return;
+}
+
+uint64_t kl__read__Ownedp( struct kl__Owned* kl_this_1 )
+{
+    uint64_t kl_t0;
+#line 64 "codegen/methods.kl"
+    kl_t0 = ( *kl_this_1 ).kl_n_84;
+    return kl_t0;
+}
+
+void kl__add__Ownedp_u64( struct kl__Owned* kl_this_1, uint64_t kl_by_2 )
+{
+    uint64_t kl_t3;
+#line 69 "codegen/methods.kl"
+    kl_t3 = ( *kl_this_1 ).kl_n_84 + kl_by_2;
+    ( *kl_this_1 ).kl_n_84 = kl_t3;
+    return;
+}
+
+void kl__twice__Ownedp_u64( struct kl__Owned* kl_this_1, uint64_t kl_by_2 )
+{
+#line 74 "codegen/methods.kl"
+    kl__add__Ownedp_u64( kl_this_1, kl_by_2 );
+#line 75 "codegen/methods.kl"
+    kl__add__Ownedp_u64( kl_this_1, kl_by_2 );
+    return;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__Counter kl_c_1;
+    struct kl__Counter kl_t2;
+    struct kl__Counter* kl_t3;
+    struct kl__Counter* kl_t5;
+    struct kl__Counter* kl_t7;
+    int32_t kl_t8;
+    bool kl_t9;
+    struct kl__Counter* kl_t10;
+    int32_t kl_t11;
+    bool kl_t12;
+    struct kl__Counter* kl_t13;
+    int32_t kl_t14;
+    bool kl_t15;
+    struct kl__Owned kl_o_16;
+    struct kl__Owned* kl_t17;
+    struct kl__Owned* kl_t19;
+    struct kl__Owned* kl_t21;
+    uint64_t kl_t22;
+    bool kl_t23;
+    bool kl_t24;
+    struct kl__Counter* kl_t25;
+    int32_t kl_t26;
+#line 81 "codegen/methods.kl"
+    kl_t2.kl_value_1 = 0;
+    kl_c_1 = kl_t2;
+#line 83 "codegen/methods.kl"
+    kl_t3 = &kl_c_1;
+    kl__add__Counterp_i32( kl_t3, 1 );
+#line 84 "codegen/methods.kl"
+    kl_t5 = &kl_c_1;
+    kl__twice__Counterp_i32( kl_t5, 10 );
+#line 86 "codegen/methods.kl"
+    kl_t7 = &kl_c_1;
+    kl_t8 = kl__read__Counterp( kl_t7 );
+    kl_t9 = kl_t8 != 21;
+    if ( kl_t9 ) goto bb1; else goto bb2;
+    bb1:
+#line 88 "codegen/methods.kl"
+    kl_t0 = 90;
+    return kl_t0;
+    bb2:
+    goto bb3;
+    bb3:
+#line 91 "codegen/methods.kl"
+    kl_t10 = &kl_c_1;
+    kl_t11 = kl__through_a_pointer__Counterp( kl_t10 );
+    kl_t12 = kl_t11 != 121;
+    if ( kl_t12 ) goto bb4; else goto bb5;
+    bb4:
+#line 93 "codegen/methods.kl"
+    kl_t0 = 91;
+    return kl_t0;
+    bb5:
+    goto bb6;
+    bb6:
+#line 96 "codegen/methods.kl"
+    kl_t13 = &kl_c_1;
+    kl_t14 = kl__doubled__Counterp( kl_t13 );
+    kl_t15 = kl_t14 != 242;
+    if ( kl_t15 ) goto bb7; else goto bb8;
+    bb7:
+#line 98 "codegen/methods.kl"
+    kl_t0 = 92;
+    return kl_t0;
+    bb8:
+    goto bb9;
+    bb9:
+#line 104 "codegen/methods.kl"
+    kl_t17 = &kl_o_16;
+    kl__Owned__Ownedp_u64( kl_t17, 1 );
+#line 106 "codegen/methods.kl"
+    kl_t19 = &kl_o_16;
+    kl__twice__Ownedp_u64( kl_t19, 10 );
+#line 108 "codegen/methods.kl"
+    kl_t21 = &kl_o_16;
+    kl_t22 = kl__read__Ownedp( kl_t21 );
+    kl_t23 = kl_t22 != 21;
+    if ( kl_t23 ) goto bb10; else goto bb11;
+    bb10:
+#line 110 "codegen/methods.kl"
+    kl_t0 = 93;
+    kl__Owned__dtor( &kl_o_16 );
+    return kl_t0;
+    bb11:
+    goto bb12;
+    bb12:
+#line 103 "codegen/methods.kl"
+    kl__Owned__dtor( &kl_o_16 );
+#line 114 "codegen/methods.kl"
+    kl_t24 = kl_freed_82 != 1;
+    if ( kl_t24 ) goto bb13; else goto bb14;
+    bb13:
+#line 116 "codegen/methods.kl"
+    kl_t0 = 94;
+    return kl_t0;
+    bb14:
+    goto bb15;
+    bb15:
+#line 120 "codegen/methods.kl"
+    kl_t25 = &kl_c_1;
+    kl_t26 = kl__read__Counterp( kl_t25 );
+    kl_t0 = kl_t26;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

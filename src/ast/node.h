@@ -64,6 +64,7 @@ enum class Node_kind : u16
     Variant_pattern, // `Shape::Circle( r )` in a case; children are the Path_expr then Binding_decls
     Binding_decl,    // a name bound by a pattern; aux is the name, and it has no annotation  // `1..5`, half-open; children are
                      // the two bounds
+    Method_decl,     // aux is the name; children are { return type, params, body }, as Function_decl
 
     Count
 };
@@ -94,7 +95,8 @@ constexpr bool is_aggregate( Node_kind kind )
 // A destructor is a Function_decl minus its return type, so one scan finds both.
 constexpr bool is_function_like( Node_kind kind )
 {
-    return kind == Node_kind::Function_decl || kind == Node_kind::Destructor_decl || kind == Node_kind::Constructor_decl;
+    return kind == Node_kind::Function_decl || kind == Node_kind::Destructor_decl || kind == Node_kind::Constructor_decl ||
+           kind == Node_kind::Method_decl;
 }
 
 struct Node

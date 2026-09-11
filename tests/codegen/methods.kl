@@ -1,0 +1,121 @@
+// PLAN D29/D32. A method is a function whose parameter 0 is the receiver, and the trailing `const`
+// decides which binding mode that parameter carries. Only the exit code can see that the receiver
+// is the caller's object rather than a copy: every mutation below is made through a method and read
+// back through another, so a receiver passed by value would leave each number at its start.
+struct Counter
+{
+    i32 value;
+
+    i32 read() const
+    {
+        return value;
+    }
+
+    void add( i32 by )
+    {
+        value = value + by;
+    }
+
+    // A sibling called by bare name: methods join the member scope alongside fields, so `add( by )`
+    // means `this.add( by )` - which is what C++ does, and what any type larger than this needs.
+    void twice( i32 by )
+    {
+        add( by );
+        add( by );
+    }
+
+    // And the const rule follows the receiver through: this may call `read` and not `add`.
+    i32 doubled() const
+    {
+        return read() + read();
+    }
+};
+
+// D22 reaches through a pointer for a method as it does for a field, and the pointer's value is
+// already the address the receiver wants - taking its address would pass a `Counter**`.
+i32 through_a_pointer( Counter* c )
+{
+    c.add( 100 );
+
+    return c.read();
+}
+
+// D29 splits the two kinds at trivial copyability, not at what they may have - so a `class` gets
+// methods on exactly the same machinery, alongside the constructor and destructor it may also have.
+// Nothing here is a second implementation of anything above.
+u64 freed = 0;
+
+class Owned
+{
+    u64 n;
+
+    Owned( u64 start )
+    {
+        n = start;
+    }
+
+    ~Owned()
+    {
+        freed = freed + 1;
+    }
+
+    u64 read() const
+    {
+        return n;
+    }
+
+    void add( u64 by )
+    {
+        n = n + by;
+    }
+
+    void twice( u64 by )
+    {
+        add( by );
+        add( by );
+    }
+};
+
+i32 main()
+{
+    Counter c = Counter { 0 };
+
+    c.add( 1 );      // 1
+    c.twice( 10 );   // 21
+
+    if( c.read() != 21 )
+    {
+        return 90;
+    }
+
+    if( through_a_pointer( &c ) != 121 )
+    {
+        return 91;
+    }
+
+    if( c.doubled() != 242 )
+    {
+        return 92;
+    }
+
+    // The same three shapes on a `class`, which also has a constructor and a destructor - and the
+    // destructor still runs exactly once, so methods did not change what the scope owns.
+    {
+        Owned o = Owned( 1 );
+
+        o.twice( 10 );
+
+        if( o.read() != 21 )
+        {
+            return 93;
+        }
+    }
+
+    if( freed != 1 )
+    {
+        return 94;
+    }
+
+    // The pointer wrote the same object, so the value survives the call.
+    return c.read();
+}

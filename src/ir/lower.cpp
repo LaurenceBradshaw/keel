@@ -39,6 +39,8 @@ private:
     Operand lower_binary( Node_id id );
     Operand lower_unary( Node_id id );
     Operand lower_call( Node_id id );
+    Operand lower_method_call( Node_id id );
+    Operand lower_method_call_on( Node_id id, Node_id method, Operand receiver );
     Operand lower_variant_construction( Node_id id );
     Operand lower_empty_variant( Node_id id );
     void    bind_variant_pattern( Place matched, Node_id label );
@@ -708,6 +710,83 @@ Operand Lowering::lower_variant_construction( Node_id id )
     return copy( place, type );
 }
 
+// D29/D32. A method call is an ordinary call whose first argument is the receiver's **address**.
+// The receiver is a `ref T` or `const ref T` binding, so this is the same address_operand step
+// lower_argument takes for any borrow - the only difference is that the argument was never written
+// at the call site, so it is prepended here.
+Operand Lowering::lower_method_call( Node_id id )
+{
+    const Node_id callee = ast_.children( id )[0];
+    const Node_id object = ast_.children( callee )[0];
+    const Span    span   = ast_.span( id );
+
+    const Node_id method = types_.method_of( id );
+
+    assert( method.is_valid() && "the checker records the method for every call it accepts" );
+
+    const std::span<const Node_id> parameters = ast_.children( ast_.children( method )[1] );
+
+    // D22 reaches through a pointer, so `q.area()` on a `Point*` calls the method on the pointee -
+    // and the pointer's *value* is already the address the receiver wants. Taking its address
+    // instead would hand the method a `Point**`, which type-checks nowhere and miscompiles here.
+    const Type_id object_type = types_.type_of( object );
+
+    const Operand receiver = types_.table().is_pointer( object_type )
+                                 ? lower_expression( object )
+                                 : address_operand( lower_place( object ), binding_type( ast_, types_, parameters[0] ), span );
+
+    return lower_method_call_on( id, method, receiver );
+}
+
+// The half both call shapes share. What differs is only where the receiver came from - an object
+// written at the call site, or the one the enclosing method was given.
+Operand Lowering::lower_method_call_on( Node_id id, Node_id method, Operand receiver )
+{
+    const Span span = ast_.span( id );
+
+    const std::span<const Node_id> parameters = ast_.children( ast_.children( method )[1] );
+    const std::span<const Node_id> arguments  = ast_.children( ast_.children( id )[1] );
+
+    std::vector<Operand> operands;
+
+    operands.reserve( arguments.size() + 1 );
+    operands.push_back( receiver );
+
+    // Every argument is lowered before any is converted, so the order the statements come out in is
+    // the order the arguments were written - §7.1's guarantee, which C leaves unspecified.
+    for( const Node_id argument : arguments )
+    {
+        operands.push_back( lower_expression( argument ) );
+    }
+
+    // From 1: parameter 0 is the receiver, which was never written at the call site.
+    for( std::size_t i = 0; i < arguments.size() && i + 1 < parameters.size(); ++i )
+    {
+        operands[i + 1] =
+            converted( operands[i + 1], binding_type( ast_, types_, parameters[i + 1] ), ast_.span( arguments[i] ) );
+
+        if( is_move_parameter( parameters[i + 1] ) )
+        {
+            operands[i + 1] = moved_if_owning( operands[i + 1] );
+        }
+    }
+
+    const u32     first = builder_.add_operands( operands );
+    const Type_id type  = types_.type_of( id );
+
+    // The same split lower_call makes for a free function: a callee that returns a binding hands
+    // back an address, so the call's own type is that pointer and the temporary holding it is one
+    // too. Dereferencing once here is what makes both uses at the call site fall out - a copy reads
+    // `(*_t)`, and a binding takes `&(*_t)`, which is `_t` again.
+    const bool    binding     = is_borrowed_binding( ast_, types_, method );
+    const Type_id result_type = binding ? binding_type( ast_, types_, method ) : type;
+
+    const Local_id result =
+        builder_.into_temp( call( method, first, static_cast<u32>( operands.size() ), result_type ), result_type, span );
+
+    return copy( binding ? builder_.deref( builder_.place( result ) ) : builder_.place( result ), type );
+}
+
 Operand Lowering::lower_call( Node_id id )
 {
     // D7: a call whose callee is a path is a variant being constructed, not a function being
@@ -732,6 +811,21 @@ Operand Lowering::lower_call( Node_id id )
         lower_construction( builder_.place( local ), id );
 
         return copy( builder_.place( local ), type );
+    }
+
+    // `p.area()` - the callee is a Field_expr rather than a name, and the receiver is its object.
+    // Handled before the lookup below, which reaches for a declaration a Field_expr does not have.
+    if( ast_.kind( ast_.children( id )[0] ) == Node_kind::Field_expr )
+    {
+        return lower_method_call( id );
+    }
+
+    // A bare `add( by )` inside a method. The receiver is the one this function was given, and its
+    // local already holds the address - so unlike every other call shape there is nothing to take
+    // the address *of*.
+    if( const Node_id method = types_.method_of( id ); method.is_valid() )
+    {
+        return lower_method_call_on( id, method, copy( builder_.place( receiver_ ), builder_.type_of( receiver_ ) ) );
     }
 
     const Node_id callee = resolution_.declaration_of( ast_.children( id )[0] );
@@ -4100,6 +4194,94 @@ TEST_CASE( "lower_switches_on_the_tag_and_binds_the_payload", "[ir][lower][paylo
     REQUIRE( text.find( "// r" ) != std::string::npos );
     REQUIRE( text.find( "// w" ) != std::string::npos );
     REQUIRE( text.find( "// h" ) != std::string::npos );
+}
+
+// PLAN D32. A method call is an ordinary call whose first argument is the receiver's **address** -
+// the same address_operand step lower_argument takes for any borrow, except that the argument was
+// never written at the call site, so it is prepended.
+TEST_CASE( "lower_passes_the_receiver_by_address", "[ir][lower][method]" )
+{
+    Lowered p( "struct P { i32 x; i32 get() const { return x; } };\n"
+               "i32 main() { P p = P { 1 }; return p.get(); }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string callee = p.named( "get" );
+
+    INFO( callee );
+    REQUIRE( callee.find( "let _1: P*; // parameter this" ) != std::string::npos );
+
+    // A bare field name is `this.field`, and the receiver is a borrowed binding - so place_for
+    // derefs it and the projection is off the referent, not off the pointer.
+    REQUIRE( callee.find( "copy (*_1).x" ) != std::string::npos );
+
+    const std::string caller = p.named( "main" );
+
+    INFO( caller );
+    REQUIRE( caller.find( "= &_1" ) != std::string::npos );
+    REQUIRE( caller.find( "call get(copy _" ) != std::string::npos );
+}
+
+// The receiver is parameter 0, so the written arguments start at 1 - and lining them up wrongly
+// would convert each against the parameter beside it rather than its own.
+TEST_CASE( "lower_passes_arguments_after_the_receiver", "[ir][lower][method]" )
+{
+    Lowered p( "struct P { i32 x; void set( i32 a, i32 b ) { x = a + b; } };\n"
+               "i32 main() { P p = P { 0 }; p.set( 7, 9 ); return p.x; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string caller = p.named( "main" );
+
+    INFO( caller );
+    REQUIRE( caller.find( "const 7, const 9" ) != std::string::npos );
+}
+
+// D22 reaches through a pointer for a field, and a method is reached the same way - so the receiver
+// address is the pointer's value rather than the pointer's own address.
+TEST_CASE( "lower_calls_a_method_through_a_pointer", "[ir][lower][method]" )
+{
+    Lowered p( "struct P { i32 x; i32 get() const { return x; } };\n"
+               "i32 main() { P p = P { 5 }; P* q = &p; return q.get(); }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string caller = p.named( "main" );
+
+    INFO( caller );
+
+    // The pointer is handed over as it stands. `&q` would be a `P**` - which is what this did
+    // until the D22 branch was written, and it compiled to C that dereferenced the wrong thing.
+    REQUIRE( caller.find( "call get(copy _" ) != std::string::npos );
+    REQUIRE( caller.find( "= &_2" ) == std::string::npos );
+}
+
+// The lowering half of §8's receiver clause. The method hands back an address, so the call's own
+// type is that pointer - typing it as the language type produced C that assigned an `int*` to an
+// `int`, which only -Werror caught.
+TEST_CASE( "lower_returns_a_reference_from_a_method", "[ir][lower][method]" )
+{
+    Lowered p( "struct P { i32 x; const ref i32 get() const { return x; } };\n"
+               "i32 main() { P p = P { 7 }; const ref i32 r = p.get(); return r; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string callee = p.named( "get" );
+
+    INFO( callee );
+    REQUIRE( callee.find( "let _0: i32*; // return slot" ) != std::string::npos );
+    REQUIRE( callee.find( "_0 = &(*_1).x" ) != std::string::npos );
+
+    // And the caller binds the pointer it was handed rather than the address of a copy of it.
+    const std::string caller = p.named( "main" );
+
+    INFO( caller );
+    REQUIRE( caller.find( "let _3: i32*; // r" ) != std::string::npos );
+    REQUIRE( caller.find( "copy (*_3)" ) != std::string::npos );
 }
 
 } // namespace keel

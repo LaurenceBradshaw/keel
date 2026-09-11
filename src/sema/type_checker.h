@@ -41,12 +41,14 @@ public:
         std::vector<Type_id>                    types,
         std::vector<Node_id>                    struct_order,
         std::unordered_map<u32, Constant_value> constants,
-        std::unordered_set<u32>                 owning
+        std::unordered_set<u32>                 owning,
+        std::unordered_map<u32, Node_id>        methods
     )
         : table_( std::move( table ) ),
           types_( std::move( types ) ),
           struct_order_( std::move( struct_order ) ),
           constants_( std::move( constants ) ),
+          methods_( std::move( methods ) ),
           owning_( std::move( owning ) )
     {
     }
@@ -69,6 +71,16 @@ public:
         const auto found = constants_.find( node.v );
 
         return found == constants_.end() ? std::nullopt : std::optional<Constant_value>( found->second );
+    }
+
+    // The Method_decl a `p.area()` resolved to. Carried rather than looked up again: finding a
+    // method by name on a type is a *rule*, and lowering repeating it is how the two would drift
+    // the day that rule grows - inheritance, or a method on a generic.
+    Node_id method_of( Node_id call ) const
+    {
+        const auto found = methods_.find( call.v );
+
+        return found == methods_.end() ? Node_id {} : found->second;
     }
 
     const std::vector<Node_id>& struct_order() const
@@ -96,6 +108,7 @@ private:
     std::vector<Type_id>                    types_;
     std::vector<Node_id>                    struct_order_;
     std::unordered_map<u32, Constant_value> constants_; // dependencies first, from the DFS post-order
+    std::unordered_map<u32, Node_id>        methods_;   // Call_expr -> the Method_decl it resolved to
     std::unordered_set<u32>                 owning_;
 };
 
@@ -114,8 +127,12 @@ bool enum_has_payload( const Ast& ast, Node_id enum_decl );
 
 Keyword parameter_mode( const Ast& ast, Node_id decl );
 
-bool    is_borrowed_binding( const Ast& ast, const Types& types, Node_id decl );
-bool    is_const_binding( const Ast& ast, Node_id decl );
+bool is_borrowed_binding( const Ast& ast, const Types& types, Node_id decl );
+bool is_const_binding( const Ast& ast, Node_id decl );
+
+// A method written with a trailing `const`, which is a `const ref` receiver. Its own name because
+// the question is asked of the *method* while the answer lives on its parameter 0.
+bool    is_const_method( const Ast& ast, Node_id method );
 Type_id binding_type( const Ast& ast, const Types& types, Node_id decl );
 // `const ref T` wraps the mode: Const_type( Mode_type( T ) ). Every question about a mode goes
 // through here, so adding the spelling cannot quietly turn a `const ref` into a bare parameter.

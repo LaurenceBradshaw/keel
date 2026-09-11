@@ -74,6 +74,7 @@ private:
     Node_id parse_source_file();
     Node_id parse_declaration();
     Node_id parse_function_decl();
+    Node_id parse_method_decl( Symbol_id enclosing );
     Node_id parse_param_list( Node_id leading = Node_id {} );
     Node_id parse_aggregate_decl();
     Node_id parse_enum_decl();
@@ -106,8 +107,8 @@ private:
     // parse: it moves the cursor, looks, and puts it back, building no nodes and reporting nothing.
     // A speculative *parse* would emit diagnostics for guesses that turn out wrong.
     bool looks_like_declaration();
-
     bool looks_like_binding();
+    bool looks_like_method();
 
     // Scans a type followed by the declared name, leaving pos_ just after that name. Shared by
     // looks_like_declaration, which only wants the answer, and parse_declaration, which needs to
@@ -598,10 +599,7 @@ Node_id Parser::parse_declaration()
     // scan_type_and_name below steps over the mode to find the name.
     if( check( Token_kind::Identifier ) || check_keyword( Keyword::Const ) || at_mode_keyword() )
     {
-        const u32  saved    = pos_;
-        const bool function = scan_type_and_name() && check( Token_kind::L_paren );
-
-        pos_ = saved;
+        const bool function = looks_like_method();
 
         return function ? parse_function_decl() : parse_var_decl();
     }
@@ -650,6 +648,66 @@ Node_id Parser::parse_function_decl()
     }
 
     return ast_.add( Node_kind::Function_decl, Span::merge( start, previous().span ), name.v, { return_type, params, body } );
+}
+
+Node_id Parser::parse_method_decl( Symbol_id enclosing )
+{
+    const Span      start       = peek().span;
+    const Node_id   return_type = parse_type_with_mode();
+    const Symbol_id name        = expect_name();
+
+    const u32 before = pos_;
+
+    if( !expect( Token_kind::L_paren ) )
+    {
+        return error_node( Span::merge( start, previous().span ) );
+    }
+
+    // The trailing `const` is written *after* the parameter list, and the receiver has to exist
+    // before the list is built - so the list is skipped once to find it, then rewound and parsed
+    // properly. Nesting is counted rather than assumed: a parameter's type may contain parentheses
+    // one day, and a loop that stops at the first `)` would then read the wrong token.
+    u32 depth = 1;
+
+    while( depth > 0 && !at_end() )
+    {
+        if( check( Token_kind::L_paren ) )
+        {
+            ++depth;
+        }
+        else if( check( Token_kind::R_paren ) )
+        {
+            --depth;
+        }
+
+        advance();
+    }
+
+    if( depth != 0 )
+    {
+        return error_node( Span::merge( start, previous().span ) );
+    }
+
+    const bool is_const = check_keyword( Keyword::Const );
+
+    pos_ = before;
+
+    const Node_id receiver = synthesise_receiver( enclosing, start, is_const );
+    const Node_id params   = parse_param_list( receiver );
+
+    if( is_const )
+    {
+        match_keyword( Keyword::Const );
+    }
+
+    const Node_id body = parse_block();
+
+    if( !name.is_valid() )
+    {
+        return error_node( Span::merge( start, previous().span ) );
+    }
+
+    return ast_.add( Node_kind::Method_decl, Span::merge( start, previous().span ), name.v, { return_type, params, body } );
 }
 
 Node_id Parser::parse_param_list( Node_id leading )
@@ -710,10 +768,15 @@ Node_id Parser::parse_aggregate_decl()
 
         const bool is_destructor  = check( Token_kind::Tilde );
         const bool is_constructor = check( Token_kind::Identifier ) && peek( 1 ).kind == Token_kind::L_paren;
+        // A method is a type, a name and a parameter list - which is what scan_type_and_name finds,
+        // and it restores the cursor. A constructor is the same shape minus the type, so it has to
+        // be tested first or `Buffer( u64 n )` reads as a method returning `Buffer`.
+        const bool is_method = !is_destructor && !is_constructor && looks_like_method();
 
         members.push_back(
             is_destructor    ? parse_destructor_decl( name )
             : is_constructor ? parse_constructor_decl( name )
+            : is_method      ? parse_method_decl( name )
                              : parse_field_decl()
         );
 
@@ -1254,6 +1317,15 @@ bool Parser::looks_like_binding()
     advance(); // the mode
 
     const bool found = scan_type_and_name();
+
+    pos_ = saved;
+    return found;
+}
+
+bool Parser::looks_like_method()
+{
+    const u32  saved = pos_;
+    const bool found = scan_type_and_name() && check( Token_kind::L_paren );
 
     pos_ = saved;
     return found;
@@ -5152,6 +5224,73 @@ TEST_CASE( "parser_parses_a_variant_pattern", "[parse]" )
         INFO( p.errors() );
         REQUIRE_FALSE( p.has_errors() );
         REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::Variant_pattern ).is_valid() );
+    }
+}
+
+// PLAN D29/D32. A method is a function whose parameter 0 is the receiver, and the trailing `const`
+// decides which binding mode that parameter carries - `ref T` when the method may write the object,
+// `const ref T` when it may not. Written as C++ writes it, and meaning what Keel's `const` already
+// means, so no rule had to be invented for either half.
+TEST_CASE( "parser_parses_a_method", "[parse]" )
+{
+    SECTION( "the receiver is a `ref T` binding" )
+    {
+        const Parsed p( "struct P { i32 x; void shift( i32 by ) { } };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id method = find_first( p.ast(), p.root(), Node_kind::Method_decl );
+
+        REQUIRE( method.is_valid() );
+
+        // Children are { return type, params, body }, as a Function_decl's are.
+        const Node_id params = p.child( method, 1 );
+
+        REQUIRE( p.children( params ).size() == 2 ); // the receiver, then the written parameter
+
+        const Node_id receiver = p.child( params, 0 );
+
+        REQUIRE( p.kind( p.child( receiver, 0 ) ) == Node_kind::Mode_type );
+        REQUIRE( p.aux( p.child( receiver, 0 ) ) == static_cast<u32>( Keyword::Ref ) );
+    }
+
+    // The trailing `const` is written *after* the parameter list, and the receiver has to exist
+    // before the list is built - so the parser skips the list once to find it and then rewinds.
+    SECTION( "and a trailing `const` makes it `const ref T`" )
+    {
+        const Parsed p( "struct P { i32 x; i32 sum() const { return x; } };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id method   = find_first( p.ast(), p.root(), Node_kind::Method_decl );
+        const Node_id receiver = p.child( p.child( method, 1 ), 0 );
+
+        REQUIRE( p.kind( p.child( receiver, 0 ) ) == Node_kind::Const_type );
+        REQUIRE( p.kind( p.child( p.child( receiver, 0 ), 0 ) ) == Node_kind::Mode_type );
+    }
+
+    // The three member shapes are told apart by what precedes the parenthesis, and a constructor is
+    // a method minus the type - so it has to be tested first or `P( i32 x )` reads as a method
+    // returning `P`.
+    SECTION( "a constructor is still a constructor" )
+    {
+        const Parsed p( "struct P { i32 x; P( i32 v ) { x = v; } };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( find_first( p.ast(), p.root(), Node_kind::Constructor_decl ).is_valid() );
+        REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::Method_decl ).is_valid() );
+    }
+
+    SECTION( "and a field is still a field" )
+    {
+        const Parsed p( "struct P { i32 x; f64 y; };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::Method_decl ).is_valid() );
     }
 }
 

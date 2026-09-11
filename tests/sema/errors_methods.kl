@@ -1,0 +1,143 @@
+// PLAN D29/D32. A method without a trailing `const` takes its receiver as `ref T` and may write the
+// object, so calling one needs a receiver that may be written - which is check_writable's question,
+// asked of the object rather than of an assignment. Every rule that already refuses a write refuses
+// this too, each with its own message.
+class B
+{
+    u64 n;
+
+    B( u64 x )
+    {
+        n = x;
+    }
+
+    ~B()
+    {
+    }
+
+    u64 read() const
+    {
+        return n;
+    }
+
+    void bump()
+    {
+        n = n + 1;
+    }
+};
+
+struct P
+{
+    i32 x;
+
+    // A bare field name is `this.field` written implicitly, so what it is rooted in is the
+    // receiver. Without that the field is not a binding, every question answers no, and a `const`
+    // method writes its own object in silence.
+    void writes_its_object() const
+    {
+        x = 1;
+    }
+
+    i32 wrong_return_type() const
+    {
+        return true;
+    }
+};
+
+u64 mutates_a_borrow( B b )
+{
+    b.bump();
+
+    return 0;
+}
+
+i32 mutates_a_const()
+{
+    const B c = B( 1 );
+
+    c.bump();
+
+    return 0;
+}
+
+i32 calls_a_missing_method()
+{
+    P p = P { 1 };
+
+    return p.nope();
+}
+
+i32 calls_a_field()
+{
+    P p = P { 1 };
+
+    return p.x();
+}
+
+i32 calls_on_a_primitive()
+{
+    i32 n = 1;
+
+    return n.foo();
+}
+
+// A constructor shares the type's name and is reached by calling the type; a destructor is never
+// called at all. Matching either by name would let this resolve.
+i32 calls_a_constructor()
+{
+    B b = B( 1 );
+
+    b.B( 2 );
+
+    return 0;
+}
+
+// A sibling is callable by bare name, and the receiver's mode carries through: the constness
+// question is asked of the *enclosing* method's receiver, there being no object to ask it of.
+struct Counter
+{
+    i32 v;
+
+    i32 read() const
+    {
+        return v;
+    }
+
+    void add( i32 b )
+    {
+        v = v + b;
+    }
+
+    i32 calls_a_mutating_sibling() const
+    {
+        add( 1 );
+
+        return v;
+    }
+};
+
+// Everything below is accepted, and the fixture would be worth much less without it.
+
+u64 reads_a_borrow( B b )
+{
+    return b.read();
+}
+
+i32 reads_a_const()
+{
+    const B c = B( 1 );
+
+    return wrap<i32>( c.read() );
+}
+
+i32 writes_through_a_mutable_method()
+{
+    P p = P { 1 };
+
+    return p.x;
+}
+
+i32 main()
+{
+    return 0;
+}

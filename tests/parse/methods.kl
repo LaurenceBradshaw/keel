@@ -1,0 +1,47 @@
+// PLAN D29/D32. A method is a function whose parameter 0 is the receiver, and the trailing `const`
+// decides which binding mode that parameter carries - `ref T` when the method may write the object,
+// `const ref T` when it may not.
+//
+// The three member shapes are told apart by what precedes the parenthesis: `~` is a destructor, a
+// bare name is a constructor, a type and a name is a method. The constructor test comes first,
+// because it is a method minus the type.
+struct Point
+{
+    i32 x;
+    i32 y;
+
+    i32 sum() const
+    {
+        return x + y;
+    }
+
+    void shift( i32 by )
+    {
+        x = x + by;
+        y = y + by;
+    }
+};
+
+class Buffer
+{
+    u64 len;
+
+    Buffer( u64 n )
+    {
+        len = n;
+    }
+
+    ~Buffer()
+    {
+    }
+
+    u64 size() const
+    {
+        return len;
+    }
+};
+
+i32 main()
+{
+    return 0;
+}

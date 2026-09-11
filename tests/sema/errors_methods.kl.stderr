@@ -1,0 +1,55 @@
+error: a `const` method cannot modify its object
+  --> sema/errors_methods.kl:38:9
+   |
+38 |         x = 1;
+   |         ^ remove `const` from `writes_its_object` to let it
+
+error: expected `i32`, but got `bool`
+  --> sema/errors_methods.kl:43:16
+   |
+43 |         return true;
+   |                ^^^^
+
+error: `b` is borrowed, so it cannot be modified
+  --> sema/errors_methods.kl:49:5
+   |
+49 |     b.bump();
+   |     ^ take it as `ref B b` to modify it
+
+error: `c` is `const`
+  --> sema/errors_methods.kl:58:5
+   |
+58 |     c.bump();
+   |     ^ remove `const` to modify it
+
+error: `P` has no method `nope`
+  --> sema/errors_methods.kl:67:12
+   |
+67 |     return p.nope();
+   |            ^^^^^^
+
+error: `x` is a field of `P`, not a method; it cannot be called
+  --> sema/errors_methods.kl:74:12
+   |
+74 |     return p.x();
+   |            ^^^
+
+error: `i32` has no methods
+  --> sema/errors_methods.kl:81:12
+   |
+81 |     return n.foo();
+   |            ^
+
+error: `B` has no method `B`
+  --> sema/errors_methods.kl:90:5
+   |
+90 |     b.B( 2 );
+   |     ^^^
+
+error: a `const` method cannot call `add`, which may modify the object
+   --> sema/errors_methods.kl:113:9
+    |
+113 |         add( 1 );
+    |         ^^^ remove `const` from `calls_a_mutating_sibling`, or add it to `add`
+
+9 errors generated

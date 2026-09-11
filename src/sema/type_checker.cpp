@@ -412,6 +412,7 @@ private:
     // The first member of a kind, or invalid. Constructors and destructors are both at most one,
     // so "the first" and "the only" coincide once check_aggregate_members has run.
     Node_id find_member( Node_id decl, Node_kind kind ) const;
+    Node_id find_method( Node_id decl, Symbol_id name ) const;
 
     // The same question Types::is_owning answers, asked before there is a Types to ask - the result
     // is not assembled until run() returns.
@@ -422,6 +423,10 @@ private:
     void check_owning_source( Node_id value, Type_id type );
 
     Node_id place_root( Node_id id ) const;
+
+    // Parameter 0 of a method, constructor or destructor - the synthesised `this`. Invalid for a
+    // free function, which has no receiver for a bare name to be rooted in.
+    Node_id receiver_of( Node_id function ) const;
     bool    is_borrow_binding( Node_id decl ) const;
     bool    check_writable( Node_id target );
 
@@ -436,23 +441,24 @@ private:
     Type_id infer( Node_id id ); // expression, no expectation
 
     // One per construct, dispatched from visit and infer - the shape parse_*() uses next door.
-    void               visit_function( Node_id id );
-    void               check_condition( Node_id id ); // if/while/for all want the same message
-    bool               is_assignable( Node_id id ) const;
-    bool               returns_a_binding( Node_id decl ) const;
-    void               visit_return( Node_id id );
-    void               visit_var( Node_id id );
-    void               visit_assign( Node_id id );
-    void               visit_if( Node_id id );
-    void               visit_switch( Node_id id );
-    void               check_enum_switch( Node_id id, Type_id type, bool& has_default );
-    void               check_variant_pattern( Node_id pattern, Type_id type, std::vector<Node_id>& covered );
-    void               check_numeric_switch( Node_id id, Type_id type, bool& has_default );
+    void visit_function( Node_id id );
+    void check_condition( Node_id id ); // if/while/for all want the same message
+    bool is_assignable( Node_id id ) const;
+    bool returns_a_binding( Node_id decl ) const;
+    void visit_return( Node_id id );
+    void visit_var( Node_id id );
+    void visit_assign( Node_id id );
+    void visit_if( Node_id id );
+    void visit_switch( Node_id id );
+    void check_enum_switch( Node_id id, Type_id type, bool& has_default );
+    void check_variant_pattern( Node_id pattern, Type_id type, std::vector<Node_id>& covered );
+    void check_numeric_switch( Node_id id, Type_id type, bool& has_default );
+    void visit_while( Node_id id );
+    void visit_for( Node_id id );
+    void visit_increment( Node_id id );
+    void visit_global( Node_id id );
+
     std::optional<i64> fold_bound( Node_id bound, Type_id expected );
-    void               visit_while( Node_id id );
-    void               visit_for( Node_id id );
-    void               visit_increment( Node_id id );
-    void               visit_global( Node_id id );
 
     // Int, Float and Bool literals with nothing to give them a type - the fallback defaults.
     // Whether context can give this expression a type, rather than it having one of its own.
@@ -470,6 +476,9 @@ private:
 
     Type_id infer_name( Node_id id );
     Type_id infer_call( Node_id id );
+    Type_id infer_method_call( Node_id id );
+    Type_id infer_implicit_method_call( Node_id id, Node_id method );
+    Type_id check_method_arguments( Node_id id, Node_id method );
     Type_id infer_binary( Node_id id );
     Type_id infer_unary( Node_id id );
 
@@ -534,6 +543,9 @@ private:
     // One per file-scope initialiser. Every accepted one must fold - the rule already requires a
     // constant expression - so a missing entry is an internal error, not a user's mistake.
     std::unordered_map<u32, Constant_value> constants_;
+
+    // Call_expr -> the Method_decl it resolved to. Recorded so lowering does not repeat the lookup.
+    std::unordered_map<u32, Node_id> methods_;
 };
 
 Types Checker::run()
@@ -542,7 +554,12 @@ Types Checker::run()
     declare_signatures();
     visit( ast_.root() );
     return Types(
-        std::move( table_ ), std::move( types_ ), std::move( struct_order_ ), std::move( constants_ ), std::move( owning_ )
+        std::move( table_ ),
+        std::move( types_ ),
+        std::move( struct_order_ ),
+        std::move( constants_ ),
+        std::move( owning_ ),
+        std::move( methods_ )
     );
 }
 
@@ -711,8 +728,35 @@ void Checker::declare_signatures_member_functions()
                 continue;
             }
 
-            // A destructor returns nothing, so unlike a function there is no annotation to read.
-            record( member, table_.builtin( Type_kind::Void ) );
+            // A constructor and a destructor return nothing and have no annotation to read; a
+            // method has both. Child 0 is the return type either way, and is invalid for the two
+            // that have none.
+            const Node_id return_type_node = ast_.children( member )[0];
+
+            const Type_id return_type =
+                return_type_node.is_valid() ? type_of_annotation( return_type_node ) : table_.builtin( Type_kind::Void );
+
+            record( member, return_type );
+
+            // §8 allows exactly one reference return, and only the read-only one - the same rule
+            // declare_signatures_function_decls applies to a free function. Without this a method
+            // could write `const ref T` and have it silently mean `T`: the recorded address is what
+            // every consumer reads to know a binding travels by address, and nothing else sets it.
+            if( is_ref_parameter( ast_, member ) && !table_.is_error( return_type ) )
+            {
+                if( !is_const_binding( ast_, member ) )
+                {
+                    error_at(
+                        ast_.span( return_type_node ),
+                        "only a `const ref` may be returned",
+                        fmt::format( "write `const ref {}`", table_.name( return_type ) )
+                    );
+                }
+                else
+                {
+                    record_binding_address( return_type_node, return_type );
+                }
+            }
 
             for( Node_id param : ast_.children( ast_.children( member )[1] ) )
             {
@@ -1024,6 +1068,18 @@ void Checker::check_owning_source( Node_id value, Type_id type )
     );
 }
 
+Node_id Checker::receiver_of( Node_id function ) const
+{
+    if( !function.is_valid() || ast_.kind( function ) == Node_kind::Function_decl )
+    {
+        return Node_id {};
+    }
+
+    const std::span<const Node_id> params = ast_.children( ast_.children( function )[1] );
+
+    return params.empty() ? Node_id {} : params[0];
+}
+
 Node_id Checker::place_root( Node_id id ) const
 {
     while( ast_.kind( id ) == Node_kind::Field_expr )
@@ -1041,7 +1097,17 @@ Node_id Checker::place_root( Node_id id ) const
         id = object;
     }
 
-    return ast_.kind( id ) == Node_kind::Name_expr ? resolution_.declaration_of( id ) : Node_id {};
+    const Node_id decl = ast_.kind( id ) == Node_kind::Name_expr ? resolution_.declaration_of( id ) : Node_id {};
+
+    // A bare field name is `this.field` written implicitly (D22), so what it is rooted in is the
+    // **receiver**, not the field. Without this a `const` method could write its own object: the
+    // field is not a binding, so every question below would answer no and nothing would object.
+    if( decl.is_valid() && ast_.kind( decl ) == Node_kind::Field_decl )
+    {
+        return receiver_of( current_function_ );
+    }
+
+    return decl;
 }
 
 // Bare and owning: the read-only borrow. `move` is not one - the callee owns what it was given -
@@ -1082,6 +1148,22 @@ bool Checker::check_writable( Node_id target )
 
     if( is_const_binding( ast_, root ) )
     {
+        // The receiver reads differently from any other const binding: the `const` that made it one
+        // is written on the *method*, so naming the variable would point at a word the author never
+        // wrote. `this` is also not what they typed - a bare field name is what got here.
+        if( root == receiver_of( current_function_ ) )
+        {
+            error_at(
+                ast_.span( target ),
+                "a `const` method cannot modify its object",
+                fmt::format(
+                    "remove `const` from `{}` to let it", interner_.text( Symbol_id { ast_.aux( current_function_ ) } )
+                )
+            );
+
+            return false;
+        }
+
         error_at(
             ast_.span( target ),
             fmt::format( "`{}` is `const`", interner_.text( Symbol_id { ast_.aux( root ) } ) ),
@@ -1112,6 +1194,27 @@ Node_id Checker::find_member( Node_id decl, Node_kind kind ) const
     for( const Node_id member : ast_.children( decl ) )
     {
         if( ast_.kind( member ) == kind )
+        {
+            return member;
+        }
+    }
+
+    return Node_id {};
+}
+
+// `decl` is the aggregate, not the call. Only a Method_decl is reachable by name: a constructor
+// shares the type's name and is reached by calling the type, and a destructor is never called at
+// all - so matching either here would let `p.Point()` resolve.
+Node_id Checker::find_method( Node_id decl, Symbol_id name ) const
+{
+    if( !decl.is_valid() )
+    {
+        return Node_id {};
+    }
+
+    for( const Node_id member : ast_.children( decl ) )
+    {
+        if( ast_.kind( member ) == Node_kind::Method_decl && Symbol_id { ast_.aux( member ) } == name )
         {
             return member;
         }
@@ -1380,6 +1483,7 @@ void Checker::visit( Node_id id )
     case Node_kind::Function_decl:
     case Node_kind::Destructor_decl:
     case Node_kind::Constructor_decl:
+    case Node_kind::Method_decl:
         return visit_function( id );
 
     case Node_kind::Return_stmt:
@@ -1496,9 +1600,15 @@ bool Checker::is_assignable( Node_id id ) const
     // deliberately leaves shut.
     if( ast_.kind( id ) == Node_kind::Call_expr )
     {
-        const Node_id callee = resolution_.declaration_of( ast_.children( id )[0] );
+        // A method call resolves through methods_ rather than the resolver: its callee is a
+        // Field_expr, or a bare name that names a sibling. Either way the question below is the
+        // same one - does this callable hand back a binding.
+        const auto    method = methods_.find( id.v );
+        const Node_id callee = method != methods_.end() ? method->second : resolution_.declaration_of( ast_.children( id )[0] );
 
-        return callee.is_valid() && ast_.kind( callee ) == Node_kind::Function_decl && returns_a_binding( callee );
+        return callee.is_valid() &&
+               ( ast_.kind( callee ) == Node_kind::Function_decl || ast_.kind( callee ) == Node_kind::Method_decl ) &&
+               returns_a_binding( callee );
     }
 
     // A field is always assignable. `make().x = 2.0;` writes into a temporary and is therefore
@@ -2638,6 +2748,13 @@ Type_id Checker::infer_call( Node_id id )
         return infer_variant_construction( id );
     }
 
+    // `p.area()` - a method call. The receiver is the Field_expr's object, and the callable is
+    // found on its type, which is the same lookup infer_field does for a field name.
+    if( ast_.kind( callee ) == Node_kind::Field_expr )
+    {
+        return infer_method_call( id );
+    }
+
     // v0 has no function pointers, so anything but a plain name in call position has no
     // declaration to find.
     const Node_id decl = ast_.kind( callee ) == Node_kind::Name_expr ? resolution_.declaration_of( callee ) : Node_id {};
@@ -2693,6 +2810,12 @@ Type_id Checker::infer_call( Node_id id )
         // The receiver is an ordinary first parameter, so skipping it here is what stops every
         // call site owing an extra argument.
         implicit_params = 1;
+    }
+    else if( ast_.kind( decl ) == Node_kind::Method_decl )
+    {
+        // A bare `add( by )` inside a method is `this.add( by )`: the member scope puts a sibling
+        // in reach by name, and the receiver is the one this function was given.
+        return infer_implicit_method_call( id, decl );
     }
     else if( ast_.kind( decl ) != Node_kind::Function_decl )
     {
@@ -2803,6 +2926,166 @@ Type_id Checker::infer_call( Node_id id )
     }
 
     return record( id, result );
+}
+
+Type_id Checker::infer_method_call( Node_id id )
+{
+    const Node_id callee = ast_.children( id )[0];
+    const Node_id object = ast_.children( callee )[0];
+
+    const Type_id result      = infer( object );
+    const Type_id object_type = table_.is_pointer( result ) ? table_.get( result ).element : result;
+
+    if( table_.is_error( object_type ) )
+    {
+        for( const Node_id argument : ast_.children( ast_.children( id )[1] ) )
+        {
+            infer( argument );
+        }
+
+        return record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    if( !table_.is_struct( object_type ) )
+    {
+        error_at( ast_.span( object ), fmt::format( "`{}` has no methods", table_.name( object_type ) ) );
+        return record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    // The aggregate, not the call: find_method searches a declaration's members.
+    const Node_id method = find_method( table_.get( object_type ).declaration, Symbol_id { ast_.aux( callee ) } );
+
+    if( method.is_valid() )
+    {
+        methods_.emplace( id.v, method );
+    }
+
+    if( !method.is_valid() )
+    {
+        // Check if a field of the same name exists, which is a common mistake when a method is expected. The
+        // field's type is not a method, so it cannot be called.
+        const Node_id field = find_field( object_type, Symbol_id { ast_.aux( callee ) } );
+        if( field.is_valid() )
+        {
+            error_at(
+                ast_.span( callee ),
+                fmt::format(
+                    "`{}` is a field of `{}`, not a method; it cannot be called",
+                    interner_.text( Symbol_id { ast_.aux( callee ) } ),
+                    table_.name( object_type )
+                )
+            );
+
+            return record( id, table_.builtin( Type_kind::Error ) );
+        }
+
+        error_at(
+            ast_.span( callee ),
+            fmt::format(
+                "`{}` has no method `{}`", table_.name( object_type ), interner_.text( Symbol_id { ast_.aux( callee ) } )
+            )
+        );
+
+        return record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    // A method without a trailing `const` takes its receiver as `ref T` and may write the object,
+    // so calling one needs a receiver that may be written. That is exactly check_writable's
+    // question - asked of the object rather than of an assignment - so a `const` local, a
+    // read-only borrow and a pattern binding are all refused here by the rules that already refuse
+    // them elsewhere, each with its own message.
+    if( !is_const_method( ast_, method ) && !check_writable( object ) )
+    {
+        return record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    return check_method_arguments( id, method );
+}
+
+// Shared by both call shapes - `p.area()` and a bare `area()` inside a method - because what is
+// checked is the same: the parameters from 1, the receiver having been supplied either way.
+Type_id Checker::check_method_arguments( Node_id id, Node_id method )
+{
+    const std::span<const Node_id> params    = ast_.children( ast_.children( method )[1] ).subspan( 1 );
+    const std::span<const Node_id> arguments = ast_.children( ast_.children( id )[1] );
+
+    if( params.size() != arguments.size() )
+    {
+        error_at(
+            ast_.span( ast_.children( id )[1] ),
+            fmt::format(
+                "`{}` takes {} argument{}, but {} {} given",
+                interner_.text( Symbol_id { ast_.aux( method ) } ),
+                params.size(),
+                params.size() == 1 ? "" : "s",
+                arguments.size(),
+                arguments.size() == 1 ? "was" : "were"
+            )
+        );
+    }
+
+    // Check the pairs that do line up even when the count is wrong: one missing argument should
+    // not hide a type error in the others.
+    const std::size_t shared = std::min( params.size(), arguments.size() );
+
+    for( std::size_t i = 0; i < shared; ++i )
+    {
+        const Node_id param = params[i];
+        const Node_id arg   = arguments[i];
+
+        check( arg, types_[param.v] );
+    }
+
+    return record( id, types_[method.v] );
+}
+
+// D29/D32. `add( by )` inside a method: the receiver is the one this function was given, so there
+// is no object expression to check - the constness question is asked of the *enclosing* method's
+// receiver instead, which is what stops a `const` method calling a mutating sibling.
+Type_id Checker::infer_implicit_method_call( Node_id id, Node_id method )
+{
+    const Node_id receiver = receiver_of( current_function_ );
+
+    if( !receiver.is_valid() )
+    {
+        error_at(
+            ast_.span( ast_.children( id )[0] ),
+            fmt::format(
+                "`{}` is a method, and there is no object here to call it on",
+                interner_.text( Symbol_id { ast_.aux( method ) } )
+            ),
+            "a method can only be called by bare name from inside another method of the same type"
+        );
+
+        for( const Node_id argument : ast_.children( ast_.children( id )[1] ) )
+        {
+            infer( argument );
+        }
+
+        return record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    if( !is_const_method( ast_, method ) && is_const_binding( ast_, receiver ) )
+    {
+        error_at(
+            ast_.span( ast_.children( id )[0] ),
+            fmt::format(
+                "a `const` method cannot call `{}`, which may modify the object",
+                interner_.text( Symbol_id { ast_.aux( method ) } )
+            ),
+            fmt::format(
+                "remove `const` from `{}`, or add it to `{}`",
+                interner_.text( Symbol_id { ast_.aux( current_function_ ) } ),
+                interner_.text( Symbol_id { ast_.aux( method ) } )
+            )
+        );
+
+        return record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    methods_.emplace( id.v, method );
+
+    return check_method_arguments( id, method );
 }
 
 Type_id Checker::infer_binary( Node_id id )
@@ -3010,7 +3293,10 @@ Node_id Checker::find_field( Type_id type, Symbol_id name ) const
 
     for( const Node_id field : ast_.children( decl ) )
     {
-        if( ast_.aux( field ) == name.v )
+        // The kind matters as much as the name. A constructor's aux is the *type's* name, so
+        // without this a search for a field called `B` finds `B`'s constructor - which is how
+        // `b.B( 2 )` came to report that `B` was a field of itself.
+        if( ast_.kind( field ) == Node_kind::Field_decl && ast_.aux( field ) == name.v )
         {
             return field;
         }
@@ -4234,9 +4520,12 @@ Keyword parameter_mode( const Ast& ast, Node_id decl )
 
 bool is_ref_parameter( const Ast& ast, Node_id param )
 {
+    // children[0] is invalid for an `auto` local, and for a constructor or destructor, which have
+    // no return type to carry a mode. kind() asserts on an invalid id rather than answering.
     const Node_id annotation = unwrap_const( ast, ast.children( param )[0] );
 
-    return ast.kind( annotation ) == Node_kind::Mode_type && static_cast<Keyword>( ast.aux( annotation ) ) == Keyword::Ref;
+    return annotation.is_valid() && ast.kind( annotation ) == Node_kind::Mode_type &&
+           static_cast<Keyword>( ast.aux( annotation ) ) == Keyword::Ref;
 }
 
 bool is_borrowed_binding( const Ast& ast, const Types& types, Node_id decl )
@@ -4249,11 +4538,12 @@ bool is_borrowed_binding( const Ast& ast, const Types& types, Node_id decl )
 
 bool is_const_binding( const Ast& ast, Node_id decl )
 {
-    // A return type is a binding position too, and a Function_decl's children[0] is its annotation
-    // exactly as a variable's is - which is what lets §8's rule ask this question of a function.
+    // Every one of these carries its binding on children[0]: a variable's annotation, a parameter's
+    // type, a function's return type - and a method's, which is why a Method_decl belongs here even
+    // though the *receiver's* constness is a different question, which is_const_method asks.
     const bool declares_a_binding =
         decl.is_valid() && ( ast.kind( decl ) == Node_kind::Var_decl || ast.kind( decl ) == Node_kind::Param_decl ||
-                             ast.kind( decl ) == Node_kind::Function_decl );
+                             ast.kind( decl ) == Node_kind::Function_decl || ast.kind( decl ) == Node_kind::Method_decl );
 
     if( !declares_a_binding )
     {
@@ -4262,6 +4552,21 @@ bool is_const_binding( const Ast& ast, Node_id decl )
 
     const Node_id annotation = ast.children( decl )[0];
     return annotation.is_valid() && ast.kind( annotation ) == Node_kind::Const_type;
+}
+
+bool is_const_method( const Ast& ast, Node_id method )
+{
+    if( !method.is_valid() || ast.kind( method ) != Node_kind::Method_decl )
+    {
+        return false;
+    }
+
+    // The trailing `const` marks the **receiver**, which the parser wraps as `const ref T` - child
+    // 0 of the method is its return type, which is a different `const` entirely. So this is the
+    // ordinary const-binding question, asked of parameter 0.
+    const std::span<const Node_id> params = ast.children( ast.children( method )[1] );
+
+    return !params.empty() && is_const_binding( ast, params[0] );
 }
 
 Type_id binding_type( const Ast& ast, const Types& types, Node_id param )
@@ -9302,6 +9607,298 @@ TEST_CASE( "type_checker_counts_payload_variants_for_exhaustiveness", "[sema][pa
 
     INFO( p.rendered() );
     REQUIRE( p.rendered().find( "missing `Circle`" ) != std::string::npos );
+}
+
+// PLAN D29. A method is an ordinary function whose parameter 0 is the receiver, so a call is checked
+// against the parameters from 1 - the same skip a constructor call already does.
+TEST_CASE( "type_checker_calls_a_method", "[sema][method]" )
+{
+    constexpr std::string_view point = "struct P { i32 x; i32 get() const { return x; } void set( i32 v ) { x = v; } };\n";
+
+    SECTION( "the result is the method's return type" )
+    {
+        const Typed p( std::string( point ) + "i32 main() { P p = P { 1 }; p.set( 2 ); return p.get(); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // D22 reaches through a pointer for a field, and a method is reached the same way - `q.get()`
+    // needs no second rule.
+    SECTION( "and it reaches through a pointer" )
+    {
+        const Typed p( std::string( point ) + "i32 main() { P p = P { 1 }; P* q = &p; return q.get(); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "arguments are checked from parameter 1" )
+    {
+        const Typed p( std::string( point ) + "i32 main() { P p = P { 1 }; p.set( true ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    SECTION( "and the count excludes the receiver" )
+    {
+        const Typed p( std::string( point ) + "i32 main() { P p = P { 1 }; p.set( 1, 2 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    // The body sees the fields, which is the resolver's member scope - gated on is_function_like,
+    // so a method got it by being added to that one predicate.
+    SECTION( "the body sees the fields by bare name" )
+    {
+        const Typed p( "struct P { i32 x; i32 y; i32 sum() const { return x + y; } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // The body is checked against the method's own return type. It was not, for a while: Method_decl
+    // was missing from the checker's visit dispatch, so a body fell to the default child walk and
+    // current_return_ was never set - every return in every method went unchecked.
+    SECTION( "and against the method's return type" )
+    {
+        const Typed p( "struct P { i32 x; i32 wrong() const { return true; } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.rendered().find( "expected `i32`, but got `bool`" ) != std::string::npos );
+    }
+}
+
+TEST_CASE( "type_checker_reports_a_bad_method_call", "[sema][method]" )
+{
+    SECTION( "no method of that name" )
+    {
+        const Typed p( "struct P { i32 x; };\ni32 main() { P p = P { 1 }; return p.nope(); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "`P` has no method `nope`" ) != std::string::npos );
+    }
+
+    // Worth its own message: calling a field is a different mistake from naming one that is not
+    // there, and the fix is different too.
+    SECTION( "a field called as a method" )
+    {
+        const Typed p( "struct P { i32 x; };\ni32 main() { P p = P { 1 }; return p.x(); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "is a field of `P`, not a method" ) != std::string::npos );
+    }
+
+    SECTION( "and a receiver with no methods at all" )
+    {
+        const Typed p( "i32 main() { i32 n = 1; return n.foo(); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "`i32` has no methods" ) != std::string::npos );
+    }
+
+    // A constructor shares the type's name and is reached by calling the type; a destructor is
+    // never called at all. Matching either by name here would let `p.P()` resolve.
+    SECTION( "a constructor is not reachable by name" )
+    {
+        const Typed p( "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+                       "i32 main() { B b = B( 1 ); b.B( 2 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "has no method `B`" ) != std::string::npos );
+    }
+}
+
+// Decision 1, and the whole of what a trailing `const` buys: a method without one takes its
+// receiver as `ref T` and may write the object, so calling it needs a receiver that may be written.
+// That is check_writable's question asked of the object, so every rule that already refuses a write
+// refuses this too, each with its own message.
+TEST_CASE( "type_checker_enforces_a_const_method", "[sema][method]" )
+{
+    constexpr std::string_view owning = "class B { u64 n; B( u64 x ) { n = x; } ~B() { }"
+                                        " u64 read() const { return n; } void bump() { n = n + 1; } };\n";
+
+    SECTION( "a mutating method needs a writable receiver" )
+    {
+        const Typed p( std::string( owning ) + "i32 main() { const B c = B( 1 ); c.bump(); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`c` is `const`" ) != std::string::npos );
+    }
+
+    SECTION( "including through a read-only borrow" )
+    {
+        const Typed p( std::string( owning ) + "u64 f( B b ) { b.bump(); return 0; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`b` is borrowed" ) != std::string::npos );
+    }
+
+    SECTION( "but a `const` method may be called on either" )
+    {
+        const Typed p(
+            std::string( owning ) + "u64 f( B b ) { return b.read(); }\n"
+                                    "i32 main() { const B c = B( 1 ); return wrap<i32>( c.read() ); }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // The half that makes the receiver's mode mean something inside the body. A bare field name is
+    // `this.field` written implicitly, so what it is rooted in is the *receiver* - without that the
+    // field is not a binding, every question answers no, and a `const` method writes its own object
+    // in silence.
+    SECTION( "and a `const` method cannot write its own field" )
+    {
+        const Typed p( "struct P { i32 x; void bad() const { x = 1; } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "a `const` method cannot modify its object" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "remove `const` from `bad`" ) != std::string::npos );
+    }
+
+    SECTION( "where a non-const one may" )
+    {
+        const Typed p( "struct P { i32 x; void fine() { x = 1; } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// A sibling is callable by bare name: methods join the member scope alongside fields, so
+// `add( by )` means `this.add( by )`. C++ does this, and a type whose methods have to qualify each
+// other is tiring to write long before it is large.
+TEST_CASE( "type_checker_calls_a_sibling_method_by_name", "[sema][method]" )
+{
+    constexpr std::string_view counter = "struct C { i32 v; i32 read() const { return v; }"
+                                         " void add( i32 b ) { v = v + b; } };\n";
+
+    SECTION( "from a mutating method" )
+    {
+        const Typed p( "struct C { i32 v; void add( i32 b ) { v = v + b; }"
+                       " void twice( i32 b ) { add( b ); add( b ); } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and from a `const` one, when the sibling is `const` too" )
+    {
+        const Typed p( std::string( counter ) + "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // The receiver's mode carries through a bare call as it does through a written one: the
+    // constness question is asked of the *enclosing* method's receiver, there being no object
+    // expression to ask it of.
+    SECTION( "but a `const` method cannot call a mutating sibling" )
+    {
+        const Typed p( "struct C { i32 v; void add( i32 b ) { v = v + b; }"
+                       " i32 bad() const { add( 1 ); return v; } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "a `const` method cannot call `add`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "remove `const` from `bad`, or add it to `add`" ) != std::string::npos );
+    }
+
+    SECTION( "arguments are still checked" )
+    {
+        const Typed p( "struct C { i32 v; void add( i32 b ) { v = v + b; }"
+                       " void bad() { add( true ); } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    // The scope is the type's, so the name is not in reach from outside it - which is what makes
+    // the bare form unambiguous rather than a second way to spell a free function.
+    SECTION( "and the name does not escape the type" )
+    {
+        const Typed p( "struct C { i32 v; i32 read() const { return v; } };\ni32 loose() { return read(); }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "`read` is not declared" ) != std::string::npos );
+    }
+
+    // A method and a field cannot share a name, because both live in the member scope.
+    SECTION( "a method colliding with a field is refused" )
+    {
+        const Typed p( "struct C { i32 v; i32 v() const { return 1; } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+}
+
+// PLAN §8. "A method may return a reference into its object" was fiction until the receiver became
+// a binding - `this` was a `T*` passed by value, so it failed the by-address test the rule uses.
+// It is true now, and this is what makes it a checked claim.
+//
+// Four layers had to agree for it to work, and each was silently wrong on its own: the method's
+// return annotation had to have its address recorded (only free functions did), a method call had
+// to count as a *place* (is_assignable knew only Function_decl), is_const_binding had to answer for
+// a Method_decl, and the call had to be typed as the pointer it returns rather than the language
+// type - which produced C that assigned an `int*` to an `int`.
+TEST_CASE( "type_checker_returns_a_reference_into_the_object", "[sema][method]" )
+{
+    SECTION( "a `const ref` method is accepted and its result binds" )
+    {
+        const Typed p( "struct P { i32 x; const ref i32 get() const { return x; } };\n"
+                       "i32 main() { P p = P { 7 }; const ref i32 r = p.get(); return r; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and a mutable one is refused, as for a free function" )
+    {
+        const Typed p( "struct P { i32 x; ref i32 get() { return x; } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "only a `const ref` may be returned" ) != std::string::npos );
+    }
+}
+
+// D29 splits the two kinds at trivial copyability, not at what they may have - so a `class` gets
+// methods on the same machinery a `struct` does, alongside the constructor and destructor it may
+// also have. Nothing here is a second implementation of anything; this is the case that says so.
+TEST_CASE( "type_checker_gives_a_class_methods_too", "[sema][method]" )
+{
+    constexpr std::string_view owned = "class B { u64 n; B( u64 x ) { n = x; } ~B() { }"
+                                       " u64 read() const { return n; }"
+                                       " void add( u64 by ) { n = n + by; }"
+                                       " void twice( u64 by ) { add( by ); add( by ); } };\n";
+
+    SECTION( "alongside a constructor and destructor" )
+    {
+        const Typed p( std::string( owned ) + "i32 main() { B b = B( 1 ); b.twice( 10 ); return wrap<i32>( b.read() ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // The receiver is a borrow either way, so the rules that apply to a struct's methods apply
+    // here unchanged - including the one that matters most for an owning type.
+    SECTION( "and the const rule holds on one" )
+    {
+        const Typed p( std::string( owned ) + "i32 main() { const B b = B( 1 ); b.add( 1 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`b` is `const`" ) != std::string::npos );
+    }
 }
 
 } // namespace keel

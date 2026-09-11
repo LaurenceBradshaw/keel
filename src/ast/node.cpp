@@ -109,6 +109,8 @@ std::string_view node_kind_name( Node_kind kind )
         return "Variant_pattern";
     case Node_kind::Binding_decl:
         return "Binding_decl";
+    case Node_kind::Method_decl:
+        return "Method_decl";
 
     case Node_kind::Count:
         break;

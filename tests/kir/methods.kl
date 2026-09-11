@@ -1,0 +1,42 @@
+// PLAN D32. A method call is an ordinary call whose first argument is the receiver's address - the
+// same step any borrow takes, except that the argument was never written at the call site. Inside,
+// a bare field name is `this.field`, and because the receiver is a borrowed binding, place_for
+// derefs it: the projection is off the referent rather than off the pointer.
+struct Point
+{
+    i32 x;
+    i32 y;
+
+    i32 sum() const
+    {
+        return x + y;
+    }
+
+    void shift( i32 by )
+    {
+        x = x + by;
+    }
+
+    // A sibling by bare name. Its receiver is the one this method was given, whose local already
+    // holds the address - so unlike every other call shape there is nothing to take the address of.
+    void shift_twice( i32 by )
+    {
+        shift( by );
+        shift( by );
+    }
+};
+
+// D22 reaches through a pointer, and the pointer's value is already the address the receiver wants.
+i32 through_a_pointer( Point* p )
+{
+    return p.sum();
+}
+
+i32 main()
+{
+    Point p = Point { 1, 2 };
+
+    p.shift( 10 );
+
+    return p.sum();
+}

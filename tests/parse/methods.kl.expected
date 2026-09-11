@@ -1,0 +1,76 @@
+Source_file                             8:1-48:1
+  Struct_decl                           8:1-23:3    name=Point
+    Field_decl                          10:5-10:11  name=x
+      Named_type                        10:5-10:8   "i32"
+    Field_decl                          11:5-11:11  name=y
+      Named_type                        11:5-11:8   "i32"
+    Method_decl                         13:5-16:6
+      Named_type                        13:5-13:8   "i32"
+      Param_list                        13:12-13:14
+        Param_decl                      13:5-13:8   name=this
+          Const_type                    13:5-13:8
+            Mode_type                   13:5-13:8   mode=ref
+              Named_type                13:5-13:8   "i32"  name=Point
+      Block                             14:5-16:6
+        Return_stmt                     15:9-15:22
+          Binary_expr                   15:16-15:21 op=+
+            Name_expr                   15:16-15:17 "x"
+            Name_expr                   15:20-15:21 "y"
+    Method_decl                         18:5-22:6
+      Named_type                        18:5-18:9   "void"
+      Param_list                        18:15-18:25
+        Param_decl                      18:5-18:9   name=this
+          Mode_type                     18:5-18:9   mode=ref
+            Named_type                  18:5-18:9   "void"  name=Point
+        Param_decl                      18:17-18:23 name=by
+          Named_type                    18:17-18:20 "i32"
+      Block                             19:5-22:6
+        Assign_stmt                     20:9-20:20  op==
+          Name_expr                     20:9-20:10  "x"
+          Binary_expr                   20:13-20:19 op=+
+            Name_expr                   20:13-20:14 "x"
+            Name_expr                   20:17-20:19 "by"
+        Assign_stmt                     21:9-21:20  op==
+          Name_expr                     21:9-21:10  "y"
+          Binary_expr                   21:13-21:19 op=+
+            Name_expr                   21:13-21:14 "y"
+            Name_expr                   21:17-21:19 "by"
+  Class_decl                            25:1-42:3   name=Buffer
+    Field_decl                          27:5-27:13  name=len
+      Named_type                        27:5-27:8   "u64"
+    Constructor_decl                    29:5-32:6
+      <none>                            -
+      Param_list                        29:11-29:20
+        Param_decl                      29:5-29:11  name=this
+          Mode_type                     29:5-29:11  mode=ref
+            Named_type                  29:5-29:11  "Buffer"
+        Param_decl                      29:13-29:18 name=n
+          Named_type                    29:13-29:16 "u64"
+      Block                             30:5-32:6
+        Assign_stmt                     31:9-31:17  op==
+          Name_expr                     31:9-31:12  "len"
+          Name_expr                     31:15-31:16 "n"
+    Destructor_decl                     34:5-36:6   name=Buffer
+      <none>                            -
+      Param_list                        34:12-34:14
+        Param_decl                      34:5-34:6   name=this
+          Mode_type                     34:5-34:6   mode=ref
+            Named_type                  34:5-34:6   "~"  name=Buffer
+      Block                             35:5-36:6   "{
+    }"
+    Method_decl                         38:5-41:6
+      Named_type                        38:5-38:8   "u64"
+      Param_list                        38:13-38:15
+        Param_decl                      38:5-38:8   name=this
+          Const_type                    38:5-38:8
+            Mode_type                   38:5-38:8   mode=ref
+              Named_type                38:5-38:8   "u64"  name=Buffer
+      Block                             39:5-41:6
+        Return_stmt                     40:9-40:20
+          Name_expr                     40:16-40:19 "len"
+  Function_decl                         44:1-47:2   name=main
+    Named_type                          44:1-44:4   "i32"
+    Param_list                          44:9-44:11  "()"
+    Block                               45:1-47:2
+      Return_stmt                       46:5-46:14
+        Int_literal                     46:12-46:13 "0"
