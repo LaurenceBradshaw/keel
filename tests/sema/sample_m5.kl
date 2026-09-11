@@ -1,0 +1,34 @@
+// PLAN §6.2's M5 section, and M5's stated acceptance: the `Shape`/`area` sample.
+//
+// Written qualified. D30 gives a variant enum-class scoping in every position, and a `case` is not
+// an exception: `Shape::Circle` reads the same in a label as it does in a construction, and the
+// alternative - a bare name legal only where the scrutinee's type happens to be known - would be a
+// second spelling for one thing, which is the redundancy D25, D30 and D32 all refuse.
+enum Shape
+{
+    Circle( f64 radius ),
+    Rect( f64 width, f64 height )
+};
+
+f64 area( Shape s )
+{
+    switch( s )
+    {
+        case Shape::Circle( r ):
+            return 3.14159 * r * r;
+        case Shape::Rect( w, h ):
+            return w * h;
+    }
+}
+
+i32 main()
+{
+    // Exhaustive with no `default`, so adding a variant to Shape makes `area` stop compiling -
+    // which is the guarantee the whole construct exists for.
+    if( area( Shape::Rect( 2.0, 5.0 ) ) != 10.0 )
+    {
+        return 1;
+    }
+
+    return 0;
+}

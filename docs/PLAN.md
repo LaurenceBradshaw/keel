@@ -438,8 +438,8 @@ f64 area( Shape s )
 {
     switch( s )
     {
-        case Circle( r ):    return 3.14159 * r * r;
-        case Rect( w, h ):   return w * h;
+        case Shape::Circle( r ):   return 3.14159 * r * r;
+        case Shape::Rect( w, h ):  return w * h;
     }
 }
 
@@ -502,7 +502,7 @@ overflows; what happens then is the open overflow question in §12.
 | D27 | **No pointer arithmetic on `*T`**, which points at exactly one `T`. Arithmetic belongs to a many-item pointer, `[*]T` in Zig's notation, which v0 does not have. | `p + 1` on a single-item pointer is not dangerous, it is *nonsense*, and a type distinction catches it statically at no cost. Note the performance argument for C's arithmetic does not hold: `*(p + i)` and `p[i]` compile to identical machine code, so what buys speed is the capability of touching raw memory, which survives either spelling. C's implicit scaling by element size is the wart — a named `offset` operation says what it does. §6.4 already answers nothing for a pointer, so rejection is the default rather than a rule to add. `==` and `!=` between two pointers of the **same** type are allowed, since that is how a null check is written; ordering is not, because comparing pointers into different allocations is meaningless. |
 | D28 | Conversions are written `cast<T>( x )` and `wrap<T>( x )`, both **keywords**. `cast` preserves the value; `wrap` keeps the low bits. Neither converts float to integer, and neither converts integer to bool. §6.5 has the table. **Narrowing `cast` is refused until the run-time check exists.** | Two spellings rather than one because the failure policy is the interesting part, and an unqualified cast lets an author avoid stating it — which is how C's `(u8)x` silently truncates. Keywords because as identifiers they walk into §12's `a < b > ( c )` ambiguity; as keywords the `<` can only be a bracket. Both spellings are new notation, so §5.1 is satisfied for free. Float to integer is rejected because `cast<i32>( 1.9 )` has no obvious answer — truncate, round, floor and ceil are four operations and C picks one silently; they arrive as library functions at M6. Integer to bool is rejected because `x != 0` says it better and modular arithmetic down to one bit says something else again. Float *rounding* is accepted (`cast<f32>( some_f64 )`), because a float that cannot hold the value gives an infinity rather than a plausible wrong number — the line is that `cast` refuses to turn a value into a *different* value, not that it refuses to lose precision. |
 | D29 | **Two aggregate kinds, split by one principle: a `struct` is a type whose representation is its interface; a `class` is a type whose interface hides its representation.** A `struct` has all fields public, is trivially copyable, may not have a destructor, and may not contain an owning member (transitively); it is built from a struct literal (D23). A `class` has fields private by default, may own resources, may have a constructor and a destructor, is moved rather than copied, and is built by a constructor. **Both may have methods.** Neither inherits and neither is virtual in v0. A `struct` with a destructor, and a `struct` with a `private:` label, are hard errors naming `class` as the fix. | C++ has two keywords for one job — the only difference is default access, kept so that C headers would compile — and Keel pays no C-compatibility tax, so the second word is free to earn its keep. The line is drawn at **trivial copyability** rather than at "may have methods", because only the first has semantic consequences: a trivially copyable type cannot have a destructor (copy plus destructor is a double free, which is why Rust makes `Copy` and `Drop` mutually exclusive), is never moved, and never enters §8's drop analysis. "May have methods" has no consequences at all, and the motivating examples for restricting it — `Node_id::is_valid()` — need them anyway. The two initialisation syntaxes stop competing as a side effect: literals belong to structs, constructors to classes, so `Buffer { ... }` versus `Buffer( 16 )` never has to be disambiguated. Enforcement is free: `struct` is legal exactly when D2's owning query says no. Safe under §5.1 because both rejected spellings are errors rather than reinterpretations. Prior art cuts both ways and is worth recording: the languages that keep two aggregate keywords (C#, Swift, D) split on value-versus-reference semantics, and the C++ successors that exist (Carbon, Cpp2, Hylo) collapse to one kind. This splits on copyability, which is the ownership-language analogue of the first — Keel has no garbage collector, so "reference type" has nothing to mean. |
-| D30 | **One `enum` keyword**, carrying `enum class`'s semantics: scoped (`Shape::Circle`), with no implicit conversion to an integer. The underlying type is spelled as in C++: `enum Shape : u8 { ... }`. `enum class E` is a hard error saying to drop the `class`. | The same C-compatibility tax as D29, with the opposite answer, and the asymmetry is the point: `struct`/`class` are two words for one job, so the job gets split; `enum`/`enum class` are two words for one job where only one of them does it correctly, so there is nothing to split. C++'s plain `enum` leaked its variant names into the enclosing scope and converted implicitly to `int`; both were mistakes, `enum class` fixed them in C++11, and the broken spelling survives only for C. Safe under §5.1 because every point where the two meanings diverge is an error rather than a reinterpretation: `Shape s = Circle;` is an unknown name, and `i32 x = Circle;` and `if ( s == 0 )` have no conversion to reach for. Rejecting `enum class` follows D22's pattern — keep the spelling recognised so the diagnostic can name the fix. **Answered at M5, and the answer is smaller than the question looked.** Ownership is **inherited, not chosen**: an enum is owning exactly when any variant's payload is owning, which is D2's query extended to variants with no new rule. That is why D29's question does not really transfer - D29 forced `struct` against `class` because the *author* had to say which they meant, and here there is nothing to say, since every variant is visible in the declaration and the compiler already knows. No annotation, no `enum class` equivalent, no way to get it wrong.
+| D30 | **One `enum` keyword**, carrying `enum class`'s semantics: scoped (`Shape::Circle`), with no implicit conversion to an integer. **Scoped everywhere, including a `case` label** - `case Shape::Circle( r ):`, never a bare `Circle`. The underlying type is spelled as in C++: `enum Shape : u8 { ... }`. `enum class E` is a hard error saying to drop the `class`. | The same C-compatibility tax as D29, with the opposite answer, and the asymmetry is the point: `struct`/`class` are two words for one job, so the job gets split; `enum`/`enum class` are two words for one job where only one of them does it correctly, so there is nothing to split. C++'s plain `enum` leaked its variant names into the enclosing scope and converted implicitly to `int`; both were mistakes, `enum class` fixed them in C++11, and the broken spelling survives only for C. Safe under §5.1 because every point where the two meanings diverge is an error rather than a reinterpretation: `Shape s = Circle;` is an unknown name, and `i32 x = Circle;` and `if ( s == 0 )` have no conversion to reach for. Rejecting `enum class` follows D22's pattern — keep the spelling recognised so the diagnostic can name the fix. **Answered at M5, and the answer is smaller than the question looked.** Ownership is **inherited, not chosen**: an enum is owning exactly when any variant's payload is owning, which is D2's query extended to variants with no new rule. That is why D29's question does not really transfer - D29 forced `struct` against `class` because the *author* had to say which they meant, and here there is nothing to say, since every variant is visible in the declaration and the compiler already knows. No annotation, no `enum class` equivalent, no way to get it wrong.
 
 What is genuinely new is *how* one is destroyed. A struct's destructor is a fixed sequence - field 1, field 2, field 3 - and every drop in the language today is static. An enum has **one live variant, chosen at run time**, so destroying it means reading the tag and destroying only that payload; destroying the wrong one frees memory that was never allocated. The answer is a **synthesised destructor that switches on the tag**, one generated function per owning enum. That is the whole of the new machinery, and it is affordable precisely because nothing else moves: `drop` still means "call this type's destructor", so drop elaboration, drop flags, the move analysis and the emitter are untouched. Expanding the switch inline at every drop site instead would multiply both the code and the flags.
 
@@ -2183,7 +2183,97 @@ five errors and silently lost four: type errors stop the driver before lowering,
 and was worth recording twice - one fixture per pass, wherever a pass can gate the one
 after it.
 
+**M5: sum types.** `enum` in four slices - payload-free enums, `switch` with
+exhaustiveness, integer and float scrutinees with D34's range labels, and payloads
+with destructuring. Each was a working feature on its own, which is what let the
+hard question wait until there was code to answer it against.
+
+**D30 was mostly enforced by what is absent.** `holds()` needed no case at all: an
+enum reaches an integer through no branch that exists, so `i32 x = Colour::Red;` is
+rejected by there being nothing to accept it. The same for arithmetic - `cpp_result`
+has no answer for a non-numeric operand. Only `==` needed writing, and it joined
+D27's pointer-equality path rather than getting its own: both compare by identity,
+and **ordering is deliberately absent from both**. For an enum the reason is worth
+keeping - variants are names rather than magnitudes, and the declaration order they
+happen to have is not an ordering anyone wrote down.
+
+**Two coverage strategies, split by decidability.** An enum has finitely many
+variants, so coverage is a vector indexed by ordinal and a gap can be *named* -
+`missing \`Green\` and \`Blue\`` is the message the whole feature exists to produce.
+A number has 2^32 or more values, so coverage is a set of half-open intervals that
+can be checked for overlap and never proved complete: `default` is required there
+and optional here, and the dead-`default` rule applies only to the enum side.
+
+**Stacked labels fall out of the grammar.** An arm holds its own labels, so the
+parser takes labels until something that is not one appears. No fallthrough rule was
+written, and falling out of a non-empty arm is *unrepresentable* rather than
+rejected - which is the answer to the destructuring problem C++ never had to face,
+where an arm could otherwise fall into one whose bindings were never assigned.
+
+**A range is syntax and lives only where it is legal.** Parsing `a..b` in the
+expression grammar would make `i32 x = 1..5;` parse and then need a diagnostic to
+un-parse it. Lowering it needs no conjunction in KIR - `&&` short-circuits and the
+lowerer already builds that out of blocks - so a range is one more link in the chain
+a stacked label list already builds.
+
+**Payloads: no union, and that is what made it tractable.** A tagged variant would
+normally be a tag plus a union. Payload field names are already mangled with their
+node id, so two variants cannot collide, and every payload field can sit as a
+sibling in one struct. The cost is the space a union would have saved, which is
+invisible - nothing guarantees an enum's layout and no FFI can see one. What it buys
+is that a payload field is an **ordinary Field projection**: `Projection_kind` gained
+one entry, `Tag`, rather than a variant-aware projection needing its own type walk
+and a reverse lookup from field back to variant. Moving to a union later is a change
+to `emit_enums` and nothing else.
+
+**Two representations, and the one that must not change.** A payload-free enum stays
+its underlying integer, which is what keeps every enum written before payloads
+untouched; only one carrying payloads becomes a struct. The scrutinee's tag is read
+*once*, alongside the scrutinee, so the arms are unchanged - they still compare one
+operand against one constant and never learn payloads exist.
+
+**A pattern is not an expression.** `case Shape::Circle( r )` binds `r`; parsed as an
+expression the name would reach the resolver, which would report about a variable
+that does not exist instead of about the pattern. The postfix loop folds the `(` into
+a Call_expr before the label parser sees it, so the pattern is recovered from that
+rather than parsed with a lower binding power - which would also stop `::`, since
+both are 110.
+
+**The arm is the scope, not its body.** A pattern's bindings are written *outside*
+the block, so a scope on the block alone puts them out of reach of the code that
+uses them.
+
+Four things only the doing found. Enums were declared before structs, so a payload
+could not name one. The resolver skipped variants entirely, so a payload field's
+*type* never resolved - it now visits the annotations while still refusing to declare
+the variant names, which is D30's scoping intact. A pattern binding was not a place,
+and `visit_assign` stays silent for an unassignable *name*, so `r = 2.0;` compiled in
+silence; it is now a place that `check_writable` refuses, exactly as `const` is. And
+the **fallback arm never bound its pattern** - the one arm the binding loop skips,
+which matters because with no `default` the *last arm* is the fallback and may well
+destructure. Every earlier fixture happened to end on a payload-free variant, so
+nothing caught it until M5's own acceptance sample did.
+
+**On that sample.** M5's acceptance is the `Shape`/`area` listing in §6.2, and it did
+not compile: it wrote `case Circle( r ):` unqualified. D30 scopes a variant in every
+position and a `case` is not an exception, so the sample was corrected rather than the
+language - a bare name legal only where the scrutinee's type happens to be known
+would be a second spelling for one thing, which is the redundancy D25, D30 and D32
+all refuse. It is now `tests/sema/sample_m5.kl`, so the acceptance is a checked claim
+rather than a paragraph - and writing it is what found the fallback bug above.
+
 ### Debts to pay along the way
+
+- **An enum cannot carry an owning payload.** D30 records the design - a synthesised destructor
+  that switches on the tag, one generated function per owning enum, with every drop site unchanged
+  - and the first cut refuses one instead. It is what `Result<Buffer, E>` needs, and it needs
+  allocation to be worth having, so it is naturally M5.5's work rather than a loose end of M5's.
+
+- **A payload enum is a struct of every variant's fields, not a union.** Correct and wasteful: a
+  four-variant enum is as large as all four payloads together. Invisible today, because nothing
+  guarantees an enum's layout and no FFI can see one; the fix is confined to `emit_enums` and the
+  moment it matters is when one is put in a container.
+
 
 - **`out` cannot take a type that owns a resource.** Assigning one destroys nothing, so it would
   leak whatever the caller already held. The fix is a conditional drop of the argument's place

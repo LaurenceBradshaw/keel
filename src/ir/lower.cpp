@@ -1302,7 +1302,18 @@ void Lowering::lower_switch( Node_id id )
     {
         builder_.terminate_goto( fallback_block, span );
         builder_.switch_to( fallback_block );
-        lower_statement( ast_.children( fallback ).back() );
+
+        // The fallback arm binds its pattern like any other. It is easy to miss because it is the
+        // one arm the loop above skips - and when the fallback is the *last arm* of an exhaustive
+        // switch rather than a `default`, it is an ordinary arm that may well destructure.
+        const std::span<const Node_id> arm_children = ast_.children( fallback );
+
+        for( const Node_id label : arm_children.subspan( 0, arm_children.size() - 1 ) )
+        {
+            bind_variant_pattern( matched, label );
+        }
+
+        lower_statement( arm_children.back() );
     }
 
     leave();
@@ -4039,6 +4050,28 @@ TEST_CASE( "lower_leaves_a_payload_free_enum_as_an_integer", "[ir][lower][payloa
     INFO( text );
     REQUIRE( text.find( "_1 = const 1" ) != std::string::npos );
     REQUIRE( text.find( ".tag" ) == std::string::npos );
+}
+
+// The regression M5's acceptance sample found. With no `default`, the **last arm is the fallback**
+// and is skipped by the loop that binds patterns - so an exhaustive switch whose final arm
+// destructures bound nothing and crashed lowering. It went unnoticed because every earlier fixture
+// happened to end on a payload-free variant, which binds nothing anyway.
+TEST_CASE( "lower_binds_a_pattern_in_the_fallback_arm", "[ir][lower][payload]" )
+{
+    Lowered p( "enum Shape { Circle( f64 radius ), Rect( f64 w, f64 h ) };\n"
+               "f64 area( Shape s ) { switch( s ) {"
+               " case Shape::Circle( r ): return r;"
+               " case Shape::Rect( w, h ): return w * h; } }\n"
+               "i32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.named( "area" );
+
+    INFO( text );
+    REQUIRE( text.find( "// w" ) != std::string::npos );
+    REQUIRE( text.find( "// h" ) != std::string::npos );
 }
 
 TEST_CASE( "lower_switches_on_the_tag_and_binds_the_payload", "[ir][lower][payload]" )
