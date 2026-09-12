@@ -2650,6 +2650,17 @@ only by `-Werror`. Each layer was independently wrong and each was silent alone.
   `unsafe` at the call site is asserting, so neither needs a rule — but they are
   the first places where a Keel guarantee is an assumption, and they should be
   named when the runtime is reviewed.
+- **A node that carries a name must not be built without one.** `parse_function_decl`
+  has said so since M0 — *"a declaration with no name is not one"* — and the rule
+  turned out to apply one level down, to expressions: `p.this`, `E::this` and any
+  other keyword after `.` or `::` built a `Field_expr`/`Path_expr` holding an
+  *invalid* `Symbol_id`, and `Interner::text` aborts on one. Seven spellings
+  crashed the compiler. Both sites now produce an `Error` node instead, and both
+  use `expect_name()` rather than a bare `expect( Identifier )` so the keyword is
+  consumed — leaving it in place turned three mistakes into sixteen diagnostics.
+  **The general rule, for any node kind added later: if `aux` is a `Symbol_id`,
+  either the parser guarantees it is valid or every reader needs a guard.** The
+  first is one edit and the second is unbounded.
 - **`kl_rt_alloc` guards a zero-size request, and that guard treats a symptom.**
   `struct Empty { };` type-checks, `sizeof` it is 0 under the GCC/Clang extension
   that lets an empty C struct exist at all, and `alloc<Empty>()` therefore asks

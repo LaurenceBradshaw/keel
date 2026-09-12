@@ -1,0 +1,20 @@
+// A keyword where a member name belongs. Each of these aborted the compiler until the parser was
+// taught that an access with no name is not an access - the same rule a declaration with no name
+// already followed.
+struct Point { i32 x; };
+
+enum Colour { Red, Green };
+
+i32 main()
+{
+    Point p = Point { 1 };
+    Point* q = &p;
+
+    i32 a = p.this;
+
+    q.if = p;
+
+    Colour c = Colour::this;
+
+    return 0;
+}

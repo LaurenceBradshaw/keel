@@ -1,0 +1,19 @@
+error: expected an identifier, found `this`
+  --> sema/errors_keyword_members.kl:13:15
+   |
+13 |     i32 a = p.this;
+   |               ^ `this` is a keyword, so it cannot be used as a name
+
+error: expected an identifier, found `if`
+  --> sema/errors_keyword_members.kl:15:7
+   |
+15 |     q.if = p;
+   |       ^ `if` is a keyword, so it cannot be used as a name
+
+error: expected an identifier, found `this`
+  --> sema/errors_keyword_members.kl:17:24
+   |
+17 |     Colour c = Colour::this;
+   |                        ^ `this` is a keyword, so it cannot be used as a name
+
+3 errors generated

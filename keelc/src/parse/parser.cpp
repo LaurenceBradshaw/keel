@@ -2059,12 +2059,19 @@ Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing )
 
             advance();
 
-            // Only on success: a failed expect() does not advance, so previous() would be the dot
-            // itself and its symbol would become the field's name.
-            Symbol_id name;
-            if( expect( Token_kind::Identifier ) )
+            // expect_name rather than a bare expect: a keyword here was meant as the member name,
+            // so it is consumed as well. Left in place it is re-parsed as the start of a new
+            // statement and one mistake becomes a dozen.
+            const Symbol_id name = expect_name();
+
+            // A member access with no name is not one - the same rule parse_function_decl applies to
+            // a declaration, and for the same reason: every later pass reads the name to report
+            // about it, and an invalid Symbol_id aborts the interner rather than degrading. The
+            // parser has already said what it found in the name's place.
+            if( !name.is_valid() )
             {
-                name = previous().symbol;
+                left = error_node( Span::merge( ast_.span( left ), previous().span ) );
+                continue;
             }
 
             left = ast_.add( Node_kind::Field_expr, Span::merge( ast_.span( left ), previous().span ), name.v, { left } );
@@ -2075,12 +2082,16 @@ Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing )
         {
             advance();
 
-            // Only on success: a failed expect() does not advance, so previous() would be the `::`
-            // itself and its symbol would become the field's name.
-            Symbol_id name;
-            if( expect( Token_kind::Identifier ) )
+            const Symbol_id name = expect_name();
+
+            // A member access with no name is not one - the same rule parse_function_decl applies to
+            // a declaration, and for the same reason: every later pass reads the name to report
+            // about it, and an invalid Symbol_id aborts the interner rather than degrading. The
+            // parser has already said what it found in the name's place.
+            if( !name.is_valid() )
             {
-                name = previous().symbol;
+                left = error_node( Span::merge( ast_.span( left ), previous().span ) );
+                continue;
             }
 
             left = ast_.add( Node_kind::Path_expr, Span::merge( ast_.span( left ), previous().span ), name.v, { left } );
@@ -3860,6 +3871,184 @@ TEST_CASE( "parser_points_a_forward_declaration_at_extern", "[parse][extern]" )
     INFO( p.errors() );
     REQUIRE( p.errors().find( "no forward declarations" ) != std::string::npos );
     REQUIRE( p.errors().find( "`extern`" ) != std::string::npos );
+}
+
+// A keyword after `.` or `::` used to abort the compiler. The parser guarded `previous()` - so the
+// dot's own symbol could not become the name - but still built a Field_expr carrying an *invalid*
+// Symbol_id, and every later pass reads that name to report about it. `Interner::text` asserts.
+//
+// The rule is the one parse_function_decl already states for declarations, one level down: a member
+// access with no name is not one, so it is an Error node instead.
+TEST_CASE( "parser_rejects_a_keyword_as_a_member_name", "[parse][members]" )
+{
+    // Every keyword class: a statement keyword, a type-position one, an expression one, a mode, and
+    // the two this slice added. The crash did not care which.
+    for( const char* member :
+         { "this",
+           "if",
+           "return",
+           "cast",
+           "wrap",
+           "move",
+           "ref",
+           "out",
+           "alloc",
+           "free",
+           "true",
+           "nullptr",
+           "struct",
+           "enum",
+           "unsafe",
+           "extern",
+           "const",
+           "auto" } )
+    {
+        const std::string dotted =
+            std::string( "struct P { i32 x; };\ni32 main() { P a = P { 1 }; i32 q = a." ) + member + "; return 0; }";
+        const Parsed p( dotted );
+
+        INFO( dotted << "\n" << p.errors() );
+        REQUIRE( p.has_errors() );
+        REQUIRE( p.errors().find( "expected an identifier" ) != std::string::npos );
+
+        // The node must not survive carrying a name it does not have.
+        const Node_id field = find_first( p.ast(), p.root(), Node_kind::Field_expr );
+        REQUIRE_FALSE( field.is_valid() );
+    }
+}
+
+TEST_CASE( "parser_rejects_a_keyword_after_colon_colon", "[parse][members]" )
+{
+    for( const char* member : { "this", "if", "return", "alloc", "free" } )
+    {
+        const std::string path = std::string( "enum E { A, B };\ni32 main() { E e = E::" ) + member + "; return 0; }";
+        const Parsed      p( path );
+
+        INFO( path << "\n" << p.errors() );
+        REQUIRE( p.has_errors() );
+        REQUIRE( p.errors().find( "expected an identifier" ) != std::string::npos );
+        REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::Path_expr ).is_valid() );
+    }
+}
+
+// The same hole reached through three other constructs, each of which builds on one of the two
+// nodes above. Grouped because one guard closed all of them, and a future change that reopens any
+// one should fail here rather than in whichever pass reads the name first.
+TEST_CASE( "parser_survives_a_keyword_member_in_every_position", "[parse][members]" )
+{
+    SECTION( "assigned to" )
+    {
+        const Parsed p( "struct P { i32 x; };\ni32 main() { P a = P { 1 }; P* q = &a; q.this = a; return 0; }" );
+
+        REQUIRE( p.has_errors() );
+        INFO( p.errors() );
+        REQUIRE( p.errors().find( "expected an identifier" ) != std::string::npos );
+    }
+
+    SECTION( "called as a method" )
+    {
+        const Parsed p( "class C { i32 x; C( i32 v ) { x = v; } i32 g() { return x; } };\n"
+                        "i32 main() { C c = C( 1 ); return c.this(); }" );
+
+        REQUIRE( p.has_errors() );
+        INFO( p.errors() );
+        REQUIRE( p.errors().find( "expected an identifier" ) != std::string::npos );
+    }
+
+    SECTION( "as a case pattern" )
+    {
+        // Reaches Variant_pattern, which is built only when the callee folded into a Path_expr -
+        // so refusing the Path_expr is what keeps this out too.
+        const Parsed p( "enum S { A( i32 r ), B };\n"
+                        "i32 main() { S s = S::B; switch( s ) { case S::this( r ): return r; default: return 0; } }" );
+
+        REQUIRE( p.has_errors() );
+        INFO( p.errors() );
+        REQUIRE( p.errors().find( "expected an identifier" ) != std::string::npos );
+    }
+
+    SECTION( "chained behind a valid access" )
+    {
+        const Parsed p( "struct I { i32 v; };\nstruct P { I inner; };\n"
+                        "i32 main() { P a = P { I { 1 } }; i32 q = a.inner.this; return 0; }" );
+
+        REQUIRE( p.has_errors() );
+        INFO( p.errors() );
+        REQUIRE( p.errors().find( "expected an identifier, found `this`" ) != std::string::npos );
+
+        // The whole chain becomes the Error, not just the broken link: `a.inner` was built and is
+        // then left unreferenced, which is what an arena-allocated tree costs and is why nothing
+        // downstream can reach a half-formed access.
+        REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::Field_expr ).is_valid() );
+    }
+}
+
+// One mistake, one error. A bare expect() reports without consuming, so the keyword was re-parsed
+// as the start of a new statement and three mistakes produced sixteen diagnostics; expect_name
+// consumes it, which is exactly the reason that helper exists.
+TEST_CASE( "parser_does_not_cascade_from_a_keyword_member", "[parse][members]" )
+{
+    SECTION( "one access" )
+    {
+        const Parsed p( "struct P { i32 x; };\ni32 main() { P a = P { 1 }; i32 q = a.this; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+    }
+
+    SECTION( "three, in different positions" )
+    {
+        const Parsed p( "struct P { i32 x; };\n"
+                        "enum E { A, B };\n"
+                        "i32 main()\n"
+                        "{\n"
+                        "    P a = P { 1 };\n"
+                        "    P* q = &a;\n"
+                        "    i32 v = a.this;\n"
+                        "    q.if = a;\n"
+                        "    E c = E::this;\n"
+                        "    return 0;\n"
+                        "}" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 3 );
+    }
+
+    SECTION( "the declarations after one still parse" )
+    {
+        const Parsed p( "struct P { i32 x; };\n"
+                        "i32 broken( P a ) { return a.this; }\n"
+                        "i32 fine() { return 1; }\n" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+
+        std::size_t functions = 0;
+        for( const Node_id decl : p.children( p.root() ) )
+        {
+            functions += p.kind( decl ) == Node_kind::Function_decl ? 1 : 0;
+        }
+
+        REQUIRE( functions == 2 );
+    }
+}
+
+// The guard must not cost a legal access. These are the shapes the fix runs through.
+TEST_CASE( "parser_still_accepts_ordinary_member_access", "[parse][members]" )
+{
+    for( const char* source : {
+             "struct P { i32 x; };\ni32 main() { P a = P { 1 }; return a.x; }",
+             "struct I { i32 v; };\nstruct P { I inner; };\ni32 main() { P a = P { I { 1 } }; return a.inner.v; }",
+             "struct P { i32 x; };\ni32 main() { P a = P { 1 }; P* q = &a; return q.x; }",
+             "enum E { A, B };\ni32 main() { E e = E::A; return 0; }",
+             "class C { i32 x; C( i32 v ) { x = v; } i32 g() { return x; } };\ni32 main() { C c = C( 1 ); return c.g(); }",
+         } )
+    {
+        const Parsed p( source );
+
+        INFO( source << "\n" << p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+    }
 }
 
 TEST_CASE( "parser_call_errors", "[parse]" )
