@@ -496,6 +496,13 @@ private:
     Type_id infer_path( Node_id id );
     Type_id infer_variant_construction( Node_id id );
 
+    Type_id infer_alloc( Node_id id );
+    Type_id infer_free( Node_id id );
+    // D35: an operation on the enumerated list is permitted inside an unsafe block and reported
+    // outside one. The `why` is the operation's own reason - what the author is asserting by writing
+    // the block - so each caller supplies it.
+    void require_unsafe( Node_id id, std::string what, std::string why = {} );
+
     // Constant rejection (§12). fold_* answer what an expression's value is when it is made only
     // of literals; check_constant decides whether that value can exist in the type the operation
     // happens in, and record_constant is the two together.
@@ -2489,6 +2496,12 @@ Type_id Checker::infer( Node_id id )
     case Node_kind::Cast_expr:
         return infer_cast( id );
 
+    case Node_kind::Alloc_expr:
+        return infer_alloc( id );
+
+    case Node_kind::Free_expr:
+        return infer_free( id );
+
     case Node_kind::Marker_expr:
         return infer_marker( id );
 
@@ -2875,18 +2888,11 @@ Type_id Checker::infer_call( Node_id id )
 
     if( is_extern( ast_, callable ) )
     {
-        if( unsafe_depth_ == 0 )
-        {
-            error_at(
-                ast_.span( callee ),
-                fmt::format( "calling `{}` needs an `unsafe` block", name ),
-                "it is defined in C, so the compiler cannot check what it does with its arguments"
-            );
-        }
-        else
-        {
-            unsafe_used_ = true;
-        }
+        require_unsafe(
+            callee,
+            fmt::format( "calling `{}` needs an `unsafe` block", name ),
+            "it is defined in C, so the compiler cannot check what it does with its arguments"
+        );
     }
 
     const std::span<const Node_id> declared  = ast_.children( ast_.children( callable )[1] );
@@ -3451,6 +3457,62 @@ Type_id Checker::infer_variant_construction( Node_id id )
     return record( id, result );
 }
 
+Type_id Checker::infer_alloc( Node_id id )
+{
+    const Type_id element = type_of_annotation( ast_.children( id )[0] );
+
+    if( table_.is_error( element ) )
+    {
+        return record( id, element );
+    }
+
+    if( element == table_.builtin( Type_kind::Void ) )
+    {
+        error_at( ast_.span( id ), "`alloc` needs a type to allocate", "`void` has no size" );
+        return record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    require_unsafe(
+        id,
+        "`alloc` needs an `unsafe` block",
+        "it hands back memory that does not hold a value yet, so the pointer's type is a claim rather than a fact"
+    );
+
+    return record( id, table_.pointer_to( element ) );
+}
+
+Type_id Checker::infer_free( Node_id id )
+{
+    const Type_id operand = infer( ast_.children( id )[0] );
+
+    if( table_.is_error( operand ) )
+    {
+        return record( id, operand );
+    }
+
+    if( !table_.is_pointer( operand ) )
+    {
+        error_at( ast_.span( id ), fmt::format( "`free` needs a pointer, but got `{}`", table_.name( operand ) ) );
+        return record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    require_unsafe( id, "`free` needs an `unsafe` block", "the compiler cannot tell whether anything still points at it" );
+
+    return record( id, table_.builtin( Type_kind::Void ) );
+}
+
+void Checker::require_unsafe( Node_id id, std::string what, std::string why )
+{
+    if( unsafe_depth_ == 0 )
+    {
+        error_at( ast_.span( id ), what, why );
+    }
+    else
+    {
+        unsafe_used_ = true;
+    }
+}
+
 Type_id Checker::infer_path( Node_id id )
 {
     const Node_id   qualifier = ast_.children( id )[0];
@@ -3770,15 +3832,18 @@ Type_id Checker::infer_cast( Node_id id )
 
     case Conversion::Unsafe:
     {
+        require_unsafe(
+            id,
+            fmt::format(
+                "converting between `{}` and `{}` needs an `unsafe` block", table_.name( value ), table_.name( target )
+            ),
+            "the compiler cannot check that the target type describes what is there"
+        );
 
-        if( unsafe_depth_ == 0 )
+        if( !unsafe_used_ )
         {
-            return reject(
-                "converting between pointer types needs an `unsafe` block",
-                "the compiler cannot check that the target type describes what is there"
-            );
+            return record( id, error );
         }
-        unsafe_used_ = true;
         break;
     }
 
@@ -6584,6 +6649,305 @@ TEST_CASE( "type_checker_accepts_binding_modes_on_an_extern", "[sema][types][ext
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
+    }
+}
+
+// D35's third and fourth gated operations. `alloc` is gated for a sharper reason than "it can
+// fail": it hands back a pointer whose type claims there is a `T` there, and there is not.
+TEST_CASE( "type_checker_gates_alloc_and_free_on_unsafe", "[sema][types][alloc]" )
+{
+    SECTION( "alloc outside an unsafe block" )
+    {
+        const Typed p( "i32 main() { i32* n = alloc<i32>(); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`alloc` needs an `unsafe` block" ) != std::string::npos );
+    }
+
+    SECTION( "free outside an unsafe block" )
+    {
+        const Typed p( "i32 main() { i32* n = nullptr; free( n ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`free` needs an `unsafe` block" ) != std::string::npos );
+    }
+
+    SECTION( "both inside one" )
+    {
+        const Typed p( "i32 main() { unsafe { i32* n = alloc<i32>(); free( n ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "alloc alone justifies the block" )
+    {
+        const Typed p( "i32 main() { i32* n = nullptr; unsafe { n = alloc<i32>(); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "free alone justifies the block" )
+    {
+        const Typed p( "i32 main() { i32* n = nullptr; unsafe { free( n ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "the permission does not leak past the block" )
+    {
+        const Typed p( "i32 main()\n"
+                       "{\n"
+                       "    i32* a = nullptr;\n"
+                       "    unsafe { a = alloc<i32>(); }\n"
+                       "    i32* b = alloc<i32>();\n"
+                       "    return 0;\n"
+                       "}" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "a safe wrapper is the point" )
+    {
+        const Typed p( "struct N { i32 v; };\n"
+                       "N* make() { N* n = nullptr; unsafe { n = alloc<N>(); } return n; }\n"
+                       "i32 main() { N* n = make(); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+TEST_CASE( "type_checker_types_alloc_and_free", "[sema][types][alloc]" )
+{
+    SECTION( "alloc yields a pointer to its argument" )
+    {
+        const Typed p( "struct N { i32 v; };\ni32 main() { unsafe { N* n = alloc<N>(); free( n ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Alloc_expr, 0 ) ) == "N*" );
+    }
+
+    SECTION( "a builtin element" )
+    {
+        const Typed p( "i32 main() { unsafe { i32* n = alloc<i32>(); free( n ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Alloc_expr, 0 ) ) == "i32*" );
+    }
+
+    SECTION( "a pointer element" )
+    {
+        const Typed p( "i32 main() { unsafe { i32** n = alloc<i32*>(); free( n ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Alloc_expr, 0 ) ) == "i32**" );
+    }
+
+    SECTION( "an enum element" )
+    {
+        const Typed p( "enum E { A, B };\ni32 main() { unsafe { E* n = alloc<E>(); free( n ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Alloc_expr, 0 ) ) == "E*" );
+    }
+
+    SECTION( "free yields void" )
+    {
+        const Typed p( "i32 main() { i32* n = nullptr; unsafe { free( n ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Free_expr, 0 ) ) == "void" );
+    }
+
+    SECTION( "the pointer type is not interchangeable" )
+    {
+        const Typed p( "struct N { i32 v; };\ni32 main() { unsafe { i32* n = alloc<N>(); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "N*" ) != std::string::npos );
+    }
+
+    SECTION( "`void` has no size" )
+    {
+        const Typed p( "i32 main() { unsafe { i32* n = alloc<void>(); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.rendered().find( "needs a type to allocate" ) != std::string::npos );
+    }
+
+    SECTION( "an unknown element type is reported, and not twice over as a gate failure" )
+    {
+        const Typed p( "i32 main() { unsafe { i32* n = alloc<Nope>(); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.rendered().find( "needs an `unsafe` block" ) == std::string::npos );
+    }
+
+    SECTION( "free needs a pointer" )
+    {
+        const Typed p( "i32 main() { i32 x = 1; unsafe { free( x ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.rendered().find( "`free` needs a pointer, but got `i32`" ) != std::string::npos );
+    }
+
+    SECTION( "free of a struct value, not a pointer to one" )
+    {
+        const Typed p( "struct N { i32 v; };\ni32 main() { N n = N { 1 }; unsafe { free( n ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.rendered().find( "needs a pointer" ) != std::string::npos );
+    }
+
+    SECTION( "`.` reaches through an allocated pointer, and chains" )
+    {
+        // The idiom `codegen/alloc_free.kl` is written in: no `(*n).` anywhere in a Keel program.
+        const Typed p( "struct N { i32 v; N* next; };\n"
+                       "i32 main()\n"
+                       "{\n"
+                       "    i32 r = 0;\n"
+                       "    unsafe\n"
+                       "    {\n"
+                       "        N* a = alloc<N>();\n"
+                       "        N* b = alloc<N>();\n"
+                       "        b.v = 3;\n"
+                       "        a.next = b;\n"
+                       "        r = a.next.v;\n"
+                       "        free( a );\n"
+                       "        free( b );\n"
+                       "    }\n"
+                       "    return r;\n"
+                       "}" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a file-scope initialiser cannot allocate" )
+    {
+        // Not a rule of its own: §7 requires a constant expression there, and a call to the
+        // allocator is not one. Pinned because the alternative - running it before main - is what
+        // a reader might assume.
+        const Typed p( "i32* g = alloc<i32>();\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+}
+
+// What `alloc` and `free` do NOT do. Each of these type-checks, and each is a hazard the `unsafe`
+// at the call site is standing behind - pinned as accepted rather than as correct, so that the day
+// `Owned<T>` makes one of them a compile error the change is visible here.
+TEST_CASE( "type_checker_leaves_raw_memory_raw", "[sema][types][alloc]" )
+{
+    SECTION( "allocating a class runs no constructor" )
+    {
+        // `alloc<C>()` is memory, not an object: the fields are uninitialised and `C`'s invariant
+        // has never held. This is exactly the gap D10's `Owned<T>` exists to close.
+        const Typed p( "class C { i32 x; C( i32 v ) { x = v; } ~C() { } };\n"
+                       "i32 main() { unsafe { C* p = alloc<C>(); free( p ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "freeing runs no destructor" )
+    {
+        const Typed p( "class C { i32 x; C( i32 v ) { x = v; } ~C() { } };\n"
+                       "i32 main() { C* p = nullptr; unsafe { free( p ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "freeing a stack address is not caught" )
+    {
+        const Typed p( "i32 main() { i32 x = 1; unsafe { free( &x ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "freeing twice is not caught" )
+    {
+        const Typed p( "i32 main() { unsafe { i32* n = alloc<i32>(); free( n ); free( n ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "leaking is not caught" )
+    {
+        const Typed p( "i32 main() { unsafe { i32* n = alloc<i32>(); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "using after free is not caught" )
+    {
+        const Typed p( "i32 main() { i32 v = 0; unsafe { i32* n = alloc<i32>(); free( n ); v = *n; } return v; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// §12: "`unsafe` permits operations, it does not disable checks." The same claim D35 makes, tested
+// against the two operations this slice added.
+TEST_CASE( "type_checker_still_checks_around_alloc", "[sema][types][alloc]" )
+{
+    SECTION( "the pointer is const-checked" )
+    {
+        const Typed p( "i32 main() { unsafe { i32* const n = alloc<i32>(); n = nullptr; free( n ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    SECTION( "a field written through it is type-checked" )
+    {
+        const Typed p( "struct N { i32 v; };\n"
+                       "i32 main() { unsafe { N* n = alloc<N>(); (*n).v = true; free( n ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "and through `.`, which reaches the same field" )
+    {
+        // D22: `.` is the only member-access operator and reaches through a pointer, so the
+        // explicit deref above is a second spelling rather than the required one. Both are checked.
+        const Typed p( "struct N { i32 v; };\n"
+                       "i32 main() { unsafe { N* n = alloc<N>(); n.v = true; free( n ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "an unknown field is still unknown" )
+    {
+        const Typed p( "struct N { i32 v; };\n"
+                       "i32 main() { unsafe { N* n = alloc<N>(); (*n).nope = 1; free( n ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
     }
 }
 

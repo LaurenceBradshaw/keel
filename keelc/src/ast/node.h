@@ -65,6 +65,8 @@ enum class Node_kind : u16
     Binding_decl,    // a name bound by a pattern; aux is the name, and it has no annotation  // `1..5`, half-open; children are
                      // the two bounds
     Method_decl,     // aux is the name; children are { return type, params, body }, as Function_decl
+    Alloc_expr,      // `alloc<T>()`; child 0 is the type annotation, and there is no operand
+    Free_expr,       // `free( p )`; child 0 is the pointer
 
     Count
 };

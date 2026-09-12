@@ -1,4 +1,4 @@
-error: converting between pointer types needs an `unsafe` block
+error: converting between `i32*` and `u8*` needs an `unsafe` block
  --> sema/errors_unsafe.kl:8:16
   |
 8 |     u8* bare = cast<u8*>( address );

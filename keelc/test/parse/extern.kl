@@ -2,7 +2,7 @@
 // would be, which is the only place the declaration differs from an ordinary function.
 extern i32 abs( i32 v );
 
-extern u8* alloc( u64 n );
+extern u8* reserve( u64 n );
 
 extern i32 rand();
 

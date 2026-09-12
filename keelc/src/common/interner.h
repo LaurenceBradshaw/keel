@@ -64,6 +64,8 @@ enum class Keyword : u32
     This,
 
     Extern,
+    Alloc,
+    Free,
 
     Count
 };

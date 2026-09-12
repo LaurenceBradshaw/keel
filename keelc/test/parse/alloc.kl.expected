@@ -1,0 +1,40 @@
+Source_file                             4:1-25:1
+  Struct_decl                           4:1-8:3     name=Node
+    Field_decl                          6:5-6:17    name=value
+      Named_type                        6:5-6:8     "i32"
+    Field_decl                          7:5-7:16    name=next
+      Pointer_type                      7:5-7:10
+        Named_type                      7:5-7:9     "Node"
+  Function_decl                         10:1-24:2   name=main
+    Named_type                          10:1-10:4   "i32"
+    Param_list                          10:9-10:11  "()"
+    Block                               11:1-24:2
+      Block                             12:5-21:6   unsafe
+        Var_decl                        14:9-14:33  name=n
+          Pointer_type                  14:9-14:14
+            Named_type                  14:9-14:13  "Node"
+          Alloc_expr                    14:19-14:32
+            Named_type                  14:25-14:29 "Node"
+        Var_decl                        15:9-15:32  name=v
+          Pointer_type                  15:9-15:13
+            Named_type                  15:9-15:12  "i32"
+          Alloc_expr                    15:19-15:31
+            Named_type                  15:25-15:28 "i32"
+        Var_decl                        16:9-16:33  name=p
+          Pointer_type                  16:9-16:14
+            Pointer_type                16:9-16:13
+              Named_type                16:9-16:12  "i32"
+          Alloc_expr                    16:19-16:32
+            Pointer_type                16:25-16:29
+              Named_type                16:25-16:28 "i32"
+        Expr_stmt                       18:9-18:19
+          Free_expr                     18:9-18:18
+            Name_expr                   18:15-18:16 "p"
+        Expr_stmt                       19:9-19:19
+          Free_expr                     19:9-19:18
+            Name_expr                   19:15-19:16 "v"
+        Expr_stmt                       20:9-20:19
+          Free_expr                     20:9-20:18
+            Name_expr                   20:15-20:16 "n"
+      Return_stmt                       23:5-23:14
+        Int_literal                     23:12-23:13 "0"

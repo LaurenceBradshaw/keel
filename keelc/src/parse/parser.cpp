@@ -1338,7 +1338,8 @@ bool Parser::can_start_expression() const
     case Token_kind::Keyword:
         return check_keyword( Keyword::True ) || check_keyword( Keyword::False ) || check_keyword( Keyword::Nullptr ) ||
                check_keyword( Keyword::Move ) || check_keyword( Keyword::Out ) || check_keyword( Keyword::Ref ) ||
-               check_keyword( Keyword::Cast ) || check_keyword( Keyword::Wrap ) || check_keyword( Keyword::This );
+               check_keyword( Keyword::Cast ) || check_keyword( Keyword::Wrap ) || check_keyword( Keyword::This ) ||
+               check_keyword( Keyword::Alloc ) || check_keyword( Keyword::Free );
 
     default:
         return false;
@@ -1693,7 +1694,10 @@ Node_id Parser::parse_expression_stmt( bool consume_semicolon )
         kind     = Node_kind::Increment_stmt;
         aux      = static_cast<u32>( op.kind );
     }
-    else if( ast_.kind( expr ) != Node_kind::Call_expr && ast_.kind( expr ) != Node_kind::Error )
+    // A call and a `free` are the effectful expression kinds; everything else computes a value the
+    // statement then discards, which is D15's rule.
+    else if( ast_.kind( expr ) != Node_kind::Call_expr && ast_.kind( expr ) != Node_kind::Free_expr &&
+             ast_.kind( expr ) != Node_kind::Error )
     {
         // `u32 *ptr;` and `u32 &r;` are what a C++ programmer writes from habit, and neither reaches
         // the type parser: the first is a multiplication under D17, the second a bitwise and now
@@ -2145,6 +2149,37 @@ Node_id Parser::parse_keyword_prefix( Span start )
     {
         advance();
         return ast_.add( Node_kind::Null_literal, Span::merge( start, previous().span ), 0, {} );
+    }
+
+    if( check_keyword( Keyword::Alloc ) )
+    {
+        advance();
+
+        expect( Token_kind::Less );
+        const Node_id type = parse_type();
+
+        // Not expect( Greater ): `alloc<Vector<i32>>()` closes with `>>`.
+        if( !match_generic_close() )
+        {
+            error_expected( Token_kind::Greater );
+        }
+
+        // Empty for now. D27's `[*]T` is what gives the count somewhere to go, so the parens are
+        // here to be filled rather than to be added.
+        expect( Token_kind::L_paren );
+        expect( Token_kind::R_paren );
+
+        return ast_.add( Node_kind::Alloc_expr, Span::merge( start, previous().span ), 0, { type } );
+    }
+
+    if( check_keyword( Keyword::Free ) )
+    {
+        advance();
+        expect( Token_kind::L_paren );
+        const Node_id operand = parse_expression( 0 );
+        expect( Token_kind::R_paren );
+
+        return ast_.add( Node_kind::Free_expr, Span::merge( start, previous().span ), 0, { operand } );
     }
 
     if( check_keyword( Keyword::Cast ) || check_keyword( Keyword::Wrap ) )
@@ -3555,7 +3590,7 @@ TEST_CASE( "parser_parses_an_extern_declaration", "[parse][extern]" )
 
     SECTION( "a pointer parameter and a pointer return" )
     {
-        const Parsed p( "extern u8* alloc( u64 n );" );
+        const Parsed p( "extern u8* reserve( u64 n );" );
 
         INFO( p.errors() );
         REQUIRE_FALSE( p.has_errors() );
@@ -3662,6 +3697,156 @@ TEST_CASE( "parser_rejects_a_malformed_extern", "[parse][extern]" )
 
         INFO( p.errors() );
         REQUIRE( p.error_count() == 1 );
+    }
+}
+
+// `alloc<T>()` is D28's shape - a keyword carrying a type argument, so the `<` can only be a
+// bracket and never a comparison. `free( p )` is its pair rather than a call, because Keel has no
+// `void*` for an extern `free` to take.
+TEST_CASE( "parser_parses_alloc", "[parse][alloc]" )
+{
+    SECTION( "it is an Alloc_expr holding its type" )
+    {
+        const Parsed p( "struct N { i32 v; };\ni32 main() { unsafe { N* n = alloc<N>(); free( n ); } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id node = find_first( p.ast(), p.root(), Node_kind::Alloc_expr );
+
+        REQUIRE( node.is_valid() );
+        REQUIRE( p.children( node ).size() == 1 );
+        REQUIRE( p.kind( p.child( node, 0 ) ) == Node_kind::Named_type );
+        REQUIRE( p.text( p.child( node, 0 ) ) == "N" );
+    }
+
+    SECTION( "the span covers the whole form" )
+    {
+        const Parsed p( "i32 main() { unsafe { i32* n = alloc<i32>(); free( n ); } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id node = find_first( p.ast(), p.root(), Node_kind::Alloc_expr );
+
+        REQUIRE( node.is_valid() );
+        REQUIRE( p.text( node ) == "alloc<i32>()" );
+    }
+
+    SECTION( "a pointer element type" )
+    {
+        const Parsed p( "i32 main() { unsafe { i32** n = alloc<i32*>(); free( n ); } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id node = find_first( p.ast(), p.root(), Node_kind::Alloc_expr );
+
+        REQUIRE( node.is_valid() );
+        REQUIRE( p.kind( p.child( node, 0 ) ) == Node_kind::Pointer_type );
+    }
+
+    SECTION( "it is a Free_expr holding its operand" )
+    {
+        const Parsed p( "i32 main() { i32* n = nullptr; unsafe { free( n ); } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id node = find_first( p.ast(), p.root(), Node_kind::Free_expr );
+
+        REQUIRE( node.is_valid() );
+        REQUIRE( p.children( node ).size() == 1 );
+        REQUIRE( p.kind( p.child( node, 0 ) ) == Node_kind::Name_expr );
+    }
+
+    SECTION( "free takes an arbitrary expression, not just a name" )
+    {
+        const Parsed p( "struct N { i32 v; };\ni32 main() { unsafe { free( alloc<N>() ); } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id node = find_first( p.ast(), p.root(), Node_kind::Free_expr );
+
+        REQUIRE( node.is_valid() );
+        REQUIRE( p.kind( p.child( node, 0 ) ) == Node_kind::Alloc_expr );
+    }
+
+    SECTION( "the `<` is a bracket, never a comparison" )
+    {
+        // The whole reason `alloc` is a keyword rather than a function: `a < b > ( c )` is §12's
+        // open ambiguity for a generic call, and it cannot arise here.
+        const Parsed p( "i32 main() { unsafe { i32* n = alloc<i32>(); free( n ); } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::Binary_expr ).is_valid() );
+    }
+}
+
+TEST_CASE( "parser_rejects_a_malformed_alloc", "[parse][alloc]" )
+{
+    // Each of these must report rather than parse into something else - the shape has three moving
+    // parts and every one of them can be left out.
+    for( const char* body : {
+             "i32* n = alloc<i32>;", // no argument list
+             "i32* n = alloc();",    // no type
+             "i32* n = alloc<>();",  // empty type
+             "i32* n = alloc<i32>(", // unterminated
+             "i32* n = alloc;",      // bare keyword
+             "free();",              // no operand
+             "free( 1, 2 );",        // two operands
+             "free;",                // bare keyword
+         } )
+    {
+        const Parsed p( std::string( "i32 main() { " ) + body + " return 0; }" );
+
+        INFO( body << "\n" << p.errors() );
+        REQUIRE( p.has_errors() );
+    }
+}
+
+// D15: a construct with no effect is an error. `free( p )` has one and must be allowed to stand
+// alone; `alloc<T>()` has none that survives - the pointer is dropped and the memory leaks.
+TEST_CASE( "parser_applies_d15_to_alloc_and_free", "[parse][alloc]" )
+{
+    SECTION( "`free( p );` is a statement" )
+    {
+        const Parsed p( "i32 main() { i32* n = nullptr; unsafe { free( n ); } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+    }
+
+    SECTION( "`alloc<T>();` alone is not" )
+    {
+        const Parsed p( "i32 main() { unsafe { alloc<i32>(); } return 0; }" );
+
+        REQUIRE( p.has_errors() );
+        INFO( p.errors() );
+        REQUIRE( p.errors().find( "no effect" ) != std::string::npos );
+    }
+}
+
+// Both are keywords, so neither can be a name. Worth pinning: it is the visible cost of the
+// spelling, and it broke two existing tests the day it landed.
+TEST_CASE( "parser_reserves_alloc_and_free", "[parse][alloc]" )
+{
+    for( const char* source : {
+             "i32 main() { i32 alloc = 1; return alloc; }",
+             "i32 main() { i32 free = 1; return free; }",
+             "i32 alloc( i32 v ) { return v; }",
+             "i32 free( i32 v ) { return v; }",
+             "extern u8* alloc( u64 n );",
+             "extern void free( u8* p );",
+             "struct S { i32 alloc; };",
+         } )
+    {
+        const Parsed p( source );
+
+        INFO( source << "\n" << p.errors() );
+        REQUIRE( p.has_errors() );
     }
 }
 

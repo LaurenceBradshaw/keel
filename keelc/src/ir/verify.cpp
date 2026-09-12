@@ -115,6 +115,11 @@ void check_rvalue( const Function& func, const Rvalue& value, std::string_view w
 
         return;
     }
+    case Rvalue_kind::Allocate:
+        return;
+    case Rvalue_kind::Release:
+        operand_at( value.a, "operand" );
+        return;
     }
 }
 

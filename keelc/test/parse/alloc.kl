@@ -1,0 +1,24 @@
+// `alloc<T>()` carries a type argument, so the `<` can only be a bracket - that is the whole reason
+// it is a keyword rather than a function. `free( p )` is its pair, and is one of the two expression
+// kinds D15 accepts as a statement on its own.
+struct Node
+{
+    i32   value;
+    Node* next;
+};
+
+i32 main()
+{
+    unsafe
+    {
+        Node* n = alloc<Node>();
+        i32*  v = alloc<i32>();
+        i32** p = alloc<i32*>();
+
+        free( p );
+        free( v );
+        free( n );
+    }
+
+    return 0;
+}

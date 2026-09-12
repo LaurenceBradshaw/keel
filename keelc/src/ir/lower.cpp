@@ -940,6 +940,20 @@ Operand Lowering::lower_expression( Node_id id )
     case Node_kind::Cast_expr:
         // TODO: distinguish between cast and wrap.
         return converted( lower_expression( ast_.children( id )[1] ), types_.type_of( id ), ast_.span( id ) );
+    case Node_kind::Alloc_expr:
+    {
+        const Type_id type = types_.type_of( id );
+        return copy( builder_.place( builder_.into_temp( allocate( type ), type, ast_.span( id ) ) ), type );
+    }
+    case Node_kind::Free_expr:
+    {
+        const Operand target = lower_expression( ast_.children( id )[0] );
+        const Type_id type   = types_.table().builtin( Type_kind::Void );
+
+        // Into a void temp, exactly as a void call already lowers: KIR keeps Assign total and the
+        // emitter drops a destination it cannot declare.
+        return copy( builder_.place( builder_.into_temp( release( target ), type, ast_.span( id ) ) ), type );
+    }
     // Reading a place is a copy of it - no temporary, because a place is already readable. That is
     // the whole of what lower_place buys in value position.
     case Node_kind::Field_expr:

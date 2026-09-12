@@ -113,6 +113,10 @@ struct Printer
 
             return fmt::format( "call {}({})", name_of( value.callee ), arguments );
         }
+        case Rvalue_kind::Allocate:
+            return fmt::format( "allocate {}", type_name( value.type ) );
+        case Rvalue_kind::Release:
+            return fmt::format( "release {}", operand( value.a ) );
         }
 
         return "<bad rvalue>";

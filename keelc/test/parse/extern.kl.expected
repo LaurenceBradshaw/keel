@@ -5,12 +5,12 @@ Source_file                             3:1-20:1
       Param_decl                        3:17-3:22   name=v
         Named_type                      3:17-3:20   "i32"
     <none>                              -
-  Function_decl                         5:1-5:27    name=alloc
+  Function_decl                         5:1-5:29    name=reserve
     Pointer_type                        5:8-5:11
       Named_type                        5:8-5:10    "u8"
-    Param_list                          5:17-5:26
-      Param_decl                        5:19-5:24   name=n
-        Named_type                      5:19-5:22   "u64"
+    Param_list                          5:19-5:28
+      Param_decl                        5:21-5:26   name=n
+        Named_type                      5:21-5:24   "u64"
     <none>                              -
   Function_decl                         7:1-7:19    name=rand
     Named_type                          7:8-7:11    "i32"

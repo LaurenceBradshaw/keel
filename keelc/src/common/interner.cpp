@@ -19,7 +19,7 @@ Interner::Interner()
         // New Keel keywords
         "move",     "out",      "ref",     "cast",     "wrap",    "this",
 
-        "extern"
+        "extern",   "alloc",    "free"
     };
     // clang-format on
 

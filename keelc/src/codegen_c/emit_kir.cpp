@@ -33,6 +33,7 @@ private:
     void emit_enums();
     void emit_globals();
     void emit_prototypes();
+    void emit_runtime_prototypes();
     void emit_externs();
     void emit_functions();
     void emit_main_shim();
@@ -42,6 +43,8 @@ private:
     void emit_function( const Function& function );
 
     std::string local_name( u32 index ) const;
+
+    bool uses_runtime() const;
 
     // A void local is never declared: C has no such object, and nothing reads one. Testing the
     // *kind* rather than is_valid() - a void local's Type_id is perfectly valid, it just names the
@@ -96,6 +99,7 @@ std::string Kir_emitter::run()
     emit_structs();
     emit_enums();
     emit_globals();
+    emit_runtime_prototypes();
     emit_externs();
     emit_prototypes();
     emit_functions();
@@ -249,6 +253,18 @@ void Kir_emitter::emit_prototypes()
         write_line( prototype( function.declaration ) + ";" );
     }
 
+    write_line( "" );
+}
+
+void Kir_emitter::emit_runtime_prototypes()
+{
+    if( !uses_runtime() )
+    {
+        return;
+    }
+
+    write_line( "void* kl_rt_alloc( size_t );" );
+    write_line( "void  kl_rt_free( void* );" );
     write_line( "" );
 }
 
@@ -495,6 +511,32 @@ std::string Kir_emitter::local_name( u32 index ) const
     return local.name.is_valid() ? mangle_local( interner_.text( local.name ), index ) : fmt::format( "kl_t{}", index );
 }
 
+// Asked of KIR rather than the tree: the question is whether the C about to be written calls the
+// runtime, and KIR is what it is written from. The tree would answer it twice over wrongly - an
+// alloc is buried in a function body rather than being a top-level declaration, and the day
+// something other than an Alloc_expr lowers to an allocation the scan would quietly stop finding
+// it and the emitted C would stop linking.
+bool Kir_emitter::uses_runtime() const
+{
+    for( const Function& function : functions_ )
+    {
+        for( const Statement& statement : function.statements )
+        {
+            if( statement.kind != Statement_kind::Assign )
+            {
+                continue;
+            }
+
+            if( statement.value.kind == Rvalue_kind::Allocate || statement.value.kind == Rvalue_kind::Release )
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 Type_id Kir_emitter::type_of( const Place& place ) const
 {
     Type_id type = place.is_global() ? types_.type_of( place.global ) : current_->locals[place.local.v].type;
@@ -607,6 +649,16 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue ) const
         }
         return fmt::format( "{}( {} )", spelling_.function( rvalue.callee ), args );
     }
+    case Rvalue_kind::Allocate:
+        // The element type gives the size, which is the whole reason `alloc` is a keyword rather
+        // than a function: no `sizeof` is written and none can be got wrong.
+        return fmt::format(
+            "( {} ) kl_rt_alloc( sizeof( {} ) )",
+            spelling_.type( rvalue.type ),
+            spelling_.type( types_.table().get( rvalue.type ).element )
+        );
+    case Rvalue_kind::Release:
+        return fmt::format( "kl_rt_free( {} )", operand( rvalue.a ) );
 
     default:
         assert( false && "unknown rvalue kind" );
@@ -879,11 +931,11 @@ TEST_CASE( "emit_kir_declares_every_extern", "[codegen][kir][extern]" )
 
     SECTION( "a pointer signature spells C pointers" )
     {
-        Generated g( "extern u8* alloc( u64 n );\ni32 main() { return 0; }" );
+        Generated g( "extern u8* reserve( u64 n );\ni32 main() { return 0; }" );
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "uint8_t* alloc( uint64_t );" ) );
+        REQUIRE( g.has( "uint8_t* reserve( uint64_t );" ) );
     }
 
     SECTION( "the declarations precede the definitions that call them" )
@@ -928,6 +980,176 @@ TEST_CASE( "emit_kir_spells_an_extern_binding_as_a_pointer", "[codegen][kir][ext
         INFO( g.c );
         REQUIRE( g.clean() );
         REQUIRE( g.has( "int32_t* peek( void );" ) );
+    }
+}
+
+// The element type gives the size, which is the whole reason `alloc` is a keyword: no `sizeof` is
+// written in Keel and none can be got wrong.
+TEST_CASE( "emit_kir_writes_an_allocation", "[codegen][kir][alloc]" )
+{
+    SECTION( "a struct" )
+    {
+        Generated g( "struct N { i32 v; };\ni32 main() { unsafe { N* n = alloc<N>(); free( n ); } return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "( struct kl__N* ) kl_rt_alloc( sizeof( struct kl__N ) )" ) );
+    }
+
+    SECTION( "a builtin" )
+    {
+        Generated g( "i32 main() { unsafe { i32* n = alloc<i32>(); free( n ); } return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "( int32_t* ) kl_rt_alloc( sizeof( int32_t ) )" ) );
+    }
+
+    SECTION( "a pointer" )
+    {
+        Generated g( "i32 main() { unsafe { i32** n = alloc<i32*>(); free( n ); } return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "( int32_t** ) kl_rt_alloc( sizeof( int32_t* ) )" ) );
+    }
+
+    SECTION( "free is a statement of its own, with no destination" )
+    {
+        // void is not a type C can declare a local of, so the release has nowhere to be assigned -
+        // the same rule a void call already goes through.
+        Generated g( "i32 main() { unsafe { i32* n = alloc<i32>(); free( n ); } return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "kl_rt_free( kl_n_1 );" ) );
+        REQUIRE_FALSE( g.has( "= kl_rt_free" ) );
+    }
+
+    SECTION( "neither runs a constructor or a destructor" )
+    {
+        // `alloc` is memory, not an object. Pinned in the backend as well as the checker because
+        // this is where a future `Owned<T>` would have to start emitting the calls.
+        Generated g( "class C { i32 x; C( i32 v ) { x = v; } ~C() { } };\n"
+                     "i32 main() { unsafe { C* p = alloc<C>(); free( p ); } return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+
+        // The destructor is still *defined* - `C` has one - but nothing in main calls it.
+        const std::size_t body = g.c.find( "int32_t kl__main__( void )\n{" );
+
+        REQUIRE( body != std::string::npos );
+        REQUIRE( g.c.find( "kl__C__dtor(", body ) == std::string::npos );
+        REQUIRE( g.c.find( "ctor", body ) == std::string::npos );
+    }
+}
+
+// The bug this replaced could never fire: it scanned the top-level declarations for an Alloc_expr,
+// which lives inside a function body. Every program came out claiming it used no runtime, and the
+// emitted C called kl_rt_alloc undeclared.
+TEST_CASE( "emit_kir_declares_the_runtime_when_it_is_used", "[codegen][kir][alloc]" )
+{
+    const std::string_view alloc_prototype = "void* kl_rt_alloc( size_t );";
+    const std::string_view free_prototype  = "void  kl_rt_free( void* );";
+
+    SECTION( "a program that allocates gets both" )
+    {
+        Generated g( "i32 main() { unsafe { i32* n = alloc<i32>(); free( n ); } return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( alloc_prototype ) );
+        REQUIRE( g.has( free_prototype ) );
+    }
+
+    SECTION( "one that only allocates still gets both" )
+    {
+        Generated g( "i32 main() { i32* n = nullptr; unsafe { n = alloc<i32>(); } return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( alloc_prototype ) );
+        REQUIRE( g.has( free_prototype ) );
+    }
+
+    SECTION( "one that only frees still gets both" )
+    {
+        Generated g( "i32 main() { i32* n = nullptr; unsafe { free( n ); } return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( alloc_prototype ) );
+        REQUIRE( g.has( free_prototype ) );
+    }
+
+    SECTION( "one that does neither gets neither" )
+    {
+        // Not cosmetic: emitting them unconditionally would churn every golden in the corpus for
+        // programs that never touch the heap.
+        Generated g( "i32 main() { i32 x = 1; return x; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE_FALSE( g.has( "kl_rt_" ) );
+    }
+
+    SECTION( "an allocation buried several levels down is still found" )
+    {
+        // The shape the old scan missed. An alloc is never a top-level declaration.
+        Generated g( "i32 main()\n"
+                     "{\n"
+                     "    i32 i = 0;\n"
+                     "    unsafe\n"
+                     "    {\n"
+                     "        while( i < 2 )\n"
+                     "        {\n"
+                     "            if( i == 0 )\n"
+                     "            {\n"
+                     "                i32* n = alloc<i32>();\n"
+                     "                free( n );\n"
+                     "            }\n"
+                     "            i = i + 1;\n"
+                     "        }\n"
+                     "    }\n"
+                     "    return 0;\n"
+                     "}" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( alloc_prototype ) );
+    }
+
+    SECTION( "an allocation in a function other than main is found" )
+    {
+        Generated g( "i32* make() { i32* n = nullptr; unsafe { n = alloc<i32>(); } return n; }\n"
+                     "i32 main() { return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( alloc_prototype ) );
+    }
+
+    SECTION( "one in a method is found" )
+    {
+        Generated g( "class C { i32* p; C() { unsafe { p = alloc<i32>(); } } ~C() { unsafe { free( p ); } } };\n"
+                     "i32 main() { C c = C(); return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( alloc_prototype ) );
+    }
+
+    SECTION( "the declarations precede every use" )
+    {
+        Generated g( "i32 main() { unsafe { i32* n = alloc<i32>(); free( n ); } return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+
+        // C needs them first, and the emitter's ordering in run() is the only thing that says so.
+        REQUIRE( g.c.find( alloc_prototype ) < g.c.find( "kl_rt_alloc( sizeof" ) );
+        REQUIRE( g.c.find( free_prototype ) < g.c.find( "kl_rt_free( kl_" ) );
     }
 }
 

@@ -1,0 +1,37 @@
+error: `alloc` needs an `unsafe` block
+ --> sema/errors_alloc.kl:6:15
+  |
+6 |     Node* n = alloc<Node>();
+  |               ^^^^^^^^^^^^^ it hands back memory that does not hold a value yet, so the pointer's type is a claim rather than a fact
+
+error: `free` needs an `unsafe` block
+ --> sema/errors_alloc.kl:8:5
+  |
+8 |     free( n );
+  |     ^^^^^^^^^ the compiler cannot tell whether anything still points at it
+
+error: expected `i32*`, but got `Node*`
+  --> sema/errors_alloc.kl:19:18
+   |
+19 |         i32* n = alloc<Node>();
+   |                  ^^^^^^^^^^^^^
+
+error: `free` needs a pointer, but got `i32`
+  --> sema/errors_alloc.kl:21:9
+   |
+21 |         free( v );
+   |         ^^^^^^^^^
+
+error: an `unsafe` block that does nothing unsafe
+  --> sema/errors_alloc.kl:29:5
+   |
+29 |     unsafe
+   |     ^^^^^^ remove `unsafe`
+
+error: `alloc` needs a type to allocate
+  --> sema/errors_alloc.kl:31:18
+   |
+31 |         i32* n = alloc<void>();
+   |                  ^^^^^^^^^^^^^ `void` has no size
+
+6 errors generated

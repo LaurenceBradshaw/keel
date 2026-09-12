@@ -111,7 +111,9 @@ enum class Rvalue_kind : u8
     Unary,
     Cast,
     Call,
-    Address_of // reads a.place; the address is not a copy of what lives there
+    Address_of, // reads a.place; the address is not a copy of what lives there
+    Allocate,
+    Release
 };
 
 // How a value is produced. One tagged struct rather than a variant hierarchy, as Node and Type
@@ -251,6 +253,16 @@ inline Rvalue unary( Token_kind op, Operand a, Type_id type )
 inline Rvalue cast_to( Operand a, Type_id type )
 {
     return Rvalue { .kind = Rvalue_kind::Cast, .type = type, .a = a };
+}
+
+inline Rvalue allocate( Type_id type ) // type is the *pointer* type; element comes off it
+{
+    return Rvalue { .kind = Rvalue_kind::Allocate, .type = type };
+}
+
+inline Rvalue release( Operand a ) // type is void
+{
+    return Rvalue { .kind = Rvalue_kind::Release, .type = Type_id {}, .a = a };
 }
 
 // The operand carries only its place. An address is not a read of what lives there, so the

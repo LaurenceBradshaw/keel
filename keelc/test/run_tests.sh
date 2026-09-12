@@ -23,6 +23,8 @@
 #                     M3's acceptance is that a destructor frees exactly once, which a golden
 #                     exit code cannot see - a double free or a leak both still exit 0.
 #   KEEL_CFLAGS flags for it                      (default: -std=c11 -Wall -Wextra -Werror)
+#   KEEL_RT     the C runtime source to link in   (default: ../../keel_rt/src/kl_rt.c, skipped
+#               if absent - a program that allocates will then fail to link, which is the point)
 #   KEEL_ARTIFACTS  where the .c and binaries go  (default: ../../build/test-artifacts)
 #
 #   run_tests.sh <path-to-keelc>            check
@@ -56,6 +58,25 @@ fi
 
 # Paths appear in diagnostics, so run from tests/ to keep them stable regardless of caller cwd.
 cd "$( dirname "$0" )" || exit 2
+
+# The C floor a generated program links against. Compiled from source beside the emitted .c rather
+# than linked from a build directory: the suite then needs to know nothing about presets or
+# configurations, and it uses the same $CC a real Keel program would.
+#
+# Resolved after the cd above, so this is simply a path rather than a computation that can fail and
+# leave a plausible-looking wrong value behind. Empty while the runtime does not exist, so keelc
+# stays testable before it is written - and a *missing* one is reported here rather than as a
+# confusing error from the C compiler.
+runtime_sources="${KEEL_RT:-../../keel_rt/src/kl_rt.c}"
+
+if [ ! -f "$runtime_sources" ]; then
+    if [ -n "${KEEL_RT:-}" ]; then
+        echo "run_tests.sh: KEEL_RT names '$runtime_sources', which is not a file" >&2
+        exit 2
+    fi
+
+    runtime_sources=""
+fi
 
 cc="${CC:-cc}"
 # -Werror, because a warning in emitted C is the compiler saying the code means something other
@@ -138,7 +159,7 @@ check_run()
     cp "$out" "$source_c"
 
     # Unquoted on purpose: cflags is a list of arguments, not one.
-    if ! $cc $cflags -o "$stem" "$source_c" > "$build_log" 2>&1; then
+    if ! $cc $cflags -o "$stem" "$source_c" $runtime_sources > "$build_log" 2>&1; then
         echo "    the emitted C did not compile:"
         sed 's/^/      /' < "$build_log"
         echo "      kept at ${source_c}"

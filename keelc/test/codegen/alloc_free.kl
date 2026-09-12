@@ -1,0 +1,67 @@
+// M5.5's acceptance under option (b): a data structure whose nodes are allocated one at a time,
+// linked together, walked, and freed. The exit code is the sum, so a node lost or a link misread
+// shows up as a wrong answer rather than as a passing golden - and KEEL_VALGRIND=1 is what sees
+// the difference between freeing once and freeing twice, which an exit code cannot.
+struct Node
+{
+    i32   value;
+    Node* next;
+};
+
+// The safe wrapper over the unchecked boundary: `unsafe` stops here rather than reaching callers.
+Node* push( Node* head, i32 value )
+{
+    Node* node = nullptr;
+
+    unsafe
+    {
+        node = alloc<Node>();
+    }
+
+    // Written outside the block: reaching through the pointer is an ordinary operation (D22), and
+    // only obtaining it needed the assertion.
+    node.value = value;
+    node.next  = head;
+
+    return node;
+}
+
+i32 sum_and_release( Node* head )
+{
+    i32 total = 0;
+
+    while( head != nullptr )
+    {
+        Node* next = head.next;
+
+        total = total + head.value;
+
+        unsafe
+        {
+            free( head );
+        }
+
+        head = next;
+    }
+
+    return total;
+}
+
+i32 main()
+{
+    Node* head = nullptr;
+    i32   i = 1;
+
+    while( i < 5 )
+    {
+        head = push( head, i * 3 );
+        i    = i + 1;
+    }
+
+    // A single node allocated and released on its own, to prove the one-element path works too.
+    Node* lone = push( nullptr, 12 );
+
+    i32 total = sum_and_release( head ) + sum_and_release( lone );
+
+    return total; // (3 + 6 + 9 + 12) + 12 = 42
+}

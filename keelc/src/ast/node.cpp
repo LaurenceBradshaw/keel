@@ -111,6 +111,10 @@ std::string_view node_kind_name( Node_kind kind )
         return "Binding_decl";
     case Node_kind::Method_decl:
         return "Method_decl";
+    case Node_kind::Alloc_expr:
+        return "Alloc_expr";
+    case Node_kind::Free_expr:
+        return "Free_expr";
 
     case Node_kind::Count:
         break;
