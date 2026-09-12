@@ -1,0 +1,19 @@
+error: converting between pointer types needs an `unsafe` block
+ --> sema/errors_unsafe.kl:8:16
+  |
+8 |     u8* bare = cast<u8*>( address );
+  |                ^^^^^^^^^^^^^^^^^^^^ the compiler cannot check that the target type describes what is there
+
+error: an `unsafe` block that does nothing unsafe
+  --> sema/errors_unsafe.kl:10:5
+   |
+10 |     unsafe
+   |     ^^^^^^ remove `unsafe`
+
+error: an `unsafe` block inside another one
+  --> sema/errors_unsafe.kl:19:9
+   |
+19 |         unsafe
+   |         ^^^^^^ the enclosing block already permits it
+
+3 errors generated

@@ -1,0 +1,39 @@
+// A pointer conversion emits a plain C cast, so the whole gate is a front-end rule - this runs to
+// prove the permitted form still produces working code, and that a round trip through `u8*` keeps
+// the address it started with.
+i32 bump_through_bytes( i32* target )
+{
+    unsafe
+    {
+        u8*  bytes = cast<u8*>( target );
+        i32* back  = cast<i32*>( bytes );
+
+        *back = *back + 1;
+    }
+
+    return *target;
+}
+
+i32 main()
+{
+    i32 value = 40;
+
+    i32 once = bump_through_bytes( &value );
+
+    // The block is a scope like any other, so `held` does not escape it.
+    unsafe
+    {
+        u8* held = cast<u8*>( &value );
+
+        i32* restored = cast<i32*>( held );
+
+        *restored = *restored + 1;
+    }
+
+    if( once != 41 )
+    {
+        return 1;
+    }
+
+    return value; // 42
+}

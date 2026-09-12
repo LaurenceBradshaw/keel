@@ -78,6 +78,12 @@ std::string aux_note( const Ast& ast, const Interner& interner, Node_id id, std:
         return fmt::format( "mode={}", mode );
     }
 
+    case Node_kind::Block:
+    {
+        const u32 aux = ast.aux( id );
+        return aux == 1 ? "unsafe" : std::string {};
+    }
+
     default:
         return {};
     }

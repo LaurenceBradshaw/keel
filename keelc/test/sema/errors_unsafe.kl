@@ -1,0 +1,26 @@
+// The gate and the two rules around it: an operation that needs permission and has none, a block
+// that asks for permission it does not use, and a block inside one that already grants it.
+i32 main()
+{
+    i32  x = 1;
+    i32* address = &x;
+
+    u8* bare = cast<u8*>( address );
+
+    unsafe
+    {
+        i32 nothing = 2;
+    }
+
+    unsafe
+    {
+        u8* allowed = cast<u8*>( address );
+
+        unsafe
+        {
+            u8* again = cast<u8*>( address );
+        }
+    }
+
+    return 0;
+}

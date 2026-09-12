@@ -22,11 +22,11 @@ error: `wrap` cannot convert `bool` to `i32`
 16 |     i32 counted = wrap<i32>( flag );
    |                   ^^^^^^^^^^^^^^^^^ `wrap` keeps the low bits of an integer; use `cast` here
 
-error: converting between pointer types is not supported yet
+error: converting between pointer types needs an `unsafe` block
   --> sema/errors_conversions.kl:17:18
    |
 17 |     u8* recast = cast<u8*>( address );
-   |                  ^^^^^^^^^^^^^^^^^^^^
+   |                  ^^^^^^^^^^^^^^^^^^^^ the compiler cannot check that the target type describes what is there
 
 error: `cast` cannot convert `Point` to `i32`
   --> sema/errors_conversions.kl:18:21

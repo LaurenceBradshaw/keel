@@ -1,0 +1,25 @@
+// An unsafe block is a Block carrying aux 1, so the dump is the only place the marker is visible -
+// no span distinguishes it from an ordinary block.
+i32 main()
+{
+    i32 x = 1;
+
+    unsafe
+    {
+        i32* q = &x;
+    }
+
+    {
+        i32 plain = 2;
+    }
+
+    if( x == 1 )
+    {
+        unsafe
+        {
+            i32 nested = 3;
+        }
+    }
+
+    return 0;
+}

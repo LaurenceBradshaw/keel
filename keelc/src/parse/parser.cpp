@@ -100,7 +100,8 @@ private:
 
     // --- statements ---
 
-    Node_id parse_block();
+    Node_id parse_block( u32 aux = 0, Span opening = Span {} );
+    Node_id parse_unsafe_block();
     Node_id parse_statement();
 
     // Decides whether a statement starting with an identifier is a declaration. A scan, not a trial
@@ -1193,9 +1194,9 @@ Node_id Parser::parse_param()
     return ast_.add( Node_kind::Param_decl, Span::merge( start, previous().span ), name.v, { type } );
 }
 
-Node_id Parser::parse_block()
+Node_id Parser::parse_block( u32 aux, Span opening )
 {
-    const Span start = peek().span;
+    const Span start = opening.is_valid() ? opening : peek().span;
 
     // Report a missing brace but carry on: the statements after it are still worth parsing, and
     // synchronising here would swallow them.
@@ -1219,7 +1220,21 @@ Node_id Parser::parse_block()
 
     expect( Token_kind::R_brace );
 
-    return ast_.add( Node_kind::Block, Span::merge( start, previous().span ), 0, statements );
+    return ast_.add( Node_kind::Block, Span::merge( start, previous().span ), aux, statements );
+}
+
+Node_id Parser::parse_unsafe_block()
+{
+    const Span start = peek().span;
+    advance(); // the `unsafe` keyword
+
+    if( !check( Token_kind::L_brace ) )
+    {
+        error_at( start, "`unsafe` must be followed by a block", "write `unsafe { ... }`" );
+        return error_node( Span::merge( start, previous().span ) );
+    }
+
+    return parse_block( 1, start );
 }
 
 bool Parser::peek_is_adjacent() const
@@ -1458,6 +1473,11 @@ Node_id Parser::parse_statement()
         advance();
         expect( Token_kind::Semicolon );
         return ast_.add( Node_kind::Continue_stmt, Span::merge( start, previous().span ), 0, {} );
+    }
+
+    if( check_keyword( Keyword::Unsafe ) )
+    {
+        return parse_unsafe_block();
     }
 
     if( check( Token_kind::L_brace ) )
@@ -4135,6 +4155,148 @@ TEST_CASE( "parser_nested_blocks", "[parse]" )
         INFO( p.errors() );
         REQUIRE( p.errors().find( "expected `}`" ) != std::string::npos );
     }
+}
+
+// An unsafe block is a Block carrying aux 1, not a kind of its own: every pass that already walks
+// blocks - scoping, lowering, drop placement - then handles it without being told.
+TEST_CASE( "parser_parses_an_unsafe_block", "[parse][unsafe]" )
+{
+    SECTION( "it is a Block, marked" )
+    {
+        const Parsed p( "i32 main() { unsafe { } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id body  = p.child( p.child( p.root(), 0 ), 2 );
+        const Node_id block = p.child( body, 0 );
+
+        REQUIRE( p.kind( block ) == Node_kind::Block );
+        REQUIRE( p.aux( block ) == 1 );
+    }
+
+    SECTION( "an ordinary block is not marked" )
+    {
+        const Parsed p( "i32 main() { { } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id body = p.child( p.child( p.root(), 0 ), 2 );
+
+        REQUIRE( p.kind( p.child( body, 0 ) ) == Node_kind::Block );
+        REQUIRE( p.aux( p.child( body, 0 ) ) == 0 );
+
+        // The function body itself is a Block too, and it must not pick the flag up.
+        REQUIRE( p.aux( body ) == 0 );
+    }
+
+    SECTION( "the span covers the keyword" )
+    {
+        const Parsed p( "i32 main() { unsafe { } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id block = p.child( p.child( p.child( p.root(), 0 ), 2 ), 0 );
+
+        // Not just "{ }" - the diagnostic for an unsafe block that needs nothing underlines the
+        // whole construct, and a span starting at the brace would point past the word at fault.
+        REQUIRE( p.text( block ) == "unsafe { }" );
+    }
+
+    SECTION( "statements inside are parsed normally" )
+    {
+        const Parsed p( "i32 main() { unsafe { i32 x = 1; x = 2; } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id block = p.child( p.child( p.child( p.root(), 0 ), 2 ), 0 );
+
+        REQUIRE( p.children( block ).size() == 2 );
+        REQUIRE( p.kind( p.child( block, 0 ) ) == Node_kind::Var_decl );
+        REQUIRE( p.kind( p.child( block, 1 ) ) == Node_kind::Assign_stmt );
+    }
+
+    SECTION( "it nests inside other statements" )
+    {
+        const Parsed p( "i32 main() { if( true ) { unsafe { } } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id inner = find_first( p.ast(), p.root(), Node_kind::If_stmt );
+        REQUIRE( inner.is_valid() );
+
+        const Node_id then = p.child( inner, 1 );
+        REQUIRE( p.kind( then ) == Node_kind::Block );
+        REQUIRE( p.aux( then ) == 0 );
+        REQUIRE( p.aux( p.child( then, 0 ) ) == 1 );
+    }
+
+    SECTION( "one unsafe block does not mark the next" )
+    {
+        const Parsed p( "i32 main() { unsafe { } { } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id body = p.child( p.child( p.root(), 0 ), 2 );
+
+        REQUIRE( p.aux( p.child( body, 0 ) ) == 1 );
+        REQUIRE( p.aux( p.child( body, 1 ) ) == 0 );
+    }
+}
+
+TEST_CASE( "parser_rejects_unsafe_without_a_block", "[parse][unsafe]" )
+{
+    // `unsafe` marks a region, so there is no statement form of it - `unsafe f();` would leave the
+    // extent of the permission to a reader's guess.
+    SECTION( "followed by a statement" )
+    {
+        const Parsed p( "i32 main() { unsafe return 0; }" );
+
+        REQUIRE( p.has_errors() );
+        INFO( p.errors() );
+        REQUIRE( p.errors().find( "unsafe" ) != std::string::npos );
+    }
+
+    SECTION( "at the end of a body" )
+    {
+        const Parsed p( "i32 main() { unsafe }" );
+
+        REQUIRE( p.has_errors() );
+    }
+
+    SECTION( "in expression position" )
+    {
+        const Parsed p( "i32 main() { i32 x = unsafe { }; return 0; }" );
+
+        REQUIRE( p.has_errors() );
+    }
+
+    SECTION( "as a declaration" )
+    {
+        const Parsed p( "unsafe i32 main() { return 0; }" );
+
+        // Deferred to the `extern` slice, which is the only thing that needs "unsafe to call".
+        // Until then it must be refused rather than silently ignored.
+        REQUIRE( p.has_errors() );
+    }
+}
+
+// The dumper is how the golden suite sees the flag at all: aux carries it, and no span does.
+TEST_CASE( "parser_dump_shows_an_unsafe_block", "[parse][unsafe]" )
+{
+    const Parsed marked( "i32 main() { unsafe { } return 0; }" );
+    const Parsed plain( "i32 main() { { } return 0; }" );
+
+    INFO( marked.dump() );
+    REQUIRE( marked.dump().find( "unsafe" ) != std::string::npos );
+
+    INFO( plain.dump() );
+    REQUIRE( plain.dump().find( "unsafe" ) == std::string::npos );
 }
 
 TEST_CASE( "parser_dump_matches_the_tree", "[parse]" )

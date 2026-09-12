@@ -457,6 +457,7 @@ private:
     void visit_for( Node_id id );
     void visit_increment( Node_id id );
     void visit_global( Node_id id );
+    void visit_block( Node_id id );
 
     std::optional<i64> fold_bound( Node_id bound, Type_id expected );
 
@@ -538,7 +539,9 @@ private:
     bool    constructing_ = false;
     Node_id current_function_; // whose annotation the escape rule reads
 
-    u32 loop_depth_ = 0; // for break/continue
+    u32  loop_depth_   = 0; // for break/continue
+    u32  unsafe_depth_ = 0; // an unsafe operation is permitted while this is non-zero
+    bool unsafe_used_  = false;
 
     // One per file-scope initialiser. Every accepted one must fold - the rule already requires a
     // constant expression - so a missing entry is an internal error, not a user's mistake.
@@ -1475,6 +1478,8 @@ void Checker::visit( Node_id id )
 
         return;
     }
+    case Node_kind::Block:
+        return visit_block( id );
 
     case Node_kind::Expr_stmt:
         infer( ast_.children( id )[0] );
@@ -2389,6 +2394,44 @@ void Checker::visit_global( Node_id id )
             id.v, Constant_value { Constant_value::Kind::Integer, value.value.magnitude, value.value.negative, 0.0 }
         );
     }
+}
+
+void Checker::visit_block( Node_id id )
+{
+    if( ast_.aux( id ) != 1 )
+    {
+        for( const Node_id child : ast_.children( id ) )
+        {
+            visit( child );
+        }
+        return;
+    }
+
+    if( unsafe_depth_ > 0 )
+    {
+        error_at( ast_.span( id ), "an `unsafe` block inside another one", "the enclosing block already permits it" );
+    }
+
+    // Saved and restored, not just cleared: the flag answers "did *this* block use its
+    // permission", and an inner block must not spend an outer one's.
+    const bool enclosing_used = unsafe_used_;
+
+    unsafe_used_ = false;
+    unsafe_depth_ += 1;
+
+    for( const Node_id child : ast_.children( id ) )
+    {
+        visit( child );
+    }
+
+    unsafe_depth_ -= 1;
+
+    if( !unsafe_used_ )
+    {
+        error_at( ast_.span( id ), "an `unsafe` block that does nothing unsafe", "remove `unsafe`" );
+    }
+
+    unsafe_used_ = enclosing_used;
 }
 
 Type_id Checker::infer( Node_id id )
@@ -3704,7 +3747,18 @@ Type_id Checker::infer_cast( Node_id id )
     }
 
     case Conversion::Unsafe:
-        return reject( "converting between pointer types is not supported yet" );
+    {
+
+        if( unsafe_depth_ == 0 )
+        {
+            return reject(
+                "converting between pointer types needs an `unsafe` block",
+                "the compiler cannot check that the target type describes what is there"
+            );
+        }
+        unsafe_used_ = true;
+        break;
+    }
 
     case Conversion::Cast_only:
         if( !is_cast )
@@ -6156,15 +6210,15 @@ TEST_CASE( "type_checker_rejects_the_conversions_outside_the_table", "[sema][typ
         REQUIRE( p.errors() == 1 );
     }
 
-    // A real conversion, held back for the unsafe gate rather than rejected as nonsense - so it
-    // gets its own message.
-    SECTION( "a pointer conversion is not supported yet" )
+    // A real conversion rather than nonsense, so it is gated rather than refused - the one cell of
+    // the table `unsafe` opens. See the [unsafe] cases for the gate itself.
+    SECTION( "a pointer conversion needs an unsafe block" )
     {
         const Typed p( "i32 main() { i32 x = 1; i32* q = &x; u8* r = cast<u8*>( q ); return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "not supported yet" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`unsafe` block" ) != std::string::npos );
     }
 
     SECTION( "an unknown target type is reported once" )
@@ -6316,6 +6370,258 @@ TEST_CASE( "type_checker_uses_a_conversion_as_an_ordinary_expression", "[sema][t
 // failed there is nothing for it to adopt from - and asking it anyway makes it report that, on top
 // of the error that is the actual cause. `nullptr` is the one that shows this, because it is the
 // only literal with no default type to fall back on.
+// The gate, and its one customer. A pointer conversion is a real conversion the compiler cannot
+// verify - the target type is an assertion about what is at that address - so it is the operation
+// `unsafe` was built to permit. Nothing else is gated yet: raw-pointer dereference stays safe until
+// the enumerated list is settled, and `extern` arrives with its own slice.
+TEST_CASE( "type_checker_gates_a_pointer_conversion_on_unsafe", "[sema][types][unsafe]" )
+{
+    SECTION( "refused outside an unsafe block" )
+    {
+        const Typed p( "i32 main() { i32 x = 1; i32* q = &x; u8* r = cast<u8*>( q ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "unsafe" ) != std::string::npos );
+    }
+
+    SECTION( "permitted inside one" )
+    {
+        const Typed p( "i32 main() { i32 x = 1; i32* q = &x; unsafe { u8* r = cast<u8*>( q ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "the permission does not leak past the block" )
+    {
+        const Typed p( "i32 main()\n"
+                       "{\n"
+                       "    i32 x = 1;\n"
+                       "    i32* q = &x;\n"
+                       "    unsafe { u8* a = cast<u8*>( q ); }\n"
+                       "    u8* b = cast<u8*>( q );\n"
+                       "    return 0;\n"
+                       "}" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "the permission does not leak into a later function" )
+    {
+        const Typed p( "void marked( i32* q ) { unsafe { u8* a = cast<u8*>( q ); } }\n"
+                       "i32 main() { i32 x = 1; i32* q = &x; u8* b = cast<u8*>( q ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "it reaches nested statements inside the block" )
+    {
+        const Typed p( "i32 main()\n"
+                       "{\n"
+                       "    i32 x = 1;\n"
+                       "    i32* q = &x;\n"
+                       "    unsafe\n"
+                       "    {\n"
+                       "        if( x == 1 )\n"
+                       "        {\n"
+                       "            u8* r = cast<u8*>( q );\n"
+                       "        }\n"
+                       "    }\n"
+                       "    return 0;\n"
+                       "}" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "it does not reach a function called from inside it" )
+    {
+        // The block permits operations written in it, not everything it transitively reaches -
+        // otherwise the marker would say nothing about the code the reader is looking at.
+        const Typed p( "u8* reinterpret( i32* q ) { return cast<u8*>( q ); }\n"
+                       "i32 main()\n"
+                       "{\n"
+                       "    i32 x = 1;\n"
+                       "    i32* q = &x;\n"
+                       "    unsafe { u8* a = cast<u8*>( q ); u8* b = reinterpret( q ); }\n"
+                       "    return 0;\n"
+                       "}" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "unsafe" ) != std::string::npos );
+    }
+}
+
+// §12: "`unsafe` permits operations, it does not disable checks." Everything the checker does
+// outside a block it still does inside one - this is the half of the design most often got wrong.
+TEST_CASE( "type_checker_still_checks_inside_an_unsafe_block", "[sema][types][unsafe]" )
+{
+    SECTION( "types" )
+    {
+        const Typed p( "i32 main() { i32* q = nullptr; unsafe { u8* r = cast<u8*>( q ); bool b = r; } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "a conversion the table refuses outright" )
+    {
+        // Conversion::None is nonsense rather than unchecked, so `unsafe` does not unlock it.
+        const Typed p( "i32 main()\n"
+                       "{\n"
+                       "    f64 d = 1.5;\n"
+                       "    i32* q = nullptr;\n"
+                       "    unsafe { u8* r = cast<u8*>( q ); i32 x = cast<i32>( d ); }\n"
+                       "    return 0;\n"
+                       "}" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "rounding" ) != std::string::npos );
+    }
+
+    SECTION( "const" )
+    {
+        const Typed p( "i32 main()\n"
+                       "{\n"
+                       "    const i32 x = 1;\n"
+                       "    i32* q = nullptr;\n"
+                       "    unsafe { u8* r = cast<u8*>( q ); x = 2; }\n"
+                       "    return 0;\n"
+                       "}" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "`break` outside a loop" )
+    {
+        const Typed p( "i32 main()\n"
+                       "{\n"
+                       "    i32* q = nullptr;\n"
+                       "    unsafe { u8* r = cast<u8*>( q ); break; }\n"
+                       "    return 0;\n"
+                       "}" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "break" ) != std::string::npos );
+    }
+
+    SECTION( "the scope is a real one" )
+    {
+        const Typed p( "i32 main() { i32* q = nullptr; unsafe { u8* r = cast<u8*>( q ); } return wrap<i32>( r ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+}
+
+// An unsafe block over safe code is D15's shape: a construct with no effect. It is also how an
+// unsafe region grows quietly wider than the operation it was opened for.
+TEST_CASE( "type_checker_rejects_an_unsafe_block_that_needs_nothing", "[sema][types][unsafe]" )
+{
+    SECTION( "empty" )
+    {
+        const Typed p( "i32 main() { unsafe { } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "nothing" ) != std::string::npos );
+    }
+
+    SECTION( "holding only safe statements" )
+    {
+        const Typed p( "i32 main() { i32 y = 0; unsafe { y = 1; y = y + 1; } return y; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "an operation in an enclosing block does not excuse it" )
+    {
+        const Typed p( "i32 main()\n"
+                       "{\n"
+                       "    i32 x = 1;\n"
+                       "    i32* q = &x;\n"
+                       "    unsafe { u8* r = cast<u8*>( q ); }\n"
+                       "    unsafe { x = 2; }\n"
+                       "    return 0;\n"
+                       "}" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "one that is used reports nothing" )
+    {
+        const Typed p( "i32 main() { i32 x = 1; i32* q = &x; unsafe { u8* r = cast<u8*>( q ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// Permission is not cumulative, so a second marker inside the first can only mislead a reader into
+// thinking the inner region is the guarded one.
+TEST_CASE( "type_checker_rejects_a_nested_unsafe_block", "[sema][types][unsafe]" )
+{
+    SECTION( "directly nested" )
+    {
+        const Typed p( "i32 main() { i32 x = 1; i32* q = &x; unsafe { unsafe { u8* r = cast<u8*>( q ); } } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() >= 1 );
+        REQUIRE( p.rendered().find( "unsafe" ) != std::string::npos );
+    }
+
+    SECTION( "nested through an ordinary block" )
+    {
+        const Typed p( "i32 main()\n"
+                       "{\n"
+                       "    i32 x = 1;\n"
+                       "    i32* q = &x;\n"
+                       "    unsafe\n"
+                       "    {\n"
+                       "        u8* a = cast<u8*>( q );\n"
+                       "        { unsafe { u8* b = cast<u8*>( q ); } }\n"
+                       "    }\n"
+                       "    return 0;\n"
+                       "}" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() >= 1 );
+    }
+
+    SECTION( "two side by side are both fine" )
+    {
+        const Typed p( "i32 main()\n"
+                       "{\n"
+                       "    i32 x = 1;\n"
+                       "    i32* q = &x;\n"
+                       "    unsafe { u8* a = cast<u8*>( q ); }\n"
+                       "    unsafe { u8* b = cast<u8*>( q ); }\n"
+                       "    return 0;\n"
+                       "}" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "one in a function called from inside another is fine" )
+    {
+        const Typed p( "void inner( i32* q ) { unsafe { u8* a = cast<u8*>( q ); } }\n"
+                       "i32 main() { i32 x = 1; i32* q = &x; unsafe { u8* b = cast<u8*>( q ); inner( q ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
 TEST_CASE( "type_checker_absorbs_a_literal_beside_a_failed_operand", "[sema][types]" )
 {
     SECTION( "comparison, literal on the right" )
