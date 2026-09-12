@@ -67,6 +67,7 @@ enum class Node_kind : u16
     Method_decl,     // aux is the name; children are { return type, params, body }, as Function_decl
     Alloc_expr,      // `alloc<T>()`; child 0 is the type annotation, and there is no operand
     Free_expr,       // `free( p )`; child 0 is the pointer
+    Fallthrough_stmt,
 
     Count
 };

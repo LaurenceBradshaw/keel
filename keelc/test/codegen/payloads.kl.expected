@@ -33,32 +33,32 @@ double kl__area__Shape( struct kl__Shape kl_s_1 )
     double kl_t9;
 #line 23 "codegen/payloads.kl"
     kl_t2 = kl_s_1.tag == 0;
-    if ( kl_t2 ) goto bb2; else goto bb3;
+    if ( kl_t2 ) goto bb1; else goto bb4;
     bb1:
-#line 28 "codegen/payloads.kl"
-    kl_t0 = 0.0;
-    return kl_t0;
-    bb2:
-#line 23 "codegen/payloads.kl"
     kl_r_3 = kl_s_1.kl_radius_1;
 #line 24 "codegen/payloads.kl"
     kl_t4 = 3.0 * kl_r_3;
     kl_t5 = kl_t4 * kl_r_3;
     kl_t0 = kl_t5;
     return kl_t0;
-    bb3:
+    bb2:
 #line 25 "codegen/payloads.kl"
-    kl_t6 = kl_s_1.tag == 1;
-    if ( kl_t6 ) goto bb4; else goto bb5;
-    bb4:
     kl_w_7 = kl_s_1.kl_width_4;
     kl_h_8 = kl_s_1.kl_height_6;
 #line 26 "codegen/payloads.kl"
     kl_t9 = kl_w_7 * kl_h_8;
     kl_t0 = kl_t9;
     return kl_t0;
+    bb3:
+#line 28 "codegen/payloads.kl"
+    kl_t0 = 0.0;
+    return kl_t0;
+    bb4:
+#line 25 "codegen/payloads.kl"
+    kl_t6 = kl_s_1.tag == 1;
+    if ( kl_t6 ) goto bb2; else goto bb5;
     bb5:
-    goto bb1;
+    goto bb3;
 }
 
 int32_t kl__unwrap__Slot_i32( struct kl__Slot kl_s_1, int32_t kl_fallback_2 )
@@ -68,19 +68,18 @@ int32_t kl__unwrap__Slot_i32( struct kl__Slot kl_s_1, int32_t kl_fallback_2 )
     int32_t kl_v_4;
 #line 36 "codegen/payloads.kl"
     kl_t3 = kl_s_1.tag == 1;
-    if ( kl_t3 ) goto bb2; else goto bb3;
+    if ( kl_t3 ) goto bb1; else goto bb3;
     bb1:
-#line 39 "codegen/payloads.kl"
-    kl_t0 = kl_fallback_2;
-    return kl_t0;
-    bb2:
-#line 36 "codegen/payloads.kl"
     kl_v_4 = kl_s_1.kl_value_12;
 #line 37 "codegen/payloads.kl"
     kl_t0 = kl_v_4;
     return kl_t0;
+    bb2:
+#line 39 "codegen/payloads.kl"
+    kl_t0 = kl_fallback_2;
+    return kl_t0;
     bb3:
-    goto bb1;
+    goto bb2;
 }
 
 int32_t kl__main__( void )

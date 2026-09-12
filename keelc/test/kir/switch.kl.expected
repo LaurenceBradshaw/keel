@@ -6,26 +6,26 @@ fn chain {
 
     bb0:
         _2 = copy _1 == const 0
-        branch copy _2 -> bb2, bb3
+        branch copy _2 -> bb1, bb4
 
     bb1:
-        _0 = const 3
-        return
-
-    bb2:
         _0 = const 1
         return
 
-    bb3:
-        _3 = copy _1 == const 1
-        branch copy _3 -> bb4, bb5
-
-    bb4:
+    bb2:
         _0 = const 2
         return
 
+    bb3:
+        _0 = const 3
+        return
+
+    bb4:
+        _3 = copy _1 == const 1
+        branch copy _3 -> bb2, bb5
+
     bb5:
-        goto -> bb1
+        goto -> bb3
 }
 fn stacked {
     let _0: i32; // return slot
@@ -35,22 +35,22 @@ fn stacked {
 
     bb0:
         _2 = copy _1 == const 0
-        branch copy _2 -> bb2, bb3
+        branch copy _2 -> bb1, bb3
 
     bb1:
-        _0 = const 2
+        _0 = const 1
         return
 
     bb2:
-        _0 = const 1
+        _0 = const 2
         return
 
     bb3:
         _3 = copy _1 == const 2
-        branch copy _3 -> bb2, bb4
+        branch copy _3 -> bb1, bb4
 
     bb4:
-        goto -> bb1
+        goto -> bb2
 }
 fn main {
     let _0: i32; // return slot

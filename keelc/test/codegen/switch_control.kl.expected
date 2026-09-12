@@ -1,0 +1,391 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Counter;
+
+struct kl__Counter
+{
+    int32_t* kl_slot_173;
+};
+
+int32_t kl__falls__E( int32_t );
+int32_t kl__breaks_the_switch__( void );
+int32_t kl__breaks_the_loop__( void );
+int32_t kl__continues_the_loop__( void );
+void kl__Counter__Counterp_i32p( struct kl__Counter*, int32_t* );
+void kl__Counter__dtor( struct kl__Counter* );
+int32_t kl__drops_on_continue__( void );
+int32_t kl__drops_on_break__( void );
+int32_t kl__main__( void );
+
+int32_t kl__falls__E( int32_t kl_e_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t_2;
+    bool kl_t3;
+    bool kl_t4;
+    int32_t kl_t5;
+    int32_t kl_t6;
+#line 8 "codegen/switch_control.kl"
+    kl_t_2 = 0;
+#line 12 "codegen/switch_control.kl"
+    kl_t3 = kl_e_1 == 0;
+    if ( kl_t3 ) goto bb1; else goto bb4;
+    bb1:
+#line 13 "codegen/switch_control.kl"
+    kl_t_2 = 1;
+    goto bb2;
+    bb2:
+#line 16 "codegen/switch_control.kl"
+    kl_t5 = kl_t_2 + 10;
+    kl_t_2 = kl_t5;
+    goto bb3;
+    bb3:
+#line 19 "codegen/switch_control.kl"
+    kl_t6 = kl_t_2 + 100;
+    kl_t_2 = kl_t6;
+    goto bb6;
+    bb4:
+#line 15 "codegen/switch_control.kl"
+    kl_t4 = kl_e_1 == 1;
+    if ( kl_t4 ) goto bb2; else goto bb5;
+    bb5:
+    goto bb3;
+    bb6:
+#line 22 "codegen/switch_control.kl"
+    kl_t0 = kl_t_2;
+    return kl_t0;
+}
+
+int32_t kl__breaks_the_switch__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_count_1;
+    int32_t kl_i_2;
+    bool kl_t3;
+    int32_t kl_t4;
+    bool kl_t5;
+    int32_t kl_t6;
+    int32_t kl_t7;
+#line 29 "codegen/switch_control.kl"
+    kl_count_1 = 0;
+#line 30 "codegen/switch_control.kl"
+    kl_i_2 = 0;
+    goto bb1;
+    bb1:
+#line 32 "codegen/switch_control.kl"
+    kl_t3 = kl_i_2 < 3;
+    if ( kl_t3 ) goto bb2; else goto bb3;
+    bb2:
+#line 34 "codegen/switch_control.kl"
+    kl_t4 = kl_i_2 + 1;
+    kl_i_2 = kl_t4;
+#line 38 "codegen/switch_control.kl"
+    kl_t5 = 0 == 0;
+    if ( kl_t5 ) goto bb4; else goto bb6;
+    bb3:
+#line 48 "codegen/switch_control.kl"
+    kl_t0 = kl_count_1;
+    return kl_t0;
+    bb4:
+    goto bb7;
+    bb5:
+#line 42 "codegen/switch_control.kl"
+    kl_t6 = kl_count_1 + 100;
+    kl_count_1 = kl_t6;
+    goto bb7;
+    bb6:
+    goto bb5;
+    bb7:
+#line 45 "codegen/switch_control.kl"
+    kl_t7 = kl_count_1 + 1;
+    kl_count_1 = kl_t7;
+    goto bb1;
+}
+
+int32_t kl__breaks_the_loop__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_n_1;
+    bool kl_t2;
+    int32_t kl_t3;
+#line 54 "codegen/switch_control.kl"
+    kl_n_1 = 0;
+#line 58 "codegen/switch_control.kl"
+    kl_t2 = 0 == 0;
+    if ( kl_t2 ) goto bb1; else goto bb3;
+    bb1:
+    goto bb4;
+    bb2:
+#line 67 "codegen/switch_control.kl"
+    kl_n_1 = 99;
+    goto bb7;
+    bb3:
+    goto bb2;
+    bb4:
+    if ( true ) goto bb5; else goto bb6;
+    bb5:
+#line 61 "codegen/switch_control.kl"
+    kl_t3 = kl_n_1 + 7;
+    kl_n_1 = kl_t3;
+    goto bb6;
+    bb6:
+    goto bb7;
+    bb7:
+#line 70 "codegen/switch_control.kl"
+    kl_t0 = kl_n_1;
+    return kl_t0;
+}
+
+int32_t kl__continues_the_loop__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_count_1;
+    int32_t kl_i_2;
+    bool kl_t3;
+    int32_t kl_t4;
+    bool kl_t5;
+    int32_t kl_t6;
+    int32_t kl_t7;
+#line 76 "codegen/switch_control.kl"
+    kl_count_1 = 0;
+#line 77 "codegen/switch_control.kl"
+    kl_i_2 = 0;
+    goto bb1;
+    bb1:
+#line 79 "codegen/switch_control.kl"
+    kl_t3 = kl_i_2 < 3;
+    if ( kl_t3 ) goto bb2; else goto bb3;
+    bb2:
+#line 81 "codegen/switch_control.kl"
+    kl_t4 = kl_i_2 + 1;
+    kl_i_2 = kl_t4;
+#line 85 "codegen/switch_control.kl"
+    kl_t5 = 0 == 0;
+    if ( kl_t5 ) goto bb4; else goto bb6;
+    bb3:
+#line 95 "codegen/switch_control.kl"
+    kl_t0 = kl_count_1;
+    return kl_t0;
+    bb4:
+    goto bb1;
+    bb5:
+#line 89 "codegen/switch_control.kl"
+    kl_t6 = kl_count_1 + 100;
+    kl_count_1 = kl_t6;
+    goto bb7;
+    bb6:
+    goto bb5;
+    bb7:
+#line 92 "codegen/switch_control.kl"
+    kl_t7 = kl_count_1 + 1;
+    kl_count_1 = kl_t7;
+    goto bb1;
+}
+
+void kl__Counter__Counterp_i32p( struct kl__Counter* kl_this_1, int32_t* kl_s_2 )
+{
+#line 102 "codegen/switch_control.kl"
+    ( *kl_this_1 ).kl_slot_173 = kl_s_2;
+    return;
+}
+
+void kl__Counter__dtor( struct kl__Counter* kl_this_1 )
+{
+    int32_t kl_t2;
+#line 103 "codegen/switch_control.kl"
+    kl_t2 = ( *( *kl_this_1 ).kl_slot_173 ) + 1;
+    ( *( *kl_this_1 ).kl_slot_173 ) = kl_t2;
+    return;
+}
+
+int32_t kl__drops_on_continue__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_drops_1;
+    int32_t kl_i_2;
+    bool kl_t3;
+    int32_t kl_t4;
+    struct kl__Counter kl_outer_5;
+    struct kl__Counter* kl_t6;
+    int32_t* kl_t7;
+    bool kl_t9;
+    int32_t kl_t10;
+#line 111 "codegen/switch_control.kl"
+    kl_drops_1 = 0;
+#line 112 "codegen/switch_control.kl"
+    kl_i_2 = 0;
+    goto bb1;
+    bb1:
+#line 114 "codegen/switch_control.kl"
+    kl_t3 = kl_i_2 < 3;
+    if ( kl_t3 ) goto bb2; else goto bb3;
+    bb2:
+#line 116 "codegen/switch_control.kl"
+    kl_t4 = kl_i_2 + 1;
+    kl_i_2 = kl_t4;
+#line 118 "codegen/switch_control.kl"
+    kl_t6 = &kl_outer_5;
+    kl_t7 = &kl_drops_1;
+    kl__Counter__Counterp_i32p( kl_t6, kl_t7 );
+#line 122 "codegen/switch_control.kl"
+    kl_t9 = 0 == 0;
+    if ( kl_t9 ) goto bb4; else goto bb6;
+    bb3:
+#line 130 "codegen/switch_control.kl"
+    kl_t0 = kl_drops_1;
+    return kl_t0;
+    bb4:
+#line 123 "codegen/switch_control.kl"
+    kl__Counter__dtor( &kl_outer_5 );
+    goto bb1;
+    bb5:
+#line 126 "codegen/switch_control.kl"
+    kl_t10 = kl_drops_1 + 100;
+    kl_drops_1 = kl_t10;
+    goto bb7;
+    bb6:
+    goto bb5;
+    bb7:
+#line 115 "codegen/switch_control.kl"
+    kl__Counter__dtor( &kl_outer_5 );
+    goto bb1;
+}
+
+int32_t kl__drops_on_break__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_drops_1;
+    bool kl_t2;
+    struct kl__Counter kl_inner_3;
+    struct kl__Counter* kl_t4;
+    int32_t* kl_t5;
+    int32_t kl_t7;
+#line 136 "codegen/switch_control.kl"
+    kl_drops_1 = 0;
+#line 140 "codegen/switch_control.kl"
+    kl_t2 = 0 == 0;
+    if ( kl_t2 ) goto bb1; else goto bb3;
+    bb1:
+#line 142 "codegen/switch_control.kl"
+    kl_t4 = &kl_inner_3;
+    kl_t5 = &kl_drops_1;
+    kl__Counter__Counterp_i32p( kl_t4, kl_t5 );
+#line 143 "codegen/switch_control.kl"
+    kl__Counter__dtor( &kl_inner_3 );
+    goto bb4;
+    bb2:
+#line 147 "codegen/switch_control.kl"
+    kl_t7 = kl_drops_1 + 100;
+    kl_drops_1 = kl_t7;
+    goto bb4;
+    bb3:
+    goto bb2;
+    bb4:
+#line 150 "codegen/switch_control.kl"
+    kl_t0 = kl_drops_1;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_total_1;
+    int32_t kl_t2;
+    int32_t kl_t3;
+    int32_t kl_t4;
+    int32_t kl_t5;
+    int32_t kl_t6;
+    bool kl_t7;
+    int32_t kl_t8;
+    bool kl_t9;
+    int32_t kl_t10;
+    bool kl_t11;
+    int32_t kl_t12;
+    bool kl_t13;
+    int32_t kl_t14;
+    bool kl_t15;
+    int32_t kl_t16;
+    bool kl_t17;
+#line 156 "codegen/switch_control.kl"
+    kl_t2 = kl__falls__E( 0 );
+    kl_t3 = kl__falls__E( 1 );
+    kl_t4 = kl_t2 + kl_t3;
+    kl_t5 = kl__falls__E( 2 );
+    kl_t6 = kl_t4 + kl_t5;
+    kl_total_1 = kl_t6;
+#line 158 "codegen/switch_control.kl"
+    kl_t7 = kl_total_1 != 321;
+    if ( kl_t7 ) goto bb1; else goto bb2;
+    bb1:
+#line 160 "codegen/switch_control.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+    goto bb3;
+    bb3:
+#line 163 "codegen/switch_control.kl"
+    kl_t8 = kl__breaks_the_switch__(  );
+    kl_t9 = kl_t8 != 3;
+    if ( kl_t9 ) goto bb4; else goto bb5;
+    bb4:
+#line 165 "codegen/switch_control.kl"
+    kl_t0 = 2;
+    return kl_t0;
+    bb5:
+    goto bb6;
+    bb6:
+#line 168 "codegen/switch_control.kl"
+    kl_t10 = kl__breaks_the_loop__(  );
+    kl_t11 = kl_t10 != 7;
+    if ( kl_t11 ) goto bb7; else goto bb8;
+    bb7:
+#line 170 "codegen/switch_control.kl"
+    kl_t0 = 3;
+    return kl_t0;
+    bb8:
+    goto bb9;
+    bb9:
+#line 173 "codegen/switch_control.kl"
+    kl_t12 = kl__continues_the_loop__(  );
+    kl_t13 = kl_t12 != 0;
+    if ( kl_t13 ) goto bb10; else goto bb11;
+    bb10:
+#line 175 "codegen/switch_control.kl"
+    kl_t0 = 4;
+    return kl_t0;
+    bb11:
+    goto bb12;
+    bb12:
+#line 178 "codegen/switch_control.kl"
+    kl_t14 = kl__drops_on_continue__(  );
+    kl_t15 = kl_t14 != 3;
+    if ( kl_t15 ) goto bb13; else goto bb14;
+    bb13:
+#line 180 "codegen/switch_control.kl"
+    kl_t0 = 5;
+    return kl_t0;
+    bb14:
+    goto bb15;
+    bb15:
+#line 183 "codegen/switch_control.kl"
+    kl_t16 = kl__drops_on_break__(  );
+    kl_t17 = kl_t16 != 1;
+    if ( kl_t17 ) goto bb16; else goto bb17;
+    bb16:
+#line 185 "codegen/switch_control.kl"
+    kl_t0 = 6;
+    return kl_t0;
+    bb17:
+    goto bb18;
+    bb18:
+#line 188 "codegen/switch_control.kl"
+    kl_t0 = 42;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

@@ -66,6 +66,7 @@ enum class Keyword : u32
     Extern,
     Alloc,
     Free,
+    Fallthrough,
 
     Count
 };

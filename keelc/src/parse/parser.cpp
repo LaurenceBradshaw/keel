@@ -1522,6 +1522,14 @@ Node_id Parser::parse_statement()
         return ast_.add( Node_kind::Continue_stmt, Span::merge( start, previous().span ), 0, {} );
     }
 
+    if( check_keyword( Keyword::Fallthrough ) )
+    {
+        const Span start = peek().span;
+        advance();
+        expect( Token_kind::Semicolon );
+        return ast_.add( Node_kind::Fallthrough_stmt, Span::merge( start, previous().span ), 0, {} );
+    }
+
     if( check_keyword( Keyword::Unsafe ) )
     {
         return parse_unsafe_block();
@@ -4048,6 +4056,51 @@ TEST_CASE( "parser_still_accepts_ordinary_member_access", "[parse][members]" )
 
         INFO( source << "\n" << p.errors() );
         REQUIRE_FALSE( p.has_errors() );
+    }
+}
+
+// `fallthrough` is spelled like `break` and `continue` and parses like them. Where it may appear is
+// the checker's question - the parser has no idea whether it is inside a `switch`.
+TEST_CASE( "parser_parses_fallthrough", "[parse][fallthrough]" )
+{
+    SECTION( "as a statement" )
+    {
+        const Parsed p( "enum E { A, B };\ni32 main() { switch( E::A ) { case E::A: fallthrough; default: } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( find_first( p.ast(), p.root(), Node_kind::Fallthrough_stmt ).is_valid() );
+    }
+
+    SECTION( "it needs its semicolon" )
+    {
+        const Parsed p( "enum E { A, B };\ni32 main() { switch( E::A ) { case E::A: fallthrough default: } return 0; }" );
+
+        REQUIRE( p.has_errors() );
+    }
+
+    SECTION( "the parser does not rule on where it is" )
+    {
+        // Accepted here and reported by the checker, which is the same split `break` already has.
+        const Parsed p( "void f() { fallthrough; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+    }
+
+    SECTION( "the word is reserved" )
+    {
+        for( const char* source : {
+                 "i32 main() { i32 fallthrough = 1; return fallthrough; }",
+                 "i32 fallthrough() { return 1; }",
+                 "struct S { i32 fallthrough; };",
+             } )
+        {
+            const Parsed p( source );
+
+            INFO( source << "\n" << p.errors() );
+            REQUIRE( p.has_errors() );
+        }
     }
 }
 

@@ -676,12 +676,13 @@ TEST_CASE( "assign_check_requires_a_value_on_every_path_out", "[check][assign][r
         REQUIRE( c.errors().size() == 1 );
     }
 
-    SECTION( "a non-empty case arm falling out of the switch" )
+    SECTION( "an arm that breaks out of the switch and returns nothing" )
     {
-        // D7 says this is an error in its own right and nothing enforces that yet - but the arm
-        // jumps past the switch rather than into the next one, so it lands here.
+        // The arm leaves the `switch` rather than the function, so control reaches the end of `f`
+        // with the slot unwritten. Note the `break` is what keeps this a *return* error: without
+        // it the arm would run on into the next one in C++, which the checker now refuses first.
         const Checked c( "enum E { A, B };\n"
-                         "i32 f( E e ) { switch( e ) { case E::A: i32 y = 1; case E::B: return 2; } }\n"
+                         "i32 f( E e ) { switch( e ) { case E::A: break; case E::B: return 2; } }\n"
                          "i32 main() { return f( E::A ); }" );
 
         INFO( c.rendered() );

@@ -521,6 +521,23 @@ private:
     Type_id check( Node_id id, Type_id expected );                   // expression, with one
     Type_id type_of_annotation( Node_id id, bool outermost = true ); // Named_type/Pointer_type subtree; invalid for auto
 
+    // Whether control can reach the end of this statement. Conservative one way only: it answers
+    // "yes" when unsure, so the rule below can miss a divergence but never invent one.
+    bool completes_normally( Node_id id ) const;
+
+    // The rules about an arm's shape rather than its labels' values, so they hold for an enum
+    // switch and a numeric one alike and live here rather than in either.
+    void check_arm_structure( Node_id id );
+
+    // Every `fallthrough` check_arm_structure has ruled on - which is exactly those written as a
+    // top-level statement of an arm. Any other one is nested inside a block, a loop, or no `switch`
+    // at all, and `visit` reports it; without this the lowerer would reach it with no target.
+    std::unordered_set<u32> ruled_fallthroughs_;
+
+    // Whether any of an arm's labels destructures a payload. What "this arm binds" means for the
+    // two rules that ask it: labels may not be stacked when one does, and nothing may fall into one.
+    bool arm_binds( Node_id arm ) const;
+
     // Writes the node's type and returns it. Every infer branch ends in one of these, so that
     // forgetting to record a type is hard rather than silent.
     Type_id record( Node_id id, Type_id type );
@@ -543,10 +560,15 @@ private:
     // Set while the callee of a call is being inferred, so infer_path can tell `Shape::Circle` the
     // expression from `Shape::Circle( 1.0 )` the construction. One flag rather than a second entry
     // point, because everything else about reaching the variant is identical.
-    bool    constructing_ = false;
+    // Whether a bare variant path here names the variant rather than standing for a value of
+    // the enum. True while checking a construction's callee, a pattern's path, and a bare `case`
+    // label - in all three the payload is accounted for, so `Shape::Circle` is complete.
+    bool    naming_variant_ = false;
     Node_id current_function_; // whose annotation the escape rule reads
 
-    u32  loop_depth_   = 0; // for break/continue
+    u32 loop_depth_      = 0; // `continue` binds here, looking past any switch
+    u32 breakable_depth_ = 0; // `break` binds to the nearest of either
+
     u32  unsafe_depth_ = 0; // an unsafe operation is permitted while this is non-zero
     bool unsafe_used_  = false;
 
@@ -1542,11 +1564,28 @@ void Checker::visit( Node_id id )
         return visit_increment( id );
 
     case Node_kind::Break_stmt:
-        if( loop_depth_ == 0 )
+        if( breakable_depth_ == 0 )
         {
-            error_at( ast_.span( id ), "`break` outside a loop body", "`break` can only appear inside a `while` or `for`" );
+            error_at(
+                ast_.span( id ),
+                "`break` outside a loop or switch body",
+                "`break` can only appear inside a `while`, `for` or `switch`"
+            );
         }
         return;
+    case Node_kind::Fallthrough_stmt:
+        // check_arm_structure runs before an arm's body is visited, so anything still unrecorded
+        // by now was not written where a `fallthrough` may go.
+        if( !ruled_fallthroughs_.contains( id.v ) )
+        {
+            error_at(
+                ast_.span( id ),
+                "`fallthrough` must be the last statement of a `case`",
+                "it cannot be nested inside a block, a loop or an `if`"
+            );
+        }
+        return;
+
     case Node_kind::Continue_stmt:
         if( loop_depth_ == 0 )
         {
@@ -1938,8 +1977,11 @@ void Checker::visit_switch( Node_id id )
         return;
     }
 
+    check_arm_structure( id );
+
     bool has_default = false;
 
+    breakable_depth_ += 1;
     if( numeric )
     {
         check_numeric_switch( id, type, has_default );
@@ -1948,6 +1990,7 @@ void Checker::visit_switch( Node_id id )
     {
         check_enum_switch( id, type, has_default );
     }
+    breakable_depth_ -= 1;
 }
 
 // Coverage as a vector indexed by ordinal, which is what makes a gap nameable: the missing variants
@@ -1961,10 +2004,11 @@ void Checker::check_variant_pattern( Node_id pattern, Type_id type, std::vector<
     const Node_id                  path     = parts[0];
     const std::span<const Node_id> bindings = parts.subspan( 1 );
 
-    // The same flag construction uses: the payload is coming, so the bare form is not incomplete.
-    constructing_           = true;
+    // The same flag construction uses: the pattern accounts for the payload, so the path inside it
+    // names a variant rather than standing for a value.
+    naming_variant_         = true;
     const Type_id path_type = infer( path );
-    constructing_           = false;
+    naming_variant_         = false;
 
     if( table_.is_error( path_type ) )
     {
@@ -2071,7 +2115,12 @@ void Checker::check_enum_switch( Node_id id, Type_id type, bool& has_default )
                 continue;
             }
 
+            // A bare label names the variant and ignores its payload, which is a complete thing to
+            // say here even when the variant carries one - so the same flag a pattern and a
+            // construction set. `Shape s = Shape::Circle;` still has it false and still reports.
+            naming_variant_          = true;
             const Type_id label_type = infer( label );
+            naming_variant_          = false;
 
             if( table_.is_error( label_type ) )
             {
@@ -2308,8 +2357,10 @@ void Checker::visit_while( Node_id id )
 {
     check_condition( ast_.children( id )[0] );
     loop_depth_ += 1;
+    breakable_depth_ += 1;
     visit( ast_.children( id )[1] );
     loop_depth_ -= 1;
+    breakable_depth_ -= 1;
 }
 
 void Checker::visit_for( Node_id id )
@@ -2321,8 +2372,10 @@ void Checker::visit_for( Node_id id )
     check_condition( ast_.children( id )[1] );
     visit( ast_.children( id )[2] );
     loop_depth_ += 1;
+    breakable_depth_ += 1;
     visit( ast_.children( id )[3] );
     loop_depth_ -= 1;
+    breakable_depth_ -= 1;
 }
 
 void Checker::visit_increment( Node_id id )
@@ -3401,10 +3454,10 @@ Type_id Checker::infer_variant_construction( Node_id id )
     const Node_id                  path      = ast_.children( id )[0];
     const std::span<const Node_id> arguments = ast_.children( ast_.children( id )[1] );
 
-    // Tells infer_path the payload is coming, so it does not report the bare form as incomplete.
-    constructing_        = true;
+    // Tells infer_path the arguments account for the payload, so the bare path is not incomplete.
+    naming_variant_      = true;
     const Type_id result = infer( path );
-    constructing_        = false;
+    naming_variant_      = false;
 
     if( table_.is_error( result ) )
     {
@@ -3570,13 +3623,14 @@ Type_id Checker::infer_path( Node_id id )
         // constant expression. Lowering needs the number, and aux holds the name.
         constants_[id.v] = Constant_value { .kind = Constant_value::Kind::Integer, .magnitude = i };
 
-        // D7: a variant with a payload is not a value until it has one. `Shape::Circle` alone is
-        // as incomplete as a struct literal with no fields, and saying so here is better than
+        // D7: a variant with a payload is not a *value* until it has one. `Shape s = Shape::Circle;`
+        // is as incomplete as a struct literal with no fields, and saying so here is better than
         // letting it type as a Shape and produce garbage in the payload.
         //
-        // infer_call handles the complete form and reaches the variant through this same walk, so
-        // it sets `constructing_` first to say the payload is coming.
-        if( !ast_.children( variants[i] ).empty() && !constructing_ )
+        // Naming the variant is a different thing from producing one, and the three places that do
+        // it set the flag first: a construction supplies the payload, a pattern destructures it,
+        // and a bare `case` label ignores it.
+        if( !ast_.children( variants[i] ).empty() && !naming_variant_ )
         {
             error_at(
                 ast_.span( id ),
@@ -4215,6 +4269,154 @@ Type_id Checker::type_of_annotation( Node_id id, bool outermost )
     default:
         // Error nodes, and anything the parser puts in type position that is not a type.
         return table_.builtin( Type_kind::Error );
+    }
+}
+
+bool Checker::arm_binds( Node_id arm ) const
+{
+    const std::span<const Node_id> children = ast_.children( arm );
+
+    for( const Node_id label : children.subspan( 0, children.size() - 1 ) )
+    {
+        // A Variant_pattern is the only label form that introduces names, and it carries one
+        // Binding_decl per bound field - so an empty one binds nothing despite being a pattern.
+        if( ast_.kind( label ) == Node_kind::Variant_pattern && ast_.children( label ).size() > 1 )
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// Three rules about the shape of an arm. All of them exist because a `switch` is the one place
+// Keel's meaning and C++'s can differ for the same source: an arm that runs on into the next in
+// C++ simply ends here, and a label that binds gives names to fields the matched variant may not
+// have.
+void Checker::check_arm_structure( Node_id id )
+{
+    const std::span<const Node_id> arms = ast_.children( id ).subspan( 1 );
+
+    for( std::size_t i = 0; i < arms.size(); ++i )
+    {
+        const Node_id                  arm      = arms[i];
+        const std::span<const Node_id> children = ast_.children( arm );
+        const Node_id                  body     = children.back();
+        const bool                     last     = i + 1 == arms.size();
+
+        // Stacked labels share one body, so they must agree on what is in scope in it. The only
+        // way to agree is to bind nothing: `case Circle( r ): case Rect( w, h ):` would read `r`
+        // out of a Rect, which is a field that variant does not have.
+        if( children.size() > 2 && arm_binds( arm ) )
+        {
+            error_at(
+                ast_.span( arm ),
+                "a `case` that destructures cannot share its body with another",
+                "give it an arm of its own, or drop the `( ... )` to match the variant without its payload"
+            );
+        }
+
+        // `fallthrough` is the arm's last act. Anywhere else and what follows is unreachable, and
+        // "the next arm" stops being the obvious reading.
+        const std::span<const Node_id> statements =
+            ast_.kind( body ) == Node_kind::Block ? ast_.children( body ) : std::span<const Node_id> {};
+
+        for( std::size_t s = 0; s < statements.size(); ++s )
+        {
+            if( ast_.kind( statements[s] ) != Node_kind::Fallthrough_stmt )
+            {
+                continue;
+            }
+
+            // Recorded whatever the verdict below: this one has been ruled on here, so `visit`
+            // stays quiet about it either way.
+            ruled_fallthroughs_.insert( statements[s].v );
+
+            if( s + 1 != statements.size() )
+            {
+                error_at( ast_.span( statements[s] ), "`fallthrough` must be the last statement of its `case`" );
+                continue;
+            }
+
+            if( last )
+            {
+                error_at(
+                    ast_.span( statements[s] ),
+                    "`fallthrough` in the last `case`",
+                    "there is no arm after this one to fall into"
+                );
+                continue;
+            }
+
+            // The arm below binds names out of the variant *it* matched. Arriving from here, that
+            // variant is not the one in hand, so the names would read fields that were never set.
+            if( arm_binds( arms[i + 1] ) )
+            {
+                error_at(
+                    ast_.span( statements[s] ),
+                    "`fallthrough` into a `case` that destructures",
+                    "the next arm binds names from its own variant, and this value is not one"
+                );
+            }
+        }
+
+        // The divergence this whole rule exists for: the same source runs on into the next arm in
+        // C, and ends here. So an arm with a body has to say which it means. The last arm is
+        // exempt - there is nothing after it either way.
+        if( !last && completes_normally( body ) )
+        {
+            error_at(
+                ast_.span( arm ),
+                "a `case` with a body must say how it ends",
+                "end it with `break;` or `return;`, or `fallthrough;` to run on into the next `case`"
+            );
+        }
+    }
+}
+
+bool Checker::completes_normally( Node_id id ) const
+{
+    switch( ast_.kind( id ) )
+    {
+    case Node_kind::Return_stmt:
+    case Node_kind::Break_stmt:
+    case Node_kind::Continue_stmt:
+    case Node_kind::Fallthrough_stmt:
+        return false;
+    case Node_kind::While_stmt:
+    case Node_kind::For_stmt:
+    case Node_kind::Switch_stmt:
+        return true;
+    case Node_kind::Block:
+    {
+        for( const Node_id child : ast_.children( id ) )
+        {
+            if( !completes_normally( child ) )
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+    case Node_kind::If_stmt:
+    {
+        const std::span<const Node_id> children  = ast_.children( id );
+        const Node_id                  otherwise = children[2];
+
+        // Arity is fixed at three and the else *slot* survives when there is no else - so the test
+        // is whether that child is valid, never how many there are.
+        //
+        // With no else the false path falls straight out, so the statement always completes.
+        if( !otherwise.is_valid() )
+        {
+            return true;
+        }
+
+        return completes_normally( children[1] ) || completes_normally( otherwise );
+    }
+    default:
+        return true;
     }
 }
 
@@ -10321,6 +10523,441 @@ TEST_CASE( "type_checker_checks_arm_bodies_even_when_the_scrutinee_is_wrong", "[
 
     INFO( p.rendered() );
     REQUIRE( p.errors() >= 2 );
+}
+
+// D7. The same source runs on into the next arm in C and ends here, so an arm with a body has to
+// say which it means. The last arm is exempt - nothing follows it either way.
+TEST_CASE( "type_checker_requires_a_case_to_say_how_it_ends", "[sema][switch][arms]" )
+{
+    const std::string_view e = "enum E { A, B, C };\n";
+
+    SECTION( "an assignment" )
+    {
+        const Typed p(
+            std::string( e ) + "i32 f( E x ) { i32 t = 0; switch( x ) { case E::A: t = 1; default: t = 2; } return t; }\n"
+                               "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "must say how it ends" ) != std::string::npos );
+    }
+
+    SECTION( "a call" )
+    {
+        const Typed p(
+            std::string( e ) + "void g() { }\n"
+                               "void f( E x ) { switch( x ) { case E::A: g(); default: g(); } }\n"
+                               "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "a declaration" )
+    {
+        const Typed p(
+            std::string( e ) + "void f( E x ) { switch( x ) { case E::A: i32 y = 1; default: } }\n"
+                               "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "a `default` in the middle is an arm like any other" )
+    {
+        const Typed p(
+            std::string( e ) + "i32 f( E x ) { i32 t = 0; switch( x ) { default: t = 1; case E::A: t = 2; } return t; }\n"
+                               "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "every non-final arm is reported, not just the first" )
+    {
+        const Typed p(
+            std::string( e ) +
+            "i32 f( E x ) { i32 t = 0; switch( x ) { case E::A: t = 1; case E::B: t = 2; default: t = 3; } return t; }\n"
+            "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 2 );
+    }
+
+    SECTION( "the three fixes all work" )
+    {
+        for( const char* ending : { "return 1;", "break;", "fallthrough;" } )
+        {
+            const std::string source = std::string( e ) + "i32 f( E x ) { i32 t = 0; switch( x ) { case E::A: t = 1; " +
+                                       ending + " default: t = 2; } return t; }\ni32 main() { return 0; }";
+            const Typed p( source );
+
+            INFO( source << "\n" << p.rendered() );
+            REQUIRE( p.clean() );
+        }
+    }
+
+    SECTION( "the last arm needs no ending" )
+    {
+        const Typed p(
+            std::string( e ) + "i32 f( E x ) { i32 t = 0; switch( x ) { case E::A: break; default: t = 2; } return t; }\n"
+                               "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "stacked labels are one arm, so only the body counts" )
+    {
+        const Typed p(
+            std::string( e ) + "i32 f( E x ) { switch( x ) { case E::A: case E::B: return 1; default: return 2; } }\n"
+                               "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a numeric switch is held to the same rule" )
+    {
+        const Typed p( "i32 f( i32 x ) { i32 t = 0; switch( x ) { case 1: t = 1; default: t = 2; } return t; }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+}
+
+// The predicate is "can control reach the end of this arm", not "is the last statement a jump" -
+// which is why an `if` that returns on both sides is fine and one that returns on one side is not.
+TEST_CASE( "type_checker_asks_whether_an_arm_can_finish", "[sema][switch][arms]" )
+{
+    const std::string_view e = "enum E { A, B };\n";
+
+    SECTION( "an if/else where both branches return" )
+    {
+        const Typed p(
+            std::string( e ) +
+            "i32 f( E x, bool c ) { switch( x ) { case E::A: if( c ) { return 1; } else { return 2; } default: return 3; } }\n"
+            "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "an if with no else" )
+    {
+        const Typed p(
+            std::string( e ) + "i32 f( E x, bool c ) { switch( x ) { case E::A: if( c ) { return 1; } default: return 3; } }\n"
+                               "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "an if/else where only one branch returns" )
+    {
+        const Typed p(
+            std::string( e ) + "i32 f( E x, bool c ) { i32 t = 0; switch( x ) { case E::A: if( c ) { return 1; } else { t = 2; "
+                               "} default: return 3; } }\n"
+                               "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "a nested block ending in a jump" )
+    {
+        const Typed p(
+            std::string( e ) + "i32 f( E x ) { switch( x ) { case E::A: { { return 1; } } default: return 3; } }\n"
+                               "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a loop is assumed to finish" )
+    {
+        // Conservative: `while( true )` never finishes, and knowing that needs constant folding.
+        // Erring this way reports an arm that did not need it, rather than missing one that did.
+        const Typed p(
+            std::string( e ) + "void f( E x ) { switch( x ) { case E::A: while( true ) { } default: } }\n"
+                               "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+}
+
+// `break` binds to the nearest enclosing loop *or* switch; `continue` looks past a switch to the
+// loop. Two counters rather than one, because the two questions have different answers.
+TEST_CASE( "type_checker_binds_break_to_a_switch_as_well_as_a_loop", "[sema][switch][arms]" )
+{
+    const std::string_view e = "enum E { A, B };\n";
+
+    SECTION( "break in a switch with no enclosing loop" )
+    {
+        const Typed p(
+            std::string( e ) + "void f( E x ) { switch( x ) { case E::A: break; default: } }\ni32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "continue in a switch with no enclosing loop is still an error" )
+    {
+        const Typed p(
+            std::string( e ) + "void f( E x ) { switch( x ) { case E::A: continue; default: } }\ni32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`continue` outside a loop" ) != std::string::npos );
+    }
+
+    SECTION( "continue in a switch inside a loop is fine" )
+    {
+        const Typed p(
+            std::string( e ) + "void f( E x ) { while( true ) { switch( x ) { case E::A: continue; default: continue; } } }\n"
+                               "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "break outside either is still an error" )
+    {
+        const Typed p( "void f() { break; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "outside a loop or switch" ) != std::string::npos );
+    }
+}
+
+// `fallthrough` is the explicit form of the thing C does implicitly. Three rules keep it readable:
+// it ends the arm, it is not in the last one, and it never enters an arm that binds.
+TEST_CASE( "type_checker_checks_fallthrough", "[sema][switch][fallthrough]" )
+{
+    const std::string_view e     = "enum E { A, B, C };\n";
+    const std::string_view shape = "enum Shape { Circle( i32 r ), Rect( i32 w, i32 h ) };\n";
+
+    SECTION( "into the next arm" )
+    {
+        const Typed p(
+            std::string( e ) +
+            "i32 f( E x ) { i32 t = 0; switch( x ) { case E::A: t = 1; fallthrough; default: t = t + 10; } return t; }\n"
+            "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "chained through three arms" )
+    {
+        const Typed p(
+            std::string( e ) + "i32 f( E x ) { i32 t = 0; switch( x ) { case E::A: t = 1; fallthrough; case E::B: t = t + 10; "
+                               "fallthrough; default: t = t + 100; } return t; }\n"
+                               "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "not the last statement of its arm" )
+    {
+        const Typed p(
+            std::string( e ) +
+            "i32 f( E x ) { i32 t = 0; switch( x ) { case E::A: fallthrough; t = 1; default: t = 2; } return t; }\n"
+            "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "must be the last statement" ) != std::string::npos );
+    }
+
+    SECTION( "in the last arm" )
+    {
+        const Typed p(
+            std::string( e ) + "void f( E x ) { switch( x ) { case E::A: break; default: fallthrough; } }\n"
+                               "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "no arm after this one" ) != std::string::npos );
+    }
+
+    SECTION( "into an arm that destructures" )
+    {
+        // The hazard the whole rule exists for: the next arm names fields out of the variant *it*
+        // matched, and arriving from here that is not the variant in hand.
+        const Typed p(
+            std::string( shape ) +
+            "i32 f( Shape s ) { switch( s ) { case Shape::Circle: fallthrough; case Shape::Rect( w, h ): return w; } }\n"
+            "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "destructures" ) != std::string::npos );
+    }
+
+    SECTION( "into an arm that binds nothing is fine" )
+    {
+        const Typed p(
+            std::string( shape ) + "i32 f( Shape s ) { i32 t = 0; switch( s ) { case Shape::Circle( r ): t = r; fallthrough; "
+                                   "case Shape::Rect: t = t + 1; } return t; }\n"
+                                   "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "outside a switch entirely" )
+    {
+        const Typed p( "void f() { fallthrough; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+}
+
+// Stacked labels share one body, so they have to agree on what is in scope in it - and the only
+// way to agree is to bind nothing. Otherwise a name reads a field the matched variant has not got.
+TEST_CASE( "type_checker_refuses_to_stack_a_case_that_destructures", "[sema][switch][fallthrough]" )
+{
+    const std::string_view shape = "enum Shape { Circle( i32 r ), Rect( i32 w, i32 h ), Dot };\n";
+
+    SECTION( "two labels that both bind" )
+    {
+        const Typed p(
+            std::string( shape ) + "i32 f( Shape s ) { switch( s ) { case Shape::Circle( r ): case Shape::Rect( w, h ): return "
+                                   "1; default: return 0; } }\n"
+                                   "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "cannot share its body" ) != std::string::npos );
+    }
+
+    SECTION( "one that binds stacked with one that does not" )
+    {
+        const Typed p(
+            std::string( shape ) +
+            "i32 f( Shape s ) { switch( s ) { case Shape::Circle( r ): case Shape::Dot: return 1; default: return 0; } }\n"
+            "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "two bare labels over payload variants" )
+    {
+        const Typed p(
+            std::string( shape ) +
+            "i32 f( Shape s ) { switch( s ) { case Shape::Circle: case Shape::Rect: return 1; default: return 0; } }\n"
+            "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a single destructuring label is untouched" )
+    {
+        const Typed p(
+            std::string( shape ) +
+            "i32 f( Shape s ) { switch( s ) { case Shape::Circle( r ): return r; default: return 0; } }\n"
+            "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// A bare label names the variant and ignores its payload, which is a complete thing to say in a
+// `case` even when the variant carries one. Naming a variant and producing one are different, and
+// only the second needs the payload.
+TEST_CASE( "type_checker_matches_a_variant_without_destructuring_it", "[sema][switch][fallthrough]" )
+{
+    const std::string_view shape = "enum Shape { Circle( i32 r ), Rect( i32 w, i32 h ) };\n";
+
+    SECTION( "a bare label covers its variant" )
+    {
+        const Typed p(
+            std::string( shape ) +
+            "i32 f( Shape s ) { switch( s ) { case Shape::Circle: return 1; case Shape::Rect: return 2; } }\n"
+            "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "mixed with a destructuring arm" )
+    {
+        const Typed p(
+            std::string( shape ) +
+            "i32 f( Shape s ) { switch( s ) { case Shape::Circle: return 1; case Shape::Rect( w, h ): return w; } }\n"
+            "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a missing variant is still missing" )
+    {
+        const Typed p(
+            std::string( shape ) + "i32 f( Shape s ) { switch( s ) { case Shape::Circle: return 1; } }\n"
+                                   "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "does not cover every variant" ) != std::string::npos );
+    }
+
+    SECTION( "a duplicate is still a duplicate, whichever form each uses" )
+    {
+        const Typed p(
+            std::string( shape ) + "i32 f( Shape s ) { switch( s ) { case Shape::Circle: return 1; case Shape::Circle( r ): "
+                                   "return r; case Shape::Rect: return 2; } }\n"
+                                   "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "already covered" ) != std::string::npos );
+    }
+
+    SECTION( "but a bare path is still not a value" )
+    {
+        // The half of the rule that stays: `Shape::Circle` names a variant here and produces one
+        // nowhere, so expression position is unchanged.
+        const Typed p( std::string( shape ) + "i32 main() { Shape s = Shape::Circle; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "carries a payload" ) != std::string::npos );
+    }
 }
 
 // PLAN D34. Over a number, coverage is a set of **half-open** intervals: `case 3:` is [3, 4) and

@@ -1,0 +1,189 @@
+// The three ways an arm can end, and what `break` binds to. Every value here is chosen so a wrong
+// edge shows up as a wrong exit code rather than as a passing golden.
+enum E { A, B, C };
+
+// `fallthrough` runs the next arm's body as well as this one's.
+i32 falls( E e )
+{
+    i32 t = 0;
+
+    switch( e )
+    {
+        case E::A:
+            t = 1;
+            fallthrough;
+        case E::B:
+            t = t + 10;
+            fallthrough;
+        case E::C:
+            t = t + 100;
+    }
+
+    return t;
+}
+
+// `break` binds to the nearest enclosing loop or switch, so this one leaves the `switch` and the
+// loop keeps going.
+i32 breaks_the_switch()
+{
+    i32 count = 0;
+    i32 i = 0;
+
+    while( i < 3 )
+    {
+        i = i + 1;
+
+        switch( E::A )
+        {
+            case E::A:
+                break;
+            case E::B:
+            case E::C:
+                count = count + 100;
+        }
+
+        count = count + 1;
+    }
+
+    return count;
+}
+
+// The nearest here is the `while`, not the `switch` outside it.
+i32 breaks_the_loop()
+{
+    i32 n = 0;
+
+    switch( E::A )
+    {
+        case E::A:
+            while( true )
+            {
+                n = n + 7;
+                break;
+            }
+            break;
+        case E::B:
+        case E::C:
+            n = 99;
+    }
+
+    return n;
+}
+
+// `continue` looks past the `switch` to the loop, so the tail of the body is skipped.
+i32 continues_the_loop()
+{
+    i32 count = 0;
+    i32 i = 0;
+
+    while( i < 3 )
+    {
+        i = i + 1;
+
+        switch( E::A )
+        {
+            case E::A:
+                continue;
+            case E::B:
+            case E::C:
+                count = count + 100;
+        }
+
+        count = count + 1;
+    }
+
+    return count;
+}
+
+class Counter
+{
+    i32* slot;
+
+    Counter( i32* s ) { slot = s; }
+    ~Counter() { *slot = *slot + 1; }
+};
+
+// Leaving an arm drops what the *loop body* owns, not just what the arm does - `continue` unwinds
+// to the loop's scope, which is further out than the switch's. Counting is the only way to see it:
+// a wrong unwind depth leaks rather than crashing.
+i32 drops_on_continue()
+{
+    i32 drops = 0;
+    i32 i = 0;
+
+    while( i < 3 )
+    {
+        i = i + 1;
+
+        Counter outer = Counter( &drops );
+
+        switch( E::A )
+        {
+            case E::A:
+                continue;
+            case E::B:
+            case E::C:
+                drops = drops + 100;
+        }
+    }
+
+    return drops;
+}
+
+// And the same for `break`, which unwinds only as far as the switch.
+i32 drops_on_break()
+{
+    i32 drops = 0;
+
+    switch( E::A )
+    {
+        case E::A:
+        {
+            Counter inner = Counter( &drops );
+            break;
+        }
+        case E::B:
+        case E::C:
+            drops = drops + 100;
+    }
+
+    return drops;
+}
+
+i32 main()
+{
+    // 111 + 110 + 100 = 321, chosen so a missed arm is visible in a single digit.
+    i32 total = falls( E::A ) + falls( E::B ) + falls( E::C );
+
+    if( total != 321 )
+    {
+        return 1;
+    }
+
+    if( breaks_the_switch() != 3 )
+    {
+        return 2;
+    }
+
+    if( breaks_the_loop() != 7 )
+    {
+        return 3;
+    }
+
+    if( continues_the_loop() != 0 )
+    {
+        return 4;
+    }
+
+    if( drops_on_continue() != 3 )
+    {
+        return 5;
+    }
+
+    if( drops_on_break() != 1 )
+    {
+        return 6;
+    }
+
+    return 42;
+}

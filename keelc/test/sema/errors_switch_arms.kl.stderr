@@ -1,0 +1,31 @@
+error: a `case` with a body must say how it ends
+  --> sema/errors_switch_arms.kl:13:9
+   |
+13 |         case E::A:
+   |         ^^^^^^^^^^ end it with `break;` or `return;`, or `fallthrough;` to run on into the next `case`
+
+error: a `case` that destructures cannot share its body with another
+  --> sema/errors_switch_arms.kl:27:9
+   |
+27 |         case Shape::Circle( r ):
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^ give it an arm of its own, or drop the `( ... )` to match the variant without its payload
+
+error: `fallthrough` into a `case` that destructures
+  --> sema/errors_switch_arms.kl:40:13
+   |
+40 |             fallthrough;
+   |             ^^^^^^^^^^^^ the next arm binds names from its own variant, and this value is not one
+
+error: `fallthrough` in the last `case`
+  --> sema/errors_switch_arms.kl:56:13
+   |
+56 |             fallthrough;
+   |             ^^^^^^^^^^^^ there is no arm after this one to fall into
+
+error: `fallthrough` must be the last statement of a `case`
+  --> sema/errors_switch_arms.kl:62:5
+   |
+62 |     fallthrough;
+   |     ^^^^^^^^^^^^ it cannot be nested inside a block, a loop or an `if`
+
+5 errors generated

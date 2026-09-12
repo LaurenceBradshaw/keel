@@ -62,6 +62,11 @@ private:
     void lower_while( Node_id id );
     void lower_for( Node_id id );
 
+    // Where a `fallthrough` in the arm being lowered goes: the next arm's body. Saved and restored
+    // around each arm rather than kept in a stack, which is what makes a nested switch's arms
+    // restore the outer one's target on the way out.
+    Block_id fallthrough_target_;
+
     // Where `break` and `continue` jump to. In KIR these are plain edges - no labels, no
     // emit-the-label-only-if-used, and no -Wunused-label to design around. That is the whole of
     // what the C emitter needed a stack of names and a used-flag for.
@@ -70,6 +75,7 @@ private:
         Block_id break_target;    // the exit block
         Block_id continue_target; // a while re-tests at the header; a for runs its update first
         u32      depth;
+        bool     is_switch = false; // `continue` looks past these; `break` stops at the first
     };
 
     // Allocated on demand, because a block nothing jumps to is unreachable and verify rejects one.
@@ -102,6 +108,11 @@ private:
     // Runs a construct with `target`'s address as its receiver. Not an expression: a constructor
     // returns nothing and writes through the pointer it is handed.
     void lower_construction( Place target, Node_id call_expr );
+
+    // `break` binds to the nearest enclosing loop *or* switch, so it is always loops_.back() and
+    // needs no finder. `continue` looks past switches, and needs the entry rather than just its
+    // block: the scope depth it unwinds to has to be the loop's, not the switch's.
+    Loop_targets& enclosing_loop();
 
     const Ast& ast_;
 
@@ -447,7 +458,7 @@ void Lowering::lower_construction( Place target, Node_id call_expr )
 
 Block_id Lowering::break_target()
 {
-    assert( !loops_.empty() && "the checker rejects a break outside a loop" );
+    assert( !loops_.empty() && "the checker rejects a break outside a loop or switch" );
 
     Loop_targets& loop = loops_.back();
 
@@ -459,11 +470,25 @@ Block_id Lowering::break_target()
     return loop.break_target;
 }
 
+Lowering::Loop_targets& Lowering::enclosing_loop()
+{
+    for( std::size_t i = loops_.size(); i > 0; --i )
+    {
+        if( !loops_[i - 1].is_switch )
+        {
+            return loops_[i - 1];
+        }
+    }
+
+    assert( false && "the checker rejects a continue outside a loop" );
+    return loops_.back();
+}
+
 Block_id Lowering::continue_target()
 {
     assert( !loops_.empty() && "the checker rejects a continue outside a loop" );
 
-    Loop_targets& loop = loops_.back();
+    Loop_targets& loop = enclosing_loop();
 
     // A while sets this to its header up front, so only a for's latch is ever allocated here.
     if( !loop.continue_target.is_valid() )
@@ -1327,21 +1352,19 @@ void Lowering::lower_switch( Node_id id )
 
     drop_statement_temporaries( span );
 
-    Block_id join;
+    // A switch is a break target like a loop is, and the block after it is the block `break` jumps
+    // to - so the two are the same block by construction rather than by two pieces of code
+    // agreeing. Allocated on demand by break_target(), exactly as a loop's exit is.
+    loops_.push_back( Loop_targets { Block_id {}, Block_id {}, scope_depth(), true } );
 
     const auto leave = [&]()
     {
         if( builder_.is_terminated() )
         {
-            return; // the arm ended in a return of its own
+            return; // the arm ended in a return, a break, or a fallthrough of its own
         }
 
-        if( !join.is_valid() )
-        {
-            join = builder_.add_block();
-        }
-
-        builder_.terminate_goto( join, span );
+        builder_.terminate_goto( break_target(), span );
     };
 
     // One arm is the fallback: where every test's final false edge goes, tested for nothing itself.
@@ -1354,25 +1377,42 @@ void Lowering::lower_switch( Node_id id )
     // impossible and reports as a possibly-uninitialised return value. It also drops one
     // comparison per switch, which is the same thing a real backend does with a jump table's
     // default.
-    Node_id fallback;
+    Node_id     fallback;
+    std::size_t fallback_index = 0; // into `bodies` below, which is indexed from the first arm
 
-    for( const Node_id arm : children.subspan( 1 ) )
+    for( std::size_t index = 1; index < children.size(); ++index )
     {
-        if( ast_.aux( arm ) == 1 )
+        if( ast_.aux( children[index] ) == 1 )
         {
-            fallback = arm;
+            fallback       = children[index];
+            fallback_index = index - 1;
         }
     }
 
     if( !fallback.is_valid() && children.size() > 1 )
     {
-        fallback = children.back();
+        fallback       = children.back();
+        fallback_index = children.size() - 2;
     }
 
-    const Block_id fallback_block = fallback.is_valid() ? builder_.add_block() : Block_id {};
+    // One block per arm, all allocated before any is lowered. `fallthrough` jumps into the *next*
+    // arm's body, and that arm has not been lowered yet when it does - so its block has to exist
+    // first. The fallback's is one of these rather than an allocation of its own.
+    std::vector<Block_id> bodies;
 
-    for( const Node_id arm : children.subspan( 1 ) )
+    bodies.reserve( children.size() - 1 );
+
+    for( std::size_t i = 1; i < children.size(); ++i )
     {
+        bodies.push_back( builder_.add_block() );
+    }
+
+    const Block_id fallback_block = fallback.is_valid() ? bodies[fallback_index] : Block_id {};
+
+    for( std::size_t index = 1; index < children.size(); ++index )
+    {
+        const Node_id arm = children[index];
+
         if( arm == fallback )
         {
             continue;
@@ -1381,7 +1421,7 @@ void Lowering::lower_switch( Node_id id )
         const std::span<const Node_id> arm_children = ast_.children( arm );
         const std::span<const Node_id> labels       = arm_children.subspan( 0, arm_children.size() - 1 );
 
-        const Block_id body = builder_.add_block();
+        const Block_id body = bodies[index - 1];
 
         for( const Node_id label : labels )
         {
@@ -1402,8 +1442,16 @@ void Lowering::lower_switch( Node_id id )
             bind_variant_pattern( matched, label );
         }
 
+        const Block_id enclosing_fallthrough = fallthrough_target_;
+
+        // The checker has already refused a `fallthrough` in the last arm, so an invalid target
+        // here is never reached.
+        fallthrough_target_ = index < bodies.size() ? bodies[index] : Block_id {};
+
         lower_statement( arm_children.back() );
         leave();
+
+        fallthrough_target_ = enclosing_fallthrough;
 
         builder_.switch_to( resume );
     }
@@ -1424,14 +1472,27 @@ void Lowering::lower_switch( Node_id id )
             bind_variant_pattern( matched, label );
         }
 
+        const Block_id enclosing_fallthrough = fallthrough_target_;
+
+        // The fallback is lowered last but sits wherever it was written, so its `fallthrough` goes
+        // to whatever follows it in source order - which may be a block lowered long ago. An edge
+        // backwards is still just an edge.
+        fallthrough_target_ = fallback_index + 1 < bodies.size() ? bodies[fallback_index + 1] : Block_id {};
+
         lower_statement( arm_children.back() );
+
+        fallthrough_target_ = enclosing_fallthrough;
     }
 
     leave();
 
-    if( join.is_valid() )
+    const Block_id after = loops_.back().break_target;
+
+    loops_.pop_back();
+
+    if( after.is_valid() )
     {
-        builder_.switch_to( join );
+        builder_.switch_to( after );
     }
 }
 
@@ -1671,8 +1732,15 @@ void Lowering::lower_statement( Node_id id )
         return;
 
     case Node_kind::Continue_stmt:
-        unwind_to( loops_.back().depth, ast_.span( id ) );
+        // The *loop's* depth. loops_.back() may be a switch between here and it, and unwinding to
+        // that would leave the loop's own locals undropped.
+        unwind_to( enclosing_loop().depth, ast_.span( id ) );
         builder_.terminate_goto( continue_target(), ast_.span( id ) );
+        return;
+
+    case Node_kind::Fallthrough_stmt:
+        unwind_to( loops_.back().depth, ast_.span( id ) );
+        builder_.terminate_goto( fallthrough_target_, ast_.span( id ) );
         return;
 
     default:
@@ -3980,6 +4048,93 @@ TEST_CASE( "lower_turns_a_switch_into_a_branch_chain", "[ir][lower][switch]" )
 
     // Nothing new in the IR: a switch is branches and gotos, which every pass already handles.
     REQUIRE( text.find( "switch" ) == std::string::npos );
+}
+
+// `fallthrough` jumps into the *next* arm's body - which has not been lowered when the jump is
+// emitted, so every arm's block is allocated before any of them is filled. Without that the target
+// would not exist yet.
+TEST_CASE( "lower_sends_a_fallthrough_into_the_next_arm", "[ir][lower][switch]" )
+{
+    Lowered p( "enum Colour { Red, Green, Blue };\n"
+               "i32 f( Colour c ) { i32 t = 0; switch( c ) { case Colour::Red: t = 1; fallthrough;"
+               " case Colour::Green: t = t + 10; break; default: t = 100; } return t; }\n"
+               "i32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.named( "f" );
+
+    INFO( text );
+
+    // The arm that falls through must end in a goto rather than in the jump to the block after the
+    // switch, and the block it names must be the one holding the next arm's body.
+    REQUIRE( text.find( "const 1" ) != std::string::npos );
+    REQUIRE( text.find( "const 10" ) != std::string::npos );
+}
+
+// A switch is a break target like a loop is, so the block after it and the block `break` jumps to
+// are one block rather than two that happen to agree.
+TEST_CASE( "lower_treats_a_switch_as_a_break_target", "[ir][lower][switch]" )
+{
+    SECTION( "break leaves the switch, not the enclosing loop" )
+    {
+        Lowered p( "enum Colour { Red, Green };\n"
+                   "i32 f( Colour c ) { i32 n = 0; while( n < 3 ) { n = n + 1; switch( c ) { case Colour::Red: break;"
+                   " default: n = n + 10; } } return n; }\n"
+                   "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "continue looks past it to the loop" )
+    {
+        Lowered p( "enum Colour { Red, Green };\n"
+                   "i32 f( Colour c ) { i32 n = 0; while( n < 3 ) { n = n + 1; switch( c ) { case Colour::Red: continue;"
+                   " default: continue; } } return n; }\n"
+                   "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "break with no loop at all" )
+    {
+        Lowered p( "enum Colour { Red, Green };\n"
+                   "i32 f( Colour c ) { i32 n = 0; switch( c ) { case Colour::Red: break; default: n = 1; } return n; }\n"
+                   "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// Leaving an arm has to drop what the arm owns, whichever way it leaves - and `continue` is the
+// one that would go wrong by unwinding to the switch's scope depth rather than the loop's.
+TEST_CASE( "lower_drops_an_arms_locals_however_it_leaves", "[ir][lower][switch]" )
+{
+    const std::string_view owner = "enum Colour { Red, Green };\n"
+                                   "class Owned { i32 x; Owned( i32 v ) { x = v; } ~Owned() { } };\n";
+
+    for( const char* leaving : { "break;", "continue;", "return 1;" } )
+    {
+        const std::string source = std::string( owner ) +
+                                   "i32 f( Colour c ) { i32 n = 0; while( n < 3 ) { n = n + 1; switch( c ) {"
+                                   " case Colour::Red: { Owned o = Owned( 1 ); " +
+                                   leaving + " } default: n = n + 1; } } return n; }\ni32 main() { return 0; }";
+
+        Lowered p( source );
+
+        INFO( source << "\n" << p.rendered() );
+        REQUIRE( p.clean() );
+
+        // Exactly one drop of the arm's local, on the path that leaves through it.
+        const std::string text = p.named( "f" );
+
+        INFO( text );
+        REQUIRE( text.find( "drop" ) != std::string::npos );
+    }
 }
 
 // Stacked labels are an OR, and an OR of equalities is two tests reaching one body. Checking that

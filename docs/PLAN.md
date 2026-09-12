@@ -473,7 +473,14 @@ Result<Config, Config_error> load_config( const ref Path path )
 This list is the audit surface for the §5.1 containment rule. Every entry is
 either new notation or a hard error; none silently redefines valid C++ — with one
 exception, marked `†` in §6.4, where sub-32-bit arithmetic keeps a narrower result
-type than C++'s integral promotion gives. Values agree there until the result
+type than C++'s integral promotion gives.
+
+**That claim has been false twice, and both times in `switch`** — an arm running on
+into the next, and `break` inside a `switch`. Both are fixed (D38) and the claim
+holds again, but it is a property to *test* rather than assert: the way to check it
+is to compile the same source with both compilers and compare, which is what found
+these. A divergence that produces a different answer rather than an error is exactly
+what this list exists to prevent, and a list cannot notice its own omissions. Values agree there until the result
 overflows; what happens then is the open overflow question in §12.
 
 | # | Divergence | Why it is safe under the §5.1 rule |
@@ -484,7 +491,7 @@ overflows; what happens then is the open overflow question in §12.
 | D4 | `switch` has no fallthrough, needs no `break`, requires exhaustiveness, and matches sum-type payloads. | Payload patterns (`case Circle( r ):`) are new notation. A `switch` over a plain integer keeps C++ meaning minus fallthrough; missing cases are an error, never a silent skip. |
 | D5 | No *lossy* implicit conversions. A binary operator widens both operands to the smallest type that losslessly holds both, and is a hard error whenever C++'s own result type would not hold them. Assignment is implicit only where the target holds the source type. int↔bool and pointer↔bool are never implicit. §6.4 has the table. | The second clause makes the §5.1 audit executable: where C++ is lossless Keel agrees with it, and where C++ silently loses information Keel refuses. Lossless widening is not a conversion anyone can get wrong, and requiring a cast for it trains authors to write casts reflexively — which is how the dangerous ones get waved through. **Provisional**: adopted for M1 to unblock the type checker, and expected to be re-judged once real code exists. |
 | D6 | `?` postfix operator for error propagation. | No meaning in C++; pure addition. The one borrow from outside the C family, kept because no C++ notation exists for it. |
-| D7 | **`enum` variants carry payloads**, and the shape follows from rules Keel already has. A variant's payload is a positional list of named fields: `Circle( f64 radius )`. It is constructed by naming it scoped, `Shape::Circle( 1.0 )`, as D30 requires of every variant name. It is destructured in a `case`, where the scope may be dropped — `case Circle( r ):` — because the scrutinee's type is known there and a bare name can collide with nothing. **A binding in a `case` is a read-only borrow of the payload in place**, exactly as a bare parameter of an owning type is (D31): the enum is still alive and still owns what is inside it, so the binding cannot be a copy — §6.6 has no copy constructors — and cannot be a move, which would tear a hole in a live object. `case Circle( ref r ):` is the mutable form, and reads the same as everywhere else. Variants with and without payloads mix freely: `enum Optional { None, Some( i32 ) }`. **`switch` is exhaustive**: every variant appears, or `default` does. Fallthrough happens only between **directly adjacent labels** — `case Red: case Green: return 1;` — and falling out of a non-empty arm is an error. | A payload-free `enum` behaves exactly as C++'s `enum class`, which D30 makes the only spelling; payloads are new notation. Each decision above is the existing rule applied rather than a new one, which is the test this entry had to pass: the binding mode is D31's, the scoping is D30's, and the exhaustiveness is what makes the feature worth having at all. **Fallthrough is restricted rather than refused** because stacked labels are the overwhelming majority of its use in C and C++ and cannot go wrong — an empty label binds nothing — while falling *into* a case with bindings would read payload fields that were never assigned, which is a class of bug C++ never faced because it has no destructuring. The emitted C is a tag plus a union; §6.6 records that this is the one legitimate use of a union and precisely why Keel has no `union` keyword — the tag is the compiler's to maintain, never the author's. **The first cut refuses an owning payload** (see D30), which costs nothing usable: a variant worth owning needs allocation, and that is M5.5. |
+| D7 | **`enum` variants carry payloads**, and the shape follows from rules Keel already has. A variant's payload is a positional list of named fields: `Circle( f64 radius )`. It is constructed by naming it scoped, `Shape::Circle( 1.0 )`, as D30 requires of every variant name. It is destructured in a `case`, where the scope may be dropped — `case Circle( r ):` — because the scrutinee's type is known there and a bare name can collide with nothing. **A binding in a `case` is a read-only borrow of the payload in place**, exactly as a bare parameter of an owning type is (D31): the enum is still alive and still owns what is inside it, so the binding cannot be a copy — §6.6 has no copy constructors — and cannot be a move, which would tear a hole in a live object. `case Circle( ref r ):` is the mutable form, and reads the same as everywhere else. Variants with and without payloads mix freely: `enum Optional { None, Some( i32 ) }`. **`switch` is exhaustive**: every variant appears, or `default` does. Fallthrough between **directly adjacent labels** — `case Red: case Green: return 1;` — is implicit; anywhere else it is spelled `fallthrough;`, and falling out of a non-empty arm is an error (**D38**, which is where these two became rules rather than intentions). | A payload-free `enum` behaves exactly as C++'s `enum class`, which D30 makes the only spelling; payloads are new notation. Each decision above is the existing rule applied rather than a new one, which is the test this entry had to pass: the binding mode is D31's, the scoping is D30's, and the exhaustiveness is what makes the feature worth having at all. **Fallthrough is restricted rather than refused** because stacked labels are the overwhelming majority of its use in C and C++ and cannot go wrong — an empty label binds nothing — while falling *into* a case with bindings would read payload fields that were never assigned, which is a class of bug C++ never faced because it has no destructuring. **That last sentence described a hazard this entry then failed to prevent**: stacked labels bound every label's payload unconditionally and with no tag test, so the bug was live until D38 refused the construct. The emitted C is a tag plus a union; §6.6 records that this is the one legitimate use of a union and precisely why Keel has no `union` keyword — the tag is the compiler's to maintain, never the author's. **The first cut refuses an owning payload** (see D30), which costs nothing usable: a variant worth owning needs allocation, and that is M5.5. |
 | D8 | No headers, no preprocessor. `import graphics;` — C++20's spelling. | `#include` is a hard error directing to `import`. |
 | D9 | Reading an uninitialised variable is a compile error. | Strictly rejects programs C++ accepts; never changes the meaning of an accepted one. |
 | D10 | No `new`/`delete` in safe code; `Owned<T>`, `Shared<T>`, `Weak<T>` instead. | `new` and `delete` are hard errors outside `unsafe`. |
@@ -522,6 +529,7 @@ The first cut still refuses an owning payload. Destroying an enum means destroyi
 | D35 | **`unsafe` is a block, and it permits operations rather than disabling checks.** `unsafe { ... }` is the only form: no `unsafe` function, no `unsafe` expression, no statement form — so the extent of the permission is always a pair of braces the reader can see. Everything the compiler checks outside one it still checks inside: types, `const`, move checking, definite assignment, exhaustiveness, `break` placement. What a block changes is a short **enumerated** list of *operations*, and at M5.5 that list has four entries — **converting between pointer types**, the one `unsafe` cell of §6.5's table; **calling an `extern` function** (D36); and **`alloc<T>()` and `free( p )`** (D37). Two rules come with it: **a block that uses none of them is an error**, and **a block inside another one is an error**. Raw-pointer dereference is deliberately *not* on the list. | The shape was settled in §12 and is Rust's; what this entry adds is the two rules and the list, and each follows from an entry Keel already has. **Unused is an error rather than a warning** because that is D15's shape — a construct with no effect is an error — and because the failure mode it prevents is the one that makes `unsafe` worthless for review: a region that quietly grows wider than the operation it was opened for, until the marker no longer tells a reader where to look. The compiler emits no warnings at all today, so "warning" would also mean deciding what a warning does to the exit code, which is a larger decision than this one. **Nesting is an error** because permission is not cumulative: an inner marker can only mislead about which region is the guarded one. That is the same instinct as the rule against nesting `try` in §12. **The list stays enumerated rather than inferred**, which is why dereference is absent: gating it is a language change that breaks working programs — `codegen/pointers.kl` and five other fixtures deref in safe code — and it deserves its own decision rather than arriving as a side effect of building the gate. §12 named `Buffer` and `[*]T` as what would force the full list, and neither exists yet. **No `unsafe fn`, for now.** The only construct that needs "unsafe to *call*" is `extern`, which got its own representation in the next slice — **D36, and it needed no marker at all**, because the absent body already says everything a flag would have — and a declaration marker with no customer is precisely the defect D2 records for `move` in signatures — an optional marker whose absence means either "safe" or "forgot". Worth recording for whenever it lands: Rust shipped `unsafe fn` bodies as implicit unsafe blocks and **moved away from it** in the 2024 edition, because the marker conflated "callers must check" with "the body need not say where" — so if Keel adds one it should mark callers only. **Representation, and why it is worth an entry**: an unsafe block is a `Block` carrying `aux == 1`, not a `Node_kind` of its own. Every pass that already walks blocks — scoping, lowering, drop placement, both dataflow checks — then handles it with no edit at all. That is not a micro-optimisation but a defence: a new `Node_kind` missing from one dispatch compiles cleanly and makes a rule *silently absent*, which is the most common bug in this compiler's history. |
 | D36 | **`extern` declares a function defined in C, and calling one needs `unsafe`.** `extern i32 abs( i32 v );` — file scope only, terminated by `;`, and **the absent body is what marks it**: D18's corollary already makes a bare prototype an error, so `extern` is the only rule that can produce a body-less function and no flag is needed to read it back. The name is **not mangled** — `kl__abs__i32` would link against nothing — which makes `extern` mean what C++'s `extern "C"` means. Every call site needs an `unsafe` block (D35's second gated operation), and `extern` alone carries that: there is no `unsafe extern` spelling and no way to declare a safe one. `main` may not be `extern`. Binding modes work and are how a real C signature is spelled: `ref i32` and `out i32` both emit `int32_t*`. | The representation is the entry's best part and was not designed so much as noticed. `Function_decl`'s `aux` is already the name, so a flag had nowhere to live — the same wall D35 hit — and the absent body turned out to carry the information for free. Four passes then needed **no change at all**: the resolver registers the name in its file-scope sweep and guards `!id.is_valid()` before visiting the body, the checker's `visit` guards identically, `declare_signatures` reads only the return type and parameters, and the three dataflow checks run on KIR, which an extern never enters. The total cost was one predicate, one `&& !is_extern` in `lower`, one early return in `Spelling::function`, and one new emitter pass. **That last one is the only piece that does not fall out**, and it is worth knowing why: prototypes are emitted by walking the *lowered KIR functions*, and an extern is not one — so it needs a second pass over the AST, and omitting it produces C that does not compile rather than C that is subtly wrong, which is the good failure. **Why `extern` implies unsafe rather than `unsafe extern`.** §12 leaned toward Rust's two-word form, and Rust needs both because its 2024 edition lets individual items be marked `safe` inside an `unsafe extern` block. Keel has no such escape and should not invent one: with every extern unsafe to call, the second keyword carries no information, which is the redundancy D25 and D30 refuse. **The FFI boundary is where the assertion belongs** — being the checked wrapper over an unchecked one is what §12 says `Buffer` is for, and the rule is what makes that wrapper a real boundary rather than a convention. **Two guarantees now rest on a promise rather than a proof**, and both are deliberate: `out` on an extern parameter is discharged in a body that does not exist, so the caller's variable is believed initialised on the C function's word; and `move` hands ownership to a function whose destructor Keel will never run. Neither needs a new rule, because the `unsafe` at the call site is precisely the author asserting them — but they are the first places in the language where that is true, and they are listed in §15 rather than left implicit. **The emitted file declares its externs itself and never includes the C header.** That avoids a conflicting-declaration error whenever the Keel spelling and the real one differ, and makes the Keel declaration the single source of truth; the cost is that a wrong declaration is an ABI bug at run time rather than a compile error. It is also the strongest argument for the runtime being a *thin* C floor whose signatures are ours. |
 | D37 | **`alloc<T>()` and `free( p )` are keywords, and both need `unsafe`.** `alloc<T>()` yields `T*` and takes no count — D27's `[*]T` is what will give the count somewhere to go, so the parens are there to be filled rather than added. `free( p )` takes any `T*` and yields `void`. Both lower to the runtime, `kl_rt_alloc( sizeof( T ) )` and `kl_rt_free( p )`, whose prototypes the backend emits itself when a program uses them. **Neither runs a constructor or a destructor**: `alloc` returns memory, not an object. Both are reserved words, so nothing may be named `alloc` or `free`. | **Keywords, because `alloc` needs the element type to compute the size** — that is D28's argument for `cast<T>` reused: the `<` can only be a bracket, so §12's `a < b > ( c )` ambiguity cannot arise, and no `sizeof` is ever written in Keel to be got wrong. **`free` is a keyword for a different reason, and the reason is a hole**: Keel has no `void*`, so an `extern void kl_rt_free( u8* p )` would force `unsafe { kl_rt_free( cast<u8*>( node ) ); }` at every call — an `unsafe`, a `cast`, and a pointer conversion that is *itself* a gated operation, to release one node. A keyword also *checks* its argument is a pointer, which an extern taking `u8*` cannot. Allocation and release are one decision and should be one mechanism. This does not waste D36: `extern` is still how any C library is reached and is still never thrown away; what it is not is how the *runtime* is reached, and that is right, because `kl_rt_alloc` is not a library the author chose to call. **Why `alloc` is gated, and the reason is sharper than "it can fail."** It hands back a pointer whose type says there is a `T` at that address, and there is not — the bytes are uninitialised and no invariant has ever held. That is a false statement the type system makes the instant the expression evaluates, and nothing else will catch it, because definite assignment does not track through pointers. The nullptr stopgap is the second reason and the weaker one. This is exactly the difference between `alloc` and Rust's `Box::new`, which is safe *because it takes an initialised value* — Keel has no such form yet, so there is nothing safe to expose, and that gap is what D10's `Owned<T>` exists to close. **What the pair deliberately does not do** is track anything: double free, use after free, leaking, and freeing a stack address all type-check. Each is what the `unsafe` at the site is asserting, and each is pinned as *accepted* in the tests so that the day `Owned<T>` makes one a compile error, the change is visible. **The cost, paid immediately**: reserving `free` broke two existing tests the day it landed. Worth recording as the price of the spelling rather than discovering it again later. |
+| D38 | **A `case` with a body says how it ends, and `fallthrough` is how it runs on.** Four rules, all about the shape of an arm rather than its labels. An arm that can complete normally may not be followed by another — it ends with `return`, `break` or `fallthrough`, and the last arm is exempt because nothing follows it. **`break` binds to the nearest enclosing loop *or* `switch`**, as in C; `continue` still looks past a `switch` to the loop. **`fallthrough;`** runs the next arm's body: it must be the arm's last statement, may not appear in the last arm, and may not enter an arm that binds. **No stacked label may destructure** — `case Circle( r ): case Rect( w, h ):` is refused — and **a bare `case Shape::Circle:` matches a payload variant without destructuring it**, which is what keeps stacking available. | **This is the only construct where Keel was found silently redefining valid C++**, and it did so twice. `case A: t = 1; case B: t = t + 10;` gave 1 where C++ gives 11, and `break` inside a `switch` inside a loop left the *loop* where C++ leaves the switch — both compiling in both languages with no diagnostic. §6.3's audit claims none of Keel's divergences do that; these were unrecorded exceptions, and the claim is only worth having if it is tested rather than asserted. Both are now hard errors or match C++. **`fallthrough` is what makes the first rule enforceable.** Without it the diagnostic for a run-on arm has no fix to name: `break` was spoken for, and an arm that must end but cannot say so is a rule nobody can satisfy. Every language that keeps C's `case X:` and removes implicit fallthrough keeps an explicit terminator — C# requires one, Go inserts it and lets you write `fallthrough` — and that is not a coincidence, it is the only escape hatch the syntax offers. `fallthrough;` is a *hard error* in C++ today (an undeclared identifier), so §5.1 permits it outright as new notation, and C++17's `[[fallthrough]]` already makes the word familiar. **The binding rules exist because destructuring is a hazard C++ never had.** D7 named it — *"falling into a case with bindings would read payload fields that were never assigned"* — and then nothing enforced it: stacked labels bound every label's payload unconditionally, with no tag test, so `case Circle( r ): case Rect( w, h ): return r;` read a field a `Rect` has not got. That is worse than either divergence above, because it is not a different answer but a meaningless one. **`case Shape::Circle:` is the relaxation that keeps the rule cheap.** Naming a variant and producing one are different things, and only the second needs a payload — so the same flag that lets a pattern and a construction write the bare path now lets a `case` label do it. Two rejected alternatives: a `_` wildcard, which is not needed until *partial* ignoring (`Rect( w, _ )`) is wanted and does not solve the mixed-binding case anyway; and stacking labels that bind matching names and types, which is a rule nobody would predict for a case nobody writes. |
 
 
 ### 6.4 Numeric conversions (D5)
@@ -768,7 +776,7 @@ milestone is complete until its acceptance program is a passing golden test.
 | **M4** | Move checking, `ref`/`out` bindings (D32), the non-escaping rule, drop flags. Enforcement of D2. | Use-after-move is a compile error with a good message; a conditionally-moved value drops correctly. | Ownership, dataflow analysis |
 | **M5** | `enum` (D30) payload-free first, then payloads (D7). `switch` with destructuring, `default`, stacked labels and exhaustiveness. Range labels (D34). | The `Shape`/`area` sample. Non-exhaustive `switch` is a compile error naming the missing variant. | Sum types, tagged variants |
 | **M5.5** | ~~Methods on `struct` and `class`~~ **done**. ~~`unsafe` blocks (D35)~~ **done**. ~~`extern` (D36)~~ **done**. ~~`alloc<T>`/`free` and `kl_rt` (D37)~~ **done**. | A linked list whose nodes are allocated one at a time, walked, and freed — valgrind-clean. **Amended**: this was `Buffer` with `push`, which needs the many-item pointer `[*]T` that D27 leaves out of v0, so it was never reachable at M5.5. Option (b) keeps the question the acceptance was asked to answer — can the language express a heap data structure and release it — and defers only the growable-array half to M7. | Whether the language can express a real data structure |
-| **M6** | `template<C T>` generics, monomorphisation worklist, name mangling with type args. | `max<i32>` and `max<f64>` both work; a generic `Box<T>` with a destructor drops correctly. | Instantiation, mangling |
+| **M6** | `template<C T>` generics, monomorphisation worklist, name mangling with type args. **Plus two KIR passes carried from M5.5**: empty-block threading, and constant-branch folding with the `while( true )` → `for( ; ; )` warning that goes with it. | `max<i32>` and `max<f64>` both work; a generic `Box<T>` with a destructor drops correctly. | Instantiation, mangling |
 | **M7** | Modules (`import`), multi-file compilation, then begin `Vector` and `String` **in Keel**. | A two-module program. Then a `Vector<i32>` that grows and frees. | **Whether the design actually works** |
 
 **M3 is where this stops being a toy** — it is the first thing C cannot do for
@@ -970,6 +978,7 @@ none of them can block work indefinitely.
 | Are interfaces/traits the only form of polymorphism, or is there virtual dispatch? | M6 (generic bounds force a partial answer) |
 | **What exactly is in an `unsafe` block, and what does it permit?** **Half answered — D35.** The block exists as of M5.5, the two rules around it are decided (an unused block and a nested block are both errors), and what stays open is only the *list*: today it holds one operation, converting between pointer types. Raw-pointer dereference is the next candidate and is deliberately still outside, because gating it breaks programs that compile now. The rest of this entry stands as written. The shape is settled: Rust's model — `unsafe { }` blocks and `unsafe fn` — with Zig's `[*]T` beside it. What remains is the enumerated list. The property that makes Rust's version work, and the one most often misunderstood: **`unsafe` permits operations, it does not disable checks.** Move checking, type checking and D5 all still apply inside one; an unsafe block is not a different language. The two mechanisms are orthogonal rather than overlapping — `p + 1000000` on a `[*]T` is type-correct and catastrophic, so the type says the operation is *meaningful* while `unsafe` says the author *checked the invariant*. D's `@trusted` is deliberately **not** taken: a safe function containing an unsafe block already *is* one, so Rust's two levels encode D's three, and a standalone `@trusted` without D's full `@safe`/`@system` lattice would be an optional marker whose absence means either "safe" or "forgot" — the same defect that keeps `move` out of signatures under D2. | The block: **M5.5 — done**. The full list: whenever `[*]T` and `alloc<T>` give it something beyond the pointer cast to gate |
 | **Does an empty aggregate exist, and what is its size?** `struct Empty { };` type-checks today and emits a C struct with no members, which is a **constraint violation in standard C** — GCC and Clang accept it as an extension and give it size 0, which is §2.2's boundary leaking: the emitted C compiles only because two compilers agree on something the standard does not define, and `-Wpedantic` rejects it. It is also how `kl_rt_alloc( 0 )` becomes reachable from valid Keel, which collides with the one invariant the allocation stopgap rests on — `nullptr` means failure and nothing else — since `malloc( 0 )` may legitimately return `NULL`. The runtime currently guards it by bumping a zero request to one byte, which treats the symptom. **Three answers, and the question is which problem is real.** *Reject an aggregate with no fields*, naming an `enum` with one variant as the tag-only alternative: cheapest, and it removes the C extension and the zero allocation together — but it forecloses the empty-struct-as-marker pattern that generics will want at M6, where a `Unit`-like type is the natural thing to instantiate a container with when there is nothing to store. *Give it a size of one*, as C++ does for an empty class: emits `struct { char pad; }` and matches what every C++ programmer already believes, at the cost of a byte no Keel program asked for and a field that shows up in nothing else. *Keep it at zero and emit standard C for it*, which cannot be done — C has no spelling for a zero-size object. Note the question generalises past `struct`: a payload-free `enum` variant, and any future `Unit`, land in the same place. **Decide with generics**, which is where the marker-type use becomes concrete rather than hypothetical; until then the runtime's one-byte guard holds the invariant and §15 records it as a symptom being treated. | M6, with generics — the marker-type use is what decides it |
+| **Is there a construct for "do several unconnected things to one value"?** This started as a way to spell fallthrough — let a `case` label appear more than once, run the matching arms in written order — and was rejected for `switch` on action at a distance (D38): knowing what `case A` does would mean scanning the whole `switch` for other `case A`s. **The idea survives the rejection, because what it actually describes is not a `switch`.** A `switch` selects *one* arm and the exhaustiveness that makes it worth having depends on that. What this wants is the opposite: a value, and a list of independent things to do to it, each guarded, each running if it matches, in order. Validation is the obvious customer — a field checked against several rules, accumulating findings — and so is dispatch that genuinely is one-to-many. Open questions if it is ever built: what the arms produce (nothing, or a collected value), whether the guards are patterns or predicates (D34 refused predicates in a `case` because they make exhaustiveness undecidable — a construct that *has* no exhaustiveness claim is free to allow them), and whether it needs a keyword of its own or is a library shape once generics land. **Not a v0 feature and possibly not a feature at all**; recorded because rejecting it from `switch` is not the same as deciding against it, and the reasoning is easy to lose. | After M7, with real code to judge it against |
 | Optionals: `T?`, `Optional<T>`, or a nullable-reference type — and how does it interact with `&`? | M5 |
 | ~~Does `class` exist at all, or is `struct` the only aggregate?~~ **Answered — D29.** Both exist, split at trivial copyability: `struct` is a transparent aggregate that cannot own, `class` is a type with invariants that can. Answered early, at M3 rather than M7, because the cost is asymmetric — one keyword now, versus a breaking change to every program that declared a `struct` that should have been a `class`. | M3 — decided |
 | Custom allocators / arenas — visible in the type system or not? | M7 |
@@ -1622,7 +1631,7 @@ allocation because the runtime is deferred (§12), and what that costs is precis
 what valgrind would otherwise be checking - placement is proven, freeing is
 simulated.
 
-### M4 — in progress
+### M4, M5 and M5.5 — done
 
 **`move` reaches KIR.** The first step was not the dataflow: `move x` parsed into a
 `Marker_expr` that the checker rejected outright, so nothing in the compiler ever
@@ -2241,10 +2250,18 @@ can be checked for overlap and never proved complete: `default` is required ther
 and optional here, and the dead-`default` rule applies only to the enum side.
 
 **Stacked labels fall out of the grammar.** An arm holds its own labels, so the
-parser takes labels until something that is not one appears. No fallthrough rule was
-written, and falling out of a non-empty arm is *unrepresentable* rather than
-rejected - which is the answer to the destructuring problem C++ never had to face,
-where an arm could otherwise fall into one whose bindings were never assigned.
+parser takes labels until something that is not one appears.
+
+**The paragraph that stood here was wrong, and is worth keeping as a correction.**
+It claimed falling out of a non-empty arm was *unrepresentable* rather than rejected,
+and called that "the answer to the destructuring problem C++ never had to face". Both
+halves were false. Falling out was entirely representable - it simply left the
+`switch` instead of running on, which is a silent divergence rather than an
+impossibility - and the destructuring problem was live the whole time, because
+stacking bound every label's payload with no tag test. D38 is where both became real
+rules. The lesson is the general one: "unrepresentable" is a claim about the grammar
+that has to be checked against the checker and the lowerer, not inferred from the
+parser alone.
 
 **A range is syntax and lives only where it is legal.** Parsing `a..b` in the
 expression grammar would make `i32 x = 1..5;` parse and then need a diagnostic to
@@ -2382,6 +2399,62 @@ and `out i32` both emit `int32_t*`, which is exactly the signature a C function 
 the honesty is: `out` discharges definite assignment in a body that does not exist, and
 `move` hands ownership to a destructor Keel will never run. Both are accepted on the
 call site's `unsafe` and both are now in the debts.
+
+**The `switch` slice, and how it was found.** A bug hunt after M5.5 turned up four
+things, and the two most serious were in `switch`. Both were found the same way:
+compiling the same source with `keelc` and with `c++ -std=c++20` and comparing exit
+codes. `case A: t = 1; case B: t = t + 10;` gave **1** against C++'s **11**, and
+`break` in a `switch` inside a loop gave **0** against **3**. Neither produced a
+diagnostic in either compiler. §6.3 claims no divergence does that; these were
+unrecorded exceptions, and nothing short of running both would have shown it.
+
+**A third, worse one came out of a question rather than a test.** Asked how
+`fallthrough` would interact with payload enums, the answer turned out to be that
+Keel already had the bug — stacked labels *are* fallthrough, and the emitted C bound
+every stacked label's payload unconditionally, with no tag test:
+
+```c
+kl_r_2 = kl_s_1.kl_r_1;   /* from the Circle label */
+kl_w_3 = kl_s_1.kl_w_4;   /* from the Rect label   */
+```
+
+So `case Circle( r ): case Rect( w, h ): return r;` read a field a `Rect` has not
+got. D7 had named that exact hazard and the M5 log had claimed it impossible; both
+were wrong, and the claim is corrected above rather than deleted.
+
+**`fallthrough` is load-bearing, not a convenience.** Without it the run-on rule has
+no fix to name: `break` was already spoken for, and "this arm must say how it ends"
+is unsatisfiable if there is nothing to write. Two designs were weighed. Go's
+`fallthrough` won on contiguity — you read downward, as in C — against a proposal to
+let a `case` label appear twice and run in written order, which composes better and
+is *immune* to the payload hazard by construction (each label does its own match and
+its own binding) but is action at a distance: knowing what `case A` does would mean
+scanning the whole `switch` for other `case A`s, which is what D19 and the `->`
+scope-injection rejection already refuse. It also costs the duplicate-label check and
+forecloses ever emitting a real jump table. Recorded because it is a better idea than
+its rejection suggests.
+
+**The rules interlock.** `break` had to bind to the nearest `switch` *because* leaving
+it bound to the loop is the divergence; the run-on rule needed `fallthrough` to have a
+fix; `fallthrough` needed the no-binding rule or it recreated the payload bug one
+mechanism over; and the no-binding rule needed bare `case Shape::Circle:` or stacking
+payload variants would have become impossible rather than merely unbinding. Five
+changes, and dropping any one leaves another unsatisfiable.
+
+**What the tests caught that review did not.** Writing them found a crash in
+`completes_normally` — `If_stmt` keeps its else *slot* when there is no else, so
+testing `children.size()` rather than `children[2].is_valid()` read an invalid node,
+the fourth instance of that exact assert this session. And a `fallthrough` outside a
+`switch` segfaulted while one nested in a block was silently accepted, because the
+arm walk only inspects an arm's top-level statements: both now go through a set of
+the fallthroughs that walk has ruled on, so anything it never saw is reported once.
+
+**Mutation testing earned its place here.** Breaking each rule in turn, three failed
+9, 2 and 1 assertions — and the fourth, `continue` unwinding to the switch's scope
+depth instead of the loop's, **passed everything**. The test was too weak: the shape
+that distinguishes them needs an owning local declared in the loop body *outside* the
+`switch`, and the buggy build drops 0 where the correct one drops 3. The check moved
+into a golden that counts destructor calls through the exit code.
 
 **One recovery decision, found by review rather than by a test.** `extern i32 f() { }`
 had no check at all: the `;` simply never arrived, the braces were left unconsumed, and
@@ -2690,14 +2763,12 @@ only by `-Werror`. Each layer was independently wrong and each was silent alone.
   `for( ; ; )` has no condition and therefore no exit block, which makes the
   workaround the better code — one fewer test per iteration — and is what the
   follow-up below should recommend.
-- **D7's "falling out of a non-empty arm is an error" is not enforced.** A
-  non-empty `case` that reaches the next label is accepted, and does not fall
-  through — control goes to the block after the `switch`. In a non-`void`
-  function that now lands on the return check above and is reported, though for
-  the wrong reason; in a `void` function it is still a silently-taken branch the
-  author did not write. Stacked empty labels work correctly, so only the error is
-  missing.
-- **Thread empty blocks.** `for( ; ; ) { return 1; }` lowers to `bb0: goto bb1`,
+- ~~**D7's "falling out of a non-empty arm is an error" is not enforced.**~~
+  **Fixed — D38**, along with two things found while fixing it: `break` inside a
+  `switch` left the enclosing loop rather than the switch, and stacked labels that
+  destructure read payload fields of a variant that was not there. `fallthrough;`
+  is what gave the rule a fix to name.
+- **Thread empty blocks — scheduled for M6.** `for( ; ; ) { return 1; }` lowers to `bb0: goto bb1`,
   `bb1: goto bb2`, `bb2: ...` — two blocks carrying no statements, existing only
   because the lowerer gives each construct its own entry. Every predecessor of a
   block whose statement list is empty and whose terminator is a `Goto` can jump
@@ -2712,8 +2783,8 @@ only by `-Werror`. Each layer was independently wrong and each was silent alone.
   edges pointing somewhere valid. Cheap to verify — `verify.cpp` already checks
   that every terminator target is in range, and the golden KIR corpus is the
   before/after.
-- **Fold constant branches in the lowerer, and warn on `while( true )`.** Two
-  halves of one gap, both deferred deliberately. Folding a `Branch` on a literal
+- **Fold constant branches in the lowerer, and warn on `while( true )` — scheduled
+  for M6.** Two halves of one gap, both deferred deliberately. Folding a `Branch` on a literal
   condition into a `Goto` emits less C, removes the `while( true )` false
   positive above, and is the machinery compile-time evaluation needs anyway — so
   it should land **with constexpr** rather than before it. Until then a warning
@@ -2724,10 +2795,14 @@ only by `-Werror`. Each layer was independently wrong and each was silent alone.
 - **A raw pointer to a local may escape.** `i32* f() { i32 x = 1; return &x; }`
   compiles, and so does returning `&p.x`. §8's non-escaping rule is about
   *bindings* and correctly refuses `const ref i32 f() { i32 x = 1; return x; }`,
-  but `&` produces a `T*`, which the rule does not cover. Whether that is a gap
-  or the intended boundary is a real question — §8's argument is that a binding
-  is initialised at its declaration and never reseated, which a pointer is not —
-  and it should be answered before `[*]T` arrives and makes pointers common.
+  but `&` produces a `T*`, which the rule does not cover. **Decide it with
+  `[*]T`**, which is when pointers stop being rare. **The leaning is an error
+  rather than a warning, and narrow**: where the compiler can see that the
+  storage an escaping address names is about to be destroyed — a local going out
+  of scope at the `return` that carries its address — there is no program that
+  wants it, so there is nothing to warn about. That is a much smaller claim than
+  tracking pointer lifetimes in general, and it is the half that is decidable
+  from what §8 already knows.
 - **A node that carries a name must not be built without one.** `parse_function_decl`
   has said so since M0 — *"a declaration with no name is not one"* — and the rule
   turned out to apply one level down, to expressions: `p.this`, `E::this` and any
