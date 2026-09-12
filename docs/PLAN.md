@@ -2650,6 +2650,43 @@ only by `-Werror`. Each layer was independently wrong and each was silent alone.
   `unsafe` at the call site is asserting, so neither needs a rule — but they are
   the first places where a Keel guarantee is an assumption, and they should be
   named when the runtime is reviewed.
+- **D9 is not implemented.** *"Reading an uninitialised variable is a compile
+  error"* is in the decision table and nothing enforces it: `i32 x; return x;`
+  compiles, and so does `void f( out i32 a ) { i32 y = a; a = 1; }` — reading an
+  `out` parameter before assigning it, which is reading memory the contract says
+  is empty. **The machinery is one condition away.** `check_moves` already starts
+  every local `Uninitialised` and already inspects that state on each read; it
+  simply reports only `Moved` and `Maybe_moved`. What the fix needs beyond the
+  extra condition: `out` parameters must start `Uninitialised` rather than `Live`
+  (`Function::out_parameters` already names them), `Move_error` needs a shape for
+  "never initialised" since there is no moved-from span, and the false positives
+  the §15 note above records — a local marked live by having its address taken —
+  have to be re-examined, because they were tolerable while nothing read the
+  state and are not once something does.
+- **Nothing checks that every path returns a value.** `i32 f() { }` compiles, and
+  so does a function that returns only inside an `if` or only inside a loop. The
+  lowerer emits an implicit `return <return slot>` at the end of every function,
+  so the generated C is well-formed and the *Keel* value is garbage — the one
+  failure mode §7.7 cannot blame on C. **This is `check_assignment` applied to
+  local 0.** The return slot is exactly an `out` parameter of the function: the
+  pass already answers "can a path reach the end without assigning this", it
+  already walks the right CFG with the right lattice, and it already carries the
+  span of the `return` it reaches. Adding the return slot to the set it checks,
+  for any non-`void` function, is most of the work.
+- **D7's "falling out of a non-empty arm is an error" is not enforced.** A
+  non-empty `case` that reaches the next label is accepted, and does not fall
+  through — control goes to the block after the `switch`, so in a non-`void`
+  function it lands on the implicit return above and yields garbage. Stacked
+  empty labels work correctly, so only the error is missing. Largely subsumed by
+  the return check above, but not entirely: in a `void` function it is still a
+  silently-taken branch the author did not write.
+- **A raw pointer to a local may escape.** `i32* f() { i32 x = 1; return &x; }`
+  compiles, and so does returning `&p.x`. §8's non-escaping rule is about
+  *bindings* and correctly refuses `const ref i32 f() { i32 x = 1; return x; }`,
+  but `&` produces a `T*`, which the rule does not cover. Whether that is a gap
+  or the intended boundary is a real question — §8's argument is that a binding
+  is initialised at its declaration and never reseated, which a pointer is not —
+  and it should be answered before `[*]T` arrives and makes pointers common.
 - **A node that carries a name must not be built without one.** `parse_function_decl`
   has said so since M0 — *"a declaration with no name is not one"* — and the rule
   turned out to apply one level down, to expressions: `p.this`, `E::this` and any

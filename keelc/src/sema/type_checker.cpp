@@ -897,8 +897,13 @@ void Checker::declare_signatures_enum_decls()
 
 void Checker::record_borrowed_parameters()
 {
-    // A flat walk rathr than one over root's children: parameters live under functions,
+    // A flat walk rather than one over root's children: parameters live under functions,
     // constructors, and destructors alike, and a walk that names its containers can miss one.
+    //
+    // The cost of a flat walk is that it also sees nodes nothing references. A declaration whose
+    // name failed to parse becomes an Error node, and the parameters and receiver built before
+    // that point stay in the array, unreachable from the root - so declare_signatures never typed
+    // them. Anything walking the array rather than the tree has to tolerate them.
     for( u32 i = 0; i < ast_.node_count(); ++i )
     {
         Node_id param { i };
@@ -909,6 +914,14 @@ void Checker::record_borrowed_parameters()
         }
 
         const Type_id type = types_[param.v];
+
+        // Untyped: an orphan of a failed declaration, per the note above. It is not part of the
+        // program, and pointer_to() on an invalid type asserts rather than degrading.
+        if( !type.is_valid() )
+        {
+            continue;
+        }
+
         const Keyword mode = parameter_mode( param );
 
         // D31's two borrows. `ref` is the mutable one; a *bare* parameter of an owning type is the
@@ -6948,6 +6961,73 @@ TEST_CASE( "type_checker_still_checks_around_alloc", "[sema][types][alloc]" )
 
         INFO( p.rendered() );
         REQUIRE_FALSE( p.clean() );
+    }
+}
+
+// record_borrowed_parameters walks the node array rather than the tree, so it sees nodes nothing
+// references. A declaration whose name failed to parse becomes an Error node, but the parameters
+// and the synthesised receiver built before that point stay in the array untyped - and
+// `pointer_to` on an invalid type asserts rather than degrading. Every one of these aborted the
+// compiler.
+TEST_CASE( "type_checker_ignores_the_orphans_of_a_failed_declaration", "[sema][types][recovery]" )
+{
+    SECTION( "a method named by a keyword" )
+    {
+        // The receiver is a synthesised `ref C` parameter, so it is by-address and reaches the
+        // walk even though the Method_decl was never built.
+        const Typed p( "class C { i32 x; i32 case() { return x; } };" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    SECTION( "every keyword, in that position" )
+    {
+        for( const char* keyword :
+             { "this",   "if",   "return", "switch", "case",   "default",  "break",  "continue", "while", "for",    "else",
+               "struct", "enum", "class",  "const",  "auto",   "unsafe",   "extern", "alloc",    "free",  "move",   "out",
+               "ref",    "cast", "wrap",   "new",    "delete", "template", "import", "true",     "false", "nullptr" } )
+        {
+            const std::string source = std::string( "class C { i32 x; i32 " ) + keyword + "() { return x; } };";
+            const Typed       p( source );
+
+            INFO( source << "\n" << p.rendered() );
+            REQUIRE_FALSE( p.clean() );
+        }
+    }
+
+    SECTION( "a free function named by a keyword, with a ref parameter" )
+    {
+        const Typed p( "i32 case( ref i32 a ) { return a; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    SECTION( "with an out parameter" )
+    {
+        const Typed p( "void case( out i32 a ) { a = 1; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    SECTION( "a method named by a keyword with a ref parameter" )
+    {
+        const Typed p( "class C { i32 x; i32 case( ref i32 a ) { return a; } };" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    SECTION( "a valid declaration beside a failed one is still checked" )
+    {
+        // The orphans must be skipped without the walk losing the real parameters around them.
+        const Typed p( "class C { i32 x; i32 case() { return x; } i32 get( ref i32 a ) { return a + x; } };" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.rendered().find( "expected an identifier" ) != std::string::npos );
     }
 }
 
