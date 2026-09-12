@@ -23,7 +23,7 @@
 #                     M3's acceptance is that a destructor frees exactly once, which a golden
 #                     exit code cannot see - a double free or a leak both still exit 0.
 #   KEEL_CFLAGS flags for it                      (default: -std=c11 -Wall -Wextra -Werror)
-#   KEEL_ARTIFACTS  where the .c and binaries go  (default: ../build/test-artifacts)
+#   KEEL_ARTIFACTS  where the .c and binaries go  (default: ../../build/test-artifacts)
 #
 #   run_tests.sh <path-to-keelc>            check
 #   run_tests.sh <path-to-keelc> --update   rewrite every expectation from current behaviour
@@ -66,7 +66,7 @@ cflags="${KEEL_CFLAGS:--std=c11 -Wall -Wextra -Werror -Wno-unused-variable -Wno-
 
 # Deliberately outside tests/: the stray-file check below treats anything in a suite directory as a
 # bug, and that check is worth more than the convenience of building in place.
-artifacts="${KEEL_ARTIFACTS:-../build/test-artifacts}"
+artifacts="${KEEL_ARTIFACTS:-../../build/test-artifacts}"
 run_timeout="${KEEL_RUN_TIMEOUT:-10}"
 
 # Off by default: it multiplies the suite's runtime, and most fixtures allocate nothing for it to

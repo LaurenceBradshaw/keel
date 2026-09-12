@@ -884,6 +884,29 @@ keel/
   examples/
 ```
 
+**Superseded at M5.5.** One repository, three projects, three languages:
+
+```
+keel/
+  keelc/                  # the compiler, C++
+    src/                  # the layout above, unchanged
+    test/                 # golden corpus + run_tests.sh
+  keel_rt/                # the C floor every Keel program links against
+    src/ test/
+  keel_stl/               # the standard library, written in Keel
+    src/ test/
+  CMakePresets.json  vcpkg.json  .clang-format
+```
+
+Each project is buildable from the root and **keeps its own include root**, so keelc's
+sources still say `#include "lex/lexer.h"` and never name the project they are in - the
+restructure moved every file and changed no include. `keel_rt` is a separate project
+rather than part of keelc because it is not part of the compiler: it is *data the
+compiler ships*, in a different language, linked into programs keelc produces. `keel_stl`
+is Keel compiled by keelc, and is empty until M7. What makes one repository the right
+answer rather than three is that a change to the runtime and the change to the compiler
+that needs it are one commit, and one build proves both.
+
 Build: CMake + Ninja, C++20, clang-18. Configuration is driven by
 `CMakePresets.json`, not by VS Code kits — the kit scanner on this machine
 picks up Windows toolchains from `/mnt/c` (clang-cl, MinGW) that have no usable

@@ -51,14 +51,49 @@ for preset in debug release; do
     fi
 done
 
+# Every project's sources, not one hard-coded directory. The previous version scanned `src/`, and
+# when that moved under keelc/ the find matched nothing - so the check *passed in zero seconds*
+# having read no files. A silent pass is worse than a loud failure, which is why the count below is
+# checked rather than trusted.
 check_format()
 {
     local bad=0
+    local seen=0
+
     while IFS= read -r f; do
+        seen=$(( seen + 1 ))
         clang-format-18 -style=file:.clang-format "$f" | diff -u "$f" - && continue
         bad=1
-    done < <( find src -name '*.cpp' -o -name '*.h' )
+    done < <( find keelc keel_rt keel_stl \( -name '*.cpp' -o -name '*.h' -o -name '*.c' \) 2>/dev/null )
+
+    if [ "$seen" -eq 0 ]; then
+        echo "no sources found to format-check - has the layout moved?"
+        return 1
+    fi
+
     return "$bad"
+}
+
+# Each project registers its own golden suite by having a runner, the same way its CMakeLists does.
+# A project without one is skipped rather than failing, so keel_rt and keel_stl cost nothing until
+# they have something to run.
+check_goldens()
+{
+    local any=0
+
+    for runner in keelc/test/run_tests.sh keel_rt/test/run_tests.sh keel_stl/test/run_tests.sh; do
+        [ -x "$runner" ] || continue
+
+        any=1
+        "$runner" ./build/debug/bin/keelc || return 1
+    done
+
+    if [ "$any" -eq 0 ]; then
+        echo "no golden runners found - has the layout moved?"
+        return 1
+    fi
+
+    return 0
 }
 
 echo "pre-commit:"
@@ -67,7 +102,7 @@ echo "pre-commit:"
 step "clang-format"        check_format                              || exit 1
 step "build (debug)"       cmake --build --preset debug              || exit 1
 step "unit tests"          ./build/debug/bin/keel_tests              || exit 1
-step "golden tests"        ./tests/run_tests.sh ./build/debug/bin/keelc || exit 1
+step "golden tests"        check_goldens                             || exit 1
 step "build (release -Werror)" cmake --build --preset release        || exit 1
 
 echo "  ${green}all checks passed${reset}"

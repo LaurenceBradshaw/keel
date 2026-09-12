@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 
-# C is enabled alongside C++ because keelc's own output is C: runtime/kl_rt.c will be built here,
-# and the golden "run" tests compile generated .c files. It also stops CMake warning that the
+# C is enabled alongside C++ because keelc's own output is C: keel_rt is written in it, and the
+# golden "run" tests compile generated .c files. It also stops CMake warning that the
 # CMAKE_C_COMPILER set by the presets is unused.
 project(keel VERSION 0.1.0 LANGUAGES CXX C)
 
@@ -46,5 +46,10 @@ if(KEEL_TESTS)
     include(CTest)
 endif()
 
-add_subdirectory(src)
-add_subdirectory(tests)
+# One repository, three projects, three languages: keelc is C++, keel_rt is the C floor every Keel
+# program links against, and keel_stl is Keel compiled by keelc. Each is buildable from here, and
+# each keeps its own include root - so keelc's sources still say `#include "lex/lexer.h"` and never
+# name the project they are in.
+add_subdirectory(keelc)
+add_subdirectory(keel_rt)
+add_subdirectory(keel_stl)
