@@ -1,0 +1,34 @@
+// The whole point of the slice, end to end: a declaration with no body, emitted unmangled, linked
+// against the real libc and run. `abs` is chosen because C's `int` and Keel's `i32` coincide
+// wherever this suite runs - a wider signature would be testing the platform, not the compiler.
+extern i32 abs( i32 v );
+
+// The safe wrapper over an unchecked boundary. §12 says being one is the point of the rule: the
+// `unsafe` stops here rather than spreading to every caller.
+i32 magnitude( i32 v )
+{
+    i32 n = 0;
+
+    unsafe
+    {
+        n = abs( v );
+    }
+
+    return n;
+}
+
+i32 main()
+{
+    i32 total = 0;
+
+    total = total + magnitude( 0 - 5 ); // 5
+    total = total + magnitude( 7 );     // 12
+
+    // Called directly as well, to prove the call site spells the same symbol the prototype does.
+    unsafe
+    {
+        total = total + abs( 0 - 30 ); // 42
+    }
+
+    return total;
+}

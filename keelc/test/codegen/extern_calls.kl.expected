@@ -1,0 +1,61 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+int32_t abs( int32_t );
+
+int32_t kl__magnitude__i32( int32_t );
+int32_t kl__main__( void );
+
+int32_t kl__magnitude__i32( int32_t kl_v_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_n_2;
+    int32_t kl_t3;
+#line 10 "codegen/extern_calls.kl"
+    kl_n_2 = 0;
+#line 14 "codegen/extern_calls.kl"
+    kl_t3 = abs( kl_v_1 );
+    kl_n_2 = kl_t3;
+#line 17 "codegen/extern_calls.kl"
+    kl_t0 = kl_n_2;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_total_1;
+    int32_t kl_t2;
+    int32_t kl_t3;
+    int32_t kl_t4;
+    int32_t kl_t5;
+    int32_t kl_t6;
+    int32_t kl_t7;
+    int32_t kl_t8;
+    int32_t kl_t9;
+#line 22 "codegen/extern_calls.kl"
+    kl_total_1 = 0;
+#line 24 "codegen/extern_calls.kl"
+    kl_t2 = 0 - 5;
+    kl_t3 = kl__magnitude__i32( kl_t2 );
+    kl_t4 = kl_total_1 + kl_t3;
+    kl_total_1 = kl_t4;
+#line 25 "codegen/extern_calls.kl"
+    kl_t5 = kl__magnitude__i32( 7 );
+    kl_t6 = kl_total_1 + kl_t5;
+    kl_total_1 = kl_t6;
+#line 30 "codegen/extern_calls.kl"
+    kl_t7 = 0 - 30;
+    kl_t8 = abs( kl_t7 );
+    kl_t9 = kl_total_1 + kl_t8;
+    kl_total_1 = kl_t9;
+#line 33 "codegen/extern_calls.kl"
+    kl_t0 = kl_total_1;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

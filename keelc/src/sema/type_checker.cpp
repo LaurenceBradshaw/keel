@@ -695,6 +695,12 @@ void Checker::declare_signatures_function_decls()
 
         if( interner_.text( Symbol_id { ast_.aux( child ) } ) == "main" )
         {
+            // Main may not be marked `extern`
+            if( is_extern( ast_, child ) )
+            {
+                error_at( ast_.span( child ), "`main` may not be marked `extern`" );
+            }
+
             // return type
             if( !table_.is_error( return_type ) && return_type != table_.integer( 32, true ) )
             {
@@ -2867,6 +2873,22 @@ Type_id Checker::infer_call( Node_id id )
         return record( id, table_.builtin( Type_kind::Error ) );
     }
 
+    if( is_extern( ast_, callable ) )
+    {
+        if( unsafe_depth_ == 0 )
+        {
+            error_at(
+                ast_.span( callee ),
+                fmt::format( "calling `{}` needs an `unsafe` block", name ),
+                "it is defined in C, so the compiler cannot check what it does with its arguments"
+            );
+        }
+        else
+        {
+            unsafe_used_ = true;
+        }
+    }
+
     const std::span<const Node_id> declared  = ast_.children( ast_.children( callable )[1] );
     const std::span<const Node_id> params    = declared.subspan( implicit_params );
     const std::span<const Node_id> arguments = ast_.children( args );
@@ -4582,6 +4604,11 @@ bool is_ref_parameter( const Ast& ast, Node_id param )
            static_cast<Keyword>( ast.aux( annotation ) ) == Keyword::Ref;
 }
 
+bool is_extern( const Ast& ast, Node_id decl )
+{
+    return ast.kind( decl ) == Node_kind::Function_decl && !ast.children( decl )[2].is_valid();
+}
+
 bool is_borrowed_binding( const Ast& ast, const Types& types, Node_id decl )
 {
     const Node_id annotation = ast.children( decl )[0];
@@ -4700,6 +4727,11 @@ public:
     const Types& types() const
     {
         return types_;
+    }
+
+    const Ast& ast() const
+    {
+        return ast_;
     }
 
     Node_id nth( Node_kind kind, std::size_t index ) const
@@ -6370,6 +6402,221 @@ TEST_CASE( "type_checker_uses_a_conversion_as_an_ordinary_expression", "[sema][t
 // failed there is nothing for it to adopt from - and asking it anyway makes it report that, on top
 // of the error that is the actual cause. `nullptr` is the one that shows this, because it is the
 // only literal with no default type to fall back on.
+// D35 deferred "unsafe to call" to this slice, and `extern` is what needed it: the FFI boundary is
+// where the assertion belongs, because a C function's contract is a promise rather than a proof.
+TEST_CASE( "type_checker_gates_an_extern_call_on_unsafe", "[sema][types][extern]" )
+{
+    SECTION( "refused outside an unsafe block" )
+    {
+        const Typed p( "extern i32 abs( i32 v );\ni32 main() { return abs( 1 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`unsafe` block" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "abs" ) != std::string::npos );
+    }
+
+    SECTION( "permitted inside one" )
+    {
+        const Typed p( "extern i32 abs( i32 v );\ni32 main() { i32 n = 0; unsafe { n = abs( 1 ); } return n; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "an extern call is enough to justify the block" )
+    {
+        // The second entry on D35's list, and the one that makes `unsafe_used_` a flag with more
+        // than one writer.
+        const Typed p( "extern i32 abs( i32 v );\ni32 main() { i32 n = 0; unsafe { n = abs( 1 ); } return n; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "does nothing unsafe" ) == std::string::npos );
+    }
+
+    SECTION( "calling an ordinary function needs nothing" )
+    {
+        const Typed p( "i32 twice( i32 v ) { return v + v; }\ni32 main() { return twice( 1 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "the permission does not leak past the block" )
+    {
+        const Typed p( "extern i32 abs( i32 v );\n"
+                       "i32 main()\n"
+                       "{\n"
+                       "    i32 n = 0;\n"
+                       "    unsafe { n = abs( 1 ); }\n"
+                       "    n = abs( 2 );\n"
+                       "    return n;\n"
+                       "}" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "a safe wrapper is the point of the rule" )
+    {
+        // Being the checked wrapper over an unchecked boundary is what §12 says `Buffer` is for.
+        const Typed p( "extern i32 abs( i32 v );\n"
+                       "i32 magnitude( i32 v ) { i32 n = 0; unsafe { n = abs( v ); } return n; }\n"
+                       "i32 main() { return magnitude( 0 - 3 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "in an argument to another call" )
+    {
+        const Typed p( "extern i32 abs( i32 v );\n"
+                       "i32 twice( i32 v ) { return v + v; }\n"
+                       "i32 main() { return twice( abs( 1 ) ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+}
+
+// An extern is checked like any other declaration: it has a signature, and every call is checked
+// against it. `unsafe` permits the call; it does not stop the compiler reading the types.
+TEST_CASE( "type_checker_checks_calls_to_an_extern", "[sema][types][extern]" )
+{
+    SECTION( "the argument count" )
+    {
+        const Typed p( "extern i32 abs( i32 v );\ni32 main() { i32 n = 0; unsafe { n = abs( 1, 2 ); } return n; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "takes 1 argument" ) != std::string::npos );
+    }
+
+    SECTION( "the argument types" )
+    {
+        const Typed p( "extern i32 abs( i32 v );\n"
+                       "i32 main() { f64 d = 1.5; i32 n = 0; unsafe { n = abs( d ); } return n; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "the return type" )
+    {
+        const Typed p( "extern i32 abs( i32 v );\ni32 main() { bool b = true; unsafe { b = abs( 1 ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "an unknown parameter type is reported" )
+    {
+        const Typed p( "extern i32 f( Nope v );\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    SECTION( "a pointer signature is typed" )
+    {
+        const Typed p( "extern u64 length( u8* s );\n"
+                       "i32 main() { u8* p = nullptr; u64 n = 0; unsafe { n = length( p ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// The modes work on an extern, and two of them are where a Keel guarantee starts resting on a
+// promise rather than a proof. Pinned as *accepted* rather than as correct: the call site's
+// `unsafe` is what is standing behind them, which is the whole reason the gate is there.
+TEST_CASE( "type_checker_accepts_binding_modes_on_an_extern", "[sema][types][extern]" )
+{
+    SECTION( "a ref parameter" )
+    {
+        const Typed p( "extern void bump( ref i32 v );\ni32 main() { i32 x = 1; unsafe { bump( ref x ); } return x; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "the marker is still required at the call" )
+    {
+        const Typed p( "extern void bump( ref i32 v );\ni32 main() { i32 x = 1; unsafe { bump( x ); } return x; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "an out parameter satisfies definite assignment" )
+    {
+        // The hole worth knowing about: the obligation to assign is discharged in the callee's
+        // body, and an extern has none - so `x` is believed initialised on the C function's word.
+        const Typed p( "extern void init( out i32 v );\ni32 main() { i32 x; unsafe { init( out x ); } return x; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a move parameter is accepted, and the caller's value dies" )
+    {
+        const Typed p( "class C { i32 x; C( i32 v ) { x = v; } ~C() { } };\n"
+                       "extern void take( move C c );\n"
+                       "i32 main() { C c = C( 1 ); unsafe { take( move c ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a struct parameter" )
+    {
+        const Typed p( "struct P { i32 x; };\n"
+                       "extern i32 sum( P p );\n"
+                       "i32 main() { P p = P { 1 }; i32 n = 0; unsafe { n = sum( p ); } return n; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "returning void" )
+    {
+        const Typed p( "extern void flush();\ni32 main() { unsafe { flush(); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// `main` is the one name the backend also generates a shim for, so an extern one would have the
+// shim call the symbol it is standing in for - a silent infinite recursion rather than a link error.
+TEST_CASE( "type_checker_rejects_an_extern_main", "[sema][types][extern]" )
+{
+    const Typed p( "extern i32 main();" );
+
+    INFO( p.rendered() );
+    REQUIRE_FALSE( p.clean() );
+    REQUIRE( p.rendered().find( "`extern`" ) != std::string::npos );
+}
+
+// The predicate three passes share. Asked of the wrong kind it must answer false rather than
+// assert: lower() puts every function-like node through it, destructors and constructors included.
+TEST_CASE( "type_checker_is_extern_reads_the_absent_body", "[sema][types][extern]" )
+{
+    const Typed p( "extern i32 abs( i32 v );\n"
+                   "class C { i32 x; C( i32 v ) { x = v; } ~C() { } i32 get() { return x; } };\n"
+                   "i32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    REQUIRE( is_extern( p.ast(), p.nth( Node_kind::Function_decl, 0 ) ) );       // the extern
+    REQUIRE_FALSE( is_extern( p.ast(), p.nth( Node_kind::Function_decl, 1 ) ) ); // main
+    REQUIRE_FALSE( is_extern( p.ast(), p.nth( Node_kind::Constructor_decl, 0 ) ) );
+    REQUIRE_FALSE( is_extern( p.ast(), p.nth( Node_kind::Destructor_decl, 0 ) ) );
+    REQUIRE_FALSE( is_extern( p.ast(), p.nth( Node_kind::Method_decl, 0 ) ) );
+    REQUIRE_FALSE( is_extern( p.ast(), p.nth( Node_kind::Class_decl, 0 ) ) );
+}
+
 // The gate, and its one customer. A pointer conversion is a real conversion the compiler cannot
 // verify - the target type is an assertion about what is at that address - so it is the operation
 // `unsafe` was built to permit. Nothing else is gated yet: raw-pointer dereference stays safe until

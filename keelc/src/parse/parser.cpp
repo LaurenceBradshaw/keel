@@ -590,6 +590,11 @@ Node_id Parser::parse_declaration()
         return parse_enum_decl();
     }
 
+    if( check_keyword( Keyword::Extern ) )
+    {
+        return parse_function_decl();
+    }
+
     // A function and a file-scope variable both open with a type and a name; only what follows the
     // name separates them. `(` opens a parameter list, anything else belongs to a variable.
     //
@@ -616,6 +621,9 @@ Node_id Parser::parse_function_decl()
 {
     const Span start = peek().span;
 
+    // Check for extern keyword first, and consume it if present.
+    bool is_extern = match_keyword( Keyword::Extern );
+
     const Node_id return_type = parse_type_with_mode();
 
     // The name is a token, not a subtree, so it goes in aux rather than becoming a fourth child.
@@ -624,6 +632,35 @@ Node_id Parser::parse_function_decl()
     // No early return on a missing name: keep parsing so the body's errors are reported too.
     const Node_id params = parse_param_list();
 
+    // A body contradicts `extern` rather than merely being redundant. Recover as an ordinary
+    // definition - the body is right there, so that is the reading that lets the rest of the file
+    // compile, and leaving the braces unconsumed reads their statements as declarations.
+    if( is_extern && check( Token_kind::L_brace ) )
+    {
+        error_at(
+            peek().span,
+            "an `extern` function cannot have a body",
+            "`extern` says the definition is in C: remove the body, or remove `extern` to define it here"
+        );
+
+        is_extern = false;
+    }
+
+    if( is_extern )
+    {
+        expect( Token_kind::Semicolon );
+
+        // The absent body is what marks it: `extern` is the only rule that can produce one, so
+        // nothing needs a flag to read it back.
+        return name.is_valid() ? ast_.add(
+                                     Node_kind::Function_decl,
+                                     Span::merge( start, previous().span ),
+                                     name.v,
+                                     { return_type, params, Node_id {} }
+                                 )
+                               : error_node( Span::merge( start, previous().span ) );
+    }
+
     // A `;` in place of the body is a forward declaration, which D18 makes unnecessary. Return an
     // Error node rather than a Function_decl: this declares nothing, so letting it through would
     // also make the real definition below it look like a duplicate. Stopping here likewise keeps
@@ -631,7 +668,8 @@ Node_id Parser::parse_function_decl()
     if( check( Token_kind::Semicolon ) )
     {
         error_expected(
-            Token_kind::L_brace, "Keel has no forward declarations: every top-level declaration is visible throughout the file"
+            Token_kind::L_brace,
+            "Keel has no forward declarations: write the definition here, or `extern` if it is defined in C"
         );
         return error_node( Span::merge( start, advance().span ) );
     }
@@ -766,6 +804,14 @@ Node_id Parser::parse_aggregate_decl()
     while( !check( Token_kind::R_brace ) && !at_end() )
     {
         const u32 before = pos_;
+
+        // Reject `extern` here: a class or struct is a Keel construct, so it cannot contain a C function.
+        if( check_keyword( Keyword::Extern ) )
+        {
+            error_at( peek().span, "`extern` is not allowed inside a class or struct" );
+            advance();
+            continue;
+        }
 
         const bool is_destructor  = check( Token_kind::Tilde );
         const bool is_constructor = check( Token_kind::Identifier ) && peek( 1 ).kind == Token_kind::L_paren;
@@ -1521,6 +1567,21 @@ Node_id Parser::parse_statement()
         // Parsed for its cursor movement, not its result: the node is not a statement, so an
         // Error node stands in its place. A malformed struct still reports from in there.
         parse_aggregate_decl();
+
+        return error_node( Span::merge( start, previous().span ) );
+    }
+
+    if( check_keyword( Keyword::Extern ) )
+    {
+        const Span start = peek().span;
+
+        error_at(
+            start, "`extern` is not a statement", "write `extern` at file scope, where it declares a function or a variable"
+        );
+
+        // Parsed for its cursor movement, not its result: the node is not a statement, so an
+        // Error node stands in its place. A malformed extern still reports from in there.
+        parse_function_decl();
 
         return error_node( Span::merge( start, previous().span ) );
     }
@@ -3421,6 +3482,199 @@ TEST_CASE( "parser_rejects_a_forward_declaration", "[parse]" )
 
         REQUIRE( functions == 2 );
     }
+}
+
+// D18's corollary made a body-less function a parse error; `extern` is the one rule that produces
+// one on purpose. The absent body IS the marker - nothing carries a flag - so these check the shape
+// as closely as the acceptance.
+TEST_CASE( "parser_parses_an_extern_declaration", "[parse][extern]" )
+{
+    SECTION( "it is a Function_decl with no body" )
+    {
+        const Parsed p( "extern i32 abs( i32 v );\ni32 main() { return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id decl = p.child( p.root(), 0 );
+
+        REQUIRE( p.kind( decl ) == Node_kind::Function_decl );
+        REQUIRE( p.children( decl ).size() == 3 );
+        REQUIRE( p.kind( p.child( decl, 0 ) ) == Node_kind::Named_type );
+        REQUIRE( p.kind( p.child( decl, 1 ) ) == Node_kind::Param_list );
+        REQUIRE_FALSE( p.child( decl, 2 ).is_valid() );
+    }
+
+    SECTION( "an ordinary function keeps its body" )
+    {
+        const Parsed p( "i32 f( i32 v ) { return v; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id decl = p.child( p.root(), 0 );
+
+        REQUIRE( p.child( decl, 2 ).is_valid() );
+        REQUIRE( p.kind( p.child( decl, 2 ) ) == Node_kind::Block );
+    }
+
+    SECTION( "the span covers the keyword" )
+    {
+        const Parsed p( "extern i32 abs( i32 v );" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        // A diagnostic about the declaration must underline `extern` too - it is the word that
+        // makes it one.
+        REQUIRE( p.text( p.child( p.root(), 0 ) ) == "extern i32 abs( i32 v );" );
+    }
+
+    SECTION( "the parameters are real Param_decls" )
+    {
+        const Parsed p( "extern i32 max( i32 a, i32 b );" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id params = p.child( p.child( p.root(), 0 ), 1 );
+
+        REQUIRE( p.children( params ).size() == 2 );
+        REQUIRE( p.kind( p.child( params, 0 ) ) == Node_kind::Param_decl );
+        REQUIRE( p.kind( p.child( params, 1 ) ) == Node_kind::Param_decl );
+    }
+
+    SECTION( "no parameters" )
+    {
+        const Parsed p( "extern i32 rand();" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.children( p.child( p.child( p.root(), 0 ), 1 ) ).empty() );
+    }
+
+    SECTION( "a pointer parameter and a pointer return" )
+    {
+        const Parsed p( "extern u8* alloc( u64 n );" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.kind( p.child( p.child( p.root(), 0 ), 0 ) ) == Node_kind::Pointer_type );
+    }
+
+    SECTION( "several in a row" )
+    {
+        const Parsed p( "extern i32 abs( i32 v );\nextern i32 rand();\ni32 main() { return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.children( p.root() ).size() == 3 );
+    }
+}
+
+TEST_CASE( "parser_rejects_a_malformed_extern", "[parse][extern]" )
+{
+    SECTION( "without a terminator" )
+    {
+        const Parsed p( "extern i32 abs( i32 v )\ni32 main() { return 0; }" );
+
+        REQUIRE( p.has_errors() );
+        INFO( p.errors() );
+        REQUIRE( p.errors().find( "expected `;`" ) != std::string::npos );
+    }
+
+    SECTION( "with a body" )
+    {
+        // `extern` says the definition is elsewhere, so writing one here is a contradiction rather
+        // than a redundancy - and it must say so, rather than failing to find the `;`.
+        const Parsed p( "extern i32 f() { return 1; }" );
+
+        REQUIRE( p.has_errors() );
+        INFO( p.errors() );
+        REQUIRE( p.errors().find( "cannot have a body" ) != std::string::npos );
+    }
+
+    SECTION( "a body does not cascade" )
+    {
+        // The struct-in-a-function precedent, and the same count: left unconsumed, the body's
+        // statements are read as top-level declarations and one mistake becomes five.
+        const Parsed p( "extern i32 f() { return 1; }\ni32 main() { return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+    }
+
+    SECTION( "a body recovers as an ordinary definition" )
+    {
+        // The body is right there, so that is the reading that lets the rest of the file compile.
+        // Dropping the declaration would turn every call to it into an unknown name.
+        const Parsed p( "extern i32 f() { return 1; }\ni32 main() { return f(); }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+
+        const Node_id decl = p.child( p.root(), 0 );
+
+        REQUIRE( p.kind( decl ) == Node_kind::Function_decl );
+        REQUIRE( p.child( decl, 2 ).is_valid() );
+        REQUIRE( p.kind( p.child( decl, 2 ) ) == Node_kind::Block );
+    }
+
+    SECTION( "with no name" )
+    {
+        const Parsed p( "extern i32 ( i32 v );" );
+
+        REQUIRE( p.has_errors() );
+    }
+
+    SECTION( "inside a class" )
+    {
+        const Parsed p( "class C { i32 x; extern i32 g( i32 v ); C( i32 v ) { x = v; } };" );
+
+        REQUIRE( p.has_errors() );
+        INFO( p.errors() );
+        REQUIRE( p.errors().find( "extern" ) != std::string::npos );
+    }
+
+    SECTION( "inside a struct" )
+    {
+        const Parsed p( "struct S { i32 x; extern i32 g( i32 v ); };" );
+
+        REQUIRE( p.has_errors() );
+        INFO( p.errors() );
+        REQUIRE( p.errors().find( "extern" ) != std::string::npos );
+    }
+
+    SECTION( "as a statement" )
+    {
+        const Parsed p( "i32 main() { extern i32 abs( i32 v ); return 0; }" );
+
+        REQUIRE( p.has_errors() );
+        INFO( p.errors() );
+        REQUIRE( p.errors().find( "not a statement" ) != std::string::npos );
+    }
+
+    SECTION( "a statement-position extern does not swallow what follows" )
+    {
+        // The struct-in-a-function case is the precedent: the declaration is parsed for its cursor
+        // movement so that one mistake stays one mistake.
+        const Parsed p( "i32 main() { extern i32 abs( i32 v ); return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+    }
+}
+
+// §12 promised this: the error a C++ author gets out of habit should name the fix now that one
+// exists.
+TEST_CASE( "parser_points_a_forward_declaration_at_extern", "[parse][extern]" )
+{
+    const Parsed p( "i32 odd( i32 n );\ni32 odd( i32 n ) { return n; }" );
+
+    REQUIRE( p.error_count() == 1 );
+    INFO( p.errors() );
+    REQUIRE( p.errors().find( "no forward declarations" ) != std::string::npos );
+    REQUIRE( p.errors().find( "`extern`" ) != std::string::npos );
 }
 
 TEST_CASE( "parser_call_errors", "[parse]" )

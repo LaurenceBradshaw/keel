@@ -1,0 +1,45 @@
+// The FFI boundary is where the assertion belongs: every call to a C function needs an `unsafe`
+// block, and the signature is checked exactly as any other function's would be.
+extern i32 abs( i32 v );
+
+i32 unguarded( i32 v )
+{
+    return abs( v );
+}
+
+i32 wrong_arity()
+{
+    i32 n = 0;
+
+    unsafe
+    {
+        n = abs( 1, 2 );
+    }
+
+    return n;
+}
+
+i32 wrong_type()
+{
+    f64 d = 1.5;
+    i32 n = 0;
+
+    unsafe
+    {
+        n = abs( d );
+    }
+
+    return n;
+}
+
+// A body contradicts the declaration. One error, and it recovers as an ordinary definition - so
+// `defined_here` below resolves, rather than cascading into an unknown name.
+extern i32 defined_here()
+{
+    return 3;
+}
+
+i32 main()
+{
+    return defined_here();
+}

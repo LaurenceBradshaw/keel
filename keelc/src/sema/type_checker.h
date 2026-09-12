@@ -117,6 +117,11 @@ Types type_check( const Ast&, const Resolution&, const Literals&, const Source_m
 // What a parameter is actually passed as: its own type, except a `ref` binding, which travels as
 // an address. Shared because lowering, the prototype and the mangled name must all agree.
 bool is_ref_parameter( const Ast& ast, Node_id param );
+
+// An FFI declaration: a function with no body. `extern` is the only rule that produces one (D18's
+// corollary makes a bare prototype an error), so the absent body is the marker and there is no flag.
+bool is_extern( const Ast& ast, Node_id decl );
+
 // The mode a declaration was written with, or Keyword::Count for none. The one reader of a
 // Mode_type's aux: three separate copies of this test existed before it, and a fourth was about to.
 // D7: whether any variant carries a payload. That one answer decides the representation - a

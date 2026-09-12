@@ -1704,7 +1704,7 @@ lower( const Ast& ast, const Resolution& resolution, const Types& types, Literal
 
     for( Node_id id { 0 }; id.v < ast.node_count(); ++id.v )
     {
-        if( is_function_like( ast.kind( id ) ) )
+        if( is_function_like( ast.kind( id ) ) && !is_extern( ast, id ) )
         {
             Lowering lowering( id, ast, resolution, types, literals, interner );
             functions.push_back( lowering.run() );

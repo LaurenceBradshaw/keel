@@ -76,6 +76,13 @@ std::string Spelling::field( Node_id declaration ) const
 
 std::string Spelling::function( Node_id declaration ) const
 {
+    // An extern names a symbol someone else defined, so the Keel name is the C name: `kl__malloc__u64`
+    // would not link against anything.
+    if( is_extern( ast, declaration ) )
+    {
+        return std::string( interner.text( Symbol_id { ast.aux( declaration ) } ) );
+    }
+
     if( ast.kind( declaration ) == Node_kind::Destructor_decl )
     {
         return mangle_destructor( "", interner.text( Symbol_id { ast.aux( declaration ) } ) );

@@ -17,7 +17,9 @@ Interner::Interner()
         "new",      "delete",
 
         // New Keel keywords
-        "move",     "out",      "ref",     "cast",     "wrap",    "this"
+        "move",     "out",      "ref",     "cast",     "wrap",    "this",
+
+        "extern"
     };
     // clang-format on
 
@@ -150,6 +152,7 @@ TEST_CASE( "interner_keyword_ids_match_the_enum", "[common][interner]" )
     REQUIRE( in.intern( "auto" ) == Interner::keyword( Keyword::Auto ) );
     REQUIRE( in.intern( "template" ) == Interner::keyword( Keyword::Template ) );
     REQUIRE( in.intern( "true" ) == Interner::keyword( Keyword::True ) );
+    REQUIRE( in.intern( "extern" ) == Interner::keyword( Keyword::Extern ) );
 }
 
 // Every enum value must have a spelling, and interning that spelling must give the id back. This is

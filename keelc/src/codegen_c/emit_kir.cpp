@@ -33,6 +33,7 @@ private:
     void emit_enums();
     void emit_globals();
     void emit_prototypes();
+    void emit_externs();
     void emit_functions();
     void emit_main_shim();
 
@@ -95,6 +96,7 @@ std::string Kir_emitter::run()
     emit_structs();
     emit_enums();
     emit_globals();
+    emit_externs();
     emit_prototypes();
     emit_functions();
     emit_main_shim();
@@ -248,6 +250,27 @@ void Kir_emitter::emit_prototypes()
     }
 
     write_line( "" );
+}
+
+void Kir_emitter::emit_externs()
+{
+    bool any = false;
+
+    for( const Node_id decl : ast_.children( ast_.root() ) )
+    {
+        if( !is_extern( ast_, decl ) )
+        {
+            continue;
+        }
+
+        write_line( prototype( decl ) + ";" );
+        any = true;
+    }
+
+    if( any )
+    {
+        write_line( "" );
+    }
 }
 
 void Kir_emitter::emit_functions()
@@ -789,6 +812,123 @@ TEST_CASE( "emit_kir_drops_the_destination_of_a_void_call", "[codegen][kir]" )
     REQUIRE( g.has( "kl__nothing__(  );" ) );
     REQUIRE_FALSE( g.has( "void kl_t" ) ); // no void local is declared
     REQUIRE( g.has( "void kl__nothing__( void )" ) );
+}
+
+// §12: `extern` "should mean what C++'s `extern \"C\"` means, including suppressing mangling" -
+// `kl__abs__i32` would not link against anything. Spelling::function is the single place a C name
+// is produced, so the prototype and the call site cannot disagree.
+TEST_CASE( "emit_kir_leaves_an_extern_unmangled", "[codegen][kir][extern]" )
+{
+    Generated g( "extern i32 abs( i32 v );\ni32 main() { i32 n = 0; unsafe { n = abs( 1 ); } return n; }" );
+
+    INFO( g.c );
+    REQUIRE( g.clean() );
+
+    SECTION( "the prototype carries the C name" )
+    {
+        REQUIRE( g.has( "int32_t abs( int32_t );" ) );
+        REQUIRE_FALSE( g.has( "kl__abs" ) );
+    }
+
+    SECTION( "and so does the call" )
+    {
+        REQUIRE( g.has( "= abs( " ) );
+    }
+
+    SECTION( "an ordinary function beside it is still mangled" )
+    {
+        REQUIRE( g.has( "kl__main__" ) );
+    }
+}
+
+// An extern never becomes a KIR function, so its declaration cannot come from the same loop the
+// other prototypes do - it is emitted from the AST, and forgetting it would produce C that does
+// not compile rather than C that is wrong.
+TEST_CASE( "emit_kir_declares_every_extern", "[codegen][kir][extern]" )
+{
+    SECTION( "one that is never called is still declared" )
+    {
+        Generated g( "extern i32 rand();\ni32 main() { return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "int32_t rand( void );" ) );
+    }
+
+    SECTION( "several" )
+    {
+        Generated g( "extern i32 abs( i32 v );\nextern i32 rand();\ni32 main() { return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "int32_t abs( int32_t );" ) );
+        REQUIRE( g.has( "int32_t rand( void );" ) );
+    }
+
+    SECTION( "no body is emitted for it" )
+    {
+        Generated g( "extern i32 abs( i32 v );\ni32 main() { return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+
+        // A definition would be `int32_t abs( int32_t kl_... )` followed by a brace. The
+        // declaration ends in a semicolon and nothing else mentions the name.
+        REQUIRE( g.c.find( "abs" ) == g.c.rfind( "abs" ) );
+    }
+
+    SECTION( "a pointer signature spells C pointers" )
+    {
+        Generated g( "extern u8* alloc( u64 n );\ni32 main() { return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "uint8_t* alloc( uint64_t );" ) );
+    }
+
+    SECTION( "the declarations precede the definitions that call them" )
+    {
+        Generated g( "extern i32 abs( i32 v );\ni32 main() { i32 n = 0; unsafe { n = abs( 1 ); } return n; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+
+        // C needs the declaration first, and the emitter's order is what guarantees it.
+        REQUIRE( g.c.find( "int32_t abs( int32_t );" ) < g.c.find( "int32_t kl__main__( void )\n{" ) );
+    }
+}
+
+// A `ref` parameter travels as an address (D32), which is exactly C's `int*` - so the modes are
+// how an extern spells the signatures a real C library has. Pinned because the prototype, the call
+// site and the KIR return slot all derive it separately and must agree.
+TEST_CASE( "emit_kir_spells_an_extern_binding_as_a_pointer", "[codegen][kir][extern]" )
+{
+    SECTION( "a ref parameter" )
+    {
+        Generated g( "extern void bump( ref i32 v );\ni32 main() { i32 x = 1; unsafe { bump( ref x ); } return x; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "void bump( int32_t* );" ) );
+    }
+
+    SECTION( "an out parameter" )
+    {
+        Generated g( "extern void init( out i32 v );\ni32 main() { i32 x; unsafe { init( out x ); } return x; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "void init( int32_t* );" ) );
+    }
+
+    SECTION( "a const ref return" )
+    {
+        Generated g( "extern const ref i32 peek();\ni32 main() { return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "int32_t* peek( void );" ) );
+    }
 }
 
 } // namespace keel

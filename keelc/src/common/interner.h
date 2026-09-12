@@ -63,6 +63,8 @@ enum class Keyword : u32
     Wrap,
     This,
 
+    Extern,
+
     Count
 };
 

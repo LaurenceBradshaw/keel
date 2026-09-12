@@ -2,6 +2,6 @@ error: expected `{`, found `;`
  --> sema/errors_forward_declaration.kl:3:17
   |
 3 | i32 odd( i32 n );
-  |                 ^ Keel has no forward declarations: every top-level declaration is visible throughout the file
+  |                 ^ Keel has no forward declarations: write the definition here, or `extern` if it is defined in C
 
 1 error generated
