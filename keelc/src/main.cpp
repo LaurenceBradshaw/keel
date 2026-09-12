@@ -69,11 +69,12 @@ void report_move_errors(
     }
 }
 
-// D31: an `out` parameter is one the callee assigns, and "the callee must assign it" is a promise
-// to the caller rather than advice - so a path that returns without writing one is an error. Same
-// shape as report_move_errors above, and for the same reason: the pass reports spans and a
-// Local_id, and this is the only place with an Interner to name it.
-// Return is also an `out` parameter, so the same checks apply.
+// Two rules out of one analysis. D31: an `out` parameter is one the callee assigns, and "the callee
+// must assign it" is a promise to the caller rather than advice - so a path that returns without
+// writing one is an error, and the return slot is the same obligation under another name. D9: a
+// value read before anything put one there. Same shape as report_move_errors above, and for the
+// same reason: the pass reports spans and a Local_id, and this is the only place with an Interner
+// to name it.
 void report_unassigned_errors(
     const std::vector<keel::Function>& functions,
     const keel::Interner&              interner,
@@ -83,7 +84,43 @@ void report_unassigned_errors(
 {
     for( const keel::Function& function : functions )
     {
-        for( const keel::Unassigned_error& error : keel::check_assignment( function ) )
+        const keel::Assignment_report report = keel::check_assignment( function );
+
+        // D9: a value read before it exists. Reported first, because when a function has both the
+        // read is the mistake and the missing assignment at the exit is its consequence.
+        for( const keel::Uninitialised_read& read : report.reads )
+        {
+            const keel::Symbol_id name = function.locals[read.local.v].name;
+
+            // A temporary is always written before it is read, so an unnamed local here is a
+            // lowering bug rather than the author's - say something rather than nothing.
+            const std::string subject =
+                name.is_valid() ? fmt::format( "`{}`", interner.text( name ) ) : std::string( "this value" );
+
+            const bool is_out = std::find( function.out_parameters.begin(), function.out_parameters.end(), read.local ) !=
+                                function.out_parameters.end();
+
+            // An `out` parameter gets its own wording: the author did write it, so "used before it
+            // is initialised" would read as though they had forgotten a declaration.
+            if( is_out )
+            {
+                diagnostics.error(
+                    read.at,
+                    fmt::format( "{} is read before this function assigns it", subject ),
+                    "an `out` parameter holds no value on entry - the caller supplies the storage, not the value"
+                );
+                continue;
+            }
+
+            diagnostics.error(
+                read.at,
+                read.maybe ? fmt::format( "{} may be used before it is initialised", subject )
+                           : fmt::format( "{} is used before it is initialised", subject ),
+                read.maybe ? "it is assigned on some paths to here, but not all" : "give it a value at its declaration"
+            );
+        }
+
+        for( const keel::Unassigned_error& error : report.unassigned )
         {
             if( error.local == keel::k_return_slot )
             {

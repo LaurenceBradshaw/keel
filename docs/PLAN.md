@@ -2650,19 +2650,37 @@ only by `-Werror`. Each layer was independently wrong and each was silent alone.
   `unsafe` at the call site is asserting, so neither needs a rule — but they are
   the first places where a Keel guarantee is an assumption, and they should be
   named when the runtime is reviewed.
-- **D9 is not implemented.** *"Reading an uninitialised variable is a compile
-  error"* is in the decision table and nothing enforces it: `i32 x; return x;`
-  compiles, and so does `void f( out i32 a ) { i32 y = a; a = 1; }` — reading an
-  `out` parameter before assigning it, which is reading memory the contract says
-  is empty. **The machinery is one condition away.** `check_moves` already starts
-  every local `Uninitialised` and already inspects that state on each read; it
-  simply reports only `Moved` and `Maybe_moved`. What the fix needs beyond the
-  extra condition: `out` parameters must start `Uninitialised` rather than `Live`
-  (`Function::out_parameters` already names them), `Move_error` needs a shape for
-  "never initialised" since there is no moved-from span, and the false positives
-  the §15 note above records — a local marked live by having its address taken —
-  have to be re-examined, because they were tolerable while nothing read the
-  state and are not once something does.
+- ~~**D9 is not implemented.**~~ **Done.** It is `check_assignment` generalised,
+  not a condition added to `check_moves` — the note that used to stand here said
+  the latter and was wrong. `check_moves`' `Uninitialised` is a *lattice bottom*
+  meaning "no information yet", so `join( Uninitialised, Live )` is `Live`, which
+  is exactly the wrong answer for a value assigned on one branch and not the
+  other. D9 needs a **must** analysis, which is what `check_assignment` already
+  is, and its transfer rules were already the right ones: `Address_of` counts as
+  initialising (without it every constructor reports, since `C c = C( 3 )` writes
+  through a pointer) and a projected write counts (without it every struct
+  literal reports, since one is assembled entirely through projections). The pass
+  now answers both halves of one question — whether a value exists by the time
+  something reads it, and whether it exists by the time the function leaves.
+  Reading an unwritten `out` parameter falls out for free and needed no extra
+  rule.
+- **Two known shallownesses in D9, both erring safe.** Taking a local's address
+  counts as initialising it, so `i32 x; i32* q = &x; return x;` is accepted even
+  though nothing wrote through `q` — the same shallowness `place_root` and
+  drop-flag placement already have, and the thing that makes `out` forwarding
+  work. And writing one field counts as initialising the whole struct, so
+  `P p; p.x = 1; return p.y;` is accepted; closing that needs per-field state,
+  which is a much larger lattice. Both are pinned in the tests as *accepted*, so
+  the day either is closed a test says so.
+- **Two guards in `check_assignment` are defensive and unexercised.** The
+  reporting walk skips unreached blocks, and `Storage_live` clears a local's
+  answer. Neither can change a verdict today: the lowerer discards statements
+  after a terminator, so no unreached block is ever built, and `always` is an
+  intersection reached by the entry path before any back edge, so a stale answer
+  at a `Storage_live` cannot survive. Both are correct and cost nothing, and the
+  first becomes load-bearing the moment constant-branch folding leaves a block
+  behind. Recorded because a mutation test shows them surviving, and that should
+  read as "known" rather than as a gap.
 - ~~**Nothing checks that every path returns a value.**~~ **Fixed.** It was
   `check_assignment` applied to local 0, as predicted: the return slot *is* an
   `out` parameter of the function, so `Function::returns_a_value` seeds it in
@@ -2679,6 +2697,21 @@ only by `-Werror`. Each layer was independently wrong and each was silent alone.
   the wrong reason; in a `void` function it is still a silently-taken branch the
   author did not write. Stacked empty labels work correctly, so only the error is
   missing.
+- **Thread empty blocks.** `for( ; ; ) { return 1; }` lowers to `bb0: goto bb1`,
+  `bb1: goto bb2`, `bb2: ...` — two blocks carrying no statements, existing only
+  because the lowerer gives each construct its own entry. Every predecessor of a
+  block whose statement list is empty and whose terminator is a `Goto` can jump
+  straight to that target instead, and the block then has no predecessors and can
+  go. **A pass over finished KIR rather than a change to any one construct's
+  lowering**, which is the whole point: the shape comes from `for`, from `while`,
+  from a `switch` arm and from nested blocks, and fixing it per-construct would be
+  four fixes that each have to be got right again next time. It also shrinks the
+  emitted C, where each of those blocks is a label and a `goto`. Watch the one
+  interaction: a self-`Goto` (`bb1: goto bb1`) must not be threaded into an
+  infinite substitution, and a block that is a branch target twice must keep both
+  edges pointing somewhere valid. Cheap to verify — `verify.cpp` already checks
+  that every terminator target is in range, and the golden KIR corpus is the
+  before/after.
 - **Fold constant branches in the lowerer, and warn on `while( true )`.** Two
   halves of one gap, both deferred deliberately. Folding a `Branch` on a literal
   condition into a `Goto` emits less C, removes the `while( true )` false

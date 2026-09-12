@@ -1,0 +1,31 @@
+error: `x` is used before it is initialised
+  --> sema/errors_uninitialised.kl:10:5
+   |
+10 |     return x;
+   |     ^^^^^^^^^ give it a value at its declaration
+
+error: `x` may be used before it is initialised
+  --> sema/errors_uninitialised.kl:22:5
+   |
+22 |     return x;
+   |     ^^^^^^^^^ it is assigned on some paths to here, but not all
+
+error: `x` is used before it is initialised
+  --> sema/errors_uninitialised.kl:29:9
+   |
+29 |     if( x > 0 )
+   |         ^^^^^ give it a value at its declaration
+
+error: `p` is used before it is initialised
+  --> sema/errors_uninitialised.kl:41:5
+   |
+41 |     return p.x;
+   |     ^^^^^^^^^^^ give it a value at its declaration
+
+error: `a` is read before this function assigns it
+  --> sema/errors_uninitialised.kl:48:5
+   |
+48 |     i32 copied = a;
+   |     ^^^^^^^^^^^^^^^ an `out` parameter holds no value on entry - the caller supplies the storage, not the value
+
+5 errors generated

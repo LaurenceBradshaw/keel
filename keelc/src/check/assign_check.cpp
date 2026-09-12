@@ -73,19 +73,69 @@ void successors( const Terminator& terminator, std::vector<Block_id>& out )
     }
 }
 
+// D9's half. A constant names no local and a global is not a local's storage, so neither can be
+// uninitialised; everything else is a read of whatever `place.local` names, projections included -
+// reading `_1.x` is reading `_1`.
+void read_operand( const Operand& operand, Span span, const Flow& flow, std::vector<Uninitialised_read>* reads )
+{
+    if( reads == nullptr || operand.kind == Operand_kind::Constant || operand.place.is_global() )
+    {
+        return;
+    }
+
+    const u32 local = operand.place.local.v;
+
+    if( flow.always[local] != 0 )
+    {
+        return;
+    }
+
+    reads->push_back( Uninitialised_read { .local = operand.place.local, .at = span, .maybe = flow.ever[local] != 0 } );
+}
+
+// a and b cover Use, Binary, Unary and Cast; the argument range covers Call. An Rvalue leaves the
+// operands its kind does not use at their Constant default, so reading all of them needs no switch -
+// the same shape check_moves' read_rvalue has, and for the same reason.
+//
+// Address_of reads a place rather than a value: `&x` does not look at what is in x, and the rule
+// below treats it as putting something there. Deliberately nothing here for it.
+void read_rvalue(
+    const Function& func, const Rvalue& value, Span span, const Flow& flow, std::vector<Uninitialised_read>* reads
+)
+{
+    read_operand( value.a, span, flow, reads );
+    read_operand( value.b, span, flow, reads );
+
+    for( u32 i = 0; i < value.argument_count; ++i )
+    {
+        read_operand( func.operands[value.first_argument + i], span, flow, reads );
+    }
+}
+
 // Only an Assign matters. A projected target counts: `(*_1).x = ...` is a step in building the
 // referent, and an `out` parameter is written exactly that way when its type is a struct.
 //
-// Storage_dead clears, so a local reused after its scope ends does not carry the old answer. It
-// cannot name an `out` parameter - those live for the whole function - but the pass is over locals
-// rather than over parameters, and a rule that holds for one should hold for all of them.
-void transfer_block( const Function& func, u32 block, Flow& flow )
+// Storage_live and Storage_dead both clear, so a local entering or leaving scope carries no answer
+// from the last time round a loop.
+//
+// `reads` is null during the fixpoint and set for the single reporting walk: reporting inside the
+// worklist would emit one error per visit for any block on a back edge, which is the same reason
+// check_moves reports in a second pass.
+void transfer_block( const Function& func, u32 block, Flow& flow, std::vector<Uninitialised_read>* reads )
 {
     const Block& b = func.blocks[block];
 
     for( u32 i = 0; i < b.statement_count; ++i )
     {
         const Statement& statement = func.statements[b.first_statement + i];
+
+        // Reads happen before the write, which is the order the statement happens in: `_1 = _1 + 1`
+        // looks at _1 and then replaces it. Outside the is_global guard below, because a global
+        // target does not stop its rvalue reading locals.
+        if( statement.kind == Statement_kind::Assign )
+        {
+            read_rvalue( func, statement.value, statement.span, flow, reads );
+        }
 
         if( statement.place.is_global() )
         {
@@ -116,24 +166,39 @@ void transfer_block( const Function& func, u32 block, Flow& flow )
 
             break;
         case Statement_kind::Storage_dead:
+        case Statement_kind::Storage_live:
             flow.always[local] = 0;
             flow.ever[local]   = 0;
             break;
-        case Statement_kind::Storage_live:
         case Statement_kind::Drop:
+            // Silent, as in check_moves: whether a drop of something uninitialised is reachable is
+            // drop elaboration's question, and reporting it here would blame the author for where
+            // the compiler put a drop.
             break;
         }
     }
+
+    // On the way out, after every statement. A non-Branch terminator leaves `condition` at its
+    // default, which is a Constant, so read_operand returns immediately.
+    read_operand( b.terminator.condition, b.terminator.span, flow, reads );
 }
 
 Flow entry_flow( const Function& func )
 {
-    Flow flow { std::vector<u8>( func.locals.size(), 1 ), std::vector<u8>( func.locals.size(), 1 ), true };
+    Flow flow { std::vector<u8>( func.locals.size(), 0 ), std::vector<u8>( func.locals.size(), 0 ), true };
 
-    // The one thing this pass asserts about the entry: an `out` parameter's referent is empty until
-    // the body writes it. Everything else is taken as assigned, because this pass is not general
-    // definite assignment - it answers one question, and a local nobody made it look at must not
-    // become an error by accident.
+    // Parameters arrive holding a value; locals and temporaries do not. The exceptions are the two
+    // obligations this pass also reports at the exits - an `out` parameter's referent is empty until
+    // the body writes it, and so is the return slot.
+    for( u32 i = 1; i <= func.parameter_count; ++i )
+    {
+        flow.always[i] = 1;
+        flow.ever[i]   = 1;
+    }
+
+    // An `out` parameter is the exception among parameters: the caller supplies storage, not a
+    // value, so its referent is empty until the body writes it. Reading one before then is D9's
+    // error as much as reading an unassigned local is.
     for( const Local_id local : func.out_parameters )
     {
         flow.always[local.v] = 0;
@@ -154,15 +219,12 @@ Flow entry_flow( const Function& func )
 
 } // namespace
 
-std::vector<Unassigned_error> check_assignment( const Function& func )
+Assignment_report check_assignment( const Function& func )
 {
-    std::vector<Unassigned_error> errors;
+    Assignment_report report;
 
-    if( func.out_parameters.empty() && !func.returns_a_value )
-    {
-        return errors; // nothing to be unassigned, and the fixpoint would prove it slowly
-    }
-
+    // No early out any more. D9 applies to every function, so every function pays for the fixpoint -
+    // the same cost check_moves has always paid on all of them.
     std::vector<Flow> in( func.blocks.size(), bottom( func.locals.size() ) );
     in[0] = entry_flow( func );
 
@@ -179,7 +241,7 @@ std::vector<Unassigned_error> check_assignment( const Function& func )
         work.pop_back();
 
         Flow out = in[block.v];
-        transfer_block( func, block.v, out );
+        transfer_block( func, block.v, out, nullptr );
 
         next.clear();
         successors( func.blocks[block.v].terminator, next );
@@ -193,20 +255,29 @@ std::vector<Unassigned_error> check_assignment( const Function& func )
         }
     }
 
-    // Every return is a way out, so every return has to have written them. Reported once per block
-    // rather than inside the loop above, which would emit one error per visit for any block on a
-    // back edge - the same reason check_moves reports in a second walk.
+    // One walk, each block exactly once, doing both halves. Reported here rather than inside the
+    // loop above, which would emit one error per visit for any block on a back edge - the same
+    // reason check_moves reports in a second walk.
+    //
+    // An unreached block is skipped outright. check_moves can afford to walk one because its
+    // unreached state is all-Uninitialised and it reports on Moved; here an unreached block holds
+    // nothing assigned, so every read in it would be reported.
     for( u32 block = 0; block < func.blocks.size(); ++block )
     {
         const Block& b = func.blocks[block];
 
-        if( b.terminator.kind != Terminator_kind::Return || !in[block].reached )
+        if( !in[block].reached )
         {
             continue;
         }
 
         Flow flow = in[block];
-        transfer_block( func, block, flow );
+        transfer_block( func, block, flow, &report.reads );
+
+        if( b.terminator.kind != Terminator_kind::Return )
+        {
+            continue;
+        }
 
         // What this exit owes: every `out` parameter, and the return slot when the function has
         // one. The two are reported through one lambda so that the set checked here cannot drift
@@ -218,7 +289,9 @@ std::vector<Unassigned_error> check_assignment( const Function& func )
                 return;
             }
 
-            errors.push_back( Unassigned_error { .local = local, .at = b.terminator.span, .maybe = flow.ever[local.v] != 0 } );
+            report.unassigned.push_back(
+                Unassigned_error { .local = local, .at = b.terminator.span, .maybe = flow.ever[local.v] != 0 }
+            );
         };
 
         for( const Local_id local : func.out_parameters )
@@ -232,7 +305,7 @@ std::vector<Unassigned_error> check_assignment( const Function& func )
         }
     }
 
-    return errors;
+    return report;
 }
 
 } // namespace keel
@@ -296,21 +369,51 @@ struct Checked
     }
 
     // Every function, the way the driver does it. Note a case must now keep its *other* functions
-    // returning properly: the return slot is checked too, so a stray `i32 helper() { }` in a
-    // fixture would add an error of its own.
+    // returning properly and reading nothing uninitialised: both halves are checked, so a stray
+    // `i32 helper() { }` in a fixture would add an error of its own.
     std::vector<Unassigned_error> errors() const
     {
         std::vector<Unassigned_error> all;
 
         for( const Function& function : functions )
         {
-            for( const Unassigned_error& error : check_assignment( function ) )
+            for( const Unassigned_error& error : check_assignment( function ).unassigned )
             {
                 all.push_back( error );
             }
         }
 
         return all;
+    }
+
+    // D9's half, gathered the same way.
+    std::vector<Uninitialised_read> reads() const
+    {
+        std::vector<Uninitialised_read> all;
+
+        for( const Function& function : functions )
+        {
+            for( const Uninitialised_read& read : check_assignment( function ).reads )
+            {
+                all.push_back( read );
+            }
+        }
+
+        return all;
+    }
+
+    // The name a read is about, for the same reason name_of exists below.
+    std::string_view name_of_read( const Uninitialised_read& read ) const
+    {
+        for( const Function& function : functions )
+        {
+            if( read.local.v < function.locals.size() && function.locals[read.local.v].name.is_valid() )
+            {
+                return interner.text( function.locals[read.local.v].name );
+            }
+        }
+
+        return {};
     }
 
     // Which parameter an error is about. The whole point of carrying a Local_id rather than a
@@ -334,6 +437,208 @@ struct Checked
 // The return slot is local 0, and `return x` lowers to an Assign into it - so "can a path reach a
 // return without having produced a value" is this pass's own question asked of one more local.
 // Before this, `i32 f() { }` compiled and returned whatever was in the slot.
+// D9. Note this cannot live beside `move`: check_moves' Uninitialised is a lattice bottom meaning
+// "no information yet", so join( Uninitialised, Live ) is Live - exactly the wrong answer for a
+// value assigned on one branch and not the other. Must-analysis, so it belongs here.
+TEST_CASE( "assign_check_reports_a_read_before_initialisation", "[check][assign][d9]" )
+{
+    SECTION( "a plain read" )
+    {
+        const Checked c( "i32 main() { i32 x; return x; }" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.reads().size() == 1 );
+        REQUIRE( c.name_of_read( c.reads()[0] ) == "x" );
+        REQUIRE_FALSE( c.reads()[0].maybe );
+    }
+
+    SECTION( "assigned on one branch only" )
+    {
+        const Checked c( "i32 f( bool b ) { i32 x; if( b ) { x = 1; } return x; }\ni32 main() { return f( true ); }" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.reads().size() == 1 );
+        REQUIRE( c.name_of_read( c.reads()[0] ) == "x" );
+
+        // The distinction the flag exists for: one path did assign it, so this is an ambiguity
+        // rather than a certainty.
+        REQUIRE( c.reads()[0].maybe );
+    }
+
+    SECTION( "read in a condition" )
+    {
+        // The terminator's operand is a read like any other, and is the one a transfer that only
+        // walked statements would miss.
+        const Checked c( "i32 main() { i32 x; if( x > 0 ) { return 1; } return 0; }" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.reads().size() == 1 );
+    }
+
+    SECTION( "read as a call argument" )
+    {
+        const Checked c( "i32 g( i32 v ) { return v; }\ni32 main() { i32 x; return g( x ); }" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.reads().size() == 1 );
+    }
+
+    SECTION( "a field of an uninitialised struct" )
+    {
+        const Checked c( "struct P { i32 x; };\ni32 main() { P p; return p.x; }" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.reads().size() == 1 );
+        REQUIRE( c.name_of_read( c.reads()[0] ) == "p" );
+    }
+
+    SECTION( "dereferencing an uninitialised pointer" )
+    {
+        const Checked c( "i32 main() { i32* p; return *p; }" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.reads().size() == 1 );
+    }
+
+    SECTION( "a local declared after another has gone out of scope" )
+    {
+        // Storage_live clears, so the second local does not inherit the first's answer.
+        const Checked c( "i32 main() { i32 y = 0; { i32 x = 1; y = x; } i32 z; return z; }" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.reads().size() == 1 );
+        REQUIRE( c.name_of_read( c.reads()[0] ) == "z" );
+    }
+
+    SECTION( "reported once, not once per visit" )
+    {
+        // A read on a back edge would be re-reported on every worklist visit without the second
+        // walk - the same shape check_moves' "reports once" case pins.
+        const Checked c( "i32 main() { i32 x; i32 i = 0; i32 t = 0; while( i < 3 ) { t = t + x; i = i + 1; } return t; }" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.reads().size() == 1 );
+    }
+}
+
+// An `out` parameter holds storage, not a value, so reading one before the body writes it is the
+// same mistake - and the one D31's exit check could never see, because it only looked at the ways
+// out.
+TEST_CASE( "assign_check_reports_a_read_of_an_unwritten_out_parameter", "[check][assign][d9]" )
+{
+    SECTION( "read before assigning" )
+    {
+        const Checked c( "void f( out i32 a ) { i32 y = a; a = 1; }\ni32 main() { i32 x; f( out x ); return x; }" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.reads().size() == 1 );
+        REQUIRE( c.name_of_read( c.reads()[0] ) == "a" );
+    }
+
+    SECTION( "assigned first, then read" )
+    {
+        const Checked c( "void f( out i32 a ) { a = 1; i32 y = a; a = y; }\ni32 main() { i32 x; f( out x ); return x; }" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.reads().empty() );
+    }
+
+    SECTION( "forwarding still works" )
+    {
+        // `init( out n )` lowers to `&n`, and the address-of rule is what makes the callee's
+        // promise count as the assignment. Without it every forwarder would report.
+        const Checked c( "void init( out i32 n ) { n = 1; }\n"
+                         "void forward( out i32 n ) { init( out n ); }\n"
+                         "i32 main() { i32 x; forward( out x ); return x; }" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.reads().empty() );
+        REQUIRE( c.errors().empty() );
+    }
+}
+
+// The false-positive set, and it is the whole game: this pass now looks at every local in every
+// function, so a rule that is slightly too strict breaks working programs rather than catching
+// bugs. Each of these is a shape whose initialisation the analysis cannot see directly.
+TEST_CASE( "assign_check_accepts_what_is_initialised_indirectly", "[check][assign][d9]" )
+{
+    for( const char* source : {
+             // A constructor writes through a pointer; only the Address_of rule connects the two.
+             "class C { i32 v; C( i32 n ) { v = n; } ~C() { } };\ni32 main() { C c = C( 3 ); return c.v; }",
+             // A struct literal is assembled entirely through projections.
+             "struct P { i32 x; i32 y; };\ni32 main() { P p = P { 1, 2 }; return p.x; }",
+             // Nested, so the inner temporary is built the same way.
+             "struct I { i32 v; };\nstruct P { I inner; };\ni32 main() { P p = P { I { 1 } }; return p.inner.v; }",
+             "i32 main() { i32 x; x = 1; return x; }",
+             "i32 f( bool b ) { i32 x; if( b ) { x = 1; } else { x = 2; } return x; }\ni32 main() { return f( true ); }",
+             "i32 main() { i32 t = 0; i32 i = 0; while( i < 3 ) { t = t + i; i = i + 1; } return t; }",
+             // Fresh every iteration, and assigned before it is read every time. Note this passes
+             // whether or not Storage_live clears: `always` is an intersection and the entry path
+             // reaches the body before any back edge does, so the first iteration settles it. The
+             // clear is kept because a local entering scope holding an answer from last time is
+             // wrong on its face, not because a case here can tell the difference.
+             "i32 main() { i32 t = 0; i32 i = 0; while( i < 3 ) { i32 z; z = i; t = t + z; i = i + 1; } return t; }",
+             // The address is taken and written through; the analysis cannot follow the pointer.
+             "i32 main() { i32 x; i32* q = &x; *q = 1; return x; }",
+             "void bump( ref i32 v ) { v = v + 1; }\ni32 main() { i32 x = 1; bump( ref x ); return x; }",
+             "struct N { i32 v; };\n"
+             "i32 main() { i32 r = 0; unsafe { N* n = alloc<N>(); n.v = 7; r = n.v; free( n ); } return r; }",
+             // A pattern binding is initialised by the match itself.
+             "enum S { A( i32 r ), B };\n"
+             "i32 main() { S s = S::A( 3 ); switch( s ) { case S::A( r ): return r; case S::B: return 0; } }",
+             // Moved away, then given a new value before being read again.
+             "class C { i32 v; C( i32 n ) { v = n; } ~C() { } };\n"
+             "i32 main() { C a = C( 1 ); C b = move a; a = C( 2 ); return a.v; }",
+         } )
+    {
+        const Checked c( source );
+
+        INFO( source << "\n" << c.rendered() );
+        REQUIRE( c.reads().empty() );
+    }
+}
+
+// Statements after a terminator are discarded by the lowerer, so this never becomes a block at
+// all - which is why it passes with or without the `reached` guard in the reporting walk.
+//
+// That guard is kept deliberately and is currently unexercised: an unreached block holds nothing
+// assigned, so every read in one would be reported, and check_moves can walk unreached blocks only
+// because its unreached state reports nothing. The day the lowerer leaves one behind - folding a
+// constant branch would do it - this is the rule that stops a cascade, and there is no way to
+// write a case for it until then.
+TEST_CASE( "assign_check_ignores_unreachable_code", "[check][assign][d9]" )
+{
+    const Checked c( "i32 f( i32 n ) { return n; i32 x; return x; }\ni32 main() { return f( 1 ); }" );
+
+    INFO( c.rendered() );
+    REQUIRE( c.reads().empty() );
+
+    // The premise above: one block, so there is nothing unreached to skip.
+    REQUIRE( c.functions.front().blocks.size() == 1 );
+}
+
+// Recorded rather than fixed: both err in the safe direction - they can miss a real mistake, never
+// invent one - and closing either needs a bigger lattice. Pinned so that the day one is closed,
+// this says so.
+TEST_CASE( "assign_check_is_shallow_in_two_known_ways", "[check][assign][d9]" )
+{
+    SECTION( "taking the address counts as initialising, even if nothing writes through it" )
+    {
+        const Checked c( "i32 main() { i32 x; i32* q = &x; return x; }" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.reads().empty() );
+    }
+
+    SECTION( "writing one field counts as initialising the whole struct" )
+    {
+        const Checked c( "struct P { i32 x; i32 y; };\ni32 main() { P p; p.x = 1; return p.y; }" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.reads().empty() );
+    }
+}
+
 TEST_CASE( "assign_check_requires_a_value_on_every_path_out", "[check][assign][returns]" )
 {
     SECTION( "no return at all" )
