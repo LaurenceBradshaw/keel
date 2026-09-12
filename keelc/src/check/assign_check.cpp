@@ -140,6 +140,15 @@ Flow entry_flow( const Function& func )
         flow.ever[local.v]   = 0;
     }
 
+    // The return slot is an `out` parameter of the function: the caller supplies the storage and the
+    // body's obligation is to have written it before any way out. Seeded here rather than given a
+    // pass of its own, because it is the same question on the same graph.
+    if( func.returns_a_value )
+    {
+        flow.always[k_return_slot.v] = 0;
+        flow.ever[k_return_slot.v]   = 0;
+    }
+
     return flow;
 }
 
@@ -149,7 +158,7 @@ std::vector<Unassigned_error> check_assignment( const Function& func )
 {
     std::vector<Unassigned_error> errors;
 
-    if( func.out_parameters.empty() )
+    if( func.out_parameters.empty() && !func.returns_a_value )
     {
         return errors; // nothing to be unassigned, and the fixpoint would prove it slowly
     }
@@ -199,13 +208,27 @@ std::vector<Unassigned_error> check_assignment( const Function& func )
         Flow flow = in[block];
         transfer_block( func, block, flow );
 
+        // What this exit owes: every `out` parameter, and the return slot when the function has
+        // one. The two are reported through one lambda so that the set checked here cannot drift
+        // from the set entry_flow seeds - they have to name exactly the same locals.
+        const auto owed = [&]( Local_id local )
+        {
+            if( flow.always[local.v] != 0 )
+            {
+                return;
+            }
+
+            errors.push_back( Unassigned_error { .local = local, .at = b.terminator.span, .maybe = flow.ever[local.v] != 0 } );
+        };
+
         for( const Local_id local : func.out_parameters )
         {
-            if( flow.always[local.v] == 0 )
-            {
-                errors.push_back( Unassigned_error { .local = local, .at = b.terminator.span, .maybe = flow.ever[local.v] != 0 }
-                );
-            }
+            owed( local );
+        }
+
+        if( func.returns_a_value )
+        {
+            owed( k_return_slot );
         }
     }
 
@@ -272,8 +295,9 @@ struct Checked
         return out.str();
     }
 
-    // Every function, the way the driver does it: only one with `out` parameters can report, so
-    // which function that is never has to be worked out by a case here.
+    // Every function, the way the driver does it. Note a case must now keep its *other* functions
+    // returning properly: the return slot is checked too, so a stray `i32 helper() { }` in a
+    // fixture would add an error of its own.
     std::vector<Unassigned_error> errors() const
     {
         std::vector<Unassigned_error> all;
@@ -306,6 +330,133 @@ struct Checked
 };
 
 } // namespace
+
+// The return slot is local 0, and `return x` lowers to an Assign into it - so "can a path reach a
+// return without having produced a value" is this pass's own question asked of one more local.
+// Before this, `i32 f() { }` compiled and returned whatever was in the slot.
+TEST_CASE( "assign_check_requires_a_value_on_every_path_out", "[check][assign][returns]" )
+{
+    SECTION( "no return at all" )
+    {
+        const Checked c( "i32 f() { }\ni32 main() { return f(); }" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.errors().size() == 1 );
+        REQUIRE( c.errors()[0].local == k_return_slot );
+    }
+
+    SECTION( "a return in an `if` with no `else`" )
+    {
+        const Checked c( "i32 f( i32 x ) { if( x > 0 ) { return 1; } }\ni32 main() { return f( 0 ); }" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.errors().size() == 1 );
+        REQUIRE( c.errors()[0].local == k_return_slot );
+    }
+
+    SECTION( "one arm of a switch" )
+    {
+        const Checked c( "i32 f( i32 x ) { switch( x ) { case 1: return 1; default: i32 y = 2; } }\n"
+                         "i32 main() { return f( 1 ); }" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.errors().size() == 1 );
+    }
+
+    SECTION( "only inside a loop" )
+    {
+        const Checked c( "i32 f() { while( false ) { return 1; } }\ni32 main() { return f(); }" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.errors().size() == 1 );
+    }
+
+    SECTION( "a non-empty case arm falling out of the switch" )
+    {
+        // D7 says this is an error in its own right and nothing enforces that yet - but the arm
+        // jumps past the switch rather than into the next one, so it lands here.
+        const Checked c( "enum E { A, B };\n"
+                         "i32 f( E e ) { switch( e ) { case E::A: i32 y = 1; case E::B: return 2; } }\n"
+                         "i32 main() { return f( E::A ); }" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.errors().size() == 1 );
+    }
+
+    SECTION( "main is not exempt" )
+    {
+        const Checked c( "i32 main() { }" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.errors().size() == 1 );
+    }
+}
+
+// Each of these is a shape that could plausibly report and must not. The enum switch is the one
+// worth having: it has no `default` and no block after it, so nothing falls through - and if the
+// lowerer ever starts emitting one, this is what says so.
+TEST_CASE( "assign_check_accepts_every_path_that_does_return", "[check][assign][returns]" )
+{
+    for( const char* source : {
+             "i32 f( i32 x ) { if( x > 0 ) { return 1; } else { return 2; } }\ni32 main() { return f( 1 ); }",
+             "enum E { A, B };\n"
+             "i32 f( E e ) { switch( e ) { case E::A: return 1; case E::B: return 2; } }\n"
+             "i32 main() { return f( E::A ); }",
+             "i32 f( i32 x ) { switch( x ) { case 1: return 1; default: return 2; } }\ni32 main() { return f( 1 ); }",
+             "enum E { A, B, C };\n"
+             "i32 f( E e ) { switch( e ) { case E::A: case E::B: return 1; case E::C: return 2; } }\n"
+             "i32 main() { return f( E::A ); }",
+             "i32 f() { { { return 1; } } }\ni32 main() { return f(); }",
+             "i32 f( i32 x ) { if( x > 0 ) { return 1; } else { if( x < 0 ) { return 2; } else { return 3; } } }\n"
+             "i32 main() { return f( 0 ); }",
+             "i32 f( out i32 a ) { a = 1; return 2; }\ni32 main() { i32 x; return f( out x ); }",
+             "i32 f() { for( ; ; ) { return 1; } }\ni32 main() { return f(); }",
+         } )
+    {
+        const Checked c( source );
+
+        INFO( source << "\n" << c.rendered() );
+        REQUIRE( c.errors().empty() );
+    }
+}
+
+// A `void` return slot is not an obligation, so nothing that has one may report. Constructors and
+// destructors are the cases that would be easy to miss - they have a return slot like any other
+// function, and it is `void`.
+TEST_CASE( "assign_check_leaves_void_functions_alone", "[check][assign][returns]" )
+{
+    for( const char* source : {
+             "void g() { }\ni32 main() { g(); return 0; }",
+             "void g() { return; }\ni32 main() { g(); return 0; }",
+             "void g( i32 x ) { if( x > 0 ) { return; } }\ni32 main() { g( 1 ); return 0; }",
+             "class C { i32 x; C( i32 v ) { x = v; } ~C() { } };\ni32 main() { C c = C( 1 ); return 0; }",
+             "class C { i32 x; C( i32 v ) { x = v; } void set( i32 v ) { x = v; } };\n"
+             "i32 main() { C c = C( 1 ); c.set( 2 ); return 0; }",
+         } )
+    {
+        const Checked c( source );
+
+        INFO( source << "\n" << c.rendered() );
+        REQUIRE( c.errors().empty() );
+    }
+}
+
+// The known false positive, pinned so that the day constant branches are folded this test says so
+// rather than the behaviour changing quietly. `while( true )` leaves a loop-exit block that is
+// reachable in the graph and never taken at run time; `for( ; ; )` has no condition, so there is no
+// exit block at all - which makes the workaround the better code anyway.
+TEST_CASE( "assign_check_reports_a_constantly_true_loop", "[check][assign][returns]" )
+{
+    const Checked flagged( "i32 f() { while( true ) { return 1; } }\ni32 main() { return f(); }" );
+
+    INFO( flagged.rendered() );
+    REQUIRE( flagged.errors().size() == 1 );
+
+    const Checked clean( "i32 f() { for( ; ; ) { return 1; } }\ni32 main() { return f(); }" );
+
+    INFO( clean.rendered() );
+    REQUIRE( clean.errors().empty() );
+}
 
 TEST_CASE( "assign_check_accepts_an_out_parameter_assigned_on_every_path", "[check][assign]" )
 {

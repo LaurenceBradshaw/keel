@@ -194,6 +194,10 @@ struct Function
     std::vector<Statement>  statements;
     std::vector<Projection> projections;
     std::vector<Operand>    operands;
+
+    // Whether local 0 is a value the body must produce. The passes have no Type_table, so this is
+    // recorded the same way out_parameters is, and for the same reason: the graph does not say.
+    bool returns_a_value = false;
 };
 
 // Constructors for the vocabulary above. Designated initialisers throughout, for three reasons:

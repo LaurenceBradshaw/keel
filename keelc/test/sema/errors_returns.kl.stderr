@@ -1,0 +1,25 @@
+error: this function never returns a value
+ --> sema/errors_returns.kl:4:1
+  |
+4 | i32 nothing_at_all()
+  | ^^^^^^^^^^^^^^^^^^^^ it returns `i32`, so every path out of it must produce one
+
+error: this function does not return a value on every path
+ --> sema/errors_returns.kl:8:1
+  |
+8 | i32 only_when_positive( i32 x )
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ it returns `i32`, so every path out of it must produce one
+
+error: this function does not return a value on every path
+  --> sema/errors_returns.kl:16:1
+   |
+16 | i32 only_one_arm( i32 x )
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^ it returns `i32`, so every path out of it must produce one
+
+error: this function does not return a value on every path
+  --> sema/errors_returns.kl:27:1
+   |
+27 | i32 never_leaves_the_loop()
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^ it returns `i32`, so every path out of it must produce one
+
+4 errors generated

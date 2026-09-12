@@ -1,5 +1,6 @@
 #include <fmt/core.h>
 #include <fmt/format.h>
+#include <algorithm>
 #include <cstdlib>
 #include <cxxopts.hpp>
 #include <filesystem>
@@ -72,14 +73,46 @@ void report_move_errors(
 // to the caller rather than advice - so a path that returns without writing one is an error. Same
 // shape as report_move_errors above, and for the same reason: the pass reports spans and a
 // Local_id, and this is the only place with an Interner to name it.
+// Return is also an `out` parameter, so the same checks apply.
 void report_unassigned_errors(
-    const std::vector<keel::Function>& functions, const keel::Interner& interner, keel::Diagnostics& diagnostics
+    const std::vector<keel::Function>& functions,
+    const keel::Interner&              interner,
+    keel::Diagnostics&                 diagnostics,
+    const keel::Types&                 types
 )
 {
     for( const keel::Function& function : functions )
     {
         for( const keel::Unassigned_error& error : keel::check_assignment( function ) )
         {
+            if( error.local == keel::k_return_slot )
+            {
+                const std::string_view return_type = types.table().name( function.locals[keel::k_return_slot.v].type );
+
+                // Not error.maybe, which cannot answer this one. A path that returns *leaves* the
+                // graph, so it never joins the block this is reported at, and `ever` there is
+                // always 0 - the flag is meaningful for an `out` parameter, whose paths do join,
+                // and structurally false for the return slot. The question the wording wants is
+                // about the whole function, so it is asked of the whole function.
+                const bool returns_somewhere = std::any_of(
+                    function.statements.begin(),
+                    function.statements.end(),
+                    []( const keel::Statement& statement )
+                    {
+                        return statement.kind == keel::Statement_kind::Assign && !statement.place.is_global() &&
+                               statement.place.local == keel::k_return_slot;
+                    }
+                );
+
+                diagnostics.error(
+                    error.at,
+                    returns_somewhere ? "this function does not return a value on every path"
+                                      : "this function never returns a value",
+                    fmt::format( "it returns `{}`, so every path out of it must produce one", return_type )
+                );
+                continue;
+            }
+
             const keel::Symbol_id name = function.locals[error.local.v].name;
 
             // An `out` parameter always has one, unlike a moved temporary - but reading it from the
@@ -232,7 +265,7 @@ int main( int argc, char** argv )
     // an editor wants use-after-move underlined. Which is why this runs above that early return
     // rather than beside the emitter.
     report_move_errors( functions, sm, interner, diagnostics );
-    report_unassigned_errors( functions, interner, diagnostics );
+    report_unassigned_errors( functions, interner, diagnostics, types );
 
     if( diagnostics.has_errors() )
     {

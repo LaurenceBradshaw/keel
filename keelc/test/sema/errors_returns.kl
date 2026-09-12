@@ -1,0 +1,38 @@
+// D9's other half: a non-void function that can reach its end without producing a value. The
+// lowerer has to terminate every block, so the fall-off-the-end path returns the slot regardless -
+// which made this a wrong answer delivered silently rather than a diagnostic.
+i32 nothing_at_all()
+{
+}
+
+i32 only_when_positive( i32 x )
+{
+    if( x > 0 )
+    {
+        return 1;
+    }
+}
+
+i32 only_one_arm( i32 x )
+{
+    switch( x )
+    {
+        case 1: return 1;
+        default: i32 y = 2;
+    }
+}
+
+// `while( true )` leaves a loop-exit block the graph can reach and the program cannot. `for( ; ; )`
+// has no condition and no exit block, so it is both the fix and the better code.
+i32 never_leaves_the_loop()
+{
+    while( true )
+    {
+        return 1;
+    }
+}
+
+i32 main()
+{
+    return 0;
+}

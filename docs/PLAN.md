@@ -2663,23 +2663,31 @@ only by `-Werror`. Each layer was independently wrong and each was silent alone.
   the §15 note above records — a local marked live by having its address taken —
   have to be re-examined, because they were tolerable while nothing read the
   state and are not once something does.
-- **Nothing checks that every path returns a value.** `i32 f() { }` compiles, and
-  so does a function that returns only inside an `if` or only inside a loop. The
-  lowerer emits an implicit `return <return slot>` at the end of every function,
-  so the generated C is well-formed and the *Keel* value is garbage — the one
-  failure mode §7.7 cannot blame on C. **This is `check_assignment` applied to
-  local 0.** The return slot is exactly an `out` parameter of the function: the
-  pass already answers "can a path reach the end without assigning this", it
-  already walks the right CFG with the right lattice, and it already carries the
-  span of the `return` it reaches. Adding the return slot to the set it checks,
-  for any non-`void` function, is most of the work.
+- ~~**Nothing checks that every path returns a value.**~~ **Fixed.** It was
+  `check_assignment` applied to local 0, as predicted: the return slot *is* an
+  `out` parameter of the function, so `Function::returns_a_value` seeds it in
+  `entry_flow` and the reporting loop owes it at every exit. **A constantly-true
+  loop is a known false positive**: `while( true ) { return 1; }` leaves a
+  loop-exit block the graph can reach and the program cannot, so it is reported.
+  `for( ; ; )` has no condition and therefore no exit block, which makes the
+  workaround the better code — one fewer test per iteration — and is what the
+  follow-up below should recommend.
 - **D7's "falling out of a non-empty arm is an error" is not enforced.** A
   non-empty `case` that reaches the next label is accepted, and does not fall
-  through — control goes to the block after the `switch`, so in a non-`void`
-  function it lands on the implicit return above and yields garbage. Stacked
-  empty labels work correctly, so only the error is missing. Largely subsumed by
-  the return check above, but not entirely: in a `void` function it is still a
-  silently-taken branch the author did not write.
+  through — control goes to the block after the `switch`. In a non-`void`
+  function that now lands on the return check above and is reported, though for
+  the wrong reason; in a `void` function it is still a silently-taken branch the
+  author did not write. Stacked empty labels work correctly, so only the error is
+  missing.
+- **Fold constant branches in the lowerer, and warn on `while( true )`.** Two
+  halves of one gap, both deferred deliberately. Folding a `Branch` on a literal
+  condition into a `Goto` emits less C, removes the `while( true )` false
+  positive above, and is the machinery compile-time evaluation needs anyway — so
+  it should land **with constexpr** rather than before it. Until then a warning
+  on `while( true )` naming `for( ; ; )` would close the loop for the author, at
+  the cost of being the compiler's first warning: `Diagnostics::warning` exists
+  and nothing calls it, so this also means deciding what a warning does to the
+  exit code.
 - **A raw pointer to a local may escape.** `i32* f() { i32 x = 1; return &x; }`
   compiles, and so does returning `&p.x`. §8's non-escaping rule is about
   *bindings* and correctly refuses `const ref i32 f() { i32 x = 1; return x; }`,

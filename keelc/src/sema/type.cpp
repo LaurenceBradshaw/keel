@@ -356,6 +356,12 @@ bool Type_table::is_pointer( Type_id id ) const
     return get( id ).kind == Type_kind::Pointer;
 }
 
+bool Type_table::is_void( Type_id id ) const
+{
+    assert( id.is_valid() );
+    return get( id ).kind == Type_kind::Void;
+}
+
 bool Type_table::fits( u64 magnitude, bool negative, Type_id type ) const
 {
     if( is_error( type ) )

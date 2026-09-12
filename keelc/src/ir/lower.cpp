@@ -215,7 +215,10 @@ Function Lowering::run()
         builder_.terminate_return( span );
     }
 
-    return builder_.finish();
+    Function function        = builder_.finish();
+    function.returns_a_value = !types_.table().is_void( function.locals[k_return_slot.v].type );
+
+    return function;
 }
 
 Place Lowering::place_for( Node_id declaration )
