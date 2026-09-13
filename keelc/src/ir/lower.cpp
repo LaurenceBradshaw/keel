@@ -20,14 +20,27 @@ public:
         Node_id           declaration,
         const Ast&        ast,
         const Resolution& resolution,
-        const Types&      types,
+        Types&            types,
         Literals&         literals,
-        const Interner&   interner
+        const Interner&   interner,
+        Bindings          bindings = {}
     );
 
     Function run();
 
 private:
+    // A node's type, and a declaration's binding type, with this instantiation's parameters bound.
+    // Every read of a type goes through one of these: a `Parameter` that escapes into the emitter
+    // hits Spelling::type's assert, which is loud but late.
+    Type_id type_of( Node_id id );
+    Type_id binding_type_of( Node_id decl );
+
+    // A declaration's binding type under an explicit set of bindings, and the set a *call* is made
+    // under. lower_call needs the callee's rather than this function's: a plain `main` calling
+    // `id<i32>` has none of its own, while the callee's parameters and return are `T`.
+    Type_id  binding_type_under( Node_id decl, const Bindings& bindings );
+    Bindings bindings_for_call( Node_id call ) const;
+
     Place   place_for( Node_id declaration );
     Node_id field_of( Type_id type, Symbol_id name ) const;
 
@@ -46,7 +59,9 @@ private:
     void    bind_variant_pattern( Place matched, Node_id label );
     Place   lower_place( Node_id id );     // names where a value lives
     void    lower_statement( Node_id id ); // emits, produces nothing
-    Operand lower_argument( Node_id argument, Node_id parameter );
+    // `bindings` are the *callee's*: the parameter's type is written in its declaration, so
+    // substituting with this function's would ask it to bind a parameter it has never heard of.
+    Operand lower_argument( Node_id argument, Node_id parameter, const Bindings& bindings );
 
     Operand address_operand( Place place, Type_id type, Span span );
 
@@ -119,8 +134,12 @@ private:
     // Held but not read yet: resolution_ is what turns a Name_expr into the declaration whose
     // local it is, which arrives with names. literals_ and interner_ may turn out unnecessary -
     // a Literal_id comes straight off aux, and a Symbol_id is passed through without a lookup.
-    const Resolution&                resolution_;
-    const Types&                     types_;
+    const Resolution& resolution_;
+    Types&            types_;
+
+    // This instantiation's type parameters, bound. Empty for an ordinary function, which is
+    // what makes the substitution below the identity and lets one path serve both.
+    Bindings                         bindings_;
     Literals&                        literals_;
     [[maybe_unused]] const Interner& interner_;
 
@@ -149,26 +168,30 @@ Lowering::Lowering(
     Node_id           declaration,
     const Ast&        ast,
     const Resolution& resolution,
-    const Types&      types,
+    Types&            types,
     Literals&         literals,
-    const Interner&   interner
+    const Interner&   interner,
+    Bindings          bindings
 )
     : ast_( ast ),
       resolution_( resolution ),
       types_( types ),
+      bindings_( std::move( bindings ) ),
       literals_( literals ),
       interner_( interner ),
       declaration_( declaration ),
-      builder_( declaration, binding_type( ast, types, declaration ), ast_.span( declaration ) ),
+      builder_(
+          declaration, types.table().substitute( binding_type( ast, types, declaration ), bindings_ ), ast_.span( declaration )
+      ),
       locals_()
 {
-    // walk ast_.children( declaration )[1] - the Param_list - and for each Param_decl, add_parameter() and record the Local_id
+    // walk ast_.child( declaration, 1 ) - the Param_list - and for each Param_decl, add_parameter() and record the Local_id
     // in locals_.
-    for( const Node_id param : ast_.children( ast_.children( declaration )[1] ) )
+    for( const Node_id param : ast_.children( ast_.child( declaration, 1 ) ) )
     {
         if( ast_.kind( param ) == Node_kind::Param_decl )
         {
-            const Type_id   type  = binding_type( ast_, types_, param );
+            const Type_id   type  = binding_type_of( param );
             const Span      span  = ast_.span( param );
             const Symbol_id name  = Symbol_id { ast_.aux( param ) };
             const Local_id  local = builder_.add_parameter( type, span, name );
@@ -215,7 +238,7 @@ Function Lowering::run()
         scope_locals_.push_back( parameter );
     }
 
-    lower_statement( ast_.children( declaration_ )[2] ); // the body block
+    lower_statement( ast_.child( declaration_, 2 ) ); // the body block
 
     // The fall-off-the-end path: a `return` has already unwound to 0, and unwind_to is a no-op on a
     // terminated block, so this only fires where nothing returned.
@@ -230,6 +253,43 @@ Function Lowering::run()
     function.returns_a_value = !types_.table().is_void( function.locals[k_return_slot.v].type );
 
     return function;
+}
+
+Type_id Lowering::type_of( Node_id id )
+{
+    return types_.table().substitute( types_.type_of( id ), bindings_ );
+}
+
+Type_id Lowering::binding_type_of( Node_id decl )
+{
+    return binding_type_under( decl, bindings_ );
+}
+
+Type_id Lowering::binding_type_under( Node_id decl, const Bindings& bindings )
+{
+    return types_.table().substitute( binding_type( ast_, types_, decl ), bindings );
+}
+
+Bindings Lowering::bindings_for_call( Node_id call ) const
+{
+    const std::optional<std::size_t> instance = types_.instantiation_of( call );
+
+    if( !instance.has_value() )
+    {
+        return {};
+    }
+
+    const Instantiation&           chosen     = types_.instantiations()[*instance];
+    const std::span<const Node_id> parameters = ast_.children( ast_.child( chosen.declaration, 3 ) );
+
+    Bindings bindings;
+
+    for( std::size_t i = 0; i < parameters.size() && i < chosen.arguments.size(); ++i )
+    {
+        bindings.emplace( types_.type_of( parameters[i] ).v, chosen.arguments[i] );
+    }
+
+    return bindings;
 }
 
 Place Lowering::place_for( Node_id declaration )
@@ -275,8 +335,8 @@ Node_id Lowering::field_of( Type_id type, Symbol_id name ) const
 // meet at their common type, and §6.4's answer for that is recorded nowhere on the node.
 Type_id Lowering::operation_type( Node_id node ) const
 {
-    const Type_id left  = types_.type_of( ast_.children( node )[0] );
-    const Type_id right = types_.type_of( ast_.children( node )[1] );
+    const Type_id left  = types_.type_of( ast_.child( node, 0 ) );
+    const Type_id right = types_.type_of( ast_.child( node, 1 ) );
 
     const Type_id common = types_.table().arithmetic_result( left, right );
 
@@ -310,7 +370,7 @@ Operand Lowering::moved_if_owning( Operand operand ) const
 
 bool Lowering::is_move_parameter( Node_id param ) const
 {
-    const Node_id annotation = ast_.children( param )[0];
+    const Node_id annotation = ast_.child( param, 0 );
 
     return ast_.kind( annotation ) == Node_kind::Mode_type && static_cast<Keyword>( ast_.aux( annotation ) ) == Keyword::Move;
 }
@@ -376,7 +436,7 @@ void Lowering::drop_place( Place place, Type_id type, Span span )
 
         if( ast_.kind( member ) == Node_kind::Field_decl )
         {
-            drop_place( builder_.field( place, member ), types_.type_of( member ), span );
+            drop_place( builder_.field( place, member ), type_of( member ), span );
         }
     }
 }
@@ -400,7 +460,7 @@ bool Lowering::is_construction( Node_id id ) const
         return false;
     }
 
-    const Node_id decl = resolution_.declaration_of( ast_.children( id )[0] );
+    const Node_id decl = resolution_.declaration_of( ast_.child( id, 0 ) );
 
     return decl.is_valid() && is_aggregate( ast_.kind( decl ) );
 }
@@ -408,7 +468,7 @@ bool Lowering::is_construction( Node_id id ) const
 void Lowering::lower_construction( Place target, Node_id call_expr )
 {
     const Span    span      = ast_.span( call_expr );
-    const Node_id aggregate = resolution_.declaration_of( ast_.children( call_expr )[0] );
+    const Node_id aggregate = resolution_.declaration_of( ast_.child( call_expr, 0 ) );
 
     Node_id constructor {};
 
@@ -423,10 +483,10 @@ void Lowering::lower_construction( Place target, Node_id call_expr )
 
     assert( constructor.is_valid() && "the checker rejects constructing a type that has none" );
 
-    const std::span<const Node_id> parameters = ast_.children( ast_.children( constructor )[1] );
-    const std::span<const Node_id> arguments  = ast_.children( ast_.children( call_expr )[1] );
+    const std::span<const Node_id> parameters = ast_.children( ast_.child( constructor, 1 ) );
+    const std::span<const Node_id> arguments  = ast_.children( ast_.child( call_expr, 1 ) );
 
-    const Type_id receiver_type = binding_type( ast_, types_, parameters[0] );
+    const Type_id receiver_type = binding_type_of( parameters[0] );
 
     std::vector<Operand> operands;
 
@@ -444,12 +504,12 @@ void Lowering::lower_construction( Place target, Node_id call_expr )
 
     for( std::size_t i = 0; i < arguments.size(); ++i )
     {
-        const Type_id param_type = types_.type_of( parameters[i + 1] );
+        const Type_id param_type = type_of( parameters[i + 1] );
         operands[i + 1]          = converted( operands[i + 1], param_type, ast_.span( arguments[i] ) );
     }
 
     const u32     first = builder_.add_operands( operands );
-    const Type_id type  = types_.type_of( constructor ); // void
+    const Type_id type  = type_of( constructor ); // void
 
     // The result is discarded, but Assign stays total: a void local is what the backend drops the
     // assignment from, leaving the bare call.
@@ -506,11 +566,11 @@ Operand Lowering::lower_short_circuit( Node_id id )
 {
     const Token_kind op   = static_cast<Token_kind>( ast_.aux( id ) );
     const Span       span = ast_.span( id );
-    const Type_id    type = types_.type_of( id );
+    const Type_id    type = type_of( id );
 
     const Local_id result = builder_.add_local( type, span );
 
-    builder_.assign( builder_.place( result ), use( lower_expression( ast_.children( id )[0] ) ), span );
+    builder_.assign( builder_.place( result ), use( lower_expression( ast_.child( id, 0 ) ) ), span );
 
     const Block_id right_block = builder_.add_block();
     const Block_id join        = builder_.add_block();
@@ -524,7 +584,7 @@ Operand Lowering::lower_short_circuit( Node_id id )
     );
 
     builder_.switch_to( right_block );
-    builder_.assign( builder_.place( result ), use( lower_expression( ast_.children( id )[1] ) ), span );
+    builder_.assign( builder_.place( result ), use( lower_expression( ast_.child( id, 1 ) ) ), span );
 
     // From wherever lowering ended up, not from right_block: a nested `&&` on the right leaves the
     // cursor in its own join.
@@ -540,7 +600,7 @@ Operand Lowering::lower_struct_literal( Node_id id )
     // A temporary, then one assignment per field. Lowered and assigned in a single pass, so the
     // order the fields are *written* is the order they run - which is what §7.1 asks for, and
     // what the C emitter needed two phases to achieve because it was building one expression.
-    const Type_id  type = types_.type_of( id );
+    const Type_id  type = type_of( id );
     const Span     span = ast_.span( id );
     const Local_id temp = builder_.add_local( type, span );
 
@@ -564,13 +624,13 @@ Operand Lowering::lower_struct_literal( Node_id id )
 
         // §6.4 may have widened the value to reach the field, the same as an argument reaching
         // a parameter. Saying so here is what keeps a backend from re-deriving it.
-        const Operand value = lower_expression( ast_.children( initialiser )[0] );
+        const Operand value = lower_expression( ast_.child( initialiser, 0 ) );
 
         builder_.assign(
             builder_.field( builder_.place( temp ), field ),
             // Moved, not copied, when the field owns something: a copy would leave the temporary
             // and the field holding one resource between them, and both would be dropped.
-            use( moved_if_owning( converted( value, types_.type_of( field ), ast_.span( initialiser ) ) ) ),
+            use( moved_if_owning( converted( value, type_of( field ), ast_.span( initialiser ) ) ) ),
             ast_.span( initialiser )
         );
 
@@ -596,8 +656,8 @@ Operand Lowering::lower_binary( Node_id id )
 
     // Both operands are lowered before either is converted: lowering is what can have effects,
     // so its order is §7.1's order, and the conversions are pure and can follow.
-    const Operand raw_left  = lower_expression( ast_.children( id )[0] );
-    const Operand raw_right = lower_expression( ast_.children( id )[1] );
+    const Operand raw_left  = lower_expression( ast_.child( id, 0 ) );
+    const Operand raw_right = lower_expression( ast_.child( id, 1 ) );
 
     // A shift's count keeps its own type - it is a width, not a value meeting the left operand.
     const bool is_shift = op == Token_kind::Less_less || op == Token_kind::Greater_greater;
@@ -606,7 +666,7 @@ Operand Lowering::lower_binary( Node_id id )
     const Operand right = is_shift ? raw_right : converted( raw_right, operation, span );
 
     // The type the operation *produces*, which for a comparison is bool.
-    const Type_id type = types_.type_of( id );
+    const Type_id type = type_of( id );
 
     return copy( builder_.place( builder_.into_temp( binary( op, left, right, type ), type, span ) ), type );
 }
@@ -614,7 +674,7 @@ Operand Lowering::lower_binary( Node_id id )
 Operand Lowering::lower_unary( Node_id id )
 {
     const Token_kind op   = static_cast<Token_kind>( ast_.aux( id ) );
-    const Type_id    type = types_.type_of( id );
+    const Type_id    type = type_of( id );
     const Span       span = ast_.span( id );
 
     // Both of these are settled before the operand is lowered, because neither reads it the
@@ -630,12 +690,12 @@ Operand Lowering::lower_unary( Node_id id )
     {
         // A place, not an operand - which is why verify's Address_of case looks at a.place and
         // ignores the operand's kind.
-        const Rvalue address = address_of( lower_place( ast_.children( id )[0] ), type );
+        const Rvalue address = address_of( lower_place( ast_.child( id, 0 ) ), type );
 
         return copy( builder_.place( builder_.into_temp( address, type, span ) ), type );
     }
 
-    const Operand a = lower_expression( ast_.children( id )[0] );
+    const Operand a = lower_expression( ast_.child( id, 0 ) );
 
     return copy( builder_.place( builder_.into_temp( unary( op, a, type ), type, span ) ), type );
 }
@@ -659,7 +719,7 @@ void Lowering::bind_variant_pattern( Place matched, Node_id label )
     const std::span<const Node_id> parts    = ast_.children( label );
     const std::span<const Node_id> bindings = parts.subspan( 1 );
 
-    const Type_id enum_type = types_.type_of( parts[0] );
+    const Type_id enum_type = type_of( parts[0] );
     const Node_id decl      = types_.table().get( enum_type ).declaration;
 
     const std::optional<Constant_value> ordinal = types_.constant_of( parts[0] );
@@ -672,7 +732,7 @@ void Lowering::bind_variant_pattern( Place matched, Node_id label )
 
     for( std::size_t i = 0; i < bindings.size() && i < payload.size(); ++i )
     {
-        const Type_id  field_type = types_.type_of( payload[i] );
+        const Type_id  field_type = type_of( payload[i] );
         const Span     span       = ast_.span( bindings[i] );
         const Local_id local      = builder_.add_local( field_type, span, Symbol_id { ast_.aux( bindings[i] ) } );
 
@@ -685,7 +745,7 @@ void Lowering::bind_variant_pattern( Place matched, Node_id label )
 
 Operand Lowering::lower_empty_variant( Node_id id )
 {
-    const Type_id type = types_.type_of( id );
+    const Type_id type = type_of( id );
     const Span    span = ast_.span( id );
 
     const Local_id local = builder_.add_local( type, span );
@@ -704,9 +764,9 @@ Operand Lowering::lower_empty_variant( Node_id id )
 
 Operand Lowering::lower_variant_construction( Node_id id )
 {
-    const Node_id                  path      = ast_.children( id )[0];
-    const std::span<const Node_id> arguments = ast_.children( ast_.children( id )[1] );
-    const Type_id                  type      = types_.type_of( id );
+    const Node_id                  path      = ast_.child( id, 0 );
+    const std::span<const Node_id> arguments = ast_.children( ast_.child( id, 1 ) );
+    const Type_id                  type      = type_of( id );
     const Span                     span      = ast_.span( id );
 
     const Local_id local = builder_.add_local( type, span );
@@ -730,7 +790,7 @@ Operand Lowering::lower_variant_construction( Node_id id )
 
     for( std::size_t i = 0; i < arguments.size() && i < payload.size(); ++i )
     {
-        const Operand value = converted( lower_expression( arguments[i] ), types_.type_of( payload[i] ), span );
+        const Operand value = converted( lower_expression( arguments[i] ), type_of( payload[i] ), span );
 
         builder_.assign( builder_.field( place, payload[i] ), use( value ), span );
     }
@@ -744,24 +804,24 @@ Operand Lowering::lower_variant_construction( Node_id id )
 // at the call site, so it is prepended here.
 Operand Lowering::lower_method_call( Node_id id )
 {
-    const Node_id callee = ast_.children( id )[0];
-    const Node_id object = ast_.children( callee )[0];
+    const Node_id callee = ast_.child( id, 0 );
+    const Node_id object = ast_.child( callee, 0 );
     const Span    span   = ast_.span( id );
 
     const Node_id method = types_.method_of( id );
 
     assert( method.is_valid() && "the checker records the method for every call it accepts" );
 
-    const std::span<const Node_id> parameters = ast_.children( ast_.children( method )[1] );
+    const std::span<const Node_id> parameters = ast_.children( ast_.child( method, 1 ) );
 
     // D22 reaches through a pointer, so `q.area()` on a `Point*` calls the method on the pointee -
     // and the pointer's *value* is already the address the receiver wants. Taking its address
     // instead would hand the method a `Point**`, which type-checks nowhere and miscompiles here.
-    const Type_id object_type = types_.type_of( object );
+    const Type_id object_type = type_of( object );
 
     const Operand receiver = types_.table().is_pointer( object_type )
                                  ? lower_expression( object )
-                                 : address_operand( lower_place( object ), binding_type( ast_, types_, parameters[0] ), span );
+                                 : address_operand( lower_place( object ), binding_type_of( parameters[0] ), span );
 
     return lower_method_call_on( id, method, receiver );
 }
@@ -772,8 +832,8 @@ Operand Lowering::lower_method_call_on( Node_id id, Node_id method, Operand rece
 {
     const Span span = ast_.span( id );
 
-    const std::span<const Node_id> parameters = ast_.children( ast_.children( method )[1] );
-    const std::span<const Node_id> arguments  = ast_.children( ast_.children( id )[1] );
+    const std::span<const Node_id> parameters = ast_.children( ast_.child( method, 1 ) );
+    const std::span<const Node_id> arguments  = ast_.children( ast_.child( id, 1 ) );
 
     std::vector<Operand> operands;
 
@@ -790,8 +850,7 @@ Operand Lowering::lower_method_call_on( Node_id id, Node_id method, Operand rece
     // From 1: parameter 0 is the receiver, which was never written at the call site.
     for( std::size_t i = 0; i < arguments.size() && i + 1 < parameters.size(); ++i )
     {
-        operands[i + 1] =
-            converted( operands[i + 1], binding_type( ast_, types_, parameters[i + 1] ), ast_.span( arguments[i] ) );
+        operands[i + 1] = converted( operands[i + 1], binding_type_of( parameters[i + 1] ), ast_.span( arguments[i] ) );
 
         if( is_move_parameter( parameters[i + 1] ) )
         {
@@ -800,14 +859,14 @@ Operand Lowering::lower_method_call_on( Node_id id, Node_id method, Operand rece
     }
 
     const u32     first = builder_.add_operands( operands );
-    const Type_id type  = types_.type_of( id );
+    const Type_id type  = type_of( id );
 
     // The same split lower_call makes for a free function: a callee that returns a binding hands
     // back an address, so the call's own type is that pointer and the temporary holding it is one
     // too. Dereferencing once here is what makes both uses at the call site fall out - a copy reads
     // `(*_t)`, and a binding takes `&(*_t)`, which is `_t` again.
     const bool    binding     = is_borrowed_binding( ast_, types_, method );
-    const Type_id result_type = binding ? binding_type( ast_, types_, method ) : type;
+    const Type_id result_type = binding ? binding_type_of( method ) : type;
 
     const Local_id result =
         builder_.into_temp( call( method, first, static_cast<u32>( operands.size() ), result_type ), result_type, span );
@@ -819,7 +878,7 @@ Operand Lowering::lower_call( Node_id id )
 {
     // D7: a call whose callee is a path is a variant being constructed, not a function being
     // called. Checked first, because everything below reaches for a Function_decl.
-    if( ast_.kind( ast_.children( id )[0] ) == Node_kind::Path_expr )
+    if( ast_.kind( ast_.child( id, 0 ) ) == Node_kind::Path_expr )
     {
         return lower_variant_construction( id );
     }
@@ -828,7 +887,7 @@ Operand Lowering::lower_call( Node_id id )
     // drops that temporary - the same hole an owning struct literal already has, and no new one.
     if( is_construction( id ) )
     {
-        const Type_id  type  = types_.type_of( id );
+        const Type_id  type  = type_of( id );
         const Local_id local = builder_.add_local( type, ast_.span( id ) );
 
         if( types_.is_owning( type ) )
@@ -843,7 +902,7 @@ Operand Lowering::lower_call( Node_id id )
 
     // `p.area()` - the callee is a Field_expr rather than a name, and the receiver is its object.
     // Handled before the lookup below, which reaches for a declaration a Field_expr does not have.
-    if( ast_.kind( ast_.children( id )[0] ) == Node_kind::Field_expr )
+    if( ast_.kind( ast_.child( id, 0 ) ) == Node_kind::Field_expr )
     {
         return lower_method_call( id );
     }
@@ -856,17 +915,17 @@ Operand Lowering::lower_call( Node_id id )
         return lower_method_call_on( id, method, copy( builder_.place( receiver_ ), builder_.type_of( receiver_ ) ) );
     }
 
-    const Node_id callee = resolution_.declaration_of( ast_.children( id )[0] );
+    const Node_id callee = resolution_.declaration_of( ast_.child( id, 0 ) );
     assert(
         callee.is_valid() && ast_.kind( callee ) == Node_kind::Function_decl &&
         "checker should have rejected an unresolved call"
     );
-    const std::span<const Node_id> arguments = ast_.children( ast_.children( id )[1] ); // the Arg_list's children
+    const std::span<const Node_id> arguments = ast_.children( ast_.child( id, 1 ) ); // the Arg_list's children
 
     // The *parameter* types, from the callee's Param_list. An argument's own type is not the
     // same thing: §6.4 may have widened it to reach the parameter, and reading the type off
     // the argument would make every conversion a no-op.
-    const std::span<const Node_id> parameters = ast_.children( ast_.children( callee )[1] );
+    const std::span<const Node_id> parameters = ast_.children( ast_.child( callee, 1 ) );
 
     // Every argument is lowered before any is converted, so the order the statements come out
     // in is the order the arguments were written - which is what §7.1 guarantees and C leaves
@@ -875,14 +934,19 @@ Operand Lowering::lower_call( Node_id id )
 
     operands.reserve( arguments.size() );
 
+    // The callee's bindings, not this function's. Every type below belongs to the callee's
+    // signature, which is written in *its* parameters - so substituting with `bindings_` would ask
+    // `main` to bind a `T` it has never heard of.
+    const Bindings callee_bound = bindings_for_call( id );
+
     for( std::size_t i = 0; i < arguments.size(); ++i )
     {
-        operands.push_back( lower_argument( arguments[i], parameters[i] ) );
+        operands.push_back( lower_argument( arguments[i], parameters[i], callee_bound ) );
     }
 
     for( std::size_t i = 0; i < operands.size(); ++i )
     {
-        operands[i] = converted( operands[i], binding_type( ast_, types_, parameters[i] ), ast_.span( arguments[i] ) );
+        operands[i] = converted( operands[i], binding_type_under( parameters[i], callee_bound ), ast_.span( arguments[i] ) );
 
         // The parameter's mode rather than what was written at the call: KIR records what
         // happens. Today they coincide, because the checker requires the marker - but the
@@ -900,17 +964,28 @@ Operand Lowering::lower_call( Node_id id )
     // total is worth more than avoiding it: an optional destination would mean every consumer
     // handling a statement that writes nowhere. It is what MIR does with the unit type, and a
     // backend spells it by emitting the call and dropping the assignment.
-    const Type_id type = types_.type_of( id );
+    const Type_id type = type_of( id );
 
     // A callee that returns a binding hands back an address, so the call's own type is that pointer
     // and so is the temporary holding it - `type` above is the language type, `T`, and the two
     // differ only here. Dereferencing once is what makes both uses at the call site fall out: a
     // copy reads `(*_t)`, and a binding takes `&(*_t)`, which is `_t` again.
     const bool    binding     = is_borrowed_binding( ast_, types_, callee );
-    const Type_id result_type = binding ? binding_type( ast_, types_, callee ) : type;
+    const Type_id result_type = binding ? binding_type_under( callee, callee_bound ) : type;
+
+    // What the symbol is mangled with. The checker recorded which instantiation this call resolved
+    // to, because turning a type argument into a type is its rule rather than the lowerer's.
+    std::vector<Type_id> type_arguments;
+
+    if( const std::optional<std::size_t> instance = types_.instantiation_of( id ) )
+    {
+        type_arguments = types_.instantiations()[*instance].arguments;
+    }
 
     const Local_id result = builder_.into_temp(
-        call( callee, first, narrow_cast<u32>( operands.size() ), result_type ), result_type, ast_.span( id )
+        call( callee, first, narrow_cast<u32>( operands.size() ), result_type, std::move( type_arguments ) ),
+        result_type,
+        ast_.span( id )
     );
 
     return copy( binding ? builder_.deref( builder_.place( result ) ) : builder_.place( result ), type );
@@ -923,13 +998,13 @@ Operand Lowering::lower_expression( Node_id id )
     case Node_kind::Name_expr:
     {
         const Node_id decl = resolution_.declaration_of( id );
-        return copy( place_for( decl ), types_.type_of( id ) );
+        return copy( place_for( decl ), type_of( id ) );
     }
     case Node_kind::Int_literal:
     case Node_kind::Char_literal:
     {
         // aux is the Literal_id, and the checker recorded the type context gave it.
-        const Type_id type = types_.type_of( id );
+        const Type_id type = type_of( id );
 
         // An integer literal in float context. §6.4 lets a literal adopt the type context gives
         // it, so `f64 x = 1;` is legal - but the value sits in the integer pool, and everything
@@ -946,16 +1021,16 @@ Operand Lowering::lower_expression( Node_id id )
         return constant( Literal_id { ast_.aux( id ) }, type );
     }
     case Node_kind::Float_literal:
-        return constant( Literal_id { ast_.aux( id ) }, types_.type_of( id ) );
+        return constant( Literal_id { ast_.aux( id ) }, type_of( id ) );
     case Node_kind::Null_literal:
         // Unlike the other literals, aux carries no Literal_id - the parser records nothing for
         // `nullptr`, and Literal_id { 0 } is the invalid sentinel. A null pointer is the integer
         // zero here, the same way a bool is 0 or 1.
-        return constant( literals_.add_integer( 0 ), types_.type_of( id ) );
+        return constant( literals_.add_integer( 0 ), type_of( id ) );
     case Node_kind::Bool_literal:
     {
         Literal_id literal = literals_.add_integer( ast_.aux( id ) != 0 ? 1 : 0 );
-        return constant( literal, types_.type_of( id ) );
+        return constant( literal, type_of( id ) );
     }
     case Node_kind::Struct_literal:
         return lower_struct_literal( id );
@@ -967,15 +1042,15 @@ Operand Lowering::lower_expression( Node_id id )
         return lower_call( id );
     case Node_kind::Cast_expr:
         // TODO: distinguish between cast and wrap.
-        return converted( lower_expression( ast_.children( id )[1] ), types_.type_of( id ), ast_.span( id ) );
+        return converted( lower_expression( ast_.child( id, 1 ) ), type_of( id ), ast_.span( id ) );
     case Node_kind::Alloc_expr:
     {
-        const Type_id type = types_.type_of( id );
+        const Type_id type = type_of( id );
         return copy( builder_.place( builder_.into_temp( allocate( type ), type, ast_.span( id ) ) ), type );
     }
     case Node_kind::Free_expr:
     {
-        const Operand target = lower_expression( ast_.children( id )[0] );
+        const Operand target = lower_expression( ast_.child( id, 0 ) );
         const Type_id type   = types_.table().builtin( Type_kind::Void );
 
         // Into a void temp, exactly as a void call already lowers: KIR keeps Assign total and the
@@ -985,11 +1060,11 @@ Operand Lowering::lower_expression( Node_id id )
     // Reading a place is a copy of it - no temporary, because a place is already readable. That is
     // the whole of what lower_place buys in value position.
     case Node_kind::Field_expr:
-        return copy( lower_place( id ), types_.type_of( id ) );
+        return copy( lower_place( id ), type_of( id ) );
     case Node_kind::Marker_expr:
     {
-        const Node_id operand = ast_.children( id )[0];
-        const Type_id type    = types_.type_of( id );
+        const Node_id operand = ast_.child( id, 0 );
+        const Type_id type    = type_of( id );
 
         // A named variable is already a place, and moving it empties that place. A temporary is
         // not: it has to be built somewhere before it can be handed over. lower_expression puts it
@@ -1012,8 +1087,8 @@ Operand Lowering::lower_expression( Node_id id )
         // D7: a payload enum is a struct, so a bare path names a variant with no payload and has to
         // be built rather than named. The checker has already refused a bare path to a variant that
         // carries one.
-        if( types_.table().is_enum( types_.type_of( id ) ) &&
-            enum_has_payload( ast_, types_.table().get( types_.type_of( id ) ).declaration ) )
+        if( types_.table().is_enum( type_of( id ) ) &&
+            enum_has_payload( ast_, types_.table().get( type_of( id ) ).declaration ) )
         {
             return lower_empty_variant( id );
         }
@@ -1025,7 +1100,7 @@ Operand Lowering::lower_expression( Node_id id )
 
         assert( value.has_value() && "the checker records an ordinal for every variant it accepts" );
 
-        return constant( literals_.add_integer( value->magnitude ), types_.type_of( id ) );
+        return constant( literals_.add_integer( value->magnitude ), type_of( id ) );
     }
     default:
         // Names the construct rather than the category: while the lowerer is incomplete this is
@@ -1047,8 +1122,8 @@ Place Lowering::lower_place( Node_id id )
     case Node_kind::Field_expr:
     {
         // The field's declaration, found on the object's struct type - same lookup as the emitter does.
-        const Node_id   object      = ast_.children( id )[0];
-        const Type_id   object_type = types_.type_of( object );
+        const Node_id   object      = ast_.child( id, 0 );
+        const Type_id   object_type = type_of( object );
         const Symbol_id name        = Symbol_id { ast_.aux( id ) };
 
         // D22: `.` reaches through a pointer, so `p.x` is the implicit form of `( *p ).x` and
@@ -1076,7 +1151,7 @@ Place Lowering::lower_place( Node_id id )
             assert( false && "unary & not a place" );
             return Place {};
         }
-        const Operand pointer = lower_expression( ast_.children( id )[0] );
+        const Operand pointer = lower_expression( ast_.child( id, 0 ) );
         const Span    span    = ast_.span( id );
 
         // A constant has no place to project from, so it needs a local first. Anything else already
@@ -1125,7 +1200,7 @@ void Lowering::lower_block( Node_id id )
 
 void Lowering::lower_return( Node_id id )
 {
-    const Node_id value = ast_.children( id )[0]; // invalid for a bare `return;`
+    const Node_id value = ast_.child( id, 0 ); // invalid for a bare `return;`
     const Span    span  = ast_.span( id );
     if( value.is_valid() )
     {
@@ -1137,7 +1212,7 @@ void Lowering::lower_return( Node_id id )
         {
             // The address, not a read of it: a read would return a copy of the referent and the
             // form would buy nothing.
-            const Type_id address = binding_type( ast_, types_, declaration_ );
+            const Type_id address = binding_type_of( declaration_ );
 
             builder_.assign( builder_.place( k_return_slot ), address_of( lower_place( value ), address ), span );
         }
@@ -1160,7 +1235,7 @@ void Lowering::lower_var( Node_id id )
     const Span      span     = ast_.span( id );
     const Symbol_id name     = Symbol_id { ast_.aux( id ) };
     const bool      borrowed = is_borrowed_binding( ast_, types_, id );
-    const Type_id   type     = borrowed ? binding_type( ast_, types_, id ) : types_.type_of( id );
+    const Type_id   type     = borrowed ? binding_type_of( id ) : type_of( id );
     const Local_id  local    = builder_.add_local( type, span, name );
 
     locals_.emplace( id.v, local );
@@ -1171,7 +1246,7 @@ void Lowering::lower_var( Node_id id )
         borrowed_bindings_.insert( id.v );
     }
 
-    const Node_id init = ast_.children( id )[1];
+    const Node_id init = ast_.child( id, 1 );
     if( init.is_valid() )
     {
         // A binding stores the address, so the initialiser is lowered as a place rather than read.
@@ -1201,8 +1276,8 @@ void Lowering::lower_var( Node_id id )
 void Lowering::lower_assign( Node_id id )
 {
     const Span       span   = ast_.span( id );
-    const Place      target = lower_place( ast_.children( id )[0] );
-    const Operand    value  = lower_expression( ast_.children( id )[1] );
+    const Place      target = lower_place( ast_.child( id, 0 ) );
+    const Operand    value  = lower_expression( ast_.child( id, 1 ) );
     const Token_kind op     = static_cast<Token_kind>( ast_.aux( id ) );
     if( op == Token_kind::Equal )
     {
@@ -1215,11 +1290,11 @@ void Lowering::lower_assign( Node_id id )
     {
         // `x += 3` is `x = x + 3`: read the target, combine, store back.
         //
-        // The operation happens at the *target's* type, not at types_.type_of( id ) - the
+        // The operation happens at the *target's* type, not at type_of( id ) - the
         // checker records nothing on a statement, so that would be an invalid Type_id. It is
         // also the type the checker measured the value against, so the two agree by
         // construction.
-        const Type_id type = types_.type_of( ast_.children( id )[0] );
+        const Type_id type = types_.type_of( ast_.child( id, 0 ) );
 
         const Operand left  = copy( target, type );
         const Operand right = converted( value, type, span );
@@ -1231,8 +1306,8 @@ void Lowering::lower_assign( Node_id id )
 
 void Lowering::lower_increment( Node_id id )
 {
-    const Place      target      = lower_place( ast_.children( id )[0] );
-    const Type_id    target_type = types_.type_of( ast_.children( id )[0] );
+    const Place      target      = lower_place( ast_.child( id, 0 ) );
+    const Type_id    target_type = types_.type_of( ast_.child( id, 0 ) );
     const Token_kind op          = static_cast<Token_kind>( ast_.aux( id ) );
     const Token_kind base_op     = op == Token_kind::Plus_plus ? Token_kind::Plus : Token_kind::Minus;
     const Operand    left        = copy( target, target_type );
@@ -1272,7 +1347,7 @@ void Lowering::lower_case_test( Operand scrutinee, Node_id label, Block_id body 
     // and the scrutinee here is already just the tag.
     const auto value_of = [&]( Node_id bound ) -> Operand
     {
-        const Type_id bound_type = types_.type_of( bound );
+        const Type_id bound_type = type_of( bound );
 
         if( ast_.kind( bound ) == Node_kind::Path_expr && types_.table().is_enum( bound_type ) &&
             enum_has_payload( ast_, types_.table().get( bound_type ).declaration ) )
@@ -1301,7 +1376,7 @@ void Lowering::lower_case_test( Operand scrutinee, Node_id label, Block_id body 
     // already said which variant is live.
     if( ast_.kind( label ) == Node_kind::Variant_pattern )
     {
-        branch_on( Token_kind::Equal_equal, ast_.children( label )[0], body );
+        branch_on( Token_kind::Equal_equal, ast_.child( label, 0 ), body );
         return;
     }
 
@@ -1315,12 +1390,12 @@ void Lowering::lower_case_test( Operand scrutinee, Node_id label, Block_id body 
     // upper test rather than the body, which is what makes the pair a conjunction.
     const Block_id in_range = builder_.add_block();
 
-    branch_on( Token_kind::Greater_equal, ast_.children( label )[0], in_range );
+    branch_on( Token_kind::Greater_equal, ast_.child( label, 0 ), in_range );
 
     const Block_id resume = builder_.current();
 
     builder_.switch_to( in_range );
-    branch_on( Token_kind::Less, ast_.children( label )[1], body );
+    branch_on( Token_kind::Less, ast_.child( label, 1 ), body );
 
     // The upper test failing must land where the lower test's failure lands, so the arm has one
     // exit and the chain stays a chain.
@@ -1498,9 +1573,9 @@ void Lowering::lower_switch( Node_id id )
 
 void Lowering::lower_if( Node_id id )
 {
-    const Node_id condition   = ast_.children( id )[0];
-    const Node_id then_branch = ast_.children( id )[1];
-    const Node_id else_branch = ast_.children( id )[2]; // invalid when absent
+    const Node_id condition   = ast_.child( id, 0 );
+    const Node_id then_branch = ast_.child( id, 1 );
+    const Node_id else_branch = ast_.child( id, 2 ); // invalid when absent
     const Span    span        = ast_.span( id );
 
     // Before the blocks: whatever the condition emits belongs to the block being left.
@@ -1560,8 +1635,8 @@ void Lowering::lower_if( Node_id id )
 
 void Lowering::lower_while( Node_id id )
 {
-    const Node_id condition = ast_.children( id )[0];
-    const Node_id body      = ast_.children( id )[1];
+    const Node_id condition = ast_.child( id, 0 );
+    const Node_id body      = ast_.child( id, 1 );
     const Span    span      = ast_.span( id );
 
     // A fresh block, not the one being left: the condition is re-evaluated every iteration, so
@@ -1603,10 +1678,10 @@ void Lowering::lower_while( Node_id id )
 
 void Lowering::lower_for( Node_id id )
 {
-    const Node_id init      = ast_.children( id )[0];
-    const Node_id condition = ast_.children( id )[1];
-    const Node_id update    = ast_.children( id )[2];
-    const Node_id body      = ast_.children( id )[3];
+    const Node_id init      = ast_.child( id, 0 );
+    const Node_id condition = ast_.child( id, 1 );
+    const Node_id update    = ast_.child( id, 2 );
+    const Node_id body      = ast_.child( id, 3 );
     const Span    span      = ast_.span( id );
 
     push_scope();
@@ -1720,7 +1795,7 @@ void Lowering::lower_statement( Node_id id )
     // Small enough to read here. Extracting them would cost a name and buy nothing.
     case Node_kind::Expr_stmt:
         // Discard the operand. D15 means the only thing that reaches here is a call.
-        lower_expression( ast_.children( id )[0] );
+        lower_expression( ast_.child( id, 0 ) );
         drop_statement_temporaries( ast_.span( id ) );
         return;
 
@@ -1749,14 +1824,14 @@ void Lowering::lower_statement( Node_id id )
     }
 }
 
-Operand Lowering::lower_argument( Node_id argument, Node_id parameter )
+Operand Lowering::lower_argument( Node_id argument, Node_id parameter, const Bindings& bindings )
 {
     if( !is_borrowed_binding( ast_, types_, parameter ) )
     {
         return lower_expression( argument );
     }
 
-    const Type_id address = binding_type( ast_, types_, parameter );
+    const Type_id address = binding_type_under( parameter, bindings );
     const Span    span    = ast_.span( argument );
 
     // `ref x` is stepped through: the marker says how the argument travels and has no value of its
@@ -1765,7 +1840,7 @@ Operand Lowering::lower_argument( Node_id argument, Node_id parameter )
     // wherever it landed, which is also what drops the temporary afterwards.
     if( ast_.kind( argument ) == Node_kind::Marker_expr )
     {
-        return address_operand( lower_place( ast_.children( argument )[0] ), address, span );
+        return address_operand( lower_place( ast_.child( argument, 0 ) ), address, span );
     }
 
     const Operand value = lower_expression( argument );
@@ -1783,17 +1858,46 @@ Operand Lowering::address_operand( Place place, Type_id type, Span span )
 } // namespace
 
 std::vector<Function>
-lower( const Ast& ast, const Resolution& resolution, const Types& types, Literals& literals, const Interner& interner )
+lower( const Ast& ast, const Resolution& resolution, Types& types, Literals& literals, const Interner& interner )
 {
     std::vector<Function> functions;
 
     for( Node_id id { 0 }; id.v < ast.node_count(); ++id.v )
     {
-        if( is_function_like( ast.kind( id ) ) && !is_extern( ast, id ) )
+        // A generic has no code of its own - it is the template the instantiations below are
+        // emitted from, and emitting it directly would try to give `T` a C spelling.
+        if( is_function_like( ast.kind( id ) ) && !is_extern( ast, id ) && !is_generic( ast, id ) )
         {
             Lowering lowering( id, ast, resolution, types, literals, interner );
             functions.push_back( lowering.run() );
         }
+    }
+
+    // One function per set of type arguments any call site named. A plain pass rather than a
+    // worklist: the checker visited every call, so the list is already complete. It becomes a
+    // worklist the day a *generic* body calls another generic with a type built from its own
+    // parameters, which needs generic types - writing the loop before then means writing a
+    // termination condition for a case that cannot arise.
+    for( const Instantiation& instance : types.instantiations() )
+    {
+        const std::span<const Node_id> parameters = ast.children( ast.child( instance.declaration, 3 ) );
+
+        Bindings bindings;
+
+        // Positional, which is what D39's spelling guarantees: the nth type argument binds the nth
+        // parameter.
+        for( std::size_t i = 0; i < parameters.size() && i < instance.arguments.size(); ++i )
+        {
+            bindings.emplace( types.type_of( parameters[i] ).v, instance.arguments[i] );
+        }
+
+        Lowering lowering( instance.declaration, ast, resolution, types, literals, interner, std::move( bindings ) );
+
+        Function emitted = lowering.run();
+
+        emitted.type_arguments = instance.arguments;
+
+        functions.push_back( std::move( emitted ) );
     }
 
     return functions;

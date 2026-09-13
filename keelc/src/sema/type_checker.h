@@ -32,6 +32,15 @@ struct Constant_value
     f64  floating  = 0.0;
 };
 
+// A generic named with concrete type arguments at some call site. The seed for M6's
+// monomorphisation worklist: recorded by the checker because that is the only pass that resolves a
+// type argument to a type, and read by nothing yet.
+struct Instantiation
+{
+    Node_id              declaration {};
+    std::vector<Type_id> arguments;
+};
+
 class Types
 {
 public:
@@ -42,14 +51,18 @@ public:
         std::vector<Node_id>                    struct_order,
         std::unordered_map<u32, Constant_value> constants,
         std::unordered_set<u32>                 owning,
-        std::unordered_map<u32, Node_id>        methods
+        std::unordered_map<u32, Node_id>        methods,
+        std::vector<Instantiation>              instantiations,
+        std::unordered_map<u32, u32>            instantiation_of
     )
         : table_( std::move( table ) ),
           types_( std::move( types ) ),
           struct_order_( std::move( struct_order ) ),
           constants_( std::move( constants ) ),
           methods_( std::move( methods ) ),
-          owning_( std::move( owning ) )
+          owning_( std::move( owning ) ),
+          instantiations_( std::move( instantiations ) ),
+          instantiation_of_( std::move( instantiation_of ) )
     {
     }
 
@@ -60,6 +73,13 @@ public:
     }
 
     const Type_table& table() const
+    {
+        return table_;
+    }
+
+    // Mutable because substituting a type parameter can intern a type that did not exist before:
+    // `T*` becomes `i32*`, and the table is where composed types live.
+    Type_table& table()
     {
         return table_;
     }
@@ -88,6 +108,13 @@ public:
         return struct_order_;
     }
 
+    // Deduplicated: two calls at the same type arguments are one instantiation, because one is all
+    // that will be emitted.
+    const std::vector<Instantiation>& instantiations() const
+    {
+        return instantiations_;
+    }
+
     // D2: a type owns when it has a destructor, directly or through a by-value member. Recorded
     // rather than recomputed because drop elaboration runs on KIR, after the checker has gone.
     // Keyed by Type_id because that is what every caller holds; the set below stores declarations.
@@ -103,6 +130,14 @@ public:
         return decl.is_valid() && owning_.contains( decl.v );
     }
 
+    // Which instantiation a call resolved to, or nothing for an ordinary call.
+    std::optional<std::size_t> instantiation_of( Node_id call ) const
+    {
+        const auto found = instantiation_of_.find( call.v );
+
+        return found == instantiation_of_.end() ? std::nullopt : std::optional<std::size_t>( found->second );
+    }
+
 private:
     Type_table                              table_;
     std::vector<Type_id>                    types_;
@@ -110,6 +145,8 @@ private:
     std::unordered_map<u32, Constant_value> constants_; // dependencies first, from the DFS post-order
     std::unordered_map<u32, Node_id>        methods_;   // Call_expr -> the Method_decl it resolved to
     std::unordered_set<u32>                 owning_;
+    std::vector<Instantiation>              instantiations_;
+    std::unordered_map<u32, u32>            instantiation_of_; // Call_expr -> index into instantiations_
 };
 
 Types type_check( const Ast&, const Resolution&, const Literals&, const Source_manager&, const Interner&, Diagnostics& );
@@ -117,6 +154,11 @@ Types type_check( const Ast&, const Resolution&, const Literals&, const Source_m
 // What a parameter is actually passed as: its own type, except a `ref` binding, which travels as
 // an address. Shared because lowering, the prototype and the mangled name must all agree.
 bool is_ref_parameter( const Ast& ast, Node_id param );
+
+// Whether a declaration carries type parameters. The kind is checked first: only a function-like
+// declaration has a fixed fourth slot, and a call's callee may be an aggregate, whose children are
+// its members.
+bool is_generic( const Ast& ast, Node_id decl );
 
 // An FFI declaration: a function with no body. `extern` is the only rule that produces one (D18's
 // corollary makes a bare prototype an error), so the absent body is the marker and there is no flag.

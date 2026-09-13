@@ -285,7 +285,7 @@ int main( int argc, char** argv )
     const keel::Resolution resolution = keel::resolve( ast, sm, interner, diagnostics );
 
     // Type checking is part of compiling too - same reasoning as parsing and resolution.
-    const keel::Types types = keel::type_check( ast, resolution, literals, sm, interner, diagnostics );
+    keel::Types types = keel::type_check( ast, resolution, literals, sm, interner, diagnostics );
 
     // Nothing is emitted for a program that did not check: the emitter takes no Diagnostics
     // because by here there is nothing left for it to object to.

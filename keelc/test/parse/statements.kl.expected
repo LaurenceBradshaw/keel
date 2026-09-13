@@ -45,6 +45,7 @@ Source_file                             1:1-20:1
         Call_expr                       15:5-15:8
           Name_expr                     15:5-15:6   "f"
           Arg_list                      15:6-15:8   "()"
+          <none>                        -
       Expr_stmt                         16:5-16:19
         Call_expr                       16:5-16:18
           Name_expr                     16:5-16:6   "g"
@@ -53,5 +54,7 @@ Source_file                             1:1-20:1
             Binary_expr                 16:11-16:16 op=+
               Int_literal               16:11-16:12 "1"
               Int_literal               16:15-16:16 "2"
+          <none>                        -
       Return_stmt                       18:5-18:14
         Name_expr                       18:12-18:13 "y"
+    <none>                              -

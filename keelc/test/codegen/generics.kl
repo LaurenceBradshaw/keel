@@ -1,0 +1,73 @@
+// One generic, emitted once per set of type arguments. The two instantiations are separate C
+// functions with separate names, and each call site names the one it meant - a declaration alone no
+// longer identifies a function.
+T id<T>( T a )
+{
+    return a;
+}
+
+T pick<T, U>( T a, U b )
+{
+    return a;
+}
+
+// A binding mode on a generic parameter: `ref T` becomes `ref i32` at the instantiation, and the
+// address it travels as is the substituted type's. Reading the callee's parameter type with the
+// *caller's* bindings is the mistake this catches - `main` has no `T` of its own.
+void set_to<T>( ref T target, T value )
+{
+    target = value;
+}
+
+const ref T peek<T>( const ref T a )
+{
+    return a;
+}
+
+void first_write<T>( out T target, T value )
+{
+    target = value;
+}
+
+// A generic may call an ordinary function, and another generic.
+i32 doubled( i32 v )
+{
+    return v + v;
+}
+
+i32 relay<T>( T ignored )
+{
+    return doubled( id<i32>( 2 ) );
+}
+
+i32 main()
+{
+    i32  a = id<i32>( 7 );
+    bool b = id<bool>( true );
+
+    // The same type named twice is one instantiation: `id<i32>` above and here share a function.
+    i32 c = id<i32>( 30 );
+
+    i32 d = pick<i32, bool>( 4, false );
+
+    if( !b )
+    {
+        return 1;
+    }
+
+    i32 e = 0;
+
+    set_to<i32>( ref e, 4 );
+
+    if( peek<i32>( e ) != 4 )
+    {
+        return 2;
+    }
+
+    i32 f;
+
+    first_write<i32>( out f, 1 );
+
+    // 7 + 30 + 4 + 4 + 1 - 4 = 42
+    return a + c + d + e + f - relay<bool>( true );
+}

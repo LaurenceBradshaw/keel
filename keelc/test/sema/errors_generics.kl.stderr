@@ -1,0 +1,79 @@
+error: unknown type `T`
+ --> sema/errors_generics.kl:9:1
+  |
+9 | T stray( T a )
+  | ^
+
+error: unknown type `T`
+ --> sema/errors_generics.kl:9:10
+  |
+9 | T stray( T a )
+  |          ^
+
+error: `T` is already declared in this scope
+  --> sema/errors_generics.kl:14:17
+   |
+14 | T duplicated<T, T>( T a )
+   |                 ^ previous declaration is at: 14:14
+
+error: unknown type `T`
+  --> sema/errors_generics.kl:19:1
+   |
+19 | T empty<>( i32 a )
+   | ^
+
+error: a generic needs at least one type parameter
+  --> sema/errors_generics.kl:19:9
+   |
+19 | T empty<>( i32 a )
+   |         ^
+
+error: unknown type `T`
+  --> sema/errors_generics.kl:24:1
+   |
+24 | T inline_bound<Comparable T>( T a )
+   | ^
+
+error: a type parameter is a name on its own here
+  --> sema/errors_generics.kl:24:27
+   |
+24 | T inline_bound<Comparable T>( T a )
+   |                           ^ write the bound in a `where` clause after the parameter list
+
+error: unknown type `T`
+  --> sema/errors_generics.kl:24:31
+   |
+24 | T inline_bound<Comparable T>( T a )
+   |                               ^
+
+error: `id` is generic, so its type arguments must be written
+  --> sema/errors_generics.kl:38:12
+   |
+38 |     return id( 1 );
+   |            ^^ as in `id<i32>( ... )`
+
+error: `not_a_generic` is not a generic
+  --> sema/errors_generics.kl:50:12
+   |
+50 |     return not_a_generic<i32>( 1 );
+   |            ^^^^^^^^^^^^^
+
+error: expected `i32`, but got `bool`
+  --> sema/errors_generics.kl:57:12
+   |
+57 |     return id<bool>( 1 );
+   |            ^^^^^^^^^^^^^
+
+error: expected `bool`, but got an integer literal
+  --> sema/errors_generics.kl:57:22
+   |
+57 |     return id<bool>( 1 );
+   |                      ^
+
+error: `id` takes 1 type argument, but 2 were given
+  --> sema/errors_generics.kl:62:14
+   |
+62 |     return id<i32, f64>( 1 );
+   |              ^^^^^^^^^^
+
+13 errors generated

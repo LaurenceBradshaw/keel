@@ -12,6 +12,8 @@ namespace keel
 
 // A Function per Function_decl, in declaration order.
 std::vector<Function>
-lower( const Ast& ast, const Resolution& resolution, const Types& types, Literals& literals, const Interner& interner );
+// Types is mutable because an instantiation substitutes its parameters away, and `T*` becoming
+// `i32*` interns a type that may not exist yet.
+lower( const Ast& ast, const Resolution& resolution, Types& types, Literals& literals, const Interner& interner );
 
 } // namespace keel

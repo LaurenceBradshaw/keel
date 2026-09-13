@@ -76,6 +76,7 @@ private:
     Node_id parse_function_decl();
     Node_id parse_method_decl( Symbol_id enclosing );
     Node_id parse_param_list( Node_id leading = Node_id {} );
+    Node_id parse_type_param_list();
     Node_id parse_aggregate_decl();
     Node_id parse_enum_decl();
     Node_id parse_variant_decl();
@@ -97,6 +98,7 @@ private:
     Node_id parse_type();
     Node_id parse_type_with_mode();
     Node_id parse_param();
+    Node_id parse_type_param();
 
     // --- statements ---
 
@@ -110,6 +112,10 @@ private:
     bool looks_like_declaration();
     bool looks_like_binding();
     bool looks_like_method();
+
+    // Whether `<` here opens a generic call's type arguments rather than being a comparison.
+    // A scan like the ones above: no nodes, no diagnostics, cursor restored either way.
+    bool scan_type_arguments();
 
     // Scans a type followed by the declared name, leaving pos_ just after that name. Shared by
     // looks_like_declaration, which only wants the answer, and parse_declaration, which needs to
@@ -629,6 +635,13 @@ Node_id Parser::parse_function_decl()
     // The name is a token, not a subtree, so it goes in aux rather than becoming a fourth child.
     const Symbol_id name = expect_name();
 
+    Node_id type_params;
+
+    if( check( Token_kind::Less ) )
+    {
+        type_params = parse_type_param_list();
+    }
+
     // No early return on a missing name: keep parsing so the body's errors are reported too.
     const Node_id params = parse_param_list();
 
@@ -656,7 +669,7 @@ Node_id Parser::parse_function_decl()
                                      Node_kind::Function_decl,
                                      Span::merge( start, previous().span ),
                                      name.v,
-                                     { return_type, params, Node_id {} }
+                                     { return_type, params, Node_id {}, type_params }
                                  )
                                : error_node( Span::merge( start, previous().span ) );
     }
@@ -686,7 +699,9 @@ Node_id Parser::parse_function_decl()
         return error_node( Span::merge( start, previous().span ) );
     }
 
-    return ast_.add( Node_kind::Function_decl, Span::merge( start, previous().span ), name.v, { return_type, params, body } );
+    return ast_.add(
+        Node_kind::Function_decl, Span::merge( start, previous().span ), name.v, { return_type, params, body, type_params }
+    );
 }
 
 Node_id Parser::parse_method_decl( Symbol_id enclosing )
@@ -746,7 +761,12 @@ Node_id Parser::parse_method_decl( Symbol_id enclosing )
         return error_node( Span::merge( start, previous().span ) );
     }
 
-    return ast_.add( Node_kind::Method_decl, Span::merge( start, previous().span ), name.v, { return_type, params, body } );
+    // Four children, as every function-like declaration has: the slot for type parameters stays
+    // invalid until a method may be generic, so the shared walk in the resolver does not have to
+    // ask which kind it is looking at.
+    return ast_.add(
+        Node_kind::Method_decl, Span::merge( start, previous().span ), name.v, { return_type, params, body, Node_id {} }
+    );
 }
 
 Node_id Parser::parse_param_list( Node_id leading )
@@ -777,6 +797,35 @@ Node_id Parser::parse_param_list( Node_id leading )
     expect( Token_kind::R_paren );
 
     return ast_.add( Node_kind::Param_list, Span::merge( start, previous().span ), 0, params );
+}
+
+Node_id Parser::parse_type_param_list()
+{
+    expect( Token_kind::Less );
+    const Span start = peek().span;
+
+    std::vector<Node_id> params;
+
+    // `<>` declares a generic with nothing to instantiate over. Reported rather than treated as an
+    // absent list, which would make `T id<>( T a )` a function whose return type names nothing.
+    if( match_generic_close() )
+    {
+        error_at( Span::merge( start, previous().span ), "a generic needs at least one type parameter" );
+    }
+    else
+    {
+        do
+        {
+            params.push_back( parse_type_param() );
+        } while( match( Token_kind::Comma ) );
+
+        if( !match_generic_close() )
+        {
+            error_expected( Token_kind::Greater );
+        }
+    }
+
+    return ast_.add( Node_kind::Type_param_list, Span::merge( start, previous().span ), 0, params );
 }
 
 Node_id Parser::parse_aggregate_decl()
@@ -994,12 +1043,11 @@ Node_id Parser::parse_destructor_decl( Symbol_id enclosing )
         return error_node( Span::merge( start, previous().span ) );
     }
 
-    return ast_.add( // no return type in children
+    return ast_.add( // no return type in children, and no type parameters
         Node_kind::Destructor_decl,
         Span::merge( start, previous().span ),
         name.v,
-        { Node_id {}, params, body }
-
+        { Node_id {}, params, body, Node_id {} }
     );
 }
 
@@ -1019,7 +1067,9 @@ Node_id Parser::parse_constructor_decl( Symbol_id enclosing )
         return error_node( Span::merge( start, previous().span ) );
     }
 
-    return ast_.add( Node_kind::Constructor_decl, Span::merge( start, previous().span ), name.v, { Node_id {}, params, body } );
+    return ast_.add(
+        Node_kind::Constructor_decl, Span::merge( start, previous().span ), name.v, { Node_id {}, params, body, Node_id {} }
+    );
 }
 
 Node_id Parser::parse_struct_literal( Span start, Symbol_id type_name )
@@ -1240,6 +1290,28 @@ Node_id Parser::parse_param()
     return ast_.add( Node_kind::Param_decl, Span::merge( start, previous().span ), name.v, { type } );
 }
 
+Node_id Parser::parse_type_param()
+{
+    const Span      at   = peek().span;
+    const Symbol_id name = expect_name();
+
+    // `<Comparable T>` is C++'s terse form, and it is what a reader of that language writes first.
+    // Naming it costs one lookahead; without it the stray name derails the parameter list and then
+    // the signature after it, which is a dozen diagnostics for one habit.
+    if( check( Token_kind::Identifier ) )
+    {
+        error_at(
+            peek().span,
+            "a type parameter is a name on its own here",
+            "write the bound in a `where` clause after the parameter list"
+        );
+
+        advance();
+    }
+
+    return ast_.add( Node_kind::Type_param_decl, at, name.v, {} );
+}
+
 Node_id Parser::parse_block( u32 aux, Span opening )
 {
     const Span start = opening.is_valid() ? opening : peek().span;
@@ -1384,10 +1456,69 @@ bool Parser::looks_like_binding()
     return found;
 }
 
+// `id<i32>( 1 )` against `a < b > ( c )`. The parser has no symbol table (L17), so this is decided
+// on shape alone: a type-argument list that closes and is immediately followed by `(`.
+//
+// Committing to the generic reading is safe because the comparison reading has no valid typing to
+// fall back to - a comparison yields `bool`, operators are methods on the left operand's type
+// (D33), and `bool` is a builtin that can have none. See §12.
+//
+// Depth is counted here rather than by calling match_generic_close, which splits `>>` by leaving
+// `pending_greater_` set. That is parser state, and a scan that rewinds `pos_` without restoring it
+// would hand the next real `>` to whatever came after - which `Vector<Box<i32>>` reaches directly.
+bool Parser::scan_type_arguments()
+{
+    const u32 saved = pos_;
+
+    advance(); // the `<`
+
+    u32 depth = 1;
+
+    while( depth > 0 && !at_end() )
+    {
+        switch( peek().kind )
+        {
+        case Token_kind::Less:
+            depth += 1;
+            break;
+        case Token_kind::Greater:
+            depth -= 1;
+            break;
+        case Token_kind::Greater_greater:
+            // One token closing two levels. A lone `>>` at depth 1 is a shift, not a close.
+            if( depth < 2 )
+            {
+                pos_ = saved;
+                return false;
+            }
+            depth -= 2;
+            break;
+
+        // Everything a type may be made of, and nothing else: a type argument cannot contain a
+        // call, a literal or an operator, so meeting one means this was a comparison all along.
+        case Token_kind::Identifier:
+        case Token_kind::Star:
+        case Token_kind::Comma:
+            break;
+
+        default:
+            pos_ = saved;
+            return false;
+        }
+
+        advance();
+    }
+
+    const bool generic = depth == 0 && check( Token_kind::L_paren );
+
+    pos_ = saved;
+    return generic;
+}
+
 bool Parser::looks_like_method()
 {
     const u32  saved = pos_;
-    const bool found = scan_type_and_name() && check( Token_kind::L_paren );
+    const bool found = scan_type_and_name() && ( check( Token_kind::L_paren ) || check( Token_kind::Less ) );
 
     pos_ = saved;
     return found;
@@ -1715,13 +1846,13 @@ Node_id Parser::parse_expression_stmt( bool consume_semicolon )
             ast_.kind( expr ) == Node_kind::Binary_expr ? static_cast<Token_kind>( ast_.aux( expr ) ) : Token_kind::Unknown;
 
         const bool looks_like_a_declaration = ( op == Token_kind::Star || op == Token_kind::Amp ) &&
-                                              ast_.kind( ast_.children( expr )[0] ) == Node_kind::Name_expr &&
-                                              ast_.kind( ast_.children( expr )[1] ) == Node_kind::Name_expr;
+                                              ast_.kind( ast_.child( expr, 0 ) ) == Node_kind::Name_expr &&
+                                              ast_.kind( ast_.child( expr, 1 ) ) == Node_kind::Name_expr;
 
         if( looks_like_a_declaration )
         {
-            const std::string_view type = sm_.text( ast_.span( ast_.children( expr )[0] ) );
-            const std::string_view name = sm_.text( ast_.span( ast_.children( expr )[1] ) );
+            const std::string_view type = sm_.text( ast_.span( ast_.child( expr, 0 ) ) );
+            const std::string_view name = sm_.text( ast_.span( ast_.child( expr, 1 ) ) );
 
             // Different rules, so different messages: `*` is a spacing mistake, `&` is a spelling
             // that no longer exists.
@@ -1901,12 +2032,11 @@ Node_id Parser::parse_switch_stmt()
                 // Converting here is what keeps the bindings away from the resolver: as Name_exprs
                 // they would be looked up, and it would report about variables that do not exist
                 // instead of about the pattern.
-                if( ast_.kind( lower ) == Node_kind::Call_expr &&
-                    ast_.kind( ast_.children( lower )[0] ) == Node_kind::Path_expr )
+                if( ast_.kind( lower ) == Node_kind::Call_expr && ast_.kind( ast_.child( lower, 0 ) ) == Node_kind::Path_expr )
                 {
-                    std::vector<Node_id> parts { ast_.children( lower )[0] };
+                    std::vector<Node_id> parts { ast_.child( lower, 0 ) };
 
-                    for( const Node_id argument : ast_.children( ast_.children( lower )[1] ) )
+                    for( const Node_id argument : ast_.children( ast_.child( lower, 1 ) ) )
                     {
                         if( ast_.kind( argument ) != Node_kind::Name_expr )
                         {
@@ -2029,13 +2159,7 @@ Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing )
 
     while( true )
     {
-        // 0 means "not an infix operator". Without that test, `0 >= min_power` is true for every
-        // token and the loop never ends.
-        const u8 power = binding_power( peek().kind );
-        if( power == 0 || power < min_power )
-        {
-            break;
-        }
+        // Postfix operators first, because they bind tighter than any infix operator.
 
         // function call is a special case: it is the only infix operator that does not produce a
         // Binary_expr node, so it does not need the parentheses check below.
@@ -2043,7 +2167,37 @@ Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing )
         {
             Node_id args = parse_arg_list();
 
-            left = ast_.add( Node_kind::Call_expr, Span::merge( ast_.span( left ), ast_.span( args ) ), 0, { left, args } );
+            left = ast_.add(
+                Node_kind::Call_expr, Span::merge( ast_.span( left ), ast_.span( args ) ), 0, { left, args, Node_id {} }
+            );
+            continue;
+        }
+
+        // `id<i32>( 1 )`. The scan above has already proved the shape, so this parses for real -
+        // parse_type and match_generic_close, the same pair a `Vector<i32>` annotation uses.
+        if( check( Token_kind::Less ) && scan_type_arguments() )
+        {
+            const Span open = peek().span;
+
+            advance(); // the `<`
+
+            std::vector<Node_id> arguments;
+
+            do
+            {
+                arguments.push_back( parse_type() );
+            } while( match( Token_kind::Comma ) );
+
+            if( !match_generic_close() )
+            {
+                error_expected( Token_kind::Greater );
+            }
+
+            const Node_id types = ast_.add( Node_kind::Type_arg_list, Span::merge( open, previous().span ), 0, arguments );
+            const Node_id args  = parse_arg_list();
+
+            left =
+                ast_.add( Node_kind::Call_expr, Span::merge( ast_.span( left ), ast_.span( args ) ), 0, { left, args, types } );
             continue;
         }
 
@@ -2104,6 +2258,16 @@ Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing )
 
             left = ast_.add( Node_kind::Path_expr, Span::merge( ast_.span( left ), previous().span ), name.v, { left } );
             continue;
+        }
+
+        // Now deal with actual infix operators.
+
+        // 0 means "not an infix operator". Without that test, `0 >= min_power` is true for every
+        // token and the loop never ends.
+        const u8 power = binding_power( peek().kind );
+        if( power == 0 || power < min_power )
+        {
+            break;
         }
 
         // D16 has to look both ways. A looser operator folds into `left` first, so `a && b || c`
@@ -2590,7 +2754,10 @@ TEST_CASE( "parser_minimal_function_shape", "[parse]" )
     REQUIRE( p.kind( func ) == Node_kind::Function_decl );
 
     // Fixed arity: return type, parameter list, body.
-    REQUIRE( p.children( func ).size() == 3 );
+    // Four: return type, parameters, body, type parameters - the last invalid unless the
+    // declaration is generic, so every function-like kind has the same arity.
+    REQUIRE( p.children( func ).size() == 4 );
+    REQUIRE_FALSE( p.child( func, 3 ).is_valid() );
     REQUIRE( p.kind( p.child( func, 0 ) ) == Node_kind::Named_type );
     REQUIRE( p.kind( p.child( func, 1 ) ) == Node_kind::Param_list );
     REQUIRE( p.kind( p.child( func, 2 ) ) == Node_kind::Block );
@@ -3553,7 +3720,10 @@ TEST_CASE( "parser_parses_an_extern_declaration", "[parse][extern]" )
         const Node_id decl = p.child( p.root(), 0 );
 
         REQUIRE( p.kind( decl ) == Node_kind::Function_decl );
-        REQUIRE( p.children( decl ).size() == 3 );
+        // Four: return type, parameters, body, type parameters - the last invalid unless the
+        // declaration is generic, so every function-like kind has the same arity.
+        REQUIRE( p.children( decl ).size() == 4 );
+        REQUIRE_FALSE( p.child( decl, 3 ).is_valid() );
         REQUIRE( p.kind( p.child( decl, 0 ) ) == Node_kind::Named_type );
         REQUIRE( p.kind( p.child( decl, 1 ) ) == Node_kind::Param_list );
         REQUIRE_FALSE( p.child( decl, 2 ).is_valid() );
@@ -4104,6 +4274,285 @@ TEST_CASE( "parser_parses_fallthrough", "[parse][fallthrough]" )
     }
 }
 
+// D39: type parameters go on the name, not in a `template<...>` prefix, so the declaration reads
+// the way the call site already does. Nothing here checks them - slice 1a is the shape only.
+TEST_CASE( "parser_parses_type_parameters", "[parse][generic]" )
+{
+    SECTION( "one parameter" )
+    {
+        const Parsed p( "T id<T>( T a ) { return a; }\ni32 main() { return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id decl = p.child( p.root(), 0 );
+        const Node_id list = p.child( decl, 3 );
+
+        REQUIRE( p.kind( list ) == Node_kind::Type_param_list );
+        REQUIRE( p.children( list ).size() == 1 );
+        REQUIRE( p.kind( p.child( list, 0 ) ) == Node_kind::Type_param_decl );
+        REQUIRE( p.text( p.child( list, 0 ) ) == "T" );
+    }
+
+    SECTION( "a parameter binds a name and nothing else" )
+    {
+        // The bound lives in a `where` clause, so a parameter has no children of its own.
+        const Parsed p( "T id<T>( T a ) { return a; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.children( p.child( p.child( p.root(), 0 ), 3 ) ).empty() == false );
+
+        const Node_id param = p.child( p.child( p.child( p.root(), 0 ), 3 ), 0 );
+
+        REQUIRE( p.children( param ).empty() );
+    }
+
+    SECTION( "several, in order" )
+    {
+        const Parsed p( "T pick<T, U, V>( T a, U b, V c ) { return a; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id list = p.child( p.child( p.root(), 0 ), 3 );
+
+        REQUIRE( p.children( list ).size() == 3 );
+        REQUIRE( p.text( p.child( list, 0 ) ) == "T" );
+        REQUIRE( p.text( p.child( list, 1 ) ) == "U" );
+        REQUIRE( p.text( p.child( list, 2 ) ) == "V" );
+    }
+
+    SECTION( "the type parameters may be named in the signature and the body" )
+    {
+        const Parsed p( "T twice<T>( T a, T b ) { T c = a; return c; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+    }
+
+    SECTION( "a generic is not mistaken for a variable" )
+    {
+        // looks_like_method decides this, and it used to require `(` immediately after the name -
+        // so `T id<T>(` took the variable path and reported a stray `<`.
+        const Parsed p( "T id<T>( T a ) { return a; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.kind( p.child( p.root(), 0 ) ) == Node_kind::Function_decl );
+    }
+}
+
+// Every function-like declaration carries the same four children, so the one walk that visits them
+// does not have to ask which kind it is looking at. Three separate out-of-bounds reads came from
+// the two shapes disagreeing while this was being added.
+TEST_CASE( "parser_gives_every_declaration_the_same_arity", "[parse][generic]" )
+{
+    SECTION( "a plain function" )
+    {
+        const Parsed p( "i32 f( i32 a ) { return a; }" );
+
+        const Node_id decl = p.child( p.root(), 0 );
+
+        REQUIRE( p.children( decl ).size() == 4 );
+        REQUIRE_FALSE( p.child( decl, 3 ).is_valid() );
+    }
+
+    SECTION( "an extern, which has no body either" )
+    {
+        const Parsed p( "extern i32 abs( i32 v );" );
+
+        const Node_id decl = p.child( p.root(), 0 );
+
+        REQUIRE( p.children( decl ).size() == 4 );
+        REQUIRE_FALSE( p.child( decl, 2 ).is_valid() ); // no body
+        REQUIRE_FALSE( p.child( decl, 3 ).is_valid() ); // no type parameters
+    }
+
+    SECTION( "a method, a constructor and a destructor" )
+    {
+        const Parsed p( "class C { i32 x; C( i32 v ) { x = v; } ~C() { } i32 g() { return x; } };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        for( const Node_kind kind : { Node_kind::Method_decl, Node_kind::Constructor_decl, Node_kind::Destructor_decl } )
+        {
+            const Node_id decl = find_first( p.ast(), p.root(), kind );
+
+            INFO( node_kind_name( kind ) );
+            REQUIRE( decl.is_valid() );
+            REQUIRE( p.children( decl ).size() == 4 );
+            REQUIRE_FALSE( p.child( decl, 3 ).is_valid() );
+        }
+    }
+}
+
+TEST_CASE( "parser_rejects_a_malformed_type_parameter_list", "[parse][generic]" )
+{
+    SECTION( "empty" )
+    {
+        const Parsed p( "T id<>( T a ) { return a; }" );
+
+        REQUIRE( p.has_errors() );
+        INFO( p.errors() );
+        REQUIRE( p.errors().find( "at least one type parameter" ) != std::string::npos );
+    }
+
+    SECTION( "unterminated" )
+    {
+        const Parsed p( "T id<T( T a ) { return a; }" );
+
+        REQUIRE( p.has_errors() );
+    }
+
+    SECTION( "a trailing comma" )
+    {
+        const Parsed p( "T id<T,>( T a ) { return a; }" );
+
+        REQUIRE( p.has_errors() );
+    }
+
+    SECTION( "the C++ terse-bound spelling is named once, not cascaded" )
+    {
+        // `<Comparable T>` is what a C++ reader writes first. Left unhandled the stray name derails
+        // the parameter list and then the signature - a dozen diagnostics for one habit.
+        const Parsed p( "T id<Comparable T>( T a ) { return a; }\ni32 main() { return 0; }" );
+
+        REQUIRE( p.has_errors() );
+        INFO( p.errors() );
+        REQUIRE( p.errors().find( "a name on its own" ) != std::string::npos );
+        REQUIRE( p.errors().find( "`where` clause" ) != std::string::npos );
+        REQUIRE( p.error_count() == 1 );
+    }
+
+    SECTION( "and the declaration after it still parses" )
+    {
+        const Parsed p( "T id<Comparable T>( T a ) { return a; }\ni32 main() { return 0; }" );
+
+        std::size_t functions = 0;
+        for( const Node_id decl : p.children( p.root() ) )
+        {
+            functions += p.kind( decl ) == Node_kind::Function_decl ? 1 : 0;
+        }
+
+        REQUIRE( functions == 2 );
+    }
+}
+
+// `id<i32>( 1 )` against `a < b > ( c )`, decided on shape alone because the parser has no symbol
+// table (L17). Committing to the generic reading is safe because the comparison reading has no
+// valid typing to fall back to - see §12.
+TEST_CASE( "parser_parses_a_generic_call", "[parse][generic]" )
+{
+    const auto call_of = []( const Parsed& p ) { return find_first( p.ast(), p.root(), Node_kind::Call_expr ); };
+
+    SECTION( "one type argument" )
+    {
+        const Parsed p( "i32 f( i32 a ) { return a; }\ni32 main() { return f<i32>( 1 ); }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id call = call_of( p );
+
+        REQUIRE( call.is_valid() );
+        REQUIRE( p.children( call ).size() == 3 );
+        REQUIRE( p.kind( p.child( call, 2 ) ) == Node_kind::Type_arg_list );
+        REQUIRE( p.children( p.child( call, 2 ) ).size() == 1 );
+    }
+
+    SECTION( "several" )
+    {
+        const Parsed p( "i32 f( i32 a ) { return a; }\ni32 main() { return f<i32, f64, bool>( 1 ); }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.children( p.child( call_of( p ), 2 ) ).size() == 3 );
+    }
+
+    SECTION( "a pointer argument" )
+    {
+        const Parsed p( "i32 f( i32 a ) { return a; }\ni32 main() { return f<i32*>( 1 ); }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.kind( p.child( p.child( call_of( p ), 2 ), 0 ) ) == Node_kind::Pointer_type );
+    }
+
+    SECTION( "nested, closing on `>>`" )
+    {
+        const Parsed p( "struct Box { i32 v; };\ni32 f( i32 a ) { return a; }\ni32 main() { return f<Box<i32>>( 1 ); }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.kind( p.child( call_of( p ), 2 ) ) == Node_kind::Type_arg_list );
+    }
+
+    SECTION( "every call carries the slot, generic or not" )
+    {
+        const Parsed p( "i32 f( i32 a ) { return a; }\ni32 main() { return f( 1 ); }" );
+
+        const Node_id call = call_of( p );
+
+        REQUIRE( p.children( call ).size() == 3 );
+        REQUIRE_FALSE( p.child( call, 2 ).is_valid() );
+    }
+}
+
+// The other half of the same decision: what must stay a comparison. The scan requires the list to
+// close *and* be followed immediately by `(`, which is what keeps these unchanged.
+TEST_CASE( "parser_still_reads_comparisons_as_comparisons", "[parse][generic]" )
+{
+    for( const char* body : {
+             "bool r = a < b;",
+             "bool r = a < b == true;",
+             "i32 r = b >> c;",
+             "i32 r = ( b >> c ) + 1;",
+             "bool r = a < b; bool s = c > a;",
+         } )
+    {
+        const std::string source = std::string( "i32 main() { i32 a = 1; i32 b = 2; i32 c = 3; " ) + body + " return 0; }";
+        const Parsed      p( source );
+
+        INFO( source << "\n" << p.errors() );
+        REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::Type_arg_list ).is_valid() );
+    }
+}
+
+// match_generic_close splits `>>` by leaving `pending_greater_` set, and that is parser state. A
+// scan that rewound the cursor without restoring it would hand the next real `>` to whatever came
+// after - so the scan counts depth itself and never calls that helper.
+TEST_CASE( "parser_leaves_no_state_behind_after_a_scan", "[parse][generic]" )
+{
+    SECTION( "a shift after a nested generic call still shifts" )
+    {
+        const Parsed p( "struct Box { i32 v; };\n"
+                        "i32 f( i32 a ) { return a; }\n"
+                        "i32 main() { i32 b = 8; i32 c = 1; i32 x = f<Box<i32>>( 1 ); return b >> c; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        // From `main`, not from the root: `f`'s own `return a;` comes first in the tree.
+        const Node_id body = p.child( p.child( p.root(), 2 ), 2 );
+        const Node_id ret  = find_first( p.ast(), body, Node_kind::Return_stmt );
+
+        REQUIRE( ret.is_valid() );
+        REQUIRE( p.kind( p.child( ret, 0 ) ) == Node_kind::Binary_expr );
+        REQUIRE( static_cast<Token_kind>( p.aux( p.child( ret, 0 ) ) ) == Token_kind::Greater_greater );
+    }
+
+    SECTION( "a comparison after a failed scan is unaffected" )
+    {
+        const Parsed p( "i32 main() { i32 a = 1; i32 b = 2; i32 c = 3; bool r = a < b; bool s = b > c; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::Type_arg_list ).is_valid() );
+    }
+}
+
 TEST_CASE( "parser_call_errors", "[parse]" )
 {
     SECTION( "a trailing comma is rejected, as in C++" )
@@ -4141,7 +4590,11 @@ TEST_CASE( "parser_call_node_shape", "[parse]" )
 
     const Node_id call = parse_expression_of( p );
     REQUIRE( p.kind( call ) == Node_kind::Call_expr );
-    REQUIRE( p.children( call ).size() == 2 );
+
+    // Three: callee, arguments, type arguments - the last invalid unless the call is generic, so
+    // every Call_expr has the same arity whether or not it names type arguments.
+    REQUIRE( p.children( call ).size() == 3 );
+    REQUIRE_FALSE( p.child( call, 2 ).is_valid() );
     REQUIRE( p.kind( p.child( call, 0 ) ) == Node_kind::Name_expr );
 
     const Node_id args = p.child( call, 1 );
@@ -5393,7 +5846,10 @@ TEST_CASE( "parser_parses_destructors", "[parse][aggregates]" )
         INFO( p.dump() );
         REQUIRE_FALSE( p.has_errors() );
         REQUIRE( dtor.is_valid() );
-        REQUIRE( p.children( dtor ).size() == 3 );
+        // Four: return type, parameters, body, type parameters - the last invalid unless the
+        // declaration is generic, so every function-like kind has the same arity.
+        REQUIRE( p.children( dtor ).size() == 4 );
+        REQUIRE_FALSE( p.child( dtor, 3 ).is_valid() );
         REQUIRE_FALSE( p.child( dtor, 0 ).is_valid() ); // no return type
         REQUIRE( p.kind( p.child( dtor, 1 ) ) == Node_kind::Param_list );
 
@@ -5567,7 +6023,10 @@ TEST_CASE( "parser_parses_constructors", "[parse][aggregates]" )
         INFO( p.dump() );
         REQUIRE_FALSE( p.has_errors() );
         REQUIRE( ctor.is_valid() );
-        REQUIRE( p.children( ctor ).size() == 3 );
+        // Four: return type, parameters, body, type parameters - the last invalid unless the
+        // declaration is generic, so every function-like kind has the same arity.
+        REQUIRE( p.children( ctor ).size() == 4 );
+        REQUIRE_FALSE( p.child( ctor, 3 ).is_valid() );
         REQUIRE_FALSE( p.child( ctor, 0 ).is_valid() ); // no return type
         REQUIRE( p.kind( p.child( ctor, 1 ) ) == Node_kind::Param_list );
         REQUIRE( p.kind( p.child( ctor, 2 ) ) == Node_kind::Block );

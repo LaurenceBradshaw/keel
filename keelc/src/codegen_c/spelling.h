@@ -1,4 +1,5 @@
 #pragma once
+#include <span>
 #include <string>
 #include "ast/ast.h"
 #include "common/interner.h"
@@ -16,7 +17,9 @@ struct Spelling
     std::string type( Type_id type ) const; // "int32_t", "struct kl__Point", "int32_t*"
     std::string structure( Node_id declaration ) const;
     std::string field( Node_id declaration ) const;
-    std::string function( Node_id declaration ) const;
+    // The declaration alone no longer names a function: one generic is emitted once per set of
+    // type arguments, so they are part of the symbol.
+    std::string function( Node_id declaration, std::span<const Type_id> type_arguments = {} ) const;
 
     // The symbol a Drop calls. A Drop always names a type with a destructor of its own - the
     // lowerer expands a compound into per-field drops - so a type without one is a lowering bug

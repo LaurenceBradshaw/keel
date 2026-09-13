@@ -29,6 +29,7 @@ enum class Type_kind : u8
     Pointer, // M2; element unused before then
     Struct,  // `declaration` says which one
     Enum,
+    Parameter, // a generic type parameter.
 };
 
 // Defaulted rather than bare, so a kind that does not use a field can leave it out of the aggregate
@@ -41,6 +42,10 @@ struct Type
     Type_id   element     = {};    // For Pointer and Enum
     Node_id   declaration = {};    // for Struct and Enum; the node that defines it
 };
+
+// A type parameter bound to a concrete type, keyed by the parameter's own Type_id. Named because
+// it travels from the checker's call site through to the lowerer's instantiation.
+using Bindings = std::unordered_map<u32, Type_id>;
 
 class Type_table
 {
@@ -56,6 +61,14 @@ public:
     // Interned by *declaration*, not by name: two modules each declaring `Point` must be two
     // distinct types. The name is passed in because the table has no Interner of its own.
     Type_id structure( Node_id declaration, std::string_view name );
+
+    // A type parameter, before any instantiation substitutes it away. Keyed by its Type_param_decl,
+    // so `T` in one declaration is never `T` in another - the resolver already scoped them apart.
+    Type_id parameter( Node_id declaration, std::string_view name );
+
+    // `T` -> `i32`, `T*` -> `i32*`. Structural, because a parameter can appear inside a type
+    // constructor as readily as alone, and `T*` is reachable the moment anyone writes it.
+    Type_id substitute( Type_id type, const Bindings& bindings );
 
     const Type&      get( Type_id id ) const;
     std::string_view name( Type_id id ) const; // "i32", "u8*" - for diagnostics
@@ -109,6 +122,7 @@ private:
     std::unordered_map<u32, Type_id> pointers_; // element id -> pointer id
     std::unordered_map<u32, Type_id> structs_;  // Struct_decl node -> struct type
     std::unordered_map<u32, Type_id> enums_;    // Enum_decl node -> enum type
+    std::unordered_map<u32, Type_id> params_;   // Type_param_decl node -> type parameter
     std::deque<std::string>          composed_;
 
     std::unordered_map<std::string_view, Type_id>

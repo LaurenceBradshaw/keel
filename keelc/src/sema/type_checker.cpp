@@ -555,7 +555,19 @@ private:
     std::vector<Type_id>    types_;        // sized node_count(), invalid-filled, like bindings_ in Resolver
     std::vector<Node_id>    struct_order_; // dependencies first; also the "already proved acyclic" set
     std::unordered_set<u32> owning_;       // filled by compute_owning, handed to Types
-    Type_id                 current_return_;
+
+    // Every (generic, type arguments) pair a call site named, deduplicated. Nothing reads it yet:
+    // it is what the monomorphisation worklist starts from, recorded here because this is the one
+    // pass that turns a type argument into a type.
+    std::vector<Instantiation> instantiations_;
+
+    // Which instantiation each generic call resolved to. Carried rather than recomputed, for the
+    // reason methods_ is: resolving a type argument to a type is this pass's rule, and lowering
+    // repeating it is how the two would drift.
+    std::unordered_map<u32, u32> instantiation_of_;
+
+    std::size_t record_instantiation( Node_id declaration, std::vector<Type_id> arguments );
+    Type_id     current_return_;
 
     // Set while the callee of a call is being inferred, so infer_path can tell `Shape::Circle` the
     // expression from `Shape::Circle( 1.0 )` the construction. One flag rather than a second entry
@@ -591,7 +603,9 @@ Types Checker::run()
         std::move( struct_order_ ),
         std::move( constants_ ),
         std::move( owning_ ),
-        std::move( methods_ )
+        std::move( methods_ ),
+        std::move( instantiations_ ),
+        std::move( instantiation_of_ )
     );
 }
 
@@ -655,7 +669,7 @@ void Checker::declare_signatures_field_decls()
                 continue;
             }
 
-            const Node_id annotation = ast_.children( field )[0];
+            const Node_id annotation = ast_.child( field, 0 );
 
             // A field is not a binding, so `const` has nothing to attach to. Rejected rather than
             // ignored - a keyword that silently does nothing is worse than not having one.
@@ -668,7 +682,7 @@ void Checker::declare_signatures_field_decls()
                 );
             }
 
-            record( field, type_of_annotation( ast_.children( field )[0] ) );
+            record( field, type_of_annotation( ast_.child( field, 0 ) ) );
         }
     }
 }
@@ -687,7 +701,24 @@ void Checker::declare_signatures_function_decls()
             continue;
         }
 
-        const Node_id return_type_node = ast_.children( child )[0];
+        if( ast_.child( child, 3 ).is_valid() )
+        {
+            // Recorded before the signature below is typed, so `T` resolves through the ordinary
+            // type_of_annotation path rather than needing one of its own. Keyed by the
+            // Type_param_decl itself, which is what makes one declaration's `T` distinct from
+            // another's - the resolver has already scoped them apart.
+            for( const Node_id type_param : ast_.children( ast_.child( child, 3 ) ) )
+            {
+                if( ast_.kind( type_param ) != Node_kind::Type_param_decl )
+                {
+                    continue;
+                }
+
+                record( type_param, table_.parameter( type_param, interner_.text( Symbol_id { ast_.aux( type_param ) } ) ) );
+            }
+        }
+
+        const Node_id return_type_node = ast_.child( child, 0 );
         const Type_id return_type      = type_of_annotation( return_type_node );
         record( child, return_type );
 
@@ -709,7 +740,7 @@ void Checker::declare_signatures_function_decls()
             }
         }
 
-        const Node_id param_list = ast_.children( child )[1];
+        const Node_id param_list = ast_.child( child, 1 );
         for( Node_id param : ast_.children( param_list ) )
         {
             if( ast_.kind( param ) != Node_kind::Param_decl )
@@ -717,7 +748,7 @@ void Checker::declare_signatures_function_decls()
                 continue;
             }
 
-            const Node_id param_type_node = ast_.children( param )[0];
+            const Node_id param_type_node = ast_.child( param, 0 );
             const Type_id param_type      = type_of_annotation( param_type_node );
             record( param, param_type );
         }
@@ -769,7 +800,7 @@ void Checker::declare_signatures_member_functions()
             // A constructor and a destructor return nothing and have no annotation to read; a
             // method has both. Child 0 is the return type either way, and is invalid for the two
             // that have none.
-            const Node_id return_type_node = ast_.children( member )[0];
+            const Node_id return_type_node = ast_.child( member, 0 );
 
             const Type_id return_type =
                 return_type_node.is_valid() ? type_of_annotation( return_type_node ) : table_.builtin( Type_kind::Void );
@@ -796,9 +827,9 @@ void Checker::declare_signatures_member_functions()
                 }
             }
 
-            for( Node_id param : ast_.children( ast_.children( member )[1] ) )
+            for( Node_id param : ast_.children( ast_.child( member, 1 ) ) )
             {
-                const Node_id param_type_node = ast_.children( param )[0];
+                const Node_id param_type_node = ast_.child( param, 0 );
                 const Type_id param_type      = type_of_annotation( param_type_node );
                 record( param, param_type );
             }
@@ -820,7 +851,7 @@ void Checker::declare_signatures_global_decls()
             continue;
         }
 
-        const Node_id var_type_node = ast_.children( child )[0];
+        const Node_id var_type_node = ast_.child( child, 0 );
         const Type_id var_type      = type_of_annotation( var_type_node );
         record( child, var_type );
     }
@@ -844,7 +875,7 @@ void Checker::declare_signatures_enum_decls()
 
         // Child 0 is the underlying type, invalid when unwritten. i32 by default, which is what
         // C++ gives a plain enum - D30 changed the semantics of the keyword, not its arithmetic.
-        const Node_id annotation = ast_.children( child )[0];
+        const Node_id annotation = ast_.child( child, 0 );
         Type_id       underlying = annotation.is_valid() ? type_of_annotation( annotation ) : table_.integer( 32, true );
 
         // Only an integer can count variants. Absorbed to i32 on failure so the enum still gets a
@@ -895,7 +926,7 @@ void Checker::declare_signatures_enum_decls()
 
             for( const Node_id field : ast_.children( variant ) )
             {
-                const Type_id field_type = type_of_annotation( ast_.children( field )[0] );
+                const Type_id field_type = type_of_annotation( ast_.child( field, 0 ) );
 
                 record( field, field_type );
 
@@ -961,7 +992,7 @@ void Checker::record_borrowed_parameters()
             continue;
         }
 
-        record_binding_address( ast_.children( param )[0], type );
+        record_binding_address( ast_.child( param, 0 ), type );
     }
 }
 
@@ -1126,7 +1157,7 @@ Node_id Checker::receiver_of( Node_id function ) const
         return Node_id {};
     }
 
-    const std::span<const Node_id> params = ast_.children( ast_.children( function )[1] );
+    const std::span<const Node_id> params = ast_.children( ast_.child( function, 1 ) );
 
     return params.empty() ? Node_id {} : params[0];
 }
@@ -1135,7 +1166,7 @@ Node_id Checker::place_root( Node_id id ) const
 {
     while( ast_.kind( id ) == Node_kind::Field_expr )
     {
-        const Node_id object = ast_.children( id )[0];
+        const Node_id object = ast_.child( id, 0 );
 
         // D22 reaches through a pointer, and past one the borrow says nothing: what a pointer
         // points at was never part of the object that was lent. The same shallowness `const` has
@@ -1530,7 +1561,7 @@ void Checker::visit( Node_id id )
         return visit_block( id );
 
     case Node_kind::Expr_stmt:
-        infer( ast_.children( id )[0] );
+        infer( ast_.child( id, 0 ) );
         return; // discard the result. D15 already made effectless expressions a parse error
 
     case Node_kind::Function_decl:
@@ -1617,7 +1648,7 @@ void Checker::visit_function( Node_id id )
 
     current_return_   = types_[id.v];
     current_function_ = id;
-    visit( ast_.children( id )[2] );
+    visit( ast_.child( id, 2 ) );
     current_return_   = enclosing_return;
     current_function_ = enclosing_function;
 }
@@ -1657,7 +1688,7 @@ bool Checker::returns_a_binding( Node_id decl ) const
         return false;
     }
 
-    const Node_id annotation = ast_.children( decl )[0];
+    const Node_id annotation = ast_.child( decl, 0 );
 
     return annotation.is_valid() && types_[annotation.v].is_valid();
 }
@@ -1674,7 +1705,7 @@ bool Checker::is_assignable( Node_id id ) const
         // Field_expr, or a bare name that names a sibling. Either way the question below is the
         // same one - does this callable hand back a binding.
         const auto    method = methods_.find( id.v );
-        const Node_id callee = method != methods_.end() ? method->second : resolution_.declaration_of( ast_.children( id )[0] );
+        const Node_id callee = method != methods_.end() ? method->second : resolution_.declaration_of( ast_.child( id, 0 ) );
 
         return callee.is_valid() &&
                ( ast_.kind( callee ) == Node_kind::Function_decl || ast_.kind( callee ) == Node_kind::Method_decl ) &&
@@ -1717,7 +1748,7 @@ bool Checker::is_assignable( Node_id id ) const
 
 void Checker::visit_return( Node_id id )
 {
-    const Node_id value     = ast_.children( id )[0];
+    const Node_id value     = ast_.child( id, 0 );
     const Type_id void_type = table_.builtin( Type_kind::Void );
 
     if( !value.is_valid() ) // a bare `return;`
@@ -1775,8 +1806,8 @@ void Checker::visit_var( Node_id id )
 {
     // Children are { type, init }. Either can be invalid: no annotation means `auto`, and no
     // initialiser means the variable is only declared.
-    const Node_id annotation = ast_.children( id )[0];
-    const Node_id init       = ast_.children( id )[1];
+    const Node_id annotation = ast_.child( id, 0 );
+    const Node_id init       = ast_.child( id, 1 );
     const Node_id spelled    = unwrap_const( ast_, annotation );
     const Keyword mode       = spelled.is_valid() && ast_.kind( spelled ) == Node_kind::Mode_type
                                    ? static_cast<Keyword>( ast_.aux( spelled ) )
@@ -1861,8 +1892,8 @@ void Checker::visit_assign( Node_id id )
 {
     // Children are { target, value }; aux is the operator, which may be `+=` rather than `=`.
     const Token_kind op     = static_cast<Token_kind>( ast_.aux( id ) );
-    const Node_id    target = ast_.children( id )[0];
-    const Node_id    value  = ast_.children( id )[1];
+    const Node_id    target = ast_.child( id, 0 );
+    const Node_id    value  = ast_.child( id, 1 );
 
     // Asked before infer(), which would otherwise absorb it: a literal target types as an error
     // today, so `1 = 2;` passed in silence. Parameters are assignable too - L12 is
@@ -2268,8 +2299,8 @@ void Checker::check_numeric_switch( Node_id id, Type_id type, bool& has_default 
 
             if( is_range )
             {
-                const std::optional<i64> low  = fold_bound( ast_.children( label )[0], type );
-                const std::optional<i64> high = fold_bound( ast_.children( label )[1], type );
+                const std::optional<i64> low  = fold_bound( ast_.child( label, 0 ), type );
+                const std::optional<i64> high = fold_bound( ast_.child( label, 1 ), type );
 
                 if( !low.has_value() || !high.has_value() )
                 {
@@ -2348,17 +2379,17 @@ void Checker::visit_if( Node_id id )
 {
     // Children are { condition, then, else }; else is invalid when there is none, and visit()
     // returns immediately on that.
-    check_condition( ast_.children( id )[0] );
-    visit( ast_.children( id )[1] );
-    visit( ast_.children( id )[2] );
+    check_condition( ast_.child( id, 0 ) );
+    visit( ast_.child( id, 1 ) );
+    visit( ast_.child( id, 2 ) );
 }
 
 void Checker::visit_while( Node_id id )
 {
-    check_condition( ast_.children( id )[0] );
+    check_condition( ast_.child( id, 0 ) );
     loop_depth_ += 1;
     breakable_depth_ += 1;
-    visit( ast_.children( id )[1] );
+    visit( ast_.child( id, 1 ) );
     loop_depth_ -= 1;
     breakable_depth_ -= 1;
 }
@@ -2368,12 +2399,12 @@ void Checker::visit_for( Node_id id )
     // Children are { init, condition, update, body }, any of which `for( ; ; )` leaves invalid.
     // init and update are ordinary statements - a declaration, an assignment, an increment - so
     // they go through visit, not infer.
-    visit( ast_.children( id )[0] );
-    check_condition( ast_.children( id )[1] );
-    visit( ast_.children( id )[2] );
+    visit( ast_.child( id, 0 ) );
+    check_condition( ast_.child( id, 1 ) );
+    visit( ast_.child( id, 2 ) );
     loop_depth_ += 1;
     breakable_depth_ += 1;
-    visit( ast_.children( id )[3] );
+    visit( ast_.child( id, 3 ) );
     loop_depth_ -= 1;
     breakable_depth_ -= 1;
 }
@@ -2382,7 +2413,7 @@ void Checker::visit_increment( Node_id id )
 {
     // Children are { operand }; aux is `++` or `--`.
     const Token_kind op      = static_cast<Token_kind>( ast_.aux( id ) );
-    const Node_id    operand = ast_.children( id )[0];
+    const Node_id    operand = ast_.child( id, 0 );
 
     if( !is_assignable( operand ) )
     {
@@ -2419,7 +2450,7 @@ void Checker::visit_increment( Node_id id )
 void Checker::visit_global( Node_id id )
 {
     const Type_id type = types_[id.v];
-    const Node_id init = ast_.children( id )[1];
+    const Node_id init = ast_.child( id, 1 );
 
     if( table_.is_error( type ) )
     {
@@ -2626,7 +2657,7 @@ bool Checker::is_literal_expression( Node_id id ) const
             return false;
         }
 
-        const Node_kind operand = ast_.kind( ast_.children( id )[0] );
+        const Node_kind operand = ast_.kind( ast_.child( id, 0 ) );
 
         return operand == Node_kind::Int_literal || operand == Node_kind::Float_literal;
     }
@@ -2667,7 +2698,7 @@ bool Checker::is_constant_expression( Node_id id ) const
         case Token_kind::Plus:
         case Token_kind::Tilde:
         case Token_kind::Bang:
-            return is_constant_expression( ast_.children( id )[0] );
+            return is_constant_expression( ast_.child( id, 0 ) );
 
         default:
             return false;
@@ -2682,11 +2713,11 @@ bool Checker::is_constant_expression( Node_id id ) const
             return false;
         }
 
-        return is_constant_expression( ast_.children( id )[0] ) && is_constant_expression( ast_.children( id )[1] );
+        return is_constant_expression( ast_.child( id, 0 ) ) && is_constant_expression( ast_.child( id, 1 ) );
     }
 
     case Node_kind::Cast_expr:
-        return is_constant_expression( ast_.children( id )[1] );
+        return is_constant_expression( ast_.child( id, 1 ) );
 
     default:
         return false;
@@ -2728,9 +2759,9 @@ Type_id Checker::check_literal( Node_id id, Type_id expected )
     bool    negative = false;
 
     if( ast_.kind( id ) == Node_kind::Unary_expr && static_cast<Token_kind>( ast_.aux( id ) ) == Token_kind::Minus &&
-        is_literal_expression( ast_.children( id )[0] ) )
+        is_literal_expression( ast_.child( id, 0 ) ) )
     {
-        literal = ast_.children( id )[0];
+        literal = ast_.child( id, 0 );
 
         // Only integers have an asymmetric range. A float's negation cannot take it out of range.
         negative = ast_.kind( literal ) == Node_kind::Int_literal;
@@ -2865,8 +2896,8 @@ Type_id Checker::infer_name( Node_id id )
 
 Type_id Checker::infer_call( Node_id id )
 {
-    const Node_id callee = ast_.children( id )[0];
-    const Node_id args   = ast_.children( id )[1];
+    const Node_id callee = ast_.child( id, 0 );
+    const Node_id args   = ast_.child( id, 1 );
 
     // D7: `Shape::Circle( 1.0 )` constructs a variant. Handled before the ordinary call path
     // because the callee is a Path_expr rather than a name, and because what it checks the
@@ -2909,7 +2940,34 @@ Type_id Checker::infer_call( Node_id id )
         return record( id, table_.builtin( Type_kind::Error ) );
     }
 
-    const std::string_view name = interner_.text( Symbol_id { ast_.aux( callee ) } );
+    const Node_id          type_args = ast_.child( id, 2 );
+    const std::string_view name      = interner_.text( Symbol_id { ast_.aux( callee ) } );
+
+    // A generic call on something that is not generic. After 1b the parser reads `a < b > ( c )`
+    // this way, so this is the message that shape produces - it has to name the real problem.
+    if( type_args.is_valid() && !is_generic( ast_, decl ) )
+    {
+        error_at( ast_.span( callee ), fmt::format( "`{}` is not a generic", name ) );
+
+        type_the_arguments_anyway();
+        return record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    // And the mirror: a generic whose type arguments were not written. Inferring them from the
+    // value arguments is a decision of its own and is not taken here, so this names the explicit
+    // form rather than guessing. Without it the parameters stay unbound and substitution has
+    // nothing to look up.
+    if( !type_args.is_valid() && is_generic( ast_, decl ) )
+    {
+        error_at(
+            ast_.span( callee ),
+            fmt::format( "`{}` is generic, so its type arguments must be written", name ),
+            fmt::format( "as in `{}<i32>( ... )`", name )
+        );
+
+        type_the_arguments_anyway();
+        return record( id, table_.builtin( Type_kind::Error ) );
+    }
 
     // What the arguments are checked against, what the call produces, and how many leading
     // parameters are not the author's to supply. For a plain function all three are the obvious
@@ -2961,7 +3019,52 @@ Type_id Checker::infer_call( Node_id id )
         );
     }
 
-    const std::span<const Node_id> declared  = ast_.children( ast_.children( callable )[1] );
+    std::unordered_map<u32, Type_id> bindings;
+
+    if( type_args.is_valid() )
+    {
+        const std::span<const Node_id> parameters = ast_.children( ast_.child( callable, 3 ) );
+        const std::span<const Node_id> given      = ast_.children( type_args );
+
+        if( parameters.size() != given.size() )
+        {
+            error_at(
+                ast_.span( type_args ),
+                fmt::format(
+                    "`{}` takes {} type argument{}, but {} {} given",
+                    name,
+                    parameters.size(),
+                    parameters.size() == 1 ? "" : "s",
+                    given.size(),
+                    given.size() == 1 ? "was" : "were"
+                )
+            );
+
+            type_the_arguments_anyway();
+            return record( id, table_.builtin( Type_kind::Error ) );
+        }
+
+        std::vector<Type_id> resolved;
+
+        resolved.reserve( parameters.size() );
+
+        for( std::size_t i = 0; i < parameters.size(); ++i )
+        {
+            const Type_id argument = type_of_annotation( given[i] );
+
+            resolved.push_back( argument );
+
+            // type_of_annotation has already reported an unknown type. Binding the error type keeps
+            // every later substitution total, and check() absorbs it at each argument.
+            bindings.emplace( types_[parameters[i].v].v, argument );
+        }
+
+        const std::size_t instance = record_instantiation( callable, std::move( resolved ) );
+
+        instantiation_of_.emplace( id.v, narrow_cast<u32>( instance ) );
+    }
+
+    const std::span<const Node_id> declared  = ast_.children( ast_.child( callable, 1 ) );
     const std::span<const Node_id> params    = declared.subspan( implicit_params );
     const std::span<const Node_id> arguments = ast_.children( args );
 
@@ -2987,7 +3090,13 @@ Type_id Checker::infer_call( Node_id id )
 
     for( std::size_t i = 0; i < shared; ++i )
     {
-        check( arguments[i], types_[params[i].v] );
+        // The parameter's type with this call's type arguments bound. Every use below is of this
+        // rather than of the declared type: the declared one may be `T`, which the caller never
+        // wrote and which no diagnostic should name. An empty map makes this the identity, so the
+        // ordinary path needs no branch.
+        const Type_id expected = table_.substitute( types_[params[i].v], bindings );
+
+        check( arguments[i], expected );
 
         // D2: transfer is visible at the call *and* in the signature, and neither alone is enough -
         // a reader of one should never have to find the other.
@@ -3004,13 +3113,11 @@ Type_id Checker::infer_call( Node_id id )
         // Above the agreement check, because agreeing is this rule's precondition rather than its
         // exit - and it wants both sides, so one missing marker does not report twice.
         if( wanted == Keyword::Ref && given == Keyword::Ref && !table_.is_error( types_[arguments[i].v] ) &&
-            types_[arguments[i].v] != types_[params[i].v] )
+            types_[arguments[i].v] != expected )
         {
             error_at(
                 ast_.span( arguments[i] ),
-                fmt::format(
-                    "cannot borrow `{}` as `ref {}`", table_.name( types_[arguments[i].v] ), table_.name( types_[params[i].v] )
-                ),
+                fmt::format( "cannot borrow `{}` as `ref {}`", table_.name( types_[arguments[i].v] ), table_.name( expected ) ),
                 "a borrow is the variable itself, so its type must match exactly"
             );
         }
@@ -3026,7 +3133,10 @@ Type_id Checker::infer_call( Node_id id )
         const bool about_ownership =
             ( wanted == Keyword::Count || wanted == Keyword::Move ) && ( given == Keyword::Count || given == Keyword::Move );
 
-        if( about_ownership && !is_owning_type( types_[params[i].v] ) )
+        // The substituted type, not the declared one: whether `T` owns is a property of the
+        // instantiation, and a bare `Parameter` owns nothing - which would wave every `move`
+        // through unmarked.
+        if( about_ownership && !is_owning_type( expected ) )
         {
             continue;
         }
@@ -3062,20 +3172,22 @@ Type_id Checker::infer_call( Node_id id )
         infer( arguments[i] );
     }
 
-    return record( id, result );
+    // Substituted here rather than where `result` is set: the aggregate path overwrites it with
+    // the type being constructed, so doing it earlier would substitute the wrong thing or twice.
+    return record( id, table_.substitute( result, bindings ) );
 }
 
 Type_id Checker::infer_method_call( Node_id id )
 {
-    const Node_id callee = ast_.children( id )[0];
-    const Node_id object = ast_.children( callee )[0];
+    const Node_id callee = ast_.child( id, 0 );
+    const Node_id object = ast_.child( callee, 0 );
 
     const Type_id result      = infer( object );
     const Type_id object_type = table_.is_pointer( result ) ? table_.get( result ).element : result;
 
     if( table_.is_error( object_type ) )
     {
-        for( const Node_id argument : ast_.children( ast_.children( id )[1] ) )
+        for( const Node_id argument : ast_.children( ast_.child( id, 1 ) ) )
         {
             infer( argument );
         }
@@ -3143,13 +3255,13 @@ Type_id Checker::infer_method_call( Node_id id )
 // checked is the same: the parameters from 1, the receiver having been supplied either way.
 Type_id Checker::check_method_arguments( Node_id id, Node_id method )
 {
-    const std::span<const Node_id> params    = ast_.children( ast_.children( method )[1] ).subspan( 1 );
-    const std::span<const Node_id> arguments = ast_.children( ast_.children( id )[1] );
+    const std::span<const Node_id> params    = ast_.children( ast_.child( method, 1 ) ).subspan( 1 );
+    const std::span<const Node_id> arguments = ast_.children( ast_.child( id, 1 ) );
 
     if( params.size() != arguments.size() )
     {
         error_at(
-            ast_.span( ast_.children( id )[1] ),
+            ast_.span( ast_.child( id, 1 ) ),
             fmt::format(
                 "`{}` takes {} argument{}, but {} {} given",
                 interner_.text( Symbol_id { ast_.aux( method ) } ),
@@ -3186,7 +3298,7 @@ Type_id Checker::infer_implicit_method_call( Node_id id, Node_id method )
     if( !receiver.is_valid() )
     {
         error_at(
-            ast_.span( ast_.children( id )[0] ),
+            ast_.span( ast_.child( id, 0 ) ),
             fmt::format(
                 "`{}` is a method, and there is no object here to call it on",
                 interner_.text( Symbol_id { ast_.aux( method ) } )
@@ -3194,7 +3306,7 @@ Type_id Checker::infer_implicit_method_call( Node_id id, Node_id method )
             "a method can only be called by bare name from inside another method of the same type"
         );
 
-        for( const Node_id argument : ast_.children( ast_.children( id )[1] ) )
+        for( const Node_id argument : ast_.children( ast_.child( id, 1 ) ) )
         {
             infer( argument );
         }
@@ -3205,7 +3317,7 @@ Type_id Checker::infer_implicit_method_call( Node_id id, Node_id method )
     if( !is_const_method( ast_, method ) && is_const_binding( ast_, receiver ) )
     {
         error_at(
-            ast_.span( ast_.children( id )[0] ),
+            ast_.span( ast_.child( id, 0 ) ),
             fmt::format(
                 "a `const` method cannot call `{}`, which may modify the object",
                 interner_.text( Symbol_id { ast_.aux( method ) } )
@@ -3228,8 +3340,8 @@ Type_id Checker::infer_implicit_method_call( Node_id id, Node_id method )
 Type_id Checker::infer_binary( Node_id id )
 {
     const Token_kind op        = static_cast<Token_kind>( ast_.aux( id ) );
-    const Node_id    left      = ast_.children( id )[0];
-    const Node_id    right     = ast_.children( id )[1];
+    const Node_id    left      = ast_.child( id, 0 );
+    const Node_id    right     = ast_.child( id, 1 );
     const Type_id    bool_type = table_.builtin( Type_kind::Bool );
     const Type_id    error     = table_.builtin( Type_kind::Error );
 
@@ -3349,7 +3461,7 @@ Type_id Checker::infer_binary( Node_id id )
 Type_id Checker::infer_unary( Node_id id )
 {
     const Token_kind op           = static_cast<Token_kind>( ast_.aux( id ) );
-    const Type_id    operand_type = infer( ast_.children( id )[0] );
+    const Type_id    operand_type = infer( ast_.child( id, 0 ) );
     const Type_id    error        = table_.builtin( Type_kind::Error );
 
     if( table_.is_error( operand_type ) )
@@ -3364,7 +3476,7 @@ Type_id Checker::infer_unary( Node_id id )
         // The operand must be somewhere a value lives. `&f()` names the address of a temporary
         // that is about to vanish, and `&1` names nothing at all. Asked after infer() so that
         // errors inside the operand are reported first.
-        if( !is_assignable( ast_.children( id )[0] ) )
+        if( !is_assignable( ast_.child( id, 0 ) ) )
         {
             error_at( ast_.span( id ), "cannot take the address of this expression", "it does not name a variable" );
 
@@ -3451,8 +3563,8 @@ Node_id Checker::find_field( Type_id type, Symbol_id name ) const
 // question only `switch` may ask.
 Type_id Checker::infer_variant_construction( Node_id id )
 {
-    const Node_id                  path      = ast_.children( id )[0];
-    const std::span<const Node_id> arguments = ast_.children( ast_.children( id )[1] );
+    const Node_id                  path      = ast_.child( id, 0 );
+    const std::span<const Node_id> arguments = ast_.children( ast_.child( id, 1 ) );
 
     // Tells infer_path the arguments account for the payload, so the bare path is not incomplete.
     naming_variant_      = true;
@@ -3494,7 +3606,7 @@ Type_id Checker::infer_variant_construction( Node_id id )
     else if( payload.size() != arguments.size() )
     {
         error_at(
-            ast_.span( ast_.children( id )[1] ),
+            ast_.span( ast_.child( id, 1 ) ),
             fmt::format(
                 "`{}` carries {} value{}, but {} {} given",
                 interner_.text( Symbol_id { ast_.aux( variant ) } ),
@@ -3525,7 +3637,7 @@ Type_id Checker::infer_variant_construction( Node_id id )
 
 Type_id Checker::infer_alloc( Node_id id )
 {
-    const Type_id element = type_of_annotation( ast_.children( id )[0] );
+    const Type_id element = type_of_annotation( ast_.child( id, 0 ) );
 
     if( table_.is_error( element ) )
     {
@@ -3549,7 +3661,7 @@ Type_id Checker::infer_alloc( Node_id id )
 
 Type_id Checker::infer_free( Node_id id )
 {
-    const Type_id operand = infer( ast_.children( id )[0] );
+    const Type_id operand = infer( ast_.child( id, 0 ) );
 
     if( table_.is_error( operand ) )
     {
@@ -3581,7 +3693,7 @@ void Checker::require_unsafe( Node_id id, std::string what, std::string why )
 
 Type_id Checker::infer_path( Node_id id )
 {
-    const Node_id   qualifier = ast_.children( id )[0];
+    const Node_id   qualifier = ast_.child( id, 0 );
     const Symbol_id name { ast_.aux( id ) };
 
     const Node_id decl = ast_.kind( qualifier ) == Node_kind::Name_expr ? resolution_.declaration_of( qualifier ) : Node_id {};
@@ -3654,7 +3766,7 @@ Type_id Checker::infer_path( Node_id id )
 
 Type_id Checker::infer_field( Node_id id )
 {
-    const Node_id base      = ast_.children( id )[0];
+    const Node_id base      = ast_.child( id, 0 );
     const Type_id base_type = infer( base );
 
     if( table_.is_error( base_type ) )
@@ -3697,7 +3809,7 @@ Type_id Checker::infer_struct_literal( Node_id id )
     {
         for( const Node_id init : ast_.children( id ) )
         {
-            infer( ast_.children( init )[0] ); // type the values anyway
+            infer( ast_.child( init, 0 ) ); // type the values anyway
         }
 
         return record( id, error );
@@ -3718,7 +3830,7 @@ Type_id Checker::infer_struct_literal( Node_id id )
 
         for( const Node_id init : ast_.children( id ) )
         {
-            infer( ast_.children( init )[0] );
+            infer( ast_.child( init, 0 ) );
         }
 
         // The declared type rather than the error type: the mistake is how it was built, not what
@@ -3785,12 +3897,12 @@ Type_id Checker::infer_struct_literal( Node_id id )
         for( std::size_t i = 0; i < shared; ++i )
         {
             // check, never infer - `Point { 1, 2 }` has to let those literals become f64.
-            check( ast_.children( initialisers[i] )[0], types_[fields[i].v] );
+            check( ast_.child( initialisers[i], 0 ), types_[fields[i].v] );
         }
 
         for( std::size_t i = shared; i < initialisers.size(); ++i )
         {
-            infer( ast_.children( initialisers[i] )[0] );
+            infer( ast_.child( initialisers[i], 0 ) );
         }
 
         return record( id, result );
@@ -3801,7 +3913,7 @@ Type_id Checker::infer_struct_literal( Node_id id )
     for( const Node_id init : initialisers )
     {
         const Symbol_id name { ast_.aux( init ) };
-        const Node_id   value = ast_.children( init )[0];
+        const Node_id   value = ast_.child( init, 0 );
 
         if( !name.is_valid() )
         {
@@ -3844,8 +3956,8 @@ Type_id Checker::infer_struct_literal( Node_id id )
 Type_id Checker::infer_cast( Node_id id )
 {
     const bool    is_cast = static_cast<Keyword>( ast_.aux( id ) ) == Keyword::Cast;
-    const Type_id target  = type_of_annotation( ast_.children( id )[0] );
-    const Node_id operand = ast_.children( id )[1];
+    const Type_id target  = type_of_annotation( ast_.child( id, 0 ) );
+    const Node_id operand = ast_.child( id, 1 );
     const Type_id error   = table_.builtin( Type_kind::Error );
 
     // A literal has a value and no type, so `cast` is the context that gives it one:
@@ -3945,7 +4057,7 @@ Type_id Checker::infer_cast( Node_id id )
 Type_id Checker::infer_marker( Node_id id )
 {
     const Keyword marker  = static_cast<Keyword>( ast_.aux( id ) );
-    const Node_id operand = ast_.children( id )[0];
+    const Node_id operand = ast_.child( id, 0 );
 
     // `out` assigns through the place, so it needs one, and one that may be written. Same test as
     // `ref` for the same reason: what may be assigned is exactly what may be lent for assignment.
@@ -4093,13 +4205,13 @@ Type_id Checker::check( Node_id id, Type_id expected )
         // whatever it is given, and pushing the expectation into it would be nonsense.
         const Binary_rule* rule = binary_rule_for( static_cast<Token_kind>( ast_.aux( id ) ) );
 
-        if( rule != nullptr && rule->result == Result::Common && is_literal_expression( ast_.children( id )[0] ) &&
-            is_literal_expression( ast_.children( id )[1] ) )
+        if( rule != nullptr && rule->result == Result::Common && is_literal_expression( ast_.child( id, 0 ) ) &&
+            is_literal_expression( ast_.child( id, 1 ) ) )
         {
             const std::size_t before = diags_.error_count();
 
-            check( ast_.children( id )[0], expected );
-            check( ast_.children( id )[1], expected );
+            check( ast_.child( id, 0 ), expected );
+            check( ast_.child( id, 1 ), expected );
 
             // An operand that did not fit has already been reported, and it is the cause. Folding
             // the whole thing would say the same thing again with a different number: `i8 d = 0 -
@@ -4115,12 +4227,12 @@ Type_id Checker::check( Node_id id, Type_id expected )
         // A shift's result type is its *left* operand's (§6.4), so that is the only operand an
         // expectation flows into - the count is a width, not a value in the same type. Without
         // this `u32 d = 1 << 4;` settles the literal on i32 and is then refused for being one.
-        if( rule != nullptr && rule->result == Result::Left && is_literal_expression( ast_.children( id )[0] ) )
+        if( rule != nullptr && rule->result == Result::Left && is_literal_expression( ast_.child( id, 0 ) ) )
         {
             const std::size_t before = diags_.error_count();
 
-            check( ast_.children( id )[0], expected );
-            infer( ast_.children( id )[1] );
+            check( ast_.child( id, 0 ), expected );
+            infer( ast_.child( id, 1 ) );
 
             if( diags_.error_count() != before )
             {
@@ -4173,7 +4285,8 @@ Type_id Checker::type_of_annotation( Node_id id, bool outermost )
         {
             // An enum names a type as much as an aggregate does. Not folded into is_aggregate(),
             // which gates the struct/class member rules and has no business answering this.
-            if( !is_aggregate( ast_.kind( decl ) ) && ast_.kind( decl ) != Node_kind::Enum_decl )
+            if( !is_aggregate( ast_.kind( decl ) ) && ast_.kind( decl ) != Node_kind::Enum_decl &&
+                ast_.kind( decl ) != Node_kind::Type_param_decl )
             {
                 // Resolved to a function or variable of the same name.
                 error_at(
@@ -4223,11 +4336,11 @@ Type_id Checker::type_of_annotation( Node_id id, bool outermost )
             return table_.builtin( Type_kind::Error );
         }
 
-        return type_of_annotation( ast_.children( id )[0], false );
+        return type_of_annotation( ast_.child( id, 0 ), false );
 
     case Node_kind::Pointer_type:
     {
-        const Type_id element = type_of_annotation( ast_.children( id )[0], false );
+        const Type_id element = type_of_annotation( ast_.child( id, 0 ), false );
 
         // Poison propagates rather than being wrapped: `<error>*` is not the error type, so check()
         // would not absorb it and one bad annotation would report twice.
@@ -4241,7 +4354,7 @@ Type_id Checker::type_of_annotation( Node_id id, bool outermost )
     {
         const Keyword mode = static_cast<Keyword>( ast_.aux( id ) );
 
-        const Type_id inner = type_of_annotation( ast_.children( id )[0], false );
+        const Type_id inner = type_of_annotation( ast_.child( id, 0 ), false );
 
         // An `out` parameter is assigned without its old value being destroyed, so an owning one
         // would leak whatever the caller was already holding. Refused until the caller emits a
@@ -4467,7 +4580,7 @@ Folded Checker::fold_integer( Node_id id, Type_id known ) const
 
     case Node_kind::Unary_expr:
     {
-        const Folded operand = fold_integer( ast_.children( id )[0] );
+        const Folded operand = fold_integer( ast_.child( id, 0 ) );
 
         if( !operand.constant || operand.overflowed )
         {
@@ -4505,7 +4618,7 @@ Folded Checker::fold_integer( Node_id id, Type_id known ) const
     // to trap with - so this is a reduction modulo the target's width either way.
     case Node_kind::Cast_expr:
     {
-        const Folded operand = fold_integer( ast_.children( id )[1] );
+        const Folded operand = fold_integer( ast_.child( id, 1 ) );
 
         if( !operand.constant || operand.overflowed )
         {
@@ -4526,8 +4639,8 @@ Folded Checker::fold_integer( Node_id id, Type_id known ) const
 
     case Node_kind::Binary_expr:
     {
-        const Folded left  = fold_integer( ast_.children( id )[0] );
-        const Folded right = fold_integer( ast_.children( id )[1] );
+        const Folded left  = fold_integer( ast_.child( id, 0 ) );
+        const Folded right = fold_integer( ast_.child( id, 1 ) );
 
         if( !left.constant || !right.constant )
         {
@@ -4653,7 +4766,7 @@ std::optional<f64> Checker::fold_float( Node_id id ) const
 
     case Node_kind::Unary_expr:
     {
-        const std::optional<f64> operand = fold_float( ast_.children( id )[0] );
+        const std::optional<f64> operand = fold_float( ast_.child( id, 0 ) );
 
         if( !operand )
         {
@@ -4675,8 +4788,8 @@ std::optional<f64> Checker::fold_float( Node_id id ) const
 
     case Node_kind::Binary_expr:
     {
-        const std::optional<f64> left  = fold_float( ast_.children( id )[0] );
-        const std::optional<f64> right = fold_float( ast_.children( id )[1] );
+        const std::optional<f64> left  = fold_float( ast_.child( id, 0 ) );
+        const std::optional<f64> right = fold_float( ast_.child( id, 1 ) );
 
         if( !left || !right )
         {
@@ -4722,7 +4835,7 @@ bool Checker::check_constant( Node_id id, Type_id type )
     if( ast_.kind( id ) == Node_kind::Binary_expr )
     {
         const Token_kind op    = static_cast<Token_kind>( ast_.aux( id ) );
-        const Node_id    right = ast_.children( id )[1];
+        const Node_id    right = ast_.child( id, 1 );
 
         if( op == Token_kind::Slash || op == Token_kind::Percent )
         {
@@ -4826,6 +4939,25 @@ void Checker::absorb( Node_id id )
     }
 }
 
+// Deduplicated on insert: `id<i32>( 1 )` written twice is one instantiation, because one is all
+// that will be emitted. A linear scan rather than a set - the list is short, and hashing a vector
+// of Type_ids to avoid a handful of comparisons is not a trade worth making yet.
+std::size_t Checker::record_instantiation( Node_id declaration, std::vector<Type_id> arguments )
+{
+    for( std::size_t i = 0; i < instantiations_.size(); ++i )
+    {
+        const Instantiation& seen = instantiations_[i];
+
+        if( seen.declaration == declaration && seen.arguments == arguments )
+        {
+            return i;
+        }
+    }
+
+    instantiations_.push_back( Instantiation { .declaration = declaration, .arguments = std::move( arguments ) } );
+    return instantiations_.size() - 1;
+}
+
 Type_id Checker::record( Node_id id, Type_id type )
 {
     types_[id.v] = type;
@@ -4867,7 +4999,7 @@ bool enum_has_payload( const Ast& ast, Node_id enum_decl )
 
 Keyword parameter_mode( const Ast& ast, Node_id decl )
 {
-    const Node_id annotation = unwrap_const( ast, ast.children( decl )[0] );
+    const Node_id annotation = unwrap_const( ast, ast.child( decl, 0 ) );
 
     return annotation.is_valid() && ast.kind( annotation ) == Node_kind::Mode_type
                ? static_cast<Keyword>( ast.aux( annotation ) )
@@ -4878,20 +5010,25 @@ bool is_ref_parameter( const Ast& ast, Node_id param )
 {
     // children[0] is invalid for an `auto` local, and for a constructor or destructor, which have
     // no return type to carry a mode. kind() asserts on an invalid id rather than answering.
-    const Node_id annotation = unwrap_const( ast, ast.children( param )[0] );
+    const Node_id annotation = unwrap_const( ast, ast.child( param, 0 ) );
 
     return annotation.is_valid() && ast.kind( annotation ) == Node_kind::Mode_type &&
            static_cast<Keyword>( ast.aux( annotation ) ) == Keyword::Ref;
 }
 
+bool is_generic( const Ast& ast, Node_id decl )
+{
+    return is_function_like( ast.kind( decl ) ) && ast.child( decl, 3 ).is_valid();
+}
+
 bool is_extern( const Ast& ast, Node_id decl )
 {
-    return ast.kind( decl ) == Node_kind::Function_decl && !ast.children( decl )[2].is_valid();
+    return ast.kind( decl ) == Node_kind::Function_decl && !ast.child( decl, 2 ).is_valid();
 }
 
 bool is_borrowed_binding( const Ast& ast, const Types& types, Node_id decl )
 {
-    const Node_id annotation = ast.children( decl )[0];
+    const Node_id annotation = ast.child( decl, 0 );
 
     // `auto` has no annotation node at all, so guard before asking.
     return annotation.is_valid() && types.type_of( annotation ).is_valid();
@@ -4911,7 +5048,7 @@ bool is_const_binding( const Ast& ast, Node_id decl )
         return false;
     }
 
-    const Node_id annotation = ast.children( decl )[0];
+    const Node_id annotation = ast.child( decl, 0 );
     return annotation.is_valid() && ast.kind( annotation ) == Node_kind::Const_type;
 }
 
@@ -4925,20 +5062,19 @@ bool is_const_method( const Ast& ast, Node_id method )
     // The trailing `const` marks the **receiver**, which the parser wraps as `const ref T` - child
     // 0 of the method is its return type, which is a different `const` entirely. So this is the
     // ordinary const-binding question, asked of parameter 0.
-    const std::span<const Node_id> params = ast.children( ast.children( method )[1] );
+    const std::span<const Node_id> params = ast.children( ast.child( method, 1 ) );
 
     return !params.empty() && is_const_binding( ast, params[0] );
 }
 
 Type_id binding_type( const Ast& ast, const Types& types, Node_id param )
 {
-    return is_borrowed_binding( ast, types, param ) ? types.type_of( ast.children( param )[0] ) : types.type_of( param );
+    return is_borrowed_binding( ast, types, param ) ? types.type_of( ast.child( param, 0 ) ) : types.type_of( param );
 }
 
 Node_id unwrap_const( const Ast& ast, Node_id annotation )
 {
-    return annotation.is_valid() && ast.kind( annotation ) == Node_kind::Const_type ? ast.children( annotation )[0]
-                                                                                    : annotation;
+    return annotation.is_valid() && ast.kind( annotation ) == Node_kind::Const_type ? ast.child( annotation, 0 ) : annotation;
 }
 
 } // namespace keel
@@ -10960,9 +11096,271 @@ TEST_CASE( "type_checker_matches_a_variant_without_destructuring_it", "[sema][sw
     }
 }
 
-// PLAN D34. Over a number, coverage is a set of **half-open** intervals: `case 3:` is [3, 4) and
-// `case 1..5:` is [1, 5). One representation for both is what makes overlap a single pairwise walk,
-// and what makes a value label and a range label indistinguishable to everything downstream.
+// Slice 1a of M6: the shape parses and the resolver scopes the parameters, and sema says once that
+// nothing further is built yet. Reporting once matters - typing the body would report an unknown
+// type for every use of `T`, turning one unimplemented feature into five errors.
+// A generic's signature is typed with `T` standing for itself, so the parameters resolve like any
+// other named type and nothing in the signature reports as unknown. The body is not checked yet -
+// that is D11's definition-checking, and until it lands an instance is checked at its expansion.
+TEST_CASE( "type_checker_types_a_generic_signature", "[sema][generic]" )
+{
+    SECTION( "the declaration alone is accepted" )
+    {
+        const Typed p( "T id<T>( T a ) { return a; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "the type parameters are not unknown types" )
+    {
+        const Typed p( "T twice<T>( T a, T b ) { T c = a; return c; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "unknown type" ) == std::string::npos );
+    }
+
+    SECTION( "a broken non-generic beside it is still checked" )
+    {
+        const Typed p( "T id<T>( T a ) { return a; }\n"
+                       "i32 broken() { return true; }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "and a plain program is untouched" )
+    {
+        const Typed p( "i32 f( i32 a ) { return a; }\ni32 main() { return f( 1 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// The call site binds each parameter to the type argument written for it, and every use of the
+// parameter's declared type below is of the *substituted* one - so no diagnostic names `T`, which
+// the caller never wrote.
+TEST_CASE( "type_checker_types_a_generic_call", "[sema][generic]" )
+{
+    const std::string_view id = "T id<T>( T a ) { return a; }\n";
+
+    SECTION( "the call takes the argument's type" )
+    {
+        const Typed p( std::string( id ) + "i32 main() { return id<i32>( 1 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and produces it" )
+    {
+        const Typed p( std::string( id ) + "i32 main() { f64 x = id<f64>( 1.0 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "the result type is substituted, not left as the parameter" )
+    {
+        const Typed p( std::string( id ) + "i32 main() { bool b = id<i32>( 1 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "expected `bool`, but got `i32`" ) != std::string::npos );
+    }
+
+    SECTION( "an argument is checked against the substituted parameter" )
+    {
+        const Typed p( std::string( id ) + "i32 main() { return id<i32>( true ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "expected `i32`, but got `bool`" ) != std::string::npos );
+    }
+
+    SECTION( "one generic at two types in one program" )
+    {
+        const Typed p( std::string( id ) + "i32 main() { f64 x = id<f64>( 1.0 ); return id<i32>( 1 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "several parameters, bound positionally" )
+    {
+        const Typed p( "T pick<T, U>( T a, U b ) { return a; }\n"
+                       "i32 main() { f64 d = 2.0; return pick<i32, f64>( 1, d ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a `ref` mismatch names the substituted type, not the parameter" )
+    {
+        // The borrow check reads the parameter's type in two more places than the argument check
+        // does; missing either leaves it comparing against `T` and always firing.
+        const Typed p( "void bump<T>( ref T a ) { }\ni32 main() { u8 x = 1; bump<i32>( ref x ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "cannot borrow `u8` as `ref i32`" ) != std::string::npos );
+    }
+}
+
+// D11 wants constraints checked at the definition rather than at each expansion, and that falls
+// out of typing the signature: the body is walked once with `T` standing for itself, so an
+// operation `T` does not have is rejected *there* rather than inside some instantiation.
+//
+// With no bound, `T` supports nothing - which is the correct reading of an unbounded parameter and
+// is why `id` is about the only generic writable today. Adding bounds is what widens it, and these
+// cases are what will change shape when they land.
+TEST_CASE( "type_checker_checks_a_generic_body_against_its_parameters", "[sema][generic]" )
+{
+    SECTION( "a body that needs nothing of `T` is accepted" )
+    {
+        const Typed p( "T id<T>( T a ) { return a; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "an unknown name is reported at the definition" )
+    {
+        const Typed p( "T id<T>( T a ) { return nonsense; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "`nonsense` is not declared" ) != std::string::npos );
+    }
+
+    SECTION( "and so is a return of the wrong type" )
+    {
+        const Typed p( "i32 count<T>( T a ) { return true; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "an operation `T` has not got is refused, with no instantiation needed" )
+    {
+        // The whole point of D11: reported once, here, rather than once per expansion and pointing
+        // at code the author did not write.
+        const Typed p( "T twice<T>( T a ) { return a + a; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "no operator `+` for `T` and `T`" ) != std::string::npos );
+    }
+
+    SECTION( "including a method call" )
+    {
+        const Typed p( "T grow<T>( T a ) { return a.nope(); }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "`T` has no methods" ) != std::string::npos );
+    }
+
+    SECTION( "and it is reported even with no call site at all" )
+    {
+        const Typed p( "T twice<T>( T a ) { return a + a; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+}
+
+TEST_CASE( "type_checker_checks_type_arguments", "[sema][generic]" )
+{
+    const std::string_view id = "T id<T>( T a ) { return a; }\n";
+
+    SECTION( "too many" )
+    {
+        const Typed p( std::string( id ) + "i32 main() { return id<i32, f64>( 1 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "takes 1 type argument, but 2 were given" ) != std::string::npos );
+    }
+
+    SECTION( "too few" )
+    {
+        const Typed p( "T pick<T, U>( T a, U b ) { return a; }\ni32 main() { return pick<i32>( 1, 2 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.rendered().find( "type argument" ) != std::string::npos );
+    }
+
+    SECTION( "an unknown one is reported once" )
+    {
+        const Typed p( std::string( id ) + "i32 main() { return id<Nope>( 1 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "unknown type `Nope`" ) != std::string::npos );
+    }
+
+    SECTION( "a non-generic given type arguments" )
+    {
+        // The shape `a < b > ( c )` now parses as, so this is the message that reading produces.
+        const Typed p( "i32 f( i32 a ) { return a; }\ni32 main() { return f<i32>( 1 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`f` is not a generic" ) != std::string::npos );
+    }
+
+    SECTION( "a generic given none" )
+    {
+        // Inference is a decision of its own and is not taken here, so this names the explicit form
+        // rather than guessing - and without it the parameters stay unbound.
+        const Typed p( std::string( id ) + "i32 main() { return id( 1 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "must be written" ) != std::string::npos );
+    }
+
+    SECTION( "a mistake inside an argument is still reported" )
+    {
+        const Typed p( std::string( id ) + "i32 main() { return id<i32>( nope ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "nope" ) != std::string::npos );
+    }
+}
+
+TEST_CASE( "type_checker_scopes_type_parameters", "[sema][generic]" )
+{
+    SECTION( "a duplicate is reported" )
+    {
+        const Typed p( "T id<T, T>( T a ) { return a; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.rendered().find( "already declared" ) != std::string::npos );
+    }
+
+    SECTION( "they do not escape the declaration" )
+    {
+        const Typed p( "T id<T>( T a ) { return a; }\nT stray( T a ) { return a; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "unknown type `T`" ) != std::string::npos );
+    }
+
+    SECTION( "two declarations may reuse the same parameter name" )
+    {
+        const Typed p( "T one<T>( T a ) { return a; }\nT two<T>( T a ) { return a; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+
+        // Each declaration's `T` is its own type, keyed by its own Type_param_decl.
+        REQUIRE( p.clean() );
+    }
+}
+
+// The call site's half of slice 1b. Reported before the arguments are matched against a signature,
+// because with nothing instantiated there is no signature to match them against - checking them
+// against the uninstantiated one reports about a call the author did not write.
 TEST_CASE( "type_checker_checks_a_numeric_switch", "[sema][range]" )
 {
     SECTION( "an integer scrutinee is accepted with a default" )

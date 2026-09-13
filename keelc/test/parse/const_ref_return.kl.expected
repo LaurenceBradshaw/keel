@@ -26,6 +26,7 @@ Source_file                             4:1-33:1
         <none>                          -
       Return_stmt                       16:5-16:14
         Name_expr                       16:12-16:13 "b"
+    <none>                              -
   Function_decl                         19:1-22:2   name=gets
     Const_type                          19:1-19:14
       Mode_type                         19:1-19:10  mode=ref
@@ -39,6 +40,7 @@ Source_file                             4:1-33:1
       Return_stmt                       21:5-21:16
         Field_expr                      21:12-21:15 name=x
           Name_expr                     21:12-21:13 "p"
+    <none>                              -
   Function_decl                         24:1-27:2   name=mutable_return
     Mode_type                           24:1-24:4   mode=ref
       Named_type                        24:5-24:8   "i32"
@@ -49,9 +51,11 @@ Source_file                             4:1-33:1
     Block                               25:1-27:2
       Return_stmt                       26:5-26:14
         Name_expr                       26:12-26:13 "a"
+    <none>                              -
   Function_decl                         29:1-32:2   name=main
     Named_type                          29:1-29:4   "i32"
     Param_list                          29:9-29:11  "()"
     Block                               30:1-32:2
       Return_stmt                       31:5-31:14
         Int_literal                     31:12-31:13 "0"
+    <none>                              -

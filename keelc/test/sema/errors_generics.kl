@@ -1,0 +1,63 @@
+// A generic's signature types, so the mistakes here are about the type parameters themselves and
+// about the arguments a call site names - not about the feature being unfinished.
+T id<T>( T a )
+{
+    return a;
+}
+
+// The parameters are scoped to their own declaration, so this one does not see `id`'s.
+T stray( T a )
+{
+    return a;
+}
+
+T duplicated<T, T>( T a )
+{
+    return a;
+}
+
+T empty<>( i32 a )
+{
+    return a;
+}
+
+T inline_bound<Comparable T>( T a )
+{
+    return a;
+}
+
+i32 main()
+{
+    return 0;
+}
+
+// A generic needs its type arguments written: inference is a separate decision, so the bare form
+// names the explicit one rather than guessing.
+i32 without_type_arguments()
+{
+    return id( 1 );
+}
+
+// And the mirror - a plain function given type arguments. After the call-site scan this is also
+// what `a < b > ( c )` parses as, so it is the message that shape produces.
+i32 not_a_generic( i32 a )
+{
+    return a;
+}
+
+i32 calls_the_wrong_thing()
+{
+    return not_a_generic<i32>( 1 );
+}
+
+// The argument is checked against the *substituted* parameter, so the diagnostic names `i32`
+// rather than `T`, which the caller never wrote.
+i32 wrong_argument()
+{
+    return id<bool>( 1 );
+}
+
+i32 too_many_type_arguments()
+{
+    return id<i32, f64>( 1 );
+}

@@ -12,6 +12,7 @@ Source_file                             4:1-32:1
       Assign_stmt                       8:5-8:11    op==
         Name_expr                       8:5-8:6     "r"
         Int_literal                     8:9-8:10    "5"
+    <none>                              -
   Function_decl                         13:1-18:2   name=for_initialiser
     Named_type                          13:1-13:5   "void"
     Param_list                          13:21-13:30
@@ -30,6 +31,7 @@ Source_file                             4:1-32:1
           Name_expr                     15:33-15:34 "r"
         Block                           16:5-17:6   "{
     }"
+    <none>                              -
   Function_decl                         22:1-26:2   name=other_modes
     Named_type                          22:1-22:5   "void"
     Param_list                          22:17-22:19 "()"
@@ -42,9 +44,11 @@ Source_file                             4:1-32:1
         Mode_type                       25:5-25:8   mode=out
           Named_type                    25:9-25:12  "i32"
         Int_literal                     25:17-25:18 "2"
+    <none>                              -
   Function_decl                         28:1-31:2   name=main
     Named_type                          28:1-28:4   "i32"
     Param_list                          28:9-28:11  "()"
     Block                               29:1-31:2
       Return_stmt                       30:5-30:14
         Int_literal                     30:12-30:13 "0"
+    <none>                              -

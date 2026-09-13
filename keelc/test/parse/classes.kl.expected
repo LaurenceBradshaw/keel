@@ -17,6 +17,8 @@ Source_file                             4:1-66:1
             Name_expr                   11:9-11:16  "release"
             Arg_list                    11:16-11:23
               Name_expr                 11:18-11:21 "ptr"
+            <none>                      -
+      <none>                            -
   Class_decl                            16:1-19:3   name=Handle
     Field_decl                          18:5-18:15  name=value
       Named_type                        18:5-18:8   "u64"
@@ -30,6 +32,7 @@ Source_file                             4:1-66:1
             Named_type                  27:5-27:6   "~"  name=Reordered
       Block                             28:5-29:6   "{
     }"
+      <none>                            -
     Field_decl                          31:5-31:13  name=ptr
       Pointer_type                      31:5-31:8
         Named_type                      31:5-31:7   "u8"
@@ -46,6 +49,7 @@ Source_file                             4:1-66:1
             Named_type                  41:5-41:6   "~"  name=Point
       Block                             42:5-43:6   "{
     }"
+      <none>                            -
   Class_decl                            48:1-55:3   name=Mismatched
     Field_decl                          50:5-50:13  name=ptr
       Pointer_type                      50:5-50:8
@@ -58,6 +62,7 @@ Source_file                             4:1-66:1
             Named_type                  52:5-52:6   "~"  name=Mismatched
       Block                             53:5-54:6   "{
     }"
+      <none>                            -
   Function_decl                         57:1-59:2   name=release
     Named_type                          57:1-57:5   "void"
     Param_list                          57:13-57:22
@@ -66,6 +71,7 @@ Source_file                             4:1-66:1
           Named_type                    57:15-57:17 "u8"
     Block                               58:1-59:2   "{
 }"
+    <none>                              -
   Function_decl                         61:1-65:2   name=main
     Named_type                          61:1-61:4   "i32"
     Param_list                          61:9-61:11  "()"
@@ -77,3 +83,4 @@ Source_file                             4:1-66:1
             Int_literal                 63:23-63:24 "1"
       Return_stmt                       64:5-64:14
         Int_literal                     64:12-64:13 "0"
+    <none>                              -

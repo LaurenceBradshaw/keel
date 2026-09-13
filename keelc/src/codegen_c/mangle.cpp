@@ -31,14 +31,23 @@ std::string construct_arg_string( std::span<const Type_id> params, const Type_ta
 }
 } // namespace
 
-std::string
-mangle_function( std::string_view module, std::string_view name, std::span<const Type_id> params, const Type_table& types )
+std::string mangle_function(
+    std::string_view         module,
+    std::string_view         name,
+    std::span<const Type_id> params,
+    const Type_table&        types,
+    std::span<const Type_id> type_arguments
+)
 {
-    // kl_<module>_<name>__<argtypes>
+    // kl_<module>_<name>__<argtypes>, then __<typeargs> for an instantiation.
+    const std::string argtypes = construct_arg_string( params, types );
 
-    std::string argtypes = construct_arg_string( params, types );
+    if( type_arguments.empty() )
+    {
+        return fmt::format( "kl_{}_{}__{}", module, name, argtypes );
+    }
 
-    return fmt::format( "kl_{}_{}__{}", module, name, argtypes );
+    return fmt::format( "kl_{}_{}__{}__{}", module, name, argtypes, construct_arg_string( type_arguments, types ) );
 }
 
 std::string mangle_struct( std::string_view module, std::string_view name )

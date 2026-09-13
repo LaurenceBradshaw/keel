@@ -109,8 +109,8 @@ void Resolver::visit( Node_id id )
             // because their cases do not declare - only Var_decl does.
             if( ast_.kind( decl ) == Node_kind::Var_decl )
             {
-                visit( ast_.children( decl )[0] ); // the type annotation
-                visit( ast_.children( decl )[1] ); // the initialiser
+                visit( ast_.child( decl, 0 ) ); // the type annotation
+                visit( ast_.child( decl, 1 ) ); // the initialiser
                 continue;
             }
 
@@ -130,13 +130,17 @@ void Resolver::visit( Node_id id )
     case Node_kind::Method_decl:
     case Node_kind::Function_decl:
         push_scope( Scope_kind::Barrier );
-        visit( ast_.children( id )[0] ); // return type; invalid for Destructor_decl
-        visit( ast_.children( id )[1] ); // param list
-        visit( ast_.children( id )[2] ); // body
+        visit( ast_.child( id, 3 ) ); // type parameters, before anything that can name one
+        visit( ast_.child( id, 0 ) ); // return type; invalid for Destructor_decl
+        visit( ast_.child( id, 1 ) ); // param list
+        visit( ast_.child( id, 2 ) ); // body
         pop_scope();
         return;
     case Node_kind::Param_decl:
-        visit( ast_.children( id )[0] ); // the type annotation, which may name a struct
+        visit( ast_.child( id, 0 ) ); // the type annotation, which may name a struct
+        declare( Symbol_id { ast_.aux( id ) }, id );
+        return;
+    case Node_kind::Type_param_decl:
         declare( Symbol_id { ast_.aux( id ) }, id );
         return;
     case Node_kind::For_stmt:
@@ -148,8 +152,8 @@ void Resolver::visit( Node_id id )
         pop_scope();
         return;
     case Node_kind::Var_decl:
-        visit( ast_.children( id )[0] ); // type
-        visit( ast_.children( id )[1] ); // Var_decl arity of 2: type, initialiser
+        visit( ast_.child( id, 0 ) ); // type
+        visit( ast_.child( id, 1 ) ); // Var_decl arity of 2: type, initialiser
         declare( Symbol_id { ast_.aux( id ) }, id );
         return;
     case Node_kind::Name_expr:
@@ -257,7 +261,7 @@ void Resolver::visit( Node_id id )
         {
             for( const Node_id field : ast_.children( variant ) )
             {
-                visit( ast_.children( field )[0] );
+                visit( ast_.child( field, 0 ) );
             }
         }
 

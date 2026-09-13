@@ -113,6 +113,55 @@ Type_id Type_table::structure( Node_id declaration, std::string_view name )
     return id;
 }
 
+Type_id Type_table::parameter( Node_id declaration, std::string_view name )
+{
+    const auto it = params_.find( declaration.v );
+
+    if( it != params_.end() )
+    {
+        return it->second;
+    }
+
+    const Type_id id = add( Type { Type_kind::Parameter, 0, false, Type_id {}, declaration }, name );
+
+    params_.emplace( declaration.v, id );
+
+    return id;
+}
+
+Type_id Type_table::substitute( Type_id type, const Bindings& bindings )
+{
+    if( !type.is_valid() )
+    {
+        return Type_id {}; // a parameter whose own annotation failed to resolve; check() absorbs it
+    }
+
+    const Type& described = get( type );
+
+    switch( described.kind )
+    {
+    case Type_kind::Parameter:
+    {
+        const auto found = bindings.find( type.v );
+
+        // Unbound means the caller built the map from the wrong declaration's parameters, which is
+        // a compiler bug rather than a program one - every parameter in scope is bound by
+        // construction at the one call site that makes a map.
+        assert( found != bindings.end() && "type parameter is not bound" );
+
+        return found->second;
+    }
+    case Type_kind::Pointer:
+    {
+        return pointer_to( substitute( described.element, bindings ) );
+    }
+    default:
+        return type;
+    }
+
+    return type;
+}
+
 const Type& Type_table::get( Type_id id ) const
 {
     assert( id.is_valid() );

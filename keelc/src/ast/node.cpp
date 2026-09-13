@@ -117,6 +117,10 @@ std::string_view node_kind_name( Node_kind kind )
         return "Free_expr";
     case Node_kind::Fallthrough_stmt:
         return "Fallthrough_stmt";
+    case Node_kind::Type_param_list:
+        return "Type_param_list";
+    case Node_kind::Type_param_decl:
+        return "Type_param_decl";
 
     case Node_kind::Count:
         break;

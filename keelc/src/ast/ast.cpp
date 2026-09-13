@@ -41,6 +41,15 @@ std::span<const Node_id> Ast::children( Node_id id ) const
     return std::span<const Node_id>( children_.data() + node.first_child, node.child_count );
 }
 
+Node_id Ast::child( Node_id id, std::size_t index ) const
+{
+    const std::span<const Node_id> all = children( id );
+
+    assert( index < all.size() && "child index out of range for this node kind" );
+
+    return all[index];
+}
+
 Node_id Ast::root() const
 {
     return root_;
@@ -160,10 +169,10 @@ TEST_CASE( "ast_child_lists_do_not_interfere", "[ast]" )
     REQUIRE( ast.children( c ).size() == 0 );
     REQUIRE( ast.children( d ).size() == 2 );
 
-    REQUIRE( ast.children( a )[2] == leaves[2] );
-    REQUIRE( ast.children( b )[0] == leaves[3] );
-    REQUIRE( ast.children( d )[0] == leaves[4] );
-    REQUIRE( ast.children( d )[1] == leaves[5] );
+    REQUIRE( ast.child( a, 2 ) == leaves[2] );
+    REQUIRE( ast.child( b, 0 ) == leaves[3] );
+    REQUIRE( ast.child( d, 0 ) == leaves[4] );
+    REQUIRE( ast.child( d, 1 ) == leaves[5] );
 }
 
 // The span children() returns points into children_, which reallocates. Re-fetching after more
@@ -232,7 +241,7 @@ TEST_CASE( "ast_accepts_a_span_as_well_as_a_braced_list", "[ast]" )
     const Node_id              list = ast.add( Node_kind::Param_list, at( 0, 4 ), 0, scratch );
 
     REQUIRE( ast.children( list ).size() == 2 );
-    REQUIRE( ast.children( list )[0] == a );
+    REQUIRE( ast.child( list, 0 ) == a );
 }
 
 // The shape the parser must produce for `i32 main() { return 0; }`, built by hand. Also the tree
@@ -254,18 +263,18 @@ TEST_CASE( "ast_builds_a_small_function", "[ast]" )
     REQUIRE( ast.node_count() == 7 );
     REQUIRE( ast.kind( ast.root() ) == Node_kind::Source_file );
 
-    const Node_id only = ast.children( ast.root() )[0];
+    const Node_id only = ast.child( ast.root(), 0 );
     REQUIRE( ast.kind( only ) == Node_kind::Function_decl );
 
     // Function_decl arity is fixed at three: return type, parameter list, body.
     REQUIRE( ast.children( only ).size() == 3 );
-    REQUIRE( ast.kind( ast.children( only )[0] ) == Node_kind::Named_type );
-    REQUIRE( ast.kind( ast.children( only )[1] ) == Node_kind::Param_list );
-    REQUIRE( ast.kind( ast.children( only )[2] ) == Node_kind::Block );
+    REQUIRE( ast.kind( ast.child( only, 0 ) ) == Node_kind::Named_type );
+    REQUIRE( ast.kind( ast.child( only, 1 ) ) == Node_kind::Param_list );
+    REQUIRE( ast.kind( ast.child( only, 2 ) ) == Node_kind::Block );
 
-    const Node_id block = ast.children( only )[2];
+    const Node_id block = ast.child( only, 2 );
     REQUIRE( ast.children( block ).size() == 1 );
-    REQUIRE( ast.kind( ast.children( block )[0] ) == Node_kind::Return_stmt );
+    REQUIRE( ast.kind( ast.child( block, 0 ) ) == Node_kind::Return_stmt );
     REQUIRE( ast.span( func ) == at( 0, 24 ) );
 }
 

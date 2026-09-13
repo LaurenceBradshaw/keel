@@ -1,0 +1,49 @@
+// D39: type parameters go on the name and bounds in a `where` clause, so the declaration reads the
+// way the call site already does - `max<i32>( a, b )` at the use, `T max<T>( ... )` at the
+// declaration. The `<none>` under every other declaration is the same slot, left empty.
+T id<T>( T a )
+{
+    return a;
+}
+
+T pick<T, U, V>( T a, U b, V c )
+{
+    return a;
+}
+
+i32 plain( i32 a )
+{
+    return a;
+}
+
+extern i32 abs( i32 v );
+
+struct Box { i32 v; };
+
+class Holder
+{
+    i32 value;
+
+    Holder( i32 v ) { value = v; }
+
+    ~Holder() { }
+
+    i32 get() { return value; }
+};
+
+// A call names its type arguments the same way the declaration does. `f<Box<i32>>( 1 )` closes on
+// `>>`, which the scan counts rather than splitting - splitting is parser state, and a scan that
+// rewinds must leave none behind.
+i32 uses_them()
+{
+    i32 a = plain<i32>( 1 );
+    i32 b = plain<Box<i32>>( 2 );
+    i32 c = pick<i32, f64, bool>( 3, 4.0, true );
+
+    return a + b + c;
+}
+
+i32 main()
+{
+    return 0;
+}

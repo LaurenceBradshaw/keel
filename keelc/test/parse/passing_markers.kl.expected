@@ -10,6 +10,7 @@ Source_file                             3:1-13:1
           Arg_list                      5:14-5:24
             Marker_expr                 5:16-5:22   marker=move
               Name_expr                 5:21-5:22   "b"
+          <none>                        -
       Var_decl                          6:5-6:24    name=c
         Named_type                      6:5-6:8     "i32"
         Call_expr                       6:13-6:23
@@ -17,6 +18,7 @@ Source_file                             3:1-13:1
           Arg_list                      6:14-6:23
             Marker_expr                 6:16-6:21   marker=out
               Name_expr                 6:20-6:21   "b"
+          <none>                        -
       Var_decl                          7:5-7:24    name=d
         Named_type                      7:5-7:8     "i32"
         Call_expr                       7:13-7:23
@@ -24,6 +26,7 @@ Source_file                             3:1-13:1
           Arg_list                      7:14-7:23
             Marker_expr                 7:16-7:21   marker=ref
               Name_expr                 7:20-7:21   "b"
+          <none>                        -
       Var_decl                          8:5-8:31    name=e
         Named_type                      8:5-8:8     "i32"
         Call_expr                       8:13-8:30
@@ -32,6 +35,7 @@ Source_file                             3:1-13:1
             Marker_expr                 8:16-8:28   marker=move
               Field_expr                8:21-8:28   name=field
                 Name_expr               8:21-8:22   "b"
+          <none>                        -
       Var_decl                          9:5-9:29    name=g
         Named_type                      9:5-9:8     "i32"
         Call_expr                       9:13-9:28
@@ -41,9 +45,11 @@ Source_file                             3:1-13:1
               Binary_expr               9:21-9:26   op=+
                 Name_expr               9:21-9:22   "b"
                 Name_expr               9:25-9:26   "c"
+          <none>                        -
       Var_decl                          10:5-10:20  name=h
         Named_type                      10:5-10:8   "i32"
         Marker_expr                     10:13-10:19 marker=move
           Name_expr                     10:18-10:19 "b"
       Return_stmt                       11:5-11:14
         Int_literal                     11:12-11:13 "0"
+    <none>                              -

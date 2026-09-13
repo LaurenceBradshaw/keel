@@ -6,3 +6,4 @@ Source_file                             1:1-6:1
       Error                             3:5-3:6     "@"
       Return_stmt                       4:5-4:14
         Int_literal                     4:12-4:13   "0"
+    <none>                              -

@@ -15,7 +15,7 @@ std::vector<Type_id> parameter_types_vector( const Ast& ast, const Types& types,
 {
     std::vector<Type_id> params;
 
-    for( const Node_id param : ast.children( ast.children( decl )[1] ) )
+    for( const Node_id param : ast.children( ast.child( decl, 1 ) ) )
     {
         // The type is recorded on the Param_decl itself, by declare_signatures - not on the type
         // annotation beneath it, which is never typed.
@@ -74,7 +74,7 @@ std::string Spelling::field( Node_id declaration ) const
     return mangle_local( interner.text( Symbol_id { ast.aux( declaration ) } ), declaration.v );
 }
 
-std::string Spelling::function( Node_id declaration ) const
+std::string Spelling::function( Node_id declaration, std::span<const Type_id> type_arguments ) const
 {
     // An extern names a symbol someone else defined, so the Keel name is the C name: `kl__malloc__u64`
     // would not link against anything.
@@ -89,7 +89,8 @@ std::string Spelling::function( Node_id declaration ) const
     }
 
     std::vector<Type_id> params = parameter_types_vector( ast, types, declaration );
-    return mangle_function( "", interner.text( Symbol_id { ast.aux( declaration ) } ), params, types.table() );
+
+    return mangle_function( "", interner.text( Symbol_id { ast.aux( declaration ) } ), params, types.table(), type_arguments );
 }
 
 std::string Spelling::destructor_of( Type_id type ) const

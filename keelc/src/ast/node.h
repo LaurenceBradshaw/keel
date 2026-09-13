@@ -68,6 +68,8 @@ enum class Node_kind : u16
     Alloc_expr,      // `alloc<T>()`; child 0 is the type annotation, and there is no operand
     Free_expr,       // `free( p )`; child 0 is the pointer
     Fallthrough_stmt,
+    Type_param_list, // children are Type_param_decls
+    Type_param_decl, // aux is the name; no children until bounds (D39's `where` clause)
 
     Count
 };

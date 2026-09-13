@@ -15,8 +15,16 @@ namespace keel
 // `kl_<module>_<name>__<argtypes>`. The module is empty until M7, which gives `kl__add__i32_i32`.
 // Parameter types are what make overloads distinct, so they are part of the name even in v0 where
 // no overloads exist.
-std::string
-mangle_function( std::string_view module, std::string_view name, std::span<const Type_id> params, const Type_table& types );
+// `kl_<module>_<name>__<argtypes>`, plus `__<typeargs>` when the function is an instantiation.
+// Two instantiations of one generic share a declaration and every value-parameter type once
+// substituted, so the type arguments are the only thing that can tell them apart.
+std::string mangle_function(
+    std::string_view         module,
+    std::string_view         name,
+    std::span<const Type_id> params,
+    const Type_table&        types,
+    std::span<const Type_id> type_arguments = {}
+);
 std::string mangle_struct( std::string_view module, std::string_view name );
 // `kl_<module>_<Type>__dtor`. The suffix sits where argtypes go, so nothing collides with it short
 // of a function taking a parameter of a type named `dtor`, which L15's naming rules out. Same

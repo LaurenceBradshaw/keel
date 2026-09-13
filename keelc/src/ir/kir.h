@@ -128,6 +128,11 @@ struct Rvalue
     u32         first_argument = 0; // into Function::operands, for Call
     u32         argument_count = 0;
     Node_id     callee {};
+
+    // The callee's type arguments, for the same reason Function carries them: a Node_id no longer
+    // identifies a function once one declaration can be emitted more than once. Defaulted like
+    // every other field here, so the designated-initialiser factories below need not list it.
+    std::vector<Type_id> type_arguments {};
 };
 
 enum class Statement_kind : u8
@@ -184,7 +189,13 @@ struct Block
 struct Function
 {
     Node_id declaration {};
-    u32     parameter_count = 0;
+
+    // What this instantiation was emitted for; empty for an ordinary function. Nothing else in KIR
+    // separates two instantiations of one generic - they share a declaration, so the declaration
+    // alone no longer names a function.
+    std::vector<Type_id> type_arguments {};
+
+    u32 parameter_count = 0;
     // Which parameters arrive uninitialised. Nothing else in KIR says so - an `out` parameter's
     // local holds a valid address, and it is the referent that is empty - so the analysis that
     // needs it cannot work it out from the graph.
@@ -276,7 +287,8 @@ inline Rvalue address_of( Place place, Type_id type )
     return Rvalue { .kind = Rvalue_kind::Address_of, .type = type, .a = Operand { .place = place } };
 }
 
-inline Rvalue call( Node_id callee, u32 first_argument, u32 argument_count, Type_id type )
+inline Rvalue
+call( Node_id callee, u32 first_argument, u32 argument_count, Type_id type, std::vector<Type_id> type_arguments = {} )
 {
     return Rvalue {
         .kind           = Rvalue_kind::Call,
@@ -284,6 +296,7 @@ inline Rvalue call( Node_id callee, u32 first_argument, u32 argument_count, Type
         .first_argument = first_argument,
         .argument_count = argument_count,
         .callee         = callee,
+        .type_arguments = std::move( type_arguments ),
     };
 }
 
