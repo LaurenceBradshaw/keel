@@ -7,7 +7,7 @@ Source_file                             4:1-50:1
     Block                               5:1-7:2
       Return_stmt                       6:5-6:14
         Name_expr                       6:12-6:13   "a"
-    Type_param_list                     4:6-4:8
+    Type_param_list                     4:5-4:8
       Type_param_decl                   4:6-4:7     "T"
   Function_decl                         9:1-12:2    name=pick
     Named_type                          9:1-9:2     "T"
@@ -21,7 +21,7 @@ Source_file                             4:1-50:1
     Block                               10:1-12:2
       Return_stmt                       11:5-11:14
         Name_expr                       11:12-11:13 "a"
-    Type_param_list                     9:8-9:16
+    Type_param_list                     9:7-9:16
       Type_param_decl                   9:8-9:9     "T"
       Type_param_decl                   9:11-9:12   "U"
       Type_param_decl                   9:14-9:15   "V"

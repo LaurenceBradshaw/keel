@@ -9,17 +9,17 @@ Interner::Interner()
     // Reserve keywords first, so their ids match the Keyword enum.
     // clang-format off
     static constexpr std::string_view k_keyword_spellings[] = {
-        "if",       "else",     "while",   "for",      "return",   "struct",  "enum",
-        "class",    "switch",   "case",    "default",  "break",    "continue","const",
-        "auto",     "template", "true",    "false",    "import",   "unsafe",  "nullptr",
+        "if",       "else",     "while",   "for",         "return",   "struct",  "enum",
+        "class",    "switch",   "case",    "default",     "break",    "continue","const",
+        "auto",     "template", "true",    "false",       "import",   "unsafe",  "nullptr",
 
         // See the Keyword enum: the C++ type names are handled by sema, not reserved here.
         "new",      "delete",
 
         // New Keel keywords
-        "move",     "out",      "ref",     "cast",     "wrap",    "this",
+        "move",     "out",      "ref",     "cast",        "wrap",    "this",
 
-        "extern",   "alloc",    "free",    "fallthrough"
+        "extern",   "alloc",    "free",    "fallthrough", "where"
     };
     // clang-format on
 
@@ -154,6 +154,7 @@ TEST_CASE( "interner_keyword_ids_match_the_enum", "[common][interner]" )
     REQUIRE( in.intern( "true" ) == Interner::keyword( Keyword::True ) );
     REQUIRE( in.intern( "extern" ) == Interner::keyword( Keyword::Extern ) );
     REQUIRE( in.intern( "fallthrough" ) == Interner::keyword( Keyword::Fallthrough ) );
+    REQUIRE( in.intern( "where" ) == Interner::keyword( Keyword::Where ) );
 }
 
 // Every enum value must have a spelling, and interning that spelling must give the id back. This is

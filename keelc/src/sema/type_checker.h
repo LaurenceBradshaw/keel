@@ -155,6 +155,10 @@ Types type_check( const Ast&, const Resolution&, const Literals&, const Source_m
 // an address. Shared because lowering, the prototype and the mangled name must all agree.
 bool is_ref_parameter( const Ast& ast, Node_id param );
 
+// The type parameters of a declaration, without the `where` clauses that share their list. Four
+// places want exactly this and three of them were counting the clauses.
+std::vector<Node_id> type_parameters( const Ast& ast, Node_id decl );
+
 // Whether a declaration carries type parameters. The kind is checked first: only a function-like
 // declaration has a fixed fourth slot, and a call's callee may be an aggregate, whose children are
 // its members.

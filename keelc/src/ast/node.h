@@ -68,8 +68,13 @@ enum class Node_kind : u16
     Alloc_expr,      // `alloc<T>()`; child 0 is the type annotation, and there is no operand
     Free_expr,       // `free( p )`; child 0 is the pointer
     Fallthrough_stmt,
-    Type_param_list, // children are Type_param_decls
-    Type_param_decl, // aux is the name; no children until bounds (D39's `where` clause)
+    // The whole generic declaration: the parameters, then the `where` clauses constraining them.
+    // One node rather than two so that a function-like declaration keeps four children, and so the
+    // resolver's single visit declares the parameters before anything names one.
+    Type_param_list,
+    Type_param_decl, // aux is the name; the bounds are in a Where_clause beside it, not below it
+    Where_clause,    // aux is the parameter it constrains; children are Bound_names
+    Bound_name,      // aux is the bound's name, resolved against D40's fixed set by the checker
 
     Count
 };

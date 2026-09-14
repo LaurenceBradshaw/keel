@@ -83,6 +83,7 @@ public:
     bool is_struct( Type_id id ) const;
     bool is_enum( Type_id id ) const;
     bool is_pointer( Type_id id ) const;
+    bool is_parameter( Type_id id ) const; // a `T`, before an instantiation substitutes it away
     bool is_void( Type_id id ) const;
 
     // §6.4 assignment: does every value of `from` exist in `to`?

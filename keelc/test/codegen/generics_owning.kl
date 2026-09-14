@@ -1,0 +1,70 @@
+// D40's reason for existing, run rather than merely checked. Bounds are for D11, not for
+// monomorphisation: an instance always knows its `T`'s destructor, so a generic destroys an owning
+// argument correctly with no bound written anywhere here. What a golden exit code cannot see is
+// *how many times* - a double free and a leak both still exit 0 - so this fixture counts the calls
+// itself and holds a real allocation for valgrind to check the other half.
+
+i32 built = 0;
+i32 destroyed = 0;
+
+class Cell
+{
+    i32* slot;
+
+    Cell()
+    {
+        unsafe { slot = alloc<i32>(); }
+        built = built + 1;
+    }
+
+    ~Cell()
+    {
+        unsafe { free( slot ); }
+        destroyed = destroyed + 1;
+    }
+};
+
+// No `where` clause: taking ownership, holding it and dropping it need no promise at all. The
+// clause would be needed only to *copy* the argument, which none of these do.
+void consume<T>( move T a )
+{
+}
+
+T relay<T>( move T a )
+{
+    return a;
+}
+
+// A borrow, which is what a bare parameter of an owning type is. The caller still owns it, so this
+// one must not destroy anything.
+void inspect<T>( T a )
+{
+}
+
+i32 main()
+{
+    // Moved in and dropped by the callee.
+    Cell a = Cell();
+    consume<Cell>( move a );
+
+    // Moved in, moved out, dropped at the end of `main` as `c`.
+    Cell b = Cell();
+    Cell c = relay<Cell>( move b );
+
+    // Borrowed: one construction, one destruction, and neither of them here.
+    Cell d = Cell();
+    inspect<Cell>( d );
+
+    // 3 built, and by this point 1 destroyed - `c` and `d` are still alive.
+    if( built != 3 )
+    {
+        return 1;
+    }
+
+    if( destroyed != 1 )
+    {
+        return 2;
+    }
+
+    return 42;
+}

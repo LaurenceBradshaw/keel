@@ -76,7 +76,18 @@ private:
     Node_id parse_function_decl();
     Node_id parse_method_decl( Symbol_id enclosing );
     Node_id parse_param_list( Node_id leading = Node_id {} );
-    Node_id parse_type_param_list();
+    // The parameters alone: the list node is built later, once the `where` clauses that belong
+    // beside them have been parsed too.
+    std::vector<Node_id> parse_type_params();
+    Node_id              parse_type_param();
+
+    // One `where T : A & B`. Several are separated by `, where` - the comma is for the reader, and
+    // `where` is what the parser keys on.
+    Node_id parse_where_clause();
+
+    // `&` between bounds, and a diagnostic for the two plausible wrong guesses.
+    bool match_bound_separator();
+
     Node_id parse_aggregate_decl();
     Node_id parse_enum_decl();
     Node_id parse_variant_decl();
@@ -98,7 +109,6 @@ private:
     Node_id parse_type();
     Node_id parse_type_with_mode();
     Node_id parse_param();
-    Node_id parse_type_param();
 
     // --- statements ---
 
@@ -635,15 +645,43 @@ Node_id Parser::parse_function_decl()
     // The name is a token, not a subtree, so it goes in aux rather than becoming a fourth child.
     const Symbol_id name = expect_name();
 
-    Node_id type_params;
+    // The parameters and the `where` clauses that constrain them end up in one node, but they are
+    // written either side of the parameter list - so the parts are collected here and the node is
+    // built once both halves are in hand.
+    const Span           generic_start = peek().span;
+    const bool           generic       = check( Token_kind::Less );
+    std::vector<Node_id> generics      = generic ? parse_type_params() : std::vector<Node_id> {};
 
-    if( check( Token_kind::Less ) )
-    {
-        type_params = parse_type_param_list();
-    }
+    // Captured before the parameter list is parsed: with no `where` clause the node ends at the
+    // `>`, and merging with previous() later would stretch it over the parameters.
+    Span generic_span = Span::merge( generic_start, previous().span );
 
     // No early return on a missing name: keep parsing so the body's errors are reported too.
     const Node_id params = parse_param_list();
+
+    while( check_keyword( Keyword::Where ) )
+    {
+        const Node_id clause = parse_where_clause();
+
+        // A clause with nothing to constrain. Reported here rather than left to sema, because
+        // without it the declaration would look generic to everything downstream.
+        if( !generic )
+        {
+            error_at(
+                ast_.span( clause ),
+                "a `where` clause needs type parameters",
+                "write them on the name, as in `T f<T>( T a ) where T : Copyable`"
+            );
+
+            continue;
+        }
+
+        generics.push_back( clause );
+
+        generic_span = Span::merge( generic_span, ast_.span( clause ) );
+    }
+
+    const Node_id type_params = generic ? ast_.add( Node_kind::Type_param_list, generic_span, 0, generics ) : Node_id {};
 
     // A body contradicts `extern` rather than merely being redundant. Recover as an ordinary
     // definition - the body is right there, so that is the reading that lets the rest of the file
@@ -799,7 +837,7 @@ Node_id Parser::parse_param_list( Node_id leading )
     return ast_.add( Node_kind::Param_list, Span::merge( start, previous().span ), 0, params );
 }
 
-Node_id Parser::parse_type_param_list()
+std::vector<Node_id> Parser::parse_type_params()
 {
     expect( Token_kind::Less );
     const Span start = peek().span;
@@ -825,7 +863,7 @@ Node_id Parser::parse_type_param_list()
         }
     }
 
-    return ast_.add( Node_kind::Type_param_list, Span::merge( start, previous().span ), 0, params );
+    return params;
 }
 
 Node_id Parser::parse_aggregate_decl()
@@ -1070,6 +1108,65 @@ Node_id Parser::parse_constructor_decl( Symbol_id enclosing )
     return ast_.add(
         Node_kind::Constructor_decl, Span::merge( start, previous().span ), name.v, { Node_id {}, params, body, Node_id {} }
     );
+}
+
+// D40: `&` joins bounds because all of them must hold and `&` says so. The two plausible wrong
+// guesses are `,` - which C# and Swift use - and `|`, which reads as the opposite of what this
+// means. Both are named once here; left unhandled they derail the clause and then the signature.
+bool Parser::match_bound_separator()
+{
+    if( match( Token_kind::Amp ) )
+    {
+        return true;
+    }
+
+    // A comma *does* separate clauses, but only when a `where` follows it.
+    const bool clause_follows =
+        peek( 1 ).kind == Token_kind::Keyword && static_cast<Keyword>( peek( 1 ).symbol.v ) == Keyword::Where;
+
+    if( ( check( Token_kind::Comma ) && !clause_follows ) || check( Token_kind::Pipe ) )
+    {
+        error_at( peek().span, "bounds are joined with `&`", "every one of them has to hold, and `&` says so" );
+
+        advance();
+        return true;
+    }
+
+    return false;
+}
+
+Node_id Parser::parse_where_clause()
+{
+    const Span start = peek().span;
+
+    advance(); // the `where`, which parse_function_decl has already seen
+
+    const Symbol_id subject = expect_name();
+
+    expect( Token_kind::Colon );
+
+    std::vector<Node_id> bounds;
+
+    do
+    {
+        const Span      at   = peek().span;
+        const Symbol_id name = expect_name();
+
+        // Stop rather than spin: expect_name reports and consumes a keyword, but anything else
+        // leaves the cursor where it was, and the loop below would keep asking.
+        if( !name.is_valid() )
+        {
+            break;
+        }
+
+        bounds.push_back( ast_.add( Node_kind::Bound_name, at, name.v, {} ) );
+    } while( match_bound_separator() );
+
+    // The comma before a following `where` is for the reader; `where` is what the loop in
+    // parse_function_decl keys on, so it is stepped over here rather than being its business.
+    match( Token_kind::Comma );
+
+    return ast_.add( Node_kind::Where_clause, Span::merge( start, previous().span ), subject.v, bounds );
 }
 
 Node_id Parser::parse_struct_literal( Span start, Symbol_id type_name )

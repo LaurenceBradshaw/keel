@@ -279,8 +279,8 @@ Bindings Lowering::bindings_for_call( Node_id call ) const
         return {};
     }
 
-    const Instantiation&           chosen     = types_.instantiations()[*instance];
-    const std::span<const Node_id> parameters = ast_.children( ast_.child( chosen.declaration, 3 ) );
+    const Instantiation&       chosen     = types_.instantiations()[*instance];
+    const std::vector<Node_id> parameters = type_parameters( ast_, ast_.child( chosen.declaration, 3 ) );
 
     Bindings bindings;
 
@@ -1845,9 +1845,16 @@ Operand Lowering::lower_argument( Node_id argument, Node_id parameter, const Bin
 
     const Operand value = lower_expression( argument );
 
-    assert( value.kind != Operand_kind::Constant && "an owning value is never a constant" );
+    // A constant has no address, and a borrowed parameter travels as one. This is reachable only
+    // through a generic: a bare `T a` borrows unless the `where` clause promises `Copyable`, so
+    // `f<i32>( 1 )` hands a literal to a by-address parameter. Materialise it and borrow that - the
+    // callee may only read through the borrow, so a temporary living to the end of the statement is
+    // exactly long enough, and a type that reaches here has no destructor to run on it.
+    const Place place = value.kind == Operand_kind::Constant
+                            ? builder_.place( builder_.into_temp( use( value ), value.type, span ) )
+                            : value.place;
 
-    return address_operand( value.place, address, span );
+    return address_operand( place, address, span );
 }
 
 Operand Lowering::address_operand( Place place, Type_id type, Span span )
@@ -1880,7 +1887,7 @@ lower( const Ast& ast, const Resolution& resolution, Types& types, Literals& lit
     // termination condition for a case that cannot arise.
     for( const Instantiation& instance : types.instantiations() )
     {
-        const std::span<const Node_id> parameters = ast.children( ast.child( instance.declaration, 3 ) );
+        const std::vector<Node_id> parameters = type_parameters( ast, ast.child( instance.declaration, 3 ) );
 
         Bindings bindings;
 

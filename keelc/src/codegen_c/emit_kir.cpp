@@ -1194,7 +1194,7 @@ TEST_CASE( "emit_kir_substitutes_a_generic_binding_mode", "[codegen][kir][generi
 
     SECTION( "written through" )
     {
-        Generated g( "void set_to<T>( ref T a, T v ) { a = v; }\n"
+        Generated g( "void set_to<T>( ref T a, T v ) where T : Copyable { a = v; }\n"
                      "i32 main() { i32 x = 1; set_to<i32>( ref x, 12 ); return x; }" );
 
         INFO( g.c );
@@ -1203,7 +1203,7 @@ TEST_CASE( "emit_kir_substitutes_a_generic_binding_mode", "[codegen][kir][generi
 
     SECTION( "an `out` parameter" )
     {
-        Generated g( "void init<T>( out T a, T v ) { a = v; }\n"
+        Generated g( "void init<T>( out T a, T v ) where T : Copyable { a = v; }\n"
                      "i32 main() { i32 x; init<i32>( out x, 13 ); return x; }" );
 
         INFO( g.c );
@@ -1235,10 +1235,35 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
         REQUIRE( g.has( "kl__twice__i32" ) );
     }
 
+    SECTION( "a numeric bound carries `Copyable`, so the parameter travels by value" )
+    {
+        // Nothing but a builtin can satisfy `Numeric` today and every builtin copies, so a numeric
+        // parameter need not be borrowed. Visible only here: the checker's answer is a mangled name
+        // and a C signature, and `Tp` is what a borrow looks like in both.
+        Generated g( "void f<T>( T a ) where T : Integral { }\ni32 main() { f<i32>( 1 ); return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "void kl__f__T__i32( int32_t )" ) );
+        REQUIRE_FALSE( g.has( "kl__f__Tp__i32" ) );
+    }
+
+    SECTION( "a bound that does not carry `Copyable` borrows, and a constant is materialised" )
+    {
+        // `Equatable` is deliberately left borrowing - a string compares and owns - so this is the
+        // shape that has a literal arriving at a by-address parameter. A constant has no address,
+        // so it goes into a temporary and that is what travels.
+        Generated g( "void f<T>( T a ) where T : Equatable { }\ni32 main() { f<i32>( 1 ); return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "void kl__f__Tp__i32( int32_t* )" ) );
+    }
+
     SECTION( "another generic, at a different type" )
     {
-        Generated g( "T id<T>( T a ) { return a; }\n"
-                     "i32 relay<T>( T a ) { return id<i32>( 6 ); }\n"
+        Generated g( "T id<T>( T a ) where T : Copyable { return a; }\n"
+                     "i32 relay<T>( T a ) where T : Copyable { return id<i32>( 6 ); }\n"
                      "i32 main() { return relay<bool>( true ); }" );
 
         INFO( g.c );
@@ -1255,7 +1280,7 @@ TEST_CASE( "emit_kir_substitutes_through_type_constructors", "[codegen][kir][gen
 {
     SECTION( "a struct type argument" )
     {
-        Generated g( "struct P { i32 v; };\nT id<T>( T a ) { return a; }\n"
+        Generated g( "struct P { i32 v; };\nT id<T>( T a ) where T : Copyable { return a; }\n"
                      "i32 main() { P p = P { 7 }; P q = id<P>( p ); return q.v; }" );
 
         INFO( g.c );
@@ -1265,7 +1290,7 @@ TEST_CASE( "emit_kir_substitutes_through_type_constructors", "[codegen][kir][gen
 
     SECTION( "a pointer type argument" )
     {
-        Generated g( "T id<T>( T a ) { return a; }\n"
+        Generated g( "T id<T>( T a ) where T : Copyable { return a; }\n"
                      "i32 main() { i32 x = 9; i32* p = &x; i32* q = id<i32*>( p ); return *q; }" );
 
         INFO( g.c );
@@ -1275,7 +1300,7 @@ TEST_CASE( "emit_kir_substitutes_through_type_constructors", "[codegen][kir][gen
 
     SECTION( "an enum type argument" )
     {
-        Generated g( "enum E { A, B };\nT id<T>( T a ) { return a; }\n"
+        Generated g( "enum E { A, B };\nT id<T>( T a ) where T : Copyable { return a; }\n"
                      "i32 main() { E e = id<E>( E::B ); switch( e ) { case E::A: return 0; case E::B: return 1; } }" );
 
         INFO( g.c );
@@ -1287,7 +1312,7 @@ TEST_CASE( "emit_kir_emits_one_function_per_instantiation", "[codegen][kir][gene
 {
     SECTION( "two types, two functions, two names" )
     {
-        Generated g( "T id<T>( T a ) { return a; }\n"
+        Generated g( "T id<T>( T a ) where T : Copyable { return a; }\n"
                      "i32 main() { i32 a = id<i32>( 1 ); bool b = id<bool>( true ); return a; }" );
 
         INFO( g.c );
@@ -1298,7 +1323,7 @@ TEST_CASE( "emit_kir_emits_one_function_per_instantiation", "[codegen][kir][gene
 
     SECTION( "each call site names the one it meant" )
     {
-        Generated g( "T id<T>( T a ) { return a; }\n"
+        Generated g( "T id<T>( T a ) where T : Copyable { return a; }\n"
                      "i32 main() { i32 a = id<i32>( 1 ); bool b = id<bool>( true ); return a; }" );
 
         INFO( g.c );
@@ -1308,7 +1333,7 @@ TEST_CASE( "emit_kir_emits_one_function_per_instantiation", "[codegen][kir][gene
 
     SECTION( "the same type twice is one function" )
     {
-        Generated g( "T id<T>( T a ) { return a; }\ni32 main() { return id<i32>( 3 ) + id<i32>( 4 ); }" );
+        Generated g( "T id<T>( T a ) where T : Copyable { return a; }\ni32 main() { return id<i32>( 3 ) + id<i32>( 4 ); }" );
 
         INFO( g.c );
         REQUIRE( g.clean() );
@@ -1329,7 +1354,7 @@ TEST_CASE( "emit_kir_emits_one_function_per_instantiation", "[codegen][kir][gene
     SECTION( "the generic itself is never emitted" )
     {
         // It has no code of its own, and emitting it would ask `T` for a C spelling.
-        Generated g( "T id<T>( T a ) { return a; }\ni32 main() { return id<i32>( 1 ); }" );
+        Generated g( "T id<T>( T a ) where T : Copyable { return a; }\ni32 main() { return id<i32>( 1 ); }" );
 
         INFO( g.c );
         REQUIRE( g.clean() );
@@ -1338,7 +1363,7 @@ TEST_CASE( "emit_kir_emits_one_function_per_instantiation", "[codegen][kir][gene
 
     SECTION( "several parameters" )
     {
-        Generated g( "T pick<T, U>( T a, U b ) { return a; }\n"
+        Generated g( "T pick<T, U>( T a, U b ) where T : Copyable, where U : Copyable { return a; }\n"
                      "i32 main() { return pick<i32, bool>( 1, true ); }" );
 
         INFO( g.c );
@@ -1350,7 +1375,7 @@ TEST_CASE( "emit_kir_emits_one_function_per_instantiation", "[codegen][kir][gene
     {
         // The declaration still says `T`; only the lowered function knows `i32`. A `Parameter`
         // reaching here trips Spelling::type's assert, so this passing is the proof.
-        Generated g( "T id<T>( T a ) { return a; }\ni32 main() { return id<i32>( 1 ); }" );
+        Generated g( "T id<T>( T a ) where T : Copyable { return a; }\ni32 main() { return id<i32>( 1 ); }" );
 
         INFO( g.c );
         REQUIRE( g.has( "int32_t kl__id__T__i32( int32_t );" ) );

@@ -67,6 +67,7 @@ enum class Keyword : u32
     Alloc,
     Free,
     Fallthrough,
+    Where,
 
     Count
 };

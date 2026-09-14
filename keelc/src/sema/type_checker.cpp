@@ -48,6 +48,153 @@ std::string_view keel_spelling_for( std::string_view cpp_spelling )
     return {};
 }
 
+// D40. Closed because D33 closes the operator set, so what a body can ask of a `T` is finite.
+// One bit each, written out: the operators below mask with these values directly, so an ordinal
+// here would make `Copyable` the empty set and let `Comparable` and `Numeric` overlap.
+enum class Bound : u8
+{
+    Copyable   = 1u << 0, // trivially copyable - D29's `struct`, and what D31 needs to permit a copy
+    Equatable  = 1u << 1,
+    Comparable = 1u << 2,
+    Numeric    = 1u << 3,
+    Integral   = 1u << 4,
+    Floating   = 1u << 5,
+};
+
+using Bound_set = u8;
+
+constexpr Bound_set operator&( Bound_set bits, Bound bound )
+{
+    return bits & static_cast<Bound_set>( bound );
+}
+
+constexpr Bound_set operator|=( Bound_set& bits, Bound bound )
+{
+    bits |= static_cast<Bound_set>( bound );
+    return bits;
+}
+
+// D40's set is closed, so a table rather than a lookup structure: six entries, scanned once per
+// bound written. Also the one place that knows the spellings, which is what lets a diagnostic list
+// them all when a name is not one of them.
+struct Named_bound
+{
+    std::string_view name;
+    Bound            bound;
+};
+
+constexpr Named_bound k_bounds[] = {
+    { "Copyable", Bound::Copyable },
+    { "Equatable", Bound::Equatable },
+    { "Comparable", Bound::Comparable },
+    { "Numeric", Bound::Numeric },
+    { "Integral", Bound::Integral },
+    { "Floating", Bound::Floating },
+};
+
+// "Copyable, Equatable, ... and Floating", from the table above rather than from a string - so a
+// seventh bound updates every message that lists them without anyone remembering to.
+std::string known_bound_names()
+{
+    std::string listed;
+
+    for( std::size_t i = 0; i < std::size( k_bounds ); ++i )
+    {
+        if( i != 0 )
+        {
+            listed += i + 1 == std::size( k_bounds ) ? " and " : ", ";
+        }
+
+        listed += k_bounds[i].name;
+    }
+
+    return listed;
+}
+
+// The spelling of one bound, for a diagnostic that names the one that is missing.
+std::string_view name_of_bound( Bound bound )
+{
+    for( const Named_bound& known : k_bounds )
+    {
+        if( known.bound == bound )
+        {
+            return known.name;
+        }
+    }
+
+    return "?";
+}
+
+// What a type has to be to carry a bound, for the help line under a violated one. Phrased as the
+// requirement rather than as the failure: the error above already says which bound was not met, and
+// what the author needs next is what would meet it.
+std::string_view bound_requirement( Bound bound )
+{
+    switch( bound )
+    {
+    case Bound::Copyable:
+        return "a type with a destructor owns something, so copying it would own it twice";
+    case Bound::Equatable:
+        return "equality needs a number, a `bool`, an `enum` or a pointer";
+    case Bound::Comparable:
+        return "ordering needs a number";
+    case Bound::Numeric:
+        return "it has to be an integer or a float";
+    case Bound::Integral:
+        return "it has to be an integer";
+    case Bound::Floating:
+        return "it has to be a float";
+    }
+
+    return {};
+}
+
+std::optional<Bound> bound_for_name( std::string_view spelling )
+{
+    for( const Named_bound& known : k_bounds )
+    {
+        if( known.name == spelling )
+        {
+            return known.bound;
+        }
+    }
+
+    return std::nullopt;
+}
+
+// The bound an operator needs of a type parameter. Not every operator has one: `&&` and `||` want
+// bools, and no bound in D40's set makes a `T` a bool - so those return nothing and are left to the
+// rule table, which already rejects them with what the operands have to be.
+std::optional<Bound> operator_to_bound( Token_kind kind )
+{
+    switch( kind )
+    {
+    case Token_kind::Equal_equal:
+    case Token_kind::Bang_equal:
+        return Bound::Equatable;
+    case Token_kind::Less:
+    case Token_kind::Greater:
+    case Token_kind::Less_equal:
+    case Token_kind::Greater_equal:
+        return Bound::Comparable;
+    case Token_kind::Plus:
+    case Token_kind::Minus:
+    case Token_kind::Star:
+    case Token_kind::Slash:
+        return Bound::Numeric;
+    case Token_kind::Percent:
+    case Token_kind::Amp:
+    case Token_kind::Pipe:
+    case Token_kind::Caret:
+    case Token_kind::Less_less:
+    case Token_kind::Greater_greater:
+        return Bound::Integral;
+
+    default:
+        return std::nullopt;
+    }
+}
+
 // What an operator accepts, and where its result type comes from. A table rather than nested
 // switches, for the same reason the parser keeps binding_power() as one: these are rules, and
 // checking them against PLAN §6.4 and D16 should not mean tracing control flow.
@@ -514,6 +661,14 @@ private:
     bool               check_constant( Node_id id, Type_id type );
     Type_id            record_constant( Node_id id, Type_id type );
 
+    // `Integral` promises everything `Numeric` does, and so on. Expanded at the `where` clause rather
+    // than walked at each query - the closure is small and fixed, and computing it once means the
+    // operator check below is one test.
+    Bound_set closure( Bound_set direct );
+    bool      has_bound( Type_id type, Bound bound ) const; // Parameter -> its set; else false
+    bool      satisfies( Type_id type, Bound bound ) const; // the same question, of a concrete type
+    void      check_bounds( Node_id parameter, Node_id written, Type_id argument, std::string_view callee );
+
     // Walks an expression only for the errors inside it, in a context that has already failed.
     void absorb( Node_id id );
 
@@ -589,7 +744,8 @@ private:
     std::unordered_map<u32, Constant_value> constants_;
 
     // Call_expr -> the Method_decl it resolved to. Recorded so lowering does not repeat the lookup.
-    std::unordered_map<u32, Node_id> methods_;
+    std::unordered_map<u32, Node_id>   methods_;
+    std::unordered_map<u32, Bound_set> bounds_; // Type_param_decl -> its closed bound set
 };
 
 Types Checker::run()
@@ -703,11 +859,12 @@ void Checker::declare_signatures_function_decls()
 
         if( ast_.child( child, 3 ).is_valid() )
         {
+            const std::span<const Node_id> type_param_list = ast_.children( ast_.child( child, 3 ) );
             // Recorded before the signature below is typed, so `T` resolves through the ordinary
             // type_of_annotation path rather than needing one of its own. Keyed by the
             // Type_param_decl itself, which is what makes one declaration's `T` distinct from
             // another's - the resolver has already scoped them apart.
-            for( const Node_id type_param : ast_.children( ast_.child( child, 3 ) ) )
+            for( const Node_id type_param : type_param_list )
             {
                 if( ast_.kind( type_param ) != Node_kind::Type_param_decl )
                 {
@@ -715,6 +872,76 @@ void Checker::declare_signatures_function_decls()
                 }
 
                 record( type_param, table_.parameter( type_param, interner_.text( Symbol_id { ast_.aux( type_param ) } ) ) );
+            }
+
+            // Second pass over the where clauses
+            for( const Node_id where_clause : type_param_list )
+            {
+                if( ast_.kind( where_clause ) != Node_kind::Where_clause )
+                {
+                    continue;
+                }
+
+                // Match the where clause's aux (the subject name) against the Type_param_decl's aux
+                // and record the bounds for that Type_param_decl in bounds_
+                const Symbol_id subject_name = Symbol_id { ast_.aux( where_clause ) };
+
+                // Find the Type_param_decl that matches the subject name
+                const auto it = std::find_if(
+                    type_param_list.begin(),
+                    type_param_list.end(),
+                    [&]( const Node_id type_param ) {
+                        return ast_.kind( type_param ) == Node_kind::Type_param_decl &&
+                               Symbol_id { ast_.aux( type_param ) } == subject_name;
+                    }
+                );
+
+                if( it == type_param_list.end() )
+                {
+                    error_at(
+                        ast_.span( where_clause ),
+                        fmt::format(
+                            "`{}` is not a type parameter of `{}`",
+                            interner_.text( subject_name ),
+                            interner_.text( Symbol_id { ast_.aux( child ) } )
+                        )
+                    );
+                    continue;
+                }
+
+                // Keyed by the Type_param_decl node, never by its name: two declarations may each
+                // have a parameter called `T`, and keying by name would merge their bounds.
+                if( bounds_.contains( it->v ) )
+                {
+                    error_at(
+                        ast_.span( where_clause ),
+                        fmt::format( "duplicate where clause for type parameter `{}`", interner_.text( subject_name ) )
+                    );
+                    continue;
+                }
+
+                Bound_set direct_bounds = 0;
+                for( const Node_id bound_node : ast_.children( where_clause ) )
+                {
+                    std::string_view     bound_name = interner_.text( Symbol_id { ast_.aux( bound_node ) } );
+                    std::optional<Bound> bound      = bound_for_name( bound_name );
+
+                    if( !bound )
+                    {
+                        // The span is the name, not the clause, and the list comes from the table
+                        // rather than from this string - so adding a bound updates the message.
+                        error_at(
+                            ast_.span( bound_node ),
+                            fmt::format( "unknown bound `{}`", bound_name ),
+                            fmt::format( "the bounds are {}", known_bound_names() )
+                        );
+                        continue;
+                    }
+
+                    direct_bounds = closure( direct_bounds | static_cast<Bound_set>( bound.value() ) );
+                }
+
+                bounds_.emplace( it->v, direct_bounds );
             }
         }
 
@@ -1118,6 +1345,11 @@ bool Checker::contains_itself( Node_id decl, std::vector<Node_id>& path )
 
 bool Checker::is_owning_type( Type_id type ) const
 {
+    if( table_.is_parameter( type ) )
+    {
+        return !has_bound( type, Bound::Copyable );
+    }
+
     if( !type.is_valid() || table_.is_error( type ) || !table_.is_struct( type ) )
     {
         return false;
@@ -3023,7 +3255,7 @@ Type_id Checker::infer_call( Node_id id )
 
     if( type_args.is_valid() )
     {
-        const std::span<const Node_id> parameters = ast_.children( ast_.child( callable, 3 ) );
+        const std::vector<Node_id>     parameters = type_parameters( ast_, ast_.child( callable, 3 ) );
         const std::span<const Node_id> given      = ast_.children( type_args );
 
         if( parameters.size() != given.size() )
@@ -3054,8 +3286,12 @@ Type_id Checker::infer_call( Node_id id )
 
             resolved.push_back( argument );
 
+            check_bounds( parameters[i], given[i], argument, name );
+
             // type_of_annotation has already reported an unknown type. Binding the error type keeps
             // every later substitution total, and check() absorbs it at each argument.
+            // An argument that failed a bound is bound anyway: the value arguments are still worth
+            // checking against it, and the error above is what makes the compile fail.
             bindings.emplace( types_[parameters[i].v].v, argument );
         }
 
@@ -3396,6 +3632,41 @@ Type_id Checker::infer_binary( Node_id id )
 
         return record( id, error );
     };
+
+    // D11 checks the body once, before any instance exists, so an operation on a `T` is answered
+    // from what the `where` clause promised rather than from any concrete type. Above
+    // compares_by_identity because a parameter is neither a pointer nor an enum, so without this it
+    // would fall through to the rule table and be rejected by operand classes that have nothing to
+    // say about it.
+    if( const std::optional<Bound> bound = operator_to_bound( op );
+        bound && ( table_.is_parameter( lhs_type ) || table_.is_parameter( rhs_type ) ) )
+    {
+        // Inside a generic body there is no conversion between an unknown type and anything else,
+        // so the two sides have to already agree. Returning rather than reporting and carrying on:
+        // one mistake is one diagnostic, and a type recorded past this point would be a claim about
+        // an expression that has just been refused.
+        if( lhs_type != rhs_type )
+        {
+            return reject( fmt::format( "`{}` needs both operands to be the same type", token_kind_spelling( op ) ) );
+        }
+
+        // Both sides are the same type and one of them is a parameter, so both are - which is what
+        // lets the help below name it without asking which side it was on.
+        if( !has_bound( lhs_type, *bound ) )
+        {
+            return reject( fmt::format(
+                "`{}` needs `{}`; write `where {} : {}` on `{}`",
+                token_kind_spelling( op ),
+                name_of_bound( *bound ),
+                table_.name( lhs_type ),
+                name_of_bound( *bound ),
+                interner_.text( Symbol_id { ast_.aux( current_function_ ) } )
+            ) );
+        }
+
+        // A comparison answers `bool` whatever `T` turns out to be; arithmetic answers `T`.
+        return record( id, *bound == Bound::Equatable || *bound == Bound::Comparable ? bool_type : lhs_type );
+    }
 
     // Pointer and enum equality, which the rule table cannot express - its operand classes are all
     // numeric or bool. For a pointer this is how a null check is written; for an enum it is the
@@ -4928,6 +5199,175 @@ Type_id Checker::record_constant( Node_id id, Type_id type )
     return record( id, type );
 }
 
+Bound_set Checker::closure( Bound_set direct )
+{
+    if( direct & Bound::Integral || direct & Bound::Floating )
+    {
+        direct |= Bound::Numeric;
+    }
+
+    if( direct & Bound::Numeric )
+    {
+        direct |= Bound::Comparable;
+
+        // Numbers are copyable, so a numeric parameter need not be borrowed. This is the one
+        // implication that is a fact about *satisfaction* rather than about the bounds: D33's
+        // operators are not shipped, so nothing but a builtin can satisfy `Numeric` today, and
+        // every builtin copies. A class overloading arithmetic while owning a resource makes it
+        // false, and the failure is in the safe direction - `Copyable` is in the promised set, so
+        // the call site checks it and refuses that class rather than copying it twice.
+        //
+        // Deliberately not extended to `Comparable` and `Equatable`, which is where an owning type
+        // will want to be first: a string orders and compares and owns its bytes, and keeping those
+        // two borrowing is what leaves room for it.
+        direct |= Bound::Copyable;
+    }
+
+    if( direct & Bound::Comparable )
+    {
+        direct |= Bound::Equatable;
+    }
+
+    return direct;
+}
+
+// A bound is a promise about a *parameter*, so only a parameter can carry one - a concrete type
+// either supports an operation or does not, and satisfies() is the question to ask of it.
+//
+// The route is type -> its Type_param_decl -> the set recorded when the `where` clause was read.
+// `declaration` is what makes one declaration's `T` distinct from another's, and it is the key the
+// set is stored under for the same reason.
+bool Checker::has_bound( Type_id type, Bound bound ) const
+{
+    if( !type.is_valid() || !table_.is_parameter( type ) )
+    {
+        return false;
+    }
+
+    const Node_id declaration = table_.get( type ).declaration;
+
+    if( !declaration.is_valid() )
+    {
+        return false;
+    }
+
+    const auto found = bounds_.find( declaration.v );
+
+    // No `where` clause at all: an unbounded parameter promises nothing, which is the correct
+    // reading and is why `id` is close to the only generic writable without one.
+    return found != bounds_.end() && ( found->second & bound ) != 0;
+}
+
+// The other half of the same question. has_bound asks what a parameter *promises*; this asks what a
+// concrete type *delivers*, and a bound is met when the second answers the first.
+//
+// The first line is not a special case, it is the feature: a generic calling another generic passes
+// its own `T` as a type argument, and forwarding the question to has_bound is what makes that legal
+// exactly when the inner bounds are a subset of the outer ones. Nothing else has to know about it.
+bool Checker::satisfies( Type_id type, Bound bound ) const
+{
+    if( !type.is_valid() || table_.is_error( type ) )
+    {
+        return true; // already reported; every bound would fail on it and say nothing new
+    }
+
+    if( table_.is_parameter( type ) )
+    {
+        return has_bound( type, bound );
+    }
+
+    switch( bound )
+    {
+    case Bound::Copyable:
+        return !is_owning_type( type );
+
+    // Ordering is deliberately narrower than equality, and for the reasons written above
+    // compares_by_identity: a pointer and an enum can be told apart but cannot be ranked.
+    case Bound::Equatable:
+        return table_.is_integer( type ) || table_.is_float( type ) || type == table_.builtin( Type_kind::Bool ) ||
+               table_.is_enum( type ) || table_.is_pointer( type );
+    case Bound::Comparable:
+    case Bound::Numeric:
+        return table_.is_integer( type ) || table_.is_float( type );
+    case Bound::Integral:
+        return table_.is_integer( type );
+    case Bound::Floating:
+        return table_.is_float( type );
+    }
+
+    return false;
+}
+
+// Every bound on one type parameter, against the type argument written for it.
+//
+// Reports all of them rather than the first: two unmet bounds are two things to fix, and one per
+// compile is two compiles. What it does *not* report twice is one mistake wearing several names -
+// closure() stored `Integral` as `Integral | Numeric | Comparable | Equatable`, so a struct fails
+// all four, and only the strongest is the one the author wrote.
+void Checker::check_bounds( Node_id parameter, Node_id written, Type_id argument, std::string_view callee )
+{
+    const auto found = bounds_.find( parameter.v );
+
+    if( found == bounds_.end() )
+    {
+        return; // unbounded: nothing promised, so nothing to check
+    }
+
+    Bound_set failing = 0;
+
+    for( const Named_bound& known : k_bounds )
+    {
+        if( ( found->second & known.bound ) != 0 && !satisfies( argument, known.bound ) )
+        {
+            failing |= static_cast<Bound_set>( known.bound );
+        }
+    }
+
+    // A failing bound that another failing bound implies is the same mistake said again. Computed
+    // from closure() rather than from the order of k_bounds, so a seventh bound needs nothing here.
+    Bound_set implied = 0;
+
+    for( const Named_bound& known : k_bounds )
+    {
+        if( ( failing & known.bound ) != 0 )
+        {
+            implied |= closure( static_cast<Bound_set>( known.bound ) ) & ~static_cast<Bound_set>( known.bound );
+        }
+    }
+
+    for( const Named_bound& known : k_bounds )
+    {
+        if( ( failing & ~implied & known.bound ) == 0 )
+        {
+            continue;
+        }
+
+        // A type argument that is itself a parameter is a generic forwarding its own `T`, and the
+        // fix is one clause away rather than one type away - so it gets the other half of the
+        // sentence. Saying "ordering needs a number" here would be advice about the wrong thing.
+        const bool forwarded = table_.is_parameter( argument );
+
+        error_at(
+            ast_.span( written ),
+            fmt::format(
+                "`{}` {} `{}`, and `{}` requires it of `{}`",
+                table_.name( argument ),
+                forwarded ? "does not promise" : "is not",
+                known.name,
+                callee,
+                interner_.text( Symbol_id { ast_.aux( parameter ) } )
+            ),
+            forwarded ? fmt::format(
+                            "add `{}` to the `where` clause for `{}` on `{}`",
+                            known.name,
+                            table_.name( argument ),
+                            interner_.text( Symbol_id { ast_.aux( current_function_ ) } )
+                        )
+                      : std::string( bound_requirement( known.bound ) )
+        );
+    }
+}
+
 // A literal is skipped: there is nothing inside one to be wrong, and its only complaint is that
 // nothing told it what type to be - which is exactly what the error that got us here already
 // explains. Inferring it anyway is how one mistake produces two diagnostics.
@@ -5014,6 +5454,25 @@ bool is_ref_parameter( const Ast& ast, Node_id param )
 
     return annotation.is_valid() && ast.kind( annotation ) == Node_kind::Mode_type &&
            static_cast<Keyword>( ast.aux( annotation ) ) == Keyword::Ref;
+}
+
+// The type parameters of a declaration, without the `where` clauses that share their list. Four
+// places want exactly this and three of them were counting the clauses.
+std::vector<Node_id> type_parameters( const Ast& ast, Node_id decl )
+{
+    assert( ast.kind( decl ) == Node_kind::Type_param_list );
+    std::vector<Node_id> result;
+    for( const Node_id param : ast.children( decl ) )
+    {
+        if( ast.kind( param ) != Node_kind::Type_param_decl )
+        {
+            continue;
+        }
+
+        result.push_back( param );
+    }
+
+    return result;
 }
 
 bool is_generic( const Ast& ast, Node_id decl )
@@ -11106,7 +11565,7 @@ TEST_CASE( "type_checker_types_a_generic_signature", "[sema][generic]" )
 {
     SECTION( "the declaration alone is accepted" )
     {
-        const Typed p( "T id<T>( T a ) { return a; }\ni32 main() { return 0; }" );
+        const Typed p( "T id<T>( T a ) where T : Copyable { return a; }\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
@@ -11122,7 +11581,7 @@ TEST_CASE( "type_checker_types_a_generic_signature", "[sema][generic]" )
 
     SECTION( "a broken non-generic beside it is still checked" )
     {
-        const Typed p( "T id<T>( T a ) { return a; }\n"
+        const Typed p( "T id<T>( T a ) where T : Copyable { return a; }\n"
                        "i32 broken() { return true; }\n"
                        "i32 main() { return 0; }" );
 
@@ -11144,7 +11603,7 @@ TEST_CASE( "type_checker_types_a_generic_signature", "[sema][generic]" )
 // the caller never wrote.
 TEST_CASE( "type_checker_types_a_generic_call", "[sema][generic]" )
 {
-    const std::string_view id = "T id<T>( T a ) { return a; }\n";
+    const std::string_view id = "T id<T>( T a ) where T : Copyable { return a; }\n";
 
     SECTION( "the call takes the argument's type" )
     {
@@ -11190,7 +11649,7 @@ TEST_CASE( "type_checker_types_a_generic_call", "[sema][generic]" )
 
     SECTION( "several parameters, bound positionally" )
     {
-        const Typed p( "T pick<T, U>( T a, U b ) { return a; }\n"
+        const Typed p( "T pick<T, U>( T a, U b ) where T : Copyable { return a; }\n"
                        "i32 main() { f64 d = 2.0; return pick<i32, f64>( 1, d ); }" );
 
         INFO( p.rendered() );
@@ -11212,22 +11671,38 @@ TEST_CASE( "type_checker_types_a_generic_call", "[sema][generic]" )
 // out of typing the signature: the body is walked once with `T` standing for itself, so an
 // operation `T` does not have is rejected *there* rather than inside some instantiation.
 //
-// With no bound, `T` supports nothing - which is the correct reading of an unbounded parameter and
-// is why `id` is about the only generic writable today. Adding bounds is what widens it, and these
-// cases are what will change shape when they land.
+// With no bound, `T` supports nothing: no operator, no copy, and so no return by value either -
+// which is the correct reading of an unbounded parameter, and leaves storing, passing and dropping
+// as the whole of what one permits. A `where` clause is what widens it, one promise at a time.
 TEST_CASE( "type_checker_checks_a_generic_body_against_its_parameters", "[sema][generic]" )
 {
     SECTION( "a body that needs nothing of `T` is accepted" )
     {
-        const Typed p( "T id<T>( T a ) { return a; }\ni32 main() { return 0; }" );
+        // Storing, passing and dropping need no promise at all - monomorphisation knows the size
+        // and the destructor. Taking a `T` and doing nothing with it is the whole of what an
+        // unbounded parameter permits.
+        const Typed p( "void f<T>( T a ) { }\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
     }
 
+    SECTION( "returning a `T` by value is a copy, and needs the promise" )
+    {
+        // The bare parameter of an unbounded `T` is D31's read-only borrow, because `T` may turn
+        // out to own something. Returning it by value would hand out a second owner.
+        const Typed without( "T id<T>( T a ) { return a; }\ni32 main() { return 0; }" );
+        const Typed with( "T id<T>( T a ) where T : Copyable { return a; }\ni32 main() { return 0; }" );
+
+        INFO( without.rendered() << with.rendered() );
+        REQUIRE( without.errors() == 1 );
+        REQUIRE( without.rendered().find( "cannot return a borrowed value" ) != std::string::npos );
+        REQUIRE( with.clean() );
+    }
+
     SECTION( "an unknown name is reported at the definition" )
     {
-        const Typed p( "T id<T>( T a ) { return nonsense; }\ni32 main() { return 0; }" );
+        const Typed p( "T id<T>( T a ) where T : Copyable { return nonsense; }\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.rendered().find( "`nonsense` is not declared" ) != std::string::npos );
@@ -11270,7 +11745,7 @@ TEST_CASE( "type_checker_checks_a_generic_body_against_its_parameters", "[sema][
 
 TEST_CASE( "type_checker_checks_type_arguments", "[sema][generic]" )
 {
-    const std::string_view id = "T id<T>( T a ) { return a; }\n";
+    const std::string_view id = "T id<T>( T a ) where T : Copyable { return a; }\n";
 
     SECTION( "too many" )
     {
@@ -11283,7 +11758,7 @@ TEST_CASE( "type_checker_checks_type_arguments", "[sema][generic]" )
 
     SECTION( "too few" )
     {
-        const Typed p( "T pick<T, U>( T a, U b ) { return a; }\ni32 main() { return pick<i32>( 1, 2 ); }" );
+        const Typed p( "T pick<T, U>( T a, U b ) where T : Copyable { return a; }\ni32 main() { return pick<i32>( 1, 2 ); }" );
 
         INFO( p.rendered() );
         REQUIRE_FALSE( p.clean() );
@@ -11328,6 +11803,293 @@ TEST_CASE( "type_checker_checks_type_arguments", "[sema][generic]" )
     }
 }
 
+// D40. A bound is a promise about a parameter, and a type argument either keeps it or does not.
+// The two halves are has_bound (what `T` promises) and satisfies (what a concrete type delivers),
+// and every case below is one or the other answering at a call site.
+//
+// `const ref T` throughout rather than `T`: the by-value binding mode of an owning parameter is
+// D31's question, not this one, and mixing them would make a failure here ambiguous.
+// D11 again, from the operator side: an operation on a `T` is answered from what the `where` clause
+// promised, before any instance exists. The pre-check sits above the pointer-and-enum rule because a
+// parameter is neither, and would otherwise be judged by operand classes that say nothing about it.
+TEST_CASE( "type_checker_checks_operators_on_a_type_parameter", "[sema][generic][bound]" )
+{
+    SECTION( "an operator the clause promised is accepted" )
+    {
+        const Typed comparison( "bool f<T>( T a ) where T : Comparable { return a < a; }\ni32 main() { return 0; }" );
+        const Typed equality( "bool f<T>( T a ) where T : Equatable { return a == a; }\ni32 main() { return 0; }" );
+        const Typed arithmetic( "T f<T>( T a ) where T : Numeric { return a + a; }\ni32 main() { return 0; }" );
+        const Typed bitwise( "T f<T>( T a ) where T : Integral { return a & a; }\ni32 main() { return 0; }" );
+
+        INFO( comparison.rendered() << equality.rendered() << arithmetic.rendered() << bitwise.rendered() );
+        REQUIRE( comparison.clean() );
+        REQUIRE( equality.clean() );
+        REQUIRE( arithmetic.clean() );
+        REQUIRE( bitwise.clean() );
+    }
+
+    SECTION( "a comparison answers `bool`, and arithmetic answers `T`" )
+    {
+        const Typed p( "T f<T>( T a ) where T : Numeric { bool b = a < a; T c = a + a; return c; }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "an operator it did not names the bound and the clause to write" )
+    {
+        const Typed p( "bool f<T>( T a ) { return a == a; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "no operator `==` for `T` and `T`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`==` needs `Equatable`; write `where T : Equatable` on `f`" ) != std::string::npos );
+    }
+
+    SECTION( "implication reaches the operator table" )
+    {
+        // `Integral` was stored with `Numeric`, `Comparable` and `Equatable`, so one clause buys all
+        // four operators; `Comparable` does not run downhill to arithmetic.
+        const Typed widest( "bool f<T>( T a ) where T : Integral { return a < a; }\ni32 main() { return 0; }" );
+        const Typed narrow( "T f<T>( T a ) where T : Comparable { return a + a; }\ni32 main() { return 0; }" );
+
+        INFO( widest.rendered() << narrow.rendered() );
+        REQUIRE( widest.clean() );
+        REQUIRE( narrow.errors() == 1 );
+        REQUIRE( narrow.rendered().find( "`+` needs `Numeric`" ) != std::string::npos );
+    }
+
+    SECTION( "operands that are not the same type are one diagnostic, not two" )
+    {
+        // The mismatch returns rather than reporting and carrying on. Without that, a `T` that does
+        // hold the bound goes on to record a type on an expression just refused - and one that does
+        // not reports the same mistake twice.
+        const Typed unbounded( "bool f<T>( T a ) { i32 x = 1; return a < x; }\ni32 main() { return 0; }" );
+        const Typed bounded( "i32 f<T>( T a ) where T : Comparable { i32 x = 1; i32 y = a < x; return y; }\n"
+                             "i32 main() { return 0; }" );
+
+        INFO( unbounded.rendered() << bounded.rendered() );
+        REQUIRE( unbounded.errors() == 1 );
+        REQUIRE( unbounded.rendered().find( "needs both operands to be the same type" ) != std::string::npos );
+        REQUIRE( bounded.errors() == 1 );
+        REQUIRE( bounded.rendered().find( "expected `i32`, but got `bool`" ) == std::string::npos );
+    }
+
+    SECTION( "the help names the parameter whichever side it was on" )
+    {
+        // `where i32 : Comparable` is not a thing anyone can write. Reachable only if the mismatch
+        // above falls through, which is the other half of why it returns.
+        const Typed p( "bool f<T>( T a ) where T : Comparable { i32 x = 1; return x < a; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "where i32 :" ) == std::string::npos );
+    }
+
+    SECTION( "an operator no bound grants is left to the rule table" )
+    {
+        // `&&` and `||` want bools and nothing in D40's set makes a `T` one, so the pre-check has
+        // nothing to add and says so by declining to answer rather than by asserting.
+        const Typed p( "bool f<T>( T a ) where T : Comparable { return a && a; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "no operator `&&` for `T` and `T`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "both operands must be `bool`" ) != std::string::npos );
+    }
+}
+
+TEST_CASE( "type_checker_checks_bounds_at_the_call_site", "[sema][generic][bound]" )
+{
+    const auto call = []( std::string_view clause, std::string_view argument, std::string_view value )
+    {
+        return fmt::format(
+            "class Buffer {{ i32 x; Buffer( i32 n ) {{ x = n; }} ~Buffer() {{ }} }};\n"
+            "enum Colour {{ Red, Green }};\n"
+            "void f<T>( const ref T a ) where T : {} {{ }}\n"
+            "i32 main() {{ {} v = {}; f<{}>( v ); return 0; }}\n",
+            clause,
+            argument,
+            value,
+            argument
+        );
+    };
+
+    SECTION( "each bound, met" )
+    {
+        const Typed copyable( call( "Copyable", "i32", "1" ) );
+        const Typed equatable( call( "Equatable", "bool", "true" ) );
+        const Typed comparable( call( "Comparable", "i32", "1" ) );
+        const Typed numeric( call( "Numeric", "f64", "1.0" ) );
+        const Typed integral( call( "Integral", "u8", "1" ) );
+        const Typed floating( call( "Floating", "f64", "1.0" ) );
+
+        INFO(
+            copyable.rendered() << equatable.rendered() << comparable.rendered() << numeric.rendered() << integral.rendered()
+                                << floating.rendered()
+        );
+        REQUIRE( copyable.clean() );
+        REQUIRE( equatable.clean() );
+        REQUIRE( comparable.clean() );
+        REQUIRE( numeric.clean() );
+        REQUIRE( integral.clean() );
+        REQUIRE( floating.clean() );
+    }
+
+    SECTION( "`Copyable` is what a destructor takes away" )
+    {
+        const Typed p( call( "Copyable", "Buffer", "Buffer( 1 )" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`Buffer` is not `Copyable`" ) != std::string::npos );
+    }
+
+    SECTION( "an enum and a pointer are `Equatable` but not `Comparable`" )
+    {
+        // The split is D30's: a variant can be told from another, but the declaration order it
+        // happens to have is not an ordering anyone wrote down. Ditto two pointers.
+        const Typed equatable( call( "Equatable", "Colour", "Colour::Red" ) );
+        const Typed comparable( call( "Comparable", "Colour", "Colour::Red" ) );
+
+        INFO( equatable.rendered() << comparable.rendered() );
+        REQUIRE( equatable.clean() );
+        REQUIRE( comparable.errors() == 1 );
+        REQUIRE( comparable.rendered().find( "`Colour` is not `Comparable`" ) != std::string::npos );
+    }
+
+    SECTION( "a bound the argument misses names the bound and what would meet it" )
+    {
+        const Typed p( call( "Integral", "f64", "1.0" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`f64` is not `Integral`, and `f` requires it of `T`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "it has to be an integer" ) != std::string::npos );
+    }
+
+    SECTION( "one mistake is reported once, not once per implied bound" )
+    {
+        // closure() stored `Integral` as `Integral | Numeric | Comparable | Equatable`, so a struct
+        // fails all four. Only the one the author wrote is a thing they can act on.
+        const Typed p( call( "Integral", "Buffer", "Buffer( 1 )" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`Integral`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`Numeric`" ) == std::string::npos );
+        REQUIRE( p.rendered().find( "`Comparable`" ) == std::string::npos );
+        REQUIRE( p.rendered().find( "`Equatable`" ) == std::string::npos );
+    }
+
+    SECTION( "two unmet bounds that imply nothing of each other are both reported" )
+    {
+        // Two things to fix is two diagnostics: one per compile would be two compiles.
+        const Typed p( call( "Copyable & Comparable", "Buffer", "Buffer( 1 )" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 2 );
+        REQUIRE( p.rendered().find( "not `Copyable`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "not `Comparable`" ) != std::string::npos );
+    }
+
+    SECTION( "an implied bound is met by the one that implies it" )
+    {
+        // `where T : Numeric` is enough for a parameter that asks only for `Equatable`, because
+        // closure() put it there when the clause was read.
+        const Typed p( "void needs<T>( const ref T a ) where T : Equatable { }\n"
+                       "void has<T>( const ref T a ) where T : Numeric { needs<T>( a ); }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "implication does not run downhill" )
+    {
+        const Typed p( "void needs<T>( const ref T a ) where T : Integral { }\n"
+                       "void has<T>( const ref T a ) where T : Numeric { needs<T>( a ); }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "does not promise `Integral`" ) != std::string::npos );
+    }
+
+    SECTION( "a generic forwarding its own `T` is told to widen its clause, not its type" )
+    {
+        // The type argument is a parameter, so the fix is a clause away rather than a type away.
+        // "it has to be an integer" would be advice about the wrong thing entirely.
+        const Typed p( "void needs<T>( const ref T a ) where T : Comparable { }\n"
+                       "void has<T>( const ref T a ) where T : Equatable { needs<T>( a ); }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`T` does not promise `Comparable`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "add `Comparable` to the `where` clause for `T` on `has`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "ordering needs a number" ) == std::string::npos );
+    }
+
+    SECTION( "an unbounded parameter accepts anything" )
+    {
+        const Typed p( "void f<T>( const ref T a ) { }\n"
+                       "i32 main() { Buffer v = Buffer( 1 ); f<Buffer>( v ); return 0; }\n"
+                       "class Buffer { i32 x; Buffer( i32 n ) { x = n; } ~Buffer() { } };" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "an unknown type argument is reported once and not measured against the bounds" )
+    {
+        const Typed p( "void f<T>( const ref T a ) where T : Copyable & Integral { }\n"
+                       "i32 main() { i32 v = 1; f<Nope>( v ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "unknown type `Nope`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "requires it of" ) == std::string::npos );
+    }
+
+    SECTION( "the diagnostic points at the type argument, not at the whole call" )
+    {
+        const Typed p( "void f<T, U>( const ref T a, const ref U b ) where U : Integral { }\n"
+                       "i32 main() { i32 v = 1; f64 w = 1.0; f<i32, f64>( v, w ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`f64` is not `Integral`, and `f` requires it of `U`" ) != std::string::npos );
+    }
+
+    SECTION( "a bound is in hand before the declaration's own annotations are typed" )
+    {
+        // `out T` asks is_owning_type about `T`, and the only thing that can answer is the `where`
+        // clause on the same declaration - which is read ten lines earlier, in the same loop body.
+        // Nothing else marks that order as load-bearing, so this pair is what holds it: move the
+        // recording after the annotations and the first of these starts reporting.
+        const Typed copyable( "void f<T>( out T a ) where T : Copyable { }\ni32 main() { return 0; }" );
+        const Typed unbounded( "void f<T>( out T a ) { }\ni32 main() { return 0; }" );
+
+        INFO( copyable.rendered() << unbounded.rendered() );
+        REQUIRE( copyable.clean() );
+        REQUIRE( unbounded.errors() == 1 );
+        REQUIRE(
+            unbounded.rendered().find( "`out` is not supported for a type that owns a resource yet" ) != std::string::npos
+        );
+    }
+
+    SECTION( "the value arguments are still checked after a bound fails" )
+    {
+        // The binding happens anyway: one unmet bound should not hide a wrong argument.
+        const Typed p( "void f<T>( const ref T a ) where T : Integral { }\n"
+                       "i32 main() { f64 v = 1.0; f<f64>( nope ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "not `Integral`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "nope" ) != std::string::npos );
+    }
+}
+
 TEST_CASE( "type_checker_scopes_type_parameters", "[sema][generic]" )
 {
     SECTION( "a duplicate is reported" )
@@ -11341,7 +12103,8 @@ TEST_CASE( "type_checker_scopes_type_parameters", "[sema][generic]" )
 
     SECTION( "they do not escape the declaration" )
     {
-        const Typed p( "T id<T>( T a ) { return a; }\nT stray( T a ) { return a; }\ni32 main() { return 0; }" );
+        const Typed p( "T id<T>( T a ) where T : Copyable { return a; }\nT stray( T a ) { return a; }\ni32 main() { return 0; }"
+        );
 
         INFO( p.rendered() );
         REQUIRE( p.rendered().find( "unknown type `T`" ) != std::string::npos );
@@ -11349,7 +12112,8 @@ TEST_CASE( "type_checker_scopes_type_parameters", "[sema][generic]" )
 
     SECTION( "two declarations may reuse the same parameter name" )
     {
-        const Typed p( "T one<T>( T a ) { return a; }\nT two<T>( T a ) { return a; }\ni32 main() { return 0; }" );
+        const Typed p( "T one<T>( T a ) where T : Copyable { return a; }\n"
+                       "T two<T>( T a ) where T : Copyable { return a; }\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
 

@@ -405,6 +405,12 @@ bool Type_table::is_pointer( Type_id id ) const
     return get( id ).kind == Type_kind::Pointer;
 }
 
+bool Type_table::is_parameter( Type_id id ) const
+{
+    assert( id.is_valid() );
+    return get( id ).kind == Type_kind::Parameter;
+}
+
 bool Type_table::is_void( Type_id id ) const
 {
     assert( id.is_valid() );

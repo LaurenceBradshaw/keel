@@ -1,12 +1,12 @@
 // One generic, emitted once per set of type arguments. The two instantiations are separate C
 // functions with separate names, and each call site names the one it meant - a declaration alone no
 // longer identifies a function.
-T id<T>( T a )
+T id<T>( T a ) where T : Copyable
 {
     return a;
 }
 
-T pick<T, U>( T a, U b )
+T pick<T, U>( T a, U b ) where T : Copyable, where U : Copyable
 {
     return a;
 }
@@ -14,7 +14,7 @@ T pick<T, U>( T a, U b )
 // A binding mode on a generic parameter: `ref T` becomes `ref i32` at the instantiation, and the
 // address it travels as is the substituted type's. Reading the callee's parameter type with the
 // *caller's* bindings is the mistake this catches - `main` has no `T` of its own.
-void set_to<T>( ref T target, T value )
+void set_to<T>( ref T target, T value ) where T : Copyable
 {
     target = value;
 }
@@ -24,7 +24,7 @@ const ref T peek<T>( const ref T a )
     return a;
 }
 
-void first_write<T>( out T target, T value )
+void first_write<T>( out T target, T value ) where T : Copyable
 {
     target = value;
 }
@@ -35,7 +35,7 @@ i32 doubled( i32 v )
     return v + v;
 }
 
-i32 relay<T>( T ignored )
+i32 relay<T>( T ignored ) where T : Copyable
 {
     return doubled( id<i32>( 2 ) );
 }

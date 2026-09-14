@@ -1,6 +1,6 @@
 // A generic's signature types, so the mistakes here are about the type parameters themselves and
 // about the arguments a call site names - not about the feature being unfinished.
-T id<T>( T a )
+T id<T>( T a ) where T : Copyable
 {
     return a;
 }
@@ -11,9 +11,8 @@ T stray( T a )
     return a;
 }
 
-T duplicated<T, T>( T a )
+void duplicated<T, T>( T a )
 {
-    return a;
 }
 
 T empty<>( i32 a )
@@ -60,4 +59,79 @@ i32 wrong_argument()
 i32 too_many_type_arguments()
 {
     return id<i32, f64>( 1 );
+}
+
+// D40. The bounds themselves: a name that is not one of them, a subject that is not a parameter of
+// this declaration, and a clause with nothing to constrain.
+void unknown_bound<T>( T a ) where T : Sortable
+{
+}
+
+void wrong_subject<T>( T a ) where U : Copyable
+{
+}
+
+i32 no_type_parameters( i32 a ) where T : Copyable
+{
+    return a;
+}
+
+void twice_over<T>( T a ) where T : Copyable, where T : Comparable
+{
+}
+
+// Bounds are joined with `&`, because every one of them has to hold.
+void wrong_separator<T>( T a ) where T : Copyable | Comparable
+{
+}
+
+// The body is checked once, before any instance exists, so an operation `T` was not promised is
+// rejected here rather than inside some expansion.
+class Owner
+{
+    i32 x;
+
+    Owner( i32 n ) { x = n; }
+
+    ~Owner() { }
+};
+
+enum Suit { Clubs, Hearts };
+
+bool unpromised_operator<T>( T a ) where T : Copyable
+{
+    return a < a;
+}
+
+bool mismatched_operands<T>( T a, i32 b ) where T : Copyable & Comparable
+{
+    return a < b;
+}
+
+// And the call site's half: a type argument that does not deliver what the parameter was promised.
+void breaks_a_bound()
+{
+    Owner o = Owner( 1 );
+    id<Owner>( o );
+}
+
+// One mistake, not four: `Integral` was stored with everything it implies, and only the bound the
+// author wrote is a thing they can act on.
+void needs_integral<T>( const ref T a ) where T : Integral
+{
+}
+
+void orders_an_enum()
+{
+    needs_integral<Suit>( Suit::Clubs );
+}
+
+// A generic forwarding its own `T` is told to widen its clause, not to change its type.
+void needs_comparable<T>( const ref T a ) where T : Comparable
+{
+}
+
+void forwards<T>( const ref T a ) where T : Equatable
+{
+    needs_comparable<T>( a );
 }
