@@ -1,0 +1,102 @@
+// D26 meeting a type parameter, run rather than only checked. A literal adopts `T` in the checker,
+// and by the time the emitter sees it `T` has been substituted away - so the constant has to come
+// out of the pool the *literal* was stored in, not the one its final type suggests. Getting that
+// wrong reads an unrelated value out of the wrong vector, silently, because the index is usually in
+// range. Only running the program catches it.
+
+T abs<T>( T a ) where T : Copyable & Numeric
+{
+    if( a < 0 )
+    {
+        return 0 - a;
+    }
+
+    return a;
+}
+
+// An integer literal in a floating parameter: `1` is in the integer pool and has to be converted
+// where the checker's decision becomes a value, exactly as `f64 x = 1;` is.
+T bump<T>( T a ) where T : Copyable & Floating
+{
+    return a + 1;
+}
+
+T scale<T>( T a ) where T : Copyable & Floating
+{
+    return a * 2.5;
+}
+
+// The narrow end of what `Integral` admits. 100 fits every one of the eight integers, so this is
+// the same generic at a type that could not hold much more.
+T clamp_low<T>( T a ) where T : Copyable & Integral
+{
+    if( a < 100 )
+    {
+        return 100;
+    }
+
+    return a;
+}
+
+i32 main()
+{
+    if( abs<i32>( -7 ) != 7 )
+    {
+        return 1;
+    }
+
+    if( abs<i32>( 7 ) != 7 )
+    {
+        return 2;
+    }
+
+    f64 magnitude = abs<f64>( -2.5 );
+
+    if( magnitude < 2.4 )
+    {
+        return 3;
+    }
+
+    if( magnitude > 2.6 )
+    {
+        return 4;
+    }
+
+    // 1.5 + 1 == 2.5, which only holds if the literal came out of the integer pool and was
+    // converted rather than read as a float.
+    f64 bumped = bump<f64>( 1.5 );
+
+    if( bumped < 2.4 )
+    {
+        return 5;
+    }
+
+    if( bumped > 2.6 )
+    {
+        return 6;
+    }
+
+    f64 scaled = scale<f64>( 4.0 );
+
+    if( scaled < 9.9 )
+    {
+        return 7;
+    }
+
+    if( scaled > 10.1 )
+    {
+        return 8;
+    }
+
+    if( clamp_low<u8>( 3 ) != 100 )
+    {
+        return 9;
+    }
+
+    if( clamp_low<i64>( 500 ) != 500 )
+    {
+        return 10;
+    }
+
+    return 42;
+}

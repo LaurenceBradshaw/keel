@@ -1235,6 +1235,33 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
         REQUIRE( g.has( "kl__twice__i32" ) );
     }
 
+    SECTION( "arithmetic on a `T` is emitted at the substituted type" )
+    {
+        // The operands are recorded as `T`, and the type the operation happens *at* is derived from
+        // them - so deriving it without substituting first carries a `T` into the emitter, which
+        // has no C spelling for one. Only reachable since a literal could adopt `T`: before that,
+        // no generic body could do arithmetic at all.
+        Generated g( "T f<T>( T a ) where T : Copyable & Integral { return a + 1; }\n"
+                     "i32 main() { return f<i32>( 6 ); }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "int32_t kl__f__T__i32( int32_t" ) );
+    }
+
+    SECTION( "an integer literal adopting a floating `T` comes out of the integer pool" )
+    {
+        // `1` is stored as an integer whatever type it ends up with, and the conversion happens
+        // where the checker's decision becomes a value. Reading it as a float instead finds an
+        // unrelated entry, silently, because the index is usually in range.
+        Generated g( "T f<T>( T a ) where T : Copyable & Floating { return a + 1; }\n"
+                     "i32 main() { f64 x = f<f64>( 1.5 ); return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "double kl__f__T__f64( double" ) );
+    }
+
     SECTION( "a numeric bound carries `Copyable`, so the parameter travels by value" )
     {
         // Nothing but a builtin can satisfy `Numeric` today and every builtin copies, so a numeric

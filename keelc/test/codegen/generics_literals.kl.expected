@@ -1,0 +1,261 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+int32_t kl__main__( void );
+int32_t kl__abs__T__i32( int32_t );
+double kl__abs__T__f64( double );
+double kl__bump__T__f64( double );
+double kl__scale__T__f64( double );
+uint8_t kl__clamp_low__T__u8( uint8_t );
+int64_t kl__clamp_low__T__i64( int64_t );
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_t1;
+    int32_t kl_t2;
+    bool kl_t3;
+    int32_t kl_t4;
+    bool kl_t5;
+    double kl_magnitude_6;
+    double kl_t7;
+    double kl_t8;
+    bool kl_t9;
+    bool kl_t10;
+    double kl_bumped_11;
+    double kl_t12;
+    bool kl_t13;
+    bool kl_t14;
+    double kl_scaled_15;
+    double kl_t16;
+    bool kl_t17;
+    bool kl_t18;
+    uint8_t kl_t19;
+    bool kl_t20;
+    int64_t kl_t21;
+    bool kl_t22;
+#line 43 "codegen/generics_literals.kl"
+    kl_t1 = -7;
+    kl_t2 = kl__abs__T__i32( kl_t1 );
+    kl_t3 = kl_t2 != 7;
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 45 "codegen/generics_literals.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+    goto bb3;
+    bb3:
+#line 48 "codegen/generics_literals.kl"
+    kl_t4 = kl__abs__T__i32( 7 );
+    kl_t5 = kl_t4 != 7;
+    if ( kl_t5 ) goto bb4; else goto bb5;
+    bb4:
+#line 50 "codegen/generics_literals.kl"
+    kl_t0 = 2;
+    return kl_t0;
+    bb5:
+    goto bb6;
+    bb6:
+#line 53 "codegen/generics_literals.kl"
+    kl_t7 = -2.5;
+    kl_t8 = kl__abs__T__f64( kl_t7 );
+    kl_magnitude_6 = kl_t8;
+#line 55 "codegen/generics_literals.kl"
+    kl_t9 = kl_magnitude_6 < 2.4;
+    if ( kl_t9 ) goto bb7; else goto bb8;
+    bb7:
+#line 57 "codegen/generics_literals.kl"
+    kl_t0 = 3;
+    return kl_t0;
+    bb8:
+    goto bb9;
+    bb9:
+#line 60 "codegen/generics_literals.kl"
+    kl_t10 = kl_magnitude_6 > 2.6;
+    if ( kl_t10 ) goto bb10; else goto bb11;
+    bb10:
+#line 62 "codegen/generics_literals.kl"
+    kl_t0 = 4;
+    return kl_t0;
+    bb11:
+    goto bb12;
+    bb12:
+#line 67 "codegen/generics_literals.kl"
+    kl_t12 = kl__bump__T__f64( 1.5 );
+    kl_bumped_11 = kl_t12;
+#line 69 "codegen/generics_literals.kl"
+    kl_t13 = kl_bumped_11 < 2.4;
+    if ( kl_t13 ) goto bb13; else goto bb14;
+    bb13:
+#line 71 "codegen/generics_literals.kl"
+    kl_t0 = 5;
+    return kl_t0;
+    bb14:
+    goto bb15;
+    bb15:
+#line 74 "codegen/generics_literals.kl"
+    kl_t14 = kl_bumped_11 > 2.6;
+    if ( kl_t14 ) goto bb16; else goto bb17;
+    bb16:
+#line 76 "codegen/generics_literals.kl"
+    kl_t0 = 6;
+    return kl_t0;
+    bb17:
+    goto bb18;
+    bb18:
+#line 79 "codegen/generics_literals.kl"
+    kl_t16 = kl__scale__T__f64( 4.0 );
+    kl_scaled_15 = kl_t16;
+#line 81 "codegen/generics_literals.kl"
+    kl_t17 = kl_scaled_15 < 9.9;
+    if ( kl_t17 ) goto bb19; else goto bb20;
+    bb19:
+#line 83 "codegen/generics_literals.kl"
+    kl_t0 = 7;
+    return kl_t0;
+    bb20:
+    goto bb21;
+    bb21:
+#line 86 "codegen/generics_literals.kl"
+    kl_t18 = kl_scaled_15 > 10.1;
+    if ( kl_t18 ) goto bb22; else goto bb23;
+    bb22:
+#line 88 "codegen/generics_literals.kl"
+    kl_t0 = 8;
+    return kl_t0;
+    bb23:
+    goto bb24;
+    bb24:
+#line 91 "codegen/generics_literals.kl"
+    kl_t19 = kl__clamp_low__T__u8( 3 );
+    kl_t20 = kl_t19 != 100;
+    if ( kl_t20 ) goto bb25; else goto bb26;
+    bb25:
+#line 93 "codegen/generics_literals.kl"
+    kl_t0 = 9;
+    return kl_t0;
+    bb26:
+    goto bb27;
+    bb27:
+#line 96 "codegen/generics_literals.kl"
+    kl_t21 = kl__clamp_low__T__i64( 500 );
+    kl_t22 = kl_t21 != 500;
+    if ( kl_t22 ) goto bb28; else goto bb29;
+    bb28:
+#line 98 "codegen/generics_literals.kl"
+    kl_t0 = 10;
+    return kl_t0;
+    bb29:
+    goto bb30;
+    bb30:
+#line 101 "codegen/generics_literals.kl"
+    kl_t0 = 42;
+    return kl_t0;
+}
+
+int32_t kl__abs__T__i32( int32_t kl_a_1 )
+{
+    int32_t kl_t0;
+    bool kl_t2;
+    int32_t kl_t3;
+#line 9 "codegen/generics_literals.kl"
+    kl_t2 = kl_a_1 < 0;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 11 "codegen/generics_literals.kl"
+    kl_t3 = 0 - kl_a_1;
+    kl_t0 = kl_t3;
+    return kl_t0;
+    bb2:
+    goto bb3;
+    bb3:
+#line 14 "codegen/generics_literals.kl"
+    kl_t0 = kl_a_1;
+    return kl_t0;
+}
+
+double kl__abs__T__f64( double kl_a_1 )
+{
+    double kl_t0;
+    bool kl_t2;
+    double kl_t3;
+#line 9 "codegen/generics_literals.kl"
+    kl_t2 = kl_a_1 < 0.0;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 11 "codegen/generics_literals.kl"
+    kl_t3 = 0.0 - kl_a_1;
+    kl_t0 = kl_t3;
+    return kl_t0;
+    bb2:
+    goto bb3;
+    bb3:
+#line 14 "codegen/generics_literals.kl"
+    kl_t0 = kl_a_1;
+    return kl_t0;
+}
+
+double kl__bump__T__f64( double kl_a_1 )
+{
+    double kl_t0;
+    double kl_t2;
+#line 21 "codegen/generics_literals.kl"
+    kl_t2 = kl_a_1 + 1.0;
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+double kl__scale__T__f64( double kl_a_1 )
+{
+    double kl_t0;
+    double kl_t2;
+#line 26 "codegen/generics_literals.kl"
+    kl_t2 = kl_a_1 * 2.5;
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+uint8_t kl__clamp_low__T__u8( uint8_t kl_a_1 )
+{
+    uint8_t kl_t0;
+    bool kl_t2;
+#line 33 "codegen/generics_literals.kl"
+    kl_t2 = kl_a_1 < 100;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 35 "codegen/generics_literals.kl"
+    kl_t0 = 100;
+    return kl_t0;
+    bb2:
+    goto bb3;
+    bb3:
+#line 38 "codegen/generics_literals.kl"
+    kl_t0 = kl_a_1;
+    return kl_t0;
+}
+
+int64_t kl__clamp_low__T__i64( int64_t kl_a_1 )
+{
+    int64_t kl_t0;
+    bool kl_t2;
+#line 33 "codegen/generics_literals.kl"
+    kl_t2 = kl_a_1 < 100;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 35 "codegen/generics_literals.kl"
+    kl_t0 = 100;
+    return kl_t0;
+    bb2:
+    goto bb3;
+    bb3:
+#line 38 "codegen/generics_literals.kl"
+    kl_t0 = kl_a_1;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

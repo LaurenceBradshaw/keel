@@ -474,6 +474,13 @@ either new notation or a hard error; none silently redefines valid C++ — with 
 exception, marked `†` in §6.4, where sub-32-bit arithmetic keeps a narrower result
 type than C++'s integral promotion gives.
 
+**One entry is a deliberate divergence in the permissive direction, and is the
+only one**: D41 accepts a mixed-signedness comparison that C++ compiles with a
+warning and the wrong answer. It is listed here because the audit surface is about
+*differences*, not about severity, and a reader checking Keel against C++ needs to
+find it — but it removes a silent wrong answer rather than creating one, which is
+the opposite of what this list usually guards against.
+
 **That claim has been false twice, and both times in `switch`** — an arm running on
 into the next, and `break` inside a `switch`. Both are fixed (D38) and the claim
 holds again, but it is a property to *test* rather than assert: the way to check it
@@ -782,6 +789,7 @@ milestone is complete until its acceptance program is a passing golden test.
 | **M5** | `enum` (D30) payload-free first, then payloads (D7). `switch` with destructuring, `default`, stacked labels and exhaustiveness. Range labels (D34). | The `Shape`/`area` sample. Non-exhaustive `switch` is a compile error naming the missing variant. | Sum types, tagged variants |
 | **M5.5** | ~~Methods on `struct` and `class`~~ **done**. ~~`unsafe` blocks (D35)~~ **done**. ~~`extern` (D36)~~ **done**. ~~`alloc<T>`/`free` and `kl_rt` (D37)~~ **done**. | A linked list whose nodes are allocated one at a time, walked, and freed — valgrind-clean. **Amended**: this was `Buffer` with `push`, which needs the many-item pointer `[*]T` that D27 leaves out of v0, so it was never reachable at M5.5. Option (b) keeps the question the acceptance was asked to answer — can the language express a heap data structure and release it — and defers only the growable-array half to M7. | Whether the language can express a real data structure |
 | **M6** | Generics (D39's spelling, D11's checking), monomorphisation worklist, name mangling with type args. **Plus two KIR passes carried from M5.5**: empty-block threading, and constant-branch folding with the `while( true )` → `for( ; ; )` warning that goes with it. | `max<i32>` and `max<f64>` both work; a generic `Box<T>` with a destructor drops correctly. | Instantiation, mangling |
+| **M6.5** | The debts that are neither M6's feature nor M7's: D41's mixed-signedness comparison, `cast`/`wrap` on a type parameter, the mangling rework (length-prefixing, the `ref`/pointer collision, `kl__id__T__i32`), and constant checking inside a generic body. | `u64` and `i64` compare correctly at every boundary value; `cast<i32>( a )` works for an `Integral` `T`; two generics whose mangled names collide today do not. | Paying debts before they compound |
 | **M7** | Modules (`import`), multi-file compilation, then begin `Vector` and `String` **in Keel**. | A two-module program. Then a `Vector<i32>` that grows and frees. | **Whether the design actually works** |
 
 **M3 is where this stops being a toy** — it is the first thing C cannot do for
@@ -799,6 +807,16 @@ milestone to answer them in. Both are deferred deliberately from here: **every
 question about either is answered when M5.5 starts, not before.** What is settled
 is only the order — after M5's payload-carrying `enum`, before M6's generics,
 because a generic container is exactly the thing that needs both.
+
+**M6.5 is a named place for debts, not a feature.** Three of the four items in it
+were found while building M6 and belong to none of it: D41 is a rule about
+concrete numeric types that generics only *surfaced*, the mangling rework was owed
+before generics existed and generics made it uglier, and constant checking inside
+a generic body is a hole that literal adoption opens rather than one it causes.
+Each is small, each is the kind of thing that gets carried indefinitely because no
+milestone owns it, and carrying them into M7 means paying them while also finding
+out whether the language works. The milestone exists so they have somewhere to be
+finished rather than somewhere to be remembered.
 
 Write no standard library before M6. Write no `Shared<T>` before M7.
 
@@ -984,6 +1002,7 @@ none of them can block work indefinitely.
 | **Can a numeric literal adopt a type parameter's type, and where is its range checked?** `T abs<T>( T a ) where T : Numeric { if( a < 0 ) { return 0 - a; } return a; }` is the first generic anyone writes that needs one, and it does not compile: a literal takes its type from context (D26), and `T` is not a context `check_literal` knows. **Leaning: yes, and the rule is asymmetric by literal kind.** An integer literal may adopt a `Numeric` `T`, because every numeric type represents an integer — `f64 x = 1;` already works concretely and the generic case should not differ. A *float* literal needs `Floating` specifically, because a `Numeric` `T` may turn out to be an integer and `1.5` is not one. A `bool` literal never adopts, and neither does `null`: `Equatable` admits pointers *and* enums, so it cannot tell which. A `char` literal follows the integer rule under `Integral`. **The range check is the real question**, because it is the one thing about a literal that cannot be answered from the bound alone: `return a + 300;` is well-typed for every `Integral` `T` and out of range for `u8`. **Leaning: check it at the definition against every type the bound admits, and require an explicit `wrap<T>`/`cast<T>` past that.** For `Integral` that intersection is `0..127`, which is not as tight as it sounds — the literals that appear in generic numeric code are `0`, `1` and `2`. **The route not taken, and why it is worth writing down**: the instantiation set is *closed* — Keel has no separate compilation, so by monomorphisation every `T` a generic is used at is known, and the range could be checked against that list instead. It is a real mechanism and it is more permissive. It was rejected because **adding a call site elsewhere would then break a function that compiled yesterday**, which is precisely the failure mode D11 exists to abolish; and the signature would no longer be the contract, since nothing in `where T : Numeric` warns a reader that `300` is in the body. Paying that for a case whose realistic literals all fit is a bad trade. The mechanism stays available for an obligation that has *no* definition-time answer and no escape hatch; the literal has both. **What the restriction really exposes** is that `Integral` is too coarse: an author who writes `-1` means "signed", and there is no bound that says so. Watch for that pressure rather than pre-empting it — a signedness or width bound is a real extension to D40's fixed set, and one example does not justify it. **What does not work is letting the literal fall back to its default type**: `a + 1` would then be `T + i32`, which the definition would have to accept and which no instantiation does, since §6.4 refuses mixed signedness. That is D11 inverted — the definition passing what an expansion rejects. | M6, with `cast`/`wrap` on a parameter |
 | **Should a `T` be comparable against a concrete numeric type?** `i8 < i32` and `i8 + i32` are both legal — §6.4 mixes *widths* freely and refuses mixed *signedness* — so the parameter rule is stricter than the concrete one it sits above: `a < x` with `T : Numeric` and `x : i32` is refused for needing both operands to be the same type. **Leaning: keep it refused, and say so rather than calling it principled.** The blocker is signedness, not width: `Numeric` admits `u64`, `common( u64, i32 )` does not exist, so no answer holds for every admissible `T`. The closed-world check above would answer it per instantiation, and is a *worse* trade here than for a literal — an operand mismatch is a type error, so deferring it means the signature stops telling you whether the body compiles, which is the whole of D11. **Most of the pressure disappears with literal adoption**: the case that occurs in practice is `a < 0`, where `0` is a literal and adopts `T`. What remains is `a < x` against a typed variable, where `cast<T>( x )` is explicit and correct. | M6, after literal adoption — measure what is left |
 | **Is there a `Boolean` bound?** No, and the reason generalises: the bound would admit exactly one type. `Floating` admits two, `Integral` eight, `Equatable` every number, `bool`, every `enum` and every pointer — each names a *set* a body can be written against. A bound whose admissible set is a singleton is that type spelled longer, and the parameter should be `bool`. It stays a singleton because Keel has no conversion operators and D33's set is closed, so nothing can ever become bool-like; `&&` in particular short-circuits, which is the one operator overloading has no sound meaning for. | Answered; revisit only if D33 ever admits a conversion operator |
+| D41 | **Comparison is not arithmetic, and only arithmetic needs a common type.** `<`, `>`, `<=`, `>=`, `==` and `!=` accept any two numeric operands, mixed signedness included: `u64 a; i64 b; a < b` is legal and gives the mathematically correct answer. Every other binary operator keeps D5's rule — both operands widen to the smallest type that losslessly holds both, and no such type means a hard error. The emitter is responsible for the answer being right, not the C compiler: where no wider type exists to compare in, it emits a sign guard rather than a bare C comparison. | **The result type is the whole difference.** `a + b` must land somewhere, and for `u64` and `i64` there is nowhere — no integer type holds both ranges, so D5 refuses it and is right to. `a < b` lands in `bool`, which holds every answer, and the mathematical question "is this value less than that one" always *has* an answer regardless of how either side is stored. Refusing it was D5 applied one operator too widely: the rule protects a *result*, and a comparison has no result to protect. **C is the cautionary tale, not the precedent.** `-1 < 1u` is *false* in C, because the usual arithmetic conversions force both sides to a common type before comparing and `-1` becomes `UINT_MAX`. That is the single most-cited integer footgun in the language, `-Wsign-compare` exists for it alone, and it is caused precisely by insisting on a common type where none is needed. Keel does not inherit it because Keel does not do the conversion: the comparison is evaluated in a domain wide enough for both operands, or by cases when no such domain exists. **§5.1 is satisfied by rejection-turned-acceptance in the safe direction.** Keel previously refused `u32 < i32`; it now accepts it and answers correctly, so no program changes meaning — there were no such programs. Against C++ the divergence is real and is an *improvement* that must be listed in §6.3: C++ compiles `a < b` for mixed signedness with a warning and the wrong answer, Keel compiles it with the right one. This is the one place the project deliberately diverges by being *more* permissive than the audit surface usually allows, and it earns it by removing a silent wrong answer rather than adding one. **The cost is in the emitter and is small and bounded.** Widths up to 32 bits need nothing — both sides widen into `i64` and C compares correctly. Only 64-bit mixed signedness has no wider domain, and it is one guard: the signed side is negative, in which case the ordering is already decided, or it is not, in which case the unsigned comparison is exact. Two shapes, both branch-free if written as such, and both testable against every boundary value. **Float against integer is unaffected** and already worked: `f64 < i32` widens into `f64`, which is D5 doing its job with a common type that does exist. **What this does not open**: the mixed operands still have to be *numeric*. A pointer and an integer do not compare, an enum and a number do not compare, and `Comparable` as a bound is unchanged — this is about which pairs of concrete numeric types an operator accepts, not about what kinds of thing are ordered at all. |
 | ~~**What is the bound vocabulary, and is it structural or nominal?**~~ **Answered — D40.** Nominal, a fixed set, with implication; `Copyable` rather than `struct`; and the mechanism is a bitset consulted in front of the operator table. The open remainder is user-defined bounds, which arrive with traits and have no customer yet — the test being whether M7's `Vector` and `String` need one, and they appear not to. | Answered; user-defined bounds wait for traits |
 | **Does Keel have function overloading?** **This is not currently a decision, and that is the finding.** No Law refuses it, no D-entry refuses it, and it is absent from §6.6's "not in v0" list; it does not exist only because the resolver reports a second declaration of a name as a redeclaration. Two places in the codebase already assume it is coming — the mangler encodes parameter types with the comment *"parameter types are what make overloads distinct, so they are part of the name even in v0 where no overloads exist"*, and §15 carries a note headed *"noted for whenever overloading arrives"* — and **D33 contradicts the implementation outright**, saying constructors *"do have arg types because they are overloadable"* while `C( i32 )` and `C( f64 )` together report *"`C` already has a constructor"*. An accident that three places already plan around should be settled deliberately. **The cost is far lower here than the C++ experience suggests, and the reason is D5.** C++'s overload resolution is enormous because of what surrounds it: integral promotions, standard conversion sequences, user-defined conversions, and a ranking system to order them all. Keel has none — an argument either has the parameter's type or it does not — so resolution collapses to "which candidate matches exactly", with no ranking table. There is no ADL to add, and D33 keeps operators out of it entirely by making them methods with one candidate. **D31 makes the call site *more* informative than C++'s**: `f( x )`, `f( ref x )` and `f( move x )` are distinguished by what the author wrote rather than by reference-binding rules, so the marker participates in selection for free. **Three wrinkles, and only the last is hard.** *Literals are circular*: D26 and L5 give a literal its type from context, and under overloading the context is the overload set, so `f( 1 )` against `f( i32 )` and `f( f64 )` has nothing to appeal to — C++ answers by ranking, which Keel deleted. The plausible rule is that a literal prefers the family it is written in, integer or float, and that is a rule to state rather than derive. *`ref i32` and `i32*` mangle identically*, both to `i32p` — §15 already records this as harmless only while a second `f` is caught by name, and it stops being harmless here. *Generics are where it genuinely gets hard*: overloading plus templates is where C++ reaches partial ordering, and Keel needs a rule for a generic and a non-generic both matching — probably that the non-generic wins, with two generics being ambiguous. **The customer that forces it is constructors.** A class that cannot have two is a real limitation on no deferral list, and it is the narrowest slice to land first; `print( i32 )` and `print( f64 )` want it again at M7. **Decide it with M6**, because generics are the only part that is hard and deciding before they exist would be guessing. | M6, with generics — and D33's constructor clause is a live contradiction until then |
 | **Are interfaces/traits the only form of polymorphism, or is there virtual dispatch?** They answer different questions and only one is forced at M6. **Static** — "what operations does this type support?" — is resolved at compile time, monomorphised, no indirection, no metadata; **dynamic** — "a collection of different types behind one interface" — needs a vtable pointer per object and an indirect call. **M6 forces the static half whether or not the dynamic one is wanted**, because D11's definition-checking *is* a bound system: the body is checked once against the bound, so the bound has to name the operations. D31 adds a concrete requirement to that vocabulary — a generic that mutates a bare parameter is legal only when `T` is a `struct`, so something like `is_trivially_copyable` has to sit beside `is_numeric`, or the error lands at the instantiation site, which is the C++ behaviour D11 exists to avoid. **Leaning: Rust's shape** — one declaration, static by default, dynamic opt-in and visibly spelled in the type. The prior art splits: Rust does both from one trait (`T: Draw` static, `&dyn Draw` dynamic); Zig has comptime duck typing and no built-in dynamic dispatch at all; Go's interfaces are *only* dynamic and implicit; C++ keeps concepts and `virtual` entirely unrelated. Keel already leans static everywhere else — §4 refuses RTTI, D33 gives operators exactly one candidate — so the dynamic half should wait for a real customer rather than be designed alongside the static one. | M6 for the static half, which generics force; dynamic dispatch after M7, with real code |
@@ -2746,6 +2765,60 @@ clause says. The rule when it lands is not "has a bound" but "legal for every ty
 bound admits": `Numeric` is *not* enough for `cast<i32>`, because `T` may be `f64` and
 float-to-int is refused for having no one obvious rounding — `Integral` is. Owed before
 M6 closes.
+
+**Slice 1e: a literal can be a `T`.** D26's adoption meeting a bound. The question a
+bound answers is not "does the value fit `T`" — there is no such type yet — but "does
+it fit *every* type `T` may turn out to be", and the admissible set is built by
+filtering the ten numeric types through `satisfies`, so a seventh bound needs nothing
+added. An integer literal adopts any `Numeric` parameter, including a floating one,
+because every numeric type represents an integer and `f64 x = 1;` already works. A
+fractional literal needs `Floating` specifically, since a `Numeric` `T` may be an
+integer. `bool` and `null` never adopt.
+
+**The range window is the price of D11, and it is worth paying.** `Integral` admits all
+eight integers, so the intersection is `0..127`: `-1` is refused because `u8` is
+admissible, `128` because `i8` is. The permissive alternative was live — the
+instantiation set is closed, so the value could be checked against every `T` the
+program actually uses — and it was rejected because **adding a call site elsewhere would
+then break a function that compiled yesterday**, which is the failure mode D11 exists to
+abolish. The signature has to stay the contract. The realistic literals in generic
+numeric code are `0`, `1` and `2`, so the window costs almost nothing; what it does
+expose is that `Integral` is too coarse, since an author who writes `-1` means *signed*
+and no bound says so. Watch for that pressure rather than pre-empting it.
+
+**Which pool holds the value is the literal's question, never the type's.** Inside a
+generic a literal has adopted `T`, which is neither an integer nor a float, so the
+recorded type cannot say which of the two literal pools the value is in. Dispatching on
+the candidate type instead reads an unrelated entry out of the wrong vector — *silently*,
+because the index is usually in range. The same mistake appeared three times in one
+afternoon: measuring a range, folding a divisor, and the pre-existing note at the
+emitter's own integer-literal-in-float-context branch. **The rule is one sentence** — ask
+the node kind, not the type — and it is worth stating because nothing in the types makes
+it obvious.
+
+**A third `type_of` that did not substitute.** `operation_type` derives the type an
+operation happens *at* from its operands, and read them raw. With both operands recorded
+as `T` there is no arithmetic result, so it fell back to the left operand and carried an
+unsubstituted `T` into the emitter, which has no C spelling for one. This is now the
+**fourth** instance of reading a callee's or a node's type without the instance's
+bindings; two more were found beside it, in compound assignment and increment. The fix
+each time is the same one line, which is the argument for there being no second spelling
+of `type_of` at all.
+
+**What a literal reopened.** `check_constant` returned early for any type that is neither
+integer nor float, so with `T` in that position **every constant check was skipped inside
+a generic body** — division by zero, remainder by zero, shift width. Unreachable while a
+literal could not be a `T`, and live the moment it could. The split is between the checks
+that need to know `T` and the checks that do not: a zero divisor is answerable without
+it, and a shift count is answerable against the *narrowest* width the bound admits —
+which is the literal rule again, applied to a width instead of a value. Only the folded
+value-range check genuinely cannot be answered, and it is unreachable anyway, because a
+constant expression of two literals settles on the default type rather than on `T`.
+
+**One route in was missed.** The operator pre-check returned through `record` rather than
+`record_constant`, so even after the above, the parameter path went around the checks
+entirely. The concrete tail four lines below had always used `record_constant`; the two
+paths existing at all is what let them drift.
 
 ### Debts to pay along the way
 

@@ -63,11 +63,6 @@ enum class Bound : u8
 
 using Bound_set = u8;
 
-constexpr Bound_set operator&( Bound_set bits, Bound bound )
-{
-    return bits & static_cast<Bound_set>( bound );
-}
-
 constexpr Bound_set operator|=( Bound_set& bits, Bound bound )
 {
     bits |= static_cast<Bound_set>( bound );
@@ -664,10 +659,23 @@ private:
     // `Integral` promises everything `Numeric` does, and so on. Expanded at the `where` clause rather
     // than walked at each query - the closure is small and fixed, and computing it once means the
     // operator check below is one test.
-    Bound_set closure( Bound_set direct );
-    bool      has_bound( Type_id type, Bound bound ) const; // Parameter -> its set; else false
-    bool      satisfies( Type_id type, Bound bound ) const; // the same question, of a concrete type
-    void      check_bounds( Node_id parameter, Node_id written, Type_id argument, std::string_view callee );
+    Bound_set            closure( Bound_set direct );
+    bool                 bound_set_contains( Bound_set bounds, Bound bound ) const;
+    bool                 has_bound( Type_id type, Bound bound ) const; // Parameter -> its set; else false
+    bool                 satisfies( Type_id type, Bound bound ) const; // the same question, of a concrete type
+    void                 check_bounds( Node_id parameter, Node_id written, Type_id argument, std::string_view callee );
+    std::vector<Type_id> admissible_numeric_types( Bound_set bounds ) const;
+
+    // The bound set recorded for a parameter, or an empty set when it carries no `where` clause.
+    Bound_set bounds_for( Type_id parameter ) const;
+
+    // The narrowest integer a parameter may turn out to be, for the checks that need a width. Zero
+    // when no integer is admissible at all.
+    u8 narrowest_admissible_width( Type_id parameter ) const;
+    // The first admissible type the literal will not fit, or an invalid id when every one holds it.
+    // Returns the type rather than a bool so the diagnostic can name what is doing the rejecting -
+    // `i8` is the answer an author can act on, `T` is not.
+    Type_id type_the_literal_overflows( Node_id literal, bool negative, Bound_set bounds ) const;
 
     // Walks an expression only for the errors inside it, in a context that has already failed.
     void absorb( Node_id id );
@@ -2999,6 +3007,90 @@ Type_id Checker::check_literal( Node_id id, Type_id expected )
         negative = ast_.kind( literal ) == Node_kind::Int_literal;
     }
 
+    // D26 with a type parameter as the context. What a bound admits is a *set* of types, so the
+    // question is not "does the value fit `T`" - there is no such type yet - but "does it fit every
+    // type `T` may turn out to be". Answering it here keeps D11 whole: nothing is deferred to an
+    // instantiation, and no later call site can break a body that compiled.
+    if( table_.is_parameter( expected ) )
+    {
+        // An unbounded parameter has no entry at all rather than an empty one, which bounds_for
+        // answers as the empty set: it promises nothing, and fails the test below.
+        const Bound_set bounds = bounds_for( expected );
+
+        const bool floating_literal = ast_.kind( literal ) == Node_kind::Float_literal;
+
+        // Neither carries a Literal_id - a bool's value is in aux and `nullptr` records nothing - so
+        // the range check below reads an invalid id, finds nothing to reject, and would let them
+        // adopt `T`. They are refused on kind because no bound admits either: nothing in the set
+        // makes a `T` a bool, and `Equatable` cannot tell a pointer from an `enum`.
+        if( ast_.kind( literal ) == Node_kind::Bool_literal || ast_.kind( literal ) == Node_kind::Null_literal )
+        {
+            error_at(
+                ast_.span( id ),
+                fmt::format(
+                    "{} cannot be a `{}`",
+                    ast_.kind( literal ) == Node_kind::Bool_literal ? "a `bool` literal" : "a null literal",
+                    table_.name( expected )
+                ),
+                "no bound promises that, so the parameter has to be written out as a type"
+            );
+
+            return expected;
+        }
+
+        // `Numeric` is the promise that says `T` is a number, and it is what licenses treating the
+        // admissible set as numeric at all - every numeric type satisfies `Equatable` too, but so
+        // do `bool`, every `enum` and every pointer, and a literal is none of those.
+        if( !bound_set_contains( bounds, Bound::Numeric ) )
+        {
+            error_at(
+                ast_.span( id ),
+                fmt::format( "a literal cannot be a `{}`", table_.name( expected ) ),
+                fmt::format( "write `where {} : Numeric` to promise it is a number", table_.name( expected ) )
+            );
+
+            return expected;
+        }
+
+        // An integer literal needs nothing more: every numeric type represents one, which is why
+        // `f64 x = 1;` needs no decimal point. A *float* literal does, because a `Numeric` `T` may
+        // turn out to be an integer and a fractional value is not one.
+        if( floating_literal && !bound_set_contains( bounds, Bound::Floating ) )
+        {
+            error_at(
+                ast_.span( id ),
+                fmt::format( "a fractional literal cannot be a `{}`", table_.name( expected ) ),
+                fmt::format(
+                    "`{}` may be an integer; write `where {} : Floating`", table_.name( expected ), table_.name( expected )
+                )
+            );
+
+            return expected;
+        }
+
+        if( const Type_id rejects = type_the_literal_overflows( literal, negative, bounds ); rejects.is_valid() )
+        {
+            error_at(
+                ast_.span( id ),
+                fmt::format(
+                    "`{}{}` does not fit every type `{}` may be",
+                    negative ? "-" : "",
+                    floating_literal ? fmt::format( "{}", literals_.floating( Literal_id { ast_.aux( literal ) } ) )
+                                     : fmt::format( "{}", literals_.integer( Literal_id { ast_.aux( literal ) } ) ),
+                    table_.name( expected )
+                ),
+                fmt::format( "the bounds admit `{}`, which cannot hold it", table_.name( rejects ) )
+            );
+
+            return expected;
+        }
+
+        // The adoption, which the switch below would otherwise refuse: its arms ask whether
+        // `expected` is an integer or a float, and a parameter is neither.
+        record( literal, expected );
+        return record( id, expected );
+    }
+
     switch( ast_.kind( literal ) )
     {
     case Node_kind::Bool_literal:
@@ -3665,7 +3757,11 @@ Type_id Checker::infer_binary( Node_id id )
         }
 
         // A comparison answers `bool` whatever `T` turns out to be; arithmetic answers `T`.
-        return record( id, *bound == Bound::Equatable || *bound == Bound::Comparable ? bool_type : lhs_type );
+        //
+        // record_constant and not record, exactly as the concrete tail below does: a division by
+        // zero and an out-of-range shift are answerable without knowing `T`, and routing around the
+        // check is how a generic body would be the one place they are not caught.
+        return record_constant( id, *bound == Bound::Equatable || *bound == Bound::Comparable ? bool_type : lhs_type );
     }
 
     // Pointer and enum equality, which the rule table cannot express - its operand classes are all
@@ -5095,8 +5191,9 @@ bool Checker::check_constant( Node_id id, Type_id type )
 {
     const bool integer  = table_.is_integer( type );
     const bool floating = table_.is_float( type );
+    const bool generic  = table_.is_parameter( type );
 
-    if( !integer && !floating )
+    if( !integer && !floating && !generic )
     {
         return true; // bool, pointers, structs: nothing here can overflow
     }
@@ -5112,8 +5209,14 @@ bool Checker::check_constant( Node_id id, Type_id type )
         {
             const Folded divisor = fold_integer( right );
 
-            const bool zero = integer ? ( divisor.constant && !divisor.overflowed && divisor.value.magnitude == 0 )
-                                      : ( fold_float( right ).value_or( 1.0 ) == 0.0 );
+            // Which pool the divisor lives in is the *node's* question, not the type's: inside a
+            // generic it has adopted `T`, which is neither an integer nor a float, and asking
+            // Literals for a float it never stored reads an unrelated value out of the wrong
+            // vector. A concrete type answers it directly; a parameter is told by the literal.
+            const bool by_float = floating || ( generic && ast_.kind( right ) == Node_kind::Float_literal );
+
+            const bool zero = by_float ? ( fold_float( right ).value_or( 1.0 ) == 0.0 )
+                                       : ( divisor.constant && !divisor.overflowed && divisor.value.magnitude == 0 );
 
             if( zero )
             {
@@ -5125,21 +5228,42 @@ bool Checker::check_constant( Node_id id, Type_id type )
         if( op == Token_kind::Less_less || op == Token_kind::Greater_greater )
         {
             const Folded count = fold_integer( right );
-            const u8     width = table_.get( type ).width;
 
-            if( count.constant && ( count.overflowed || count.value.negative || count.value.magnitude >= width ) )
+            // A parameter has no width of its own, so the count must be in range for the narrowest
+            // integer it may turn out to be - the same rule a literal's value is held to, and for
+            // the same reason: it is answerable here, so D11 does not have to give anything up.
+            const u8 width = generic ? narrowest_admissible_width( type ) : table_.get( type ).width;
+
+            if( width != 0 && count.constant && ( count.overflowed || count.value.negative || count.value.magnitude >= width ) )
             {
                 error_at(
                     ast_.span( right ),
                     "the shift count is out of range",
-                    fmt::format(
-                        "`{}` is {} bits wide, so the count must be between 0 and {}", table_.name( type ), width, width - 1
-                    )
+                    generic ? fmt::format(
+                                  "`{}` may be {} bits wide, so the count must be between 0 and {}",
+                                  table_.name( type ),
+                                  width,
+                                  width - 1
+                              )
+                            : fmt::format(
+                                  "`{}` is {} bits wide, so the count must be between 0 and {}",
+                                  table_.name( type ),
+                                  width,
+                                  width - 1
+                              )
                 );
 
                 return false;
             }
         }
+    }
+
+    // Everything below measures a folded *value* against the type, which a parameter does not fix.
+    // Nothing is lost: a constant expression of two literals settles on the default type rather
+    // than on `T` - only a lone literal is ever typed `T`, and check_literal ranged it already.
+    if( generic )
+    {
+        return true;
     }
 
     if( floating )
@@ -5201,12 +5325,12 @@ Type_id Checker::record_constant( Node_id id, Type_id type )
 
 Bound_set Checker::closure( Bound_set direct )
 {
-    if( direct & Bound::Integral || direct & Bound::Floating )
+    if( bound_set_contains( direct, Bound::Integral ) || bound_set_contains( direct, Bound::Floating ) )
     {
         direct |= Bound::Numeric;
     }
 
-    if( direct & Bound::Numeric )
+    if( bound_set_contains( direct, Bound::Numeric ) )
     {
         direct |= Bound::Comparable;
 
@@ -5223,12 +5347,17 @@ Bound_set Checker::closure( Bound_set direct )
         direct |= Bound::Copyable;
     }
 
-    if( direct & Bound::Comparable )
+    if( bound_set_contains( direct, Bound::Comparable ) )
     {
         direct |= Bound::Equatable;
     }
 
     return direct;
+}
+
+bool Checker::bound_set_contains( Bound_set bounds, Bound bound ) const
+{
+    return ( bounds & static_cast<Bound_set>( bound ) ) != 0;
 }
 
 // A bound is a promise about a *parameter*, so only a parameter can carry one - a concrete type
@@ -5239,23 +5368,10 @@ Bound_set Checker::closure( Bound_set direct )
 // set is stored under for the same reason.
 bool Checker::has_bound( Type_id type, Bound bound ) const
 {
-    if( !type.is_valid() || !table_.is_parameter( type ) )
-    {
-        return false;
-    }
-
-    const Node_id declaration = table_.get( type ).declaration;
-
-    if( !declaration.is_valid() )
-    {
-        return false;
-    }
-
-    const auto found = bounds_.find( declaration.v );
-
-    // No `where` clause at all: an unbounded parameter promises nothing, which is the correct
-    // reading and is why `id` is close to the only generic writable without one.
-    return found != bounds_.end() && ( found->second & bound ) != 0;
+    // An unbounded parameter, and anything that is not a parameter at all, come back as the empty
+    // set - which promises nothing, and is why `id` is close to the only generic writable without a
+    // `where` clause. A concrete type is asked with satisfies() instead.
+    return bound_set_contains( bounds_for( type ), bound );
 }
 
 // The other half of the same question. has_bound asks what a parameter *promises*; this asks what a
@@ -5317,7 +5433,7 @@ void Checker::check_bounds( Node_id parameter, Node_id written, Type_id argument
 
     for( const Named_bound& known : k_bounds )
     {
-        if( ( found->second & known.bound ) != 0 && !satisfies( argument, known.bound ) )
+        if( bound_set_contains( found->second, known.bound ) && !satisfies( argument, known.bound ) )
         {
             failing |= static_cast<Bound_set>( known.bound );
         }
@@ -5329,7 +5445,7 @@ void Checker::check_bounds( Node_id parameter, Node_id written, Type_id argument
 
     for( const Named_bound& known : k_bounds )
     {
-        if( ( failing & known.bound ) != 0 )
+        if( bound_set_contains( failing, known.bound ) )
         {
             implied |= closure( static_cast<Bound_set>( known.bound ) ) & ~static_cast<Bound_set>( known.bound );
         }
@@ -5337,7 +5453,7 @@ void Checker::check_bounds( Node_id parameter, Node_id written, Type_id argument
 
     for( const Named_bound& known : k_bounds )
     {
-        if( ( failing & ~implied & known.bound ) == 0 )
+        if( !bound_set_contains( failing & ~implied, known.bound ) )
         {
             continue;
         }
@@ -5366,6 +5482,129 @@ void Checker::check_bounds( Node_id parameter, Node_id written, Type_id argument
                       : std::string( bound_requirement( known.bound ) )
         );
     }
+}
+
+Bound_set Checker::bounds_for( Type_id parameter ) const
+{
+    if( !table_.is_parameter( parameter ) )
+    {
+        return 0;
+    }
+
+    const Node_id declaration = table_.get( parameter ).declaration;
+    const auto    found       = declaration.is_valid() ? bounds_.find( declaration.v ) : bounds_.end();
+
+    // An unbounded parameter has no entry rather than an empty one, and promises nothing.
+    return found == bounds_.end() ? Bound_set { 0 } : found->second;
+}
+
+// The same question a literal's range asks, for a width rather than a value: a shift count has to
+// be in range for every type `T` may be, and the narrowest admissible integer is what decides it.
+u8 Checker::narrowest_admissible_width( Type_id parameter ) const
+{
+    u8 narrowest = 0;
+
+    for( const Type_id candidate : admissible_numeric_types( bounds_for( parameter ) ) )
+    {
+        if( !table_.is_integer( candidate ) )
+        {
+            continue;
+        }
+
+        const u8 width = table_.get( candidate ).width;
+
+        if( narrowest == 0 || width < narrowest )
+        {
+            narrowest = width;
+        }
+    }
+
+    return narrowest;
+}
+
+std::vector<Type_id> Checker::admissible_numeric_types( Bound_set bounds ) const
+{
+    // Returns every concrete numeric type that satisfies all the bounds in the set.
+    std::vector<Type_id> result;
+
+    // Integers: 8/16/32/64 x signed/unsigned.
+    // Floats: 32/64.
+    const Type_id types[] = {
+        table_.integer( 8, true ),
+        table_.integer( 8, false ),
+        table_.integer( 16, true ),
+        table_.integer( 16, false ),
+        table_.integer( 32, true ),
+        table_.integer( 32, false ),
+        table_.integer( 64, true ),
+        table_.integer( 64, false ),
+        table_.floating( 32 ),
+        table_.floating( 64 ),
+    };
+    for( const Type_id type : types )
+    {
+        bool satisfies_all = true;
+        for( const Named_bound& known : k_bounds )
+        {
+            if( bound_set_contains( bounds, known.bound ) && !satisfies( type, known.bound ) )
+            {
+                satisfies_all = false;
+                break;
+            }
+        }
+        if( satisfies_all )
+        {
+            result.push_back( type );
+        }
+    }
+
+    return result;
+}
+
+Type_id Checker::type_the_literal_overflows( Node_id literal, bool negative, Bound_set bounds ) const
+{
+    const Literal_id value { ast_.aux( literal ) };
+
+    // A literal the lexer could not scan has no value recorded. It reported there.
+    if( !value.is_valid() )
+    {
+        return Type_id {};
+    }
+
+    // The *literal's* kind decides which pool the value lives in, never the candidate's. An integer
+    // literal measured against `f64` is still an integer in the integer pool, and asking Literals
+    // for a float it never stored reads past the end of the wrong vector.
+    const bool floating_literal = ast_.kind( literal ) == Node_kind::Float_literal;
+
+    for( const Type_id candidate : admissible_numeric_types( bounds ) )
+    {
+        if( floating_literal )
+        {
+            // A float literal only reaches here under `Floating`, whose admissible set is floats.
+            assert( table_.is_float( candidate ) && "a fractional literal was measured against an integer" );
+
+            if( !table_.fits_float( literals_.floating( value ), candidate ) )
+            {
+                return candidate;
+            }
+
+            continue;
+        }
+
+        const u64 magnitude = literals_.integer( value );
+
+        const bool holds =
+            table_.is_float( candidate )
+                ? table_.fits_float( negative ? -static_cast<f64>( magnitude ) : static_cast<f64>( magnitude ), candidate )
+                : table_.fits( magnitude, negative, candidate );
+
+        if( !holds )
+        {
+            return candidate;
+        }
+    }
+
+    return Type_id {};
 }
 
 // A literal is skipped: there is nothing inside one to be wrong, and its only complaint is that
@@ -11896,6 +12135,185 @@ TEST_CASE( "type_checker_checks_operators_on_a_type_parameter", "[sema][generic]
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "no operator `&&` for `T` and `T`" ) != std::string::npos );
         REQUIRE( p.rendered().find( "both operands must be `bool`" ) != std::string::npos );
+    }
+}
+
+// D26 meeting a type parameter. A literal has a value rather than a type, and context supplies one -
+// but a bound supplies a *set* of types, so the question becomes whether the value fits every type
+// `T` may turn out to be. Answering it here rather than at an instantiation is what keeps D11 whole:
+// no later call site can break a body that already compiled.
+TEST_CASE( "type_checker_adopts_a_literal_into_a_type_parameter", "[sema][generic][bound]" )
+{
+    const auto body = []( std::string_view clause, std::string_view expression )
+    { return fmt::format( "T f<T>( T a ) where T : {} {{ return {}; }}\ni32 main() {{ return 0; }}", clause, expression ); };
+
+    SECTION( "an integer literal adopts any numeric parameter" )
+    {
+        // Including a floating one: every numeric type represents an integer, which is why
+        // `f64 x = 1;` needs no decimal point and why the generic case should not differ.
+        const Typed numeric( body( "Numeric", "a + 1" ) );
+        const Typed integral( body( "Integral", "a + 1" ) );
+        const Typed floating( body( "Floating", "a + 1" ) );
+
+        INFO( numeric.rendered() << integral.rendered() << floating.rendered() );
+        REQUIRE( numeric.clean() );
+        REQUIRE( integral.clean() );
+        REQUIRE( floating.clean() );
+    }
+
+    SECTION( "a fractional literal needs `Floating` specifically" )
+    {
+        // `Numeric` is not enough: the parameter may turn out to be an integer, and `1.5` is not
+        // one. The asymmetry with the case above is the whole rule.
+        const Typed floating( body( "Floating", "a + 1.5" ) );
+        const Typed numeric( body( "Numeric", "a + 1.5" ) );
+        const Typed integral( body( "Integral", "a + 1.5" ) );
+
+        INFO( floating.rendered() << numeric.rendered() << integral.rendered() );
+        REQUIRE( floating.clean() );
+        REQUIRE( numeric.errors() == 1 );
+        REQUIRE( numeric.rendered().find( "a fractional literal cannot be a `T`" ) != std::string::npos );
+        REQUIRE( integral.errors() == 1 );
+    }
+
+    SECTION( "a parameter with no numeric bound takes no literal at all" )
+    {
+        // `Equatable` is the trap: every numeric type satisfies it, but so do `bool`, every `enum`
+        // and every pointer, and a literal is none of those. `Numeric` is the promise that says the
+        // parameter is a number, and it is what licenses reading the admissible set as numeric.
+        const Typed equatable( body( "Equatable", "a" ) + "\nbool g<T>( T a ) where T : Equatable { return a == 0; }" );
+        const Typed unbounded( "void f<T>( T a ) { T x = 1; }\ni32 main() { return 0; }" );
+
+        INFO( equatable.rendered() << unbounded.rendered() );
+        REQUIRE( equatable.rendered().find( "a literal cannot be a `T`" ) != std::string::npos );
+        REQUIRE( equatable.rendered().find( "where T : Numeric" ) != std::string::npos );
+
+        // An unbounded parameter has no entry in the bound table at all, rather than an empty one.
+        // Reading that as a broken invariant rather than as "promises nothing" aborted the compiler.
+        REQUIRE( unbounded.errors() == 1 );
+        REQUIRE( unbounded.rendered().find( "a literal cannot be a `T`" ) != std::string::npos );
+    }
+
+    SECTION( "`bool` and `null` never adopt" )
+    {
+        const Typed boolean( body( "Numeric", "a" ) + "\nvoid g<T>( T a ) where T : Numeric { T x = true; }" );
+        const Typed pointer( body( "Numeric", "a" ) + "\nvoid g<T>( T a ) where T : Equatable { T x = nullptr; }" );
+
+        INFO( boolean.rendered() << pointer.rendered() );
+        REQUIRE_FALSE( boolean.clean() );
+        REQUIRE_FALSE( pointer.clean() );
+    }
+
+    SECTION( "the value has to fit every type the bound admits" )
+    {
+        // `Integral` admits all eight integers, so the window is their intersection: 0..127. That is
+        // tighter than it looks and it is the price of D11 - the alternative is checking against the
+        // instantiation set, where a call site added later breaks a body that compiled yesterday.
+        const Typed zero( body( "Integral", "a + 0" ) );
+        const Typed edge( body( "Integral", "a + 127" ) );
+        const Typed over( body( "Integral", "a + 128" ) );
+        const Typed under( body( "Integral", "a + -1" ) );
+
+        INFO( zero.rendered() << edge.rendered() << over.rendered() << under.rendered() );
+        REQUIRE( zero.clean() );
+        REQUIRE( edge.clean() );
+
+        // `i8` cannot hold 128, and `u8` cannot hold -1. Both are admissible, so both reject.
+        REQUIRE( over.errors() == 1 );
+        REQUIRE( over.rendered().find( "does not fit every type `T` may be" ) != std::string::npos );
+        REQUIRE( over.rendered().find( "`i8`" ) != std::string::npos );
+        REQUIRE( under.errors() == 1 );
+        REQUIRE( under.rendered().find( "`u8`" ) != std::string::npos );
+    }
+
+    SECTION( "a narrower bound admits a wider value" )
+    {
+        // The same literal against a different set: `Floating` admits only f32 and f64, and both
+        // hold 128, so what `Integral` refuses this accepts.
+        const Typed p( body( "Floating", "a + 128" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "the diagnostic names the type doing the rejecting, not the parameter" )
+    {
+        // `300 does not fit in T` would be unactionable - `T` has no range. Naming the admissible
+        // type that cannot hold it is the whole reason the helper returns a Type_id and not a bool.
+        const Typed p( body( "Integral", "a + 300" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "the bounds admit `i8`, which cannot hold it" ) != std::string::npos );
+    }
+
+    SECTION( "a fractional literal out of `f32`'s range is refused under `Floating`" )
+    {
+        // f64 always fits - the lexer rejected anything strtod could not hold - so f32 is the only
+        // admissible type that can reject, and it has to be consulted for the check to mean
+        // anything.
+        const Typed p( body( "Floating", "a + 1.0e40" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`f32`" ) != std::string::npos );
+    }
+
+    SECTION( "`abs` compiles, which is the point of all of it" )
+    {
+        const Typed p( "T abs<T>( T a ) where T : Copyable & Numeric { if( a < 0 ) { return 0 - a; } return a; }\n"
+                       "i32 main() { return abs<i32>( -7 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// A literal in a generic body reopened checks that were unreachable while `T` took none: the
+// operator-level ones are answerable without knowing `T` and must still run, and routing the
+// parameter path around record_constant is how a generic body became the one place they did not.
+TEST_CASE( "type_checker_checks_constants_in_a_generic_body", "[sema][generic][bound]" )
+{
+    SECTION( "division and remainder by a literal zero" )
+    {
+        const Typed divide( "T f<T>( T a ) where T : Integral { return a / 0; }\ni32 main() { return 0; }" );
+        const Typed modulo( "T f<T>( T a ) where T : Integral { return a % 0; }\ni32 main() { return 0; }" );
+
+        INFO( divide.rendered() << modulo.rendered() );
+        REQUIRE( divide.rendered().find( "division by zero" ) != std::string::npos );
+        REQUIRE( modulo.rendered().find( "remainder by zero" ) != std::string::npos );
+    }
+
+    SECTION( "a fractional zero divisor, which lives in the other pool" )
+    {
+        // Reached by the literal's node kind rather than by the type: inside a generic the divisor
+        // has adopted `T`, which is neither an integer nor a float, so the type cannot say which
+        // pool holds it.
+        const Typed p( "T f<T>( T a ) where T : Floating { return a / 0.0; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "division by zero" ) != std::string::npos );
+    }
+
+    SECTION( "a non-zero divisor is left alone" )
+    {
+        const Typed p( "T f<T>( T a ) where T : Integral { return a / 2; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a shift count is held to the narrowest width the bound admits" )
+    {
+        // `Integral` admits `i8`, so the count must be in range for eight bits. Same rule as the
+        // literal's value, and answerable for the same reason.
+        const Typed fits( "T f<T>( T a ) where T : Integral { return a << 7; }\ni32 main() { return 0; }" );
+        const Typed over( "T f<T>( T a ) where T : Integral { return a << 8; }\ni32 main() { return 0; }" );
+
+        INFO( fits.rendered() << over.rendered() );
+        REQUIRE( fits.clean() );
+        REQUIRE( over.errors() == 1 );
+        REQUIRE( over.rendered().find( "the shift count is out of range" ) != std::string::npos );
+        REQUIRE( over.rendered().find( "`T` may be 8 bits wide" ) != std::string::npos );
     }
 }
 

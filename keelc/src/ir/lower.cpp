@@ -103,7 +103,7 @@ private:
     Operand lower_short_circuit( Node_id id );
 
     // The type an operation happens in, and the conversion that puts an operand there. See §6.4.
-    Type_id operation_type( Node_id node ) const;
+    Type_id operation_type( Node_id node );
     Operand converted( Operand operand, Type_id to, Span span );
     Operand moved_if_owning( Operand operand ) const;
 
@@ -333,10 +333,13 @@ Node_id Lowering::field_of( Type_id type, Symbol_id name ) const
 
 // Not always the type the operation *produces*: a comparison yields bool while its operands still
 // meet at their common type, and §6.4's answer for that is recorded nowhere on the node.
-Type_id Lowering::operation_type( Node_id node ) const
+Type_id Lowering::operation_type( Node_id node )
 {
-    const Type_id left  = types_.type_of( ast_.child( node, 0 ) );
-    const Type_id right = types_.type_of( ast_.child( node, 1 ) );
+    // type_of and not types_.type_of: inside an instance the operands are recorded as `T`, and a
+    // `T` has no C spelling. arithmetic_result has no answer for one either, so the fallback below
+    // would carry it into the emitter as the operation's own type.
+    const Type_id left  = type_of( ast_.child( node, 0 ) );
+    const Type_id right = type_of( ast_.child( node, 1 ) );
 
     const Type_id common = types_.table().arithmetic_result( left, right );
 
@@ -1294,7 +1297,7 @@ void Lowering::lower_assign( Node_id id )
         // checker records nothing on a statement, so that would be an invalid Type_id. It is
         // also the type the checker measured the value against, so the two agree by
         // construction.
-        const Type_id type = types_.type_of( ast_.child( id, 0 ) );
+        const Type_id type = type_of( ast_.child( id, 0 ) );
 
         const Operand left  = copy( target, type );
         const Operand right = converted( value, type, span );
@@ -1307,7 +1310,7 @@ void Lowering::lower_assign( Node_id id )
 void Lowering::lower_increment( Node_id id )
 {
     const Place      target      = lower_place( ast_.child( id, 0 ) );
-    const Type_id    target_type = types_.type_of( ast_.child( id, 0 ) );
+    const Type_id    target_type = type_of( ast_.child( id, 0 ) );
     const Token_kind op          = static_cast<Token_kind>( ast_.aux( id ) );
     const Token_kind base_op     = op == Token_kind::Plus_plus ? Token_kind::Plus : Token_kind::Minus;
     const Operand    left        = copy( target, target_type );
