@@ -1,0 +1,89 @@
+// The set of functions to emit is not what the call sites wrote. A call inside a generic writes
+// `inner<T>`, which names no instance at all until `T` is known - so the checker's list is a seed
+// and the real set is its closure under the generic call graph. Every function below except the
+// outermost is reached that way, and none of them is named anywhere in this file with a concrete
+// type argument.
+//
+// Run rather than only compiled: a closure that emits the right functions but leaves a call site
+// mangled against the template it was written as links, and calls the wrong thing.
+
+T identity<T>( T a ) where T : Copyable
+{
+    return a;
+}
+
+T doubled<T>( T a ) where T : Copyable & Numeric
+{
+    return identity<T>( a ) + identity<T>( a );
+}
+
+// Three deep, so the worklist has to find something only the round before discovered.
+T quadrupled<T>( T a ) where T : Copyable & Numeric
+{
+    return doubled<T>( doubled<T>( a ) );
+}
+
+// A cycle that forwards its parameter is ordinary recursion: the instance set is finite because
+// going round it produces nothing new.
+T countdown<T>( T a ) where T : Copyable & Numeric
+{
+    if( a < 1 )
+    {
+        return a;
+    }
+
+    return countdown<T>( a - 1 );
+}
+
+// Building a type out of the parameter is legal when nothing leads back. `borrowing<i32>` needs
+// `through<i32*>`, and that is where it stops.
+T through<T>( T a ) where T : Copyable
+{
+    return a;
+}
+
+i32 borrowing<T>( T a ) where T : Copyable & Integral
+{
+    T*  p = &a;
+    T*  q = through<T*>( p );
+
+    if( q == p )
+    {
+        return 1;
+    }
+
+    return 0;
+}
+
+i32 main()
+{
+    if( quadrupled<i32>( 3 ) != 12 )
+    {
+        return 1;
+    }
+
+    // The same chain at a second type: each instance reaches its own copy of everything below it.
+    f64 scaled = quadrupled<f64>( 0.5 );
+
+    if( scaled < 1.9 )
+    {
+        return 2;
+    }
+
+    if( scaled > 2.1 )
+    {
+        return 3;
+    }
+
+    if( countdown<i32>( 5 ) != 0 )
+    {
+        return 4;
+    }
+
+    if( borrowing<i32>( 7 ) != 1 )
+    {
+        return 5;
+    }
+
+    return 42;
+}

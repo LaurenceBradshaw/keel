@@ -669,6 +669,11 @@ private:
     // The bound set recorded for a parameter, or an empty set when it carries no `where` clause.
     Bound_set bounds_for( Type_id parameter ) const;
 
+    // D11's other termination question. See check_generic_recursion.
+    void check_generic_recursion();
+    bool expands_forever( Node_id generic, std::vector<Node_id>& path, std::optional<Span> grown_at );
+    bool wraps_a_parameter( Type_id argument ) const;
+
     // The narrowest integer a parameter may turn out to be, for the checks that need a width. Zero
     // when no integer is admissible at all.
     u8 narrowest_admissible_width( Type_id parameter ) const;
@@ -729,6 +734,13 @@ private:
     // repeating it is how the two would drift.
     std::unordered_map<u32, u32> instantiation_of_;
 
+    // The generic call graph, in declaration order. See Generic_call.
+    std::vector<Generic_call> generic_calls_;
+
+    // Every declaration on a cycle already named. One cycle is one mistake, and the walk below
+    // starts from each of its own members in turn - so without this it is reported once per member.
+    std::unordered_set<u32> expanding_;
+
     std::size_t record_instantiation( Node_id declaration, std::vector<Type_id> arguments );
     Type_id     current_return_;
 
@@ -761,6 +773,11 @@ Types Checker::run()
     types_.assign( ast_.node_count(), Type_id {} );
     declare_signatures();
     visit( ast_.root() );
+
+    // After the bodies: the graph it walks is built one edge per generic call typed, so it is not
+    // complete until every body has been.
+    check_generic_recursion();
+
     return Types(
         std::move( table_ ),
         std::move( types_ ),
@@ -769,7 +786,8 @@ Types Checker::run()
         std::move( owning_ ),
         std::move( methods_ ),
         std::move( instantiations_ ),
-        std::move( instantiation_of_ )
+        std::move( instantiation_of_ ),
+        std::move( generic_calls_ )
     );
 }
 
@@ -3387,6 +3405,15 @@ Type_id Checker::infer_call( Node_id id )
             bindings.emplace( types_[parameters[i].v].v, argument );
         }
 
+        // The edge, before `resolved` is consumed. Only from inside a generic: a call in `main` is
+        // already an instance rather than a step towards one.
+        if( is_generic( ast_, current_function_ ) )
+        {
+            generic_calls_.push_back(
+                Generic_call { .from = current_function_, .to = callable, .arguments = resolved, .at = ast_.span( id ) }
+            );
+        }
+
         const std::size_t instance = record_instantiation( callable, std::move( resolved ) );
 
         instantiation_of_.emplace( id.v, narrow_cast<u32>( instance ) );
@@ -5482,6 +5509,134 @@ void Checker::check_bounds( Node_id parameter, Node_id written, Type_id argument
                       : std::string( bound_requirement( known.bound ) )
         );
     }
+}
+
+// Is this type argument a *construction* over a type parameter rather than one of them? `T` is not,
+// `T*` is, and `T**` is more so - but one level is all the question needs, because one level per
+// step around a cycle is already unbounded.
+bool Checker::wraps_a_parameter( Type_id argument ) const
+{
+    if( !argument.is_valid() || table_.is_parameter( argument ) )
+    {
+        return false; // a bare parameter forwards a type, it does not build one
+    }
+
+    for( Type_id inner = argument; table_.is_pointer( inner ); inner = table_.get( inner ).element )
+    {
+        if( table_.is_parameter( table_.get( inner ).element ) )
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// Monomorphisation emits one function per set of type arguments, so it terminates only if that set
+// is finite. `f<T>` calling `g<T>` is fine however deep the cycle runs - the arguments never change,
+// so the set is the arguments `main` named and nothing more. `f<T>` calling `f<T*>` is not: each
+// step builds a type one level deeper than the last, and `f<i32>`, `f<i32*>`, `f<i32**>` go on
+// forever.
+//
+// A depth limit would turn that into a number nobody can justify, and would report it at whichever
+// expansion happened to hit the wall rather than at the line that is wrong. The shape is decidable
+// here instead: it is a cycle in the call graph carrying at least one edge that builds a type, and
+// the same walk `contains_itself` does over struct fields answers it over generic calls.
+void Checker::check_generic_recursion()
+{
+    std::vector<Node_id> path;
+
+    for( const Generic_call& edge : generic_calls_ )
+    {
+        if( expanding_.contains( edge.from.v ) )
+        {
+            continue;
+        }
+
+        path.clear();
+        path.push_back( edge.from );
+
+        expands_forever( edge.from, path, std::nullopt );
+    }
+}
+
+// Depth-first from one generic, carrying whether any edge on the current path built a type. Returns
+// whether it reported, so a cycle is named once rather than once per way round it.
+bool Checker::expands_forever( Node_id generic, std::vector<Node_id>& path, std::optional<Span> grown_at )
+{
+    for( const Generic_call& edge : generic_calls_ )
+    {
+        if( edge.from != generic )
+        {
+            continue;
+        }
+
+        // The span of the *growing* call, kept rather than a flag: the edge that closes the cycle
+        // is usually an innocent-looking forward, and pointing at it would name the wrong line.
+        std::optional<Span> grows = grown_at;
+
+        for( const Type_id argument : edge.arguments )
+        {
+            if( !grows && wraps_a_parameter( argument ) )
+            {
+                grows = edge.at;
+            }
+        }
+
+        const bool closes = std::find( path.begin(), path.end(), edge.to ) != path.end();
+
+        if( closes && grows )
+        {
+            const auto name_of = [&]( Node_id declaration )
+            { return std::string( interner_.text( Symbol_id { ast_.aux( declaration ) } ) ); };
+
+            // The cycle as written, from where it closes: `f` -> `g` -> `f`. A self-call renders as
+            // `f` -> `f`, which reads correctly without a second phrasing for it.
+            std::string cycle;
+
+            for( auto step = std::find( path.begin(), path.end(), edge.to ); step != path.end(); ++step )
+            {
+                cycle += fmt::format( "`{}` to ", name_of( *step ) );
+            }
+
+            cycle += fmt::format( "`{}`", name_of( edge.to ) );
+
+            for( const Node_id step : path )
+            {
+                expanding_.insert( step.v );
+            }
+
+            error_at(
+                *grows,
+                fmt::format( "`{}` is instantiated with a bigger type argument each time round", name_of( edge.to ) ),
+                fmt::format(
+                    "{}, and each round builds a type out of the last - so no set of instances ever "
+                    "finishes; forward the parameter itself, or take the built type as a second parameter",
+                    cycle
+                )
+            );
+
+            return true;
+        }
+
+        if( closes )
+        {
+            continue; // a cycle that forwards its parameters is finite, and is ordinary recursion
+        }
+
+        path.push_back( edge.to );
+
+        const bool reported = expands_forever( edge.to, path, grows );
+
+        path.pop_back();
+
+        if( reported )
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 Bound_set Checker::bounds_for( Type_id parameter ) const
@@ -12142,6 +12297,126 @@ TEST_CASE( "type_checker_checks_operators_on_a_type_parameter", "[sema][generic]
 // but a bound supplies a *set* of types, so the question becomes whether the value fits every type
 // `T` may turn out to be. Answering it here rather than at an instantiation is what keeps D11 whole:
 // no later call site can break a body that already compiled.
+// Monomorphisation emits one function per set of type arguments, so it terminates only if that set
+// is finite. Forwarding a parameter keeps it finite however deep the recursion runs; building a type
+// out of it does not, and the shape is decidable at the definition rather than at whichever
+// expansion happens to hit a limit.
+// A type parameter or a `where` subject whose name failed to parse must not become a node. The
+// parser reports either way; what a nameless node costs is sema, which reads that name to report
+// about it and hands an invalid one to the interner - which asserts, so the compiler dies on a file
+// it had already diagnosed. Nine spellings, two nodes, and the same reading parse_aggregate_decl
+// takes of a declaration with no name.
+TEST_CASE( "type_checker_survives_a_nameless_type_parameter_or_clause", "[sema][generic]" )
+{
+    const auto diagnosed = []( std::string_view source )
+    {
+        const Typed p( std::string( source ) + "\ni32 main() { return 0; }" );
+
+        // Reaching here at all is the assertion: the failure mode is an abort, not a wrong answer.
+        return !p.clean();
+    };
+
+    SECTION( "a malformed type parameter list" )
+    {
+        REQUIRE( diagnosed( "T f<T,>( T a ) { return a; }" ) );
+        REQUIRE( diagnosed( "T f<,T>( T a ) { return a; }" ) );
+        REQUIRE( diagnosed( "T f<T,,U>( T a ) { return a; }" ) );
+        REQUIRE( diagnosed( "T f<if>( T a ) { return a; }" ) );
+    }
+
+    SECTION( "a `where` clause with no subject" )
+    {
+        REQUIRE( diagnosed( "T f<T>( T a ) where { return a; }" ) );
+        REQUIRE( diagnosed( "T f<T>( T a ) where : Copyable { return a; }" ) );
+        REQUIRE( diagnosed( "T f<T>( T a ) where where T : Copyable { return a; }" ) );
+        REQUIRE( diagnosed( "T f<T>( T a ) where 5 : Copyable { return a; }" ) );
+        REQUIRE( diagnosed( "T f<T>( T a ) where if : Copyable { return a; }" ) );
+    }
+
+    SECTION( "a well-formed one still works" )
+    {
+        // The guard drops the node rather than the feature.
+        const Typed p( "T f<T>( T a ) where T : Copyable { return a; }\ni32 main() { return f<i32>( 1 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+TEST_CASE( "type_checker_refuses_a_generic_that_expands_forever", "[sema][generic]" )
+{
+    SECTION( "a generic calling itself at its own parameter is ordinary recursion" )
+    {
+        const Typed p( "void f<T>( T a ) where T : Copyable { f<T>( a ); }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a cycle that forwards its parameters is finite" )
+    {
+        // `f<i32>` needs `g<i32>` needs `f<i32>`, which is already emitted. Going round twice
+        // produces nothing new, so the set closes.
+        const Typed p( "void g<T>( T a ) where T : Copyable { }\n"
+                       "void f<T>( T a ) where T : Copyable { g<T>( a ); }\n"
+                       "void h<T>( T a ) where T : Copyable { f<T>( a ); g<T>( a ); }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "building a type out of the parameter is fine when nothing leads back" )
+    {
+        // One step deeper and then stop: `f<i32>` needs `g<i32*>` and that is the end of it.
+        const Typed p( "void g<T>( T a ) where T : Copyable { }\n"
+                       "void f<T>( T a ) where T : Copyable { T* p = &a; g<T*>( p ); }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a generic calling itself with a pointer to its own parameter is refused" )
+    {
+        // `f<i32>`, `f<i32*>`, `f<i32**>` - no set of instances finishes.
+        const Typed p( "void f<T>( T a ) where T : Copyable { T* p = &a; f<T*>( p ); }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`f` is instantiated with a bigger type argument each time round" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`f` to `f`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "f<T*>( p )" ) != std::string::npos );
+    }
+
+    SECTION( "the same through a second generic" )
+    {
+        // The cycle is what matters, not the self-call: `g` grows it and `f` carries it back.
+        const Typed p( "void g<T>( T a ) where T : Copyable { T* p = &a; f<T*>( p ); }\n"
+                       "void f<T>( T a ) where T : Copyable { g<T>( a ); }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+
+        // The cycle is rendered from wherever the walk entered it, so either rotation is a correct
+        // description of the same thing. What matters is that both members are named and that the
+        // span is the call that *builds* the type rather than the one that forwards it.
+        REQUIRE( p.rendered().find( "`g` to `f` to `g`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "f<T*>( p )" ) != std::string::npos );
+    }
+
+    SECTION( "it is reported without anything being instantiated" )
+    {
+        // The graph is over declarations, so `main` naming none of them changes nothing. Reporting
+        // only once something asked for an instance would be the deferred check this avoids.
+        const Typed p( "void f<T>( T a ) where T : Copyable { T* p = &a; f<T*>( p ); }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "bigger type argument" ) != std::string::npos );
+    }
+}
+
 TEST_CASE( "type_checker_adopts_a_literal_into_a_type_parameter", "[sema][generic][bound]" )
 {
     const auto body = []( std::string_view clause, std::string_view expression )

@@ -39,7 +39,7 @@ private:
     // under. lower_call needs the callee's rather than this function's: a plain `main` calling
     // `id<i32>` has none of its own, while the callee's parameters and return are `T`.
     Type_id  binding_type_under( Node_id decl, const Bindings& bindings );
-    Bindings bindings_for_call( Node_id call ) const;
+    Bindings bindings_for_call( Node_id call );
 
     Place   place_for( Node_id declaration );
     Node_id field_of( Type_id type, Symbol_id name ) const;
@@ -270,7 +270,7 @@ Type_id Lowering::binding_type_under( Node_id decl, const Bindings& bindings )
     return types_.table().substitute( binding_type( ast_, types_, decl ), bindings );
 }
 
-Bindings Lowering::bindings_for_call( Node_id call ) const
+Bindings Lowering::bindings_for_call( Node_id call )
 {
     const std::optional<std::size_t> instance = types_.instantiation_of( call );
 
@@ -286,7 +286,11 @@ Bindings Lowering::bindings_for_call( Node_id call ) const
 
     for( std::size_t i = 0; i < parameters.size() && i < chosen.arguments.size(); ++i )
     {
-        bindings.emplace( types_.type_of( parameters[i] ).v, chosen.arguments[i] );
+        // Through this instance's own bindings first. What the checker recorded is what the call
+        // *wrote*, and inside a generic that is `T` - so `g<T>( a )` in an instance of `f<i32>`
+        // resolves to `g<i32>` here and nowhere else. An empty map makes it the identity, which is
+        // every call outside a generic.
+        bindings.emplace( types_.type_of( parameters[i] ).v, types_.table().substitute( chosen.arguments[i], bindings_ ) );
     }
 
     return bindings;
@@ -982,7 +986,13 @@ Operand Lowering::lower_call( Node_id id )
 
     if( const std::optional<std::size_t> instance = types_.instantiation_of( id ) )
     {
-        type_arguments = types_.instantiations()[*instance].arguments;
+        // Substituted, for the reason bindings_for_call substitutes: the recorded arguments are
+        // what the call wrote, and a call inside a generic wrote `T`. The mangled name has to be
+        // the one the instance was emitted under.
+        for( const Type_id argument : types_.instantiations()[*instance].arguments )
+        {
+            type_arguments.push_back( types_.table().substitute( argument, bindings_ ) );
+        }
     }
 
     const Local_id result = builder_.into_temp(
@@ -1883,12 +1893,82 @@ lower( const Ast& ast, const Resolution& resolution, Types& types, Literals& lit
         }
     }
 
-    // One function per set of type arguments any call site named. A plain pass rather than a
-    // worklist: the checker visited every call, so the list is already complete. It becomes a
-    // worklist the day a *generic* body calls another generic with a type built from its own
-    // parameters, which needs generic types - writing the loop before then means writing a
-    // termination condition for a case that cannot arise.
-    for( const Instantiation& instance : types.instantiations() )
+    // One function per set of type arguments, and the checker's list is only the seed. A call site
+    // inside a generic writes `g<T>`, which names no instance at all until `T` is known - so the
+    // real set is the closure of that list under the generic call graph, and reaching it needs a
+    // worklist rather than a pass.
+    //
+    // It terminates because check_generic_recursion refused the shape that would not: a cycle whose
+    // arguments grow a level each time round. Every other cycle forwards its parameters unchanged,
+    // so going round it twice produces an instantiation that is already in the set.
+    std::vector<Instantiation> pending;
+
+    const auto already_queued = [&pending]( const Instantiation& candidate )
+    {
+        return std::any_of(
+            pending.begin(),
+            pending.end(),
+            [&candidate]( const Instantiation& seen )
+            { return seen.declaration == candidate.declaration && seen.arguments == candidate.arguments; }
+        );
+    };
+
+    // An argument mentioning a type parameter - `T`, or `T*` - means the call was written inside a
+    // generic and names a template rather than an instance. Those are the edges, not the seeds.
+    const auto is_closed = [&types]( const Instantiation& candidate )
+    {
+        return std::none_of(
+            candidate.arguments.begin(),
+            candidate.arguments.end(),
+            [&types]( Type_id argument ) { return types.table().mentions_parameter( argument ); }
+        );
+    };
+
+    for( const Instantiation& seed : types.instantiations() )
+    {
+        if( is_closed( seed ) && !already_queued( seed ) )
+        {
+            pending.push_back( seed );
+        }
+    }
+
+    // Indexed rather than iterated: the loop below appends to what it is walking.
+    for( std::size_t at = 0; at < pending.size(); ++at )
+    {
+        const Instantiation        instance   = pending[at];
+        const std::vector<Node_id> parameters = type_parameters( ast, ast.child( instance.declaration, 3 ) );
+
+        Bindings bindings;
+
+        for( std::size_t i = 0; i < parameters.size() && i < instance.arguments.size(); ++i )
+        {
+            bindings.emplace( types.type_of( parameters[i] ).v, instance.arguments[i] );
+        }
+
+        // What this instance's body reaches. `g<T>` under `{ T -> i32 }` is `g<i32>`, which no call
+        // site ever wrote and which nothing else would ever emit.
+        for( const Generic_call& edge : types.generic_calls() )
+        {
+            if( edge.from != instance.declaration )
+            {
+                continue;
+            }
+
+            Instantiation reached { .declaration = edge.to, .arguments = {} };
+
+            for( const Type_id argument : edge.arguments )
+            {
+                reached.arguments.push_back( types.table().substitute( argument, bindings ) );
+            }
+
+            if( is_closed( reached ) && !already_queued( reached ) )
+            {
+                pending.push_back( std::move( reached ) );
+            }
+        }
+    }
+
+    for( const Instantiation& instance : pending )
     {
         const std::vector<Node_id> parameters = type_parameters( ast, ast.child( instance.declaration, 3 ) );
 

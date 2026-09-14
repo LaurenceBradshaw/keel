@@ -1166,6 +1166,13 @@ Node_id Parser::parse_where_clause()
     // parse_function_decl keys on, so it is stepped over here rather than being its business.
     match( Token_kind::Comma );
 
+    // No subject, no clause. The bounds inside were still parsed, so anything wrong with them is
+    // already reported; what a nameless clause would cost is the pass that looks the subject up.
+    if( !subject.is_valid() )
+    {
+        return error_node( Span::merge( start, previous().span ) );
+    }
+
     return ast_.add( Node_kind::Where_clause, Span::merge( start, previous().span ), subject.v, bounds );
 }
 
@@ -1404,6 +1411,14 @@ Node_id Parser::parse_type_param()
         );
 
         advance();
+    }
+
+    // A parameter with no name is not one: every pass downstream reads the name to report about
+    // it, so handing one over means a stray comma or a keyword crashes a pass that had no reason to
+    // expect it. The same reading parse_aggregate_decl takes of a nameless declaration.
+    if( !name.is_valid() )
+    {
+        return error_node( Span::merge( at, previous().span ) );
     }
 
     return ast_.add( Node_kind::Type_param_decl, at, name.v, {} );

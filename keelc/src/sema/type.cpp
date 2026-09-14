@@ -129,6 +129,26 @@ Type_id Type_table::parameter( Node_id declaration, std::string_view name )
     return id;
 }
 
+bool Type_table::mentions_parameter( Type_id id ) const
+{
+    if( !id.is_valid() )
+    {
+        return false;
+    }
+
+    const Type& described = get( id );
+
+    switch( described.kind )
+    {
+    case Type_kind::Parameter:
+        return true;
+    case Type_kind::Pointer:
+        return mentions_parameter( described.element );
+    default:
+        return false;
+    }
+}
+
 Type_id Type_table::substitute( Type_id type, const Bindings& bindings )
 {
     if( !type.is_valid() )

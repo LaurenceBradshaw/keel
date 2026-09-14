@@ -41,6 +41,19 @@ struct Instantiation
     std::vector<Type_id> arguments;
 };
 
+// One edge of the generic call graph: a generic body naming another generic. The arguments are
+// written in the *caller's* type parameters, so `g<T>( a )` inside `f<T>` records `T` and not
+// anything concrete - which is the whole reason the edge is worth keeping. Two passes read it:
+// the checker, to refuse a cycle that would expand forever, and the lowerer, to find the
+// instantiations no call site ever wrote down.
+struct Generic_call
+{
+    Node_id              from {}; // the generic whose body holds the call
+    Node_id              to {};   // the generic it names
+    std::vector<Type_id> arguments;
+    Span                 at {};
+};
+
 class Types
 {
 public:
@@ -53,7 +66,8 @@ public:
         std::unordered_set<u32>                 owning,
         std::unordered_map<u32, Node_id>        methods,
         std::vector<Instantiation>              instantiations,
-        std::unordered_map<u32, u32>            instantiation_of
+        std::unordered_map<u32, u32>            instantiation_of,
+        std::vector<Generic_call>               generic_calls
     )
         : table_( std::move( table ) ),
           types_( std::move( types ) ),
@@ -62,7 +76,8 @@ public:
           methods_( std::move( methods ) ),
           owning_( std::move( owning ) ),
           instantiations_( std::move( instantiations ) ),
-          instantiation_of_( std::move( instantiation_of ) )
+          instantiation_of_( std::move( instantiation_of ) ),
+          generic_calls_( std::move( generic_calls ) )
     {
     }
 
@@ -115,6 +130,13 @@ public:
         return instantiations_;
     }
 
+    // Every generic-to-generic call in the program. What a call site wrote is only the seed: an
+    // instance of `f<i32>` needs `g<i32>` emitted too, and no call site ever named that.
+    const std::vector<Generic_call>& generic_calls() const
+    {
+        return generic_calls_;
+    }
+
     // D2: a type owns when it has a destructor, directly or through a by-value member. Recorded
     // rather than recomputed because drop elaboration runs on KIR, after the checker has gone.
     // Keyed by Type_id because that is what every caller holds; the set below stores declarations.
@@ -146,7 +168,8 @@ private:
     std::unordered_map<u32, Node_id>        methods_;   // Call_expr -> the Method_decl it resolved to
     std::unordered_set<u32>                 owning_;
     std::vector<Instantiation>              instantiations_;
-    std::unordered_map<u32, u32>            instantiation_of_; // Call_expr -> index into instantiations_
+    std::unordered_map<u32, u32>            instantiation_of_;
+    std::vector<Generic_call>               generic_calls_;
 };
 
 Types type_check( const Ast&, const Resolution&, const Literals&, const Source_manager&, const Interner&, Diagnostics& );

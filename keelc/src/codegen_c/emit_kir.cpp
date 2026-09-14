@@ -1287,6 +1287,78 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
         REQUIRE( g.has( "void kl__f__Tp__i32( int32_t* )" ) );
     }
 
+    SECTION( "at its caller's own parameter, which no call site ever wrote" )
+    {
+        // `f<i32>` needs `g<i32>`, and nothing in the source names it: the call inside `f` writes
+        // `g<T>`, which is an edge in the generic call graph rather than an instance. The checker's
+        // list is a seed, and the set of functions to emit is its closure under that graph.
+        Generated g( "T inner<T>( T a ) where T : Copyable { return a; }\n"
+                     "T outer<T>( T a ) where T : Copyable { return inner<T>( a ); }\n"
+                     "i32 main() { return outer<i32>( 7 ); }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "kl__outer__T__i32" ) );
+        REQUIRE( g.has( "kl__inner__T__i32" ) );
+
+        // And not the template it was written as.
+        REQUIRE_FALSE( g.has( "kl__inner__T__T" ) );
+    }
+
+    SECTION( "the closure follows each instance separately" )
+    {
+        // Two instances of the outer generic reach two different instances of the inner one. A
+        // single pass over the checker's list would emit neither.
+        Generated g( "T inner<T>( T a ) where T : Copyable { return a; }\n"
+                     "T outer<T>( T a ) where T : Copyable { return inner<T>( a ); }\n"
+                     "i32 main() { f64 d = outer<f64>( 1.5 ); return outer<i32>( 7 ); }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "kl__inner__T__i32" ) );
+        REQUIRE( g.has( "kl__inner__T__f64" ) );
+    }
+
+    SECTION( "a generic reached only through another is still emitted" )
+    {
+        // Three deep, so the worklist has to find something the round before also only discovered.
+        Generated g( "T third<T>( T a ) where T : Copyable { return a; }\n"
+                     "T second<T>( T a ) where T : Copyable { return third<T>( a ); }\n"
+                     "T first<T>( T a ) where T : Copyable { return second<T>( a ); }\n"
+                     "i32 main() { return first<i32>( 7 ); }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "kl__third__T__i32" ) );
+    }
+
+    SECTION( "an uninstantiated generic contributes nothing" )
+    {
+        // The edge exists, but nothing seeds it - so neither end is emitted, and asking the emitter
+        // for a C spelling of `T` never arises.
+        Generated g( "void inner<T>( T a ) where T : Copyable { }\n"
+                     "void outer<T>( T a ) where T : Copyable { inner<T>( a ); }\n"
+                     "i32 main() { return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE_FALSE( g.has( "kl__inner" ) );
+        REQUIRE_FALSE( g.has( "kl__outer" ) );
+    }
+
+    SECTION( "a type built from the parameter, one level and no cycle" )
+    {
+        // `f<i32>` needs `g<i32*>`. Legal because nothing leads back: the set is two instances and
+        // it closes.
+        Generated g( "void inner<T>( T a ) where T : Copyable { }\n"
+                     "void outer<T>( T a ) where T : Copyable { T* p = &a; inner<T*>( p ); }\n"
+                     "i32 main() { i32 x = 1; outer<i32>( x ); return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "kl__inner__T__i32p" ) );
+    }
+
     SECTION( "another generic, at a different type" )
     {
         Generated g( "T id<T>( T a ) where T : Copyable { return a; }\n"

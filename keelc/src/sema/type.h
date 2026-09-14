@@ -84,6 +84,11 @@ public:
     bool is_enum( Type_id id ) const;
     bool is_pointer( Type_id id ) const;
     bool is_parameter( Type_id id ) const; // a `T`, before an instantiation substitutes it away
+
+    // Whether a parameter appears anywhere inside, not only at the top: `T` and `T*` both do, `i32*`
+    // does not. What separates a type an instance can be emitted at from one that is still a
+    // template, and structural for the same reason substitute() is.
+    bool mentions_parameter( Type_id id ) const;
     bool is_void( Type_id id ) const;
 
     // §6.4 assignment: does every value of `from` exist in `to`?
