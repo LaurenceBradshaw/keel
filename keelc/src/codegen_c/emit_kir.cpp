@@ -17,10 +17,11 @@ public:
     Kir_emitter(
         const std::vector<Function>& functions,
         const Ast&                   ast,
-        const Types&                 types,
+        Types&                       types,
         const Literals&              literals,
         const Source_manager&        sm,
-        const Interner&              interner
+        const Interner&              interner,
+        std::span<const Type_id>     struct_order
     );
 
     std::string run();
@@ -70,24 +71,30 @@ private:
 
     const std::vector<Function>& functions_;
     const Ast&                   ast_;
-    const Types&                 types_;
-    const Literals&              literals_;
-    const Source_manager&        sm_;
-    const Interner&              interner_;
-    const Spelling               spelling_;
+    // Mutable because emit_structs substitutes a field's declared type through its instance, and
+    // substituting interns. Everything it names was interned while the order was built, so nothing
+    // new appears - but the table has no const way to say so.
+    Types&                   types_;
+    std::span<const Type_id> struct_order_;
+    const Literals&          literals_;
+    const Source_manager&    sm_;
+    const Interner&          interner_;
+    const Spelling           spelling_;
 };
 
 Kir_emitter::Kir_emitter(
     const std::vector<Function>& functions,
     const Ast&                   ast,
-    const Types&                 types,
+    Types&                       types,
     const Literals&              literals,
     const Source_manager&        sm,
-    const Interner&              interner
+    const Interner&              interner,
+    std::span<const Type_id>     struct_order
 )
     : functions_( functions ),
       ast_( ast ),
       types_( types ),
+      struct_order_( struct_order ),
       literals_( literals ),
       sm_( sm ),
       interner_( interner ),
@@ -160,7 +167,7 @@ void Kir_emitter::emit_enums()
             continue;
         }
 
-        write_line( spelling_.structure( decl ) );
+        write_line( spelling_.structure( types_.type_of( decl ) ) );
         write_line( "{" );
         indent_ += 4;
 
@@ -182,39 +189,46 @@ void Kir_emitter::emit_enums()
 
 void Kir_emitter::emit_structs()
 {
-    // Already in dependency order: the checker's cycle walk is a topological sort, and its
-    // post-order is exactly what C needs for by-value members. Rebuilding the graph here would be
-    // a second implementation of one rule.
-    const std::vector<Node_id>& order = types_.struct_order();
-
-    if( order.empty() )
+    // One entry per instantiation, already ordered so that a type arrives after everything it holds
+    // by value. See emitted_struct_order, which is where the walk and the reason for it live.
+    if( struct_order_.empty() )
     {
         return;
     }
 
     // §7.4's forward declarations. Nothing in v0 needs them - the definitions are already ordered
-    // - but they cost a line each and become necessary the moment a struct holds a pointer to one.
-    for( const Node_id decl : order )
+    // - but they cost a line each and become necessary the moment a struct holds a pointer to one,
+    // which a generic linked list does.
+    for( const Type_id type : struct_order_ )
     {
-        write_line( fmt::format( "{};", spelling_.structure( decl ) ) );
+        write_line( fmt::format( "{};", spelling_.structure( type ) ) );
     }
 
     write_line( "" );
 
-    for( const Node_id decl : order )
+    for( const Type_id type : struct_order_ )
     {
-        write_line( spelling_.structure( decl ) );
+        const Node_id declaration = types_.table().get( type ).declaration;
+
+        write_line( spelling_.structure( type ) );
         write_line( "{" );
         indent_ += 4;
 
-        for( const Node_id field : ast_.children( decl ) )
+        for( const Node_id field : ast_.members( declaration ) )
         {
             if( ast_.kind( field ) != Node_kind::Field_decl )
             {
                 continue;
             }
 
-            write_line( fmt::format( "{} {};", spelling_.type( types_.type_of( field ) ), spelling_.field( field ) ) );
+            // The field's type through *this* instance: what the declaration says is `T`, which is
+            // true of the template and has no C spelling. Every instance was interned while the
+            // order was built, so nothing new is named here.
+            const Type_id spelled = types_.table().substitute(
+                types_.type_of( field ), aggregate_bindings( ast_, types_.table(), type, types_.recorded() )
+            );
+
+            write_line( fmt::format( "{} {};", spelling_.type( spelled ), spelling_.field( field ) ) );
         }
 
         indent_ -= 4;
@@ -691,16 +705,75 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue ) const
 
 } // namespace
 
+// Every struct type that has to reach C, in an order where a type arrives after everything it holds
+// by value. One entry per *instantiation*: `Box<i32>` and `Box<f64>` are two C structs from one
+// declaration, and the open `Box<T>` is none, the way a generic function is no C function.
+//
+// Built here rather than in the checker because an instantiation can be created during lowering -
+// substituting `Box<T>` inside an instance of a generic that holds one - and the checker has gone
+// by then. The walk interns as it goes, for the same reason: a field of type `Pair<T>` inside
+// `Box<T>` names `Pair<i32>`, which nothing else need ever have written down.
+//
+// Terminating and acyclic by the checker's own walk: contains_itself rejected every by-value cycle
+// before this runs, and a pointer field is skipped here exactly as it is there.
+std::vector<Type_id> emitted_struct_order( const Ast& ast, Types& types )
+{
+    std::vector<Type_id> order;
+    std::vector<Type_id> visiting;
+
+    // Recursive rather than a queue: the post-order *is* the answer, and a queue would need the
+    // graph built first.
+    const auto visit = [&]( auto&& self, Type_id type ) -> void
+    {
+        if( !type.is_valid() || !types.table().is_struct( type ) || types.table().mentions_parameter( type ) )
+        {
+            return;
+        }
+
+        if( std::find( order.begin(), order.end(), type ) != order.end() ||
+            std::find( visiting.begin(), visiting.end(), type ) != visiting.end() )
+        {
+            return;
+        }
+
+        visiting.push_back( type );
+
+        for( const Node_id member : ast.members( types.table().get( type ).declaration ) )
+        {
+            if( ast.kind( member ) != Node_kind::Field_decl )
+            {
+                continue;
+            }
+
+            self( self, field_type( ast, types.table(), type, member, types.recorded() ) );
+        }
+
+        visiting.pop_back();
+        order.push_back( type );
+    };
+
+    // Indexed, because visiting a type can intern another and grow the table underneath us - which
+    // is the point: a `Box<i32>` reached only through a field is discovered exactly here.
+    for( std::size_t at = 0; at < types.table().struct_types().size(); ++at )
+    {
+        visit( visit, types.table().struct_types()[at] );
+    }
+
+    return order;
+}
+
 std::string emit_c_from_kir(
     const std::vector<Function>& functions,
     const Ast&                   ast,
-    const Types&                 types,
+    Types&                       types,
     const Literals&              literals,
     const Source_manager&        sm,
     const Interner&              interner
 )
 {
-    return Kir_emitter( functions, ast, types, literals, sm, interner ).run();
+    const std::vector<Type_id> order = emitted_struct_order( ast, types );
+
+    return Kir_emitter( functions, ast, types, literals, sm, interner, order ).run();
 }
 
 } // namespace keel
@@ -785,8 +858,8 @@ TEST_CASE( "emit_kir_names_parameters_from_kir_locals", "[codegen][kir]" )
     INFO( g.c );
     REQUIRE( g.clean() );
 
-    REQUIRE( g.has( "int32_t kl__add__i32_i32( int32_t, int32_t );" ) ); // the prototype, unnamed
-    REQUIRE( g.has( "int32_t kl_a_1, int32_t kl_b_2" ) );                // the definition, named
+    REQUIRE( g.has( "int32_t kl__add__3i32_3i32( int32_t, int32_t );" ) ); // the prototype, unnamed
+    REQUIRE( g.has( "int32_t kl_a_1, int32_t kl_b_2" ) );                  // the definition, named
 
     // Declared once, by the signature - not again as locals.
     REQUIRE_FALSE( g.has( "int32_t kl_a_1;" ) );
@@ -1222,6 +1295,124 @@ TEST_CASE( "emit_kir_substitutes_a_generic_binding_mode", "[codegen][kir][generi
 
 // A generic is an ordinary function once instantiated, so it may call anything - and what it calls
 // is resolved against the call site's own instantiation rather than the enclosing one's.
+// A generic aggregate is a family of C structs rather than one, and which of them exist is not
+// something any single declaration says. The set is every closed instantiation the table holds by
+// the time lowering has finished, and the order is by-value containment - both of which the walk in
+// emitted_struct_order answers, because the checker has gone before some of them are even created.
+TEST_CASE( "emit_kir_emits_one_struct_per_instantiation", "[codegen][kir][generic][aggregate]" )
+{
+    const std::string_view box = "struct Box<T> where T : Copyable { T v; };\n";
+
+    SECTION( "two type arguments are two C structs" )
+    {
+        Generated g( std::string( box ) + "i32 main() { Box<i32> a; Box<f64> b; a.v = 1; b.v = 1.5; return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "struct kl__Box__I3i32E" ) );
+        REQUIRE( g.has( "struct kl__Box__I3f64E" ) );
+    }
+
+    SECTION( "each field is spelled at its own argument" )
+    {
+        Generated g( std::string( box ) + "i32 main() { Box<i32> a; Box<f64> b; a.v = 1; b.v = 1.5; return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.has( "int32_t kl_v_" ) );
+        REQUIRE( g.has( "double kl_v_" ) );
+
+        // And never the declared type, which has no C spelling at all.
+        REQUIRE_FALSE( g.has( " T kl_v_" ) );
+    }
+
+    SECTION( "the template itself is emitted not at all" )
+    {
+        // The mirror of a generic function: `Box<T>` is what instances are made from, and is no
+        // more a C struct than `id<T>` is a C function.
+        Generated g( std::string( box ) + "i32 main() { Box<i32> a; a.v = 1; return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE_FALSE( g.has( "struct kl__Box;" ) );
+        REQUIRE_FALSE( g.has( "struct kl__Box\n" ) );
+    }
+
+    SECTION( "a declared but never instantiated generic emits nothing" )
+    {
+        Generated g( std::string( box ) + "i32 main() { return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE_FALSE( g.has( "kl__Box" ) );
+    }
+
+    SECTION( "what a struct holds is defined before it" )
+    {
+        // C needs the inner definition first for a by-value member, which is the whole reason the
+        // order is a post-order rather than the order things were interned in.
+        Generated g(
+            std::string( box ) + "struct Holder { Box<i32> b; };\n"
+                                 "i32 main() { Holder h; h.b.v = 1; return 0; }"
+        );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+
+        const std::size_t inner = g.c.find( "struct kl__Box__I3i32E\n{" );
+        const std::size_t outer = g.c.find( "struct kl__Holder\n{" );
+
+        REQUIRE( inner != std::string::npos );
+        REQUIRE( outer != std::string::npos );
+        REQUIRE( inner < outer );
+    }
+
+    SECTION( "an instantiation reached only through a field is still emitted" )
+    {
+        // `Holder<i32>` is what the source names; `Box<i32>` is what its field becomes, and nothing
+        // else in the program writes it down. Interned by the order walk itself.
+        Generated g(
+            std::string( box ) + "struct Holder<T> where T : Copyable { Box<T> b; };\n"
+                                 "i32 main() { Holder<i32> h; h.b.v = 1; return 0; }"
+        );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "struct kl__Box__I3i32E" ) );
+        REQUIRE( g.has( "struct kl__Holder__I3i32E" ) );
+    }
+
+    SECTION( "nested instantiations, which need `>>` to have parsed" )
+    {
+        Generated g( std::string( box ) + "i32 main() { Box<Box<i32>> b; b.v.v = 1; return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "struct kl__Box__I3BoxI3i32EE" ) );
+        REQUIRE( g.has( "struct kl__Box__I3i32E" ) );
+    }
+
+    SECTION( "a generic list, which is what the forward declarations are for" )
+    {
+        Generated g( "class Node<T> where T : Copyable { T v; Node<T>* next; };\n"
+                     "i32 main() { Node<i32> n; n.v = 1; return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "struct kl__Node__I3i32E;" ) ); // the forward declaration
+        REQUIRE( g.has( "struct kl__Node__I3i32E* kl_next_" ) );
+    }
+
+    SECTION( "a non-generic aggregate is spelled exactly as it was" )
+    {
+        Generated g( "struct Point { i32 x; i32 y; };\ni32 main() { Point p; p.x = 1; return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "struct kl__Point" ) );
+        REQUIRE_FALSE( g.has( "kl__Point__I" ) );
+    }
+}
+
 TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][generic]" )
 {
     SECTION( "an ordinary function" )
@@ -1232,7 +1423,7 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "kl__twice__i32" ) );
+        REQUIRE( g.has( "kl__twice__3i32" ) );
     }
 
     SECTION( "arithmetic on a `T` is emitted at the substituted type" )
@@ -1246,7 +1437,7 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "int32_t kl__f__T__i32( int32_t" ) );
+        REQUIRE( g.has( "int32_t kl__f__3i32( int32_t" ) );
     }
 
     SECTION( "an integer literal adopting a floating `T` comes out of the integer pool" )
@@ -1259,7 +1450,7 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "double kl__f__T__f64( double" ) );
+        REQUIRE( g.has( "double kl__f__3f64( double" ) );
     }
 
     SECTION( "a numeric bound carries `Copyable`, so the parameter travels by value" )
@@ -1271,8 +1462,12 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "void kl__f__T__i32( int32_t )" ) );
-        REQUIRE_FALSE( g.has( "kl__f__Tp__i32" ) );
+
+        // The C signature rather than the symbol: an instantiation is named by its type arguments
+        // alone, so the convention is no longer visible in the name - which is the right place for
+        // it to be invisible, and the wrong place to test it from.
+        REQUIRE( g.has( "void kl__f__3i32( int32_t )" ) );
+        REQUIRE_FALSE( g.has( "void kl__f__3i32( int32_t* )" ) );
     }
 
     SECTION( "a bound that does not carry `Copyable` borrows, and a constant is materialised" )
@@ -1284,7 +1479,7 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "void kl__f__Tp__i32( int32_t* )" ) );
+        REQUIRE( g.has( "void kl__f__3i32( int32_t* )" ) );
     }
 
     SECTION( "at its caller's own parameter, which no call site ever wrote" )
@@ -1298,8 +1493,8 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "kl__outer__T__i32" ) );
-        REQUIRE( g.has( "kl__inner__T__i32" ) );
+        REQUIRE( g.has( "kl__outer__3i32" ) );
+        REQUIRE( g.has( "kl__inner__3i32" ) );
 
         // And not the template it was written as.
         REQUIRE_FALSE( g.has( "kl__inner__T__T" ) );
@@ -1315,8 +1510,8 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "kl__inner__T__i32" ) );
-        REQUIRE( g.has( "kl__inner__T__f64" ) );
+        REQUIRE( g.has( "kl__inner__3i32" ) );
+        REQUIRE( g.has( "kl__inner__3f64" ) );
     }
 
     SECTION( "a generic reached only through another is still emitted" )
@@ -1329,7 +1524,7 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "kl__third__T__i32" ) );
+        REQUIRE( g.has( "kl__third__3i32" ) );
     }
 
     SECTION( "an uninstantiated generic contributes nothing" )
@@ -1356,7 +1551,7 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "kl__inner__T__i32p" ) );
+        REQUIRE( g.has( "kl__inner__P3i32" ) );
     }
 
     SECTION( "another generic, at a different type" )
@@ -1369,8 +1564,8 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
         REQUIRE( g.clean() );
 
         // The inner call is `id<i32>` whatever `relay` was instantiated at.
-        REQUIRE( g.has( "kl__id__T__i32" ) );
-        REQUIRE( g.has( "kl__relay__T__bool" ) );
+        REQUIRE( g.has( "kl__id__3i32" ) );
+        REQUIRE( g.has( "kl__relay__4bool" ) );
     }
 }
 
@@ -1384,7 +1579,7 @@ TEST_CASE( "emit_kir_substitutes_through_type_constructors", "[codegen][kir][gen
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "kl__id__T__P" ) );
+        REQUIRE( g.has( "kl__id__1P" ) );
     }
 
     SECTION( "a pointer type argument" )
@@ -1394,7 +1589,7 @@ TEST_CASE( "emit_kir_substitutes_through_type_constructors", "[codegen][kir][gen
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "kl__id__T__i32p" ) );
+        REQUIRE( g.has( "kl__id__P3i32" ) );
     }
 
     SECTION( "an enum type argument" )
@@ -1416,8 +1611,8 @@ TEST_CASE( "emit_kir_emits_one_function_per_instantiation", "[codegen][kir][gene
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "kl__id__T__i32" ) );
-        REQUIRE( g.has( "kl__id__T__bool" ) );
+        REQUIRE( g.has( "kl__id__3i32" ) );
+        REQUIRE( g.has( "kl__id__4bool" ) );
     }
 
     SECTION( "each call site names the one it meant" )
@@ -1426,8 +1621,8 @@ TEST_CASE( "emit_kir_emits_one_function_per_instantiation", "[codegen][kir][gene
                      "i32 main() { i32 a = id<i32>( 1 ); bool b = id<bool>( true ); return a; }" );
 
         INFO( g.c );
-        REQUIRE( g.has( "= kl__id__T__i32( 1 )" ) );
-        REQUIRE( g.has( "= kl__id__T__bool( true )" ) );
+        REQUIRE( g.has( "= kl__id__3i32( 1 )" ) );
+        REQUIRE( g.has( "= kl__id__4bool( true )" ) );
     }
 
     SECTION( "the same type twice is one function" )
@@ -1439,12 +1634,12 @@ TEST_CASE( "emit_kir_emits_one_function_per_instantiation", "[codegen][kir][gene
 
         // Once as a prototype and once as a definition, and no more.
         std::size_t definitions = 0;
-        std::size_t at          = g.c.find( "int32_t kl__id__T__i32( int32_t kl_" );
+        std::size_t at          = g.c.find( "int32_t kl__id__3i32( int32_t kl_" );
 
         while( at != std::string::npos )
         {
             definitions += 1;
-            at = g.c.find( "int32_t kl__id__T__i32( int32_t kl_", at + 1 );
+            at = g.c.find( "int32_t kl__id__3i32( int32_t kl_", at + 1 );
         }
 
         REQUIRE( definitions == 1 );
@@ -1457,7 +1652,7 @@ TEST_CASE( "emit_kir_emits_one_function_per_instantiation", "[codegen][kir][gene
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE_FALSE( g.has( "kl__id__T( " ) );
+        REQUIRE_FALSE( g.has( "kl__id__( " ) );
     }
 
     SECTION( "several parameters" )
@@ -1467,7 +1662,7 @@ TEST_CASE( "emit_kir_emits_one_function_per_instantiation", "[codegen][kir][gene
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "kl__pick__T_U__i32_bool" ) );
+        REQUIRE( g.has( "kl__pick__3i32_4bool" ) );
     }
 
     SECTION( "the parameter and return types are the substituted ones" )
@@ -1477,7 +1672,7 @@ TEST_CASE( "emit_kir_emits_one_function_per_instantiation", "[codegen][kir][gene
         Generated g( "T id<T>( T a ) where T : Copyable { return a; }\ni32 main() { return id<i32>( 1 ); }" );
 
         INFO( g.c );
-        REQUIRE( g.has( "int32_t kl__id__T__i32( int32_t );" ) );
+        REQUIRE( g.has( "int32_t kl__id__3i32( int32_t );" ) );
     }
 
     SECTION( "a non-generic program is unchanged" )
@@ -1486,7 +1681,7 @@ TEST_CASE( "emit_kir_emits_one_function_per_instantiation", "[codegen][kir][gene
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "int32_t kl__f__i32( int32_t );" ) );
+        REQUIRE( g.has( "int32_t kl__f__3i32( int32_t );" ) );
     }
 }
 

@@ -1,17 +1,21 @@
 Source_file                             2:1-31:1
   Struct_decl                           2:1-6:3     name=Point
+    <none>                              -
     Field_decl                          4:5-4:11    name=x
       Named_type                        4:5-4:8     "f64"
     Field_decl                          5:5-5:11    name=y
       Named_type                        5:5-5:8     "f64"
-  Struct_decl                           8:1-8:18    "struct Empty { };"  name=Empty
+  Struct_decl                           8:1-8:18    name=Empty
+    <none>                              -
   Struct_decl                           10:1-14:3   name=Buffer
+    <none>                              -
     Field_decl                          12:5-12:13  name=ptr
       Pointer_type                      12:5-12:8
         Named_type                      12:5-12:7   "u8"
     Field_decl                          13:5-13:13  name=len
       Named_type                        13:5-13:8   "u64"
   Struct_decl                           16:1-20:3   name=Line
+    <none>                              -
     Field_decl                          18:5-18:13  name=a
       Named_type                        18:5-18:10  "Point"
     Field_decl                          19:5-19:13  name=b

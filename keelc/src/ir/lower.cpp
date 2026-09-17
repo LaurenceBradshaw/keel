@@ -33,13 +33,15 @@ private:
     // Every read of a type goes through one of these: a `Parameter` that escapes into the emitter
     // hits Spelling::type's assert, which is loud but late.
     Type_id type_of( Node_id id );
+    Type_id type_under( Node_id id, const Bindings& bindings );
     Type_id binding_type_of( Node_id decl );
 
     // A declaration's binding type under an explicit set of bindings, and the set a *call* is made
     // under. lower_call needs the callee's rather than this function's: a plain `main` calling
     // `id<i32>` has none of its own, while the callee's parameters and return are `T`.
-    Type_id  binding_type_under( Node_id decl, const Bindings& bindings );
-    Bindings bindings_for_call( Node_id call );
+    Type_id              binding_type_under( Node_id decl, const Bindings& bindings );
+    Bindings             bindings_for_call( Node_id call );
+    std::vector<Type_id> type_arguments_for_call( Node_id call );
 
     Place   place_for( Node_id declaration );
     Node_id field_of( Type_id type, Symbol_id name ) const;
@@ -105,7 +107,7 @@ private:
     // The type an operation happens in, and the conversion that puts an operand there. See §6.4.
     Type_id operation_type( Node_id node );
     Operand converted( Operand operand, Type_id to, Span span );
-    Operand moved_if_owning( Operand operand ) const;
+    Operand moved_if_owning( Operand operand );
 
     bool is_move_parameter( Node_id param ) const;
 
@@ -136,6 +138,12 @@ private:
     // a Literal_id comes straight off aux, and a Symbol_id is passed through without a lookup.
     const Resolution& resolution_;
     Types&            types_;
+    // D2 for this instance rather than for the declaration: `Box<i32>` and `Box<Buffer>` are two
+    // answers, and the drop being elaborated here belongs to one of them.
+    bool owns( Type_id type )
+    {
+        return instance_owns( ast_, types_.table(), type, types_.recorded() );
+    }
 
     // This instantiation's type parameters, bound. Empty for an ordinary function, which is
     // what makes the substitution below the identity and lets one path serve both.
@@ -260,6 +268,11 @@ Type_id Lowering::type_of( Node_id id )
     return types_.table().substitute( types_.type_of( id ), bindings_ );
 }
 
+Type_id Lowering::type_under( Node_id id, const Bindings& bindings )
+{
+    return types_.table().substitute( types_.type_of( id ), bindings );
+}
+
 Type_id Lowering::binding_type_of( Node_id decl )
 {
     return binding_type_under( decl, bindings_ );
@@ -268,6 +281,25 @@ Type_id Lowering::binding_type_of( Node_id decl )
 Type_id Lowering::binding_type_under( Node_id decl, const Bindings& bindings )
 {
     return types_.table().substitute( binding_type( ast_, types_, decl ), bindings );
+}
+
+// What the symbol is mangled with. The checker recorded which instantiation this call resolved to,
+// because turning a type argument into a type is its rule rather than the lowerer's. Substituted
+// for the reason bindings_for_call substitutes: the recorded arguments are what the call *wrote*,
+// and a call inside a generic wrote `T` - the mangled name has to be the instance's.
+std::vector<Type_id> Lowering::type_arguments_for_call( Node_id call )
+{
+    std::vector<Type_id> type_arguments;
+
+    if( const std::optional<std::size_t> instance = types_.instantiation_of( call ) )
+    {
+        for( const Type_id argument : types_.instantiations()[*instance].arguments )
+        {
+            type_arguments.push_back( types_.table().substitute( argument, bindings_ ) );
+        }
+    }
+
+    return type_arguments;
 }
 
 Bindings Lowering::bindings_for_call( Node_id call )
@@ -280,7 +312,7 @@ Bindings Lowering::bindings_for_call( Node_id call )
     }
 
     const Instantiation&       chosen     = types_.instantiations()[*instance];
-    const std::vector<Node_id> parameters = type_parameters( ast_, ast_.child( chosen.declaration, 3 ) );
+    const std::vector<Node_id> parameters = type_parameters( ast_, ast_.type_param_list( chosen.declaration ) );
 
     Bindings bindings;
 
@@ -324,7 +356,7 @@ Place Lowering::place_for( Node_id declaration )
 
 Node_id Lowering::field_of( Type_id type, Symbol_id name ) const
 {
-    for( const Node_id field : ast_.children( types_.table().get( type ).declaration ) )
+    for( const Node_id field : ast_.members( types_.table().get( type ).declaration ) )
     {
         if( ast_.kind( field ) == Node_kind::Field_decl && ast_.aux( field ) == name.v )
         {
@@ -365,9 +397,9 @@ Operand Lowering::converted( Operand operand, Type_id to, Span span )
     return copy( builder_.place( builder_.into_temp( cast_to( operand, to ), to, span ) ), to );
 }
 
-Operand Lowering::moved_if_owning( Operand operand ) const
+Operand Lowering::moved_if_owning( Operand operand )
 {
-    if( operand.kind != Operand_kind::Copy || !types_.is_owning( operand.type ) )
+    if( operand.kind != Operand_kind::Copy || !owns( operand.type ) )
     {
         return operand;
     }
@@ -418,7 +450,7 @@ void Lowering::unwind_to( u32 depth, Span span )
 
 void Lowering::drop_place( Place place, Type_id type, Span span )
 {
-    if( !types_.is_owning( type ) )
+    if( !owns( type ) )
     {
         return;
     }
@@ -426,7 +458,7 @@ void Lowering::drop_place( Place place, Type_id type, Span span )
     const Node_id decl = types_.table().get( type ).declaration;
 
     // Its own destructor first, then its members.
-    for( const Node_id member : ast_.children( decl ) )
+    for( const Node_id member : ast_.members( decl ) )
     {
         if( ast_.kind( member ) == Node_kind::Destructor_decl )
         {
@@ -436,14 +468,18 @@ void Lowering::drop_place( Place place, Type_id type, Span span )
     }
 
     // Reverse declaration order.
-    const auto members = ast_.children( decl );
+    const auto members = ast_.members( decl );
     for( std::size_t i = members.size(); i > 0; --i )
     {
         const Node_id member = members[i - 1];
 
         if( ast_.kind( member ) == Node_kind::Field_decl )
         {
-            drop_place( builder_.field( place, member ), type_of( member ), span );
+            // Through the instance being dropped, not the enclosing function: the field of a
+            // `Box<Buffer>` is declared `T`, and only this instance says what that is.
+            drop_place(
+                builder_.field( place, member ), field_type( ast_, types_.table(), type, member, types_.recorded() ), span
+            );
         }
     }
 }
@@ -479,7 +515,7 @@ void Lowering::lower_construction( Place target, Node_id call_expr )
 
     Node_id constructor {};
 
-    for( const Node_id member : ast_.children( aggregate ) )
+    for( const Node_id member : ast_.members( aggregate ) )
     {
         if( ast_.kind( member ) == Node_kind::Constructor_decl )
         {
@@ -493,7 +529,11 @@ void Lowering::lower_construction( Place target, Node_id call_expr )
     const std::span<const Node_id> parameters = ast_.children( ast_.child( constructor, 1 ) );
     const std::span<const Node_id> arguments  = ast_.children( ast_.child( call_expr, 1 ) );
 
-    const Type_id receiver_type = binding_type_of( parameters[0] );
+    // The instance being built, not the enclosing function: `Box<i32>( 7 )` inside a non-generic
+    // `main` has no bindings of its own, and the constructor's parameters are written in `T`.
+    const Bindings callee_bound = bindings_for_call( call_expr );
+
+    const Type_id receiver_type = binding_type_under( parameters[0], callee_bound );
 
     std::vector<Operand> operands;
 
@@ -511,7 +551,7 @@ void Lowering::lower_construction( Place target, Node_id call_expr )
 
     for( std::size_t i = 0; i < arguments.size(); ++i )
     {
-        const Type_id param_type = type_of( parameters[i + 1] );
+        const Type_id param_type = type_under( parameters[i + 1], callee_bound );
         operands[i + 1]          = converted( operands[i + 1], param_type, ast_.span( arguments[i] ) );
     }
 
@@ -520,7 +560,9 @@ void Lowering::lower_construction( Place target, Node_id call_expr )
 
     // The result is discarded, but Assign stays total: a void local is what the backend drops the
     // assignment from, leaving the bare call.
-    builder_.into_temp( call( constructor, first, narrow_cast<u32>( operands.size() ), type ), type, span );
+    builder_.into_temp(
+        call( constructor, first, narrow_cast<u32>( operands.size() ), type, type_arguments_for_call( call_expr ) ), type, span
+    );
 }
 
 Block_id Lowering::break_target()
@@ -611,14 +653,14 @@ Operand Lowering::lower_struct_literal( Node_id id )
     const Span     span = ast_.span( id );
     const Local_id temp = builder_.add_local( type, span );
 
-    if( types_.is_owning( type ) )
+    if( owns( type ) )
     {
         statement_temporaries_.push_back( temp );
     }
 
     // Positional form names no field, so the i-th initialiser fills the i-th field. The two
     // forms cannot be mixed - the checker rejects that - so an index is enough here.
-    const std::span<const Node_id> fields = ast_.children( types_.table().get( type ).declaration );
+    const std::span<const Node_id> fields = ast_.members( types_.table().get( type ).declaration );
 
     std::size_t index = 0;
 
@@ -826,9 +868,10 @@ Operand Lowering::lower_method_call( Node_id id )
     // instead would hand the method a `Point**`, which type-checks nowhere and miscompiles here.
     const Type_id object_type = type_of( object );
 
-    const Operand receiver = types_.table().is_pointer( object_type )
-                                 ? lower_expression( object )
-                                 : address_operand( lower_place( object ), binding_type_of( parameters[0] ), span );
+    const Operand receiver =
+        types_.table().is_pointer( object_type )
+            ? lower_expression( object )
+            : address_operand( lower_place( object ), binding_type_under( parameters[0], bindings_for_call( id ) ), span );
 
     return lower_method_call_on( id, method, receiver );
 }
@@ -841,6 +884,10 @@ Operand Lowering::lower_method_call_on( Node_id id, Node_id method, Operand rece
 
     const std::span<const Node_id> parameters = ast_.children( ast_.child( method, 1 ) );
     const std::span<const Node_id> arguments  = ast_.children( ast_.child( id, 1 ) );
+
+    // The receiver's own arguments, not the enclosing function's: `p.first()` on a `Pair<i32>`
+    // reads `T` out of the declaration, and only this instance says what it is.
+    const Bindings callee_bound = bindings_for_call( id );
 
     std::vector<Operand> operands;
 
@@ -857,7 +904,8 @@ Operand Lowering::lower_method_call_on( Node_id id, Node_id method, Operand rece
     // From 1: parameter 0 is the receiver, which was never written at the call site.
     for( std::size_t i = 0; i < arguments.size() && i + 1 < parameters.size(); ++i )
     {
-        operands[i + 1] = converted( operands[i + 1], binding_type_of( parameters[i + 1] ), ast_.span( arguments[i] ) );
+        operands[i + 1] =
+            converted( operands[i + 1], binding_type_under( parameters[i + 1], callee_bound ), ast_.span( arguments[i] ) );
 
         if( is_move_parameter( parameters[i + 1] ) )
         {
@@ -873,10 +921,13 @@ Operand Lowering::lower_method_call_on( Node_id id, Node_id method, Operand rece
     // too. Dereferencing once here is what makes both uses at the call site fall out - a copy reads
     // `(*_t)`, and a binding takes `&(*_t)`, which is `_t` again.
     const bool    binding     = is_borrowed_binding( ast_, types_, method );
-    const Type_id result_type = binding ? binding_type_of( method ) : type;
+    const Type_id result_type = binding ? binding_type_under( method, callee_bound ) : type;
 
-    const Local_id result =
-        builder_.into_temp( call( method, first, static_cast<u32>( operands.size() ), result_type ), result_type, span );
+    const Local_id result = builder_.into_temp(
+        call( method, first, static_cast<u32>( operands.size() ), result_type, type_arguments_for_call( id ) ),
+        result_type,
+        span
+    );
 
     return copy( binding ? builder_.deref( builder_.place( result ) ) : builder_.place( result ), type );
 }
@@ -897,7 +948,7 @@ Operand Lowering::lower_call( Node_id id )
         const Type_id  type  = type_of( id );
         const Local_id local = builder_.add_local( type, ast_.span( id ) );
 
-        if( types_.is_owning( type ) )
+        if( owns( type ) )
         {
             statement_temporaries_.push_back( local );
         }
@@ -980,20 +1031,7 @@ Operand Lowering::lower_call( Node_id id )
     const bool    binding     = is_borrowed_binding( ast_, types_, callee );
     const Type_id result_type = binding ? binding_type_under( callee, callee_bound ) : type;
 
-    // What the symbol is mangled with. The checker recorded which instantiation this call resolved
-    // to, because turning a type argument into a type is its rule rather than the lowerer's.
-    std::vector<Type_id> type_arguments;
-
-    if( const std::optional<std::size_t> instance = types_.instantiation_of( id ) )
-    {
-        // Substituted, for the reason bindings_for_call substitutes: the recorded arguments are
-        // what the call wrote, and a call inside a generic wrote `T`. The mangled name has to be
-        // the one the instance was emitted under.
-        for( const Type_id argument : types_.instantiations()[*instance].arguments )
-        {
-            type_arguments.push_back( types_.table().substitute( argument, bindings_ ) );
-        }
-    }
+    std::vector<Type_id> type_arguments = type_arguments_for_call( id );
 
     const Local_id result = builder_.into_temp(
         call( callee, first, narrow_cast<u32>( operands.size() ), result_type, std::move( type_arguments ) ),
@@ -1932,11 +1970,46 @@ lower( const Ast& ast, const Resolution& resolution, Types& types, Literals& lit
         }
     }
 
+    for( const Type_id struct_type_id : types.table().struct_types() )
+    {
+        const Type                 struct_type = types.table().get( struct_type_id );
+        const std::vector<Type_id> arguments { struct_type.arguments.begin(), struct_type.arguments.end() };
+        Instantiation              instance { .declaration = struct_type.declaration, .arguments = arguments };
+
+        if( !struct_type.declaration.is_valid() || !is_generic( ast, struct_type.declaration ) )
+        {
+            continue;
+        }
+
+        bool destructor_found = false;
+        for( const auto& decl : ast.members( struct_type.declaration ) )
+        {
+            if( ast.kind( decl ) == Node_kind::Destructor_decl )
+            {
+                instance.declaration = decl;
+                destructor_found     = true;
+                break;
+            }
+        }
+
+        if( !destructor_found )
+        {
+            continue;
+        }
+
+        if( !is_closed( instance ) || already_queued( instance ) )
+        {
+            continue;
+        }
+
+        pending.push_back( std::move( instance ) );
+    }
+
     // Indexed rather than iterated: the loop below appends to what it is walking.
     for( std::size_t at = 0; at < pending.size(); ++at )
     {
         const Instantiation        instance   = pending[at];
-        const std::vector<Node_id> parameters = type_parameters( ast, ast.child( instance.declaration, 3 ) );
+        const std::vector<Node_id> parameters = type_parameters( ast, ast.type_param_list( instance.declaration ) );
 
         Bindings bindings;
 
@@ -1970,7 +2043,7 @@ lower( const Ast& ast, const Resolution& resolution, Types& types, Literals& lit
 
     for( const Instantiation& instance : pending )
     {
-        const std::vector<Node_id> parameters = type_parameters( ast, ast.child( instance.declaration, 3 ) );
+        const std::vector<Node_id> parameters = type_parameters( ast, ast.type_param_list( instance.declaration ) );
 
         Bindings bindings;
 

@@ -13,11 +13,11 @@ struct kl__Node
 void* kl_rt_alloc( size_t );
 void  kl_rt_free( void* );
 
-struct kl__Node* kl__push__Nodep_i32( struct kl__Node*, int32_t );
-int32_t kl__sum_and_release__Nodep( struct kl__Node* );
+struct kl__Node* kl__push__P4Node_3i32( struct kl__Node*, int32_t );
+int32_t kl__sum_and_release__P4Node( struct kl__Node* );
 int32_t kl__main__( void );
 
-struct kl__Node* kl__push__Nodep_i32( struct kl__Node* kl_head_1, int32_t kl_value_2 )
+struct kl__Node* kl__push__P4Node_3i32( struct kl__Node* kl_head_1, int32_t kl_value_2 )
 {
     struct kl__Node* kl_t0;
     struct kl__Node* kl_node_3;
@@ -36,7 +36,7 @@ struct kl__Node* kl__push__Nodep_i32( struct kl__Node* kl_head_1, int32_t kl_val
     return kl_t0;
 }
 
-int32_t kl__sum_and_release__Nodep( struct kl__Node* kl_head_1 )
+int32_t kl__sum_and_release__P4Node( struct kl__Node* kl_head_1 )
 {
     int32_t kl_t0;
     int32_t kl_total_2;
@@ -94,7 +94,7 @@ int32_t kl__main__( void )
     bb2:
 #line 57 "codegen/alloc_free.kl"
     kl_t4 = kl_i_2 * 3;
-    kl_t5 = kl__push__Nodep_i32( kl_head_1, kl_t4 );
+    kl_t5 = kl__push__P4Node_3i32( kl_head_1, kl_t4 );
     kl_head_1 = kl_t5;
 #line 58 "codegen/alloc_free.kl"
     kl_t6 = kl_i_2 + 1;
@@ -102,11 +102,11 @@ int32_t kl__main__( void )
     goto bb1;
     bb3:
 #line 62 "codegen/alloc_free.kl"
-    kl_t8 = kl__push__Nodep_i32( NULL, 12 );
+    kl_t8 = kl__push__P4Node_3i32( NULL, 12 );
     kl_lone_7 = kl_t8;
 #line 64 "codegen/alloc_free.kl"
-    kl_t10 = kl__sum_and_release__Nodep( kl_head_1 );
-    kl_t11 = kl__sum_and_release__Nodep( kl_lone_7 );
+    kl_t10 = kl__sum_and_release__P4Node( kl_head_1 );
+    kl_t11 = kl__sum_and_release__P4Node( kl_lone_7 );
     kl_t12 = kl_t10 + kl_t11;
     kl_total_9 = kl_t12;
 #line 66 "codegen/alloc_free.kl"

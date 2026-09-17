@@ -2,10 +2,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-int32_t kl__bump_through_bytes__i32p( int32_t* );
+int32_t kl__bump_through_bytes__P3i32( int32_t* );
 int32_t kl__main__( void );
 
-int32_t kl__bump_through_bytes__i32p( int32_t* kl_target_1 )
+int32_t kl__bump_through_bytes__P3i32( int32_t* kl_target_1 )
 {
     int32_t kl_t0;
     uint8_t* kl_bytes_2;
@@ -45,7 +45,7 @@ int32_t kl__main__( void )
     kl_value_1 = 40;
 #line 21 "codegen/unsafe_blocks.kl"
     kl_t3 = &kl_value_1;
-    kl_t4 = kl__bump_through_bytes__i32p( kl_t3 );
+    kl_t4 = kl__bump_through_bytes__P3i32( kl_t3 );
     kl_once_2 = kl_t4;
 #line 26 "codegen/unsafe_blocks.kl"
     kl_t6 = &kl_value_1;

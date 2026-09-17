@@ -30,6 +30,19 @@ public:
     // is a constant naming a fixed slot.
     Node_id child( Node_id id, std::size_t index ) const;
 
+    // The members of a `struct` or `class` - its fields, methods, constructor and destructor - and
+    // nothing else. A generic aggregate carries its type parameters in the same child list, in a
+    // leading slot this skips, exactly as an `enum` carries its underlying type in one; walking the
+    // children directly would read that slot as a member. Asserts on any other kind, because the
+    // answer for one would be a guess about what its children mean.
+    std::span<const Node_id> members( Node_id id ) const;
+
+    // The declaration's `Type_param_list`, or an invalid id when it has none. Which child holds it
+    // depends on the kind - the front for an aggregate, whose members are variadic, and the fixed
+    // last slot for anything function-like - and this is the one place that knows, so no caller
+    // indexes that slot by hand.
+    Node_id type_param_list( Node_id id ) const;
+
     Node_id     root() const;
     void        set_root( Node_id id );
     std::size_t node_count() const;

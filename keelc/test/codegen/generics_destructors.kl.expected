@@ -1,0 +1,247 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Box__I3i32E;
+struct kl__Box__I3f64E;
+
+struct kl__Box__I3i32E
+{
+    int32_t kl_value_7;
+};
+
+struct kl__Box__I3f64E
+{
+    double kl_value_7;
+};
+
+int32_t kl_live_1;
+
+int32_t kl__early__3i32( int32_t );
+int32_t kl__main__( void );
+void kl__Box__I3i32E__P3BoxI3i32E_3i32__ctor( struct kl__Box__I3i32E*, int32_t );
+int32_t kl__get__3i32( struct kl__Box__I3i32E* );
+void kl__Box__I3f64E__P3BoxI3f64E_3f64__ctor( struct kl__Box__I3f64E*, double );
+double kl__get__3f64( struct kl__Box__I3f64E* );
+void kl__Box__I3i32E__dtor( struct kl__Box__I3i32E* );
+void kl__Box__I3f64E__dtor( struct kl__Box__I3f64E* );
+
+int32_t kl__early__3i32( int32_t kl_n_1 )
+{
+    int32_t kl_t0;
+    struct kl__Box__I3i32E kl_a_2;
+    struct kl__Box__I3i32E* kl_t3;
+    struct kl__Box__I3i32E* kl_t5;
+    int32_t kl_t6;
+    bool kl_t7;
+#line 31 "codegen/generics_destructors.kl"
+    kl_t3 = &kl_a_2;
+    kl__Box__I3i32E__P3BoxI3i32E_3i32__ctor( kl_t3, kl_n_1 );
+#line 33 "codegen/generics_destructors.kl"
+    kl_t5 = &kl_a_2;
+    kl_t6 = kl__get__3i32( kl_t5 );
+    kl_t7 = kl_t6 > 2;
+    if ( kl_t7 ) goto bb1; else goto bb2;
+    bb1:
+#line 35 "codegen/generics_destructors.kl"
+    kl_t0 = 1;
+    kl__Box__I3i32E__dtor( &kl_a_2 );
+    return kl_t0;
+    bb2:
+    goto bb3;
+    bb3:
+#line 38 "codegen/generics_destructors.kl"
+    kl_t0 = 0;
+    kl__Box__I3i32E__dtor( &kl_a_2 );
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__Box__I3i32E kl_a_1;
+    struct kl__Box__I3i32E* kl_t2;
+    struct kl__Box__I3f64E kl_b_4;
+    struct kl__Box__I3f64E* kl_t5;
+    bool kl_t7;
+    struct kl__Box__I3i32E* kl_t8;
+    int32_t kl_t9;
+    bool kl_t10;
+    struct kl__Box__I3f64E* kl_t11;
+    double kl_t12;
+    bool kl_t13;
+    bool kl_t14;
+    int32_t kl_t15;
+    bool kl_t16;
+    bool kl_t17;
+    int32_t kl_t18;
+    bool kl_t19;
+    bool kl_t20;
+#line 43 "codegen/generics_destructors.kl"
+    kl_live_1 = 0;
+#line 46 "codegen/generics_destructors.kl"
+    kl_t2 = &kl_a_1;
+    kl__Box__I3i32E__P3BoxI3i32E_3i32__ctor( kl_t2, 7 );
+#line 47 "codegen/generics_destructors.kl"
+    kl_t5 = &kl_b_4;
+    kl__Box__I3f64E__P3BoxI3f64E_3f64__ctor( kl_t5, 2.5 );
+#line 50 "codegen/generics_destructors.kl"
+    kl_t7 = kl_live_1 != 2;
+    if ( kl_t7 ) goto bb1; else goto bb2;
+    bb1:
+#line 52 "codegen/generics_destructors.kl"
+    kl_t0 = 1;
+    kl__Box__I3f64E__dtor( &kl_b_4 );
+    kl__Box__I3i32E__dtor( &kl_a_1 );
+    return kl_t0;
+    bb2:
+    goto bb3;
+    bb3:
+#line 55 "codegen/generics_destructors.kl"
+    kl_t8 = &kl_a_1;
+    kl_t9 = kl__get__3i32( kl_t8 );
+    kl_t10 = kl_t9 != 7;
+    if ( kl_t10 ) goto bb4; else goto bb5;
+    bb4:
+#line 57 "codegen/generics_destructors.kl"
+    kl_t0 = 2;
+    kl__Box__I3f64E__dtor( &kl_b_4 );
+    kl__Box__I3i32E__dtor( &kl_a_1 );
+    return kl_t0;
+    bb5:
+    goto bb6;
+    bb6:
+#line 60 "codegen/generics_destructors.kl"
+    kl_t11 = &kl_b_4;
+    kl_t12 = kl__get__3f64( kl_t11 );
+    kl_t13 = kl_t12 != 2.5;
+    if ( kl_t13 ) goto bb7; else goto bb8;
+    bb7:
+#line 62 "codegen/generics_destructors.kl"
+    kl_t0 = 3;
+    kl__Box__I3f64E__dtor( &kl_b_4 );
+    kl__Box__I3i32E__dtor( &kl_a_1 );
+    return kl_t0;
+    bb8:
+    goto bb9;
+    bb9:
+#line 45 "codegen/generics_destructors.kl"
+    kl__Box__I3f64E__dtor( &kl_b_4 );
+    kl__Box__I3i32E__dtor( &kl_a_1 );
+#line 67 "codegen/generics_destructors.kl"
+    kl_t14 = kl_live_1 != 0;
+    if ( kl_t14 ) goto bb10; else goto bb11;
+    bb10:
+#line 69 "codegen/generics_destructors.kl"
+    kl_t0 = 4;
+    return kl_t0;
+    bb11:
+    goto bb12;
+    bb12:
+#line 72 "codegen/generics_destructors.kl"
+    kl_t15 = kl__early__3i32( 9 );
+    kl_t16 = kl_t15 != 1;
+    if ( kl_t16 ) goto bb13; else goto bb14;
+    bb13:
+#line 74 "codegen/generics_destructors.kl"
+    kl_t0 = 5;
+    return kl_t0;
+    bb14:
+    goto bb15;
+    bb15:
+#line 77 "codegen/generics_destructors.kl"
+    kl_t17 = kl_live_1 != 0;
+    if ( kl_t17 ) goto bb16; else goto bb17;
+    bb16:
+#line 79 "codegen/generics_destructors.kl"
+    kl_t0 = 6;
+    return kl_t0;
+    bb17:
+    goto bb18;
+    bb18:
+#line 82 "codegen/generics_destructors.kl"
+    kl_t18 = kl__early__3i32( 1 );
+    kl_t19 = kl_t18 != 0;
+    if ( kl_t19 ) goto bb19; else goto bb20;
+    bb19:
+#line 84 "codegen/generics_destructors.kl"
+    kl_t0 = 7;
+    return kl_t0;
+    bb20:
+    goto bb21;
+    bb21:
+#line 87 "codegen/generics_destructors.kl"
+    kl_t20 = kl_live_1 != 0;
+    if ( kl_t20 ) goto bb22; else goto bb23;
+    bb22:
+#line 89 "codegen/generics_destructors.kl"
+    kl_t0 = 8;
+    return kl_t0;
+    bb23:
+    goto bb24;
+    bb24:
+#line 92 "codegen/generics_destructors.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+void kl__Box__I3i32E__P3BoxI3i32E_3i32__ctor( struct kl__Box__I3i32E* kl_this_1, int32_t kl_v_2 )
+{
+    int32_t kl_t3;
+#line 13 "codegen/generics_destructors.kl"
+    ( *kl_this_1 ).kl_value_7 = kl_v_2;
+#line 14 "codegen/generics_destructors.kl"
+    kl_t3 = kl_live_1 + 1;
+    kl_live_1 = kl_t3;
+    return;
+}
+
+int32_t kl__get__3i32( struct kl__Box__I3i32E* kl_this_1 )
+{
+    int32_t kl_t0;
+#line 24 "codegen/generics_destructors.kl"
+    kl_t0 = ( *kl_this_1 ).kl_value_7;
+    return kl_t0;
+}
+
+void kl__Box__I3f64E__P3BoxI3f64E_3f64__ctor( struct kl__Box__I3f64E* kl_this_1, double kl_v_2 )
+{
+    int32_t kl_t3;
+#line 13 "codegen/generics_destructors.kl"
+    ( *kl_this_1 ).kl_value_7 = kl_v_2;
+#line 14 "codegen/generics_destructors.kl"
+    kl_t3 = kl_live_1 + 1;
+    kl_live_1 = kl_t3;
+    return;
+}
+
+double kl__get__3f64( struct kl__Box__I3f64E* kl_this_1 )
+{
+    double kl_t0;
+#line 24 "codegen/generics_destructors.kl"
+    kl_t0 = ( *kl_this_1 ).kl_value_7;
+    return kl_t0;
+}
+
+void kl__Box__I3i32E__dtor( struct kl__Box__I3i32E* kl_this_1 )
+{
+    int32_t kl_t2;
+#line 19 "codegen/generics_destructors.kl"
+    kl_t2 = kl_live_1 - 1;
+    kl_live_1 = kl_t2;
+    return;
+}
+
+void kl__Box__I3f64E__dtor( struct kl__Box__I3f64E* kl_this_1 )
+{
+    int32_t kl_t2;
+#line 19 "codegen/generics_destructors.kl"
+    kl_t2 = kl_live_1 - 1;
+    kl_live_1 = kl_t2;
+    return;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

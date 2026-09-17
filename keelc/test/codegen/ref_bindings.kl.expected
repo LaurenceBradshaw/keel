@@ -10,10 +10,10 @@ struct kl__Point
     int32_t kl_y_3;
 };
 
-void kl__bump_twice__i32p( int32_t* );
+void kl__bump_twice__P3i32( int32_t* );
 int32_t kl__main__( void );
 
-void kl__bump_twice__i32p( int32_t* kl_n_1 )
+void kl__bump_twice__P3i32( int32_t* kl_n_1 )
 {
     int32_t* kl_inner_2;
     int32_t kl_t3;
@@ -54,7 +54,7 @@ int32_t kl__main__( void )
     ( *kl_r_2 ) = kl_t3;
 #line 28 "codegen/ref_bindings.kl"
     kl_t4 = &kl_a_1;
-    kl__bump_twice__i32p( kl_t4 );
+    kl__bump_twice__P3i32( kl_t4 );
 #line 30 "codegen/ref_bindings.kl"
     kl_t7.kl_x_1 = 2;
     kl_t7.kl_y_3 = 3;

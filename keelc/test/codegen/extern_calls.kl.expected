@@ -4,10 +4,10 @@
 
 int32_t abs( int32_t );
 
-int32_t kl__magnitude__i32( int32_t );
+int32_t kl__magnitude__3i32( int32_t );
 int32_t kl__main__( void );
 
-int32_t kl__magnitude__i32( int32_t kl_v_1 )
+int32_t kl__magnitude__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
     int32_t kl_n_2;
@@ -38,11 +38,11 @@ int32_t kl__main__( void )
     kl_total_1 = 0;
 #line 24 "codegen/extern_calls.kl"
     kl_t2 = 0 - 5;
-    kl_t3 = kl__magnitude__i32( kl_t2 );
+    kl_t3 = kl__magnitude__3i32( kl_t2 );
     kl_t4 = kl_total_1 + kl_t3;
     kl_total_1 = kl_t4;
 #line 25 "codegen/extern_calls.kl"
-    kl_t5 = kl__magnitude__i32( 7 );
+    kl_t5 = kl__magnitude__3i32( 7 );
     kl_t6 = kl_total_1 + kl_t5;
     kl_total_1 = kl_t6;
 #line 30 "codegen/extern_calls.kl"

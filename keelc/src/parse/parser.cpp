@@ -74,7 +74,7 @@ private:
     Node_id parse_source_file();
     Node_id parse_declaration();
     Node_id parse_function_decl();
-    Node_id parse_method_decl( Symbol_id enclosing );
+    Node_id parse_method_decl( Symbol_id enclosing, Node_id type_params );
     Node_id parse_param_list( Node_id leading = Node_id {} );
     // The parameters alone: the list node is built later, once the `where` clauses that belong
     // beside them have been parsed too.
@@ -92,8 +92,8 @@ private:
     Node_id parse_enum_decl();
     Node_id parse_variant_decl();
     Node_id parse_field_decl();
-    Node_id parse_destructor_decl( Symbol_id enclosing );
-    Node_id parse_constructor_decl( Symbol_id enclosing );
+    Node_id parse_destructor_decl( Symbol_id enclosing, Node_id type_params );
+    Node_id parse_constructor_decl( Symbol_id enclosing, Node_id type_params );
 
     // `Point { 0.0, 0.0 }` or `Point { .x = 0.0, .y = 0.0 }`. Entered from parse_prefix once the
     // identifier is consumed and a `{` is seen behind it.
@@ -173,7 +173,8 @@ private:
     void mark_parenthesised( Node_id id );
     bool is_parenthesised( Node_id id ) const;
 
-    Node_id synthesise_receiver( Symbol_id enclosing, Span span, bool is_const );
+    Node_id generic_self( Node_id named, Node_id type_params, Span span );
+    Node_id synthesise_receiver( Symbol_id enclosing, Node_id type_params, Span span, bool is_const );
 
     bool at_mode_keyword() const;
 
@@ -742,7 +743,7 @@ Node_id Parser::parse_function_decl()
     );
 }
 
-Node_id Parser::parse_method_decl( Symbol_id enclosing )
+Node_id Parser::parse_method_decl( Symbol_id enclosing, Node_id type_params )
 {
     const Span      start       = peek().span;
     const Node_id   return_type = parse_type_with_mode();
@@ -784,7 +785,7 @@ Node_id Parser::parse_method_decl( Symbol_id enclosing )
 
     pos_ = before;
 
-    const Node_id receiver = synthesise_receiver( enclosing, start, is_const );
+    const Node_id receiver = synthesise_receiver( enclosing, type_params, start, is_const );
     const Node_id params   = parse_param_list( receiver );
 
     if( is_const )
@@ -799,11 +800,11 @@ Node_id Parser::parse_method_decl( Symbol_id enclosing )
         return error_node( Span::merge( start, previous().span ) );
     }
 
-    // Four children, as every function-like declaration has: the slot for type parameters stays
-    // invalid until a method may be generic, so the shared walk in the resolver does not have to
-    // ask which kind it is looking at.
+    // Four children, as every function-like declaration has. The type parameter slot holds the
+    // *enclosing* aggregate's list: a method of `Box<T>` is generic in T without writing any of
+    // its own, and everything downstream asks this slot rather than asking who owns the member.
     return ast_.add(
-        Node_kind::Method_decl, Span::merge( start, previous().span ), name.v, { return_type, params, body, Node_id {} }
+        Node_kind::Method_decl, Span::merge( start, previous().span ), name.v, { return_type, params, body, type_params }
     );
 }
 
@@ -876,6 +877,36 @@ Node_id Parser::parse_aggregate_decl()
     // The name is a token, so it goes in aux rather than becoming a child.
     const Symbol_id name = expect_name();
 
+    const Span           generic_start = peek().span;
+    const bool           generic       = check( Token_kind::Less );
+    std::vector<Node_id> generics      = generic ? parse_type_params() : std::vector<Node_id> {};
+
+    Span generic_span = Span::merge( generic_start, previous().span );
+
+    while( check_keyword( Keyword::Where ) )
+    {
+        const Node_id clause = parse_where_clause();
+
+        // A clause with nothing to constrain. Reported here rather than left to sema, because
+        // without it the declaration would look generic to everything downstream.
+        if( !generic )
+        {
+            error_at(
+                ast_.span( clause ),
+                "a `where` clause needs type parameters",
+                "write them on the name, as in `T f<T>( T a ) where T : Copyable`"
+            );
+
+            continue;
+        }
+
+        generics.push_back( clause );
+
+        generic_span = Span::merge( generic_span, ast_.span( clause ) );
+    }
+
+    const Node_id type_params = generic ? ast_.add( Node_kind::Type_param_list, generic_span, 0, generics ) : Node_id {};
+
     // Bail rather than carry on: with no brace there is no field list to find, and scanning for
     // one runs to the next `}` - which belongs to whatever encloses this.
     if( !expect( Token_kind::L_brace ) )
@@ -908,9 +939,9 @@ Node_id Parser::parse_aggregate_decl()
         const bool is_method = !is_destructor && !is_constructor && looks_like_method();
 
         members.push_back(
-            is_destructor    ? parse_destructor_decl( name )
-            : is_constructor ? parse_constructor_decl( name )
-            : is_method      ? parse_method_decl( name )
+            is_destructor    ? parse_destructor_decl( name, type_params )
+            : is_constructor ? parse_constructor_decl( name, type_params )
+            : is_method      ? parse_method_decl( name, type_params )
                              : parse_field_decl()
         );
 
@@ -932,8 +963,11 @@ Node_id Parser::parse_aggregate_decl()
         return error_node( Span::merge( start, previous().span ) );
     }
 
+    // insert type_params as child 0
+    members.insert( members.begin(), type_params );
+
     return ast_.add(
-        is_class ? Node_kind::Class_decl : Node_kind::Struct_decl, Span::merge( start, previous().span ), name.v, members
+        is_class ? Node_kind::Class_decl : Node_kind::Struct_decl, Span::merge( start, previous().span ), name.v, { members }
     );
 }
 
@@ -1053,7 +1087,7 @@ Node_id Parser::parse_field_decl()
     return ast_.add( Node_kind::Field_decl, Span::merge( start, previous().span ), name.v, { type } );
 }
 
-Node_id Parser::parse_destructor_decl( Symbol_id enclosing )
+Node_id Parser::parse_destructor_decl( Symbol_id enclosing, Node_id type_params )
 {
     const Span start = peek().span;
 
@@ -1063,7 +1097,7 @@ Node_id Parser::parse_destructor_decl( Symbol_id enclosing )
 
     // C++ writes `this` implicitly; Keel writes it down. As an ordinary parameter it needs no
     // special case in the resolver, the checker, mangling or lowering - it is simply parameter 0.
-    const Node_id receiver = synthesise_receiver( enclosing, start, false );
+    const Node_id receiver = synthesise_receiver( enclosing, type_params, start, false );
     // Parsed rather than rejected on sight, so a stray parameter does not desynchronise the body.
     const Node_id params = parse_param_list( receiver );
 
@@ -1081,22 +1115,22 @@ Node_id Parser::parse_destructor_decl( Symbol_id enclosing )
         return error_node( Span::merge( start, previous().span ) );
     }
 
-    return ast_.add( // no return type in children, and no type parameters
+    return ast_.add( // no return type in children; the type parameters are the aggregate's
         Node_kind::Destructor_decl,
         Span::merge( start, previous().span ),
         name.v,
-        { Node_id {}, params, body, Node_id {} }
+        { Node_id {}, params, body, type_params }
     );
 }
 
-Node_id Parser::parse_constructor_decl( Symbol_id enclosing )
+Node_id Parser::parse_constructor_decl( Symbol_id enclosing, Node_id type_params )
 {
     const Span      start = peek().span;
     const Symbol_id name  = expect_name();
 
     // Same receiver the destructor gets, and for the same reason: as an ordinary parameter it
     // needs no special case in any later pass.
-    const Node_id receiver = synthesise_receiver( enclosing, start, false );
+    const Node_id receiver = synthesise_receiver( enclosing, type_params, start, false );
     const Node_id params   = parse_param_list( receiver );
     const Node_id body     = parse_block();
 
@@ -1106,7 +1140,7 @@ Node_id Parser::parse_constructor_decl( Symbol_id enclosing )
     }
 
     return ast_.add(
-        Node_kind::Constructor_decl, Span::merge( start, previous().span ), name.v, { Node_id {}, params, body, Node_id {} }
+        Node_kind::Constructor_decl, Span::merge( start, previous().span ), name.v, { Node_id {}, params, body, type_params }
     );
 }
 
@@ -1283,6 +1317,14 @@ Node_id Parser::parse_type()
 
     while( true )
     {
+        // A `>` from a split `>>` is still owed to whoever opened the enclosing list, and every
+        // token after it belongs to *them*. Without this, the inner type in `Bad<Box<T>>*` reads
+        // the `*` as its own and the field becomes `Bad<Box<T>*>` - a different type, silently.
+        if( pending_greater_ > 0 )
+        {
+            break;
+        }
+
         // A trailing const applies to what precedes it: `i32* const p` is a const pointer.
         if( match_keyword( Keyword::Const ) )
         {
@@ -1488,7 +1530,10 @@ bool Parser::match_generic_close()
     if( check( Token_kind::Greater_greater ) )
     {
         advance();
-        pending_greater_ = 1;
+
+        // Incremented rather than set: one pending close is all the current grammar can produce,
+        // and a counter that cannot lose one is worth more than the assumption.
+        pending_greater_ += 1;
         return true;
     }
 
@@ -2248,13 +2293,37 @@ bool Parser::is_parenthesised( Node_id id ) const
     return id.v < parenthesised_.size() && parenthesised_[id.v];
 }
 
+// `Box` inside `Box<T>` is `Box<T>`: the arguments are the parameters, by name. Built as the
+// arguments a written annotation would have - fresh Named_type nodes rather than the
+// Type_param_decls themselves - so the receiver resolves through the ordinary path.
+Node_id Parser::generic_self( Node_id named, Node_id type_params, Span span )
+{
+    std::vector<Node_id> arguments;
+
+    // The list holds where clauses too, and a bound is not an argument.
+    for( const Node_id type_param : ast_.children( type_params ) )
+    {
+        if( ast_.kind( type_param ) != Node_kind::Type_param_decl )
+        {
+            continue;
+        }
+
+        arguments.push_back( ast_.add( Node_kind::Named_type, span, ast_.aux( type_param ), {} ) );
+    }
+
+    const Node_id list = ast_.add( Node_kind::Type_arg_list, span, 0, arguments );
+
+    return ast_.add( Node_kind::Generic_type, span, 0, { named, list } );
+}
+
 // D32: the receiver is a binding, not a pointer. `ref T` when the method may write the object,
 // `const ref T` when it may not, which is what a trailing `const` on the method says. Built out of
 // the same nodes a written parameter would be, so nothing downstream learns it was synthesised.
-Node_id Parser::synthesise_receiver( Symbol_id enclosing, Span span, bool is_const )
+Node_id Parser::synthesise_receiver( Symbol_id enclosing, Node_id type_params, Span span, bool is_const )
 {
     const Node_id named = ast_.add( Node_kind::Named_type, span, enclosing.v, {} );
-    const Node_id mode  = ast_.add( Node_kind::Mode_type, span, static_cast<u32>( Keyword::Ref ), { named } );
+    const Node_id param = type_params.is_valid() ? generic_self( named, type_params, span ) : named;
+    const Node_id mode  = ast_.add( Node_kind::Mode_type, span, static_cast<u32>( Keyword::Ref ), { param } );
     const Node_id type  = is_const ? ast_.add( Node_kind::Const_type, span, 0, { mode } ) : mode;
 
     return ast_.add( Node_kind::Param_decl, span, Interner::keyword( Keyword::This ).v, { type } );
@@ -2702,6 +2771,11 @@ public:
     Node_id child( Node_id id, std::size_t index ) const
     {
         return ast_.children( id )[index];
+    }
+
+    std::span<const Node_id> members( Node_id id ) const
+    {
+        return ast_.members( id );
     }
 
     std::string_view text( Node_id id ) const
@@ -3596,17 +3670,21 @@ TEST_CASE( "parser_parses_a_struct_declaration", "[parse]" )
     REQUIRE( p.kind( decl ) == Node_kind::Struct_decl );
     REQUIRE( p.text( decl ).starts_with( "struct Point" ) );
 
-    // Fields are the children, in declaration order - layout is declaration order (§9, M2).
-    REQUIRE( p.children( decl ).size() == 2 );
-    REQUIRE( p.kind( p.child( decl, 0 ) ) == Node_kind::Field_decl );
-    REQUIRE( p.kind( p.child( decl, 1 ) ) == Node_kind::Field_decl );
+    // Child 0 is the type parameter list, invalid because this one is not generic - present either
+    // way, so that reading the members is a subspan rather than a question about the node.
+    REQUIRE_FALSE( p.child( decl, 0 ).is_valid() );
+
+    // Fields are the members, in declaration order - layout is declaration order (§9, M2).
+    REQUIRE( p.members( decl ).size() == 2 );
+    REQUIRE( p.kind( p.members( decl )[0] ) == Node_kind::Field_decl );
+    REQUIRE( p.kind( p.members( decl )[1] ) == Node_kind::Field_decl );
 
     // A field carries its name in aux and its type as its one child, exactly like Param_decl.
-    const Node_id first = p.child( decl, 0 );
+    const Node_id first = p.members( decl )[0];
     REQUIRE( p.children( first ).size() == 1 );
     REQUIRE( p.kind( p.child( first, 0 ) ) == Node_kind::Named_type );
     REQUIRE( p.text( p.child( first, 0 ) ) == "f64" );
-    REQUIRE( p.aux( first ) != p.aux( p.child( decl, 1 ) ) ); // x and y are different symbols
+    REQUIRE( p.aux( first ) != p.aux( p.members( decl )[1] ) ); // x and y are different symbols
 }
 
 TEST_CASE( "parser_parses_struct_edge_cases", "[parse]" )
@@ -3618,7 +3696,7 @@ TEST_CASE( "parser_parses_struct_edge_cases", "[parse]" )
         INFO( p.errors() );
         REQUIRE_FALSE( p.has_errors() );
         REQUIRE( p.kind( p.child( p.root(), 0 ) ) == Node_kind::Struct_decl );
-        REQUIRE( p.children( p.child( p.root(), 0 ) ).empty() );
+        REQUIRE( p.members( p.child( p.root(), 0 ) ).empty() );
     }
 
     SECTION( "one field" )
@@ -3627,7 +3705,7 @@ TEST_CASE( "parser_parses_struct_edge_cases", "[parse]" )
 
         INFO( p.errors() );
         REQUIRE_FALSE( p.has_errors() );
-        REQUIRE( p.children( p.child( p.root(), 0 ) ).size() == 1 );
+        REQUIRE( p.members( p.child( p.root(), 0 ) ).size() == 1 );
     }
 
     SECTION( "a field whose type is another struct" )
@@ -3637,7 +3715,7 @@ TEST_CASE( "parser_parses_struct_edge_cases", "[parse]" )
         INFO( p.errors() );
         REQUIRE_FALSE( p.has_errors() );
         REQUIRE( p.children( p.root() ).size() == 2 );
-        REQUIRE( p.children( p.child( p.root(), 1 ) ).size() == 2 );
+        REQUIRE( p.members( p.child( p.root(), 1 ) ).size() == 2 );
     }
 
     SECTION( "a const field type" )
@@ -3646,7 +3724,7 @@ TEST_CASE( "parser_parses_struct_edge_cases", "[parse]" )
 
         INFO( p.errors() );
         REQUIRE_FALSE( p.has_errors() );
-        REQUIRE( p.kind( p.child( p.child( p.child( p.root(), 0 ), 0 ), 0 ) ) == Node_kind::Const_type );
+        REQUIRE( p.kind( p.child( p.members( p.child( p.root(), 0 ) )[0], 0 ) ) == Node_kind::Const_type );
     }
 
     SECTION( "a pointer field - what M3's Buffer needs" )
@@ -3656,7 +3734,7 @@ TEST_CASE( "parser_parses_struct_edge_cases", "[parse]" )
         INFO( p.errors() );
         REQUIRE_FALSE( p.has_errors() );
 
-        const Node_id field = p.child( p.child( p.root(), 0 ), 0 );
+        const Node_id field = p.members( p.child( p.root(), 0 ) )[0];
         REQUIRE( p.kind( p.child( field, 0 ) ) == Node_kind::Pointer_type );
     }
 
@@ -4388,6 +4466,112 @@ TEST_CASE( "parser_parses_fallthrough", "[parse][fallthrough]" )
 
 // D39: type parameters go on the name, not in a `template<...>` prefix, so the declaration reads
 // the way the call site already does. Nothing here checks them - slice 1a is the shape only.
+// The members of an aggregate are read through one accessor rather than off its children, because
+// a generic one will carry its type parameters in the same list - in a leading slot, exactly as an
+// `enum` carries its underlying type in one. Today the two answers coincide; the accessor exists so
+// that the day they stop coinciding is one edit rather than nineteen.
+TEST_CASE( "ast_members_are_an_aggregate_s_own", "[parse][ast]" )
+{
+    SECTION( "fields, methods and the special members, in declaration order" )
+    {
+        const Parsed p( "class C\n"
+                        "{\n"
+                        "    i32 x;\n"
+                        "    C( i32 n ) { x = n; }\n"
+                        "    i32 get() { return x; }\n"
+                        "    ~C() { }\n"
+                        "};" );
+
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Class_decl );
+
+        REQUIRE( decl.is_valid() );
+        REQUIRE( p.members( decl ).size() == 4 );
+        REQUIRE( p.kind( p.members( decl )[0] ) == Node_kind::Field_decl );
+        REQUIRE( p.kind( p.members( decl )[1] ) == Node_kind::Constructor_decl );
+        REQUIRE( p.kind( p.members( decl )[2] ) == Node_kind::Method_decl );
+        REQUIRE( p.kind( p.members( decl )[3] ) == Node_kind::Destructor_decl );
+    }
+
+    SECTION( "an empty aggregate has none" )
+    {
+        const Parsed p( "struct S { };" );
+
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Struct_decl );
+
+        REQUIRE( decl.is_valid() );
+        REQUIRE( p.members( decl ).empty() );
+    }
+}
+
+// `>>` closes two lists, and the second close is still owed when the inner type finishes parsing.
+// Any token after it belongs to whoever opened the enclosing list - so a postfix operator read by
+// the inner type lands one level too deep, and does so silently: `Bad<Box<T>>*` and `Bad<Box<T>*>`
+// are both well-formed types, and the compiler would pick the wrong one with nothing to report.
+TEST_CASE( "parser_closes_nested_generics_before_reading_a_postfix", "[parse][generic]" )
+{
+    // The field's annotation, rendered as the chain of node kinds down to the first leaf. `shape()`
+    // prints a type's text, which is the same for both readings and so cannot tell them apart.
+    const auto field_shape = []( std::string_view source )
+    {
+        const Parsed  p { std::string( source ) };
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Struct_decl );
+
+        REQUIRE( decl.is_valid() );
+        REQUIRE( p.members( decl ).size() == 1 );
+
+        std::string chain;
+
+        for( Node_id at = p.child( p.members( decl )[0], 0 ); at.is_valid() && !p.children( at ).empty();
+             at         = p.child( at, 0 ) )
+        {
+            chain += node_kind_name( p.kind( at ) );
+            chain += " ";
+        }
+
+        return chain;
+    };
+
+    SECTION( "the pointer belongs to the outer type" )
+    {
+        // And the spaced form is what it has to agree with: `> >` needs no splitting at all, so it
+        // was right before this and is the reference answer.
+        const std::string unspaced = field_shape( "struct Bad<T> { Bad<Bad<T>>* v; };" );
+        const std::string spaced   = field_shape( "struct Bad<T> { Bad<Bad<T> >* v; };" );
+
+        INFO( unspaced << " vs " << spaced );
+        REQUIRE( unspaced == spaced );
+    }
+
+    SECTION( "a pointer written inside the list stays inside it" )
+    {
+        const std::string inner = field_shape( "struct Bad<T> { Bad<Bad<T>*> v; };" );
+        const std::string outer = field_shape( "struct Bad<T> { Bad<Bad<T>>* v; };" );
+
+        INFO( inner << " vs " << outer );
+        REQUIRE( inner != outer );
+    }
+
+    SECTION( "nesting closes correctly however deep" )
+    {
+        const Parsed p( "struct Box<T> { T v; };\n"
+                        "struct Deep { Box<Box<Box<Box<i32>>>> v; };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+    }
+
+    SECTION( "and a trailing const is owed to the outer type too" )
+    {
+        const std::string unspaced = field_shape( "struct Bad<T> { Bad<Bad<T>> const v; };" );
+        const std::string spaced   = field_shape( "struct Bad<T> { Bad<Bad<T> > const v; };" );
+
+        INFO( unspaced << " vs " << spaced );
+        REQUIRE( unspaced == spaced );
+    }
+}
+
 TEST_CASE( "parser_parses_type_parameters", "[parse][generic]" )
 {
     SECTION( "one parameter" )
@@ -5884,9 +6068,9 @@ TEST_CASE( "parser_parses_class_declarations", "[parse][aggregates]" )
         INFO( p.dump() );
         REQUIRE_FALSE( p.has_errors() );
         REQUIRE( decl.is_valid() );
-        REQUIRE( p.children( decl ).size() == 2 );
-        REQUIRE( p.kind( p.child( decl, 0 ) ) == Node_kind::Field_decl );
-        REQUIRE( p.kind( p.child( decl, 1 ) ) == Node_kind::Field_decl );
+        REQUIRE( p.members( decl ).size() == 2 );
+        REQUIRE( p.kind( p.members( decl )[0] ) == Node_kind::Field_decl );
+        REQUIRE( p.kind( p.members( decl )[1] ) == Node_kind::Field_decl );
     }
 
     SECTION( "a struct is unchanged" )
@@ -5941,7 +6125,7 @@ TEST_CASE( "parser_parses_class_declarations", "[parse][aggregates]" )
 
         INFO( p.dump() );
         REQUIRE_FALSE( p.has_errors() );
-        REQUIRE( p.children( decl ).empty() );
+        REQUIRE( p.members( decl ).empty() );
     }
 }
 
@@ -6039,9 +6223,9 @@ TEST_CASE( "parser_parses_destructors", "[parse][aggregates]" )
 
         INFO( p.dump() );
         REQUIRE_FALSE( p.has_errors() );
-        REQUIRE( p.children( decl ).size() == 2 );
-        REQUIRE( p.kind( p.child( decl, 0 ) ) == Node_kind::Destructor_decl );
-        REQUIRE( p.kind( p.child( decl, 1 ) ) == Node_kind::Field_decl );
+        REQUIRE( p.members( decl ).size() == 2 );
+        REQUIRE( p.kind( p.members( decl )[0] ) == Node_kind::Destructor_decl );
+        REQUIRE( p.kind( p.members( decl )[1] ) == Node_kind::Field_decl );
     }
 
     // C++ requires the parens and §5.1 keeps them: an empty parameter list that differed from
@@ -6182,9 +6366,9 @@ TEST_CASE( "parser_parses_constructors", "[parse][aggregates]" )
 
         INFO( p.dump() );
         REQUIRE_FALSE( p.has_errors() );
-        REQUIRE( p.children( decl ).size() == 2 );
-        REQUIRE( p.kind( p.child( decl, 0 ) ) == Node_kind::Field_decl );
-        REQUIRE( p.kind( p.child( decl, 1 ) ) == Node_kind::Field_decl );
+        REQUIRE( p.members( decl ).size() == 2 );
+        REQUIRE( p.kind( p.members( decl )[0] ) == Node_kind::Field_decl );
+        REQUIRE( p.kind( p.members( decl )[1] ) == Node_kind::Field_decl );
     }
 
     // Decided on shape, so this parses and the checker reports it - the same treatment `~Wrong()`
@@ -6227,10 +6411,10 @@ TEST_CASE( "parser_parses_constructors", "[parse][aggregates]" )
 
         INFO( p.dump() );
         REQUIRE_FALSE( p.has_errors() );
-        REQUIRE( p.children( decl ).size() == 3 );
-        REQUIRE( p.kind( p.child( decl, 0 ) ) == Node_kind::Constructor_decl );
-        REQUIRE( p.kind( p.child( decl, 1 ) ) == Node_kind::Destructor_decl );
-        REQUIRE( p.kind( p.child( decl, 2 ) ) == Node_kind::Field_decl );
+        REQUIRE( p.members( decl ).size() == 3 );
+        REQUIRE( p.kind( p.members( decl )[0] ) == Node_kind::Constructor_decl );
+        REQUIRE( p.kind( p.members( decl )[1] ) == Node_kind::Destructor_decl );
+        REQUIRE( p.kind( p.members( decl )[2] ) == Node_kind::Field_decl );
     }
 
     // The member loop advances on no progress so that garbage cannot spin it, and a malformed

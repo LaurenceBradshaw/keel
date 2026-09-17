@@ -1,5 +1,6 @@
 #pragma once
 #include <optional>
+#include <span>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -85,6 +86,13 @@ public:
     Type_id type_of( Node_id node ) const
     {
         return node.v < types_.size() ? types_[node.v] : Type_id {};
+    }
+
+    // Every node's recorded type, for the two free functions that want the whole vector rather than
+    // one entry - they are also called from inside the checker, which has no Types yet.
+    std::span<const Type_id> recorded() const
+    {
+        return types_;
     }
 
     const Type_table& table() const
@@ -206,7 +214,21 @@ bool is_const_binding( const Ast& ast, Node_id decl );
 
 // A method written with a trailing `const`, which is a `const ref` receiver. Its own name because
 // the question is asked of the *method* while the answer lives on its parameter 0.
-bool    is_const_method( const Ast& ast, Node_id method );
+bool is_const_method( const Ast& ast, Node_id method );
+// See the definitions: an aggregate's type-parameter bindings, and a field's type seen through
+// them. Free rather than Checker members because the emitter needs the same answers and has no
+// checker - the alternative being the rule written twice.
+// Whether a declaration declares a destructor of its own. Free because three passes and the
+// emitter all ask it, and only one of them has a checker.
+bool has_destructor( const Ast& ast, Node_id declaration );
+// D2 asked of an *instance*: `Box<i32>` and `Box<Buffer>` are two answers from one declaration, and
+// a drop is elaborated against this one. Types::is_owning answers from the declaration instead,
+// which is the open form's answer and the right one for the checker's move rules inside a generic
+// body - the two are different questions and both are wanted.
+bool     instance_owns( const Ast& ast, Type_table& table, Type_id instance, std::span<const Type_id> recorded );
+Bindings aggregate_bindings( const Ast& ast, const Type_table& table, Type_id aggregate, std::span<const Type_id> recorded );
+Type_id  field_type( const Ast& ast, Type_table& table, Type_id aggregate, Node_id field, std::span<const Type_id> recorded );
+
 Type_id binding_type( const Ast& ast, const Types& types, Node_id decl );
 // `const ref T` wraps the mode: Const_type( Mode_type( T ) ). Every question about a mode goes
 // through here, so adding the spelling cannot quietly turn a `const ref` into a bare parameter.

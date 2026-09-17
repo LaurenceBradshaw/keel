@@ -1,0 +1,93 @@
+// M6's acceptance: a generic class with a destructor drops correctly, at more than one type
+// argument. Ownership is a question about the instantiation - `Box<i32>` and `Box<f64>` are two C
+// structs and two destructors from one declaration - and the counter is what makes "exactly once"
+// a checked claim rather than an inspected one. Run under KEEL_VALGRIND=1 as well.
+i32 live;
+
+class Box<T> where T : Copyable
+{
+    T value;
+
+    Box( T v )
+    {
+        this.value = v;
+        live = live + 1;
+    }
+
+    ~Box()
+    {
+        live = live - 1;
+    }
+
+    T get( )
+    {
+        return this.value;
+    }
+};
+
+// The destructor has to run on the early path too, which is what a drop flag is for.
+i32 early( i32 n )
+{
+    Box<i32> a = Box<i32>( n );
+
+    if( a.get( ) > 2 )
+    {
+        return 1;
+    }
+
+    return 0;
+}
+
+i32 main( )
+{
+    live = 0;
+
+    {
+        Box<i32> a = Box<i32>( 7 );
+        Box<f64> b = Box<f64>( 2.5 );
+
+        // Two instantiations alive at once, each having run its own constructor.
+        if( live != 2 )
+        {
+            return 1;
+        }
+
+        if( a.get( ) != 7 )
+        {
+            return 2;
+        }
+
+        if( b.get( ) != 2.5 )
+        {
+            return 3;
+        }
+    }
+
+    // Both destructors ran at the end of the block, not at the end of the function.
+    if( live != 0 )
+    {
+        return 4;
+    }
+
+    if( early( 9 ) != 1 )
+    {
+        return 5;
+    }
+
+    if( live != 0 )
+    {
+        return 6;
+    }
+
+    if( early( 1 ) != 0 )
+    {
+        return 7;
+    }
+
+    if( live != 0 )
+    {
+        return 8;
+    }
+
+    return 0;
+}

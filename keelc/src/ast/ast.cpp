@@ -50,6 +50,25 @@ Node_id Ast::child( Node_id id, std::size_t index ) const
     return all[index];
 }
 
+Node_id Ast::type_param_list( Node_id id ) const
+{
+    if( is_aggregate( kind( id ) ) )
+    {
+        return child( id, 0 );
+    }
+
+    return is_function_like( kind( id ) ) ? child( id, 3 ) : Node_id {};
+}
+
+std::span<const Node_id> Ast::members( Node_id id ) const
+{
+    assert( is_aggregate( kind( id ) ) && "members are a struct's or a class's, not any node's" );
+
+    // Child 0 is the type parameter list, invalid when the aggregate is not generic - always
+    // present either way, so that this is a subspan rather than a question about the node.
+    return children( id ).subspan( 1 );
+}
+
 Node_id Ast::root() const
 {
     return root_;

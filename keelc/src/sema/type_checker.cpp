@@ -528,6 +528,9 @@ private:
     void declare_signatures_struct_decls();
     void declare_signatures_field_decls();
     void declare_signatures_function_decls();
+
+    // See the definition: shared between a generic function and a generic aggregate.
+    void declare_type_parameters( Node_id declaration, Node_id list );
     void declare_signatures_member_functions();
     void declare_signatures_global_decls();
     void declare_signatures_enum_decls();
@@ -621,11 +624,24 @@ private:
     Type_id infer_call( Node_id id );
     Type_id infer_method_call( Node_id id );
     Type_id infer_implicit_method_call( Node_id id, Node_id method );
-    Type_id check_method_arguments( Node_id id, Node_id method );
+    Type_id check_method_arguments( Node_id id, Node_id method, Type_id receiver );
+    void    record_method_instantiation( Node_id id, Node_id method, Type_id receiver );
     Type_id infer_binary( Node_id id );
     Type_id infer_unary( Node_id id );
 
     Node_id find_field( Type_id type, Symbol_id name ) const;
+
+    // What binds an aggregate's type parameters to what it was instantiated at. Empty for a
+    // non-generic one, and the identity for the open form, so callers need no branch.
+    Bindings bindings_of( Type_id aggregate ) const;
+
+    // A field's type *as seen through this instance*. The declared type of `Box<T>`'s field is `T`,
+    // which is true of the template and of no value anyone holds - so every read of a field's type
+    // goes through here rather than through types_[field.v].
+    Type_id field_type( Type_id aggregate, Node_id field );
+
+    // Whether *this* instantiation owns something: its declaration's destructor, or a field whose
+    // substituted type owns. The per-instance answer Types::is_owning does not give yet.
     Type_id infer_field( Node_id id );
 
     // A composite constructor, not a value literal: its type is fixed by its name rather than
@@ -659,11 +675,15 @@ private:
     // `Integral` promises everything `Numeric` does, and so on. Expanded at the `where` clause rather
     // than walked at each query - the closure is small and fixed, and computing it once means the
     // operator check below is one test.
-    Bound_set            closure( Bound_set direct );
-    bool                 bound_set_contains( Bound_set bounds, Bound bound ) const;
-    bool                 has_bound( Type_id type, Bound bound ) const; // Parameter -> its set; else false
-    bool                 satisfies( Type_id type, Bound bound ) const; // the same question, of a concrete type
-    void                 check_bounds( Node_id parameter, Node_id written, Type_id argument, std::string_view callee );
+    Bound_set closure( Bound_set direct );
+    bool      bound_set_contains( Bound_set bounds, Bound bound ) const;
+    bool      has_bound( Type_id type, Bound bound ) const; // Parameter -> its set; else false
+    bool      satisfies( Type_id type, Bound bound ) const; // the same question, of a concrete type
+    void      check_bounds( Node_id parameter, Node_id written, Type_id argument, std::string_view callee );
+
+    // See the definition: shared between a generic call and a generic aggregate's annotation.
+    bool
+    resolve_type_arguments( Node_id declaration, Node_id type_args, std::string_view name, std::vector<Type_id>& resolved );
     std::vector<Type_id> admissible_numeric_types( Bound_set bounds ) const;
 
     // The bound set recorded for a parameter, or an empty set when it carries no `where` clause.
@@ -825,8 +845,20 @@ void Checker::declare_signatures_struct_decls()
             continue;
         }
 
-        std::string_view name = interner_.text( Symbol_id { ast_.aux( child ) } );
-        record( child, table_.structure( child, name ) );
+        // Before the type below, because the type *is* its parameters: `Box` on its own is
+        // `Box<T>`, the open form D11 checks the body against, and `T` has to exist to name it.
+        declare_type_parameters( child, ast_.type_param_list( child ) );
+
+        std::vector<Type_id> arguments;
+
+        for( const Node_id type_param : type_parameters( ast_, ast_.type_param_list( child ) ) )
+        {
+            arguments.push_back( types_[type_param.v] );
+        }
+
+        const std::string_view name = interner_.text( Symbol_id { ast_.aux( child ) } );
+
+        record( child, table_.structure( child, arguments, name ) );
     }
 }
 
@@ -844,7 +876,7 @@ void Checker::declare_signatures_field_decls()
             continue;
         }
 
-        for( Node_id field : ast_.children( child ) )
+        for( Node_id field : ast_.members( child ) )
         {
             if( ast_.kind( field ) != Node_kind::Field_decl )
             {
@@ -869,6 +901,110 @@ void Checker::declare_signatures_field_decls()
     }
 }
 
+// The type parameters a declaration introduces, and the `where` clauses that constrain them.
+// Shared because a generic aggregate wants exactly what a generic function wants, and the only
+// difference is which child holds the list - the front for an aggregate, whose members are
+// variadic, and the fixed fourth slot for anything function-like.
+//
+// Runs before the signature or the fields are typed, so `T` resolves through the ordinary
+// type_of_annotation path rather than needing one of its own, and so is_owning_type can already
+// answer for it. Ten lines separate the recording from the first query; the pair of `out T` tests
+// is what holds that order.
+void Checker::declare_type_parameters( Node_id declaration, Node_id list )
+{
+    // A non-generic declaration has no list at all, which is the ordinary case and not an
+    // absence worth testing for at every call.
+    if( !list.is_valid() )
+    {
+        return;
+    }
+
+    const std::span<const Node_id> type_param_list = ast_.children( list );
+    // Recorded before the signature below is typed, so `T` resolves through the ordinary
+    // type_of_annotation path rather than needing one of its own. Keyed by the
+    // Type_param_decl itself, which is what makes one declaration's `T` distinct from
+    // another's - the resolver has already scoped them apart.
+    for( const Node_id type_param : type_param_list )
+    {
+        if( ast_.kind( type_param ) != Node_kind::Type_param_decl )
+        {
+            continue;
+        }
+
+        record( type_param, table_.parameter( type_param, interner_.text( Symbol_id { ast_.aux( type_param ) } ) ) );
+    }
+
+    // Second pass over the where clauses
+    for( const Node_id where_clause : type_param_list )
+    {
+        if( ast_.kind( where_clause ) != Node_kind::Where_clause )
+        {
+            continue;
+        }
+
+        // Match the where clause's aux (the subject name) against the Type_param_decl's aux
+        // and record the bounds for that Type_param_decl in bounds_
+        const Symbol_id subject_name = Symbol_id { ast_.aux( where_clause ) };
+
+        // Find the Type_param_decl that matches the subject name
+        const auto it = std::find_if(
+            type_param_list.begin(),
+            type_param_list.end(),
+            [&]( const Node_id type_param ) {
+                return ast_.kind( type_param ) == Node_kind::Type_param_decl &&
+                       Symbol_id { ast_.aux( type_param ) } == subject_name;
+            }
+        );
+
+        if( it == type_param_list.end() )
+        {
+            error_at(
+                ast_.span( where_clause ),
+                fmt::format(
+                    "`{}` is not a type parameter of `{}`",
+                    interner_.text( subject_name ),
+                    interner_.text( Symbol_id { ast_.aux( declaration ) } )
+                )
+            );
+            continue;
+        }
+
+        // Keyed by the Type_param_decl node, never by its name: two declarations may each
+        // have a parameter called `T`, and keying by name would merge their bounds.
+        if( bounds_.contains( it->v ) )
+        {
+            error_at(
+                ast_.span( where_clause ),
+                fmt::format( "duplicate where clause for type parameter `{}`", interner_.text( subject_name ) )
+            );
+            continue;
+        }
+
+        Bound_set direct_bounds = 0;
+        for( const Node_id bound_node : ast_.children( where_clause ) )
+        {
+            std::string_view     bound_name = interner_.text( Symbol_id { ast_.aux( bound_node ) } );
+            std::optional<Bound> bound      = bound_for_name( bound_name );
+
+            if( !bound )
+            {
+                // The span is the name, not the clause, and the list comes from the table
+                // rather than from this string - so adding a bound updates the message.
+                error_at(
+                    ast_.span( bound_node ),
+                    fmt::format( "unknown bound `{}`", bound_name ),
+                    fmt::format( "the bounds are {}", known_bound_names() )
+                );
+                continue;
+            }
+
+            direct_bounds = closure( direct_bounds | static_cast<Bound_set>( bound.value() ) );
+        }
+
+        bounds_.emplace( it->v, direct_bounds );
+    }
+}
+
 void Checker::declare_signatures_function_decls()
 {
     for( Node_id child : ast_.children( ast_.root() ) )
@@ -883,93 +1019,7 @@ void Checker::declare_signatures_function_decls()
             continue;
         }
 
-        if( ast_.child( child, 3 ).is_valid() )
-        {
-            const std::span<const Node_id> type_param_list = ast_.children( ast_.child( child, 3 ) );
-            // Recorded before the signature below is typed, so `T` resolves through the ordinary
-            // type_of_annotation path rather than needing one of its own. Keyed by the
-            // Type_param_decl itself, which is what makes one declaration's `T` distinct from
-            // another's - the resolver has already scoped them apart.
-            for( const Node_id type_param : type_param_list )
-            {
-                if( ast_.kind( type_param ) != Node_kind::Type_param_decl )
-                {
-                    continue;
-                }
-
-                record( type_param, table_.parameter( type_param, interner_.text( Symbol_id { ast_.aux( type_param ) } ) ) );
-            }
-
-            // Second pass over the where clauses
-            for( const Node_id where_clause : type_param_list )
-            {
-                if( ast_.kind( where_clause ) != Node_kind::Where_clause )
-                {
-                    continue;
-                }
-
-                // Match the where clause's aux (the subject name) against the Type_param_decl's aux
-                // and record the bounds for that Type_param_decl in bounds_
-                const Symbol_id subject_name = Symbol_id { ast_.aux( where_clause ) };
-
-                // Find the Type_param_decl that matches the subject name
-                const auto it = std::find_if(
-                    type_param_list.begin(),
-                    type_param_list.end(),
-                    [&]( const Node_id type_param ) {
-                        return ast_.kind( type_param ) == Node_kind::Type_param_decl &&
-                               Symbol_id { ast_.aux( type_param ) } == subject_name;
-                    }
-                );
-
-                if( it == type_param_list.end() )
-                {
-                    error_at(
-                        ast_.span( where_clause ),
-                        fmt::format(
-                            "`{}` is not a type parameter of `{}`",
-                            interner_.text( subject_name ),
-                            interner_.text( Symbol_id { ast_.aux( child ) } )
-                        )
-                    );
-                    continue;
-                }
-
-                // Keyed by the Type_param_decl node, never by its name: two declarations may each
-                // have a parameter called `T`, and keying by name would merge their bounds.
-                if( bounds_.contains( it->v ) )
-                {
-                    error_at(
-                        ast_.span( where_clause ),
-                        fmt::format( "duplicate where clause for type parameter `{}`", interner_.text( subject_name ) )
-                    );
-                    continue;
-                }
-
-                Bound_set direct_bounds = 0;
-                for( const Node_id bound_node : ast_.children( where_clause ) )
-                {
-                    std::string_view     bound_name = interner_.text( Symbol_id { ast_.aux( bound_node ) } );
-                    std::optional<Bound> bound      = bound_for_name( bound_name );
-
-                    if( !bound )
-                    {
-                        // The span is the name, not the clause, and the list comes from the table
-                        // rather than from this string - so adding a bound updates the message.
-                        error_at(
-                            ast_.span( bound_node ),
-                            fmt::format( "unknown bound `{}`", bound_name ),
-                            fmt::format( "the bounds are {}", known_bound_names() )
-                        );
-                        continue;
-                    }
-
-                    direct_bounds = closure( direct_bounds | static_cast<Bound_set>( bound.value() ) );
-                }
-
-                bounds_.emplace( it->v, direct_bounds );
-            }
-        }
+        declare_type_parameters( child, ast_.type_param_list( child ) );
 
         const Node_id return_type_node = ast_.child( child, 0 );
         const Type_id return_type      = type_of_annotation( return_type_node );
@@ -1043,7 +1093,7 @@ void Checker::declare_signatures_member_functions()
             continue;
         }
 
-        for( Node_id member : ast_.children( child ) )
+        for( Node_id member : ast_.members( child ) )
         {
             if( !is_function_like( ast_.kind( member ) ) )
             {
@@ -1325,7 +1375,7 @@ bool Checker::contains_itself( Node_id decl, std::vector<Node_id>& path )
 
     path.push_back( decl );
 
-    for( Node_id field : ast_.children( decl ) )
+    for( Node_id field : ast_.members( decl ) )
     {
         if( ast_.kind( field ) != Node_kind::Field_decl )
         {
@@ -1364,19 +1414,34 @@ bool Checker::contains_itself( Node_id decl, std::vector<Node_id>& path )
     // The DFS post-order: every struct after everything it contains, which is exactly the order C
     // needs for by-value members. A struct on a cycle never reaches here, and never needs to - the
     // driver stops before emission when anything reported.
-    struct_order_.push_back( decl );
+    //
+    // A *generic* aggregate is walked for the cycle above and then left out: it has no layout of
+    // its own, the way a generic function has no code, and what gets ordered and emitted is each
+    // instantiation.
+    if( !is_generic( ast_, decl ) )
+    {
+        struct_order_.push_back( decl );
+    }
     path.pop_back();
     return false;
 }
 
 bool Checker::is_owning_type( Type_id type ) const
 {
+    // Validity first, because is_parameter asserts on an invalid id - a forward reference to a
+    // generic reaches here before the type exists. The parameter question still comes before the
+    // struct one: a `T` is not a struct, and answering from its bounds is the whole point.
+    if( !type.is_valid() || table_.is_error( type ) )
+    {
+        return false;
+    }
+
     if( table_.is_parameter( type ) )
     {
         return !has_bound( type, Bound::Copyable );
     }
 
-    if( !type.is_valid() || table_.is_error( type ) || !table_.is_struct( type ) )
+    if( !table_.is_struct( type ) )
     {
         return false;
     }
@@ -1531,7 +1596,7 @@ bool Checker::check_writable( Node_id target )
 
 Node_id Checker::find_member( Node_id decl, Node_kind kind ) const
 {
-    for( const Node_id member : ast_.children( decl ) )
+    for( const Node_id member : ast_.members( decl ) )
     {
         if( ast_.kind( member ) == kind )
         {
@@ -1552,7 +1617,7 @@ Node_id Checker::find_method( Node_id decl, Symbol_id name ) const
         return Node_id {};
     }
 
-    for( const Node_id member : ast_.children( decl ) )
+    for( const Node_id member : ast_.members( decl ) )
     {
         if( ast_.kind( member ) == Node_kind::Method_decl && Symbol_id { ast_.aux( member ) } == name )
         {
@@ -1600,7 +1665,7 @@ void Checker::check_member_kind( Node_id decl, const Member_kind& kind )
 
     Node_id first {};
 
-    for( const Node_id member : ast_.children( decl ) )
+    for( const Node_id member : ast_.members( decl ) )
     {
         if( ast_.kind( member ) != kind.node )
         {
@@ -1686,7 +1751,7 @@ void Checker::compute_owning()
     {
         bool owns = has_destructor( decl );
 
-        for( const Node_id field : ast_.children( decl ) )
+        for( const Node_id field : ast_.members( decl ) )
         {
             if( owns )
             {
@@ -1734,7 +1799,7 @@ void Checker::check_struct_ownership()
 
 void Checker::check_struct_fields_are_not_owning( Node_id decl )
 {
-    for( const Node_id field : ast_.children( decl ) )
+    for( const Node_id field : ast_.members( decl ) )
     {
         if( ast_.kind( field ) != Node_kind::Field_decl )
         {
@@ -1748,12 +1813,15 @@ void Checker::check_struct_fields_are_not_owning( Node_id decl )
             continue;
         }
 
-        const Node_id field_decl = table_.get( field_type ).declaration;
-
-        if( !field_decl.is_valid() || !owning_.contains( field_decl.v ) )
+        // is_owning_type rather than the set directly: a field of type `T` has no declaration to
+        // look up, and an unbounded one may turn out to own something - which is exactly what a
+        // struct may not contain. The promise that rules it out is `Copyable`.
+        if( !is_owning_type( field_type ) )
         {
             continue;
         }
+
+        const Node_id field_decl = table_.get( field_type ).declaration;
 
         // One per field: each is a separate place the author has to change.
         error_at(
@@ -1761,27 +1829,25 @@ void Checker::check_struct_fields_are_not_owning( Node_id decl )
             fmt::format(
                 "a struct cannot contain `{}`, which {}",
                 table_.name( field_type ),
-                has_destructor( field_decl ) ? "has a destructor" : "owns a resource"
+                table_.is_parameter( field_type ) ? "may own a resource"
+                : has_destructor( field_decl )    ? "has a destructor"
+                                                  : "owns a resource"
             ),
-            fmt::format(
-                "a struct is copied freely, so declare `{}` as a class if it owns this",
-                interner_.text( Symbol_id { ast_.aux( decl ) } )
-            )
+            table_.is_parameter( field_type )
+                ? fmt::format(
+                      "a struct is copied freely, so promise it can be: `where {} : Copyable`", table_.name( field_type )
+                  )
+                : fmt::format(
+                      "a struct is copied freely, so declare `{}` as a class if it owns this",
+                      interner_.text( Symbol_id { ast_.aux( decl ) } )
+                  )
         );
     }
 }
 
 bool Checker::has_destructor( Node_id decl ) const
 {
-    for( const Node_id member : ast_.children( decl ) )
-    {
-        if( ast_.kind( member ) == Node_kind::Destructor_decl )
-        {
-            return true;
-        }
-    }
-
-    return false;
+    return keel::has_destructor( ast_, decl );
 }
 
 void Checker::visit( Node_id id )
@@ -3365,44 +3431,23 @@ Type_id Checker::infer_call( Node_id id )
 
     if( type_args.is_valid() )
     {
-        const std::vector<Node_id>     parameters = type_parameters( ast_, ast_.child( callable, 3 ) );
-        const std::span<const Node_id> given      = ast_.children( type_args );
+        std::vector<Type_id> resolved;
 
-        if( parameters.size() != given.size() )
+        if( !resolve_type_arguments( callable, type_args, name, resolved ) )
         {
-            error_at(
-                ast_.span( type_args ),
-                fmt::format(
-                    "`{}` takes {} type argument{}, but {} {} given",
-                    name,
-                    parameters.size(),
-                    parameters.size() == 1 ? "" : "s",
-                    given.size(),
-                    given.size() == 1 ? "was" : "were"
-                )
-            );
-
             type_the_arguments_anyway();
             return record( id, table_.builtin( Type_kind::Error ) );
         }
 
-        std::vector<Type_id> resolved;
-
-        resolved.reserve( parameters.size() );
+        const std::vector<Node_id> parameters = type_parameters( ast_, ast_.type_param_list( callable ) );
 
         for( std::size_t i = 0; i < parameters.size(); ++i )
         {
-            const Type_id argument = type_of_annotation( given[i] );
-
-            resolved.push_back( argument );
-
-            check_bounds( parameters[i], given[i], argument, name );
-
             // type_of_annotation has already reported an unknown type. Binding the error type keeps
             // every later substitution total, and check() absorbs it at each argument.
             // An argument that failed a bound is bound anyway: the value arguments are still worth
             // checking against it, and the error above is what makes the compile fail.
-            bindings.emplace( types_[parameters[i].v].v, argument );
+            bindings.emplace( types_[parameters[i].v].v, resolved[i] );
         }
 
         // The edge, before `resolved` is consumed. Only from inside a generic: a call in `main` is
@@ -3603,12 +3648,12 @@ Type_id Checker::infer_method_call( Node_id id )
         return record( id, table_.builtin( Type_kind::Error ) );
     }
 
-    return check_method_arguments( id, method );
+    return check_method_arguments( id, method, object_type );
 }
 
 // Shared by both call shapes - `p.area()` and a bare `area()` inside a method - because what is
 // checked is the same: the parameters from 1, the receiver having been supplied either way.
-Type_id Checker::check_method_arguments( Node_id id, Node_id method )
+Type_id Checker::check_method_arguments( Node_id id, Node_id method, Type_id receiver )
 {
     const std::span<const Node_id> params    = ast_.children( ast_.child( method, 1 ) ).subspan( 1 );
     const std::span<const Node_id> arguments = ast_.children( ast_.child( id, 1 ) );
@@ -3632,15 +3677,53 @@ Type_id Checker::check_method_arguments( Node_id id, Node_id method )
     // not hide a type error in the others.
     const std::size_t shared = std::min( params.size(), arguments.size() );
 
+    // The receiver's arguments are the method's: `p.first()` on a `Pair<i32>` is that instance's
+    // `first`, and the declaration's `T` means nothing until they are applied. Reading either the
+    // parameters or the result without them is how a method returns `T` to a caller expecting i32.
+    const Bindings bindings = bindings_of( receiver );
+
     for( std::size_t i = 0; i < shared; ++i )
     {
         const Node_id param = params[i];
         const Node_id arg   = arguments[i];
 
-        check( arg, types_[param.v] );
+        check( arg, table_.substitute( types_[param.v], bindings ) );
     }
 
-    return record( id, types_[method.v] );
+    record_method_instantiation( id, method, receiver );
+
+    return record( id, table_.substitute( types_[method.v], bindings ) );
+}
+
+// A method call writes no type arguments - the receiver carries them - so the explicit path that
+// records an instantiation never runs for one. Without this a method of a generic is checked and
+// then emitted by nobody.
+void Checker::record_method_instantiation( Node_id id, Node_id method, Type_id receiver )
+{
+    if( !receiver.is_valid() || !table_.is_struct( receiver ) )
+    {
+        return;
+    }
+
+    const std::span<const Type_id> arguments = table_.get( receiver ).arguments;
+
+    if( arguments.empty() )
+    {
+        return;
+    }
+
+    const std::vector<Type_id> resolved( arguments.begin(), arguments.end() );
+
+    // The same edge a written call records: from inside a generic this names a template, and the
+    // worklist is what turns it into an instance once the enclosing one is known.
+    if( is_generic( ast_, current_function_ ) )
+    {
+        generic_calls_.push_back(
+            Generic_call { .from = current_function_, .to = method, .arguments = resolved, .at = ast_.span( id ) }
+        );
+    }
+
+    instantiation_of_.emplace( id.v, narrow_cast<u32>( record_instantiation( method, resolved ) ) );
 }
 
 // D29/D32. `add( by )` inside a method: the receiver is the one this function was given, so there
@@ -3689,7 +3772,7 @@ Type_id Checker::infer_implicit_method_call( Node_id id, Node_id method )
 
     methods_.emplace( id.v, method );
 
-    return check_method_arguments( id, method );
+    return check_method_arguments( id, method, types_[receiver.v] );
 }
 
 Type_id Checker::infer_binary( Node_id id )
@@ -3925,6 +4008,16 @@ Type_id Checker::infer_unary( Node_id id )
     return record_constant( id, operand_type );
 }
 
+Bindings Checker::bindings_of( Type_id aggregate ) const
+{
+    return aggregate_bindings( ast_, table_, aggregate, types_ );
+}
+
+Type_id Checker::field_type( Type_id aggregate, Node_id field )
+{
+    return keel::field_type( ast_, table_, aggregate, field, types_ );
+}
+
 Node_id Checker::find_field( Type_id type, Symbol_id name ) const
 {
     const Node_id decl = table_.get( type ).declaration;
@@ -3934,7 +4027,7 @@ Node_id Checker::find_field( Type_id type, Symbol_id name ) const
         return Node_id();
     }
 
-    for( const Node_id field : ast_.children( decl ) )
+    for( const Node_id field : ast_.members( decl ) )
     {
         // The kind matters as much as the name. A constructor's aux is the *type's* name, so
         // without this a search for a field called `B` finds `B`'s constructor - which is how
@@ -4188,7 +4281,7 @@ Type_id Checker::infer_field( Node_id id )
         return record( id, table_.builtin( Type_kind::Error ) );
     }
 
-    return record( id, types_[decl.v] );
+    return record( id, field_type( object_type, decl ) );
 }
 
 Type_id Checker::infer_struct_literal( Node_id id )
@@ -4238,7 +4331,7 @@ Type_id Checker::infer_struct_literal( Node_id id )
     // demand an extra initialiser and misalign every positional one after it.
     std::vector<Node_id> fields;
 
-    for( const Node_id member : ast_.children( decl ) )
+    for( const Node_id member : ast_.members( decl ) )
     {
         if( ast_.kind( member ) == Node_kind::Field_decl )
         {
@@ -4291,7 +4384,7 @@ Type_id Checker::infer_struct_literal( Node_id id )
         for( std::size_t i = 0; i < shared; ++i )
         {
             // check, never infer - `Point { 1, 2 }` has to let those literals become f64.
-            check( ast_.child( initialisers[i], 0 ), types_[fields[i].v] );
+            check( ast_.child( initialisers[i], 0 ), field_type( result, fields[i] ) );
         }
 
         for( std::size_t i = shared; i < initialisers.size(); ++i )
@@ -4329,7 +4422,7 @@ Type_id Checker::infer_struct_literal( Node_id id )
             error_at( ast_.span( init ), fmt::format( "field `{}` is given twice", interner_.text( name ) ) );
         }
 
-        check( value, types_[field.v] );
+        check( value, field_type( result, field ) );
     }
 
     // Every field that is missing, not just the first: a struct that gained three fields should
@@ -4660,6 +4753,51 @@ Type_id Checker::check( Node_id id, Type_id expected )
     return expected;
 }
 
+// The type arguments written for a declaration, resolved and measured against what it declared.
+// Shared because a generic aggregate asks exactly what a generic call asks - how many, of what, and
+// do they keep the promises - and two copies of that would drift the first time either grew a rule.
+//
+// False when the *count* is wrong, which is the one failure that leaves nothing usable behind; an
+// argument that failed to resolve, or that broke a bound, is reported and still handed back, so the
+// rest of the annotation or call is checked against something rather than abandoned.
+bool Checker::resolve_type_arguments(
+    Node_id declaration, Node_id type_args, std::string_view name, std::vector<Type_id>& resolved
+)
+{
+    const std::vector<Node_id>     parameters = type_parameters( ast_, ast_.type_param_list( declaration ) );
+    const std::span<const Node_id> given      = ast_.children( type_args );
+
+    if( parameters.size() != given.size() )
+    {
+        error_at(
+            ast_.span( type_args ),
+            fmt::format(
+                "`{}` takes {} type argument{}, but {} {} given",
+                name,
+                parameters.size(),
+                parameters.size() == 1 ? "" : "s",
+                given.size(),
+                given.size() == 1 ? "was" : "were"
+            )
+        );
+
+        return false;
+    }
+
+    resolved.reserve( parameters.size() );
+
+    for( std::size_t i = 0; i < parameters.size(); ++i )
+    {
+        const Type_id argument = type_of_annotation( given[i] );
+
+        resolved.push_back( argument );
+
+        check_bounds( parameters[i], given[i], argument, name );
+    }
+
+    return true;
+}
+
 Type_id Checker::type_of_annotation( Node_id id, bool outermost )
 {
     // An invalid Node_id is `auto`, not a mistake - the parser writes one deliberately.
@@ -4685,6 +4823,22 @@ Type_id Checker::type_of_annotation( Node_id id, bool outermost )
                 // Resolved to a function or variable of the same name.
                 error_at(
                     ast_.span( id ), fmt::format( "`{}` is not a type", interner_.text( Symbol_id { ast_.aux( id ) } ) )
+                );
+
+                return table_.builtin( Type_kind::Error );
+            }
+
+            // The mirror of a generic call written without its type arguments: what `Box` names on
+            // its own is the open form, which no value can have. Inference is a decision of its own
+            // and is not taken here, so this names the explicit form rather than guessing.
+            if( is_aggregate( ast_.kind( decl ) ) && is_generic( ast_, decl ) )
+            {
+                const std::string_view name = interner_.text( Symbol_id { ast_.aux( id ) } );
+
+                error_at(
+                    ast_.span( id ),
+                    fmt::format( "`{}` is generic, so its type arguments must be written", name ),
+                    fmt::format( "as in `{}<i32>`", name )
                 );
 
                 return table_.builtin( Type_kind::Error );
@@ -4767,11 +4921,69 @@ Type_id Checker::type_of_annotation( Node_id id, bool outermost )
         return inner;
     }
 
+    // `Box<i32>`: the base names a declaration and the list says what it was instantiated at. The
+    // mirror of a generic call, and it asks the same three questions through the same helper.
     case Node_kind::Generic_type:
-        // A diagnostic rather than an assert: these parse, so reaching one is bad input, not a
-        // broken invariant, and keelc must not abort on a program someone wrote.
-        error_at( ast_.span( id ), "this type is not supported yet" );
-        return table_.builtin( Type_kind::Error );
+    {
+        const Node_id base      = ast_.child( id, 0 );
+        const Node_id type_args = ast_.child( id, 1 );
+
+        if( !base.is_valid() || !type_args.is_valid() )
+        {
+            return table_.builtin( Type_kind::Error );
+        }
+
+        const Node_id decl = resolution_.declaration_of( base );
+
+        if( !decl.is_valid() )
+        {
+            // The base resolved to nothing. Reporting here rather than through the Named_type case
+            // keeps the span on the whole `Box<i32>`, which is what the author wrote.
+            error_at( ast_.span( id ), fmt::format( "unknown type `{}`", interner_.text( Symbol_id { ast_.aux( base ) } ) ) );
+
+            return table_.builtin( Type_kind::Error );
+        }
+
+        const std::string_view name = interner_.text( Symbol_id { ast_.aux( base ) } );
+
+        if( !is_aggregate( ast_.kind( decl ) ) )
+        {
+            error_at( ast_.span( id ), fmt::format( "`{}` is not a generic", name ) );
+            return table_.builtin( Type_kind::Error );
+        }
+
+        if( !is_generic( ast_, decl ) )
+        {
+            error_at(
+                ast_.span( id ),
+                fmt::format( "`{}` is not a generic", name ),
+                fmt::format( "it takes no type arguments, so write `{}` on its own", name )
+            );
+
+            return table_.builtin( Type_kind::Error );
+        }
+
+        std::vector<Type_id> arguments;
+
+        if( !resolve_type_arguments( decl, type_args, name, arguments ) )
+        {
+            return table_.builtin( Type_kind::Error );
+        }
+
+        // An argument that failed to resolve makes the whole type an error rather than interning
+        // `Box<<error>>` - which would spell nothing, and which every later diagnostic would name.
+        for( const Type_id argument : arguments )
+        {
+            if( !argument.is_valid() || table_.is_error( argument ) )
+            {
+                return table_.builtin( Type_kind::Error );
+            }
+        }
+
+        const Type_id instance = table_.structure( decl, arguments, name );
+
+        return instance;
+    }
 
     default:
         // Error nodes, and anything the parser puts in type position that is not a type.
@@ -5516,20 +5728,20 @@ void Checker::check_bounds( Node_id parameter, Node_id written, Type_id argument
 // step around a cycle is already unbounded.
 bool Checker::wraps_a_parameter( Type_id argument ) const
 {
-    if( !argument.is_valid() || table_.is_parameter( argument ) )
+    if( !argument.is_valid() )
     {
-        return false; // a bare parameter forwards a type, it does not build one
+        return false;
     }
 
-    for( Type_id inner = argument; table_.is_pointer( inner ); inner = table_.get( inner ).element )
+    // A bare parameter forwards a type, it does not build one - which is the whole distinction, and
+    // why this cannot simply be mentions_parameter. Every *other* type that mentions one has put a
+    // constructor around it, and one constructor per step round a cycle is already unbounded.
+    if( table_.is_parameter( argument ) )
     {
-        if( table_.is_parameter( table_.get( inner ).element ) )
-        {
-            return true;
-        }
+        return false;
     }
 
-    return false;
+    return table_.mentions_parameter( argument );
 }
 
 // Monomorphisation emits one function per set of type arguments, so it terminates only if that set
@@ -5854,6 +6066,13 @@ bool is_ref_parameter( const Ast& ast, Node_id param )
 // places want exactly this and three of them were counting the clauses.
 std::vector<Node_id> type_parameters( const Ast& ast, Node_id decl )
 {
+    // A non-generic declaration carries the slot with nothing in it, so "no list" is the ordinary
+    // answer rather than a caller's mistake - and every caller would otherwise guard first.
+    if( !decl.is_valid() )
+    {
+        return {};
+    }
+
     assert( ast.kind( decl ) == Node_kind::Type_param_list );
     std::vector<Node_id> result;
     for( const Node_id param : ast.children( decl ) )
@@ -5871,7 +6090,7 @@ std::vector<Node_id> type_parameters( const Ast& ast, Node_id decl )
 
 bool is_generic( const Ast& ast, Node_id decl )
 {
-    return is_function_like( ast.kind( decl ) ) && ast.child( decl, 3 ).is_valid();
+    return ast.type_param_list( decl ).is_valid();
 }
 
 bool is_extern( const Ast& ast, Node_id decl )
@@ -5918,6 +6137,129 @@ bool is_const_method( const Ast& ast, Node_id method )
     const std::span<const Node_id> params = ast.children( ast.child( method, 1 ) );
 
     return !params.empty() && is_const_binding( ast, params[0] );
+}
+
+// What binds an aggregate's type parameters to what it was instantiated at. Empty for a
+// non-generic one, and the identity for the open form, so callers need no branch.
+//
+// The recorded types come in as a span rather than through a Types, because the checker asks this
+// while it is still filling that vector and has no Types to hand.
+Bindings aggregate_bindings( const Ast& ast, const Type_table& table, Type_id aggregate, std::span<const Type_id> recorded )
+{
+    if( !aggregate.is_valid() || !table.is_struct( aggregate ) )
+    {
+        return {};
+    }
+
+    const std::span<const Type_id> arguments = table.get( aggregate ).arguments;
+
+    const std::vector<Node_id> parameters = type_parameters( ast, ast.type_param_list( table.get( aggregate ).declaration ) );
+
+    Bindings bindings;
+
+    for( std::size_t i = 0; i < parameters.size() && i < arguments.size(); ++i )
+    {
+        bindings.emplace( recorded[parameters[i].v].v, arguments[i] );
+    }
+
+    return bindings;
+}
+
+// A field's type *as seen through this instance*. The declared type of `Box<T>`'s field is `T`,
+// which is true of the template and of no value anyone holds - so every read of a field's type goes
+// through here rather than through the recorded one.
+//
+// The table is mutable because substituting can intern: `Box<T>`'s field of type `Pair<T>` becomes
+// `Pair<i32>`, which may be a type nothing has named before.
+Type_id field_type( const Ast& ast, Type_table& table, Type_id aggregate, Node_id field, std::span<const Type_id> recorded )
+{
+    if( !field.is_valid() || field.v >= recorded.size() )
+    {
+        return Type_id {};
+    }
+
+    // An empty map makes this the identity, which is every non-generic aggregate - so the ordinary
+    // path costs a lookup that finds nothing rather than a branch here.
+    return table.substitute( recorded[field.v], aggregate_bindings( ast, table, aggregate, recorded ) );
+}
+
+bool has_destructor( const Ast& ast, Node_id declaration )
+{
+    if( !declaration.is_valid() || !is_aggregate( ast.kind( declaration ) ) )
+    {
+        return false;
+    }
+
+    for( const Node_id member : ast.members( declaration ) )
+    {
+        if( ast.kind( member ) == Node_kind::Destructor_decl )
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+namespace
+{
+// The recursion behind instance_owns. `visiting` is not a cycle *check* - order_structs already
+// refuses a by-value cycle between declarations - but instances are interned as they are asked
+// about, and answering the same one twice down a chain would not terminate.
+bool owns_through_fields(
+    const Ast& ast, Type_table& table, Type_id instance, std::span<const Type_id> recorded, std::vector<Type_id>& visiting
+)
+{
+    if( !instance.is_valid() || table.is_error( instance ) || !table.is_struct( instance ) )
+    {
+        return false;
+    }
+
+    const Node_id declaration = table.get( instance ).declaration;
+
+    if( !declaration.is_valid() )
+    {
+        return false;
+    }
+
+    if( has_destructor( ast, declaration ) )
+    {
+        return true;
+    }
+
+    if( std::find( visiting.begin(), visiting.end(), instance ) != visiting.end() )
+    {
+        return false;
+    }
+
+    visiting.push_back( instance );
+
+    // Only by-value containment, exactly as D2 counts it everywhere else: an address says nothing
+    // about who frees what it points at, and field_type is what applies this instance's bindings.
+    for( const Node_id field : ast.members( declaration ) )
+    {
+        if( ast.kind( field ) != Node_kind::Field_decl )
+        {
+            continue;
+        }
+
+        if( owns_through_fields( ast, table, field_type( ast, table, instance, field, recorded ), recorded, visiting ) )
+        {
+            visiting.pop_back();
+            return true;
+        }
+    }
+
+    visiting.pop_back();
+    return false;
+}
+} // namespace
+
+bool instance_owns( const Ast& ast, Type_table& table, Type_id instance, std::span<const Type_id> recorded )
+{
+    std::vector<Type_id> visiting;
+
+    return owns_through_fields( ast, table, instance, recorded, visiting );
 }
 
 Type_id binding_type( const Ast& ast, const Types& types, Node_id param )
@@ -5991,6 +6333,12 @@ public:
     std::optional<Constant_value> constant_of( Node_id node ) const
     {
         return types_.constant_of( node );
+    }
+
+    // Non-const because a question about an instance substitutes, and substituting interns.
+    Types& types()
+    {
+        return types_;
     }
 
     const Types& types() const
@@ -12414,6 +12762,345 @@ TEST_CASE( "type_checker_refuses_a_generic_that_expands_forever", "[sema][generi
 
         INFO( p.rendered() );
         REQUIRE( p.rendered().find( "bigger type argument" ) != std::string::npos );
+    }
+}
+
+// D39's other half: a type may be generic as readily as a function. `Box<i32>` and `Box<f64>` are
+// two types from one declaration, and a field written `T` is whichever of them asked. Everything
+// here is the type side; nothing emits one yet, so a use reports and these read past that.
+TEST_CASE( "type_checker_types_a_generic_aggregate", "[sema][generic][aggregate]" )
+{
+    SECTION( "the declaration alone is accepted, and emits nothing" )
+    {
+        // No layout of its own, the way a generic function has no code: what gets ordered and
+        // emitted is each instantiation.
+        const Typed p( "struct Box<T> where T : Copyable { T v; };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a type parameter is in scope inside the declaration and nowhere else" )
+    {
+        const Typed inside( "struct Box<T> where T : Copyable { T v; };\ni32 main() { return 0; }" );
+        const Typed outside( "struct Box<T> where T : Copyable { T v; };\n"
+                             "T stray( T a ) { return a; }\n"
+                             "i32 main() { return 0; }" );
+
+        INFO( inside.rendered() << outside.rendered() );
+        REQUIRE( inside.clean() );
+        REQUIRE( outside.rendered().find( "unknown type `T`" ) != std::string::npos );
+    }
+
+    SECTION( "two instantiations are two types" )
+    {
+        const Typed p( "struct Box<T> where T : Copyable { T v; };\n"
+                       "i32 main() { Box<i32> a; Box<f64> b; a = b; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "expected `Box<i32>`, but got `Box<f64>`" ) != std::string::npos );
+    }
+
+    SECTION( "a field takes the type argument, not the parameter" )
+    {
+        // The declared type of the field is `T`, which is true of the template and of no value
+        // anyone holds - so the diagnostic has to name `i32`, which the author wrote.
+        const Typed fits( "struct Box<T> where T : Copyable { T v; };\n"
+                          "i32 main() { Box<i32> b; b.v = 1; return b.v; }" );
+        const Typed wrong( "struct Box<T> where T : Copyable { T v; };\n"
+                           "i32 main() { Box<i32> b; b.v = true; return 0; }" );
+
+        INFO( fits.rendered() << wrong.rendered() );
+        REQUIRE( fits.clean() );
+        REQUIRE( wrong.rendered().find( "expected `i32`, but got `bool`" ) != std::string::npos );
+        REQUIRE( wrong.rendered().find( "`T`" ) == std::string::npos );
+    }
+
+    SECTION( "and a second instantiation takes a different one" )
+    {
+        const Typed p( "struct Box<T> where T : Copyable { T v; };\n"
+                       "i32 main() { Box<f64> b; b.v = 1.5; return b.v; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "expected `i32`, but got `f64`" ) != std::string::npos );
+    }
+
+    SECTION( "written bare, it says what is missing" )
+    {
+        // The mirror of a generic call with no type arguments. Inference is a decision of its own
+        // and is not taken here, so this names the explicit form rather than guessing.
+        const Typed p( "struct Box<T> where T : Copyable { T v; };\ni32 main() { Box b; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "`Box` is generic, so its type arguments must be written" ) != std::string::npos );
+    }
+
+    SECTION( "type arguments on something that takes none" )
+    {
+        const Typed p( "struct P { i32 v; };\ni32 main() { P<i32> x; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "`P` is not a generic" ) != std::string::npos );
+    }
+
+    SECTION( "the wrong number, through the same helper a call uses" )
+    {
+        const Typed many( "struct Box<T> where T : Copyable { T v; };\ni32 main() { Box<i32, f64> b; return 0; }" );
+        const Typed few( "struct Pair<T, U> where T : Copyable, where U : Copyable { T a; U b; };\n"
+                         "i32 main() { Pair<i32> p; return 0; }" );
+
+        INFO( many.rendered() << few.rendered() );
+        REQUIRE( many.rendered().find( "`Box` takes 1 type argument, but 2 were given" ) != std::string::npos );
+        REQUIRE( few.rendered().find( "`Pair` takes 2 type arguments, but 1 was given" ) != std::string::npos );
+    }
+
+    SECTION( "a bound on the declaration is checked at the annotation" )
+    {
+        const Typed p( "struct Box<T> where T : Integral { T v; };\ni32 main() { Box<f64> b; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "`f64` is not `Integral`, and `Box` requires it of `T`" ) != std::string::npos );
+    }
+
+    SECTION( "an unknown type argument is reported once" )
+    {
+        // And the aggregate is not interned as `Box<<error>>`, which would spell nothing and which
+        // every later diagnostic would name.
+        const Typed p( "struct Box<T> where T : Copyable { T v; };\ni32 main() { Box<Nope> b; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "unknown type `Nope`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "<error>" ) == std::string::npos );
+    }
+}
+
+// A generic aggregate in a generic *signature* is where substitution over a struct type happens:
+// `Box<T>` is written once and every instantiation reads a different one. Reachable at the checker
+// even though nothing emits one yet, because a call site substitutes the parameter's type to check
+// its argument against it.
+TEST_CASE( "type_checker_substitutes_a_generic_aggregate", "[sema][generic][aggregate]" )
+{
+    const std::string_view box = "struct Box<T> where T : Copyable { T v; };\n";
+
+    SECTION( "a parameter of type `Box<T>` names the instantiation at the call" )
+    {
+        // The diagnostic has to say `Box<i32>`, which means substitute rebuilt the struct type from
+        // its arguments rather than handing back the template.
+        const Typed p(
+            std::string( box ) + "void take<T>( Box<T> b ) where T : Copyable { }\n"
+                                 "i32 main() { i32 x = 1; take<i32>( x ); return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "expected `Box<i32>`, but got `i32`" ) != std::string::npos );
+
+        // Not `Box<T><i32>`, which is what composing the new name out of the old rendering gives.
+        REQUIRE( p.rendered().find( "Box<T>" ) == std::string::npos );
+    }
+
+    SECTION( "a field of one is read at the substituted type" )
+    {
+        const Typed p(
+            std::string( box ) + "T peek<T>( Box<T> b ) where T : Copyable { return b.v; }\n"
+                                 "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and the wrong field type is named against the parameter" )
+    {
+        const Typed p(
+            std::string( box ) + "bool peek<T>( Box<T> b ) where T : Copyable { return b.v; }\n"
+                                 "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "expected `bool`, but got `T`" ) != std::string::npos );
+    }
+
+    SECTION( "D42 counts a generic aggregate as building a type, exactly as a pointer does" )
+    {
+        // `f<i32>` would need `f<Box<i32>>` would need `f<Box<Box<i32>>>`. The rule was written for
+        // `T*` and needed nothing added for this - wraps_a_parameter asks whether the argument
+        // *mentions* a parameter without *being* one, which both shapes answer the same way.
+        const Typed p(
+            std::string( box ) + "void f<T>( T a ) where T : Copyable { Box<T> b; f<Box<T>>( b ); }\n"
+                                 "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "is instantiated with a bigger type argument each time round" ) != std::string::npos );
+    }
+
+    SECTION( "forwarding the parameter itself is still finite" )
+    {
+        const Typed p(
+            std::string( box ) + "void g<T>( Box<T> b ) where T : Copyable { }\n"
+                                 "void f<T>( Box<T> b ) where T : Copyable { g<T>( b ); }\n"
+                                 "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// D2 counts only by-value containment, so what a generic aggregate owns is a question about the
+// *field's* type rather than about the declaration - and an unbounded `T` may turn out to own
+// something. Nothing new was needed for any of this; it falls out of rules already written.
+TEST_CASE( "type_checker_applies_the_owning_rules_to_a_generic_aggregate", "[sema][generic][aggregate]" )
+{
+    SECTION( "a struct may not hold a `T` that might own something" )
+    {
+        const Typed p( "struct Pair<T> { T a; };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "a struct cannot contain `T`, which may own a resource" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`where T : Copyable`" ) != std::string::npos );
+    }
+
+    SECTION( "the promise that rules it out is `Copyable`" )
+    {
+        const Typed p( "struct Pair<T> where T : Copyable { T a; };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a class may hold one, because a class is not copied" )
+    {
+        const Typed p( "class Box<T> { T a; };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a pointer to one owns nothing, whatever `T` is" )
+    {
+        // Only by-value containment counts, which is the existing rule and needed no generic case.
+        const Typed p( "struct Ref<T> { T* a; };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// Ownership is a question about the *instantiation*, not the declaration: `Box<i32>` and
+// `Box<Buf>` come from one class and one of them owns. Types::is_owning still answers from the
+// declaration, which is the open form's answer and what the checker's move rules want inside a
+// generic body - instance_owns is the other half, and the one a drop is elaborated from.
+TEST_CASE( "type_checker_answers_ownership_per_instantiation", "[sema][generic][aggregate]" )
+{
+    const std::string_view owner = "class Buf\n"
+                                   "{\n"
+                                   "    i32* p;\n"
+                                   "    Buf() { unsafe { p = alloc<i32>(); } }\n"
+                                   "    ~Buf() { unsafe { free( p ); } }\n"
+                                   "};\n"
+                                   "class Box<T> { T v; };\n";
+
+    SECTION( "an argument that owns something makes the instance own" )
+    {
+        Typed p( std::string( owner ) + "i32 main() { Box<Buf> b; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const Type_id instance = p.types().type_of( p.nth( Node_kind::Var_decl, 0 ) );
+
+        REQUIRE( instance_owns( p.ast(), p.types().table(), instance, p.types().recorded() ) );
+    }
+
+    SECTION( "the same declaration at an argument that does not" )
+    {
+        Typed p( std::string( owner ) + "i32 main() { Box<i32> b; b.v = 1; return b.v; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const Type_id instance = p.types().type_of( p.nth( Node_kind::Var_decl, 0 ) );
+
+        REQUIRE_FALSE( instance_owns( p.ast(), p.types().table(), instance, p.types().recorded() ) );
+        // The declaration's answer is the one that cannot tell them apart, which is why both
+        // questions exist.
+        REQUIRE_FALSE( p.types().is_owning( instance ) );
+    }
+
+    SECTION( "a pointer to an owning type owns nothing" )
+    {
+        // D2 counts only by-value containment, here as everywhere else.
+        Typed p(
+            std::string( owner ) + "class Ref<T> { T* v; };\n"
+                                   "i32 main() { Ref<Buf> r; return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const Type_id instance = p.types().type_of( p.nth( Node_kind::Var_decl, 0 ) );
+
+        REQUIRE_FALSE( instance_owns( p.ast(), p.types().table(), instance, p.types().recorded() ) );
+    }
+
+    SECTION( "a destructor of its own makes every instance own" )
+    {
+        Typed p( "class Held<T> { T v; ~Held() { } };\n"
+                 "i32 main() { Held<i32> h; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const Type_id instance = p.types().type_of( p.nth( Node_kind::Var_decl, 0 ) );
+
+        REQUIRE( instance_owns( p.ast(), p.types().table(), instance, p.types().recorded() ) );
+    }
+}
+
+// Self-containment is about size, and size is about by-value members - so the existing walk answers
+// it for a generic aggregate unchanged, including the shape that grows a type each time round.
+TEST_CASE( "type_checker_refuses_a_generic_aggregate_that_contains_itself", "[sema][generic][aggregate]" )
+{
+    SECTION( "directly" )
+    {
+        const Typed p( "struct Odd<T> where T : Copyable { Odd<T> inner; };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "`Odd` contains itself" ) != std::string::npos );
+    }
+
+    SECTION( "through a type built from its own parameter" )
+    {
+        // Infinite twice over: no size, and no finite set of instantiations either. The size rule
+        // catches it first, which is the same answer for a stronger reason.
+        const Typed p( "struct Box<T> where T : Copyable { T v; };\n"
+                       "struct Odd<T> where T : Copyable { Odd<Box<T>> inner; };\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "`Odd` contains itself" ) != std::string::npos );
+    }
+
+    SECTION( "a pointer to itself is finite, and is how a list is written" )
+    {
+        const Typed p( "class Node<T> where T : Copyable { Node<T>* next; };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "holding a different instantiation is ordinary containment" )
+    {
+        // A generic holding a *concrete* instantiation of another is a finite thing, unlike the
+        // case above: `Holder<i32>` needs `Box<i32>` and `Box<i32>` needs nothing back.
+        const Typed p( "struct Box<T> where T : Copyable { T v; };\n"
+                       "struct Holder<T> where T : Copyable { Box<i32> b; };\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
     }
 }
 

@@ -42,9 +42,11 @@ Source_file                             4:1-50:1
     <none>                              -
     <none>                              -
   Struct_decl                           21:1-21:23  name=Box
+    <none>                              -
     Field_decl                          21:14-21:20 name=v
       Named_type                        21:14-21:17 "i32"
   Class_decl                            23:1-32:3   name=Holder
+    <none>                              -
     Field_decl                          25:5-25:15  name=value
       Named_type                        25:5-25:8   "i32"
     Constructor_decl                    27:5-27:35

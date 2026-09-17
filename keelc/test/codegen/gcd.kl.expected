@@ -2,10 +2,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-int32_t kl__gcd__i32_i32( int32_t, int32_t );
+int32_t kl__gcd__3i32_3i32( int32_t, int32_t );
 int32_t kl__main__( void );
 
-int32_t kl__gcd__i32_i32( int32_t kl_a_1, int32_t kl_b_2 )
+int32_t kl__gcd__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 {
     int32_t kl_t0;
     bool kl_t3;
@@ -36,7 +36,7 @@ int32_t kl__main__( void )
     int32_t kl_t0;
     int32_t kl_t1;
 #line 17 "codegen/gcd.kl"
-    kl_t1 = kl__gcd__i32_i32( 1071, 462 );
+    kl_t1 = kl__gcd__3i32_3i32( 1071, 462 );
     kl_t0 = kl_t1;
     return kl_t0;
 }

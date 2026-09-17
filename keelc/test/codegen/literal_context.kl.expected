@@ -2,10 +2,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-int32_t kl__takes_u8__u8( uint8_t );
+int32_t kl__takes_u8__2u8( uint8_t );
 int32_t kl__main__( void );
 
-int32_t kl__takes_u8__u8( uint8_t kl_v_1 )
+int32_t kl__takes_u8__2u8( uint8_t kl_v_1 )
 {
     int32_t kl_t0;
 #line 4 "codegen/literal_context.kl"
@@ -100,7 +100,7 @@ int32_t kl__main__( void )
     kl_t25 = kl_n_23 - 1;
     kl_o_24 = kl_t25;
 #line 29 "codegen/literal_context.kl"
-    kl_t27 = kl__takes_u8__u8( 3 );
+    kl_t27 = kl__takes_u8__2u8( 3 );
     kl_p_26 = kl_t27;
 #line 30 "codegen/literal_context.kl"
     kl_q_28 = 1;

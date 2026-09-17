@@ -2,20 +2,20 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-bool kl__is_even__i32( int32_t );
-bool kl__is_odd__i32( int32_t );
-int32_t kl__isqrt__i32( int32_t );
-bool kl__is_prime__i32( int32_t );
-int32_t kl__count_primes__i32( int32_t );
-int32_t kl__collatz_steps__u64( uint64_t );
-uint64_t kl__collatz_peak__u64( uint64_t );
-int32_t kl__digit_sum__i32( int32_t );
-int32_t kl__reverse_digits__i32( int32_t );
-bool kl__is_palindrome__i32( int32_t );
-uint64_t kl__factorial__u32( uint32_t );
+bool kl__is_even__3i32( int32_t );
+bool kl__is_odd__3i32( int32_t );
+int32_t kl__isqrt__3i32( int32_t );
+bool kl__is_prime__3i32( int32_t );
+int32_t kl__count_primes__3i32( int32_t );
+int32_t kl__collatz_steps__3u64( uint64_t );
+uint64_t kl__collatz_peak__3u64( uint64_t );
+int32_t kl__digit_sum__3i32( int32_t );
+int32_t kl__reverse_digits__3i32( int32_t );
+bool kl__is_palindrome__3i32( int32_t );
+uint64_t kl__factorial__3u32( uint32_t );
 int32_t kl__main__( void );
 
-bool kl__is_even__i32( int32_t kl_n_1 )
+bool kl__is_even__3i32( int32_t kl_n_1 )
 {
     bool kl_t0;
     bool kl_t2;
@@ -33,12 +33,12 @@ bool kl__is_even__i32( int32_t kl_n_1 )
     bb3:
 #line 20 "codegen/numbers.kl"
     kl_t3 = kl_n_1 - 1;
-    kl_t4 = kl__is_odd__i32( kl_t3 );
+    kl_t4 = kl__is_odd__3i32( kl_t3 );
     kl_t0 = kl_t4;
     return kl_t0;
 }
 
-bool kl__is_odd__i32( int32_t kl_n_1 )
+bool kl__is_odd__3i32( int32_t kl_n_1 )
 {
     bool kl_t0;
     bool kl_t2;
@@ -56,12 +56,12 @@ bool kl__is_odd__i32( int32_t kl_n_1 )
     bb3:
 #line 30 "codegen/numbers.kl"
     kl_t3 = kl_n_1 - 1;
-    kl_t4 = kl__is_even__i32( kl_t3 );
+    kl_t4 = kl__is_even__3i32( kl_t3 );
     kl_t0 = kl_t4;
     return kl_t0;
 }
 
-int32_t kl__isqrt__i32( int32_t kl_value_1 )
+int32_t kl__isqrt__3i32( int32_t kl_value_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -111,7 +111,7 @@ int32_t kl__isqrt__i32( int32_t kl_value_1 )
     return kl_t0;
 }
 
-bool kl__is_prime__i32( int32_t kl_n_1 )
+bool kl__is_prime__3i32( int32_t kl_n_1 )
 {
     bool kl_t0;
     bool kl_t2;
@@ -147,7 +147,7 @@ bool kl__is_prime__i32( int32_t kl_n_1 )
     goto bb6;
     bb6:
 #line 68 "codegen/numbers.kl"
-    kl_t7 = kl__isqrt__i32( kl_n_1 );
+    kl_t7 = kl__isqrt__3i32( kl_n_1 );
     kl_bound_6 = kl_t7;
 #line 69 "codegen/numbers.kl"
     kl_divisor_8 = 3;
@@ -177,7 +177,7 @@ bool kl__is_prime__i32( int32_t kl_n_1 )
     goto bb7;
 }
 
-int32_t kl__count_primes__i32( int32_t kl_limit_1 )
+int32_t kl__count_primes__3i32( int32_t kl_limit_1 )
 {
     int32_t kl_t0;
     int32_t kl_found_2;
@@ -194,7 +194,7 @@ int32_t kl__count_primes__i32( int32_t kl_limit_1 )
     if ( kl_t4 ) goto bb2; else goto bb3;
     bb2:
 #line 90 "codegen/numbers.kl"
-    kl_t5 = kl__is_prime__i32( kl_n_3 );
+    kl_t5 = kl__is_prime__3i32( kl_n_3 );
     if ( kl_t5 ) goto bb4; else goto bb5;
     bb3:
 #line 96 "codegen/numbers.kl"
@@ -214,7 +214,7 @@ int32_t kl__count_primes__i32( int32_t kl_limit_1 )
     goto bb1;
 }
 
-int32_t kl__collatz_steps__u64( uint64_t kl_start_1 )
+int32_t kl__collatz_steps__3u64( uint64_t kl_start_1 )
 {
     int32_t kl_t0;
     uint64_t kl_value_2;
@@ -260,7 +260,7 @@ int32_t kl__collatz_steps__u64( uint64_t kl_start_1 )
     goto bb1;
 }
 
-uint64_t kl__collatz_peak__u64( uint64_t kl_start_1 )
+uint64_t kl__collatz_peak__3u64( uint64_t kl_start_1 )
 {
     uint64_t kl_t0;
     uint64_t kl_value_2;
@@ -315,7 +315,7 @@ uint64_t kl__collatz_peak__u64( uint64_t kl_start_1 )
     goto bb1;
 }
 
-int32_t kl__digit_sum__i32( int32_t kl_n_1 )
+int32_t kl__digit_sum__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
     int32_t kl_rest_2;
@@ -346,7 +346,7 @@ int32_t kl__digit_sum__i32( int32_t kl_n_1 )
     return kl_t0;
 }
 
-int32_t kl__reverse_digits__i32( int32_t kl_n_1 )
+int32_t kl__reverse_digits__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
     int32_t kl_rest_2;
@@ -381,19 +381,19 @@ int32_t kl__reverse_digits__i32( int32_t kl_n_1 )
     return kl_t0;
 }
 
-bool kl__is_palindrome__i32( int32_t kl_n_1 )
+bool kl__is_palindrome__3i32( int32_t kl_n_1 )
 {
     bool kl_t0;
     int32_t kl_t2;
     bool kl_t3;
 #line 180 "codegen/numbers.kl"
-    kl_t2 = kl__reverse_digits__i32( kl_n_1 );
+    kl_t2 = kl__reverse_digits__3i32( kl_n_1 );
     kl_t3 = kl_t2 == kl_n_1;
     kl_t0 = kl_t3;
     return kl_t0;
 }
 
-uint64_t kl__factorial__u32( uint32_t kl_n_1 )
+uint64_t kl__factorial__3u32( uint32_t kl_n_1 )
 {
     uint64_t kl_t0;
     uint64_t kl_total_2;
@@ -482,7 +482,7 @@ int32_t kl__main__( void )
     uint64_t kl_t52;
     bool kl_t53;
 #line 200 "codegen/numbers.kl"
-    kl_t1 = kl__is_even__i32( 0 );
+    kl_t1 = kl__is_even__3i32( 0 );
     kl_t2 = !kl_t1;
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -492,7 +492,7 @@ int32_t kl__main__( void )
     goto bb3;
     bb3:
 #line 201 "codegen/numbers.kl"
-    kl_t3 = kl__is_odd__i32( 0 );
+    kl_t3 = kl__is_odd__3i32( 0 );
     if ( kl_t3 ) goto bb4; else goto bb5;
     bb4:
     kl_t0 = 2;
@@ -501,7 +501,7 @@ int32_t kl__main__( void )
     goto bb6;
     bb6:
 #line 202 "codegen/numbers.kl"
-    kl_t4 = kl__is_even__i32( 10 );
+    kl_t4 = kl__is_even__3i32( 10 );
     kl_t5 = !kl_t4;
     if ( kl_t5 ) goto bb7; else goto bb8;
     bb7:
@@ -511,7 +511,7 @@ int32_t kl__main__( void )
     goto bb9;
     bb9:
 #line 203 "codegen/numbers.kl"
-    kl_t6 = kl__is_odd__i32( 7 );
+    kl_t6 = kl__is_odd__3i32( 7 );
     kl_t7 = !kl_t6;
     if ( kl_t7 ) goto bb10; else goto bb11;
     bb10:
@@ -521,7 +521,7 @@ int32_t kl__main__( void )
     goto bb12;
     bb12:
 #line 204 "codegen/numbers.kl"
-    kl_t8 = kl__is_even__i32( 7 );
+    kl_t8 = kl__is_even__3i32( 7 );
     if ( kl_t8 ) goto bb13; else goto bb14;
     bb13:
     kl_t0 = 5;
@@ -530,7 +530,7 @@ int32_t kl__main__( void )
     goto bb15;
     bb15:
 #line 207 "codegen/numbers.kl"
-    kl_t9 = kl__isqrt__i32( 0 );
+    kl_t9 = kl__isqrt__3i32( 0 );
     kl_t10 = kl_t9 != 0;
     if ( kl_t10 ) goto bb16; else goto bb17;
     bb16:
@@ -540,7 +540,7 @@ int32_t kl__main__( void )
     goto bb18;
     bb18:
 #line 208 "codegen/numbers.kl"
-    kl_t11 = kl__isqrt__i32( 1 );
+    kl_t11 = kl__isqrt__3i32( 1 );
     kl_t12 = kl_t11 != 1;
     if ( kl_t12 ) goto bb19; else goto bb20;
     bb19:
@@ -550,7 +550,7 @@ int32_t kl__main__( void )
     goto bb21;
     bb21:
 #line 209 "codegen/numbers.kl"
-    kl_t13 = kl__isqrt__i32( 3 );
+    kl_t13 = kl__isqrt__3i32( 3 );
     kl_t14 = kl_t13 != 1;
     if ( kl_t14 ) goto bb22; else goto bb23;
     bb22:
@@ -560,7 +560,7 @@ int32_t kl__main__( void )
     goto bb24;
     bb24:
 #line 210 "codegen/numbers.kl"
-    kl_t15 = kl__isqrt__i32( 4 );
+    kl_t15 = kl__isqrt__3i32( 4 );
     kl_t16 = kl_t15 != 2;
     if ( kl_t16 ) goto bb25; else goto bb26;
     bb25:
@@ -570,7 +570,7 @@ int32_t kl__main__( void )
     goto bb27;
     bb27:
 #line 211 "codegen/numbers.kl"
-    kl_t17 = kl__isqrt__i32( 999999 );
+    kl_t17 = kl__isqrt__3i32( 999999 );
     kl_t18 = kl_t17 != 999;
     if ( kl_t18 ) goto bb28; else goto bb29;
     bb28:
@@ -580,7 +580,7 @@ int32_t kl__main__( void )
     goto bb30;
     bb30:
 #line 212 "codegen/numbers.kl"
-    kl_t19 = kl__isqrt__i32( 1000000 );
+    kl_t19 = kl__isqrt__3i32( 1000000 );
     kl_t20 = kl_t19 != 1000;
     if ( kl_t20 ) goto bb31; else goto bb32;
     bb31:
@@ -590,7 +590,7 @@ int32_t kl__main__( void )
     goto bb33;
     bb33:
 #line 214 "codegen/numbers.kl"
-    kl_t21 = kl__is_prime__i32( 1 );
+    kl_t21 = kl__is_prime__3i32( 1 );
     if ( kl_t21 ) goto bb34; else goto bb35;
     bb34:
     kl_t0 = 12;
@@ -599,7 +599,7 @@ int32_t kl__main__( void )
     goto bb36;
     bb36:
 #line 215 "codegen/numbers.kl"
-    kl_t22 = kl__is_prime__i32( 2 );
+    kl_t22 = kl__is_prime__3i32( 2 );
     kl_t23 = !kl_t22;
     if ( kl_t23 ) goto bb37; else goto bb38;
     bb37:
@@ -609,7 +609,7 @@ int32_t kl__main__( void )
     goto bb39;
     bb39:
 #line 216 "codegen/numbers.kl"
-    kl_t24 = kl__is_prime__i32( 97 );
+    kl_t24 = kl__is_prime__3i32( 97 );
     kl_t25 = !kl_t24;
     if ( kl_t25 ) goto bb40; else goto bb41;
     bb40:
@@ -619,7 +619,7 @@ int32_t kl__main__( void )
     goto bb42;
     bb42:
 #line 217 "codegen/numbers.kl"
-    kl_t26 = kl__is_prime__i32( 91 );
+    kl_t26 = kl__is_prime__3i32( 91 );
     if ( kl_t26 ) goto bb43; else goto bb44;
     bb43:
     kl_t0 = 15;
@@ -628,7 +628,7 @@ int32_t kl__main__( void )
     goto bb45;
     bb45:
 #line 218 "codegen/numbers.kl"
-    kl_t27 = kl__count_primes__i32( 100 );
+    kl_t27 = kl__count_primes__3i32( 100 );
     kl_t28 = kl_t27 != 25;
     if ( kl_t28 ) goto bb46; else goto bb47;
     bb46:
@@ -638,7 +638,7 @@ int32_t kl__main__( void )
     goto bb48;
     bb48:
 #line 219 "codegen/numbers.kl"
-    kl_t29 = kl__count_primes__i32( 1000 );
+    kl_t29 = kl__count_primes__3i32( 1000 );
     kl_t30 = kl_t29 != 168;
     if ( kl_t30 ) goto bb49; else goto bb50;
     bb49:
@@ -648,7 +648,7 @@ int32_t kl__main__( void )
     goto bb51;
     bb51:
 #line 221 "codegen/numbers.kl"
-    kl_t31 = kl__collatz_steps__u64( 1 );
+    kl_t31 = kl__collatz_steps__3u64( 1 );
     kl_t32 = kl_t31 != 0;
     if ( kl_t32 ) goto bb52; else goto bb53;
     bb52:
@@ -658,7 +658,7 @@ int32_t kl__main__( void )
     goto bb54;
     bb54:
 #line 222 "codegen/numbers.kl"
-    kl_t33 = kl__collatz_steps__u64( 27 );
+    kl_t33 = kl__collatz_steps__3u64( 27 );
     kl_t34 = kl_t33 != 111;
     if ( kl_t34 ) goto bb55; else goto bb56;
     bb55:
@@ -668,7 +668,7 @@ int32_t kl__main__( void )
     goto bb57;
     bb57:
 #line 223 "codegen/numbers.kl"
-    kl_t35 = kl__collatz_steps__u64( 97 );
+    kl_t35 = kl__collatz_steps__3u64( 97 );
     kl_t36 = kl_t35 != 118;
     if ( kl_t36 ) goto bb58; else goto bb59;
     bb58:
@@ -678,7 +678,7 @@ int32_t kl__main__( void )
     goto bb60;
     bb60:
 #line 224 "codegen/numbers.kl"
-    kl_t37 = kl__collatz_peak__u64( 27 );
+    kl_t37 = kl__collatz_peak__3u64( 27 );
     kl_t38 = kl_t37 != 9232;
     if ( kl_t38 ) goto bb61; else goto bb62;
     bb61:
@@ -688,7 +688,7 @@ int32_t kl__main__( void )
     goto bb63;
     bb63:
 #line 226 "codegen/numbers.kl"
-    kl_t39 = kl__digit_sum__i32( 98765 );
+    kl_t39 = kl__digit_sum__3i32( 98765 );
     kl_t40 = kl_t39 != 35;
     if ( kl_t40 ) goto bb64; else goto bb65;
     bb64:
@@ -698,7 +698,7 @@ int32_t kl__main__( void )
     goto bb66;
     bb66:
 #line 227 "codegen/numbers.kl"
-    kl_t41 = kl__digit_sum__i32( 0 );
+    kl_t41 = kl__digit_sum__3i32( 0 );
     kl_t42 = kl_t41 != 0;
     if ( kl_t42 ) goto bb67; else goto bb68;
     bb67:
@@ -708,7 +708,7 @@ int32_t kl__main__( void )
     goto bb69;
     bb69:
 #line 228 "codegen/numbers.kl"
-    kl_t43 = kl__reverse_digits__i32( 12345 );
+    kl_t43 = kl__reverse_digits__3i32( 12345 );
     kl_t44 = kl_t43 != 54321;
     if ( kl_t44 ) goto bb70; else goto bb71;
     bb70:
@@ -718,7 +718,7 @@ int32_t kl__main__( void )
     goto bb72;
     bb72:
 #line 229 "codegen/numbers.kl"
-    kl_t45 = kl__is_palindrome__i32( 12321 );
+    kl_t45 = kl__is_palindrome__3i32( 12321 );
     kl_t46 = !kl_t45;
     if ( kl_t46 ) goto bb73; else goto bb74;
     bb73:
@@ -728,7 +728,7 @@ int32_t kl__main__( void )
     goto bb75;
     bb75:
 #line 230 "codegen/numbers.kl"
-    kl_t47 = kl__is_palindrome__i32( 12345 );
+    kl_t47 = kl__is_palindrome__3i32( 12345 );
     if ( kl_t47 ) goto bb76; else goto bb77;
     bb76:
     kl_t0 = 26;
@@ -737,7 +737,7 @@ int32_t kl__main__( void )
     goto bb78;
     bb78:
 #line 232 "codegen/numbers.kl"
-    kl_t48 = kl__factorial__u32( 0 );
+    kl_t48 = kl__factorial__3u32( 0 );
     kl_t49 = kl_t48 != 1;
     if ( kl_t49 ) goto bb79; else goto bb80;
     bb79:
@@ -747,7 +747,7 @@ int32_t kl__main__( void )
     goto bb81;
     bb81:
 #line 233 "codegen/numbers.kl"
-    kl_t50 = kl__factorial__u32( 10 );
+    kl_t50 = kl__factorial__3u32( 10 );
     kl_t51 = kl_t50 != 3628800;
     if ( kl_t51 ) goto bb82; else goto bb83;
     bb82:
@@ -757,7 +757,7 @@ int32_t kl__main__( void )
     goto bb84;
     bb84:
 #line 234 "codegen/numbers.kl"
-    kl_t52 = kl__factorial__u32( 20 );
+    kl_t52 = kl__factorial__3u32( 20 );
     kl_t53 = kl_t52 != 2432902008176640000;
     if ( kl_t53 ) goto bb85; else goto bb86;
     bb85:

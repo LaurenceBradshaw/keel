@@ -24,20 +24,20 @@ struct kl__Rect
     struct kl__Point kl_high_13;
 };
 
-struct kl__Vec2 kl__add__Vec2_Vec2( struct kl__Vec2, struct kl__Vec2 );
-struct kl__Vec2 kl__scale__Vec2_f64( struct kl__Vec2, double );
-double kl__dot__Vec2_Vec2( struct kl__Vec2, struct kl__Vec2 );
-double kl__length_squared__Vec2( struct kl__Vec2 );
-int32_t kl__smaller__i32_i32( int32_t, int32_t );
-int32_t kl__larger__i32_i32( int32_t, int32_t );
-bool kl__is_empty__Rect( struct kl__Rect );
-int64_t kl__area__Rect( struct kl__Rect );
-bool kl__contains__Rect_Point( struct kl__Rect, struct kl__Point );
-bool kl__overlaps__Rect_Rect( struct kl__Rect, struct kl__Rect );
-struct kl__Rect kl__intersection__Rect_Rect( struct kl__Rect, struct kl__Rect );
+struct kl__Vec2 kl__add__4Vec2_4Vec2( struct kl__Vec2, struct kl__Vec2 );
+struct kl__Vec2 kl__scale__4Vec2_3f64( struct kl__Vec2, double );
+double kl__dot__4Vec2_4Vec2( struct kl__Vec2, struct kl__Vec2 );
+double kl__length_squared__4Vec2( struct kl__Vec2 );
+int32_t kl__smaller__3i32_3i32( int32_t, int32_t );
+int32_t kl__larger__3i32_3i32( int32_t, int32_t );
+bool kl__is_empty__4Rect( struct kl__Rect );
+int64_t kl__area__4Rect( struct kl__Rect );
+bool kl__contains__4Rect_5Point( struct kl__Rect, struct kl__Point );
+bool kl__overlaps__4Rect_4Rect( struct kl__Rect, struct kl__Rect );
+struct kl__Rect kl__intersection__4Rect_4Rect( struct kl__Rect, struct kl__Rect );
 int32_t kl__main__( void );
 
-struct kl__Vec2 kl__add__Vec2_Vec2( struct kl__Vec2 kl_a_1, struct kl__Vec2 kl_b_2 )
+struct kl__Vec2 kl__add__4Vec2_4Vec2( struct kl__Vec2 kl_a_1, struct kl__Vec2 kl_b_2 )
 {
     struct kl__Vec2 kl_t0;
     struct kl__Vec2 kl_t3;
@@ -52,7 +52,7 @@ struct kl__Vec2 kl__add__Vec2_Vec2( struct kl__Vec2 kl_a_1, struct kl__Vec2 kl_b
     return kl_t0;
 }
 
-struct kl__Vec2 kl__scale__Vec2_f64( struct kl__Vec2 kl_v_1, double kl_factor_2 )
+struct kl__Vec2 kl__scale__4Vec2_3f64( struct kl__Vec2 kl_v_1, double kl_factor_2 )
 {
     struct kl__Vec2 kl_t0;
     struct kl__Vec2 kl_t3;
@@ -67,7 +67,7 @@ struct kl__Vec2 kl__scale__Vec2_f64( struct kl__Vec2 kl_v_1, double kl_factor_2 
     return kl_t0;
 }
 
-double kl__dot__Vec2_Vec2( struct kl__Vec2 kl_a_1, struct kl__Vec2 kl_b_2 )
+double kl__dot__4Vec2_4Vec2( struct kl__Vec2 kl_a_1, struct kl__Vec2 kl_b_2 )
 {
     double kl_t0;
     double kl_t3;
@@ -81,17 +81,17 @@ double kl__dot__Vec2_Vec2( struct kl__Vec2 kl_a_1, struct kl__Vec2 kl_b_2 )
     return kl_t0;
 }
 
-double kl__length_squared__Vec2( struct kl__Vec2 kl_v_1 )
+double kl__length_squared__4Vec2( struct kl__Vec2 kl_v_1 )
 {
     double kl_t0;
     double kl_t2;
 #line 46 "codegen/geometry.kl"
-    kl_t2 = kl__dot__Vec2_Vec2( kl_v_1, kl_v_1 );
+    kl_t2 = kl__dot__4Vec2_4Vec2( kl_v_1, kl_v_1 );
     kl_t0 = kl_t2;
     return kl_t0;
 }
 
-int32_t kl__smaller__i32_i32( int32_t kl_a_1, int32_t kl_b_2 )
+int32_t kl__smaller__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 {
     int32_t kl_t0;
     bool kl_t3;
@@ -110,7 +110,7 @@ int32_t kl__smaller__i32_i32( int32_t kl_a_1, int32_t kl_b_2 )
     return kl_t0;
 }
 
-int32_t kl__larger__i32_i32( int32_t kl_a_1, int32_t kl_b_2 )
+int32_t kl__larger__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
 {
     int32_t kl_t0;
     bool kl_t3;
@@ -129,7 +129,7 @@ int32_t kl__larger__i32_i32( int32_t kl_a_1, int32_t kl_b_2 )
     return kl_t0;
 }
 
-bool kl__is_empty__Rect( struct kl__Rect kl_r_1 )
+bool kl__is_empty__4Rect( struct kl__Rect kl_r_1 )
 {
     bool kl_t0;
     bool kl_t2;
@@ -148,7 +148,7 @@ bool kl__is_empty__Rect( struct kl__Rect kl_r_1 )
     return kl_t0;
 }
 
-int64_t kl__area__Rect( struct kl__Rect kl_r_1 )
+int64_t kl__area__4Rect( struct kl__Rect kl_r_1 )
 {
     int64_t kl_t0;
     bool kl_t2;
@@ -160,7 +160,7 @@ int64_t kl__area__Rect( struct kl__Rect kl_r_1 )
     int64_t kl_t8;
     int64_t kl_t9;
 #line 81 "codegen/geometry.kl"
-    kl_t2 = kl__is_empty__Rect( kl_r_1 );
+    kl_t2 = kl__is_empty__4Rect( kl_r_1 );
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
 #line 83 "codegen/geometry.kl"
@@ -183,7 +183,7 @@ int64_t kl__area__Rect( struct kl__Rect kl_r_1 )
     return kl_t0;
 }
 
-bool kl__contains__Rect_Point( struct kl__Rect kl_r_1, struct kl__Point kl_p_2 )
+bool kl__contains__4Rect_5Point( struct kl__Rect kl_r_1, struct kl__Point kl_p_2 )
 {
     bool kl_t0;
     bool kl_t3;
@@ -220,7 +220,7 @@ bool kl__contains__Rect_Point( struct kl__Rect kl_r_1, struct kl__Point kl_p_2 )
     return kl_t0;
 }
 
-bool kl__overlaps__Rect_Rect( struct kl__Rect kl_a_1, struct kl__Rect kl_b_2 )
+bool kl__overlaps__4Rect_4Rect( struct kl__Rect kl_a_1, struct kl__Rect kl_b_2 )
 {
     bool kl_t0;
     bool kl_t3;
@@ -257,7 +257,7 @@ bool kl__overlaps__Rect_Rect( struct kl__Rect kl_a_1, struct kl__Rect kl_b_2 )
     return kl_t0;
 }
 
-struct kl__Rect kl__intersection__Rect_Rect( struct kl__Rect kl_a_1, struct kl__Rect kl_b_2 )
+struct kl__Rect kl__intersection__4Rect_4Rect( struct kl__Rect kl_a_1, struct kl__Rect kl_b_2 )
 {
     struct kl__Rect kl_t0;
     struct kl__Point kl_low_3;
@@ -270,15 +270,15 @@ struct kl__Rect kl__intersection__Rect_Rect( struct kl__Rect kl_a_1, struct kl__
     int32_t kl_t10;
     struct kl__Rect kl_t11;
 #line 107 "codegen/geometry.kl"
-    kl_t5 = kl__larger__i32_i32( kl_a_1.kl_low_11.kl_x_6, kl_b_2.kl_low_11.kl_x_6 );
+    kl_t5 = kl__larger__3i32_3i32( kl_a_1.kl_low_11.kl_x_6, kl_b_2.kl_low_11.kl_x_6 );
     kl_t4.kl_x_6 = kl_t5;
-    kl_t6 = kl__larger__i32_i32( kl_a_1.kl_low_11.kl_y_8, kl_b_2.kl_low_11.kl_y_8 );
+    kl_t6 = kl__larger__3i32_3i32( kl_a_1.kl_low_11.kl_y_8, kl_b_2.kl_low_11.kl_y_8 );
     kl_t4.kl_y_8 = kl_t6;
     kl_low_3 = kl_t4;
 #line 108 "codegen/geometry.kl"
-    kl_t9 = kl__smaller__i32_i32( kl_a_1.kl_high_13.kl_x_6, kl_b_2.kl_high_13.kl_x_6 );
+    kl_t9 = kl__smaller__3i32_3i32( kl_a_1.kl_high_13.kl_x_6, kl_b_2.kl_high_13.kl_x_6 );
     kl_t8.kl_x_6 = kl_t9;
-    kl_t10 = kl__smaller__i32_i32( kl_a_1.kl_high_13.kl_y_8, kl_b_2.kl_high_13.kl_y_8 );
+    kl_t10 = kl__smaller__3i32_3i32( kl_a_1.kl_high_13.kl_y_8, kl_b_2.kl_high_13.kl_y_8 );
     kl_t8.kl_y_8 = kl_t10;
     kl_high_7 = kl_t8;
 #line 110 "codegen/geometry.kl"
@@ -377,7 +377,7 @@ int32_t kl__main__( void )
     kl_t4.kl_y_3 = 4.0;
     kl_b_3 = kl_t4;
 #line 118 "codegen/geometry.kl"
-    kl_t5 = kl__dot__Vec2_Vec2( kl_a_1, kl_b_3 );
+    kl_t5 = kl__dot__4Vec2_4Vec2( kl_a_1, kl_b_3 );
     kl_t6 = kl_t5 != 12.5;
     if ( kl_t6 ) goto bb1; else goto bb2;
     bb1:
@@ -389,7 +389,7 @@ int32_t kl__main__( void )
 #line 119 "codegen/geometry.kl"
     kl_t7.kl_x_1 = 3.0;
     kl_t7.kl_y_3 = 4.0;
-    kl_t8 = kl__length_squared__Vec2( kl_t7 );
+    kl_t8 = kl__length_squared__4Vec2( kl_t7 );
     kl_t9 = kl_t8 != 25.0;
     if ( kl_t9 ) goto bb4; else goto bb5;
     bb4:
@@ -399,7 +399,7 @@ int32_t kl__main__( void )
     goto bb6;
     bb6:
 #line 121 "codegen/geometry.kl"
-    kl_t11 = kl__add__Vec2_Vec2( kl_a_1, kl_b_3 );
+    kl_t11 = kl__add__4Vec2_4Vec2( kl_a_1, kl_b_3 );
     kl_sum_10 = kl_t11;
 #line 123 "codegen/geometry.kl"
     kl_t12 = kl_sum_10.kl_x_1 != 4.5;
@@ -420,7 +420,7 @@ int32_t kl__main__( void )
     goto bb12;
     bb12:
 #line 126 "codegen/geometry.kl"
-    kl_t15 = kl__scale__Vec2_f64( kl_a_1, 2.0 );
+    kl_t15 = kl__scale__4Vec2_3f64( kl_a_1, 2.0 );
     kl_doubled_14 = kl_t15;
 #line 128 "codegen/geometry.kl"
     kl_t16 = kl_doubled_14.kl_x_1 != 3.0;
@@ -441,10 +441,10 @@ int32_t kl__main__( void )
     goto bb18;
     bb18:
 #line 132 "codegen/geometry.kl"
-    kl_t18 = kl__scale__Vec2_f64( kl_a_1, 2.0 );
+    kl_t18 = kl__scale__4Vec2_3f64( kl_a_1, 2.0 );
     kl_t19.kl_x_1 = 1.0;
     kl_t19.kl_y_3 = 0.5;
-    kl_t20 = kl__dot__Vec2_Vec2( kl_t18, kl_t19 );
+    kl_t20 = kl__dot__4Vec2_4Vec2( kl_t18, kl_t19 );
     kl_t21 = kl_t20 != 5.0;
     if ( kl_t21 ) goto bb19; else goto bb20;
     bb19:
@@ -462,7 +462,7 @@ int32_t kl__main__( void )
     kl_t23.kl_high_13 = kl_t25;
     kl_unit_22 = kl_t23;
 #line 136 "codegen/geometry.kl"
-    kl_t26 = kl__area__Rect( kl_unit_22 );
+    kl_t26 = kl__area__4Rect( kl_unit_22 );
     kl_t27 = kl_t26 != 12;
     if ( kl_t27 ) goto bb22; else goto bb23;
     bb22:
@@ -472,7 +472,7 @@ int32_t kl__main__( void )
     goto bb24;
     bb24:
 #line 137 "codegen/geometry.kl"
-    kl_t28 = kl__is_empty__Rect( kl_unit_22 );
+    kl_t28 = kl__is_empty__4Rect( kl_unit_22 );
     if ( kl_t28 ) goto bb25; else goto bb26;
     bb25:
     kl_t0 = 9;
@@ -483,7 +483,7 @@ int32_t kl__main__( void )
 #line 140 "codegen/geometry.kl"
     kl_t29.kl_x_6 = 0;
     kl_t29.kl_y_8 = 0;
-    kl_t30 = kl__contains__Rect_Point( kl_unit_22, kl_t29 );
+    kl_t30 = kl__contains__4Rect_5Point( kl_unit_22, kl_t29 );
     kl_t31 = !kl_t30;
     if ( kl_t31 ) goto bb28; else goto bb29;
     bb28:
@@ -495,7 +495,7 @@ int32_t kl__main__( void )
 #line 141 "codegen/geometry.kl"
     kl_t32.kl_x_6 = 4;
     kl_t32.kl_y_8 = 3;
-    kl_t33 = kl__contains__Rect_Point( kl_unit_22, kl_t32 );
+    kl_t33 = kl__contains__4Rect_5Point( kl_unit_22, kl_t32 );
     if ( kl_t33 ) goto bb31; else goto bb32;
     bb31:
     kl_t0 = 11;
@@ -506,7 +506,7 @@ int32_t kl__main__( void )
 #line 142 "codegen/geometry.kl"
     kl_t34.kl_x_6 = 3;
     kl_t34.kl_y_8 = 2;
-    kl_t35 = kl__contains__Rect_Point( kl_unit_22, kl_t34 );
+    kl_t35 = kl__contains__4Rect_5Point( kl_unit_22, kl_t34 );
     kl_t36 = !kl_t35;
     if ( kl_t36 ) goto bb34; else goto bb35;
     bb34:
@@ -519,7 +519,7 @@ int32_t kl__main__( void )
     kl_t38 = -1;
     kl_t37.kl_x_6 = kl_t38;
     kl_t37.kl_y_8 = 1;
-    kl_t39 = kl__contains__Rect_Point( kl_unit_22, kl_t37 );
+    kl_t39 = kl__contains__4Rect_5Point( kl_unit_22, kl_t37 );
     if ( kl_t39 ) goto bb37; else goto bb38;
     bb37:
     kl_t0 = 13;
@@ -536,7 +536,7 @@ int32_t kl__main__( void )
     kl_t41.kl_low_11 = kl_t43;
     kl_offset_40 = kl_t41;
 #line 148 "codegen/geometry.kl"
-    kl_t44 = kl__area__Rect( kl_offset_40 );
+    kl_t44 = kl__area__4Rect( kl_offset_40 );
     kl_t45 = kl_t44 != 16;
     if ( kl_t45 ) goto bb40; else goto bb41;
     bb40:
@@ -546,7 +546,7 @@ int32_t kl__main__( void )
     goto bb42;
     bb42:
 #line 150 "codegen/geometry.kl"
-    kl_t46 = kl__overlaps__Rect_Rect( kl_unit_22, kl_offset_40 );
+    kl_t46 = kl__overlaps__4Rect_4Rect( kl_unit_22, kl_offset_40 );
     kl_t47 = !kl_t46;
     if ( kl_t47 ) goto bb43; else goto bb44;
     bb43:
@@ -556,7 +556,7 @@ int32_t kl__main__( void )
     goto bb45;
     bb45:
 #line 152 "codegen/geometry.kl"
-    kl_t49 = kl__intersection__Rect_Rect( kl_unit_22, kl_offset_40 );
+    kl_t49 = kl__intersection__4Rect_4Rect( kl_unit_22, kl_offset_40 );
     kl_shared_48 = kl_t49;
 #line 154 "codegen/geometry.kl"
     kl_t50 = kl_shared_48.kl_low_11.kl_x_6 != 2;
@@ -595,7 +595,7 @@ int32_t kl__main__( void )
     goto bb57;
     bb57:
 #line 158 "codegen/geometry.kl"
-    kl_t54 = kl__area__Rect( kl_shared_48 );
+    kl_t54 = kl__area__4Rect( kl_shared_48 );
     kl_t55 = kl_t54 != 4;
     if ( kl_t55 ) goto bb58; else goto bb59;
     bb58:
@@ -613,10 +613,10 @@ int32_t kl__main__( void )
     kl_t57.kl_high_13 = kl_t59;
     kl_far_56 = kl_t57;
 #line 162 "codegen/geometry.kl"
-    kl_t61 = kl__intersection__Rect_Rect( kl_unit_22, kl_far_56 );
+    kl_t61 = kl__intersection__4Rect_4Rect( kl_unit_22, kl_far_56 );
     kl_none_60 = kl_t61;
 #line 164 "codegen/geometry.kl"
-    kl_t62 = kl__overlaps__Rect_Rect( kl_unit_22, kl_far_56 );
+    kl_t62 = kl__overlaps__4Rect_4Rect( kl_unit_22, kl_far_56 );
     if ( kl_t62 ) goto bb61; else goto bb62;
     bb61:
     kl_t0 = 21;
@@ -625,7 +625,7 @@ int32_t kl__main__( void )
     goto bb63;
     bb63:
 #line 165 "codegen/geometry.kl"
-    kl_t63 = kl__is_empty__Rect( kl_none_60 );
+    kl_t63 = kl__is_empty__4Rect( kl_none_60 );
     kl_t64 = !kl_t63;
     if ( kl_t64 ) goto bb64; else goto bb65;
     bb64:
@@ -635,7 +635,7 @@ int32_t kl__main__( void )
     goto bb66;
     bb66:
 #line 166 "codegen/geometry.kl"
-    kl_t65 = kl__area__Rect( kl_none_60 );
+    kl_t65 = kl__area__4Rect( kl_none_60 );
     kl_t66 = kl_t65 != 0;
     if ( kl_t66 ) goto bb67; else goto bb68;
     bb67:
@@ -653,7 +653,7 @@ int32_t kl__main__( void )
     kl_t68.kl_high_13 = kl_t70;
     kl_huge_67 = kl_t68;
 #line 171 "codegen/geometry.kl"
-    kl_t71 = kl__area__Rect( kl_huge_67 );
+    kl_t71 = kl__area__4Rect( kl_huge_67 );
     kl_t72 = kl_t71 != 10000000000;
     if ( kl_t72 ) goto bb70; else goto bb71;
     bb70:
@@ -663,11 +663,11 @@ int32_t kl__main__( void )
     goto bb72;
     bb72:
 #line 174 "codegen/geometry.kl"
-    kl_t74 = kl__intersection__Rect_Rect( kl_unit_22, kl_unit_22 );
+    kl_t74 = kl__intersection__4Rect_4Rect( kl_unit_22, kl_unit_22 );
     kl_itself_73 = kl_t74;
 #line 176 "codegen/geometry.kl"
-    kl_t75 = kl__area__Rect( kl_itself_73 );
-    kl_t76 = kl__area__Rect( kl_unit_22 );
+    kl_t75 = kl__area__4Rect( kl_itself_73 );
+    kl_t76 = kl__area__4Rect( kl_unit_22 );
     kl_t77 = kl_t75 != kl_t76;
     if ( kl_t77 ) goto bb73; else goto bb74;
     bb73:

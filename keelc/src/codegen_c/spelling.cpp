@@ -24,6 +24,22 @@ std::vector<Type_id> parameter_types_vector( const Ast& ast, const Types& types,
 
     return params;
 }
+// The declaration's type parameters against this instance's arguments. The same map the worklist
+// builds when it emits the instance - written again here because a symbol is computed from the
+// declaration and must come back through the instance, like everything else that reaches that way.
+Bindings instance_bindings( const Ast& ast, const Types& types, Node_id declaration, std::span<const Type_id> type_arguments )
+{
+    const std::vector<Node_id> parameters = type_parameters( ast, ast.type_param_list( declaration ) );
+
+    Bindings bindings;
+
+    for( std::size_t i = 0; i < parameters.size() && i < type_arguments.size(); ++i )
+    {
+        bindings.emplace( types.type_of( parameters[i] ).v, type_arguments[i] );
+    }
+
+    return bindings;
+}
 } // namespace
 
 std::string Spelling::type( Type_id type ) const
@@ -46,7 +62,7 @@ std::string Spelling::type( Type_id type ) const
         return described.width == 32 ? "float" : "double";
 
     case Type_kind::Struct:
-        return structure( described.declaration );
+        return structure( type );
 
     case Type_kind::Pointer:
         return fmt::format( "{}*", this->type( described.element ) );
@@ -55,8 +71,7 @@ std::string Spelling::type( Type_id type ) const
     // implementation-defined and which would buy nothing, since by here Keel has already erased the
     // distinction the tag existed for. One carrying payloads is a struct: a tag and the fields.
     case Type_kind::Enum:
-        return enum_has_payload( ast, described.declaration ) ? structure( described.declaration )
-                                                              : this->type( described.element );
+        return enum_has_payload( ast, described.declaration ) ? structure( type ) : this->type( described.element );
 
     default:
         assert( false && "no C spelling for this type" );
@@ -64,9 +79,9 @@ std::string Spelling::type( Type_id type ) const
     }
 }
 
-std::string Spelling::structure( Node_id declaration ) const
+std::string Spelling::structure( Type_id type ) const
 {
-    return fmt::format( "struct {}", mangle_struct( "", interner.text( Symbol_id { ast.aux( declaration ) } ) ) );
+    return fmt::format( "struct {}", mangle_struct( "", type, types.table() ) );
 }
 
 std::string Spelling::field( Node_id declaration ) const
@@ -83,12 +98,31 @@ std::string Spelling::function( Node_id declaration, std::span<const Type_id> ty
         return std::string( interner.text( Symbol_id { ast.aux( declaration ) } ) );
     }
 
+    // A destructor's aux is the type's own name, and an instantiation is told apart by its type
+    // arguments alone - the same rule mangle_function follows.
     if( ast.kind( declaration ) == Node_kind::Destructor_decl )
     {
-        return mangle_destructor( "", interner.text( Symbol_id { ast.aux( declaration ) } ) );
+        return mangle_destructor( "", interner.text( Symbol_id { ast.aux( declaration ) } ), type_arguments, types.table() );
     }
 
     std::vector<Type_id> params = parameter_types_vector( ast, types, declaration );
+
+    if( ast.kind( declaration ) == Node_kind::Constructor_decl )
+    {
+        // A constructor is the one symbol that carries both: the type arguments say which instance,
+        // and the parameter types tell two constructors of it apart. The parameters are written in
+        // the declaration's own `T`, so without this the instance's symbol names a type parameter.
+        const Bindings bindings = instance_bindings( ast, types, declaration, type_arguments );
+
+        for( Type_id& param : params )
+        {
+            param = types.table().substitute( param, bindings );
+        }
+
+        return mangle_constructor(
+            "", interner.text( Symbol_id { ast.aux( declaration ) } ), type_arguments, params, types.table()
+        );
+    }
 
     return mangle_function( "", interner.text( Symbol_id { ast.aux( declaration ) } ), params, types.table(), type_arguments );
 }
@@ -97,11 +131,11 @@ std::string Spelling::destructor_of( Type_id type ) const
 {
     const Node_id declaration = types.table().get( type ).declaration;
 
-    for( const Node_id member : ast.children( declaration ) )
+    for( const Node_id member : ast.members( declaration ) )
     {
         if( ast.kind( member ) == Node_kind::Destructor_decl )
         {
-            return function( member );
+            return function( member, types.table().get( type ).arguments );
         }
     }
 

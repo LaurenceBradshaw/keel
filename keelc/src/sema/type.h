@@ -1,8 +1,10 @@
 #pragma once
 #include <deque>
+#include <span>
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <vector>
 #include "ast/node.h"
 #include "common/types.h"
 
@@ -41,6 +43,11 @@ struct Type
     bool      is_signed   = false; // only for Int
     Type_id   element     = {};    // For Pointer and Enum
     Node_id   declaration = {};    // for Struct and Enum; the node that defines it
+
+    // What a generic aggregate was instantiated at: `Box<i32>` holds one, `Box` itself holds its
+    // own parameters, and everything else holds none. A view rather than a vector, into storage the
+    // table owns - the same arrangement name() already uses, and what keeps Type cheap to copy.
+    std::span<const Type_id> arguments {};
 };
 
 // A type parameter bound to a concrete type, keyed by the parameter's own Type_id. Named because
@@ -58,9 +65,11 @@ public:
     Type_id pointer_to( Type_id element ); // interns; same element -> same id
     Type_id enumeration( Node_id declaration, std::string_view name, Type_id underlying );
 
-    // Interned by *declaration*, not by name: two modules each declaring `Point` must be two
-    // distinct types. The name is passed in because the table has no Interner of its own.
-    Type_id structure( Node_id declaration, std::string_view name );
+    // Interned by *declaration* and by its type arguments, never by name: two modules each
+    // declaring `Point` must be two distinct types, and `Box<i32>` and `Box<f64>` must be two more.
+    // The name is passed in because the table has no Interner of its own; the `<...>` part is
+    // composed here, from the arguments' own names, so one place decides how a generic type reads.
+    Type_id structure( Node_id declaration, std::span<const Type_id> arguments, std::string_view name );
 
     // A type parameter, before any instantiation substitutes it away. Keyed by its Type_param_decl,
     // so `T` in one declaration is never `T` in another - the resolver already scoped them apart.
@@ -72,6 +81,14 @@ public:
 
     const Type&      get( Type_id id ) const;
     std::string_view name( Type_id id ) const; // "i32", "u8*" - for diagnostics
+
+    // The declared name without its type arguments: `Box` for `Box<i32>`, and the whole name for
+    // everything else. Exact because a declared name is an identifier and can hold no bracket.
+    std::string_view base_name( Type_id id ) const;
+    // Every struct type the table has interned, in a deterministic order. Includes the open form
+    // of a generic aggregate - `Box<T>` - which a caller wanting only instances filters out with
+    // mentions_parameter.
+    std::vector<Type_id> struct_types() const;
     // The type a source spelling names, or invalid if it names none. Only the eleven a program may
     // actually write - not "<error>", and not composed pointer names, which reach sema as
     // Pointer_type nodes rather than as identifiers.
@@ -126,10 +143,24 @@ private:
     Type_id floats_[2];
 
     std::unordered_map<u32, Type_id> pointers_; // element id -> pointer id
-    std::unordered_map<u32, Type_id> structs_;  // Struct_decl node -> struct type
-    std::unordered_map<u32, Type_id> enums_;    // Enum_decl node -> enum type
-    std::unordered_map<u32, Type_id> params_;   // Type_param_decl node -> type parameter
-    std::deque<std::string>          composed_;
+    // Struct_decl node -> every instantiation of it. A list scanned linearly rather than a map
+    // keyed on the arguments: a program has a handful of instantiations per generic, and hashing a
+    // vector of Type_ids to avoid a handful of comparisons is not a trade worth making - the same
+    // reading record_instantiation takes of the same question.
+    struct Instance
+    {
+        std::span<const Type_id> arguments;
+        Type_id                  type;
+    };
+
+    std::unordered_map<u32, std::vector<Instance>> structs_;
+    std::unordered_map<u32, Type_id>               enums_;  // Enum_decl node -> enum type
+    std::unordered_map<u32, Type_id>               params_; // Type_param_decl node -> type parameter
+    std::deque<std::string>                        composed_;
+
+    // Backs Type::arguments. A deque for the reason composed_ is one: the views handed out have to
+    // survive every later insertion.
+    std::deque<std::vector<Type_id>> arguments_;
 
     std::unordered_map<std::string_view, Type_id>
         by_spelling_; // views into composed_ // "u8*" etc; name() returns views into these

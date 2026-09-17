@@ -1,5 +1,6 @@
 Source_file                             4:1-66:1
   Class_decl                            4:1-13:3    name=Buffer
+    <none>                              -
     Field_decl                          6:5-6:13    name=ptr
       Pointer_type                      6:5-6:8
         Named_type                      6:5-6:7     "u8"
@@ -20,10 +21,13 @@ Source_file                             4:1-66:1
             <none>                      -
       <none>                            -
   Class_decl                            16:1-19:3   name=Handle
+    <none>                              -
     Field_decl                          18:5-18:15  name=value
       Named_type                        18:5-18:8   "u64"
-  Class_decl                            21:1-21:17  "class Empty { };"  name=Empty
+  Class_decl                            21:1-21:17  name=Empty
+    <none>                              -
   Class_decl                            25:1-32:3   name=Reordered
+    <none>                              -
     Destructor_decl                     27:5-29:6   name=Reordered
       <none>                            -
       Param_list                        27:15-27:17
@@ -37,6 +41,7 @@ Source_file                             4:1-66:1
       Pointer_type                      31:5-31:8
         Named_type                      31:5-31:7   "u8"
   Struct_decl                           36:1-44:3   name=Point
+    <none>                              -
     Field_decl                          38:5-38:11  name=x
       Named_type                        38:5-38:8   "f64"
     Field_decl                          39:5-39:11  name=y
@@ -51,6 +56,7 @@ Source_file                             4:1-66:1
     }"
       <none>                            -
   Class_decl                            48:1-55:3   name=Mismatched
+    <none>                              -
     Field_decl                          50:5-50:13  name=ptr
       Pointer_type                      50:5-50:8
         Named_type                      50:5-50:7   "u8"

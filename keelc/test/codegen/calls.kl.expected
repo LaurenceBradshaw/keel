@@ -2,12 +2,12 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-int32_t kl__g__i32( int32_t );
-int32_t kl__even__i32( int32_t );
-int32_t kl__odd__i32( int32_t );
+int32_t kl__g__3i32( int32_t );
+int32_t kl__even__3i32( int32_t );
+int32_t kl__odd__3i32( int32_t );
 int32_t kl__main__( void );
 
-int32_t kl__g__i32( int32_t kl_x_1 )
+int32_t kl__g__3i32( int32_t kl_x_1 )
 {
     int32_t kl_t0;
 #line 3 "codegen/calls.kl"
@@ -15,7 +15,7 @@ int32_t kl__g__i32( int32_t kl_x_1 )
     return kl_t0;
 }
 
-int32_t kl__even__i32( int32_t kl_n_1 )
+int32_t kl__even__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -31,12 +31,12 @@ int32_t kl__even__i32( int32_t kl_n_1 )
     goto bb3;
     bb3:
     kl_t3 = kl_n_1 - 1;
-    kl_t4 = kl__odd__i32( kl_t3 );
+    kl_t4 = kl__odd__3i32( kl_t3 );
     kl_t0 = kl_t4;
     return kl_t0;
 }
 
-int32_t kl__odd__i32( int32_t kl_n_1 )
+int32_t kl__odd__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -52,7 +52,7 @@ int32_t kl__odd__i32( int32_t kl_n_1 )
     goto bb3;
     bb3:
     kl_t3 = kl_n_1 - 1;
-    kl_t4 = kl__even__i32( kl_t3 );
+    kl_t4 = kl__even__3i32( kl_t3 );
     kl_t0 = kl_t4;
     return kl_t0;
 }
@@ -67,11 +67,11 @@ int32_t kl__main__( void )
     int32_t kl_t5;
     int32_t kl_t6;
 #line 10 "codegen/calls.kl"
-    kl_t1 = kl__g__i32( 1 );
-    kl_t2 = kl__g__i32( 2 );
+    kl_t1 = kl__g__3i32( 1 );
+    kl_t2 = kl__g__3i32( 2 );
     kl_t3 = kl_t1 + kl_t2;
-    kl_t4 = kl__g__i32( kl_t3 );
-    kl_t5 = kl__even__i32( 4 );
+    kl_t4 = kl__g__3i32( kl_t3 );
+    kl_t5 = kl__even__3i32( 4 );
     kl_t6 = kl_t4 + kl_t5;
     kl_t0 = kl_t6;
     return kl_t0;

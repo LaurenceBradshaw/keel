@@ -14,7 +14,7 @@ namespace keel
 std::string emit_c_from_kir(
     const std::vector<Function>& functions,
     const Ast&                   ast,
-    const Types&                 types,
+    Types&                       types,
     const Literals&              literals,
     const Source_manager&        sm,
     const Interner&              interner

@@ -1,5 +1,6 @@
 Source_file                             4:1-33:1
   Struct_decl                           4:1-7:3     name=Point
+    <none>                              -
     Field_decl                          6:5-6:11    name=x
       Named_type                        6:5-6:8     "i32"
   Function_decl                         9:1-17:2    name=picks

@@ -25,7 +25,7 @@ int32_t kl__read_counter__( void );
 void kl__bump__( void );
 int32_t kl__read_later__( void );
 int32_t* kl__address_of_counter__( void );
-int32_t kl__shadowed__i32( int32_t );
+int32_t kl__shadowed__3i32( int32_t );
 int32_t kl__main__( void );
 
 int32_t kl__read_counter__( void )
@@ -61,7 +61,7 @@ int32_t* kl__address_of_counter__( void )
     return kl_t0;
 }
 
-int32_t kl__shadowed__i32( int32_t kl_counter_1 )
+int32_t kl__shadowed__3i32( int32_t kl_counter_1 )
 {
     int32_t kl_t0;
 #line 66 "codegen/globals.kl"
@@ -309,7 +309,7 @@ int32_t kl__main__( void )
     goto bb54;
     bb54:
 #line 118 "codegen/globals.kl"
-    kl_t32 = kl__shadowed__i32( 5 );
+    kl_t32 = kl__shadowed__3i32( 5 );
     kl_t33 = kl_t32 != 5;
     if ( kl_t33 ) goto bb55; else goto bb56;
     bb55:

@@ -12,10 +12,10 @@ struct kl__Owned
 int32_t kl_live_1;
 
 void kl__release__( void );
-void kl__Owned__Ownedp_u64( struct kl__Owned*, uint64_t );
+void kl__Owned__P5Owned_3u64__ctor( struct kl__Owned*, uint64_t );
 void kl__Owned__dtor( struct kl__Owned* );
-void kl__consume__Owned( struct kl__Owned );
-int32_t kl__run__i32( int32_t );
+void kl__consume__5Owned( struct kl__Owned );
+int32_t kl__run__3i32( int32_t );
 int32_t kl__main__( void );
 
 void kl__release__( void )
@@ -27,7 +27,7 @@ void kl__release__( void )
     return;
 }
 
-void kl__Owned__Ownedp_u64( struct kl__Owned* kl_this_1, uint64_t kl_n_2 )
+void kl__Owned__P5Owned_3u64__ctor( struct kl__Owned* kl_this_1, uint64_t kl_n_2 )
 {
     int32_t kl_t3;
 #line 18 "codegen/drop_flags.kl"
@@ -45,14 +45,14 @@ void kl__Owned__dtor( struct kl__Owned* kl_this_1 )
     return;
 }
 
-void kl__consume__Owned( struct kl__Owned kl_o_1 )
+void kl__consume__5Owned( struct kl__Owned kl_o_1 )
 {
 #line 30 "codegen/drop_flags.kl"
     kl__Owned__dtor( &kl_o_1 );
     return;
 }
 
-int32_t kl__run__i32( int32_t kl_c_1 )
+int32_t kl__run__3i32( int32_t kl_c_1 )
 {
     int32_t kl_t0;
     struct kl__Owned kl_o_2;
@@ -63,13 +63,13 @@ int32_t kl__run__i32( int32_t kl_c_1 )
     kl_t7 = false;
     kl_t3 = &kl_o_2;
     kl_t7 = true;
-    kl__Owned__Ownedp_u64( kl_t3, 1 );
+    kl__Owned__P5Owned_3u64__ctor( kl_t3, 1 );
 #line 39 "codegen/drop_flags.kl"
     kl_t5 = kl_c_1 == 0;
     if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
 #line 41 "codegen/drop_flags.kl"
-    kl__consume__Owned( kl_o_2 );
+    kl__consume__5Owned( kl_o_2 );
     kl_t7 = false;
     goto bb3;
     bb2:
@@ -92,11 +92,11 @@ int32_t kl__main__( void )
     int32_t kl_t5;
     int32_t kl_t6;
 #line 51 "codegen/drop_flags.kl"
-    kl_t1 = kl__run__i32( 1 );
+    kl_t1 = kl__run__3i32( 1 );
 #line 52 "codegen/drop_flags.kl"
     kl_after_kept_2 = kl_live_1;
 #line 56 "codegen/drop_flags.kl"
-    kl_t3 = kl__run__i32( 0 );
+    kl_t3 = kl__run__3i32( 0 );
 #line 57 "codegen/drop_flags.kl"
     kl_after_moved_4 = kl_live_1;
 #line 60 "codegen/drop_flags.kl"

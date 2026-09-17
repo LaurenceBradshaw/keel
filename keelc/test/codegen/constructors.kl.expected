@@ -17,13 +17,13 @@ struct kl__Shadowed
 
 int32_t kl_live_1;
 
-void kl__Owned__Ownedp_u64( struct kl__Owned*, uint64_t );
+void kl__Owned__P5Owned_3u64__ctor( struct kl__Owned*, uint64_t );
 void kl__Owned__dtor( struct kl__Owned* );
-void kl__Shadowed__Shadowedp_i32( struct kl__Shadowed*, int32_t );
-int32_t kl__early__i32( int32_t );
+void kl__Shadowed__P8Shadowed_3i32__ctor( struct kl__Shadowed*, int32_t );
+int32_t kl__early__3i32( int32_t );
 int32_t kl__main__( void );
 
-void kl__Owned__Ownedp_u64( struct kl__Owned* kl_this_1, uint64_t kl_n_2 )
+void kl__Owned__P5Owned_3u64__ctor( struct kl__Owned* kl_this_1, uint64_t kl_n_2 )
 {
     int32_t kl_t3;
 #line 15 "codegen/constructors.kl"
@@ -43,14 +43,14 @@ void kl__Owned__dtor( struct kl__Owned* kl_this_1 )
     return;
 }
 
-void kl__Shadowed__Shadowedp_i32( struct kl__Shadowed* kl_this_1, int32_t kl_id_2 )
+void kl__Shadowed__P8Shadowed_3i32__ctor( struct kl__Shadowed* kl_this_1, int32_t kl_id_2 )
 {
 #line 33 "codegen/constructors.kl"
     ( *kl_this_1 ).kl_id_33 = kl_id_2;
     return;
 }
 
-int32_t kl__early__i32( int32_t kl_n_1 )
+int32_t kl__early__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
     struct kl__Owned kl_o_2;
@@ -58,7 +58,7 @@ int32_t kl__early__i32( int32_t kl_n_1 )
     bool kl_t5;
 #line 40 "codegen/constructors.kl"
     kl_t3 = &kl_o_2;
-    kl__Owned__Ownedp_u64( kl_t3, 1 );
+    kl__Owned__P5Owned_3u64__ctor( kl_t3, 1 );
 #line 42 "codegen/constructors.kl"
     kl_t5 = kl_n_1 == 0;
     if ( kl_t5 ) goto bb1; else goto bb2;
@@ -94,7 +94,7 @@ int32_t kl__main__( void )
     int32_t kl_t16;
 #line 54 "codegen/constructors.kl"
     kl_t2 = &kl_a_1;
-    kl__Owned__Ownedp_u64( kl_t2, 1 );
+    kl__Owned__P5Owned_3u64__ctor( kl_t2, 1 );
 #line 53 "codegen/constructors.kl"
     kl__Owned__dtor( &kl_a_1 );
 #line 58 "codegen/constructors.kl"
@@ -107,7 +107,7 @@ int32_t kl__main__( void )
     bb2:
 #line 61 "codegen/constructors.kl"
     kl_t7 = &kl_b_6;
-    kl__Owned__Ownedp_u64( kl_t7, 2 );
+    kl__Owned__P5Owned_3u64__ctor( kl_t7, 2 );
 #line 62 "codegen/constructors.kl"
     kl_t9 = kl_i_4 + 1;
     kl_i_4 = kl_t9;
@@ -116,12 +116,12 @@ int32_t kl__main__( void )
     goto bb1;
     bb3:
 #line 65 "codegen/constructors.kl"
-    kl_t10 = kl__early__i32( 0 );
+    kl_t10 = kl__early__3i32( 0 );
 #line 66 "codegen/constructors.kl"
-    kl_t11 = kl__early__i32( 1 );
+    kl_t11 = kl__early__3i32( 1 );
 #line 69 "codegen/constructors.kl"
     kl_t13 = &kl_s_12;
-    kl__Shadowed__Shadowedp_i32( kl_t13, 9 );
+    kl__Shadowed__P8Shadowed_3i32__ctor( kl_t13, 9 );
 #line 73 "codegen/constructors.kl"
     kl_t15 = 33 + kl_live_1;
     kl_t16 = kl_t15 + kl_s_12.kl_id_33;

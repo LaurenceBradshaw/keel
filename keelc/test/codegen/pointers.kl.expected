@@ -16,11 +16,11 @@ struct kl__Cell
     int32_t kl_n_6;
 };
 
-int32_t kl__read__i32p( int32_t* );
-void kl__bump__i32p( int32_t* );
+int32_t kl__read__P3i32( int32_t* );
+void kl__bump__P3i32( int32_t* );
 int32_t kl__main__( void );
 
-int32_t kl__read__i32p( int32_t* kl_q_1 )
+int32_t kl__read__P3i32( int32_t* kl_q_1 )
 {
     int32_t kl_t0;
 #line 6 "codegen/pointers.kl"
@@ -28,7 +28,7 @@ int32_t kl__read__i32p( int32_t* kl_q_1 )
     return kl_t0;
 }
 
-void kl__bump__i32p( int32_t* kl_q_1 )
+void kl__bump__P3i32( int32_t* kl_q_1 )
 {
     int32_t kl_t2;
 #line 8 "codegen/pointers.kl"
@@ -84,7 +84,7 @@ int32_t kl__main__( void )
     goto bb3;
     bb3:
 #line 16 "codegen/pointers.kl"
-    kl_t5 = kl__read__i32p( kl_q_2 );
+    kl_t5 = kl__read__P3i32( kl_q_2 );
     kl_t6 = kl_t5 != 41;
     if ( kl_t6 ) goto bb4; else goto bb5;
     bb4:
@@ -94,7 +94,7 @@ int32_t kl__main__( void )
     goto bb6;
     bb6:
 #line 18 "codegen/pointers.kl"
-    kl__bump__i32p( kl_q_2 );
+    kl__bump__P3i32( kl_q_2 );
 #line 19 "codegen/pointers.kl"
     kl_t8 = kl_v_1 != 42;
     if ( kl_t8 ) goto bb7; else goto bb8;

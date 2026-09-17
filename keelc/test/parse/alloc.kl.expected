@@ -1,5 +1,6 @@
 Source_file                             4:1-25:1
   Struct_decl                           4:1-8:3     name=Node
+    <none>                              -
     Field_decl                          6:5-6:17    name=value
       Named_type                        6:5-6:8     "i32"
     Field_decl                          7:5-7:16    name=next

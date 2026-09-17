@@ -1,6 +1,8 @@
 # Keel — Implementation Plan
 
-**Status:** M0 complete. `keelc` parses the §6.1 sample to a tree with no errors.
+**Status:** M0–M5.5 complete. M6 in progress: generic functions, bounds, literal adoption and
+generic aggregates work; a generic aggregate cannot yet have a method, a constructor, a
+destructor or a struct literal. §15 is the live tracker.
 **Companion document:** `MANIFESTO.md` (the vision doc). This file is the engineering plan.
 
 ---
@@ -789,7 +791,7 @@ milestone is complete until its acceptance program is a passing golden test.
 | **M5** | `enum` (D30) payload-free first, then payloads (D7). `switch` with destructuring, `default`, stacked labels and exhaustiveness. Range labels (D34). | The `Shape`/`area` sample. Non-exhaustive `switch` is a compile error naming the missing variant. | Sum types, tagged variants |
 | **M5.5** | ~~Methods on `struct` and `class`~~ **done**. ~~`unsafe` blocks (D35)~~ **done**. ~~`extern` (D36)~~ **done**. ~~`alloc<T>`/`free` and `kl_rt` (D37)~~ **done**. | A linked list whose nodes are allocated one at a time, walked, and freed — valgrind-clean. **Amended**: this was `Buffer` with `push`, which needs the many-item pointer `[*]T` that D27 leaves out of v0, so it was never reachable at M5.5. Option (b) keeps the question the acceptance was asked to answer — can the language express a heap data structure and release it — and defers only the growable-array half to M7. | Whether the language can express a real data structure |
 | **M6** | Generics (D39's spelling, D11's checking), bounds (D40), the monomorphisation **worklist** and D42's termination rule, name mangling with type args. **Plus two KIR passes carried from M5.5**: empty-block threading, and constant-branch folding with the `while( true )` → `for( ; ; )` warning that goes with it. | `max<i32>` and `max<f64>` both work; a generic `Box<T>` with a destructor drops correctly. | Instantiation, mangling |
-| **M6.5** | The debts that are neither M6's feature nor M7's: D41's mixed-signedness comparison, `cast`/`wrap` on a type parameter, the mangling rework (length-prefixing, the `ref`/pointer collision, `kl__id__T__i32`), and constant checking inside a generic body. | `u64` and `i64` compare correctly at every boundary value; `cast<i32>( a )` works for an `Integral` `T`; two generics whose mangled names collide today do not. | Paying debts before they compound |
+| **M6.5** | The debts that are neither M6's feature nor M7's: D41's mixed-signedness comparison, `cast`/`wrap` on a type parameter, ~~the mangling rework (length-prefixing, the `ref`/pointer collision, `kl__id__T__i32`)~~ **done in M6's slice 2b** — 2b forced it, and the `ref`/pointer collision is unreachable until overloading lands, and constant checking inside a generic body. | `u64` and `i64` compare correctly at every boundary value; `cast<i32>( a )` works for an `Integral` `T`; two generics whose mangled names collide today do not. | Paying debts before they compound |
 | **M7** | Modules (`import`), multi-file compilation, then begin `Vector` and `String` **in Keel**. | A two-module program. Then a `Vector<i32>` that grows and frees. | **Whether the design actually works** |
 
 **M3 is where this stops being a toy** — it is the first thing C cannot do for
@@ -2865,6 +2867,338 @@ passing its own `T` to another — was built, mutation-tested and shipped in sli
 nine test sections, every one of them a `Typed`. It had never once lowered. **A generic
 test that only constructs a `Typed` proves the checker and nothing further**; the feature
 it was testing was one of the six shapes that crashed.
+
+**Slice 2a, step 0: `Ast::members`.** Generic aggregates need a place in the aggregate's
+child list for its type parameters, and an aggregate's children are its *members* —
+variadic, with no fixed slot to put anything in front of. Nineteen walks across the
+compiler read that list, so the slot goes in behind an accessor and the walks convert
+first, while the two answers still coincide.
+
+**The slot goes at the front, following `enum`.** An `Enum_decl` already carries its
+underlying type at child 0 and every walk says `subspan( 1 )`; an aggregate carrying its
+type parameters the same way is one rule rather than two. Appending instead would be
+safer for code that exists — a non-generic aggregate grows no child, so nothing changes —
+but it leaves the hazard live for exactly the new feature, which is the wrong trade: a
+loud break on the day the slot appears beats a silent one later.
+
+**It asserts on any other kind**, and that is what made the sweep verifiable rather than
+hopeful. Nineteen sites were classified by hand from every `children()` call in the
+compiler; a misclassified `enum` or parameter-list walk would have aborted the debug test
+binary on the first fixture that reached it, and none did.
+
+**Proving a refactor did something is the other half.** A no-op rename is indistinguishable
+from a rename that missed its targets, so `members()` was temporarily made to drop the
+first child — what slice 2a will make it do for real — and the suite produced **62 unit
+failures**. That is the evidence the sites route through it. The five test-block
+assertions that count an aggregate's children were converted too: they are correct today
+and would have failed then for a reason that has nothing to do with what they test.
+
+**Slice 2a: `class Box<T>` declares, and `Box<i32>` is a type.** The type side only —
+nothing emits one yet, so a *closed* instantiation reports `cannot be used yet` and the
+slice is honest about where it stops. Interning is by declaration **and** arguments, so
+`Box<i32>` and `Box<f64>` are two types from one declaration, and a field written `T` is
+whichever of them asked.
+
+**`Type::arguments` is a view, not a vector.** A span into a deque the table owns, which
+is the arrangement `name()` already uses for the same reason — the views handed out have
+to survive every later insertion, and `Type` stays cheap to copy. The mutation that
+matters is the one that borrows the *caller's* span instead of copying: it passes every
+test written with a temporary argument list, because reading a dead temporary usually
+still finds the right bytes. The test that catches it builds the list in a local, writes a
+different type over it, and lets it die.
+
+**Four accessors replaced four conventions.** `Ast::members` skips the type-parameter
+slot, `Ast::type_param_list` knows it sits at the front for an aggregate and at the fixed
+last slot for anything function-like, `Checker::field_type` substitutes a field's declared
+type through its receiver's arguments, and `Checker::resolve_type_arguments` is the arity
+and bounds check shared by a generic call and a generic annotation. Each exists because
+the alternative is the same rule written twice and drifting — the shape this milestone has
+now hit four times.
+
+**`wraps_a_parameter` got smaller rather than bigger.** D42's rule was written for `T*` and
+walked pointers by hand; a generic aggregate would have meant a second walk beside it. It
+is now "mentions a parameter without *being* one", which is one line over
+`mentions_parameter` and answers `T*`, `Box<T>` and `Box<Box<T>>` uniformly. `f<T>` calling
+`f<Box<T>>` is refused with nothing added for it.
+
+**The rules for ownership and self-containment needed no generic case at all**, which is
+the strongest evidence they were written at the right level. D2 counts only by-value
+members, so `class Box<T> { T v; }` is owning exactly when `T` is and `struct Ref<T> { T* a; }`
+never is. `contains_itself` walks declarations, so `Odd<T> inner` and `Odd<Box<T>> inner`
+are both caught as infinite size, and `Node<T>* next` is finite. The one edit was the
+struct rule reading `is_owning_type` rather than the `owning_` set directly — a field of
+type `T` has no declaration to look up, and an unbounded one may own something.
+
+**The gate is on closed types only, and finding that out took a wrong version first.**
+Gating every generic annotation made `class Node<T> { Node<T>* next; }` unwritable, and
+skipping generic aggregates in `order_structs` skipped their *cycle check* along with their
+layout. Both are one rule seen from two sides: a generic aggregate has no layout and
+belongs in no order, but it still has a shape and still has to be walked for one.
+
+**Before 2b: `>>` silently misparsed a nested generic.** `Bad<Box<T>>*` read as
+`Bad<Box<T>*>` — two well-formed types, and the compiler picked the wrong one with nothing
+to report. `match_generic_close` splits `>>` into two closes and holds the second in a
+counter, but the *inner* `parse_type`'s postfix loop ran before the outer close was taken,
+so it read the `*` as its own. The guard is one test at the top of that loop: a pending
+close means every token after it belongs to whoever opened the enclosing list. The spaced
+form `Bad<Box<T> >*` needs no splitting and was always right, which is what the fix is
+tested against.
+
+It had a visible symptom nobody had traced: `class Bad<T> { Bad<Box<T>>* next; }` reported
+*"contains itself, so it has no size"*, because the field's type came out as the struct
+rather than a pointer to it. The identical spaced form was accepted.
+
+**The mangling rework, done once rather than twice.** §15 owed three things here and 2b
+forces the first: `Box<i32>` is not a plain word, and the old scheme rewrote `*` to `p`
+and said in its own comment that it was safe only while every type name was one. Every
+name is now length-prefixed — `i32*` is `P3i32` and a struct genuinely called `i32p` is
+`4i32p` — which is injective by construction. No separator is needed, because a length is
+always followed by a non-digit; one is written anyway, because `3i32_3i32` can be taken
+apart by a reader and `3i323i32` cannot.
+
+**A generic aggregate is `kl__Box__I3i32E`**, nesting as `kl__Box__I3BoxI3i32EE`, and an
+aggregate with no type arguments keeps the name it already had — so nothing a v0 program
+can write changed.
+
+**And the third debt fell out for free.** `kl__id__T__i32` was the declared parameter type
+followed by the type argument, which reads as though `T` were a type someone could write.
+An instantiation is now named by its **type arguments alone**: its value parameters are
+written in the declaration's own parameters, two instantiations of one generic differ only
+by type arguments, and two generics cannot share a name. `kl__id__3i32`.
+
+**What that gives up, and why it costs nothing yet.** An instance's symbol no longer
+records its calling convention: `void f<T>( T a )` and `void f<T>( ref T a )` at `i32` both
+become `kl__f__3i32`. They cannot coexist — same name, and there is no overloading — so it
+is not a collision. It is the same reason the `ref`/pointer ambiguity the PLAN also owes
+here is still unreachable, and both become real together on the day overloading lands.
+
+**Slice 2b: one C struct per instantiation.** `Box<i32>` and `Box<f64>` emit as two, the
+open `Box<T>` as none, and the whole set is decided nowhere in the source: an
+instantiation reached only through a field of another is discovered by the walk that
+orders them.
+
+**The set is the table, not a record anyone kept.** By the time emission runs, every
+struct type any code mentions is already interned — the checker interned what annotations
+wrote, and `Type_table::substitute` interned what lowering created. So there is no
+discovery pass, only an enumeration and a filter: `mentions_parameter` separates the
+templates from the instances. The cost is that a closed type interned by dead code is
+still emitted, which is a redundant definition rather than a symbol, and harmless.
+
+**`Type_table::struct_types` has to be sorted, and the reason is not tidiness.** It walks
+an unordered map, and the emitter writes structs out in the order it is given — so without
+a sort the generated C differs between runs of the same compiler on the same source.
+Type_id is interning order, which is deterministic for a given program. A mutation that
+reverses it passes the whole unit suite and fails two goldens, which is the only reason
+that property is pinned at all.
+
+**The order is a post-order over *types*, computed at emission rather than in the
+checker**, because an instantiation can be created during lowering and the checker has
+gone by then. It interns as it goes, which is the point: `Holder<i32>` names `Box<i32>`
+only through a field, and nothing else in the program writes that type down. It terminates
+on the checker's own guarantee — `contains_itself` rejected every by-value cycle before
+this runs, and a pointer field is skipped here exactly as it is there.
+
+**Ownership is where 2b deliberately stops.** `Types::is_owning` answers from the
+*declaration*, so `Box<i32>` and `Box<Buffer>` get one answer between them and one of them
+is wrong. Emission does not care — a C struct holding an owning member is still a C struct
+— but a drop elaborated against the wrong answer is a double free found under valgrind
+several slices later rather than a diagnostic now. So an instantiation that owns something
+is refused, by a check that computes the per-instance answer purely in order to reject it.
+The rest of 2b works at every argument that does not own.
+
+**What is still missing is construction.** `Box<i32> { 7 }` does not parse: a struct
+literal carries its type name in `aux` and has no room for type arguments, so the `<` after
+the name reads as a comparison. A generic aggregate can be declared, instantiated, emitted,
+assigned to field by field and read back — but not built from a literal, which is the next
+thing worth having and is what the runnable fixture works around.
+
+
+**A bug hunt after 2b, and it reordered what comes next.** Five findings over the generic
+aggregate surface, against a tree where the whole suite passes — so all five are gaps rather
+than breakage, and none of them is the struct literal.
+
+**Methods, constructors and destructors are all refused on a generic aggregate, by one line.**
+`synthesise_receiver` builds the receiver as the enclosing aggregate's *name*, which for a
+generic is an open reference and is rejected — so `Box<T>` may have no method, no constructor
+and no destructor, and the error points at the method's return type and names a type the author
+never wrote. The receiver needs the aggregate's own parameters as its arguments: inside
+`Box<T>`, `this` is a `Box<T>`. **This is M6's acceptance blocker**, not the literal: the
+milestone is defined by a generic `Box<T>` with a destructor dropping correctly, and a
+destructor on a generic cannot currently be declared. The literal is still worth having and is
+still next after it, but it was never the thing standing in the way.
+
+**The refusal of an owning instantiation is reported against the wrong cause, and misses the
+case that matters.** A generic class with its *own* destructor is told that its type argument
+owns something, when the argument is an `i32`. And the guard fires only on a closed annotation,
+so `Box<T>` written inside `f<T>` passes — the instance `Box<Buf>` is first created by
+substitution when `f<Buf>` is monomorphised, by which point nothing re-asks, and the emitted
+function declares the struct with no drop at scope exit. That is a silent leak past a check
+whose entire purpose is to refuse it, and it is the same family as 1f's finding: **the
+checker's instantiation list is a seed, not the answer.** The ownership rework 2b deferred has
+to answer at the instance, wherever the instance is created, rather than at the annotation.
+
+**A field that grows its own type argument hangs the compiler.** `Box<T> { Box<Box<T>>* next; }`
+checks clean and never finishes emitting. `contains_itself` does not catch it because the cycle
+is not by-value, and D42's rule is enforced for functions — `f<Box<T>>` is diagnosed — with no
+equivalent for aggregates. The loop that does not terminate is the *enumeration* in
+`emitted_struct_order`, not its recursion: it is indexed over a table that visiting deliberately
+grows, which is what discovers a `Box<i32>` reached only through a field, and here the growth
+never stops. D42 belongs on the aggregate side too, and the diagnostic already exists to copy.
+
+**A closed instantiation named before its generic is declared crashes the compiler.** Source
+order alone decides it: the same file with the generic moved above its use is clean. Two layers,
+and both are worth fixing — `is_owning_type` asks `is_parameter` before its own validity guard,
+and `instantiation_owns` is reached from field declaration for a type whose fields are not yet
+recorded, so it is handed an invalid `Type_id`. A forward reference to a *non*-generic struct is
+fine, which is what makes this specific rather than a missing pass.
+
+**No golden covers a generic-aggregate diagnostic at all.** `errors_generics.kl` declares no
+generic aggregate, and the owning-instantiation refusal exists only as a unit test — so every
+finding above needs a fixture as well as a fix, and the absence is why four of the five survived
+2b's own testing.
+
+**Slice 2c, first half: the receiver.** `synthesise_receiver` now builds `Box<T>` rather than
+`Box` — a `Generic_type` over the aggregate's parameters *by name*, as fresh `Named_type` nodes
+rather than the `Type_param_decl`s themselves, so the receiver resolves through the same path a
+written annotation does. The three member parsers thread the aggregate's `Type_param_list` down to
+it, and each member now stores that list in its own type-parameter slot.
+
+That last part is what makes the rest work, and it is not merely convenient. A member pushes a
+**barrier** scope, so the aggregate's `T` is not visible inside a method at all — the member has to
+declare the parameters itself, and sharing the aggregate's list is what lets it, pointing at the
+same `Type_param_decl` nodes the checker has already recorded types for. It also makes `is_generic`
+true for a method of a generic, which is what keeps `lower` from emitting one directly and trying
+to give `T` a C spelling.
+
+The fix to `is_owning_type`'s assert was taken first and was wrong in a way the suite caught
+immediately: putting the validity check in front of the existing condition also put `!is_struct`
+in front of the parameter branch, and a `T` is not a struct — so an unbounded `T` stopped being
+owning, three unit tests and `generics_owning.kl` failed. Validity first, then the parameter
+question, then the struct one.
+
+Mangling followed the same rule generics already use everywhere else: an instantiation is told
+apart by its **type arguments**, not by a composed name. `mangle_destructor` takes the type's name
+and its arguments rather than a `Type_id`, which keeps `Spelling::function` at the shape its five
+call sites already pass. `mangle_constructor` was given the same treatment and remains what it was
+before — **dead code**: `Spelling::function` never branches to it, so a constructor is mangled as
+an ordinary function by its own name, and the `__ctor` scheme this file documents is implemented
+nowhere.
+
+What this opened up, with the suite green at 577 cases and 149 goldens:
+
+- **A method's return type is not substituted at the call site.** `Pair<i32>`'s `T first()` reports
+  `expected i32, but got T`, with no ownership or destructor anywhere near it. The seventh instance
+  of reading a type without the instance's bindings, and the smallest one yet.
+- **The owning refusal now fires on the acceptance program itself**, and blames the argument: a
+  `Box<T>` with its own destructor is told that `i32` owns something. Both halves are 2c's second
+  half — answer ownership at the instance, and say what is actually wrong.
+
+**Slice 2c, second half: ownership per instance, and methods.** Two changes, and the first one is
+smaller than it looked. `owning_` and `Types::is_owning` stay exactly as they are — they answer
+*"does this declaration own?"*, which is the open form's answer and the right one for the checker's
+move rules inside a generic body, where no instance exists yet. What was missing is the other
+question, and it is now `instance_owns( ast, table, instance, recorded )`, a free function beside
+`aggregate_bindings` and `field_type` for the same reason they are free: the emitter needs the same
+answer and has no checker. Drop elaboration asks it through a one-line `Lowering::owns`, and
+`moved_if_owning` drops `const` because answering interns as it substitutes.
+
+The recursion carries a visiting set. Not as a cycle check — `order_structs` already refuses a
+by-value cycle between declarations — but because instances are interned as they are asked about,
+and the `Bad<Box<T>>` hang is the standing proof that instances have no equivalent guarantee.
+
+A method of a generic was wrong in two places, and the second was hiding behind the first.
+`check_method_arguments` now takes the receiver's type and substitutes both the parameter types and
+the result through it; without that, `Pair<i32>`'s `T first()` returned `T` to a caller expecting
+`i32`. Fixing the checker then exposed the same fault one stage down: `lower_method_call` read the
+method's parameters under the *enclosing function's* bindings, which for a call in `main` is an
+empty map, and substitution asserted on an unbound `T`. That is the eighth instance of the family,
+and the assertion's own comment — "every parameter in scope is bound by construction at the one
+call site that makes a map" — was true right up until there were two.
+
+A method call writes no type arguments, so the explicit path that records an instantiation never
+ran for one. `record_method_instantiation` records it from the receiver's arguments and pushes the
+same `Generic_call` edge a written call would, which is what puts the method in the worklist at
+all. `type_arguments_for_call` was lifted out of `lower_call` so both call shapes mangle the same
+way. `Pair<i32>`'s `first` now emits as `kl__first__3i32( struct kl__Pair__I3i32E* )`, links, and
+returns the right answer.
+
+Constructors came out of 2.4 already working: `Box<i32>( 7 )` writes its type arguments on the
+callee, and the member carrying the aggregate's parameter list is what makes `resolve_type_arguments`
+and `record_instantiation` apply to a `Constructor_decl` unchanged. Giving `Spelling::function` a
+constructor branch made `mangle_constructor` live for the first time — it had been dead code
+documenting a scheme implemented nowhere — and renamed every constructor in seven goldens, with
+every `.run` and `.exit` file unchanged.
+
+Still open, and all that stands between here and M6's acceptance: nothing seeds a destructor into
+the worklist, because a destructor is never called by name.
+
+**Slice 2c, third half: the destructor reaches the worklist, and M6's acceptance runs.** A
+destructor is never called by name, so nothing ever seeded one. `lower` now walks
+`Type_table::struct_types()` and queues an `Instantiation` whose declaration is the
+`Destructor_decl` and whose arguments are the instance's — guarded to generic declarations, because
+a non-generic class's destructor is already emitted by the direct loop and seeding it again is a C
+redefinition. Nothing else in the worklist changed: `ast.type_param_list` of a `Destructor_decl` is
+the *aggregate's* list after 2.4, so the parameters bind with no special case.
+
+Proving it took three more readings of a type without the instance's bindings, found one at a time
+by running the acceptance program and reading the backtrace. `lower_construction` had it twice — the
+receiver's type and each parameter's — and was also mangling the constructor with no type arguments
+at all, so two instantiations wanted one symbol. `drop_place` had the tenth and worst instance: it
+walks the members of the *declaration* and dropped each field at its declared type, so the field of
+a `Box<Buffer>` was dropped as a `T`. `field_type` is the fix and already existed.
+
+The pattern is now unambiguous enough to state as a rule. **Any code that reaches from an instance
+into its declaration must come back through the instance.** Ten sites, one shape, and each was
+found by a crash rather than by a test — which is what `--check`-only fixtures cost.
+
+With the refusal at `type_of_annotation` temporarily lifted, **M6's acceptance passes**: a
+`Box<T>` with a destructor at `i32` and `f64`, a live-object counter back to zero, exit 0, valgrind
+clean. Both destructors are emitted, both are called on every path out, and in reverse declaration
+order. What remains is to delete the refusal and write that program down as a fixture.
+
+**M6's acceptance is met.** The refusal in `type_of_annotation` is gone, and with it
+`Checker::instantiation_owns`, which had no other caller — it existed only to reject. What replaced
+it is not a diagnostic but an answer: `instance_owns`, asked at every drop site.
+
+`codegen/generics_destructors.kl` is the acceptance written down. A `Box<T>` with a constructor, a
+destructor and a method, at `i32` and `f64`, with a live-object counter; two instances alive at
+once, dropped at the end of their block rather than the end of the function; and an early `return`
+out of a second function so the drop flag is exercised too. It passes, and passes under valgrind.
+Two C structs, two constructors, two destructors and two `get`s come out of one declaration.
+
+The unit test that used to assert the refusal now asserts the thing the refusal was standing in
+for: `Box<Buf>` owns, `Box<i32>` does not, `Ref<Buf>` does not because D2 counts only by-value
+containment, and a generic with a destructor of its own owns at every argument. It also pins the
+half that cannot tell them apart — `Types::is_owning( Box<i32> )` and `Box<Buf>` give one answer —
+which is the reason both questions exist rather than an oversight.
+
+**A mangling defect this uncovered, not yet fixed.** A constructor's symbol encodes its parameter
+types from the *declaration*: `Box<i32>`'s is `kl__Box__I3i32E__P3BoxI1TE_1T__ctor`, with the
+template's own `T` in the name of a concrete instance. It is not a collision today — the type
+arguments in the prefix separate the instances — but a symbol naming a type parameter is wrong on
+its face, and it is the constructor branch alone that has it, because an instantiation is otherwise
+named by its type arguments and nothing else. `Spelling::function` reads
+`parameter_types_vector` against the declaration; it wants the call's bindings, the same ones
+`lower_construction` now uses.
+
+**The constructor symbol no longer names a type parameter.** `Spelling::function` substitutes the
+declaration's parameter types through the instance's bindings before mangling, so `Box<i32>`'s
+constructor is `kl__Box__I3i32E__P3BoxI3i32E_3i32__ctor` rather than `..._P3BoxI1TE_1T__ctor`.
+`Spelling` holds a mutable `Types&` for it, because substituting interns. It is the eleventh site of
+the same shape and the first found by reading a symbol rather than by a crash.
+
+A constructor is the one symbol that needs both halves: the type arguments say which instance, and
+the parameter types tell two constructors of that instance apart. Every other instantiation is
+named by its type arguments alone, which is why nothing else had the fault.
+
+**Two things changed under this that were not aimed at.** A closed instantiation named *before* its
+generic is declared now compiles — both causes are gone, `is_owning_type`'s guard order and
+`instantiation_owns` being reached with an unrecorded type, the latter because the function no
+longer exists. It has no regression test, which is the next thing it needs.
+
+And the `Bad<Box<T>>` family has changed character: it no longer hangs, it asserts in `Ast::aux` on
+an invalid node, early. Better than a hang and still a crash on a program `--check` accepts, so
+D42's aggregate rule is still owed — the diagnostic simply arrives as an abort instead of never.
 
 ### Debts to pay along the way
 

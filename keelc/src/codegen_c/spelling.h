@@ -11,11 +11,11 @@ namespace keel
 struct Spelling
 {
     const Ast&      ast;
-    const Types&    types;
+    Types&          types;
     const Interner& interner;
 
     std::string type( Type_id type ) const; // "int32_t", "struct kl__Point", "int32_t*"
-    std::string structure( Node_id declaration ) const;
+    std::string structure( Type_id type ) const;
     std::string field( Node_id declaration ) const;
     // The declaration alone no longer names a function: one generic is emitted once per set of
     // type arguments, so they are part of the symbol.

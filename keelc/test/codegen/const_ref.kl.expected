@@ -19,14 +19,14 @@ struct kl__Big
 
 uint64_t kl_freed_2 = 0;
 
-void kl__B__Bp_u64( struct kl__B*, uint64_t );
+void kl__B__P1B_3u64__ctor( struct kl__B*, uint64_t );
 void kl__B__dtor( struct kl__B* );
-uint64_t kl__peek__Bp( struct kl__B* );
-uint64_t kl__forward__Bp( struct kl__B* );
-int32_t kl__sum__Bigp( struct kl__Big* );
+uint64_t kl__peek__P1B( struct kl__B* );
+uint64_t kl__forward__P1B( struct kl__B* );
+int32_t kl__sum__P3Big( struct kl__Big* );
 int32_t kl__main__( void );
 
-void kl__B__Bp_u64( struct kl__B* kl_this_1, uint64_t kl_x_2 )
+void kl__B__P1B_3u64__ctor( struct kl__B* kl_this_1, uint64_t kl_x_2 )
 {
 #line 16 "codegen/const_ref.kl"
     ( *kl_this_1 ).kl_n_4 = kl_x_2;
@@ -42,7 +42,7 @@ void kl__B__dtor( struct kl__B* kl_this_1 )
     return;
 }
 
-uint64_t kl__peek__Bp( struct kl__B* kl_b_1 )
+uint64_t kl__peek__P1B( struct kl__B* kl_b_1 )
 {
     uint64_t kl_t0;
 #line 34 "codegen/const_ref.kl"
@@ -50,19 +50,19 @@ uint64_t kl__peek__Bp( struct kl__B* kl_b_1 )
     return kl_t0;
 }
 
-uint64_t kl__forward__Bp( struct kl__B* kl_b_1 )
+uint64_t kl__forward__P1B( struct kl__B* kl_b_1 )
 {
     uint64_t kl_t0;
     struct kl__B* kl_t2;
     uint64_t kl_t3;
 #line 40 "codegen/const_ref.kl"
     kl_t2 = &( *kl_b_1 );
-    kl_t3 = kl__peek__Bp( kl_t2 );
+    kl_t3 = kl__peek__P1B( kl_t2 );
     kl_t0 = kl_t3;
     return kl_t0;
 }
 
-int32_t kl__sum__Bigp( struct kl__Big* kl_g_1 )
+int32_t kl__sum__P3Big( struct kl__Big* kl_g_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
@@ -101,10 +101,10 @@ int32_t kl__main__( void )
     kl_total_1 = 0;
 #line 53 "codegen/const_ref.kl"
     kl_t3 = &kl_a_2;
-    kl__B__Bp_u64( kl_t3, 5 );
+    kl__B__P1B_3u64__ctor( kl_t3, 5 );
 #line 55 "codegen/const_ref.kl"
     kl_t5 = &kl_a_2;
-    kl_t6 = kl__forward__Bp( kl_t5 );
+    kl_t6 = kl__forward__P1B( kl_t5 );
     kl_t7 = ( int32_t ) kl_t6;
     kl_t8 = kl_total_1 + kl_t7;
     kl_total_1 = kl_t8;
@@ -117,7 +117,7 @@ int32_t kl__main__( void )
     kl_g_9 = kl_t10;
 #line 60 "codegen/const_ref.kl"
     kl_t11 = &kl_g_9;
-    kl_t12 = kl__sum__Bigp( kl_t11 );
+    kl_t12 = kl__sum__P3Big( kl_t11 );
     kl_t13 = kl_total_1 + kl_t12;
     kl_total_1 = kl_t13;
 #line 63 "codegen/const_ref.kl"
@@ -127,7 +127,7 @@ int32_t kl__main__( void )
     kl_frozen_14 = kl_t15;
 #line 65 "codegen/const_ref.kl"
     kl_t16 = &kl_frozen_14;
-    kl_t17 = kl__sum__Bigp( kl_t16 );
+    kl_t17 = kl__sum__P3Big( kl_t16 );
     kl_t18 = kl_total_1 + kl_t17;
     kl_total_1 = kl_t18;
 #line 69 "codegen/const_ref.kl"

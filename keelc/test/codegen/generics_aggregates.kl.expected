@@ -1,0 +1,169 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Box__I3i32E;
+struct kl__Box__I3f64E;
+struct kl__Pair__I3i32_3f64E;
+struct kl__Box__I3BoxI3i32EE;
+struct kl__Holder__I3i32E;
+struct kl__Node__I3i32E;
+
+struct kl__Box__I3i32E
+{
+    int32_t kl_v_5;
+};
+
+struct kl__Box__I3f64E
+{
+    double kl_v_5;
+};
+
+struct kl__Pair__I3i32_3f64E
+{
+    int32_t kl_first_15;
+    double kl_second_17;
+};
+
+struct kl__Box__I3BoxI3i32EE
+{
+    struct kl__Box__I3i32E kl_v_5;
+};
+
+struct kl__Holder__I3i32E
+{
+    struct kl__Box__I3i32E kl_inner_27;
+    int32_t kl_tag_29;
+};
+
+struct kl__Node__I3i32E
+{
+    int32_t kl_value_36;
+    struct kl__Node__I3i32E* kl_next_42;
+};
+
+int32_t kl__main__( void );
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__Box__I3i32E kl_whole_1;
+    struct kl__Box__I3f64E kl_part_2;
+    bool kl_t3;
+    bool kl_t4;
+    bool kl_t5;
+    struct kl__Pair__I3i32_3f64E kl_both_6;
+    bool kl_t7;
+    struct kl__Box__I3BoxI3i32EE kl_twice_8;
+    bool kl_t9;
+    struct kl__Holder__I3i32E kl_held_10;
+    bool kl_t11;
+    struct kl__Node__I3i32E kl_node_12;
+    bool kl_t13;
+    int32_t kl_t14;
+    int32_t kl_t15;
+    int32_t kl_t16;
+    int32_t kl_t17;
+    int32_t kl_t18;
+#line 42 "codegen/generics_aggregates.kl"
+    kl_whole_1.kl_v_5 = 7;
+#line 43 "codegen/generics_aggregates.kl"
+    kl_part_2.kl_v_5 = 0.5;
+#line 45 "codegen/generics_aggregates.kl"
+    kl_t3 = kl_whole_1.kl_v_5 != 7;
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 47 "codegen/generics_aggregates.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+    goto bb3;
+    bb3:
+#line 50 "codegen/generics_aggregates.kl"
+    kl_t4 = kl_part_2.kl_v_5 > 0.6;
+    if ( kl_t4 ) goto bb4; else goto bb5;
+    bb4:
+#line 52 "codegen/generics_aggregates.kl"
+    kl_t0 = 2;
+    return kl_t0;
+    bb5:
+    goto bb6;
+    bb6:
+#line 55 "codegen/generics_aggregates.kl"
+    kl_t5 = kl_part_2.kl_v_5 < 0.4;
+    if ( kl_t5 ) goto bb7; else goto bb8;
+    bb7:
+#line 57 "codegen/generics_aggregates.kl"
+    kl_t0 = 3;
+    return kl_t0;
+    bb8:
+    goto bb9;
+    bb9:
+#line 63 "codegen/generics_aggregates.kl"
+    kl_both_6.kl_first_15 = 5;
+#line 64 "codegen/generics_aggregates.kl"
+    kl_both_6.kl_second_17 = 2.5;
+#line 66 "codegen/generics_aggregates.kl"
+    kl_t7 = kl_both_6.kl_second_17 < 2.4;
+    if ( kl_t7 ) goto bb10; else goto bb11;
+    bb10:
+#line 68 "codegen/generics_aggregates.kl"
+    kl_t0 = 4;
+    return kl_t0;
+    bb11:
+    goto bb12;
+    bb12:
+#line 74 "codegen/generics_aggregates.kl"
+    kl_twice_8.kl_v_5.kl_v_5 = 9;
+#line 76 "codegen/generics_aggregates.kl"
+    kl_t9 = kl_twice_8.kl_v_5.kl_v_5 != 9;
+    if ( kl_t9 ) goto bb13; else goto bb14;
+    bb13:
+#line 78 "codegen/generics_aggregates.kl"
+    kl_t0 = 5;
+    return kl_t0;
+    bb14:
+    goto bb15;
+    bb15:
+#line 83 "codegen/generics_aggregates.kl"
+    kl_held_10.kl_inner_27.kl_v_5 = 4;
+#line 84 "codegen/generics_aggregates.kl"
+    kl_held_10.kl_tag_29 = 3;
+#line 86 "codegen/generics_aggregates.kl"
+    kl_t11 = kl_held_10.kl_inner_27.kl_v_5 != 4;
+    if ( kl_t11 ) goto bb16; else goto bb17;
+    bb16:
+#line 88 "codegen/generics_aggregates.kl"
+    kl_t0 = 6;
+    return kl_t0;
+    bb17:
+    goto bb18;
+    bb18:
+#line 93 "codegen/generics_aggregates.kl"
+    kl_node_12.kl_value_36 = 1;
+#line 94 "codegen/generics_aggregates.kl"
+    kl_node_12.kl_next_42 = NULL;
+#line 96 "codegen/generics_aggregates.kl"
+    kl_t13 = kl_node_12.kl_next_42 != NULL;
+    if ( kl_t13 ) goto bb19; else goto bb20;
+    bb19:
+#line 98 "codegen/generics_aggregates.kl"
+    kl_t0 = 7;
+    return kl_t0;
+    bb20:
+    goto bb21;
+    bb21:
+#line 102 "codegen/generics_aggregates.kl"
+    kl_t14 = kl_whole_1.kl_v_5 + kl_both_6.kl_first_15;
+    kl_t15 = kl_t14 + kl_twice_8.kl_v_5.kl_v_5;
+    kl_t16 = kl_t15 + kl_held_10.kl_tag_29;
+    kl_t17 = kl_t16 + kl_node_12.kl_value_36;
+    kl_t18 = kl_t17 + 17;
+    kl_t0 = kl_t18;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

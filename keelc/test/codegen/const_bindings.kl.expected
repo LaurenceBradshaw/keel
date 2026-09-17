@@ -12,12 +12,12 @@ struct kl__Point
 
 int32_t kl_scale_8 = 10;
 
-int32_t kl__doubled__i32( int32_t );
-int32_t kl__through_a_const_pointer__i32( int32_t );
+int32_t kl__doubled__3i32( int32_t );
+int32_t kl__through_a_const_pointer__3i32( int32_t );
 int32_t kl__through_a_field_pointer__( void );
 int32_t kl__main__( void );
 
-int32_t kl__doubled__i32( int32_t kl_n_1 )
+int32_t kl__doubled__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
@@ -27,7 +27,7 @@ int32_t kl__doubled__i32( int32_t kl_n_1 )
     return kl_t0;
 }
 
-int32_t kl__through_a_const_pointer__i32( int32_t kl_seed_1 )
+int32_t kl__through_a_const_pointer__3i32( int32_t kl_seed_1 )
 {
     int32_t kl_t0;
     int32_t kl_v_2;
@@ -90,7 +90,7 @@ int32_t kl__main__( void )
     kl_t3.kl_y_3 = 5;
     kl_p_2 = kl_t3;
 #line 48 "codegen/const_bindings.kl"
-    kl_t5 = kl__doubled__i32( kl_base_1 );
+    kl_t5 = kl__doubled__3i32( kl_base_1 );
     kl_total_4 = kl_t5;
 #line 49 "codegen/const_bindings.kl"
     kl_t6 = kl_total_4 + kl_p_2.kl_x_1;
@@ -100,7 +100,7 @@ int32_t kl__main__( void )
     kl_t8 = kl_total_4 + kl_scale_8;
     kl_total_4 = kl_t8;
 #line 51 "codegen/const_bindings.kl"
-    kl_t9 = kl__through_a_const_pointer__i32( 6 );
+    kl_t9 = kl__through_a_const_pointer__3i32( 6 );
     kl_t10 = kl_total_4 + kl_t9;
     kl_total_4 = kl_t10;
 #line 52 "codegen/const_bindings.kl"

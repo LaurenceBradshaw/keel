@@ -280,9 +280,15 @@ void Resolver::visit( Node_id id )
         // annotation is ever inside it, so the hazard above cannot arise there. Two passes rather
         // than one, because declaration order carries meaning inside a function body and none
         // between members: a field written after the destructor must still be visible in it.
+        // The type parameters, before anything that can name one. A barrier for the reason a
+        // function's is: `T` belongs to this declaration and to nothing outside it, and a scope
+        // that carried outer names in would let a top-level `T` be found from a member body.
+        push_scope( Scope_kind::Barrier );
+        visit( ast_.type_param_list( id ) );
+
         std::unordered_map<u32, Node_id> members;
 
-        for( const Node_id field : ast_.children( id ) )
+        for( const Node_id field : ast_.members( id ) )
         {
             if( ast_.kind( field ) != Node_kind::Field_decl )
             {
@@ -316,7 +322,7 @@ void Resolver::visit( Node_id id )
         //
         // A second loop rather than a branch in the one above, because a method's own annotations
         // are resolved when its body is visited below, not here.
-        for( const Node_id member : ast_.children( id ) )
+        for( const Node_id member : ast_.members( id ) )
         {
             if( ast_.kind( member ) != Node_kind::Method_decl )
             {
@@ -354,7 +360,7 @@ void Resolver::visit( Node_id id )
             current_fields_.insert( Symbol_id { name } );
         }
 
-        for( const Node_id member : ast_.children( id ) )
+        for( const Node_id member : ast_.members( id ) )
         {
             if( is_function_like( ast_.kind( member ) ) )
             {
@@ -367,6 +373,8 @@ void Resolver::visit( Node_id id )
         // ever changes this has to become a save and restore.
         current_fields_.clear();
         pop_scope();
+
+        pop_scope(); // the type parameters
 
         return;
     }

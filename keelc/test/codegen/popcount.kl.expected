@@ -2,10 +2,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-uint32_t kl__popcount__u32( uint32_t );
+uint32_t kl__popcount__3u32( uint32_t );
 int32_t kl__main__( void );
 
-uint32_t kl__popcount__u32( uint32_t kl_bits_1 )
+uint32_t kl__popcount__3u32( uint32_t kl_bits_1 )
 {
     uint32_t kl_t0;
     uint32_t kl_count_2;
@@ -43,7 +43,7 @@ int32_t kl__main__( void )
     uint32_t kl_t5;
     bool kl_t6;
 #line 20 "codegen/popcount.kl"
-    kl_t1 = kl__popcount__u32( 183 );
+    kl_t1 = kl__popcount__3u32( 183 );
     kl_t2 = kl_t1 != 6;
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -53,7 +53,7 @@ int32_t kl__main__( void )
     goto bb3;
     bb3:
 #line 21 "codegen/popcount.kl"
-    kl_t3 = kl__popcount__u32( 0 );
+    kl_t3 = kl__popcount__3u32( 0 );
     kl_t4 = kl_t3 != 0;
     if ( kl_t4 ) goto bb4; else goto bb5;
     bb4:
@@ -63,7 +63,7 @@ int32_t kl__main__( void )
     goto bb6;
     bb6:
 #line 22 "codegen/popcount.kl"
-    kl_t5 = kl__popcount__u32( 4294967295 );
+    kl_t5 = kl__popcount__3u32( 4294967295 );
     kl_t6 = kl_t5 != 32;
     if ( kl_t6 ) goto bb7; else goto bb8;
     bb7:

@@ -1,5 +1,7 @@
 #include "sema/type.h"
 #include <fmt/format.h>
+#include <algorithm>
+#include <array>
 #include <cassert>
 #include <cmath>
 #include <limits>
@@ -97,18 +99,43 @@ Type_id Type_table::enumeration( Node_id declaration, std::string_view name, Typ
     return id;
 }
 
-Type_id Type_table::structure( Node_id declaration, std::string_view name )
+Type_id Type_table::structure( Node_id declaration, std::span<const Type_id> arguments, std::string_view name )
 {
-    const auto it = structs_.find( declaration.v );
+    std::vector<Instance>& instances = structs_[declaration.v];
 
-    if( it != structs_.end() )
+    for( const Instance& seen : instances )
     {
-        return it->second;
+        if( std::equal( seen.arguments.begin(), seen.arguments.end(), arguments.begin(), arguments.end() ) )
+        {
+            return seen.type;
+        }
     }
 
-    const Type_id id = add( Type { Type_kind::Struct, 0, false, Type_id {}, declaration }, name );
+    // Copied into storage the table owns, because the caller's span is a local: a Type holds a view
+    // of this for the rest of the run. An empty argument list keeps an empty view rather than an
+    // entry, so a non-generic aggregate costs nothing.
+    const std::span<const Type_id> owned =
+        arguments.empty() ? std::span<const Type_id> {}
+                          : std::span<const Type_id>( arguments_.emplace_back( arguments.begin(), arguments.end() ) );
 
-    structs_.emplace( declaration.v, id );
+    // `Box<i32>`, composed from the arguments' own names so that a nested one reads as written -
+    // `Box<Pair<i32>>` rather than anything the caller had to assemble.
+    std::string spelling( name );
+
+    for( std::size_t i = 0; i < owned.size(); ++i )
+    {
+        spelling += i == 0 ? "<" : ", ";
+        spelling += this->name( owned[i] );
+    }
+
+    if( !owned.empty() )
+    {
+        spelling += ">";
+    }
+
+    const Type_id id = add( Type { Type_kind::Struct, 0, false, Type_id {}, declaration, owned }, spelling );
+
+    instances.push_back( Instance { .arguments = owned, .type = id } );
 
     return id;
 }
@@ -144,6 +171,15 @@ bool Type_table::mentions_parameter( Type_id id ) const
         return true;
     case Type_kind::Pointer:
         return mentions_parameter( described.element );
+    case Type_kind::Struct:
+        for( Type_id arg : described.arguments )
+        {
+            if( mentions_parameter( arg ) )
+            {
+                return true;
+            }
+        }
+        return false;
     default:
         return false;
     }
@@ -175,6 +211,28 @@ Type_id Type_table::substitute( Type_id type, const Bindings& bindings )
     {
         return pointer_to( substitute( described.element, bindings ) );
     }
+    case Type_kind::Struct:
+    {
+        // A non-generic aggregate substitutes to itself, and asking the table to re-intern it would
+        // only find it again. Worth the branch because most struct types are this one.
+        if( described.arguments.empty() )
+        {
+            return type;
+        }
+
+        std::vector<Type_id> substituted;
+
+        substituted.reserve( described.arguments.size() );
+
+        for( const Type_id argument : described.arguments )
+        {
+            substituted.push_back( substitute( argument, bindings ) );
+        }
+
+        // The *base* name, not this type's: `name( type )` is the whole rendering - `Box<T>` - and
+        // handing that back would intern `Box<T><i32>`.
+        return structure( described.declaration, substituted, base_name( type ) );
+    }
     default:
         return type;
     }
@@ -192,6 +250,33 @@ std::string_view Type_table::name( Type_id id ) const
 {
     assert( id.is_valid() );
     return std::string_view( composed_[id.v] );
+}
+
+std::string_view Type_table::base_name( Type_id id ) const
+{
+    const std::string_view rendered = name( id );
+
+    return rendered.substr( 0, rendered.find( '<' ) );
+}
+
+std::vector<Type_id> Type_table::struct_types() const
+{
+    std::vector<Type_id> result;
+
+    for( const auto& [declaration, instances] : structs_ )
+    {
+        for( const Instance& instance : instances )
+        {
+            result.push_back( instance.type );
+        }
+    }
+
+    // Sorted, because the map is unordered and the emitter writes these out in the order it is
+    // given: without this the generated C would differ between runs of the same compiler on the
+    // same source. Type_id is interning order, which is deterministic for a given program.
+    std::sort( result.begin(), result.end(), []( Type_id a, Type_id b ) { return a.v < b.v; } );
+
+    return result;
 }
 
 Type_id Type_table::from_spelling( std::string_view spelling ) const
@@ -977,6 +1062,106 @@ TEST_CASE( "type_table_from_spelling_round_trips_every_builtin", "[sema][type]" 
     }
 }
 
+// A generic aggregate is not one type but a family, and the arguments are what tell them apart.
+// Interned on the pair, so `Box<i32>` written in two places is one type and `Box<f64>` is another -
+// which is what makes a field of type `T` answerable, and what a C struct per instantiation needs.
+TEST_CASE( "type_table_interns_a_generic_struct_by_its_arguments", "[sema][type][generic]" )
+{
+    Type_table table;
+
+    const Node_id box { 7 };
+    const Type_id i32 = table.integer( 32, true );
+    const Type_id f64 = table.floating( 64 );
+
+    const Type_id of_i32 = table.structure( box, std::array { i32 }, "Box" );
+    const Type_id of_f64 = table.structure( box, std::array { f64 }, "Box" );
+
+    SECTION( "different arguments are different types" )
+    {
+        REQUIRE( of_i32 != of_f64 );
+        REQUIRE( table.is_struct( of_i32 ) );
+        REQUIRE( table.is_struct( of_f64 ) );
+    }
+
+    SECTION( "the same arguments are the same type" )
+    {
+        REQUIRE( table.structure( box, std::array { i32 }, "Box" ) == of_i32 );
+    }
+
+    SECTION( "both still name the declaration they came from" )
+    {
+        // Which is what lets a member lookup find the one set of fields written for them.
+        REQUIRE( table.get( of_i32 ).declaration == box );
+        REQUIRE( table.get( of_f64 ).declaration == box );
+    }
+
+    SECTION( "the arguments are readable back off the type" )
+    {
+        REQUIRE( table.get( of_i32 ).arguments.size() == 1 );
+        REQUIRE( table.get( of_i32 ).arguments[0] == i32 );
+        REQUIRE( table.get( of_f64 ).arguments[0] == f64 );
+    }
+
+    SECTION( "the name is composed from the arguments' own" )
+    {
+        // So a diagnostic says `Box<i32>` rather than `Box`, and a nested one reads as written.
+        REQUIRE( table.name( of_i32 ) == "Box<i32>" );
+        REQUIRE( table.name( of_f64 ) == "Box<f64>" );
+        REQUIRE( table.name( table.structure( box, std::array { of_i32 }, "Box" ) ) == "Box<Box<i32>>" );
+    }
+
+    SECTION( "several arguments are separated as written" )
+    {
+        const Node_id pair { 11 };
+
+        REQUIRE( table.name( table.structure( pair, std::array { i32, f64 }, "Pair" ) ) == "Pair<i32, f64>" );
+    }
+
+    SECTION( "a non-generic aggregate carries none, and is unchanged" )
+    {
+        const Node_id point { 13 };
+
+        REQUIRE( table.name( table.structure( point, {}, "Point" ) ) == "Point" );
+        REQUIRE( table.get( table.structure( point, {}, "Point" ) ).arguments.empty() );
+    }
+
+    SECTION( "the arguments are copied, not borrowed from the caller" )
+    {
+        // Type::arguments is a span, so what it views has to belong to the table: every caller
+        // builds its argument list in a local and lets it go, and a type outlives all of them.
+        Type_id interned {};
+
+        {
+            std::vector<Type_id> caller_local { i32 };
+
+            interned = table.structure( Node_id { 21 }, caller_local, "Held" );
+
+            // Scribbled over before it dies, so a borrowed view reads the wrong type rather than
+            // merely reading freed memory that happens to still hold the right value.
+            caller_local[0] = f64;
+        }
+
+        REQUIRE( table.get( interned ).arguments.size() == 1 );
+        REQUIRE( table.get( interned ).arguments[0] == i32 );
+        REQUIRE( table.name( interned ) == "Held<i32>" );
+    }
+
+    SECTION( "a view stays valid as the table grows" )
+    {
+        // Interning more types must not move what an earlier one points at, which is why the
+        // storage behind these views is a deque rather than a vector.
+        const std::span<const Type_id> early = table.get( of_i32 ).arguments;
+
+        for( int i = 0; i < 64; ++i )
+        {
+            table.structure( Node_id { static_cast<u32>( 100 + i ) }, std::array { i32, f64 }, "Filler" );
+        }
+
+        REQUIRE( early[0] == i32 );
+        REQUIRE( table.get( of_i32 ).arguments[0] == i32 );
+    }
+}
+
 TEST_CASE( "type_table_interns_structs_by_declaration", "[sema][type]" )
 {
     Type_table table;
@@ -985,7 +1170,7 @@ TEST_CASE( "type_table_interns_structs_by_declaration", "[sema][type]" )
     const Node_id first { 7 };
     const Node_id second { 11 };
 
-    const Type_id point = table.structure( first, "Point" );
+    const Type_id point = table.structure( first, {}, "Point" );
 
     REQUIRE( point.is_valid() );
     REQUIRE( table.is_struct( point ) );
@@ -994,14 +1179,14 @@ TEST_CASE( "type_table_interns_structs_by_declaration", "[sema][type]" )
 
     SECTION( "the same declaration gives the same type" )
     {
-        REQUIRE( table.structure( first, "Point" ) == point );
+        REQUIRE( table.structure( first, {}, "Point" ) == point );
     }
 
     // The property the whole design turns on: at M7 two modules may each declare `Point`, and they
     // must not be the same type.
     SECTION( "two declarations of the same name are two types" )
     {
-        REQUIRE( table.structure( second, "Point" ) != point );
+        REQUIRE( table.structure( second, {}, "Point" ) != point );
     }
 
     // Struct names are resolved through the resolver, never through by_spelling_, which stays the
@@ -1026,8 +1211,8 @@ TEST_CASE( "type_table_rejects_struct_conversions_and_arithmetic", "[sema][type]
 {
     Type_table table;
 
-    const Type_id point = table.structure( Node_id { 7 }, "Point" );
-    const Type_id line  = table.structure( Node_id { 11 }, "Line" );
+    const Type_id point = table.structure( Node_id { 7 }, {}, "Point" );
+    const Type_id line  = table.structure( Node_id { 11 }, {}, "Line" );
     const Type_id i32   = table.integer( 32, true );
 
     SECTION( "holds is identity only" )

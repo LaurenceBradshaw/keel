@@ -2,11 +2,11 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-int32_t kl__weight__Colour( int32_t );
-int32_t kl__exhaustive__Colour( int32_t );
+int32_t kl__weight__6Colour( int32_t );
+int32_t kl__exhaustive__6Colour( int32_t );
 int32_t kl__main__( void );
 
-int32_t kl__weight__Colour( int32_t kl_c_1 )
+int32_t kl__weight__6Colour( int32_t kl_c_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -39,7 +39,7 @@ int32_t kl__weight__Colour( int32_t kl_c_1 )
     goto bb3;
 }
 
-int32_t kl__exhaustive__Colour( int32_t kl_c_1 )
+int32_t kl__exhaustive__6Colour( int32_t kl_c_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -93,23 +93,23 @@ int32_t kl__main__( void )
 #line 46 "codegen/switch.kl"
     kl_total_1 = 0;
 #line 48 "codegen/switch.kl"
-    kl_t2 = kl__weight__Colour( 0 );
+    kl_t2 = kl__weight__6Colour( 0 );
     kl_t3 = kl_total_1 + kl_t2;
     kl_total_1 = kl_t3;
 #line 49 "codegen/switch.kl"
-    kl_t4 = kl__weight__Colour( 1 );
+    kl_t4 = kl__weight__6Colour( 1 );
     kl_t5 = kl_total_1 + kl_t4;
     kl_total_1 = kl_t5;
 #line 50 "codegen/switch.kl"
-    kl_t6 = kl__weight__Colour( 2 );
+    kl_t6 = kl__weight__6Colour( 2 );
     kl_t7 = kl_total_1 + kl_t6;
     kl_total_1 = kl_t7;
 #line 51 "codegen/switch.kl"
-    kl_t8 = kl__weight__Colour( 3 );
+    kl_t8 = kl__weight__6Colour( 3 );
     kl_t9 = kl_total_1 + kl_t8;
     kl_total_1 = kl_t9;
 #line 53 "codegen/switch.kl"
-    kl_t10 = kl__exhaustive__Colour( 3 );
+    kl_t10 = kl__exhaustive__6Colour( 3 );
     kl_t11 = kl_total_1 + kl_t10;
     kl_total_1 = kl_t11;
 #line 55 "codegen/switch.kl"

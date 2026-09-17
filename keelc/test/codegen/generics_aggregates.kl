@@ -1,0 +1,103 @@
+// A generic aggregate is a family of C structs rather than one, and which of them exist is decided
+// nowhere in this file: `Box<i32>`, `Box<f64>` and `Box<Box<i32>>` are three, `Pair<i32, f64>` is a
+// fourth, and the `Box<i32>` inside `Holder<i32>` is a fifth that nothing here writes down.
+//
+// Run rather than only compiled. An order that puts a struct before what it holds by value still
+// emits - it just does not compile - and a field spelled from the template does not even do that;
+// but a *wrong* field type that happens to be a C type compiles and gives the wrong answer, and
+// only running catches that.
+
+struct Box<T> where T : Copyable
+{
+    T v;
+};
+
+struct Pair<A, B> where A : Copyable, where B : Copyable
+{
+    A first;
+    B second;
+};
+
+// The instantiation reached only through a field: `Holder<i32>` is named below, `Box<i32>` is what
+// its field becomes, and nothing names that.
+struct Holder<T> where T : Copyable
+{
+    Box<T> inner;
+    i32    tag;
+};
+
+// A generic list: finite in size because the link is a pointer, and the reason the emitter writes
+// forward declarations at all.
+class Node<T> where T : Copyable
+{
+    T        value;
+    Node<T>* next;
+};
+
+i32 main()
+{
+    Box<i32> whole;
+    Box<f64> part;
+
+    whole.v = 7;
+    part.v  = 0.5;
+
+    if( whole.v != 7 )
+    {
+        return 1;
+    }
+
+    if( part.v > 0.6 )
+    {
+        return 2;
+    }
+
+    if( part.v < 0.4 )
+    {
+        return 3;
+    }
+
+    // Two parameters, bound positionally, at two different types.
+    Pair<i32, f64> both;
+
+    both.first  = 5;
+    both.second = 2.5;
+
+    if( both.second < 2.4 )
+    {
+        return 4;
+    }
+
+    // Nested, which needs `>>` to close two lists rather than one.
+    Box<Box<i32>> twice;
+
+    twice.v.v = 9;
+
+    if( twice.v.v != 9 )
+    {
+        return 5;
+    }
+
+    Holder<i32> held;
+
+    held.inner.v = 4;
+    held.tag     = 3;
+
+    if( held.inner.v != 4 )
+    {
+        return 6;
+    }
+
+    Node<i32> node;
+
+    node.value = 1;
+    node.next  = nullptr;
+
+    if( node.next != nullptr )
+    {
+        return 7;
+    }
+
+    // 7 + 5 + 9 + 3 + 1 = 25
+    return whole.v + both.first + twice.v.v + held.tag + node.value + 17;
+}

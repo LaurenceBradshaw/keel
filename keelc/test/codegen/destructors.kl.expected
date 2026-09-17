@@ -44,14 +44,14 @@ struct kl__Wrapper
 
 int32_t kl_released_1;
 
-void kl__release__u8p( uint8_t* );
+void kl__release__P2u8( uint8_t* );
 void kl__Buffer__dtor( struct kl__Buffer* );
 void kl__Counter__dtor( struct kl__Counter* );
 void kl__Guarded__dtor( struct kl__Guarded* );
-int32_t kl__early__i32( int32_t );
+int32_t kl__early__3i32( int32_t );
 int32_t kl__main__( void );
 
-void kl__release__u8p( uint8_t* kl_p_1 )
+void kl__release__P2u8( uint8_t* kl_p_1 )
 {
     int32_t kl_t2;
 #line 8 "codegen/destructors.kl"
@@ -63,7 +63,7 @@ void kl__release__u8p( uint8_t* kl_p_1 )
 void kl__Buffer__dtor( struct kl__Buffer* kl_this_1 )
 {
 #line 19 "codegen/destructors.kl"
-    kl__release__u8p( ( *kl_this_1 ).kl_ptr_16 );
+    kl__release__P2u8( ( *kl_this_1 ).kl_ptr_16 );
     return;
 }
 
@@ -103,7 +103,7 @@ void kl__Guarded__dtor( struct kl__Guarded* kl_this_1 )
     if ( kl_t4 ) goto bb5; else goto bb6;
     bb5:
 #line 52 "codegen/destructors.kl"
-    kl__release__u8p( ( *kl_this_1 ).kl_ptr_56 );
+    kl__release__P2u8( ( *kl_this_1 ).kl_ptr_56 );
 #line 53 "codegen/destructors.kl"
     kl_t6 = kl_i_3 + 1;
     kl_i_3 = kl_t6;
@@ -112,7 +112,7 @@ void kl__Guarded__dtor( struct kl__Guarded* kl_this_1 )
     return;
 }
 
-int32_t kl__early__i32( int32_t kl_n_1 )
+int32_t kl__early__3i32( int32_t kl_n_1 )
 {
     int32_t kl_t0;
     struct kl__Buffer kl_b_2;
@@ -224,9 +224,9 @@ int32_t kl__main__( void )
     goto bb1;
     bb3:
 #line 113 "codegen/destructors.kl"
-    kl_t15 = kl__early__i32( 0 );
+    kl_t15 = kl__early__3i32( 0 );
 #line 114 "codegen/destructors.kl"
-    kl_t16 = kl__early__i32( 1 );
+    kl_t16 = kl__early__3i32( 1 );
 #line 117 "codegen/destructors.kl"
     kl_t17 = kl_p_1.kl_x_92 + kl_p_1.kl_y_94;
     kl_t18 = kl_t17 + kl_released_1;

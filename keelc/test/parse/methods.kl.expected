@@ -1,5 +1,6 @@
 Source_file                             8:1-48:1
   Struct_decl                           8:1-23:3    name=Point
+    <none>                              -
     Field_decl                          10:5-10:11  name=x
       Named_type                        10:5-10:8   "i32"
     Field_decl                          11:5-11:11  name=y
@@ -38,6 +39,7 @@ Source_file                             8:1-48:1
             Name_expr                   21:17-21:19 "by"
       <none>                            -
   Class_decl                            25:1-42:3   name=Buffer
+    <none>                              -
     Field_decl                          27:5-27:13  name=len
       Named_type                        27:5-27:8   "u64"
     Constructor_decl                    29:5-32:6

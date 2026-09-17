@@ -9,17 +9,17 @@ struct kl__Counter
     int32_t* kl_slot_173;
 };
 
-int32_t kl__falls__E( int32_t );
+int32_t kl__falls__1E( int32_t );
 int32_t kl__breaks_the_switch__( void );
 int32_t kl__breaks_the_loop__( void );
 int32_t kl__continues_the_loop__( void );
-void kl__Counter__Counterp_i32p( struct kl__Counter*, int32_t* );
+void kl__Counter__P7Counter_P3i32__ctor( struct kl__Counter*, int32_t* );
 void kl__Counter__dtor( struct kl__Counter* );
 int32_t kl__drops_on_continue__( void );
 int32_t kl__drops_on_break__( void );
 int32_t kl__main__( void );
 
-int32_t kl__falls__E( int32_t kl_e_1 )
+int32_t kl__falls__1E( int32_t kl_e_1 )
 {
     int32_t kl_t0;
     int32_t kl_t_2;
@@ -184,7 +184,7 @@ int32_t kl__continues_the_loop__( void )
     goto bb1;
 }
 
-void kl__Counter__Counterp_i32p( struct kl__Counter* kl_this_1, int32_t* kl_s_2 )
+void kl__Counter__P7Counter_P3i32__ctor( struct kl__Counter* kl_this_1, int32_t* kl_s_2 )
 {
 #line 102 "codegen/switch_control.kl"
     ( *kl_this_1 ).kl_slot_173 = kl_s_2;
@@ -228,7 +228,7 @@ int32_t kl__drops_on_continue__( void )
 #line 118 "codegen/switch_control.kl"
     kl_t6 = &kl_outer_5;
     kl_t7 = &kl_drops_1;
-    kl__Counter__Counterp_i32p( kl_t6, kl_t7 );
+    kl__Counter__P7Counter_P3i32__ctor( kl_t6, kl_t7 );
 #line 122 "codegen/switch_control.kl"
     kl_t9 = 0 == 0;
     if ( kl_t9 ) goto bb4; else goto bb6;
@@ -271,7 +271,7 @@ int32_t kl__drops_on_break__( void )
 #line 142 "codegen/switch_control.kl"
     kl_t4 = &kl_inner_3;
     kl_t5 = &kl_drops_1;
-    kl__Counter__Counterp_i32p( kl_t4, kl_t5 );
+    kl__Counter__P7Counter_P3i32__ctor( kl_t4, kl_t5 );
 #line 143 "codegen/switch_control.kl"
     kl__Counter__dtor( &kl_inner_3 );
     goto bb4;
@@ -309,10 +309,10 @@ int32_t kl__main__( void )
     int32_t kl_t16;
     bool kl_t17;
 #line 156 "codegen/switch_control.kl"
-    kl_t2 = kl__falls__E( 0 );
-    kl_t3 = kl__falls__E( 1 );
+    kl_t2 = kl__falls__1E( 0 );
+    kl_t3 = kl__falls__1E( 1 );
     kl_t4 = kl_t2 + kl_t3;
-    kl_t5 = kl__falls__E( 2 );
+    kl_t5 = kl__falls__1E( 2 );
     kl_t6 = kl_t4 + kl_t5;
     kl_total_1 = kl_t6;
 #line 158 "codegen/switch_control.kl"
