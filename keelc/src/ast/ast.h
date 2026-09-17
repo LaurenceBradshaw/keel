@@ -32,10 +32,13 @@ public:
 
     // The members of a `struct` or `class` - its fields, methods, constructor and destructor - and
     // nothing else. A generic aggregate carries its type parameters in the same child list, in a
-    // leading slot this skips, exactly as an `enum` carries its underlying type in one; walking the
-    // children directly would read that slot as a member. Asserts on any other kind, because the
-    // answer for one would be a guess about what its children mean.
+    // leading slot this skips; walking the children directly would read that slot as a member.
+    // Asserts on any other kind, because the answer for one would be a guess about what its
+    // children mean.
     std::span<const Node_id> members( Node_id id ) const;
+
+    // An `enum`'s variants, past the two leading slots it skips. Asserts for the same reason.
+    std::span<const Node_id> variants( Node_id id ) const;
 
     // The declaration's `Type_param_list`, or an invalid id when it has none. Which child holds it
     // depends on the kind - the front for an aggregate, whose members are variadic, and the fixed

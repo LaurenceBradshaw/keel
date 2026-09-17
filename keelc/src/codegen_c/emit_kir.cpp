@@ -11,6 +11,42 @@ namespace keel
 namespace
 {
 
+// The fields a composite holds by value, in the order C declares them. A struct's are its
+// Field_decl members; an enum's are every payload field of every variant, side by side - the layout
+// emit_composites writes, and so the set the containment walk has to follow.
+std::vector<Node_id> contained_fields( const Ast& ast, Node_id declaration )
+{
+    std::vector<Node_id> fields;
+
+    if( !declaration.is_valid() )
+    {
+        return fields;
+    }
+
+    if( ast.kind( declaration ) == Node_kind::Enum_decl )
+    {
+        for( const Node_id variant : ast.variants( declaration ) )
+        {
+            for( const Node_id field : ast.children( variant ) )
+            {
+                fields.push_back( field );
+            }
+        }
+
+        return fields;
+    }
+
+    for( const Node_id member : ast.members( declaration ) )
+    {
+        if( ast.kind( member ) == Node_kind::Field_decl )
+        {
+            fields.push_back( member );
+        }
+    }
+
+    return fields;
+}
+
 class Kir_emitter
 {
 public:
@@ -31,8 +67,7 @@ private:
     void line_directive( Span span );
 
     void emit_prologue();
-    void emit_structs();
-    void emit_enums();
+    void emit_composites();
     void emit_globals();
     void emit_prototypes();
     void emit_runtime_prototypes();
@@ -105,8 +140,7 @@ Kir_emitter::Kir_emitter(
 std::string Kir_emitter::run()
 {
     emit_prologue();
-    emit_structs();
-    emit_enums();
+    emit_composites();
     emit_globals();
     emit_runtime_prototypes();
     emit_externs();
@@ -151,46 +185,20 @@ void Kir_emitter::emit_prologue()
     write_line( "" );
 }
 
-// D7. An enum that carries payloads is a struct in C: a tag saying which variant is live, then
-// every payload field of every variant side by side.
+// One C struct per instantiation, in containment order. An enum with a payload is a struct too: a
+// tag followed by every payload field of every variant, side by side rather than in a union. The
+// field names are already mangled with their node id, so two variants cannot collide, and the only
+// cost is the space a union would have saved - invisible, because nothing guarantees an enum's
+// layout and no FFI can see one. Moving to a union later is a change to this function and nothing
+// else.
 //
-// Side by side rather than in a union, which is what a tagged variant would normally be. The field
-// names are already mangled with their node id, so two variants cannot collide, and the only cost
-// is the space a union would have saved - invisible, because nothing guarantees an enum's layout
-// and no FFI can see one. Moving to a union later is a change to this function and nothing else.
-void Kir_emitter::emit_enums()
+// One pass over both kinds rather than one each: a struct can hold an enum by value and an enum a
+// struct, so any order that finishes one kind before starting the other puts some definition before
+// something it contains.
+void Kir_emitter::emit_composites()
 {
-    for( const Node_id decl : ast_.children( ast_.root() ) )
-    {
-        if( ast_.kind( decl ) != Node_kind::Enum_decl || !enum_has_payload( ast_, decl ) )
-        {
-            continue;
-        }
-
-        write_line( spelling_.structure( types_.type_of( decl ) ) );
-        write_line( "{" );
-        indent_ += 4;
-
-        write_line( fmt::format( "{} tag;", spelling_.type( types_.table().get( types_.type_of( decl ) ).element ) ) );
-
-        for( const Node_id variant : ast_.children( decl ).subspan( 1 ) )
-        {
-            for( const Node_id field : ast_.children( variant ) )
-            {
-                write_line( fmt::format( "{} {};", spelling_.type( types_.type_of( field ) ), spelling_.field( field ) ) );
-            }
-        }
-
-        indent_ -= 4;
-        write_line( "};" );
-        write_line( "" );
-    }
-}
-
-void Kir_emitter::emit_structs()
-{
-    // One entry per instantiation, already ordered so that a type arrives after everything it holds
-    // by value. See emitted_struct_order, which is where the walk and the reason for it live.
+    // Already ordered so that a type arrives after everything it holds by value. See
+    // emitted_struct_order, which is where the walk and the reason for it live.
     if( struct_order_.empty() )
     {
         return;
@@ -214,13 +222,14 @@ void Kir_emitter::emit_structs()
         write_line( "{" );
         indent_ += 4;
 
-        for( const Node_id field : ast_.members( declaration ) )
+        // Which variant is held is not a field of any variant, so it is written first and once.
+        if( types_.table().is_enum( type ) )
         {
-            if( ast_.kind( field ) != Node_kind::Field_decl )
-            {
-                continue;
-            }
+            write_line( fmt::format( "{} tag;", spelling_.type( types_.table().get( type ).element ) ) );
+        }
 
+        for( const Node_id field : contained_fields( ast_, declaration ) )
+        {
             // The field's type through *this* instance: what the declaration says is `T`, which is
             // true of the template and has no C spelling. Every instance was interned while the
             // order was built, so nothing new is named here.
@@ -726,7 +735,19 @@ std::vector<Type_id> emitted_struct_order( const Ast& ast, Types& types )
     // graph built first.
     const auto visit = [&]( auto&& self, Type_id type ) -> void
     {
-        if( !type.is_valid() || !types.table().is_struct( type ) || types.table().mentions_parameter( type ) )
+        if( !type.is_valid() || types.table().mentions_parameter( type ) )
+        {
+            return;
+        }
+
+        // A payload-free enum has no C struct at all - Spelling::type writes it as its underlying
+        // integer - so admitting one would forward-declare a struct that is an `int`. The kind is
+        // checked first because enum_has_payload asserts on anything but an Enum_decl.
+        const bool writes_a_struct =
+            types.table().is_struct( type ) ||
+            ( types.table().is_enum( type ) && enum_has_payload( ast, types.table().get( type ).declaration ) );
+
+        if( !writes_a_struct )
         {
             return;
         }
@@ -739,13 +760,8 @@ std::vector<Type_id> emitted_struct_order( const Ast& ast, Types& types )
 
         visiting.push_back( type );
 
-        for( const Node_id member : ast.members( types.table().get( type ).declaration ) )
+        for( const Node_id member : contained_fields( ast, types.table().get( type ).declaration ) )
         {
-            if( ast.kind( member ) != Node_kind::Field_decl )
-            {
-                continue;
-            }
-
             self( self, field_type( ast, types.table(), type, member, types.recorded() ) );
         }
 
@@ -755,9 +771,9 @@ std::vector<Type_id> emitted_struct_order( const Ast& ast, Types& types )
 
     // Indexed, because visiting a type can intern another and grow the table underneath us - which
     // is the point: a `Box<i32>` reached only through a field is discovered exactly here.
-    for( std::size_t at = 0; at < types.table().struct_types().size(); ++at )
+    for( std::size_t at = 0; at < types.table().composite_types().size(); ++at )
     {
-        visit( visit, types.table().struct_types()[at] );
+        visit( visit, types.table().composite_types()[at] );
     }
 
     return order;

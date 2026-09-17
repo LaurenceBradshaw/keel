@@ -771,7 +771,10 @@ private:
     // Whether a bare variant path here names the variant rather than standing for a value of
     // the enum. True while checking a construction's callee, a pattern's path, and a bare `case`
     // label - in all three the payload is accounted for, so `Shape::Circle` is complete.
-    bool    naming_variant_ = false;
+    bool naming_variant_ = false;
+    // The instance a variant path should name, when the context knows one. Its sibling above
+    // rather than a second entry point, for the same reason: reaching the variant is identical.
+    Type_id expected_enum_;
     Node_id current_function_; // whose annotation the escape rule reads
 
     u32 loop_depth_      = 0; // `continue` binds here, looking past any switch
@@ -1194,9 +1197,18 @@ void Checker::declare_signatures_enum_decls()
 
         const std::string_view name = interner_.text( Symbol_id { ast_.aux( child ) } );
 
-        // Child 0 is the underlying type, invalid when unwritten. i32 by default, which is what
+        declare_type_parameters( child, ast_.type_param_list( child ) );
+
+        std::vector<Type_id> arguments;
+
+        for( const Node_id type_param : type_parameters( ast_, ast_.type_param_list( child ) ) )
+        {
+            arguments.push_back( types_[type_param.v] );
+        }
+
+        // Child 1 is the underlying type, invalid when unwritten. i32 by default, which is what
         // C++ gives a plain enum - D30 changed the semantics of the keyword, not its arithmetic.
-        const Node_id annotation = ast_.child( child, 0 );
+        const Node_id annotation = ast_.child( child, 1 );
         Type_id       underlying = annotation.is_valid() ? type_of_annotation( annotation ) : table_.integer( 32, true );
 
         // Only an integer can count variants. Absorbed to i32 on failure so the enum still gets a
@@ -1211,7 +1223,7 @@ void Checker::declare_signatures_enum_decls()
             underlying = table_.integer( 32, true );
         }
 
-        const Type_id type = table_.enumeration( child, name, underlying );
+        const Type_id type = table_.enumeration( child, arguments, name, underlying );
 
         record( child, type );
 
@@ -1219,9 +1231,14 @@ void Checker::declare_signatures_enum_decls()
         // field: three collisions should say so in one compile rather than over three.
         std::unordered_set<u32> seen;
 
-        for( const Node_id variant : ast_.children( child ).subspan( 1 ) )
+        for( const Node_id variant : ast_.variants( child ) )
         {
             const Symbol_id variant_name { ast_.aux( variant ) };
+
+            if( !variant_name.is_valid() )
+            {
+                continue;
+            }
 
             if( !seen.insert( variant_name.v ).second )
             {
@@ -1235,10 +1252,10 @@ void Checker::declare_signatures_enum_decls()
         // is enforced by this line and by the absence of a conversion rule for Enum anywhere else:
         // if a variant typed as i32, `i32 x = Colour::Red;` would compile and the entry would be a
         // comment rather than a rule.
-        // From 1: child 0 is the underlying type, and is invalid when unwritten - kind() asserts
-        // on an invalid id rather than returning something to test against.
-        for( const Node_id variant : ast_.children( child ).subspan( 1 ) )
+        for( const Node_id variant : ast_.variants( child ) )
         {
+            const Symbol_id variant_name { ast_.aux( variant ) };
+
             record( variant, type );
 
             // D7: a variant's children are its payload fields, and they are Field_decls - so this
@@ -1251,16 +1268,19 @@ void Checker::declare_signatures_enum_decls()
 
                 record( field, field_type );
 
+                if( is_generic( ast_, child ) )
+                {
+                    record_generic_uses( child, field_type, ast_.span( field ) );
+                }
+
                 const Symbol_id field_name { ast_.aux( field ) };
 
-                if( !fields.insert( field_name.v ).second )
+                if( !fields.insert( field_name.v ).second && variant_name.is_valid() )
                 {
                     error_at(
                         ast_.span( field ),
                         fmt::format(
-                            "`{}` already has a field `{}`",
-                            interner_.text( Symbol_id { ast_.aux( variant ) } ),
-                            interner_.text( field_name )
+                            "`{}` already has a field `{}`", interner_.text( variant_name ), interner_.text( field_name )
                         )
                     );
                 }
@@ -1746,7 +1766,7 @@ void Checker::check_enum_payloads()
             continue;
         }
 
-        for( const Node_id variant : ast_.children( decl ).subspan( 1 ) )
+        for( const Node_id variant : ast_.variants( decl ) )
         {
             for( const Node_id field : ast_.children( variant ) )
             {
@@ -2386,8 +2406,10 @@ void Checker::check_variant_pattern( Node_id pattern, Type_id type, std::vector<
     // The same flag construction uses: the pattern accounts for the payload, so the path inside it
     // names a variant rather than standing for a value.
     naming_variant_         = true;
+    expected_enum_          = type;
     const Type_id path_type = infer( path );
     naming_variant_         = false;
+    expected_enum_          = Type_id {};
 
     if( table_.is_error( path_type ) )
     {
@@ -2423,7 +2445,7 @@ void Checker::check_variant_pattern( Node_id pattern, Type_id type, std::vector<
     covered[index] = path;
 
     const Node_id                  decl    = table_.get( type ).declaration;
-    const Node_id                  variant = ast_.children( decl ).subspan( 1 )[index];
+    const Node_id                  variant = ast_.variants( decl )[index];
     const std::span<const Node_id> payload = ast_.children( variant );
 
     if( payload.size() != bindings.size() )
@@ -2442,13 +2464,14 @@ void Checker::check_variant_pattern( Node_id pattern, Type_id type, std::vector<
         );
     }
 
-    // Each binding takes its field's type. The resolver has already put them in the arm's scope,
-    // so all that is left here is to say what they hold.
+    // Each binding takes its field's type *through this instance*: what the declaration records for
+    // `Opt<T>`'s payload is a `T`. The resolver has already put the names in the arm's scope, so all
+    // that is left here is to say what they hold.
     const std::size_t shared = std::min( payload.size(), bindings.size() );
 
     for( std::size_t i = 0; i < shared; ++i )
     {
-        record( bindings[i], types_[payload[i].v] );
+        record( bindings[i], field_type( type, payload[i] ) );
     }
 }
 
@@ -2456,9 +2479,8 @@ void Checker::check_enum_switch( Node_id id, Type_id type, bool& has_default )
 {
     const std::span<const Node_id> children = ast_.children( id );
 
-    // From 1: child 0 of an Enum_decl is its underlying type.
     const Node_id                  decl     = table_.get( type ).declaration;
-    const std::span<const Node_id> variants = ast_.children( decl ).subspan( 1 );
+    const std::span<const Node_id> variants = ast_.variants( decl );
 
     // The label that covered each ordinal, so a duplicate can point at the first one.
     std::vector<Node_id> covered( variants.size(), Node_id {} );
@@ -2498,8 +2520,10 @@ void Checker::check_enum_switch( Node_id id, Type_id type, bool& has_default )
             // say here even when the variant carries one - so the same flag a pattern and a
             // construction set. `Shape s = Shape::Circle;` still has it false and still reports.
             naming_variant_          = true;
+            expected_enum_           = type;
             const Type_id label_type = infer( label );
             naming_variant_          = false;
+            expected_enum_           = Type_id {};
 
             if( table_.is_error( label_type ) )
             {
@@ -4096,7 +4120,7 @@ Type_id Checker::infer_variant_construction( Node_id id )
     // name lookup.
     const Node_id                  decl     = table_.get( result ).declaration;
     const auto                     ordinal  = constants_.find( path.v );
-    const std::span<const Node_id> variants = ast_.children( decl ).subspan( 1 );
+    const std::span<const Node_id> variants = ast_.variants( decl );
 
     if( ordinal == constants_.end() || ordinal->second.magnitude >= variants.size() )
     {
@@ -4135,7 +4159,7 @@ Type_id Checker::infer_variant_construction( Node_id id )
 
     for( std::size_t i = 0; i < shared; ++i )
     {
-        check( arguments[i], types_[payload[i].v] );
+        check( arguments[i], field_type( result, payload[i] ) );
     }
 
     for( std::size_t i = shared; i < arguments.size(); ++i )
@@ -4232,8 +4256,7 @@ Type_id Checker::infer_path( Node_id id )
         return record( id, table_.builtin( Type_kind::Error ) );
     }
 
-    // From 1: child 0 is the underlying type.
-    const std::span<const Node_id> variants = ast_.children( decl ).subspan( 1 );
+    const std::span<const Node_id> variants = ast_.variants( decl );
 
     for( std::size_t i = 0; i < variants.size(); ++i )
     {
@@ -4259,6 +4282,31 @@ Type_id Checker::infer_path( Node_id id )
                 ast_.span( id ),
                 fmt::format( "`{}` carries a payload", interner_.text( name ) ),
                 fmt::format( "write `{}( ... )` with a value for each field", sm_.text( ast_.span( id ) ) )
+            );
+
+            return record( id, table_.builtin( Type_kind::Error ) );
+        }
+
+        // Which instance this path names. The declaration test is what keeps a wrong expectation
+        // out: `Opt<i32> x = Plain::One;` falls through to the open form and is refused below by
+        // the ordinary mismatch, rather than being quietly retyped to whatever was wanted.
+        if( expected_enum_.is_valid() && table_.get( expected_enum_ ).declaration == decl )
+        {
+            return record( id, expected_enum_ );
+        }
+
+        // Nothing said which instance, and a generic declaration's own type is the open form -
+        // `Opt<T>`, which is a template rather than anything a value can hold. Left to the mismatch
+        // below it would escape through `auto`, which has no expectation to disagree with.
+        if( is_generic( ast_, decl ) )
+        {
+            error_at(
+                ast_.span( id ),
+                fmt::format( "nothing here says which `{}` this is", interner_.text( Symbol_id { ast_.aux( decl ) } ) ),
+                fmt::format(
+                    "write the type where the value lands, as in `{}<i32> x = ...`",
+                    interner_.text( Symbol_id { ast_.aux( decl ) } )
+                )
             );
 
             return record( id, table_.builtin( Type_kind::Error ) );
@@ -4760,7 +4808,9 @@ Type_id Checker::check( Node_id id, Type_id expected )
         break;
     }
 
+    expected_enum_       = expected;
     const Type_id actual = infer( id );
+    expected_enum_       = Type_id {};
     if( table_.is_error( actual ) )
     {
         return expected;
@@ -4855,7 +4905,7 @@ Type_id Checker::type_of_annotation( Node_id id, bool outermost )
             // The mirror of a generic call written without its type arguments: what `Box` names on
             // its own is the open form, which no value can have. Inference is a decision of its own
             // and is not taken here, so this names the explicit form rather than guessing.
-            if( is_aggregate( ast_.kind( decl ) ) && is_generic( ast_, decl ) )
+            if( ( is_aggregate( ast_.kind( decl ) ) || ast_.kind( decl ) == Node_kind::Enum_decl ) && is_generic( ast_, decl ) )
             {
                 const std::string_view name = interner_.text( Symbol_id { ast_.aux( id ) } );
 
@@ -4970,7 +5020,7 @@ Type_id Checker::type_of_annotation( Node_id id, bool outermost )
 
         const std::string_view name = interner_.text( Symbol_id { ast_.aux( base ) } );
 
-        if( !is_aggregate( ast_.kind( decl ) ) )
+        if( !is_aggregate( ast_.kind( decl ) ) && ast_.kind( decl ) != Node_kind::Enum_decl )
         {
             error_at( ast_.span( id ), fmt::format( "`{}` is not a generic", name ) );
             return table_.builtin( Type_kind::Error );
@@ -5004,7 +5054,17 @@ Type_id Checker::type_of_annotation( Node_id id, bool outermost )
             }
         }
 
-        const Type_id instance = table_.structure( decl, arguments, name );
+        Type_id instance {};
+        if( ast_.kind( decl ) == Node_kind::Enum_decl )
+        {
+            const Node_id annotation = ast_.child( decl, 1 );
+            Type_id       underlying = annotation.is_valid() ? type_of_annotation( annotation ) : table_.integer( 32, true );
+            instance                 = table_.enumeration( decl, arguments, name, underlying );
+        }
+        else
+        {
+            instance = table_.structure( decl, arguments, name );
+        }
 
         return instance;
     }
@@ -5822,6 +5882,7 @@ void Checker::record_generic_uses( Node_id from, Type_id type, Span at )
         break;
 
     case Type_kind::Struct:
+    case Type_kind::Enum:
         if( described.declaration.is_valid() && is_generic( ast_, described.declaration ) )
         {
             const std::vector<Type_id> arguments { described.arguments.begin(), described.arguments.end() };
@@ -6102,8 +6163,7 @@ Types type_check(
 
 bool enum_has_payload( const Ast& ast, Node_id enum_decl )
 {
-    // From 1: child 0 is the underlying type.
-    for( const Node_id variant : ast.children( enum_decl ).subspan( 1 ) )
+    for( const Node_id variant : ast.variants( enum_decl ) )
     {
         if( !ast.children( variant ).empty() )
         {
@@ -6217,7 +6277,7 @@ bool is_const_method( const Ast& ast, Node_id method )
 // while it is still filling that vector and has no Types to hand.
 Bindings aggregate_bindings( const Ast& ast, const Type_table& table, Type_id aggregate, std::span<const Type_id> recorded )
 {
-    if( !aggregate.is_valid() || !table.is_struct( aggregate ) )
+    if( !aggregate.is_valid() || ( !table.is_struct( aggregate ) && !table.is_enum( aggregate ) ) )
     {
         return {};
     }

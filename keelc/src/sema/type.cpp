@@ -83,61 +83,15 @@ Type_id Type_table::pointer_to( Type_id element )
     return id;
 }
 
-Type_id Type_table::enumeration( Node_id declaration, std::string_view name, Type_id underlying )
+Type_id
+Type_table::enumeration( Node_id declaration, std::span<const Type_id> arguments, std::string_view name, Type_id underlying )
 {
-    const auto it = enums_.find( declaration.v );
-
-    if( it != enums_.end() )
-    {
-        return it->second;
-    }
-
-    // The declaration is carried the way a struct's is: it is how a consumer gets from the type
-    // back to the variants, which is what exhaustiveness checking walks.
-    const Type_id id = add( Type { Type_kind::Enum, 0, false, underlying, declaration }, name );
-    enums_.emplace( declaration.v, id );
-    return id;
+    return composite( Type_kind::Enum, declaration, arguments, name, underlying );
 }
 
 Type_id Type_table::structure( Node_id declaration, std::span<const Type_id> arguments, std::string_view name )
 {
-    std::vector<Instance>& instances = structs_[declaration.v];
-
-    for( const Instance& seen : instances )
-    {
-        if( std::equal( seen.arguments.begin(), seen.arguments.end(), arguments.begin(), arguments.end() ) )
-        {
-            return seen.type;
-        }
-    }
-
-    // Copied into storage the table owns, because the caller's span is a local: a Type holds a view
-    // of this for the rest of the run. An empty argument list keeps an empty view rather than an
-    // entry, so a non-generic aggregate costs nothing.
-    const std::span<const Type_id> owned =
-        arguments.empty() ? std::span<const Type_id> {}
-                          : std::span<const Type_id>( arguments_.emplace_back( arguments.begin(), arguments.end() ) );
-
-    // `Box<i32>`, composed from the arguments' own names so that a nested one reads as written -
-    // `Box<Pair<i32>>` rather than anything the caller had to assemble.
-    std::string spelling( name );
-
-    for( std::size_t i = 0; i < owned.size(); ++i )
-    {
-        spelling += i == 0 ? "<" : ", ";
-        spelling += this->name( owned[i] );
-    }
-
-    if( !owned.empty() )
-    {
-        spelling += ">";
-    }
-
-    const Type_id id = add( Type { Type_kind::Struct, 0, false, Type_id {}, declaration, owned }, spelling );
-
-    instances.push_back( Instance { .arguments = owned, .type = id } );
-
-    return id;
+    return composite( Type_kind::Struct, declaration, arguments, name, Type_id {} );
 }
 
 Type_id Type_table::parameter( Node_id declaration, std::string_view name )
@@ -171,6 +125,7 @@ bool Type_table::mentions_parameter( Type_id id ) const
         return true;
     case Type_kind::Pointer:
         return mentions_parameter( described.element );
+    case Type_kind::Enum:
     case Type_kind::Struct:
         for( Type_id arg : described.arguments )
         {
@@ -212,6 +167,7 @@ Type_id Type_table::substitute( Type_id type, const Bindings& bindings )
         return pointer_to( substitute( described.element, bindings ) );
     }
     case Type_kind::Struct:
+    case Type_kind::Enum:
     {
         // A non-generic aggregate substitutes to itself, and asking the table to re-intern it would
         // only find it again. Worth the branch because most struct types are this one.
@@ -229,9 +185,16 @@ Type_id Type_table::substitute( Type_id type, const Bindings& bindings )
             substituted.push_back( substitute( argument, bindings ) );
         }
 
-        // The *base* name, not this type's: `name( type )` is the whole rendering - `Box<T>` - and
-        // handing that back would intern `Box<T><i32>`.
-        return structure( described.declaration, substituted, base_name( type ) );
+        if( described.kind == Type_kind::Enum )
+        {
+            return enumeration( described.declaration, substituted, base_name( type ), described.element );
+        }
+        else
+        {
+            // The *base* name, not this type's: `name( type )` is the whole rendering - `Box<T>` - and
+            // handing that back would intern `Box<T><i32>`.
+            return structure( described.declaration, substituted, base_name( type ) );
+        }
     }
     default:
         return type;
@@ -259,11 +222,11 @@ std::string_view Type_table::base_name( Type_id id ) const
     return rendered.substr( 0, rendered.find( '<' ) );
 }
 
-std::vector<Type_id> Type_table::struct_types() const
+std::vector<Type_id> Type_table::composite_types() const
 {
     std::vector<Type_id> result;
 
-    for( const auto& [declaration, instances] : structs_ )
+    for( const auto& [declaration, instances] : composites_ )
     {
         for( const Instance& instance : instances )
         {
@@ -622,6 +585,49 @@ u8 Type_table::width_index( u8 width )
         assert( false );
         return 0;
     }
+}
+
+Type_id Type_table::composite(
+    Type_kind kind, Node_id declaration, std::span<const Type_id> arguments, std::string_view name, Type_id element
+)
+{
+    std::vector<Instance>& instances = composites_[declaration.v];
+
+    for( const Instance& seen : instances )
+    {
+        if( std::equal( seen.arguments.begin(), seen.arguments.end(), arguments.begin(), arguments.end() ) )
+        {
+            return seen.type;
+        }
+    }
+
+    // Copied into storage the table owns, because the caller's span is a local: a Type holds a view
+    // of this for the rest of the run. An empty argument list keeps an empty view rather than an
+    // entry, so a non-generic aggregate costs nothing.
+    const std::span<const Type_id> owned =
+        arguments.empty() ? std::span<const Type_id> {}
+                          : std::span<const Type_id>( arguments_.emplace_back( arguments.begin(), arguments.end() ) );
+
+    // `Box<i32>`, composed from the arguments' own names so that a nested one reads as written -
+    // `Box<Pair<i32>>` rather than anything the caller had to assemble.
+    std::string spelling( name );
+
+    for( std::size_t i = 0; i < owned.size(); ++i )
+    {
+        spelling += i == 0 ? "<" : ", ";
+        spelling += this->name( owned[i] );
+    }
+
+    if( !owned.empty() )
+    {
+        spelling += ">";
+    }
+
+    const Type_id id = add( Type { kind, 0, false, element, declaration, owned }, spelling );
+
+    instances.push_back( Instance { .arguments = owned, .type = id } );
+
+    return id;
 }
 
 } // namespace keel

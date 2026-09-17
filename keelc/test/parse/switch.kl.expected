@@ -1,6 +1,7 @@
 Source_file                             7:1-43:1
   Enum_decl                             7:1-12:3    name=Colour
     <none>                              -
+    <none>                              -
     Variant_decl                        9:5-9:8     "Red"  name=Red
     Variant_decl                        10:5-10:10  "Green"  name=Green
     Variant_decl                        11:5-11:9   "Blue"  name=Blue

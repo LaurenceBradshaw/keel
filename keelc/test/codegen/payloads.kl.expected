@@ -2,6 +2,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+struct kl__Shape;
+struct kl__Slot;
+
 struct kl__Shape
 {
     int32_t tag;

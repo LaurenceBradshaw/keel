@@ -1,10 +1,12 @@
 Source_file                             5:1-30:1
   Enum_decl                             5:1-10:3    name=Colour
+    <none>                              -
     Named_type                          5:15-5:17   "u8"
     Variant_decl                        7:5-7:8     "Red"  name=Red
     Variant_decl                        8:5-8:10    "Green"  name=Green
     Variant_decl                        9:5-9:9     "Blue"  name=Blue
   Enum_decl                             14:1-18:3   name=Direction
+    <none>                              -
     <none>                              -
     Variant_decl                        16:5-16:10  "North"  name=North
     Variant_decl                        17:5-17:10  "South"  name=South

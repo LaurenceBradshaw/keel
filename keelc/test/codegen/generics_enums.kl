@@ -1,0 +1,157 @@
+// A generic `enum` is a family of C structs rather than one, and the family is mixed in with the
+// structs: `Slot<i32>` holds an `Opt<i32>` by value and `Wrap<i32>` holds a `Box<i32>` by value, so
+// neither kind can be emitted as a block before the other. One post-order over both is the only
+// order in which every definition arrives after everything it contains.
+//
+// Run rather than only compiled. A definition emitted too early fails to compile and a payload
+// spelled from the template does not compile either, but a payload read through the *wrong*
+// instance's layout is valid C that gives the wrong answer - and only running catches that.
+
+struct Box<T> where T : Copyable
+{
+    T v;
+};
+
+// No payload, so this has no C struct at all - it is spelled as its underlying integer. It must
+// stay out of the emitted order, which would otherwise forward-declare a struct that is an `int`.
+enum Colour
+{
+    Red,
+    Green
+};
+
+enum Opt<T> where T : Copyable
+{
+    None,
+    Some( T v )
+};
+
+// A payload that is itself a generic struct.
+enum Wrap<T> where T : Copyable
+{
+    Held( Box<T> b )
+};
+
+// ...and a struct holding a generic enum by value, which is the other direction.
+struct Slot<T> where T : Copyable
+{
+    Opt<T> value;
+    i32    tag;
+};
+
+// Two payload fields, so their order has to survive being flattened side by side.
+enum Span2<A, B> where A : Copyable, where B : Copyable
+{
+    Both( A first, B second )
+};
+
+// A generic function over a generic enum: the parameter's own instance is what the pattern binds
+// through, and `v` is a `T` only in the template.
+T unwrap<T>( Opt<T> o, T fallback ) where T : Copyable
+{
+    switch( o )
+    {
+        case Opt::Some( v ):
+            return v;
+        case Opt::None:
+            return fallback;
+    }
+}
+
+i32 main()
+{
+    // Named before anything names `Box<f64>`, which therefore exists only because the containment
+    // walk reached it through this enum's payload. Interning order alone would define it too late.
+    Wrap<f64> late;
+
+    // Two instances of one declaration, so the emitter writes two C structs from it.
+    Opt<i32> a = Opt::Some( 7 );
+    Opt<f64> b = Opt::Some( 0.5 );
+    Opt<i32> empty = Opt::None;
+
+    if( unwrap<i32>( a, 0 ) != 7 )
+    {
+        return 1;
+    }
+
+    if( unwrap<i32>( empty, 4 ) != 4 )
+    {
+        return 2;
+    }
+
+    f64 half = unwrap<f64>( b, 0.0 );
+
+    if( half < 0.4 )
+    {
+        return 3;
+    }
+
+    if( half > 0.6 )
+    {
+        return 4;
+    }
+
+    // A payload-free enum as a type argument: `Opt<Colour>` is a struct, `Colour` is not.
+    Opt<Colour> tinted = Opt::Some( Colour::Green );
+
+    switch( tinted )
+    {
+        case Opt::Some( c ):
+            if( c != Colour::Green )
+            {
+                return 5;
+            }
+
+            break;
+        case Opt::None:
+            return 6;
+    }
+
+    // A struct holding a generic enum by value.
+    Slot<i32> s;
+    s.value = Opt::Some( 9 );
+    s.tag   = 3;
+
+    if( unwrap<i32>( s.value, 0 ) != 9 )
+    {
+        return 7;
+    }
+
+    // An enum holding a generic struct by value, the other way round.
+    Box<i32> bx;
+    bx.v = 5;
+
+    Wrap<i32> w = Wrap::Held( bx );
+
+    switch( w )
+    {
+        case Wrap::Held( held ):
+            if( held.v != 5 )
+            {
+                return 8;
+            }
+
+            break;
+    }
+
+    // Two payload fields at two different types, read back in the order they were written.
+    Span2<i32, f64> pair = Span2::Both( 2, 1.5 );
+
+    switch( pair )
+    {
+        case Span2::Both( first, second ):
+            if( first != 2 )
+            {
+                return 9;
+            }
+
+            if( second < 1.4 )
+            {
+                return 10;
+            }
+
+            break;
+    }
+
+    return 30 + s.tag + unwrap<i32>( a, 0 ) + 2; // 30 + 3 + 7 + 2
+}

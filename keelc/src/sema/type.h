@@ -63,7 +63,7 @@ public:
     Type_id integer( u8 width, bool is_signed ) const;
     Type_id floating( u8 width ) const;
     Type_id pointer_to( Type_id element ); // interns; same element -> same id
-    Type_id enumeration( Node_id declaration, std::string_view name, Type_id underlying );
+    Type_id enumeration( Node_id declaration, std::span<const Type_id> arguments, std::string_view name, Type_id underlying );
 
     // Interned by *declaration* and by its type arguments, never by name: two modules each
     // declaring `Point` must be two distinct types, and `Box<i32>` and `Box<f64>` must be two more.
@@ -85,10 +85,10 @@ public:
     // The declared name without its type arguments: `Box` for `Box<i32>`, and the whole name for
     // everything else. Exact because a declared name is an identifier and can hold no bracket.
     std::string_view base_name( Type_id id ) const;
-    // Every struct type the table has interned, in a deterministic order. Includes the open form
+    // Every composite type the table has interned, in a deterministic order. Includes the open form
     // of a generic aggregate - `Box<T>` - which a caller wanting only instances filters out with
     // mentions_parameter.
-    std::vector<Type_id> struct_types() const;
+    std::vector<Type_id> composite_types() const;
     // The type a source spelling names, or invalid if it names none. Only the eleven a program may
     // actually write - not "<error>", and not composed pointer names, which reach sema as
     // Pointer_type nodes rather than as identifiers.
@@ -136,6 +136,10 @@ private:
     Type_id   add( const Type& type, std::string_view name );
     static u8 width_index( u8 width );
 
+    Type_id composite(
+        Type_kind kind, Node_id declaration, std::span<const Type_id> arguments, std::string_view name, Type_id element
+    );
+
     std::deque<Type> types_; // types_[0] reserved so Type_id{} is invalid
 
     Type_id error_, void_, bool_; // what the constructor made
@@ -153,8 +157,7 @@ private:
         Type_id                  type;
     };
 
-    std::unordered_map<u32, std::vector<Instance>> structs_;
-    std::unordered_map<u32, Type_id>               enums_;  // Enum_decl node -> enum type
+    std::unordered_map<u32, std::vector<Instance>> composites_;
     std::unordered_map<u32, Type_id>               params_; // Type_param_decl node -> type parameter
     std::deque<std::string>                        composed_;
 

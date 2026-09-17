@@ -1,0 +1,54 @@
+// A generic `enum` is instantiated, bounded and cycle-checked exactly as a generic aggregate is.
+// One declaration per message, and a clean one at the end, since stderr is diffed whole.
+
+class Buf
+{
+    i32 v;
+    ~Buf() { }
+};
+
+struct Box<T> where T : Copyable
+{
+    T v;
+};
+
+enum Opt<T> where T : Copyable
+{
+    None,
+    Some( T v )
+};
+
+enum Pair<A, B> where A : Copyable where B : Copyable
+{
+    Left( A a ),
+    Right( B b )
+};
+
+// D42: `Bad` reaches `Bad` at a bigger argument each time round, through a payload rather than a
+// call. The edge is recorded from the *enum*, so the cycle closes on the declaration.
+enum Bad<T> where T : Copyable
+{
+    V( Bad<Box<T>> b )
+};
+
+// The same cycle with the growing argument built out of a generic `enum` rather than a struct, so
+// the detector has to count an enum as a construction over the parameter the way it counts a struct.
+enum Worse<T> where T : Copyable
+{
+    V( Worse<Opt<T>> w )
+};
+
+i32 main()
+{
+    Opt<i32, f64> too_many;
+    Pair<i32>     too_few;
+    Opt           bare;
+    Opt<Buf>      unbounded;
+
+    // Two arguments are two types, and neither converts to the other.
+    Opt<i32> a;
+    Opt<f64> b;
+    a = b;
+
+    return 0;
+}

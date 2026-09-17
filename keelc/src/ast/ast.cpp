@@ -52,7 +52,7 @@ Node_id Ast::child( Node_id id, std::size_t index ) const
 
 Node_id Ast::type_param_list( Node_id id ) const
 {
-    if( is_aggregate( kind( id ) ) )
+    if( is_aggregate( kind( id ) ) || kind( id ) == Node_kind::Enum_decl )
     {
         return child( id, 0 );
     }
@@ -67,6 +67,14 @@ std::span<const Node_id> Ast::members( Node_id id ) const
     // Child 0 is the type parameter list, invalid when the aggregate is not generic - always
     // present either way, so that this is a subspan rather than a question about the node.
     return children( id ).subspan( 1 );
+}
+
+std::span<const Node_id> Ast::variants( Node_id id ) const
+{
+    assert( kind( id ) == Node_kind::Enum_decl && "variants are an enum's, not any node's" );
+
+    // Child 0 is the type parameter list, child 1 is the underlying type, and the rest are the variants.
+    return children( id ).subspan( 2 );
 }
 
 Node_id Ast::root() const

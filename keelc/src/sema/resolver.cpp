@@ -252,12 +252,15 @@ void Resolver::visit( Node_id id )
         // type, and nothing else will resolve it.
         const std::span<const Node_id> children = ast_.children( id );
 
-        if( children[0].is_valid() )
+        push_scope( Scope_kind::Barrier );
+        visit( ast_.type_param_list( id ) );
+
+        if( children[1].is_valid() )
         {
-            visit( children[0] );
+            visit( children[1] );
         }
 
-        for( const Node_id variant : children.subspan( 1 ) )
+        for( const Node_id variant : children.subspan( 2 ) )
         {
             for( const Node_id field : ast_.children( variant ) )
             {
@@ -265,6 +268,7 @@ void Resolver::visit( Node_id id )
             }
         }
 
+        pop_scope();
         return;
     }
     case Node_kind::Class_decl:

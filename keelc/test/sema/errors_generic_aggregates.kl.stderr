@@ -14,7 +14,7 @@ error: `Suit` is not a generic
   --> sema/errors_generic_aggregates.kl:47:5
    |
 47 |     Suit<i32>  s;
-   |     ^^^^^^^^^
+   |     ^^^^^^^^^ it takes no type arguments, so write `Suit` on its own
 
 error: `Box` takes 1 type argument, but 2 were given
   --> sema/errors_generic_aggregates.kl:54:8

@@ -1,0 +1,18 @@
+// A `where` clause with nothing to constrain, on an enum rather than a function.
+enum Unconstrained where T : Copyable
+{
+    Red,
+};
+
+// Recovery: a variant with no name still has to diagnose rather than abort. The checker reads a
+// variant's name to report a duplicate, and a failed `expect_name` leaves that name invalid.
+enum Nameless
+{
+    3,
+    3,
+};
+
+i32 main()
+{
+    return 0;
+}

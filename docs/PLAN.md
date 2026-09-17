@@ -3373,23 +3373,130 @@ That mattered here. The parameter recorder went in guarded by `is_generic` asked
 nor function-like — so the guard was always false and the recording was dead. It compiled, and with
 only a both-positions fixture the suite would have gone green over half a fix.
 
-### A generic `enum` parses and then crashes
+### A generic `enum` — done
 
-`enum Opt<T> where T : Copyable { None, Some( T ) };` aborts in `Interner::text` on an invalid
-`Symbol_id`, before any D42 shape is involved. The parser accepts the type-parameter list;
-`declare_signatures_enum_decls` then walks `children( child ).subspan( 1 )` as the variants — child 0
-being the *underlying type* for an enum, not a parameter list — so the list lands in a variant slot
-and `ast_.aux` on it yields no symbol.
+`enum Opt<T> { None, Some( T v ) };` used to abort in `Interner::text` on an invalid `Symbol_id`.
+The parser did **not** accept the type-parameter list — there was no list to accept: `parse_enum_decl`
+expected `:` or `{` after the name, so `<` failed `expect( Token_kind::L_brace )`, recovery made a
+`Variant_decl` out of each of `<`, `T`, `>`, and `declare_signatures_enum_decls` then read a name off
+one that had none. Two faults, a missing feature and an unguarded read, and the feature removes the
+input that reaches the read.
 
-**It is neither promised nor refused**, which is the same shape as function overloading's entry in
-§6.6: D39 names functions and aggregates and says nothing about an `enum`, and §6.6 does not exclude
-one. So the gap is a decision that was never taken rather than a feature that was dropped, and the
-cheap half is not the feature — it is refusing the spelling with a message instead of aborting.
+**It was neither promised nor refused** — D39 names functions and aggregates and says nothing about
+an `enum`, and §6.6 does not exclude one. Settled now in favour of implementing it, because the
+customer is dated: `Result<T, E>` is an `enum` over two parameters, §12's error-handling question is
+due with M6, and it cannot be answered while the spelling crashes.
 
-The customer is real and dated: `Result<T, E>` is an `enum` over two parameters, §12's error-handling
-question is due with M6, and M7's acceptance cannot be written without it. Whether M6 implements
-generic enums or only diagnoses them is the open question; what is not open is that a compiler
-crash is the wrong answer to a spelling nobody has ruled out.
+Three things make an `enum` cost more than an aggregate. **Child 0 was taken** by the underlying
+type, so twelve places hand-wrote `children( decl ).subspan( 1 )`. **`Type_table::enumeration` was
+keyed by declaration alone**, one type per declaration, where `structure` keys by declaration *and*
+arguments. And **`Type_kind::Enum` falls through every structural walk** — `substitute` and
+`mentions_parameter` both end in `default: return type`, so `Opt<T>` would substitute to itself and
+the worklist would call the open template a closed instance.
+
+**Slice A — it parses.** Done. `parse_enum_decl` now reads a type-parameter list and `where` clauses
+in the same shape `parse_aggregate_decl` does, and an enum's children are `{ type_params, underlying,
+variants… }`. Child 0 matches an aggregate's, so `Ast::type_param_list` answers for both with one
+predicate and `is_generic` starts telling the truth for an enum; `is_aggregate` was deliberately left
+alone, because `Ast::members` asserts on it and an enum joining that set would be walked as a struct
+whose variants are fields. `Ast::variants` replaced all twelve hand-written spans, and its assert is
+what made that sweep verifiable. The duplicate-variant check now skips a nameless variant, which is
+the crash itself: `main` runs sema on a broken parse, so error recovery still reaches it.
+`sema/errors_generic_enums.kl` pins both halves.
+
+**Slice B — it types.** Done, with one gap it cannot close on its own. `structure` and `enumeration`
+now forward to one private `composite` taking a `Type_kind` and an `element`, which deleted `enums_`
+and one copy of the `<…>` spelling loop; `declare_signatures_enum_decls` declares its type parameters
+before resolving the underlying type and passes them as the instance arguments, so `Opt<T>` is the
+open form D11 checks payloads against. `substitute` and `mentions_parameter` grew an `Enum` case
+sharing the `Struct` one's body, the resolver scopes the parameters behind a `Barrier`,
+`type_of_annotation` admits an `Enum_decl` in both its `Generic_type` and `Named_type` branches, and
+`aggregate_bindings` no longer gates on `is_struct`, so `field_type` answers for a payload.
+
+What works and is pinned by `sema/errors_generic_enums.kl`: instantiation at one and two parameters,
+arity in both directions, a bare `Opt` naming the open form, a bound violation, two arguments being
+two types, and a D42 cycle closing through a payload. **An unbounded `T` payload is refused**, and
+that is D30 and D11 agreeing rather than a gap — `is_owning_type` answers a parameter from its
+bounds, so `Some( T v )` needs `where T : Copyable` exactly as a struct field does.
+
+**Slice D — which instance a variant path names.** Done. `Opt::Some( 7 )` parses and resolves
+already; what it produced was `types_[decl]`, the *declaration's* type, which for a generic enum is
+the open form `Opt<T>` — a template rather than anything a value can hold. Every route to a variant
+runs through the tail of `infer_path`, so one change there serves construction, patterns and bare
+`case` labels alike. The instance now arrives through `expected_enum_`, the sibling of the existing
+`naming_variant_` flag: the pattern and the bare label pass the scrutinee, and `check` passes its
+expectation around the trailing `infer`. `infer` is not memoised, so a flag set around a call is read.
+
+**The declaration comparison is the whole guard.** `infer_path` takes the expectation only when it
+belongs to the same declaration; a mismatch falls through to the open form and is refused by the
+ordinary message, rather than being quietly retyped to whatever was wanted. Inverting that one test
+silently accepts `i32 x = Colour::Red;` and stops two different enums comparing unequal — which is
+what it did when first written, and what three unit tests caught.
+
+**A generic path with no expectation is now an error**, because `auto` has none to disagree with:
+`auto x = Opt::Some( 7 );` used to give `x` the type `Opt<T>` with no complaint at all. Deliberately
+not inferred from the payload argument — that would still leave `Opt::None` untypeable, so an
+expectation is the only rule that covers both.
+
+**Deferred: the explicit spelling.** `Opt<i32>::Some( 7 )` still does not parse —
+`Parser::scan_type_arguments` commits to the generic reading only when `(` follows the closing `>`,
+and the postfix branch after it builds a `Call_expr` unconditionally, so a path would need a
+`Path_expr` carrying a `Type_arg_list`, the same shape `Box<i32> { 7 }` needs. Nothing requires it:
+every position that can hold a variant can also state the type.
+
+`sema/errors_generic_variants.kl` pins it, and the correct code at the top of that fixture is as much
+of the test as the errors — a sema fixture stops before codegen, so a positive case can live in one
+before slice C exists. Reading `v.v` off a pattern binding is the assertion that the binding is a
+`Red` and not a `T`. The types are two structs rather than two numbers: `i32` widens to `f64`, so a
+payload checked against the wrong one of those is still accepted and proves nothing.
+
+**Slice B's three unverified guards are now verified.** All three needed a substitution that reaches
+*through* an enum rather than replacing a bare `T`, which the corpus had nowhere: a payload of type
+`Opt<T>` inside `Nest<T>` kills dropping the `Enum` case from `substitute`, a D42 cycle whose growing
+argument is `Opt<T>` rather than `Box<T>` kills dropping it from `mentions_parameter`, and `name` for
+`base_name` needed an instance created *only* by substitution — `enumeration` interns by declaration
+and arguments, never by name, so a wrong name is discarded unless that call is the first to intern
+that pair. All nine mutations over slices B and D now die.
+
+**Slice C — it emits.** Done. Enum instances join the one ordered composite list rather than
+getting a second: an enum with a by-value struct payload and a struct with a by-value enum field are
+both writable, and only one post-order over all of them puts every definition after everything it
+contains. Two asserts have to be guarded first — the destructor-seeding loop in `lower.cpp` calls
+`ast.members` on whatever `is_generic` admits, and `emitted_struct_order`'s walk gates on
+`is_struct`. Then `emit_enums` is deleted rather than rewritten, folded into `emit_structs`, which
+also fixes a **latent bug that predates generics**: `run()` emits all structs before all enums, so a
+struct holding a payload enum by value emits before the enum it contains. Mangling and spelling need
+nothing — `mangle_struct` already reads `base_name` and `arguments` off the `Type`.
+
+What it actually took, in the order the fixture forced. **Lowering came first, and it aborted rather
+than misspelled**: `lower_variant_construction` and `bind_variant_pattern` both read a payload
+field's *declared* type, so `Lowering::type_of` substituted a bare `T` through `main`'s empty
+bindings and tripped the "type parameter is not bound" assert on the first `Opt::Some( 7 )` in any
+program. Both now go through `field_type` against the instance — the same call `emit_structs` makes,
+and reachable only because slice D records the instance on the path.
+
+`struct_types` became `composite_types` and stopped filtering, and the two walks that consume it
+each needed a guard, because `Ast::members` asserts on an `Enum_decl`: lowering's destructor seeding
+skips an enum outright — D30 refuses an owning payload, so there is no destructor to seed — and
+`emitted_struct_order` reads a new `contained_fields` that answers for both kinds, a struct's
+`Field_decl` members and an enum's payload fields flattened across its variants. That flattening is
+the same list `emit_composites` writes, which is why it is one function and not two.
+
+**A payload-free enum must stay out of the order.** It has no C struct at all — `Spelling::type`
+writes it as its underlying integer — so admitting one forward-declares a struct that is an `int`.
+The kind test has to come before `enum_has_payload`, which asserts on anything but an `Enum_decl`.
+
+`emit_enums` is deleted. It walked the *AST*, so it wrote one C struct per declaration — the open
+`Opt<T>` for a generic — and it ran after every struct, which is the latent ordering bug. Driving
+both kinds from the one ordered list fixes both at once, and gives payload enums the forward
+declarations they never had: `codegen/payloads.kl.expected` gains three lines and nothing else moves.
+
+`codegen/generics_enums.kl` pins it, and two of its lines exist only because a mutation survived
+without them. `Wrap<f64>` is named before anything names `Box<f64>`, so that containment edge has to
+come from the enum's own payload rather than from interning order — with the walk reverted to struct
+members the rest of the fixture still passed, because every other container happened to be interned
+after what it holds. And `Opt<Colour>` carries a payload-free enum as a type argument, which is what
+notices if the filter goes.
 
 ### Debts to pay along the way
 

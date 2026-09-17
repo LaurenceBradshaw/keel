@@ -775,13 +775,13 @@ void Lowering::bind_variant_pattern( Place matched, Node_id label )
 
     assert( ordinal.has_value() && "the checker records an ordinal for every variant it accepts" );
 
-    const Node_id variant = ast_.children( decl ).subspan( 1 )[static_cast<std::size_t>( ordinal->magnitude )];
+    const Node_id variant = ast_.variants( decl )[static_cast<std::size_t>( ordinal->magnitude )];
 
     const std::span<const Node_id> payload = ast_.children( variant );
 
     for( std::size_t i = 0; i < bindings.size() && i < payload.size(); ++i )
     {
-        const Type_id  field_type = type_of( payload[i] );
+        const Type_id  field_type = keel::field_type( ast_, types_.table(), enum_type, payload[i], types_.recorded() );
         const Span     span       = ast_.span( bindings[i] );
         const Local_id local      = builder_.add_local( field_type, span, Symbol_id { ast_.aux( bindings[i] ) } );
 
@@ -833,13 +833,19 @@ Operand Lowering::lower_variant_construction( Node_id id )
 
     // The payload fields, in declaration order - which is the order the arguments were checked in.
     const Node_id decl    = types_.table().get( type ).declaration;
-    const Node_id variant = ast_.children( decl ).subspan( 1 )[static_cast<std::size_t>( ordinal->magnitude )];
+    const Node_id variant = ast_.variants( decl )[static_cast<std::size_t>( ordinal->magnitude )];
 
     const std::span<const Node_id> payload = ast_.children( variant );
 
+    // Each field's type through *this* instance: the declaration records `T`, which no local can
+    // hold. `type` is already substituted through the enclosing instantiation, so this is concrete.
     for( std::size_t i = 0; i < arguments.size() && i < payload.size(); ++i )
     {
-        const Operand value = converted( lower_expression( arguments[i] ), type_of( payload[i] ), span );
+        const Operand value = converted(
+            lower_expression( arguments[i] ),
+            keel::field_type( ast_, types_.table(), type, payload[i], types_.recorded() ),
+            span
+        );
 
         builder_.assign( builder_.field( place, payload[i] ), use( value ), span );
     }
@@ -1970,19 +1976,22 @@ lower( const Ast& ast, const Resolution& resolution, Types& types, Literals& lit
         }
     }
 
-    for( const Type_id struct_type_id : types.table().struct_types() )
+    for( const Type_id composite_type_id : types.table().composite_types() )
     {
-        const Type                 struct_type = types.table().get( struct_type_id );
-        const std::vector<Type_id> arguments { struct_type.arguments.begin(), struct_type.arguments.end() };
-        Instantiation              instance { .declaration = struct_type.declaration, .arguments = arguments };
+        const Type                 composite_type = types.table().get( composite_type_id );
+        const std::vector<Type_id> arguments { composite_type.arguments.begin(), composite_type.arguments.end() };
+        Instantiation              instance { .declaration = composite_type.declaration, .arguments = arguments };
 
-        if( !struct_type.declaration.is_valid() || !is_generic( ast, struct_type.declaration ) )
+        // An enum is skipped rather than walked: D30 refuses an owning payload, so it has no
+        // destructor to seed - and ast.members asserts on one.
+        if( !composite_type.declaration.is_valid() || !is_generic( ast, composite_type.declaration ) ||
+            ast.kind( composite_type.declaration ) == Node_kind::Enum_decl )
         {
             continue;
         }
 
         bool destructor_found = false;
-        for( const auto& decl : ast.members( struct_type.declaration ) )
+        for( const auto& decl : ast.members( composite_type.declaration ) )
         {
             if( ast.kind( decl ) == Node_kind::Destructor_decl )
             {

@@ -1,6 +1,7 @@
 Source_file                             8:1-35:1
   Enum_decl                             8:1-13:3    name=Shape
     <none>                              -
+    <none>                              -
     Variant_decl                        10:5-10:25  name=Circle
       Field_decl                        10:13-10:23 name=radius
         Named_type                      10:13-10:16 "f64"

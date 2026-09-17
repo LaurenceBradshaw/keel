@@ -1,0 +1,43 @@
+error: a `where` clause needs type parameters
+ --> sema/errors_enum_recovery.kl:2:20
+  |
+2 | enum Unconstrained where T : Copyable
+  |                    ^^^^^^^^^^^^^^^^^^ write them on the name, as in `enum Opt<T> where T : Copyable`
+
+error: expected an identifier, found `3`
+  --> sema/errors_enum_recovery.kl:10:2
+   |
+10 | {
+   |  ^
+
+error: expected `,`, found `3`
+  --> sema/errors_enum_recovery.kl:10:2
+   |
+10 | {
+   |  ^
+
+error: expected an identifier, found `,`
+  --> sema/errors_enum_recovery.kl:11:6
+   |
+11 |     3,
+   |      ^
+
+error: expected an identifier, found `3`
+  --> sema/errors_enum_recovery.kl:11:7
+   |
+11 |     3,
+   |       ^
+
+error: expected `,`, found `3`
+  --> sema/errors_enum_recovery.kl:11:7
+   |
+11 |     3,
+   |       ^
+
+error: expected an identifier, found `,`
+  --> sema/errors_enum_recovery.kl:12:6
+   |
+12 |     3,
+   |      ^
+
+7 errors generated

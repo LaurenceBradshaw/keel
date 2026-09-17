@@ -1,0 +1,98 @@
+// Which instance a variant path names. `Opt::Some( r )` is a value of *some* `Opt<T>`, and only the
+// context says which - so a payload is checked against that instance's field rather than against
+// the declaration's own `T`. The correct code at the top is as much of the test as the errors: a
+// line about it appearing in stderr is the failure this fixture exists to catch.
+//
+// Two structs rather than two numbers, because i32 widens to f64 and a payload checked against the
+// wrong one of those would still be accepted - which says nothing about whether substitution ran.
+
+struct Red
+{
+    i32 v;
+};
+
+struct Blue
+{
+    i32 v;
+};
+
+// Only ever a type argument, never written as an annotation - so `Opt<Green>` exists solely because
+// substituting `Nest<Green>`'s payload created it, and the name it interned under was decided there.
+struct Green
+{
+    i32 v;
+};
+
+enum Opt<T> where T : Copyable
+{
+    None,
+    Some( T v )
+};
+
+// Two parameters, so a payload that lines up by count can still be wrong by order.
+enum Pair<A, B> where A : Copyable where B : Copyable
+{
+    Both( A a, B b )
+};
+
+// A payload that is itself a generic instance, so the substitution has to reach inside one rather
+// than replace a bare `T`. `Opt<T>` becomes `Opt<Red>` here or the whole thing is unchecked.
+enum Nest<T> where T : Copyable
+{
+    Inner( Opt<T> o )
+};
+
+enum Plain
+{
+    One,
+    Two
+};
+
+// The pattern side, where the scrutinee names the instance and nothing has to be inferred. Reading
+// `v.v` is the assertion: a binding left at the declaration's `T` has no fields to reach.
+i32 unwrap( Opt<Red> s )
+{
+    switch( s )
+    {
+        case Opt::Some( v ):
+            return v.v;
+        case Opt::None:
+            return 0;
+    }
+}
+
+i32 main()
+{
+    Red  r = Red { 1 };
+    Blue b = Blue { 2 };
+
+    // Correct, both ways round: a payload-carrying variant and a payload-free one.
+    Opt<Red> some = Opt::Some( r );
+    Opt<Red> none = Opt::None;
+
+    Pair<Red, Blue> both = Pair::Both( r, b );
+
+    // The payload is a `Red` through this instance, so `b` is what is wrong - not `Opt<T>`.
+    Opt<Red> wrong_payload = Opt::Some( b );
+
+    // Count is right and order is not, which only a per-field substitution can tell apart.
+    Pair<Red, Blue> swapped = Pair::Both( b, r );
+
+    // Correct: the payload is an `Opt<Red>` through this instance, not the declared `Opt<T>`.
+    Nest<Red> nested = Nest::Inner( some );
+
+    // ...and the same substitution is what makes this wrong.
+    Opt<Blue> blue    = Opt::Some( b );
+    Nest<Red> mixed   = Nest::Inner( blue );
+
+    // The payload type here is reached only by substitution, so its rendering is this line's to check.
+    Nest<Green> unspelled = Nest::Inner( r );
+
+    // A different enum is a different type however it is expected to be read.
+    Opt<Red> foreign = Plain::One;
+
+    // Nothing here says which `Opt`, so there is no instance for the path to name.
+    auto loose = Opt::Some( r );
+
+    return unwrap( some );
+}

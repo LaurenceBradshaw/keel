@@ -986,16 +986,47 @@ Node_id Parser::parse_enum_decl()
 
     const Symbol_id name = expect_name();
 
+    const Span           generic_start = peek().span;
+    const bool           generic       = check( Token_kind::Less );
+    std::vector<Node_id> generics      = generic ? parse_type_params() : std::vector<Node_id> {};
+
+    Span generic_span = Span::merge( generic_start, previous().span );
+
+    while( check_keyword( Keyword::Where ) )
+    {
+        const Node_id clause = parse_where_clause();
+
+        // A clause with nothing to constrain. Reported here rather than left to sema, because
+        // without it the declaration would look generic to everything downstream.
+        if( !generic )
+        {
+            error_at(
+                ast_.span( clause ),
+                "a `where` clause needs type parameters",
+                "write them on the name, as in `enum Opt<T> where T : Copyable`"
+            );
+
+            continue;
+        }
+
+        generics.push_back( clause );
+
+        generic_span = Span::merge( generic_span, ast_.span( clause ) );
+    }
+
+    const Node_id type_params = generic ? ast_.add( Node_kind::Type_param_list, generic_span, 0, generics ) : Node_id {};
+
     // D30: the underlying type is spelled as in C++. parse_type() rather than a bare name, so
     // `enum E : Colour` is a *sema* error about the type rather than a parse error about a token.
     const Node_id underlying = match( Token_kind::Colon ) ? parse_type() : Node_id {};
 
     expect( Token_kind::L_brace );
 
-    // Child 0 is the underlying type and is invalid when unwritten, which is the convention
-    // Var_decl already uses for a missing annotation - so the variants start at 1 and a consumer
-    // never has to ask which kind the last child is.
-    std::vector<Node_id> members { underlying };
+    // Child 0 is the type parameter list and child 1 the underlying type, both invalid when
+    // unwritten - the convention Var_decl uses for a missing annotation. Fixed slots rather than
+    // optional ones so the variants always start at 2, which Ast::variants is the only reader of.
+    // Child 0 matches an aggregate's, so Ast::type_param_list needs no separate rule for an enum.
+    std::vector<Node_id> members { type_params, underlying };
     while( !check( Token_kind::R_brace ) && !at_end() )
     {
         const u32 before = pos_;
@@ -6590,9 +6621,10 @@ TEST_CASE( "parser_refuses_a_reference_field", "[parse]" )
     REQUIRE( p.has_errors() );
 }
 
-// PLAN D30. One `enum` keyword carrying `enum class` semantics. The underlying type is child 0 and
-// is invalid when unwritten - the convention Var_decl already uses for a missing annotation, so
-// the variants start at 1 and no consumer has to ask which kind the last child is.
+// PLAN D30. One `enum` keyword carrying `enum class` semantics. The type parameter list is child 0
+// and the underlying type child 1, each invalid when unwritten - the convention Var_decl already
+// uses for a missing annotation, so the variants start at 2 and no consumer has to ask which kind
+// the last child is.
 TEST_CASE( "parser_parses_an_enum", "[parse]" )
 {
     SECTION( "with an underlying type" )
@@ -6605,13 +6637,14 @@ TEST_CASE( "parser_parses_an_enum", "[parse]" )
         const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Enum_decl );
 
         REQUIRE( decl.is_valid() );
-        REQUIRE( p.children( decl ).size() == 4 ); // the type, then three variants
-        REQUIRE( p.kind( p.child( decl, 0 ) ) == Node_kind::Named_type );
-        REQUIRE( p.kind( p.child( decl, 1 ) ) == Node_kind::Variant_decl );
-        REQUIRE( p.kind( p.child( decl, 3 ) ) == Node_kind::Variant_decl );
+        REQUIRE( p.children( decl ).size() == 5 ); // the two fixed slots, then three variants
+        REQUIRE_FALSE( p.child( decl, 0 ).is_valid() );
+        REQUIRE( p.kind( p.child( decl, 1 ) ) == Node_kind::Named_type );
+        REQUIRE( p.kind( p.child( decl, 2 ) ) == Node_kind::Variant_decl );
+        REQUIRE( p.kind( p.child( decl, 4 ) ) == Node_kind::Variant_decl );
     }
 
-    SECTION( "without one, leaving child 0 invalid" )
+    SECTION( "without one, leaving both slots invalid" )
     {
         const Parsed p( "enum Colour { Red, Green };" );
 
@@ -6620,9 +6653,10 @@ TEST_CASE( "parser_parses_an_enum", "[parse]" )
 
         const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Enum_decl );
 
-        REQUIRE( p.children( decl ).size() == 3 );
+        REQUIRE( p.children( decl ).size() == 4 );
         REQUIRE_FALSE( p.child( decl, 0 ).is_valid() );
-        REQUIRE( p.kind( p.child( decl, 1 ) ) == Node_kind::Variant_decl );
+        REQUIRE_FALSE( p.child( decl, 1 ).is_valid() );
+        REQUIRE( p.kind( p.child( decl, 2 ) ) == Node_kind::Variant_decl );
     }
 
     SECTION( "and a trailing comma is allowed" )
@@ -6631,7 +6665,7 @@ TEST_CASE( "parser_parses_an_enum", "[parse]" )
 
         INFO( p.errors() );
         REQUIRE_FALSE( p.has_errors() );
-        REQUIRE( p.children( find_first( p.ast(), p.root(), Node_kind::Enum_decl ) ).size() == 3 );
+        REQUIRE( p.children( find_first( p.ast(), p.root(), Node_kind::Enum_decl ) ).size() == 4 );
     }
 
     // D30 keeps the spelling recognised so the diagnostic can name the fix, which is D22's pattern
@@ -6779,9 +6813,71 @@ TEST_CASE( "parser_parses_a_payload_variant", "[parse]" )
 
         const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Enum_decl );
 
-        REQUIRE( p.children( decl ).size() == 3 ); // the underlying type, then two variants
-        REQUIRE( p.children( p.child( decl, 1 ) ).empty() );
-        REQUIRE( p.children( p.child( decl, 2 ) ).size() == 1 );
+        REQUIRE( p.children( decl ).size() == 4 ); // the two fixed slots, then two variants
+        REQUIRE( p.children( p.child( decl, 2 ) ).empty() );
+        REQUIRE( p.children( p.child( decl, 3 ) ).size() == 1 );
+    }
+}
+
+// An enum takes type parameters the way an aggregate does, and in the same slot: child 0, so that
+// Ast::type_param_list answers for both with one predicate. The underlying type moves to child 1
+// and the variants to 2, which Ast::variants is the only reader of.
+TEST_CASE( "parser_parses_a_generic_enum", "[parse][generic][enum]" )
+{
+    SECTION( "the list is child 0 and the variants follow the underlying type" )
+    {
+        const Parsed p( "enum Opt<T> { None, Some( T v ) };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Enum_decl );
+
+        REQUIRE( p.kind( p.child( decl, 0 ) ) == Node_kind::Type_param_list );
+        REQUIRE( p.children( p.child( decl, 0 ) ).size() == 1 );
+        REQUIRE_FALSE( p.child( decl, 1 ).is_valid() ); // no underlying type written
+        REQUIRE( p.ast().variants( decl ).size() == 2 );
+    }
+
+    SECTION( "the list comes before the underlying type" )
+    {
+        const Parsed p( "enum Opt<T> : u8 { None, Some( T v ) };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Enum_decl );
+
+        REQUIRE( p.kind( p.child( decl, 0 ) ) == Node_kind::Type_param_list );
+        REQUIRE( p.kind( p.child( decl, 1 ) ) == Node_kind::Named_type );
+        REQUIRE( p.ast().variants( decl ).size() == 2 );
+    }
+
+    SECTION( "a where clause joins the list" )
+    {
+        const Parsed p( "enum Opt<T> where T : Copyable { None, Some( T v ) };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Enum_decl );
+
+        REQUIRE( p.children( p.child( decl, 0 ) ).size() == 2 );
+        REQUIRE( p.kind( p.child( p.child( decl, 0 ), 1 ) ) == Node_kind::Where_clause );
+        REQUIRE( p.ast().variants( decl ).size() == 2 );
+    }
+
+    SECTION( "a plain enum leaves the slot invalid" )
+    {
+        const Parsed p( "enum Colour { Red, Green };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Enum_decl );
+
+        REQUIRE_FALSE( p.child( decl, 0 ).is_valid() );
+        REQUIRE( p.ast().variants( decl ).size() == 2 );
     }
 }
 
