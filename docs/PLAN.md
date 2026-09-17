@@ -790,8 +790,8 @@ milestone is complete until its acceptance program is a passing golden test.
 | **M4** | Move checking, `ref`/`out` bindings (D32), the non-escaping rule, drop flags. Enforcement of D2. | Use-after-move is a compile error with a good message; a conditionally-moved value drops correctly. | Ownership, dataflow analysis |
 | **M5** | `enum` (D30) payload-free first, then payloads (D7). `switch` with destructuring, `default`, stacked labels and exhaustiveness. Range labels (D34). | The `Shape`/`area` sample. Non-exhaustive `switch` is a compile error naming the missing variant. | Sum types, tagged variants |
 | **M5.5** | ~~Methods on `struct` and `class`~~ **done**. ~~`unsafe` blocks (D35)~~ **done**. ~~`extern` (D36)~~ **done**. ~~`alloc<T>`/`free` and `kl_rt` (D37)~~ **done**. | A linked list whose nodes are allocated one at a time, walked, and freed — valgrind-clean. **Amended**: this was `Buffer` with `push`, which needs the many-item pointer `[*]T` that D27 leaves out of v0, so it was never reachable at M5.5. Option (b) keeps the question the acceptance was asked to answer — can the language express a heap data structure and release it — and defers only the growable-array half to M7. | Whether the language can express a real data structure |
-| **M6** | Generics (D39's spelling, D11's checking), bounds (D40), the monomorphisation **worklist** and D42's termination rule, name mangling with type args. **Plus two KIR passes carried from M5.5**: empty-block threading, and constant-branch folding with the `while( true )` → `for( ; ; )` warning that goes with it. | `max<i32>` and `max<f64>` both work; a generic `Box<T>` with a destructor drops correctly. | Instantiation, mangling |
-| **M6.5** | The debts that are neither M6's feature nor M7's: D41's mixed-signedness comparison, `cast`/`wrap` on a type parameter, ~~the mangling rework (length-prefixing, the `ref`/pointer collision, `kl__id__T__i32`)~~ **done in M6's slice 2b** — 2b forced it, and the `ref`/pointer collision is unreachable until overloading lands, and constant checking inside a generic body. | `u64` and `i64` compare correctly at every boundary value; `cast<i32>( a )` works for an `Integral` `T`; two generics whose mangled names collide today do not. | Paying debts before they compound |
+| **M6** | Generics (D39's spelling, D11's checking), bounds (D40), the monomorphisation **worklist** and D42's termination rule — for functions *and* aggregates — name mangling with type args, and the §12 decisions M6 is the deadline for. | `max<i32>` and `max<f64>` both work; a generic `Box<T>` with a destructor drops correctly. | Instantiation, mangling |
+| **M6.5** | The debts that are neither M6's feature nor M7's: D41's mixed-signedness comparison, `cast`/`wrap` on a type parameter, **the two KIR passes carried from M5.5** — empty-block threading, and constant-branch folding with the `while( true )` → `for( ; ; )` warning that goes with it — ~~the mangling rework (length-prefixing, the `ref`/pointer collision, `kl__id__T__i32`)~~ **done in M6's slice 2b** — 2b forced it, and the `ref`/pointer collision is unreachable until overloading lands, and constant checking inside a generic body. | `u64` and `i64` compare correctly at every boundary value; `cast<i32>( a )` works for an `Integral` `T`; `while( true ) { return 7; }` needs no `return` after it, and `for( ; ; )` lowers to two blocks rather than three. | Paying debts before they compound |
 | **M7** | Modules (`import`), multi-file compilation, then begin `Vector` and `String` **in Keel**. | A two-module program. Then a `Vector<i32>` that grows and frees. | **Whether the design actually works** |
 
 **M3 is where this stops being a toy** — it is the first thing C cannot do for
@@ -3037,7 +3037,8 @@ whose entire purpose is to refuse it, and it is the same family as 1f's finding:
 checker's instantiation list is a seed, not the answer.** The ownership rework 2b deferred has
 to answer at the instance, wherever the instance is created, rather than at the annotation.
 
-**A field that grows its own type argument hangs the compiler.** `Box<T> { Box<Box<T>>* next; }`
+**A field that grows its own type argument hangs the compiler.** *(Fixed — see "D42 for
+aggregates" below.)* `Box<T> { Box<Box<T>>* next; }`
 checks clean and never finishes emitting. `contains_itself` does not catch it because the cycle
 is not by-value, and D42's rule is enforced for functions — `f<Box<T>>` is diagnosed — with no
 equivalent for aggregates. The loop that does not terminate is the *enumeration* in
@@ -3045,14 +3046,16 @@ equivalent for aggregates. The loop that does not terminate is the *enumeration*
 grows, which is what discovers a `Box<i32>` reached only through a field, and here the growth
 never stops. D42 belongs on the aggregate side too, and the diagnostic already exists to copy.
 
-**A closed instantiation named before its generic is declared crashes the compiler.** Source
+**A closed instantiation named before its generic is declared crashes the compiler.** *(Fixed —
+see "The forward reference, and which fix actually took" below.)* Source
 order alone decides it: the same file with the generic moved above its use is clean. Two layers,
 and both are worth fixing — `is_owning_type` asks `is_parameter` before its own validity guard,
 and `instantiation_owns` is reached from field declaration for a type whose fields are not yet
 recorded, so it is handed an invalid `Type_id`. A forward reference to a *non*-generic struct is
 fine, which is what makes this specific rather than a missing pass.
 
-**No golden covers a generic-aggregate diagnostic at all.** `errors_generics.kl` declares no
+**No golden covers a generic-aggregate diagnostic at all.** *(Fixed — see "A golden for the
+generic-aggregate diagnostics" below.)* `errors_generics.kl` declares no
 generic aggregate, and the owning-instantiation refusal exists only as a unit test — so every
 finding above needs a fixture as well as a fix, and the absence is why four of the five survived
 2b's own testing.
@@ -3196,9 +3199,112 @@ generic is declared now compiles — both causes are gone, `is_owning_type`'s gu
 `instantiation_owns` being reached with an unrecorded type, the latter because the function no
 longer exists. It has no regression test, which is the next thing it needs.
 
-And the `Bad<Box<T>>` family has changed character: it no longer hangs, it asserts in `Ast::aux` on
-an invalid node, early. Better than a hang and still a crash on a program `--check` accepts, so
-D42's aggregate rule is still owed — the diagnostic simply arrives as an abort instead of never.
+### D42 for aggregates — done
+
+The `Bad<Box<T>>` family is closed. The hang was never in a recursion: `emitted_struct_order`'s
+driver loop re-reads `struct_types()` on every step *because* visiting a type can intern another,
+which is what discovers a `Box<i32>` reached only through a field — and `Bad<T>` holding a
+`Bad<Box<T>>*` makes that growth unbounded. A gdb interrupt lands in the `std::sort` inside
+`struct_types()`, which is a symptom of an unbounded set rather than a bad comparator.
+
+**The rule needed no analysis written, only edges recorded.** D42's graph is over *declarations*
+with arguments spelled in the caller's own parameters; it was never about calls in particular. A
+field naming another generic is the same edge, so `record_generic_uses` walks a recorded field type
+— through pointers, into struct instances, and into their type arguments — and pushes a
+`Generic_call` for each generic instance it finds. `wraps_a_parameter`, `expands_forever` and the
+diagnostic are untouched. Recorded into the *one* graph rather than a second, so a cycle running
+through both an aggregate and a function is found the way a cycle through two functions is.
+
+`Bad<Box<T>>` is two facts — `Bad` names `Bad` at `Box<T>`, and `Bad` names `Box` at `T` — so the
+arguments are walked as well as the type. Only the inner mention closes the cycle in
+`Box<A<Box<T>>>`, which is the section that pins it.
+
+**One mistake, one message.** The by-value form is infinite twice over — no size, and no finite
+instance set — and both rules fired, so `order_structs` now seeds `expanding_` with the cycle it
+reported. Having no size is the more basic half and the one the author fixes first.
+
+**The guard on the field pass is not observable, and stays anyway.** A non-generic aggregate cannot
+write a type argument that mentions a parameter, so skipping it changes no diagnostic; deleting it
+kills no test. It keeps `generic_calls_`'s stated invariant — arguments in the caller's parameters
+— true by construction, which is what the lowering worklist's `is_closed` filter leans on. The
+test section is named for what it actually pins.
+
+**Still open in the same family:** the shape in a *method signature* rather than a field
+(`Bad<Box<T>>* grow()`) is recorded by nobody. It compiles today only because `emitted_struct_order`
+walks fields and not signatures, so it is latent rather than broken. The second call site for
+`record_generic_uses` is `declare_signatures_member_functions`, whose loop has the same two ends in
+hand.
+
+### A golden for the generic-aggregate diagnostics
+
+`sema/errors_generic_aggregates.kl`, thirteen messages over one file. Its own fixture rather than
+more declarations in `errors_generics.kl`, which scopes itself to a generic's signature and to what
+a call site names: these mistakes are made in a type *annotation*, in a field, or in the shape of
+the declaration, and a call reaches none of the three.
+
+Two of the messages have call-site twins that were already covered and are nonetheless separate
+emit sites — a bare `Box` in an annotation, and `Plain<i32>` on an aggregate that takes no type
+arguments, whose note (`write `Plain` on its own`) the callee form has no way to give. The enum
+form, `Suit<i32>`, is a third branch with no note at all. The rest are the annotation span on the
+shared `resolve_type_arguments`, an unresolved name in either half, the rendering of an
+instantiated name in an ordinary type error, the two layout cycles, and D42's growing argument.
+
+**The clean declarations are the point, not padding.** `Node<T>* next` and a `Holder<T>` holding a
+`Box<i32>` sit in the same file and produce nothing; because the runner diffs stderr *whole*, they
+assert that the rules stop without anyone writing an assertion. The same mechanism is what pins
+one-mistake-one-message on the by-value `Deep<Box<T>>`: in the unit test that is a `== npos` someone
+has to think to write, and here a second message simply changes the file.
+
+Four mutations, each backed out of `type_checker.cpp` alone and each caught by this fixture with the
+unit tests set aside: dropping the field-pass edge, dropping the `expanding_` seed, dropping the
+pointer recursion, and dropping the argument recursion. The last survived the first draft — nothing
+in it closed a cycle through a type *argument* — which is what the `Ring<T>` declaration was added
+for. Written by hand rather than with `--update`, since a new fixture has nothing to snapshot and
+`--update` would have rewritten all 150 others to add three files.
+
+### The forward reference, and which fix actually took
+
+The crash is gone, and not by the fix aimed at it. Two layers were recorded and they had opposite
+fates.
+
+`is_owning_type`'s guard order was corrected deliberately — `ace2fdf` asks `is_parameter` before
+the validity check, `81e8789` does not. It is also **inert**: putting the old order back changes
+nothing, and the whole suite passes with it. `Type_table::is_parameter` asserts on an invalid id,
+so that survival is proof that nothing reaches `is_owning_type` with one. The comment there used to
+give the forward reference as its reason; it now says only that the guard is insurance, which is
+what it is. It stays, because the cost is one comparison and the failure it prevents is an abort.
+
+`instantiation_owns` was never fixed — its *call site* was deleted. It appears in no commit at all,
+having lived only inside 81e8789's working tree, and the per-instance ownership answer is now
+`instance_owns`, whose only non-test caller is the lowerer. The checker's field pass asks no
+ownership question at all any more. That is what removed the crash, and it was a side effect of
+moving ownership to lowering rather than anything aimed here.
+
+The successor is also written the way the original was not: `owns_through_fields` guards validity
+before `get`, so putting the call back into the field pass does **not** crash. The original bug needs
+both layers restored — the call site, and a question asked ahead of the validity check — and with
+both back the assert reproduces exactly.
+
+**What that leaves at risk is not the old assert.** Nothing stops a later pass from asking a
+fields-dependent question during field declaration again, which is what the old call did; and note
+that before it crashed it was also getting a *wrong* answer, because the fields it needed were not
+recorded yet. So the test had to be a program rather than an assertion about a guard.
+
+`codegen/generics_forward_reference.kl` declares every generic at the bottom and names them all
+above: a field, a two-level field (`Box<Box<i32>>`), a local, a parameter, a return type, and an
+instance whose destructor has to be found. It counts its own drops, because a forward reference
+that emits a struct with no destructor call still compiles, links and exits 0.
+
+No fixture forward-referenced a generic before it — the apparent hits in `generics_aggregates.kl`
+and `generics_destructors.kl` are all in comments. Under the faithful two-layer reproduction the
+only goldens that fail are this one and `errors_generic_aggregates.kl`, both written the same day.
+
+**And a driver bug fell out of writing it.** §11's emitter entry has always said `keelc` writes the
+`.c` beside the executable; it wrote it beside the *input*, so building a fixture in place left a
+stray `.kl.c` in the source tree — which the golden suite's own stray-file check then reported as a
+failure. It now goes where `-o` points, keeping the input's name so `foo.kl.c` still says what it
+came from. With no `-o` the executable is already the input's stem in the working directory, so both
+artifacts land there together.
 
 ### Debts to pay along the way
 

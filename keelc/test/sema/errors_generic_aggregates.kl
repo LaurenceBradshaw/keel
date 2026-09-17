@@ -1,0 +1,114 @@
+// The aggregate half of the generic surface. errors_generics.kl covers a generic's signature and
+// the arguments a call site names; the mistakes here are made in a type *annotation*, in a field,
+// or in the shape of the declaration itself - three places a call never reaches.
+
+struct Box<T> where T : Copyable
+{
+    T v;
+};
+
+struct Counted<T> where T : Integral
+{
+    T n;
+};
+
+struct Plain
+{
+    i32 v;
+};
+
+enum Suit { Clubs, Hearts };
+
+// A pointer to itself is finite, and is how a list is written - so this one is silent.
+class Node<T> where T : Copyable
+{
+    Node<T>* next;
+};
+
+// And a generic holding a *concrete* instantiation of another is ordinary containment:
+// `Holder<i32>` needs `Box<i32>`, and `Box<i32>` needs nothing back.
+struct Holder<T> where T : Copyable
+{
+    Box<i32> b;
+};
+
+// The mirror of a generic call written without its type arguments. Inference is a decision of its
+// own and is not taken here, so the message names the explicit form rather than guessing.
+void written_bare()
+{
+    Box b;
+}
+
+// Two ways to be "not a generic", and they are not the same message: an aggregate that takes no
+// type arguments can be told what to write instead, and an enum cannot.
+void not_a_generic()
+{
+    Plain<i32> p;
+    Suit<i32>  s;
+}
+
+// The count and the bounds are checked by the same helper a call site uses, but the caret lands on
+// the annotation's argument list rather than on a callee.
+void wrong_arguments()
+{
+    Box<i32, f64> many;
+    Counted<f64>  unbounded;
+}
+
+// An unresolved name in either half. Reported once, and the aggregate is not interned as
+// `Box<<error>>`, which would spell nothing and which every later diagnostic would name.
+void unknown_names()
+{
+    Nope<i32> base;
+    Box<Nope> argument;
+}
+
+// Two instantiations are two types, and the diagnostic has to say which - so this is also what
+// pins an instantiated name rendering at all.
+void two_instantiations()
+{
+    Box<i32> a;
+    Box<f64> b;
+
+    a = b;
+}
+
+// A field is read at the type argument, never at the parameter: `T` is true of the template and of
+// no value anyone holds, so naming it here would name something the author never wrote.
+void wrong_field_type()
+{
+    Box<i32> b;
+
+    b.v = true;
+}
+
+// A by-value member of its own type has no size. One mistake, so one message: the growing argument
+// below is the more basic half of the same fault and stays quiet about it.
+struct Odd<T> where T : Copyable
+{
+    Odd<T> inner;
+};
+
+struct Deep<T> where T : Copyable
+{
+    Deep<Box<T>> inner;
+};
+
+// The other half. A pointer hides the cycle from the size rule entirely, and this still names an
+// instance set that never finishes - each round builds a type argument out of the last.
+class Grows<T> where T : Copyable
+{
+    Grows<Box<T>>* next;
+};
+
+// And the cycle can close through a type *argument* rather than through the type named: `Ring`
+// never names `Ring` - it names `Box`, whose argument does.
+struct Ring<T> where T : Copyable
+{
+    Box<Ring<Box<T>>>* link;
+};
+
+i32 main()
+{
+    return 0;
+}

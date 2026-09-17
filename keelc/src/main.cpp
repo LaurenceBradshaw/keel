@@ -372,9 +372,10 @@ int main( int argc, char** argv )
                                                  ? std::filesystem::path( args["output"].as<std::string>() )
                                                  : std::filesystem::path( args["input"].as<std::string>() ).stem();
 
-    // Named after the input rather than the output - `foo.kl.c` says what it came from, and is the
-    // shape .gitignore already expects.
-    const std::filesystem::path generated_path = args["input"].as<std::string>() + ".c";
+    // Named after the input but written beside the executable - `foo.kl.c` says what it came from,
+    // and both artifacts land wherever `-o` points rather than in the source tree.
+    const std::filesystem::path generated_path =
+        executable.parent_path() / ( std::filesystem::path( args["input"].as<std::string>() ).filename().string() + ".c" );
 
     {
         std::ofstream out( generated_path );

@@ -691,6 +691,7 @@ private:
 
     // D11's other termination question. See check_generic_recursion.
     void check_generic_recursion();
+    void record_generic_uses( Node_id from, Type_id type, Span at );
     bool expands_forever( Node_id generic, std::vector<Node_id>& path, std::optional<Span> grown_at );
     bool wraps_a_parameter( Type_id argument ) const;
 
@@ -896,7 +897,14 @@ void Checker::declare_signatures_field_decls()
                 );
             }
 
-            record( field, type_of_annotation( ast_.child( field, 0 ) ) );
+            const Type_id field_type = type_of_annotation( ast_.child( field, 0 ) );
+
+            record( field, field_type );
+
+            if( is_generic( ast_, child ) )
+            {
+                record_generic_uses( child, field_type, ast_.span( field ) );
+            }
         }
     }
 }
@@ -1338,6 +1346,12 @@ void Checker::order_structs()
         // Every aggregate on the cycle is reported by that one message. Without marking them all,
         // `A -> B -> A` is found again from B and reported twice for one mistake.
         cycle_reported.insert( cycle_reported.end(), path.begin(), path.end() );
+
+        // And D42 stays quiet about it: having no size is the more basic half of one mistake.
+        for( const Node_id node : path )
+        {
+            expanding_.insert( node.v );
+        }
     }
 }
 
@@ -1428,9 +1442,9 @@ bool Checker::contains_itself( Node_id decl, std::vector<Node_id>& path )
 
 bool Checker::is_owning_type( Type_id type ) const
 {
-    // Validity first, because is_parameter asserts on an invalid id - a forward reference to a
-    // generic reaches here before the type exists. The parameter question still comes before the
-    // struct one: a `T` is not a struct, and answering from its bounds is the whole point.
+    // Validity first: is_parameter asserts on an invalid id. Nothing reaches here with one today.
+    // The parameter question still comes before the struct one: a `T` is not a struct, and
+    // answering from its bounds is the whole point.
     if( !type.is_valid() || table_.is_error( type ) )
     {
         return false;
@@ -5769,6 +5783,53 @@ void Checker::check_generic_recursion()
         path.push_back( edge.from );
 
         expands_forever( edge.from, path, std::nullopt );
+    }
+}
+
+// A field naming another generic is the same edge a call is: `Bad<T>` holding a `Bad<Box<T>>*` is
+// `Bad` reaching `Bad` at a bigger argument, and D42's rule was never about calls in particular.
+// Recorded into the one graph rather than a second, so a cycle running through both an aggregate
+// and a function is found the same way a cycle through two functions is.
+//
+// `Bad<Box<T>>` is two facts - `Bad` names `Bad` at `Box<T>`, and `Bad` names `Box` at `T` - so the
+// arguments are walked as well as the type itself. The walk needs no visited-set: an interned type
+// is a finite tree, the same one mentions_parameter descends.
+void Checker::record_generic_uses( Node_id from, Type_id type, Span at )
+{
+    if( !type.is_valid() )
+    {
+        return;
+    }
+
+    const Type& described = table_.get( type );
+
+    switch( described.kind )
+    {
+    // A pointer is exactly what stops contains_itself seeing this, and D42 asks about instances
+    // rather than layout - so the indirection is walked straight through.
+    case Type_kind::Pointer:
+        record_generic_uses( from, described.element, at );
+        break;
+
+    case Type_kind::Struct:
+        if( described.declaration.is_valid() && is_generic( ast_, described.declaration ) )
+        {
+            const std::vector<Type_id> arguments { described.arguments.begin(), described.arguments.end() };
+
+            generic_calls_.push_back(
+                Generic_call { .from = from, .to = described.declaration, .arguments = arguments, .at = at }
+            );
+
+            for( const Type_id argument : described.arguments )
+            {
+                record_generic_uses( from, argument, at );
+            }
+        }
+        break;
+
+    // A bare `T` forwards rather than builds, and nothing else can hold a type argument at all.
+    default:
+        break;
     }
 }
 
@@ -13081,6 +13142,9 @@ TEST_CASE( "type_checker_refuses_a_generic_aggregate_that_contains_itself", "[se
 
         INFO( p.rendered() );
         REQUIRE( p.rendered().find( "`Odd` contains itself" ) != std::string::npos );
+
+        // And only that one: two messages for one mistake sends the author round twice.
+        REQUIRE( p.rendered().find( "bigger type argument" ) == std::string::npos );
     }
 
     SECTION( "a pointer to itself is finite, and is how a list is written" )
@@ -13098,6 +13162,98 @@ TEST_CASE( "type_checker_refuses_a_generic_aggregate_that_contains_itself", "[se
         const Typed p( "struct Box<T> where T : Copyable { T v; };\n"
                        "struct Holder<T> where T : Copyable { Box<i32> b; };\n"
                        "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// The other half of the same question. Size is about by-value members, so a pointer hides the cycle
+// from contains_itself entirely - and `Bad<T>` holding a `Bad<Box<T>>*` still names an instance set
+// that never finishes. D42 is what refuses it, over the field edges record_generic_uses records.
+TEST_CASE( "type_checker_refuses_a_generic_aggregate_that_grows_behind_a_pointer", "[sema][generic][aggregate]" )
+{
+    constexpr std::string_view box = "struct Box<T> where T : Copyable { T v; };\n";
+
+    SECTION( "a field growing its own parameter is refused" )
+    {
+        // Accepted until the field edges existed, and then emitted forever: the struct order
+        // interns `Bad<Box<i32>>` to walk it, which interns `Bad<Box<Box<i32>>>`, without end.
+        const Typed p(
+            std::string( box ) + "class Bad<T> where T : Copyable { Bad<Box<T>>* next; };\n"
+                                 "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE(
+            p.rendered().find( "`Bad` is instantiated with a bigger type argument each time round" ) != std::string::npos
+        );
+    }
+
+    SECTION( "the cycle may run through a second aggregate" )
+    {
+        // Reported at the growing field rather than at the one that closes the cycle - `B` holding
+        // an `A<U>*` is the innocent-looking half, and naming it would point at the wrong line.
+        const Typed p(
+            std::string( box ) + "class A<T> where T : Copyable { B<Box<T>>* b; };\n"
+                                 "class B<U> where U : Copyable { A<U>* a; };\n"
+                                 "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "bigger type argument each time round" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`A` to `B` to `A`" ) != std::string::npos );
+    }
+
+    SECTION( "the cycle may close through a type argument rather than the type itself" )
+    {
+        // `Box<A<Box<T>>>` names `Box` at the top and `A` one level in. Only the inner mention
+        // closes a cycle, so the arguments have to be walked and not just the type they belong to.
+        const Typed p(
+            std::string( box ) + "class A<T> where T : Copyable { Box<A<Box<T>>>* b; };\n"
+                                 "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "`A` is instantiated with a bigger type argument each time round" ) != std::string::npos );
+    }
+
+    SECTION( "forwarding the parameter round the cycle is finite" )
+    {
+        // The rule is about growth, not about recursion: these two need `A<i32>` and `B<i32>` and
+        // nothing further, however long the cycle runs.
+        const Typed p( "class A<T> where T : Copyable { B<T>* b; };\n"
+                       "class B<U> where U : Copyable { A<U>* a; };\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "building one level without a cycle is fine" )
+    {
+        // `Vector<T>` storing a `T*` is the first thing a real container writes, and `Box<T*>`
+        // needs exactly two instances rather than unboundedly many.
+        const Typed p(
+            std::string( box ) + "class Vector<T> where T : Copyable { T* data; };\n"
+                                 "class Wrapper<T> where T : Copyable { Box<T*>* b; };\n"
+                                 "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a plain aggregate may hold an instance of a generic one" )
+    {
+        // The field pass skips a non-generic aggregate, because `Box<i32>` there is already an
+        // instance rather than a step towards one. Nothing observable turns on it - a declaration
+        // with no parameters cannot write an argument that mentions one - so the guard keeps the
+        // graph's invariant true by construction, and this section only pins the accepting half.
+        const Typed p(
+            std::string( box ) + "struct Holder { Box<i32>* b; };\n"
+                                 "i32 main() { return 0; }"
+        );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );

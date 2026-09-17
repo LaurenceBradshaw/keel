@@ -1,0 +1,122 @@
+// Every generic here is named before it is declared, and the declarations are all at the bottom.
+// Source order used to decide whether this compiled at all: the checker asked an ownership question
+// while declaring fields, and for a forward reference the answer needed fields nobody had recorded
+// yet. The question has since moved to lowering, which runs after everything is recorded - but
+// nothing stopped a later pass from asking a fields-dependent question during declaration again,
+// and this fixture is what would notice.
+//
+// Run rather than only compiled, and it counts its own drops: a forward reference that emits a
+// struct with no destructor call still compiles, links and exits 0.
+
+i32 destroyed = 0;
+
+// A field of a plain aggregate. The shape the crash was first found with.
+struct Holder
+{
+    Box<i32> b;
+};
+
+// The type argument can itself be an instantiation, so the annotation is two levels deep before
+// either level exists.
+struct Nested
+{
+    Box<Box<i32>> b;
+};
+
+// A local, a parameter and a return type, each naming an instance that is not declared yet.
+i32 in_a_local()
+{
+    Box<i32> b;
+
+    b.v = 3;
+
+    return b.v;
+}
+
+i32 through_a_parameter( Box<i32> b )
+{
+    return b.v;
+}
+
+Box<i32> as_a_return( i32 n )
+{
+    Box<i32> b;
+
+    b.v = n;
+
+    return b;
+}
+
+// The half that used to crash: an instance whose ownership has to be answered. Declared below with
+// a destructor of its own, so this scope has a drop to elaborate.
+void drops_at_scope_exit()
+{
+    Counted<i32> c;
+
+    c.v = 1;
+}
+
+i32 main()
+{
+    Holder h;
+
+    h.b.v = 7;
+
+    if( h.b.v != 7 )
+    {
+        return 1;
+    }
+
+    Nested n;
+
+    n.b.v.v = 9;
+
+    if( n.b.v.v != 9 )
+    {
+        return 2;
+    }
+
+    if( in_a_local() != 3 )
+    {
+        return 3;
+    }
+
+    Box<i32> passed;
+
+    passed.v = 5;
+
+    if( through_a_parameter( passed ) != 5 )
+    {
+        return 4;
+    }
+
+    if( as_a_return( 11 ).v != 11 )
+    {
+        return 5;
+    }
+
+    drops_at_scope_exit();
+
+    if( destroyed != 1 )
+    {
+        return 6;
+    }
+
+    return 42;
+}
+
+// And only here are they declared.
+struct Box<T> where T : Copyable
+{
+    T v;
+};
+
+class Counted<T> where T : Copyable
+{
+    T v;
+
+    ~Counted()
+    {
+        destroyed = destroyed + 1;
+    }
+};

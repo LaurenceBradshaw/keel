@@ -1,0 +1,79 @@
+error: `Box` is generic, so its type arguments must be written
+  --> sema/errors_generic_aggregates.kl:39:5
+   |
+39 |     Box b;
+   |     ^^^ as in `Box<i32>`
+
+error: `Plain` is not a generic
+  --> sema/errors_generic_aggregates.kl:46:5
+   |
+46 |     Plain<i32> p;
+   |     ^^^^^^^^^^ it takes no type arguments, so write `Plain` on its own
+
+error: `Suit` is not a generic
+  --> sema/errors_generic_aggregates.kl:47:5
+   |
+47 |     Suit<i32>  s;
+   |     ^^^^^^^^^
+
+error: `Box` takes 1 type argument, but 2 were given
+  --> sema/errors_generic_aggregates.kl:54:8
+   |
+54 |     Box<i32, f64> many;
+   |        ^^^^^^^^^^
+
+error: `f64` is not `Integral`, and `Counted` requires it of `T`
+  --> sema/errors_generic_aggregates.kl:55:13
+   |
+55 |     Counted<f64>  unbounded;
+   |             ^^^ it has to be an integer
+
+error: unknown type `Nope`
+  --> sema/errors_generic_aggregates.kl:62:5
+   |
+62 |     Nope<i32> base;
+   |     ^^^^^^^^^
+
+error: unknown type `Nope`
+  --> sema/errors_generic_aggregates.kl:63:9
+   |
+63 |     Box<Nope> argument;
+   |         ^^^^
+
+error: expected `Box<i32>`, but got `Box<f64>`
+  --> sema/errors_generic_aggregates.kl:73:9
+   |
+73 |     a = b;
+   |         ^
+
+error: expected `i32`, but got `bool`
+  --> sema/errors_generic_aggregates.kl:82:11
+   |
+82 |     b.v = true;
+   |           ^^^^
+
+error: `Odd` contains itself, so it has no size
+  --> sema/errors_generic_aggregates.kl:87:1
+   |
+87 | struct Odd<T> where T : Copyable
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Odd -> Odd
+
+error: `Deep` contains itself, so it has no size
+  --> sema/errors_generic_aggregates.kl:92:1
+   |
+92 | struct Deep<T> where T : Copyable
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Deep -> Deep
+
+error: `Grows` is instantiated with a bigger type argument each time round
+   --> sema/errors_generic_aggregates.kl:101:5
+    |
+101 |     Grows<Box<T>>* next;
+    |     ^^^^^^^^^^^^^^^^^^^^ `Grows` to `Grows`, and each round builds a type out of the last - so no set of instances ever finishes; forward the parameter itself, or take the built type as a second parameter
+
+error: `Ring` is instantiated with a bigger type argument each time round
+   --> sema/errors_generic_aggregates.kl:108:5
+    |
+108 |     Box<Ring<Box<T>>>* link;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^ `Ring` to `Ring`, and each round builds a type out of the last - so no set of instances ever finishes; forward the parameter itself, or take the built type as a second parameter
+
+13 errors generated

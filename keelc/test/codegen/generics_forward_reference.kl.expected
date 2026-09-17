@@ -1,0 +1,188 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Box__I3i32E;
+struct kl__Holder;
+struct kl__Box__I3BoxI3i32EE;
+struct kl__Nested;
+struct kl__Counted__I3i32E;
+
+struct kl__Box__I3i32E
+{
+    int32_t kl_v_174;
+};
+
+struct kl__Holder
+{
+    struct kl__Box__I3i32E kl_b_7;
+};
+
+struct kl__Box__I3BoxI3i32EE
+{
+    struct kl__Box__I3i32E kl_v_174;
+};
+
+struct kl__Nested
+{
+    struct kl__Box__I3BoxI3i32EE kl_b_16;
+};
+
+struct kl__Counted__I3i32E
+{
+    int32_t kl_v_181;
+};
+
+int32_t kl_destroyed_2 = 0;
+
+int32_t kl__in_a_local__( void );
+int32_t kl__through_a_parameter__3BoxI3i32E( struct kl__Box__I3i32E );
+struct kl__Box__I3i32E kl__as_a_return__3i32( int32_t );
+void kl__drops_at_scope_exit__( void );
+int32_t kl__main__( void );
+void kl__Counted__I3i32E__dtor( struct kl__Counted__I3i32E* );
+
+int32_t kl__in_a_local__( void )
+{
+    int32_t kl_t0;
+    struct kl__Box__I3i32E kl_b_1;
+#line 31 "codegen/generics_forward_reference.kl"
+    kl_b_1.kl_v_174 = 3;
+#line 33 "codegen/generics_forward_reference.kl"
+    kl_t0 = kl_b_1.kl_v_174;
+    return kl_t0;
+}
+
+int32_t kl__through_a_parameter__3BoxI3i32E( struct kl__Box__I3i32E kl_b_1 )
+{
+    int32_t kl_t0;
+#line 38 "codegen/generics_forward_reference.kl"
+    kl_t0 = kl_b_1.kl_v_174;
+    return kl_t0;
+}
+
+struct kl__Box__I3i32E kl__as_a_return__3i32( int32_t kl_n_1 )
+{
+    struct kl__Box__I3i32E kl_t0;
+    struct kl__Box__I3i32E kl_b_2;
+#line 45 "codegen/generics_forward_reference.kl"
+    kl_b_2.kl_v_174 = kl_n_1;
+#line 47 "codegen/generics_forward_reference.kl"
+    kl_t0 = kl_b_2;
+    return kl_t0;
+}
+
+void kl__drops_at_scope_exit__( void )
+{
+    struct kl__Counted__I3i32E kl_c_1;
+#line 56 "codegen/generics_forward_reference.kl"
+    kl_c_1.kl_v_181 = 1;
+#line 53 "codegen/generics_forward_reference.kl"
+    kl__Counted__I3i32E__dtor( &kl_c_1 );
+    return;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__Holder kl_h_1;
+    bool kl_t2;
+    struct kl__Nested kl_n_3;
+    bool kl_t4;
+    int32_t kl_t5;
+    bool kl_t6;
+    struct kl__Box__I3i32E kl_passed_7;
+    int32_t kl_t8;
+    bool kl_t9;
+    struct kl__Box__I3i32E kl_t10;
+    bool kl_t11;
+    bool kl_t13;
+#line 63 "codegen/generics_forward_reference.kl"
+    kl_h_1.kl_b_7.kl_v_174 = 7;
+#line 65 "codegen/generics_forward_reference.kl"
+    kl_t2 = kl_h_1.kl_b_7.kl_v_174 != 7;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 67 "codegen/generics_forward_reference.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+    goto bb3;
+    bb3:
+#line 72 "codegen/generics_forward_reference.kl"
+    kl_n_3.kl_b_16.kl_v_174.kl_v_174 = 9;
+#line 74 "codegen/generics_forward_reference.kl"
+    kl_t4 = kl_n_3.kl_b_16.kl_v_174.kl_v_174 != 9;
+    if ( kl_t4 ) goto bb4; else goto bb5;
+    bb4:
+#line 76 "codegen/generics_forward_reference.kl"
+    kl_t0 = 2;
+    return kl_t0;
+    bb5:
+    goto bb6;
+    bb6:
+#line 79 "codegen/generics_forward_reference.kl"
+    kl_t5 = kl__in_a_local__(  );
+    kl_t6 = kl_t5 != 3;
+    if ( kl_t6 ) goto bb7; else goto bb8;
+    bb7:
+#line 81 "codegen/generics_forward_reference.kl"
+    kl_t0 = 3;
+    return kl_t0;
+    bb8:
+    goto bb9;
+    bb9:
+#line 86 "codegen/generics_forward_reference.kl"
+    kl_passed_7.kl_v_174 = 5;
+#line 88 "codegen/generics_forward_reference.kl"
+    kl_t8 = kl__through_a_parameter__3BoxI3i32E( kl_passed_7 );
+    kl_t9 = kl_t8 != 5;
+    if ( kl_t9 ) goto bb10; else goto bb11;
+    bb10:
+#line 90 "codegen/generics_forward_reference.kl"
+    kl_t0 = 4;
+    return kl_t0;
+    bb11:
+    goto bb12;
+    bb12:
+#line 93 "codegen/generics_forward_reference.kl"
+    kl_t10 = kl__as_a_return__3i32( 11 );
+    kl_t11 = kl_t10.kl_v_174 != 11;
+    if ( kl_t11 ) goto bb13; else goto bb14;
+    bb13:
+#line 95 "codegen/generics_forward_reference.kl"
+    kl_t0 = 5;
+    return kl_t0;
+    bb14:
+    goto bb15;
+    bb15:
+#line 98 "codegen/generics_forward_reference.kl"
+    kl__drops_at_scope_exit__(  );
+#line 100 "codegen/generics_forward_reference.kl"
+    kl_t13 = kl_destroyed_2 != 1;
+    if ( kl_t13 ) goto bb16; else goto bb17;
+    bb16:
+#line 102 "codegen/generics_forward_reference.kl"
+    kl_t0 = 6;
+    return kl_t0;
+    bb17:
+    goto bb18;
+    bb18:
+#line 105 "codegen/generics_forward_reference.kl"
+    kl_t0 = 42;
+    return kl_t0;
+}
+
+void kl__Counted__I3i32E__dtor( struct kl__Counted__I3i32E* kl_this_1 )
+{
+    int32_t kl_t2;
+#line 120 "codegen/generics_forward_reference.kl"
+    kl_t2 = kl_destroyed_2 + 1;
+    kl_destroyed_2 = kl_t2;
+    return;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}
