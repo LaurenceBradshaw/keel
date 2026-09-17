@@ -1,0 +1,227 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Buf;
+struct kl__Box__I3BufE;
+struct kl__Box__I3i32E;
+struct kl__Box__I3BoxI3BufEE;
+
+struct kl__Buf
+{
+    int32_t kl_v_4;
+};
+
+struct kl__Box__I3BufE
+{
+    struct kl__Buf kl_v_31;
+};
+
+struct kl__Box__I3i32E
+{
+    int32_t kl_v_31;
+};
+
+struct kl__Box__I3BoxI3BufEE
+{
+    struct kl__Box__I3BufE kl_v_31;
+};
+
+int32_t kl_destroyed_2 = 0;
+
+void kl__Buf__P3Buf_3i32__ctor( struct kl__Buf*, int32_t );
+void kl__Buf__dtor( struct kl__Buf* );
+int32_t kl__early__3i32( int32_t );
+int32_t kl__main__( void );
+
+void kl__Buf__P3Buf_3i32__ctor( struct kl__Buf* kl_this_1, int32_t kl_n_2 )
+{
+#line 15 "codegen/generics_owning_field.kl"
+    ( *kl_this_1 ).kl_v_4 = kl_n_2;
+    return;
+}
+
+void kl__Buf__dtor( struct kl__Buf* kl_this_1 )
+{
+    int32_t kl_t2;
+#line 20 "codegen/generics_owning_field.kl"
+    kl_t2 = kl_destroyed_2 + 1;
+    kl_destroyed_2 = kl_t2;
+    return;
+}
+
+int32_t kl__early__3i32( int32_t kl_n_1 )
+{
+    int32_t kl_t0;
+    struct kl__Box__I3BufE kl_b_2;
+    struct kl__Buf kl_t3;
+    struct kl__Buf* kl_t4;
+    bool kl_t6;
+    bool kl_t7;
+#line 35 "codegen/generics_owning_field.kl"
+    kl_t4 = &kl_t3;
+    kl_t7 = true;
+    kl__Buf__P3Buf_3i32__ctor( kl_t4, kl_n_1 );
+    kl_b_2.kl_v_31 = kl_t3;
+    kl_t7 = false;
+    if ( kl_t7 ) kl__Buf__dtor( &kl_t3 );
+#line 37 "codegen/generics_owning_field.kl"
+    kl_t6 = kl_n_1 > 2;
+    if ( kl_t6 ) goto bb1; else goto bb2;
+    bb1:
+#line 39 "codegen/generics_owning_field.kl"
+    kl_t0 = 1;
+    kl__Buf__dtor( &kl_b_2.kl_v_31 );
+    return kl_t0;
+    bb2:
+    goto bb3;
+    bb3:
+#line 42 "codegen/generics_owning_field.kl"
+    kl_t0 = 0;
+    kl__Buf__dtor( &kl_b_2.kl_v_31 );
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__Box__I3BufE kl_a_1;
+    struct kl__Buf kl_t2;
+    struct kl__Buf* kl_t3;
+    bool kl_t5;
+    struct kl__Box__I3i32E kl_n_6;
+    bool kl_t7;
+    bool kl_t8;
+    struct kl__Box__I3BoxI3BufEE kl_outer_9;
+    struct kl__Box__I3BufE kl_inner_10;
+    struct kl__Buf kl_t11;
+    struct kl__Buf* kl_t12;
+    bool kl_t14;
+    int32_t kl_t15;
+    bool kl_t16;
+    bool kl_t17;
+    int32_t kl_t18;
+    bool kl_t19;
+    bool kl_t20;
+    bool kl_t21;
+    bool kl_t22;
+    bool kl_t23;
+#line 50 "codegen/generics_owning_field.kl"
+    kl_t3 = &kl_t2;
+    kl_t21 = true;
+    kl__Buf__P3Buf_3i32__ctor( kl_t3, 7 );
+    kl_a_1.kl_v_31 = kl_t2;
+    kl_t21 = false;
+    if ( kl_t21 ) kl__Buf__dtor( &kl_t2 );
+#line 48 "codegen/generics_owning_field.kl"
+    kl__Buf__dtor( &kl_a_1.kl_v_31 );
+#line 53 "codegen/generics_owning_field.kl"
+    kl_t5 = kl_destroyed_2 != 1;
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb1:
+#line 55 "codegen/generics_owning_field.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+    goto bb3;
+    bb3:
+#line 62 "codegen/generics_owning_field.kl"
+    kl_n_6.kl_v_31 = 9;
+#line 64 "codegen/generics_owning_field.kl"
+    kl_t7 = kl_n_6.kl_v_31 != 9;
+    if ( kl_t7 ) goto bb4; else goto bb5;
+    bb4:
+#line 66 "codegen/generics_owning_field.kl"
+    kl_t0 = 2;
+    return kl_t0;
+    bb5:
+    goto bb6;
+    bb6:
+#line 70 "codegen/generics_owning_field.kl"
+    kl_t8 = kl_destroyed_2 != 1;
+    if ( kl_t8 ) goto bb7; else goto bb8;
+    bb7:
+#line 72 "codegen/generics_owning_field.kl"
+    kl_t0 = 3;
+    return kl_t0;
+    bb8:
+    goto bb9;
+    bb9:
+#line 79 "codegen/generics_owning_field.kl"
+    kl_t22 = false;
+#line 80 "codegen/generics_owning_field.kl"
+    kl_t12 = &kl_t11;
+    kl_t23 = true;
+    kl__Buf__P3Buf_3i32__ctor( kl_t12, 11 );
+    kl_inner_10.kl_v_31 = kl_t11;
+    kl_t23 = false;
+    kl_t22 = true;
+    if ( kl_t23 ) kl__Buf__dtor( &kl_t11 );
+#line 81 "codegen/generics_owning_field.kl"
+    kl_outer_9.kl_v_31 = kl_inner_10;
+    kl_t22 = false;
+#line 77 "codegen/generics_owning_field.kl"
+    if ( kl_t22 ) kl__Buf__dtor( &kl_inner_10.kl_v_31 );
+    kl_t22 = false;
+    kl__Buf__dtor( &kl_outer_9.kl_v_31.kl_v_31 );
+#line 84 "codegen/generics_owning_field.kl"
+    kl_t14 = kl_destroyed_2 != 2;
+    if ( kl_t14 ) goto bb10; else goto bb11;
+    bb10:
+#line 86 "codegen/generics_owning_field.kl"
+    kl_t0 = 4;
+    return kl_t0;
+    bb11:
+    goto bb12;
+    bb12:
+#line 89 "codegen/generics_owning_field.kl"
+    kl_t15 = kl__early__3i32( 5 );
+    kl_t16 = kl_t15 != 1;
+    if ( kl_t16 ) goto bb13; else goto bb14;
+    bb13:
+#line 91 "codegen/generics_owning_field.kl"
+    kl_t0 = 5;
+    return kl_t0;
+    bb14:
+    goto bb15;
+    bb15:
+#line 94 "codegen/generics_owning_field.kl"
+    kl_t17 = kl_destroyed_2 != 3;
+    if ( kl_t17 ) goto bb16; else goto bb17;
+    bb16:
+#line 96 "codegen/generics_owning_field.kl"
+    kl_t0 = 6;
+    return kl_t0;
+    bb17:
+    goto bb18;
+    bb18:
+#line 99 "codegen/generics_owning_field.kl"
+    kl_t18 = kl__early__3i32( 1 );
+    kl_t19 = kl_t18 != 0;
+    if ( kl_t19 ) goto bb19; else goto bb20;
+    bb19:
+#line 101 "codegen/generics_owning_field.kl"
+    kl_t0 = 7;
+    return kl_t0;
+    bb20:
+    goto bb21;
+    bb21:
+#line 104 "codegen/generics_owning_field.kl"
+    kl_t20 = kl_destroyed_2 != 4;
+    if ( kl_t20 ) goto bb22; else goto bb23;
+    bb22:
+#line 106 "codegen/generics_owning_field.kl"
+    kl_t0 = 8;
+    return kl_t0;
+    bb23:
+    goto bb24;
+    bb24:
+#line 109 "codegen/generics_owning_field.kl"
+    kl_t0 = 42;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

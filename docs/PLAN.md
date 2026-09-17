@@ -1,8 +1,10 @@
 # Keel — Implementation Plan
 
 **Status:** M0–M5.5 complete. M6 in progress: generic functions, bounds, literal adoption and
-generic aggregates work; a generic aggregate cannot yet have a method, a constructor, a
-destructor or a struct literal. §15 is the live tracker.
+generic aggregates work, methods, constructors and destructors included — M6's acceptance passes.
+What is left before M6 closes: a generic aggregate cannot be built from a struct literal, D42 does
+not see a method signature, and §12's five M6-deadline questions are undecided. §15 is the live
+tracker.
 **Companion document:** `MANIFESTO.md` (the vision doc). This file is the engineering plan.
 
 ---
@@ -3028,7 +3030,8 @@ destructor on a generic cannot currently be declared. The literal is still worth
 still next after it, but it was never the thing standing in the way.
 
 **The refusal of an owning instantiation is reported against the wrong cause, and misses the
-case that matters.** A generic class with its *own* destructor is told that its type argument
+case that matters.** *(Fixed — the refusal itself went in 2c; the case it missed is closed under
+"A field typed `T` at a drop site" below, which also corrects the diagnosis here.)* A generic class with its *own* destructor is told that its type argument
 owns something, when the argument is an `i32`. And the guard fires only on a closed annotation,
 so `Box<T>` written inside `f<T>` passes — the instance `Box<Buf>` is first created by
 substitution when `f<Buf>` is monomorphised, by which point nothing re-asks, and the emitted
@@ -3305,6 +3308,36 @@ stray `.kl.c` in the source tree — which the golden suite's own stray-file che
 failure. It now goes where `-o` points, keeping the input's name so `foo.kl.c` still says what it
 came from. With no `-o` the executable is already the input's stem in the working directory, so both
 artifacts land there together.
+
+### A field typed `T` at a drop site — done
+
+`class Box<T> { T v; }` at `Box<Buf>` type-checked, lowered to correct KIR — `drop _1.v`, the field
+rather than the whole local — and then aborted in `Ast::members`. `Kir_emitter::type_of` walks a
+place's projections and read a field's type straight off the declaration, so `_1.v` answered `T`;
+`Spelling::destructor_of` asked that type for its declaration and got a `Type_param_decl`, which is
+not an aggregate. The assert it would have hit one line later is the accurate one: a drop naming a
+type with no destructor of its own.
+
+**The twelfth site of the same shape**, and the first in the emitter rather than the checker or the
+lowerer: a type read without the instance's bindings. The fix is that the projection walk goes
+through `field_type`, whose own comment already claimed *every* read of a field's type went through
+it — the emitter was the one that did not. It composes down a chain, so `Box<Box<Buf>>` drops as
+`kl__Buf__dtor( &kl_outer_1.kl_v_31.kl_v_31 )` rather than needing a second rule for nesting.
+
+**The non-generic twin always worked**, which is what made this specific rather than a missing
+feature: `class Holder { Buf v; }` decomposes to `kl__Buf__dtor( &kl_h_1.kl_v_29 )` and runs.
+Member-wise drop existed; only the substitution was missing.
+
+**This is what 2b's refusal was standing in front of.** The annotation-time guard rejected an owning
+instantiation outright, so no such drop ever reached emission; deleting it in 2c exposed the hole
+rather than opening it. That also closes the second half of 1f's finding by contradicting its
+diagnosis: the leak was described as needing an instance created by *substitution* inside `f<Buf>`,
+and a plain `Box<Buf> b;` reached it, so the fault was never about where the instance came from.
+
+`codegen/generics_owning_field.kl` pins it — an owning instance and a non-owning one from the same
+declaration, a two-level nesting, and an early return so the drop flag is exercised. Reverting the
+one expression fails that golden and no other, which is also the measure of how little covered it:
+the crash survived 152 passing fixtures.
 
 ### Debts to pay along the way
 

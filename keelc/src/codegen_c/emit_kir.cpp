@@ -582,10 +582,11 @@ Type_id Kir_emitter::type_of( const Place& place ) const
     {
         const Projection& proj = current_->projections[place.first_projection + i];
 
-        // Deref is the pointee, Field is the field's own recorded type, and a Tag is the enum's
-        // underlying integer - which is also `element` for an enum, so the two share a branch.
-        // Mirrors place()'s walk, and has to stay in step with it.
-        type = proj.kind == Projection_kind::Field ? types_.type_of( proj.field ) : types_.table().get( type ).element;
+        // Deref is the pointee, Field is the field's type *through this instance* - the declaration
+        // records `Box<T>`'s field as a `T`, and a drop of it has to name the `Buf` - and a Tag is
+        // the enum's underlying integer, which is also `element`. Mirrors place()'s walk.
+        type = proj.kind == Projection_kind::Field ? field_type( ast_, types_.table(), type, proj.field, types_.recorded() )
+                                                   : types_.table().get( type ).element;
     }
 
     return type;

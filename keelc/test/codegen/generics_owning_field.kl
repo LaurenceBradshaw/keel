@@ -1,0 +1,110 @@
+// An instance that owns through a field typed `T`. The declaration says the field is a `T`, which
+// is true of the template and of no value anyone holds - so every drop of that field has to name
+// the type the *instance* was built at. `Box<Buf>` and `Box<i32>` are one declaration and two
+// answers: the first destroys its field, the second has nothing to destroy. The counter is what
+// makes "exactly once" a checked claim; run under KEEL_VALGRIND=1 for the other half.
+
+i32 destroyed = 0;
+
+class Buf
+{
+    i32 v;
+
+    Buf( i32 n )
+    {
+        v = n;
+    }
+
+    ~Buf()
+    {
+        destroyed = destroyed + 1;
+    }
+};
+
+// No bound: holding a `T` and dropping it needs no promise. A `where T : Copyable` would refuse
+// the argument that makes this fixture interesting.
+class Box<T>
+{
+    T v;
+};
+
+// The drop has to be emitted on the early path as well as the fall-through one.
+i32 early( i32 n )
+{
+    Box<Buf> b;
+    b.v = Buf( n );
+
+    if( n > 2 )
+    {
+        return 1;
+    }
+
+    return 0;
+}
+
+i32 main()
+{
+    // One instance, one field, one destruction at the end of the block.
+    {
+        Box<Buf> a;
+        a.v = Buf( 7 );
+    }
+
+    if( destroyed != 1 )
+    {
+        return 1;
+    }
+
+    // The same declaration at an argument that owns nothing: no destructor to call, and the
+    // counter must not move.
+    {
+        Box<i32> n;
+        n.v = 9;
+
+        if( n.v != 9 )
+        {
+            return 2;
+        }
+    }
+
+    if( destroyed != 1 )
+    {
+        return 3;
+    }
+
+    // Two levels. The outer field is a `Box<Buf>` and its own field is a `Buf`, so the
+    // substitution has to compose down the projection rather than answer once.
+    {
+        Box<Box<Buf>> outer;
+        Box<Buf> inner;
+        inner.v = Buf( 11 );
+        outer.v = move inner;
+    }
+
+    if( destroyed != 2 )
+    {
+        return 4;
+    }
+
+    if( early( 5 ) != 1 )
+    {
+        return 5;
+    }
+
+    if( destroyed != 3 )
+    {
+        return 6;
+    }
+
+    if( early( 1 ) != 0 )
+    {
+        return 7;
+    }
+
+    if( destroyed != 4 )
+    {
+        return 8;
+    }
+
+    return 42;
+}
