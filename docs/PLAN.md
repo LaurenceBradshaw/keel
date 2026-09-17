@@ -2,9 +2,9 @@
 
 **Status:** M0–M5.5 complete. M6 in progress: generic functions, bounds, literal adoption and
 generic aggregates work, methods, constructors and destructors included — M6's acceptance passes.
-What is left before M6 closes: a generic aggregate cannot be built from a struct literal, D42 does
-not see a method signature, and §12's five M6-deadline questions are undecided. §15 is the live
-tracker.
+What is left before M6 closes: a generic aggregate cannot be built from a struct literal, a generic
+`enum` is unimplemented and crashes, and §12's five M6-deadline questions are undecided. §15 is the
+live tracker.
 **Companion document:** `MANIFESTO.md` (the vision doc). This file is the engineering plan.
 
 ---
@@ -3233,10 +3233,10 @@ kills no test. It keeps `generic_calls_`'s stated invariant — arguments in the
 test section is named for what it actually pins.
 
 **Still open in the same family:** the shape in a *method signature* rather than a field
-(`Bad<Box<T>>* grow()`) is recorded by nobody. It compiles today only because `emitted_struct_order`
-walks fields and not signatures, so it is latent rather than broken. The second call site for
-`record_generic_uses` is `declare_signatures_member_functions`, whose loop has the same two ends in
-hand.
+(`Bad<Box<T>>* grow()`) is recorded by nobody. *(Fixed — see "D42 sees a method signature" below.)*
+It compiles today only because `emitted_struct_order` walks fields and not signatures, so it is
+latent rather than broken. The second call site for `record_generic_uses` is
+`declare_signatures_member_functions`, whose loop has the same two ends in hand.
 
 ### A golden for the generic-aggregate diagnostics
 
@@ -3338,6 +3338,58 @@ and a plain `Box<Buf> b;` reached it, so the fault was never about where the ins
 declaration, a two-level nesting, and an early return so the drop flag is exercised. Reverting the
 one expression fails that golden and no other, which is also the measure of how little covered it:
 the crash survived 152 passing fixtures.
+
+### D42 sees a method signature — done
+
+A return type and a parameter are the same edge a field is, and `declare_signatures_member_functions`
+now records both through `record_generic_uses`. The rule, the walk and the diagnostic are untouched
+for the third time running — D42 keeps turning out to need edges rather than analysis.
+
+**The `from` is the aggregate, not the method**, and that is load-bearing twice over. The cycle to
+close is `Bad` to `Bad`; an edge from the *method* would need a `Bad` to `grow` edge coming back, and
+nothing records one, so the self-loop would be invisible. And `generic_calls_` is not only D42's
+graph — the monomorphisation worklist follows it, matching `edge.from` against an instance's
+declaration and handing `edge.to` to `Lowering` as a function. An aggregate declaration is never an
+instance's declaration there, because an aggregate instance is entered under its *destructor* node;
+so an edge from an aggregate is invisible to the worklist, which is exactly right for a type named in
+a signature that nobody calls. An edge from a `Function_decl` would not be, which is why the free
+function pass does **not** get the same call — and does not need it: a function cannot be named as a
+type, so a signature edge out of one can never close a cycle.
+
+**Latent, and with a date on it.** The growth that hangs is `emitted_struct_order`'s driver loop, and
+it walks fields. A signature-only mention interns the open form once and nothing re-substitutes it
+per instance, so nothing grew. That ends the moment the monomorphiser substitutes a method's
+signature types per instance — which is what `T* data()` needs, and M7's first container writes it.
+
+**Three cases, because two would have passed for the wrong reason.** The cycle through a return type
+and the cycle through a parameter are separate declarations, since one message is reported per
+generic however many ways round it goes — a single method with the cycle in both positions leaves
+either recorder unpinned. The third declaration must stay *silent*: naming its own generic at the
+argument it was given is forwarding, not building, and it is what every method of a container looks
+like. Stderr is diffed whole, so it costs nothing to assert.
+
+That mattered here. The parameter recorder went in guarded by `is_generic` asked of the
+`Param_decl`, which `Ast::type_param_list` answers with an invalid id for anything neither aggregate
+nor function-like — so the guard was always false and the recording was dead. It compiled, and with
+only a both-positions fixture the suite would have gone green over half a fix.
+
+### A generic `enum` parses and then crashes
+
+`enum Opt<T> where T : Copyable { None, Some( T ) };` aborts in `Interner::text` on an invalid
+`Symbol_id`, before any D42 shape is involved. The parser accepts the type-parameter list;
+`declare_signatures_enum_decls` then walks `children( child ).subspan( 1 )` as the variants — child 0
+being the *underlying type* for an enum, not a parameter list — so the list lands in a variant slot
+and `ast_.aux` on it yields no symbol.
+
+**It is neither promised nor refused**, which is the same shape as function overloading's entry in
+§6.6: D39 names functions and aggregates and says nothing about an `enum`, and §6.6 does not exclude
+one. So the gap is a decision that was never taken rather than a feature that was dropped, and the
+cheap half is not the feature — it is refusing the spelling with a message instead of aborting.
+
+The customer is real and dated: `Result<T, E>` is an `enum` over two parameters, §12's error-handling
+question is due with M6, and M7's acceptance cannot be written without it. Whether M6 implements
+generic enums or only diagnoses them is the open question; what is not open is that a compiler
+crash is the wrong answer to a spelling nobody has ruled out.
 
 ### Debts to pay along the way
 

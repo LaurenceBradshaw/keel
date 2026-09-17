@@ -108,6 +108,41 @@ struct Ring<T> where T : Copyable
     Box<Ring<Box<T>>>* link;
 };
 
+// A method signature is the same edge a field is. The cycle closes through a return type here and
+// through a parameter below, and the two are separate declarations because one message is reported
+// per generic however many ways round it goes.
+class Returns<T> where T : Copyable
+{
+    T v;
+
+    Returns<Box<T>>* make()
+    {
+        unsafe { return alloc<Returns<Box<T>>>(); }
+    }
+};
+
+class Takes<T> where T : Copyable
+{
+    T v;
+
+    void give( Takes<Box<T>>* p )
+    {
+    }
+};
+
+// And the shape that must stay silent: naming its own generic at the argument it was given is
+// forwarding, not building, so the instance set is whatever was written and stops there. This is
+// what every method of a container looks like.
+class Same<T> where T : Copyable
+{
+    T v;
+
+    Same<T>* sibling( Same<T>* p )
+    {
+        return p;
+    }
+};
+
 i32 main()
 {
     return 0;

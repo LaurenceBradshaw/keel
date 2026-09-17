@@ -1118,6 +1118,11 @@ void Checker::declare_signatures_member_functions()
 
             record( member, return_type );
 
+            if( is_generic( ast_, child ) && return_type_node.is_valid() )
+            {
+                record_generic_uses( child, return_type, ast_.span( return_type_node ) );
+            }
+
             // §8 allows exactly one reference return, and only the read-only one - the same rule
             // declare_signatures_function_decls applies to a free function. Without this a method
             // could write `const ref T` and have it silently mean `T`: the recorded address is what
@@ -1143,6 +1148,11 @@ void Checker::declare_signatures_member_functions()
                 const Node_id param_type_node = ast_.child( param, 0 );
                 const Type_id param_type      = type_of_annotation( param_type_node );
                 record( param, param_type );
+
+                if( is_generic( ast_, child ) )
+                {
+                    record_generic_uses( child, param_type, ast_.span( param_type_node ) );
+                }
             }
         }
     }

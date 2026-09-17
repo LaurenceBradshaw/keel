@@ -76,4 +76,16 @@ error: `Ring` is instantiated with a bigger type argument each time round
 108 |     Box<Ring<Box<T>>>* link;
     |     ^^^^^^^^^^^^^^^^^^^^^^^^ `Ring` to `Ring`, and each round builds a type out of the last - so no set of instances ever finishes; forward the parameter itself, or take the built type as a second parameter
 
-13 errors generated
+error: `Returns` is instantiated with a bigger type argument each time round
+   --> sema/errors_generic_aggregates.kl:118:5
+    |
+118 |     Returns<Box<T>>* make()
+    |     ^^^^^^^^^^^^^^^^ `Returns` to `Returns`, and each round builds a type out of the last - so no set of instances ever finishes; forward the parameter itself, or take the built type as a second parameter
+
+error: `Takes` is instantiated with a bigger type argument each time round
+   --> sema/errors_generic_aggregates.kl:128:16
+    |
+128 |     void give( Takes<Box<T>>* p )
+    |                ^^^^^^^^^^^^^^ `Takes` to `Takes`, and each round builds a type out of the last - so no set of instances ever finishes; forward the parameter itself, or take the built type as a second parameter
+
+15 errors generated
