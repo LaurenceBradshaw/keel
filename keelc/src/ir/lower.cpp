@@ -679,7 +679,9 @@ Operand Lowering::lower_struct_literal( Node_id id )
             builder_.field( builder_.place( temp ), field ),
             // Moved, not copied, when the field owns something: a copy would leave the temporary
             // and the field holding one resource between them, and both would be dropped.
-            use( moved_if_owning( converted( value, type_of( field ), ast_.span( initialiser ) ) ) ),
+            use( moved_if_owning(
+                converted( value, field_type( ast_, types_.table(), type, field, types_.recorded() ), ast_.span( initialiser ) )
+            ) ),
             ast_.span( initialiser )
         );
 

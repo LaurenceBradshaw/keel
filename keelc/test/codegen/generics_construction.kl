@@ -1,0 +1,123 @@
+// Building a generic aggregate from a struct literal. `Box { 7 }` names no instance on its own -
+// the context does - so each initialiser is converted to the field's type *through that instance*
+// rather than to the declaration's own `T`. Reading the declared type instead does not emit
+// anything wrong: it aborts, because `T` has no binding in `main` - the same assert slice C hit.
+//
+// Run rather than only compiled, because the failure that survives emission is quieter than that
+// one. A conversion made against the wrong *instance* - `Box<i32>`'s field where `Box<f64>`'s was
+// meant - is valid C, and 2.5 arrives as 2.0 with nothing to say so.
+
+struct Box<T> where T : Copyable
+{
+    T v;
+};
+
+// A field that is itself a generic instance, so the substitution has to reach inside one rather
+// than replace a bare `T`.
+struct Outer<T> where T : Copyable
+{
+    Box<T> inner;
+    i32    tag;
+};
+
+// A generic body, where the expectation is legitimately the open form: `Box { v }` here is a
+// `Box<T>` until the call site says which one, and monomorphisation resolves it afterwards.
+Box<T> hold<T>( T v ) where T : Copyable
+{
+    return Box { v };
+}
+
+f64 unbox_f64( Box<f64> b )
+{
+    return b.v;
+}
+
+i32 main()
+{
+    Box<i32> a = Box { 7 };
+
+    if( a.v != 7 )
+    {
+        return 1;
+    }
+
+    // The named form, which finds its field by a different route than the positional one.
+    Box<i32> named = Box { .v = 9 };
+
+    if( named.v != 9 )
+    {
+        return 2;
+    }
+
+    // An integer literal reaching an `f64` field that is only an `f64` through this instance. The
+    // whole fixture exists for this line: converted to `T` rather than to `f64`, it is reinterpreted.
+    Box<f64> wide = Box { 7 };
+
+    if( wide.v < 6.9 )
+    {
+        return 3;
+    }
+
+    if( wide.v > 7.1 )
+    {
+        return 4;
+    }
+
+    // A float literal reaching the same field. Converted through the wrong instance this truncates
+    // to 2 and the comparison below still compiles - which is the case only running catches.
+    Box<f64> frac = Box { 2.5 };
+
+    if( frac.v < 2.4 )
+    {
+        return 5;
+    }
+
+    if( frac.v > 2.6 )
+    {
+        return 6;
+    }
+
+    // ...and the same through a call, so the value crosses a function boundary as an f64.
+    if( unbox_f64( Box { 3 } ) != 3.0 )
+    {
+        return 7;
+    }
+
+    // A literal nested inside a literal: the inner one's expectation comes from a field type that
+    // is itself substituted, rather than from an annotation.
+    Outer<i32> nested = Outer { Box { 11 }, 2 };
+
+    if( nested.inner.v != 11 )
+    {
+        return 8;
+    }
+
+    if( nested.tag != 2 )
+    {
+        return 9;
+    }
+
+    // Two instances of the same declaration in one program, so neither can be the declaration's.
+    Outer<f64> wide_nest = Outer { Box { 4 }, 3 };
+
+    if( wide_nest.inner.v < 3.9 )
+    {
+        return 10;
+    }
+
+    // Built inside a generic body and returned, at two different arguments.
+    Box<i32> held = hold<i32>( 5 );
+    Box<f64> held_wide = hold<f64>( 2.5 );
+
+    if( held.v != 5 )
+    {
+        return 11;
+    }
+
+    if( held_wide.v < 2.4 )
+    {
+        return 12;
+    }
+
+    return 30 + nested.tag + wide_nest.tag + held.v + 2;
+}

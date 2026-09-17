@@ -1,0 +1,266 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Box__I3f64E;
+struct kl__Box__I3i32E;
+struct kl__Outer__I3i32E;
+struct kl__Outer__I3f64E;
+
+struct kl__Box__I3f64E
+{
+    double kl_v_5;
+};
+
+struct kl__Box__I3i32E
+{
+    int32_t kl_v_5;
+};
+
+struct kl__Outer__I3i32E
+{
+    struct kl__Box__I3i32E kl_inner_15;
+    int32_t kl_tag_17;
+};
+
+struct kl__Outer__I3f64E
+{
+    struct kl__Box__I3f64E kl_inner_15;
+    int32_t kl_tag_17;
+};
+
+double kl__unbox_f64__3BoxI3f64E( struct kl__Box__I3f64E );
+int32_t kl__main__( void );
+struct kl__Box__I3i32E kl__hold__3i32( int32_t );
+struct kl__Box__I3f64E kl__hold__3f64( double );
+
+double kl__unbox_f64__3BoxI3f64E( struct kl__Box__I3f64E kl_b_1 )
+{
+    double kl_t0;
+#line 32 "codegen/generics_construction.kl"
+    kl_t0 = kl_b_1.kl_v_5;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__Box__I3i32E kl_a_1;
+    struct kl__Box__I3i32E kl_t2;
+    bool kl_t3;
+    struct kl__Box__I3i32E kl_named_4;
+    struct kl__Box__I3i32E kl_t5;
+    bool kl_t6;
+    struct kl__Box__I3f64E kl_wide_7;
+    struct kl__Box__I3f64E kl_t8;
+    bool kl_t9;
+    bool kl_t10;
+    struct kl__Box__I3f64E kl_frac_11;
+    struct kl__Box__I3f64E kl_t12;
+    bool kl_t13;
+    bool kl_t14;
+    struct kl__Box__I3f64E kl_t15;
+    double kl_t16;
+    bool kl_t17;
+    struct kl__Outer__I3i32E kl_nested_18;
+    struct kl__Outer__I3i32E kl_t19;
+    struct kl__Box__I3i32E kl_t20;
+    bool kl_t21;
+    bool kl_t22;
+    struct kl__Outer__I3f64E kl_wide_nest_23;
+    struct kl__Outer__I3f64E kl_t24;
+    struct kl__Box__I3f64E kl_t25;
+    bool kl_t26;
+    struct kl__Box__I3i32E kl_held_27;
+    struct kl__Box__I3i32E kl_t28;
+    struct kl__Box__I3f64E kl_held_wide_29;
+    struct kl__Box__I3f64E kl_t30;
+    bool kl_t31;
+    bool kl_t32;
+    int32_t kl_t33;
+    int32_t kl_t34;
+    int32_t kl_t35;
+    int32_t kl_t36;
+#line 37 "codegen/generics_construction.kl"
+    kl_t2.kl_v_5 = 7;
+    kl_a_1 = kl_t2;
+#line 39 "codegen/generics_construction.kl"
+    kl_t3 = kl_a_1.kl_v_5 != 7;
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 41 "codegen/generics_construction.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+    goto bb3;
+    bb3:
+#line 45 "codegen/generics_construction.kl"
+    kl_t5.kl_v_5 = 9;
+    kl_named_4 = kl_t5;
+#line 47 "codegen/generics_construction.kl"
+    kl_t6 = kl_named_4.kl_v_5 != 9;
+    if ( kl_t6 ) goto bb4; else goto bb5;
+    bb4:
+#line 49 "codegen/generics_construction.kl"
+    kl_t0 = 2;
+    return kl_t0;
+    bb5:
+    goto bb6;
+    bb6:
+#line 54 "codegen/generics_construction.kl"
+    kl_t8.kl_v_5 = 7.0;
+    kl_wide_7 = kl_t8;
+#line 56 "codegen/generics_construction.kl"
+    kl_t9 = kl_wide_7.kl_v_5 < 6.9;
+    if ( kl_t9 ) goto bb7; else goto bb8;
+    bb7:
+#line 58 "codegen/generics_construction.kl"
+    kl_t0 = 3;
+    return kl_t0;
+    bb8:
+    goto bb9;
+    bb9:
+#line 61 "codegen/generics_construction.kl"
+    kl_t10 = kl_wide_7.kl_v_5 > 7.1;
+    if ( kl_t10 ) goto bb10; else goto bb11;
+    bb10:
+#line 63 "codegen/generics_construction.kl"
+    kl_t0 = 4;
+    return kl_t0;
+    bb11:
+    goto bb12;
+    bb12:
+#line 68 "codegen/generics_construction.kl"
+    kl_t12.kl_v_5 = 2.5;
+    kl_frac_11 = kl_t12;
+#line 70 "codegen/generics_construction.kl"
+    kl_t13 = kl_frac_11.kl_v_5 < 2.4;
+    if ( kl_t13 ) goto bb13; else goto bb14;
+    bb13:
+#line 72 "codegen/generics_construction.kl"
+    kl_t0 = 5;
+    return kl_t0;
+    bb14:
+    goto bb15;
+    bb15:
+#line 75 "codegen/generics_construction.kl"
+    kl_t14 = kl_frac_11.kl_v_5 > 2.6;
+    if ( kl_t14 ) goto bb16; else goto bb17;
+    bb16:
+#line 77 "codegen/generics_construction.kl"
+    kl_t0 = 6;
+    return kl_t0;
+    bb17:
+    goto bb18;
+    bb18:
+#line 81 "codegen/generics_construction.kl"
+    kl_t15.kl_v_5 = 3.0;
+    kl_t16 = kl__unbox_f64__3BoxI3f64E( kl_t15 );
+    kl_t17 = kl_t16 != 3.0;
+    if ( kl_t17 ) goto bb19; else goto bb20;
+    bb19:
+#line 83 "codegen/generics_construction.kl"
+    kl_t0 = 7;
+    return kl_t0;
+    bb20:
+    goto bb21;
+    bb21:
+#line 88 "codegen/generics_construction.kl"
+    kl_t20.kl_v_5 = 11;
+    kl_t19.kl_inner_15 = kl_t20;
+    kl_t19.kl_tag_17 = 2;
+    kl_nested_18 = kl_t19;
+#line 90 "codegen/generics_construction.kl"
+    kl_t21 = kl_nested_18.kl_inner_15.kl_v_5 != 11;
+    if ( kl_t21 ) goto bb22; else goto bb23;
+    bb22:
+#line 92 "codegen/generics_construction.kl"
+    kl_t0 = 8;
+    return kl_t0;
+    bb23:
+    goto bb24;
+    bb24:
+#line 95 "codegen/generics_construction.kl"
+    kl_t22 = kl_nested_18.kl_tag_17 != 2;
+    if ( kl_t22 ) goto bb25; else goto bb26;
+    bb25:
+#line 97 "codegen/generics_construction.kl"
+    kl_t0 = 9;
+    return kl_t0;
+    bb26:
+    goto bb27;
+    bb27:
+#line 101 "codegen/generics_construction.kl"
+    kl_t25.kl_v_5 = 4.0;
+    kl_t24.kl_inner_15 = kl_t25;
+    kl_t24.kl_tag_17 = 3;
+    kl_wide_nest_23 = kl_t24;
+#line 103 "codegen/generics_construction.kl"
+    kl_t26 = kl_wide_nest_23.kl_inner_15.kl_v_5 < 3.9;
+    if ( kl_t26 ) goto bb28; else goto bb29;
+    bb28:
+#line 105 "codegen/generics_construction.kl"
+    kl_t0 = 10;
+    return kl_t0;
+    bb29:
+    goto bb30;
+    bb30:
+#line 109 "codegen/generics_construction.kl"
+    kl_t28 = kl__hold__3i32( 5 );
+    kl_held_27 = kl_t28;
+#line 110 "codegen/generics_construction.kl"
+    kl_t30 = kl__hold__3f64( 2.5 );
+    kl_held_wide_29 = kl_t30;
+#line 112 "codegen/generics_construction.kl"
+    kl_t31 = kl_held_27.kl_v_5 != 5;
+    if ( kl_t31 ) goto bb31; else goto bb32;
+    bb31:
+#line 114 "codegen/generics_construction.kl"
+    kl_t0 = 11;
+    return kl_t0;
+    bb32:
+    goto bb33;
+    bb33:
+#line 117 "codegen/generics_construction.kl"
+    kl_t32 = kl_held_wide_29.kl_v_5 < 2.4;
+    if ( kl_t32 ) goto bb34; else goto bb35;
+    bb34:
+#line 119 "codegen/generics_construction.kl"
+    kl_t0 = 12;
+    return kl_t0;
+    bb35:
+    goto bb36;
+    bb36:
+#line 122 "codegen/generics_construction.kl"
+    kl_t33 = 30 + kl_nested_18.kl_tag_17;
+    kl_t34 = kl_t33 + kl_wide_nest_23.kl_tag_17;
+    kl_t35 = kl_t34 + kl_held_27.kl_v_5;
+    kl_t36 = kl_t35 + 2;
+    kl_t0 = kl_t36;
+    return kl_t0;
+}
+
+struct kl__Box__I3i32E kl__hold__3i32( int32_t kl_v_1 )
+{
+    struct kl__Box__I3i32E kl_t0;
+    struct kl__Box__I3i32E kl_t2;
+#line 27 "codegen/generics_construction.kl"
+    kl_t2.kl_v_5 = kl_v_1;
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+struct kl__Box__I3f64E kl__hold__3f64( double kl_v_1 )
+{
+    struct kl__Box__I3f64E kl_t0;
+    struct kl__Box__I3f64E kl_t2;
+#line 27 "codegen/generics_construction.kl"
+    kl_t2.kl_v_5 = kl_v_1;
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

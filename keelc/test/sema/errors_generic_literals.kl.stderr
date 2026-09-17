@@ -1,0 +1,55 @@
+error: expected `Red`, but got `Blue`
+  --> sema/errors_generic_literals.kl:74:34
+   |
+74 |     Box<Red> wrong_field = Box { b };
+   |                                  ^
+
+error: expected `Red`, but got `Blue`
+  --> sema/errors_generic_literals.kl:77:39
+   |
+77 |     Box<Red> wrong_named = Box { .v = b };
+   |                                       ^
+
+error: expected `Red`, but got `Blue`
+  --> sema/errors_generic_literals.kl:80:38
+   |
+80 |     Pair<Red, Blue> swapped = Pair { b, r };
+   |                                      ^
+
+error: expected `Blue`, but got `Red`
+  --> sema/errors_generic_literals.kl:80:41
+   |
+80 |     Pair<Red, Blue> swapped = Pair { b, r };
+   |                                         ^
+
+error: expected `Box<Red>`, but got `Box<Blue>`
+  --> sema/errors_generic_literals.kl:87:32
+   |
+87 |     Outer<Red> mixed = Outer { blue };
+   |                                ^^^^
+
+error: expected `Box<Green>`, but got `Red`
+  --> sema/errors_generic_literals.kl:90:38
+   |
+90 |     Outer<Green> unspelled = Outer { r };
+   |                                      ^
+
+error: expected `Box<Red>`, but got `Plain`
+  --> sema/errors_generic_literals.kl:93:24
+   |
+93 |     Box<Red> foreign = Plain { 3 };
+   |                        ^^^^^^^^^^^
+
+error: expected `Plain`, but got `Box`
+  --> sema/errors_generic_literals.kl:97:20
+   |
+97 |     Plain mirror = Box { r };
+   |                    ^^^^^^^^^
+
+error: nothing here says which `Box` this is
+   --> sema/errors_generic_literals.kl:100:18
+    |
+100 |     auto loose = Box { r };
+    |                  ^^^^^^^^^ write the type where the value lands, as in `Box<i32> x = ...`
+
+9 errors generated

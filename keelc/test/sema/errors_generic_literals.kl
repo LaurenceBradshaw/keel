@@ -1,0 +1,103 @@
+// Which instance a struct literal names. `Box { r }` is a value of *some* `Box<T>`, and only the
+// context says which - so each initialiser is checked against that instance's field rather than
+// against the declaration's own `T`. The correct code at the top is as much of the test as the
+// errors: a line about it appearing in stderr is the failure this fixture exists to catch.
+//
+// Two structs rather than two numbers, because i32 widens to f64 and an initialiser checked against
+// the wrong one of those would still be accepted - which says nothing about whether substitution ran.
+
+struct Red
+{
+    i32 v;
+};
+
+struct Blue
+{
+    i32 v;
+};
+
+// Only ever a type argument, never written as an annotation - so `Box<Green>` exists solely because
+// substituting `Outer<Green>`'s field created it, and the name it interned under was decided there.
+struct Green
+{
+    i32 v;
+};
+
+struct Box<T> where T : Copyable
+{
+    T v;
+};
+
+// Two parameters, so a list that lines up by count can still be wrong by order.
+struct Pair<A, B> where A : Copyable where B : Copyable
+{
+    A a;
+    B b;
+};
+
+// A field that is itself a generic instance, so the substitution has to reach inside one rather
+// than replace a bare `T`. `Box<T>` becomes `Box<Red>` here or the whole thing is unchecked.
+struct Outer<T> where T : Copyable
+{
+    Box<T> inner;
+};
+
+struct Plain
+{
+    i32 v;
+};
+
+// The argument position, where the expectation comes from a parameter rather than an annotation.
+i32 takes( Box<Red> s )
+{
+    return s.v.v;
+}
+
+// The return position, which reaches check() by a third route again.
+Box<Red> make( Red r )
+{
+    return Box { r };
+}
+
+i32 main()
+{
+    Red  r = Red { 1 };
+    Blue b = Blue { 2 };
+
+    // Correct, both forms: positional and named.
+    Box<Red> ok    = Box { r };
+    Box<Red> named = Box { .v = r };
+
+    Pair<Red, Blue> both = Pair { r, b };
+
+    // The field is a `Red` through this instance, so `b` is what is wrong - not `Box<T>`.
+    Box<Red> wrong_field = Box { b };
+
+    // ...and the same through the named form, which finds its field by a different route.
+    Box<Red> wrong_named = Box { .v = b };
+
+    // Count is right and order is not, which only a per-field substitution can tell apart.
+    Pair<Red, Blue> swapped = Pair { b, r };
+
+    // Correct: the field is a `Box<Red>` through this instance, not the declared `Box<T>`.
+    Outer<Red> nested = Outer { ok };
+
+    // ...and the same substitution is what makes this wrong.
+    Box<Blue>  blue  = Box { b };
+    Outer<Red> mixed = Outer { blue };
+
+    // The field type here is reached only by substitution, so its rendering is this line's to check.
+    Outer<Green> unspelled = Outer { r };
+
+    // A different struct is a different type however it is expected to be read.
+    Box<Red> foreign = Plain { 3 };
+
+    // The mirror: the expectation belongs to another declaration, so it names no instance - but it
+    // is still what the reader should be told about, and the open form must not reach the message.
+    Plain mirror = Box { r };
+
+    // Nothing here says which `Box`, so there is no instance for the literal to name.
+    auto loose = Box { r };
+
+    return takes( Box { r } ) + make( r ).v.v + named.v.v + both.a.v + nested.inner.v.v;
+}

@@ -647,6 +647,7 @@ private:
     // A composite constructor, not a value literal: its type is fixed by its name rather than
     // adopted from context, which is why it has no place in infer_literal.
     Type_id infer_struct_literal( Node_id id );
+    Type_id no_instance_named( Node_id id, Node_id declaration );
 
     Type_id infer_cast( Node_id id );
     Type_id infer_marker( Node_id id );
@@ -772,9 +773,9 @@ private:
     // the enum. True while checking a construction's callee, a pattern's path, and a bare `case`
     // label - in all three the payload is accounted for, so `Shape::Circle` is complete.
     bool naming_variant_ = false;
-    // The instance a variant path should name, when the context knows one. Its sibling above
-    // rather than a second entry point, for the same reason: reaching the variant is identical.
-    Type_id expected_enum_;
+    // The instance a variant path or a struct literal should name. Set by check() around the
+    // expectation it is testing, and by the two places a pattern already knows the scrutinee.
+    Type_id expected_composite_;
     Node_id current_function_; // whose annotation the escape rule reads
 
     u32 loop_depth_      = 0; // `continue` binds here, looking past any switch
@@ -2406,10 +2407,10 @@ void Checker::check_variant_pattern( Node_id pattern, Type_id type, std::vector<
     // The same flag construction uses: the pattern accounts for the payload, so the path inside it
     // names a variant rather than standing for a value.
     naming_variant_         = true;
-    expected_enum_          = type;
+    expected_composite_     = type;
     const Type_id path_type = infer( path );
     naming_variant_         = false;
-    expected_enum_          = Type_id {};
+    expected_composite_     = Type_id {};
 
     if( table_.is_error( path_type ) )
     {
@@ -2520,10 +2521,10 @@ void Checker::check_enum_switch( Node_id id, Type_id type, bool& has_default )
             // say here even when the variant carries one - so the same flag a pattern and a
             // construction set. `Shape s = Shape::Circle;` still has it false and still reports.
             naming_variant_          = true;
-            expected_enum_           = type;
+            expected_composite_      = type;
             const Type_id label_type = infer( label );
             naming_variant_          = false;
-            expected_enum_           = Type_id {};
+            expected_composite_      = Type_id {};
 
             if( table_.is_error( label_type ) )
             {
@@ -4290,26 +4291,17 @@ Type_id Checker::infer_path( Node_id id )
         // Which instance this path names. The declaration test is what keeps a wrong expectation
         // out: `Opt<i32> x = Plain::One;` falls through to the open form and is refused below by
         // the ordinary mismatch, rather than being quietly retyped to whatever was wanted.
-        if( expected_enum_.is_valid() && table_.get( expected_enum_ ).declaration == decl )
+        if( expected_composite_.is_valid() && table_.get( expected_composite_ ).declaration == decl )
         {
-            return record( id, expected_enum_ );
+            return record( id, expected_composite_ );
         }
 
-        // Nothing said which instance, and a generic declaration's own type is the open form -
+        // Nothing named an instance, and a generic declaration's own type is the open form -
         // `Opt<T>`, which is a template rather than anything a value can hold. Left to the mismatch
         // below it would escape through `auto`, which has no expectation to disagree with.
         if( is_generic( ast_, decl ) )
         {
-            error_at(
-                ast_.span( id ),
-                fmt::format( "nothing here says which `{}` this is", interner_.text( Symbol_id { ast_.aux( decl ) } ) ),
-                fmt::format(
-                    "write the type where the value lands, as in `{}<i32> x = ...`",
-                    interner_.text( Symbol_id { ast_.aux( decl ) } )
-                )
-            );
-
-            return record( id, table_.builtin( Type_kind::Error ) );
+            return record( id, no_instance_named( id, decl ) );
         }
 
         return record( id, types_[decl.v] );
@@ -4354,6 +4346,31 @@ Type_id Checker::infer_field( Node_id id )
     }
 
     return record( id, field_type( object_type, decl ) );
+}
+
+// Nothing named an instance of a generic declaration, so there is no type here a value can hold.
+// Two causes with two different fixes, which is why one message cannot serve both: either nothing
+// was expected at all, or what was expected belongs to another declaration entirely.
+Type_id Checker::no_instance_named( Node_id id, Node_id declaration )
+{
+    const std::string_view name = interner_.text( Symbol_id { ast_.aux( declaration ) } );
+
+    if( expected_composite_.is_valid() )
+    {
+        // The ordinary mismatch, stated here rather than left to check(): falling through would
+        // name the open form - `Box<T>`, a type the author never wrote - on the `got` side.
+        error_at( ast_.span( id ), fmt::format( "expected `{}`, but got `{}`", table_.name( expected_composite_ ), name ) );
+    }
+    else
+    {
+        error_at(
+            ast_.span( id ),
+            fmt::format( "nothing here says which `{}` this is", name ),
+            fmt::format( "write the type where the value lands, as in `{}<i32> x = ...`", name )
+        );
+    }
+
+    return table_.builtin( Type_kind::Error );
 }
 
 Type_id Checker::infer_struct_literal( Node_id id )
@@ -4412,7 +4429,27 @@ Type_id Checker::infer_struct_literal( Node_id id )
     }
 
     const std::string_view struct_name = interner_.text( Symbol_id { ast_.aux( decl ) } );
-    const Type_id          result      = types_[decl.v];
+
+    // Which instance this literal builds. The declaration test is what keeps a wrong expectation
+    // out: `Box<i32> x = Plain { 1 };` falls through and is refused by the ordinary mismatch below,
+    // rather than being quietly retyped to whatever was wanted.
+    const bool names_an_instance = expected_composite_.is_valid() && table_.get( expected_composite_ ).declaration == decl;
+
+    if( !names_an_instance && is_generic( ast_, decl ) )
+    {
+        // Reported before the values are typed, because typing one runs check(), which is what
+        // sets expected_composite_ - and the message depends on it.
+        const Type_id poison = no_instance_named( id, decl );
+
+        for( const Node_id init : initialisers )
+        {
+            infer( ast_.child( init, 0 ) ); // type the values anyway
+        }
+
+        return record( id, poison );
+    }
+
+    const Type_id result = names_an_instance ? expected_composite_ : types_[decl.v];
 
     // One convention per literal, as C++20 requires. Two in the same literal is a reader's
     // problem rather than a parser's.
@@ -4808,9 +4845,9 @@ Type_id Checker::check( Node_id id, Type_id expected )
         break;
     }
 
-    expected_enum_       = expected;
+    expected_composite_  = expected;
     const Type_id actual = infer( id );
-    expected_enum_       = Type_id {};
+    expected_composite_  = Type_id {};
     if( table_.is_error( actual ) )
     {
         return expected;

@@ -2,9 +2,9 @@
 
 **Status:** M0–M5.5 complete. M6 in progress: generic functions, bounds, literal adoption and
 generic aggregates work, methods, constructors and destructors included — M6's acceptance passes.
-What is left before M6 closes: a generic aggregate cannot be built from a struct literal, a generic
-`enum` is unimplemented and crashes, and §12's five M6-deadline questions are undecided. §15 is the
-live tracker.
+What is left before M6 closes: §12's five M6-deadline questions are undecided, and the
+empty-aggregate rejection §12 already settled is still unimplemented. Generic aggregates build from
+a struct literal and generic `enum`s type, lower and emit. §15 is the live tracker.
 **Companion document:** `MANIFESTO.md` (the vision doc). This file is the engineering plan.
 
 ---
@@ -3008,11 +3008,11 @@ several slices later rather than a diagnostic now. So an instantiation that owns
 is refused, by a check that computes the per-instance answer purely in order to reject it.
 The rest of 2b works at every argument that does not own.
 
-**What is still missing is construction.** `Box<i32> { 7 }` does not parse: a struct
-literal carries its type name in `aux` and has no room for type arguments, so the `<` after
-the name reads as a comparison. A generic aggregate can be declared, instantiated, emitted,
-assigned to field by field and read back — but not built from a literal, which is the next
-thing worth having and is what the runnable fixture works around.
+**What is still missing is construction.** A generic aggregate can be declared, instantiated,
+emitted, assigned to field by field and read back — but not built from a literal, which is the next
+thing worth having and is what the runnable fixture works around. *(Closed by slice E below. The
+diagnosis here is wrong and worth keeping for what it cost: `Box<i32> { 7 }` does not parse, but
+`Box { 7 }` always did, and the context names the instance in every position that can hold one.)*
 
 
 **A bug hunt after 2b, and it reordered what comes next.** Five findings over the generic
@@ -3497,6 +3497,41 @@ come from the enum's own payload rather than from interning order — with the w
 members the rest of the fixture still passed, because every other container happened to be interned
 after what it holds. And `Opt<Colour>` carries a payload-free enum as a type argument, which is what
 notices if the filter goes.
+
+**Slice E — it is built.** Done. `Box<i32> { 7 }` was recorded here as the thing that does not
+parse, and that framing was wrong in the same way slice D's was: the unqualified `Box { 7 }` already
+parses and resolves, and `infer_struct_literal` simply took `types_[decl.v]` — the open form, at the
+same line and for the same reason `infer_path` did. The parser was never in the way.
+
+So the slice is two edits. `infer_struct_literal` takes `expected_composite_` when that type's
+declaration is this one, which is slice D's guard reused verbatim — the member is renamed from
+`expected_enum_` because a literal is not a variant, and nothing else about the channel changes:
+`check()` already carried the expectation into it. `field_type` then substitutes each field through
+the instance without being asked, so the second of the two errors every generic literal used to
+produce disappears with no edit of its own. And `lower_struct_literal` converted each value to
+`Lowering::type_of( field )` — **C6 a third time**, after `lower_variant_construction` and
+`bind_variant_pattern`, and failing the same way: `T` has no binding in `main`, so it aborts rather
+than misspells.
+
+**The explicit `Box<i32> { 7 }` spelling is dropped, not deferred.** The argument is the one already
+made for `Opt<i32>::Some`, and it is now checked rather than assumed: type arguments are never
+deduced from call arguments, so every argument position is a written type, and a field initialiser's
+expectation arrives already substituted. Every position that can hold a literal states its type.
+`auto` is the exception, and it is a diagnostic.
+
+**One message was wrong, and it was wrong in slice D too.** Both sites reached "nothing here says
+which `Box` this is" by way of *the expectation did not apply*, which conflates nothing being
+expected with something else being expected: `Plain p = Box { r };` was told nothing said which
+`Box`, and offered a help line that would not fix the program. The two causes have two different
+fixes, so they need two messages — `no_instance_named` decides which and both sites call it. The
+wrong-declaration branch states the mismatch itself rather than falling through, because falling
+through puts the open form on the `got` side of a message about a type the author never wrote.
+
+`sema/errors_generic_literals.kl` and `codegen/generics_construction.kl` pin it, and all eight
+mutations die, including slice D's guard inverted. The codegen fixture runs because the failure that
+survives emission is quieter than the one that does not: reading the declared type aborts, but a
+conversion made against the wrong *instance* is valid C, and `Box<f64> { 2.5 }` arrives as 2.0 with
+nothing to say so.
 
 ### Debts to pay along the way
 
