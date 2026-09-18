@@ -141,9 +141,9 @@ static inline bool kl_cmp_ne_u64_f64( uint64_t a, double b )
 }
 
 int32_t kl__main__( void );
-bool kl__below__3u64( uint64_t, int64_t );
-bool kl__below__3f64( double, int64_t );
-bool kl__below__3i32( int32_t, int64_t );
+bool kl__below__I3u64E__3u64_3i64( uint64_t, int64_t );
+bool kl__below__I3f64E__3f64_3i64( double, int64_t );
+bool kl__below__I3i32E__3i32_3i64( int32_t, int64_t );
 
 int32_t kl__main__( void )
 {
@@ -853,7 +853,7 @@ int32_t kl__main__( void )
     goto bb147;
     bb147:
 #line 138 "codegen/comparisons_mixed.kl"
-    kl_t140 = kl__below__3u64( kl_plus_one_29, kl_minus_one_27 );
+    kl_t140 = kl__below__I3u64E__3u64_3i64( kl_plus_one_29, kl_minus_one_27 );
     if ( kl_t140 ) goto bb148; else goto bb149;
     bb148:
     kl_t0 = 51;
@@ -862,7 +862,7 @@ int32_t kl__main__( void )
     goto bb150;
     bb150:
 #line 139 "codegen/comparisons_mixed.kl"
-    kl_t141 = kl__below__3f64( kl_half_64, kl_minus_one_27 );
+    kl_t141 = kl__below__I3f64E__3f64_3i64( kl_half_64, kl_minus_one_27 );
     if ( kl_t141 ) goto bb151; else goto bb152;
     bb151:
     kl_t0 = 52;
@@ -871,7 +871,7 @@ int32_t kl__main__( void )
     goto bb153;
     bb153:
 #line 140 "codegen/comparisons_mixed.kl"
-    kl_t142 = kl__below__3i32( kl_neg_1, kl_three_34 );
+    kl_t142 = kl__below__I3i32E__3i32_3i64( kl_neg_1, kl_three_34 );
     kl_t143 = !kl_t142;
     if ( kl_t143 ) goto bb154; else goto bb155;
     bb154:
@@ -885,7 +885,7 @@ int32_t kl__main__( void )
     return kl_t0;
 }
 
-bool kl__below__3u64( uint64_t kl_a_1, int64_t kl_limit_2 )
+bool kl__below__I3u64E__3u64_3i64( uint64_t kl_a_1, int64_t kl_limit_2 )
 {
     bool kl_t0;
     bool kl_t3;
@@ -895,7 +895,7 @@ bool kl__below__3u64( uint64_t kl_a_1, int64_t kl_limit_2 )
     return kl_t0;
 }
 
-bool kl__below__3f64( double kl_a_1, int64_t kl_limit_2 )
+bool kl__below__I3f64E__3f64_3i64( double kl_a_1, int64_t kl_limit_2 )
 {
     bool kl_t0;
     bool kl_t3;
@@ -905,7 +905,7 @@ bool kl__below__3f64( double kl_a_1, int64_t kl_limit_2 )
     return kl_t0;
 }
 
-bool kl__below__3i32( int32_t kl_a_1, int64_t kl_limit_2 )
+bool kl__below__I3i32E__3i32_3i64( int32_t kl_a_1, int64_t kl_limit_2 )
 {
     bool kl_t0;
     int64_t kl_t3;

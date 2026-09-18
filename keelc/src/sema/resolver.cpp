@@ -44,6 +44,7 @@ private:
     void pop_scope();
 
     void    declare( Symbol_id name, Node_id decl );
+    bool    chain_overload( Node_id existing, Node_id added );
     Node_id lookup( Symbol_id name ) const;
 
     const Ast& ast_;
@@ -53,6 +54,7 @@ private:
     Diagnostics&          diags_;
 
     std::vector<Node_id> bindings_;
+    std::vector<Node_id> next_overload_;
     std::vector<Scope>   scopes_;
 
     // The enclosing aggregate's field names, for D19's member clause. Empty outside a member body,
@@ -68,6 +70,7 @@ void Resolver::error_at( Span span, std::string message, std::string help )
 Resolution Resolver::run()
 {
     bindings_.assign( ast_.node_count(), Node_id {} );
+    next_overload_.assign( ast_.node_count(), Node_id {} );
 
     // Two passes at file scope: every top-level declaration is collected before any body is
     // resolved, which is what makes recursion and mutual recursion work with no forward
@@ -87,7 +90,7 @@ Resolution Resolver::run()
     visit( ast_.root() );
     pop_scope();
 
-    return Resolution( std::move( bindings_ ) );
+    return Resolution( std::move( bindings_ ), std::move( next_overload_ ) );
 }
 
 void Resolver::visit( Node_id id )
@@ -342,7 +345,7 @@ void Resolver::visit( Node_id id )
 
             const auto [it, inserted] = members.try_emplace( name.v, member );
 
-            if( !inserted )
+            if( !inserted && !chain_overload( it->second, member ) )
             {
                 error_at(
                     ast_.span( member ),
@@ -416,6 +419,14 @@ void Resolver::declare( Symbol_id name, Node_id decl )
 
     if( !inserted )
     {
+        // Two functions of one name are an overload set, not a redeclaration. Whether their
+        // signatures actually differ is a question about types, which this pass does not have -
+        // the checker asks it once every signature is known.
+        if( chain_overload( it->second, decl ) )
+        {
+            return;
+        }
+
         error_at(
             ast_.span( decl ),
             fmt::format( "`{}` is already declared in this scope", interner_.text( name ) ),
@@ -465,6 +476,29 @@ void Resolver::declare( Symbol_id name, Node_id decl )
             return;
         }
     }
+}
+
+// Appended at the end of the chain, so walking it gives declaration order - which is what the
+// duplicate diagnostic needs to name the *earlier* one.
+bool Resolver::chain_overload( Node_id existing, Node_id added )
+{
+    const Node_kind kind = ast_.kind( existing );
+
+    if( kind != ast_.kind( added ) || ( kind != Node_kind::Function_decl && kind != Node_kind::Method_decl ) )
+    {
+        return false;
+    }
+
+    Node_id last = existing;
+
+    while( next_overload_[last.v].is_valid() )
+    {
+        last = next_overload_[last.v];
+    }
+
+    next_overload_[last.v] = added;
+
+    return true;
 }
 
 std::string Resolver::previous_declaration_note( Node_id prev ) const
@@ -573,6 +607,11 @@ public:
     std::string_view text( Node_id id ) const
     {
         return sm_.text( ast_.span( id ) );
+    }
+
+    const Resolution& resolution() const
+    {
+        return resolution_;
     }
 
 private:
@@ -833,9 +872,36 @@ TEST_CASE( "resolver_allows_a_local_to_reuse_a_file_scope_name", "[sema][resolve
 
 TEST_CASE( "resolver_reports_duplicate_declarations", "[sema][resolve]" )
 {
-    SECTION( "two functions with one name" )
+    // Two functions of one name are an overload set, and whether their signatures differ is a
+    // question about types this pass cannot ask. The checker reports the pair that does not.
+    SECTION( "two functions with one name are chained rather than reported" )
     {
         const Resolved p( "i32 f() { return 1; }\ni32 f() { return 2; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+
+        const Node_id first = p.nth( Node_kind::Function_decl, 0 );
+
+        REQUIRE( p.resolution().next_overload( first ) == p.nth( Node_kind::Function_decl, 1 ) );
+        REQUIRE_FALSE( p.resolution().next_overload( p.nth( Node_kind::Function_decl, 1 ) ).is_valid() );
+    }
+
+    // The chain is in declaration order, which is what lets a diagnostic name the earlier one.
+    SECTION( "three of one name chain in order" )
+    {
+        const Resolved p( "i32 f() { return 1; }\ni32 f() { return 2; }\ni32 f() { return 3; }\n" );
+
+        const Node_id second = p.resolution().next_overload( p.nth( Node_kind::Function_decl, 0 ) );
+
+        REQUIRE( second == p.nth( Node_kind::Function_decl, 1 ) );
+        REQUIRE( p.resolution().next_overload( second ) == p.nth( Node_kind::Function_decl, 2 ) );
+    }
+
+    // Only two callables of one kind chain: everything else is still a redeclaration.
+    SECTION( "a function and a variable of one name" )
+    {
+        const Resolved p( "i32 f() { return 1; }\ni32 f = 2;\ni32 main() { return 0; }\n" );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );

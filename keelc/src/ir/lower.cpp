@@ -536,21 +536,15 @@ bool Lowering::is_construction( Node_id id ) const
 
 void Lowering::lower_construction( Place target, Node_id call_expr )
 {
-    const Span    span      = ast_.span( call_expr );
-    const Node_id aggregate = resolution_.declaration_of( ast_.child( call_expr, 0 ) );
+    const Span span = ast_.span( call_expr );
+    // Which constructor, not just which type: a class may declare several, and the checker is
+    // where the choice between them was made.
+    const Node_id constructor = types_.callee_of( call_expr );
 
-    Node_id constructor {};
-
-    for( const Node_id member : ast_.members( aggregate ) )
-    {
-        if( ast_.kind( member ) == Node_kind::Constructor_decl )
-        {
-            constructor = member;
-            break;
-        }
-    }
-
-    assert( constructor.is_valid() && "the checker rejects constructing a type that has none" );
+    assert(
+        constructor.is_valid() && ast_.kind( constructor ) == Node_kind::Constructor_decl &&
+        "the checker rejects constructing a type that has none"
+    );
 
     const std::span<const Node_id> parameters = ast_.children( ast_.child( constructor, 1 ) );
     const std::span<const Node_id> arguments  = ast_.children( ast_.child( call_expr, 1 ) );
@@ -898,7 +892,7 @@ Operand Lowering::lower_method_call( Node_id id )
     const Node_id object = ast_.child( callee, 0 );
     const Span    span   = ast_.span( id );
 
-    const Node_id method = types_.method_of( id );
+    const Node_id method = types_.callee_of( id );
 
     assert( method.is_valid() && "the checker records the method for every call it accepts" );
 
@@ -1006,15 +1000,18 @@ Operand Lowering::lower_call( Node_id id )
         return lower_method_call( id );
     }
 
+    // The checker recorded which callable this call chose, and choosing is its rule to apply: the
+    // name alone names only the first candidate of an overload set.
+    const Node_id callee = types_.callee_of( id );
+
     // A bare `add( by )` inside a method. The receiver is the one this function was given, and its
     // local already holds the address - so unlike every other call shape there is nothing to take
     // the address *of*.
-    if( const Node_id method = types_.method_of( id ); method.is_valid() )
+    if( callee.is_valid() && ast_.kind( callee ) == Node_kind::Method_decl )
     {
-        return lower_method_call_on( id, method, copy( builder_.place( receiver_ ), builder_.type_of( receiver_ ) ) );
+        return lower_method_call_on( id, callee, copy( builder_.place( receiver_ ), builder_.type_of( receiver_ ) ) );
     }
 
-    const Node_id callee = resolution_.declaration_of( ast_.child( id, 0 ) );
     assert(
         callee.is_valid() && ast_.kind( callee ) == Node_kind::Function_decl &&
         "checker should have rejected an unresolved call"

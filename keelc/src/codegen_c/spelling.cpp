@@ -24,6 +24,25 @@ std::vector<Type_id> parameter_types_vector( const Ast& ast, const Types& types,
 
     return params;
 }
+// What tells two overloads of one name apart: each parameter's *declared* type and the marker a
+// call site writes for it. Not binding_type, which is the pointer a borrow travels as - that would
+// spell `ref i32` and `i32*` alike, and they are two parameters a call site distinguishes.
+std::vector<Mangled_parameter> mangled_parameters( const Ast& ast, const Types& types, Node_id decl )
+{
+    std::vector<Mangled_parameter> params;
+
+    for( const Node_id param : ast.children( ast.child( decl, 1 ) ) )
+    {
+        const Keyword mode = is_const_binding( ast, param ) ? Keyword::Count : parameter_mode( ast, param );
+
+        const char marker = mode == Keyword::Ref ? 'R' : mode == Keyword::Move ? 'M' : mode == Keyword::Out ? 'O' : '\0';
+
+        params.push_back( Mangled_parameter { .type = types.type_of( param ), .marker = marker } );
+    }
+
+    return params;
+}
+
 // The declaration's type parameters against this instance's arguments. The same map the worklist
 // builds when it emits the instance - written again here because a symbol is computed from the
 // declaration and must come back through the instance, like everything else that reaches that way.
@@ -105,20 +124,19 @@ std::string Spelling::function( Node_id declaration, std::span<const Type_id> ty
         return mangle_destructor( "", interner.text( Symbol_id { ast.aux( declaration ) } ), type_arguments, types.table() );
     }
 
-    std::vector<Type_id> params = parameter_types_vector( ast, types, declaration );
+    std::vector<Mangled_parameter> params = mangled_parameters( ast, types, declaration );
+
+    // The parameters are written in the declaration's own `T`, so without this an instance's symbol
+    // would name a type parameter rather than the type it was instantiated at.
+    const Bindings bindings = instance_bindings( ast, types, declaration, type_arguments );
+
+    for( Mangled_parameter& param : params )
+    {
+        param.type = types.table().substitute( param.type, bindings );
+    }
 
     if( ast.kind( declaration ) == Node_kind::Constructor_decl )
     {
-        // A constructor is the one symbol that carries both: the type arguments say which instance,
-        // and the parameter types tell two constructors of it apart. The parameters are written in
-        // the declaration's own `T`, so without this the instance's symbol names a type parameter.
-        const Bindings bindings = instance_bindings( ast, types, declaration, type_arguments );
-
-        for( Type_id& param : params )
-        {
-            param = types.table().substitute( param, bindings );
-        }
-
         return mangle_constructor(
             "", interner.text( Symbol_id { ast.aux( declaration ) } ), type_arguments, params, types.table()
         );

@@ -15,14 +15,14 @@ int32_t kl_destroyed_5 = 0;
 void* kl_rt_alloc( size_t );
 void  kl_rt_free( void* );
 
-void kl__Cell__P4Cell__ctor( struct kl__Cell* );
+void kl__Cell__R4Cell__ctor( struct kl__Cell* );
 void kl__Cell__dtor( struct kl__Cell* );
 int32_t kl__main__( void );
-void kl__consume__4Cell( struct kl__Cell );
-struct kl__Cell kl__relay__4Cell( struct kl__Cell );
-void kl__inspect__4Cell( struct kl__Cell* );
+void kl__consume__I4CellE__M4Cell( struct kl__Cell );
+struct kl__Cell kl__relay__I4CellE__M4Cell( struct kl__Cell );
+void kl__inspect__I4CellE__4Cell( struct kl__Cell* );
 
-void kl__Cell__P4Cell__ctor( struct kl__Cell* kl_this_1 )
+void kl__Cell__R4Cell__ctor( struct kl__Cell* kl_this_1 )
 {
     int32_t* kl_t2;
     int32_t kl_t3;
@@ -66,25 +66,25 @@ int32_t kl__main__( void )
     kl_t17 = false;
     kl_t2 = &kl_a_1;
     kl_t17 = true;
-    kl__Cell__P4Cell__ctor( kl_t2 );
+    kl__Cell__R4Cell__ctor( kl_t2 );
 #line 48 "codegen/generics_owning.kl"
-    kl__consume__4Cell( kl_a_1 );
+    kl__consume__I4CellE__M4Cell( kl_a_1 );
     kl_t17 = false;
 #line 51 "codegen/generics_owning.kl"
     kl_t18 = false;
     kl_t6 = &kl_b_5;
     kl_t18 = true;
-    kl__Cell__P4Cell__ctor( kl_t6 );
+    kl__Cell__R4Cell__ctor( kl_t6 );
 #line 52 "codegen/generics_owning.kl"
-    kl_t9 = kl__relay__4Cell( kl_b_5 );
+    kl_t9 = kl__relay__I4CellE__M4Cell( kl_b_5 );
     kl_t18 = false;
     kl_c_8 = kl_t9;
 #line 55 "codegen/generics_owning.kl"
     kl_t11 = &kl_d_10;
-    kl__Cell__P4Cell__ctor( kl_t11 );
+    kl__Cell__R4Cell__ctor( kl_t11 );
 #line 56 "codegen/generics_owning.kl"
     kl_t13 = &kl_d_10;
-    kl__inspect__4Cell( kl_t13 );
+    kl__inspect__I4CellE__4Cell( kl_t13 );
 #line 59 "codegen/generics_owning.kl"
     kl_t15 = kl_built_2 != 3;
     if ( kl_t15 ) goto bb1; else goto bb2;
@@ -128,14 +128,14 @@ int32_t kl__main__( void )
     return kl_t0;
 }
 
-void kl__consume__4Cell( struct kl__Cell kl_a_1 )
+void kl__consume__I4CellE__M4Cell( struct kl__Cell kl_a_1 )
 {
 #line 29 "codegen/generics_owning.kl"
     kl__Cell__dtor( &kl_a_1 );
     return;
 }
 
-struct kl__Cell kl__relay__4Cell( struct kl__Cell kl_a_1 )
+struct kl__Cell kl__relay__I4CellE__M4Cell( struct kl__Cell kl_a_1 )
 {
     struct kl__Cell kl_t0;
     bool kl_t2;
@@ -147,7 +147,7 @@ struct kl__Cell kl__relay__4Cell( struct kl__Cell kl_a_1 )
     return kl_t0;
 }
 
-void kl__inspect__4Cell( struct kl__Cell* kl_a_1 )
+void kl__inspect__I4CellE__4Cell( struct kl__Cell* kl_a_1 )
 {
     return;
 }

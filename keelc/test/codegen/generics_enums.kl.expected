@@ -66,8 +66,8 @@ struct kl__Span2__I3i32_3f64E
 };
 
 int32_t kl__main__( void );
-int32_t kl__unwrap__3i32( struct kl__Opt__I3i32E, int32_t );
-double kl__unwrap__3f64( struct kl__Opt__I3f64E, double );
+int32_t kl__unwrap__I3i32E__3OptI3i32E_3i32( struct kl__Opt__I3i32E, int32_t );
+double kl__unwrap__I3f64E__3OptI3f64E_3f64( struct kl__Opt__I3f64E, double );
 
 int32_t kl__main__( void )
 {
@@ -123,7 +123,7 @@ int32_t kl__main__( void )
     kl_t7.tag = 0;
     kl_empty_6 = kl_t7;
 #line 72 "codegen/generics_enums.kl"
-    kl_t8 = kl__unwrap__3i32( kl_a_2, 0 );
+    kl_t8 = kl__unwrap__I3i32E__3OptI3i32E_3i32( kl_a_2, 0 );
     kl_t9 = kl_t8 != 7;
     if ( kl_t9 ) goto bb1; else goto bb2;
     bb1:
@@ -134,7 +134,7 @@ int32_t kl__main__( void )
     goto bb3;
     bb3:
 #line 77 "codegen/generics_enums.kl"
-    kl_t10 = kl__unwrap__3i32( kl_empty_6, 4 );
+    kl_t10 = kl__unwrap__I3i32E__3OptI3i32E_3i32( kl_empty_6, 4 );
     kl_t11 = kl_t10 != 4;
     if ( kl_t11 ) goto bb4; else goto bb5;
     bb4:
@@ -145,7 +145,7 @@ int32_t kl__main__( void )
     goto bb6;
     bb6:
 #line 82 "codegen/generics_enums.kl"
-    kl_t13 = kl__unwrap__3f64( kl_b_4, 0.0 );
+    kl_t13 = kl__unwrap__I3f64E__3OptI3f64E_3f64( kl_b_4, 0.0 );
     kl_half_12 = kl_t13;
 #line 84 "codegen/generics_enums.kl"
     kl_t14 = kl_half_12 < 0.4;
@@ -201,7 +201,7 @@ int32_t kl__main__( void )
 #line 113 "codegen/generics_enums.kl"
     kl_s_21.kl_tag_40 = 3;
 #line 115 "codegen/generics_enums.kl"
-    kl_t23 = kl__unwrap__3i32( kl_s_21.kl_value_38, 0 );
+    kl_t23 = kl__unwrap__I3i32E__3OptI3i32E_3i32( kl_s_21.kl_value_38, 0 );
     kl_t24 = kl_t23 != 9;
     if ( kl_t24 ) goto bb20; else goto bb21;
     bb20:
@@ -267,14 +267,14 @@ int32_t kl__main__( void )
     bb35:
 #line 156 "codegen/generics_enums.kl"
     kl_t36 = 30 + kl_s_21.kl_tag_40;
-    kl_t37 = kl__unwrap__3i32( kl_a_2, 0 );
+    kl_t37 = kl__unwrap__I3i32E__3OptI3i32E_3i32( kl_a_2, 0 );
     kl_t38 = kl_t36 + kl_t37;
     kl_t39 = kl_t38 + 2;
     kl_t0 = kl_t39;
     return kl_t0;
 }
 
-int32_t kl__unwrap__3i32( struct kl__Opt__I3i32E kl_o_1, int32_t kl_fallback_2 )
+int32_t kl__unwrap__I3i32E__3OptI3i32E_3i32( struct kl__Opt__I3i32E kl_o_1, int32_t kl_fallback_2 )
 {
     int32_t kl_t0;
     bool kl_t3;
@@ -295,7 +295,7 @@ int32_t kl__unwrap__3i32( struct kl__Opt__I3i32E kl_o_1, int32_t kl_fallback_2 )
     goto bb2;
 }
 
-double kl__unwrap__3f64( struct kl__Opt__I3f64E kl_o_1, double kl_fallback_2 )
+double kl__unwrap__I3f64E__3OptI3f64E_3f64( struct kl__Opt__I3f64E kl_o_1, double kl_fallback_2 )
 {
     double kl_t0;
     bool kl_t3;

@@ -9,13 +9,13 @@ struct kl__Point
     int32_t kl_x_1;
 };
 
-void kl__bump__P3i32( int32_t* );
-void kl__twice__P3i32( int32_t* );
-void kl__slide__P5Point( struct kl__Point* );
+void kl__bump__R3i32( int32_t* );
+void kl__twice__R3i32( int32_t* );
+void kl__slide__R5Point( struct kl__Point* );
 void kl__through__P3i32( int32_t* );
 int32_t kl__main__( void );
 
-void kl__bump__P3i32( int32_t* kl_n_1 )
+void kl__bump__R3i32( int32_t* kl_n_1 )
 {
     int32_t kl_t2;
 #line 11 "codegen/refs.kl"
@@ -24,25 +24,25 @@ void kl__bump__P3i32( int32_t* kl_n_1 )
     return;
 }
 
-void kl__twice__P3i32( int32_t* kl_n_1 )
+void kl__twice__R3i32( int32_t* kl_n_1 )
 {
     int32_t* kl_t2;
     int32_t* kl_t4;
 #line 17 "codegen/refs.kl"
     kl_t2 = &( *kl_n_1 );
-    kl__bump__P3i32( kl_t2 );
+    kl__bump__R3i32( kl_t2 );
 #line 18 "codegen/refs.kl"
     kl_t4 = &( *kl_n_1 );
-    kl__bump__P3i32( kl_t4 );
+    kl__bump__R3i32( kl_t4 );
     return;
 }
 
-void kl__slide__P5Point( struct kl__Point* kl_p_1 )
+void kl__slide__R5Point( struct kl__Point* kl_p_1 )
 {
     int32_t* kl_t2;
 #line 23 "codegen/refs.kl"
     kl_t2 = &( *kl_p_1 ).kl_x_1;
-    kl__bump__P3i32( kl_t2 );
+    kl__bump__R3i32( kl_t2 );
     return;
 }
 
@@ -51,7 +51,7 @@ void kl__through__P3i32( int32_t* kl_q_1 )
     int32_t* kl_t2;
 #line 29 "codegen/refs.kl"
     kl_t2 = &( *kl_q_1 );
-    kl__bump__P3i32( kl_t2 );
+    kl__bump__R3i32( kl_t2 );
     return;
 }
 
@@ -70,10 +70,10 @@ int32_t kl__main__( void )
     kl_x_1 = 0;
 #line 36 "codegen/refs.kl"
     kl_t2 = &kl_x_1;
-    kl__bump__P3i32( kl_t2 );
+    kl__bump__R3i32( kl_t2 );
 #line 37 "codegen/refs.kl"
     kl_t4 = &kl_x_1;
-    kl__twice__P3i32( kl_t4 );
+    kl__twice__R3i32( kl_t4 );
 #line 38 "codegen/refs.kl"
     kl_t6 = &kl_x_1;
     kl__through__P3i32( kl_t6 );
@@ -82,7 +82,7 @@ int32_t kl__main__( void )
     kl_p_8 = kl_t9;
 #line 42 "codegen/refs.kl"
     kl_t10 = &kl_p_8;
-    kl__slide__P5Point( kl_t10 );
+    kl__slide__R5Point( kl_t10 );
 #line 44 "codegen/refs.kl"
     kl_t12 = kl_x_1 + kl_p_8.kl_x_1;
     kl_t0 = kl_t12;

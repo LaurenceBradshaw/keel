@@ -29,12 +29,12 @@ struct kl__Box__I3BoxI3BufEE
 
 int32_t kl_destroyed_2 = 0;
 
-void kl__Buf__P3Buf_3i32__ctor( struct kl__Buf*, int32_t );
+void kl__Buf__R3Buf_3i32__ctor( struct kl__Buf*, int32_t );
 void kl__Buf__dtor( struct kl__Buf* );
 int32_t kl__early__3i32( int32_t );
 int32_t kl__main__( void );
 
-void kl__Buf__P3Buf_3i32__ctor( struct kl__Buf* kl_this_1, int32_t kl_n_2 )
+void kl__Buf__R3Buf_3i32__ctor( struct kl__Buf* kl_this_1, int32_t kl_n_2 )
 {
 #line 15 "codegen/generics_owning_field.kl"
     ( *kl_this_1 ).kl_v_4 = kl_n_2;
@@ -61,7 +61,7 @@ int32_t kl__early__3i32( int32_t kl_n_1 )
 #line 35 "codegen/generics_owning_field.kl"
     kl_t4 = &kl_t3;
     kl_t7 = true;
-    kl__Buf__P3Buf_3i32__ctor( kl_t4, kl_n_1 );
+    kl__Buf__R3Buf_3i32__ctor( kl_t4, kl_n_1 );
     kl_b_2.kl_v_31 = kl_t3;
     kl_t7 = false;
     if ( kl_t7 ) kl__Buf__dtor( &kl_t3 );
@@ -109,7 +109,7 @@ int32_t kl__main__( void )
 #line 50 "codegen/generics_owning_field.kl"
     kl_t3 = &kl_t2;
     kl_t21 = true;
-    kl__Buf__P3Buf_3i32__ctor( kl_t3, 7 );
+    kl__Buf__R3Buf_3i32__ctor( kl_t3, 7 );
     kl_a_1.kl_v_31 = kl_t2;
     kl_t21 = false;
     if ( kl_t21 ) kl__Buf__dtor( &kl_t2 );
@@ -152,7 +152,7 @@ int32_t kl__main__( void )
 #line 80 "codegen/generics_owning_field.kl"
     kl_t12 = &kl_t11;
     kl_t23 = true;
-    kl__Buf__P3Buf_3i32__ctor( kl_t12, 11 );
+    kl__Buf__R3Buf_3i32__ctor( kl_t12, 11 );
     kl_inner_10.kl_v_31 = kl_t11;
     kl_t23 = false;
     kl_t22 = true;

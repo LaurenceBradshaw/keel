@@ -71,24 +71,52 @@ std::string construct_arg_string( std::span<const Type_id> params, const Type_ta
 
     return encoded;
 }
+
+// The marker leads, and every letter it can be is one no encoded type starts with - a type starts
+// with a digit or with `P`.
+std::string construct_arg_string( std::span<const Mangled_parameter> params, const Type_table& types )
+{
+    std::string encoded;
+
+    for( const Mangled_parameter& param : params )
+    {
+        if( !encoded.empty() )
+        {
+            encoded += '_';
+        }
+
+        if( param.marker != '\0' )
+        {
+            encoded += param.marker;
+        }
+
+        encode_type( encoded, param.type, types );
+    }
+
+    return encoded;
+}
 } // namespace
 
 std::string mangle_function(
-    std::string_view         module,
-    std::string_view         name,
-    std::span<const Type_id> params,
-    const Type_table&        types,
-    std::span<const Type_id> type_arguments
+    std::string_view                   module,
+    std::string_view                   name,
+    std::span<const Mangled_parameter> params,
+    const Type_table&                  types,
+    std::span<const Type_id>           type_arguments
 )
 {
-    // An instantiation is named by its *type* arguments and nothing else. Its value parameters are
-    // written in the declaration's parameters - `T` - so including them gave `kl__id__3i32`,
-    // which is unique and reads as though `T` were a type someone could write. Two instantiations
-    // of one generic differ only by type arguments, and two generics cannot share a name, so the
-    // type arguments alone tell every instance apart.
+    // An instantiation carries both. The type arguments alone would collide between two overloads
+    // of one generic at the same arguments, and the parameters alone between two instantiations -
+    // and the parameters are the caller's substituted ones, so nothing here spells a `T`.
     if( !type_arguments.empty() )
     {
-        return fmt::format( "kl_{}_{}__{}", module, name, construct_arg_string( type_arguments, types ) );
+        return fmt::format(
+            "kl_{}_{}__I{}E__{}",
+            module,
+            name,
+            construct_arg_string( type_arguments, types ),
+            construct_arg_string( params, types )
+        );
     }
 
     return fmt::format( "kl_{}_{}__{}", module, name, construct_arg_string( params, types ) );
@@ -122,11 +150,11 @@ std::string mangle_destructor(
 }
 
 std::string mangle_constructor(
-    std::string_view         module,
-    std::string_view         type_name,
-    std::span<const Type_id> type_arguments,
-    std::span<const Type_id> params,
-    const Type_table&        types
+    std::string_view                   module,
+    std::string_view                   type_name,
+    std::span<const Type_id>           type_arguments,
+    std::span<const Mangled_parameter> params,
+    const Type_table&                  types
 )
 {
     const std::string argtypes = construct_arg_string( params, types );
@@ -158,15 +186,25 @@ std::string mangle_local( std::string_view name, u32 declaration )
 namespace keel
 {
 
+namespace
+{
+// A plain by-value parameter, which is what almost every test below wants.
+Mangled_parameter by_value( Type_id type )
+{
+    return Mangled_parameter { .type = type, .marker = '\0' };
+}
+} // namespace
+
 TEST_CASE( "mangle_function_spells_the_signature", "[codegen][mangle]" )
 {
     const Type_table table;
 
-    const Type_id              signed32  = table.integer( 32, true );
-    const Type_id              unsigned8 = table.integer( 8, false );
-    std::vector<Type_id>       none;
-    const std::vector<Type_id> two   = { signed32, signed32 };
-    const std::vector<Type_id> mixed = { unsigned8, table.floating( 64 ) };
+    const Mangled_parameter signed32  = by_value( table.integer( 32, true ) );
+    const Mangled_parameter unsigned8 = by_value( table.integer( 8, false ) );
+
+    std::vector<Mangled_parameter>       none;
+    const std::vector<Mangled_parameter> two   = { signed32, signed32 };
+    const std::vector<Mangled_parameter> mixed = { unsigned8, by_value( table.floating( 64 ) ) };
 
     // The module is empty until M7, which leaves the doubled underscore in place.
     REQUIRE( mangle_function( "", "main", none, table ) == "kl__main__" );
@@ -191,6 +229,62 @@ TEST_CASE( "mangle_function_spells_the_signature", "[codegen][mangle]" )
     }
 }
 
+// The two collisions overloading makes reachable. Both were written down as harmless while a second
+// declaration of a name was caught by name alone, and a second declaration of a name is exactly
+// what overloading permits.
+TEST_CASE( "mangle_tells_apart_what_a_call_site_tells_apart", "[codegen][mangle]" )
+{
+    Type_table table;
+
+    const Type_id i32     = table.integer( 32, true );
+    const Type_id pointer = table.pointer_to( i32 );
+
+    SECTION( "a borrow and a pointer" )
+    {
+        // `void f( ref i32 n )` and `void f( i32* n )`: two parameters a call site distinguishes,
+        // because one is written `f( ref x )` and the other `f( p )`.
+        const Mangled_parameter borrowed[] = { { .type = i32, .marker = 'R' } };
+        const Mangled_parameter pointed[]  = { by_value( pointer ) };
+
+        REQUIRE( mangle_function( "", "f", borrowed, table ) == "kl__f__R3i32" );
+        REQUIRE( mangle_function( "", "f", pointed, table ) == "kl__f__P3i32" );
+        REQUIRE( mangle_function( "", "f", borrowed, table ) != mangle_function( "", "f", pointed, table ) );
+    }
+
+    SECTION( "a transfer and a copy" )
+    {
+        const Mangled_parameter moved[]  = { { .type = i32, .marker = 'M' } };
+        const Mangled_parameter copied[] = { by_value( i32 ) };
+
+        REQUIRE( mangle_function( "", "f", moved, table ) == "kl__f__M3i32" );
+        REQUIRE( mangle_function( "", "f", moved, table ) != mangle_function( "", "f", copied, table ) );
+    }
+
+    SECTION( "two overloads of one generic at the same type arguments" )
+    {
+        // `void f<T>( T a )` and `void f<T>( T a, i32 b )` at `i32`. Named by their type arguments
+        // alone they were one symbol; the parameters are the substituted ones, so neither spells a
+        // `T`.
+        const Mangled_parameter one[] = { by_value( i32 ) };
+        const Mangled_parameter two[] = { by_value( i32 ), by_value( i32 ) };
+        const Type_id           at[]  = { i32 };
+
+        REQUIRE( mangle_function( "", "f", one, table, at ) == "kl__f__I3i32E__3i32" );
+        REQUIRE( mangle_function( "", "f", two, table, at ) == "kl__f__I3i32E__3i32_3i32" );
+        REQUIRE( mangle_function( "", "f", one, table, at ) != mangle_function( "", "f", two, table, at ) );
+    }
+
+    // The one pair that still shares an encoding, and the reason it is allowed to: a `const ref T`
+    // takes no marker at the call, so it may not be declared beside a bare `T` in the first place.
+    SECTION( "a read-only borrow spells like the value it stands for" )
+    {
+        const Mangled_parameter borrowed[] = { by_value( i32 ) };
+        const Mangled_parameter plain[]    = { by_value( i32 ) };
+
+        REQUIRE( mangle_function( "", "f", borrowed, table ) == mangle_function( "", "f", plain, table ) );
+    }
+}
+
 // The property the length prefixes exist for. The previous scheme spelled a type's name with `*`
 // rewritten to `p`, and said in its own comment that it was safe only while every type name was a
 // plain word - a generic aggregate ends that, and a struct may be called anything L15 allows.
@@ -206,8 +300,8 @@ TEST_CASE( "mangle_encodes_every_type_injectively", "[codegen][mangle]" )
 
     SECTION( "a pointer and a struct that spells like one are different" )
     {
-        const Type_id as_pointer[] = { pointer };
-        const Type_id as_struct[]  = { lookalike };
+        const Mangled_parameter as_pointer[] = { by_value( pointer ) };
+        const Mangled_parameter as_struct[]  = { by_value( lookalike ) };
 
         REQUIRE( mangle_function( "", "f", as_pointer, table ) != mangle_function( "", "f", as_struct, table ) );
         REQUIRE( mangle_function( "", "f", as_pointer, table ) == "kl__f__P3i32" );
@@ -218,7 +312,7 @@ TEST_CASE( "mangle_encodes_every_type_injectively", "[codegen][mangle]" )
     {
         // `u8` and `8` next to each other would run together without the lengths, and the
         // separator is for the reader rather than for the parse.
-        const Type_id two[] = { table.integer( 8, false ), table.integer( 8, true ) };
+        const Mangled_parameter two[] = { by_value( table.integer( 8, false ) ), by_value( table.integer( 8, true ) ) };
 
         REQUIRE( mangle_function( "", "f", two, table ) == "kl__f__2u8_2i8" );
     }
@@ -250,14 +344,14 @@ TEST_CASE( "mangle_encodes_every_type_injectively", "[codegen][mangle]" )
         REQUIRE( mangle_struct( "", point, table ) == "kl__Point" );
     }
 
-    SECTION( "an instantiation is named by its type arguments and nothing else" )
+    SECTION( "an instantiation carries its type arguments and its substituted parameters" )
     {
-        // Its value parameters are written in the declaration's own parameters - `T` - so including
-        // them gave `kl__id__T__i32`, which reads as though `T` were a type someone could write.
-        const Type_id declared[]  = { table.parameter( Node_id { 19 }, "T" ) };
-        const Type_id arguments[] = { i32 };
+        // The parameters are substituted before they get here, so `kl__id__T__3i32` - which reads
+        // as though `T` were a type someone could write - is not a form this can produce.
+        const Mangled_parameter substituted[] = { by_value( i32 ) };
+        const Type_id           arguments[]   = { i32 };
 
-        REQUIRE( mangle_function( "", "id", declared, table, arguments ) == "kl__id__3i32" );
+        REQUIRE( mangle_function( "", "id", substituted, table, arguments ) == "kl__id__I3i32E__3i32" );
     }
 }
 

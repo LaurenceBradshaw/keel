@@ -1,0 +1,133 @@
+// PLAN §12. What overloading refuses, and it is one question throughout: could a call site say
+// which of these it meant? Two that it could never tell apart are refused where they are written,
+// and a call that cannot be told apart is refused where it is made.
+
+// Identical parameters. The oldest of these rules, now asked of the signature rather than the name.
+void same( i32 a )
+{
+}
+
+void same( i32 b )
+{
+}
+
+// A return type is not something a call site writes, so it cannot be what tells two apart.
+void returns_differ( i32 a )
+{
+}
+
+i32 returns_differ( i32 a )
+{
+    return a;
+}
+
+// A `const ref` takes no marker at the call, exactly like a bare parameter - so `unmarked( x )`
+// means both of these and neither is reachable.
+void unmarked( i32 a )
+{
+}
+
+void unmarked( const ref i32 a )
+{
+}
+
+// An `extern` keeps its C name, because that is the name someone else defined it under.
+extern void outside( i32 a );
+extern void outside( f64 a );
+
+// A program has one entry point, and it is spelled `main` in C too.
+i32 main()
+{
+    i32 whole = 1;
+    f64 fraction = 1.0;
+
+    // No candidate takes two arguments.
+    pick( whole, whole );
+
+    // No candidate takes a `bool`, and §6.4's widening is not consulted: it is what gets an
+    // argument to a parameter after one has been chosen.
+    pick( true );
+
+    // A `u8` is not an `i32`, though it fits in one.
+    u8 small = 1;
+    pick( small );
+
+    // A literal carries the family it is written in and no more, so it cannot choose between two
+    // parameters that are both in it.
+    ambiguous( 1 );
+
+    // Nor can it choose between two whose difference is one it does not carry.
+    ambiguous( fraction );
+
+    // A method, asked the same questions.
+    Pair p = Pair( 1 );
+    p.get( true );
+    p.get( whole, whole );
+
+    return 0;
+}
+
+void pick( i32 a )
+{
+}
+
+void pick( f64 a )
+{
+}
+
+void ambiguous( i32 a )
+{
+}
+
+void ambiguous( i64 a )
+{
+}
+
+class Pair
+{
+    i32 x;
+
+    Pair( i32 v )
+    {
+        x = v;
+    }
+
+    // Two methods that differ only in their receiver. A call writes the object, never the mode, so
+    // `p.count()` means both.
+    i32 count()
+    {
+        return x;
+    }
+
+    i32 count() const
+    {
+        return x;
+    }
+
+    i32 get( i32 n )
+    {
+        return x + n;
+    }
+};
+
+class Slot<T> where T : Copyable
+{
+    T held;
+
+    Slot( T v )
+    {
+        held = v;
+    }
+
+    // `Slot<i32>` makes these one signature, and a method call writes no type argument that could
+    // say which was meant - so the pair is refused here rather than at that instantiation.
+    i32 put( T a )
+    {
+        return 0;
+    }
+
+    i32 put( i32 a )
+    {
+        return 1;
+    }
+};

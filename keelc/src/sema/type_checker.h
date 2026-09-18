@@ -65,7 +65,7 @@ public:
         std::vector<Node_id>                    struct_order,
         std::unordered_map<u32, Constant_value> constants,
         std::unordered_set<u32>                 owning,
-        std::unordered_map<u32, Node_id>        methods,
+        std::unordered_map<u32, Node_id>        callees,
         std::vector<Instantiation>              instantiations,
         std::unordered_map<u32, u32>            instantiation_of,
         std::vector<Generic_call>               generic_calls
@@ -74,7 +74,7 @@ public:
           types_( std::move( types ) ),
           struct_order_( std::move( struct_order ) ),
           constants_( std::move( constants ) ),
-          methods_( std::move( methods ) ),
+          callees_( std::move( callees ) ),
           owning_( std::move( owning ) ),
           instantiations_( std::move( instantiations ) ),
           instantiation_of_( std::move( instantiation_of ) ),
@@ -116,14 +116,14 @@ public:
         return found == constants_.end() ? std::nullopt : std::optional<Constant_value>( found->second );
     }
 
-    // The Method_decl a `p.area()` resolved to. Carried rather than looked up again: finding a
-    // method by name on a type is a *rule*, and lowering repeating it is how the two would drift
-    // the day that rule grows - inheritance, or a method on a generic.
-    Node_id method_of( Node_id call ) const
+    // The callable a call resolved to - a method, a constructor, or one function out of an overload
+    // set. Carried rather than looked up again: choosing a callable by name and argument types is a
+    // *rule*, and lowering repeating it is how the two would drift the day that rule grows.
+    Node_id callee_of( Node_id call ) const
     {
-        const auto found = methods_.find( call.v );
+        const auto found = callees_.find( call.v );
 
-        return found == methods_.end() ? Node_id {} : found->second;
+        return found == callees_.end() ? Node_id {} : found->second;
     }
 
     const std::vector<Node_id>& struct_order() const
@@ -173,7 +173,7 @@ private:
     std::vector<Type_id>                    types_;
     std::vector<Node_id>                    struct_order_;
     std::unordered_map<u32, Constant_value> constants_; // dependencies first, from the DFS post-order
-    std::unordered_map<u32, Node_id>        methods_;   // Call_expr -> the Method_decl it resolved to
+    std::unordered_map<u32, Node_id>        callees_;   // Call_expr -> the callable it resolved to
     std::unordered_set<u32>                 owning_;
     std::vector<Instantiation>              instantiations_;
     std::unordered_map<u32, u32>            instantiation_of_;

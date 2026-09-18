@@ -12,18 +12,27 @@ namespace keel
 // with a C keyword, a libc name, or the runtime. Mangling is spelled in *Keel* type names, not C
 // ones - `kl__add__i32_i32` - so this file knows nothing about the C backend.
 
-// `kl_<module>_<name>__<argtypes>`. The module is empty until M7, which gives `kl__add__i32_i32`.
-// Parameter types are what make overloads distinct, so they are part of the name even in v0 where
-// no overloads exist.
-// `kl_<module>_<name>__<argtypes>`, plus `__<typeargs>` when the function is an instantiation.
-// Two instantiations of one generic share a declaration and every value-parameter type once
-// substituted, so the type arguments are the only thing that can tell them apart.
+// One parameter as the mangler sees it: its declared type, and the marker a call site writes for
+// it. The marker is part of the name because it is part of what tells two overloads apart - a
+// `ref i32` and an `i32*` are different parameters that would otherwise encode alike, and so are a
+// `move i32` and a bare one. A `const ref i32` takes no marker, which is precisely why it may not
+// be declared beside a bare `i32`, so the two sharing an encoding costs nothing.
+struct Mangled_parameter
+{
+    Type_id type;
+    char    marker = '\0'; // 'R' to borrow, 'M' to transfer, 'O' to assign, none for a plain value
+};
+
+// `kl_<module>_<name>__<argtypes>`, plus `__I<typeargs>E__` before them when the function is an
+// instantiation. The module is empty until M7, which gives `kl__add__3i32_3i32`. Parameter types
+// are what tell two overloads of one name apart, and the type arguments are what tell two
+// instantiations of one generic apart - an overloaded generic needs both.
 std::string mangle_function(
-    std::string_view         module,
-    std::string_view         name,
-    std::span<const Type_id> params,
-    const Type_table&        types,
-    std::span<const Type_id> type_arguments = {}
+    std::string_view                   module,
+    std::string_view                   name,
+    std::span<const Mangled_parameter> params,
+    const Type_table&                  types,
+    std::span<const Type_id>           type_arguments = {}
 );
 // `kl_<module>_<Name>`, plus `__I<args>E` when the aggregate is an instantiation. The type rather
 // than a name, because `Box<i32>` and `Box<f64>` are two C structs from one declaration.
@@ -34,13 +43,14 @@ std::string mangle_struct( std::string_view module, Type_id type, const Type_tab
 std::string mangle_destructor(
     std::string_view module, std::string_view type_name, std::span<const Type_id> type_arguments, const Type_table& types
 );
-// Similarly for constructors, yet they do have arg types because they are overloadable.
+// Similarly for constructors, which carry both for the same reason: the type arguments say which
+// instance, and the parameter types tell that instance's constructors apart.
 std::string mangle_constructor(
-    std::string_view         module,
-    std::string_view         type_name,
-    std::span<const Type_id> type_arguments,
-    std::span<const Type_id> params,
-    const Type_table&        types
+    std::string_view                   module,
+    std::string_view                   type_name,
+    std::span<const Type_id>           type_arguments,
+    std::span<const Mangled_parameter> params,
+    const Type_table&                  types
 );
 
 // A local or parameter. The declaration's node id disambiguates: a Keel program may legitimately

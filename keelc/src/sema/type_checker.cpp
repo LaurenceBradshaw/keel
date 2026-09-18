@@ -484,17 +484,35 @@ std::string quoted_list( std::span<const std::string_view> names )
     return text;
 }
 
+// What an argument says about itself before a candidate has been chosen.
+enum class Argument_kind : u8
+{
+    Typed,
+    Integer,
+    Floating,
+    Anything
+};
+
+struct Argument_shape
+{
+    Argument_kind kind     = Argument_kind::Anything;
+    Type_id       type     = {};
+    Keyword       marker   = Keyword::Count;
+    bool          recorded = false; // whether infer() has already run over it
+};
+
 struct Member_kind
 {
     Node_kind        node;
-    std::string_view noun;   // "constructor"
-    std::string_view prefix; // written before the name: "" or "~"
-    std::string_view remedy; // what to do instead, when a struct declares one
+    std::string_view noun;     // "constructor"
+    std::string_view prefix;   // written before the name: "" or "~"
+    std::string_view remedy;   // what to do instead, when a struct declares one
+    bool             only_one; // a second is refused here rather than by the overload rules
 };
 
 constexpr Member_kind k_member_kinds[] = {
-    { Node_kind::Constructor_decl, "constructor", "", "use `class`, or build this from a literal" },
-    { Node_kind::Destructor_decl, "destructor", "~", "use `class` if this type owns a resource" },
+    { Node_kind::Constructor_decl, "constructor", "", "use `class`, or build this from a literal", false },
+    { Node_kind::Destructor_decl, "destructor", "~", "use `class` if this type owns a resource", true },
 };
 } // namespace
 
@@ -551,6 +569,16 @@ private:
     void check_enum_payloads();
     void check_struct_fields_are_not_owning( Node_id decl );
     void check_member_kind( Node_id decl, const Member_kind& kind );
+
+    // See the definitions: two callables of one name, and whether any call site could tell them
+    // apart. `substitutable` is the member rule - a method or constructor call writes no type
+    // arguments, so a pair that some instantiation would make identical is refused where it is
+    // written rather than where it is called.
+    void    check_overload_sets();
+    void    check_aggregate_overloads( Node_id decl );
+    void    check_overloaded_pair( Node_id first, Node_id second, bool member );
+    bool    parameters_collide( Node_id first, Node_id second, bool member );
+    Keyword call_marker( Node_id param ) const;
 
     bool has_destructor( Node_id decl ) const;
 
@@ -627,9 +655,37 @@ private:
 
     Type_id infer_name( Node_id id );
     Type_id infer_call( Node_id id );
+
+    // See the definitions: choosing one callable out of a set of one name, and what an argument can
+    // say about itself before that choice is made.
+    Node_id select_overload(
+        Node_id                      call,
+        std::string_view             name,
+        std::span<const Node_id>     candidates,
+        u32                          implicit_params,
+        std::vector<Argument_shape>& shapes,
+        std::vector<Type_id>&        resolved
+    );
+    Argument_shape argument_shape( Node_id argument );
+    bool           candidate_accepts(
+                  Node_id callable, u32 implicit_params, std::span<const Argument_shape> shapes, const Bindings& bindings
+              );
+    Node_id     select_method( Node_id call, Node_id first, Type_id receiver, std::vector<Argument_shape>& shapes );
+    bool        marker_accepts( Node_id param, Keyword given, Type_id expected );
+    Bindings    type_bindings( Node_id callable, std::span<const Type_id> arguments ) const;
+    std::string signature_of( Node_id callable, u32 implicit_params, const Bindings& bindings );
+    std::string candidate_list( std::span<const Node_id> candidates, u32 implicit_params, const Bindings& bindings );
+    void        check_call_arguments(
+               Node_id                         call,
+               Node_id                         callable,
+               std::string_view                name,
+               u32                             implicit_params,
+               const Bindings&                 bindings,
+               std::span<const Argument_shape> shapes
+           );
     Type_id infer_method_call( Node_id id );
     Type_id infer_implicit_method_call( Node_id id, Node_id method );
-    Type_id check_method_arguments( Node_id id, Node_id method, Type_id receiver );
+    Type_id check_method_arguments( Node_id id, Node_id method, Type_id receiver, std::span<const Argument_shape> shapes = {} );
     void    record_method_instantiation( Node_id id, Node_id method, Type_id receiver );
     Type_id infer_binary( Node_id id );
     Type_id infer_unary( Node_id id );
@@ -768,7 +824,7 @@ private:
     std::vector<Instantiation> instantiations_;
 
     // Which instantiation each generic call resolved to. Carried rather than recomputed, for the
-    // reason methods_ is: resolving a type argument to a type is this pass's rule, and lowering
+    // reason callees_ is: resolving a type argument to a type is this pass's rule, and lowering
     // repeating it is how the two would drift.
     std::unordered_map<u32, u32> instantiation_of_;
 
@@ -805,7 +861,7 @@ private:
     std::unordered_map<u32, Constant_value> constants_;
 
     // Call_expr -> the Method_decl it resolved to. Recorded so lowering does not repeat the lookup.
-    std::unordered_map<u32, Node_id>   methods_;
+    std::unordered_map<u32, Node_id>   callees_;
     std::unordered_map<u32, Bound_set> bounds_; // Type_param_decl -> its closed bound set
 };
 
@@ -825,7 +881,7 @@ Types Checker::run()
         std::move( struct_order_ ),
         std::move( constants_ ),
         std::move( owning_ ),
-        std::move( methods_ ),
+        std::move( callees_ ),
         std::move( instantiations_ ),
         std::move( instantiation_of_ ),
         std::move( generic_calls_ )
@@ -850,6 +906,7 @@ void Checker::declare_signatures()
     declare_signatures_function_decls();
     declare_signatures_global_decls();
     record_borrowed_parameters();
+    check_overload_sets();
 }
 
 void Checker::declare_signatures_struct_decls()
@@ -1743,12 +1800,17 @@ void Checker::check_member_kind( Node_id decl, const Member_kind& kind )
 
         if( first.is_valid() )
         {
-            // Overloading is outside v0 (§6.6), so a second one has nothing to tell it apart.
-            error_at(
-                ast_.span( member ),
-                fmt::format( "`{}` already has a {}", type_text, kind.noun ),
-                previous_declaration_note( first )
-            );
+            // A destructor takes no parameters, so a second one has nothing to tell it apart. A
+            // constructor does, and check_overload_sets asks whether they differ.
+            if( kind.only_one )
+            {
+                error_at(
+                    ast_.span( member ),
+                    fmt::format( "`{}` already has a {}", type_text, kind.noun ),
+                    previous_declaration_note( first )
+                );
+            }
+
             continue;
         }
 
@@ -1763,6 +1825,207 @@ void Checker::check_member_kind( Node_id decl, const Member_kind& kind )
                 fmt::format( "`{}{}` does not name the enclosing type", kind.prefix, interner_.text( written ) ),
                 fmt::format( "write `{}{}`", kind.prefix, type_text )
             );
+        }
+    }
+}
+
+// D31's markers are part of what a call site writes, so this is the whole of what a call can say
+// about one parameter. `const ref T` takes no marker, which is exactly why it cannot be told from a
+// bare `T` - and `ref T` and `T*` differ here, which is why they can coexist.
+Keyword Checker::call_marker( Node_id param ) const
+{
+    return is_const_binding( ast_, param ) ? Keyword::Count : parameter_mode( param );
+}
+
+bool Checker::parameters_collide( Node_id first, Node_id second, bool member )
+{
+    // A member's parameter 0 is the receiver, which the call site never writes - so two that differ
+    // only in it, `area()` and `area() const`, are one signature and have to be refused here. Read
+    // off the kind rather than from `member`, which answers the unrelated question below.
+    const std::size_t implicit = ast_.kind( first ) == Node_kind::Function_decl ? 0 : 1;
+
+    const std::span<const Node_id> mine   = ast_.children( ast_.child( first, 1 ) ).subspan( implicit );
+    const std::span<const Node_id> theirs = ast_.children( ast_.child( second, 1 ) ).subspan( implicit );
+
+    if( mine.size() != theirs.size() )
+    {
+        return false;
+    }
+
+    const std::vector<Node_id> my_parameters    = type_parameters( ast_, ast_.type_param_list( first ) );
+    const std::vector<Node_id> their_parameters = type_parameters( ast_, ast_.type_param_list( second ) );
+
+    // A call writes its type arguments, so a different count is something the call site says.
+    if( my_parameters.size() != their_parameters.size() )
+    {
+        return false;
+    }
+
+    // `f<T>( T a )` and `f<U>( U a )` are one signature written twice, and their parameters intern
+    // to different types - so the second is read through the first's names before comparing.
+    Bindings bindings;
+
+    for( std::size_t i = 0; i < my_parameters.size(); ++i )
+    {
+        bindings.emplace( types_[their_parameters[i].v].v, types_[my_parameters[i].v] );
+    }
+
+    for( std::size_t i = 0; i < mine.size(); ++i )
+    {
+        if( call_marker( mine[i] ) != call_marker( theirs[i] ) )
+        {
+            return false;
+        }
+
+        const Type_id left  = types_[mine[i].v];
+        const Type_id right = table_.substitute( types_[theirs[i].v], bindings );
+
+        if( left == right )
+        {
+            continue;
+        }
+
+        // Deliberately coarse: `Box<T>` can never be `i32`, and this says it could. Refusing a
+        // legal pair is recoverable, accepting an ambiguous one is not.
+        // A member call writes no type arguments, so a `T` parameter may become anything and a pair
+        // that some instantiation would make identical has to be refused where it is written.
+        if( !member || !( table_.mentions_parameter( left ) || table_.mentions_parameter( right ) ) )
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void Checker::check_overloaded_pair( Node_id first, Node_id second, bool member )
+{
+    const std::string_view name = interner_.text( Symbol_id { ast_.aux( second ) } );
+
+    // An extern names a symbol someone else defined, and `main` is the program's entry point:
+    // both keep their spelling in C, so a second of either has nowhere to differ.
+    if( is_extern( ast_, first ) || is_extern( ast_, second ) )
+    {
+        error_at(
+            ast_.span( second ),
+            fmt::format( "`{}` is defined in C, so it cannot be overloaded", name ),
+            previous_declaration_note( first )
+        );
+
+        return;
+    }
+
+    if( ast_.kind( second ) == Node_kind::Function_decl && name == "main" )
+    {
+        error_at( ast_.span( second ), "a program has one `main`", previous_declaration_note( first ) );
+
+        return;
+    }
+
+    const bool exact = parameters_collide( first, second, false );
+
+    if( !exact )
+    {
+        if( !member || !parameters_collide( first, second, true ) )
+        {
+            return;
+        }
+
+        error_at(
+            ast_.span( second ),
+            fmt::format( "`{}` is already declared, and a type argument could make the two identical", name ),
+            previous_declaration_note( first )
+        );
+
+        return;
+    }
+
+    // Two declarations that differ only in what they return. Worth its own message: the author
+    // wrote a difference, and it is not one a call site can act on.
+    if( types_[first.v] != types_[second.v] )
+    {
+        error_at(
+            ast_.span( second ),
+            fmt::format( "`{}` is already declared with these parameters", name ),
+            "two of one name must differ in their parameters, not only in what they return"
+        );
+
+        return;
+    }
+
+    // And the same for a trailing `const`, which is a habit worth naming: it binds the receiver,
+    // and a call writes the object rather than how the method holds it.
+    if( member && is_const_method( ast_, first ) != is_const_method( ast_, second ) )
+    {
+        error_at(
+            ast_.span( second ),
+            fmt::format( "`{}` is already declared with these parameters", name ),
+            "`const` binds the receiver, which a call site does not write, so it cannot tell two apart"
+        );
+
+        return;
+    }
+
+    error_at(
+        ast_.span( second ),
+        fmt::format( "`{}` is already declared with these parameters", name ),
+        previous_declaration_note( first )
+    );
+}
+
+// Every ordered pair, once: the walk starts from each member of a chain and visits only what
+// follows it.
+void Checker::check_overload_sets()
+{
+    for( const Node_id decl : ast_.children( ast_.root() ) )
+    {
+        if( ast_.kind( decl ) == Node_kind::Function_decl )
+        {
+            for( Node_id other = resolution_.next_overload( decl ); other.is_valid();
+                 other         = resolution_.next_overload( other ) )
+            {
+                check_overloaded_pair( decl, other, false );
+            }
+
+            continue;
+        }
+
+        if( is_aggregate( ast_.kind( decl ) ) )
+        {
+            check_aggregate_overloads( decl );
+        }
+    }
+}
+
+void Checker::check_aggregate_overloads( Node_id decl )
+{
+    std::vector<Node_id> constructors;
+
+    for( const Node_id member : ast_.members( decl ) )
+    {
+        if( ast_.kind( member ) == Node_kind::Constructor_decl )
+        {
+            constructors.push_back( member );
+            continue;
+        }
+
+        if( ast_.kind( member ) != Node_kind::Method_decl )
+        {
+            continue;
+        }
+
+        for( Node_id other = resolution_.next_overload( member ); other.is_valid(); other = resolution_.next_overload( other ) )
+        {
+            check_overloaded_pair( member, other, true );
+        }
+    }
+
+    // Constructors share the type's name rather than a scope, so they have no chain to walk.
+    for( std::size_t i = 0; i < constructors.size(); ++i )
+    {
+        for( std::size_t j = i + 1; j < constructors.size(); ++j )
+        {
+            check_overloaded_pair( constructors[i], constructors[j], true );
         }
     }
 }
@@ -2086,11 +2349,11 @@ bool Checker::is_assignable( Node_id id ) const
     // deliberately leaves shut.
     if( ast_.kind( id ) == Node_kind::Call_expr )
     {
-        // A method call resolves through methods_ rather than the resolver: its callee is a
-        // Field_expr, or a bare name that names a sibling. Either way the question below is the
-        // same one - does this callable hand back a binding.
-        const auto    method = methods_.find( id.v );
-        const Node_id callee = method != methods_.end() ? method->second : resolution_.declaration_of( ast_.child( id, 0 ) );
+        // The callable the checker chose, rather than the name the resolver bound: a method call's
+        // callee is a Field_expr, and an overloaded call's name is only the first candidate. Either
+        // way the question below is the same one - does this callable hand back a binding.
+        const auto    method = callees_.find( id.v );
+        const Node_id callee = method != callees_.end() ? method->second : resolution_.declaration_of( ast_.child( id, 0 ) );
 
         return callee.is_valid() &&
                ( ast_.kind( callee ) == Node_kind::Function_decl || ast_.kind( callee ) == Node_kind::Method_decl ) &&
@@ -3464,176 +3727,407 @@ Type_id Checker::infer_name( Node_id id )
     return record( id, types_[decl.v] );
 }
 
-Type_id Checker::infer_call( Node_id id )
+// The types the call wrote, mapped onto the callable's own type parameters. Positional, because
+// that is the only correspondence there is - `f<T>` and `f<U>` name theirs differently.
+Bindings Checker::type_bindings( Node_id callable, std::span<const Type_id> arguments ) const
 {
-    const Node_id callee = ast_.child( id, 0 );
-    const Node_id args   = ast_.child( id, 1 );
+    const std::vector<Node_id> parameters = type_parameters( ast_, ast_.type_param_list( callable ) );
 
-    // D7: `Shape::Circle( 1.0 )` constructs a variant. Handled before the ordinary call path
-    // because the callee is a Path_expr rather than a name, and because what it checks the
-    // arguments against is a *payload* rather than a parameter list.
-    if( ast_.kind( callee ) == Node_kind::Path_expr )
+    Bindings bindings;
+
+    for( std::size_t i = 0; i < parameters.size() && i < arguments.size(); ++i )
     {
-        return infer_variant_construction( id );
+        // type_of_annotation has already reported an unknown type. Binding the error type keeps
+        // every later substitution total, and check() absorbs it at each argument.
+        bindings.emplace( types_[parameters[i].v].v, arguments[i] );
     }
 
-    // `p.area()` - a method call. The receiver is the Field_expr's object, and the callable is
-    // found on its type, which is the same lookup infer_field does for a field name.
-    if( ast_.kind( callee ) == Node_kind::Field_expr )
+    return bindings;
+}
+
+// D26: a literal has a value rather than a type, and context is what gives it one - so where the
+// context is the thing being chosen, a literal narrows the set to a family and no further. A struct
+// literal takes its instance from the expectation in the same way, so it says nothing at all.
+Argument_shape Checker::argument_shape( Node_id argument )
+{
+    Argument_shape shape;
+
+    Node_id value = argument;
+
+    if( ast_.kind( argument ) == Node_kind::Marker_expr )
     {
-        return infer_method_call( id );
+        shape.marker = static_cast<Keyword>( ast_.aux( argument ) );
+        value        = ast_.child( argument, 0 );
     }
 
-    // v0 has no function pointers, so anything but a plain name in call position has no
-    // declaration to find.
-    const Node_id decl = ast_.kind( callee ) == Node_kind::Name_expr ? resolution_.declaration_of( callee ) : Node_id {};
-
-    // Even on a failed call the arguments must be typed, or later passes meet untyped nodes and a
-    // genuine mistake inside one goes unreported.
-    const auto type_the_arguments_anyway = [&]()
+    if( is_literal_expression( value ) )
     {
-        for( const Node_id arg : ast_.children( args ) )
+        const Node_id inner = ast_.kind( value ) == Node_kind::Unary_expr ? ast_.child( value, 0 ) : value;
+
+        switch( ast_.kind( inner ) )
         {
-            infer( arg );
-        }
-    };
+        case Node_kind::Int_literal:
+        case Node_kind::Char_literal:
+            shape.kind = Argument_kind::Integer;
+            return shape;
 
-    if( !decl.is_valid() )
+        case Node_kind::Float_literal:
+            shape.kind = Argument_kind::Floating;
+            return shape;
+
+        case Node_kind::Bool_literal:
+            // `true` has one type, so it is as informative as a variable - it just has not been
+            // recorded yet, because check_literal is what records a literal.
+            shape.kind = Argument_kind::Typed;
+            shape.type = table_.builtin( Type_kind::Bool );
+            return shape;
+
+        default:
+            return shape; // `nullptr`, which every pointer accepts
+        }
+    }
+
+    if( ast_.kind( value ) == Node_kind::Struct_literal )
     {
-        // An unknown name was already reported by the resolver; say nothing twice.
-        if( ast_.kind( callee ) != Node_kind::Name_expr )
+        return shape;
+    }
+
+    shape.kind     = Argument_kind::Typed;
+    shape.type     = infer( argument );
+    shape.recorded = true;
+
+    return shape;
+}
+
+// D31's marker is part of what the call says, so it selects as much as the type does. The exemption
+// is the one the diagnostic applies too: on a non-owning type `move` is the caller's own assertion
+// about its variable, which the callee never sees.
+bool Checker::marker_accepts( Node_id param, Keyword given, Type_id expected )
+{
+    const Keyword wanted = call_marker( param );
+
+    if( wanted == given )
+    {
+        return true;
+    }
+
+    const bool about_ownership =
+        ( wanted == Keyword::Count || wanted == Keyword::Move ) && ( given == Keyword::Count || given == Keyword::Move );
+
+    return about_ownership && !is_owning_type( expected );
+}
+
+// Exactly, or not at all. §6.4's widening is what gets an argument to a parameter *after* one has
+// been chosen; letting it choose would mean ranking two parameters that both accept, which is the
+// machinery D5 deleted.
+bool Checker::candidate_accepts(
+    Node_id callable, u32 implicit_params, std::span<const Argument_shape> shapes, const Bindings& bindings
+)
+{
+    const std::span<const Node_id> params = ast_.children( ast_.child( callable, 1 ) ).subspan( implicit_params );
+
+    for( std::size_t i = 0; i < params.size() && i < shapes.size(); ++i )
+    {
+        const Type_id expected = table_.substitute( types_[params[i].v], bindings );
+
+        // A parameter whose own type failed to resolve accepts anything: the error is already
+        // reported, and refusing here would answer it with a second one about the call.
+        if( table_.is_error( expected ) )
         {
-            error_at( ast_.span( callee ), "this expression is not callable" );
+            continue;
         }
 
-        type_the_arguments_anyway();
-        return record( id, table_.builtin( Type_kind::Error ) );
+        if( !marker_accepts( params[i], shapes[i].marker, expected ) )
+        {
+            return false;
+        }
+
+        switch( shapes[i].kind )
+        {
+        case Argument_kind::Typed:
+            if( shapes[i].type != expected )
+            {
+                return false;
+            }
+            break;
+
+        case Argument_kind::Integer:
+            if( !table_.is_integer( expected ) )
+            {
+                return false;
+            }
+            break;
+
+        case Argument_kind::Floating:
+            if( !table_.is_float( expected ) )
+            {
+                return false;
+            }
+            break;
+
+        case Argument_kind::Anything:
+            break;
+        }
     }
 
-    const Node_id          type_args = ast_.child( id, 2 );
-    const std::string_view name      = interner_.text( Symbol_id { ast_.aux( callee ) } );
+    return true;
+}
 
-    // A generic call on something that is not generic. After 1b the parser reads `a < b > ( c )`
-    // this way, so this is the message that shape produces - it has to name the real problem.
-    if( type_args.is_valid() && !is_generic( ast_, decl ) )
+// The signature as a call site would have to write it, for a diagnostic that has to say what the
+// author could have meant.
+std::string Checker::signature_of( Node_id callable, u32 implicit_params, const Bindings& bindings )
+{
+    const std::span<const Node_id> params = ast_.children( ast_.child( callable, 1 ) ).subspan( implicit_params );
+
+    std::string text = "(";
+
+    for( std::size_t i = 0; i < params.size(); ++i )
     {
-        error_at( ast_.span( callee ), fmt::format( "`{}` is not a generic", name ) );
+        const Keyword marker = call_marker( params[i] );
 
-        type_the_arguments_anyway();
-        return record( id, table_.builtin( Type_kind::Error ) );
+        text += fmt::format(
+            "{}{}{}",
+            i == 0 ? " " : ", ",
+            marker == Keyword::Count ? "" : fmt::format( "{} ", interner_.text( Interner::keyword( marker ) ) ),
+            table_.name( table_.substitute( types_[params[i].v], bindings ) )
+        );
     }
 
-    // And the mirror: a generic whose type arguments were not written. Inferring them from the
-    // value arguments is a decision of its own and is not taken here, so this names the explicit
-    // form rather than guessing. Without it the parameters stay unbound and substitution has
-    // nothing to look up.
-    if( !type_args.is_valid() && is_generic( ast_, decl ) )
+    return text + ( params.empty() ? ")" : " )" );
+}
+
+std::string Checker::candidate_list( std::span<const Node_id> candidates, u32 implicit_params, const Bindings& bindings )
+{
+    std::string text;
+
+    for( std::size_t i = 0; i < candidates.size(); ++i )
     {
+        if( i != 0 )
+        {
+            text += i + 1 == candidates.size() ? " and " : ", ";
+        }
+
+        text += fmt::format( "`{}`", signature_of( candidates[i], implicit_params, bindings ) );
+    }
+
+    return text;
+}
+
+// The set narrowed to one, or invalid with a diagnostic already reported. Only ever reached with
+// two or more candidates: one is the ordinary path, which this must leave exactly as it was.
+Node_id Checker::select_overload(
+    Node_id                      call,
+    std::string_view             name,
+    std::span<const Node_id>     candidates,
+    u32                          implicit_params,
+    std::vector<Argument_shape>& shapes,
+    std::vector<Type_id>&        resolved
+)
+{
+    const std::span<const Node_id> arguments = ast_.children( ast_.child( call, 1 ) );
+    const Node_id                  type_args = ast_.child( call, 2 );
+    const std::size_t              written   = type_args.is_valid() ? ast_.children( type_args ).size() : 0;
+
+    // How many arguments and how many type arguments are what the call *says*, so they narrow the
+    // set before anything is typed - and typing an argument is what cannot be taken back.
+    std::vector<Node_id> viable;
+
+    for( const Node_id candidate : candidates )
+    {
+        const std::size_t params = ast_.children( ast_.child( candidate, 1 ) ).size() - implicit_params;
+
+        if( params == arguments.size() && type_parameters( ast_, ast_.type_param_list( candidate ) ).size() == written )
+        {
+            viable.push_back( candidate );
+        }
+    }
+
+    if( viable.empty() )
+    {
+        // Which of the two filters emptied it. Both are things the call site wrote, so naming the
+        // wrong one would send the author to the wrong half of their own line.
+        const bool arity = std::none_of(
+            candidates.begin(),
+            candidates.end(),
+            [&]( Node_id candidate )
+            { return ast_.children( ast_.child( candidate, 1 ) ).size() - implicit_params == arguments.size(); }
+        );
+
         error_at(
-            ast_.span( callee ),
-            fmt::format( "`{}` is generic, so its type arguments must be written", name ),
-            fmt::format( "as in `{}<i32>( ... )`", name )
+            ast_.span( call ),
+            arity ? fmt::format( "no `{}` takes {} argument{}", name, arguments.size(), arguments.size() == 1 ? "" : "s" )
+                  : fmt::format( "no `{}` takes {} type argument{}", name, written, written == 1 ? "" : "s" ),
+            fmt::format( "the ones declared take {}", candidate_list( candidates, implicit_params, {} ) )
         );
 
-        type_the_arguments_anyway();
-        return record( id, table_.builtin( Type_kind::Error ) );
+        return Node_id {};
     }
 
-    // What the arguments are checked against, what the call produces, and how many leading
-    // parameters are not the author's to supply. For a plain function all three are the obvious
-    // answers; a construction is where they come apart.
-    Node_id callable        = decl;
-    Type_id result          = types_[decl.v];
-    u32     implicit_params = 0;
-
-    if( is_aggregate( ast_.kind( decl ) ) )
+    if( viable.size() == 1 )
     {
-        // `Buffer( 16 )` names a type, not a function: the arguments belong to its constructor, but
-        // the result is the type itself - a constructor returns nothing and writes through `this`.
-        callable = find_member( decl, Node_kind::Constructor_decl );
-
-        if( !callable.is_valid() )
-        {
-            error_at(
-                ast_.span( callee ),
-                fmt::format( "`{}` has no constructor", name ),
-                fmt::format( "build it from a literal: `{} {{ ... }}`", name )
-            );
-            type_the_arguments_anyway();
-            return record( id, table_.builtin( Type_kind::Error ) );
-        }
-
-        // The receiver is an ordinary first parameter, so skipping it here is what stops every
-        // call site owing an extra argument.
-        implicit_params = 1;
+        return viable.front();
     }
-    else if( ast_.kind( decl ) == Node_kind::Method_decl )
+
+    for( const Node_id argument : arguments )
     {
-        // A bare `add( by )` inside a method is `this.add( by )`: the member scope puts a sibling
-        // in reach by name, and the receiver is the one this function was given.
-        return infer_implicit_method_call( id, decl );
+        shapes.push_back( argument_shape( argument ) );
     }
-    else if( ast_.kind( decl ) != Node_kind::Function_decl )
-    {
-        error_at( ast_.span( callee ), fmt::format( "`{}` is not callable", name ) );
-        type_the_arguments_anyway();
-        return record( id, table_.builtin( Type_kind::Error ) );
-    }
-
-    if( is_extern( ast_, callable ) )
-    {
-        require_unsafe(
-            callee,
-            fmt::format( "calling `{}` needs an `unsafe` block", name ),
-            "it is defined in C, so the compiler cannot check what it does with its arguments"
-        );
-    }
-
-    std::unordered_map<u32, Type_id> bindings;
 
     if( type_args.is_valid() )
     {
-        std::vector<Type_id> resolved;
-
-        if( !resolve_type_arguments( callable, type_args, name, resolved ) )
+        for( const Node_id written_argument : ast_.children( type_args ) )
         {
-            type_the_arguments_anyway();
-            return record( id, table_.builtin( Type_kind::Error ) );
+            resolved.push_back( type_of_annotation( written_argument ) );
         }
-
-        const std::vector<Node_id> parameters = type_parameters( ast_, ast_.type_param_list( callable ) );
-
-        for( std::size_t i = 0; i < parameters.size(); ++i )
-        {
-            // type_of_annotation has already reported an unknown type. Binding the error type keeps
-            // every later substitution total, and check() absorbs it at each argument.
-            // An argument that failed a bound is bound anyway: the value arguments are still worth
-            // checking against it, and the error above is what makes the compile fail.
-            bindings.emplace( types_[parameters[i].v].v, resolved[i] );
-        }
-
-        // The edge, before `resolved` is consumed. Only from inside a generic: a call in `main` is
-        // already an instance rather than a step towards one.
-        if( is_generic( ast_, current_function_ ) )
-        {
-            generic_calls_.push_back(
-                Generic_call { .from = current_function_, .to = callable, .arguments = resolved, .at = ast_.span( id ) }
-            );
-        }
-
-        const std::size_t instance = record_instantiation( callable, std::move( resolved ) );
-
-        instantiation_of_.emplace( id.v, narrow_cast<u32>( instance ) );
     }
 
+    std::vector<Node_id> matching;
+
+    for( const Node_id candidate : viable )
+    {
+        if( candidate_accepts( candidate, implicit_params, shapes, type_bindings( candidate, resolved ) ) )
+        {
+            matching.push_back( candidate );
+        }
+    }
+
+    if( matching.size() == 1 )
+    {
+        return matching.front();
+    }
+
+    if( matching.empty() )
+    {
+        error_at(
+            ast_.span( call ),
+            fmt::format( "no `{}` matches these arguments", name ),
+            fmt::format( "the ones declared take {}", candidate_list( viable, implicit_params, {} ) )
+        );
+
+        return Node_id {};
+    }
+
+    // More than one matches. A literal is the usual cause: it carries a family rather than a type,
+    // so it cannot choose between two parameters in one family.
+    error_at(
+        ast_.span( call ),
+        fmt::format( "this call to `{}` is ambiguous", name ),
+        fmt::format(
+            "more than one matches: {}; write a type the call can be told by", candidate_list( matching, implicit_params, {} )
+        )
+    );
+
+    return Node_id {};
+}
+
+// The same choice, made from a receiver's members rather than from a scope. A method call writes
+// no type arguments - the receiver carries them - so arity is the only filter before the types, and
+// the bindings are the instance's.
+Node_id Checker::select_method( Node_id call, Node_id first, Type_id receiver, std::vector<Argument_shape>& shapes )
+{
+    std::vector<Node_id> candidates;
+
+    for( Node_id candidate = first; candidate.is_valid(); candidate = resolution_.next_overload( candidate ) )
+    {
+        candidates.push_back( candidate );
+    }
+
+    if( candidates.size() == 1 )
+    {
+        return candidates.front();
+    }
+
+    const std::span<const Node_id> arguments = ast_.children( ast_.child( call, 1 ) );
+    const std::string_view         name      = interner_.text( Symbol_id { ast_.aux( first ) } );
+    const Bindings                 bindings  = bindings_of( receiver );
+
+    std::vector<Node_id> viable;
+
+    for( const Node_id candidate : candidates )
+    {
+        if( ast_.children( ast_.child( candidate, 1 ) ).size() - 1 == arguments.size() )
+        {
+            viable.push_back( candidate );
+        }
+    }
+
+    if( viable.empty() )
+    {
+        error_at(
+            ast_.span( call ),
+            fmt::format( "no `{}` takes {} argument{}", name, arguments.size(), arguments.size() == 1 ? "" : "s" ),
+            fmt::format( "the ones declared take {}", candidate_list( candidates, 1, bindings ) )
+        );
+
+        return Node_id {};
+    }
+
+    if( viable.size() == 1 )
+    {
+        return viable.front();
+    }
+
+    for( const Node_id argument : arguments )
+    {
+        shapes.push_back( argument_shape( argument ) );
+    }
+
+    std::vector<Node_id> matching;
+
+    for( const Node_id candidate : viable )
+    {
+        if( candidate_accepts( candidate, 1, shapes, bindings ) )
+        {
+            matching.push_back( candidate );
+        }
+    }
+
+    if( matching.size() == 1 )
+    {
+        return matching.front();
+    }
+
+    if( matching.empty() )
+    {
+        error_at(
+            ast_.span( call ),
+            fmt::format( "no `{}` matches these arguments", name ),
+            fmt::format( "the ones declared take {}", candidate_list( viable, 1, bindings ) )
+        );
+
+        return Node_id {};
+    }
+
+    error_at(
+        ast_.span( call ),
+        fmt::format( "this call to `{}` is ambiguous", name ),
+        fmt::format(
+            "more than one matches: {}; write a type the call can be told by", candidate_list( matching, 1, bindings )
+        )
+    );
+
+    return Node_id {};
+}
+
+// The arguments against the chosen callable's parameters. `shapes` is empty on the ordinary path,
+// and on the overloaded one it says which arguments selection has already typed.
+void Checker::check_call_arguments(
+    Node_id                         call,
+    Node_id                         callable,
+    std::string_view                name,
+    u32                             implicit_params,
+    const Bindings&                 bindings,
+    std::span<const Argument_shape> shapes
+)
+{
     const std::span<const Node_id> declared  = ast_.children( ast_.child( callable, 1 ) );
     const std::span<const Node_id> params    = declared.subspan( implicit_params );
-    const std::span<const Node_id> arguments = ast_.children( args );
+    const std::span<const Node_id> arguments = ast_.children( ast_.child( call, 1 ) );
 
     if( params.size() != arguments.size() )
     {
         error_at(
-            ast_.span( args ),
+            ast_.span( ast_.child( call, 1 ) ),
             fmt::format(
                 "`{}` takes {} argument{}, but {} {} given",
                 name,
@@ -3658,7 +4152,12 @@ Type_id Checker::infer_call( Node_id id )
         // ordinary path needs no branch.
         const Type_id expected = table_.substitute( types_[params[i].v], bindings );
 
-        check( arguments[i], expected );
+        // Already typed by selection, which had to know what it was choosing between. Typing it
+        // again would report a mistake inside it twice.
+        if( i >= shapes.size() || !shapes[i].recorded )
+        {
+            check( arguments[i], expected );
+        }
 
         // D2: transfer is visible at the call *and* in the signature, and neither alone is enough -
         // a reader of one should never have to find the other.
@@ -3731,8 +4230,223 @@ Type_id Checker::infer_call( Node_id id )
 
     for( std::size_t i = shared; i < arguments.size(); ++i )
     {
-        infer( arguments[i] );
+        if( i >= shapes.size() || !shapes[i].recorded )
+        {
+            infer( arguments[i] );
+        }
     }
+}
+
+Type_id Checker::infer_call( Node_id id )
+{
+    const Node_id callee = ast_.child( id, 0 );
+    const Node_id args   = ast_.child( id, 1 );
+
+    // D7: `Shape::Circle( 1.0 )` constructs a variant. Handled before the ordinary call path
+    // because the callee is a Path_expr rather than a name, and because what it checks the
+    // arguments against is a *payload* rather than a parameter list.
+    if( ast_.kind( callee ) == Node_kind::Path_expr )
+    {
+        return infer_variant_construction( id );
+    }
+
+    // `p.area()` - a method call. The receiver is the Field_expr's object, and the callable is
+    // found on its type, which is the same lookup infer_field does for a field name.
+    if( ast_.kind( callee ) == Node_kind::Field_expr )
+    {
+        return infer_method_call( id );
+    }
+
+    // v0 has no function pointers, so anything but a plain name in call position has no
+    // declaration to find.
+    const Node_id decl = ast_.kind( callee ) == Node_kind::Name_expr ? resolution_.declaration_of( callee ) : Node_id {};
+
+    // What choosing between candidates already had to type. Empty until it does, which is every
+    // call with one candidate - so the ordinary path types each argument exactly once, as before.
+    std::vector<Argument_shape> shapes;
+
+    // Even on a failed call the arguments must be typed, or later passes meet untyped nodes and a
+    // genuine mistake inside one goes unreported. Typed *once*: an argument reported twice is one
+    // mistake told twice.
+    const auto type_the_arguments_anyway = [&]()
+    {
+        const std::span<const Node_id> list = ast_.children( args );
+
+        for( std::size_t i = 0; i < list.size(); ++i )
+        {
+            if( i < shapes.size() && shapes[i].recorded )
+            {
+                continue;
+            }
+
+            infer( list[i] );
+        }
+    };
+
+    if( !decl.is_valid() )
+    {
+        // An unknown name was already reported by the resolver; say nothing twice.
+        if( ast_.kind( callee ) != Node_kind::Name_expr )
+        {
+            error_at( ast_.span( callee ), "this expression is not callable" );
+        }
+
+        type_the_arguments_anyway();
+        return record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    const Node_id          type_args = ast_.child( id, 2 );
+    const std::string_view name      = interner_.text( Symbol_id { ast_.aux( callee ) } );
+
+    // What the arguments are checked against, what the call produces, and how many leading
+    // parameters are not the author's to supply. For a plain function all three are the obvious
+    // answers; a construction is where they come apart.
+    Type_id result          = types_[decl.v];
+    u32     implicit_params = 0;
+
+    std::vector<Node_id> candidates;
+
+    if( is_aggregate( ast_.kind( decl ) ) )
+    {
+        // `Buffer( 16 )` names a type, not a function: the arguments belong to its constructors,
+        // but the result is the type itself - a constructor returns nothing and writes through
+        // `this`. They share the type's name rather than a scope, so they have no chain to walk.
+        for( const Node_id member : ast_.members( decl ) )
+        {
+            if( ast_.kind( member ) == Node_kind::Constructor_decl )
+            {
+                candidates.push_back( member );
+            }
+        }
+
+        if( candidates.empty() )
+        {
+            error_at(
+                ast_.span( callee ),
+                fmt::format( "`{}` has no constructor", name ),
+                fmt::format( "build it from a literal: `{} {{ ... }}`", name )
+            );
+            type_the_arguments_anyway();
+            return record( id, table_.builtin( Type_kind::Error ) );
+        }
+
+        // The receiver is an ordinary first parameter, so skipping it here is what stops every
+        // call site owing an extra argument.
+        implicit_params = 1;
+    }
+    else if( ast_.kind( decl ) == Node_kind::Method_decl )
+    {
+        // A bare `add( by )` inside a method is `this.add( by )`: the member scope puts a sibling
+        // in reach by name, and the receiver is the one this function was given.
+        return infer_implicit_method_call( id, decl );
+    }
+    else if( ast_.kind( decl ) != Node_kind::Function_decl )
+    {
+        error_at( ast_.span( callee ), fmt::format( "`{}` is not callable", name ) );
+        type_the_arguments_anyway();
+        return record( id, table_.builtin( Type_kind::Error ) );
+    }
+    else
+    {
+        for( Node_id candidate = decl; candidate.is_valid(); candidate = resolution_.next_overload( candidate ) )
+        {
+            candidates.push_back( candidate );
+        }
+    }
+
+    // Resolved once and read by every candidate: resolving inside the loop would report an unknown
+    // type once per candidate. Left empty on the one-candidate path, where the call below fills it.
+    std::vector<Type_id> resolved;
+    Node_id              callable {};
+
+    if( candidates.size() == 1 )
+    {
+        callable = candidates.front();
+
+        // A generic call on something that is not generic. After 1b the parser reads `a < b > ( c )`
+        // this way, so this is the message that shape produces - it has to name the real problem.
+        if( type_args.is_valid() && !is_generic( ast_, callable ) )
+        {
+            error_at( ast_.span( callee ), fmt::format( "`{}` is not a generic", name ) );
+
+            type_the_arguments_anyway();
+            return record( id, table_.builtin( Type_kind::Error ) );
+        }
+
+        // And the mirror: a generic whose type arguments were not written. Inferring them from the
+        // value arguments is a decision of its own and is not taken here, so this names the explicit
+        // form rather than guessing. Without it the parameters stay unbound and substitution has
+        // nothing to look up.
+        if( !type_args.is_valid() && is_generic( ast_, callable ) )
+        {
+            error_at(
+                ast_.span( callee ),
+                fmt::format( "`{}` is generic, so its type arguments must be written", name ),
+                fmt::format( "as in `{}<i32>( ... )`", name )
+            );
+
+            type_the_arguments_anyway();
+            return record( id, table_.builtin( Type_kind::Error ) );
+        }
+    }
+    else
+    {
+        callable = select_overload( id, name, candidates, implicit_params, shapes, resolved );
+
+        if( !callable.is_valid() )
+        {
+            type_the_arguments_anyway();
+            return record( id, table_.builtin( Type_kind::Error ) );
+        }
+    }
+
+    // The chosen callable's return type, not the name's. `decl` is only the first candidate, so
+    // reading the result off it hands every call in a set the first one's type.
+    if( !is_aggregate( ast_.kind( decl ) ) )
+    {
+        result = types_[callable.v];
+    }
+
+    // Recorded for every call, not only an overloaded one: lowering reads the choice rather than
+    // making it, and a rule applied in one pass and repeated in another is a rule that drifts.
+    callees_.emplace( id.v, callable );
+
+    if( is_extern( ast_, callable ) )
+    {
+        require_unsafe(
+            callee,
+            fmt::format( "calling `{}` needs an `unsafe` block", name ),
+            "it is defined in C, so the compiler cannot check what it does with its arguments"
+        );
+    }
+
+    Bindings bindings;
+
+    if( type_args.is_valid() )
+    {
+        if( !resolve_type_arguments( callable, type_args, name, resolved ) )
+        {
+            type_the_arguments_anyway();
+            return record( id, table_.builtin( Type_kind::Error ) );
+        }
+
+        bindings = type_bindings( callable, resolved );
+
+        // The edge, before `resolved` is consumed. Only from inside a generic: a call in `main` is
+        // already an instance rather than a step towards one.
+        if( is_generic( ast_, current_function_ ) )
+        {
+            generic_calls_.push_back(
+                Generic_call { .from = current_function_, .to = callable, .arguments = resolved, .at = ast_.span( id ) }
+            );
+        }
+
+        const std::size_t instance = record_instantiation( callable, std::move( resolved ) );
+
+        instantiation_of_.emplace( id.v, narrow_cast<u32>( instance ) );
+    }
+
+    check_call_arguments( id, callable, name, implicit_params, bindings, shapes );
 
     // Substituted here rather than where `result` is set: the aggregate path overwrites it with
     // the type being constructed, so doing it earlier would substitute the wrong thing or twice.
@@ -3763,15 +4477,11 @@ Type_id Checker::infer_method_call( Node_id id )
         return record( id, table_.builtin( Type_kind::Error ) );
     }
 
-    // The aggregate, not the call: find_method searches a declaration's members.
-    const Node_id method = find_method( table_.get( object_type ).declaration, Symbol_id { ast_.aux( callee ) } );
+    // The aggregate, not the call: find_method searches a declaration's members, and hands back
+    // the first of however many share the name.
+    const Node_id first = find_method( table_.get( object_type ).declaration, Symbol_id { ast_.aux( callee ) } );
 
-    if( method.is_valid() )
-    {
-        methods_.emplace( id.v, method );
-    }
-
-    if( !method.is_valid() )
+    if( !first.is_valid() )
     {
         // Check if a field of the same name exists, which is a common mistake when a method is expected. The
         // field's type is not a method, so it cannot be called.
@@ -3800,6 +4510,25 @@ Type_id Checker::infer_method_call( Node_id id )
         return record( id, table_.builtin( Type_kind::Error ) );
     }
 
+    std::vector<Argument_shape> shapes;
+
+    const Node_id method = select_method( id, first, object_type, shapes );
+
+    if( !method.is_valid() )
+    {
+        for( std::size_t i = 0; i < ast_.children( ast_.child( id, 1 ) ).size(); ++i )
+        {
+            if( i >= shapes.size() || !shapes[i].recorded )
+            {
+                infer( ast_.children( ast_.child( id, 1 ) )[i] );
+            }
+        }
+
+        return record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    callees_.emplace( id.v, method );
+
     // A method without a trailing `const` takes its receiver as `ref T` and may write the object,
     // so calling one needs a receiver that may be written. That is exactly check_writable's
     // question - asked of the object rather than of an assignment - so a `const` local, a
@@ -3810,12 +4539,12 @@ Type_id Checker::infer_method_call( Node_id id )
         return record( id, table_.builtin( Type_kind::Error ) );
     }
 
-    return check_method_arguments( id, method, object_type );
+    return check_method_arguments( id, method, object_type, shapes );
 }
 
 // Shared by both call shapes - `p.area()` and a bare `area()` inside a method - because what is
 // checked is the same: the parameters from 1, the receiver having been supplied either way.
-Type_id Checker::check_method_arguments( Node_id id, Node_id method, Type_id receiver )
+Type_id Checker::check_method_arguments( Node_id id, Node_id method, Type_id receiver, std::span<const Argument_shape> shapes )
 {
     const std::span<const Node_id> params    = ast_.children( ast_.child( method, 1 ) ).subspan( 1 );
     const std::span<const Node_id> arguments = ast_.children( ast_.child( id, 1 ) );
@@ -3849,7 +4578,11 @@ Type_id Checker::check_method_arguments( Node_id id, Node_id method, Type_id rec
         const Node_id param = params[i];
         const Node_id arg   = arguments[i];
 
-        check( arg, table_.substitute( types_[param.v], bindings ) );
+        // Already typed by selection, which had to know what it was choosing between.
+        if( i >= shapes.size() || !shapes[i].recorded )
+        {
+            check( arg, table_.substitute( types_[param.v], bindings ) );
+        }
     }
 
     record_method_instantiation( id, method, receiver );
@@ -3914,6 +4647,23 @@ Type_id Checker::infer_implicit_method_call( Node_id id, Node_id method )
         return record( id, table_.builtin( Type_kind::Error ) );
     }
 
+    std::vector<Argument_shape> shapes;
+
+    method = select_method( id, method, types_[receiver.v], shapes );
+
+    if( !method.is_valid() )
+    {
+        for( std::size_t i = 0; i < ast_.children( ast_.child( id, 1 ) ).size(); ++i )
+        {
+            if( i >= shapes.size() || !shapes[i].recorded )
+            {
+                infer( ast_.children( ast_.child( id, 1 ) )[i] );
+            }
+        }
+
+        return record( id, table_.builtin( Type_kind::Error ) );
+    }
+
     if( !is_const_method( ast_, method ) && is_const_binding( ast_, receiver ) )
     {
         error_at(
@@ -3932,9 +4682,9 @@ Type_id Checker::infer_implicit_method_call( Node_id id, Node_id method )
         return record( id, table_.builtin( Type_kind::Error ) );
     }
 
-    methods_.emplace( id.v, method );
+    callees_.emplace( id.v, method );
 
-    return check_method_arguments( id, method, types_[receiver.v] );
+    return check_method_arguments( id, method, types_[receiver.v], shapes );
 }
 
 Type_id Checker::infer_binary( Node_id id )
@@ -5098,15 +5848,21 @@ bool Checker::resolve_type_arguments(
         return false;
     }
 
-    resolved.reserve( parameters.size() );
+    // Non-empty when a call with several candidates has already resolved them - once, because
+    // resolving per candidate would report an unknown type once per candidate.
+    if( resolved.empty() )
+    {
+        resolved.reserve( parameters.size() );
+
+        for( const Node_id argument : given )
+        {
+            resolved.push_back( type_of_annotation( argument ) );
+        }
+    }
 
     for( std::size_t i = 0; i < parameters.size(); ++i )
     {
-        const Type_id argument = type_of_annotation( given[i] );
-
-        resolved.push_back( argument );
-
-        check_bounds( parameters[i], given[i], argument, name );
+        check_bounds( parameters[i], given[i], resolved[i], name );
     }
 
     return true;
@@ -10740,14 +11496,22 @@ TEST_CASE( "type_checker_checks_constructor_declarations", "[sema][aggregates]" 
         REQUIRE( p.errors() == 1 );
     }
 
-    // §6.6 puts overloading outside v0, so a second one has nothing to distinguish it.
-    SECTION( "two constructors are rejected once" )
+    SECTION( "two constructors that differ coexist" )
     {
         const Typed p( "class Buffer { u64 len; Buffer( u64 n ) { } Buffer( i32 m ) { } };\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "two constructors with the same parameters are rejected once" )
+    {
+        const Typed p( "class Buffer { u64 len; Buffer( u64 n ) { } Buffer( u64 m ) { } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
         REQUIRE_FALSE( p.clean() );
         REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "already declared with these parameters" ) != std::string::npos );
     }
 
     SECTION( "a constructor beside a destructor is fine" )
@@ -10777,6 +11541,325 @@ TEST_CASE( "type_checker_checks_constructor_declarations", "[sema][aggregates]" 
 
 // `Buffer( 16 )` is a Call_expr whose callee names a type rather than a function. Its result is the
 // type itself, and its parameters are the constructor's with the receiver skipped.
+// §12. Two callables may share a name when a call site can tell them apart. Every case below is
+// one reading of that: what the call says, what it cannot say, and what is refused for saying
+// nothing at all.
+TEST_CASE( "type_checker_chooses_between_overloads", "[sema][overload]" )
+{
+    // Every case below reads the answer off the *return* type, and the two return types are `bool`
+    // and `i32`, which §6.4 widens into each other in neither direction - so each assignment type
+    // checks only if the call chose the overload it was meant to.
+    SECTION( "by the argument's own type" )
+    {
+        const Typed p( "i32 f( i32 a ) { return 1; }\nbool f( f64 a ) { return true; }\n"
+                       "i32 main() { f64 d = 1.0; bool b = f( d ); return f( 1 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and the wrong one really would be refused" )
+    {
+        const Typed p( "i32 f( i32 a ) { return 1; }\nbool f( f64 a ) { return true; }\n"
+                       "i32 main() { f64 d = 1.0; i32 n = f( d ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "expected `i32`, but got `bool`" ) != std::string::npos );
+    }
+
+    SECTION( "by how many arguments there are" )
+    {
+        const Typed p( "i32 f( i32 a ) { return 1; }\nbool f( i32 a, i32 b ) { return true; }\n"
+                       "i32 main() { bool b = f( 1, 2 ); return f( 1 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // D26: a literal has a value rather than a type, and here the context that would give it one is
+    // what is being chosen - so it narrows the set to a family and no further.
+    SECTION( "a literal carries the family it is written in" )
+    {
+        const Typed p( "i32 f( i32 a ) { return 1; }\nbool f( f64 a ) { return true; }\n"
+                       "i32 main() { bool b = f( 1.5 ); return f( 1 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and cannot choose between two in one family" )
+    {
+        const Typed p( "i32 f( i32 a ) { return 1; }\nf64 f( i64 a ) { return 2.0; }\n"
+                       "i32 main() { f( 1 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "is ambiguous" ) != std::string::npos );
+    }
+
+    // D31's marker is part of what the call writes, so it selects as much as the type does. These
+    // two are also the pair that mangled alike until overloading made it reachable.
+    SECTION( "by the marker the call writes" )
+    {
+        const Typed p( "i32 f( i32 a ) { return 1; }\nbool f( ref i32 a ) { return true; }\n"
+                       "i32 main() { i32 x = 0; bool b = f( ref x ); return f( x ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a borrow and a pointer are two parameters" )
+    {
+        const Typed p( "i32 f( ref i32 a ) { return 1; }\nbool f( i32* a ) { return true; }\n"
+                       "i32 main() { i32 x = 0; i32* q = &x; bool b = f( q ); return f( ref x ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // The rule that keeps §12's promise of no ranking: widening is what gets an argument to a
+    // parameter *after* one has been chosen, and two parameters that both accept would need one.
+    SECTION( "selection is by exact type, not by what §6.4 would widen" )
+    {
+        const Typed p( "void f( i32 a ) { }\nvoid f( i64 a ) { }\n"
+                       "i32 main() { u8 b = 1; f( b ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "no `f` matches these arguments" ) != std::string::npos );
+    }
+
+    SECTION( "and one candidate still widens, exactly as before" )
+    {
+        const Typed p( "void f( i64 a ) { }\ni32 main() { u8 b = 1; f( b ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a wrong count names the count" )
+    {
+        const Typed p( "void f( i32 a ) { }\nvoid f( f64 a ) { }\ni32 main() { f( 1, 2 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "no `f` takes 2 arguments" ) != std::string::npos );
+    }
+
+    // `move` on a non-owning type is the caller's own assertion about its variable, which the
+    // callee never sees - so selection applies the same exemption the diagnostic does, and a
+    // marker that means nothing to the callee cannot stop a candidate matching.
+    SECTION( "a `move` on a type that owns nothing still selects" )
+    {
+        const Typed p( "i32 f( i32 a ) { return 1; }\nbool f( f64 a ) { return true; }\n"
+                       "i32 main() { i32 x = 1; return f( move x ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // Choosing has to type the arguments, and the chosen candidate's parameters are then checked
+    // against them - so an argument typed twice would report a mistake inside it twice.
+    SECTION( "an argument is typed once, however many candidates there were" )
+    {
+        const Typed p( "void f( i32 a ) { }\nvoid f( f64 a ) { }\ni32 g( i32 n ) { return n; }\n"
+                       "i32 main() { f( g( true ) ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    // A local shadows the whole set, because lookup finds the local and never reaches it.
+    SECTION( "a local of the same name shadows every candidate" )
+    {
+        const Typed p( "void f( i32 a ) { }\nvoid f( f64 a ) { }\ni32 main() { i32 f = 1; f( 1 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "is not callable" ) != std::string::npos );
+    }
+
+    SECTION( "a generic and a plain one of a name, told apart by what the call writes" )
+    {
+        const Typed p( "i32 f( i32 a ) { return 1; }\nbool f<T>( T a ) where T : Copyable { return true; }\n"
+                       "i32 main() { bool b = f<bool>( true ); return f( 1 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// The other half: pairs no call site could ever tell apart, refused where they are written.
+TEST_CASE( "type_checker_refuses_overloads_nothing_can_tell_apart", "[sema][overload]" )
+{
+    SECTION( "the same parameters twice" )
+    {
+        const Typed p( "void f( i32 a ) { }\nvoid f( i32 b ) { }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "already declared with these parameters" ) != std::string::npos );
+    }
+
+    SECTION( "differing only in the return type" )
+    {
+        const Typed p( "void f( i32 a ) { }\ni32 f( i32 a ) { return a; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "not only in what they return" ) != std::string::npos );
+    }
+
+    // A `const ref` takes no marker at the call, which is the whole reason it cannot sit beside a
+    // bare parameter - and also why the two are allowed to share a mangled name.
+    SECTION( "a `const ref` beside a bare parameter" )
+    {
+        const Typed p( "void f( i32 a ) { }\nvoid f( const ref i32 a ) { }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "already declared with these parameters" ) != std::string::npos );
+    }
+
+    SECTION( "two methods differing only in a trailing `const`" )
+    {
+        const Typed p( "class C { i32 x; C( i32 v ) { x = v; } i32 n() { return x; } i32 n() const { return x; } };\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`const` binds the receiver" ) != std::string::npos );
+    }
+
+    // D11: a generic that checks must instantiate. A method call writes no type argument, so a pair
+    // some instantiation would make identical is refused here rather than at that instantiation.
+    SECTION( "two members a type argument could make identical" )
+    {
+        const Typed p( "class S<T> where T : Copyable { T v; S( T a ) { v = a; } "
+                       "i32 f( T a ) { return 0; } i32 f( i32 a ) { return 1; } };\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "a type argument could make the two identical" ) != std::string::npos );
+    }
+
+    SECTION( "but two that no argument could" )
+    {
+        const Typed p( "class S<T> where T : Copyable { T v; S( T a ) { v = a; } "
+                       "i32 f( T a ) { return 0; } i32 f( T a, i32 b ) { return b; } };\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "an `extern`, which keeps the name someone else defined" )
+    {
+        const Typed p( "extern void f( i32 a );\nextern void f( f64 a );\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "defined in C, so it cannot be overloaded" ) != std::string::npos );
+    }
+
+    SECTION( "a second `main`" )
+    {
+        const Typed p( "i32 main() { return 0; }\ni32 main( i32 a ) { return a; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "a program has one `main`" ) != std::string::npos );
+    }
+
+    // Only two callables of one kind are a set. Everything else is still a redeclaration, and the
+    // resolver still says so.
+    SECTION( "a function beside a variable is not an overload set" )
+    {
+        const Typed p( "void f( i32 a ) { }\ni32 f = 1;\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.rendered().find( "already declared" ) != std::string::npos );
+    }
+}
+
+// Two constructors are §12's narrowest slice and the one with a real limitation behind it: a class
+// that can be built only one way.
+TEST_CASE( "type_checker_chooses_between_constructors", "[sema][overload][aggregates]" )
+{
+    SECTION( "by the argument's type" )
+    {
+        const Typed p( "class C { i32 x; C( i32 v ) { x = v; } C( bool v ) { x = 0; } };\n"
+                       "i32 main() { C a = C( 1 ); C b = C( true ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and the call records which one, for lowering to read back" )
+    {
+        Typed p( "class C { i32 x; C( i32 v ) { x = v; } C( bool v ) { x = 0; } };\n"
+                 "i32 main() { C b = C( true ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const Node_id chosen = p.types().callee_of( p.nth( Node_kind::Call_expr, 0 ) );
+
+        REQUIRE( chosen == p.nth( Node_kind::Constructor_decl, 1 ) );
+    }
+
+    SECTION( "two with the same parameters are still refused" )
+    {
+        const Typed p( "class C { i32 x; C( i32 v ) { x = v; } C( i32 w ) { x = w; } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "already declared with these parameters" ) != std::string::npos );
+    }
+}
+
+// A method call is the same choice made from the receiver's members, and a bare name inside a
+// method reaches the same set through the member scope.
+TEST_CASE( "type_checker_chooses_between_methods", "[sema][overload][method]" )
+{
+    SECTION( "on the object" )
+    {
+        const Typed p( "class C { i32 x; C( i32 v ) { x = v; } i32 at( i32 n ) { return n; } "
+                       "bool at( f64 n ) { return true; } };\n"
+                       "i32 main() { C c = C( 1 ); bool b = c.at( 1.0 ); return c.at( 2 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and by bare name from a sibling" )
+    {
+        const Typed p( "class C { i32 x; C( i32 v ) { x = v; } i32 at( i32 n ) { return n; } "
+                       "bool at( f64 n ) { return true; } bool use() { return at( 1.0 ); } };\n"
+                       "i32 main() { C c = C( 1 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a receiver's type arguments reach the comparison" )
+    {
+        // `put( T )` on a `S<bool>` is `put( bool )`, so the `bool` argument picks it rather than
+        // the `i32` one - which is the receiver's bindings being applied before the types are
+        // compared, not after.
+        const Typed p( "class S<T> where T : Copyable { T v; S( T a ) { v = a; } "
+                       "i32 put( T a ) { return 0; } i32 put( i32 a ) { return 1; } };\n"
+                       "i32 main() { S<bool> s = S<bool>( true ); return s.put( true ); }" );
+
+        INFO( p.rendered() );
+
+        // Refused at the declaration, because `S<i32>` would make the two one signature.
+        REQUIRE( p.rendered().find( "a type argument could make the two identical" ) != std::string::npos );
+    }
+}
+
 TEST_CASE( "type_checker_types_a_constructor_call", "[sema][aggregates]" )
 {
     SECTION( "the call has the class's type" )

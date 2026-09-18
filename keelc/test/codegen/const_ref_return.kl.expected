@@ -10,11 +10,11 @@ struct kl__Point
     int32_t kl_y_3;
 };
 
-int32_t* kl__picks__P3i32_P3i32( int32_t*, int32_t* );
-int32_t* kl__gets__P5Point( struct kl__Point* );
+int32_t* kl__picks__3i32_3i32( int32_t*, int32_t* );
+int32_t* kl__gets__5Point( struct kl__Point* );
 int32_t kl__main__( void );
 
-int32_t* kl__picks__P3i32_P3i32( int32_t* kl_a_1, int32_t* kl_b_2 )
+int32_t* kl__picks__3i32_3i32( int32_t* kl_a_1, int32_t* kl_b_2 )
 {
     int32_t* kl_t0;
     bool kl_t3;
@@ -33,7 +33,7 @@ int32_t* kl__picks__P3i32_P3i32( int32_t* kl_a_1, int32_t* kl_b_2 )
     return kl_t0;
 }
 
-int32_t* kl__gets__P5Point( struct kl__Point* kl_p_1 )
+int32_t* kl__gets__5Point( struct kl__Point* kl_p_1 )
 {
     int32_t* kl_t0;
 #line 24 "codegen/const_ref_return.kl"
@@ -63,7 +63,7 @@ int32_t kl__main__( void )
 #line 33 "codegen/const_ref_return.kl"
     kl_t4 = &kl_x_1;
     kl_t5 = &kl_y_2;
-    kl_t6 = kl__picks__P3i32_P3i32( kl_t4, kl_t5 );
+    kl_t6 = kl__picks__3i32_3i32( kl_t4, kl_t5 );
     kl_bound_3 = &( *kl_t6 );
 #line 35 "codegen/const_ref_return.kl"
     kl_t8.kl_x_1 = 3;
@@ -71,7 +71,7 @@ int32_t kl__main__( void )
     kl_v_7 = kl_t8;
 #line 39 "codegen/const_ref_return.kl"
     kl_t10 = &kl_v_7;
-    kl_t11 = kl__gets__P5Point( kl_t10 );
+    kl_t11 = kl__gets__5Point( kl_t10 );
     kl_copied_9 = ( *kl_t11 );
 #line 44 "codegen/const_ref_return.kl"
     kl_y_2 = 50;

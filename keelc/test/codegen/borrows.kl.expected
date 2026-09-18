@@ -11,14 +11,14 @@ struct kl__B
 
 uint64_t kl_freed_2 = 0;
 
-void kl__B__P1B_3u64__ctor( struct kl__B*, uint64_t );
+void kl__B__R1B_3u64__ctor( struct kl__B*, uint64_t );
 void kl__B__dtor( struct kl__B* );
-uint64_t kl__peek__P1B( struct kl__B* );
-uint64_t kl__forward__P1B( struct kl__B* );
-void kl__own__1B( struct kl__B );
+uint64_t kl__peek__1B( struct kl__B* );
+uint64_t kl__forward__1B( struct kl__B* );
+void kl__own__M1B( struct kl__B );
 int32_t kl__main__( void );
 
-void kl__B__P1B_3u64__ctor( struct kl__B* kl_this_1, uint64_t kl_x_2 )
+void kl__B__R1B_3u64__ctor( struct kl__B* kl_this_1, uint64_t kl_x_2 )
 {
 #line 14 "codegen/borrows.kl"
     ( *kl_this_1 ).kl_n_4 = kl_x_2;
@@ -34,7 +34,7 @@ void kl__B__dtor( struct kl__B* kl_this_1 )
     return;
 }
 
-uint64_t kl__peek__P1B( struct kl__B* kl_b_1 )
+uint64_t kl__peek__1B( struct kl__B* kl_b_1 )
 {
     uint64_t kl_t0;
 #line 25 "codegen/borrows.kl"
@@ -42,19 +42,19 @@ uint64_t kl__peek__P1B( struct kl__B* kl_b_1 )
     return kl_t0;
 }
 
-uint64_t kl__forward__P1B( struct kl__B* kl_b_1 )
+uint64_t kl__forward__1B( struct kl__B* kl_b_1 )
 {
     uint64_t kl_t0;
     struct kl__B* kl_t2;
     uint64_t kl_t3;
 #line 31 "codegen/borrows.kl"
     kl_t2 = &( *kl_b_1 );
-    kl_t3 = kl__peek__P1B( kl_t2 );
+    kl_t3 = kl__peek__1B( kl_t2 );
     kl_t0 = kl_t3;
     return kl_t0;
 }
 
-void kl__own__1B( struct kl__B kl_b_1 )
+void kl__own__M1B( struct kl__B kl_b_1 )
 {
 #line 35 "codegen/borrows.kl"
     kl__B__dtor( &kl_b_1 );
@@ -88,24 +88,24 @@ int32_t kl__main__( void )
     kl_total_1 = 0;
 #line 44 "codegen/borrows.kl"
     kl_t3 = &kl_a_2;
-    kl__B__P1B_3u64__ctor( kl_t3, 1 );
+    kl__B__R1B_3u64__ctor( kl_t3, 1 );
 #line 46 "codegen/borrows.kl"
     kl_t5 = &kl_a_2;
-    kl_t6 = kl__peek__P1B( kl_t5 );
+    kl_t6 = kl__peek__1B( kl_t5 );
     kl_t7 = kl_total_1 + kl_t6;
     kl_total_1 = kl_t7;
 #line 47 "codegen/borrows.kl"
     kl_t8 = &kl_a_2;
-    kl_t9 = kl__forward__P1B( kl_t8 );
+    kl_t9 = kl__forward__1B( kl_t8 );
     kl_t10 = kl_total_1 + kl_t9;
     kl_total_1 = kl_t10;
 #line 43 "codegen/borrows.kl"
     kl__B__dtor( &kl_a_2 );
 #line 50 "codegen/borrows.kl"
     kl_t12 = &kl_t11;
-    kl__B__P1B_3u64__ctor( kl_t12, 2 );
+    kl__B__R1B_3u64__ctor( kl_t12, 2 );
     kl_t14 = &kl_t11;
-    kl_t15 = kl__peek__P1B( kl_t14 );
+    kl_t15 = kl__peek__1B( kl_t14 );
     kl_t16 = kl_total_1 + kl_t15;
     kl_total_1 = kl_t16;
     kl__B__dtor( &kl_t11 );
@@ -113,9 +113,9 @@ int32_t kl__main__( void )
     kl_t24 = false;
     kl_t18 = &kl_c_17;
     kl_t24 = true;
-    kl__B__P1B_3u64__ctor( kl_t18, 3 );
+    kl__B__R1B_3u64__ctor( kl_t18, 3 );
 #line 54 "codegen/borrows.kl"
-    kl__own__1B( kl_c_17 );
+    kl__own__M1B( kl_c_17 );
     kl_t24 = false;
 #line 57 "codegen/borrows.kl"
     kl_t21 = kl_total_1 * 10;

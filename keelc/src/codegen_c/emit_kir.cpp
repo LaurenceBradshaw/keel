@@ -1746,7 +1746,7 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "int32_t kl__f__3i32( int32_t" ) );
+        REQUIRE( g.has( "int32_t kl__f__I3i32E__3i32( int32_t" ) );
     }
 
     SECTION( "an integer literal adopting a floating `T` comes out of the integer pool" )
@@ -1759,7 +1759,7 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "double kl__f__3f64( double" ) );
+        REQUIRE( g.has( "double kl__f__I3f64E__3f64( double" ) );
     }
 
     SECTION( "a numeric bound carries `Copyable`, so the parameter travels by value" )
@@ -1775,8 +1775,8 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
         // The C signature rather than the symbol: an instantiation is named by its type arguments
         // alone, so the convention is no longer visible in the name - which is the right place for
         // it to be invisible, and the wrong place to test it from.
-        REQUIRE( g.has( "void kl__f__3i32( int32_t )" ) );
-        REQUIRE_FALSE( g.has( "void kl__f__3i32( int32_t* )" ) );
+        REQUIRE( g.has( "void kl__f__I3i32E__3i32( int32_t )" ) );
+        REQUIRE_FALSE( g.has( "void kl__f__I3i32E__3i32( int32_t* )" ) );
     }
 
     SECTION( "a bound that does not carry `Copyable` borrows, and a constant is materialised" )
@@ -1788,7 +1788,7 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "void kl__f__3i32( int32_t* )" ) );
+        REQUIRE( g.has( "void kl__f__I3i32E__3i32( int32_t* )" ) );
     }
 
     SECTION( "at its caller's own parameter, which no call site ever wrote" )
@@ -1802,8 +1802,8 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "kl__outer__3i32" ) );
-        REQUIRE( g.has( "kl__inner__3i32" ) );
+        REQUIRE( g.has( "kl__outer__I3i32E__3i32" ) );
+        REQUIRE( g.has( "kl__inner__I3i32E__3i32" ) );
 
         // And not the template it was written as.
         REQUIRE_FALSE( g.has( "kl__inner__T__T" ) );
@@ -1819,8 +1819,8 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "kl__inner__3i32" ) );
-        REQUIRE( g.has( "kl__inner__3f64" ) );
+        REQUIRE( g.has( "kl__inner__I3i32E__3i32" ) );
+        REQUIRE( g.has( "kl__inner__I3f64E__3f64" ) );
     }
 
     SECTION( "a generic reached only through another is still emitted" )
@@ -1833,7 +1833,7 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "kl__third__3i32" ) );
+        REQUIRE( g.has( "kl__third__I3i32E__3i32" ) );
     }
 
     SECTION( "an uninstantiated generic contributes nothing" )
@@ -1860,7 +1860,7 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "kl__inner__P3i32" ) );
+        REQUIRE( g.has( "kl__inner__IP3i32E__P3i32" ) );
     }
 
     SECTION( "another generic, at a different type" )
@@ -1873,8 +1873,8 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
         REQUIRE( g.clean() );
 
         // The inner call is `id<i32>` whatever `relay` was instantiated at.
-        REQUIRE( g.has( "kl__id__3i32" ) );
-        REQUIRE( g.has( "kl__relay__4bool" ) );
+        REQUIRE( g.has( "kl__id__I3i32E__3i32" ) );
+        REQUIRE( g.has( "kl__relay__I4boolE__4bool" ) );
     }
 }
 
@@ -1888,7 +1888,7 @@ TEST_CASE( "emit_kir_substitutes_through_type_constructors", "[codegen][kir][gen
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "kl__id__1P" ) );
+        REQUIRE( g.has( "kl__id__I1PE__1P" ) );
     }
 
     SECTION( "a pointer type argument" )
@@ -1898,7 +1898,7 @@ TEST_CASE( "emit_kir_substitutes_through_type_constructors", "[codegen][kir][gen
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "kl__id__P3i32" ) );
+        REQUIRE( g.has( "kl__id__IP3i32E__P3i32" ) );
     }
 
     SECTION( "an enum type argument" )
@@ -1920,8 +1920,8 @@ TEST_CASE( "emit_kir_emits_one_function_per_instantiation", "[codegen][kir][gene
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "kl__id__3i32" ) );
-        REQUIRE( g.has( "kl__id__4bool" ) );
+        REQUIRE( g.has( "kl__id__I3i32E__3i32" ) );
+        REQUIRE( g.has( "kl__id__I4boolE__4bool" ) );
     }
 
     SECTION( "each call site names the one it meant" )
@@ -1930,8 +1930,8 @@ TEST_CASE( "emit_kir_emits_one_function_per_instantiation", "[codegen][kir][gene
                      "i32 main() { i32 a = id<i32>( 1 ); bool b = id<bool>( true ); return a; }" );
 
         INFO( g.c );
-        REQUIRE( g.has( "= kl__id__3i32( 1 )" ) );
-        REQUIRE( g.has( "= kl__id__4bool( true )" ) );
+        REQUIRE( g.has( "= kl__id__I3i32E__3i32( 1 )" ) );
+        REQUIRE( g.has( "= kl__id__I4boolE__4bool( true )" ) );
     }
 
     SECTION( "the same type twice is one function" )
@@ -1943,12 +1943,12 @@ TEST_CASE( "emit_kir_emits_one_function_per_instantiation", "[codegen][kir][gene
 
         // Once as a prototype and once as a definition, and no more.
         std::size_t definitions = 0;
-        std::size_t at          = g.c.find( "int32_t kl__id__3i32( int32_t kl_" );
+        std::size_t at          = g.c.find( "int32_t kl__id__I3i32E__3i32( int32_t kl_" );
 
         while( at != std::string::npos )
         {
             definitions += 1;
-            at = g.c.find( "int32_t kl__id__3i32( int32_t kl_", at + 1 );
+            at = g.c.find( "int32_t kl__id__I3i32E__3i32( int32_t kl_", at + 1 );
         }
 
         REQUIRE( definitions == 1 );
@@ -1971,7 +1971,7 @@ TEST_CASE( "emit_kir_emits_one_function_per_instantiation", "[codegen][kir][gene
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "kl__pick__3i32_4bool" ) );
+        REQUIRE( g.has( "kl__pick__I3i32_4boolE__3i32_4bool" ) );
     }
 
     SECTION( "the parameter and return types are the substituted ones" )
@@ -1981,7 +1981,7 @@ TEST_CASE( "emit_kir_emits_one_function_per_instantiation", "[codegen][kir][gene
         Generated g( "T id<T>( T a ) where T : Copyable { return a; }\ni32 main() { return id<i32>( 1 ); }" );
 
         INFO( g.c );
-        REQUIRE( g.has( "int32_t kl__id__3i32( int32_t );" ) );
+        REQUIRE( g.has( "int32_t kl__id__I3i32E__3i32( int32_t );" ) );
     }
 
     SECTION( "a non-generic program is unchanged" )

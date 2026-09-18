@@ -1,0 +1,79 @@
+error: `same` is already declared with these parameters
+  --> sema/errors_overloads.kl:10:1
+   |
+10 | void same( i32 b )
+   | ^^^^^^^^^^^^^^^^^^ previous declaration is at: 6:1
+
+error: `returns_differ` is already declared with these parameters
+  --> sema/errors_overloads.kl:19:1
+   |
+19 | i32 returns_differ( i32 a )
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^ two of one name must differ in their parameters, not only in what they return
+
+error: `unmarked` is already declared with these parameters
+  --> sema/errors_overloads.kl:30:1
+   |
+30 | void unmarked( const ref i32 a )
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ previous declaration is at: 26:1
+
+error: `outside` is defined in C, so it cannot be overloaded
+  --> sema/errors_overloads.kl:36:1
+   |
+36 | extern void outside( f64 a );
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ previous declaration is at: 35:1
+
+error: no `pick` takes 2 arguments
+  --> sema/errors_overloads.kl:45:5
+   |
+45 |     pick( whole, whole );
+   |     ^^^^^^^^^^^^^^^^^^^^ the ones declared take `( i32 )` and `( f64 )`
+
+error: no `pick` matches these arguments
+  --> sema/errors_overloads.kl:49:5
+   |
+49 |     pick( true );
+   |     ^^^^^^^^^^^^ the ones declared take `( i32 )` and `( f64 )`
+
+error: no `pick` matches these arguments
+  --> sema/errors_overloads.kl:53:5
+   |
+53 |     pick( small );
+   |     ^^^^^^^^^^^^^ the ones declared take `( i32 )` and `( f64 )`
+
+error: this call to `ambiguous` is ambiguous
+  --> sema/errors_overloads.kl:57:5
+   |
+57 |     ambiguous( 1 );
+   |     ^^^^^^^^^^^^^^ more than one matches: `( i32 )` and `( i64 )`; write a type the call can be told by
+
+error: no `ambiguous` matches these arguments
+  --> sema/errors_overloads.kl:60:5
+   |
+60 |     ambiguous( fraction );
+   |     ^^^^^^^^^^^^^^^^^^^^^ the ones declared take `( i32 )` and `( i64 )`
+
+error: expected `i32`, but got `bool`
+  --> sema/errors_overloads.kl:64:12
+   |
+64 |     p.get( true );
+   |            ^^^^
+
+error: `get` takes 1 argument, but 2 were given
+  --> sema/errors_overloads.kl:65:10
+   |
+65 |     p.get( whole, whole );
+   |          ^^^^^^^^^^^^^^^^
+
+error: `count` is already declared with these parameters
+   --> sema/errors_overloads.kl:102:5
+    |
+102 |     i32 count() const
+    |     ^^^^^^^^^^^^^^^^^ `const` binds the receiver, which a call site does not write, so it cannot tell two apart
+
+error: `put` is already declared, and a type argument could make the two identical
+   --> sema/errors_overloads.kl:129:5
+    |
+129 |     i32 put( i32 a )
+    |     ^^^^^^^^^^^^^^^^ previous declaration is at: 124:5
+
+13 errors generated

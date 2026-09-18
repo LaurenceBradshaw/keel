@@ -1,4 +1,4 @@
-error: `duplicated` is already declared in this scope
+error: `duplicated` is already declared with these parameters
  --> sema/errors_redeclaration.kl:6:1
   |
 6 | i32 duplicated()

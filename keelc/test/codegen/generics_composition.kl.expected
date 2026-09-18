@@ -3,15 +3,15 @@
 #include <stddef.h>
 
 int32_t kl__main__( void );
-int32_t kl__quadrupled__3i32( int32_t );
-double kl__quadrupled__3f64( double );
-int32_t kl__countdown__3i32( int32_t );
-int32_t kl__borrowing__3i32( int32_t );
-int32_t kl__doubled__3i32( int32_t );
-double kl__doubled__3f64( double );
-int32_t* kl__through__P3i32( int32_t* );
-int32_t kl__identity__3i32( int32_t );
-double kl__identity__3f64( double );
+int32_t kl__quadrupled__I3i32E__3i32( int32_t );
+double kl__quadrupled__I3f64E__3f64( double );
+int32_t kl__countdown__I3i32E__3i32( int32_t );
+int32_t kl__borrowing__I3i32E__3i32( int32_t );
+int32_t kl__doubled__I3i32E__3i32( int32_t );
+double kl__doubled__I3f64E__3f64( double );
+int32_t* kl__through__IP3i32E__P3i32( int32_t* );
+int32_t kl__identity__I3i32E__3i32( int32_t );
+double kl__identity__I3f64E__3f64( double );
 
 int32_t kl__main__( void )
 {
@@ -27,7 +27,7 @@ int32_t kl__main__( void )
     int32_t kl_t9;
     bool kl_t10;
 #line 60 "codegen/generics_composition.kl"
-    kl_t1 = kl__quadrupled__3i32( 3 );
+    kl_t1 = kl__quadrupled__I3i32E__3i32( 3 );
     kl_t2 = kl_t1 != 12;
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
@@ -38,7 +38,7 @@ int32_t kl__main__( void )
     goto bb3;
     bb3:
 #line 66 "codegen/generics_composition.kl"
-    kl_t4 = kl__quadrupled__3f64( 0.5 );
+    kl_t4 = kl__quadrupled__I3f64E__3f64( 0.5 );
     kl_scaled_3 = kl_t4;
 #line 68 "codegen/generics_composition.kl"
     kl_t5 = kl_scaled_3 < 1.9;
@@ -61,7 +61,7 @@ int32_t kl__main__( void )
     goto bb9;
     bb9:
 #line 78 "codegen/generics_composition.kl"
-    kl_t7 = kl__countdown__3i32( 5 );
+    kl_t7 = kl__countdown__I3i32E__3i32( 5 );
     kl_t8 = kl_t7 != 0;
     if ( kl_t8 ) goto bb10; else goto bb11;
     bb10:
@@ -72,7 +72,7 @@ int32_t kl__main__( void )
     goto bb12;
     bb12:
 #line 83 "codegen/generics_composition.kl"
-    kl_t9 = kl__borrowing__3i32( 7 );
+    kl_t9 = kl__borrowing__I3i32E__3i32( 7 );
     kl_t10 = kl_t9 != 1;
     if ( kl_t10 ) goto bb13; else goto bb14;
     bb13:
@@ -87,31 +87,31 @@ int32_t kl__main__( void )
     return kl_t0;
 }
 
-int32_t kl__quadrupled__3i32( int32_t kl_a_1 )
+int32_t kl__quadrupled__I3i32E__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
     int32_t kl_t3;
 #line 23 "codegen/generics_composition.kl"
-    kl_t2 = kl__doubled__3i32( kl_a_1 );
-    kl_t3 = kl__doubled__3i32( kl_t2 );
+    kl_t2 = kl__doubled__I3i32E__3i32( kl_a_1 );
+    kl_t3 = kl__doubled__I3i32E__3i32( kl_t2 );
     kl_t0 = kl_t3;
     return kl_t0;
 }
 
-double kl__quadrupled__3f64( double kl_a_1 )
+double kl__quadrupled__I3f64E__3f64( double kl_a_1 )
 {
     double kl_t0;
     double kl_t2;
     double kl_t3;
 #line 23 "codegen/generics_composition.kl"
-    kl_t2 = kl__doubled__3f64( kl_a_1 );
-    kl_t3 = kl__doubled__3f64( kl_t2 );
+    kl_t2 = kl__doubled__I3f64E__3f64( kl_a_1 );
+    kl_t3 = kl__doubled__I3f64E__3f64( kl_t2 );
     kl_t0 = kl_t3;
     return kl_t0;
 }
 
-int32_t kl__countdown__3i32( int32_t kl_a_1 )
+int32_t kl__countdown__I3i32E__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -129,12 +129,12 @@ int32_t kl__countdown__3i32( int32_t kl_a_1 )
     bb3:
 #line 35 "codegen/generics_composition.kl"
     kl_t3 = kl_a_1 - 1;
-    kl_t4 = kl__countdown__3i32( kl_t3 );
+    kl_t4 = kl__countdown__I3i32E__3i32( kl_t3 );
     kl_t0 = kl_t4;
     return kl_t0;
 }
 
-int32_t kl__borrowing__3i32( int32_t kl_a_1 )
+int32_t kl__borrowing__I3i32E__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
     int32_t* kl_p_2;
@@ -146,7 +146,7 @@ int32_t kl__borrowing__3i32( int32_t kl_a_1 )
     kl_t3 = &kl_a_1;
     kl_p_2 = kl_t3;
 #line 48 "codegen/generics_composition.kl"
-    kl_t5 = kl__through__P3i32( kl_p_2 );
+    kl_t5 = kl__through__IP3i32E__P3i32( kl_p_2 );
     kl_q_4 = kl_t5;
 #line 50 "codegen/generics_composition.kl"
     kl_t6 = kl_q_4 == kl_p_2;
@@ -163,35 +163,35 @@ int32_t kl__borrowing__3i32( int32_t kl_a_1 )
     return kl_t0;
 }
 
-int32_t kl__doubled__3i32( int32_t kl_a_1 )
+int32_t kl__doubled__I3i32E__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
     int32_t kl_t3;
     int32_t kl_t4;
 #line 17 "codegen/generics_composition.kl"
-    kl_t2 = kl__identity__3i32( kl_a_1 );
-    kl_t3 = kl__identity__3i32( kl_a_1 );
+    kl_t2 = kl__identity__I3i32E__3i32( kl_a_1 );
+    kl_t3 = kl__identity__I3i32E__3i32( kl_a_1 );
     kl_t4 = kl_t2 + kl_t3;
     kl_t0 = kl_t4;
     return kl_t0;
 }
 
-double kl__doubled__3f64( double kl_a_1 )
+double kl__doubled__I3f64E__3f64( double kl_a_1 )
 {
     double kl_t0;
     double kl_t2;
     double kl_t3;
     double kl_t4;
 #line 17 "codegen/generics_composition.kl"
-    kl_t2 = kl__identity__3f64( kl_a_1 );
-    kl_t3 = kl__identity__3f64( kl_a_1 );
+    kl_t2 = kl__identity__I3f64E__3f64( kl_a_1 );
+    kl_t3 = kl__identity__I3f64E__3f64( kl_a_1 );
     kl_t4 = kl_t2 + kl_t3;
     kl_t0 = kl_t4;
     return kl_t0;
 }
 
-int32_t* kl__through__P3i32( int32_t* kl_a_1 )
+int32_t* kl__through__IP3i32E__P3i32( int32_t* kl_a_1 )
 {
     int32_t* kl_t0;
 #line 42 "codegen/generics_composition.kl"
@@ -199,7 +199,7 @@ int32_t* kl__through__P3i32( int32_t* kl_a_1 )
     return kl_t0;
 }
 
-int32_t kl__identity__3i32( int32_t kl_a_1 )
+int32_t kl__identity__I3i32E__3i32( int32_t kl_a_1 )
 {
     int32_t kl_t0;
 #line 12 "codegen/generics_composition.kl"
@@ -207,7 +207,7 @@ int32_t kl__identity__3i32( int32_t kl_a_1 )
     return kl_t0;
 }
 
-double kl__identity__3f64( double kl_a_1 )
+double kl__identity__I3f64E__3f64( double kl_a_1 )
 {
     double kl_t0;
 #line 12 "codegen/generics_composition.kl"
