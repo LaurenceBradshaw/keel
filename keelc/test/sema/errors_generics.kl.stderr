@@ -46,94 +46,88 @@ error: unknown type `T`
 23 | T inline_bound<Comparable T>( T a )
    |                               ^
 
-error: `id` is generic, so its type arguments must be written
-  --> sema/errors_generics.kl:37:12
-   |
-37 |     return id( 1 );
-   |            ^^ as in `id<i32>( ... )`
-
 error: `not_a_generic` is not a generic
-  --> sema/errors_generics.kl:49:12
+  --> sema/errors_generics.kl:45:12
    |
-49 |     return not_a_generic<i32>( 1 );
+45 |     return not_a_generic<i32>( 1 );
    |            ^^^^^^^^^^^^^
 
 error: expected `i32`, but got `bool`
-  --> sema/errors_generics.kl:56:12
+  --> sema/errors_generics.kl:52:12
    |
-56 |     return id<bool>( 1 );
+52 |     return id<bool>( 1 );
    |            ^^^^^^^^^^^^^
 
 error: expected `bool`, but got an integer literal
-  --> sema/errors_generics.kl:56:22
+  --> sema/errors_generics.kl:52:22
    |
-56 |     return id<bool>( 1 );
+52 |     return id<bool>( 1 );
    |                      ^
 
 error: `id` takes 1 type argument, but 2 were given
-  --> sema/errors_generics.kl:61:14
+  --> sema/errors_generics.kl:57:14
    |
-61 |     return id<i32, f64>( 1 );
+57 |     return id<i32, f64>( 1 );
    |              ^^^^^^^^^^
 
 error: unknown bound `Sortable`
-  --> sema/errors_generics.kl:66:40
+  --> sema/errors_generics.kl:62:40
    |
-66 | void unknown_bound<T>( T a ) where T : Sortable
+62 | void unknown_bound<T>( T a ) where T : Sortable
    |                                        ^^^^^^^^ the bounds are Copyable, Equatable, Comparable, Numeric, Integral and Floating
 
 error: `U` is not a type parameter of `wrong_subject`
-  --> sema/errors_generics.kl:70:30
+  --> sema/errors_generics.kl:66:30
    |
-70 | void wrong_subject<T>( T a ) where U : Copyable
+66 | void wrong_subject<T>( T a ) where U : Copyable
    |                              ^^^^^^^^^^^^^^^^^^
 
 error: a `where` clause needs type parameters
-  --> sema/errors_generics.kl:74:33
+  --> sema/errors_generics.kl:70:33
    |
-74 | i32 no_type_parameters( i32 a ) where T : Copyable
+70 | i32 no_type_parameters( i32 a ) where T : Copyable
    |                                 ^^^^^^^^^^^^^^^^^^ write them on the name, as in `T f<T>( T a ) where T : Copyable`
 
 error: duplicate where clause for type parameter `T`
-  --> sema/errors_generics.kl:79:47
+  --> sema/errors_generics.kl:75:47
    |
-79 | void twice_over<T>( T a ) where T : Copyable, where T : Comparable
+75 | void twice_over<T>( T a ) where T : Copyable, where T : Comparable
    |                                               ^^^^^^^^^^^^^^^^^^^^
 
 error: bounds are joined with `&`
-  --> sema/errors_generics.kl:84:51
+  --> sema/errors_generics.kl:80:51
    |
-84 | void wrong_separator<T>( T a ) where T : Copyable | Comparable
+80 | void wrong_separator<T>( T a ) where T : Copyable | Comparable
    |                                                   ^ every one of them has to hold, and `&` says so
 
 error: no operator `<` for `T` and `T`
-   --> sema/errors_generics.kl:103:12
-    |
-103 |     return a < a;
-    |            ^^^^^ `<` needs `Comparable`; write `where T : Comparable` on `unpromised_operator`
+  --> sema/errors_generics.kl:99:12
+   |
+99 |     return a < a;
+   |            ^^^^^ `<` needs `Comparable`; write `where T : Comparable` on `unpromised_operator`
 
 error: no operator `<` for `T` and `bool`
-   --> sema/errors_generics.kl:110:12
+   --> sema/errors_generics.kl:106:12
     |
-110 |     return a < b;
+106 |     return a < b;
     |            ^^^^^ `<` needs both operands to be the same type
 
 error: `Owner` is not `Copyable`, and `id` requires it of `T`
-   --> sema/errors_generics.kl:117:8
+   --> sema/errors_generics.kl:113:8
     |
-117 |     id<Owner>( o );
+113 |     id<Owner>( o );
     |        ^^^^^ a type with a destructor owns something, so copying it would own it twice
 
 error: `Suit` is not `Integral`, and `needs_integral` requires it of `T`
-   --> sema/errors_generics.kl:128:20
+   --> sema/errors_generics.kl:124:20
     |
-128 |     needs_integral<Suit>( Suit::Clubs );
+124 |     needs_integral<Suit>( Suit::Clubs );
     |                    ^^^^ it has to be an integer
 
 error: `T` does not promise `Comparable`, and `needs_comparable` requires it of `T`
-   --> sema/errors_generics.kl:138:22
+   --> sema/errors_generics.kl:134:22
     |
-138 |     needs_comparable<T>( a );
+134 |     needs_comparable<T>( a );
     |                      ^ add `Comparable` to the `where` clause for `T` on `forwards`
 
-23 errors generated
+22 errors generated

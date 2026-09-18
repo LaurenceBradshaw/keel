@@ -203,6 +203,59 @@ Type_id Type_table::substitute( Type_id type, const Bindings& bindings )
     return type;
 }
 
+bool Type_table::deduce( Type_id pattern, Type_id actual, Bindings& into ) const
+{
+    if( !pattern.is_valid() || !actual.is_valid() )
+    {
+        return false;
+    }
+
+    const Type& p = get( pattern );
+
+    // Above the kind comparison, because this is the one case where the two kinds differ by
+    // design: a `T` matches an `i32`, and testing kinds first would refuse every deduction there
+    // is. First binding wins - a parameter appearing twice in one pattern disagrees with itself,
+    // and the ordinary argument check reports that against the whole argument.
+    if( p.kind == Type_kind::Parameter )
+    {
+        into.emplace( pattern.v, actual );
+        return true;
+    }
+
+    const Type& a = get( actual );
+
+    if( p.kind != a.kind )
+    {
+        return false;
+    }
+
+    switch( p.kind )
+    {
+    case Type_kind::Pointer:
+        return deduce( p.element, a.element, into );
+    case Type_kind::Struct:
+    case Type_kind::Enum:
+        // Two aggregates of one shape are still two types: `Box<T>` deduces nothing from a
+        // `Wrap<i32>`, and without this it would deduce `T = i32` from an unrelated declaration.
+        if( p.declaration != a.declaration || p.arguments.size() != a.arguments.size() )
+        {
+            return false;
+        }
+
+        for( std::size_t i = 0; i < p.arguments.size(); ++i )
+        {
+            if( !deduce( p.arguments[i], a.arguments[i], into ) )
+            {
+                return false;
+            }
+        }
+
+        return true;
+    default:
+        return true; // no parameters to bind
+    }
+}
+
 const Type& Type_table::get( Type_id id ) const
 {
     assert( id.is_valid() );
@@ -1398,6 +1451,124 @@ TEST_CASE( "type_table_pointers_convert_to_nothing", "[sema][type]" )
         REQUIRE_FALSE( table.arithmetic_result( to_i32, to_i32 ).is_valid() );
         REQUIRE_FALSE( table.common( to_i32, to_u8 ).is_valid() );
         REQUIRE_FALSE( table.fits( 0, false, to_i32 ) );
+    }
+}
+
+// The inverse of substitute, and structural for the same reason: a parameter appears inside a type
+// constructor as readily as alone.
+TEST_CASE( "type_table_deduces_a_parameter_from_a_concrete_type", "[sema][type][generic]" )
+{
+    Type_table table;
+
+    const Node_id box { 7 };
+    const Node_id wrap { 8 };
+    const Node_id pair { 11 };
+    const Type_id t   = table.parameter( Node_id { 3 }, "T" );
+    const Type_id u   = table.parameter( Node_id { 4 }, "U" );
+    const Type_id i32 = table.integer( 32, true );
+    const Type_id f64 = table.floating( 64 );
+
+    SECTION( "a bare parameter takes whatever it is given" )
+    {
+        Bindings bindings;
+
+        REQUIRE( table.deduce( t, i32, bindings ) );
+        REQUIRE( bindings.at( t.v ) == i32 );
+    }
+
+    SECTION( "through a pointer" )
+    {
+        Bindings bindings;
+
+        REQUIRE( table.deduce( table.pointer_to( t ), table.pointer_to( f64 ), bindings ) );
+        REQUIRE( bindings.at( t.v ) == f64 );
+    }
+
+    SECTION( "through an aggregate, at any depth" )
+    {
+        const Type_id of_i32 = table.structure( box, std::array { i32 }, "Box" );
+
+        Bindings one;
+        REQUIRE( table.deduce( table.structure( box, std::array { t }, "Box" ), of_i32, one ) );
+        REQUIRE( one.at( t.v ) == i32 );
+
+        Bindings two;
+        REQUIRE( table.deduce(
+            table.structure( box, std::array { table.structure( box, std::array { t }, "Box" ) }, "Box" ),
+            table.structure( box, std::array { of_i32 }, "Box" ),
+            two
+        ) );
+        REQUIRE( two.at( t.v ) == i32 );
+    }
+
+    SECTION( "several parameters at once" )
+    {
+        Bindings bindings;
+
+        REQUIRE( table.deduce(
+            table.structure( pair, std::array { t, u }, "Pair" ),
+            table.structure( pair, std::array { i32, f64 }, "Pair" ),
+            bindings
+        ) );
+
+        REQUIRE( bindings.at( t.v ) == i32 );
+        REQUIRE( bindings.at( u.v ) == f64 );
+    }
+
+    // Two aggregates of one shape are still two types, so the declaration has to match. Without
+    // this a `Box<T>` parameter would deduce its `T` from an unrelated `Wrap<i32>`.
+    SECTION( "a different declaration deduces nothing" )
+    {
+        Bindings bindings;
+
+        REQUIRE_FALSE( table.deduce(
+            table.structure( box, std::array { t }, "Box" ), table.structure( wrap, std::array { i32 }, "Wrap" ), bindings
+        ) );
+    }
+
+    // Not an error, and deliberately so: the ordinary argument check is what reports a mismatch,
+    // and it can say what was expected once the other arguments have settled the parameters.
+    SECTION( "a shape that does not match deduces nothing" )
+    {
+        Bindings bindings;
+
+        REQUIRE_FALSE( table.deduce( table.structure( box, std::array { t }, "Box" ), i32, bindings ) );
+        REQUIRE_FALSE( table.deduce( table.pointer_to( t ), i32, bindings ) );
+        REQUIRE_FALSE( table.deduce( t, Type_id {}, bindings ) );
+    }
+
+    // A parameter appearing twice in one pattern keeps its first binding. The disagreement reaches
+    // the caller as the whole argument having the wrong type, which is what it is.
+    SECTION( "the first binding wins" )
+    {
+        Bindings bindings;
+
+        REQUIRE( table.deduce(
+            table.structure( pair, std::array { t, t }, "Pair" ),
+            table.structure( pair, std::array { i32, f64 }, "Pair" ),
+            bindings
+        ) );
+
+        REQUIRE( bindings.at( t.v ) == i32 );
+    }
+
+    // What a generic forwarding its own parameter produces, and why no occurs check is needed: the
+    // callee's parameters and the caller's are interned apart, so a binding can never be written in
+    // terms of the thing being bound.
+    SECTION( "a parameter deduces from another parameter" )
+    {
+        Bindings bindings;
+
+        REQUIRE( table.deduce( t, u, bindings ) );
+        REQUIRE( bindings.at( t.v ) == u );
+    }
+
+    SECTION( "a concrete pattern binds nothing and still matches" )
+    {
+        Bindings bindings;
+
+        REQUIRE( table.deduce( i32, i32, bindings ) );
+        REQUIRE( bindings.empty() );
     }
 }
 

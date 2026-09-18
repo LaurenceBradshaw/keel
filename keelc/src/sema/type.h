@@ -79,6 +79,12 @@ public:
     // constructor as readily as alone, and `T*` is reachable the moment anyone writes it.
     Type_id substitute( Type_id type, const Bindings& bindings );
 
+    // The inverse: `T` against an `i32` binds `T`, `Box<T>` against a `Box<i32>` binds it one level
+    // down. Structural for the same reason substitute() is. False means the two do not match at
+    // all, which is not an error here - the ordinary argument check reports that - so a caller
+    // deduces into a scratch map and keeps it only when this returns true.
+    bool deduce( Type_id pattern, Type_id actual, Bindings& into ) const;
+
     const Type&      get( Type_id id ) const;
     std::string_view name( Type_id id ) const; // "i32", "u8*" - for diagnostics
 

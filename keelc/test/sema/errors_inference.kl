@@ -1,0 +1,170 @@
+// PLAN §12. A call's type arguments are deduced from the argument types and, for whatever they
+// leave open, from the expectation at the call site. These are the calls where that is not enough,
+// and each one has its own message: nothing said what a parameter is, or two things said different.
+
+struct Box<T> where T : Copyable
+{
+    T v;
+};
+
+T id<T>( T a ) where T : Copyable
+{
+    return a;
+}
+
+T zeroed<T>() where T : Integral
+{
+    return wrap<T>( 0 );
+}
+
+T both<T>( T a, T b ) where T : Copyable
+{
+    return a;
+}
+
+T unbox<T>( Box<T> b ) where T : Copyable
+{
+    return b.v;
+}
+
+U second<T, U>( T a ) where T : Copyable, where U : Integral
+{
+    return wrap<U>( 0 );
+}
+
+i32 ordered<T>( T a ) where T : Comparable
+{
+    return 1;
+}
+
+struct Plain
+{
+    i32 v;
+};
+
+// A literal contributes nothing - its own type is what is being deduced - and in statement
+// position nothing expects anything either, so there is nothing left to read.
+void nothing_says_what_t_is()
+{
+    id( 1 );
+}
+
+// The same, where the parameter appears only in the result: there is no argument to read at all.
+void only_in_the_result()
+{
+    zeroed();
+}
+
+// Two arguments that cannot agree. The message names the disagreement rather than reporting no
+// match, which would be true and useless.
+i32 arguments_disagree( i32 a, bool b )
+{
+    return both( a, b );
+}
+
+// And the same disagreement one level down, because deduction is structural.
+i32 arguments_disagree_inside( Box<i32> a, Box<bool> b )
+{
+    both( a, b );
+
+    return 0;
+}
+
+// All or nothing: one parameter is settled by the argument and the other by nobody. A partial list
+// is a rule nobody can recite, so the whole call goes back to the explicit form.
+void one_of_two()
+{
+    i32 a = 1;
+
+    second( a );
+}
+
+// The argument does not have the parameter's shape, so it deduces nothing - and a `T` nothing
+// deduced is the same failure as a `T` nothing mentioned.
+i32 wrong_shape( i32 a )
+{
+    return unbox( a );
+}
+
+// A bound is a promise about the type argument however it was arrived at, and the argument that
+// chose the type is what the message underlines.
+i32 deduced_breaks_a_bound( Plain p )
+{
+    return ordered( p );
+}
+
+// Two generics that both match: one takes the whole `Box<i32>` as `T`, the other takes what is
+// inside it. Neither is more specific - ranking how well each fits is the thing this refuses - so
+// only the type arguments can say which was meant.
+bool which<T>( T a ) where T : Copyable
+{
+    return true;
+}
+
+bool which<T>( Box<T> a ) where T : Copyable
+{
+    return false;
+}
+
+bool two_generics_match( Box<i32> b )
+{
+    return which( b );
+}
+
+// A struct literal takes its instance from the expectation, and here the expectation is what is
+// being deduced - so it says nothing, exactly as a numeric literal says nothing.
+void a_struct_literal_says_nothing()
+{
+    unbox( Box { 1 } );
+}
+
+struct Pair<T, U> where T : Copyable, where U : Copyable
+{
+    T a;
+    U b;
+};
+
+T twice<T, U>( Pair<T, U> x, Pair<T, U> y ) where T : Copyable, where U : Copyable
+{
+    return x.a;
+}
+
+// Two parameters disagreeing at once. Both are true, and only one is reported - so which one has
+// to be the first as declared, or the message would depend on how a map happened to hash.
+i32 two_disagreements( Pair<i32, bool> one, Pair<bool, i32> two )
+{
+    twice( one, two );
+
+    return 0;
+}
+
+// An argument that selection already typed is not typed again. `ext` needs an `unsafe` block, and
+// saying so twice would be one mistake told twice.
+extern i32 ext( i32 a );
+
+T chosen<T>( T a, i32 b ) where T : Copyable
+{
+    return a;
+}
+
+T chosen<T>( Box<T> a, i32 b ) where T : Copyable
+{
+    return a.v;
+}
+
+i32 typed_once()
+{
+    return chosen( ext( 1 ), 2 );
+}
+
+// The arguments decide and the expectation only fills what they left, so this is an ordinary
+// mismatch about the result rather than a second deduction that disagrees.
+bool expectation_does_not_override( i32 a )
+{
+    return id( a );
+}
+
+i32 main()
+{
+    return 0;
+}

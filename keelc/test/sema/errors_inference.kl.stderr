@@ -1,0 +1,79 @@
+error: nothing here says what `T` is in `id`
+  --> sema/errors_inference.kl:49:5
+   |
+49 |     id( 1 );
+   |     ^^ write the type arguments, as in `id<i32>( ... )`
+
+error: nothing here says what `T` is in `zeroed`
+  --> sema/errors_inference.kl:55:5
+   |
+55 |     zeroed();
+   |     ^^^^^^ write the type arguments, as in `zeroed<i32>( ... )`
+
+error: `T` cannot be both `i32` and `bool`
+  --> sema/errors_inference.kl:62:21
+   |
+62 |     return both( a, b );
+   |                     ^ an earlier argument already made it `i32`
+
+error: `T` cannot be both `Box<i32>` and `Box<bool>`
+  --> sema/errors_inference.kl:68:14
+   |
+68 |     both( a, b );
+   |              ^ an earlier argument already made it `Box<i32>`
+
+error: nothing here says what `U` is in `second`
+  --> sema/errors_inference.kl:79:5
+   |
+79 |     second( a );
+   |     ^^^^^^ write the type arguments, as in `second<i32>( ... )`
+
+error: expected `Box<i32>`, but got `i32`
+  --> sema/errors_inference.kl:86:19
+   |
+86 |     return unbox( a );
+   |                   ^
+
+error: `Plain` is not `Comparable`, and `ordered` requires it of `T`
+  --> sema/errors_inference.kl:93:21
+   |
+93 |     return ordered( p );
+   |                     ^ ordering needs a number
+
+error: this call to `which` is ambiguous
+   --> sema/errors_inference.kl:111:12
+    |
+111 |     return which( b );
+    |            ^^^^^^^^^^ more than one matches: `( T )` and `( Box<T> )`; write the type arguments, as in `which<i32>( ... )`
+
+error: nothing here says what `T` is in `unbox`
+   --> sema/errors_inference.kl:118:5
+    |
+118 |     unbox( Box { 1 } );
+    |     ^^^^^ write the type arguments, as in `unbox<i32>( ... )`
+
+error: nothing here says which `Box` this is
+   --> sema/errors_inference.kl:118:12
+    |
+118 |     unbox( Box { 1 } );
+    |            ^^^^^^^^^ write the type where the value lands, as in `Box<i32> x = ...`
+
+error: `T` cannot be both `i32` and `bool`
+   --> sema/errors_inference.kl:136:17
+    |
+136 |     twice( one, two );
+    |                 ^^^ an earlier argument already made it `i32`
+
+error: calling `ext` needs an `unsafe` block
+   --> sema/errors_inference.kl:157:20
+    |
+157 |     return chosen( ext( 1 ), 2 );
+    |                    ^^^ it is defined in C, so the compiler cannot check what it does with its arguments
+
+error: expected `bool`, but got `i32`
+   --> sema/errors_inference.kl:164:12
+    |
+164 |     return id( a );
+    |            ^^^^^^^
+
+13 errors generated

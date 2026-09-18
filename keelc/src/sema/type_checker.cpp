@@ -493,6 +493,8 @@ enum class Argument_kind : u8
     Anything
 };
 
+// A kind other than `Typed` carries no type, deliberately: that is where D26's rule that a literal
+// says nothing actually lives, because deduction and selection both read the type and find none.
 struct Argument_shape
 {
     Argument_kind kind     = Argument_kind::Anything;
@@ -670,9 +672,24 @@ private:
     bool           candidate_accepts(
                   Node_id callable, u32 implicit_params, std::span<const Argument_shape> shapes, const Bindings& bindings
               );
-    Node_id     select_method( Node_id call, Node_id first, Type_id receiver, std::vector<Argument_shape>& shapes );
-    bool        marker_accepts( Node_id param, Keyword given, Type_id expected );
-    Bindings    type_bindings( Node_id callable, std::span<const Type_id> arguments ) const;
+    Node_id  select_method( Node_id call, Node_id first, Type_id receiver, std::vector<Argument_shape>& shapes );
+    bool     marker_accepts( Node_id param, Keyword given, Type_id expected );
+    Bindings type_bindings( Node_id callable, std::span<const Type_id> arguments ) const;
+    bool     deduce_for_candidate(
+            Node_id callable, u32 implicit_params, std::span<const Argument_shape> shapes, std::vector<Type_id>& resolved
+        );
+    bool deduce_type_arguments(
+        Node_id                         callable,
+        u32                             implicit_params,
+        std::span<const Argument_shape> shapes,
+        std::span<const Node_id>        arguments,
+        Type_id                         result,
+        Type_id                         expectation,
+        std::string_view                name,
+        Span                            at,
+        std::vector<Type_id>&           resolved,
+        std::vector<Node_id>&           bound_by
+    );
     std::string signature_of( Node_id callable, u32 implicit_params, const Bindings& bindings );
     std::string candidate_list( std::span<const Node_id> candidates, u32 implicit_params, const Bindings& bindings );
     void        check_call_arguments(
@@ -741,7 +758,7 @@ private:
     bool      bound_set_contains( Bound_set bounds, Bound bound ) const;
     bool      has_bound( Type_id type, Bound bound ) const; // Parameter -> its set; else false
     bool      satisfies( Type_id type, Bound bound ) const; // the same question, of a concrete type
-    void      check_bounds( Node_id parameter, Node_id written, Type_id argument, std::string_view callee );
+    void      check_bounds( Node_id parameter, Span at, Type_id argument, std::string_view callee );
 
     // See the definition: shared between a generic call and a generic aggregate's annotation.
     bool
@@ -845,9 +862,12 @@ private:
     // the enum. True while checking a construction's callee, a pattern's path, and a bare `case`
     // label - in all three the payload is accounted for, so `Shape::Circle` is complete.
     bool naming_variant_ = false;
-    // The instance a variant path or a struct literal should name. Set by check() around the
-    // expectation it is testing, and by the two places a pattern already knows the scrutinee.
-    Type_id expected_composite_;
+    // What the surrounding context wants this expression to be. Set by check() around the
+    // expectation it is testing, and by the two places a pattern already knows the scrutinee. Read
+    // by a variant path and a struct literal to say which instance they name, and by a call to
+    // deduce the type arguments nobody wrote. A consumer takes it and clears it, so nothing nested
+    // inside the expression reads an expectation that belongs to its parent.
+    Type_id expected_;
     Node_id current_function_; // whose annotation the escape rule reads
 
     u32 loop_depth_      = 0; // `continue` binds here, looking past any switch
@@ -2686,10 +2706,10 @@ void Checker::check_variant_pattern( Node_id pattern, Type_id type, std::vector<
     // The same flag construction uses: the pattern accounts for the payload, so the path inside it
     // names a variant rather than standing for a value.
     naming_variant_         = true;
-    expected_composite_     = type;
+    expected_               = type;
     const Type_id path_type = infer( path );
     naming_variant_         = false;
-    expected_composite_     = Type_id {};
+    expected_               = Type_id {};
 
     if( table_.is_error( path_type ) )
     {
@@ -2800,10 +2820,10 @@ void Checker::check_enum_switch( Node_id id, Type_id type, bool& has_default )
             // say here even when the variant carries one - so the same flag a pattern and a
             // construction set. `Shape s = Shape::Circle;` still has it false and still reports.
             naming_variant_          = true;
-            expected_composite_      = type;
+            expected_                = type;
             const Type_id label_type = infer( label );
             naming_variant_          = false;
-            expected_composite_      = Type_id {};
+            expected_                = Type_id {};
 
             if( table_.is_error( label_type ) )
             {
@@ -3745,6 +3765,185 @@ Bindings Checker::type_bindings( Node_id callable, std::span<const Type_id> argu
     return bindings;
 }
 
+// The bindings the arguments alone justify, or none at all. Silent, because selection *probes*: a
+// candidate whose parameters cannot all be deduced is simply not a candidate, and what to say when
+// nothing matches is select_overload's to decide. That is the same split candidate_accepts and
+// check_call_arguments already have, for the same reason.
+//
+// The expectation is deliberately absent. Reading it here would be choosing a callable by what its
+// result is wanted for, which is selection by return type - the thing §12 refuses outright when it
+// forbids two declarations that differ only in what they return.
+bool Checker::deduce_for_candidate(
+    Node_id callable, u32 implicit_params, std::span<const Argument_shape> shapes, std::vector<Type_id>& resolved
+)
+{
+    const std::span<const Node_id> params = ast_.children( ast_.child( callable, 1 ) ).subspan( implicit_params );
+
+    Bindings bindings;
+
+    for( std::size_t i = 0; i < params.size() && i < shapes.size(); ++i )
+    {
+        // A shape that is not `Typed` carries no type, and deduce() reads nothing from one - which
+        // is where a literal saying nothing actually happens. Two arguments that disagree need no
+        // test here either: the first binding wins, and candidate_accepts then finds the second
+        // argument does not have the parameter's type.
+        Bindings deduced;
+
+        if( !table_.deduce( types_[params[i].v], shapes[i].type, deduced ) )
+        {
+            continue;
+        }
+
+        for( const auto& [parameter, type] : deduced )
+        {
+            bindings.emplace( parameter, type );
+        }
+    }
+
+    for( const Node_id parameter : type_parameters( ast_, ast_.type_param_list( callable ) ) )
+    {
+        const auto found = bindings.find( types_[parameter.v].v );
+
+        if( found == bindings.end() )
+        {
+            return false;
+        }
+
+        resolved.push_back( found->second );
+    }
+
+    return true;
+}
+
+// §12: inferred where possible, written where not. Two sources, and they are not equal - the
+// arguments decide, and the expectation fills only what they left. `i64 x = id( a );` on an `i32`
+// therefore instantiates `id<i32>` and widens the result, exactly as the written `id<i32>( a )`
+// does: an expectation is where a value is going, not a constraint on how it was made.
+//
+// False with a diagnostic already reported. `resolved` comes back as the vector a written list
+// would have produced, so everything downstream - the bounds, the instantiation, the call graph,
+// the mangled name - cannot tell a deduced call from a written one.
+bool Checker::deduce_type_arguments(
+    Node_id                         callable,
+    u32                             implicit_params,
+    std::span<const Argument_shape> shapes,
+    std::span<const Node_id>        arguments,
+    Type_id                         result,
+    Type_id                         expectation,
+    std::string_view                name,
+    Span                            at,
+    std::vector<Type_id>&           resolved,
+    std::vector<Node_id>&           bound_by
+)
+{
+    const std::vector<Node_id>     parameters = type_parameters( ast_, ast_.type_param_list( callable ) );
+    const std::span<const Node_id> params     = ast_.children( ast_.child( callable, 1 ) ).subspan( implicit_params );
+
+    Bindings                         bindings;
+    std::unordered_map<u32, Node_id> from; // which argument bound each parameter, for the messages
+
+    for( std::size_t i = 0; i < params.size() && i < shapes.size() && i < arguments.size(); ++i )
+    {
+        // Deduced into a scratch map and merged only on success: a partial match leaves bindings
+        // behind that no argument actually justified.
+        Bindings deduced;
+
+        if( !table_.deduce( types_[params[i].v], shapes[i].type, deduced ) )
+        {
+            continue; // the argument does not match the parameter's shape; check() reports that
+        }
+
+        // Merged in declaration order rather than the map's, so which of two disagreements is
+        // reported does not depend on hashing.
+        for( const Node_id parameter : parameters )
+        {
+            const auto found = deduced.find( types_[parameter.v].v );
+
+            if( found == deduced.end() )
+            {
+                continue;
+            }
+
+            const auto already = bindings.find( found->first );
+
+            if( already == bindings.end() )
+            {
+                bindings.emplace( found->first, found->second );
+                from.emplace( found->first, arguments[i] );
+                continue;
+            }
+
+            if( already->second == found->second )
+            {
+                continue;
+            }
+
+            error_at(
+                ast_.span( arguments[i] ),
+                fmt::format(
+                    "`{}` cannot be both `{}` and `{}`",
+                    interner_.text( Symbol_id { ast_.aux( parameter ) } ),
+                    table_.name( already->second ),
+                    table_.name( found->second )
+                ),
+                fmt::format( "an earlier argument already made it `{}`", table_.name( already->second ) )
+            );
+
+            return false;
+        }
+    }
+
+    // Whatever the arguments left open. `T make<T>()` has no argument to read at all, which is the
+    // case this exists for. `result` rather than the callable's own type because a constructor
+    // produces the aggregate rather than returning anything - `Box<i32> b = Box( 7 );` reads its
+    // instance from the expectation exactly as `Box { 7 }` does.
+    if( result.is_valid() && expectation.is_valid() && !table_.is_error( expectation ) )
+    {
+        Bindings deduced;
+
+        if( table_.deduce( result, expectation, deduced ) )
+        {
+            for( const auto& [parameter, type] : deduced )
+            {
+                bindings.emplace( parameter, type );
+            }
+        }
+    }
+
+    // All or nothing: a partial list is a rule nobody can recite, so one parameter left open sends
+    // the author to the explicit form for the whole call.
+    resolved.reserve( parameters.size() );
+    bound_by.reserve( parameters.size() );
+
+    for( const Node_id parameter : parameters )
+    {
+        const auto found = bindings.find( types_[parameter.v].v );
+
+        if( found == bindings.end() )
+        {
+            error_at(
+                at,
+                fmt::format(
+                    "nothing here says what `{}` is in `{}`", interner_.text( Symbol_id { ast_.aux( parameter ) } ), name
+                ),
+                fmt::format( "write the type arguments, as in `{}<i32>( ... )`", name )
+            );
+
+            resolved.clear();
+            bound_by.clear();
+            return false;
+        }
+
+        resolved.push_back( found->second );
+
+        const auto bound = from.find( found->first );
+
+        bound_by.push_back( bound == from.end() ? Node_id {} : bound->second );
+    }
+
+    return true;
+}
+
 // D26: a literal has a value rather than a type, and context is what gives it one - so where the
 // context is the thing being chosen, a literal narrows the set to a family and no further. A struct
 // literal takes its instance from the expectation in the same way, so it says nothing at all.
@@ -3879,6 +4078,16 @@ std::string Checker::signature_of( Node_id callable, u32 implicit_params, const 
 {
     const std::span<const Node_id> params = ast_.children( ast_.child( callable, 1 ) ).subspan( implicit_params );
 
+    // A list of candidates can hold a generic nothing has instantiated - the call wrote the wrong
+    // number of type arguments, or none - and substituting a `T` the map has no entry for asserts.
+    // Unbound, the declaration is what the author wrote and is what the message should show.
+    bool bound = true;
+
+    for( const Node_id parameter : type_parameters( ast_, ast_.type_param_list( callable ) ) )
+    {
+        bound = bound && bindings.contains( types_[parameter.v].v );
+    }
+
     std::string text = "(";
 
     for( std::size_t i = 0; i < params.size(); ++i )
@@ -3889,7 +4098,7 @@ std::string Checker::signature_of( Node_id callable, u32 implicit_params, const 
             "{}{}{}",
             i == 0 ? " " : ", ",
             marker == Keyword::Count ? "" : fmt::format( "{} ", interner_.text( Interner::keyword( marker ) ) ),
-            table_.name( table_.substitute( types_[params[i].v], bindings ) )
+            table_.name( bound ? table_.substitute( types_[params[i].v], bindings ) : types_[params[i].v] )
         );
     }
 
@@ -3936,7 +4145,11 @@ Node_id Checker::select_overload(
     {
         const std::size_t params = ast_.children( ast_.child( candidate, 1 ) ).size() - implicit_params;
 
-        if( params == arguments.size() && type_parameters( ast_, ast_.type_param_list( candidate ) ).size() == written )
+        // A call that wrote type arguments means them, so a candidate has to take exactly that many
+        // - which keeps a non-generic out of `f<i32>( x )`. A call that wrote none says nothing
+        // about genericity, so both kinds stay and the types decide below.
+        if( params == arguments.size() &&
+            ( written == 0 || type_parameters( ast_, ast_.type_param_list( candidate ) ).size() == written ) )
         {
             viable.push_back( candidate );
         }
@@ -3985,9 +4198,45 @@ Node_id Checker::select_overload(
 
     for( const Node_id candidate : viable )
     {
-        if( candidate_accepts( candidate, implicit_params, shapes, type_bindings( candidate, resolved ) ) )
+        // Deduced only to ask whether this one could have been meant. What it found is thrown
+        // away: the caller deduces again once the callable is settled, with the expectation in
+        // hand and with a diagnostic to give, and keeping it here would be two answers to keep
+        // in step.
+        std::vector<Type_id> deduced;
+        const bool           infers = written == 0 && is_generic( ast_, candidate );
+
+        if( infers && !deduce_for_candidate( candidate, implicit_params, shapes, deduced ) )
+        {
+            continue; // nothing here says what its parameters are, so it is not what was meant
+        }
+
+        if( candidate_accepts( candidate, implicit_params, shapes, type_bindings( candidate, infers ? deduced : resolved ) ) )
         {
             matching.push_back( candidate );
+        }
+    }
+
+    // §12: a non-generic candidate beats a generic one, and two generics are ambiguous. It is one
+    // rule read off the declarations rather than a ranking of how well each fits, which is the
+    // distinction the whole feature rests on. Unreachable until the call could leave its type
+    // arguments unwritten, which is what puts both kinds in one set.
+    if( matching.size() > 1 )
+    {
+        Node_id     concrete {};
+        std::size_t found = 0;
+
+        for( const Node_id candidate : matching )
+        {
+            if( !is_generic( ast_, candidate ) )
+            {
+                concrete = candidate;
+                ++found;
+            }
+        }
+
+        if( found == 1 )
+        {
+            return concrete; // it has no type arguments, so `resolved` stays as the call left it
         }
     }
 
@@ -4008,12 +4257,19 @@ Node_id Checker::select_overload(
     }
 
     // More than one matches. A literal is the usual cause: it carries a family rather than a type,
-    // so it cannot choose between two parameters in one family.
+    // so it cannot choose between two parameters in one family. Where every one left is a generic
+    // the arguments cannot say it either - both fit exactly - and only the type arguments can.
+    const bool all_generic =
+        std::all_of( matching.begin(), matching.end(), [&]( Node_id candidate ) { return is_generic( ast_, candidate ); } );
+
     error_at(
         ast_.span( call ),
         fmt::format( "this call to `{}` is ambiguous", name ),
         fmt::format(
-            "more than one matches: {}; write a type the call can be told by", candidate_list( matching, implicit_params, {} )
+            "more than one matches: {}; {}",
+            candidate_list( matching, implicit_params, {} ),
+            all_generic ? fmt::format( "write the type arguments, as in `{}<i32>( ... )`", name )
+                        : std::string( "write a type the call can be told by" )
         )
     );
 
@@ -4152,11 +4408,20 @@ void Checker::check_call_arguments(
         // ordinary path needs no branch.
         const Type_id expected = table_.substitute( types_[params[i].v], bindings );
 
-        // Already typed by selection, which had to know what it was choosing between. Typing it
-        // again would report a mistake inside it twice.
+        // Already typed, by selection or by deduction, both of which had to know what the argument
+        // was before they could use it. Typing it again would report a mistake inside it twice -
+        // but it still has to be *checked*, and only selection did that. Deduction reads an
+        // argument without judging it: one that deduces nothing simply deduces nothing.
         if( i >= shapes.size() || !shapes[i].recorded )
         {
             check( arguments[i], expected );
+        }
+        else if( !table_.is_error( shapes[i].type ) && !table_.holds( shapes[i].type, expected ) )
+        {
+            error_at(
+                ast_.span( arguments[i] ),
+                fmt::format( "expected `{}`, but got `{}`", table_.name( expected ), table_.name( shapes[i].type ) )
+            );
         }
 
         // D2: transfer is visible at the call *and* in the signature, and neither alone is enough -
@@ -4261,6 +4526,12 @@ Type_id Checker::infer_call( Node_id id )
     // declaration to find.
     const Node_id decl = ast_.kind( callee ) == Node_kind::Name_expr ? resolution_.declaration_of( callee ) : Node_id {};
 
+    // Taken and cleared, because the expectation belongs to this call and to nothing inside it:
+    // in `f( g() )` the type wanted of `f` says nothing about what `g` should produce. What it
+    // does say is what a type parameter appearing only in the return type must be.
+    const Type_id expectation = expected_;
+    expected_                 = Type_id {};
+
     // What choosing between candidates already had to type. Empty until it does, which is every
     // call with one candidate - so the ordinary path types each argument exactly once, as before.
     std::vector<Argument_shape> shapes;
@@ -4357,6 +4628,10 @@ Type_id Checker::infer_call( Node_id id )
     // Resolved once and read by every candidate: resolving inside the loop would report an unknown
     // type once per candidate. Left empty on the one-candidate path, where the call below fills it.
     std::vector<Type_id> resolved;
+    // Parallel to `resolved`, and empty unless the arguments deduced it: which argument settled
+    // each type parameter, so a broken bound underlines the argument that chose the type rather
+    // than the whole call. Invalid where the expectation is what settled it.
+    std::vector<Node_id> bound_by;
     Node_id              callable {};
 
     if( candidates.size() == 1 )
@@ -4368,22 +4643,6 @@ Type_id Checker::infer_call( Node_id id )
         if( type_args.is_valid() && !is_generic( ast_, callable ) )
         {
             error_at( ast_.span( callee ), fmt::format( "`{}` is not a generic", name ) );
-
-            type_the_arguments_anyway();
-            return record( id, table_.builtin( Type_kind::Error ) );
-        }
-
-        // And the mirror: a generic whose type arguments were not written. Inferring them from the
-        // value arguments is a decision of its own and is not taken here, so this names the explicit
-        // form rather than guessing. Without it the parameters stay unbound and substitution has
-        // nothing to look up.
-        if( !type_args.is_valid() && is_generic( ast_, callable ) )
-        {
-            error_at(
-                ast_.span( callee ),
-                fmt::format( "`{}` is generic, so its type arguments must be written", name ),
-                fmt::format( "as in `{}<i32>( ... )`", name )
-            );
 
             type_the_arguments_anyway();
             return record( id, table_.builtin( Type_kind::Error ) );
@@ -4407,6 +4666,39 @@ Type_id Checker::infer_call( Node_id id )
         result = types_[callable.v];
     }
 
+    // A generic whose type arguments were not written, which is the ordinary way to call one.
+    // *After* the callable is settled rather than inside either branch above: selection reaches an
+    // answer by arity alone as readily as by type, and a candidate chosen that way still has its
+    // parameters to deduce. One place deduces, whichever way the callable was arrived at.
+    // Deduction reports its own failure - which parameter, and why - so there is nothing to add.
+    if( !type_args.is_valid() && is_generic( ast_, callable ) )
+    {
+        if( shapes.empty() )
+        {
+            for( const Node_id argument : ast_.children( args ) )
+            {
+                shapes.push_back( argument_shape( argument ) );
+            }
+        }
+
+        if( !deduce_type_arguments(
+                callable,
+                implicit_params,
+                shapes,
+                ast_.children( args ),
+                result,
+                expectation,
+                name,
+                ast_.span( callee ),
+                resolved,
+                bound_by
+            ) )
+        {
+            type_the_arguments_anyway();
+            return record( id, table_.builtin( Type_kind::Error ) );
+        }
+    }
+
     // Recorded for every call, not only an overloaded one: lowering reads the choice rather than
     // making it, and a rule applied in one pass and repeated in another is a rule that drifts.
     callees_.emplace( id.v, callable );
@@ -4422,12 +4714,34 @@ Type_id Checker::infer_call( Node_id id )
 
     Bindings bindings;
 
-    if( type_args.is_valid() )
+    // Written or deduced, it is the same call from here on. Two conditions rather than one because
+    // a written list is resolved *inside* this block, so it is still empty when the block is
+    // entered - and a deduced one was filled before the callable was even settled.
+    if( type_args.is_valid() || !resolved.empty() )
     {
-        if( !resolve_type_arguments( callable, type_args, name, resolved ) )
+        if( type_args.is_valid() )
         {
-            type_the_arguments_anyway();
-            return record( id, table_.builtin( Type_kind::Error ) );
+            if( !resolve_type_arguments( callable, type_args, name, resolved ) )
+            {
+                type_the_arguments_anyway();
+                return record( id, table_.builtin( Type_kind::Error ) );
+            }
+        }
+        else
+        {
+            // Deduced, so there is no written annotation to count or to underline - but a bound is
+            // a promise about the type argument however it was arrived at.
+            const std::vector<Node_id> parameters = type_parameters( ast_, ast_.type_param_list( callable ) );
+
+            for( std::size_t i = 0; i < parameters.size() && i < resolved.size(); ++i )
+            {
+                check_bounds(
+                    parameters[i],
+                    i < bound_by.size() && bound_by[i].is_valid() ? ast_.span( bound_by[i] ) : ast_.span( callee ),
+                    resolved[i],
+                    name
+                );
+            }
         }
 
         bindings = type_bindings( callable, resolved );
@@ -5204,9 +5518,9 @@ Type_id Checker::infer_path( Node_id id )
         // Which instance this path names. The declaration test is what keeps a wrong expectation
         // out: `Opt<i32> x = Plain::One;` falls through to the open form and is refused below by
         // the ordinary mismatch, rather than being quietly retyped to whatever was wanted.
-        if( expected_composite_.is_valid() && table_.get( expected_composite_ ).declaration == decl )
+        if( expected_.is_valid() && table_.get( expected_ ).declaration == decl )
         {
-            return record( id, expected_composite_ );
+            return record( id, expected_ );
         }
 
         // Nothing named an instance, and a generic declaration's own type is the open form -
@@ -5268,11 +5582,11 @@ Type_id Checker::no_instance_named( Node_id id, Node_id declaration )
 {
     const std::string_view name = interner_.text( Symbol_id { ast_.aux( declaration ) } );
 
-    if( expected_composite_.is_valid() )
+    if( expected_.is_valid() )
     {
         // The ordinary mismatch, stated here rather than left to check(): falling through would
         // name the open form - `Box<T>`, a type the author never wrote - on the `got` side.
-        error_at( ast_.span( id ), fmt::format( "expected `{}`, but got `{}`", table_.name( expected_composite_ ), name ) );
+        error_at( ast_.span( id ), fmt::format( "expected `{}`, but got `{}`", table_.name( expected_ ), name ) );
     }
     else
     {
@@ -5346,12 +5660,12 @@ Type_id Checker::infer_struct_literal( Node_id id )
     // Which instance this literal builds. The declaration test is what keeps a wrong expectation
     // out: `Box<i32> x = Plain { 1 };` falls through and is refused by the ordinary mismatch below,
     // rather than being quietly retyped to whatever was wanted.
-    const bool names_an_instance = expected_composite_.is_valid() && table_.get( expected_composite_ ).declaration == decl;
+    const bool names_an_instance = expected_.is_valid() && table_.get( expected_ ).declaration == decl;
 
     if( !names_an_instance && is_generic( ast_, decl ) )
     {
         // Reported before the values are typed, because typing one runs check(), which is what
-        // sets expected_composite_ - and the message depends on it.
+        // sets expected_ - and the message depends on it.
         const Type_id poison = no_instance_named( id, decl );
 
         for( const Node_id init : initialisers )
@@ -5362,7 +5676,7 @@ Type_id Checker::infer_struct_literal( Node_id id )
         return record( id, poison );
     }
 
-    const Type_id result = names_an_instance ? expected_composite_ : types_[decl.v];
+    const Type_id result = names_an_instance ? expected_ : types_[decl.v];
 
     // One convention per literal, as C++20 requires. Two in the same literal is a reader's
     // problem rather than a parser's.
@@ -5798,9 +6112,10 @@ Type_id Checker::check( Node_id id, Type_id expected )
         break;
     }
 
-    expected_composite_  = expected;
+    expected_            = expected;
     const Type_id actual = infer( id );
-    expected_composite_  = Type_id {};
+    expected_            = Type_id {};
+
     if( table_.is_error( actual ) )
     {
         return expected;
@@ -5862,7 +6177,7 @@ bool Checker::resolve_type_arguments(
 
     for( std::size_t i = 0; i < parameters.size(); ++i )
     {
-        check_bounds( parameters[i], given[i], resolved[i], name );
+        check_bounds( parameters[i], ast_.span( given[i] ), resolved[i], name );
     }
 
     return true;
@@ -6739,7 +7054,9 @@ bool Checker::satisfies( Type_id type, Bound bound ) const
 // compile is two compiles. What it does *not* report twice is one mistake wearing several names -
 // closure() stored `Integral` as `Integral | Numeric | Comparable | Equatable`, so a struct fails
 // all four, and only the strongest is the one the author wrote.
-void Checker::check_bounds( Node_id parameter, Node_id written, Type_id argument, std::string_view callee )
+// A span rather than a node, because a deduced type argument has no written annotation to
+// underline - the argument that chose it stands in its place.
+void Checker::check_bounds( Node_id parameter, Span at, Type_id argument, std::string_view callee )
 {
     const auto found = bounds_.find( parameter.v );
 
@@ -6783,7 +7100,7 @@ void Checker::check_bounds( Node_id parameter, Node_id written, Type_id argument
         const bool forwarded = table_.is_parameter( argument );
 
         error_at(
-            ast_.span( written ),
+            at,
             fmt::format(
                 "`{}` {} `{}`, and `{}` requires it of `{}`",
                 table_.name( argument ),
@@ -14195,15 +14512,22 @@ TEST_CASE( "type_checker_checks_type_arguments", "[sema][generic]" )
         REQUIRE( p.rendered().find( "`f` is not a generic" ) != std::string::npos );
     }
 
-    SECTION( "a generic given none" )
+    SECTION( "a generic given none takes them from the expectation" )
     {
-        // Inference is a decision of its own and is not taken here, so this names the explicit form
-        // rather than guessing - and without it the parameters stay unbound.
+        // The literal says nothing - its own type is what is being deduced - so the `i32` the
+        // return wants is the only thing here that does.
         const Typed p( std::string( id ) + "i32 main() { return id( 1 ); }" );
 
         INFO( p.rendered() );
-        REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "must be written" ) != std::string::npos );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a generic given none, with nothing to deduce from" )
+    {
+        const Typed p( std::string( id ) + "i32 main() { id( 1 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "nothing here says what `T` is in `id`" ) != std::string::npos );
     }
 
     SECTION( "a mistake inside an argument is still reported" )
@@ -14212,6 +14536,192 @@ TEST_CASE( "type_checker_checks_type_arguments", "[sema][generic]" )
 
         INFO( p.rendered() );
         REQUIRE( p.rendered().find( "nope" ) != std::string::npos );
+    }
+}
+
+// §12: deduced from the argument types and, for what they leave open, from the expectation at the
+// call site. Every case below reads its answer off a type that would not check if the deduction had
+// gone the other way, rather than off a node index.
+TEST_CASE( "type_checker_deduces_type_arguments", "[sema][generic]" )
+{
+    const std::string_view id  = "T id<T>( T a ) where T : Copyable { return a; }\n";
+    const std::string_view box = "struct Box<T> where T : Copyable { T v; };\n";
+
+    SECTION( "from an argument" )
+    {
+        // `bool` and `i32` widen into each other in neither direction, so each assignment checks
+        // only if `T` came from the argument beside it.
+        const Typed p(
+            std::string( id ) + "i32 main() { bool t = true; bool b = id( t ); i32 n = 1; i32 m = id( n ); "
+                                "return m + 0 * n; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "structurally, not positionally" )
+    {
+        const Typed p(
+            std::string( box ) + "T first<T>( Box<T> b ) where T : Copyable { return b.v; }\n"
+                                 "i32 main() { Box<bool> b = Box { true }; bool t = first( b ); return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "from the expectation, when the parameter is only in the result" )
+    {
+        const Typed p( "T zeroed<T>() where T : Integral { return wrap<T>( 0 ); }\n"
+                       "i32 main() { i64 wide = zeroed(); return 0 * wrap<i32>( wide ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // The two sources are not equal. `i64 x = id( n );` on an `i32` instantiates `id<i32>` and
+    // widens the result, exactly as the written `id<i32>( n )` does - an expectation is where the
+    // value is going, not a claim about how it was made.
+    SECTION( "an argument beats the expectation" )
+    {
+        const Typed p( std::string( id ) + "i32 main() { i32 n = 1; i64 wide = id( n ); return 0 * wrap<i32>( wide ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and the expectation cannot retype the argument" )
+    {
+        const Typed p( std::string( id ) + "i32 main() { i32 n = 1; bool b = id( n ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "expected `bool`, but got `i32`" ) != std::string::npos );
+    }
+
+    // D26 again: the context that would give a literal its type is the thing being deduced.
+    SECTION( "a literal says nothing, and a real argument beside it decides" )
+    {
+        const Typed p( "T both<T>( T a, T b ) where T : Copyable { return a; }\n"
+                       "i32 main() { i64 wide = 1; i64 answer = both( wide, 1 ); return 0 * wrap<i32>( answer ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "two arguments that disagree name the disagreement" )
+    {
+        const Typed p( "T both<T>( T a, T b ) where T : Copyable { return a; }\n"
+                       "i32 main() { i32 n = 1; bool t = true; both( n, t ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "`T` cannot be both `i32` and `bool`" ) != std::string::npos );
+    }
+
+    // All or nothing: a partial list is a rule nobody can recite, so one parameter left open sends
+    // the whole call to the explicit form.
+    SECTION( "one parameter deduced and one not is still a failure" )
+    {
+        const Typed p( "U second<T, U>( T a ) where T : Copyable, where U : Integral { return wrap<U>( 0 ); }\n"
+                       "i32 main() { i32 n = 1; second( n ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "nothing here says what `U` is in `second`" ) != std::string::npos );
+    }
+
+    // Deduction reads an argument without judging it, so the one that deduced nothing still has to
+    // be checked against the parameter once the others have settled it.
+    SECTION( "an argument deduction could not read is still checked" )
+    {
+        const Typed p(
+            std::string( box ) + "T first<T>( Box<T> b ) where T : Copyable { return b.v; }\n"
+                                 "i32 main() { i32 n = 1; return first( n ); }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "expected `Box<i32>`, but got `i32`" ) != std::string::npos );
+    }
+
+    // A bound is a promise about the type argument however it was arrived at, and what underlines
+    // it is the argument that chose the type - there is no written annotation to point at.
+    SECTION( "a bound still holds, and blames the argument that chose the type" )
+    {
+        const Typed p( "struct Plain { i32 v; };\ni32 ordered<T>( T a ) where T : Comparable { return 1; }\n"
+                       "i32 main() { Plain p = Plain { 1 }; return ordered( p ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "`Plain` is not `Comparable`" ) != std::string::npos );
+    }
+
+    // §12's tie-break, unreachable until a call could leave its type arguments unwritten: it is the
+    // thing that puts a generic and a non-generic in one candidate set.
+    SECTION( "a non-generic candidate beats a generic one" )
+    {
+        const Typed p( "bool f( i32 a ) { return true; }\nT f<T>( T a ) where T : Copyable { return a; }\n"
+                       "i32 main() { i32 n = 1; bool b = f( n ); i32 m = f<i32>( n ); return m; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and two generics are ambiguous rather than ranked" )
+    {
+        const Typed p(
+            std::string( box ) + "bool which<T>( T a ) where T : Copyable { return true; }\n"
+                                 "bool which<T>( Box<T> a ) where T : Copyable { return false; }\n"
+                                 "i32 main() { Box<i32> b = Box { 1 }; which( b ); return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "is ambiguous" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "write the type arguments" ) != std::string::npos );
+    }
+
+    // Selection by arity alone still leaves the parameters to deduce: it reaches an answer before
+    // any argument has been typed, so the deduction cannot live inside the choosing.
+    SECTION( "a candidate chosen by arity is still deduced" )
+    {
+        const Typed p( "T one<T>( T a ) where T : Copyable { return a; }\n"
+                       "T one<T>( T a, T b ) where T : Copyable { return b; }\n"
+                       "i32 main() { bool t = true; bool b = one( t, t ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // A constructor produces the aggregate rather than returning anything, so the instance comes
+    // from the expectation exactly as a struct literal's does.
+    SECTION( "a constructor takes its instance from the expectation" )
+    {
+        const Typed p( "class Held<T> where T : Copyable { T v; Held( T value ) { v = value; } "
+                       "T get() const { return v; } };\n"
+                       "i32 main() { Held<bool> h = Held( true ); bool t = h.get(); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // The expectation belongs to the call it was written for and to nothing inside it. Without
+    // that, an argument would take the type its *parent's* result is wanted at, which is only ever
+    // right by accident - so a call with nothing of its own to read is refused and says so.
+    SECTION( "an expectation does not reach into an argument" )
+    {
+        const Typed p(
+            std::string( id ) + "T zeroed<T>() where T : Integral { return wrap<T>( 0 ); }\n"
+                                "i32 main() { i64 wide = id( zeroed() ); return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "nothing here says what `T` is in `zeroed`" ) != std::string::npos );
+    }
+
+    SECTION( "a deduced call and a written one are one instantiation" )
+    {
+        const Typed p( std::string( id ) + "i32 main() { i32 n = 1; return id( n ) + id<i32>( n ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.types().instantiations().size() == 1 );
     }
 }
 

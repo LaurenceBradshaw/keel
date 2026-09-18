@@ -1,0 +1,168 @@
+// PLAN §12. A call's type arguments are deduced where possible and written where not. Two sources,
+// and they are not equal: the arguments decide, and the expectation at the call site fills only
+// what they left. A literal contributes nothing - its own type is what is being deduced - and a
+// struct literal contributes nothing for the same reason.
+//
+// Only the exit code can see most of this. Every generic below answers differently at different
+// type arguments, so a wrong deduction is a wrong number rather than a wrong-looking symbol.
+
+struct Box<T> where T : Copyable
+{
+    T v;
+};
+
+// Deduced from the one argument, which is the ordinary case.
+T id<T>( T a ) where T : Copyable
+{
+    return a;
+}
+
+// Two positions of one parameter. They have to agree, and here they do.
+i32 both<T>( T a, T b ) where T : Copyable & Equatable
+{
+    if( a == b )
+    {
+        return 1;
+    }
+
+    return 2;
+}
+
+// Structural, not positional: `T` is reached through a type constructor rather than standing alone.
+T unbox<T>( Box<T> b ) where T : Copyable
+{
+    return b.v;
+}
+
+// And two levels down, which is the case a positional rule would miss.
+T unbox_twice<T>( Box<Box<T>> b ) where T : Copyable
+{
+    return b.v.v;
+}
+
+// Through a pointer, the other type constructor substitution walks.
+T through_pointer<T>( T* p ) where T : Copyable
+{
+    return *p;
+}
+
+// A marker is part of what the call writes, and it does not get in deduction's way: the parameter
+// carries its declared type either way, and the pointer lives on the binding.
+void bumped<T>( ref T a ) where T : Integral
+{
+    a = a + wrap<T>( 1 );
+}
+
+// Nothing to deduce from but the expectation - `T` appears only in the result.
+T zeroed<T>() where T : Integral
+{
+    return wrap<T>( 0 );
+}
+
+// Two parameters, one from an argument and one from nowhere else. The list is all-or-nothing, so
+// this works only because both are settled.
+U widened<T, U>( T a ) where T : Integral & Copyable, where U : Integral
+{
+    if( a == wrap<T>( 0 ) )
+    {
+        return wrap<U>( 0 );
+    }
+
+    return wrap<U>( 1 );
+}
+
+// A generic beside a plain one. Deduction is what puts both in the set, and the plain one wins -
+// one rule read off the declarations, not a ranking of how well each fits.
+i32 either( i32 a )
+{
+    return 300 + a * 0;
+}
+
+T either<T>( T a ) where T : Copyable
+{
+    return a;
+}
+
+// A deduced call from inside a generic is an edge in the call graph like any written one, and
+// monomorphisation is what turns it into an instance.
+T forwards<T>( T a ) where T : Copyable
+{
+    T held = id( a );
+
+    return held;
+}
+
+class Held<T> where T : Copyable
+{
+    T v;
+
+    Held( T value )
+    {
+        v = value;
+    }
+
+    T get() const
+    {
+        return v;
+    }
+};
+
+i32 main()
+{
+    i32  whole = 7;
+    bool flag  = true;
+
+    // 1..2: one argument, at two instantiations of one generic.
+    if( id( whole ) != 7 ) { return 1; }
+    if( !id( flag ) ) { return 2; }
+
+    // 3..4: two positions that agree, and a literal beside a real argument - the real one decides,
+    // and the literal then checks against a concrete type in the ordinary way.
+    i32 same = 7;
+    if( both( whole, same ) != 1 ) { return 3; }
+    if( both( whole, 7 ) != 1 ) { return 4; }
+
+    // 5..7: structural, one level, two levels, and through a pointer.
+    Box<i32> boxed = Box { 5 };
+    if( unbox( boxed ) != 5 ) { return 5; }
+
+    Box<Box<i32>> nested = Box { boxed };
+    if( unbox_twice( nested ) != 5 ) { return 6; }
+
+    i32  target = 9;
+    i32* at     = &target;
+    if( through_pointer( at ) != 9 ) { return 7; }
+
+    // 8: a marker, which the call writes and deduction reads past.
+    i32 counted = 1;
+    bumped( ref counted );
+    if( counted != 2 ) { return 8; }
+
+    // 9..10: nothing but the expectation, at two different types.
+    i32 from_nowhere = zeroed();
+    if( from_nowhere != 0 ) { return 9; }
+
+    i64 wider = zeroed();
+    if( wider != 0 ) { return 10; }
+
+    // 11: the argument settles one parameter and the expectation settles the other.
+    i64 mixed = widened( whole );
+    if( mixed != 1 ) { return 11; }
+
+    // 12..13: the plain one wins, and the written form still reaches the generic.
+    if( either( whole ) != 300 ) { return 12; }
+    if( either<i32>( whole ) != 7 ) { return 13; }
+
+    // 14: deduced from inside a generic, which the worklist has to follow.
+    if( forwards( whole ) != 7 ) { return 14; }
+    if( !forwards( flag ) ) { return 15; }
+
+    // 16: a constructor takes its instance from the expectation, exactly as a literal does.
+    Held<i32> held = Held( 4 );
+    if( held.get() != 4 ) { return 16; }
+
+    // 17: the deduced call and the written one are one instantiation, not two.
+    if( id<i32>( whole ) != id( whole ) ) { return 17; }
+
+    return 42;
+}

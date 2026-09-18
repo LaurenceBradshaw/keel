@@ -30,12 +30,8 @@ i32 main()
     return 0;
 }
 
-// A generic needs its type arguments written: inference is a separate decision, so the bare form
-// names the explicit one rather than guessing.
-i32 without_type_arguments()
-{
-    return id( 1 );
-}
+// A generic's type arguments are deduced where the call says enough and written where it does
+// not. Which is which, and what each failure reads like, is errors_inference.kl.
 
 // And the mirror - a plain function given type arguments. After the call-site scan this is also
 // what `a < b > ( c )` parses as, so it is the message that shape produces.

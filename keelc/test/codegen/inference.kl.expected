@@ -1,0 +1,477 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Box__I3i32E;
+struct kl__Box__I3BoxI3i32EE;
+struct kl__Held__I3i32E;
+
+struct kl__Box__I3i32E
+{
+    int32_t kl_v_5;
+};
+
+struct kl__Box__I3BoxI3i32EE
+{
+    struct kl__Box__I3i32E kl_v_5;
+};
+
+struct kl__Held__I3i32E
+{
+    int32_t kl_v_197;
+};
+
+int32_t kl__either__3i32( int32_t );
+int32_t kl__main__( void );
+int32_t kl__id__I3i32E__3i32( int32_t );
+bool kl__id__I4boolE__4bool( bool );
+int32_t kl__both__I3i32E__3i32_3i32( int32_t, int32_t );
+int32_t kl__unbox__I3i32E__3BoxI3i32E( struct kl__Box__I3i32E );
+int32_t kl__unbox_twice__I3i32E__3BoxI3BoxI3i32EE( struct kl__Box__I3BoxI3i32EE );
+int32_t kl__through_pointer__I3i32E__P3i32( int32_t* );
+void kl__bumped__I3i32E__R3i32( int32_t* );
+int32_t kl__zeroed__I3i32E__( void );
+int64_t kl__zeroed__I3i64E__( void );
+int64_t kl__widened__I3i32_3i64E__3i32( int32_t );
+int32_t kl__either__I3i32E__3i32( int32_t );
+int32_t kl__forwards__I3i32E__3i32( int32_t );
+bool kl__forwards__I4boolE__4bool( bool );
+void kl__Held__I3i32E__R4HeldI3i32E_3i32__ctor( struct kl__Held__I3i32E*, int32_t );
+int32_t kl__get__I3i32E__4HeldI3i32E( struct kl__Held__I3i32E* );
+
+int32_t kl__either__3i32( int32_t kl_a_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t2;
+    int32_t kl_t3;
+#line 78 "codegen/inference.kl"
+    kl_t2 = kl_a_1 * 0;
+    kl_t3 = 300 + kl_t2;
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_whole_1;
+    bool kl_flag_2;
+    int32_t kl_t3;
+    bool kl_t4;
+    bool kl_t5;
+    bool kl_t6;
+    int32_t kl_same_7;
+    int32_t kl_t8;
+    bool kl_t9;
+    int32_t kl_t10;
+    bool kl_t11;
+    struct kl__Box__I3i32E kl_boxed_12;
+    struct kl__Box__I3i32E kl_t13;
+    int32_t kl_t14;
+    bool kl_t15;
+    struct kl__Box__I3BoxI3i32EE kl_nested_16;
+    struct kl__Box__I3BoxI3i32EE kl_t17;
+    int32_t kl_t18;
+    bool kl_t19;
+    int32_t kl_target_20;
+    int32_t* kl_at_21;
+    int32_t* kl_t22;
+    int32_t kl_t23;
+    bool kl_t24;
+    int32_t kl_counted_25;
+    int32_t* kl_t26;
+    bool kl_t28;
+    int32_t kl_from_nowhere_29;
+    int32_t kl_t30;
+    bool kl_t31;
+    int64_t kl_wider_32;
+    int64_t kl_t33;
+    bool kl_t34;
+    int64_t kl_mixed_35;
+    int64_t kl_t36;
+    bool kl_t37;
+    int32_t kl_t38;
+    bool kl_t39;
+    int32_t kl_t40;
+    bool kl_t41;
+    int32_t kl_t42;
+    bool kl_t43;
+    bool kl_t44;
+    bool kl_t45;
+    struct kl__Held__I3i32E kl_held_46;
+    struct kl__Held__I3i32E* kl_t47;
+    struct kl__Held__I3i32E* kl_t49;
+    int32_t kl_t50;
+    bool kl_t51;
+    int32_t kl_t52;
+    int32_t kl_t53;
+    bool kl_t54;
+#line 112 "codegen/inference.kl"
+    kl_whole_1 = 7;
+#line 113 "codegen/inference.kl"
+    kl_flag_2 = true;
+#line 116 "codegen/inference.kl"
+    kl_t3 = kl__id__I3i32E__3i32( kl_whole_1 );
+    kl_t4 = kl_t3 != 7;
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+    goto bb3;
+    bb3:
+#line 117 "codegen/inference.kl"
+    kl_t5 = kl__id__I4boolE__4bool( kl_flag_2 );
+    kl_t6 = !kl_t5;
+    if ( kl_t6 ) goto bb4; else goto bb5;
+    bb4:
+    kl_t0 = 2;
+    return kl_t0;
+    bb5:
+    goto bb6;
+    bb6:
+#line 121 "codegen/inference.kl"
+    kl_same_7 = 7;
+#line 122 "codegen/inference.kl"
+    kl_t8 = kl__both__I3i32E__3i32_3i32( kl_whole_1, kl_same_7 );
+    kl_t9 = kl_t8 != 1;
+    if ( kl_t9 ) goto bb7; else goto bb8;
+    bb7:
+    kl_t0 = 3;
+    return kl_t0;
+    bb8:
+    goto bb9;
+    bb9:
+#line 123 "codegen/inference.kl"
+    kl_t10 = kl__both__I3i32E__3i32_3i32( kl_whole_1, 7 );
+    kl_t11 = kl_t10 != 1;
+    if ( kl_t11 ) goto bb10; else goto bb11;
+    bb10:
+    kl_t0 = 4;
+    return kl_t0;
+    bb11:
+    goto bb12;
+    bb12:
+#line 126 "codegen/inference.kl"
+    kl_t13.kl_v_5 = 5;
+    kl_boxed_12 = kl_t13;
+#line 127 "codegen/inference.kl"
+    kl_t14 = kl__unbox__I3i32E__3BoxI3i32E( kl_boxed_12 );
+    kl_t15 = kl_t14 != 5;
+    if ( kl_t15 ) goto bb13; else goto bb14;
+    bb13:
+    kl_t0 = 5;
+    return kl_t0;
+    bb14:
+    goto bb15;
+    bb15:
+#line 129 "codegen/inference.kl"
+    kl_t17.kl_v_5 = kl_boxed_12;
+    kl_nested_16 = kl_t17;
+#line 130 "codegen/inference.kl"
+    kl_t18 = kl__unbox_twice__I3i32E__3BoxI3BoxI3i32EE( kl_nested_16 );
+    kl_t19 = kl_t18 != 5;
+    if ( kl_t19 ) goto bb16; else goto bb17;
+    bb16:
+    kl_t0 = 6;
+    return kl_t0;
+    bb17:
+    goto bb18;
+    bb18:
+#line 132 "codegen/inference.kl"
+    kl_target_20 = 9;
+#line 133 "codegen/inference.kl"
+    kl_t22 = &kl_target_20;
+    kl_at_21 = kl_t22;
+#line 134 "codegen/inference.kl"
+    kl_t23 = kl__through_pointer__I3i32E__P3i32( kl_at_21 );
+    kl_t24 = kl_t23 != 9;
+    if ( kl_t24 ) goto bb19; else goto bb20;
+    bb19:
+    kl_t0 = 7;
+    return kl_t0;
+    bb20:
+    goto bb21;
+    bb21:
+#line 137 "codegen/inference.kl"
+    kl_counted_25 = 1;
+#line 138 "codegen/inference.kl"
+    kl_t26 = &kl_counted_25;
+    kl__bumped__I3i32E__R3i32( kl_t26 );
+#line 139 "codegen/inference.kl"
+    kl_t28 = kl_counted_25 != 2;
+    if ( kl_t28 ) goto bb22; else goto bb23;
+    bb22:
+    kl_t0 = 8;
+    return kl_t0;
+    bb23:
+    goto bb24;
+    bb24:
+#line 142 "codegen/inference.kl"
+    kl_t30 = kl__zeroed__I3i32E__(  );
+    kl_from_nowhere_29 = kl_t30;
+#line 143 "codegen/inference.kl"
+    kl_t31 = kl_from_nowhere_29 != 0;
+    if ( kl_t31 ) goto bb25; else goto bb26;
+    bb25:
+    kl_t0 = 9;
+    return kl_t0;
+    bb26:
+    goto bb27;
+    bb27:
+#line 145 "codegen/inference.kl"
+    kl_t33 = kl__zeroed__I3i64E__(  );
+    kl_wider_32 = kl_t33;
+#line 146 "codegen/inference.kl"
+    kl_t34 = kl_wider_32 != 0;
+    if ( kl_t34 ) goto bb28; else goto bb29;
+    bb28:
+    kl_t0 = 10;
+    return kl_t0;
+    bb29:
+    goto bb30;
+    bb30:
+#line 149 "codegen/inference.kl"
+    kl_t36 = kl__widened__I3i32_3i64E__3i32( kl_whole_1 );
+    kl_mixed_35 = kl_t36;
+#line 150 "codegen/inference.kl"
+    kl_t37 = kl_mixed_35 != 1;
+    if ( kl_t37 ) goto bb31; else goto bb32;
+    bb31:
+    kl_t0 = 11;
+    return kl_t0;
+    bb32:
+    goto bb33;
+    bb33:
+#line 153 "codegen/inference.kl"
+    kl_t38 = kl__either__3i32( kl_whole_1 );
+    kl_t39 = kl_t38 != 300;
+    if ( kl_t39 ) goto bb34; else goto bb35;
+    bb34:
+    kl_t0 = 12;
+    return kl_t0;
+    bb35:
+    goto bb36;
+    bb36:
+#line 154 "codegen/inference.kl"
+    kl_t40 = kl__either__I3i32E__3i32( kl_whole_1 );
+    kl_t41 = kl_t40 != 7;
+    if ( kl_t41 ) goto bb37; else goto bb38;
+    bb37:
+    kl_t0 = 13;
+    return kl_t0;
+    bb38:
+    goto bb39;
+    bb39:
+#line 157 "codegen/inference.kl"
+    kl_t42 = kl__forwards__I3i32E__3i32( kl_whole_1 );
+    kl_t43 = kl_t42 != 7;
+    if ( kl_t43 ) goto bb40; else goto bb41;
+    bb40:
+    kl_t0 = 14;
+    return kl_t0;
+    bb41:
+    goto bb42;
+    bb42:
+#line 158 "codegen/inference.kl"
+    kl_t44 = kl__forwards__I4boolE__4bool( kl_flag_2 );
+    kl_t45 = !kl_t44;
+    if ( kl_t45 ) goto bb43; else goto bb44;
+    bb43:
+    kl_t0 = 15;
+    return kl_t0;
+    bb44:
+    goto bb45;
+    bb45:
+#line 161 "codegen/inference.kl"
+    kl_t47 = &kl_held_46;
+    kl__Held__I3i32E__R4HeldI3i32E_3i32__ctor( kl_t47, 4 );
+#line 162 "codegen/inference.kl"
+    kl_t49 = &kl_held_46;
+    kl_t50 = kl__get__I3i32E__4HeldI3i32E( kl_t49 );
+    kl_t51 = kl_t50 != 4;
+    if ( kl_t51 ) goto bb46; else goto bb47;
+    bb46:
+    kl_t0 = 16;
+    return kl_t0;
+    bb47:
+    goto bb48;
+    bb48:
+#line 165 "codegen/inference.kl"
+    kl_t52 = kl__id__I3i32E__3i32( kl_whole_1 );
+    kl_t53 = kl__id__I3i32E__3i32( kl_whole_1 );
+    kl_t54 = kl_t52 != kl_t53;
+    if ( kl_t54 ) goto bb49; else goto bb50;
+    bb49:
+    kl_t0 = 17;
+    return kl_t0;
+    bb50:
+    goto bb51;
+    bb51:
+#line 167 "codegen/inference.kl"
+    kl_t0 = 42;
+    return kl_t0;
+}
+
+int32_t kl__id__I3i32E__3i32( int32_t kl_a_1 )
+{
+    int32_t kl_t0;
+#line 17 "codegen/inference.kl"
+    kl_t0 = kl_a_1;
+    return kl_t0;
+}
+
+bool kl__id__I4boolE__4bool( bool kl_a_1 )
+{
+    bool kl_t0;
+#line 17 "codegen/inference.kl"
+    kl_t0 = kl_a_1;
+    return kl_t0;
+}
+
+int32_t kl__both__I3i32E__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
+{
+    int32_t kl_t0;
+    bool kl_t3;
+#line 23 "codegen/inference.kl"
+    kl_t3 = kl_a_1 == kl_b_2;
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 25 "codegen/inference.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+    goto bb3;
+    bb3:
+#line 28 "codegen/inference.kl"
+    kl_t0 = 2;
+    return kl_t0;
+}
+
+int32_t kl__unbox__I3i32E__3BoxI3i32E( struct kl__Box__I3i32E kl_b_1 )
+{
+    int32_t kl_t0;
+#line 34 "codegen/inference.kl"
+    kl_t0 = kl_b_1.kl_v_5;
+    return kl_t0;
+}
+
+int32_t kl__unbox_twice__I3i32E__3BoxI3BoxI3i32EE( struct kl__Box__I3BoxI3i32EE kl_b_1 )
+{
+    int32_t kl_t0;
+#line 40 "codegen/inference.kl"
+    kl_t0 = kl_b_1.kl_v_5.kl_v_5;
+    return kl_t0;
+}
+
+int32_t kl__through_pointer__I3i32E__P3i32( int32_t* kl_p_1 )
+{
+    int32_t kl_t0;
+#line 46 "codegen/inference.kl"
+    kl_t0 = ( *kl_p_1 );
+    return kl_t0;
+}
+
+void kl__bumped__I3i32E__R3i32( int32_t* kl_a_1 )
+{
+    int32_t kl_t2;
+#line 53 "codegen/inference.kl"
+    kl_t2 = ( *kl_a_1 ) + 1;
+    ( *kl_a_1 ) = kl_t2;
+    return;
+}
+
+int32_t kl__zeroed__I3i32E__( void )
+{
+    int32_t kl_t0;
+#line 59 "codegen/inference.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int64_t kl__zeroed__I3i64E__( void )
+{
+    int64_t kl_t0;
+    int64_t kl_t1;
+#line 59 "codegen/inference.kl"
+    kl_t1 = ( int64_t ) 0;
+    kl_t0 = kl_t1;
+    return kl_t0;
+}
+
+int64_t kl__widened__I3i32_3i64E__3i32( int32_t kl_a_1 )
+{
+    int64_t kl_t0;
+    bool kl_t2;
+    int64_t kl_t3;
+    int64_t kl_t4;
+#line 66 "codegen/inference.kl"
+    kl_t2 = kl_a_1 == 0;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 68 "codegen/inference.kl"
+    kl_t3 = ( int64_t ) 0;
+    kl_t0 = kl_t3;
+    return kl_t0;
+    bb2:
+    goto bb3;
+    bb3:
+#line 71 "codegen/inference.kl"
+    kl_t4 = ( int64_t ) 1;
+    kl_t0 = kl_t4;
+    return kl_t0;
+}
+
+int32_t kl__either__I3i32E__3i32( int32_t kl_a_1 )
+{
+    int32_t kl_t0;
+#line 83 "codegen/inference.kl"
+    kl_t0 = kl_a_1;
+    return kl_t0;
+}
+
+int32_t kl__forwards__I3i32E__3i32( int32_t kl_a_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_held_2;
+    int32_t kl_t3;
+#line 90 "codegen/inference.kl"
+    kl_t3 = kl__id__I3i32E__3i32( kl_a_1 );
+    kl_held_2 = kl_t3;
+#line 92 "codegen/inference.kl"
+    kl_t0 = kl_held_2;
+    return kl_t0;
+}
+
+bool kl__forwards__I4boolE__4bool( bool kl_a_1 )
+{
+    bool kl_t0;
+    bool kl_held_2;
+    bool kl_t3;
+#line 90 "codegen/inference.kl"
+    kl_t3 = kl__id__I4boolE__4bool( kl_a_1 );
+    kl_held_2 = kl_t3;
+#line 92 "codegen/inference.kl"
+    kl_t0 = kl_held_2;
+    return kl_t0;
+}
+
+void kl__Held__I3i32E__R4HeldI3i32E_3i32__ctor( struct kl__Held__I3i32E* kl_this_1, int32_t kl_value_2 )
+{
+#line 101 "codegen/inference.kl"
+    ( *kl_this_1 ).kl_v_197 = kl_value_2;
+    return;
+}
+
+int32_t kl__get__I3i32E__4HeldI3i32E( struct kl__Held__I3i32E* kl_this_1 )
+{
+    int32_t kl_t0;
+#line 106 "codegen/inference.kl"
+    kl_t0 = ( *kl_this_1 ).kl_v_197;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}
