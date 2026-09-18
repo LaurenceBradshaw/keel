@@ -1,0 +1,85 @@
+// What `cast` and `wrap` refuse when one end is a type parameter. The rule is "legal for every type
+// the bound admits", so every error here is a whole admissible *set* being rejected on the strength
+// of one member of it - and each message names that member, because `T` is not something an author
+// can act on and `f64` is.
+//
+// The correct code at the top is as much of the test as the errors: a line about it appearing in
+// stderr means the rule has started refusing conversions that are fine at every instantiation.
+
+i32 fine_wrap<T>( T v ) where T : Copyable & Integral
+{
+    return wrap<i32>( v );
+}
+
+f64 fine_cast<T>( T v ) where T : Copyable & Floating
+{
+    return cast<f64>( v );
+}
+
+// No `where` clause at all, so the parameter promises nothing and there is no set to check against.
+// The help asks for the bound rather than naming a type, because there is no type to name.
+i32 unbounded<T>( ref T v )
+{
+    return cast<i32>( v );
+}
+
+// A bound that exists but is not numeric. `Copyable` is every type that is not owning, which is
+// most structs - none of which convert to anything. This is the case a vacuous product would let
+// through, because the admissible *numeric* types all convert to `f64` perfectly well.
+f64 not_numeric<T>( T v ) where T : Copyable
+{
+    return cast<f64>( v );
+}
+
+// `Equatable` is the same hole wearing a bound the author did write: it admits `bool`, every `enum`
+// and every pointer alongside the numbers.
+i32 equatable_only<T>( T v ) where T : Copyable & Equatable
+{
+    return cast<i32>( v );
+}
+
+// `Numeric` admits the floats, and float to int is refused for having no one obvious rounding.
+i32 numeric_to_int<T>( T v ) where T : Copyable & Numeric
+{
+    return cast<i32>( v );
+}
+
+// `Integral` rules the floats out, and `cast` still fails - on narrowing rather than on the pair.
+// `u8` is admissible and does not fit an `i8`.
+i8 integral_narrows<T>( T v ) where T : Copyable & Integral
+{
+    return cast<i8>( v );
+}
+
+// The widest target does not help: `Integral` admits `u64`, which reaches a signed type only at a
+// strictly greater width, so no concrete integer target survives this bound.
+i64 integral_narrows_wide<T>( T v ) where T : Copyable & Integral
+{
+    return cast<i64>( v );
+}
+
+// The parameter as the target rather than the source. The witness is drawn from the admissible set
+// on that side instead.
+T into_integral<T>( f64 v ) where T : Copyable & Integral
+{
+    return cast<T>( v );
+}
+
+// The parameter as the target with the pair table satisfied, so it is narrowing that refuses this
+// one. The witness has to come from the admissible set on the *target* side - `i8` is what an `i32`
+// will not fit, and `i32` is not news to anybody.
+T narrow_into_integral<T>( i32 v ) where T : Copyable & Integral
+{
+    return cast<T>( v );
+}
+
+// `wrap` keeps the low bits of an integer, and there are no low bits to keep on the way to a float.
+T wrap_into_float<T>( i32 v ) where T : Copyable & Floating
+{
+    return wrap<T>( v );
+}
+
+i32 main()
+{
+    return 0;
+}

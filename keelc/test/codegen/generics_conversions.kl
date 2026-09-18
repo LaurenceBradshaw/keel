@@ -1,0 +1,101 @@
+// `cast` and `wrap` with a type parameter on one end or both. The rule is that a conversion on a
+// `T` is legal when it is legal for every type `T` may turn out to be, so what is proved here is
+// that the *set* was checked, not one convenient member of it.
+//
+// Every generic is instantiated at two type arguments that convert differently, because a body
+// checked once and emitted once would pass a fixture that only ever used one.
+
+i32 to_i32<T>( T v ) where T : Copyable & Integral
+{
+    return wrap<i32>( v );
+}
+
+// The parameter is the target rather than the source, which is the shape the range diagnostic
+// sends authors to when a literal does not fit every admissible type.
+T from_i32<T>( i32 v ) where T : Copyable & Integral
+{
+    return wrap<T>( v );
+}
+
+// `cast` needs every admissible pair to widen, and `Floating` is the bound where that holds:
+// `Integral` admits `u64`, which fits no integer type at all.
+f64 widen<T>( T v ) where T : Copyable & Floating
+{
+    return cast<f64>( v );
+}
+
+// Both ends generic. The product is checked in both directions, and neither type exists until the
+// call site names it.
+U across<T, U>( T v ) where T : Copyable & Integral, where U : Copyable & Integral
+{
+    return wrap<U>( v );
+}
+
+// A literal adopting the parameter through `cast`, which is the one shape that already worked:
+// `cast` hands the target to the literal as its expectation rather than converting anything.
+T five<T>() where T : Copyable & Numeric
+{
+    return cast<T>( 5 );
+}
+
+i32 main()
+{
+    // Widening out of a parameter.
+    if( to_i32<u8>( 200 ) != 200 )
+    {
+        return 1;
+    }
+
+    // The same body at a signed argument, where the conversion sign-extends instead.
+    if( to_i32<i16>( -7 ) != -7 )
+    {
+        return 2;
+    }
+
+    // Truncating *into* a parameter. 300 does not fit a u8, and `wrap` keeping the low bits is
+    // exactly why this is the operator the diagnostic names.
+    if( from_i32<u8>( 300 ) != 44 )
+    {
+        return 3;
+    }
+
+    // The same body where nothing is lost, so the truncation above is the conversion and not the
+    // fixture's arithmetic.
+    if( from_i32<i32>( 300 ) != 300 )
+    {
+        return 4;
+    }
+
+    if( widen<f32>( 1.5 ) != 1.5 )
+    {
+        return 5;
+    }
+
+    if( widen<f64>( 2.5 ) != 2.5 )
+    {
+        return 6;
+    }
+
+    // Parameter to parameter: 70000 keeps its low sixteen bits.
+    if( across<i32, i16>( 70000 ) != 4464 )
+    {
+        return 7;
+    }
+
+    if( across<u8, i32>( 9 ) != 9 )
+    {
+        return 8;
+    }
+
+    if( five<u8>() != 5 )
+    {
+        return 9;
+    }
+
+    if( five<f64>() != 5.0 )
+    {
+        return 10;
+    }
+
+    return 42;
+}

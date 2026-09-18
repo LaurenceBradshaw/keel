@@ -1,0 +1,254 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+int32_t kl__main__( void );
+int32_t kl__to_i32__2u8( uint8_t );
+int32_t kl__to_i32__3i16( int16_t );
+uint8_t kl__from_i32__2u8( int32_t );
+int32_t kl__from_i32__3i32( int32_t );
+double kl__widen__3f32( float );
+double kl__widen__3f64( double );
+int16_t kl__across__3i32_3i16( int32_t );
+int32_t kl__across__2u8_3i32( uint8_t );
+uint8_t kl__five__2u8( void );
+double kl__five__3f64( void );
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_t1;
+    bool kl_t2;
+    int16_t kl_t3;
+    int32_t kl_t4;
+    int32_t kl_t5;
+    bool kl_t6;
+    uint8_t kl_t7;
+    bool kl_t8;
+    int32_t kl_t9;
+    bool kl_t10;
+    double kl_t11;
+    bool kl_t12;
+    double kl_t13;
+    bool kl_t14;
+    int16_t kl_t15;
+    bool kl_t16;
+    int32_t kl_t17;
+    bool kl_t18;
+    uint8_t kl_t19;
+    bool kl_t20;
+    double kl_t21;
+    bool kl_t22;
+#line 44 "codegen/generics_conversions.kl"
+    kl_t1 = kl__to_i32__2u8( 200 );
+    kl_t2 = kl_t1 != 200;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 46 "codegen/generics_conversions.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+    goto bb3;
+    bb3:
+#line 50 "codegen/generics_conversions.kl"
+    kl_t3 = -7;
+    kl_t4 = kl__to_i32__3i16( kl_t3 );
+    kl_t5 = -7;
+    kl_t6 = kl_t4 != kl_t5;
+    if ( kl_t6 ) goto bb4; else goto bb5;
+    bb4:
+#line 52 "codegen/generics_conversions.kl"
+    kl_t0 = 2;
+    return kl_t0;
+    bb5:
+    goto bb6;
+    bb6:
+#line 57 "codegen/generics_conversions.kl"
+    kl_t7 = kl__from_i32__2u8( 300 );
+    kl_t8 = kl_t7 != 44;
+    if ( kl_t8 ) goto bb7; else goto bb8;
+    bb7:
+#line 59 "codegen/generics_conversions.kl"
+    kl_t0 = 3;
+    return kl_t0;
+    bb8:
+    goto bb9;
+    bb9:
+#line 64 "codegen/generics_conversions.kl"
+    kl_t9 = kl__from_i32__3i32( 300 );
+    kl_t10 = kl_t9 != 300;
+    if ( kl_t10 ) goto bb10; else goto bb11;
+    bb10:
+#line 66 "codegen/generics_conversions.kl"
+    kl_t0 = 4;
+    return kl_t0;
+    bb11:
+    goto bb12;
+    bb12:
+#line 69 "codegen/generics_conversions.kl"
+    kl_t11 = kl__widen__3f32( 1.5 );
+    kl_t12 = kl_t11 != 1.5;
+    if ( kl_t12 ) goto bb13; else goto bb14;
+    bb13:
+#line 71 "codegen/generics_conversions.kl"
+    kl_t0 = 5;
+    return kl_t0;
+    bb14:
+    goto bb15;
+    bb15:
+#line 74 "codegen/generics_conversions.kl"
+    kl_t13 = kl__widen__3f64( 2.5 );
+    kl_t14 = kl_t13 != 2.5;
+    if ( kl_t14 ) goto bb16; else goto bb17;
+    bb16:
+#line 76 "codegen/generics_conversions.kl"
+    kl_t0 = 6;
+    return kl_t0;
+    bb17:
+    goto bb18;
+    bb18:
+#line 80 "codegen/generics_conversions.kl"
+    kl_t15 = kl__across__3i32_3i16( 70000 );
+    kl_t16 = kl_t15 != 4464;
+    if ( kl_t16 ) goto bb19; else goto bb20;
+    bb19:
+#line 82 "codegen/generics_conversions.kl"
+    kl_t0 = 7;
+    return kl_t0;
+    bb20:
+    goto bb21;
+    bb21:
+#line 85 "codegen/generics_conversions.kl"
+    kl_t17 = kl__across__2u8_3i32( 9 );
+    kl_t18 = kl_t17 != 9;
+    if ( kl_t18 ) goto bb22; else goto bb23;
+    bb22:
+#line 87 "codegen/generics_conversions.kl"
+    kl_t0 = 8;
+    return kl_t0;
+    bb23:
+    goto bb24;
+    bb24:
+#line 90 "codegen/generics_conversions.kl"
+    kl_t19 = kl__five__2u8(  );
+    kl_t20 = kl_t19 != 5;
+    if ( kl_t20 ) goto bb25; else goto bb26;
+    bb25:
+#line 92 "codegen/generics_conversions.kl"
+    kl_t0 = 9;
+    return kl_t0;
+    bb26:
+    goto bb27;
+    bb27:
+#line 95 "codegen/generics_conversions.kl"
+    kl_t21 = kl__five__3f64(  );
+    kl_t22 = kl_t21 != 5.0;
+    if ( kl_t22 ) goto bb28; else goto bb29;
+    bb28:
+#line 97 "codegen/generics_conversions.kl"
+    kl_t0 = 10;
+    return kl_t0;
+    bb29:
+    goto bb30;
+    bb30:
+#line 100 "codegen/generics_conversions.kl"
+    kl_t0 = 42;
+    return kl_t0;
+}
+
+int32_t kl__to_i32__2u8( uint8_t kl_v_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t2;
+#line 10 "codegen/generics_conversions.kl"
+    kl_t2 = ( int32_t ) kl_v_1;
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+int32_t kl__to_i32__3i16( int16_t kl_v_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t2;
+#line 10 "codegen/generics_conversions.kl"
+    kl_t2 = ( int32_t ) kl_v_1;
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+uint8_t kl__from_i32__2u8( int32_t kl_v_1 )
+{
+    uint8_t kl_t0;
+    uint8_t kl_t2;
+#line 17 "codegen/generics_conversions.kl"
+    kl_t2 = ( uint8_t ) kl_v_1;
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+int32_t kl__from_i32__3i32( int32_t kl_v_1 )
+{
+    int32_t kl_t0;
+#line 17 "codegen/generics_conversions.kl"
+    kl_t0 = kl_v_1;
+    return kl_t0;
+}
+
+double kl__widen__3f32( float kl_v_1 )
+{
+    double kl_t0;
+    double kl_t2;
+#line 24 "codegen/generics_conversions.kl"
+    kl_t2 = ( double ) kl_v_1;
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+double kl__widen__3f64( double kl_v_1 )
+{
+    double kl_t0;
+#line 24 "codegen/generics_conversions.kl"
+    kl_t0 = kl_v_1;
+    return kl_t0;
+}
+
+int16_t kl__across__3i32_3i16( int32_t kl_v_1 )
+{
+    int16_t kl_t0;
+    int16_t kl_t2;
+#line 31 "codegen/generics_conversions.kl"
+    kl_t2 = ( int16_t ) kl_v_1;
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+int32_t kl__across__2u8_3i32( uint8_t kl_v_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t2;
+#line 31 "codegen/generics_conversions.kl"
+    kl_t2 = ( int32_t ) kl_v_1;
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+uint8_t kl__five__2u8( void )
+{
+    uint8_t kl_t0;
+#line 38 "codegen/generics_conversions.kl"
+    kl_t0 = 5;
+    return kl_t0;
+}
+
+double kl__five__3f64( void )
+{
+    double kl_t0;
+#line 38 "codegen/generics_conversions.kl"
+    kl_t0 = 5.0;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

@@ -1,0 +1,55 @@
+error: `cast` cannot convert `T` to `i32`
+  --> sema/errors_generic_conversions.kl:23:12
+   |
+23 |     return cast<i32>( v );
+   |            ^^^^^^^^^^^^^^ write `where T : Numeric` to promise it is a number
+
+error: `cast` cannot convert `T` to `f64`
+  --> sema/errors_generic_conversions.kl:31:12
+   |
+31 |     return cast<f64>( v );
+   |            ^^^^^^^^^^^^^^ write `where T : Numeric` to promise it is a number
+
+error: `cast` cannot convert `T` to `i32`
+  --> sema/errors_generic_conversions.kl:38:12
+   |
+38 |     return cast<i32>( v );
+   |            ^^^^^^^^^^^^^^ write `where T : Numeric` to promise it is a number
+
+error: `cast` cannot convert `T` to `i32`
+  --> sema/errors_generic_conversions.kl:44:12
+   |
+44 |     return cast<i32>( v );
+   |            ^^^^^^^^^^^^^^ `T` may be `f32`, and rounding is not implied; this needs an explicit rounding function
+
+error: `cast` cannot narrow `T` to `i8` yet
+  --> sema/errors_generic_conversions.kl:51:12
+   |
+51 |     return cast<i8>( v );
+   |            ^^^^^^^^^^^^^ `T` may be `u8`, and the run-time check is unimplemented; `wrap<i8>` truncates instead
+
+error: `cast` cannot narrow `T` to `i64` yet
+  --> sema/errors_generic_conversions.kl:58:12
+   |
+58 |     return cast<i64>( v );
+   |            ^^^^^^^^^^^^^^ `T` may be `u64`, and the run-time check is unimplemented; `wrap<i64>` truncates instead
+
+error: `cast` cannot convert `f64` to `T`
+  --> sema/errors_generic_conversions.kl:65:12
+   |
+65 |     return cast<T>( v );
+   |            ^^^^^^^^^^^^ `T` may be `i8`, and rounding is not implied; this needs an explicit rounding function
+
+error: `cast` cannot narrow `i32` to `T` yet
+  --> sema/errors_generic_conversions.kl:73:12
+   |
+73 |     return cast<T>( v );
+   |            ^^^^^^^^^^^^ `T` may be `i8`, and the run-time check is unimplemented; `wrap<T>` truncates instead
+
+error: `wrap` cannot convert `i32` to `T`
+  --> sema/errors_generic_conversions.kl:79:12
+   |
+79 |     return wrap<T>( v );
+   |            ^^^^^^^^^^^^ `wrap` keeps the low bits of an integer; use `cast` here
+
+9 errors generated

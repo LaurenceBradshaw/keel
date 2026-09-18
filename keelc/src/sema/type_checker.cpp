@@ -699,6 +699,17 @@ private:
     // The narrowest integer a parameter may turn out to be, for the checks that need a width. Zero
     // when no integer is admissible at all.
     u8 narrowest_admissible_width( Type_id parameter ) const;
+
+    // Every concrete type a value may turn out to be: itself, or what a parameter's bounds admit.
+    // Empty means not enumerable, which is a refusal and not a free pass.
+    std::vector<Type_id> possible_types( Type_id type ) const;
+
+    // conversion_for() over that set: legal for every admissible type, or not legal at all.
+    Conversion conversion_between( Type_id from, Type_id to, Type_id& witness ) const;
+
+    // holds() over the same set. Returns the admissible type that narrows, or an invalid id when
+    // every pair widens - a `cast` is safe only when none of them does.
+    Type_id narrowing_witness( Type_id from, Type_id to ) const;
     // The first admissible type the literal will not fit, or an invalid id when every one holds it.
     // Returns the type rather than a bool so the diagnostic can name what is doing the rejecting -
     // `i8` is the answer an author can act on, `T` is not.
@@ -4576,6 +4587,11 @@ Type_id Checker::infer_cast( Node_id id )
     }
 
     const std::string_view name = is_cast ? "cast" : "wrap";
+    Type_id                witness;
+
+    // Which side the author wrote a parameter on, if either. `value` wins when both are, matching
+    // which side conversion_between draws its witness from.
+    const Type_id generic = table_.is_parameter( value ) ? value : table_.is_parameter( target ) ? target : Type_id {};
 
     const auto reject = [&]( std::string message, std::string help = {} )
     {
@@ -4584,19 +4600,39 @@ Type_id Checker::infer_cast( Node_id id )
         return record( id, error );
     };
 
-    switch( conversion_for( table_.get( value ).kind, table_.get( target ).kind ) )
+    switch( conversion_between( value, target, witness ) )
     {
     case Conversion::None:
     {
+        // The concrete pair that actually failed. With nothing generic these are the written
+        // types, which is why the two tests below did not have to change.
+        const Type_id failed_from = table_.is_parameter( value ) ? witness : value;
+        const Type_id failed_to   = table_.is_parameter( value ) ? target : witness.is_valid() ? witness : target;
+
         std::string help;
 
-        if( table_.is_float( value ) && table_.is_integer( target ) )
+        // No witness with a parameter in play means the set was not enumerable at all, which is a
+        // missing bound rather than a refused pair.
+        if( generic.is_valid() && !witness.is_valid() )
+        {
+            help = fmt::format( "write `where {} : Numeric` to promise it is a number", table_.name( generic ) );
+        }
+        else if( table_.is_float( failed_from ) && table_.is_integer( failed_to ) )
         {
             help = "rounding is not implied; this needs an explicit rounding function";
         }
-        else if( table_.is_integer( value ) && target == table_.builtin( Type_kind::Bool ) )
+        else if( table_.is_integer( failed_from ) && failed_to == table_.builtin( Type_kind::Bool ) )
         {
             help = "compare it instead, as in `x != 0`";
+        }
+
+        // `T` is what the author wrote and the witness is what refused it. Only one of the two is
+        // something they can act on, so the help carries both.
+        if( witness.is_valid() )
+        {
+            const std::string may = fmt::format( "`{}` may be `{}`", table_.name( generic ), table_.name( witness ) );
+
+            help = help.empty() ? may : fmt::format( "{}, and {}", may, help );
         }
 
         return reject(
@@ -4636,12 +4672,27 @@ Type_id Checker::infer_cast( Node_id id )
     case Conversion::Both:
         // Narrowing is the one place the two operators disagree, and the check that makes `cast`
         // safe there does not exist yet.
-        if( k_narrowing_cast_needs_a_run_time_check && is_cast && !table_.holds( value, target ) )
+        if( k_narrowing_cast_needs_a_run_time_check && is_cast )
         {
-            return reject(
-                fmt::format( "`cast` cannot narrow `{}` to `{}` yet", table_.name( value ), table_.name( target ) ),
-                fmt::format( "the run-time check is unimplemented; `wrap<{}>` truncates instead", table_.name( target ) )
-            );
+            const Type_id narrows = narrowing_witness( value, target );
+
+            if( narrows.is_valid() )
+            {
+                std::string help =
+                    fmt::format( "the run-time check is unimplemented; `wrap<{}>` truncates instead", table_.name( target ) );
+
+                if( generic.is_valid() )
+                {
+                    help = fmt::format(
+                        "`{}` may be `{}`, and {}", table_.name( generic ), table_.name( narrows ), std::move( help )
+                    );
+                }
+
+                return reject(
+                    fmt::format( "`cast` cannot narrow `{}` to `{}` yet", table_.name( value ), table_.name( target ) ),
+                    std::move( help )
+                );
+            }
         }
 
         break;
@@ -6056,6 +6107,120 @@ u8 Checker::narrowest_admissible_width( Type_id parameter ) const
     }
 
     return narrowest;
+}
+
+// Every concrete type a value of this type may turn out to be.
+//
+// A parameter without `Numeric` comes back empty rather than unbounded, and the emptiness is the
+// point: `Copyable` alone admits every struct, and admissible_numeric_types cannot see them. An
+// empty answer means "not enumerable", never "nothing to check".
+std::vector<Type_id> Checker::possible_types( Type_id type ) const
+{
+    if( !table_.is_parameter( type ) )
+    {
+        return { type };
+    }
+
+    const Bound_set bounds = bounds_for( type );
+
+    // `Integral` and `Floating` are stored with `Numeric` in them by closure(), so this one test
+    // covers all three.
+    return bound_set_contains( bounds, Bound::Numeric ) ? admissible_numeric_types( bounds ) : std::vector<Type_id> {};
+}
+
+// What `cast` and `wrap` mean for a pair that may not be concrete yet: a conversion on a `T` is
+// legal when it is legal for *every* type `T` may turn out to be, and means what the weakest of
+// them means. The product is at most ten by ten, and its answer is the same at every instantiation
+// - which is what keeps D11 whole, because no later call site can break a body that compiled.
+//
+// `witness` names the admissible type that decided it. `T` is not something an author can act on
+// and `f64` is, so the diagnostic needs the type, not the parameter. It is left invalid when the
+// answer is `Both` and nothing has to be explained.
+Conversion Checker::conversion_between( Type_id from, Type_id to, Type_id& witness ) const
+{
+    witness = Type_id {};
+
+    // Neither side generic: the pair table is the whole answer, `Unsafe` included. Below it cannot
+    // arise, because no bound admits a pointer.
+    if( !table_.is_parameter( from ) && !table_.is_parameter( to ) )
+    {
+        return conversion_for( table_.get( from ).kind, table_.get( to ).kind );
+    }
+
+    const std::vector<Type_id> froms = possible_types( from );
+    const std::vector<Type_id> tos   = possible_types( to );
+
+    // A side that is not enumerable has no set to check against, and a vacuous product answers
+    // `Both` - which would let `cast<f64>` through on a `Copyable` `T` that may be a struct. The
+    // caller reports the missing bound; refusing here is what stops the hole existing at all.
+    if( froms.empty() || tos.empty() )
+    {
+        return Conversion::None;
+    }
+
+    Conversion weakest = Conversion::Both;
+
+    for( const Type_id f : froms )
+    {
+        for( const Type_id t : tos )
+        {
+            const Conversion pair = conversion_for( table_.get( f ).kind, table_.get( t ).kind );
+
+            assert( pair != Conversion::Unsafe && "no bound admits a pointer, so no pair here is one" );
+
+            // Nothing is weaker than a refusal, so no later pair can change the answer.
+            if( pair == Conversion::None )
+            {
+                witness = table_.is_parameter( from ) ? f : t;
+
+                return Conversion::None;
+            }
+
+            // First one only: the earliest witness is the narrowest admissible type, which is the
+            // one worth naming.
+            if( pair == Conversion::Cast_only && weakest == Conversion::Both )
+            {
+                weakest = Conversion::Cast_only;
+                witness = table_.is_parameter( from ) ? f : t;
+            }
+        }
+    }
+
+    return weakest;
+}
+
+// The narrowing half of the same product. holds() is a pair question like conversion_for, so a
+// parameter has to be expanded the same way: a `cast` is safe only when *every* admissible pair
+// widens, and one that narrows is the whole answer.
+Type_id Checker::narrowing_witness( Type_id from, Type_id to ) const
+{
+    if( !table_.is_parameter( from ) && !table_.is_parameter( to ) )
+    {
+        return table_.holds( from, to ) ? Type_id {} : from;
+    }
+
+    const std::vector<Type_id> froms = possible_types( from );
+    const std::vector<Type_id> tos   = possible_types( to );
+
+    // Unreachable: conversion_between refused an unenumerable side before this arm was taken. The
+    // guard is here because a vacuous product would answer "nothing narrows", which is backwards.
+    if( froms.empty() || tos.empty() )
+    {
+        return from;
+    }
+
+    for( const Type_id f : froms )
+    {
+        for( const Type_id t : tos )
+        {
+            if( !table_.holds( f, t ) )
+            {
+                return table_.is_parameter( from ) ? f : t;
+            }
+        }
+    }
+
+    return Type_id {};
 }
 
 std::vector<Type_id> Checker::admissible_numeric_types( Bound_set bounds ) const
