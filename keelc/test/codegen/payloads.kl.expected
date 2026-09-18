@@ -59,9 +59,7 @@ double kl__area__5Shape( struct kl__Shape kl_s_1 )
     bb4:
 #line 25 "codegen/payloads.kl"
     kl_t6 = kl_s_1.tag == 1;
-    if ( kl_t6 ) goto bb2; else goto bb5;
-    bb5:
-    goto bb3;
+    if ( kl_t6 ) goto bb2; else goto bb3;
 }
 
 int32_t kl__unwrap__4Slot_3i32( struct kl__Slot kl_s_1, int32_t kl_fallback_2 )
@@ -71,7 +69,7 @@ int32_t kl__unwrap__4Slot_3i32( struct kl__Slot kl_s_1, int32_t kl_fallback_2 )
     int32_t kl_v_4;
 #line 36 "codegen/payloads.kl"
     kl_t3 = kl_s_1.tag == 1;
-    if ( kl_t3 ) goto bb1; else goto bb3;
+    if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
     kl_v_4 = kl_s_1.kl_value_12;
 #line 37 "codegen/payloads.kl"
@@ -81,8 +79,6 @@ int32_t kl__unwrap__4Slot_3i32( struct kl__Slot kl_s_1, int32_t kl_fallback_2 )
 #line 39 "codegen/payloads.kl"
     kl_t0 = kl_fallback_2;
     return kl_t0;
-    bb3:
-    goto bb2;
 }
 
 int32_t kl__main__( void )
@@ -123,54 +119,44 @@ int32_t kl__main__( void )
     kl_t0 = 10;
     return kl_t0;
     bb2:
-    goto bb3;
-    bb3:
 #line 50 "codegen/payloads.kl"
     kl_t5.tag = 0;
     kl_t5.kl_radius_1 = 2.0;
     kl_t6 = kl__area__5Shape( kl_t5 );
     kl_t7 = kl_t6 != 12.0;
-    if ( kl_t7 ) goto bb4; else goto bb5;
-    bb4:
+    if ( kl_t7 ) goto bb3; else goto bb4;
+    bb3:
     kl_t0 = 11;
     return kl_t0;
-    bb5:
-    goto bb6;
-    bb6:
+    bb4:
 #line 51 "codegen/payloads.kl"
     kl_t8.tag = 2;
     kl_t9 = kl__area__5Shape( kl_t8 );
     kl_t10 = kl_t9 != 0.0;
-    if ( kl_t10 ) goto bb7; else goto bb8;
-    bb7:
+    if ( kl_t10 ) goto bb5; else goto bb6;
+    bb5:
     kl_t0 = 12;
     return kl_t0;
-    bb8:
-    goto bb9;
-    bb9:
+    bb6:
 #line 55 "codegen/payloads.kl"
     kl_t11.tag = 1;
     kl_t11.kl_value_12 = 7;
     kl_t12 = kl__unwrap__4Slot_3i32( kl_t11, 99 );
     kl_t13 = kl_t12 != 7;
-    if ( kl_t13 ) goto bb10; else goto bb11;
-    bb10:
+    if ( kl_t13 ) goto bb7; else goto bb8;
+    bb7:
     kl_t0 = 20;
     return kl_t0;
-    bb11:
-    goto bb12;
-    bb12:
+    bb8:
 #line 56 "codegen/payloads.kl"
     kl_t14.tag = 0;
     kl_t15 = kl__unwrap__4Slot_3i32( kl_t14, 99 );
     kl_t16 = kl_t15 != 99;
-    if ( kl_t16 ) goto bb13; else goto bb14;
-    bb13:
+    if ( kl_t16 ) goto bb9; else goto bb10;
+    bb9:
     kl_t0 = 21;
     return kl_t0;
-    bb14:
-    goto bb15;
-    bb15:
+    bb10:
 #line 58 "codegen/payloads.kl"
     kl_t17.tag = 1;
     kl_t17.kl_value_12 = 5;

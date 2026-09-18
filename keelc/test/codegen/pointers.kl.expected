@@ -81,52 +81,42 @@ int32_t kl__main__( void )
     kl_t0 = 1;
     return kl_t0;
     bb2:
-    goto bb3;
-    bb3:
 #line 16 "codegen/pointers.kl"
     kl_t5 = kl__read__P3i32( kl_q_2 );
     kl_t6 = kl_t5 != 41;
-    if ( kl_t6 ) goto bb4; else goto bb5;
-    bb4:
+    if ( kl_t6 ) goto bb3; else goto bb4;
+    bb3:
     kl_t0 = 2;
     return kl_t0;
-    bb5:
-    goto bb6;
-    bb6:
+    bb4:
 #line 18 "codegen/pointers.kl"
     kl__bump__P3i32( kl_q_2 );
 #line 19 "codegen/pointers.kl"
     kl_t8 = kl_v_1 != 42;
-    if ( kl_t8 ) goto bb7; else goto bb8;
-    bb7:
+    if ( kl_t8 ) goto bb5; else goto bb6;
+    bb5:
     kl_t0 = 3;
     return kl_t0;
-    bb8:
-    goto bb9;
-    bb9:
+    bb6:
 #line 21 "codegen/pointers.kl"
     ( *kl_q_2 ) = 7;
 #line 22 "codegen/pointers.kl"
     kl_t9 = kl_v_1 != 7;
-    if ( kl_t9 ) goto bb10; else goto bb11;
-    bb10:
+    if ( kl_t9 ) goto bb7; else goto bb8;
+    bb7:
     kl_t0 = 4;
     return kl_t0;
-    bb11:
-    goto bb12;
-    bb12:
+    bb8:
 #line 24 "codegen/pointers.kl"
     kl_t11 = &kl_q_2;
     kl_r_10 = kl_t11;
 #line 25 "codegen/pointers.kl"
     kl_t12 = ( *( *kl_r_10 ) ) != 7;
-    if ( kl_t12 ) goto bb13; else goto bb14;
-    bb13:
+    if ( kl_t12 ) goto bb9; else goto bb10;
+    bb9:
     kl_t0 = 5;
     return kl_t0;
-    bb14:
-    goto bb15;
-    bb15:
+    bb10:
 #line 27 "codegen/pointers.kl"
     kl_t14.kl_x_1 = 1.0;
     kl_t14.kl_y_3 = 2.0;
@@ -138,24 +128,20 @@ int32_t kl__main__( void )
     ( *kl_f_15 ) = 9.0;
 #line 30 "codegen/pointers.kl"
     kl_t17 = kl_s_13.kl_y_3 != 9.0;
-    if ( kl_t17 ) goto bb16; else goto bb17;
-    bb16:
+    if ( kl_t17 ) goto bb11; else goto bb12;
+    bb11:
     kl_t0 = 6;
     return kl_t0;
-    bb17:
-    goto bb18;
-    bb18:
+    bb12:
 #line 32 "codegen/pointers.kl"
     kl_n_18 = NULL;
 #line 33 "codegen/pointers.kl"
     kl_t19 = kl_n_18 != NULL;
-    if ( kl_t19 ) goto bb19; else goto bb20;
-    bb19:
+    if ( kl_t19 ) goto bb13; else goto bb14;
+    bb13:
     kl_t0 = 7;
     return kl_t0;
-    bb20:
-    goto bb21;
-    bb21:
+    bb14:
 #line 37 "codegen/pointers.kl"
     kl_t21 = &kl_s_13;
     kl_p_20 = kl_t21;
@@ -163,25 +149,21 @@ int32_t kl__main__( void )
     ( *kl_p_20 ).kl_x_1 = 3.0;
 #line 39 "codegen/pointers.kl"
     kl_t22 = kl_s_13.kl_x_1 != 3.0;
-    if ( kl_t22 ) goto bb22; else goto bb23;
-    bb22:
+    if ( kl_t22 ) goto bb15; else goto bb16;
+    bb15:
     kl_t0 = 8;
     return kl_t0;
-    bb23:
-    goto bb24;
-    bb24:
+    bb16:
 #line 42 "codegen/pointers.kl"
     kl_t23 = ( *kl_p_20 ).kl_x_1 + 1.0;
     ( *kl_p_20 ).kl_x_1 = kl_t23;
 #line 43 "codegen/pointers.kl"
     kl_t24 = kl_s_13.kl_x_1 != 4.0;
-    if ( kl_t24 ) goto bb25; else goto bb26;
-    bb25:
+    if ( kl_t24 ) goto bb17; else goto bb18;
+    bb17:
     kl_t0 = 9;
     return kl_t0;
-    bb26:
-    goto bb27;
-    bb27:
+    bb18:
 #line 46 "codegen/pointers.kl"
     kl_t26.kl_n_6 = 10;
     kl_c_25 = kl_t26;
@@ -192,24 +174,20 @@ int32_t kl__main__( void )
     ( *kl_d_27 ).kl_n_6 = ( *kl_d_27 ).kl_n_6 + 5;
 #line 49 "codegen/pointers.kl"
     kl_t29 = kl_c_25.kl_n_6 != 15;
-    if ( kl_t29 ) goto bb28; else goto bb29;
-    bb28:
+    if ( kl_t29 ) goto bb19; else goto bb20;
+    bb19:
     kl_t0 = 10;
     return kl_t0;
-    bb29:
-    goto bb30;
-    bb30:
+    bb20:
 #line 51 "codegen/pointers.kl"
     ( *kl_d_27 ).kl_n_6 = ( *kl_d_27 ).kl_n_6 + 1;
 #line 52 "codegen/pointers.kl"
     kl_t30 = kl_c_25.kl_n_6 != 16;
-    if ( kl_t30 ) goto bb31; else goto bb32;
-    bb31:
+    if ( kl_t30 ) goto bb21; else goto bb22;
+    bb21:
     kl_t0 = 11;
     return kl_t0;
-    bb32:
-    goto bb33;
-    bb33:
+    bb22:
 #line 54 "codegen/pointers.kl"
     kl_t0 = 0;
     return kl_t0;

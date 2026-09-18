@@ -13,9 +13,6 @@ fn picks {
         return
 
     bb2:
-        goto -> bb3
-
-    bb3:
         _0 = &(*_2)
         return
 }

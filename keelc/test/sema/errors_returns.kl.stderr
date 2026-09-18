@@ -16,10 +16,4 @@ error: this function does not return a value on every path
 16 | i32 only_one_arm( i32 x )
    | ^^^^^^^^^^^^^^^^^^^^^^^^^ it returns `i32`, so every path out of it must produce one
 
-error: this function does not return a value on every path
-  --> sema/errors_returns.kl:27:1
-   |
-27 | i32 never_leaves_the_loop()
-   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^ it returns `i32`, so every path out of it must produce one
-
-4 errors generated
+3 errors generated

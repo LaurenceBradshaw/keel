@@ -92,9 +92,6 @@ fn early_return {
         return
 
     bb2:
-        goto -> bb3
-
-    bb3:
         storage_dead _3
         _0 = copy _2
         storage_dead _2
@@ -143,29 +140,23 @@ fn break_from_nested {
         goto -> bb1
 
     bb1:
-        branch const 1 -> bb2, bb3
-
-    bb2:
         storage_live _1
         _1 = const 1
         storage_live _2
         _2 = const 2
         _3 = copy _2 > copy _1
-        branch copy _3 -> bb4, bb5
+        branch copy _3 -> bb3, bb4
 
-    bb3:
+    bb2:
         _0 = const 0
         return
 
-    bb4:
+    bb3:
         storage_dead _2
         storage_dead _1
-        goto -> bb3
+        goto -> bb2
 
-    bb5:
-        goto -> bb6
-
-    bb6:
+    bb4:
         storage_dead _2
         storage_dead _1
         goto -> bb1
@@ -203,13 +194,10 @@ fn for_init_scope {
         goto -> bb3
 
     bb5:
+        storage_dead _4
         goto -> bb6
 
     bb6:
-        storage_dead _4
-        goto -> bb7
-
-    bb7:
         _2 = copy _2 + const 1
         goto -> bb1
 }
@@ -259,29 +247,23 @@ fn every_exit {
         goto -> bb3
 
     bb5:
-        goto -> bb6
+        _9 = copy _5 == const 4
+        branch copy _9 -> bb6, bb7
 
     bb6:
-        _9 = copy _5 == const 4
-        branch copy _9 -> bb7, bb8
-
-    bb7:
         _0 = copy _2
         storage_dead _5
         storage_dead _3
         storage_dead _2
         return
 
-    bb8:
-        goto -> bb9
-
-    bb9:
+    bb7:
         _10 = copy _2 + copy _5
         _2 = copy _10
         storage_dead _5
-        goto -> bb10
+        goto -> bb8
 
-    bb10:
+    bb8:
         _3 = copy _3 + const 1
         goto -> bb1
 }

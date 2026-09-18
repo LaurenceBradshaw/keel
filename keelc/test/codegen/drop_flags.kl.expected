@@ -71,10 +71,8 @@ int32_t kl__run__3i32( int32_t kl_c_1 )
 #line 41 "codegen/drop_flags.kl"
     kl__consume__M5Owned( kl_o_2 );
     kl_t7 = false;
-    goto bb3;
+    goto bb2;
     bb2:
-    goto bb3;
-    bb3:
 #line 44 "codegen/drop_flags.kl"
     kl_t0 = 0;
     if ( kl_t7 ) kl__Owned__dtor( &kl_o_2 );

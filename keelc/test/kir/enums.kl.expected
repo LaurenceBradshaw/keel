@@ -29,9 +29,6 @@ fn main {
         return
 
     bb2:
-        goto -> bb3
-
-    bb3:
         _0 = const 0
         storage_dead _2
         storage_dead _1

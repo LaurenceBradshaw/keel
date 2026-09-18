@@ -40,18 +40,15 @@ fn stepped {
 
     bb1:
         _4 = copy _3 < copy _1
-        branch copy _4 -> bb2, bb3
+        branch copy _4 -> bb3, bb2
 
     bb2:
-        goto -> bb4
-
-    bb3:
         storage_dead _3
         _0 = copy _2
         storage_dead _2
         return
 
-    bb4:
+    bb3:
         _3 = copy _3 + const 1
         goto -> bb1
 }
@@ -63,15 +60,9 @@ fn never_finishes {
         goto -> bb1
 
     bb1:
-        goto -> bb2
-
-    bb2:
         storage_live _1
         _1 = const 1
         storage_dead _1
-        goto -> bb3
-
-    bb3:
         goto -> bb1
 }
 fn leaves_immediately {
@@ -81,12 +72,6 @@ fn leaves_immediately {
         goto -> bb1
 
     bb1:
-        goto -> bb2
-
-    bb2:
-        goto -> bb3
-
-    bb3:
         return
 }
 fn returns_from_the_body {
@@ -145,7 +130,7 @@ fn nested {
 
     bb5:
         _5 = copy _3 == const 2
-        branch copy _5 -> bb7, bb8
+        branch copy _5 -> bb6, bb7
 
     bb6:
         storage_dead _3
@@ -154,15 +139,6 @@ fn nested {
         goto -> bb1
 
     bb7:
-        goto -> bb6
-
-    bb8:
-        goto -> bb9
-
-    bb9:
-        goto -> bb10
-
-    bb10:
         _3 = copy _3 + const 1
         goto -> bb4
 }
@@ -176,23 +152,14 @@ fn conditional_break {
         goto -> bb1
 
     bb1:
-        branch const 1 -> bb2, bb3
+        _2 = copy _1 > const 0
+        branch copy _2 -> bb2, bb3
 
     bb2:
-        _2 = copy _1 > const 0
-        branch copy _2 -> bb4, bb5
-
-    bb3:
         _0 = copy _1
         return
 
-    bb4:
-        goto -> bb3
-
-    bb5:
-        goto -> bb6
-
-    bb6:
+    bb3:
         _3 = copy _1 + const 1
         _1 = copy _3
         goto -> bb1

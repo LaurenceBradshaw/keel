@@ -729,6 +729,44 @@ void Kir_emitter::emit_terminator( const Terminator& terminator, const Function&
     }
 }
 
+// Which locals the body still names. Pruning a block takes its statements with it, and C declares
+// every local at the top of the function - so a local only that block mentioned would be declared
+// and never used, which -Wunused-variable rejects and the golden runner builds with -Werror.
+std::vector<bool> mentioned_locals( const Function& function )
+{
+    std::vector<bool> mentioned( function.locals.size(), false );
+
+    const auto mark = [&]( const Place& place )
+    {
+        if( !place.is_global() && place.local.is_valid() )
+        {
+            mentioned[place.local.v] = true;
+        }
+    };
+
+    for( const Statement& statement : function.statements )
+    {
+        mark( statement.place );
+
+        if( statement.drop_flag.is_valid() )
+        {
+            mentioned[statement.drop_flag.v] = true;
+        }
+
+        for_each_operand( function, statement.value, [&]( const Operand& operand ) { mark( operand.place ); } );
+    }
+
+    // A branch prints its condition, so the set has to cover it. Unkillable today - the temporary a
+    // condition reads is assigned in the same block - but the contract here is every local the
+    // emitter can name, not every local it happens to name twice.
+    for( const Block& block : function.blocks )
+    {
+        mark( block.terminator.condition.place );
+    }
+
+    return mentioned;
+}
+
 void Kir_emitter::emit_function( const Function& function )
 {
     current_   = &function;
@@ -754,17 +792,20 @@ void Kir_emitter::emit_function( const Function& function )
     write_line( "{" );
     indent_ += 4;
 
+    const std::vector<bool> mentioned = mentioned_locals( function );
+
     for( u32 i = 0; i < function.locals.size(); ++i )
     {
-        // Parameters are declared by the signature already, and a void local cannot be declared at
-        // all. Everything else, including the return slot, needs storage here - KIR has no scoping,
-        // so there is one declaration per local at the top.
+        // Parameters are declared by the signature already, a void local cannot be declared at all,
+        // and one nothing names survives only as a warning. Everything else, including the return
+        // slot, needs storage here - KIR has no scoping, so there is one declaration per local at
+        // the top.
         if( i >= 1 && i <= function.parameter_count )
         {
             continue;
         }
 
-        if( is_void( function.locals[i].type ) )
+        if( is_void( function.locals[i].type ) || !mentioned[i] )
         {
             continue;
         }
@@ -1091,6 +1132,7 @@ std::string emit_c_from_kir(
 
 #include "common/diagnostics.h"
 #include "ir/lower.h"
+#include "ir/simplify.h"
 #include "lex/lexer.h"
 #include "parse/parser.h"
 #include "sema/resolver.h"
@@ -1123,7 +1165,15 @@ struct Generated
 
         if( !diags.has_errors() )
         {
-            c = emit_c_from_kir( lower( ast, resolution, types, literals, interner ), ast, types, literals, sm, interner );
+            std::vector<Function> functions = lower( ast, resolution, types, literals, interner );
+
+            // The driver simplifies before emitting, so the C these tests read is the C it writes.
+            for( Function& function : functions )
+            {
+                simplify( function, literals );
+            }
+
+            c = emit_c_from_kir( functions, ast, types, literals, sm, interner );
         }
     }
 

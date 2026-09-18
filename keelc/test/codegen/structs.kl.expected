@@ -34,8 +34,6 @@ double kl__abs__3f64( double kl_v_1 )
     kl_t0 = kl_t3;
     return kl_t0;
     bb2:
-    goto bb3;
-    bb3:
 #line 19 "codegen/structs.kl"
     kl_t0 = kl_v_1;
     return kl_t0;
@@ -95,8 +93,6 @@ int32_t kl__main__( void )
     kl_t0 = 1;
     return kl_t0;
     bb2:
-    goto bb3;
-    bb3:
 #line 37 "codegen/structs.kl"
     kl_t9.kl_y_8 = 2.0;
     kl_t9.kl_x_6 = 1.0;
@@ -108,13 +104,11 @@ int32_t kl__main__( void )
 #line 39 "codegen/structs.kl"
     kl_t11 = kl__distance__4Line( kl_flipped_7 );
     kl_t12 = kl_t11 != 7.0;
-    if ( kl_t12 ) goto bb4; else goto bb5;
-    bb4:
+    if ( kl_t12 ) goto bb3; else goto bb4;
+    bb3:
     kl_t0 = 2;
     return kl_t0;
-    bb5:
-    goto bb6;
-    bb6:
+    bb4:
 #line 41 "codegen/structs.kl"
     kl_t14.kl_x_6 = 0.0;
     kl_t14.kl_y_8 = 0.0;
@@ -123,35 +117,29 @@ int32_t kl__main__( void )
     kl_p_13.kl_x_6 = 3.0;
 #line 44 "codegen/structs.kl"
     kl_t15 = kl_p_13.kl_x_6 != 3.0;
-    if ( kl_t15 ) goto bb7; else goto bb8;
-    bb7:
+    if ( kl_t15 ) goto bb5; else goto bb6;
+    bb5:
     kl_t0 = 3;
     return kl_t0;
-    bb8:
-    goto bb9;
-    bb9:
+    bb6:
 #line 45 "codegen/structs.kl"
     kl_t16 = kl_p_13.kl_y_8 != 0.0;
-    if ( kl_t16 ) goto bb10; else goto bb11;
-    bb10:
+    if ( kl_t16 ) goto bb7; else goto bb8;
+    bb7:
     kl_t0 = 4;
     return kl_t0;
-    bb11:
-    goto bb12;
-    bb12:
+    bb8:
 #line 48 "codegen/structs.kl"
     kl_p_13.kl_y_8 = kl_p_13.kl_y_8 + 1.0;
 #line 49 "codegen/structs.kl"
     kl_p_13.kl_y_8 = kl_p_13.kl_y_8 + 2.0;
 #line 51 "codegen/structs.kl"
     kl_t17 = kl_p_13.kl_y_8 != 3.0;
-    if ( kl_t17 ) goto bb13; else goto bb14;
-    bb13:
+    if ( kl_t17 ) goto bb9; else goto bb10;
+    bb9:
     kl_t0 = 5;
     return kl_t0;
-    bb14:
-    goto bb15;
-    bb15:
+    bb10:
 #line 53 "codegen/structs.kl"
     kl_t0 = 0;
     return kl_t0;

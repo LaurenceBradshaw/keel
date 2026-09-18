@@ -56,8 +56,6 @@ int32_t kl__main__( void )
     kl_t0 = 1;
     return kl_t0;
     bb2:
-    goto bb3;
-    bb3:
 #line 12 "codegen/conversions.kl"
     kl_t6 = 0 - 1;
     kl_negative_5 = kl_t6;
@@ -66,13 +64,11 @@ int32_t kl__main__( void )
     kl_flipped_7 = kl_t8;
 #line 14 "codegen/conversions.kl"
     kl_t9 = kl_flipped_7 != 4294967295;
-    if ( kl_t9 ) goto bb4; else goto bb5;
-    bb4:
+    if ( kl_t9 ) goto bb3; else goto bb4;
+    bb3:
     kl_t0 = 2;
     return kl_t0;
-    bb5:
-    goto bb6;
-    bb6:
+    bb4:
 #line 17 "codegen/conversions.kl"
     kl_byte_10 = 200;
 #line 18 "codegen/conversions.kl"
@@ -80,13 +76,11 @@ int32_t kl__main__( void )
     kl_wide_11 = kl_t12;
 #line 19 "codegen/conversions.kl"
     kl_t13 = kl_wide_11 != 200;
-    if ( kl_t13 ) goto bb7; else goto bb8;
-    bb7:
+    if ( kl_t13 ) goto bb5; else goto bb6;
+    bb5:
     kl_t0 = 3;
     return kl_t0;
-    bb8:
-    goto bb9;
-    bb9:
+    bb6:
 #line 22 "codegen/conversions.kl"
     kl_small_14 = 7;
 #line 23 "codegen/conversions.kl"
@@ -94,25 +88,21 @@ int32_t kl__main__( void )
     kl_widened_15 = kl_t16;
 #line 24 "codegen/conversions.kl"
     kl_t17 = kl_widened_15 != 7;
-    if ( kl_t17 ) goto bb10; else goto bb11;
-    bb10:
+    if ( kl_t17 ) goto bb7; else goto bb8;
+    bb7:
     kl_t0 = 4;
     return kl_t0;
-    bb11:
-    goto bb12;
-    bb12:
+    bb8:
 #line 27 "codegen/conversions.kl"
     kl_t19 = ( float ) kl_small_14;
     kl_scaled_18 = kl_t19;
 #line 28 "codegen/conversions.kl"
     kl_t20 = kl_scaled_18 != 7.0;
-    if ( kl_t20 ) goto bb13; else goto bb14;
-    bb13:
+    if ( kl_t20 ) goto bb9; else goto bb10;
+    bb9:
     kl_t0 = 5;
     return kl_t0;
-    bb14:
-    goto bb15;
-    bb15:
+    bb10:
 #line 31 "codegen/conversions.kl"
     kl_precise_21 = 2.5;
 #line 32 "codegen/conversions.kl"
@@ -120,13 +110,11 @@ int32_t kl__main__( void )
     kl_rougher_22 = kl_t23;
 #line 33 "codegen/conversions.kl"
     kl_t24 = kl_rougher_22 != 2.5;
-    if ( kl_t24 ) goto bb16; else goto bb17;
-    bb16:
+    if ( kl_t24 ) goto bb11; else goto bb12;
+    bb11:
     kl_t0 = 6;
     return kl_t0;
-    bb17:
-    goto bb18;
-    bb18:
+    bb12:
 #line 36 "codegen/conversions.kl"
     kl_yes_25 = true;
 #line 37 "codegen/conversions.kl"
@@ -134,34 +122,28 @@ int32_t kl__main__( void )
 #line 38 "codegen/conversions.kl"
     kl_t27 = ( int32_t ) kl_yes_25;
     kl_t28 = kl_t27 != 1;
-    if ( kl_t28 ) goto bb19; else goto bb20;
-    bb19:
+    if ( kl_t28 ) goto bb13; else goto bb14;
+    bb13:
     kl_t0 = 7;
     return kl_t0;
-    bb20:
-    goto bb21;
-    bb21:
+    bb14:
 #line 39 "codegen/conversions.kl"
     kl_t29 = ( int32_t ) kl_no_26;
     kl_t30 = kl_t29 != 0;
-    if ( kl_t30 ) goto bb22; else goto bb23;
-    bb22:
+    if ( kl_t30 ) goto bb15; else goto bb16;
+    bb15:
     kl_t0 = 8;
     return kl_t0;
-    bb23:
-    goto bb24;
-    bb24:
+    bb16:
 #line 42 "codegen/conversions.kl"
     kl_direct_31 = 200;
 #line 43 "codegen/conversions.kl"
     kl_t32 = kl_direct_31 != 200;
-    if ( kl_t32 ) goto bb25; else goto bb26;
-    bb25:
+    if ( kl_t32 ) goto bb17; else goto bb18;
+    bb17:
     kl_t0 = 9;
     return kl_t0;
-    bb26:
-    goto bb27;
-    bb27:
+    bb18:
 #line 46 "codegen/conversions.kl"
     kl_t34 = ( int64_t ) kl_small_14;
     kl_t35 = ( int64_t ) kl_byte_10;
@@ -169,13 +151,11 @@ int32_t kl__main__( void )
     kl_total_33 = kl_t36;
 #line 47 "codegen/conversions.kl"
     kl_t37 = kl_total_33 != 207;
-    if ( kl_t37 ) goto bb28; else goto bb29;
-    bb28:
+    if ( kl_t37 ) goto bb19; else goto bb20;
+    bb19:
     kl_t0 = 10;
     return kl_t0;
-    bb29:
-    goto bb30;
-    bb30:
+    bb20:
 #line 49 "codegen/conversions.kl"
     kl_t0 = 0;
     return kl_t0;

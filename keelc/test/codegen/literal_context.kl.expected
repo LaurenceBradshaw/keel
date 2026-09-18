@@ -113,64 +113,50 @@ int32_t kl__main__( void )
     kl_t0 = 90;
     return kl_t0;
     bb2:
-    goto bb3;
-    bb3:
 #line 34 "codegen/literal_context.kl"
     kl_t30 = -1;
     kl_t31 = kl_t30 >= 0;
-    if ( kl_t31 ) goto bb4; else goto bb5;
-    bb4:
+    if ( kl_t31 ) goto bb3; else goto bb4;
+    bb3:
     kl_t0 = 91;
     return kl_t0;
-    bb5:
-    goto bb6;
-    bb6:
+    bb4:
 #line 41 "codegen/literal_context.kl"
     kl_t32 = kl_c_5 != 1.0;
-    if ( kl_t32 ) goto bb7; else goto bb8;
-    bb7:
+    if ( kl_t32 ) goto bb5; else goto bb6;
+    bb5:
     kl_t0 = 10;
     return kl_t0;
-    bb8:
-    goto bb9;
-    bb9:
+    bb6:
 #line 42 "codegen/literal_context.kl"
     kl_t33 = kl_d_6 != 2.0;
-    if ( kl_t33 ) goto bb10; else goto bb11;
-    bb10:
+    if ( kl_t33 ) goto bb7; else goto bb8;
+    bb7:
     kl_t0 = 11;
     return kl_t0;
-    bb11:
-    goto bb12;
-    bb12:
+    bb8:
 #line 43 "codegen/literal_context.kl"
     kl_t34 = kl_g_10 != 2.0;
-    if ( kl_t34 ) goto bb13; else goto bb14;
-    bb13:
+    if ( kl_t34 ) goto bb9; else goto bb10;
+    bb9:
     kl_t0 = 12;
     return kl_t0;
-    bb14:
-    goto bb15;
-    bb15:
+    bb10:
 #line 44 "codegen/literal_context.kl"
     kl_t35 = kl_f_8 != 2.5;
-    if ( kl_t35 ) goto bb16; else goto bb17;
-    bb16:
+    if ( kl_t35 ) goto bb11; else goto bb12;
+    bb11:
     kl_t0 = 13;
     return kl_t0;
-    bb17:
-    goto bb18;
-    bb18:
+    bb12:
 #line 45 "codegen/literal_context.kl"
     kl_t36 = -1.5;
     kl_t37 = kl_a_1 != kl_t36;
-    if ( kl_t37 ) goto bb19; else goto bb20;
-    bb19:
+    if ( kl_t37 ) goto bb13; else goto bb14;
+    bb13:
     kl_t0 = 14;
     return kl_t0;
-    bb20:
-    goto bb21;
-    bb21:
+    bb14:
 #line 47 "codegen/literal_context.kl"
     kl_t38 = ( int32_t ) kl_h_12;
     kl_t39 = ( int32_t ) kl_i_13;

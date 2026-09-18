@@ -21,6 +21,7 @@
 #include "common/version.h"
 #include "ir/lower.h"
 #include "ir/print.h"
+#include "ir/simplify.h"
 #include "ir/verify.h"
 #include "lex/lexer.h"
 #include "parse/parser.h"
@@ -297,6 +298,11 @@ int main( int argc, char** argv )
     // Lowered once, for everything downstream: the move check, --dump-kir and the emitter all read
     // the same functions rather than each lowering a copy of its own.
     std::vector<keel::Function> functions = keel::lower( ast, resolution, types, literals, interner );
+
+    for( keel::Function& function : functions )
+    {
+        keel::simplify( function, literals );
+    }
 
     // Move checking is part of the front end, not of emission: --check is what an editor wants, and
     // an editor wants use-after-move underlined. Which is why this runs above that early return

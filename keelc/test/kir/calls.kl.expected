@@ -72,9 +72,6 @@ fn fib {
         return
 
     bb2:
-        goto -> bb3
-
-    bb3:
         _3 = copy _1 - const 1
         _4 = call fib(copy _3)
         _5 = copy _1 - const 2
@@ -99,9 +96,6 @@ fn even {
         return
 
     bb2:
-        goto -> bb3
-
-    bb3:
         _3 = copy _1 - const 1
         _4 = call odd(copy _3)
         _0 = copy _4
@@ -123,9 +117,6 @@ fn odd {
         return
 
     bb2:
-        goto -> bb3
-
-    bb3:
         _3 = copy _1 - const 1
         _4 = call even(copy _3)
         _0 = copy _4

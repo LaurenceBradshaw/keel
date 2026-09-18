@@ -254,6 +254,7 @@ void elaborate_drops( Function& func, const Flag_vocabulary& vocabulary )
 #include "common/source_manager.h"
 #include "ir/lower.h"
 #include "ir/print.h"
+#include "ir/simplify.h"
 #include "ir/verify.h"
 #include "lex/lexer.h"
 #include "parse/parser.h"
@@ -291,6 +292,12 @@ struct Elaborated
         }
 
         functions = lower( ast, resolution, types, literals, interner );
+
+        // The driver simplifies every function before anything reads it, so these do too.
+        for( Function& function : functions )
+        {
+            simplify( function, literals );
+        }
 
         const Flag_vocabulary vocabulary {
             .bool_type     = types.table().builtin( Type_kind::Bool ),

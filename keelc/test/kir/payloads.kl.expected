@@ -33,10 +33,7 @@ fn area {
 
     bb4:
         _4 = copy _1.tag == const 1
-        branch copy _4 -> bb2, bb5
-
-    bb5:
-        goto -> bb3
+        branch copy _4 -> bb2, bb3
 }
 fn code {
     let _0: i32; // return slot
@@ -45,7 +42,7 @@ fn code {
 
     bb0:
         _2 = copy _1 == const 0
-        branch copy _2 -> bb1, bb3
+        branch copy _2 -> bb1, bb2
 
     bb1:
         _0 = const 1
@@ -54,9 +51,6 @@ fn code {
     bb2:
         _0 = const 2
         return
-
-    bb3:
-        goto -> bb2
 }
 fn main {
     let _0: i32; // return slot

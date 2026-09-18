@@ -22,8 +22,6 @@ int32_t kl__fib__3i32( int32_t kl_n_1 )
     kl_t0 = kl_n_1;
     return kl_t0;
     bb2:
-    goto bb3;
-    bb3:
 #line 10 "codegen/fib.kl"
     kl_t3 = kl_n_1 - 1;
     kl_t4 = kl__fib__3i32( kl_t3 );

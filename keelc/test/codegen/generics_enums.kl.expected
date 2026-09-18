@@ -131,69 +131,55 @@ int32_t kl__main__( void )
     kl_t0 = 1;
     return kl_t0;
     bb2:
-    goto bb3;
-    bb3:
 #line 77 "codegen/generics_enums.kl"
     kl_t10 = kl__unwrap__I3i32E__3OptI3i32E_3i32( kl_empty_6, 4 );
     kl_t11 = kl_t10 != 4;
-    if ( kl_t11 ) goto bb4; else goto bb5;
-    bb4:
+    if ( kl_t11 ) goto bb3; else goto bb4;
+    bb3:
 #line 79 "codegen/generics_enums.kl"
     kl_t0 = 2;
     return kl_t0;
-    bb5:
-    goto bb6;
-    bb6:
+    bb4:
 #line 82 "codegen/generics_enums.kl"
     kl_t13 = kl__unwrap__I3f64E__3OptI3f64E_3f64( kl_b_4, 0.0 );
     kl_half_12 = kl_t13;
 #line 84 "codegen/generics_enums.kl"
     kl_t14 = kl_half_12 < 0.4;
-    if ( kl_t14 ) goto bb7; else goto bb8;
-    bb7:
+    if ( kl_t14 ) goto bb5; else goto bb6;
+    bb5:
 #line 86 "codegen/generics_enums.kl"
     kl_t0 = 3;
     return kl_t0;
-    bb8:
-    goto bb9;
-    bb9:
+    bb6:
 #line 89 "codegen/generics_enums.kl"
     kl_t15 = kl_half_12 > 0.6;
-    if ( kl_t15 ) goto bb10; else goto bb11;
-    bb10:
+    if ( kl_t15 ) goto bb7; else goto bb8;
+    bb7:
 #line 91 "codegen/generics_enums.kl"
     kl_t0 = 4;
     return kl_t0;
-    bb11:
-    goto bb12;
-    bb12:
+    bb8:
 #line 95 "codegen/generics_enums.kl"
     kl_t17.tag = 1;
     kl_t17.kl_v_16 = 1;
     kl_tinted_16 = kl_t17;
 #line 99 "codegen/generics_enums.kl"
     kl_t18 = kl_tinted_16.tag == 1;
-    if ( kl_t18 ) goto bb13; else goto bb15;
-    bb13:
+    if ( kl_t18 ) goto bb9; else goto bb10;
+    bb9:
     kl_c_19 = kl_tinted_16.kl_v_16;
 #line 100 "codegen/generics_enums.kl"
     kl_t20 = kl_c_19 != 1;
-    if ( kl_t20 ) goto bb16; else goto bb17;
-    bb14:
+    if ( kl_t20 ) goto bb11; else goto bb12;
+    bb10:
 #line 107 "codegen/generics_enums.kl"
     kl_t0 = 6;
     return kl_t0;
-    bb15:
-    goto bb14;
-    bb16:
+    bb11:
 #line 102 "codegen/generics_enums.kl"
     kl_t0 = 5;
     return kl_t0;
-    bb17:
-    goto bb18;
-    bb18:
-    goto bb19;
-    bb19:
+    bb12:
 #line 112 "codegen/generics_enums.kl"
     kl_t22.tag = 1;
     kl_t22.kl_v_16 = 9;
@@ -203,68 +189,56 @@ int32_t kl__main__( void )
 #line 115 "codegen/generics_enums.kl"
     kl_t23 = kl__unwrap__I3i32E__3OptI3i32E_3i32( kl_s_21.kl_value_38, 0 );
     kl_t24 = kl_t23 != 9;
-    if ( kl_t24 ) goto bb20; else goto bb21;
-    bb20:
+    if ( kl_t24 ) goto bb13; else goto bb14;
+    bb13:
 #line 117 "codegen/generics_enums.kl"
     kl_t0 = 7;
     return kl_t0;
-    bb21:
-    goto bb22;
-    bb22:
+    bb14:
 #line 122 "codegen/generics_enums.kl"
     kl_bx_25.kl_v_5 = 5;
 #line 124 "codegen/generics_enums.kl"
     kl_t27.tag = 0;
     kl_t27.kl_b_27 = kl_bx_25;
     kl_w_26 = kl_t27;
-    goto bb23;
-    bb23:
+    goto bb15;
+    bb15:
 #line 128 "codegen/generics_enums.kl"
     kl_held_28 = kl_w_26.kl_b_27;
 #line 129 "codegen/generics_enums.kl"
     kl_t29 = kl_held_28.kl_v_5 != 5;
-    if ( kl_t29 ) goto bb24; else goto bb25;
-    bb24:
+    if ( kl_t29 ) goto bb16; else goto bb17;
+    bb16:
 #line 131 "codegen/generics_enums.kl"
     kl_t0 = 8;
     return kl_t0;
-    bb25:
-    goto bb26;
-    bb26:
-    goto bb27;
-    bb27:
+    bb17:
 #line 138 "codegen/generics_enums.kl"
     kl_t31.tag = 0;
     kl_t31.kl_first_50 = 2;
     kl_t31.kl_second_52 = 1.5;
     kl_pair_30 = kl_t31;
-    goto bb28;
-    bb28:
+    goto bb18;
+    bb18:
 #line 142 "codegen/generics_enums.kl"
     kl_first_32 = kl_pair_30.kl_first_50;
     kl_second_33 = kl_pair_30.kl_second_52;
 #line 143 "codegen/generics_enums.kl"
     kl_t34 = kl_first_32 != 2;
-    if ( kl_t34 ) goto bb29; else goto bb30;
-    bb29:
+    if ( kl_t34 ) goto bb19; else goto bb20;
+    bb19:
 #line 145 "codegen/generics_enums.kl"
     kl_t0 = 9;
     return kl_t0;
-    bb30:
-    goto bb31;
-    bb31:
+    bb20:
 #line 148 "codegen/generics_enums.kl"
     kl_t35 = kl_second_33 < 1.4;
-    if ( kl_t35 ) goto bb32; else goto bb33;
-    bb32:
+    if ( kl_t35 ) goto bb21; else goto bb22;
+    bb21:
 #line 150 "codegen/generics_enums.kl"
     kl_t0 = 10;
     return kl_t0;
-    bb33:
-    goto bb34;
-    bb34:
-    goto bb35;
-    bb35:
+    bb22:
 #line 156 "codegen/generics_enums.kl"
     kl_t36 = 30 + kl_s_21.kl_tag_40;
     kl_t37 = kl__unwrap__I3i32E__3OptI3i32E_3i32( kl_a_2, 0 );
@@ -281,7 +255,7 @@ int32_t kl__unwrap__I3i32E__3OptI3i32E_3i32( struct kl__Opt__I3i32E kl_o_1, int3
     int32_t kl_v_4;
 #line 54 "codegen/generics_enums.kl"
     kl_t3 = kl_o_1.tag == 1;
-    if ( kl_t3 ) goto bb1; else goto bb3;
+    if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
     kl_v_4 = kl_o_1.kl_v_16;
 #line 55 "codegen/generics_enums.kl"
@@ -291,8 +265,6 @@ int32_t kl__unwrap__I3i32E__3OptI3i32E_3i32( struct kl__Opt__I3i32E kl_o_1, int3
 #line 57 "codegen/generics_enums.kl"
     kl_t0 = kl_fallback_2;
     return kl_t0;
-    bb3:
-    goto bb2;
 }
 
 double kl__unwrap__I3f64E__3OptI3f64E_3f64( struct kl__Opt__I3f64E kl_o_1, double kl_fallback_2 )
@@ -302,7 +274,7 @@ double kl__unwrap__I3f64E__3OptI3f64E_3f64( struct kl__Opt__I3f64E kl_o_1, doubl
     double kl_v_4;
 #line 54 "codegen/generics_enums.kl"
     kl_t3 = kl_o_1.tag == 1;
-    if ( kl_t3 ) goto bb1; else goto bb3;
+    if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
     kl_v_4 = kl_o_1.kl_v_16;
 #line 55 "codegen/generics_enums.kl"
@@ -312,8 +284,6 @@ double kl__unwrap__I3f64E__3OptI3f64E_3f64( struct kl__Opt__I3f64E kl_o_1, doubl
 #line 57 "codegen/generics_enums.kl"
     kl_t0 = kl_fallback_2;
     return kl_t0;
-    bb3:
-    goto bb2;
 }
 
 int main( void )

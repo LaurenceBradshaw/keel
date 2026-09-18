@@ -33,12 +33,9 @@ fn no_else {
 
     bb1:
         _2 = const 1
-        goto -> bb3
+        goto -> bb2
 
     bb2:
-        goto -> bb3
-
-    bb3:
         _0 = copy _2
         storage_dead _2
         return

@@ -26,8 +26,6 @@ int32_t* kl__picks__3i32_3i32( int32_t* kl_a_1, int32_t* kl_b_2 )
     kl_t0 = &( *kl_a_1 );
     return kl_t0;
     bb2:
-    goto bb3;
-    bb3:
 #line 19 "codegen/const_ref_return.kl"
     kl_t0 = &( *kl_b_2 );
     return kl_t0;

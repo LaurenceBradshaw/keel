@@ -20,18 +20,14 @@ int32_t kl__weight__6Colour( uint8_t kl_c_1 )
     kl_t0 = 1;
     return kl_t0;
     bb2:
-    goto bb3;
-    bb3:
 #line 28 "codegen/enums.kl"
     kl_t3 = kl_c_1 == 1;
-    if ( kl_t3 ) goto bb4; else goto bb5;
-    bb4:
+    if ( kl_t3 ) goto bb3; else goto bb4;
+    bb3:
 #line 30 "codegen/enums.kl"
     kl_t0 = 10;
     return kl_t0;
-    bb5:
-    goto bb6;
-    bb6:
+    bb4:
 #line 33 "codegen/enums.kl"
     kl_t0 = 100;
     return kl_t0;
@@ -49,8 +45,6 @@ uint8_t kl__turn__6Colour( uint8_t kl_c_1 )
     kl_t0 = 2;
     return kl_t0;
     bb2:
-    goto bb3;
-    bb3:
 #line 43 "codegen/enums.kl"
     kl_t0 = 0;
     return kl_t0;
@@ -68,8 +62,6 @@ int32_t kl__heading__9Direction( int32_t kl_d_1 )
     kl_t0 = 7;
     return kl_t0;
     bb2:
-    goto bb3;
-    bb3:
 #line 53 "codegen/enums.kl"
     kl_t0 = 0;
     return kl_t0;

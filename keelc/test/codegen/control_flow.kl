@@ -15,5 +15,14 @@ i32 main()
         total--;
     }
 
+    // A constant condition folds away and takes the arm it never runs with it. The local declared
+    // in there goes too - C declares every local at the top of the function, and one left behind
+    // with nothing naming it is an unused-variable warning, which this suite builds as an error.
+    if( false )
+    {
+        i32 unreachable = 99;
+        total = unreachable;
+    }
+
     return total;
 }

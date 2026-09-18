@@ -8,6 +8,17 @@
 //
 // Every check returns a distinct code, so exit 0 means all of them agreed.
 
+// A `while( true )` that returns from inside owes no `return` after it. The loop-exit block is
+// reachable in the graph and never taken by the program, and folding the constant branch away is
+// what makes the two agree.
+i32 never_leaves_the_loop()
+{
+    while ( true )
+    {
+        return 7;
+    }
+}
+
 i32 main()
 {
     // A while loop leaves through break. Nothing else stops it.
@@ -154,6 +165,8 @@ i32 main()
 
     if ( rounds != 6 ) { return 13; }
     if ( trailing != 15 ) { return 14; }
+
+    if ( never_leaves_the_loop() != 7 ) { return 15; }
 
     return 0;
 }

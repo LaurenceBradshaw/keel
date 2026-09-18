@@ -1,15 +1,18 @@
 # Keel — Implementation Plan
 
-**Status:** M0–M5.5 complete. M6 in progress: generic functions, bounds, literal adoption
-and generic aggregates work, methods, constructors and destructors included — M6's
-acceptance passes. §12's M6-deadline questions are **all decided** (2026-09-18), and the four
-that carried implementation — D41's mixed-signedness comparison, `cast`/`wrap` on a type
-parameter, **overloading** and **type-argument inference** — are all **done** (2026-09-18).
-The empty-aggregate rejection moves to M6.5. The one M6-adjacent row still open is **function
-pointers**, whose deadline is conditional rather than fixed: generics have taken the
-comparator and strategy uses, so what is left to judge is FFI alone. Generic aggregates
-build from a struct literal and generic `enum`s type, lower and emit. §15 is the live
-tracker.
+**Status:** M0–M6 complete (2026-09-18). Generic functions, bounds, literal adoption and
+generic aggregates work, methods, constructors and destructors included; §12's M6-deadline
+questions are **all decided**, and the four that carried implementation — D41's
+mixed-signedness comparison, `cast`/`wrap` on a type parameter, **overloading** and
+**type-argument inference** — are all done. The last M6-adjacent row, **function pointers**,
+is **decided**: FFI is the surviving customer, and member pointers come with them — where a
+member *function* pointer turns out not to be a second feature at all, because L13 has no
+inheritance for one to adjust for. **M6.5 is in progress**, and it is debts rather than a
+feature. The two KIR passes carried from M5.5 are **done (2026-09-18)** as one pass,
+`ir/simplify.cpp`, which closes the one *wrong answer* the tree held —
+`while( true ) { return 1; }` reported as a path with no return. What is left in M6.5:
+§12's empty-aggregate rejection and the conditional-expression decision. Function pointers
+implement at M6.5 or M7. §15 is the live tracker.
 **Companion document:** `MANIFESTO.md` (the vision doc). This file is the engineering plan.
 
 ---
@@ -681,7 +684,12 @@ then.
 tag is maintained by hand and correct every time, and the one legitimate use of
 one — a tagged variant — is what M5's payload-carrying `enum` (D7, D30) is, with
 the tag maintained by the compiler and `switch` exhaustiveness checked.
-Modules arrive at M7. **Reflection** is listed here for v0 only — §12 records its direction: compile-time reflection, yes; runtime reflection, never. **String literals** lex and parse but have no type
+Modules arrive at M7, and **`namespace` on the list above means "no second
+mechanism", not "no namespacing"** — the module *is* the namespace. §3's style
+line says "C with containers and namespaces" and the mangler has carried a module
+slot since M0, `kl_<module>_<name>__<argtypes>`, empty until M7; a separate
+`namespace` keyword would be a second way to do the one job, which is what C++
+needs only because a header is not a unit. **Reflection** is listed here for v0 only — §12 records its direction: compile-time reflection, yes; runtime reflection, never. **String literals** lex and parse but have no type
 (D20); they wait for `String`, which is M7 as well.
 
 ---
@@ -829,7 +837,7 @@ milestone is complete until its acceptance program is a passing golden test.
 | **M5** | `enum` (D30) payload-free first, then payloads (D7). `switch` with destructuring, `default`, stacked labels and exhaustiveness. Range labels (D34). | The `Shape`/`area` sample. Non-exhaustive `switch` is a compile error naming the missing variant. | Sum types, tagged variants |
 | **M5.5** | ~~Methods on `struct` and `class`~~ **done**. ~~`unsafe` blocks (D35)~~ **done**. ~~`extern` (D36)~~ **done**. ~~`alloc<T>`/`free` and `kl_rt` (D37)~~ **done**. | A linked list whose nodes are allocated one at a time, walked, and freed — valgrind-clean. **Amended**: this was `Buffer` with `push`, which needs the many-item pointer `[*]T` that D27 leaves out of v0, so it was never reachable at M5.5. Option (b) keeps the question the acceptance was asked to answer — can the language express a heap data structure and release it — and defers only the growable-array half to M7. | Whether the language can express a real data structure |
 | **M6** | Generics (D39's spelling, D11's checking), bounds (D40), the monomorphisation **worklist** and D42's termination rule — for functions *and* aggregates — name mangling with type args, and the §12 decisions M6 is the deadline for — **all now taken (2026-09-18)**, four of which carry implementation into this milestone: ~~**D41's mixed-signedness comparison**~~ (moved here from M6.5, because §12's `T` generalisation depends on it; **done 2026-09-18**, §15 slice 1g — and it is not only signedness, see the correction in D41), ~~**`cast`/`wrap` on a type parameter**~~ (moved here too — the shipped range diagnostic tells authors to reach for it, so it is not optional; **done 2026-09-18**, §15 slice 1f), ~~**overloading**~~ (constructors first, and the `ref`/pointer mangling collision with it; **done 2026-09-18**, §15 slice 3), and ~~**type-argument inference**~~ (**done 2026-09-18**, §15 slice 4 — which also pays slice 3's deferred generic tie-break). | `max<i32>` and `max<f64>` both work; a generic `Box<T>` with a destructor drops correctly; `u32 < i32` and `i64 < f64` both compile and answer correctly; `wrap<i32>( a )` works for an `Integral` `T` and `cast<f64>( a )` for a `Floating` one; `C( i32 )` and `C( f64 )` coexist; `i32 x = id( 5 );` needs no written type argument. | Instantiation, mangling |
-| **M6.5** | The debts that are neither M6's feature nor M7's: ~~D41's mixed-signedness comparison~~ **moved into M6** — §12's generalisation of it to `T` depends on it, ~~`cast`/`wrap` on a type parameter~~ **moved into M6** — the shipped range diagnostic points at it, **§12's empty-aggregate rejection**, **the two KIR passes carried from M5.5** — empty-block threading, and constant-branch folding with the `while( true )` → `for( ; ; )` warning that goes with it — ~~the mangling rework (length-prefixing, the `ref`/pointer collision, `kl__id__T__i32`)~~ **done in M6's slices 2b and 3e** — 2b forced the length-prefixing, and ~~the `ref`/pointer collision is unreachable until overloading lands~~ **overloading landed in M6 and took the collision with it**, and constant checking inside a generic body. | `struct Empty { };` is refused naming a one-variant `enum`; `while( true ) { return 7; }` needs no `return` after it, and `for( ; ; )` lowers to two blocks rather than three. | Paying debts before they compound |
+| **M6.5** | The debts that are neither M6's feature nor M7's: ~~D41's mixed-signedness comparison~~ **moved into M6** — §12's generalisation of it to `T` depends on it, ~~`cast`/`wrap` on a type parameter~~ **moved into M6** — the shipped range diagnostic points at it, **§12's empty-aggregate rejection**, ~~the two KIR passes carried from M5.5~~ — empty-block threading and constant-branch folding — **done (2026-09-18)** as one pass, `ir/simplify.cpp`, because folding forces pruning and pruning needs a finished graph; the warning that went with them was cut rather than written, — ~~the mangling rework (length-prefixing, the `ref`/pointer collision, `kl__id__T__i32`)~~ **done in M6's slices 2b and 3e** — 2b forced the length-prefixing, and ~~the `ref`/pointer collision is unreachable until overloading lands~~ **overloading landed in M6 and took the collision with it**, ~~constant checking inside a generic body~~ **done in M6's slice 1f** — literal adoption is what made it reachable, so it was paid where it broke rather than carried. **Two arrived with M6's decisions**: §12's **conditional expression**, which is a decision rather than a debt and is here to stop it being an accident, and **function pointers**, whose implementation is M6.5 or M7 depending on whether FFI asks first. | `struct Empty { };` is refused naming a one-variant `enum`; `while( true ) { return 7; }` needs no `return` after it, and `for( ; ; )` lowers to two blocks rather than three. | Paying debts before they compound |
 | **M7** | Modules (`import`), multi-file compilation, then begin `Vector` and `String` **in Keel**. | A two-module program. Then a `Vector<i32>` that grows and frees. | **Whether the design actually works** |
 
 **M3 is where this stops being a toy** — it is the first thing C cannot do for
@@ -1052,6 +1060,8 @@ none of them can block work indefinitely.
 | **Is there a construct for "do several unconnected things to one value"?** This started as a way to spell fallthrough — let a `case` label appear more than once, run the matching arms in written order — and was rejected for `switch` on action at a distance (D38): knowing what `case A` does would mean scanning the whole `switch` for other `case A`s. **The idea survives the rejection, because what it actually describes is not a `switch`.** A `switch` selects *one* arm and the exhaustiveness that makes it worth having depends on that. What this wants is the opposite: a value, and a list of independent things to do to it, each guarded, each running if it matches, in order. Validation is the obvious customer — a field checked against several rules, accumulating findings — and so is dispatch that genuinely is one-to-many. Open questions if it is ever built: what the arms produce (nothing, or a collected value), whether the guards are patterns or predicates (D34 refused predicates in a `case` because they make exhaustiveness undecidable — a construct that *has* no exhaustiveness claim is free to allow them), and whether it needs a keyword of its own or is a library shape once generics land. **Not a v0 feature and possibly not a feature at all**; recorded because rejecting it from `switch` is not the same as deciding against it, and the reasoning is easy to lose. | After M7, with real code to judge it against |
 | Optionals: `T?`, `Optional<T>`, or a nullable-reference type — and how does it interact with `&`? | M5 |
 | ~~Does `class` exist at all, or is `struct` the only aggregate?~~ **Answered — D29.** Both exist, split at trivial copyability: `struct` is a transparent aggregate that cannot own, `class` is a type with invariants that can. Answered early, at M3 rather than M7, because the cost is asymmetric — one keyword now, versus a breaking change to every program that declared a `struct` that should have been a `class`. | M3 — decided |
+| **Is there a conditional expression, and is it `?:` or an `if` that has a value?** **This is not currently a decision, and that is the finding** — the same shape as the overloading row below. It appears in no Law, no D-entry and no §6.6 exclusion, and `a > 0 ? 1 : 2` is simply a parse error. **D33 already assumes it exists**, listing `?:` among the operators that may *not* be overloaded because "short-circuiting and sequencing cannot survive becoming a call" — an entry planning around a feature the compiler does not have, which is exactly what made function overloading an accident rather than a decision. **The token is free.** `Question` is lexed and was reserved for D6's postfix `?`, and §12's error-handling row has since redirected propagation to a `try` prefix, so nothing else wants it. **Two shapes, and they are not the same decision.** C's `?:` is a pure addition under §5.1 and costs one right-associative Pratt rule. Making `if` an *expression*, as Rust and Kotlin do, is the larger and more interesting option: it removes a second form rather than adding one, it composes with `switch` — which would want the same treatment or the language has two inconsistent answers — and it interacts with D26, since `i64 x = c ? 1 : 2;` needs the expectation to reach both arms exactly as `check()` already pushes it through a binary operator's operands. **The real content is the type rule, not the syntax.** Both arms must agree, and "agree" is D5's question: exact equality, or `Type_table::common`, which is §6.4's widening and would make this the second place a type is chosen by ranking. The overloading row's correction applies unchanged — widening after a type is settled, never to settle one — so the leaning is that an expectation decides and, with none, the arms must match exactly. **Nothing before M7 needs it**, and `if` as a statement covers every case; what it should stop being is an accident. | M6.5 to stop it being an accident; the `if`-as-expression half may wait for M7 |
+| **What does importing two modules that each declare `print` give you?** **Overloading created this question and M7 has to answer it** (2026-09-18). Before M6 a name meant one declaration, so an import either brought it or collided. Now a name denotes a *chain* — §15 slice 3's `next_overload` — and two modules each contributing to it is a merge rather than a clash: `print( i32 )` from one and `print( f64 )` from another could reasonably form one set, exactly as two declarations in one file do. **The argument for merging** is that a call site already tells them apart by what it writes, which is the whole basis of the feature, and refusing would make the module boundary mean something the type system does not. **The argument against** is that it makes an import able to change which function an existing call resolves to, which is the failure mode D11 exists to abolish — and the duplicate rule then has to run across modules, where the two declarations may not both be visible. **It also decides where the duplicate check lives**: it is a checker pass today (§15 slice 3) precisely because the resolver cannot ask about types, and across modules it needs every contributing declaration in hand at once. Note the mangler is already ready either way — a parameter list is part of the symbol and the module slot is separate — so this is a name-lookup decision, not a codegen one. | M7, with module granularity |
 | Custom allocators / arenas — visible in the type system or not? | M7 |
 | Module granularity: file, directory, or explicit declaration? | M7 |
 | **A build tool.** A language people use needs one, and `cmake` is the argument for writing it rather than adopting it. The scope that stays small: find the sources, build a dependency graph from `import` (M7 gives the graph for free), invoke the C compiler, cache. The scope that eats the project: package management, versioning, cross-compilation, a configuration language. Note the second list is where every "not horrible" build tool became horrible — Cargo is the closest to good and is inseparable from crates.io. **Start with the smallest thing that builds a multi-module program**, and treat every addition as a decision with an entry rather than a feature request. | After M7 — the module graph is the input, so it cannot start earlier |
@@ -1059,7 +1069,7 @@ none of them can block work indefinitely.
 | **Does an import bring the types reachable from a signature with it?** If `load_config` returns `Result<Config, Config_error>`, then importing it means needing all three to handle the result, and requiring three imports is friction carrying no information. Errors are where this bites first — a combining enum is needed in the module that declares it, the one that handles it, and every layer that re-wraps it — but nothing about it is specific to errors. The alternative floated and rejected was a dedicated file kind for error enums (`.kle`): that is a naming convention enforced by the toolchain rather than a language feature, it still has to be imported, and it files declarations by *what kind of thing they are* instead of *what they belong to*, which scatters a module for no gain. | M7 |
 | **Does the error type of a `Result` have to be a named enum?** Written out, multi-source error handling produces a combining enum per layer — `enum Config_error { Io( Io_error ), Parse( Parse_error ) }` — that carries no information and exists only to say "either of those". Every Rust project reaches for `thiserror` to generate exactly this, or `Box<dyn Error>` to erase it; both are libraries patching a language gap, and the layers it creates then force a matching cascade of one-level `switch`es to peel them back off. **Zig's answer is error sets**, which union structurally and can be inferred from a body, so no combining type is ever declared. The Keel shape would be an **anonymous error union** — `Result<Config, Io_error \| Parse_error>` — with `try` widening into any union containing the source type, which generalises the "exactly one way to convert" rule above rather than replacing it, and with `switch` matching leaf variants directly so the cascade collapses. **The cost is the largest type-system addition in this document**: flattening so `( A \| B ) \| C` is `A \| B \| C`, order-independence so `A \| B` and `B \| A` are one type, and exhaustiveness across a union of unions. The cheap half-measure is inference alone — keep the named enum, allow `Result<Config, _>` — which removes the declaration but not the type, and makes the signature less informative, which is the opposite of what every other entry here has chosen. **One argument for the named enum that brevity comparisons miss**: exhaustiveness means the compiler knows the complete failure set at every call site, so an editor can offer *fill in the missing arms* as a fix rather than the author compiling to discover them one at a time. A computed set can be enumerated too, but a named type has a declaration to jump to, somewhere to hang a doc comment, and a stable name in a diagnostic. Weigh that against the boilerplate rather than only the line count. **Do not decide this at M5.** Payload-free enums need none of it, and the evidence that decides it is real error-handling code, which cannot be written until after M6. **Considered and rejected: attaching the error type to the success type**, so that `Config` declares its own `Config_error` and `Result<Config>` needs no second parameter. It is discoverable and it reads well for a type with exactly one fallible constructor, and it fails on four counts. The same success type comes from operations that fail differently — `parse_int` and `divide` both yield an `i32`, and the failure belongs to parsing and to dividing, not to the number. Primitives have no declaration site at all, so `Result<i32>` has nowhere to hang one. It inverts the dependency: `Config` would have to name `Io_error`, a filesystem concept, and would then change when a *loading strategy* changed. And it is the wrong axis — a combining error set is per **layer**, not per type, since `load_config` unions IO with parse while a caller unions config with network. The instinct behind it is right and worth keeping: the objection is to naming the error type *at all*. Inference attaches it to the **operation** instead, which is the axis that actually varies, and composes — a caller's set is the union of everything it propagates. **Decided (2026-09-18): the anonymous error union, with widening confined to propagation.** `Result<Config, Io_error \| Parse_error>`, no combining enum declared, and `switch` matching leaf members so the cascade never forms. **The two costs quoted above are not equal, and the first was overstated.** Flattening and order-independence are one canonicalise-at-construction step — expand nested unions, sort members by `Type_id`, dedupe — and `Type_id`s are already interned, so sorting by numeric id gives a canonical key for free. That is a small function, not an architectural fork. What is real is that **a union has no declaration**, so `Type_table` gains a second interning path keyed on the member set rather than on declaration plus arguments; that is the one place this cuts against the grain of §4. **The tag is the part the comparison with Zig hides.** Zig's error sets are cheap because errors are globally numbered and payload-free, so a set is a compile-time subset and widening is a runtime no-op. Keel's errors carry payloads, so that does not transfer directly — but it transfers with one move: **give every error type a stable global tag**, which is available precisely because Keel has no separate compilation and the whole program's error types are known. Widening then keeps the tag and copies into a larger payload slot, and exhaustiveness is a subset test over a bitset. **Widening is confined to `try` and is not a subtype relation. This condition is what the decision rests on.** A general “an `Io_error` is acceptable wherever an `Io_error \| Parse_error` is expected” would fire at every point where types meet, and the collision is with overloading, decided above: `handle( Io_error \| Parse_error )` and `handle( Io_error \| Parse_error \| Net_error )` would both accept an `Io_error`, which needs most-specific-match, which over sets is subset ordering, which is *partial* and brings ambiguity rules with it — the ranking machinery D5 deleted and D33's overloading argument depends on being absent. Confined, the rule is **one subset check in one place**: every other position matches a union by identity, and D5's “exactly, or not at all” survives everywhere else. **It is an explicit conversion, not an implicit one**, because `try` is a keyword the author typed — the same family as `cast<T>`, `wrap<T>`, `move` and `ref`, a visible marker where something non-obvious happens (D2, D31). **The error set is declared, never inferred.** Zig infers it from the body; inferring here would stop the signature stating what can go wrong, which is the property every other entry in this document has chosen. Declaring it makes `try`'s check a subset test against something written down, and makes adding a `try` for a new error type a compile error **at the contract** rather than a silent change at every call site — D11's spirit. **What it gives up**: constructing a union value by any route other than `try` is explicit. That is a small loss in a rare position and the safe direction to be wrong in — relaxing a rule later is safe, tightening one is not. **This also answers the conversion sub-question in the `?`/`try` row above**: under a union there is no conversion to define, only widening into a superset. | **Direction decided: the union, widening confined to `try`** — implement with error handling, post-M6 |
 | **Does a pattern nest?** `case Err( Io( e ) ):` is what anyone will write once errors are enums of enums, and peeling one layer per `switch` is the alternative — two small functions rather than one deep pattern. Nesting is more expressive and is where pattern matching starts to need a real compiler: exhaustiveness over a product of variants, and a reasonable diagnostic when a case is missing three levels down. One layer at a time is the conservative start and composes by hand. | M5, with destructuring |
-| **Are there function pointers, and does anything still need them?** They appear nowhere above — the same gap methods had. Three uses, and generics take two of them: a comparator for `sort` becomes a type parameter at M6, and so does any strategy passed to a container. What survives is **FFI** — a C library that takes a callback has no other spelling — and that alone may be enough to need them. `T( * )( args )` is C's syntax and is widely disliked; a named form reads better. | M6 decides whether generics leave anything for them to do; M5.5's `extern` may force them sooner |
+| **Are there function pointers, and does anything still need them?** They appear nowhere above — the same gap methods had. Three uses, and generics take two of them: a comparator for `sort` becomes a type parameter at M6, and so does any strategy passed to a container. What survives is **FFI** — a C library that takes a callback has no other spelling — and that alone may be enough to need them. `T( * )( args )` is C's syntax and is widely disliked; a named form reads better. **Decided (2026-09-18): yes, and member pointers with them — but that is three features wearing one name, and only two of them are new.** M6 went as predicted: generics took the comparator and the strategy, and **FFI is the surviving customer**, which settles the first half on its own. *A member **function** pointer is not a second feature here, and L13 is why.* C++'s are fat and implementation-defined — a code address plus a `this` adjustment plus a vtable index — for reasons that are entirely inheritance and virtual dispatch, and Keel has neither. A method already lowers to a function whose first parameter is the receiver, `ref C` or `const ref C` by D32's `const`, so `&C::get` **is** an ordinary function pointer over that signature. Writing that down is the point of this clause: the machinery must not be built. *A member **data** pointer is the one genuinely new thing.* It is an **offset, not an address**, so it is applied to an object rather than dereferenced — which is D27's own instinct, since the thing that makes it safe is that it cannot be arithmetic. **Four sub-questions, and the last two are the ones that bite.** *The type spelling*, where this row's dislike of `T( * )( args )` now has a reason rather than a preference: §15 slice 3 made a parameter's identity the pair **(declared type, marker)**, so `fn( ref i32 )` and `fn( i32* )` are different types and a marker needs somewhere to sit — which C's declarator has nowhere for. Leaning `fn( i32, i32 ) -> i32`. *The application spelling*, which cannot be `obj->*p` because D22 deleted `->` outright, and where `C::v` also widens `::` from D30's *“reaches a variant, and only an `enum` has them”* to a general scope qualifier. *Overloading makes `&f` ambiguous*, and the only thing that can choose is the **expected type** — which is exactly the channel §15 slice 4 built, taken and cleared by the node that owns it. So `fn( i32, i32 ) -> i32 g = &add;` selects, and `auto g = &add;` on an overloaded name is an error; today the whole question is masked by `infer_name` reporting *“`add` is a function, not a value”*. *Taking a generic's address is a new **seed** for the monomorphisation worklist*, and this is the one that fails silently: `&id` is an error and `&id<i32>` is required, but `instantiations_` and `generic_calls_` are recorded in `infer_call`, and an address-of is not a call — miss it and the symbol is referenced and never emitted, which is a `cc` error in generated code rather than a diagnostic, the worst failure class this project has. **Two dependencies rather than one.** Member data pointers need **access control to exist first**, or `&C::v` on a private field is a hole in visibility the day visibility arrives; and they sit against §12's reflection direction — *compile-time yes, runtime never* — because a runtime-valued field selector is the weak form of exactly that, which is a boundary to state rather than to discover. **Timing: the FFI half with `extern`'s customers, the member half with access control**; neither is M6's, whose obligation was the decision and is discharged. | **Decided** — M6; function pointers implement with FFI, member pointers with access control |
 | **Pointer-to-member — `&Point::x`?** Its real uses are serialisation and generic field access, and §12 already promises **compile-time reflection**, which covers both and more. Likely subsumed rather than added: a feature whose only customers are served better by another feature is one to leave out. | Whenever reflection is designed; not before |
 | **`for( var : collection )`.** Needs an iteration protocol, which needs something to iterate — so it waits for `Vector` and `String`, and the protocol should be designed against a real container rather than invented ahead of one. Note D34's `for( i : 0..n )` is the *same syntax*, which is an argument for settling both together. | M7 |
 | Standard library naming. `MANIFESTO.md` §12 already refuses to mirror `std`, but the specific names are unsettled: one `Hash_map` rather than `map`/`unordered_map`, and a better name than `vector` for a dynamic array. Note the one real trap — `List` reads as a *linked* list to a C++ programmer (it is `List<T>` in C#/Java but `std::list` in C++), so a familiar name would carry the wrong semantics. Not a §6.3 divergence: those cover syntax and semantics the compiler enforces, and no library exists yet. | M7, when the first containers are written in Keel |
@@ -3968,6 +3978,70 @@ the one case that had to move — `return id( 1 );`, which the row's own worked 
 should now compile — and that is the proof the slice needed: a deduced call reaches
 instantiation, mangling and emission as the same call a written list produces.
 
+## M6.5 — in progress
+
+### The two KIR passes — done (2026-09-18)
+
+`ir/simplify.{h,cpp}`, one exported free function — `void simplify( Function&, const Literals& )` —
+run per function in the driver immediately after `lower()` and before anything reads the graph.
+Three steps in one sweep: fold a `Branch` whose condition is a constant into a `Goto`, thread every
+edge through blocks that carry no statements and end in a `Goto`, then delete what is no longer
+reachable and rebuild `blocks` and `statements` together.
+
+**Why the two halves are one pass.** The debt entries treat them as separate, and they are not.
+Folding in the lowerer cannot work, because `break_target()` allocates a loop's exit block *before*
+the branch is terminated — so a folded `while( true )` still leaves that block behind with nothing
+reaching it, and `verify` rejects an unreachable block. Folding therefore forces pruning, pruning
+renumbers blocks, and renumbering is only expressible over a finished graph. One pass falls out of
+that rather than being a preference.
+
+**One sweep is the fixpoint.** Folding is what turns a loop header into an empty `Goto`, so it runs
+first; threading cannot turn a `Goto` back into a `Branch`, and pruning creates neither. A test
+runs the pass twice and requires the second to change nothing, which is the only way that claim
+stays true as the pass grows.
+
+**The empty-goto cycle has no special case.** `for( ; ; ) { }` is a ring of blocks that all thread
+to one another. `final_target` walks with a visited set and stops when it comes back round, which
+resolves the ring to a deliberate `bb1: goto bb1` — an infinite loop the verifier accepts, the
+assignment check walks, and C spells directly. The PLAN entry asked for a guard against infinite
+substitution; the guard is the visited set, and the self-goto it produces is the right answer
+rather than the thing being avoided.
+
+**Statements are rebuilt, not left with holes.** Two things scan `Function::statements` end to end
+— whether a function assigns its return slot anywhere, and which locals need drop flags — so a
+pruned block's statements sitting in the middle of the vector would answer both with code that
+cannot run. The rebuild is the shape drop elaboration's `rewrite_statements` already uses.
+
+**What broke, and it was in the backend.** C declares every local at the top of the function, so a
+temporary that only the pruned block mentioned would be declared and never used — which `-Wall`
+reports and the golden runner builds with `-Werror`. **A valid Keel program would have failed to
+compile.** `mentioned_locals` in `emit_kir.cpp` is the fix: the declaration loop skips a local no
+surviving statement, operand or terminator names, beside the parameter and void skips it already
+had. Locals are deliberately **not** renumbered in KIR — that would mean rewriting every `Place`,
+and the dump showing a local nothing uses is honest rather than wrong.
+
+**The consequence to know about.** The pass runs before the flow-sensitive checks, so a body under
+a constant-false condition is no longer move-checked or definite-assignment-checked. It is still
+type-checked — that happens on the AST. The alternative was to teach `check_assignment`'s
+`successors()` to skip a constant branch's untaken edge and leave the graph alone, which was
+rejected for giving the compiler two different answers to "what is reachable".
+
+**What the tests found.** The pinned false positive did its job: `assign_check_reports_a_constantly_
+true_loop` was written *"so that the day constant branches are folded this test says so rather than
+the behaviour changing quietly"*, and it failed on the first run after the pass was wired into that
+harness. It is now `assign_check_accepts_a_constantly_true_loop`. `never_leaves_the_loop` moved out
+of `sema/errors_returns.kl` into `codegen/loops.kl`, where it is run rather than merely accepted —
+the same move `return id( 1 );` made in slice 4.
+
+**13 mutations, 12 killed.** The survivor is `mentioned_locals` visiting terminator conditions,
+which is unkillable because the temporary a condition reads is assigned in the same block — kept
+anyway, because the helper's contract is every local the emitter *can* name. One earlier survivor
+was a forced `mentioned[k_return_slot]`, deleted rather than kept: a non-void function that never
+assigns its return slot is refused before emission, and a void one is skipped as void.
+**49 goldens changed and no `.run` or `.exit` file did** — the emitted C lost 910 `goto`s and kept
+436, and every codegen fixture still returns its own answer, which is the proof the output is
+different and still correct.
+
 ### Debts to pay along the way
 
 - **Static methods have no spelling.** Every method takes a receiver, so a function that belongs to
@@ -4158,7 +4232,11 @@ instantiation, mangling and emission as the same call a written list produces.
   at a `Storage_live` cannot survive. Both are correct and cost nothing, and the
   first becomes load-bearing the moment constant-branch folding leaves a block
   behind. Recorded because a mutation test shows them surviving, and that should
-  read as "known" rather than as a gap.
+  read as "known" rather than as a gap. **The prediction was wrong, and in the
+  useful direction (2026-09-18):** `simplify` deletes an unreachable block rather
+  than leaving one, so the unreached-block skip is *still* unexercised — folding
+  removed the false positive by removing the block, not by teaching the pass to
+  ignore it.
 - ~~**Nothing checks that every path returns a value.**~~ **Fixed.** It was
   `check_assignment` applied to local 0, as predicted: the return slot *is* an
   `out` parameter of the function, so `Function::returns_a_value` seeds it in
@@ -4173,7 +4251,7 @@ instantiation, mangling and emission as the same call a written list produces.
   `switch` left the enclosing loop rather than the switch, and stacked labels that
   destructure read payload fields of a variant that was not there. `fallthrough;`
   is what gave the rule a fix to name.
-- **Thread empty blocks — scheduled for M6.** `for( ; ; ) { return 1; }` lowers to `bb0: goto bb1`,
+- ~~**Thread empty blocks.**~~ **Done (2026-09-18), M6.5.** `for( ; ; ) { return 1; }` lowered to `bb0: goto bb1`,
   `bb1: goto bb2`, `bb2: ...` — two blocks carrying no statements, existing only
   because the lowerer gives each construct its own entry. Every predecessor of a
   block whose statement list is empty and whose terminator is a `Goto` can jump
@@ -4188,15 +4266,38 @@ instantiation, mangling and emission as the same call a written list produces.
   edges pointing somewhere valid. Cheap to verify — `verify.cpp` already checks
   that every terminator target is in range, and the golden KIR corpus is the
   before/after.
-- **Fold constant branches in the lowerer, and warn on `while( true )` — scheduled
-  for M6.** Two halves of one gap, both deferred deliberately. Folding a `Branch` on a literal
-  condition into a `Goto` emits less C, removes the `while( true )` false
-  positive above, and is the machinery compile-time evaluation needs anyway — so
-  it should land **with constexpr** rather than before it. Until then a warning
-  on `while( true )` naming `for( ; ; )` would close the loop for the author, at
-  the cost of being the compiler's first warning: `Diagnostics::warning` exists
-  and nothing calls it, so this also means deciding what a warning does to the
-  exit code.
+- ~~**Fold constant branches in the lowerer, and warn on `while( true )`.**~~ **Done
+  (2026-09-18), M6.5 — and neither half landed where this entry expected.** Folding is **not in
+  the lowerer**: `break_target()` allocates a loop's exit block before the branch is terminated, so
+  a lowerer that folded would still leave that block behind, unreachable, which `verify` rejects.
+  Folding therefore *forces* pruning, and pruning is only expressible over a finished graph — which
+  is what makes this one pass with the threading above rather than two. **The `with constexpr`
+  argument does not apply to what was built**: `simplify` reads a literal the lowerer already put
+  in the terminator and propagates nothing, so it is not the machinery a constant evaluator needs
+  and does not pre-empt one. **The warning was cut**, and not for the reason this entry gives —
+  D41's *"this comparison is always true"* had already made `Diagnostics::warning` live during M6,
+  so the exit-code question was settled before this arrived. It was cut because folding removes the
+  thing it was there to explain: `while( true ) { return 7; }` now compiles, so a warning steering
+  the author to `for( ; ; )` would be advice to rewrite working code.
+
+- **A `switch` arm ending in `while( true )` is still reported as falling out of a non-empty arm.**
+  The same false positive folding removed from the return check, in the one place folding cannot
+  reach it: `completes_normally` in `sema/type_checker.cpp` answers over the **AST**, before
+  anything is lowered, and returns `true` for a `While_stmt` unconditionally. So
+  `case E::A: while( true ) { }` is refused although nothing can leave that arm. Fixing it needs
+  the helper to ask whether the condition is the literal `true` **and** whether any `break` binds
+  to that loop — a scan the checker already knows how to do, since it binds `break` to the nearest
+  enclosing loop or switch for D38. Pinned as *accepted* in
+  `type_checker_reports_an_arm_that_falls_out` ("a loop is assumed to finish"), so the day it is
+  fixed a test says so. **Worth doing when the conditional expression lands**, which is the next
+  thing to touch that file's view of what a statement is worth.
+
+- **A block with one predecessor is not merged into it.** `simplify` threads edges and deletes
+  blocks; it does not merge a block into a sole predecessor whose terminator is a `Goto`, so
+  `if( false ) { ... }` before a `return` still emits `goto bb1; bb1:` where straight-line code
+  would do. Every case the M6.5 acceptance names is already paid without it, it is one more rewrite
+  of the same two vectors, and the emitted C it removes is a label and a jump that no C compiler
+  keeps. Worth doing the day the generated C is read by a person rather than by `cc`.
 - **An over-wide shift count is undefined behaviour in the emitted C.** A
   *constant* one is rejected — `i32 a = 1; a << 40;` says "the shift count is out
   of range" — but a variable one is not, and `a << b` with `b == 40` emits a plain
@@ -4224,7 +4325,14 @@ instantiation, mangling and emission as the same call a written list produces.
   and it is the reason bounds come before generic aggregates rather than after: a
   `Vector<T>` whose `push` copies an element has the same hole at scale, so
   building on top of it means auditing everything written meanwhile. Until then a
-  generic is only safe over non-owning types, and nothing says so.
+  generic is only safe over non-owning types, and nothing says so. **Closed at M6
+  (D40 shipped, verified 2026-09-18), and it closes from both ends**: without a
+  bound, `T b = a;` is refused with *an owning value is transferred, not copied*,
+  because an unbound `T` no longer answers "not owning" to that question; with
+  `where T : Copyable`, the body compiles and `twice<Counter>` is refused at the
+  call — *`Counter` is not `Copyable`* — because a type with a destructor owns
+  something. The definition and the instantiation each report the half that is
+  theirs, which is D11's shape.
 - **A raw pointer to a local may escape.** `i32* f() { i32 x = 1; return &x; }`
   compiles, and so does returning `&p.x`. §8's non-escaping rule is about
   *bindings* and correctly refuses `const ref i32 f() { i32 x = 1; return x; }`,

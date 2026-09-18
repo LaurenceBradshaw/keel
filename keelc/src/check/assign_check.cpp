@@ -317,6 +317,7 @@ Assignment_report check_assignment( const Function& func )
 #include "common/literals.h"
 #include "common/source_manager.h"
 #include "ir/lower.h"
+#include "ir/simplify.h"
 #include "lex/lexer.h"
 #include "parse/parser.h"
 #include "sema/resolver.h"
@@ -353,6 +354,13 @@ struct Checked
         if( !diags.has_errors() )
         {
             functions = lower( ast, resolution, types, literals, interner );
+
+            // The driver simplifies every function before anything reads it, so these do too: a
+            // test that walked a graph the compiler never analyses would pin the wrong thing.
+            for( Function& function : functions )
+            {
+                simplify( function, literals );
+            }
         }
     }
 
@@ -747,16 +755,17 @@ TEST_CASE( "assign_check_leaves_void_functions_alone", "[check][assign][returns]
     }
 }
 
-// The known false positive, pinned so that the day constant branches are folded this test says so
-// rather than the behaviour changing quietly. `while( true )` leaves a loop-exit block that is
-// reachable in the graph and never taken at run time; `for( ; ; )` has no condition, so there is no
-// exit block at all - which makes the workaround the better code anyway.
-TEST_CASE( "assign_check_reports_a_constantly_true_loop", "[check][assign][returns]" )
+// This was the pass's one known false positive, pinned so that the day constant branches were
+// folded the test would say so rather than the behaviour changing quietly. That day came:
+// `while( true )` left a loop-exit block reachable in the graph and never taken at run time, and
+// simplify() folds the branch and prunes the block before this pass ever sees it. The two spellings
+// now answer alike, which is the point - `for( ; ; )` was only ever the workaround.
+TEST_CASE( "assign_check_accepts_a_constantly_true_loop", "[check][assign][returns]" )
 {
-    const Checked flagged( "i32 f() { while( true ) { return 1; } }\ni32 main() { return f(); }" );
+    const Checked folded( "i32 f() { while( true ) { return 1; } }\ni32 main() { return f(); }" );
 
-    INFO( flagged.rendered() );
-    REQUIRE( flagged.errors().size() == 1 );
+    INFO( folded.rendered() );
+    REQUIRE( folded.errors().empty() );
 
     const Checked clean( "i32 f() { for( ; ; ) { return 1; } }\ni32 main() { return f(); }" );
 

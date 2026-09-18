@@ -107,67 +107,55 @@ int32_t kl__main__( void )
     kl_t0 = 1;
     return kl_t0;
     bb2:
-    goto bb3;
-    bb3:
 #line 72 "codegen/generics_forward_reference.kl"
     kl_n_3.kl_b_16.kl_v_174.kl_v_174 = 9;
 #line 74 "codegen/generics_forward_reference.kl"
     kl_t4 = kl_n_3.kl_b_16.kl_v_174.kl_v_174 != 9;
-    if ( kl_t4 ) goto bb4; else goto bb5;
-    bb4:
+    if ( kl_t4 ) goto bb3; else goto bb4;
+    bb3:
 #line 76 "codegen/generics_forward_reference.kl"
     kl_t0 = 2;
     return kl_t0;
-    bb5:
-    goto bb6;
-    bb6:
+    bb4:
 #line 79 "codegen/generics_forward_reference.kl"
     kl_t5 = kl__in_a_local__(  );
     kl_t6 = kl_t5 != 3;
-    if ( kl_t6 ) goto bb7; else goto bb8;
-    bb7:
+    if ( kl_t6 ) goto bb5; else goto bb6;
+    bb5:
 #line 81 "codegen/generics_forward_reference.kl"
     kl_t0 = 3;
     return kl_t0;
-    bb8:
-    goto bb9;
-    bb9:
+    bb6:
 #line 86 "codegen/generics_forward_reference.kl"
     kl_passed_7.kl_v_174 = 5;
 #line 88 "codegen/generics_forward_reference.kl"
     kl_t8 = kl__through_a_parameter__3BoxI3i32E( kl_passed_7 );
     kl_t9 = kl_t8 != 5;
-    if ( kl_t9 ) goto bb10; else goto bb11;
-    bb10:
+    if ( kl_t9 ) goto bb7; else goto bb8;
+    bb7:
 #line 90 "codegen/generics_forward_reference.kl"
     kl_t0 = 4;
     return kl_t0;
-    bb11:
-    goto bb12;
-    bb12:
+    bb8:
 #line 93 "codegen/generics_forward_reference.kl"
     kl_t10 = kl__as_a_return__3i32( 11 );
     kl_t11 = kl_t10.kl_v_174 != 11;
-    if ( kl_t11 ) goto bb13; else goto bb14;
-    bb13:
+    if ( kl_t11 ) goto bb9; else goto bb10;
+    bb9:
 #line 95 "codegen/generics_forward_reference.kl"
     kl_t0 = 5;
     return kl_t0;
-    bb14:
-    goto bb15;
-    bb15:
+    bb10:
 #line 98 "codegen/generics_forward_reference.kl"
     kl__drops_at_scope_exit__(  );
 #line 100 "codegen/generics_forward_reference.kl"
     kl_t13 = kl_destroyed_2 != 1;
-    if ( kl_t13 ) goto bb16; else goto bb17;
-    bb16:
+    if ( kl_t13 ) goto bb11; else goto bb12;
+    bb11:
 #line 102 "codegen/generics_forward_reference.kl"
     kl_t0 = 6;
     return kl_t0;
-    bb17:
-    goto bb18;
-    bb18:
+    bb12:
 #line 105 "codegen/generics_forward_reference.kl"
     kl_t0 = 42;
     return kl_t0;

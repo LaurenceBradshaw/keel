@@ -34,9 +34,7 @@ int32_t kl__weight__6Colour( int32_t kl_c_1 )
     bb5:
 #line 20 "codegen/switch.kl"
     kl_t4 = kl_c_1 == 2;
-    if ( kl_t4 ) goto bb2; else goto bb6;
-    bb6:
-    goto bb3;
+    if ( kl_t4 ) goto bb2; else goto bb3;
 }
 
 int32_t kl__exhaustive__6Colour( int32_t kl_c_1 )
@@ -71,9 +69,7 @@ int32_t kl__exhaustive__6Colour( int32_t kl_c_1 )
     bb6:
 #line 37 "codegen/switch.kl"
     kl_t4 = kl_c_1 == 2;
-    if ( kl_t4 ) goto bb3; else goto bb7;
-    bb7:
-    goto bb4;
+    if ( kl_t4 ) goto bb3; else goto bb4;
 }
 
 int32_t kl__main__( void )

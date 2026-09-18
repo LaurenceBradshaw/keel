@@ -126,141 +126,113 @@ int32_t kl__main__( void )
     kl_t0 = 1;
     return kl_t0;
     bb2:
-    goto bb3;
-    bb3:
 #line 72 "codegen/globals.kl"
     kl_t2 = kl_small_5 != 200;
-    if ( kl_t2 ) goto bb4; else goto bb5;
-    bb4:
+    if ( kl_t2 ) goto bb3; else goto bb4;
+    bb3:
     kl_t0 = 2;
     return kl_t0;
-    bb5:
-    goto bb6;
-    bb6:
+    bb4:
 #line 73 "codegen/globals.kl"
     kl_t3 = kl_ratio_8 != 1.5;
-    if ( kl_t3 ) goto bb7; else goto bb8;
-    bb7:
+    if ( kl_t3 ) goto bb5; else goto bb6;
+    bb5:
     kl_t0 = 3;
     return kl_t0;
-    bb8:
-    goto bb9;
-    bb9:
+    bb6:
 #line 74 "codegen/globals.kl"
     kl_t4 = !kl_ready_11;
-    if ( kl_t4 ) goto bb10; else goto bb11;
-    bb10:
+    if ( kl_t4 ) goto bb7; else goto bb8;
+    bb7:
     kl_t0 = 4;
     return kl_t0;
-    bb11:
-    goto bb12;
-    bb12:
+    bb8:
 #line 75 "codegen/globals.kl"
     kl_t5 = -1;
     kl_t6 = kl_below_15 != kl_t5;
-    if ( kl_t6 ) goto bb13; else goto bb14;
-    bb13:
+    if ( kl_t6 ) goto bb9; else goto bb10;
+    bb9:
     kl_t0 = 5;
     return kl_t0;
-    bb14:
-    goto bb15;
-    bb15:
+    bb10:
 #line 76 "codegen/globals.kl"
     kl_t7 = kl_blank_17 != 0;
-    if ( kl_t7 ) goto bb16; else goto bb17;
-    bb16:
+    if ( kl_t7 ) goto bb11; else goto bb12;
+    bb11:
     kl_t0 = 6;
     return kl_t0;
-    bb17:
-    goto bb18;
-    bb18:
+    bb12:
 #line 77 "codegen/globals.kl"
     kl_t8 = kl_later_20 != 7;
-    if ( kl_t8 ) goto bb19; else goto bb20;
-    bb19:
+    if ( kl_t8 ) goto bb13; else goto bb14;
+    bb13:
     kl_t0 = 7;
     return kl_t0;
-    bb20:
-    goto bb21;
-    bb21:
+    bb14:
 #line 79 "codegen/globals.kl"
     kl_t9 = kl__read_counter__(  );
     kl_t10 = kl_t9 != 1;
-    if ( kl_t10 ) goto bb22; else goto bb23;
-    bb22:
+    if ( kl_t10 ) goto bb15; else goto bb16;
+    bb15:
     kl_t0 = 8;
     return kl_t0;
-    bb23:
-    goto bb24;
-    bb24:
+    bb16:
 #line 80 "codegen/globals.kl"
     kl_t11 = kl__read_later__(  );
     kl_t12 = kl_t11 != 7;
-    if ( kl_t12 ) goto bb25; else goto bb26;
-    bb25:
+    if ( kl_t12 ) goto bb17; else goto bb18;
+    bb17:
     kl_t0 = 9;
     return kl_t0;
-    bb26:
-    goto bb27;
-    bb27:
+    bb18:
 #line 83 "codegen/globals.kl"
     kl__bump__(  );
 #line 84 "codegen/globals.kl"
     kl_t14 = kl_counter_2 != 2;
-    if ( kl_t14 ) goto bb28; else goto bb29;
-    bb28:
+    if ( kl_t14 ) goto bb19; else goto bb20;
+    bb19:
     kl_t0 = 10;
     return kl_t0;
-    bb29:
-    goto bb30;
-    bb30:
+    bb20:
 #line 85 "codegen/globals.kl"
     kl_t15 = kl__read_counter__(  );
     kl_t16 = kl_t15 != 2;
-    if ( kl_t16 ) goto bb31; else goto bb32;
-    bb31:
+    if ( kl_t16 ) goto bb21; else goto bb22;
+    bb21:
     kl_t0 = 11;
     return kl_t0;
-    bb32:
-    goto bb33;
-    bb33:
+    bb22:
 #line 87 "codegen/globals.kl"
     kl__bump__(  );
 #line 88 "codegen/globals.kl"
     kl__bump__(  );
 #line 89 "codegen/globals.kl"
     kl_t19 = kl_counter_2 != 4;
-    if ( kl_t19 ) goto bb34; else goto bb35;
-    bb34:
+    if ( kl_t19 ) goto bb23; else goto bb24;
+    bb23:
     kl_t0 = 12;
     return kl_t0;
-    bb35:
-    goto bb36;
-    bb36:
+    bb24:
 #line 92 "codegen/globals.kl"
     kl_counter_2 = 10;
 #line 93 "codegen/globals.kl"
     kl_t20 = kl__read_counter__(  );
     kl_t21 = kl_t20 != 10;
-    if ( kl_t21 ) goto bb37; else goto bb38;
-    bb37:
+    if ( kl_t21 ) goto bb25; else goto bb26;
+    bb25:
     kl_t0 = 13;
     return kl_t0;
-    bb38:
-    goto bb39;
-    bb39:
+    bb26:
 #line 97 "codegen/globals.kl"
     kl_t22 = kl__address_of_counter__(  );
     ( *kl_t22 ) = 20;
 #line 98 "codegen/globals.kl"
     kl_t23 = kl_counter_2 != 20;
-    if ( kl_t23 ) goto bb40; else goto bb41;
-    bb40:
+    if ( kl_t23 ) goto bb27; else goto bb28;
+    bb27:
     kl_t0 = 14;
     return kl_t0;
-    bb41:
-    goto bb42;
-    bb42:
+    bb28:
 #line 100 "codegen/globals.kl"
     kl_t25 = kl__address_of_counter__(  );
     kl_held_24 = kl_t25;
@@ -268,22 +240,18 @@ int32_t kl__main__( void )
     ( *kl_held_24 ) = 30;
 #line 103 "codegen/globals.kl"
     kl_t26 = kl_counter_2 != 30;
-    if ( kl_t26 ) goto bb43; else goto bb44;
-    bb43:
+    if ( kl_t26 ) goto bb29; else goto bb30;
+    bb29:
     kl_t0 = 15;
     return kl_t0;
-    bb44:
-    goto bb45;
-    bb45:
+    bb30:
 #line 104 "codegen/globals.kl"
     kl_t27 = ( *kl_held_24 ) != 30;
-    if ( kl_t27 ) goto bb46; else goto bb47;
-    bb46:
+    if ( kl_t27 ) goto bb31; else goto bb32;
+    bb31:
     kl_t0 = 16;
     return kl_t0;
-    bb47:
-    goto bb48;
-    bb48:
+    bb32:
 #line 107 "codegen/globals.kl"
     kl_shadow_check_28 = 0;
 #line 110 "codegen/globals.kl"
@@ -292,185 +260,147 @@ int32_t kl__main__( void )
     kl_shadow_check_28 = kl_counter_29;
 #line 114 "codegen/globals.kl"
     kl_t30 = kl_shadow_check_28 != 99;
-    if ( kl_t30 ) goto bb49; else goto bb50;
-    bb49:
+    if ( kl_t30 ) goto bb33; else goto bb34;
+    bb33:
     kl_t0 = 17;
     return kl_t0;
-    bb50:
-    goto bb51;
-    bb51:
+    bb34:
 #line 115 "codegen/globals.kl"
     kl_t31 = kl_counter_2 != 30;
-    if ( kl_t31 ) goto bb52; else goto bb53;
-    bb52:
+    if ( kl_t31 ) goto bb35; else goto bb36;
+    bb35:
     kl_t0 = 18;
     return kl_t0;
-    bb53:
-    goto bb54;
-    bb54:
+    bb36:
 #line 118 "codegen/globals.kl"
     kl_t32 = kl__shadowed__3i32( 5 );
     kl_t33 = kl_t32 != 5;
-    if ( kl_t33 ) goto bb55; else goto bb56;
-    bb55:
+    if ( kl_t33 ) goto bb37; else goto bb38;
+    bb37:
     kl_t0 = 19;
     return kl_t0;
-    bb56:
-    goto bb57;
-    bb57:
+    bb38:
 #line 119 "codegen/globals.kl"
     kl_t34 = kl_counter_2 != 30;
-    if ( kl_t34 ) goto bb58; else goto bb59;
-    bb58:
+    if ( kl_t34 ) goto bb39; else goto bb40;
+    bb39:
     kl_t0 = 20;
     return kl_t0;
-    bb59:
-    goto bb60;
-    bb60:
+    bb40:
 #line 122 "codegen/globals.kl"
     kl_small_5 = 255;
 #line 123 "codegen/globals.kl"
     kl_t35 = kl_small_5 != 255;
-    if ( kl_t35 ) goto bb61; else goto bb62;
-    bb61:
+    if ( kl_t35 ) goto bb41; else goto bb42;
+    bb41:
     kl_t0 = 21;
     return kl_t0;
-    bb62:
-    goto bb63;
-    bb63:
+    bb42:
 #line 125 "codegen/globals.kl"
     kl_ready_11 = false;
-    if ( kl_ready_11 ) goto bb64; else goto bb65;
-    bb64:
+    if ( kl_ready_11 ) goto bb43; else goto bb44;
+    bb43:
 #line 126 "codegen/globals.kl"
     kl_t0 = 22;
     return kl_t0;
-    bb65:
-    goto bb66;
-    bb66:
+    bb44:
 #line 128 "codegen/globals.kl"
     kl_ratio_8 = 2.5;
 #line 129 "codegen/globals.kl"
     kl_t36 = kl_ratio_8 != 2.5;
-    if ( kl_t36 ) goto bb67; else goto bb68;
-    bb67:
+    if ( kl_t36 ) goto bb45; else goto bb46;
+    bb45:
     kl_t0 = 23;
     return kl_t0;
-    bb68:
-    goto bb69;
-    bb69:
+    bb46:
 #line 132 "codegen/globals.kl"
     kl_t37 = kl_seconds_per_hour_25 != 3600;
-    if ( kl_t37 ) goto bb70; else goto bb71;
-    bb70:
+    if ( kl_t37 ) goto bb47; else goto bb48;
+    bb47:
     kl_t0 = 24;
     return kl_t0;
-    bb71:
-    goto bb72;
-    bb72:
+    bb48:
 #line 133 "codegen/globals.kl"
     kl_t38 = kl_precedence_32 != 7;
-    if ( kl_t38 ) goto bb73; else goto bb74;
-    bb73:
+    if ( kl_t38 ) goto bb49; else goto bb50;
+    bb49:
     kl_t0 = 25;
     return kl_t0;
-    bb74:
-    goto bb75;
-    bb75:
+    bb50:
 #line 134 "codegen/globals.kl"
     kl_t39 = kl_grouped_39 != 9;
-    if ( kl_t39 ) goto bb76; else goto bb77;
-    bb76:
+    if ( kl_t39 ) goto bb51; else goto bb52;
+    bb51:
     kl_t0 = 26;
     return kl_t0;
-    bb77:
-    goto bb78;
-    bb78:
+    bb52:
 #line 135 "codegen/globals.kl"
     kl_t40 = kl_masked_44 != 15;
-    if ( kl_t40 ) goto bb79; else goto bb80;
-    bb79:
+    if ( kl_t40 ) goto bb53; else goto bb54;
+    bb53:
     kl_t0 = 27;
     return kl_t0;
-    bb80:
-    goto bb81;
-    bb81:
+    bb54:
 #line 136 "codegen/globals.kl"
     kl_t41 = kl_shifted_49 != 16;
-    if ( kl_t41 ) goto bb82; else goto bb83;
-    bb82:
+    if ( kl_t41 ) goto bb55; else goto bb56;
+    bb55:
     kl_t0 = 28;
     return kl_t0;
-    bb83:
-    goto bb84;
-    bb84:
+    bb56:
 #line 137 "codegen/globals.kl"
     kl_t42 = -1;
     kl_t43 = kl_flipped_53 != kl_t42;
-    if ( kl_t43 ) goto bb85; else goto bb86;
-    bb85:
+    if ( kl_t43 ) goto bb57; else goto bb58;
+    bb57:
     kl_t0 = 29;
     return kl_t0;
-    bb86:
-    goto bb87;
-    bb87:
+    bb58:
 #line 138 "codegen/globals.kl"
     kl_t44 = -9;
     kl_t45 = kl_negated_59 != kl_t44;
-    if ( kl_t45 ) goto bb88; else goto bb89;
-    bb88:
+    if ( kl_t45 ) goto bb59; else goto bb60;
+    bb59:
     kl_t0 = 30;
     return kl_t0;
-    bb89:
-    goto bb90;
-    bb90:
+    bb60:
 #line 139 "codegen/globals.kl"
     kl_t46 = kl_remainder_64 != 1;
-    if ( kl_t46 ) goto bb91; else goto bb92;
-    bb91:
+    if ( kl_t46 ) goto bb61; else goto bb62;
+    bb61:
     kl_t0 = 31;
     return kl_t0;
-    bb92:
-    goto bb93;
-    bb93:
+    bb62:
 #line 140 "codegen/globals.kl"
     kl_t47 = kl_scaled_69 != 3.0;
-    if ( kl_t47 ) goto bb94; else goto bb95;
-    bb94:
+    if ( kl_t47 ) goto bb63; else goto bb64;
+    bb63:
     kl_t0 = 32;
     return kl_t0;
-    bb95:
-    goto bb96;
-    bb96:
+    bb64:
 #line 141 "codegen/globals.kl"
     kl_t48 = !kl_compared_74;
-    if ( kl_t48 ) goto bb97; else goto bb98;
-    bb97:
+    if ( kl_t48 ) goto bb65; else goto bb66;
+    bb65:
     kl_t0 = 33;
     return kl_t0;
-    bb98:
-    goto bb99;
-    bb99:
+    bb66:
 #line 142 "codegen/globals.kl"
     kl_t49 = kl_all_ones_81 != 4294967295;
-    if ( kl_t49 ) goto bb100; else goto bb101;
-    bb100:
+    if ( kl_t49 ) goto bb67; else goto bb68;
+    bb67:
     kl_t0 = 34;
     return kl_t0;
-    bb101:
-    goto bb102;
-    bb102:
+    bb68:
 #line 145 "codegen/globals.kl"
     kl_seconds_per_hour_25 = 1;
 #line 146 "codegen/globals.kl"
     kl_t50 = kl_seconds_per_hour_25 != 1;
-    if ( kl_t50 ) goto bb103; else goto bb104;
-    bb103:
+    if ( kl_t50 ) goto bb69; else goto bb70;
+    bb69:
     kl_t0 = 35;
     return kl_t0;
-    bb104:
-    goto bb105;
-    bb105:
+    bb70:
 #line 148 "codegen/globals.kl"
     kl_t0 = 0;
     return kl_t0;

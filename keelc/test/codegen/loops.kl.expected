@@ -2,7 +2,18 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+int32_t kl__never_leaves_the_loop__( void );
 int32_t kl__main__( void );
+
+int32_t kl__never_leaves_the_loop__( void )
+{
+    int32_t kl_t0;
+    goto bb1;
+    bb1:
+#line 18 "codegen/loops.kl"
+    kl_t0 = 7;
+    return kl_t0;
+}
 
 int32_t kl__main__( void )
 {
@@ -59,365 +70,305 @@ int32_t kl__main__( void )
     bool kl_t50;
     bool kl_t51;
     bool kl_t52;
-#line 14 "codegen/loops.kl"
+    int32_t kl_t53;
+    bool kl_t54;
+#line 25 "codegen/loops.kl"
     kl_sum_1 = 0;
-#line 15 "codegen/loops.kl"
+#line 26 "codegen/loops.kl"
     kl_step_2 = 0;
     goto bb1;
     bb1:
-    if ( true ) goto bb2; else goto bb3;
-    bb2:
-#line 19 "codegen/loops.kl"
+#line 30 "codegen/loops.kl"
     kl_t3 = kl_step_2 == 5;
-    if ( kl_t3 ) goto bb4; else goto bb5;
-    bb3:
-#line 28 "codegen/loops.kl"
+    if ( kl_t3 ) goto bb2; else goto bb3;
+    bb2:
+#line 39 "codegen/loops.kl"
     kl_t4 = kl_sum_1 != 10;
-    if ( kl_t4 ) goto bb7; else goto bb8;
-    bb4:
-    goto bb3;
-    bb5:
-    goto bb6;
-    bb6:
-#line 24 "codegen/loops.kl"
+    if ( kl_t4 ) goto bb4; else goto bb5;
+    bb3:
+#line 35 "codegen/loops.kl"
     kl_sum_1 = kl_sum_1 + kl_step_2;
-#line 25 "codegen/loops.kl"
+#line 36 "codegen/loops.kl"
     kl_step_2 = kl_step_2 + 1;
     goto bb1;
-    bb7:
-#line 28 "codegen/loops.kl"
+    bb4:
+#line 39 "codegen/loops.kl"
     kl_t0 = 1;
     return kl_t0;
-    bb8:
-    goto bb9;
-    bb9:
-#line 29 "codegen/loops.kl"
+    bb5:
+#line 40 "codegen/loops.kl"
     kl_t5 = kl_step_2 != 5;
-    if ( kl_t5 ) goto bb10; else goto bb11;
-    bb10:
+    if ( kl_t5 ) goto bb6; else goto bb7;
+    bb6:
     kl_t0 = 2;
     return kl_t0;
-    bb11:
-    goto bb12;
-    bb12:
-#line 32 "codegen/loops.kl"
+    bb7:
+#line 43 "codegen/loops.kl"
     kl_counted_6 = 0;
-#line 33 "codegen/loops.kl"
+#line 44 "codegen/loops.kl"
     kl_value_7 = 0;
-    goto bb13;
-    bb13:
-#line 35 "codegen/loops.kl"
+    goto bb8;
+    bb8:
+#line 46 "codegen/loops.kl"
     kl_t8 = kl_value_7 < 10;
-    if ( kl_t8 ) goto bb14; else goto bb15;
-    bb14:
-#line 37 "codegen/loops.kl"
+    if ( kl_t8 ) goto bb9; else goto bb10;
+    bb9:
+#line 48 "codegen/loops.kl"
     kl_value_7 = kl_value_7 + 1;
-#line 39 "codegen/loops.kl"
+#line 50 "codegen/loops.kl"
     kl_t9 = kl_value_7 % 2;
     kl_t10 = kl_t9 == 0;
-    if ( kl_t10 ) goto bb16; else goto bb17;
-    bb15:
-#line 47 "codegen/loops.kl"
+    if ( kl_t10 ) goto bb8; else goto bb11;
+    bb10:
+#line 58 "codegen/loops.kl"
     kl_t11 = kl_counted_6 != 5;
-    if ( kl_t11 ) goto bb19; else goto bb20;
-    bb16:
-    goto bb13;
-    bb17:
-    goto bb18;
-    bb18:
-#line 44 "codegen/loops.kl"
+    if ( kl_t11 ) goto bb12; else goto bb13;
+    bb11:
+#line 55 "codegen/loops.kl"
     kl_counted_6 = kl_counted_6 + 1;
-    goto bb13;
-    bb19:
-#line 47 "codegen/loops.kl"
+    goto bb8;
+    bb12:
+#line 58 "codegen/loops.kl"
     kl_t0 = 3;
     return kl_t0;
-    bb20:
-    goto bb21;
-    bb21:
-#line 48 "codegen/loops.kl"
+    bb13:
+#line 59 "codegen/loops.kl"
     kl_t12 = kl_value_7 != 10;
-    if ( kl_t12 ) goto bb22; else goto bb23;
-    bb22:
+    if ( kl_t12 ) goto bb14; else goto bb15;
+    bb14:
     kl_t0 = 4;
     return kl_t0;
-    bb23:
-    goto bb24;
-    bb24:
-#line 51 "codegen/loops.kl"
+    bb15:
+#line 62 "codegen/loops.kl"
     kl_visited_13 = 0;
-#line 53 "codegen/loops.kl"
+#line 64 "codegen/loops.kl"
     kl_i_14 = 0;
-    goto bb25;
-    bb25:
+    goto bb16;
+    bb16:
     kl_t15 = kl_i_14 < 100;
-    if ( kl_t15 ) goto bb26; else goto bb27;
-    bb26:
-#line 55 "codegen/loops.kl"
+    if ( kl_t15 ) goto bb17; else goto bb18;
+    bb17:
+#line 66 "codegen/loops.kl"
     kl_visited_13 = kl_visited_13 + 1;
-#line 57 "codegen/loops.kl"
+#line 68 "codegen/loops.kl"
     kl_t16 = kl_i_14 == 3;
-    if ( kl_t16 ) goto bb28; else goto bb29;
-    bb27:
-#line 63 "codegen/loops.kl"
+    if ( kl_t16 ) goto bb18; else goto bb19;
+    bb18:
+#line 74 "codegen/loops.kl"
     kl_t17 = kl_visited_13 != 4;
-    if ( kl_t17 ) goto bb32; else goto bb33;
-    bb28:
-    goto bb27;
-    bb29:
-    goto bb30;
-    bb30:
-    goto bb31;
-    bb31:
-#line 53 "codegen/loops.kl"
+    if ( kl_t17 ) goto bb20; else goto bb21;
+    bb19:
+#line 64 "codegen/loops.kl"
     kl_i_14 = kl_i_14 + 1;
-    goto bb25;
-    bb32:
-#line 63 "codegen/loops.kl"
+    goto bb16;
+    bb20:
+#line 74 "codegen/loops.kl"
     kl_t0 = 5;
     return kl_t0;
-    bb33:
-    goto bb34;
-    bb34:
-#line 66 "codegen/loops.kl"
+    bb21:
+#line 77 "codegen/loops.kl"
     kl_odds_18 = 0;
-#line 67 "codegen/loops.kl"
-    kl_guard_19 = 0;
-#line 69 "codegen/loops.kl"
-    kl_i_20 = 0;
-    goto bb35;
-    bb35:
-    kl_t21 = kl_i_20 < 10;
-    if ( kl_t21 ) goto bb36; else goto bb37;
-    bb36:
-#line 71 "codegen/loops.kl"
-    kl_guard_19 = kl_guard_19 + 1;
-#line 73 "codegen/loops.kl"
-    kl_t22 = kl_guard_19 > 100;
-    if ( kl_t22 ) goto bb38; else goto bb39;
-    bb37:
-#line 86 "codegen/loops.kl"
-    kl_t25 = kl_guard_19 > 100;
-    if ( kl_t25 ) goto bb45; else goto bb46;
-    bb38:
-    goto bb37;
-    bb39:
-    goto bb40;
-    bb40:
 #line 78 "codegen/loops.kl"
+    kl_guard_19 = 0;
+#line 80 "codegen/loops.kl"
+    kl_i_20 = 0;
+    goto bb22;
+    bb22:
+    kl_t21 = kl_i_20 < 10;
+    if ( kl_t21 ) goto bb23; else goto bb24;
+    bb23:
+#line 82 "codegen/loops.kl"
+    kl_guard_19 = kl_guard_19 + 1;
+#line 84 "codegen/loops.kl"
+    kl_t22 = kl_guard_19 > 100;
+    if ( kl_t22 ) goto bb24; else goto bb25;
+    bb24:
+#line 97 "codegen/loops.kl"
+    kl_t25 = kl_guard_19 > 100;
+    if ( kl_t25 ) goto bb28; else goto bb29;
+    bb25:
+#line 89 "codegen/loops.kl"
     kl_t23 = kl_i_20 % 2;
     kl_t24 = kl_t23 == 0;
-    if ( kl_t24 ) goto bb41; else goto bb42;
-    bb41:
-    goto bb43;
-    bb42:
-    goto bb44;
-    bb43:
-#line 69 "codegen/loops.kl"
+    if ( kl_t24 ) goto bb26; else goto bb27;
+    bb26:
+#line 80 "codegen/loops.kl"
     kl_i_20 = kl_i_20 + 1;
-    goto bb35;
-    bb44:
-#line 83 "codegen/loops.kl"
+    goto bb22;
+    bb27:
+#line 94 "codegen/loops.kl"
     kl_odds_18 = kl_odds_18 + kl_i_20;
-    goto bb43;
-    bb45:
-#line 86 "codegen/loops.kl"
+    goto bb26;
+    bb28:
+#line 97 "codegen/loops.kl"
     kl_t0 = 6;
     return kl_t0;
-    bb46:
-    goto bb47;
-    bb47:
-#line 87 "codegen/loops.kl"
+    bb29:
+#line 98 "codegen/loops.kl"
     kl_t26 = kl_guard_19 != 10;
-    if ( kl_t26 ) goto bb48; else goto bb49;
-    bb48:
+    if ( kl_t26 ) goto bb30; else goto bb31;
+    bb30:
     kl_t0 = 7;
     return kl_t0;
-    bb49:
-    goto bb50;
-    bb50:
-#line 88 "codegen/loops.kl"
+    bb31:
+#line 99 "codegen/loops.kl"
     kl_t27 = kl_odds_18 != 25;
-    if ( kl_t27 ) goto bb51; else goto bb52;
-    bb51:
+    if ( kl_t27 ) goto bb32; else goto bb33;
+    bb32:
     kl_t0 = 8;
     return kl_t0;
-    bb52:
-    goto bb53;
-    bb53:
-#line 91 "codegen/loops.kl"
+    bb33:
+#line 102 "codegen/loops.kl"
     kl_total_28 = 0;
-#line 92 "codegen/loops.kl"
+#line 103 "codegen/loops.kl"
     kl_spins_29 = 0;
-#line 94 "codegen/loops.kl"
-    kl_i_30 = 0;
-    goto bb54;
-    bb54:
-    kl_t31 = kl_i_30 < 4;
-    if ( kl_t31 ) goto bb55; else goto bb56;
-    bb55:
-#line 96 "codegen/loops.kl"
-    kl_j_32 = 0;
-    goto bb57;
-    bb56:
-#line 119 "codegen/loops.kl"
-    kl_t37 = kl_spins_29 > 200;
-    if ( kl_t37 ) goto bb71; else goto bb72;
-    bb57:
-#line 96 "codegen/loops.kl"
-    kl_t33 = kl_j_32 < 4;
-    if ( kl_t33 ) goto bb58; else goto bb59;
-    bb58:
-#line 98 "codegen/loops.kl"
-    kl_spins_29 = kl_spins_29 + 1;
-#line 100 "codegen/loops.kl"
-    kl_t34 = kl_spins_29 > 200;
-    if ( kl_t34 ) goto bb60; else goto bb61;
-    bb59:
-    goto bb70;
-    bb60:
-    goto bb59;
-    bb61:
-    goto bb62;
-    bb62:
 #line 105 "codegen/loops.kl"
+    kl_i_30 = 0;
+    goto bb34;
+    bb34:
+    kl_t31 = kl_i_30 < 4;
+    if ( kl_t31 ) goto bb35; else goto bb36;
+    bb35:
+#line 107 "codegen/loops.kl"
+    kl_j_32 = 0;
+    goto bb37;
+    bb36:
+#line 130 "codegen/loops.kl"
+    kl_t37 = kl_spins_29 > 200;
+    if ( kl_t37 ) goto bb45; else goto bb46;
+    bb37:
+#line 107 "codegen/loops.kl"
+    kl_t33 = kl_j_32 < 4;
+    if ( kl_t33 ) goto bb38; else goto bb39;
+    bb38:
+#line 109 "codegen/loops.kl"
+    kl_spins_29 = kl_spins_29 + 1;
+#line 111 "codegen/loops.kl"
+    kl_t34 = kl_spins_29 > 200;
+    if ( kl_t34 ) goto bb39; else goto bb40;
+    bb39:
+    goto bb44;
+    bb40:
+#line 116 "codegen/loops.kl"
     kl_t35 = kl_j_32 == 2;
-    if ( kl_t35 ) goto bb63; else goto bb64;
-    bb63:
-    goto bb65;
-    bb64:
-    goto bb66;
-    bb65:
-#line 96 "codegen/loops.kl"
+    if ( kl_t35 ) goto bb41; else goto bb42;
+    bb41:
+#line 107 "codegen/loops.kl"
     kl_j_32 = kl_j_32 + 1;
-    goto bb57;
-    bb66:
-#line 110 "codegen/loops.kl"
+    goto bb37;
+    bb42:
+#line 121 "codegen/loops.kl"
     kl_t36 = kl_j_32 == 3;
-    if ( kl_t36 ) goto bb67; else goto bb68;
-    bb67:
-    goto bb59;
-    bb68:
-    goto bb69;
-    bb69:
-#line 115 "codegen/loops.kl"
+    if ( kl_t36 ) goto bb39; else goto bb43;
+    bb43:
+#line 126 "codegen/loops.kl"
     kl_total_28 = kl_total_28 + 1;
-    goto bb65;
-    bb70:
-#line 94 "codegen/loops.kl"
+    goto bb41;
+    bb44:
+#line 105 "codegen/loops.kl"
     kl_i_30 = kl_i_30 + 1;
-    goto bb54;
-    bb71:
-#line 119 "codegen/loops.kl"
+    goto bb34;
+    bb45:
+#line 130 "codegen/loops.kl"
     kl_t0 = 9;
     return kl_t0;
-    bb72:
-    goto bb73;
-    bb73:
-#line 120 "codegen/loops.kl"
+    bb46:
+#line 131 "codegen/loops.kl"
     kl_t38 = kl_spins_29 != 16;
-    if ( kl_t38 ) goto bb74; else goto bb75;
-    bb74:
+    if ( kl_t38 ) goto bb47; else goto bb48;
+    bb47:
     kl_t0 = 10;
     return kl_t0;
-    bb75:
-    goto bb76;
-    bb76:
-#line 121 "codegen/loops.kl"
+    bb48:
+#line 132 "codegen/loops.kl"
     kl_t39 = kl_total_28 != 8;
-    if ( kl_t39 ) goto bb77; else goto bb78;
-    bb77:
+    if ( kl_t39 ) goto bb49; else goto bb50;
+    bb49:
     kl_t0 = 11;
     return kl_t0;
-    bb78:
-    goto bb79;
-    bb79:
-#line 124 "codegen/loops.kl"
+    bb50:
+#line 135 "codegen/loops.kl"
     kl_outer_40 = 0;
-#line 126 "codegen/loops.kl"
+#line 137 "codegen/loops.kl"
     kl_i_41 = 0;
-    goto bb80;
-    bb80:
+    goto bb51;
+    bb51:
     kl_t42 = kl_i_41 < 5;
-    if ( kl_t42 ) goto bb81; else goto bb82;
-    bb81:
-#line 128 "codegen/loops.kl"
+    if ( kl_t42 ) goto bb52; else goto bb53;
+    bb52:
+#line 139 "codegen/loops.kl"
     kl_outer_40 = kl_outer_40 + 1;
-#line 130 "codegen/loops.kl"
+#line 141 "codegen/loops.kl"
     kl_j_43 = 0;
-    goto bb83;
-    bb82:
-#line 136 "codegen/loops.kl"
+    goto bb54;
+    bb53:
+#line 147 "codegen/loops.kl"
     kl_t45 = kl_outer_40 != 5;
-    if ( kl_t45 ) goto bb87; else goto bb88;
-    bb83:
-#line 130 "codegen/loops.kl"
+    if ( kl_t45 ) goto bb57; else goto bb58;
+    bb54:
+#line 141 "codegen/loops.kl"
     kl_t44 = kl_j_43 < 5;
-    if ( kl_t44 ) goto bb84; else goto bb85;
-    bb84:
-    goto bb85;
-    bb85:
-    goto bb86;
-    bb86:
-#line 126 "codegen/loops.kl"
+    if ( kl_t44 ) goto bb55; else goto bb55;
+    bb55:
+    goto bb56;
+    bb56:
+#line 137 "codegen/loops.kl"
     kl_i_41 = kl_i_41 + 1;
-    goto bb80;
-    bb87:
-#line 136 "codegen/loops.kl"
+    goto bb51;
+    bb57:
+#line 147 "codegen/loops.kl"
     kl_t0 = 12;
     return kl_t0;
-    bb88:
-    goto bb89;
-    bb89:
-#line 139 "codegen/loops.kl"
+    bb58:
+#line 150 "codegen/loops.kl"
     kl_trailing_46 = 0;
-#line 140 "codegen/loops.kl"
-    kl_rounds_47 = 0;
-#line 142 "codegen/loops.kl"
-    kl_i_48 = 0;
-    goto bb90;
-    bb90:
-    kl_t49 = kl_i_48 < 6;
-    if ( kl_t49 ) goto bb91; else goto bb92;
-    bb91:
-#line 144 "codegen/loops.kl"
-    kl_rounds_47 = kl_rounds_47 + 1;
-#line 146 "codegen/loops.kl"
-    kl_t50 = kl_rounds_47 > 60;
-    if ( kl_t50 ) goto bb93; else goto bb94;
-    bb92:
-#line 155 "codegen/loops.kl"
-    kl_t51 = kl_rounds_47 != 6;
-    if ( kl_t51 ) goto bb97; else goto bb98;
-    bb93:
-    goto bb92;
-    bb94:
-    goto bb95;
-    bb95:
 #line 151 "codegen/loops.kl"
-    kl_trailing_46 = kl_trailing_46 + kl_i_48;
-    goto bb96;
-    bb96:
-#line 142 "codegen/loops.kl"
-    kl_i_48 = kl_i_48 + 1;
-    goto bb90;
-    bb97:
+    kl_rounds_47 = 0;
+#line 153 "codegen/loops.kl"
+    kl_i_48 = 0;
+    goto bb59;
+    bb59:
+    kl_t49 = kl_i_48 < 6;
+    if ( kl_t49 ) goto bb60; else goto bb61;
+    bb60:
 #line 155 "codegen/loops.kl"
+    kl_rounds_47 = kl_rounds_47 + 1;
+#line 157 "codegen/loops.kl"
+    kl_t50 = kl_rounds_47 > 60;
+    if ( kl_t50 ) goto bb61; else goto bb62;
+    bb61:
+#line 166 "codegen/loops.kl"
+    kl_t51 = kl_rounds_47 != 6;
+    if ( kl_t51 ) goto bb64; else goto bb65;
+    bb62:
+#line 162 "codegen/loops.kl"
+    kl_trailing_46 = kl_trailing_46 + kl_i_48;
+    goto bb63;
+    bb63:
+#line 153 "codegen/loops.kl"
+    kl_i_48 = kl_i_48 + 1;
+    goto bb59;
+    bb64:
+#line 166 "codegen/loops.kl"
     kl_t0 = 13;
     return kl_t0;
-    bb98:
-    goto bb99;
-    bb99:
-#line 156 "codegen/loops.kl"
+    bb65:
+#line 167 "codegen/loops.kl"
     kl_t52 = kl_trailing_46 != 15;
-    if ( kl_t52 ) goto bb100; else goto bb101;
-    bb100:
+    if ( kl_t52 ) goto bb66; else goto bb67;
+    bb66:
     kl_t0 = 14;
     return kl_t0;
-    bb101:
-    goto bb102;
-    bb102:
-#line 158 "codegen/loops.kl"
+    bb67:
+#line 169 "codegen/loops.kl"
+    kl_t53 = kl__never_leaves_the_loop__(  );
+    kl_t54 = kl_t53 != 7;
+    if ( kl_t54 ) goto bb68; else goto bb69;
+    bb68:
+    kl_t0 = 15;
+    return kl_t0;
+    bb69:
+#line 171 "codegen/loops.kl"
     kl_t0 = 0;
     return kl_t0;
 }

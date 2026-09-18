@@ -48,109 +48,89 @@ int32_t kl__main__( void )
     kl_t0 = 1;
     return kl_t0;
     bb2:
-    goto bb3;
-    bb3:
 #line 50 "codegen/generics_conversions.kl"
     kl_t3 = -7;
     kl_t4 = kl__to_i32__I3i16E__3i16( kl_t3 );
     kl_t5 = -7;
     kl_t6 = kl_t4 != kl_t5;
-    if ( kl_t6 ) goto bb4; else goto bb5;
-    bb4:
+    if ( kl_t6 ) goto bb3; else goto bb4;
+    bb3:
 #line 52 "codegen/generics_conversions.kl"
     kl_t0 = 2;
     return kl_t0;
-    bb5:
-    goto bb6;
-    bb6:
+    bb4:
 #line 57 "codegen/generics_conversions.kl"
     kl_t7 = kl__from_i32__I2u8E__3i32( 300 );
     kl_t8 = kl_t7 != 44;
-    if ( kl_t8 ) goto bb7; else goto bb8;
-    bb7:
+    if ( kl_t8 ) goto bb5; else goto bb6;
+    bb5:
 #line 59 "codegen/generics_conversions.kl"
     kl_t0 = 3;
     return kl_t0;
-    bb8:
-    goto bb9;
-    bb9:
+    bb6:
 #line 64 "codegen/generics_conversions.kl"
     kl_t9 = kl__from_i32__I3i32E__3i32( 300 );
     kl_t10 = kl_t9 != 300;
-    if ( kl_t10 ) goto bb10; else goto bb11;
-    bb10:
+    if ( kl_t10 ) goto bb7; else goto bb8;
+    bb7:
 #line 66 "codegen/generics_conversions.kl"
     kl_t0 = 4;
     return kl_t0;
-    bb11:
-    goto bb12;
-    bb12:
+    bb8:
 #line 69 "codegen/generics_conversions.kl"
     kl_t11 = kl__widen__I3f32E__3f32( 1.5 );
     kl_t12 = kl_t11 != 1.5;
-    if ( kl_t12 ) goto bb13; else goto bb14;
-    bb13:
+    if ( kl_t12 ) goto bb9; else goto bb10;
+    bb9:
 #line 71 "codegen/generics_conversions.kl"
     kl_t0 = 5;
     return kl_t0;
-    bb14:
-    goto bb15;
-    bb15:
+    bb10:
 #line 74 "codegen/generics_conversions.kl"
     kl_t13 = kl__widen__I3f64E__3f64( 2.5 );
     kl_t14 = kl_t13 != 2.5;
-    if ( kl_t14 ) goto bb16; else goto bb17;
-    bb16:
+    if ( kl_t14 ) goto bb11; else goto bb12;
+    bb11:
 #line 76 "codegen/generics_conversions.kl"
     kl_t0 = 6;
     return kl_t0;
-    bb17:
-    goto bb18;
-    bb18:
+    bb12:
 #line 80 "codegen/generics_conversions.kl"
     kl_t15 = kl__across__I3i32_3i16E__3i32( 70000 );
     kl_t16 = kl_t15 != 4464;
-    if ( kl_t16 ) goto bb19; else goto bb20;
-    bb19:
+    if ( kl_t16 ) goto bb13; else goto bb14;
+    bb13:
 #line 82 "codegen/generics_conversions.kl"
     kl_t0 = 7;
     return kl_t0;
-    bb20:
-    goto bb21;
-    bb21:
+    bb14:
 #line 85 "codegen/generics_conversions.kl"
     kl_t17 = kl__across__I2u8_3i32E__2u8( 9 );
     kl_t18 = kl_t17 != 9;
-    if ( kl_t18 ) goto bb22; else goto bb23;
-    bb22:
+    if ( kl_t18 ) goto bb15; else goto bb16;
+    bb15:
 #line 87 "codegen/generics_conversions.kl"
     kl_t0 = 8;
     return kl_t0;
-    bb23:
-    goto bb24;
-    bb24:
+    bb16:
 #line 90 "codegen/generics_conversions.kl"
     kl_t19 = kl__five__I2u8E__(  );
     kl_t20 = kl_t19 != 5;
-    if ( kl_t20 ) goto bb25; else goto bb26;
-    bb25:
+    if ( kl_t20 ) goto bb17; else goto bb18;
+    bb17:
 #line 92 "codegen/generics_conversions.kl"
     kl_t0 = 9;
     return kl_t0;
-    bb26:
-    goto bb27;
-    bb27:
+    bb18:
 #line 95 "codegen/generics_conversions.kl"
     kl_t21 = kl__five__I3f64E__(  );
     kl_t22 = kl_t21 != 5.0;
-    if ( kl_t22 ) goto bb28; else goto bb29;
-    bb28:
+    if ( kl_t22 ) goto bb19; else goto bb20;
+    bb19:
 #line 97 "codegen/generics_conversions.kl"
     kl_t0 = 10;
     return kl_t0;
-    bb29:
-    goto bb30;
-    bb30:
+    bb20:
 #line 100 "codegen/generics_conversions.kl"
     kl_t0 = 42;
     return kl_t0;

@@ -258,6 +258,7 @@ std::vector<Move_error> check_moves( const Function& func )
 #include "common/literals.h"
 #include "common/source_manager.h"
 #include "ir/lower.h"
+#include "ir/simplify.h"
 #include "lex/lexer.h"
 #include "parse/parser.h"
 #include "sema/resolver.h"
@@ -293,6 +294,13 @@ struct Checked
         if( !diags.has_errors() )
         {
             functions = lower( ast, resolution, types, literals, interner );
+
+            // The driver simplifies every function before anything reads it, so these do too: a
+            // test that walked a graph the compiler never analyses would pin the wrong thing.
+            for( Function& function : functions )
+            {
+                simplify( function, literals );
+            }
         }
     }
 

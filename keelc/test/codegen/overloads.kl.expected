@@ -73,8 +73,6 @@ int32_t kl__by_type__3f64( double kl_a_1 )
     kl_t0 = 2;
     return kl_t0;
     bb2:
-    goto bb3;
-    bb3:
 #line 22 "codegen/overloads.kl"
     kl_t0 = 2;
     return kl_t0;
@@ -89,8 +87,6 @@ int32_t kl__by_type__4bool( bool kl_a_1 )
     kl_t0 = 3;
     return kl_t0;
     bb2:
-    goto bb3;
-    bb3:
 #line 32 "codegen/overloads.kl"
     kl_t0 = 3;
     return kl_t0;
@@ -249,8 +245,6 @@ int32_t kl__at__R3Two_4bool( struct kl__Two* kl_this_1, bool kl_n_2 )
     kl_t0 = kl_t3;
     return kl_t0;
     bb2:
-    goto bb3;
-    bb3:
 #line 126 "codegen/overloads.kl"
     kl_t0 = ( *kl_this_1 ).kl_x_170;
     return kl_t0;
@@ -289,8 +283,6 @@ int32_t kl__answers__4bool( bool kl_a_1 )
     kl_t0 = 500;
     return kl_t0;
     bb2:
-    goto bb3;
-    bb3:
 #line 184 "codegen/overloads.kl"
     kl_t0 = 0;
     return kl_t0;
@@ -394,108 +386,86 @@ int32_t kl__main__( void )
     kl_t0 = 1;
     return kl_t0;
     bb2:
-    goto bb3;
-    bb3:
 #line 207 "codegen/overloads.kl"
     kl_t7 = kl__by_type__3f64( kl_fraction_2 );
     kl_t8 = kl_t7 != 2;
-    if ( kl_t8 ) goto bb4; else goto bb5;
-    bb4:
+    if ( kl_t8 ) goto bb3; else goto bb4;
+    bb3:
     kl_t0 = 2;
     return kl_t0;
-    bb5:
-    goto bb6;
-    bb6:
+    bb4:
 #line 208 "codegen/overloads.kl"
     kl_t9 = kl__by_type__4bool( true );
     kl_t10 = kl_t9 != 3;
-    if ( kl_t10 ) goto bb7; else goto bb8;
-    bb7:
+    if ( kl_t10 ) goto bb5; else goto bb6;
+    bb5:
     kl_t0 = 3;
     return kl_t0;
-    bb8:
-    goto bb9;
-    bb9:
+    bb6:
 #line 211 "codegen/overloads.kl"
     kl_t11 = kl__by_type__3i32( 9 );
     kl_t12 = kl_t11 != 1;
-    if ( kl_t12 ) goto bb10; else goto bb11;
-    bb10:
+    if ( kl_t12 ) goto bb7; else goto bb8;
+    bb7:
     kl_t0 = 4;
     return kl_t0;
-    bb11:
-    goto bb12;
-    bb12:
+    bb8:
 #line 212 "codegen/overloads.kl"
     kl_t13 = kl__by_type__3f64( 9.0 );
     kl_t14 = kl_t13 != 2;
-    if ( kl_t14 ) goto bb13; else goto bb14;
-    bb13:
+    if ( kl_t14 ) goto bb9; else goto bb10;
+    bb9:
     kl_t0 = 5;
     return kl_t0;
-    bb14:
-    goto bb15;
-    bb15:
+    bb10:
 #line 215 "codegen/overloads.kl"
     kl_t15 = kl__by_arity__3i32( kl_whole_1 );
     kl_t16 = kl_t15 != 10;
-    if ( kl_t16 ) goto bb16; else goto bb17;
-    bb16:
+    if ( kl_t16 ) goto bb11; else goto bb12;
+    bb11:
     kl_t0 = 6;
     return kl_t0;
-    bb17:
-    goto bb18;
-    bb18:
+    bb12:
 #line 216 "codegen/overloads.kl"
     kl_t17 = kl__by_arity__3i32_3i32( kl_whole_1, kl_whole_1 );
     kl_t18 = kl_t17 != 20;
-    if ( kl_t18 ) goto bb19; else goto bb20;
-    bb19:
+    if ( kl_t18 ) goto bb13; else goto bb14;
+    bb13:
     kl_t0 = 7;
     return kl_t0;
-    bb20:
-    goto bb21;
-    bb21:
+    bb14:
 #line 219 "codegen/overloads.kl"
     kl_t19 = kl__by_marker__3i32( kl_whole_1 );
     kl_t20 = kl_t19 != 30;
-    if ( kl_t20 ) goto bb22; else goto bb23;
-    bb22:
+    if ( kl_t20 ) goto bb15; else goto bb16;
+    bb15:
     kl_t0 = 8;
     return kl_t0;
-    bb23:
-    goto bb24;
-    bb24:
+    bb16:
 #line 220 "codegen/overloads.kl"
     kl_t21 = &kl_whole_1;
     kl_t22 = kl__by_marker__R3i32( kl_t21 );
     kl_t23 = kl_t22 != 40;
-    if ( kl_t23 ) goto bb25; else goto bb26;
-    bb25:
+    if ( kl_t23 ) goto bb17; else goto bb18;
+    bb17:
     kl_t0 = 9;
     return kl_t0;
-    bb26:
-    goto bb27;
-    bb27:
+    bb18:
 #line 221 "codegen/overloads.kl"
     kl_t24 = kl_whole_1 != 8;
-    if ( kl_t24 ) goto bb28; else goto bb29;
-    bb28:
+    if ( kl_t24 ) goto bb19; else goto bb20;
+    bb19:
     kl_t0 = 10;
     return kl_t0;
-    bb29:
-    goto bb30;
-    bb30:
+    bb20:
 #line 222 "codegen/overloads.kl"
     kl_t25 = kl__by_marker__P3i32( kl_address_3 );
     kl_t26 = kl_t25 != 50;
-    if ( kl_t26 ) goto bb31; else goto bb32;
-    bb31:
+    if ( kl_t26 ) goto bb21; else goto bb22;
+    bb21:
     kl_t0 = 11;
     return kl_t0;
-    bb32:
-    goto bb33;
-    bb33:
+    bb22:
 #line 225 "codegen/overloads.kl"
     kl_t28 = &kl_borrowed_27;
     kl__Owned__R5Owned_3i32__ctor( kl_t28, 1 );
@@ -503,14 +473,12 @@ int32_t kl__main__( void )
     kl_t30 = &kl_borrowed_27;
     kl_t31 = kl__by_transfer__5Owned( kl_t30 );
     kl_t32 = kl_t31 != 60;
-    if ( kl_t32 ) goto bb34; else goto bb35;
-    bb34:
+    if ( kl_t32 ) goto bb23; else goto bb24;
+    bb23:
     kl_t0 = 12;
     kl__Owned__dtor( &kl_borrowed_27 );
     return kl_t0;
-    bb35:
-    goto bb36;
-    bb36:
+    bb24:
 #line 228 "codegen/overloads.kl"
     kl_t73 = false;
     kl_t34 = &kl_given_33;
@@ -520,88 +488,76 @@ int32_t kl__main__( void )
     kl_t36 = kl__by_transfer__M5Owned( kl_given_33 );
     kl_t73 = false;
     kl_t37 = kl_t36 != 70;
-    if ( kl_t37 ) goto bb37; else goto bb38;
-    bb37:
+    if ( kl_t37 ) goto bb25; else goto bb26;
+    bb25:
     kl_t0 = 13;
     if ( kl_t73 ) kl__Owned__dtor( &kl_given_33 );
     kl_t73 = false;
     kl__Owned__dtor( &kl_borrowed_27 );
     return kl_t0;
-    bb38:
-    goto bb39;
-    bb39:
+    bb26:
 #line 232 "codegen/overloads.kl"
     kl_t39 = &kl_from_whole_38;
     kl__Two__R3Two_3i32__ctor( kl_t39, 5 );
 #line 233 "codegen/overloads.kl"
     kl_t41 = kl_from_whole_38.kl_x_170 != 5;
-    if ( kl_t41 ) goto bb40; else goto bb41;
-    bb40:
+    if ( kl_t41 ) goto bb27; else goto bb28;
+    bb27:
     kl_t0 = 14;
     if ( kl_t73 ) kl__Owned__dtor( &kl_given_33 );
     kl_t73 = false;
     kl__Owned__dtor( &kl_borrowed_27 );
     return kl_t0;
-    bb41:
-    goto bb42;
-    bb42:
+    bb28:
 #line 235 "codegen/overloads.kl"
     kl_t43 = &kl_from_fraction_42;
     kl__Two__R3Two_3f64__ctor( kl_t43, 2.5 );
 #line 236 "codegen/overloads.kl"
     kl_t45 = kl_from_fraction_42.kl_x_170 != 100;
-    if ( kl_t45 ) goto bb43; else goto bb44;
-    bb43:
+    if ( kl_t45 ) goto bb29; else goto bb30;
+    bb29:
     kl_t0 = 15;
     if ( kl_t73 ) kl__Owned__dtor( &kl_given_33 );
     kl_t73 = false;
     kl__Owned__dtor( &kl_borrowed_27 );
     return kl_t0;
-    bb44:
-    goto bb45;
-    bb45:
+    bb30:
 #line 238 "codegen/overloads.kl"
     kl_t46 = &kl_from_whole_38;
     kl_t47 = kl__at__R3Two_3i32( kl_t46, 3 );
     kl_t48 = kl_t47 != 8;
-    if ( kl_t48 ) goto bb46; else goto bb47;
-    bb46:
+    if ( kl_t48 ) goto bb31; else goto bb32;
+    bb31:
     kl_t0 = 16;
     if ( kl_t73 ) kl__Owned__dtor( &kl_given_33 );
     kl_t73 = false;
     kl__Owned__dtor( &kl_borrowed_27 );
     return kl_t0;
-    bb47:
-    goto bb48;
-    bb48:
+    bb32:
 #line 239 "codegen/overloads.kl"
     kl_t49 = &kl_from_whole_38;
     kl_t50 = kl__at__R3Two_4bool( kl_t49, true );
     kl_t51 = kl_t50 != 10;
-    if ( kl_t51 ) goto bb49; else goto bb50;
-    bb49:
+    if ( kl_t51 ) goto bb33; else goto bb34;
+    bb33:
     kl_t0 = 17;
     if ( kl_t73 ) kl__Owned__dtor( &kl_given_33 );
     kl_t73 = false;
     kl__Owned__dtor( &kl_borrowed_27 );
     return kl_t0;
-    bb50:
-    goto bb51;
-    bb51:
+    bb34:
 #line 240 "codegen/overloads.kl"
     kl_t52 = &kl_from_whole_38;
     kl_t53 = kl__both__R3Two_3i32( kl_t52, 3 );
     kl_t54 = kl_t53 != 18;
-    if ( kl_t54 ) goto bb52; else goto bb53;
-    bb52:
+    if ( kl_t54 ) goto bb35; else goto bb36;
+    bb35:
     kl_t0 = 18;
     if ( kl_t73 ) kl__Owned__dtor( &kl_given_33 );
     kl_t73 = false;
     kl__Owned__dtor( &kl_borrowed_27 );
     return kl_t0;
-    bb53:
-    goto bb54;
-    bb54:
+    bb36:
 #line 243 "codegen/overloads.kl"
     kl_t56 = &kl_holder_55;
     kl__Holder__I3i32E__R6HolderI3i32E_3i32__ctor( kl_t56, 4 );
@@ -609,84 +565,72 @@ int32_t kl__main__( void )
     kl_t58 = &kl_holder_55;
     kl_t59 = kl__count__I3i32E__R6HolderI3i32E_3i32_3i32( kl_t58, 4, 19 );
     kl_t60 = kl_t59 != 19;
-    if ( kl_t60 ) goto bb55; else goto bb56;
-    bb55:
+    if ( kl_t60 ) goto bb37; else goto bb38;
+    bb37:
     kl_t0 = 19;
     if ( kl_t73 ) kl__Owned__dtor( &kl_given_33 );
     kl_t73 = false;
     kl__Owned__dtor( &kl_borrowed_27 );
     return kl_t0;
-    bb56:
-    goto bb57;
-    bb57:
+    bb38:
 #line 245 "codegen/overloads.kl"
     kl_t61 = &kl_holder_55;
     kl_t62 = kl__count__I3i32E__R6HolderI3i32E_4bool( kl_t61, true );
     kl_t63 = kl_t62 != 200;
-    if ( kl_t63 ) goto bb58; else goto bb59;
-    bb58:
+    if ( kl_t63 ) goto bb39; else goto bb40;
+    bb39:
     kl_t0 = 20;
     if ( kl_t73 ) kl__Owned__dtor( &kl_given_33 );
     kl_t73 = false;
     kl__Owned__dtor( &kl_borrowed_27 );
     return kl_t0;
-    bb59:
-    goto bb60;
-    bb60:
+    bb40:
 #line 248 "codegen/overloads.kl"
     kl_t64 = kl__either__3i32( kl_whole_1 );
     kl_t65 = kl_t64 != 300;
-    if ( kl_t65 ) goto bb61; else goto bb62;
-    bb61:
+    if ( kl_t65 ) goto bb41; else goto bb42;
+    bb41:
     kl_t0 = 21;
     if ( kl_t73 ) kl__Owned__dtor( &kl_given_33 );
     kl_t73 = false;
     kl__Owned__dtor( &kl_borrowed_27 );
     return kl_t0;
-    bb62:
-    goto bb63;
-    bb63:
+    bb42:
 #line 249 "codegen/overloads.kl"
     kl_t66 = kl__either__I3i32E__3i32( kl_whole_1 );
     kl_t67 = kl_t66 != 400;
-    if ( kl_t67 ) goto bb64; else goto bb65;
-    bb64:
+    if ( kl_t67 ) goto bb43; else goto bb44;
+    bb43:
     kl_t0 = 22;
     if ( kl_t73 ) kl__Owned__dtor( &kl_given_33 );
     kl_t73 = false;
     kl__Owned__dtor( &kl_borrowed_27 );
     return kl_t0;
-    bb65:
-    goto bb66;
-    bb66:
+    bb44:
 #line 252 "codegen/overloads.kl"
     kl_t69 = kl__answers__3i32( kl_whole_1 );
     kl_positive_68 = kl_t69;
 #line 253 "codegen/overloads.kl"
     kl_t70 = !kl_positive_68;
-    if ( kl_t70 ) goto bb67; else goto bb68;
-    bb67:
+    if ( kl_t70 ) goto bb45; else goto bb46;
+    bb45:
     kl_t0 = 23;
     if ( kl_t73 ) kl__Owned__dtor( &kl_given_33 );
     kl_t73 = false;
     kl__Owned__dtor( &kl_borrowed_27 );
     return kl_t0;
-    bb68:
-    goto bb69;
-    bb69:
+    bb46:
 #line 254 "codegen/overloads.kl"
     kl_t71 = kl__answers__4bool( true );
     kl_t72 = kl_t71 != 500;
-    if ( kl_t72 ) goto bb70; else goto bb71;
-    bb70:
+    if ( kl_t72 ) goto bb47; else goto bb48;
+    bb47:
     kl_t0 = 24;
     if ( kl_t73 ) kl__Owned__dtor( &kl_given_33 );
     kl_t73 = false;
     kl__Owned__dtor( &kl_borrowed_27 );
     return kl_t0;
-    bb71:
-    goto bb72;
-    bb72:
+    bb48:
 #line 256 "codegen/overloads.kl"
     kl_t0 = 42;
     if ( kl_t73 ) kl__Owned__dtor( &kl_given_33 );
@@ -714,8 +658,6 @@ int32_t kl__count__I3i32E__R6HolderI3i32E_3i32_3i32( struct kl__Holder__I3i32E* 
     kl_t0 = kl_b_3;
     return kl_t0;
     bb2:
-    goto bb3;
-    bb3:
 #line 155 "codegen/overloads.kl"
     kl_t0 = 0;
     return kl_t0;
@@ -734,8 +676,6 @@ int32_t kl__count__I3i32E__R6HolderI3i32E_4bool( struct kl__Holder__I3i32E* kl_t
     kl_t0 = kl_t4;
     return kl_t0;
     bb2:
-    goto bb3;
-    bb3:
 #line 165 "codegen/overloads.kl"
     kl_t0 = 0;
     return kl_t0;

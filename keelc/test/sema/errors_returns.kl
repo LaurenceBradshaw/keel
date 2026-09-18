@@ -22,16 +22,6 @@ i32 only_one_arm( i32 x )
     }
 }
 
-// `while( true )` leaves a loop-exit block the graph can reach and the program cannot. `for( ; ; )`
-// has no condition and no exit block, so it is both the fix and the better code.
-i32 never_leaves_the_loop()
-{
-    while( true )
-    {
-        return 1;
-    }
-}
-
 i32 main()
 {
     return 0;

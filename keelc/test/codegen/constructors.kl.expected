@@ -68,8 +68,6 @@ int32_t kl__early__3i32( int32_t kl_n_1 )
     kl__Owned__dtor( &kl_o_2 );
     return kl_t0;
     bb2:
-    goto bb3;
-    bb3:
 #line 47 "codegen/constructors.kl"
     kl_t0 = 1;
     kl__Owned__dtor( &kl_o_2 );

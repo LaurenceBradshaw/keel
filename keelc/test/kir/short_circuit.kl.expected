@@ -84,9 +84,6 @@ fn in_a_condition {
         return
 
     bb4:
-        goto -> bb5
-
-    bb5:
         _0 = const 0
         return
 }

@@ -92,79 +92,65 @@ int32_t kl__main__( void )
     kl_t0 = 1;
     return kl_t0;
     bb2:
-    goto bb3;
-    bb3:
 #line 45 "codegen/generics_construction.kl"
     kl_t5.kl_v_5 = 9;
     kl_named_4 = kl_t5;
 #line 47 "codegen/generics_construction.kl"
     kl_t6 = kl_named_4.kl_v_5 != 9;
-    if ( kl_t6 ) goto bb4; else goto bb5;
-    bb4:
+    if ( kl_t6 ) goto bb3; else goto bb4;
+    bb3:
 #line 49 "codegen/generics_construction.kl"
     kl_t0 = 2;
     return kl_t0;
-    bb5:
-    goto bb6;
-    bb6:
+    bb4:
 #line 54 "codegen/generics_construction.kl"
     kl_t8.kl_v_5 = 7.0;
     kl_wide_7 = kl_t8;
 #line 56 "codegen/generics_construction.kl"
     kl_t9 = kl_wide_7.kl_v_5 < 6.9;
-    if ( kl_t9 ) goto bb7; else goto bb8;
-    bb7:
+    if ( kl_t9 ) goto bb5; else goto bb6;
+    bb5:
 #line 58 "codegen/generics_construction.kl"
     kl_t0 = 3;
     return kl_t0;
-    bb8:
-    goto bb9;
-    bb9:
+    bb6:
 #line 61 "codegen/generics_construction.kl"
     kl_t10 = kl_wide_7.kl_v_5 > 7.1;
-    if ( kl_t10 ) goto bb10; else goto bb11;
-    bb10:
+    if ( kl_t10 ) goto bb7; else goto bb8;
+    bb7:
 #line 63 "codegen/generics_construction.kl"
     kl_t0 = 4;
     return kl_t0;
-    bb11:
-    goto bb12;
-    bb12:
+    bb8:
 #line 68 "codegen/generics_construction.kl"
     kl_t12.kl_v_5 = 2.5;
     kl_frac_11 = kl_t12;
 #line 70 "codegen/generics_construction.kl"
     kl_t13 = kl_frac_11.kl_v_5 < 2.4;
-    if ( kl_t13 ) goto bb13; else goto bb14;
-    bb13:
+    if ( kl_t13 ) goto bb9; else goto bb10;
+    bb9:
 #line 72 "codegen/generics_construction.kl"
     kl_t0 = 5;
     return kl_t0;
-    bb14:
-    goto bb15;
-    bb15:
+    bb10:
 #line 75 "codegen/generics_construction.kl"
     kl_t14 = kl_frac_11.kl_v_5 > 2.6;
-    if ( kl_t14 ) goto bb16; else goto bb17;
-    bb16:
+    if ( kl_t14 ) goto bb11; else goto bb12;
+    bb11:
 #line 77 "codegen/generics_construction.kl"
     kl_t0 = 6;
     return kl_t0;
-    bb17:
-    goto bb18;
-    bb18:
+    bb12:
 #line 81 "codegen/generics_construction.kl"
     kl_t15.kl_v_5 = 3.0;
     kl_t16 = kl__unbox_f64__3BoxI3f64E( kl_t15 );
     kl_t17 = kl_t16 != 3.0;
-    if ( kl_t17 ) goto bb19; else goto bb20;
-    bb19:
+    if ( kl_t17 ) goto bb13; else goto bb14;
+    bb13:
 #line 83 "codegen/generics_construction.kl"
     kl_t0 = 7;
     return kl_t0;
-    bb20:
-    goto bb21;
-    bb21:
+    bb14:
 #line 88 "codegen/generics_construction.kl"
     kl_t20.kl_v_5 = 11;
     kl_t19.kl_inner_15 = kl_t20;
@@ -172,24 +158,20 @@ int32_t kl__main__( void )
     kl_nested_18 = kl_t19;
 #line 90 "codegen/generics_construction.kl"
     kl_t21 = kl_nested_18.kl_inner_15.kl_v_5 != 11;
-    if ( kl_t21 ) goto bb22; else goto bb23;
-    bb22:
+    if ( kl_t21 ) goto bb15; else goto bb16;
+    bb15:
 #line 92 "codegen/generics_construction.kl"
     kl_t0 = 8;
     return kl_t0;
-    bb23:
-    goto bb24;
-    bb24:
+    bb16:
 #line 95 "codegen/generics_construction.kl"
     kl_t22 = kl_nested_18.kl_tag_17 != 2;
-    if ( kl_t22 ) goto bb25; else goto bb26;
-    bb25:
+    if ( kl_t22 ) goto bb17; else goto bb18;
+    bb17:
 #line 97 "codegen/generics_construction.kl"
     kl_t0 = 9;
     return kl_t0;
-    bb26:
-    goto bb27;
-    bb27:
+    bb18:
 #line 101 "codegen/generics_construction.kl"
     kl_t25.kl_v_5 = 4.0;
     kl_t24.kl_inner_15 = kl_t25;
@@ -197,14 +179,12 @@ int32_t kl__main__( void )
     kl_wide_nest_23 = kl_t24;
 #line 103 "codegen/generics_construction.kl"
     kl_t26 = kl_wide_nest_23.kl_inner_15.kl_v_5 < 3.9;
-    if ( kl_t26 ) goto bb28; else goto bb29;
-    bb28:
+    if ( kl_t26 ) goto bb19; else goto bb20;
+    bb19:
 #line 105 "codegen/generics_construction.kl"
     kl_t0 = 10;
     return kl_t0;
-    bb29:
-    goto bb30;
-    bb30:
+    bb20:
 #line 109 "codegen/generics_construction.kl"
     kl_t28 = kl__hold__I3i32E__3i32( 5 );
     kl_held_27 = kl_t28;
@@ -213,24 +193,20 @@ int32_t kl__main__( void )
     kl_held_wide_29 = kl_t30;
 #line 112 "codegen/generics_construction.kl"
     kl_t31 = kl_held_27.kl_v_5 != 5;
-    if ( kl_t31 ) goto bb31; else goto bb32;
-    bb31:
+    if ( kl_t31 ) goto bb21; else goto bb22;
+    bb21:
 #line 114 "codegen/generics_construction.kl"
     kl_t0 = 11;
     return kl_t0;
-    bb32:
-    goto bb33;
-    bb33:
+    bb22:
 #line 117 "codegen/generics_construction.kl"
     kl_t32 = kl_held_wide_29.kl_v_5 < 2.4;
-    if ( kl_t32 ) goto bb34; else goto bb35;
-    bb34:
+    if ( kl_t32 ) goto bb23; else goto bb24;
+    bb23:
 #line 119 "codegen/generics_construction.kl"
     kl_t0 = 12;
     return kl_t0;
-    bb35:
-    goto bb36;
-    bb36:
+    bb24:
 #line 122 "codegen/generics_construction.kl"
     kl_t33 = 30 + kl_nested_18.kl_tag_17;
     kl_t34 = kl_t33 + kl_wide_nest_23.kl_tag_17;

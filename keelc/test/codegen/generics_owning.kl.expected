@@ -99,12 +99,10 @@ int32_t kl__main__( void )
     kl_t17 = false;
     return kl_t0;
     bb2:
-    goto bb3;
-    bb3:
 #line 64 "codegen/generics_owning.kl"
     kl_t16 = kl_destroyed_5 != 1;
-    if ( kl_t16 ) goto bb4; else goto bb5;
-    bb4:
+    if ( kl_t16 ) goto bb3; else goto bb4;
+    bb3:
 #line 66 "codegen/generics_owning.kl"
     kl_t0 = 2;
     kl__Cell__dtor( &kl_d_10 );
@@ -114,9 +112,7 @@ int32_t kl__main__( void )
     if ( kl_t17 ) kl__Cell__dtor( &kl_a_1 );
     kl_t17 = false;
     return kl_t0;
-    bb5:
-    goto bb6;
-    bb6:
+    bb4:
 #line 69 "codegen/generics_owning.kl"
     kl_t0 = 42;
     kl__Cell__dtor( &kl_d_10 );

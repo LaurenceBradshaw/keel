@@ -27,7 +27,7 @@ int32_t kl__main__( void )
     kl_t4 = kl_i_2 == 2;
     if ( kl_t4 ) goto bb4; else goto bb5;
     bb3:
-    goto bb8;
+    goto bb7;
     bb4:
     kl_t5 = kl_total_1 + 10;
     kl_total_1 = kl_t5;
@@ -38,21 +38,19 @@ int32_t kl__main__( void )
     kl_total_1 = kl_t6;
     goto bb6;
     bb6:
-    goto bb7;
-    bb7:
 #line 7 "codegen/control_flow.kl"
     kl_i_2 = kl_i_2 + 1;
     goto bb1;
-    bb8:
+    bb7:
 #line 13 "codegen/control_flow.kl"
     kl_t7 = kl_total_1 > 3;
-    if ( kl_t7 ) goto bb9; else goto bb10;
-    bb9:
+    if ( kl_t7 ) goto bb8; else goto bb9;
+    bb8:
 #line 15 "codegen/control_flow.kl"
     kl_total_1 = kl_total_1 - 1;
-    goto bb8;
-    bb10:
-#line 18 "codegen/control_flow.kl"
+    goto bb7;
+    bb9:
+#line 27 "codegen/control_flow.kl"
     kl_t0 = kl_total_1;
     return kl_t0;
 }
