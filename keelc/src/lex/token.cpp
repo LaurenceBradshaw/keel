@@ -252,6 +252,23 @@ std::string_view token_kind_spelling( Token_kind kind )
     return "invalid character";
 }
 
+bool is_comparison( Token_kind kind )
+{
+    switch( kind )
+    {
+    case Token_kind::Less:
+    case Token_kind::Less_equal:
+    case Token_kind::Greater:
+    case Token_kind::Greater_equal:
+    case Token_kind::Equal_equal:
+    case Token_kind::Bang_equal:
+        return true;
+
+    default:
+        return false;
+    }
+}
+
 Token_kind base_operator( Token_kind assignment )
 {
     switch( assignment )

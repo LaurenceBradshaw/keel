@@ -1,0 +1,23 @@
+warning: this comparison is always false
+   --> codegen/comparisons_mixed.kl:131:9
+    |
+131 |     if( umax < -1 ) { return 47; }
+    |         ^^^^^^^^^ `-1` is outside the range of `u64`
+
+warning: this comparison is always true
+   --> codegen/comparisons_mixed.kl:132:12
+    |
+132 |     if( !( imax < 18446744073709551615 ) ) { return 48; }
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ `18446744073709551615` is outside the range of `i64`
+
+warning: this comparison is always false
+   --> codegen/comparisons_mixed.kl:133:9
+    |
+133 |     if( tiny > 300 ) { return 49; }
+    |         ^^^^^^^^^^ `300` is outside the range of `i8`
+
+warning: this comparison is always true
+   --> codegen/comparisons_mixed.kl:134:12
+    |
+134 |     if( !( zero != 0 - 1 ) ) { return 50; }
+    |            ^^^^^^^^^^^^^ `-1` is outside the range of `u64`

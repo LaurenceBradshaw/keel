@@ -109,6 +109,11 @@ std::string_view token_kind_spelling( Token_kind kind );
 // not §6.4's.
 Token_kind base_operator( Token_kind assignment );
 
+// The six operators whose answer is a `bool` about two values rather than a value of their own.
+// D41 turns on that distinction, and both the lowering that picks their domain and the backend
+// that compares outside one ask the question - so it is answered here rather than twice.
+bool is_comparison( Token_kind kind );
+
 struct Token
 {
     Token_kind kind;

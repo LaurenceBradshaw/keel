@@ -1,0 +1,143 @@
+// D41: a comparison asks about two values, not about how either is stored. Every pair here is one
+// §6.4 refuses for arithmetic, because a sum has nowhere to land - the answers below do, in `bool`.
+//
+// Each check is the mathematical answer, and several are answers C++ gets wrong: it converts both
+// sides to a common type first, and `-1 < 1u` is false there.
+
+bool below<T>( T a, i64 limit ) where T : Numeric
+{
+    return a < limit;
+}
+
+// The failure codes run 1 upwards and step over 42, which is what a run that checked everything
+// returns.
+i32 main()
+{
+    // Mixed signedness that meets in a wider type. No guard is needed: both sides widen into i64
+    // and C compares them correctly once they are there.
+    i32 neg = -1;
+    u32 one = 1;
+    if( !( neg < one ) ) { return 1; }
+    if( one <= neg ) { return 2; }
+    if( neg == one ) { return 3; }
+    if( !( neg != one ) ) { return 4; }
+
+    // An integer that no f32 holds exactly. Comparing in f32 would round it and call these equal,
+    // so the domain has to be f64 - which is what `common` picks and `arithmetic_result` does not.
+    f32 rounded = 16777216.0;
+    i32 exact   = 16777217;
+    if( !( exact > rounded ) ) { return 5; }
+    if( exact == rounded ) { return 6; }
+
+    // i64 against u64: no type holds both, and the guard decides it by the sign of the signed side.
+    i64 minus_one = -1;
+    u64 plus_one  = 1;
+    if( !( minus_one < plus_one ) ) { return 7; }
+    if( minus_one >= plus_one ) { return 8; }
+    if( minus_one == plus_one ) { return 9; }
+
+    // Both non-negative, where the reinterpretation is exact and the answer is an ordinary one.
+    i64 three = 3;
+    u64 four  = 4;
+    if( !( three < four ) ) { return 10; }
+    if( !( four > three ) ) { return 11; }
+    if( !( three <= four ) ) { return 12; }
+
+    u64 imax_as_u64 = 9223372036854775807;
+    i64 imax        = 9223372036854775807;
+    if( !( imax == imax_as_u64 ) ) { return 13; }
+    if( imax != imax_as_u64 ) { return 14; }
+
+    // The far end of u64, which no signed type reaches at all.
+    u64 umax = 18446744073709551615;
+    if( !( imax < umax ) ) { return 15; }
+    if( !( umax > imax ) ) { return 16; }
+
+    // A narrower signed type widens into i64 first, so one guard serves all four of them.
+    i8  tiny = -1;
+    u64 zero = 0;
+    if( !( tiny < zero ) ) { return 17; }
+
+    // i64 against f64. 2^63 is exactly representable and is one past i64's maximum, so this is the
+    // boundary the guard tests before it may truncate.
+    f64 two63 = 9223372036854775808.0;
+    if( !( imax < two63 ) ) { return 18; }
+    if( !( two63 > imax ) ) { return 19; }
+
+    // A fraction is what the integer comparison cannot see, and it is what breaks the tie.
+    i64 whole = 3;
+    f64 half  = 3.5;
+    if( !( whole < half ) ) { return 20; }
+    if( whole >= half ) { return 21; }
+
+    // The same on the negative side, where truncation rounds towards zero rather than down.
+    i64 minus_three = -3;
+    f64 minus_half  = -3.5;
+    if( !( minus_three > minus_half ) ) { return 22; }
+    if( minus_three <= minus_half ) { return 23; }
+
+    // The other end of i64, which -2^63 names exactly - the one double that is a valid i64 rather
+    // than one past the range, so the guard must let it through to be compared rather than settle
+    // it from the bound.
+    i64 imin           = -9223372036854775808;
+    f64 minus_two63    = -9223372036854775808.0;
+    if( !( imin == minus_two63 ) ) { return 24; }
+    if( imin < minus_two63 ) { return 25; }
+    if( imin > minus_two63 ) { return 26; }
+    if( !( imin <= minus_two63 ) ) { return 27; }
+    if( !( imin >= minus_two63 ) ) { return 28; }
+    if( imin != minus_two63 ) { return 29; }
+
+    // And zero, where a u64 and a double meet without any widening between them.
+    f64 nought_check = 0.0;
+    if( !( zero == nought_check ) ) { return 30; }
+
+    // Past 2^53 a double counts in twos, so this integer is one the f64 beside it cannot be.
+    i64 odd  = 9007199254740993;
+    f64 even = 9007199254740992.0;
+    if( !( odd > even ) ) { return 31; }
+    if( odd == even ) { return 32; }
+
+    // u64 against f64: 2^64 is one past every u64, and a negative double is below every one.
+    f64 two64      = 18446744073709551616.0;
+    f64 minus_tiny = -0.5;
+    if( !( umax < two64 ) ) { return 33; }
+    if( !( zero > minus_tiny ) ) { return 34; }
+    if( !( umax >= two63 ) ) { return 35; }
+    if( !( umax <= two64 ) ) { return 36; }
+    if( zero == minus_tiny ) { return 37; }
+
+    // An infinity is outside both ranges, and a NaN is ordered against nothing at all - `!=` is
+    // the only one of the six that holds for it.
+    f64 nought   = 0.0;
+    f64 infinity = 1.0 / nought;
+    f64 nan      = nought / nought;
+    if( !( imax < infinity ) ) { return 38; }
+    if( !( umax < infinity ) ) { return 39; }
+    if( imax < nan ) { return 40; }
+    if( imax >= nan ) { return 41; }
+    if( imax == nan ) { return 43; }
+    if( !( imax != nan ) ) { return 44; }
+    if( !( umax != nan ) ) { return 45; }
+
+    // An f32 operand widens into f64 the same way a narrow integer widens into i64.
+    f32 small = 0.5;
+    i64 naught = 0;
+    if( !( naught < small ) ) { return 46; }
+
+    // A constant the other side cannot hold. D41 gives it an answer, so it compiles and runs -
+    // and because the answer cannot depend on the operand, the compiler warns about each one.
+    // Both spellings are caught: the literal, and the expression that folds to the same value.
+    if( umax < -1 ) { return 47; }
+    if( !( imax < 18446744073709551615 ) ) { return 48; }
+    if( tiny > 300 ) { return 49; }
+    if( !( zero != 0 - 1 ) ) { return 50; }
+
+    // §12: a `T` promised to be a number compares against a concrete one, and each instantiation
+    // gets the domain its own type argument asks for.
+    if( below<u64>( plus_one, minus_one ) ) { return 51; }
+    if( below<f64>( half, minus_one ) ) { return 52; }
+    if( !( below<i32>( neg, three ) ) ) { return 53; }
+
+    return 42;
+}

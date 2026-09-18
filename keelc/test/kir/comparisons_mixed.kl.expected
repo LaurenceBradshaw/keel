@@ -1,0 +1,59 @@
+fn main {
+    let _0: i32; // return slot
+    let _1: i32; // narrow
+    let _2: u32; // unsigned_narrow
+    let _3: i64; // wide
+    let _4: u64; // unsigned_wide
+    let _5: f32; // small_real
+    let _6: bool; // met
+    let _7: i64;
+    let _8: i64;
+    let _9: bool;
+    let _10: bool; // signs
+    let _11: bool;
+    let _12: bool; // against_a_real
+    let _13: f64;
+    let _14: bool;
+    let _15: bool; // widened
+    let _16: f64;
+    let _17: bool;
+
+    bb0:
+        storage_live _1
+        _1 = const 1
+        storage_live _2
+        _2 = const 2
+        storage_live _3
+        _3 = const 3
+        storage_live _4
+        _4 = const 4
+        storage_live _5
+        _5 = const 0.5
+        storage_live _6
+        _7 = copy _1 as i64
+        _8 = copy _2 as i64
+        _9 = copy _7 < copy _8
+        _6 = copy _9
+        storage_live _10
+        _11 = copy _3 < copy _4
+        _10 = copy _11
+        storage_live _12
+        _13 = copy _5 as f64
+        _14 = copy _3 >= copy _13
+        _12 = copy _14
+        storage_live _15
+        _16 = copy _5 as f64
+        _17 = copy _4 != copy _16
+        _15 = copy _17
+        _0 = const 0
+        storage_dead _15
+        storage_dead _12
+        storage_dead _10
+        storage_dead _6
+        storage_dead _5
+        storage_dead _4
+        storage_dead _3
+        storage_dead _2
+        storage_dead _1
+        return
+}

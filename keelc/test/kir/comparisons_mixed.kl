@@ -1,0 +1,21 @@
+// D41: the one binary whose operands reach KIR with different types. A comparison answers `bool`
+// whatever it is given, so there is no result for the mismatch to corrupt - and a backend that
+// cannot use a C helper needs the pair as it stands rather than a domain that does not exist.
+//
+// The first pair meets in i64 and is converted like any other. The rest do not meet at all: each
+// side widens as far as its own kind reaches, which leaves three shapes rather than eight pairs.
+i32 main()
+{
+    i32 narrow = 1;
+    u32 unsigned_narrow = 2;
+    i64 wide = 3;
+    u64 unsigned_wide = 4;
+    f32 small_real = 0.5;
+
+    bool met = narrow < unsigned_narrow;
+    bool signs = wide < unsigned_wide;
+    bool against_a_real = wide >= small_real;
+    bool widened = unsigned_wide != small_real;
+
+    return 0;
+}

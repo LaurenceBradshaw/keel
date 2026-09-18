@@ -112,28 +112,28 @@ error: no operator `<` for `T` and `T`
 103 |     return a < a;
     |            ^^^^^ `<` needs `Comparable`; write `where T : Comparable` on `unpromised_operator`
 
-error: no operator `<` for `T` and `i32`
-   --> sema/errors_generics.kl:108:12
+error: no operator `<` for `T` and `bool`
+   --> sema/errors_generics.kl:110:12
     |
-108 |     return a < b;
+110 |     return a < b;
     |            ^^^^^ `<` needs both operands to be the same type
 
 error: `Owner` is not `Copyable`, and `id` requires it of `T`
-   --> sema/errors_generics.kl:115:8
+   --> sema/errors_generics.kl:117:8
     |
-115 |     id<Owner>( o );
+117 |     id<Owner>( o );
     |        ^^^^^ a type with a destructor owns something, so copying it would own it twice
 
 error: `Suit` is not `Integral`, and `needs_integral` requires it of `T`
-   --> sema/errors_generics.kl:126:20
+   --> sema/errors_generics.kl:128:20
     |
-126 |     needs_integral<Suit>( Suit::Clubs );
+128 |     needs_integral<Suit>( Suit::Clubs );
     |                    ^^^^ it has to be an integer
 
 error: `T` does not promise `Comparable`, and `needs_comparable` requires it of `T`
-   --> sema/errors_generics.kl:136:22
+   --> sema/errors_generics.kl:138:22
     |
-136 |     needs_comparable<T>( a );
+138 |     needs_comparable<T>( a );
     |                      ^ add `Comparable` to the `where` clause for `T` on `forwards`
 
 23 errors generated

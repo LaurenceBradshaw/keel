@@ -1,0 +1,923 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+static inline bool kl_cmp_lt_i64_u64( int64_t a, uint64_t b )
+{
+    return a < 0 ? true : ( uint64_t ) a < b;
+}
+
+static inline bool kl_cmp_le_i64_u64( int64_t a, uint64_t b )
+{
+    return a < 0 ? true : ( uint64_t ) a <= b;
+}
+
+static inline bool kl_cmp_gt_i64_u64( int64_t a, uint64_t b )
+{
+    return a < 0 ? false : ( uint64_t ) a > b;
+}
+
+static inline bool kl_cmp_ge_i64_u64( int64_t a, uint64_t b )
+{
+    return a < 0 ? false : ( uint64_t ) a >= b;
+}
+
+static inline bool kl_cmp_eq_i64_u64( int64_t a, uint64_t b )
+{
+    return a < 0 ? false : ( uint64_t ) a == b;
+}
+
+static inline bool kl_cmp_ne_i64_u64( int64_t a, uint64_t b )
+{
+    return a < 0 ? true : ( uint64_t ) a != b;
+}
+
+static inline bool kl_cmp_lt_i64_f64( int64_t a, double b )
+{
+    if( b != b ) return false;
+    if( b >= 9223372036854775808.0 ) return true;
+    if( b < -9223372036854775808.0 ) return false;
+    int64_t t = ( int64_t ) b;
+    return a < t || ( a == t && b > ( double ) t );
+}
+
+static inline bool kl_cmp_le_i64_f64( int64_t a, double b )
+{
+    if( b != b ) return false;
+    if( b >= 9223372036854775808.0 ) return true;
+    if( b < -9223372036854775808.0 ) return false;
+    int64_t t = ( int64_t ) b;
+    return a < t || ( a == t && b >= ( double ) t );
+}
+
+static inline bool kl_cmp_gt_i64_f64( int64_t a, double b )
+{
+    if( b != b ) return false;
+    if( b >= 9223372036854775808.0 ) return false;
+    if( b < -9223372036854775808.0 ) return true;
+    int64_t t = ( int64_t ) b;
+    return a > t || ( a == t && b < ( double ) t );
+}
+
+static inline bool kl_cmp_ge_i64_f64( int64_t a, double b )
+{
+    if( b != b ) return false;
+    if( b >= 9223372036854775808.0 ) return false;
+    if( b < -9223372036854775808.0 ) return true;
+    int64_t t = ( int64_t ) b;
+    return a > t || ( a == t && b <= ( double ) t );
+}
+
+static inline bool kl_cmp_eq_i64_f64( int64_t a, double b )
+{
+    if( b != b ) return false;
+    if( b >= 9223372036854775808.0 ) return false;
+    if( b < -9223372036854775808.0 ) return false;
+    int64_t t = ( int64_t ) b;
+    return a == t && b == ( double ) t;
+}
+
+static inline bool kl_cmp_ne_i64_f64( int64_t a, double b )
+{
+    if( b != b ) return true;
+    if( b >= 9223372036854775808.0 ) return true;
+    if( b < -9223372036854775808.0 ) return true;
+    int64_t t = ( int64_t ) b;
+    return a != t || b != ( double ) t;
+}
+
+static inline bool kl_cmp_lt_u64_f64( uint64_t a, double b )
+{
+    if( b != b ) return false;
+    if( b >= 18446744073709551616.0 ) return true;
+    if( b < 0.0 ) return false;
+    uint64_t t = ( uint64_t ) b;
+    return a < t || ( a == t && b > ( double ) t );
+}
+
+static inline bool kl_cmp_le_u64_f64( uint64_t a, double b )
+{
+    if( b != b ) return false;
+    if( b >= 18446744073709551616.0 ) return true;
+    if( b < 0.0 ) return false;
+    uint64_t t = ( uint64_t ) b;
+    return a < t || ( a == t && b >= ( double ) t );
+}
+
+static inline bool kl_cmp_gt_u64_f64( uint64_t a, double b )
+{
+    if( b != b ) return false;
+    if( b >= 18446744073709551616.0 ) return false;
+    if( b < 0.0 ) return true;
+    uint64_t t = ( uint64_t ) b;
+    return a > t || ( a == t && b < ( double ) t );
+}
+
+static inline bool kl_cmp_ge_u64_f64( uint64_t a, double b )
+{
+    if( b != b ) return false;
+    if( b >= 18446744073709551616.0 ) return false;
+    if( b < 0.0 ) return true;
+    uint64_t t = ( uint64_t ) b;
+    return a > t || ( a == t && b <= ( double ) t );
+}
+
+static inline bool kl_cmp_eq_u64_f64( uint64_t a, double b )
+{
+    if( b != b ) return false;
+    if( b >= 18446744073709551616.0 ) return false;
+    if( b < 0.0 ) return false;
+    uint64_t t = ( uint64_t ) b;
+    return a == t && b == ( double ) t;
+}
+
+static inline bool kl_cmp_ne_u64_f64( uint64_t a, double b )
+{
+    if( b != b ) return true;
+    if( b >= 18446744073709551616.0 ) return true;
+    if( b < 0.0 ) return true;
+    uint64_t t = ( uint64_t ) b;
+    return a != t || b != ( double ) t;
+}
+
+int32_t kl__main__( void );
+bool kl__below__3u64( uint64_t, int64_t );
+bool kl__below__3f64( double, int64_t );
+bool kl__below__3i32( int32_t, int64_t );
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_neg_1;
+    int32_t kl_t2;
+    uint32_t kl_one_3;
+    int64_t kl_t4;
+    int64_t kl_t5;
+    bool kl_t6;
+    bool kl_t7;
+    int64_t kl_t8;
+    int64_t kl_t9;
+    bool kl_t10;
+    int64_t kl_t11;
+    int64_t kl_t12;
+    bool kl_t13;
+    int64_t kl_t14;
+    int64_t kl_t15;
+    bool kl_t16;
+    bool kl_t17;
+    float kl_rounded_18;
+    int32_t kl_exact_19;
+    double kl_t20;
+    double kl_t21;
+    bool kl_t22;
+    bool kl_t23;
+    double kl_t24;
+    double kl_t25;
+    bool kl_t26;
+    int64_t kl_minus_one_27;
+    int64_t kl_t28;
+    uint64_t kl_plus_one_29;
+    bool kl_t30;
+    bool kl_t31;
+    bool kl_t32;
+    bool kl_t33;
+    int64_t kl_three_34;
+    uint64_t kl_four_35;
+    bool kl_t36;
+    bool kl_t37;
+    bool kl_t38;
+    bool kl_t39;
+    bool kl_t40;
+    bool kl_t41;
+    uint64_t kl_imax_as_u64_42;
+    int64_t kl_imax_43;
+    bool kl_t44;
+    bool kl_t45;
+    bool kl_t46;
+    uint64_t kl_umax_47;
+    bool kl_t48;
+    bool kl_t49;
+    bool kl_t50;
+    bool kl_t51;
+    int8_t kl_tiny_52;
+    int8_t kl_t53;
+    uint64_t kl_zero_54;
+    int64_t kl_t55;
+    bool kl_t56;
+    bool kl_t57;
+    double kl_two63_58;
+    bool kl_t59;
+    bool kl_t60;
+    bool kl_t61;
+    bool kl_t62;
+    int64_t kl_whole_63;
+    double kl_half_64;
+    bool kl_t65;
+    bool kl_t66;
+    bool kl_t67;
+    int64_t kl_minus_three_68;
+    int64_t kl_t69;
+    double kl_minus_half_70;
+    double kl_t71;
+    bool kl_t72;
+    bool kl_t73;
+    bool kl_t74;
+    int64_t kl_imin_75;
+    int64_t kl_t76;
+    double kl_minus_two63_77;
+    double kl_t78;
+    bool kl_t79;
+    bool kl_t80;
+    bool kl_t81;
+    bool kl_t82;
+    bool kl_t83;
+    bool kl_t84;
+    bool kl_t85;
+    bool kl_t86;
+    bool kl_t87;
+    double kl_nought_check_88;
+    bool kl_t89;
+    bool kl_t90;
+    int64_t kl_odd_91;
+    double kl_even_92;
+    bool kl_t93;
+    bool kl_t94;
+    bool kl_t95;
+    double kl_two64_96;
+    double kl_minus_tiny_97;
+    double kl_t98;
+    bool kl_t99;
+    bool kl_t100;
+    bool kl_t101;
+    bool kl_t102;
+    bool kl_t103;
+    bool kl_t104;
+    bool kl_t105;
+    bool kl_t106;
+    bool kl_t107;
+    double kl_nought_108;
+    double kl_infinity_109;
+    double kl_t110;
+    double kl_nan_111;
+    double kl_t112;
+    bool kl_t113;
+    bool kl_t114;
+    bool kl_t115;
+    bool kl_t116;
+    bool kl_t117;
+    bool kl_t118;
+    bool kl_t119;
+    bool kl_t120;
+    bool kl_t121;
+    bool kl_t122;
+    bool kl_t123;
+    float kl_small_124;
+    int64_t kl_naught_125;
+    double kl_t126;
+    bool kl_t127;
+    bool kl_t128;
+    int32_t kl_t129;
+    int64_t kl_t130;
+    bool kl_t131;
+    bool kl_t132;
+    bool kl_t133;
+    int32_t kl_t134;
+    bool kl_t135;
+    int32_t kl_t136;
+    int64_t kl_t137;
+    bool kl_t138;
+    bool kl_t139;
+    bool kl_t140;
+    bool kl_t141;
+    bool kl_t142;
+    bool kl_t143;
+#line 18 "codegen/comparisons_mixed.kl"
+    kl_t2 = -1;
+    kl_neg_1 = kl_t2;
+#line 19 "codegen/comparisons_mixed.kl"
+    kl_one_3 = 1;
+#line 20 "codegen/comparisons_mixed.kl"
+    kl_t4 = ( int64_t ) kl_neg_1;
+    kl_t5 = ( int64_t ) kl_one_3;
+    kl_t6 = kl_t4 < kl_t5;
+    kl_t7 = !kl_t6;
+    if ( kl_t7 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+    goto bb3;
+    bb3:
+#line 21 "codegen/comparisons_mixed.kl"
+    kl_t8 = ( int64_t ) kl_one_3;
+    kl_t9 = ( int64_t ) kl_neg_1;
+    kl_t10 = kl_t8 <= kl_t9;
+    if ( kl_t10 ) goto bb4; else goto bb5;
+    bb4:
+    kl_t0 = 2;
+    return kl_t0;
+    bb5:
+    goto bb6;
+    bb6:
+#line 22 "codegen/comparisons_mixed.kl"
+    kl_t11 = ( int64_t ) kl_neg_1;
+    kl_t12 = ( int64_t ) kl_one_3;
+    kl_t13 = kl_t11 == kl_t12;
+    if ( kl_t13 ) goto bb7; else goto bb8;
+    bb7:
+    kl_t0 = 3;
+    return kl_t0;
+    bb8:
+    goto bb9;
+    bb9:
+#line 23 "codegen/comparisons_mixed.kl"
+    kl_t14 = ( int64_t ) kl_neg_1;
+    kl_t15 = ( int64_t ) kl_one_3;
+    kl_t16 = kl_t14 != kl_t15;
+    kl_t17 = !kl_t16;
+    if ( kl_t17 ) goto bb10; else goto bb11;
+    bb10:
+    kl_t0 = 4;
+    return kl_t0;
+    bb11:
+    goto bb12;
+    bb12:
+#line 27 "codegen/comparisons_mixed.kl"
+    kl_rounded_18 = 16777216.0;
+#line 28 "codegen/comparisons_mixed.kl"
+    kl_exact_19 = 16777217;
+#line 29 "codegen/comparisons_mixed.kl"
+    kl_t20 = ( double ) kl_exact_19;
+    kl_t21 = ( double ) kl_rounded_18;
+    kl_t22 = kl_t20 > kl_t21;
+    kl_t23 = !kl_t22;
+    if ( kl_t23 ) goto bb13; else goto bb14;
+    bb13:
+    kl_t0 = 5;
+    return kl_t0;
+    bb14:
+    goto bb15;
+    bb15:
+#line 30 "codegen/comparisons_mixed.kl"
+    kl_t24 = ( double ) kl_exact_19;
+    kl_t25 = ( double ) kl_rounded_18;
+    kl_t26 = kl_t24 == kl_t25;
+    if ( kl_t26 ) goto bb16; else goto bb17;
+    bb16:
+    kl_t0 = 6;
+    return kl_t0;
+    bb17:
+    goto bb18;
+    bb18:
+#line 33 "codegen/comparisons_mixed.kl"
+    kl_t28 = -1;
+    kl_minus_one_27 = kl_t28;
+#line 34 "codegen/comparisons_mixed.kl"
+    kl_plus_one_29 = 1;
+#line 35 "codegen/comparisons_mixed.kl"
+    kl_t30 = kl_cmp_lt_i64_u64( kl_minus_one_27, kl_plus_one_29 );
+    kl_t31 = !kl_t30;
+    if ( kl_t31 ) goto bb19; else goto bb20;
+    bb19:
+    kl_t0 = 7;
+    return kl_t0;
+    bb20:
+    goto bb21;
+    bb21:
+#line 36 "codegen/comparisons_mixed.kl"
+    kl_t32 = kl_cmp_ge_i64_u64( kl_minus_one_27, kl_plus_one_29 );
+    if ( kl_t32 ) goto bb22; else goto bb23;
+    bb22:
+    kl_t0 = 8;
+    return kl_t0;
+    bb23:
+    goto bb24;
+    bb24:
+#line 37 "codegen/comparisons_mixed.kl"
+    kl_t33 = kl_cmp_eq_i64_u64( kl_minus_one_27, kl_plus_one_29 );
+    if ( kl_t33 ) goto bb25; else goto bb26;
+    bb25:
+    kl_t0 = 9;
+    return kl_t0;
+    bb26:
+    goto bb27;
+    bb27:
+#line 40 "codegen/comparisons_mixed.kl"
+    kl_three_34 = 3;
+#line 41 "codegen/comparisons_mixed.kl"
+    kl_four_35 = 4;
+#line 42 "codegen/comparisons_mixed.kl"
+    kl_t36 = kl_cmp_lt_i64_u64( kl_three_34, kl_four_35 );
+    kl_t37 = !kl_t36;
+    if ( kl_t37 ) goto bb28; else goto bb29;
+    bb28:
+    kl_t0 = 10;
+    return kl_t0;
+    bb29:
+    goto bb30;
+    bb30:
+#line 43 "codegen/comparisons_mixed.kl"
+    kl_t38 = kl_cmp_lt_i64_u64( kl_three_34, kl_four_35 );
+    kl_t39 = !kl_t38;
+    if ( kl_t39 ) goto bb31; else goto bb32;
+    bb31:
+    kl_t0 = 11;
+    return kl_t0;
+    bb32:
+    goto bb33;
+    bb33:
+#line 44 "codegen/comparisons_mixed.kl"
+    kl_t40 = kl_cmp_le_i64_u64( kl_three_34, kl_four_35 );
+    kl_t41 = !kl_t40;
+    if ( kl_t41 ) goto bb34; else goto bb35;
+    bb34:
+    kl_t0 = 12;
+    return kl_t0;
+    bb35:
+    goto bb36;
+    bb36:
+#line 46 "codegen/comparisons_mixed.kl"
+    kl_imax_as_u64_42 = 9223372036854775807;
+#line 47 "codegen/comparisons_mixed.kl"
+    kl_imax_43 = 9223372036854775807;
+#line 48 "codegen/comparisons_mixed.kl"
+    kl_t44 = kl_cmp_eq_i64_u64( kl_imax_43, kl_imax_as_u64_42 );
+    kl_t45 = !kl_t44;
+    if ( kl_t45 ) goto bb37; else goto bb38;
+    bb37:
+    kl_t0 = 13;
+    return kl_t0;
+    bb38:
+    goto bb39;
+    bb39:
+#line 49 "codegen/comparisons_mixed.kl"
+    kl_t46 = kl_cmp_ne_i64_u64( kl_imax_43, kl_imax_as_u64_42 );
+    if ( kl_t46 ) goto bb40; else goto bb41;
+    bb40:
+    kl_t0 = 14;
+    return kl_t0;
+    bb41:
+    goto bb42;
+    bb42:
+#line 52 "codegen/comparisons_mixed.kl"
+    kl_umax_47 = 18446744073709551615ull;
+#line 53 "codegen/comparisons_mixed.kl"
+    kl_t48 = kl_cmp_lt_i64_u64( kl_imax_43, kl_umax_47 );
+    kl_t49 = !kl_t48;
+    if ( kl_t49 ) goto bb43; else goto bb44;
+    bb43:
+    kl_t0 = 15;
+    return kl_t0;
+    bb44:
+    goto bb45;
+    bb45:
+#line 54 "codegen/comparisons_mixed.kl"
+    kl_t50 = kl_cmp_lt_i64_u64( kl_imax_43, kl_umax_47 );
+    kl_t51 = !kl_t50;
+    if ( kl_t51 ) goto bb46; else goto bb47;
+    bb46:
+    kl_t0 = 16;
+    return kl_t0;
+    bb47:
+    goto bb48;
+    bb48:
+#line 57 "codegen/comparisons_mixed.kl"
+    kl_t53 = -1;
+    kl_tiny_52 = kl_t53;
+#line 58 "codegen/comparisons_mixed.kl"
+    kl_zero_54 = 0;
+#line 59 "codegen/comparisons_mixed.kl"
+    kl_t55 = ( int64_t ) kl_tiny_52;
+    kl_t56 = kl_cmp_lt_i64_u64( kl_t55, kl_zero_54 );
+    kl_t57 = !kl_t56;
+    if ( kl_t57 ) goto bb49; else goto bb50;
+    bb49:
+    kl_t0 = 17;
+    return kl_t0;
+    bb50:
+    goto bb51;
+    bb51:
+#line 63 "codegen/comparisons_mixed.kl"
+    kl_two63_58 = 9.223372036854776e+18;
+#line 64 "codegen/comparisons_mixed.kl"
+    kl_t59 = kl_cmp_lt_i64_f64( kl_imax_43, kl_two63_58 );
+    kl_t60 = !kl_t59;
+    if ( kl_t60 ) goto bb52; else goto bb53;
+    bb52:
+    kl_t0 = 18;
+    return kl_t0;
+    bb53:
+    goto bb54;
+    bb54:
+#line 65 "codegen/comparisons_mixed.kl"
+    kl_t61 = kl_cmp_lt_i64_f64( kl_imax_43, kl_two63_58 );
+    kl_t62 = !kl_t61;
+    if ( kl_t62 ) goto bb55; else goto bb56;
+    bb55:
+    kl_t0 = 19;
+    return kl_t0;
+    bb56:
+    goto bb57;
+    bb57:
+#line 68 "codegen/comparisons_mixed.kl"
+    kl_whole_63 = 3;
+#line 69 "codegen/comparisons_mixed.kl"
+    kl_half_64 = 3.5;
+#line 70 "codegen/comparisons_mixed.kl"
+    kl_t65 = kl_cmp_lt_i64_f64( kl_whole_63, kl_half_64 );
+    kl_t66 = !kl_t65;
+    if ( kl_t66 ) goto bb58; else goto bb59;
+    bb58:
+    kl_t0 = 20;
+    return kl_t0;
+    bb59:
+    goto bb60;
+    bb60:
+#line 71 "codegen/comparisons_mixed.kl"
+    kl_t67 = kl_cmp_ge_i64_f64( kl_whole_63, kl_half_64 );
+    if ( kl_t67 ) goto bb61; else goto bb62;
+    bb61:
+    kl_t0 = 21;
+    return kl_t0;
+    bb62:
+    goto bb63;
+    bb63:
+#line 74 "codegen/comparisons_mixed.kl"
+    kl_t69 = -3;
+    kl_minus_three_68 = kl_t69;
+#line 75 "codegen/comparisons_mixed.kl"
+    kl_t71 = -3.5;
+    kl_minus_half_70 = kl_t71;
+#line 76 "codegen/comparisons_mixed.kl"
+    kl_t72 = kl_cmp_gt_i64_f64( kl_minus_three_68, kl_minus_half_70 );
+    kl_t73 = !kl_t72;
+    if ( kl_t73 ) goto bb64; else goto bb65;
+    bb64:
+    kl_t0 = 22;
+    return kl_t0;
+    bb65:
+    goto bb66;
+    bb66:
+#line 77 "codegen/comparisons_mixed.kl"
+    kl_t74 = kl_cmp_le_i64_f64( kl_minus_three_68, kl_minus_half_70 );
+    if ( kl_t74 ) goto bb67; else goto bb68;
+    bb67:
+    kl_t0 = 23;
+    return kl_t0;
+    bb68:
+    goto bb69;
+    bb69:
+#line 82 "codegen/comparisons_mixed.kl"
+    kl_t76 = -9223372036854775808ull;
+    kl_imin_75 = kl_t76;
+#line 83 "codegen/comparisons_mixed.kl"
+    kl_t78 = -9.223372036854776e+18;
+    kl_minus_two63_77 = kl_t78;
+#line 84 "codegen/comparisons_mixed.kl"
+    kl_t79 = kl_cmp_eq_i64_f64( kl_imin_75, kl_minus_two63_77 );
+    kl_t80 = !kl_t79;
+    if ( kl_t80 ) goto bb70; else goto bb71;
+    bb70:
+    kl_t0 = 24;
+    return kl_t0;
+    bb71:
+    goto bb72;
+    bb72:
+#line 85 "codegen/comparisons_mixed.kl"
+    kl_t81 = kl_cmp_lt_i64_f64( kl_imin_75, kl_minus_two63_77 );
+    if ( kl_t81 ) goto bb73; else goto bb74;
+    bb73:
+    kl_t0 = 25;
+    return kl_t0;
+    bb74:
+    goto bb75;
+    bb75:
+#line 86 "codegen/comparisons_mixed.kl"
+    kl_t82 = kl_cmp_gt_i64_f64( kl_imin_75, kl_minus_two63_77 );
+    if ( kl_t82 ) goto bb76; else goto bb77;
+    bb76:
+    kl_t0 = 26;
+    return kl_t0;
+    bb77:
+    goto bb78;
+    bb78:
+#line 87 "codegen/comparisons_mixed.kl"
+    kl_t83 = kl_cmp_le_i64_f64( kl_imin_75, kl_minus_two63_77 );
+    kl_t84 = !kl_t83;
+    if ( kl_t84 ) goto bb79; else goto bb80;
+    bb79:
+    kl_t0 = 27;
+    return kl_t0;
+    bb80:
+    goto bb81;
+    bb81:
+#line 88 "codegen/comparisons_mixed.kl"
+    kl_t85 = kl_cmp_ge_i64_f64( kl_imin_75, kl_minus_two63_77 );
+    kl_t86 = !kl_t85;
+    if ( kl_t86 ) goto bb82; else goto bb83;
+    bb82:
+    kl_t0 = 28;
+    return kl_t0;
+    bb83:
+    goto bb84;
+    bb84:
+#line 89 "codegen/comparisons_mixed.kl"
+    kl_t87 = kl_cmp_ne_i64_f64( kl_imin_75, kl_minus_two63_77 );
+    if ( kl_t87 ) goto bb85; else goto bb86;
+    bb85:
+    kl_t0 = 29;
+    return kl_t0;
+    bb86:
+    goto bb87;
+    bb87:
+#line 92 "codegen/comparisons_mixed.kl"
+    kl_nought_check_88 = 0.0;
+#line 93 "codegen/comparisons_mixed.kl"
+    kl_t89 = kl_cmp_eq_u64_f64( kl_zero_54, kl_nought_check_88 );
+    kl_t90 = !kl_t89;
+    if ( kl_t90 ) goto bb88; else goto bb89;
+    bb88:
+    kl_t0 = 30;
+    return kl_t0;
+    bb89:
+    goto bb90;
+    bb90:
+#line 96 "codegen/comparisons_mixed.kl"
+    kl_odd_91 = 9007199254740993;
+#line 97 "codegen/comparisons_mixed.kl"
+    kl_even_92 = 9007199254740992.0;
+#line 98 "codegen/comparisons_mixed.kl"
+    kl_t93 = kl_cmp_gt_i64_f64( kl_odd_91, kl_even_92 );
+    kl_t94 = !kl_t93;
+    if ( kl_t94 ) goto bb91; else goto bb92;
+    bb91:
+    kl_t0 = 31;
+    return kl_t0;
+    bb92:
+    goto bb93;
+    bb93:
+#line 99 "codegen/comparisons_mixed.kl"
+    kl_t95 = kl_cmp_eq_i64_f64( kl_odd_91, kl_even_92 );
+    if ( kl_t95 ) goto bb94; else goto bb95;
+    bb94:
+    kl_t0 = 32;
+    return kl_t0;
+    bb95:
+    goto bb96;
+    bb96:
+#line 102 "codegen/comparisons_mixed.kl"
+    kl_two64_96 = 1.8446744073709552e+19;
+#line 103 "codegen/comparisons_mixed.kl"
+    kl_t98 = -0.5;
+    kl_minus_tiny_97 = kl_t98;
+#line 104 "codegen/comparisons_mixed.kl"
+    kl_t99 = kl_cmp_lt_u64_f64( kl_umax_47, kl_two64_96 );
+    kl_t100 = !kl_t99;
+    if ( kl_t100 ) goto bb97; else goto bb98;
+    bb97:
+    kl_t0 = 33;
+    return kl_t0;
+    bb98:
+    goto bb99;
+    bb99:
+#line 105 "codegen/comparisons_mixed.kl"
+    kl_t101 = kl_cmp_gt_u64_f64( kl_zero_54, kl_minus_tiny_97 );
+    kl_t102 = !kl_t101;
+    if ( kl_t102 ) goto bb100; else goto bb101;
+    bb100:
+    kl_t0 = 34;
+    return kl_t0;
+    bb101:
+    goto bb102;
+    bb102:
+#line 106 "codegen/comparisons_mixed.kl"
+    kl_t103 = kl_cmp_ge_u64_f64( kl_umax_47, kl_two63_58 );
+    kl_t104 = !kl_t103;
+    if ( kl_t104 ) goto bb103; else goto bb104;
+    bb103:
+    kl_t0 = 35;
+    return kl_t0;
+    bb104:
+    goto bb105;
+    bb105:
+#line 107 "codegen/comparisons_mixed.kl"
+    kl_t105 = kl_cmp_le_u64_f64( kl_umax_47, kl_two64_96 );
+    kl_t106 = !kl_t105;
+    if ( kl_t106 ) goto bb106; else goto bb107;
+    bb106:
+    kl_t0 = 36;
+    return kl_t0;
+    bb107:
+    goto bb108;
+    bb108:
+#line 108 "codegen/comparisons_mixed.kl"
+    kl_t107 = kl_cmp_eq_u64_f64( kl_zero_54, kl_minus_tiny_97 );
+    if ( kl_t107 ) goto bb109; else goto bb110;
+    bb109:
+    kl_t0 = 37;
+    return kl_t0;
+    bb110:
+    goto bb111;
+    bb111:
+#line 112 "codegen/comparisons_mixed.kl"
+    kl_nought_108 = 0.0;
+#line 113 "codegen/comparisons_mixed.kl"
+    kl_t110 = 1.0 / kl_nought_108;
+    kl_infinity_109 = kl_t110;
+#line 114 "codegen/comparisons_mixed.kl"
+    kl_t112 = kl_nought_108 / kl_nought_108;
+    kl_nan_111 = kl_t112;
+#line 115 "codegen/comparisons_mixed.kl"
+    kl_t113 = kl_cmp_lt_i64_f64( kl_imax_43, kl_infinity_109 );
+    kl_t114 = !kl_t113;
+    if ( kl_t114 ) goto bb112; else goto bb113;
+    bb112:
+    kl_t0 = 38;
+    return kl_t0;
+    bb113:
+    goto bb114;
+    bb114:
+#line 116 "codegen/comparisons_mixed.kl"
+    kl_t115 = kl_cmp_lt_u64_f64( kl_umax_47, kl_infinity_109 );
+    kl_t116 = !kl_t115;
+    if ( kl_t116 ) goto bb115; else goto bb116;
+    bb115:
+    kl_t0 = 39;
+    return kl_t0;
+    bb116:
+    goto bb117;
+    bb117:
+#line 117 "codegen/comparisons_mixed.kl"
+    kl_t117 = kl_cmp_lt_i64_f64( kl_imax_43, kl_nan_111 );
+    if ( kl_t117 ) goto bb118; else goto bb119;
+    bb118:
+    kl_t0 = 40;
+    return kl_t0;
+    bb119:
+    goto bb120;
+    bb120:
+#line 118 "codegen/comparisons_mixed.kl"
+    kl_t118 = kl_cmp_ge_i64_f64( kl_imax_43, kl_nan_111 );
+    if ( kl_t118 ) goto bb121; else goto bb122;
+    bb121:
+    kl_t0 = 41;
+    return kl_t0;
+    bb122:
+    goto bb123;
+    bb123:
+#line 119 "codegen/comparisons_mixed.kl"
+    kl_t119 = kl_cmp_eq_i64_f64( kl_imax_43, kl_nan_111 );
+    if ( kl_t119 ) goto bb124; else goto bb125;
+    bb124:
+    kl_t0 = 43;
+    return kl_t0;
+    bb125:
+    goto bb126;
+    bb126:
+#line 120 "codegen/comparisons_mixed.kl"
+    kl_t120 = kl_cmp_ne_i64_f64( kl_imax_43, kl_nan_111 );
+    kl_t121 = !kl_t120;
+    if ( kl_t121 ) goto bb127; else goto bb128;
+    bb127:
+    kl_t0 = 44;
+    return kl_t0;
+    bb128:
+    goto bb129;
+    bb129:
+#line 121 "codegen/comparisons_mixed.kl"
+    kl_t122 = kl_cmp_ne_u64_f64( kl_umax_47, kl_nan_111 );
+    kl_t123 = !kl_t122;
+    if ( kl_t123 ) goto bb130; else goto bb131;
+    bb130:
+    kl_t0 = 45;
+    return kl_t0;
+    bb131:
+    goto bb132;
+    bb132:
+#line 124 "codegen/comparisons_mixed.kl"
+    kl_small_124 = 0.5;
+#line 125 "codegen/comparisons_mixed.kl"
+    kl_naught_125 = 0;
+#line 126 "codegen/comparisons_mixed.kl"
+    kl_t126 = ( double ) kl_small_124;
+    kl_t127 = kl_cmp_lt_i64_f64( kl_naught_125, kl_t126 );
+    kl_t128 = !kl_t127;
+    if ( kl_t128 ) goto bb133; else goto bb134;
+    bb133:
+    kl_t0 = 46;
+    return kl_t0;
+    bb134:
+    goto bb135;
+    bb135:
+#line 131 "codegen/comparisons_mixed.kl"
+    kl_t129 = -1;
+    kl_t130 = ( int64_t ) kl_t129;
+    kl_t131 = kl_cmp_gt_i64_u64( kl_t130, kl_umax_47 );
+    if ( kl_t131 ) goto bb136; else goto bb137;
+    bb136:
+    kl_t0 = 47;
+    return kl_t0;
+    bb137:
+    goto bb138;
+    bb138:
+#line 132 "codegen/comparisons_mixed.kl"
+    kl_t132 = kl_cmp_lt_i64_u64( kl_imax_43, 18446744073709551615ull );
+    kl_t133 = !kl_t132;
+    if ( kl_t133 ) goto bb139; else goto bb140;
+    bb139:
+    kl_t0 = 48;
+    return kl_t0;
+    bb140:
+    goto bb141;
+    bb141:
+#line 133 "codegen/comparisons_mixed.kl"
+    kl_t134 = ( int32_t ) kl_tiny_52;
+    kl_t135 = kl_t134 > 300;
+    if ( kl_t135 ) goto bb142; else goto bb143;
+    bb142:
+    kl_t0 = 49;
+    return kl_t0;
+    bb143:
+    goto bb144;
+    bb144:
+#line 134 "codegen/comparisons_mixed.kl"
+    kl_t136 = 0 - 1;
+    kl_t137 = ( int64_t ) kl_t136;
+    kl_t138 = kl_cmp_ne_i64_u64( kl_t137, kl_zero_54 );
+    kl_t139 = !kl_t138;
+    if ( kl_t139 ) goto bb145; else goto bb146;
+    bb145:
+    kl_t0 = 50;
+    return kl_t0;
+    bb146:
+    goto bb147;
+    bb147:
+#line 138 "codegen/comparisons_mixed.kl"
+    kl_t140 = kl__below__3u64( kl_plus_one_29, kl_minus_one_27 );
+    if ( kl_t140 ) goto bb148; else goto bb149;
+    bb148:
+    kl_t0 = 51;
+    return kl_t0;
+    bb149:
+    goto bb150;
+    bb150:
+#line 139 "codegen/comparisons_mixed.kl"
+    kl_t141 = kl__below__3f64( kl_half_64, kl_minus_one_27 );
+    if ( kl_t141 ) goto bb151; else goto bb152;
+    bb151:
+    kl_t0 = 52;
+    return kl_t0;
+    bb152:
+    goto bb153;
+    bb153:
+#line 140 "codegen/comparisons_mixed.kl"
+    kl_t142 = kl__below__3i32( kl_neg_1, kl_three_34 );
+    kl_t143 = !kl_t142;
+    if ( kl_t143 ) goto bb154; else goto bb155;
+    bb154:
+    kl_t0 = 53;
+    return kl_t0;
+    bb155:
+    goto bb156;
+    bb156:
+#line 142 "codegen/comparisons_mixed.kl"
+    kl_t0 = 42;
+    return kl_t0;
+}
+
+bool kl__below__3u64( uint64_t kl_a_1, int64_t kl_limit_2 )
+{
+    bool kl_t0;
+    bool kl_t3;
+#line 9 "codegen/comparisons_mixed.kl"
+    kl_t3 = kl_cmp_gt_i64_u64( kl_limit_2, kl_a_1 );
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+bool kl__below__3f64( double kl_a_1, int64_t kl_limit_2 )
+{
+    bool kl_t0;
+    bool kl_t3;
+#line 9 "codegen/comparisons_mixed.kl"
+    kl_t3 = kl_cmp_gt_i64_f64( kl_limit_2, kl_a_1 );
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+bool kl__below__3i32( int32_t kl_a_1, int64_t kl_limit_2 )
+{
+    bool kl_t0;
+    int64_t kl_t3;
+    bool kl_t4;
+#line 9 "codegen/comparisons_mixed.kl"
+    kl_t3 = ( int64_t ) kl_a_1;
+    kl_t4 = kl_t3 < kl_limit_2;
+    kl_t0 = kl_t4;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

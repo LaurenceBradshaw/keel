@@ -1,0 +1,53 @@
+// What D41 does not make legal. It moves the line for comparison alone, and only for numbers: a
+// result still has to land somewhere, and a value still has to be a magnitude before it is ranked.
+enum Colour
+{
+    Red,
+    Green
+};
+
+// What a comparison against a number needs from a `T` is that it *is* one, and only `Numeric`
+// says so. `Equatable` promises equality and `Comparable` promises ordering; both are satisfied by
+// exactly the numbers today only because D33's operators are not shipped, and a type that orders
+// itself will satisfy `Comparable` without comparing against an `i32`.
+bool equated<T>( T a, i32 x ) where T : Equatable
+{
+    return a == x;
+}
+
+bool ordered<T>( T a, i32 x ) where T : Comparable
+{
+    return a < x;
+}
+
+i32 main()
+{
+    i32   small = 1;
+    u32   unsigned_small = 1;
+    i64   wide = 1;
+    u64   unsigned_wide = 1;
+    f64   real = 1.5;
+    bool  flag = true;
+    i32*  address = &small;
+    Colour shade = Colour::Red;
+
+    // Arithmetic keeps D5's rule: these pairs compare, but their sum has no type to be.
+    u32 summed = small + unsigned_small;
+    i64 scaled = wide * unsigned_wide;
+    f64 mixed = wide - real;
+
+    // A literal that does not fit is a warning rather than an error (D41 gives it an answer), so
+    // the refusals here are all about what a value *is*, never about the range it lands in.
+
+    // A bool is not a magnitude, whichever side it is on.
+    bool counted = flag == small;
+    bool inverted = small != flag;
+    bool ranked = flag < small;
+
+    // Neither is an address or a variant. D30 leaves no route from either to a number.
+    bool located = address == small;
+    bool shaded = shade == small;
+    bool ordered = address < address;
+
+    return 0;
+}

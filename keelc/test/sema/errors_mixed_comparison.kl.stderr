@@ -1,0 +1,67 @@
+error: no operator `==` for `T` and `i32`
+  --> sema/errors_mixed_comparison.kl:15:12
+   |
+15 |     return a == x;
+   |            ^^^^^^ `T` must be a number to compare against `i32`; write `where T : Numeric` on `equated`
+
+error: no operator `<` for `T` and `i32`
+  --> sema/errors_mixed_comparison.kl:20:12
+   |
+20 |     return a < x;
+   |            ^^^^^ `T` must be a number to compare against `i32`; write `where T : Numeric` on `ordered`
+
+error: no operator `+` for `i32` and `u32`
+  --> sema/errors_mixed_comparison.kl:35:18
+   |
+35 |     u32 summed = small + unsigned_small;
+   |                  ^^^^^^^^^^^^^^^^^^^^^^
+
+error: no operator `*` for `i64` and `u64`
+  --> sema/errors_mixed_comparison.kl:36:18
+   |
+36 |     i64 scaled = wide * unsigned_wide;
+   |                  ^^^^^^^^^^^^^^^^^^^^
+
+error: no operator `-` for `i64` and `f64`
+  --> sema/errors_mixed_comparison.kl:37:17
+   |
+37 |     f64 mixed = wide - real;
+   |                 ^^^^^^^^^^^
+
+error: no operator `==` for `bool` and `i32`
+  --> sema/errors_mixed_comparison.kl:43:20
+   |
+43 |     bool counted = flag == small;
+   |                    ^^^^^^^^^^^^^
+
+error: no operator `!=` for `i32` and `bool`
+  --> sema/errors_mixed_comparison.kl:44:21
+   |
+44 |     bool inverted = small != flag;
+   |                     ^^^^^^^^^^^^^
+
+error: no operator `<` for `bool` and `i32`
+  --> sema/errors_mixed_comparison.kl:45:19
+   |
+45 |     bool ranked = flag < small;
+   |                   ^^^^^^^^^^^^
+
+error: no operator `==` for `i32*` and `i32`
+  --> sema/errors_mixed_comparison.kl:48:20
+   |
+48 |     bool located = address == small;
+   |                    ^^^^^^^^^^^^^^^^ only pointers of the same type can be compared
+
+error: no operator `==` for `Colour` and `i32`
+  --> sema/errors_mixed_comparison.kl:49:19
+   |
+49 |     bool shaded = shade == small;
+   |                   ^^^^^^^^^^^^^^ only values of the same `enum` can be compared
+
+error: no operator `<` for `i32*` and `i32*`
+  --> sema/errors_mixed_comparison.kl:50:20
+   |
+50 |     bool ordered = address < address;
+   |                    ^^^^^^^^^^^^^^^^^
+
+11 errors generated

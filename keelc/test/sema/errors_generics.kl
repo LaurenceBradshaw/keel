@@ -103,7 +103,9 @@ bool unpromised_operator<T>( T a ) where T : Copyable
     return a < a;
 }
 
-bool mismatched_operands<T>( T a, i32 b ) where T : Copyable & Comparable
+// Against a bool, because D41 lets a `Comparable` `T` meet a concrete *number* - what is left
+// is the operand that is not one.
+bool mismatched_operands<T>( T a, bool b ) where T : Copyable & Comparable
 {
     return a < b;
 }

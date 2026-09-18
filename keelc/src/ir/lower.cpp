@@ -106,6 +106,7 @@ private:
 
     // The type an operation happens in, and the conversion that puts an operand there. See §6.4.
     Type_id operation_type( Node_id node );
+    Type_id comparison_width( Type_id type ) const;
     Operand converted( Operand operand, Type_id to, Span span );
     Operand moved_if_owning( Operand operand );
 
@@ -377,6 +378,16 @@ Type_id Lowering::operation_type( Node_id node )
     const Type_id left  = type_of( ast_.child( node, 0 ) );
     const Type_id right = type_of( ast_.child( node, 1 ) );
 
+    // D41: a comparison meets in the narrowest type that holds both operands exactly, and is not
+    // held to arithmetic_result's further demand that C++ would pick that type too. That demand
+    // protects a *result*, and a comparison's result is a bool. An invalid answer here means no
+    // type holds both - `i64` against `u64`, or either against a float - which lower_binary
+    // answers by cases rather than by a conversion.
+    if( is_comparison( static_cast<Token_kind>( ast_.aux( node ) ) ) )
+    {
+        return types_.table().common( left, right );
+    }
+
     const Type_id common = types_.table().arithmetic_result( left, right );
 
     // A shift takes no common type: its result is the left operand's, which is why
@@ -384,9 +395,24 @@ Type_id Lowering::operation_type( Node_id node )
     return common.is_valid() ? common : left;
 }
 
+// How far an operand of such a comparison widens on its own. Every pair with no common type
+// reduces to i64/u64, i64/f64 or u64/f64 this way, which is what leaves the backend three guards
+// to write rather than eight.
+Type_id Lowering::comparison_width( Type_id type ) const
+{
+    const Type_table& table = types_.table();
+
+    return table.is_float( type ) ? table.floating( 64 ) : table.integer( 64, table.get( type ).is_signed );
+}
+
 // Both operands of a binary end up sharing a type, so a backend can read KIR without re-deriving
 // §6.4 - and so an LLVM backend gets what it already requires of an add. Most code produces no
 // conversion at all: a literal has already adopted its type from the checker.
+//
+// D41 is the one exception, and it is deliberate: a comparison whose operands meet in no type
+// leaves them unequal, because there is no domain to convert to and a comparison has no result
+// for the mismatch to corrupt. A backend answers it by cases - the C one with a guard function,
+// an LLVM one with the branch it would have to emit anyway, since no C helper is available to it.
 Operand Lowering::converted( Operand operand, Type_id to, Span span )
 {
     if( operand.type == to )
@@ -713,8 +739,15 @@ Operand Lowering::lower_binary( Node_id id )
     // A shift's count keeps its own type - it is a width, not a value meeting the left operand.
     const bool is_shift = op == Token_kind::Less_less || op == Token_kind::Greater_greater;
 
-    const Operand left  = converted( raw_left, operation, span );
-    const Operand right = is_shift ? raw_right : converted( raw_right, operation, span );
+    // D41's other case: the operands meet in no type at all, so each widens as far as its own kind
+    // reaches and the backend compares them where they are. This is the one binary whose operands
+    // reach KIR with different types, and the only reason it may: a comparison answers `bool`
+    // whatever the operands are, so there is no result for the mismatch to corrupt.
+    const bool by_cases = is_comparison( op ) && !operation.is_valid();
+
+    const Operand left = converted( raw_left, by_cases ? comparison_width( raw_left.type ) : operation, span );
+    const Operand right =
+        is_shift ? raw_right : converted( raw_right, by_cases ? comparison_width( raw_right.type ) : operation, span );
 
     // The type the operation *produces*, which for a comparison is bool.
     const Type_id type = type_of( id );

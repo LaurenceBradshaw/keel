@@ -619,6 +619,11 @@ private:
     // lets `u32 x = 42;` need no suffix. Also where a unary minus must be pushed through, so that
     // `i32 x = -2147483648;` range-checks as a negative rather than as an out-of-range positive.
     Type_id check_literal( Node_id id, Type_id expected );
+    // D41: the type a literal takes when the operand beside it cannot hold its value. Empty when
+    // it fits and should adopt as usual - which is every case but a comparison against a constant
+    // the other side has no room for.
+    Type_id standalone_literal_type( Node_id id, Type_id known ) const;
+    void    warn_if_constant_comparison( Node_id id, Token_kind op, Type_id lhs_type, Type_id rhs_type );
 
     Type_id infer_name( Node_id id );
     Type_id infer_call( Node_id id );
@@ -3134,6 +3139,103 @@ Type_id Checker::infer_literal( Node_id id )
     }
 }
 
+// Its default first, because that is D26's answer and the one an author predicts; a value too
+// large for that takes whichever 64-bit type holds it. Which one is picked cannot change the
+// answer - every type holding the value exactly compares the same - so this decides only where
+// the comparison happens.
+//
+// Integer literals only. A float literal that overflows an `f32` is a precision question rather
+// than this one, and it keeps the error it has today.
+Type_id Checker::standalone_literal_type( Node_id id, Type_id known ) const
+{
+    Node_id literal  = id;
+    bool    negative = false;
+
+    if( ast_.kind( id ) == Node_kind::Unary_expr && static_cast<Token_kind>( ast_.aux( id ) ) == Token_kind::Minus &&
+        is_literal_expression( ast_.child( id, 0 ) ) )
+    {
+        literal  = ast_.child( id, 0 );
+        negative = ast_.kind( literal ) == Node_kind::Int_literal;
+    }
+
+    if( ast_.kind( literal ) != Node_kind::Int_literal && ast_.kind( literal ) != Node_kind::Char_literal )
+    {
+        return Type_id {};
+    }
+
+    const Literal_id value { ast_.aux( literal ) };
+
+    // Nothing the lexer could not scan, and nothing against a type with no range to be outside
+    // of - a parameter's admissible set is slice 1e's question and is answered by check_literal.
+    if( !value.is_valid() || ( !table_.is_integer( known ) && !table_.is_float( known ) ) )
+    {
+        return Type_id {};
+    }
+
+    const u64 magnitude = literals_.integer( value );
+
+    if( table_.fits( magnitude, negative, known ) )
+    {
+        return Type_id {};
+    }
+
+    for( const Type_id candidate : { table_.default_integer(), table_.integer( 64, true ), table_.integer( 64, false ) } )
+    {
+        if( table_.fits( magnitude, negative, candidate ) )
+        {
+            return candidate;
+        }
+    }
+
+    return Type_id {};
+}
+
+// The other half of the rule above: a comparison against a constant the operand beside it cannot
+// hold is legal, and its answer does not depend on that operand at all. D41 is why it compiles;
+// this is why it is still worth saying. Deliberately a warning - the code is well defined and
+// means something, it just does not mean what it looks like.
+void Checker::warn_if_constant_comparison( Node_id id, Token_kind op, Type_id lhs_type, Type_id rhs_type )
+{
+    const Folded folded[2] = { fold_integer( ast_.child( id, 0 ) ), fold_integer( ast_.child( id, 1 ) ) };
+
+    // Either side may be the constant, and when both are, either may be the one out of range -
+    // `300 > cast<u8>( 200 )` is as settled as `b < -1` is. So both are asked, rather than one
+    // being picked and the other trusted.
+    for( const bool constant_on_the_left : { true, false } )
+    {
+        const Folded  value = constant_on_the_left ? folded[0] : folded[1];
+        const Type_id other = constant_on_the_left ? rhs_type : lhs_type;
+
+        if( !value.constant || value.overflowed || table_.fits( value.value.magnitude, value.value.negative, other ) )
+        {
+            continue;
+        }
+
+        // A range is contiguous, so a value outside it is above all of it or below all of it, and
+        // for an integer the sign says which: a negative that does not fit is below the minimum,
+        // and a non-negative one is above the maximum. That settles the ordering, and the operator
+        // does the rest.
+        const bool left_is_smaller = constant_on_the_left == value.value.negative;
+
+        const bool answer =
+            left_is_smaller ? ( op == Token_kind::Less || op == Token_kind::Less_equal || op == Token_kind::Bang_equal )
+                            : ( op == Token_kind::Greater || op == Token_kind::Greater_equal || op == Token_kind::Bang_equal );
+
+        diags_.warning(
+            ast_.span( id ),
+            fmt::format( "this comparison is always {}", answer ? "true" : "false" ),
+            fmt::format(
+                "`{}{}` is outside the range of `{}`",
+                value.value.negative ? "-" : "",
+                value.value.magnitude,
+                table_.name( other )
+            )
+        );
+
+        return;
+    }
+}
+
 Type_id Checker::check_literal( Node_id id, Type_id expected )
 {
     // `-2147483648` parses as a negation of 2147483648, which does not fit an i32 on its own. So
@@ -3859,9 +3961,15 @@ Type_id Checker::infer_binary( Node_id id )
 
         const Type_id known = infer( known_side );
 
+        // D41: a literal the other operand cannot hold is not a type error, because the comparison
+        // still has an answer - so it takes a type of its own to be compared in rather than
+        // adopting one it never had to fit. Arithmetic keeps the adoption, because there the two
+        // really do have to meet somewhere.
+        const Type_id standalone = is_comparison( op ) ? standalone_literal_type( literal_side, known ) : Type_id {};
+
         // A failed operand gives nothing to adopt, and check() absorbs an error expectation - so
         // the literal is carried along rather than asked to invent a type it has no basis for.
-        const Type_id adopted = check( literal_side, known );
+        const Type_id adopted = check( literal_side, standalone.is_valid() ? standalone : known );
 
         lhs_type = literal_on_the_left ? adopted : known;
         rhs_type = literal_on_the_left ? known : adopted;
@@ -3903,27 +4011,55 @@ Type_id Checker::infer_binary( Node_id id )
     if( const std::optional<Bound> bound = operator_to_bound( op );
         bound && ( table_.is_parameter( lhs_type ) || table_.is_parameter( rhs_type ) ) )
     {
+        const Type_id parameter = table_.is_parameter( lhs_type ) ? lhs_type : rhs_type;
+        const Type_id other     = parameter == lhs_type ? rhs_type : lhs_type;
+
+        // D41 generalised (§12): a comparison needs no common type, so a `T` promised to be a
+        // number compares against a concrete one exactly as two concrete numbers do. No walk over
+        // the types the bound admits, unlike a conversion: every one of them compares against
+        // every number, so the answer is `bool` without asking which `T` turns out to be.
+        const bool against_a_number =
+            is_comparison( op ) && !table_.is_parameter( other ) && accepts( Operands::Numeric, other );
+
         // Inside a generic body there is no conversion between an unknown type and anything else,
-        // so the two sides have to already agree. Returning rather than reporting and carrying on:
-        // one mistake is one diagnostic, and a type recorded past this point would be a claim about
-        // an expression that has just been refused.
-        if( lhs_type != rhs_type )
+        // so the two sides otherwise have to already agree. Returning rather than reporting and
+        // carrying on: one mistake is one diagnostic, and a type recorded past this point would be
+        // a claim about an expression that has just been refused.
+        if( lhs_type != rhs_type && !against_a_number )
         {
             return reject( fmt::format( "`{}` needs both operands to be the same type", token_kind_spelling( op ) ) );
         }
 
-        // Both sides are the same type and one of them is a parameter, so both are - which is what
-        // lets the help below name it without asking which side it was on.
-        if( !has_bound( lhs_type, *bound ) )
+        // `Numeric` and not the operator's own bound, for the mixed case only. What this needs is
+        // not that `T` is orderable but that it is a *number*, which is the one thing `Numeric`
+        // says - and the two are not the same promise even where they admit the same types today.
+        // `Comparable` and `Equatable` are both satisfied by exactly the numbers only because D33's
+        // operators are not shipped; when they are, a type that orders itself satisfies
+        // `Comparable` and still does not compare against an `i32`. Gating on `Numeric` is what
+        // makes this rule survive that, and it is also what keeps the help honest: an author who
+        // wrote `Equatable` wanted equality, and telling them to promise ordering instead would be
+        // asking for the wrong thing twice over.
+        const Bound required = against_a_number ? Bound::Numeric : *bound;
+
+        if( !has_bound( parameter, required ) )
         {
-            return reject( fmt::format(
-                "`{}` needs `{}`; write `where {} : {}` on `{}`",
-                token_kind_spelling( op ),
-                name_of_bound( *bound ),
-                table_.name( lhs_type ),
-                name_of_bound( *bound ),
-                interner_.text( Symbol_id { ast_.aux( current_function_ ) } )
-            ) );
+            return reject(
+                against_a_number ? fmt::format(
+                                       "`{}` must be a number to compare against `{}`; write `where {} : Numeric` on `{}`",
+                                       table_.name( parameter ),
+                                       table_.name( other ),
+                                       table_.name( parameter ),
+                                       interner_.text( Symbol_id { ast_.aux( current_function_ ) } )
+                                   )
+                                 : fmt::format(
+                                       "`{}` needs `{}`; write `where {} : {}` on `{}`",
+                                       token_kind_spelling( op ),
+                                       name_of_bound( required ),
+                                       table_.name( parameter ),
+                                       name_of_bound( required ),
+                                       interner_.text( Symbol_id { ast_.aux( current_function_ ) } )
+                                   )
+            );
         }
 
         // A comparison answers `bool` whatever `T` turns out to be; arithmetic answers `T`.
@@ -3931,7 +4067,9 @@ Type_id Checker::infer_binary( Node_id id )
         // record_constant and not record, exactly as the concrete tail below does: a division by
         // zero and an out-of-range shift are answerable without knowing `T`, and routing around the
         // check is how a generic body would be the one place they are not caught.
-        return record_constant( id, *bound == Bound::Equatable || *bound == Bound::Comparable ? bool_type : lhs_type );
+        return record_constant(
+            id, against_a_number || *bound == Bound::Equatable || *bound == Bound::Comparable ? bool_type : lhs_type
+        );
     }
 
     // Pointer and enum equality, which the rule table cannot express - its operand classes are all
@@ -3980,6 +4118,20 @@ Type_id Checker::infer_binary( Node_id id )
         return record( id, bool_type );
     }
 
+    // D41: a comparison needs no common type. Its answer lands in `bool`, which holds every
+    // answer, so the question is about the two values and not about how either is stored -
+    // where no one type holds both, lowering compares by cases instead. Arithmetic keeps D5's
+    // rule below, because a sum has to land somewhere and `u64 + i64` has nowhere.
+    //
+    // Both operands numeric, and not just what the rule accepts: `Comparable` also admits bool,
+    // and `flag == 1` has no answer of this kind.
+    if( rule->result == Result::Bool && accepts( Operands::Numeric, lhs_type ) && accepts( Operands::Numeric, rhs_type ) )
+    {
+        warn_if_constant_comparison( id, op, lhs_type, rhs_type );
+
+        return record_constant( id, bool_type );
+    }
+
     if( rule->result == Result::Left )
     {
         return record_constant( id, lhs_type );
@@ -3992,7 +4144,7 @@ Type_id Checker::infer_binary( Node_id id )
         return reject( {} );
     }
 
-    return record_constant( id, rule->result == Result::Bool ? bool_type : common );
+    return record_constant( id, common );
 }
 
 Type_id Checker::infer_unary( Node_id id )
@@ -6849,8 +7001,8 @@ TEST_CASE( "type_checker_applies_the_conversion_table", "[sema][types]" )
     }
 }
 
-// A comparison yields bool, but its operands still have to agree - `i32 < u32` is the original
-// bug D5 exists to catch, and it must not slip through just because the result is a bool.
+// A comparison yields bool, and D41 is the rule that its operands need not meet: the answer lands
+// in a type that holds every answer, so no common type is needed to produce one.
 TEST_CASE( "type_checker_types_comparisons_as_bool", "[sema][types]" )
 {
     SECTION( "the result is bool, not the operand type" )
@@ -6862,12 +7014,72 @@ TEST_CASE( "type_checker_types_comparisons_as_bool", "[sema][types]" )
         REQUIRE( p.type_name( p.nth( Node_kind::Binary_expr, 0 ) ) == "bool" );
     }
 
-    SECTION( "the operands are still subject to the table" )
+    // The cell §6.4 refuses for arithmetic. C++ compiles it and answers wrongly, which is the
+    // reason D41 is a divergence worth taking rather than a relaxation.
+    SECTION( "D41: mixed signedness compares where it cannot add" )
     {
         const Typed p( "bool f( i32 a, u32 b ) { return a < b; }" );
 
         INFO( p.rendered() );
-        REQUIRE( p.errors() >= 1 );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Binary_expr, 0 ) ) == "bool" );
+    }
+
+    // No type holds both, and it makes no difference: the question still has an answer.
+    SECTION( "D41: and where no type holds both operands" )
+    {
+        static const char* accepted[] = {
+            "bool f( i64 a, u64 b ) { return a < b; }",
+            "bool f( i64 a, f64 b ) { return a >= b; }",
+            "bool f( u64 a, f32 b ) { return a == b; }",
+            "bool f( f32 a, i64 b ) { return a != b; }",
+        };
+
+        for( const char* source : accepted )
+        {
+            const Typed p( source );
+
+            INFO( "source: " << source << "\n" << p.rendered() );
+            REQUIRE( p.clean() );
+            REQUIRE( p.type_name( p.nth( Node_kind::Binary_expr, 0 ) ) == "bool" );
+        }
+    }
+
+    // D41 moves the line for comparison alone. Arithmetic on the same pair still has nowhere to
+    // put its result, which is the whole of why the two rules differ.
+    SECTION( "D41 does not reach arithmetic" )
+    {
+        static const char* rejected[] = {
+            "u32 f( i32 a, u32 b ) { return a + b; }",
+            "i64 f( i64 a, u64 b ) { return a * b; }",
+            "f64 f( i64 a, f64 b ) { return a - b; }",
+        };
+
+        for( const char* source : rejected )
+        {
+            const Typed p( source );
+
+            INFO( "source: " << source << "\n" << p.rendered() );
+            REQUIRE( p.errors() >= 1 );
+        }
+    }
+
+    // `Comparable` admits bool, so the operand check alone would let `flag == 1` through to a
+    // rule that has no answer for it. Numeric on both sides is what the new branch tests.
+    SECTION( "a bool still compares only against a bool" )
+    {
+        static const char* rejected[] = {
+            "bool f( bool a, i32 b ) { return a == b; }",
+            "bool f( i32 a, bool b ) { return a != b; }",
+        };
+
+        for( const char* source : rejected )
+        {
+            const Typed p( source );
+
+            INFO( "source: " << source << "\n" << p.rendered() );
+            REQUIRE( p.errors() >= 1 );
+        }
     }
 }
 
@@ -7321,21 +7533,61 @@ TEST_CASE( "type_checker_lets_a_literal_adopt_the_other_operand", "[sema][types]
         REQUIRE( p.clean() );
     }
 
-    // Adopting is not the same as ignoring: the value still has to fit what it adopted.
-    SECTION( "a literal that does not fit the adopted type is still rejected" )
+    // Adopting is not the same as ignoring: in arithmetic the value still has to fit what it
+    // adopted, because there is a result and it has to land somewhere.
+    SECTION( "a literal that does not fit the adopted type is still rejected in arithmetic" )
     {
-        const Typed p( "i32 main() { u8 b = 1; if( b == 300 ) { return 1; } return 0; }" );
+        const Typed p( "i32 main() { u8 b = 1; b = b + 300; return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
+
+        // The literal itself, not the assignment downstream of it. Letting it take a type of its
+        // own here would report `expected u8, but got i32` and point at the wrong thing.
+        REQUIRE( p.rendered().find( "`300` does not fit in `u8`" ) != std::string::npos );
     }
 
-    SECTION( "a negative literal cannot adopt an unsigned type" )
+    // D41: a comparison has an answer whether or not the literal fits, so it is accepted and the
+    // answer is what gets reported. The value is outside the range, so nothing about the operand
+    // can change it.
+    SECTION( "but in a comparison it is accepted and the constant answer is warned about" )
     {
-        const Typed p( "i32 main() { u32 n = 1; if( n == -1 ) { return 1; } return 0; }" );
+        static const char* sources[] = {
+            "i32 main() { u8 b = 1; if( b == 300 ) { return 1; } return 0; }",
+            "i32 main() { u32 n = 1; if( n == -1 ) { return 1; } return 0; }",
+            "i32 main() { u64 n = 1; if( n < 0 - 1 ) { return 1; } return 0; }",
+        };
+
+        for( const char* source : sources )
+        {
+            const Typed p( source );
+
+            INFO( "source: " << source << "\n" << p.rendered() );
+            REQUIRE( p.clean() );
+            REQUIRE( p.rendered().find( "this comparison is always false" ) != std::string::npos );
+        }
+    }
+
+    // Both sides constant, and it is the *left* one that is out of range. Asking only one side
+    // would answer this by looking at the wrong operand and finding nothing wrong with it.
+    SECTION( "and the constant may be either operand" )
+    {
+        const Typed p( "i32 main() { if( 300 > cast<u8>( 200 ) ) { return 1; } return 0; }" );
 
         INFO( p.rendered() );
-        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.clean() );
+        REQUIRE( p.rendered().find( "this comparison is always true" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`300` is outside the range of `u8`" ) != std::string::npos );
+    }
+
+    SECTION( "and which way the constant answer falls is reported" )
+    {
+        const Typed p( "i32 main() { u8 b = 1; if( b < 300 ) { return 1; } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.rendered().find( "this comparison is always true" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`300` is outside the range of `u8`" ) != std::string::npos );
     }
 
     // Two literals have nothing to adopt from, so both take their defaults.
@@ -7347,12 +7599,14 @@ TEST_CASE( "type_checker_lets_a_literal_adopt_the_other_operand", "[sema][types]
         REQUIRE( p.clean() );
     }
 
-    SECTION( "and a mismatch between two real types is still an error" )
+    // D41: the pair that used to be the error here. Adoption is still what the section is about -
+    // neither operand is a literal, so nothing adopts and the comparison stands on its own.
+    SECTION( "and two real types of mixed signedness now compare" )
     {
         const Typed p( "i32 main() { i32 a = 1; u32 b = 2; if( a < b ) { return 1; } return 0; }" );
 
         INFO( p.rendered() );
-        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.clean() );
     }
 }
 
@@ -12940,8 +13194,11 @@ TEST_CASE( "type_checker_checks_operators_on_a_type_parameter", "[sema][generic]
         // The mismatch returns rather than reporting and carrying on. Without that, a `T` that does
         // hold the bound goes on to record a type on an expression just refused - and one that does
         // not reports the same mistake twice.
-        const Typed unbounded( "bool f<T>( T a ) { i32 x = 1; return a < x; }\ni32 main() { return 0; }" );
-        const Typed bounded( "i32 f<T>( T a ) where T : Comparable { i32 x = 1; i32 y = a < x; return y; }\n"
+        //
+        // Against a bool, because D41 lets a numeric `T` meet a concrete *number* - this is the
+        // mismatch that survives it.
+        const Typed unbounded( "bool f<T>( T a ) { bool x = true; return a == x; }\ni32 main() { return 0; }" );
+        const Typed bounded( "i32 f<T>( T a ) where T : Equatable { bool x = true; i32 y = a == x; return y; }\n"
                              "i32 main() { return 0; }" );
 
         INFO( unbounded.rendered() << bounded.rendered() );
@@ -12953,12 +13210,85 @@ TEST_CASE( "type_checker_checks_operators_on_a_type_parameter", "[sema][generic]
 
     SECTION( "the help names the parameter whichever side it was on" )
     {
-        // `where i32 : Comparable` is not a thing anyone can write. Reachable only if the mismatch
-        // above falls through, which is the other half of why it returns.
-        const Typed p( "bool f<T>( T a ) where T : Comparable { i32 x = 1; return x < a; }\ni32 main() { return 0; }" );
+        // `where i32 : Comparable` is not a thing anyone can write, and the number is on the left
+        // here - so the help has to read the parameter off the other operand.
+        const Typed p( "bool f<T>( T a ) { i32 x = 1; return x < a; }\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE(
+            p.rendered().find( "`T` must be a number to compare against `i32`; write `where T : Numeric` on `f`" ) !=
+            std::string::npos
+        );
         REQUIRE( p.rendered().find( "where i32 :" ) == std::string::npos );
+    }
+
+    // D41 generalised (§12). The bound is what makes it legal, not the operator - an `Equatable`
+    // `T` may be an enum or a pointer, and neither of those compares against a number.
+    SECTION( "a numeric `T` compares against a concrete number" )
+    {
+        static const char* accepted[] = {
+            "bool f<T>( T a ) where T : Numeric { i32 x = 1; return a < x; }",
+            "bool f<T>( T a ) where T : Floating { f64 x = 1.5; return x >= a; }",
+            "bool f<T>( T a ) where T : Integral { u64 x = 1; return a != x; }",
+            "bool f<T>( T a ) where T : Floating { i64 x = 1; return a == x; }",
+        };
+
+        for( const char* source : accepted )
+        {
+            const std::string source_with_main = std::string( source ) + "\ni32 main() { return 0; }";
+            const Typed       p( source_with_main.c_str() );
+
+            INFO( "source: " << source << "\n" << p.rendered() );
+            REQUIRE( p.clean() );
+            REQUIRE( p.type_name( p.nth( Node_kind::Binary_expr, 0 ) ) == "bool" );
+        }
+    }
+
+    SECTION( "but arithmetic against one is still refused" )
+    {
+        const Typed p( "T f<T>( T a ) where T : Numeric { i32 x = 1; return a + x; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() >= 1 );
+        REQUIRE( p.rendered().find( "needs both operands to be the same type" ) != std::string::npos );
+    }
+
+    // Two parameters is a question §12 did not answer - it decided a `T` against a *concrete*
+    // number. Every admissible pair would compare, so this is scope rather than soundness, and it
+    // stays refused until something asks for it.
+    SECTION( "but not one `T` against another" )
+    {
+        const Typed p( "bool f<T, U>( T a, U b ) where T : Numeric, where U : Numeric { return a < b; }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "needs both operands to be the same type" ) != std::string::npos );
+    }
+
+    // The bound has to say `T` is a *number*, and neither of these does. `Comparable` promises
+    // ordering and `Equatable` promises equality; both are satisfied by exactly the numbers only
+    // because D33's operators are not shipped, and neither is the promise this rule needs.
+    SECTION( "and a bound that is not `Numeric` does not buy one" )
+    {
+        static const char* rejected[] = {
+            "bool f<T>( T a ) where T : Equatable { i32 x = 1; return a == x; }",
+            "bool f<T>( T a ) where T : Comparable { i32 x = 1; return a < x; }",
+        };
+
+        for( const char* source : rejected )
+        {
+            const std::string source_with_main = std::string( source ) + "\ni32 main() { return 0; }";
+            const Typed       p( source_with_main.c_str() );
+
+            INFO( "source: " << source << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE(
+                p.rendered().find( "`T` must be a number to compare against `i32`; write `where T : Numeric` on `f`" ) !=
+                std::string::npos
+            );
+        }
     }
 
     SECTION( "an operator no bound grants is left to the rule table" )

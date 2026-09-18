@@ -867,6 +867,62 @@ TEST_CASE( "type_table_arithmetic_result_matches_plan_6_4", "[sema][type]" )
     }
 }
 
+// The domain a *comparison* happens in (D41), which is the same question without §5.1's clause
+// that C++ would pick the same type. Every cell here that the table above marks `--` is a pair
+// Keel compares and C++ gets wrong; every `--` that remains is a pair the backend guards, and
+// there are eight of them. Spelled out rather than derived, because which eight is the whole of
+// what the backend has to implement.
+constexpr std::string_view comparison_table[10][10] = {
+    /*       i8     i16    i32    i64    u8     u16    u32    u64    f32    f64  */
+    /* i8 */ { "i8", "i16", "i32", "i64", "i16", "i32", "i64", "--", "f32", "f64" },
+    /* i16*/ { "i16", "i16", "i32", "i64", "i16", "i32", "i64", "--", "f32", "f64" },
+    /* i32*/ { "i32", "i32", "i32", "i64", "i32", "i32", "i64", "--", "f64", "f64" },
+    /* i64*/ { "i64", "i64", "i64", "i64", "i64", "i64", "i64", "--", "--", "--" },
+    /* u8 */ { "i16", "i16", "i32", "i64", "u8", "u16", "u32", "u64", "f32", "f64" },
+    /* u16*/ { "i32", "i32", "i32", "i64", "u16", "u16", "u32", "u64", "f32", "f64" },
+    /* u32*/ { "i64", "i64", "i64", "i64", "u32", "u32", "u32", "u64", "f64", "f64" },
+    /* u64*/ { "--", "--", "--", "--", "u64", "u64", "u64", "u64", "--", "--" },
+    /* f32*/ { "f32", "f32", "f64", "--", "f32", "f32", "f64", "--", "f32", "f64" },
+    /* f64*/ { "f64", "f64", "f64", "--", "f64", "f64", "f64", "--", "f64", "f64" },
+};
+
+TEST_CASE( "type_table_common_is_the_comparison_domain", "[sema][type]" )
+{
+    const Type_table table;
+
+    std::size_t guarded = 0;
+
+    for( std::size_t row = 0; row < std::size( scalars ); ++row )
+    {
+        for( std::size_t col = 0; col < std::size( scalars ); ++col )
+        {
+            const Type_id          got      = table.common( named( table, scalars[row] ), named( table, scalars[col] ) );
+            const std::string_view expected = comparison_table[row][col];
+
+            INFO( scalars[row] << " vs " << scalars[col] << " -> expected " << expected );
+
+            if( expected == "--" )
+            {
+                REQUIRE_FALSE( got.is_valid() );
+                ++guarded;
+                continue;
+            }
+
+            REQUIRE( got.is_valid() );
+            REQUIRE( table.name( got ) == expected );
+
+            // A domain that did not hold both operands exactly would answer a different question
+            // from the one the author asked.
+            REQUIRE( table.holds( named( table, scalars[row] ), got ) );
+            REQUIRE( table.holds( named( table, scalars[col] ), got ) );
+        }
+    }
+
+    // Sixteen cells, eight unordered pairs, three shapes once each side widens: i64/u64, i64/f64
+    // and u64/f64. If this number moves, the backend has a shape it does not implement.
+    REQUIRE( guarded == 16 );
+}
+
 // Properties that must hold whatever the table says, so a future edit to it cannot go unnoticed.
 TEST_CASE( "type_table_arithmetic_result_properties", "[sema][type]" )
 {
