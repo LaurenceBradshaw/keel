@@ -6,3 +6,5 @@ compile_commands.json
 
 # Generated C output and the binaries built from it
 *.kl.c
+.claude/
+graphify-out/

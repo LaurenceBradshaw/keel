@@ -206,7 +206,7 @@ TEST_CASE( "mangle_function_spells_the_signature", "[codegen][mangle]" )
     const std::vector<Mangled_parameter> two   = { signed32, signed32 };
     const std::vector<Mangled_parameter> mixed = { unsigned8, by_value( table.floating( 64 ) ) };
 
-    // The module is empty until M7, which leaves the doubled underscore in place.
+    // The module is empty until M8, which leaves the doubled underscore in place.
     REQUIRE( mangle_function( "", "main", none, table ) == "kl__main__" );
     REQUIRE( mangle_function( "", "add", two, table ) == "kl__add__3i32_3i32" );
     REQUIRE( mangle_function( "", "f", mixed, table ) == "kl__f__2u8_3f64" );

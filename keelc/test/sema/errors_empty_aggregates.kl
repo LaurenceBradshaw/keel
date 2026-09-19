@@ -1,0 +1,62 @@
+// PLAN §12. An aggregate with no fields emits a C struct with no members, which standard C does not
+// have - so it is refused, and an `enum` with one variant is the spelling for a type with one value.
+// The rule is "no fields", not "no members": a method-only class is just as empty once emitted.
+struct Empty
+{
+};
+
+class Empty_class
+{
+};
+
+// Methods take no storage, so this is the same empty C struct as the two above.
+class Only_a_method
+{
+    i32 get()
+    {
+        return 1;
+    }
+};
+
+// A destructor cannot own what the type does not hold, so the emptiness is the only mistake here
+// and the ownership rules stay quiet about it.
+class Only_lifecycle
+{
+    Only_lifecycle()
+    {
+    }
+
+    ~Only_lifecycle()
+    {
+    }
+};
+
+// Empty for every `T`, so it is refused once where it is written rather than at each instantiation.
+struct Box<T>
+{
+};
+
+// The alternative the diagnostic names, and it must stay legal - conflating "no fields" with "no
+// data" would reject the fix the message recommends.
+enum Unit
+{
+    Only
+};
+
+// The same point where payloads are in play: a payload-free variant beside one that carries data.
+enum Shape
+{
+    Nothing,
+    Circle( f64 radius )
+};
+
+// One field is enough, which is where the boundary sits.
+struct One
+{
+    i32 x;
+};
+
+i32 main()
+{
+    return 0;
+}

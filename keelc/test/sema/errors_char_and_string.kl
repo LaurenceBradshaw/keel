@@ -1,4 +1,4 @@
-// D20. A character literal is a u8-sized code point; a string literal has no type until M7.
+// D20. A character literal is a u8-sized code point; a string literal has no type until M8.
 i32 main()
 {
     bool a = 'x';

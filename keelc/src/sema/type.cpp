@@ -1297,7 +1297,7 @@ TEST_CASE( "type_table_interns_structs_by_declaration", "[sema][type]" )
         REQUIRE( table.structure( first, {}, "Point" ) == point );
     }
 
-    // The property the whole design turns on: at M7 two modules may each declare `Point`, and they
+    // The property the whole design turns on: at M8 two modules may each declare `Point`, and they
     // must not be the same type.
     SECTION( "two declarations of the same name are two types" )
     {

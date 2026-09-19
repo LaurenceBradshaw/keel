@@ -1,0 +1,31 @@
+error: `Empty` has no fields, so it has no size
+ --> sema/errors_empty_aggregates.kl:4:1
+  |
+4 | struct Empty
+  | ^^^^^^^^^^^^ use an `enum` with one variant for a type with one value
+
+error: `Empty_class` has no fields, so it has no size
+ --> sema/errors_empty_aggregates.kl:8:1
+  |
+8 | class Empty_class
+  | ^^^^^^^^^^^^^^^^^ use an `enum` with one variant for a type with one value
+
+error: `Only_a_method` has no fields, so it has no size
+  --> sema/errors_empty_aggregates.kl:13:1
+   |
+13 | class Only_a_method
+   | ^^^^^^^^^^^^^^^^^^^ use an `enum` with one variant for a type with one value
+
+error: `Only_lifecycle` has no fields, so it has no size
+  --> sema/errors_empty_aggregates.kl:23:1
+   |
+23 | class Only_lifecycle
+   | ^^^^^^^^^^^^^^^^^^^^ use an `enum` with one variant for a type with one value
+
+error: `Box` has no fields, so it has no size
+  --> sema/errors_empty_aggregates.kl:35:1
+   |
+35 | struct Box<T>
+   | ^^^^^^^^^^^^^ use an `enum` with one variant for a type with one value
+
+5 errors generated

@@ -24,7 +24,7 @@ struct Mangled_parameter
 };
 
 // `kl_<module>_<name>__<argtypes>`, plus `__I<typeargs>E__` before them when the function is an
-// instantiation. The module is empty until M7, which gives `kl__add__3i32_3i32`. Parameter types
+// instantiation. The module is empty until M8, which gives `kl__add__3i32_3i32`. Parameter types
 // are what tell two overloads of one name apart, and the type arguments are what tell two
 // instantiations of one generic apart - an overloaded generic needs both.
 std::string mangle_function(
