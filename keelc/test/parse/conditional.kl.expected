@@ -1,0 +1,143 @@
+Source_file                             4:1-48:1
+  Function_decl                         4:1-9:2     name=loosest
+    Named_type                          4:1-4:4     "i32"
+    Param_list                          4:12-4:44
+      Param_decl                        4:14-4:20   name=a
+        Named_type                      4:14-4:18   "bool"
+      Param_decl                        4:22-4:28   name=b
+        Named_type                      4:22-4:26   "bool"
+      Param_decl                        4:30-4:35   name=c
+        Named_type                      4:30-4:33   "i32"
+      Param_decl                        4:37-4:42   name=d
+        Named_type                      4:37-4:40   "i32"
+    Block                               5:1-9:2
+      Return_stmt                       8:5-8:27
+        Conditional_expr                8:12-8:26
+          Binary_expr                   8:12-8:18   op=||
+            Name_expr                   8:12-8:13   "a"
+            Name_expr                   8:17-8:18   "b"
+          Name_expr                     8:21-8:22   "c"
+          Name_expr                     8:25-8:26   "d"
+    <none>                              -
+  Function_decl                         11:1-14:2   name=arms_fold_in
+    Named_type                          11:1-11:4   "i32"
+    Param_list                          11:17-11:55
+      Param_decl                        11:19-11:24 name=a
+        Named_type                      11:19-11:22 "i32"
+      Param_decl                        11:26-11:31 name=b
+        Named_type                      11:26-11:29 "i32"
+      Param_decl                        11:33-11:38 name=c
+        Named_type                      11:33-11:36 "i32"
+      Param_decl                        11:40-11:45 name=d
+        Named_type                      11:40-11:43 "i32"
+      Param_decl                        11:47-11:53 name=p
+        Named_type                      11:47-11:51 "bool"
+    Block                               12:1-14:2
+      Return_stmt                       13:5-13:30
+        Conditional_expr                13:12-13:29
+          Name_expr                     13:12-13:13 "p"
+          Binary_expr                   13:16-13:21 op=+
+            Name_expr                   13:16-13:17 "a"
+            Name_expr                   13:20-13:21 "b"
+          Binary_expr                   13:24-13:29 op=*
+            Name_expr                   13:24-13:25 "c"
+            Name_expr                   13:28-13:29 "d"
+    <none>                              -
+  Function_decl                         18:1-21:2   name=chained
+    Named_type                          18:1-18:4   "i32"
+    Param_list                          18:12-18:51
+      Param_decl                        18:14-18:20 name=a
+        Named_type                      18:14-18:18 "bool"
+      Param_decl                        18:22-18:28 name=b
+        Named_type                      18:22-18:26 "bool"
+      Param_decl                        18:30-18:35 name=w
+        Named_type                      18:30-18:33 "i32"
+      Param_decl                        18:37-18:42 name=x
+        Named_type                      18:37-18:40 "i32"
+      Param_decl                        18:44-18:49 name=y
+        Named_type                      18:44-18:47 "i32"
+    Block                               19:1-21:2
+      Return_stmt                       20:5-20:30
+        Conditional_expr                20:12-20:29
+          Name_expr                     20:12-20:13 "a"
+          Name_expr                     20:16-20:17 "w"
+          Conditional_expr              20:20-20:29
+            Name_expr                   20:20-20:21 "b"
+            Name_expr                   20:24-20:25 "x"
+            Name_expr                   20:28-20:29 "y"
+    <none>                              -
+  Function_decl                         25:1-28:2   name=middle_is_delimited
+    Named_type                          25:1-25:4   "i32"
+    Param_list                          25:24-25:64
+      Param_decl                        25:26-25:32 name=p
+        Named_type                      25:26-25:30 "bool"
+      Param_decl                        25:34-25:40 name=q
+        Named_type                      25:34-25:38 "bool"
+      Param_decl                        25:42-25:48 name=r
+        Named_type                      25:42-25:46 "bool"
+      Param_decl                        25:50-25:55 name=x
+        Named_type                      25:50-25:53 "i32"
+      Param_decl                        25:57-25:62 name=y
+        Named_type                      25:57-25:60 "i32"
+    Block                               26:1-28:2
+      Return_stmt                       27:5-27:39
+        Conditional_expr                27:12-27:38
+          Name_expr                     27:12-27:13 "p"
+          Conditional_expr              27:18-27:32
+            Binary_expr                 27:18-27:24 op=||
+              Name_expr                 27:18-27:19 "q"
+              Name_expr                 27:23-27:24 "r"
+            Name_expr                   27:27-27:28 "x"
+            Name_expr                   27:31-27:32 "y"
+          Name_expr                     27:37-27:38 "y"
+    <none>                              -
+  Function_decl                         32:1-35:2   name=nested_condition
+    Named_type                          32:1-32:4   "i32"
+    Param_list                          32:21-32:61
+      Param_decl                        32:23-32:29 name=a
+        Named_type                      32:23-32:27 "bool"
+      Param_decl                        32:31-32:37 name=b
+        Named_type                      32:31-32:35 "bool"
+      Param_decl                        32:39-32:45 name=c
+        Named_type                      32:39-32:43 "bool"
+      Param_decl                        32:47-32:52 name=x
+        Named_type                      32:47-32:50 "i32"
+      Param_decl                        32:54-32:59 name=y
+        Named_type                      32:54-32:57 "i32"
+    Block                               33:1-35:2
+      Return_stmt                       34:5-34:34
+        Conditional_expr                34:14-34:33
+          Conditional_expr              34:14-34:23
+            Name_expr                   34:14-34:15 "a"
+            Name_expr                   34:18-34:19 "b"
+            Name_expr                   34:22-34:23 "c"
+          Name_expr                     34:28-34:29 "x"
+          Name_expr                     34:32-34:33 "y"
+    <none>                              -
+  Function_decl                         39:1-42:2   name=not_a_D16_mix
+    Named_type                          39:1-39:4   "i32"
+    Param_list                          39:18-39:48
+      Param_decl                        39:20-39:25 name=a
+        Named_type                      39:20-39:23 "i32"
+      Param_decl                        39:27-39:32 name=b
+        Named_type                      39:27-39:30 "i32"
+      Param_decl                        39:34-39:39 name=c
+        Named_type                      39:34-39:37 "i32"
+      Param_decl                        39:41-39:46 name=d
+        Named_type                      39:41-39:44 "i32"
+    Block                               40:1-42:2
+      Return_stmt                       41:5-41:26
+        Conditional_expr                41:12-41:25
+          Binary_expr                   41:12-41:17 op=&
+            Name_expr                   41:12-41:13 "a"
+            Name_expr                   41:16-41:17 "b"
+          Name_expr                     41:20-41:21 "c"
+          Name_expr                     41:24-41:25 "d"
+    <none>                              -
+  Function_decl                         44:1-47:2   name=main
+    Named_type                          44:1-44:4   "i32"
+    Param_list                          44:9-44:11  "()"
+    Block                               45:1-47:2
+      Return_stmt                       46:5-46:14
+        Int_literal                     46:12-46:13 "0"
+    <none>                              -

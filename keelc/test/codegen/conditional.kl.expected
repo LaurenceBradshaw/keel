@@ -1,0 +1,538 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Pair;
+struct kl__Owner;
+
+struct kl__Pair
+{
+    int32_t kl_x_16;
+    int32_t kl_y_18;
+};
+
+struct kl__Owner
+{
+    int32_t kl_tag_23;
+};
+
+int32_t kl_calls_1;
+int32_t kl_drops_21;
+
+int32_t kl__counted__3i32( int32_t );
+void kl__Owner__R5Owner_3i32__ctor( struct kl__Owner*, int32_t );
+void kl__Owner__dtor( struct kl__Owner* );
+int32_t kl__owning__4bool( bool );
+int32_t kl__owning_built__4bool( bool );
+int32_t kl__owning_temporary__4bool( bool );
+int32_t kl__main__( void );
+
+int32_t kl__counted__3i32( int32_t kl_v_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t2;
+#line 7 "codegen/conditional.kl"
+    kl_t2 = kl_calls_1 + 1;
+    kl_calls_1 = kl_t2;
+#line 8 "codegen/conditional.kl"
+    kl_t0 = kl_v_1;
+    return kl_t0;
+}
+
+void kl__Owner__R5Owner_3i32__ctor( struct kl__Owner* kl_this_1, int32_t kl_t_2 )
+{
+#line 25 "codegen/conditional.kl"
+    ( *kl_this_1 ).kl_tag_23 = kl_t_2;
+    return;
+}
+
+void kl__Owner__dtor( struct kl__Owner* kl_this_1 )
+{
+    int32_t kl_t2;
+#line 30 "codegen/conditional.kl"
+    kl_t2 = kl_drops_21 + 1;
+    kl_drops_21 = kl_t2;
+    return;
+}
+
+int32_t kl__owning__4bool( bool kl_which_1 )
+{
+    int32_t kl_t0;
+    struct kl__Owner kl_a_2;
+    struct kl__Owner* kl_t3;
+    struct kl__Owner kl_b_5;
+    struct kl__Owner* kl_t6;
+    struct kl__Owner kl_c_8;
+    struct kl__Owner kl_t9;
+    bool kl_t10;
+    bool kl_t11;
+    bool kl_t12;
+#line 37 "codegen/conditional.kl"
+    kl_t10 = false;
+    kl_t3 = &kl_a_2;
+    kl_t10 = true;
+    kl__Owner__R5Owner_3i32__ctor( kl_t3, 1 );
+#line 38 "codegen/conditional.kl"
+    kl_t11 = false;
+    kl_t6 = &kl_b_5;
+    kl_t11 = true;
+    kl__Owner__R5Owner_3i32__ctor( kl_t6, 2 );
+    if ( kl_which_1 ) goto bb1; else goto bb2;
+    bb1:
+#line 39 "codegen/conditional.kl"
+    kl_t9 = kl_a_2;
+    kl_t10 = false;
+    kl_t12 = true;
+    goto bb3;
+    bb2:
+    kl_t9 = kl_b_5;
+    kl_t11 = false;
+    kl_t12 = true;
+    goto bb3;
+    bb3:
+    kl_c_8 = kl_t9;
+    kl_t12 = false;
+    if ( kl_t12 ) kl__Owner__dtor( &kl_t9 );
+#line 41 "codegen/conditional.kl"
+    kl_t0 = kl_c_8.kl_tag_23;
+    kl__Owner__dtor( &kl_c_8 );
+    if ( kl_t11 ) kl__Owner__dtor( &kl_b_5 );
+    kl_t11 = false;
+    if ( kl_t10 ) kl__Owner__dtor( &kl_a_2 );
+    kl_t10 = false;
+    return kl_t0;
+}
+
+int32_t kl__owning_built__4bool( bool kl_which_1 )
+{
+    int32_t kl_t0;
+    struct kl__Owner kl_c_2;
+    struct kl__Owner kl_t3;
+    struct kl__Owner kl_t4;
+    struct kl__Owner* kl_t5;
+    struct kl__Owner kl_t7;
+    struct kl__Owner* kl_t8;
+    bool kl_t10;
+    bool kl_t11;
+    bool kl_t12;
+    if ( kl_which_1 ) goto bb1; else goto bb2;
+    bb1:
+#line 48 "codegen/conditional.kl"
+    kl_t5 = &kl_t4;
+    kl_t11 = true;
+    kl__Owner__R5Owner_3i32__ctor( kl_t5, 100 );
+    kl_t3 = kl_t4;
+    kl_t11 = false;
+    kl_t10 = true;
+    goto bb3;
+    bb2:
+    kl_t8 = &kl_t7;
+    kl_t12 = true;
+    kl__Owner__R5Owner_3i32__ctor( kl_t8, 200 );
+    kl_t3 = kl_t7;
+    kl_t12 = false;
+    kl_t10 = true;
+    goto bb3;
+    bb3:
+    kl_c_2 = kl_t3;
+    kl_t10 = false;
+    if ( kl_t12 ) kl__Owner__dtor( &kl_t7 );
+    if ( kl_t11 ) kl__Owner__dtor( &kl_t4 );
+    if ( kl_t10 ) kl__Owner__dtor( &kl_t3 );
+#line 50 "codegen/conditional.kl"
+    kl_t0 = kl_c_2.kl_tag_23;
+    kl__Owner__dtor( &kl_c_2 );
+    return kl_t0;
+}
+
+int32_t kl__owning_temporary__4bool( bool kl_which_1 )
+{
+    int32_t kl_t0;
+    struct kl__Owner kl_a_2;
+    struct kl__Owner* kl_t3;
+    struct kl__Owner kl_b_5;
+    struct kl__Owner* kl_t6;
+    struct kl__Owner kl_t8;
+    bool kl_t9;
+    bool kl_t10;
+#line 56 "codegen/conditional.kl"
+    kl_t9 = false;
+    kl_t3 = &kl_a_2;
+    kl_t9 = true;
+    kl__Owner__R5Owner_3i32__ctor( kl_t3, 10 );
+#line 57 "codegen/conditional.kl"
+    kl_t10 = false;
+    kl_t6 = &kl_b_5;
+    kl_t10 = true;
+    kl__Owner__R5Owner_3i32__ctor( kl_t6, 20 );
+    if ( kl_which_1 ) goto bb1; else goto bb2;
+    bb1:
+#line 59 "codegen/conditional.kl"
+    kl_t8 = kl_a_2;
+    kl_t9 = false;
+    goto bb3;
+    bb2:
+    kl_t8 = kl_b_5;
+    kl_t10 = false;
+    goto bb3;
+    bb3:
+    kl_t0 = kl_t8.kl_tag_23;
+    kl__Owner__dtor( &kl_t8 );
+    if ( kl_t10 ) kl__Owner__dtor( &kl_b_5 );
+    kl_t10 = false;
+    if ( kl_t9 ) kl__Owner__dtor( &kl_a_2 );
+    kl_t9 = false;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_a_1;
+    int32_t kl_b_2;
+    int32_t kl_t3;
+    bool kl_t4;
+    bool kl_t5;
+    int32_t kl_t6;
+    bool kl_t7;
+    bool kl_t8;
+    int32_t kl_chosen_9;
+    int32_t kl_t10;
+    int32_t kl_t11;
+    bool kl_t13;
+    bool kl_t14;
+    int64_t kl_wide_15;
+    int64_t kl_t16;
+    bool kl_t17;
+    bool kl_t18;
+    int64_t kl_widened_19;
+    int64_t kl_t20;
+    bool kl_t21;
+    int64_t kl_t22;
+    int64_t kl_t23;
+    bool kl_t24;
+    int32_t kl_ladder_25;
+    int32_t kl_t26;
+    bool kl_t27;
+    int32_t kl_t28;
+    bool kl_t29;
+    bool kl_t30;
+    int32_t kl_inner_31;
+    int32_t kl_t32;
+    bool kl_t33;
+    bool kl_t34;
+    bool kl_t35;
+    struct kl__Pair kl_p_36;
+    struct kl__Pair kl_t37;
+    struct kl__Pair kl_q_38;
+    struct kl__Pair kl_t39;
+    struct kl__Pair kl_t40;
+    bool kl_t41;
+    bool kl_t42;
+    struct kl__Pair kl_t43;
+    bool kl_t44;
+    bool kl_t45;
+    int32_t kl_t46;
+    bool kl_t47;
+    bool kl_t48;
+    int32_t kl_t49;
+    bool kl_t50;
+    bool kl_t51;
+    int32_t kl_t52;
+    bool kl_t53;
+    bool kl_t54;
+    int32_t kl_t55;
+    bool kl_t56;
+    bool kl_t57;
+    int32_t kl_t58;
+    bool kl_t59;
+    bool kl_t60;
+#line 64 "codegen/conditional.kl"
+    kl_a_1 = 3;
+#line 65 "codegen/conditional.kl"
+    kl_b_2 = 7;
+#line 67 "codegen/conditional.kl"
+    kl_t4 = kl_a_1 < kl_b_2;
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t3 = kl_a_1;
+    goto bb3;
+    bb2:
+    kl_t3 = kl_b_2;
+    goto bb3;
+    bb3:
+    kl_t5 = kl_t3 != 3;
+    if ( kl_t5 ) goto bb4; else goto bb5;
+    bb4:
+    kl_t0 = 1;
+    return kl_t0;
+    bb5:
+#line 68 "codegen/conditional.kl"
+    kl_t7 = kl_a_1 > kl_b_2;
+    if ( kl_t7 ) goto bb6; else goto bb7;
+    bb6:
+    kl_t6 = kl_a_1;
+    goto bb8;
+    bb7:
+    kl_t6 = kl_b_2;
+    goto bb8;
+    bb8:
+    kl_t8 = kl_t6 != 7;
+    if ( kl_t8 ) goto bb9; else goto bb10;
+    bb9:
+    kl_t0 = 2;
+    return kl_t0;
+    bb10:
+#line 72 "codegen/conditional.kl"
+    kl_calls_1 = 0;
+    goto bb11;
+    bb11:
+#line 74 "codegen/conditional.kl"
+    kl_t11 = kl__counted__3i32( 1 );
+    kl_t10 = kl_t11;
+    goto bb12;
+    bb12:
+    kl_chosen_9 = kl_t10;
+#line 76 "codegen/conditional.kl"
+    kl_t13 = kl_chosen_9 != 1;
+    if ( kl_t13 ) goto bb13; else goto bb14;
+    bb13:
+    kl_t0 = 3;
+    return kl_t0;
+    bb14:
+#line 77 "codegen/conditional.kl"
+    kl_t14 = kl_calls_1 != 1;
+    if ( kl_t14 ) goto bb15; else goto bb16;
+    bb15:
+    kl_t0 = 4;
+    return kl_t0;
+    bb16:
+#line 80 "codegen/conditional.kl"
+    kl_t17 = kl_a_1 < kl_b_2;
+    if ( kl_t17 ) goto bb17; else goto bb18;
+    bb17:
+    kl_t16 = 1;
+    goto bb19;
+    bb18:
+    kl_t16 = 2;
+    goto bb19;
+    bb19:
+    kl_wide_15 = kl_t16;
+#line 82 "codegen/conditional.kl"
+    kl_t18 = kl_wide_15 != 1;
+    if ( kl_t18 ) goto bb20; else goto bb21;
+    bb20:
+    kl_t0 = 5;
+    return kl_t0;
+    bb21:
+#line 85 "codegen/conditional.kl"
+    kl_t21 = kl_a_1 < kl_b_2;
+    if ( kl_t21 ) goto bb22; else goto bb23;
+    bb22:
+    kl_t22 = ( int64_t ) kl_a_1;
+    kl_t20 = kl_t22;
+    goto bb24;
+    bb23:
+    kl_t23 = ( int64_t ) kl_b_2;
+    kl_t20 = kl_t23;
+    goto bb24;
+    bb24:
+    kl_widened_19 = kl_t20;
+#line 87 "codegen/conditional.kl"
+    kl_t24 = kl_widened_19 != 3;
+    if ( kl_t24 ) goto bb25; else goto bb26;
+    bb25:
+    kl_t0 = 6;
+    return kl_t0;
+    bb26:
+#line 90 "codegen/conditional.kl"
+    kl_t27 = kl_a_1 > kl_b_2;
+    if ( kl_t27 ) goto bb27; else goto bb28;
+    bb27:
+    kl_t26 = 10;
+    goto bb29;
+    bb28:
+    kl_t29 = kl_a_1 == kl_b_2;
+    if ( kl_t29 ) goto bb30; else goto bb31;
+    bb29:
+    kl_ladder_25 = kl_t26;
+#line 92 "codegen/conditional.kl"
+    kl_t30 = kl_ladder_25 != 30;
+    if ( kl_t30 ) goto bb33; else goto bb34;
+    bb30:
+#line 90 "codegen/conditional.kl"
+    kl_t28 = 20;
+    goto bb32;
+    bb31:
+    kl_t28 = 30;
+    goto bb32;
+    bb32:
+    kl_t26 = kl_t28;
+    goto bb29;
+    bb33:
+#line 92 "codegen/conditional.kl"
+    kl_t0 = 7;
+    return kl_t0;
+    bb34:
+#line 95 "codegen/conditional.kl"
+    kl_t34 = kl_a_1 < kl_b_2;
+    if ( kl_t34 ) goto bb38; else goto bb39;
+    bb35:
+    kl_t32 = 40;
+    goto bb37;
+    bb36:
+    kl_t32 = 50;
+    goto bb37;
+    bb37:
+    kl_inner_31 = kl_t32;
+#line 97 "codegen/conditional.kl"
+    kl_t35 = kl_inner_31 != 40;
+    if ( kl_t35 ) goto bb41; else goto bb42;
+    bb38:
+#line 95 "codegen/conditional.kl"
+    kl_t33 = true;
+    goto bb40;
+    bb39:
+    kl_t33 = false;
+    goto bb40;
+    bb40:
+    if ( kl_t33 ) goto bb35; else goto bb36;
+    bb41:
+#line 97 "codegen/conditional.kl"
+    kl_t0 = 8;
+    return kl_t0;
+    bb42:
+#line 100 "codegen/conditional.kl"
+    kl_t37.kl_x_16 = 1;
+    kl_t37.kl_y_18 = 2;
+    kl_p_36 = kl_t37;
+#line 101 "codegen/conditional.kl"
+    kl_t39.kl_x_16 = 3;
+    kl_t39.kl_y_18 = 4;
+    kl_q_38 = kl_t39;
+#line 103 "codegen/conditional.kl"
+    kl_t41 = kl_a_1 < kl_b_2;
+    if ( kl_t41 ) goto bb43; else goto bb44;
+    bb43:
+    kl_t40 = kl_p_36;
+    goto bb45;
+    bb44:
+    kl_t40 = kl_q_38;
+    goto bb45;
+    bb45:
+    kl_t42 = kl_t40.kl_y_18 != 2;
+    if ( kl_t42 ) goto bb46; else goto bb47;
+    bb46:
+    kl_t0 = 9;
+    return kl_t0;
+    bb47:
+#line 104 "codegen/conditional.kl"
+    kl_t44 = kl_a_1 > kl_b_2;
+    if ( kl_t44 ) goto bb48; else goto bb49;
+    bb48:
+    kl_t43 = kl_p_36;
+    goto bb50;
+    bb49:
+    kl_t43 = kl_q_38;
+    goto bb50;
+    bb50:
+    kl_t45 = kl_t43.kl_y_18 != 4;
+    if ( kl_t45 ) goto bb51; else goto bb52;
+    bb51:
+    kl_t0 = 10;
+    return kl_t0;
+    bb52:
+#line 106 "codegen/conditional.kl"
+    kl_drops_21 = 0;
+#line 107 "codegen/conditional.kl"
+    kl_t46 = kl__owning__4bool( true );
+    kl_t47 = kl_t46 != 1;
+    if ( kl_t47 ) goto bb53; else goto bb54;
+    bb53:
+    kl_t0 = 11;
+    return kl_t0;
+    bb54:
+#line 108 "codegen/conditional.kl"
+    kl_t48 = kl_drops_21 != 2;
+    if ( kl_t48 ) goto bb55; else goto bb56;
+    bb55:
+    kl_t0 = 12;
+    return kl_t0;
+    bb56:
+#line 110 "codegen/conditional.kl"
+    kl_drops_21 = 0;
+#line 111 "codegen/conditional.kl"
+    kl_t49 = kl__owning__4bool( false );
+    kl_t50 = kl_t49 != 2;
+    if ( kl_t50 ) goto bb57; else goto bb58;
+    bb57:
+    kl_t0 = 13;
+    return kl_t0;
+    bb58:
+#line 112 "codegen/conditional.kl"
+    kl_t51 = kl_drops_21 != 2;
+    if ( kl_t51 ) goto bb59; else goto bb60;
+    bb59:
+    kl_t0 = 14;
+    return kl_t0;
+    bb60:
+#line 114 "codegen/conditional.kl"
+    kl_drops_21 = 0;
+#line 115 "codegen/conditional.kl"
+    kl_t52 = kl__owning_temporary__4bool( true );
+    kl_t53 = kl_t52 != 10;
+    if ( kl_t53 ) goto bb61; else goto bb62;
+    bb61:
+    kl_t0 = 15;
+    return kl_t0;
+    bb62:
+#line 116 "codegen/conditional.kl"
+    kl_t54 = kl_drops_21 != 2;
+    if ( kl_t54 ) goto bb63; else goto bb64;
+    bb63:
+    kl_t0 = 16;
+    return kl_t0;
+    bb64:
+#line 118 "codegen/conditional.kl"
+    kl_drops_21 = 0;
+#line 119 "codegen/conditional.kl"
+    kl_t55 = kl__owning_built__4bool( true );
+    kl_t56 = kl_t55 != 100;
+    if ( kl_t56 ) goto bb65; else goto bb66;
+    bb65:
+    kl_t0 = 17;
+    return kl_t0;
+    bb66:
+#line 120 "codegen/conditional.kl"
+    kl_t57 = kl_drops_21 != 1;
+    if ( kl_t57 ) goto bb67; else goto bb68;
+    bb67:
+    kl_t0 = 18;
+    return kl_t0;
+    bb68:
+#line 122 "codegen/conditional.kl"
+    kl_drops_21 = 0;
+#line 123 "codegen/conditional.kl"
+    kl_t58 = kl__owning_built__4bool( false );
+    kl_t59 = kl_t58 != 200;
+    if ( kl_t59 ) goto bb69; else goto bb70;
+    bb69:
+    kl_t0 = 19;
+    return kl_t0;
+    bb70:
+#line 124 "codegen/conditional.kl"
+    kl_t60 = kl_drops_21 != 1;
+    if ( kl_t60 ) goto bb71; else goto bb72;
+    bb71:
+    kl_t0 = 20;
+    return kl_t0;
+    bb72:
+#line 126 "codegen/conditional.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

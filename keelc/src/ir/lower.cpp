@@ -104,6 +104,8 @@ private:
     // left demands it, so they lower to control flow.
     Operand lower_short_circuit( Node_id id );
 
+    Operand lower_conditional( Node_id id );
+
     // The type an operation happens in, and the conversion that puts an operand there. See §6.4.
     Type_id operation_type( Node_id node );
     Type_id comparison_width( Type_id type ) const;
@@ -664,6 +666,51 @@ Operand Lowering::lower_short_circuit( Node_id id )
     return copy( builder_.place( result ), type );
 }
 
+Operand Lowering::lower_conditional( Node_id id )
+{
+    const Span    span = ast_.span( id );
+    const Type_id type = type_of( id );
+
+    const Local_id result = builder_.add_local( type, span );
+
+    // Nothing else drops the result when the arms own - the same hole an owning struct literal
+    // has, and closed the same way.
+    if( owns( type ) )
+    {
+        statement_temporaries_.push_back( result );
+    }
+
+    const Block_id then_block = builder_.add_block();
+    const Block_id else_block = builder_.add_block();
+    const Block_id join       = builder_.add_block();
+
+    builder_.terminate_branch( lower_expression( ast_.child( id, 0 ) ), then_block, else_block, span );
+
+    // An arm is lowered, then assigned from wherever lowering ended up: a nested conditional in
+    // an arm leaves the cursor in its own join, so neither the assignment nor the goto may name
+    // the block this one created.
+    const auto lower_arm = [&]( Node_id arm )
+    {
+        // Widened, because an expectation reaches an arm without retyping it - `i64 x = c ? a :
+        // b;` leaves both arms i32 - and moved when it owns, because a copy would leave the arm
+        // and the result holding one resource between them.
+        const Operand value = converted( lower_expression( arm ), type, ast_.span( arm ) );
+
+        builder_.assign( builder_.place( result ), use( moved_if_owning( value ) ), ast_.span( arm ) );
+        builder_.terminate_goto( join, span );
+    };
+
+    builder_.switch_to( then_block );
+    lower_arm( ast_.child( id, 1 ) );
+
+    builder_.switch_to( else_block );
+    lower_arm( ast_.child( id, 2 ) );
+
+    builder_.switch_to( join );
+
+    return copy( builder_.place( result ), type );
+}
+
 Operand Lowering::lower_struct_literal( Node_id id )
 {
     // A temporary, then one assignment per field. Lowered and assigned in a single pass, so the
@@ -1125,6 +1172,8 @@ Operand Lowering::lower_expression( Node_id id )
         return lower_struct_literal( id );
     case Node_kind::Binary_expr:
         return lower_binary( id );
+    case Node_kind::Conditional_expr:
+        return lower_conditional( id );
     case Node_kind::Unary_expr:
         return lower_unary( id );
     case Node_kind::Call_expr:
@@ -1250,6 +1299,12 @@ Place Lowering::lower_place( Node_id id )
                                : pointer.place;
 
         return builder_.deref( base );
+    }
+    // A value, not a place - but `( c ? a : b ).t` projects from one, and lower_conditional has
+    // already put the result in a local. The same answer a call in this position gets.
+    case Node_kind::Conditional_expr:
+    {
+        return lower_expression( id ).place;
     }
     case Node_kind::Call_expr:
     {
@@ -2186,6 +2241,20 @@ struct Lowered
         return {};
     }
 };
+// Which index a function landed at is never what a lowering case is about, and a class contributes
+// its own, so verification is asked of the whole list rather than of one entry.
+bool every_function_verifies( Lowered& p )
+{
+    for( const Function& function : p.functions )
+    {
+        if( !verify( function ).empty() )
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
 
 } // namespace
 
@@ -2746,6 +2815,152 @@ TEST_CASE( "lower_short_circuits_and_and_or", "[ir][lower][cfg]" )
     SECTION( "and inside an if condition" )
     {
         Lowered p( "i32 f( bool a, bool b ) { if ( a && b ) { return 1; } return 0; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( verify( p.functions[0] ).empty() );
+    }
+}
+
+// A conditional is `&&`'s shape without the asymmetry: one result local, two arms, one join. The
+// two things the short-circuit template does not cover are here - the arms may need widening, and
+// they may own.
+TEST_CASE( "lower_builds_a_conditional", "[ir][lower][cfg]" )
+{
+    SECTION( "three blocks, and the result is one local written by both paths" )
+    {
+        Lowered p( "i32 f( bool c, i32 a, i32 b ) { return c ? a : b; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string text = p.text( 0 );
+
+        INFO( text );
+        REQUIRE( text.find( "branch copy _1 -> bb1, bb2" ) != std::string::npos );
+        REQUIRE( text.find( "_4 = copy _2" ) != std::string::npos );
+        REQUIRE( text.find( "_4 = copy _3" ) != std::string::npos );
+        REQUIRE( text.find( "_0 = copy _4" ) != std::string::npos );
+        REQUIRE( verify( p.functions[0] ).empty() );
+    }
+
+    // An expectation reaches an arm without retyping it, so both arms are still i32 while the
+    // conditional is i64. Without the conversion the assignment writes an i32 into an i64 local.
+    SECTION( "an arm is widened to reach the result" )
+    {
+        Lowered p( "i64 f( bool c, i32 a, i32 b ) { i64 r = c ? a : b; return r; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string text = p.text( 0 );
+
+        INFO( text );
+        REQUIRE( text.find( "copy _2 as i64" ) != std::string::npos );
+        REQUIRE( text.find( "copy _3 as i64" ) != std::string::npos );
+        REQUIRE( verify( p.functions[0] ).empty() );
+    }
+
+    // Moved, not copied: a copy would leave the arm and the result holding one resource between
+    // them, and drop elaboration would then drop it twice.
+    SECTION( "an owning arm is moved into the result" )
+    {
+        Lowered p( "class Owner { i32 t; Owner( i32 v ) { t = v; } ~Owner() { } };\n"
+                   "i32 f( bool c ) { Owner a = Owner( 1 ); Owner b = Owner( 2 ); "
+                   "Owner r = c ? move a : move b; return r.t; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string text = p.named( "f" );
+
+        INFO( text );
+        REQUIRE( text.find( "_9 = move _2" ) != std::string::npos );
+        REQUIRE( text.find( "_9 = move _5" ) != std::string::npos );
+        REQUIRE( text.find( "_8 = move _9" ) != std::string::npos );
+        REQUIRE( every_function_verifies( p ) );
+    }
+
+    // Nothing else drops the result when it owns and nothing moves out of it. Reading a field is
+    // the case that reaches it: the temporary survives the statement and has to be dropped once.
+    SECTION( "an owning result nothing moves out of is dropped once" )
+    {
+        Lowered p( "class Owner { i32 t; Owner( i32 v ) { t = v; } ~Owner() { } };\n"
+                   "i32 f( bool c ) { Owner a = Owner( 1 ); Owner b = Owner( 2 ); "
+                   "return ( c ? move a : move b ).t; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string text = p.named( "f" );
+
+        INFO( text );
+        // Lowering emits the drop; the flag that makes the arms' own drops conditional is added
+        // later, by drop elaboration, so what is asserted here is that the result has one at all.
+        REQUIRE( text.find( "drop _8" ) != std::string::npos );
+        REQUIRE( every_function_verifies( p ) );
+    }
+
+    // An arm written `move a` already arrives as a move; an arm that *builds* an owning value
+    // arrives as a copy of its own temporary, and that is the one moved_if_owning converts. A copy
+    // would leave the arm's temporary and the result holding one resource between them.
+    SECTION( "an owning arm built in place is moved, not copied" )
+    {
+        Lowered p( "class Owner { i32 t; Owner( i32 v ) { t = v; } ~Owner() { } };\n"
+                   "i32 f( bool c ) { Owner r = c ? Owner( 1 ) : Owner( 2 ); return r.t; }\n"
+                   "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string text = p.named( "f" );
+
+        INFO( text );
+        REQUIRE( text.find( "_3 = move _4" ) != std::string::npos );
+        REQUIRE( text.find( "_3 = move _7" ) != std::string::npos );
+        REQUIRE( every_function_verifies( p ) );
+    }
+
+    // A conditional is a value, but `( c ? a : b ).t` projects from one - and lower_conditional
+    // has already put the result in a local, which is the place to project from.
+    SECTION( "a field reads through the result local" )
+    {
+        Lowered p( "struct P { i32 t; };\n"
+                   "i32 f( bool c, P a, P b ) { return ( c ? a : b ).t; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string text = p.text( 0 );
+
+        INFO( text );
+        REQUIRE( text.find( "_0 = copy _4.t" ) != std::string::npos );
+        REQUIRE( verify( p.functions[0] ).empty() );
+    }
+
+    // A nested conditional leaves the cursor in its own join, so neither the assignment nor the
+    // goto may name the block the outer one created.
+    SECTION( "nested in an arm" )
+    {
+        Lowered p( "i32 f( bool a, bool b, i32 x, i32 y, i32 z ) { return a ? x : b ? y : z; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( verify( p.functions[0] ).empty() );
+    }
+
+    SECTION( "nested in the condition" )
+    {
+        Lowered p( "i32 f( bool a, bool b, bool c ) { return ( a ? b : c ) ? 1 : 2; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( verify( p.functions[0] ).empty() );
+    }
+
+    SECTION( "inside an if condition" )
+    {
+        Lowered p( "i32 f( bool a, bool b, bool c ) { if ( a ? b : c ) { return 1; } return 0; }\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );

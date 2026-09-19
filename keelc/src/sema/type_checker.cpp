@@ -734,6 +734,8 @@ private:
     Type_id infer_path( Node_id id );
     Type_id infer_variant_construction( Node_id id );
 
+    Type_id infer_conditional( Node_id id );
+
     Type_id infer_alloc( Node_id id );
     Type_id infer_free( Node_id id );
     // D35: an operation on the enumerated list is permitted inside an unsafe block and reported
@@ -3301,6 +3303,9 @@ Type_id Checker::infer( Node_id id )
     case Node_kind::Marker_expr:
         return infer_marker( id );
 
+    case Node_kind::Conditional_expr:
+        return infer_conditional( id );
+
     default:
         // Every expression not yet given a case of its own - the literals, chiefly, which cannot
         // be typed until their values survive lexing. Children are still typed, so a mistake
@@ -5425,6 +5430,32 @@ Type_id Checker::infer_variant_construction( Node_id id )
     return record( id, result );
 }
 
+Type_id Checker::infer_conditional( Node_id id )
+{
+    check_condition( ast_.child( id, 0 ) );
+    const Type_id then_type = infer( ast_.child( id, 1 ) );
+    const Type_id else_type = infer( ast_.child( id, 2 ) );
+
+    if( table_.is_error( then_type ) || table_.is_error( else_type ) )
+    {
+        return record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    if( then_type != else_type )
+    {
+        error_at(
+            ast_.span( id ),
+            fmt::format(
+                "ternary branches have different types: `{}` and `{}`", table_.name( then_type ), table_.name( else_type )
+            )
+        );
+
+        return record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    return record( id, then_type );
+}
+
 Type_id Checker::infer_alloc( Node_id id )
 {
     const Type_id element = type_of_annotation( ast_.child( id, 0 ) );
@@ -6133,6 +6164,13 @@ Type_id Checker::check( Node_id id, Type_id expected )
         }
 
         break;
+    }
+    case Node_kind::Conditional_expr:
+    {
+        check_condition( ast_.child( id, 0 ) );
+        check( ast_.child( id, 1 ), expected );
+        check( ast_.child( id, 2 ), expected );
+        return record( id, expected );
     }
 
     default:
@@ -8907,6 +8945,112 @@ TEST_CASE( "type_checker_types_struct_declarations", "[sema][types]" )
 
         INFO( p.rendered() );
         REQUIRE( p.errors() >= 1 );
+    }
+}
+
+// PLAN §12. A conditional has two rules and the split between them is the whole decision: an
+// expectation reaches both arms, and with none the arms must match exactly. Widening happens after
+// a type is settled, never to settle one - the same correction the overloading slice owes.
+TEST_CASE( "type_checker_types_conditional_expressions", "[sema][types]" )
+{
+    SECTION( "with no expectation the arms decide, and they must agree" )
+    {
+        const Typed p( "i32 main() { i32 a = 1; i32 b = 2; auto c = true ? a : b; return c; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Conditional_expr, 0 ) ) == "i32" );
+    }
+
+    SECTION( "arms of different types with no expectation are refused" )
+    {
+        const Typed p( "i32 main() { i32 a = 1; i64 b = 2; auto c = true ? a : b; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() >= 1 );
+        REQUIRE( p.rendered().find( "i32" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "i64" ) != std::string::npos );
+    }
+
+    // The two arms widen to a common type under §6.4 and it still does not settle one. This is the
+    // case that separates the decision taken from `Type_table::common`, which would accept it.
+    SECTION( "widening does not settle a type between two arms" )
+    {
+        const Typed p( "i32 main() { u8 a = 1; i64 b = 2; auto c = true ? a : b; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() >= 1 );
+    }
+
+    SECTION( "an expectation reaches both arms" )
+    {
+        const Typed p( "i32 main() { i64 x = true ? 1 : 2; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Conditional_expr, 0 ) ) == "i64" );
+    }
+
+    // Both arms are i32 and the expectation is wider. The arms keep their own type and the
+    // conditional takes the expectation, which is what lowering has to insert a conversion for.
+    SECTION( "an expectation wider than both arms is the conditional's type" )
+    {
+        const Typed p( "i32 main() { i32 a = 1; i32 b = 2; i64 x = true ? a : b; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Conditional_expr, 0 ) ) == "i64" );
+    }
+
+    SECTION( "an arm that cannot reach the expectation is refused" )
+    {
+        const Typed p( "i32 main() { i32 x = true ? 1 : false; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() >= 1 );
+    }
+
+    SECTION( "the condition must be a bool" )
+    {
+        const Typed p( "i32 main() { i32 a = 1; i32 x = a ? 1 : 2; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() >= 1 );
+    }
+
+    // Right-associative, so the else arm is a conditional of its own and the expectation has to
+    // reach through it rather than stopping at the outer one.
+    SECTION( "an expectation reaches through a nested conditional" )
+    {
+        const Typed p( "i32 main() { i64 x = true ? 1 : false ? 2 : 3; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Conditional_expr, 0 ) ) == "i64" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Conditional_expr, 1 ) ) == "i64" );
+    }
+
+    // One error, not two: an arm that failed is the cause, and reporting the disagreement as well
+    // would name an error type the author never wrote. This is what the error guard in
+    // infer_conditional buys, and the infer path is the only one that can reach it.
+    SECTION( "a broken arm does not cascade" )
+    {
+        const Typed p( "i32 main() { i32 a = 1; auto c = true ? *a : 1; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "cannot be dereferenced" ) != std::string::npos );
+    }
+
+    SECTION( "a conditional over owning values is typed" )
+    {
+        const Typed p( "class Owner { i32 t; Owner( i32 v ) { t = v; } ~Owner() { } };\n"
+                       "i32 main() { Owner a = Owner( 1 ); Owner b = Owner( 2 ); "
+                       "auto c = true ? move a : move b; return c.t; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Conditional_expr, 0 ) ) == "Owner" );
     }
 }
 

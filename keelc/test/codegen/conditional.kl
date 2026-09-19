@@ -1,0 +1,127 @@
+// PLAN §12. A conditional is control flow, not an operation: only the arm that was chosen runs.
+// Numbered early returns, so a failure names the property that broke.
+i32 calls;
+
+i32 counted( i32 v )
+{
+    calls = calls + 1;
+    return v;
+}
+
+struct Pair
+{
+    i32 x;
+    i32 y;
+};
+
+i32 drops;
+
+class Owner
+{
+    i32 tag;
+
+    Owner( i32 t )
+    {
+        tag = t;
+    }
+
+    ~Owner()
+    {
+        drops = drops + 1;
+    }
+};
+
+// Both arms own, so the result is moved out of whichever ran and the other is never built.
+i32 owning( bool which )
+{
+    Owner a = Owner( 1 );
+    Owner b = Owner( 2 );
+    Owner c = which ? move a : move b;
+
+    return c.tag;
+}
+
+// Arms that build their value rather than naming one. Each arm's temporary is moved into the
+// result, so only the arm that ran ever constructs and only one value is ever dropped.
+i32 owning_built( bool which )
+{
+    Owner c = which ? Owner( 100 ) : Owner( 200 );
+
+    return c.tag;
+}
+
+// The result is a temporary nothing moves out of: it has to be dropped exactly once.
+i32 owning_temporary( bool which )
+{
+    Owner a = Owner( 10 );
+    Owner b = Owner( 20 );
+
+    return ( which ? move a : move b ).tag;
+}
+
+i32 main()
+{
+    i32 a = 3;
+    i32 b = 7;
+
+    if( ( a < b ? a : b ) != 3 ) { return 1; }
+    if( ( a > b ? a : b ) != 7 ) { return 2; }
+
+    // The un-taken arm does not run. This is the property that makes it control flow rather than
+    // an operation over three operands.
+    calls = 0;
+
+    i32 chosen = true ? counted( 1 ) : counted( 2 );
+
+    if( chosen != 1 ) { return 3; }
+    if( calls != 1 ) { return 4; }
+
+    // An expectation reaches both arms, so the literals are i64 and no i32 is widened at runtime.
+    i64 wide = a < b ? 1 : 2;
+
+    if( wide != 1 ) { return 5; }
+
+    // Both arms are i32 and the expectation is wider, so each arm converts on its own path.
+    i64 widened = a < b ? a : b;
+
+    if( widened != 3 ) { return 6; }
+
+    // Right-associative: a ladder of conditions, not a nest into the first arm.
+    i32 ladder = a > b ? 10 : a == b ? 20 : 30;
+
+    if( ladder != 30 ) { return 7; }
+
+    // A conditional in a condition, which needs the parentheses to get there.
+    i32 inner = ( a < b ? true : false ) ? 40 : 50;
+
+    if( inner != 40 ) { return 8; }
+
+    // A field reads through the result local rather than through either arm.
+    Pair p = Pair { 1, 2 };
+    Pair q = Pair { 3, 4 };
+
+    if( ( a < b ? p : q ).y != 2 ) { return 9; }
+    if( ( a > b ? p : q ).y != 4 ) { return 10; }
+
+    drops = 0;
+    if( owning( true ) != 1 ) { return 11; }
+    if( drops != 2 ) { return 12; }
+
+    drops = 0;
+    if( owning( false ) != 2 ) { return 13; }
+    if( drops != 2 ) { return 14; }
+
+    drops = 0;
+    if( owning_temporary( true ) != 10 ) { return 15; }
+    if( drops != 2 ) { return 16; }
+
+    drops = 0;
+    if( owning_built( true ) != 100 ) { return 17; }
+    if( drops != 1 ) { return 18; }
+
+    drops = 0;
+    if( owning_built( false ) != 200 ) { return 19; }
+    if( drops != 1 ) { return 20; }
+
+    return 0;
+}

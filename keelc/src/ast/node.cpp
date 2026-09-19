@@ -53,6 +53,8 @@ std::string_view node_kind_name( Node_kind kind )
         return "Binary_expr";
     case Node_kind::Unary_expr:
         return "Unary_expr";
+    case Node_kind::Conditional_expr:
+        return "Conditional_expr";
     case Node_kind::Call_expr:
         return "Call_expr";
     case Node_kind::Arg_list:

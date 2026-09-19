@@ -1,0 +1,31 @@
+error: ternary branches have different types: `i32` and `i64`
+ --> sema/errors_conditional.kl:9:14
+  |
+9 |     auto c = true ? a : b;
+  |              ^^^^^^^^^^^^
+
+error: ternary branches have different types: `u8` and `i64`
+  --> sema/errors_conditional.kl:21:14
+   |
+21 |     auto c = true ? a : b;
+   |              ^^^^^^^^^^^^
+
+error: expected `bool`, but got `i32`
+  --> sema/errors_conditional.kl:31:14
+   |
+31 |     auto c = a ? 1 : 2;
+   |              ^ there is no conversion to `bool`: compare explicitly, as in `x != 0`
+
+error: expected `i32`, but got `bool`
+  --> sema/errors_conditional.kl:40:24
+   |
+40 |     i32 x = true ? 1 : false;
+   |                        ^^^^^
+
+error: ternary branches have different types: `i32` and `bool`
+  --> sema/errors_conditional.kl:53:25
+   |
+53 |     auto c = true ? a : q ? b : q;
+   |                         ^^^^^^^^^
+
+5 errors generated

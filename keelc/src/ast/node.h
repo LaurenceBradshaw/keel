@@ -35,6 +35,7 @@ enum class Node_kind : u16
     Name_expr,
     Binary_expr,
     Unary_expr,
+    Conditional_expr,
     Call_expr,
     Arg_list,
     Var_decl,

@@ -1,0 +1,47 @@
+// PLAN §12. `?:` is the loosest infix operator and the only right-associative one, so what this
+// fixture pins is grouping: every binary operator folds into an arm, and a chain nests to the
+// right. A wrong binding power still parses - it just parses something else.
+i32 loosest( bool a, bool b, i32 c, i32 d )
+{
+    // `||` binds tighter, so the whole comparison is the condition rather than the else arm
+    // being `d || ...`.
+    return a || b ? c : d;
+}
+
+i32 arms_fold_in( i32 a, i32 b, i32 c, i32 d, bool p )
+{
+    return p ? a + b : c * d;
+}
+
+// Right-associative: `a ? w : (b ? x : y)`, which is what makes a chain read as a ladder of
+// conditions rather than nesting into the first arm.
+i32 chained( bool a, bool b, i32 w, i32 x, i32 y )
+{
+    return a ? w : b ? x : y;
+}
+
+// The middle arm is delimited by `?` and `:`, so it parses from zero and a looser operator inside
+// it needs no parentheses - unlike the same operator beside the conditional.
+i32 middle_is_delimited( bool p, bool q, bool r, i32 x, i32 y )
+{
+    return p ? ( q || r ? x : y ) : y;
+}
+
+// Parentheses are the only route to a conditional in a condition, since `?:` cannot fold into
+// itself on the left.
+i32 nested_condition( bool a, bool b, bool c, i32 x, i32 y )
+{
+    return ( a ? b : c ) ? x : y;
+}
+
+// D16 refuses bitwise beside comparison and shift beside arithmetic. `?` is in neither class, so
+// it joins them without parentheses.
+i32 not_a_D16_mix( i32 a, i32 b, i32 c, i32 d )
+{
+    return a & b ? c : d;
+}
+
+i32 main()
+{
+    return 0;
+}

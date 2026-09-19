@@ -230,6 +230,8 @@ u8 binding_power( Token_kind kind )
 {
     switch( kind )
     {
+    case Token_kind::Question:
+        return 5;
     case Token_kind::Pipe_pipe:
         return 10;
 
@@ -2482,6 +2484,37 @@ Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing )
             break;
         }
 
+        if( check( Token_kind::Question ) )
+        {
+            advance();
+
+            // Both arms are delimited - the first by `?` and `:`, the second by whatever ends the
+            // expression - so neither sits beside an infix operator D16 could object to.
+            const Node_id then_branch = parse_expression( 0 );
+
+            Node_id else_branch {};
+
+            if( match( Token_kind::Colon ) )
+            {
+                // `power` rather than `power + 1`: right-associative, so `a ? b : c ? d : e` is
+                // `a ? b : (c ? d : e)`, as in C.
+                else_branch = parse_expression( power );
+            }
+            else
+            {
+                error_expected( Token_kind::Colon, "a conditional always has two arms: write `a ? b : c`" );
+                else_branch = error_node( previous().span );
+            }
+
+            left = ast_.add(
+                Node_kind::Conditional_expr,
+                Span::merge( ast_.span( left ), ast_.span( else_branch ) ),
+                0,
+                { left, then_branch, else_branch }
+            );
+            continue;
+        }
+
         // D16 has to look both ways. A looser operator folds into `left` first, so `a && b || c`
         // reaches `||` with a Binary_expr(&&) on its left. A tighter one never does: in
         // `a & b == c` the `==` is consumed inside the `&` recursion, which is what `enclosing`
@@ -2899,6 +2932,13 @@ std::string shape( const Parsed& p, Node_id id )
                shape( p, p.child( id, 0 ) ) + ")";
     }
 
+    // "?(c,a,b)" - three children and no operator token, so it renders by kind rather than by aux.
+    if( p.kind( id ) == Node_kind::Conditional_expr )
+    {
+        return "?(" + shape( p, p.child( id, 0 ) ) + "," + shape( p, p.child( id, 1 ) ) + "," + shape( p, p.child( id, 2 ) ) +
+               ")";
+    }
+
     if( p.kind( id ) == Node_kind::Call_expr )
     {
         return "call(" + shape( p, p.child( id, 0 ) ) + "," + shape( p, p.child( id, 1 ) ) + ")";
@@ -3193,6 +3233,73 @@ TEST_CASE( "parser_binary_operators_are_left_associative", "[parse]" )
     REQUIRE( shape_of( "1 - 2 + 3" ) == "+(-(1,2),3)" );
     REQUIRE( shape_of( "8 / 4 / 2" ) == "/(/(8,4),2)" );
     REQUIRE( shape_of( "a % b * c" ) == "*(%(a,b),c)" );
+}
+
+// `?:` is the loosest infix operator, so every binary operator folds into an arm rather than the
+// other way round. A wrong binding power still parses and still computes the wrong answer.
+TEST_CASE( "parser_conditional_binds_looser_than_every_binary_operator", "[parse]" )
+{
+    REQUIRE( shape_of( "a || b ? c : d" ) == "?(||(a,b),c,d)" );
+    REQUIRE( shape_of( "a ? b : c || d" ) == "?(a,b,||(c,d))" );
+    REQUIRE( shape_of( "a + b ? c - d : e * f" ) == "?(+(a,b),-(c,d),*(e,f))" );
+
+    // Parentheses are the only way to put one in a condition, and they leave no node behind.
+    REQUIRE( shape_of( "(a ? b : c) ? d : e" ) == "?(?(a,b,c),d,e)" );
+}
+
+// `power` rather than `power + 1` in the else arm. This is the one test that tells the two apart:
+// left association would give `?(?(a,b,c),d,e)`, which is also a valid parse of different code.
+TEST_CASE( "parser_conditional_is_right_associative", "[parse]" )
+{
+    REQUIRE( shape_of( "a ? b : c ? d : e" ) == "?(a,b,?(c,d,e))" );
+    REQUIRE( shape_of( "a ? b ? c : d : e" ) == "?(a,?(b,c,d),e)" );
+}
+
+// The middle arm is delimited by `?` and `:`, so it parses from zero: a looser operator inside it
+// needs no parentheses, unlike the same operator beside the conditional.
+TEST_CASE( "parser_conditional_middle_arm_is_delimited", "[parse]" )
+{
+    REQUIRE( shape_of( "a ? b || c : d" ) == "?(a,||(b,c),d)" );
+    REQUIRE( shape_of( "a ? b = 1 : d" ) == "ERROR" ); // assignment is a statement, not an arm
+}
+
+// D16 classifies `?` as Operator_class::Other, which pairs with nothing - so a conditional beside
+// a bitwise or shift operator is not one of the mixes that needs parentheses.
+TEST_CASE( "parser_conditional_is_not_a_D16_mix", "[parse]" )
+{
+    REQUIRE( shape_of( "a & b ? c : d" ) == "?(&(a,b),c,d)" );
+    REQUIRE( shape_of( "a << b ? c : d" ) == "?(<<(a,b),c,d)" );
+}
+
+TEST_CASE( "parser_conditional_has_three_children_and_no_operator", "[parse]" )
+{
+    const Parsed p( "i32 main() { return a ? b : c; }" );
+
+    INFO( p.errors() );
+    REQUIRE_FALSE( p.has_errors() );
+
+    const Node_id expression = parse_expression_of( p );
+    REQUIRE( p.kind( expression ) == Node_kind::Conditional_expr );
+    REQUIRE( p.children( expression ).size() == 3 );
+
+    // One kind means one shape: nothing distinguishes two conditionals, so aux stays unused.
+    REQUIRE( p.aux( expression ) == 0 );
+}
+
+// The parser recovers rather than bailing, so a conditional missing its `:` still yields a node
+// with three children - every later pass reads child 2 without asking whether it is there.
+TEST_CASE( "parser_conditional_without_a_colon_recovers", "[parse]" )
+{
+    const Parsed p( "i32 main() { return a ? b; }" );
+
+    REQUIRE( p.has_errors() );
+    INFO( p.errors() );
+    REQUIRE( p.errors().find( "a conditional always has two arms" ) != std::string::npos );
+
+    const Node_id expression = parse_expression_of( p );
+    REQUIRE( p.kind( expression ) == Node_kind::Conditional_expr );
+    REQUIRE( p.children( expression ).size() == 3 );
+    REQUIRE( p.kind( p.child( expression, 2 ) ) == Node_kind::Error );
 }
 
 TEST_CASE( "parser_binary_operator_is_recorded_in_aux", "[parse]" )

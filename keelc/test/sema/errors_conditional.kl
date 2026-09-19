@@ -1,0 +1,61 @@
+// PLAN §12. A conditional has two type rules: an expectation reaches both arms, and with none the
+// arms must match exactly. Widening happens after a type is settled, never to settle one - so two
+// arms that §6.4 would happily widen to a common type are still refused when nothing else decides.
+i32 arms_must_agree()
+{
+    i32 a = 1;
+    i64 b = 2;
+
+    auto c = true ? a : b;
+
+    return 0;
+}
+
+// The case that separates the rule taken from `Type_table::common`: u8 and i64 have a common type
+// and it is still not allowed to be the answer, because nothing asked for one.
+i32 widening_does_not_decide()
+{
+    u8  a = 1;
+    i64 b = 2;
+
+    auto c = true ? a : b;
+
+    return 0;
+}
+
+// A condition is a condition wherever it appears, so this is the same rule an `if` applies.
+i32 condition_must_be_bool()
+{
+    i32 a = 1;
+
+    auto c = a ? 1 : 2;
+
+    return 0;
+}
+
+// With an expectation the arms never meet: each is measured against `i32` on its own, so the
+// report names the arm that failed rather than a disagreement between them.
+i32 an_arm_that_cannot_reach_the_expectation()
+{
+    i32 x = true ? 1 : false;
+
+    return x;
+}
+
+// Right-associative, so the inner conditional is the outer one's else arm and is inferred on its
+// own. One report, from the arms that actually disagree.
+i32 nested_arms_must_agree()
+{
+    i32  a = 1;
+    i32  b = 2;
+    bool q = false;
+
+    auto c = true ? a : q ? b : q;
+
+    return 0;
+}
+
+i32 main()
+{
+    return 0;
+}
