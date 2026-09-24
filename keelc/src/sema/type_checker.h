@@ -8,7 +8,7 @@
 #include "ast/node.h"
 #include "common/diagnostics.h"
 #include "common/interner.h"
-#include "common/literals.h"
+#include "common/literal_pool.h"
 #include "common/source_manager.h"
 #include "sema/resolver.h"
 #include "sema/type.h"
@@ -180,7 +180,7 @@ private:
     std::vector<Generic_call>               generic_calls_;
 };
 
-Types type_check( const Ast&, const Resolution&, const Literals&, const Source_manager&, const Interner&, Diagnostics& );
+Types type_check( const Ast&, const Resolution&, const Literal_pool&, const Source_manager&, const Interner&, Diagnostics& );
 
 // What a parameter is actually passed as: its own type, except a `ref` binding, which travels as
 // an address. Shared because lowering, the prototype and the mangled name must all agree.

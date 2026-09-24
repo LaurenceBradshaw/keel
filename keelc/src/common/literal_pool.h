@@ -5,7 +5,7 @@
 namespace keel
 {
 
-// Handle into Literals, the same pattern as Symbol_id and Type_id. Slot 0 is reserved so a
+// Handle into Literal_pool, the same pattern as Symbol_id and Type_id. Slot 0 is reserved so a
 // default-constructed handle means "no value".
 struct Literal_id
 {
@@ -25,10 +25,10 @@ struct Literal_id
 //
 // Integers are stored as an unsigned magnitude. Sign is a separate Unary_expr node, so the pool
 // never sees a negative number - which is why Type_table::fits() takes `negative` separately.
-class Literals
+class Literal_pool
 {
 public:
-    Literals();
+    Literal_pool();
 
     Literal_id add_integer( u64 magnitude );
     Literal_id add_float( f64 value );

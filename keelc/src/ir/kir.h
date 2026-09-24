@@ -2,7 +2,7 @@
 #include <vector>
 #include "ast/node.h"
 #include "common/interner.h"
-#include "common/literals.h"
+#include "common/literal_pool.h"
 #include "common/span.h"
 #include "common/types.h"
 #include "lex/token.h"

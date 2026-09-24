@@ -270,7 +270,7 @@ struct Elaborated
 {
     Source_manager sm;
     Interner       interner;
-    Literals       literals;
+    Literal_pool   literals;
     Diagnostics    diags;
     Ast            ast;
     Resolution     resolution;

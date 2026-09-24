@@ -8,3 +8,4 @@ compile_commands.json
 *.kl.c
 .claude/
 graphify-out/
+CLAUDE.md

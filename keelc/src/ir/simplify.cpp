@@ -5,7 +5,7 @@ namespace keel
 {
 namespace
 {
-bool fold_constant_branches( Function& func, const Literals& literals )
+bool fold_constant_branches( Function& func, const Literal_pool& literals )
 {
     bool folded = false;
     for( Block& block : func.blocks )
@@ -178,7 +178,7 @@ void prune( Function& func, const std::vector<bool>& live )
 
 // One sweep, not a fixpoint: folding is what turns a loop header into an empty goto, threading
 // cannot turn a goto back into a branch, and pruning creates neither.
-void simplify( Function& func, const Literals& literals )
+void simplify( Function& func, const Literal_pool& literals )
 {
     fold_constant_branches( func, literals );
     thread_gotos( func );
@@ -214,7 +214,7 @@ struct Simplified
 {
     Source_manager sm;
     Interner       interner;
-    Literals       literals;
+    Literal_pool   literals;
     Diagnostics    diags;
     Ast            ast;
     Resolution     resolution;

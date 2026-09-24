@@ -200,7 +200,7 @@ void Builder::set_terminator( Terminator terminator )
 #include <fmt/ranges.h>
 #include <catch2/catch_test_macros.hpp>
 
-#include "common/literals.h"
+#include "common/literal_pool.h"
 #include "ir/verify.h"
 
 namespace keel
@@ -210,8 +210,8 @@ namespace
 
 struct Fixture
 {
-    Type_table table;
-    Literals   literals;
+    Type_table   table;
+    Literal_pool literals;
 
     Type_id i32() const
     {

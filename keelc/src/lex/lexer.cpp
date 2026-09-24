@@ -56,7 +56,7 @@ bool is_ident_continue( char c )
 class Scanner
 {
 public:
-    Scanner( File_id file, const Source_manager& sm, Interner& interner, Literals& literals, Diagnostics& diags );
+    Scanner( File_id file, const Source_manager& sm, Interner& interner, Literal_pool& literals, Diagnostics& diags );
 
     std::vector<Token> run();
 
@@ -126,17 +126,17 @@ private:
 
     File_id            file_;
     Interner&          interner_;
-    Literals&          literals_;
+    Literal_pool&      literal_pool_;
     Diagnostics&       diags_;
     std::string_view   text_;
     u32                pos_ = 0;
     std::vector<Token> out_;
 };
 
-Scanner::Scanner( File_id file, const Source_manager& sm, Interner& interner, Literals& literals, Diagnostics& diags )
+Scanner::Scanner( File_id file, const Source_manager& sm, Interner& interner, Literal_pool& literals, Diagnostics& diags )
     : file_( file ),
       interner_( interner ),
-      literals_( literals ),
+      literal_pool_( literals ),
       diags_( diags ),
       text_( sm.file( file ).text )
 {
@@ -320,7 +320,7 @@ Literal_id Scanner::intern_integer( u32 start, u32 base )
         return Literal_id {};
     }
 
-    return literals_.add_integer( value );
+    return literal_pool_.add_integer( value );
 }
 
 Literal_id Scanner::intern_float( u32 start )
@@ -336,7 +336,7 @@ Literal_id Scanner::intern_float( u32 start )
         return Literal_id {};
     }
 
-    return literals_.add_float( value );
+    return literal_pool_.add_float( value );
 }
 
 void Scanner::scan_identifier_or_keyword( u32 start )
@@ -624,7 +624,7 @@ void Scanner::scan_char( u32 start )
             // Only a well-formed literal records a value. A reported one carries none, so sema
             // stays quiet rather than reporting a second time. `ok` matters as well as the count:
             // a bad escape yields no byte, and 0 would be indistinguishable from `\0`.
-            const Literal_id id = ok && count == 1 ? literals_.add_integer( value ) : Literal_id {};
+            const Literal_id id = ok && count == 1 ? literal_pool_.add_integer( value ) : Literal_id {};
 
             push( Token_kind::Char_literal, start, Symbol_id { id.v } );
             return;
@@ -814,7 +814,7 @@ void Scanner::scan_punctuation( char c, u32 start )
 
 } // namespace
 
-std::vector<Token> lex( File_id file, const Source_manager& sm, Interner& interner, Literals& literals, Diagnostics& diags )
+std::vector<Token> lex( File_id file, const Source_manager& sm, Interner& interner, Literal_pool& literals, Diagnostics& diags )
 {
     return Scanner( file, sm, interner, literals, diags ).run();
 }
@@ -839,7 +839,7 @@ public:
     explicit Lexed( std::string_view source )
     {
         file_   = sm_.add_file( "t.kl", std::string( source ) );
-        tokens_ = lex( file_, sm_, interner_, literals_, diags_ );
+        tokens_ = lex( file_, sm_, interner_, literal_pool_, diags_ );
     }
 
     // Excludes the End_of_file token.
@@ -872,12 +872,12 @@ public:
     // The value the scanner recorded, via the pool the token's Literal_id indexes.
     u64 integer( std::size_t i ) const
     {
-        return literals_.integer( tokens_[i].literal() );
+        return literal_pool_.integer( tokens_[i].literal() );
     }
 
     f64 floating( std::size_t i ) const
     {
-        return literals_.floating( tokens_[i].literal() );
+        return literal_pool_.floating( tokens_[i].literal() );
     }
 
     bool has_value( std::size_t i ) const
@@ -919,7 +919,7 @@ public:
 private:
     Source_manager     sm_;
     Interner           interner_;
-    Literals           literals_;
+    Literal_pool       literal_pool_;
     Diagnostics        diags_;
     File_id            file_;
     std::vector<Token> tokens_;

@@ -1,36 +1,36 @@
-#include "common/literals.h"
+#include "common/literal_pool.h"
 
 #include <cassert>
 
 namespace keel
 {
 
-Literals::Literals()
+Literal_pool::Literal_pool()
 {
     // Dummy values in slot 0
     integers_.push_back( {} );
     floats_.push_back( {} );
 }
 
-Literal_id Literals::add_integer( u64 magnitude )
+Literal_id Literal_pool::add_integer( u64 magnitude )
 {
     integers_.push_back( magnitude );
     return Literal_id { narrow_cast<u32>( integers_.size() - 1 ) };
 }
 
-Literal_id Literals::add_float( f64 value )
+Literal_id Literal_pool::add_float( f64 value )
 {
     floats_.push_back( value );
     return Literal_id { narrow_cast<u32>( floats_.size() - 1 ) };
 }
 
-u64 Literals::integer( Literal_id id ) const
+u64 Literal_pool::integer( Literal_id id ) const
 {
     assert( id.is_valid() && id.v < integers_.size() && "invalid Literal_id" );
     return integers_[id.v];
 }
 
-f64 Literals::floating( Literal_id id ) const
+f64 Literal_pool::floating( Literal_id id ) const
 {
     assert( id.is_valid() && id.v < floats_.size() && "invalid Literal_id" );
     return floats_[id.v];
@@ -44,9 +44,9 @@ f64 Literals::floating( Literal_id id ) const
 namespace keel
 {
 
-TEST_CASE( "literals_pool_round_trips_values", "[common][literals]" )
+TEST_CASE( "literal_pool_round_trips_values", "[common][literals]" )
 {
-    Literals pool;
+    Literal_pool pool;
 
     REQUIRE_FALSE( Literal_id {}.is_valid() );
 

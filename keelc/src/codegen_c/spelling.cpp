@@ -17,7 +17,7 @@ std::vector<Type_id> parameter_types_vector( const Ast& ast, const Types& types,
 
     for( const Node_id param : ast.children( ast.child( decl, 1 ) ) )
     {
-        // The type is recorded on the Param_decl itself, by declare_signatures - not on the type
+        // The type is recorded on the Param_decl itself, by the declaration pass - not on the type
         // annotation beneath it, which is never typed.
         params.push_back( binding_type( ast, types, param ) );
     }

@@ -12,11 +12,11 @@ namespace
 // below do not each carry five parameters.
 struct Printer
 {
-    const Function&   func;
-    const Ast&        ast;
-    const Type_table& types;
-    const Literals&   literals;
-    const Interner&   interner;
+    const Function&     func;
+    const Ast&          ast;
+    const Type_table&   types;
+    const Literal_pool& literals;
+    const Interner&     interner;
 
     std::string_view name_of( Node_id declaration ) const
     {
@@ -183,7 +183,7 @@ struct Printer
 } // namespace
 
 std::string
-print( const Function& func, const Ast& ast, const Type_table& types, const Literals& literals, const Interner& interner )
+print( const Function& func, const Ast& ast, const Type_table& types, const Literal_pool& literals, const Interner& interner )
 {
     const Printer printer { func, ast, types, literals, interner };
 
@@ -254,7 +254,7 @@ struct Fixture
 {
     Source_manager sm;
     Interner       interner;
-    Literals       literals;
+    Literal_pool   literals;
     Diagnostics    diags;
     Type_table     table;
     Ast            ast;

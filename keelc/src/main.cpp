@@ -235,7 +235,7 @@ int main( int argc, char** argv )
 
     keel::Interner           interner;
     keel::Diagnostics        diagnostics;
-    keel::Literals           literals;
+    keel::Literal_pool       literals;
     std::vector<keel::Token> tokens = keel::lex( file_id.value(), sm, interner, literals, diagnostics );
 
     // Reporting is the same wherever we stop, and each --dump flag stops after its own phase.

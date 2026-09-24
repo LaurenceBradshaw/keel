@@ -18,7 +18,9 @@ expectation decides and with none the arms must match exactly.
 **M6.5's original list is now empty, and it has been given a second one (2026-09-19)**: splitting
 `sema/type_checker.cpp`, the mangling category tag, two one-rule holes — `g().t = 1;` and
 `enum Nothing { };` — and a decision on the `Arena`, which still has no caller after both of the
-ones §15 predicted were decided against. **Function pointers moved to M7**, not M8: M8 is the
+ones §15 predicted were decided against. **The split is done (2026-09-19)**: `Checker` now lives
+in `sema/checker.h` with its definitions across nine files, none over 1,373 code lines, and no
+change to a single assertion or golden. Four items remain. **Function pointers moved to M7**, not M8: M8 is the
 library, and §12's own timing rule already put member pointers with access control, which is M7.
 **M7 is now static methods and the old M7 is M8** (2026-09-19) — §9 records why the debt got
 a milestone rather than a place in the library's. §15 is the live tracker.
@@ -99,14 +101,21 @@ buys nothing.
 
 We use C++20 in a **deliberately restrained subset**:
 
-- No exceptions. No RTTI. No inheritance. No virtual functions.
+- No exceptions. No RTTI.
+- No inheritance and no virtual functions **in this compiler**. This is a style rule about
+  compilers, not a statement about Keel: **Keel will have inheritance and the dynamic dispatch
+  that comes with it** — virtual methods, overriding, abstract bases. It is not in v0 (L13, D29)
+  and is not yet scheduled to a milestone, so the bootstrap will reach this code before it
+  exists; but "Keel will not have it" was never the reason and this list should not be read as
+  saying so. Corrected 2026-09-19, after the reading had been used to justify a design.
 - No templates beyond using the standard containers.
 - Standard containers, `string_view`, `optional`, `span` — yes.
 - Style is "C with containers and namespaces."
 
 Two reasons for the restraint: it is the correct style for compilers, and every
 line here will eventually be rewritten in Keel during bootstrap. Do not lean on
-features Keel will not have.
+features Keel does not have — which for most of this list means *will never have*,
+and for inheritance means *does not have yet*.
 
 ---
 
@@ -232,6 +241,559 @@ src/check/
 CFG otherwise surfaces as a wrong program instead of a failed assertion, and it
 is what makes the `--dump-kir` goldens worth trusting.
 
+**Correction (2026-09-19), found while auditing the split this section's premise
+justifies.** *"A class cannot span translation units"* is false as written, and
+the rule built on it is narrower than it looks. A class **declaration** must
+appear in one place; its **member function definitions** may live in as many
+translation units as you like, which is exactly how Clang's `Sema`
+(`SemaExpr.cpp`, `SemaDecl.cpp`, `SemaOverload.cpp`, …) and Go's
+`types2.Checker` (`expr.go`, `stmt.go`, `call.go`, …) are organised. What is
+actually true is the narrower claim: a *file-local* class cannot, because
+nothing outside the file can name it — and `Checker` is one, declared inside an
+anonymous namespace that spans lines 16 to 7,642 of the `.cpp`, nearly the whole
+file. So this entry's *conclusion* holds and only its *reason* was wrong: the
+obstacle is internal linkage plus a declaration that was never written into a
+header, not a property of classes. Moving the declaration into one, and out of
+the anonymous namespace, removes it. **This does not retire the free-function
+rule for KIR**, which was
+chosen for passes that are genuinely independent of one another and has been
+vindicated by `simplify.cpp`. It does mean the rule was justified here by a
+constraint that does not exist, and that the checker's split is a choice about
+what is clearest rather than an accommodation of the language.
+
+**The working document was `docs/TYPE_CHECKER_SPLIT.md`** — the measurements, the file layout,
+the step sequence, and what Go's `types2` was read for. It did its job and is deleted; everything
+that outlived the work is in §15 and in the rest of this section.
+
+**Stage A landed on 2026-09-19.** `Checker` is declared in `sema/checker.h` and its 127 member
+definitions are spread over `sema/type_checker.cpp` (the spine: `run`, `visit`, `record`,
+`error_at`, `absorb`, `type_of_annotation`) and eight `sema/check_*.cpp`, one per construct.
+No implementation file exceeds 1,373 code lines against a ceiling of 1,500 — where Go's
+`types2` holds, and tighter than M6.5's stated 3,000. Behaviour is unchanged: the same 7,072
+assertions in 602 test cases and the same 172 goldens pass, before and after.
+
+**Stage A met M6.5's acceptance and did not improve the code, and that is the finding that
+matters.** Splitting the file changed nothing about readability, because the cut was along the
+grammar and the entanglement is in the state: every function could still reach every field. Two
+measurements say what the shape should have been. Of `Checker`'s 26 private fields, four are
+broadly shared (`ast_` 104 members, `table_` 75, `types_` 36, `interner_` 31) and **twenty-two
+are touched by twelve members or fewer, most by two or three** — `bounds_` by three,
+`unsafe_depth_` by two. And eleven of the fourteen classes that partition implies draw 75% or
+more of their lines from a single Stage A file. So the neighbourhoods were right and the walls
+were missing.
+
+**Stage B was therefore not a lift of free functions; it is fourteen classes, one per file,
+with a DAG between them** — `Types_builder`, `Reporter`, `Aggregates`, `Bounds`, `Annotations`,
+`Constant_folder`, `Places`, `Generic_recursion`, `Literals`, `Operators`, `Overloads`,
+`Expressions`, `Coverage`, `Statements`, `Signatures`, `Checker`, plus `Callees`, which the design
+forced out as a third level-0 collaborator because `Places` reads what `Overloads` writes and
+neither may name the other. A service takes types and spans rather than a `Node_id` it intends to
+walk, which is what removes the callbacks and what stops a rule function from wandering into one
+more check. Rescoped 2026-09-19, run through B0–B14, and **closed out on 2026-09-24**.
+
+**B0 is done (2026-09-19)**: `sema/types_builder.{h,cpp}` owns `table_` and `types_`,
+`sema/reporter.{h,cpp}` owns `sm_` and `diags_`, and `Checker` is down four fields with no
+assertion or golden changed. It also settled the thing that made the rest look expensive: a
+**shared** field does not have its readers rewritten, only its owner — `table_` becomes a
+`Type_table&` bound once, exactly as `ast_` already is, so all 370 of its call sites move
+untouched at B1–B13. `Reporter::previous_declaration_note` took a `Span` instead of a
+`Node_id` on the way, which is the service inversion arriving early because it was free.
+
+**B1 is done (2026-09-19)**: `sema/aggregates.{h,cpp}` owns `struct_order_` and `owning_` and
+answers the shape questions — containment order, the owning set, member and field lookup,
+`bindings_of`, `field_type`. `is_owning_type` split into `Aggregates::owns` (concrete
+aggregates, asks nothing) and a dispatcher on `Checker` that dies at B2. B0's shared-field rule
+held exactly: fifteen call sites gained a prefix and nothing else moved. Two things it added.
+A lower class that needs to write a *higher* class's field should **return** the answer instead
+— `order_structs` hands back the aggregates it found on a cycle and `Checker` seeds `expanding_`
+from that — which is §4.3's inversion again, and it will recur. And a class that takes no nodes
+it walks can be unit-tested with a parsed tree and nothing else: writing those five tests found
+that no golden and no unit test covered leaving a generic aggregate out of the struct order, a
+gap that predates the split.
+
+**B2 is done (2026-09-20)**: `sema/bounds.{h,cpp}` owns `bounds_` — D40's table, the closure, the
+bound queries, `check_bounds`, the admissible-set machinery and `declare_type_parameters`.
+`Checker::is_owning_type` is gone; `!bounds_.satisfies( t, Bound::Copyable )` is the whole of it.
+Three things it added. The **vocabulary leaves with the class**: `Bound`, `Bound_set` and
+`Conversion` could not stay in `checker.h` once `checker.h` includes `bounds.h`, so §5.2's claim
+that they stay there forever is corrected — expect one header move per remaining step.
+`current_function_`, the field §5.2 could not place, **became a parameter** for the first time,
+which is what that section said to do until B8 decides. And **inverting a predicate is where a
+pure move stops being pure**: six of the ten `is_owning_type` sites already carried a `!`, two
+came out inverted, and only the suites caught it — the compiler cannot check a sign, so delete the
+old declaration first and work its list one site at a time. Ten direct `Bounds` tests came with
+it, and one `Typed` case moved because its subject did.
+
+**B3 is done (2026-09-20)**, in two commits. `sema/annotations.{h,cpp}` owns `type_of` (was
+`type_of_annotation`) and `resolve_type_arguments` — the annotation subtree, the one walk that is
+not the expression walk. It is the first of the fourteen that **owns no state**: §4.2 put the two
+members together because they share one recursion, `Box<Vec<i32>>` being both at once.
+
+The first commit was not the move. B2 had given `check_bounds` a `current_function` parameter so
+its help line could say which declaration to put a `where` clause on, and that was the wrong
+question: the declaration to name is the one that introduced *the argument's* type parameter,
+which for a field of a generic aggregate is the aggregate and not any function. `struct Box<U>
+where U : Numeric { U v; }; struct Pair<T> { Box<T> b; };` aborted in `Ast::aux`, because the
+signature pass has no current function. `Bounds::declare_type_parameters` already knows the
+pairing, so it records it and the parameter is gone. Doing that first is what kept B3 a pure move
+instead of threading a field through twelve call sites and unthreading it at B8. **§5.2's
+ownerless field is forced less often than it looks** — ask what the reader actually needs first.
+
+**B4's first commit is a bug fix (2026-09-20).** `fold_float` handled three node kinds where
+`fold_integer` handles seven, so a file-scope float whose initialiser was not built purely from
+float literals folded to nothing, and `visit_global` recorded no value — emitting the global
+uninitialised with no diagnostic. `f64 a = 1;` compiled clean and compared unequal to `1.0` at run
+time; every cast dropped the same way; and `f64 x = 1.0 / 0;` was accepted while `1.0 / 0.0` was
+refused, because the operator check asks the float pool about a divisor only the integer pool
+holds. Two cases close all three. **Which pool a literal lives in is the lexer's decision, and the
+checker never moves it** — adopting a float type does not carry an `Int_literal`'s value across,
+so anything reading one has to ask by node kind rather than by recorded type. `checker.h`'s claim
+that a missing entry in `constants_` is an internal error had been false for as long as the folder
+existed, and no golden covered it: every file-scope float in the suite is a bare float literal.
+
+**B4's second commit is the move (2026-09-20).** `Constant_folder` takes five collaborators — the
+tree, the literal pools, `Types_builder`, `Bounds` and `Reporter`. `Interner` was on the predicted
+list and turned out unused, so the class does not take one. `constants_` moved with it behind
+`record_value` / `value_of` / `take_values`, because `Expressions`, `Coverage` and `Statements` all
+read the map and none of them may name `Checker`. `check_constants.cpp` is gone — the first Stage A
+file fully consumed, which is what "100% aligned to one file" was supposed to mean. Behaviour
+unchanged: 7,197 assertions in 635 test cases, 172 goldens in debug and release, all identical to
+before the move, which is the only evidence a pure move can offer.
+
+**A move can widen linkage, and no test will say so.** The nine folding helpers arrived at
+`keel::sema` scope instead of the anonymous namespace they left, giving `folded`, `equals` and
+`less_than` external linkage under names generic enough to collide later — B2's finding a second
+time, at a step that had already recorded it. The same reading found a `#include` of the new header
+duplicated with two different spellings, and `<limits>` left behind while `std::numeric_limits`
+came along. §6 says to grep for the old names before calling a step done; that catches a renamed
+reference and none of these. **A lift is also not finished when its code compiles** — all thirteen
+`TEST_CASE`s stayed in a file that then held nothing else, though §6's own rule says a `Typed` case
+moves when the member under test is the one moving, and here every one of them was.
+
+**B5 is `Places`, in two commits (2026-09-21).** Ten members leave `check_statements.cpp`,
+`check_declarations.cpp` and `check_aggregates.cpp` for `sema/places.{h,cpp}` — place roots,
+borrows, writability and the two passes that record which parameters travel by address. Seven
+collaborators, and no field of its own: the first rule class in the stack that owns no state,
+which is worth saying because §2 justified the whole redesign by state ownership and this one is
+a counterexample the design accommodates rather than a hole in it. Behaviour unchanged, 7,197
+assertions in 635 test cases and 172 goldens in debug and release.
+
+**The DAG stopped a step for the first time, and only when the class was being written.**
+`is_assignable` has to know which callable a call resolved to, and `callees_` was assigned to
+`Overloads`, four levels below `Places`. Nothing in the plan predicted it, and nothing in the
+tree would have shown it: a dependency that runs the wrong way up the DAG is invisible until the
+class that must not have it exists. The answer is the one that produced `Reporter` — a third
+level-0 collaborator, `Callees`, owned by `Checker` and read by both sides, which is the shape to
+reach for whenever two classes on opposite sides of the order need one map.
+
+**The first commit's own tests are the ones worth having here.** `Callees` is thirty lines and
+its mutations are lopsided: dropping the write and emptying the hand-off both *abort the
+compiler* in lowering rather than producing a diagnostic, so 66 goldens fail and the unit binary
+dies partway. Blanking the lookup is the interesting one — two unit cases catch it and all 172
+goldens pass, because no golden program both returns a `const ref` from a method and binds the
+result. A survivor on one side of a two-sided battery is the reason for running both.
+
+**B6 is `Generic_recursion`, in one commit (2026-09-21).** The five members of
+`check_generics.cpp` — `record_generic_uses`, `record_instantiation`, `expands_forever`,
+`wraps_a_parameter` and what was `check_generic_recursion` — move to `sema/generic_recursion.{h,cpp}`
+with `generic_calls_`, `instantiations_` and `expanding_`. Two members are new and neither is a
+rule: `record_call` replaces two raw `push_back`s into the graph and owns the `is_generic` guard
+that used to sit at both of them, and `mark_reported` gives B1's inversion a name where
+`check_declarations.cpp` had been reaching into `expanding_` directly. It is the first plain lift
+since B2 — no state had to be threaded, no collaborator had to be invented, and every caller was
+already below it in the DAG. It is also the first step that **empties a Stage A file of code**:
+`check_generics.cpp` is now tests only, and drains as B7 to B10 take the classes those tests pin.
+
+**A class that only needs level 0 can sit anywhere in the DAG.** `Generic_recursion` names `Ast`,
+`Interner`, `Type_table`, `Reporter` and the free `is_generic`, and nothing else — it would be
+legal at #1 as readily as at #6. That is worth writing down because §5's ordering has so far read
+as a constraint discovered late, and here it constrains nothing. It is also the first class to take
+`const Type_table&` rather than `Types_builder&`: it asks the table three questions and records no
+type, so taking the builder would be an unused dependency dressed as a real one — the same argument
+that deleted `Checker::parameter_mode` at B5, arriving before the code was written rather than after.
+
+**The survivor was the guard, not the walk.** Four mutations. Blanking `wraps_a_parameter` dies to
+three unit cases and two goldens, and dropping `record_instantiation`'s deduplication dies to one
+unit case — `type_checker_deduces_type_arguments`, which asserts a deduced call and a written one
+are one instantiation — while passing all 172 goldens. The prediction that nothing covered
+deduplication was wrong, and the test that covers it was written for the overload rules rather than
+for this. The genuine survivor is `record_call`'s `is_generic` guard: removing it passes 636 unit
+cases and 172 goldens. It records edges out of `main` that are not steps towards anything, and
+nothing downstream currently looks. The guard is still right — the walk reads every edge as a step —
+so the answer is a test rather than a deletion, and
+`generic_recursion_records_an_edge_only_from_inside_a_generic` is it. Second time in Stage B that a
+lift's mutation battery has found a pre-existing gap rather than a new defect; B1's was the same shape.
+
+**`keel::Literals` became `Literal_pool` first, in its own commit (2026-09-23).** Row 7's class
+is `Literals`, and `keel::Literals` is the lexer's value store — two classes of one name, one of
+them in an enclosing namespace of the other. C++ resolves that quietly and wrongly: inside
+`class Literals` the injected-class-name wins, so `const Literals& literals_` declares a reference
+to itself, and in `checker.h` the `Checker` constructor's own parameter changes meaning the moment
+the new header is included. Both are caught by the build, neither by reading. The file said
+`Literal_pool` in its prose already — its class comment calls it a pool and its test was named
+`literals_pool_round_trips_values` — so the rename only wrote down a name that was in use. Singular,
+to match `Literal_id` beside it. `common/literals.{h,cpp}` moved to `common/literal_pool.{h,cpp}`,
+which also removes a second, quieter collision: two `literals.cpp` in one build. Four comments that
+say "literals" about values rather than about the class were left alone, which is the part a
+whole-word substitution gets wrong.
+
+**B7 is `Literals`, in one commit (2026-09-23).** `is_literal_expression`, `infer_literal`,
+`check_literal`, `standalone_literal_type` and `warn_if_constant_comparison` move to
+`sema/literals.{h,cpp}` — the membership test that counts `-5` as a literal, the no-context
+fallbacks, the 204-line core that pushes an expectation through a unary minus so
+`i32 x = -2147483648;` range-checks as a negative and asks of a type parameter whether the value
+fits every type `T` may become, and D41's two halves: the type a literal takes when the operand
+beside it cannot hold its value, and the warning that the comparison this made legal was never in
+doubt. A second plain lift — the bodies reach only `Ast`, `Type_table`, `Literal_pool`, `Bounds`,
+`Constant_folder` and `Reporter`, make no `infer` or `check` call, and every caller was already
+below them. It is the first step to **delete** a Stage A file rather than empty one:
+`check_literals.cpp`'s nine tests all pin this class's own rules, so they moved with it.
+
+**A class can be earned by a shared question rather than by shared state.** `Literals` carries no
+fields at all — seven references and nothing else — which is the first time in Stage B, and the
+measurement §15 leans on would have said to leave it in `Checker`. It is one class for the reason
+`Annotations` is: its members answer one question, "what type does this literal take, and from
+where", and splitting them would put the membership test in one file and the rule it gates in
+another. It is also the first class **not** to take the `Interner` — `interner_` appears nowhere in
+the five bodies, and taking one anyway would have been an unused reference that no warning catches.
+`Bounds` and `Constant_folder` are held `const` for B6's reason: every method asked of either is.
+
+**A field can die of the move that reads it.** `Checker::literals_` looked like shared state and was
+not: `bounds_` and `constant_folder_` bind the pool from the constructor *parameter*, so the five
+moving members were its only readers and the move left it dead. `Checker` now holds no literal pool
+at all and only forwards the parameter. Worth doing at every step — ask what actually reads a field
+before assuming the class keeps it — and it is §5.2's question asked about one field rather than
+about `current_function_`. The battery is five, one per member, and all five die to unit cases: the
+negated-literal arm of the membership test, the `negative` flag, the standalone-type escape hatch,
+asking both operands rather than one, and a char literal defaulting as a `u8` code point. No
+survivor, unlike B1's battery and B6's.
+
+**B8 is `Operators`, in one commit (2026-09-23), and it is the first inversion.** `infer_binary`,
+`infer_unary`, `infer_cast` and `infer_conditional` stop taking a node: the caller infers the
+operands and asks for a result type. `sema/operators.{h,cpp}` answers five questions — where a
+binary operator's result type comes from, what a binary operator answers for two operand types,
+what the four rule-table unary operators answer, what a ternary answers when both arms are typed,
+and which conversions `cast` and `wrap` permit with the help for the ones they do not. Five `const`
+references and no fields, the second such class after `Literals`. 483 lines leave
+`check_expressions.cpp`, which goes 3,023 to 2,295.
+
+**An inversion cannot be proved the way a lift can, so prove something else.** Every step before
+this one came out byte-identical under two or three mechanical rewrites; this one rewrites every
+`return` in the bodies it moves, because `record( id, T )` becomes `return T`. What replaced the
+diff, and what the remaining inversions should copy: first a multiset diff of every string literal
+across the old file and the two new ones — 82 in, 82 out, none lost, none gained, none altered —
+which is the mechanical half and catches a diagnostic that silently became a different diagnostic;
+then a normalised structural diff per function, read by eye, confirming every remaining hunk is one
+of the intended rewrites. The thing being looked for is an early return that used to record the
+error type and now returns a valid one, or the reverse, which is a failure mode the plain lifts
+did not have.
+
+**A rule's machinery can have a reader the members do not.** The plan predicted which *members*
+had to invert and was right about all four; it missed that `check()` reads the rule table directly,
+to know which operands an expectation may flow into. That is neither a node question nor a type
+question, so no inversion removes it — it needed a query, `result_source`, which then lets the
+table itself stay private. **Before inverting, grep for every reader of the machinery, not only of
+the members.**
+
+**Threading beats a shared field, and B8 is where that stops being an open question.** The field
+with no owner, `current_function_`, is read by `Operators::result_of` for one help line at one call
+site. Across all of Stage B it has now been threaded to nine call sites in three classes, no class
+has wanted the shared-field alternative, and the one time it looked forced it turned out to be a
+bug. A class that takes it holds an `Ast&` to render it and never walks it, which is worth a line
+in the class comment, because an `Ast&` on a service class otherwise reads as the inversion having
+failed.
+
+**An inversion is the first time a rule's test coverage is visible, and B8's battery is the proof.**
+Eleven mutations. Seven died to unit cases. Two died only to a golden — a shift answering its right
+operand's type, and a refused generic conversion dropping the witness clause — which says the unit
+suite had no direct hold on either. **Two survived everything**: `-u32( 1 )` was accepted with the
+signed-only check removed, and nothing anywhere noticed, though it is D5's founding example; and
+having `check()` treat a shift like ordinary arithmetic pushed the expectation into the shift
+*count* without failing the test that exists for exactly that rule, because both operands of
+`1 << 4` are literals and the assertion is about the left one. Three new `TEST_CASE`s close all
+four. The earlier batteries were not weaker — the rules simply were not reachable on their own
+before, so their coverage could not be measured. **B9 confirmed it**: four survivors again, two of
+them caught by nothing at all. Expect B11 to find the same thing.
+
+**Testing a rule directly costs eleven lines, and the DAG is why.** Four of `operators.cpp`'s
+`TEST_CASE`s construct the class and ask it about types with no source string anywhere — the first
+tests in `sema/` that do not run the whole front end. The fixture is an `Ast`, an `Interner`, a
+`Source_manager`, a `Diagnostics` and a `Literal_pool`, all default constructed, then a `Reporter`,
+a `Types_builder`, an `Aggregates` and a `Bounds` to reach an `Operators`. Every one of them is a
+level below, which is the entire payoff of insisting a class may only name classes above it: the
+stack assembles without the checker. Eleven lines is cheap enough that a rule about types alone now
+has no excuse for being unpinned.
+
+**Private vocabulary leaves the header rather than moving to the new one.** `Operands` did not go
+from `checker.h` to `operators.h`; it went into `operators.cpp`'s anonymous namespace, because its
+only reader, `accepts`, reads no field either and became a free function over the type table. The
+class's public surface is five members. The whole of the old anonymous namespace moved with it, 102
+lines, with no reader anywhere else — a boundary the file already had.
+
+**B9 lifted overloading out, and it is the largest class in the stage.** Sixteen members — ten from
+`check_calls.cpp` and five from `check_aggregates.cpp`, plus `instantiation_of_` — into
+`sema/overloads.{h,cpp}`: which callable a name means at a call site, what its type arguments are,
+and whether two declarations of one name could ever be told apart. `check_calls.cpp` falls from
+2,538 lines to 1,388 and keeps only what a call *expression* is; `check_aggregates.cpp` from 1,043
+to 749. The class takes nine collaborators, the most of any in the stage, and holds six of them
+`const` by B6's rule. It does not name `Places`, which the plan had assumed it would.
+
+**§4.3's rule had to be narrowed rather than extended.** "A service takes types and spans, not
+nodes" is unachievable for this class — it reads parameter lists, renders signatures and walks the
+root for the overload sets — and it was never what the acyclicity needed. The rule that holds is
+that a class may read *declaration* subtrees and may not re-enter the expression walk, which is
+checkable: grep the new file for `infer(`, `check(` and `visit(` and expect nothing. `Places` has
+been obeying that version since B5.
+
+**A lazy call into the walk inverts into two entry points, never one.** Both selectors called
+`argument_shape`, which infers, and both called it only after arity had failed to settle the
+candidate set — because typing an argument cannot be taken back. Building the shapes eagerly would
+have inferred arguments that today are checked against a parameter's type, changing diagnostics in a
+way no assertion count would show. So each selector became a pair with the caller's walk in between.
+And `check_call_arguments` needed splitting for a second reason the plan had not seen: its `ref`
+rule reads the type the `check()` two lines above it had just written, so batching the walk left
+that read empty. **When inverting a call into the walk, look for what the re-entry wrote, not only
+for the re-entry.** The suite caught it in two cases, immediately.
+
+**The B9 battery is thirteen and the shape of the finding has changed.** Seven died to unit cases at
+once; four survived the unit suite and two of those survived everything, and all four are now
+closed. The two the goldens caught were the `move` exemption on a non-owning type and deduction
+forgetting which argument bound each parameter; the two nothing caught were an argument past the
+last parameter never being walked, and a duplicate `main` losing its "previous declaration" note.
+Two mutants still survive and both are equivalent rather than unpinned — and the second is equivalent
+only because of a real defect it uncovered: **a method candidate list names `T` where the author
+wrote `Box<i32>`.** `no `pick` takes 0 arguments / the ones declared take `( T )` and `( T, T )``
+should read `( i32 )`. `signature_of` declines to substitute because a method's `type_param_list`
+yields the aggregate's parameters and the receiver's bindings are not keyed by them. Not fixed in
+B9, which changes no behaviour; it is a diagnostic naming a type the author never wrote, which is
+the thing §5's substitution rule exists to prevent.
+
+**B10 lifted the expression walk out, and it was the cheapest step in the stage.** Twenty-four
+members and 1,564 lines into `sema/expressions.h` with definitions across `expressions.cpp` and
+`expressions_calls.cpp` — one class, two translation units, because 1,564 code lines plus 2,063 of
+tests is larger than the monolith Stage A set out to cut up. Both `check_expressions.cpp` and
+`check_calls.cpp` are gone. A normalised per-function diff makes **twenty-six of the thirty-one
+members byte-identical to their originals and none changed**. The first nine steps were expensive
+because they were lifting rules *out* of the walk; a class that *is* the walk needs nothing
+inverted to become one, which is the cost curve the plan had exactly backwards.
+
+**Inverting a callee makes its caller longer, and nothing had said so.** The split plan predicted
+`infer_call` would "shrink substantially" once B9 took selection and deduction out of it. Measured,
+it went **259 → 295**, with `infer_method_call` 88 → 103 and `infer_implicit_method_call` 62 → 79.
+A two-phase selector puts the sequencing in the caller by construction, so those 68 lines are the
+price of B9's inversion, charged to the walk rather than saved anywhere. A plan that books a
+shrink on both sides of an inversion has double-counted.
+
+**The field with no owner had one: it belongs to whoever is the walk, not to whoever asks.**
+`current_function_` was the one of 26 the split plan could not place, and it offered a threaded
+parameter or a shared `Walk_context`. Both were wrong: every reader is either inside `Expressions`
+or above it in the DAG, and the three classes below already take it as an argument. It is a private
+field of `Expressions` with a scoped enter/leave pair the statement walk calls — which is exactly
+what the other four walk-state fields do. **Ask which walk a piece of state belongs to before
+asking which class**; the `Walk_context` is struck.
+
+**One helper crossed the boundary the wrong way, and the compiler found it.** `check_condition`
+was shared by `if`, `while`, `for` and the ternary, so it read as a statement rule. Its body infers
+one node and reports one message, which makes it an expression rule that statements call, and it
+moved *down* to `Expressions` rather than leaving a cycle. **When a helper is shared across a layer
+boundary, ask which layer its body is in, not which layer calls it.**
+
+**B11 inverted `Coverage`, and the inversion was two lines.** `sema/coverage.{h,cpp}`, seven members
+and 510 lines of code out of `check_statements.cpp`, plus `Interval` out of `checker.h` and
+`quoted_list` out of the statement file's anonymous namespace. The two lines are the
+`visit( arm_children.back() )` that sat at the bottom of the enum and numeric arm loops. They could
+not simply be hoisted above the loop: an arm's pattern declares names its body then reads, so labels
+and bodies interleave, and hoisting would have reordered every diagnostic a `switch` produces. So
+**the loop moved to the caller instead** — `Statements::visit_switch` drives it, and `Coverage`
+answers one arm at a time through `begin_switch`, `check_arm_labels` and `finish_switch` over a
+`Switch_coverage` the caller holds. Two members became six. The rule generalises past this class:
+**when a callee's loop interleaves with something only the caller may do, move the loop, not the
+call.**
+
+**Who calls a helper settles where it goes, when the helper reads nothing.** `completes_normally`
+was booked to `Statements` by association with the `visit_*` family. It reads only the `Ast` and has
+exactly one caller, `check_arm_structure`, so it is `Coverage`'s — and taking it is what makes the
+class answerable without naming the walk. That is the same question B10 asked of `check_condition`
+and got the opposite answer to, because there the body was in a different layer from every caller.
+Ask about the body first; ask about the callers when the body settles nothing.
+
+**A class's collaborator list is readable off its last ten lines, not off its description.** The
+reading that planned B11 predicted six collaborators for `Coverage` and the build named eight:
+`check_variant_pattern` ends in `record( bindings[i], aggregates_.field_type( type, payload[i] ) )`,
+so it needs `Types_builder` and `Aggregates` too. Third step in a row where the compiler found a
+dependency the reading missed, which is an argument for doing the wiring before the prose rather
+than after.
+
+**Two shipped defects in D34's numeric coverage, both found by mutation and neither by reading.** A
+single `case` label is stored as the one-wide interval `[v, v+1)` and overlap is a symmetric
+pairwise test. Dropping the width, so the interval is `[v, v)` and empty, means `case 1: case 1:` is
+no longer reported as a repeat. Dropping the second conjunct of the overlap test means
+`case 5: case 1..3:` *is* reported as overlapping, because the test stops being symmetric and source
+order starts to matter. Both survived 649 unit cases and 172 goldens. Both now have a `TEST_CASE`.
+The shape to remember is that **both halves of a two-part invariant need their own mutation** — one
+mutation of the pair would have found neither.
+
+**B12 is the first step in Stage B where nothing had to be restructured.** `sema/statements.{h,cpp}`,
+twelve members and 537 lines of code — the eleven `visit_*` out of `check_statements.cpp`, which
+the step deletes, and `Checker::visit` out of `type_checker.cpp` — plus the `record` and `error_at`
+forwarders every class in the split carries. **All twelve moved byte-identical**
+modulo the class rename, against B10's twenty-six of twenty-eight and B11's five of seven. The
+reason is the row itself: a class that is only dispatch reaches nothing except collaborators it is
+allowed to name, so there is nothing to invert and nothing to split. The corollary is worth having
+before B13 — **a step's cost is set by what its members reach, not by how many lines they are.**
+
+**The DAG claim that `Statements` sits above everything now has its second grep.** B10 settled
+`visit(` appearing nowhere in `Expressions`; B12 settles the other direction — the only caller of
+`visit` outside the class is `Checker::run`, and `statements.{h,cpp}` name nothing in rows 13 or 14.
+Eleven collaborators, five of them `const`.
+
+**A save/restore pair is one fact per construct, not one per field, and mutating the second field
+re-measures the first.** `Statements::visit_function` saves and restores `current_return_` and
+`current_function_` on adjacent lines, both against nested functions the language does not have
+until M6's lambdas. B10 measured `current_function_` and found `enter_function` called 2,972 times
+with the field invalid every time. B12 mutated the other one and got the same answer from a
+different counter: `visit_function` is entered **3,089 times** across 652 unit cases and 172 goldens
+(2,207 and 882) with the enclosing return type valid **zero times**, while a positive control on the
+same line fired 3,089. One equivalent mutant out of sixteen, and it is the same insurance measured
+twice — which is a reason to record the *construct* as probed rather than the field.
+
+**An unearned-include probe has to be a name grep, not a build.** Removing `<algorithm>` from
+`type_checker.cpp` still compiled, because something it includes provides it; the file names
+`std::find` and the include is earned. `lex/token.h` in `checker.h` failed both tests and is gone —
+`Token_kind` and `Keyword` left with the `visit_*` family. **Compiling without an include proves
+only that the include is redundant, which is not the same question.**
+
+**Attributing a test by the file that emits its message caught a fixture in the wrong class, and
+the gap behind it.** The unruled-`fallthrough` branch is `Statements::visit`'s, but its only case
+was a section of `Coverage`'s `type_checker_checks_fallthrough` asserting nothing more than
+`REQUIRE_FALSE( p.clean() )` — and the three placements the help text actually names, inside a
+block, an `if` and a loop, had no case at all. Honest about what found it: **mutation did not.**
+Flipping the guard either way dies to the section that was already there, so this is a gap in what
+the suite *says* rather than in what it covers, and only reading the attribution surfaces it.
+
+**A class may not be split across two files, because Keel cannot express it.** C++ lets a class be
+declared once and have its members defined in as many translation units as you like; that device is
+what `checker.h` existed for, and it is what let `Expressions` become `expressions.cpp` plus
+`expressions_calls.cpp` at B10. Keel has no such form. So a compiler written this way cannot be
+written in the language it compiles, and every file that relies on the device is a piece that would
+have to be redesigned rather than translated. **This outranks the 1,500 code-line ceiling.** B13 was
+built as two files for exactly the reason B10 was — one file would be large — and merged into one at
+609 code lines the moment the rule was named. Where the two constraints conflict, the *class* gets
+split, not the file. `Expressions` is the one place still outstanding, and it is a real split into
+two classes rather than a merge into one 1,716-line file.
+
+**B13 restructured nothing either: fourteen of fourteen byte-identical**, after B12's twelve of
+twelve. `sema/signatures.{h,cpp}` took 572 lines from `check_declarations.cpp` and
+`check_aggregates.cpp`, both deleted, modulo the class rename and one mechanical infix drop —
+`declare_signatures` became `declare`, which turns `signatures_.declare_signatures()` into
+`signatures_.declare()` and follows `generic_recursion_.check()`. Two comments in other modules
+named the old names and now say "the declaration pass", which the DAG wanted anyway: a row-3 class
+should not be naming a row-13 one even in prose.
+
+**Ten collaborators and only two of them `const` — the fewest of any row, and the reason is what the
+row does.** Every other class in the split holds several things read-only. A declaration pass holds
+almost nothing that way, because it *writes*: it records types, declares type parameters, computes
+ownership, records binding addresses, checks overload sets. Probed one field at a time, nine of ten
+refuse `const`; only `Ast` and `Interner` survive. **How much of a class's state is read-only is a
+fact about what the class is for**, not a hygiene score, and a pass that only writes should look
+like one.
+
+**"One mistake, one diagnostic" is invisible to `REQUIRE_FALSE( p.clean() )`, and three of B13's four
+survivors were that shape.** A rule that suppresses a *second* diagnostic cannot be caught by an
+assertion that the program is dirty, because it is still dirty with two. A struct with two
+constructors, and a struct that declares its own destructor beside an owning field, both reported
+once and would have reported twice — and every existing section asserted only cleanliness. The
+assertion that catches this class of rule is `REQUIRE( p.errors() == 1 )`, and it should be the
+default wherever a comment says one mistake yields one message.
+
+**A silent mis-ordering is worse than a loud one, and `record`'s discipline does not catch it.**
+Moving `declare_enum_decls()` after `declare_field_decls()` in the eleven-step sequence leaves a
+field that names an enum **typed as nothing, with no diagnostic at all** — 653 unit cases and 172
+goldens pass, and the compiler then aborts in the emitter on an invalid `Type_id`. The rule that
+"every infer branch ends in a `record`, so forgetting to record a type is hard rather than silent"
+holds for the *branch* and not for the *ordering*: the record happened, with a type the annotation
+had resolved to nothing. The test that catches it asserts the recorded type, not cleanliness.
+
+**An absorption downstream of a gate the error itself closes cannot be mutation-tested.** B13's one
+equivalent mutant drops `underlying = i32` after "an `enum` must be backed by an integer". It is
+unobservable by construction, not by measurement: the line runs only immediately after that error is
+reported (once in the whole suite, against a control of 116 enum declarations), the only readers of
+an enum's underlying type are the emitter and the speller, and `main.cpp` returns before lowering
+whenever there are errors. The right response is to say so in the comment rather than write a test
+that cannot exist — and the previous comment claimed a cascade it could not have prevented.
+
+**The class a test's topic names is not always the class its fixture can live in.**
+`type_checker_types_a_generic_aggregate` is about aggregates and went to `aggregates.cpp`, where it
+would not compile: that file's fixture is `Shapes`, which parses and types fields *without* the
+checker on purpose, and importing `Typed` beside it would undercut the point the fixture exists to
+prove. It belongs with the class that emits its messages. **Attribution by emitting file survives
+the case where attribution by topic does not**, which is the second time that rule has paid — the
+first was B12's misplaced `fallthrough` section.
+
+**The three `TEST_CASE`s owed since B6, B7 and B8 are paid, and `check_generics.cpp` is deleted.**
+It was 637 lines of tests and no code. Six fixtures came out of it and three out of
+`type_checker.cpp`, every one attributed by the file that emits the message it asserts; assertion
+and case counts were unchanged by each move, which is the check that a move was only a move. The
+method is mechanical where a test name is not: take the longest run of an asserted message with no
+backticked name in it, and grep the tree for that run.
+
+**Probe before declaring an equivalent mutant.** B10's battery is sixteen: eight died to units, four
+only to goldens, one to nothing, and five new `TEST_CASE`s took it to thirteen killed by units. Of
+the three that survive, all three would have been plausible to argue equivalent — so they were
+measured instead, with an instrumented build and a positive control. `infer`'s `default:` arm is
+reached **zero times** across 649 unit cases and 172 goldens, because the two expression kinds with
+no case of their own only ever appear as `case` labels. `enter_function` is called **2,972 times
+with no enclosing function**, because the language has no nested functions until M6's lambdas. Both
+are insurance against a language that does not exist yet, which is a defensible thing for code to
+be — but arguing it is how a real gap gets filed as a non-gap. B11's one survivor was measured the same
+way: growing the coverage vector by a slot changes nothing, because its bound is reached 172 times
+across 651 unit cases and 172 goldens and never once fires, and a control with the bound one lower
+fired 46 times at the same two sites.
+
+**Comments are reviewed per finished class**, after the suites are green rather than during the
+lift — a move that rewrites its comments is no longer a move. `aggregates`, `types_builder`,
+`reporter`, `bounds` and `annotations` were trimmed on 2026-09-20, and `constant_folder`,
+`callees`, `places` and `generic_recursion` on 2026-09-21 and `literals`, `operators` and
+`overloads` on 2026-09-23 and `expressions` and `coverage` on 2026-09-24 — **nothing is currently
+unswept**; the rest of `sema/` follows B14.
+The same pass catches surface that widened during the move: B2's five file-local helpers had
+become public in `bounds.h` and went back to internal linkage. It also catches cross-references
+the move invalidated — B3's rename left four comments in other files naming the old function, and
+nothing but a grep finds those; B9 left one, `check_aggregates.cpp` naming `check_overload_sets`
+after it had become `Overloads`'.
+
+**B14 is a deletion (2026-09-24).** `class Checker` moved into `sema/type_checker.cpp` and
+`sema/checker.h` is gone: one translation unit defines its members now, so the header's whole
+reason for existing had left with the fourteenth class. What remains of `Checker` is a constructor
+and a 33-line `run()`. Nine fixtures were rehomed to the files that emit their diagnostics and
+`check_generics.cpp` — 637 lines, tests and no code — was deleted with them, which paid the three
+`TEST_CASE`s owed since B6, B7 and B8. Three mutations over `run()` all die.
+
+**Stage B is closed out (2026-09-24), and the honest accounting is in §15.** Fourteen classes plus
+three level-0 collaborators, one class per file, and the DAG is **checked mechanically at zero
+violations across all seventeen** rather than argued. All nine `check_*.cpp` and `checker.h` are
+deleted. Two claims were made for the split and **one of them held**: the DAG is real; the tests did
+not get simpler, and `Expressions` went *up* rather than down. What the split actually bought, and
+what nothing predicted, is mutation testing per class instead of per compiler — every step from B10
+on found a real gap, and the close-out found two more.
+
+**One class in one file is a self-hosting constraint, not a preference.** B10 split `Expressions`
+across two translation units because one file would have been large; B13 was about to do the same
+and merged instead. C++ permits it, **Keel has no form for it**, so a class written that way could
+not be translated when this compiler compiles itself. The close-out merged `expressions_calls.cpp`
+back in. This outranks the 1,500-line ceiling the split set itself: when a class is too large, split
+the *class*.
+
+**The measurement that decides the shape.** This entry proposed splitting the
+checker *into free functions over `Ast` and `Type_table`*. Propagating state use
+through `Checker`'s internal call graph — 127 member definitions, 6,258 lines of
+bodies — says that reaches **22 functions and 432 lines, 7% of the file**.
+Another 45 functions (1,794 lines) touch only the accumulators that become
+`Types`, and 60 functions (4,032 lines, 64%) touch the transient walk state —
+`expected_`, `naming_variant_`, `current_return_`, the depth counters — and
+cannot become free functions without threading that state by hand through every
+call. The free-function plan is right for the 7% and wrong for the rest.
+
 ### 3.3 The order to build it in
 
 M3 is where §13 warns that silent breakage compounds, so the path is chosen so
@@ -316,7 +878,7 @@ exists specifically to prevent indefinite bikeshedding.
 | L10 | Golden-file tests from the first commit. |
 | L11 | **Surface syntax is C++'s** (§5.1). Statement-oriented, explicit `return`, no expression-blocks. |
 | L12 | Mutable by default; `const` for immutable — as in C++. See §12; this is the sharpest familiarity-vs-safety trade in the design. |
-| L13 | **Two aggregate kinds** (D29). A `struct` is a transparent aggregate: all fields public, trivially copyable, no destructor, no owning members. A `class` has invariants: fields private by default, may own resources, may have a constructor and a destructor, and is moved rather than copied. Neither inherits and neither is virtual in v0. |
+| L13 | **Two aggregate kinds** (D29). A `struct` is a transparent aggregate: all fields public, trivially copyable, no destructor, no owning members. A `class` has invariants: fields private by default, may own resources, may have a constructor and a destructor, and is moved rather than copied. Neither inherits and neither is virtual **in v0** — inheritance and dynamic dispatch are planned, unscheduled, and not a thing v0 forecloses. |
 | L14 | No exceptions in the language. Errors are `Result` + `?`. |
 | L15 | Naming: `Capitalized_snake_case` types (`String_view`, `Hash_map`), `snake_case` values and functions — the convention already used in `MANIFESTO.md` §12. |
 | L16 | C declaration order (`i32 x`), so type constructors are **postfix**: `T*`. References are not among them — `ref` is a binding mode written in front of the type (D32), so `T*` is the only one left and `&` means address-of and nothing else. |
@@ -547,7 +1109,7 @@ overflows; what happens then is the open overflow question in §12.
 | D26 | `nullptr` is the null pointer, spelled as in C++, and it is a **literal** whose type comes from context: `u8* p = nullptr;` adopts, `auto p = nullptr;` is an error. | The spelling is C++'s because §5.1 has no reason to invent another for an identical concept. Making it a literal rather than a value of some `nullptr_t` reuses `check_literal` wholesale and keeps D5 intact — no conversion happens, the literal simply *becomes* that type, exactly as `42` becomes a `u32`. The `auto` case then falls out as an error for the same reason it does for any literal with nothing to adopt from. |
 | D27 | **No pointer arithmetic on `*T`**, which points at exactly one `T`. Arithmetic belongs to a many-item pointer, `[*]T` in Zig's notation, which v0 does not have. | `p + 1` on a single-item pointer is not dangerous, it is *nonsense*, and a type distinction catches it statically at no cost. Note the performance argument for C's arithmetic does not hold: `*(p + i)` and `p[i]` compile to identical machine code, so what buys speed is the capability of touching raw memory, which survives either spelling. C's implicit scaling by element size is the wart — a named `offset` operation says what it does. §6.4 already answers nothing for a pointer, so rejection is the default rather than a rule to add. `==` and `!=` between two pointers of the **same** type are allowed, since that is how a null check is written; ordering is not, because comparing pointers into different allocations is meaningless. |
 | D28 | Conversions are written `cast<T>( x )` and `wrap<T>( x )`, both **keywords**. `cast` preserves the value; `wrap` keeps the low bits. Neither converts float to integer, and neither converts integer to bool. §6.5 has the table. **Narrowing `cast` is refused until the run-time check exists.** | Two spellings rather than one because the failure policy is the interesting part, and an unqualified cast lets an author avoid stating it — which is how C's `(u8)x` silently truncates. Keywords because as identifiers they walk into §12's `a < b > ( c )` ambiguity; as keywords the `<` can only be a bracket. Both spellings are new notation, so §5.1 is satisfied for free. Float to integer is rejected because `cast<i32>( 1.9 )` has no obvious answer — truncate, round, floor and ceil are four operations and C picks one silently; they arrive as library functions at M6. Integer to bool is rejected because `x != 0` says it better and modular arithmetic down to one bit says something else again. Float *rounding* is accepted (`cast<f32>( some_f64 )`), because a float that cannot hold the value gives an infinity rather than a plausible wrong number — the line is that `cast` refuses to turn a value into a *different* value, not that it refuses to lose precision. |
-| D29 | **Two aggregate kinds, split by one principle: a `struct` is a type whose representation is its interface; a `class` is a type whose interface hides its representation.** **Both may have methods** (M5.5), written as C++ writes them, with a **trailing `const`** saying the method does not modify its object. A `struct` has all fields public, is trivially copyable, may not have a destructor, and may not contain an owning member (transitively); it is built from a struct literal (D23). A `class` has fields private by default, may own resources, may have a constructor and a destructor, is moved rather than copied, and is built by a constructor. **Both may have methods.** Neither inherits and neither is virtual in v0. A `struct` with a destructor, and a `struct` with a `private:` label, are hard errors naming `class` as the fix. | C++ has two keywords for one job — the only difference is default access, kept so that C headers would compile — and Keel pays no C-compatibility tax, so the second word is free to earn its keep. The line is drawn at **trivial copyability** rather than at "may have methods", because only the first has semantic consequences: a trivially copyable type cannot have a destructor (copy plus destructor is a double free, which is why Rust makes `Copy` and `Drop` mutually exclusive), is never moved, and never enters §8's drop analysis. "May have methods" has no consequences at all, and the motivating examples for restricting it — `Node_id::is_valid()` — need them anyway. The two initialisation syntaxes stop competing as a side effect: literals belong to structs, constructors to classes, so `Buffer { ... }` versus `Buffer( 16 )` never has to be disambiguated. Enforcement is free: `struct` is legal exactly when D2's owning query says no. Safe under §5.1 because both rejected spellings are errors rather than reinterpretations. Prior art cuts both ways and is worth recording: the languages that keep two aggregate keywords (C#, Swift, D) split on value-versus-reference semantics, and the C++ successors that exist (Carbon, Cpp2, Hylo) collapse to one kind. This splits on copyability, which is the ownership-language analogue of the first — Keel has no garbage collector, so "reference type" has nothing to mean. |
+| D29 | **Two aggregate kinds, split by one principle: a `struct` is a type whose representation is its interface; a `class` is a type whose interface hides its representation.** **Both may have methods** (M5.5), written as C++ writes them, with a **trailing `const`** saying the method does not modify its object. A `struct` has all fields public, is trivially copyable, may not have a destructor, and may not contain an owning member (transitively); it is built from a struct literal (D23). A `class` has fields private by default, may own resources, may have a constructor and a destructor, is moved rather than copied, and is built by a constructor. **Both may have methods.** Neither inherits and neither is virtual **in v0**; inheritance and dynamic dispatch are planned and unscheduled, and D29's split is drawn so as not to foreclose them — the line is copyability, which says nothing about whether a `class` may later have a base. A `struct` with a destructor, and a `struct` with a `private:` label, are hard errors naming `class` as the fix. | C++ has two keywords for one job — the only difference is default access, kept so that C headers would compile — and Keel pays no C-compatibility tax, so the second word is free to earn its keep. The line is drawn at **trivial copyability** rather than at "may have methods", because only the first has semantic consequences: a trivially copyable type cannot have a destructor (copy plus destructor is a double free, which is why Rust makes `Copy` and `Drop` mutually exclusive), is never moved, and never enters §8's drop analysis. "May have methods" has no consequences at all, and the motivating examples for restricting it — `Node_id::is_valid()` — need them anyway. The two initialisation syntaxes stop competing as a side effect: literals belong to structs, constructors to classes, so `Buffer { ... }` versus `Buffer( 16 )` never has to be disambiguated. Enforcement is free: `struct` is legal exactly when D2's owning query says no. Safe under §5.1 because both rejected spellings are errors rather than reinterpretations. Prior art cuts both ways and is worth recording: the languages that keep two aggregate keywords (C#, Swift, D) split on value-versus-reference semantics, and the C++ successors that exist (Carbon, Cpp2, Hylo) collapse to one kind. This splits on copyability, which is the ownership-language analogue of the first — Keel has no garbage collector, so "reference type" has nothing to mean. |
 | D30 | **One `enum` keyword**, carrying `enum class`'s semantics: scoped (`Shape::Circle`), with no implicit conversion to an integer. **Scoped everywhere, including a `case` label** - `case Shape::Circle( r ):`, never a bare `Circle`. The underlying type is spelled as in C++: `enum Shape : u8 { ... }`. `enum class E` is a hard error saying to drop the `class`. | The same C-compatibility tax as D29, with the opposite answer, and the asymmetry is the point: `struct`/`class` are two words for one job, so the job gets split; `enum`/`enum class` are two words for one job where only one of them does it correctly, so there is nothing to split. C++'s plain `enum` leaked its variant names into the enclosing scope and converted implicitly to `int`; both were mistakes, `enum class` fixed them in C++11, and the broken spelling survives only for C. Safe under §5.1 because every point where the two meanings diverge is an error rather than a reinterpretation: `Shape s = Circle;` is an unknown name, and `i32 x = Circle;` and `if ( s == 0 )` have no conversion to reach for. Rejecting `enum class` follows D22's pattern — keep the spelling recognised so the diagnostic can name the fix. **Answered at M5, and the answer is smaller than the question looked.** Ownership is **inherited, not chosen**: an enum is owning exactly when any variant's payload is owning, which is D2's query extended to variants with no new rule. That is why D29's question does not really transfer - D29 forced `struct` against `class` because the *author* had to say which they meant, and here there is nothing to say, since every variant is visible in the declaration and the compiler already knows. No annotation, no `enum class` equivalent, no way to get it wrong.
 
 What is genuinely new is *how* one is destroyed. A struct's destructor is a fixed sequence - field 1, field 2, field 3 - and every drop in the language today is static. An enum has **one live variant, chosen at run time**, so destroying it means reading the tag and destroying only that payload; destroying the wrong one frees memory that was never allocated. The answer is a **synthesised destructor that switches on the tag**, one generated function per owning enum. That is the whole of the new machinery, and it is affordable precisely because nothing else moves: `drop` still means "call this type's destructor", so drop elaboration, drop flags, the move analysis and the emitter are untouched. Expanding the switch inline at every drop site instead would multiply both the code and the flags.
@@ -846,7 +1408,7 @@ milestone is complete until its acceptance program is a passing golden test.
 | **M5** | `enum` (D30) payload-free first, then payloads (D7). `switch` with destructuring, `default`, stacked labels and exhaustiveness. Range labels (D34). | The `Shape`/`area` sample. Non-exhaustive `switch` is a compile error naming the missing variant. | Sum types, tagged variants |
 | **M5.5** | ~~Methods on `struct` and `class`~~ **done**. ~~`unsafe` blocks (D35)~~ **done**. ~~`extern` (D36)~~ **done**. ~~`alloc<T>`/`free` and `kl_rt` (D37)~~ **done**. | A linked list whose nodes are allocated one at a time, walked, and freed — valgrind-clean. **Amended**: this was `Buffer` with `push`, which needs the many-item pointer `[*]T` that D27 leaves out of v0, so it was never reachable at M5.5. Option (b) keeps the question the acceptance was asked to answer — can the language express a heap data structure and release it — and defers only the growable-array half to M8. | Whether the language can express a real data structure |
 | **M6** | Generics (D39's spelling, D11's checking), bounds (D40), the monomorphisation **worklist** and D42's termination rule — for functions *and* aggregates — name mangling with type args, and the §12 decisions M6 is the deadline for — **all now taken (2026-09-18)**, four of which carry implementation into this milestone: ~~**D41's mixed-signedness comparison**~~ (moved here from M6.5, because §12's `T` generalisation depends on it; **done 2026-09-18**, §15 slice 1g — and it is not only signedness, see the correction in D41), ~~**`cast`/`wrap` on a type parameter**~~ (moved here too — the shipped range diagnostic tells authors to reach for it, so it is not optional; **done 2026-09-18**, §15 slice 1f), ~~**overloading**~~ (constructors first, and the `ref`/pointer mangling collision with it; **done 2026-09-18**, §15 slice 3), and ~~**type-argument inference**~~ (**done 2026-09-18**, §15 slice 4 — which also pays slice 3's deferred generic tie-break). | `max<i32>` and `max<f64>` both work; a generic `Box<T>` with a destructor drops correctly; `u32 < i32` and `i64 < f64` both compile and answer correctly; `wrap<i32>( a )` works for an `Integral` `T` and `cast<f64>( a )` for a `Floating` one; `C( i32 )` and `C( f64 )` coexist; `i32 x = id( 5 );` needs no written type argument. | Instantiation, mangling |
-| **M6.5** | The debts that are neither M6's feature nor M8's: ~~D41's mixed-signedness comparison~~ **moved into M6** — §12's generalisation of it to `T` depends on it, ~~`cast`/`wrap` on a type parameter~~ **moved into M6** — the shipped range diagnostic points at it, ~~§12's empty-aggregate rejection~~ **done (2026-09-19)** — and it kept the `kl_rt_alloc` guard that §12 expected it to delete, because pinning `malloc( 0 )` is worth a branch independently of what reaches it, ~~the two KIR passes carried from M5.5~~ — empty-block threading and constant-branch folding — **done (2026-09-18)** as one pass, `ir/simplify.cpp`, because folding forces pruning and pruning needs a finished graph; the warning that went with them was cut rather than written, — ~~the mangling rework (length-prefixing, the `ref`/pointer collision, `kl__id__T__i32`)~~ **done in M6's slices 2b and 3e** — 2b forced the length-prefixing, and ~~the `ref`/pointer collision is unreachable until overloading lands~~ **overloading landed in M6 and took the collision with it**, ~~constant checking inside a generic body~~ **done in M6's slice 1f** — literal adoption is what made it reachable, so it was paid where it broke rather than carried. **Two arrived with M6's decisions**: ~~§12's **conditional expression**, which is a decision rather than a debt and is here to stop it being an accident~~ **decided and built (2026-09-19)** — `?:` ships and `if`-as-expression is **rejected**, not deferred, and ~~**function pointers**, whose implementation is M6.5 or M8 depending on whether FFI asks first~~ **moved to M7 (2026-09-19)** — M8 is the library, and a language feature should not arrive inside a milestone that is otherwise about writing Keel in Keel. **Four more scoped here (2026-09-19)**, all of them debts this milestone exists for rather than features: **splitting `sema/type_checker.cpp`**, which the §15 entry deferred until KIR landed and which has since gone from 2350 code lines to 7898 on one file-local class of 158 members — done *before* M7 rather than after, because M7 adds member-declaration rules to exactly this file and splitting is cheaper before the addition than after; **the mangling category tag**, the surviving half of that debt now that M6 length-prefixed the other half, owed because a static method is the first scheme with no receiver to tell it apart; **`g().t = 1;`**, which assigns into a discarded temporary and which the conditional now inherits; and **the `Arena`'s decision**, whose two predicted callers have both been decided against — wire it to the `Interner` or delete it, but stop carrying it unowned. | `struct Empty { };` is refused naming a one-variant `enum`; `while( true ) { return 7; }` needs no `return` after it, `for( ; ; )` lowers to two blocks rather than three, `a > b ? a : b` compiles, runs only the arm it chose, and is refused when the arms disagree; `struct foo__ { };` beside `i32 foo()` no longer mangles to one name; no source file in `keelc/src` exceeds 3000 code lines; and the `Arena` either has a caller or is gone. | Paying debts before they compound |
+| **M6.5** | The debts that are neither M6's feature nor M8's: ~~D41's mixed-signedness comparison~~ **moved into M6** — §12's generalisation of it to `T` depends on it, ~~`cast`/`wrap` on a type parameter~~ **moved into M6** — the shipped range diagnostic points at it, ~~§12's empty-aggregate rejection~~ **done (2026-09-19)** — and it kept the `kl_rt_alloc` guard that §12 expected it to delete, because pinning `malloc( 0 )` is worth a branch independently of what reaches it, ~~the two KIR passes carried from M5.5~~ — empty-block threading and constant-branch folding — **done (2026-09-18)** as one pass, `ir/simplify.cpp`, because folding forces pruning and pruning needs a finished graph; the warning that went with them was cut rather than written, — ~~the mangling rework (length-prefixing, the `ref`/pointer collision, `kl__id__T__i32`)~~ **done in M6's slices 2b and 3e** — 2b forced the length-prefixing, and ~~the `ref`/pointer collision is unreachable until overloading lands~~ **overloading landed in M6 and took the collision with it**, ~~constant checking inside a generic body~~ **done in M6's slice 1f** — literal adoption is what made it reachable, so it was paid where it broke rather than carried. **Two arrived with M6's decisions**: ~~§12's **conditional expression**, which is a decision rather than a debt and is here to stop it being an accident~~ **decided and built (2026-09-19)** — `?:` ships and `if`-as-expression is **rejected**, not deferred, and ~~**function pointers**, whose implementation is M6.5 or M8 depending on whether FFI asks first~~ **moved to M7 (2026-09-19)** — M8 is the library, and a language feature should not arrive inside a milestone that is otherwise about writing Keel in Keel. **Five more scoped here (2026-09-19)**, all of them debts this milestone exists for rather than features: ~~**splitting `sema/type_checker.cpp`**, which the §15 entry deferred until KIR landed and which has since gone from 2350 code lines to 7898 on one file-local class of 158 members — done *before* M7 rather than after, because M7 adds member-declaration rules to exactly this file and splitting is cheaper before the addition than after~~ **done (2026-09-19)**, and the class was kept: the audit measured the free-function shape this milestone assumed and found it reaches 7% of the file, so `Checker` moved to `sema/checker.h` and its 127 definitions to nine files, largest 1,373 code lines, with no assertion or golden changed — **the acceptance criterion was met and the code did not get easier to read**, which is recorded in §15 and in §3.2 rather than quietly dropped, and is why `Checker` was then dissolved into fourteen classes instead of kept — ~~that work is scoped, unscheduled, and not part of this milestone~~ **Stage B done and closed out (2026-09-24)**: seventeen classes, one per file, a machine-checked DAG at zero violations, and `checker.h` and all nine `check_*.cpp` deleted; **the mangling category tag**, the surviving half of that debt now that M6 length-prefixed the other half, owed because a static method is the first scheme with no receiver to tell it apart; **`g().t = 1;`**, which assigns into a discarded temporary and which the conditional now inherits; **`enum Nothing { };`**, rejected on the empty-aggregate precedent so that an accidental spelling does not become the one uninhabited types have to live with; and **the `Arena`'s decision**, whose two predicted callers have both been decided against — wire it to the `Interner` or delete it, but stop carrying it unowned. | `struct Empty { };` is refused naming a one-variant `enum`; `while( true ) { return 7; }` needs no `return` after it, `for( ; ; )` lowers to two blocks rather than three, `a > b ? a : b` compiles, runs only the arm it chose, and is refused when the arms disagree; `struct foo__ { };` beside `i32 foo()` no longer mangles to one name; `enum Nothing { };` is refused and `( c ? a : b ).t = 1;` is too; no source file in `keelc/src` exceeds 3000 code lines — **met (2026-09-19)**, the largest is now `parse/parser.cpp` at 2786; and the `Arena` either has a caller or is gone. | Paying debts before they compound |
 | **M7** | **Static methods** — a function that belongs to a type but takes no receiver, called `Type::name( args )`. The §15 debt, scheduled here because M8's library is the first thing that wants one: `Vector::with_capacity`, `String::from_bytes`. Scope is *methods only* — type-scoped **data** waits on M8's modules and globals, function-local static storage has no customer, and internal linkage is the access-control debt below it rather than this one. The **spelling is undecided** and §12 now carries it: every method has an implicit receiver, so something has to say "this one does not", and D30 already gives `Type::name` at the call site without saying how the declaration is marked. **Two more scoped here (2026-09-19). Access control**, the §15 debt sitting directly below this one, because M7's own customer argues for it: `Vector::with_capacity` is a named constructor, and a named constructor only earns its place if the ordinary one can be hidden — so the feature that motivates M7 is incomplete without it. It is a resolver feature, member lookup carrying visibility, and a slice of its own rather than a rider. **Function pointers**, moved from M6.5's fork: the alternative was M8, and M8 is the standard library — a milestone about writing Keel in Keel should not also be where a language feature first appears. It is the smallest of the three and goes last, because nothing else here depends on it. **Order matters within the milestone**: the spelling decision, then static methods, then access control, then function pointers. | A named constructor returns an aggregate, is called as `Type::make( args )`, and is refused as `value.make( args )` — both a golden and the mangling that tells it from a method; a field declared private is refused from outside its type and accepted from a method of it; and a function's address is taken, stored in a variable, and called through it. | **Whether a type is a namespace, and whether a function is a value** |
 | **M8** | Modules (`import`), multi-file compilation, then begin `Vector` and `String` **in Keel**. | A two-module program. Then a `Vector<i32>` that grows and frees. | **Whether the design actually works** |
 
@@ -1184,7 +1746,7 @@ output rather than dumps.
    suggestion table landed on the unknown-type path, so its promise is real
    rather than aspirational. Literals are bidirectional (L5), so
    `u32 x = 42;` needs no suffix and `u8 x = 300;` does not compile: the lexer
-   records values into a `Literals` pool that the token's unused `symbol` slot
+   records values into a `Literal_pool` that the token's unused `symbol` slot
    indexes, and `check` measures them against the target type. The negation case
    is handled explicitly — `-2147483648` is a negation of a value that does not
    itself fit an `i32`, so the expectation is pushed through the minus. Range-checking a literal against its
@@ -4008,7 +4570,7 @@ instantiation, mangling and emission as the same call a written list produces.
 
 ### The two KIR passes — done (2026-09-18)
 
-`ir/simplify.{h,cpp}`, one exported free function — `void simplify( Function&, const Literals& )` —
+`ir/simplify.{h,cpp}`, one exported free function — `void simplify( Function&, const Literal_pool& )` —
 run per function in the driver immediately after `lower()` and before anything reads the graph.
 Three steps in one sweep: fold a `Branch` whose condition is a constant into a `Goto`, thread every
 edge through blocks that carry no statements and end in a `Goto`, then delete what is no longer
@@ -4164,6 +4726,182 @@ Each was killed by both suites rather than one.
 temporary that is then discarded. Pre-existing — the conditional inherits it by being given the
 same place handling — and out of this slice's scope.
 
+## M6.5 slice: splitting `sema/type_checker.cpp` (2026-09-19)
+
+**16,678 lines became nine files, and the class stayed.** `Checker` is declared in
+`sema/checker.h` and its 127 member definitions sit in `type_checker.cpp` (the spine) and eight
+`check_*.cpp`, one per construct. The largest is `check_expressions.cpp` at 1,373 code lines,
+under the 1,500 where Go's `types2` holds and well under M6.5's stated 3,000. 7,072 assertions in
+602 test cases and 172 goldens pass unchanged, before and after, in debug and release.
+
+**The plan this was scheduled under was wrong, and measuring is what showed it.** §3.2 asked for
+free functions over `Ast` and `Type_table`. Propagating state use through `Checker`'s internal
+call graph says that reaches **22 functions and 432 lines — 7%**. Another 64% touches transient
+walk state, and removing any single member of that state from the class saves **zero** lines;
+the best three-way combination saves 10%. There is no free-function escape from a body walk. The
+full measurement, and what Go's `types2` was read for, was in `docs/TYPE_CHECKER_SPLIT.md`,
+which is deleted now that the work has landed.
+
+**The one hazard was linkage, and it cost a redesign of the first step.** Everything leaving the
+anonymous namespace acquires external linkage, so it went into `keel::sema` rather than bare
+`keel`. The step then failed on something I had predicted would work: `using namespace
+keel::sema;` makes the names findable but **an out-of-class member definition must appear
+lexically in a namespace enclosing the class**. So each file closes its anonymous namespace
+before the first `Checker::` definition and opens `namespace sema`, which is now written into
+`checker.h` so it is not rediscovered nine times.
+
+**Two things the audit had not predicted, both found by the compiler.** The bound table:
+`k_bounds` is read by five queries whose callers landed in three different files, so unlike every
+other rule table it could not stay file-local — the five are declared in `checker.h` and defined
+in `check_generics.cpp`. And the test fixture: all 162 `TEST_CASE`s shared one `Typed` class,
+which became `sema/checker_test_support.h`, still in an anonymous namespace so each translation
+unit gets its own.
+
+**What made this safe was that it is a pure extraction.** The region between the first
+`Checker::` definition and the namespace close contained nothing but definitions and blank lines
+— checked before cutting, not after. Every line of the original file was then accounted for
+against `HEAD` by content, so nothing could be silently dropped. `CMakeLists.txt` needed no edit:
+`keelc/src/CMakeLists.txt:9` globs `*.cpp` with `CONFIGURE_DEPENDS`.
+
+**And then it did not help, which is the part worth keeping.** Stage A met the acceptance
+criterion and left the code no easier to read: the same "and this needs checking too" in every
+function, now spread over nine files instead of one. The cut was along the grammar; the
+entanglement is in the state. Re-measured by ownership rather than by construct, 22 of
+`Checker`'s 26 fields are touched by twelve members or fewer and most by two or three — so the
+class was never one entangled thing, it was fourteen small ones sharing a `this`. Splitting the
+file could not fix that, because nothing stopped `check_literal` from reading `loop_depth_`.
+
+The split plan had asserted "the walk state is irreducible" and that stands
+corrected: the only experiment run was threading a field as a *parameter*, which measures
+whether the walk can become free functions and not whether the state has an owner. Stage B is
+rescoped to the fourteen classes (§3.2), with the eight `check_*.cpp` kept as the starting
+neighbourhoods rather than reverted — eleven of the fourteen draw 75%+ of their lines from one
+of them.
+
+**Two corrections this forced elsewhere.** §2.3's "No inheritance. No virtual functions." was
+being read as a statement about Keel and used to argue that a cycle between checker classes
+could never be broken by an interface. It is a rule about the C++ subset this compiler is
+written in; **Keel will have inheritance and dynamic dispatch**, and §2.3 now says so. The DAG
+survives on its own merits — an interface that breaks a cycle hides it rather than removing it
+— but it is a choice and not a constraint, and the difference was worth getting right.
+
+### Stage B's close-out (2026-09-24)
+
+**The fourteen classes landed, and §5.1's two claims came out one for two.** `Checker` is 33 lines
+of `run()` plus a constructor; every rule lives in one of fourteen classes, one per file, and the
+DAG is now checked mechanically rather than argued — **zero violations across all seventeen
+classes**, including the three level-0 collaborators the design forced out. All nine `check_*.cpp`
+and `checker.h` are deleted. That claim is met.
+
+**`Expressions` did not come down — it went up.** §5 booked row 10 at 1,288 lines; it moved 1,564
+and stands at 1,698 code lines, still the largest thing in `sema/`. The row was not wrong about what
+belongs together; it was wrong that what belongs together would fit. It owes a split into two
+*classes*; the two *files* it briefly had were a defect and are gone.
+
+### The close-out pass (2026-09-24)
+
+Four things after B14, each verified and each its own commit.
+
+**One class in one file is a self-hosting constraint, not a preference, and it cost nothing to
+obey.** `expressions_calls.cpp` merged back into `expressions.cpp`: 4,013 lines, 1,698 of code.
+The proof was a sorted-line diff of the two originals against the merge — the only lines lost were
+the second file's own scaffolding, three braces and its includes and namespace markers, and not one
+line of code or test. 7,263/653 and 172 goldens, unchanged either side. The rule is now real
+everywhere in `sema/`: every class could be written in the language this compiler compiles.
+
+**The one defect Stage B recorded was real, was in a different place than recorded, and had a worse
+one underneath it.** B9 filed "a method candidate list names `T` where the author wrote `Box<i32>`"
+and argued a mutant equivalent on the strength of it. Reproduced at close-out, the *method* half
+renders correctly — the receiver's bindings reach it. The half that does not is the *constructor*
+list, which `Overloads::viable_overloads` and `select_overload` ask for with no bindings at all,
+because at selection time nothing has deduced any. That is not an oversight: `deduce_for_candidate`
+refuses the expectation on purpose, since choosing a callable by what its result is wanted for is
+selection by return type, which §12 forbids. **A construction is not that case.** A constructor's
+type parameters are the *aggregate's*, and `Box<i32> b = Box( 7, true );` names the instance in the
+same breath as the call — which is the receiver's role in a method call, not a return type. So the
+instance is now threaded into both, and the three candidate-list sites read it.
+
+**Fixing the message exposed the defect it was hiding.** With the list spelled correctly, the
+diagnostic contradicted itself: `no `Box` matches these arguments / the ones declared take
+`( i32, u8 )` and `( i32, bool )`` — for the call `Box( 7, true )`, which the second one takes
+exactly. Selection could not match *any* constructor of a generic aggregate whose parameters
+mention `T`, because a literal cannot deduce `T` and nothing else was allowed to. **A valid program
+was being rejected, and only the wrong wording of the rejection had kept it hidden.** The same
+instance fixes it: selection binds the aggregate's parameters from the instance and lets what the
+call wrote or the arguments deduced win over it.
+
+**Nine mutations, eight killed.** Three of the nine were gaps rather than kills on the first run —
+two candidate-list sites with no test between them, and one that was worse than a gap: removing the
+guard that keeps a *free function's* candidates out of the expectation's bindings makes the
+compiler **abort** in `Type_table::substitute`, and 655 cases and 172 goldens had nothing to say
+about it. `make`'s `T` is not `Box`'s, and binding one by the other leaves a parameter that a later
+substitution asserts on. Four `TEST_CASE`s close all three. The survivor — the instance overwriting
+what the call wrote instead of filling behind it — is observable only in programs the "a type
+argument could make the two identical" rule already rejects; probed, not argued, after B11's lesson
+that arguing is how a real gap gets filed as a non-gap.
+
+**A placement and naming pass over `sema/`, and it found little, which is the point.** Four changes.
+`Bounds::bound_set_contains` was a `const` member that read no member state — a bit test on a `u8` —
+and is now a free `contains` beside the set's `operator|=`; `Aggregates::has_destructor` only hid
+the free `keel::has_destructor`, and both are the same lesson B7 recorded about `parameter_mode`.
+`Signatures`' six `declare_*_decls` lost the suffix that made them read "declare declarations", and
+`Operators::result_of` became `result_of_binary` beside `result_of_unary` and `result_of_conditional`.
+Nothing else moved: the two members that look like forwarders, `bindings_of` and `field_type`,
+bundle `Types_builder`'s state into the question and earn their place.
+
+**Eight members that only shortened a call are gone.** `Expressions`, `Statements`, `Signatures`
+and `Coverage` each carried a private `record` and `error_at` forwarding one line to `Types_builder`
+and `Reporter`. All eight are deleted and their 188 call sites now name the collaborator they
+reach — 97 `reporter_.error_at` and 91 `types_.record` — which is what the DAG wanted said out loud.
+The same lesson as `bound_set_contains` and `has_destructor`, at a larger scale: a member that adds
+no behaviour hides an edge. Two comments carried real design information that would have died with
+the declarations and were moved to where they are still true: that every branch of `infer` and
+`check` ends in a recorded type, including the error branches, and that a pattern's bindings are the
+one thing `Coverage` writes a type for.
+
+**The comment pass found the density already right and the references already wrong.** 1,455 comment
+lines against 7,927 of code, 18%, with no file out of line and only two comments in the whole of
+`sema/` restating the code beneath them. What it did find: **eleven comments citing
+`TYPE_CHECKER_SPLIT` by section number, in a document that was about to be deleted.** All
+eleven now state the rule instead — chiefly §4.3's, that no class below the expression walk may
+re-enter it — so nothing in `keelc/src/` names that file any more and deleting it breaks nothing.
+Two more cited a Stage B step number, which is process rather than rule, and say the rule now.
+
+**A rule with no D-entry behind it.** Linking implementations to the plan turned up one that cannot
+be linked: by-value containment cycles between aggregates — `struct A { B b; }` and
+`struct B { A a; }` — are computed and reported by `Aggregates::order_structs` and no D-entry
+covers them. D42 is the *generic* instantiation cycle, a different rule. Recorded rather than
+cited, because a wrong citation is worse than none.
+
+**The tests got simpler for a third of the classes and not at all for the rest.** *Corrected at
+the close-out: the count booked at B14 said "35 narrow, and 30 of those predate Stage B", which was
+a miscount — the 30 `Resolved` cases are a separate pre-existing group, not part of the 35. Stage B
+produced 35 narrow cases, not five. The measurement below is the recount, and it is kinder to the
+split than the one it replaces.* Of **268 `TEST_CASE`s in `sema/`, 181 still construct a whole
+front end through `Typed`** to ask about one rule. The other 87: 30 are `resolver.cpp`'s `Resolved`
+and 22 are `type.cpp`'s, both of which predate Stage B; **35 are Stage B's own** — five on
+`Aggregates`' `Shapes`, and thirty that build their subject by hand and name no fixture at all
+(`Annotations` eleven, `Bounds` ten, `Operators` three, `Reporter` three, `Types_builder` three).
+Those thirty are the strongest form of what the split was for: a class constructed directly and
+asked a question, with no source string anywhere.
+
+**But the pattern in which classes got them is the finding.** Every one of the five is a class that
+takes types and spans rather than nodes. Not one of `Expressions`, `Statements`, `Signatures`,
+`Coverage`, `Overloads`, `Places`, `Literals` or `Constant_folder` has a single narrow case — the
+walk and everything that reports through it still needs the whole front end to say anything. **So
+the DAG predicts testability exactly**: a class is narrowly testable when, and only when, it sits
+where a service sits. Splitting the file was a necessary condition for that and not a sufficient
+one, and the two-thirds that still reach for `Typed` are the two-thirds that were never going to
+stop.
+
+What the split also bought: mutation testing became possible per class rather than per
+compiler, and it paid immediately — every step from B10 on found real gaps, and B13 found three in
+one class. That was not a stated goal and is the better half of the outcome.
+
+`parse/parser.cpp` is now the largest file in the tree at 2,786 code lines and has had no
+equivalent audit; `Parser` is not `Checker`, a recursive-descent parser's state really is a
+cursor and a token, and the measurement has to be redone before anything is assumed.
+
 ### Debts to pay along the way
 
 - ~~**Static methods have no spelling.** Every method takes a receiver, so a function that belongs to
@@ -4255,8 +4993,9 @@ same place handling — and out of this slice's scope.
   machinery is proven. Recording them here keeps §6.3's audit honest: D29 as
   written is not yet what the compiler enforces.
 
-- **Three files have grown past what one file should hold.** Code lines, excluding the in-source
-  tests that roughly double each: `sema/type_checker.cpp` 2350, `parse/parser.cpp` 1675,
+- ~~**Three files have grown past what one file should hold.**~~ **The checker's half is paid
+  (2026-09-19); `parse/parser.cpp` and `ir/lower.cpp` are not.** Code lines, excluding the
+  in-source tests that roughly double each: `sema/type_checker.cpp` 2350, `parse/parser.cpp` 1675,
   `lex/lexer.cpp` 824. `ir/lower.cpp` at 768 is the one to watch.
 
   **Re-measured (2026-09-19), and the numbers are no longer in the same range**:
@@ -4286,16 +5025,24 @@ same place handling — and out of this slice's scope.
 
   KIR is being built the other way round (§3.2) to avoid repeating it, which also makes it the
   natural moment to judge whether the free-function-pass discipline is actually pleasanter to work
-  in before retrofitting it. **To be revisited after KIR lands**, when there is evidence rather
+  in before retrofitting it. ~~**To be revisited after KIR lands**, when there is evidence rather
   than preference. The likely shapes: split `type_checker.cpp` along its seams — annotation
   resolution, the operator tables, the constant folder — into free functions over `Ast` and
-  `Type_table`; and split the parser by grammar section. Neither should be attempted mid-M3.
+  `Type_table`; and split the parser by grammar section.~~ **Revisited, and the checker is split
+  (2026-09-19).** The predicted shape was wrong twice over, which is the useful part of the entry.
+  The obstacle was never that a class cannot span translation units — only a *file-local* one
+  cannot — so the fix was a private header, not free functions. And the free-function shape it
+  predicted was measured against the call graph and reaches **7% of the file**: 64% of it touches
+  transient walk state that no combination of extractions reduces by more than 10%. What shipped
+  keeps the class and splits its 127 definitions across nine files by construct, largest 1,373 code
+  lines. `parse/parser.cpp` is unsplit and now the largest file in the tree; the same audit would
+  have to be redone for it, because `Parser` is not `Checker` and the answer is not assumable.
 
 - **Narrowing `cast` is blocked, not implemented.** D28 defines `cast` as checking the value at
   run time and trapping when it does not fit, and nothing in the pipeline can emit that check yet.
   Rather than let a narrowing `cast` silently truncate — which is `wrap`'s behaviour wearing
   `cast`'s name, exactly the silent wrong answer D5 exists to remove — the checker refuses it. The
-  block is one named constant, `k_narrowing_cast_needs_a_run_time_check` in `type_checker.cpp`,
+  block is one named constant, `k_narrowing_cast_needs_a_run_time_check` in `sema/operators.cpp`,
   and the single branch that reads it; deleting both is the whole change once the KIR can trap.
   Nothing that compiles today changes meaning when it goes, because the cell is currently empty.
   The three tests under `type_checker_holds_back_a_narrowing_cast` go at the same time.

@@ -21,7 +21,7 @@ public:
         const Ast&        ast,
         const Resolution& resolution,
         Types&            types,
-        Literals&         literals,
+        Literal_pool&     literals,
         const Interner&   interner,
         Bindings          bindings = {}
     );
@@ -137,7 +137,7 @@ private:
     const Ast& ast_;
 
     // Held but not read yet: resolution_ is what turns a Name_expr into the declaration whose
-    // local it is, which arrives with names. literals_ and interner_ may turn out unnecessary -
+    // local it is, which arrives with names. literal_pool_ and interner_ may turn out unnecessary -
     // a Literal_id comes straight off aux, and a Symbol_id is passed through without a lookup.
     const Resolution& resolution_;
     Types&            types_;
@@ -151,7 +151,7 @@ private:
     // This instantiation's type parameters, bound. Empty for an ordinary function, which is
     // what makes the substitution below the identity and lets one path serve both.
     Bindings                         bindings_;
-    Literals&                        literals_;
+    Literal_pool&                    literal_pool_;
     [[maybe_unused]] const Interner& interner_;
 
     const Node_id declaration_;
@@ -180,7 +180,7 @@ Lowering::Lowering(
     const Ast&        ast,
     const Resolution& resolution,
     Types&            types,
-    Literals&         literals,
+    Literal_pool&     literals,
     const Interner&   interner,
     Bindings          bindings
 )
@@ -188,7 +188,7 @@ Lowering::Lowering(
       resolution_( resolution ),
       types_( types ),
       bindings_( std::move( bindings ) ),
-      literals_( literals ),
+      literal_pool_( literals ),
       interner_( interner ),
       declaration_( declaration ),
       builder_(
@@ -882,7 +882,9 @@ Operand Lowering::lower_empty_variant( Node_id id )
 
     const Type_id tag_type = types_.table().get( type ).element;
 
-    builder_.assign( builder_.tag( place ), use( constant( literals_.add_integer( ordinal->magnitude ), tag_type ) ), span );
+    builder_.assign(
+        builder_.tag( place ), use( constant( literal_pool_.add_integer( ordinal->magnitude ), tag_type ) ), span
+    );
 
     return copy( place, type );
 }
@@ -905,7 +907,9 @@ Operand Lowering::lower_variant_construction( Node_id id )
 
     const Type_id tag_type = types_.table().get( type ).element;
 
-    builder_.assign( builder_.tag( place ), use( constant( literals_.add_integer( ordinal->magnitude ), tag_type ) ), span );
+    builder_.assign(
+        builder_.tag( place ), use( constant( literal_pool_.add_integer( ordinal->magnitude ), tag_type ) ), span
+    );
 
     // The payload fields, in declaration order - which is the order the arguments were checked in.
     const Node_id decl    = types_.table().get( type ).declaration;
@@ -1145,13 +1149,13 @@ Operand Lowering::lower_expression( Node_id id )
         // An integer literal in float context. §6.4 lets a literal adopt the type context gives
         // it, so `f64 x = 1;` is legal - but the value sits in the integer pool, and everything
         // downstream reads a float constant out of the float pool. Converted here, where the
-        // checker's decision becomes a concrete value; without it the emitter asks Literals for a
+        // checker's decision becomes a concrete value; without it the emitter asks Literal_pool for a
         // float it never stored, and the compiler aborts on a program that type-checked.
         if( types_.table().is_float( type ) )
         {
-            const u64 magnitude = literals_.integer( Literal_id { ast_.aux( id ) } );
+            const u64 magnitude = literal_pool_.integer( Literal_id { ast_.aux( id ) } );
 
-            return constant( literals_.add_float( static_cast<f64>( magnitude ) ), type );
+            return constant( literal_pool_.add_float( static_cast<f64>( magnitude ) ), type );
         }
 
         return constant( Literal_id { ast_.aux( id ) }, type );
@@ -1162,10 +1166,10 @@ Operand Lowering::lower_expression( Node_id id )
         // Unlike the other literals, aux carries no Literal_id - the parser records nothing for
         // `nullptr`, and Literal_id { 0 } is the invalid sentinel. A null pointer is the integer
         // zero here, the same way a bool is 0 or 1.
-        return constant( literals_.add_integer( 0 ), type_of( id ) );
+        return constant( literal_pool_.add_integer( 0 ), type_of( id ) );
     case Node_kind::Bool_literal:
     {
-        Literal_id literal = literals_.add_integer( ast_.aux( id ) != 0 ? 1 : 0 );
+        Literal_id literal = literal_pool_.add_integer( ast_.aux( id ) != 0 ? 1 : 0 );
         return constant( literal, type_of( id ) );
     }
     case Node_kind::Struct_literal:
@@ -1238,7 +1242,7 @@ Operand Lowering::lower_expression( Node_id id )
 
         assert( value.has_value() && "the checker records an ordinal for every variant it accepts" );
 
-        return constant( literals_.add_integer( value->magnitude ), type_of( id ) );
+        return constant( literal_pool_.add_integer( value->magnitude ), type_of( id ) );
     }
     default:
         // Names the construct rather than the category: while the lowerer is incomplete this is
@@ -1458,7 +1462,8 @@ void Lowering::lower_increment( Node_id id )
     // Into the table the *type* will be read from. Literals live in two tables and an operand
     // says which by its type, so an integer 1 typed f64 sends every reader to the float table
     // at that index - a valid Literal_id naming an unrelated value.
-    const Literal_id one = types_.table().is_float( target_type ) ? literals_.add_float( 1.0 ) : literals_.add_integer( 1 );
+    const Literal_id one =
+        types_.table().is_float( target_type ) ? literal_pool_.add_float( 1.0 ) : literal_pool_.add_integer( 1 );
 
     const Operand right = constant( one, target_type );
 
@@ -1500,7 +1505,7 @@ void Lowering::lower_case_test( Operand scrutinee, Node_id label, Block_id body 
 
             assert( ordinal.has_value() && "the checker records an ordinal for every variant it accepts" );
 
-            return constant( literals_.add_integer( ordinal->magnitude ), types_.table().get( bound_type ).element );
+            return constant( literal_pool_.add_integer( ordinal->magnitude ), types_.table().get( bound_type ).element );
         }
 
         return lower_expression( bound );
@@ -2009,7 +2014,7 @@ Operand Lowering::address_operand( Place place, Type_id type, Span span )
 } // namespace
 
 std::vector<Function>
-lower( const Ast& ast, const Resolution& resolution, Types& types, Literals& literals, const Interner& interner )
+lower( const Ast& ast, const Resolution& resolution, Types& types, Literal_pool& literals, const Interner& interner )
 {
     std::vector<Function> functions;
 
@@ -2029,7 +2034,7 @@ lower( const Ast& ast, const Resolution& resolution, Types& types, Literals& lit
     // real set is the closure of that list under the generic call graph, and reaching it needs a
     // worklist rather than a pass.
     //
-    // It terminates because check_generic_recursion refused the shape that would not: a cycle whose
+    // It terminates because Generic_recursion::check refused the shape that would not: a cycle whose
     // arguments grow a level each time round. Every other cycle forwards its parameters unchanged,
     // so going round it twice produces an instantiation that is already in the set.
     std::vector<Instantiation> pending;
@@ -2185,7 +2190,7 @@ struct Lowered
 {
     Source_manager sm;
     Interner       interner;
-    Literals       literals;
+    Literal_pool   literals;
     Diagnostics    diags;
     Ast            ast;
     Resolution     resolution;
@@ -4718,7 +4723,7 @@ TEST_CASE( "lower_reads_the_scrutinee_once", "[ir][lower][switch]" )
 
 // §6.4 lets a literal adopt the type context gives it, so `f64 x = 1;` type-checks - and until
 // this was found, it then **aborted the compiler**: the value sits in the integer pool and the
-// emitter asked Literals for a float it never stored. Found through a float range label, whose
+// emitter asked Literal_pool for a float it never stored. Found through a float range label, whose
 // bounds are integers by D34, but it was never about ranges.
 TEST_CASE( "lower_converts_an_integer_literal_in_float_context", "[ir][lower]" )
 {

@@ -229,7 +229,7 @@ public:
         const std::vector<Function>& functions,
         const Ast&                   ast,
         Types&                       types,
-        const Literals&              literals,
+        const Literal_pool&          literals,
         const Source_manager&        sm,
         const Interner&              interner,
         std::span<const Type_id>     struct_order
@@ -291,7 +291,7 @@ private:
     // new appears - but the table has no const way to say so.
     Types&                   types_;
     std::span<const Type_id> struct_order_;
-    const Literals&          literals_;
+    const Literal_pool&      literal_pool_;
     const Source_manager&    sm_;
     const Interner&          interner_;
     const Spelling           spelling_;
@@ -301,7 +301,7 @@ Kir_emitter::Kir_emitter(
     const std::vector<Function>& functions,
     const Ast&                   ast,
     Types&                       types,
-    const Literals&              literals,
+    const Literal_pool&          literals,
     const Source_manager&        sm,
     const Interner&              interner,
     std::span<const Type_id>     struct_order
@@ -310,7 +310,7 @@ Kir_emitter::Kir_emitter(
       ast_( ast ),
       types_( types ),
       struct_order_( struct_order ),
-      literals_( literals ),
+      literal_pool_( literals ),
       sm_( sm ),
       interner_( interner ),
       spelling_( Spelling { ast, types, interner } )
@@ -950,14 +950,14 @@ std::string Kir_emitter::constant( Literal_id literal, Type_id type ) const
     switch( types_.table().get( type ).kind )
     {
     case Type_kind::Bool:
-        return literals_.integer( literal ) != 0 ? "true" : "false";
+        return literal_pool_.integer( literal ) != 0 ? "true" : "false";
     case Type_kind::Pointer:
         return "NULL";
     case Type_kind::Float:
-        return c_float( literals_.floating( literal ) );
+        return c_float( literal_pool_.floating( literal ) );
     case Type_kind::Int:
     case Type_kind::Enum: // a variant is its index; the C type is the underlying integer
-        return c_integer( literals_.integer( literal ) );
+        return c_integer( literal_pool_.integer( literal ) );
 
     default:
         assert( false && "no C spelling for this type" );
@@ -1116,7 +1116,7 @@ std::string emit_c_from_kir(
     const std::vector<Function>& functions,
     const Ast&                   ast,
     Types&                       types,
-    const Literals&              literals,
+    const Literal_pool&          literals,
     const Source_manager&        sm,
     const Interner&              interner
 )
@@ -1148,7 +1148,7 @@ struct Generated
 {
     Source_manager sm;
     Interner       interner;
-    Literals       literals;
+    Literal_pool   literals;
     Diagnostics    diags;
     Ast            ast;
     Resolution     resolution;

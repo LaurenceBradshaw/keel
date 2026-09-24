@@ -314,7 +314,7 @@ Assignment_report check_assignment( const Function& func )
 #include <catch2/catch_test_macros.hpp>
 
 #include "common/diagnostics.h"
-#include "common/literals.h"
+#include "common/literal_pool.h"
 #include "common/source_manager.h"
 #include "ir/lower.h"
 #include "ir/simplify.h"
@@ -335,7 +335,7 @@ struct Checked
 {
     Source_manager sm;
     Interner       interner;
-    Literals       literals;
+    Literal_pool   literals;
     Diagnostics    diags;
     Ast            ast;
     Resolution     resolution;

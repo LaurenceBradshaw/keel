@@ -1,12 +1,12 @@
 #pragma once
-#include "common/literals.h"
+#include "common/literal_pool.h"
 #include "ir/kir.h"
 
 namespace keel
 {
 
 // What a flag is made of, none of which the Function carries. Passed in as data rather than as a
-// Type_table and a Literals to look them up in, so the pass stays a function of its inputs.
+// Type_table and a Literal_pool to look them up in, so the pass stays a function of its inputs.
 struct Flag_vocabulary
 {
     Type_id    bool_type {};

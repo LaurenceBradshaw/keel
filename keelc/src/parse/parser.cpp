@@ -2804,7 +2804,7 @@ public:
     explicit Parsed( std::string_view source )
     {
         file_ = sm_.add_file( "t.kl", std::string( source ) );
-        ast_  = parse( lex( file_, sm_, interner_, literals_, diags_ ), sm_, diags_ );
+        ast_  = parse( lex( file_, sm_, interner_, literal_pool_, diags_ ), sm_, diags_ );
     }
 
     const Ast& ast() const
@@ -2873,7 +2873,7 @@ public:
 private:
     Source_manager sm_;
     Interner       interner_;
-    Literals       literals_;
+    Literal_pool   literal_pool_;
     Diagnostics    diags_;
     File_id        file_;
     Ast            ast_;
