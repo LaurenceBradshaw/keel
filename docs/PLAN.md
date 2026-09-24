@@ -20,7 +20,9 @@ expectation decides and with none the arms must match exactly.
 `enum Nothing { };` — and a decision on the `Arena`, which still has no caller after both of the
 ones §15 predicted were decided against. **The split is done (2026-09-19)**: `Checker` now lives
 in `sema/checker.h` with its definitions across nine files, none over 1,373 code lines, and no
-change to a single assertion or golden. Four items remain. **Function pointers moved to M7**, not M8: M8 is the
+change to a single assertion or golden. **M6.5's second list is now empty too (2026-09-24)**: the
+tag, both holes, and the `Arena` are all closed, and the `Arena` was **deleted** rather than wired —
+its third predicted caller was measured and did not pay, see §15. **Function pointers moved to M7**, not M8: M8 is the
 library, and §12's own timing rule already put member pointers with access control, which is M7.
 **M7 is now static methods and the old M7 is M8** (2026-09-19) — §9 records why the debt got
 a milestone rather than a place in the library's. §15 is the live tracker.
@@ -131,7 +133,7 @@ and for inheritance means *does not have yet*.
   Parser           recursive descent + Pratt for expressions
       |
       v
-  AST              arena-allocated, u32 handles, every node has a Span
+  AST              flat vectors, u32 handles, every node has a Span
       |
       v
   Resolver         names -> declarations; builds scope tree
@@ -225,8 +227,7 @@ than inline, the layout follows §11's reserved directories:
 
 ```
 src/ir/
-  kir.h          the vocabulary; no logic
-  kir.cpp        accessors, arena
+  kir.h          the vocabulary; no logic - the accessors are inline, so there is no kir.cpp
   builder.h/cpp  allocate locals and blocks, emit, wire terminators
   lower.h/cpp    typed AST -> KIR            the only large one
   print.h/cpp    --dump-kir, and the golden format
@@ -850,7 +851,7 @@ These are load-bearing and painful to retrofit. Decide once, at M0.
 
 | Decision | Rule |
 | --- | --- |
-| **Memory** | Arena-allocate the AST, types, and KIR. Never free. The compiler is a batch process; it exits. |
+| **Memory** | ~~Arena-allocate the AST, types, and KIR. Never free.~~ **Amended (2026-09-24).** Every one of the three is a `std::vector` and always was; the `Arena` never acquired a caller and is now deleted. What survives is the half that was load-bearing: *never free*, because the compiler is a batch process and it exits. See §15. |
 | **Handles** | Refer to nodes by `u32` index wrappers (`struct ExprId { uint32_t v; };`), not pointers. Arrays grow without invalidating references; nodes stay small; dumping is trivial. |
 | **Identifiers** | Interned at lex time into a `SymbolId`. All name comparison is integer comparison. |
 | **Spans** | Every AST node, type, and KIR instruction stores `{ File_id, u32 start, u32 end }` — half-open byte offsets, not line/column. Non-negotiable — retrofitting spans is miserable and diagnostics are ~40% of a real compiler. |
@@ -868,7 +869,7 @@ exists specifically to prevent indefinite bikeshedding.
 | --- | --- |
 | L1 | Backend is C11. Frontend owns all semantics. No C++ output, ever. |
 | L2 | Compiler is C++20, restrained subset (§2.3). |
-| L3 | Arena + `u32` handles for all IR-ish data. |
+| L3 | ~~Arena +~~ `u32` handles for all IR-ish data. **Reopened and amended (2026-09-24)**, with the written reason in §15: the handles are the part that was load-bearing and they are untouched; the arena was never what stood behind them. |
 | L4 | Hand-written lexer and recursive-descent parser. No generators. Pratt parsing for expressions. |
 | L5 | Bidirectional type checking (`check(expr, expected)` / `infer(expr)`). No Hindley-Milner, no global inference. |
 | L6 | Function signatures and struct members are fully annotated. Inference exists only for `auto` locals. |
@@ -1408,7 +1409,7 @@ milestone is complete until its acceptance program is a passing golden test.
 | **M5** | `enum` (D30) payload-free first, then payloads (D7). `switch` with destructuring, `default`, stacked labels and exhaustiveness. Range labels (D34). | The `Shape`/`area` sample. Non-exhaustive `switch` is a compile error naming the missing variant. | Sum types, tagged variants |
 | **M5.5** | ~~Methods on `struct` and `class`~~ **done**. ~~`unsafe` blocks (D35)~~ **done**. ~~`extern` (D36)~~ **done**. ~~`alloc<T>`/`free` and `kl_rt` (D37)~~ **done**. | A linked list whose nodes are allocated one at a time, walked, and freed — valgrind-clean. **Amended**: this was `Buffer` with `push`, which needs the many-item pointer `[*]T` that D27 leaves out of v0, so it was never reachable at M5.5. Option (b) keeps the question the acceptance was asked to answer — can the language express a heap data structure and release it — and defers only the growable-array half to M8. | Whether the language can express a real data structure |
 | **M6** | Generics (D39's spelling, D11's checking), bounds (D40), the monomorphisation **worklist** and D42's termination rule — for functions *and* aggregates — name mangling with type args, and the §12 decisions M6 is the deadline for — **all now taken (2026-09-18)**, four of which carry implementation into this milestone: ~~**D41's mixed-signedness comparison**~~ (moved here from M6.5, because §12's `T` generalisation depends on it; **done 2026-09-18**, §15 slice 1g — and it is not only signedness, see the correction in D41), ~~**`cast`/`wrap` on a type parameter**~~ (moved here too — the shipped range diagnostic tells authors to reach for it, so it is not optional; **done 2026-09-18**, §15 slice 1f), ~~**overloading**~~ (constructors first, and the `ref`/pointer mangling collision with it; **done 2026-09-18**, §15 slice 3), and ~~**type-argument inference**~~ (**done 2026-09-18**, §15 slice 4 — which also pays slice 3's deferred generic tie-break). | `max<i32>` and `max<f64>` both work; a generic `Box<T>` with a destructor drops correctly; `u32 < i32` and `i64 < f64` both compile and answer correctly; `wrap<i32>( a )` works for an `Integral` `T` and `cast<f64>( a )` for a `Floating` one; `C( i32 )` and `C( f64 )` coexist; `i32 x = id( 5 );` needs no written type argument. | Instantiation, mangling |
-| **M6.5** | The debts that are neither M6's feature nor M8's: ~~D41's mixed-signedness comparison~~ **moved into M6** — §12's generalisation of it to `T` depends on it, ~~`cast`/`wrap` on a type parameter~~ **moved into M6** — the shipped range diagnostic points at it, ~~§12's empty-aggregate rejection~~ **done (2026-09-19)** — and it kept the `kl_rt_alloc` guard that §12 expected it to delete, because pinning `malloc( 0 )` is worth a branch independently of what reaches it, ~~the two KIR passes carried from M5.5~~ — empty-block threading and constant-branch folding — **done (2026-09-18)** as one pass, `ir/simplify.cpp`, because folding forces pruning and pruning needs a finished graph; the warning that went with them was cut rather than written, — ~~the mangling rework (length-prefixing, the `ref`/pointer collision, `kl__id__T__i32`)~~ **done in M6's slices 2b and 3e** — 2b forced the length-prefixing, and ~~the `ref`/pointer collision is unreachable until overloading lands~~ **overloading landed in M6 and took the collision with it**, ~~constant checking inside a generic body~~ **done in M6's slice 1f** — literal adoption is what made it reachable, so it was paid where it broke rather than carried. **Two arrived with M6's decisions**: ~~§12's **conditional expression**, which is a decision rather than a debt and is here to stop it being an accident~~ **decided and built (2026-09-19)** — `?:` ships and `if`-as-expression is **rejected**, not deferred, and ~~**function pointers**, whose implementation is M6.5 or M8 depending on whether FFI asks first~~ **moved to M7 (2026-09-19)** — M8 is the library, and a language feature should not arrive inside a milestone that is otherwise about writing Keel in Keel. **Five more scoped here (2026-09-19)**, all of them debts this milestone exists for rather than features: ~~**splitting `sema/type_checker.cpp`**, which the §15 entry deferred until KIR landed and which has since gone from 2350 code lines to 7898 on one file-local class of 158 members — done *before* M7 rather than after, because M7 adds member-declaration rules to exactly this file and splitting is cheaper before the addition than after~~ **done (2026-09-19)**, and the class was kept: the audit measured the free-function shape this milestone assumed and found it reaches 7% of the file, so `Checker` moved to `sema/checker.h` and its 127 definitions to nine files, largest 1,373 code lines, with no assertion or golden changed — **the acceptance criterion was met and the code did not get easier to read**, which is recorded in §15 and in §3.2 rather than quietly dropped, and is why `Checker` was then dissolved into fourteen classes instead of kept — ~~that work is scoped, unscheduled, and not part of this milestone~~ **Stage B done and closed out (2026-09-24)**: seventeen classes, one per file, a machine-checked DAG at zero violations, and `checker.h` and all nine `check_*.cpp` deleted; **the mangling category tag**, the surviving half of that debt now that M6 length-prefixed the other half, owed because a static method is the first scheme with no receiver to tell it apart - ~~**and reachable today rather than at M7 (2026-09-24)**: a method and a free function of one name emit the same C symbol, in both the by-value and the `ref` spelling, and `cc` refuses the result~~ **done (2026-09-24)** — the tag leads a member's argtypes as `S<type>` and the receiver leaves them, see §15; ~~**`g().t = 1;`**, which assigns into a discarded temporary and which the conditional now inherits~~ **done (2026-09-24)** — and it was two bugs, not one: the same missing root let a write through a returned `const ref` take effect, which is a soundness hole rather than a useless write, and the struct-literal spelling aborted the lowerer rather than compiling to nothing, see §15; ~~**`enum Nothing { };`**, rejected on the empty-aggregate precedent so that an accidental spelling does not become the one uninhabited types have to live with~~ **done (2026-09-24)** — one pass beside `check_aggregate_has_fields` rather than inside it, because an enum was never reached by that rule rather than permitted by it, see §15; and **the `Arena`'s decision**, whose two predicted callers have both been decided against — wire it to the `Interner` or delete it, but stop carrying it unowned. | `struct Empty { };` is refused naming a one-variant `enum`; `while( true ) { return 7; }` needs no `return` after it, `for( ; ; )` lowers to two blocks rather than three, `a > b ? a : b` compiles, runs only the arm it chose, and is refused when the arms disagree; `struct foo__ { };` beside `i32 foo()` no longer mangles to one name; `enum Nothing { };` is refused and `( c ? a : b ).t = 1;` is too; no source file in `keelc/src` exceeds 3000 code lines — **met (2026-09-19)**, the largest is now `parse/parser.cpp` at 2786; and the `Arena` either has a caller or is gone. | Paying debts before they compound |
+| **M6.5** | The debts that are neither M6's feature nor M8's: ~~D41's mixed-signedness comparison~~ **moved into M6** — §12's generalisation of it to `T` depends on it, ~~`cast`/`wrap` on a type parameter~~ **moved into M6** — the shipped range diagnostic points at it, ~~§12's empty-aggregate rejection~~ **done (2026-09-19)** — and it kept the `kl_rt_alloc` guard that §12 expected it to delete, because pinning `malloc( 0 )` is worth a branch independently of what reaches it, ~~the two KIR passes carried from M5.5~~ — empty-block threading and constant-branch folding — **done (2026-09-18)** as one pass, `ir/simplify.cpp`, because folding forces pruning and pruning needs a finished graph; the warning that went with them was cut rather than written, — ~~the mangling rework (length-prefixing, the `ref`/pointer collision, `kl__id__T__i32`)~~ **done in M6's slices 2b and 3e** — 2b forced the length-prefixing, and ~~the `ref`/pointer collision is unreachable until overloading lands~~ **overloading landed in M6 and took the collision with it**, ~~constant checking inside a generic body~~ **done in M6's slice 1f** — literal adoption is what made it reachable, so it was paid where it broke rather than carried. **Two arrived with M6's decisions**: ~~§12's **conditional expression**, which is a decision rather than a debt and is here to stop it being an accident~~ **decided and built (2026-09-19)** — `?:` ships and `if`-as-expression is **rejected**, not deferred, and ~~**function pointers**, whose implementation is M6.5 or M8 depending on whether FFI asks first~~ **moved to M7 (2026-09-19)** — M8 is the library, and a language feature should not arrive inside a milestone that is otherwise about writing Keel in Keel. **Five more scoped here (2026-09-19)**, all of them debts this milestone exists for rather than features: ~~**splitting `sema/type_checker.cpp`**, which the §15 entry deferred until KIR landed and which has since gone from 2350 code lines to 7898 on one file-local class of 158 members — done *before* M7 rather than after, because M7 adds member-declaration rules to exactly this file and splitting is cheaper before the addition than after~~ **done (2026-09-19)**, and the class was kept: the audit measured the free-function shape this milestone assumed and found it reaches 7% of the file, so `Checker` moved to `sema/checker.h` and its 127 definitions to nine files, largest 1,373 code lines, with no assertion or golden changed — **the acceptance criterion was met and the code did not get easier to read**, which is recorded in §15 and in §3.2 rather than quietly dropped, and is why `Checker` was then dissolved into fourteen classes instead of kept — ~~that work is scoped, unscheduled, and not part of this milestone~~ **Stage B done and closed out (2026-09-24)**: seventeen classes, one per file, a machine-checked DAG at zero violations, and `checker.h` and all nine `check_*.cpp` deleted; **the mangling category tag**, the surviving half of that debt now that M6 length-prefixed the other half, owed because a static method is the first scheme with no receiver to tell it apart - ~~**and reachable today rather than at M7 (2026-09-24)**: a method and a free function of one name emit the same C symbol, in both the by-value and the `ref` spelling, and `cc` refuses the result~~ **done (2026-09-24)** — the tag leads a member's argtypes as `S<type>` and the receiver leaves them, see §15; ~~**`g().t = 1;`**, which assigns into a discarded temporary and which the conditional now inherits~~ **done (2026-09-24)** — and it was two bugs, not one: the same missing root let a write through a returned `const ref` take effect, which is a soundness hole rather than a useless write, and the struct-literal spelling aborted the lowerer rather than compiling to nothing, see §15; ~~**`enum Nothing { };`**, rejected on the empty-aggregate precedent so that an accidental spelling does not become the one uninhabited types have to live with~~ **done (2026-09-24)** — one pass beside `check_aggregate_has_fields` rather than inside it, because an enum was never reached by that rule rather than permitted by it, see §15; and ~~**the `Arena`'s decision**, whose two predicted callers have both been decided against — wire it to the `Interner` or delete it, but stop carrying it unowned~~ **decided and deleted (2026-09-24)** — the third candidate was measured rather than argued and bought about ten allocations per compile, and the arena an `Interner` would want is not the node arena that was built for the two falsified callers, see §15. **M6.5 is complete.** | `struct Empty { };` is refused naming a one-variant `enum`; `while( true ) { return 7; }` needs no `return` after it, `for( ; ; )` lowers to two blocks rather than three, `a > b ? a : b` compiles, runs only the arm it chose, and is refused when the arms disagree; `struct foo__ { };` beside `i32 foo()` no longer mangles to one name; `enum Nothing { };` is refused and `( c ? a : b ).t = 1;` is too; no source file in `keelc/src` exceeds 3000 code lines — **met (2026-09-19)**, the largest is now `parse/parser.cpp` at 2786; and the `Arena` either has a caller or is gone — **met (2026-09-24)**, it is gone. | Paying debts before they compound |
 | **M7** | **Static methods** — a function that belongs to a type but takes no receiver, called `Type::name( args )`. The §15 debt, scheduled here because M8's library is the first thing that wants one: `Vector::with_capacity`, `String::from_bytes`. Scope is *methods only* — type-scoped **data** waits on M8's modules and globals, function-local static storage has no customer, and internal linkage is the access-control debt below it rather than this one. The **spelling is undecided** and §12 now carries it: every method has an implicit receiver, so something has to say "this one does not", and D30 already gives `Type::name` at the call site without saying how the declaration is marked. **Two more scoped here (2026-09-19). Access control**, the §15 debt sitting directly below this one, because M7's own customer argues for it: `Vector::with_capacity` is a named constructor, and a named constructor only earns its place if the ordinary one can be hidden — so the feature that motivates M7 is incomplete without it. It is a resolver feature, member lookup carrying visibility, and a slice of its own rather than a rider. **Function pointers**, moved from M6.5's fork: the alternative was M8, and M8 is the standard library — a milestone about writing Keel in Keel should not also be where a language feature first appears. It is the smallest of the three and goes last, because nothing else here depends on it. **Order matters within the milestone**: the spelling decision, then static methods, then access control, then function pointers. | A named constructor returns an aggregate, is called as `Type::make( args )`, and is refused as `value.make( args )` — both a golden and the mangling that tells it from a method; a field declared private is refused from outside its type and accepted from a method of it; and a function's address is taken, stored in a variable, and called through it. | **Whether a type is a namespace, and whether a function is a value** |
 | **M8** | Modules (`import`), multi-file compilation, then begin `Vector` and `String` **in Keel**. | A two-module program. Then a `Vector<i32>` that grows and frees. | **Whether the design actually works** |
 
@@ -1473,8 +1474,11 @@ directly, so the lexer's classification tables, the parser's recovery
 predicates, and the dataflow lattice joins are all testable without widening a
 single public header.
 
-Use unit tests for anything with an invariant expressible in C++: the arena,
-the interner, span arithmetic, token boundaries, lattice joins.
+Use unit tests for anything with an invariant expressible in C++: the
+interner, span arithmetic, token boundaries, lattice joins. **With the caveat the
+`Arena` earned (2026-09-24)**: a suite this style makes cheap to write is not evidence
+that the thing under it is used, and the `Arena`'s twelve cases outlived its last caller
+by the whole project. Test what the compiler calls.
 
 ### Golden-file tests cover language behaviour
 
@@ -1542,7 +1546,7 @@ keel/
     DECISIONS.md          # append-only log of decisions and their reasons
   src/
     main.cpp              # driver: parse args, run pipeline, invoke cc
-    common/               # arena, interner, span, diagnostics, small containers
+    common/               # interner, span, diagnostics, small containers
     lex/
     parse/
     ast/
@@ -1607,7 +1611,7 @@ Dependencies are held to three, all via vcpkg, and each has to justify itself:
 | `catch2` | Unit tests, inline in the sources (§10). Test-only; `-DKEEL_TESTS=OFF` builds with two deps. |
 
 Nothing else gets added without deleting something. In particular the compiler
-writes its own arena, interner, and containers — those are the parts we are
+writes its own interner and containers — those are the parts we are
 here to understand, and they are rewritten in Keel at bootstrap.
 
 `keelc` and `keel_tests` are built from the same glob of `src/**/*.cpp`, the
@@ -1654,7 +1658,7 @@ none of them can block work indefinitely.
 | Custom allocators / arenas — visible in the type system or not? | M8 |
 | Module granularity: file, directory, or explicit declaration? | M8 |
 | **A build tool.** A language people use needs one, and `cmake` is the argument for writing it rather than adopting it. The scope that stays small: find the sources, build a dependency graph from `import` (M8 gives the graph for free), invoke the C compiler, cache. The scope that eats the project: package management, versioning, cross-compilation, a configuration language. Note the second list is where every "not horrible" build tool became horrible — Cargo is the closest to good and is inseparable from crates.io. **Start with the smallest thing that builds a multi-module program**, and treat every addition as a decision with an entry rather than a feature request. | After M8 — the module graph is the input, so it cannot start earlier |
-| **An editor extension, and the architecture it needs.** Exhaustiveness, `move` checking and definite assignment all know *exactly* what the author must fix, and today that only reaches them by running the compiler — which is the loop this is meant to delete. The parser is already the hard half: it recovers rather than bailing, so a half-typed file still produces a tree, which is what an editor needs on every keystroke. **The conflict to resolve first is §3's memory policy**: *"arena-allocate, never free, the compiler is a batch process; it exits"* is true of `keelc` and false of a language server, which is long-lived and re-analyses continuously. Two honest answers — run `keelc` as a subprocess per analysis, which keeps the policy and is how several real servers work, or make the compiler re-entrant and give the arena a reset. The first is much cheaper and should be tried first. | After M8, alongside the build tool |
+| **An editor extension, and the architecture it needs.** Exhaustiveness, `move` checking and definite assignment all know *exactly* what the author must fix, and today that only reaches them by running the compiler — which is the loop this is meant to delete. The parser is already the hard half: it recovers rather than bailing, so a half-typed file still produces a tree, which is what an editor needs on every keystroke. **The conflict to resolve first is §3's memory policy**: *"never free, the compiler is a batch process; it exits"* is true of `keelc` and false of a language server, which is long-lived and re-analyses continuously. Two honest answers — run `keelc` as a subprocess per analysis, which keeps the policy and is how several real servers work, or make the compiler re-entrant. **The second got no cheaper from the `Arena` sitting in the tree (2026-09-24)**, which is part of why it was deleted: it had no `reset`, so it never served this entry either, and re-entrancy is about the vectors and maps that hold the real state. The first is much cheaper and should be tried first. | After M8, alongside the build tool |
 | **Does an import bring the types reachable from a signature with it?** If `load_config` returns `Result<Config, Config_error>`, then importing it means needing all three to handle the result, and requiring three imports is friction carrying no information. Errors are where this bites first — a combining enum is needed in the module that declares it, the one that handles it, and every layer that re-wraps it — but nothing about it is specific to errors. The alternative floated and rejected was a dedicated file kind for error enums (`.kle`): that is a naming convention enforced by the toolchain rather than a language feature, it still has to be imported, and it files declarations by *what kind of thing they are* instead of *what they belong to*, which scatters a module for no gain. | M8 |
 | **Does the error type of a `Result` have to be a named enum?** Written out, multi-source error handling produces a combining enum per layer — `enum Config_error { Io( Io_error ), Parse( Parse_error ) }` — that carries no information and exists only to say "either of those". Every Rust project reaches for `thiserror` to generate exactly this, or `Box<dyn Error>` to erase it; both are libraries patching a language gap, and the layers it creates then force a matching cascade of one-level `switch`es to peel them back off. **Zig's answer is error sets**, which union structurally and can be inferred from a body, so no combining type is ever declared. The Keel shape would be an **anonymous error union** — `Result<Config, Io_error \| Parse_error>` — with `try` widening into any union containing the source type, which generalises the "exactly one way to convert" rule above rather than replacing it, and with `switch` matching leaf variants directly so the cascade collapses. **The cost is the largest type-system addition in this document**: flattening so `( A \| B ) \| C` is `A \| B \| C`, order-independence so `A \| B` and `B \| A` are one type, and exhaustiveness across a union of unions. The cheap half-measure is inference alone — keep the named enum, allow `Result<Config, _>` — which removes the declaration but not the type, and makes the signature less informative, which is the opposite of what every other entry here has chosen. **One argument for the named enum that brevity comparisons miss**: exhaustiveness means the compiler knows the complete failure set at every call site, so an editor can offer *fill in the missing arms* as a fix rather than the author compiling to discover them one at a time. A computed set can be enumerated too, but a named type has a declaration to jump to, somewhere to hang a doc comment, and a stable name in a diagnostic. Weigh that against the boilerplate rather than only the line count. **Do not decide this at M5.** Payload-free enums need none of it, and the evidence that decides it is real error-handling code, which cannot be written until after M6. **Considered and rejected: attaching the error type to the success type**, so that `Config` declares its own `Config_error` and `Result<Config>` needs no second parameter. It is discoverable and it reads well for a type with exactly one fallible constructor, and it fails on four counts. The same success type comes from operations that fail differently — `parse_int` and `divide` both yield an `i32`, and the failure belongs to parsing and to dividing, not to the number. Primitives have no declaration site at all, so `Result<i32>` has nowhere to hang one. It inverts the dependency: `Config` would have to name `Io_error`, a filesystem concept, and would then change when a *loading strategy* changed. And it is the wrong axis — a combining error set is per **layer**, not per type, since `load_config` unions IO with parse while a caller unions config with network. The instinct behind it is right and worth keeping: the objection is to naming the error type *at all*. Inference attaches it to the **operation** instead, which is the axis that actually varies, and composes — a caller's set is the union of everything it propagates. **Decided (2026-09-18): the anonymous error union, with widening confined to propagation.** `Result<Config, Io_error \| Parse_error>`, no combining enum declared, and `switch` matching leaf members so the cascade never forms. **The two costs quoted above are not equal, and the first was overstated.** Flattening and order-independence are one canonicalise-at-construction step — expand nested unions, sort members by `Type_id`, dedupe — and `Type_id`s are already interned, so sorting by numeric id gives a canonical key for free. That is a small function, not an architectural fork. What is real is that **a union has no declaration**, so `Type_table` gains a second interning path keyed on the member set rather than on declaration plus arguments; that is the one place this cuts against the grain of §4. **The tag is the part the comparison with Zig hides.** Zig's error sets are cheap because errors are globally numbered and payload-free, so a set is a compile-time subset and widening is a runtime no-op. Keel's errors carry payloads, so that does not transfer directly — but it transfers with one move: **give every error type a stable global tag**, which is available precisely because Keel has no separate compilation and the whole program's error types are known. Widening then keeps the tag and copies into a larger payload slot, and exhaustiveness is a subset test over a bitset. **Widening is confined to `try` and is not a subtype relation. This condition is what the decision rests on.** A general “an `Io_error` is acceptable wherever an `Io_error \| Parse_error` is expected” would fire at every point where types meet, and the collision is with overloading, decided above: `handle( Io_error \| Parse_error )` and `handle( Io_error \| Parse_error \| Net_error )` would both accept an `Io_error`, which needs most-specific-match, which over sets is subset ordering, which is *partial* and brings ambiguity rules with it — the ranking machinery D5 deleted and D33's overloading argument depends on being absent. Confined, the rule is **one subset check in one place**: every other position matches a union by identity, and D5's “exactly, or not at all” survives everywhere else. **It is an explicit conversion, not an implicit one**, because `try` is a keyword the author typed — the same family as `cast<T>`, `wrap<T>`, `move` and `ref`, a visible marker where something non-obvious happens (D2, D31). **The error set is declared, never inferred.** Zig infers it from the body; inferring here would stop the signature stating what can go wrong, which is the property every other entry in this document has chosen. Declaring it makes `try`'s check a subset test against something written down, and makes adding a `try` for a new error type a compile error **at the contract** rather than a silent change at every call site — D11's spirit. **What it gives up**: constructing a union value by any route other than `try` is explicit. That is a small loss in a rare position and the safe direction to be wrong in — relaxing a rule later is safe, tightening one is not. **This also answers the conversion sub-question in the `?`/`try` row above**: under a union there is no conversion to define, only widening into a superset. | **Direction decided: the union, widening confined to `try`** — implement with error handling, post-M6 |
 | **Does a pattern nest?** `case Err( Io( e ) ):` is what anyone will write once errors are enums of enums, and peeling one layer per `switch` is the alternative — two small functions rather than one deep pattern. Nesting is more expressive and is where pattern matching starts to need a real compiler: exhaustiveness over a product of variants, and a reasonable diagnostic when a case is missing three levels down. One layer at a time is the conservative start and composes by hand. | M5, with destructuring |
@@ -1707,7 +1711,7 @@ API exist in Keel, and it will be a full rewrite rather than a port.
 
 | | |
 | --- | --- |
-| `common/` | `Span`, `Source_manager`, `Diagnostics`, `Interner`, `Arena` |
+| `common/` | `Span`, `Source_manager`, `Diagnostics`, `Interner`, ~~`Arena`~~ — deleted 2026-09-24, see the slice below |
 | `lex/` | `Token`, the lexer, `token_kind_name`/`token_kind_spelling` |
 | `ast/` | `Node`, `Ast`, the dumper |
 | `parse/` | declarations, statements, and expressions with C++ precedence |
@@ -4967,8 +4971,8 @@ M7 is cheaper than paying it inside M7 — the same argument that moved the type
 of M7. ~~Then `enum Nothing { };`, which is one predicate beside
 `Signatures::check_aggregate_has_fields`~~ **done (2026-09-24)**, and it is one predicate *beside*
 that function rather than inside it — see the slice below. Then the temporary-assignment rule, which
-is a question for `Places::is_assignable`. The `Arena` last, being a decision with no code depending
-on the answer.
+is a question for `Places::is_assignable`. ~~The `Arena` last, being a decision with no code depending
+on the answer.~~ **Done (2026-09-24)**, and last it was — see the slice below.
 
 ### M6.5 slice: the mangling category tag (2026-09-24)
 
@@ -5111,6 +5115,72 @@ block outright 174/2 and six unit failures, which reproduces the original compil
 real objection is lifetime rather than uselessness — `Statements::visit_var_decl` already has a
 separate message for `ref A r = g();` one level up. Worth one message rather than two if the
 distinction proves to matter.
+
+
+### M6.5 slice: the `Arena`'s decision (2026-09-24)
+
+**Deleted.** `common/arena.h` and `common/arena.cpp` are gone, and with them the last item on M6.5's
+second list. Nothing else in `keelc/src` changed, because nothing else ever named them.
+
+**The 393 lines were not 393 lines of asset.** `arena.cpp` is 344 lines of which only 1-84 are the
+implementation; 85-344 are twelve `TEST_CASE`s behind `ENABLE_UNIT_TESTS`. With the 49-line header
+that is ~133 lines of code carrying 260 lines of tests. A third of the public surface was
+`bytes_used()`, which with zero call sites could only ever have had the suite as its reader.
+
+**Three predictions, three falsified.** §15 has predicted a caller three times. Monomorphised AST
+clones - M6 used a bindings map instead. KIR payloads - they went to `std::vector` on `Function`.
+The type-checker split - the 2026-09-19 note in this section had already checked and recorded that
+an allocator changes none of what blocked it. That is not a caller running late.
+
+**The third candidate was measured, not argued.** The live proposal was the `Interner` holding its
+strings in the arena instead of the map's keys, deleting `Sv_hash` and the `std::equal_to<>`. The
+claim it rested on was "one heap allocation per symbol", and that is not what happens: most
+identifiers fit the SSO buffer and never allocate, and `unordered_map` allocates its node either
+way. Across the whole golden corpus plus `examples/` there are 2,546 distinct identifiers, of which
+**130 exceed fifteen characters - 5%**. One compile interns far fewer: the largest fixture,
+`codegen/comparisons_mixed.kl`, has 238 distinct identifiers, so **about ten of them allocate at
+all**. The entry's own words were "it is not a bottleneck"; the measurement says that was generous.
+
+**The decisive argument is shape, not size.** Even granting the wiring, the arena an `Interner`
+wants is not this one. This is a node arena: `allocate( size, align )` with power-of-two alignment
+assertions, `align_up`, the `+ align` slack for `new[]`'s 16-byte guarantee, and `allocate_n<T>`
+behind a trivially-destructible `static_assert`. All of that exists for the two callers that were
+decided against, both of which allocate *typed* objects. An `Interner` wants one function returning
+a `std::string_view` into stable storage, alignment 1, no template. Wiring this class to that caller
+would leave half its machinery permanently unexercised by its only user - which is how it got here.
+
+**The stability argument is thinner than it looks.** `interner.h` documents that `texts_` holds
+views into the map's keys and is correct because `unordered_map` is node-based. That is a real
+dependency on a container guarantee, but it is one the standard makes, it is written down where it
+matters, and nothing has come near breaking it. An arena would make it unconditional; it would not
+make it correct, because it already is.
+
+**The compiler confirmed the zero call sites rather than grep.** After deleting both files the build
+**only relinked** - not one translation unit recompiled, so nothing had included the header. Goldens
+stayed at **176 passed, 0 failed**, and no fixture moved. `keel_tests` went from 7300 assertions in
+659 cases to **6234 in 647**: exactly the twelve arena cases, and nothing else.
+
+**Two locked decisions were reopened, with the reason written down rather than edited away.** §4's
+Memory row and §5's L3 both name the arena as policy. The half that was load-bearing survives
+untouched - *never free*, and `u32` handles for IR-ish data - and the half that was deleted was
+never what the compiler did: the AST is `std::vector<Node>` plus a flat `children_` array, types are
+a vector, KIR payloads are vectors. The policy has been amended to say that, in both places.
+
+**Three stale claims fell out of it.** `parse/parser.cpp` said an unreferenced node is "what an
+arena-allocated tree costs" - the cost is real and the attribution was wrong, so it now reads
+*append-only*. §3's pipeline diagram called the AST arena-allocated. And the `src/ir/` layout listed
+a `kir.cpp` holding "accessors, arena"; there is no such file, the accessors are inline in `kir.h`,
+and that line is now gone rather than left describing a file nobody wrote.
+
+**The caveat §10 earned.** In-source Catch2 makes a suite cheap to write, and a suite is easy to
+read as evidence that the thing under it is used. The `Arena`'s twelve cases outlived its last
+caller by the entire project and were the main reason it kept looking like an asset. §10 now says to
+test what the compiler calls.
+
+**If the `Interner` change is ever wanted on its own merits** - one fewer allocation per long
+identifier, one fewer template parameter on the map - it is thirty lines of purpose-built string
+storage written against a caller that exists. That is cheaper than the review attention of carrying
+a general allocator that has now outlived three predictions.
 
 
 ### Debts to pay along the way
@@ -5306,10 +5376,17 @@ distinction proves to matter.
   it. `expectation()` beside it draws the same distinction for the expected half —
   punctuation is quoted because it is what the author would type, a category is
   prose because "identifier" is not something you can write.
-- `Interner` should hold its strings in an `Arena` rather than in the map's keys.
+- ~~`Interner` should hold its strings in an `Arena` rather than in the map's keys.
   That deletes `Sv_hash` and `std::equal_to<>` — the lookup type becomes the key
   type again — and drops one heap allocation per symbol. Deferred: it is not a
-  bottleneck and the API does not change.
+  bottleneck and the API does not change.~~ **Measured and dropped (2026-09-24)**, and
+  it took the `Arena` with it — see the slice below. "One heap allocation per symbol"
+  was the overstatement: most identifiers fit the SSO buffer and never allocate, and the
+  `unordered_map` node is allocated either way. Across the whole golden corpus 130 of
+  2,546 distinct identifiers exceed fifteen characters, so a compile saves roughly ten
+  `malloc`s. The two readability halves are still available without an allocator if they
+  are ever wanted on their own: thirty lines of purpose-built string storage buys the
+  same `Sv_hash` deletion.
 - ~~The `Arena` still has no caller. It earns its place at M6 (monomorphised
   instances) or in KIR payloads, whichever arrives first.~~ **Both predicted callers have now been
   decided against, and it still has none (2026-09-19).** M6 did not clone the AST — §15's M6 entry
@@ -5320,7 +5397,9 @@ distinction proves to matter.
   in M6.5**: either give it the one real caller still on the list — the `Interner` holding its
   strings in an arena, two entries above — or delete it. Note §3's *"arena-allocate, never free"*
   is already not what the compiler does, so deleting it costs a policy line that was aspirational
-  rather than a mechanism anything depends on.
+  rather than a mechanism anything depends on. **Deleted (2026-09-24)** — the third candidate was
+  measured and did not pay either, and §3's Memory row and L3 were amended rather than left
+  claiming a mechanism that is gone. See the slice below.
 
   **It would not help the file split above, and that was worth checking rather than assuming
   (2026-09-19).** What blocks splitting `type_checker.cpp` is that `Checker` is a *file-local*

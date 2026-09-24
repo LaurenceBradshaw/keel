@@ -4483,7 +4483,7 @@ TEST_CASE( "parser_survives_a_keyword_member_in_every_position", "[parse][member
         REQUIRE( p.errors().find( "expected an identifier, found `this`" ) != std::string::npos );
 
         // The whole chain becomes the Error, not just the broken link: `a.inner` was built and is
-        // then left unreferenced, which is what an arena-allocated tree costs and is why nothing
+        // then left unreferenced, which is what an append-only tree costs and is why nothing
         // downstream can reach a half-formed access.
         REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::Field_expr ).is_valid() );
     }
