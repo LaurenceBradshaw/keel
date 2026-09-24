@@ -1,0 +1,37 @@
+error: this value is a temporary, so writing to it has no effect
+  --> sema/errors_temporary_writes.kl:32:5
+   |
+32 |     by_value().t = 1;
+   |     ^^^^^^^^^^ assign it to a variable and modify that
+
+error: this value is a temporary, so writing to it has no effect
+  --> sema/errors_temporary_writes.kl:33:5
+   |
+33 |     by_value().t++;
+   |     ^^^^^^^^^^ assign it to a variable and modify that
+
+error: this value is a temporary, so writing to it has no effect
+  --> sema/errors_temporary_writes.kl:37:5
+   |
+37 |     by_value().set( 3 );
+   |     ^^^^^^^^^^ assign it to a variable and modify that
+
+error: this value is a temporary, so writing to it has no effect
+  --> sema/errors_temporary_writes.kl:40:17
+   |
+40 |     ref i32 r = by_value().t;
+   |                 ^^^^^^^^^^ assign it to a variable and modify that
+
+error: this value is a temporary, so writing to it has no effect
+  --> sema/errors_temporary_writes.kl:43:7
+   |
+43 |     ( c ? a : b ).t = 4;
+   |       ^^^^^^^^^ assign it to a variable and modify that
+
+error: this value is a temporary, so writing to it has no effect
+  --> sema/errors_temporary_writes.kl:46:5
+   |
+46 |     P { 5 }.t = 6;
+   |     ^^^^^^^ assign it to a variable and modify that
+
+6 errors generated

@@ -26,8 +26,9 @@ bool Places::is_assignable( Node_id id ) const
                returns_a_binding( callee );
     }
 
-    // A field is always assignable. `make().x = 2.0;` is useless rather than wrong, and refusing it
-    // needs value categories v0 does not have - a warning's job, not the type checker's.
+    // A field is always a place, including a field of a temporary - reading one is an ordinary
+    // read. Whether it may be *written* is check_writable's question, which asks what the place is
+    // rooted in and refuses `make().x = 2.0;` there. No value categories were needed for it.
     if( ast_.kind( id ) == Node_kind::Field_expr )
     {
         return true; // whether the object has fields at all is infer_field's question
@@ -77,6 +78,54 @@ bool Places::returns_a_binding( Node_id decl ) const
 // someone else owns it - different reasons, so different messages and different fixes.
 bool Places::check_writable( Node_id target, Node_id current_function )
 {
+    // Above place_root, which resolves only a `Name_expr`: a call root reaches it as an invalid id
+    // and the guard below reads that as permission. `returns_a_binding` rather than
+    // `is_const_binding` - `const P f()` returns a const *value*, not a reference.
+    const Node_id source = place_source( target );
+
+    if( source.is_valid() )
+    {
+        // A conditional materialises its result even when both arms are places, and a literal has
+        // no storage at all - neither has a declaration, which is why they are named here directly.
+        bool temporary = ast_.kind( source ) == Node_kind::Conditional_expr || ast_.kind( source ) == Node_kind::Struct_literal;
+
+        if( ast_.kind( source ) == Node_kind::Call_expr )
+        {
+            const Node_id method = callees_.callee_of( source );
+            const Node_id callee = method.is_valid() ? method : resolution_.declaration_of( ast_.child( source, 0 ) );
+
+            if( returns_a_binding( callee ) )
+            {
+                reporter_.error_at(
+                    ast_.span( target ),
+                    fmt::format(
+                        "`{}` returns a const ref, so it cannot be modified", interner_.text( Symbol_id { ast_.aux( callee ) } )
+                    ),
+                    "a returned reference is always read-only"
+                );
+
+                return false;
+            }
+
+            // A constructor lands here too, since its callee is the aggregate rather than a
+            // function. An unresolved one stays quiet: the name was already reported.
+            temporary = callee.is_valid();
+        }
+
+        if( temporary )
+        {
+            // The source rather than the target: there is no declaration to name, so the span is
+            // what says where the value came from.
+            reporter_.error_at(
+                ast_.span( source ),
+                "this value is a temporary, so writing to it has no effect",
+                "assign it to a variable and modify that"
+            );
+
+            return false;
+        }
+    }
+
     const Node_id root = place_root( target, current_function );
 
     if( !root.is_valid() )
@@ -164,6 +213,29 @@ Node_id Places::receiver_of( Node_id function ) const
 
 Node_id Places::place_root( Node_id id, Node_id current_function ) const
 {
+    id = place_source( id );
+
+    // place_source bails on a pointer projection, and every question below reads the node.
+    if( !id.is_valid() )
+    {
+        return Node_id {};
+    }
+
+    const Node_id decl = ast_.kind( id ) == Node_kind::Name_expr ? resolution_.declaration_of( id ) : Node_id {};
+
+    // A bare field name is `this.field` written implicitly (D22), so what it is rooted in is the
+    // **receiver**, not the field. Without this a `const` method could write its own object: the
+    // field is not a binding, so every question below would answer no and nothing would object.
+    if( decl.is_valid() && ast_.kind( decl ) == Node_kind::Field_decl )
+    {
+        return receiver_of( current_function );
+    }
+
+    return decl;
+}
+
+Node_id Places::place_source( Node_id id ) const
+{
     while( ast_.kind( id ) == Node_kind::Field_expr )
     {
         const Node_id object = ast_.child( id, 0 );
@@ -179,17 +251,7 @@ Node_id Places::place_root( Node_id id, Node_id current_function ) const
         id = object;
     }
 
-    const Node_id decl = ast_.kind( id ) == Node_kind::Name_expr ? resolution_.declaration_of( id ) : Node_id {};
-
-    // A bare field name is `this.field` written implicitly (D22), so what it is rooted in is the
-    // **receiver**, not the field. Without this a `const` method could write its own object: the
-    // field is not a binding, so every question below would answer no and nothing would object.
-    if( decl.is_valid() && ast_.kind( decl ) == Node_kind::Field_decl )
-    {
-        return receiver_of( current_function );
-    }
-
-    return decl;
+    return id;
 }
 
 void Places::check_owning_source( Node_id value, Type_id type )
@@ -992,6 +1054,118 @@ TEST_CASE( "type_checker_gives_a_const_pointer_its_c_meaning", "[sema][const]" )
     SECTION( "but writing through it is allowed" )
     {
         const Typed p( "i32 main() { i32 y = 1; i32* const q = &y; *q = 5; return y; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// PLAN §12. A place rooted in a call reached check_writable as an invalid `Node_id`, because
+// place_root resolved only a `Name_expr` - and the guard that treats an unrooted place as writable
+// then skipped every rule below it. Two different bugs shared that one line.
+TEST_CASE( "type_checker_refuses_a_write_through_a_returned_reference", "[sema][constref]" )
+{
+    constexpr std::string_view lend = "struct P { i32 t; };\n"
+                                      "const ref P by_ref( const ref P p ) { return p; }\n";
+
+    // Not merely useless: this one compiled to a store and changed the object.
+    SECTION( "a field of one cannot be assigned" )
+    {
+        const Typed p( std::string( lend ) + "i32 main() { P a = P { 1 }; by_ref( a ).t = 2; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`by_ref` returns a const ref" ) != std::string::npos );
+    }
+
+    // A `const` method's return let a caller write the object the method could not touch.
+    SECTION( "a method's return is the same rule" )
+    {
+        const Typed p( "struct P { i32 t; };\n"
+                       "struct H { P inner; const ref P get() const { return inner; } };\n"
+                       "i32 main() { H h = H { P { 1 } }; h.get().t = 2; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`get` returns a const ref" ) != std::string::npos );
+    }
+
+    SECTION( "reading through one stays legal" )
+    {
+        const Typed p( std::string( lend ) + "i32 main() { P a = P { 1 }; return by_ref( a ).t; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // What a pointer points at was never part of the call's result, so this is an ordinary write.
+    // The bare `p.t` spelling reaches through the pointer, which is the form the walk actually sees.
+    SECTION( "a pointer's referent is not covered" )
+    {
+        const Typed p( "struct P { i32 t; };\n"
+                       "P* by_pointer( P* p ) { return p; }\n"
+                       "i32 main() { P a = P { 1 }; by_pointer( &a ).t = 3; return a.t; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// PLAN §12. The other half: a value with no storage of its own. This replaces a case that asserted
+// the opposite - it held that refusing this needed value categories v0 does not have, and naming
+// what the place came from turned out to be enough.
+TEST_CASE( "type_checker_refuses_a_write_to_a_temporary", "[sema][places]" )
+{
+    constexpr std::string_view make = "struct P { i32 t; };\nP make() { return P { 1 }; }\n";
+
+    SECTION( "a field of a by-value call cannot be assigned" )
+    {
+        const Typed p( std::string( make ) + "i32 main() { make().t = 2; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "this value is a temporary" ) != std::string::npos );
+    }
+
+    // Both arms are places and the result still is not - the conditional materialises a value.
+    SECTION( "a conditional's result is one too" )
+    {
+        const Typed p( "struct P { i32 t; };\n"
+                       "i32 main() { P a = P { 1 }; P b = P { 2 }; ( true ? a : b ).t = 3; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "this value is a temporary" ) != std::string::npos );
+    }
+
+    // This one reached the lowerer and aborted, so refusing it here removes a crash rather than a
+    // silently accepted program.
+    SECTION( "a struct literal is one, and used to abort" )
+    {
+        const Typed p( "struct P { i32 t; };\ni32 main() { P { 1 }.t = 2; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "this value is a temporary" ) != std::string::npos );
+    }
+
+    // The discriminator is returns_a_binding, not is_const_binding: a `const` by-value return is a
+    // temporary like any other, and keying on constness would call it a reference.
+    SECTION( "a const by-value return is a temporary, not a reference" )
+    {
+        const Typed p( "struct P { i32 t; };\n"
+                       "const P make() { return P { 1 }; }\n"
+                       "i32 main() { make().t = 2; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "this value is a temporary" ) != std::string::npos );
+    }
+
+    // Reading is what a temporary is for, and refusing it would take the conditional's own tests.
+    SECTION( "reading through one stays legal" )
+    {
+        const Typed p( std::string( make ) + "i32 main() { return make().t; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );

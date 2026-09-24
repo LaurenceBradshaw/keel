@@ -1,0 +1,60 @@
+// PLAN §12. A call returning a reference names a place - the referent was alive at the call site -
+// so a projection off it is a place too, and reading one is exactly what the return is for. But §8
+// permits only `const ref` returns, so every such place is read-only, and writing through one has
+// to be refused.
+//
+// It is accepted today, and it is not merely useless: `by_ref( a ).t = 2;` emits a store and `a`
+// changes. The same write through a named `const ref` binding is already refused, so one fact has
+// two spellings and two answers. place_root resolved only a `Name_expr`, so a call root became an
+// invalid id and check_writable read that as permission.
+
+struct P
+{
+    i32 t;
+};
+
+struct Holder
+{
+    P inner;
+
+    const ref P get() const
+    {
+        return inner;
+    }
+};
+
+const ref P by_ref( const ref P p )
+{
+    return p;
+}
+
+P* by_pointer( P* p )
+{
+    return p;
+}
+
+i32 main()
+{
+    P      a = P { 1 };
+    Holder h = Holder { P { 2 } };
+
+    // Each of these writes through a read-only reference.
+    by_ref( a ).t = 2;
+    by_ref( a ).t++;
+
+    // Through a method rather than a free function: a different call site of the same rule, since
+    // a receiver reaches check_writable from the method call rather than from the assignment.
+    h.get().t = 5;
+
+    // A mutable borrow of a read-only place is the same refusal, asked before anything is written.
+    ref i32 r = by_ref( a ).t;
+
+    // Legal: reading through the reference is the whole point of returning one.
+    i32 v = by_ref( a ).t;
+
+    // Legal: a pointer's referent outlives the call, so this is an ordinary write. The bare `p.t`
+    // spelling reaches through the pointer, which is the form the rule actually has to recognise.
+    by_pointer( &a ).t = 3;
+
+    return v;
+}

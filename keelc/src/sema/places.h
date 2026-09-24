@@ -47,6 +47,7 @@ public:
     Node_id receiver_of( Node_id function ) const;
 
     Node_id place_root( Node_id id, Node_id current_function ) const;
+    Node_id place_source( Node_id id ) const;
 
     // D31's initialisation and assignment clause: an owning value transfers rather than copies, and
     // the transfer is written down.

@@ -1,0 +1,58 @@
+// PLAN §12. A projection off a value with no storage of its own is a place that can be read and
+// not written: the write lands in a temporary that is discarded on the next line, so it provably
+// does nothing. Three things produce one - a call returning by value, a conditional, and a struct
+// literal - and the conditional inherited it when `?:` shipped, since a conditional's result gets a
+// temporary's place even when both arms are places.
+//
+// The struct literal is not a silent acceptance but an abort: it passed sema and then asserted in
+// the lowerer, which had no place to project from. Refusing it here is what removes the crash.
+
+struct P
+{
+    i32 t;
+
+    void set( i32 v )
+    {
+        t = v;
+    }
+};
+
+P by_value()
+{
+    return P { 1 };
+}
+
+i32 main()
+{
+    bool c = true;
+    P    a = P { 1 };
+    P    b = P { 2 };
+
+    // The call's result has no scope of its own, so each of these writes something nothing can read.
+    by_value().t = 1;
+    by_value().t++;
+
+    // A method that writes its receiver is the same write, asked at the receiver rather than at an
+    // assignment - so it reaches the rule from the method call instead.
+    by_value().set( 3 );
+
+    // A mutable borrow of a temporary is refused for the stronger reason: it would outlive it.
+    ref i32 r = by_value().t;
+
+    // Both arms are places and the result still is not - the conditional materialises a value.
+    ( c ? a : b ).t = 4;
+
+    // Reached the lowerer and aborted before this rule existed.
+    P { 5 }.t = 6;
+
+    // Legal: reading through a temporary is an ordinary field read, and refusing it would take the
+    // conditional's own tests with it.
+    i32 v = by_value().t;
+
+    if( ( c ? a : b ).t == 1 )
+    {
+        return v;
+    }
+
+    return 0;
+}

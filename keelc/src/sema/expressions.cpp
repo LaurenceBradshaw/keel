@@ -1886,18 +1886,6 @@ TEST_CASE( "type_checker_types_field_access", "[sema][types]" )
         REQUIRE( p.errors() == 0 ); // the resolver already reported the name
     }
 
-    // Useless - the temporary is discarded - but legal, as it is in C++. Rejecting it would need
-    // value categories, which v0 does not have.
-    SECTION( "a field of a temporary is still assignable" )
-    {
-        const Typed p( "struct Point { f64 x; };\n"
-                       "Point make() { return Point { 1.0 }; }\n"
-                       "i32 main() { make().x = 2.0; return 0; }\n" );
-
-        INFO( p.rendered() );
-        REQUIRE( p.clean() );
-    }
-
     SECTION( "a field is assignable" )
     {
         const Typed p( "struct Point { f64 x; };\n"
