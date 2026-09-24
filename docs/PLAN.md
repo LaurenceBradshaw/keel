@@ -1408,7 +1408,7 @@ milestone is complete until its acceptance program is a passing golden test.
 | **M5** | `enum` (D30) payload-free first, then payloads (D7). `switch` with destructuring, `default`, stacked labels and exhaustiveness. Range labels (D34). | The `Shape`/`area` sample. Non-exhaustive `switch` is a compile error naming the missing variant. | Sum types, tagged variants |
 | **M5.5** | ~~Methods on `struct` and `class`~~ **done**. ~~`unsafe` blocks (D35)~~ **done**. ~~`extern` (D36)~~ **done**. ~~`alloc<T>`/`free` and `kl_rt` (D37)~~ **done**. | A linked list whose nodes are allocated one at a time, walked, and freed — valgrind-clean. **Amended**: this was `Buffer` with `push`, which needs the many-item pointer `[*]T` that D27 leaves out of v0, so it was never reachable at M5.5. Option (b) keeps the question the acceptance was asked to answer — can the language express a heap data structure and release it — and defers only the growable-array half to M8. | Whether the language can express a real data structure |
 | **M6** | Generics (D39's spelling, D11's checking), bounds (D40), the monomorphisation **worklist** and D42's termination rule — for functions *and* aggregates — name mangling with type args, and the §12 decisions M6 is the deadline for — **all now taken (2026-09-18)**, four of which carry implementation into this milestone: ~~**D41's mixed-signedness comparison**~~ (moved here from M6.5, because §12's `T` generalisation depends on it; **done 2026-09-18**, §15 slice 1g — and it is not only signedness, see the correction in D41), ~~**`cast`/`wrap` on a type parameter**~~ (moved here too — the shipped range diagnostic tells authors to reach for it, so it is not optional; **done 2026-09-18**, §15 slice 1f), ~~**overloading**~~ (constructors first, and the `ref`/pointer mangling collision with it; **done 2026-09-18**, §15 slice 3), and ~~**type-argument inference**~~ (**done 2026-09-18**, §15 slice 4 — which also pays slice 3's deferred generic tie-break). | `max<i32>` and `max<f64>` both work; a generic `Box<T>` with a destructor drops correctly; `u32 < i32` and `i64 < f64` both compile and answer correctly; `wrap<i32>( a )` works for an `Integral` `T` and `cast<f64>( a )` for a `Floating` one; `C( i32 )` and `C( f64 )` coexist; `i32 x = id( 5 );` needs no written type argument. | Instantiation, mangling |
-| **M6.5** | The debts that are neither M6's feature nor M8's: ~~D41's mixed-signedness comparison~~ **moved into M6** — §12's generalisation of it to `T` depends on it, ~~`cast`/`wrap` on a type parameter~~ **moved into M6** — the shipped range diagnostic points at it, ~~§12's empty-aggregate rejection~~ **done (2026-09-19)** — and it kept the `kl_rt_alloc` guard that §12 expected it to delete, because pinning `malloc( 0 )` is worth a branch independently of what reaches it, ~~the two KIR passes carried from M5.5~~ — empty-block threading and constant-branch folding — **done (2026-09-18)** as one pass, `ir/simplify.cpp`, because folding forces pruning and pruning needs a finished graph; the warning that went with them was cut rather than written, — ~~the mangling rework (length-prefixing, the `ref`/pointer collision, `kl__id__T__i32`)~~ **done in M6's slices 2b and 3e** — 2b forced the length-prefixing, and ~~the `ref`/pointer collision is unreachable until overloading lands~~ **overloading landed in M6 and took the collision with it**, ~~constant checking inside a generic body~~ **done in M6's slice 1f** — literal adoption is what made it reachable, so it was paid where it broke rather than carried. **Two arrived with M6's decisions**: ~~§12's **conditional expression**, which is a decision rather than a debt and is here to stop it being an accident~~ **decided and built (2026-09-19)** — `?:` ships and `if`-as-expression is **rejected**, not deferred, and ~~**function pointers**, whose implementation is M6.5 or M8 depending on whether FFI asks first~~ **moved to M7 (2026-09-19)** — M8 is the library, and a language feature should not arrive inside a milestone that is otherwise about writing Keel in Keel. **Five more scoped here (2026-09-19)**, all of them debts this milestone exists for rather than features: ~~**splitting `sema/type_checker.cpp`**, which the §15 entry deferred until KIR landed and which has since gone from 2350 code lines to 7898 on one file-local class of 158 members — done *before* M7 rather than after, because M7 adds member-declaration rules to exactly this file and splitting is cheaper before the addition than after~~ **done (2026-09-19)**, and the class was kept: the audit measured the free-function shape this milestone assumed and found it reaches 7% of the file, so `Checker` moved to `sema/checker.h` and its 127 definitions to nine files, largest 1,373 code lines, with no assertion or golden changed — **the acceptance criterion was met and the code did not get easier to read**, which is recorded in §15 and in §3.2 rather than quietly dropped, and is why `Checker` was then dissolved into fourteen classes instead of kept — ~~that work is scoped, unscheduled, and not part of this milestone~~ **Stage B done and closed out (2026-09-24)**: seventeen classes, one per file, a machine-checked DAG at zero violations, and `checker.h` and all nine `check_*.cpp` deleted; **the mangling category tag**, the surviving half of that debt now that M6 length-prefixed the other half, owed because a static method is the first scheme with no receiver to tell it apart; **`g().t = 1;`**, which assigns into a discarded temporary and which the conditional now inherits; **`enum Nothing { };`**, rejected on the empty-aggregate precedent so that an accidental spelling does not become the one uninhabited types have to live with; and **the `Arena`'s decision**, whose two predicted callers have both been decided against — wire it to the `Interner` or delete it, but stop carrying it unowned. | `struct Empty { };` is refused naming a one-variant `enum`; `while( true ) { return 7; }` needs no `return` after it, `for( ; ; )` lowers to two blocks rather than three, `a > b ? a : b` compiles, runs only the arm it chose, and is refused when the arms disagree; `struct foo__ { };` beside `i32 foo()` no longer mangles to one name; `enum Nothing { };` is refused and `( c ? a : b ).t = 1;` is too; no source file in `keelc/src` exceeds 3000 code lines — **met (2026-09-19)**, the largest is now `parse/parser.cpp` at 2786; and the `Arena` either has a caller or is gone. | Paying debts before they compound |
+| **M6.5** | The debts that are neither M6's feature nor M8's: ~~D41's mixed-signedness comparison~~ **moved into M6** — §12's generalisation of it to `T` depends on it, ~~`cast`/`wrap` on a type parameter~~ **moved into M6** — the shipped range diagnostic points at it, ~~§12's empty-aggregate rejection~~ **done (2026-09-19)** — and it kept the `kl_rt_alloc` guard that §12 expected it to delete, because pinning `malloc( 0 )` is worth a branch independently of what reaches it, ~~the two KIR passes carried from M5.5~~ — empty-block threading and constant-branch folding — **done (2026-09-18)** as one pass, `ir/simplify.cpp`, because folding forces pruning and pruning needs a finished graph; the warning that went with them was cut rather than written, — ~~the mangling rework (length-prefixing, the `ref`/pointer collision, `kl__id__T__i32`)~~ **done in M6's slices 2b and 3e** — 2b forced the length-prefixing, and ~~the `ref`/pointer collision is unreachable until overloading lands~~ **overloading landed in M6 and took the collision with it**, ~~constant checking inside a generic body~~ **done in M6's slice 1f** — literal adoption is what made it reachable, so it was paid where it broke rather than carried. **Two arrived with M6's decisions**: ~~§12's **conditional expression**, which is a decision rather than a debt and is here to stop it being an accident~~ **decided and built (2026-09-19)** — `?:` ships and `if`-as-expression is **rejected**, not deferred, and ~~**function pointers**, whose implementation is M6.5 or M8 depending on whether FFI asks first~~ **moved to M7 (2026-09-19)** — M8 is the library, and a language feature should not arrive inside a milestone that is otherwise about writing Keel in Keel. **Five more scoped here (2026-09-19)**, all of them debts this milestone exists for rather than features: ~~**splitting `sema/type_checker.cpp`**, which the §15 entry deferred until KIR landed and which has since gone from 2350 code lines to 7898 on one file-local class of 158 members — done *before* M7 rather than after, because M7 adds member-declaration rules to exactly this file and splitting is cheaper before the addition than after~~ **done (2026-09-19)**, and the class was kept: the audit measured the free-function shape this milestone assumed and found it reaches 7% of the file, so `Checker` moved to `sema/checker.h` and its 127 definitions to nine files, largest 1,373 code lines, with no assertion or golden changed — **the acceptance criterion was met and the code did not get easier to read**, which is recorded in §15 and in §3.2 rather than quietly dropped, and is why `Checker` was then dissolved into fourteen classes instead of kept — ~~that work is scoped, unscheduled, and not part of this milestone~~ **Stage B done and closed out (2026-09-24)**: seventeen classes, one per file, a machine-checked DAG at zero violations, and `checker.h` and all nine `check_*.cpp` deleted; **the mangling category tag**, the surviving half of that debt now that M6 length-prefixed the other half, owed because a static method is the first scheme with no receiver to tell it apart - ~~**and reachable today rather than at M7 (2026-09-24)**: a method and a free function of one name emit the same C symbol, in both the by-value and the `ref` spelling, and `cc` refuses the result~~ **done (2026-09-24)** — the tag leads a member's argtypes as `S<type>` and the receiver leaves them, see §15; **`g().t = 1;`**, which assigns into a discarded temporary and which the conditional now inherits; **`enum Nothing { };`**, rejected on the empty-aggregate precedent so that an accidental spelling does not become the one uninhabited types have to live with; and **the `Arena`'s decision**, whose two predicted callers have both been decided against — wire it to the `Interner` or delete it, but stop carrying it unowned. | `struct Empty { };` is refused naming a one-variant `enum`; `while( true ) { return 7; }` needs no `return` after it, `for( ; ; )` lowers to two blocks rather than three, `a > b ? a : b` compiles, runs only the arm it chose, and is refused when the arms disagree; `struct foo__ { };` beside `i32 foo()` no longer mangles to one name; `enum Nothing { };` is refused and `( c ? a : b ).t = 1;` is too; no source file in `keelc/src` exceeds 3000 code lines — **met (2026-09-19)**, the largest is now `parse/parser.cpp` at 2786; and the `Arena` either has a caller or is gone. | Paying debts before they compound |
 | **M7** | **Static methods** — a function that belongs to a type but takes no receiver, called `Type::name( args )`. The §15 debt, scheduled here because M8's library is the first thing that wants one: `Vector::with_capacity`, `String::from_bytes`. Scope is *methods only* — type-scoped **data** waits on M8's modules and globals, function-local static storage has no customer, and internal linkage is the access-control debt below it rather than this one. The **spelling is undecided** and §12 now carries it: every method has an implicit receiver, so something has to say "this one does not", and D30 already gives `Type::name` at the call site without saying how the declaration is marked. **Two more scoped here (2026-09-19). Access control**, the §15 debt sitting directly below this one, because M7's own customer argues for it: `Vector::with_capacity` is a named constructor, and a named constructor only earns its place if the ordinary one can be hidden — so the feature that motivates M7 is incomplete without it. It is a resolver feature, member lookup carrying visibility, and a slice of its own rather than a rider. **Function pointers**, moved from M6.5's fork: the alternative was M8, and M8 is the standard library — a milestone about writing Keel in Keel should not also be where a language feature first appears. It is the smallest of the three and goes last, because nothing else here depends on it. **Order matters within the milestone**: the spelling decision, then static methods, then access control, then function pointers. | A named constructor returns an aggregate, is called as `Type::make( args )`, and is refused as `value.make( args )` — both a golden and the mangling that tells it from a method; a field declared private is refused from outside its type and accepted from a method of it; and a function's address is taken, stored in a variable, and called through it. | **Whether a type is a namespace, and whether a function is a value** |
 | **M8** | Modules (`import`), multi-file compilation, then begin `Vector` and `String` **in Keel**. | A two-module program. Then a `Vector<i32>` that grows and frees. | **Whether the design actually works** |
 
@@ -4795,8 +4795,16 @@ and `checker.h` are deleted. That claim is met.
 
 **`Expressions` did not come down — it went up.** §5 booked row 10 at 1,288 lines; it moved 1,564
 and stands at 1,698 code lines, still the largest thing in `sema/`. The row was not wrong about what
-belongs together; it was wrong that what belongs together would fit. It owes a split into two
-*classes*; the two *files* it briefly had were a defect and are gone.
+belongs together; it was wrong that what belongs together would fit. The two *files* it briefly had
+were a defect and are gone.
+
+**It does not owe a split, and this entry said it did (2026-09-24).** The ruling is the author's and
+it is the one this document argues for everywhere else: the measure is whether a class serves one
+purpose, not how many lines serving it takes. `Expressions` type-checks expressions and does nothing
+else, so the booked row is a miss in the estimate rather than a debt in the code. A line count is
+evidence to go looking with, never a reason on its own — the type-checker split happened because
+`Checker` held fourteen unrelated responsibilities, and the count was how that was noticed, not what
+made it true.
 
 ### The close-out pass (2026-09-24)
 
@@ -4901,6 +4909,94 @@ one class. That was not a stated goal and is the better half of the outcome.
 `parse/parser.cpp` is now the largest file in the tree at 2,786 code lines and has had no
 equivalent audit; `Parser` is not `Checker`, a recursive-descent parser's state really is a
 cursor and a token, and the measurement has to be redone before anything is assumed.
+
+### M6.5's four remaining items, re-measured (2026-09-24)
+
+All four were probed against the current tree rather than carried forward on the plan's word, and
+**one of them is worse than this document says it is.**
+
+**The mangling category tag is not latent — it is a miscompile shipping today.** The entry above
+schedules it *"because a static method is the first scheme with no receiver to tell it apart"*,
+which reads as a hole that opens at M7. It is already open. `Spelling::function` mangles a method
+through `mangle_function` with the receiver as parameter 0, so a method `at` on a `Box` and a free
+function `i32 at( Box b, i32 i )` both encode as `kl__at__3Box_3i32`. Nothing in `sema/` can catch
+it: they are different signatures by every rule the checker applies, and the collision exists only
+in the emitted name. The program compiles, emits two prototypes of one symbol with different
+parameter types, and **`cc` rejects it** — *"conflicting types for `kl__at__3Box_3i32`"* — which
+surfaces to the author as a C error against generated source, exactly what §2.2 says must never
+happen. **Both spellings collide, and the second is the worse of the two.** The first probe
+suggested the `ref` form escaped, because a borrow carries `R` — but the receiver of a *plain*
+method is a `ref T`, so it carries `R` too, and `void bump( ref Box, i32 )` beside a method
+`bump( i32 )` is the same symbol again. That pair is worse: their C prototypes are *identical*, so
+it is a
+plain redefinition rather than a conflict, and identical prototypes in two translation units are
+what a linker resolves silently by picking one. The two halves are the trailing `const`: a const
+method's receiver is a `const ref T`, which takes no marker and collides with the by-value free
+function. A category tag fixes both at once, and it is the only one of the four that is a wrong
+answer rather than a missing rule.
+
+**The other three are as recorded.** `enum Nothing { };` type-checks silently and lowers to
+`int32_t`. `g().t = 1;` and `( c ? a : b ).t = 1;` both type-check and both assign into a discarded
+temporary — probed together, since the conditional inherits the hole rather than adding one.
+The `Arena` has **zero call sites** outside `common/arena.{h,cpp}`, still 393 lines and a suite.
+
+**The shape the fix takes.** A marker on the receiver would not do: a static method has no receiver,
+so M7's case would stay open, and the marker is defined as what a call site *writes* for a
+parameter. The tag belongs to the name instead. The receiver leaves the parameter list — the checker
+already proves it cannot distinguish two members, since `Overloads::parameters_collide` compares a
+member's parameters from index 1 and refuses `area()` beside `area() const` — and the enclosing type
+takes its place as a leading `S<type>` in the argtypes, where every token is already length-prefixed
+and injective and no encoded type begins with a letter. A member `at( i32 ) const` on `Box` becomes
+`kl__at__S3Box_3i32`, the free `at( Box, i32 )` stays `kl__at__3Box_3i32`, and `at( ref Box, i32 )`
+stays `kl__at__R3Box_3i32`. No free function changes name, a generic member carries its instance
+through the substituted receiver type, and M7's static method is told apart by the same `S` with no
+receiver to borrow it from. Qualifying the *name* instead — `kl__Box__at__3i32`, beside `__ctor` and
+`__dtor` — reads better and was rejected: a free function legitimately called `Box__at` would then
+collide, which is a new reachable hole rather than the theoretical one those two already carry.
+
+**The red test is in the tree first**: `keelc/test/codegen/member_and_function_one_name.kl`, a valid
+program holding both pairs, each answering a different number so that a wrong pick is an exit code
+rather than a link-time coincidence. Today it fails with `cc` reporting the conflict and the
+redefinition; its `.expected` is deliberately absent until the fix lands, because a golden recorded
+from broken behaviour is worse than no golden.
+
+**Order, and why.** ~~The tag goes first~~ **the tag is done (2026-09-24)**, see the slice below: it
+is the live defect, and M7 adds the declaration form that makes it unavoidable, so paying it before
+M7 is cheaper than paying it inside M7 — the same argument that moved the type-checker split ahead
+of M7. Then `enum Nothing { };`, which is one predicate beside
+`Signatures::check_aggregate_has_fields`. Then the temporary-assignment rule, which is a question
+for `Places::is_assignable`. The `Arena` last, being a decision with no code depending on the
+answer.
+
+### M6.5 slice: the mangling category tag (2026-09-24)
+
+**Done.** A member's symbol now leads its argtypes with `S` and the encoded enclosing type, and the
+receiver is no longer among them. `mangle_function` gained a trailing `Type_id enclosing`, invalid
+for a free function; the file-local `construct_arg_string` seeds its result with the tag before the
+parameter loop, so the existing `_` join places it for free. `Spelling::function` grew one branch on
+`Node_kind::Method_decl` that reads `params.front().type` — the receiver, already substituted by the
+loop above it, so the tag is `Box<i32>` and not `Box<T>` — and passes the parameters from index 1.
+Constructors were left exactly as they were: `__ctor` already keeps them out of a free function's
+way, and moving them would have put a second topic in the commit.
+
+**173 goldens pass, none fail**, and four fixtures' expectations moved. Every changed line carries
+an `S`: no free function, no struct, no constructor and no destructor changed name, which was the
+property the placement was chosen for. The new fixture emits four distinct symbols where it emitted
+two.
+
+**Five mutations, five killed.** Removing the `S` character, spelling the tag with `base_name`
+instead of `encode_type`, leaving the receiver in the parameters, never taking the `Method_decl`
+branch, and reading the receiver's declared type rather than the substituted one. Worth recording
+that only the first two are killed by a unit test — the other three live in `Spelling::function`,
+which has no unit test of its own and is covered by the goldens alone.
+
+**Two wrong turns on the way, both caught before the commit.** The enclosing type was first read
+from child 0 of the method declaration, which is the return type rather than the parameter list:
+that compiled, indexed an empty span, left the id invalid and changed no emitted symbol at all — the
+suite stayed exactly as red as it had been. And the tag first sat between two `__` fences after the
+name, as `kl__at__SBox__3i32`, which is precisely what a free function legitimately named `at__SBox`
+mangles to. Inside the argtypes there is no fence to imitate, which is the whole reason it goes
+there.
 
 ### Debts to pay along the way
 

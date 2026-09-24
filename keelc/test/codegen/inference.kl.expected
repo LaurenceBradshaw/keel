@@ -37,7 +37,7 @@ int32_t kl__either__I3i32E__3i32( int32_t );
 int32_t kl__forwards__I3i32E__3i32( int32_t );
 bool kl__forwards__I4boolE__4bool( bool );
 void kl__Held__I3i32E__R4HeldI3i32E_3i32__ctor( struct kl__Held__I3i32E*, int32_t );
-int32_t kl__get__I3i32E__4HeldI3i32E( struct kl__Held__I3i32E* );
+int32_t kl__get__I3i32E__S4HeldI3i32E( struct kl__Held__I3i32E* );
 
 int32_t kl__either__3i32( int32_t kl_a_1 )
 {
@@ -258,7 +258,7 @@ int32_t kl__main__( void )
     kl__Held__I3i32E__R4HeldI3i32E_3i32__ctor( kl_t47, 4 );
 #line 162 "codegen/inference.kl"
     kl_t49 = &kl_held_46;
-    kl_t50 = kl__get__I3i32E__4HeldI3i32E( kl_t49 );
+    kl_t50 = kl__get__I3i32E__S4HeldI3i32E( kl_t49 );
     kl_t51 = kl_t50 != 4;
     if ( kl_t51 ) goto bb31; else goto bb32;
     bb31:
@@ -425,7 +425,7 @@ void kl__Held__I3i32E__R4HeldI3i32E_3i32__ctor( struct kl__Held__I3i32E* kl_this
     return;
 }
 
-int32_t kl__get__I3i32E__4HeldI3i32E( struct kl__Held__I3i32E* kl_this_1 )
+int32_t kl__get__I3i32E__S4HeldI3i32E( struct kl__Held__I3i32E* kl_this_1 )
 {
     int32_t kl_t0;
 #line 106 "codegen/inference.kl"

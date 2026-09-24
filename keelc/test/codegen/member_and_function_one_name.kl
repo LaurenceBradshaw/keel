@@ -1,0 +1,57 @@
+// PLAN §7.5 and §2.2. A method and a free function may share a name: the call site tells them apart
+// by writing `b.at( 1 )` or `at( b, 1 )`, so the two symbols have to differ as well. Each pair below
+// answers with a different number, so calling the wrong one is an exit code here rather than a
+// mystery on the day the two sit in separate translation units and the linker picks one.
+struct Box
+{
+    i32 v;
+
+    i32 at( i32 i ) const
+    {
+        return v + i;
+    }
+
+    void bump( i32 by )
+    {
+        v = v + by;
+    }
+};
+
+// A const method's receiver is a `const ref Box`, which is written at no call site and so carries no
+// marker - exactly what a by-value parameter of the same type carries.
+i32 at( Box b, i32 i )
+{
+    return b.v - i;
+}
+
+// And a plain method's receiver is a `ref Box`, which carries the marker this parameter carries.
+void bump( ref Box b, i32 by )
+{
+    b.v = b.v - by;
+}
+
+i32 main()
+{
+    Box b = Box { 10 };
+
+    if( b.at( 1 ) != 11 )
+    {
+        return 91;
+    }
+
+    if( at( b, 1 ) != 9 )
+    {
+        return 92;
+    }
+
+    b.bump( 5 );
+
+    if( b.v != 15 )
+    {
+        return 93;
+    }
+
+    bump( ref b, 5 );
+
+    return b.v;
+}

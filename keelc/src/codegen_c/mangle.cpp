@@ -73,10 +73,17 @@ std::string construct_arg_string( std::span<const Type_id> params, const Type_ta
 }
 
 // The marker leads, and every letter it can be is one no encoded type starts with - a type starts
-// with a digit or with `P`.
-std::string construct_arg_string( std::span<const Mangled_parameter> params, const Type_table& types )
+// with a digit or with `P`. `S` is the same trick for the type a member belongs to, which leads the
+// whole list.
+std::string construct_arg_string( std::span<const Mangled_parameter> params, const Type_table& types, Type_id enclosing = {} )
 {
     std::string encoded;
+
+    if( enclosing.is_valid() )
+    {
+        encoded += 'S';
+        encode_type( encoded, enclosing, types );
+    }
 
     for( const Mangled_parameter& param : params )
     {
@@ -102,7 +109,8 @@ std::string mangle_function(
     std::string_view                   name,
     std::span<const Mangled_parameter> params,
     const Type_table&                  types,
-    std::span<const Type_id>           type_arguments
+    std::span<const Type_id>           type_arguments,
+    Type_id                            enclosing
 )
 {
     // An instantiation carries both. The type arguments alone would collide between two overloads
@@ -115,11 +123,11 @@ std::string mangle_function(
             module,
             name,
             construct_arg_string( type_arguments, types ),
-            construct_arg_string( params, types )
+            construct_arg_string( params, types, enclosing )
         );
     }
 
-    return fmt::format( "kl_{}_{}__{}", module, name, construct_arg_string( params, types ) );
+    return fmt::format( "kl_{}_{}__{}", module, name, construct_arg_string( params, types, enclosing ) );
 }
 
 std::string mangle_struct( std::string_view module, Type_id type, const Type_table& types )
@@ -282,6 +290,72 @@ TEST_CASE( "mangle_tells_apart_what_a_call_site_tells_apart", "[codegen][mangle]
         const Mangled_parameter plain[]    = { by_value( i32 ) };
 
         REQUIRE( mangle_function( "", "f", borrowed, table ) == mangle_function( "", "f", plain, table ) );
+    }
+}
+
+// The collision the checker cannot see: a member and a free function of one name have the same
+// parameters and the same markers, and differ only in how they are written at a call.
+TEST_CASE( "mangle_tells_a_member_from_a_free_function", "[codegen][mangle]" )
+{
+    Type_table table;
+
+    const Type_id i32 = table.integer( 32, true );
+    const Type_id box = table.structure( Node_id { 3 }, {}, "Box" );
+
+    const Mangled_parameter own[]      = { by_value( i32 ) };
+    const Mangled_parameter passed[]   = { by_value( box ), by_value( i32 ) };
+    const Mangled_parameter borrowed[] = { { .type = box, .marker = 'R' }, by_value( i32 ) };
+
+    SECTION( "a method and the two free spellings of it are three names" )
+    {
+        // `i32 at( i32 ) const` on `Box`, then `i32 at( Box, i32 )` and `i32 at( ref Box, i32 )`.
+        // A const receiver is a `const ref Box` and takes no marker, so it encoded as the first of
+        // these; a plain one is a `ref Box`, so it encoded as the second.
+        REQUIRE( mangle_function( "", "at", own, table, {}, box ) == "kl__at__S3Box_3i32" );
+        REQUIRE( mangle_function( "", "at", passed, table ) == "kl__at__3Box_3i32" );
+        REQUIRE( mangle_function( "", "at", borrowed, table ) == "kl__at__R3Box_3i32" );
+    }
+
+    SECTION( "the tag names which type, not merely that there is one" )
+    {
+        const Type_id cell = table.structure( Node_id { 5 }, {}, "Cell" );
+
+        REQUIRE( mangle_function( "", "at", own, table, {}, cell ) == "kl__at__S4Cell_3i32" );
+        REQUIRE( mangle_function( "", "at", own, table, {}, box ) != mangle_function( "", "at", own, table, {}, cell ) );
+    }
+
+    SECTION( "two instances of one generic" )
+    {
+        // The receiver used to carry this and is no longer among the parameters, so the tag is the
+        // encoded type rather than the bare name - `3BoxI3i32E`, not `Box`.
+        const Type_id of_i32 = table.structure( Node_id { 11 }, std::array { i32 }, "Box" );
+        const Type_id of_f64 = table.structure( Node_id { 11 }, std::array { table.floating( 64 ) }, "Box" );
+
+        REQUIRE( mangle_function( "", "at", own, table, {}, of_i32 ) == "kl__at__S3BoxI3i32E_3i32" );
+        REQUIRE( mangle_function( "", "at", own, table, {}, of_i32 ) != mangle_function( "", "at", own, table, {}, of_f64 ) );
+    }
+
+    SECTION( "a member with no parameters of its own" )
+    {
+        const std::vector<Mangled_parameter> none;
+
+        REQUIRE( mangle_function( "", "area", none, table, {}, box ) == "kl__area__S3Box" );
+        REQUIRE( mangle_function( "", "area", none, table, {}, box ) != mangle_function( "", "area", none, table ) );
+    }
+
+    // M7's shape: a static method has no receiver for a marker to sit on, which is why the tag is
+    // the name's rather than parameter 0's - it survives the receiver not existing.
+    SECTION( "a member whose own parameters include its type" )
+    {
+        REQUIRE( mangle_function( "", "at", passed, table, {}, box ) == "kl__at__S3Box_3Box_3i32" );
+        REQUIRE( mangle_function( "", "at", passed, table, {}, box ) != mangle_function( "", "at", passed, table ) );
+    }
+
+    SECTION( "an instantiated member carries both" )
+    {
+        const Type_id at[] = { i32 };
+
+        REQUIRE( mangle_function( "", "at", own, table, at, box ) == "kl__at__I3i32E__S3Box_3i32" );
     }
 }
 

@@ -37,16 +37,16 @@ int32_t kl__by_transfer__5Owned( struct kl__Owned* );
 int32_t kl__by_transfer__M5Owned( struct kl__Owned );
 void kl__Two__R3Two_3i32__ctor( struct kl__Two*, int32_t );
 void kl__Two__R3Two_3f64__ctor( struct kl__Two*, double );
-int32_t kl__at__R3Two_3i32( struct kl__Two*, int32_t );
-int32_t kl__at__R3Two_4bool( struct kl__Two*, bool );
-int32_t kl__both__R3Two_3i32( struct kl__Two*, int32_t );
+int32_t kl__at__S3Two_3i32( struct kl__Two*, int32_t );
+int32_t kl__at__S3Two_4bool( struct kl__Two*, bool );
+int32_t kl__both__S3Two_3i32( struct kl__Two*, int32_t );
 bool kl__answers__3i32( int32_t );
 int32_t kl__answers__4bool( bool );
 int32_t kl__either__3i32( int32_t );
 int32_t kl__main__( void );
 void kl__Holder__I3i32E__R6HolderI3i32E_3i32__ctor( struct kl__Holder__I3i32E*, int32_t );
-int32_t kl__count__I3i32E__R6HolderI3i32E_3i32_3i32( struct kl__Holder__I3i32E*, int32_t, int32_t );
-int32_t kl__count__I3i32E__R6HolderI3i32E_4bool( struct kl__Holder__I3i32E*, bool );
+int32_t kl__count__I3i32E__S6HolderI3i32E_3i32_3i32( struct kl__Holder__I3i32E*, int32_t, int32_t );
+int32_t kl__count__I3i32E__S6HolderI3i32E_4bool( struct kl__Holder__I3i32E*, bool );
 int32_t kl__either__I3i32E__3i32( int32_t );
 
 int32_t kl__by_type__3i32( int32_t kl_a_1 )
@@ -224,7 +224,7 @@ void kl__Two__R3Two_3f64__ctor( struct kl__Two* kl_this_1, double kl_v_2 )
     return;
 }
 
-int32_t kl__at__R3Two_3i32( struct kl__Two* kl_this_1, int32_t kl_n_2 )
+int32_t kl__at__S3Two_3i32( struct kl__Two* kl_this_1, int32_t kl_n_2 )
 {
     int32_t kl_t0;
     int32_t kl_t3;
@@ -234,7 +234,7 @@ int32_t kl__at__R3Two_3i32( struct kl__Two* kl_this_1, int32_t kl_n_2 )
     return kl_t0;
 }
 
-int32_t kl__at__R3Two_4bool( struct kl__Two* kl_this_1, bool kl_n_2 )
+int32_t kl__at__S3Two_4bool( struct kl__Two* kl_this_1, bool kl_n_2 )
 {
     int32_t kl_t0;
     int32_t kl_t3;
@@ -250,15 +250,15 @@ int32_t kl__at__R3Two_4bool( struct kl__Two* kl_this_1, bool kl_n_2 )
     return kl_t0;
 }
 
-int32_t kl__both__R3Two_3i32( struct kl__Two* kl_this_1, int32_t kl_n_2 )
+int32_t kl__both__S3Two_3i32( struct kl__Two* kl_this_1, int32_t kl_n_2 )
 {
     int32_t kl_t0;
     int32_t kl_t3;
     int32_t kl_t4;
     int32_t kl_t5;
 #line 133 "codegen/overloads.kl"
-    kl_t3 = kl__at__R3Two_3i32( kl_this_1, kl_n_2 );
-    kl_t4 = kl__at__R3Two_4bool( kl_this_1, true );
+    kl_t3 = kl__at__S3Two_3i32( kl_this_1, kl_n_2 );
+    kl_t4 = kl__at__S3Two_4bool( kl_this_1, true );
     kl_t5 = kl_t3 + kl_t4;
     kl_t0 = kl_t5;
     return kl_t0;
@@ -524,7 +524,7 @@ int32_t kl__main__( void )
     bb30:
 #line 238 "codegen/overloads.kl"
     kl_t46 = &kl_from_whole_38;
-    kl_t47 = kl__at__R3Two_3i32( kl_t46, 3 );
+    kl_t47 = kl__at__S3Two_3i32( kl_t46, 3 );
     kl_t48 = kl_t47 != 8;
     if ( kl_t48 ) goto bb31; else goto bb32;
     bb31:
@@ -536,7 +536,7 @@ int32_t kl__main__( void )
     bb32:
 #line 239 "codegen/overloads.kl"
     kl_t49 = &kl_from_whole_38;
-    kl_t50 = kl__at__R3Two_4bool( kl_t49, true );
+    kl_t50 = kl__at__S3Two_4bool( kl_t49, true );
     kl_t51 = kl_t50 != 10;
     if ( kl_t51 ) goto bb33; else goto bb34;
     bb33:
@@ -548,7 +548,7 @@ int32_t kl__main__( void )
     bb34:
 #line 240 "codegen/overloads.kl"
     kl_t52 = &kl_from_whole_38;
-    kl_t53 = kl__both__R3Two_3i32( kl_t52, 3 );
+    kl_t53 = kl__both__S3Two_3i32( kl_t52, 3 );
     kl_t54 = kl_t53 != 18;
     if ( kl_t54 ) goto bb35; else goto bb36;
     bb35:
@@ -563,7 +563,7 @@ int32_t kl__main__( void )
     kl__Holder__I3i32E__R6HolderI3i32E_3i32__ctor( kl_t56, 4 );
 #line 244 "codegen/overloads.kl"
     kl_t58 = &kl_holder_55;
-    kl_t59 = kl__count__I3i32E__R6HolderI3i32E_3i32_3i32( kl_t58, 4, 19 );
+    kl_t59 = kl__count__I3i32E__S6HolderI3i32E_3i32_3i32( kl_t58, 4, 19 );
     kl_t60 = kl_t59 != 19;
     if ( kl_t60 ) goto bb37; else goto bb38;
     bb37:
@@ -575,7 +575,7 @@ int32_t kl__main__( void )
     bb38:
 #line 245 "codegen/overloads.kl"
     kl_t61 = &kl_holder_55;
-    kl_t62 = kl__count__I3i32E__R6HolderI3i32E_4bool( kl_t61, true );
+    kl_t62 = kl__count__I3i32E__S6HolderI3i32E_4bool( kl_t61, true );
     kl_t63 = kl_t62 != 200;
     if ( kl_t63 ) goto bb39; else goto bb40;
     bb39:
@@ -646,7 +646,7 @@ void kl__Holder__I3i32E__R6HolderI3i32E_3i32__ctor( struct kl__Holder__I3i32E* k
     return;
 }
 
-int32_t kl__count__I3i32E__R6HolderI3i32E_3i32_3i32( struct kl__Holder__I3i32E* kl_this_1, int32_t kl_a_2, int32_t kl_b_3 )
+int32_t kl__count__I3i32E__S6HolderI3i32E_3i32_3i32( struct kl__Holder__I3i32E* kl_this_1, int32_t kl_a_2, int32_t kl_b_3 )
 {
     int32_t kl_t0;
     bool kl_t4;
@@ -663,7 +663,7 @@ int32_t kl__count__I3i32E__R6HolderI3i32E_3i32_3i32( struct kl__Holder__I3i32E* 
     return kl_t0;
 }
 
-int32_t kl__count__I3i32E__R6HolderI3i32E_4bool( struct kl__Holder__I3i32E* kl_this_1, bool kl_a_2 )
+int32_t kl__count__I3i32E__S6HolderI3i32E_4bool( struct kl__Holder__I3i32E* kl_this_1, bool kl_a_2 )
 {
     int32_t kl_t0;
     int32_t kl_t3;

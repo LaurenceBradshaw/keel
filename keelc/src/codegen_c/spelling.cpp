@@ -142,6 +142,22 @@ std::string Spelling::function( Node_id declaration, std::span<const Type_id> ty
         );
     }
 
+    if( ast.kind( declaration ) == Node_kind::Method_decl )
+    {
+        // The receiver, substituted above - so the tag names `Box<i32>` rather than `Box<T>` - and
+        // then dropped from the parameters, since it can never be what tells two members apart.
+        const Type_id enclosing = params.front().type;
+
+        return mangle_function(
+            "",
+            interner.text( Symbol_id { ast.aux( declaration ) } ),
+            std::span( params ).subspan( 1 ),
+            types.table(),
+            type_arguments,
+            enclosing
+        );
+    }
+
     return mangle_function( "", interner.text( Symbol_id { ast.aux( declaration ) } ), params, types.table(), type_arguments );
 }
 

@@ -20,9 +20,9 @@ int32_t kl_live_1;
 int32_t kl__early__3i32( int32_t );
 int32_t kl__main__( void );
 void kl__Box__I3i32E__R3BoxI3i32E_3i32__ctor( struct kl__Box__I3i32E*, int32_t );
-int32_t kl__get__I3i32E__R3BoxI3i32E( struct kl__Box__I3i32E* );
+int32_t kl__get__I3i32E__S3BoxI3i32E( struct kl__Box__I3i32E* );
 void kl__Box__I3f64E__R3BoxI3f64E_3f64__ctor( struct kl__Box__I3f64E*, double );
-double kl__get__I3f64E__R3BoxI3f64E( struct kl__Box__I3f64E* );
+double kl__get__I3f64E__S3BoxI3f64E( struct kl__Box__I3f64E* );
 void kl__Box__I3i32E__dtor( struct kl__Box__I3i32E* );
 void kl__Box__I3f64E__dtor( struct kl__Box__I3f64E* );
 
@@ -39,7 +39,7 @@ int32_t kl__early__3i32( int32_t kl_n_1 )
     kl__Box__I3i32E__R3BoxI3i32E_3i32__ctor( kl_t3, kl_n_1 );
 #line 33 "codegen/generics_destructors.kl"
     kl_t5 = &kl_a_2;
-    kl_t6 = kl__get__I3i32E__R3BoxI3i32E( kl_t5 );
+    kl_t6 = kl__get__I3i32E__S3BoxI3i32E( kl_t5 );
     kl_t7 = kl_t6 > 2;
     if ( kl_t7 ) goto bb1; else goto bb2;
     bb1:
@@ -95,7 +95,7 @@ int32_t kl__main__( void )
     bb2:
 #line 55 "codegen/generics_destructors.kl"
     kl_t8 = &kl_a_1;
-    kl_t9 = kl__get__I3i32E__R3BoxI3i32E( kl_t8 );
+    kl_t9 = kl__get__I3i32E__S3BoxI3i32E( kl_t8 );
     kl_t10 = kl_t9 != 7;
     if ( kl_t10 ) goto bb3; else goto bb4;
     bb3:
@@ -107,7 +107,7 @@ int32_t kl__main__( void )
     bb4:
 #line 60 "codegen/generics_destructors.kl"
     kl_t11 = &kl_b_4;
-    kl_t12 = kl__get__I3f64E__R3BoxI3f64E( kl_t11 );
+    kl_t12 = kl__get__I3f64E__S3BoxI3f64E( kl_t11 );
     kl_t13 = kl_t12 != 2.5;
     if ( kl_t13 ) goto bb5; else goto bb6;
     bb5:
@@ -178,7 +178,7 @@ void kl__Box__I3i32E__R3BoxI3i32E_3i32__ctor( struct kl__Box__I3i32E* kl_this_1,
     return;
 }
 
-int32_t kl__get__I3i32E__R3BoxI3i32E( struct kl__Box__I3i32E* kl_this_1 )
+int32_t kl__get__I3i32E__S3BoxI3i32E( struct kl__Box__I3i32E* kl_this_1 )
 {
     int32_t kl_t0;
 #line 24 "codegen/generics_destructors.kl"
@@ -197,7 +197,7 @@ void kl__Box__I3f64E__R3BoxI3f64E_3f64__ctor( struct kl__Box__I3f64E* kl_this_1,
     return;
 }
 
-double kl__get__I3f64E__R3BoxI3f64E( struct kl__Box__I3f64E* kl_this_1 )
+double kl__get__I3f64E__S3BoxI3f64E( struct kl__Box__I3f64E* kl_this_1 )
 {
     double kl_t0;
 #line 24 "codegen/generics_destructors.kl"
