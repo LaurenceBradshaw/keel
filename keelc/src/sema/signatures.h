@@ -82,6 +82,7 @@ private:
     void check_aggregate_members();
     void check_member_kind( Node_id decl, const Member_kind& kind );
     void check_aggregate_has_fields( Node_id decl );
+    void check_enum_has_variants();
     void check_enum_payloads();
     void check_struct_ownership();
     void check_struct_fields_are_not_owning( Node_id decl );

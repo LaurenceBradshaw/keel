@@ -36,6 +36,7 @@ void Signatures::declare()
     declare_fields();
     order_structs();
     check_aggregate_members();
+    check_enum_has_variants();
     aggregates_.compute_owning();
     check_struct_ownership();
     check_enum_payloads();
@@ -499,6 +500,30 @@ void Signatures::check_aggregate_has_fields( Node_id decl )
             ast_.span( decl ),
             fmt::format( "`{}` has no fields, so it has no size", interner_.text( Symbol_id { ast_.aux( decl ) } ) ),
             "use an `enum` with one variant for a type with one value"
+        );
+    }
+}
+
+// Its own pass rather than part of check_aggregate_members, whose loop skips anything is_aggregate
+// refuses and so never reaches an enum. Having no values is a different fact from having no size.
+void Signatures::check_enum_has_variants()
+{
+    for( const Node_id decl : ast_.children( ast_.root() ) )
+    {
+        if( ast_.kind( decl ) != Node_kind::Enum_decl )
+        {
+            continue;
+        }
+
+        if( !ast_.variants( decl ).empty() )
+        {
+            continue;
+        }
+
+        reporter_.error_at(
+            ast_.span( decl ),
+            fmt::format( "`{}` has no variants, so it has no values", interner_.text( Symbol_id { ast_.aux( decl ) } ) ),
+            "add a variant, or delete the type"
         );
     }
 }

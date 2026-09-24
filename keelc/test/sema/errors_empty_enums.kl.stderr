@@ -1,0 +1,19 @@
+error: `Nothing` has no variants, so it has no values
+ --> sema/errors_empty_enums.kl:5:1
+  |
+5 | enum Nothing
+  | ^^^^^^^^^^^^ add a variant, or delete the type
+
+error: `Tagged` has no variants, so it has no values
+  --> sema/errors_empty_enums.kl:11:1
+   |
+11 | enum Tagged : u8
+   | ^^^^^^^^^^^^^^^^ add a variant, or delete the type
+
+error: `Empty` has no variants, so it has no values
+  --> sema/errors_empty_enums.kl:16:1
+   |
+16 | enum Empty<T>
+   | ^^^^^^^^^^^^^ add a variant, or delete the type
+
+3 errors generated

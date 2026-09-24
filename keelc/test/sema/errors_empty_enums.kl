@@ -1,0 +1,30 @@
+// PLAN §12. An `enum` with no variants has no values at all - nothing can ever construct one - so
+// it is refused rather than left as the accidental spelling of a concept the language has not
+// decided it wants. A different fact from the empty aggregate beside it: that one has no *size*.
+
+enum Nothing
+{
+};
+
+// The underlying type is written and there are still no values, which is where a check against the
+// node's children rather than its variants would go quiet.
+enum Tagged : u8
+{
+};
+
+// Empty for every `T`, so it is refused once where it is written rather than at each instantiation.
+enum Empty<T>
+{
+};
+
+// One variant is enough, which is where the boundary sits - and it is the spelling the empty
+// aggregate's diagnostic recommends, so it must stay legal.
+enum Unit
+{
+    Only
+};
+
+i32 main()
+{
+    return 0;
+}
