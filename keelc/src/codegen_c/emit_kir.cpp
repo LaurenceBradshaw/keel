@@ -1752,7 +1752,7 @@ TEST_CASE( "emit_kir_emits_one_struct_per_instantiation", "[codegen][kir][generi
 
     SECTION( "a generic list, which is what the forward declarations are for" )
     {
-        Generated g( "class Node<T> where T : Copyable { T v; Node<T>* next; };\n"
+        Generated g( "class Node<T> where T : Copyable { public T v; Node<T>* next; };\n"
                      "i32 main() { Node<i32> n; n.v = 1; return 0; }" );
 
         INFO( g.c );

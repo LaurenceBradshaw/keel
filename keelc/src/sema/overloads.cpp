@@ -1752,7 +1752,7 @@ TEST_CASE( "overloads_name_the_declaration_a_duplicate_collides_with", "[sema][o
 // the same type: the marker selects, except where it says nothing the callee could see.
 TEST_CASE( "overloads_exempt_move_on_a_type_that_owns_nothing", "[sema][overload][move]" )
 {
-    const Typed p( "class Owned { i32 v; ~Owned() { } };\n"
+    const Typed p( "class Owned { public i32 v; ~Owned() { } };\n"
                    "i32 by_transfer( const ref Owned a ) { return 1; }\n"
                    "i32 by_transfer( move Owned a ) { return 2; }\n"
                    "i32 by_copy( i32 a ) { return 3; }\n"

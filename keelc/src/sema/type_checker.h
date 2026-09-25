@@ -199,6 +199,10 @@ bool is_generic( const Ast& ast, Node_id decl );
 // corollary makes a bare prototype an error), so the absent body is the marker and there is no flag.
 bool is_extern( const Ast& ast, Node_id decl );
 
+// Whether `member` may be named from inside the aggregate `from`, which is `enclosing_aggregate` of
+// whatever function the access was written in - and an invalid id when that was a free function.
+bool is_visible_from( const Ast& ast, Node_id member, Node_id from );
+
 // Whether parameter 0 is the synthesised `this`: true of a method, constructor and destructor,
 // false of a free function and of M7's static method. The node kind cannot answer it any more.
 bool has_receiver( const Ast& ast, Node_id decl );

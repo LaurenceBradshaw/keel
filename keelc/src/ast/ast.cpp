@@ -77,6 +77,17 @@ std::span<const Node_id> Ast::variants( Node_id id ) const
     return children( id ).subspan( 2 );
 }
 
+Access Ast::access( Node_id id ) const
+{
+    const auto it = access_.find( id.v );
+    return it != access_.end() ? it->second : Access::Public;
+}
+
+void Ast::set_access( Node_id id, Access access )
+{
+    access_[id.v] = access;
+}
+
 Node_id Ast::root() const
 {
     return root_;
@@ -85,6 +96,32 @@ Node_id Ast::root() const
 void Ast::set_root( Node_id id )
 {
     root_ = id;
+}
+
+Node_id enclosing_aggregate( const Ast& ast, Node_id member )
+{
+    if( !member.is_valid() )
+    {
+        return Node_id {};
+    }
+
+    for( const Node_id decl : ast.children( ast.root() ) )
+    {
+        if( !is_aggregate( ast.kind( decl ) ) )
+        {
+            continue;
+        }
+
+        for( const Node_id candidate : ast.members( decl ) )
+        {
+            if( candidate == member )
+            {
+                return decl;
+            }
+        }
+    }
+
+    return Node_id {};
 }
 
 std::size_t Ast::node_count() const

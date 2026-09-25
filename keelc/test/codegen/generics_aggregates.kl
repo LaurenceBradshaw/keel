@@ -30,8 +30,8 @@ struct Holder<T> where T : Copyable
 // forward declarations at all.
 class Node<T> where T : Copyable
 {
-    T        value;
-    Node<T>* next;
+    public T        value;
+    public Node<T>* next;
 };
 
 i32 main()

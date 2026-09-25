@@ -9,7 +9,7 @@ struct P
 
 class B
 {
-    u64 n;
+    public u64 n;
 
     B( u64 x )
     {
@@ -23,7 +23,7 @@ class B
 
 class W
 {
-    P p;
+    public P p;
 
     ~W()
     {
@@ -122,7 +122,7 @@ u64 passes_it_on( B b )
 // part of the object that was lent.
 class Holder
 {
-    P* q;
+    public P* q;
 
     ~Holder()
     {

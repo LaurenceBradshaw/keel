@@ -1,0 +1,49 @@
+error: `balance` is private to `Account`
+  --> sema/errors_access_control.kl:58:16
+   |
+58 |         return a.balance;
+   |                ^^^^^^^^^ only that type's own members may name it
+
+error: `balance` is private to `Account`
+  --> sema/errors_access_control.kl:64:12
+   |
+64 |     return a.balance;
+   |            ^^^^^^^^^ only that type's own members may name it
+
+error: `balance` is private to `Account`
+  --> sema/errors_access_control.kl:69:5
+   |
+69 |     a.balance = 1;
+   |     ^^^^^^^^^ only that type's own members may name it
+
+error: `secret` is private to `Account`
+  --> sema/errors_access_control.kl:74:12
+   |
+74 |     return a.secret();
+   |            ^^^^^^^^ only that type's own members may name it
+
+error: `rate` is private to `Account`
+  --> sema/errors_access_control.kl:79:12
+   |
+79 |     return Account::rate();
+   |            ^^^^^^^^^^^^^ only that type's own members may name it
+
+error: `Sealed`'s constructor is private
+  --> sema/errors_access_control.kl:84:16
+   |
+84 |     Sealed s = Sealed( 1 );
+   |                ^^^^^^ build it through one of its own static methods instead
+
+error: `Plain` keeps `x` private, so it cannot be built from a literal
+  --> sema/errors_access_control.kl:91:15
+   |
+91 |     Plain p = Plain { 1 };
+   |               ^^^^^^^^^^^ give it a constructor, and build it by calling that
+
+error: `x` is private to `Plain`
+  --> sema/errors_access_control.kl:93:12
+   |
+93 |     return p.x;
+   |            ^^^ only that type's own members may name it
+
+8 errors generated

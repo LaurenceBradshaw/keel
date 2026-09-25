@@ -56,7 +56,7 @@ i32 uses_out()
 
 class B
 {
-    u64 n;
+    public u64 n;
 
     B( u64 x )
     {

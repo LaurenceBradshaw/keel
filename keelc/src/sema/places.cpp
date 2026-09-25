@@ -335,7 +335,7 @@ namespace keel
 // to prevent.
 TEST_CASE( "type_checker_requires_move_when_copying_an_owning_value", "[sema][move]" )
 {
-    constexpr std::string_view owning = "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n";
+    constexpr std::string_view owning = "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n";
 
     SECTION( "an initialiser from a named variable" )
     {
@@ -398,7 +398,7 @@ TEST_CASE( "type_checker_requires_move_when_copying_an_owning_value", "[sema][mo
 // the only meaning a bare argument has left.
 TEST_CASE( "type_checker_makes_a_bare_owning_parameter_read_only", "[sema][borrow]" )
 {
-    constexpr std::string_view owning = "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n";
+    constexpr std::string_view owning = "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n";
 
     SECTION( "a field of it cannot be assigned" )
     {
@@ -448,7 +448,7 @@ TEST_CASE( "type_checker_makes_a_bare_owning_parameter_read_only", "[sema][borro
     // The walk is a loop, not one step: a path of any depth still roots in the borrow.
     SECTION( "a nested field is refused too" )
     {
-        const Typed p( "struct P { i32 x; };\nclass W { P p; ~W() { } };\n"
+        const Typed p( "struct P { i32 x; };\nclass W { public P p; ~W() { } };\n"
                        "i32 f( W w ) { w.p.x = 5; return 0; }\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
@@ -460,7 +460,7 @@ TEST_CASE( "type_checker_makes_a_bare_owning_parameter_read_only", "[sema][borro
     // never part of the object that was lent. The borrow covers the pointer, not the pointee.
     SECTION( "but writing through a pointer it holds is allowed" )
     {
-        const Typed p( "class B { i32* q; ~B() { } };\n"
+        const Typed p( "class B { public i32* q; ~B() { } };\n"
                        "i32 f( B b ) { *b.q = 5; return 0; }\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
@@ -469,7 +469,7 @@ TEST_CASE( "type_checker_makes_a_bare_owning_parameter_read_only", "[sema][borro
 
     SECTION( "including through D22's implicit reach" )
     {
-        const Typed p( "struct P { i32 x; };\nclass B { P* q; ~B() { } };\n"
+        const Typed p( "struct P { i32 x; };\nclass B { public P* q; ~B() { } };\n"
                        "i32 f( B b ) { b.q.x = 5; return 0; }\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
@@ -491,7 +491,7 @@ TEST_CASE( "type_checker_makes_a_bare_owning_parameter_read_only", "[sema][borro
 // one is the sharpest: `B pass( B b ) { return b; }` freed one resource twice before this existed.
 TEST_CASE( "type_checker_refuses_to_transfer_a_borrow", "[sema][borrow]" )
 {
-    constexpr std::string_view owning = "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n";
+    constexpr std::string_view owning = "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n";
 
     SECTION( "it cannot be moved" )
     {
@@ -554,7 +554,7 @@ TEST_CASE( "type_checker_refuses_to_transfer_a_borrow", "[sema][borrow]" )
 // A `ref` parameter is the mutable borrow, so it is the contrast that gives the bare one meaning.
 TEST_CASE( "type_checker_leaves_a_ref_parameter_writable", "[sema][borrow]" )
 {
-    const Typed p( "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+    const Typed p( "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
                    "void grow( ref B b ) { b.n = b.n + 1; }\ni32 main() { return 0; }" );
 
     INFO( p.rendered() );
@@ -716,7 +716,7 @@ TEST_CASE( "type_checker_accepts_a_const_ref_return_from_a_parameter", "[sema][e
     // parameter for this rule too - the caller owns the object and outlives the call.
     SECTION( "and from a bare owning parameter, which is one" )
     {
-        const Typed p( "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+        const Typed p( "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
                        "const ref u64 peek( B b ) { return b.n; }\n"
                        "i32 main() { B a = B( 1 ); return wrap<i32>( peek( a ) ); }" );
 
@@ -850,7 +850,7 @@ TEST_CASE( "type_checker_types_a_ref_parameter_as_its_referent", "[sema][ref]" )
 // thing §6.6 leaves available for passing one without giving it away.
 TEST_CASE( "type_checker_lends_a_class_by_ref", "[sema][ref]" )
 {
-    const Typed p( "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+    const Typed p( "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
                    "void grow( ref B b ) { b.n = b.n + 1; }\n"
                    "i32 main() { B a = B( 1 ); grow( ref a ); return 0; }" );
 
@@ -864,7 +864,7 @@ TEST_CASE( "type_checker_lends_a_class_by_ref", "[sema][ref]" )
 // borrow, which silently took the drop flag off every conditionally-moved local.
 TEST_CASE( "type_checker_leaves_a_move_parameter_owned", "[sema][borrow]" )
 {
-    constexpr std::string_view owning = "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n";
+    constexpr std::string_view owning = "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n";
 
     SECTION( "it can be modified" )
     {
@@ -908,7 +908,7 @@ TEST_CASE( "type_checker_leaves_the_receiver_alone", "[sema][borrow]" )
 // exactly why the borrow rule is a pass of its own. Without that they would never be borrows.
 TEST_CASE( "type_checker_borrows_in_a_member_function_too", "[sema][borrow]" )
 {
-    constexpr std::string_view owning = "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n";
+    constexpr std::string_view owning = "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n";
 
     SECTION( "a constructor may read one" )
     {

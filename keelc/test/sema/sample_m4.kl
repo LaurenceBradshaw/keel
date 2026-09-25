@@ -5,7 +5,7 @@
 // old spelling for two milestones because nothing compiled it.
 class Buffer
 {
-    u64 len;
+    public u64 len;
 
     Buffer( u64 n )
     {

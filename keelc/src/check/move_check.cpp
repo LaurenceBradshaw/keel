@@ -533,7 +533,7 @@ TEST_CASE( "move_check_reports_both_ends", "[check][move]" )
 // of. Eliding it is drop elaboration's job; blaming the author for it here would be wrong.
 TEST_CASE( "move_check_says_nothing_about_drops", "[check][move]" )
 {
-    const Checked p( "class Buffer { u64 len; ~Buffer() { } };\n"
+    const Checked p( "class Buffer { public u64 len; ~Buffer() { } };\n"
                      "void sink( move Buffer b ) { }\n"
                      "i32 main() { Buffer b = Buffer { 1 }; sink( move b ); return 0; }" );
 

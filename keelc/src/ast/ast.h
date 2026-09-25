@@ -1,11 +1,20 @@
 #pragma once
 #include <initializer_list>
 #include <span>
+#include <unordered_map>
 #include <vector>
 #include "ast/node.h"
 
 namespace keel
 {
+
+// Written on a member by the parser, which always stamps one - so a node nobody stamped reads as
+// public and no caller has to ask whether access applies to it.
+enum class Access : u8
+{
+    Public,
+    Private
+};
 
 class Ast
 {
@@ -40,6 +49,11 @@ public:
     // An `enum`'s variants, past the two leading slots it skips. Asserts for the same reason.
     std::span<const Node_id> variants( Node_id id ) const;
 
+    // A member's declared access. Public for every node the parser did not stamp, which is every
+    // node that is not a member - so this is a total function and never asks what kind `id` is.
+    Access access( Node_id id ) const;
+    void   set_access( Node_id id, Access access );
+
     // The declaration's `Type_param_list`, or an invalid id when it has none. Which child holds it
     // depends on the kind - the front for an aggregate, whose members are variadic, and the fixed
     // last slot for anything function-like - and this is the one place that knows, so no caller
@@ -51,9 +65,15 @@ public:
     std::size_t node_count() const;
 
 private:
-    std::vector<Node>    nodes_;
-    std::vector<Node_id> children_; // every child of every node, back to back
-    Node_id              root_;
+    std::vector<Node>               nodes_;
+    std::vector<Node_id>            children_; // every child of every node, back to back
+    Node_id                         root_;
+    std::unordered_map<u32, Access> access_; // members only; absence means public
 };
+
+// The aggregate a member was declared in, or an invalid id for anything declared at the top level.
+// One copy rather than three: the mangler and the checker each grew their own, and access control
+// is the third caller - and the one that breaks silently if two of them disagree.
+Node_id enclosing_aggregate( const Ast& ast, Node_id member );
 
 } // namespace keel

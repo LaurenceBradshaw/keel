@@ -1291,7 +1291,7 @@ TEST_CASE( "type_checker_binds_a_ref_local_to_any_place", "[sema][binding]" )
 // is given away - which is exactly what a borrow is for.
 TEST_CASE( "type_checker_does_not_treat_a_ref_binding_as_a_transfer", "[sema][binding]" )
 {
-    constexpr std::string_view owning = "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n";
+    constexpr std::string_view owning = "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n";
 
     SECTION( "no `move` is demanded" )
     {

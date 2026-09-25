@@ -139,10 +139,13 @@ private:
     // are applied, which for a static call is the only place those can come from.
     Node_id qualifier_declaration( Node_id path ) const;
 
-    // The aggregate a member was declared in. Scanned rather than recorded: nothing else has ever
-    // needed it, because every other question about a member goes through its receiver - which is
-    // exactly what a static method does not have.
-    Node_id enclosing_aggregate( Node_id member ) const;
+    // The type the access being checked is written inside, or an invalid id in a free function.
+    // Asked of the enclosing *function*, never of a receiver: a static method has no receiver and
+    // is as much inside its type as an instance method is.
+    Node_id current_type() const;
+
+    // The shared half of the five refusals, which differ only in what they return afterwards.
+    void    report_private( Node_id at, Node_id member );
     Type_id qualifier_type( Node_id path, Node_id declaration );
     Type_id infer_static_call( Node_id id, Node_id aggregate );
 

@@ -1,0 +1,82 @@
+// PLAN D29, M7. The half of access control the sema fixture cannot show: what is *accepted*. Every
+// refusal is a diagnostic and lives beside the others in sema/errors_access_control.kl; what is left
+// here is that a type still works from the inside once its representation is hidden.
+//
+// Run rather than only compiled. Access control exists entirely in sema - it adds no node, changes
+// no layout and emits nothing - so a bug that dropped it would still produce C that compiles. Only
+// the exit code says the fields were read and written through the right object.
+
+class Counter
+{
+    i32 n;
+
+    private i32 step() const
+    {
+        return 2;
+    }
+
+    // A private static method, reached from an instance method by bare name.
+    private static i32 base()
+    {
+        return 10;
+    }
+
+    Counter( i32 start )
+    {
+        n = start;
+    }
+
+    void bump()
+    {
+        n = n + step();
+    }
+
+    i32 total() const
+    {
+        return n + base();
+    }
+};
+
+// A private constructor behind a named one, which is the shape M7 exists for: `Sealed( 3 )` is
+// refused everywhere outside, and `Sealed::of( 3 )` is how one is built.
+class Sealed
+{
+    i32 v;
+
+    private Sealed( i32 n )
+    {
+        v = n;
+    }
+
+    static Sealed of( i32 n )
+    {
+        return Sealed( n * 2 );
+    }
+
+    i32 value() const
+    {
+        return v;
+    }
+};
+
+// A struct is unchanged: its representation is its interface, so every field stays reachable.
+struct Pair
+{
+    i32 x;
+    i32 y;
+};
+
+i32 main()
+{
+    Counter c = Counter( 1 );
+
+    c.bump();
+    c.bump();
+
+    Sealed s = Sealed::of( 3 );
+
+    Pair p = Pair { 4, 5 };
+
+    // 5 + 10 + 6 + 4 + 5 = 30
+    return c.total() + s.value() + p.x + p.y;
+}

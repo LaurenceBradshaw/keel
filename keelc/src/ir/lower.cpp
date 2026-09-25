@@ -2873,7 +2873,7 @@ TEST_CASE( "lower_builds_a_conditional", "[ir][lower][cfg]" )
     // them, and drop elaboration would then drop it twice.
     SECTION( "an owning arm is moved into the result" )
     {
-        Lowered p( "class Owner { i32 t; Owner( i32 v ) { t = v; } ~Owner() { } };\n"
+        Lowered p( "class Owner { public i32 t; Owner( i32 v ) { t = v; } ~Owner() { } };\n"
                    "i32 f( bool c ) { Owner a = Owner( 1 ); Owner b = Owner( 2 ); "
                    "Owner r = c ? move a : move b; return r.t; }\ni32 main() { return 0; }" );
 
@@ -2893,7 +2893,7 @@ TEST_CASE( "lower_builds_a_conditional", "[ir][lower][cfg]" )
     // the case that reaches it: the temporary survives the statement and has to be dropped once.
     SECTION( "an owning result nothing moves out of is dropped once" )
     {
-        Lowered p( "class Owner { i32 t; Owner( i32 v ) { t = v; } ~Owner() { } };\n"
+        Lowered p( "class Owner { public i32 t; Owner( i32 v ) { t = v; } ~Owner() { } };\n"
                    "i32 f( bool c ) { Owner a = Owner( 1 ); Owner b = Owner( 2 ); "
                    "return ( c ? move a : move b ).t; }\ni32 main() { return 0; }" );
 
@@ -2914,7 +2914,7 @@ TEST_CASE( "lower_builds_a_conditional", "[ir][lower][cfg]" )
     // would leave the arm's temporary and the result holding one resource between them.
     SECTION( "an owning arm built in place is moved, not copied" )
     {
-        Lowered p( "class Owner { i32 t; Owner( i32 v ) { t = v; } ~Owner() { } };\n"
+        Lowered p( "class Owner { public i32 t; Owner( i32 v ) { t = v; } ~Owner() { } };\n"
                    "i32 f( bool c ) { Owner r = c ? Owner( 1 ) : Owner( 2 ); return r.t; }\n"
                    "i32 main() { return 0; }" );
 
@@ -4148,7 +4148,7 @@ TEST_CASE( "lower_forwards_a_ref_binding", "[ir][lower][ref]" )
 // Nothing about the parameter is owning - its local is a pointer - so no drop is elaborated for it.
 TEST_CASE( "lower_lends_a_class_by_ref", "[ir][lower][ref]" )
 {
-    Lowered p( "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+    Lowered p( "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
                "void grow( ref B b ) { b.n = b.n + 1; }\n"
                "i32 main() { B a = B( 1 ); grow( ref a ); return 0; }" );
 
@@ -4169,7 +4169,7 @@ TEST_CASE( "lower_lends_a_class_by_ref", "[ir][lower][ref]" )
 // because the difference between them is entirely what the checker permits through each.
 TEST_CASE( "lower_passes_a_bare_owning_parameter_by_address", "[ir][lower][borrow]" )
 {
-    Lowered p( "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+    Lowered p( "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
                "u64 peek( B b ) { return b.n; }\n"
                "i32 main() { B a = B( 1 ); return wrap<i32>( peek( a ) ); }" );
 
@@ -4186,7 +4186,7 @@ TEST_CASE( "lower_passes_a_bare_owning_parameter_by_address", "[ir][lower][borro
 
 TEST_CASE( "lower_borrows_at_the_call_without_moving", "[ir][lower][borrow]" )
 {
-    Lowered p( "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+    Lowered p( "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
                "u64 peek( B b ) { return b.n; }\n"
                "i32 main() { B a = B( 1 ); return wrap<i32>( peek( a ) ); }" );
 
@@ -4209,7 +4209,7 @@ TEST_CASE( "lower_borrows_at_the_call_without_moving", "[ir][lower][borrow]" )
 // and the address being taken of where it landed is also what leaves it registered for the drop.
 TEST_CASE( "lower_drops_a_borrowed_temporary", "[ir][lower][borrow]" )
 {
-    Lowered p( "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+    Lowered p( "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
                "u64 peek( B b ) { return b.n; }\n"
                "i32 main() { return wrap<i32>( peek( B( 1 ) ) ); }" );
 
@@ -4227,7 +4227,7 @@ TEST_CASE( "lower_drops_a_borrowed_temporary", "[ir][lower][borrow]" )
 // every use of the name goes through. No copy at either hop.
 TEST_CASE( "lower_forwards_a_bare_borrow", "[ir][lower][borrow]" )
 {
-    Lowered p( "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+    Lowered p( "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
                "u64 peek( B b ) { return b.n; }\n"
                "u64 forward( B b ) { return peek( b ); }\n"
                "i32 main() { B a = B( 1 ); return wrap<i32>( forward( a ) ); }" );
@@ -4246,7 +4246,7 @@ TEST_CASE( "lower_forwards_a_bare_borrow", "[ir][lower][borrow]" )
 // the type: a `move` parameter is owned, so it stays a value and the callee is what drops it.
 TEST_CASE( "lower_keeps_a_move_parameter_by_value", "[ir][lower][borrow]" )
 {
-    Lowered p( "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+    Lowered p( "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
                "void own( move B b ) { }\n"
                "i32 main() { own( move B( 1 ) ); return 0; }" );
 
@@ -4305,7 +4305,7 @@ TEST_CASE( "lower_binds_a_ref_local_to_a_field", "[ir][lower][binding]" )
 // exactly once, by the scope that declared it.
 TEST_CASE( "lower_never_drops_a_ref_binding", "[ir][lower][binding]" )
 {
-    Lowered p( "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+    Lowered p( "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
                "i32 main() { B a = B( 1 ); ref B r = a; r.n = 5; return 0; }" );
 
     INFO( p.rendered() );
@@ -4376,7 +4376,7 @@ TEST_CASE( "lower_binds_a_const_ref_local_to_an_address", "[ir][lower][constref]
 // difference between one destructor run and two. Nothing is moved and the caller still drops.
 TEST_CASE( "lower_borrows_a_class_by_const_ref", "[ir][lower][constref]" )
 {
-    Lowered p( "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+    Lowered p( "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
                "u64 peek( const ref B b ) { return b.n; }\n"
                "i32 main() { B a = B( 1 ); return wrap<i32>( peek( a ) ); }" );
 

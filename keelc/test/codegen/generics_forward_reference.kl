@@ -113,7 +113,7 @@ struct Box<T> where T : Copyable
 
 class Counted<T> where T : Copyable
 {
-    T v;
+    public T v;
 
     ~Counted()
     {

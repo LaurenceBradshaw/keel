@@ -952,7 +952,7 @@ TEST_CASE( "type_checker_refuses_const_on_a_field_for_now", "[sema][const]" )
 // was already holding. Refused until the caller emits a drop before the call.
 TEST_CASE( "type_checker_refuses_an_owning_out_parameter", "[sema][out]" )
 {
-    const Typed p( "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+    const Typed p( "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
                    "void init( out B b ) { }\ni32 main() { return 0; }" );
 
     INFO( p.rendered() );
@@ -1395,7 +1395,7 @@ TEST_CASE( "type_checker_computes_the_owning_query", "[sema][aggregates][owning]
 
     SECTION( "a class with a destructor owns; one without does not" )
     {
-        const Typed p( "class Buffer { u8* ptr; ~Buffer() { } };\n"
+        const Typed p( "class Buffer { public u8* ptr; ~Buffer() { } };\n"
                        "class Handle { u64 value; };\n"
                        "i32 main() { return 0; }" );
 
@@ -1418,7 +1418,7 @@ TEST_CASE( "type_checker_computes_the_owning_query", "[sema][aggregates][owning]
     // there is no way for it not to own.
     SECTION( "owning is transitive through a by-value member" )
     {
-        const Typed p( "class Buffer { u8* ptr; ~Buffer() { } };\n"
+        const Typed p( "class Buffer { public u8* ptr; ~Buffer() { } };\n"
                        "class Wrapper { Buffer inner; };\n"
                        "class Outer { Wrapper w; };\n"
                        "i32 main() { return 0; }" );
@@ -1432,7 +1432,7 @@ TEST_CASE( "type_checker_computes_the_owning_query", "[sema][aggregates][owning]
     // An address says nothing about who frees it, so a pointer breaks the chain.
     SECTION( "a pointer to an owning type does not own" )
     {
-        const Typed p( "class Buffer { u8* ptr; ~Buffer() { } };\n"
+        const Typed p( "class Buffer { public u8* ptr; ~Buffer() { } };\n"
                        "class Holder { Buffer* p; };\n"
                        "i32 main() { return 0; }" );
 
@@ -1456,7 +1456,7 @@ TEST_CASE( "type_checker_rejects_an_owning_member_in_a_struct", "[sema][aggregat
 {
     SECTION( "a struct holding a class with a destructor is rejected" )
     {
-        const Typed p( "class Buffer { u8* ptr; ~Buffer() { } };\n"
+        const Typed p( "class Buffer { public u8* ptr; ~Buffer() { } };\n"
                        "struct Holder { Buffer b; };\n"
                        "i32 main() { return 0; }" );
 
@@ -1467,7 +1467,7 @@ TEST_CASE( "type_checker_rejects_an_owning_member_in_a_struct", "[sema][aggregat
 
     SECTION( "transitively, through a class that only contains one" )
     {
-        const Typed p( "class Buffer { u8* ptr; ~Buffer() { } };\n"
+        const Typed p( "class Buffer { public u8* ptr; ~Buffer() { } };\n"
                        "class Wrapper { Buffer inner; };\n"
                        "struct Holder { Wrapper w; };\n"
                        "i32 main() { return 0; }" );
@@ -1479,7 +1479,7 @@ TEST_CASE( "type_checker_rejects_an_owning_member_in_a_struct", "[sema][aggregat
 
     SECTION( "a pointer to one is fine - it owns nothing" )
     {
-        const Typed p( "class Buffer { u8* ptr; ~Buffer() { } };\n"
+        const Typed p( "class Buffer { public u8* ptr; ~Buffer() { } };\n"
                        "struct Holder { Buffer* p; };\n"
                        "i32 main() { return 0; }" );
 
@@ -1493,7 +1493,7 @@ TEST_CASE( "type_checker_rejects_an_owning_member_in_a_struct", "[sema][aggregat
     // exist, so it is exactly the path with no other coverage.
     SECTION( "a destructor is not counted as a field by a struct literal" )
     {
-        const Typed p( "class Buffer { u8* ptr; ~Buffer() { } };\n"
+        const Typed p( "class Buffer { public u8* ptr; ~Buffer() { } };\n"
                        "i32 main() { Buffer b = Buffer { nullptr }; return 0; }" );
 
         INFO( p.rendered() );
@@ -1502,7 +1502,7 @@ TEST_CASE( "type_checker_rejects_an_owning_member_in_a_struct", "[sema][aggregat
 
     SECTION( "and a genuinely wrong count still reports the field count, not the member count" )
     {
-        const Typed p( "class Buffer { u8* ptr; u64 len; ~Buffer() { } };\n"
+        const Typed p( "class Buffer { public u8* ptr; public u64 len; ~Buffer() { } };\n"
                        "i32 main() { Buffer b = Buffer { nullptr }; return 0; }" );
 
         INFO( p.rendered() );
@@ -1512,7 +1512,7 @@ TEST_CASE( "type_checker_rejects_an_owning_member_in_a_struct", "[sema][aggregat
 
     SECTION( "a class holding one is fine" )
     {
-        const Typed p( "class Buffer { u8* ptr; ~Buffer() { } };\n"
+        const Typed p( "class Buffer { public u8* ptr; ~Buffer() { } };\n"
                        "class Wrapper { Buffer inner; };\n"
                        "i32 main() { return 0; }" );
 
@@ -1534,7 +1534,7 @@ TEST_CASE( "type_checker_rejects_an_owning_member_in_a_struct", "[sema][aggregat
     // are the same decision to reverse rather than a second one.
     SECTION( "a struct with a destructor of its own is reported once" )
     {
-        const Typed p( "class Buffer { u8* ptr; ~Buffer() { } };\n"
+        const Typed p( "class Buffer { public u8* ptr; ~Buffer() { } };\n"
                        "struct Holder { Buffer b; ~Holder() { } };\n"
                        "i32 main() { return 0; }" );
 
@@ -1545,7 +1545,7 @@ TEST_CASE( "type_checker_rejects_an_owning_member_in_a_struct", "[sema][aggregat
     // Every field is reported, because each is a separate place the author has to change.
     SECTION( "two owning fields are two diagnostics" )
     {
-        const Typed p( "class Buffer { u8* ptr; ~Buffer() { } };\n"
+        const Typed p( "class Buffer { public u8* ptr; ~Buffer() { } };\n"
                        "struct Holder { Buffer a; Buffer b; };\n"
                        "i32 main() { return 0; }" );
 
@@ -1684,7 +1684,7 @@ TEST_CASE( "type_checker_answers_ownership_per_instantiation", "[sema][generic][
                                    "    Buf() { unsafe { p = alloc<i32>(); } }\n"
                                    "    ~Buf() { unsafe { free( p ); } }\n"
                                    "};\n"
-                                   "class Box<T> { T v; };\n";
+                                   "class Box<T> { public T v; };\n";
 
     SECTION( "an argument that owns something makes the instance own" )
     {
@@ -1748,7 +1748,7 @@ TEST_CASE( "type_checker_answers_ownership_per_instantiation", "[sema][generic][
 // Until that exists, an owning payload would leak or double-free, so it is refused.
 TEST_CASE( "type_checker_refuses_an_owning_payload_for_now", "[sema][payload]" )
 {
-    const Typed p( "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+    const Typed p( "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
                    "enum Holder { Full( B value ), Empty };\ni32 main() { return 0; }" );
 
     INFO( p.rendered() );

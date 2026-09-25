@@ -7,7 +7,7 @@ u64 freed = 0;
 
 class B
 {
-    u64 n;
+    public u64 n;
 
     B( u64 x )
     {

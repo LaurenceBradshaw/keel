@@ -26,7 +26,7 @@ class Owned
 // A parameter may shadow the field it initialises; `this.id` disambiguates.
 class Shadowed
 {
-    i32 id;
+    public i32 id;
 
     Shadowed( i32 id )
     {

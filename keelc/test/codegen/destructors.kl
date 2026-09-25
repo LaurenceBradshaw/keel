@@ -11,8 +11,8 @@ void release( u8* p )
 // The plain shape: a field read, passed to a free function.
 class Buffer
 {
-    u8* ptr;
-    u64 len;
+    public u8* ptr;
+    public u64 len;
 
     ~Buffer()
     {
@@ -58,7 +58,7 @@ class Guarded
 // A class need not have one, and a struct may never have one.
 class Handle
 {
-    u64 value;
+    public u64 value;
 };
 
 struct Point
@@ -71,7 +71,7 @@ struct Point
 // which is what makes drop elaboration expand rather than call a `~Wrapper` that does not exist.
 class Wrapper
 {
-    Buffer inner;
+    public Buffer inner;
 };
 
 // Exactly once, on every path out - including the early one.

@@ -940,6 +940,24 @@ Node_id Parser::parse_aggregate_decl()
             continue;
         }
 
+        // Consumed before the `static` triage below for the reason that one is consumed before the
+        // type: left in place either would be read as a type name and the member would parse as a
+        // field called `public`.
+        const Span access_span   = peek().span;
+        const bool wrote_public  = match_keyword( Keyword::Public );
+        const bool wrote_private = !wrote_public && match_keyword( Keyword::Private );
+        const bool wrote_access  = wrote_public || wrote_private;
+
+        // Tested on what was written rather than on the resulting access, which every member has.
+        if( wrote_access && !is_class )
+        {
+            error_at(
+                access_span,
+                "a `struct` has no private members",
+                "write `class` instead, which is the kind that hides what it holds"
+            );
+        }
+
         // Consumed before the triage below, which starts by looking for a type name: left in place
         // it would be read as one, and the member would parse as a field called `static`.
         const Span static_span = peek().span;
@@ -953,6 +971,12 @@ Node_id Parser::parse_aggregate_decl()
         if( is_static && ( is_destructor || is_constructor ) )
         {
             error_at( static_span, fmt::format( "a {} cannot be `static`", is_destructor ? "destructor" : "constructor" ) );
+        }
+
+        // Same test, same reason: every destructor has an access, and almost none were written.
+        if( is_destructor && wrote_access )
+        {
+            error_at( access_span, "a destructor cannot be `public` or `private`", "it is never called by name" );
         }
 
         // A method is a type, a name and a parameter list - which is what scan_type_and_name finds,
@@ -977,6 +1001,18 @@ Node_id Parser::parse_aggregate_decl()
             : is_constructor ? parse_constructor_decl( name, type_params )
             : is_method      ? parse_method_decl( name, type_params, is_static )
                              : parse_field_decl()
+        );
+
+        // A `class` hides its representation, and its representation is its fields: a method, a
+        // constructor and a destructor are how one is used rather than what it holds, so the
+        // default reaches fields only. Decided after the flip was written the other way and every
+        // getter in the test suite stopped compiling - see PLAN D29.
+        const bool private_by_default = is_class && !is_method && !is_constructor && !is_destructor;
+
+        ast_.set_access(
+            members.back(),
+            wrote_access ? ( wrote_private ? Access::Private : Access::Public )
+                         : ( private_by_default ? Access::Private : Access::Public )
         );
 
         if( pos_ == before )
@@ -7147,6 +7183,127 @@ TEST_CASE( "parser_parses_a_method", "[parse]" )
         INFO( p.errors() );
         REQUIRE_FALSE( p.has_errors() );
         REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::Method_decl ).is_valid() );
+    }
+}
+
+// PLAN D29, M7. A `class` hides its representation, so its fields are private unless a member says
+// otherwise - and its methods are not, because they are the interface rather than the representation.
+// `public` and `private` are written on the member rather than as a section label: a label is parser
+// state that outlives the declaration it applies to, and every other marker here - `static`, `const`,
+// `ref` - is written on the thing it changes.
+TEST_CASE( "parser_reads_a_member_s_access", "[parse][access]" )
+{
+    // A field of a class is what the default is about, and it is the only thing the default reaches.
+    SECTION( "a class hides its fields and not its methods" )
+    {
+        const Parsed p( "class C { i32 x; i32 get() const { return x; } };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Class_decl );
+
+        REQUIRE( p.ast().access( find_first( p.ast(), decl, Node_kind::Field_decl ) ) == Access::Private );
+        REQUIRE( p.ast().access( find_first( p.ast(), decl, Node_kind::Method_decl ) ) == Access::Public );
+    }
+
+    // A constructor is how a type is used rather than what it holds, so it follows the methods.
+    SECTION( "and neither its constructor nor its destructor" )
+    {
+        const Parsed p( "class C { i32 x; C( i32 v ) { x = v; } ~C() { } };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Class_decl );
+
+        REQUIRE( p.ast().access( find_first( p.ast(), decl, Node_kind::Constructor_decl ) ) == Access::Public );
+        REQUIRE( p.ast().access( find_first( p.ast(), decl, Node_kind::Destructor_decl ) ) == Access::Public );
+    }
+
+    SECTION( "a written marker overrides the default in both directions" )
+    {
+        const Parsed p( "class C { public i32 x; private i32 hidden() { return x; } };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Class_decl );
+
+        REQUIRE( p.ast().access( find_first( p.ast(), decl, Node_kind::Field_decl ) ) == Access::Public );
+        REQUIRE( p.ast().access( find_first( p.ast(), decl, Node_kind::Method_decl ) ) == Access::Private );
+    }
+
+    // The marker is consumed before the triage that looks for a type name, which is the same reason
+    // `static` is: left in place it would be read as one and the member would parse as a field.
+    SECTION( "the marker is not read as the member's type" )
+    {
+        const Parsed p( "class C { public i32 x; };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id decl  = find_first( p.ast(), p.root(), Node_kind::Class_decl );
+        const Node_id field = find_first( p.ast(), decl, Node_kind::Field_decl );
+
+        REQUIRE( p.ast().members( decl ).size() == 1 );
+        REQUIRE( p.text( p.child( field, 0 ) ) == "i32" ); // the annotation, not the marker
+    }
+
+    // Both markers stack with `static`, which is consumed after them.
+    SECTION( "and it stacks with `static`" )
+    {
+        const Parsed p( "class C { private static i32 make() { return 1; } };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id decl   = find_first( p.ast(), p.root(), Node_kind::Class_decl );
+        const Node_id method = find_first( p.ast(), decl, Node_kind::Method_decl );
+
+        REQUIRE( p.ast().access( method ) == Access::Private );
+        REQUIRE( p.children( p.child( method, 1 ) ).empty() ); // no receiver, so still static
+    }
+
+    // D29: a struct is a type whose representation *is* its interface, so there is nothing for a
+    // marker to say. Refused on the written marker rather than on the resulting access, which every
+    // member of every aggregate has.
+    SECTION( "a struct refuses a marker outright" )
+    {
+        const Parsed p( "struct P { private i32 x; };" );
+
+        INFO( p.errors() );
+        REQUIRE( p.has_errors() );
+    }
+
+    SECTION( "including `public`, which would otherwise look harmless" )
+    {
+        const Parsed p( "struct P { public i32 x; };" );
+
+        INFO( p.errors() );
+        REQUIRE( p.has_errors() );
+    }
+
+    // A struct's members still parse, and still carry the access every member carries.
+    SECTION( "and a struct with no marker is quiet" )
+    {
+        const Parsed p( "struct P { i32 x; i32 y; };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Struct_decl );
+
+        REQUIRE( p.ast().access( find_first( p.ast(), decl, Node_kind::Field_decl ) ) == Access::Public );
+    }
+
+    // A destructor is never named, so a marker on one says nothing and is more likely a mistake.
+    SECTION( "a destructor refuses a marker" )
+    {
+        const Parsed p( "class C { i32 x; private ~C() { } };" );
+
+        INFO( p.errors() );
+        REQUIRE( p.has_errors() );
     }
 }
 

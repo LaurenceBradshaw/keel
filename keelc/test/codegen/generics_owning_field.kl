@@ -25,7 +25,7 @@ class Buf
 // the argument that makes this fixture interesting.
 class Box<T>
 {
-    T v;
+    public T v;
 };
 
 // The drop has to be emitted on the early path as well as the fall-through one.

@@ -267,12 +267,37 @@ Type_id Expressions::infer_call( Node_id id )
         // `Buffer( 16 )` names a type, not a function: the arguments belong to its constructors,
         // but the result is the type itself - a constructor returns nothing and writes through
         // `this`. They share the type's name rather than a scope, so they have no chain to walk.
+        std::size_t hidden = 0;
+
         for( const Node_id member : ast_.members( decl ) )
         {
-            if( ast_.kind( member ) == Node_kind::Constructor_decl )
+            if( ast_.kind( member ) != Node_kind::Constructor_decl )
+            {
+                continue;
+            }
+
+            // Filtered rather than refused as a set: overloading means one constructor may be
+            // reachable while its sibling is not, and hiding the ordinary one behind a named
+            // constructor is the whole reason a type would write `private` on it.
+            if( is_visible_from( ast_, member, current_type() ) )
             {
                 candidates.push_back( member );
             }
+            else
+            {
+                ++hidden;
+            }
+        }
+
+        if( candidates.empty() && hidden != 0 )
+        {
+            reporter_.error_at(
+                ast_.span( callee ),
+                fmt::format( "`{}`'s constructor is private", name ),
+                "build it through one of its own static methods instead"
+            );
+            type_the_arguments_anyway();
+            return types_.record( id, table_.builtin( Type_kind::Error ) );
         }
 
         if( candidates.empty() )
@@ -541,6 +566,18 @@ Type_id Expressions::infer_method_call( Node_id id )
         return types_.record( id, table_.builtin( Type_kind::Error ) );
     }
 
+    if( !is_visible_from( ast_, first, current_type() ) )
+    {
+        report_private( callee, first );
+
+        for( const Node_id argument : ast_.children( ast_.child( id, 1 ) ) )
+        {
+            infer( argument );
+        }
+
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
     if( !first.is_valid() )
     {
         // Check if a field of the same name exists, which is a common mistake when a method is expected. The
@@ -708,7 +745,7 @@ Type_id Expressions::infer_implicit_method_call( Node_id id, Node_id method )
     // question, which asks about an object neither of them touches.
     if( is_static_method( ast_, method ) )
     {
-        const Node_id owner = enclosing_aggregate( method );
+        const Node_id owner = enclosing_aggregate( ast_, method );
 
         // The enclosing instance when there is one, so a sibling of `Box<i32>` is checked in terms
         // of `i32` rather than of `T`. Its open form otherwise, which is all a static body knows.
@@ -921,25 +958,24 @@ Type_id Expressions::infer_unary( Node_id id )
 // checked against its fields exactly as a call's are checked against a parameter list. The result
 // is the *enum*, never the payload - a constructed variant is a Shape, and which one it is is a
 // question only `switch` may ask.
-Node_id Expressions::enclosing_aggregate( Node_id member ) const
+Node_id Expressions::current_type() const
 {
-    for( const Node_id decl : ast_.children( ast_.root() ) )
-    {
-        if( !is_aggregate( ast_.kind( decl ) ) )
-        {
-            continue;
-        }
+    return enclosing_aggregate( ast_, current_function_ );
+}
 
-        for( const Node_id candidate : ast_.members( decl ) )
-        {
-            if( candidate == member )
-            {
-                return decl;
-            }
-        }
-    }
+void Expressions::report_private( Node_id at, Node_id member )
+{
+    const Node_id owner = enclosing_aggregate( ast_, member );
 
-    return Node_id {};
+    reporter_.error_at(
+        ast_.span( at ),
+        fmt::format(
+            "`{}` is private to `{}`",
+            interner_.text( Symbol_id { ast_.aux( member ) } ),
+            interner_.text( Symbol_id { ast_.aux( owner ) } )
+        ),
+        "only that type's own members may name it"
+    );
 }
 
 // The declaration a path's qualifier names, or nothing when the qualifier is not a name at all.
@@ -1044,6 +1080,13 @@ Type_id Expressions::infer_static_call( Node_id id, Node_id aggregate )
             fmt::format( "`{}` needs an object", interner_.text( name ) ),
             fmt::format( "call it as `value.{}( ... )`", interner_.text( name ) )
         );
+
+        return refuse();
+    }
+
+    if( !is_visible_from( ast_, method, current_type() ) )
+    {
+        report_private( path, method );
 
         return refuse();
     }
@@ -1364,6 +1407,13 @@ Type_id Expressions::infer_field( Node_id id )
         return types_.record( id, table_.builtin( Type_kind::Error ) );
     }
 
+    if( !is_visible_from( ast_, decl, current_type() ) )
+    {
+        report_private( id, decl );
+
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
     return types_.record( id, aggregates_.field_type( object_type, decl ) );
 }
 
@@ -1448,6 +1498,33 @@ Type_id Expressions::infer_struct_literal( Node_id id )
     }
 
     const std::string_view struct_name = interner_.text( Symbol_id { ast_.aux( decl ) } );
+
+    // Every field is written by a literal, named or not, so one private field refuses the whole
+    // spelling rather than the one initialiser that reaches it. The first is reported and the rest
+    // left alone: a class hides all of its fields at once, so naming each would say one thing many
+    // times.
+    for( const Node_id field : fields )
+    {
+        if( !is_visible_from( ast_, field, current_type() ) )
+        {
+            reporter_.error_at(
+                ast_.span( id ),
+                fmt::format(
+                    "`{}` keeps `{}` private, so it cannot be built from a literal",
+                    struct_name,
+                    interner_.text( Symbol_id { ast_.aux( field ) } )
+                ),
+                "give it a constructor, and build it by calling that"
+            );
+
+            for( const Node_id init : initialisers )
+            {
+                infer( ast_.child( init, 0 ) );
+            }
+
+            return types_.record( id, table_.builtin( Type_kind::Error ) );
+        }
+    }
 
     // Which instance this literal builds. The declaration test is what keeps a wrong expectation
     // out: `Box<i32> x = Plain { 1 };` falls through and is refused by the ordinary mismatch below,
@@ -2056,7 +2133,7 @@ TEST_CASE( "type_checker_types_conditional_expressions", "[sema][types]" )
 
     SECTION( "a conditional over owning values is typed" )
     {
-        const Typed p( "class Owner { i32 t; Owner( i32 v ) { t = v; } ~Owner() { } };\n"
+        const Typed p( "class Owner { public i32 t; Owner( i32 v ) { t = v; } ~Owner() { } };\n"
                        "i32 main() { Owner a = Owner( 1 ); Owner b = Owner( 2 ); "
                        "auto c = true ? move a : move b; return c.t; }\n" );
 
@@ -2928,7 +3005,7 @@ TEST_CASE( "type_checker_rejects_a_literal_for_a_constructed_class", "[sema][agg
 
     SECTION( "and accepted when it has none" )
     {
-        const Typed p( "class Handle { u64 value; };\ni32 main() { Handle h = Handle { 1 }; return 0; }" );
+        const Typed p( "class Handle { public u64 value; };\ni32 main() { Handle h = Handle { 1 }; return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
@@ -3021,7 +3098,7 @@ TEST_CASE( "type_checker_types_a_move", "[sema][move]" )
 
     SECTION( "an owning type can be moved" )
     {
-        const Typed p( "class Buffer { u64 len; ~Buffer() { } };\n"
+        const Typed p( "class Buffer { public u64 len; ~Buffer() { } };\n"
                        "void f( move Buffer b ) { }\n"
                        "i32 main() { Buffer b = Buffer { 1 }; f( move b ); return 0; }" );
 
@@ -4012,7 +4089,7 @@ TEST_CASE( "type_checker_reports_a_bad_method_call", "[sema][method]" )
     // never called at all. Matching either by name here would let `p.P()` resolve.
     SECTION( "a constructor is not reachable by name" )
     {
-        const Typed p( "class B { u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+        const Typed p( "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
                        "i32 main() { B b = B( 1 ); b.B( 2 ); return 0; }" );
 
         INFO( p.rendered() );
@@ -4026,7 +4103,7 @@ TEST_CASE( "type_checker_reports_a_bad_method_call", "[sema][method]" )
 // refuses this too, each with its own message.
 TEST_CASE( "type_checker_enforces_a_const_method", "[sema][method]" )
 {
-    constexpr std::string_view owning = "class B { u64 n; B( u64 x ) { n = x; } ~B() { }"
+    constexpr std::string_view owning = "class B { public u64 n; B( u64 x ) { n = x; } ~B() { }"
                                         " u64 read() const { return n; } void bump() { n = n + 1; } };\n";
 
     SECTION( "a mutating method needs a writable receiver" )
@@ -4182,9 +4259,153 @@ TEST_CASE( "type_checker_returns_a_reference_into_the_object", "[sema][method]" 
 // D29 splits the two kinds at trivial copyability, not at what they may have - so a `class` gets
 // methods on the same machinery a `struct` does, alongside the constructor and destructor it may
 // also have. Nothing here is a second implementation of anything; this is the case that says so.
+// PLAN D29, M7. Visibility is one comparison against the aggregate the access was written inside,
+// and the cases that matter are the ones where something *other* than the owning type is asking:
+// a free function, and another class. The second is what a predicate that only asked "am I inside
+// some aggregate" would let through, which is how this was first written.
+TEST_CASE( "type_checker_hides_a_private_member", "[sema][access]" )
+{
+    constexpr std::string_view account = "class Account\n"
+                                         "{\n"
+                                         "    i32 balance;\n"
+                                         "    Account( i32 n ) { balance = n; }\n"
+                                         "    private i32 secret() const { return balance; }\n"
+                                         "    private static i32 rate() { return 3; }\n"
+                                         "    i32 report() const { return balance + secret() + rate(); }\n"
+                                         "};\n";
+
+    // The half that must keep working: a member of the type sees everything the type declares,
+    // through a bare name and through `this` alike.
+    SECTION( "its own members see it" )
+    {
+        const Typed p( std::string( account ) + "i32 main() { Account a = Account( 1 ); return a.report(); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a free function does not" )
+    {
+        const Typed p(
+            std::string( account ) + "i32 f( const ref Account a ) { return a.balance; }\ni32 main() { return 0; }"
+        );
+
+        REQUIRE( p.errors() == 1 );
+    }
+
+    // The case a predicate that asks only "is the caller inside a type" answers wrongly: `Snooper`
+    // is an aggregate, so an enclosing-aggregate test passes and the access is allowed.
+    SECTION( "and neither does another class" )
+    {
+        const Typed p(
+            std::string( account ) + "class Snooper\n"
+                                     "{\n"
+                                     "    public i32 seen;\n"
+                                     "    i32 peek( const ref Account a ) const { return a.balance; }\n"
+                                     "};\n"
+                                     "i32 main() { return 0; }"
+        );
+
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "a write is refused as well as a read" )
+    {
+        const Typed p( std::string( account ) + "void f( ref Account a ) { a.balance = 1; }\ni32 main() { return 0; }" );
+
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "a private method is refused from outside" )
+    {
+        const Typed p(
+            std::string( account ) + "i32 f( const ref Account a ) { return a.secret(); }\ni32 main() { return 0; }"
+        );
+
+        REQUIRE( p.errors() == 1 );
+    }
+
+    // A static method has no receiver, so it is inside its type by declaration rather than by
+    // parameter - which is the whole reason the question is asked of the enclosing function.
+    SECTION( "a private static method is refused from outside" )
+    {
+        const Typed p( std::string( account ) + "i32 f() { return Account::rate(); }\ni32 main() { return 0; }" );
+
+        REQUIRE( p.errors() == 1 );
+    }
+
+    // A struct has no private members, so nothing here may start refusing one.
+    SECTION( "a struct is untouched" )
+    {
+        const Typed p( "struct P { i32 x; };\ni32 f( const ref P p ) { return p.x; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// The two spellings that build a type, which are where hiding the representation actually pays:
+// a named constructor is only worth writing if the ordinary one can be taken away.
+TEST_CASE( "type_checker_hides_a_private_constructor", "[sema][access]" )
+{
+    constexpr std::string_view sealed = "class Sealed\n"
+                                        "{\n"
+                                        "    i32 v;\n"
+                                        "    private Sealed( i32 n ) { v = n; }\n"
+                                        "    static Sealed of( i32 n ) { return Sealed( n ); }\n"
+                                        "};\n";
+
+    SECTION( "its own static method still calls it" )
+    {
+        const Typed p( std::string( sealed ) + "i32 main() { Sealed s = Sealed::of( 1 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // The message is asserted rather than only the count: with the visibility branch gone this
+    // still reports one error - "has no constructor" - which is true of a type that has one and
+    // hides it only in the sense that the author cannot see it.
+    SECTION( "and nothing outside does" )
+    {
+        const Typed p( std::string( sealed ) + "i32 main() { Sealed s = Sealed( 1 ); return 0; }" );
+
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "constructor is private" ) != std::string::npos );
+    }
+
+    // Filtered rather than refused as a set: one constructor may be reachable while its sibling is
+    // not, and taking the whole overload set away would be a different rule.
+    SECTION( "a public overload beside a private one is still reachable" )
+    {
+        const Typed p( "class C { i32 v; private C( i32 n ) { v = n; } C( f64 n ) { v = 0; } };\n"
+                       "i32 main() { C c = C( 1.0 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // A class with no constructor at all: every field is private by default, so the literal
+    // spelling has nothing left it may write.
+    SECTION( "a literal cannot reach a private field" )
+    {
+        const Typed p( "class Plain { i32 x; };\ni32 main() { Plain p = Plain { 1 }; return 0; }" );
+
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "and can when the field is public" )
+    {
+        const Typed p( "class Plain { public i32 x; };\ni32 main() { Plain p = Plain { 1 }; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
 TEST_CASE( "type_checker_gives_a_class_methods_too", "[sema][method]" )
 {
-    constexpr std::string_view owned = "class B { u64 n; B( u64 x ) { n = x; } ~B() { }"
+    constexpr std::string_view owned = "class B { public u64 n; B( u64 x ) { n = x; } ~B() { }"
                                        " u64 read() const { return n; }"
                                        " void add( u64 by ) { n = n + by; }"
                                        " void twice( u64 by ) { add( by ); add( by ); } };\n";

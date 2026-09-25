@@ -65,7 +65,7 @@ i32 destroyed = 0;
 
 class Owned
 {
-    i32 tag;
+    public i32 tag;
 
     Owned( i32 t )
     {
@@ -92,7 +92,7 @@ i32 by_transfer( move Owned a )
 
 class Two
 {
-    i32 x;
+    public i32 x;
 
     Two( i32 v )
     {

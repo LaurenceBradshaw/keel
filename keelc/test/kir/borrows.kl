@@ -3,7 +3,7 @@
 // because what separates them is entirely what the checker permits through each.
 class B
 {
-    u64 n;
+    public u64 n;
 
     B( u64 x )
     {

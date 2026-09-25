@@ -80,7 +80,7 @@ const ref i32 looks( ref i32 a )
 
 class B
 {
-    u64 n;
+    public u64 n;
 
     B( u64 x )
     {

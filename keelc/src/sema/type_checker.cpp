@@ -230,6 +230,21 @@ bool is_extern( const Ast& ast, Node_id decl )
     return ast.kind( decl ) == Node_kind::Function_decl && !ast.child( decl, 2 ).is_valid();
 }
 
+// Visibility is one comparison, and `from` is an aggregate declaration rather than the function or
+// the receiver the access was written in: asking anything else forces every caller to convert, and
+// the conversion is where the two halves stop meaning the same thing.
+//
+// An invalid `from` is a free function, which is outside every type and so sees nothing private.
+bool is_visible_from( const Ast& ast, Node_id member, Node_id from )
+{
+    if( !member.is_valid() || ast.access( member ) != Access::Private )
+    {
+        return true;
+    }
+
+    return from.is_valid() && enclosing_aggregate( ast, member ) == from;
+}
+
 // Whether parameter 0 is the synthesised `this`. Asked of the parameter rather than of the node
 // kind, because three kinds have a receiver and two do not, and M7 made the second group hold both
 // a free function and a member. `this` is a keyword, so no written parameter can carry its name and

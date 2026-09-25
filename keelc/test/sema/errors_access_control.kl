@@ -1,0 +1,99 @@
+// PLAN D29, M7. A `class` is a type whose interface hides its representation: its fields are
+// private unless a member says otherwise, and its methods, constructors and destructors are not -
+// they are how one is used rather than what it holds. Every refusal below is about a *qualified*
+// access, because a bare name that reaches a member is resolved inside that member's own type and
+// so is always visible.
+
+class Account
+{
+    i32 balance;
+
+    private i32 secret() const
+    {
+        return balance;
+    }
+
+    private static i32 rate()
+    {
+        return 3;
+    }
+
+    // Its own members see everything, which is the half that must keep working.
+    i32 report() const
+    {
+        return balance + secret() + rate();
+    }
+};
+
+// A type with only a private constructor, which is the shape a named constructor exists for.
+class Sealed
+{
+    i32 v;
+
+    private Sealed( i32 n )
+    {
+        v = n;
+    }
+
+    static Sealed make( i32 n )
+    {
+        return Sealed( n );
+    }
+};
+
+// A class with no constructor at all: every field is private by default, so the literal spelling
+// has nothing left to write.
+class Plain
+{
+    i32 x;
+};
+
+// Another type is as much an outsider as a free function is - visibility is per type, not per file.
+class Snooper
+{
+    public i32 seen;
+
+    i32 peek( const ref Account a ) const
+    {
+        return a.balance;
+    }
+};
+
+i32 read_a_private_field( const ref Account a )
+{
+    return a.balance;
+}
+
+void write_a_private_field( ref Account a )
+{
+    a.balance = 1;
+}
+
+i32 call_a_private_method( const ref Account a )
+{
+    return a.secret();
+}
+
+i32 call_a_private_static_method()
+{
+    return Account::rate();
+}
+
+i32 call_a_private_constructor()
+{
+    Sealed s = Sealed( 1 );
+
+    return 0;
+}
+
+i32 build_from_a_literal()
+{
+    Plain p = Plain { 1 };
+
+    return p.x;
+}
+
+i32 main()
+{
+    return 0;
+}

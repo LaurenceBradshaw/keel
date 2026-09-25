@@ -1,0 +1,159 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Counter;
+struct kl__Sealed;
+struct kl__Pair;
+
+struct kl__Counter
+{
+    int32_t kl_n_1;
+};
+
+struct kl__Sealed
+{
+    int32_t kl_v_59;
+};
+
+struct kl__Pair
+{
+    int32_t kl_x_96;
+    int32_t kl_y_98;
+};
+
+int32_t kl__step__S7Counter( struct kl__Counter* );
+int32_t kl__base__S7Counter( void );
+void kl__Counter__R7Counter_3i32__ctor( struct kl__Counter*, int32_t );
+void kl__bump__S7Counter( struct kl__Counter* );
+int32_t kl__total__S7Counter( struct kl__Counter* );
+void kl__Sealed__R6Sealed_3i32__ctor( struct kl__Sealed*, int32_t );
+struct kl__Sealed kl__of__S6Sealed_3i32( int32_t );
+int32_t kl__value__S6Sealed( struct kl__Sealed* );
+int32_t kl__main__( void );
+
+int32_t kl__step__S7Counter( struct kl__Counter* kl_this_1 )
+{
+    int32_t kl_t0;
+#line 15 "codegen/access_control.kl"
+    kl_t0 = 2;
+    return kl_t0;
+}
+
+int32_t kl__base__S7Counter( void )
+{
+    int32_t kl_t0;
+#line 21 "codegen/access_control.kl"
+    kl_t0 = 10;
+    return kl_t0;
+}
+
+void kl__Counter__R7Counter_3i32__ctor( struct kl__Counter* kl_this_1, int32_t kl_start_2 )
+{
+#line 26 "codegen/access_control.kl"
+    ( *kl_this_1 ).kl_n_1 = kl_start_2;
+    return;
+}
+
+void kl__bump__S7Counter( struct kl__Counter* kl_this_1 )
+{
+    int32_t kl_t2;
+    int32_t kl_t3;
+#line 31 "codegen/access_control.kl"
+    kl_t2 = kl__step__S7Counter( kl_this_1 );
+    kl_t3 = ( *kl_this_1 ).kl_n_1 + kl_t2;
+    ( *kl_this_1 ).kl_n_1 = kl_t3;
+    return;
+}
+
+int32_t kl__total__S7Counter( struct kl__Counter* kl_this_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t2;
+    int32_t kl_t3;
+#line 36 "codegen/access_control.kl"
+    kl_t2 = kl__base__S7Counter(  );
+    kl_t3 = ( *kl_this_1 ).kl_n_1 + kl_t2;
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+void kl__Sealed__R6Sealed_3i32__ctor( struct kl__Sealed* kl_this_1, int32_t kl_n_2 )
+{
+#line 48 "codegen/access_control.kl"
+    ( *kl_this_1 ).kl_v_59 = kl_n_2;
+    return;
+}
+
+struct kl__Sealed kl__of__S6Sealed_3i32( int32_t kl_n_1 )
+{
+    struct kl__Sealed kl_t0;
+    struct kl__Sealed kl_t2;
+    struct kl__Sealed* kl_t3;
+    int32_t kl_t4;
+#line 53 "codegen/access_control.kl"
+    kl_t3 = &kl_t2;
+    kl_t4 = kl_n_1 * 2;
+    kl__Sealed__R6Sealed_3i32__ctor( kl_t3, kl_t4 );
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+int32_t kl__value__S6Sealed( struct kl__Sealed* kl_this_1 )
+{
+    int32_t kl_t0;
+#line 58 "codegen/access_control.kl"
+    kl_t0 = ( *kl_this_1 ).kl_v_59;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__Counter kl_c_1;
+    struct kl__Counter* kl_t2;
+    struct kl__Counter* kl_t4;
+    struct kl__Counter* kl_t6;
+    struct kl__Sealed kl_s_8;
+    struct kl__Sealed kl_t9;
+    struct kl__Pair kl_p_10;
+    struct kl__Pair kl_t11;
+    struct kl__Counter* kl_t12;
+    int32_t kl_t13;
+    struct kl__Sealed* kl_t14;
+    int32_t kl_t15;
+    int32_t kl_t16;
+    int32_t kl_t17;
+    int32_t kl_t18;
+#line 71 "codegen/access_control.kl"
+    kl_t2 = &kl_c_1;
+    kl__Counter__R7Counter_3i32__ctor( kl_t2, 1 );
+#line 73 "codegen/access_control.kl"
+    kl_t4 = &kl_c_1;
+    kl__bump__S7Counter( kl_t4 );
+#line 74 "codegen/access_control.kl"
+    kl_t6 = &kl_c_1;
+    kl__bump__S7Counter( kl_t6 );
+#line 76 "codegen/access_control.kl"
+    kl_t9 = kl__of__S6Sealed_3i32( 3 );
+    kl_s_8 = kl_t9;
+#line 78 "codegen/access_control.kl"
+    kl_t11.kl_x_96 = 4;
+    kl_t11.kl_y_98 = 5;
+    kl_p_10 = kl_t11;
+#line 81 "codegen/access_control.kl"
+    kl_t12 = &kl_c_1;
+    kl_t13 = kl__total__S7Counter( kl_t12 );
+    kl_t14 = &kl_s_8;
+    kl_t15 = kl__value__S6Sealed( kl_t14 );
+    kl_t16 = kl_t13 + kl_t15;
+    kl_t17 = kl_t16 + kl_p_10.kl_x_96;
+    kl_t18 = kl_t17 + kl_p_10.kl_y_98;
+    kl_t0 = kl_t18;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

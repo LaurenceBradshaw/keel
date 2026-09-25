@@ -43,30 +43,6 @@ std::vector<Mangled_parameter> mangled_parameters( const Ast& ast, const Types& 
     return params;
 }
 
-// The aggregate a member was declared in. A method reads its own from parameter 0 and never needs
-// this; M7's static method has no parameter 0, and the category tag has to name the type all the
-// same - it is what tells a named constructor from a free function of one name and one signature.
-Node_id enclosing_aggregate( const Ast& ast, Node_id member )
-{
-    for( const Node_id decl : ast.children( ast.root() ) )
-    {
-        if( !is_aggregate( ast.kind( decl ) ) )
-        {
-            continue;
-        }
-
-        for( const Node_id candidate : ast.members( decl ) )
-        {
-            if( candidate == member )
-            {
-                return decl;
-            }
-        }
-    }
-
-    return Node_id {};
-}
-
 // The declaration's type parameters against this instance's arguments. The same map the worklist
 // builds when it emits the instance - written again here because a symbol is computed from the
 // declaration and must come back through the instance, like everything else that reaches that way.

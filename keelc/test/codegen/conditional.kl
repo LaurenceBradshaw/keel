@@ -18,7 +18,7 @@ i32 drops;
 
 class Owner
 {
-    i32 tag;
+    public i32 tag;
 
     Owner( i32 t )
     {
