@@ -226,7 +226,7 @@ Lowering::Lowering(
             // The parser puts the receiver first, and it is what a bare field name is reached
             // through. Captured from the walk rather than assumed to be local 1, so it survives
             // anything that adds a local before this runs.
-            if( !receiver_.is_valid() && ast_.kind( declaration ) != Node_kind::Function_decl )
+            if( !receiver_.is_valid() && has_receiver( ast_, declaration ) )
             {
                 receiver_             = local;
                 receiver_declaration_ = param;
@@ -1021,8 +1021,10 @@ Operand Lowering::lower_method_call_on( Node_id id, Node_id method, Operand rece
 Operand Lowering::lower_call( Node_id id )
 {
     // D7: a call whose callee is a path is a variant being constructed, not a function being
-    // called. Checked first, because everything below reaches for a Function_decl.
-    if( ast_.kind( ast_.child( id, 0 ) ) == Node_kind::Path_expr )
+    // called. Checked first, because everything below reaches for a Function_decl. M7's
+    // `P::make( 7 )` wears the same shape, and what tells them apart is that the checker chose a
+    // callable for one and recorded an ordinal for the other.
+    if( ast_.kind( ast_.child( id, 0 ) ) == Node_kind::Path_expr && !types_.callee_of( id ).is_valid() )
     {
         return lower_variant_construction( id );
     }
@@ -1057,14 +1059,15 @@ Operand Lowering::lower_call( Node_id id )
 
     // A bare `add( by )` inside a method. The receiver is the one this function was given, and its
     // local already holds the address - so unlike every other call shape there is nothing to take
-    // the address *of*.
-    if( callee.is_valid() && ast_.kind( callee ) == Node_kind::Method_decl )
+    // the address *of*. A static method has none to pass, so it falls through to the ordinary path
+    // below, where its written parameters are the whole of its signature.
+    if( callee.is_valid() && ast_.kind( callee ) == Node_kind::Method_decl && has_receiver( ast_, callee ) )
     {
         return lower_method_call_on( id, callee, copy( builder_.place( receiver_ ), builder_.type_of( receiver_ ) ) );
     }
 
     assert(
-        callee.is_valid() && ast_.kind( callee ) == Node_kind::Function_decl &&
+        callee.is_valid() && ( ast_.kind( callee ) == Node_kind::Function_decl || is_static_method( ast_, callee ) ) &&
         "checker should have rejected an unresolved call"
     );
     const std::span<const Node_id> arguments = ast_.children( ast_.child( id, 1 ) ); // the Arg_list's children
@@ -4982,6 +4985,58 @@ TEST_CASE( "lower_returns_a_reference_from_a_method", "[ir][lower][method]" )
     INFO( caller );
     REQUIRE( caller.find( "let _3: i32*; // r" ) != std::string::npos );
     REQUIRE( caller.find( "copy (*_3)" ) != std::string::npos );
+}
+
+// PLAN §12, M7. The parameter walk captures the receiver from the first parameter of anything that
+// is not a free function, which is the node kind standing in for a question about the signature. A
+// static method is the second declaration with no receiver, and without this the walk adopts its
+// first written parameter as `this` - so a bare field name would project off an `i32`.
+TEST_CASE( "lower_gives_a_static_method_no_receiver", "[ir][lower][static]" )
+{
+    Lowered p( "struct P { i32 x; static P make( i32 v ) { return P { v }; } };\n"
+               "i32 main() { P p = P::make( 7 ); return p.x; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string callee = p.named( "make" );
+
+    INFO( callee );
+    REQUIRE( callee.find( "parameter this" ) == std::string::npos );
+    REQUIRE( callee.find( "// parameter v" ) != std::string::npos );
+}
+
+// And the call site prepends nothing. A method call takes the receiver's address as argument 0, so
+// a static one emitting that would pass an address the callee has no parameter for.
+TEST_CASE( "lower_prepends_no_receiver_to_a_static_call", "[ir][lower][static]" )
+{
+    Lowered p( "struct P { i32 x; static P make( i32 v ) { return P { v }; } };\n"
+               "i32 main() { P p = P::make( 7 ); return p.x; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string caller = p.named( "main" );
+
+    INFO( caller );
+    REQUIRE( caller.find( "call make(const 7)" ) != std::string::npos );
+}
+
+// A plain method declared beside one keeps everything it had. Here rather than left to the method
+// cases above, because what breaks it is the receiver test being removed rather than narrowed.
+TEST_CASE( "lower_still_passes_a_plain_method_its_receiver", "[ir][lower][static]" )
+{
+    Lowered p( "struct P { i32 x; static P make( i32 v ) { return P { v }; } i32 get() const { return x; } };\n"
+               "i32 main() { P p = P::make( 7 ); return p.get(); }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string callee = p.named( "get" );
+
+    INFO( callee );
+    REQUIRE( callee.find( "let _1: P*; // parameter this" ) != std::string::npos );
+    REQUIRE( callee.find( "copy (*_1).x" ) != std::string::npos );
 }
 
 } // namespace keel

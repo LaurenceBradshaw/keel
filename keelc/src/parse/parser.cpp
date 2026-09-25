@@ -74,7 +74,7 @@ private:
     Node_id parse_source_file();
     Node_id parse_declaration();
     Node_id parse_function_decl();
-    Node_id parse_method_decl( Symbol_id enclosing, Node_id type_params );
+    Node_id parse_method_decl( Symbol_id enclosing, Node_id type_params, bool is_static );
     Node_id parse_param_list( Node_id leading = Node_id {} );
     // The parameters alone: the list node is built later, once the `where` clauses that belong
     // beside them have been parsed too.
@@ -745,7 +745,7 @@ Node_id Parser::parse_function_decl()
     );
 }
 
-Node_id Parser::parse_method_decl( Symbol_id enclosing, Node_id type_params )
+Node_id Parser::parse_method_decl( Symbol_id enclosing, Node_id type_params, bool is_static )
 {
     const Span      start       = peek().span;
     const Node_id   return_type = parse_type_with_mode();
@@ -787,11 +787,18 @@ Node_id Parser::parse_method_decl( Symbol_id enclosing, Node_id type_params )
 
     pos_ = before;
 
-    const Node_id receiver = synthesise_receiver( enclosing, type_params, start, is_const );
+    const Node_id receiver = is_static ? Node_id {} : synthesise_receiver( enclosing, type_params, start, is_const );
     const Node_id params   = parse_param_list( receiver );
 
     if( is_const )
     {
+        // A trailing `const` binds the receiver, so on a member with none it marks nothing. Reported
+        // at the keyword rather than after it, and still consumed, so the body parses either way.
+        if( is_static )
+        {
+            error_at( peek().span, "a `static` method has no object, so it cannot be `const`" );
+        }
+
         match_keyword( Keyword::Const );
     }
 
@@ -933,17 +940,42 @@ Node_id Parser::parse_aggregate_decl()
             continue;
         }
 
+        // Consumed before the triage below, which starts by looking for a type name: left in place
+        // it would be read as one, and the member would parse as a field called `static`.
+        const Span static_span = peek().span;
+        const bool is_static   = match_keyword( Keyword::Static );
+
         const bool is_destructor  = check( Token_kind::Tilde );
         const bool is_constructor = check( Token_kind::Identifier ) && peek( 1 ).kind == Token_kind::L_paren;
+
+        // Both are defined by what they do to an object, so neither has a receiver to remove.
+        // Reported and then parsed anyway, so the member still reaches sema and its body is checked.
+        if( is_static && ( is_destructor || is_constructor ) )
+        {
+            error_at( static_span, fmt::format( "a {} cannot be `static`", is_destructor ? "destructor" : "constructor" ) );
+        }
+
         // A method is a type, a name and a parameter list - which is what scan_type_and_name finds,
         // and it restores the cursor. A constructor is the same shape minus the type, so it has to
         // be tested first or `Buffer( u64 n )` reads as a method returning `Buffer`.
         const bool is_method = !is_destructor && !is_constructor && looks_like_method();
 
+        // Refused rather than dropped, which is what it used to be: the keyword parsed away and left
+        // an ordinary field, so every object carried its own copy of what was written to be shared.
+        // Type-scoped data is M8's, after modules - see PLAN §15.
+        if( is_static && !is_method && !is_destructor && !is_constructor )
+        {
+            error_at(
+                static_span,
+                "a field cannot be `static` yet",
+                "it would be one variable shared by every object, and that is not built yet"
+            );
+        }
+
         members.push_back(
             is_destructor    ? parse_destructor_decl( name, type_params )
             : is_constructor ? parse_constructor_decl( name, type_params )
-            : is_method      ? parse_method_decl( name, type_params )
+            : is_method      ? parse_method_decl( name, type_params, is_static )
                              : parse_field_decl()
         );
 
@@ -1699,7 +1731,7 @@ bool Parser::scan_type_arguments()
         advance();
     }
 
-    const bool generic = depth == 0 && check( Token_kind::L_paren );
+    const bool generic = depth == 0 && ( check( Token_kind::Colon_colon ) || check( Token_kind::L_paren ) );
 
     pos_ = saved;
     return generic;
@@ -2408,7 +2440,30 @@ Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing )
             }
 
             const Node_id types = ast_.add( Node_kind::Type_arg_list, Span::merge( open, previous().span ), 0, arguments );
-            const Node_id args  = parse_arg_list();
+
+            // `Box<i32>::of( 7 )`. The arguments belong to the *qualifier* rather than to a call, so
+            // they are carried on the path instead - a static call has no receiver to read them off,
+            // which makes this the only place they can come from. The trailing `( 7 )` is then an
+            // ordinary call over the path, handled by the postfix branch at the top of this loop.
+            if( check( Token_kind::Colon_colon ) )
+            {
+                advance();
+
+                const Symbol_id scoped = expect_name();
+
+                if( !scoped.is_valid() )
+                {
+                    left = error_node( Span::merge( ast_.span( left ), previous().span ) );
+                    continue;
+                }
+
+                left = ast_.add(
+                    Node_kind::Path_expr, Span::merge( ast_.span( left ), previous().span ), scoped.v, { left, types }
+                );
+                continue;
+            }
+
+            const Node_id args = parse_arg_list();
 
             left =
                 ast_.add( Node_kind::Call_expr, Span::merge( ast_.span( left ), ast_.span( args ) ), 0, { left, args, types } );
@@ -7092,6 +7147,174 @@ TEST_CASE( "parser_parses_a_method", "[parse]" )
         INFO( p.errors() );
         REQUIRE_FALSE( p.has_errors() );
         REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::Method_decl ).is_valid() );
+    }
+}
+
+// PLAN §12, M7. A static method is a member with no receiver, and `static` is what says so. The
+// declaration is otherwise a method's, so it stays a Method_decl - the difference is an absence, the
+// same shape `extern` already has as a Function_decl with no body rather than a kind of its own.
+TEST_CASE( "parser_parses_a_static_method", "[parse][static]" )
+{
+    SECTION( "the parameter list has no receiver" )
+    {
+        const Parsed p( "struct P { i32 x; static P make( i32 v ) { return P { v }; } };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id method = find_first( p.ast(), p.root(), Node_kind::Method_decl );
+
+        REQUIRE( method.is_valid() );
+
+        // One parameter, and it is the written one - not a receiver with the written one behind it.
+        const Node_id params = p.child( method, 1 );
+
+        REQUIRE( p.children( params ).size() == 1 );
+        REQUIRE( p.aux( p.child( params, 0 ) ) != Interner::keyword( Keyword::This ).v );
+    }
+
+    // The absence must be this member's alone: a plain method declared beside it still gets the
+    // receiver the parser has always synthesised.
+    SECTION( "a plain method beside it still has one" )
+    {
+        const Parsed p( "struct P { i32 x; static P make( i32 v ) { return P { v }; } i32 get() const { return x; } };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id decl  = find_first( p.ast(), p.root(), Node_kind::Struct_decl );
+        const Node_id plain = p.members( decl )[2]; // the field, the static, then this
+
+        REQUIRE( p.kind( plain ) == Node_kind::Method_decl );
+
+        const Node_id receiver = p.child( p.child( plain, 1 ), 0 );
+
+        REQUIRE( p.aux( receiver ) == Interner::keyword( Keyword::This ).v );
+    }
+
+    // A trailing `const` binds the receiver, so on a member with none it marks nothing. Refused
+    // rather than ignored: silently accepting it would teach the habit of writing it.
+    SECTION( "a trailing `const` is refused" )
+    {
+        const Parsed p( "struct P { i32 x; static P make( i32 v ) const { return P { v }; } };" );
+
+        INFO( p.errors() );
+        REQUIRE( p.has_errors() );
+    }
+
+    // A constructor and a destructor are defined by what they do to an object, so neither has a
+    // receiver to remove.
+    SECTION( "`static` is refused on a constructor" )
+    {
+        const Parsed p( "struct P { i32 x; static P( i32 v ) { x = v; } };" );
+
+        INFO( p.errors() );
+        REQUIRE( p.has_errors() );
+    }
+
+    SECTION( "and on a destructor" )
+    {
+        const Parsed p( "class C { u64 n; C( u64 v ) { n = v; } static ~C() { } };" );
+
+        INFO( p.errors() );
+        REQUIRE( p.has_errors() );
+    }
+
+    // Type-scoped data is M8's, after modules - see PLAN §15. Until then the keyword is refused on
+    // a field rather than dropped: it used to parse as an ordinary one, so every object carried its
+    // own copy of what was written to be shared.
+    SECTION( "and on a field, which is M8's" )
+    {
+        const Parsed p( "class C { static i32 count; i32 x; };" );
+
+        INFO( p.errors() );
+        REQUIRE( p.has_errors() );
+    }
+
+    // Still a field afterwards, so the members below it parse and their errors are reported too.
+    SECTION( "and the field is parsed anyway" )
+    {
+        const Parsed p( "class C { static i32 count; i32 x; };" );
+
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Class_decl );
+
+        std::size_t fields = 0;
+
+        for( const Node_id member : p.ast().members( decl ) )
+        {
+            fields += p.ast().kind( member ) == Node_kind::Field_decl;
+        }
+
+        REQUIRE( fields == 2 );
+    }
+
+    // The type parameter slot holds the *enclosing* aggregate's list, which is how a method of
+    // `Box<T>` is generic in T without writing any of its own. A static one is generic in exactly
+    // the same way and through the same slot - it has no receiver to carry `T` in instead.
+    SECTION( "a generic aggregate's type parameters still reach it" )
+    {
+        const Parsed p( "struct Box<T> { T v; static Box<T> of( T x ) { return Box { x }; } };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id method = find_first( p.ast(), p.root(), Node_kind::Method_decl );
+
+        REQUIRE( method.is_valid() );
+        REQUIRE( p.child( method, 3 ).is_valid() );
+    }
+
+    // `static` is a keyword from M7, so it is no longer available as a name. Worth a case of its
+    // own: the corpus is what would otherwise discover this, one fixture at a time.
+    SECTION( "and it is no longer an identifier" )
+    {
+        const Parsed p( "i32 main() { i32 static = 1; return static; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.has_errors() );
+    }
+}
+
+// PLAN §12, M7. `Vector<i32>::with_capacity( n )` is the shape M8's first customer is written in,
+// and the qualifier is where it breaks before the call is ever reached: a type-argument list in
+// expression position is only recognised when a `(` follows it, which is true of `id<i32>( 1 )` and
+// false of every scoped spelling. The type arguments are also the only place a static call can read
+// them from, there being no receiver to carry them.
+TEST_CASE( "parser_parses_a_scoped_call_on_a_generic_type", "[parse][static][generic]" )
+{
+    SECTION( "the type arguments are followed by `::` rather than by a call" )
+    {
+        const Parsed p( "struct Box<T> { T v; static Box<T> of( T x ) { return Box { x }; } };\n"
+                        "i32 main() { Box<i32> b = Box<i32>::of( 7 ); return b.v; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id path = find_first( p.ast(), p.child( p.root(), 1 ), Node_kind::Path_expr );
+
+        REQUIRE( path.is_valid() );
+    }
+
+    // The existing spelling must not be taken by the widening: `id<i32>( 1 )` is a generic call
+    // whose arguments are followed by a call, and it has been parsed this way since M6.
+    SECTION( "and a generic call is still a generic call" )
+    {
+        const Parsed p( "T id<T>( T a ) { return a; }\ni32 main() { return id<i32>( 1 ); }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::Path_expr ).is_valid() );
+    }
+
+    // A comparison is what the `<` would otherwise be, and it is the reason the list is scanned
+    // rather than assumed. Nothing about M7 may turn `a < b` into a qualifier.
+    SECTION( "and a comparison is still a comparison" )
+    {
+        const Parsed p( "i32 main() { i32 a = 1; i32 b = 2; if( a < b ) { return 1; } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::Path_expr ).is_valid() );
     }
 }
 

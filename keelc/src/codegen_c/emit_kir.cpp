@@ -2136,5 +2136,54 @@ TEST_CASE( "emit_kir_guards_a_comparison_with_no_common_type", "[codegen][kir]" 
     }
 }
 
+// PLAN §12, M7 and §7.5. The category tag leads a member's argtypes as `S<type>` rather than sitting
+// on parameter 0, which is what lets it survive the receiver not existing - the reason M6.5 moved it
+// there. So a static method needs the tag from its enclosing aggregate instead, the one place the
+// receiver was the only source.
+TEST_CASE( "emit_kir_names_a_static_method", "[codegen][kir][static]" )
+{
+    Generated g( "struct P { i32 x; static P make( i32 v ) { return P { v }; } };\n"
+                 "i32 main() { P p = P::make( 7 ); return p.x; }" );
+
+    INFO( g.c );
+    REQUIRE( g.clean() );
+
+    REQUIRE( g.has( "struct kl__P kl__make__S1P_3i32( int32_t );" ) );
+
+    // The tag is what tells it from the free function of the same name and parameters - the
+    // collision M6.5 closed for methods, reopened by a member with no receiver to encode.
+    REQUIRE_FALSE( g.has( "kl__make__3i32(" ) );
+}
+
+// A static and a plain method of one type are told apart by their written parameters alone, since
+// the tag they carry is the same and neither encodes a receiver.
+TEST_CASE( "emit_kir_tells_a_static_from_a_plain_method", "[codegen][kir][static]" )
+{
+    Generated g( "struct P { i32 x; static P make( i32 v ) { return P { v }; } i32 get() const { return x; } };\n"
+                 "i32 main() { P p = P::make( 7 ); return p.get(); }" );
+
+    INFO( g.c );
+    REQUIRE( g.clean() );
+
+    REQUIRE( g.has( "kl__make__S1P_3i32" ) );
+    REQUIRE( g.has( "kl__get__S1P" ) );
+}
+
+// The seed §12 warns about, in the form that fails silently: a static call is what puts this
+// instantiation on the worklist, and nothing about it passes through a receiver. Missing it leaves
+// the symbol referenced and never defined, which `cc` reports rather than keelc.
+TEST_CASE( "emit_kir_emits_a_generic_static_method_instantiation", "[codegen][kir][static][generic]" )
+{
+    Generated g( "struct Box<T> where T : Copyable { T v; static Box<T> of( T x ) { return Box { x }; } };\n"
+                 "i32 main() { Box<i32> b = Box<i32>::of( 7 ); return b.v; }" );
+
+    INFO( g.c );
+    REQUIRE( g.clean() );
+
+    // The tag names the instance rather than the open form, so `Box<i32>` and `Box<f64>` would be
+    // two symbols - and the type arguments lead the argtypes, as they do for any instantiation.
+    REQUIRE( g.has( "kl__of__I3i32E__S3BoxI3i32E_3i32" ) );
+}
+
 } // namespace keel
 #endif

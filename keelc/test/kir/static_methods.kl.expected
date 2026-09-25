@@ -1,0 +1,65 @@
+fn make {
+    let _0: P; // return slot
+    let _1: i32; // parameter v
+    let _2: P;
+
+    bb0:
+        _2.x = copy _1
+        _0 = copy _2
+        return
+}
+fn twice {
+    let _0: i32; // return slot
+    let _1: i32; // parameter n
+    let _2: i32;
+
+    bb0:
+        _2 = copy _1 + copy _1
+        _0 = copy _2
+        return
+}
+fn get {
+    let _0: i32; // return slot
+    let _1: P*; // parameter this
+
+    bb0:
+        _0 = copy (*_1).x
+        return
+}
+fn doubled {
+    let _0: i32; // return slot
+    let _1: P*; // parameter this
+    let _2: i32;
+
+    bb0:
+        _2 = call twice(copy (*_1).x)
+        _0 = copy _2
+        return
+}
+fn main {
+    let _0: i32; // return slot
+    let _1: P; // p
+    let _2: P;
+    let _3: P*;
+    let _4: i32;
+    let _5: i32;
+    let _6: i32;
+    let _7: P*;
+    let _8: i32;
+    let _9: i32;
+
+    bb0:
+        storage_live _1
+        _2 = call make(const 7)
+        _1 = copy _2
+        _3 = &_1
+        _4 = call get(copy _3)
+        _5 = call twice(const 1)
+        _6 = copy _4 + copy _5
+        _7 = &_1
+        _8 = call doubled(copy _7)
+        _9 = copy _6 + copy _8
+        _0 = copy _9
+        storage_dead _1
+        return
+}

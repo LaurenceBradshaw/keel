@@ -201,7 +201,7 @@ bool Places::is_borrow_binding( Node_id decl ) const
 
 Node_id Places::receiver_of( Node_id function ) const
 {
-    if( !function.is_valid() || ast_.kind( function ) == Node_kind::Function_decl )
+    if( !has_receiver( ast_, function ) )
     {
         return Node_id {};
     }

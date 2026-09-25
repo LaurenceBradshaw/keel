@@ -43,6 +43,30 @@ std::vector<Mangled_parameter> mangled_parameters( const Ast& ast, const Types& 
     return params;
 }
 
+// The aggregate a member was declared in. A method reads its own from parameter 0 and never needs
+// this; M7's static method has no parameter 0, and the category tag has to name the type all the
+// same - it is what tells a named constructor from a free function of one name and one signature.
+Node_id enclosing_aggregate( const Ast& ast, Node_id member )
+{
+    for( const Node_id decl : ast.children( ast.root() ) )
+    {
+        if( !is_aggregate( ast.kind( decl ) ) )
+        {
+            continue;
+        }
+
+        for( const Node_id candidate : ast.members( decl ) )
+        {
+            if( candidate == member )
+            {
+                return decl;
+            }
+        }
+    }
+
+    return Node_id {};
+}
+
 // The declaration's type parameters against this instance's arguments. The same map the worklist
 // builds when it emits the instance - written again here because a symbol is computed from the
 // declaration and must come back through the instance, like everything else that reaches that way.
@@ -145,13 +169,20 @@ std::string Spelling::function( Node_id declaration, std::span<const Type_id> ty
     if( ast.kind( declaration ) == Node_kind::Method_decl )
     {
         // The receiver, substituted above - so the tag names `Box<i32>` rather than `Box<T>` - and
-        // then dropped from the parameters, since it can never be what tells two members apart.
-        const Type_id enclosing = params.front().type;
+        // then dropped from the parameters, since it can never be what tells two members apart. A
+        // static method has no receiver to read either from, so the tag is built from the aggregate
+        // and every written parameter stays: that is why the tag leads the argtypes rather than
+        // sitting on parameter 0, and it is the whole of what M7 asked of this scheme.
+        const bool    receiver = has_receiver( ast, declaration );
+        const Node_id owner    = receiver ? Node_id {} : enclosing_aggregate( ast, declaration );
+        const Type_id enclosing =
+            receiver ? params.front().type
+                     : types.table().structure( owner, type_arguments, interner.text( Symbol_id { ast.aux( owner ) } ) );
 
         return mangle_function(
             "",
             interner.text( Symbol_id { ast.aux( declaration ) } ),
-            std::span( params ).subspan( 1 ),
+            std::span( params ).subspan( receiver ? 1 : 0 ),
             types.table(),
             type_arguments,
             enclosing

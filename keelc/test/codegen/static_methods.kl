@@ -1,0 +1,175 @@
+// PLAN §12, M7. M7's acceptance in one file: a named constructor returns an aggregate, is called as
+// `Type::make( args )`, and is refused as `value.make( args )` - that last half being a diagnostic,
+// so it lives in the sema fixture and what remains here is that the accepted spellings work.
+//
+// Run rather than only compiled. A static method that wrongly kept a receiver still emits: the
+// parameter it adopts is a real one, so the C compiles and reads a field off the wrong object. Only
+// the exit code can see that. The free function sharing `of`'s name and parameters is here for the
+// same reason - two symbols that collided would be caught by `cc`, but one that silently won would
+// not be.
+
+struct Vec
+{
+    i32 a;
+    i32 b;
+
+    static Vec zero()
+    {
+        return Vec { 0, 0 };
+    }
+
+    static Vec of( i32 x, i32 y )
+    {
+        return Vec { x, y };
+    }
+
+    static i32 twice( i32 n )
+    {
+        return n + n;
+    }
+
+    i32 sum() const
+    {
+        return a + b;
+    }
+
+    // A static sibling reached by bare name from an instance method, which has a receiver and
+    // simply does not thread it through.
+    i32 doubled_first() const
+    {
+        return twice( a );
+    }
+
+    // And from a static one, which has none to thread.
+    static i32 four_times( i32 n )
+    {
+        return twice( twice( n ) );
+    }
+};
+
+// One name, one parameter list, and a different function. The mangling is the only thing keeping
+// these apart: nothing at a call site could confuse them.
+Vec of( i32 x, i32 y )
+{
+    return Vec { x + 100, y + 100 };
+}
+
+struct Box<T> where T : Copyable
+{
+    T v;
+
+    static Box<T> of( T x )
+    {
+        return Box { x };
+    }
+};
+
+// D29 splits the two kinds at trivial copyability, so a class takes a static method on the same
+// machinery, alongside the constructor and destructor it may also have. Nothing here is a second
+// implementation of anything above.
+u64 freed = 0;
+
+class Owned
+{
+    u64 n;
+
+    Owned( u64 start )
+    {
+        n = start;
+    }
+
+    ~Owned()
+    {
+        freed = freed + 1;
+    }
+
+    static u64 limit()
+    {
+        return 64;
+    }
+
+    u64 read() const
+    {
+        return n;
+    }
+};
+
+i32 main()
+{
+    Vec z = Vec::zero();
+
+    if( z.sum() != 0 )
+    {
+        return 90;
+    }
+
+    Vec v = Vec::of( 3, 4 );
+
+    if( v.sum() != 7 )
+    {
+        return 91;
+    }
+
+    // The free function of one name and one parameter list, which must reach a different body.
+    Vec f = of( 3, 4 );
+
+    if( f.sum() != 207 )
+    {
+        return 92;
+    }
+
+    if( Vec::twice( 21 ) != 42 )
+    {
+        return 93;
+    }
+
+    if( Vec::four_times( 5 ) != 20 )
+    {
+        return 94;
+    }
+
+    // Reads `a` off the object it was called on. A receiver wrongly adopted from the written
+    // parameter would read it off something else and this is what would notice.
+    if( v.doubled_first() != 6 )
+    {
+        return 95;
+    }
+
+    // The instantiation nothing else names: a static call is a seed for the monomorphisation
+    // worklist in its own right, since nothing about it passes through a receiver.
+    Box<i32> b = Box<i32>::of( 9 );
+
+    if( b.v != 9 )
+    {
+        return 96;
+    }
+
+    Box<f64> d = Box<f64>::of( 2.5 );
+
+    if( d.v != 2.5 )
+    {
+        return 97;
+    }
+
+    {
+        Owned o = Owned( 1 );
+
+        if( o.read() != 1 )
+        {
+            return 98;
+        }
+
+        if( Owned::limit() != 64 )
+        {
+            return 99;
+        }
+    }
+
+    // The destructor still runs exactly once: a static method did not change what the scope owns.
+    if( freed != 1 )
+    {
+        return 100;
+    }
+
+    return v.sum() + b.v;
+}

@@ -134,6 +134,18 @@ private:
     Type_id infer_path( Node_id id );
     Type_id infer_variant_construction( Node_id id );
 
+    // PLAN §12, M7. `P::make( 7 )` - a member reached through its type rather than an object. The
+    // declaration a path's qualifier names, and the type it stands for once its own type arguments
+    // are applied, which for a static call is the only place those can come from.
+    Node_id qualifier_declaration( Node_id path ) const;
+
+    // The aggregate a member was declared in. Scanned rather than recorded: nothing else has ever
+    // needed it, because every other question about a member goes through its receiver - which is
+    // exactly what a static method does not have.
+    Node_id enclosing_aggregate( Node_id member ) const;
+    Type_id qualifier_type( Node_id path, Node_id declaration );
+    Type_id infer_static_call( Node_id id, Node_id aggregate );
+
     Type_id infer_conditional( Node_id id );
 
     Type_id infer_alloc( Node_id id );

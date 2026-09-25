@@ -58,13 +58,13 @@ error: `Colour` has no variant `Purple`
 78 |     Colour c = Colour::Purple;
    |                ^^^^^^^^^^^^^^
 
-error: `Point` is not an `enum`
+error: `Point` has no static method `x`
   --> sema/errors_enums.kl:85:13
    |
 85 |     i32 n = Point::x;
-   |             ^^^^^ `::` reaches a variant, and only an `enum` has them
+   |             ^^^^^^^^ `x` is a field, so it belongs to an object rather than to `Point`
 
-error: `::` needs the name of an `enum` on its left
+error: `::` needs the name of a type on its left
   --> sema/errors_enums.kl:92:13
    |
 92 |     i32 n = Colour::Red::Green;

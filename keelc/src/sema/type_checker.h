@@ -199,6 +199,13 @@ bool is_generic( const Ast& ast, Node_id decl );
 // corollary makes a bare prototype an error), so the absent body is the marker and there is no flag.
 bool is_extern( const Ast& ast, Node_id decl );
 
+// Whether parameter 0 is the synthesised `this`: true of a method, constructor and destructor,
+// false of a free function and of M7's static method. The node kind cannot answer it any more.
+bool has_receiver( const Ast& ast, Node_id decl );
+
+// A member that belongs to the type rather than to an object (PLAN §12, M7).
+bool is_static_method( const Ast& ast, Node_id method );
+
 // The mode a declaration was written with, or Keyword::Count for none. The one reader of a
 // Mode_type's aux: three separate copies of this test existed before it, and a fourth was about to.
 // D7: whether any variant carries a payload. That one answer decides the representation - a

@@ -1,0 +1,73 @@
+// PLAN §12, M7. A static method is a member with no receiver, and `static` is what says so. The
+// declaration is otherwise a method's, so it parses to a Method_decl - the difference is an absence,
+// the same shape `extern` already has as a Function_decl with no body rather than a kind of its own.
+//
+// What the dump is here to show is the parameter list: a plain method's opens with the synthesised
+// `this`, and a static one's opens with whatever was written.
+
+struct P
+{
+    i32 x;
+
+    static P make( i32 v )
+    {
+        return P { v };
+    }
+
+    // Takes nothing at all, which is the shape with no parameter list to mistake for a receiver.
+    static P zero()
+    {
+        return P { 0 };
+    }
+
+    // Declared beside them and unchanged: the receiver is still synthesised, and the trailing
+    // `const` still wraps it as `const ref P`.
+    i32 get() const
+    {
+        return x;
+    }
+
+    void set( i32 v )
+    {
+        x = v;
+    }
+};
+
+// The type parameter slot holds the *enclosing* aggregate's list, which is how a method of `Box<T>`
+// is generic in T without writing any of its own. A static one is generic the same way and through
+// the same slot - it has no receiver to carry `T` in instead.
+struct Box<T> where T : Copyable
+{
+    T v;
+
+    static Box<T> of( T x )
+    {
+        return Box { x };
+    }
+};
+
+// D29 splits the two kinds at trivial copyability, so a class takes a static method on the same
+// machinery, alongside the constructor and destructor it may also have.
+class Owned
+{
+    u64 n;
+
+    Owned( u64 start )
+    {
+        n = start;
+    }
+
+    ~Owned()
+    {
+    }
+
+    static u64 limit()
+    {
+        return 64;
+    }
+};
+
+i32 main()
+{
+    return 0;
+}

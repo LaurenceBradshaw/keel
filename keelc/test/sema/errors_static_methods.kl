@@ -1,0 +1,197 @@
+// PLAN §12, M7. A static method belongs to a type and takes no receiver, so every route that
+// reaches an object implicitly is closed to it - and the two call spellings stop being
+// interchangeable in both directions. Each refusal below is a diagnostic rather than a miscompile:
+// without them the lowerer adopts the first written parameter as `this` and projects a field off it.
+
+struct P
+{
+    i32 x;
+
+    static P make( i32 v )
+    {
+        return P { v };
+    }
+
+    i32 get() const
+    {
+        return x;
+    }
+
+    // A bare field name is `this.field` written implicitly, and there is no `this` to write it
+    // through.
+    static i32 reads_a_field()
+    {
+        return x;
+    }
+
+    // The same thing said out loud, which must not be the one spelling that survives.
+    static i32 names_the_receiver()
+    {
+        return this.x;
+    }
+
+    // The member scope puts a sibling in reach by bare name. A static method joins it, but only the
+    // half of it that needs no object.
+    static i32 calls_an_instance_sibling()
+    {
+        return get();
+    }
+};
+
+// A trailing `const` binds the receiver, so on a member with none it marks nothing. Refused rather
+// than ignored: accepting it silently teaches the habit of writing it.
+struct Marked
+{
+    i32 x;
+
+    static i32 one() const
+    {
+        return 1;
+    }
+};
+
+// A constructor and a destructor are defined by what they do to an object, so neither has a
+// receiver to remove. A `class` rather than a `struct`, so this says one thing: D29 already refuses
+// a constructor on a struct, and the two rules firing together would hide which one is under test.
+class Ctor
+{
+    i32 x;
+
+    static Ctor( i32 v )
+    {
+        x = v;
+    }
+
+    static ~Ctor()
+    {
+    }
+};
+
+// Type-scoped data is M8's, after modules. Refused here rather than dropped: the keyword used to
+// parse away and leave an ordinary field, so every object carried its own copy of what was written
+// to be shared - a miscompile with no diagnostic, which is the worst class this project has.
+class Shared
+{
+    static i32 count;
+
+    i32 x;
+};
+
+// A static and an instance method of one name take the same written parameters and mangle to one
+// symbol: the tag names the enclosing type and the receiver is among the parameters in neither. No
+// call site is ambiguous, but `cc` refuses two definitions of one name - a failure in generated code
+// rather than a diagnostic, which is the worst class this project has.
+struct Clash
+{
+    i32 x;
+
+    static i32 f( i32 a )
+    {
+        return a;
+    }
+
+    i32 f( i32 a ) const
+    {
+        return a + x;
+    }
+};
+
+// The call spellings are not interchangeable in either direction.
+i32 calls_a_static_through_an_object()
+{
+    P p = P::make( 1 );
+
+    P q = p.make( 2 );
+
+    return q.x;
+}
+
+i32 calls_an_instance_method_through_the_type()
+{
+    return P::get();
+}
+
+i32 reaches_a_field_through_the_type()
+{
+    return P::x;
+}
+
+i32 names_something_the_type_does_not_have()
+{
+    P p = P::nope();
+
+    return p.x;
+}
+
+// The qualifier may now be a struct or a class, and that is the whole of what widened. A primitive
+// has no members of any kind, and an expression is not a name at all.
+i32 qualifies_a_primitive()
+{
+    return i32::make( 1 );
+}
+
+i32 free_function()
+{
+    return 1;
+}
+
+i32 qualifies_an_expression()
+{
+    return free_function()::x;
+}
+
+// `::` reaching a variant is what it meant before M7, and an enum still has no static methods for it
+// to find instead.
+enum Colour
+{
+    Red,
+    Green
+};
+
+i32 qualifies_an_enum_with_a_name_it_lacks()
+{
+    return Colour::make( 1 );
+}
+
+// Everything below is accepted, and the fixture would be worth much less without it.
+
+struct Good
+{
+    i32 x;
+
+    static i32 one()
+    {
+        return 1;
+    }
+
+    // A static sibling needs no object, so a bare call to one is as legal here as between free
+    // functions - and as legal from an instance method, which has a receiver it simply does not use.
+    static i32 two()
+    {
+        return one() + one();
+    }
+
+    i32 plus_one() const
+    {
+        return one() + x;
+    }
+};
+
+i32 accepted()
+{
+    Good g = Good { 1 };
+
+    Colour c = Colour::Red;
+
+    if( c == Colour::Green )
+    {
+        return 0;
+    }
+
+    return Good::two() + g.plus_one();
+}
+
+i32 main()
+{
+    return 0;
+}

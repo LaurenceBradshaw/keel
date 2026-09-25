@@ -724,12 +724,13 @@ void Overloads::check_argument_markers(
 bool Overloads::parameters_collide( Node_id first, Node_id second, bool member )
 {
     // A member's parameter 0 is the receiver, which the call site never writes - so two that differ
-    // only in it, `area()` and `area() const`, are one signature and have to be refused here. Read
-    // off the kind rather than from `member`, which answers the unrelated question below.
-    const std::size_t implicit = ast_.kind( first ) == Node_kind::Function_decl ? 0 : 1;
-
-    const std::span<const Node_id> mine   = ast_.children( ast_.child( first, 1 ) ).subspan( implicit );
-    const std::span<const Node_id> theirs = ast_.children( ast_.child( second, 1 ) ).subspan( implicit );
+    // only in it, `area()` and `area() const`, are one signature and have to be refused here. Asked
+    // of each signature rather than of the kind, and separately: M7's static method is a member with
+    // no receiver, so a pair may legitimately disagree about whether there is one to skip.
+    const std::span<const Node_id> mine =
+        ast_.children( ast_.child( first, 1 ) ).subspan( has_receiver( ast_, first ) ? 1 : 0 );
+    const std::span<const Node_id> theirs =
+        ast_.children( ast_.child( second, 1 ) ).subspan( has_receiver( ast_, second ) ? 1 : 0 );
 
     if( mine.size() != theirs.size() )
     {
@@ -834,6 +835,21 @@ void Overloads::check_overloaded_pair( Node_id first, Node_id second, bool membe
             ast_.span( second ),
             fmt::format( "`{}` is already declared with these parameters", name ),
             "two of one name must differ in their parameters, not only in what they return"
+        );
+
+        return;
+    }
+
+    // M7: one takes an object and the other does not. The call spellings differ, so nothing at a
+    // call site is ambiguous - but the category tag names the enclosing type either way and the
+    // receiver is among the parameters in neither, so the two emit one symbol. Reported before the
+    // `const` clause below, which would otherwise blame a keyword whose removal changes nothing.
+    if( member && has_receiver( ast_, first ) != has_receiver( ast_, second ) )
+    {
+        reporter_.error_at(
+            ast_.span( second ),
+            fmt::format( "`{}` is already declared with these parameters", name ),
+            "a `static` method and a method of one name must differ in their parameters"
         );
 
         return;
@@ -1761,6 +1777,79 @@ TEST_CASE( "overloads_underline_the_argument_that_chose_the_type", "[sema][gener
 
     // One caret, so it is the argument and not the seven characters of `ordered`.
     REQUIRE( p.rendered().find( "^^ ordering needs a number" ) == std::string::npos );
+}
+
+// PLAN §12, M7. A member's parameter 0 is the receiver and the overload check drops it before
+// comparing, which is what makes `area()` and `area() const` one signature. A static method has no
+// parameter 0 to drop, so a check that decides how many to skip from the *node kind* compares the
+// wrong lists - and the pair it then fails to separate emit one C symbol, which is the collision
+// M6.5 paid off for methods and free functions.
+TEST_CASE( "overloads_tell_static_methods_apart_by_their_written_parameters", "[sema][static][overload]" )
+{
+    SECTION( "two that differ in the first parameter are two" )
+    {
+        const Typed p( "struct P { i32 x; static i32 f( i32 a ) { return a; } static i32 f( bool a ) { return 1; } };\n"
+                       "i32 main() { return P::f( 1 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and two that agree on every one are refused" )
+    {
+        const Typed p( "struct P { i32 x; static i32 f( i32 a ) { return a; } static i32 f( i32 b ) { return 1; } };\n"
+                       "i32 main() { return P::f( 1 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    SECTION( "one taking nothing is not the same as one taking something" )
+    {
+        const Typed p( "struct P { i32 x; static i32 f() { return 1; } static i32 f( i32 a ) { return a; } };\n"
+                       "i32 main() { return P::f(); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// A static and an instance method of one name take the same written parameters and mangle to one
+// symbol, because the tag names the enclosing type and the receiver is not among the parameters
+// either way. The call spellings differ, so nothing at a call site is ambiguous - but `cc` refuses
+// two definitions of one name, which is a failure in generated code rather than a diagnostic.
+TEST_CASE( "overloads_refuse_a_static_and_an_instance_method_of_one_signature", "[sema][static][overload]" )
+{
+    SECTION( "same name, same written parameters" )
+    {
+        const Typed p( "struct P { i32 x; static i32 f( i32 a ) { return a; } i32 f( i32 a ) const { return a + x; } };\n"
+                       "i32 main() { return P::f( 1 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    // Declaration order must not decide it: the pair is checked once per ordered pair, and the
+    // instance-first spelling is the one a check keyed off the first declaration would miss.
+    SECTION( "and the other way round" )
+    {
+        const Typed p( "struct P { i32 x; i32 f( i32 a ) const { return a + x; } static i32 f( i32 a ) { return a; } };\n"
+                       "i32 main() { return P::f( 1 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    // Different parameters are genuinely two functions and mangle apart, so this is the boundary
+    // rather than a blanket refusal of the two kinds sharing a name.
+    SECTION( "but differing parameters are two functions" )
+    {
+        const Typed p( "struct P { i32 x; static i32 f( bool a ) { return 1; } i32 f( i32 a ) const { return a + x; } };\n"
+                       "i32 main() { return P::f( true ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
 }
 
 } // namespace keel

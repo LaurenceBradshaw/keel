@@ -1,0 +1,91 @@
+error: `x` is a field, and there is no object here to read it from
+  --> sema/errors_static_methods.kl:24:16
+   |
+24 |         return x;
+   |                ^ take one as a parameter, or make this a method
+
+error: `this` is not declared
+  --> sema/errors_static_methods.kl:30:16
+   |
+30 |         return this.x;
+   |                ^^^^
+
+error: `get` is a method, and there is no object here to call it on
+  --> sema/errors_static_methods.kl:37:16
+   |
+37 |         return get();
+   |                ^^^ a method can only be called by bare name from inside another method of the same type
+
+error: a `static` method has no object, so it cannot be `const`
+  --> sema/errors_static_methods.kl:47:22
+   |
+47 |     static i32 one() const
+   |                      ^^^^^
+
+error: a constructor cannot be `static`
+  --> sema/errors_static_methods.kl:60:5
+   |
+60 |     static Ctor( i32 v )
+   |     ^^^^^^
+
+error: a destructor cannot be `static`
+  --> sema/errors_static_methods.kl:65:5
+   |
+65 |     static ~Ctor()
+   |     ^^^^^^
+
+error: a field cannot be `static` yet
+  --> sema/errors_static_methods.kl:75:5
+   |
+75 |     static i32 count;
+   |     ^^^^^^ it would be one variable shared by every object, and that is not built yet
+
+error: `f` is already declared with these parameters
+  --> sema/errors_static_methods.kl:93:5
+   |
+93 |     i32 f( i32 a ) const
+   |     ^^^^^^^^^^^^^^^^^^^^ a `static` method and a method of one name must differ in their parameters
+
+error: `make` is a `static` method of `P`, so it takes no object
+   --> sema/errors_static_methods.kl:104:11
+    |
+104 |     P q = p.make( 2 );
+    |           ^^^^^^ call it as `P::make( ... )`
+
+error: `get` needs an object
+   --> sema/errors_static_methods.kl:111:12
+    |
+111 |     return P::get();
+    |            ^^^^^^ call it as `value.get( ... )`
+
+error: `P` has no static method `x`
+   --> sema/errors_static_methods.kl:116:12
+    |
+116 |     return P::x;
+    |            ^^^^ `x` is a field, so it belongs to an object rather than to `P`
+
+error: `P` has no static method `nope`
+   --> sema/errors_static_methods.kl:121:11
+    |
+121 |     P p = P::nope();
+    |           ^^^^^^^
+
+error: `i32` is not declared
+   --> sema/errors_static_methods.kl:130:12
+    |
+130 |     return i32::make( 1 );
+    |            ^^^
+
+error: `::` needs the name of a type on its left
+   --> sema/errors_static_methods.kl:140:12
+    |
+140 |     return free_function()::x;
+    |            ^^^^^^^^^^^^^^^
+
+error: `Colour` has no variant `make`
+   --> sema/errors_static_methods.kl:153:12
+    |
+153 |     return Colour::make( 1 );
+    |            ^^^^^^^^^^^^
+
+15 errors generated

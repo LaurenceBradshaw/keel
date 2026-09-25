@@ -107,6 +107,22 @@ Type_id Expressions::infer_name( Node_id id )
         return types_.record( id, table_.builtin( Type_kind::Error ) );
     }
 
+    // D22: a bare field name is `this.field` written implicitly, so it needs a receiver to be
+    // written through. M7's static method is declared inside the type and has none, which is the
+    // one place the member scope reaches a field that no object backs.
+    if( ast_.kind( decl ) == Node_kind::Field_decl && !places_.receiver_of( current_function_ ).is_valid() )
+    {
+        reporter_.error_at(
+            ast_.span( id ),
+            fmt::format(
+                "`{}` is a field, and there is no object here to read it from", interner_.text( Symbol_id { ast_.aux( id ) } )
+            ),
+            "take one as a parameter, or make this a method"
+        );
+
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
     return types_.record( id, types_.type_of( decl ) );
 }
 
@@ -169,11 +185,18 @@ Type_id Expressions::infer_call( Node_id id )
     const Node_id callee = ast_.child( id, 0 );
     const Node_id args   = ast_.child( id, 1 );
 
-    // D7: `Shape::Circle( 1.0 )` constructs a variant. Handled before the ordinary call path
-    // because the callee is a Path_expr rather than a name, and because what it checks the
-    // arguments against is a *payload* rather than a parameter list.
+    // D7: `Shape::Circle( 1.0 )` constructs a variant, and M7's `P::make( 7 )` calls a static
+    // method. Both are handled before the ordinary call path because the callee is a Path_expr
+    // rather than a name, and they part on what the qualifier names rather than on what follows it.
     if( ast_.kind( callee ) == Node_kind::Path_expr )
     {
+        const Node_id qualifier = qualifier_declaration( callee );
+
+        if( qualifier.is_valid() && is_aggregate( ast_.kind( qualifier ) ) )
+        {
+            return infer_static_call( id, qualifier );
+        }
+
         return infer_variant_construction( id );
     }
 
@@ -493,6 +516,31 @@ Type_id Expressions::infer_method_call( Node_id id )
     // the first of however many share the name.
     const Node_id first = aggregates_.find_method( table_.get( object_type ).declaration, Symbol_id { ast_.aux( callee ) } );
 
+    // M7's acceptance: a named constructor is refused as `value.make( args )`. The member exists,
+    // so this is about the spelling rather than about the name - and saying which one it is costs
+    // nothing here and everything at the point of confusion.
+    if( is_static_method( ast_, first ) )
+    {
+        reporter_.error_at(
+            ast_.span( callee ),
+            fmt::format(
+                "`{}` is a `static` method of `{}`, so it takes no object",
+                interner_.text( Symbol_id { ast_.aux( callee ) } ),
+                table_.name( object_type )
+            ),
+            fmt::format(
+                "call it as `{}::{}( ... )`", table_.name( object_type ), interner_.text( Symbol_id { ast_.aux( callee ) } )
+            )
+        );
+
+        for( const Node_id argument : ast_.children( ast_.child( id, 1 ) ) )
+        {
+            infer( argument );
+        }
+
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
     if( !first.is_valid() )
     {
         // Check if a field of the same name exists, which is a common mistake when a method is expected. The
@@ -574,7 +622,10 @@ Type_id Expressions::infer_method_call( Node_id id )
 Type_id
 Expressions::check_method_arguments( Node_id id, Node_id method, Type_id receiver, std::span<const Argument_shape> shapes )
 {
-    const std::span<const Node_id> params    = ast_.children( ast_.child( method, 1 ) ).subspan( 1 );
+    // One implicit parameter for a method, none for M7's static one. Asked of the signature rather
+    // than assumed, because this is the only place a static call's arguments are lined up.
+    const std::span<const Node_id> params =
+        ast_.children( ast_.child( method, 1 ) ).subspan( has_receiver( ast_, method ) ? 1 : 0 );
     const std::span<const Node_id> arguments = ast_.children( ast_.child( id, 1 ) );
 
     if( params.size() != arguments.size() )
@@ -650,6 +701,23 @@ void Expressions::record_method_instantiation( Node_id id, Node_id method, Type_
 Type_id Expressions::infer_implicit_method_call( Node_id id, Node_id method )
 {
     const Node_id receiver = places_.receiver_of( current_function_ );
+
+    // M7: a static sibling needs no object, so a bare call to one is as legal from a static method
+    // as it is between free functions - and from an instance method, which has a receiver it simply
+    // does not use. Settled before the receiver is demanded below, and before the constness
+    // question, which asks about an object neither of them touches.
+    if( is_static_method( ast_, method ) )
+    {
+        const Node_id owner = enclosing_aggregate( method );
+
+        // The enclosing instance when there is one, so a sibling of `Box<i32>` is checked in terms
+        // of `i32` rather than of `T`. Its open form otherwise, which is all a static body knows.
+        const Type_id instance = receiver.is_valid() ? types_.type_of( receiver ) : types_.type_of( owner );
+
+        callees_.record( id, method );
+
+        return check_method_arguments( id, method, table_.is_pointer( instance ) ? table_.get( instance ).element : instance );
+    }
 
     if( !receiver.is_valid() )
     {
@@ -853,6 +921,147 @@ Type_id Expressions::infer_unary( Node_id id )
 // checked against its fields exactly as a call's are checked against a parameter list. The result
 // is the *enum*, never the payload - a constructed variant is a Shape, and which one it is is a
 // question only `switch` may ask.
+Node_id Expressions::enclosing_aggregate( Node_id member ) const
+{
+    for( const Node_id decl : ast_.children( ast_.root() ) )
+    {
+        if( !is_aggregate( ast_.kind( decl ) ) )
+        {
+            continue;
+        }
+
+        for( const Node_id candidate : ast_.members( decl ) )
+        {
+            if( candidate == member )
+            {
+                return decl;
+            }
+        }
+    }
+
+    return Node_id {};
+}
+
+// The declaration a path's qualifier names, or nothing when the qualifier is not a name at all.
+// `f()::x` has no declaration to find and is refused where the path is typed, not here.
+Node_id Expressions::qualifier_declaration( Node_id path ) const
+{
+    const Node_id qualifier = ast_.child( path, 0 );
+
+    return ast_.kind( qualifier ) == Node_kind::Name_expr ? resolution_.declaration_of( qualifier ) : Node_id {};
+}
+
+// Which instance the qualifier names. `Box<i32>::of` carries its own arguments on the path, there
+// being no receiver to read them off - which is the second source for something that has only ever
+// had one. Without them a generic qualifier is the open form, which is a template rather than a
+// type a call can be checked against, so it is refused rather than left to fail on the parameters.
+Type_id Expressions::qualifier_type( Node_id path, Node_id declaration )
+{
+    const Node_id          type_args = ast_.children( path ).size() > 1 ? ast_.child( path, 1 ) : Node_id {};
+    const std::string_view name      = interner_.text( Symbol_id { ast_.aux( ast_.child( path, 0 ) ) } );
+
+    if( !type_args.is_valid() )
+    {
+        if( is_generic( ast_, declaration ) )
+        {
+            reporter_.error_at(
+                ast_.span( ast_.child( path, 0 ) ),
+                fmt::format( "`{}` needs its type arguments here", name ),
+                fmt::format( "write `{}< ... >::{}`", name, interner_.text( Symbol_id { ast_.aux( path ) } ) )
+            );
+
+            return table_.builtin( Type_kind::Error );
+        }
+
+        return types_.type_of( declaration );
+    }
+
+    if( !is_generic( ast_, declaration ) )
+    {
+        reporter_.error_at( ast_.span( path ), fmt::format( "`{}` is not a generic", name ) );
+
+        return table_.builtin( Type_kind::Error );
+    }
+
+    std::vector<Type_id> arguments;
+
+    if( !annotations_.resolve_type_arguments( declaration, type_args, name, arguments ) )
+    {
+        return table_.builtin( Type_kind::Error );
+    }
+
+    // An argument that failed to resolve makes the whole type an error rather than interning
+    // `Box<<error>>`, which spells nothing and which every later diagnostic would name.
+    for( const Type_id argument : arguments )
+    {
+        if( !argument.is_valid() || table_.is_error( argument ) )
+        {
+            return table_.builtin( Type_kind::Error );
+        }
+    }
+
+    return table_.structure( declaration, arguments, name );
+}
+
+// PLAN §12, M7. `P::make( 7 )` - a member that belongs to the type rather than to an object. The
+// arguments are the written ones and nothing precedes them, which is the whole of what separates
+// this from a method call. Everything else is what check_method_arguments already does for a
+// receiver, including the instantiation a generic one seeds - the qualifier's type stands in for
+// the receiver's, and it carries the same bindings.
+Type_id Expressions::infer_static_call( Node_id id, Node_id aggregate )
+{
+    const Node_id   path = ast_.child( id, 0 );
+    const Symbol_id name { ast_.aux( path ) };
+
+    // Even on a failed call the arguments must be typed, or later passes meet untyped nodes and a
+    // genuine mistake inside one goes unreported.
+    const auto refuse = [&]()
+    {
+        for( const Node_id argument : ast_.children( ast_.child( id, 1 ) ) )
+        {
+            infer( argument );
+        }
+
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    };
+
+    const std::string_view owner  = interner_.text( Symbol_id { ast_.aux( ast_.child( path, 0 ) ) } );
+    const Node_id          method = aggregates_.find_method( aggregate, name );
+
+    if( !method.is_valid() )
+    {
+        reporter_.error_at( ast_.span( path ), fmt::format( "`{}` has no static method `{}`", owner, interner_.text( name ) ) );
+
+        return refuse();
+    }
+
+    // The two spellings are not interchangeable. An instance method has a receiver the type cannot
+    // supply, so this is refused rather than called with nothing.
+    if( !is_static_method( ast_, method ) )
+    {
+        reporter_.error_at(
+            ast_.span( path ),
+            fmt::format( "`{}` needs an object", interner_.text( name ) ),
+            fmt::format( "call it as `value.{}( ... )`", interner_.text( name ) )
+        );
+
+        return refuse();
+    }
+
+    const Type_id instance = qualifier_type( path, aggregate );
+
+    if( table_.is_error( instance ) )
+    {
+        return refuse();
+    }
+
+    // Which callable this call chose. Lowering reads it to tell a static call from the variant
+    // construction it otherwise looks exactly like - both are a call whose callee is a path.
+    callees_.record( id, method );
+
+    return check_method_arguments( id, method, instance );
+}
+
 Type_id Expressions::infer_variant_construction( Node_id id )
 {
     const Node_id                  path      = ast_.child( id, 0 );
@@ -1012,8 +1221,46 @@ Type_id Expressions::infer_path( Node_id id )
     {
         if( ast_.kind( qualifier ) != Node_kind::Name_expr )
         {
-            reporter_.error_at( ast_.span( qualifier ), "`::` needs the name of an `enum` on its left" );
+            reporter_.error_at( ast_.span( qualifier ), "`::` needs the name of a type on its left" );
         }
+
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    const std::string_view owner = interner_.text( Symbol_id { ast_.aux( qualifier ) } );
+
+    // M7 widened what `::` reaches, and this is where the two meet: an `enum` has variants, and a
+    // struct or class has static methods. Nothing else has either.
+    if( is_aggregate( ast_.kind( decl ) ) )
+    {
+        const Node_id method = aggregates_.find_method( decl, name );
+
+        if( !method.is_valid() )
+        {
+            // A field of that name is the likely mistake, and it is a different one: a field
+            // belongs to an object, so there is nothing here for the type to hand back.
+            const bool field = aggregates_.find_field( types_.type_of( decl ), name ).is_valid();
+
+            reporter_.error_at(
+                ast_.span( id ),
+                fmt::format( "`{}` has no static method `{}`", owner, interner_.text( name ) ),
+                field ? fmt::format(
+                            "`{}` is a field, so it belongs to an object rather than to `{}`", interner_.text( name ), owner
+                        )
+                      : std::string {}
+            );
+
+            return types_.record( id, table_.builtin( Type_kind::Error ) );
+        }
+
+        // Named rather than called. The same complaint a bare function name gets, and for the same
+        // reason: L13 has no function pointers yet, so there is no value for this to be.
+        reporter_.error_at(
+            ast_.span( id ),
+            fmt::format( "`{}` is a function, not a value", interner_.text( name ) ),
+            is_static_method( ast_, method ) ? fmt::format( "call it as `{}::{}( ... )`", owner, interner_.text( name ) )
+                                             : fmt::format( "call it as `value.{}( ... )`", interner_.text( name ) )
+        );
 
         return types_.record( id, table_.builtin( Type_kind::Error ) );
     }
@@ -1022,8 +1269,8 @@ Type_id Expressions::infer_path( Node_id id )
     {
         reporter_.error_at(
             ast_.span( qualifier ),
-            fmt::format( "`{}` is not an `enum`", interner_.text( Symbol_id { ast_.aux( qualifier ) } ) ),
-            "`::` reaches a variant, and only an `enum` has them"
+            fmt::format( "`{}` is not a type", owner ),
+            "`::` reaches a variant of an `enum` or a static method of a `struct` or `class`"
         );
 
         return types_.record( id, table_.builtin( Type_kind::Error ) );
@@ -2870,12 +3117,15 @@ TEST_CASE( "type_checker_checks_a_path", "[sema][enum]" )
         REQUIRE( p.rendered().find( "`Colour` has no variant `Purple`" ) != std::string::npos );
     }
 
+    // M7 gave a struct something for `::` to reach, so the complaint is about the *name* now
+    // rather than about the qualifier - and a field is named as the different thing it is.
     SECTION( "a qualifier that is not an enum is refused" )
     {
         const Typed p( "struct P { i32 x; };\ni32 main() { i32 n = P::x; return 0; }" );
 
         INFO( p.rendered() );
-        REQUIRE( p.rendered().find( "is not an `enum`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`P` has no static method `x`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`x` is a field" ) != std::string::npos );
     }
 
     SECTION( "and `::` needs a name on its left" )
@@ -2883,7 +3133,7 @@ TEST_CASE( "type_checker_checks_a_path", "[sema][enum]" )
         const Typed p( std::string( colour ) + "i32 main() { i32 n = Colour::Red::Green; return 0; }" );
 
         INFO( p.rendered() );
-        REQUIRE( p.rendered().find( "needs the name of an `enum` on its left" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "needs the name of a type on its left" ) != std::string::npos );
     }
 }
 
@@ -3986,6 +4236,249 @@ TEST_CASE( "expressions_record_the_instantiation_a_method_call_chose", "[sema][m
     const Node_id call = p.nth( Node_kind::Call_expr, 0 );
     REQUIRE( call.is_valid() );
     REQUIRE( p.types().instantiation_of( call ).has_value() );
+}
+
+// PLAN §12, M7. D30 already spells the call - `Type::name( args )`, the same scoped form a variant
+// uses - so what M7 adds on this side is a second thing `::` can reach. Until now it reached a
+// variant and nothing else, which is why every case below that still refuses one matters as much as
+// the case that now succeeds.
+TEST_CASE( "type_checker_calls_a_static_method", "[sema][static]" )
+{
+    SECTION( "it types as its return type" )
+    {
+        const Typed p( "struct P { i32 x; static P make( i32 v ) { return P { v }; } };\n"
+                       "i32 main() { P p = P::make( 7 ); return p.x; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const Node_id call = p.nth( Node_kind::Call_expr, 0 );
+
+        REQUIRE( call.is_valid() );
+        REQUIRE( p.type_name( call ) == "P" );
+    }
+
+    // The arguments are the written ones and nothing precedes them, so a wrong one is reported
+    // against the parameter beside it rather than against a receiver that is not there.
+    SECTION( "and its arguments are checked against the written parameters" )
+    {
+        const Typed p( "struct P { i32 x; static P make( i32 v ) { return P { v }; } };\n"
+                       "i32 main() { P p = P::make( true ); return p.x; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "one taking nothing is still a call" )
+    {
+        const Typed p( "struct P { i32 x; static P zero() { return P { 0 }; } };\n"
+                       "i32 main() { P p = P::zero(); return p.x; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// The two spellings are not interchangeable in either direction, and M7's acceptance names the
+// first of them: a named constructor is refused as `value.make( args )`.
+TEST_CASE( "type_checker_keeps_the_two_call_spellings_apart", "[sema][static]" )
+{
+    // Counted rather than merely non-clean: every line of this would also be refused by a compiler
+    // that cannot parse `static` at all, and a test that passes before the feature exists says
+    // nothing about it afterwards. One type error means the declaration was understood and the
+    // spelling was the only objection.
+    SECTION( "a static method is refused through an object" )
+    {
+        const Typed p( "struct P { i32 x; static P make( i32 v ) { return P { v }; } };\n"
+                       "i32 main() { P p = P::make( 1 ); P q = p.make( 2 ); return q.x; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    // And the other way: an instance method has a receiver the type cannot supply, so reaching one
+    // through `::` is refused rather than called with nothing.
+    SECTION( "an instance method is refused through the type" )
+    {
+        const Typed p( "struct P { i32 x; i32 get() const { return x; } };\n"
+                       "i32 main() { return P::get(); }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    // A field is neither, and `::` has never reached one. It stays refused now that the qualifier
+    // may legitimately be a struct, which is the case a check written as "is it an enum" would lose.
+    SECTION( "and a field is still not reachable through the type" )
+    {
+        const Typed p( "struct P { i32 x; static P zero() { return P { 0 }; } };\n"
+                       "i32 main() { return P::x; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    SECTION( "a name the type does not have is refused" )
+    {
+        const Typed p( "struct P { i32 x; static P zero() { return P { 0 }; } };\n"
+                       "i32 main() { P p = P::nope(); return p.x; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+}
+
+// The qualifier may now be a struct or a class, and that is the whole of what widened. A primitive
+// has no members of any kind, and an expression is not a name at all.
+TEST_CASE( "type_checker_still_refuses_a_qualifier_that_reaches_nothing", "[sema][static]" )
+{
+    SECTION( "a primitive" )
+    {
+        const Typed p( "i32 main() { return i32::make( 1 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    SECTION( "and an expression" )
+    {
+        const Typed p( "i32 f() { return 1; }\ni32 main() { return f()::x; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+}
+
+// The variant path is what `::` meant before M7 and it must be untouched by the addition. Here
+// rather than left to the enum cases above it, because what breaks it is a widening written as a
+// replacement rather than as an extra arm.
+TEST_CASE( "type_checker_leaves_the_variant_path_alone", "[sema][static][enum]" )
+{
+    SECTION( "a bare variant" )
+    {
+        const Typed p( "enum Colour { Red, Green };\ni32 main() { Colour c = Colour::Red; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and one carrying a payload" )
+    {
+        const Typed p( "enum Shape { Circle( i32 r ), Empty };\ni32 main() { Shape s = Shape::Circle( 2 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and an enum has no static methods to find instead" )
+    {
+        const Typed p( "enum Colour { Red, Green };\ni32 main() { return Colour::make( 1 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+}
+
+// A static method's body has no receiver, so everything a method reaches implicitly through one is
+// unreachable from it. Each is a diagnostic rather than a miscompile: the lowerer would otherwise
+// adopt the first written parameter as `this` and project a field off it.
+TEST_CASE( "type_checker_refuses_the_receiver_from_a_static_body", "[sema][static]" )
+{
+    SECTION( "a bare field name" )
+    {
+        const Typed p( "struct P { i32 x; static i32 f() { return x; } };\ni32 main() { return P::f(); }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    SECTION( "an explicit `this`" )
+    {
+        const Typed p( "struct P { i32 x; static i32 f() { return this.x; } };\ni32 main() { return P::f(); }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    // The member scope is what puts a sibling in reach by bare name, and it is right that a static
+    // method joins it - but only the half of it that needs no object.
+    SECTION( "and a bare instance sibling" )
+    {
+        const Typed p( "struct P { i32 x; i32 get() const { return x; } static i32 f() { return get(); } };\n"
+                       "i32 main() { return P::f(); }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    // The accepted half, and the fixture would be worth much less without it: a static sibling
+    // needs no object, so a bare call to one is exactly as legal as it is between free functions.
+    SECTION( "a bare static sibling is accepted" )
+    {
+        const Typed p( "struct P { i32 x; static i32 one() { return 1; } static i32 f() { return one(); } };\n"
+                       "i32 main() { return P::f(); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and so is a static called by bare name from an instance method" )
+    {
+        const Typed p( "struct P { i32 x; static i32 one() { return 1; } i32 g() const { return one() + x; } };\n"
+                       "i32 main() { P p = P { 1 }; return p.g(); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// M8's first customer is `Vector::with_capacity`, so the generic case is the one that matters. The
+// type arguments come from the qualifier, there being no receiver to read them off - which is a
+// second source for something that has only ever had one.
+TEST_CASE( "type_checker_types_a_generic_static_method", "[sema][static][generic]" )
+{
+    SECTION( "the qualifier's type arguments reach the body" )
+    {
+        const Typed p( "struct Box<T> where T : Copyable { T v; static Box<T> of( T x ) { return Box { x }; } };\n"
+                       "i32 main() { Box<i32> b = Box<i32>::of( 7 ); return b.v; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const Node_id call = p.nth( Node_kind::Call_expr, 0 );
+
+        REQUIRE( call.is_valid() );
+        REQUIRE( p.type_name( call ) == "Box<i32>" );
+    }
+
+    // A call is what records an instantiation for the monomorphisation worklist, and a static call
+    // is a *new* seed rather than a variation on one - nothing about it passes through a receiver.
+    // Missing it means a symbol referenced and never emitted, which is a `cc` error in generated
+    // code rather than a diagnostic.
+    SECTION( "and the instantiation is recorded" )
+    {
+        Typed p( "struct Box<T> where T : Copyable { T v; static Box<T> of( T x ) { return Box { x }; } };\n"
+                 "i32 main() { Box<i32> b = Box<i32>::of( 7 ); return b.v; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const Node_id call = p.nth( Node_kind::Call_expr, 0 );
+
+        REQUIRE( call.is_valid() );
+        REQUIRE( p.types().instantiation_of( call ).has_value() );
+    }
+
+    // The argument is what settles `T` when the qualifier leaves it open, exactly as it does for a
+    // free generic function - so the open spelling is not an error by itself.
+    SECTION( "and a wrong argument is still refused" )
+    {
+        const Typed p( "struct Box<T> where T : Copyable { T v; static Box<T> of( T x ) { return Box { x }; } };\n"
+                       "i32 main() { Box<i32> b = Box<i32>::of( true ); return b.v; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
 }
 
 } // namespace keel

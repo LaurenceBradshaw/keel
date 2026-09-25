@@ -68,6 +68,7 @@ enum class Keyword : u32
     Free,
     Fallthrough,
     Where,
+    Static,
 
     Count
 };

@@ -230,6 +230,27 @@ bool is_extern( const Ast& ast, Node_id decl )
     return ast.kind( decl ) == Node_kind::Function_decl && !ast.child( decl, 2 ).is_valid();
 }
 
+// Whether parameter 0 is the synthesised `this`. Asked of the parameter rather than of the node
+// kind, because three kinds have a receiver and two do not, and M7 made the second group hold both
+// a free function and a member. `this` is a keyword, so no written parameter can carry its name and
+// the test is exact.
+bool has_receiver( const Ast& ast, Node_id decl )
+{
+    if( !decl.is_valid() || !is_function_like( ast.kind( decl ) ) )
+    {
+        return false;
+    }
+
+    const std::span<const Node_id> params = ast.children( ast.child( decl, 1 ) );
+
+    return !params.empty() && Symbol_id { ast.aux( params[0] ) } == Interner::keyword( Keyword::This );
+}
+
+bool is_static_method( const Ast& ast, Node_id method )
+{
+    return method.is_valid() && ast.kind( method ) == Node_kind::Method_decl && !has_receiver( ast, method );
+}
+
 bool is_borrowed_binding( const Ast& ast, const Types& types, Node_id decl )
 {
     const Node_id annotation = ast.child( decl, 0 );
@@ -268,7 +289,7 @@ bool is_const_method( const Ast& ast, Node_id method )
     // ordinary const-binding question, asked of parameter 0.
     const std::span<const Node_id> params = ast.children( ast.child( method, 1 ) );
 
-    return !params.empty() && is_const_binding( ast, params[0] );
+    return has_receiver( ast, method ) && is_const_binding( ast, params[0] );
 }
 
 // What binds an aggregate's type parameters to what it was instantiated at. Empty for a

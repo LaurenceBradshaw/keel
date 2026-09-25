@@ -1,0 +1,41 @@
+// PLAN §12, M7. The parameter walk captures the receiver from the first parameter of anything that
+// is not a free function, which is the node kind standing in for a question about the signature. A
+// static method is the second declaration with no receiver, and this dump is where the difference is
+// visible: `make` opens on its written parameter, `get` opens on the synthesised `this`.
+//
+// The call site is the other half. A method call takes the receiver's address as argument 0, so a
+// static one emitting that would pass an address the callee has no parameter for.
+
+struct P
+{
+    i32 x;
+
+    static P make( i32 v )
+    {
+        return P { v };
+    }
+
+    static i32 twice( i32 n )
+    {
+        return n + n;
+    }
+
+    i32 get() const
+    {
+        return x;
+    }
+
+    // A static sibling by bare name: no receiver is threaded through, which is what separates this
+    // from the implicit `this.get()` beside it.
+    i32 doubled() const
+    {
+        return twice( x );
+    }
+};
+
+i32 main()
+{
+    P p = P::make( 7 );
+
+    return p.get() + P::twice( 1 ) + p.doubled();
+}
