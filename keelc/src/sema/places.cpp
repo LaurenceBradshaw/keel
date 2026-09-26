@@ -1162,6 +1162,17 @@ TEST_CASE( "type_checker_refuses_a_write_to_a_temporary", "[sema][places]" )
         REQUIRE( p.rendered().find( "this value is a temporary" ) != std::string::npos );
     }
 
+    // M7 slice 3. The callee is a variable, and a variable's child 0 is its type annotation - so
+    // asking whether it returns a binding answers yes and names a reason that does not exist.
+    SECTION( "a call through a function-typed variable is one too" )
+    {
+        const Typed p( std::string( make ) + "i32 main() { fn() -> P f = &make; f().t = 2; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "this value is a temporary" ) != std::string::npos );
+    }
+
     // Reading is what a temporary is for, and refusing it would take the conditional's own tests.
     SECTION( "reading through one stays legal" )
     {

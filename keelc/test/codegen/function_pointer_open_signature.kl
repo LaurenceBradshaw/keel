@@ -1,0 +1,45 @@
+// `fn( T ) -> T` inside a generic names the enclosing instance's own signature, which is closed once
+// the instance exists. A signature that still mentions `T` is interned beside those, and gets no
+// typedef at all - so this has to link, which is what makes it a golden.
+
+T bounded<T>( T a ) where T : Integral
+{
+    return a + a;
+}
+
+// A function-typed parameter written in terms of the enclosing type parameter, called through. No
+// address is taken inside this one: writing the type is enough to intern the open form.
+T through<T>( fn( T ) -> T f, T a ) where T : Integral
+{
+    return f( a );
+}
+
+// The other door: the address of a generic, taken at the enclosing instance's own argument.
+T forwarded<T>( T a ) where T : Integral
+{
+    fn( T ) -> T p = &bounded<T>;
+
+    return p( a );
+}
+
+i32 twice32( i32 a )
+{
+    return a + a;
+}
+
+i64 twice64( i64 a )
+{
+    return a + a;
+}
+
+i32 main()
+{
+    // Two instances of one open signature, so one typedef each and neither is the open form.
+    if( through<i32>( &twice32, 3 ) != 6 ) { return 1; }
+    if( through<i64>( &twice64, 4 ) != 8 ) { return 2; }
+
+    if( forwarded<i32>( 5 ) != 10 ) { return 3; }
+    if( forwarded<i64>( 6 ) != 12 ) { return 4; }
+
+    return 0;
+}

@@ -1,0 +1,19 @@
+// M7 slice 2: a function's address is a value. Calling through the variable is slice 3, so what
+// this pins is that the C compiler accepts the symbol at the declared type - a typedef that
+// disagreed with the mangled name would not build.
+i32 twice( i32 a )
+{
+    return a * 2;
+}
+
+void nothing()
+{
+}
+
+i32 main()
+{
+    fn( i32 ) -> i32 p = &twice;
+    fn() -> void     q = &nothing;
+
+    return 0;
+}

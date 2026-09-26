@@ -1425,6 +1425,7 @@ milestone is complete until its acceptance program is a passing golden test.
 | **M7** | ~~**Static methods**~~ **done (2026-09-25)**, see §15 — a function that belongs to a type but takes no receiver, called `Type::name( args )`. The §15 debt, scheduled here because M8's library is the first thing that wants one: `Vector::with_capacity`, `String::from_bytes`. Scope is *methods only* — type-scoped **data** waits on M8's modules and globals, function-local static storage has no customer, and internal linkage is the access-control debt below it rather than this one. The **spelling is undecided** and §12 now carries it: every method has an implicit receiver, so something has to say "this one does not", and D30 already gives `Type::name` at the call site without saying how the declaration is marked. **Two more scoped here (2026-09-19). Access control**, the §15 debt sitting directly below this one, because M7's own customer argues for it: `Vector::with_capacity` is a named constructor, and a named constructor only earns its place if the ordinary one can be hidden — so the feature that motivates M7 is incomplete without it. It is a resolver feature, member lookup carrying visibility, and a slice of its own rather than a rider. **Corrected (2026-09-25): it is not a resolver feature.** The resolver only ever resolves *bare* names, and a bare name that reaches a member is resolved inside that member's own type - always visible, so nothing there can be refused. Every access-control decision is about a **qualified** access, and all five live in `sema/expressions.cpp`: `obj.f`, `obj.f( ... )`, `Type::f`, `C { ... }` and `C( ... )` - the last being the one M7's own customer needs, since hiding the ordinary constructor is what makes `Vector::with_capacity` worth writing. The resolver's only part is having bound the *type* name already. See §15. **Function pointers**, moved from M6.5's fork: the alternative was M8, and M8 is the standard library — a milestone about writing Keel in Keel should not also be where a language feature first appears. It is the smallest of the three and goes last, because nothing else here depends on it. **Order matters within the milestone**: the spelling decision, then static methods, then access control, then function pointers. ~~**Access control**~~ **done (2026-09-25)**, see §15 - `private` and `public` on a member, a class's fields private by default, and five refusals in `sema/expressions.cpp`. **Only function pointers remain.** | A named constructor returns an aggregate, is called as `Type::make( args )`, and is refused as `value.make( args )` — both a golden and the mangling that tells it from a method; a field declared private is refused from outside its type and accepted from a method of it; and a function's address is taken, stored in a variable, and called through it. | **Whether a type is a namespace, and whether a function is a value** |
 | **M8** | **The many-item pointer `[*]T` (D27), first and on its own**, then modules (`import`), multi-file compilation, then **static fields**, then begin `Vector` and `String` **in Keel**. **Static fields scheduled here (2026-09-25)**, and they are the audit's own failure repeating: M7's row and its §15 debt both deferred type-scoped *data* to "M8's modules and globals" — a destination that names this milestone's *contents* rather than its row, so no row carried it, which is exactly what the 2026-09-24 scheduling audit was run to catch and is a fifth instance it missed. They sit **after modules** because modules are what they actually wait on: storage is not the open question — file-scope variables already declare, fold, check and emit end to end, and `mangle_local` suffixes the node id so two types each holding a `count` cannot collide — **linkage** is, and internal linkage was deferred into M7's access-control slice rather than into the feature. The part that is genuinely this milestone's size is **one storage per instantiation** on a generic aggregate, which the monomorphisation worklist has to emit rather than a walk over the root, and `Vector<T>` is the first type to want one. The design is worked out in §15 so it is not re-derived: a static field is a `Var_decl` in the member list, **not a flagged `Field_decl`**. | `alloc<T>( n )` yields a `[*]T`, `p[ i ]` and `p + i` work on one and are still refused on a `*T`, and a `[*]u8` walked out of bounds is the author's problem rather than a type error. Then a two-module program. Then a `static` field shared across two objects of one type, written from a method and read from a static method, absent from the emitted C struct, and one on a generic type with separate storage per instantiation. Then a `Vector<i32>` that grows and frees. | **Whether the design actually works** |
 | **M9** | **Error handling.** `try` as a prefix keyword (D6's leaning, §12), `Result<T, E>` as an ordinary generic `enum` in the library rather than a language type, and the one real language addition: **§12's anonymous error union**, `Result<Config, Io_error \| Parse_error>` — flattening so `( A \| B ) \| C` is `A \| B \| C`, order-independence so `A \| B` and `B \| A` are one type, `try` widening into any union containing the source type, and `switch` matching leaf variants with exhaustiveness across a union of unions. | A function returning `Result<Config, Io_error \| Parse_error>` propagates with `try` from a callee returning `Result<String, Io_error>` and no conversion is written. `switch` over the union matches leaf variants; a missing arm is a compile error naming it. `A \| B` and `B \| A` select the same instantiation and mangle to one symbol. | **The largest type-system addition in the document** |
+| **M10** | **Compiler flags.** Nothing above says how a warning is turned on, off or into an error, and the generated C inherits whatever `$CC` was given rather than anything Keel decided: `i32 f( i32 a ) { return 0; }` emits an unused parameter and fails under the golden runner's default `-Werror`, although the emitted code is correct and Keel itself said nothing. **The flag surface is the deliverable**: which diagnostics are warnings, which are errors, which can be silenced, and the rule that **a `-W` flag reaches `$CC` only when Keel was asked for the same thing** - so the C compiler never refuses code Keel accepted. | `keelc --werror=unused-parameter` refuses that program with Keel's own diagnostic, and without the flag both Keel and the generated C accept it. The golden runner's C flags follow what each fixture asked for rather than one global default. | Diagnostics as an interface |
 
 **M3 is where this stops being a toy** — it is the first thing C cannot do for
 us. **M4 is where we learn whether the ownership model is real.** **M5.5 is where
@@ -1734,7 +1735,7 @@ none of them can block work indefinitely.
 | **Does an import bring the types reachable from a signature with it?** If `load_config` returns `Result<Config, Config_error>`, then importing it means needing all three to handle the result, and requiring three imports is friction carrying no information. Errors are where this bites first — a combining enum is needed in the module that declares it, the one that handles it, and every layer that re-wraps it — but nothing about it is specific to errors. The alternative floated and rejected was a dedicated file kind for error enums (`.kle`): that is a naming convention enforced by the toolchain rather than a language feature, it still has to be imported, and it files declarations by *what kind of thing they are* instead of *what they belong to*, which scatters a module for no gain. | M8 |
 | **Does the error type of a `Result` have to be a named enum?** Written out, multi-source error handling produces a combining enum per layer — `enum Config_error { Io( Io_error ), Parse( Parse_error ) }` — that carries no information and exists only to say "either of those". Every Rust project reaches for `thiserror` to generate exactly this, or `Box<dyn Error>` to erase it; both are libraries patching a language gap, and the layers it creates then force a matching cascade of one-level `switch`es to peel them back off. **Zig's answer is error sets**, which union structurally and can be inferred from a body, so no combining type is ever declared. The Keel shape would be an **anonymous error union** — `Result<Config, Io_error \| Parse_error>` — with `try` widening into any union containing the source type, which generalises the "exactly one way to convert" rule above rather than replacing it, and with `switch` matching leaf variants directly so the cascade collapses. **The cost is the largest type-system addition in this document**: flattening so `( A \| B ) \| C` is `A \| B \| C`, order-independence so `A \| B` and `B \| A` are one type, and exhaustiveness across a union of unions. The cheap half-measure is inference alone — keep the named enum, allow `Result<Config, _>` — which removes the declaration but not the type, and makes the signature less informative, which is the opposite of what every other entry here has chosen. **One argument for the named enum that brevity comparisons miss**: exhaustiveness means the compiler knows the complete failure set at every call site, so an editor can offer *fill in the missing arms* as a fix rather than the author compiling to discover them one at a time. A computed set can be enumerated too, but a named type has a declaration to jump to, somewhere to hang a doc comment, and a stable name in a diagnostic. Weigh that against the boilerplate rather than only the line count. **Do not decide this at M5.** Payload-free enums need none of it, and the evidence that decides it is real error-handling code, which cannot be written until after M6. **Considered and rejected: attaching the error type to the success type**, so that `Config` declares its own `Config_error` and `Result<Config>` needs no second parameter. It is discoverable and it reads well for a type with exactly one fallible constructor, and it fails on four counts. The same success type comes from operations that fail differently — `parse_int` and `divide` both yield an `i32`, and the failure belongs to parsing and to dividing, not to the number. Primitives have no declaration site at all, so `Result<i32>` has nowhere to hang one. It inverts the dependency: `Config` would have to name `Io_error`, a filesystem concept, and would then change when a *loading strategy* changed. And it is the wrong axis — a combining error set is per **layer**, not per type, since `load_config` unions IO with parse while a caller unions config with network. The instinct behind it is right and worth keeping: the objection is to naming the error type *at all*. Inference attaches it to the **operation** instead, which is the axis that actually varies, and composes — a caller's set is the union of everything it propagates. **Decided (2026-09-18): the anonymous error union, with widening confined to propagation.** `Result<Config, Io_error \| Parse_error>`, no combining enum declared, and `switch` matching leaf members so the cascade never forms. **The two costs quoted above are not equal, and the first was overstated.** Flattening and order-independence are one canonicalise-at-construction step — expand nested unions, sort members by `Type_id`, dedupe — and `Type_id`s are already interned, so sorting by numeric id gives a canonical key for free. That is a small function, not an architectural fork. What is real is that **a union has no declaration**, so `Type_table` gains a second interning path keyed on the member set rather than on declaration plus arguments; that is the one place this cuts against the grain of §4. **The tag is the part the comparison with Zig hides.** Zig's error sets are cheap because errors are globally numbered and payload-free, so a set is a compile-time subset and widening is a runtime no-op. Keel's errors carry payloads, so that does not transfer directly — but it transfers with one move: **give every error type a stable global tag**, which is available precisely because Keel has no separate compilation and the whole program's error types are known. Widening then keeps the tag and copies into a larger payload slot, and exhaustiveness is a subset test over a bitset. **Widening is confined to `try` and is not a subtype relation. This condition is what the decision rests on.** A general “an `Io_error` is acceptable wherever an `Io_error \| Parse_error` is expected” would fire at every point where types meet, and the collision is with overloading, decided above: `handle( Io_error \| Parse_error )` and `handle( Io_error \| Parse_error \| Net_error )` would both accept an `Io_error`, which needs most-specific-match, which over sets is subset ordering, which is *partial* and brings ambiguity rules with it — the ranking machinery D5 deleted and D33's overloading argument depends on being absent. Confined, the rule is **one subset check in one place**: every other position matches a union by identity, and D5's “exactly, or not at all” survives everywhere else. **It is an explicit conversion, not an implicit one**, because `try` is a keyword the author typed — the same family as `cast<T>`, `wrap<T>`, `move` and `ref`, a visible marker where something non-obvious happens (D2, D31). **The error set is declared, never inferred.** Zig infers it from the body; inferring here would stop the signature stating what can go wrong, which is the property every other entry in this document has chosen. Declaring it makes `try`'s check a subset test against something written down, and makes adding a `try` for a new error type a compile error **at the contract** rather than a silent change at every call site — D11's spirit. **What it gives up**: constructing a union value by any route other than `try` is explicit. That is a small loss in a rare position and the safe direction to be wrong in — relaxing a rule later is safe, tightening one is not. **This also answers the conversion sub-question in the `?`/`try` row above**: under a union there is no conversion to define, only widening into a superset. | **Direction decided: the union, widening confined to `try`** — implement with error handling, ~~post-M6~~ **which is M9 as of 2026-09-24** — this row is the bulk of that milestone |
 | **Does a pattern nest?** `case Err( Io( e ) ):` is what anyone will write once errors are enums of enums, and peeling one layer per `switch` is the alternative — two small functions rather than one deep pattern. Nesting is more expressive and is where pattern matching starts to need a real compiler: exhaustiveness over a product of variants, and a reasonable diagnostic when a case is missing three levels down. One layer at a time is the conservative start and composes by hand. | M5, with destructuring |
-| **Are there function pointers, and does anything still need them?** They appear nowhere above — the same gap methods had. Three uses, and generics take two of them: a comparator for `sort` becomes a type parameter at M6, and so does any strategy passed to a container. What survives is **FFI** — a C library that takes a callback has no other spelling — and that alone may be enough to need them. `T( * )( args )` is C's syntax and is widely disliked; a named form reads better. **Decided (2026-09-18): yes, and member pointers with them — but that is three features wearing one name, and only two of them are new.** M6 went as predicted: generics took the comparator and the strategy, and **FFI is the surviving customer**, which settles the first half on its own. *A member **function** pointer is not a second feature here, and L13 is why.* C++'s are fat and implementation-defined — a code address plus a `this` adjustment plus a vtable index — for reasons that are entirely inheritance and virtual dispatch, and Keel has neither. A method already lowers to a function whose first parameter is the receiver, `ref C` or `const ref C` by D32's `const`, so `&C::get` **is** an ordinary function pointer over that signature. Writing that down is the point of this clause: the machinery must not be built. *A member **data** pointer is the one genuinely new thing.* It is an **offset, not an address**, so it is applied to an object rather than dereferenced — which is D27's own instinct, since the thing that makes it safe is that it cannot be arithmetic. **Four sub-questions, and the last two are the ones that bite.** *The type spelling*, where this row's dislike of `T( * )( args )` now has a reason rather than a preference: §15 slice 3 made a parameter's identity the pair **(declared type, marker)**, so `fn( ref i32 )` and `fn( i32* )` are different types and a marker needs somewhere to sit — which C's declarator has nowhere for. Leaning `fn( i32, i32 ) -> i32`. *The application spelling*, which cannot be `obj->*p` because D22 deleted `->` outright, and where `C::v` also widens `::` from D30's *“reaches a variant, and only an `enum` has them”* to a general scope qualifier. *Overloading makes `&f` ambiguous*, and the only thing that can choose is the **expected type** — which is exactly the channel §15 slice 4 built, taken and cleared by the node that owns it. So `fn( i32, i32 ) -> i32 g = &add;` selects, and `auto g = &add;` on an overloaded name is an error; today the whole question is masked by `infer_name` reporting *“`add` is a function, not a value”*. *Taking a generic's address is a new **seed** for the monomorphisation worklist*, and this is the one that fails silently: `&id` is an error and `&id<i32>` is required, but `instantiations_` and `generic_calls_` are recorded in `infer_call`, and an address-of is not a call — miss it and the symbol is referenced and never emitted, which is a `cc` error in generated code rather than a diagnostic, the worst failure class this project has. **Two dependencies rather than one.** Member data pointers need **access control to exist first**, or `&C::v` on a private field is a hole in visibility the day visibility arrives; and they sit against §12's reflection direction — *compile-time yes, runtime never* — because a runtime-valued field selector is the weak form of exactly that, which is a boundary to state rather than to discover. **Timing: the FFI half with `extern`'s customers, the member half with access control**; neither is M6's, whose obligation was the decision and is discharged. **Scheduled: M7 (2026-09-19).** The fork this row left open was M6.5 or M8, and neither is right — M8 is the standard library, and a language feature arriving inside the milestone that writes Keel in Keel would make that milestone about two things. **The row's own timing rule picks M7 without being changed**: member pointers were always to land *with access control*, and access control is now M7, so the member half was already scheduled there the moment that moved. The FFI half goes with it rather than waiting separately, because splitting one feature across two milestones to satisfy a customer that has not appeared is worse than building it once. | **Decided** — M6; **scheduled M7** — FFI half and member half together, since access control landed there |
+| **Are there function pointers, and does anything still need them?** They appear nowhere above — the same gap methods had. Three uses, and generics take two of them: a comparator for `sort` becomes a type parameter at M6, and so does any strategy passed to a container. What survives is **FFI** — a C library that takes a callback has no other spelling — and that alone may be enough to need them. `T( * )( args )` is C's syntax and is widely disliked; a named form reads better. **Decided (2026-09-18): yes, and member pointers with them — but that is three features wearing one name, and only two of them are new.** M6 went as predicted: generics took the comparator and the strategy, and **FFI is the surviving customer**, which settles the first half on its own. *A member **function** pointer is not a second feature here, and L13 is why.* C++'s are fat and implementation-defined — a code address plus a `this` adjustment plus a vtable index — for reasons that are entirely inheritance and virtual dispatch, and Keel has neither. A method already lowers to a function whose first parameter is the receiver, `ref C` or `const ref C` by D32's `const`, so `&C::get` **is** an ordinary function pointer over that signature. Writing that down is the point of this clause: the machinery must not be built. *A member **data** pointer is the one genuinely new thing.* It is an **offset, not an address**, so it is applied to an object rather than dereferenced — which is D27's own instinct, since the thing that makes it safe is that it cannot be arithmetic. **Four sub-questions, and the last two are the ones that bite.** *The type spelling*, where this row's dislike of `T( * )( args )` now has a reason rather than a preference: §15 slice 3 made a parameter's identity the pair **(declared type, marker)**, so `fn( ref i32 )` and `fn( i32* )` are different types and a marker needs somewhere to sit — which C's declarator has nowhere for. Leaning `fn( i32, i32 ) -> i32`. *The application spelling*, which cannot be `obj->*p` because D22 deleted `->` outright, and where `C::v` also widens `::` from D30's *“reaches a variant, and only an `enum` has them”* to a general scope qualifier. *Overloading makes `&f` ambiguous*, and the only thing that can choose is the **expected type** — which is exactly the channel §15 slice 4 built, taken and cleared by the node that owns it. So `fn( i32, i32 ) -> i32 g = &add;` selects, and `auto g = &add;` on an overloaded name is an error; today the whole question is masked by `infer_name` reporting *“`add` is a function, not a value”*. *Taking a generic's address is a new **seed** for the monomorphisation worklist*, and this is the one that fails silently: `&id` is an error and `&id<i32>` is required, but `instantiations_` and `generic_calls_` are recorded in `infer_call`, and an address-of is not a call — miss it and the symbol is referenced and never emitted, which is a `cc` error in generated code rather than a diagnostic, the worst failure class this project has. **Two dependencies rather than one.** Member data pointers need **access control to exist first**, or `&C::v` on a private field is a hole in visibility the day visibility arrives; and they sit against §12's reflection direction — *compile-time yes, runtime never* — because a runtime-valued field selector is the weak form of exactly that, which is a boundary to state rather than to discover. **Timing: the FFI half with `extern`'s customers, the member half with access control**; neither is M6's, whose obligation was the decision and is discharged. **Scheduled: M7 (2026-09-19).** The fork this row left open was M6.5 or M8, and neither is right — M8 is the standard library, and a language feature arriving inside the milestone that writes Keel in Keel would make that milestone about two things. **The row's own timing rule picks M7 without being changed**: member pointers were always to land *with access control*, and access control is now M7, so the member half was already scheduled there the moment that moved. The FFI half goes with it rather than waiting separately, because splitting one feature across two milestones to satisfy a customer that has not appeared is worse than building it once. | **Decided** — M6; **scheduled M7** — FFI half and member half together, since access control landed there; **all four sub-questions taken, 2026-09-25 and 2026-09-26**, see §15 |
 | **Pointer-to-member — `&Point::x`?** Its real uses are serialisation and generic field access, and §12 already promises **compile-time reflection**, which covers both and more. Likely subsumed rather than added: a feature whose only customers are served better by another feature is one to leave out. | Whenever reflection is designed; not before |
 | **`for( var : collection )`.** Needs an iteration protocol, which needs something to iterate — so it waits for `Vector` and `String`, and the protocol should be designed against a real container rather than invented ahead of one. Note D34's `for( i : 0..n )` is the *same syntax*, which is an argument for settling both together. | M8 |
 | Standard library naming. `MANIFESTO.md` §12 already refuses to mirror `std`, but the specific names are unsettled: one `Hash_map` rather than `map`/`unordered_map`, and a better name than `vector` for a dynamic array. Note the one real trap — `List` reads as a *linked* list to a C++ programmer (it is `List<T>` in C#/Java but `std::list` in C++), so a familiar name would carry the wrong semantics. Not a §6.3 divergence: those cover syntax and semantics the compiler enforces, and no library exists yet. | M8, when the first containers are written in Keel |
@@ -5501,6 +5502,469 @@ that implements it. Unit tests went into `sema/expressions.cpp` where the rules 
 then still survived the unit suite - removing the private-constructor branch, which falls through to
 `has no constructor` and leaves the error *count* unchanged. A count is not an assertion about a
 diagnostic. That section now asserts the message.
+
+### M7 slice: the function-pointer decisions (2026-09-25)
+
+**Three of §12's four sub-questions are taken, the fourth is narrowed, and the milestone's scope
+grew rather than shrank.** Nothing is built yet; this is the decision record the slice is written
+against.
+
+**The type spelling is `fn( i32, i32 ) -> i32`, arrow included even for `void`.** One spelling per
+type, so no eliding. The form is forced rather than preferred: slice 3 made a parameter's identity
+the pair *(declared type, marker)*, so `fn( ref i32 )` and `fn( i32* )` are different types and the
+marker needs a slot that C's declarator has nowhere for.
+
+**The variable's name is stranded after its type, and §5.1 is why.** The obvious fix for how that
+reads is to put the name where a function declaration puts it - `i32 g( i32, i32 ) = &add;` - and
+that is the one spelling the containment rule forbids outright: C++ reads it as a declaration of a
+function and Keel would read it as a variable. D18 sharpens it, since a bare prototype is already a
+hard error here, so `= &add` would be the whole difference between an error and a variable. That is
+C's declarator trap rebuilt with a smaller trigger. Recorded because the verbosity is a real cost
+and the answer is a rule rather than a taste.
+
+**Verbosity is concentrated where it reads best**, which is the other half of that answer. The full
+type appears in parameter and field position, where the name follows its type as every parameter's
+does, and `auto` carries every local whose initialiser is unambiguous. There are no type aliases in
+v0, so it cannot be named once and reused; `auto` is the substitute.
+
+**`->` stops being a free token, and §12's row for it closes.** It gains a meaning in *type*
+position only, after a `fn` parameter list. The expression-position refusal is untouched - `p->x` is
+still a hard error naming `.` - and the two positions never meet, so the reuse costs nothing that
+row was protecting.
+
+**Overload selection reads the expected type, and `auto` is refused on an overloaded name.**
+`fn( i32, i32 ) -> i32 g = &add;` selects; `auto g = &add;` is fine on a name with one meaning and
+an error on a name with several. The channel is slice 4's, taken and cleared by the node that owns
+it.
+
+**The monomorphisation seed is work rather than a question.** `&id` is an error and `&id<i32>` is
+required, and the instantiation must be recorded at the address-of, because `instantiations_` and
+`generic_calls_` are populated in `infer_call` and an address-of is not a call. A miss is a symbol
+referenced and never defined, reported by `cc`. It gets the pair of tests static calls got: the
+checker records the instantiation, and the emitter writes the instance's body. `&Box<i32>::value`
+is the same seed from the member side.
+
+**Member data pointers stay in M7, and the argument that kept them corrects this plan's method.**
+They were proposed for deferral on the owning-enum-payload precedent - gated on a use case rather
+than a date - and the objection is that **a trigger nobody is watching for fails exactly the way a
+phrase-destination fails.** The 2026-09-24 audit found four deferrals whose destination was a
+sentence rather than a row, and decided two of the remainder onto triggers; this says that is the
+same defect wearing a different hat, because the realistic trigger for most of them is *rewriting
+this compiler in Keel*, which is far enough away that nothing in between will notice. **The
+existing trigger-gated deferrals - the owning enum payload, and inheritance - are now suspect on
+the same ground.** Not reopened here, but they are no longer evidence that the mechanism works.
+
+**What replaces the trigger is real external code**, named so it is not re-derived:
+`~/src/federated-positioning/` and `~/src/rtlblogv4-gnss-sdr/`, both C++, both maths-heavy, the
+second with runtime speed constraints and 163 sources. They are the intended practice targets for a
+Keel rewrite and they are usable now as evidence about what the language owes.
+
+**Both use member data pointers, and the shapes disagree with what was assumed.**
+`utils::extract_vector` and `extract_row` take `MemberType T::* member_ptr` and are called six times
+from `federated_client/gnss_positioning.cpp:119`, and `sat_matrix` in `sdr/pvt/position.cpp:97`
+takes **three concrete ones at once**, `double Satellite_measurement::* px`, with no generics
+involved. Three findings from that:
+
+- **Every one of the six call sites reads. None writes.** So a member data pointer can be a
+  *read-only projection* in v0, which removes the question of how const-ness flows through an
+  application and removes any interaction with M6.5's rule against writing through a call's result.
+  A writing form can be added later without invalidating the read-only one.
+- **The concrete, non-generic shape is the common one**, which was not the expectation - the
+  generic `MemberType T::*` was assumed to be the whole feature. A spelling is therefore judged on
+  how three of them read in one parameter list, not on how one reads alone.
+- **`extract_matrix` is not expressible and will not be**, because it reads `MemberType::Scalar` and
+  `MemberType::RowsAtCompileTime` - associated types and constants on a type parameter, which Keel
+  has no form of. The feature serves `extract_vector`, `extract_row` and `sat_matrix`, and that is
+  stated so the corpus is not later read as a failure.
+
+**Access control needs nothing extra for this, which the corpus confirms.** `Satellite_measurement`
+is a plain data record, so in Keel it is a `struct` with public fields, and taking
+`&Satellite_measurement::px` from a free function is accepted. Were it a `class`, the refusal would
+be correct rather than inconvenient, and no `friend` is wanted - the leaning §12 already records.
+
+**The member-pointer type is `field( C ) -> T`, applied as `p( obj )`, and it is read-only.** It
+rhymes with `fn( args ) -> ret`, composes when both sides are type parameters, needs no new
+operator, cannot collide with a field named `p`, and leaves D22 alone. The shorter `field<C, T>` was
+rejected with its cost stated: `field( Satellite_measurement ) -> f64 px` is longer than C++'s
+`double Satellite_measurement::* px` and `sat_matrix` writes three in a row, and the rhyme is worth
+more than the characters. **It is not spelled with `*`**: §12's whole reason this is safe is that
+an offset cannot be arithmetic, and borrowing the raw-pointer sigil teaches the opposite.
+
+**A method pointer shows its receiver, because L13 already decided it must.** `&C::func` for a
+`func( i32 )` is `fn( ref C, i32 ) -> T`, not `fn( i32 ) -> T`. Hiding the receiver is exactly the
+fat C++ representation L13 forbids - something would have to carry the object - so the receiver is
+an ordinary parameter 0 and is written like one. The shorter form is the one thing about this
+feature that is *not* available.
+
+**Read-only is not a v0 convenience - it is what `Places` already enforces.** `check_writable`
+refuses every call result whose callee returns a binding, saying *a returned reference is always
+read-only* (`keelc/src/sema/places.cpp:97`). So `p( obj )` handing back something the caller cannot
+write is no carve-out invented for member pointers; it is what every call in Keel already is, and
+the corpus asks for nothing more, since none of its nine call sites writes.
+
+**Writing is therefore not a spelling question, and the four candidates weighed for it are all
+rejected** - recorded so the ground is not walked again when the writing form is wanted:
+
+- `const field( C ) -> T` - prefix `const` in Keel wraps the *binding*: `const P make()` returns a
+  const value, `const ref Path p` is a const borrow. Here it would say the pointer variable cannot
+  be reassigned, which is a different and wanted meaning. The slot is taken.
+- `field( C ) -> const T` - marks the read-only form, so the bare form becomes the writing one. It
+  matches Keel's default-mutable convention, which is the real argument for it, and it is still
+  refused: every signature already written read-only would publish a different contract without
+  being edited, `sat_matrix`'s three parameters among them.
+- `field( C ) const -> T` - trailing `const` in Keel marks the **receiver**, which the parser
+  desugars to `const ref T` on parameter 0. The receiver is written inside the parens here, so the
+  trailing slot attaches to nothing that is not already spelled. It is also the closest to the C++
+  habit, which §5.1 makes a mark against rather than for.
+- `field( const C ) -> T` and `field( const ref C ) -> T` - the `C` names *which aggregate the
+  offset is into*. It is a type, not a binding, and one offset is valid for every `C` that will
+  ever exist. A binding mode belongs to whatever holds the object, so writing one here says the
+  value carries a borrow of some particular object, which it does not: the category error `*` would
+  have made, moved to a different position.
+
+**The propagation the fourth candidate reached for is already free.** `p( obj )` on an `obj` bound
+as `const ref C` yields something that cannot be written, because no call result can. The field
+type never has to encode the object's constness, and must not, since one value is applied to many
+objects.
+
+**What writing needs is that blanket rule relaxed, which is a return-binding decision and not a
+member-pointer one**: a `ref` return, as against a `const ref` one, would have to become a writable
+place. Do that and `p( obj ) = x` works with no new member-pointer syntax at all. If a marker on the
+type is ever wanted anyway it is `field( C ) -> ref T`, reusing the vocabulary that already means
+*a place, not a value*, rather than inverting `const`.
+
+**Slice 1 landed on 2026-09-25: `fn( args ) -> ret` parses in type position.** `Function_type`,
+child 0 the return type and child 1 a `Param_list` - the same order `Function_decl` uses, so every
+helper that reads *child 1 is the parameters* reads a function type unchanged. The parameters are
+`Param_decl`s with `aux` set to the invalid symbol rather than bare types, because `parameter_mode`,
+`is_const_binding` and `binding_type` all take a `Param_decl`, and the slice-3 rule that a
+parameter's identity is the pair (declared type, marker) needs the marker to survive as far as the
+mangler. Nesting works in both positions and the node never enters `parse_type`'s trailing `*` loop,
+so `fn( i32 ) -> i32*` returns a pointer rather than being one.
+
+**The scan is a scan.** `scan_type_and_name` steps over a function type by counting parentheses, not
+by calling `parse_type` - the same rule `scan_type_arguments` was already written to, and for a
+reason that was found rather than assumed. The first version parsed the parameters, and because
+`looks_like_declaration` restores `pos_` and nothing restores the rest, every speculative scan
+reported its diagnostics, built its nodes and left `pending_greater_` behind it. `fn( i32 ) i32 f;`
+reported *expected `->`* twice: once for the scan that was thrown away, once for the parse that
+followed. The test that was meant to catch this asked whether the rendered diagnostics contained
+`->` and passed against both, because the location line renders as `-->`. It now asserts the message
+text and `error_count() == 1`, and the count is the only part of it that sees the defect.
+
+**A missing arrow commits to the declaration rather than rejecting it.** Nothing else in the grammar
+starts with `fn`, so the scan breaks out and lets `parse_type` report the arrow. Rejecting instead
+sends the statement down the expression path, where the message is that `fn` cannot start one -
+true, useless, and pointing at the wrong token.
+
+**A trailing comma is refused, as it is in a signature.** The first parameter loop was a
+`while( !check( R_paren ) )`, which accepted `fn( i32, ) -> i32` silently while `i32 f( i32, )` was
+an error. It is now the `do/while( match( Comma ) )` shape `parse_param_list` uses, so one rule
+covers both.
+
+**Slice 2 gives the type a `Type_id` and `&f` a value (2026-09-25).** `Type_kind::Function` keeps
+its return type in `element` and its parameters in `arguments`, interned on that pair alone - it
+has no declaration to be keyed on, so the signature is the whole of its identity. `&f` on a
+non-overloaded, non-generic free function produces that type rather than a pointer to it, because
+`fn( i32 ) -> i32*` already means a function returning a pointer and there is no spelling left for
+the other reading. The consequence is that `&p`, where `p` is a variable holding one, is refused:
+`pointer_to` of a function type would be a type nobody could write down or read back.
+
+**A name is a slot, not a log.** The first cut of `Type_table::function` appended the composed name
+to `composed_` itself, on top of the append `add` already makes. `name()` indexes that container by
+`Type_id`, in lockstep with `types_`, so one function type desynchronised the two and every type
+interned afterwards answered with the previous one's name - `pointer_to( u8 )` calling itself
+`i32(i32)`. The whole existing suite, 6599 assertions, stayed green through it, because nothing
+outside M7 interns a function type. Found by a fixture written before the code, which is the only
+reason it was found at all.
+
+**The return type is not an argument.** `mentions_parameter`, `substitute` and `deduce` each joined
+the Struct/Enum case, which keys on `declaration` plus `arguments`. All three then walked the
+parameters and left the return behind: `fn( i32 ) -> T` claimed to mention no parameter,
+substitution passed the return through untouched, and `fn( i32 ) -> i32` deduced as a match for
+`fn( i32 ) -> f64`. The `declaration` comparison that stops `Box<T>` matching `Wrap<i32>` is also
+vacuous here, since every function type's is invalid. Each now has its own case beside the
+aggregate one rather than inside it.
+
+**A mode is deferred, not decided.** `fn( ref i32 ) -> i32` is refused, in the annotation and again
+at `&f`, because a `Type` has nowhere to put a parameter's marker and one dropped silently would
+make it and `fn( i32 ) -> i32` the same type. Slice 6's method pointers spell the receiver `ref C`,
+so that is where the marker becomes part of the type and where both diagnostics are deleted. `const`
+inside a function type is not deferred: nothing written there is a declaration, so it is the
+pointer-to-const meaning the checker already refuses, and when it is written outside a mode the
+const rule answers first.
+
+**C spells a function type through a typedef.** A C function-pointer type is a declarator with the
+name inside it, and every caller of `Spelling::type` writes the type and then the name, so the type
+needs a name of its own first. One typedef per interned signature is emitted after the composites,
+because a signature may mention a struct by value. They come from a new `Type_table::function_types`
+rather than from `composite_types`, whose one consumer wants types that become a C struct. The
+mangler encodes a signature as `F<params>E<return>`, a letter no encoded type starts with, since a
+function type's own name is no identifier and cannot go through the length-prefixed path.
+
+**A call through a variable is its own call shape.** `p( 21 )` reaches `infer_call`'s last branch -
+the one that reported *"is not callable"* - and takes two exits above it: a poisoned signature
+returns the error type quietly, and a function type goes to `Expressions::indirect_call`. The branch
+tests the declaration's **kind** as well as its type, because `types_.type_of` on a callable is its
+*return* type, so a function returning a signature answers `is_function` too. Nothing is recorded in
+`callees_`, and that absence is what lowering branches on: a recorded callable would send it down
+the path that reaches for a `Param_list`, and a variable has none.
+
+**The callee node was never typed, and nothing noticed until lowering.** A direct call reads its
+callable's declaration and never infers its own callee, so a `Name_expr` in call position carries no
+type at all. The indirect path needs one twice over - the guard in `lower_call` asks whether the
+callee is function-typed, and `lower_expression` builds the operand from that type - so
+`indirect_call` records the signature on the callee as well as on the call. The slice's walkthrough
+missed it; the lowering fixture found it, by aborting the whole test binary on the assert inside
+`is_function` rather than failing.
+
+**A signature answers what a `Param_list` answers.** `lower_indirect_call` is the short form of
+`lower_call`: the parameter types come from the type rather than from declarations, so there is no
+`bindings_for_call`, no `type_arguments_for_call`, no `lower_argument`, no move marking and no
+binding deref. None of those can exist on a type that was refused a mode.
+`Rvalue_kind::Indirect_call` is a kind of its own rather than a `Call` with an unset callee, because
+`verify` requires that `Node_id` to be set - and `-Wswitch` is then what walks every consumer.
+
+**The table's own vectors move under a checking loop.** The checker and the lowerer both read the
+parameter types out of `Type_table::get( signature ).arguments`, and both then call something that
+interns - `check` and `converted`. Interning appends to `types_`, the vector reallocates, and the
+span dangles. Both copy the types out first. Nothing in the existing code met this, because nothing
+else reads a type's contents across a call that can intern.
+
+**The unsafe gate belongs at the address, not the call.** `infer_call` requires an `unsafe` block
+around a call to an `extern`, and a signature keeps no trace of where it came from - so `&puts`
+stored and then called would have escaped the requirement the moment this slice landed.
+`function_address` gates instead, and reports rather than returning early, since the address still
+has its type. Its first spelling passed a `{}` to `require_unsafe`, which takes a finished string,
+so the diagnostic read *"taking the address of `{}`"* - and the fixture had only looked for the tail
+of the message.
+
+**Two guards that guarded nothing, and one boundary that was not asserted.** Mutation testing found
+all three. `Places::returns_a_binding` was thought to answer yes for any annotated variable, and its
+call site was guarded with `is_function_like` against it - but an annotation carries a type only
+when the declaration is a borrow, so the guard was dead and is gone. The declaration-kind test
+above, by contrast, is real: without it a function-typed **field** called by its bare name is
+accepted, and it then lowers and emits correctly as `( *this ).cb()`. That is a slice-5 feature
+arriving by accident rather than a bug, so the refusal stays and a fixture now pins it. And nothing
+asserted the
+argument *order* of an indirect call - only the golden's text did, which a reordering that happens
+to commute would survive.
+
+**A struct field of function type emitted C that did not compile - fixed (2026-09-26).** Slice 2 put
+the typedefs after the composites, because a signature may mention a struct by value - but a struct
+holding one needs the typedef *before* its own definition, and got `kl__fn__FE3i32 kl_cb_3;` above
+the `typedef`. Neither slice's goldens had such a struct, so both suites stayed green over C that
+`cc` rejects. **The order is three-way rather than two**, which is why neither position alone works:
+forward declarations, then typedefs, then definitions. `emit_composites` held the first and the last
+in one function, so it split, and `emit_composite_forwards` is what a signature naming a struct by
+value is now written against - `typedef struct S ( *F )( struct S );` is legal C while `S` is still
+incomplete, checked against `-std=c11 -Wall -Wextra -Werror` before the fix was written rather than
+assumed. Nothing new is interned between the typedefs and the definitions: `emitted_struct_order`
+calls `field_type` on every contained field, which substitutes and therefore interns, and it runs
+before the emitter is built. The golden that would have caught it is
+`function_pointer_in_struct.kl`, which holds a signature in a struct and passes a struct through
+one, and which compiles and runs rather than only diffing.
+
+**The expectation is what chooses, and `check` is the only door.** `&f` on an overload set has no
+signature of its own, so `function_address` takes and clears `expected_` - the same take-and-clear
+`infer_call` performs - and hands the set to `overload_for_signature` when what it holds is a
+function type. Every context that can choose arrives through `Expressions::check`: an annotated
+declaration, a parameter, a struct literal's field and an assignment. Not one of the four is
+special-cased, which is why a single branch bought all four. Selection is identity of the interned
+signature rather than `holds`, because a conversion between two function types would have to decide
+variance and nothing in the language needs that answer yet. A *returned* signature is not among the
+four: the parser takes no `fn( ... ) -> ...` in return position, so `return &f;` has nothing to be
+chosen from until it does.
+
+**Two candidates a set can hold but a type cannot name.** A generic one is skipped, since its
+parameters mention a type parameter that no concrete expectation can equal; a mode-carrying one is
+skipped because `written_signature` refuses `ref` any place in a `Type` at all. So `&f` wanted as
+`fn( i32 ) -> i32` where the only `i32` candidate is `f( ref i32 )` reports that the set holds no
+such signature rather than that `ref` is unsupported - the second would complain about a candidate
+nobody asked for. The hint lists what the set *can* name, so it names neither. An `extern` candidate
+cannot arise at all: the resolver refuses to overload a function defined in C, so the unsafe gate at
+the address is unreachable through selection and no test pretends otherwise.
+
+**A choice is not a choice until it is recorded.** Lowering had resolved the name itself, and the
+resolver's answer is the *first* candidate of a set - both overloads print as `&f` in KIR and differ
+only in the mangled name, so nothing downstream could have told them apart. `function_address`
+records the chosen declaration in `callees_`, the table a call's chosen callable already uses, and
+`lower_unary` reads `callee_of` with no fallback. Left out, the emitter asserts inside `Ast::kind`
+on the invalid id and takes the whole test binary down with it: the second slice running where the
+missing step was the recording rather than the rule.
+
+**The table's names move, not only its argument spans.** Slice 3 met the dangling span in
+`Type_table::get( t ).arguments`; `name( t )` is that hazard one layer along, since it returns a
+view into `composed_` and a short name lives in the `std::string`'s own buffer, which moves when
+that vector grows. The candidate loop interns a signature per candidate, so each name it offers in
+the hint is copied in the same iteration, and the expectation's name is read only after the loop.
+
+**A guard whose only visible effect was the wording, and was not.** Skipping a generic candidate in
+the selection loop looked like a matter of which diagnostic came out: without it the candidate is
+chosen and the `is_generic` check below reports *"`f` is generic"* instead of *"no overload has this
+type"*, and both are honest. Ten mutations found this the only survivor, and following it up found
+what the wording hid - `written_signature` **interns** every candidate's signature to compare it,
+the emitter writes a typedef for every interned function type, and a generic one mentions its type
+parameter, so a program that selects successfully *past* a generic candidate then asserts in
+`Spelling::type` with no C spelling for it. The guard is load-bearing and the fixture that missed it
+was a checker fixture, which stops before codegen; a section in the emitter's fixture is what kills
+it now.
+
+**A function taking an owning parameter emitted C that did not compile - fixed (2026-09-26).** §8
+hands an owning argument over as an **address** - `u64 peek( B b )` is
+`uint64_t kl__peek__1B( struct kl__B* )` - while a function type spells every parameter by value,
+so `fn( B ) -> u64 p = &peek;` was accepted and emitted `kl_t2 = kl__peek__1B;` against a
+`( struct kl__B )` typedef, which `cc -std=c11 -Wall -Wextra -Werror` refuses as
+`-Werror=incompatible-pointer-types`. It needed no generics and no overloads, and every golden
+stayed green because none of them takes the address of a function with an owning parameter. **It is
+the same disagreement the modes already have**, so it is refused the same way and by the same
+function: `written_signature` returns nothing for a parameter that travels as an address, and
+`function_address` tells the two apart by whether a mode was written. The predicate is
+`Bound::Copyable`, which is `!Aggregates::owns` for a concrete type and the declared bound set for
+a type parameter - and because a `where` clause is closed over what it implies, that one question
+answers for all four cases observed: a plain `struct` and a `class` with no destructor travel by
+value, a `class` with a destructor travels as an address, an unbounded `T` does too, and a
+`T : Integral` does not. **Only parameters**: an owning value is *returned* by value, which was
+checked by running it rather than assumed, so `fn( u64 ) -> B` is left alone. What lifts this is
+what lifts the modes - a function type that can say how each parameter travels.
+
+**The generic seed is not the slice §12 described, and the reason it is safe to leave is better
+than the reason to do it.** That row expects `&id<i32>` to be required and warns that missing the
+seed references a symbol nobody emits - "a `cc` error in generated code rather than a diagnostic,
+the worst failure class this project has". Three things were found instead. `&id<i32>` **does not
+parse at all**: `scan_type_arguments` commits to the generic reading only when the closing `>` is
+followed by `::` or `(`, so the feared failure cannot be reached today, and the parser is the first
+step rather than the checker. An unbounded generic's instance takes its parameter **as an address**
+- `kl__id__I3i32E__3i32( int32_t* )` - so `&id<i32>` is the defect above wearing a type parameter,
+and the rule now refuses it for a stated reason. And a **bounded** one does not, since the closure
+of `where T : Integral` includes `Copyable`, so `&plus<i32>` is the case the slice can actually
+deliver. The slice is therefore parser work, then the seed, then nothing new about ownership at
+all.
+
+**An unused parameter makes the generated C fail, and that is a flag question rather than a
+defect.** `i32 f( i32 a ) { return 0; }` emits `int32_t kl__f__3i32( int32_t kl_a_1 )` and the
+golden runner's default `-Werror` refuses it as `-Werror=unused-parameter`; an empty destructor
+body reaches it the same way. The emitted code is correct, and Keel said nothing about the
+parameter - so the mistake is handing `$CC` a `-W` flag Keel was never asked for. Recorded as
+**M10** rather than fixed here, because the fix is a flag surface and not a line in the emitter.
+
+**Slice 5 is in: the address of a generic instance (2026-09-26).** `&id<i32>` parses, chooses one
+instance, seeds it and links. Three passes changed and none of them grew a rule. The **parser**
+widens `scan_type_arguments`: the generic reading is committed to when the list closes and the next
+token cannot begin an operand - `;`, `,`, `)`, `]` and `}` beside the `::` and `(` it already took.
+That is decidable without a symbol table for the same reason the original pair was: a comparison
+always has a right operand, so its `>` is never followed by one of them. The list has no call to
+hang on, so it goes on the `Name_expr` as child 0 - the slot a path already gives its qualifier -
+and the resolver visits it, or the type arguments would be the one annotation nothing binds. The
+**checker** then does what a generic call does, in the same order and through the same classes:
+`resolve_type_arguments` for arity and bounds, `type_bindings` for the substitution, `record_call`
+and `record_instantiation` for the seed. The **KIR** change is one defaulted parameter: `Rvalue`
+already carried `type_arguments` for a call, because a `Node_id` stopped naming a function the day
+one declaration could be emitted twice, and an address is the same problem.
+
+**What makes it a seed rather than a lookup.** In a program that only takes `&id<i32>`, nothing else
+mentions that instance, and the lowerer walks the recorded instantiations to decide what to emit -
+so the record *is* the reason a body exists. The emitter's fixture therefore asserts the definition
+and not only the symbol, because a symbol with no definition is precisely the `cc` failure in
+generated code that §12 named the worst failure class this project has.
+
+**One of the three findings in the paragraph above was wrong.** It claimed `&id<i32>` is the
+owning-parameter defect wearing a type parameter. It is not. The by-address rule is asked of the
+**declared** parameter, and `codegen/generics.kl` has declared `T id<T>( T a ) where T : Copyable`
+since M5 - a bounded one, which travels by value, so the example §12 chose works exactly as it
+wrote it. What is refused is the **unbounded** `T`, and it is refused however concrete the instance
+is, because the C the instance is emitted as spells the declared parameter. The probe that settled
+this ran in four directions before a line was written: unbounded gives `( int32_t* )`, and both
+`Copyable` and `Integral` give `( int32_t )`.
+
+**Two things the slice refuses rather than guesses.** A name that is **overloaded and written with
+type arguments** offers two ways to choose and no rule covering both; honouring one and ignoring the
+other is how the wrong function's address is taken silently, so it is refused until one rule can
+cover them. And **type arguments on a name that takes none** are refused rather than dropped. One
+diagnostic each, and both are cheap now and a defect report later.
+
+**A wording debt this slice exposed.** An unbounded `T` is refused with *"takes `T`, which owns a
+resource"*, which is true of how it travels and false of `T`, since `T` may be `i32`. The message
+predates this slice and the fixture asserts only *"has no function type yet"*, so it can be
+corrected without touching a test. It belongs with whatever lifts the by-address rule.
+
+**A signature is not widened into another signature, and that is a rule rather than a gap.** §6.4
+widens a *value* losslessly - a `u8` argument reaches an `i32` parameter - and the instinct is that
+`fn( i32 ) -> i32 g = &narrow;` should therefore accept a `u8 narrow( u8 )`. It does not, and it
+must not: a function pointer is not a value being widened but a target being *called through*, so
+the call would hand 32 bits to a body reading 8 and read 32 back from one returning 8, and the C
+types `uint8_t ( * )( uint8_t )` and `int32_t ( * )( int32_t )` are incompatible besides. Selection
+is therefore **identity of the interned signature**, in both directions and at every door - the
+annotation, the parameter, the field and the overload set. Widening still happens where it always
+did, one level in: `p( 1 )` through an `fn( i32 ) -> i32` promotes the literal as any call does.
+What would lift this is variance, which needs parameters contravariant and returns covariant and a
+thunk wherever the C types differ - a feature, not an oversight. The refusal reads
+*"expected `fn( i32 ) -> i32`, but got `fn( u8 ) -> u8`"* and is pinned in
+`sema/errors_function_pointers.kl`.
+
+**The refusals now have a golden of their own, and writing it found two defects the unit fixtures
+could not.** Every M7 refusal was proved only by substring assertions over a rendered diagnostic,
+which cannot see a caret, a hint, or two neighbouring mistakes running together.
+`sema/errors_function_pointers.kl` holds all twelve in one file, and the first blessing showed a
+hint reading *"is one function already"* with the pronoun missing - fixed - and confirmed the
+unbounded-`T` wording debt above as something an author actually sees. It also showed that a
+parameter refusal reports at the **declaration**, so two addresses of the same bad function give
+two identical carets and neither names the use site; that is the shape defect 5 shipped with and it
+is recorded here rather than changed under a golden that was written to pin behaviour.
+
+**Defect 7: an open signature crashed the compiler, found and fixed 2026-09-26.** Asking
+whether `fn( T ) -> T` names anything reached an assert rather than a diagnostic:
+`void use<T>( fn( T ) -> T f, T a )` fails in `Spelling::type` with *"no C spelling for this type"*,
+and so does `fn( T ) -> T p = &bounded<T>;` inside a generic body. **It has nothing to do with this
+slice** - the smaller case takes no address at all, so it has been reachable since signatures became
+types - but slice 5 adds a second way in. The cause is `emit_function_types`, which walks **every**
+interned function type and spells each one, while an open one has no C spelling. That is the same
+hazard slice 4 found behind mutation N4 and guarded *in the selection loop only*; the general form
+was missed, and the annotation path interns open signatures without going anywhere near selection.
+**The rule the emitter already applies to aggregates is the fix**: one entry per instantiation, and
+the open form is none. `Type_table::mentions_parameter` exists and its comment already says it is
+*"what separates a type an instance can be emitted at from one that is still a template"*, so the
+change is a skip of any signature that mentions one.
+
+**Fixed in a commit of its own, after slice 5**, with the fixtures it wanted:
+`emit_kir_writes_no_typedef_for_an_open_signature` and the golden
+`codegen/function_pointer_open_signature.kl`, which links and runs at `i32` and at `i64`.
+
+The filter runs *before* the emptiness check rather than as a `continue` inside the loop, and that
+placement is the whole of the second half of the fix. An open signature is interned whether or not
+the generic is ever instantiated, so a program holding nothing but one - a generic with a
+function-typed parameter that nobody calls - has function types to walk and none to write. Asking
+the unfiltered list whether there is anything to write leaves a section containing only its own
+trailing blank line. Mutation D5 planted exactly that and **survived the whole golden suite**: no
+golden has a lone open signature, and a stray blank line is invisible to every fixture that looks
+for a string rather than at the shape of the file. The section that kills it asserts the emitted C
+holds no `typedef` *and* no double blank line, which is the only observable the mutation has.
+
+Mutations: 5 planted, 5 killed. D1 dropping the guard, D2 inverting it and D3 emitting from the
+unfiltered list all abort in `Spelling::type` - the defect's own signature, which is the point. D4
+never returning early is caught 54 goldens wide. D5 needed the fixture above.
+
+**A pointer to a generic *itself* cannot exist, and that is a consequence rather than a
+limitation.** `fn( T ) -> T` inside a generic names one instance - the one the enclosing instance
+was made at - and that is meaningful and should work. A value callable at *any* type is a different
+thing, and monomorphisation forecloses it: `bounded<i32>` and `bounded<i64>` are
+`int32_t ( * )( int32_t )` and `int64_t ( * )( int64_t )`, two machine signatures with two
+addresses and no third one standing for both. Every language that offers the polymorphic form
+pays for it at runtime - a
+dictionary passed beside the pointer, or one uniform boxed representation - which is the runtime
+machinery D5 and L13 already decline. Outside a generic `T` is simply not in scope, and *"unknown
+type `T`"* is the right answer there.
+
+**Free functions are now complete, and everything else is refused with a reason.** Every free
+function has an address: plain, overloaded, `extern` behind `unsafe`, and generic through a written
+instance. A method, a static method, a mode-carrying parameter, an owning parameter, an unbounded
+type parameter, an overload set with no expectation and a returned signature each have a
+diagnostic that says what is missing rather than emitting C that does not compile.
+
+**M7's acceptance cannot be the real `extract_*` until M8.** Both need a sequence of records, which
+is `[*]T` and `Vector`, so the M7 goldens are the single-object forms - a concrete projection, a
+generic one, and the refusals - and the corpus functions become an M8 exercise.
+
 
 ### Debts to pay along the way
 

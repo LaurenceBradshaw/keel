@@ -1,0 +1,40 @@
+// M7 slice 3: a signature and a struct that mention each other. The typedef naming a signature has
+// to sit between the struct forward declarations and the struct definitions - a struct holding one
+// needs it above its own definition, and a signature taking or returning a struct by value needs
+// only the forward declaration. This compiles with -Werror or it does not compile at all, which is
+// the whole reason the fixture exists.
+struct P
+{
+    i32 t;
+};
+
+i32 twice( i32 a )
+{
+    return a * 2;
+}
+
+P bump( P v )
+{
+    return P { v.t + 1 };
+}
+
+struct Holder
+{
+    fn( i32 ) -> i32 cb;
+};
+
+i32 main()
+{
+    Holder h = Holder { &twice };
+
+    // Read out of the field, not called through it: calling a field by its name is a later slice.
+    fn( i32 ) -> i32 p = h.cb;
+    fn( P ) -> P     q = &bump;
+
+    P one = P { 1 };
+
+    if( p( 21 ) != 42 ) { return 1; }
+    if( q( one ).t != 2 ) { return 2; }
+
+    return 0;
+}

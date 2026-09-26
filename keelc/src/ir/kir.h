@@ -113,7 +113,9 @@ enum class Rvalue_kind : u8
     Call,
     Address_of, // reads a.place; the address is not a copy of what lives there
     Allocate,
-    Release
+    Release,
+    Function_address,
+    Indirect_call
 };
 
 // How a value is produced. One tagged struct rather than a variant hierarchy, as Node and Type
@@ -285,6 +287,24 @@ inline Rvalue release( Operand a ) // type is void
 inline Rvalue address_of( Place place, Type_id type )
 {
     return Rvalue { .kind = Rvalue_kind::Address_of, .type = type, .a = Operand { .place = place } };
+}
+
+inline Rvalue function_address( Node_id callee, Type_id type, std::vector<Type_id> type_arguments = {} )
+{
+    return Rvalue {
+        .kind = Rvalue_kind::Function_address, .type = type, .callee = callee, .type_arguments = std::move( type_arguments )
+    };
+}
+
+inline Rvalue indirect_call( Operand callee, u32 first_argument, u32 argument_count, Type_id type )
+{
+    return Rvalue {
+        .kind           = Rvalue_kind::Indirect_call,
+        .type           = type,
+        .a              = callee,
+        .first_argument = first_argument,
+        .argument_count = argument_count,
+    };
 }
 
 inline Rvalue

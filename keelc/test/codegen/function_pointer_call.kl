@@ -1,0 +1,52 @@
+// M7 slice 3: a function's address is called through the variable holding it. The exit code is the
+// answer rather than the diff, so a call that reached the wrong function or dropped an argument
+// fails here even if the emitted C still compiles.
+i32 twice( i32 a )
+{
+    return a * 2;
+}
+
+i32 add( i32 a, i32 b )
+{
+    return a + b;
+}
+
+i32 apply( fn( i32 )->i32 f, i32 v )
+{
+    return f( v );
+}
+
+void nothing() {}
+
+i32 main()
+{
+    fn( i32 )->i32      p = &twice;
+    fn( i32, i32 )->i32 q = &add;
+    fn()->void          r = &nothing;
+
+    u8 b = 5;
+
+    r();
+
+    if( p( 21 ) != 42 )
+    {
+        return 1;
+    }
+
+    if( q( 1, 2 ) != 3 )
+    {
+        return 2;
+    }
+
+    if( apply( p, 4 ) != 8 )
+    {
+        return 3;
+    }
+
+    if( p( b ) != 10 )
+    {
+        return 4;
+    }
+
+    return 0;
+}

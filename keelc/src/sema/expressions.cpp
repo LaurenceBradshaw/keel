@@ -323,6 +323,18 @@ Type_id Expressions::infer_call( Node_id id )
     }
     else if( ast_.kind( decl ) != Node_kind::Function_decl )
     {
+        if( ( ast_.kind( decl ) == Node_kind::Var_decl || ast_.kind( decl ) == Node_kind::Param_decl ) &&
+            table_.is_error( result ) )
+        {
+            type_the_arguments_anyway();
+            return types_.record( id, table_.builtin( Type_kind::Error ) );
+        }
+        if( ( ast_.kind( decl ) == Node_kind::Var_decl || ast_.kind( decl ) == Node_kind::Param_decl ) &&
+            table_.is_function( result ) )
+        {
+            return indirect_call( id, decl, result );
+        }
+
         reporter_.error_at( ast_.span( callee ), fmt::format( "`{}` is not callable", name ) );
         type_the_arguments_anyway();
         return types_.record( id, table_.builtin( Type_kind::Error ) );
@@ -900,11 +912,286 @@ Type_id Expressions::infer_binary( Node_id id )
     return constant_folder_.record_constant( id, result.type );
 }
 
+// `&f` is the one place a function's name is a value. The type is the signature itself rather than
+// a pointer to it: `fn( i32 ) -> i32*` already means a function returning a pointer, so there is no
+// spelling left for the other reading.
+Type_id Expressions::function_address( Node_id id, Node_id declaration )
+{
+    const Type_id          error = table_.builtin( Type_kind::Error );
+    const std::string_view name  = interner_.text( Symbol_id { ast_.aux( ast_.child( id, 0 ) ) } );
+
+    const Node_id type_args = ast_.children( ast_.child( id, 0 ) ).empty() ? Node_id {} : ast_.child( ast_.child( id, 0 ), 0 );
+
+    const Type_id expectation = expected_;
+    expected_                 = Type_id {};
+
+    if( resolution_.next_overload( declaration ).is_valid() )
+    {
+        if( type_args.is_valid() )
+        {
+            reporter_.error_at(
+                ast_.span( id ),
+                fmt::format( "`{}` is overloaded, so its type arguments choose nothing", name ),
+                "give the generic a name of its own, or drop the type arguments and choose by the signature"
+            );
+
+            return types_.record( id, error );
+        }
+
+        if( expectation.is_valid() && table_.is_function( expectation ) )
+        {
+            declaration = overload_for_signature( id, name, declaration, expectation );
+
+            if( !declaration.is_valid() )
+            {
+                return types_.record( id, error );
+            }
+        }
+        else
+        {
+            reporter_.error_at(
+                ast_.span( id ),
+                fmt::format( "`{}` is overloaded, so its address names no one function", name ),
+                "assigning it to a variable of one signature will choose between them"
+            );
+
+            return types_.record( id, error );
+        }
+    }
+
+    if( is_generic( ast_, declaration ) && !type_args.is_valid() )
+    {
+        reporter_.error_at(
+            ast_.span( id ),
+            fmt::format( "`{}` is generic, so its address names no one function", name ),
+            fmt::format( "write its type arguments, as in `&{}<i32>`", name )
+        );
+
+        return types_.record( id, error );
+    }
+
+    if( !is_generic( ast_, declaration ) && type_args.is_valid() )
+    {
+        reporter_.error_at(
+            ast_.span( type_args ), fmt::format( "`{}` is not generic, so it takes no type arguments", name ), "remove them"
+        );
+
+        return types_.record( id, error );
+    }
+
+    if( is_extern( ast_, declaration ) )
+    {
+        require_unsafe(
+            id,
+            fmt::format( "taking the address of `{}` needs an `unsafe` block", name ),
+            "it is defined in C, so the compiler cannot check what it does with its arguments"
+        );
+    }
+
+    std::vector<Type_id> resolved;
+    Bindings             bindings;
+    if( type_args.is_valid() )
+    {
+        bool success = annotations_.resolve_type_arguments( declaration, type_args, name, resolved );
+        if( !success )
+        {
+            return types_.record( id, error );
+        }
+
+        bindings = overloads_.type_bindings( declaration, resolved );
+    }
+
+    Node_id       refused {};
+    const Type_id signature = written_signature( declaration, bindings, refused );
+    if( refused.is_valid() )
+    {
+        const Keyword mode = parameter_mode( ast_, refused );
+
+        if( mode != Keyword::Count )
+        {
+            reporter_.error_at(
+                ast_.span( refused ),
+                fmt::format( "`{}` is not supported in a function type yet", interner_.text( Interner::keyword( mode ) ) ),
+                fmt::format( "call `{}` by its name, or take the parameter by value", name )
+            );
+        }
+        else
+        {
+            // Told apart because the fix differs: a concrete type that owns cannot be made to
+            // travel by value, and a type parameter is one `where` clause away from doing so.
+            const Type_id          type  = types_.type_of( refused );
+            const std::string_view spelt = table_.name( type );
+
+            reporter_.error_at(
+                ast_.span( refused ),
+                fmt::format(
+                    "`{}` takes `{}`, which {}, so its address has no function type yet",
+                    name,
+                    spelt,
+                    table_.is_parameter( type ) ? "is not known to be copyable" : "owns a resource"
+                ),
+                table_.is_parameter( type ) ? fmt::format( "add `where {} : Copyable` to `{}`", spelt, name )
+                                            : fmt::format( "call `{}` by its name, or take a parameter it does not own", name )
+            );
+        }
+
+        return types_.record( id, error );
+    }
+
+    // Recorded after the refusal, because a refused address seeds no instance.
+    if( type_args.is_valid() )
+    {
+        generic_recursion_.record_call( current_function_, declaration, resolved, ast_.span( id ) );
+        overloads_.record_instantiation( id, generic_recursion_.record_instantiation( declaration, std::move( resolved ) ) );
+    }
+
+    callees_.record( id, declaration );
+    return types_.record( id, signature );
+}
+
+Type_id Expressions::written_signature( Node_id declaration, const Bindings& bindings, Node_id& refused )
+{
+    refused = Node_id {};
+    std::vector<Type_id> parameters;
+
+    for( const Node_id param : ast_.children( ast_.child( declaration, 1 ) ) )
+    {
+        // A mode, and an owning type, for one reason: both travel as an address and a function type
+        // spells every parameter by value, so the C would disagree with itself.
+        if( parameter_mode( ast_, param ) != Keyword::Count || !bounds_.satisfies( types_.type_of( param ), Bound::Copyable ) )
+        {
+            refused = param;
+            return Type_id {};
+        }
+        // The bound is asked of the declared parameter and the spelling of the substituted one: what
+        // travels is decided before the instance exists.
+        parameters.push_back( table_.substitute( types_.type_of( param ), bindings ) );
+    }
+
+    return table_.function( table_.substitute( types_.type_of( declaration ), bindings ), parameters );
+}
+
+Node_id Expressions::overload_for_signature( Node_id id, std::string_view name, Node_id first, Type_id signature )
+{
+    std::vector<std::string> offered;
+    for( Node_id candidate = first; candidate.is_valid(); candidate = resolution_.next_overload( candidate ) )
+    {
+        if( is_generic( ast_, candidate ) )
+        {
+            continue;
+        }
+
+        Node_id       refused {};
+        const Type_id written = written_signature( candidate, Bindings {}, refused );
+
+        if( !written.is_valid() )
+        {
+            continue;
+        }
+
+        if( written == signature )
+        {
+            return candidate;
+        }
+
+        offered.push_back( fmt::format( "`{}`", table_.name( written ) ) );
+    }
+
+    std::string text;
+
+    for( std::size_t i = 0; i < offered.size(); ++i )
+    {
+        if( i != 0 )
+        {
+            text += i + 1 == offered.size() ? " and " : ", ";
+        }
+
+        text += offered[i];
+    }
+
+    reporter_.error_at(
+        ast_.span( id ),
+        fmt::format( "no overload of `{}` has the type `{}`", name, table_.name( signature ) ),
+        offered.empty() ? "none of its overloads can be written as a type" : fmt::format( "its overloads are {}", text )
+    );
+
+    return Node_id {};
+}
+
+Type_id Expressions::indirect_call( Node_id id, Node_id declaration, Type_id signature )
+{
+    const Node_id            callee    = ast_.child( id, 0 );
+    std::span<const Node_id> arguments = ast_.children( ast_.child( id, 1 ) );
+    std::string_view         name      = interner_.text( Symbol_id { ast_.aux( callee ) } );
+
+    std::vector<Type_id> parameters( table_.get( signature ).arguments.begin(), table_.get( signature ).arguments.end() );
+
+    types_.record( callee, signature );
+
+    if( ast_.child( id, 2 ).is_valid() )
+    {
+        reporter_.error_at( ast_.span( ast_.child( id, 2 ) ), fmt::format( "`{}` is not a generic", name ) );
+    }
+
+    if( parameters.size() != arguments.size() )
+    {
+        reporter_.error_at(
+            ast_.span( ast_.child( id, 1 ) ),
+            fmt::format(
+                "`{}` takes {} argument{}, but {} {} given",
+                name,
+                parameters.size(),
+                parameters.size() == 1 ? "" : "s",
+                arguments.size(),
+                arguments.size() == 1 ? "was" : "were"
+            )
+        );
+    }
+
+    for( std::size_t i = 0; i < std::min( parameters.size(), arguments.size() ); ++i )
+    {
+        if( ast_.kind( arguments[i] ) == Node_kind::Marker_expr )
+        {
+            reporter_.error_at(
+                ast_.span( arguments[i] ),
+                fmt::format( "`{}` takes every argument by value", name ),
+                fmt::format(
+                    "remove `{}`", interner_.text( Interner::keyword( static_cast<Keyword>( ast_.aux( arguments[i] ) ) ) )
+                )
+            );
+            infer( arguments[i] );
+            continue;
+        }
+
+        check( arguments[i], parameters[i] );
+    }
+
+    for( std::size_t i = parameters.size(); i < arguments.size(); ++i )
+    {
+        infer( arguments[i] );
+    }
+
+    return types_.record( id, table_.get( signature ).element );
+}
+
 Type_id Expressions::infer_unary( Node_id id )
 {
-    const Token_kind op           = static_cast<Token_kind>( ast_.aux( id ) );
-    const Type_id    operand_type = infer( ast_.child( id, 0 ) );
-    const Type_id    error        = table_.builtin( Type_kind::Error );
+    const Token_kind op = static_cast<Token_kind>( ast_.aux( id ) );
+
+    // Answered before the operand is inferred: infer_name reports a bare function name, and
+    // nothing here could take that diagnostic back once it is written.
+    if( op == Token_kind::Amp && ast_.kind( ast_.child( id, 0 ) ) == Node_kind::Name_expr )
+    {
+        const Node_id declaration = resolution_.declaration_of( ast_.child( id, 0 ) );
+
+        if( declaration.is_valid() && ast_.kind( declaration ) == Node_kind::Function_decl )
+        {
+            return function_address( id, declaration );
+        }
+    }
+
+    const Type_id operand_type = infer( ast_.child( id, 0 ) );
+    const Type_id error        = table_.builtin( Type_kind::Error );
 
     if( table_.is_error( operand_type ) )
     {
@@ -916,6 +1203,18 @@ Type_id Expressions::infer_unary( Node_id id )
     // two stay here rather than following the other four into Operators.
     if( op == Token_kind::Amp )
     {
+        // A function type is already an address, so a pointer to one has no spelling.
+        if( table_.is_function( operand_type ) )
+        {
+            reporter_.error_at(
+                ast_.span( id ),
+                fmt::format( "`{}` is already an address, so it has none of its own", table_.name( operand_type ) ),
+                "drop the `&`"
+            );
+
+            return types_.record( id, error );
+        }
+
         // The operand must be somewhere a value lives. `&f()` names the address of a temporary
         // that is about to vanish, and `&1` names nothing at all. Asked after infer() so that
         // errors inside the operand are reported first.
@@ -1913,8 +2212,14 @@ Type_id Expressions::check( Node_id id, Type_id expected )
 
     if( !table_.holds( actual, expected ) )
     {
+        // Only signatures get a hint: everywhere else §6.4 does widen, so the mismatch is a
+        // mismatch and saying more would be saying it twice.
         reporter_.error_at(
-            ast_.span( id ), fmt::format( "expected `{}`, but got `{}`", table_.name( expected ), table_.name( actual ) )
+            ast_.span( id ),
+            fmt::format( "expected `{}`, but got `{}`", table_.name( expected ), table_.name( actual ) ),
+            table_.is_function( expected ) && table_.is_function( actual )
+                ? "one signature is never widened into another, so the two have to match exactly"
+                : ""
         );
         return expected;
     }
@@ -2456,6 +2761,647 @@ TEST_CASE( "type_checker_types_pointers", "[sema][types]" )
     {
         const Typed p( "i32 read( i32* q ) { return *q; }\n"
                        "i32 main() { i32 v = 1; return read( &v ); }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// `&f` is the one place a function's name is a value. What it produces is the signature itself,
+// not a pointer to one: `fn( i32 ) -> i32*` already means a function returning a pointer, so there
+// is no spelling left for a pointer to a function.
+TEST_CASE( "type_checker_types_the_address_of_a_function", "[sema][types][m7]" )
+{
+    SECTION( "the type is the signature" )
+    {
+        const Typed p( "i32 f( i32 a ) { return a; }\n"
+                       "i32 main() { fn( i32 ) -> i32 p = &f; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( i32 ) -> i32" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Var_decl, 0 ) ) == "fn( i32 ) -> i32" );
+    }
+
+    SECTION( "a function taking nothing and returning nothing" )
+    {
+        const Typed p( "void f() { }\ni32 main() { fn() -> void p = &f; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn() -> void" );
+    }
+
+    SECTION( "auto reads it off the address" )
+    {
+        const Typed p( "i32 f( i32 a ) { return a; }\ni32 main() { auto p = &f; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Var_decl, 0 ) ) == "fn( i32 ) -> i32" );
+    }
+
+    SECTION( "a signature that disagrees is the ordinary assignment error" )
+    {
+        for( const char* annotation : { "fn( i32 ) -> f64", "fn( f64 ) -> i32", "fn() -> i32", "i32", "i32*" } )
+        {
+            const Typed p(
+                std::string( "i32 f( i32 a ) { return a; }\ni32 main() { " ) + annotation + " p = &f; return 0; }\n"
+            );
+
+            INFO( annotation << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+        }
+    }
+
+    // The diagnostic the address operator lifts, and the only one it lifts.
+    SECTION( "a bare function name is still not a value" )
+    {
+        const Typed p( "i32 f( i32 a ) { return a; }\ni32 main() { auto p = f; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`f` is a function, not a value" ) != std::string::npos );
+    }
+}
+
+// Each of these is lifted by a later M7 slice. Until then each must report exactly once - a second
+// diagnostic means the operand was inferred before the function case was reached.
+TEST_CASE( "type_checker_refuses_the_address_of_a_function_it_cannot_name_yet", "[sema][types][m7]" )
+{
+    SECTION( "an overload set has no one signature to give" )
+    {
+        const Typed p( "i32 f( i32 a ) { return a; }\nf64 f( f64 a ) { return a; }\n"
+                       "i32 main() { auto p = &f; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "overload" ) != std::string::npos );
+    }
+
+    SECTION( "a mode has nowhere to live in the type" )
+    {
+        const Typed p( "i32 f( ref i32 a ) { return a; }\ni32 main() { auto p = &f; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "is not supported in a function type yet" ) != std::string::npos );
+    }
+
+    // The resolver answers this one, so the address operator must add nothing on top of it.
+    SECTION( "and a method is not reachable by its bare name" )
+    {
+        const Typed p( "struct C { i32 v; i32 get() const { return v; } };\n"
+                       "i32 main() { auto p = &get; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.rendered().find( "`get` is not declared" ) != std::string::npos );
+    }
+
+    // There is no `fn( i32 ) -> i32*` to name, so the address of storage holding one has no type.
+    SECTION( "the address of a variable holding one has no spelling" )
+    {
+        const Typed p( "i32 f( i32 a ) { return a; }\n"
+                       "i32 main() { fn( i32 ) -> i32 p = &f; auto r = &p; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+}
+
+// M7. An argument of an owning type travels as an address (PLAN §8), while a function type spells
+// every parameter by value - so the C disagrees with itself and the address is refused until the
+// type can say which it is. The parameter is what travels; a returned value does not.
+TEST_CASE( "type_checker_refuses_the_address_of_a_function_taking_an_owning_parameter", "[sema][types][m7]" )
+{
+    constexpr std::string_view owner = "class B { public u64 n; B( u64 x ) { n = x; } ~B() { n = 0; } };\n";
+
+    SECTION( "an owning parameter has no place in the type" )
+    {
+        const Typed p(
+            std::string( owner ) + "u64 peek( B b ) { return b.n; }\n"
+                                   "i32 main() { fn( B ) -> u64 p = &peek; return 0; }\n"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`peek` takes `B`, which owns a resource" ) != std::string::npos );
+    }
+
+    SECTION( "and so does one among several" )
+    {
+        const Typed p(
+            std::string( owner ) + "u64 peek( i32 a, B b ) { return b.n; }\n"
+                                   "i32 main() { fn( i32, B ) -> u64 p = &peek; return 0; }\n"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "which owns a resource" ) != std::string::npos );
+    }
+
+    // The three boundaries, so the refusal is no wider than the disagreement it is about.
+    SECTION( "a class with no destructor owns nothing" )
+    {
+        const Typed p( "class C { public i32 v; C( i32 x ) { v = x; } };\n"
+                       "i32 take( C c ) { return c.v; }\n"
+                       "i32 main() { fn( C ) -> i32 p = &take; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and a plain struct owns nothing" )
+    {
+        const Typed p( "struct P { i32 t; };\n"
+                       "i32 take( P v ) { return v.t; }\n"
+                       "i32 main() { fn( P ) -> i32 p = &take; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and a returned value is handed back by value however it was made" )
+    {
+        const Typed p(
+            std::string( owner ) + "B make( u64 v ) { return B( v ); }\n"
+                                   "i32 main() { fn( u64 ) -> B p = &make; return 0; }\n"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// M7 slice 4. An overload set has no one signature, so the type the context wants is what chooses.
+TEST_CASE( "type_checker_chooses_an_overload_by_the_expected_signature", "[sema][types][m7]" )
+{
+    constexpr std::string_view pair = "i32 f( i32 a ) { return a; }\nf64 f( f64 a ) { return a; }\n";
+
+    SECTION( "the annotation says which one" )
+    {
+        const Typed p( std::string( pair ) + "i32 main() { fn( f64 ) -> f64 p = &f; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( f64 ) -> f64" );
+    }
+
+    SECTION( "and the other annotation the other one" )
+    {
+        const Typed p( std::string( pair ) + "i32 main() { fn( i32 ) -> i32 p = &f; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( i32 ) -> i32" );
+    }
+
+    SECTION( "a parameter's type chooses it" )
+    {
+        const Typed p(
+            std::string( pair ) + "void take( fn( f64 ) -> f64 c ) { }\n"
+                                  "i32 main() { take( &f ); return 0; }\n"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( f64 ) -> f64" );
+    }
+
+    SECTION( "a field's type chooses it" )
+    {
+        const Typed p(
+            std::string( pair ) + "struct Holder { fn( f64 ) -> f64 cb; };\n"
+                                  "i32 main() { Holder h = Holder { &f }; return 0; }\n"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( f64 ) -> f64" );
+    }
+
+    SECTION( "an assignment chooses it" )
+    {
+        const Typed p( std::string( pair ) + "i32 main() { fn( f64 ) -> f64 p = &f; p = &f; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( f64 ) -> f64" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 1 ) ) == "fn( f64 ) -> f64" );
+    }
+
+    SECTION( "a generic overload is not a candidate" )
+    {
+        const Typed p( "i32 f<T>( T a ) { return 0; }\nf64 f( f64 a ) { return a; }\n"
+                       "i32 main() { fn( f64 ) -> f64 p = &f; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( f64 ) -> f64" );
+    }
+
+    SECTION( "a mode-carrying overload is not a candidate" )
+    {
+        const Typed p( "i32 f( ref i32 a ) { return a; }\nf64 f( f64 a ) { return a; }\n"
+                       "i32 main() { fn( f64 ) -> f64 p = &f; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.rendered().find( "is not supported in a function type yet" ) == std::string::npos );
+    }
+
+    SECTION( "an expectation that is not a signature chooses nothing" )
+    {
+        const Typed p( std::string( pair ) + "i32 main() { i32 q = &f; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "is overloaded" ) != std::string::npos );
+    }
+
+    SECTION( "and neither does auto" )
+    {
+        const Typed p( std::string( pair ) + "i32 main() { auto p = &f; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "is overloaded" ) != std::string::npos );
+    }
+}
+
+// The set is walked before anything is chosen, so what it does hold is what the hint can name.
+TEST_CASE( "type_checker_reports_when_no_overload_has_the_expected_signature", "[sema][types][m7]" )
+{
+    constexpr std::string_view pair = "i32 f( i32 a ) { return a; }\nf64 f( f64 a ) { return a; }\n";
+
+    SECTION( "none of them has that signature" )
+    {
+        const Typed p( std::string( pair ) + "i32 main() { fn( i32 ) -> f64 p = &f; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "no overload of `f` has the type `fn( i32 ) -> f64`" ) != std::string::npos );
+    }
+
+    SECTION( "the ones it has are listed" )
+    {
+        const Typed p( std::string( pair ) + "i32 main() { fn( i32 ) -> f64 p = &f; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "its overloads are" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`fn( i32 ) -> i32`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`fn( f64 ) -> f64`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( " and " ) != std::string::npos );
+    }
+
+    SECTION( "a mode-carrying overload is not offered" )
+    {
+        const Typed p( "i32 f( ref i32 a ) { return a; }\nf64 f( f64 a ) { return a; }\n"
+                       "i32 main() { fn( i32 ) -> i32 p = &f; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "no overload of `f`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "ref" ) == std::string::npos );
+    }
+
+    SECTION( "an arity nobody has" )
+    {
+        const Typed p( std::string( pair ) + "i32 main() { fn( i32, i32 ) -> i32 p = &f; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "no overload" ) != std::string::npos );
+    }
+}
+
+// M7 slice 5. Written type arguments choose one instance of a generic, and the instance is an
+// ordinary function from there on: a concrete signature, and a seed the lowerer emits a body for.
+// The by-address rule is asked of the *declared* parameter, not of the substituted one - an
+// unbounded `T` arrives as a pointer however concrete the instance is.
+TEST_CASE( "type_checker_takes_the_address_of_a_generic_instance", "[sema][types][m7][generic]" )
+{
+    constexpr std::string_view generics = "T id<T>( T a ) where T : Copyable { return a; }\n"
+                                          "T twice<T>( T a ) where T : Integral { return a + a; }\n";
+
+    SECTION( "the arguments make the signature" )
+    {
+        const Typed p( std::string( generics ) + "i32 main() { fn( i32 ) -> i32 p = &id<i32>; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( i32 ) -> i32" );
+    }
+
+    SECTION( "and another instance is another signature" )
+    {
+        const Typed p( std::string( generics ) + "i32 main() { fn( f64 ) -> f64 p = &id<f64>; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( f64 ) -> f64" );
+    }
+
+    SECTION( "a parameter chooses one the same way an annotation does" )
+    {
+        const Typed p(
+            std::string( generics ) + "i32 apply( fn( i32 ) -> i32 f, i32 v ) { return f( v ); }\n"
+                                      "i32 main() { return apply( &id<i32>, 4 ); }\n"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // Nothing else makes the instance exist: the lowerer walks the recorded instantiations, so an
+    // address that recorded none would name a function no pass ever emitted a body for.
+    SECTION( "the instance is recorded against the address" )
+    {
+        Typed p( std::string( generics ) + "i32 main() { fn( i32 ) -> i32 p = &id<i32>; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.types().instantiation_of( p.nth( Node_kind::Unary_expr, 0 ) ).has_value() );
+    }
+
+    SECTION( "two instances are two of them" )
+    {
+        Typed p(
+            std::string( generics ) + "i32 main() { fn( i32 ) -> i32 p = &id<i32>; fn( f64 ) -> f64 q = &id<f64>; return 0; }\n"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::optional<std::size_t> first  = p.types().instantiation_of( p.nth( Node_kind::Unary_expr, 0 ) );
+        const std::optional<std::size_t> second = p.types().instantiation_of( p.nth( Node_kind::Unary_expr, 1 ) );
+
+        REQUIRE( first.has_value() );
+        REQUIRE( second.has_value() );
+        REQUIRE( *first != *second );
+    }
+
+    // A builtin's name needs no binding, so a fixture that only ever writes `i32` cannot tell
+    // whether the type arguments were resolved at all.
+    SECTION( "a type argument that names a declaration is resolved" )
+    {
+        const Typed p( "struct P { i32 t; };\nT id<T>( T a ) where T : Copyable { return a; }\n"
+                       "i32 main() { fn( P ) -> P p = &id<P>; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( P ) -> P" );
+    }
+
+    SECTION( "without them the generic is still refused" )
+    {
+        const Typed p( std::string( generics ) + "i32 main() { auto p = &id; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`id` is generic, so its address names no one function" ) != std::string::npos );
+    }
+
+    SECTION( "the wrong number of them is counted" )
+    {
+        const Typed p( std::string( generics ) + "i32 main() { auto p = &id<i32, f64>; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`id` takes 1 type argument, but 2 were given" ) != std::string::npos );
+    }
+
+    SECTION( "a bound the argument does not keep is reported" )
+    {
+        const Typed p( std::string( generics ) + "i32 main() { auto p = &twice<f64>; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`f64` is not `Integral`, and `twice` requires it of `T`" ) != std::string::npos );
+    }
+
+    // The substituted parameter is `i32`, which travels by value - but the C the instance is
+    // emitted as spells the declared `T`, and an unbounded one arrives as a pointer.
+    SECTION( "an unbounded type parameter is refused however concrete the instance" )
+    {
+        const Typed p( "i32 count<T>( T a ) { return 1; }\n"
+                       "i32 main() { auto p = &count<i32>; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`count` takes `T`, which is not known to be copyable" ) != std::string::npos );
+    }
+
+    SECTION( "type arguments on a name that takes none" )
+    {
+        const Typed p( "i32 f( i32 a ) { return a; }\ni32 main() { auto p = &f<i32>; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`f` is not generic, so it takes no type arguments" ) != std::string::npos );
+    }
+
+    // Selection walks the set for a signature, and a written argument list is a second way to
+    // choose. Honouring one and ignoring the other is how the wrong function gets its address
+    // taken silently, so having both is refused until one rule covers them.
+    SECTION( "an overloaded name with type arguments is refused" )
+    {
+        const Typed p( "T id<T>( T a ) where T : Copyable { return a; }\nf64 id( f64 a ) { return a; }\n"
+                       "i32 main() { fn( i32 ) -> i32 p = &id<i32>; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`id` is overloaded, so its type arguments choose nothing" ) != std::string::npos );
+    }
+}
+
+// M7 slice 3. The callee is a variable rather than a name the resolver bound to a function, so the
+// signature it holds is the whole of what the call is checked against.
+TEST_CASE( "type_checker_calls_through_a_function_typed_variable", "[sema][types][m7]" )
+{
+    constexpr std::string_view twice = "i32 twice( i32 a ) { return a * 2; }\n";
+
+    SECTION( "the call has the signature's return type" )
+    {
+        const Typed p( std::string( twice ) + "i32 main() { fn( i32 ) -> i32 p = &twice; return p( 21 ); }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Call_expr, 0 ) ) == "i32" );
+    }
+
+    SECTION( "a parameter holds one as readily as a local" )
+    {
+        const Typed p( "i32 apply( fn( i32 ) -> i32 f, i32 v ) { return f( v ); }\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Call_expr, 0 ) ) == "i32" );
+    }
+
+    SECTION( "taking nothing and returning nothing" )
+    {
+        const Typed p( "void nothing() { }\ni32 main() { fn() -> void q = &nothing; q(); return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Call_expr, 0 ) ) == "void" );
+    }
+
+    SECTION( "an argument reaches its parameter the ordinary way" )
+    {
+        const Typed p( std::string( twice ) + "i32 main() { u8 b = 1; fn( i32 ) -> i32 p = &twice; return p( b ); }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // What lowering reads to tell the two call shapes apart. A recorded callable would send this
+    // down the path that reaches for a Param_list, and a variable has none.
+    SECTION( "no callable is recorded for it" )
+    {
+        const Typed p( std::string( twice ) + "i32 main() { fn( i32 ) -> i32 p = &twice; return p( 21 ); }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE_FALSE( p.types().callee_of( p.nth( Node_kind::Call_expr, 0 ) ).is_valid() );
+    }
+}
+
+// Each of these must report exactly once, and the arguments must still be typed: a call that fails
+// is where a mistake inside an argument would otherwise go unreported.
+TEST_CASE( "type_checker_checks_a_call_through_a_variable_against_its_signature", "[sema][types][m7]" )
+{
+    constexpr std::string_view head = "i32 twice( i32 a ) { return a * 2; }\n"
+                                      "i32 main() { fn( i32 ) -> i32 p = &twice; ";
+
+    SECTION( "too many arguments" )
+    {
+        const Typed p( std::string( head ) + "return p( 1, 2 ); }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`p` takes 1 argument, but 2 were given" ) != std::string::npos );
+    }
+
+    SECTION( "too few" )
+    {
+        const Typed p( std::string( head ) + "return p(); }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`p` takes 1 argument, but 0 were given" ) != std::string::npos );
+    }
+
+    SECTION( "an argument of the wrong type is the ordinary conversion error" )
+    {
+        const Typed p( std::string( head ) + "return p( true ); }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "and every argument is typed even when the count is wrong" )
+    {
+        const Typed p( std::string( head ) + "return p( 1, true ); }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Bool_literal, 0 ) ) != "<none>" );
+    }
+
+    // A signature carries no modes, so there is nothing at the call site for a marker to agree
+    // with - and a marker waved through would announce something that does not happen.
+    SECTION( "a marker has no mode to agree with" )
+    {
+        for( const char* marker : { "move", "ref", "out" } )
+        {
+            const Typed p( std::string( head ) + "i32 a = 1; return p( " + marker + " a ); }\n" );
+
+            INFO( marker << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( "takes every argument by value" ) != std::string::npos );
+        }
+    }
+
+    SECTION( "type arguments belong to a generic" )
+    {
+        const Typed p( std::string( head ) + "return p<i32>( 1 ); }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`p` is not a generic" ) != std::string::npos );
+    }
+
+    SECTION( "a variable of any other type is still not callable" )
+    {
+        const Typed p( "i32 main() { i32 x = 0; return x( 1 ); }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`x` is not callable" ) != std::string::npos );
+    }
+
+    // A field holding one lowers and emits correctly today, so this refusal is a scope boundary
+    // rather than a guard - and a boundary nothing asserts is a boundary that moves by accident.
+    SECTION( "a field holding one is not callable by its bare name yet" )
+    {
+        const Typed p( "struct S { fn() -> i32 cb; i32 run() { return cb(); } };\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`cb` is not callable" ) != std::string::npos );
+    }
+
+    SECTION( "a variable whose type failed to resolve says nothing further" )
+    {
+        const Typed p( "i32 main() { fn( Missing ) -> i32 p; return p( 1 ); }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "is not callable" ) == std::string::npos );
+        REQUIRE( p.rendered().find( "takes" ) == std::string::npos );
+    }
+}
+
+// The address is where the gate has to be: once it is in a variable the call site has no `extern`
+// left to see, and slice 3 is what makes that call reachable.
+TEST_CASE( "type_checker_gates_the_address_of_an_extern_on_unsafe", "[sema][types][m7][extern]" )
+{
+    SECTION( "outside an unsafe block it is refused" )
+    {
+        const Typed p( "extern i32 abs( i32 v );\ni32 main() { fn( i32 ) -> i32 p = &abs; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "taking the address of `abs` needs an `unsafe` block" ) != std::string::npos );
+    }
+
+    SECTION( "inside one it is allowed" )
+    {
+        const Typed p( "extern i32 abs( i32 v );\ni32 main() { unsafe { fn( i32 ) -> i32 p = &abs; } return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // The other direction: a Keel function handed to a C callback parameter. Only the call is
+    // unchecked, so only the call needs the block - the address is of a function the compiler wrote.
+    SECTION( "and a Keel function's address needs no block to reach an extern" )
+    {
+        const Typed p( "extern void register_cb( fn( i32 ) -> i32 cb );\n"
+                       "i32 f( i32 a ) { return a; }\n"
+                       "i32 main() { register_cb( &f ); return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "calling `register_cb` needs an `unsafe` block" ) != std::string::npos );
+    }
+
+    SECTION( "and inside a block that call is all it took" )
+    {
+        const Typed p( "extern void register_cb( fn( i32 ) -> i32 cb );\n"
+                       "i32 f( i32 a ) { return a; }\n"
+                       "i32 main() { unsafe { register_cb( &f ); } return 0; }\n" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );

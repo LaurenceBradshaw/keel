@@ -1,0 +1,48 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+typedef int32_t ( *kl__fn__F3i32E3i32 )( int32_t );
+typedef void ( *kl__fn__FE4void )( void );
+
+int32_t kl__twice__3i32( int32_t );
+void kl__nothing__( void );
+int32_t kl__main__( void );
+
+int32_t kl__twice__3i32( int32_t kl_a_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t2;
+#line 6 "codegen/function_pointer_address.kl"
+    kl_t2 = kl_a_1 * 2;
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+void kl__nothing__( void )
+{
+    return;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    kl__fn__F3i32E3i32 kl_p_1;
+    kl__fn__F3i32E3i32 kl_t2;
+    kl__fn__FE4void kl_q_3;
+    kl__fn__FE4void kl_t4;
+#line 15 "codegen/function_pointer_address.kl"
+    kl_t2 = kl__twice__3i32;
+    kl_p_1 = kl_t2;
+#line 16 "codegen/function_pointer_address.kl"
+    kl_t4 = kl__nothing__;
+    kl_q_3 = kl_t4;
+#line 18 "codegen/function_pointer_address.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

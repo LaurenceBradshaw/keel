@@ -1,0 +1,40 @@
+// M7 slice 4: an overload set has no one signature, so the type wanted of the address chooses. The
+// exit code is the answer, so a selection that landed on the other overload fails here even though
+// both of them emit and compile.
+i32 pick( i32 a )
+{
+    return a + 1;
+}
+
+f64 pick( f64 a )
+{
+    return a + 0.5;
+}
+
+i32 apply( fn( i32 )->i32 f, i32 v )
+{
+    return f( v );
+}
+
+i32 main()
+{
+    fn( i32 )->i32 p = &pick;
+    fn( f64 )->f64 q = &pick;
+
+    if( p( 1 ) != 2 )
+    {
+        return 1;
+    }
+
+    if( q( 2.0 ) < 2.4 )
+    {
+        return 2;
+    }
+
+    if( apply( &pick, 4 ) != 5 )
+    {
+        return 3;
+    }
+
+    return 0;
+}

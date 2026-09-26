@@ -1374,6 +1374,46 @@ Node_id Parser::parse_type()
     // parse_type has to as well, or the scan and the parse disagree.
     const bool leading_const = match_keyword( Keyword::Const );
 
+    if( match_keyword( Keyword::Fn ) )
+    {
+        const Span open = peek().span;
+
+        expect( Token_kind::L_paren );
+
+        // The same shape as parse_param_list, so that a trailing comma is refused in a function
+        // type exactly as it is in the signature the type stands for.
+        std::vector<Node_id> params;
+
+        if( !check( Token_kind::R_paren ) )
+        {
+            do
+            {
+                const Span    at   = peek().span;
+                const Node_id type = parse_type_with_mode();
+
+                params.push_back(
+                    ast_.add( Node_kind::Param_decl, Span::merge( at, previous().span ), k_invalid_symbol, { type } )
+                );
+            } while( match( Token_kind::Comma ) );
+        }
+
+        expect( Token_kind::R_paren );
+
+        const Node_id param_list = ast_.add( Node_kind::Param_list, Span::merge( open, previous().span ), 0, params );
+
+        expect( Token_kind::Arrow );
+        const Node_id return_type = parse_type();
+
+        Node_id fn_type =
+            ast_.add( Node_kind::Function_type, Span::merge( start, previous().span ), 0, { return_type, param_list } );
+
+        if( leading_const )
+        {
+            fn_type = ast_.add( Node_kind::Const_type, Span::merge( start, previous().span ), 0, { fn_type } );
+        }
+        return fn_type;
+    }
+
     if( !expect( Token_kind::Identifier ) )
     {
         return error_node( start );
@@ -1679,7 +1719,7 @@ bool Parser::can_start_expression() const
 bool Parser::looks_like_declaration()
 {
     // `auto x = ...` is settled by its keyword; the caller checks that before asking.
-    if( !check( Token_kind::Identifier ) && !check_keyword( Keyword::Const ) )
+    if( !check( Token_kind::Identifier ) && !check_keyword( Keyword::Const ) && !check_keyword( Keyword::Fn ) )
     {
         return false;
     }
@@ -1715,7 +1755,7 @@ bool Parser::looks_like_binding()
 }
 
 // `id<i32>( 1 )` against `a < b > ( c )`. The parser has no symbol table (L17), so this is decided
-// on shape alone: a type-argument list that closes and is immediately followed by `(`.
+// on shape alone: the closing token cannot begin an operand, and a comparison always has a right operand.
 //
 // Committing to the generic reading is safe because the comparison reading has no valid typing to
 // fall back to - a comparison yields `bool`, operators are methods on the left operand's type
@@ -1767,7 +1807,10 @@ bool Parser::scan_type_arguments()
         advance();
     }
 
-    const bool generic = depth == 0 && ( check( Token_kind::Colon_colon ) || check( Token_kind::L_paren ) );
+    const bool generic =
+        depth == 0 && ( check( Token_kind::Colon_colon ) || check( Token_kind::L_paren ) || check( Token_kind::Semicolon ) ||
+                        check( Token_kind::Comma ) || check( Token_kind::R_paren ) || check( Token_kind::R_bracket ) ||
+                        check( Token_kind::R_brace ) );
 
     pos_ = saved;
     return generic;
@@ -1800,6 +1843,49 @@ bool Parser::scan_type_and_name()
     if( at_mode_keyword() )
     {
         advance();
+    }
+
+    // `fn( T, U ) -> R`, whose R may be another. Parens are counted rather than parsed, for the
+    // reason scan_type_arguments counts its own: parse_type reports, builds nodes and leaves
+    // pending_greater_ set, and none of the three is undone by restoring pos_.
+    while( check_keyword( Keyword::Fn ) )
+    {
+        advance();
+
+        if( !check( Token_kind::L_paren ) )
+        {
+            pos_ = saved;
+            return false;
+        }
+
+        u32 depth = 0;
+
+        do
+        {
+            if( check( Token_kind::L_paren ) )
+            {
+                depth += 1;
+            }
+            else if( check( Token_kind::R_paren ) )
+            {
+                depth -= 1;
+            }
+            else if( check( Token_kind::Semicolon ) || check( Token_kind::R_brace ) || at_end() )
+            {
+                pos_ = saved;
+                return false; // unbalanced - not a type
+            }
+
+            advance();
+        } while( depth > 0 );
+
+        // A missing arrow still scans as a declaration: nothing else starts with `fn`, so the
+        // reading is committed to here and parse_type reports the arrow rather than the statement
+        // falling through to an expression and a message about `fn` not being one.
+        if( !match( Token_kind::Arrow ) )
+        {
+            break;
+        }
     }
 
     if( !match( Token_kind::Identifier ) )
@@ -2497,6 +2583,29 @@ Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing )
                     Node_kind::Path_expr, Span::merge( ast_.span( left ), previous().span ), scoped.v, { left, types }
                 );
                 continue;
+            }
+
+            // The list belongs to the name because there is no call to hang it on, the same slot a path already gives its
+            // qualifier.
+            if( !check( Token_kind::L_paren ) )
+            {
+                if( ast_.kind( left ) != Node_kind::Name_expr )
+                {
+                    error_at(
+                        Span::merge( ast_.span( left ), previous().span ),
+                        "only a name can take type arguments",
+                        "`<` after anything else is a comparison, and its right operand is missing"
+                    );
+                    left = error_node( Span::merge( ast_.span( left ), previous().span ) );
+                    continue;
+                }
+                else
+                {
+                    left = ast_.add(
+                        Node_kind::Name_expr, Span::merge( ast_.span( left ), previous().span ), ast_.aux( left ), { types }
+                    );
+                    continue;
+                }
             }
 
             const Node_id args = parse_arg_list();
@@ -5025,8 +5134,120 @@ TEST_CASE( "parser_parses_a_generic_call", "[parse][generic]" )
     }
 }
 
+// M7 slice 5. `&id<i32>` names one instance and is not a call, so the list has nowhere to hang but
+// the name itself - the slot a path already gives `Colour::Red`. What makes it readable without a
+// symbol table is that the token closing the list cannot begin an operand, so a comparison's right
+// operand can never be mistaken for it.
+TEST_CASE( "parser_parses_type_arguments_on_a_bare_name", "[parse][generic][m7]" )
+{
+    // The operand of the `&`, which is the only Unary_expr in any of these.
+    const auto addressed = []( const Parsed& p )
+    {
+        const Node_id unary = find_first( p.ast(), p.root(), Node_kind::Unary_expr );
+
+        return unary.is_valid() ? p.child( unary, 0 ) : Node_id {};
+    };
+
+    SECTION( "the name carries the list" )
+    {
+        const Parsed p( "i32 main() { auto p = &id<i32>; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id name = addressed( p );
+
+        REQUIRE( name.is_valid() );
+        REQUIRE( p.kind( name ) == Node_kind::Name_expr );
+        REQUIRE( p.children( name ).size() == 1 );
+        REQUIRE( p.kind( p.child( name, 0 ) ) == Node_kind::Type_arg_list );
+        REQUIRE( p.children( p.child( name, 0 ) ).size() == 1 );
+    }
+
+    SECTION( "several" )
+    {
+        const Parsed p( "i32 main() { auto p = &pick<i32, f64>; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.children( p.child( addressed( p ), 0 ) ).size() == 2 );
+    }
+
+    SECTION( "nested, closing on `>>`" )
+    {
+        const Parsed p( "struct Box { i32 v; };\ni32 main() { auto p = &id<Box<i32>>; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.kind( p.child( addressed( p ), 0 ) ) == Node_kind::Type_arg_list );
+    }
+
+    // The three closers that are not `;`, one per shape that can hold an argument.
+    SECTION( "as a call argument, closed by a comma" )
+    {
+        const Parsed p( "i32 main() { auto r = apply( &id<i32>, 4 ); return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.kind( p.child( addressed( p ), 0 ) ) == Node_kind::Type_arg_list );
+    }
+
+    SECTION( "as the last call argument, closed by the parenthesis" )
+    {
+        const Parsed p( "i32 main() { auto r = apply( 4, &id<i32> ); return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.kind( p.child( addressed( p ), 0 ) ) == Node_kind::Type_arg_list );
+    }
+
+    SECTION( "as a struct-literal field, closed by the brace" )
+    {
+        const Parsed p( "i32 main() { auto h = Holder { &id<i32> }; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.kind( p.child( addressed( p ), 0 ) ) == Node_kind::Type_arg_list );
+    }
+
+    // The list belongs to the call when there is one, and the name keeps none - otherwise every
+    // later pass would have two places to look and two answers to reconcile.
+    SECTION( "a generic call still puts the list on the call" )
+    {
+        const Parsed p( "i32 main() { return id<i32>( 1 ); }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id call = find_first( p.ast(), p.root(), Node_kind::Call_expr );
+
+        REQUIRE( p.kind( p.child( call, 2 ) ) == Node_kind::Type_arg_list );
+        REQUIRE( p.children( p.child( call, 0 ) ).empty() );
+    }
+
+    SECTION( "and a bare name still carries nothing" )
+    {
+        const Parsed p( "i32 main() { auto p = &id; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.children( addressed( p ) ).empty() );
+    }
+
+    // Only a name can be instantiated. Anything else with a list after it is a comparison whose
+    // right operand went missing, and saying so beats building a node nothing downstream reads.
+    SECTION( "a list after something that is not a name is refused" )
+    {
+        const Parsed p( "i32 main() { auto p = f( 1 )<i32>; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.has_errors() );
+    }
+}
+
 // The other half of the same decision: what must stay a comparison. The scan requires the list to
-// close *and* be followed immediately by `(`, which is what keeps these unchanged.
+// close *and* be followed by a token that cannot begin an operand, which is what keeps these
+// unchanged - a comparison always has a right operand, so its `>` is never followed by one of them.
 TEST_CASE( "parser_still_reads_comparisons_as_comparisons", "[parse][generic]" )
 {
     for( const char* body : {
@@ -5035,6 +5256,13 @@ TEST_CASE( "parser_still_reads_comparisons_as_comparisons", "[parse][generic]" )
              "i32 r = b >> c;",
              "i32 r = ( b >> c ) + 1;",
              "bool r = a < b; bool s = c > a;",
+
+             // The closers the bare-name list accepts, each with the comparison that reaches one.
+             "bool r = a < b > c;",
+             "i32 r = g( a < b, c > b );",
+             "i32 r = g( a < b > c );",
+             "if ( a < b ) { }",
+             "auto s = S { a < b };",
          } )
     {
         const std::string source = std::string( "i32 main() { i32 a = 1; i32 b = 2; i32 c = 3; " ) + body + " return 0; }";
@@ -5435,6 +5663,8 @@ TEST_CASE( "parser_declaration_versus_expression", "[parse]" )
         { "Vector<i32> v;", Node_kind::Var_decl },
         { "Vector<Vector<i32>> v;", Node_kind::Var_decl },
         { "auto x = 1;", Node_kind::Var_decl },
+        { "fn( i32 ) -> i32 f;", Node_kind::Var_decl },
+        { "fn() -> void f = g;", Node_kind::Var_decl },
         { "y = 1;", Node_kind::Assign_stmt },
         { "y++;", Node_kind::Increment_stmt },
         { "f();", Node_kind::Expr_stmt },
@@ -5513,6 +5743,137 @@ TEST_CASE( "parser_generic_and_qualified_types", "[parse]" )
         const Parsed p( "i32 main() { Vector<i32 v; }" );
         REQUIRE( p.has_errors() );
     }
+}
+
+// The parameters are Param_decls with no name, so that everything downstream reading a parameter -
+// its mode, its constness, its type - reads a function type's the same way it reads a signature's.
+TEST_CASE( "parser_function_type_shape", "[parse]" )
+{
+    struct Case
+    {
+        const char* source;
+        std::size_t arity;
+    };
+
+    static const Case cases[] = {
+        { "fn() -> void f;", 0 },
+        { "fn( i32 ) -> i32 f;", 1 },
+        { "fn( i32, i32 ) -> i32 f;", 2 },
+        { "fn( i32, f64, bool ) -> void f;", 3 },
+    };
+
+    for( const Case& c : cases )
+    {
+        const Parsed p( std::string( "i32 main() { " ) + c.source + " }" );
+
+        INFO( "source: " << c.source << "\n" << p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id type = p.child( first_statement( p ), 0 );
+        REQUIRE( p.kind( type ) == Node_kind::Function_type );
+        REQUIRE( p.children( type ).size() == 2 );
+        REQUIRE( p.kind( p.child( type, 1 ) ) == Node_kind::Param_list );
+        REQUIRE( p.children( p.child( type, 1 ) ).size() == c.arity );
+
+        for( const Node_id param : p.children( p.child( type, 1 ) ) )
+        {
+            REQUIRE( p.kind( param ) == Node_kind::Param_decl );
+            REQUIRE( p.aux( param ) == k_invalid_symbol );
+        }
+    }
+
+    SECTION( "a parameter keeps its marker" )
+    {
+        const Parsed p( "i32 main() { fn( ref i32 ) -> void f; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id param = p.child( p.child( p.child( first_statement( p ), 0 ), 1 ), 0 );
+        REQUIRE( p.kind( p.child( param, 0 ) ) == Node_kind::Mode_type );
+    }
+
+    SECTION( "a parameter may be generic" )
+    {
+        const Parsed p( "i32 main() { fn( Vector<Box<i32>> ) -> i32 f; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id param = p.child( p.child( p.child( first_statement( p ), 0 ), 1 ), 0 );
+        REQUIRE( p.kind( p.child( param, 0 ) ) == Node_kind::Generic_type );
+    }
+
+    SECTION( "the `*` binds to the return type" )
+    {
+        const Parsed p( "i32 main() { fn( i32 ) -> i32* f; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id type = p.child( first_statement( p ), 0 );
+        REQUIRE( p.kind( type ) == Node_kind::Function_type );
+        REQUIRE( p.kind( p.child( type, 0 ) ) == Node_kind::Pointer_type );
+    }
+
+    SECTION( "a function type may be a parameter" )
+    {
+        const Parsed p( "i32 main() { fn( fn( i32 ) -> i32, i32 ) -> i32 f; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id params = p.child( p.child( first_statement( p ), 0 ), 1 );
+        REQUIRE( p.children( params ).size() == 2 );
+        REQUIRE( p.kind( p.child( p.child( params, 0 ), 0 ) ) == Node_kind::Function_type );
+    }
+
+    SECTION( "a function type may be the return type" )
+    {
+        const Parsed p( "i32 main() { fn( i32 ) -> fn( i32 ) -> i32 f; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id type = p.child( first_statement( p ), 0 );
+        REQUIRE( p.kind( type ) == Node_kind::Function_type );
+        REQUIRE( p.kind( p.child( type, 0 ) ) == Node_kind::Function_type );
+    }
+
+    SECTION( "a trailing comma is not a parameter" )
+    {
+        const Parsed p( "i32 main() { fn( i32, ) -> i32 f; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.has_errors() );
+    }
+
+    SECTION( "a leading const wraps the whole type" )
+    {
+        const Parsed p( "i32 main() { const fn( i32 ) -> i32 f = g; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id type = p.child( first_statement( p ), 0 );
+        REQUIRE( p.kind( type ) == Node_kind::Const_type );
+        REQUIRE( p.kind( p.child( type, 0 ) ) == Node_kind::Function_type );
+    }
+}
+
+// Nothing else starts with `fn`, so the declaration reading is committed to before the arrow is
+// looked for - without that the statement falls through to an expression and the message is about
+// `fn` not being one.
+TEST_CASE( "parser_function_type_requires_an_arrow", "[parse]" )
+{
+    const Parsed p( "i32 main() { fn( i32 ) i32 f; }" );
+
+    INFO( p.errors() );
+    REQUIRE( p.errors().find( "expected `->`" ) != std::string::npos );
+
+    // One, not two: a scan that parsed the parameters rather than counting them reported this
+    // speculatively and then again for real, and the count is the only thing that sees it.
+    REQUIRE( p.error_count() == 1 );
 }
 
 // can_start_expression keeps the better message for tokens that cannot begin a statement.

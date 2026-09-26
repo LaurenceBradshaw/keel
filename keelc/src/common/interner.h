@@ -71,6 +71,7 @@ enum class Keyword : u32
     Static,
     Private,
     Public,
+    Fn,
 
     Count
 };

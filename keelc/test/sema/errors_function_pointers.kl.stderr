@@ -1,0 +1,73 @@
+error: `owns` takes `B`, which owns a resource, so its address has no function type yet
+  --> sema/errors_function_pointers.kl:14:11
+   |
+14 | u64 owns( B b ) { return b.n; }
+   |           ^^^ call `owns` by its name, or take a parameter it does not own
+
+error: `ref` is not supported in a function type yet
+  --> sema/errors_function_pointers.kl:16:12
+   |
+16 | i32 moded( ref i32 a ) { return a; }
+   |            ^^^^^^^^^ call `moded` by its name, or take the parameter by value
+
+error: `unbounded` takes `T`, which is not known to be copyable, so its address has no function type yet
+  --> sema/errors_function_pointers.kl:25:19
+   |
+25 | i32 unbounded<T>( T a ) { return 1; }
+   |                   ^^^ add `where T : Copyable` to `unbounded`
+
+error: `over` is overloaded, so its address names no one function
+  --> sema/errors_function_pointers.kl:30:26
+   |
+30 |     auto             a = &over;
+   |                          ^^^^^ assigning it to a variable of one signature will choose between them
+
+error: no overload of `over` has the type `fn( i32 ) -> f64`
+  --> sema/errors_function_pointers.kl:31:26
+   |
+31 |     fn( i32 ) -> f64 b = &over;
+   |                          ^^^^^ its overloads are `fn( i32 ) -> i32` and `fn( f64 ) -> f64`
+
+error: `bounded` is generic, so its address names no one function
+  --> sema/errors_function_pointers.kl:34:26
+   |
+34 |     auto             c = &bounded;
+   |                          ^^^^^^^^ write its type arguments, as in `&bounded<i32>`
+
+error: `bounded` takes 1 type argument, but 2 were given
+  --> sema/errors_function_pointers.kl:35:34
+   |
+35 |     auto             d = &bounded<i32, f64>;
+   |                                  ^^^^^^^^^^ `bounded` declares `T`
+
+error: `f64` is not `Integral`, and `bounded` requires it of `T`
+  --> sema/errors_function_pointers.kl:36:35
+   |
+36 |     auto             e = &bounded<f64>;
+   |                                   ^^^ it has to be an integer
+
+error: `plain` is not generic, so it takes no type arguments
+  --> sema/errors_function_pointers.kl:39:32
+   |
+39 |     auto             f = &plain<i32>;
+   |                                ^^^^^ remove them
+
+error: `over` is overloaded, so its type arguments choose nothing
+  --> sema/errors_function_pointers.kl:40:26
+   |
+40 |     fn( i32 ) -> i32 g = &over<i32>;
+   |                          ^^^^^^^^^^ give the generic a name of its own, or drop the type arguments and choose by the signature
+
+error: expected `fn( i32 ) -> i32`, but got `fn( u8 ) -> u8`
+  --> sema/errors_function_pointers.kl:48:26
+   |
+48 |     fn( i32 ) -> i32 k = &narrow;
+   |                          ^^^^^^^ one signature is never widened into another, so the two have to match exactly
+
+error: `fn( i32 ) -> i32` is already an address, so it has none of its own
+  --> sema/errors_function_pointers.kl:52:26
+   |
+52 |     auto             n = &m;
+   |                          ^^ drop the `&`
+
+12 errors generated

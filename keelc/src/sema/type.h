@@ -32,6 +32,7 @@ enum class Type_kind : u8
     Struct,  // `declaration` says which one
     Enum,
     Parameter, // a generic type parameter.
+    Function,
 };
 
 // Defaulted rather than bare, so a kind that does not use a field can leave it out of the aggregate
@@ -41,7 +42,7 @@ struct Type
     Type_kind kind        = Type_kind::Error;
     u8        width       = 0;     // 8/16/32/64 for Int, 32/64 for Float, 0 otherwise
     bool      is_signed   = false; // only for Int
-    Type_id   element     = {};    // For Pointer and Enum
+    Type_id   element     = {};    // For Pointer and Enum and Function
     Node_id   declaration = {};    // for Struct and Enum; the node that defines it
 
     // What a generic aggregate was instantiated at: `Box<i32>` holds one, `Box` itself holds its
@@ -63,6 +64,7 @@ public:
     Type_id integer( u8 width, bool is_signed ) const;
     Type_id floating( u8 width ) const;
     Type_id pointer_to( Type_id element ); // interns; same element -> same id
+    Type_id function( Type_id return_type, std::span<const Type_id> parameters );
     Type_id enumeration( Node_id declaration, std::span<const Type_id> arguments, std::string_view name, Type_id underlying );
 
     // Interned by *declaration* and by its type arguments, never by name: two modules each
@@ -95,6 +97,10 @@ public:
     // of a generic aggregate - `Box<T>` - which a caller wanting only instances filters out with
     // mentions_parameter.
     std::vector<Type_id> composite_types() const;
+    // Every function type interned, in interning order. Separate from composite_types because the
+    // one consumer of that list wants types that become a C struct, and a function type becomes a
+    // typedef instead.
+    std::vector<Type_id> function_types() const;
     // The type a source spelling names, or invalid if it names none. Only the eleven a program may
     // actually write - not "<error>", and not composed pointer names, which reach sema as
     // Pointer_type nodes rather than as identifiers.
@@ -107,6 +113,7 @@ public:
     bool is_enum( Type_id id ) const;
     bool is_pointer( Type_id id ) const;
     bool is_parameter( Type_id id ) const; // a `T`, before an instantiation substitutes it away
+    bool is_function( Type_id id ) const;
 
     // Whether a parameter appears anywhere inside, not only at the top: `T` and `T*` both do, `i32*`
     // does not. What separates a type an instance can be emitted at from one that is still a
@@ -173,6 +180,8 @@ private:
 
     std::unordered_map<std::string_view, Type_id>
         by_spelling_; // views into composed_ // "u8*" etc; name() returns views into these
+
+    std::vector<Type_id> functions_;
 };
 
 } // namespace keel

@@ -286,6 +286,20 @@ TEST_CASE( "type_checker_refuses_a_generic_that_expands_forever", "[sema][generi
         REQUIRE( p.clean() );
     }
 
+    // M7 slice 5. An address seeds an instantiation exactly as a call does, so it has to be an edge
+    // of the same graph - otherwise the one construct that can reach a generic without calling it is
+    // the one construct that expands forever unchecked.
+    SECTION( "taking an instance's address is an edge like a call is" )
+    {
+        const Typed p( "void f<T>( T a ) where T : Copyable { T* p = &a; fn( T* ) -> void q = &f<T*>; }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`f` is instantiated with a bigger type argument each time round" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "&f<T*>" ) != std::string::npos );
+    }
+
     SECTION( "a generic calling itself with a pointer to its own parameter is refused" )
     {
         // `f<i32>`, `f<i32*>`, `f<i32**>` - no set of instances finishes.

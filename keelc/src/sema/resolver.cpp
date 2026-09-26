@@ -173,6 +173,11 @@ void Resolver::visit( Node_id id )
             error_at( ast_.span( id ), fmt::format( "`{}` is not declared", interner_.text( name ) ) );
         }
 
+        if( !ast_.children( id ).empty() )
+        {
+            visit( ast_.child( id, 0 ) ); // type arguments, if any
+        }
+
         return;
     }
     case Node_kind::Named_type:

@@ -93,10 +93,15 @@ void check_rvalue( const Function& func, const Rvalue& value, std::string_view w
         return;
 
     case Rvalue_kind::Call:
+    case Rvalue_kind::Indirect_call:
     {
-        if( !value.callee.is_valid() )
+        if( value.kind == Rvalue_kind::Call && !value.callee.is_valid() )
         {
             errors.push_back( fmt::format( "{}: callee is not set", where ) );
+        }
+        else if( value.kind == Rvalue_kind::Indirect_call )
+        {
+            operand_at( value.a, "callee" );
         }
 
         const u64 end = static_cast<u64>( value.first_argument ) + value.argument_count;
@@ -119,6 +124,15 @@ void check_rvalue( const Function& func, const Rvalue& value, std::string_view w
         return;
     case Rvalue_kind::Release:
         operand_at( value.a, "operand" );
+        return;
+
+    // The callee is the whole of it: a function is not a place, so there is no operand to check.
+    case Rvalue_kind::Function_address:
+        if( !value.callee.is_valid() )
+        {
+            errors.push_back( fmt::format( "{}: callee is not set", where ) );
+        }
+
         return;
     }
 }
@@ -641,6 +655,30 @@ TEST_CASE( "verify_checks_rvalue_fields", "[ir][verify]" )
         Rvalue value;
         value.kind           = Rvalue_kind::Call;
         value.callee         = Node_id { 1 };
+        value.first_argument = 0;
+        value.argument_count = 2;
+
+        REQUIRE( mentions( verify( with_value( value ) ), "arguments 0..2 are out of range" ) );
+    }
+
+    // M7 slice 3. An indirect call names no declaration, so what has to hold up is the operand the
+    // callee travels on.
+    SECTION( "an indirect call through a local that does not exist" )
+    {
+        Rvalue value;
+        value.kind    = Rvalue_kind::Indirect_call;
+        value.a.kind  = Operand_kind::Copy;
+        value.a.place = Place { .local = Local_id { 9 } };
+
+        REQUIRE( mentions( verify( with_value( value ) ), "callee: local 9 is out of range" ) );
+    }
+
+    SECTION( "an indirect call whose arguments run past the end" )
+    {
+        Rvalue value;
+        value.kind           = Rvalue_kind::Indirect_call;
+        value.a.kind         = Operand_kind::Copy;
+        value.a.place        = Place { .local = Local_id { 0 } };
         value.first_argument = 0;
         value.argument_count = 2;
 

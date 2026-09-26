@@ -29,6 +29,8 @@ std::string_view node_kind_name( Node_kind kind )
         return "Const_type";
     case Node_kind::Generic_type:
         return "Generic_type";
+    case Node_kind::Function_type:
+        return "Function_type";
     case Node_kind::Type_arg_list:
         return "Type_arg_list";
     case Node_kind::Param_list:

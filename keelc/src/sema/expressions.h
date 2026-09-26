@@ -120,6 +120,14 @@ private:
     // is a question about places rather than types.
     Type_id infer_binary( Node_id id );
     Type_id infer_unary( Node_id id );
+    // `&f`: the operand names a function, so the type is its signature and not a pointer to it.
+    Type_id function_address( Node_id id, Node_id declaration );
+
+    // The function type a declaration would be written as; refused receives the first parameter carrying a mode.
+    Type_id written_signature( Node_id declaration, const Bindings& bindings, Node_id& refused );
+    // Which overload the expected signature names, or nothing - reported - when the set holds no such one.
+    Node_id overload_for_signature( Node_id id, std::string_view name, Node_id first, Type_id signature );
+    Type_id indirect_call( Node_id id, Node_id declaration, Type_id signature );
 
     Type_id infer_field( Node_id id );
 

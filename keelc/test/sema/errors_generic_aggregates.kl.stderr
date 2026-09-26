@@ -20,7 +20,7 @@ error: `Box` takes 1 type argument, but 2 were given
   --> sema/errors_generic_aggregates.kl:54:8
    |
 54 |     Box<i32, f64> many;
-   |        ^^^^^^^^^^
+   |        ^^^^^^^^^^ `Box` declares `T`
 
 error: `f64` is not `Integral`, and `Counted` requires it of `T`
   --> sema/errors_generic_aggregates.kl:55:13

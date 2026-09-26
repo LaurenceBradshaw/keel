@@ -239,12 +239,75 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
 
         return instance;
     }
+    // D31/D32 are deferred here rather than decided: a mode has nowhere to live in a Type, and one
+    // dropped silently would make `fn( i32 ) -> i32` and `fn( ref i32 ) -> i32` one type.
+    case Node_kind::Function_type:
+    {
+        // Nothing written inside a function type is a declaration, so none of it is outermost.
+        const Type_id return_type = type_of( ast_.child( annotation, 0 ), false );
+
+        std::vector<Type_id> parameters;
+
+        bool poisoned = table_.is_error( return_type );
+
+        for( const Node_id param : ast_.children( ast_.child( annotation, 1 ) ) )
+        {
+            const Node_id spelled = ast_.child( param, 0 );
+
+            if( ast_.kind( spelled ) == Node_kind::Mode_type )
+            {
+                const Keyword mode = static_cast<Keyword>( ast_.aux( spelled ) );
+
+                reporter_.error_at(
+                    ast_.span( spelled ),
+                    fmt::format( "`{}` is not supported in a function type yet", interner_.text( Interner::keyword( mode ) ) ),
+                    "write the underlying type, and take the mode on the function itself"
+                );
+
+                poisoned = true;
+                continue;
+            }
+
+            const Type_id param_type = type_of( spelled, false );
+
+            poisoned = poisoned || table_.is_error( param_type );
+
+            parameters.push_back( param_type );
+        }
+
+        // Poison propagates rather than being wrapped, for the reason Pointer_type's does: a
+        // `fn( <error> ) -> i32` is not the error type, so one bad annotation would report twice.
+        return poisoned ? table_.builtin( Type_kind::Error ) : table_.function( return_type, parameters );
+    }
 
     default:
         // Error nodes, and anything the parser puts in type position that is not a type.
         return table_.builtin( Type_kind::Error );
     }
 }
+
+namespace
+{
+
+// `T`, or `T` and `U`, in declaration order - the same joining Overloads uses for a candidate list.
+std::string type_parameter_list( const Ast& ast, const Interner& interner, std::span<const Node_id> parameters )
+{
+    std::string text;
+
+    for( std::size_t i = 0; i < parameters.size(); ++i )
+    {
+        if( i != 0 )
+        {
+            text += i + 1 == parameters.size() ? " and " : ", ";
+        }
+
+        text += fmt::format( "`{}`", interner.text( Symbol_id { ast.aux( parameters[i] ) } ) );
+    }
+
+    return text;
+}
+
+} // namespace
 
 // Shared because a generic aggregate asks exactly what a generic call asks - how many, of what,
 // and do they keep the promises - and two copies of that would drift the first time either grew a
@@ -267,7 +330,10 @@ bool Annotations::resolve_type_arguments(
                 parameters.size() == 1 ? "" : "s",
                 given.size(),
                 given.size() == 1 ? "was" : "were"
-            )
+            ),
+            // The names, not the count again: the count is in the message and the names are what
+            // the author has to write something for.
+            fmt::format( "`{}` declares {}", name, type_parameter_list( ast_, interner_, parameters ) )
         );
 
         return false;
@@ -464,6 +530,115 @@ TEST_CASE( "annotations_propagate_the_poison_out_of_a_pointer", "[sema][annotati
     // would not absorb it and one bad annotation would report twice.
     REQUIRE( type == p.table().builtin( Type_kind::Error ) );
     REQUIRE( p.errors() == 1 );
+}
+
+TEST_CASE( "annotations_read_a_function_type", "[sema][annotation][m7]" )
+{
+    Written p( "void g( fn( i32 ) -> bool a, fn() -> void b, fn( fn( i32 ) -> i32 ) -> i32 c ) { }" );
+
+    REQUIRE( p.table().name( p.annotations().type_of( p.parameter_annotation( 0, 0 ) ) ) == "fn( i32 ) -> bool" );
+    REQUIRE( p.table().name( p.annotations().type_of( p.parameter_annotation( 0, 1 ) ) ) == "fn() -> void" );
+    REQUIRE( p.table().name( p.annotations().type_of( p.parameter_annotation( 0, 2 ) ) ) == "fn( fn( i32 ) -> i32 ) -> i32" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.errors() == 0 );
+}
+
+TEST_CASE( "annotations_propagate_the_poison_out_of_a_function_type", "[sema][annotation][m7]" )
+{
+    // The error type itself, not a function type wrapping it: `fn( <error> ) -> i32` is not the
+    // error type, so check() would not absorb it and one bad annotation would report twice.
+    SECTION( "from a parameter" )
+    {
+        Written p( "void g( fn( Nope ) -> i32 a ) { }" );
+
+        const Type_id type = p.annotations().type_of( p.parameter_annotation( 0, 0 ) );
+
+        INFO( p.rendered() );
+        REQUIRE( type == p.table().builtin( Type_kind::Error ) );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "and from the return type" )
+    {
+        Written p( "void g( fn( i32 ) -> Nope a ) { }" );
+
+        const Type_id type = p.annotations().type_of( p.parameter_annotation( 0, 0 ) );
+
+        INFO( p.rendered() );
+        REQUIRE( type == p.table().builtin( Type_kind::Error ) );
+        REQUIRE( p.errors() == 1 );
+    }
+}
+
+TEST_CASE( "annotations_refuse_const_inside_a_function_type", "[sema][annotation][const][m7]" )
+{
+    SECTION( "the outermost one is still the binding, and unwraps to what it binds" )
+    {
+        Written p( "void g( const fn( i32 ) -> i32 a ) { }" );
+
+        REQUIRE( p.table().name( p.annotations().type_of( p.parameter_annotation( 0, 0 ) ) ) == "fn( i32 ) -> i32" );
+        REQUIRE( p.errors() == 0 );
+    }
+
+    // Nothing written inside a function type is a declaration, so `const` there is the pointer
+    // meaning, which is refused everywhere else already.
+    SECTION( "one in the return position is not" )
+    {
+        Written p( "void g( fn( i32 ) -> const i32 a ) { }" );
+
+        const Type_id type = p.annotations().type_of( p.parameter_annotation( 0, 0 ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.table().is_error( type ) );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "nor is one on a parameter" )
+    {
+        Written p( "void g( fn( const i32 ) -> i32 a ) { }" );
+
+        const Type_id type = p.annotations().type_of( p.parameter_annotation( 0, 0 ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.table().is_error( type ) );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    // `const` is written outside the mode, so the const rule answers first - one diagnostic, not
+    // the mode's as well.
+    SECTION( "and it answers before the mode does" )
+    {
+        Written p( "void g( fn( const ref i32 ) -> i32 a ) { }" );
+
+        const Type_id type = p.annotations().type_of( p.parameter_annotation( 0, 0 ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.table().is_error( type ) );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "a pointer to `const` is not supported yet" ) != std::string::npos );
+    }
+}
+
+// Deferred rather than decided: a mode has nowhere to live in a Type, and a function type that
+// dropped it would make `fn( i32 ) -> i32` and `fn( ref i32 ) -> i32` one type - two signatures a
+// call site tells apart.
+TEST_CASE( "annotations_refuse_a_mode_in_a_function_type", "[sema][annotation][m7]" )
+{
+    for( const char* source :
+         { "void g( fn( ref i32 ) -> i32 a ) { }",
+           "void g( fn( move i32 ) -> i32 a ) { }",
+           "void g( fn( out i32 ) -> i32 a ) { }" } )
+    {
+        Written p( source );
+
+        const Type_id type = p.annotations().type_of( p.parameter_annotation( 0, 0 ) );
+
+        INFO( source << "\n" << p.rendered() );
+        REQUIRE( p.table().is_error( type ) );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "is not supported in a function type yet" ) != std::string::npos );
+    }
 }
 
 TEST_CASE( "annotations_take_const_off_the_outermost_and_refuse_it_inside", "[sema][annotation][const]" )

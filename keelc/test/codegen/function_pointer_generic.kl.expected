@@ -1,0 +1,217 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Holder;
+
+typedef int32_t ( *kl__fn__F3i32E3i32 )( int32_t );
+typedef double ( *kl__fn__F3f64E3f64 )( double );
+
+struct kl__Holder
+{
+    kl__fn__F3i32E3i32 kl_cb_80;
+};
+
+int32_t kl__apply__F3i32E3i32_3i32( kl__fn__F3i32E3i32, int32_t );
+double kl__apply_f__F3f64E3f64_3f64( kl__fn__F3f64E3f64, double );
+int32_t kl__main__( void );
+int32_t kl__id__I3i32E__3i32( int32_t );
+double kl__id__I3f64E__3f64( double );
+int32_t kl__doubled__I3i32E__3i32( int32_t );
+int32_t kl__half__I3i32E__3i32( int32_t );
+double kl__half__I3f64E__3f64( double );
+
+int32_t kl__apply__F3i32E3i32_3i32( kl__fn__F3i32E3i32 kl_f_1, int32_t kl_v_2 )
+{
+    int32_t kl_t0;
+    int32_t kl_t3;
+#line 25 "codegen/function_pointer_generic.kl"
+    kl_t3 = kl_f_1( kl_v_2 );
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+double kl__apply_f__F3f64E3f64_3f64( kl__fn__F3f64E3f64 kl_f_1, double kl_v_2 )
+{
+    double kl_t0;
+    double kl_t3;
+#line 30 "codegen/function_pointer_generic.kl"
+    kl_t3 = kl_f_1( kl_v_2 );
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    kl__fn__F3i32E3i32 kl_p_1;
+    kl__fn__F3i32E3i32 kl_t2;
+    kl__fn__F3f64E3f64 kl_q_3;
+    kl__fn__F3f64E3f64 kl_t4;
+    int32_t kl_t5;
+    bool kl_t6;
+    double kl_t7;
+    bool kl_t8;
+    kl__fn__F3i32E3i32 kl_t9;
+    int32_t kl_t10;
+    bool kl_t11;
+    struct kl__Holder kl_h_12;
+    struct kl__Holder kl_t13;
+    kl__fn__F3i32E3i32 kl_t14;
+    kl__fn__F3i32E3i32 kl_r_15;
+    int32_t kl_t16;
+    bool kl_t17;
+    kl__fn__F3i32E3i32 kl_hi_18;
+    kl__fn__F3i32E3i32 kl_t19;
+    kl__fn__F3f64E3f64 kl_hf_20;
+    kl__fn__F3f64E3f64 kl_t21;
+    int32_t kl_t22;
+    bool kl_t23;
+    double kl_t24;
+    bool kl_t25;
+    kl__fn__F3f64E3f64 kl_t26;
+    double kl_t27;
+    bool kl_t28;
+    kl__fn__F3i32E3i32 kl_t29;
+    int32_t kl_t30;
+    bool kl_t31;
+#line 40 "codegen/function_pointer_generic.kl"
+    kl_t2 = kl__id__I3i32E__3i32;
+    kl_p_1 = kl_t2;
+#line 41 "codegen/function_pointer_generic.kl"
+    kl_t4 = kl__id__I3f64E__3f64;
+    kl_q_3 = kl_t4;
+#line 43 "codegen/function_pointer_generic.kl"
+    kl_t5 = kl_p_1( 7 );
+    kl_t6 = kl_t5 != 7;
+    if ( kl_t6 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+#line 44 "codegen/function_pointer_generic.kl"
+    kl_t7 = kl_q_3( 0.5 );
+    kl_t8 = kl_t7 != 0.5;
+    if ( kl_t8 ) goto bb3; else goto bb4;
+    bb3:
+    kl_t0 = 2;
+    return kl_t0;
+    bb4:
+#line 47 "codegen/function_pointer_generic.kl"
+    kl_t9 = kl__doubled__I3i32E__3i32;
+    kl_t10 = kl__apply__F3i32E3i32_3i32( kl_t9, 21 );
+    kl_t11 = kl_t10 != 42;
+    if ( kl_t11 ) goto bb5; else goto bb6;
+    bb5:
+    kl_t0 = 3;
+    return kl_t0;
+    bb6:
+#line 51 "codegen/function_pointer_generic.kl"
+    kl_t14 = kl__id__I3i32E__3i32;
+    kl_t13.kl_cb_80 = kl_t14;
+    kl_h_12 = kl_t13;
+#line 53 "codegen/function_pointer_generic.kl"
+    kl_r_15 = kl_h_12.kl_cb_80;
+#line 55 "codegen/function_pointer_generic.kl"
+    kl_t16 = kl_r_15( 3 );
+    kl_t17 = kl_t16 != 3;
+    if ( kl_t17 ) goto bb7; else goto bb8;
+    bb7:
+    kl_t0 = 4;
+    return kl_t0;
+    bb8:
+#line 58 "codegen/function_pointer_generic.kl"
+    kl_t19 = kl__half__I3i32E__3i32;
+    kl_hi_18 = kl_t19;
+#line 59 "codegen/function_pointer_generic.kl"
+    kl_t21 = kl__half__I3f64E__3f64;
+    kl_hf_20 = kl_t21;
+#line 61 "codegen/function_pointer_generic.kl"
+    kl_t22 = kl_hi_18( 3 );
+    kl_t23 = kl_t22 != 1;
+    if ( kl_t23 ) goto bb9; else goto bb10;
+    bb9:
+    kl_t0 = 5;
+    return kl_t0;
+    bb10:
+#line 62 "codegen/function_pointer_generic.kl"
+    kl_t24 = kl_hf_20( 3.0 );
+    kl_t25 = kl_t24 != 1.5;
+    if ( kl_t25 ) goto bb11; else goto bb12;
+    bb11:
+    kl_t0 = 6;
+    return kl_t0;
+    bb12:
+#line 65 "codegen/function_pointer_generic.kl"
+    kl_t26 = kl__half__I3f64E__3f64;
+    kl_t27 = kl__apply_f__F3f64E3f64_3f64( kl_t26, 5.0 );
+    kl_t28 = kl_t27 != 2.5;
+    if ( kl_t28 ) goto bb13; else goto bb14;
+    bb13:
+    kl_t0 = 7;
+    return kl_t0;
+    bb14:
+#line 66 "codegen/function_pointer_generic.kl"
+    kl_t29 = kl__half__I3i32E__3i32;
+    kl_t30 = kl__apply__F3i32E3i32_3i32( kl_t29, 5 );
+    kl_t31 = kl_t30 != 2;
+    if ( kl_t31 ) goto bb15; else goto bb16;
+    bb15:
+    kl_t0 = 8;
+    return kl_t0;
+    bb16:
+#line 68 "codegen/function_pointer_generic.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int32_t kl__id__I3i32E__3i32( int32_t kl_a_1 )
+{
+    int32_t kl_t0;
+#line 7 "codegen/function_pointer_generic.kl"
+    kl_t0 = kl_a_1;
+    return kl_t0;
+}
+
+double kl__id__I3f64E__3f64( double kl_a_1 )
+{
+    double kl_t0;
+#line 7 "codegen/function_pointer_generic.kl"
+    kl_t0 = kl_a_1;
+    return kl_t0;
+}
+
+int32_t kl__doubled__I3i32E__3i32( int32_t kl_a_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t2;
+#line 20 "codegen/function_pointer_generic.kl"
+    kl_t2 = kl_a_1 + kl_a_1;
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+int32_t kl__half__I3i32E__3i32( int32_t kl_a_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t2;
+#line 15 "codegen/function_pointer_generic.kl"
+    kl_t2 = kl_a_1 / 2;
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+double kl__half__I3f64E__3f64( double kl_a_1 )
+{
+    double kl_t0;
+    double kl_t2;
+#line 15 "codegen/function_pointer_generic.kl"
+    kl_t2 = kl_a_1 / 2.0;
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

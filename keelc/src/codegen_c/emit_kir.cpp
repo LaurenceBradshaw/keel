@@ -242,7 +242,9 @@ private:
     void line_directive( Span span );
 
     void emit_prologue();
+    void emit_composite_forwards();
     void emit_composites();
+    void emit_function_types();
     void emit_globals();
     void emit_prototypes();
     void emit_runtime_prototypes();
@@ -320,6 +322,8 @@ Kir_emitter::Kir_emitter(
 std::string Kir_emitter::run()
 {
     emit_prologue();
+    emit_composite_forwards();
+    emit_function_types();
     emit_composites();
     emit_globals();
     emit_runtime_prototypes();
@@ -366,6 +370,51 @@ void Kir_emitter::emit_prologue()
     write_line( "" );
 }
 
+// A C function-pointer type puts the name inside the declarator, and every caller of
+// Spelling::type writes the type and then the name. One typedef per interned signature that has a
+// C spelling is what makes the two agree. Between the struct forward declarations and the struct definitions: a struct
+// may hold a signature, a signature may mention a struct by value, and an incomplete struct is
+// enough for the second.
+void Kir_emitter::emit_function_types()
+{
+    std::vector<Type_id> signatures;
+
+    // An open signature has no C spelling at all; the instance's own is interned beside it.
+    for( const Type_id signature : types_.table().function_types() )
+    {
+        if( !types_.table().mentions_parameter( signature ) )
+        {
+            signatures.push_back( signature );
+        }
+    }
+
+    if( signatures.empty() )
+    {
+        return;
+    }
+
+    for( const Type_id signature : signatures )
+    {
+        const Type& described = types_.table().get( signature );
+
+        std::string parameters;
+
+        for( const Type_id parameter : described.arguments )
+        {
+            parameters += fmt::format( "{}{}", parameters.empty() ? "" : ", ", spelling_.type( parameter ) );
+        }
+
+        write_line( fmt::format(
+            "typedef {} ( *{} )( {} );",
+            spelling_.type( described.element ),
+            spelling_.type( signature ),
+            parameters.empty() ? "void" : parameters
+        ) );
+    }
+
+    write_line( "" );
+}
+
 // One C struct per instantiation, in containment order. An enum with a payload is a struct too: a
 // tag followed by every payload field of every variant, side by side rather than in a union. The
 // field names are already mangled with their node id, so two variants cannot collide, and the only
@@ -376,6 +425,25 @@ void Kir_emitter::emit_prologue()
 // One pass over both kinds rather than one each: a struct can hold an enum by value and an enum a
 // struct, so any order that finishes one kind before starting the other puts some definition before
 // something it contains.
+// §7.4's forward declarations. Nothing in v0 needs them for the structs' own sake - the definitions
+// are already ordered - but they cost a line each, they become necessary the moment a struct holds a
+// pointer to one, which a generic linked list does, and they are what lets a signature naming a
+// struct by value be written before that struct is complete.
+void Kir_emitter::emit_composite_forwards()
+{
+    if( struct_order_.empty() )
+    {
+        return;
+    }
+
+    for( const Type_id type : struct_order_ )
+    {
+        write_line( fmt::format( "{};", spelling_.structure( type ) ) );
+    }
+
+    write_line( "" );
+}
+
 void Kir_emitter::emit_composites()
 {
     // Already ordered so that a type arrives after everything it holds by value. See
@@ -384,16 +452,6 @@ void Kir_emitter::emit_composites()
     {
         return;
     }
-
-    // §7.4's forward declarations. Nothing in v0 needs them - the definitions are already ordered
-    // - but they cost a line each and become necessary the moment a struct holds a pointer to one,
-    // which a generic linked list does.
-    for( const Type_id type : struct_order_ )
-    {
-        write_line( fmt::format( "{};", spelling_.structure( type ) ) );
-    }
-
-    write_line( "" );
 
     for( const Type_id type : struct_order_ )
     {
@@ -1017,6 +1075,7 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue ) const
         return fmt::format( "&{}", place( rvalue.a.place ) );
 
     case Rvalue_kind::Call:
+    case Rvalue_kind::Indirect_call:
     {
         std::string args;
         for( u32 i = 0; i < rvalue.argument_count; ++i )
@@ -1027,7 +1086,9 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue ) const
             }
             args += operand( current_->operands[rvalue.first_argument + i] );
         }
-        return fmt::format( "{}( {} )", spelling_.function( rvalue.callee, rvalue.type_arguments ), args );
+        std::string callee_name =
+            rvalue.kind == Rvalue_kind::Call ? spelling_.function( rvalue.callee, rvalue.type_arguments ) : operand( rvalue.a );
+        return fmt::format( "{}( {} )", callee_name, args );
     }
     case Rvalue_kind::Allocate:
         // The element type gives the size, which is the whole reason `alloc` is a keyword rather
@@ -1039,6 +1100,11 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue ) const
         );
     case Rvalue_kind::Release:
         return fmt::format( "kl_rt_free( {} )", operand( rvalue.a ) );
+
+    // No `&`: a function name already decays to its address in C, and the operator would be a
+    // second spelling of one thing.
+    case Rvalue_kind::Function_address:
+        return spelling_.function( rvalue.callee, rvalue.type_arguments );
 
     default:
         assert( false && "unknown rvalue kind" );
@@ -1205,6 +1271,320 @@ TEST_CASE( "emit_kir_writes_a_function", "[codegen][kir]" )
     REQUIRE( g.has( "int32_t kl_t0;" ) );
     REQUIRE( g.has( "kl_t0 = 0;" ) );
     REQUIRE( g.has( "return kl_t0;" ) );
+}
+
+// A C function-pointer type is a declarator, not a prefix: `R ( *name )( A )` puts the name inside
+// it, and every caller of Spelling::type writes type then name. A typedef is what makes the two
+// agree, so the type has a name of its own before any local is declared with it.
+TEST_CASE( "emit_kir_writes_a_function_address_as_a_bare_symbol", "[codegen][kir][m7]" )
+{
+    Generated g( "i32 f( i32 a ) { return a; }\n"
+                 "i32 main() { fn( i32 ) -> i32 p = &f; return 0; }\n" );
+
+    INFO( g.c );
+    REQUIRE( g.clean() );
+
+    // A function name already decays to its address in C, so the operator would be a second
+    // spelling of one thing - and `&` on a typedef'd pointer would be the address of the variable.
+    REQUIRE( g.has( "kl__f__3i32;" ) );
+    REQUIRE_FALSE( g.has( "&kl__f__3i32" ) );
+
+    SECTION( "the typedef is written once for a signature used twice" )
+    {
+        Generated twice( "i32 f( i32 a ) { return a; }\n"
+                         "i32 main() { fn( i32 ) -> i32 p = &f; fn( i32 ) -> i32 q = &f; return 0; }\n" );
+
+        INFO( twice.c );
+        REQUIRE( twice.clean() );
+
+        const std::size_t first = twice.c.find( "typedef" );
+
+        REQUIRE( first != std::string::npos );
+        REQUIRE( twice.c.find( "typedef", first + 1 ) == std::string::npos );
+    }
+
+    // Two signatures differing only in what they return are two C types, so the name has to carry
+    // the return as well as the parameters or both locals would be declared the same.
+    SECTION( "a signature is named by its return as well as its parameters" )
+    {
+        Generated both( "i32 f( i32 a ) { return a; }\nf64 g( i32 a ) { return 1.0; }\n"
+                        "i32 main() { fn( i32 ) -> i32 p = &f; fn( i32 ) -> f64 q = &g; return 0; }\n" );
+
+        INFO( both.c );
+        REQUIRE( both.clean() );
+
+        const auto typedef_name = [&both]( std::size_t from )
+        {
+            const std::size_t open = both.c.find( "( *", from ) + 3;
+
+            return both.c.substr( open, both.c.find( " )", open ) - open );
+        };
+
+        const std::size_t first  = both.c.find( "typedef" );
+        const std::size_t second = both.c.find( "typedef", first + 1 );
+
+        REQUIRE( second != std::string::npos );
+        REQUIRE( typedef_name( first ) != typedef_name( second ) );
+    }
+
+    // Before the first function that could declare a local with it, for the reason the struct
+    // definitions are ordered: C reads a file once, top to bottom.
+    SECTION( "and before anything that uses it" )
+    {
+        REQUIRE( g.c.find( "typedef" ) < g.c.find( "int32_t kl__f__3i32(" ) );
+    }
+}
+
+// The mangled name carries the parameter types, so the chosen overload is visible in the C and
+// nowhere else: both candidates print as `&f` in KIR.
+TEST_CASE( "emit_kir_writes_the_address_of_the_chosen_overload", "[codegen][kir][m7]" )
+{
+    SECTION( "the f64 one when that is the annotation" )
+    {
+        Generated g( "i32 f( i32 a ) { return a; }\n"
+                     "f64 f( f64 a ) { return a; }\n"
+                     "i32 main() { fn( f64 ) -> f64 p = &f; return 0; }\n" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+
+        // The `= ` and the `;` are both needed: each name is also written as a forward declaration.
+        REQUIRE( g.has( "= kl__f__3f64;" ) );
+        REQUIRE_FALSE( g.has( "= kl__f__3i32;" ) );
+    }
+
+    SECTION( "and the i32 one when that is what was asked for" )
+    {
+        Generated g( "i32 f( i32 a ) { return a; }\n"
+                     "f64 f( f64 a ) { return a; }\n"
+                     "i32 main() { fn( i32 ) -> i32 p = &f; return 0; }\n" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "= kl__f__3i32;" ) );
+        REQUIRE_FALSE( g.has( "= kl__f__3f64;" ) );
+    }
+
+    // Every interned signature becomes a typedef, and a generic candidate's mentions its type
+    // parameter - so a candidate the selection passed over must not have been interned to pass it.
+    SECTION( "a generic candidate in the set is never interned" )
+    {
+        Generated g( "i32 f<T>( T a ) { return 0; }\n"
+                     "f64 f( f64 a ) { return a; }\n"
+                     "i32 main() { fn( f64 ) -> f64 p = &f; return 0; }\n" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "= kl__f__3f64;" ) );
+    }
+}
+
+// M7 slice 5. The instance's mangled name carries its type arguments, so the address is the one
+// place a generic reaches C without a call - and the body it names has to be there to be reached.
+TEST_CASE( "emit_kir_writes_the_address_of_a_generic_instance", "[codegen][kir][m7][generic]" )
+{
+    constexpr std::string_view id = "T id<T>( T a ) where T : Copyable { return a; }\n";
+
+    SECTION( "the instance, not the declaration" )
+    {
+        Generated g( std::string( id ) + "i32 main() { fn( i32 ) -> i32 p = &id<i32>; return 0; }\n" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "= kl__id__I3i32E__3i32;" ) );
+    }
+
+    // Nothing calls it, so the seed is the only thing that put a body in the file.
+    SECTION( "and its body is emitted" )
+    {
+        Generated g( std::string( id ) + "i32 main() { fn( i32 ) -> i32 p = &id<i32>; return 0; }\n" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "int32_t kl__id__I3i32E__3i32( int32_t kl_a_1 )" ) );
+    }
+
+    SECTION( "the signature it was chosen for is a typedef" )
+    {
+        Generated g( std::string( id ) + "i32 main() { fn( i32 ) -> i32 p = &id<i32>; return 0; }\n" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "typedef int32_t ( *kl__fn__F3i32E3i32 )( int32_t );" ) );
+    }
+
+    SECTION( "two instances are two symbols and two bodies" )
+    {
+        Generated g(
+            std::string( id ) + "i32 main() { fn( i32 ) -> i32 p = &id<i32>; fn( f64 ) -> f64 q = &id<f64>; return 0; }\n"
+        );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "= kl__id__I3i32E__3i32;" ) );
+        REQUIRE( g.has( "= kl__id__I3f64E__3f64;" ) );
+        REQUIRE( g.has( "double kl__id__I3f64E__3f64( double kl_a_1 )" ) );
+    }
+}
+
+// M7 slice 3. C calls through a function-pointer variable with no `*`, the same way it takes the
+// address with no `&` - so the callee is spelled exactly where the mangled symbol would be.
+TEST_CASE( "emit_kir_calls_through_a_function_typed_variable", "[codegen][kir][m7]" )
+{
+    Generated g( "i32 twice( i32 a ) { return a * 2; }\n"
+                 "i32 main() { fn( i32 ) -> i32 p = &twice; return p( 21 ); }\n" );
+
+    INFO( g.c );
+    REQUIRE( g.clean() );
+
+    REQUIRE( g.has( "kl_p_1( 21 )" ) );
+    REQUIRE_FALSE( g.has( "( *kl_p_1 )" ) );
+    REQUIRE_FALSE( g.has( "= kl__twice__3i32( " ) );
+
+    SECTION( "a void one is a statement of its own" )
+    {
+        Generated v( "void nothing() { }\ni32 main() { fn() -> void q = &nothing; q(); return 0; }\n" );
+
+        INFO( v.c );
+        REQUIRE( v.clean() );
+        REQUIRE( v.has( "kl_q_1(  );" ) );
+    }
+
+    // A parameter's own C type is the typedef, so a signature that reaches C only as a parameter
+    // still has to be written before the function taking it.
+    SECTION( "and through a parameter, whose typedef comes first" )
+    {
+        Generated a( "i32 apply( fn( i32 ) -> i32 f, i32 v ) { return f( v ); }\ni32 main() { return 0; }\n" );
+
+        INFO( a.c );
+        REQUIRE( a.clean() );
+        REQUIRE( a.has( "kl_f_1( kl_v_2 )" ) );
+        REQUIRE( a.c.find( "typedef" ) < a.c.find( "kl__apply__" ) );
+    }
+}
+
+// M7 slice 3. A struct holding a signature needs the typedef above its own definition; a signature
+// mentioning a struct by value needs only the forward declaration, which C accepts incomplete. The
+// typedefs therefore sit between the two, and a fixture pinning one end alone would let them move
+// to where the other breaks.
+TEST_CASE( "emit_kir_orders_a_signature_against_the_struct_it_touches", "[codegen][kir][m7]" )
+{
+    SECTION( "a struct holding one" )
+    {
+        Generated g( "struct Holder { fn( i32 ) -> i32 cb; };\ni32 main() { return 0; }\n" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+
+        const std::size_t forward    = g.c.find( "struct kl__Holder;" );
+        const std::size_t signature  = g.c.find( "typedef" );
+        const std::size_t definition = g.c.find( "struct kl__Holder\n{" );
+
+        REQUIRE( forward != std::string::npos );
+        REQUIRE( signature != std::string::npos );
+        REQUIRE( definition != std::string::npos );
+        REQUIRE( forward < signature );
+        REQUIRE( signature < definition );
+    }
+
+    SECTION( "a signature mentioning one" )
+    {
+        Generated g( "struct P { i32 t; };\nP make() { return P { 1 }; }\n"
+                     "i32 main() { fn() -> P f = &make; return 0; }\n" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+
+        const std::size_t forward   = g.c.find( "struct kl__P;" );
+        const std::size_t signature = g.c.find( "typedef" );
+
+        REQUIRE( forward != std::string::npos );
+        REQUIRE( signature != std::string::npos );
+        REQUIRE( forward < signature );
+    }
+
+    SECTION( "and both at once, which is what fixes the order rather than moves it" )
+    {
+        Generated g( "struct P { i32 t; };\nP bump( P v ) { return P { v.t + 1 }; }\n"
+                     "struct Holder { fn( P ) -> P cb; };\n"
+                     "i32 main() { Holder h = Holder { &bump }; return 0; }\n" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+
+        const std::size_t forward    = g.c.find( "struct kl__P;" );
+        const std::size_t signature  = g.c.find( "typedef" );
+        const std::size_t definition = g.c.find( "struct kl__Holder\n{" );
+
+        REQUIRE( forward != std::string::npos );
+        REQUIRE( signature != std::string::npos );
+        REQUIRE( definition != std::string::npos );
+        REQUIRE( forward < signature );
+        REQUIRE( signature < definition );
+    }
+}
+
+// An open signature has no C spelling, so it gets no typedef - the rule emitted_struct_order
+// already applies to an open `Box<T>`. Inside a generic, `fn( T ) -> T` names the enclosing
+// instance's signature, and that one is closed.
+TEST_CASE( "emit_kir_writes_no_typedef_for_an_open_signature", "[codegen][kir][m7][generic]" )
+{
+    SECTION( "a function-typed parameter inside a generic, with no address taken anywhere" )
+    {
+        Generated g( "void use<T>( fn( T ) -> T f, T a ) where T : Integral { T r = f( a ); }\n"
+                     "i32 twice( i32 a ) { return a + a; }\n"
+                     "i32 main() { use<i32>( &twice, 2 ); return 0; }\n" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "typedef int32_t ( *kl__fn__F3i32E3i32 )( int32_t );" ) );
+    }
+
+    SECTION( "the enclosing instance's own signature, written as `fn( T ) -> T`" )
+    {
+        Generated g( "T bounded<T>( T a ) where T : Integral { return a; }\n"
+                     "void use<T>( T a ) where T : Integral { fn( T ) -> T p = &bounded<T>; }\n"
+                     "i32 main() { use<i32>( 1 ); return 0; }\n" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "typedef int32_t ( *kl__fn__F3i32E3i32 )( int32_t );" ) );
+    }
+
+    SECTION( "one typedef per instance, and the open form is none" )
+    {
+        Generated g( "T bounded<T>( T a ) where T : Integral { return a; }\n"
+                     "T use<T>( T a ) where T : Integral { fn( T ) -> T p = &bounded<T>; return p( a ); }\n"
+                     "i32 main() { i32 x = use<i32>( 1 ); i64 y = use<i64>( 2 ); return x + 1; }\n" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "typedef int32_t ( *kl__fn__F3i32E3i32 )( int32_t );" ) );
+        REQUIRE( g.has( "typedef int64_t ( *kl__fn__F3i64E3i64 )( int64_t );" ) );
+
+        std::size_t typedefs = 0;
+
+        for( std::size_t at = g.c.find( "typedef" ); at != std::string::npos; at = g.c.find( "typedef", at + 1 ) )
+        {
+            ++typedefs;
+        }
+
+        REQUIRE( typedefs == 2 );
+    }
+
+    // An open signature is interned whether or not the generic is ever instantiated, so asking the
+    // unfiltered list whether there is anything to write would leave a section holding only its own
+    // blank line.
+    SECTION( "an open signature on its own leaves the section out entirely" )
+    {
+        Generated g( "void unused<T>( fn( T ) -> T f, T a ) where T : Integral { T r = f( a ); }\n"
+                     "i32 main() { return 0; }\n" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE_FALSE( g.has( "typedef" ) );
+        REQUIRE_FALSE( g.has( "\n\n\n" ) );
+    }
 }
 
 // The body names parameters by Local_id; the prototype names none at all. Naming them from the
@@ -1402,6 +1782,46 @@ TEST_CASE( "emit_kir_declares_every_extern", "[codegen][kir][extern]" )
 
         // C needs the declaration first, and the emitter's order is what guarantees it.
         REQUIRE( g.c.find( "int32_t abs( int32_t );" ) < g.c.find( "int32_t kl__main__( void )\n{" ) );
+    }
+}
+
+// M7's customer for function pointers: a C library that takes a callback has no other spelling.
+// The parameter is a Keel signature and the argument is a Keel function, so both halves of the
+// slice meet here - the typedef the extern is declared with, and the bare symbol passed to it.
+TEST_CASE( "emit_kir_passes_a_function_address_to_an_extern", "[codegen][kir][m7][extern]" )
+{
+    Generated g( "extern void register_cb( fn( i32 ) -> i32 cb );\n"
+                 "i32 f( i32 a ) { return a; }\n"
+                 "i32 main() { unsafe { register_cb( &f ); } return 0; }\n" );
+
+    INFO( g.c );
+    REQUIRE( g.clean() );
+
+    // The extern keeps its C name, and its parameter is spelled with the typedef like any other.
+    REQUIRE( g.has( "void register_cb( kl__fn__F3i32E3i32 );" ) );
+    REQUIRE( g.c.find( "typedef" ) < g.c.find( "void register_cb(" ) );
+
+    SECTION( "and the argument is the mangled Keel symbol, bare" )
+    {
+        REQUIRE( g.has( "= kl__f__3i32;" ) );
+        REQUIRE( g.has( "register_cb( kl_t" ) );
+        REQUIRE_FALSE( g.has( "&kl__f__3i32" ) );
+    }
+
+    // The same channel slice 4 selects through, arriving from a declaration written in C.
+    SECTION( "and an extern's parameter chooses between overloads" )
+    {
+        // The f64 one is declared first, so taking the head of the set rather than the match
+        // answers wrongly here - the order is the assertion.
+        Generated over( "extern void register_cb( fn( i32 ) -> i32 cb );\n"
+                        "f64 f( f64 a ) { return a; }\n"
+                        "i32 f( i32 a ) { return a; }\n"
+                        "i32 main() { unsafe { register_cb( &f ); } return 0; }\n" );
+
+        INFO( over.c );
+        REQUIRE( over.clean() );
+        REQUIRE( over.has( "= kl__f__3i32;" ) );
+        REQUIRE_FALSE( over.has( "= kl__f__3f64;" ) );
     }
 }
 

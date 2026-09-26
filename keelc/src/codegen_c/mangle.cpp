@@ -25,6 +25,23 @@ void encode_type( std::string& out, Type_id id, const Type_table& types )
         return;
     }
 
+    // `fn( i32 ) -> i32` is `F3i32E3i32`: the parameters between brackets, then the return. Its
+    // own name is no identifier, so it cannot go through the length-prefixed path below - and `F`
+    // is a letter no encoded type starts with, which is what keeps the scheme injective.
+    if( types.is_function( id ) )
+    {
+        out += 'F';
+
+        for( const Type_id parameter : types.get( id ).arguments )
+        {
+            encode_type( out, parameter, types );
+        }
+
+        out += 'E';
+        encode_type( out, types.get( id ).element, types );
+        return;
+    }
+
     // `Box<i32>` is `3BoxI3i32E`: the base, then its arguments between brackets that cannot appear
     // in a name. Nested and multi-argument forms fall out - `Box<Box<i32>>` is `3BoxI3BoxI3i32EE`.
     const std::string_view base = types.base_name( id );
@@ -143,6 +160,15 @@ std::string mangle_struct( std::string_view module, Type_id type, const Type_tab
     }
 
     return fmt::format( "kl_{}_{}__I{}E", module, base, construct_arg_string( arguments, types ) );
+}
+
+std::string mangle_function_type( std::string_view module, Type_id type, const Type_table& types )
+{
+    std::string encoded;
+
+    encode_type( encoded, type, types );
+
+    return fmt::format( "kl_{}_fn__{}", module, encoded );
 }
 
 std::string mangle_destructor(

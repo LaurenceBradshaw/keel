@@ -1,0 +1,98 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__P;
+struct kl__Holder;
+
+typedef int32_t ( *kl__fn__F3i32E3i32 )( int32_t );
+typedef struct kl__P ( *kl__fn__F1PE1P )( struct kl__P );
+
+struct kl__P
+{
+    int32_t kl_t_1;
+};
+
+struct kl__Holder
+{
+    kl__fn__F3i32E3i32 kl_cb_31;
+};
+
+int32_t kl__twice__3i32( int32_t );
+struct kl__P kl__bump__1P( struct kl__P );
+int32_t kl__main__( void );
+
+int32_t kl__twice__3i32( int32_t kl_a_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t2;
+#line 13 "codegen/function_pointer_in_struct.kl"
+    kl_t2 = kl_a_1 * 2;
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+struct kl__P kl__bump__1P( struct kl__P kl_v_1 )
+{
+    struct kl__P kl_t0;
+    struct kl__P kl_t2;
+    int32_t kl_t3;
+#line 18 "codegen/function_pointer_in_struct.kl"
+    kl_t3 = kl_v_1.kl_t_1 + 1;
+    kl_t2.kl_t_1 = kl_t3;
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__Holder kl_h_1;
+    struct kl__Holder kl_t2;
+    kl__fn__F3i32E3i32 kl_t3;
+    kl__fn__F3i32E3i32 kl_p_4;
+    kl__fn__F1PE1P kl_q_5;
+    kl__fn__F1PE1P kl_t6;
+    struct kl__P kl_one_7;
+    struct kl__P kl_t8;
+    int32_t kl_t9;
+    bool kl_t10;
+    struct kl__P kl_t11;
+    bool kl_t12;
+#line 28 "codegen/function_pointer_in_struct.kl"
+    kl_t3 = kl__twice__3i32;
+    kl_t2.kl_cb_31 = kl_t3;
+    kl_h_1 = kl_t2;
+#line 31 "codegen/function_pointer_in_struct.kl"
+    kl_p_4 = kl_h_1.kl_cb_31;
+#line 32 "codegen/function_pointer_in_struct.kl"
+    kl_t6 = kl__bump__1P;
+    kl_q_5 = kl_t6;
+#line 34 "codegen/function_pointer_in_struct.kl"
+    kl_t8.kl_t_1 = 1;
+    kl_one_7 = kl_t8;
+#line 36 "codegen/function_pointer_in_struct.kl"
+    kl_t9 = kl_p_4( 21 );
+    kl_t10 = kl_t9 != 42;
+    if ( kl_t10 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+#line 37 "codegen/function_pointer_in_struct.kl"
+    kl_t11 = kl_q_5( kl_one_7 );
+    kl_t12 = kl_t11.kl_t_1 != 2;
+    if ( kl_t12 ) goto bb3; else goto bb4;
+    bb3:
+    kl_t0 = 2;
+    return kl_t0;
+    bb4:
+#line 39 "codegen/function_pointer_in_struct.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

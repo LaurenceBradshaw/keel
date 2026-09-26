@@ -68,7 +68,7 @@ error: `id` takes 1 type argument, but 2 were given
   --> sema/errors_generics.kl:57:14
    |
 57 |     return id<i32, f64>( 1 );
-   |              ^^^^^^^^^^
+   |              ^^^^^^^^^^ `id` declares `T`
 
 error: unknown bound `Sortable`
   --> sema/errors_generics.kl:62:40

@@ -14,13 +14,13 @@ error: `Opt` takes 1 type argument, but 2 were given
   --> sema/errors_generic_enums.kl:43:8
    |
 43 |     Opt<i32, f64> too_many;
-   |        ^^^^^^^^^^
+   |        ^^^^^^^^^^ `Opt` declares `T`
 
 error: `Pair` takes 2 type arguments, but 1 was given
   --> sema/errors_generic_enums.kl:44:9
    |
 44 |     Pair<i32>     too_few;
-   |         ^^^^^
+   |         ^^^^^ `Pair` declares `A` and `B`
 
 error: `Opt` is generic, so its type arguments must be written
   --> sema/errors_generic_enums.kl:45:5

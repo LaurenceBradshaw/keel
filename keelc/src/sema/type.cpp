@@ -83,6 +83,53 @@ Type_id Type_table::pointer_to( Type_id element )
     return id;
 }
 
+Type_id Type_table::function( Type_id return_type, std::span<const Type_id> parameters )
+{
+    for( const Type_id id : functions_ )
+    {
+        const Type& described = get( id );
+
+        if( described.element != return_type || described.arguments.size() != parameters.size() )
+        {
+            continue;
+        }
+
+        bool match = true;
+
+        for( std::size_t i = 0; i < parameters.size(); ++i )
+        {
+            if( described.arguments[i] != parameters[i] )
+            {
+                match = false;
+                break;
+            }
+        }
+
+        if( match )
+        {
+            return id;
+        }
+    }
+
+    std::vector<Type_id>& args = arguments_.emplace_back( parameters.begin(), parameters.end() );
+
+    // The source spelling, because this is what every diagnostic naming the type prints.
+    std::string spelling( "fn(" );
+
+    for( std::size_t i = 0; i < args.size(); ++i )
+    {
+        spelling += i == 0 ? " " : ", ";
+        spelling += name( args[i] );
+    }
+
+    spelling += args.empty() ? ") -> " : " ) -> ";
+    spelling += name( return_type );
+
+    const Type_id id = add( { Type_kind::Function, 0, false, return_type, Node_id {}, args }, spelling );
+    functions_.push_back( id );
+    return id;
+}
+
 Type_id
 Type_table::enumeration( Node_id declaration, std::span<const Type_id> arguments, std::string_view name, Type_id underlying )
 {
@@ -135,6 +182,23 @@ bool Type_table::mentions_parameter( Type_id id ) const
             }
         }
         return false;
+    case Type_kind::Function:
+    {
+        if( mentions_parameter( described.element ) )
+        {
+            return true;
+        }
+
+        for( Type_id arg : described.arguments )
+        {
+            if( mentions_parameter( arg ) )
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
     default:
         return false;
     }
@@ -189,12 +253,29 @@ Type_id Type_table::substitute( Type_id type, const Bindings& bindings )
         {
             return enumeration( described.declaration, substituted, base_name( type ), described.element );
         }
+        else if( described.kind == Type_kind::Function )
+        {
+            return function( described.element, substituted );
+        }
         else
         {
             // The *base* name, not this type's: `name( type )` is the whole rendering - `Box<T>` - and
             // handing that back would intern `Box<T><i32>`.
             return structure( described.declaration, substituted, base_name( type ) );
         }
+    }
+    case Type_kind::Function:
+    {
+        std::vector<Type_id> substituted;
+
+        substituted.reserve( described.arguments.size() );
+
+        for( const Type_id argument : described.arguments )
+        {
+            substituted.push_back( substitute( argument, bindings ) );
+        }
+
+        return function( substitute( described.element, bindings ), substituted );
     }
     default:
         return type;
@@ -251,6 +332,23 @@ bool Type_table::deduce( Type_id pattern, Type_id actual, Bindings& into ) const
         }
 
         return true;
+    case Type_kind::Function:
+    {
+        if( !deduce( p.element, a.element, into ) || p.arguments.size() != a.arguments.size() )
+        {
+            return false;
+        }
+
+        for( std::size_t i = 0; i < p.arguments.size(); ++i )
+        {
+            if( !deduce( p.arguments[i], a.arguments[i], into ) )
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
     default:
         return true; // no parameters to bind
     }
@@ -273,6 +371,11 @@ std::string_view Type_table::base_name( Type_id id ) const
     const std::string_view rendered = name( id );
 
     return rendered.substr( 0, rendered.find( '<' ) );
+}
+
+std::vector<Type_id> Type_table::function_types() const
+{
+    return functions_; // already in interning order, which is deterministic for a given program
 }
 
 std::vector<Type_id> Type_table::composite_types() const
@@ -530,6 +633,12 @@ bool Type_table::is_parameter( Type_id id ) const
 {
     assert( id.is_valid() );
     return get( id ).kind == Type_kind::Parameter;
+}
+
+bool Type_table::is_function( Type_id id ) const
+{
+    assert( id.is_valid() );
+    return get( id ).kind == Type_kind::Function;
 }
 
 bool Type_table::is_void( Type_id id ) const
@@ -1144,6 +1253,238 @@ TEST_CASE( "type_table_composes_nested_pointer_names", "[sema][type]" )
     REQUIRE( table.name( table.pointer_to( once ) ) == "u8**" );
     REQUIRE( table.name( table.pointer_to( table.pointer_to( once ) ) ) == "u8***" );
     REQUIRE( table.name( once ) == "u8*" ); // still valid after three more appends
+}
+
+// A function type has no declaration to be interned on, so its signature is the whole of its
+// identity - the same reading `structure` takes of a generic's arguments.
+TEST_CASE( "type_table_interns_a_function_type_by_its_signature", "[sema][type][m7]" )
+{
+    Type_table table;
+
+    const Type_id i32 = table.integer( 32, true );
+    const Type_id f64 = table.floating( 64 );
+
+    const Type_id takes_i32 = table.function( i32, std::array { i32 } );
+
+    SECTION( "the same signature is the same type" )
+    {
+        REQUIRE( table.function( i32, std::array { i32 } ) == takes_i32 );
+    }
+
+    SECTION( "the return type is part of it" )
+    {
+        REQUIRE( table.function( f64, std::array { i32 } ) != takes_i32 );
+    }
+
+    SECTION( "so is the arity" )
+    {
+        REQUIRE( table.function( i32, std::array { i32, i32 } ) != takes_i32 );
+        REQUIRE( table.function( i32, {} ) != takes_i32 );
+    }
+
+    SECTION( "and so is the order" )
+    {
+        REQUIRE( table.function( i32, std::array { i32, f64 } ) != table.function( i32, std::array { f64, i32 } ) );
+    }
+
+    SECTION( "it is a function and none of the other kinds" )
+    {
+        REQUIRE( table.is_function( takes_i32 ) );
+        REQUIRE_FALSE( table.is_pointer( takes_i32 ) );
+        REQUIRE_FALSE( table.is_struct( takes_i32 ) );
+        REQUIRE_FALSE( table.is_integer( takes_i32 ) );
+        REQUIRE_FALSE( table.is_function( table.pointer_to( i32 ) ) );
+    }
+
+    SECTION( "the signature is readable back off the type" )
+    {
+        REQUIRE( table.get( takes_i32 ).element == i32 );
+        REQUIRE( table.get( takes_i32 ).arguments.size() == 1 );
+        REQUIRE( table.get( takes_i32 ).arguments[0] == i32 );
+    }
+
+    // Type::arguments is a span, so what it views has to belong to the table: every caller builds
+    // its parameter list in a local and lets it go, and a type outlives all of them.
+    SECTION( "the parameters are copied, not borrowed from the caller" )
+    {
+        Type_id interned {};
+
+        {
+            std::vector<Type_id> caller_local { i32 };
+
+            interned = table.function( i32, caller_local );
+
+            caller_local[0] = f64;
+        }
+
+        REQUIRE( table.get( interned ).arguments.size() == 1 );
+        REQUIRE( table.get( interned ).arguments[0] == i32 );
+        REQUIRE( table.name( interned ) == "fn( i32 ) -> i32" );
+    }
+}
+
+// Every diagnostic that mentions a type prints this, so it is the source spelling and nothing else.
+TEST_CASE( "type_table_composes_a_function_type_name", "[sema][type][m7]" )
+{
+    Type_table table;
+
+    const Type_id i32 = table.integer( 32, true );
+    const Type_id f64 = table.floating( 64 );
+
+    REQUIRE(
+        table.name( table.function( table.builtin( Type_kind::Bool ), std::array { i32, f64 } ) ) == "fn( i32, f64 ) -> bool"
+    );
+    REQUIRE( table.name( table.function( table.builtin( Type_kind::Void ), {} ) ) == "fn() -> void" );
+
+    SECTION( "and nests as written" )
+    {
+        const Type_id inner = table.function( i32, std::array { i32 } );
+
+        REQUIRE( table.name( table.function( i32, std::array { inner } ) ) == "fn( fn( i32 ) -> i32 ) -> i32" );
+        REQUIRE( table.name( table.function( inner, std::array { i32 } ) ) == "fn( i32 ) -> fn( i32 ) -> i32" );
+    }
+
+    // composed_ is indexed by Type_id, in lockstep with types_. One extra append renames every type
+    // interned after it, which nothing in the table itself would notice.
+    SECTION( "every other type still has its own name afterwards" )
+    {
+        table.function( i32, std::array { i32 } );
+
+        REQUIRE( table.name( table.pointer_to( table.integer( 8, false ) ) ) == "u8*" );
+        REQUIRE( table.name( table.structure( Node_id { 7 }, {}, "Point" ) ) == "Point" );
+        REQUIRE( table.name( i32 ) == "i32" );
+    }
+
+    // A composed name is not a spelling a program may write in place of a builtin's.
+    SECTION( "and it is not a spelling" )
+    {
+        table.function( i32, std::array { i32 } );
+
+        REQUIRE_FALSE( table.from_spelling( "fn( i32 ) -> i32" ).is_valid() );
+    }
+}
+
+// v0 has no conversion between two function types and no arithmetic on either. An `i32` quietly
+// accepting one is the failure mode to watch for.
+TEST_CASE( "type_table_a_function_type_converts_to_nothing", "[sema][type][m7]" )
+{
+    Type_table table;
+
+    const Type_id i32 = table.integer( 32, true );
+    const Type_id f64 = table.floating( 64 );
+
+    const Type_id to_i32 = table.function( i32, std::array { i32 } );
+    const Type_id to_f64 = table.function( f64, std::array { i32 } );
+
+    SECTION( "holds is identity only" )
+    {
+        REQUIRE( table.holds( to_i32, to_i32 ) );
+        REQUIRE_FALSE( table.holds( to_i32, to_f64 ) );
+        REQUIRE_FALSE( table.holds( to_i32, i32 ) );
+        REQUIRE_FALSE( table.holds( i32, to_i32 ) );
+        REQUIRE_FALSE( table.holds( to_i32, table.pointer_to( i32 ) ) );
+    }
+
+    // One bad annotation must report once, which only holds if the error type still absorbs here.
+    SECTION( "an error absorbs in both directions" )
+    {
+        REQUIRE( table.holds( table.builtin( Type_kind::Error ), to_i32 ) );
+        REQUIRE( table.holds( to_i32, table.builtin( Type_kind::Error ) ) );
+    }
+
+    SECTION( "there is no arithmetic and no common type but itself" )
+    {
+        REQUIRE_FALSE( table.arithmetic_result( to_i32, to_i32 ).is_valid() );
+        REQUIRE_FALSE( table.arithmetic_result( to_i32, i32 ).is_valid() );
+        REQUIRE( table.common( to_i32, to_i32 ) == to_i32 );
+        REQUIRE_FALSE( table.common( to_i32, to_f64 ).is_valid() );
+    }
+
+    SECTION( "and no literal fits one" )
+    {
+        REQUIRE_FALSE( table.fits( 0, false, to_i32 ) );
+        REQUIRE_FALSE( table.fits_float( 0.0, to_i32 ) );
+    }
+}
+
+// The return type is half the signature, so every structural operation has to walk it. An
+// aggregate keeps nothing in `element` that substitution reaches, which is why borrowing its case
+// leaves the return behind.
+TEST_CASE( "type_table_walks_the_return_type_of_a_function_type", "[sema][type][m7]" )
+{
+    Type_table table;
+
+    const Type_id i32 = table.integer( 32, true );
+    const Type_id f64 = table.floating( 64 );
+    const Type_id t   = table.parameter( Node_id { 7 }, "T" );
+
+    const Bindings bound { { t.v, i32 } };
+
+    SECTION( "a parameter in the return position is mentioned" )
+    {
+        REQUIRE( table.mentions_parameter( table.function( t, std::array { i32 } ) ) );
+        REQUIRE( table.mentions_parameter( table.function( i32, std::array { t } ) ) );
+        REQUIRE_FALSE( table.mentions_parameter( table.function( i32, std::array { i32 } ) ) );
+    }
+
+    SECTION( "and is substituted there" )
+    {
+        REQUIRE(
+            table.substitute( table.function( t, std::array { i32 } ), bound ) == table.function( i32, std::array { i32 } )
+        );
+        REQUIRE(
+            table.substitute( table.function( i32, std::array { t } ), bound ) == table.function( i32, std::array { i32 } )
+        );
+        REQUIRE(
+            table.substitute( table.function( t, std::array { t } ), bound ) == table.function( i32, std::array { i32 } )
+        );
+    }
+
+    // The case an early-out on an empty parameter list skips.
+    SECTION( "including where there are no parameters to substitute" )
+    {
+        REQUIRE( table.substitute( table.function( t, {} ), bound ) == table.function( i32, {} ) );
+    }
+
+    SECTION( "a signature with nothing to substitute is unchanged" )
+    {
+        const Type_id concrete = table.function( i32, std::array { i32 } );
+
+        REQUIRE( table.substitute( concrete, bound ) == concrete );
+    }
+
+    SECTION( "and it is deduced from there" )
+    {
+        Bindings into;
+
+        REQUIRE( table.deduce( table.function( t, std::array { i32 } ), table.function( f64, std::array { i32 } ), into ) );
+        REQUIRE( into.at( t.v ) == f64 );
+    }
+
+    SECTION( "a return type that disagrees is not a match" )
+    {
+        Bindings into;
+
+        REQUIRE_FALSE(
+            table.deduce( table.function( i32, std::array { i32 } ), table.function( f64, std::array { i32 } ), into )
+        );
+    }
+
+    SECTION( "nor is a different arity" )
+    {
+        Bindings into;
+
+        REQUIRE_FALSE( table.deduce( table.function( i32, std::array { t } ), table.function( i32, {} ), into ) );
+    }
+
+    // Every function type has an invalid declaration, so two compared the way two aggregates are
+    // would agree on that field and never look at anything that tells them apart.
+    SECTION( "and an aggregate is not a function type of the same shape" )
+    {
+        Bindings into;
+
+        REQUIRE_FALSE( table.deduce( table.function( t, {} ), table.structure( Node_id { 11 }, {}, "Point" ), into ) );
+    }
 }
 
 TEST_CASE( "type_table_from_spelling_round_trips_every_builtin", "[sema][type]" )

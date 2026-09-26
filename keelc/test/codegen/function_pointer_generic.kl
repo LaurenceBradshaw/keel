@@ -1,0 +1,69 @@
+// M7 slice 5: the address of a generic instance. Nothing calls `id<i32>` or `id<f64>` by name, so
+// the addresses are the only reason either body is in the C at all - and each has to link, which is
+// what makes this a golden rather than a checker fixture.
+
+T id<T>( T a ) where T : Copyable
+{
+    return a;
+}
+
+// Integer division truncates and float division does not, so which instance an address named shows
+// up in the answer rather than only in the mangled name: a golden that called `id` both ways would
+// pass even if both addresses were the same symbol.
+T half<T>( T a ) where T : Copyable & Numeric
+{
+    return a / 2;
+}
+
+T doubled<T>( T a ) where T : Integral
+{
+    return a + a;
+}
+
+i32 apply( fn( i32 ) -> i32 f, i32 v )
+{
+    return f( v );
+}
+
+f64 apply_f( fn( f64 ) -> f64 f, f64 v )
+{
+    return f( v );
+}
+
+struct Holder
+{
+    fn( i32 ) -> i32 cb;
+};
+
+i32 main()
+{
+    fn( i32 ) -> i32 p = &id<i32>;
+    fn( f64 ) -> f64 q = &id<f64>;
+
+    if( p( 7 ) != 7 ) { return 1; }
+    if( q( 0.5 ) != 0.5 ) { return 2; }
+
+    // Chosen by the parameter rather than by an annotation, which is the other door selection uses.
+    if( apply( &doubled<i32>, 21 ) != 42 ) { return 3; }
+
+    // And by a field, where the closer is a brace. Read out rather than called through: calling a
+    // field by its name is a later slice.
+    Holder h = Holder { &id<i32> };
+
+    fn( i32 ) -> i32 r = h.cb;
+
+    if( r( 3 ) != 3 ) { return 4; }
+
+    // The written argument is the whole of the choice, and the two answers differ.
+    fn( i32 ) -> i32 hi = &half<i32>;
+    fn( f64 ) -> f64 hf = &half<f64>;
+
+    if( hi( 3 ) != 1 ) { return 5; }
+    if( hf( 3.0 ) != 1.5 ) { return 6; }
+
+    // The same choice made at a parameter instead of an annotation.
+    if( apply_f( &half<f64>, 5.0 ) != 2.5 ) { return 7; }
+    if( apply( &half<i32>, 5 ) != 2 ) { return 8; }
+
+    return 0;
+}

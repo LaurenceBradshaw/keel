@@ -54,6 +54,7 @@ private:
     Operand lower_binary( Node_id id );
     Operand lower_unary( Node_id id );
     Operand lower_call( Node_id id );
+    Operand lower_indirect_call( Node_id id );
     Operand lower_method_call( Node_id id );
     Operand lower_method_call_on( Node_id id, Node_id method, Operand receiver );
     Operand lower_variant_construction( Node_id id );
@@ -136,8 +137,8 @@ private:
 
     const Ast& ast_;
 
-    // Held but not read yet: resolution_ is what turns a Name_expr into the declaration whose
-    // local it is, which arrives with names. literal_pool_ and interner_ may turn out unnecessary -
+    // Read only for `&f`, whose callee is a declaration rather than a place. Everywhere else a
+    // name arrives with its local already. literal_pool_ and interner_ may turn out unnecessary -
     // a Literal_id comes straight off aux, and a Symbol_id is passed through without a lookup.
     const Resolution& resolution_;
     Types&            types_;
@@ -813,6 +814,16 @@ Operand Lowering::lower_unary( Node_id id )
 
     if( op == Token_kind::Amp )
     {
+        // A function is not a place, so the callee travels on the rvalue rather than through
+        // lower_place, which resolves a name to a local or a global and asserts on anything else.
+        // The callable the checker chose, not the name the resolver bound: an overload set's name is only its first candidate.
+        if( types_.table().is_function( type ) )
+        {
+            const Rvalue address = function_address( types_.callee_of( id ), type, type_arguments_for_call( id ) );
+
+            return copy( builder_.place( builder_.into_temp( address, type, span ) ), type );
+        }
+
         // A place, not an operand - which is why verify's Address_of case looks at a.place and
         // ignores the operand's kind.
         const Rvalue address = address_of( lower_place( ast_.child( id, 0 ) ), type );
@@ -1066,6 +1077,12 @@ Operand Lowering::lower_call( Node_id id )
         return lower_method_call_on( id, callee, copy( builder_.place( receiver_ ), builder_.type_of( receiver_ ) ) );
     }
 
+    if( !callee.is_valid() && type_of( ast_.child( id, 0 ) ).is_valid() &&
+        types_.table().is_function( type_of( ast_.child( id, 0 ) ) ) )
+    {
+        return lower_indirect_call( id );
+    }
+
     assert(
         callee.is_valid() && ( ast_.kind( callee ) == Node_kind::Function_decl || is_static_method( ast_, callee ) ) &&
         "checker should have rejected an unresolved call"
@@ -1132,6 +1149,37 @@ Operand Lowering::lower_call( Node_id id )
     );
 
     return copy( binding ? builder_.deref( builder_.place( result ) ) : builder_.place( result ), type );
+}
+
+Operand Lowering::lower_indirect_call( Node_id id )
+{
+    const Span span = ast_.span( id );
+
+    const Type_id signature = type_of( ast_.child( id, 0 ) );
+
+    std::span<const Type_id> args = types_.table().get( signature ).arguments;
+    std::vector<Type_id>     arguments( args.begin(), args.end() );
+
+    Operand callee = lower_expression( ast_.child( id, 0 ) );
+
+    std::vector<Operand> operands;
+    for( const Node_id param : ast_.children( ast_.child( id, 1 ) ) )
+    {
+        operands.push_back( lower_expression( param ) );
+    }
+
+    for( std::size_t i = 0; i < operands.size() && i < arguments.size(); ++i )
+    {
+        operands[i] = converted( operands[i], arguments[i], ast_.span( ast_.child( id, 1 ) ) );
+    }
+
+    const u32 first = builder_.add_operands( operands );
+
+    Local_id result = builder_.into_temp(
+        indirect_call( callee, first, narrow_cast<u32>( operands.size() ), type_of( id ) ), type_of( id ), span
+    );
+
+    return copy( builder_.place( result ), type_of( id ) );
 }
 
 Operand Lowering::lower_expression( Node_id id )
@@ -3101,6 +3149,211 @@ TEST_CASE( "lower_builds_calls", "[ir][lower][calls]" )
         REQUIRE( text.find( "let _1: void;" ) != std::string::npos );
         REQUIRE( text.find( "_1 = call nothing()" ) != std::string::npos );
         REQUIRE( verify( p.functions[1] ).empty() );
+    }
+}
+
+// M7 slice 3. The callee is an operand rather than a declaration: there is no Node_id to name, and
+// the local holding the address is what the call reads.
+TEST_CASE( "lower_calls_through_a_function_typed_variable", "[ir][lower][calls][m7]" )
+{
+    SECTION( "the callee is a local, not a symbol" )
+    {
+        Lowered p( "i32 twice( i32 a ) { return a * 2; }\n"
+                   "i32 main() { fn( i32 ) -> i32 p = &twice; return p( 21 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string text = p.text( 1 );
+
+        INFO( text );
+        REQUIRE( text.find( "= call copy _" ) != std::string::npos );
+        REQUIRE( text.find( "call twice" ) == std::string::npos );
+        REQUIRE( verify( p.functions[1] ).empty() );
+    }
+
+    // The parameter types come from the signature rather than from a Param_list, so this is where
+    // reading them off the argument instead would make every conversion a no-op.
+    SECTION( "an argument widens to reach the signature's parameter" )
+    {
+        Lowered p( "i32 twice( i32 a ) { return a * 2; }\n"
+                   "i32 main() { u8 b = 1; fn( i32 ) -> i32 p = &twice; return p( b ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string text = p.text( 1 );
+
+        INFO( text );
+        REQUIRE( text.find( "as i32" ) != std::string::npos );
+        REQUIRE( verify( p.functions[1] ).empty() );
+    }
+
+    SECTION( "one taking nothing and returning nothing" )
+    {
+        Lowered p( "void nothing() { }\ni32 main() { fn() -> void q = &nothing; q(); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string text = p.text( 1 );
+
+        INFO( text );
+        REQUIRE( text.find( "= call copy _" ) != std::string::npos );
+        REQUIRE( verify( p.functions[1] ).empty() );
+    }
+
+    // The order the operands come out in is the order the arguments were written. A signature gives
+    // lowering no Param_list to read that order off, so this is the only thing pinning it.
+    SECTION( "the arguments keep their written order" )
+    {
+        Lowered p( "i32 sub( i32 a, i32 b ) { return a - b; }\n"
+                   "i32 main() { fn( i32, i32 ) -> i32 p = &sub; return p( 5, 3 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string text = p.text( 1 );
+
+        INFO( text );
+        REQUIRE( text.find( "(const 5, const 3)" ) != std::string::npos );
+        REQUIRE( verify( p.functions[1] ).empty() );
+    }
+
+    SECTION( "and through a parameter, where no address was taken at all" )
+    {
+        Lowered p( "i32 apply( fn( i32 ) -> i32 f, i32 v ) { return f( v ); }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string text = p.text( 0 );
+
+        INFO( text );
+        REQUIRE( text.find( "= call copy _1(copy _2)" ) != std::string::npos );
+        REQUIRE( verify( p.functions[0] ).empty() );
+    }
+}
+
+// M7 slice 4. Both overloads share a name, so which declaration travels on the rvalue is the whole
+// of the difference - and only its return type tells the two apart.
+TEST_CASE( "lower_takes_the_address_of_the_chosen_overload", "[ir][lower][m7]" )
+{
+    constexpr std::string_view pair = "i32 f( i32 a ) { return a; }\nf64 f( f64 a ) { return a; }\n";
+
+    const auto address_callee = []( Lowered& p )
+    {
+        std::vector<Node_id> callees;
+
+        for( const Function& func : p.functions )
+        {
+            for( const Statement& s : func.statements )
+            {
+                if( s.value.kind == Rvalue_kind::Function_address )
+                {
+                    callees.push_back( s.value.callee );
+                }
+            }
+        }
+
+        REQUIRE( callees.size() == 1 );
+
+        return std::string( p.types.table().name( p.types.type_of( callees[0] ) ) );
+    };
+
+    SECTION( "the f64 one when that is the annotation" )
+    {
+        Lowered p( std::string( pair ) + "i32 main() { fn( f64 ) -> f64 p = &f; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( address_callee( p ) == "f64" );
+    }
+
+    SECTION( "and the i32 one when that is" )
+    {
+        Lowered p( std::string( pair ) + "i32 main() { fn( i32 ) -> i32 p = &f; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( address_callee( p ) == "i32" );
+    }
+}
+
+// M7 slice 5. Two instances of one generic share a declaration, so the Node_id on the rvalue no
+// longer names a function on its own - the type arguments beside it are what tell them apart, the
+// same pair a call already carries.
+TEST_CASE( "lower_takes_the_address_of_a_generic_instance", "[ir][lower][m7][generic]" )
+{
+    constexpr std::string_view id = "T id<T>( T a ) where T : Copyable { return a; }\n";
+
+    const auto addresses = []( Lowered& p )
+    {
+        std::vector<std::string> spelled;
+
+        for( const Function& func : p.functions )
+        {
+            for( const Statement& s : func.statements )
+            {
+                if( s.value.kind != Rvalue_kind::Function_address )
+                {
+                    continue;
+                }
+
+                std::string text;
+
+                for( const Type_id argument : s.value.type_arguments )
+                {
+                    text += p.types.table().name( argument );
+                }
+
+                spelled.push_back( text );
+            }
+        }
+
+        return spelled;
+    };
+
+    SECTION( "the arguments travel on the rvalue" )
+    {
+        Lowered p( std::string( id ) + "i32 main() { fn( i32 ) -> i32 p = &id<i32>; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( addresses( p ) == std::vector<std::string> { "i32" } );
+    }
+
+    SECTION( "and tell two instances apart" )
+    {
+        Lowered p(
+            std::string( id ) + "i32 main() { fn( i32 ) -> i32 p = &id<i32>; fn( f64 ) -> f64 q = &id<f64>; return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( addresses( p ) == std::vector<std::string> { "i32", "f64" } );
+    }
+
+    // An ordinary function has none, and the slot stays empty rather than picking up the enclosing
+    // instantiation's - a non-generic callee is one function however it was reached.
+    SECTION( "an ordinary function carries none" )
+    {
+        Lowered p( "i32 f( i32 a ) { return a; }\ni32 main() { fn( i32 ) -> i32 p = &f; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( addresses( p ) == std::vector<std::string> { "" } );
+    }
+
+    // The seed, which is the whole reason the checker records an instantiation here: nothing else
+    // in the program mentions `id<i32>`, so without it there is no body to point at.
+    SECTION( "the instance is lowered even though nobody calls it" )
+    {
+        Lowered p( std::string( id ) + "i32 main() { fn( i32 ) -> i32 p = &id<i32>; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.functions.size() == 2 );
     }
 }
 

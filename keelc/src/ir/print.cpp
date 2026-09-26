@@ -103,6 +103,7 @@ struct Printer
             return fmt::format( "&{}", place( value.a.place ) );
 
         case Rvalue_kind::Call:
+        case Rvalue_kind::Indirect_call:
         {
             std::string arguments;
 
@@ -111,12 +112,16 @@ struct Printer
                 arguments += fmt::format( "{}{}", i == 0 ? "" : ", ", operand( func.operands[value.first_argument + i] ) );
             }
 
-            return fmt::format( "call {}({})", name_of( value.callee ), arguments );
+            return fmt::format(
+                "call {}({})", value.kind == Rvalue_kind::Call ? name_of( value.callee ) : operand( value.a ), arguments
+            );
         }
         case Rvalue_kind::Allocate:
             return fmt::format( "allocate {}", type_name( value.type ) );
         case Rvalue_kind::Release:
             return fmt::format( "release {}", operand( value.a ) );
+        case Rvalue_kind::Function_address:
+            return fmt::format( "&{}", name_of( value.callee ) );
         }
 
         return "<bad rvalue>";
@@ -373,6 +378,9 @@ TEST_CASE( "print_spells_each_rvalue", "[ir][print]" )
     const u32 first = builder.add_operands( std::array { two, two } );
     builder.assign( p, call( f.first( Node_kind::Function_decl ), first, 2, i32 ), Span {} );
 
+    // M7 slice 3: the callee is an operand, so it is spelled where the symbol would be.
+    builder.assign( p, indirect_call( copy( p, i32 ), first, 2, i32 ), Span {} );
+
     builder.terminate_return( Span {} );
 
     const std::string text = f.text( builder.finish() );
@@ -386,6 +394,7 @@ TEST_CASE( "print_spells_each_rvalue", "[ir][print]" )
     REQUIRE( has( text, "_1 = copy _1 as u8" ) );
     REQUIRE( has( text, "_1 = &_1" ) );
     REQUIRE( has( text, "_1 = call helper(const 2, const 2)" ) );
+    REQUIRE( has( text, "_1 = call copy _1(const 2, const 2)" ) );
 }
 
 TEST_CASE( "print_spells_each_statement_and_terminator", "[ir][print]" )

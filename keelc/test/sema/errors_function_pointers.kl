@@ -1,0 +1,55 @@
+// Every way an address can fail to name one function, in one file. The unit fixtures check that
+// each message is produced; this checks what the author actually sees - the caret, the hint, and
+// that two neighbouring mistakes do not run into one another.
+
+class B
+{
+    public u64 n;
+    B( u64 x ) { n = x; }
+    ~B() { n = 0; }
+};
+
+u8 narrow( u8 a ) { return a; }
+
+u64 owns( B b ) { return b.n; }
+
+i32 moded( ref i32 a ) { return a; }
+
+i32 plain( i32 a ) { return a; }
+
+i32 over( i32 a ) { return a; }
+f64 over( f64 a ) { return a; }
+
+T bounded<T>( T a ) where T : Integral { return a; }
+
+i32 unbounded<T>( T a ) { return 1; }
+
+i32 main()
+{
+    // An overload set with nothing to choose by, and one with an expectation nobody has.
+    auto             a = &over;
+    fn( i32 ) -> f64 b = &over;
+
+    // A generic with no instance written, and one written wrongly twice over.
+    auto             c = &bounded;
+    auto             d = &bounded<i32, f64>;
+    auto             e = &bounded<f64>;
+
+    // Type arguments where there are no type parameters, and type arguments on a set.
+    auto             f = &plain<i32>;
+    fn( i32 ) -> i32 g = &over<i32>;
+
+    // The two ways a parameter travels as an address while a function type says by value.
+    auto             h = &moded;
+    auto             i = &owns;
+    auto             j = &unbounded<i32>;
+
+    // A signature is not widened to another signature, however its values would widen.
+    fn( i32 ) -> i32 k = &narrow;
+
+    // And there is no `fn( i32 ) -> i32*` to name, so a variable holding one has no address.
+    fn( i32 ) -> i32 m = &plain;
+    auto             n = &m;
+
+    return 0;
+}
