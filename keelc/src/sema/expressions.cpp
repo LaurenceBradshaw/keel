@@ -334,6 +334,11 @@ Type_id Expressions::infer_call( Node_id id )
         {
             return indirect_call( id, decl, result );
         }
+        if( ( ast_.kind( decl ) == Node_kind::Var_decl || ast_.kind( decl ) == Node_kind::Param_decl ) &&
+            table_.is_field( result ) )
+        {
+            return field_application( id, result );
+        }
 
         reporter_.error_at( ast_.span( callee ), fmt::format( "`{}` is not callable", name ) );
         type_the_arguments_anyway();
@@ -1048,12 +1053,12 @@ Type_id Expressions::method_address( Node_id id, Node_id aggregate )
     if( !first.is_valid() )
     {
         const Node_id field = aggregates_.find_field( types_.type_of( aggregate ), name );
-        reporter_.error_at(
-            ast_.span( id ),
-            fmt::format( "`{}` has no method `{}`", owner, interner_.text( name ) ),
-            field.is_valid() ? fmt::format( "`{}` is a field of `{}`, not a method", interner_.text( name ), owner )
-                             : std::string {}
-        );
+        if( field.is_valid() )
+        {
+            return field_address( id, aggregate, field );
+        }
+
+        reporter_.error_at( ast_.span( id ), fmt::format( "`{}` has no member `{}`", owner, interner_.text( name ) ) );
 
         return types_.record( id, table_.builtin( Type_kind::Error ) );
     }
@@ -1139,6 +1144,42 @@ Type_id Expressions::method_address( Node_id id, Node_id aggregate )
     record_method_instantiation( id, method, qualified_type );
     callees_.record( id, method );
     return types_.record( id, signature );
+}
+
+Type_id Expressions::field_address( Node_id id, Node_id aggregate, Node_id field )
+{
+    if( !is_visible_from( ast_, field, current_type() ) )
+    {
+        report_private( id, field );
+
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    const Node_id path = ast_.child( id, 0 );
+    const Type_id type = qualifier_type( path, aggregate );
+    if( table_.is_error( type ) )
+    {
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    const Type_id field_type = table_.substitute( types_.type_of( field ), aggregates_.bindings_of( type ) );
+    if( !bounds_.satisfies( field_type, Bound::Copyable ) )
+    {
+        reporter_.error_at(
+            ast_.span( id ),
+            fmt::format(
+                "`{}` is a `{}`, which is not copyable, so reading it through a field type would copy it",
+                interner_.text( Symbol_id { ast_.aux( field ) } ),
+                table_.name( field_type )
+            ),
+            "a field type that borrows is not supported yet"
+        );
+
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    callees_.record( id, field );
+    return types_.record( id, table_.field( type, field_type ) );
 }
 
 Type_id Expressions::written_signature( Node_id declaration, const Bindings& bindings, Node_id& refused )
@@ -1278,6 +1319,66 @@ Type_id Expressions::indirect_call( Node_id id, Node_id declaration, Type_id sig
     }
 
     return types_.record( id, table_.get( signature ).element );
+}
+
+Type_id Expressions::field_application( Node_id id, Type_id offset )
+{
+    const Node_id            callee    = ast_.child( id, 0 );
+    std::span<const Node_id> arguments = ast_.children( ast_.child( id, 1 ) );
+    std::string_view         name      = interner_.text( Symbol_id { ast_.aux( callee ) } );
+    const Type_id            aggregate = table_.get( offset ).arguments[0];
+    const Type_id            member    = table_.get( offset ).element;
+
+    types_.record( callee, offset );
+
+    if( ast_.child( id, 2 ).is_valid() )
+    {
+        reporter_.error_at( ast_.span( ast_.child( id, 2 ) ), fmt::format( "`{}` is not a generic", name ) );
+    }
+
+    if( arguments.size() != 1 )
+    {
+        reporter_.error_at(
+            ast_.span( ast_.child( id, 1 ) ),
+            fmt::format(
+                "`{}` reads a field of one object, but {} {} given",
+                name,
+                arguments.size(),
+                arguments.size() == 1 ? "was" : "were"
+            )
+        );
+    }
+
+    for( std::size_t i = 0; i < arguments.size(); ++i )
+    {
+        if( i != 0 || ast_.kind( arguments[i] ) == Node_kind::Marker_expr )
+        {
+            infer( arguments[i] );
+        }
+        else
+        {
+            check( arguments[i], aggregate );
+        }
+    }
+
+    // The object travels as a `const ref` would, so it takes the marker that one takes: none.
+    if( !arguments.empty() )
+    {
+        overloads_.check_one_argument_marker( arguments[0], call_marker_of( Param_mode::Const_ref ), aggregate, name );
+    }
+
+    if( !bounds_.satisfies( member, Bound::Copyable ) )
+    {
+        reporter_.error_at(
+            ast_.span( id ),
+            fmt::format( "`{}` reads a `{}` by copying it, which is not known to be copyable", name, table_.name( member ) ),
+            fmt::format( "add `where {} : Copyable`", table_.name( member ) )
+        );
+
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    return types_.record( id, member );
 }
 
 Type_id Expressions::infer_unary( Node_id id )
@@ -1694,17 +1795,15 @@ Type_id Expressions::infer_path( Node_id id )
 
         if( !method.is_valid() )
         {
-            // A field of that name is the likely mistake, and it is a different one: a field
-            // belongs to an object, so there is nothing here for the type to hand back.
+            // A field of that name is the likely mistake: its value belongs to an object, and the type has only its offset.
             const bool field = aggregates_.find_field( types_.type_of( decl ), name ).is_valid();
 
             reporter_.error_at(
                 ast_.span( id ),
                 fmt::format( "`{}` has no static method `{}`", owner, interner_.text( name ) ),
-                field ? fmt::format(
-                            "`{}` is a field, so it belongs to an object rather than to `{}`", interner_.text( name ), owner
-                        )
-                      : std::string {}
+                field
+                    ? fmt::format( "take its offset as `&{0}::{1}`, or read it as `value.{1}`", owner, interner_.text( name ) )
+                    : std::string {}
             );
 
             return types_.record( id, table_.builtin( Type_kind::Error ) );
@@ -3561,8 +3660,7 @@ TEST_CASE( "type_checker_refuses_the_address_of_a_method_it_cannot_name", "[sema
     for( const Case c :
          { Case { "auto p = &C::make;", "`make` is a `static` method, so its address is not supported yet" },
            Case { "auto p = &Vault::hidden;", "`hidden` is private to `Vault`" },
-           Case { "auto p = &C::nope;", "`C` has no method `nope`" },
-           Case { "auto p = &C::n;", "`C` has no method `n`" },
+           Case { "auto p = &C::nope;", "`C` has no member `nope`" },
            Case { "auto p = &Box::value;", "`Box` needs its type arguments here" },
            Case { "auto p = &C::pick;", "`pick` is overloaded, so its address names no one function" },
            Case { "auto p = &Open<i32>::keep;", "`keep` takes `T`, which is not known to be copyable" },
@@ -3585,6 +3683,100 @@ TEST_CASE( "type_checker_offers_the_address_of_a_method_named_without_one", "[se
     INFO( p.rendered() );
     REQUIRE( p.errors() == 1 );
     REQUIRE( p.rendered().find( "take its address as `&C::add`, or call it as `value.add( ... )`" ) != std::string::npos );
+}
+
+// M7 slice 7. A field's address is its offset, typed by the aggregate it is into and the field it reads.
+TEST_CASE( "type_checker_types_the_offset_of_a_field", "[sema][types][m7][field]" )
+{
+    constexpr std::string_view types = "struct P { i32 x; f64 y; };\n"
+                                       "struct Box<T> where T : Copyable { T v; };\n";
+
+    SECTION( "the aggregate and the field's type" )
+    {
+        const Typed p( std::string( types ) + "i32 main() { auto o = &P::y; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "field( P ) -> f64" );
+    }
+
+    SECTION( "a generic's field is read at the qualifier's instance" )
+    {
+        const Typed p( std::string( types ) + "i32 main() { auto o = &Box<i32>::v; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "field( Box<i32> ) -> i32" );
+    }
+
+    SECTION( "applying one reads the field's type" )
+    {
+        const Typed p(
+            std::string( types ) + "f64 main2( field( P ) -> f64 o, const ref P q ) { return o( q ); }\n"
+                                   "i32 main() { return 0; }\n"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Call_expr, 0 ) ) == "f64" );
+    }
+
+    SECTION( "a generic application needs its field type to be copyable" )
+    {
+        const Typed p( "U read<C, U>( field( C ) -> U o, const ref C q ) where U : Copyable { return o( q ); }\n"
+                       "i32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+TEST_CASE( "type_checker_refuses_the_offset_of_a_field_it_cannot_read", "[sema][types][m7][field]" )
+{
+    constexpr std::string_view types = "class Buffer { public u8* ptr; ~Buffer() { } };\n"
+                                       "class Holder { public Buffer buf; public i32 n; i32 secret; };\n"
+                                       "struct P { i32 x; };\n"
+                                       "struct Box<T> where T : Copyable { T v; };\n";
+
+    struct Case
+    {
+        const char* body;
+        const char* message;
+    };
+
+    for( const Case c :
+         { Case { "auto o = &Holder::secret;", "`secret` is private to `Holder`" },
+           Case { "auto o = &Holder::buf;", "`buf` is a `Buffer`, which is not copyable" },
+           Case { "auto o = &Box::v;", "`Box` needs its type arguments here" },
+           Case { "field( P ) -> i32 o = &P::x; P q; i32 r = o( ref q );", "does not modify this argument" },
+           Case { "field( P ) -> i32 o = &P::x; P q; i32 r = o( q, q );", "reads a field of one object, but 2 were given" },
+           Case { "field( P ) -> i32 o = &P::x; Holder h; i32 r = o( h );", "expected `P`, but got `Holder`" },
+           Case { "field( Holder ) -> i32 o = &P::x;", "expected `field( Holder ) -> i32`, but got `field( P ) -> i32`" } } )
+    {
+        const Typed p( fmt::format( "{}i32 main() {{ {} return 0; }}\n", types, c.body ) );
+
+        INFO( c.body << "\n" << p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( c.message ) != std::string::npos );
+    }
+
+    SECTION( "an unbounded field type cannot be copied out" )
+    {
+        const Typed p( "U read<C, U>( field( C ) -> U o, const ref C q ) { return o( q ); }\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`o` reads a `U` by copying it" ) != std::string::npos );
+    }
+}
+
+TEST_CASE( "type_checker_offers_the_offset_of_a_field_named_without_one", "[sema][types][m7][field]" )
+{
+    const Typed p( "struct P { i32 x; };\ni32 main() { auto o = P::x; return 0; }\n" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.errors() == 1 );
+    REQUIRE( p.rendered().find( "take its offset as `&P::x`, or read it as `value.x`" ) != std::string::npos );
 }
 
 // M7 slice 3. The callee is a variable rather than a name the resolver bound to a function, so the
@@ -4547,7 +4739,7 @@ TEST_CASE( "type_checker_checks_a_path", "[sema][enum]" )
 
         INFO( p.rendered() );
         REQUIRE( p.rendered().find( "`P` has no static method `x`" ) != std::string::npos );
-        REQUIRE( p.rendered().find( "`x` is a field" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "take its offset as `&P::x`" ) != std::string::npos );
     }
 
     SECTION( "and `::` needs a name on its left" )

@@ -1,0 +1,164 @@
+// M7's acceptance program: every feature of the milestone in one program that checks its own answer.
+// A class hides its representation behind a named constructor, and positions are filtered through
+// function pointers, method pointers and field types. The refusals the acceptance also names are
+// diagnostics, so they live in sema/errors_sample_m7.kl.
+
+struct Fix
+{
+    f64 x;
+    f64 y;
+    i32 sats;
+};
+
+// Fields private by default, and the ordinary constructor hidden: `Window::around` is the way in.
+class Window
+{
+    f64 lo;
+    f64 hi;
+
+    private Window( f64 a, f64 b )
+    {
+        lo = a;
+        hi = b;
+    }
+
+    static Window around( f64 centre, f64 radius )
+    {
+        return Window( centre - radius, centre + radius );
+    }
+
+    bool holds( f64 v ) const
+    {
+        return v >= lo && v <= hi;
+    }
+
+    void widen( f64 by )
+    {
+        lo = lo - by;
+        hi = hi + by;
+    }
+
+    f64 width() const
+    {
+        return hi - lo;
+    }
+};
+
+// Three field types in one parameter list, the shape the corpus asks for.
+f64 sum_of( field( Fix ) -> f64 axis, const ref Fix a, const ref Fix b, const ref Fix c )
+{
+    return axis( a ) + axis( b ) + axis( c );
+}
+
+U pick<C, U>( field( C ) -> U p, const ref C obj ) where U : Copyable
+{
+    return p( obj );
+}
+
+// A method pointer and a field type together: which test, applied to which coordinate.
+i32 count_inside(
+    fn( const ref Window, f64 )->bool test, const ref Window w, field( Fix ) -> f64 axis, const ref Fix a, const ref Fix b,
+    const ref Fix c
+)
+{
+    i32 n = 0;
+
+    if( test( w, axis( a ) ) )
+    {
+        n = n + 1;
+    }
+
+    if( test( w, axis( b ) ) )
+    {
+        n = n + 1;
+    }
+
+    if( test( w, axis( c ) ) )
+    {
+        n = n + 1;
+    }
+
+    return n;
+}
+
+// Overloaded, so taking its address has to be chosen by the type it is stored as.
+f64 scaled( f64 v )
+{
+    return v * 2.0;
+}
+
+f64 scaled( i32 v )
+{
+    return 0.0;
+}
+
+f64 apply( fn( f64 )->f64 f, f64 v )
+{
+    return f( v );
+}
+
+const ref f64 x_of( const ref Fix f )
+{
+    return f.x;
+}
+
+i32 main()
+{
+    Fix a = Fix { 1.0, 2.0, 5 };
+    Fix b = Fix { 3.0, 4.0, 7 };
+    Fix c = Fix { 5.0, 6.0, 9 };
+
+    if( sum_of( &Fix::x, a, b, c ) != 9.0 )
+    {
+        return 1;
+    }
+
+    field( Fix ) -> f64 axis = &Fix::y;
+
+    if( sum_of( axis, a, b, c ) != 12.0 )
+    {
+        return 2;
+    }
+
+    if( pick( &Fix::sats, b ) != 7 )
+    {
+        return 3;
+    }
+
+    // [2, 4]
+    Window w = Window::around( 3.0, 1.0 );
+
+    fn( const ref Window, f64 )->bool inside = &Window::holds;
+
+    if( count_inside( inside, w, &Fix::x, a, b, c ) != 1 || count_inside( inside, w, axis, a, b, c ) != 2 )
+    {
+        return 4;
+    }
+
+    // [1, 5]
+    fn( ref Window, f64 )->void grow = &Window::widen;
+    grow( ref w, 1.0 );
+
+    fn( const ref Window )->f64 measure = &Window::width;
+
+    if( measure( w ) != 4.0 || count_inside( inside, w, &Fix::x, a, b, c ) != 3 )
+    {
+        return 5;
+    }
+
+    fn( f64 )->f64 twice = &scaled;
+
+    if( apply( twice, 1.5 ) != 3.0 )
+    {
+        return 6;
+    }
+
+    fn( const ref Fix )->const ref f64 read_x = &x_of;
+
+    if( read_x( c ) != 5.0 )
+    {
+        return 7;
+    }
+
+    return 0;
+}

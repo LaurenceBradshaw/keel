@@ -173,6 +173,28 @@ Type_id Type_table::function( Type_id return_type, std::span<const Parameter> pa
     return id;
 }
 
+Type_id Type_table::field( Type_id aggregate, Type_id member )
+{
+    for( const Type_id id : fields_ )
+    {
+        const Type& described = get( id );
+
+        if( described.element == member && described.arguments.size() == 1 && described.arguments[0] == aggregate )
+        {
+            return id;
+        }
+    }
+
+    // Stored where function() stores its arguments: a Type's span must outlive this call.
+    const std::vector<Type_id>& stored = arguments_.emplace_back( std::vector<Type_id> { aggregate } );
+
+    const std::string spelling = fmt::format( "field( {} ) -> {}", name( aggregate ), name( member ) );
+
+    const Type_id id = add( { Type_kind::Field, 0, false, member, Node_id {}, stored }, spelling );
+    fields_.push_back( id );
+    return id;
+}
+
 Type_id
 Type_table::enumeration( Node_id declaration, std::span<const Type_id> arguments, std::string_view name, Type_id underlying )
 {
@@ -242,6 +264,8 @@ bool Type_table::mentions_parameter( Type_id id ) const
 
         return false;
     }
+    case Type_kind::Field:
+        return mentions_parameter( described.element ) || mentions_parameter( described.arguments[0] );
     default:
         return false;
     }
@@ -315,6 +339,10 @@ Type_id Type_table::substitute( Type_id type, const Bindings& bindings )
         }
 
         return function( substitute( described.element, bindings ), substituted, described.return_mode );
+    }
+    case Type_kind::Field:
+    {
+        return field( substitute( described.arguments[0], bindings ), substitute( described.element, bindings ) );
     }
     default:
         return type;
@@ -401,6 +429,8 @@ bool Type_table::deduce( Type_id pattern, Type_id actual, Bindings& into ) const
 
         return true;
     }
+    case Type_kind::Field:
+        return deduce( p.element, a.element, into ) && deduce( p.arguments[0], a.arguments[0], into );
     default:
         return true; // no parameters to bind
     }
@@ -691,6 +721,12 @@ bool Type_table::is_function( Type_id id ) const
 {
     assert( id.is_valid() );
     return get( id ).kind == Type_kind::Function;
+}
+
+bool Type_table::is_field( Type_id id ) const
+{
+    assert( id.is_valid() );
+    return get( id ).kind == Type_kind::Field;
 }
 
 bool Type_table::is_void( Type_id id ) const
@@ -1611,6 +1647,66 @@ TEST_CASE( "type_table_carries_a_return_mode", "[sema][type][m7][mode]" )
 // The return type is half the signature, so every structural operation has to walk it. An
 // aggregate keeps nothing in `element` that substitution reaches, which is why borrowing its case
 // leaves the return behind.
+TEST_CASE( "type_table_interns_a_field_type_by_its_pair", "[sema][type][m7][field]" )
+{
+    Type_table table;
+
+    const Type_id i32 = table.integer( 32, true );
+    const Type_id f64 = table.floating( 64 );
+    const Type_id p   = table.structure( Node_id { 3 }, {}, "P" );
+    const Type_id q   = table.structure( Node_id { 4 }, {}, "Q" );
+    const Type_id t   = table.parameter( Node_id { 7 }, "T" );
+
+    const Type_id reads_i32 = table.field( p, i32 );
+
+    SECTION( "the same pair is the same type, and either half tells two apart" )
+    {
+        REQUIRE( table.field( p, i32 ) == reads_i32 );
+        REQUIRE( table.field( p, f64 ) != reads_i32 );
+        REQUIRE( table.field( q, i32 ) != reads_i32 );
+        REQUIRE( table.is_field( reads_i32 ) );
+        REQUIRE_FALSE( table.is_function( reads_i32 ) );
+    }
+
+    SECTION( "it is named as it is written" )
+    {
+        REQUIRE( table.name( reads_i32 ) == "field( P ) -> i32" );
+    }
+
+    // The aggregate is read back through a span; interning more afterwards must not move what it views.
+    SECTION( "its aggregate outlives later interning" )
+    {
+        for( int i = 0; i < 64; ++i )
+        {
+            table.field( table.pointer_to( p ), table.function( i32, by_value( { i32 } ) ) );
+            table.field( q, table.floating( 32 ) );
+            table.pointer_to( table.pointer_to( q ) );
+        }
+
+        REQUIRE( table.get( reads_i32 ).arguments[0] == p );
+    }
+
+    SECTION( "both halves are walked" )
+    {
+        const Bindings bound { { t.v, i32 } };
+
+        REQUIRE( table.mentions_parameter( table.field( t, i32 ) ) );
+        REQUIRE( table.mentions_parameter( table.field( p, t ) ) );
+        REQUIRE_FALSE( table.mentions_parameter( reads_i32 ) );
+
+        REQUIRE( table.substitute( table.field( p, t ), bound ) == reads_i32 );
+        REQUIRE( table.substitute( table.field( t, t ), bound ) == table.field( i32, i32 ) );
+
+        Bindings into;
+        REQUIRE( table.deduce( table.field( t, i32 ), reads_i32, into ) );
+        REQUIRE( into.at( t.v ) == p );
+
+        Bindings none;
+        REQUIRE_FALSE( table.deduce( table.field( p, f64 ), reads_i32, none ) );
+        REQUIRE_FALSE( table.deduce( table.field( p, i32 ), table.function( i32, by_value( { i32 } ) ), none ) );
+    }
+}
+
 TEST_CASE( "type_table_walks_the_return_type_of_a_function_type", "[sema][type][m7]" )
 {
     Type_table table;

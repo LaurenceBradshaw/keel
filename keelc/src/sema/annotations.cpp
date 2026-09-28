@@ -325,7 +325,77 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
         // `fn( <error> ) -> i32` is not the error type, so one bad annotation would report twice.
         return poisoned ? table_.builtin( Type_kind::Error ) : table_.function( return_type, parameters, return_mode );
     }
+    case Node_kind::Field_type:
+    {
+        const Node_id spelled_member    = ast_.child( annotation, 0 );
+        const Node_id bare_member       = unwrap_const( ast_, spelled_member );
+        const Node_id spelled_aggregate = ast_.child( annotation, 1 );
+        const Keyword member_mode       = parameter_mode( ast_, annotation );
 
+        // Stripped by hand rather than typed through: a Mode_type reports its own refusals, and a mode here is refused whole.
+        Node_id bare_aggregate = unwrap_const( ast_, spelled_aggregate );
+        if( ast_.kind( bare_aggregate ) == Node_kind::Mode_type )
+        {
+            bare_aggregate = ast_.child( bare_aggregate, 0 );
+        }
+
+        const Type_id aggregate = type_of( bare_aggregate, false );
+        bool          poisoned  = table_.is_error( aggregate );
+
+        if( bare_aggregate != spelled_aggregate )
+        {
+            reporter_.error_at(
+                ast_.span( spelled_aggregate ),
+                "the aggregate of a field type takes no mode",
+                "one offset serves every object of the type, so write the type alone"
+            );
+            poisoned = true;
+        }
+        else if( !poisoned && !table_.is_struct( aggregate ) && !table_.is_parameter( aggregate ) )
+        {
+            reporter_.error_at(
+                ast_.span( spelled_aggregate ),
+                fmt::format( "`{}` has no fields", table_.name( aggregate ) ),
+                "a field type reads a field of a `struct` or a `class`"
+            );
+            poisoned = true;
+        }
+
+        if( member_mode == Keyword::Ref && bare_member != spelled_member )
+        {
+            reporter_.error_at( ast_.span( spelled_member ), "a field type that borrows is not supported yet" );
+            poisoned = true;
+        }
+        else if( member_mode == Keyword::Ref )
+        {
+            reporter_.error_at( ast_.span( spelled_member ), "writing through a field type is not supported yet" );
+            poisoned = true;
+        }
+        else if( member_mode == Keyword::Out || member_mode == Keyword::Move )
+        {
+            const std::string_view mode_text = interner_.text( Interner::keyword( member_mode ) );
+
+            reporter_.error_at(
+                ast_.span( spelled_member ),
+                fmt::format( "`{}` is not a return mode", mode_text ),
+                fmt::format( "`{}` says how an argument travels, and a return is not an argument", mode_text )
+            );
+            poisoned = true;
+        }
+        else if( member_mode == Keyword::Count && bare_member != spelled_member )
+        {
+            reporter_.error_at(
+                const_keyword( spelled_member ), "a `const` here binds nothing, because a field type only reads", "remove it"
+            );
+            poisoned = true;
+        }
+
+        // Typed only without a mode, since a Mode_type would add its own refusals under the one above.
+        const Type_id member =
+            member_mode == Keyword::Count ? type_of( bare_member, false ) : table_.builtin( Type_kind::Error );
+
+        return poisoned || table_.is_error( member ) ? table_.builtin( Type_kind::Error ) : table_.field( aggregate, member );
+    }
     default:
         // Error nodes, and anything the parser puts in type position that is not a type.
         return table_.builtin( Type_kind::Error );
@@ -606,6 +676,47 @@ TEST_CASE( "annotations_read_a_function_type", "[sema][annotation][m7]" )
 
     INFO( p.rendered() );
     REQUIRE( p.errors() == 0 );
+}
+
+TEST_CASE( "annotations_read_a_field_type", "[sema][annotation][m7][field]" )
+{
+    Written p( "struct P { i32 x; };\nvoid g( field( P ) -> i32 a, const field( P ) -> i32 b ) { }" );
+
+    REQUIRE( p.table().name( p.annotations().type_of( p.parameter_annotation( 1, 0 ) ) ) == "field( P ) -> i32" );
+    REQUIRE( p.table().name( p.annotations().type_of( p.parameter_annotation( 1, 1 ) ) ) == "field( P ) -> i32" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.errors() == 0 );
+}
+
+TEST_CASE( "annotations_refuse_a_field_type_that_is_not_a_read", "[sema][annotation][m7][field]" )
+{
+    struct Case
+    {
+        const char* type;
+        const char* message;
+    };
+
+    for( const Case c :
+         { Case { "field( ref P ) -> i32", "the aggregate of a field type takes no mode" },
+           Case { "field( const ref P ) -> i32", "the aggregate of a field type takes no mode" },
+           Case { "field( i32 ) -> i32", "`i32` has no fields" },
+           Case { "field( P ) -> ref i32", "writing through a field type is not supported yet" },
+           Case { "field( P ) -> const ref i32", "a field type that borrows is not supported yet" },
+           Case { "field( P ) -> out i32", "`out` is not a return mode" },
+           Case { "field( P ) -> const i32", "a `const` here binds nothing, because a field type only reads" },
+           Case { "field( Nope ) -> i32", "`Nope`" },
+           Case { "field( P ) -> Nope", "`Nope`" } } )
+    {
+        Written p( fmt::format( "struct P {{ i32 x; }};\nvoid g( {} a ) {{ }}", c.type ) );
+
+        const Type_id type = p.annotations().type_of( p.parameter_annotation( 1, 0 ) );
+
+        INFO( c.type << "\n" << p.rendered() );
+        REQUIRE( type == p.table().builtin( Type_kind::Error ) );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( c.message ) != std::string::npos );
+    }
 }
 
 TEST_CASE( "annotations_propagate_the_poison_out_of_a_function_type", "[sema][annotation][m7]" )

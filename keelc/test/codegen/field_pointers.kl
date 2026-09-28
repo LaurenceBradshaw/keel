@@ -1,0 +1,94 @@
+// M7 slice 7: a field type is an offset into an aggregate, applied to an object to read that field.
+// The exit code is the answer, so an offset into the wrong field fails here even when the C builds.
+struct Measurement
+{
+    f64 px;
+    f64 py;
+    f64 pz;
+    i32 id;
+};
+
+struct Box<T> where T : Copyable
+{
+    i32 tag;
+    T   v;
+};
+
+f64 sum( field( Measurement ) -> f64 a, field( Measurement ) -> f64 b, field( Measurement ) -> f64 c, const ref Measurement m )
+{
+    return a( m ) + b( m ) + c( m );
+}
+
+U read<C, U>( field( C ) -> U p, const ref C obj ) where U : Copyable
+{
+    return p( obj );
+}
+
+i32 which( field( Measurement ) -> f64 p )
+{
+    return 1;
+}
+
+i32 which( field( Measurement ) -> i32 p )
+{
+    return 2;
+}
+
+Measurement make()
+{
+    return Measurement { 1.0, 2.0, 4.0, 9 };
+}
+
+i32 main()
+{
+    Measurement m = make();
+
+    field( Measurement ) -> f64 x = &Measurement::px;
+    auto                        z = &Measurement::pz;
+    const field( Measurement ) -> i32 id = &Measurement::id;
+
+    if( x( m ) != 1.0 || z( m ) != 4.0 || id( m ) != 9 )
+    {
+        return 1;
+    }
+
+    if( sum( &Measurement::px, &Measurement::py, z, m ) != 7.0 )
+    {
+        return 2;
+    }
+
+    if( read( id, m ) != 9 || read( &Measurement::py, m ) != 2.0 )
+    {
+        return 3;
+    }
+
+    if( x( make() ) != 1.0 )
+    {
+        return 4;
+    }
+
+    if( which( x ) != 1 || which( id ) != 2 )
+    {
+        return 5;
+    }
+
+    Box<i32> b;
+    b.tag = 3;
+    b.v   = 8;
+
+    field( Box<i32> ) -> i32 value = &Box<i32>::v;
+
+    if( value( b ) != 8 || read( value, b ) != 8 )
+    {
+        return 6;
+    }
+
+    x = &Measurement::py;
+
+    if( x( m ) != 2.0 )
+    {
+        return 7;
+    }
+
+    return 0;
+}

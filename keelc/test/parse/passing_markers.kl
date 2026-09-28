@@ -5,7 +5,7 @@ i32 main()
     i32 a = f( move b );
     i32 c = f( out b );
     i32 d = f( ref b );
-    i32 e = f( move b.field );   // `.` binds tighter
+    i32 e = f( move b.inner );   // `.` binds tighter
     i32 g = f( move b + c );     // arithmetic binds looser
     i32 h = move b;              // not only in argument lists
     return 0;

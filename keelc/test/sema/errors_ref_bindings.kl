@@ -91,14 +91,14 @@ i32 binds_places()
 
     Point p = Point { 2 };
 
-    ref i32 field = p.x;
+    ref i32 piece = p.x;
 
     i32* addr = &a;
 
     ref i32 pointee = *addr;
 
     r       = 5;
-    field   = 6;
+    piece   = 6;
     pointee = 7;
 
     return a + p.x;

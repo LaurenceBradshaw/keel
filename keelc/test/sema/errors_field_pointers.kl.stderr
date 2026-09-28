@@ -1,0 +1,91 @@
+error: `p` reads a `U` by copying it, which is not known to be copyable
+  --> sema/errors_field_pointers.kl:31:12
+   |
+31 |     return p( obj );
+   |            ^^^^^^^^ add `where U : Copyable`
+
+error: the aggregate of a field type takes no mode
+  --> sema/errors_field_pointers.kl:34:19
+   |
+34 | i32 modes( field( ref P ) -> i32 a, field( P ) -> ref i32 b, field( P ) -> const ref i32 c, field( P ) -> const i32 d )
+   |                   ^^^ one offset serves every object of the type, so write the type alone
+
+error: writing through a field type is not supported yet
+  --> sema/errors_field_pointers.kl:34:51
+   |
+34 | i32 modes( field( ref P ) -> i32 a, field( P ) -> ref i32 b, field( P ) -> const ref i32 c, field( P ) -> const i32 d )
+   |                                                   ^^^
+
+error: a field type that borrows is not supported yet
+  --> sema/errors_field_pointers.kl:34:76
+   |
+34 | i32 modes( field( ref P ) -> i32 a, field( P ) -> ref i32 b, field( P ) -> const ref i32 c, field( P ) -> const i32 d )
+   |                                                                            ^^^^^^^^^^^^^
+
+error: a `const` here binds nothing, because a field type only reads
+  --> sema/errors_field_pointers.kl:34:107
+   |
+34 | i32 modes( field( ref P ) -> i32 a, field( P ) -> ref i32 b, field( P ) -> const ref i32 c, field( P ) -> const i32 d )
+   |                                                                                                           ^^^^^ remove it
+
+error: `i32` has no fields
+  --> sema/errors_field_pointers.kl:39:20
+   |
+39 | i32 scalar( field( i32 ) -> i32 a )
+   |                    ^^^ a field type reads a field of a `struct` or a `class`
+
+error: `secret` is private to `Holder`
+  --> sema/errors_field_pointers.kl:46:14
+   |
+46 |     auto a = &Holder::secret;
+   |              ^^^^^^^^^^^^^^^ only that type's own members may name it
+
+error: `buf` is a `Buffer`, which is not copyable, so reading it through a field type would copy it
+  --> sema/errors_field_pointers.kl:47:14
+   |
+47 |     auto b = &Holder::buf;
+   |              ^^^^^^^^^^^^ a field type that borrows is not supported yet
+
+error: `Box` needs its type arguments here
+  --> sema/errors_field_pointers.kl:48:15
+   |
+48 |     auto c = &Box::v;
+   |               ^^^ write `Box< ... >::v`
+
+error: `P` has no member `y`
+  --> sema/errors_field_pointers.kl:49:14
+   |
+49 |     auto d = &P::y;
+   |              ^^^^^
+
+error: `x` does not modify this argument
+  --> sema/errors_field_pointers.kl:56:16
+   |
+56 |     i32 e = x( ref p );
+   |                ^^^^^ remove `ref`
+
+error: `x` reads a field of one object, but 2 were given
+  --> sema/errors_field_pointers.kl:57:14
+   |
+57 |     i32 f = x( p, p );
+   |              ^^^^^^^^
+
+error: expected `P`, but got `Holder`
+  --> sema/errors_field_pointers.kl:58:16
+   |
+58 |     i32 g = x( h );
+   |                ^
+
+error: expected `field( Holder ) -> i32`, but got `field( P ) -> i32`
+  --> sema/errors_field_pointers.kl:60:36
+   |
+60 |     field( Holder ) -> i32 wrong = &P::x;
+   |                                    ^^^^^
+
+error: `P` has no static method `x`
+  --> sema/errors_field_pointers.kl:62:14
+   |
+62 |     auto k = P::x;
+   |              ^^^^ take its offset as `&P::x`, or read it as `value.x`
+
+15 errors generated

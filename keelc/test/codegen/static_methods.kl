@@ -1,4 +1,4 @@
-// PLAN §12, M7. M7's acceptance in one file: a named constructor returns an aggregate, is called as
+// PLAN §12, M7. The static-method part of M7's acceptance: a named constructor returns an aggregate, is called as
 // `Type::make( args )`, and is refused as `value.make( args )` - that last half being a diagnostic,
 // so it lives in the sema fixture and what remains here is that the accepted spellings work.
 //

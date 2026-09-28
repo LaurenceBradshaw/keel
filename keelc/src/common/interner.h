@@ -72,6 +72,7 @@ enum class Keyword : u32
     Private,
     Public,
     Fn,
+    Field,
 
     Count
 };

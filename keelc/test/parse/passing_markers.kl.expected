@@ -33,7 +33,7 @@ Source_file                             3:1-13:1
           Name_expr                     8:13-8:14   "f"
           Arg_list                      8:14-8:30
             Marker_expr                 8:16-8:28   marker=move
-              Field_expr                8:21-8:28   name=field
+              Field_expr                8:21-8:28   name=inner
                 Name_expr               8:21-8:22   "b"
           <none>                        -
       Var_decl                          9:5-9:29    name=g

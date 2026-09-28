@@ -25,6 +25,7 @@ enum class Node_kind : u16
     Generic_type,
     Function_type, // child 0 is the return type, child 1 a Param_list whose children are Param_decls with aux set to the
                    // invalid symbol.
+    Field_type,    // Child 0 is the return type and child 1 is the aggregate's spelled type
     Type_arg_list,
     Param_list,
     Block,

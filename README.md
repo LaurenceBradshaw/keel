@@ -85,8 +85,8 @@ the C backend all work; the standard library does not exist yet.
 **Working today:** functions, control flow, fixed-width primitives, `struct` and `class`, methods,
 constructors, destructors, operators, access control, static methods, payload-carrying `enum`s with
 exhaustive `switch`, generics by monomorphisation with definition-time bound checking, function and
-constructor overloading, move checking on the IR's CFG, `unsafe`, `extern`, and native executables via
-`cc`.
+constructor overloading, function pointers, method pointers and field types, move checking on the IR's
+CFG, `unsafe`, `extern`, and native executables via `cc`.
 
 **Designed and not yet built:** modules and `import`, the standard library, `Result` and the `?`
 operator, `String`, `Optional<T>`, many-item pointers (`[*]T`), inheritance and dynamic dispatch.
@@ -180,6 +180,29 @@ noted in its row.
 | Bounds come from a closed, compiler-provided set, joined with `&`. | Concepts: open, structural, arbitrarily complex. | A closed set can be checked completely at the definition; an open one cannot. |
 | Generics are checked at the definition, not at the instantiation. | Both, and the interesting errors surface at the expansion. | Errors point at the generic you wrote, not at the expansion you did not. |
 | Monomorphised. | Monomorphised. | No divergence — this one C++ got right. |
+
+### Function and member pointers
+
+| Keel | C++ | Why |
+| --- | --- | --- |
+| A function type is written `fn( i32, i32 ) -> i32`, and a parameter's mode is part of it. | `int (*)( int, int )`, a declarator with the name in the middle. | `fn( ref i32 )` and `fn( i32 )` are different types, and a C declarator has nowhere to put a mode. It also reads left to right. |
+| `&add` on an overloaded name is chosen by the type it is stored as; `auto f = &add;` is then an error. A generic's address names its arguments: `&id<i32>`. | The same selection, plus deduction from the target. | The expected type is the one thing that can choose, so it is the only rule. |
+| A method pointer is an ordinary function pointer with the receiver as parameter 0: `&C::get` is `fn( const ref C ) -> i32`, called `p( obj )`. | A separate member-function-pointer type, often fat, called `( obj.*p )()`. | Without inheritance or virtual dispatch there is nothing to adjust, so one kind of function pointer and one call syntax are enough. |
+| A member data pointer is `field( C ) -> T`: an offset, applied as `p( obj )`, returning a copy. It is read-only. | `T C::*`, applied with `.*` or `->*`, writable. | `->*` went with `->`. Every use found in real code reads. Writing waits on a returned `ref` becoming a writable place. |
+
+What each spelling means:
+
+| Spelling | Meaning |
+| --- | --- |
+| `fn( T ) -> U` | Takes `T` as a bare parameter would: a copy for a `struct`, a read-only borrow for a `class`. Called `p( x )`. |
+| `fn( ref T )`, `fn( out T )`, `fn( move T )` | The mode travels with the type, and the call writes it: `p( ref x )`, `p( out x )`, `p( move x )`. |
+| `fn( const ref T )` | A read-only borrow, called `p( x )`. A different type from `fn( T )`. |
+| `fn() -> const ref T` | Returns a borrow; the only reference a function type can return. |
+| `const fn( T ) -> U p` | The variable cannot be reassigned. It says nothing about the function. |
+| `&C::m` | `fn( ref C, ... )`, or `fn( const ref C, ... )` for a `const` method. Static methods *(planned)*. |
+| `field( C ) -> T`, `&C::x`, `p( obj )` | The offset of `x` in `C`, and a copy of that field of `obj`. `T` must be copyable. |
+| `field( C ) -> const ref T`, `field( C ) -> ref T` | A borrowing read and a writing form *(planned)*. |
+| `fn( const T )`, `fn() -> ref T`, `field( ref C ) -> T`, `field( C ) -> const T` | Errors. A type has no callee for a `const` to bind, only a `const ref` may be returned, and one offset serves every `C`, so `C` takes no mode. |
 
 ---
 

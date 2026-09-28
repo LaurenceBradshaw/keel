@@ -128,11 +128,17 @@ void check_rvalue( const Function& func, const Rvalue& value, std::string_view w
 
     // The callee is the whole of it: a function is not a place, so there is no operand to check.
     case Rvalue_kind::Function_address:
+    case Rvalue_kind::Field_offset:
         if( !value.callee.is_valid() )
         {
             errors.push_back( fmt::format( "{}: callee is not set", where ) );
         }
 
+        return;
+
+    case Rvalue_kind::Field_read:
+        operand_at( value.a, "object" );
+        operand_at( value.b, "offset" );
         return;
     }
 }

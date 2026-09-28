@@ -62,7 +62,7 @@ error: `Point` has no static method `x`
   --> sema/errors_enums.kl:85:13
    |
 85 |     i32 n = Point::x;
-   |             ^^^^^^^^ `x` is a field, so it belongs to an object rather than to `Point`
+   |             ^^^^^^^^ take its offset as `&Point::x`, or read it as `value.x`
 
 error: `::` needs the name of a type on its left
   --> sema/errors_enums.kl:92:13

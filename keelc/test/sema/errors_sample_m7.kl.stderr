@@ -1,0 +1,25 @@
+error: `around` is a `static` method of `Window`, so it takes no object
+  --> sema/errors_sample_m7.kl:24:16
+   |
+24 |     Window v = w.around( 1.0, 1.0 );
+   |                ^^^^^^^^ call it as `Window::around( ... )`
+
+error: `Window`'s constructor is private
+  --> sema/errors_sample_m7.kl:25:16
+   |
+25 |     Window u = Window( 1.0, 2.0 );
+   |                ^^^^^^ build it through one of its own static methods instead
+
+error: `lo` is private to `Window`
+  --> sema/errors_sample_m7.kl:27:15
+   |
+27 |     f64 low = w.lo;
+   |               ^^^^ only that type's own members may name it
+
+error: `hi` is private to `Window`
+  --> sema/errors_sample_m7.kl:28:15
+   |
+28 |     auto hi = &Window::hi;
+   |               ^^^^^^^^^^^ only that type's own members may name it
+
+4 errors generated

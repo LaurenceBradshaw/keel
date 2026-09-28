@@ -122,6 +122,10 @@ struct Printer
             return fmt::format( "release {}", operand( value.a ) );
         case Rvalue_kind::Function_address:
             return fmt::format( "&{}", name_of( value.callee ) );
+        case Rvalue_kind::Field_offset:
+            return fmt::format( "offset {}", name_of( value.callee ) );
+        case Rvalue_kind::Field_read:
+            return fmt::format( "read {} at {}", operand( value.a ), operand( value.b ) );
         }
 
         return "<bad rvalue>";

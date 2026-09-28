@@ -1414,6 +1414,27 @@ Node_id Parser::parse_type()
         return fn_type;
     }
 
+    if( match_keyword( Keyword::Field ) )
+    {
+        expect( Token_kind::L_paren );
+
+        const Node_id aggregate_type = parse_type_with_mode();
+
+        expect( Token_kind::R_paren );
+        expect( Token_kind::Arrow );
+
+        const Node_id return_type = parse_type_with_mode();
+
+        Node_id field_type =
+            ast_.add( Node_kind::Field_type, Span::merge( start, previous().span ), 0, { return_type, aggregate_type } );
+
+        if( leading_const )
+        {
+            field_type = ast_.add( Node_kind::Const_type, Span::merge( start, previous().span ), 0, { field_type } );
+        }
+        return field_type;
+    }
+
     if( !expect( Token_kind::Identifier ) )
     {
         return error_node( start );
@@ -1719,7 +1740,8 @@ bool Parser::can_start_expression() const
 bool Parser::looks_like_declaration()
 {
     // `auto x = ...` is settled by its keyword; the caller checks that before asking.
-    if( !check( Token_kind::Identifier ) && !check_keyword( Keyword::Const ) && !check_keyword( Keyword::Fn ) )
+    if( !check( Token_kind::Identifier ) && !check_keyword( Keyword::Const ) && !check_keyword( Keyword::Fn ) &&
+        !check_keyword( Keyword::Field ) )
     {
         return false;
     }
@@ -1848,7 +1870,7 @@ bool Parser::scan_type_and_name()
     // `fn( T, U ) -> R`, whose R may be another. Parens are counted rather than parsed, for the
     // reason scan_type_arguments counts its own: parse_type reports, builds nodes and leaves
     // pending_greater_ set, and none of the three is undone by restoring pos_.
-    while( check_keyword( Keyword::Fn ) )
+    while( check_keyword( Keyword::Fn ) || check_keyword( Keyword::Field ) )
     {
         advance();
 
@@ -5924,6 +5946,51 @@ TEST_CASE( "parser_function_type_requires_an_arrow", "[parse]" )
     // One, not two: a scan that parsed the parameters rather than counting them reported this
     // speculatively and then again for real, and the count is the only thing that sees it.
     REQUIRE( p.error_count() == 1 );
+}
+
+TEST_CASE( "parser_field_type_shape", "[parse][field]" )
+{
+    SECTION( "the field's type, then the aggregate" )
+    {
+        const Parsed p( "i32 main() { field( P ) -> i32 f; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id type = p.child( first_statement( p ), 0 );
+        REQUIRE( p.kind( type ) == Node_kind::Field_type );
+        REQUIRE( p.kind( p.child( type, 0 ) ) == Node_kind::Named_type );
+        REQUIRE( p.kind( p.child( type, 1 ) ) == Node_kind::Named_type );
+    }
+
+    SECTION( "a leading const wraps it, and modes are kept for sema to refuse" )
+    {
+        const Parsed p( "i32 main() { const field( ref P ) -> ref i32 f; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id type = p.child( first_statement( p ), 0 );
+        REQUIRE( p.kind( type ) == Node_kind::Const_type );
+        REQUIRE( p.kind( p.child( p.child( type, 0 ), 0 ) ) == Node_kind::Mode_type );
+        REQUIRE( p.kind( p.child( p.child( type, 0 ), 1 ) ) == Node_kind::Mode_type );
+    }
+
+    SECTION( "it nests with a function type" )
+    {
+        const Parsed p( "i32 main() { fn( field( P ) -> i32 ) -> field( Q ) -> f64 f; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.kind( p.child( first_statement( p ), 0 ) ) == Node_kind::Function_type );
+    }
+
+    SECTION( "it is a keyword, so it is no longer a name" )
+    {
+        const Parsed p( "i32 main() { i32 field = 1; }" );
+
+        REQUIRE( p.has_errors() );
+    }
 }
 
 // can_start_expression keeps the better message for tokens that cannot begin a statement.

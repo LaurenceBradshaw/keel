@@ -55,6 +55,7 @@ private:
     Operand lower_unary( Node_id id );
     Operand lower_call( Node_id id );
     Operand lower_indirect_call( Node_id id );
+    Operand lower_field_application( Node_id id );
     Operand lower_method_call( Node_id id );
     Operand lower_method_call_on( Node_id id, Node_id method, Operand receiver );
     Operand lower_variant_construction( Node_id id );
@@ -825,6 +826,14 @@ Operand Lowering::lower_unary( Node_id id )
             return copy( builder_.place( builder_.into_temp( address, type, span ) ), type );
         }
 
+        // Nor is a field: `&C::x` is an offset, which names the field and no object.
+        if( types_.table().is_field( type ) )
+        {
+            return copy(
+                builder_.place( builder_.into_temp( field_offset( types_.callee_of( id ), type ), type, span ) ), type
+            );
+        }
+
         // A place, not an operand - which is why verify's Address_of case looks at a.place and
         // ignores the operand's kind.
         const Rvalue address = address_of( lower_place( ast_.child( id, 0 ) ), type );
@@ -1084,6 +1093,12 @@ Operand Lowering::lower_call( Node_id id )
         return lower_indirect_call( id );
     }
 
+    if( !callee.is_valid() && type_of( ast_.child( id, 0 ) ).is_valid() &&
+        types_.table().is_field( type_of( ast_.child( id, 0 ) ) ) )
+    {
+        return lower_field_application( id );
+    }
+
     assert(
         callee.is_valid() && ( ast_.kind( callee ) == Node_kind::Function_decl || is_static_method( ast_, callee ) ) &&
         "checker should have rejected an unresolved call"
@@ -1200,6 +1215,20 @@ Operand Lowering::lower_indirect_call( Node_id id )
     );
 
     return copy( binding ? builder_.deref( builder_.place( result ) ) : builder_.place( result ), type_of( id ) );
+}
+
+Operand Lowering::lower_field_application( Node_id id )
+{
+    const Type_id offset    = type_of( ast_.child( id, 0 ) );
+    const Type_id aggregate = types_.table().get( offset ).arguments[0];
+
+    const Operand at     = lower_expression( ast_.child( id, 0 ) );
+    const Operand object = borrowed_argument( ast_.children( ast_.child( id, 1 ) )[0], types_.table().pointer_to( aggregate ) );
+
+    return copy(
+        builder_.place( builder_.into_temp( field_read( object, at, type_of( id ) ), type_of( id ), ast_.span( id ) ) ),
+        type_of( id )
+    );
 }
 
 Operand Lowering::lower_expression( Node_id id )

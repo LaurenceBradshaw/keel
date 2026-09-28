@@ -1,0 +1,31 @@
+// The refusals M7's acceptance names, beside the program in codegen/sample_m7.kl that is accepted:
+// a named constructor called through a value, and a hidden representation reached from outside.
+class Window
+{
+    f64 lo;
+    f64 hi;
+
+    private Window( f64 a, f64 b )
+    {
+        lo = a;
+        hi = b;
+    }
+
+    static Window around( f64 centre, f64 radius )
+    {
+        return Window( centre - radius, centre + radius );
+    }
+};
+
+i32 main()
+{
+    Window w = Window::around( 3.0, 1.0 );
+
+    Window v = w.around( 1.0, 1.0 );
+    Window u = Window( 1.0, 2.0 );
+
+    f64 low = w.lo;
+    auto hi = &Window::hi;
+
+    return 0;
+}

@@ -60,7 +60,6 @@ i32 main()
     auto a = &C::make;
     auto b = &Vault::hidden;
     auto c = &C::nope;
-    auto d = &C::n;
     auto e = &Box::value;
     auto f = &C::pick;
     auto k = &Open<i32>::keep;

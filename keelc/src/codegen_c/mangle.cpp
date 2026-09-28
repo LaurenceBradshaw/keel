@@ -67,6 +67,15 @@ void encode_type( std::string& out, Type_id id, const Type_table& types )
         return;
     }
 
+    // `field( P ) -> f64` is `D1P3f64`: `D` starts no other encoding and no mode prefix, and each half delimits itself.
+    if( types.is_field( id ) )
+    {
+        out += 'D';
+        encode_type( out, types.get( id ).arguments[0], types );
+        encode_type( out, types.get( id ).element, types );
+        return;
+    }
+
     // `Box<i32>` is `3BoxI3i32E`: the base, then its arguments between brackets that cannot appear
     // in a name. Nested and multi-argument forms fall out - `Box<Box<i32>>` is `3BoxI3BoxI3i32EE`.
     const std::string_view base = types.base_name( id );
@@ -456,6 +465,18 @@ TEST_CASE( "mangle_encodes_every_type_injectively", "[codegen][mangle]" )
 
         REQUIRE( mangle_function( "", "f", takes_copies, table ) == "kl__f__FK3i32E3i32" );
         REQUIRE( mangle_function( "", "f", takes_peeks, table ) == "kl__f__FK3i32EK3i32" );
+    }
+
+    // `D` opens a field type, then the aggregate and the field, each delimiting itself.
+    SECTION( "a field type carries both halves" )
+    {
+        const Type_id p = table.structure( Node_id { 9 }, {}, "P" );
+
+        const Mangled_parameter reads_i32[] = { by_value( table.field( p, i32 ) ) };
+        const Mangled_parameter reads_ptr[] = { by_value( table.field( p, pointer ) ) };
+
+        REQUIRE( mangle_function( "", "f", reads_i32, table ) == "kl__f__D1P3i32" );
+        REQUIRE( mangle_function( "", "f", reads_ptr, table ) == "kl__f__D1PP3i32" );
     }
 
     SECTION( "a generic aggregate carries its arguments" )

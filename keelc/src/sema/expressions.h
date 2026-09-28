@@ -125,6 +125,11 @@ private:
     // `&C::f`: an instance method's signature, with its receiver as parameter 0.
     Type_id method_address( Node_id id, Node_id aggregate );
 
+    // `&C::x`: the offset of a field, typed `field( C ) -> T` at the qualifier's instance.
+    Type_id field_address( Node_id id, Node_id aggregate, Node_id field );
+    // `p( obj )`, where `p` holds an offset: a copy of that field of `obj`.
+    Type_id field_application( Node_id id, Type_id offset );
+
     // The function type a declaration would be written as; refused receives the first parameter carrying a mode.
     Type_id written_signature( Node_id declaration, const Bindings& bindings, Node_id& refused );
     // Which overload the expected signature names, or nothing - reported - when the set holds no such one.

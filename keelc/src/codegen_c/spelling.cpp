@@ -90,6 +90,10 @@ std::string Spelling::type( Type_id type ) const
     case Type_kind::Function:
         return mangle_function_type( "", type, types.table() );
 
+    // An offset in bytes; which aggregate and which field is the checker's business, not C's.
+    case Type_kind::Field:
+        return "size_t";
+
     // A payload-free enum is its underlying integer - not a C `enum`, whose type is
     // implementation-defined and which would buy nothing, since by here Keel has already erased the
     // distinction the tag existed for. One carrying payloads is a struct: a tag and the fields.

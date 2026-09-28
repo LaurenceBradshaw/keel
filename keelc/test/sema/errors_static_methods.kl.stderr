@@ -62,7 +62,7 @@ error: `P` has no static method `x`
    --> sema/errors_static_methods.kl:116:12
     |
 116 |     return P::x;
-    |            ^^^^ `x` is a field, so it belongs to an object rather than to `P`
+    |            ^^^^ take its offset as `&P::x`, or read it as `value.x`
 
 error: `P` has no static method `nope`
    --> sema/errors_static_methods.kl:121:11

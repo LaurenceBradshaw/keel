@@ -1116,6 +1116,19 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue ) const
     case Rvalue_kind::Function_address:
         return spelling_.function( rvalue.callee, rvalue.type_arguments );
 
+    case Rvalue_kind::Field_offset:
+        return fmt::format(
+            "offsetof( {}, {} )",
+            spelling_.type( types_.table().get( rvalue.type ).arguments[0] ),
+            spelling_.field( rvalue.callee )
+        );
+
+    // Through `char*` because an offset counts bytes, and never as arithmetic Keel can spell.
+    case Rvalue_kind::Field_read:
+        return fmt::format(
+            "*( {}* )( ( char* ) {} + {} )", spelling_.type( rvalue.type ), operand( rvalue.a ), operand( rvalue.b )
+        );
+
     default:
         assert( false && "unknown rvalue kind" );
         return "<unknown>";

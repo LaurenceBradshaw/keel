@@ -1,0 +1,65 @@
+// Every way a field type can be refused, in one file. The unit fixtures check that each message is
+// produced; this checks the caret and the hint the author sees.
+class Buffer
+{
+    public u8* ptr;
+
+    ~Buffer()
+    {
+    }
+};
+
+class Holder
+{
+    public Buffer buf;
+    public i32    n;
+    i32           secret;
+};
+
+struct P
+{
+    i32 x;
+};
+
+struct Box<T> where T : Copyable
+{
+    T v;
+};
+
+U loose<C, U>( field( C ) -> U p, const ref C obj )
+{
+    return p( obj );
+}
+
+i32 modes( field( ref P ) -> i32 a, field( P ) -> ref i32 b, field( P ) -> const ref i32 c, field( P ) -> const i32 d )
+{
+    return 0;
+}
+
+i32 scalar( field( i32 ) -> i32 a )
+{
+    return 0;
+}
+
+i32 main()
+{
+    auto a = &Holder::secret;
+    auto b = &Holder::buf;
+    auto c = &Box::v;
+    auto d = &P::y;
+
+    P  p;
+    Holder h;
+
+    field( P ) -> i32 x = &P::x;
+
+    i32 e = x( ref p );
+    i32 f = x( p, p );
+    i32 g = x( h );
+
+    field( Holder ) -> i32 wrong = &P::x;
+
+    auto k = P::x;
+
+    return 0;
+}

@@ -10,46 +10,40 @@ error: `hidden` is private to `Vault`
 61 |     auto b = &Vault::hidden;
    |              ^^^^^^^^^^^^^^ only that type's own members may name it
 
-error: `C` has no method `nope`
+error: `C` has no member `nope`
   --> sema/errors_method_pointers.kl:62:14
    |
 62 |     auto c = &C::nope;
    |              ^^^^^^^^
 
-error: `C` has no method `n`
-  --> sema/errors_method_pointers.kl:63:14
-   |
-63 |     auto d = &C::n;
-   |              ^^^^^ `n` is a field of `C`, not a method
-
 error: `Box` needs its type arguments here
-  --> sema/errors_method_pointers.kl:64:15
+  --> sema/errors_method_pointers.kl:63:15
    |
-64 |     auto e = &Box::value;
+63 |     auto e = &Box::value;
    |               ^^^ write `Box< ... >::value`
 
 error: `pick` is overloaded, so its address names no one function
-  --> sema/errors_method_pointers.kl:65:14
+  --> sema/errors_method_pointers.kl:64:14
    |
-65 |     auto f = &C::pick;
+64 |     auto f = &C::pick;
    |              ^^^^^^^^ assigning it to a variable of one signature will choose between them
 
 error: `keep` takes `T`, which is not known to be copyable, so its address has no function type yet
-  --> sema/errors_method_pointers.kl:66:14
+  --> sema/errors_method_pointers.kl:65:14
    |
-66 |     auto k = &Open<i32>::keep;
+65 |     auto k = &Open<i32>::keep;
    |              ^^^^^^^^^^^^^^^^ add `where T : Copyable` to `Open`; the parameter of `keep` is at 52:15
 
 error: no overload of `pick` has the type `fn( ref C, bool ) -> i32`
-  --> sema/errors_method_pointers.kl:68:32
+  --> sema/errors_method_pointers.kl:67:32
    |
-68 |     fn( ref C, bool )->i32 g = &C::pick;
+67 |     fn( ref C, bool )->i32 g = &C::pick;
    |                                ^^^^^^^^ its overloads are `fn( ref C, i32 ) -> i32` and `fn( ref C, f64 ) -> i32`
 
 error: `add` is a function, not a value
-  --> sema/errors_method_pointers.kl:70:14
+  --> sema/errors_method_pointers.kl:69:14
    |
-70 |     auto h = C::add;
+69 |     auto h = C::add;
    |              ^^^^^^ take its address as `&C::add`, or call it as `value.add( ... )`
 
-9 errors generated
+8 errors generated
