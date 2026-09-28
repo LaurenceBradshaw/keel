@@ -6162,6 +6162,11 @@ else will name them.
    underlines both words, because a `Const_type`'s span covers what it wraps. Each lands on
    something true, and the `const` one should underline the `const` alone - so the fix is a span for
    the keyword rather than for the node, in the one branch.
+   **Corrected 2026-09-28, before implementing:** two branches, not one. `fn( const i32 ) -> i32`
+   gets the same message with the same nine-caret underline, and fixing only the return would leave
+   one refusal underlining two ways. A trailing `-> i32 const` has its keyword at the *end* of the
+   span, so the span is found from which side of the wrapped type the keyword sits on.
+   **Done (2026-09-28)** - see the paragraph after defect 3's.
 
 The first two are soundness and the last two are diagnostics, which is the order they are in; all
 four are ahead of slice 6, because a diagnostic about a mode is cheaper to correct before method
@@ -6476,6 +6481,17 @@ not the diagnostic's own. `previous_declaration_note` inherits that, and `Resolv
 of it at `resolver.cpp`, which should be folded into `Reporter` rather than fixed twice. Carried on
 M8's row.
 
+**Defect 4 done (2026-09-28).** Both refusals of a bare `const` inside a function type, on the
+return and on a parameter, now underline the keyword alone through
+`Annotations::const_keyword( Node_id )`. The keyword is found from the side of the wrapped type it
+sits on, because a trailing `-> i32 const` ends the span with it rather than starting with it.
+Test `annotations_underline_only_the_const_a_function_type_refuses` has a leading, a trailing and a
+parameter section; `sema/errors_function_pointer_returns.kl` and `errors_function_pointer_modes.kl`
+were re-recorded, going from nine carets to five in the same column. **Mutation:** reverting either
+call site, inverting the side test and lengthening the keyword are killed by the unit test and a
+golden; always taking the leading side is killed by the unit test alone, since no golden writes a
+trailing `const`.
+
 ### Mode slice 2: modes in a function type, the return - done (2026-09-28)
 
 Four things were settled before any of it was implemented, and they are recorded here because each
@@ -6623,10 +6639,10 @@ What remains under function pointers is not mode work: the two ownership defects
 then slice 6 and slice 7. **Two carried items are named here so they are not lost.** ~~The surviving
 Copyable refusal reports at the *declaration's* parameter while the mistake is at `&unbounded<i32>`,
 which is a use-site question the message does not answer.~~ **Done (2026-09-28).**
-And a caret under a refused return spans
+~~And a caret under a refused return spans
 the keyword for a `Mode_type` and both words for a `Const_type` - each lands on the offending word,
 so it reads as an inconsistency rather than a fault, and it is the span the AST gives rather than
-anything the mode work chose.
+anything the mode work chose.~~ **Done (2026-09-28)**, for parameters as well.
 
 ### Function pointers in KIR: audited for a second backend (2026-09-28)
 

@@ -50,6 +50,8 @@ public:
     resolve_type_arguments( Node_id declaration, Node_id type_args, std::string_view name, std::vector<Type_id>& resolved );
 
 private:
+    Span const_keyword( Node_id const_type ) const;
+
     const Ast&        ast_;
     const Interner&   interner_;
     const Resolution& resolution_;

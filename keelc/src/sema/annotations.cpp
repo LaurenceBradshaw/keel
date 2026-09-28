@@ -281,7 +281,7 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
         else if( return_mode_kw == Keyword::Count && bare_return != spelled_return )
         {
             reporter_.error_at(
-                ast_.span( spelled_return ),
+                const_keyword( spelled_return ),
                 "a `const` here binds nothing, because a function type has no callee",
                 "remove it - whether the callee copies is its own business"
             );
@@ -302,7 +302,7 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
             if( bare != spelled && ast_.kind( bare ) != Node_kind::Mode_type )
             {
                 reporter_.error_at(
-                    ast_.span( spelled ),
+                    const_keyword( spelled ),
                     "a `const` here binds nothing, because a function type has no callee",
                     "remove it - whether the callee copies is its own business"
                 );
@@ -405,11 +405,29 @@ bool Annotations::resolve_type_arguments(
     return true;
 }
 
+Span Annotations::const_keyword( Node_id const_type ) const
+{
+    const Span const_type_span = ast_.span( const_type );
+    const Span element_span    = ast_.span( ast_.child( const_type, 0 ) );
+
+    const u32 const_length = narrow_cast<u32>( interner_.text( Interner::keyword( Keyword::Const ) ).size() );
+
+    if( element_span.start > const_type_span.start )
+    {
+        return Span { const_type_span.file, const_type_span.start, const_type_span.start + const_length };
+    }
+    else
+    {
+        return Span { const_type_span.file, const_type_span.end - const_length, const_type_span.end };
+    }
+}
+
 } // namespace sema
 } // namespace keel
 #ifdef ENABLE_UNIT_TESTS
 #include <catch2/catch_test_macros.hpp>
 
+#include <algorithm>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -650,6 +668,41 @@ TEST_CASE( "annotations_refuse_const_inside_a_function_type", "[sema][annotation
         REQUIRE( p.table().is_error( type ) );
         REQUIRE( p.errors() == 1 );
     }
+}
+
+// The caret belongs on the word being refused, not on the type it wraps: `^^^^^` and no wider.
+TEST_CASE( "annotations_underline_only_the_const_a_function_type_refuses", "[sema][annotation][const][m7]" )
+{
+    std::string_view source;
+    std::string_view at;
+
+    SECTION( "a leading one on the return" )
+    {
+        source = "void g( fn( i32 ) -> const i32 a ) { }";
+        at     = ":1:22";
+    }
+
+    SECTION( "a trailing one on the return" )
+    {
+        source = "void g( fn( i32 ) -> i32 const a ) { }";
+        at     = ":1:26";
+    }
+
+    SECTION( "one on a parameter" )
+    {
+        source = "void g( fn( const i32 ) -> i32 a ) { }";
+        at     = ":1:13";
+    }
+
+    Written p( source );
+    p.annotations().type_of( p.parameter_annotation( 0, 0 ) );
+
+    const std::string rendered = p.rendered();
+
+    INFO( rendered );
+    REQUIRE( p.errors() == 1 );
+    REQUIRE( rendered.find( at ) != std::string::npos );
+    REQUIRE( std::count( rendered.begin(), rendered.end(), '^' ) == 5 );
 }
 
 // D31's five parameter forms are five types, because two of them differ in how the call is made

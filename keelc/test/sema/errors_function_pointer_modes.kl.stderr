@@ -2,7 +2,7 @@ error: a `const` here binds nothing, because a function type has no callee
  --> sema/errors_function_pointer_modes.kl:7:9
   |
 7 |     fn( const i32 ) -> i32     a;
-  |         ^^^^^^^^^ remove it - whether the callee copies is its own business
+  |         ^^^^^ remove it - whether the callee copies is its own business
 
 error: `const` comes before the mode
  --> sema/errors_function_pointer_modes.kl:8:13

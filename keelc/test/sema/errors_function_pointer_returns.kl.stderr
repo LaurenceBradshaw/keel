@@ -20,6 +20,6 @@ error: a `const` here binds nothing, because a function type has no callee
   --> sema/errors_function_pointer_returns.kl:17:29
    |
 17 | void promises( fn( i32 ) -> const i32 p )
-   |                             ^^^^^^^^^ remove it - whether the callee copies is its own business
+   |                             ^^^^^ remove it - whether the callee copies is its own business
 
 4 errors generated
