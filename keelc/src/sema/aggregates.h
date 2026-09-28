@@ -68,8 +68,9 @@ private:
     Type_table&     table_;
     Reporter&       reporter_;
 
-    std::vector<Node_id>    struct_order_; // dependencies first; also the "already proved acyclic" set
-    std::unordered_set<u32> owning_;       // filled by compute_owning, handed to Types
+    std::vector<Node_id>    struct_order_;      // dependencies first
+    std::vector<Node_id>    containment_order_; // every aggregate, generics too, dependencies first; the proved-acyclic set
+    std::unordered_set<u32> owning_;            // filled by compute_owning, handed to Types
 };
 
 } // namespace keel::sema

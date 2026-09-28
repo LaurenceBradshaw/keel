@@ -72,7 +72,7 @@ bool Aggregates::contains_itself( Node_id decl, std::vector<Node_id>& path )
 {
     // Being in the order *is* being done: a struct lands there only once everything it contains
     // has, so membership and "proved acyclic" are the same fact.
-    if( std::find( struct_order_.begin(), struct_order_.end(), decl ) != struct_order_.end() )
+    if( std::find( containment_order_.begin(), containment_order_.end(), decl ) != containment_order_.end() )
     {
         return false;
     }
@@ -116,8 +116,9 @@ bool Aggregates::contains_itself( Node_id decl, std::vector<Node_id>& path )
     }
 
     // The DFS post-order: every struct after everything it contains, which is the order C needs for
-    // by-value members. A generic aggregate is walked for the cycle above and then left out - it has
-    // no layout of its own, and what gets ordered and emitted is each instantiation.
+    // by-value members. A generic aggregate is walked for the cycle above and then left out of this
+    // order, but still recorded in containment_order_.
+    containment_order_.push_back( decl );
     if( !is_generic( ast_, decl ) )
     {
         struct_order_.push_back( decl );
@@ -128,9 +129,9 @@ bool Aggregates::contains_itself( Node_id decl, std::vector<Node_id>& path )
 
 void Aggregates::compute_owning()
 {
-    // struct_order_ is the DFS post-order, so a field's answer is already in owning_ when its owner
+    // containment_order_ is the DFS post-order, so a field's answer is already in owning_ when its owner
     // is reached - which is what makes one forward pass enough. A cycle never enters the order.
-    for( const Node_id decl : struct_order_ )
+    for( const Node_id decl : containment_order_ )
     {
         bool is_owning = keel::has_destructor( ast_, decl );
 
@@ -432,6 +433,21 @@ TEST_CASE( "aggregates_own_through_a_destructor_and_through_a_field", "[sema][ag
     REQUIRE( s.aggregates().owns( s.type_of( s.declaration( 1 ) ) ) );  // a field that owns
     REQUIRE( !s.aggregates().owns( s.type_of( s.declaration( 2 ) ) ) ); // neither
     REQUIRE( !s.aggregates().owns( Type_id {} ) );
+}
+
+// Left out of the order is not left out of the owning set: every instance of `Box<T>` runs its
+// destructor, so the declaration owns whatever `T` is.
+TEST_CASE( "aggregates_own_through_a_generic_destructor", "[sema][aggregates][owning][generic]" )
+{
+    // Holder first, so only the containment order - not source order - puts Box ahead of it.
+    Shapes s( "class Holder { Box b; };\nclass Box<T> { u64 n; ~Box() { } };\nstruct Plain<T> { T v; };" );
+
+    s.aggregates().order_structs();
+    s.aggregates().compute_owning();
+
+    REQUIRE( s.aggregates().owns( s.type_of( s.declaration( 1 ) ) ) );  // generic, its own destructor
+    REQUIRE( s.aggregates().owns( s.type_of( s.declaration( 0 ) ) ) );  // ordered after the generic it holds
+    REQUIRE( !s.aggregates().owns( s.type_of( s.declaration( 2 ) ) ) ); // a bare `T` owns nothing here
 }
 
 TEST_CASE( "aggregates_find_a_member_a_method_and_a_field", "[sema][aggregates]" )

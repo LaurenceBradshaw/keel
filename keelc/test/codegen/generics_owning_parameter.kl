@@ -1,0 +1,72 @@
+// A generic class with a destructor owns at every instance, so a bare parameter of one is the
+// read-only borrow D2 makes of any owning type: it travels as an address and the callee drops
+// nothing. The same holds one level out, for a class whose field is such an instance, and through
+// a function pointer, whose typedef has to agree with the prototype. Run under KEEL_VALGRIND=1.
+
+i32 destroyed = 0;
+
+class Box<T>
+{
+    public u64 n;
+
+    Box( u64 m )
+    {
+        n = m;
+    }
+
+    ~Box()
+    {
+        destroyed = destroyed + 1;
+    }
+};
+
+// Owns through its field rather than a destructor of its own.
+class Holder<T>
+{
+    public Box<T> inner;
+
+    Holder( u64 m )
+    {
+        inner = Box<T>( m );
+    }
+};
+
+u64 peek( Box<u64> b )
+{
+    return b.n;
+}
+
+u64 look( Holder<u64> h )
+{
+    return h.inner.n;
+}
+
+// Everything is dropped when this returns, so main can count it.
+i32 borrow()
+{
+    Box<u64>    b = Box<u64>( 7 );
+    Holder<u64> h = Holder<u64>( 5 );
+
+    fn( Box<u64> ) -> u64 p = &peek;
+
+    if( peek( b ) != 7 ) { return 1; }
+    if( p( b ) != 7 ) { return 2; }
+    if( look( h ) != 5 ) { return 3; }
+
+    // A borrow is not a drop: three calls, and nothing destroyed yet.
+    if( destroyed != 0 ) { return 4; }
+
+    return 0;
+}
+
+i32 main()
+{
+    i32 result = borrow();
+
+    if( result != 0 ) { return result; }
+
+    // One Box of its own and one inside the Holder, each destroyed once.
+    if( destroyed != 2 ) { return 5; }
+
+    return 0;
+}

@@ -1692,12 +1692,8 @@ TEST_CASE( "emit_kir_spells_an_owning_parameter_as_an_address", "[codegen][kir][
         REQUIRE( g.has( "typedef uint64_t ( *kl__fn__FM1BE3u64 )( struct kl__B );" ) );
     }
 
-    // `Types::is_owning` and `instance_owns` are two questions and this is the one type that tells
-    // them apart: no generic declaration ever enters the owning set, so a `Box<u64>` with a
-    // destructor is passed by value - by the prototype and therefore by the typedef. That is wrong
-    // and is recorded as its own defect; what is pinned here is that the two agree, because a
-    // typedef spelling a pointer against a by-value prototype is what `cc` refuses. Re-record this
-    // when the defect is fixed, and expect a pointer on both sides.
+    // A generic declaration with a destructor owns at every instance, so `Box<u64>` travels as an
+    // address - and the typedef must say so too, or `cc` refuses the pointer against the prototype.
     SECTION( "and a generic aggregate is spelled the way its prototype is" )
     {
         const Generated g( "class Box<T> { public u64 n; Box( u64 m ) { n = m; } ~Box() { n = 0; } };\n"
@@ -1711,8 +1707,8 @@ TEST_CASE( "emit_kir_spells_an_owning_parameter_as_an_address", "[codegen][kir][
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "typedef uint64_t ( *kl__fn__F3BoxI3u64EE3u64 )( struct kl__Box__I3u64E );" ) );
-        REQUIRE( g.has( "uint64_t kl__peek__3BoxI3u64E( struct kl__Box__I3u64E );" ) );
+        REQUIRE( g.has( "typedef uint64_t ( *kl__fn__F3BoxI3u64EE3u64 )( struct kl__Box__I3u64E* );" ) );
+        REQUIRE( g.has( "uint64_t kl__peek__3BoxI3u64E( struct kl__Box__I3u64E* );" ) );
     }
 
     // The boundary: a class owns only when something in it does, and a value parameter is still a

@@ -153,7 +153,7 @@ when `[*]T` arrives.
 produces was written up under the mode work as an observation *deliberately not scheduled*, on the
 ground that both C and LLVM fold it for free. Under this rule that ground is gone: it is an
 IR-level simplification, so it is Keel's, and it is the first entry on the KIR peephole list rather
-than an argument for leaving the list empty.
+than an argument for leaving the list empty. That list is now M11's row in §9 (2026-09-28).
 
 **The C backend is in the same position today, and cannot express it.** The golden runner passes no
 `-O` at all, which happens to match this rule; but a release build through C has no way to ask for
@@ -1489,6 +1489,7 @@ milestone is complete until its acceptance program is a passing golden test.
 | **M8** | **The many-item pointer `[*]T` (D27), first and on its own**, then modules (`import`), multi-file compilation, then **static fields**, then begin `Vector` and `String` **in Keel**. **Static fields scheduled here (2026-09-25)**, and they are the audit's own failure repeating: M7's row and its §15 debt both deferred type-scoped *data* to "M8's modules and globals" — a destination that names this milestone's *contents* rather than its row, so no row carried it, which is exactly what the 2026-09-24 scheduling audit was run to catch and is a fifth instance it missed. They sit **after modules** because modules are what they actually wait on: storage is not the open question — file-scope variables already declare, fold, check and emit end to end, and `mangle_local` suffixes the node id so two types each holding a `count` cannot collide — **linkage** is, and internal linkage was deferred into M7's access-control slice rather than into the feature. The part that is genuinely this milestone's size is **one storage per instantiation** on a generic aggregate, which the monomorphisation worklist has to emit rather than a walk over the root, and `Vector<T>` is the first type to want one. The design is worked out in §15 so it is not re-derived: a static field is a `Var_decl` in the member list, **not a flagged `Field_decl`**. **Static method pointers are scheduled here (2026-09-26)**: `&C::make` needs no receiver and is `fn( args ) -> ret`, so nothing about the pointer itself waits. What waits is a test that tells it from a free function pointer behind a `::`, and only a static field gives it one - see §15. Carried as a row rather than as a sentence, which is the 2026-09-24 audit's own rule. **An editor language for Keel is scheduled here as well (2026-09-27), and before `Vector` and `String`**: the library is the first Keel anybody writes at length, and writing it against a grammar that reads `->` as member access and `fn` as an identifier is the wrong order. It waits for M7 only because M7 is what settles the spellings a grammar would have to encode twice otherwise - `fn( const ref T ) -> U`, `field( C ) -> T` and the four modes. See §15 for what it has to contain and what it lets us delete. | `alloc<T>( n )` yields a `[*]T`, `p[ i ]` and `p + i` work on one and are still refused on a `*T`, and a `[*]u8` walked out of bounds is the author's problem rather than a type error. Then a two-module program. Then a `static` field shared across two objects of one type, written from a method and read from a static method, absent from the emitted C struct, and one on a generic type with separate storage per instantiation. A `.kl` file opens as Keel rather than as C++, with `fn`, `field`, `where` and the four modes highlighted as keywords, and saving one changes not a byte. Then a `Vector<i32>` that grows and frees. And `&C::make` on a static method that reads a static field, stored in a variable and called through it. | **Whether the design actually works** |
 | **M9** | **Error handling.** `try` as a prefix keyword (D6's leaning, §12), `Result<T, E>` as an ordinary generic `enum` in the library rather than a language type, and the one real language addition: **§12's anonymous error union**, `Result<Config, Io_error \| Parse_error>` — flattening so `( A \| B ) \| C` is `A \| B \| C`, order-independence so `A \| B` and `B \| A` are one type, `try` widening into any union containing the source type, and `switch` matching leaf variants with exhaustiveness across a union of unions. | A function returning `Result<Config, Io_error \| Parse_error>` propagates with `try` from a callee returning `Result<String, Io_error>` and no conversion is written. `switch` over the union matches leaf variants; a missing arm is a compile error naming it. `A \| B` and `B \| A` select the same instantiation and mangle to one symbol. | **The largest type-system addition in the document** |
 | **M10** | **Compiler flags.** Nothing above says how a warning is turned on, off or into an error, and the generated C inherits whatever `$CC` was given rather than anything Keel decided: `i32 f( i32 a ) { return 0; }` emits an unused parameter and fails under the golden runner's default `-Werror`, although the emitted code is correct and Keel itself said nothing. **The flag surface is the deliverable**: which diagnostics are warnings, which are errors, which can be silenced, and the rule that **a `-W` flag reaches `$CC` only when Keel was asked for the same thing** - so the C compiler never refuses code Keel accepted. | `keelc --werror=unused-parameter` refuses that program with Keel's own diagnostic, and without the flag both Keel and the generated C accept it. The golden runner's C flags follow what each fixture asked for rather than one global default. | Diagnostics as an interface |
+| **M11** | **KIR passes (scheduled 2026-09-28).** The simplifications §2.2 says are Keel's rather than a backend's, written against KIR so the C backend and any later one inherit them. It opens with the two already owed: **the redundant drop-flag write** - since the 2026-09-28 drop-flag fix every flag is cleared at the top of the entry block, so a flag whose local also has a `storage_live` there is written false twice, a dead store; and **the `&(*x)` peephole** a borrow-returning call produces. Then dead store elimination in general, copy propagation and constant propagation, and §7's drop-flag elimination - a flag whose value is known on every path to its join needs no storage. §2.2's larger list (promotion to SSA, inlining, GVN, loop passes) is the backlog behind these and waits for a backend that needs it. After M10 because nothing above it is blocked on speed, and because a pass is only safe to add once the goldens it rewrites are ones someone reads. | `codegen/drop_flags.kl` emits each flag's false write once, `codegen/borrows.kl` emits no `&( *`, and every other golden changes only by lines removed. Each pass is its own commit with its own fixture, the full suite passes under `KEEL_VALGRIND=1`, and a unit test shows each pass leaving alone the case that looks like its target and is not. | Transformations that must keep the ownership invariants |
 
 **M3 is where this stops being a toy** — it is the first thing C cannot do for
 us. **M4 is where we learn whether the ownership model is real.** **M5.5 is where
@@ -6145,8 +6146,11 @@ else will name them.
    **Done (2026-09-28)** - see the defect paragraph under slice 3.
 2. **The generic aggregate that owns and is passed by value.** Recorded under slice 1 as well,
    found while probing slice 3. `compute_owning` never sees a generic declaration, so `Box<u64>`
-   with a destructor is copied into a bare parameter that D2 says is a borrow. It is `Places` and
-   `Bounds` rather than the emitter, and the emitter's three sites follow whatever they answer.
+   with a destructor is copied into a bare parameter that D2 says is a borrow. ~~It is `Places` and
+   `Bounds` rather than the emitter, and the emitter's three sites follow whatever they answer.~~
+   **Corrected 2026-09-28, before implementing:** it is `Aggregates`, below all of them - see the
+   correction under the defect paragraph.
+   **Done (2026-09-28).**
 3. **The Copyable refusal reports at the declaration, not the use site.** `&unbounded<i32>` puts the
    caret under the *declaration's* parameter, which is the only place the offending type is written
    but not the place the mistake was made. `written_signature` already hands back which parameter
@@ -6398,13 +6402,13 @@ block, each at its guarded local's span, before any of the block's own statement
 writes and the `#line` directives that go with them, and `KEEL_VALGRIND=1` is silent on all 194.
 **What it leaves behind, deliberately:** a flagged local that also has a `storage_live` is now
 written false twice, which is a dead store for a KIR pass to remove rather than a case to special
-here; and the `#line` directives at a function's top step between the locals' lines, which is
-cosmetic. **Mutation:** writing `true`, clearing in the last block instead of the entry, never
-running the loop, and `break` for `continue` are each killed by the unit test and the goldens.
-Clearing at the top of *every* block survives the unit test - it checks the entry writes are
-present, not that they are absent elsewhere - and is killed only by two fixtures' exit codes;
-accepted rather than tightened. Borrowing the flag's own span instead of the guarded local's was
-not run.
+here - **scheduled as M11's first entry (2026-09-28)**; and the `#line` directives at a function's
+top step between the locals' lines, which is cosmetic. **Mutation:** writing `true`, clearing in the
+last block instead of the entry, never running the loop, and `break` for `continue` are each killed
+by the unit test and the goldens. Clearing at the top of *every* block survives the unit test - it
+checks the entry writes are present, not that they are absent elsewhere - and is killed only by two
+fixtures' exit codes; accepted rather than tightened. Borrowing the flag's own span instead of the
+guarded local's was not run.
 
 **Second defect, found while probing slice 3 on 2026-09-28 and also older than function pointers: a
 generic aggregate that owns is passed to a bare parameter by value.** `Aggregates::compute_owning`
@@ -6422,6 +6426,39 @@ consistently. The day this is fixed both sides move together, which is why they 
 predicate. **Scheduled (2026-09-28)** beside the drop flag, between step 3 and step 4 of the order
 above: not before slice 3, which needed only that the two sides agree, but before slice 6, which
 would otherwise put a receiver in parameter 0 on top of it.
+
+**Corrected 2026-09-28, before implementing: the fix is one layer lower than written, and it is not
+`instance_owns`.** `Places` and `Bounds` do not decide ownership - both read `Aggregates::owns`, and
+the emitter's three sites read `Types::is_owning`, which is the same `owning_` set handed over by
+`take_owning`. So the set is the one site, and filling it moves the checker, the lowerer and the
+emitter together, which is what slice 3 required. `instance_owns` is the wrong predicate for
+parameter passing: `Places` records a parameter's address once, on the annotation of a body checked
+once, so an answer that varies per instance would disagree with the prototype the first time a
+generic function takes a `Box<T>`. The declaration's answer is also simply right for the recorded
+case, since a destructor on `Box<T>` runs for every `T`. The fix: `contains_itself` keeps a generic
+declaration out of `struct_order_` for layout but still records it in post-order, and
+`compute_owning` walks that fuller order, so `class Holder<T> { Box<T> b; }` is reached after `Box`.
+Four symptoms, one cause, all confirmed on the current binary: `peek( Box<u64> b )` takes a copy;
+`twice<Box<u64>>` passes `where T : Copyable`; `struct S { Box<u64> b; }` passes D29; and
+`Holder<u64>` is copied too. **Not closed by it**: `class Wrap<T> { T v; }` at an owning `T` owns
+only through its type argument, which no declaration-keyed set can say; that is a `Bounds` question
+about instances and is left for its own entry.
+
+**Done (2026-09-28).** `contains_itself` records every aggregate in `containment_order_`, generic or
+not, which is also now the proved-acyclic set; `struct_order_` still holds only what has a layout;
+`compute_owning` walks the fuller order. Test `aggregates_own_through_a_generic_destructor`. The
+emit_kir section *"and a generic aggregate is spelled the way its prototype is"* went red as planned
+and is re-recorded with a pointer on both sides. New fixtures:
+`codegen/generics_owning_parameter.kl` (a bare `Box<u64>`, a `Holder<u64>` and a function pointer,
+all by address, nothing dropped by a callee, each object destroyed once) and
+`sema/errors_generic_owning.kl` (the `Copyable` refusal and D29 for a struct holding either). No
+existing golden changed, and `KEEL_VALGRIND=1` is silent on all 196. **Mutation:** not recording a
+generic, walking `struct_order_` in `compute_owning`, and skipping generics inside it are killed by
+the unit tests and goldens. Recording in pre-order *survived* the first test, whose source already
+declared `Box` before `Holder`, so source order did the work; the test now declares `Holder` first
+and kills it. Checking `struct_order_` for the early return survives and is equivalent - a generic
+is walked again and recorded twice, and inserting into the owning set twice changes nothing - so it
+is accepted. The `Wrap<T>` residual above is untouched.
 
 ### Mode slice 2: modes in a function type, the return - done (2026-09-28)
 
@@ -6599,7 +6636,8 @@ gotos and prunes blocks; it has no rvalue-level peephole, so this reaches C as `
 was first written up here as an observation *deliberately not scheduled*, on the ground that both C
 and a future backend fold it for free. **§2.2's rule reverses that**: an optimisation available at
 the IR level is Keel's, so this is the first entry on the KIR peephole list rather than an argument
-for leaving the list empty. Unscheduled still, but owed rather than declined.
+for leaving the list empty. ~~Unscheduled still, but owed rather than declined.~~ **Scheduled in
+M11 (2026-09-28)**, beside the redundant drop-flag write.
 
 ### Debts to pay along the way
 

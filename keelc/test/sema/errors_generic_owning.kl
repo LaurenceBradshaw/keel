@@ -1,0 +1,49 @@
+// A generic class with a destructor owns at every instance, so each rule about owning types
+// applies to its instances exactly as to a concrete class: no `Copyable` bound admits one, and no
+// struct may contain one - directly or through a class that holds one.
+
+class Box<T>
+{
+    public u64 n;
+
+    Box( u64 m )
+    {
+        n = m;
+    }
+
+    ~Box()
+    {
+    }
+};
+
+class Holder<T>
+{
+    public Box<T> inner;
+};
+
+T twice<T>( T a ) where T : Copyable
+{
+    T b = a;
+    return b;
+}
+
+struct Direct
+{
+    Box<u64> b;
+};
+
+struct Through
+{
+    Holder<u64> h;
+};
+
+u64 copies()
+{
+    Box<u64> c = twice<Box<u64>>( Box<u64>( 3 ) );
+    return c.n;
+}
+
+i32 main()
+{
+    return 0;
+}
