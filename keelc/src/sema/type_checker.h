@@ -220,6 +220,12 @@ bool enum_has_payload( const Ast& ast, Node_id enum_decl );
 
 Keyword parameter_mode( const Ast& ast, Node_id decl );
 
+// A mode has two spellings: a `Param_mode` inside a function type, and the `Keyword` the source
+// writes. `const ref` is the one form where the two disagree - it is a mode of its own in a type and
+// takes no marker at a call, which is D31's rule - so neither direction is a rename of the other.
+Param_mode parameter_mode_of( const Ast& ast, Node_id param );
+Keyword    call_marker_of( Param_mode mode );
+
 bool is_borrowed_binding( const Ast& ast, const Types& types, Node_id decl );
 bool is_const_binding( const Ast& ast, Node_id decl );
 

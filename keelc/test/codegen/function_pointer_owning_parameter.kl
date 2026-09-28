@@ -1,0 +1,63 @@
+// An owning type reached through a function pointer. Nothing here is written as a mode: `B` owns a
+// resource, so §8 hands it over as an address, and the typedef has to say the same thing the
+// prototype does. `move B` is the contrast - it transfers, so it travels by value and the callee
+// destroys it - and the two spellings must therefore be two typedefs.
+
+class B
+{
+public
+    u64 n;
+    B( u64 x )
+    {
+        n = x;
+    }
+    ~B()
+    {
+        n = 0;
+    }
+};
+
+u64 peek( B b )
+{
+    return b.n;
+}
+
+u64 takes( move B b )
+{
+    return b.n;
+}
+
+i32 main()
+{
+    B b = B( 7 );
+
+    fn( B ) -> u64      p = &peek;
+    fn( move B ) -> u64 q = &takes;
+
+    // The caller still owns `b`, so this is a borrow it did not have to write, and reading it
+    // twice is what proves nothing was transferred.
+    if( p( b ) != 7 )
+    {
+        return 1;
+    }
+
+    if( p( b ) != 7 )
+    {
+        return 2;
+    }
+
+    // A temporary is a place too: its address is taken and it is destroyed at the end of the
+    // statement rather than by the callee.
+    if( p( B( 5 ) ) != 5 )
+    {
+        return 3;
+    }
+
+    // And this one does transfer, so `b` is gone afterwards and only the callee destroys it.
+    if( q( move b ) != 7 )
+    {
+        return 4;
+    }
+
+    return 0;
+}

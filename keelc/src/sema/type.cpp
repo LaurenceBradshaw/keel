@@ -8,6 +8,30 @@
 
 namespace keel
 {
+
+namespace
+{
+std::string param_spelling( Param_mode mode )
+{
+    switch( mode )
+    {
+    case Param_mode::Value:
+        return "";
+    case Param_mode::Ref:
+        return "ref ";
+    case Param_mode::Const_ref:
+        return "const ref ";
+    case Param_mode::Out:
+        return "out ";
+    case Param_mode::Move:
+        return "move ";
+    default:
+        assert( false );
+        return "";
+    }
+}
+} // namespace
+
 Type_table::Type_table()
 {
     // Since slot 0 is reserved for "invalid", push a dummy entry
@@ -83,13 +107,14 @@ Type_id Type_table::pointer_to( Type_id element )
     return id;
 }
 
-Type_id Type_table::function( Type_id return_type, std::span<const Type_id> parameters )
+Type_id Type_table::function( Type_id return_type, std::span<const Parameter> parameters, Param_mode return_mode )
 {
     for( const Type_id id : functions_ )
     {
         const Type& described = get( id );
 
-        if( described.element != return_type || described.arguments.size() != parameters.size() )
+        if( described.element != return_type || described.arguments.size() != parameters.size() ||
+            described.return_mode != return_mode )
         {
             continue;
         }
@@ -98,7 +123,7 @@ Type_id Type_table::function( Type_id return_type, std::span<const Type_id> para
 
         for( std::size_t i = 0; i < parameters.size(); ++i )
         {
-            if( described.arguments[i] != parameters[i] )
+            if( described.arguments[i] != parameters[i].type || described.modes[i] != parameters[i].mode )
             {
                 match = false;
                 break;
@@ -111,21 +136,39 @@ Type_id Type_table::function( Type_id return_type, std::span<const Type_id> para
         }
     }
 
-    std::vector<Type_id>& args = arguments_.emplace_back( parameters.begin(), parameters.end() );
+    std::vector<Param_mode> modes;
+    std::vector<Type_id>    args;
+
+    modes.reserve( parameters.size() );
+    args.reserve( parameters.size() );
+
+    for( const Parameter& param : parameters )
+    {
+        modes.push_back( param.mode );
+        args.push_back( param.type );
+    }
+
+    // References into the table's own storage, not the locals: those have been moved from, and the
+    // spans the Type keeps have to outlive this call.
+    const std::vector<Param_mode>& stored_modes = modes_.emplace_back( std::move( modes ) );
+    const std::vector<Type_id>&    stored_args  = arguments_.emplace_back( std::move( args ) );
 
     // The source spelling, because this is what every diagnostic naming the type prints.
     std::string spelling( "fn(" );
 
-    for( std::size_t i = 0; i < args.size(); ++i )
+    for( std::size_t i = 0; i < stored_args.size(); ++i )
     {
         spelling += i == 0 ? " " : ", ";
-        spelling += name( args[i] );
+        spelling += param_spelling( stored_modes[i] );
+        spelling += name( stored_args[i] );
     }
 
-    spelling += args.empty() ? ") -> " : " ) -> ";
+    spelling += stored_args.empty() ? ") -> " : " ) -> ";
+    spelling += param_spelling( return_mode );
     spelling += name( return_type );
 
-    const Type_id id = add( { Type_kind::Function, 0, false, return_type, Node_id {}, args }, spelling );
+    const Type_id id =
+        add( { Type_kind::Function, 0, false, return_type, Node_id {}, stored_args, stored_modes, return_mode }, spelling );
     functions_.push_back( id );
     return id;
 }
@@ -253,10 +296,6 @@ Type_id Type_table::substitute( Type_id type, const Bindings& bindings )
         {
             return enumeration( described.declaration, substituted, base_name( type ), described.element );
         }
-        else if( described.kind == Type_kind::Function )
-        {
-            return function( described.element, substituted );
-        }
         else
         {
             // The *base* name, not this type's: `name( type )` is the whole rendering - `Box<T>` - and
@@ -266,16 +305,16 @@ Type_id Type_table::substitute( Type_id type, const Bindings& bindings )
     }
     case Type_kind::Function:
     {
-        std::vector<Type_id> substituted;
+        std::vector<Parameter> substituted;
 
         substituted.reserve( described.arguments.size() );
 
-        for( const Type_id argument : described.arguments )
+        for( std::size_t i = 0; i < described.arguments.size(); ++i )
         {
-            substituted.push_back( substitute( argument, bindings ) );
+            substituted.push_back( Parameter { substitute( described.arguments[i], bindings ), described.modes[i] } );
         }
 
-        return function( substitute( described.element, bindings ), substituted );
+        return function( substitute( described.element, bindings ), substituted, described.return_mode );
     }
     default:
         return type;
@@ -334,6 +373,12 @@ bool Type_table::deduce( Type_id pattern, Type_id actual, Bindings& into ) const
         return true;
     case Type_kind::Function:
     {
+        // a mode is part of the signature, and substitution would never turn one into the other.
+        if( p.return_mode != a.return_mode )
+        {
+            return false;
+        }
+
         if( !deduce( p.element, a.element, into ) || p.arguments.size() != a.arguments.size() )
         {
             return false;
@@ -341,6 +386,13 @@ bool Type_table::deduce( Type_id pattern, Type_id actual, Bindings& into ) const
 
         for( std::size_t i = 0; i < p.arguments.size(); ++i )
         {
+            // A mode is part of the signature, so two that differ only in one are not each
+            // other's instance - and substitution would never turn the pattern into the actual.
+            if( p.modes[i] != a.modes[i] )
+            {
+                return false;
+            }
+
             if( !deduce( p.arguments[i], a.arguments[i], into ) )
             {
                 return false;
@@ -811,6 +863,20 @@ Type_id named( const Type_table& t, std::string_view name )
     return name[0] == 'f' ? t.floating( width ) : t.integer( width, name[0] == 'i' );
 }
 
+// Most signature fixtures are about identity rather than modes, so one spelling for a by-value
+// parameter list keeps them readable. A case that is about a mode writes its `Parameter`s out.
+std::vector<Parameter> by_value( std::initializer_list<Type_id> types )
+{
+    std::vector<Parameter> parameters;
+
+    for( const Type_id type : types )
+    {
+        parameters.push_back( Parameter { type } );
+    }
+
+    return parameters;
+}
+
 } // namespace
 
 TEST_CASE( "type_id_default_is_invalid", "[sema][type]" )
@@ -1264,27 +1330,50 @@ TEST_CASE( "type_table_interns_a_function_type_by_its_signature", "[sema][type][
     const Type_id i32 = table.integer( 32, true );
     const Type_id f64 = table.floating( 64 );
 
-    const Type_id takes_i32 = table.function( i32, std::array { i32 } );
+    const Type_id takes_i32 = table.function( i32, by_value( { i32 } ) );
 
     SECTION( "the same signature is the same type" )
     {
-        REQUIRE( table.function( i32, std::array { i32 } ) == takes_i32 );
+        REQUIRE( table.function( i32, by_value( { i32 } ) ) == takes_i32 );
     }
 
     SECTION( "the return type is part of it" )
     {
-        REQUIRE( table.function( f64, std::array { i32 } ) != takes_i32 );
+        REQUIRE( table.function( f64, by_value( { i32 } ) ) != takes_i32 );
     }
 
     SECTION( "so is the arity" )
     {
-        REQUIRE( table.function( i32, std::array { i32, i32 } ) != takes_i32 );
+        REQUIRE( table.function( i32, by_value( { i32, i32 } ) ) != takes_i32 );
         REQUIRE( table.function( i32, {} ) != takes_i32 );
     }
 
     SECTION( "and so is the order" )
     {
-        REQUIRE( table.function( i32, std::array { i32, f64 } ) != table.function( i32, std::array { f64, i32 } ) );
+        REQUIRE( table.function( i32, by_value( { i32, f64 } ) ) != table.function( i32, by_value( { f64, i32 } ) ) );
+    }
+
+    // Five forms, and two pairs of them differ in nothing else: `T` and `const ref T` agree on what
+    // a call site writes, `ref T` and `out T` on the C they become.
+    SECTION( "and so is each parameter's mode" )
+    {
+        std::vector<Type_id> seen;
+
+        for( const Param_mode mode :
+             { Param_mode::Value, Param_mode::Ref, Param_mode::Const_ref, Param_mode::Out, Param_mode::Move } )
+        {
+            seen.push_back( table.function( i32, std::array { Parameter { i32, mode } } ) );
+        }
+
+        REQUIRE( seen[0] == takes_i32 );
+
+        for( std::size_t i = 0; i < seen.size(); ++i )
+        {
+            for( std::size_t j = i + 1; j < seen.size(); ++j )
+            {
+                REQUIRE( seen[i] != seen[j] );
+            }
+        }
     }
 
     SECTION( "it is a function and none of the other kinds" )
@@ -1310,11 +1399,11 @@ TEST_CASE( "type_table_interns_a_function_type_by_its_signature", "[sema][type][
         Type_id interned {};
 
         {
-            std::vector<Type_id> caller_local { i32 };
+            std::vector<Parameter> caller_local { Parameter { i32 } };
 
             interned = table.function( i32, caller_local );
 
-            caller_local[0] = f64;
+            caller_local[0].type = f64;
         }
 
         REQUIRE( table.get( interned ).arguments.size() == 1 );
@@ -1332,23 +1421,43 @@ TEST_CASE( "type_table_composes_a_function_type_name", "[sema][type][m7]" )
     const Type_id f64 = table.floating( 64 );
 
     REQUIRE(
-        table.name( table.function( table.builtin( Type_kind::Bool ), std::array { i32, f64 } ) ) == "fn( i32, f64 ) -> bool"
+        table.name( table.function( table.builtin( Type_kind::Bool ), by_value( { i32, f64 } ) ) ) == "fn( i32, f64 ) -> bool"
     );
     REQUIRE( table.name( table.function( table.builtin( Type_kind::Void ), {} ) ) == "fn() -> void" );
 
     SECTION( "and nests as written" )
     {
-        const Type_id inner = table.function( i32, std::array { i32 } );
+        const Type_id inner = table.function( i32, by_value( { i32 } ) );
 
-        REQUIRE( table.name( table.function( i32, std::array { inner } ) ) == "fn( fn( i32 ) -> i32 ) -> i32" );
-        REQUIRE( table.name( table.function( inner, std::array { i32 } ) ) == "fn( i32 ) -> fn( i32 ) -> i32" );
+        REQUIRE( table.name( table.function( i32, by_value( { inner } ) ) ) == "fn( fn( i32 ) -> i32 ) -> i32" );
+        REQUIRE( table.name( table.function( inner, by_value( { i32 } ) ) ) == "fn( i32 ) -> fn( i32 ) -> i32" );
+    }
+
+    // The mode is written where the parameter is, which is what a diagnostic has to print for the
+    // two forms that are otherwise spelled alike.
+    SECTION( "and writes each mode where the parameter is" )
+    {
+        struct Case
+        {
+            Param_mode  mode;
+            const char* spelling;
+        };
+
+        for( const Case c :
+             { Case { Param_mode::Ref, "fn( ref i32 ) -> i32" },
+               Case { Param_mode::Const_ref, "fn( const ref i32 ) -> i32" },
+               Case { Param_mode::Out, "fn( out i32 ) -> i32" },
+               Case { Param_mode::Move, "fn( move i32 ) -> i32" } } )
+        {
+            REQUIRE( table.name( table.function( i32, std::array { Parameter { i32, c.mode } } ) ) == c.spelling );
+        }
     }
 
     // composed_ is indexed by Type_id, in lockstep with types_. One extra append renames every type
     // interned after it, which nothing in the table itself would notice.
     SECTION( "every other type still has its own name afterwards" )
     {
-        table.function( i32, std::array { i32 } );
+        table.function( i32, by_value( { i32 } ) );
 
         REQUIRE( table.name( table.pointer_to( table.integer( 8, false ) ) ) == "u8*" );
         REQUIRE( table.name( table.structure( Node_id { 7 }, {}, "Point" ) ) == "Point" );
@@ -1358,7 +1467,7 @@ TEST_CASE( "type_table_composes_a_function_type_name", "[sema][type][m7]" )
     // A composed name is not a spelling a program may write in place of a builtin's.
     SECTION( "and it is not a spelling" )
     {
-        table.function( i32, std::array { i32 } );
+        table.function( i32, by_value( { i32 } ) );
 
         REQUIRE_FALSE( table.from_spelling( "fn( i32 ) -> i32" ).is_valid() );
     }
@@ -1373,8 +1482,8 @@ TEST_CASE( "type_table_a_function_type_converts_to_nothing", "[sema][type][m7]" 
     const Type_id i32 = table.integer( 32, true );
     const Type_id f64 = table.floating( 64 );
 
-    const Type_id to_i32 = table.function( i32, std::array { i32 } );
-    const Type_id to_f64 = table.function( f64, std::array { i32 } );
+    const Type_id to_i32 = table.function( i32, by_value( { i32 } ) );
+    const Type_id to_f64 = table.function( f64, by_value( { i32 } ) );
 
     SECTION( "holds is identity only" )
     {
@@ -1407,6 +1516,98 @@ TEST_CASE( "type_table_a_function_type_converts_to_nothing", "[sema][type][m7]" 
     }
 }
 
+// A mode belongs to the parameter it is written on, so substitution replaces the type and leaves the
+// mode where it is, and two signatures differing only in one are not each other's instance.
+TEST_CASE( "type_table_carries_a_parameter_mode_through_substitution_and_deduction", "[sema][type][m7][mode]" )
+{
+    Type_table table;
+
+    const Type_id i32 = table.integer( 32, true );
+    const Type_id t   = table.parameter( Node_id { 7 }, "T" );
+
+    const Bindings bound { { t.v, i32 } };
+
+    const Type_id open   = table.function( t, std::array { Parameter { t, Param_mode::Ref } } );
+    const Type_id closed = table.function( i32, std::array { Parameter { i32, Param_mode::Ref } } );
+
+    SECTION( "substitution replaces the type and keeps the mode" )
+    {
+        REQUIRE( table.substitute( open, bound ) == closed );
+        REQUIRE( table.name( table.substitute( open, bound ) ) == "fn( ref i32 ) -> i32" );
+    }
+
+    SECTION( "and deduction refuses a signature that differs only in a mode" )
+    {
+        Bindings into;
+
+        REQUIRE_FALSE( table.deduce( open, table.function( i32, by_value( { i32 } ) ), into ) );
+    }
+
+    SECTION( "and accepts the one that agrees" )
+    {
+        Bindings into;
+
+        REQUIRE( table.deduce( open, closed, into ) );
+        REQUIRE( into.at( t.v ) == i32 );
+    }
+}
+
+// The return is the signature's other half, and `const ref T` is the one mode it may carry - the
+// same rule a declaration gets, asked of a type instead of a function.
+TEST_CASE( "type_table_carries_a_return_mode", "[sema][type][m7][mode]" )
+{
+    Type_table table;
+
+    const Type_id i32 = table.integer( 32, true );
+    const Type_id t   = table.parameter( Node_id { 7 }, "T" );
+
+    const Type_id returns_value  = table.function( i32, {} );
+    const Type_id returns_borrow = table.function( i32, {}, Param_mode::Const_ref );
+
+    SECTION( "a returning borrow is not the returning value" )
+    {
+        REQUIRE( returns_borrow != returns_value );
+        REQUIRE( table.function( i32, {}, Param_mode::Const_ref ) == returns_borrow );
+    }
+
+    // D32: `const ref T` replaces `T&` in every position, so the return slot writes it in full.
+    SECTION( "and spells itself in full" )
+    {
+        REQUIRE( table.name( returns_borrow ) == "fn() -> const ref i32" );
+        const Type_id one = table.function( i32, by_value( { i32 } ), Param_mode::Const_ref );
+
+        REQUIRE( table.name( one ) == "fn( i32 ) -> const ref i32" );
+    }
+
+    SECTION( "and is readable back off the type" )
+    {
+        REQUIRE( table.get( returns_borrow ).return_mode == Param_mode::Const_ref );
+        REQUIRE( table.get( returns_value ).return_mode == Param_mode::Value );
+    }
+
+    SECTION( "substitution keeps it" )
+    {
+        const Bindings bound { { t.v, i32 } };
+
+        REQUIRE( table.substitute( table.function( t, {}, Param_mode::Const_ref ), bound ) == returns_borrow );
+    }
+
+    SECTION( "and deduction refuses a signature that differs only in it" )
+    {
+        Bindings into;
+
+        REQUIRE_FALSE( table.deduce( table.function( t, {}, Param_mode::Const_ref ), returns_value, into ) );
+    }
+
+    SECTION( "and accepts the one that agrees" )
+    {
+        Bindings into;
+
+        REQUIRE( table.deduce( table.function( t, {}, Param_mode::Const_ref ), returns_borrow, into ) );
+        REQUIRE( into.at( t.v ) == i32 );
+    }
+}
+
 // The return type is half the signature, so every structural operation has to walk it. An
 // aggregate keeps nothing in `element` that substitution reaches, which is why borrowing its case
 // leaves the return behind.
@@ -1422,21 +1623,21 @@ TEST_CASE( "type_table_walks_the_return_type_of_a_function_type", "[sema][type][
 
     SECTION( "a parameter in the return position is mentioned" )
     {
-        REQUIRE( table.mentions_parameter( table.function( t, std::array { i32 } ) ) );
-        REQUIRE( table.mentions_parameter( table.function( i32, std::array { t } ) ) );
-        REQUIRE_FALSE( table.mentions_parameter( table.function( i32, std::array { i32 } ) ) );
+        REQUIRE( table.mentions_parameter( table.function( t, by_value( { i32 } ) ) ) );
+        REQUIRE( table.mentions_parameter( table.function( i32, by_value( { t } ) ) ) );
+        REQUIRE_FALSE( table.mentions_parameter( table.function( i32, by_value( { i32 } ) ) ) );
     }
 
     SECTION( "and is substituted there" )
     {
         REQUIRE(
-            table.substitute( table.function( t, std::array { i32 } ), bound ) == table.function( i32, std::array { i32 } )
+            table.substitute( table.function( t, by_value( { i32 } ) ), bound ) == table.function( i32, by_value( { i32 } ) )
         );
         REQUIRE(
-            table.substitute( table.function( i32, std::array { t } ), bound ) == table.function( i32, std::array { i32 } )
+            table.substitute( table.function( i32, by_value( { t } ) ), bound ) == table.function( i32, by_value( { i32 } ) )
         );
         REQUIRE(
-            table.substitute( table.function( t, std::array { t } ), bound ) == table.function( i32, std::array { i32 } )
+            table.substitute( table.function( t, by_value( { t } ) ), bound ) == table.function( i32, by_value( { i32 } ) )
         );
     }
 
@@ -1448,7 +1649,7 @@ TEST_CASE( "type_table_walks_the_return_type_of_a_function_type", "[sema][type][
 
     SECTION( "a signature with nothing to substitute is unchanged" )
     {
-        const Type_id concrete = table.function( i32, std::array { i32 } );
+        const Type_id concrete = table.function( i32, by_value( { i32 } ) );
 
         REQUIRE( table.substitute( concrete, bound ) == concrete );
     }
@@ -1457,7 +1658,7 @@ TEST_CASE( "type_table_walks_the_return_type_of_a_function_type", "[sema][type][
     {
         Bindings into;
 
-        REQUIRE( table.deduce( table.function( t, std::array { i32 } ), table.function( f64, std::array { i32 } ), into ) );
+        REQUIRE( table.deduce( table.function( t, by_value( { i32 } ) ), table.function( f64, by_value( { i32 } ) ), into ) );
         REQUIRE( into.at( t.v ) == f64 );
     }
 
@@ -1466,7 +1667,7 @@ TEST_CASE( "type_table_walks_the_return_type_of_a_function_type", "[sema][type][
         Bindings into;
 
         REQUIRE_FALSE(
-            table.deduce( table.function( i32, std::array { i32 } ), table.function( f64, std::array { i32 } ), into )
+            table.deduce( table.function( i32, by_value( { i32 } ) ), table.function( f64, by_value( { i32 } ) ), into )
         );
     }
 
@@ -1474,7 +1675,7 @@ TEST_CASE( "type_table_walks_the_return_type_of_a_function_type", "[sema][type][
     {
         Bindings into;
 
-        REQUIRE_FALSE( table.deduce( table.function( i32, std::array { t } ), table.function( i32, {} ), into ) );
+        REQUIRE_FALSE( table.deduce( table.function( i32, by_value( { t } ) ), table.function( i32, {} ), into ) );
     }
 
     // Every function type has an invalid declaration, so two compared the way two aggregates are

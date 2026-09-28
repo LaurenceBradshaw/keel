@@ -56,6 +56,19 @@ ref i32 returns_a_mutable_ref( ref i32 a )
     return a;
 }
 
+// The other two modes are argument-passing modes with no argument to pass. Both used to reach the
+// emitter with the keyword silently dropped, because the check asked for `ref` alone and these
+// matched neither the refusal nor the binding.
+out i32 returns_an_out()
+{
+    return 1;
+}
+
+move i32 returns_a_move()
+{
+    return 1;
+}
+
 // Everything below is accepted, and the fixture would be worth much less without it.
 
 const ref i32 picks( const ref i32 a, const ref i32 b )

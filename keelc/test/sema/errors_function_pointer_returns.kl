@@ -1,0 +1,29 @@
+// A function type's return slot carries the one mode the language returns and refuses the rest, with
+// the same messages a declaration gets: `const ref` is the read-only borrow, a mutable one would let
+// a caller write through a reference it never asked for, and `out` and `move` say how an *argument*
+// travels. A bare `const` binds nothing, because a type has no callee.
+void mutable_borrow( fn( i32 ) -> ref i32 p )
+{
+}
+
+void assigns( fn( i32 ) -> out i32 p )
+{
+}
+
+void transfers( fn( i32 ) -> move i32 p )
+{
+}
+
+void promises( fn( i32 ) -> const i32 p )
+{
+}
+
+// Accepted, and the reason the four above are each one error rather than two.
+void borrows( fn( const ref i32 ) -> const ref i32 p )
+{
+}
+
+i32 main()
+{
+    return 0;
+}

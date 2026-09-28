@@ -399,14 +399,24 @@ void Kir_emitter::emit_function_types()
 
         std::string parameters;
 
-        for( const Type_id parameter : described.arguments )
+        for( std::size_t i = 0; i < described.arguments.size(); ++i )
         {
-            parameters += fmt::format( "{}{}", parameters.empty() ? "" : ", ", spelling_.type( parameter ) );
+            // `move` travels by value, and a bare parameter's type decides
+            const Param_mode mode       = described.modes[i];
+            const bool       by_address = ( mode != Param_mode::Value && mode != Param_mode::Move ) ||
+                                    ( mode == Param_mode::Value && types_.is_owning( described.arguments[i] ) );
+
+            parameters += fmt::format(
+                "{}{}{}", parameters.empty() ? "" : ", ", spelling_.type( described.arguments[i] ), by_address ? "*" : ""
+            );
         }
 
+        // Two asterisks with nothing to do with each other: the first is the returning borrow
+        // travelling as an address, the second is the typedef being a pointer to a function.
         write_line( fmt::format(
-            "typedef {} ( *{} )( {} );",
+            "typedef {}{} ( *{} )( {} );",
             spelling_.type( described.element ),
+            described.return_mode == Param_mode::Const_ref ? "*" : "",
             spelling_.type( signature ),
             parameters.empty() ? "void" : parameters
         ) );
@@ -1521,6 +1531,201 @@ TEST_CASE( "emit_kir_orders_a_signature_against_the_struct_it_touches", "[codege
         REQUIRE( definition != std::string::npos );
         REQUIRE( forward < signature );
         REQUIRE( signature < definition );
+    }
+}
+
+// A mode decides how a parameter travels, so it decides the typedef's C spelling: `ref`, `const ref`
+// and `out` are an address, and a value and a `move` are not. Two forms that agree on the spelling
+// still need two typedefs, because a call site tells them apart.
+TEST_CASE( "emit_kir_spells_a_mode_in_a_function_typedef", "[codegen][kir][m7][mode]" )
+{
+    SECTION( "a borrowed parameter is a pointer" )
+    {
+        const Generated g( "i32 bump( ref i32 a ) { a = a + 1; return a; }\n"
+                           "i32 main() { fn( ref i32 ) -> i32 p = &bump; i32 n = 1; return p( ref n ) - 2; }\n" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "( int32_t* );" ) );
+    }
+
+    SECTION( "and a moved one is not" )
+    {
+        const Generated g( "i32 taken( move i32 a ) { return a; }\n"
+                           "i32 main() { fn( move i32 ) -> i32 p = &taken; i32 n = 1; return p( move n ) - 1; }\n" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "( int32_t );" ) );
+    }
+
+    // A returned borrow travels as an address exactly as a borrowed parameter does, so the typedef's
+    // return is a pointer - and the `K` after the `E` is what stops the two signatures sharing a name.
+    SECTION( "and a returning borrow is a pointer too" )
+    {
+        const Generated g( "const ref i32 peek( const ref i32 a ) { return a; }\n"
+                           "i32 main() { fn( const ref i32 ) -> const ref i32 p = &peek; i32 n = 3; return p( n ) - 3; }\n" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "typedef int32_t* ( *kl__fn__FK3i32EK3i32 )( int32_t* );" ) );
+    }
+
+    SECTION( "and the return's mode is part of the typedef's name" )
+    {
+        const Generated g( "i32 copies( const ref i32 a ) { return a; }\n"
+                           "const ref i32 peek( const ref i32 a ) { return a; }\n"
+                           "i32 main()\n"
+                           "{\n"
+                           "    fn( const ref i32 ) -> i32           a = &copies;\n"
+                           "    fn( const ref i32 ) -> const ref i32 b = &peek;\n"
+                           "    return 0;\n"
+                           "}\n" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "kl__fn__FK3i32E3i32" ) );
+        REQUIRE( g.has( "kl__fn__FK3i32EK3i32" ) );
+    }
+
+    // Five forms, five interned types, five typedefs - `ref` and `out` share a C spelling and must
+    // still be two names, or one of the two variables below would be declared with the other's type.
+    SECTION( "every form gets a typedef of its own" )
+    {
+        const Generated g( "i32 plain( i32 a ) { return a; }\n"
+                           "i32 borrow( ref i32 a ) { return a; }\n"
+                           "i32 peek( const ref i32 a ) { return a; }\n"
+                           "i32 fill( out i32 a ) { a = 1; return a; }\n"
+                           "i32 taken( move i32 a ) { return a; }\n"
+                           "i32 main()\n"
+                           "{\n"
+                           "    fn( i32 ) -> i32           a = &plain;\n"
+                           "    fn( ref i32 ) -> i32       b = &borrow;\n"
+                           "    fn( const ref i32 ) -> i32 c = &peek;\n"
+                           "    fn( out i32 ) -> i32       d = &fill;\n"
+                           "    fn( move i32 ) -> i32      e = &taken;\n"
+                           "    return 0;\n"
+                           "}\n" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+
+        std::size_t typedefs = 0;
+
+        for( std::size_t at = g.c.find( "typedef" ); at != std::string::npos; at = g.c.find( "typedef", at + 1 ) )
+        {
+            ++typedefs;
+        }
+
+        REQUIRE( typedefs == 5 );
+    }
+
+    // substitute() has to carry the mode through with the type, or the instance's signature would
+    // be the by-value one and the C would disagree with itself.
+    SECTION( "and substitution carries the mode into an instance" )
+    {
+        const Generated g( "T through<T>( fn( ref T ) -> T f, ref T a ) where T : Integral { return f( ref a ); }\n"
+                           "i32 same32( ref i32 a ) { return a; }\n"
+                           "i64 same64( ref i64 a ) { return a; }\n"
+                           "i32 main()\n"
+                           "{\n"
+                           "    i32 a = 1;\n"
+                           "    i64 b = 2;\n"
+                           "    return through<i32>( &same32, ref a ) - 1;\n"
+                           "}\n" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "( int32_t* );" ) );
+    }
+}
+
+// A mode is written and ownership is not, so this is the one parameter whose C spelling comes from
+// the type alone. §8 hands an owning argument over as an address, and the typedef has to say the
+// same thing the prototype does or `cc` refuses the assignment that connects them.
+TEST_CASE( "emit_kir_spells_an_owning_parameter_as_an_address", "[codegen][kir][m7][mode]" )
+{
+    constexpr std::string_view owner = "class B { public u64 n; B( u64 x ) { n = x; } ~B() { n = 0; } };\n";
+
+    SECTION( "a bare owning parameter is a pointer" )
+    {
+        const Generated g(
+            std::string( owner ) + "u64 peek( B b ) { return b.n; }\n"
+                                   "i32 main() { B b = B( 7 ); fn( B ) -> u64 p = &peek; return p( b ) == 7 ? 0 : 1; }\n"
+        );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "typedef uint64_t ( *kl__fn__F1BE3u64 )( struct kl__B* );" ) );
+    }
+
+    // `move` transfers, so the callee gets the object itself and destroys it - the one owning form
+    // that still travels by value, and the reason ownership cannot simply override every mode.
+    SECTION( "and a moved one is not" )
+    {
+        const Generated g(
+            std::string( owner ) + "u64 takes( move B b ) { return b.n; }\n"
+                                   "i32 main()\n"
+                                   "{\n"
+                                   "    B b = B( 7 );\n"
+                                   "    fn( move B ) -> u64 p = &takes;\n"
+                                   "    return p( move b ) == 7 ? 0 : 1;\n"
+                                   "}\n"
+        );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "typedef uint64_t ( *kl__fn__FM1BE3u64 )( struct kl__B );" ) );
+    }
+
+    SECTION( "and the two are two typedefs" )
+    {
+        const Generated g(
+            std::string( owner ) + "u64 peek( B b ) { return b.n; }\n"
+                                   "u64 takes( move B b ) { return b.n; }\n"
+                                   "i32 main() { fn( B ) -> u64 a = &peek; fn( move B ) -> u64 c = &takes; return 0; }\n"
+        );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "typedef uint64_t ( *kl__fn__F1BE3u64 )( struct kl__B* );" ) );
+        REQUIRE( g.has( "typedef uint64_t ( *kl__fn__FM1BE3u64 )( struct kl__B );" ) );
+    }
+
+    // `Types::is_owning` and `instance_owns` are two questions and this is the one type that tells
+    // them apart: no generic declaration ever enters the owning set, so a `Box<u64>` with a
+    // destructor is passed by value - by the prototype and therefore by the typedef. That is wrong
+    // and is recorded as its own defect; what is pinned here is that the two agree, because a
+    // typedef spelling a pointer against a by-value prototype is what `cc` refuses. Re-record this
+    // when the defect is fixed, and expect a pointer on both sides.
+    SECTION( "and a generic aggregate is spelled the way its prototype is" )
+    {
+        const Generated g( "class Box<T> { public u64 n; Box( u64 m ) { n = m; } ~Box() { n = 0; } };\n"
+                           "u64 peek( Box<u64> b ) { return b.n; }\n"
+                           "i32 main()\n"
+                           "{\n"
+                           "    Box<u64> b = Box<u64>( 7 );\n"
+                           "    fn( Box<u64> ) -> u64 p = &peek;\n"
+                           "    return p( b ) == 7 ? 0 : 1;\n"
+                           "}\n" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "typedef uint64_t ( *kl__fn__F3BoxI3u64EE3u64 )( struct kl__Box__I3u64E );" ) );
+        REQUIRE( g.has( "uint64_t kl__peek__3BoxI3u64E( struct kl__Box__I3u64E );" ) );
+    }
+
+    // The boundary: a class owns only when something in it does, and a value parameter is still a
+    // value. Without this the change reads as "an aggregate travels as an address", which is wrong.
+    SECTION( "and a class with no destructor is still a value" )
+    {
+        const Generated g( "class C { public i32 v; C( i32 x ) { v = x; } };\n"
+                           "i32 take( C c ) { return c.v; }\n"
+                           "i32 main() { C c = C( 0 ); fn( C ) -> i32 p = &take; return p( c ); }\n" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "typedef int32_t ( *kl__fn__F1CE3i32 )( struct kl__C );" ) );
     }
 }
 

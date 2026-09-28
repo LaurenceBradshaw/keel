@@ -1,0 +1,149 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__B;
+
+typedef uint64_t ( *kl__fn__F1BE3u64 )( struct kl__B* );
+typedef uint64_t ( *kl__fn__FM1BE3u64 )( struct kl__B );
+
+struct kl__B
+{
+    uint64_t kl_n_1;
+};
+
+void kl__B__R1B_3u64__ctor( struct kl__B*, uint64_t );
+void kl__B__dtor( struct kl__B* );
+uint64_t kl__peek__1B( struct kl__B* );
+uint64_t kl__takes__M1B( struct kl__B );
+int32_t kl__main__( void );
+
+void kl__B__R1B_3u64__ctor( struct kl__B* kl_this_1, uint64_t kl_x_2 )
+{
+#line 12 "codegen/function_pointer_owning_parameter.kl"
+    ( *kl_this_1 ).kl_n_1 = kl_x_2;
+    return;
+}
+
+void kl__B__dtor( struct kl__B* kl_this_1 )
+{
+#line 16 "codegen/function_pointer_owning_parameter.kl"
+    ( *kl_this_1 ).kl_n_1 = 0;
+    return;
+}
+
+uint64_t kl__peek__1B( struct kl__B* kl_b_1 )
+{
+    uint64_t kl_t0;
+#line 22 "codegen/function_pointer_owning_parameter.kl"
+    kl_t0 = ( *kl_b_1 ).kl_n_1;
+    return kl_t0;
+}
+
+uint64_t kl__takes__M1B( struct kl__B kl_b_1 )
+{
+    uint64_t kl_t0;
+#line 27 "codegen/function_pointer_owning_parameter.kl"
+    kl_t0 = kl_b_1.kl_n_1;
+    kl__B__dtor( &kl_b_1 );
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__B kl_b_1;
+    struct kl__B* kl_t2;
+    kl__fn__F1BE3u64 kl_p_4;
+    kl__fn__F1BE3u64 kl_t5;
+    kl__fn__FM1BE3u64 kl_q_6;
+    kl__fn__FM1BE3u64 kl_t7;
+    struct kl__B* kl_t8;
+    uint64_t kl_t9;
+    bool kl_t10;
+    struct kl__B* kl_t11;
+    uint64_t kl_t12;
+    bool kl_t13;
+    struct kl__B kl_t14;
+    struct kl__B* kl_t15;
+    struct kl__B* kl_t17;
+    uint64_t kl_t18;
+    bool kl_t19;
+    uint64_t kl_t20;
+    bool kl_t21;
+    bool kl_t22;
+#line 32 "codegen/function_pointer_owning_parameter.kl"
+    kl_t22 = false;
+    kl_t2 = &kl_b_1;
+    kl_t22 = true;
+    kl__B__R1B_3u64__ctor( kl_t2, 7 );
+#line 34 "codegen/function_pointer_owning_parameter.kl"
+    kl_t5 = kl__peek__1B;
+    kl_p_4 = kl_t5;
+#line 35 "codegen/function_pointer_owning_parameter.kl"
+    kl_t7 = kl__takes__M1B;
+    kl_q_6 = kl_t7;
+#line 39 "codegen/function_pointer_owning_parameter.kl"
+    kl_t8 = &kl_b_1;
+    kl_t22 = true;
+    kl_t9 = kl_p_4( kl_t8 );
+    kl_t10 = kl_t9 != 7;
+    if ( kl_t10 ) goto bb1; else goto bb2;
+    bb1:
+#line 41 "codegen/function_pointer_owning_parameter.kl"
+    kl_t0 = 1;
+    if ( kl_t22 ) kl__B__dtor( &kl_b_1 );
+    kl_t22 = false;
+    return kl_t0;
+    bb2:
+#line 44 "codegen/function_pointer_owning_parameter.kl"
+    kl_t11 = &kl_b_1;
+    kl_t22 = true;
+    kl_t12 = kl_p_4( kl_t11 );
+    kl_t13 = kl_t12 != 7;
+    if ( kl_t13 ) goto bb3; else goto bb4;
+    bb3:
+#line 46 "codegen/function_pointer_owning_parameter.kl"
+    kl_t0 = 2;
+    if ( kl_t22 ) kl__B__dtor( &kl_b_1 );
+    kl_t22 = false;
+    return kl_t0;
+    bb4:
+#line 51 "codegen/function_pointer_owning_parameter.kl"
+    kl_t15 = &kl_t14;
+    kl__B__R1B_3u64__ctor( kl_t15, 5 );
+    kl_t17 = &kl_t14;
+    kl_t18 = kl_p_4( kl_t17 );
+    kl_t19 = kl_t18 != 5;
+    kl__B__dtor( &kl_t14 );
+    if ( kl_t19 ) goto bb5; else goto bb6;
+    bb5:
+#line 53 "codegen/function_pointer_owning_parameter.kl"
+    kl_t0 = 3;
+    if ( kl_t22 ) kl__B__dtor( &kl_b_1 );
+    kl_t22 = false;
+    return kl_t0;
+    bb6:
+#line 57 "codegen/function_pointer_owning_parameter.kl"
+    kl_t20 = kl_q_6( kl_b_1 );
+    kl_t22 = false;
+    kl_t21 = kl_t20 != 7;
+    if ( kl_t21 ) goto bb7; else goto bb8;
+    bb7:
+#line 59 "codegen/function_pointer_owning_parameter.kl"
+    kl_t0 = 4;
+    if ( kl_t22 ) kl__B__dtor( &kl_b_1 );
+    kl_t22 = false;
+    return kl_t0;
+    bb8:
+#line 62 "codegen/function_pointer_owning_parameter.kl"
+    kl_t0 = 0;
+    if ( kl_t22 ) kl__B__dtor( &kl_b_1 );
+    kl_t22 = false;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

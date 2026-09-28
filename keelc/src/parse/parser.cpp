@@ -1402,7 +1402,7 @@ Node_id Parser::parse_type()
         const Node_id param_list = ast_.add( Node_kind::Param_list, Span::merge( open, previous().span ), 0, params );
 
         expect( Token_kind::Arrow );
-        const Node_id return_type = parse_type();
+        const Node_id return_type = parse_type_with_mode();
 
         Node_id fn_type =
             ast_.add( Node_kind::Function_type, Span::merge( start, previous().span ), 0, { return_type, param_list } );
@@ -1885,6 +1885,15 @@ bool Parser::scan_type_and_name()
         if( !match( Token_kind::Arrow ) )
         {
             break;
+        }
+
+        // Same skips as the start of this function.
+        while( match_keyword( Keyword::Const ) )
+        {
+        }
+        if( at_mode_keyword() )
+        {
+            advance();
         }
     }
 
@@ -5838,6 +5847,47 @@ TEST_CASE( "parser_function_type_shape", "[parse]" )
         const Node_id type = p.child( first_statement( p ), 0 );
         REQUIRE( p.kind( type ) == Node_kind::Function_type );
         REQUIRE( p.kind( p.child( type, 0 ) ) == Node_kind::Function_type );
+    }
+
+    // D32's *every position*: the return slot takes a mode as a parameter slot does, and the one
+    // form the language returns is written out in full.
+    SECTION( "the return slot keeps a mode too" )
+    {
+        const Parsed p( "i32 main() { fn( i32 ) -> const ref i32 f; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id type = p.child( first_statement( p ), 0 );
+        REQUIRE( p.kind( type ) == Node_kind::Function_type );
+        REQUIRE( p.kind( p.child( type, 0 ) ) == Node_kind::Const_type );
+        REQUIRE( p.kind( p.child( p.child( type, 0 ), 0 ) ) == Node_kind::Mode_type );
+    }
+
+    // Refused by the checker with the message a declaration gets, which it can only do if the mode
+    // reaches it. A parser that stopped here would report `fn` instead of the word that is wrong.
+    SECTION( "and a return mode the language refuses still parses" )
+    {
+        for( const char* spelling : { "ref i32", "out i32", "move i32", "const i32" } )
+        {
+            const Parsed p( fmt::format( "i32 main() {{ fn( i32 ) -> {} f; }}", spelling ) );
+
+            INFO( spelling << "\n" << p.errors() );
+            REQUIRE_FALSE( p.has_errors() );
+            REQUIRE( p.kind( p.child( first_statement( p ), 0 ) ) == Node_kind::Function_type );
+        }
+    }
+
+    SECTION( "and a nested return keeps one as well" )
+    {
+        const Parsed p( "i32 main() { fn( i32 ) -> fn( i32 ) -> const ref i32 f; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id inner = p.child( p.child( first_statement( p ), 0 ), 0 );
+        REQUIRE( p.kind( inner ) == Node_kind::Function_type );
+        REQUIRE( p.kind( p.child( inner, 0 ) ) == Node_kind::Const_type );
     }
 
     SECTION( "a trailing comma is not a parameter" )

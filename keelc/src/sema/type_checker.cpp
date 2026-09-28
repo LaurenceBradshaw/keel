@@ -184,6 +184,38 @@ Keyword parameter_mode( const Ast& ast, Node_id decl )
                : Keyword::Count;
 }
 
+Param_mode parameter_mode_of( const Ast& ast, Node_id param )
+{
+    switch( parameter_mode( ast, param ) )
+    {
+    case Keyword::Ref:
+        return is_const_binding( ast, param ) ? Param_mode::Const_ref : Param_mode::Ref;
+    case Keyword::Out:
+        return Param_mode::Out;
+    case Keyword::Move:
+        return Param_mode::Move;
+    default:
+        return Param_mode::Value;
+    }
+}
+
+Keyword call_marker_of( Param_mode mode )
+{
+    switch( mode )
+    {
+    case Param_mode::Ref:
+        return Keyword::Ref;
+    case Param_mode::Out:
+        return Keyword::Out;
+    case Param_mode::Move:
+        return Keyword::Move;
+    // Bare and `const ref` both: after either, the caller's object is alive and unchanged, which is
+    // the whole of what a marker announces.
+    default:
+        return Keyword::Count;
+    }
+}
+
 bool is_ref_parameter( const Ast& ast, Node_id param )
 {
     // children[0] is invalid for an `auto` local, and for a constructor or destructor, which have

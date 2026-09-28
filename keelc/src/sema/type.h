@@ -35,6 +35,23 @@ enum class Type_kind : u8
     Function,
 };
 
+enum class Param_mode : u8
+{
+    Value,
+    Ref,
+    Const_ref,
+    Out,
+    Move
+};
+
+struct Parameter
+{
+    Type_id    type;
+    Param_mode mode = Param_mode::Value;
+
+    bool operator==( const Parameter& other ) const = default;
+};
+
 // Defaulted rather than bare, so a kind that does not use a field can leave it out of the aggregate
 // initialiser - and so adding a field later does not break every existing one.
 struct Type
@@ -48,7 +65,12 @@ struct Type
     // What a generic aggregate was instantiated at: `Box<i32>` holds one, `Box` itself holds its
     // own parameters, and everything else holds none. A view rather than a vector, into storage the
     // table owns - the same arrangement name() already uses, and what keeps Type cheap to copy.
-    std::span<const Type_id> arguments {};
+    std::span<const Type_id>    arguments {};
+    std::span<const Param_mode> modes {};
+
+    // The return's own mode. Only `Value` and `Const_ref` can reach here: a function type spells
+    // the one returning borrow the language has, and the rest are refused where they are written.
+    Param_mode return_mode = Param_mode::Value;
 };
 
 // A type parameter bound to a concrete type, keyed by the parameter's own Type_id. Named because
@@ -64,7 +86,7 @@ public:
     Type_id integer( u8 width, bool is_signed ) const;
     Type_id floating( u8 width ) const;
     Type_id pointer_to( Type_id element ); // interns; same element -> same id
-    Type_id function( Type_id return_type, std::span<const Type_id> parameters );
+    Type_id function( Type_id return_type, std::span<const Parameter> parameters, Param_mode return_mode = Param_mode::Value );
     Type_id enumeration( Node_id declaration, std::span<const Type_id> arguments, std::string_view name, Type_id underlying );
 
     // Interned by *declaration* and by its type arguments, never by name: two modules each
@@ -176,7 +198,8 @@ private:
 
     // Backs Type::arguments. A deque for the reason composed_ is one: the views handed out have to
     // survive every later insertion.
-    std::deque<std::vector<Type_id>> arguments_;
+    std::deque<std::vector<Type_id>>    arguments_;
+    std::deque<std::vector<Param_mode>> modes_;
 
     std::unordered_map<std::string_view, Type_id>
         by_spelling_; // views into composed_ // "u8*" etc; name() returns views into these

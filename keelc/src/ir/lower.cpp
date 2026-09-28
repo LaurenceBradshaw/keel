@@ -65,6 +65,7 @@ private:
     // `bindings` are the *callee's*: the parameter's type is written in its declaration, so
     // substituting with this function's would ask it to bind a parameter it has never heard of.
     Operand lower_argument( Node_id argument, Node_id parameter, const Bindings& bindings );
+    Operand borrowed_argument( Node_id argument, Type_id address );
 
     Operand address_operand( Place place, Type_id type, Span span );
 
@@ -1162,24 +1163,43 @@ Operand Lowering::lower_indirect_call( Node_id id )
 
     Operand callee = lower_expression( ast_.child( id, 0 ) );
 
+    const std::span<const Param_mode> modes   = types_.table().get( signature ).modes;
+    const std::span<const Node_id>    written = ast_.children( ast_.child( id, 1 ) );
+
     std::vector<Operand> operands;
-    for( const Node_id param : ast_.children( ast_.child( id, 1 ) ) )
+
+    for( std::size_t i = 0; i < written.size(); ++i )
     {
-        operands.push_back( lower_expression( param ) );
+        // `move` travels by value as a bare argument does, so only the three borrows take an address.
+        const bool by_address = i < modes.size() && ( ( modes[i] != Param_mode::Value && modes[i] != Param_mode::Move ) ||
+                                                      ( modes[i] == Param_mode::Value && types_.is_owning( arguments[i] ) ) );
+
+        operands.push_back(
+            by_address ? borrowed_argument( written[i], types_.table().pointer_to( arguments[i] ) )
+                       : lower_expression( written[i] )
+        );
     }
 
+    // Only a by-value argument converts: a borrow is the caller's variable itself, so there is
+    // nothing for a conversion to happen to.
     for( std::size_t i = 0; i < operands.size() && i < arguments.size(); ++i )
     {
-        operands[i] = converted( operands[i], arguments[i], ast_.span( ast_.child( id, 1 ) ) );
+        if( ( modes[i] == Param_mode::Value && !types_.is_owning( arguments[i] ) ) || modes[i] == Param_mode::Move )
+        {
+            operands[i] = converted( operands[i], arguments[i], ast_.span( ast_.child( id, 1 ) ) );
+        }
     }
 
     const u32 first = builder_.add_operands( operands );
 
+    const bool    binding     = types_.table().get( signature ).return_mode == Param_mode::Const_ref;
+    const Type_id result_type = binding ? types_.table().pointer_to( type_of( id ) ) : type_of( id );
+
     Local_id result = builder_.into_temp(
-        indirect_call( callee, first, narrow_cast<u32>( operands.size() ), type_of( id ) ), type_of( id ), span
+        indirect_call( callee, first, narrow_cast<u32>( operands.size() ), result_type ), result_type, span
     );
 
-    return copy( builder_.place( result ), type_of( id ) );
+    return copy( binding ? builder_.deref( builder_.place( result ) ) : builder_.place( result ), type_of( id ) );
 }
 
 Operand Lowering::lower_expression( Node_id id )
@@ -2031,8 +2051,15 @@ Operand Lowering::lower_argument( Node_id argument, Node_id parameter, const Bin
         return lower_expression( argument );
     }
 
-    const Type_id address = binding_type_under( parameter, bindings );
-    const Span    span    = ast_.span( argument );
+    return borrowed_argument( argument, binding_type_under( parameter, bindings ) );
+}
+
+// What a borrow lowers to, given the pointer type it travels as. Its own member because a call
+// through a variable reads the mode off a function type and has no Param_decl to hand over, and a
+// borrow may not lower one way through a name and another through a variable.
+Operand Lowering::borrowed_argument( Node_id argument, Type_id address )
+{
+    const Span span = ast_.span( argument );
 
     // `ref x` is stepped through: the marker says how the argument travels and has no value of its
     // own to produce. A bare borrow has no marker to step through, and a temporary has no place

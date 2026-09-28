@@ -16,6 +16,20 @@ i32 apply( fn( i32 )->i32 f, i32 v )
     return f( v );
 }
 
+// One name, two overloads that differ only in how the parameter travels. `mangled_parameters` has
+// always told these apart at a declaration; what makes them selectable here is the mode being part
+// of the written type, so the expectation has something to match against.
+i32 vary( i32 a )
+{
+    return a + 1;
+}
+
+i32 vary( ref i32 a )
+{
+    a = a + 10;
+    return a;
+}
+
 i32 main()
 {
     fn( i32 )->i32 p = &pick;
@@ -34,6 +48,33 @@ i32 main()
     if( apply( &pick, 4 ) != 5 )
     {
         return 3;
+    }
+
+    // The by-value one: it must not be the `ref` overload, which would leave `n` at 11.
+    fn( i32 ) -> i32 byvalue = &vary;
+    i32              n       = 1;
+
+    if( byvalue( n ) != 2 )
+    {
+        return 4;
+    }
+
+    if( n != 1 )
+    {
+        return 5;
+    }
+
+    // And the borrowing one, chosen from the same name by the mode alone.
+    fn( ref i32 ) -> i32 borrowing = &vary;
+
+    if( borrowing( ref n ) != 11 )
+    {
+        return 6;
+    }
+
+    if( n != 11 )
+    {
+        return 7;
     }
 
     return 0;

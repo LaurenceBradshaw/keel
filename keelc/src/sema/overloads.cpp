@@ -641,83 +641,80 @@ void Overloads::check_argument_markers(
     {
         const Type_id expected = table_.substitute( types_.type_of( params[i] ), bindings );
 
-        // D2: transfer is visible at the call *and* in the signature, and neither alone is enough -
-        // a reader of one should never have to find the other.
         // What a marker announces is that something happens to the caller's variable. `const ref` is
         // the one mode where nothing does - alive and unchanged afterwards, exactly like a bare
         // argument - so it sits with bare rather than with `ref`, and takes no marker at the call.
         const Keyword wanted = is_const_binding( ast_, params[i] ) ? Keyword::Count : parameter_mode( ast_, params[i] );
-        const Keyword given  = ast_.kind( arguments[i] ) == Node_kind::Marker_expr
-                                   ? static_cast<Keyword>( ast_.aux( arguments[i] ) )
-                                   : Keyword::Count;
 
-        // A ref binds to the caller's object itself, so there is no conversion step for a widened
-        // copy to live in: `ref u8` and `ref i32` are different bindings, not convertible ones.
-        // Above the agreement check, because agreeing is this rule's precondition rather than its
-        // exit - and it wants both sides, so one missing marker does not report twice.
-        if( wanted == Keyword::Ref && given == Keyword::Ref && !table_.is_error( types_.type_of( arguments[i] ) ) &&
-            types_.type_of( arguments[i] ) != expected )
-        {
-            reporter_.error_at(
-                ast_.span( arguments[i] ),
-                fmt::format(
-                    "cannot borrow `{}` as `ref {}`", table_.name( types_.type_of( arguments[i] ) ), table_.name( expected )
-                ),
-                "a borrow is the variable itself, so its type must match exactly"
-            );
-        }
+        check_one_argument_marker( arguments[i], wanted, expected, name );
+    }
+}
 
-        if( wanted == given )
-        {
-            continue;
-        }
+// D2: transfer is visible at the call *and* in the signature, and neither alone is enough - a reader
+// of one should never have to find the other.
+void Overloads::check_one_argument_marker( Node_id argument, Keyword wanted, Type_id expected, std::string_view name )
+{
+    const Keyword given =
+        ast_.kind( argument ) == Node_kind::Marker_expr ? static_cast<Keyword>( ast_.aux( argument ) ) : Keyword::Count;
 
-        // The exemption is narrow and belongs only to `move`: on a non-owning type it is the
-        // caller's own assertion that the source is dead afterwards, which the callee never sees.
-        // `ref` changes what the callee is holding, at every type.
-        const bool about_ownership =
-            ( wanted == Keyword::Count || wanted == Keyword::Move ) && ( given == Keyword::Count || given == Keyword::Move );
+    // A ref binds to the caller's object itself, so there is no conversion step for a widened
+    // copy to live in: `ref u8` and `ref i32` are different bindings, not convertible ones.
+    // Above the agreement check, because agreeing is this rule's precondition rather than its
+    // exit - and it wants both sides, so one missing marker does not report twice.
+    if( wanted == Keyword::Ref && given == Keyword::Ref && !table_.is_error( types_.type_of( argument ) ) &&
+        types_.type_of( argument ) != expected )
+    {
+        reporter_.error_at(
+            ast_.span( argument ),
+            fmt::format( "cannot borrow `{}` as `ref {}`", table_.name( types_.type_of( argument ) ), table_.name( expected ) ),
+            "a borrow is the variable itself, so its type must match exactly"
+        );
+    }
 
-        // The substituted type, not the declared one: whether `T` owns is a property of the
-        // instantiation, and a bare `Parameter` owns nothing - which would wave every `move`
-        // through unmarked.
-        if( about_ownership && bounds_.satisfies( expected, Bound::Copyable ) )
-        {
-            continue;
-        }
+    if( wanted == given )
+    {
+        return;
+    }
 
-        if( wanted == Keyword::Ref )
-        {
-            reporter_.error_at(
-                ast_.span( arguments[i] ), fmt::format( "`{}` may modify this argument", name ), "write `ref`"
-            );
-        }
-        else if( given == Keyword::Ref )
-        {
-            reporter_.error_at(
-                ast_.span( arguments[i] ), fmt::format( "`{}` does not modify this argument", name ), "remove `ref`"
-            );
-        }
-        else if( wanted == Keyword::Move )
-        {
-            reporter_.error_at(
-                ast_.span( arguments[i] ), fmt::format( "`{}` takes ownership of this argument", name ), "write `move`"
-            );
-        }
-        else if( given == Keyword::Move )
-        {
-            reporter_.error_at( ast_.span( arguments[i] ), fmt::format( "`{}` borrows this argument", name ), "remove `move`" );
-        }
-        else if( wanted == Keyword::Out )
-        {
-            reporter_.error_at( ast_.span( arguments[i] ), fmt::format( "`{}` assigns this argument", name ), "write `out`" );
-        }
-        else if( given == Keyword::Out )
-        {
-            reporter_.error_at(
-                ast_.span( arguments[i] ), fmt::format( "`{}` does not assign this argument", name ), "remove `out`"
-            );
-        }
+    // The exemption is narrow and belongs only to `move`: on a non-owning type it is the
+    // caller's own assertion that the source is dead afterwards, which the callee never sees.
+    // `ref` changes what the callee is holding, at every type.
+    const bool about_ownership =
+        ( wanted == Keyword::Count || wanted == Keyword::Move ) && ( given == Keyword::Count || given == Keyword::Move );
+
+    // The substituted type, not the declared one: whether `T` owns is a property of the
+    // instantiation, and a bare `Parameter` owns nothing - which would wave every `move`
+    // through unmarked.
+    if( about_ownership && bounds_.satisfies( expected, Bound::Copyable ) )
+    {
+        return;
+    }
+
+    if( wanted == Keyword::Ref )
+    {
+        reporter_.error_at( ast_.span( argument ), fmt::format( "`{}` may modify this argument", name ), "write `ref`" );
+    }
+    else if( given == Keyword::Ref )
+    {
+        reporter_.error_at( ast_.span( argument ), fmt::format( "`{}` does not modify this argument", name ), "remove `ref`" );
+    }
+    else if( wanted == Keyword::Move )
+    {
+        reporter_.error_at(
+            ast_.span( argument ), fmt::format( "`{}` takes ownership of this argument", name ), "write `move`"
+        );
+    }
+    else if( given == Keyword::Move )
+    {
+        reporter_.error_at( ast_.span( argument ), fmt::format( "`{}` borrows this argument", name ), "remove `move`" );
+    }
+    else if( wanted == Keyword::Out )
+    {
+        reporter_.error_at( ast_.span( argument ), fmt::format( "`{}` assigns this argument", name ), "write `out`" );
+    }
+    else if( given == Keyword::Out )
+    {
+        reporter_.error_at( ast_.span( argument ), fmt::format( "`{}` does not assign this argument", name ), "remove `out`" );
     }
 }
 

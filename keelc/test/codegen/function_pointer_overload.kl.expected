@@ -4,10 +4,13 @@
 
 typedef int32_t ( *kl__fn__F3i32E3i32 )( int32_t );
 typedef double ( *kl__fn__F3f64E3f64 )( double );
+typedef int32_t ( *kl__fn__FR3i32E3i32 )( int32_t* );
 
 int32_t kl__pick__3i32( int32_t );
 double kl__pick__3f64( double );
 int32_t kl__apply__F3i32E3i32_3i32( kl__fn__F3i32E3i32, int32_t );
+int32_t kl__vary__3i32( int32_t );
+int32_t kl__vary__R3i32( int32_t* );
 int32_t kl__main__( void );
 
 int32_t kl__pick__3i32( int32_t kl_a_1 )
@@ -40,6 +43,28 @@ int32_t kl__apply__F3i32E3i32_3i32( kl__fn__F3i32E3i32 kl_f_1, int32_t kl_v_2 )
     return kl_t0;
 }
 
+int32_t kl__vary__3i32( int32_t kl_a_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t2;
+#line 24 "codegen/function_pointer_overload.kl"
+    kl_t2 = kl_a_1 + 1;
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+int32_t kl__vary__R3i32( int32_t* kl_a_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t2;
+#line 29 "codegen/function_pointer_overload.kl"
+    kl_t2 = ( *kl_a_1 ) + 10;
+    ( *kl_a_1 ) = kl_t2;
+#line 30 "codegen/function_pointer_overload.kl"
+    kl_t0 = ( *kl_a_1 );
+    return kl_t0;
+}
+
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
@@ -54,41 +79,96 @@ int32_t kl__main__( void )
     kl__fn__F3i32E3i32 kl_t9;
     int32_t kl_t10;
     bool kl_t11;
-#line 21 "codegen/function_pointer_overload.kl"
+    kl__fn__F3i32E3i32 kl_byvalue_12;
+    kl__fn__F3i32E3i32 kl_t13;
+    int32_t kl_n_14;
+    int32_t kl_t15;
+    bool kl_t16;
+    bool kl_t17;
+    kl__fn__FR3i32E3i32 kl_borrowing_18;
+    kl__fn__FR3i32E3i32 kl_t19;
+    int32_t* kl_t20;
+    int32_t kl_t21;
+    bool kl_t22;
+    bool kl_t23;
+#line 35 "codegen/function_pointer_overload.kl"
     kl_t2 = kl__pick__3i32;
     kl_p_1 = kl_t2;
-#line 22 "codegen/function_pointer_overload.kl"
+#line 36 "codegen/function_pointer_overload.kl"
     kl_t4 = kl__pick__3f64;
     kl_q_3 = kl_t4;
-#line 24 "codegen/function_pointer_overload.kl"
+#line 38 "codegen/function_pointer_overload.kl"
     kl_t5 = kl_p_1( 1 );
     kl_t6 = kl_t5 != 2;
     if ( kl_t6 ) goto bb1; else goto bb2;
     bb1:
-#line 26 "codegen/function_pointer_overload.kl"
+#line 40 "codegen/function_pointer_overload.kl"
     kl_t0 = 1;
     return kl_t0;
     bb2:
-#line 29 "codegen/function_pointer_overload.kl"
+#line 43 "codegen/function_pointer_overload.kl"
     kl_t7 = kl_q_3( 2.0 );
     kl_t8 = kl_t7 < 2.4;
     if ( kl_t8 ) goto bb3; else goto bb4;
     bb3:
-#line 31 "codegen/function_pointer_overload.kl"
+#line 45 "codegen/function_pointer_overload.kl"
     kl_t0 = 2;
     return kl_t0;
     bb4:
-#line 34 "codegen/function_pointer_overload.kl"
+#line 48 "codegen/function_pointer_overload.kl"
     kl_t9 = kl__pick__3i32;
     kl_t10 = kl__apply__F3i32E3i32_3i32( kl_t9, 4 );
     kl_t11 = kl_t10 != 5;
     if ( kl_t11 ) goto bb5; else goto bb6;
     bb5:
-#line 36 "codegen/function_pointer_overload.kl"
+#line 50 "codegen/function_pointer_overload.kl"
     kl_t0 = 3;
     return kl_t0;
     bb6:
-#line 39 "codegen/function_pointer_overload.kl"
+#line 54 "codegen/function_pointer_overload.kl"
+    kl_t13 = kl__vary__3i32;
+    kl_byvalue_12 = kl_t13;
+#line 55 "codegen/function_pointer_overload.kl"
+    kl_n_14 = 1;
+#line 57 "codegen/function_pointer_overload.kl"
+    kl_t15 = kl_byvalue_12( kl_n_14 );
+    kl_t16 = kl_t15 != 2;
+    if ( kl_t16 ) goto bb7; else goto bb8;
+    bb7:
+#line 59 "codegen/function_pointer_overload.kl"
+    kl_t0 = 4;
+    return kl_t0;
+    bb8:
+#line 62 "codegen/function_pointer_overload.kl"
+    kl_t17 = kl_n_14 != 1;
+    if ( kl_t17 ) goto bb9; else goto bb10;
+    bb9:
+#line 64 "codegen/function_pointer_overload.kl"
+    kl_t0 = 5;
+    return kl_t0;
+    bb10:
+#line 68 "codegen/function_pointer_overload.kl"
+    kl_t19 = kl__vary__R3i32;
+    kl_borrowing_18 = kl_t19;
+#line 70 "codegen/function_pointer_overload.kl"
+    kl_t20 = &kl_n_14;
+    kl_t21 = kl_borrowing_18( kl_t20 );
+    kl_t22 = kl_t21 != 11;
+    if ( kl_t22 ) goto bb11; else goto bb12;
+    bb11:
+#line 72 "codegen/function_pointer_overload.kl"
+    kl_t0 = 6;
+    return kl_t0;
+    bb12:
+#line 75 "codegen/function_pointer_overload.kl"
+    kl_t23 = kl_n_14 != 11;
+    if ( kl_t23 ) goto bb13; else goto bb14;
+    bb13:
+#line 77 "codegen/function_pointer_overload.kl"
+    kl_t0 = 7;
+    return kl_t0;
+    bb14:
+#line 80 "codegen/function_pointer_overload.kl"
     kl_t0 = 0;
     return kl_t0;
 }

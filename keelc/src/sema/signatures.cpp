@@ -143,11 +143,18 @@ void Signatures::declare_functions()
         const Type_id return_type      = annotations_.type_of( return_type_node );
         types_.record( child, return_type );
 
+        const Keyword return_mode = parameter_mode( ast_, child );
+
         // §8 allows exactly one reference return, and only the read-only one: a mutable one would
-        // let a caller write through a reference it never asked for.
-        if( is_ref_parameter( ast_, child ) && !table_.is_error( return_type ) )
+        // let a caller write through a reference it never asked for. Any other mode says how an
+        // argument travels, and a return is not one.
+        if( return_mode != Keyword::Count && !table_.is_error( return_type ) )
         {
-            if( !is_const_binding( ast_, child ) )
+            if( return_mode == Keyword::Ref && is_const_binding( ast_, child ) )
+            {
+                places_.record_binding_address( return_type_node, return_type );
+            }
+            else if( return_mode == Keyword::Ref )
             {
                 reporter_.error_at(
                     ast_.span( return_type_node ),
@@ -157,7 +164,13 @@ void Signatures::declare_functions()
             }
             else
             {
-                places_.record_binding_address( return_type_node, return_type );
+                const std::string_view mode_text = interner_.text( Interner::keyword( return_mode ) );
+
+                reporter_.error_at(
+                    ast_.span( return_type_node ),
+                    fmt::format( "`{}` is not a return mode", mode_text ),
+                    fmt::format( "`{}` says how an argument travels, and a return is not an argument", mode_text )
+                );
             }
         }
 

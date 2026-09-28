@@ -7,6 +7,27 @@ namespace keel
 
 namespace
 {
+
+std::string param_mode_prefix( Param_mode mode )
+{
+    switch( mode )
+    {
+    case Param_mode::Value:
+        return "";
+    case Param_mode::Ref:
+        return "R";
+    case Param_mode::Const_ref:
+        return "K";
+    case Param_mode::Out:
+        return "O";
+    case Param_mode::Move:
+        return "M";
+    default:
+        assert( false );
+        return "";
+    }
+}
+
 // One type, encoded so that no two distinct types encode alike.
 //
 // Every name is preceded by its length, which is what makes it injective: a struct genuinely called
@@ -30,15 +51,19 @@ void encode_type( std::string& out, Type_id id, const Type_table& types )
     // is a letter no encoded type starts with, which is what keeps the scheme injective.
     if( types.is_function( id ) )
     {
+        const Type& described = types.get( id );
+
         out += 'F';
 
-        for( const Type_id parameter : types.get( id ).arguments )
+        for( std::size_t i = 0; i < described.arguments.size(); ++i )
         {
-            encode_type( out, parameter, types );
+            out += param_mode_prefix( described.modes[i] );
+            encode_type( out, described.arguments[i], types );
         }
 
         out += 'E';
-        encode_type( out, types.get( id ).element, types );
+        out += param_mode_prefix( described.return_mode );
+        encode_type( out, described.element, types );
         return;
     }
 
@@ -415,6 +440,22 @@ TEST_CASE( "mangle_encodes_every_type_injectively", "[codegen][mangle]" )
         const Mangled_parameter two[] = { by_value( table.integer( 8, false ) ), by_value( table.integer( 8, true ) ) };
 
         REQUIRE( mangle_function( "", "f", two, table ) == "kl__f__2u8_2i8" );
+    }
+
+    // `F` opens the parameters, `E` closes them, and the return follows. A mode letter before each
+    // encoded type keeps the scheme injective, because no encoded type starts with one.
+    SECTION( "a function type carries a mode on each half of its signature" )
+    {
+        const std::array borrowed { Parameter { i32, Param_mode::Const_ref } };
+
+        const Type_id copies = table.function( i32, borrowed );
+        const Type_id peeks  = table.function( i32, borrowed, Param_mode::Const_ref );
+
+        const Mangled_parameter takes_copies[] = { by_value( copies ) };
+        const Mangled_parameter takes_peeks[]  = { by_value( peeks ) };
+
+        REQUIRE( mangle_function( "", "f", takes_copies, table ) == "kl__f__FK3i32E3i32" );
+        REQUIRE( mangle_function( "", "f", takes_peeks, table ) == "kl__f__FK3i32EK3i32" );
     }
 
     SECTION( "a generic aggregate carries its arguments" )

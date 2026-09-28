@@ -39,6 +39,7 @@ public:
 
     bool is_assignable( Node_id id ) const;
     bool returns_a_binding( Node_id decl ) const;
+    bool call_returns_a_binding( Node_id call ) const;
     bool check_writable( Node_id target, Node_id current_function );
     bool is_borrow_binding( Node_id decl ) const;
 

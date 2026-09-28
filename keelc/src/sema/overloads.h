@@ -126,6 +126,10 @@ public:
     void check_argument_markers(
         Node_id call, Node_id callable, std::string_view name, u32 implicit_params, const Bindings& bindings
     );
+    // One argument against the one mode its parameter declares. Its own member because an indirect
+    // call asks exactly this, with `wanted` read off a function type instead of off a Param_decl -
+    // and the rule may not differ between a call through a name and a call through a variable.
+    void check_one_argument_marker( Node_id argument, Keyword wanted, Type_id expected, std::string_view name );
 
     void check_overload_sets();
 

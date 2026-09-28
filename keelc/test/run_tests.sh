@@ -282,10 +282,16 @@ fi
 # A suite whose FLAGS stop before emission must leave nothing behind. Nothing above would notice
 # otherwise: a driver that wrongly compiles a --check fixture writes a .c file and an executable,
 # and every stream comparison still passes because neither appears on stdout or stderr.
+#
+# .clang-format is committed here and is not a leftover: the editor maps *.kl to cpp for
+# highlighting, which also hands every fixture to the formatter on save, and this is what turns that
+# off for the tree. It has to sit here rather than higher up, because clang-format reads the nearest
+# one above the file and anything higher would cover keelc/src as well.
 stray="$( find . -type f \
     ! -name '*.kl' ! -name '*.kl.expected' ! -name '*.kl.stderr' ! -name '*.kl.exit' \
     ! -name '*.kl.run' \
-    ! -name FLAGS ! -name RUN ! -name run_tests.sh ! -name CMakeLists.txt | sort )"
+    ! -name FLAGS ! -name RUN ! -name run_tests.sh ! -name CMakeLists.txt \
+    ! -name .clang-format | sort )"
 
 if [ -n "$stray" ]; then
     echo

@@ -239,45 +239,91 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
 
         return instance;
     }
-    // D31/D32 are deferred here rather than decided: a mode has nowhere to live in a Type, and one
-    // dropped silently would make `fn( i32 ) -> i32` and `fn( ref i32 ) -> i32` one type.
     case Node_kind::Function_type:
     {
+        const Node_id spelled_return = ast_.child( annotation, 0 );
+        const Node_id bare_return    = unwrap_const( ast_, spelled_return );
+        const Keyword return_mode_kw = parameter_mode( ast_, annotation );
+
+        // The unwrapped node, not what was written: `const ref i32` reaches here as a Const_type,
+        // and typing that with outermost false is what reports a pointer to `const` - the right
+        // refusal for the wrong reason, and a second diagnostic under every one below.
+        //
         // Nothing written inside a function type is a declaration, so none of it is outermost.
-        const Type_id return_type = type_of( ast_.child( annotation, 0 ), false );
+        const Type_id return_type = type_of( bare_return, false );
+        bool          poisoned    = table_.is_error( return_type );
 
-        std::vector<Type_id> parameters;
+        Param_mode return_mode = Param_mode::Value;
+        if( return_mode_kw == Keyword::Ref && bare_return != spelled_return )
+        {
+            return_mode = Param_mode::Const_ref;
+        }
+        else if( return_mode_kw == Keyword::Ref )
+        {
+            reporter_.error_at(
+                ast_.span( spelled_return ),
+                "only a `const ref` may be returned",
+                fmt::format( "write `const ref {}`", table_.name( return_type ) )
+            );
+            poisoned = true;
+        }
+        else if( return_mode_kw == Keyword::Out || return_mode_kw == Keyword::Move )
+        {
+            const std::string_view mode_text = interner_.text( Interner::keyword( return_mode_kw ) );
 
-        bool poisoned = table_.is_error( return_type );
+            reporter_.error_at(
+                ast_.span( spelled_return ),
+                fmt::format( "`{}` is not a return mode", mode_text ),
+                fmt::format( "`{}` says how an argument travels, and a return is not an argument", mode_text )
+            );
+            poisoned = true;
+        }
+        else if( return_mode_kw == Keyword::Count && bare_return != spelled_return )
+        {
+            reporter_.error_at(
+                ast_.span( spelled_return ),
+                "a `const` here binds nothing, because a function type has no callee",
+                "remove it - whether the callee copies is its own business"
+            );
+            poisoned = true;
+        }
+
+        std::vector<Parameter> parameters;
 
         for( const Node_id param : ast_.children( ast_.child( annotation, 1 ) ) )
         {
+            Parameter     parameter;
             const Node_id spelled = ast_.child( param, 0 );
 
-            if( ast_.kind( spelled ) == Node_kind::Mode_type )
-            {
-                const Keyword mode = static_cast<Keyword>( ast_.aux( spelled ) );
+            const Node_id bare = unwrap_const( ast_, spelled );
 
+            // A `const` with no mode under it: the only thing it could bind is a callee's own copy,
+            // and a type has no callee. `const ref` reaches the Mode_type and is a mode like the rest.
+            if( bare != spelled && ast_.kind( bare ) != Node_kind::Mode_type )
+            {
                 reporter_.error_at(
                     ast_.span( spelled ),
-                    fmt::format( "`{}` is not supported in a function type yet", interner_.text( Interner::keyword( mode ) ) ),
-                    "write the underlying type, and take the mode on the function itself"
+                    "a `const` here binds nothing, because a function type has no callee",
+                    "remove it - whether the callee copies is its own business"
                 );
 
                 poisoned = true;
                 continue;
             }
 
-            const Type_id param_type = type_of( spelled, false );
+            parameter.mode = parameter_mode_of( ast_, param );
+
+            const Type_id param_type = type_of( bare, false );
 
             poisoned = poisoned || table_.is_error( param_type );
 
-            parameters.push_back( param_type );
+            parameter.type = param_type;
+            parameters.push_back( parameter );
         }
 
         // Poison propagates rather than being wrapped, for the reason Pointer_type's does: a
         // `fn( <error> ) -> i32` is not the error type, so one bad annotation would report twice.
-        return poisoned ? table_.builtin( Type_kind::Error ) : table_.function( return_type, parameters );
+        return poisoned ? table_.builtin( Type_kind::Error ) : table_.function( return_type, parameters, return_mode );
     }
 
     default:
@@ -604,40 +650,180 @@ TEST_CASE( "annotations_refuse_const_inside_a_function_type", "[sema][annotation
         REQUIRE( p.table().is_error( type ) );
         REQUIRE( p.errors() == 1 );
     }
+}
 
-    // `const` is written outside the mode, so the const rule answers first - one diagnostic, not
-    // the mode's as well.
-    SECTION( "and it answers before the mode does" )
+// D31's five parameter forms are five types, because two of them differ in how the call is made
+// even where they agree on what the caller writes. `const ref T` and `T` are one overload and two
+// types; `ref T` and `out T` are one C spelling and two call markers.
+TEST_CASE( "annotations_give_a_function_type_one_type_per_mode", "[sema][annotation][m7][mode]" )
+{
+    SECTION( "each mode is accepted and spells itself back" )
     {
-        Written p( "void g( fn( const ref i32 ) -> i32 a ) { }" );
+        for( const char* spelling :
+             { "fn( ref i32 ) -> i32", "fn( const ref i32 ) -> i32", "fn( out i32 ) -> i32", "fn( move i32 ) -> i32" } )
+        {
+            Written p( fmt::format( "void g( {} a ) {{ }}", spelling ) );
+
+            const Type_id type = p.annotations().type_of( p.parameter_annotation( 0, 0 ) );
+
+            INFO( spelling << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 0 );
+            REQUIRE_FALSE( p.table().is_error( type ) );
+            REQUIRE( p.table().name( type ) == spelling );
+        }
+    }
+
+    SECTION( "and the five forms are five types" )
+    {
+        Written p( "void g( fn( i32 ) -> i32 a, fn( ref i32 ) -> i32 b, fn( const ref i32 ) -> i32 c,\n"
+                   "        fn( out i32 ) -> i32 d, fn( move i32 ) -> i32 e ) { }" );
+
+        std::vector<Type_id> seen;
+
+        for( std::size_t i = 0; i < 5; ++i )
+        {
+            seen.push_back( p.annotations().type_of( p.parameter_annotation( 0, i ) ) );
+        }
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+
+        for( std::size_t i = 0; i < seen.size(); ++i )
+        {
+            REQUIRE_FALSE( p.table().is_error( seen[i] ) );
+
+            for( std::size_t j = i + 1; j < seen.size(); ++j )
+            {
+                REQUIRE( seen[i] != seen[j] );
+            }
+        }
+    }
+
+    // A pointer is a type and a mode is not, so the two stay tellable apart: `i32*` is nullable and
+    // reseatable where `ref i32` is neither.
+    SECTION( "and a pointer parameter is not a borrow" )
+    {
+        Written p( "void g( fn( i32* ) -> i32 a, fn( ref i32 ) -> i32 b ) { }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        const Type_id pointer = p.annotations().type_of( p.parameter_annotation( 0, 0 ) );
+        const Type_id borrow  = p.annotations().type_of( p.parameter_annotation( 0, 1 ) );
+
+        REQUIRE( pointer != borrow );
+    }
+
+    // A by-value `const` is the callee's promise about its own copy, and a type has no callee. It
+    // would name the same type as `fn( i32 ) -> i32`, so accepting it gives one type two spellings.
+    SECTION( "a bare const binds nothing here" )
+    {
+        Written p( "void g( fn( const i32 ) -> i32 a ) { }" );
 
         const Type_id type = p.annotations().type_of( p.parameter_annotation( 0, 0 ) );
 
         INFO( p.rendered() );
-        REQUIRE( p.table().is_error( type ) );
         REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "a pointer to `const` is not supported yet" ) != std::string::npos );
+        REQUIRE( p.table().is_error( type ) );
+        REQUIRE( p.rendered().find( "binds nothing" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "a pointer to `const`" ) == std::string::npos );
     }
-}
 
-// Deferred rather than decided: a mode has nowhere to live in a Type, and a function type that
-// dropped it would make `fn( i32 ) -> i32` and `fn( ref i32 ) -> i32` one type - two signatures a
-// call site tells apart.
-TEST_CASE( "annotations_refuse_a_mode_in_a_function_type", "[sema][annotation][m7]" )
-{
-    for( const char* source :
-         { "void g( fn( ref i32 ) -> i32 a ) { }",
-           "void g( fn( move i32 ) -> i32 a ) { }",
-           "void g( fn( out i32 ) -> i32 a ) { }" } )
+    // D32 gives one order, and the parser already says so. The mode being legal now must not add a
+    // second diagnostic underneath it.
+    SECTION( "const after the mode is an ordering error and nothing else" )
     {
-        Written p( source );
+        Written p( "void g( fn( ref const i32 ) -> i32 a ) { }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "`const` comes before the mode" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "is not supported in a function type" ) == std::string::npos );
+        REQUIRE( p.rendered().find( "a pointer to `const`" ) == std::string::npos );
+    }
+
+    // D32 again: `const ref T` is one spelling for every position, so the return slot carries it
+    // and the mode is part of the type there exactly as it is in a parameter slot.
+    SECTION( "and so does one on the return" )
+    {
+        Written p( "void g( fn( i32 ) -> const ref i32 a ) { }" );
 
         const Type_id type = p.annotations().type_of( p.parameter_annotation( 0, 0 ) );
 
-        INFO( source << "\n" << p.rendered() );
-        REQUIRE( p.table().is_error( type ) );
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE_FALSE( p.table().is_error( type ) );
+        REQUIRE( p.table().name( type ) == "fn( i32 ) -> const ref i32" );
+    }
+
+    SECTION( "and a returning borrow is not a returning value" )
+    {
+        Written p( "void g( fn( i32 ) -> i32 a, fn( i32 ) -> const ref i32 b ) { }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        const Type_id value  = p.annotations().type_of( p.parameter_annotation( 0, 0 ) );
+        const Type_id borrow = p.annotations().type_of( p.parameter_annotation( 0, 1 ) );
+
+        REQUIRE( value != borrow );
+    }
+
+    // The one reference return the language has is the read-only one, and a type gets the rule and
+    // the message a declaration gets: a mutable one would let a caller write through a borrow it
+    // never asked for.
+    SECTION( "but a mutable borrow may not be returned" )
+    {
+        Written p( "void g( fn( i32 ) -> ref i32 a ) { }" );
+
+        const Type_id type = p.annotations().type_of( p.parameter_annotation( 0, 0 ) );
+
+        INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "is not supported in a function type yet" ) != std::string::npos );
+        REQUIRE( p.table().is_error( type ) );
+        REQUIRE( p.rendered().find( "only a `const ref` may be returned" ) != std::string::npos );
+    }
+
+    // `out` and `move` say how an *argument* travels, and a return is not one.
+    SECTION( "and an argument-passing mode is not a return mode" )
+    {
+        for( const char* mode : { "out", "move" } )
+        {
+            Written p( fmt::format( "void g( fn( i32 ) -> {} i32 a ) {{ }}", mode ) );
+
+            const Type_id type = p.annotations().type_of( p.parameter_annotation( 0, 0 ) );
+
+            INFO( mode << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.table().is_error( type ) );
+            REQUIRE( p.rendered().find( fmt::format( "`{}` is not a return mode", mode ) ) != std::string::npos );
+        }
+    }
+
+    // Same reason the parameter slot gives: a by-value `const` is the callee's promise about its own
+    // copy, and a type has no callee - so it would be a second spelling of `fn( i32 ) -> i32`.
+    SECTION( "and a bare const binds nothing on the return either" )
+    {
+        Written p( "void g( fn( i32 ) -> const i32 a ) { }" );
+
+        const Type_id type = p.annotations().type_of( p.parameter_annotation( 0, 0 ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.table().is_error( type ) );
+        REQUIRE( p.rendered().find( "binds nothing" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "a pointer to `const`" ) == std::string::npos );
+    }
+
+    // Unchanged by the slice: the value already there would be overwritten without being destroyed,
+    // which is a rule about `out` rather than about where `out` was written.
+    SECTION( "and out still refuses a type that owns" )
+    {
+        Written p( "class B { i32 n; ~B() { } };\nvoid g( fn( out B ) -> i32 a ) { }" );
+
+        // Declaration 1: the class is declaration 0.
+        p.annotations().type_of( p.parameter_annotation( 1, 0 ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`out` is not supported for a type that owns a resource yet" ) != std::string::npos );
     }
 }
 

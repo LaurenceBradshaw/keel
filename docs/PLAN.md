@@ -96,7 +96,70 @@ exists to avoid.
 
 KIR is. Do not build a backend abstraction layer now — keep all emission in one
 directory and keep KIR clean enough that an LLVM backend could consume it in
-year three. Realistically that day never comes and that is fine.
+year three. ~~Realistically that day never comes and that is fine.~~ **Intended
+rather than hypothetical as of 2026-09-28** — still unscheduled, and the advice
+above is unchanged, but "that day never comes" is no longer the expectation and
+the paragraphs below decide what the backend would be allowed to do when it does.
+
+**LLVM is the intended backend, and the division of labour is decided (2026-09-28).** Not scheduled
+- there is no milestone for it and the sentence above about year three stands - but decided, because
+the answer changes what `ir/simplify.cpp` is for and that pass exists today.
+
+**The rule: if an optimisation is available at the IR level, Keel performs it. LLVM is used for
+machine-level work only.** Instruction selection, register allocation, machine scheduling, branch
+layout, addressing-mode folding, calling-convention lowering - all of that is work Keel has no
+reason to own and no ability to do better. Everything above it is Keel's, in KIR, where the
+ownership and borrow invariants are still visible. A backend that optimises for us is a backend that
+hides which of our own transformations are worth writing.
+
+**The `-O` level, which is two knobs rather than one.** LLVM's command-line `-O` conflates the
+mid-level IR pipeline with the codegen optimisation level; the API keeps them apart, and so should
+we.
+
+- **Mid-level pipeline: empty.** `PassBuilder` with no passes added - not `buildO0DefaultPipeline`
+  as a target to hit, simply nothing, plus the handful that are about legality rather than speed:
+  `AlwaysInliner` if `alwaysinline` is ever emitted, `AtomicExpand`, `PreISelIntrinsicLowering`.
+- **Codegen: `CodeGenOptLevel::Aggressive`.** Through `llc` that is `llc -O3` applied to
+  unoptimised IR, which is the combination this rule describes and the one to test against.
+- **Not `clang -O0`.** That sets both knobs to zero, which costs the greedy register allocator, the
+  machine scheduler and machine block placement - machine-level work, given up for nothing.
+
+**One honest caveat, so the rule is not read as stricter than it can be.** `CodeGenPrepare` is an
+IR-level pass and it runs at any codegen level above `None`. Its work is addressing-mode and
+branch-shape rewriting driven by the target, so it belongs on the machine side by intent even though
+it operates on IR. The rule is therefore *no IR pass whose purpose is a speed-up KIR could have
+achieved*, not *no IR pass runs*, which is not achievable and would not be worth achieving.
+
+**Three boundary cases, decided here so they are not argued twice.** **Auto-vectorisation is
+LLVM's**, because the shape of the transformation depends on the target's vector width and KIR
+cannot know it - this is the one place the rule is a judgement call rather than a consequence.
+**Tail-call elimination is Keel's**, because turning self-recursion into a loop is an IR
+transformation with nothing target-specific in it; the backend's sibling-call optimisation is a
+different thing and stays the backend's. **Anything gated on undefined behaviour is nobody's**: no
+`nsw`, `nuw`, `noalias`, `dereferenceable` or `!tbaa` is emitted unless Keel can prove the claim it
+makes, because those are permissions handed to an optimiser we have just declined to run.
+
+**What the rule then obliges Keel to write**, listed so the debt is visible rather than discovered:
+**promotion of non-address-taken locals to SSA values**, which is the big one - LLVM's pipeline
+assumes SROA/mem2reg has run and a KIR full of stack slots will codegen badly without an equivalent;
+then inlining with a cost model, CSE and GVN, constant propagation and folding, copy propagation,
+dead code and dead store elimination, LICM, loop unrolling, induction-variable simplification and
+strength reduction. **And the ones LLVM could never do**, which are the reason the rule is worth
+keeping: drop elimination, move elision, drop-flag elimination (§7's own deferred optimisation),
+redundant-borrow removal, devirtualisation once dynamic dispatch lands, and bounds-check elimination
+when `[*]T` arrives.
+
+**A consequence, recorded because it reverses an earlier note.** The `&(*x)` a borrow-returning call
+produces was written up under the mode work as an observation *deliberately not scheduled*, on the
+ground that both C and LLVM fold it for free. Under this rule that ground is gone: it is an
+IR-level simplification, so it is Keel's, and it is the first entry on the KIR peephole list rather
+than an argument for leaving the list empty.
+
+**The C backend is in the same position today, and cannot express it.** The golden runner passes no
+`-O` at all, which happens to match this rule; but a release build through C has no way to ask for
+the machine half only, since `cc -O2` is both knobs at once and C's undefined behaviour is a wider
+surface than LLVM IR's. That is not a reason to hurry - it is the clearest single argument for the
+eventual move, and worth having written down before the move is costed.
 
 ### 2.3 Compiler implementation language: C++20
 
@@ -1423,7 +1486,7 @@ milestone is complete until its acceptance program is a passing golden test.
 | **M6** | Generics (D39's spelling, D11's checking), bounds (D40), the monomorphisation **worklist** and D42's termination rule — for functions *and* aggregates — name mangling with type args, and the §12 decisions M6 is the deadline for — **all now taken (2026-09-18)**, four of which carry implementation into this milestone: ~~**D41's mixed-signedness comparison**~~ (moved here from M6.5, because §12's `T` generalisation depends on it; **done 2026-09-18**, §15 slice 1g — and it is not only signedness, see the correction in D41), ~~**`cast`/`wrap` on a type parameter**~~ (moved here too — the shipped range diagnostic tells authors to reach for it, so it is not optional; **done 2026-09-18**, §15 slice 1f), ~~**overloading**~~ (constructors first, and the `ref`/pointer mangling collision with it; **done 2026-09-18**, §15 slice 3), and ~~**type-argument inference**~~ (**done 2026-09-18**, §15 slice 4 — which also pays slice 3's deferred generic tie-break). | `max<i32>` and `max<f64>` both work; a generic `Box<T>` with a destructor drops correctly; `u32 < i32` and `i64 < f64` both compile and answer correctly; `wrap<i32>( a )` works for an `Integral` `T` and `cast<f64>( a )` for a `Floating` one; `C( i32 )` and `C( f64 )` coexist; `i32 x = id( 5 );` needs no written type argument. | Instantiation, mangling |
 | **M6.5** | The debts that are neither M6's feature nor M8's: ~~D41's mixed-signedness comparison~~ **moved into M6** — §12's generalisation of it to `T` depends on it, ~~`cast`/`wrap` on a type parameter~~ **moved into M6** — the shipped range diagnostic points at it, ~~§12's empty-aggregate rejection~~ **done (2026-09-19)** — and it kept the `kl_rt_alloc` guard that §12 expected it to delete, because pinning `malloc( 0 )` is worth a branch independently of what reaches it, ~~the two KIR passes carried from M5.5~~ — empty-block threading and constant-branch folding — **done (2026-09-18)** as one pass, `ir/simplify.cpp`, because folding forces pruning and pruning needs a finished graph; the warning that went with them was cut rather than written, — ~~the mangling rework (length-prefixing, the `ref`/pointer collision, `kl__id__T__i32`)~~ **done in M6's slices 2b and 3e** — 2b forced the length-prefixing, and ~~the `ref`/pointer collision is unreachable until overloading lands~~ **overloading landed in M6 and took the collision with it**, ~~constant checking inside a generic body~~ **done in M6's slice 1f** — literal adoption is what made it reachable, so it was paid where it broke rather than carried. **Two arrived with M6's decisions**: ~~§12's **conditional expression**, which is a decision rather than a debt and is here to stop it being an accident~~ **decided and built (2026-09-19)** — `?:` ships and `if`-as-expression is **rejected**, not deferred, and ~~**function pointers**, whose implementation is M6.5 or M8 depending on whether FFI asks first~~ **moved to M7 (2026-09-19)** — M8 is the library, and a language feature should not arrive inside a milestone that is otherwise about writing Keel in Keel. **Five more scoped here (2026-09-19)**, all of them debts this milestone exists for rather than features: ~~**splitting `sema/type_checker.cpp`**, which the §15 entry deferred until KIR landed and which has since gone from 2350 code lines to 7898 on one file-local class of 158 members — done *before* M7 rather than after, because M7 adds member-declaration rules to exactly this file and splitting is cheaper before the addition than after~~ **done (2026-09-19)**, and the class was kept: the audit measured the free-function shape this milestone assumed and found it reaches 7% of the file, so `Checker` moved to `sema/checker.h` and its 127 definitions to nine files, largest 1,373 code lines, with no assertion or golden changed — **the acceptance criterion was met and the code did not get easier to read**, which is recorded in §15 and in §3.2 rather than quietly dropped, and is why `Checker` was then dissolved into fourteen classes instead of kept — ~~that work is scoped, unscheduled, and not part of this milestone~~ **Stage B done and closed out (2026-09-24)**: seventeen classes, one per file, a machine-checked DAG at zero violations, and `checker.h` and all nine `check_*.cpp` deleted; **the mangling category tag**, the surviving half of that debt now that M6 length-prefixed the other half, owed because a static method is the first scheme with no receiver to tell it apart - ~~**and reachable today rather than at M7 (2026-09-24)**: a method and a free function of one name emit the same C symbol, in both the by-value and the `ref` spelling, and `cc` refuses the result~~ **done (2026-09-24)** — the tag leads a member's argtypes as `S<type>` and the receiver leaves them, see §15; ~~**`g().t = 1;`**, which assigns into a discarded temporary and which the conditional now inherits~~ **done (2026-09-24)** — and it was two bugs, not one: the same missing root let a write through a returned `const ref` take effect, which is a soundness hole rather than a useless write, and the struct-literal spelling aborted the lowerer rather than compiling to nothing, see §15; ~~**`enum Nothing { };`**, rejected on the empty-aggregate precedent so that an accidental spelling does not become the one uninhabited types have to live with~~ **done (2026-09-24)** — one pass beside `check_aggregate_has_fields` rather than inside it, because an enum was never reached by that rule rather than permitted by it, see §15; and ~~**the `Arena`'s decision**, whose two predicted callers have both been decided against — wire it to the `Interner` or delete it, but stop carrying it unowned~~ **decided and deleted (2026-09-24)** — the third candidate was measured rather than argued and bought about ten allocations per compile, and the arena an `Interner` would want is not the node arena that was built for the two falsified callers, see §15. **M6.5 is complete.** | `struct Empty { };` is refused naming a one-variant `enum`; `while( true ) { return 7; }` needs no `return` after it, `for( ; ; )` lowers to two blocks rather than three, `a > b ? a : b` compiles, runs only the arm it chose, and is refused when the arms disagree; `struct foo__ { };` beside `i32 foo()` no longer mangles to one name; `enum Nothing { };` is refused and `( c ? a : b ).t = 1;` is too; no source file in `keelc/src` exceeds 3000 code lines — **met (2026-09-19)**, the largest is now `parse/parser.cpp` at 2786; and the `Arena` either has a caller or is gone — **met (2026-09-24)**, it is gone. | Paying debts before they compound |
 | **M7** | ~~**Static methods**~~ **done (2026-09-25)**, see §15 — a function that belongs to a type but takes no receiver, called `Type::name( args )`. The §15 debt, scheduled here because M8's library is the first thing that wants one: `Vector::with_capacity`, `String::from_bytes`. Scope is *methods only* — type-scoped **data** waits on M8's modules and globals, function-local static storage has no customer, and internal linkage is the access-control debt below it rather than this one. The **spelling is undecided** and §12 now carries it: every method has an implicit receiver, so something has to say "this one does not", and D30 already gives `Type::name` at the call site without saying how the declaration is marked. **Two more scoped here (2026-09-19). Access control**, the §15 debt sitting directly below this one, because M7's own customer argues for it: `Vector::with_capacity` is a named constructor, and a named constructor only earns its place if the ordinary one can be hidden — so the feature that motivates M7 is incomplete without it. It is a resolver feature, member lookup carrying visibility, and a slice of its own rather than a rider. **Corrected (2026-09-25): it is not a resolver feature.** The resolver only ever resolves *bare* names, and a bare name that reaches a member is resolved inside that member's own type - always visible, so nothing there can be refused. Every access-control decision is about a **qualified** access, and all five live in `sema/expressions.cpp`: `obj.f`, `obj.f( ... )`, `Type::f`, `C { ... }` and `C( ... )` - the last being the one M7's own customer needs, since hiding the ordinary constructor is what makes `Vector::with_capacity` worth writing. The resolver's only part is having bound the *type* name already. See §15. **Function pointers**, moved from M6.5's fork: the alternative was M8, and M8 is the standard library — a milestone about writing Keel in Keel should not also be where a language feature first appears. It is the smallest of the three and goes last, because nothing else here depends on it. **Order matters within the milestone**: the spelling decision, then static methods, then access control, then function pointers. ~~**Access control**~~ **done (2026-09-25)**, see §15 - `private` and `public` on a member, a class's fields private by default, and five refusals in `sema/expressions.cpp`. **Only function pointers remain.** | A named constructor returns an aggregate, is called as `Type::make( args )`, and is refused as `value.make( args )` — both a golden and the mangling that tells it from a method; a field declared private is refused from outside its type and accepted from a method of it; and a function's address is taken, stored in a variable, and called through it. | **Whether a type is a namespace, and whether a function is a value** |
-| **M8** | **The many-item pointer `[*]T` (D27), first and on its own**, then modules (`import`), multi-file compilation, then **static fields**, then begin `Vector` and `String` **in Keel**. **Static fields scheduled here (2026-09-25)**, and they are the audit's own failure repeating: M7's row and its §15 debt both deferred type-scoped *data* to "M8's modules and globals" — a destination that names this milestone's *contents* rather than its row, so no row carried it, which is exactly what the 2026-09-24 scheduling audit was run to catch and is a fifth instance it missed. They sit **after modules** because modules are what they actually wait on: storage is not the open question — file-scope variables already declare, fold, check and emit end to end, and `mangle_local` suffixes the node id so two types each holding a `count` cannot collide — **linkage** is, and internal linkage was deferred into M7's access-control slice rather than into the feature. The part that is genuinely this milestone's size is **one storage per instantiation** on a generic aggregate, which the monomorphisation worklist has to emit rather than a walk over the root, and `Vector<T>` is the first type to want one. The design is worked out in §15 so it is not re-derived: a static field is a `Var_decl` in the member list, **not a flagged `Field_decl`**. | `alloc<T>( n )` yields a `[*]T`, `p[ i ]` and `p + i` work on one and are still refused on a `*T`, and a `[*]u8` walked out of bounds is the author's problem rather than a type error. Then a two-module program. Then a `static` field shared across two objects of one type, written from a method and read from a static method, absent from the emitted C struct, and one on a generic type with separate storage per instantiation. Then a `Vector<i32>` that grows and frees. | **Whether the design actually works** |
+| **M8** | **The many-item pointer `[*]T` (D27), first and on its own**, then modules (`import`), multi-file compilation, then **static fields**, then begin `Vector` and `String` **in Keel**. **Static fields scheduled here (2026-09-25)**, and they are the audit's own failure repeating: M7's row and its §15 debt both deferred type-scoped *data* to "M8's modules and globals" — a destination that names this milestone's *contents* rather than its row, so no row carried it, which is exactly what the 2026-09-24 scheduling audit was run to catch and is a fifth instance it missed. They sit **after modules** because modules are what they actually wait on: storage is not the open question — file-scope variables already declare, fold, check and emit end to end, and `mangle_local` suffixes the node id so two types each holding a `count` cannot collide — **linkage** is, and internal linkage was deferred into M7's access-control slice rather than into the feature. The part that is genuinely this milestone's size is **one storage per instantiation** on a generic aggregate, which the monomorphisation worklist has to emit rather than a walk over the root, and `Vector<T>` is the first type to want one. The design is worked out in §15 so it is not re-derived: a static field is a `Var_decl` in the member list, **not a flagged `Field_decl`**. **Static method pointers are scheduled here (2026-09-26)**: `&C::make` needs no receiver and is `fn( args ) -> ret`, so nothing about the pointer itself waits. What waits is a test that tells it from a free function pointer behind a `::`, and only a static field gives it one - see §15. Carried as a row rather than as a sentence, which is the 2026-09-24 audit's own rule. **An editor language for Keel is scheduled here as well (2026-09-27), and before `Vector` and `String`**: the library is the first Keel anybody writes at length, and writing it against a grammar that reads `->` as member access and `fn` as an identifier is the wrong order. It waits for M7 only because M7 is what settles the spellings a grammar would have to encode twice otherwise - `fn( const ref T ) -> U`, `field( C ) -> T` and the four modes. See §15 for what it has to contain and what it lets us delete. | `alloc<T>( n )` yields a `[*]T`, `p[ i ]` and `p + i` work on one and are still refused on a `*T`, and a `[*]u8` walked out of bounds is the author's problem rather than a type error. Then a two-module program. Then a `static` field shared across two objects of one type, written from a method and read from a static method, absent from the emitted C struct, and one on a generic type with separate storage per instantiation. A `.kl` file opens as Keel rather than as C++, with `fn`, `field`, `where` and the four modes highlighted as keywords, and saving one changes not a byte. Then a `Vector<i32>` that grows and frees. And `&C::make` on a static method that reads a static field, stored in a variable and called through it. | **Whether the design actually works** |
 | **M9** | **Error handling.** `try` as a prefix keyword (D6's leaning, §12), `Result<T, E>` as an ordinary generic `enum` in the library rather than a language type, and the one real language addition: **§12's anonymous error union**, `Result<Config, Io_error \| Parse_error>` — flattening so `( A \| B ) \| C` is `A \| B \| C`, order-independence so `A \| B` and `B \| A` are one type, `try` widening into any union containing the source type, and `switch` matching leaf variants with exhaustiveness across a union of unions. | A function returning `Result<Config, Io_error \| Parse_error>` propagates with `try` from a callee returning `Result<String, Io_error>` and no conversion is written. `switch` over the union matches leaf variants; a missing arm is a compile error naming it. `A \| B` and `B \| A` select the same instantiation and mangle to one symbol. | **The largest type-system addition in the document** |
 | **M10** | **Compiler flags.** Nothing above says how a warning is turned on, off or into an error, and the generated C inherits whatever `$CC` was given rather than anything Keel decided: `i32 f( i32 a ) { return 0; }` emits an unused parameter and fails under the golden runner's default `-Werror`, although the emitted code is correct and Keel itself said nothing. **The flag surface is the deliverable**: which diagnostics are warnings, which are errors, which can be silenced, and the rule that **a `-W` flag reaches `$CC` only when Keel was asked for the same thing** - so the C compiler never refuses code Keel accepted. | `keelc --werror=unused-parameter` refuses that program with Keel's own diagnostic, and without the flag both Keel and the generated C accept it. The golden runner's C flags follow what each fixture asked for rather than one global default. | Diagnostics as an interface |
 
@@ -5688,11 +5751,13 @@ aggregate one rather than inside it.
 
 **A mode is deferred, not decided.** `fn( ref i32 ) -> i32` is refused, in the annotation and again
 at `&f`, because a `Type` has nowhere to put a parameter's marker and one dropped silently would
-make it and `fn( i32 ) -> i32` the same type. Slice 6's method pointers spell the receiver `ref C`,
-so that is where the marker becomes part of the type and where both diagnostics are deleted. `const`
-inside a function type is not deferred: nothing written there is a declaration, so it is the
-pointer-to-const meaning the checker already refuses, and when it is written outside a mode the
-const rule answers first.
+make it and `fn( i32 ) -> i32` the same type. **Amended 2026-09-26.** This said slice 6's method
+pointers were where the marker becomes part of the type. They are not: the marker is two slices of
+its own and both come first, for the reasons in *how constness reaches a function type* below. The
+claim that `const` inside a function type "is not deferred" was wrong as well, and wrong in a way
+that produced a misleading diagnostic rather than a missing feature - a parameter slot in a function
+type *is* a binding position, so `fn( const i32 ) -> i32` is refused while `&byval` for
+`i32 byval( const i32 a )` is accepted at that very type.
 
 **C spells a function type through a typedef.** A C function-pointer type is a declarator with the
 name inside it, and every caller of `Spelling::type` writes the type and then the name, so the type
@@ -5965,6 +6030,555 @@ diagnostic that says what is missing rather than emitting C that does not compil
 is `[*]T` and `Vector`, so the M7 goldens are the single-object forms - a concrete projection, a
 generic one, and the refusals - and the corpus functions become an M8 exercise.
 
+
+### M7: how constness reaches a function type (2026-09-26)
+
+Asked, before slice 6, how const-ness propagates through a free function pointer today, how it
+should, and what slice 7 inherits. Answered by probing the built compiler rather than by reading
+the source, which is what turned three of the four findings up.
+
+**What propagates today.** `i32 byval( const i32 a )` assigned to a `fn( i32 ) -> i32` is accepted,
+and so is `const i32 made()` assigned to a `fn() -> i32`: a `const` on a by-value parameter or on a
+by-value return is erased from the function type. Both erasures are right, and both happen because
+nobody asks - `Expressions::written_signature` builds the type from `types_.type_of( param )`, the
+*declared* type, and `parameter_mode` calls `unwrap_const` before it looks for a `Mode_type`.
+Everything else about a mode is refused, in two places that disagree with each other:
+`written_signature` (`keelc/src/sema/expressions.cpp:1061`) and the `Function_type` case of
+`Annotations::type_of` (`keelc/src/sema/annotations.cpp:243`).
+
+**`const ref T` and `T` are already one overload.** Declaring `i32 peek( P a )` beside
+`i32 peek( const ref P a )` is *"`peek` is already declared with these parameters"*, and the
+ambiguity note prints `( P )` and `( P )`. That is D31 working as written: `const ref` takes no
+call-site marker, so there is nothing for a caller to tell the two apart by.
+
+**Four defects, all pre-existing, none related to slice 5.**
+
+- `fn( const ref i32 ) -> i32` reports *"a pointer to `const` is not supported yet"* and suggests
+  writing `const ref T` to someone who has written `const ref T`. The parser builds
+  `Const_type( Mode_type( i32 ) )` and the `Function_type` case tests the raw child for a
+  `Mode_type`, so the mode check misses and the `Const_type` case answers instead. `parameter_mode`
+  unwraps first; this does not.
+- `fn( const i32 ) -> i32` gets that same message, while `&byval` is accepted at `fn( i32 ) -> i32`
+  - the annotation refuses a spelling the address side produces. Each parameter is typed with
+  `outermost = false`, but a parameter slot in a function type **is** a binding position, so
+  pointer-to-const is the wrong reading of it.
+- The return slot parses no mode and no `const` at all: the parameters go through
+  `parse_type_with_mode` (`keelc/src/parse/parser.cpp:1392`) and the return through plain
+  `parse_type` (`:1405`). `fn() -> const ref i32` fails as *"expected a statement, found `fn`"*,
+  pointing at `fn` rather than at the word that is wrong.
+- `written_signature` never asks about the **return's** mode. That is unreachable today only by
+  accident: a `const ref` return must borrow from a parameter, and a borrowed parameter blocks the
+  address. Lift the parameter refusal without a return rule in the same step and `&peek` types as
+  `fn( P ) -> P` against a C function returning `P*` - a `cc` error rather than a diagnostic, which
+  is the failure the slice-5 seed was written to avoid.
+
+**The rule is one sentence: a mode is part of a function type, and a `const` not attached to a mode
+is not.** By-value `const` stays erased on both sides, exactly as it already is.
+
+**`const ref` needs a fifth marker, and the D31 tension is apparent rather than real.** Overload
+identity says `const ref P` *is* `P`; `binding_type` says one travels as a `P*` and the other as a
+`P`. Both are right, because the two identities were never the same relation - the comment above
+`mangled_parameters` (`keelc/src/codegen_c/spelling.cpp:27`) already draws that line. Overload
+identity is about **what the caller writes**, type identity about **how the call is made**, and
+`ref i32` against `i32*` is the same shape one step over. Nothing can observe the oddness, because
+the two forms cannot be declared together and `&peek` therefore always has exactly one type. So
+`Mangled_parameter` gains a fifth marker - `'K'` is free, since `encode_type` starts every encoded
+type with a digit, `P` or `F` - and without it `fn( P ) -> i32` and `fn( const ref P ) -> i32` are
+one typedef name standing for two C spellings. Note that `written_signature` asks raw
+`parameter_mode` where `mangled_parameters` and `Overloads::call_marker` ask the const-erasing
+form: that looks like an inconsistency to tidy up, and **it is already correct**.
+
+**The return slot spells `const ref T` in full.** D32 says `const ref T` replaces `T&` and
+`const T&` *in every position - parameter, local binding, and return*, which settles it against any
+abbreviation. There is only one returning-borrow form to spell, because `ref i32 pick()` is refused
+language-wide (*only a `const ref` may be returned*), so `-> const ref T` is unambiguous and
+`-> ref T` stays unspoken - which is also the spelling this plan reserves for slice 7's future
+writing form.
+
+**Slice 7's spelling is unchanged, and the suggestion to mode-mark its receiver is withdrawn.**
+Raised as a tension with slice 6's shown receiver: if `&C::func` spells `ref C`, why does
+`field( C ) -> T` not spell `const ref C`? Because `field( const ref C ) -> T` is the fourth
+candidate this section already rejected, for the reason that survives the comparison - `C` names
+*which aggregate the offset is into*. It is a type, not a binding, and one offset is valid for
+every `C` that will ever exist, so there is no receiver there to show. Slice 6's `ref C` is a
+parameter of a function that is called with one object; slice 7's `C` is not. The two agree.
+
+**One consequence of that, recorded because it is not a spelling question**: `field( C ) -> T` with
+no mode on the return means a **value**, by D32's own rule that a mode is how a borrow is spelled
+and its absence is a value. So `p( obj )` copies, and the form wants `T : Copyable` - the same
+bound `written_signature` already asks of every function-pointer parameter. Read-only still costs
+nothing, because no call result is writable.
+
+**The order, revised again on 2026-09-27.** Six steps, each independently committable:
+
+0. **A mode on a return that is not `ref` is silently dropped.** Two lines in `Signatures` and a
+   fixture, independent of everything else here, and first because it is live today and drops a
+   keyword rather than refusing it.
+1. **Modes in a function type, parameters.** The fifth marker, both deferred refusals deleted, the
+   first two defects with them, and the Copyable bound narrowed to the mode-less form. The return's
+   mode is now refused *explicitly*, which closes the fourth defect before lifting the parameter
+   refusal can open it.
+2. **Modes in a function type, the return.** The parser change and the `written_signature`
+   question. Wanted by slice 6 rather than by slice 7: `const ref i32 get() const` is the method an
+   author most wants the address of, and it compiles clean today.
+3. **A bare owning parameter's address**, once `Spelling` can ask whether a type owns. Blocks
+   nothing below it, and is where the refusal slice 1 deliberately keeps is finally lifted.
+4. **Slice 6, instance method pointers** - by then a `::` and a qualified lookup.
+5. **Slice 7, member data pointers.**
+
+**Four defects are scheduled between step 3 and step 4, and the first attempt at this was wrong
+(2026-09-28).** It was written as *"ahead of step 3"* in the same turn that step 3 was
+handed over and built, so it named a slot that had already gone by - the scheduling failure this
+plan keeps catching in other people's prose, committed here. **The slot is after the mode work and
+before slice 6**, which is the real constraint: the first two are about how an owning value
+travels, slice 6 puts a *receiver* in parameter 0 of every method pointer, and building that on top
+of a parameter-passing rule known to be wrong is how one bug becomes two. None of the four is M7's
+work and the first two are older than function pointers; they are scheduled here because nothing
+else will name them.
+
+1. **The uninitialised drop flag.** Recorded under slice 1, found by `KEEL_VALGRIND=1`. A join
+   reads a flag no path wrote, and the only reason it passes is that the stack bytes happen to be
+   zero. One initialiser at the flag's declaration in the emitter.
+2. **The generic aggregate that owns and is passed by value.** Recorded under slice 1 as well,
+   found while probing slice 3. `compute_owning` never sees a generic declaration, so `Box<u64>`
+   with a destructor is copied into a bare parameter that D2 says is a borrow. It is `Places` and
+   `Bounds` rather than the emitter, and the emitter's three sites follow whatever they answer.
+3. **The Copyable refusal reports at the declaration, not the use site.** `&unbounded<i32>` puts the
+   caret under the *declaration's* parameter, which is the only place the offending type is written
+   but not the place the mistake was made. `written_signature` already hands back which parameter
+   through `refused`, so the fix is which span `function_address` reports at - `ast_.span( id )`,
+   with the declaration as a second location rather than the first.
+4. **A refused return's caret spans a keyword or two words depending on the node.** `-> ref i32` and
+   `-> move i32` underline the keyword, because a `Mode_type`'s span is the keyword; `-> const i32`
+   underlines both words, because a `Const_type`'s span covers what it wraps. Each lands on
+   something true, and the `const` one should underline the `const` alone - so the fix is a span for
+   the keyword rather than for the node, in the one branch.
+
+The first two are soundness and the last two are diagnostics, which is the order they are in; all
+four are ahead of slice 6, because a diagnostic about a mode is cheaper to correct before method
+pointers add a receiver to every one of them.
+
+Each is its own commit, and the second has a fixture waiting for it: *"and a generic aggregate is
+spelled the way its prototype is"* pins today's wrong-but-consistent answer, so fixing the defect
+turns that fixture red on purpose and it is re-recorded with a pointer on both sides.
+
+**Step 3's precondition was already met, and the wording above is what hid it (2026-09-28).**
+*"once `Spelling` can ask whether a type owns"* reads like a prerequisite and names none: `Spelling`
+holds a `Types&`, and `Types::is_owning` is `Aggregates::owns` keyed the same way - the very
+predicate `Bound::Copyable` is defined as. So nothing is owed before the step, and the predicate the
+emitter must use is `is_owning` rather than `instance_owns`, because the typedef has to agree with
+the prototype and the prototype is written from `Bound::Copyable`.
+
+**Static method pointers wait for static fields, and the reason first offered for it was the wrong
+one.** Proposed on the ground that a static method needs a "static receiver" to reach static
+fields. It does not: a static field has static storage reached by a mangled global name,
+`mangle_local` already suffixes the node id so two types each holding a `count` cannot collide, and
+nothing travels with the pointer - `&C::make` is `fn( args ) -> ret` with no parameter 0. The
+entanglement is one step over, and it is real: a static field on a **generic** aggregate is one
+storage per instantiation, so `&Box<i32>::make` and `&Box<i64>::make` read different storage -
+still resolved into the symbol at monomorphisation rather than into a parameter. That reaches the
+same conclusion by another road. Until static fields exist there is no test that tells a static
+method pointer from a free function pointer behind a `::`, so the slice has nothing to prove and
+waits for M8's row.
+
+**Every form was written out on 2026-09-27, which forced two decisions and turned up a fifth
+defect.** The table itself is not repeated here; what follows is only what it settled.
+
+**A bare `const` inside a function type is an error, not an erasure.** `fn( const i32 ) -> i32` and
+`fn() -> const i32` name the same types as `fn( i32 ) -> i32` and `fn() -> i32`, since a by-value
+`const` is the callee's promise about its own copy and is erased from the type. The two readings
+were accept-and-erase, or refuse. **Refuse**, for the reason D25 and D30 already give: two spellings
+for one type is the redundancy this language declines, and here the `const` does not merely repeat
+something - it constrains nothing at all, because a type has no callee and no body for it to bind.
+The shape of the diagnostic is the one `plain` already gets for type arguments it cannot take: say
+what the word would bind and name removing it as the fix. `const ref` is untouched by this, being a
+mode rather than a bare `const`.
+
+**`field( C ) -> const ref T` should exist beside `field( C ) -> T`, and is not on the rejected
+list.** Those four candidates were all about marking *which* of read and write a form is; this is
+the separate question of whether the read **copies or borrows**. `-> T` carries no mode, so by D32
+it is a value: `p( obj )` copies, and the form therefore wants `T : Copyable` - the same bound
+`written_signature` already asks of every function-pointer parameter. That leaves no way at all to
+project a field whose type owns a resource, and no way to read a large one without copying it.
+`-> const ref T` is exactly the fifth passing form D31 added to parameters, arriving at the return
+for the same reason and by the same argument. The three forms then partition cleanly with no
+overlap: `-> T` copies, `-> const ref T` borrows read-only, `-> ref T` stays reserved for the
+writing form. Only `-> T` is owed by the corpus, whose nine call sites all read scalars, so the
+borrowing form is a later addition rather than slice 7 scope - but it is a gap in the design rather
+than a rejected spelling, and the refusal for it should say so.
+
+**Defect: a mode on a *return* is accepted and silently dropped unless it is `ref`.** `out i32 f()`
+and `move i32 f()` pass the whole front end and emit `int32_t kl__f__( void )` - the program builds
+and runs with the keyword gone. The check in `Signatures` (`keelc/src/sema/signatures.cpp:148`)
+asks `is_ref_parameter`, which tests for `Keyword::Ref` alone, so an `out` or a `move` matches
+neither the refusal branch nor the `record_binding_address` one and falls out between them. It is a
+declaration-side defect, older than function pointers and reachable without them, and the fix
+belongs with the return half of the mode work, where the same question is being asked of a type.
+`ref i32 f()` is refused correctly (*only a `const ref` may be returned*), which is why the hole
+went unseen: the one mode anybody writes there is the one that is checked.
+
+**The full form table, written out on 2026-09-27.** Every spelling of a function type and of a
+field type, with every mode, and what each one means *once implemented* - the current behaviour is
+not recorded, because all of it is either a refusal being lifted or a parse that does nothing.
+**When function pointers and member pointers are both complete this is owed a condensed version in
+`README.md`**: the tables below are the working record, and a reader of the repository should not
+have to open the plan to learn what `fn( const ref T ) -> U` means.
+
+A function type's parameter slot:
+
+| Form | Meaning |
+|---|---|
+| `fn( T )` | A value. The callee gets a copy it owns for a `struct` and a read-only borrow for a `class` - the kind decides, and the kind is a property of `T`, so the type stays unambiguous. Called `p( x )`. |
+| `fn( ref T )` | A mutable borrow, travelling as an address. Called `p( ref x )`. |
+| `fn( const ref T )` | A read-only borrow, travelling as an address. **A different type from `fn( T )`**, though the two are one *overload* at a declaration. Called `p( x )`, with no marker, per D31. This is the form that needs the fifth marker. |
+| `fn( out T )` | The callee must assign it. Called `p( out x )`. `T` may not own a resource - the existing rule, unchanged. |
+| `fn( move T )` | Ownership transfers. Called `p( move x )`. Travels **by value**: the callee owns it and destroys it. |
+| `fn( T* )` | A pointer parameter - a *type*, not a mode: nullable, reseatable, and a different type from `fn( ref T )`. The two coexist. |
+| `fn( const T )` | **Error, permanently.** A by-value `const` binds the callee's own copy and a type has no callee, so it would be a second spelling of `fn( T )`. |
+| `fn( ref const T )` | **Error, permanently** - `const` comes before the mode. The parser already says so. |
+| `fn( const out T )`, `fn( const move T )` | **Unspellable.** `const` is looked for only before `ref`, so these do not parse as modes at all. |
+
+A function type's return slot:
+
+| Form | Meaning |
+|---|---|
+| `fn() -> T` | A value. |
+| `fn() -> const ref T` | A returning borrow - the only reference return the language has. Spelled in full, per D32's *every position*. The result is not writable, because no call result is. |
+| `fn() -> T*` | Returns a pointer. Never means "pointer to function". |
+| `fn() -> fn( T ) -> U` | Returns a function pointer. Nests in both slots. |
+| `fn() -> ref T` | **Error, permanently**: *only a `const ref` may be returned*, the same rule and message a declaration gets. |
+| `fn() -> out T`, `fn() -> move T` | **Error, permanently.** Argument-passing modes with no argument to pass. The declaration side has to start refusing them too - see the defect below. |
+| `fn() -> const T` | **Error, permanently.** Same reason as the parameter slot. |
+
+The type in a position:
+
+| Form | Meaning |
+|---|---|
+| `fn( T ) -> U p` | A variable holding an address. |
+| `const fn( T ) -> U p` | The **variable** cannot be reassigned; says nothing about the pointee. This is why prefix `const` was unavailable as slice 7's read/write marker - the slot was already taken. |
+| `ref fn( T ) -> U p`, as a parameter | A mutable borrow of a variable holding one; `call( ref p )`. Works already. |
+| `&p`, where `p` holds one | **Error, permanently.** A function type is already an address, and `fn( ... )*` has no spelling for the other reading. |
+
+Method pointers, slice 6:
+
+| Form | Type |
+|---|---|
+| `&C::func` for `func( i32 ) -> T` | `fn( ref C, i32 ) -> T`. The receiver is ordinary parameter 0 and is written like one. |
+| `&C::get` for `i32 get() const` | `fn( const ref C ) -> i32`. A **different type** from the non-`const` method's, and the fifth marker is the only thing keeping the two apart. |
+| `&C::get` for `const ref i32 get() const` | `fn( const ref C ) -> const ref i32`. Both halves of the mode work in one signature, which is why the return half is slice 6's dependency rather than slice 7's. |
+| `&C::make`, static | `fn( args ) -> ret`, with no parameter 0. Waits for M8 with static fields. |
+| `&Box<i32>::value` | Slice 5's monomorphisation seed, reached from the member side. |
+| a private member | Refused by access control, which already exists. |
+
+Field types, slice 7:
+
+| Form | Meaning |
+|---|---|
+| `field( C ) -> T` | The decided form: a read-only projection, applied `p( obj )`, yielding a **value**. It copies, so it wants `T : Copyable`. |
+| `field( C ) -> const ref T` | A read-only **borrow** of the field - the gap recorded above. Not slice 7 scope, but not a rejected spelling either. |
+| `field( C ) -> ref T` | Reserved for the writing form. Refused until a `ref` return becomes a writable place, which is a return-binding decision rather than a member-pointer one. |
+| `field( C ) -> const T` | **Error, permanently.** It would make the bare form mean *writing* and silently re-publish a different contract for every signature already written read-only. |
+| `field( const C ) -> T`, `field( const ref C ) -> T`, `field( ref C ) -> T`, `field( out C ) ...`, `field( move C ) ...` | **Error, permanently.** `C` names which aggregate the offset is into: a type, not a binding. One offset is valid for every `C` that will ever exist, so a mode there claims the value carries a borrow of some particular object, which it does not. |
+| `const field( C ) -> T p` | The **variable** cannot be reassigned. As `const fn( ... )`. |
+| `field( T ) -> U`, `field( C ) -> field( D ) -> U` | Compose freely - a field type is a type like any other. |
+| `p( obj )` where `obj` is a `const ref C` | Still read-only. The field type never encodes the object's constness, and must not, since one value applies to many objects. |
+
+**The owning-parameter refusal survives slice 1 deliberately, and that is what keeps the bare form
+honest.** `&f` is refused today when a parameter's type owns a resource, on the ground that a
+function type spells every parameter by value. Once modes are in the type that ground goes away for
+four of the five forms - `ref`, `const ref` and `out` travel as an address and say so, and `move`
+travels by value and says so - so the bound is asked **only of a parameter with no mode**, and
+`fn( move Buffer ) -> i32` becomes legal in slice 1. The bare form is the one that cannot follow,
+because a bare parameter travels by value for a `struct` and **by address for an owning `class`**
+(`Places::record_borrowed_parameters`), so the C spelling of `fn( B ) -> u64` depends on whether `B`
+owns - a question `Spelling` does not currently ask. Keeping the refusal is therefore not caution:
+it is what lets slice 1 treat the mode-less form as by-value with no exceptions. Lifting it is a
+step of its own, and its content is the ownership question reaching the emitter.
+
+
+### Mode slice 1: modes in a function type, parameters - done (2026-09-27)
+
+`Type_table::function` takes `std::span<const Parameter>`, where a `Parameter` is a type and a
+`Param_mode` of `Value`, `Ref`, `Const_ref`, `Out` or `Move`. The modes are stored in a `modes_`
+deque beside `arguments_` and handed out as a second span on `Type`, rather than putting `Parameter`
+on `Type` itself: `Spelling::function` and `Lowering::lower_indirect_call` both read
+`.arguments` on a function type and want the types, and neither should have been touched by this.
+One list goes in, so no caller can desync the two halves, and the one place that could - `function`
+itself - binds references into the table's storage rather than reading back locals it moved from.
+
+**Five forms are five types, and the two pairs that collapse are the point.** `T` and `const ref T`
+agree on what a call site writes and differ in the C they become; `ref T` and `out T` agree on the C
+and differ in what a call site writes. So neither the mangled name nor the typedef can be derived
+from the other, and `fn( ref i32 ) -> i32` and `fn( out i32 ) -> i32` are two typedefs with one
+parameter list: `kl__fn__FR3i32E3i32` and `kl__fn__FO3i32E3i32`, both `( int32_t* )`.
+
+**The fifth marker is `'K'`, and it belongs to the function type only.** `encode_type` writes a
+letter before each parameter - nothing, `R`, `K`, `O`, `M` - and stays injective because every
+encoded type starts with a digit, `P` or `F`. `Mangled_parameter::marker` is untouched and still has
+four values, because overload identity deliberately makes `const ref P` and `P` one signature. The
+emitted C shows both rules at once: the typedef is `kl__fn__FK1PE3i32` and the function it points at
+is `kl__total__1P`, with no `K` in it.
+
+**The two vocabularies get one translation each**, `parameter_mode_of` and `call_marker_of` in
+`sema/type_checker.h`. The first had been written out as a five-case switch in both
+`Annotations::type_of` and `Expressions::written_signature`; the second is what a call site wants
+and is where `const ref` mapping to *no marker* gets stated once. Neither is a rename of the
+other, which is why both exist.
+
+**A bare `const` inside a function type is refused**, as the table above decided: *a `const` here
+binds nothing, because a function type has no callee*. `const ref` reaches the `Mode_type` under
+it and is a mode like the rest, so one guard tells the two apart: `unwrap_const` moved, and what
+it landed on is not a `Mode_type`.
+
+**The Copyable bound is now asked only of the mode-less form**, so `fn( move Buffer ) -> i32` is
+legal: a mode says how the parameter travels and leaves the bound nothing to decide. A bare owning
+parameter stays refused, which is step 3's and is what keeps `Param_mode::Value` unambiguously
+by-value for the emitter.
+
+**The return's mode is refused explicitly**, in the same step that lifted the parameter refusal that
+had been masking it - *`peek` returns a reference, so its address has no function type yet*. Without
+that the slice would have typed `&peek` as `fn( P ) -> P` against a C function returning `P*`.
+
+**Two steps were missing from the walkthrough, and the slice's own tests are what found them.** The
+type carried the mode and nothing let a call write one:
+
+- `Expressions::indirect_call` refused every `Marker_expr` with *"takes every argument by value"*,
+  which was right while a signature held no modes. The rule a direct call gets was extracted out of
+  `Overloads::check_argument_markers` into `Overloads::check_one_argument_marker`, taking the wanted
+  `Keyword`, the argument and the expected type, and both callers now go through it - a direct call
+  computing `wanted` from a `Param_decl`, an indirect one from the signature. Sharing it rather than
+  copying it is what keeps D31's `move`-on-a-copyable exemption and the exact-type borrow rule from
+  drifting between the two call shapes.
+- `Lowering::lower_indirect_call` lowered every argument with `lower_expression`, so `p( ref n )`
+  reached the move checker as a move and *"`n` is used after it was moved"* came out of a program
+  that borrows. The by-address tail of `Lowering::lower_argument` became
+  `Lowering::borrowed_argument`, taking the pointer type it travels as, and the indirect call picks
+  by `Param_mode` where the direct one picks by `is_borrowed_binding`. Only by-value and `move`
+  arguments convert, because a borrow is the caller's variable and there is nothing to convert.
+
+Both were reachable only through a call, which is why the annotation and address-of fixtures were
+green while the codegen golden was not. A slice that stops at the type is half a slice.
+
+Mutations: 9 planted, 9 killed - 8 on the first pass, and **M2 survived**: dropping the mode
+comparison from `deduce`. The claim that substitution and deduction had direct unit coverage was
+wrong: that fixture had been drafted and never written, so nothing anywhere asked whether
+`fn( ref T ) -> T` deduces against `fn( i32 ) -> i32`. The fixture
+`type_table_carries_a_parameter_mode_through_substitution_and_deduction` now does, and kills it.
+
+Of the rest, M1 dropping the mode from the intern loop and M7 spelling `const ref` as `ref` both
+abort the unit binary; M4 asking the bound of every form, M8 dropping the
+return check and M9 dropping a marker from `call_marker_of` abort it too; M3 never taking an address
+in the typedef and M6 lowering every indirect argument by value are each caught by one golden and by
+the new codegen fixture.
+
+
+**Defect, found by `KEEL_VALGRIND=1` on 2026-09-28 and unrelated to M7: a conditional's drop flags
+are read on paths that never wrote them.** `codegen/conditional.kl`'s `owning_built` builds an
+`Owner` in each arm of a `? :`, and the join block tests *both* arms' flags - so whichever arm did
+not run leaves its flag uninitialised and `if ( kl_t12 ) kl__Owner__dtor( &kl_t7 );` branches on
+garbage. It passes today only because the stack bytes happen to be zero; on a non-zero read it
+destroys an object that was never constructed. The design above already gives the answer - a drop
+flag is *false while storage is empty* - and the emitter declares the flag without an initialiser,
+so the invariant holds on every path the arm runs and on none of the others. The fix is one
+initialiser at the declaration, not dataflow: eliminating flags a join cannot reach is the
+optimisation §7 says not to attempt first. It is the only fixture valgrind reports, and it is a
+drop-elaboration bug older than function pointers. **Scheduled (2026-09-28)**: the step order above
+now puts it before step 3, as its own commit.
+
+**Second defect, found while probing slice 3 on 2026-09-28 and also older than function pointers: a
+generic aggregate that owns is passed to a bare parameter by value.** `Aggregates::compute_owning`
+walks `struct_order_`, and `order_structs` deliberately keeps a generic declaration out of that
+order - so no generic class ever enters the owning set, `Bound::Copyable` admits `Box<u64>` with a
+destructor, and `u64 peek( Box<u64> b )` emits a prototype taking
+`struct kl__Box__I3u64E` by value and is called with a shallow copy. D2 says a bare owning
+parameter is a borrow the author did not choose; here it is a copy of a resource the caller still
+owns, which is the hole §8 exists to close.
+`instance_owns` is the question that answers correctly and the drop elaborator already asks it -
+what is missing is the parameter-passing decision asking it too, which means `Places` and `Bounds`
+rather than the emitter. **Not slice 3's to fix**: slice 3's only obligation is that the function
+type agrees with the prototype, and reading `is_owning` there is what makes it agree, wrongly and
+consistently. The day this is fixed both sides move together, which is why they must keep asking one
+predicate. **Scheduled (2026-09-28)** beside the drop flag, between step 3 and step 4 of the order
+above: not before slice 3, which needed only that the two sides agree, but before slice 6, which
+would otherwise put a receiver in parameter 0 on top of it.
+
+### Mode slice 2: modes in a function type, the return - done (2026-09-28)
+
+Four things were settled before any of it was implemented, and they are recorded here because each
+was a choice between readings rather than a consequence of slice 1.
+
+**The return's mode is a field on `Type` and a defaulted trailing parameter on
+`Type_table::function`.** The alternative was to take the return as a `Parameter`, which reads
+better - a return is a type and a mode, exactly as a parameter is - and it was refused because it
+rewrites every one of the forty call sites in the table's own fixtures for a slot that can hold two
+of the five modes. The default is `Param_mode::Value`, so the two real callers are the only ones
+that say anything: `Annotations::type_of` and `Expressions::written_signature`.
+
+**`parameter_mode_of` cannot answer for a function type, and the reason is worth keeping.** It
+composes `parameter_mode` with `is_const_binding`, and `is_const_binding` deliberately answers only
+for the four declarations that carry a binding on children[0] - a `Function_type` carries a return
+type there, which is not a binding. So the `Function_type` case asks `parameter_mode` for the
+keyword and tests the unwrapped node for the `const` itself, which is what its parameter loop
+already does one line over.
+
+**The two refusals are spelled twice, on purpose.** *only a `const ref` may be returned* and
+*`{}` is not a return mode* are emitted by `Signatures::declare_functions` for a declaration and by
+`Annotations::type_of` for a type. Sharing them would mean a reporting free function in
+`type_checker.cpp`, which has none, or moving the emission into `Annotations` and with it the
+fixtures that belong to the declaration's rule. Two sites, four strings, a golden over each, and a
+comment at each naming the other.
+
+**A place asks one question of a call, and it now has two ways to answer it.**
+`Places::is_assignable` and `Places::check_writable` both computed *does this callable hand back a
+binding* from the callee declaration, which an indirect call has none of - so the answer comes from
+the signature the variable holds instead. Both sites go through one
+`Places::call_returns_a_binding`, which also removes the copy of those three lines they each had.
+Without it `const ref i32 r = p( x );` is refused with *a `ref` binding needs a variable to bind to*
+while the same call through a name is accepted, and `p( x ) = 5;` reports *cannot assign to this
+expression* rather than naming the returned borrow.
+
+**Four defects between the walkthrough and the working slice, and two of them the tests caught only
+because the tests came first.** `Places::call_returns_a_binding` asked `parameter_mode_of` of the
+`Call_expr` itself, which reads children[0] - the callee *expression* - and finds no `Mode_type`
+there, so the indirect branch was dead and answered `Value` for everything; the same shape as slice
+1's wrong-node bug, and it compiles silently. It then aborted on `is_function` of an invalid
+`Type_id`, because a direct call records no type on its callee node. And asking a *type* rather than
+a declaration turned out to be wrong twice over: `is_assignable` is asked before the expression has
+been typed at all, so the signature has to come off the declaration the resolver bound; and a
+declaration that *is* callable must never be asked, because `fn() -> const ref i32 maker()` hands a
+borrow-returning signature back **by value** and reading that signature's return mode would make a
+temporary into a place. That last one is now a fixture of its own.
+
+**The typedef's two asterisks are unrelated and the first attempt spent one on the other.** The
+return-mode `*` went into the declarator where the pointer-to-function `*` lives, so every existing
+typedef became a function type rather than a pointer to one. `typedef {}{} ( *{} )( {} )`: the first
+asterisk is the returning borrow travelling as an address, the second is the typedef being a
+pointer.
+
+**The return is typed from the unwrapped node.** `type_of( spelled_return, false )` reports *a
+pointer to `const` is not supported yet* for `-> const ref i32`, which is the right refusal for the
+wrong reason and a second diagnostic under every one of the four new ones. `bare_return` is what
+gets typed, exactly as the parameter loop types `bare`.
+
+**Slice 1's `errors_function_pointer_modes.kl` lost its `peek` case**, which existed only to record
+*`peek` returns a reference, so its address has no function type yet* - the refusal this slice
+lifts. The acceptance now lives in `type_checker_gives_a_mode_carrying_function_its_address` and in
+the new `errors_function_pointer_returns.kl`, whose `borrows` declaration is what proves the four
+refusals above are one error each rather than two.
+
+### Mode slice 3: a bare owning parameter's address - done (2026-09-28)
+
+Three things were settled by probing before any of it was written, and the probe was reverted.
+
+**The predicate is `Types::is_owning`, not `instance_owns`.** The typedef's only obligation is to
+spell what the prototype spells, and the prototype comes from `Bound::Copyable`, which is
+`!Aggregates::owns` - the same declaration-keyed answer `Types::is_owning` gives. Asking the more
+correct question at the emitter would make the two disagree, which is the whole defect this slice
+closes wearing different clothes. The generic hole recorded above is real and is not this slice's;
+both sides must keep asking one predicate so that fixing it moves them together.
+
+**Ownership is not a sixth mode and does not override the five.** `move B` still travels by value,
+because the callee owns it and destroys it, so the rule is *`Value` and owning* rather than *owning*
+- and `fn( B ) -> u64` and `fn( move B ) -> u64` stay two types with two typedefs, which they
+already were. The bare form and the `move` form differ in what travels, so nothing had to be added
+to the mangling: ownership is a property of `B`, and `1B` already names it.
+
+**A returned owning value is untouched.** §8 hands one back by value, which was checked by emitting
+it rather than assumed, so `fn( u64 ) -> B` needed nothing - the same conclusion the 2026-09-26
+entry reached, now with a fixture behind it.
+
+**The refusal collapses to one arm.** `written_signature` refused a mode-less parameter that is not
+`Copyable`, which covered a concrete owning type *and* a type parameter with no bound; only the
+second survives, because an instance's C spells the declared `T` and an unbounded one arrives as a
+pointer whatever it was instantiated at. So `function_address`'s two-armed message loses its
+ternaries rather than gaining a branch.
+
+**Two things were found by reading the applied edit.** `function_address` kept passing the surviving
+message fragment as a `{}` argument, which is scaffolding from the two-armed version and is now in
+the format string. And the conversion loop in `lower_indirect_call` was written
+`( Value || Move ) && !is_owning`, which says *nothing owning is converted* where the rule is *a
+`Value` that owns travels as an address*. **The mutation run says the two are equivalent**: no
+conversion applies to a struct, so `Move` and owning can never need one, and the as-applied form
+survives every fixture. It was changed anyway, for what it says rather than for what it does, and
+that is recorded here rather than presented as a fix.
+
+**Mutations: 23 planted across slices 2 and 3, 23 killed - 22 on the first pass, and one survived**:
+the typedef asking `instance_owns` where it must ask `is_owning`. Nothing in the corpus told the two
+apart, because the only type they disagree about is a generic aggregate that owns - the second
+defect above. The section *"and a generic aggregate is spelled the way its prototype is"* now pins
+that the two sides agree, and kills it. Of the rest, every slice-2 mutation was caught: the four
+`Type_table` ones and `deduce` abort the unit binary, the return's `*`, the `K` after the `E`, all
+four annotations refusals, both `Places` arms and the parser's repeated skips are each caught by the
+unit suite and a golden, and the indirect call's `binding` by a golden alone. In slice 3, both
+halves of the narrowed refusal and both typedef mutations are caught by the unit suite and a golden;
+the lowerer's two are caught by goldens alone, which is what running the emitted C buys.
+
+### Mode work: golden coverage audited and closed (2026-09-28)
+
+Steps 0 to 3 are done, and the mode work for function pointers is complete: `out i32 f()` and `move
+i32 f()` are refused at a declaration, all five modes reach a parameter slot, the one returning
+borrow reaches the return slot, the four return spellings that are not it are refused where they are
+written, and a bare owning parameter's address is taken. A sweep of the form tables confirmed the
+rest by emitting it - a pointer parameter, a nested function type, a `const` variable holding a
+signature, a borrowed one as a parameter - and `FP3i32E3i32` against `FR3i32E3i32` shows the
+ref/pointer collision staying resolved.
+
+**Five things were only in unit fixtures and are now in goldens.** The unit suite checks that each
+answer is produced; a golden checks what the emitted C does with it, and for modes those are
+different claims - four of the five modes share two C spellings, so a wrong one compiles and
+computes the wrong answer rather than failing to build.
+
+- **The fifth mode in `function_pointer_modes.kl`.** The file's own first line claimed every
+  parameter mode and carried four; `move i32` is now the fifth, and the five typedefs are five names
+  over four C spellings.
+- **Overload selection by mode, in `function_pointer_overload.kl`.** `i32 vary( i32 )` beside `i32
+  vary( ref i32 )`, chosen from one name by the expectation alone, with the exit code checking that
+  the borrow reached the caller's variable and the by-value one did not.
+- **A mode carried through substitution, in `function_pointer_generic.kl`.** `fn( ref T ) -> T` at
+  `i32` and `i64`: two typedefs, two instances, each parameter an address. Getting this wrong emits
+  a by-value typedef against a prototype taking an address, which is a `cc` error rather than a
+  wrong answer.
+- **The declaration-side return modes, in `errors_const_ref_return.kl`.** `out i32 f()` and `move
+  i32 f()`, the defect step 0 fixed. That file already carried `ref i32 f()`, so the three refusals
+  `Signatures` emits now sit together.
+- **A mode mismatch on an address, in `errors_function_pointers.kl`.** Both directions - a `ref`
+  signature wanted by value and a by-value one wanted as a `ref` - because a mode is part of the
+  type and neither is convertible to the other.
+
+What remains under function pointers is not mode work: the two ownership defects scheduled above,
+then slice 6 and slice 7. **Two carried items are named here so they are not lost.** The surviving
+Copyable refusal reports at the *declaration's* parameter while the mistake is at `&unbounded<i32>`,
+which is a use-site question the message does not answer. And a caret under a refused return spans
+the keyword for a `Mode_type` and both words for a `Const_type` - each lands on the offending word,
+so it reads as an inconsistency rather than a fault, and it is the span the AST gives rather than
+anything the mode work chose.
+
+### Function pointers in KIR: audited for a second backend (2026-09-28)
+
+Asked whether the lowering leans on C, and it does not. KIR has two rvalues of its own for this and
+neither is a C construct: `Function_address` names the callee declaration and its type arguments and
+is typed with the signature, and `Indirect_call` carries the callee as an **operand** rather than as
+a `Node_id`, which is what keeps it a different thing from `Call` rather than a variant of it. Every
+convention the modes introduced is explicit in KIR before the emitter sees it - `_8 = &_1` then
+`call copy _4(copy _8)` for a bare owning argument, `call copy _6(move _1)` for the `move` form, and
+a borrow-returning call whose result local is already `i32*` with the deref written as a `Place`
+projection. Nothing is left for a backend's own calling convention to decide.
+
+**Three things the C backend adds, none of them semantic.** The **typedef**, because C has no inline
+spelling for a function-pointer type that works in every declaration position - a structural
+function type needs none. The **mangled name of the function type**, which exists only to name that
+typedef; type identity is the interned `Type_id` and nothing reads the string back. And C's
+**function-to-pointer decay**, used by emitting the bare symbol for `Function_address`: in a backend
+where a function is already a pointer constant this is more direct rather than less, so the reliance
+costs nothing to remove.
+
+**One thing is not as lowered as it could be.** A borrow-returning call produces `_7 = &(*_10)`, an
+address of a deref of a pointer, which is `_10`. `ir/simplify.cpp` folds constant branches, threads
+gotos and prunes blocks; it has no rvalue-level peephole, so this reaches C as `&( *kl_t10 )`. It
+was first written up here as an observation *deliberately not scheduled*, on the ground that both C
+and a future backend fold it for free. **§2.2's rule reverses that**: an optimisation available at
+the IR level is Keel's, so this is the first entry on the KIR peephole list rather than an argument
+for leaving the list empty. Unscheduled still, but owed rather than declined.
 
 ### Debts to pay along the way
 
@@ -6461,3 +7075,25 @@ about debts *between* them, which is the gap this list cannot see.
   driver cannot, because an installed compiler has no source tree to reach into. So it wants
   `keel_rt` installed as a library and found by a path the driver knows, which is a packaging
   decision rather than a compiler one and belongs with M8's multi-file compilation.
+
+- **Keel has no editor language, and `.kl` is pretending to be C++.** `.vscode/settings.json` maps
+  `*.kl` to `cpp` for the highlighting, which is most of what the language looks like - but the
+  mapping also hands every fixture to clang-format on save, and it reformats them as C++: `->` is
+  read as member access, so `fn( i32 ) -> i32` loses the spaces around its arrow, and a one-line
+  fixture body is split over four. **Scheduled in M8's row, before `Vector` and `String`
+  (2026-09-27)**, because the library is the first Keel written at length and it should not be
+  written against a grammar that misreads the type syntax. It waits for M7 rather than landing now
+  only because M7 settles the spellings the grammar would otherwise encode twice - the four modes,
+  `fn( const ref T ) -> U` and slice 7's `field( C ) -> T`.
+
+  What it is: a small VS Code extension contributing a `keel` language id and a TextMate grammar.
+  What it has to know, so the list is not re-derived - the keywords (`fn`, `field`, `where`, `ref`,
+  `out`, `move`, `const`, `unsafe`, `extern`, `struct`, `class`, `enum`, `switch`, `import`), that
+  `->` is a type arrow and never member access, that `.` is the only reach-through (D22), that `::`
+  is a scope qualifier and not a namespace separator, and the ten scalar types §6.4 names. It gets
+  no formatter, which is the whole point.
+
+  **What it lets us delete**, which is also how we will know it worked: `keelc/test/.clang-format`
+  and `examples/.clang-format`, both of which exist only to say `DisableFormat: true` to a formatter
+  that should never have been handed a `.kl` file, and the `! -name .clang-format` exclusion they
+  forced into `run_tests.sh`'s stray-file check. Three workarounds for one wrong language id.

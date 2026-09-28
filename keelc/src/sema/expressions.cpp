@@ -1005,35 +1005,16 @@ Type_id Expressions::function_address( Node_id id, Node_id declaration )
     const Type_id signature = written_signature( declaration, bindings, refused );
     if( refused.is_valid() )
     {
-        const Keyword mode = parameter_mode( ast_, refused );
+        const Type_id          type  = types_.type_of( refused );
+        const std::string_view spelt = table_.name( type );
 
-        if( mode != Keyword::Count )
-        {
-            reporter_.error_at(
-                ast_.span( refused ),
-                fmt::format( "`{}` is not supported in a function type yet", interner_.text( Interner::keyword( mode ) ) ),
-                fmt::format( "call `{}` by its name, or take the parameter by value", name )
-            );
-        }
-        else
-        {
-            // Told apart because the fix differs: a concrete type that owns cannot be made to
-            // travel by value, and a type parameter is one `where` clause away from doing so.
-            const Type_id          type  = types_.type_of( refused );
-            const std::string_view spelt = table_.name( type );
-
-            reporter_.error_at(
-                ast_.span( refused ),
-                fmt::format(
-                    "`{}` takes `{}`, which {}, so its address has no function type yet",
-                    name,
-                    spelt,
-                    table_.is_parameter( type ) ? "is not known to be copyable" : "owns a resource"
-                ),
-                table_.is_parameter( type ) ? fmt::format( "add `where {} : Copyable` to `{}`", spelt, name )
-                                            : fmt::format( "call `{}` by its name, or take a parameter it does not own", name )
-            );
-        }
+        reporter_.error_at(
+            ast_.span( refused ),
+            fmt::format(
+                "`{}` takes `{}`, which is not known to be copyable, so its address has no function type yet", name, spelt
+            ),
+            fmt::format( "add `where {} : Copyable` to `{}`", spelt, name )
+        );
 
         return types_.record( id, error );
     }
@@ -1052,23 +1033,33 @@ Type_id Expressions::function_address( Node_id id, Node_id declaration )
 Type_id Expressions::written_signature( Node_id declaration, const Bindings& bindings, Node_id& refused )
 {
     refused = Node_id {};
-    std::vector<Type_id> parameters;
+    std::vector<Parameter> parameters;
 
     for( const Node_id param : ast_.children( ast_.child( declaration, 1 ) ) )
     {
-        // A mode, and an owning type, for one reason: both travel as an address and a function type
-        // spells every parameter by value, so the C would disagree with itself.
-        if( parameter_mode( ast_, param ) != Keyword::Count || !bounds_.satisfies( types_.type_of( param ), Bound::Copyable ) )
+        Parameter parameter;
+
+        parameter.mode = parameter_mode_of( ast_, param );
+
+        // Asked only of the mode-less form: a mode says how the parameter travels, and a bare parameter now does have one C
+        // spelling, because ownership is a property of the type; only a type parameter is unanswerable, since the instance's C
+        // spells the declared T and an unbounded one arrives as a pointer whatever it was instantiated at.
+        if( parameter.mode == Param_mode::Value && table_.is_parameter( types_.type_of( param ) ) &&
+            !bounds_.satisfies( types_.type_of( param ), Bound::Copyable ) )
         {
             refused = param;
             return Type_id {};
         }
+
+        parameter.type = table_.substitute( types_.type_of( param ), bindings );
         // The bound is asked of the declared parameter and the spelling of the substituted one: what
         // travels is decided before the instance exists.
-        parameters.push_back( table_.substitute( types_.type_of( param ), bindings ) );
+        parameters.push_back( parameter );
     }
 
-    return table_.function( table_.substitute( types_.type_of( declaration ), bindings ), parameters );
+    return table_.function(
+        table_.substitute( types_.type_of( declaration ), bindings ), parameters, parameter_mode_of( ast_, declaration )
+    );
 }
 
 Node_id Expressions::overload_for_signature( Node_id id, std::string_view name, Node_id first, Type_id signature )
@@ -1148,22 +1139,24 @@ Type_id Expressions::indirect_call( Node_id id, Node_id declaration, Type_id sig
         );
     }
 
+    const std::span<const Param_mode> modes = table_.get( signature ).modes;
+
     for( std::size_t i = 0; i < std::min( parameters.size(), arguments.size() ); ++i )
     {
+        // A marker is inferred rather than checked: a borrow binds the caller's variable itself, so
+        // there is no conversion for it to travel through, and the exactness rule below stands in.
         if( ast_.kind( arguments[i] ) == Node_kind::Marker_expr )
         {
-            reporter_.error_at(
-                ast_.span( arguments[i] ),
-                fmt::format( "`{}` takes every argument by value", name ),
-                fmt::format(
-                    "remove `{}`", interner_.text( Interner::keyword( static_cast<Keyword>( ast_.aux( arguments[i] ) ) ) )
-                )
-            );
             infer( arguments[i] );
-            continue;
+        }
+        else
+        {
+            check( arguments[i], parameters[i] );
         }
 
-        check( arguments[i], parameters[i] );
+        // The same rule a call through a name gets, with the mode read off the signature rather than
+        // off a Param_decl - a variable holding an address has none.
+        overloads_.check_one_argument_marker( arguments[i], call_marker_of( modes[i] ), parameters[i], name );
     }
 
     for( std::size_t i = parameters.size(); i < arguments.size(); ++i )
@@ -2827,6 +2820,114 @@ TEST_CASE( "type_checker_types_the_address_of_a_function", "[sema][types][m7]" )
 
 // Each of these is lifted by a later M7 slice. Until then each must report exactly once - a second
 // diagnostic means the operand was inferred before the function case was reached.
+// The mode is part of the type now, so the address of a mode-carrying function has one. What each
+// form travels as is decided here and spelled by the emitter; what a call site writes for it is
+// D31's and does not change.
+TEST_CASE( "type_checker_gives_a_mode_carrying_function_its_address", "[sema][types][m7][mode]" )
+{
+    SECTION( "each mode reaches the type" )
+    {
+        struct Case
+        {
+            const char* parameter;
+            const char* spelling;
+        };
+
+        for( const Case c :
+             { Case { "ref i32 a", "fn( ref i32 ) -> i32" },
+               Case { "const ref i32 a", "fn( const ref i32 ) -> i32" },
+               Case { "out i32 a", "fn( out i32 ) -> i32" } } )
+        {
+            const Typed p( fmt::format( "i32 f( {} ) {{ return 1; }}\ni32 main() {{ auto p = &f; return 0; }}\n", c.parameter )
+            );
+
+            INFO( c.parameter << "\n" << p.rendered() );
+            REQUIRE( p.clean() );
+            REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == c.spelling );
+        }
+    }
+
+    // The bound was asked of every parameter because a function type spelled them all by value. A
+    // `move` says how it travels, so there is nothing left for the bound to decide.
+    SECTION( "and a move parameter no longer needs its type to be copyable" )
+    {
+        const Typed p( "class B { i32 n; ~B() { } };\n"
+                       "i32 f( move B b ) { return 1; }\n"
+                       "i32 main() { auto p = &f; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( move B ) -> i32" );
+    }
+
+    // One signature is never widened into another, and a mode is now part of one.
+    SECTION( "a mode-carrying signature is not the by-value one" )
+    {
+        const Typed p( "i32 f( ref i32 a ) { return a; }\n"
+                       "i32 main() { fn( i32 ) -> i32 p = &f; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "expected `fn( i32 ) -> i32`, but got `fn( ref i32 ) -> i32`" ) != std::string::npos );
+    }
+
+    // `mangled_parameters` already tells these two apart, so they are two overloads. Now the
+    // written type tells them apart as well, which is what lets an expectation choose between them.
+    SECTION( "and an expectation chooses between two overloads by their modes" )
+    {
+        const char* pair = "i32 f( i32 a ) { return a; }\ni32 f( ref i32 a ) { return a; }\n";
+
+        const Typed by_value( std::string( pair ) + "i32 main() { fn( i32 ) -> i32 p = &f; return 0; }\n" );
+
+        INFO( by_value.rendered() );
+        REQUIRE( by_value.clean() );
+        REQUIRE( by_value.type_name( by_value.nth( Node_kind::Unary_expr, 0 ) ) == "fn( i32 ) -> i32" );
+
+        const Typed by_borrow( std::string( pair ) + "i32 main() { fn( ref i32 ) -> i32 p = &f; return 0; }\n" );
+
+        INFO( by_borrow.rendered() );
+        REQUIRE( by_borrow.clean() );
+        REQUIRE( by_borrow.type_name( by_borrow.nth( Node_kind::Unary_expr, 0 ) ) == "fn( ref i32 ) -> i32" );
+    }
+
+    // The return slot says how the result travels now, so the refusal the parameter refusal was
+    // masking is gone: `&peek` has a type, and the mode is what keeps it apart from a returning copy.
+    SECTION( "and a function that returns a borrow has a type" )
+    {
+        const Typed p( "struct P { i32 t; };\n"
+                       "const ref P peek( const ref P a ) { return a; }\n"
+                       "i32 main() { auto p = &peek; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( const ref P ) -> const ref P" );
+    }
+
+    SECTION( "and a returning borrow is not the returning copy" )
+    {
+        const Typed p( "const ref i32 peek( const ref i32 a ) { return a; }\n"
+                       "i32 main() { fn( const ref i32 ) -> i32 p = &peek; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE(
+            p.rendered().find( "expected `fn( const ref i32 ) -> i32`, but got `fn( const ref i32 ) -> const ref i32`" ) !=
+            std::string::npos
+        );
+    }
+
+    // Two overloads cannot differ in the return type alone, so what an expectation chooses between
+    // here is a returning borrow and a returning value of two different types.
+    SECTION( "and the written signature spells the mode back" )
+    {
+        const Typed p( "const ref i32 peek( const ref i32 a ) { return a; }\n"
+                       "i32 main() { fn( const ref i32 ) -> const ref i32 p = &peek; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
 TEST_CASE( "type_checker_refuses_the_address_of_a_function_it_cannot_name_yet", "[sema][types][m7]" )
 {
     SECTION( "an overload set has no one signature to give" )
@@ -2837,15 +2938,6 @@ TEST_CASE( "type_checker_refuses_the_address_of_a_function_it_cannot_name_yet", 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "overload" ) != std::string::npos );
-    }
-
-    SECTION( "a mode has nowhere to live in the type" )
-    {
-        const Typed p( "i32 f( ref i32 a ) { return a; }\ni32 main() { auto p = &f; return 0; }\n" );
-
-        INFO( p.rendered() );
-        REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "is not supported in a function type yet" ) != std::string::npos );
     }
 
     // The resolver answers this one, so the address operator must add nothing on top of it.
@@ -2870,14 +2962,14 @@ TEST_CASE( "type_checker_refuses_the_address_of_a_function_it_cannot_name_yet", 
     }
 }
 
-// M7. An argument of an owning type travels as an address (PLAN §8), while a function type spells
-// every parameter by value - so the C disagrees with itself and the address is refused until the
-// type can say which it is. The parameter is what travels; a returned value does not.
-TEST_CASE( "type_checker_refuses_the_address_of_a_function_taking_an_owning_parameter", "[sema][types][m7]" )
+// M7 slice 3. An argument of an owning type travels as an address (PLAN §8), and so does the same
+// parameter written into a function type: owning is a property of the type, so one spelling names
+// one C parameter list and nothing has to be said. The parameter is what travels; a return does not.
+TEST_CASE( "type_checker_gives_a_function_taking_an_owning_parameter_its_address", "[sema][types][m7][mode]" )
 {
     constexpr std::string_view owner = "class B { public u64 n; B( u64 x ) { n = x; } ~B() { n = 0; } };\n";
 
-    SECTION( "an owning parameter has no place in the type" )
+    SECTION( "an owning parameter is part of the type" )
     {
         const Typed p(
             std::string( owner ) + "u64 peek( B b ) { return b.n; }\n"
@@ -2885,11 +2977,11 @@ TEST_CASE( "type_checker_refuses_the_address_of_a_function_taking_an_owning_para
         );
 
         INFO( p.rendered() );
-        REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "`peek` takes `B`, which owns a resource" ) != std::string::npos );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( B ) -> u64" );
     }
 
-    SECTION( "and so does one among several" )
+    SECTION( "and so is one among several" )
     {
         const Typed p(
             std::string( owner ) + "u64 peek( i32 a, B b ) { return b.n; }\n"
@@ -2897,8 +2989,24 @@ TEST_CASE( "type_checker_refuses_the_address_of_a_function_taking_an_owning_para
         );
 
         INFO( p.rendered() );
-        REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "which owns a resource" ) != std::string::npos );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( i32, B ) -> u64" );
+    }
+
+    // The bare form is a borrow the author did not choose and the `move` form is a transfer, so the
+    // two travel differently and are two types - which is what stops one variable holding the other.
+    SECTION( "and the bare form is not the move form" )
+    {
+        const Typed p(
+            std::string( owner ) + "u64 peek( B b ) { return b.n; }\n"
+                                   "u64 takes( move B b ) { return b.n; }\n"
+                                   "i32 main() { auto a = &peek; auto b = &takes; return 0; }\n"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( B ) -> u64" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 1 ) ) == "fn( move B ) -> u64" );
     }
 
     // The three boundaries, so the refusal is no wider than the disagreement it is about.
@@ -3001,7 +3109,7 @@ TEST_CASE( "type_checker_chooses_an_overload_by_the_expected_signature", "[sema]
         REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( f64 ) -> f64" );
     }
 
-    SECTION( "a mode-carrying overload is not a candidate" )
+    SECTION( "an overload whose mode does not match is not chosen" )
     {
         const Typed p( "i32 f( ref i32 a ) { return a; }\nf64 f( f64 a ) { return a; }\n"
                        "i32 main() { fn( f64 ) -> f64 p = &f; return 0; }\n" );
@@ -3055,7 +3163,9 @@ TEST_CASE( "type_checker_reports_when_no_overload_has_the_expected_signature", "
         REQUIRE( p.rendered().find( " and " ) != std::string::npos );
     }
 
-    SECTION( "a mode-carrying overload is not offered" )
+    // The mode is part of the type now, so a mode-carrying candidate is offered and spelled with
+    // its mode - what it is not is a match for the by-value signature that was asked for.
+    SECTION( "a mode-carrying overload is offered, and is not the by-value one" )
     {
         const Typed p( "i32 f( ref i32 a ) { return a; }\nf64 f( f64 a ) { return a; }\n"
                        "i32 main() { fn( i32 ) -> i32 p = &f; return 0; }\n" );
@@ -3063,7 +3173,7 @@ TEST_CASE( "type_checker_reports_when_no_overload_has_the_expected_signature", "
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "no overload of `f`" ) != std::string::npos );
-        REQUIRE( p.rendered().find( "ref" ) == std::string::npos );
+        REQUIRE( p.rendered().find( "`fn( ref i32 ) -> i32`" ) != std::string::npos );
     }
 
     SECTION( "an arity nobody has" )
@@ -3310,18 +3420,46 @@ TEST_CASE( "type_checker_checks_a_call_through_a_variable_against_its_signature"
         REQUIRE( p.type_name( p.nth( Node_kind::Bool_literal, 0 ) ) != "<none>" );
     }
 
-    // A signature carries no modes, so there is nothing at the call site for a marker to agree
-    // with - and a marker waved through would announce something that does not happen.
-    SECTION( "a marker has no mode to agree with" )
+    // The signature carries the modes now, so a call through a variable answers to D2 exactly as a
+    // call through a name does - same rule, same messages, with `wanted` read off the function type.
+    SECTION( "a marker must agree with the signature's mode" )
     {
-        for( const char* marker : { "move", "ref", "out" } )
+        struct Case
         {
-            const Typed p( std::string( head ) + "i32 a = 1; return p( " + marker + " a ); }\n" );
+            const char* marker;
+            const char* message;
+        };
 
-            INFO( marker << "\n" << p.rendered() );
+        for( const Case c :
+             { Case { "ref", "does not modify this argument" }, Case { "out", "does not assign this argument" } } )
+        {
+            const Typed p( std::string( head ) + "i32 a = 1; return p( " + c.marker + " a ); }\n" );
+
+            INFO( c.marker << "\n" << p.rendered() );
             REQUIRE( p.errors() == 1 );
-            REQUIRE( p.rendered().find( "takes every argument by value" ) != std::string::npos );
+            REQUIRE( p.rendered().find( c.message ) != std::string::npos );
         }
+    }
+
+    // D31's one exemption, and it belongs to the rule rather than to this call shape: on a copyable
+    // type `move` is the caller's own assertion that the source is dead, which the callee never sees.
+    SECTION( "and move on a copyable argument is the caller's own business" )
+    {
+        const Typed p( std::string( head ) + "i32 a = 1; return p( move a ); }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // The other direction: the mode is in the type, so a borrow that is not written is refused.
+    SECTION( "and a mode the signature declares must be written" )
+    {
+        const Typed p( "i32 bump( ref i32 a ) { a = a + 1; return a; }\n"
+                       "i32 main() { fn( ref i32 ) -> i32 p = &bump; i32 n = 1; return p( n ); }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "may modify this argument" ) != std::string::npos );
     }
 
     SECTION( "type arguments belong to a generic" )

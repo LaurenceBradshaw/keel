@@ -1,0 +1,102 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Point;
+
+typedef int32_t* ( *kl__fn__FK3i32K3i32EK3i32 )( int32_t*, int32_t* );
+typedef int32_t* ( *kl__fn__FK5PointEK3i32 )( struct kl__Point* );
+
+struct kl__Point
+{
+    int32_t kl_x_1;
+    int32_t kl_y_3;
+};
+
+int32_t* kl__picks__3i32_3i32( int32_t*, int32_t* );
+int32_t* kl__gets__5Point( struct kl__Point* );
+int32_t kl__main__( void );
+
+int32_t* kl__picks__3i32_3i32( int32_t* kl_a_1, int32_t* kl_b_2 )
+{
+    int32_t* kl_t0;
+    bool kl_t3;
+#line 13 "codegen/function_pointer_const_ref_return.kl"
+    kl_t3 = ( *kl_a_1 ) > ( *kl_b_2 );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 15 "codegen/function_pointer_const_ref_return.kl"
+    kl_t0 = &( *kl_a_1 );
+    return kl_t0;
+    bb2:
+#line 18 "codegen/function_pointer_const_ref_return.kl"
+    kl_t0 = &( *kl_b_2 );
+    return kl_t0;
+}
+
+int32_t* kl__gets__5Point( struct kl__Point* kl_p_1 )
+{
+    int32_t* kl_t0;
+#line 23 "codegen/function_pointer_const_ref_return.kl"
+    kl_t0 = &( *kl_p_1 ).kl_y_3;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    kl__fn__FK3i32K3i32EK3i32 kl_pick_1;
+    kl__fn__FK3i32K3i32EK3i32 kl_t2;
+    kl__fn__FK5PointEK3i32 kl_get_3;
+    kl__fn__FK5PointEK3i32 kl_t4;
+    int32_t kl_x_5;
+    int32_t kl_y_6;
+    int32_t* kl_bound_7;
+    int32_t* kl_t8;
+    int32_t* kl_t9;
+    int32_t* kl_t10;
+    struct kl__Point kl_v_11;
+    struct kl__Point kl_t12;
+    int32_t kl_copied_13;
+    struct kl__Point* kl_t14;
+    int32_t* kl_t15;
+    int32_t kl_t16;
+    int32_t kl_t17;
+#line 28 "codegen/function_pointer_const_ref_return.kl"
+    kl_t2 = kl__picks__3i32_3i32;
+    kl_pick_1 = kl_t2;
+#line 29 "codegen/function_pointer_const_ref_return.kl"
+    kl_t4 = kl__gets__5Point;
+    kl_get_3 = kl_t4;
+#line 31 "codegen/function_pointer_const_ref_return.kl"
+    kl_x_5 = 10;
+#line 32 "codegen/function_pointer_const_ref_return.kl"
+    kl_y_6 = 20;
+#line 36 "codegen/function_pointer_const_ref_return.kl"
+    kl_t8 = &kl_x_5;
+    kl_t9 = &kl_y_6;
+    kl_t10 = kl_pick_1( kl_t8, kl_t9 );
+    kl_bound_7 = &( *kl_t10 );
+#line 38 "codegen/function_pointer_const_ref_return.kl"
+    kl_t12.kl_x_1 = 3;
+    kl_t12.kl_y_3 = 7;
+    kl_v_11 = kl_t12;
+#line 41 "codegen/function_pointer_const_ref_return.kl"
+    kl_t14 = &kl_v_11;
+    kl_t15 = kl_get_3( kl_t14 );
+    kl_copied_13 = ( *kl_t15 );
+#line 43 "codegen/function_pointer_const_ref_return.kl"
+    kl_y_6 = 50;
+#line 44 "codegen/function_pointer_const_ref_return.kl"
+    kl_v_11.kl_y_3 = 99;
+#line 46 "codegen/function_pointer_const_ref_return.kl"
+    kl_t16 = ( *kl_bound_7 ) + kl_copied_13;
+    kl_t17 = kl_t16 - 57;
+    kl_t0 = kl_t17;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

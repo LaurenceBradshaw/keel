@@ -18,12 +18,7 @@ bool Places::is_assignable( Node_id id ) const
         // The callable the checker chose, rather than the name the resolver bound: a method call's
         // callee is a Field_expr, and an overloaded call's name is only the first candidate. Either
         // way the question below is the same one - does this callable hand back a binding.
-        const Node_id method = callees_.callee_of( id );
-        const Node_id callee = method.is_valid() ? method : resolution_.declaration_of( ast_.child( id, 0 ) );
-
-        return callee.is_valid() &&
-               ( ast_.kind( callee ) == Node_kind::Function_decl || ast_.kind( callee ) == Node_kind::Method_decl ) &&
-               returns_a_binding( callee );
+        return call_returns_a_binding( id );
     }
 
     // A field is always a place, including a field of a temporary - reading one is an ordinary
@@ -74,6 +69,29 @@ bool Places::returns_a_binding( Node_id decl ) const
     return annotation.is_valid() && types_.type_of( annotation ).is_valid();
 }
 
+bool Places::call_returns_a_binding( Node_id call ) const
+{
+    const Node_id method = callees_.callee_of( call );
+    const Node_id callee = method.is_valid() ? method : resolution_.declaration_of( ast_.child( call, 0 ) );
+
+    // A callable declaration answers from its own return, and nothing below may be asked of one:
+    // `fn() -> const ref i32 maker()` hands back a signature *by value*, and reading that
+    // signature's return mode would make the call a place when it is a temporary.
+    if( callee.is_valid() &&
+        ( ast_.kind( callee ) == Node_kind::Function_decl || ast_.kind( callee ) == Node_kind::Method_decl ) )
+    {
+        return returns_a_binding( callee );
+    }
+
+    // A call through a variable has no such declaration, so the signature the variable holds is what
+    // answers - taken off the declaration rather than off the callee expression, because
+    // visit_assign asks this before the expression has been typed at all.
+    const Type_id signature = callee.is_valid() ? types_.type_of( callee ) : types_.type_of( ast_.child( call, 0 ) );
+
+    return signature.is_valid() && table_.is_function( signature ) &&
+           table_.get( signature ).return_mode == Param_mode::Const_ref;
+}
+
 // D31/D32: what may be written. A `const` declaration says so itself; a borrow is read-only because
 // someone else owns it - different reasons, so different messages and different fixes.
 bool Places::check_writable( Node_id target, Node_id current_function )
@@ -94,12 +112,13 @@ bool Places::check_writable( Node_id target, Node_id current_function )
             const Node_id method = callees_.callee_of( source );
             const Node_id callee = method.is_valid() ? method : resolution_.declaration_of( ast_.child( source, 0 ) );
 
-            if( returns_a_binding( callee ) )
+            if( call_returns_a_binding( source ) )
             {
                 reporter_.error_at(
                     ast_.span( target ),
                     fmt::format(
-                        "`{}` returns a const ref, so it cannot be modified", interner_.text( Symbol_id { ast_.aux( callee ) } )
+                        "`{}` returns a const ref, so it cannot be modified",
+                        interner_.text( Symbol_id { ast_.aux( ast_.child( source, 0 ) ) } )
                     ),
                     "a returned reference is always read-only"
                 );
@@ -824,6 +843,70 @@ TEST_CASE( "type_checker_binds_the_result_of_a_const_ref_return", "[sema][escape
     SECTION( "and an ordinary call is still not a place" )
     {
         const Typed p( "i32 make() { return 1; }\ni32 main() { const ref i32 r = make(); return r; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "needs a variable to bind to" ) != std::string::npos );
+    }
+}
+
+// Every claim above, asked of a call through a variable rather than through a name. The question a
+// place asks is "does this callable hand back a binding", and for an indirect call the only thing
+// that can answer is the signature the variable holds - there is no declaration behind it.
+TEST_CASE( "type_checker_binds_the_result_of_a_const_ref_return_through_a_pointer", "[sema][escape][m7][mode]" )
+{
+    constexpr std::string_view pick = "const ref i32 pick( const ref i32 a ) { return a; }\n";
+    constexpr std::string_view held = "fn( const ref i32 ) -> const ref i32 p = &pick; ";
+
+    SECTION( "it may be bound" )
+    {
+        const Typed p(
+            std::string( pick ) + "i32 main() { " + std::string( held ) + "i32 x = 1; const ref i32 r = p( x ); return r; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and it may be copied" )
+    {
+        const Typed p( std::string( pick ) + "i32 main() { " + std::string( held ) + "i32 x = 1; i32 v = p( x ); return v; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // No call result is writable, and the message names the variable the call went through because
+    // that is the whole of what the call site wrote.
+    SECTION( "but the result is not written through" )
+    {
+        const Typed p( std::string( pick ) + "i32 main() { " + std::string( held ) + "i32 x = 1; p( x ) = 5; return x; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`p` returns a const ref, so it cannot be modified" ) != std::string::npos );
+    }
+
+    // A function whose *return type* is a borrow-returning signature. The signature says
+    // `const ref`, the call hands one back by value, and asking the wrong one of those two makes a
+    // temporary into a place.
+    SECTION( "and a function returning such a signature is not one" )
+    {
+        const Typed p( "const ref i32 pick( const ref i32 a ) { return a; }\n"
+                       "fn( const ref i32 ) -> const ref i32 maker() { return &pick; }\n"
+                       "i32 main() { const ref i32 r = maker(); return r; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "needs a variable to bind to" ) != std::string::npos );
+    }
+
+    // The contrast, one step over: a pointer to a function returning a *value* hands back nothing
+    // with a scope of its own, so binding to it is refused exactly as an ordinary call is.
+    SECTION( "and a pointer to a value-returning function is still not a place" )
+    {
+        const Typed p( "i32 make( i32 a ) { return a; }\n"
+                       "i32 main() { fn( i32 ) -> i32 p = &make; const ref i32 r = p( 1 ); return r; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );

@@ -20,6 +20,20 @@ T doubled<T>( T a ) where T : Integral
     return a + a;
 }
 
+// A mode has to survive substitution: `fn( ref T ) -> T` is the open signature, and each instance's
+// own is the closed one the typedef is written from. Getting this wrong emits a by-value typedef
+// against a prototype that takes an address, which is a C error rather than a wrong answer.
+T raise<T>( ref T a ) where T : Integral
+{
+    a = a + 1;
+    return a;
+}
+
+T via<T>( fn( ref T ) -> T f, ref T a ) where T : Integral
+{
+    return f( ref a );
+}
+
 i32 apply( fn( i32 ) -> i32 f, i32 v )
 {
     return f( v );
@@ -57,6 +71,32 @@ i32 main()
     // The written argument is the whole of the choice, and the two answers differ.
     fn( i32 ) -> i32 hi = &half<i32>;
     fn( f64 ) -> f64 hf = &half<f64>;
+
+    // Two instances of one mode-carrying signature, so the two typedefs have to be two names and
+    // each parameter has to be an address.
+    i32 small = 1;
+    i64 large = 2;
+
+    if( via<i32>( &raise<i32>, ref small ) != 2 )
+    {
+        return 20;
+    }
+
+    if( via<i64>( &raise<i64>, ref large ) != 3 )
+    {
+        return 21;
+    }
+
+    // And the borrow reached the caller's own variables.
+    if( small != 2 )
+    {
+        return 22;
+    }
+
+    if( large != 3 )
+    {
+        return 23;
+    }
 
     if( hi( 3 ) != 1 ) { return 5; }
     if( hf( 3.0 ) != 1.5 ) { return 6; }

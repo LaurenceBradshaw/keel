@@ -1,0 +1,47 @@
+// A returning borrow reached through a function pointer. The exit code is the only thing that can
+// say the result names the caller's own storage rather than a copy of it, so both sources below are
+// written after the calls have returned and the two halves of the answer must disagree about
+// whether that is visible: the binding must see the new value, the copy must not.
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+const ref i32 picks( const ref i32 a, const ref i32 b )
+{
+    if( a > b )
+    {
+        return a;
+    }
+
+    return b;
+}
+
+const ref i32 gets( const ref Point p )
+{
+    return p.y;
+}
+
+i32 main()
+{
+    fn( const ref i32, const ref i32 ) -> const ref i32 pick = &picks;
+    fn( const ref Point ) -> const ref i32               get = &gets;
+
+    i32 x = 10;
+    i32 y = 20;
+
+    // The binding names `y` itself, in main's own frame, reached through a variable holding an
+    // address rather than through a name.
+    const ref i32 bound = pick( x, y );
+
+    Point v = Point { 3, 7 };
+
+    // The other thing a caller may do with the result: read through it once into a value of its own.
+    i32 copied = get( v );
+
+    y   = 50;
+    v.y = 99;
+
+    return bound + copied - 57; // 50 + 7 - 57
+}

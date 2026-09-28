@@ -34,4 +34,16 @@ error: only a `const ref` may be returned
 54 | ref i32 returns_a_mutable_ref( ref i32 a )
    | ^^^ write `const ref i32`
 
-6 errors generated
+error: `out` is not a return mode
+  --> sema/errors_const_ref_return.kl:62:1
+   |
+62 | out i32 returns_an_out()
+   | ^^^ `out` says how an argument travels, and a return is not an argument
+
+error: `move` is not a return mode
+  --> sema/errors_const_ref_return.kl:67:1
+   |
+67 | move i32 returns_a_move()
+   | ^^^^ `move` says how an argument travels, and a return is not an argument
+
+8 errors generated
