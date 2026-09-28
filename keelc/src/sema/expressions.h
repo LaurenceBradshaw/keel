@@ -124,6 +124,8 @@ private:
     Type_id function_address( Node_id id, Node_id declaration );
     // `&C::f`: an instance method's signature, with its receiver as parameter 0.
     Type_id method_address( Node_id id, Node_id aggregate );
+    // `C::C`: the name a class's constructor was declared with, which only `C( ... )` reaches.
+    bool names_constructor( Node_id aggregate, Symbol_id name ) const;
 
     // `&C::x`: the offset of a field, typed `field( C ) -> T` at the qualifier's instance.
     Type_id field_address( Node_id id, Node_id aggregate, Node_id field );

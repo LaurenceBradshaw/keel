@@ -57,6 +57,9 @@ private:
     // is consumed as well: leaving it in place trips every rule after this one.
     Symbol_id expect_name();
 
+    // expect_name after `::`, where `~Name` is refused as one mistake rather than two.
+    Symbol_id expect_member_name();
+
     // What peek() should be called in a message: its source text where it has one, so "found
     // `widget`" rather than "found `identifier`".
     std::string found_text() const;
@@ -503,6 +506,25 @@ Symbol_id Parser::expect_name()
     {
         advance();
     }
+
+    return Symbol_id {};
+}
+
+Symbol_id Parser::expect_member_name()
+{
+    if( !check( Token_kind::Tilde ) )
+    {
+        return expect_name();
+    }
+
+    const Span tilde = advance().span;
+    match( Token_kind::Identifier );
+
+    error_at(
+        Span::merge( tilde, previous().span ),
+        "a destructor cannot be named",
+        "it runs by itself when the value's lifetime ends"
+    );
 
     return Symbol_id {};
 }
@@ -2602,7 +2624,7 @@ Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing )
             {
                 advance();
 
-                const Symbol_id scoped = expect_name();
+                const Symbol_id scoped = expect_member_name();
 
                 if( !scoped.is_valid() )
                 {
@@ -2689,7 +2711,7 @@ Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing )
         {
             advance();
 
-            const Symbol_id name = expect_name();
+            const Symbol_id name = expect_member_name();
 
             // A member access with no name is not one - the same rule parse_function_decl applies to
             // a declaration, and for the same reason: every later pass reads the name to report
@@ -4664,6 +4686,22 @@ TEST_CASE( "parser_rejects_a_keyword_after_colon_colon", "[parse][members]" )
         INFO( path << "\n" << p.errors() );
         REQUIRE( p.has_errors() );
         REQUIRE( p.errors().find( "expected an identifier" ) != std::string::npos );
+        REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::Path_expr ).is_valid() );
+    }
+}
+
+TEST_CASE( "parser_refuses_to_name_a_destructor_after_colon_colon", "[parse][members][m7]" )
+{
+    constexpr std::string_view c = "class C { i32 n; C( i32 v ) { n = v; } ~C() {} };\n";
+
+    for( const char* body : { "auto p = &C::~C;", "C::~C();", "auto p = &Box<i32>::~Box;" } )
+    {
+        const std::string source = fmt::format( "{}i32 main() {{ {} return 0; }}", c, body );
+        const Parsed      p( source );
+
+        INFO( source << "\n" << p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "a destructor cannot be named" ) != std::string::npos );
         REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::Path_expr ).is_valid() );
     }
 }

@@ -1,0 +1,25 @@
+error: a constructor has no address
+  --> sema/errors_constructor_name.kl:14:14
+   |
+14 |     auto p = &C::C;
+   |              ^^^^^ take the address of a function that returns `C( ... )`
+
+error: a constructor has no address
+  --> sema/errors_constructor_name.kl:15:24
+   |
+15 |     fn( i32 ) -> C q = &C::C;
+   |                        ^^^^^ take the address of a function that returns `C( ... )`
+
+error: a constructor is not a static method
+  --> sema/errors_constructor_name.kl:16:11
+   |
+16 |     C a = C::C( 1 );
+   |           ^^^^ construct it as `C( ... )`
+
+error: a constructor is not a static method
+  --> sema/errors_constructor_name.kl:17:14
+   |
+17 |     auto r = C::C;
+   |              ^^^^ construct it as `C( ... )`
+
+4 errors generated

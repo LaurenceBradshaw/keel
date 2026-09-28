@@ -1,0 +1,19 @@
+// A constructor is reached only as `C( ... )`: it has no address, and `C::C` does not name it.
+class C
+{
+    i32 n;
+
+    C( i32 v )
+    {
+        n = v;
+    }
+};
+
+i32 main()
+{
+    auto p = &C::C;
+    fn( i32 ) -> C q = &C::C;
+    C a = C::C( 1 );
+    auto r = C::C;
+    return 0;
+}

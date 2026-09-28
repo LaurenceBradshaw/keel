@@ -6560,6 +6560,18 @@ table in `README.md` is now owed**.
   by-address spelling) follows whatever that answers. **Scheduled first in M8, ahead of `[*]T`**,
   because it is unsound: the compiler accepts a program and the program frees twice.
 
+**Special members named through their type (2026-09-28).** A follow-up to the close-out: every
+spelling of a constructor or destructor as a member was already refused, but by the wrong message.
+`&C::C` said "`C` has no member `C`", which is false of a class with a constructor, and `&C::~C`
+produced two parse errors about `~`. Now the parser's `expect_member_name` refuses `~Name` after
+`::` once, "a destructor cannot be named", at both `::` sites. In sema, `names_constructor` (the
+qualifier's own name, on a class that declares a constructor) turns `&C::C` into "a constructor has
+no address", and `C::C` and `C::C( ... )` into "a constructor is not a static method" with
+`C( ... )` offered. A struct has no constructor, so `&S::S` stays an ordinary miss. Neither member
+gets an address: a destructor called through a pointer would end a lifetime twice, and a
+constructor's address is a static method that builds one, which arrives with static method
+addresses. Fixtures: `parse/errors_destructor_name.kl`, `sema/errors_constructor_name.kl`.
+
 ### Mode slice 2: modes in a function type, the return - done (2026-09-28)
 
 Four things were settled before any of it was implemented, and they are recorded here because each

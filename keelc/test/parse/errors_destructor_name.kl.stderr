@@ -1,0 +1,13 @@
+error: a destructor cannot be named
+  --> parse/errors_destructor_name.kl:19:18
+   |
+19 |     auto p = &C::~C;
+   |                  ^^ it runs by itself when the value's lifetime ends
+
+error: a destructor cannot be named
+  --> parse/errors_destructor_name.kl:20:8
+   |
+20 |     C::~C();
+   |        ^^ it runs by itself when the value's lifetime ends
+
+2 errors generated

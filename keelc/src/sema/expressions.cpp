@@ -1040,6 +1040,12 @@ Type_id Expressions::function_address( Node_id id, Node_id declaration )
     return types_.record( id, signature );
 }
 
+bool Expressions::names_constructor( Node_id aggregate, Symbol_id name ) const
+{
+    return name == Symbol_id { ast_.aux( aggregate ) } &&
+           aggregates_.find_member( aggregate, Node_kind::Constructor_decl ).is_valid();
+}
+
 Type_id Expressions::method_address( Node_id id, Node_id aggregate )
 {
     const Node_id          path  = ast_.child( id, 0 );
@@ -1056,6 +1062,17 @@ Type_id Expressions::method_address( Node_id id, Node_id aggregate )
         if( field.is_valid() )
         {
             return field_address( id, aggregate, field );
+        }
+
+        if( names_constructor( aggregate, name ) )
+        {
+            reporter_.error_at(
+                ast_.span( id ),
+                "a constructor has no address",
+                fmt::format( "take the address of a function that returns `{}( ... )`", owner )
+            );
+
+            return types_.record( id, table_.builtin( Type_kind::Error ) );
         }
 
         reporter_.error_at( ast_.span( id ), fmt::format( "`{}` has no member `{}`", owner, interner_.text( name ) ) );
@@ -1579,6 +1596,15 @@ Type_id Expressions::infer_static_call( Node_id id, Node_id aggregate )
     const std::string_view owner  = interner_.text( Symbol_id { ast_.aux( ast_.child( path, 0 ) ) } );
     const Node_id          method = aggregates_.find_method( aggregate, name );
 
+    if( !method.is_valid() && names_constructor( aggregate, name ) )
+    {
+        reporter_.error_at(
+            ast_.span( path ), "a constructor is not a static method", fmt::format( "construct it as `{}( ... )`", owner )
+        );
+
+        return refuse();
+    }
+
     if( !method.is_valid() )
     {
         reporter_.error_at( ast_.span( path ), fmt::format( "`{}` has no static method `{}`", owner, interner_.text( name ) ) );
@@ -1792,6 +1818,15 @@ Type_id Expressions::infer_path( Node_id id )
     if( is_aggregate( ast_.kind( decl ) ) )
     {
         const Node_id method = aggregates_.find_method( decl, name );
+
+        if( !method.is_valid() && names_constructor( decl, name ) )
+        {
+            reporter_.error_at(
+                ast_.span( id ), "a constructor is not a static method", fmt::format( "construct it as `{}( ... )`", owner )
+            );
+
+            return types_.record( id, table_.builtin( Type_kind::Error ) );
+        }
 
         if( !method.is_valid() )
         {
@@ -3672,6 +3707,42 @@ TEST_CASE( "type_checker_refuses_the_address_of_a_method_it_cannot_name", "[sema
         INFO( c.body << "\n" << p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( c.message ) != std::string::npos );
+    }
+}
+
+// A constructor is reached only through its type's name, so every other spelling of it is refused as one.
+TEST_CASE( "type_checker_refuses_to_name_a_constructor_through_its_type", "[sema][types][m7][method]" )
+{
+    constexpr std::string_view c = "class C { i32 n; C( i32 v ) { n = v; } };\n";
+
+    struct Case
+    {
+        const char* body;
+        const char* message;
+        const char* help;
+    };
+
+    for( const Case k :
+         { Case { "auto p = &C::C;", "a constructor has no address", "take the address of a function that returns `C( ... )`" },
+           Case { "fn( i32 ) -> C p = &C::C;", "a constructor has no address", "a function that returns `C( ... )`" },
+           Case { "C a = C::C( 1 );", "a constructor is not a static method", "construct it as `C( ... )`" },
+           Case { "auto p = C::C;", "a constructor is not a static method", "construct it as `C( ... )`" } } )
+    {
+        const Typed p( fmt::format( "{}i32 main() {{ {} return 0; }}\n", c, k.body ) );
+
+        INFO( k.body << "\n" << p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( k.message ) != std::string::npos );
+        REQUIRE( p.rendered().find( k.help ) != std::string::npos );
+    }
+
+    SECTION( "a struct has no constructor, so its own name is an ordinary miss" )
+    {
+        const Typed p( "struct S { i32 n; };\ni32 main() { auto p = &S::S; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`S` has no member `S`" ) != std::string::npos );
     }
 }
 
