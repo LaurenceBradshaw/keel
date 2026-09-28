@@ -6138,7 +6138,11 @@ else will name them.
 
 1. **The uninitialised drop flag.** Recorded under slice 1, found by `KEEL_VALGRIND=1`. A join
    reads a flag no path wrote, and the only reason it passes is that the stack bytes happen to be
-   zero. One initialiser at the flag's declaration in the emitter.
+   zero. ~~One initialiser at the flag's declaration in the emitter.~~ **Corrected 2026-09-28,
+   before implementing:** in `elaborate_drops`, not the emitter. A C initialiser leaves KIR reading
+   an unwritten local, which a second backend would inherit as `undef`; §2.2 puts the fix where
+   the invariant is stated. Every flag is written false at the top of the entry block.
+   **Done (2026-09-28)** - see the defect paragraph under slice 3.
 2. **The generic aggregate that owns and is passed by value.** Recorded under slice 1 as well,
    found while probing slice 3. `compute_owning` never sees a generic declaration, so `Box<u64>`
    with a destructor is copied into a bare parameter that D2 says is a borrow. It is `Places` and
@@ -6383,7 +6387,24 @@ so the invariant holds on every path the arm runs and on none of the others. The
 initialiser at the declaration, not dataflow: eliminating flags a join cannot reach is the
 optimisation §7 says not to attempt first. It is the only fixture valgrind reports, and it is a
 drop-elaboration bug older than function pointers. **Scheduled (2026-09-28)**: the step order above
-now puts it before step 3, as its own commit.
+now puts it before step 3, as its own commit. *(Rescheduled between step 3 and step 4, and moved
+from the emitter into `elaborate_drops` - see item 1 of the defect list.)* The cause is narrower
+than "no initialiser": a flag's only false-on-entry write comes from `storage_live`, and a
+conditional arm's temporary has none, so the arm that did not run never writes it.
+
+**Done (2026-09-28).** `rewrite_statements` writes every valid flag false at the top of the entry
+block, each at its guarded local's span, before any of the block's own statements. Test
+`drop_flags_clears_every_flag_on_entry`; nine goldens re-recorded, each gaining only the entry
+writes and the `#line` directives that go with them, and `KEEL_VALGRIND=1` is silent on all 194.
+**What it leaves behind, deliberately:** a flagged local that also has a `storage_live` is now
+written false twice, which is a dead store for a KIR pass to remove rather than a case to special
+here; and the `#line` directives at a function's top step between the locals' lines, which is
+cosmetic. **Mutation:** writing `true`, clearing in the last block instead of the entry, never
+running the loop, and `break` for `continue` are each killed by the unit test and the goldens.
+Clearing at the top of *every* block survives the unit test - it checks the entry writes are
+present, not that they are absent elsewhere - and is killed only by two fixtures' exit codes;
+accepted rather than tightened. Borrowing the flag's own span instead of the guarded local's was
+not run.
 
 **Second defect, found while probing slice 3 on 2026-09-28 and also older than function pointers: a
 generic aggregate that owns is passed to a bare parameter by value.** `Aggregates::compute_owning`

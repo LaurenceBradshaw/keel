@@ -371,6 +371,8 @@ int32_t kl__main__( void )
     int32_t kl_t71;
     bool kl_t72;
     bool kl_t73;
+#line 228 "codegen/overloads.kl"
+    kl_t73 = false;
 #line 201 "codegen/overloads.kl"
     kl_whole_1 = 7;
 #line 202 "codegen/overloads.kl"

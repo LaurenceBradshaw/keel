@@ -64,6 +64,10 @@ int32_t kl__main__( void )
     bool kl_t18;
 #line 47 "codegen/generics_owning.kl"
     kl_t17 = false;
+#line 51 "codegen/generics_owning.kl"
+    kl_t18 = false;
+#line 47 "codegen/generics_owning.kl"
+    kl_t17 = false;
     kl_t2 = &kl_a_1;
     kl_t17 = true;
     kl__Cell__R4Cell__ctor( kl_t2 );
@@ -135,6 +139,8 @@ struct kl__Cell kl__relay__I4CellE__M4Cell( struct kl__Cell kl_a_1 )
 {
     struct kl__Cell kl_t0;
     bool kl_t2;
+#line 33 "codegen/generics_owning.kl"
+    kl_t2 = false;
 #line 35 "codegen/generics_owning.kl"
     kl_t0 = kl_a_1;
     kl_t2 = false;

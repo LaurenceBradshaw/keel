@@ -65,6 +65,7 @@ fn main {
     let _18: bool;
 
     bb0:
+        _18 = const 0
         storage_live _1
         _2 = &_1
         _3 = call B(copy _2, const 1)

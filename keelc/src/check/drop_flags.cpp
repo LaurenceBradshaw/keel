@@ -194,6 +194,21 @@ void rewrite_statements( Function& func, const Flag_map& flags, const Flag_vocab
         const u32 count     = block.statement_count;
         const u32 new_first = narrow_cast<u32>( rebuilt.size() );
 
+        // Clear every flag on entry: an arm's temporary has no storage_live to do it on the path that skips it.
+        if( &block == &func.blocks.front() )
+        {
+            for( u32 local = 0; local < flags.size(); ++local )
+            {
+                const Local_id flag = flags[local];
+                if( !flag.is_valid() )
+                {
+                    continue;
+                }
+
+                rebuilt.push_back( set_flag( flag, false, func.locals[local].span, vocabulary ) );
+            }
+        }
+
         for( u32 i = 0; i < count; ++i )
         {
             Statement statement = func.statements[old_first + i];
@@ -424,6 +439,33 @@ TEST_CASE( "drop_flags_leaves_every_function_verifiable", "[check][drop]" )
     {
         INFO( print( function, p.ast, p.types.table(), p.literals, p.interner ) );
         REQUIRE( verify( function ).empty() );
+    }
+}
+
+// A temporary built in one arm of a conditional has no storage_live, so nothing on the other arm's
+// path would clear its flag - and the join tests both.
+TEST_CASE( "drop_flags_clears_every_flag_on_entry", "[check][drop]" )
+{
+    Elaborated p(
+        std::string( k_owning ) + "i32 run( bool c ) { Owned o = c ? Owned( 1 ) : Owned( 2 ); return 0; }\n"
+                                  "i32 main() { return run( true ); }"
+    );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text  = p.text( p.functions.size() - 2 ); // run
+    const std::string entry = text.substr( text.find( "bb0:" ), text.find( "bb1:" ) - text.find( "bb0:" ) );
+
+    INFO( text );
+    REQUIRE( count( text, " if _" ) == 3 );
+
+    for( std::size_t at = text.find( " if _" ); at != std::string::npos; at = text.find( " if _", at + 1 ) )
+    {
+        const std::string flag = text.substr( at + 4, text.find( '\n', at ) - at - 4 );
+
+        INFO( flag );
+        REQUIRE( entry.find( flag + " = const 0" ) != std::string::npos );
     }
 }
 

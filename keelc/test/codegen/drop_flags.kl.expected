@@ -61,6 +61,7 @@ int32_t kl__run__3i32( int32_t kl_c_1 )
     bool kl_t7;
 #line 37 "codegen/drop_flags.kl"
     kl_t7 = false;
+    kl_t7 = false;
     kl_t3 = &kl_o_2;
     kl_t7 = true;
     kl__Owned__R5Owned_3u64__ctor( kl_t3, 1 );

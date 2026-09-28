@@ -69,6 +69,12 @@ int32_t kl__owning__4bool( bool kl_which_1 )
     bool kl_t12;
 #line 37 "codegen/conditional.kl"
     kl_t10 = false;
+#line 38 "codegen/conditional.kl"
+    kl_t11 = false;
+#line 39 "codegen/conditional.kl"
+    kl_t12 = false;
+#line 37 "codegen/conditional.kl"
+    kl_t10 = false;
     kl_t3 = &kl_a_2;
     kl_t10 = true;
     kl__Owner__R5Owner_3i32__ctor( kl_t3, 1 );
@@ -115,9 +121,12 @@ int32_t kl__owning_built__4bool( bool kl_which_1 )
     bool kl_t10;
     bool kl_t11;
     bool kl_t12;
+#line 48 "codegen/conditional.kl"
+    kl_t10 = false;
+    kl_t11 = false;
+    kl_t12 = false;
     if ( kl_which_1 ) goto bb1; else goto bb2;
     bb1:
-#line 48 "codegen/conditional.kl"
     kl_t5 = &kl_t4;
     kl_t11 = true;
     kl__Owner__R5Owner_3i32__ctor( kl_t5, 100 );
@@ -155,6 +164,10 @@ int32_t kl__owning_temporary__4bool( bool kl_which_1 )
     struct kl__Owner kl_t8;
     bool kl_t9;
     bool kl_t10;
+#line 56 "codegen/conditional.kl"
+    kl_t9 = false;
+#line 57 "codegen/conditional.kl"
+    kl_t10 = false;
 #line 56 "codegen/conditional.kl"
     kl_t9 = false;
     kl_t3 = &kl_a_2;

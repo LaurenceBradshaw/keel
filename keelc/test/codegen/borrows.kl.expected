@@ -84,6 +84,8 @@ int32_t kl__main__( void )
     uint64_t kl_t22;
     int32_t kl_t23;
     bool kl_t24;
+#line 52 "codegen/borrows.kl"
+    kl_t24 = false;
 #line 41 "codegen/borrows.kl"
     kl_total_1 = 0;
 #line 44 "codegen/borrows.kl"

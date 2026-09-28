@@ -74,6 +74,7 @@ int32_t kl__main__( void )
     bool kl_t22;
 #line 32 "codegen/function_pointer_owning_parameter.kl"
     kl_t22 = false;
+    kl_t22 = false;
     kl_t2 = &kl_b_1;
     kl_t22 = true;
     kl__B__R1B_3u64__ctor( kl_t2, 7 );
