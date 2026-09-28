@@ -17,9 +17,13 @@ void Reporter::warn_at( Span span, std::string message, std::string help )
 
 std::string Reporter::previous_declaration_note( Span previous ) const
 {
-    const Line_col loc = sm_.line_col( previous.file, previous.start );
+    return fmt::format( "previous declaration is at: {}", position( previous ) );
+}
 
-    return fmt::format( "previous declaration is at: {}:{}", loc.line, loc.col );
+std::string Reporter::position( Span span ) const
+{
+    const Line_col loc = sm_.line_col( span.file, span.start );
+    return fmt::format( "{}:{}", loc.line, loc.col );
 }
 
 std::string_view Reporter::text( Span span ) const
@@ -69,6 +73,18 @@ TEST_CASE( "reporter_names_the_line_and_column_of_an_earlier_declaration", "[sem
 
     // Second line, first column - the note must say so rather than repeat the byte offset.
     REQUIRE( reporter.previous_declaration_note( Span { file, 11, 14 } ) == "previous declaration is at: 2:1" );
+}
+
+TEST_CASE( "reporter_names_where_a_span_starts", "[sema][reporter]" )
+{
+    Source_manager sm;
+    Diagnostics    diags;
+    const File_id  file = sm.add_file( "t.kl", "let x = 1;\nlet y = 2;\n" );
+
+    sema::Reporter reporter( sm, diags );
+
+    // `y = 2` - its start, not its end, and line before column.
+    REQUIRE( reporter.position( Span { file, 15, 20 } ) == "2:5" );
 }
 
 TEST_CASE( "reporter_quotes_the_source_back", "[sema][reporter]" )

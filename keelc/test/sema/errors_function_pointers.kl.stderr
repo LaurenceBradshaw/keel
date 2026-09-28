@@ -1,9 +1,3 @@
-error: `unbounded` takes `T`, which is not known to be copyable, so its address has no function type yet
-  --> sema/errors_function_pointers.kl:34:19
-   |
-34 | i32 unbounded<T>( T a )
-   |                   ^^^ add `where T : Copyable` to `unbounded`
-
 error: `over` is overloaded, so its address names no one function
   --> sema/errors_function_pointers.kl:42:24
    |
@@ -45,6 +39,12 @@ error: `over` is overloaded, so its type arguments choose nothing
    |
 52 |     fn( i32 )->i32 g = &over<i32>;
    |                        ^^^^^^^^^^ give the generic a name of its own, or drop the type arguments and choose by the signature
+
+error: `unbounded` takes `T`, which is not known to be copyable, so its address has no function type yet
+  --> sema/errors_function_pointers.kl:56:14
+   |
+56 |     auto j = &unbounded<i32>;
+   |              ^^^^^^^^^^^^^^^ add `where T : Copyable` to `unbounded`, whose parameter is at 34:19
 
 error: expected `fn( i32 ) -> i32`, but got `fn( u8 ) -> u8`
   --> sema/errors_function_pointers.kl:59:24

@@ -1009,11 +1009,16 @@ Type_id Expressions::function_address( Node_id id, Node_id declaration )
         const std::string_view spelt = table_.name( type );
 
         reporter_.error_at(
-            ast_.span( refused ),
+            ast_.span( id ),
             fmt::format(
                 "`{}` takes `{}`, which is not known to be copyable, so its address has no function type yet", name, spelt
             ),
-            fmt::format( "add `where {} : Copyable` to `{}`", spelt, name )
+            fmt::format(
+                "add `where {} : Copyable` to `{}`, whose parameter is at {}",
+                spelt,
+                name,
+                reporter_.position( ast_.span( refused ) )
+            )
         );
 
         return types_.record( id, error );
