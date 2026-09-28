@@ -940,7 +940,7 @@ Type_id Expressions::function_address( Node_id id, Node_id declaration )
 
         if( expectation.is_valid() && table_.is_function( expectation ) )
         {
-            declaration = overload_for_signature( id, name, declaration, expectation );
+            declaration = overload_for_signature( id, name, declaration, expectation, Bindings {} );
 
             if( !declaration.is_valid() )
             {
@@ -1035,6 +1035,112 @@ Type_id Expressions::function_address( Node_id id, Node_id declaration )
     return types_.record( id, signature );
 }
 
+Type_id Expressions::method_address( Node_id id, Node_id aggregate )
+{
+    const Node_id          path  = ast_.child( id, 0 );
+    const Symbol_id        name  = Symbol_id { ast_.aux( path ) };
+    const std::string_view owner = interner_.text( Symbol_id { ast_.aux( aggregate ) } );
+
+    const Type_id expectation = expected_;
+    expected_                 = Type_id {};
+
+    const Node_id first = aggregates_.find_method( aggregate, name );
+    if( !first.is_valid() )
+    {
+        const Node_id field = aggregates_.find_field( types_.type_of( aggregate ), name );
+        reporter_.error_at(
+            ast_.span( id ),
+            fmt::format( "`{}` has no method `{}`", owner, interner_.text( name ) ),
+            field.is_valid() ? fmt::format( "`{}` is a field of `{}`, not a method", interner_.text( name ), owner )
+                             : std::string {}
+        );
+
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    if( is_static_method( ast_, first ) )
+    {
+        reporter_.error_at(
+            ast_.span( id ),
+            fmt::format( "`{}` is a `static` method, so its address is not supported yet", interner_.text( name ) ),
+            fmt::format( "call it as `{}::{}( ... )`", owner, interner_.text( name ) )
+        );
+
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    if( !is_visible_from( ast_, first, current_type() ) )
+    {
+        report_private( id, first );
+
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    const Type_id qualified_type = qualifier_type( path, aggregate );
+    if( table_.is_error( qualified_type ) )
+    {
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    const Bindings bindings = aggregates_.bindings_of( qualified_type );
+
+    Node_id method;
+    if( !resolution_.next_overload( first ).is_valid() )
+    {
+        method = first;
+    }
+    else if( expectation.is_valid() && table_.is_function( expectation ) )
+    {
+        method = overload_for_signature( id, interner_.text( name ), first, expectation, bindings );
+
+        if( !method.is_valid() )
+        {
+            return types_.record( id, table_.builtin( Type_kind::Error ) );
+        }
+    }
+    else
+    {
+        reporter_.error_at(
+            ast_.span( id ),
+            fmt::format( "`{}` is overloaded, so its address names no one function", interner_.text( name ) ),
+            "assigning it to a variable of one signature will choose between them"
+        );
+
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    Node_id       refused {};
+    const Type_id signature = written_signature( method, bindings, refused );
+
+    if( refused.is_valid() )
+    {
+        const Type_id          type  = types_.type_of( refused );
+        const std::string_view spelt = table_.name( type );
+
+        reporter_.error_at(
+            ast_.span( id ),
+            fmt::format(
+                "`{}` takes `{}`, which is not known to be copyable, so its address has no function type yet",
+                interner_.text( name ),
+                spelt
+            ),
+            fmt::format(
+                "add `where {} : Copyable` to `{}`; the parameter of `{}` is at {}",
+                spelt,
+                owner,
+                interner_.text( name ),
+                reporter_.position( ast_.span( refused ) )
+            )
+        );
+
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    record_method_instantiation( id, method, qualified_type );
+    callees_.record( id, method );
+    return types_.record( id, signature );
+}
+
 Type_id Expressions::written_signature( Node_id declaration, const Bindings& bindings, Node_id& refused )
 {
     refused = Node_id {};
@@ -1067,18 +1173,20 @@ Type_id Expressions::written_signature( Node_id declaration, const Bindings& bin
     );
 }
 
-Node_id Expressions::overload_for_signature( Node_id id, std::string_view name, Node_id first, Type_id signature )
+Node_id Expressions::overload_for_signature(
+    Node_id id, std::string_view name, Node_id first, Type_id signature, const Bindings& bindings
+)
 {
     std::vector<std::string> offered;
     for( Node_id candidate = first; candidate.is_valid(); candidate = resolution_.next_overload( candidate ) )
     {
-        if( is_generic( ast_, candidate ) )
+        if( is_generic( ast_, candidate ) && bindings.empty() )
         {
             continue;
         }
 
         Node_id       refused {};
-        const Type_id written = written_signature( candidate, Bindings {}, refused );
+        const Type_id written = written_signature( candidate, bindings, refused );
 
         if( !written.is_valid() )
         {
@@ -1185,6 +1293,15 @@ Type_id Expressions::infer_unary( Node_id id )
         if( declaration.is_valid() && ast_.kind( declaration ) == Node_kind::Function_decl )
         {
             return function_address( id, declaration );
+        }
+    }
+
+    if( ast_.kind( ast_.child( id, 0 ) ) == Node_kind::Path_expr )
+    {
+        const Node_id qualified_declaration = qualifier_declaration( ast_.child( id, 0 ) );
+        if( qualified_declaration.is_valid() && is_aggregate( ast_.kind( qualified_declaration ) ) )
+        {
+            return method_address( id, qualified_declaration );
         }
     }
 
@@ -1593,13 +1710,15 @@ Type_id Expressions::infer_path( Node_id id )
             return types_.record( id, table_.builtin( Type_kind::Error ) );
         }
 
-        // Named rather than called. The same complaint a bare function name gets, and for the same
-        // reason: L13 has no function pointers yet, so there is no value for this to be.
+        // Named rather than called: an instance method's value is its address, which takes a `&`.
         reporter_.error_at(
             ast_.span( id ),
             fmt::format( "`{}` is a function, not a value", interner_.text( name ) ),
-            is_static_method( ast_, method ) ? fmt::format( "call it as `{}::{}( ... )`", owner, interner_.text( name ) )
-                                             : fmt::format( "call it as `value.{}( ... )`", interner_.text( name ) )
+            is_static_method( ast_, method )
+                ? fmt::format( "call it as `{}::{}( ... )`", owner, interner_.text( name ) )
+                : fmt::format(
+                      "take its address as `&{0}::{1}`, or call it as `value.{1}( ... )`", owner, interner_.text( name )
+                  )
         );
 
         return types_.record( id, table_.builtin( Type_kind::Error ) );
@@ -3329,6 +3448,143 @@ TEST_CASE( "type_checker_takes_the_address_of_a_generic_instance", "[sema][types
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "`id` is overloaded, so its type arguments choose nothing" ) != std::string::npos );
     }
+}
+
+TEST_CASE( "type_checker_types_the_address_of_a_method", "[sema][types][m7][method]" )
+{
+    constexpr std::string_view counter = "struct C\n"
+                                         "{\n"
+                                         "    i32 n;\n"
+                                         "    i32 add( i32 by ) { return n + by; }\n"
+                                         "    i32 get() const { return n; }\n"
+                                         "    const ref i32 peek() const { return n; }\n"
+                                         "    i32 pick( i32 a ) { return a; }\n"
+                                         "    i32 pick( f64 a ) { return 2; }\n"
+                                         "};\n";
+
+    constexpr std::string_view box = "struct Box<T> where T : Copyable\n"
+                                     "{\n"
+                                     "    T v;\n"
+                                     "    T value( T other ) const { return v; }\n"
+                                     "    T pick( i32 a ) const { return v; }\n"
+                                     "    T pick( f64 a ) const { return v; }\n"
+                                     "};\n";
+
+    SECTION( "the receiver is parameter 0" )
+    {
+        const Typed p( std::string( counter ) + "i32 main() { auto p = &C::add; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( ref C, i32 ) -> i32" );
+    }
+
+    SECTION( "a const method's receiver is a read-only borrow" )
+    {
+        const Typed p( std::string( counter ) + "i32 main() { auto p = &C::get; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( const ref C ) -> i32" );
+    }
+
+    SECTION( "a returned borrow keeps its mode" )
+    {
+        const Typed p( std::string( counter ) + "i32 main() { auto p = &C::peek; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( const ref C ) -> const ref i32" );
+    }
+
+    SECTION( "an instance's receiver and parameters are substituted" )
+    {
+        const Typed p( std::string( box ) + "i32 main() { auto p = &Box<i32>::value; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( const ref Box<i32>, i32 ) -> i32" );
+    }
+
+    SECTION( "the expected signature chooses an overload" )
+    {
+        const Typed p( std::string( counter ) + "i32 main() { fn( ref C, f64 ) -> i32 p = &C::pick; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( ref C, f64 ) -> i32" );
+    }
+
+    SECTION( "and chooses one on a generic instance" )
+    {
+        const Typed p(
+            std::string( box ) + "i32 main() { fn( const ref Box<i32>, f64 ) -> i32 p = &Box<i32>::pick; return 0; }\n"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 0 ) ) == "fn( const ref Box<i32>, f64 ) -> i32" );
+    }
+
+    SECTION( "it is called with the receiver first" )
+    {
+        const Typed p( std::string( counter ) + "i32 main() { C c; auto p = &C::add; return p( ref c, 2 ); }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+TEST_CASE( "type_checker_refuses_the_address_of_a_method_it_cannot_name", "[sema][types][m7][method]" )
+{
+    constexpr std::string_view counter = "struct C\n"
+                                         "{\n"
+                                         "    i32 n;\n"
+                                         "    static i32 make() { return 1; }\n"
+                                         "    i32 pick( i32 a ) { return a; }\n"
+                                         "    i32 pick( f64 a ) { return 2; }\n"
+                                         "};\n"
+                                         "class Vault { i32 v; private i32 hidden() { return 1; } };\n"
+                                         "struct Box<T> where T : Copyable\n"
+                                         "{\n"
+                                         "    T v;\n"
+                                         "    T value() const { return v; }\n"
+                                         "};\n"
+                                         "struct Open<T> { T* v; i32 keep( T a ) const { return 1; } };\n";
+
+    struct Case
+    {
+        const char* body;
+        const char* message;
+    };
+
+    for( const Case c :
+         { Case { "auto p = &C::make;", "`make` is a `static` method, so its address is not supported yet" },
+           Case { "auto p = &Vault::hidden;", "`hidden` is private to `Vault`" },
+           Case { "auto p = &C::nope;", "`C` has no method `nope`" },
+           Case { "auto p = &C::n;", "`C` has no method `n`" },
+           Case { "auto p = &Box::value;", "`Box` needs its type arguments here" },
+           Case { "auto p = &C::pick;", "`pick` is overloaded, so its address names no one function" },
+           Case { "auto p = &Open<i32>::keep;", "`keep` takes `T`, which is not known to be copyable" },
+           Case { "fn( ref C, bool ) -> i32 p = &C::pick;", "no overload of `pick` has the type `fn( ref C, bool ) -> i32`" }
+         } )
+    {
+        const Typed p( fmt::format( "{}i32 main() {{ {} return 0; }}\n", counter, c.body ) );
+
+        INFO( c.body << "\n" << p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( c.message ) != std::string::npos );
+    }
+}
+
+TEST_CASE( "type_checker_offers_the_address_of_a_method_named_without_one", "[sema][types][m7][method]" )
+{
+    const Typed p( "struct C\n{\n    i32 n;\n    i32 add( i32 by ) { return n + by; }\n};\n"
+                   "i32 main() { auto p = C::add; return 0; }\n" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.errors() == 1 );
+    REQUIRE( p.rendered().find( "take its address as `&C::add`, or call it as `value.add( ... )`" ) != std::string::npos );
 }
 
 // M7 slice 3. The callee is a variable rather than a name the resolver bound to a function, so the

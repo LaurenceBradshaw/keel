@@ -1,0 +1,73 @@
+// Every way a method's address can fail to name one function, in one file. The unit fixtures check
+// that each message is produced; this checks the caret and the hint the author sees.
+struct C
+{
+    i32 n;
+
+    static i32 make()
+    {
+        return 1;
+    }
+
+    i32 add( i32 by )
+    {
+        return n + by;
+    }
+
+    i32 pick( i32 a )
+    {
+        return a;
+    }
+
+    i32 pick( f64 a )
+    {
+        return 2;
+    }
+};
+
+class Vault
+{
+    i32 v;
+
+    private i32 hidden()
+    {
+        return 1;
+    }
+};
+
+struct Box<T> where T : Copyable
+{
+    T v;
+
+    T value() const
+    {
+        return v;
+    }
+};
+
+struct Open<T>
+{
+    T* v;
+
+    i32 keep( T a ) const
+    {
+        return 1;
+    }
+};
+
+i32 main()
+{
+    auto a = &C::make;
+    auto b = &Vault::hidden;
+    auto c = &C::nope;
+    auto d = &C::n;
+    auto e = &Box::value;
+    auto f = &C::pick;
+    auto k = &Open<i32>::keep;
+
+    fn( ref C, bool )->i32 g = &C::pick;
+
+    auto h = C::add;
+
+    return 0;
+}

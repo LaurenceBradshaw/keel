@@ -220,9 +220,8 @@ bool enum_has_payload( const Ast& ast, Node_id enum_decl );
 
 Keyword parameter_mode( const Ast& ast, Node_id decl );
 
-// A mode has two spellings: a `Param_mode` inside a function type, and the `Keyword` the source
-// writes. `const ref` is the one form where the two disagree - it is a mode of its own in a type and
-// takes no marker at a call, which is D31's rule - so neither direction is a rename of the other.
+// A mode's two spellings: a `Param_mode` in a type, and the `Keyword` a call site writes. Bare and `const ref` share the
+// empty marker, since after either the caller's variable is unchanged (D31), but stay two modes, so neither maps back.
 Param_mode parameter_mode_of( const Ast& ast, Node_id param );
 Keyword    call_marker_of( Param_mode mode );
 

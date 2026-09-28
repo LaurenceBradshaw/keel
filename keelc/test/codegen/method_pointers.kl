@@ -1,0 +1,98 @@
+// M7 slice 6: a method's address is a function taking its receiver first. The exit code is the
+// answer, so a receiver passed by value, or a call that reached the wrong overload, fails here even
+// when the emitted C builds.
+struct Counter
+{
+    i32 n;
+
+    void add( i32 by )
+    {
+        n = n + by;
+    }
+
+    i32 get() const
+    {
+        return n;
+    }
+
+    i32 pick( i32 a )
+    {
+        return 1;
+    }
+
+    i32 pick( f64 a )
+    {
+        return 2;
+    }
+};
+
+struct Box<T> where T : Copyable
+{
+    T v;
+
+    T value() const
+    {
+        return v;
+    }
+
+    i32 pick( i32 a ) const
+    {
+        return 1;
+    }
+
+    i32 pick( f64 a ) const
+    {
+        return 2;
+    }
+};
+
+i32 apply( fn( const ref Counter )->i32 f, const ref Counter c )
+{
+    return f( c );
+}
+
+i32 main()
+{
+    Counter c;
+    c.n = 1;
+
+    fn( ref Counter, i32 )->void bump = &Counter::add;
+    fn( const ref Counter )->i32 read = &Counter::get;
+
+    bump( ref c, 4 );
+
+    if( read( c ) != 5 )
+    {
+        return 1;
+    }
+
+    if( apply( read, c ) != 5 )
+    {
+        return 2;
+    }
+
+    fn( ref Counter, f64 )->i32 choose = &Counter::pick;
+
+    if( choose( ref c, 1.0 ) != 2 )
+    {
+        return 3;
+    }
+
+    Box<i32> b;
+    b.v = 7;
+
+    fn( const ref Box<i32> )->i32      unwrap = &Box<i32>::value;
+    fn( const ref Box<i32>, f64 )->i32 choose_box = &Box<i32>::pick;
+
+    if( unwrap( b ) != 7 )
+    {
+        return 4;
+    }
+
+    if( choose_box( b, 1.0 ) != 2 )
+    {
+        return 5;
+    }
+
+    return 0;
+}
