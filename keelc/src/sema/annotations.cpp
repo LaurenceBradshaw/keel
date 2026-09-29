@@ -555,7 +555,6 @@ public:
         }
 
         aggregates_.order_structs();
-        aggregates_.compute_owning();
 
         // Last, so errors() counts only what the case itself provokes.
         earlier_ = diags_.error_count();

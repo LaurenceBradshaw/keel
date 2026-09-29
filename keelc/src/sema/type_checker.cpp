@@ -1,9 +1,6 @@
 #include "sema/type_checker.h"
-
 #include <fmt/format.h>
-
 #include <algorithm>
-
 #include "common/source_manager.h"
 #include "sema/aggregates.h"
 #include "sema/annotations.h"
@@ -140,7 +137,6 @@ Types Checker::run()
         types_.take_types(),
         aggregates_.take_struct_order(),
         constant_folder_.take_values(),
-        aggregates_.take_owning(),
         callees_.take(),
         generic_recursion_.take_instantiations(),
         overloads_.take_instantiations(),
@@ -401,16 +397,29 @@ bool has_destructor( const Ast& ast, Node_id declaration )
     return false;
 }
 
-namespace
-{
 // The recursion behind instance_owns. `visiting` is not a cycle *check* - order_structs already
 // refuses a by-value cycle between declarations - but instances are interned as they are asked
 // about, and answering the same one twice down a chain would not terminate.
-bool owns_through_fields(
-    const Ast& ast, Type_table& table, Type_id instance, std::span<const Type_id> recorded, std::vector<Type_id>& visiting
+bool may_own(
+    const Ast&                            ast,
+    Type_table&                           table,
+    Type_id                               instance,
+    std::span<const Type_id>              recorded,
+    std::vector<Type_id>&                 visiting,
+    const std::function<bool( Type_id )>& parameter_owns
 )
 {
-    if( !instance.is_valid() || table.is_error( instance ) || !table.is_struct( instance ) )
+    if( !instance.is_valid() || table.is_error( instance ) )
+    {
+        return false;
+    }
+
+    if( table.is_parameter( instance ) )
+    {
+        return parameter_owns( instance );
+    }
+
+    if( !table.is_struct( instance ) )
     {
         return false;
     }
@@ -443,7 +452,7 @@ bool owns_through_fields(
             continue;
         }
 
-        if( owns_through_fields( ast, table, field_type( ast, table, instance, field, recorded ), recorded, visiting ) )
+        if( may_own( ast, table, field_type( ast, table, instance, field, recorded ), recorded, visiting, parameter_owns ) )
         {
             visiting.pop_back();
             return true;
@@ -453,13 +462,12 @@ bool owns_through_fields(
     visiting.pop_back();
     return false;
 }
-} // namespace
 
 bool instance_owns( const Ast& ast, Type_table& table, Type_id instance, std::span<const Type_id> recorded )
 {
     std::vector<Type_id> visiting;
 
-    return owns_through_fields( ast, table, instance, recorded, visiting );
+    return may_own( ast, table, instance, recorded, visiting, []( Type_id ) { return true; } );
 }
 
 Type_id binding_type( const Ast& ast, const Types& types, Node_id param )

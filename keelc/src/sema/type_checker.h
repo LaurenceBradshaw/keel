@@ -1,8 +1,8 @@
 #pragma once
+#include <functional>
 #include <optional>
 #include <span>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 #include "ast/ast.h"
 #include "ast/node.h"
@@ -64,7 +64,6 @@ public:
         std::vector<Type_id>                    types,
         std::vector<Node_id>                    struct_order,
         std::unordered_map<u32, Constant_value> constants,
-        std::unordered_set<u32>                 owning,
         std::unordered_map<u32, Node_id>        callees,
         std::vector<Instantiation>              instantiations,
         std::unordered_map<u32, u32>            instantiation_of,
@@ -75,7 +74,6 @@ public:
           struct_order_( std::move( struct_order ) ),
           constants_( std::move( constants ) ),
           callees_( std::move( callees ) ),
-          owning_( std::move( owning ) ),
           instantiations_( std::move( instantiations ) ),
           instantiation_of_( std::move( instantiation_of ) ),
           generic_calls_( std::move( generic_calls ) )
@@ -145,21 +143,6 @@ public:
         return generic_calls_;
     }
 
-    // D2: a type owns when it has a destructor, directly or through a by-value member. Recorded
-    // rather than recomputed because drop elaboration runs on KIR, after the checker has gone.
-    // Keyed by Type_id because that is what every caller holds; the set below stores declarations.
-    bool is_owning( Type_id type ) const
-    {
-        if( !type.is_valid() || !table_.is_struct( type ) )
-        {
-            return false;
-        }
-
-        const Node_id decl = table_.get( type ).declaration;
-
-        return decl.is_valid() && owning_.contains( decl.v );
-    }
-
     // Which instantiation a call resolved to, or nothing for an ordinary call.
     std::optional<std::size_t> instantiation_of( Node_id call ) const
     {
@@ -174,7 +157,6 @@ private:
     std::vector<Node_id>                    struct_order_;
     std::unordered_map<u32, Constant_value> constants_; // dependencies first, from the DFS post-order
     std::unordered_map<u32, Node_id>        callees_;   // Call_expr -> the callable it resolved to
-    std::unordered_set<u32>                 owning_;
     std::vector<Instantiation>              instantiations_;
     std::unordered_map<u32, u32>            instantiation_of_;
     std::vector<Generic_call>               generic_calls_;
@@ -237,10 +219,17 @@ bool is_const_method( const Ast& ast, Node_id method );
 // Whether a declaration declares a destructor of its own. Free because three passes and the
 // emitter all ask it, and only one of them has a checker.
 bool has_destructor( const Ast& ast, Node_id declaration );
+// instance_owns for a type that may still hold a parameter, which `parameter_owns` answers
+bool may_own(
+    const Ast&                            ast,
+    Type_table&                           table,
+    Type_id                               instance,
+    std::span<const Type_id>              recorded,
+    std::vector<Type_id>&                 visiting,
+    const std::function<bool( Type_id )>& parameter_owns
+);
 // D2 asked of an *instance*: `Box<i32>` and `Box<Buffer>` are two answers from one declaration, and
-// a drop is elaborated against this one. Types::is_owning answers from the declaration instead,
-// which is the open form's answer and the right one for the checker's move rules inside a generic
-// body - the two are different questions and both are wanted.
+// a drop is elaborated against this one.
 bool     instance_owns( const Ast& ast, Type_table& table, Type_id instance, std::span<const Type_id> recorded );
 Bindings aggregate_bindings( const Ast& ast, const Type_table& table, Type_id aggregate, std::span<const Type_id> recorded );
 Type_id  field_type( const Ast& ast, Type_table& table, Type_id aggregate, Node_id field, std::span<const Type_id> recorded );

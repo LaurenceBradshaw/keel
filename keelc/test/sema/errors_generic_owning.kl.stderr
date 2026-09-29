@@ -14,6 +14,6 @@ error: `Box<u64>` is not `Copyable`, and `twice` requires it of `T`
   --> sema/errors_generic_owning.kl:42:24
    |
 42 |     Box<u64> c = twice<Box<u64>>( Box<u64>( 3 ) );
-   |                        ^^^^^^^^^ a type with a destructor owns something, so copying it would own it twice
+   |                        ^^^^^^^^^ it owns something, itself or through a field, so copying it would own that twice
 
 3 errors generated

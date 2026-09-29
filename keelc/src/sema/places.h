@@ -54,8 +54,8 @@ public:
     // the transfer is written down.
     void check_owning_source( Node_id value, Type_id type );
 
-    // D31: which parameters travel by address. Its own pass because the owning query is only
-    // answered after compute_owning, by which time both parameter loops have already run.
+    // D31: which parameters travel by address. Its own pass because ownership is asked of field
+    // types, which are recorded only after both parameter loops have run.
     void record_borrowed_parameters();
     void record_binding_address( Node_id annotation, Type_id type );
 

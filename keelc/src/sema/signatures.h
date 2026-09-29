@@ -78,7 +78,7 @@ private:
     // Ordering is Aggregates'; this only keeps D42 quiet about the aggregates it reported.
     void order_structs();
 
-    // D29's rules, split out because check_struct_ownership cannot run before compute_owning has.
+    // D29's rules, split out because check_struct_ownership cannot run before every field's type is recorded.
     void check_aggregate_members();
     void check_member_kind( Node_id decl, const Member_kind& kind );
     void check_aggregate_has_fields( Node_id decl );

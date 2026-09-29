@@ -987,8 +987,23 @@ TEST_CASE( "type_checker_leaves_the_receiver_alone", "[sema][borrow]" )
     REQUIRE( p.clean() );
 }
 
-// A constructor's parameters are declared by a pass that runs *before* compute_owning, which is
-// exactly why the borrow rule is a pass of its own. Without that they would never be borrows.
+// A bare parameter is a borrow when its type owns, and `Wrap<Tracked>` owns only through its
+// argument - so the borrow has to be decided per instance, or the callee gets a copy it frees.
+TEST_CASE( "type_checker_borrows_an_instance_that_owns_through_its_argument", "[sema][borrow][generic]" )
+{
+    const Typed p( "class Tracked { public i32 n; Tracked( i32 m ) { n = m; } ~Tracked() { } };\n"
+                   "class Wrap<T> { public T v; Wrap( move T x ) { v = move x; } };\n"
+                   "void consume( move Wrap<Tracked> w ) { }\n"
+                   "void f( Wrap<Tracked> w ) { consume( move w ); }\n"
+                   "i32 main() { return 0; }\n" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.errors() == 1 );
+    REQUIRE( p.rendered().find( "cannot move out of a borrow" ) != std::string::npos );
+}
+
+// A constructor's parameters are declared by a pass that runs *before* field types are recorded,
+// which is exactly why the borrow rule is a pass of its own. Without that they would never be borrows.
 TEST_CASE( "type_checker_borrows_in_a_member_function_too", "[sema][borrow]" )
 {
     constexpr std::string_view owning = "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n";

@@ -1,5 +1,4 @@
 #pragma once
-#include <unordered_set>
 #include <vector>
 #include "ast/ast.h"
 #include "ast/node.h"
@@ -7,15 +6,14 @@
 #include "sema/reporter.h"
 #include "sema/types_builder.h"
 
-// Structs, classes and enums as *shapes*: what contains what, what owns a resource, and where a
-// member or a field is. No rule about them lives here - only the answers the rules ask for.
+// Structs, classes and enums as *shapes*: what contains what, and where a member or a field is.
+// No rule about them lives here - only the answers the rules ask for.
 
 namespace keel::sema
 {
 
-// Owns the containment order and the owning set, the two facts about an aggregate that are
-// computed once for the whole program rather than at a use site. The owning set is what D29's
-// rules about a `struct` are then read against; the containment order has no D-entry behind it.
+// Owns the containment order, the one fact about an aggregate computed once for the whole program
+// rather than at a use site.
 class Aggregates
 {
 public:
@@ -32,12 +30,9 @@ public:
     // aggregates that were on one, so the caller can keep its own rules quiet about them.
     std::vector<Node_id> order_structs();
 
-    // Must run after order_structs, whose order it walks.
-    void compute_owning();
-
-    // Whether this concrete aggregate owns a resource. False for anything else, a type parameter
-    // included - ask Bounds when the answer has to cover one.
-    bool owns( Type_id type ) const;
+    // Whether order_structs proved this declaration, and everything it holds by value, free of a
+    // containment cycle. False before order_structs has run.
+    bool is_acyclic( Node_id decl ) const;
 
     // The first member of a kind, or invalid. Constructors and destructors are both at most one,
     // so "the first" and "the only" coincide once check_aggregate_members has run.
@@ -54,9 +49,8 @@ public:
     // goes through here rather than through the recorded type of the field declaration.
     Type_id field_type( Type_id aggregate, Node_id field );
 
-    // Handing the run's result to Types. Both leave this object empty; nothing reads it after.
-    std::vector<Node_id>    take_struct_order();
-    std::unordered_set<u32> take_owning();
+    // Handing the run's result to Types. Leaves this object empty; nothing reads it after.
+    std::vector<Node_id> take_struct_order();
 
 private:
     void report_containment_cycle( Node_id decl, const std::vector<Node_id>& path );
@@ -68,9 +62,8 @@ private:
     Type_table&     table_;
     Reporter&       reporter_;
 
-    std::vector<Node_id>    struct_order_;      // dependencies first
-    std::vector<Node_id>    containment_order_; // every aggregate, generics too, dependencies first; the proved-acyclic set
-    std::unordered_set<u32> owning_;            // filled by compute_owning, handed to Types
+    std::vector<Node_id> struct_order_;      // dependencies first
+    std::vector<Node_id> containment_order_; // every aggregate, generics too, dependencies first; the proved-acyclic set
 };
 
 } // namespace keel::sema

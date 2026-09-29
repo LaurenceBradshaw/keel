@@ -1,6 +1,7 @@
 #include "ir/lower.h"
 #include <cassert>
 #include <unordered_map>
+#include <unordered_set>
 
 #include <fmt/format.h>
 #include <vector>
@@ -1187,7 +1188,7 @@ Operand Lowering::lower_indirect_call( Node_id id )
     {
         // `move` travels by value as a bare argument does, so only the three borrows take an address.
         const bool by_address = i < modes.size() && ( ( modes[i] != Param_mode::Value && modes[i] != Param_mode::Move ) ||
-                                                      ( modes[i] == Param_mode::Value && types_.is_owning( arguments[i] ) ) );
+                                                      ( modes[i] == Param_mode::Value && owns( arguments[i] ) ) );
 
         operands.push_back(
             by_address ? borrowed_argument( written[i], types_.table().pointer_to( arguments[i] ) )
@@ -1199,7 +1200,7 @@ Operand Lowering::lower_indirect_call( Node_id id )
     // nothing for a conversion to happen to.
     for( std::size_t i = 0; i < operands.size() && i < arguments.size(); ++i )
     {
-        if( ( modes[i] == Param_mode::Value && !types_.is_owning( arguments[i] ) ) || modes[i] == Param_mode::Move )
+        if( ( modes[i] == Param_mode::Value && !owns( arguments[i] ) ) || modes[i] == Param_mode::Move )
         {
             operands[i] = converted( operands[i], arguments[i], ast_.span( ast_.child( id, 1 ) ) );
         }

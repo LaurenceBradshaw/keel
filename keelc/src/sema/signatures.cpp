@@ -37,7 +37,6 @@ void Signatures::declare()
     order_structs();
     check_aggregate_members();
     check_enum_has_variants();
-    aggregates_.compute_owning();
     check_struct_ownership();
     check_enum_payloads();
     declare_functions();
@@ -546,8 +545,8 @@ void Signatures::check_enum_has_variants()
 // destructor the language would have. Until that exists an owning payload would leak on every path
 // that did not construct it, so it is refused here rather than mis-destroyed there.
 //
-// Its own pass because is_owning_type only answers after compute_owning, which runs after the pass
-// that declares enums - the same ordering that made record_borrowed_parameters a pass of its own.
+// Its own pass because ownership is asked of field types, which are recorded after the pass that
+// declares enums - the same ordering that made record_borrowed_parameters a pass of its own.
 void Signatures::check_enum_payloads()
 {
     for( const Node_id decl : ast_.children( ast_.root() ) )
@@ -605,7 +604,7 @@ void Signatures::check_struct_fields_are_not_owning( Node_id decl )
             continue;
         }
 
-        // is_owning_type rather than the set directly: a field of type `T` has no declaration to
+        // Copyable rather than ownership directly: a field of type `T` has no declaration to
         // look up, and an unbounded one may turn out to own something - which is exactly what a
         // struct may not contain. The promise that rules it out is `Copyable`.
         if( bounds_.satisfies( field_type, Bound::Copyable ) )
@@ -621,7 +620,7 @@ void Signatures::check_struct_fields_are_not_owning( Node_id decl )
             fmt::format(
                 "a struct cannot contain `{}`, which {}",
                 table_.name( field_type ),
-                table_.is_parameter( field_type )          ? "may own a resource"
+                table_.mentions_parameter( field_type )    ? "may own a resource"
                 : keel::has_destructor( ast_, field_decl ) ? "has a destructor"
                                                            : "owns a resource"
             ),
@@ -1399,18 +1398,18 @@ TEST_CASE( "type_checker_checks_destructor_names", "[sema][aggregates]" )
 }
 
 // D2: a type is owning exactly when it has a destructor, directly or through a by-value member.
-// The answer is recorded rather than recomputed because drop elaboration runs on KIR, long after
-// the checker has finished.
 TEST_CASE( "type_checker_computes_the_owning_query", "[sema][aggregates][owning]" )
 {
-    const auto owning = []( const Typed& p, std::size_t nth_decl )
-    { return p.types().is_owning( p.types().type_of( p.nth( Node_kind::Class_decl, nth_decl ) ) ); };
+    const auto owns = []( Typed& p, Type_id type )
+    { return instance_owns( p.ast(), p.types().table(), type, p.types().recorded() ); };
+    const auto owning = [&]( Typed& p, std::size_t nth_decl )
+    { return owns( p, p.types().type_of( p.nth( Node_kind::Class_decl, nth_decl ) ) ); };
 
     SECTION( "a class with a destructor owns; one without does not" )
     {
-        const Typed p( "class Buffer { public u8* ptr; ~Buffer() { } };\n"
-                       "class Handle { u64 value; };\n"
-                       "i32 main() { return 0; }" );
+        Typed p( "class Buffer { public u8* ptr; ~Buffer() { } };\n"
+                 "class Handle { u64 value; };\n"
+                 "i32 main() { return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
@@ -1420,21 +1419,21 @@ TEST_CASE( "type_checker_computes_the_owning_query", "[sema][aggregates][owning]
 
     SECTION( "a struct never owns - it cannot hold anything that does" )
     {
-        const Typed p( "struct Point { i32 x; i32 y; };\ni32 main() { return 0; }" );
+        Typed p( "struct Point { i32 x; i32 y; };\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE_FALSE( p.types().is_owning( p.types().type_of( p.nth( Node_kind::Struct_decl, 0 ) ) ) );
+        REQUIRE_FALSE( owns( p, p.types().type_of( p.nth( Node_kind::Struct_decl, 0 ) ) ) );
     }
 
     // The transitivity is forced rather than chosen: destroying a Wrapper destroys its Buffer, so
     // there is no way for it not to own.
     SECTION( "owning is transitive through a by-value member" )
     {
-        const Typed p( "class Buffer { public u8* ptr; ~Buffer() { } };\n"
-                       "class Wrapper { Buffer inner; };\n"
-                       "class Outer { Wrapper w; };\n"
-                       "i32 main() { return 0; }" );
+        Typed p( "class Buffer { public u8* ptr; ~Buffer() { } };\n"
+                 "class Wrapper { Buffer inner; };\n"
+                 "class Outer { Wrapper w; };\n"
+                 "i32 main() { return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
@@ -1445,9 +1444,9 @@ TEST_CASE( "type_checker_computes_the_owning_query", "[sema][aggregates][owning]
     // An address says nothing about who frees it, so a pointer breaks the chain.
     SECTION( "a pointer to an owning type does not own" )
     {
-        const Typed p( "class Buffer { public u8* ptr; ~Buffer() { } };\n"
-                       "class Holder { Buffer* p; };\n"
-                       "i32 main() { return 0; }" );
+        Typed p( "class Buffer { public u8* ptr; ~Buffer() { } };\n"
+                 "class Holder { Buffer* p; };\n"
+                 "i32 main() { return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
@@ -1456,10 +1455,10 @@ TEST_CASE( "type_checker_computes_the_owning_query", "[sema][aggregates][owning]
 
     SECTION( "a builtin never owns" )
     {
-        const Typed p( "i32 main() { return 0; }" );
+        Typed p( "i32 main() { return 0; }" );
 
         INFO( p.rendered() );
-        REQUIRE_FALSE( p.types().is_owning( p.types().table().integer( 32, true ) ) );
+        REQUIRE_FALSE( owns( p, p.types().table().integer( 32, true ) ) );
     }
 }
 
@@ -1686,9 +1685,7 @@ TEST_CASE( "type_checker_applies_the_owning_rules_to_a_generic_aggregate", "[sem
 }
 
 // Ownership is a question about the *instantiation*, not the declaration: `Box<i32>` and
-// `Box<Buf>` come from one class and one of them owns. Types::is_owning still answers from the
-// declaration, which is the open form's answer and what the checker's move rules want inside a
-// generic body - instance_owns is the other half, and the one a drop is elaborated from.
+// `Box<Buf>` come from one class and one of them owns.
 TEST_CASE( "type_checker_answers_ownership_per_instantiation", "[sema][generic][aggregate]" )
 {
     const std::string_view owner = "class Buf\n"
@@ -1721,9 +1718,6 @@ TEST_CASE( "type_checker_answers_ownership_per_instantiation", "[sema][generic][
         const Type_id instance = p.types().type_of( p.nth( Node_kind::Var_decl, 0 ) );
 
         REQUIRE_FALSE( instance_owns( p.ast(), p.types().table(), instance, p.types().recorded() ) );
-        // The declaration's answer is the one that cannot tell them apart, which is why both
-        // questions exist.
-        REQUIRE_FALSE( p.types().is_owning( instance ) );
     }
 
     SECTION( "a pointer to an owning type owns nothing" )

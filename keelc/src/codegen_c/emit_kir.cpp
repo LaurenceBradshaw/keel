@@ -404,7 +404,8 @@ void Kir_emitter::emit_function_types()
             // `move` travels by value, and a bare parameter's type decides
             const Param_mode mode       = described.modes[i];
             const bool       by_address = ( mode != Param_mode::Value && mode != Param_mode::Move ) ||
-                                    ( mode == Param_mode::Value && types_.is_owning( described.arguments[i] ) );
+                                    ( mode == Param_mode::Value &&
+                                      instance_owns( ast_, types_.table(), described.arguments[i], types_.recorded() ) );
 
             parameters += fmt::format(
                 "{}{}{}", parameters.empty() ? "" : ", ", spelling_.type( described.arguments[i] ), by_address ? "*" : ""

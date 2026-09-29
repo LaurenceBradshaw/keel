@@ -63,8 +63,7 @@ enum class Conversion : u8
 
 // Owns what each type parameter promised, and answers both halves of "may this type do that" -
 // what a parameter promises, and what a concrete type delivers. `satisfies` is the one to ask when
-// the answer has to cover either; it sends a concrete aggregate down to Aggregates, which is what
-// keeps the two acyclic.
+// the answer has to cover either; Aggregates says which aggregates are finite enough to walk.
 class Bounds
 {
 public:

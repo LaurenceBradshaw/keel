@@ -1,0 +1,31 @@
+error: a struct cannot contain `Wrap<Tracked>`, which owns a resource
+  --> sema/errors_generic_owning_argument.kl:43:5
+   |
+43 |     Wrap<Tracked> w;
+   |     ^^^^^^^^^^^^^^^^ a struct is copied freely, so declare `Plain` as a class if it owns this
+
+error: a struct cannot contain `Wrap<T>`, which may own a resource
+  --> sema/errors_generic_owning_argument.kl:49:5
+   |
+49 |     Wrap<T> w;
+   |     ^^^^^^^^^^ a struct is copied freely, so declare `Maybe` as a class if it owns this
+
+error: an owning value is transferred, not copied
+  --> sema/errors_generic_owning_argument.kl:55:23
+   |
+55 |     Wrap<Tracked> c = w;
+   |                       ^ write `move w`
+
+error: `Wrap<Tracked>` is not `Copyable`, and `twice` requires it of `T`
+  --> sema/errors_generic_owning_argument.kl:57:12
+   |
+57 |     twice( w );
+   |            ^ it owns something, itself or through a field, so copying it would own that twice
+
+error: `open` takes `Wrap<T>`, which is not known to be copyable, so its address has no function type yet
+  --> sema/errors_generic_owning_argument.kl:64:14
+   |
+64 |     auto p = &open<i32>;
+   |              ^^^^^^^^^^ take it as `const ref Wrap<T>`, so every instance passes it the same way; the parameter is at 35:14
+
+5 errors generated

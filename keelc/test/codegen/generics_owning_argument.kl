@@ -1,0 +1,89 @@
+// A generic class with no destructor owns exactly when its argument does, so `Wrap<Tracked>` is
+// borrowed by a bare parameter - directly, through a class that holds one, and through a function
+// pointer - and each object is destroyed once. Run under KEEL_VALGRIND=1.
+
+i32 destroyed = 0;
+
+class Tracked
+{
+    public i32 n;
+
+    Tracked( i32 m )
+    {
+        n = m;
+    }
+
+    ~Tracked()
+    {
+        destroyed = destroyed + 1;
+    }
+};
+
+// Owns nothing of its own: only `T` can make it own.
+class Wrap<T>
+{
+    public T v;
+
+    Wrap( move T x )
+    {
+        v = move x;
+    }
+};
+
+// Owns through a field that owns through its argument.
+class Holder
+{
+    public Wrap<Tracked> w;
+
+    Holder( i32 m )
+    {
+        w = Wrap<Tracked>( move Tracked( m ) );
+    }
+};
+
+i32 peek( Wrap<Tracked> w )
+{
+    return w.v.n;
+}
+
+i32 look( Holder h )
+{
+    return h.w.v.n;
+}
+
+// Open, so it may own whatever `T` is, and is borrowed at every instance.
+i32 open<T>( Wrap<T> w )
+{
+    return 1;
+}
+
+// Everything is dropped when this returns, so main can count it.
+i32 borrow()
+{
+    Wrap<Tracked> w = Wrap<Tracked>( move Tracked( 7 ) );
+    Holder        h = Holder( 5 );
+
+    fn( Wrap<Tracked> ) -> i32 p = &peek;
+
+    if( peek( w ) != 7 ) { return 1; }
+    if( p( w ) != 7 ) { return 2; }
+    if( look( h ) != 5 ) { return 3; }
+    if( open( w ) != 1 ) { return 4; }
+
+    // A borrow is not a drop: four calls, and nothing destroyed yet.
+    if( destroyed != 0 ) { return 5; }
+
+    return 0;
+}
+
+i32 main()
+{
+    i32 result = borrow();
+
+    if( result != 0 ) { return result; }
+
+    // One Tracked inside the Wrap and one inside the Holder, each destroyed once.
+    if( destroyed != 2 ) { return 6; }
+
+    return 0;
+}

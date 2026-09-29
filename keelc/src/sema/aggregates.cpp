@@ -72,7 +72,7 @@ bool Aggregates::contains_itself( Node_id decl, std::vector<Node_id>& path )
 {
     // Being in the order *is* being done: a struct lands there only once everything it contains
     // has, so membership and "proved acyclic" are the same fact.
-    if( std::find( containment_order_.begin(), containment_order_.end(), decl ) != containment_order_.end() )
+    if( is_acyclic( decl ) )
     {
         return false;
     }
@@ -127,48 +127,9 @@ bool Aggregates::contains_itself( Node_id decl, std::vector<Node_id>& path )
     return false;
 }
 
-void Aggregates::compute_owning()
+bool Aggregates::is_acyclic( Node_id decl ) const
 {
-    // containment_order_ is the DFS post-order, so a field's answer is already in owning_ when its owner
-    // is reached - which is what makes one forward pass enough. A cycle never enters the order.
-    for( const Node_id decl : containment_order_ )
-    {
-        bool is_owning = keel::has_destructor( ast_, decl );
-
-        for( const Node_id field : ast_.members( decl ) )
-        {
-            if( is_owning )
-            {
-                break;
-            }
-
-            if( ast_.kind( field ) != Node_kind::Field_decl )
-            {
-                continue;
-            }
-
-            const Type_id field_type = types_.type_of( field );
-
-            is_owning = owns( field_type );
-        }
-
-        if( is_owning )
-        {
-            owning_.insert( decl.v );
-        }
-    }
-}
-
-bool Aggregates::owns( Type_id type ) const
-{
-    if( !type.is_valid() || table_.is_error( type ) || !table_.is_struct( type ) )
-    {
-        return false;
-    }
-
-    const Node_id declaration = table_.get( type ).declaration;
-
-    return declaration.is_valid() && owning_.contains( declaration.v );
+    return std::find( containment_order_.begin(), containment_order_.end(), decl ) != containment_order_.end();
 }
 
 Node_id Aggregates::find_member( Node_id decl, Node_kind kind ) const
@@ -241,11 +202,6 @@ Type_id Aggregates::field_type( Type_id aggregate, Node_id field )
 std::vector<Node_id> Aggregates::take_struct_order()
 {
     return std::move( struct_order_ );
-}
-
-std::unordered_set<u32> Aggregates::take_owning()
-{
-    return std::move( owning_ );
 }
 
 } // namespace keel::sema
@@ -420,34 +376,6 @@ TEST_CASE( "aggregates_leave_a_generic_aggregate_out_of_the_order", "[sema][aggr
     const std::vector<Node_id> order = s.aggregates().take_struct_order();
     REQUIRE( order.size() == 1 );
     REQUIRE( order[0] == s.declaration( 1 ) ); // Plain, not Box
-}
-
-TEST_CASE( "aggregates_own_through_a_destructor_and_through_a_field", "[sema][aggregates][owning]" )
-{
-    Shapes s( "class Res { i32 h; ~Res() { } };\nclass Holder { Res r; };\nstruct Plain { i32 x; };" );
-
-    s.aggregates().order_structs();
-    s.aggregates().compute_owning();
-
-    REQUIRE( s.aggregates().owns( s.type_of( s.declaration( 0 ) ) ) );  // its own destructor
-    REQUIRE( s.aggregates().owns( s.type_of( s.declaration( 1 ) ) ) );  // a field that owns
-    REQUIRE( !s.aggregates().owns( s.type_of( s.declaration( 2 ) ) ) ); // neither
-    REQUIRE( !s.aggregates().owns( Type_id {} ) );
-}
-
-// Left out of the order is not left out of the owning set: every instance of `Box<T>` runs its
-// destructor, so the declaration owns whatever `T` is.
-TEST_CASE( "aggregates_own_through_a_generic_destructor", "[sema][aggregates][owning][generic]" )
-{
-    // Holder first, so only the containment order - not source order - puts Box ahead of it.
-    Shapes s( "class Holder { Box b; };\nclass Box<T> { u64 n; ~Box() { } };\nstruct Plain<T> { T v; };" );
-
-    s.aggregates().order_structs();
-    s.aggregates().compute_owning();
-
-    REQUIRE( s.aggregates().owns( s.type_of( s.declaration( 1 ) ) ) );  // generic, its own destructor
-    REQUIRE( s.aggregates().owns( s.type_of( s.declaration( 0 ) ) ) );  // ordered after the generic it holds
-    REQUIRE( !s.aggregates().owns( s.type_of( s.declaration( 2 ) ) ) ); // a bare `T` owns nothing here
 }
 
 TEST_CASE( "aggregates_find_a_member_a_method_and_a_field", "[sema][aggregates]" )

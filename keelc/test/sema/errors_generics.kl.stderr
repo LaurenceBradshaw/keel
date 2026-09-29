@@ -116,7 +116,7 @@ error: `Owner` is not `Copyable`, and `id` requires it of `T`
    --> sema/errors_generics.kl:113:8
     |
 113 |     id<Owner>( o );
-    |        ^^^^^ a type with a destructor owns something, so copying it would own it twice
+    |        ^^^^^ it owns something, itself or through a field, so copying it would own that twice
 
 error: `Suit` is not `Integral`, and `needs_integral` requires it of `T`
    --> sema/errors_generics.kl:124:20

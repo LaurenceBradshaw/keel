@@ -1,5 +1,6 @@
 #include "sema/bounds.h"
 #include <fmt/format.h>
+#include "sema/type_checker.h"
 
 namespace keel
 {
@@ -97,7 +98,7 @@ std::string_view bound_requirement( Bound bound )
     switch( bound )
     {
     case Bound::Copyable:
-        return "a type with a destructor owns something, so copying it would own it twice";
+        return "it owns something, itself or through a field, so copying it would own that twice";
     case Bound::Equatable:
         return "equality needs a number, a `bool`, an `enum` or a pointer";
     case Bound::Comparable:
@@ -184,7 +185,18 @@ bool Bounds::satisfies( Type_id type, Bound bound ) const
     switch( bound )
     {
     case Bound::Copyable:
-        return !aggregates_.owns( type );
+    {
+        // A cycle is already reported, and walking one grows a new instance each time round.
+        if( table_.is_struct( type ) && !aggregates_.is_acyclic( table_.get( type ).declaration ) )
+        {
+            return true;
+        }
+
+        std::vector<Type_id> visiting;
+        return !may_own(
+            ast_, table_, type, types_.recorded(), visiting, [this]( Type_id p ) { return !has_bound( p, Bound::Copyable ); }
+        );
+    }
 
     // Ordering is deliberately narrower than equality: a pointer and an enum can be told apart but
     // cannot be ranked.
@@ -652,8 +664,8 @@ namespace
 using namespace sema;
 
 // Bounds needs a parsed `where` clause and a type table, and nothing else. The fixture supplies
-// that: it interns one struct type per aggregate, declares the type parameters, and settles the
-// owning set so the `Copyable` arm has an answer. No resolver, no checker, no expression walk.
+// that: it interns one struct type per aggregate, declares the type parameters, and orders
+// the aggregates. No resolver, no checker, no expression walk.
 class Promises
 {
 public:
@@ -697,7 +709,6 @@ public:
         }
 
         aggregates_.order_structs();
-        aggregates_.compute_owning();
     }
 
     sema::Bounds& bounds()
@@ -1112,7 +1123,7 @@ TEST_CASE( "type_checker_checks_bounds_at_the_call_site", "[sema][generic][bound
 
     SECTION( "a bound is in hand before the declaration's own annotations are typed" )
     {
-        // `out T` asks is_owning_type about `T`, and the only thing that can answer is the `where`
+        // `out T` asks Copyable of `T`, and the only thing that can answer is the `where`
         // clause on the same declaration - which is read ten lines earlier, in the same loop body.
         // Nothing else marks that order as load-bearing, so this pair is what holds it: move the
         // recording after the annotations and the first of these starts reporting.
@@ -1136,6 +1147,69 @@ TEST_CASE( "type_checker_checks_bounds_at_the_call_site", "[sema][generic][bound
         INFO( p.rendered() );
         REQUIRE( p.rendered().find( "not `Integral`" ) != std::string::npos );
         REQUIRE( p.rendered().find( "nope" ) != std::string::npos );
+    }
+}
+
+// `Copyable` is asked of the instance, not the declaration: `Wrap` has no destructor, so only the
+// argument it holds can make it own, and an open `Wrap<T>` owns unless `T` promises it does not.
+TEST_CASE( "bounds_ask_copyable_of_an_instance", "[sema][generic][bound][owning]" )
+{
+    constexpr std::string_view wrap = "class Tracked { public i32 n; Tracked( i32 m ) { n = m; } ~Tracked() { } };\n"
+                                      "class Wrap<T> { public T v; Wrap( move T x ) { v = move x; } };\n"
+                                      "T twice<T>( T x ) where T : Copyable { return x; }\n";
+
+    SECTION( "an argument that owns makes the instance owning" )
+    {
+        const Typed p(
+            std::string( wrap ) + "i32 main() { Wrap<Tracked> w = Wrap<Tracked>( move Tracked( 1 ) ); twice( w ); return 0; }\n"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`Wrap<Tracked>` is not `Copyable`" ) != std::string::npos );
+    }
+
+    SECTION( "an argument that does not leaves it copyable" )
+    {
+        const Typed p( std::string( wrap ) + "i32 main() { Wrap<i32> w = Wrap<i32>( 1 ); twice( w ); return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "an open instance may own" )
+    {
+        const Typed p( std::string( wrap ) + "i32 h<T>( Wrap<T> w ) { twice( w ); return 0; }\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`Wrap<T>` is not `Copyable`" ) != std::string::npos );
+    }
+
+    SECTION( "unless its argument promises it cannot" )
+    {
+        const Typed p(
+            std::string( wrap ) +
+            "i32 h<T>( Wrap<T> w ) where T : Copyable { twice( w ); return 0; }\ni32 main() { return 0; }\n"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // A class with no destructor of its own, owning only through a field that owns only through
+    // its argument: the answer has to carry through both.
+    SECTION( "and it carries through a field" )
+    {
+        const Typed p(
+            std::string( wrap ) +
+            "class Holder { public Wrap<Tracked> w; Holder() { w = Wrap<Tracked>( move Tracked( 1 ) ); } };\n"
+            "i32 main() { Holder h = Holder(); twice( h ); return 0; }\n"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`Holder` is not `Copyable`" ) != std::string::npos );
     }
 }
 

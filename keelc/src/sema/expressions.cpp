@@ -1018,12 +1018,18 @@ Type_id Expressions::function_address( Node_id id, Node_id declaration )
             fmt::format(
                 "`{}` takes `{}`, which is not known to be copyable, so its address has no function type yet", name, spelt
             ),
-            fmt::format(
-                "add `where {} : Copyable` to `{}`, whose parameter is at {}",
-                spelt,
-                name,
-                reporter_.position( ast_.span( refused ) )
-            )
+            table_.is_parameter( type )
+                ? fmt::format(
+                      "add `where {} : Copyable` to `{}`, whose parameter is at {}",
+                      spelt,
+                      name,
+                      reporter_.position( ast_.span( refused ) )
+                  )
+                : fmt::format(
+                      "take it as `const ref {}`, so every instance passes it the same way; the parameter is at {}",
+                      spelt,
+                      reporter_.position( ast_.span( refused ) )
+                  )
         );
 
         return types_.record( id, error );
@@ -1146,13 +1152,20 @@ Type_id Expressions::method_address( Node_id id, Node_id aggregate )
                 interner_.text( name ),
                 spelt
             ),
-            fmt::format(
-                "add `where {} : Copyable` to `{}`; the parameter of `{}` is at {}",
-                spelt,
-                owner,
-                interner_.text( name ),
-                reporter_.position( ast_.span( refused ) )
-            )
+            table_.is_parameter( type )
+                ? fmt::format(
+                      "add `where {} : Copyable` to `{}`; the parameter of `{}` is at {}",
+                      spelt,
+                      owner,
+                      interner_.text( name ),
+                      reporter_.position( ast_.span( refused ) )
+                  )
+                : fmt::format(
+                      "take it as `const ref {}`, so every instance passes it the same way; the parameter of `{}` is at {}",
+                      spelt,
+                      interner_.text( name ),
+                      reporter_.position( ast_.span( refused ) )
+                  )
         );
 
         return types_.record( id, table_.builtin( Type_kind::Error ) );
@@ -1210,17 +1223,18 @@ Type_id Expressions::written_signature( Node_id declaration, const Bindings& bin
 
         parameter.mode = parameter_mode_of( ast_, param );
 
-        // Asked only of the mode-less form: a mode says how the parameter travels, and a bare parameter now does have one C
-        // spelling, because ownership is a property of the type; only a type parameter is unanswerable, since the instance's C
-        // spells the declared T and an unbounded one arrives as a pointer whatever it was instantiated at.
-        if( parameter.mode == Param_mode::Value && table_.is_parameter( types_.type_of( param ) ) &&
-            !bounds_.satisfies( types_.type_of( param ), Bound::Copyable ) )
+        const Type_id declared    = types_.type_of( param );
+        const Type_id substituted = table_.substitute( declared, bindings );
+
+        // Refused when the declaration passes it by address and this instance's type would not
+        if( parameter.mode == Param_mode::Value && !bounds_.satisfies( declared, Bound::Copyable ) &&
+            bounds_.satisfies( substituted, Bound::Copyable ) )
         {
             refused = param;
             return Type_id {};
         }
 
-        parameter.type = table_.substitute( types_.type_of( param ), bindings );
+        parameter.type = substituted;
         // The bound is asked of the declared parameter and the spelling of the substituted one: what
         // travels is decided before the instance exists.
         parameters.push_back( parameter );
@@ -3447,7 +3461,8 @@ TEST_CASE( "type_checker_reports_when_no_overload_has_the_expected_signature", "
 // M7 slice 5. Written type arguments choose one instance of a generic, and the instance is an
 // ordinary function from there on: a concrete signature, and a seed the lowerer emits a body for.
 // The by-address rule is asked of the *declared* parameter, not of the substituted one - an
-// unbounded `T` arrives as a pointer however concrete the instance is.
+// unbounded `T` arrives as a pointer however concrete the instance is, so an instance whose type
+// would travel by value has no function type to give it.
 TEST_CASE( "type_checker_takes_the_address_of_a_generic_instance", "[sema][types][m7][generic]" )
 {
     constexpr std::string_view generics = "T id<T>( T a ) where T : Copyable { return a; }\n"
@@ -3551,7 +3566,7 @@ TEST_CASE( "type_checker_takes_the_address_of_a_generic_instance", "[sema][types
 
     // The substituted parameter is `i32`, which travels by value - but the C the instance is
     // emitted as spells the declared `T`, and an unbounded one arrives as a pointer.
-    SECTION( "an unbounded type parameter is refused however concrete the instance" )
+    SECTION( "an unbounded type parameter is refused at an instance that would copy" )
     {
         const Typed p( "i32 count<T>( T a ) { return 1; }\n"
                        "i32 main() { auto p = &count<i32>; return 0; }\n" );
@@ -3559,6 +3574,38 @@ TEST_CASE( "type_checker_takes_the_address_of_a_generic_instance", "[sema][types
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "`count` takes `T`, which is not known to be copyable" ) != std::string::npos );
+    }
+
+    // An owning instance travels by address as well, so the two spellings agree.
+    SECTION( "and accepted at an instance that owns" )
+    {
+        const Typed p( "class Tracked { public i32 n; Tracked( i32 m ) { n = m; } ~Tracked() { } };\n"
+                       "i32 count<T>( T a ) { return 1; }\n"
+                       "i32 main() { fn( Tracked ) -> i32 p = &count<Tracked>; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // `Wrap<T>` owns exactly when `T` does, so it is the bare parameter's case one level down;
+    // the help differs because `where Wrap<T> : Copyable` is not a thing anyone can write.
+    SECTION( "a generic aggregate that owns through its argument is refused the same way" )
+    {
+        constexpr std::string_view wrap = "class Tracked { public i32 n; Tracked( i32 m ) { n = m; } ~Tracked() { } };\n"
+                                          "class Wrap<T> { public T v; Wrap( move T x ) { v = move x; } };\n"
+                                          "i32 peek<T>( Wrap<T> w ) { return 1; }\n";
+
+        const Typed copies( std::string( wrap ) + "i32 main() { auto p = &peek<i32>; return 0; }\n" );
+
+        INFO( copies.rendered() );
+        REQUIRE( copies.errors() == 1 );
+        REQUIRE( copies.rendered().find( "`peek` takes `Wrap<T>`, which is not known to be copyable" ) != std::string::npos );
+        REQUIRE( copies.rendered().find( "take it as `const ref Wrap<T>`" ) != std::string::npos );
+
+        const Typed owns( std::string( wrap ) + "i32 main() { fn( Wrap<Tracked> ) -> i32 p = &peek<Tracked>; return 0; }\n" );
+
+        INFO( owns.rendered() );
+        REQUIRE( owns.clean() );
     }
 
     SECTION( "type arguments on a name that takes none" )

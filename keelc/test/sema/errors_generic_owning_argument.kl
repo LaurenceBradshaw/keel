@@ -1,0 +1,67 @@
+// A generic class with no destructor owns exactly when its argument does, so each rule about
+// owning types applies to `Wrap<Tracked>` and not to `Wrap<i32>`: a copy needs `move`, no
+// `Copyable` bound admits one, and no struct may contain one. An open `Wrap<T>` may own, so its
+// function's address has no one spelling at an instance that would copy.
+
+class Tracked
+{
+    public i32 n;
+
+    Tracked( i32 m )
+    {
+        n = m;
+    }
+
+    ~Tracked()
+    {
+    }
+};
+
+class Wrap<T>
+{
+    public T v;
+
+    Wrap( move T x )
+    {
+        v = move x;
+    }
+};
+
+T twice<T>( T x ) where T : Copyable
+{
+    return x;
+}
+
+i32 open<T>( Wrap<T> w )
+{
+    return 1;
+}
+
+// Owns through its argument.
+struct Plain
+{
+    Wrap<Tracked> w;
+};
+
+// May own, depending on `T`.
+struct Maybe<T>
+{
+    Wrap<T> w;
+};
+
+i32 main()
+{
+    Wrap<Tracked> w = Wrap<Tracked>( move Tracked( 1 ) );
+    Wrap<Tracked> c = w;
+
+    twice( w );
+
+    // Neither owns, so neither is refused.
+    Wrap<i32> i = Wrap<i32>( 2 );
+    Wrap<i32> j = i;
+    twice( i );
+
+    auto p = &open<i32>;
+
+    return 0;
+}
