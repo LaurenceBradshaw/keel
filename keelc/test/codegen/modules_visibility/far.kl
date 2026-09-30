@@ -1,0 +1,5 @@
+// The exact match for an i32, loaded for route.kl and invisible to main.kl.
+i32 pick( i32 v )
+{
+    return 2;
+}

@@ -19,6 +19,7 @@
 #include "codegen_c/emit_kir.h"
 #include "common/diagnostics.h"
 #include "common/dump_util.h"
+#include "common/imports.h"
 #include "common/interner.h"
 #include "common/source_manager.h"
 #include "common/version.h"
@@ -277,7 +278,8 @@ int main( int argc, char** argv )
     }
 
     // Parsing is part of compiling, not a debug feature: --dump-ast only controls output.
-    const keel::Ast ast = keel::load_program( file_id.value(), sm, interner, literals, diagnostics );
+    const keel::Program prog = keel::load_program( file_id.value(), sm, interner, literals, diagnostics );
+    const keel::Ast&    ast  = prog.ast;
 
     if( args.count( "dump-ast" ) )
     {
@@ -286,7 +288,7 @@ int main( int argc, char** argv )
     }
 
     // Resolution is part of compiling, not a debug feature - same reasoning as parsing.
-    const keel::Resolution resolution = keel::resolve( ast, sm, interner, diagnostics );
+    const keel::Resolution resolution = keel::resolve( ast, sm, interner, diagnostics, prog.imports );
 
     // Type checking is part of compiling too - same reasoning as parsing and resolution.
     keel::Types types = keel::type_check( ast, resolution, literals, sm, interner, diagnostics );

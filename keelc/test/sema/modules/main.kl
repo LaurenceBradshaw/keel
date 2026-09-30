@@ -11,5 +11,21 @@ import twin;
 
 i32 main()
 {
-    return 0;
+    return secret(); // hidden.kl is loaded through twin.kl, which is not an import of this file
+}
+
+i32 pick( i64 v )
+{
+    return 1;
+}
+
+i32 pick( u8 v )
+{
+    return 2;
+}
+
+i32 choose()
+{
+    fn( i32 ) -> i32 g = &pick; // hidden.kl's pick( i32 ) matches, and this file cannot see it
+    return g( 1 );
 }

@@ -1,0 +1,30 @@
+// A file sees only the modules it imports. Both `pick`s are loaded, and each file calls the one it
+// can see even where the other is the closer match. Every check returns a distinct code.
+import route;
+
+// Declared first, so far.kl's pick follows it in the overload set and has to be skipped.
+i32 pick( i64 v )
+{
+    return 1;
+}
+
+i32 main()
+{
+    i32 x = 5;
+
+    // far.kl's pick( i32 ) matches exactly, but only route.kl imports it.
+    if( pick( x ) != 1 ) { return 1; }
+
+    // One visible overload, so the address names one function.
+    auto f = &pick;
+    if( f( x ) != 1 ) { return 2; }
+
+    // route.kl sees far.kl's pick and not this one.
+    if( via( x ) != 2 ) { return 3; }
+
+    // A Point, held and read without main.kl naming it.
+    auto p = origin();
+    if( p.x != 7 ) { return 4; }
+
+    return 0;
+}

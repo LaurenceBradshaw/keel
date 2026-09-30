@@ -6,6 +6,7 @@
 #include "ast/ast.h"
 #include "ast/node.h"
 #include "common/diagnostics.h"
+#include "common/imports.h"
 #include "common/interner.h"
 #include "common/source_manager.h"
 
@@ -19,9 +20,10 @@ class Resolution
 {
 public:
     Resolution() = default;
-    Resolution( std::vector<Node_id> bindings, std::vector<Node_id> next_overload )
+    Resolution( std::vector<Node_id> bindings, std::vector<Node_id> next_overload, const Imports& imports )
         : bindings_( std::move( bindings ) ),
-          next_overload_( std::move( next_overload ) )
+          next_overload_( std::move( next_overload ) ),
+          imports_( imports )
     {
     }
 
@@ -39,11 +41,18 @@ public:
         return declaration.v < next_overload_.size() ? next_overload_[declaration.v] : Node_id {};
     }
 
+    bool sees( File_id from, File_id to ) const
+    {
+        return imports_.sees( from, to );
+    }
+
 private:
     std::vector<Node_id> bindings_;
     std::vector<Node_id> next_overload_;
+    Imports              imports_;
 };
 
-Resolution resolve( const Ast& ast, const Source_manager& sm, const Interner& interner, Diagnostics& diags );
+Resolution
+resolve( const Ast& ast, const Source_manager& sm, const Interner& interner, Diagnostics& diags, const Imports& imports = {} );
 
 } // namespace keel

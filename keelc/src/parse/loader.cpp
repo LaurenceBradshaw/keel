@@ -5,19 +5,21 @@
 #include <fmt/format.h>
 #include <unordered_set>
 #include <vector>
+#include "common/imports.h"
 #include "common/types.h"
 #include "lex/lexer.h"
 #include "parse/parser.h"
 
 namespace keel
 {
-Ast load_program( File_id input, Source_manager& sm, Interner& interner, Literal_pool& literals, Diagnostics& diags )
+Program load_program( File_id input, Source_manager& sm, Interner& interner, Literal_pool& literals, Diagnostics& diags )
 {
     std::vector<File_id>    pending { input };
     std::unordered_set<u32> loaded;
     loaded.insert( input.v );
 
     Ast                  ast;
+    Imports              imports;
     std::vector<Node_id> decls;
 
     while( !pending.empty() )
@@ -46,8 +48,11 @@ Ast load_program( File_id input, Source_manager& sm, Interner& interner, Literal
                         fmt::format( "there is no module `{}`", module_name ),
                         fmt::format( "`import {};` looks for `{}.kl` beside the file being compiled", module_name, module_name )
                     );
+                    continue;
                 }
-                else if( loaded.insert( module->v ).second )
+
+                imports.add( current, *module );
+                if( loaded.insert( module->v ).second )
                 {
                     pending.push_back( *module );
                 }
@@ -62,7 +67,11 @@ Ast load_program( File_id input, Source_manager& sm, Interner& interner, Literal
     const Node_id root =
         ast.add( Node_kind::Source_file, Span { input, 0, narrow_cast<u32>( sm.file( input ).text.size() ) }, 0, decls );
     ast.set_root( root );
-    return ast;
+
+    Program prog;
+    prog.ast     = std::move( ast );
+    prog.imports = std::move( imports );
+    return prog;
 }
 } // namespace keel
 
@@ -71,6 +80,7 @@ Ast load_program( File_id input, Source_manager& sm, Interner& interner, Literal
 
 #include <algorithm>
 #include <initializer_list>
+#include <map>
 #include <optional>
 #include <span>
 #include <sstream>
@@ -100,12 +110,23 @@ public:
         const std::optional<File_id> input = sm_.load_file( dir_.path / "main.kl" );
 
         REQUIRE( input.has_value() );
-        ast_ = load_program( *input, sm_, interner_, literals_, diags_ );
+        program_ = load_program( *input, sm_, interner_, literals_, diags_ );
+
+        for( const auto& [name, text] : files )
+        {
+            files_[name] = *sm_.load_file( dir_.path / name ); // already loaded, so the same id
+        }
     }
 
     const Ast& ast() const
     {
-        return ast_;
+        return program_.ast;
+    }
+
+    // Whether the file `from` may name what `to` declares.
+    bool sees( std::string_view from, std::string_view to ) const
+    {
+        return program_.imports.sees( files_.at( std::string( from ) ), files_.at( std::string( to ) ) );
     }
 
     std::size_t errors() const
@@ -125,11 +146,11 @@ public:
     {
         std::vector<std::string_view> names;
 
-        for( const Node_id decl : ast_.children( ast_.root() ) )
+        for( const Node_id decl : ast().children( ast().root() ) )
         {
-            if( ast_.kind( decl ) == Node_kind::Function_decl )
+            if( ast().kind( decl ) == Node_kind::Function_decl )
             {
-                names.push_back( interner_.text( Symbol_id { ast_.aux( decl ) } ) );
+                names.push_back( interner_.text( Symbol_id { ast().aux( decl ) } ) );
             }
         }
 
@@ -143,7 +164,9 @@ private:
     Interner       interner_;
     Literal_pool   literals_;
     Diagnostics    diags_;
-    Ast            ast_;
+    Program        program_;
+
+    std::map<std::string, File_id> files_;
 };
 
 } // namespace
@@ -178,6 +201,29 @@ TEST_CASE( "loader_loads_a_program_from_its_imports", "[parse][loader]" )
         INFO( p.rendered() );
         REQUIRE( p.errors() == 0 );
         REQUIRE( p.functions() == std::vector<std::string_view> { "fa", "fb", "main" } );
+    }
+
+    // Loading follows every import; seeing follows only the file's own.
+    SECTION( "a file sees itself and what it imports, and no further" )
+    {
+        const Loaded p( {
+            { "main.kl", "import a;\ni32 main() { return fa(); }\n" },
+            { "a.kl", "import b;\nimport main;\ni32 fa() { return fb(); }\n" },
+            { "b.kl", "i32 fb() { return 1; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+
+        REQUIRE( p.sees( "main.kl", "main.kl" ) );
+        REQUIRE( p.sees( "main.kl", "a.kl" ) );
+        REQUIRE_FALSE( p.sees( "main.kl", "b.kl" ) );
+
+        REQUIRE( p.sees( "a.kl", "b.kl" ) );
+        REQUIRE( p.sees( "a.kl", "main.kl" ) );
+
+        REQUIRE( p.sees( "b.kl", "b.kl" ) );
+        REQUIRE_FALSE( p.sees( "b.kl", "a.kl" ) );
     }
 
     // A diamond reaches `c` twice, and `c` importing `main` closes a cycle. Each file is read once.

@@ -352,7 +352,7 @@ Type_id Expressions::infer_call( Node_id id )
     }
     else
     {
-        for( Node_id candidate = decl; candidate.is_valid(); candidate = resolution_.next_overload( candidate ) )
+        for( Node_id candidate = decl; candidate.is_valid(); candidate = next_visible( callee, candidate ) )
         {
             candidates.push_back( candidate );
         }
@@ -956,7 +956,7 @@ Type_id Expressions::function_address( Node_id id, Node_id declaration )
     const Type_id expectation = expected_;
     expected_                 = Type_id {};
 
-    if( resolution_.next_overload( declaration ).is_valid() )
+    if( next_visible( id, declaration ).is_valid() )
     {
         if( type_args.is_valid() )
         {
@@ -1276,7 +1276,7 @@ Node_id Expressions::overload_for_signature(
 )
 {
     std::vector<std::string> offered;
-    for( Node_id candidate = first; candidate.is_valid(); candidate = resolution_.next_overload( candidate ) )
+    for( Node_id candidate = first; candidate.is_valid(); candidate = next_visible( id, candidate ) )
     {
         if( is_generic( ast_, candidate ) && bindings.empty() )
         {
@@ -1926,6 +1926,23 @@ bool Expressions::refuses_many_member( Node_id field_expr, Type_id base_type )
         )
     );
     return true;
+}
+
+Node_id Expressions::next_visible( Node_id use, Node_id candidate ) const
+{
+    candidate = resolution_.next_overload( candidate );
+
+    while( candidate.is_valid() )
+    {
+        if( resolution_.sees( ast_.span( use ).file, ast_.span( candidate ).file ) )
+        {
+            return candidate;
+        }
+
+        candidate = resolution_.next_overload( candidate );
+    }
+
+    return Node_id {};
 }
 
 Type_id Expressions::infer_path( Node_id id )

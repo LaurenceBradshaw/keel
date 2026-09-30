@@ -1,0 +1,10 @@
+// Imported by twin.kl only.
+i32 secret()
+{
+    return 0;
+}
+
+i32 pick( i32 v )
+{
+    return 3;
+}

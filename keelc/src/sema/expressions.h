@@ -186,6 +186,8 @@ private:
 
     bool refuses_many_member( Node_id field_expr, Type_id base_type );
 
+    Node_id next_visible( Node_id use, Node_id candidate ) const;
+
     const Ast&         ast_;
     const Interner&    interner_;
     const Resolution&  resolution_;

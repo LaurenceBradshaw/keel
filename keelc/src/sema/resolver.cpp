@@ -3,6 +3,7 @@
 
 #include "sema/resolver.h"
 #include <fmt/format.h>
+#include <filesystem>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -14,11 +15,12 @@ namespace
 class Resolver
 {
 public:
-    Resolver( const Ast& ast, const Source_manager& sm, const Interner& interner, Diagnostics& diags )
+    Resolver( const Ast& ast, const Source_manager& sm, const Interner& interner, Diagnostics& diags, const Imports& imports )
         : ast_( ast ),
           sm_( sm ),
           interner_( interner ),
-          diags_( diags )
+          diags_( diags ),
+          imports_( imports )
     {
     }
 
@@ -48,13 +50,16 @@ private:
 
     void    declare( Symbol_id name, Node_id decl );
     bool    chain_overload( Node_id existing, Node_id added );
-    Node_id lookup( Symbol_id name ) const;
+    Node_id lookup( Symbol_id name, Node_id use );
+    Node_id visible_from( Node_id use, Node_id head );
+    void    refuse_unimported( Node_id use, Node_id decl );
 
     const Ast& ast_;
 
     const Source_manager& sm_;
     const Interner&       interner_;
     Diagnostics&          diags_;
+    const Imports&        imports_;
 
     std::vector<Node_id> bindings_;
     std::vector<Node_id> next_overload_;
@@ -93,7 +98,7 @@ Resolution Resolver::run()
     visit( ast_.root() );
     pop_scope();
 
-    return Resolution( std::move( bindings_ ), std::move( next_overload_ ) );
+    return Resolution( std::move( bindings_ ), std::move( next_overload_ ), imports_ );
 }
 
 void Resolver::visit( Node_id id )
@@ -165,7 +170,7 @@ void Resolver::visit( Node_id id )
     case Node_kind::Name_expr:
     {
         const Symbol_id name { ast_.aux( id ) };
-        const Node_id   decl = lookup( name );
+        const Node_id   decl = lookup( name, id );
 
         if( decl.is_valid() )
         {
@@ -185,7 +190,7 @@ void Resolver::visit( Node_id id )
     }
     case Node_kind::Named_type:
     {
-        const Node_id decl = lookup( Symbol_id { ast_.aux( id ) } );
+        const Node_id decl = lookup( Symbol_id { ast_.aux( id ) }, id );
         if( decl.is_valid() )
         {
             bindings_[id.v] = decl;
@@ -196,7 +201,7 @@ void Resolver::visit( Node_id id )
     case Node_kind::Struct_literal:
     {
         const Symbol_id name { ast_.aux( id ) };
-        const Node_id   decl = lookup( name );
+        const Node_id   decl = lookup( name, id );
 
         if( decl.is_valid() )
         {
@@ -518,7 +523,7 @@ std::string Resolver::previous_declaration_note( Node_id prev ) const
     return fmt::format( "previous declaration is at: {}:{}:{}", path, loc.line, loc.col );
 }
 
-Node_id Resolver::lookup( Symbol_id name ) const
+Node_id Resolver::lookup( Symbol_id name, Node_id use )
 {
     if( !name.is_valid() )
     {
@@ -530,29 +535,63 @@ Node_id Resolver::lookup( Symbol_id name ) const
         const auto found = it->names.find( name );
         if( found != it->names.end() )
         {
-            return found->second;
+            return visible_from( use, found->second );
         }
     }
 
     return Node_id {};
 }
 
+Node_id Resolver::visible_from( Node_id use, Node_id head )
+{
+    const File_id uses_file = ast_.span( use ).file;
+
+    for( Node_id d = head; d.is_valid(); d = next_overload_[d.v] )
+    {
+        if( imports_.sees( uses_file, ast_.span( d ).file ) )
+        {
+            return d;
+        }
+    }
+
+    refuse_unimported( use, head );
+    return head;
+}
+
+void Resolver::refuse_unimported( Node_id use, Node_id decl )
+{
+    std::string_view name        = interner_.text( Symbol_id { ast_.aux( decl ) } );
+    std::string      module_name = std::filesystem::path( sm_.file( ast_.span( decl ).file ).path ).stem().string();
+
+    error_at(
+        ast_.span( use ),
+        fmt::format( "`{}` is in `{}`, which this file does not import", name, module_name ),
+        fmt::format( "write `import {};` at the top of the file", module_name )
+    );
+}
+
 } // namespace
 
-Resolution resolve( const Ast& ast, const Source_manager& sm, const Interner& interner, Diagnostics& diags )
+Resolution
+resolve( const Ast& ast, const Source_manager& sm, const Interner& interner, Diagnostics& diags, const Imports& imports )
 {
-    return Resolver( ast, sm, interner, diags ).run();
+    return Resolver( ast, sm, interner, diags, imports ).run();
 }
 
 } // namespace keel
 #ifdef ENABLE_UNIT_TESTS
 #include "common/interner.h"
+#include "common/temp_dir.h"
 #include "lex/lexer.h"
+#include "parse/loader.h"
 #include "parse/parser.h"
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <initializer_list>
+#include <optional>
 #include <sstream>
+#include <utility>
 
 namespace keel
 {
@@ -1387,6 +1426,230 @@ TEST_CASE( "resolver_lets_a_parameter_shadow_a_field", "[sema][resolve][aggregat
         INFO( p.rendered() );
         REQUIRE_FALSE( p.clean() );
         REQUIRE( p.errors() == 1 );
+    }
+}
+
+namespace
+{
+
+// A program on disk, loaded and resolved the way the driver does it.
+class Resolved_program
+{
+public:
+    explicit Resolved_program( std::initializer_list<std::pair<const char*, std::string_view>> files )
+    {
+        for( const auto& [name, text] : files )
+        {
+            dir_.write( name, text );
+        }
+
+        const std::optional<File_id> input = sm_.load_file( dir_.path / "main.kl" );
+
+        REQUIRE( input.has_value() );
+        input_      = *input;
+        program_    = load_program( input_, sm_, interner_, literals_, diags_ );
+        earlier_    = diags_.error_count();
+        resolution_ = resolve( program_.ast, sm_, interner_, diags_, program_.imports );
+    }
+
+    // Errors from resolution only.
+    std::size_t errors() const
+    {
+        return diags_.error_count() - earlier_;
+    }
+
+    std::string rendered() const
+    {
+        std::ostringstream out;
+        diags_.render( sm_, out );
+        return out.str();
+    }
+
+    // The module whose declaration main.kl's first `kind` named `name` is bound to; empty when
+    // it is bound to nothing.
+    std::string bound_into( Node_kind kind, std::string_view name ) const
+    {
+        const Ast& ast = program_.ast;
+
+        for( u32 i = 0; i < ast.node_count(); ++i )
+        {
+            const Node_id id { i };
+
+            if( ast.kind( id ) != kind || ast.span( id ).file != input_ ||
+                interner_.text( Symbol_id { ast.aux( id ) } ) != name )
+            {
+                continue;
+            }
+
+            const Node_id decl = resolution_.declaration_of( id );
+            return decl.is_valid() ? std::filesystem::path( sm_.file( ast.span( decl ).file ).path ).stem().string()
+                                   : std::string {};
+        }
+
+        FAIL( "main.kl has no such node" );
+        return {};
+    }
+
+private:
+    Temp_dir       dir_;
+    Source_manager sm_;
+    Interner       interner_;
+    Literal_pool   literals_;
+    Diagnostics    diags_;
+    File_id        input_;
+    Program        program_;
+    Resolution     resolution_;
+    std::size_t    earlier_ = 0;
+};
+
+} // namespace
+
+TEST_CASE( "resolver_sees_only_imported_modules", "[sema][resolve][modules]" )
+{
+    SECTION( "an imported module's function is visible" )
+    {
+        const Resolved_program p( {
+            { "main.kl", "import a;\ni32 main() { return fa(); }\n" },
+            { "a.kl", "i32 fa() { return 1; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.bound_into( Node_kind::Name_expr, "fa" ) == "a" );
+    }
+
+    SECTION( "a module imported only by an import is not" )
+    {
+        const Resolved_program p( {
+            { "main.kl", "import a;\ni32 main() { return fb(); }\n" },
+            { "a.kl", "import b;\ni32 fa() { return fb(); }\n" },
+            { "b.kl", "i32 fb() { return 1; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`fb` is in `b`, which this file does not import" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "write `import b;` at the top of the file" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "main.kl:2:" ) != std::string::npos );
+    }
+
+    // Bound anyway, so the checker types the call rather than reporting it again.
+    SECTION( "a refused name is still bound" )
+    {
+        const Resolved_program p( {
+            { "main.kl", "import a;\ni32 main() { return fb(); }\n" },
+            { "a.kl", "import b;\ni32 fa() { return 1; }\n" },
+            { "b.kl", "i32 fb() { return 1; }\n" },
+        } );
+
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.bound_into( Node_kind::Name_expr, "fb" ) == "b" );
+    }
+
+    SECTION( "a type's name is refused" )
+    {
+        const Resolved_program p( {
+            { "main.kl", "import a;\ni32 main() { Point q = origin(); return 0; }\n" },
+            { "a.kl", "import geom;\nPoint origin() { return Point { 1, 2 }; }\n" },
+            { "geom.kl", "struct Point { i32 x; i32 y; };\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`Point` is in `geom`, which this file does not import" ) != std::string::npos );
+    }
+
+    SECTION( "a struct literal's name is refused" )
+    {
+        const Resolved_program p( {
+            { "main.kl", "import a;\ni32 main() { auto q = Point { 1, 2 }; return q.x; }\n" },
+            { "a.kl", "import geom;\ni32 fa() { return 1; }\n" },
+            { "geom.kl", "struct Point { i32 x; i32 y; };\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`Point` is in `geom`, which this file does not import" ) != std::string::npos );
+    }
+
+    SECTION( "a global is refused" )
+    {
+        const Resolved_program p( {
+            { "main.kl", "import a;\ni32 main() { return count; }\n" },
+            { "a.kl", "import b;\ni32 fa() { return count; }\n" },
+            { "b.kl", "i32 count = 0;\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`count` is in `b`, which this file does not import" ) != std::string::npos );
+    }
+
+    // Naming needs the import, using does not: a field read is not a lookup.
+    SECTION( "a value of an unimported type can be used" )
+    {
+        const Resolved_program p( {
+            { "main.kl", "import a;\ni32 main() { auto q = origin(); return q.x; }\n" },
+            { "a.kl", "import geom;\nPoint origin() { return Point { 1, 2 }; }\n" },
+            { "geom.kl", "struct Point { i32 x; i32 y; };\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+    }
+
+    // `far` is loaded (through `route`) before `near`, so its overload heads the chain and main
+    // cannot see it; the use binds to the one it can.
+    SECTION( "a call binds to the overload its file sees" )
+    {
+        const Resolved_program p( {
+            { "main.kl", "import near;\nimport route;\ni32 main() { return pick( 1 ); }\n" },
+            { "near.kl", "i32 pick( i64 v ) { return 1; }\n" },
+            { "route.kl", "import far;\ni32 via() { return pick( 1 ); }\n" },
+            { "far.kl", "i32 pick( i32 v ) { return 2; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.bound_into( Node_kind::Name_expr, "pick" ) == "near" );
+    }
+
+    SECTION( "an overload set none of which is visible is refused" )
+    {
+        const Resolved_program p( {
+            { "main.kl", "import route;\ni32 main() { return pick( 1 ); }\n" },
+            { "route.kl", "import far;\ni32 via() { return pick( 1 ); }\n" },
+            { "far.kl", "i32 pick( i32 v ) { return 2; }\ni32 pick( i64 v ) { return 3; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`pick` is in `far`, which this file does not import" ) != std::string::npos );
+    }
+
+    // One package, one namespace: neither file imports the other, and the second is still refused.
+    SECTION( "a duplicate between two modules is still an error" )
+    {
+        const Resolved_program p( {
+            { "main.kl", "import a;\nimport b;\ni32 main() { return 0; }\n" },
+            { "a.kl", "i32 n = 1;\n" },
+            { "b.kl", "i32 n = 2;\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`n` is already declared in this scope" ) != std::string::npos );
+    }
+
+    // Locals, parameters and main.kl's own declarations never pass through the import check.
+    SECTION( "a file's own names need no import" )
+    {
+        const Resolved_program p( {
+            { "main.kl", "i32 g = 1;\ni32 f( i32 v ) { i32 w = v; return w + g; }\ni32 main() { return f( 1 ); }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
     }
 }
 

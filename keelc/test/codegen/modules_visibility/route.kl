@@ -1,0 +1,13 @@
+// Imports what main.kl does not: the other pick, and the type origin() returns.
+import far;
+import geom;
+
+i32 via( i32 v )
+{
+    return pick( v );
+}
+
+Point origin()
+{
+    return Point { 7, 0 };
+}
