@@ -161,6 +161,8 @@ private:
     // declaration a path's qualifier names, and the type it stands for once its own type arguments
     // are applied, which for a static call is the only place those can come from.
     Node_id qualifier_declaration( Node_id path ) const;
+    // A bare name, or one written through its package: the two things a use binds.
+    bool is_name( Node_id id ) const;
 
     // The type the access being checked is written inside, or an invalid id in a free function.
     // Asked of the enclosing *function*, never of a receiver: a static method has no receiver and

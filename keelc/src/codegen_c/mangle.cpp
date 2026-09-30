@@ -86,6 +86,12 @@ void encode_type( std::string& out, Type_id id, const Type_table& types )
         return;
     }
 
+    std::string_view package = types.package( id );
+    if( !package.empty() )
+    {
+        out += fmt::format( "Q{}{}", package.size(), package );
+    }
+
     // `Box<i32>` is `3BoxI3i32E`: the base, then its arguments between brackets that cannot appear
     // in a name. Nested and multi-argument forms fall out - `Box<Box<i32>>` is `3BoxI3BoxI3i32EE`.
     const std::string_view base = types.base_name( id );
@@ -573,6 +579,42 @@ TEST_CASE( "mangle_puts_the_package_in_every_symbol", "[codegen][mangle]" )
         const Type_id b_c = table.structure( Node_id { 23 }, {}, "b_c" );
 
         REQUIRE( mangle_struct( "a_b", c, table ) != mangle_struct( "a", b_c, table ) );
+    }
+}
+
+// A type argument is where the program's `Point` and `kl`'s would otherwise meet.
+TEST_CASE( "mangle_encodes_a_package's_type_with_its_package", "[codegen][mangle]" )
+{
+    Type_table table;
+
+    table.set_package( Node_id { 17 }, "kl" );
+
+    const Type_id kl_point = table.structure( Node_id { 17 }, {}, "Point" );
+    const Type_id point    = table.structure( Node_id { 19 }, {}, "Point" );
+
+    const Mangled_parameter takes_kl[]  = { by_value( kl_point ) };
+    const Mangled_parameter takes_own[] = { by_value( point ) };
+    const Type_id           kl_args[]   = { kl_point };
+    const Type_id           own_args[]  = { point };
+
+    REQUIRE( mangle_function( "", "f", takes_kl, table ) == "kl__f__Q2kl5Point" );
+    REQUIRE( mangle_function( "", "f", takes_own, table ) == "kl__f__5Point" );
+    REQUIRE(
+        mangle_function( "", "wrap", takes_kl, table, kl_args ) != mangle_function( "", "wrap", takes_own, table, own_args )
+    );
+
+    SECTION( "the struct itself is named from its bare name" )
+    {
+        REQUIRE( mangle_struct( "kl", kl_point, table ) == "kl_2kl_Point" );
+    }
+
+    SECTION( "inside a generic" )
+    {
+        const Type_id box_of_kl  = table.structure( Node_id { 23 }, std::array { kl_point }, "Box" );
+        const Type_id box_of_own = table.structure( Node_id { 23 }, std::array { point }, "Box" );
+
+        REQUIRE( mangle_struct( "", box_of_kl, table ) == "kl__Box__IQ2kl5PointE" );
+        REQUIRE( mangle_struct( "", box_of_kl, table ) != mangle_struct( "", box_of_own, table ) );
     }
 }
 

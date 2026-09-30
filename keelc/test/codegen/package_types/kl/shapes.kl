@@ -1,0 +1,56 @@
+// One of each kind of declaration a package holds, for main.kl to name through `kl::`.
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+struct Box<T> where T : Copyable
+{
+    T v;
+
+    static Box<T> of( T x )
+    {
+        return Box { x };
+    }
+};
+
+enum Colour
+{
+    Red,
+    Green
+};
+
+enum Shape
+{
+    Circle( i32 radius ),
+    Square( i32 side )
+};
+
+class Counter
+{
+    i32 n;
+
+    Counter( i32 start )
+    {
+        n = start;
+    }
+
+    static Counter zero()
+    {
+        return Counter( 0 );
+    }
+
+    i32 get() const
+    {
+        return n;
+    }
+};
+
+i32 made = 0;
+
+Point origin()
+{
+    made = made + 1;
+    return Point { 7, 8 };
+}

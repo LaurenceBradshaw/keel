@@ -59,8 +59,9 @@ Type_id Expressions::infer( Node_id id )
     case Node_kind::Index_expr:
         return infer_index( id );
 
+    // Only a path through a package is bound, and it names a declaration as a bare name does.
     case Node_kind::Path_expr:
-        return infer_path( id );
+        return resolution_.declaration_of( id ).is_valid() ? infer_name( id ) : infer_path( id );
 
     case Node_kind::Struct_literal:
         return infer_struct_literal( id );
@@ -1572,13 +1573,20 @@ void Expressions::report_private( Node_id at, Node_id member )
     );
 }
 
+bool Expressions::is_name( Node_id id ) const
+{
+    return ast_.kind( id ) == Node_kind::Name_expr ||
+           ( ast_.kind( id ) == Node_kind::Path_expr && resolution_.declaration_of( id ).is_valid() );
+}
+
 // The declaration a path's qualifier names, or nothing when the qualifier is not a name at all.
-// `f()::x` has no declaration to find and is refused where the path is typed, not here.
+// `kl::Colour` in `kl::Colour::Red` is a name, bound through its package. `f()::x` has no
+// declaration to find and is refused where the path is typed, not here.
 Node_id Expressions::qualifier_declaration( Node_id path ) const
 {
     const Node_id qualifier = ast_.child( path, 0 );
 
-    return ast_.kind( qualifier ) == Node_kind::Name_expr ? resolution_.declaration_of( qualifier ) : Node_id {};
+    return is_name( qualifier ) ? resolution_.declaration_of( qualifier ) : Node_id {};
 }
 
 // Which instance the qualifier names. `Box<i32>::of` carries its own arguments on the path, there
@@ -1957,13 +1965,13 @@ Type_id Expressions::infer_path( Node_id id )
     const Node_id   qualifier = ast_.child( id, 0 );
     const Symbol_id name { ast_.aux( id ) };
 
-    const Node_id decl = ast_.kind( qualifier ) == Node_kind::Name_expr ? resolution_.declaration_of( qualifier ) : Node_id {};
+    const Node_id decl = qualifier_declaration( id );
 
     // An unresolved qualifier was already reported by the resolver; anything else is not a name at
     // all, and `f()::x` deserves its own complaint rather than a second one about the name.
     if( !decl.is_valid() )
     {
-        if( ast_.kind( qualifier ) != Node_kind::Name_expr )
+        if( !is_name( qualifier ) )
         {
             reporter_.error_at( ast_.span( qualifier ), "`::` needs the name of a type on its left" );
         }
@@ -2167,7 +2175,7 @@ Type_id Expressions::infer_struct_literal( Node_id id )
 
     if( !decl.is_valid() || !is_aggregate( ast_.kind( decl ) ) )
     {
-        for( const Node_id init : ast_.children( id ) )
+        for( const Node_id init : ast_.initialisers( id ) )
         {
             infer( ast_.child( init, 0 ) ); // type the values anyway
         }
@@ -2188,7 +2196,7 @@ Type_id Expressions::infer_struct_literal( Node_id id )
             fmt::format( "write `{}( ... )`", name )
         );
 
-        for( const Node_id init : ast_.children( id ) )
+        for( const Node_id init : ast_.initialisers( id ) )
         {
             infer( ast_.child( init, 0 ) );
         }
@@ -2198,7 +2206,7 @@ Type_id Expressions::infer_struct_literal( Node_id id )
         return types_.record( id, types_.type_of( decl ) );
     }
 
-    const std::span<const Node_id> initialisers = ast_.children( id );
+    const std::span<const Node_id> initialisers = ast_.initialisers( id );
 
     // Fields, not members: a destructor is a child of the declaration too, and counting it would
     // demand an extra initialiser and misalign every positional one after it.

@@ -49,6 +49,8 @@ public:
         Diagnostics&          diags
     )
         : ast_( ast ),
+          interner_( interner ),
+          resolution_( resolution ),
           reporter_( source_manager, diags ),
           table_( types_.table() ),
           aggregates_( ast, interner, types_, reporter_ ),
@@ -100,7 +102,9 @@ public:
     Types run();
 
 private:
-    const Ast& ast_;
+    const Ast&        ast_;
+    const Interner&   interner_;
+    const Resolution& resolution_;
 
     Reporter      reporter_;
     Types_builder types_;
@@ -128,6 +132,18 @@ private:
 Types Checker::run()
 {
     types_.size_to( ast_.node_count() );
+
+    for( const Node_id decl : ast_.children( ast_.root() ) )
+    {
+        const Node_kind kind    = ast_.kind( decl );
+        const Symbol_id package = resolution_.package_of( ast_.span( decl ).file );
+
+        if( ( is_aggregate( kind ) || kind == Node_kind::Enum_decl ) && package.is_valid() )
+        {
+            types_.table().set_package( decl, interner_.text( package ) );
+        }
+    }
+
     signatures_.declare();
     statements_.visit( ast_.root() );
 

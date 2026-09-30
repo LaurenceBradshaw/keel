@@ -52,6 +52,10 @@ public:
     // An `enum`'s variants, past the two leading slots it skips. Asserts for the same reason.
     std::span<const Node_id> variants( Node_id id ) const;
 
+    // A struct literal's `Field_init`s, past the package a qualified one leads with. Asserts for the
+    // same reason.
+    std::span<const Node_id> initialisers( Node_id id ) const;
+
     // A member's declared access. Public for every node the parser did not stamp, which is every
     // node that is not a member - so this is a total function and never asks what kind `id` is.
     Access access( Node_id id ) const;

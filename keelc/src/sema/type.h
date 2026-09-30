@@ -176,6 +176,9 @@ public:
     Type_id default_integer() const;
     Type_id default_float() const;
 
+    void             set_package( Node_id declaration, std::string_view package );
+    std::string_view package( Type_id id ) const;
+
 private:
     Type_id   add( const Type& type, std::string_view name );
     static u8 width_index( u8 width );
@@ -216,6 +219,8 @@ private:
 
     std::vector<Type_id> functions_;
     std::vector<Type_id> fields_;
+
+    std::unordered_map<u32, std::string> packages_; // Node_id of a declaration -> the package it was declared in
 };
 
 } // namespace keel

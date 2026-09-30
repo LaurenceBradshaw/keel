@@ -97,6 +97,12 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
             return types_.type_of( decl );
         }
 
+        // `kl::Missing` was reported by the resolver, and `kl::i32` is not `i32`.
+        if( !ast_.children( annotation ).empty() )
+        {
+            return table_.builtin( Type_kind::Error );
+        }
+
         const std::string_view spelling = interner_.text( Symbol_id { ast_.aux( annotation ) } );
         const Type_id          type     = table_.from_spelling( spelling );
 
@@ -195,6 +201,12 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
         }
 
         const Node_id decl = resolution_.declaration_of( base );
+
+        // A qualified base was reported by the resolver.
+        if( !decl.is_valid() && !ast_.children( base ).empty() )
+        {
+            return table_.builtin( Type_kind::Error );
+        }
 
         if( !decl.is_valid() )
         {

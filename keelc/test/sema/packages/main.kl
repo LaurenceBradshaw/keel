@@ -5,11 +5,19 @@ import kl::nope;
 import foo::geom;
 import kl::core::list;
 
+// A type may not take a package's name.
+struct kl
+{
+    i32 x;
+};
+
 i32 main()
 {
     i32 a = area( 1 );      // kl's, named bare
     i32 b = kl::hidden();   // in kl::deep, which only route.kl imports
     i32 c = kl::nothing();  // no module of kl this file imports declares it
-    Point p = kl::origin(); // kl's type, which cannot be named yet
-    return a + b + c + p.x;
+    Point p = kl::origin(); // kl's type, named bare
+    kl::Missing m;          // no module of kl this file imports declares it
+    kl::Missing<i32> g;     // the same, reported once though it is generic
+    return a + b + c + p.x + count;
 }

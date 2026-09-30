@@ -80,6 +80,15 @@ std::span<const Node_id> Ast::variants( Node_id id ) const
     return children( id ).subspan( 2 );
 }
 
+std::span<const Node_id> Ast::initialisers( Node_id id ) const
+{
+    assert( kind( id ) == Node_kind::Struct_literal && "initialisers are a struct literal's, not any node's" );
+
+    const std::span<const Node_id> all = children( id );
+
+    return !all.empty() && kind( all.front() ) == Node_kind::Name_expr ? all.subspan( 1 ) : all;
+}
+
 Access Ast::access( Node_id id ) const
 {
     const auto it = access_.find( id.v );

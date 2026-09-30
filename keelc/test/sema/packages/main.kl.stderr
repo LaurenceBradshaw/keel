@@ -16,28 +16,52 @@ error: an import names a module, or a package and one of its modules
 6 | import kl::core::list;
   | ^^^^^^^^^^^^^^^^^
 
+error: `kl` is the name of a package
+ --> sema/packages/main.kl:9:1
+  |
+9 | struct kl
+  | ^^^^^^^^^ a type may not take one
+
 error: `area` is in the package `kl`
-  --> sema/packages/main.kl:10:13
+  --> sema/packages/main.kl:16:13
    |
-10 |     i32 a = area( 1 );      // kl's, named bare
+16 |     i32 a = area( 1 );      // kl's, named bare
    |             ^^^^ write `kl::area`
 
 error: `hidden` is in `kl::deep`, which this file does not import
-  --> sema/packages/main.kl:11:13
+  --> sema/packages/main.kl:17:13
    |
-11 |     i32 b = kl::hidden();   // in kl::deep, which only route.kl imports
+17 |     i32 b = kl::hidden();   // in kl::deep, which only route.kl imports
    |             ^^^^^^^^^^ write `import kl::deep;` at the top of the file
 
 error: no module of `kl` that this file imports declares `nothing`
-  --> sema/packages/main.kl:12:13
+  --> sema/packages/main.kl:18:13
    |
-12 |     i32 c = kl::nothing();  // no module of kl this file imports declares it
+18 |     i32 c = kl::nothing();  // no module of kl this file imports declares it
    |             ^^^^^^^^^^^
 
 error: `Point` is in the package `kl`
-  --> sema/packages/main.kl:13:5
+  --> sema/packages/main.kl:19:5
    |
-13 |     Point p = kl::origin(); // kl's type, which cannot be named yet
-   |     ^^^^^ only another package's functions can be named so far
+19 |     Point p = kl::origin(); // kl's type, named bare
+   |     ^^^^^ write `kl::Point`
 
-7 errors generated
+error: no module of `kl` that this file imports declares `Missing`
+  --> sema/packages/main.kl:20:5
+   |
+20 |     kl::Missing m;          // no module of kl this file imports declares it
+   |     ^^^^^^^^^^^
+
+error: no module of `kl` that this file imports declares `Missing`
+  --> sema/packages/main.kl:21:5
+   |
+21 |     kl::Missing<i32> g;     // the same, reported once though it is generic
+   |     ^^^^^^^^^^^
+
+error: `count` is in the package `kl`
+  --> sema/packages/main.kl:22:30
+   |
+22 |     return a + b + c + p.x + count;
+   |                              ^^^^^ write `kl::count`
+
+11 errors generated

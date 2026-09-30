@@ -46,6 +46,16 @@ public:
         return imports_.sees( from, to );
     }
 
+    Symbol_id package_of( File_id file ) const
+    {
+        return imports_.package_of( file );
+    }
+
+    bool is_package( Symbol_id package ) const
+    {
+        return imports_.is_package( package );
+    }
+
 private:
     std::vector<Node_id> bindings_;
     std::vector<Node_id> next_overload_;

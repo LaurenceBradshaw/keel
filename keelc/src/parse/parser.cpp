@@ -103,7 +103,7 @@ private:
 
     // `Point { 0.0, 0.0 }` or `Point { .x = 0.0, .y = 0.0 }`. Entered from parse_prefix once the
     // identifier is consumed and a `{` is seen behind it.
-    Node_id parse_struct_literal( Span start, Symbol_id type_name );
+    Node_id parse_struct_literal( Span start, Symbol_id type_name, Node_id package = {} );
 
     // One initialiser. aux carries the field name in the designated form and stays invalid in the
     // positional one - Symbol_id has its own sentinel, so "no name" is representable rather than
@@ -1386,11 +1386,16 @@ Node_id Parser::parse_where_clause()
     return ast_.add( Node_kind::Where_clause, Span::merge( start, previous().span ), subject.v, bounds );
 }
 
-Node_id Parser::parse_struct_literal( Span start, Symbol_id type_name )
+Node_id Parser::parse_struct_literal( Span start, Symbol_id type_name, Node_id package )
 {
     expect( Token_kind::L_brace );
 
     std::vector<Node_id> initialisers;
+
+    if( package.is_valid() )
+    {
+        initialisers.push_back( package );
+    }
 
     while( !check( Token_kind::R_brace ) && !at_end() )
     {
@@ -1515,11 +1520,25 @@ Node_id Parser::parse_type()
         return error_node( start );
     }
 
-    const Symbol_id name = previous().symbol;
+    Symbol_id  name       = previous().symbol;
+    const Span name_start = previous().span;
 
-    // The Named_type covers only the identifier: a leading const belongs to the Const_type that
-    // wraps it, not to the name.
-    Node_id type = ast_.add( Node_kind::Named_type, previous().span, name.v, {} );
+    // `kl::Point`: the first name was the package, kept as a Name_expr child as an import keeps it.
+    Node_id package_node {};
+
+    if( check( Token_kind::Colon_colon ) && peek( 1 ).kind == Token_kind::Identifier )
+    {
+        package_node = ast_.add( Node_kind::Name_expr, name_start, name.v, {} );
+        advance(); // the `::`
+        name = expect_name();
+    }
+
+    // The Named_type covers only the name, qualified or not: a leading const belongs to the
+    // Const_type that wraps it.
+    const Span named_span = Span::merge( name_start, previous().span );
+
+    Node_id type = package_node.is_valid() ? ast_.add( Node_kind::Named_type, named_span, name.v, { package_node } )
+                                           : ast_.add( Node_kind::Named_type, named_span, name.v, {} );
 
     // Generic arguments. Nesting works because match_generic_close splits `>>`.
     if( check( Token_kind::Less ) )
@@ -1923,6 +1942,7 @@ bool Parser::scan_type_arguments()
 
         // Everything a type may be made of, and nothing else: a type argument cannot contain a
         // call, a literal or an operator, so meeting one means this was a comparison all along.
+        case Token_kind::Colon_colon:
         case Token_kind::Identifier:
         case Token_kind::Star:
         case Token_kind::Comma:
@@ -2030,6 +2050,13 @@ bool Parser::scan_type_and_name()
     {
         pos_ = saved;
         return false;
+    }
+
+    // `kl::Point p`: no expression is a path followed by a name.
+    if( check( Token_kind::Colon_colon ) && peek( 1 ).kind == Token_kind::Identifier )
+    {
+        advance();
+        advance();
     }
 
     // Whatever a type can be followed by before the declared name: `Point*`, `const T&`,
@@ -3053,6 +3080,17 @@ Node_id Parser::parse_prefix()
         advance();
 
         const Symbol_id name = previous().symbol;
+
+        if( check( Token_kind::Colon_colon ) && peek( 1 ).kind == Token_kind::Identifier &&
+            peek( 2 ).kind == Token_kind::L_brace )
+        {
+            const Node_id package_node = ast_.add( Node_kind::Name_expr, previous().span, name.v, {} );
+
+            advance(); // the `::`
+            advance(); // the type's name
+
+            return parse_struct_literal( start, previous().symbol, package_node );
+        }
 
         // No ambiguity with a block: a block is a statement and starts with `{`, so an expression
         // is never followed by one. Rust needs a rule here only because its `if` takes no
@@ -8544,6 +8582,128 @@ TEST_CASE( "parser_reads_an_import_from_a_package", "[parse][import]" )
         REQUIRE( p.has_errors() );
         REQUIRE( p.errors().find( "an import names a module, or a package and one of its modules" ) != std::string::npos );
         REQUIRE( p.kind( p.child( p.root(), 1 ) ) == Node_kind::Function_decl );
+    }
+}
+
+// A qualified name keeps the package as a Name_expr child, as an import does, and spans `kl::Point`.
+TEST_CASE( "parser_reads_a_type_from_a_package", "[parse][packages]" )
+{
+    const auto expect_qualified = [&]( const Parsed& p, Node_id type, std::string_view name )
+    {
+        REQUIRE( p.kind( type ) == Node_kind::Named_type );
+        REQUIRE( p.name( type ) == name );
+        REQUIRE( p.text( type ) == fmt::format( "kl::{}", name ) );
+        REQUIRE( p.children( type ).size() == 1 );
+        REQUIRE( p.kind( p.child( type, 0 ) ) == Node_kind::Name_expr );
+        REQUIRE( p.name( p.child( type, 0 ) ) == "kl" );
+    };
+
+    // `a::b c` is a declaration: no expression has that shape.
+    SECTION( "in a declaration" )
+    {
+        const Parsed p( "i32 main() { kl::Point p = kl::origin(); return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id decl = first_statement( p );
+
+        REQUIRE( p.kind( decl ) == Node_kind::Var_decl );
+        expect_qualified( p, p.child( decl, 0 ), "Point" );
+    }
+
+    SECTION( "with type arguments" )
+    {
+        const Parsed p( "i32 main() { kl::list<i32> v = kl::make(); return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id decl = first_statement( p );
+
+        REQUIRE( p.kind( decl ) == Node_kind::Var_decl );
+        REQUIRE( p.kind( p.child( decl, 0 ) ) == Node_kind::Generic_type );
+        expect_qualified( p, p.child( p.child( decl, 0 ), 0 ), "list" );
+    }
+
+    SECTION( "as a type argument" )
+    {
+        const Parsed p( "i32 main() { Box<kl::Point> b = make(); return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id decl = first_statement( p );
+
+        REQUIRE( p.kind( decl ) == Node_kind::Var_decl );
+
+        const Node_id list = p.child( p.child( decl, 0 ), 1 );
+
+        REQUIRE( p.kind( list ) == Node_kind::Type_arg_list );
+        expect_qualified( p, p.child( list, 0 ), "Point" );
+    }
+
+    SECTION( "in a signature" )
+    {
+        const Parsed p( "kl::Point moved( kl::Point* p ) { return *p; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id function = p.child( p.root(), 0 );
+
+        REQUIRE( p.kind( function ) == Node_kind::Function_decl );
+        expect_qualified( p, p.child( function, 0 ), "Point" );
+
+        const Node_id param = p.child( p.child( function, 1 ), 0 );
+
+        REQUIRE( p.kind( p.child( param, 0 ) ) == Node_kind::Pointer_type );
+        expect_qualified( p, p.child( p.child( param, 0 ), 0 ), "Point" );
+    }
+
+    // The package leads the initialisers, so the literal's fields are read from child 1.
+    SECTION( "a struct literal" )
+    {
+        const Parsed p( "i32 main() { auto q = kl::Point { 1, 2 }; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id literal = find_first( p.ast(), p.root(), Node_kind::Struct_literal );
+
+        REQUIRE( literal.is_valid() );
+        REQUIRE( p.name( literal ) == "Point" );
+        REQUIRE( p.text( literal ) == "kl::Point { 1, 2 }" );
+        REQUIRE( p.children( literal ).size() == 3 );
+        REQUIRE( p.kind( p.child( literal, 0 ) ) == Node_kind::Name_expr );
+        REQUIRE( p.name( p.child( literal, 0 ) ) == "kl" );
+        REQUIRE( p.kind( p.child( literal, 1 ) ) == Node_kind::Field_init );
+    }
+
+    // `<` read as a type argument list rather than a comparison, `::` and all.
+    SECTION( "as an explicit type argument" )
+    {
+        const Parsed p( "i32 main() { return size<kl::Point>(); }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id call = find_first( p.ast(), p.root(), Node_kind::Call_expr );
+
+        REQUIRE( call.is_valid() );
+        REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::Binary_expr ).is_valid() );
+        expect_qualified( p, p.child( p.child( call, 2 ), 0 ), "Point" );
+    }
+
+    // What is not a declaration stays an expression.
+    SECTION( "a call and an assignment through a package" )
+    {
+        const Parsed p( "i32 main() { kl::reset(); kl::count = 3; return kl::count; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::Var_decl ).is_valid() );
+        REQUIRE( find_first( p.ast(), p.root(), Node_kind::Call_expr ).is_valid() );
     }
 }
 

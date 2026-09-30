@@ -52,6 +52,7 @@ private:
     bool    chain_overload( Node_id existing, Node_id added );
     Node_id lookup( Symbol_id name, Node_id use );
     Node_id lookup_in( Symbol_id package, Symbol_id name, Node_id use );
+    Node_id lookup_qualified( Node_id package, Node_id use );
     Node_id visible_from( Node_id use, Node_id head );
     void    refuse_unimported( Node_id use, Node_id decl );
     void    refuse_other_package( Node_id use, Node_id decl );
@@ -94,9 +95,22 @@ Resolution Resolver::run()
         if( ast_.kind( decl ) == Node_kind::Function_decl || ast_.kind( decl ) == Node_kind::Var_decl ||
             ast_.kind( decl ) == Node_kind::Enum_decl || is_aggregate( ast_.kind( decl ) ) )
         {
+            const Symbol_id name { ast_.aux( decl ) };
+
+            // Otherwise `kl::x` could name a member of the type as well as a declaration of the package.
+            if( ( ast_.kind( decl ) == Node_kind::Enum_decl || is_aggregate( ast_.kind( decl ) ) ) &&
+                imports_.is_package( name ) )
+            {
+                error_at(
+                    ast_.span( decl ),
+                    fmt::format( "`{}` is the name of a package", interner_.text( name ) ),
+                    "a type may not take one"
+                );
+            }
+
             Scope& scope = packages_[imports_.package_of( ast_.span( decl ).file )];
             scope.kind   = Scope_kind::Barrier;
-            declare( scope, Symbol_id { ast_.aux( decl ) }, decl );
+            declare( scope, name, decl );
         }
     }
 
@@ -198,25 +212,7 @@ void Resolver::visit( Node_id id )
         if( ast_.kind( qualifier ) == Node_kind::Name_expr && ast_.children( qualifier ).empty() &&
             imports_.is_package( Symbol_id { ast_.aux( qualifier ) } ) )
         {
-            const Symbol_id package { ast_.aux( qualifier ) };
-            const Symbol_id name { ast_.aux( id ) };
-            const Node_id   decl = lookup_in( package, name, id );
-
-            if( decl.is_valid() )
-            {
-                bindings_[id.v] = decl;
-            }
-            else
-            {
-                error_at(
-                    ast_.span( id ),
-                    fmt::format(
-                        "no module of `{}` that this file imports declares `{}`",
-                        interner_.text( package ),
-                        interner_.text( name )
-                    )
-                );
-            }
+            bindings_[id.v] = lookup_qualified( qualifier, id );
 
             if( ast_.children( id ).size() > 1 )
             {
@@ -235,6 +231,14 @@ void Resolver::visit( Node_id id )
     }
     case Node_kind::Named_type:
     {
+        // `kl::Point`, whose one child is the package. A miss there is reported, since nothing
+        // later can tell a qualified name from a misspelt builtin.
+        if( !ast_.children( id ).empty() )
+        {
+            bindings_[id.v] = lookup_qualified( ast_.child( id, 0 ), id );
+            return;
+        }
+
         const Node_id decl = lookup( Symbol_id { ast_.aux( id ) }, id );
         if( decl.is_valid() )
         {
@@ -246,9 +250,12 @@ void Resolver::visit( Node_id id )
     case Node_kind::Struct_literal:
     {
         const Symbol_id name { ast_.aux( id ) };
-        const Node_id   decl = lookup( name, id );
 
-        if( decl.is_valid() )
+        if( ast_.initialisers( id ).size() != ast_.children( id ).size() )
+        {
+            bindings_[id.v] = lookup_qualified( ast_.child( id, 0 ), id );
+        }
+        else if( const Node_id decl = lookup( name, id ); decl.is_valid() )
         {
             bindings_[id.v] = decl;
         }
@@ -260,7 +267,7 @@ void Resolver::visit( Node_id id )
         // Explicit rather than falling into default: the initialiser values are ordinary
         // expressions and still need resolving, and a `return` added here for tidiness would
         // silently stop that happening.
-        for( const Node_id init : ast_.children( id ) )
+        for( const Node_id init : ast_.initialisers( id ) )
         {
             visit( init );
         }
@@ -607,6 +614,27 @@ Node_id Resolver::lookup( Symbol_id name, Node_id use )
     return Node_id {};
 }
 
+// `use` names its declaration through the package `package`, a Name_expr. Invalid, and reported, when
+// no module of it that the use's file imports declares the name.
+Node_id Resolver::lookup_qualified( Node_id package, Node_id use )
+{
+    const Symbol_id package_name { ast_.aux( package ) };
+    const Symbol_id name { ast_.aux( use ) };
+    const Node_id   decl = lookup_in( package_name, name, use );
+
+    if( !decl.is_valid() )
+    {
+        error_at(
+            ast_.span( use ),
+            fmt::format(
+                "no module of `{}` that this file imports declares `{}`", interner_.text( package_name ), interner_.text( name )
+            )
+        );
+    }
+
+    return decl;
+}
+
 Node_id Resolver::lookup_in( Symbol_id package, Symbol_id name, Node_id use )
 {
     const auto scope = packages_.find( package );
@@ -655,12 +683,10 @@ void Resolver::refuse_other_package( Node_id use, Node_id decl )
     const Symbol_id  package = imports_.package_of( ast_.span( decl ).file );
     std::string_view name    = interner_.text( Symbol_id { ast_.aux( decl ) } );
 
-    // `kl::Point` is not yet a spelling, so only a function is offered one.
     error_at(
         ast_.span( use ),
         fmt::format( "`{}` is in the package `{}`", name, interner_.text( package ) ),
-        ast_.kind( decl ) == Node_kind::Function_decl ? fmt::format( "write `{}`", qualified( interner_, package, name ) )
-                                                      : std::string( "only another package's functions can be named so far" )
+        fmt::format( "write `{}`", qualified( interner_, package, name ) )
     );
 }
 
@@ -1562,9 +1588,9 @@ public:
         return out.str();
     }
 
-    // The file, without `.kl`, whose declaration main.kl's first `kind` named `name` is bound to, as
+    // The file, without `.kl`, whose declaration main.kl's `nth` `kind` named `name` is bound to, as
     // `a` or `kl/geom`; empty when it is bound to nothing.
-    std::string bound_into( Node_kind kind, std::string_view name ) const
+    std::string bound_into( Node_kind kind, std::string_view name, u32 nth = 0 ) const
     {
         const Ast& ast = program_.ast;
 
@@ -1575,6 +1601,12 @@ public:
             if( ast.kind( id ) != kind || ast.span( id ).file != input_ ||
                 interner_.text( Symbol_id { ast.aux( id ) } ) != name )
             {
+                continue;
+            }
+
+            if( nth > 0 )
+            {
+                --nth;
                 continue;
             }
 
@@ -1843,8 +1875,7 @@ TEST_CASE( "resolver_names_another_package_through_its_name", "[sema][resolve][p
         REQUIRE( p.bound_into( Node_kind::Name_expr, "area" ) == "kl/geom" );
     }
 
-    // `kl::Point` is not a spelling yet, so the help must not offer it.
-    SECTION( "a type from another package cannot be named yet" )
+    SECTION( "a bare type from another package is refused with its qualified name" )
     {
         const Resolved_program p( {
             { "main.kl", "import kl::geom;\ni32 main() { Point q = kl::origin(); return q.x; }\n" },
@@ -1854,8 +1885,7 @@ TEST_CASE( "resolver_names_another_package_through_its_name", "[sema][resolve][p
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "`Point` is in the package `kl`" ) != std::string::npos );
-        REQUIRE( p.rendered().find( "only another package's functions can be named so far" ) != std::string::npos );
-        REQUIRE( p.rendered().find( "kl::Point" ) == std::string::npos );
+        REQUIRE( p.rendered().find( "write `kl::Point`" ) != std::string::npos );
     }
 
     SECTION( "a qualified name needs its module imported" )
@@ -1923,6 +1953,150 @@ TEST_CASE( "resolver_names_another_package_through_its_name", "[sema][resolve][p
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "no module of `kl` that this file imports declares `area`" ) != std::string::npos );
+    }
+}
+
+TEST_CASE( "resolver_names_a_package's_types_and_globals", "[sema][resolve][packages]" )
+{
+    SECTION( "a qualified type binds into the package" )
+    {
+        const Resolved_program p( {
+            { "main.kl", "import kl::geom;\ni32 main() { kl::Point q = kl::origin(); return q.x; }\n" },
+            { "kl/geom.kl", "struct Point { i32 x; };\nPoint origin() { return Point { 1 }; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.bound_into( Node_kind::Named_type, "Point" ) == "kl/geom" );
+    }
+
+    // In a type argument, and in a signature, as well as in a declaration.
+    SECTION( "a qualified type is a type wherever one is written" )
+    {
+        const Resolved_program p( {
+            { "main.kl",
+              "import kl::geom;\n"
+              "struct Box<T> where T : Copyable { T v; };\n"
+              "kl::Point first( Box<kl::Point> b ) { return b.v; }\n"
+              "i32 main() { return 0; }\n" },
+            { "kl/geom.kl", "struct Point { i32 x; };\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.bound_into( Node_kind::Named_type, "Point", 0 ) == "kl/geom" );
+        REQUIRE( p.bound_into( Node_kind::Named_type, "Point", 1 ) == "kl/geom" );
+    }
+
+    SECTION( "a package's type and the program's may share a name" )
+    {
+        const Resolved_program p( {
+            { "main.kl",
+              "import kl::geom;\n"
+              "struct Point { i32 x; };\n"
+              "i32 main() { Point a = Point { 1 }; kl::Point b = kl::Point { 2 }; return a.x + b.x; }\n" },
+            { "kl/geom.kl", "struct Point { i32 x; };\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.bound_into( Node_kind::Named_type, "Point", 0 ) == "main" );
+        REQUIRE( p.bound_into( Node_kind::Named_type, "Point", 1 ) == "kl/geom" );
+        REQUIRE( p.bound_into( Node_kind::Struct_literal, "Point", 0 ) == "main" );
+        REQUIRE( p.bound_into( Node_kind::Struct_literal, "Point", 1 ) == "kl/geom" );
+    }
+
+    SECTION( "a qualified type needs its module imported" )
+    {
+        const Resolved_program p( {
+            { "main.kl", "import route;\ni32 main() { kl::Point q = via(); return q.x; }\n" },
+            { "route.kl", "import kl::geom;\nkl::Point via() { return kl::Point { 1 }; }\n" },
+            { "kl/geom.kl", "struct Point { i32 x; };\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`Point` is in `kl::geom`, which this file does not import" ) != std::string::npos );
+    }
+
+    SECTION( "a qualified type no imported module declares" )
+    {
+        const Resolved_program p( {
+            { "main.kl", "import kl::geom;\ni32 main() { kl::Nothing n; return 0; }\n" },
+            { "kl/geom.kl", "struct Point { i32 x; };\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "no module of `kl` that this file imports declares `Nothing`" ) != std::string::npos );
+    }
+
+    // The resolver binds the qualifier; which variant or static method follows is the checker's.
+    SECTION( "a package's enum or aggregate can qualify a path" )
+    {
+        const Resolved_program p( {
+            { "main.kl",
+              "import kl::geom;\n"
+              "i32 main() { kl::Colour c = kl::Colour::Red; kl::Point q = kl::Point::make(); return q.x; }\n" },
+            { "kl/geom.kl",
+              "enum Colour { Red, Green };\n"
+              "struct Point { i32 x; static Point make() { return Point { 1 }; } };\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.bound_into( Node_kind::Path_expr, "Colour" ) == "kl/geom" );
+        REQUIRE( p.bound_into( Node_kind::Path_expr, "Point" ) == "kl/geom" );
+    }
+
+    SECTION( "a package's global" )
+    {
+        const Resolved_program p( {
+            { "main.kl", "import kl::geom;\ni32 main() { kl::count = 2; return kl::count; }\n" },
+            { "kl/geom.kl", "i32 count = 0;\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.bound_into( Node_kind::Path_expr, "count", 0 ) == "kl/geom" );
+        REQUIRE( p.bound_into( Node_kind::Path_expr, "count", 1 ) == "kl/geom" );
+    }
+
+    SECTION( "a bare global from another package is refused with its qualified name" )
+    {
+        const Resolved_program p( {
+            { "main.kl", "import kl::geom;\ni32 main() { return count; }\n" },
+            { "kl/geom.kl", "i32 count = 0;\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`count` is in the package `kl`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "write `kl::count`" ) != std::string::npos );
+    }
+
+    // Otherwise `kl::x` could name a member of the type as well as a declaration of the package.
+    SECTION( "a type may not take a package's name" )
+    {
+        const Resolved_program p( {
+            { "main.kl", "struct kl { i32 x; };\nenum kl_free { A };\ni32 main() { return 0; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`kl` is the name of a package" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "main.kl:1:1" ) != std::string::npos );
+    }
+
+    // Neither can stand before `::`, so neither can be mistaken for the package.
+    SECTION( "a function or a variable may" )
+    {
+        const Resolved_program p( {
+            { "main.kl", "i32 kl( i32 v ) { i32 kl_ = v; return kl_; }\ni32 main() { i32 kl = 1; return kl; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
     }
 }
 

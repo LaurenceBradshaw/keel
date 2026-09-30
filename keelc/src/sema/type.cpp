@@ -476,7 +476,17 @@ std::string_view Type_table::base_name( Type_id id ) const
 {
     const std::string_view rendered = name( id );
 
-    return rendered.substr( 0, rendered.find( '<' ) );
+    std::string_view cut = rendered.substr( 0, rendered.find( '<' ) );
+
+    // So `Box` is returned for `kl::Box<i32>`.
+    if( !package( id ).empty() )
+    {
+        const std::string_view pkg = package( id );
+        assert( rendered.starts_with( pkg ) );
+        cut.remove_prefix( pkg.size() + 2 ); // "::"
+    }
+
+    return cut;
 }
 
 std::vector<Type_id> Type_table::function_types() const
@@ -842,6 +852,18 @@ Type_id Type_table::default_float() const
     return floating( 64 );
 }
 
+void Type_table::set_package( Node_id declaration, std::string_view package )
+{
+    packages_[declaration.v] = package;
+}
+
+std::string_view Type_table::package( Type_id id ) const
+{
+    const Type& described = get( id );
+    const auto  it        = packages_.find( described.declaration.v );
+    return it == packages_.end() ? std::string_view {} : it->second;
+}
+
 Type_id Type_table::add( const Type& type, std::string_view name )
 {
     types_.push_back( type );
@@ -891,6 +913,12 @@ Type_id Type_table::composite(
     // `Box<i32>`, composed from the arguments' own names so that a nested one reads as written -
     // `Box<Pair<i32>>` rather than anything the caller had to assemble.
     std::string spelling( name );
+
+    const auto package_it = packages_.find( declaration.v );
+    if( package_it != packages_.end() )
+    {
+        spelling = std::string( package_it->second ) + "::" + spelling;
+    }
 
     for( std::size_t i = 0; i < owned.size(); ++i )
     {
@@ -1028,6 +1056,46 @@ TEST_CASE( "type_table_names_match_the_source_spelling", "[sema][type]" )
     REQUIRE( table.name( table.builtin( Type_kind::Bool ) ) == "bool" );
     REQUIRE( table.name( table.builtin( Type_kind::Void ) ) == "void" );
     REQUIRE( table.name( table.pointer_to( table.integer( 8, false ) ) ) == "u8*" );
+}
+
+// A package's type reads as it is written outside the package; the bare name is what C is built from.
+// The package belongs to the declaration, so it is given once, before any type of it is made.
+TEST_CASE( "type_table_names_a_package's_type_with_its_package", "[sema][type][packages]" )
+{
+    Type_table table;
+
+    table.set_package( Node_id { 3 }, "kl" );
+    table.set_package( Node_id { 9 }, "kl" );
+    table.set_package( Node_id { 11 }, "kl" );
+
+    const Type_id i32      = table.integer( 32, true );
+    const Type_id kl_point = table.structure( Node_id { 3 }, {}, "Point" );
+    const Type_id point    = table.structure( Node_id { 5 }, {}, "Point" );
+
+    REQUIRE( table.name( kl_point ) == "kl::Point" );
+    REQUIRE( table.base_name( kl_point ) == "Point" );
+    REQUIRE( table.package( kl_point ) == "kl" );
+
+    REQUIRE( table.name( point ) == "Point" );
+    REQUIRE( table.package( point ).empty() );
+
+    SECTION( "as a type argument, and as a generic" )
+    {
+        const Type_id box_of_kl = table.structure( Node_id { 7 }, std::array { kl_point }, "Box" );
+        const Type_id kl_list   = table.structure( Node_id { 9 }, std::array { i32 }, "list" );
+
+        REQUIRE( table.name( box_of_kl ) == "Box<kl::Point>" );
+        REQUIRE( table.name( kl_list ) == "kl::list<i32>" );
+        REQUIRE( table.base_name( kl_list ) == "list" );
+    }
+
+    SECTION( "an enum" )
+    {
+        const Type_id colour = table.enumeration( Node_id { 11 }, {}, "Colour", i32 );
+
+        REQUIRE( table.name( colour ) == "kl::Colour" );
+        REQUIRE( table.base_name( colour ) == "Colour" );
+    }
 }
 
 // PLAN §6.4, assignment direction. Listed as "types that hold this one", excluding itself.

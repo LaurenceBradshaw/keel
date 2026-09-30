@@ -12,3 +12,5 @@ i32 area( i32 side )
 {
     return side;
 }
+
+i32 count = 0;

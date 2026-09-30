@@ -42,7 +42,8 @@ bool Places::is_assignable( Node_id id ) const
         return true; // `arr[7] = 42;` writes through the offset. Whether arr *is* one is infer_index's question
     }
 
-    const Node_id decl = ast_.kind( id ) == Node_kind::Name_expr ? resolution_.declaration_of( id ) : Node_id {};
+    // A name, bare or through its package (`kl::count`); nothing else is bound.
+    const Node_id decl = resolution_.declaration_of( id );
     if( !decl.is_valid() )
     {
         return false;
@@ -248,7 +249,8 @@ Node_id Places::place_root( Node_id id, Node_id current_function ) const
         return Node_id {};
     }
 
-    const Node_id decl = ast_.kind( id ) == Node_kind::Name_expr ? resolution_.declaration_of( id ) : Node_id {};
+    // A name, bare or through its package (`kl::count`); nothing else is bound.
+    const Node_id decl = resolution_.declaration_of( id );
 
     // A bare field name is `this.field` written implicitly (D22), so what it is rooted in is the
     // **receiver**, not the field. Without this a `const` method could write its own object: the

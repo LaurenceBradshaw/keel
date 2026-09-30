@@ -738,7 +738,7 @@ Operand Lowering::lower_struct_literal( Node_id id )
 
     std::size_t index = 0;
 
-    for( const Node_id initialiser : ast_.children( id ) )
+    for( const Node_id initialiser : ast_.initialisers( id ) )
     {
         const Symbol_id name  = Symbol_id { ast_.aux( initialiser ) };
         const Node_id   field = name.is_valid() ? field_of( type, name ) : fields[index];
@@ -1346,6 +1346,12 @@ Operand Lowering::lower_expression( Node_id id )
     }
     case Node_kind::Path_expr:
     {
+        // `kl::count`: a global named through its package, the only path the resolver binds.
+        if( const Node_id decl = resolution_.declaration_of( id ); decl.is_valid() )
+        {
+            return copy( place_for( decl ), type_of( id ) );
+        }
+
         // D7: a payload enum is a struct, so a bare path names a variant with no payload and has to
         // be built rather than named. The checker has already refused a bare path to a variant that
         // carries one.
@@ -1378,6 +1384,7 @@ Place Lowering::lower_place( Node_id id )
     switch( ast_.kind( id ) )
     {
     case Node_kind::Name_expr:
+    case Node_kind::Path_expr: // `kl::count`, a global through its package
         // Same lookup as lower_expression's, but producing where the value lives rather than a
         // read of it.
         return place_for( resolution_.declaration_of( id ) );
