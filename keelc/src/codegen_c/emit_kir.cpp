@@ -235,7 +235,8 @@ public:
         const Literal_pool&          literals,
         const Source_manager&        sm,
         const Interner&              interner,
-        std::span<const Type_id>     struct_order
+        std::span<const Type_id>     struct_order,
+        const Imports&               imports
     );
 
     std::string run();
@@ -310,7 +311,8 @@ Kir_emitter::Kir_emitter(
     const Literal_pool&          literals,
     const Source_manager&        sm,
     const Interner&              interner,
-    std::span<const Type_id>     struct_order
+    std::span<const Type_id>     struct_order,
+    const Imports&               imports
 )
     : functions_( functions ),
       ast_( ast ),
@@ -319,7 +321,7 @@ Kir_emitter::Kir_emitter(
       literal_pool_( literals ),
       sm_( sm ),
       interner_( interner ),
-      spelling_( Spelling { ast, types, interner } )
+      spelling_( Spelling { ast, types, interner, imports } )
 {
 }
 
@@ -1250,12 +1252,13 @@ std::string emit_c_from_kir(
     Types&                       types,
     const Literal_pool&          literals,
     const Source_manager&        sm,
-    const Interner&              interner
+    const Interner&              interner,
+    const Imports&               imports
 )
 {
     const std::vector<Type_id> order = emitted_struct_order( ast, types );
 
-    return Kir_emitter( functions, ast, types, literals, sm, interner, order ).run();
+    return Kir_emitter( functions, ast, types, literals, sm, interner, order, imports ).run();
 }
 
 } // namespace keel

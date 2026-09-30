@@ -1,0 +1,6 @@
+import kl::deep;
+
+i32 via()
+{
+    return kl::hidden();
+}

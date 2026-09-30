@@ -194,7 +194,7 @@ Type_id Expressions::infer_call( Node_id id )
     // D7: `Shape::Circle( 1.0 )` constructs a variant, and M7's `P::make( 7 )` calls a static
     // method. Both are handled before the ordinary call path because the callee is a Path_expr
     // rather than a name, and they part on what the qualifier names rather than on what follows it.
-    if( ast_.kind( callee ) == Node_kind::Path_expr )
+    if( ast_.kind( callee ) == Node_kind::Path_expr && !resolution_.declaration_of( callee ).is_valid() )
     {
         const Node_id qualifier = qualifier_declaration( callee );
 
@@ -215,7 +215,9 @@ Type_id Expressions::infer_call( Node_id id )
 
     // v0 has no function pointers, so anything but a plain name in call position has no
     // declaration to find.
-    const Node_id decl = ast_.kind( callee ) == Node_kind::Name_expr ? resolution_.declaration_of( callee ) : Node_id {};
+    const Node_id decl = ast_.kind( callee ) == Node_kind::Name_expr || ast_.kind( callee ) == Node_kind::Path_expr
+                             ? resolution_.declaration_of( callee )
+                             : Node_id {};
 
     // Taken and cleared, because the expectation belongs to this call and to nothing inside it:
     // in `f( g() )` the type wanted of `f` says nothing about what `g` should produce. What it
@@ -951,7 +953,11 @@ Type_id Expressions::function_address( Node_id id, Node_id declaration )
     const Type_id          error = table_.builtin( Type_kind::Error );
     const std::string_view name  = interner_.text( Symbol_id { ast_.aux( ast_.child( id, 0 ) ) } );
 
-    const Node_id type_args = ast_.children( ast_.child( id, 0 ) ).empty() ? Node_id {} : ast_.child( ast_.child( id, 0 ), 0 );
+    // A path's child 0 is its qualifier, so its type arguments come after it.
+    const Node_id                  operand   = ast_.child( id, 0 );
+    const std::span<const Node_id> children  = ast_.children( operand );
+    const std::size_t              args_slot = ast_.kind( operand ) == Node_kind::Path_expr ? 1 : 0;
+    const Node_id                  type_args = children.size() > args_slot ? children[args_slot] : Node_id {};
 
     const Type_id expectation = expected_;
     expected_                 = Type_id {};
@@ -1444,7 +1450,8 @@ Type_id Expressions::infer_unary( Node_id id )
 
     // Answered before the operand is inferred: infer_name reports a bare function name, and
     // nothing here could take that diagnostic back once it is written.
-    if( op == Token_kind::Amp && ast_.kind( ast_.child( id, 0 ) ) == Node_kind::Name_expr )
+    if( op == Token_kind::Amp && ( ast_.kind( ast_.child( id, 0 ) ) == Node_kind::Name_expr ||
+                                   ast_.kind( ast_.child( id, 0 ) ) == Node_kind::Path_expr ) )
     {
         const Node_id declaration = resolution_.declaration_of( ast_.child( id, 0 ) );
 

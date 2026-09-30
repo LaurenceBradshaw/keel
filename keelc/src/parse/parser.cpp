@@ -628,17 +628,27 @@ Node_id Parser::parse_import()
 
     advance(); // consume `import`
 
-    const Symbol_id module = expect_name();
+    const Span package_span = peek().span;
+    Symbol_id  package      = expect_name();
+    Symbol_id  module {};
+    if( match( Token_kind::Colon_colon ) )
+    {
+        module = expect_name();
+    }
+    else
+    {
+        module  = package;
+        package = Symbol_id {};
+    }
+
+    const Node_id package_node =
+        package.is_valid() ? ast_.add( Node_kind::Name_expr, package_span, package.v, {} ) : Node_id {};
 
     bool refused = false;
     if( check( Token_kind::Colon_colon ) )
     {
         refused = true;
-        error_at(
-            Span::merge( start, peek().span ),
-            "only a module of this program can be imported",
-            "write `import foo;` for `foo.kl`"
-        );
+        error_at( Span::merge( start, peek().span ), "an import names a module, or a package and one of its modules" );
 
         // Consume the rest of the qualification so the next rule sees a semicolon rather than
         // thinking it is a declaration.
@@ -651,7 +661,9 @@ Node_id Parser::parse_import()
     expect( Token_kind::Semicolon );
 
     return module.is_valid() && !refused
-               ? ast_.add( Node_kind::Import_decl, Span::merge( start, previous().span ), module.v, {} )
+               ? package_node.is_valid()
+                     ? ast_.add( Node_kind::Import_decl, Span::merge( start, previous().span ), module.v, { package_node } )
+                     : ast_.add( Node_kind::Import_decl, Span::merge( start, previous().span ), module.v, {} )
                : error_node( Span::merge( start, previous().span ) );
 }
 
@@ -8502,6 +8514,37 @@ TEST_CASE( "parser_reads_an_import", "[parse][import]" )
     REQUIRE( p.children( decl ).empty() );
     REQUIRE( p.name( decl ) == "shape" );
     REQUIRE( p.text( decl ) == "import shape;" );
+}
+
+// The module is still the name; the package is a Name_expr child, spanning only itself.
+TEST_CASE( "parser_reads_an_import_from_a_package", "[parse][import]" )
+{
+    SECTION( "a package and one of its modules" )
+    {
+        const Parsed p( "import kl::list;\ni32 main() { return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id decl = p.child( p.root(), 0 );
+
+        REQUIRE( p.kind( decl ) == Node_kind::Import_decl );
+        REQUIRE( p.name( decl ) == "list" );
+        REQUIRE( p.text( decl ) == "import kl::list;" );
+        REQUIRE( p.children( decl ).size() == 1 );
+        REQUIRE( p.kind( p.child( decl, 0 ) ) == Node_kind::Name_expr );
+        REQUIRE( p.name( p.child( decl, 0 ) ) == "kl" );
+        REQUIRE( p.text( p.child( decl, 0 ) ) == "kl" );
+    }
+
+    SECTION( "a package holds modules, not packages" )
+    {
+        const Parsed p( "import kl::core::list;\ni32 main() { return 0; }" );
+
+        REQUIRE( p.has_errors() );
+        REQUIRE( p.errors().find( "an import names a module, or a package and one of its modules" ) != std::string::npos );
+        REQUIRE( p.kind( p.child( p.root(), 1 ) ) == Node_kind::Function_decl );
+    }
 }
 
 } // namespace keel

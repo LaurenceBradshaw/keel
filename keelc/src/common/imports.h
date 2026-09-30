@@ -3,7 +3,11 @@
 
 #pragma once
 #include <algorithm>
+#include <string>
+#include <string_view>
+#include <unordered_map>
 #include <vector>
+#include "common/interner.h"
 #include "common/span.h"
 
 namespace keel
@@ -42,8 +46,45 @@ public:
         return std::binary_search( adj.begin(), adj.end(), to );
     }
 
+    void add_package( Symbol_id package )
+    {
+        packages_.push_back( package );
+    }
+
+    bool is_package( Symbol_id package ) const
+    {
+        return std::find( packages_.begin(), packages_.end(), package ) != packages_.end();
+    }
+
+    void place( File_id file, Symbol_id package )
+    {
+        file_to_package_[file.v] = package.v;
+    }
+
+    Symbol_id package_of( File_id file ) const
+    {
+        if( const auto it = file_to_package_.find( file.v ); it != file_to_package_.end() )
+        {
+            return Symbol_id { it->second };
+        }
+        return Symbol_id {};
+    }
+
 private:
     // The graph is sparse, so an adjacency list is better than a matrix.
     std::vector<std::vector<File_id>> edges_;
+    std::vector<Symbol_id>            packages_;
+    std::unordered_map<u32, u32>      file_to_package_;
 };
+
+// `name`, or `package::name` when there is a package. The program's own package has no name.
+inline std::string qualified( const Interner& interner, Symbol_id package, std::string_view name )
+{
+    if( !package.is_valid() )
+    {
+        return std::string( name );
+    }
+
+    return std::string( interner.text( package ) ) + "::" + std::string( name );
+}
 } // namespace keel

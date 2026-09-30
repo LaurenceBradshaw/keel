@@ -12,14 +12,33 @@
 
 namespace keel
 {
-Program load_program( File_id input, Source_manager& sm, Interner& interner, Literal_pool& literals, Diagnostics& diags )
+Program load_program(
+    File_id                  input,
+    Source_manager&          sm,
+    Interner&                interner,
+    Literal_pool&            literals,
+    Diagnostics&             diags,
+    std::span<const Package> packages
+)
 {
     std::vector<File_id>    pending { input };
     std::unordered_set<u32> loaded;
     loaded.insert( input.v );
 
-    Ast                  ast;
-    Imports              imports;
+    const std::filesystem::path program_folder = std::filesystem::path( sm.file( input ).path ).parent_path();
+
+    Ast     ast;
+    Imports imports;
+
+    std::unordered_map<u32, std::filesystem::path> package_roots;
+    for( const Package& package : packages )
+    {
+        const Symbol_id package_id = interner.intern( package.name );
+        imports.add_package( package_id );
+
+        package_roots[package_id.v] = package.root;
+    }
+
     std::vector<Node_id> decls;
 
     while( !pending.empty() )
@@ -34,9 +53,29 @@ Program load_program( File_id input, Source_manager& sm, Interner& interner, Lit
         {
             if( ast.kind( decl ) == Node_kind::Import_decl )
             {
-                const std::filesystem::path dir         = std::filesystem::path( sm.file( input ).path ).parent_path();
+                Symbol_id package_id = !ast.children( decl ).empty() ? Symbol_id { ast.aux( ast.child( decl, 0 ) ) }
+                                                                     : imports.package_of( current );
+
+                std::filesystem::path module_folder = program_folder;
+                if( package_id.is_valid() )
+                {
+                    if( const auto it = package_roots.find( package_id.v ); it != package_roots.end() )
+                    {
+                        module_folder = it->second;
+                    }
+                    else
+                    {
+                        diags.error(
+                            ast.span( decl ),
+                            fmt::format( "there is no package `{}`", interner.text( package_id ) ),
+                            fmt::format( "a package is named with `--package {}=<dir>`", interner.text( package_id ) )
+                        );
+                        continue;
+                    }
+                }
+
                 const std::string_view      module_name = interner.text( Symbol_id { ast.aux( decl ) } );
-                const std::filesystem::path module_path = dir / ( std::string( module_name ) + ".kl" );
+                const std::filesystem::path module_path = module_folder / ( std::string( module_name ) + ".kl" );
 
                 // Dedupes by canonical path, which is what stops cycles and diamonds
                 const std::optional<File_id> module = sm.load_file( module_path );
@@ -45,8 +84,12 @@ Program load_program( File_id input, Source_manager& sm, Interner& interner, Lit
                 {
                     diags.error(
                         ast.span( decl ),
-                        fmt::format( "there is no module `{}`", module_name ),
-                        fmt::format( "`import {};` looks for `{}.kl` beside the file being compiled", module_name, module_name )
+                        fmt::format( "there is no module `{}`", qualified( interner, package_id, module_name ) ),
+                        package_id.is_valid()
+                            ? fmt::format( "it would be `{}.kl` in the package `{}`", module_name, interner.text( package_id ) )
+                            : fmt::format(
+                                  "`import {};` looks for `{}.kl` beside the file being compiled", module_name, module_name
+                              )
                     );
                     continue;
                 }
@@ -54,6 +97,7 @@ Program load_program( File_id input, Source_manager& sm, Interner& interner, Lit
                 imports.add( current, *module );
                 if( loaded.insert( module->v ).second )
                 {
+                    imports.place( *module, package_id );
                     pending.push_back( *module );
                 }
             }
@@ -96,7 +140,8 @@ namespace keel
 namespace
 {
 
-// A program on disk: `main.kl` and whatever else it names, loaded the way the driver loads one.
+// A program on disk: `main.kl` and whatever else it names, loaded the way the driver loads one. The
+// package `kl` is the directory `kl/` beside it.
 class Loaded
 {
 public:
@@ -110,7 +155,8 @@ public:
         const std::optional<File_id> input = sm_.load_file( dir_.path / "main.kl" );
 
         REQUIRE( input.has_value() );
-        program_ = load_program( *input, sm_, interner_, literals_, diags_ );
+        const Package kl { .name = "kl", .root = dir_.path / "kl" };
+        program_ = load_program( *input, sm_, interner_, literals_, diags_, std::span( &kl, 1 ) );
 
         for( const auto& [name, text] : files )
         {
@@ -127,6 +173,18 @@ public:
     bool sees( std::string_view from, std::string_view to ) const
     {
         return program_.imports.sees( files_.at( std::string( from ) ), files_.at( std::string( to ) ) );
+    }
+
+    // The package `file` was loaded from; empty for the program's own.
+    std::string_view package_of( std::string_view file ) const
+    {
+        const Symbol_id package = program_.imports.package_of( files_.at( std::string( file ) ) );
+        return package.is_valid() ? interner_.text( package ) : std::string_view {};
+    }
+
+    bool is_package( std::string_view name )
+    {
+        return program_.imports.is_package( interner_.intern( name ) );
     }
 
     std::size_t errors() const
@@ -264,16 +322,106 @@ TEST_CASE( "loader_loads_a_program_from_its_imports", "[parse][loader]" )
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "an `import` goes before every declaration" ) != std::string::npos );
     }
+}
 
-    SECTION( "a package path is refused for now" )
+TEST_CASE( "loader_loads_modules_from_a_package", "[parse][loader][packages]" )
+{
+    // The program's own `geom.kl` is not what `kl::geom` names, and is not loaded.
+    SECTION( "a package's module is loaded from the package's directory" )
     {
         const Loaded p( {
-            { "main.kl", "import kl::list;\ni32 main() { return 0; }\n" },
+            { "main.kl", "import kl::geom;\ni32 main() { return 0; }\n" },
+            { "geom.kl", "i32 decoy() { return 1; }\n" },
+            { "kl/geom.kl", "i32 area() { return 4; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.functions() == std::vector<std::string_view> { "area", "main" } );
+        REQUIRE( p.sees( "main.kl", "kl/geom.kl" ) );
+        REQUIRE( p.package_of( "kl/geom.kl" ) == "kl" );
+        REQUIRE( p.package_of( "main.kl" ).empty() );
+    }
+
+    SECTION( "a bare import inside a package looks in the package" )
+    {
+        const Loaded p( {
+            { "main.kl", "import kl::geom;\ni32 main() { return 0; }\n" },
+            { "shape.kl", "i32 decoy() { return 1; }\n" },
+            { "kl/geom.kl", "import shape;\ni32 area() { return side(); }\n" },
+            { "kl/shape.kl", "i32 side() { return 2; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.functions() == std::vector<std::string_view> { "area", "main", "side" } );
+        REQUIRE( p.package_of( "kl/shape.kl" ) == "kl" );
+        REQUIRE( p.sees( "kl/geom.kl", "kl/shape.kl" ) );
+    }
+
+    // Inside `kl` the qualifier is optional, so both spellings reach the same file.
+    SECTION( "a package may name itself" )
+    {
+        const Loaded p( {
+            { "main.kl", "import kl::geom;\ni32 main() { return 0; }\n" },
+            { "kl/geom.kl", "import kl::shape;\ni32 area() { return side(); }\n" },
+            { "kl/shape.kl", "i32 side() { return 2; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.functions() == std::vector<std::string_view> { "area", "main", "side" } );
+    }
+
+    SECTION( "a module of the program and one of a package may share a name" )
+    {
+        const Loaded p( {
+            { "main.kl", "import geom;\nimport kl::geom;\ni32 main() { return 0; }\n" },
+            { "geom.kl", "i32 own_area() { return 1; }\n" },
+            { "kl/geom.kl", "i32 area() { return 4; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.functions() == std::vector<std::string_view> { "area", "main", "own_area" } );
+        REQUIRE( p.package_of( "geom.kl" ).empty() );
+    }
+
+    // Named on the command line, so known before anything is imported from it.
+    SECTION( "a package is known without an import" )
+    {
+        Loaded p( {
+            { "main.kl", "i32 main() { return 0; }\n" },
+        } );
+
+        REQUIRE( p.is_package( "kl" ) );
+        REQUIRE_FALSE( p.is_package( "main" ) );
+        REQUIRE_FALSE( p.is_package( "foo" ) );
+    }
+
+    SECTION( "an unknown package is reported at its import" )
+    {
+        const Loaded p( {
+            { "main.kl", "import foo::geom;\ni32 main() { return 0; }\n" },
         } );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "only a module of this program can be imported" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "there is no package `foo`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "main.kl:1:1" ) != std::string::npos );
+    }
+
+    SECTION( "a missing module of a package is reported at its import" )
+    {
+        const Loaded p( {
+            { "main.kl", "import kl::nope;\ni32 main() { return 0; }\n" },
+            { "nope.kl", "i32 decoy() { return 1; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "there is no module `kl::nope`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`nope.kl`" ) != std::string::npos );
     }
 }
 

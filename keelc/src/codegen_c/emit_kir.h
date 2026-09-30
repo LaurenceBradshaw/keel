@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include "ast/ast.h"
+#include "common/imports.h"
 #include "common/interner.h"
 #include "common/literal_pool.h"
 #include "common/source_manager.h"
@@ -20,7 +21,8 @@ std::string emit_c_from_kir(
     Types&                       types,
     const Literal_pool&          literals,
     const Source_manager&        sm,
-    const Interner&              interner
+    const Interner&              interner,
+    const Imports&               imports = {}
 );
 
 } // namespace keel

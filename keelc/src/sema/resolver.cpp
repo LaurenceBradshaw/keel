@@ -48,11 +48,13 @@ private:
     void push_scope( Scope_kind kind = Scope_kind::Transparent );
     void pop_scope();
 
-    void    declare( Symbol_id name, Node_id decl );
+    void    declare( Scope& scope, Symbol_id name, Node_id decl );
     bool    chain_overload( Node_id existing, Node_id added );
     Node_id lookup( Symbol_id name, Node_id use );
+    Node_id lookup_in( Symbol_id package, Symbol_id name, Node_id use );
     Node_id visible_from( Node_id use, Node_id head );
     void    refuse_unimported( Node_id use, Node_id decl );
+    void    refuse_other_package( Node_id use, Node_id decl );
 
     const Ast& ast_;
 
@@ -68,6 +70,8 @@ private:
     // The enclosing aggregate's field names, for D19's member clause. Empty outside a member body,
     // so the check it drives costs one lookup per declaration everywhere else.
     std::unordered_set<Symbol_id> current_fields_;
+
+    std::unordered_map<Symbol_id, Scope> packages_;
 };
 
 void Resolver::error_at( Span span, std::string message, std::string help )
@@ -84,19 +88,19 @@ Resolution Resolver::run()
     // resolved, which is what makes recursion and mutual recursion work with no forward
     // declarations. Inside a function, scopes are populated as the walk proceeds, so using a local
     // before its declaration stays an error.
-    push_scope( Scope_kind::Barrier );
 
     for( const Node_id decl : ast_.children( ast_.root() ) )
     {
         if( ast_.kind( decl ) == Node_kind::Function_decl || ast_.kind( decl ) == Node_kind::Var_decl ||
             ast_.kind( decl ) == Node_kind::Enum_decl || is_aggregate( ast_.kind( decl ) ) )
         {
-            declare( Symbol_id { ast_.aux( decl ) }, decl );
+            Scope& scope = packages_[imports_.package_of( ast_.span( decl ).file )];
+            scope.kind   = Scope_kind::Barrier;
+            declare( scope, Symbol_id { ast_.aux( decl ) }, decl );
         }
     }
 
     visit( ast_.root() );
-    pop_scope();
 
     return Resolution( std::move( bindings_ ), std::move( next_overload_ ), imports_ );
 }
@@ -149,10 +153,10 @@ void Resolver::visit( Node_id id )
         return;
     case Node_kind::Param_decl:
         visit( ast_.child( id, 0 ) ); // the type annotation, which may name a struct
-        declare( Symbol_id { ast_.aux( id ) }, id );
+        declare( scopes_.back(), Symbol_id { ast_.aux( id ) }, id );
         return;
     case Node_kind::Type_param_decl:
-        declare( Symbol_id { ast_.aux( id ) }, id );
+        declare( scopes_.back(), Symbol_id { ast_.aux( id ) }, id );
         return;
     case Node_kind::For_stmt:
         push_scope();
@@ -165,7 +169,7 @@ void Resolver::visit( Node_id id )
     case Node_kind::Var_decl:
         visit( ast_.child( id, 0 ) ); // type
         visit( ast_.child( id, 1 ) ); // Var_decl arity of 2: type, initialiser
-        declare( Symbol_id { ast_.aux( id ) }, id );
+        declare( scopes_.back(), Symbol_id { ast_.aux( id ) }, id );
         return;
     case Node_kind::Name_expr:
     {
@@ -184,6 +188,47 @@ void Resolver::visit( Node_id id )
         if( !ast_.children( id ).empty() )
         {
             visit( ast_.child( id, 0 ) ); // type arguments, if any
+        }
+
+        return;
+    }
+    case Node_kind::Path_expr:
+    {
+        const Node_id qualifier = ast_.child( id, 0 );
+        if( ast_.kind( qualifier ) == Node_kind::Name_expr && ast_.children( qualifier ).empty() &&
+            imports_.is_package( Symbol_id { ast_.aux( qualifier ) } ) )
+        {
+            const Symbol_id package { ast_.aux( qualifier ) };
+            const Symbol_id name { ast_.aux( id ) };
+            const Node_id   decl = lookup_in( package, name, id );
+
+            if( decl.is_valid() )
+            {
+                bindings_[id.v] = decl;
+            }
+            else
+            {
+                error_at(
+                    ast_.span( id ),
+                    fmt::format(
+                        "no module of `{}` that this file imports declares `{}`",
+                        interner_.text( package ),
+                        interner_.text( name )
+                    )
+                );
+            }
+
+            if( ast_.children( id ).size() > 1 )
+            {
+                visit( ast_.child( id, 1 ) ); // type arguments
+            }
+
+            return;
+        }
+
+        for( const Node_id child : ast_.children( id ) )
+        {
+            visit( child );
         }
 
         return;
@@ -246,7 +291,7 @@ void Resolver::visit( Node_id id )
 
             for( const Node_id binding : pattern.subspan( 1 ) )
             {
-                declare( Symbol_id { ast_.aux( binding ) }, binding );
+                declare( scopes_.back(), Symbol_id { ast_.aux( binding ) }, binding );
             }
         }
 
@@ -419,16 +464,14 @@ void Resolver::pop_scope()
     scopes_.pop_back();
 }
 
-void Resolver::declare( Symbol_id name, Node_id decl )
+void Resolver::declare( Scope& scope, Symbol_id name, Node_id decl )
 {
-    assert( !scopes_.empty() );
-
     if( !name.is_valid() )
     {
         return;
     }
 
-    const auto [it, inserted] = scopes_.back().names.try_emplace( name, decl );
+    const auto [it, inserted] = scope.names.try_emplace( name, decl );
 
     if( !inserted )
     {
@@ -465,7 +508,7 @@ void Resolver::declare( Symbol_id name, Node_id decl )
 
     // D19. The declaration stays in the map even when it shadows, so later uses bind to the
     // variable actually written rather than to the outer one.
-    if( scopes_.back().kind == Scope_kind::Barrier )
+    if( scope.kind == Scope_kind::Barrier )
     {
         return;
     }
@@ -539,7 +582,42 @@ Node_id Resolver::lookup( Symbol_id name, Node_id use )
         }
     }
 
+    const Symbol_id own = imports_.package_of( ast_.span( use ).file );
+
+    if( const Node_id decl = lookup_in( own, name, use ); decl.is_valid() )
+    {
+        return decl;
+    }
+
+    // Only a named package can be written as a qualifier, so the program's own is never offered.
+    for( const auto& [package, scope] : packages_ )
+    {
+        if( package == own || !package.is_valid() )
+        {
+            continue;
+        }
+
+        if( const auto found = scope.names.find( name ); found != scope.names.end() )
+        {
+            refuse_other_package( use, found->second );
+            return found->second;
+        }
+    }
+
     return Node_id {};
+}
+
+Node_id Resolver::lookup_in( Symbol_id package, Symbol_id name, Node_id use )
+{
+    const auto scope = packages_.find( package );
+
+    if( scope == packages_.end() )
+    {
+        return Node_id {};
+    }
+
+    const auto found = scope->second.names.find( name );
+    return found != scope->second.names.end() ? visible_from( use, found->second ) : Node_id {};
 }
 
 Node_id Resolver::visible_from( Node_id use, Node_id head )
@@ -560,13 +638,29 @@ Node_id Resolver::visible_from( Node_id use, Node_id head )
 
 void Resolver::refuse_unimported( Node_id use, Node_id decl )
 {
-    std::string_view name        = interner_.text( Symbol_id { ast_.aux( decl ) } );
-    std::string      module_name = std::filesystem::path( sm_.file( ast_.span( decl ).file ).path ).stem().string();
+    const File_id     file = ast_.span( decl ).file;
+    std::string_view  name = interner_.text( Symbol_id { ast_.aux( decl ) } );
+    const std::string module_name =
+        qualified( interner_, imports_.package_of( file ), std::filesystem::path( sm_.file( file ).path ).stem().string() );
 
     error_at(
         ast_.span( use ),
         fmt::format( "`{}` is in `{}`, which this file does not import", name, module_name ),
         fmt::format( "write `import {};` at the top of the file", module_name )
+    );
+}
+
+void Resolver::refuse_other_package( Node_id use, Node_id decl )
+{
+    const Symbol_id  package = imports_.package_of( ast_.span( decl ).file );
+    std::string_view name    = interner_.text( Symbol_id { ast_.aux( decl ) } );
+
+    // `kl::Point` is not yet a spelling, so only a function is offered one.
+    error_at(
+        ast_.span( use ),
+        fmt::format( "`{}` is in the package `{}`", name, interner_.text( package ) ),
+        ast_.kind( decl ) == Node_kind::Function_decl ? fmt::format( "write `{}`", qualified( interner_, package, name ) )
+                                                      : std::string( "only another package's functions can be named so far" )
     );
 }
 
@@ -1432,7 +1526,8 @@ TEST_CASE( "resolver_lets_a_parameter_shadow_a_field", "[sema][resolve][aggregat
 namespace
 {
 
-// A program on disk, loaded and resolved the way the driver does it.
+// A program on disk, loaded and resolved the way the driver does it. The package `kl` is the directory
+// `kl/` beside it.
 class Resolved_program
 {
 public:
@@ -1446,8 +1541,10 @@ public:
         const std::optional<File_id> input = sm_.load_file( dir_.path / "main.kl" );
 
         REQUIRE( input.has_value() );
-        input_      = *input;
-        program_    = load_program( input_, sm_, interner_, literals_, diags_ );
+        input_ = *input;
+
+        const Package kl { .name = "kl", .root = dir_.path / "kl" };
+        program_    = load_program( input_, sm_, interner_, literals_, diags_, std::span( &kl, 1 ) );
         earlier_    = diags_.error_count();
         resolution_ = resolve( program_.ast, sm_, interner_, diags_, program_.imports );
     }
@@ -1465,8 +1562,8 @@ public:
         return out.str();
     }
 
-    // The module whose declaration main.kl's first `kind` named `name` is bound to; empty when
-    // it is bound to nothing.
+    // The file, without `.kl`, whose declaration main.kl's first `kind` named `name` is bound to, as
+    // `a` or `kl/geom`; empty when it is bound to nothing.
     std::string bound_into( Node_kind kind, std::string_view name ) const
     {
         const Ast& ast = program_.ast;
@@ -1482,8 +1579,13 @@ public:
             }
 
             const Node_id decl = resolution_.declaration_of( id );
-            return decl.is_valid() ? std::filesystem::path( sm_.file( ast.span( decl ).file ).path ).stem().string()
-                                   : std::string {};
+            if( !decl.is_valid() )
+            {
+                return {};
+            }
+
+            std::filesystem::path file = std::filesystem::path( sm_.file( ast.span( decl ).file ).path );
+            return file.lexically_relative( dir_.path ).replace_extension().generic_string();
         }
 
         FAIL( "main.kl has no such node" );
@@ -1650,6 +1752,177 @@ TEST_CASE( "resolver_sees_only_imported_modules", "[sema][resolve][modules]" )
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 0 );
+    }
+}
+
+TEST_CASE( "resolver_names_another_package_through_its_name", "[sema][resolve][packages]" )
+{
+    SECTION( "a qualified call binds into the package" )
+    {
+        const Resolved_program p( {
+            { "main.kl", "import kl::geom;\ni32 main() { return kl::area(); }\n" },
+            { "kl/geom.kl", "i32 area() { return 4; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.bound_into( Node_kind::Path_expr, "area" ) == "kl/geom" );
+    }
+
+    // A function, a type and a global of each name, in each package, and none of them clash.
+    SECTION( "two packages may declare one name" )
+    {
+        const Resolved_program p( {
+            { "main.kl",
+              "import kl::geom;\n"
+              "struct Point { i32 x; };\n"
+              "i32 count = 0;\n"
+              "i32 area() { return 1; }\n"
+              "i32 main() { return area() + kl::area(); }\n" },
+            { "kl/geom.kl", "struct Point { i32 x; };\ni32 count = 0;\ni32 area() { return 4; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.bound_into( Node_kind::Name_expr, "area" ) == "main" );
+        REQUIRE( p.bound_into( Node_kind::Path_expr, "area" ) == "kl/geom" );
+    }
+
+    // A bare call looks only in its own package, so `kl`'s closer match is never a candidate.
+    SECTION( "overloads never merge across packages" )
+    {
+        const Resolved_program p( {
+            { "main.kl", "import kl::geom;\ni32 pick( i64 v ) { return 1; }\ni32 main() { return pick( 1 ) + kl::pick( 1 ); }\n"
+            },
+            { "kl/geom.kl", "i32 pick( i32 v ) { return 2; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.bound_into( Node_kind::Name_expr, "pick" ) == "main" );
+        REQUIRE( p.bound_into( Node_kind::Path_expr, "pick" ) == "kl/geom" );
+    }
+
+    SECTION( "a duplicate within a package is still an error" )
+    {
+        const Resolved_program p( {
+            { "main.kl", "import kl::a;\nimport kl::b;\ni32 main() { return 0; }\n" },
+            { "kl/a.kl", "i32 n = 1;\n" },
+            { "kl/b.kl", "i32 n = 2;\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`n` is already declared in this scope" ) != std::string::npos );
+    }
+
+    SECTION( "inside a package the qualifier is optional" )
+    {
+        const Resolved_program p( {
+            { "main.kl", "import kl::geom;\ni32 main() { return kl::area(); }\n" },
+            { "kl/geom.kl", "import shape;\ni32 area() { return side() + kl::side(); }\n" },
+            { "kl/shape.kl", "i32 side() { return 2; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+    }
+
+    // Bound anyway, as an unimported name is, so the checker does not report the call again.
+    SECTION( "a bare name from another package is refused" )
+    {
+        const Resolved_program p( {
+            { "main.kl", "import kl::geom;\ni32 main() { return area(); }\n" },
+            { "kl/geom.kl", "i32 area() { return 4; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`area` is in the package `kl`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "write `kl::area`" ) != std::string::npos );
+        REQUIRE( p.bound_into( Node_kind::Name_expr, "area" ) == "kl/geom" );
+    }
+
+    // `kl::Point` is not a spelling yet, so the help must not offer it.
+    SECTION( "a type from another package cannot be named yet" )
+    {
+        const Resolved_program p( {
+            { "main.kl", "import kl::geom;\ni32 main() { Point q = kl::origin(); return q.x; }\n" },
+            { "kl/geom.kl", "struct Point { i32 x; };\nPoint origin() { return Point { 1 }; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`Point` is in the package `kl`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "only another package's functions can be named so far" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "kl::Point" ) == std::string::npos );
+    }
+
+    SECTION( "a qualified name needs its module imported" )
+    {
+        const Resolved_program p( {
+            { "main.kl", "import route;\ni32 main() { return kl::area(); }\n" },
+            { "route.kl", "import kl::geom;\ni32 via() { return kl::area(); }\n" },
+            { "kl/geom.kl", "i32 area() { return 4; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`area` is in `kl::geom`, which this file does not import" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "write `import kl::geom;` at the top of the file" ) != std::string::npos );
+        REQUIRE( p.bound_into( Node_kind::Path_expr, "area" ) == "kl/geom" );
+    }
+
+    SECTION( "a package's module is named qualified even inside it" )
+    {
+        const Resolved_program p( {
+            { "main.kl", "import kl::a;\ni32 main() { return 0; }\n" },
+            { "kl/a.kl", "import b;\ni32 fa() { return fc(); }\n" },
+            { "kl/b.kl", "import c;\ni32 fb() { return fc(); }\n" },
+            { "kl/c.kl", "i32 fc() { return 1; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`fc` is in `kl::c`, which this file does not import" ) != std::string::npos );
+    }
+
+    SECTION( "a qualified name no imported module declares" )
+    {
+        const Resolved_program p( {
+            { "main.kl", "import kl::geom;\ni32 area() { return 1; }\ni32 main() { return kl::nothing() + kl::area(); }\n" },
+            { "kl/geom.kl", "i32 side() { return 4; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 2 );
+        REQUIRE( p.rendered().find( "no module of `kl` that this file imports declares `nothing`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "no module of `kl` that this file imports declares `area`" ) != std::string::npos );
+    }
+
+    // The program's package has no name to qualify with, so nothing in `kl` is offered one.
+    SECTION( "a package cannot name the program" )
+    {
+        const Resolved_program p( {
+            { "main.kl", "import kl::geom;\ni32 helper() { return 1; }\ni32 main() { return kl::area(); }\n" },
+            { "kl/geom.kl", "i32 area() { return helper(); }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`helper` is not declared" ) != std::string::npos );
+    }
+
+    // `kl` is named on the command line, so it is a package before anything is imported from it.
+    SECTION( "a package nothing is imported from" )
+    {
+        const Resolved_program p( {
+            { "main.kl", "i32 main() { return kl::area(); }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "no module of `kl` that this file imports declares `area`" ) != std::string::npos );
     }
 }
 

@@ -163,6 +163,12 @@ std::string construct_arg_string( std::span<const Mangled_parameter> params, con
 
     return encoded;
 }
+
+// Length-prefixed, so `a_b` with `c` and `a` with `b_c` stay apart. The program's own is empty.
+std::string module_slot( std::string_view module )
+{
+    return module.empty() ? std::string {} : fmt::format( "{}{}", module.size(), module );
+}
 } // namespace
 
 std::string mangle_function(
@@ -181,14 +187,14 @@ std::string mangle_function(
     {
         return fmt::format(
             "kl_{}_{}__I{}E__{}",
-            module,
+            module_slot( module ),
             name,
             construct_arg_string( type_arguments, types ),
             construct_arg_string( params, types, enclosing )
         );
     }
 
-    return fmt::format( "kl_{}_{}__{}", module, name, construct_arg_string( params, types, enclosing ) );
+    return fmt::format( "kl_{}_{}__{}", module_slot( module ), name, construct_arg_string( params, types, enclosing ) );
 }
 
 std::string mangle_struct( std::string_view module, Type_id type, const Type_table& types )
@@ -200,10 +206,10 @@ std::string mangle_struct( std::string_view module, Type_id type, const Type_tab
 
     if( arguments.empty() )
     {
-        return fmt::format( "kl_{}_{}", module, base );
+        return fmt::format( "kl_{}_{}", module_slot( module ), base );
     }
 
-    return fmt::format( "kl_{}_{}__I{}E", module, base, construct_arg_string( arguments, types ) );
+    return fmt::format( "kl_{}_{}__I{}E", module_slot( module ), base, construct_arg_string( arguments, types ) );
 }
 
 std::string mangle_function_type( std::string_view module, Type_id type, const Type_table& types )
@@ -212,7 +218,7 @@ std::string mangle_function_type( std::string_view module, Type_id type, const T
 
     encode_type( encoded, type, types );
 
-    return fmt::format( "kl_{}_fn__{}", module, encoded );
+    return fmt::format( "kl_{}_fn__{}", module_slot( module ), encoded );
 }
 
 std::string mangle_destructor(
@@ -221,10 +227,12 @@ std::string mangle_destructor(
 {
     if( type_arguments.empty() )
     {
-        return fmt::format( "kl_{}_{}__dtor", module, type_name );
+        return fmt::format( "kl_{}_{}__dtor", module_slot( module ), type_name );
     }
 
-    return fmt::format( "kl_{}_{}__I{}E__dtor", module, type_name, construct_arg_string( type_arguments, types ) );
+    return fmt::format(
+        "kl_{}_{}__I{}E__dtor", module_slot( module ), type_name, construct_arg_string( type_arguments, types )
+    );
 }
 
 std::string mangle_constructor(
@@ -239,11 +247,11 @@ std::string mangle_constructor(
 
     if( type_arguments.empty() )
     {
-        return fmt::format( "kl_{}_{}__{}__ctor", module, type_name, argtypes );
+        return fmt::format( "kl_{}_{}__{}__ctor", module_slot( module ), type_name, argtypes );
     }
 
     return fmt::format(
-        "kl_{}_{}__I{}E__{}__ctor", module, type_name, construct_arg_string( type_arguments, types ), argtypes
+        "kl_{}_{}__I{}E__{}__ctor", module_slot( module ), type_name, construct_arg_string( type_arguments, types ), argtypes
     );
 }
 
@@ -284,11 +292,11 @@ TEST_CASE( "mangle_function_spells_the_signature", "[codegen][mangle]" )
     const std::vector<Mangled_parameter> two   = { signed32, signed32 };
     const std::vector<Mangled_parameter> mixed = { unsigned8, by_value( table.floating( 64 ) ) };
 
-    // The module is empty until M8, which leaves the doubled underscore in place.
+    // The program's own package has no name, which leaves the doubled underscore in place.
     REQUIRE( mangle_function( "", "main", none, table ) == "kl__main__" );
     REQUIRE( mangle_function( "", "add", two, table ) == "kl__add__3i32_3i32" );
     REQUIRE( mangle_function( "", "f", mixed, table ) == "kl__f__2u8_3f64" );
-    REQUIRE( mangle_function( "math", "abs", { &signed32, 1 }, table ) == "kl_math_abs__3i32" );
+    REQUIRE( mangle_function( "math", "abs", { &signed32, 1 }, table ) == "kl_4math_abs__3i32" );
 
     SECTION( "the parameter types are what make two names differ" )
     {
@@ -524,6 +532,47 @@ TEST_CASE( "mangle_encodes_every_type_injectively", "[codegen][mangle]" )
         const Type_id           arguments[]   = { i32 };
 
         REQUIRE( mangle_function( "", "id", substituted, table, arguments ) == "kl__id__I3i32E__3i32" );
+    }
+}
+
+// A package's declarations share names with the program's, so the package is part of every symbol.
+TEST_CASE( "mangle_puts_the_package_in_every_symbol", "[codegen][mangle]" )
+{
+    Type_table table;
+
+    const Type_id                  i32     = table.integer( 32, true );
+    const Mangled_parameter        one_i32 = by_value( i32 );
+    const std::span<const Type_id> no_args = {};
+
+    SECTION( "each kind of symbol" )
+    {
+        const Type_id point = table.structure( Node_id { 17 }, {}, "Point" );
+
+        REQUIRE( mangle_function( "kl", "area", { &one_i32, 1 }, table ) == "kl_2kl_area__3i32" );
+        REQUIRE( mangle_struct( "kl", point, table ) == "kl_2kl_Point" );
+        REQUIRE( mangle_destructor( "kl", "Point", no_args, table ) == "kl_2kl_Point__dtor" );
+        REQUIRE( mangle_constructor( "kl", "Point", no_args, { &one_i32, 1 }, table ) == "kl_2kl_Point__3i32__ctor" );
+    }
+
+    SECTION( "the program's own package leaves the slot empty" )
+    {
+        REQUIRE( mangle_function( "", "area", { &one_i32, 1 }, table ) == "kl__area__3i32" );
+        REQUIRE(
+            mangle_function( "", "area", { &one_i32, 1 }, table ) != mangle_function( "kl", "area", { &one_i32, 1 }, table )
+        );
+    }
+
+    // Without the length, `a_b` with `c` and `a` with `b_c` spell one symbol.
+    SECTION( "an underscore cannot move between the package and the name" )
+    {
+        REQUIRE(
+            mangle_function( "a_b", "c", { &one_i32, 1 }, table ) != mangle_function( "a", "b_c", { &one_i32, 1 }, table )
+        );
+
+        const Type_id c   = table.structure( Node_id { 19 }, {}, "c" );
+        const Type_id b_c = table.structure( Node_id { 23 }, {}, "b_c" );
+
+        REQUIRE( mangle_struct( "a_b", c, table ) != mangle_struct( "a", b_c, table ) );
     }
 }
 

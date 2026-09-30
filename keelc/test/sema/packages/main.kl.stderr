@@ -1,0 +1,43 @@
+error: there is no module `kl::nope`
+ --> sema/packages/main.kl:4:1
+  |
+4 | import kl::nope;
+  | ^^^^^^^^^^^^^^^^ it would be `nope.kl` in the package `kl`
+
+error: there is no package `foo`
+ --> sema/packages/main.kl:5:1
+  |
+5 | import foo::geom;
+  | ^^^^^^^^^^^^^^^^^ a package is named with `--package foo=<dir>`
+
+error: an import names a module, or a package and one of its modules
+ --> sema/packages/main.kl:6:1
+  |
+6 | import kl::core::list;
+  | ^^^^^^^^^^^^^^^^^
+
+error: `area` is in the package `kl`
+  --> sema/packages/main.kl:10:13
+   |
+10 |     i32 a = area( 1 );      // kl's, named bare
+   |             ^^^^ write `kl::area`
+
+error: `hidden` is in `kl::deep`, which this file does not import
+  --> sema/packages/main.kl:11:13
+   |
+11 |     i32 b = kl::hidden();   // in kl::deep, which only route.kl imports
+   |             ^^^^^^^^^^ write `import kl::deep;` at the top of the file
+
+error: no module of `kl` that this file imports declares `nothing`
+  --> sema/packages/main.kl:12:13
+   |
+12 |     i32 c = kl::nothing();  // no module of kl this file imports declares it
+   |             ^^^^^^^^^^^
+
+error: `Point` is in the package `kl`
+  --> sema/packages/main.kl:13:5
+   |
+13 |     Point p = kl::origin(); // kl's type, which cannot be named yet
+   |     ^^^^^ only another package's functions can be named so far
+
+7 errors generated

@@ -1,0 +1,5 @@
+// Not imported by anything. kl's `import shape;` must not load it.
+i32 identity( i32 v )
+{
+    return 0;
+}

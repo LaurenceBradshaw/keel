@@ -112,7 +112,9 @@ std::string Spelling::type( Type_id type ) const
 
 std::string Spelling::structure( Type_id type ) const
 {
-    return fmt::format( "struct {}", mangle_struct( "", type, types.table() ) );
+    return fmt::format(
+        "struct {}", mangle_struct( package_name( types.table().get( type ).declaration ), type, types.table() )
+    );
 }
 
 std::string Spelling::field( Node_id declaration ) const
@@ -133,7 +135,9 @@ std::string Spelling::function( Node_id declaration, std::span<const Type_id> ty
     // arguments alone - the same rule mangle_function follows.
     if( ast.kind( declaration ) == Node_kind::Destructor_decl )
     {
-        return mangle_destructor( "", interner.text( Symbol_id { ast.aux( declaration ) } ), type_arguments, types.table() );
+        return mangle_destructor(
+            package_name( declaration ), interner.text( Symbol_id { ast.aux( declaration ) } ), type_arguments, types.table()
+        );
     }
 
     std::vector<Mangled_parameter> params = mangled_parameters( ast, types, declaration );
@@ -150,7 +154,11 @@ std::string Spelling::function( Node_id declaration, std::span<const Type_id> ty
     if( ast.kind( declaration ) == Node_kind::Constructor_decl )
     {
         return mangle_constructor(
-            "", interner.text( Symbol_id { ast.aux( declaration ) } ), type_arguments, params, types.table()
+            package_name( declaration ),
+            interner.text( Symbol_id { ast.aux( declaration ) } ),
+            type_arguments,
+            params,
+            types.table()
         );
     }
 
@@ -168,7 +176,7 @@ std::string Spelling::function( Node_id declaration, std::span<const Type_id> ty
                      : types.table().structure( owner, type_arguments, interner.text( Symbol_id { ast.aux( owner ) } ) );
 
         return mangle_function(
-            "",
+            package_name( declaration ),
             interner.text( Symbol_id { ast.aux( declaration ) } ),
             std::span( params ).subspan( receiver ? 1 : 0 ),
             types.table(),
@@ -177,7 +185,13 @@ std::string Spelling::function( Node_id declaration, std::span<const Type_id> ty
         );
     }
 
-    return mangle_function( "", interner.text( Symbol_id { ast.aux( declaration ) } ), params, types.table(), type_arguments );
+    return mangle_function(
+        package_name( declaration ),
+        interner.text( Symbol_id { ast.aux( declaration ) } ),
+        params,
+        types.table(),
+        type_arguments
+    );
 }
 
 std::string Spelling::destructor_of( Type_id type ) const
@@ -282,6 +296,18 @@ std::string Spelling::global_definition( Node_id declaration ) const
     }
 
     return fmt::format( "{} {} = {};", type( variable ), name, text );
+}
+
+std::string Spelling::package_name( Node_id decl ) const
+{
+    Symbol_id package_id = imports.package_of( ast.span( decl ).file );
+
+    if( !package_id.is_valid() )
+    {
+        return "";
+    }
+
+    return std::string( interner.text( package_id ) );
 }
 
 } // namespace keel

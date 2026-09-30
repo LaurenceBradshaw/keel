@@ -1,0 +1,5 @@
+// The program's own geom, which kl::geom must not be mistaken for.
+i32 perimeter( i32 side )
+{
+    return side * 4;
+}

@@ -1,0 +1,27 @@
+// The same names as the program's, and a module of kl imported bare.
+import shape;
+
+struct Point
+{
+    i32 x;
+};
+
+Point origin()
+{
+    return Point { 7 };
+}
+
+i32 area( i32 side )
+{
+    return side * side;
+}
+
+i32 cube( i32 s )
+{
+    return area( s ) * kl::identity( s );
+}
+
+i32 pick( i32 v )
+{
+    return 2;
+}

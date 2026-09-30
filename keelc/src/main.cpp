@@ -12,6 +12,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <vector>
 #include "ast/dump.h"
 #include "check/assign_check.h"
 #include "check/drop_flags.h"
@@ -190,6 +191,7 @@ int main( int argc, char** argv )
         ( "dump-kir",      "Print the lowered KIR and stop" )
         ( "emit-c",        "Print the generated C and stop" )
         ( "check",         "Run the front end and report diagnostics, emitting nothing" )
+        ( "package",       "A package and its directory, as name=<dir>; may be repeated", cxxopts::value<std::vector<std::string>>() )
         ( "v,version",     "Print version information and exit" )
         ( "h,help",        "Print usage and exit" )
         ( "input",         "Source file",                        cxxopts::value<std::string>() );
@@ -226,6 +228,24 @@ int main( int argc, char** argv )
         fmt::print( stderr, "keelc: no input file\n" );
         fmt::print( stderr, "{}", options.help() );
         return 2;
+    }
+
+    std::vector<keel::Package> packages;
+
+    if( args.count( "package" ) )
+    {
+        for( const std::string& spec : args["package"].as<std::vector<std::string>>() )
+        {
+            const std::size_t equals = spec.find( '=' );
+
+            if( equals == std::string::npos || equals == 0 || equals + 1 == spec.size() )
+            {
+                fmt::print( stderr, "keelc: --package takes name=<dir>, not '{}'\n", spec );
+                return 2;
+            }
+
+            packages.push_back( keel::Package { .name = spec.substr( 0, equals ), .root = spec.substr( equals + 1 ) } );
+        }
     }
 
     keel::Source_manager         sm;
@@ -278,7 +298,7 @@ int main( int argc, char** argv )
     }
 
     // Parsing is part of compiling, not a debug feature: --dump-ast only controls output.
-    const keel::Program prog = keel::load_program( file_id.value(), sm, interner, literals, diagnostics );
+    const keel::Program prog = keel::load_program( file_id.value(), sm, interner, literals, diagnostics, packages );
     const keel::Ast&    ast  = prog.ast;
 
     if( args.count( "dump-ast" ) )
@@ -368,7 +388,7 @@ int main( int argc, char** argv )
         return finish();
     }
 
-    const std::string generated = keel::emit_c_from_kir( functions, ast, types, literals, sm, interner );
+    const std::string generated = keel::emit_c_from_kir( functions, ast, types, literals, sm, interner, prog.imports );
 
     if( args.count( "emit-c" ) )
     {

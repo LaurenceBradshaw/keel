@@ -34,7 +34,8 @@ struct Temp_dir
     std::filesystem::path write( const std::string& name, std::string_view contents ) const
     {
         const std::filesystem::path p = path / name;
-        std::ofstream               out( p, std::ios::binary );
+        std::filesystem::create_directories( p.parent_path() );
+        std::ofstream out( p, std::ios::binary );
         out.write( contents.data(), static_cast<std::streamsize>( contents.size() ) );
         return p;
     }

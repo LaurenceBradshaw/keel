@@ -1,0 +1,14 @@
+struct Point
+{
+    i32 x;
+};
+
+Point origin()
+{
+    return Point { 1 };
+}
+
+i32 area( i32 side )
+{
+    return side;
+}

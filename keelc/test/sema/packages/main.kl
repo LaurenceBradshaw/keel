@@ -1,0 +1,15 @@
+// Every refusal a package brings, in one program. What is accepted is in codegen/packages.
+import route;
+import kl::geom;
+import kl::nope;
+import foo::geom;
+import kl::core::list;
+
+i32 main()
+{
+    i32 a = area( 1 );      // kl's, named bare
+    i32 b = kl::hidden();   // in kl::deep, which only route.kl imports
+    i32 c = kl::nothing();  // no module of kl this file imports declares it
+    Point p = kl::origin(); // kl's type, which cannot be named yet
+    return a + b + c + p.x;
+}

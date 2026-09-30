@@ -107,12 +107,22 @@ fi
 # NUL-delimited: unquoted $( ) would word-split on spaces and glob-expand any * in a name.
 mapfile -d '' -t sources < <( find . -name '*.kl' -print0 | sort -z )
 
+# A module of a program is any other .kl at or below the directory holding its main.kl, which is
+# where a golden keeps a package of its own.
 programs=()
 for src in "${sources[@]}"; do
-    if [ -f "$( dirname "$src" )/main.kl" ] && [ "$( basename "$src" )" != "main.kl" ]; then
-        continue
-    fi
-    programs+=( "$src" )
+    dir="$( dirname "$src" )"
+    module=0
+
+    while [ "$dir" != "." ]; do
+        if [ -f "$dir/main.kl" ] && [ "$src" != "$dir/main.kl" ]; then
+            module=1
+            break
+        fi
+        dir="$( dirname "$dir" )"
+    done
+
+    [ "$module" -eq 0 ] && programs+=( "$src" )
 done
 sources=( "${programs[@]}" )
 

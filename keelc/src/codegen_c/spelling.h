@@ -5,6 +5,7 @@
 #include <span>
 #include <string>
 #include "ast/ast.h"
+#include "common/imports.h"
 #include "common/interner.h"
 #include "common/types.h"
 #include "sema/type_checker.h"
@@ -16,6 +17,7 @@ struct Spelling
     const Ast&      ast;
     Types&          types;
     const Interner& interner;
+    const Imports&  imports;
 
     std::string type( Type_id type ) const; // "int32_t", "struct kl__Point", "int32_t*"
     std::string structure( Type_id type ) const;
@@ -41,6 +43,8 @@ struct Spelling
     // value: a C file-scope initialiser must be one constant expression, and there is nowhere at
     // file scope to put the temporaries three-address form would need.
     std::string global_definition( Node_id declaration ) const;
+
+    std::string package_name( Node_id decl ) const;
 };
 
 // How C is told what kind of number it is looking at. Used by the KIR emitter for a constant
