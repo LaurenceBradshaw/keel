@@ -14,7 +14,7 @@ error: `T` is already declared in this scope
   --> sema/errors_generics.kl:14:20
    |
 14 | void duplicated<T, T>( T a )
-   |                    ^ previous declaration is at: 14:17
+   |                    ^ previous declaration is at: sema/errors_generics.kl:14:17
 
 error: unknown type `T`
   --> sema/errors_generics.kl:18:1

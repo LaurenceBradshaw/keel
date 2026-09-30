@@ -32,6 +32,7 @@ std::string aux_note( const Ast& ast, const Interner& interner, Node_id id, std:
         return name.is_valid() ? fmt::format( "name={}", interner.text( name ) ) : std::string {};
     }
 
+    case Node_kind::Import_decl:
     case Node_kind::Function_decl:
     case Node_kind::Param_decl:
     case Node_kind::Var_decl:

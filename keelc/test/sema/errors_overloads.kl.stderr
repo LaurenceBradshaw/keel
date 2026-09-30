@@ -2,7 +2,7 @@ error: `same` is already declared with these parameters
   --> sema/errors_overloads.kl:10:1
    |
 10 | void same( i32 b )
-   | ^^^^^^^^^^^^^^^^^^ previous declaration is at: 6:1
+   | ^^^^^^^^^^^^^^^^^^ previous declaration is at: sema/errors_overloads.kl:6:1
 
 error: `returns_differ` is already declared with these parameters
   --> sema/errors_overloads.kl:19:1
@@ -14,13 +14,13 @@ error: `unmarked` is already declared with these parameters
   --> sema/errors_overloads.kl:30:1
    |
 30 | void unmarked( const ref i32 a )
-   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ previous declaration is at: 26:1
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ previous declaration is at: sema/errors_overloads.kl:26:1
 
 error: `outside` is defined in C, so it cannot be overloaded
   --> sema/errors_overloads.kl:36:1
    |
 36 | extern void outside( f64 a );
-   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ previous declaration is at: 35:1
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ previous declaration is at: sema/errors_overloads.kl:35:1
 
 error: no `pick` takes 2 arguments
   --> sema/errors_overloads.kl:45:5
@@ -74,6 +74,6 @@ error: `put` is already declared, and a type argument could make the two identic
    --> sema/errors_overloads.kl:129:5
     |
 129 |     i32 put( i32 a )
-    |     ^^^^^^^^^^^^^^^^ previous declaration is at: 124:5
+    |     ^^^^^^^^^^^^^^^^ previous declaration is at: sema/errors_overloads.kl:124:5
 
 13 errors generated

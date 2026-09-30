@@ -21,9 +21,9 @@ u8 binding_power( Token_kind kind );
 class Parser
 {
 public:
-    Parser( std::span<const Token> tokens, const Source_manager& sm, Diagnostics& diags );
+    Parser( std::span<const Token> tokens, const Source_manager& sm, Ast& ast, Diagnostics& diags );
 
-    Ast run();
+    std::vector<Node_id> parse_declarations();
 
 private:
     // --- cursor. peek() clamps to the End_of_file token, so no rule needs a bounds check. ---
@@ -74,7 +74,7 @@ private:
 
     // --- declarations ---
 
-    Node_id parse_source_file();
+    Node_id parse_import();
     Node_id parse_declaration();
     Node_id parse_function_decl();
     Node_id parse_method_decl( Symbol_id enclosing, Node_id type_params, bool is_static );
@@ -184,8 +184,8 @@ private:
     std::span<const Token> tokens_;
     u32                    pos_ = 0;
     const Source_manager&  sm_;
+    Ast&                   ast_;
     Diagnostics&           diags_;
-    Ast                    ast_;
 
     // Half of a `>>` that has already been consumed while closing a generic argument list.
     u32 pending_greater_ = 0;
@@ -392,17 +392,12 @@ bool is_assignment( Token_kind kind )
     }
 }
 
-Parser::Parser( std::span<const Token> tokens, const Source_manager& sm, Diagnostics& diags )
+Parser::Parser( std::span<const Token> tokens, const Source_manager& sm, Ast& ast, Diagnostics& diags )
     : tokens_( tokens ),
       sm_( sm ),
+      ast_( ast ),
       diags_( diags )
 {
-}
-
-Ast Parser::run()
-{
-    parse_source_file();
-    return std::move( ast_ );
 }
 
 const Token& Parser::peek( u32 ahead ) const
@@ -589,18 +584,29 @@ Node_id Parser::error_node( Span span )
     return ast_.add( Node_kind::Error, span, 0, {} );
 }
 
-Node_id Parser::parse_source_file()
+std::vector<Node_id> Parser::parse_declarations()
 {
-    // loop until at_end() calling parse_declaration() and adding into a scratch vector
-    // warp in a Source_file node spanning the whole file; set_root
-
     std::vector<Node_id> decls;
+    bool                 declared = false;
 
     while( !at_end() )
     {
-        const u32 before = pos_;
+        const u32     before = pos_;
+        const Node_id decl   = parse_declaration();
 
-        decls.push_back( parse_declaration() );
+        if( ast_.kind( decl ) == Node_kind::Import_decl )
+        {
+            if( declared )
+            {
+                error_at( ast_.span( decl ), "an `import` goes before every declaration", "move it to the top of the file" );
+            }
+        }
+        else
+        {
+            declared = true;
+        }
+
+        decls.push_back( decl );
 
         // A rule that reports without consuming would spin here forever. Every loop in the parser
         // needs this guard.
@@ -610,17 +616,49 @@ Node_id Parser::parse_source_file()
         }
     }
 
-    // The whole file: the last token is always End_of_file, whose zero-length span sits at
-    // text.size(). Span {} would be invalid and assert in the dumper.
-    const Span whole = Span::merge( tokens_.front().span, tokens_.back().span );
+    return decls;
+}
 
-    const Node_id root = ast_.add( Node_kind::Source_file, whole, 0, decls );
-    ast_.set_root( root );
-    return root;
+Node_id Parser::parse_import()
+{
+    const Span start = peek().span;
+
+    advance(); // consume `import`
+
+    const Symbol_id module = expect_name();
+
+    bool refused = false;
+    if( check( Token_kind::Colon_colon ) )
+    {
+        refused = true;
+        error_at(
+            Span::merge( start, peek().span ),
+            "only a module of this program can be imported",
+            "write `import foo;` for `foo.kl`"
+        );
+
+        // Consume the rest of the qualification so the next rule sees a semicolon rather than
+        // thinking it is a declaration.
+        while( match( Token_kind::Colon_colon ) )
+        {
+            expect_name();
+        }
+    }
+
+    expect( Token_kind::Semicolon );
+
+    return module.is_valid() && !refused
+               ? ast_.add( Node_kind::Import_decl, Span::merge( start, previous().span ), module.v, {} )
+               : error_node( Span::merge( start, previous().span ) );
 }
 
 Node_id Parser::parse_declaration()
 {
+    if( check_keyword( Keyword::Import ) )
+    {
+        return parse_import();
+    }
+
     if( check_keyword( Keyword::Struct ) || check_keyword( Keyword::Class ) )
     {
         return parse_aggregate_decl();
@@ -3095,7 +3133,17 @@ Node_id Parser::parse_arg_list()
 
 Ast parse( std::span<const Token> tokens, const Source_manager& sm, Diagnostics& diags )
 {
-    return Parser( tokens, sm, diags ).run();
+    Ast                  ast;
+    std::vector<Node_id> decls = parse_into( ast, tokens, sm, diags );
+    const Span           whole = decls.empty() ? Span {} : Span::merge( tokens.front().span, tokens.back().span );
+    const Node_id        root  = ast.add( Node_kind::Source_file, whole, 0, decls );
+    ast.set_root( root );
+    return ast;
+}
+
+std::vector<Node_id> parse_into( Ast& ast, std::span<const Token> tokens, const Source_manager& sm, Diagnostics& diags )
+{
+    return Parser( tokens, sm, ast, diags ).parse_declarations();
 }
 
 } // namespace keel
@@ -3161,6 +3209,11 @@ public:
     std::string_view text( Node_id id ) const
     {
         return sm_.text( ast_.span( id ) );
+    }
+
+    std::string_view name( Node_id id ) const
+    {
+        return interner_.text( Symbol_id { ast_.aux( id ) } );
     }
 
     bool has_errors() const
@@ -8429,6 +8482,23 @@ TEST_CASE( "parser_parses_an_alloc_with_a_count", "[parse][alloc][many]" )
             REQUIRE( p.has_errors() );
         }
     }
+}
+
+// An import is a declaration of its own, named by the module it loads. What it loads is the
+// loader's business, so the parser only records the name.
+TEST_CASE( "parser_reads_an_import", "[parse][import]" )
+{
+    const Parsed p( "import shape;\ni32 main() { return 0; }" );
+
+    INFO( p.errors() );
+    REQUIRE_FALSE( p.has_errors() );
+
+    const Node_id decl = p.child( p.root(), 0 );
+
+    REQUIRE( p.kind( decl ) == Node_kind::Import_decl );
+    REQUIRE( p.children( decl ).empty() );
+    REQUIRE( p.name( decl ) == "shape" );
+    REQUIRE( p.text( decl ) == "import shape;" );
 }
 
 } // namespace keel

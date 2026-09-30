@@ -508,10 +508,11 @@ bool Resolver::chain_overload( Node_id existing, Node_id added )
 
 std::string Resolver::previous_declaration_note( Node_id prev ) const
 {
-    const Span     span = ast_.span( prev );
-    const Line_col loc  = sm_.line_col( span.file, span.start );
+    const Span             span = ast_.span( prev );
+    const Line_col         loc  = sm_.line_col( span.file, span.start );
+    const std::string_view path = sm_.file( span.file ).path;
 
-    return fmt::format( "previous declaration is at: {}:{}", loc.line, loc.col );
+    return fmt::format( "previous declaration is at: {}:{}:{}", path, loc.line, loc.col );
 }
 
 Node_id Resolver::lookup( Symbol_id name ) const
@@ -927,7 +928,7 @@ TEST_CASE( "resolver_reports_duplicate_declarations", "[sema][resolve]" )
         const Resolved p( "i32 main()\n{\n    i32 x = 0;\n    i32 x = 1;\n    return x;\n}\n" );
 
         INFO( p.rendered() );
-        REQUIRE( p.rendered().find( "previous declaration is at: 3:" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "previous declaration is at: t.kl:3:" ) != std::string::npos );
     }
 }
 
@@ -1065,7 +1066,7 @@ TEST_CASE( "resolver_reports_duplicate_fields", "[sema][resolve]" )
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "field `x` is already declared" ) != std::string::npos );
-        REQUIRE( p.rendered().find( "previous declaration is at: 3:" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "previous declaration is at: t.kl:3:" ) != std::string::npos );
     }
 
     SECTION( "two repeated names give two messages" )

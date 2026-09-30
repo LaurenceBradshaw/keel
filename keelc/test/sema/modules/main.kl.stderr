@@ -1,0 +1,19 @@
+error: there is no module `missing`
+ --> sema/modules/main.kl:3:1
+  |
+3 | import missing;
+  | ^^^^^^^^^^^^^^^ `import missing;` looks for `missing.kl` beside the file being compiled
+
+error: an `import` goes before every declaration
+  --> sema/modules/main.kl:10:1
+   |
+10 | import twin;
+   | ^^^^^^^^^^^^ move it to the top of the file
+
+error: `twice` is already declared with these parameters
+ --> sema/modules/twin.kl:2:1
+  |
+2 | i32 twice( i32 v )
+  | ^^^^^^^^^^^^^^^^^^ previous declaration is at: sema/modules/main.kl:5:1
+
+3 errors generated

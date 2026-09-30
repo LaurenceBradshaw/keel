@@ -11,6 +11,9 @@
 #     stderr   is compared against <name>.kl.stderr   (must be empty if the file is absent)
 #     exit code is compared against <name>.kl.exit    (must be 0 if the file is absent)
 #
+# A directory holding a main.kl is one program: main.kl is its test, and its other .kl files are
+# the modules it imports rather than tests of their own.
+#
 # A suite holding a RUN file goes one step further: stdout is treated as C, compiled with $CC, and
 # executed, and the program's exit code is compared against <name>.kl.run (0 if the file is
 # absent). Without this a golden diff can only say the emitted C is unchanged, never that it is
@@ -103,6 +106,15 @@ fi
 
 # NUL-delimited: unquoted $( ) would word-split on spaces and glob-expand any * in a name.
 mapfile -d '' -t sources < <( find . -name '*.kl' -print0 | sort -z )
+
+programs=()
+for src in "${sources[@]}"; do
+    if [ -f "$( dirname "$src" )/main.kl" ] && [ "$( basename "$src" )" != "main.kl" ]; then
+        continue
+    fi
+    programs+=( "$src" )
+done
+sources=( "${programs[@]}" )
 
 if [ ${#sources[@]} -eq 0 ]; then
     echo "run_tests.sh: no .kl fixtures found" >&2

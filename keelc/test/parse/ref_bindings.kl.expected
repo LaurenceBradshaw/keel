@@ -1,4 +1,4 @@
-Source_file                             4:1-32:1
+Source_file                             1:1-32:1
   Function_decl                         4:1-9:2     name=statement_position
     Named_type                          4:1-4:5     "void"
     Param_list                          4:24-4:33

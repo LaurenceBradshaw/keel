@@ -1,4 +1,4 @@
-Source_file                             8:1-74:1
+Source_file                             1:1-74:1
   Struct_decl                           8:1-34:3    name=P
     <none>                              -
     Field_decl                          10:5-10:11  name=x

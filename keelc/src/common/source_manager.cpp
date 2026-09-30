@@ -142,43 +142,10 @@ std::vector<u32> Source_manager::build_line_starts( std::string_view text )
 #ifdef ENABLE_UNIT_TESTS
 #include <catch2/catch_test_macros.hpp>
 
-#include <atomic>
-#include <fstream>
+#include "common/temp_dir.h"
 
 namespace keel
 {
-namespace
-{
-
-// Removes itself on scope exit; load_file is the only part of Source_manager that needs real files.
-struct Temp_dir
-{
-    std::filesystem::path path;
-
-    Temp_dir()
-    {
-        static std::atomic<int> counter { 0 };
-        path = std::filesystem::temp_directory_path() / ( "keel_sm_test_" + std::to_string( counter++ ) );
-        std::filesystem::remove_all( path );
-        std::filesystem::create_directories( path );
-    }
-
-    ~Temp_dir()
-    {
-        std::error_code ec;
-        std::filesystem::remove_all( path, ec );
-    }
-
-    std::filesystem::path write( const std::string& name, std::string_view contents ) const
-    {
-        const std::filesystem::path p = path / name;
-        std::ofstream               out( p, std::ios::binary );
-        out.write( contents.data(), static_cast<std::streamsize>( contents.size() ) );
-        return p;
-    }
-};
-
-} // namespace
 
 TEST_CASE( "source_manager_add_file_assigns_sequential_ids", "[common][source_manager]" )
 {

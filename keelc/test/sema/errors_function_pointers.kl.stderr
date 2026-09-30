@@ -44,7 +44,7 @@ error: `unbounded` takes `T`, which is not known to be copyable, so its address 
   --> sema/errors_function_pointers.kl:56:14
    |
 56 |     auto j = &unbounded<i32>;
-   |              ^^^^^^^^^^^^^^^ add `where T : Copyable` to `unbounded`, whose parameter is at 34:19
+   |              ^^^^^^^^^^^^^^^ add `where T : Copyable` to `unbounded`, whose parameter is at sema/errors_function_pointers.kl:34:19
 
 error: expected `fn( i32 ) -> i32`, but got `fn( u8 ) -> u8`
   --> sema/errors_function_pointers.kl:59:24

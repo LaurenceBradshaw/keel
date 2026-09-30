@@ -1,4 +1,4 @@
-Source_file                             2:1-10:1
+Source_file                             1:1-10:1
   Function_decl                         2:1-9:2     name=main
     Named_type                          2:1-2:4     "i32"
     Param_list                          2:9-2:11    "()"

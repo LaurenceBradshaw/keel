@@ -8,7 +8,7 @@ error: `Red` is already covered
   --> sema/errors_switch.kl:29:14
    |
 29 |         case Colour::Red:
-   |              ^^^^^^^^^^^ previous declaration is at: 27:14
+   |              ^^^^^^^^^^^ previous declaration is at: sema/errors_switch.kl:27:14
 
 error: every variant of `Colour` is covered, so `default` can never run
   --> sema/errors_switch.kl:38:5
@@ -44,7 +44,7 @@ error: this `case` overlaps an earlier one
    --> sema/errors_switch.kl:103:14
     |
 103 |         case 5:
-    |              ^ previous declaration is at: 101:14
+    |              ^ previous declaration is at: sema/errors_switch.kl:101:14
 
 error: a `case` label must be known at compile time
    --> sema/errors_switch.kl:114:14

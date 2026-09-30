@@ -1,0 +1,5 @@
+// Declares what main.kl already does, so the note has to name the other file.
+i32 twice( i32 v )
+{
+    return v + v;
+}

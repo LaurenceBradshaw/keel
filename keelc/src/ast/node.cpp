@@ -11,6 +11,8 @@ std::string_view node_kind_name( Node_kind kind )
         return "Error";
     case Node_kind::Source_file:
         return "Source_file";
+    case Node_kind::Import_decl:
+        return "Import_decl";
     case Node_kind::Function_decl:
         return "Function_decl";
     case Node_kind::Destructor_decl:

@@ -1,0 +1,22 @@
+// Three files, one program: main.kl is compiled, and the modules it imports come with it. Every
+// check returns a distinct code, so exit 0 means all of them agreed.
+import shape;
+import tally;
+
+// Called from tally.kl, which imports this file back.
+i32 twice( i32 v )
+{
+    return v * 2;
+}
+
+i32 main()
+{
+    Point p = Point { 3, 4 };
+    if( area( p ) != 12 ) { return 1; }
+
+    if( bump( 1 ) != 2 ) { return 2; }
+    if( bump( 2 ) != 6 ) { return 3; }
+    if( count != 6 ) { return 4; }
+
+    return 0;
+}

@@ -1,0 +1,11 @@
+// A struct and a function over it, both used from main.kl.
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+i32 area( Point p )
+{
+    return p.x * p.y;
+}

@@ -1,4 +1,4 @@
-Source_file                             4:1-48:1
+Source_file                             1:1-48:1
   Function_decl                         4:1-9:2     name=loosest
     Named_type                          4:1-4:4     "i32"
     Param_list                          4:12-4:44

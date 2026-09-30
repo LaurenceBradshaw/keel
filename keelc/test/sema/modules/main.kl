@@ -1,0 +1,15 @@
+// Every refusal an import brings, in one program. What is accepted is in codegen/modules.
+import twin;
+import missing;
+
+i32 twice( i32 v )
+{
+    return v * 2;
+}
+
+import twin;
+
+i32 main()
+{
+    return 0;
+}

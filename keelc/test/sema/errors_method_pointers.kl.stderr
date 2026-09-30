@@ -32,7 +32,7 @@ error: `keep` takes `T`, which is not known to be copyable, so its address has n
   --> sema/errors_method_pointers.kl:65:14
    |
 65 |     auto k = &Open<i32>::keep;
-   |              ^^^^^^^^^^^^^^^^ add `where T : Copyable` to `Open`; the parameter of `keep` is at 52:15
+   |              ^^^^^^^^^^^^^^^^ add `where T : Copyable` to `Open`; the parameter of `keep` is at sema/errors_method_pointers.kl:52:15
 
 error: no overload of `pick` has the type `fn( ref C, bool ) -> i32`
   --> sema/errors_method_pointers.kl:67:32

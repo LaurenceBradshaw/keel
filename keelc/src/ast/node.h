@@ -14,6 +14,7 @@ enum class Node_kind : u16
     Error,
 
     Source_file,
+    Import_decl, // aux holds the module's Symbol_id, and it has no children.
     Function_decl,
     Destructor_decl,
     Constructor_decl,

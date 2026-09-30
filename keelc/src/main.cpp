@@ -24,7 +24,7 @@
 #include "ir/simplify.h"
 #include "ir/verify.h"
 #include "lex/lexer.h"
-#include "parse/parser.h"
+#include "parse/loader.h"
 #include "sema/resolver.h"
 #include "sema/type_checker.h"
 
@@ -233,10 +233,9 @@ int main( int argc, char** argv )
         return 2;
     }
 
-    keel::Interner           interner;
-    keel::Diagnostics        diagnostics;
-    keel::Literal_pool       literals;
-    std::vector<keel::Token> tokens = keel::lex( file_id.value(), sm, interner, literals, diagnostics );
+    keel::Interner     interner;
+    keel::Diagnostics  diagnostics;
+    keel::Literal_pool literals;
 
     // Reporting is the same wherever we stop, and each --dump flag stops after its own phase.
     const auto finish = [&]() -> int
@@ -256,6 +255,7 @@ int main( int argc, char** argv )
 
     if( args.count( "dump-tokens" ) )
     {
+        std::vector<keel::Token> tokens = keel::lex( file_id.value(), sm, interner, literals, diagnostics );
         for( const keel::Token& t : tokens )
         {
             keel::Span       span  = t.span;
@@ -274,7 +274,7 @@ int main( int argc, char** argv )
     }
 
     // Parsing is part of compiling, not a debug feature: --dump-ast only controls output.
-    const keel::Ast ast = keel::parse( tokens, sm, diagnostics );
+    const keel::Ast ast = keel::load_program( file_id.value(), sm, interner, literals, diagnostics );
 
     if( args.count( "dump-ast" ) )
     {

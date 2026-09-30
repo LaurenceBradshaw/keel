@@ -1742,7 +1742,7 @@ TEST_CASE( "overloads_name_the_declaration_a_duplicate_collides_with", "[sema][o
     INFO( p.rendered() );
     REQUIRE( p.errors() == 1 );
     REQUIRE( p.rendered().find( "a program has one `main`" ) != std::string::npos );
-    REQUIRE( p.rendered().find( "previous declaration is at: 1:1" ) != std::string::npos );
+    REQUIRE( p.rendered().find( "previous declaration is at: t.kl:1:1" ) != std::string::npos );
 }
 
 // D31's exemption is what lets a `move` on a copyable type coexist with a `const ref` that takes

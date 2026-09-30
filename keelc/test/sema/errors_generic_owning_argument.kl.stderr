@@ -26,6 +26,6 @@ error: `open` takes `Wrap<T>`, which is not known to be copyable, so its address
   --> sema/errors_generic_owning_argument.kl:64:14
    |
 64 |     auto p = &open<i32>;
-   |              ^^^^^^^^^^ take it as `const ref Wrap<T>`, so every instance passes it the same way; the parameter is at 35:14
+   |              ^^^^^^^^^^ take it as `const ref Wrap<T>`, so every instance passes it the same way; the parameter is at sema/errors_generic_owning_argument.kl:35:14
 
 5 errors generated
