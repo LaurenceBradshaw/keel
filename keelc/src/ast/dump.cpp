@@ -1,3 +1,6 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 #include "ast/dump.h"
 
 #include "common/dump_util.h"

@@ -1,3 +1,6 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 #pragma once
 #include "common/interner.h"
 #include "common/literal_pool.h"

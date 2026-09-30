@@ -74,6 +74,55 @@ check_format()
     return "$bad"
 }
 
+# Every source file opens with the copyright and licence lines. Test data, examples, CMake and shell
+# scripts are exempt. A file changed since HEAD, or not yet tracked, must carry this year; one left
+# alone keeps the year it was last touched. Same silent-pass guard as check_format.
+check_headers()
+{
+    local year; year="$( date +%Y )"
+    local spdx='// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception'
+    local bad=0
+    local seen=0
+    local all_changed=0
+    local -A changed=()
+
+    if git rev-parse --verify -q HEAD > /dev/null; then
+        while IFS= read -r f; do
+            changed["$f"]=1
+        done < <( git diff --name-only HEAD; git ls-files --others --exclude-standard )
+    else
+        all_changed=1 # no commit yet, so every file is new
+    fi
+
+    while IFS= read -r f; do
+        seen=$(( seen + 1 ))
+
+        local first='' second=''
+        { IFS= read -r first; IFS= read -r second; } < "$f"
+
+        if [[ ! "$first" =~ ^//\ Copyright\ ([0-9]{4})\ Laurence\ Bradshaw$ ]] || [ "$second" != "$spdx" ]; then
+            echo "$f: missing the header - its first two lines must be"
+            echo "    // Copyright $year Laurence Bradshaw"
+            echo "    $spdx"
+            bad=1
+            continue
+        fi
+
+        if [ "${BASH_REMATCH[1]}" != "$year" ] && { [ "$all_changed" -eq 1 ] || [ -n "${changed[$f]:-}" ]; }; then
+            echo "$f: changed this year, so its copyright year should be $year, not ${BASH_REMATCH[1]}"
+            bad=1
+        fi
+    done < <( find keelc keel_rt keel_stl -path '*/test/*' -prune -o -type f \
+                  \( -name '*.cpp' -o -name '*.h' -o -name '*.c' -o -name '*.kl' \) -print 2>/dev/null )
+
+    if [ "$seen" -eq 0 ]; then
+        echo "no sources found to header-check - has the layout moved?"
+        return 1
+    fi
+
+    return "$bad"
+}
+
 # Each project registers its own golden suite by having a runner, the same way its CMakeLists does.
 # A project without one is skipped rather than failing, so keel_rt and keel_stl cost nothing until
 # they have something to run.
@@ -99,6 +148,7 @@ check_goldens()
 echo "pre-commit:"
 
 # Cheapest first, and build before the things that need a binary.
+step "copyright headers"   check_headers                             || exit 1
 step "clang-format"        check_format                              || exit 1
 step "build (debug)"       cmake --build --preset debug              || exit 1
 step "unit tests"          ./build/debug/bin/keel_tests              || exit 1

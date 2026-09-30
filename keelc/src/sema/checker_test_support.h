@@ -1,3 +1,6 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 #pragma once
 
 // The unit-test fixture. One `Typed` runs lex, parse, resolve and type_check over a source string

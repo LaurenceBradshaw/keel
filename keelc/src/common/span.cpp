@@ -1,3 +1,6 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // Span is header-only; this file exists only to host its tests. Empty TU in the keelc build.
 
 #ifdef ENABLE_UNIT_TESTS

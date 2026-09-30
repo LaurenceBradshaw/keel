@@ -1,3 +1,6 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 #ifndef KL_RT_H
 #define KL_RT_H
 

@@ -274,3 +274,9 @@ could consume it, and eventually one will, most likely LLVM.
   audit surface for the containment rule; §15 is the live work tracker.
 - [`docs/MANIFESTO.md`](docs/MANIFESTO.md) — the vision document that started it. Deliberately
   unresolved on syntax and semantics; the plan inverts its phase ordering on purpose and says why.
+
+## License
+
+Copyright 2026 Laurence Bradshaw. Keel is licensed under the Apache License 2.0 with LLVM Exceptions
+(`Apache-2.0 WITH LLVM-exception`); see [`LICENSE`](LICENSE). The exception means a program compiled
+with Keel owes nothing for the runtime and library code built into it.
