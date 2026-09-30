@@ -36,7 +36,8 @@ step()
     fi
 
     printf '  %sFAIL%s  %s\n' "$red" "$reset" "$label"
-    sed 's/^/        /' < "$log" | tail -40
+    # Without the golden runner's pass lines, which would push its failures out of the tail.
+    grep -v '^  pass     ' < "$log" | sed 's/^/        /' | tail -40
     return 1
 }
 
@@ -55,23 +56,25 @@ done
 # when that moved under keelc/ the find matched nothing - so the check *passed in zero seconds*
 # having read no files. A silent pass is worse than a loud failure, which is why the count below is
 # checked rather than trusted.
+#
+# Spread across every core. Each diff is printed whole, so two failures cannot interleave.
 check_format()
 {
-    local bad=0
-    local seen=0
+    local files
+    mapfile -d '' -t files < <( find keelc keel_rt keel_stl \( -name '*.cpp' -o -name '*.h' -o -name '*.c' \) -print0 2>/dev/null )
 
-    while IFS= read -r f; do
-        seen=$(( seen + 1 ))
-        clang-format-18 -style=file:.clang-format "$f" | diff -u "$f" - && continue
-        bad=1
-    done < <( find keelc keel_rt keel_stl \( -name '*.cpp' -o -name '*.h' -o -name '*.c' \) 2>/dev/null )
-
-    if [ "$seen" -eq 0 ]; then
+    if [ "${#files[@]}" -eq 0 ]; then
         echo "no sources found to format-check - has the layout moved?"
         return 1
     fi
 
-    return "$bad"
+    printf '%s\0' "${files[@]}" | xargs -0 -n 8 -P "$( nproc )" sh -c '
+        bad=0
+        for f; do
+            d="$( clang-format-18 -style=file:.clang-format "$f" | diff -u "$f" - )" || { printf "%s\n" "$d"; bad=1; }
+        done
+        exit "$bad"
+    ' sh
 }
 
 # Every source file opens with the copyright and licence lines. Test data, examples, CMake and shell

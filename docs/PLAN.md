@@ -2394,6 +2394,13 @@ by default because it roughly doubles the suite (4s to 9s) and most fixtures
 allocate nothing for it to check. It exists because an exit code cannot see M3's
 acceptance: a double free and a leak both still exit 0.
 
+**The runner checks fixtures in parallel (2026-10-01)**, `KEEL_JOBS` at a time
+(default `nproc`), and prints them in fixture order. It also drops `/mnt/*` from
+`PATH`: WSL appends the Windows `PATH`, and the C linker probes every entry for
+itself, so each link cost 0.15s instead of 0.016s. Together they took the suite
+from 16.5s to 1.8s, and 6.4s under valgrind. The pre-commit hook's clang-format
+check runs across all cores the same way.
+
 Two things had to be got right, and the first attempt got neither. Judging it by
 `--error-exitcode` misses a program killed by a signal, which reports the signal
 instead — so a segfault passed. And valgrind's output shared the run log with the

@@ -22,6 +22,7 @@
 #
 #   CC          the C compiler                    (default: cc)
 #   KEEL_RUN_TIMEOUT  seconds a fixture may run   (default: 10)
+#   KEEL_JOBS   fixtures checked at once          (default: nproc)
 #   KEEL_VALGRIND=1   run each fixture under valgrind too, failing on any error it reports.
 #                     M3's acceptance is that a destructor frees exactly once, which a golden
 #                     exit code cannot see - a double free or a leak both still exit 0.
@@ -61,6 +62,10 @@ fi
 
 # Paths appear in diagnostics, so run from tests/ to keep them stable regardless of caller cwd.
 cd "$( dirname "$0" )" || exit 2
+
+# WSL appends the Windows PATH, and the C linker probes every entry for itself. Over /mnt each probe
+# is slow enough to make a link ten times slower, which is most of the suite's runtime.
+PATH="$( tr ':' '\n' <<< "$PATH" | grep -v '^/mnt/' | paste -sd: )"
 
 # The C floor a generated program links against. Compiled from source beside the emitted .c rather
 # than linked from a build directory: the suite then needs to know nothing about presets or
@@ -131,11 +136,19 @@ if [ ${#sources[@]} -eq 0 ]; then
     exit 2
 fi
 
+# Checked up front, because a job cannot stop the suite.
+for src in "${sources[@]}"; do
+    if [ ! -f "$( dirname "$src" )/FLAGS" ]; then
+        echo "run_tests.sh: $( dirname "${src#./}" ) has no FLAGS file" >&2
+        exit 2
+    fi
+done
+
 pass=0
 fail=0
-out="$( mktemp )"
-err="$( mktemp )"
-trap 'rm -f "$out" "$err"' EXIT
+parallel_jobs="${KEEL_JOBS:-$( nproc )}"
+results="$( mktemp -d )"
+trap 'rm -rf "$results"' EXIT
 
 # Compares one stream against its expectation, or rewrites it under --update.
 # $1 actual file  $2 expected file  $3 label  -> echoes a diff and returns 1 on mismatch
@@ -241,22 +254,22 @@ check_run()
     return 0
 }
 
-for src in "${sources[@]}"; do
-    src="${src#./}"
-    suite_flags_file="$( dirname "$src" )/FLAGS"
-
-    if [ ! -f "$suite_flags_file" ]; then
-        echo "run_tests.sh: $( dirname "$src" ) has no FLAGS file" >&2
-        exit 2
-    fi
+# Checks one fixture, and writes its verdict to $results/<index>: "pass", "FAIL" or "updated" on the
+# first line, then any messages. $out and $err are its own, so fixtures can run side by side.
+# $1 the index  $2 the fixture path
+run_one()
+{
+    local index="$1" src="$2"
+    local out="${results}/${index}.out" err="${results}/${index}.err"
 
     # Word splitting is wanted here, unlike for filenames: FLAGS holds one or more arguments.
-    read -ra suite_flags < "$suite_flags_file"
+    local suite_flags
+    read -ra suite_flags < "$( dirname "$src" )/FLAGS"
 
-    "$keelc" "${suite_flags[@]}" "${src#./}" > "$out" 2> "$err"
-    code=$?
+    "$keelc" "${suite_flags[@]}" "$src" > "$out" 2> "$err"
+    local code=$?
 
-    problems=0
+    local messages
     messages="$(
         check_stream "$out" "${src}.expected" "stdout"
         check_stream "$err" "${src}.stderr" "stderr"
@@ -281,11 +294,36 @@ for src in "${sources[@]}"; do
         fi
     )"
 
-    [ -n "$messages" ] && problems=1
-
+    local verdict=pass
     if [ "$update" -eq 1 ]; then
+        verdict=updated
+    elif [ -n "$messages" ]; then
+        verdict=FAIL
+    fi
+
+    { echo "$verdict"; [ -n "$messages" ] && echo "$messages"; } > "${results}/${index}"
+}
+
+running=0
+for index in "${!sources[@]}"; do
+    if [ "$running" -ge "$parallel_jobs" ]; then
+        wait -n
+        running=$(( running - 1 ))
+    fi
+
+    run_one "$index" "${sources[$index]#./}" &
+    running=$(( running + 1 ))
+done
+wait
+
+# In fixture order, whatever order they finished in.
+for index in "${!sources[@]}"; do
+    src="${sources[$index]#./}"
+    { read -r verdict; messages="$( cat )"; } < "${results}/${index}"
+
+    if [ "$verdict" = updated ]; then
         echo "  ${dim}updated${reset}  ${src}"
-    elif [ "$problems" -eq 0 ]; then
+    elif [ "$verdict" = pass ]; then
         echo "  ${green}pass${reset}     ${src}"
         pass=$(( pass + 1 ))
     else
