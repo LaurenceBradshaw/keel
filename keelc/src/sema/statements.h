@@ -73,6 +73,8 @@ private:
     void visit_global( Node_id id );
     void visit_block( Node_id id );
 
+    void check_returned_address( Node_id value );
+
     const Ast&        ast_;
     const Interner&   interner_;
     const Resolution& resolution_;

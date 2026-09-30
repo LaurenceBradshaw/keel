@@ -49,16 +49,19 @@ void write_through_places( i32* q, Node* p )
 }
 
 // Taking an address is not reading what is there, so the operand is a place rather than a value.
-i32* address_of_local()
+i32 address_of_local()
 {
-    i32 x = 1;
+    i32  x = 1;
+    i32* p = &x;
 
-    return &x;
+    return *p;
 }
 
-i32* address_of_field( Point p )
+i32 address_of_field( Point p )
 {
-    return &p.x;
+    i32* q = &p.x;
+
+    return *q;
 }
 
 // A cast is the conversion rvalue, and one to the type an operand already has emits nothing.

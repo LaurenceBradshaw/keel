@@ -1,0 +1,37 @@
+error: `x` dies when this function returns, so its address would dangle
+  --> sema/errors_dying_address.kl:32:12
+   |
+32 |     return &x;
+   |            ^^ return the value itself, or allocate it with `alloc` and return that
+
+error: `v` dies when this function returns, so its address would dangle
+  --> sema/errors_dying_address.kl:37:12
+   |
+37 |     return &v;
+   |            ^^ return the value itself, or allocate it with `alloc` and return that
+
+error: `p` dies when this function returns, so its address would dangle
+  --> sema/errors_dying_address.kl:42:12
+   |
+42 |     return &p.x;
+   |            ^^^^ return the value itself, or allocate it with `alloc` and return that
+
+error: `b` dies when this function returns, so its address would dangle
+  --> sema/errors_dying_address.kl:47:12
+   |
+47 |     return &b.n;
+   |            ^^^^ return the value itself, or allocate it with `alloc` and return that
+
+error: `r` dies when this function returns, so its address would dangle
+  --> sema/errors_dying_address.kl:55:20
+   |
+55 |             return &r;
+   |                    ^^ return the value itself, or allocate it with `alloc` and return that
+
+error: `x` dies when this function returns, so its address would dangle
+  --> sema/errors_dying_address.kl:66:12
+   |
+66 |     return &r;
+   |            ^^ return the value itself, or allocate it with `alloc` and return that
+
+6 errors generated

@@ -278,6 +278,38 @@ Node_id Places::place_source( Node_id id ) const
     return id;
 }
 
+Node_id Places::dying_storage( Node_id place, Node_id current_function ) const
+{
+    Node_id root = place_root( place, current_function );
+
+    while( root.is_valid() && ast_.kind( root ) == Node_kind::Var_decl && returns_a_binding( root ) )
+    {
+        root = place_root( ast_.child( root, 1 ), current_function );
+    }
+
+    if( !root.is_valid() )
+    {
+        return Node_id {};
+    }
+
+    if( ast_.kind( root ) == Node_kind::Binding_decl )
+    {
+        return root;
+    }
+
+    if( ast_.kind( root ) == Node_kind::Param_decl && !returns_a_binding( root ) )
+    {
+        return root;
+    }
+
+    if( ast_.kind( root ) == Node_kind::Var_decl && ast_.span( current_function ).contains( ast_.span( root ) ) )
+    {
+        return root;
+    }
+
+    return Node_id {};
+}
+
 void Places::check_owning_source( Node_id value, Type_id type )
 {
     if( !value.is_valid() || bounds_.satisfies( type, Bound::Copyable ) || ast_.kind( value ) == Node_kind::Marker_expr )

@@ -1,0 +1,72 @@
+// Every address that dies at the `return` carrying it, one to a function. What outlives the call is
+// accepted, and `&counter` on a global is in codegen/globals.kl.
+struct Point
+{
+    i32 x;
+};
+
+class Box
+{
+    public i32 n;
+
+    Box()
+    {
+        n = 1;
+    }
+
+    ~Box()
+    {
+    }
+};
+
+enum Shape
+{
+    Circle( i32 r ),
+    Dot
+};
+
+i32* of_a_local()
+{
+    i32 x = 1;
+
+    return &x;
+}
+
+i32* of_a_parameter( i32 v )
+{
+    return &v;
+}
+
+i32* of_a_field( Point p )
+{
+    return &p.x;
+}
+
+i32* of_a_moved_parameter( move Box b )
+{
+    return &b.n;
+}
+
+i32* of_a_pattern_binding( Shape s )
+{
+    switch( s )
+    {
+        case Shape::Circle( r ):
+            return &r;
+        default:
+            return nullptr;
+    }
+}
+
+i32* through_a_binding()
+{
+    i32     x = 1;
+    ref i32 r = x;
+
+    return &r;
+}
+
+i32 main()
+{
+    return 0;
+}

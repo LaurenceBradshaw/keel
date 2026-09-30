@@ -3694,7 +3694,7 @@ TEST_CASE( "lower_takes_addresses_of_places", "[ir][lower][places]" )
 {
     SECTION( "of a local" )
     {
-        Lowered p( "i32* f() { i32 x = 1; return &x; }\ni32 main() { return 0; }" );
+        Lowered p( "i32 f() { i32 x = 1; i32* p = &x; return *p; }\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
@@ -3702,17 +3702,17 @@ TEST_CASE( "lower_takes_addresses_of_places", "[ir][lower][places]" )
         const std::string text = p.text( 0 );
 
         INFO( text );
-        REQUIRE( text.find( "_2 = &_1" ) != std::string::npos );
+        REQUIRE( text.find( "_3 = &_1" ) != std::string::npos );
         REQUIRE( verify( p.functions[0] ).empty() );
     }
 
     SECTION( "of a field" )
     {
-        Lowered p( "struct P { i32 x; };\ni32* f( P p ) { return &p.x; }\ni32 main() { return 0; }" );
+        Lowered p( "struct P { i32 x; };\ni32 f( P p ) { i32* q = &p.x; return *q; }\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.text( 0 ).find( "_2 = &_1.x" ) != std::string::npos );
+        REQUIRE( p.text( 0 ).find( "_3 = &_1.x" ) != std::string::npos );
     }
 }
 

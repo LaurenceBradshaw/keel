@@ -169,6 +169,9 @@ void Statements::visit_return( Node_id id )
 
     expressions_.check( value, current_return_ );
 
+    // The `T*` half of §8's rule, for a local whose storage ends here.
+    check_returned_address( value );
+
     // §8's non-escaping rule. A `ref` binding is initialised at its declaration and never reseated,
     // so everything nameable at a call site outlives any binding declared there - which is why
     // *which* parameter the result came from does not matter, and why this needs no dataflow.
@@ -576,6 +579,31 @@ void Statements::visit_block( Node_id id )
     }
 
     expressions_.leave_unsafe( ast_.span( id ), enclosing_used );
+}
+
+void Statements::check_returned_address( Node_id value )
+{
+    if( ast_.kind( value ) != Node_kind::Unary_expr || static_cast<Token_kind>( ast_.aux( value ) ) != Token_kind::Amp ||
+        table_.is_error( types_.type_of( value ) ) )
+    {
+        return;
+    }
+
+    const Node_id dying = places_.dying_storage( ast_.child( value, 0 ), expressions_.current_function() );
+
+    if( !dying.is_valid() )
+    {
+        return;
+    }
+
+    reporter_.error_at(
+        ast_.span( value ),
+        fmt::format(
+            "`{}` dies when this function returns, so its address would dangle",
+            interner_.text( Symbol_id { ast_.aux( dying ) } )
+        ),
+        "return the value itself, or allocate it with `alloc` and return that"
+    );
 }
 
 } // namespace sema
@@ -1693,6 +1721,73 @@ TEST_CASE( "type_checker_counts_indexing_as_what_an_unsafe_block_is_for", "[sema
             REQUIRE( p.errors() == 1 );
             REQUIRE( p.rendered().find( "does nothing unsafe" ) != std::string::npos );
         }
+    }
+}
+
+// The `T*` half of §8's rule: an address whose storage ends at the `return` that carries it. What a
+// pointer points at, and what the caller lent, outlive the call and are not asked about.
+TEST_CASE( "type_checker_refuses_the_address_of_a_dying_local", "[sema][escape]" )
+{
+    constexpr std::string_view types = "struct P { i32 x; };\n"
+                                       "class B { public i32 n; B() { n = 1; } ~B() { } };\n"
+                                       "enum Shape { Circle( i32 r ), Dot };\n";
+
+    struct Case
+    {
+        const char* program;
+        const char* dies; // the storage the message names
+    };
+
+    SECTION( "each of these dies at the return" )
+    {
+        for( const Case c : {
+                 Case { "i32* f() { i32 x = 1; return &x; }", "x" },
+                 Case { "i32* f( i32 v ) { return &v; }", "v" },
+                 Case { "i32* f( P p ) { return &p.x; }", "p" },
+                 Case { "i32* f( move B b ) { return &b.n; }", "b" },
+                 Case {
+                     "i32* f( Shape s ) { switch( s ) { case Shape::Circle( r ): return &r; default: return nullptr; } }", "r"
+                 },
+                 Case { "i32* f() { i32 x = 1; ref i32 r = x; return &r; }", "x" },
+                 Case { "T* f<T>( T a ) where T : Copyable { return &a; }", "a" },
+             } )
+        {
+            const Typed p( std::string( types ) + c.program + "\ni32 main() { return 0; }" );
+
+            INFO( c.program << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( fmt::format( "`{}` dies when this function returns", c.dies ) ) != std::string::npos );
+        }
+    }
+
+    SECTION( "each of these outlives the call" )
+    {
+        for( const char* program : {
+                 "i32 counter = 1;\ni32* f() { return &counter; }",
+                 "i32* f( ref i32 v ) { return &v; }",
+                 "i32* f( out i32 v ) { v = 1; return &v; }",
+                 "i32* f( B b ) { return &b.n; }",
+                 "class C { public i32 x; C() { x = 1; } i32* at() { return &x; } };",
+                 "i32* f( P* p ) { return &p.x; }",
+                 "T* f<T>( T a ) { return &a; }",
+                 "i32* f( ref i32 v ) { ref i32 r = v; return &r; }",
+                 "i32 f() { i32 x = 1; i32* p = &x; return *p; }",
+             } )
+        {
+            const Typed p( std::string( types ) + program + "\ni32 main() { return 0; }" );
+
+            INFO( program << "\n" << p.rendered() );
+            REQUIRE( p.clean() );
+        }
+    }
+
+    SECTION( "a local whose type failed is reported once" )
+    {
+        const Typed p( "i32* f() { Nope x; return &x; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "unknown type `Nope`" ) != std::string::npos );
     }
 }
 

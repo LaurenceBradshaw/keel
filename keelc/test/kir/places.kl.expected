@@ -42,26 +42,34 @@ fn write_through_places {
         return
 }
 fn address_of_local {
-    let _0: i32*; // return slot
+    let _0: i32; // return slot
     let _1: i32; // x
-    let _2: i32*;
+    let _2: i32*; // p
+    let _3: i32*;
 
     bb0:
         storage_live _1
         _1 = const 1
-        _2 = &_1
-        _0 = copy _2
+        storage_live _2
+        _3 = &_1
+        _2 = copy _3
+        _0 = copy (*_2)
+        storage_dead _2
         storage_dead _1
         return
 }
 fn address_of_field {
-    let _0: i32*; // return slot
+    let _0: i32; // return slot
     let _1: Point; // parameter p
-    let _2: i32*;
+    let _2: i32*; // q
+    let _3: i32*;
 
     bb0:
-        _2 = &_1.x
-        _0 = copy _2
+        storage_live _2
+        _3 = &_1.x
+        _2 = copy _3
+        _0 = copy (*_2)
+        storage_dead _2
         return
 }
 fn widen {

@@ -50,6 +50,9 @@ public:
     Node_id place_root( Node_id id, Node_id current_function ) const;
     Node_id place_source( Node_id id ) const;
 
+    // The declaration whose storage ends when `current_function` returns, or invalid.
+    Node_id dying_storage( Node_id place, Node_id current_function ) const;
+
     // D31's initialisation and assignment clause: an owning value transfers rather than copies, and
     // the transfer is written down.
     void check_owning_source( Node_id value, Type_id type );
