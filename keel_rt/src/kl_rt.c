@@ -1,4 +1,5 @@
 #include "kl_rt.h"
+#include <stdint.h>
 #include <stdlib.h>
 
 void* kl_rt_alloc( size_t size )
@@ -13,6 +14,16 @@ void* kl_rt_alloc( size_t size )
     }
 
     return malloc( size );
+}
+
+void* kl_rt_alloc_many( size_t count, size_t size )
+{
+    if( size != 0 && count > SIZE_MAX / size )
+    {
+        return NULL;
+    }
+
+    return kl_rt_alloc( count * size );
 }
 
 void kl_rt_free( void* ptr )

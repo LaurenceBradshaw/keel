@@ -279,6 +279,11 @@ inline Rvalue allocate( Type_id type ) // type is the *pointer* type; element co
     return Rvalue { .kind = Rvalue_kind::Allocate, .type = type };
 }
 
+inline Rvalue allocate( Type_id type, Operand count )
+{
+    return Rvalue { .kind = Rvalue_kind::Allocate, .type = type, .a = count };
+}
+
 inline Rvalue release( Operand a ) // type is void
 {
     return Rvalue { .kind = Rvalue_kind::Release, .type = Type_id {}, .a = a };

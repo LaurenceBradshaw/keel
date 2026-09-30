@@ -1,5 +1,5 @@
-// `*T` points at exactly one T. No arithmetic, no indexing - those belong to a many-item pointer,
-// which v0 does not have. Self-checking: exit 0 means every answer was right.
+// `T*` points at exactly one T. No arithmetic, no indexing - those belong to the many-item pointer,
+// `T[*]`, in many_pointers.kl. Self-checking: exit 0 means every answer was right.
 struct Point { f64 x; f64 y; };
 struct Cell { i32 n; };
 

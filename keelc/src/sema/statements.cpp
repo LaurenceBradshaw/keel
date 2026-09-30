@@ -341,6 +341,12 @@ void Statements::visit_assign( Node_id id )
         return;
     }
 
+    if( table_.is_pointer( target_type ) || table_.is_many_pointer( target_type ) )
+    {
+        expressions_.step_pointer( id, op, target_type, value );
+        return;
+    }
+
     // A compound assignment is `x = x op y`, so the value is *checked* against the target rather
     // than inferred. Inferring it would settle a literal on its default type first, and `u8 x;
     // x += 3;` would then combine u8 with i32 and have nowhere to put the result.
@@ -473,6 +479,12 @@ void Statements::visit_increment( Node_id id )
 
     if( !places_.check_writable( operand, expressions_.current_function() ) )
     {
+        return;
+    }
+
+    if( table_.is_pointer( operand_type ) || table_.is_many_pointer( operand_type ) )
+    {
+        expressions_.step_pointer( id, op, operand_type, Node_id {} );
         return;
     }
 
@@ -1527,6 +1539,160 @@ TEST_CASE( "type_checker_refuses_a_fallthrough_the_arm_rules_never_reached", "[s
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "must be the last statement of a `case`" ) != std::string::npos );
+    }
+}
+
+// `+=` is `+` applied and stored back, and `++` is `+= 1`, so on a `T[*]` each is an offset: gated
+// like one, and refused wherever `+` is.
+TEST_CASE( "type_checker_steps_a_many_item_pointer", "[sema][types][many]" )
+{
+    constexpr std::string_view head = "i32 main() { i32 v = 1; i32* one = &v; i32[*] many = nullptr; u64 n = 2; ";
+
+    SECTION( "inside unsafe" )
+    {
+        for( const char* body : { "unsafe { many += 2; }", "unsafe { many += n; }", "unsafe { many++; }" } )
+        {
+            const Typed p( std::string( head ) + body + " return 0; }" );
+
+            INFO( body << "\n" << p.rendered() );
+            REQUIRE( p.clean() );
+        }
+    }
+
+    SECTION( "outside it" )
+    {
+        for( const char* body : { "many += 2;", "many++;" } )
+        {
+            const Typed p( std::string( head ) + body + " return 0; }" );
+
+            INFO( body << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( "pointer arithmetic needs an `unsafe` block" ) != std::string::npos );
+        }
+    }
+
+    SECTION( "backwards is refused, as `-` is" )
+    {
+        const std::pair<const char*, const char*> cases[] = {
+            { "many -= 1;", "no operator `-=` for `i32[*]`" },
+            { "many--;", "no operator `--` for `i32[*]`" },
+            { "many *= 2;", "no operator `*=` for `i32[*]`" },
+        };
+
+        for( const auto& [body, message] : cases )
+        {
+            const Typed p( std::string( head ) + body + " return 0; }" );
+
+            INFO( body << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( message ) != std::string::npos );
+        }
+    }
+
+    SECTION( "the step is an integer" )
+    {
+        const Typed p( std::string( head ) + "many += 1.5; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "no operator `+=` for `i32[*]`" ) != std::string::npos );
+    }
+
+    SECTION( "a const pointer cannot be stepped" )
+    {
+        const Typed p( "i32 main() { i32[*] const many = nullptr; unsafe { many++; } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.rendered().find( "`many` is `const`" ) != std::string::npos );
+    }
+
+    SECTION( "and a single-item pointer is pointed at the other kind" )
+    {
+        for( const char* body : { "one += 1;", "one++;" } )
+        {
+            const Typed p( std::string( head ) + body + " return 0; }" );
+
+            INFO( body << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( "`i32*` points at one `i32`, so it has no arithmetic" ) != std::string::npos );
+        }
+    }
+}
+
+// An element is an ordinary place, so every statement that writes one works on it - each still
+// needing the block, because each still indexes.
+TEST_CASE( "type_checker_writes_an_element_with_every_statement", "[sema][types][many]" )
+{
+    constexpr std::string_view head = "i32 main() { i32[*] many = nullptr; unsafe { many = alloc<i32>( 2 ); } ";
+
+    SECTION( "inside unsafe" )
+    {
+        for( const char* body : { "many[ 0 ] = 1;", "many[ 0 ] += 2;", "many[ 1 ] *= 3;", "many[ 0 ]++;", "many[ 1 ]--;" } )
+        {
+            const Typed p( std::string( head ) + "unsafe { " + body + " free( many ); } return 0; }" );
+
+            INFO( body << "\n" << p.rendered() );
+            REQUIRE( p.clean() );
+        }
+    }
+
+    SECTION( "outside it" )
+    {
+        for( const char* body : { "many[ 0 ] = 1;", "many[ 0 ] += 2;", "many[ 0 ]++;" } )
+        {
+            const Typed p( std::string( head ) + body + " unsafe { free( many ); } return 0; }" );
+
+            INFO( body << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( "indexing needs an `unsafe` block" ) != std::string::npos );
+        }
+    }
+
+    SECTION( "the element's type is checked" )
+    {
+        const Typed p( std::string( head ) + "unsafe { many[ 0 ] = true; free( many ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "expected `i32`, but got `bool`" ) != std::string::npos );
+    }
+}
+
+// D35: a block holding only an index or an offset has done something unsafe.
+TEST_CASE( "type_checker_counts_indexing_as_what_an_unsafe_block_is_for", "[sema][types][unsafe][many]" )
+{
+    for( const char* body : {
+             "unsafe { r = many[ 0 ]; }",
+             "unsafe { many[ 0 ] = 1; }",
+             "unsafe { e = &many[ 0 ]; }",
+             "unsafe { many = many + 1; }",
+             "unsafe { many += 1; }",
+             "unsafe { many++; }",
+         } )
+    {
+        const Typed p(
+            std::string( "i32 main() { i32 r = 0; i32* e = nullptr; i32[*] many = nullptr; " ) + body + " return r; }"
+        );
+
+        INFO( body << "\n" << p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "but not a comparison, a copy or a pass" )
+    {
+        for( const char* body : {
+                 "unsafe { bool b = many == nullptr; }",
+                 "unsafe { i32[*] other = many; }",
+                 "unsafe { many = nullptr; }",
+             } )
+        {
+            const Typed p( std::string( "i32 main() { i32[*] many = nullptr; " ) + body + " return 0; }" );
+
+            INFO( body << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( "does nothing unsafe" ) != std::string::npos );
+        }
     }
 }
 

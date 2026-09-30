@@ -107,6 +107,21 @@ Type_id Type_table::pointer_to( Type_id element )
     return id;
 }
 
+Type_id Type_table::many_pointer_to( Type_id element )
+{
+    // same element -> same many pointer type
+    const auto it = many_pointers_.find( element.v );
+    if( it != many_pointers_.end() )
+    {
+        return it->second;
+    }
+
+    const std::string spelling = fmt::format( "{}[*]", name( element ) );
+    const Type_id     id       = add( { Type_kind::Many_pointer, 0, false, element }, spelling );
+    many_pointers_.emplace( element.v, id );
+    return id;
+}
+
 Type_id Type_table::function( Type_id return_type, std::span<const Parameter> parameters, Param_mode return_mode )
 {
     for( const Type_id id : functions_ )
@@ -236,6 +251,7 @@ bool Type_table::mentions_parameter( Type_id id ) const
     case Type_kind::Parameter:
         return true;
     case Type_kind::Pointer:
+    case Type_kind::Many_pointer:
         return mentions_parameter( described.element );
     case Type_kind::Enum:
     case Type_kind::Struct:
@@ -296,6 +312,10 @@ Type_id Type_table::substitute( Type_id type, const Bindings& bindings )
     case Type_kind::Pointer:
     {
         return pointer_to( substitute( described.element, bindings ) );
+    }
+    case Type_kind::Many_pointer:
+    {
+        return many_pointer_to( substitute( described.element, bindings ) );
     }
     case Type_kind::Struct:
     case Type_kind::Enum:
@@ -380,6 +400,7 @@ bool Type_table::deduce( Type_id pattern, Type_id actual, Bindings& into ) const
     switch( p.kind )
     {
     case Type_kind::Pointer:
+    case Type_kind::Many_pointer:
         return deduce( p.element, a.element, into );
     case Type_kind::Struct:
     case Type_kind::Enum:
@@ -709,6 +730,12 @@ bool Type_table::is_pointer( Type_id id ) const
 {
     assert( id.is_valid() );
     return get( id ).kind == Type_kind::Pointer;
+}
+
+bool Type_table::is_many_pointer( Type_id id ) const
+{
+    assert( id.is_valid() );
+    return get( id ).kind == Type_kind::Many_pointer;
 }
 
 bool Type_table::is_parameter( Type_id id ) const

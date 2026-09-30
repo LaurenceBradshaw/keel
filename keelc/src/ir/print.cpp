@@ -117,7 +117,16 @@ struct Printer
             );
         }
         case Rvalue_kind::Allocate:
-            return fmt::format( "allocate {}", type_name( value.type ) );
+        {
+            if( value.a.type.is_valid() )
+            {
+                return fmt::format( "allocate {}, {}", type_name( value.type ), operand( value.a ) );
+            }
+            else
+            {
+                return fmt::format( "allocate {}", type_name( value.type ) );
+            }
+        }
         case Rvalue_kind::Release:
             return fmt::format( "release {}", operand( value.a ) );
         case Rvalue_kind::Function_address:

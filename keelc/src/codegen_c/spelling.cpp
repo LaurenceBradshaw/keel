@@ -84,6 +84,7 @@ std::string Spelling::type( Type_id type ) const
         return structure( type );
 
     case Type_kind::Pointer:
+    case Type_kind::Many_pointer:
         return fmt::format( "{}*", this->type( described.element ) );
 
     // The typedef's name, written out by the emitter before anything can be declared with it.
@@ -264,7 +265,7 @@ std::string Spelling::global_definition( Node_id declaration ) const
     {
         text = c_float( value->floating );
     }
-    else if( table.is_pointer( variable ) )
+    else if( table.is_pointer( variable ) || table.is_many_pointer( variable ) )
     {
         text = "NULL"; // the only pointer constant there is, and it folded to zero
     }

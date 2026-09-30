@@ -138,6 +138,21 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
         // would not absorb it and one bad annotation would report twice.
         return table_.is_error( element ) ? element : table_.pointer_to( element );
     }
+    case Node_kind::Many_pointer_type:
+    {
+        const Type_id element = type_of( ast_.child( annotation, 0 ), false );
+
+        if( table_.is_void( element ) )
+        {
+            reporter_.error_at(
+                ast_.span( annotation ), "`void[*]` has no element to point at", "name the element's type, as in `u8[*]`"
+            );
+
+            return table_.builtin( Type_kind::Error );
+        }
+
+        return table_.is_error( element ) ? element : table_.many_pointer_to( element );
+    }
 
     // D31/D32: a mode is not a type. It is unwrapped here and nowhere else, so what gets recorded
     // on the declaration is the underlying type and nothing downstream meets the wrapper - anything
@@ -1219,6 +1234,112 @@ TEST_CASE( "type_checker_checks_type_arguments", "[sema][generic]" )
 
         INFO( p.rendered() );
         REQUIRE( p.rendered().find( "nope" ) != std::string::npos );
+    }
+}
+
+// D27: `T[*]` is its own type, not a flag on `T*`, so the two never meet without a `cast`.
+TEST_CASE( "type_checker_resolves_a_many_item_pointer_annotation", "[sema][many]" )
+{
+    SECTION( "the spellings name the types they read as" )
+    {
+        const std::pair<const char*, const char*> cases[] = {
+            { "i32[*]", "i32[*]" },
+            { "i32*[*]", "i32*[*]" },
+            { "i32[*]*", "i32[*]*" },
+            { "u8[*][*]", "u8[*][*]" },
+            { "i32*[*]*", "i32*[*]*" },
+            { "f64[*]", "f64[*]" },
+            { "P[*]", "P[*]" },
+            { "Box<i32>[*]", "Box<i32>[*]" },
+            { "Box<i32[*]>", "Box<i32[*]>" },
+        };
+
+        for( const auto& [spelling, name] : cases )
+        {
+            const Typed p(
+                std::string( "struct P { i32 x; };\nstruct Box<T> where T : Copyable { T v; };\n" ) + "i32 main() { " +
+                spelling + " q = nullptr; return 0; }"
+            );
+
+            INFO( spelling << "\n" << p.rendered() );
+
+            // `Box<i32> q = nullptr` is refused, and is here only to make the generic-element case
+            // stand beside the others; every other spelling is a pointer and takes `nullptr`.
+            if( std::string_view( spelling ) != "Box<i32[*]>" )
+            {
+                REQUIRE( p.clean() );
+            }
+            REQUIRE( p.type_name( p.nth( Node_kind::Var_decl, 0 ) ) == name );
+        }
+    }
+
+    SECTION( "a trailing const is the binding's, and the type is unchanged" )
+    {
+        const Typed p( "i32 main() { i32[*] const q = nullptr; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Var_decl, 0 ) ) == "i32[*]" );
+    }
+
+    // The read-only buffer is decided with `String`, so until then it is the pointer-to-const
+    // refusal, word for word.
+    SECTION( "a leading const is a pointer to const, and refused" )
+    {
+        const Typed p( "i32 main() { const i32[*] q = nullptr; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "a pointer to `const` is not supported yet" ) != std::string::npos );
+    }
+
+    SECTION( "an unknown element is reported once" )
+    {
+        const Typed p( "i32 main() { Nope[*] q = nullptr; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "unknown type `Nope`" ) != std::string::npos );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    // Indexing needs the element's size, which `void` does not have.
+    SECTION( "no `void` element" )
+    {
+        const Typed p( "i32 main() { void[*] q = nullptr; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`void[*]` has no element to point at" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "name the element's type, as in `u8[*]`" ) != std::string::npos );
+    }
+
+    SECTION( "in a signature" )
+    {
+        const Typed p( "i32[*] pass( i32[*] q ) { return q; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Param_decl, 0 ) ) == "i32[*]" );
+    }
+
+    SECTION( "as a field" )
+    {
+        const Typed p( "struct Buffer { u8[*] data; u64 size; };\n"
+                       "i32 main() { Buffer b = Buffer { nullptr, 0 }; u8[*] d = b.data; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Field_expr, 0 ) ) == "u8[*]" );
+    }
+
+    SECTION( "in a function type" )
+    {
+        const Typed p( "i32[*] pass( i32[*] q ) { return q; }\n"
+                       "i32 main() { fn( i32[*] ) -> i32[*] f = &pass; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Var_decl, 0 ) ) == "fn( i32[*] ) -> i32[*]" );
     }
 }
 

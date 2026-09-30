@@ -1516,6 +1516,38 @@ Node_id Parser::parse_type()
             continue;
         }
 
+        if( check( Token_kind::L_bracket ) && peek( 1 ).kind == Token_kind::Star && peek( 2 ).kind == Token_kind::R_bracket )
+        {
+            const Span many_item_start = peek().span;
+            bool       detatched       = !peek_is_adjacent();
+            if( detatched )
+            {
+                error_at(
+                    many_item_start,
+                    "`[*]` must touch the type it modifies",
+                    fmt::format( "write `{}[*]`", sm_.text( ast_.span( type ) ) )
+                );
+            }
+
+            advance(); // [
+            bool spaced = !peek_is_adjacent();
+            advance(); // *
+            spaced |= !peek_is_adjacent();
+            advance(); // ]
+
+            if( spaced && !detatched )
+            {
+                error_at(
+                    Span::merge( many_item_start, previous().span ),
+                    "`[*]` is written without spaces",
+                    fmt::format( "write `{}[*]`", sm_.text( ast_.span( type ) ) )
+                );
+            }
+
+            type = ast_.add( Node_kind::Many_pointer_type, Span::merge( start, previous().span ), 0, { type } );
+            continue;
+        }
+
         if( !check( Token_kind::Star ) && !check( Token_kind::Amp ) )
         {
             break;
@@ -1955,6 +1987,14 @@ bool Parser::scan_type_and_name()
         // and falls through to being an expression statement, where D15 rejects it.
         if( ( check( Token_kind::Star ) || check( Token_kind::Amp ) ) && peek_is_adjacent() )
         {
+            advance();
+            continue;
+        }
+
+        if( check( Token_kind::L_bracket ) && peek( 1 ).kind == Token_kind::Star && peek( 2 ).kind == Token_kind::R_bracket )
+        {
+            advance();
+            advance();
             advance();
             continue;
         }
@@ -2727,6 +2767,18 @@ Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing )
             continue;
         }
 
+        if( check( Token_kind::L_bracket ) )
+        {
+            advance();
+
+            const Node_id index = parse_expression( 0 );
+
+            expect( Token_kind::R_bracket );
+
+            left = ast_.add( Node_kind::Index_expr, Span::merge( ast_.span( left ), previous().span ), 0, { left, index } );
+            continue;
+        }
+
         // Now deal with actual infix operators.
 
         // 0 means "not an infix operator". Without that test, `0 >= min_power` is true for every
@@ -2845,12 +2897,23 @@ Node_id Parser::parse_keyword_prefix( Span start )
             error_expected( Token_kind::Greater );
         }
 
-        // Empty for now. D27's `[*]T` is what gives the count somewhere to go, so the parens are
-        // here to be filled rather than to be added.
         expect( Token_kind::L_paren );
+
+        Node_id count {};
+        if( !check( Token_kind::R_paren ) )
+        {
+            count = parse_expression( 0 );
+        }
         expect( Token_kind::R_paren );
 
-        return ast_.add( Node_kind::Alloc_expr, Span::merge( start, previous().span ), 0, { type } );
+        if( count.is_valid() )
+        {
+            return ast_.add( Node_kind::Alloc_expr, Span::merge( start, previous().span ), 0, { type, count } );
+        }
+        else
+        {
+            return ast_.add( Node_kind::Alloc_expr, Span::merge( start, previous().span ), 0, { type } );
+        }
     }
 
     if( check_keyword( Keyword::Free ) )
@@ -7988,6 +8051,383 @@ TEST_CASE( "parser_parses_a_scoped_call_on_a_generic_type", "[parse][static][gen
         INFO( p.errors() );
         REQUIRE_FALSE( p.has_errors() );
         REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::Path_expr ).is_valid() );
+    }
+}
+
+namespace
+{
+
+// Every node by its kind's name, and a childless one by its text: "Many_pointer_type(i32)". Names
+// rather than enumerators, so a shape can be stated before its kind exists.
+std::string outline( const Parsed& p, Node_id id )
+{
+    if( !id.is_valid() )
+    {
+        return "<none>";
+    }
+
+    if( p.children( id ).empty() )
+    {
+        return std::string( p.text( id ) );
+    }
+
+    std::string out = std::string( node_kind_name( p.kind( id ) ) ) + "(";
+
+    for( std::size_t i = 0; i < p.children( id ).size(); ++i )
+    {
+        out += ( i == 0 ? "" : "," ) + outline( p, p.child( id, i ) );
+    }
+
+    return out + ")";
+}
+
+// The first node whose kind has this name, in creation order.
+Node_id first_named( const Parsed& p, std::string_view kind )
+{
+    for( u32 i = 0; i < p.ast().node_count(); ++i )
+    {
+        if( node_kind_name( p.kind( Node_id { i } ) ) == kind )
+        {
+            return Node_id { i };
+        }
+    }
+
+    return Node_id {};
+}
+
+// The annotation of the first variable declared in `body`.
+std::string declared_type( std::string_view body )
+{
+    const Parsed  p( std::string( "i32 main() { " ) + std::string( body ) + " return 0; }" );
+    const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Var_decl );
+
+    return p.has_errors() || !decl.is_valid() ? "ERROR:\n" + p.errors() : outline( p, p.child( decl, 0 ) );
+}
+
+// The expression of `return <expr>;`, in a function where `a`, `b`, `p` and `f` all exist to the
+// parser - which does not resolve names, so their types do not matter here.
+std::string index_outline( std::string_view expression )
+{
+    const Parsed p( std::string( "i32 main() { return " ) + std::string( expression ) + "; }" );
+    return p.has_errors() ? "ERROR:\n" + p.errors() : outline( p, parse_expression_of( p ) );
+}
+
+} // namespace
+
+// D27: `T[*]` is a suffix like `*`, and every suffix applies to everything on its left - so the
+// type reads right to left, as `i32**` already does, and never inside out as C's declarators do.
+TEST_CASE( "parser_parses_a_many_item_pointer_type", "[parse][many]" )
+{
+    SECTION( "on its own" )
+    {
+        REQUIRE( declared_type( "i32[*] p = nullptr;" ) == "Many_pointer_type(i32)" );
+    }
+
+    SECTION( "the span covers the suffix" )
+    {
+        const Parsed p( "i32 main() { i32[*] p = nullptr; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.text( p.child( find_first( p.ast(), p.root(), Node_kind::Var_decl ), 0 ) ) == "i32[*]" );
+    }
+
+    SECTION( "many pointers, each to one" )
+    {
+        REQUIRE( declared_type( "i32*[*] p = nullptr;" ) == "Many_pointer_type(Pointer_type(i32))" );
+    }
+
+    SECTION( "one pointer, to a many-item pointer" )
+    {
+        REQUIRE( declared_type( "i32[*]* p = nullptr;" ) == "Pointer_type(Many_pointer_type(i32))" );
+    }
+
+    SECTION( "many of many, which is how `argv` is written" )
+    {
+        REQUIRE( declared_type( "u8[*][*] argv = nullptr;" ) == "Many_pointer_type(Many_pointer_type(u8))" );
+    }
+
+    SECTION( "three suffixes" )
+    {
+        REQUIRE( declared_type( "i32*[*]* p = nullptr;" ) == "Pointer_type(Many_pointer_type(Pointer_type(i32)))" );
+    }
+
+    SECTION( "a trailing const is the pointer's, as it is on `T*`" )
+    {
+        REQUIRE( declared_type( "i32[*] const p = nullptr;" ) == "Const_type(Many_pointer_type(i32))" );
+    }
+
+    SECTION( "a generic element" )
+    {
+        REQUIRE( declared_type( "Box<i32>[*] p = nullptr;" ) == "Many_pointer_type(Generic_type(Box,Type_arg_list(i32)))" );
+    }
+
+    SECTION( "as a generic argument, closed by `>>`" )
+    {
+        REQUIRE(
+            declared_type( "Box<Box<i32[*]>> b;" ) ==
+            "Generic_type(Box,Type_arg_list(Generic_type(Box,Type_arg_list(Many_pointer_type(i32)))))"
+        );
+    }
+}
+
+// Everywhere a type is written, not only a local's annotation - each is its own path into
+// parse_type, and one that skips the suffix fails only for its own position.
+TEST_CASE( "parser_parses_a_many_item_pointer_in_every_type_position", "[parse][many]" )
+{
+    for( const char* source : {
+             "void f( i32[*] p ) { }",
+             "i32[*] f() { return nullptr; }",
+             "struct S { i32[*] data; u64 size; };",
+             "class C { i32[*] data; C() { data = nullptr; } ~C() { } };",
+             "void f( ref i32[*] p ) { }",
+             "void f( const ref i32[*] p ) { }",
+             "void f( out i32[*] p ) { p = nullptr; }",
+             "void f( fn( i32[*] ) -> i32[*] g ) { }",
+             "T first<T>( T[*] p ) { unsafe { return p[ 0 ]; } }",
+             "i32 main() { i32 x = 1; unsafe { i32[*] p = cast<i32[*]>( &x ); } return 0; }",
+             "i32 main() { unsafe { i32[*][*] p = alloc<i32[*]>( 2 ); free( p ); } return 0; }",
+             "i32[*] g = nullptr;",
+         } )
+    {
+        const Parsed p( source );
+
+        INFO( source << "\n" << p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( first_named( p, "Many_pointer_type" ).is_valid() );
+    }
+}
+
+// D17's rule for `*`, applied to the other suffix: it belongs to the type, so it touches it.
+TEST_CASE( "parser_rejects_a_malformed_many_item_pointer_type", "[parse][many]" )
+{
+    SECTION( "the suffix must touch the type" )
+    {
+        const Parsed p( "i32 main() { i32 [*] p = nullptr; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "`[*]` must touch the type it modifies" ) != std::string::npos );
+        REQUIRE( p.errors().find( "write `i32[*]`" ) != std::string::npos );
+    }
+
+    SECTION( "and is written as one piece" )
+    {
+        for( const char* body : {
+                 "i32[ * ] p = nullptr;",
+                 "i32[ *] p = nullptr;",
+                 "i32[* ] p = nullptr;",
+                 "i32[ *] p = nullptr;",
+                 "i32 [ *] p = nullptr;",
+                 "i32 [* ] p = nullptr;",
+                 "i32 [ *] p = nullptr;",
+                 "i32 [  *] p = nullptr;",
+             } )
+        {
+            const Parsed p( std::string( "i32 main() { " ) + body + " return 0; }" );
+
+            INFO( body << "\n" << p.errors() );
+            REQUIRE( p.error_count() == 1 );
+            REQUIRE( p.errors().find( "write `i32[*]`" ) != std::string::npos );
+        }
+    }
+
+    SECTION( "the other malformed spellings report" )
+    {
+        for( const char* body : {
+                 "i32[4] p;",           // a count, which a pointer type has no room for
+                 "i32[] p;",            // nothing between the brackets
+                 "i32[* p = nullptr;",  // unterminated
+                 "[*]i32 p = nullptr;", // the prefix order, which is Zig's rather than Keel's
+             } )
+        {
+            const Parsed p( std::string( "i32 main() { " ) + body + " return 0; }" );
+
+            INFO( body << "\n" << p.errors() );
+            REQUIRE( p.has_errors() );
+        }
+    }
+}
+
+// `a[ i ]` is a postfix operator, so it binds as tightly as a call or a `.` and more tightly than any
+// prefix one: `&a[ i ]` takes the address of the element, never indexes an address.
+TEST_CASE( "parser_parses_indexing", "[parse][many]" )
+{
+    SECTION( "the shapes" )
+    {
+        const std::pair<const char*, const char*> cases[] = {
+            { "a[ 0 ]", "Index_expr(a,0)" },
+            { "a[ b ]", "Index_expr(a,b)" },
+            { "a[ b + 1 ]", "Index_expr(a,Binary_expr(b,1))" },
+            { "a[ 0 ][ 1 ]", "Index_expr(Index_expr(a,0),1)" },
+            { "a[ b[ 0 ] ]", "Index_expr(a,Index_expr(b,0))" },
+            { "a[ 0 ].x", "Field_expr(Index_expr(a,0))" },
+            { "a.x[ 0 ]", "Index_expr(Field_expr(a),0)" },
+            { "&a[ 2 ]", "Unary_expr(Index_expr(a,2))" },
+            { "*a[ 2 ]", "Unary_expr(Index_expr(a,2))" },
+            { "-a[ 2 ]", "Unary_expr(Index_expr(a,2))" },
+            { "a[ 0 ] + a[ 1 ]", "Binary_expr(Index_expr(a,0),Index_expr(a,1))" },
+            { "a[ *b ]", "Index_expr(a,Unary_expr(b))" },
+            { "p + 2", "Binary_expr(p,2)" },
+            { "( p + 2 )[ 0 ]", "Index_expr(Binary_expr(p,2),0)" },
+        };
+
+        for( const auto& [expression, expected] : cases )
+        {
+            INFO( expression );
+            REQUIRE( index_outline( expression ) == expected );
+        }
+    }
+
+    SECTION( "a call's result" )
+    {
+        const std::string out = index_outline( "f()[ 0 ]" );
+
+        INFO( out );
+        REQUIRE( out.starts_with( "Index_expr(Call_expr(" ) );
+        REQUIRE( out.ends_with( ",0)" ) );
+    }
+
+    SECTION( "a method call on an element" )
+    {
+        const std::string out = index_outline( "a[ 0 ].get()" );
+
+        INFO( out );
+        REQUIRE( out.find( "Field_expr(Index_expr(a,0))" ) != std::string::npos );
+    }
+
+    SECTION( "the span covers both brackets" )
+    {
+        const Parsed p( "i32 main() { return a[ 1 + 2 ]; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.text( parse_expression_of( p ) ) == "a[ 1 + 2 ]" );
+    }
+}
+
+// A statement that opens with a name and a `[` is an expression unless the `[` is `[*]` - which no
+// expression can contain, since `]` cannot follow a prefix `*`.
+TEST_CASE( "parser_tells_an_indexed_statement_from_a_declaration", "[parse][many]" )
+{
+    const std::pair<const char*, const char*> cases[] = {
+        { "a[ 0 ] = 1;", "Assign_stmt" },
+        { "a[ *b ] = 1;", "Assign_stmt" },
+        { "a[ 0 ][ 1 ] = 1;", "Assign_stmt" },
+        { "a[ 0 ].x = 1;", "Assign_stmt" },
+        { "a[ 0 ] += 2;", "Assign_stmt" },
+        { "a[ 0 ]++;", "Increment_stmt" },
+        { "a[ 0 ].get();", "Expr_stmt" },
+        { "i32[*] a = nullptr;", "Var_decl" },
+        { "i32[*]* a = nullptr;", "Var_decl" },
+        { "Box<i32>[*] a = nullptr;", "Var_decl" },
+    };
+
+    for( const auto& [body, kind] : cases )
+    {
+        const Parsed p( std::string( "i32 main() { " ) + body + " return 0; }" );
+
+        INFO( body << "\n" << p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( node_kind_name( p.kind( first_statement( p ) ) ) == kind );
+    }
+}
+
+// D15: an element read and discarded has no effect.
+TEST_CASE( "parser_applies_d15_to_indexing", "[parse][many]" )
+{
+    const Parsed p( "i32 main() { a[ 0 ]; return 0; }" );
+
+    INFO( p.errors() );
+    REQUIRE( p.error_count() == 1 );
+    REQUIRE( p.errors().find( "no effect" ) != std::string::npos );
+}
+
+TEST_CASE( "parser_rejects_a_malformed_index", "[parse][many]" )
+{
+    for( const char* body : {
+             "i32 v = a[];",       // no index
+             "i32 v = a[ 0;",      // unterminated
+             "i32 v = a[ 0, 1 ];", // two indices
+             "i32 v = a[ 0 ]];",   // one close too many
+         } )
+    {
+        const Parsed p( std::string( "i32 main() { " ) + body + " return 0; }" );
+
+        INFO( body << "\n" << p.errors() );
+        REQUIRE( p.has_errors() );
+
+        // The `[` itself was understood; what is reported is what is wrong inside it.
+        REQUIRE( p.errors().find( "found `[`" ) == std::string::npos );
+    }
+
+    SECTION( "nothing indexed" )
+    {
+        const Parsed p( "i32 main() { i32 v = [ 0 ]; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.has_errors() );
+    }
+}
+
+// D37's parens, filled: the count is the Alloc_expr's second child, and `alloc<T>()` keeps its one.
+TEST_CASE( "parser_parses_an_alloc_with_a_count", "[parse][alloc][many]" )
+{
+    SECTION( "a literal count" )
+    {
+        const Parsed p( "i32 main() { unsafe { i32[*] n = alloc<i32>( 4 ); free( n ); } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id node = find_first( p.ast(), p.root(), Node_kind::Alloc_expr );
+
+        REQUIRE( outline( p, node ) == "Alloc_expr(i32,4)" );
+        REQUIRE( p.text( node ) == "alloc<i32>( 4 )" );
+    }
+
+    SECTION( "an expression" )
+    {
+        const Parsed p( "i32 main() { u64 n = 2; unsafe { i32[*] a = alloc<i32>( n * 2 ); free( a ); } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( outline( p, find_first( p.ast(), p.root(), Node_kind::Alloc_expr ) ) == "Alloc_expr(i32,Binary_expr(n,2))" );
+    }
+
+    SECTION( "no count is still one child" )
+    {
+        const Parsed p( "i32 main() { unsafe { i32* n = alloc<i32>(); free( n ); } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.children( find_first( p.ast(), p.root(), Node_kind::Alloc_expr ) ).size() == 1 );
+    }
+
+    SECTION( "a many-item element" )
+    {
+        const Parsed p( "i32 main() { unsafe { u8[*][*] n = alloc<u8[*]>( 3 ); free( n ); } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE(
+            outline( p, find_first( p.ast(), p.root(), Node_kind::Alloc_expr ) ) == "Alloc_expr(Many_pointer_type(u8),3)"
+        );
+    }
+
+    SECTION( "malformed" )
+    {
+        for( const char* body : {
+                 "i32[*] n = alloc<i32>( 1, 2 );", // two counts
+                 "i32[*] n = alloc<i32>( 4;",      // unterminated
+                 "i32[*] n = alloc<i32>( , );",    // a comma and nothing else
+             } )
+        {
+            const Parsed p( std::string( "i32 main() { unsafe { " ) + body + " } return 0; }" );
+
+            INFO( body << "\n" << p.errors() );
+            REQUIRE( p.has_errors() );
+        }
     }
 }
 

@@ -28,6 +28,9 @@ struct Binary_result
     // Whether this landed on the one path D41's warning is owed on, which the caller cannot
     // reconstruct: the two branches above it may return without ever reaching the rule table.
     bool compare_constant = false;
+
+    // `p + i` on a T[*], which the caller gates
+    bool offsets = false;
 };
 
 // The same, for a conversion.
@@ -60,7 +63,8 @@ public:
     // classes, D41's bool answer for a comparison, a shift's left operand, and §6.4's common type.
     // The node is the enclosing function, and only its name is read - a `where` clause has to be
     // written somewhere, and the help says where.
-    Binary_result result_of_binary( Token_kind op, Type_id lhs, Type_id rhs, Node_id current_function, Span at );
+    Binary_result
+    result_of_binary( Token_kind op, Type_id lhs, Type_id rhs, Node_id current_function, Span at, Span lhs_at, Span rhs_at );
 
     // The four operators the rule table holds - `-`, `+`, `!`, `~`. Address-of and dereference are
     // not among them: both change the result type rather than keeping the operand's, and the first
@@ -73,6 +77,8 @@ public:
     // `cast` and `wrap` over a resolved target: which conversions exist, and the help for the ones
     // that do not.
     Conversion_result convert( bool is_cast, Type_id value, Type_id target, Span at );
+
+    void refuse_single_pointer_arithmetic( Type_id pointer, Span at );
 
 private:
     const Ast&        ast_;

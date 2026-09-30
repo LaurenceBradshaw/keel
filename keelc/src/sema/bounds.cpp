@@ -40,6 +40,9 @@ constexpr Conversion_rule conversion_rules[] = {
     { Type_kind::Float, Type_kind::Float, sema::Conversion::Cast_only },
     { Type_kind::Bool, Type_kind::Int, sema::Conversion::Cast_only },
     { Type_kind::Pointer, Type_kind::Pointer, sema::Conversion::Unsafe },
+    { Type_kind::Pointer, Type_kind::Many_pointer, sema::Conversion::Unsafe },
+    { Type_kind::Many_pointer, Type_kind::Pointer, sema::Conversion::Unsafe },
+    { Type_kind::Many_pointer, Type_kind::Many_pointer, sema::Conversion::Unsafe },
 };
 
 sema::Conversion conversion_for( Type_kind from, Type_kind to )
@@ -100,7 +103,7 @@ std::string_view bound_requirement( Bound bound )
     case Bound::Copyable:
         return "it owns something, itself or through a field, so copying it would own that twice";
     case Bound::Equatable:
-        return "equality needs a number, a `bool`, an `enum` or a pointer";
+        return "equality needs a number, a `bool`, an `enum` or a pointer of either kind";
     case Bound::Comparable:
         return "ordering needs a number";
     case Bound::Numeric:
@@ -202,7 +205,7 @@ bool Bounds::satisfies( Type_id type, Bound bound ) const
     // cannot be ranked.
     case Bound::Equatable:
         return table_.is_integer( type ) || table_.is_float( type ) || type == table_.builtin( Type_kind::Bool ) ||
-               table_.is_enum( type ) || table_.is_pointer( type );
+               table_.is_enum( type ) || table_.is_pointer( type ) || table_.is_many_pointer( type );
     case Bound::Comparable:
     case Bound::Numeric:
         return table_.is_integer( type ) || table_.is_float( type );

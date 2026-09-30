@@ -34,6 +34,11 @@ bool Places::is_assignable( Node_id id ) const
         return true; // `*ptr = 42;` writes through the pointer. Whether ptr *is* one is infer_unary's question
     }
 
+    if( ast_.kind( id ) == Node_kind::Index_expr )
+    {
+        return true; // `arr[7] = 42;` writes through the offset. Whether arr *is* one is infer_index's question
+    }
+
     const Node_id decl = ast_.kind( id ) == Node_kind::Name_expr ? resolution_.declaration_of( id ) : Node_id {};
     if( !decl.is_valid() )
     {
@@ -1275,6 +1280,145 @@ TEST_CASE( "type_checker_refuses_a_write_to_a_temporary", "[sema][places]" )
     SECTION( "reading through one stays legal" )
     {
         const Typed p( std::string( make ) + "i32 main() { return make().t; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// A `T[*]` binding's `const` is the pointer's, exactly as on `T*`: it cannot be reseated, and what
+// it points at stays writable - a read-only buffer is `String`'s decision.
+TEST_CASE( "type_checker_gives_a_const_many_item_pointer_its_c_meaning", "[sema][const][many]" )
+{
+    SECTION( "the pointer cannot be reseated" )
+    {
+        const Typed p( "i32 main() { i32[*] const q = nullptr; q = nullptr; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`q` is `const`" ) != std::string::npos );
+    }
+
+    SECTION( "but its elements can be written" )
+    {
+        const Typed p( "i32 main() { unsafe { i32[*] const q = alloc<i32>( 1 ); q[ 0 ] = 5; free( q ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "through a const ref parameter too, since the pointer is what is borrowed" )
+    {
+        const Typed p( "void set( const ref i32[*] q ) { unsafe { q[ 0 ] = 1; } }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "while a const ref parameter's pointer is still not reseated" )
+    {
+        const Typed p( "void set( const ref i32[*] q ) { q = nullptr; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    SECTION( "a const struct's field of this type is the same" )
+    {
+        const Typed p( "struct B { i32[*] data; };\n"
+                       "void set( const ref B b ) { unsafe { b.data[ 0 ] = 1; } }\n"
+                       "void reseat( const ref B b ) { b.data = nullptr; }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 ); // the reseat, not the element write
+    }
+}
+
+// An element is a place: it can be written, have its address taken and be passed by `ref`.
+TEST_CASE( "type_checker_treats_an_element_as_a_place", "[sema][places][many]" )
+{
+    constexpr std::string_view head = "struct P { i32 x; };\n"
+                                      "void bump( ref i32 v ) { v = v + 1; }\n"
+                                      "void fill( out i32 v ) { v = 9; }\n"
+                                      "i32 main() { i32[*] many = nullptr; P[*] points = nullptr; "
+                                      "unsafe { many = alloc<i32>( 2 ); points = alloc<P>( 2 ); } ";
+    constexpr std::string_view tail = " unsafe { free( many ); free( points ); } return 0; }";
+
+    for( const char* body : {
+             "unsafe { many[ 0 ] = 1; }",
+             "unsafe { points[ 1 ].x = 1; }",
+             "unsafe { bump( ref many[ 0 ] ); }",
+             "unsafe { fill( out many[ 1 ] ); }",
+             "unsafe { bump( ref points[ 0 ].x ); }",
+             "unsafe { ref i32 r = many[ 0 ]; r = 4; }",
+             "unsafe { i32* e = &points[ 1 ].x; *e = 3; }",
+         } )
+    {
+        const Typed p( std::string( head ) + body + std::string( tail ) );
+
+        INFO( body << "\n" << p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "an offset is a value, not a place" )
+    {
+        const Typed p( std::string( head ) + "unsafe { many + 1 = nullptr; }" + std::string( tail ) );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+}
+
+// D37 says writing through a pointer never drops what was there, because what was there may never
+// have been a value - `alloc` hands back raw memory. An element is the same, so an owning element is
+// allowed; destroying one in place, and moving one out, are `Vector`'s questions.
+TEST_CASE( "type_checker_leaves_owning_elements_raw", "[sema][places][many]" )
+{
+    constexpr std::string_view head = "class C { i32 n; C( i32 v ) { n = v; } ~C() { } };\n"
+                                      "i32 main() { C[*] cs = nullptr; unsafe { cs = alloc<C>( 2 ); } ";
+    constexpr std::string_view tail = " unsafe { free( cs ); } return 0; }";
+
+    SECTION( "a temporary is written into a slot" )
+    {
+        const Typed p( std::string( head ) + "unsafe { cs[ 0 ] = C( 1 ); }" + std::string( tail ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a named value is moved into one" )
+    {
+        const Typed p( std::string( head ) + "C c = C( 2 ); unsafe { cs[ 1 ] = move c; }" + std::string( tail ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and not copied" )
+    {
+        const Typed p( std::string( head ) + "C c = C( 2 ); unsafe { cs[ 1 ] = c; }" + std::string( tail ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "an owning value is transferred, not copied" ) != std::string::npos );
+    }
+
+    SECTION( "reading one out would copy it, which is refused" )
+    {
+        const Typed p( std::string( head ) + "C c = C( 0 ); unsafe { c = cs[ 0 ]; }" + std::string( tail ) );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.rendered().find( "an owning value is transferred, not copied" ) != std::string::npos );
+    }
+
+    SECTION( "borrowing one is fine" )
+    {
+        const Typed p( "class C { i32 n; C( i32 v ) { n = v; } ~C() { } i32 get() const { return n; } };\n"
+                       "i32 peek( const ref C c ) { return c.get(); }\n"
+                       "i32 main() { C[*] cs = nullptr; i32 r = 0; unsafe { cs = alloc<C>( 1 ); cs[ 0 ] = C( 3 ); "
+                       "r = peek( cs[ 0 ] ) + cs[ 0 ].get(); free( cs ); } return r; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );

@@ -260,6 +260,7 @@ private:
     std::string local_name( u32 index ) const;
 
     bool uses_runtime() const;
+    bool uses_counted_allocation() const;
 
     // Which of D41's three guards a Binary needs, or None for the ordinary infix case. `mirror` is
     // set when the operands arrive in the opposite order to the one the guard is written in.
@@ -540,6 +541,10 @@ void Kir_emitter::emit_runtime_prototypes()
 
     write_line( "void* kl_rt_alloc( size_t );" );
     write_line( "void  kl_rt_free( void* );" );
+    if( uses_counted_allocation() )
+    {
+        write_line( "void* kl_rt_alloc_many( size_t, size_t );" );
+    }
     write_line( "" );
 }
 
@@ -969,6 +974,27 @@ bool Kir_emitter::uses_runtime() const
     return false;
 }
 
+bool Kir_emitter::uses_counted_allocation() const
+{
+    for( const Function& function : functions_ )
+    {
+        for( const Statement& statement : function.statements )
+        {
+            if( statement.kind != Statement_kind::Assign )
+            {
+                continue;
+            }
+
+            if( statement.value.kind == Rvalue_kind::Allocate && statement.value.a.type.is_valid() )
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 Type_id Kir_emitter::type_of( const Place& place ) const
 {
     Type_id type = place.is_global() ? types_.type_of( place.global ) : current_->locals[place.local.v].type;
@@ -1021,6 +1047,7 @@ std::string Kir_emitter::constant( Literal_id literal, Type_id type ) const
     case Type_kind::Bool:
         return literal_pool_.integer( literal ) != 0 ? "true" : "false";
     case Type_kind::Pointer:
+    case Type_kind::Many_pointer:
         return "NULL";
     case Type_kind::Float:
         return c_float( literal_pool_.floating( literal ) );
@@ -1104,11 +1131,23 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue ) const
     case Rvalue_kind::Allocate:
         // The element type gives the size, which is the whole reason `alloc` is a keyword rather
         // than a function: no `sizeof` is written and none can be got wrong.
-        return fmt::format(
-            "( {} ) kl_rt_alloc( sizeof( {} ) )",
-            spelling_.type( rvalue.type ),
-            spelling_.type( types_.table().get( rvalue.type ).element )
-        );
+        if( rvalue.a.type.is_valid() )
+        {
+            return fmt::format(
+                "( {} ) kl_rt_alloc_many( ( size_t ) {}, sizeof( {} ) )",
+                spelling_.type( rvalue.type ),
+                operand( rvalue.a ),
+                spelling_.type( types_.table().get( rvalue.type ).element )
+            );
+        }
+        else
+        {
+            return fmt::format(
+                "( {} ) kl_rt_alloc( sizeof( {} ) )",
+                spelling_.type( rvalue.type ),
+                spelling_.type( types_.table().get( rvalue.type ).element )
+            );
+        }
     case Rvalue_kind::Release:
         return fmt::format( "kl_rt_free( {} )", operand( rvalue.a ) );
 
@@ -2818,6 +2857,171 @@ TEST_CASE( "emit_kir_emits_a_generic_static_method_instantiation", "[codegen][ki
     // The tag names the instance rather than the open form, so `Box<i32>` and `Box<f64>` would be
     // two symbols - and the type arguments lead the argtypes, as they do for any instantiation.
     REQUIRE( g.has( "kl__of__I3i32E__S3BoxI3i32E_3i32" ) );
+}
+
+// A counted allocation goes to its own runtime entry, which multiplies with an overflow check: C's
+// `sizeof( T ) * n` would wrap silently, and a short buffer is worse than no buffer. The count is
+// converted to `size_t` in the call, so a negative one becomes a huge request that fails.
+TEST_CASE( "emit_kir_writes_a_counted_allocation", "[codegen][kir][alloc][many]" )
+{
+    SECTION( "a variable count" )
+    {
+        Generated g( "i32 main() { u64 n = 4; unsafe { i32[*] a = alloc<i32>( n ); free( a ); } return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_1, sizeof( int32_t ) )" ) );
+    }
+
+    SECTION( "a literal count" )
+    {
+        Generated g( "i32 main() { unsafe { i32[*] a = alloc<i32>( 4 ); free( a ); } return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "kl_rt_alloc_many( ( size_t ) 4, sizeof( int32_t ) )" ) );
+    }
+
+    SECTION( "a struct element" )
+    {
+        Generated g( "struct N { i32 v; };\ni32 main() { unsafe { N[*] a = alloc<N>( 2 ); free( a ); } return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "( struct kl__N* ) kl_rt_alloc_many( ( size_t ) 2, sizeof( struct kl__N ) )" ) );
+    }
+
+    SECTION( "a many-item element" )
+    {
+        Generated g( "i32 main() { unsafe { u8[*][*] a = alloc<u8[*]>( 2 ); free( a ); } return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "( uint8_t** ) kl_rt_alloc_many( ( size_t ) 2, sizeof( uint8_t* ) )" ) );
+    }
+
+    SECTION( "the entry is declared only when a counted allocation is made" )
+    {
+        const std::string_view prototype = "void* kl_rt_alloc_many( size_t, size_t );";
+
+        Generated counted( "i32 main() { unsafe { i32[*] a = alloc<i32>( 2 ); free( a ); } return 0; }" );
+        Generated single( "i32 main() { unsafe { i32* a = alloc<i32>(); free( a ); } return 0; }" );
+
+        INFO( counted.c );
+        REQUIRE( counted.has( prototype ) );
+        REQUIRE( counted.has( "void  kl_rt_free( void* );" ) );
+
+        // Not cosmetic, as for the other two: every existing golden that allocates would churn.
+        INFO( single.c );
+        REQUIRE_FALSE( single.has( "kl_rt_alloc_many" ) );
+    }
+}
+
+// A `T[*]` is a `T*` to C, which already scales `+` by the element and already indexes by it.
+TEST_CASE( "emit_kir_spells_a_many_item_pointer", "[codegen][kir][many]" )
+{
+    SECTION( "as a C pointer" )
+    {
+        Generated g( "i32[*] pass( i32[*] p ) { return p; }\ni32 main() { return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "int32_t* kl__pass__N3i32( int32_t* kl_p_1 )" ) );
+    }
+
+    SECTION( "nested, either way round" )
+    {
+        Generated g( "void f( u8[*][*] a, i32*[*] b, i32[*]* c ) { }\ni32 main() { return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "uint8_t** kl_a_1" ) );
+        REQUIRE( g.has( "int32_t** kl_b_2" ) );
+        REQUIRE( g.has( "int32_t** kl_c_3" ) );
+    }
+
+    SECTION( "the two kinds mangle apart" )
+    {
+        Generated g( "i32 which( i32* p ) { return 1; }\n"
+                     "i32 which( i32[*] p ) { return 2; }\n"
+                     "i32 main() { i32 v = 0; i32[*] m = nullptr; return which( &v ) * 10 + which( m ); }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "kl__which__P3i32(" ) );
+        REQUIRE( g.has( "kl__which__N3i32(" ) );
+    }
+
+    SECTION( "as a field" )
+    {
+        Generated g( "struct B { u8[*] data; u64 size; };\ni32 main() { B b = B { nullptr, 0 }; return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "uint8_t* kl_data_" ) );
+    }
+
+    SECTION( "in a function type" )
+    {
+        Generated g( "i32[*] pass( i32[*] p ) { return p; }\n"
+                     "i32 main() { fn( i32[*] ) -> i32[*] f = &pass; return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "FN3i32EN3i32" ) ); // the typedef's mangled name
+    }
+
+    SECTION( "an instance at one" )
+    {
+        Generated g( "T[*] same<T>( T[*] p ) { return p; }\ni32 main() { i32[*] m = nullptr; m = same( m ); return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "kl__same__I3i32E__N3i32(" ) );
+    }
+}
+
+TEST_CASE( "emit_kir_indexes_and_offsets", "[codegen][kir][many]" )
+{
+    SECTION( "an offset is C's own `+`" )
+    {
+        Generated g( "i32[*] skip( i32[*] p, u64 n ) { i32[*] r = nullptr; unsafe { r = p + n; } return r; }\n"
+                     "i32 main() { return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "= kl_p_1 + kl_n_2;" ) );
+    }
+
+    SECTION( "an element is a dereference of one" )
+    {
+        Generated g( "void set( i32[*] p, u64 i ) { unsafe { p[ i ] = 7; } }\ni32 main() { return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "= kl_p_1 + kl_i_2;" ) );
+        REQUIRE( g.has( ") = 7;" ) ); // `( *kl_tN ) = 7;`
+    }
+
+    SECTION( "a field of an element parenthesises the dereference" )
+    {
+        Generated g( "struct P { i32 x; };\nvoid set( P[*] p ) { unsafe { p[ 1 ].x = 7; } }\ni32 main() { return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( " ).kl_x_" ) );
+    }
+
+    // The step is an integer 1, never a constant of the pointer's type, which C spells `NULL`.
+    SECTION( "`++` steps by one element" )
+    {
+        Generated g( "i32[*] next( i32[*] p ) { unsafe { p++; } return p; }\ni32 main() { return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "kl_p_1 = kl_p_1 + 1;" ) );
+        REQUIRE_FALSE( g.has( "+ NULL" ) );
+    }
 }
 
 } // namespace keel

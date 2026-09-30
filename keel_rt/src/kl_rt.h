@@ -4,6 +4,7 @@
 #include <stddef.h>
 
 void* kl_rt_alloc( size_t size );
+void* kl_rt_alloc_many( size_t count, size_t size );
 void  kl_rt_free( void* ptr );
 
 #endif // KL_RT_H

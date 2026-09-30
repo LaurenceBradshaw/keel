@@ -46,6 +46,13 @@ void encode_type( std::string& out, Type_id id, const Type_table& types )
         return;
     }
 
+    if( types.is_many_pointer( id ) )
+    {
+        out += 'N';
+        encode_type( out, types.get( id ).element, types );
+        return;
+    }
+
     // `fn( i32 ) -> i32` is `F3i32E3i32`: the parameters between brackets, then the return. Its
     // own name is no identifier, so it cannot go through the length-prefixed path below - and `F`
     // is a letter no encoded type starts with, which is what keeps the scheme injective.

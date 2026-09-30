@@ -37,6 +37,7 @@ void Generic_recursion::record_generic_uses( Node_id from, Type_id type, Span at
     // A pointer is exactly what stops contains_itself seeing this, and D42 asks about instances
     // rather than layout - so the indirection is walked straight through.
     case Type_kind::Pointer:
+    case Type_kind::Many_pointer:
         record_generic_uses( from, described.element, at );
         break;
 

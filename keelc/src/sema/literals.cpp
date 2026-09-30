@@ -250,7 +250,7 @@ Type_id Literals::check_literal( Node_id id, Type_id expected )
         break;
     }
     case Node_kind::Null_literal:
-        if( !table_.is_pointer( expected ) )
+        if( !table_.is_pointer( expected ) && !table_.is_many_pointer( expected ) )
         {
             reporter_.error_at(
                 ast_.span( id ),

@@ -1,0 +1,305 @@
+// D27's many-item pointer, end to end: `alloc<T>( n )`, `p[ i ]`, `p + i`, `++`, `&p[ i ]` and
+// equality, each checked by value. Self-checking - exit 0 means every answer was right - and run
+// under KEEL_VALGRIND=1, which is what sees an element written past its allocation.
+
+i32 live = 0;
+
+struct Point
+{
+    i32 x;
+    i32 y;
+
+    i32 sum() const
+    {
+        return x + y;
+    }
+};
+
+class Tracked
+{
+    public i32 n;
+
+    Tracked( i32 m )
+    {
+        n = m;
+        live = live + 1;
+    }
+
+    ~Tracked()
+    {
+        live = live - 1;
+    }
+};
+
+// The safe wrapper the `unsafe` blocks exist for: callers index through methods and never see one.
+class Ints
+{
+    i32[*] data;
+    u64    size;
+
+    Ints( u64 n )
+    {
+        unsafe
+        {
+            data = alloc<i32>( n );
+        }
+        size = n;
+    }
+
+    ~Ints()
+    {
+        unsafe
+        {
+            free( data );
+        }
+    }
+
+    void set( u64 i, i32 v )
+    {
+        unsafe
+        {
+            data[ i ] = v;
+        }
+    }
+
+    i32 get( u64 i ) const
+    {
+        i32 r = 0;
+        unsafe
+        {
+            r = data[ i ];
+        }
+        return r;
+    }
+};
+
+i32 sum( i32[*] p, u64 n )
+{
+    i32 total = 0;
+
+    unsafe
+    {
+        for( u64 i = 0; i < n; i++ )
+        {
+            total = total + p[ i ];
+        }
+    }
+
+    return total;
+}
+
+// Walks by pointer rather than by index: `end` is one past the last element, and only compared.
+i32 sum_by_walking( i32[*] p, u64 n )
+{
+    i32    total = 0;
+    i32[*] at    = p;
+    i32[*] end   = nullptr;
+
+    unsafe
+    {
+        end = p + n;
+
+        while( at != end )
+        {
+            total = total + at[ 0 ];
+            at++;
+        }
+    }
+
+    return total;
+}
+
+void fill<T>( T[*] p, u64 n, T v ) where T : Copyable
+{
+    unsafe
+    {
+        for( u64 i = 0; i < n; i++ )
+        {
+            p[ i ] = v;
+        }
+    }
+}
+
+void bump( ref i32 v )
+{
+    v = v + 1;
+}
+
+i32 which( i32* p )
+{
+    return 1;
+}
+
+i32 which( i32[*] p )
+{
+    return 2;
+}
+
+i32 main()
+{
+    i32[*] a = nullptr;
+
+    unsafe
+    {
+        a = alloc<i32>( 5 );
+
+        for( u64 i = 0; i < 5; i++ )
+        {
+            a[ i ] = wrap<i32>( i ) * 10;
+        }
+    }
+
+    if( sum( a, 5 ) != 100 ) { return 1; }
+    if( sum_by_walking( a, 5 ) != 100 ) { return 2; }
+
+    // An offset is the rest of the buffer, and indexes from there.
+    i32[*] rest = nullptr;
+    unsafe { rest = a + 2; }
+    if( sum( rest, 3 ) != 90 ) { return 3; }
+
+    i32 third = 0;
+    unsafe { third = rest[ 0 ]; }
+    if( third != 20 ) { return 4; }
+
+    // Back one, by a negative offset.
+    i32 second = 0;
+    unsafe { second = ( rest + -1 )[ 0 ]; }
+    if( second != 10 ) { return 5; }
+
+    // `&p[ i ]` is exactly one element, written through as any `T*` is.
+    i32* one = nullptr;
+    unsafe { one = &a[ 4 ]; }
+    *one = 7;
+    i32 last = 0;
+    unsafe { last = a[ 4 ]; }
+    if( last != 7 ) { return 6; }
+
+    // Every statement that writes a place writes an element.
+    unsafe
+    {
+        a[ 0 ] = 1;
+        a[ 0 ] += 2;
+        a[ 0 ]++;
+        a[ 1 ] *= 3;
+        bump( ref a[ 0 ] );
+    }
+    i32 first = 0;
+    unsafe { first = a[ 0 ] + a[ 1 ]; }
+    if( first != 5 + 30 ) { return 7; }
+
+    // Equality, and nothing else, compares two of them.
+    i32[*] again = a;
+    if( again != a ) { return 8; }
+    if( a == nullptr ) { return 9; }
+    if( which( one ) != 1 || which( a ) != 2 ) { return 10; }
+
+    // Many to one, and one to many, where the second needs the cast.
+    i32[*] widened = nullptr;
+    unsafe { widened = cast<i32[*]>( one ); }
+    i32 through = 0;
+    unsafe { through = widened[ 0 ]; }
+    if( through != 7 ) { return 11; }
+
+    unsafe { free( a ); }
+
+    // Struct elements: fields and methods reached through an element.
+    Point[*] points = nullptr;
+    i32      points_sum = 0;
+    unsafe
+    {
+        points = alloc<Point>( 2 );
+        points[ 0 ] = Point { 1, 2 };
+        points[ 1 ].x = 3;
+        points[ 1 ].y = 4;
+        points_sum = points[ 0 ].sum() + points[ 1 ].sum();
+        free( points );
+    }
+    if( points_sum != 10 ) { return 12; }
+
+    // Many of many: rows of bytes, each its own allocation.
+    u8[*][*] rows = nullptr;
+    u8       corner = 0;
+    unsafe
+    {
+        rows = alloc<u8[*]>( 2 );
+        rows[ 0 ] = alloc<u8>( 3 );
+        rows[ 1 ] = alloc<u8>( 3 );
+        rows[ 1 ][ 2 ] = 42;
+        corner = rows[ 1 ][ 2 ];
+        free( rows[ 0 ] );
+        free( rows[ 1 ] );
+        free( rows );
+    }
+    if( corner != 42 ) { return 13; }
+
+    // A generic instance at a many-item pointer.
+    f64[*] halves = nullptr;
+    f64    total = 0.0;
+    unsafe { halves = alloc<f64>( 4 ); }
+    fill( halves, 4, 0.5 );
+    unsafe
+    {
+        total = halves[ 0 ] + halves[ 1 ] + halves[ 2 ] + halves[ 3 ];
+        free( halves );
+    }
+    if( total != 2.0 ) { return 14; }
+
+    // Through a function pointer.
+    fn( i32[*], u64 ) -> i32 adder = &sum;
+    i32[*] two = nullptr;
+    i32 through_pointer = 0;
+    unsafe
+    {
+        two = alloc<i32>( 2 );
+        two[ 0 ] = 20;
+        two[ 1 ] = 22;
+    }
+    through_pointer = adder( two, 2 );
+    unsafe { free( two ); }
+    if( through_pointer != 42 ) { return 15; }
+
+    // The wrapper, whose destructor frees once - valgrind is what checks that half.
+    {
+        Ints ints = Ints( 3 );
+        ints.set( 0, 4 );
+        ints.set( 2, 5 );
+        if( ints.get( 0 ) + ints.get( 2 ) != 9 ) { return 16; }
+    }
+
+    // An owning element is written without dropping what was there, and a temporary or a moved
+    // value handed to a slot is not destroyed either: both now live in the buffer, and freeing it
+    // runs no destructor. So two are still live at the end, which is D37's hazard, pinned.
+    Tracked[*] cs = nullptr;
+    unsafe { cs = alloc<Tracked>( 2 ); }
+    {
+        Tracked t = Tracked( 2 );
+        unsafe
+        {
+            cs[ 0 ] = Tracked( 1 );
+            cs[ 1 ] = move t;
+        }
+    }
+    i32 held = 0;
+    unsafe
+    {
+        held = cs[ 0 ].n + cs[ 1 ].n;
+        free( cs );
+    }
+    if( held != 3 ) { return 17; }
+    if( live != 2 ) { return 18; }
+
+    // 2^61 + 1 eight-byte elements wrap to 8 bytes, so only the overflow check refuses it; zero succeeds.
+    u64[*] huge = nullptr;
+    u8[*]  none = nullptr;
+    u64    wraps = 2305843009213693953;
+    unsafe
+    {
+        huge = alloc<u64>( wraps );
+        none = alloc<u8>( 0 );
+    }
+    if( huge != nullptr ) { return 19; }
+    if( none == nullptr ) { return 20; }
+    unsafe { free( none ); }
+
+    return 0;
+}

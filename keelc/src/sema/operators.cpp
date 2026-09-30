@@ -166,8 +166,9 @@ Result_source Operators::result_source( Token_kind op ) const
     return Result_source::None;
 }
 
-Binary_result
-Operators::result_of_binary( Token_kind op, Type_id lhs_type, Type_id rhs_type, Node_id current_function, Span at )
+Binary_result Operators::result_of_binary(
+    Token_kind op, Type_id lhs_type, Type_id rhs_type, Node_id current_function, Span at, Span lhs_at, Span rhs_at
+)
 {
     const Type_id bool_type = table_.builtin( Type_kind::Bool );
 
@@ -250,6 +251,36 @@ Operators::result_of_binary( Token_kind op, Type_id lhs_type, Type_id rhs_type, 
         return { against_a_number || *bound == Bound::Equatable || *bound == Bound::Comparable ? bool_type : lhs_type };
     }
 
+    // The operator isn't a comparision, and either side is T*: refuse
+    if( !is_comparison( op ) && ( table_.is_pointer( lhs_type ) || table_.is_pointer( rhs_type ) ) &&
+        !table_.is_many_pointer( lhs_type ) && !table_.is_many_pointer( rhs_type ) )
+    {
+        if( table_.is_pointer( lhs_type ) )
+        {
+            refuse_single_pointer_arithmetic( lhs_type, lhs_at );
+        }
+        if( table_.is_pointer( rhs_type ) )
+        {
+            refuse_single_pointer_arithmetic( rhs_type, rhs_at );
+        }
+
+        return {};
+    }
+
+    if( op == Token_kind::Plus && table_.is_many_pointer( lhs_type ) && table_.is_integer( rhs_type ) )
+    {
+        return { lhs_type, false, true };
+    }
+    else if( op == Token_kind::Plus && table_.is_many_pointer( rhs_type ) && table_.is_integer( lhs_type ) )
+    {
+        reporter_.error_at(
+            at,
+            "the pointer goes on the left of `+`",
+            fmt::format( "write `{} + {}`", reporter_.text( rhs_at ), reporter_.text( lhs_at ) )
+        );
+        return {};
+    }
+
     // Pointer and enum equality, which the rule table cannot express - its operand classes are all
     // numeric or bool. For a pointer this is how a null check is written; for an enum it is the
     // only operation there is, since D30 leaves a variant with no conversion to reach arithmetic
@@ -257,7 +288,8 @@ Operators::result_of_binary( Token_kind op, Type_id lhs_type, Type_id rhs_type, 
     // allocations is meaningless, and an enum's variants are names rather than magnitudes - the
     // declaration order they happen to have is not an ordering anyone wrote down.
     const bool compares_by_identity = table_.is_pointer( lhs_type ) || table_.is_pointer( rhs_type ) ||
-                                      table_.is_enum( lhs_type ) || table_.is_enum( rhs_type );
+                                      table_.is_enum( lhs_type ) || table_.is_enum( rhs_type ) ||
+                                      table_.is_many_pointer( lhs_type ) || table_.is_many_pointer( rhs_type );
 
     if( compares_by_identity )
     {
@@ -480,6 +512,19 @@ Conversion_result Operators::convert( bool is_cast, Type_id value, Type_id targe
     return { target };
 }
 
+void Operators::refuse_single_pointer_arithmetic( Type_id pointer, Span at )
+{
+    reporter_.error_at(
+        at,
+        fmt::format(
+            "`{}` points at one `{}`, so it has no arithmetic",
+            table_.name( pointer ),
+            table_.name( table_.get( pointer ).element )
+        ),
+        fmt::format( "a many-item pointer, `{}[*]`, can be offset", table_.name( table_.get( pointer ).element ) )
+    );
+}
+
 } // namespace sema
 } // namespace keel
 
@@ -588,8 +633,12 @@ TEST_CASE( "operators_take_a_shift_from_its_left_operand_only", "[sema][operator
 
     SECTION( "the result is the left operand's, not the common type" )
     {
-        REQUIRE( operators.result_of_binary( Token_kind::Less_less, u8, i32, Node_id {}, Span {} ).type == u8 );
-        REQUIRE( operators.result_of_binary( Token_kind::Greater_greater, u8, i32, Node_id {}, Span {} ).type == u8 );
+        REQUIRE(
+            operators.result_of_binary( Token_kind::Less_less, u8, i32, Node_id {}, Span {}, Span {}, Span {} ).type == u8
+        );
+        REQUIRE(
+            operators.result_of_binary( Token_kind::Greater_greater, u8, i32, Node_id {}, Span {}, Span {}, Span {} ).type == u8
+        );
         REQUIRE( diags.error_count() == 0 );
     }
 
@@ -1127,6 +1176,156 @@ TEST_CASE( "type_checker_checks_operators_on_a_type_parameter", "[sema][generic]
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "no operator `&&` for `T` and `T`" ) != std::string::npos );
         REQUIRE( p.rendered().find( "both operands must be `bool`" ) != std::string::npos );
+    }
+}
+
+namespace
+{
+
+// A function holding both pointer kinds over one allocation, with `body` inside an unsafe block
+// unless the case is about the block itself.
+std::string with_pointers( std::string_view body )
+{
+    return std::string( "i32 main()\n"
+                        "{\n"
+                        "    i32 v = 1;\n"
+                        "    i32* one = &v;\n"
+                        "    i32[*] many = nullptr;\n"
+                        "    u64 n = 2;\n"
+                        "    i32 k = 1;\n" ) +
+           std::string( body ) + "\n    return 0;\n}";
+}
+
+} // namespace
+
+// D27, reversed on 2026-09-29: on a type that says it points at many, `+` counting elements is what
+// the reader expects. The result is still many - it points at the rest of the buffer.
+TEST_CASE( "type_checker_offsets_a_many_item_pointer", "[sema][types][many]" )
+{
+    SECTION( "by a literal, and the result is the same type" )
+    {
+        const Typed p( with_pointers( "    unsafe { i32[*] rest = many + 2; }" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Binary_expr, 0 ) ) == "i32[*]" );
+    }
+
+    SECTION( "by any integer type" )
+    {
+        for( const char* type : { "u8", "i8", "u16", "i16", "u32", "i32", "u64", "i64" } )
+        {
+            const Typed p( with_pointers( std::string( "    " ) + type + " d = 1;\n    unsafe { i32[*] rest = many + d; }" ) );
+
+            INFO( type << "\n" << p.rendered() );
+            REQUIRE( p.clean() );
+        }
+    }
+
+    SECTION( "chained, and then indexed" )
+    {
+        const Typed p( with_pointers( "    i32 r = 0;\n    unsafe { r = ( many + n + k )[ 0 ]; }" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a negative offset is the author's business" )
+    {
+        const Typed p( with_pointers( "    unsafe { i32[*] back = many + -1; }" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "needs an unsafe block" )
+    {
+        const Typed p( with_pointers( "    i32[*] rest = many + 2;" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "pointer arithmetic needs an `unsafe` block" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "nothing checks that the result is inside the allocation" ) != std::string::npos );
+    }
+
+    SECTION( "which it justifies on its own" )
+    {
+        const Typed p( with_pointers( "    i32[*] rest = nullptr;\n    unsafe { rest = many + 1; }" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // One spelling: the pointer on the left, as `p[ i ]` has it. Refusals are written outside a
+    // block, which an operation that was refused would otherwise leave unused.
+    SECTION( "the pointer goes first" )
+    {
+        const Typed p( with_pointers( "    i32[*] rest = 2 + many;" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "write `many + 2`" ) != std::string::npos );
+    }
+
+    SECTION( "the offset is an integer" )
+    {
+        for( const char* offset : { "1.5", "true", "one", "many" } )
+        {
+            const Typed p( with_pointers( std::string( "    i32[*] rest = many + " ) + offset + ";" ) );
+
+            INFO( offset << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( "no operator `+` for `i32[*]`" ) != std::string::npos );
+        }
+    }
+
+    // `p - i` has no customer yet and `p - q` compares allocations the language cannot see, so both
+    // are refused rather than half-designed; `many + -1` already steps back.
+    SECTION( "no other arithmetic" )
+    {
+        const std::pair<const char*, const char*> cases[] = {
+            { "i32[*] r = many - 1;", "no operator `-` for `i32[*]` and" },
+            { "i32[*] other = many;\n    i64 d = many - other;", "no operator `-` for `i32[*]` and `i32[*]`" },
+            { "i32[*] r = many * 2;", "no operator `*` for `i32[*]` and" },
+            { "i32[*] r = many / 2;", "no operator `/` for `i32[*]` and" },
+            { "i32[*] r = many % 2;", "no operator `%` for `i32[*]` and" },
+            { "i32[*] other = many;\n    i32[*] r = many + other;", "no operator `+` for `i32[*]` and `i32[*]`" },
+        };
+
+        for( const auto& [body, message] : cases )
+        {
+            const Typed p( with_pointers( std::string( "    " ) + body ) );
+
+            INFO( body << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( message ) != std::string::npos );
+        }
+    }
+
+    SECTION( "nor a unary one" )
+    {
+        const Typed p( with_pointers( "    i32[*] r = -many;" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "no operator `-` for `i32[*]`" ) != std::string::npos );
+    }
+}
+
+// D27's original half, unchanged except for the message: a single-item pointer has no arithmetic,
+// and now there is a type to point the reader at.
+TEST_CASE( "type_checker_refuses_arithmetic_on_a_single_item_pointer", "[sema][types][many]" )
+{
+    for( const char* body : { "i32* r = one + 1;", "i32* r = one + n;", "i32* r = one - 1;" } )
+    {
+        const Typed p( with_pointers( std::string( "    " ) + body ) );
+
+        INFO( body << "\n" << p.rendered() );
+
+        // One error, where there used to be two: the literal is no longer checked against `i32*`.
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`i32*` points at one `i32`, so it has no arithmetic" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "a many-item pointer, `i32[*]`, can be offset" ) != std::string::npos );
     }
 }
 

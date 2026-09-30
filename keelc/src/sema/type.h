@@ -28,8 +28,9 @@ enum class Type_kind : u8
     Bool,
     Int, // signedness is a field, not a kind
     Float,
-    Pointer, // M2; element unused before then
-    Struct,  // `declaration` says which one
+    Pointer,
+    Many_pointer, // T[*]
+    Struct,       // `declaration` says which one
     Enum,
     Parameter, // a generic type parameter.
     Function,
@@ -87,6 +88,7 @@ public:
     Type_id integer( u8 width, bool is_signed ) const;
     Type_id floating( u8 width ) const;
     Type_id pointer_to( Type_id element ); // interns; same element -> same id
+    Type_id many_pointer_to( Type_id element );
     Type_id function( Type_id return_type, std::span<const Parameter> parameters, Param_mode return_mode = Param_mode::Value );
     Type_id field( Type_id aggregate, Type_id member ); // `field( C ) -> T`: C in arguments, T in element
     Type_id enumeration( Node_id declaration, std::span<const Type_id> arguments, std::string_view name, Type_id underlying );
@@ -136,6 +138,7 @@ public:
     bool is_struct( Type_id id ) const;
     bool is_enum( Type_id id ) const;
     bool is_pointer( Type_id id ) const;
+    bool is_many_pointer( Type_id id ) const;
     bool is_parameter( Type_id id ) const; // a `T`, before an instantiation substitutes it away
     bool is_function( Type_id id ) const;
     bool is_field( Type_id id ) const;
@@ -184,7 +187,8 @@ private:
     Type_id integers_[4][2];      // [width index][0 = signed, 1 = unsigned]
     Type_id floats_[2];
 
-    std::unordered_map<u32, Type_id> pointers_; // element id -> pointer id
+    std::unordered_map<u32, Type_id> pointers_;      // element id -> pointer id
+    std::unordered_map<u32, Type_id> many_pointers_; // element id -> many pointer id
     // Struct_decl node -> every instantiation of it. A list scanned linearly rather than a map
     // keyed on the arguments: a program has a handful of instantiations per generic, and hashing a
     // vector of Type_ids to avoid a handful of comparisons is not a trade worth making - the same

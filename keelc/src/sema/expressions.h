@@ -102,6 +102,8 @@ public:
     bool enter_unsafe( Span at ); // returns the enclosing `used` flag, for leave_unsafe
     void leave_unsafe( Span at, bool enclosing_used );
 
+    void step_pointer( Node_id statement, Token_kind op, Type_id pointer, Node_id value );
+
 private:
     Type_id infer_name( Node_id id );
     Type_id infer_call( Node_id id );
@@ -172,10 +174,14 @@ private:
     Type_id infer_alloc( Node_id id );
     Type_id infer_free( Node_id id );
 
+    Type_id infer_index( Node_id id );
+
     // D35: an operation on the enumerated list is permitted inside an unsafe block and reported
     // outside one. The `why` is the operation's own reason - what the author is asserting by writing
     // the block - so each caller supplies it.
     void require_unsafe( Node_id id, std::string what, std::string why = {} );
+
+    bool refuses_many_member( Node_id field_expr, Type_id base_type );
 
     const Ast&         ast_;
     const Interner&    interner_;

@@ -20,6 +20,7 @@ enum class Node_kind : u16
     Param_decl,
     Named_type,
     Pointer_type,
+    Many_pointer_type, // T[*]; child 0 is the element
     Mode_type,
     Const_type,
     Generic_type,
@@ -55,6 +56,7 @@ enum class Node_kind : u16
     Path_expr,    // `Colour::Red`; aux is the name, child 0 the qualifier, child 1 its type arguments
     Field_decl,
     Field_expr,
+    Index_expr, // p[i]; children are the pointer, then the index
     Struct_literal,
     Field_init,
     Marker_expr, // `move`, `out`, `ref` - a unary operator that does not change the type of its operand
@@ -69,7 +71,7 @@ enum class Node_kind : u16
     Binding_decl,    // a name bound by a pattern; aux is the name, and it has no annotation  // `1..5`, half-open; children are
                      // the two bounds
     Method_decl,     // aux is the name; children are { return type, params, body }, as Function_decl
-    Alloc_expr,      // `alloc<T>()`; child 0 is the type annotation, and there is no operand
+    Alloc_expr,      // `alloc<T>()` or `alloc<T>( n )`; child 0 is the type, child 1 the count when written
     Free_expr,       // `free( p )`; child 0 is the pointer
     Fallthrough_stmt,
     // The whole generic declaration: the parameters, then the `where` clauses constraining them.

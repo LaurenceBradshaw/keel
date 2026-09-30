@@ -790,9 +790,12 @@ Operand Lowering::lower_binary( Node_id id )
     // whatever the operands are, so there is no result for the mismatch to corrupt.
     const bool by_cases = is_comparison( op ) && !operation.is_valid();
 
-    const Operand left = converted( raw_left, by_cases ? comparison_width( raw_left.type ) : operation, span );
-    const Operand right =
-        is_shift ? raw_right : converted( raw_right, by_cases ? comparison_width( raw_right.type ) : operation, span );
+    const bool offsets = types_.table().is_many_pointer( raw_left.type );
+
+    const Operand left  = converted( raw_left, by_cases ? comparison_width( raw_left.type ) : operation, span );
+    const Operand right = is_shift || offsets
+                              ? raw_right
+                              : converted( raw_right, by_cases ? comparison_width( raw_right.type ) : operation, span );
 
     // The type the operation *produces*, which for a comparison is bool.
     const Type_id type = type_of( id );
@@ -1281,6 +1284,8 @@ Operand Lowering::lower_expression( Node_id id )
         return lower_conditional( id );
     case Node_kind::Unary_expr:
         return lower_unary( id );
+    case Node_kind::Index_expr:
+        return copy( lower_place( id ), type_of( id ) );
     case Node_kind::Call_expr:
         return lower_call( id );
     case Node_kind::Cast_expr:
@@ -1288,8 +1293,19 @@ Operand Lowering::lower_expression( Node_id id )
         return converted( lower_expression( ast_.child( id, 1 ) ), type_of( id ), ast_.span( id ) );
     case Node_kind::Alloc_expr:
     {
-        const Type_id type = type_of( id );
-        return copy( builder_.place( builder_.into_temp( allocate( type ), type, ast_.span( id ) ) ), type );
+        const Type_id type      = type_of( id );
+        const bool    has_count = ast_.children( id ).size() > 1;
+        Rvalue        allocation {};
+        if( has_count )
+        {
+            const Operand count = lower_expression( ast_.child( id, 1 ) );
+            allocation          = allocate( type, count );
+        }
+        else
+        {
+            allocation = allocate( type );
+        }
+        return copy( builder_.place( builder_.into_temp( allocation, type, ast_.span( id ) ) ), type );
     }
     case Node_kind::Free_expr:
     {
@@ -1404,6 +1420,18 @@ Place Lowering::lower_place( Node_id id )
                                : pointer.place;
 
         return builder_.deref( base );
+    }
+    case Node_kind::Index_expr:
+    {
+        const Operand pointer   = lower_expression( ast_.child( id, 0 ) );
+        const Operand index     = lower_expression( ast_.child( id, 1 ) );
+        const Type_id base_type = type_of( ast_.child( id, 0 ) );
+
+        const Place place = builder_.place(
+            builder_.into_temp( binary( Token_kind::Plus, pointer, index, base_type ), base_type, ast_.span( id ) )
+        );
+
+        return builder_.deref( place );
     }
     // A value, not a place - but `( c ? a : b ).t` projects from one, and lower_conditional has
     // already put the result in a local. The same answer a call in this position gets.
@@ -1545,8 +1573,10 @@ void Lowering::lower_assign( Node_id id )
         // construction.
         const Type_id type = type_of( ast_.child( id, 0 ) );
 
+        const bool offsets = types_.table().is_many_pointer( type );
+
         const Operand left  = copy( target, type );
-        const Operand right = converted( value, type, span );
+        const Operand right = offsets ? value : converted( value, type, span );
 
         builder_.assign( target, binary( base_operator( op ), left, right, type ), span );
     }
@@ -1566,7 +1596,9 @@ void Lowering::lower_increment( Node_id id )
     const Literal_id one =
         types_.table().is_float( target_type ) ? literal_pool_.add_float( 1.0 ) : literal_pool_.add_integer( 1 );
 
-    const Operand right = constant( one, target_type );
+    // A pointer steps by an integer; a 1 typed as the pointer is a null constant.
+    const Type_id step  = types_.table().is_many_pointer( target_type ) ? types_.table().integer( 64, false ) : target_type;
+    const Operand right = constant( one, step );
 
     // The target's type again, for the same reason: a statement carries none of its own.
     builder_.assign( target, binary( base_op, left, right, target_type ), ast_.span( id ) );
@@ -5347,6 +5379,224 @@ TEST_CASE( "lower_still_passes_a_plain_method_its_receiver", "[ir][lower][static
     INFO( callee );
     REQUIRE( callee.find( "let _1: P*; // parameter this" ) != std::string::npos );
     REQUIRE( callee.find( "copy (*_1).x" ) != std::string::npos );
+}
+
+// `p[ i ]` is `*( p + i )` in KIR: an offset into a temporary, then a Deref projection of it. No new
+// projection kind, so every pass that already reads a place through a pointer reads this one.
+TEST_CASE( "lower_indexes_through_an_offset", "[ir][lower][many]" )
+{
+    SECTION( "a read" )
+    {
+        Lowered p( "i32 get( i32[*] p, u64 i ) { i32 r = 0; unsafe { r = p[ i ]; } return r; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string text = p.named( "get" );
+
+        INFO( text );
+        REQUIRE( text.find( "= copy _1 + copy _2" ) != std::string::npos ); // p is _1, i is _2
+        REQUIRE( text.find( "let _4: i32[*];" ) != std::string::npos );     // the offset is a pointer, not an element
+        REQUIRE( text.find( "copy (*_4)" ) != std::string::npos );
+        REQUIRE( every_function_verifies( p ) );
+    }
+
+    // Only the pointer skips the operand conversion; an element is an ordinary value and widens.
+    SECTION( "an element widens like any other value" )
+    {
+        Lowered p( "u64 add( u64[*] p, u32 k ) { u64 r = 0; unsafe { r = p[ 0 ] + k; } return r; }\n"
+                   "void grow( u64[*] p, u32 k ) { unsafe { p[ 1 ] += k; } }\n"
+                   "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.named( "add" ).find( "copy _2 as u64" ) != std::string::npos );
+        REQUIRE( p.named( "grow" ).find( "copy _2 as u64" ) != std::string::npos );
+        REQUIRE( every_function_verifies( p ) );
+    }
+
+    SECTION( "a write" )
+    {
+        Lowered p( "void set( i32[*] p, u64 i, i32 v ) { unsafe { p[ i ] = v; } }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string text = p.named( "set" );
+
+        INFO( text );
+        REQUIRE( text.find( "= copy _1 + copy _2" ) != std::string::npos );
+        REQUIRE( text.find( ") = copy _3" ) != std::string::npos ); // `(*_n) = copy _3`
+        REQUIRE( every_function_verifies( p ) );
+    }
+
+    SECTION( "a constant index" )
+    {
+        Lowered p( "i32 first( i32[*] p ) { i32 r = 0; unsafe { r = p[ 0 ]; } return r; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.named( "first" ).find( "= copy _1 + const 0" ) != std::string::npos );
+    }
+
+    SECTION( "the address of an element" )
+    {
+        Lowered p( "i32* at( i32[*] p, u64 i ) { i32* r = nullptr; unsafe { r = &p[ i ]; } return r; }\n"
+                   "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string text = p.named( "at" );
+
+        INFO( text );
+        REQUIRE( text.find( "= &(*_" ) != std::string::npos );
+        REQUIRE( every_function_verifies( p ) );
+    }
+
+    SECTION( "a field of an element" )
+    {
+        Lowered p( "struct P { i32 x; };\n"
+                   "i32 get( P[*] p, u64 i ) { i32 r = 0; unsafe { r = p[ i ].x; } return r; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string text = p.named( "get" );
+
+        INFO( text );
+        REQUIRE( text.find( ").x" ) != std::string::npos ); // `(*_n).x`
+        REQUIRE( every_function_verifies( p ) );
+    }
+
+    SECTION( "an element of an element" )
+    {
+        Lowered p( "u8 get( u8[*][*] rows ) { u8 r = 0; unsafe { r = rows[ 1 ][ 2 ]; } return r; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string text = p.named( "get" );
+
+        INFO( text );
+        REQUIRE( text.find( "= copy _1 + const 1" ) != std::string::npos );
+        REQUIRE( text.find( "+ const 2" ) != std::string::npos );
+        REQUIRE( every_function_verifies( p ) );
+    }
+
+    // The index is evaluated once, even where the place is both read and written.
+    SECTION( "a compound write evaluates the index once" )
+    {
+        Lowered p( "u64 next() { return 1; }\n"
+                   "void bump( i32[*] p ) { unsafe { p[ next() ] += 1; } }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string text = p.named( "bump" );
+
+        INFO( text );
+
+        std::size_t calls = 0;
+
+        for( std::size_t at = text.find( "call next(" ); at != std::string::npos; at = text.find( "call next(", at + 1 ) )
+        {
+            calls += 1;
+        }
+
+        REQUIRE( calls == 1 );
+    }
+}
+
+TEST_CASE( "lower_offsets_a_many_item_pointer", "[ir][lower][many]" )
+{
+    SECTION( "`+` is one binary operation of the pointer's type" )
+    {
+        Lowered p( "i32[*] skip( i32[*] p, u64 n ) { i32[*] r = nullptr; unsafe { r = p + n; } return r; }\n"
+                   "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string text = p.named( "skip" );
+
+        INFO( text );
+        REQUIRE( text.find( "= copy _1 + copy _2" ) != std::string::npos );
+        REQUIRE( text.find( " as " ) == std::string::npos ); // no conversion of either side
+        REQUIRE( every_function_verifies( p ) );
+    }
+
+    SECTION( "`++` steps by one element" )
+    {
+        Lowered p( "void step( i32[*] p ) { unsafe { p++; } }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.named( "step" ).find( "copy _1 + const 1" ) != std::string::npos );
+    }
+
+    SECTION( "`+=` offsets without converting the step" )
+    {
+        Lowered p( "i32[*] skip( i32[*] p, u64 n ) { unsafe { p += n; } return p; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string text = p.named( "skip" );
+
+        INFO( text );
+        REQUIRE( text.find( "_1 = copy _1 + copy _2" ) != std::string::npos );
+        REQUIRE( text.find( " as " ) == std::string::npos );
+        REQUIRE( every_function_verifies( p ) );
+    }
+}
+
+TEST_CASE( "lower_allocates_a_count", "[ir][lower][alloc][many]" )
+{
+    SECTION( "the count is an operand" )
+    {
+        Lowered p( "i32[*] make( u64 n ) { i32[*] r = nullptr; unsafe { r = alloc<i32>( n ); } return r; }\n"
+                   "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string text = p.named( "make" );
+
+        INFO( text );
+        REQUIRE( text.find( "allocate i32[*], copy _1" ) != std::string::npos );
+        REQUIRE( every_function_verifies( p ) );
+    }
+
+    SECTION( "no count is unchanged" )
+    {
+        Lowered p( "i32* make() { i32* r = nullptr; unsafe { r = alloc<i32>(); } return r; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string text = p.named( "make" );
+
+        INFO( text );
+        REQUIRE( text.find( "allocate i32*" ) != std::string::npos );
+        REQUIRE( text.find( "allocate i32*," ) == std::string::npos );
+    }
+}
+
+// D37: an element write through a pointer never drops what was there, because nothing may have been.
+TEST_CASE( "lower_writes_an_owning_element_without_dropping_it", "[ir][lower][many]" )
+{
+    Lowered p( "class C { i32 n; C( i32 v ) { n = v; } ~C() { } };\n"
+               "void put( C[*] cs ) { unsafe { cs[ 0 ] = C( 1 ); } }\ni32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.named( "put" );
+
+    INFO( text );
+    REQUIRE( text.find( "drop (*" ) == std::string::npos );
+    REQUIRE( every_function_verifies( p ) );
 }
 
 } // namespace keel

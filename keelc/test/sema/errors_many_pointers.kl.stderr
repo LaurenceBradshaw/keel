@@ -1,0 +1,85 @@
+error: indexing needs an `unsafe` block
+  --> sema/errors_many_pointers.kl:10:12
+   |
+10 |     return p[ 0 ];
+   |            ^^^^^^ nothing checks that the index is inside the allocation
+
+error: pointer arithmetic needs an `unsafe` block
+  --> sema/errors_many_pointers.kl:15:12
+   |
+15 |     return p + 1;
+   |            ^^^^^ nothing checks that the result is inside the allocation
+
+error: pointer arithmetic needs an `unsafe` block
+  --> sema/errors_many_pointers.kl:20:5
+   |
+20 |     p++;
+   |     ^^^^ nothing checks that the result is inside the allocation
+
+error: `i32*` points at one `i32`, so it cannot be indexed
+  --> sema/errors_many_pointers.kl:25:12
+   |
+25 |     return p[ 0 ];
+   |            ^^^^^^ a many-item pointer, `i32[*]`, can be
+
+error: `i32*` points at one `i32`, so it has no arithmetic
+  --> sema/errors_many_pointers.kl:30:12
+   |
+30 |     return p + 1;
+   |            ^ a many-item pointer, `i32[*]`, can be offset
+
+error: `i32` cannot be indexed
+  --> sema/errors_many_pointers.kl:35:12
+   |
+35 |     return v[ 0 ];
+   |            ^^^^^^
+
+error: `i32[*]` points at many `i32`, so `*` does not say which
+  --> sema/errors_many_pointers.kl:40:12
+   |
+40 |     return *p;
+   |            ^^ write `p[0]`
+
+error: `.` does not reach through a many-item pointer
+  --> sema/errors_many_pointers.kl:45:12
+   |
+45 |     return p.x;
+   |            ^^^ write `p[0].x`
+
+error: the pointer goes on the left of `+`
+  --> sema/errors_many_pointers.kl:50:12
+   |
+50 |     return 1 + p;
+   |            ^^^^^ write `p + 1`
+
+error: an index must be an integer, but got `bool`
+  --> sema/errors_many_pointers.kl:59:16
+   |
+59 |         r = p[ true ];
+   |                ^^^^
+
+error: `alloc` needs an integer count, but got `f64`
+  --> sema/errors_many_pointers.kl:71:25
+   |
+71 |         p = alloc<i32>( 1.5 );
+   |                         ^^^
+
+error: expected `i32*`, but got `i32[*]`
+  --> sema/errors_many_pointers.kl:79:14
+   |
+79 |     i32* q = p;
+   |              ^
+
+error: no operator `<` for `i32[*]` and `i32[*]`
+  --> sema/errors_many_pointers.kl:86:12
+   |
+86 |     return p < q;
+   |            ^^^^^
+
+error: no operator `-=` for `i32[*]`
+  --> sema/errors_many_pointers.kl:91:5
+   |
+91 |     p -= 1;
+   |     ^^^^^^^
+
+14 errors generated

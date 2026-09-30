@@ -53,6 +53,9 @@ Type_id Expressions::infer( Node_id id )
     case Node_kind::Field_expr:
         return infer_field( id );
 
+    case Node_kind::Index_expr:
+        return infer_index( id );
+
     case Node_kind::Path_expr:
         return infer_path( id );
 
@@ -536,7 +539,9 @@ Type_id Expressions::infer_method_call( Node_id id )
     const Node_id object = ast_.child( callee, 0 );
 
     const Type_id result      = infer( object );
-    const Type_id object_type = table_.is_pointer( result ) ? table_.get( result ).element : result;
+    const Type_id object_type = table_.is_pointer( result )             ? table_.get( result ).element
+                                : refuses_many_member( callee, result ) ? table_.builtin( Type_kind::Error )
+                                                                        : result;
 
     if( table_.is_error( object_type ) )
     {
@@ -880,7 +885,16 @@ Type_id Expressions::infer_binary( Node_id id )
 
         // A failed operand gives nothing to adopt, and check() absorbs an error expectation - so
         // the literal is carried along rather than asked to invent a type it has no basis for.
-        const Type_id adopted = check( literal_side, standalone.is_valid() ? standalone : known );
+        Type_id adopted {};
+        if( ( table_.is_pointer( known ) || table_.is_many_pointer( known ) ) &&
+            ast_.kind( literal_side ) != Node_kind::Null_literal )
+        {
+            adopted = infer( literal_side );
+        }
+        else
+        {
+            adopted = check( literal_side, standalone.is_valid() ? standalone : known );
+        }
 
         lhs_type = literal_on_the_left ? adopted : known;
         rhs_type = literal_on_the_left ? known : adopted;
@@ -898,7 +912,9 @@ Type_id Expressions::infer_binary( Node_id id )
         return types_.record( id, error );
     }
 
-    const Binary_result result = operators_.result_of_binary( op, lhs_type, rhs_type, current_function_, ast_.span( id ) );
+    const Binary_result result = operators_.result_of_binary(
+        op, lhs_type, rhs_type, current_function_, ast_.span( id ), ast_.span( left ), ast_.span( right )
+    );
 
     if( !result.type.is_valid() )
     {
@@ -908,6 +924,13 @@ Type_id Expressions::infer_binary( Node_id id )
     if( result.compare_constant )
     {
         literals_.warn_if_constant_comparison( id, op, lhs_type, rhs_type );
+    }
+
+    if( result.offsets )
+    {
+        require_unsafe(
+            id, "pointer arithmetic needs an `unsafe` block", "nothing checks that the result is inside the allocation"
+        );
     }
 
     // record_constant for every answer, including a generic body's: a division by zero and an
@@ -1477,6 +1500,21 @@ Type_id Expressions::infer_unary( Node_id id )
 
     if( op == Token_kind::Star )
     {
+        if( table_.is_many_pointer( operand_type ) )
+        {
+            reporter_.error_at(
+                ast_.span( id ),
+                fmt::format(
+                    "`{}` points at many `{}`, so `*` does not say which",
+                    table_.name( operand_type ),
+                    table_.name( table_.get( operand_type ).element )
+                ),
+                fmt::format( "write `{}[0]`", reporter_.text( ast_.span( ast_.child( id, 0 ) ) ) )
+            );
+
+            return types_.record( id, error );
+        }
+
         if( !table_.is_pointer( operand_type ) )
         {
             reporter_.error_at( ast_.span( id ), fmt::format( "`{}` cannot be dereferenced", table_.name( operand_type ) ) );
@@ -1771,7 +1809,23 @@ Type_id Expressions::infer_alloc( Node_id id )
         "it hands back memory that does not hold a value yet, so the pointer's type is a claim rather than a fact"
     );
 
-    return types_.record( id, table_.pointer_to( element ) );
+    Type_id count {};
+
+    if( ast_.children( id ).size() > 1 && ast_.child( id, 1 ).is_valid() )
+    {
+        count = infer( ast_.child( id, 1 ) );
+
+        if( !table_.is_integer( count ) && !table_.is_error( count ) )
+        {
+            reporter_.error_at(
+                ast_.span( ast_.child( id, 1 ) ),
+                fmt::format( "`alloc` needs an integer count, but got `{}`", table_.name( count ) )
+            );
+            return types_.record( id, table_.builtin( Type_kind::Error ) );
+        }
+    }
+
+    return types_.record( id, count.is_valid() ? table_.many_pointer_to( element ) : table_.pointer_to( element ) );
 }
 
 Type_id Expressions::infer_free( Node_id id )
@@ -1783,7 +1837,7 @@ Type_id Expressions::infer_free( Node_id id )
         return types_.record( id, operand );
     }
 
-    if( !table_.is_pointer( operand ) )
+    if( !table_.is_pointer( operand ) && !table_.is_many_pointer( operand ) )
     {
         reporter_.error_at( ast_.span( id ), fmt::format( "`free` needs a pointer, but got `{}`", table_.name( operand ) ) );
         return types_.record( id, table_.builtin( Type_kind::Error ) );
@@ -1792,6 +1846,52 @@ Type_id Expressions::infer_free( Node_id id )
     require_unsafe( id, "`free` needs an `unsafe` block", "the compiler cannot tell whether anything still points at it" );
 
     return types_.record( id, table_.builtin( Type_kind::Void ) );
+}
+
+Type_id Expressions::infer_index( Node_id id )
+{
+    const Type_id base  = infer( ast_.child( id, 0 ) );
+    const Type_id index = infer( ast_.child( id, 1 ) );
+
+    if( table_.is_error( base ) || table_.is_error( index ) )
+    {
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    if( table_.is_many_pointer( base ) )
+    {
+        require_unsafe( id, "indexing needs an `unsafe` block", "nothing checks that the index is inside the allocation" );
+
+        if( !table_.is_integer( index ) )
+        {
+            reporter_.error_at(
+                ast_.span( ast_.child( id, 1 ) ),
+                fmt::format( "an index must be an integer, but got `{}`", table_.name( index ) )
+            );
+            return types_.record( id, table_.builtin( Type_kind::Error ) );
+        }
+
+        return types_.record( id, table_.get( base ).element );
+    }
+
+    if( table_.is_pointer( base ) )
+    {
+        reporter_.error_at(
+            ast_.span( id ),
+            fmt::format(
+                "`{}` points at one `{}`, so it cannot be indexed",
+                table_.name( base ),
+                table_.name( table_.get( base ).element )
+            ),
+            fmt::format( "a many-item pointer, `{}[*]`, can be", table_.name( table_.get( base ).element ) )
+        );
+
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    reporter_.error_at( ast_.span( id ), fmt::format( "`{}` cannot be indexed", table_.name( base ) ) );
+
+    return types_.record( id, table_.builtin( Type_kind::Error ) );
 }
 
 void Expressions::require_unsafe( Node_id id, std::string what, std::string why )
@@ -1804,6 +1904,25 @@ void Expressions::require_unsafe( Node_id id, std::string what, std::string why 
     {
         unsafe_used_ = true;
     }
+}
+
+bool Expressions::refuses_many_member( Node_id field_expr, Type_id base_type )
+{
+    if( !table_.is_many_pointer( base_type ) )
+    {
+        return false;
+    }
+
+    reporter_.error_at(
+        ast_.span( field_expr ),
+        "`.` does not reach through a many-item pointer",
+        fmt::format(
+            "write `{}[0].{}`",
+            reporter_.text( ast_.span( ast_.child( field_expr, 0 ) ) ),
+            interner_.text( Symbol_id { ast_.aux( field_expr ) } )
+        )
+    );
+    return true;
 }
 
 Type_id Expressions::infer_path( Node_id id )
@@ -1947,6 +2066,11 @@ Type_id Expressions::infer_field( Node_id id )
     const Type_id base_type = infer( base );
 
     if( table_.is_error( base_type ) )
+    {
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    if( refuses_many_member( id, base_type ) )
     {
         return types_.record( id, table_.builtin( Type_kind::Error ) );
     }
@@ -2582,6 +2706,42 @@ void Expressions::leave_unsafe( Span at, bool enclosing_used )
     }
 
     unsafe_used_ = enclosing_used;
+}
+
+void Expressions::step_pointer( Node_id statement, Token_kind op, Type_id pointer, Node_id value )
+{
+    Type_id step_type {};
+    if( value.is_valid() )
+    {
+        step_type = infer( value );
+    }
+    else if( op == Token_kind::Plus_plus || op == Token_kind::Minus_minus )
+    {
+        step_type = table_.default_integer();
+    }
+
+    if( !step_type.is_valid() || table_.is_error( step_type ) )
+    {
+        return;
+    }
+
+    if( table_.is_pointer( pointer ) )
+    {
+        operators_.refuse_single_pointer_arithmetic( pointer, ast_.span( statement ) );
+        return;
+    }
+
+    if( ( op == Token_kind::Plus_equal || op == Token_kind::Plus_plus ) && table_.is_integer( step_type ) )
+    {
+        require_unsafe(
+            statement, "pointer arithmetic needs an `unsafe` block", "nothing checks that the result is inside the allocation"
+        );
+        return;
+    }
+
+    reporter_.error_at(
+        ast_.span( statement ), fmt::format( "no operator `{}` for `{}`", token_kind_spelling( op ), table_.name( pointer ) )
+    );
 }
 
 } // namespace sema
@@ -6354,6 +6514,673 @@ TEST_CASE( "type_checker_types_a_generic_static_method", "[sema][static][generic
 
         INFO( p.rendered() );
         REQUIRE_FALSE( p.clean() );
+    }
+}
+
+// The fixtures below share one allocation so each case is about the operation it names and not
+// about how the buffer came to exist.
+namespace
+{
+
+// The `index`th node whose kind has this name. By name, so a case can ask for a kind before it exists.
+Node_id nth_named( const Typed& p, std::string_view kind, std::size_t index )
+{
+    for( u32 i = 0; i < p.ast().node_count(); ++i )
+    {
+        if( node_kind_name( p.ast().kind( Node_id { i } ) ) == kind && index-- == 0 )
+        {
+            return Node_id { i };
+        }
+    }
+
+    return Node_id {};
+}
+
+std::string with_buffer( std::string_view body )
+{
+    return std::string( "struct P { i32 x; i32 get() const { return x; } };\n"
+                        "i32 main()\n"
+                        "{\n"
+                        "    i32 v = 1;\n"
+                        "    i32* one = &v;\n"
+                        "    i32[*] many = nullptr;\n"
+                        "    P[*] points = nullptr;\n"
+                        "    unsafe { many = alloc<i32>( 4 ); points = alloc<P>( 2 ); }\n" ) +
+           std::string( body ) +
+           "\n"
+           "    unsafe { free( many ); free( points ); }\n"
+           "    return 0;\n"
+           "}";
+}
+
+} // namespace
+
+// D37's parens, filled: a count makes it many, and no count is still exactly one.
+TEST_CASE( "type_checker_types_alloc_with_a_count", "[sema][types][alloc][many]" )
+{
+    SECTION( "a count yields a many-item pointer" )
+    {
+        const Typed p( "i32 main() { unsafe { i32[*] n = alloc<i32>( 4 ); free( n ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Alloc_expr, 0 ) ) == "i32[*]" );
+    }
+
+    SECTION( "no count is still one" )
+    {
+        const Typed p( "i32 main() { unsafe { i32* n = alloc<i32>(); free( n ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Alloc_expr, 0 ) ) == "i32*" );
+    }
+
+    SECTION( "the element may itself be a pointer of either kind" )
+    {
+        const Typed p( "i32 main() { unsafe { i32*[*] a = alloc<i32*>( 2 ); u8[*][*] b = alloc<u8[*]>( 2 ); "
+                       "free( a ); free( b ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Alloc_expr, 0 ) ) == "i32*[*]" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Alloc_expr, 1 ) ) == "u8[*][*]" );
+    }
+
+    SECTION( "any integer type counts" )
+    {
+        for( const char* type : { "u8", "i8", "u16", "i16", "u32", "i32", "u64", "i64" } )
+        {
+            const Typed p(
+                std::string( "i32 main() { " ) + type + " n = 3; unsafe { i32[*] a = alloc<i32>( n ); free( a ); } return 0; }"
+            );
+
+            INFO( type << "\n" << p.rendered() );
+            REQUIRE( p.clean() );
+        }
+    }
+
+    SECTION( "and a computed one" )
+    {
+        const Typed p( "u64 twice( u64 n ) { return n * 2; }\n"
+                       "i32 main() { u64 n = 3; unsafe { i32[*] a = alloc<i32>( twice( n ) + 1 ); free( a ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a count that is not an integer is refused" )
+    {
+        for( const char* count : { "true", "1.5", "one", "E::A" } )
+        {
+            const Typed p(
+                std::string( "enum E { A };\ni32 main() { i32* one = nullptr; unsafe { i32[*] a = alloc<i32>( " ) + count +
+                " ); } return 0; }"
+            );
+
+            INFO( count << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( "`alloc` needs an integer count, but got" ) != std::string::npos );
+        }
+    }
+
+    SECTION( "the pointer types are not interchangeable" )
+    {
+        const Typed a( "i32 main() { unsafe { i32* n = alloc<i32>( 4 ); } return 0; }" );
+        const Typed b( "i32 main() { unsafe { i32[*] n = alloc<i32>(); } return 0; }" );
+
+        INFO( a.rendered() << b.rendered() );
+        REQUIRE( a.errors() == 1 );
+        REQUIRE( a.rendered().find( "expected `i32*`, but got `i32[*]`" ) != std::string::npos );
+        REQUIRE( b.errors() == 1 );
+        REQUIRE( b.rendered().find( "expected `i32[*]`, but got `i32*`" ) != std::string::npos );
+    }
+
+    SECTION( "still gated" )
+    {
+        const Typed p( "i32 main() { i32[*] n = alloc<i32>( 4 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`alloc` needs an `unsafe` block" ) != std::string::npos );
+    }
+
+    SECTION( "`void` still has no size" )
+    {
+        const Typed p( "i32 main() { unsafe { i32[*] n = alloc<void>( 4 ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.rendered().find( "needs a type to allocate" ) != std::string::npos );
+    }
+
+    SECTION( "free takes either kind" )
+    {
+        const Typed p( "i32 main() { i32[*] a = nullptr; i32* b = nullptr; unsafe { free( a ); free( b ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+TEST_CASE( "type_checker_types_indexing", "[sema][types][many]" )
+{
+    SECTION( "an element has the element type" )
+    {
+        const Typed p( with_buffer( "    i32 r = 0;\n    unsafe { r = many[ 2 ]; }" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( nth_named( p, "Index_expr", 0 ) ) == "i32" );
+    }
+
+    SECTION( "of a struct, whose fields and methods are then reachable" )
+    {
+        const Typed p( with_buffer( "    i32 r = 0;\n    unsafe { r = points[ 1 ].x + points[0].get(); }" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( nth_named( p, "Index_expr", 0 ) ) == "P" );
+    }
+
+    SECTION( "of a pointer, which is one element deep" )
+    {
+        const Typed p( "i32 main() { i32 v = 1; unsafe { i32*[*] a = alloc<i32*>( 1 ); a[0] = &v; i32 r = *a[0]; "
+                       "free( a ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( nth_named( p, "Index_expr", 0 ) ) == "i32*" );
+    }
+
+    SECTION( "of a many-item pointer, which indexes again" )
+    {
+        const Typed p( "i32 main() { unsafe { u8[*][*] rows = alloc<u8[*]>( 2 ); rows[0] = alloc<u8>( 3 ); "
+                       "u8 c = rows[0][ 2 ]; free( rows[0] ); free( rows ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( nth_named( p, "Index_expr", 0 ) ) == "u8[*]" );
+    }
+
+    SECTION( "any integer type indexes" )
+    {
+        for( const char* type : { "u8", "i8", "u16", "i16", "u32", "i32", "u64", "i64" } )
+        {
+            const Typed p(
+                with_buffer( std::string( "    " ) + type + " i = 1;\n    i32 r = 0;\n    unsafe { r = many[ i ]; }" )
+            );
+
+            INFO( type << "\n" << p.rendered() );
+            REQUIRE( p.clean() );
+        }
+    }
+
+    SECTION( "and an index read from another buffer" )
+    {
+        const Typed p( with_buffer( "    i32 r = 0;\n    unsafe { many[0] = 1; r = many[ many[0] ]; }" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // The operation is still indexing into raw memory, so the block it sits in is used; only the
+    // index is wrong.
+    SECTION( "an index that is not an integer is refused" )
+    {
+        for( const char* index : { "true", "1.5", "one", "points[0]" } )
+        {
+            const Typed p( with_buffer( std::string( "    i32 r = 0;\n    unsafe { r = many[ " ) + index + " ]; }" ) );
+
+            INFO( index << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( "an index must be an integer, but got" ) != std::string::npos );
+        }
+    }
+
+    // D27: `*T` points at exactly one `T`, so an index is nonsense rather than danger - and the
+    // message says which type would make it mean something.
+    SECTION( "a single-item pointer cannot be indexed" )
+    {
+        const Typed p( with_buffer( "    i32 r = one[0];" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`i32*` points at one `i32`, so it cannot be indexed" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "a many-item pointer, `i32[*]`, can be" ) != std::string::npos );
+    }
+
+    SECTION( "nor can anything that is not a pointer" )
+    {
+        const std::pair<const char*, const char*> cases[] = {
+            { "i32 r = v[0];", "`i32` cannot be indexed" },
+            { "P s = P { 1 };\n    i32 r = s[0].x;", "`P` cannot be indexed" },
+            { "bool b = true;\n    b = b[0];", "`bool` cannot be indexed" },
+        };
+
+        for( const auto& [body, message] : cases )
+        {
+            const Typed p( with_buffer( std::string( "    " ) + body ) );
+
+            INFO( body << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( message ) != std::string::npos );
+        }
+    }
+
+    // A bad index poisons the element, and the poison must not report a second time.
+    SECTION( "one mistake is one error" )
+    {
+        const Typed p( with_buffer( "    i32 r = 0;\n    unsafe { r = many[ true ] + many[0]; }" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "an unknown name inside the brackets is reported once" )
+    {
+        const Typed p( with_buffer( "    i32 r = 0;\n    unsafe { r = many[ nope ]; }" ) );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.rendered().find( "an index must be" ) == std::string::npos );
+    }
+}
+
+// One spelling for one element: `*p` would say "the first" without saying so, and `.` would reach
+// into an element the reader cannot see was chosen.
+TEST_CASE( "type_checker_asks_which_element_of_a_many_item_pointer", "[sema][types][many]" )
+{
+    SECTION( "`*` is refused" )
+    {
+        const Typed p( with_buffer( "    i32 r = *many;" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`i32[*]` points at many `i32`, so `*` does not say which" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "write `many[0]`" ) != std::string::npos );
+    }
+
+    SECTION( "and so is writing through it" )
+    {
+        const Typed p( with_buffer( "    *many = 1;" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "does not say which" ) != std::string::npos );
+    }
+
+    SECTION( "`.` does not reach through one" )
+    {
+        const Typed p( with_buffer( "    i32 r = points.x;" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`.` does not reach through a many-item pointer" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "write `points[0].x`" ) != std::string::npos );
+    }
+
+    SECTION( "nor calls a method through one" )
+    {
+        const Typed p( with_buffer( "    i32 r = points.get();" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`.` does not reach through a many-item pointer" ) != std::string::npos );
+    }
+
+    SECTION( "while `*` on an element's pointer is ordinary" )
+    {
+        const Typed p( "i32 main() { i32 v = 1; i32 r = 0; unsafe { i32*[*] a = alloc<i32*>( 1 ); a[0] = &v; "
+                       "r = *a[0]; free( a ); } return r; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// Many to one is an ordinary expression, `&p[ i ]`; one to many widens what the pointer claims and
+// is a `cast`, which `unsafe` already gates.
+TEST_CASE( "type_checker_converts_between_the_two_pointer_kinds", "[sema][types][many]" )
+{
+    SECTION( "the address of an element is a single-item pointer" )
+    {
+        const Typed p( with_buffer( "    i32* e = nullptr;\n    unsafe { e = &many[ 1 ]; }" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 1 ) ) == "i32*" ); // [0] is `&v`
+    }
+
+    SECTION( "and of an element's field" )
+    {
+        const Typed p( with_buffer( "    i32* e = nullptr;\n    unsafe { e = &points[ 1 ].x; }" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "neither converts to the other implicitly" )
+    {
+        const std::pair<const char*, const char*> cases[] = {
+            { "i32* e = many;", "expected `i32*`, but got `i32[*]`" },
+            { "i32[*] e = one;", "expected `i32[*]`, but got `i32*`" },
+            { "i32[*] e = &v;", "expected `i32[*]`, but got `i32*`" },
+            { "many = one;", "expected `i32[*]`, but got `i32*`" },
+        };
+
+        for( const auto& [body, message] : cases )
+        {
+            const Typed p( with_buffer( std::string( "    " ) + body ) );
+
+            INFO( body << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( message ) != std::string::npos );
+        }
+    }
+
+    SECTION( "nor as an argument" )
+    {
+        const Typed p( "i32 first( i32[*] p ) { unsafe { return p[0]; } }\n"
+                       "i32 main() { i32 v = 1; return first( &v ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    SECTION( "a cast converts either way inside unsafe" )
+    {
+        const Typed p( with_buffer( "    unsafe { i32[*] m = cast<i32[*]>( one ); i32* o = cast<i32*>( many ); }" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and between element types" )
+    {
+        const Typed p( with_buffer( "    unsafe { u8[*] bytes = cast<u8[*]>( many ); }" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "but not outside it" )
+    {
+        for( const char* body : {
+                 "i32[*] m = cast<i32[*]>( one );",
+                 "i32* o = cast<i32*>( many );",
+                 "u8[*] b = cast<u8[*]>( many );",
+             } )
+        {
+            const Typed p( with_buffer( std::string( "    " ) + body ) );
+
+            INFO( body << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( "unsafe" ) != std::string::npos );
+        }
+    }
+
+    SECTION( "nor to or from an integer" )
+    {
+        const Typed a( with_buffer( "    u64 n = many;" ) );
+        const Typed b( with_buffer( "    u64 n = 0;\n    i32[*] m = n;" ) );
+
+        INFO( a.rendered() << b.rendered() );
+        REQUIRE( a.errors() == 1 );
+        REQUIRE( b.errors() == 1 );
+    }
+
+    SECTION( "nullptr is either" )
+    {
+        const Typed p( with_buffer( "    many = nullptr;\n    one = nullptr;" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// D27: equality between two pointers of the same type, because that is how a null check is written.
+TEST_CASE( "type_checker_compares_many_item_pointers", "[sema][types][many]" )
+{
+    SECTION( "with each other and with nullptr, outside unsafe" )
+    {
+        const Typed p( with_buffer( "    i32[*] other = many;\n"
+                                    "    bool a = many == other;\n"
+                                    "    bool b = many != nullptr;\n"
+                                    "    bool c = nullptr == many;" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Binary_expr, 0 ) ) == "bool" );
+    }
+
+    SECTION( "not with a single-item pointer" )
+    {
+        const Typed p( with_buffer( "    bool a = many == one;" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "not with a different element" )
+    {
+        const Typed p( with_buffer( "    u8[*] bytes = nullptr;\n    bool a = many == bytes;" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "and never ordered" )
+    {
+        for( const char* op : { "<", "<=", ">", ">=" } )
+        {
+            const Typed p( with_buffer( std::string( "    i32[*] other = many;\n    bool a = many " ) + op + " other;" ) );
+
+            INFO( op << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE(
+                p.rendered().find( std::string( "no operator `" ) + op + "` for `i32[*]` and `i32[*]`" ) != std::string::npos
+            );
+        }
+    }
+}
+
+// D35's list, decided with `[*]T`: nothing checks an index against the allocation, which is exactly
+// what the block asserts. Dereferencing a `T*` stays off the list.
+TEST_CASE( "type_checker_gates_indexing_on_unsafe", "[sema][types][unsafe][many]" )
+{
+    SECTION( "a read" )
+    {
+        const Typed p( with_buffer( "    i32 r = many[0];" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "indexing needs an `unsafe` block" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "nothing checks that the index is inside the allocation" ) != std::string::npos );
+    }
+
+    SECTION( "a write" )
+    {
+        const Typed p( with_buffer( "    many[0] = 1;" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "indexing needs an `unsafe` block" ) != std::string::npos );
+    }
+
+    SECTION( "an address" )
+    {
+        const Typed p( with_buffer( "    i32* e = &many[0];" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "a field of an element" )
+    {
+        const Typed p( with_buffer( "    i32 r = points[0].x;" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "a method called on an element" )
+    {
+        const Typed p( with_buffer( "    i32 r = points[0].get();" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "each index is its own operation" )
+    {
+        const Typed p( with_buffer( "    i32 r = many[0] + many[ 1 ];" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 2 );
+    }
+
+    SECTION( "inside one, every form is permitted" )
+    {
+        const Typed p( with_buffer( "    i32 r = 0;\n"
+                                    "    i32* e = nullptr;\n"
+                                    "    unsafe\n"
+                                    "    {\n"
+                                    "        many[0] = 1;\n"
+                                    "        r = many[0] + points[ 1 ].x + points[ 1 ].get();\n"
+                                    "        e = &many[ 3 ];\n"
+                                    "    }" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "the permission does not leak past the block" )
+    {
+        const Typed p( with_buffer( "    i32 r = 0;\n    unsafe { r = many[0]; }\n    r = many[ 1 ];" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "the pointer itself travels safely" )
+    {
+        const Typed p( "i32 first( i32[*] p ) { i32 r = 0; unsafe { r = p[0]; } return r; }\n"
+                       "i32[*] same( i32[*] p ) { i32[*] q = p; return q; }\n"
+                       "i32 main() { i32[*] m = nullptr; m = same( m ); bool n = m == nullptr; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and a single-item pointer still dereferences safely" )
+    {
+        const Typed p( with_buffer( "    i32 r = *one;\n    *one = 2;" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// Generic code sees `T[*]` as a type constructor like `T*`: substituted, deduced and indexed.
+TEST_CASE( "type_checker_instantiates_a_many_item_pointer", "[sema][generic][many]" )
+{
+    SECTION( "the element is deduced" )
+    {
+        const Typed p( "T first<T>( T[*] p ) where T : Copyable { T r; unsafe { r = p[0]; } return r; }\n"
+                       "i32 main() { i32[*] m = nullptr; unsafe { m = alloc<i32>( 1 ); m[0] = 7; } i32 r = first( m ); "
+                       "unsafe { free( m ); } return r; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // `==` and `!=` work on one as on a `T*`, so the bound that promises them is met.
+    SECTION( "it is `Equatable`" )
+    {
+        const Typed p( "bool same<T>( T a, T b ) where T : Equatable { return a == b; }\n"
+                       "i32 main() { i32[*] m = nullptr; bool s = same( m, m ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a single-item pointer does not deduce it" )
+    {
+        const Typed p( "T first<T>( T[*] p ) where T : Copyable { T r; unsafe { r = p[0]; } return r; }\n"
+                       "i32 main() { i32 v = 1; return first( &v ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    SECTION( "nor the other way round" )
+    {
+        const Typed p( "T only<T>( T* p ) where T : Copyable { return *p; }\n"
+                       "i32 main() { i32[*] m = nullptr; return only( m ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    SECTION( "an explicit argument substitutes" )
+    {
+        const Typed p( "T[*] make<T>( u64 n ) { T[*] r = nullptr; unsafe { r = alloc<T>( n ); } return r; }\n"
+                       "i32 main() { f64[*] m = make<f64>( 3 ); unsafe { free( m ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // Reading an element copies it, so an unbound `T` may own and the copy is refused - moving out of
+    // a slot is `Vector`'s question, not this slice's.
+    SECTION( "reading an element of an open `T` needs `Copyable`" )
+    {
+        const Typed p( "T first<T>( T[*] p ) { T r; unsafe { r = p[0]; } return r; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+    }
+
+    SECTION( "as a field of a generic aggregate" )
+    {
+        const Typed p( "struct Buf<T> { T[*] data; u64 size; };\n"
+                       "i32 main() { Buf<i32> b = Buf { nullptr, 0 }; unsafe { b.data = alloc<i32>( 2 ); b.data[ 1 ] = 5; "
+                       "free( b.data ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( nth_named( p, "Index_expr", 0 ) ) == "i32" );
+    }
+}
+
+// Overloading tells the two apart, since they are two types - which is also what makes the mangled
+// names differ.
+TEST_CASE( "type_checker_overloads_on_the_pointer_kind", "[sema][overload][many]" )
+{
+    const Typed p( "i32 which( i32* p ) { return 1; }\n"
+                   "i32 which( i32[*] p ) { return 2; }\n"
+                   "i32 main() { i32 v = 0; i32[*] m = nullptr; return which( &v ) * 10 + which( m ); }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+}
+
+// M8's acceptance: an index past the allocation is the author's problem, not a type error. Pinned
+// as accepted, like `alloc`'s hazards, so the day something checks it the change is visible here.
+TEST_CASE( "type_checker_leaves_bounds_to_the_author", "[sema][types][many]" )
+{
+    for( const char* body : {
+             "u8 c = b[ 5 ];",       // past the end
+             "u8 c = b[ -1 ];",      // before the start
+             "u8 c = ( b + 9 )[0];", // an offset past the end, then read
+             "b[ 2 ] = 1;",          // one past the last
+         } )
+    {
+        const Typed p( std::string( "i32 main() { unsafe { u8[*] b = alloc<u8>( 2 ); " ) + body + " free( b ); } return 0; }" );
+
+        INFO( body << "\n" << p.rendered() );
+        REQUIRE( p.clean() );
     }
 }
 
