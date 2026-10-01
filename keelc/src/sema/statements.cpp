@@ -129,14 +129,7 @@ void Statements::visit( Node_id id )
             }
             else
             {
-                if( !is_generic( ast_, id ) )
-                {
-                    visit_global( member );
-                }
-                else
-                {
-                    reporter_.error_at( ast_.span( member ), "a generic type cannot have a static field yet" );
-                }
+                visit_global( member );
             }
         }
         return;
@@ -539,6 +532,12 @@ void Statements::visit_global( Node_id id )
     }
 
     const bool is_static_field = enclosing_aggregate( ast_, id ).is_valid();
+
+    if( is_static_field && table_.mentions_parameter( type ) )
+    {
+        reporter_.error_at( ast_.span( id ), "a static field's type cannot name a type parameter yet" );
+        return;
+    }
 
     // A struct literal lowers to a temporary and field assignments, and there is nowhere at C file
     // scope to put those. Checked before the initialiser so `Point origin;` is caught too.
@@ -1842,6 +1841,19 @@ TEST_CASE( "statements_check_a_static_field_as_a_global", "[sema][statements][st
         REQUIRE( value->magnitude == 3 );
     }
 
+    SECTION( "and once on a generic type, whose instantiations all start from it" )
+    {
+        const Typed p( "struct Box<T> where T : Copyable { T v; static i32 made = 2 * 3; };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::optional<Constant_value> value = p.constant_of( p.nth( Node_kind::Var_decl, 0 ) );
+
+        REQUIRE( value.has_value() );
+        REQUIRE( value->magnitude == 6 );
+    }
+
     struct Case
     {
         const char* program;
@@ -1855,8 +1867,16 @@ TEST_CASE( "statements_check_a_static_field_as_a_global", "[sema][statements][st
            },
            Case { "struct P { i32 x; };\nstruct S { i32 x; static P origin; };", "a struct cannot be a static field yet" },
            Case {
-               "struct Box<T> where T : Copyable { T v; static i32 made = 0; };",
-               "a generic type cannot have a static field yet"
+               "struct Box<T> where T : Copyable { T v; static T last; };",
+               "a static field's type cannot name a type parameter yet"
+           },
+           Case {
+               "struct Box<T> where T : Copyable { T v; static T* head; };",
+               "a static field's type cannot name a type parameter yet"
+           },
+           Case {
+               "struct Box<T> where T : Copyable { T v; static i32 made = f(); };\ni32 f() { return 1; }",
+               "a static field's initialiser must be a constant expression"
            } } )
     {
         const Typed p( std::string( c.program ) + "\ni32 main() { return 0; }" );

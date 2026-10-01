@@ -42,7 +42,7 @@ struct Spelling
     // A file-scope variable's whole definition. Its initialiser stays an expression rather than a
     // value: a C file-scope initialiser must be one constant expression, and there is nowhere at
     // file scope to put the temporaries three-address form would need.
-    std::string global_definition( Node_id declaration ) const;
+    std::string global_definition( Node_id declaration, Type_id owner = {} ) const;
 
     std::string package_name( Node_id decl ) const;
 };

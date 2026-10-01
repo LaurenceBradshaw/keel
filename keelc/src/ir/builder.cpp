@@ -59,9 +59,9 @@ Place Builder::place( Local_id id ) const
     return Place { .local = id };
 }
 
-Place Builder::global( Node_id declaration ) const
+Place Builder::global( Node_id declaration, Type_id owner ) const
 {
-    return Place { .global = declaration };
+    return Place { .global = declaration, .owner = owner };
 }
 
 Place Builder::field( Place base, Node_id field_decl )

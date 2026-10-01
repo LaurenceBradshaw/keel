@@ -16,34 +16,46 @@ error: field `id` is already declared
 31 |     i32 id;
    |     ^^^^^^^ previous declaration is at: sema/errors_static_fields.kl:29:12
 
-error: a generic type cannot have a static field yet
-  --> sema/errors_static_fields.kl:39:12
+error: a static field's type cannot name a type parameter yet
+  --> sema/errors_static_fields.kl:41:12
    |
-39 |     static i32 made = 0;
-   |            ^^^^^^^^^^^^^
+41 |     static T last;
+   |            ^^^^^^^
 
 error: `limit` is static, so it belongs to `Counter` rather than to one object
-  --> sema/errors_static_fields.kl:44:12
+  --> sema/errors_static_fields.kl:46:12
    |
-44 |     return c.limit;
+46 |     return c.limit;
    |            ^^^^^^^ write `Counter::limit`
 
 error: `made` is private to `Counter`
-  --> sema/errors_static_fields.kl:49:13
+  --> sema/errors_static_fields.kl:51:13
    |
-49 |     i32 b = Counter::made;  // private
+51 |     i32 b = Counter::made;       // private
    |             ^^^^^^^^^^^^^ only that type's own members may name it
 
 error: `Counter` has no static field `nope`
-  --> sema/errors_static_fields.kl:50:13
+  --> sema/errors_static_fields.kl:52:13
    |
-50 |     i32 d = Counter::nope;  // nothing of that name
+52 |     i32 d = Counter::nope;       // nothing of that name
    |             ^^^^^^^^^^^^^
 
 error: `cap` is `const`
-  --> sema/errors_static_fields.kl:51:5
+  --> sema/errors_static_fields.kl:53:5
    |
-51 |     Counter::cap = 4;       // const
+53 |     Counter::cap = 4;            // const
    |     ^^^^^^^^^^^^ remove `const` to modify it
 
-8 errors generated
+error: `Box` needs its type arguments here
+  --> sema/errors_static_fields.kl:54:13
+   |
+54 |     i32 e = Box::made;           // which instantiation
+   |             ^^^ write `Box< ... >::made`
+
+error: `Counter` is not a generic
+  --> sema/errors_static_fields.kl:55:13
+   |
+55 |     i32 f = Counter<i32>::limit; // not generic
+   |             ^^^^^^^^^^^^^^^^^^^
+
+10 errors generated

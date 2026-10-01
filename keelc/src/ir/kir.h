@@ -82,6 +82,7 @@ struct Place
     Node_id  global {};            // a file-scope Var_decl - exactly one of these is valid
     u32      first_projection = 0; // into Function::projections
     u32      num_projections  = 0;
+    Type_id  owner {}; // the instantiation whose static this is, stays invalid for file-scope variables and non-generic statics
 
     bool is_global() const
     {

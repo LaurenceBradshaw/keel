@@ -47,7 +47,8 @@ private:
     Bindings             bindings_for_call( Node_id call );
     std::vector<Type_id> type_arguments_for_call( Node_id call );
 
-    Place   place_for( Node_id declaration );
+    Place   place_for( Node_id declaration, Type_id owner = {} );
+    Type_id static_owner( Node_id named, Node_id decl );
     Node_id field_of( Type_id type, Symbol_id name ) const;
 
     Operand lower_expression( Node_id id ); // produces a value
@@ -341,7 +342,7 @@ Bindings Lowering::bindings_for_call( Node_id call )
     return bindings;
 }
 
-Place Lowering::place_for( Node_id declaration )
+Place Lowering::place_for( Node_id declaration, Type_id owner )
 {
     const auto local = locals_.find( declaration.v );
 
@@ -364,7 +365,26 @@ Place Lowering::place_for( Node_id declaration )
     // Anything else that resolves to a Var_decl is at file scope: a function-local one is in the
     // map by the time any name can refer to it, because use-before-declaration is a resolver error.
     assert( ast_.kind( declaration ) == Node_kind::Var_decl && "a name resolves to a local or a global" );
-    return builder_.global( declaration );
+    return builder_.global( declaration, owner );
+}
+
+Type_id Lowering::static_owner( Node_id named, Node_id decl )
+{
+    const Node_id aggregate = enclosing_aggregate( ast_, decl );
+
+    if( !aggregate.is_valid() || !is_generic( ast_, aggregate ) || ast_.kind( decl ) != Node_kind::Var_decl )
+    {
+        return Type_id {};
+    }
+
+    if( ast_.kind( named ) == Node_kind::Path_expr )
+    {
+        return type_of( ast_.child( named, 0 ) );
+    }
+    else
+    {
+        return types_.table().substitute( types_.type_of( aggregate ), bindings_ );
+    }
 }
 
 Node_id Lowering::field_of( Type_id type, Symbol_id name ) const
@@ -1268,7 +1288,7 @@ Operand Lowering::lower_expression( Node_id id )
     case Node_kind::Name_expr:
     {
         const Node_id decl = resolution_.declaration_of( id );
-        return copy( place_for( decl ), type_of( id ) );
+        return copy( place_for( decl, static_owner( id, decl ) ), type_of( id ) );
     }
     case Node_kind::Int_literal:
     case Node_kind::Char_literal:
@@ -1372,7 +1392,7 @@ Operand Lowering::lower_expression( Node_id id )
         // `kl::count`: a global named through its package or a static field, the only paths the resolver binds.
         if( const Node_id decl = resolution_.declaration_of( id ); decl.is_valid() )
         {
-            return copy( place_for( decl ), type_of( id ) );
+            return copy( place_for( decl, static_owner( id, decl ) ), type_of( id ) );
         }
 
         // D7: a payload enum is a struct, so a bare path names a variant with no payload and has to
@@ -1408,9 +1428,12 @@ Place Lowering::lower_place( Node_id id )
     {
     case Node_kind::Name_expr:
     case Node_kind::Path_expr: // `kl::count`, a global through its package
+    {
         // Same lookup as lower_expression's, but producing where the value lives rather than a
         // read of it.
-        return place_for( resolution_.declaration_of( id ) );
+        const Node_id decl = resolution_.declaration_of( id );
+        return place_for( decl, static_owner( id, decl ) );
+    }
     case Node_kind::Field_expr:
     {
         // The field's declaration, found on the object's struct type - same lookup as the emitter does.

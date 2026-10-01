@@ -1,0 +1,57 @@
+// A generic type's static field is one variable per instantiation: `Box<i32>` and `Box<f64>` count
+// their own objects, and the exit code is what each saw.
+class Box<T> where T : Copyable
+{
+    static i32 made = 0;
+
+    public static i32 start = 7;
+
+    public T v;
+
+    Box( T value )
+    {
+        v    = value;
+        made = made + 1;
+    }
+
+    static i32 count()
+    {
+        return made;
+    }
+
+    // The qualified spelling inside the type is the same variable as the bare one.
+    void reset()
+    {
+        Box<T>::made = 0;
+    }
+};
+
+i32 main()
+{
+    Box<i32> a = Box<i32>( 1 );
+    Box<i32> b = Box<i32>( 2 );
+    Box<f64> c = Box<f64>( 3.0 );
+
+    if( Box<i32>::count() != 2 || Box<f64>::count() != 1 || c.v != 3.0 )
+    {
+        return 1;
+    }
+
+    a.reset();
+
+    if( Box<i32>::count() != 0 || Box<f64>::count() != 1 )
+    {
+        return 2;
+    }
+
+    i32* at = &Box<f64>::start;
+
+    *at = *at + b.v;
+
+    if( Box<i32>::start != 7 )
+    {
+        return 3;
+    }
+
+    return Box<f64>::start + Box<f64>::count(); // 10
+}

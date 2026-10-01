@@ -510,16 +510,43 @@ void Kir_emitter::emit_globals()
     {
         if( is_aggregate( ast_.kind( child ) ) )
         {
-            for( const Node_id member : ast_.members( child ) )
+            if( is_generic( ast_, child ) )
             {
-                if( ast_.kind( member ) != Node_kind::Var_decl )
+                for( const Type_id instance : types_.table().composite_types() )
                 {
-                    continue;
+                    const Type& described = types_.table().get( instance );
+
+                    if( described.declaration != child || types_.table().mentions_parameter( instance ) )
+                    {
+                        continue;
+                    }
+
+                    for( const Node_id member : ast_.members( child ) )
+                    {
+                        if( ast_.kind( member ) != Node_kind::Var_decl )
+                        {
+                            continue;
+                        }
+
+                        write_line( spelling_.global_definition( member, instance ) );
+
+                        any = true;
+                    }
                 }
+            }
+            else
+            {
+                for( const Node_id member : ast_.members( child ) )
+                {
+                    if( ast_.kind( member ) != Node_kind::Var_decl )
+                    {
+                        continue;
+                    }
 
-                write_line( spelling_.global_definition( member ) );
+                    write_line( spelling_.global_definition( member ) );
 
-                any = true;
+                    any = true;
+                }
             }
             continue;
         }
@@ -1036,9 +1063,15 @@ Type_id Kir_emitter::type_of( const Place& place ) const
 
 std::string Kir_emitter::place( const Place& place ) const
 {
-    std::string text = place.is_global()
-                           ? mangle_local( interner_.text( Symbol_id { ast_.aux( place.global ) } ), place.global.v )
-                           : local_name( place.local.v );
+    std::span<const Type_id> arguments =
+        place.owner.is_valid() ? types_.table().get( place.owner ).arguments : std::span<const Type_id>();
+
+    std::string text =
+        !place.is_global()
+            ? local_name( place.local.v )
+            : mangle_static_field(
+                  interner_.text( Symbol_id { ast_.aux( place.global ) } ), place.global.v, arguments, types_.table()
+              );
 
     for( u32 i = 0; i < place.num_projections; ++i )
     {
@@ -3091,6 +3124,36 @@ TEST_CASE( "emit_kir_emits_a_static_field_as_a_global", "[codegen][kir][static]"
     REQUIRE( g.has( "int32_t kl_count_" ) );
     REQUIRE( g.has( " = 5;" ) );
     REQUIRE( g.has( " = 6;" ) );
+}
+
+// One variable per instantiation, named for it, and none for the open `Box<T>`: a bare `made` in an
+// instance's method is that instance's.
+TEST_CASE( "emit_kir_emits_a_generic_static_field_per_instantiation", "[codegen][kir][static]" )
+{
+    Generated g( "struct Box<T> where T : Copyable\n"
+                 "{\n"
+                 "    T v;\n"
+                 "    static i32 made = 4;\n"
+                 "    static i32 count() { return made; }\n"
+                 "};\n"
+                 "i32 main() { Box<i32>::made = 1; Box<f64>::made = 2; return Box<i32>::count(); }" );
+
+    INFO( g.c );
+    REQUIRE( g.clean() );
+
+    const std::size_t i32_storage = g.c.find( "int32_t kl_made_" );
+
+    REQUIRE( i32_storage != std::string::npos );
+
+    const std::string name = g.c.substr( i32_storage + 8, g.c.find( "__I", i32_storage ) - i32_storage - 8 );
+
+    REQUIRE( g.has( "int32_t " + name + "__I3i32E = 4;" ) );
+    REQUIRE( g.has( "int32_t " + name + "__I3f64E = 4;" ) );
+    REQUIRE_FALSE( g.has( "int32_t " + name + " " ) );
+
+    // `count` on `Box<i32>` reads the variable `Box<i32>::made` wrote; nothing reads `Box<f64>`'s.
+    REQUIRE( g.has( " = " + name + "__I3i32E;" ) );
+    REQUIRE_FALSE( g.has( " = " + name + "__I3f64E;" ) );
 }
 
 } // namespace keel

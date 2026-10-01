@@ -75,4 +75,7 @@ std::string mangle_constructor(
 // contain both `x` and `kl_x`, which would otherwise become the same C identifier.
 std::string mangle_local( std::string_view name, u32 declaration );
 
+std::string
+mangle_static_field( std::string_view name, u32 declaration, std::span<const Type_id> type_arguments, const Type_table& types );
+
 } // namespace keel

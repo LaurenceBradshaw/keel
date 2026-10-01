@@ -257,10 +257,12 @@ std::string c_integer( u64 value )
     return value > 9223372036854775807ull ? fmt::format( "{}ull", value ) : fmt::format( "{}", value );
 }
 
-std::string Spelling::global_definition( Node_id declaration ) const
+std::string Spelling::global_definition( Node_id declaration, Type_id owner ) const
 {
-    const Type_id     variable = types.type_of( declaration );
-    const std::string name     = mangle_local( interner.text( Symbol_id { ast.aux( declaration ) } ), declaration.v );
+    const Type_id            variable  = types.type_of( declaration );
+    std::string_view         name_text = interner.text( Symbol_id { ast.aux( declaration ) } );
+    std::span<const Type_id> arguments = owner.is_valid() ? types.table().get( owner ).arguments : std::span<const Type_id>();
+    const std::string        name      = mangle_static_field( name_text, declaration.v, arguments, types.table() );
 
     // The checker evaluated the initialiser; this prints the value. It used to print the expression
     // instead, which meant a backend re-deriving §6.4's conversions in its own spelling of the tree

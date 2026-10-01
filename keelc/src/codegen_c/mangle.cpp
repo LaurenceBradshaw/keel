@@ -267,6 +267,21 @@ std::string mangle_local( std::string_view name, u32 declaration )
     return fmt::format( "kl_{}_{}", name, declaration );
 }
 
+std::string
+mangle_static_field( std::string_view name, u32 declaration, std::span<const Type_id> type_arguments, const Type_table& types )
+{
+    std::string local = mangle_local( name, declaration );
+    if( type_arguments.empty() )
+    {
+        return local;
+    }
+    else
+    {
+        local += "__I" + construct_arg_string( type_arguments, types ) + "E";
+        return local;
+    }
+}
+
 } // namespace keel
 
 #ifdef ENABLE_UNIT_TESTS
@@ -632,6 +647,30 @@ TEST_CASE( "mangle_local_cannot_collide", "[codegen][mangle]" )
     SECTION( "`x` and `kl_x` stay distinct" )
     {
         REQUIRE( mangle_local( "x", 1 ) != mangle_local( "kl_x", 2 ) );
+    }
+}
+
+// One declaration is one variable per instantiation, so the type arguments are part of its name.
+TEST_CASE( "mangle_static_field_names_each_instantiation", "[codegen][mangle][static]" )
+{
+    Type_table table;
+
+    const Type_id i32      = table.integer( 32, true );
+    const Type_id f64      = table.floating( 64 );
+    const Type_id of_i32[] = { i32 };
+    const Type_id of_f64[] = { f64 };
+    const Type_id of_box[] = { table.structure( Node_id { 11 }, std::array { i32 }, "Box" ) };
+
+    SECTION( "a non-generic type's is spelled as a global" )
+    {
+        REQUIRE( mangle_static_field( "made", 53, {}, table ) == mangle_local( "made", 53 ) );
+    }
+
+    SECTION( "an instantiation's carries its arguments" )
+    {
+        REQUIRE( mangle_static_field( "made", 53, of_i32, table ) == "kl_made_53__I3i32E" );
+        REQUIRE( mangle_static_field( "made", 53, of_box, table ) == "kl_made_53__I3BoxI3i32EE" );
+        REQUIRE( mangle_static_field( "made", 53, of_i32, table ) != mangle_static_field( "made", 53, of_f64, table ) );
     }
 }
 

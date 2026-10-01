@@ -149,6 +149,20 @@ Type_id Expressions::infer_name( Node_id id )
         return types_.record( id, table_.builtin( Type_kind::Error ) );
     }
 
+    const Node_id aggregate = enclosing_aggregate( ast_, decl );
+    if( ast_.kind( id ) == Node_kind::Path_expr && aggregate.is_valid() )
+    {
+        const Type_id qualifier = qualifier_type( id, aggregate );
+        if( table_.is_error( qualifier ) )
+        {
+            return types_.record( id, table_.builtin( Type_kind::Error ) );
+        }
+        else
+        {
+            types_.record( ast_.child( id, 0 ), qualifier );
+        }
+    }
+
     return types_.record( id, types_.type_of( decl ) );
 }
 
@@ -7481,6 +7495,51 @@ TEST_CASE( "type_checker_types_a_static_field", "[sema][types][static]" )
            Case { "C::limit = 4; return 0;", "`limit`", "" },
            Case { "return P::x;", "`P` has no static field `x`", "read it as `value.x`" },
            Case { "return C::nope;", "`C` has no static field `nope`", "" } } )
+    {
+        const Typed p( fmt::format( "{}i32 main() {{ {} }}\n", types, c.body ) );
+
+        INFO( c.body << "\n" << p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( c.message ) != std::string::npos );
+        REQUIRE( p.rendered().find( c.help ) != std::string::npos );
+    }
+}
+
+// A generic type's static field is one variable per instantiation, so a path to it has to say which,
+// and the qualifier's type is what tells the lowerer.
+TEST_CASE( "type_checker_types_a_generic_static_field", "[sema][types][static]" )
+{
+    constexpr std::string_view types = "struct Box<T> where T : Copyable\n"
+                                       "{\n"
+                                       "    T v;\n"
+                                       "    static i32 made = 0;\n"
+                                       "    static i32 count() { return made + Box<T>::made; }\n"
+                                       "};\n"
+                                       "struct S { i32 x; static i32 n = 0; };\n";
+
+    SECTION( "named through an instance" )
+    {
+        const Typed p( fmt::format( "{}i32 main() {{ Box<i32>::made = 1; return Box<i32>::made; }}\n", types ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const Node_id path = p.nth( Node_kind::Path_expr, 1 ); // after `Box<T>::made` in `count`
+
+        REQUIRE( p.type_name( path ) == "i32" );
+        REQUIRE( p.type_name( p.child( path, 0 ) ) == "Box<i32>" );
+    }
+
+    struct Case
+    {
+        const char* body;
+        const char* message;
+        const char* help;
+    };
+
+    for( const Case c :
+         { Case { "return Box::made;", "`Box` needs its type arguments here", "write `Box< ... >::made`" },
+           Case { "return S<i32>::n;", "`S` is not a generic", "" } } )
     {
         const Typed p( fmt::format( "{}i32 main() {{ {} }}\n", types, c.body ) );
 

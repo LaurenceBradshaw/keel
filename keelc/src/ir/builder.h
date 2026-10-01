@@ -33,7 +33,7 @@ public:
 
     // Places. field()/deref() build on a base rather than mutating it.
     Place place( Local_id id ) const;
-    Place global( Node_id decl ) const;
+    Place global( Node_id decl, Type_id owner = {} ) const;
     Place field( Place base, Node_id field_decl );
     Place deref( Place base );
 

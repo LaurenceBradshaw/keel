@@ -31,12 +31,14 @@ class Counter
     i32 id;
 };
 
-// One variable per instantiation is not built yet.
+// One variable per instantiation, which a type parameter would make a different type in each.
 struct Box<T> where T : Copyable
 {
     T v;
 
     static i32 made = 0;
+
+    static T last;
 };
 
 i32 through_an_object( const ref Counter c )
@@ -46,9 +48,12 @@ i32 through_an_object( const ref Counter c )
 
 i32 main()
 {
-    i32 b = Counter::made;  // private
-    i32 d = Counter::nope;  // nothing of that name
-    Counter::cap = 4;       // const
+    i32 b = Counter::made;       // private
+    i32 d = Counter::nope;       // nothing of that name
+    Counter::cap = 4;            // const
+    i32 e = Box::made;           // which instantiation
+    i32 f = Counter<i32>::limit; // not generic
+    i32 g = Box<i32>::made;      // accepted
 
     return Counter::limit; // accepted
 }

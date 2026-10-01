@@ -1,0 +1,180 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Box__I3i32E;
+struct kl__Box__I3f64E;
+
+struct kl__Box__I3i32E
+{
+    int32_t kl_v_11;
+};
+
+struct kl__Box__I3f64E
+{
+    double kl_v_11;
+};
+
+int32_t kl_made_6__I3i32E = 0;
+int32_t kl_start_9__I3i32E = 7;
+int32_t kl_made_6__I3f64E = 0;
+int32_t kl_start_9__I3f64E = 7;
+
+int32_t kl__main__( void );
+void kl__Box__I3i32E__R3BoxI3i32E_3i32__ctor( struct kl__Box__I3i32E*, int32_t );
+void kl__Box__I3f64E__R3BoxI3f64E_3f64__ctor( struct kl__Box__I3f64E*, double );
+int32_t kl__count__I3i32E__S3BoxI3i32E( void );
+int32_t kl__count__I3f64E__S3BoxI3f64E( void );
+void kl__reset__I3i32E__S3BoxI3i32E( struct kl__Box__I3i32E* );
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__Box__I3i32E kl_a_1;
+    struct kl__Box__I3i32E* kl_t2;
+    struct kl__Box__I3i32E kl_b_4;
+    struct kl__Box__I3i32E* kl_t5;
+    struct kl__Box__I3f64E kl_c_7;
+    struct kl__Box__I3f64E* kl_t8;
+    bool kl_t10;
+    bool kl_t11;
+    int32_t kl_t12;
+    bool kl_t13;
+    int32_t kl_t14;
+    bool kl_t15;
+    bool kl_t16;
+    struct kl__Box__I3i32E* kl_t17;
+    bool kl_t19;
+    int32_t kl_t20;
+    bool kl_t21;
+    int32_t kl_t22;
+    bool kl_t23;
+    int32_t* kl_at_24;
+    int32_t* kl_t25;
+    int32_t kl_t26;
+    bool kl_t27;
+    int32_t kl_t28;
+    int32_t kl_t29;
+#line 31 "codegen/static_fields_generic.kl"
+    kl_t2 = &kl_a_1;
+    kl__Box__I3i32E__R3BoxI3i32E_3i32__ctor( kl_t2, 1 );
+#line 32 "codegen/static_fields_generic.kl"
+    kl_t5 = &kl_b_4;
+    kl__Box__I3i32E__R3BoxI3i32E_3i32__ctor( kl_t5, 2 );
+#line 33 "codegen/static_fields_generic.kl"
+    kl_t8 = &kl_c_7;
+    kl__Box__I3f64E__R3BoxI3f64E_3f64__ctor( kl_t8, 3.0 );
+#line 35 "codegen/static_fields_generic.kl"
+    kl_t12 = kl__count__I3i32E__S3BoxI3i32E(  );
+    kl_t13 = kl_t12 != 2;
+    kl_t11 = kl_t13;
+    if ( kl_t11 ) goto bb2; else goto bb1;
+    bb1:
+    kl_t14 = kl__count__I3f64E__S3BoxI3f64E(  );
+    kl_t15 = kl_t14 != 1;
+    kl_t11 = kl_t15;
+    goto bb2;
+    bb2:
+    kl_t10 = kl_t11;
+    if ( kl_t10 ) goto bb4; else goto bb3;
+    bb3:
+    kl_t16 = kl_c_7.kl_v_11 != 3.0;
+    kl_t10 = kl_t16;
+    goto bb4;
+    bb4:
+    if ( kl_t10 ) goto bb5; else goto bb6;
+    bb5:
+#line 37 "codegen/static_fields_generic.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb6:
+#line 40 "codegen/static_fields_generic.kl"
+    kl_t17 = &kl_a_1;
+    kl__reset__I3i32E__S3BoxI3i32E( kl_t17 );
+#line 42 "codegen/static_fields_generic.kl"
+    kl_t20 = kl__count__I3i32E__S3BoxI3i32E(  );
+    kl_t21 = kl_t20 != 0;
+    kl_t19 = kl_t21;
+    if ( kl_t19 ) goto bb8; else goto bb7;
+    bb7:
+    kl_t22 = kl__count__I3f64E__S3BoxI3f64E(  );
+    kl_t23 = kl_t22 != 1;
+    kl_t19 = kl_t23;
+    goto bb8;
+    bb8:
+    if ( kl_t19 ) goto bb9; else goto bb10;
+    bb9:
+#line 44 "codegen/static_fields_generic.kl"
+    kl_t0 = 2;
+    return kl_t0;
+    bb10:
+#line 47 "codegen/static_fields_generic.kl"
+    kl_t25 = &kl_start_9__I3f64E;
+    kl_at_24 = kl_t25;
+#line 49 "codegen/static_fields_generic.kl"
+    kl_t26 = ( *kl_at_24 ) + kl_b_4.kl_v_11;
+    ( *kl_at_24 ) = kl_t26;
+#line 51 "codegen/static_fields_generic.kl"
+    kl_t27 = kl_start_9__I3i32E != 7;
+    if ( kl_t27 ) goto bb11; else goto bb12;
+    bb11:
+#line 53 "codegen/static_fields_generic.kl"
+    kl_t0 = 3;
+    return kl_t0;
+    bb12:
+#line 56 "codegen/static_fields_generic.kl"
+    kl_t28 = kl__count__I3f64E__S3BoxI3f64E(  );
+    kl_t29 = kl_start_9__I3f64E + kl_t28;
+    kl_t0 = kl_t29;
+    return kl_t0;
+}
+
+void kl__Box__I3i32E__R3BoxI3i32E_3i32__ctor( struct kl__Box__I3i32E* kl_this_1, int32_t kl_value_2 )
+{
+    int32_t kl_t3;
+#line 13 "codegen/static_fields_generic.kl"
+    ( *kl_this_1 ).kl_v_11 = kl_value_2;
+#line 14 "codegen/static_fields_generic.kl"
+    kl_t3 = kl_made_6__I3i32E + 1;
+    kl_made_6__I3i32E = kl_t3;
+    return;
+}
+
+void kl__Box__I3f64E__R3BoxI3f64E_3f64__ctor( struct kl__Box__I3f64E* kl_this_1, double kl_value_2 )
+{
+    int32_t kl_t3;
+#line 13 "codegen/static_fields_generic.kl"
+    ( *kl_this_1 ).kl_v_11 = kl_value_2;
+#line 14 "codegen/static_fields_generic.kl"
+    kl_t3 = kl_made_6__I3f64E + 1;
+    kl_made_6__I3f64E = kl_t3;
+    return;
+}
+
+int32_t kl__count__I3i32E__S3BoxI3i32E( void )
+{
+    int32_t kl_t0;
+#line 19 "codegen/static_fields_generic.kl"
+    kl_t0 = kl_made_6__I3i32E;
+    return kl_t0;
+}
+
+int32_t kl__count__I3f64E__S3BoxI3f64E( void )
+{
+    int32_t kl_t0;
+#line 19 "codegen/static_fields_generic.kl"
+    kl_t0 = kl_made_6__I3f64E;
+    return kl_t0;
+}
+
+void kl__reset__I3i32E__S3BoxI3i32E( struct kl__Box__I3i32E* kl_this_1 )
+{
+#line 25 "codegen/static_fields_generic.kl"
+    kl_made_6__I3i32E = 0;
+    return;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}
