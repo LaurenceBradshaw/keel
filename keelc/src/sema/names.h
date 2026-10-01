@@ -33,11 +33,13 @@ enum class Name_kind : u8
 
 std::string_view name_kind_name( Name_kind kind );
 
-// One identifier: its span covers the name alone.
+// One identifier: its span covers the name alone, and `declaration` the name where it is declared,
+// invalid for a package.
 struct Name
 {
     Span      span;
     Name_kind kind;
+    Span      declaration;
 };
 
 // Every name resolution bound, plus the variants and members named through a type, in source order.

@@ -1,7 +1,7 @@
 # Keel for VS Code
 
-Highlighting and editing rules for `.kl` files, keelc's errors underlined in the editor, and names
-coloured by what they refer to.
+Highlighting and editing rules for `.kl` files, keelc's errors underlined in the editor, names
+coloured by what they refer to, and go-to-definition.
 
 Install by linking this folder into VS Code's extensions directory, then reloading the window:
 
@@ -42,3 +42,10 @@ includes them:
 The same run also reports what each name resolved to, and the extension paints that over the
 grammar: after a save, each of these takes the right colour. While a file has unsaved edits the
 colours from its last save stay, moved along with the text, until it is saved again.
+
+## Go to definition
+
+F12, or Ctrl+click on a name, goes to where it is declared, in whichever file or package that is.
+It answers from the last save: after unsaved edits above a name it can find nothing or the wrong
+place until the file is saved again. A package name such as `extra` has no one declaration, and
+fields and methods after a `.` are not covered yet.

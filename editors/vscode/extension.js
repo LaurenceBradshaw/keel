@@ -1,8 +1,8 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// Runs `keelc --check --diagnostics=json --names` on each save, underlines what it reports, and
-// colours each name by what it refers to.
+// Runs `keelc --check --diagnostics=json --names` on each save, underlines what it reports,
+// colours each name by what it refers to, and goes from a name to its declaration.
 
 'use strict';
 
@@ -152,7 +152,19 @@ function parse( stdout, cwd, saved )
                 const lines = lines_for( file );
                 const start = utf16_col( lines, record.line, record.col );
                 const end = utf16_col( lines, record.line, record.end_col );
-                names.get( file ).push( { line: record.line - 1, start, length: end - start, type: kind[0], modifiers: kind[1] } );
+                const name = { line: record.line - 1, start, length: end - start, type: kind[0], modifiers: kind[1] };
+                if( record.decl_file !== undefined )
+                {
+                    const decl_file = path.resolve( cwd, record.decl_file );
+                    const decl_lines = lines_for( decl_file );
+                    name.declaration = {
+                        file: decl_file,
+                        line: record.decl_line - 1,
+                        start: utf16_col( decl_lines, record.decl_line, record.decl_col ),
+                        end: utf16_col( decl_lines, record.decl_line, record.decl_end_col ),
+                    };
+                }
+                names.get( file ).push( name );
             }
             continue;
         }
@@ -331,6 +343,23 @@ function activate( context )
         },
     };
     context.subscriptions.push( vscode.languages.registerDocumentSemanticTokensProvider( { language: 'keel' }, provider, legend ) );
+
+    // Positions are the last save's, so after unsaved edits above a name it can miss or land wrong.
+    const definitions = {
+        provideDefinition( document, position )
+        {
+            const name = ( names.get( document.uri.fsPath ) ?? [] ).find( ( n ) =>
+                n.declaration && n.line === position.line && n.start <= position.character && position.character <= n.start + n.length );
+            if( !name )
+            {
+                return null;
+            }
+
+            const d = name.declaration;
+            return new vscode.Location( vscode.Uri.file( d.file ), new vscode.Range( d.line, d.start, d.line, d.end ) );
+        },
+    };
+    context.subscriptions.push( vscode.languages.registerDefinitionProvider( { language: 'keel' }, definitions ) );
 
     context.subscriptions.push( vscode.workspace.onDidSaveTextDocument( check ) );
     context.subscriptions.push( vscode.workspace.onDidOpenTextDocument( check ) );

@@ -3,6 +3,7 @@
 
 #include "sema/names.h"
 #include <algorithm>
+#include <cctype>
 #include <optional>
 #include <unordered_set>
 #include "common/json.h"
@@ -30,10 +31,12 @@ public:
     std::vector<Name> run();
 
 private:
-    std::optional<Name_kind> kind_of( Node_id id ) const;
+    bool                     is_package( Node_id id ) const;
+    Node_id                  referent( Node_id id ) const;
     std::optional<Name_kind> declaration_kind( Node_id decl ) const;
-    std::optional<Name_kind> member_kind( Node_id type, Symbol_id name ) const;
+    Node_id                  member_named( Node_id type, Symbol_id name ) const;
     Span                     name_span( Node_id id ) const;
+    Span                     declared_name_span( Node_id decl ) const;
     bool                     is_qualified( Node_id id ) const;
 
     const Ast&            ast_;
@@ -57,13 +60,13 @@ std::vector<Name> Name_collector::run()
     {
         const Node_id id { i };
 
-        if( const std::optional<Name_kind> kind = kind_of( id ) )
+        const Node_id                  decl = referent( id );
+        const std::optional<Name_kind> kind = is_package( id ) ? Name_kind::Package : declaration_kind( decl );
+
+        // Synthesised nodes carry a borrowed span, which the name's text will not match.
+        if( const Span span = kind ? name_span( id ) : Span {}; span.is_valid() )
         {
-            // Synthesised nodes carry a borrowed span, which the name's text will not match.
-            if( const Span span = name_span( id ); span.is_valid() )
-            {
-                names.push_back( { span, *kind } );
-            }
+            names.push_back( { span, *kind, decl.is_valid() ? declared_name_span( decl ) : Span {} } );
         }
     }
 
@@ -81,50 +84,50 @@ std::vector<Name> Name_collector::run()
     return names;
 }
 
-std::optional<Name_kind> Name_collector::kind_of( Node_id id ) const
+bool Name_collector::is_package( Node_id id ) const
+{
+    return ast_.kind( id ) == Node_kind::Name_expr && !resolution_.declaration_of( id ).is_valid() &&
+           ast_.children( id ).empty() && resolution_.is_package( Symbol_id { ast_.aux( id ) } );
+}
+
+// The declaration a written name refers to, or invalid when it is not a name or resolved to nothing.
+Node_id Name_collector::referent( Node_id id ) const
 {
     const Node_id decl = resolution_.declaration_of( id );
 
     switch( ast_.kind( id ) )
     {
     case Node_kind::Name_expr:
-        if( Symbol_id { ast_.aux( id ) } == Interner::keyword( Keyword::This ) )
-        {
-            return std::nullopt;
-        }
-        if( decl.is_valid() )
-        {
-            return declaration_kind( decl );
-        }
-        if( ast_.children( id ).empty() && resolution_.is_package( Symbol_id { ast_.aux( id ) } ) )
-        {
-            return Name_kind::Package;
-        }
-        return std::nullopt;
+        return Symbol_id { ast_.aux( id ) } == Interner::keyword( Keyword::This ) ? Node_id {} : decl;
     case Node_kind::Named_type:
     case Node_kind::Struct_literal:
-        return decl.is_valid() ? declaration_kind( decl ) : std::nullopt;
+        return decl;
     case Node_kind::Path_expr:
     {
         if( decl.is_valid() )
         {
-            return declaration_kind( decl );
+            return decl;
         }
 
         // `Colour::Red` and `Buffer::of`: the checker binds these, so the type is asked here.
         const Node_id type = resolution_.declaration_of( ast_.child( id, 0 ) );
-        return type.is_valid() ? member_kind( type, Symbol_id { ast_.aux( id ) } ) : std::nullopt;
+        return type.is_valid() ? member_named( type, Symbol_id { ast_.aux( id ) } ) : Node_id {};
     }
     case Node_kind::Type_param_decl:
     case Node_kind::Binding_decl:
-        return declaration_kind( id );
+        return id;
     default:
-        return std::nullopt;
+        return Node_id {};
     }
 }
 
 std::optional<Name_kind> Name_collector::declaration_kind( Node_id decl ) const
 {
+    if( !decl.is_valid() )
+    {
+        return std::nullopt;
+    }
+
     switch( ast_.kind( decl ) )
     {
     case Node_kind::Var_decl:
@@ -154,7 +157,7 @@ std::optional<Name_kind> Name_collector::declaration_kind( Node_id decl ) const
     }
 }
 
-std::optional<Name_kind> Name_collector::member_kind( Node_id type, Symbol_id name ) const
+Node_id Name_collector::member_named( Node_id type, Symbol_id name ) const
 {
     if( ast_.kind( type ) == Node_kind::Enum_decl )
     {
@@ -162,7 +165,7 @@ std::optional<Name_kind> Name_collector::member_kind( Node_id type, Symbol_id na
         {
             if( Symbol_id { ast_.aux( variant ) } == name )
             {
-                return Name_kind::Variant;
+                return variant;
             }
         }
     }
@@ -173,12 +176,12 @@ std::optional<Name_kind> Name_collector::member_kind( Node_id type, Symbol_id na
             if( Symbol_id { ast_.aux( member ) } == name &&
                 ( ast_.kind( member ) == Node_kind::Method_decl || ast_.kind( member ) == Node_kind::Field_decl ) )
             {
-                return declaration_kind( member );
+                return member;
             }
         }
     }
 
-    return std::nullopt;
+    return Node_id {};
 }
 
 bool Name_collector::is_qualified( Node_id id ) const
@@ -227,6 +230,29 @@ Span Name_collector::name_span( Node_id id ) const
     }
 
     return span;
+}
+
+// A declaration's span covers all of it, so its name is the first whole-word match inside. A type
+// spelt like the name in front of it, `meter meter_of()`, is skipped by the word test; `Point Point`
+// is not, and lands one word early.
+Span Name_collector::declared_name_span( Node_id decl ) const
+{
+    const std::string_view name = interner_.text( Symbol_id { ast_.aux( decl ) } );
+    const Span             node = ast_.span( decl );
+    const std::string_view text = std::string_view( sm_.file( node.file ).text ).substr( node.start, node.len() );
+
+    const auto is_word = []( char c ) { return std::isalnum( static_cast<unsigned char>( c ) ) || c == '_'; };
+
+    for( std::size_t at = text.find( name ); !name.empty() && at != std::string_view::npos; at = text.find( name, at + 1 ) )
+    {
+        const std::size_t after = at + name.size();
+        if( ( at == 0 || !is_word( text[at - 1] ) ) && ( after == text.size() || !is_word( text[after] ) ) )
+        {
+            return Span { node.file, node.start + static_cast<u32>( at ), node.start + static_cast<u32>( after ) };
+        }
+    }
+
+    return Span {};
 }
 
 } // namespace
@@ -279,7 +305,19 @@ void render_names_json( const Source_manager& sm, const std::vector<Name>& names
 
         out << R"({"kind":"name","refers_to":")" << name_kind_name( name.kind ) << R"(","file":")"
             << json_escape( sm.file( name.span.file ).path ) << R"(","line":)" << start.line << R"(,"col":)" << start.col
-            << R"(,"end_col":)" << end.col << "}\n";
+            << R"(,"end_col":)" << end.col;
+
+        // Where go-to-definition lands; absent for a package, which has no one declaration.
+        if( name.declaration.is_valid() )
+        {
+            const Line_col decl_start = sm.line_col( name.declaration.file, name.declaration.start );
+            const Line_col decl_end   = sm.line_col( name.declaration.file, name.declaration.end );
+
+            out << R"(,"decl_file":")" << json_escape( sm.file( name.declaration.file ).path ) << R"(","decl_line":)"
+                << decl_start.line << R"(,"decl_col":)" << decl_start.col << R"(,"decl_end_col":)" << decl_end.col;
+        }
+
+        out << "}\n";
     }
 }
 
@@ -299,8 +337,8 @@ namespace keel
 namespace
 {
 
-// Each name as "text:kind", in source order.
-std::vector<std::string> named( std::string_view source )
+// Each name as "text:kind", or "text@offset->offset" with `declarations`, in source order.
+std::vector<std::string> named( std::string_view source, bool declarations = false )
 {
     Source_manager sm;
     Interner       interner;
@@ -314,7 +352,10 @@ std::vector<std::string> named( std::string_view source )
     std::vector<std::string> out;
     for( const Name& name : collect_names( ast, resolution, sm, interner ) )
     {
-        out.push_back( fmt::format( "{}:{}", sm.text( name.span ), name_kind_name( name.kind ) ) );
+        out.push_back(
+            declarations ? fmt::format( "{}@{}->{}", sm.text( name.span ), name.span.start, name.declaration.start )
+                         : fmt::format( "{}:{}", sm.text( name.span ), name_kind_name( name.kind ) )
+        );
     }
     return out;
 }
@@ -404,10 +445,36 @@ TEST_CASE( "names_render_as_json_lines", "[sema][names]" )
     const File_id  file = sm.add_file( "a.kl", "i32 x;\nT y;" );
 
     std::ostringstream out;
-    render_names_json( sm, { { Span { file, 9, 10 }, Name_kind::Global } }, out );
+    render_names_json(
+        sm,
+        { { Span { file, 9, 10 }, Name_kind::Global, Span { file, 4, 5 } }, { Span { file, 7, 8 }, Name_kind::Package, Span {} }
+        },
+        out
+    );
 
     REQUIRE(
-        out.str() == "{\"kind\":\"name\",\"refers_to\":\"global\",\"file\":\"a.kl\",\"line\":2,\"col\":3,\"end_col\":4}\n"
+        out.str() == "{\"kind\":\"name\",\"refers_to\":\"global\",\"file\":\"a.kl\",\"line\":2,\"col\":3,\"end_col\":4,"
+                     "\"decl_file\":\"a.kl\",\"decl_line\":1,\"decl_col\":5,\"decl_end_col\":6}\n"
+                     "{\"kind\":\"name\",\"refers_to\":\"package\",\"file\":\"a.kl\",\"line\":2,\"col\":1,\"end_col\":2}\n"
+    );
+}
+
+TEST_CASE( "names_point_at_the_declared_name", "[sema][names]" )
+{
+    const auto names =
+        named( "enum Colour { Red }; class meter { i32 n; }; i32 f( Colour c ) { Colour d = c; return 0; }", true );
+
+    REQUIRE( has( names, "Colour@52->5" ) );
+    REQUIRE( has( names, "c@76->59" ) );
+}
+
+TEST_CASE( "names_point_past_a_type_spelt_like_a_prefix", "[sema][names]" )
+{
+    const auto names = named( "struct p { i32 v; };\np pp( p v ) { return v; }\nvoid g() { p x = pp( p { 1 } ); }", true );
+
+    // `pp` is declared at 23, after its return type `p`.
+    REQUIRE(
+        std::ranges::any_of( names, []( const std::string& n ) { return n.starts_with( "pp@" ) && n.ends_with( "->23" ); } )
     );
 }
 
