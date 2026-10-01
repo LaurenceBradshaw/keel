@@ -77,6 +77,9 @@ public:
     // ruled_fallthrough below be an answer rather than a guess.
     void check_arm_structure( Node_id id );
 
+    // Every binding starts as an error, and check_variant_pattern overwrites the ones that match.
+    void type_bindings_as_errors( Node_id switch_id );
+
     // The three halves of one loop the caller drives: what the scrutinee settles before any arm,
     // one arm's labels, and what only the whole arm list can say.
     Switch_coverage begin_switch( Node_id id, Type_id type );

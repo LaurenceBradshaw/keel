@@ -302,7 +302,7 @@ void Statements::visit_assign( Node_id id )
     // mutable-by-default, and a parameter is a local.
     if( !places_.is_assignable( target ) )
     {
-        // A name that does not resolve, or resolves to a function, is already reported by
+        // A name that does not resolve, or resolves to a type or function, is already reported by
         // infer_name; a failed subtree was reported by whichever rule produced it. Anything else -
         // a literal, a call, an arithmetic expression - has nothing else to report it.
         if( ast_.kind( target ) != Node_kind::Name_expr && ast_.kind( target ) != Node_kind::Error )
@@ -377,6 +377,8 @@ void Statements::visit_switch( Node_id id )
     const std::span<const Node_id> children  = ast_.children( id );
     const Node_id                  scrutinee = children[0];
     const Type_id                  type      = expressions_.infer( scrutinee );
+
+    coverage_.type_bindings_as_errors( id );
 
     // Every arm body is visited whatever the scrutinee turned out to be: one mistake there should
     // not hide every mistake inside the arms.

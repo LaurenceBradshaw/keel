@@ -103,7 +103,9 @@ Type_id Expressions::infer_name( Node_id id )
         return types_.record( id, table_.builtin( Type_kind::Error ) ); // the resolver already said so
     }
 
-    if( ast_.kind( decl ) == Node_kind::Function_decl )
+    const Node_kind decl_kind = ast_.kind( decl );
+
+    if( decl_kind == Node_kind::Function_decl )
     {
         // types_.type_of( decl ) holds the function's *return* type, so without this `i32 x = f;` would
         // quietly succeed whenever f happens to return an i32.
@@ -114,10 +116,19 @@ Type_id Expressions::infer_name( Node_id id )
         return types_.record( id, table_.builtin( Type_kind::Error ) );
     }
 
+    if( is_aggregate( decl_kind ) || decl_kind == Node_kind::Enum_decl || decl_kind == Node_kind::Type_param_decl )
+    {
+        reporter_.error_at(
+            ast_.span( id ), fmt::format( "`{}` is a type, not a value", interner_.text( Symbol_id { ast_.aux( id ) } ) )
+        );
+
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
     // D22: a bare field name is `this.field` written implicitly, so it needs a receiver to be
     // written through. M7's static method is declared inside the type and has none, which is the
     // one place the member scope reaches a field that no object backs.
-    if( ast_.kind( decl ) == Node_kind::Field_decl && !places_.receiver_of( current_function_ ).is_valid() )
+    if( decl_kind == Node_kind::Field_decl && !places_.receiver_of( current_function_ ).is_valid() )
     {
         reporter_.error_at(
             ast_.span( id ),
@@ -1976,7 +1987,7 @@ Type_id Expressions::infer_path( Node_id id )
     // all, and `f()::x` deserves its own complaint rather than a second one about the name.
     if( !decl.is_valid() )
     {
-        if( !is_name( qualifier ) )
+        if( !is_name( qualifier ) && ast_.kind( qualifier ) != Node_kind::Error )
         {
             reporter_.error_at( ast_.span( qualifier ), "`::` needs the name of a type on its left" );
         }
@@ -2805,6 +2816,60 @@ TEST_CASE( "type_checker_types_a_name_from_its_declaration", "[sema][types]" )
     REQUIRE( p.clean() );
     REQUIRE( p.type_name( p.nth( Node_kind::Param_decl, 0 ) ) == "u16" );
     REQUIRE( p.type_name( p.nth( Node_kind::Var_decl, 0 ) ) == "u64" );
+}
+
+// A type's name is not a value of that type: once lowering is reached, a name must be a local or a global.
+TEST_CASE( "expressions_refuse_a_type_used_as_a_value", "[sema][types]" )
+{
+    constexpr std::string_view types = "struct P { i32 x; };\n"
+                                       "class C { i32 v; C( i32 a ) { v = a; } };\n"
+                                       "enum E { A, B };\n";
+
+    const auto refused = []( std::string_view source, std::string_view name )
+    {
+        const Typed p( source );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( fmt::format( "`{}` is a type, not a value", name ) ) != std::string::npos );
+    };
+
+    SECTION( "a struct, a class or an enum as an initialiser" )
+    {
+        refused( std::string( types ) + "i32 main() { P p = P; return 0; }", "P" );
+        refused( std::string( types ) + "i32 main() { C c = C; return 0; }", "C" );
+        refused( std::string( types ) + "i32 main() { E e = E; return 0; }", "E" );
+    }
+
+    SECTION( "a type parameter" )
+    {
+        refused( "i32 f<T>( T v ) { T w = T; return 0; }\ni32 main() { i32 n = 1; return f( n ); }", "T" );
+    }
+
+    SECTION( "as the target of an assignment" )
+    {
+        refused( std::string( types ) + "i32 f( P p ) { P = p; return 0; }\ni32 main() { return 0; }", "P" );
+        refused( std::string( types ) + "i32 main() { E = E::A; return 0; }", "E" );
+    }
+
+    SECTION( "under `&`, as an operand and as a return value" )
+    {
+        refused( std::string( types ) + "i32 main() { P* q = &P; return 0; }", "P" );
+        refused( std::string( types ) + "i32 main() { i32 y = P + 1; return y; }", "P" );
+        refused( std::string( types ) + "i32 main() { return E; }", "E" );
+    }
+
+    // The forms that name a type on purpose take other paths, and must not meet this one.
+    SECTION( "a construction, a variant and a static method still name the type" )
+    {
+        const Typed p(
+            std::string( types ) + "struct S { static S make() { return S { .x = 1 }; } i32 x; };\n"
+                                   "i32 main() { C c = C( 1 ); E e = E::A; S s = S::make(); return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
 }
 
 // PLAN §12. A conditional has two rules and the split between them is the whole decision: an

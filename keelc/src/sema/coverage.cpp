@@ -526,6 +526,26 @@ void Coverage::check_arm_structure( Node_id id )
     }
 }
 
+void Coverage::type_bindings_as_errors( Node_id switch_id )
+{
+    for( const Node_id arm : ast_.children( switch_id ).subspan( 1 ) )
+    {
+        for( const Node_id label : ast_.children( arm ).subspan( 0, ast_.children( arm ).size() - 1 ) )
+        {
+            if( ast_.kind( label ) != Node_kind::Variant_pattern )
+            {
+                continue;
+            }
+
+            const std::span<const Node_id> children = ast_.children( label ).subspan( 1 );
+            for( const Node_id child : children )
+            {
+                types_.record( child, table_.builtin( Type_kind::Error ) );
+            }
+        }
+    }
+}
+
 bool Coverage::completes_normally( Node_id id ) const
 {
     switch( ast_.kind( id ) )
@@ -1235,9 +1255,6 @@ TEST_CASE( "type_checker_switches_on_a_float_by_range_only", "[sema][range]" )
 
 // A pattern binds the payload by name. The binding is read-only: when owning payloads arrive it
 // becomes a borrow, and writing through it would then be writing into a value the enum still owns.
-
-// A pattern binds the payload by name. The binding is read-only: when owning payloads arrive it
-// becomes a borrow, and writing through it would then be writing into a value the enum still owns.
 TEST_CASE( "type_checker_binds_a_variant_pattern", "[sema][payload]" )
 {
     constexpr std::string_view shape = "enum Shape { Circle( f64 radius ), Rect( f64 w, f64 h ), Dot };\n";
@@ -1320,6 +1337,108 @@ TEST_CASE( "type_checker_counts_payload_variants_for_exhaustiveness", "[sema][pa
 
     INFO( p.rendered() );
     REQUIRE( p.rendered().find( "missing `Circle`" ) != std::string::npos );
+}
+
+// A pattern that fails still binds its names, and the arm reads them: each must be typed, as an
+// error, so the one mistake is all that is reported.
+TEST_CASE( "coverage_types_the_bindings_of_a_failed_pattern", "[sema][payload]" )
+{
+    constexpr std::string_view types = "enum Shape { Dot, Circle( i32 r ) };\n"
+                                       "enum Other { Circle( i32 r ) };\n"
+                                       "struct P { i32 x; };\n";
+
+    const auto reported_once = [&]( std::string_view function, std::string_view message )
+    {
+        const Typed p( std::string( types ) + std::string( function ) + "\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+
+        const std::string rendered = p.rendered();
+        std::size_t       errors   = 0;
+
+        for( std::size_t at = rendered.find( "error: " ); at != std::string::npos; at = rendered.find( "error: ", at + 1 ) )
+        {
+            ++errors;
+        }
+
+        REQUIRE( errors == 1 );
+        REQUIRE( rendered.find( message ) != std::string::npos );
+
+        for( std::size_t i = 0; p.nth( Node_kind::Binding_decl, i ).is_valid(); ++i )
+        {
+            REQUIRE( p.type_name( p.nth( Node_kind::Binding_decl, i ) ) == "<error>" );
+        }
+    };
+
+    SECTION( "a variant the enum does not have" )
+    {
+        reported_once(
+            "i32 f( Shape s ) { switch( s ) { case Shape::Square( r ): return r + 1; default: return 0; } }",
+            "`Shape` has no variant `Square`"
+        );
+    }
+
+    SECTION( "another enum's variant" )
+    {
+        reported_once(
+            "i32 f( Shape s ) { switch( s ) { case Other::Circle( r ): return r + 1; default: return 0; } }",
+            "a `case` label must be a variant of `Shape`"
+        );
+    }
+
+    SECTION( "a variant already covered" )
+    {
+        reported_once(
+            "i32 f( Shape s ) { switch( s ) { case Shape::Circle: return 0; case Shape::Circle( r ): return r + 1; "
+            "default: return 0; } }",
+            "`Circle` is already covered"
+        );
+    }
+
+    SECTION( "more names than the payload has values" )
+    {
+        reported_once(
+            "i32 f( Shape s ) { switch( s ) { case Shape::Dot( a ): return a + 1; default: return 0; } }",
+            "`Dot` carries 0 values, but 1 was bound"
+        );
+
+        // The names the payload does have keep their types.
+        const Typed p(
+            std::string( types ) +
+            "i32 f( Shape s ) { switch( s ) { case Shape::Circle( r, e ): return r + e; default: return 0; } }\n"
+            "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.type_name( p.nth( Node_kind::Binding_decl, 0 ) ) == "i32" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Binding_decl, 1 ) ) == "<error>" );
+    }
+
+    SECTION( "a scrutinee that is not an enum" )
+    {
+        reported_once(
+            "i32 f( P s ) { switch( s ) { case Shape::Circle( r ): return r + 1; default: return 0; } }",
+            "`switch` needs an `enum` or a number, but this is a `P`"
+        );
+    }
+
+    SECTION( "a scrutinee whose type is unknown" )
+    {
+        reported_once(
+            "i32 f( Shapex s ) { switch( s ) { case Shape::Circle( r ): return r + 1; default: return 0; } }",
+            "unknown type `Shapex`"
+        );
+    }
+
+    // The parser has said the path is broken, so the checker has nothing to add about it.
+    SECTION( "a path that did not parse" )
+    {
+        reported_once(
+            "i32 f( Shape s ) { switch( s ) { case Shape:: ::Circle( r ): return r + 1; default: return 0; } }",
+            "expected an identifier, found `::`"
+        );
+    }
 }
 
 } // namespace keel

@@ -1,0 +1,74 @@
+// A pattern that fails still binds its names. The arm reads them, and the one mistake is all that is reported.
+enum Shape
+{
+    Dot,
+    Circle( i32 r ),
+    Rect( i32 w, i32 h ),
+};
+
+enum Other
+{
+    Circle( i32 r ),
+};
+
+struct Point
+{
+    i32 x;
+};
+
+i32 labels( Shape s )
+{
+    switch ( s )
+    {
+        case Shape::Square( a ):
+            return a + 1;
+        case Other::Circle( b ):
+            return b + 1;
+        case Shape::Circle:
+            return 0;
+        case Shape::Circle( c ):
+            return c + 1;
+        case Shape::Rect( w, h, d ):
+            return w + h + d;
+        case Shape::Dot( e ):
+            return e + 1;
+    }
+}
+
+i32 not_an_enum( Point p )
+{
+    switch ( p )
+    {
+        case Shape::Circle( r ):
+            return r + 1;
+        default:
+            return 0;
+    }
+}
+
+i32 unknown_type( Shapes s )
+{
+    switch ( s )
+    {
+        case Shape::Circle( r ):
+            return r + 1;
+        default:
+            return 0;
+    }
+}
+
+i32 unparsed( Shape s )
+{
+    switch ( s )
+    {
+        case Shape:: ::Circle( r ):
+            return r + 1;
+        default:
+            return 0;
+    }
+}
+
+i32 main()
+{
+    return labels( Shape::Dot );
+}

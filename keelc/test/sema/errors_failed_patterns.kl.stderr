@@ -1,0 +1,49 @@
+error: `Shape` has no variant `Square`
+  --> sema/errors_failed_patterns.kl:23:14
+   |
+23 |         case Shape::Square( a ):
+   |              ^^^^^^^^^^^^^
+
+error: a `case` label must be a variant of `Shape`
+  --> sema/errors_failed_patterns.kl:25:14
+   |
+25 |         case Other::Circle( b ):
+   |              ^^^^^^^^^^^^^
+
+error: `Circle` is already covered
+  --> sema/errors_failed_patterns.kl:29:14
+   |
+29 |         case Shape::Circle( c ):
+   |              ^^^^^^^^^^^^^ previous declaration is at: sema/errors_failed_patterns.kl:27:14
+
+error: `Rect` carries 2 values, but 3 were bound
+  --> sema/errors_failed_patterns.kl:31:14
+   |
+31 |         case Shape::Rect( w, h, d ):
+   |              ^^^^^^^^^^^^^^^^^^^^^^ bind a name for each field of the payload
+
+error: `Dot` carries 0 values, but 1 was bound
+  --> sema/errors_failed_patterns.kl:33:14
+   |
+33 |         case Shape::Dot( e ):
+   |              ^^^^^^^^^^^^^^^ write it without a pattern
+
+error: `switch` needs an `enum` or a number, but this is a `Point`
+  --> sema/errors_failed_patterns.kl:40:14
+   |
+40 |     switch ( p )
+   |              ^
+
+error: unknown type `Shapes`
+  --> sema/errors_failed_patterns.kl:49:19
+   |
+49 | i32 unknown_type( Shapes s )
+   |                   ^^^^^^
+
+error: expected an identifier, found `::`
+  --> sema/errors_failed_patterns.kl:64:21
+   |
+64 |         case Shape:: ::Circle( r ):
+   |                     ^
+
+8 errors generated
