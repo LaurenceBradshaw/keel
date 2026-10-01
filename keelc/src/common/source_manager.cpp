@@ -78,6 +78,11 @@ const Source_file& Source_manager::file( File_id id ) const
     return *files_[id.v];
 }
 
+u32 Source_manager::file_count() const
+{
+    return static_cast<u32>( files_.size() );
+}
+
 std::string_view Source_manager::text( Span s ) const
 {
     const Source_file& f = file( s.file );
@@ -161,6 +166,7 @@ TEST_CASE( "source_manager_add_file_assigns_sequential_ids", "[common][source_ma
     REQUIRE( b.is_valid() );
     REQUIRE( a.v == 0 );
     REQUIRE( b.v == 1 );
+    REQUIRE( sm.file_count() == 2 );
 
     REQUIRE( sm.file( a ).path == "a.kl" );
     REQUIRE( sm.file( a ).text == "i32 x;" );

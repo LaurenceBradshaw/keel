@@ -1,0 +1,5 @@
+{"kind":"file","path":"sema/json/main.kl"}
+{"kind":"file","path":"sema/json/shapes.kl"}
+{"kind":"file","path":"sema/json/clean.kl"}
+{"kind":"diagnostic","severity":"error","file":"sema/json/main.kl","line":7,"col":24,"end_line":7,"end_col":31,"message":"`missing` is not declared","help":""}
+{"kind":"diagnostic","severity":"error","file":"sema/json/shapes.kl","line":4,"col":12,"end_line":4,"end_col":16,"message":"expected `i32`, but got `bool`","help":""}

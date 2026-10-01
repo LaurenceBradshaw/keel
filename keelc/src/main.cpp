@@ -191,6 +191,7 @@ int main( int argc, char** argv )
         ( "dump-kir",      "Print the lowered KIR and stop" )
         ( "emit-c",        "Print the generated C and stop" )
         ( "check",         "Run the front end and report diagnostics, emitting nothing" )
+        ( "diagnostics",   "Report diagnostics as human (on stderr) or json (lines on stdout)", cxxopts::value<std::string>()->default_value( "human" ) )
         ( "package",       "A package and its directory, as name=<dir>; may be repeated", cxxopts::value<std::vector<std::string>>() )
         ( "v,version",     "Print version information and exit" )
         ( "h,help",        "Print usage and exit" )
@@ -230,6 +231,14 @@ int main( int argc, char** argv )
         return 2;
     }
 
+    const std::string diagnostics_format = args["diagnostics"].as<std::string>();
+
+    if( diagnostics_format != "human" && diagnostics_format != "json" )
+    {
+        fmt::print( stderr, "keelc: --diagnostics takes human or json, not '{}'\n", diagnostics_format );
+        return 2;
+    }
+
     std::vector<keel::Package> packages;
 
     if( args.count( "package" ) )
@@ -264,6 +273,12 @@ int main( int argc, char** argv )
     // Reporting is the same wherever we stop, and each --dump flag stops after its own phase.
     const auto finish = [&]() -> int
     {
+        if( diagnostics_format == "json" )
+        {
+            diagnostics.render_json( sm, std::cout );
+            return diagnostics.has_errors() ? 1 : 0;
+        }
+
         diagnostics.render( sm, std::cerr, keel::colour_supported() );
 
         if( !diagnostics.has_errors() )

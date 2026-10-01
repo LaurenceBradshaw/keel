@@ -1,0 +1,8 @@
+// --diagnostics=json: a record for every loaded file, then each error in source order.
+import shapes;
+import clean;
+
+i32 main()
+{
+    return area( 2 ) + missing;
+}

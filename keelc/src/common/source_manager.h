@@ -41,6 +41,7 @@ public:
     std::optional<File_id> load_file( const std::filesystem::path& path );
 
     const Source_file& file( File_id id ) const;
+    u32                file_count() const;
     std::string_view   text( Span s ) const;
     Line_col           line_col( File_id id, u32 offset ) const;
     std::string_view   line_text( File_id id, u32 line ) const;

@@ -1,0 +1,5 @@
+// Has no errors: its file record is what lets an editor clear it.
+i32 one()
+{
+    return 1;
+}

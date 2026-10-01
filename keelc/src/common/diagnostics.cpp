@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "common/diagnostics.h"
+#include <fmt/format.h>
 #include <algorithm>
 #include <cstdlib>
 #include <ostream>
@@ -87,6 +88,43 @@ std::string expand_tabs( std::string_view line, std::vector<std::size_t>& col_of
     return expanded;
 }
 
+// A JSON string body: quotes, backslashes and control characters escaped, everything else as is.
+std::string json_escape( std::string_view text )
+{
+    std::string escaped;
+    escaped.reserve( text.size() );
+
+    for( const char c : text )
+    {
+        switch( c )
+        {
+        case '"':
+            escaped += "\\\"";
+            break;
+        case '\\':
+            escaped += "\\\\";
+            break;
+        case '\n':
+            escaped += "\\n";
+            break;
+        case '\t':
+            escaped += "\\t";
+            break;
+        default:
+            if( static_cast<unsigned char>( c ) < 0x20 )
+            {
+                escaped += fmt::format( "\\u{:04x}", static_cast<unsigned>( c ) );
+            }
+            else
+            {
+                escaped.push_back( c );
+            }
+        }
+    }
+
+    return escaped;
+}
+
 } // namespace
 
 void Diagnostics::error( Span span, std::string message, std::string help )
@@ -126,16 +164,14 @@ size_t Diagnostics::error_count() const
     return count;
 }
 
-void Diagnostics::render( const Source_manager& sm, std::ostream& out, bool colour ) const
+std::vector<u32> Diagnostics::in_source_order() const
 {
-    bool first = true;
-
     // Source order, not emission order. Emission order is pass structure - the lexer speaks before
     // the checker - and carries no meaning for the reader, because absorption already guarantees
     // every diagnostic is an independent mistake rather than a consequence of one above it. If that
     // ever stops being true, this sort goes with it.
     //
-    // Indices rather than the items themselves so render() stays const: every caller holds a
+    // Indices rather than the items themselves so the renderers stay const: every caller holds a
     // Diagnostics by const reference. Within one file a byte offset orders identically to
     // (line, column), both being derived from it, so there is nothing to look up.
     std::vector<u32> ordered( items_.size() );
@@ -170,7 +206,14 @@ void Diagnostics::render( const Source_manager& sm, std::ostream& out, bool colo
         }
     );
 
-    for( const u32 index : ordered )
+    return ordered;
+}
+
+void Diagnostics::render( const Source_manager& sm, std::ostream& out, bool colour ) const
+{
+    bool first = true;
+
+    for( const u32 index : in_source_order() )
     {
         const Diagnostic& d = items_[index];
 
@@ -226,6 +269,33 @@ void Diagnostics::render( const Source_manager& sm, std::ostream& out, bool colo
         out << p.reset;
 
         out << "\n";
+    }
+}
+
+void Diagnostics::render_json( const Source_manager& sm, std::ostream& out ) const
+{
+    for( u32 i = 0; i < sm.file_count(); ++i )
+    {
+        out << R"({"kind":"file","path":")" << json_escape( sm.file( File_id { i } ).path ) << "\"}\n";
+    }
+
+    for( const u32 index : in_source_order() )
+    {
+        const Diagnostic& d = items_[index];
+
+        out << R"({"kind":"diagnostic","severity":")" << severity_label( d.severity ) << '"';
+
+        // A diagnostic with no span belongs to no file; the editor decides where to show it.
+        if( d.span.is_valid() )
+        {
+            const Line_col start = sm.line_col( d.span.file, d.span.start );
+            const Line_col end   = sm.line_col( d.span.file, d.span.end );
+
+            out << R"(,"file":")" << json_escape( sm.file( d.span.file ).path ) << '"' << R"(,"line":)" << start.line
+                << R"(,"col":)" << start.col << R"(,"end_line":)" << end.line << R"(,"end_col":)" << end.col;
+        }
+
+        out << R"(,"message":")" << json_escape( d.message ) << R"(","help":")" << json_escape( d.help ) << "\"}\n";
     }
 }
 
@@ -540,6 +610,61 @@ TEST_CASE( "diagnostics_expands_tabs", "[common][diagnostics]" )
     REQUIRE( caret->find( '\t' ) == std::string::npos );
     REQUIRE( caret_count( *caret ) == 3 );
     REQUIRE( caret_indent( *caret ) == source_line.find( "int" ) ); // aligned, whatever the tab width
+}
+
+// Pins the exact JSON format, as diagnostics_render_exact_format does the human one.
+TEST_CASE( "diagnostics_render_json_exact_format", "[common][diagnostics]" )
+{
+    Source_manager sm;
+    const File_id  f = sm.add_file( "hello.kl", "i32 main()\n{\n    int x = 0;\n}\n" );
+    sm.add_file( "clean.kl", "i32 x;" );
+
+    Diagnostics diags;
+    diags.error( Span { f, 17, 20 }, "cannot use `int`", "use `i32` instead" );
+
+    std::ostringstream out;
+    diags.render_json( sm, out );
+
+    const std::string expected =
+        R"({"kind":"file","path":"hello.kl"})"
+        "\n"
+        R"({"kind":"file","path":"clean.kl"})"
+        "\n"
+        R"({"kind":"diagnostic","severity":"error","file":"hello.kl","line":3,"col":5,"end_line":3,"end_col":8,"message":"cannot use `int`","help":"use `i32` instead"})"
+        "\n";
+
+    REQUIRE( out.str() == expected );
+}
+
+TEST_CASE( "diagnostics_render_json_escapes_strings", "[common][diagnostics]" )
+{
+    Source_manager sm;
+    const File_id  f = sm.add_file( "a\\b.kl", "i32 x;" );
+
+    Diagnostics diags;
+    diags.error( Span { f, 0, 3 }, "say \"hi\"\tthen\nstop\x01" );
+
+    std::ostringstream out;
+    diags.render_json( sm, out );
+
+    REQUIRE( out.str().find( R"("path":"a\\b.kl")" ) != std::string::npos );
+    REQUIRE( out.str().find( R"("message":"say \"hi\"\tthen\nstop\u0001")" ) != std::string::npos );
+}
+
+TEST_CASE( "diagnostics_render_json_without_a_span", "[common][diagnostics]" )
+{
+    Source_manager sm;
+    sm.add_file( "a.kl", "i32 x;" );
+
+    Diagnostics diags;
+    diags.error( Span {}, "no place to point" );
+
+    std::ostringstream out;
+    diags.render_json( sm, out );
+
+    const auto lines = lines_of( out.str() );
+    REQUIRE( lines.size() == 2 );
+    REQUIRE( lines[1] == R"({"kind":"diagnostic","severity":"error","message":"no place to point","help":""})" );
 }
 
 } // namespace keel

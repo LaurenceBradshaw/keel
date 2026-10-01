@@ -38,7 +38,13 @@ public:
     // whether its destination is a terminal. See colour_supported().
     void render( const Source_manager& sm, std::ostream& out, bool colour = false ) const;
 
+    // JSON Lines for an editor: one {"kind":"file"} per loaded file, then one {"kind":"diagnostic"}
+    // each. Lines and columns are 1-based bytes; end is exclusive.
+    void render_json( const Source_manager& sm, std::ostream& out ) const;
+
 private:
+    std::vector<u32> in_source_order() const;
+
     std::vector<Diagnostic> items_;
 };
 

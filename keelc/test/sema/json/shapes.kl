@@ -1,0 +1,5 @@
+// Has an error of its own, so the output names two files.
+i32 area( i32 side )
+{
+    return true;
+}
