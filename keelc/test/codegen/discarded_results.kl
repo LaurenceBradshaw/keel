@@ -1,0 +1,76 @@
+// A call's result is the caller's to drop, whatever the caller then does with it: discards it,
+// reads a field of it, or lends it to another call. Each destructor run counts one, so the exit
+// code is how many ran, and a leak or a double drop both move it.
+i32 drops = 0;
+
+class Counter
+{
+    public u64 n;
+
+    Counter( u64 v )
+    {
+        n = v;
+    }
+
+    ~Counter()
+    {
+        drops = drops + 1;
+    }
+
+    Counter twin() const
+    {
+        return Counter( n );
+    }
+};
+
+Counter make()
+{
+    return Counter( 1 );
+}
+
+u64 peek( Counter c )
+{
+    return c.n;
+}
+
+const ref Counter keep( const ref Counter c )
+{
+    return c;
+}
+
+i32 seven()
+{
+    return 7;
+}
+
+i32 main()
+{
+    make(); // 1
+
+    fn() -> Counter p = &make;
+    p(); // 2
+
+    Counter held = Counter( 2 );
+    held.twin(); // 3
+
+    u64 n = make().n;     // 4
+    u64 m = peek( make() ); // 5
+
+    for( i32 i = 0; i < 3; i = i + 1 )
+    {
+        make(); // 6, 7, 8
+    }
+
+    // Bound, so the binding drops it and the statement must not as well.
+    {
+        Counter kept = make(); // 9
+    }
+
+    // Borrowed back rather than returned, so it is not the caller's to drop.
+    keep( held );
+
+    // Nothing to drop, and nothing to hold it in.
+    seven();
+
+    return drops; // `held` is still alive
+}

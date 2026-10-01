@@ -1,0 +1,191 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Counter;
+
+typedef struct kl__Counter ( *kl__fn__FE7Counter )( void );
+
+struct kl__Counter
+{
+    uint64_t kl_n_4;
+};
+
+int32_t kl_drops_2 = 0;
+
+void kl__Counter__R7Counter_3u64__ctor( struct kl__Counter*, uint64_t );
+void kl__Counter__dtor( struct kl__Counter* );
+struct kl__Counter kl__twin__S7Counter( struct kl__Counter* );
+struct kl__Counter kl__make__( void );
+uint64_t kl__peek__7Counter( struct kl__Counter* );
+struct kl__Counter* kl__keep__7Counter( struct kl__Counter* );
+int32_t kl__seven__( void );
+int32_t kl__main__( void );
+
+void kl__Counter__R7Counter_3u64__ctor( struct kl__Counter* kl_this_1, uint64_t kl_v_2 )
+{
+#line 12 "codegen/discarded_results.kl"
+    ( *kl_this_1 ).kl_n_4 = kl_v_2;
+    return;
+}
+
+void kl__Counter__dtor( struct kl__Counter* kl_this_1 )
+{
+    int32_t kl_t2;
+#line 17 "codegen/discarded_results.kl"
+    kl_t2 = kl_drops_2 + 1;
+    kl_drops_2 = kl_t2;
+    return;
+}
+
+struct kl__Counter kl__twin__S7Counter( struct kl__Counter* kl_this_1 )
+{
+    struct kl__Counter kl_t0;
+    struct kl__Counter kl_t2;
+    struct kl__Counter* kl_t3;
+    bool kl_t5;
+#line 22 "codegen/discarded_results.kl"
+    kl_t5 = false;
+    kl_t3 = &kl_t2;
+    kl_t5 = true;
+    kl__Counter__R7Counter_3u64__ctor( kl_t3, ( *kl_this_1 ).kl_n_4 );
+    kl_t0 = kl_t2;
+    kl_t5 = false;
+    if ( kl_t5 ) kl__Counter__dtor( &kl_t2 );
+    return kl_t0;
+}
+
+struct kl__Counter kl__make__( void )
+{
+    struct kl__Counter kl_t0;
+    struct kl__Counter kl_t1;
+    struct kl__Counter* kl_t2;
+    bool kl_t4;
+#line 28 "codegen/discarded_results.kl"
+    kl_t4 = false;
+    kl_t2 = &kl_t1;
+    kl_t4 = true;
+    kl__Counter__R7Counter_3u64__ctor( kl_t2, 1 );
+    kl_t0 = kl_t1;
+    kl_t4 = false;
+    if ( kl_t4 ) kl__Counter__dtor( &kl_t1 );
+    return kl_t0;
+}
+
+uint64_t kl__peek__7Counter( struct kl__Counter* kl_c_1 )
+{
+    uint64_t kl_t0;
+#line 33 "codegen/discarded_results.kl"
+    kl_t0 = ( *kl_c_1 ).kl_n_4;
+    return kl_t0;
+}
+
+struct kl__Counter* kl__keep__7Counter( struct kl__Counter* kl_c_1 )
+{
+    struct kl__Counter* kl_t0;
+#line 38 "codegen/discarded_results.kl"
+    kl_t0 = &( *kl_c_1 );
+    return kl_t0;
+}
+
+int32_t kl__seven__( void )
+{
+    int32_t kl_t0;
+#line 43 "codegen/discarded_results.kl"
+    kl_t0 = 7;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__Counter kl_t1;
+    kl__fn__FE7Counter kl_p_2;
+    kl__fn__FE7Counter kl_t3;
+    struct kl__Counter kl_t4;
+    struct kl__Counter kl_held_5;
+    struct kl__Counter* kl_t6;
+    struct kl__Counter* kl_t8;
+    struct kl__Counter kl_t9;
+    uint64_t kl_n_10;
+    struct kl__Counter kl_t11;
+    uint64_t kl_m_12;
+    struct kl__Counter kl_t13;
+    struct kl__Counter* kl_t14;
+    uint64_t kl_t15;
+    int32_t kl_i_16;
+    bool kl_t17;
+    struct kl__Counter kl_t18;
+    int32_t kl_t19;
+    struct kl__Counter kl_kept_20;
+    struct kl__Counter kl_t21;
+    struct kl__Counter* kl_t22;
+    bool kl_t25;
+#line 66 "codegen/discarded_results.kl"
+    kl_t25 = false;
+#line 48 "codegen/discarded_results.kl"
+    kl_t1 = kl__make__(  );
+    kl__Counter__dtor( &kl_t1 );
+#line 50 "codegen/discarded_results.kl"
+    kl_t3 = kl__make__;
+    kl_p_2 = kl_t3;
+#line 51 "codegen/discarded_results.kl"
+    kl_t4 = kl_p_2(  );
+    kl__Counter__dtor( &kl_t4 );
+#line 53 "codegen/discarded_results.kl"
+    kl_t6 = &kl_held_5;
+    kl__Counter__R7Counter_3u64__ctor( kl_t6, 2 );
+#line 54 "codegen/discarded_results.kl"
+    kl_t8 = &kl_held_5;
+    kl_t9 = kl__twin__S7Counter( kl_t8 );
+    kl__Counter__dtor( &kl_t9 );
+#line 56 "codegen/discarded_results.kl"
+    kl_t11 = kl__make__(  );
+    kl_n_10 = kl_t11.kl_n_4;
+    kl__Counter__dtor( &kl_t11 );
+#line 57 "codegen/discarded_results.kl"
+    kl_t13 = kl__make__(  );
+    kl_t14 = &kl_t13;
+    kl_t15 = kl__peek__7Counter( kl_t14 );
+    kl_m_12 = kl_t15;
+    kl__Counter__dtor( &kl_t13 );
+#line 59 "codegen/discarded_results.kl"
+    kl_i_16 = 0;
+    goto bb1;
+    bb1:
+    kl_t17 = kl_i_16 < 3;
+    if ( kl_t17 ) goto bb2; else goto bb3;
+    bb2:
+#line 61 "codegen/discarded_results.kl"
+    kl_t18 = kl__make__(  );
+    kl__Counter__dtor( &kl_t18 );
+    goto bb4;
+    bb3:
+#line 66 "codegen/discarded_results.kl"
+    kl_t21 = kl__make__(  );
+    kl_t25 = true;
+    kl_kept_20 = kl_t21;
+    kl_t25 = false;
+    if ( kl_t25 ) kl__Counter__dtor( &kl_t21 );
+#line 65 "codegen/discarded_results.kl"
+    kl__Counter__dtor( &kl_kept_20 );
+#line 70 "codegen/discarded_results.kl"
+    kl_t22 = &kl_held_5;
+    kl__keep__7Counter( kl_t22 );
+#line 73 "codegen/discarded_results.kl"
+    kl__seven__(  );
+#line 75 "codegen/discarded_results.kl"
+    kl_t0 = kl_drops_2;
+    kl__Counter__dtor( &kl_held_5 );
+    return kl_t0;
+    bb4:
+#line 59 "codegen/discarded_results.kl"
+    kl_t19 = kl_i_16 + 1;
+    kl_i_16 = kl_t19;
+    goto bb1;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

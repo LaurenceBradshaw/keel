@@ -158,8 +158,6 @@ int32_t kl__main__( void )
     struct kl__Buffer kl_b_12;
     struct kl__Buffer kl_t13;
     int32_t kl_t14;
-    int32_t kl_t15;
-    int32_t kl_t16;
     int32_t kl_t17;
     int32_t kl_t18;
     bool kl_t19;
@@ -228,9 +226,9 @@ int32_t kl__main__( void )
     goto bb1;
     bb3:
 #line 113 "codegen/destructors.kl"
-    kl_t15 = kl__early__3i32( 0 );
+    kl__early__3i32( 0 );
 #line 114 "codegen/destructors.kl"
-    kl_t16 = kl__early__3i32( 1 );
+    kl__early__3i32( 1 );
 #line 117 "codegen/destructors.kl"
     kl_t17 = kl_p_1.kl_x_92 + kl_p_1.kl_y_94;
     kl_t18 = kl_t17 + kl_released_1;

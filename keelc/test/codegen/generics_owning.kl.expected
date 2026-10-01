@@ -62,10 +62,13 @@ int32_t kl__main__( void )
     bool kl_t16;
     bool kl_t17;
     bool kl_t18;
+    bool kl_t19;
 #line 47 "codegen/generics_owning.kl"
     kl_t17 = false;
 #line 51 "codegen/generics_owning.kl"
     kl_t18 = false;
+#line 52 "codegen/generics_owning.kl"
+    kl_t19 = false;
 #line 47 "codegen/generics_owning.kl"
     kl_t17 = false;
     kl_t2 = &kl_a_1;
@@ -82,7 +85,10 @@ int32_t kl__main__( void )
 #line 52 "codegen/generics_owning.kl"
     kl_t9 = kl__relay__I4CellE__M4Cell( kl_b_5 );
     kl_t18 = false;
+    kl_t19 = true;
     kl_c_8 = kl_t9;
+    kl_t19 = false;
+    if ( kl_t19 ) kl__Cell__dtor( &kl_t9 );
 #line 55 "codegen/generics_owning.kl"
     kl_t11 = &kl_d_10;
     kl__Cell__R4Cell__ctor( kl_t11 );

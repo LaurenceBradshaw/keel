@@ -141,6 +141,8 @@ private:
     // block: the scope depth it unwinds to has to be the loop's, not the switch's.
     Loop_targets& enclosing_loop();
 
+    Local_id call_result( Node_id id, Rvalue call, Type_id result_type, Span span );
+
     const Ast& ast_;
 
     // Read only for `&f`, whose callee is a declaration rather than a place. Everywhere else a
@@ -176,6 +178,7 @@ private:
     // and therefore a drop, and the right moment for it is the end of the statement, which is after
     // every use of them within it.
     std::vector<Local_id> statement_temporaries_;
+    Node_id               discarded_ {};
 
     std::vector<Loop_targets> loops_; // innermost last, so break and continue bind to it
     std::vector<Local_id>     scope_locals_;
@@ -622,6 +625,25 @@ Lowering::Loop_targets& Lowering::enclosing_loop()
     return loops_.back();
 }
 
+Local_id Lowering::call_result( Node_id id, Rvalue call, Type_id result_type, Span span )
+{
+    if( id == discarded_ && !owns( result_type ) )
+    {
+        return builder_.into_temp( call, types_.table().builtin( Type_kind::Void ), span );
+    }
+    else
+    {
+        const Local_id result_temp = builder_.into_temp( call, result_type, span );
+
+        if( owns( result_type ) )
+        {
+            statement_temporaries_.push_back( result_temp );
+        }
+
+        return result_temp;
+    }
+}
+
 Block_id Lowering::continue_target()
 {
     assert( !loops_.empty() && "the checker rejects a continue outside a loop" );
@@ -1037,7 +1059,8 @@ Operand Lowering::lower_method_call_on( Node_id id, Node_id method, Operand rece
     const bool    binding     = is_borrowed_binding( ast_, types_, method );
     const Type_id result_type = binding ? binding_type_under( method, callee_bound ) : type;
 
-    const Local_id result = builder_.into_temp(
+    const Local_id result = call_result(
+        id,
         call( method, first, static_cast<u32>( operands.size() ), result_type, type_arguments_for_call( id ) ),
         result_type,
         span
@@ -1165,7 +1188,8 @@ Operand Lowering::lower_call( Node_id id )
 
     std::vector<Type_id> type_arguments = type_arguments_for_call( id );
 
-    const Local_id result = builder_.into_temp(
+    const Local_id result = call_result(
+        id,
         call( callee, first, narrow_cast<u32>( operands.size() ), result_type, std::move( type_arguments ) ),
         result_type,
         ast_.span( id )
@@ -1217,9 +1241,8 @@ Operand Lowering::lower_indirect_call( Node_id id )
     const bool    binding     = types_.table().get( signature ).return_mode == Param_mode::Const_ref;
     const Type_id result_type = binding ? types_.table().pointer_to( type_of( id ) ) : type_of( id );
 
-    Local_id result = builder_.into_temp(
-        indirect_call( callee, first, narrow_cast<u32>( operands.size() ), result_type ), result_type, span
-    );
+    Local_id result =
+        call_result( id, indirect_call( callee, first, narrow_cast<u32>( operands.size() ), result_type ), result_type, span );
 
     return copy( binding ? builder_.deref( builder_.place( result ) ) : builder_.place( result ), type_of( id ) );
 }
@@ -2086,10 +2109,15 @@ void Lowering::lower_statement( Node_id id )
 
     // Small enough to read here. Extracting them would cost a name and buy nothing.
     case Node_kind::Expr_stmt:
+    {
         // Discard the operand. D15 means the only thing that reaches here is a call.
+        Node_id old_discarded = discarded_;
+        discarded_            = ast_.child( id, 0 );
         lower_expression( ast_.child( id, 0 ) );
+        discarded_ = old_discarded;
         drop_statement_temporaries( ast_.span( id ) );
         return;
+    }
 
     // One edge each. The checker already rejected either outside a loop, so the asserts in the
     // target helpers document that rather than handle it.
@@ -4573,6 +4601,126 @@ TEST_CASE( "lower_drops_a_borrowed_temporary", "[ir][lower][borrow]" )
     INFO( text );
     REQUIRE( text.find( "= &_1" ) != std::string::npos );
     REQUIRE( text.find( "drop _1" ) != std::string::npos );
+}
+
+// A call's owning result is a temporary like a struct literal's, so the statement drops it.
+TEST_CASE( "lower_drops_an_owning_call_result", "[ir][lower][borrow]" )
+{
+    const std::string counter = "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } B twin() const { return B( n ); } };\n"
+                                "B make() { return B( 1 ); }\n"
+                                "u64 peek( B b ) { return b.n; }\n"
+                                "const ref B keep( const ref B b ) { return b; }\n";
+
+    const auto drops_in_main = [&]( std::string_view body )
+    {
+        Lowered p( counter + "i32 main() { " + std::string( body ) + " return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string text = p.named( "main" );
+
+        INFO( text );
+        return count( text, "drop _" );
+    };
+
+    SECTION( "discarded" )
+    {
+        REQUIRE( drops_in_main( "make();" ) == 1 );
+    }
+
+    SECTION( "through a function pointer" )
+    {
+        REQUIRE( drops_in_main( "fn() -> B p = &make; p();" ) == 1 );
+    }
+
+    SECTION( "from a method" )
+    {
+        REQUIRE( drops_in_main( "{ B h = B( 2 ); h.twin(); }" ) == 2 );
+    }
+
+    SECTION( "read through a field" )
+    {
+        REQUIRE( drops_in_main( "u64 n = make().n;" ) == 1 );
+    }
+
+    SECTION( "lent to another call" )
+    {
+        REQUIRE( drops_in_main( "u64 n = peek( make() );" ) == 1 );
+    }
+
+    // The address of the caller's own object, so dropping it would destroy `h` early.
+    SECTION( "but not a const ref result, which is borrowed" )
+    {
+        REQUIRE( drops_in_main( "{ B h = B( 2 ); keep( h ); }" ) == 1 );
+    }
+}
+
+// `f();` wants the call and not its result, so a result nothing drops lands in a void local, which
+// the backend emits as a bare call.
+TEST_CASE( "lower_calls_for_effect_into_a_void_local", "[ir][lower][calls]" )
+{
+    const auto main_of = []( const std::string& source )
+    {
+        Lowered p( source );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        for( const Function& function : p.functions )
+        {
+            REQUIRE( verify( function ).empty() );
+        }
+
+        return p.named( "main" );
+    };
+
+    SECTION( "a plain call" )
+    {
+        const std::string text = main_of( "i32 seven() { return 7; }\ni32 main() { seven(); return 0; }" );
+
+        INFO( text );
+        REQUIRE( text.find( "let _1: void;" ) != std::string::npos );
+        REQUIRE( text.find( "_1 = call seven()" ) != std::string::npos );
+    }
+
+    SECTION( "through a function pointer" )
+    {
+        const std::string text = main_of( "i32 seven() { return 7; }\ni32 main() { fn() -> i32 p = &seven; p(); return 0; }" );
+
+        INFO( text );
+        REQUIRE( text.find( ": void;" ) != std::string::npos );
+    }
+
+    SECTION( "a method" )
+    {
+        const std::string text =
+            main_of( "struct P { i32 x; i32 get() const { return x; } };\ni32 main() { P v = P { 1 }; v.get(); return 0; }" );
+
+        INFO( text );
+        REQUIRE( text.find( ": void;" ) != std::string::npos );
+    }
+
+    SECTION( "a const ref result, which is only an address" )
+    {
+        const std::string text =
+            main_of( "const ref i32 pick( const ref i32 a ) { return a; }\ni32 main() { i32 x = 1; pick( x ); return 0; }" );
+
+        INFO( text );
+        REQUIRE( text.find( ": void;" ) != std::string::npos );
+    }
+
+    // Dropping needs the value, so an owning result keeps its type.
+    SECTION( "but not an owning result" )
+    {
+        const std::string text =
+            main_of( "class B { u64 n; B() { n = 0; } ~B() { } };\nB make() { return B(); }\ni32 main() { make(); return 0; }"
+            );
+
+        INFO( text );
+        REQUIRE( text.find( ": void;" ) == std::string::npos );
+        REQUIRE( text.find( "drop _" ) != std::string::npos );
+    }
 }
 
 // Forwarding is `&(*_1)`: the address the binding already holds, taken back out of the deref that

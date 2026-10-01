@@ -84,8 +84,6 @@ int32_t kl__main__( void )
     struct kl__Owned kl_b_6;
     struct kl__Owned* kl_t7;
     int32_t kl_t9;
-    int32_t kl_t10;
-    int32_t kl_t11;
     struct kl__Shadowed kl_s_12;
     struct kl__Shadowed* kl_t13;
     int32_t kl_t15;
@@ -114,9 +112,9 @@ int32_t kl__main__( void )
     goto bb1;
     bb3:
 #line 65 "codegen/constructors.kl"
-    kl_t10 = kl__early__3i32( 0 );
+    kl__early__3i32( 0 );
 #line 66 "codegen/constructors.kl"
-    kl_t11 = kl__early__3i32( 1 );
+    kl__early__3i32( 1 );
 #line 69 "codegen/constructors.kl"
     kl_t13 = &kl_s_12;
     kl__Shadowed__R8Shadowed_3i32__ctor( kl_t13, 9 );

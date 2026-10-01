@@ -1961,6 +1961,30 @@ TEST_CASE( "emit_kir_drops_the_destination_of_a_void_call", "[codegen][kir]" )
     REQUIRE( g.has( "void kl__nothing__( void )" ) );
 }
 
+// A discarded result is not stored, so C has no local to call set but unused.
+TEST_CASE( "emit_kir_calls_a_discarded_result_bare", "[codegen][kir]" )
+{
+    SECTION( "a plain call" )
+    {
+        Generated g( "i32 seven() { return 7; }\ni32 main() { seven(); return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "kl__seven__(  );" ) );
+        REQUIRE_FALSE( g.has( "= kl__seven__(" ) );
+    }
+
+    SECTION( "through a function pointer" )
+    {
+        Generated g( "i32 seven() { return 7; }\ni32 main() { fn() -> i32 p = &seven; p(); return 0; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "kl_p_1(  );" ) );
+        REQUIRE_FALSE( g.has( "= kl_p_1(" ) );
+    }
+}
+
 // §12: `extern` "should mean what C++'s `extern \"C\"` means, including suppressing mangling" -
 // `kl__abs__i32` would not link against anything. Spelling::function is the single place a C name
 // is produced, so the prototype and the call site cannot disagree.
