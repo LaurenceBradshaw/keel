@@ -5,8 +5,6 @@ struct Point
     f64 y;
 };
 
-struct Empty { };
-
 struct Buffer
 {
     u8* ptr;
@@ -24,7 +22,6 @@ i32 main()
     auto a = Point { 1.0, 2.0 };
     auto b = Point { .x = 1.0, .y = 2.0 };
     auto c = Point { 1.0, 2.0, };
-    auto d = Empty { };
     auto e = Line { Point { 1.0, 2.0 }, Point { 3.0, 4.0 } };
     return 0;
 }

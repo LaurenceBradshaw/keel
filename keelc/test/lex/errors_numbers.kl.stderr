@@ -40,10 +40,4 @@ error: exponent has no digits
 7 | 1e
   |  ^ write at least one digit after `e`
 
-error: unexpected `else` after numeric literal
- --> lex/errors_numbers.kl:8:2
-  |
-8 | 1else
-  |  ^^^^ literal suffixes are not supported
-
-8 errors generated
+7 errors generated

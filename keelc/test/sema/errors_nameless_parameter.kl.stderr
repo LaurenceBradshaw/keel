@@ -5,10 +5,10 @@ error: expected an identifier, found `)`
   |              ^
 
 error: expected an identifier, found `this`
-  --> sema/errors_nameless_parameter.kl:10:17
+  --> sema/errors_nameless_parameter.kl:10:18
    |
 10 | i32 keyword( i32 this )
-   |                 ^ `this` is a keyword, so it cannot be used as a name
+   |                  ^^^^ `this` is a keyword, so it cannot be used as a name
 
 error: `twice` is already declared with these parameters
   --> sema/errors_nameless_parameter.kl:20:1

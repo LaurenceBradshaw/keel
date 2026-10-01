@@ -23,6 +23,8 @@ std::string_view token_kind_name( Token_kind kind )
         return "Identifier";
     case Token_kind::Keyword:
         return "Keyword";
+    case Token_kind::Digit_name:
+        return "Digit_name";
     case Token_kind::Int_literal:
         return "Int_literal";
     case Token_kind::Float_literal:
@@ -145,6 +147,8 @@ std::string_view token_kind_spelling( Token_kind kind )
         return "identifier";
     case Token_kind::Keyword:
         return "keyword";
+    case Token_kind::Digit_name:
+        return "name starting with a digit";
     case Token_kind::Int_literal:
         return "integer literal";
     case Token_kind::Float_literal:

@@ -18,8 +18,6 @@ class Handle
     u64 value;
 };
 
-class Empty { };
-
 // Members are children in declaration order whichever kind they are, and a destructor may precede
 // the fields as easily as follow them.
 class Reordered

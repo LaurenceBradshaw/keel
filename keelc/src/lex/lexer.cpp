@@ -56,6 +56,28 @@ bool is_ident_continue( char c )
     return is_ident_start( c ) || is_digit( c );
 }
 
+// C++'s integer suffixes, and `f`, which is a mistaken float rather than a name.
+bool is_literal_suffix( std::string_view word )
+{
+    static constexpr std::string_view suffixes[] = { "u", "l", "ul", "lu", "ll", "ull", "llu", "z", "uz", "zu", "f" };
+
+    std::string lower( word );
+    for( char& c : lower )
+    {
+        c = ( c >= 'A' && c <= 'Z' ) ? static_cast<char>( c | 0x20 ) : c;
+    }
+
+    for( const std::string_view suffix : suffixes )
+    {
+        if( lower == suffix )
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 class Scanner
 {
 public:
@@ -516,6 +538,28 @@ void Scanner::scan_number( u32 start )
     const bool       fraction = scan_fraction();
     const bool       exponent = scan_exponent( ok );
     const Token_kind kind     = ( fraction || exponent ) ? Token_kind::Float_literal : Token_kind::Int_literal;
+
+    if( kind == Token_kind::Int_literal && ok && is_ident_start( peek() ) )
+    {
+        u32 n = 0;
+        while( is_ident_continue( peek( n ) ) )
+        {
+            ++n;
+        }
+
+        const std::string_view word = text_.substr( pos_, n );
+
+        if( !is_literal_suffix( word ) )
+        {
+            for( u32 i = 0; i < n; ++i )
+            {
+                advance();
+            }
+
+            push( Token_kind::Digit_name, start );
+            return;
+        }
+    }
 
     const Literal_id value = kind == Token_kind::Int_literal ? intern_integer( start, 10 ) : intern_float( start );
 
@@ -1362,6 +1406,11 @@ TEST_CASE( "lexer_number_errors", "[lex]" )
         { "0x", "hex literal has no digits" },
         { "0b", "binary literal has no digits" },
         { "42u", "after numeric literal" },
+        { "7ull", "after numeric literal" },
+        { "8LL", "after numeric literal" },
+        { "1.5f", "after numeric literal" },
+        { "1.5x", "after numeric literal" },
+        { "0x1u", "after numeric literal" },
         { "1e", "exponent has no digits" },
         { "1e+", "exponent has no digits" },
         { "007", "leading zeros are not allowed" },
@@ -1377,12 +1426,32 @@ TEST_CASE( "lexer_number_errors", "[lex]" )
     }
 }
 
-// `1else` is an identifier butted against a literal, not a broken exponent.
-TEST_CASE( "lexer_trailing_identifier_is_not_a_broken_exponent", "[lex]" )
+// A name that starts with a digit is one token, and the parser, which knows a name was meant,
+// reports it. A C++ literal suffix is not a name, so it keeps the lexer's error.
+TEST_CASE( "lexer_reads_a_digit_led_name_as_one_token", "[lex]" )
 {
-    const Lexed lexed( "1else" );
+    static const char* const sources[] = { "3x", "1st", "2d_x", "4x4" };
 
-    REQUIRE( lexed.rendered().find( "unexpected `else` after numeric literal" ) != std::string::npos );
+    for( const char* source : sources )
+    {
+        const Lexed lexed( source );
+
+        INFO( "source '" << source << "' rendered:\n" << lexed.rendered() );
+        REQUIRE_FALSE( lexed.has_errors() );
+        REQUIRE( lexed.count() == 1 );
+        REQUIRE( lexed.kind( 0 ) == Token_kind::Digit_name );
+    }
+
+    // `1else` is a name butted against a literal, not a broken exponent.
+    SECTION( "even when it reads like an exponent" )
+    {
+        const Lexed lexed( "1else" );
+
+        INFO( lexed.rendered() );
+        REQUIRE_FALSE( lexed.has_errors() );
+        REQUIRE( lexed.count() == 1 );
+        REQUIRE( lexed.kind( 0 ) == Token_kind::Digit_name );
+    }
 }
 
 TEST_CASE( "lexer_strings", "[lex]" )

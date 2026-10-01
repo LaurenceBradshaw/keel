@@ -5,39 +5,15 @@ error: a `where` clause needs type parameters
   |                    ^^^^^^^^^^^^^^^^^^ write them on the name, as in `enum Opt<T> where T : Copyable`
 
 error: expected an identifier, found `3`
-  --> sema/errors_enum_recovery.kl:10:2
-   |
-10 | {
-   |  ^
-
-error: expected `,`, found `3`
-  --> sema/errors_enum_recovery.kl:10:2
-   |
-10 | {
-   |  ^
-
-error: expected an identifier, found `,`
-  --> sema/errors_enum_recovery.kl:11:6
+  --> sema/errors_enum_recovery.kl:11:5
    |
 11 |     3,
-   |      ^
+   |     ^ a name cannot start with a digit
 
 error: expected an identifier, found `3`
-  --> sema/errors_enum_recovery.kl:11:7
-   |
-11 |     3,
-   |       ^
-
-error: expected `,`, found `3`
-  --> sema/errors_enum_recovery.kl:11:7
-   |
-11 |     3,
-   |       ^
-
-error: expected an identifier, found `,`
-  --> sema/errors_enum_recovery.kl:12:6
+  --> sema/errors_enum_recovery.kl:12:5
    |
 12 |     3,
-   |      ^
+   |     ^ a name cannot start with a digit
 
-7 errors generated
+3 errors generated

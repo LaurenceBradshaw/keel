@@ -7060,17 +7060,24 @@ about debts *between* them, which is the gap this list cannot see.
   A nameless `where` subject only adds a follow-on error. The fuzz ran single files, so imports
   and packages are not covered.
 
-- **A name that starts with a digit is a cascade, not one error (found 2026-10-01).** `3` or `3x`
-  where a name belongs gives 3 to 9 errors depending on where: `expect_name` neither consumes it
-  nor points at it, the lexer reports `3x` as a suffixed literal, and `i32 3x = 1;` is not seen as
-  a declaration. Wanted: one error at the name, "a name cannot start with a digit", in every
-  position. The plan: a `Digit_name` token for `3x` (a real C++ suffix like `42u` keeps its
-  lexer error); `expect_name` consumes it or a bare number, pointing at it, keywords included; in
-  an expression it is an `Error` node, so no "not declared" follows; the statement lookahead takes
-  a type then a number or `Digit_name` as a declaration. `3 = v;` already gives one error.
-  - **And in the same commit:** `check_aggregate_has_fields` counts only the `Field_decl`s left,
-    so `struct S { i32 if; };` (and `i32 3;` once the above lands) also says "`S` has no fields".
-    Move it into the parser as was done for enums.
+- ~~**A name that starts with a digit is a cascade, not one error (found 2026-10-01).** `3` or `3x`
+  where a name belongs gave 3 to 9 errors depending on where.~~ **Done (2026-10-01):** one error at
+  the name, "a name cannot start with a digit", in every position. The lexer makes `3x` a
+  `Digit_name` unless the trailing word is a C++ suffix (`42u`, `7ull`, `1f`), which keeps
+  "literal suffixes are not supported"; `expect_name` consumes a `Digit_name`, a bare number or a
+  keyword and points at it, where a missing name still points past the previous token; in an
+  expression a `Digit_name` is an `Error` node; `scan_type_and_name` takes a type then a number or
+  `Digit_name` as a declaration. `3 = v;` keeps its one assignment error. Pinned by
+  `errors_digit_names.kl`, `lexer_reads_a_digit_led_name_as_one_token` and
+  `parser_reports_a_digit_led_name_once`. The enum `3, 3,` recovery case went from 6 errors to 2.
+  - ~~**And in the same commit:** `check_aggregate_has_fields` counted only the `Field_decl`s
+    left.~~ **Done:** "has no fields" moved into `parse_aggregate_decl`, which reports it only when
+    no member was written as a field, so `struct S { i32 if; };` is one error. Pinned by
+    `parser_reports_an_aggregate_with_no_fields`; `parse/classes.kl` and `parse/structs.kl` lost
+    the `Empty` declarations they used to show as valid. Fuzz 390 → 43, all in the known
+    `infer_binary`, `place_for` and `is_integer` asserts. 40 are `package_types/main.kl`, which
+    aborts in `infer_binary` even unmutated once copied away from its package; the missing package
+    itself is reported, so what aborts after it is still to find.
 
 - **`void*` type-checks, though D37 says Keel has none (found 2026-09-29).** `void* q = nullptr;`
   is accepted without a word, and nothing stops `*q`. `void[*]` is refused from the start; decide

@@ -24,6 +24,7 @@ enum class Token_kind : u16
 
     Identifier,
     Keyword, // static_cast<Keyword>( token.symbol.v ) gives which one
+    Digit_name,
 
     // Values are not computed here - the span is enough, and deferring keeps overflow out of the
     // lexer. `true` and `false` arrive as Keyword.

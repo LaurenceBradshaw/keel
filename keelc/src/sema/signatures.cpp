@@ -424,8 +424,6 @@ void Signatures::check_aggregate_members()
             continue;
         }
 
-        check_aggregate_has_fields( decl );
-
         for( const Member_kind& kind : k_member_kinds )
         {
             check_member_kind( decl, kind );
@@ -486,30 +484,6 @@ void Signatures::check_member_kind( Node_id decl, const Member_kind& kind )
                 fmt::format( "write `{}{}`", kind.prefix, type_text )
             );
         }
-    }
-}
-
-void Signatures::check_aggregate_has_fields( Node_id decl )
-{
-    assert( is_aggregate( ast_.kind( decl ) ) );
-
-    bool has_field = false;
-    for( const Node_id member : ast_.members( decl ) )
-    {
-        if( ast_.kind( member ) == Node_kind::Field_decl )
-        {
-            has_field = true;
-            break;
-        }
-    }
-
-    if( !has_field )
-    {
-        reporter_.error_at(
-            ast_.span( decl ),
-            fmt::format( "`{}` has no fields, so it has no size", interner_.text( Symbol_id { ast_.aux( decl ) } ) ),
-            "use an `enum` with one variant for a type with one value"
-        );
     }
 }
 
@@ -1213,62 +1187,10 @@ TEST_CASE( "type_checker_scopes_type_parameters", "[sema][generic]" )
     }
 }
 
-// PLAN §12. An aggregate with no fields emits a C struct with no members, which standard C has no
-// spelling for, and it is the only route left to a zero-size `alloc`. The predicate is fields
-// rather than members: a method-only class is the same empty struct once emitted.
-TEST_CASE( "type_checker_rejects_empty_aggregates", "[sema][types]" )
+// PLAN §12. An aggregate with no fields is refused by the parser, which alone can tell one from
+// fields it left out; these are the alternatives that refusal recommends, and they must stay legal.
+TEST_CASE( "type_checker_accepts_what_replaces_an_empty_aggregate", "[sema][types]" )
 {
-    SECTION( "a struct with no fields is refused" )
-    {
-        const Typed p( "struct Empty { };\ni32 main() { return 0; }\n" );
-
-        INFO( p.rendered() );
-        REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "`Empty` has no fields" ) != std::string::npos );
-    }
-
-    SECTION( "a class with no fields is refused" )
-    {
-        const Typed p( "class Empty { };\ni32 main() { return 0; }\n" );
-
-        INFO( p.rendered() );
-        REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "`Empty` has no fields" ) != std::string::npos );
-    }
-
-    // The case a "members list is empty" predicate misses: a method takes no storage, so this is
-    // the same empty C struct as one written with nothing in it.
-    SECTION( "a method does not give a class a field" )
-    {
-        const Typed p( "class Marker { i32 get() { return 1; } };\ni32 main() { return 0; }\n" );
-
-        INFO( p.rendered() );
-        REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "`Marker` has no fields" ) != std::string::npos );
-    }
-
-    // Nor does a lifecycle member. One diagnostic, not two: there is nothing here for the
-    // ownership rules to object to, since the type holds nothing to own.
-    SECTION( "a constructor and destructor do not give a class a field" )
-    {
-        const Typed p( "class Guard { Guard() { } ~Guard() { } };\ni32 main() { return 0; }\n" );
-
-        INFO( p.rendered() );
-        REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "`Guard` has no fields" ) != std::string::npos );
-    }
-
-    // Empty for every `T`, so it is caught where it is written rather than once per instantiation -
-    // which is also why an uninstantiated generic still has to report it.
-    SECTION( "a generic aggregate is refused at its declaration" )
-    {
-        const Typed p( "struct Box<T> { };\ni32 main() { return 0; }\n" );
-
-        INFO( p.rendered() );
-        REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "`Box` has no fields" ) != std::string::npos );
-    }
-
     // The alternative the diagnostic names. Conflating "no fields" with "no data" would reject the
     // fix the message recommends, so this is the section that pins the rule's edge.
     SECTION( "an enum with one variant is accepted" )

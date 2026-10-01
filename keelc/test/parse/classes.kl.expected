@@ -1,4 +1,4 @@
-Source_file                             1:1-66:1
+Source_file                             1:1-64:1
   Class_decl                            4:1-13:3    name=Buffer
     <none>                              -
     Field_decl                          6:5-6:13    name=ptr
@@ -24,69 +24,67 @@ Source_file                             1:1-66:1
     <none>                              -
     Field_decl                          18:5-18:15  name=value
       Named_type                        18:5-18:8   "u64"
-  Class_decl                            21:1-21:17  name=Empty
+  Class_decl                            23:1-30:3   name=Reordered
     <none>                              -
-  Class_decl                            25:1-32:3   name=Reordered
-    <none>                              -
-    Destructor_decl                     27:5-29:6   name=Reordered
+    Destructor_decl                     25:5-27:6   name=Reordered
       <none>                            -
-      Param_list                        27:15-27:17
-        Param_decl                      27:5-27:6   name=this
-          Mode_type                     27:5-27:6   mode=ref
-            Named_type                  27:5-27:6   "~"  name=Reordered
-      Block                             28:5-29:6   "{
+      Param_list                        25:15-25:17
+        Param_decl                      25:5-25:6   name=this
+          Mode_type                     25:5-25:6   mode=ref
+            Named_type                  25:5-25:6   "~"  name=Reordered
+      Block                             26:5-27:6   "{
     }"
       <none>                            -
-    Field_decl                          31:5-31:13  name=ptr
-      Pointer_type                      31:5-31:8
-        Named_type                      31:5-31:7   "u8"
-  Struct_decl                           36:1-44:3   name=Point
+    Field_decl                          29:5-29:13  name=ptr
+      Pointer_type                      29:5-29:8
+        Named_type                      29:5-29:7   "u8"
+  Struct_decl                           34:1-42:3   name=Point
     <none>                              -
-    Field_decl                          38:5-38:11  name=x
-      Named_type                        38:5-38:8   "f64"
-    Field_decl                          39:5-39:11  name=y
-      Named_type                        39:5-39:8   "f64"
-    Destructor_decl                     41:5-43:6   name=Point
+    Field_decl                          36:5-36:11  name=x
+      Named_type                        36:5-36:8   "f64"
+    Field_decl                          37:5-37:11  name=y
+      Named_type                        37:5-37:8   "f64"
+    Destructor_decl                     39:5-41:6   name=Point
       <none>                            -
-      Param_list                        41:11-41:13
-        Param_decl                      41:5-41:6   name=this
-          Mode_type                     41:5-41:6   mode=ref
-            Named_type                  41:5-41:6   "~"  name=Point
-      Block                             42:5-43:6   "{
+      Param_list                        39:11-39:13
+        Param_decl                      39:5-39:6   name=this
+          Mode_type                     39:5-39:6   mode=ref
+            Named_type                  39:5-39:6   "~"  name=Point
+      Block                             40:5-41:6   "{
     }"
       <none>                            -
-  Class_decl                            48:1-55:3   name=Mismatched
+  Class_decl                            46:1-53:3   name=Mismatched
     <none>                              -
-    Field_decl                          50:5-50:13  name=ptr
-      Pointer_type                      50:5-50:8
-        Named_type                      50:5-50:7   "u8"
-    Destructor_decl                     52:5-54:6   name=Wrong
+    Field_decl                          48:5-48:13  name=ptr
+      Pointer_type                      48:5-48:8
+        Named_type                      48:5-48:7   "u8"
+    Destructor_decl                     50:5-52:6   name=Wrong
       <none>                            -
-      Param_list                        52:11-52:13
-        Param_decl                      52:5-52:6   name=this
-          Mode_type                     52:5-52:6   mode=ref
-            Named_type                  52:5-52:6   "~"  name=Mismatched
-      Block                             53:5-54:6   "{
+      Param_list                        50:11-50:13
+        Param_decl                      50:5-50:6   name=this
+          Mode_type                     50:5-50:6   mode=ref
+            Named_type                  50:5-50:6   "~"  name=Mismatched
+      Block                             51:5-52:6   "{
     }"
       <none>                            -
-  Function_decl                         57:1-59:2   name=release
-    Named_type                          57:1-57:5   "void"
-    Param_list                          57:13-57:22
-      Param_decl                        57:15-57:20 name=p
-        Pointer_type                    57:15-57:18
-          Named_type                    57:15-57:17 "u8"
-    Block                               58:1-59:2   "{
+  Function_decl                         55:1-57:2   name=release
+    Named_type                          55:1-55:5   "void"
+    Param_list                          55:13-55:22
+      Param_decl                        55:15-55:20 name=p
+        Pointer_type                    55:15-55:18
+          Named_type                    55:15-55:17 "u8"
+    Block                               56:1-57:2   "{
 }"
     <none>                              -
-  Function_decl                         61:1-65:2   name=main
-    Named_type                          61:1-61:4   "i32"
-    Param_list                          61:9-61:11  "()"
-    Block                               62:1-65:2
-      Var_decl                          63:5-63:27  name=h
+  Function_decl                         59:1-63:2   name=main
+    Named_type                          59:1-59:4   "i32"
+    Param_list                          59:9-59:11  "()"
+    Block                               60:1-63:2
+      Var_decl                          61:5-61:27  name=h
         <none>                          -
-        Struct_literal                  63:14-63:26 name=Handle
-          Field_init                    63:23-63:24
-            Int_literal                 63:23-63:24 "1"
-      Return_stmt                       64:5-64:14
-        Int_literal                     64:12-64:13 "0"
+        Struct_literal                  61:14-61:26 name=Handle
+          Field_init                    61:23-61:24
+            Int_literal                 61:23-61:24 "1"
+      Return_stmt                       62:5-62:14
+        Int_literal                     62:12-62:13 "0"
     <none>                              -

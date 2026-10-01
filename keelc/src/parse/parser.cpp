@@ -495,14 +495,21 @@ void Parser::error_expected( Token_kind kind, std::string help )
 
 Symbol_id Parser::expect_name()
 {
+    if( check( Token_kind::Keyword ) || check( Token_kind::Digit_name ) || check( Token_kind::Int_literal ) )
+    {
+        std::string help = "a name cannot start with a digit";
+        if( check( Token_kind::Keyword ) )
+        {
+            help = fmt::format( "{} is a keyword, so it cannot be used as a name", found_text() );
+        }
+        error_at( peek().span, fmt::format( "expected an identifier, found {}", found_text() ), std::move( help ) );
+        advance();
+        return Symbol_id {};
+    }
+
     if( expect( Token_kind::Identifier ) )
     {
         return previous().symbol;
-    }
-
-    if( check( Token_kind::Keyword ) )
-    {
-        advance();
     }
 
     return Symbol_id {};
@@ -959,7 +966,8 @@ Node_id Parser::parse_aggregate_decl()
     match_keyword( is_class ? Keyword::Class : Keyword::Struct );
 
     // The name is a token, so it goes in aux rather than becoming a child.
-    const Symbol_id name = expect_name();
+    const Span      name_span = peek().span;
+    const Symbol_id name      = expect_name();
 
     const Span           generic_start = peek().span;
     const bool           generic       = check( Token_kind::Less );
@@ -1002,6 +1010,7 @@ Node_id Parser::parse_aggregate_decl()
         return error_node( Span::merge( start, previous().span ) );
     }
 
+    bool                 wrote_field = false;
     std::vector<Node_id> members;
     while( !check( Token_kind::R_brace ) && !at_end() )
     {
@@ -1071,12 +1080,17 @@ Node_id Parser::parse_aggregate_decl()
             );
         }
 
-        members.push_back(
-            is_destructor    ? parse_destructor_decl( name, type_params )
-            : is_constructor ? parse_constructor_decl( name, type_params )
-            : is_method      ? parse_method_decl( name, type_params, is_static )
-                             : parse_field_decl()
-        );
+        const Node_id member = is_destructor    ? parse_destructor_decl( name, type_params )
+                               : is_constructor ? parse_constructor_decl( name, type_params )
+                               : is_method      ? parse_method_decl( name, type_params, is_static )
+                                                : parse_field_decl();
+
+        if( !is_destructor && !is_constructor && !is_method )
+        {
+            wrote_field = true;
+        }
+
+        members.push_back( member );
 
         // A `class` hides its representation, and its representation is its fields: a method, a
         // constructor and a destructor are how one is used rather than what it holds, so the
@@ -1106,6 +1120,15 @@ Node_id Parser::parse_aggregate_decl()
     if( !name.is_valid() )
     {
         return error_node( Span::merge( start, previous().span ) );
+    }
+
+    if( !wrote_field )
+    {
+        error_at(
+            Span::merge( start, previous().span ),
+            fmt::format( "`{}` has no fields, so it has no size", sm_.text( name_span ) ),
+            "use an `enum` with one variant for a type with one value"
+        );
     }
 
     // insert type_params as child 0
@@ -1854,6 +1877,7 @@ bool Parser::can_start_expression() const
     switch( peek().kind )
     {
     case Token_kind::Identifier:
+    case Token_kind::Digit_name:
     case Token_kind::Int_literal:
     case Token_kind::Float_literal:
     case Token_kind::String_literal:
@@ -2158,7 +2182,8 @@ bool Parser::scan_type_and_name()
     // A keyword here is a name that cannot be one - `i32 out = 1;`. Nothing valid has a type
     // followed by a keyword, so taking the declaration path costs nothing and lets parse_var_decl
     // report the real problem rather than a stray `;`.
-    if( !check( Token_kind::Identifier ) && !check( Token_kind::Keyword ) )
+    if( !check( Token_kind::Identifier ) && !check( Token_kind::Keyword ) && !check( Token_kind::Digit_name ) &&
+        !check( Token_kind::Int_literal ) )
     {
         pos_ = saved;
         return false;
@@ -3122,6 +3147,12 @@ Node_id Parser::parse_prefix()
         }
 
         return ast_.add( Node_kind::Name_expr, Span::merge( start, previous().span ), name.v, {} );
+    }
+
+    case Token_kind::Digit_name:
+    {
+        expect_name();
+        return error_node( previous().span );
     }
 
     case Token_kind::Minus:
@@ -4270,12 +4301,13 @@ TEST_CASE( "parser_parses_a_struct_declaration", "[parse]" )
 
 TEST_CASE( "parser_parses_struct_edge_cases", "[parse]" )
 {
+    // Reported, and still built, so uses of the type resolve.
     SECTION( "a struct with no fields" )
     {
         const Parsed p( "struct Empty { };" );
 
         INFO( p.errors() );
-        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.error_count() == 1 );
         REQUIRE( p.kind( p.child( p.root(), 0 ) ) == Node_kind::Struct_decl );
         REQUIRE( p.members( p.child( p.root(), 0 ) ).empty() );
     }
@@ -7087,13 +7119,13 @@ TEST_CASE( "parser_parses_class_declarations", "[parse][aggregates]" )
         REQUIRE( p.error_count() == 1 );
     }
 
-    SECTION( "an empty class body is legal" )
+    SECTION( "an empty class body is reported, and still built" )
     {
         const Parsed  p( "class Empty { };" );
         const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Class_decl );
 
         INFO( p.dump() );
-        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.error_count() == 1 );
         REQUIRE( p.members( decl ).empty() );
     }
 }
@@ -7141,7 +7173,7 @@ TEST_CASE( "parser_parses_destructors", "[parse][aggregates]" )
     // comparing it against the enclosing declaration rather than failing to parse.
     SECTION( "aux is the name after the tilde" )
     {
-        const Parsed p( "class Buffer { ~Buffer() { } };" );
+        const Parsed p( "class Buffer { i32 n; ~Buffer() { } };" );
 
         const Node_id cls  = find_first( p.ast(), p.root(), Node_kind::Class_decl );
         const Node_id dtor = find_first( p.ast(), p.root(), Node_kind::Destructor_decl );
@@ -7153,7 +7185,7 @@ TEST_CASE( "parser_parses_destructors", "[parse][aggregates]" )
 
     SECTION( "a mismatched name still parses - the checker is what rejects it" )
     {
-        const Parsed p( "class Buffer { ~Wrong() { } };" );
+        const Parsed p( "class Buffer { i32 n; ~Wrong() { } };" );
 
         const Node_id cls  = find_first( p.ast(), p.root(), Node_kind::Class_decl );
         const Node_id dtor = find_first( p.ast(), p.root(), Node_kind::Destructor_decl );
@@ -7691,6 +7723,167 @@ TEST_CASE( "parser_reports_an_enum_with_no_variants", "[parse][enum]" )
     }
 }
 
+// A name that starts with a digit, or a bare number where a name belongs. One error each, on the
+// token itself, and the declaration carries on as one with no name - so nothing after it cascades.
+TEST_CASE( "parser_reports_a_digit_led_name_once", "[parse][names]" )
+{
+    SECTION( "wherever a name is declared" )
+    {
+        static const char* const sources[] = {
+            "struct S { i32 3x; i32 y; };",
+            "struct S { i32 3; i32 y; };",
+            "i32 f( i32 3x, i32 b ) { return b; }",
+            "enum E { 3x, A };",
+            "i32 main() { i32 3x = 1; return 0; }",
+            "i32 main() { i32 3 = 1; return 0; }",
+        };
+
+        for( const char* source : sources )
+        {
+            const Parsed p( source );
+
+            INFO( "source: " << source << "\n" << p.errors() );
+            REQUIRE( p.error_count() == 1 );
+            REQUIRE( p.errors().find( "expected an identifier, found `3" ) != std::string::npos );
+            REQUIRE( p.errors().find( "a name cannot start with a digit" ) != std::string::npos );
+        }
+    }
+
+    // Present and wrong, not missing: the error is on the token rather than just past the one before.
+    SECTION( "on the token itself" )
+    {
+        const Parsed p( "struct S { i32 3x; i32 y; };" );
+
+        INFO( p.errors() );
+        REQUIRE( p.errors().find( "t.kl:1:16" ) != std::string::npos );
+    }
+
+    SECTION( "and a keyword the same way" )
+    {
+        const Parsed p( "struct S { i32 if; i32 y; };" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "t.kl:1:16" ) != std::string::npos );
+    }
+
+    SECTION( "a parameter stays a parameter" )
+    {
+        const Parsed p( "i32 f( i32 3x, i32 b ) { return b; }" );
+
+        const Node_id params = find_first( p.ast(), p.root(), Node_kind::Param_list );
+
+        INFO( p.errors() );
+        REQUIRE( p.children( params ).size() == 2 );
+        REQUIRE( p.kind( p.child( params, 0 ) ) == Node_kind::Param_decl );
+    }
+
+    SECTION( "a variant is left out" )
+    {
+        const Parsed p( "enum E { 3x, A };" );
+
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Enum_decl );
+
+        INFO( p.errors() );
+        REQUIRE( p.ast().variants( decl ).size() == 1 );
+    }
+
+    // Used rather than declared: it can only have meant a name, and an error node keeps the resolver
+    // from adding "not declared".
+    SECTION( "in an expression it is an error node" )
+    {
+        static const char* const sources[] = {
+            "i32 main() { return 3x; }",
+            "i32 main() { i32 v = 1; 3x = v; return v; }",
+        };
+
+        for( const char* source : sources )
+        {
+            const Parsed p( source );
+
+            INFO( "source: " << source << "\n" << p.errors() );
+            REQUIRE( p.error_count() == 1 );
+            REQUIRE( p.errors().find( "a name cannot start with a digit" ) != std::string::npos );
+            REQUIRE( find_first( p.ast(), p.root(), Node_kind::Error ).is_valid() );
+        }
+    }
+
+    // A literal is a value, so assigning to one is sema's to refuse; the parser has nothing to say.
+    SECTION( "a bare number in an expression is still a literal" )
+    {
+        const Parsed p( "i32 main() { i32 v = 1; 3 = v; return v; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+    }
+}
+
+// Only the parser can tell braces with no field in them from fields it left out, so it is the one
+// that reports an empty aggregate. The rule is fields, not members: a method takes no storage.
+TEST_CASE( "parser_reports_an_aggregate_with_no_fields", "[parse][aggregates]" )
+{
+    SECTION( "however it is written" )
+    {
+        struct Case
+        {
+            const char* source;
+            const char* message;
+        };
+
+        static const Case cases[] = {
+            { "struct Empty { };", "`Empty` has no fields, so it has no size" },
+            { "class Empty { };", "`Empty` has no fields, so it has no size" },
+            { "class Marker { i32 get() { return 1; } };", "`Marker` has no fields, so it has no size" },
+            { "class Guard { Guard() { } ~Guard() { } };", "`Guard` has no fields, so it has no size" },
+            { "struct Box<T> { };", "`Box` has no fields, so it has no size" },
+        };
+
+        for( const Case& c : cases )
+        {
+            const Parsed p( c.source );
+
+            INFO( "source: " << c.source << "\n" << p.errors() );
+            REQUIRE( p.error_count() == 1 );
+            REQUIRE( p.errors().find( c.message ) != std::string::npos );
+        }
+    }
+
+    SECTION( "but not when its fields were left out" )
+    {
+        static const char* const sources[] = {
+            "struct S { i32 if; };",
+            "struct S { i32 3; };",
+            "class C { i32 3x; i32 get() { return 1; } };",
+        };
+
+        for( const char* source : sources )
+        {
+            const Parsed p( source );
+
+            INFO( "source: " << source << "\n" << p.errors() );
+            REQUIRE( p.error_count() == 1 );
+            REQUIRE( p.errors().find( "has no fields" ) == std::string::npos );
+        }
+    }
+
+    SECTION( "nor when it has no name to report" )
+    {
+        const Parsed p( "struct { };" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "has no fields" ) == std::string::npos );
+    }
+
+    SECTION( "one field is enough" )
+    {
+        const Parsed p( "struct One { i32 x; };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+    }
+}
+
 // `Colour::Red` is a postfix operator binding as tightly as `.`, and the variant name goes in aux
 // for the same reason a field's does: it resolves against the enum, not through the scope stack.
 TEST_CASE( "parser_parses_a_path", "[parse]" )
@@ -8066,7 +8259,7 @@ TEST_CASE( "parser_reads_a_member_s_access", "[parse][access]" )
     // Both markers stack with `static`, which is consumed after them.
     SECTION( "and it stacks with `static`" )
     {
-        const Parsed p( "class C { private static i32 make() { return 1; } };" );
+        const Parsed p( "class C { i32 n; private static i32 make() { return 1; } };" );
 
         INFO( p.errors() );
         REQUIRE_FALSE( p.has_errors() );
