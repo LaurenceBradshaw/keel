@@ -1709,17 +1709,9 @@ Node_id Parser::parse_param()
     Node_id type = parse_type_with_mode();
 
     // Same convention as Function_decl: the name is a token, so it goes in aux rather than becoming
-    // a second child.
+    // a second child. A nameless parameter stays a parameter, the way a function type's does, because
+    // it still counts towards the signature.
     const Symbol_id name = expect_name();
-
-    // A declaration with no name is not one: sema reads every declaration's name to report
-    // about it, so handing one over means a keyword or a missing identifier crashes a pass
-    // that had no reason to expect it. Everything inside was still parsed, so the errors in
-    // there are already reported.
-    if( !name.is_valid() )
-    {
-        return error_node( Span::merge( start, previous().span ) );
-    }
 
     return ast_.add( Node_kind::Param_decl, Span::merge( start, previous().span ), name.v, { type } );
 }
@@ -6137,6 +6129,40 @@ TEST_CASE( "parser_function_type_shape", "[parse]" )
         const Node_id type = p.child( first_statement( p ), 0 );
         REQUIRE( p.kind( type ) == Node_kind::Const_type );
         REQUIRE( p.kind( p.child( type, 0 ) ) == Node_kind::Function_type );
+    }
+}
+
+// A signature's parameter with no name is reported, then kept as a function type's is: every walk
+// over a parameter list reads each entry's type, and an Error node has none.
+TEST_CASE( "parser_nameless_parameter_is_still_a_parameter", "[parse]" )
+{
+    static const char* const sources[] = {
+        "i32 f( i32 ) { return 0; }",
+        "i32 f( i32 this ) { return 0; }",
+        "i32 f( i32 a, ref i32 ) { return a; }",
+        "class C { C( i32 ) { } };",
+        "class C { i32 m( i32 ) { return 0; } };",
+    };
+
+    for( const char* source : sources )
+    {
+        const Parsed p( source );
+
+        INFO( "source: " << source << "\n" << p.errors() );
+        REQUIRE( p.has_errors() );
+        REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::Error ).is_valid() );
+
+        const Node_id param = find_first( p.ast(), p.root(), Node_kind::Param_list );
+        REQUIRE( param.is_valid() );
+
+        for( const Node_id decl : p.children( param ) )
+        {
+            REQUIRE( p.kind( decl ) == Node_kind::Param_decl );
+            REQUIRE( p.child( decl, 0 ).is_valid() );
+        }
+
+        const Node_id last = p.children( param ).back();
+        REQUIRE( p.aux( last ) == k_invalid_symbol );
     }
 }
 

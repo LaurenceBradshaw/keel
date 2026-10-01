@@ -1,0 +1,63 @@
+// A parameter with no name is still a parameter: the missing name is reported once, and its type
+// still counts towards the signature, so a call checks and an overload compares as if it had one.
+// No call names an overloaded pair, since a duplicate's calls are a separate cascade.
+
+i32 lone( i32 )
+{
+    return 0;
+}
+
+i32 keyword( i32 this )
+{
+    return 0;
+}
+
+i32 twice( i32 a )
+{
+    return a;
+}
+
+i32 twice( i32 )
+{
+    return 0;
+}
+
+i32 second( i32 a, i32 )
+{
+    return a;
+}
+
+i32 second( i32 a, i32 b )
+{
+    return b;
+}
+
+class Counter
+{
+    i32 n;
+
+    Counter( i32 start )
+    {
+        n = start;
+    }
+
+    Counter( i32 )
+    {
+        n = 0;
+    }
+
+    i32 add( i32 by )
+    {
+        return n + by;
+    }
+
+    i32 add( i32 )
+    {
+        return n;
+    }
+};
+
+i32 main()
+{
+    return lone( 1 ) + keyword( 2 );
+}

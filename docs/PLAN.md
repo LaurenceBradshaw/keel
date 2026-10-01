@@ -7022,10 +7022,35 @@ error handling, and an `Optional` that is on the not-in-v0 list. Three are now s
 recorded as unscheduled on purpose. The entries below are debts *inside* a milestone; that audit was
 about debts *between* them, which is the gap this list cannot see.
 
-- **An overload with a malformed parameter aborts keelc (found 2026-09-29).** `i32 f( i32 a ) { }`
+- ~~**An overload with a malformed parameter aborts keelc (found 2026-09-29).**~~ **Done (2026-10-01).** `i32 f( i32 a ) { }`
   then `i32 f( i32 ) { }` asserts in `Ast::child`: sema still runs after a parse error, and something
   on the overload path reads a parameter the parser never finished. Found writing the `[*]T` tests,
-  and independent of them; fix it on its own, test-first.
+  and independent of them; fix it on its own, test-first. **Wider than an overload (2026-10-01)**:
+  `parse_param` returns an `Error` for a nameless parameter, and about sixteen walks over a
+  parameter list read every entry's type, so one call to `i32 f( i32 )`, or a destructor written
+  `~C( {`, aborts as well. The fix keeps the parameter as a nameless `Param_decl`, as a function
+  type's parameters already are. Pinned by `sema/errors_nameless_parameter.kl` and
+  `parser_nameless_parameter_is_still_a_parameter`. With it in, the fuzz below drops from 1,885
+  aborts to 675, all of them the five that follow.
+
+- **A mutation fuzz of the test sources found five more aborts (2026-10-01).** Each test `.kl` had
+  a token or a line deleted or duplicated, or was cut short the way a half-typed save is; 1,885 of
+  60,082 mutants aborted the debug build, and every one is the parameter above or one of these:
+  - *A nameless `enum`* (`enum { … }`): `parse_enum_decl` has no guard, unlike every other
+    declaration, and `declare_enums` prints its name.
+  - *A nameless variant* (`enum E { , B };`): built with an invalid name, which
+    `finish_enum_switch` prints when listing what a `switch` misses.
+  - *Two nameless payload fields* (`A( f64, f64 )`): the duplicate-field check in `declare_enums`
+    finds the two equal and prints the name.
+  - *A pattern binding no pattern typed*: `case Missing::A( r ):` over an unresolved enum, a wrong
+    variant or a binding count that does not match leaves `r` untyped, and `infer_name` hands that
+    on, so `r * 2` asserts in `infer_binary`.
+  - *A type used as a value* (`P p = P;`, `P = 1;`, `T w = T;`): `infer_name` refuses a function
+    there but not a type, so the checker accepts it and lowering asserts; the release build emits C
+    naming a variable that does not exist. The one finding that is not error recovery.
+
+  A nameless `where` subject only adds a follow-on error. The fuzz ran single files, so imports
+  and packages are not covered.
 
 - **`void*` type-checks, though D37 says Keel has none (found 2026-09-29).** `void* q = nullptr;`
   is accepted without a word, and nothing stops `*q`. `void[*]` is refused from the start; decide
