@@ -1,0 +1,7 @@
+// A module of the program, imported by main.kl.
+
+enum Shape
+{
+    Circle( f64 radius ),
+    Dot
+};

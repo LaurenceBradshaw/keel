@@ -1,0 +1,9 @@
+// A module of the package `kl`.
+
+i32 scale = 10;
+
+enum Unit
+{
+    Metre,
+    Foot
+};

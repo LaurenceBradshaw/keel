@@ -226,6 +226,8 @@ build/debug/bin/keelc examples/hello.kl -o hello && ./hello
 | Flag | Effect |
 | --- | --- |
 | `--check` | Run the front end and report diagnostics, emitting nothing |
+| `--diagnostics=json` | Report diagnostics as JSON lines on stdout, for an editor |
+| `--names` | With `--diagnostics=json`, also report what each name refers to |
 | `--dump-tokens` / `--dump-ast` / `--dump-kir` | Print that stage and stop |
 | `--emit-c` | Print the generated C and stop |
 

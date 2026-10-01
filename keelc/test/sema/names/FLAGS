@@ -1,0 +1,1 @@
+--check --diagnostics=json --names --package kl=sema/names/kl

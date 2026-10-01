@@ -30,6 +30,7 @@
 #include "ir/verify.h"
 #include "lex/lexer.h"
 #include "parse/loader.h"
+#include "sema/names.h"
 #include "sema/resolver.h"
 #include "sema/type_checker.h"
 
@@ -192,6 +193,7 @@ int main( int argc, char** argv )
         ( "emit-c",        "Print the generated C and stop" )
         ( "check",         "Run the front end and report diagnostics, emitting nothing" )
         ( "diagnostics",   "Report diagnostics as human (on stderr) or json (lines on stdout)", cxxopts::value<std::string>()->default_value( "human" ) )
+        ( "names",         "With --diagnostics=json, also say what each name refers to" )
         ( "package",       "A package and its directory, as name=<dir>; may be repeated", cxxopts::value<std::vector<std::string>>() )
         ( "v,version",     "Print version information and exit" )
         ( "h,help",        "Print usage and exit" )
@@ -239,6 +241,12 @@ int main( int argc, char** argv )
         return 2;
     }
 
+    if( args.count( "names" ) && diagnostics_format != "json" )
+    {
+        fmt::print( stderr, "keelc: --names needs --diagnostics=json\n" );
+        return 2;
+    }
+
     std::vector<keel::Package> packages;
 
     if( args.count( "package" ) )
@@ -266,9 +274,10 @@ int main( int argc, char** argv )
         return 2;
     }
 
-    keel::Interner     interner;
-    keel::Diagnostics  diagnostics;
-    keel::Literal_pool literals;
+    keel::Interner          interner;
+    keel::Diagnostics       diagnostics;
+    keel::Literal_pool      literals;
+    std::vector<keel::Name> names;
 
     // Reporting is the same wherever we stop, and each --dump flag stops after its own phase.
     const auto finish = [&]() -> int
@@ -276,6 +285,7 @@ int main( int argc, char** argv )
         if( diagnostics_format == "json" )
         {
             diagnostics.render_json( sm, std::cout );
+            keel::render_names_json( sm, names, std::cout );
             return diagnostics.has_errors() ? 1 : 0;
         }
 
@@ -324,6 +334,11 @@ int main( int argc, char** argv )
 
     // Resolution is part of compiling, not a debug feature - same reasoning as parsing.
     const keel::Resolution resolution = keel::resolve( ast, sm, interner, diagnostics, prog.imports );
+
+    if( args.count( "names" ) )
+    {
+        names = keel::collect_names( ast, resolution, sm, interner );
+    }
 
     // Type checking is part of compiling too - same reasoning as parsing and resolution.
     keel::Types types = keel::type_check( ast, resolution, literals, sm, interner, diagnostics );

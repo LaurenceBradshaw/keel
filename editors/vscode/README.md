@@ -1,6 +1,7 @@
 # Keel for VS Code
 
-Highlighting and editing rules for `.kl` files, and keelc's errors underlined in the editor.
+Highlighting and editing rules for `.kl` files, keelc's errors underlined in the editor, and names
+coloured by what they refer to.
 
 Install by linking this folder into VS Code's extensions directory, then reloading the window:
 
@@ -11,7 +12,7 @@ Edits to the grammar or to `extension.js` take effect on the next reload.
 
 ## Errors
 
-When a `.kl` file is opened or saved, the extension runs `keelc --check --diagnostics=json` on it
+When a `.kl` file is opened or saved, the extension runs `keelc --check --diagnostics=json --names` on it
 from the workspace folder, and underlines what keelc reports in every file the program loaded.
 It has no dependencies and needs no build step. Two settings:
 
@@ -28,6 +29,8 @@ If keelc cannot run at all, the reason is written to the *Keel* output channel.
 Keel syntax except string literals, which do not type-check yet. From this folder, it passes
 `keelc --check --package extra=sample/extra sample/main.kl`.
 
+## Names
+
 The grammar guesses what a name is from where it stands, so a few cases come out wrong. The sample
 includes them:
 
@@ -35,3 +38,7 @@ includes them:
 - `extra::scale` is a global, but reads as a variant.
 - `Shape::Rect( 2.0, 3.0 )` is a variant, but reads as a call.
 - `T` in `larger<T>` is declared as a type, but reads as a variable.
+
+The same run also reports what each name resolved to, and the extension paints that over the
+grammar: after a save, each of these takes the right colour. While a file has unsaved edits the
+colours from its last save stay, moved along with the text, until it is saved again.

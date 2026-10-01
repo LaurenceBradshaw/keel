@@ -1,0 +1,46 @@
+// What each name refers to: the names a grammar cannot classify by position alone.
+
+import shapes;
+import kl::units;
+
+i32 counter = 0;
+
+class meter
+{
+    i32 count;
+
+    public meter( i32 start )
+    {
+        count = start;
+    }
+
+    static meter zero()
+    {
+        return meter( 0 );
+    }
+};
+
+T larger<T>( T a, T b ) where T : Copyable
+{
+    return a;
+}
+
+f64 radius_of( Shape s )
+{
+    switch( s )
+    {
+        case Shape::Circle( r ):
+            return r;
+        default:
+            return 0.0;
+    }
+}
+
+i32 main()
+{
+    meter m       = meter( 1 );
+    meter z       = meter::zero();
+    kl::Unit unit = kl::Unit::Foot;
+    f64 r         = radius_of( Shape::Dot );
+    return larger( counter, kl::scale );
+}

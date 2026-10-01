@@ -1,7 +1,7 @@
 {
     "name": "keel",
     "displayName": "Keel",
-    "description": "Keel language support: highlighting, editing rules, and keelc's errors on save.",
+    "description": "Keel language support: highlighting, editing rules, and keelc's errors and name colours on save.",
     "version": "0.0.1",
     "publisher": "keel",
     "license": "Apache-2.0 WITH LLVM-exception",
@@ -39,6 +39,55 @@
                 "path": "./syntaxes/keel.tmLanguage.json"
             }
         ],
+        "semanticTokenModifiers": [
+            {
+                "id": "global",
+                "description": "A variable declared at the top level of a module."
+            }
+        ],
+        "semanticTokenScopes": [
+            {
+                "language": "keel",
+                "scopes": {
+                    "namespace": [
+                        "entity.name.namespace.keel"
+                    ],
+                    "struct": [
+                        "entity.name.type.keel"
+                    ],
+                    "class": [
+                        "entity.name.type.keel"
+                    ],
+                    "enum": [
+                        "entity.name.type.keel"
+                    ],
+                    "typeParameter": [
+                        "entity.name.type.parameter.keel"
+                    ],
+                    "enumMember": [
+                        "variable.other.enummember.keel"
+                    ],
+                    "property": [
+                        "variable.other.member.keel"
+                    ],
+                    "function": [
+                        "entity.name.function.keel"
+                    ],
+                    "method": [
+                        "entity.name.function.keel"
+                    ],
+                    "parameter": [
+                        "variable.parameter.keel"
+                    ],
+                    "variable": [
+                        "variable.other.keel"
+                    ],
+                    "variable.global": [
+                        "variable.other.global.keel"
+                    ]
+                }
+            }
+        ],
         "configurationDefaults": {
             "editor.tokenColorCustomizations": {
                 "textMateRules": [
@@ -49,6 +98,9 @@
                         }
                     }
                 ]
+            },
+            "[keel]": {
+                "editor.semanticHighlighting.enabled": true
             }
         },
         "configuration": {
