@@ -1,8 +1,0 @@
----
-# Keel sources, not C++. `.vscode/settings.json` maps `*.kl` to `cpp` for highlighting, which also
-# hands them to clang-format on save - and it reformats them as C++: `fn( i32 ) -> i32` loses the
-# spaces around the arrow, and a one-line fixture body gets split over four. The fixtures are read
-# by people and diffed against expectations, so their layout is theirs. Nothing under here is C or
-# C++: the unit tests live inside the sources they test.
-DisableFormat: true
-SortIncludes: Never

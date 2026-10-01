@@ -1,0 +1,208 @@
+// Every kind of Keel syntax in one program, for checking the editor's highlighting.
+// It passes `keelc --check --package extra=sample/extra sample/main.kl`, run from editors/vscode.
+// String literals are left out: they have no type yet.
+
+import geometry;
+import extra::units;
+
+extern i32 abs( i32 v );
+
+/* Globals, with every numeric literal form. */
+i32 counter = 0;
+u64 mask    = 0xFFFF_0000;
+u8  flags   = 0b1010_0101;
+i64 big     = 1_000_000;
+f64 ratio   = 2.5e-3;
+u8  letter  = 'K';
+u8  newline = '\n';
+u8  byte    = '\xFF';
+bool ready  = true;
+
+enum Colour
+{
+    Red,
+    Green,
+    Blue
+};
+
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+struct Pair<T> where T : Copyable
+{
+    T first;
+    T second;
+};
+
+class Buffer
+{
+    i32[*] data;
+    i32    size;
+
+    public Buffer( i32 n )
+    {
+        unsafe
+        {
+            data = alloc<i32>( n );
+        }
+        size = n;
+    }
+
+    ~Buffer()
+    {
+        unsafe
+        {
+            free( data );
+        }
+    }
+
+    static Buffer of( i32 n )
+    {
+        return Buffer( n * 2 );
+    }
+
+    i32 length() const
+    {
+        return this.size;
+    }
+
+    void fill( i32 value )
+    {
+        for( i32 i = 0; i < size; i++ )
+        {
+            unsafe
+            {
+                data[ i ] = value;
+            }
+        }
+    }
+};
+
+// Lowercase, so `meter( 1 )` reads as a call: only the compiler knows it names a type.
+class meter
+{
+    i32 count;
+
+    public meter( i32 start )
+    {
+        count = start;
+    }
+
+    i32 value() const
+    {
+        return count;
+    }
+};
+
+T larger<T>( T a, T b ) where T : Copyable & Comparable
+{
+    if( a > b )
+    {
+        return a;
+    }
+    else
+    {
+        return b;
+    }
+}
+
+void reset( out i32 n )
+{
+    n = 0;
+}
+
+void bump( ref i32 n )
+{
+    n += 1;
+}
+
+i32 consume( move Buffer b )
+{
+    return b.length();
+}
+
+const ref i32 x_of( const ref Point p )
+{
+    return p.x;
+}
+
+i32 code( Colour c )
+{
+    switch( c )
+    {
+        case Colour::Red:
+            counter++;
+            fallthrough;
+        case Colour::Green:
+            return 1;
+        default:
+            return 2;
+    }
+}
+
+i32 bucket( i32 n )
+{
+    switch( n )
+    {
+        case 0..10:
+            return 1;
+        default:
+            return 2;
+    }
+}
+
+i32 main()
+{
+    Point p = Point { 3, -4 };
+    Pair<i32> pair = Pair { .first = 1, .second = 2 };
+
+    fn( const ref Point ) -> const ref i32 read_x = &x_of;
+    field( Point ) -> i32 axis = &Point::y;
+    fn( i32 ) -> i32 absolute;
+    unsafe
+    {
+        absolute = &abs;
+    }
+
+    i32 n = 5;
+    reset( out n );
+    bump( ref n );
+
+    Buffer buf = Buffer::of( 4 );
+    Buffer buf2 = Buffer( 8 );
+    buf.fill( 7 );
+    i32 len = consume( move buf );
+
+    i64 wide   = cast<i64>( n );
+    i32 narrow = wrap<i32>( wide );
+
+    i32 bits = ( n << 2 ) | ( n & 1 ) ^ ~n;
+    bits >>= 1;
+
+    bool both = !ready || ( n != 1 && n >= 0 );
+
+    f64 a = area( Shape::Rect( 2.0, 3.0 ) );
+
+    meter tally = meter( 1 );
+
+    extra::Length run = extra::Length { 3, extra::Unit::Metre };
+    i32 tenths        = extra::in_tenths( run ) + extra::scale;
+
+    while( n < 3 )
+    {
+        n = n + 1;
+
+        if( n == 2 )
+        {
+            continue;
+        }
+
+        break;
+    }
+
+    return larger( read_x( p ), axis( p ) ) + absolute( -1 ) + code( Colour::Red ) + bucket( len ) - narrow
+         + pair.first * 0 + bits % 1 + n / 10 - 1 - 3 + tally.value() * 0 + tenths * 0;
+}

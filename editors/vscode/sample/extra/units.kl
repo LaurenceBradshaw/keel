@@ -1,0 +1,20 @@
+// A module of the package `extra`, which the command line names: `--package extra=<this folder>`.
+
+i32 scale = 10;
+
+enum Unit
+{
+    Metre,
+    Foot
+};
+
+struct Length
+{
+    i32  amount;
+    Unit unit;
+};
+
+i32 in_tenths( Length l )
+{
+    return l.amount * scale;
+}

@@ -33,7 +33,10 @@
     },
     "editor.formatOnSave": true,
     "editor.formatOnPaste": true,
-    "files.associations": {
-        "*.kl": "cpp"
+    // .kl files are Keel, from editors/vscode. Keel has no formatter, and saving must not change a
+    // fixture's layout.
+    "[keel]": {
+        "editor.formatOnSave": false,
+        "editor.formatOnPaste": false
     }
 }

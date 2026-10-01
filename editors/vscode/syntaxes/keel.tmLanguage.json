@@ -1,0 +1,434 @@
+{
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+    "name": "Keel",
+    "scopeName": "source.keel",
+    "fileTypes": [
+        "kl"
+    ],
+    "patterns": [
+        {
+            "include": "#comments"
+        },
+        {
+            "include": "#strings"
+        },
+        {
+            "include": "#numbers"
+        },
+        {
+            "include": "#enum"
+        },
+        {
+            "include": "#fntype"
+        },
+        {
+            "include": "#declarations"
+        },
+        {
+            "include": "#keywords"
+        },
+        {
+            "include": "#types"
+        },
+        {
+            "include": "#functions"
+        },
+        {
+            "include": "#operators"
+        },
+        {
+            "include": "#punctuation"
+        },
+        {
+            "include": "#names"
+        }
+    ],
+    "repository": {
+        "comments": {
+            "patterns": [
+                {
+                    "name": "comment.block.keel",
+                    "begin": "/\\*",
+                    "end": "\\*/",
+                    "captures": {
+                        "0": {
+                            "name": "punctuation.definition.comment.keel"
+                        }
+                    }
+                },
+                {
+                    "name": "comment.line.double-slash.keel",
+                    "begin": "//",
+                    "end": "$",
+                    "beginCaptures": {
+                        "0": {
+                            "name": "punctuation.definition.comment.keel"
+                        }
+                    }
+                }
+            ]
+        },
+        "strings": {
+            "patterns": [
+                {
+                    "name": "string.quoted.double.keel",
+                    "begin": "\"",
+                    "end": "\"|$",
+                    "captures": {
+                        "0": {
+                            "name": "punctuation.definition.string.keel"
+                        }
+                    },
+                    "patterns": [
+                        {
+                            "name": "constant.character.escape.keel",
+                            "match": "\\\\(?:[ntr0\\\\\\\"']|x[0-9A-Fa-f]{2})"
+                        },
+                        {
+                            "name": "invalid.illegal.escape.keel",
+                            "match": "\\\\."
+                        }
+                    ]
+                },
+                {
+                    "name": "string.quoted.single.keel",
+                    "begin": "'",
+                    "end": "'|$",
+                    "captures": {
+                        "0": {
+                            "name": "punctuation.definition.string.keel"
+                        }
+                    },
+                    "patterns": [
+                        {
+                            "name": "constant.character.escape.keel",
+                            "match": "\\\\(?:[ntr0\\\\\\\"']|x[0-9A-Fa-f]{2})"
+                        },
+                        {
+                            "name": "invalid.illegal.escape.keel",
+                            "match": "\\\\."
+                        }
+                    ]
+                }
+            ]
+        },
+        "numbers": {
+            "patterns": [
+                {
+                    "name": "constant.numeric.hex.keel",
+                    "match": "\\b0[xX][0-9A-Fa-f](?:_?[0-9A-Fa-f])*\\b"
+                },
+                {
+                    "name": "constant.numeric.binary.keel",
+                    "match": "\\b0[bB][01](?:_?[01])*\\b"
+                },
+                {
+                    "name": "constant.numeric.float.keel",
+                    "match": "\\b[0-9](?:_?[0-9])*(?:\\.[0-9](?:_?[0-9])*(?:[eE][+-]?[0-9]+)?|[eE][+-]?[0-9]+)\\b"
+                },
+                {
+                    "name": "constant.numeric.decimal.keel",
+                    "match": "\\b[0-9](?:_?[0-9])*\\b"
+                }
+            ]
+        },
+        "declarations": {
+            "patterns": [
+                {
+                    "match": "\\b(struct|class)\\s+([A-Za-z_]\\w*)",
+                    "captures": {
+                        "1": {
+                            "name": "storage.type.keel"
+                        },
+                        "2": {
+                            "name": "entity.name.type.keel"
+                        }
+                    }
+                }
+            ]
+        },
+        "keywords": {
+            "patterns": [
+                {
+                    "match": "\\b(import)\\s+((?:[A-Za-z_]\\w*\\s*::\\s*)*[A-Za-z_]\\w*)",
+                    "captures": {
+                        "1": {
+                            "name": "keyword.control.directive.import.keel"
+                        },
+                        "2": {
+                            "patterns": [
+                                {
+                                    "include": "#operators"
+                                },
+                                {
+                                    "name": "entity.name.namespace.keel",
+                                    "match": "\\b[A-Za-z_]\\w*\\b"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "storage.modifier.mode.keel",
+                    "match": "\\bconst(?=\\s+ref\\b)"
+                },
+                {
+                    "match": "\\b(where)\\s+([A-Za-z_]\\w*)",
+                    "captures": {
+                        "1": {
+                            "name": "keyword.other.keel"
+                        },
+                        "2": {
+                            "name": "entity.name.type.keel"
+                        }
+                    }
+                },
+                {
+                    "name": "keyword.control.keel",
+                    "match": "\\b(?:if|else|while|for|return|switch|case|default|break|continue|fallthrough)\\b"
+                },
+                {
+                    "name": "storage.type.function.keel",
+                    "match": "\\b(?:fn|field)\\b"
+                },
+                {
+                    "name": "storage.type.keel",
+                    "match": "\\b(?:struct|class|enum|auto)\\b"
+                },
+                {
+                    "name": "storage.modifier.mode.keel",
+                    "match": "\\b(?:ref|out|move)\\b"
+                },
+                {
+                    "name": "storage.modifier.keel",
+                    "match": "\\b(?:const|static|extern|private|public)\\b"
+                },
+                {
+                    "name": "keyword.other.keel",
+                    "match": "\\b(?:unsafe|where|cast|wrap|alloc|free|template|new|delete)\\b"
+                },
+                {
+                    "name": "constant.language.keel",
+                    "match": "\\b(?:true|false|nullptr)\\b"
+                },
+                {
+                    "name": "variable.language.this.keel",
+                    "match": "\\b(?:this)\\b"
+                }
+            ]
+        },
+        "types": {
+            "patterns": [
+                {
+                    "name": "storage.type.built-in.primitive.keel",
+                    "match": "\\b(?:[iu](?:8|16|32|64)|f32|f64|bool|void)\\b"
+                },
+                {
+                    "name": "support.type.bound.keel",
+                    "match": "\\b(?:Copyable|Equatable|Comparable|Numeric|Integral|Floating)\\b"
+                },
+                {
+                    "match": "(&)\\s*((?:[A-Za-z_]\\w*(?:<[\\w\\s,:*\\[\\]<>]*>)?::)+)([A-Za-z_]\\w*)",
+                    "captures": {
+                        "1": {
+                            "name": "keyword.operator.address.keel"
+                        },
+                        "2": {
+                            "patterns": [
+                                {
+                                    "include": "#types"
+                                },
+                                {
+                                    "include": "#operators"
+                                }
+                            ]
+                        },
+                        "3": {
+                            "name": "variable.other.member.keel"
+                        }
+                    }
+                },
+                {
+                    "name": "entity.name.scope.keel entity.name.namespace.keel",
+                    "match": "\\b[A-Za-z_]\\w*(?=::)"
+                },
+                {
+                    "name": "entity.name.type.keel",
+                    "match": "\\b[A-Za-z_]\\w*(?=\\s*(?:<[\\w\\s,:*\\[\\]<>]*>)?\\s*\\{)"
+                },
+                {
+                    "name": "entity.name.type.keel",
+                    "match": "\\b[A-Za-z_]\\w*(?=\\s*(?:<[\\w\\s,:*\\[\\]<>]*>)?(?:\\[\\*\\])?\\s+[A-Za-z_]\\w*\\b)"
+                },
+                {
+                    "name": "variable.other.enummember.keel",
+                    "match": "(?<=::)[A-Za-z_]\\w*\\b(?!\\s*(?:\\(|<|::|\\{|[A-Za-z_]))"
+                }
+            ]
+        },
+        "functions": {
+            "patterns": [
+                {
+                    "match": "\\b([A-Za-z_]\\w*)(?=\\s*(?:<[\\w\\s,:*\\[\\]<>]*>)?\\s*\\()",
+                    "captures": {
+                        "1": {
+                            "name": "entity.name.function.keel"
+                        }
+                    }
+                }
+            ]
+        },
+        "operators": {
+            "patterns": [
+                {
+                    "name": "keyword.operator.arrow.keel",
+                    "match": "->"
+                },
+                {
+                    "name": "punctuation.separator.scope-resolution.keel",
+                    "match": "::"
+                },
+                {
+                    "name": "keyword.operator.range.keel",
+                    "match": "\\.\\."
+                },
+                {
+                    "name": "punctuation.accessor.keel",
+                    "match": "\\."
+                },
+                {
+                    "name": "keyword.operator.assignment.compound.keel",
+                    "match": "<<=|>>=|[-+*/%&|^]="
+                },
+                {
+                    "name": "keyword.operator.bitwise.shift.keel",
+                    "match": "<<|>>"
+                },
+                {
+                    "name": "keyword.operator.comparison.keel",
+                    "match": "==|!=|<=|>=|<|>"
+                },
+                {
+                    "name": "keyword.operator.logical.keel",
+                    "match": "&&|\\|\\||!"
+                },
+                {
+                    "name": "keyword.operator.increment.keel",
+                    "match": "\\+\\+|--"
+                },
+                {
+                    "name": "keyword.operator.bitwise.keel",
+                    "match": "[&|^~]"
+                },
+                {
+                    "name": "keyword.operator.assignment.keel",
+                    "match": "="
+                },
+                {
+                    "name": "keyword.operator.arithmetic.keel",
+                    "match": "[-+*/%]"
+                },
+                {
+                    "name": "keyword.operator.ternary.keel",
+                    "match": "[?:]"
+                }
+            ]
+        },
+        "punctuation": {
+            "patterns": [
+                {
+                    "name": "punctuation.terminator.statement.keel",
+                    "match": ";"
+                },
+                {
+                    "name": "punctuation.separator.delimiter.keel",
+                    "match": ","
+                }
+            ]
+        },
+        "names": {
+            "patterns": [
+                {
+                    "name": "variable.other.keel",
+                    "match": "\\b[A-Za-z_]\\w*\\b"
+                }
+            ]
+        },
+        "enum": {
+            "begin": "\\b(enum)\\s+([A-Za-z_]\\w*)",
+            "beginCaptures": {
+                "1": {
+                    "name": "storage.type.keel"
+                },
+                "2": {
+                    "name": "entity.name.type.keel"
+                }
+            },
+            "end": "\\}",
+            "patterns": [
+                {
+                    "comment": "The body, where each bare name is a variant.",
+                    "begin": "\\{",
+                    "end": "(?=\\})",
+                    "patterns": [
+                        {
+                            "include": "#comments"
+                        },
+                        {
+                            "begin": "\\(",
+                            "end": "\\)",
+                            "patterns": [
+                                {
+                                    "include": "$self"
+                                }
+                            ]
+                        },
+                        {
+                            "name": "variable.other.enummember.keel",
+                            "match": "\\b[A-Za-z_]\\w*\\b"
+                        },
+                        {
+                            "include": "#punctuation"
+                        }
+                    ]
+                },
+                {
+                    "include": "$self"
+                }
+            ]
+        },
+        "fntype": {
+            "begin": "\\b(fn|field)\\s*(\\()",
+            "beginCaptures": {
+                "1": {
+                    "name": "storage.type.function.keel"
+                }
+            },
+            "end": "\\)",
+            "patterns": [
+                {
+                    "include": "#comments"
+                },
+                {
+                    "include": "#fntype"
+                },
+                {
+                    "include": "#keywords"
+                },
+                {
+                    "include": "#types"
+                },
+                {
+                    "include": "#operators"
+                },
+                {
+                    "include": "#punctuation"
+                },
+                {
+                    "name": "entity.name.type.keel",
+                    "match": "\\b[A-Za-z_]\\w*\\b"
+                }
+            ]
+        }
+    }
+}

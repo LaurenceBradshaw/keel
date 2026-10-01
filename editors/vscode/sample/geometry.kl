@@ -1,0 +1,21 @@
+// A module: main.kl names these after `import geometry;`.
+
+enum Shape
+{
+    Circle( f64 radius ),
+    Rect( f64 width, f64 height ),
+    Dot
+};
+
+f64 area( Shape s )
+{
+    switch( s )
+    {
+        case Shape::Circle( r ):
+            return 3.0 * r * r;
+        case Shape::Rect( w, h ):
+            return w * h;
+        case Shape::Dot:
+            return 0.0;
+    }
+}
