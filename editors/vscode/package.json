@@ -1,7 +1,7 @@
 {
     "name": "keel",
     "displayName": "Keel",
-    "description": "Keel language support: highlighting and editing rules for .kl files.",
+    "description": "Keel language support: highlighting, editing rules, and keelc's errors on save.",
     "version": "0.0.1",
     "publisher": "keel",
     "license": "Apache-2.0 WITH LLVM-exception",
@@ -10,6 +10,13 @@
     },
     "categories": [
         "Programming Languages"
+    ],
+    "main": "./extension.js",
+    "activationEvents": [
+        "onLanguage:keel"
+    ],
+    "extensionKind": [
+        "workspace"
     ],
     "contributes": {
         "languages": [
@@ -42,6 +49,24 @@
                         }
                     }
                 ]
+            }
+        },
+        "configuration": {
+            "title": "Keel",
+            "properties": {
+                "keel.compilerPath": {
+                    "type": "string",
+                    "default": "build/debug/bin/keelc",
+                    "description": "The keelc to check files with, relative to the workspace folder."
+                },
+                "keel.packages": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": [],
+                    "description": "Packages to pass to keelc, each as name=<dir>, with dir relative to the workspace folder."
+                }
             }
         }
     }

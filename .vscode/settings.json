@@ -38,5 +38,10 @@
     "[keel]": {
         "editor.formatOnSave": false,
         "editor.formatOnPaste": false
-    }
+    },
+    // The editor sample's package. The golden fixtures name three different `kl` packages in their
+    // FLAGS, so no one setting serves them, and a fixture that uses one shows its package as missing.
+    "keel.packages": [
+        "extra=editors/vscode/sample/extra"
+    ]
 }

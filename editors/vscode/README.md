@@ -1,13 +1,28 @@
 # Keel for VS Code
 
-Highlighting and editing rules for `.kl` files.
+Highlighting and editing rules for `.kl` files, and keelc's errors underlined in the editor.
 
 Install by linking this folder into VS Code's extensions directory, then reloading the window:
 
     ln -s "$PWD" ~/.vscode/extensions/keel.keel-0.0.1          # VS Code running locally
     ln -s "$PWD" ~/.vscode-server/extensions/keel.keel-0.0.1   # VS Code attached to WSL or SSH
 
-Edits to the grammar take effect on the next reload.
+Edits to the grammar or to `extension.js` take effect on the next reload.
+
+## Errors
+
+When a `.kl` file is opened or saved, the extension runs `keelc --check --diagnostics=json` on it
+from the workspace folder, and underlines what keelc reports in every file the program loaded.
+It has no dependencies and needs no build step. Two settings:
+
+- `keel.compilerPath`: the keelc to run, relative to the workspace folder. It defaults to
+  `build/debug/bin/keelc`, so build keelc first.
+- `keel.packages`: the packages to pass, each as `name=<dir>`, the same as keelc's `--package`.
+
+The saved file is checked as the program's root, which is its `main.kl` when it has one. Saving a
+module that another file imports checks the module and what it imports, but not the file importing it.
+Errors that come from how the two files use each other only show once that file is saved as well.
+If keelc cannot run at all, the reason is written to the *Keel* output channel.
 
 `sample/` is for checking the highlighting by eye: two modules and a package, using every kind of
 Keel syntax except string literals, which do not type-check yet. From this folder, it passes
