@@ -7036,21 +7036,41 @@ about debts *between* them, which is the gap this list cannot see.
 - **A mutation fuzz of the test sources found five more aborts (2026-10-01).** Each test `.kl` had
   a token or a line deleted or duplicated, or was cut short the way a half-typed save is; 1,885 of
   60,082 mutants aborted the debug build, and every one is the parameter above or one of these:
-  - *A nameless `enum`* (`enum { … }`): `parse_enum_decl` has no guard, unlike every other
-    declaration, and `declare_enums` prints its name.
-  - *A nameless variant* (`enum E { , B };`): built with an invalid name, which
-    `finish_enum_switch` prints when listing what a `switch` misses.
-  - *Two nameless payload fields* (`A( f64, f64 )`): the duplicate-field check in `declare_enums`
-    finds the two equal and prints the name.
+  - ~~*A nameless `enum`* (`enum { … }`): `parse_enum_decl` has no guard, unlike every other
+    declaration, and `declare_enums` prints its name.~~
+  - ~~*A nameless variant* (`enum E { , B };`): built with an invalid name, which
+    `finish_enum_switch` prints when listing what a `switch` misses.~~
+  - ~~*Two nameless payload fields* (`A( f64, f64 )`): the duplicate-field check in `declare_enums`
+    finds the two equal and prints the name.~~ **All three done (2026-10-01):** the parser leaves a
+    nameless enum or variant out, and a nameless field is never a duplicate. Fuzz 675 → 390.
+    Pinned by `errors_nameless_enum_parts.kl` and `parser_leaves_out_a_nameless_enum_or_variant`.
+    Leaving variants out made an enum whose every variant was broken read as empty, so the
+    "has no variants" check moved from sema into `parse_enum_decl`, the only place that can tell
+    `{ }` from braces whose contents were dropped (`parser_reports_an_enum_with_no_variants`).
   - *A pattern binding no pattern typed*: `case Missing::A( r ):` over an unresolved enum, a wrong
     variant or a binding count that does not match leaves `r` untyped, and `infer_name` hands that
     on, so `r * 2` asserts in `infer_binary`.
   - *A type used as a value* (`P p = P;`, `P = 1;`, `T w = T;`): `infer_name` refuses a function
     there but not a type, so the checker accepts it and lowering asserts; the release build emits C
     naming a variable that does not exist. The one finding that is not error recovery.
+  - *A broken argument inside a generic cycle* (found on the rerun): `Box<Ring<Box<T T>>>* link;`
+    in `errors_generic_aggregates.kl`'s `Ring` is not caught as a cycle, so instantiation never
+    ends and keelc overflows the stack after ~45s, debug and release alike.
 
   A nameless `where` subject only adds a follow-on error. The fuzz ran single files, so imports
   and packages are not covered.
+
+- **A name that starts with a digit is a cascade, not one error (found 2026-10-01).** `3` or `3x`
+  where a name belongs gives 3 to 9 errors depending on where: `expect_name` neither consumes it
+  nor points at it, the lexer reports `3x` as a suffixed literal, and `i32 3x = 1;` is not seen as
+  a declaration. Wanted: one error at the name, "a name cannot start with a digit", in every
+  position. The plan: a `Digit_name` token for `3x` (a real C++ suffix like `42u` keeps its
+  lexer error); `expect_name` consumes it or a bare number, pointing at it, keywords included; in
+  an expression it is an `Error` node, so no "not declared" follows; the statement lookahead takes
+  a type then a number or `Digit_name` as a declaration. `3 = v;` already gives one error.
+  - **And in the same commit:** `check_aggregate_has_fields` counts only the `Field_decl`s left,
+    so `struct S { i32 if; };` (and `i32 3;` once the above lands) also says "`S` has no fields".
+    Move it into the parser as was done for enums.
 
 - **`void*` type-checks, though D37 says Keel has none (found 2026-09-29).** `void* q = nullptr;`
   is accepted without a word, and nothing stops `*q`. `void[*]` is refused from the start; decide

@@ -1129,7 +1129,8 @@ Node_id Parser::parse_enum_decl()
         advance();
     }
 
-    const Symbol_id name = expect_name();
+    const Span      name_span = peek().span;
+    const Symbol_id name      = expect_name();
 
     const Span           generic_start = peek().span;
     const bool           generic       = check( Token_kind::Less );
@@ -1171,12 +1172,22 @@ Node_id Parser::parse_enum_decl()
     // unwritten - the convention Var_decl uses for a missing annotation. Fixed slots rather than
     // optional ones so the variants always start at 2, which Ast::variants is the only reader of.
     // Child 0 matches an aggregate's, so Ast::type_param_list needs no separate rule for an enum.
+    bool                 dropped_variant = false;
     std::vector<Node_id> members { type_params, underlying };
     while( !check( Token_kind::R_brace ) && !at_end() )
     {
         const u32 before = pos_;
 
-        members.push_back( parse_variant_decl() );
+        const Node_id variant = parse_variant_decl();
+
+        if( ast_.aux( variant ) != k_invalid_symbol ) // Missing name
+        {
+            members.push_back( variant );
+        }
+        else
+        {
+            dropped_variant = true;
+        }
 
         if( !check( Token_kind::R_brace ) )
         {
@@ -1195,6 +1206,24 @@ Node_id Parser::parse_enum_decl()
 
     expect( Token_kind::R_brace );
     expect( Token_kind::Semicolon );
+
+    // Same rule as every other declaration: sema reads a name to report about it, so a nameless one
+    // crashes a pass that had no reason to expect it.
+    if( !name.is_valid() )
+    {
+        return error_node( Span::merge( start, previous().span ) );
+    }
+
+    // Only the parser can tell {} from variants it left out
+    if( members.size() == 2 && !dropped_variant )
+    {
+        error_at(
+            Span::merge( start, previous().span ),
+            fmt::format( "`{}` has no variants, so it has no values", sm_.text( name_span ) ),
+            "add a variant, or delete the type"
+        );
+    }
+
     return ast_.add( Node_kind::Enum_decl, Span::merge( start, previous().span ), name.v, members );
 }
 
@@ -7586,6 +7615,79 @@ TEST_CASE( "parser_parses_an_enum", "[parse]" )
         INFO( p.errors() );
         REQUIRE( p.has_errors() );
         REQUIRE( p.errors().find( "write `enum`" ) != std::string::npos );
+    }
+}
+
+// Sema reads an enum's and a variant's name to report about it, so a nameless one stays out of the
+// tree. The rest is still parsed, so nothing after it is a follow-on error.
+TEST_CASE( "parser_leaves_out_a_nameless_enum_or_variant", "[parse][enum]" )
+{
+    SECTION( "a nameless enum is an error node" )
+    {
+        const Parsed p( "enum : u8 { Red }; enum After { A };" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.kind( p.children( p.root() )[0] ) == Node_kind::Error );
+        REQUIRE( p.kind( p.children( p.root() )[1] ) == Node_kind::Enum_decl );
+    }
+
+    SECTION( "a nameless variant is dropped, its neighbours kept" )
+    {
+        const Parsed p( "enum Shape { Circle( f64 r ), ( f64 side ), Square };" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Enum_decl );
+
+        REQUIRE( p.ast().variants( decl ).size() == 2 );
+
+        for( const Node_id variant : p.ast().variants( decl ) )
+        {
+            REQUIRE( p.aux( variant ) != k_invalid_symbol );
+        }
+    }
+}
+
+// Only the parser can tell braces with nothing in them from variants it left out, so it is the one
+// that reports an empty enum.
+TEST_CASE( "parser_reports_an_enum_with_no_variants", "[parse][enum]" )
+{
+    SECTION( "however it is written" )
+    {
+        static const char* const sources[] = {
+            "enum E { };",
+            "enum E : u8 { };",
+            "enum E<T> { };",
+        };
+
+        for( const char* source : sources )
+        {
+            const Parsed p( source );
+
+            INFO( "source: " << source << "\n" << p.errors() );
+            REQUIRE( p.error_count() == 1 );
+            REQUIRE( p.errors().find( "`E` has no variants, so it has no values" ) != std::string::npos );
+        }
+    }
+
+    SECTION( "but not when its variants were left out" )
+    {
+        const Parsed p( "enum E { ( f64 a ), ( f64 b ) };" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 2 );
+        REQUIRE( p.errors().find( "has no variants" ) == std::string::npos );
+    }
+
+    SECTION( "nor when it has no name to report" )
+    {
+        const Parsed p( "enum { };" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "has no variants" ) == std::string::npos );
     }
 }
 

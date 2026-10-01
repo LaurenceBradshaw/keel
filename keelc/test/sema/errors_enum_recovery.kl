@@ -4,8 +4,8 @@ enum Unconstrained where T : Copyable
     Red,
 };
 
-// Recovery: a variant with no name still has to diagnose rather than abort. The checker reads a
-// variant's name to report a duplicate, and a failed `expect_name` leaves that name invalid.
+// Recovery: a variant with no name is left out, but the enum is not then empty - it was written with
+// variants, so only the variants are reported.
 enum Nameless
 {
     3,
