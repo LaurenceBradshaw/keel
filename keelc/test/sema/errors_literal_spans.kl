@@ -1,0 +1,45 @@
+// A refused literal underlines what is wrong with it: the type's name, or the initialisers at fault.
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+class Counter
+{
+    i32 v;
+
+    Counter( i32 a )
+    {
+        v = a;
+    }
+};
+
+class Hidden
+{
+    i32 v;
+};
+
+struct Box<T> where T : Copyable
+{
+    T v;
+};
+
+i32 main()
+{
+    Counter c = Counter { 1 };
+    Hidden  h = Hidden { 1 };
+    auto    b = Box { 1 };
+    Point   w = Box { 1 };
+    auto    n = Nowhere { 1 };
+    Point   f = Point { 1 };
+    Point   m = Point { .x = 1 };
+    Point   t = Point { 1, 2, 3, 4 };
+    Point   x = Point { .x = 1, 2 };
+    Point   s = Point {
+        1,
+        2,
+        3,
+    };
+    return 0;
+}

@@ -1440,6 +1440,7 @@ Node_id Parser::parse_where_clause()
 
 Node_id Parser::parse_struct_literal( Span start, Symbol_id type_name, Node_id package )
 {
+    const Span name = previous().span; // both callers have just consumed the type's name
     expect( Token_kind::L_brace );
 
     std::vector<Node_id> initialisers;
@@ -1473,7 +1474,10 @@ Node_id Parser::parse_struct_literal( Span start, Symbol_id type_name, Node_id p
 
     expect( Token_kind::R_brace );
 
-    return ast_.add( Node_kind::Struct_literal, Span::merge( start, previous().span ), type_name.v, initialisers );
+    const Node_id node =
+        ast_.add( Node_kind::Struct_literal, Span::merge( start, previous().span ), type_name.v, initialisers );
+    ast_.set_type_name_span( node, name );
+    return node;
 }
 
 Node_id Parser::parse_field_init()

@@ -2097,7 +2097,7 @@ Type_id Expressions::infer_path( Node_id id )
         // below it would escape through `auto`, which has no expectation to disagree with.
         if( is_generic( ast_, decl ) )
         {
-            return types_.record( id, no_instance_named( id, decl ) );
+            return types_.record( id, no_instance_named( ast_.span( id ), decl ) );
         }
 
         return types_.record( id, types_.type_of( decl ) );
@@ -2159,7 +2159,7 @@ Type_id Expressions::infer_field( Node_id id )
 // Nothing named an instance of a generic declaration, so there is no type here a value can hold.
 // Two causes with two different fixes, which is why one message cannot serve both: either nothing
 // was expected at all, or what was expected belongs to another declaration entirely.
-Type_id Expressions::no_instance_named( Node_id id, Node_id declaration )
+Type_id Expressions::no_instance_named( Span at, Node_id declaration )
 {
     const std::string_view name = interner_.text( Symbol_id { ast_.aux( declaration ) } );
 
@@ -2167,12 +2167,12 @@ Type_id Expressions::no_instance_named( Node_id id, Node_id declaration )
     {
         // The ordinary mismatch, stated here rather than left to check(): falling through would
         // name the open form - `Box<T>`, a type the author never wrote - on the `got` side.
-        reporter_.error_at( ast_.span( id ), fmt::format( "expected `{}`, but got `{}`", table_.name( expected_ ), name ) );
+        reporter_.error_at( at, fmt::format( "expected `{}`, but got `{}`", table_.name( expected_ ), name ) );
     }
     else
     {
         reporter_.error_at(
-            ast_.span( id ),
+            at,
             fmt::format( "nothing here says which `{}` this is", name ),
             fmt::format( "write the type where the value lands, as in `{}<i32> x = ...`", name )
         );
@@ -2207,7 +2207,7 @@ Type_id Expressions::infer_struct_literal( Node_id id )
         const std::string_view name = interner_.text( Symbol_id { ast_.aux( decl ) } );
 
         reporter_.error_at(
-            ast_.span( id ),
+            ast_.type_name_span( id ),
             fmt::format( "`{}` has a constructor, so it cannot be built from a literal", name ),
             fmt::format( "write `{}( ... )`", name )
         );
@@ -2247,7 +2247,7 @@ Type_id Expressions::infer_struct_literal( Node_id id )
         if( !is_visible_from( ast_, field, current_type() ) )
         {
             reporter_.error_at(
-                ast_.span( id ),
+                ast_.type_name_span( id ),
                 fmt::format(
                     "`{}` keeps `{}` private, so it cannot be built from a literal",
                     struct_name,
@@ -2274,7 +2274,7 @@ Type_id Expressions::infer_struct_literal( Node_id id )
     {
         // Reported before the values are typed, because typing one runs check(), which is what
         // sets expected_ - and the message depends on it.
-        const Type_id poison = no_instance_named( id, decl );
+        const Type_id poison = no_instance_named( ast_.type_name_span( id ), decl );
 
         for( const Node_id init : initialisers )
         {
@@ -2289,16 +2289,26 @@ Type_id Expressions::infer_struct_literal( Node_id id )
     // One convention per literal, as C++20 requires. Two in the same literal is a reader's
     // problem rather than a parser's.
     std::size_t named = 0;
+    Node_id     differs; // the first initialiser that breaks the convention the first one set
+    const bool  named_first = !initialisers.empty() && Symbol_id { ast_.aux( initialisers.front() ) }.is_valid();
 
     for( const Node_id init : initialisers )
     {
-        named += Symbol_id { ast_.aux( init ) }.is_valid() ? 1 : 0;
+        const bool is_named = Symbol_id { ast_.aux( init ) }.is_valid();
+        named += is_named ? 1 : 0;
+
+        if( !differs.is_valid() && is_named != named_first )
+        {
+            differs = init;
+        }
     }
 
-    if( named != 0 && named != initialisers.size() )
+    const bool mixed = differs.is_valid();
+
+    if( mixed )
     {
         reporter_.error_at(
-            ast_.span( id ),
+            ast_.span( differs ),
             "an initialiser list is either all positional or all named",
             "give every field a name, or none of them"
         );
@@ -2308,8 +2318,13 @@ Type_id Expressions::infer_struct_literal( Node_id id )
     {
         if( initialisers.size() != fields.size() )
         {
+            // Too many underlines the ones left over; too few has nothing to underline but the name.
+            const Span at = initialisers.size() > fields.size()
+                                ? Span::merge( ast_.span( initialisers[fields.size()] ), ast_.span( initialisers.back() ) )
+                                : ast_.type_name_span( id );
+
             reporter_.error_at(
-                ast_.span( id ),
+                at,
                 fmt::format(
                     "`{}` has {} field{}, but {} {} given",
                     struct_name,
@@ -2372,14 +2387,16 @@ Type_id Expressions::infer_struct_literal( Node_id id )
     }
 
     // Every field that is missing, not just the first: a struct that gained three fields should
-    // say so once rather than over three compiles.
-    for( const Node_id field : fields )
+    // say so once rather than over three compiles. A mixed literal's unnamed one is the same mistake.
+    for( const Node_id field : mixed ? std::span<const Node_id> {} : std::span<const Node_id>( fields ) )
     {
         const Symbol_id name { ast_.aux( field ) };
 
         if( name.is_valid() && seen.find( name.v ) == seen.end() )
         {
-            reporter_.error_at( ast_.span( id ), fmt::format( "field `{}` is not initialised", interner_.text( name ) ) );
+            reporter_.error_at(
+                ast_.type_name_span( id ), fmt::format( "field `{}` is not initialised", interner_.text( name ) )
+            );
         }
     }
 
@@ -3182,6 +3199,73 @@ TEST_CASE( "type_checker_types_struct_literals", "[sema][types]" )
 
         INFO( p.rendered() );
         REQUIRE( p.errors() >= 1 );
+    }
+}
+
+// A refused literal underlines what is wrong with it: the type's name when the spelling or the type
+// is the mistake, and the initialisers when they are.
+TEST_CASE( "expressions_underline_the_part_of_a_literal_that_is_wrong", "[sema][types]" )
+{
+    constexpr std::string_view types = "struct P { i32 x; i32 y; }; class C { i32 v; C( i32 a ) { v = a; } }; "
+                                       "class H { i32 v; }; struct B<T> where T : Copyable { T v; };\n";
+
+    const auto underlined = [types]( std::string_view main, std::string_view message, std::string_view at, long carets )
+    {
+        const Typed       p( std::string( types ) + std::string( main ) );
+        const std::string rendered = p.rendered();
+
+        INFO( rendered );
+
+        std::size_t errors = 0;
+        for( std::size_t i = rendered.find( "error:" ); i != std::string::npos; i = rendered.find( "error:", i + 1 ) )
+        {
+            ++errors;
+        }
+
+        REQUIRE( errors == 1 );
+        REQUIRE( rendered.find( message ) != std::string::npos );
+        REQUIRE( rendered.find( fmt::format( "t.kl:{}", at ) ) != std::string::npos );
+        REQUIRE( std::count( rendered.begin(), rendered.end(), '^' ) == carets );
+    };
+
+    SECTION( "the name, when the type has a constructor" )
+    {
+        underlined( "i32 main() { C c = C { 1 }; return 0; }", "has a constructor", "2:20", 1 );
+    }
+
+    SECTION( "the name, when the type keeps a field private" )
+    {
+        underlined( "i32 main() { H h = H { 1 }; return 0; }", "keeps `v` private", "2:20", 1 );
+    }
+
+    SECTION( "the name, when nothing says which instance it is" )
+    {
+        underlined( "i32 main() { auto b = B { 1 }; return 0; }", "nothing here says which `B`", "2:23", 1 );
+        underlined( "i32 main() { P q = B { 1 }; return 0; }", "expected `P`, but got `B`", "2:20", 1 );
+    }
+
+    SECTION( "the name, when it is not declared" )
+    {
+        underlined( "i32 main() { auto q = Nope { 1 }; return 0; }", "`Nope` is not declared", "2:23", 4 );
+    }
+
+    SECTION( "the name, when fields are missing" )
+    {
+        underlined( "i32 main() { P q = P { 1 }; return 0; }", "has 2 fields, but 1 was given", "2:20", 1 );
+        underlined( "i32 main() { P q = P {}; return 0; }", "has 2 fields, but 0 were given", "2:20", 1 );
+        underlined( "i32 main() { P q = P { .x = 1 }; return 0; }", "field `y` is not initialised", "2:20", 1 );
+    }
+
+    SECTION( "the initialisers left over, when there are too many" )
+    {
+        underlined( "i32 main() { P q = P { 1, 2, 3, 4 }; return 0; }", "has 2 fields, but 4 were given", "2:30", 4 );
+    }
+
+    // The first that breaks the convention the first one set, and nothing about the field it left
+    // unnamed: that is the same mistake.
+    SECTION( "the initialiser that mixes the two conventions" )
+    {
+        underlined( "i32 main() { P q = P { .x = 1, 2 }; return 0; }", "all positional or all named", "2:32", 1 );
     }
 }
 

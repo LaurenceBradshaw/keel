@@ -1,0 +1,61 @@
+error: `Counter` has a constructor, so it cannot be built from a literal
+  --> sema/errors_literal_spans.kl:30:17
+   |
+30 |     Counter c = Counter { 1 };
+   |                 ^^^^^^^ write `Counter( ... )`
+
+error: `Hidden` keeps `v` private, so it cannot be built from a literal
+  --> sema/errors_literal_spans.kl:31:17
+   |
+31 |     Hidden  h = Hidden { 1 };
+   |                 ^^^^^^ give it a constructor, and build it by calling that
+
+error: nothing here says which `Box` this is
+  --> sema/errors_literal_spans.kl:32:17
+   |
+32 |     auto    b = Box { 1 };
+   |                 ^^^ write the type where the value lands, as in `Box<i32> x = ...`
+
+error: expected `Point`, but got `Box`
+  --> sema/errors_literal_spans.kl:33:17
+   |
+33 |     Point   w = Box { 1 };
+   |                 ^^^
+
+error: `Nowhere` is not declared
+  --> sema/errors_literal_spans.kl:34:17
+   |
+34 |     auto    n = Nowhere { 1 };
+   |                 ^^^^^^^
+
+error: `Point` has 2 fields, but 1 was given
+  --> sema/errors_literal_spans.kl:35:17
+   |
+35 |     Point   f = Point { 1 };
+   |                 ^^^^^
+
+error: field `y` is not initialised
+  --> sema/errors_literal_spans.kl:36:17
+   |
+36 |     Point   m = Point { .x = 1 };
+   |                 ^^^^^
+
+error: `Point` has 2 fields, but 4 were given
+  --> sema/errors_literal_spans.kl:37:31
+   |
+37 |     Point   t = Point { 1, 2, 3, 4 };
+   |                               ^^^^
+
+error: an initialiser list is either all positional or all named
+  --> sema/errors_literal_spans.kl:38:33
+   |
+38 |     Point   x = Point { .x = 1, 2 };
+   |                                 ^ give every field a name, or none of them
+
+error: `Point` has 2 fields, but 3 were given
+  --> sema/errors_literal_spans.kl:42:9
+   |
+42 |         3,
+   |         ^
+
+10 errors generated

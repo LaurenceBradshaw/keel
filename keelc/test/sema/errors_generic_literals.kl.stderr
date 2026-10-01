@@ -44,12 +44,12 @@ error: expected `Plain`, but got `Box`
   --> sema/errors_generic_literals.kl:97:20
    |
 97 |     Plain mirror = Box { r };
-   |                    ^^^^^^^^^
+   |                    ^^^
 
 error: nothing here says which `Box` this is
    --> sema/errors_generic_literals.kl:100:18
     |
 100 |     auto loose = Box { r };
-    |                  ^^^^^^^^^ write the type where the value lands, as in `Box<i32> x = ...`
+    |                  ^^^ write the type where the value lands, as in `Box<i32> x = ...`
 
 9 errors generated

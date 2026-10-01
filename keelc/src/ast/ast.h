@@ -61,6 +61,10 @@ public:
     Access access( Node_id id ) const;
     void   set_access( Node_id id, Access access );
 
+    // A struct literal's type name, which its own span runs past to the `}`.
+    Span type_name_span( Node_id literal ) const;
+    void set_type_name_span( Node_id literal, Span span );
+
     // The declaration's `Type_param_list`, or an invalid id when it has none. Which child holds it
     // depends on the kind - the front for an aggregate, whose members are variadic, and the fixed
     // last slot for anything function-like - and this is the one place that knows, so no caller
@@ -75,7 +79,8 @@ private:
     std::vector<Node>               nodes_;
     std::vector<Node_id>            children_; // every child of every node, back to back
     Node_id                         root_;
-    std::unordered_map<u32, Access> access_; // members only; absence means public
+    std::unordered_map<u32, Access> access_;          // members only; absence means public
+    std::unordered_map<u32, Span>   type_name_spans_; // struct literals only
 };
 
 // The aggregate a member was declared in, or an invalid id for anything declared at the top level.

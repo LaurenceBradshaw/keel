@@ -32,7 +32,7 @@ error: field `address` is not initialised
   --> sema/errors_absorption.kl:27:14
    |
 27 |     auto p = Point { .wrong = nullptr };
-   |              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |              ^^^^^
 
 error: `Point` has no field `wrong`
   --> sema/errors_absorption.kl:27:22

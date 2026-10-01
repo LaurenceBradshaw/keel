@@ -261,7 +261,7 @@ void Resolver::visit( Node_id id )
         }
         else
         {
-            error_at( ast_.span( id ), fmt::format( "`{}` is not declared", interner_.text( name ) ) );
+            error_at( ast_.type_name_span( id ), fmt::format( "`{}` is not declared", interner_.text( name ) ) );
         }
 
         // Explicit rather than falling into default: the initialiser values are ordinary

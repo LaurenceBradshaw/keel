@@ -38,7 +38,7 @@ error: `Plain` keeps `x` private, so it cannot be built from a literal
   --> sema/errors_access_control.kl:91:15
    |
 91 |     Plain p = Plain { 1 };
-   |               ^^^^^^^^^^^ give it a constructor, and build it by calling that
+   |               ^^^^^ give it a constructor, and build it by calling that
 
 error: `x` is private to `Plain`
   --> sema/errors_access_control.kl:93:12

@@ -56,7 +56,7 @@ error: nothing here says which `Box` this is
    --> sema/errors_inference.kl:118:12
     |
 118 |     unbox( Box { 1 } );
-    |            ^^^^^^^^^ write the type where the value lands, as in `Box<i32> x = ...`
+    |            ^^^ write the type where the value lands, as in `Box<i32> x = ...`
 
 error: `T` cannot be both `i32` and `bool`
    --> sema/errors_inference.kl:136:17

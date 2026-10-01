@@ -199,25 +199,21 @@ bool Name_collector::is_qualified( Node_id id ) const
     }
 }
 
-// The parser ends a qualified name's span on the name, and starts every other one with it; a
-// qualified struct literal's span runs on to its `}`, so its name is found after the `::`.
+// The parser ends a qualified name's span on the name, and starts every other one with it.
 Span Name_collector::name_span( Node_id id ) const
 {
+    if( ast_.kind( id ) == Node_kind::Struct_literal )
+    {
+        return ast_.type_name_span( id );
+    }
+
     const std::string_view name = interner_.text( Symbol_id { ast_.aux( id ) } );
     const Span             node = ast_.span( id );
     const std::string_view text = sm_.file( node.file ).text;
 
     u32 start = node.start;
 
-    if( ast_.kind( id ) == Node_kind::Struct_literal && is_qualified( id ) )
-    {
-        start = ast_.span( ast_.child( id, 0 ) ).end;
-        while( start < text.size() && ( text[start] == ':' || text[start] == ' ' || text[start] == '\t' ) )
-        {
-            ++start;
-        }
-    }
-    else if( is_qualified( id ) )
+    if( is_qualified( id ) )
     {
         start = node.end >= name.size() ? node.end - static_cast<u32>( name.size() ) : node.end;
     }
