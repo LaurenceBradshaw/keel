@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <unordered_map>
 #include <unordered_set>
+#include "sema/reporter.h"
 
 namespace keel
 {
@@ -19,7 +20,7 @@ public:
         : ast_( ast ),
           sm_( sm ),
           interner_( interner ),
-          diags_( diags ),
+          reporter_( sm, diags ),
           imports_( imports )
     {
     }
@@ -41,10 +42,6 @@ private:
 
     void visit( Node_id id );
 
-    void error_at( Span span, std::string message, std::string help = {} );
-
-    std::string previous_declaration_note( Node_id prev ) const;
-
     void push_scope( Scope_kind kind = Scope_kind::Transparent );
     void pop_scope();
 
@@ -61,7 +58,7 @@ private:
 
     const Source_manager& sm_;
     const Interner&       interner_;
-    Diagnostics&          diags_;
+    sema::Reporter        reporter_;
     const Imports&        imports_;
 
     std::vector<Node_id> bindings_;
@@ -74,11 +71,6 @@ private:
 
     std::unordered_map<Symbol_id, Scope> packages_;
 };
-
-void Resolver::error_at( Span span, std::string message, std::string help )
-{
-    diags_.error( span, std::move( message ), std::move( help ) );
-}
 
 Resolution Resolver::run()
 {
@@ -101,7 +93,7 @@ Resolution Resolver::run()
             if( ( ast_.kind( decl ) == Node_kind::Enum_decl || is_aggregate( ast_.kind( decl ) ) ) &&
                 imports_.is_package( name ) )
             {
-                error_at(
+                reporter_.error_at(
                     ast_.span( decl ),
                     fmt::format( "`{}` is the name of a package", interner_.text( name ) ),
                     "a type may not take one"
@@ -196,7 +188,7 @@ void Resolver::visit( Node_id id )
         }
         else
         {
-            error_at( ast_.span( id ), fmt::format( "`{}` is not declared", interner_.text( name ) ) );
+            reporter_.error_at( ast_.span( id ), fmt::format( "`{}` is not declared", interner_.text( name ) ) );
         }
 
         if( !ast_.children( id ).empty() )
@@ -261,7 +253,7 @@ void Resolver::visit( Node_id id )
         }
         else
         {
-            error_at( ast_.type_name_span( id ), fmt::format( "`{}` is not declared", interner_.text( name ) ) );
+            reporter_.error_at( ast_.type_name_span( id ), fmt::format( "`{}` is not declared", interner_.text( name ) ) );
         }
 
         // Explicit rather than falling into default: the initialiser values are ordinary
@@ -384,10 +376,10 @@ void Resolver::visit( Node_id id )
 
             if( !inserted )
             {
-                error_at(
+                reporter_.error_at(
                     ast_.span( field ),
                     fmt::format( "field `{}` is already declared", interner_.text( name ) ),
-                    previous_declaration_note( it->second )
+                    reporter_.previous_declaration_note( ast_.span( it->second ) )
                 );
             }
         }
@@ -416,10 +408,10 @@ void Resolver::visit( Node_id id )
 
             if( !inserted && !chain_overload( it->second, member ) )
             {
-                error_at(
+                reporter_.error_at(
                     ast_.span( member ),
                     fmt::format( "`{}` is already declared", interner_.text( name ) ),
-                    previous_declaration_note( it->second )
+                    reporter_.previous_declaration_note( ast_.span( it->second ) )
                 );
             }
         }
@@ -494,10 +486,10 @@ void Resolver::declare( Scope& scope, Symbol_id name, Node_id decl )
             return;
         }
 
-        error_at(
+        reporter_.error_at(
             ast_.span( decl ),
             fmt::format( "`{}` is already declared in this scope", interner_.text( name ) ),
-            previous_declaration_note( it->second )
+            reporter_.previous_declaration_note( ast_.span( it->second ) )
         );
         return;
     }
@@ -509,7 +501,7 @@ void Resolver::declare( Scope& scope, Symbol_id name, Node_id decl )
     // parameter wins the lookup - and the walk stops at that barrier.
     if( ast_.kind( decl ) != Node_kind::Param_decl && current_fields_.contains( name ) )
     {
-        error_at(
+        reporter_.error_at(
             ast_.span( decl ),
             fmt::format( "`{}` shadows a field", interner_.text( name ) ),
             "a local may not take a field's name"
@@ -530,10 +522,10 @@ void Resolver::declare( Scope& scope, Symbol_id name, Node_id decl )
 
         if( found != s->names.end() )
         {
-            error_at(
+            reporter_.error_at(
                 ast_.span( decl ),
                 fmt::format( "`{}` shadows an outer declaration", interner_.text( name ) ),
-                previous_declaration_note( found->second )
+                reporter_.previous_declaration_note( ast_.span( found->second ) )
             );
             return;
         }
@@ -566,15 +558,6 @@ bool Resolver::chain_overload( Node_id existing, Node_id added )
     next_overload_[last.v] = added;
 
     return true;
-}
-
-std::string Resolver::previous_declaration_note( Node_id prev ) const
-{
-    const Span             span = ast_.span( prev );
-    const Line_col         loc  = sm_.line_col( span.file, span.start );
-    const std::string_view path = sm_.file( span.file ).path;
-
-    return fmt::format( "previous declaration is at: {}:{}:{}", path, loc.line, loc.col );
 }
 
 Node_id Resolver::lookup( Symbol_id name, Node_id use )
@@ -628,7 +611,7 @@ Node_id Resolver::lookup_qualified( Node_id package, Node_id use )
 
     if( !decl.is_valid() )
     {
-        error_at(
+        reporter_.error_at(
             ast_.span( use ),
             fmt::format(
                 "no module of `{}` that this file imports declares `{}`", interner_.text( package_name ), interner_.text( name )
@@ -675,7 +658,7 @@ void Resolver::refuse_unimported( Node_id use, Node_id decl )
     const std::string module_name =
         qualified( interner_, imports_.package_of( file ), std::filesystem::path( sm_.file( file ).path ).stem().string() );
 
-    error_at(
+    reporter_.error_at(
         ast_.span( use ),
         fmt::format( "`{}` is in `{}`, which this file does not import", name, module_name ),
         fmt::format( "write `import {};` at the top of the file", module_name )
@@ -687,7 +670,7 @@ void Resolver::refuse_other_package( Node_id use, Node_id decl )
     const Symbol_id  package = imports_.package_of( ast_.span( decl ).file );
     std::string_view name    = interner_.text( Symbol_id { ast_.aux( decl ) } );
 
-    error_at(
+    reporter_.error_at(
         ast_.span( use ),
         fmt::format( "`{}` is in the package `{}`", name, interner_.text( package ) ),
         fmt::format( "write `{}`", qualified( interner_, package, name ) )

@@ -29,3 +29,8 @@ i32 choose()
     fn( i32 ) -> i32 g = &pick; // hidden.kl's pick( i32 ) matches, and this file cannot see it
     return g( 1 );
 }
+
+struct Pair
+{
+    i32 first;
+};

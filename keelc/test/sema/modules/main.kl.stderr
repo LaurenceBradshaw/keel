@@ -28,4 +28,10 @@ error: `twice` is already declared with these parameters
 4 | i32 twice( i32 v )
   | ^^^^^^^^^^^^^^^^^^ previous declaration is at: sema/modules/main.kl:5:1
 
-5 errors generated
+error: `Pair` is already declared in this scope
+  --> sema/modules/twin.kl:10:1
+   |
+10 | struct Pair
+   | ^^^^^^^^^^^ previous declaration is at: sema/modules/main.kl:33:1
+
+6 errors generated
