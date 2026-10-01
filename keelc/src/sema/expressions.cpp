@@ -285,6 +285,11 @@ Type_id Expressions::infer_call( Node_id id )
                 continue;
             }
 
+            if( overloads_.refused( member ) )
+            {
+                continue;
+            }
+
             // Filtered rather than refused as a set: overloading means one constructor may be
             // reachable while its sibling is not, and hiding the ordinary one behind a named
             // constructor is the whole reason a type would write `private` on it.
@@ -1146,7 +1151,7 @@ Type_id Expressions::method_address( Node_id id, Node_id aggregate )
     const Bindings bindings = aggregates_.bindings_of( qualified_type );
 
     Node_id method;
-    if( !resolution_.next_overload( first ).is_valid() )
+    if( !overloads_.next_overload( first ).is_valid() )
     {
         method = first;
     }
@@ -1945,7 +1950,7 @@ bool Expressions::refuses_many_member( Node_id field_expr, Type_id base_type )
 
 Node_id Expressions::next_visible( Node_id use, Node_id candidate ) const
 {
-    candidate = resolution_.next_overload( candidate );
+    candidate = overloads_.next_overload( candidate );
 
     while( candidate.is_valid() )
     {
@@ -1954,7 +1959,7 @@ Node_id Expressions::next_visible( Node_id use, Node_id candidate ) const
             return candidate;
         }
 
-        candidate = resolution_.next_overload( candidate );
+        candidate = overloads_.next_overload( candidate );
     }
 
     return Node_id {};

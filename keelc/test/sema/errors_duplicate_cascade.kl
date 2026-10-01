@@ -1,0 +1,98 @@
+// One duplicate, one error: the first declaration answers every use of the name.
+i32 twice( i32 a )
+{
+    return a;
+}
+
+i32 twice( i32 b )
+{
+    return b;
+}
+
+// Three of one signature are two mistakes, each against the first.
+i32 thrice( i32 a )
+{
+    return a;
+}
+
+i32 thrice( i32 b )
+{
+    return b;
+}
+
+i32 thrice( i32 c )
+{
+    return c;
+}
+
+class Box
+{
+    i32 v;
+
+    Box( i32 a )
+    {
+        v = a;
+    }
+
+    Box( i32 b )
+    {
+        v = b;
+    }
+
+    i32 get()
+    {
+        return v;
+    }
+
+    i32 get()
+    {
+        return v;
+    }
+
+    i32 doubled()
+    {
+        return get() * 2;
+    }
+};
+
+// A variable keeps the name, but inside the class `counter` is still the class.
+i32 counter = 0;
+
+class counter
+{
+    i32 n;
+
+    counter()
+    {
+        n = 0;
+    }
+
+    i32 get()
+    {
+        return n;
+    }
+};
+
+// The same for a type that names itself in a field or a payload.
+i32 Node = 0;
+
+struct Node
+{
+    Node* next;
+};
+
+i32 Tree = 0;
+
+enum Tree
+{
+    Leaf,
+    Branch( Tree* left ),
+};
+
+i32 main()
+{
+    auto p    = &twice;
+    Box  b    = Box( 1 );
+    i32  sum  = twice( 1 ) + thrice( 2 ) + p( 3 ) + b.get() + b.doubled();
+    return sum + counter;
+}

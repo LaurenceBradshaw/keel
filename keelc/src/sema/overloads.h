@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #pragma once
+#include <unordered_map>
+#include <unordered_set>
 #include "ast/ast.h"
 #include "common/interner.h"
 #include "sema/annotations.h"
@@ -142,6 +144,9 @@ public:
     void                         record_instantiation( Node_id call, std::size_t instance );
     std::unordered_map<u32, u32> take_instantiations();
 
+    bool    refused( Node_id id ) const;
+    Node_id next_overload( Node_id id ) const;
+
 private:
     bool marker_accepts( Node_id param, Keyword given, Type_id expected );
     bool candidate_accepts(
@@ -162,6 +167,8 @@ private:
 
     void check_aggregate_overloads( Node_id decl );
 
+    void refuse( Node_id second, std::string message, std::string help );
+
     const Ast&           ast_;
     const Interner&      interner_;
     const Resolution&    resolution_;
@@ -173,6 +180,7 @@ private:
     Reporter&            reporter_;
 
     std::unordered_map<u32, u32> instantiation_of_;
+    std::unordered_set<u32>      refused_;
 };
 
 } // namespace sema

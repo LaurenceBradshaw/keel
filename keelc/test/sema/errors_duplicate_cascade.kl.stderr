@@ -1,0 +1,49 @@
+error: `twice` is already declared with these parameters
+ --> sema/errors_duplicate_cascade.kl:7:1
+  |
+7 | i32 twice( i32 b )
+  | ^^^^^^^^^^^^^^^^^^ previous declaration is at: sema/errors_duplicate_cascade.kl:2:1
+
+error: `thrice` is already declared with these parameters
+  --> sema/errors_duplicate_cascade.kl:18:1
+   |
+18 | i32 thrice( i32 b )
+   | ^^^^^^^^^^^^^^^^^^^ previous declaration is at: sema/errors_duplicate_cascade.kl:13:1
+
+error: `thrice` is already declared with these parameters
+  --> sema/errors_duplicate_cascade.kl:23:1
+   |
+23 | i32 thrice( i32 c )
+   | ^^^^^^^^^^^^^^^^^^^ previous declaration is at: sema/errors_duplicate_cascade.kl:13:1
+
+error: `Box` is already declared with these parameters
+  --> sema/errors_duplicate_cascade.kl:37:5
+   |
+37 |     Box( i32 b )
+   |     ^^^^^^^^^^^^ previous declaration is at: sema/errors_duplicate_cascade.kl:32:5
+
+error: `get` is already declared with these parameters
+  --> sema/errors_duplicate_cascade.kl:47:5
+   |
+47 |     i32 get()
+   |     ^^^^^^^^^ previous declaration is at: sema/errors_duplicate_cascade.kl:42:5
+
+error: `counter` is already declared in this scope
+  --> sema/errors_duplicate_cascade.kl:61:1
+   |
+61 | class counter
+   | ^^^^^^^^^^^^^ previous declaration is at: sema/errors_duplicate_cascade.kl:59:1
+
+error: `Node` is already declared in this scope
+  --> sema/errors_duplicate_cascade.kl:79:1
+   |
+79 | struct Node
+   | ^^^^^^^^^^^ previous declaration is at: sema/errors_duplicate_cascade.kl:77:1
+
+error: `Tree` is already declared in this scope
+  --> sema/errors_duplicate_cascade.kl:86:1
+   |
+86 | enum Tree
+   | ^^^^^^^^^ previous declaration is at: sema/errors_duplicate_cascade.kl:84:1
+
+8 errors generated

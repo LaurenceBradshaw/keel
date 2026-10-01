@@ -475,7 +475,7 @@ std::vector<Node_id> Overloads::viable_methods( Node_id call, Node_id first, Typ
 {
     std::vector<Node_id> candidates;
 
-    for( Node_id candidate = first; candidate.is_valid(); candidate = resolution_.next_overload( candidate ) )
+    for( Node_id candidate = first; candidate.is_valid(); candidate = next_overload( candidate ) )
     {
         candidates.push_back( candidate );
     }
@@ -785,14 +785,19 @@ bool Overloads::parameters_collide( Node_id first, Node_id second, bool member )
 
 void Overloads::check_overloaded_pair( Node_id first, Node_id second, bool member )
 {
+    if( refused( first ) || refused( second ) )
+    {
+        return;
+    }
+
     const std::string_view name = interner_.text( Symbol_id { ast_.aux( second ) } );
 
     // An extern names a symbol someone else defined, and `main` is the program's entry point:
     // both keep their spelling in C, so a second of either has nowhere to differ.
     if( is_extern( ast_, first ) || is_extern( ast_, second ) )
     {
-        reporter_.error_at(
-            ast_.span( second ),
+        refuse(
+            second,
             fmt::format( "`{}` is defined in C, so it cannot be overloaded", name ),
             reporter_.previous_declaration_note( ast_.span( first ) )
         );
@@ -802,9 +807,7 @@ void Overloads::check_overloaded_pair( Node_id first, Node_id second, bool membe
 
     if( ast_.kind( second ) == Node_kind::Function_decl && name == "main" )
     {
-        reporter_.error_at(
-            ast_.span( second ), "a program has one `main`", reporter_.previous_declaration_note( ast_.span( first ) )
-        );
+        refuse( second, "a program has one `main`", reporter_.previous_declaration_note( ast_.span( first ) ) );
 
         return;
     }
@@ -818,8 +821,8 @@ void Overloads::check_overloaded_pair( Node_id first, Node_id second, bool membe
             return;
         }
 
-        reporter_.error_at(
-            ast_.span( second ),
+        refuse(
+            second,
             fmt::format( "`{}` is already declared, and a type argument could make the two identical", name ),
             reporter_.previous_declaration_note( ast_.span( first ) )
         );
@@ -831,8 +834,8 @@ void Overloads::check_overloaded_pair( Node_id first, Node_id second, bool membe
     // wrote a difference, and it is not one a call site can act on.
     if( types_.type_of( first ) != types_.type_of( second ) )
     {
-        reporter_.error_at(
-            ast_.span( second ),
+        refuse(
+            second,
             fmt::format( "`{}` is already declared with these parameters", name ),
             "two of one name must differ in their parameters, not only in what they return"
         );
@@ -846,8 +849,8 @@ void Overloads::check_overloaded_pair( Node_id first, Node_id second, bool membe
     // `const` clause below, which would otherwise blame a keyword whose removal changes nothing.
     if( member && has_receiver( ast_, first ) != has_receiver( ast_, second ) )
     {
-        reporter_.error_at(
-            ast_.span( second ),
+        refuse(
+            second,
             fmt::format( "`{}` is already declared with these parameters", name ),
             "a `static` method and a method of one name must differ in their parameters"
         );
@@ -859,8 +862,8 @@ void Overloads::check_overloaded_pair( Node_id first, Node_id second, bool membe
     // and a call writes the object rather than how the method holds it.
     if( member && is_const_method( ast_, first ) != is_const_method( ast_, second ) )
     {
-        reporter_.error_at(
-            ast_.span( second ),
+        refuse(
+            second,
             fmt::format( "`{}` is already declared with these parameters", name ),
             "`const` binds the receiver, which a call site does not write, so it cannot tell two apart"
         );
@@ -868,8 +871,8 @@ void Overloads::check_overloaded_pair( Node_id first, Node_id second, bool membe
         return;
     }
 
-    reporter_.error_at(
-        ast_.span( second ),
+    refuse(
+        second,
         fmt::format( "`{}` is already declared with these parameters", name ),
         reporter_.previous_declaration_note( ast_.span( first ) )
     );
@@ -990,6 +993,28 @@ void Overloads::record_instantiation( Node_id call, std::size_t instance )
 std::unordered_map<u32, u32> Overloads::take_instantiations()
 {
     return std::move( instantiation_of_ );
+}
+
+void Overloads::refuse( Node_id second, std::string message, std::string help )
+{
+    reporter_.error_at( ast_.span( second ), std::move( message ), std::move( help ) );
+    refused_.insert( second.v );
+}
+
+bool Overloads::refused( Node_id id ) const
+{
+    return refused_.contains( id.v );
+}
+
+Node_id Overloads::next_overload( Node_id id ) const
+{
+    Node_id next = resolution_.next_overload( id );
+    while( refused( next ) )
+    {
+        next = resolution_.next_overload( next );
+    }
+
+    return next;
 }
 
 } // namespace sema
@@ -1746,6 +1771,69 @@ TEST_CASE( "overloads_name_the_declaration_a_duplicate_collides_with", "[sema][o
     REQUIRE( p.errors() == 1 );
     REQUIRE( p.rendered().find( "a program has one `main`" ) != std::string::npos );
     REQUIRE( p.rendered().find( "previous declaration is at: t.kl:1:1" ) != std::string::npos );
+}
+
+// A refused duplicate leaves the set, so the first declaration answers every use of the name and
+// one mistake is one error.
+TEST_CASE( "overloads_absorb_a_refused_duplicate", "[sema][overload]" )
+{
+    SECTION( "a call to a function declared twice" )
+    {
+        const Typed p( "i32 f( i32 a ) { return a; }\ni32 f( i32 b ) { return b; }\ni32 main() { return f( 1 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.types().callee_of( p.nth( Node_kind::Call_expr, 0 ) ) == p.nth( Node_kind::Function_decl, 0 ) );
+    }
+
+    SECTION( "three of one signature are two mistakes" )
+    {
+        const Typed p( "i32 f( i32 a ) { return a; }\ni32 f( i32 b ) { return b; }\ni32 f( i32 c ) { return c; }\n"
+                       "i32 main() { return f( 1 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 2 );
+        REQUIRE( p.rendered().find( "previous declaration is at: t.kl:2:1" ) == std::string::npos );
+    }
+
+    SECTION( "one differing only in what it returns" )
+    {
+        const Typed p( "void f( i32 a ) { }\ni32 f( i32 a ) { return a; }\ni32 main() { f( 1 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.types().callee_of( p.nth( Node_kind::Call_expr, 0 ) ) == p.nth( Node_kind::Function_decl, 0 ) );
+    }
+
+    SECTION( "its address" )
+    {
+        const Typed p( "i32 f( i32 a ) { return a; }\ni32 f( i32 b ) { return b; }\n"
+                       "i32 main() { auto p = &f; return p( 2 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "a constructor" )
+    {
+        const Typed p( "class C { i32 x; C( i32 v ) { x = v; } C( i32 w ) { x = w; } };\n"
+                       "i32 main() { C c = C( 1 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.types().callee_of( p.nth( Node_kind::Call_expr, 0 ) ) == p.nth( Node_kind::Constructor_decl, 0 ) );
+    }
+
+    SECTION( "a method, called on an object and by bare name" )
+    {
+        const Typed p( "class C { i32 x; C( i32 v ) { x = v; } i32 n() { return x; } i32 n() { return x; } "
+                       "i32 m() { return n(); } };\n"
+                       "i32 main() { C c = C( 1 ); return c.n(); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.types().callee_of( p.nth( Node_kind::Call_expr, 2 ) ) == p.nth( Node_kind::Method_decl, 0 ) );
+    }
 }
 
 // D31's exemption is what lets a `move` on a copyable type coexist with a `const ref` that takes

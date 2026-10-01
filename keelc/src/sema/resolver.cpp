@@ -323,6 +323,8 @@ void Resolver::visit( Node_id id )
         push_scope( Scope_kind::Barrier );
         visit( ast_.type_param_list( id ) );
 
+        scopes_.back().names.emplace( Symbol_id { ast_.aux( id ) }, id );
+
         if( children[1].is_valid() )
         {
             visit( children[1] );
@@ -357,6 +359,8 @@ void Resolver::visit( Node_id id )
         // that carried outer names in would let a top-level `T` be found from a member body.
         push_scope( Scope_kind::Barrier );
         visit( ast_.type_param_list( id ) );
+
+        scopes_.back().names.emplace( Symbol_id { ast_.aux( id ) }, id );
 
         std::unordered_map<u32, Node_id> members;
 
@@ -1217,6 +1221,27 @@ TEST_CASE( "resolver_declares_struct_names_at_file_scope", "[sema][resolve]" )
         INFO( p.rendered() );
         REQUIRE( p.errors() == 0 ); // `i32` has no declaration either; silence is the only option
     }
+}
+
+// The file scope keeps the first `counter`, but inside the class its name is still the class, so
+// its members are not reported against a variable they never named.
+TEST_CASE( "resolver_lets_an_aggregate_name_itself_after_a_collision", "[sema][resolve][aggregates]" )
+{
+    const Resolved p( "i32 counter = 0;\n"
+                      "class counter { i32 n; counter() { n = 0; } i32 get() { return n; } };\n"
+                      "i32 main() { return counter; }\n" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.errors() == 1 );
+
+    const Ast&    ast           = p.ast();
+    const Node_id cls           = p.nth( Node_kind::Class_decl, 0 );
+    const auto    receiver_type = [&]( Node_id member )
+    { return ast.child( ast.child( ast.child( ast.child( member, 1 ), 0 ), 0 ), 0 ); };
+
+    REQUIRE( p.declaration_of( receiver_type( p.nth( Node_kind::Constructor_decl, 0 ) ) ) == cls );
+    REQUIRE( p.declaration_of( receiver_type( p.nth( Node_kind::Method_decl, 0 ) ) ) == cls );
+    REQUIRE( p.declaration_of( p.nth( Node_kind::Name_expr, 2 ) ) == p.nth( Node_kind::Var_decl, 0 ) );
 }
 
 TEST_CASE( "resolver_reports_duplicate_fields", "[sema][resolve]" )
