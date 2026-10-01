@@ -1549,6 +1549,17 @@ Type_id Expressions::infer_unary( Node_id id )
             return types_.record( id, error );
         }
 
+        if( table_.is_void( table_.get( operand_type ).element ) )
+        {
+            reporter_.error_at(
+                ast_.span( id ),
+                fmt::format( "`{}` is opaque, so there is nothing to dereference", table_.name( operand_type ) ),
+                "cast it to the pointer it really is, as in `cast<u8*>( p )`"
+            );
+
+            return types_.record( id, error );
+        }
+
         return types_.record( id, table_.get( operand_type ).element );
     }
 
@@ -3330,6 +3341,19 @@ TEST_CASE( "type_checker_types_pointers", "[sema][types]" )
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "cannot be dereferenced" ) != std::string::npos );
+    }
+
+    SECTION( "an opaque pointer is neither read nor written through" )
+    {
+        for( const char* body : { "auto r = *raw;", "*raw = 1;" } )
+        {
+            const Typed p( std::string( "i32 main() { void* raw = nullptr; " ) + body + " return 0; }" );
+
+            INFO( body << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( "`void*` is opaque, so there is nothing to dereference" ) != std::string::npos );
+            REQUIRE( p.rendered().find( "cast it to the pointer it really is" ) != std::string::npos );
+        }
     }
 
     SECTION( "writing through a pointer" )

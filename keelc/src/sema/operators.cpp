@@ -517,14 +517,14 @@ Conversion_result Operators::convert( bool is_cast, Type_id value, Type_id targe
 
 void Operators::refuse_single_pointer_arithmetic( Type_id pointer, Span at )
 {
+    const Type_id element = table_.get( pointer ).element;
+
     reporter_.error_at(
         at,
-        fmt::format(
-            "`{}` points at one `{}`, so it has no arithmetic",
-            table_.name( pointer ),
-            table_.name( table_.get( pointer ).element )
-        ),
-        fmt::format( "a many-item pointer, `{}[*]`, can be offset", table_.name( table_.get( pointer ).element ) )
+        fmt::format( "`{}` points at one `{}`, so it has no arithmetic", table_.name( pointer ), table_.name( element ) ),
+        // `void[*]` is refused, so an opaque pointer is pointed at bytes instead.
+        table_.is_void( element ) ? std::string( "cast it to a `u8[*]` to offset it by bytes" )
+                                  : fmt::format( "a many-item pointer, `{}[*]`, can be offset", table_.name( element ) )
     );
 }
 
@@ -1330,6 +1330,18 @@ TEST_CASE( "type_checker_refuses_arithmetic_on_a_single_item_pointer", "[sema][t
         REQUIRE( p.rendered().find( "`i32*` points at one `i32`, so it has no arithmetic" ) != std::string::npos );
         REQUIRE( p.rendered().find( "a many-item pointer, `i32[*]`, can be offset" ) != std::string::npos );
     }
+}
+
+// `void[*]` is refused, so the hint for an opaque pointer names the byte pointer it can be cast to.
+TEST_CASE( "type_checker_points_void_pointer_arithmetic_at_bytes", "[sema][types][many]" )
+{
+    const Typed p( with_pointers( "    void* raw = nullptr;\n    void* next = raw + 1;" ) );
+
+    INFO( p.rendered() );
+    REQUIRE( p.errors() == 1 );
+    REQUIRE( p.rendered().find( "`void*` points at one `void`, so it has no arithmetic" ) != std::string::npos );
+    REQUIRE( p.rendered().find( "cast it to a `u8[*]` to offset it by bytes" ) != std::string::npos );
+    REQUIRE( p.rendered().find( "void[*]" ) == std::string::npos );
 }
 
 } // namespace keel

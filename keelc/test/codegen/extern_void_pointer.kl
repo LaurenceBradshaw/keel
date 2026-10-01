@@ -1,0 +1,24 @@
+// `void*` is C's opaque pointer: an extern can take and return one, and Keel reaches the bytes by
+// casting to a typed pointer. Both externs match libc's own signatures, so `-Werror` holds.
+extern void* malloc( u64 size );
+extern void* memset( void* s, i32 c, u64 n );
+
+i32 main()
+{
+    i32 total = 0;
+
+    unsafe
+    {
+        void* raw = malloc( 8 );
+        raw = memset( raw, 1, 8 );
+
+        // Arithmetic needs an element size, so it happens on a `u8[*]` and goes back as `void*`.
+        u8[*] bytes = cast<u8[*]>( raw );
+        u8[*] tail = cast<u8[*]>( memset( cast<void*>( bytes + 4 ), 9, 4 ) );
+
+        total = cast<i32>( bytes[ 0 ] ) + cast<i32>( tail[ 3 ] ); // 10
+        free( bytes );
+    }
+
+    return total;
+}

@@ -1,0 +1,21 @@
+// `void*` is opaque: it is passed, returned and cast, but there is nothing at the other end to read,
+// write or step over. Each misuse is one error.
+extern void* malloc( u64 size );
+extern void* memset( void* s, i32 c, u64 n );
+
+i32 main()
+{
+    i32  x = 5;
+    i32* px = &x;
+
+    unsafe
+    {
+        void* raw = malloc( 8 );
+        auto  read = *raw;
+        *raw = 1;
+        void* next = raw + 1;
+        memset( px, 0, 4 );
+    }
+
+    return 0;
+}

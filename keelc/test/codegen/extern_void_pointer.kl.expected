@@ -1,0 +1,66 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+void* kl_rt_alloc( size_t );
+void  kl_rt_free( void* );
+
+void* malloc( uint64_t );
+void* memset( void*, int32_t, uint64_t );
+
+int32_t kl__main__( void );
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_total_1;
+    void* kl_raw_2;
+    void* kl_t3;
+    void* kl_t4;
+    uint8_t* kl_bytes_5;
+    uint8_t* kl_t6;
+    uint8_t* kl_tail_7;
+    uint8_t* kl_t8;
+    void* kl_t9;
+    void* kl_t10;
+    uint8_t* kl_t11;
+    uint8_t* kl_t12;
+    int32_t kl_t13;
+    uint8_t* kl_t14;
+    int32_t kl_t15;
+    int32_t kl_t16;
+#line 8 "codegen/extern_void_pointer.kl"
+    kl_total_1 = 0;
+#line 12 "codegen/extern_void_pointer.kl"
+    kl_t3 = malloc( 8 );
+    kl_raw_2 = kl_t3;
+#line 13 "codegen/extern_void_pointer.kl"
+    kl_t4 = memset( kl_raw_2, 1, 8 );
+    kl_raw_2 = kl_t4;
+#line 16 "codegen/extern_void_pointer.kl"
+    kl_t6 = ( uint8_t* ) kl_raw_2;
+    kl_bytes_5 = kl_t6;
+#line 17 "codegen/extern_void_pointer.kl"
+    kl_t8 = kl_bytes_5 + 4;
+    kl_t9 = ( void* ) kl_t8;
+    kl_t10 = memset( kl_t9, 9, 4 );
+    kl_t11 = ( uint8_t* ) kl_t10;
+    kl_tail_7 = kl_t11;
+#line 19 "codegen/extern_void_pointer.kl"
+    kl_t12 = kl_bytes_5 + 0;
+    kl_t13 = ( int32_t ) ( *kl_t12 );
+    kl_t14 = kl_tail_7 + 3;
+    kl_t15 = ( int32_t ) ( *kl_t14 );
+    kl_t16 = kl_t13 + kl_t15;
+    kl_total_1 = kl_t16;
+#line 20 "codegen/extern_void_pointer.kl"
+    kl_rt_free( kl_bytes_5 );
+#line 23 "codegen/extern_void_pointer.kl"
+    kl_t0 = kl_total_1;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}
