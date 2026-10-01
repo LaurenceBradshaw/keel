@@ -24,6 +24,17 @@ public:
     {
         for( const Node_id decl : ast_.children( ast_.root() ) )
         {
+            if( is_aggregate( ast_.kind( decl ) ) )
+            {
+                for( const Node_id member : ast_.members( decl ) )
+                {
+                    if( ast_.kind( member ) == Node_kind::Var_decl )
+                    {
+                        top_level_.insert( member.v );
+                    }
+                }
+            }
+
             top_level_.insert( decl.v );
         }
     }
@@ -472,6 +483,17 @@ TEST_CASE( "names_point_past_a_type_spelt_like_a_prefix", "[sema][names]" )
     REQUIRE(
         std::ranges::any_of( names, []( const std::string& n ) { return n.starts_with( "pp@" ) && n.ends_with( "->23" ); } )
     );
+}
+
+// Storage for the whole program, as a file-scope variable is, wherever it is declared.
+TEST_CASE( "names_static_fields_as_globals", "[sema][names][static]" )
+{
+    const auto names = named( "struct S { i32 x; static i32 made = 0; i32 get() const { return made; } };\n"
+                              "i32 f() { return S::made; }" );
+
+    REQUIRE( has( names, "made:global" ) );
+    REQUIRE_FALSE( has( names, "made:variable" ) );
+    REQUIRE_FALSE( has( names, "made:field" ) );
 }
 
 } // namespace

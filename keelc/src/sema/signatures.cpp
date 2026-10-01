@@ -291,6 +291,21 @@ void Signatures::declare_globals()
             continue;
         }
 
+        if( is_aggregate( ast_.kind( child ) ) )
+        {
+            for( Node_id member : ast_.members( child ) )
+            {
+                if( ast_.kind( member ) != Node_kind::Var_decl )
+                {
+                    continue;
+                }
+
+                const Node_id var_type_node = ast_.child( member, 0 );
+                const Type_id var_type      = annotations_.type_of( var_type_node );
+                types_.record( member, var_type );
+            }
+        }
+
         if( ast_.kind( child ) != Node_kind::Var_decl )
         {
             continue;

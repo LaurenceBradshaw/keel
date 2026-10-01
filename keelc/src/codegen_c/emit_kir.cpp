@@ -508,6 +508,22 @@ void Kir_emitter::emit_globals()
 
     for( const Node_id child : ast_.children( ast_.root() ) )
     {
+        if( is_aggregate( ast_.kind( child ) ) )
+        {
+            for( const Node_id member : ast_.members( child ) )
+            {
+                if( ast_.kind( member ) != Node_kind::Var_decl )
+                {
+                    continue;
+                }
+
+                write_line( spelling_.global_definition( member ) );
+
+                any = true;
+            }
+            continue;
+        }
+
         if( ast_.kind( child ) != Node_kind::Var_decl )
         {
             continue;
@@ -3052,6 +3068,29 @@ TEST_CASE( "emit_kir_indexes_and_offsets", "[codegen][kir][many]" )
         REQUIRE( g.has( "kl_p_1 = kl_p_1 + 1;" ) );
         REQUIRE_FALSE( g.has( "+ NULL" ) );
     }
+}
+
+// A static field is a global with the type's name in front of it, never a member of the C struct:
+// one in the struct would give every object its own copy, which compiles and is wrong.
+TEST_CASE( "emit_kir_emits_a_static_field_as_a_global", "[codegen][kir][static]" )
+{
+    Generated g( "struct S { i32 x; static i32 count = 5; };\n"
+                 "struct T { i32 y; static i32 count = 6; };\n"
+                 "i32 main() { S::count = S::count + T::count; return S::count; }" );
+
+    INFO( g.c );
+    REQUIRE( g.clean() );
+
+    const std::size_t open  = g.c.find( "struct kl__S\n{" );
+    const std::size_t close = g.c.find( "};", open );
+
+    REQUIRE( open != std::string::npos );
+    REQUIRE( g.c.substr( open, close - open ).find( "count" ) == std::string::npos );
+
+    // Two variables, each with its initialiser: the node id in the name keeps them apart.
+    REQUIRE( g.has( "int32_t kl_count_" ) );
+    REQUIRE( g.has( " = 5;" ) );
+    REQUIRE( g.has( " = 6;" ) );
 }
 
 } // namespace keel

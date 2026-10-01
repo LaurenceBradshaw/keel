@@ -82,7 +82,7 @@ error: expected `field( Holder ) -> i32`, but got `field( P ) -> i32`
 60 |     field( Holder ) -> i32 wrong = &P::x;
    |                                    ^^^^^
 
-error: `P` has no static method `x`
+error: `P` has no static field `x`
   --> sema/errors_field_pointers.kl:62:14
    |
 62 |     auto k = P::x;

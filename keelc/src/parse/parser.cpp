@@ -1068,24 +1068,13 @@ Node_id Parser::parse_aggregate_decl()
         // be tested first or `Buffer( u64 n )` reads as a method returning `Buffer`.
         const bool is_method = !is_destructor && !is_constructor && looks_like_method();
 
-        // Refused rather than dropped, which is what it used to be: the keyword parsed away and left
-        // an ordinary field, so every object carried its own copy of what was written to be shared.
-        // Type-scoped data is M8's, after modules - see PLAN §15.
-        if( is_static && !is_method && !is_destructor && !is_constructor )
-        {
-            error_at(
-                static_span,
-                "a field cannot be `static` yet",
-                "it would be one variable shared by every object, and that is not built yet"
-            );
-        }
-
         const Node_id member = is_destructor    ? parse_destructor_decl( name, type_params )
                                : is_constructor ? parse_constructor_decl( name, type_params )
                                : is_method      ? parse_method_decl( name, type_params, is_static )
+                               : is_static      ? parse_var_decl()
                                                 : parse_field_decl();
 
-        if( !is_destructor && !is_constructor && !is_method )
+        if( !is_destructor && !is_constructor && !is_method && !is_static )
         {
             wrote_field = true;
         }
@@ -8387,34 +8376,6 @@ TEST_CASE( "parser_parses_a_static_method", "[parse][static]" )
         REQUIRE( p.has_errors() );
     }
 
-    // Type-scoped data is M8's, after modules - see PLAN §15. Until then the keyword is refused on
-    // a field rather than dropped: it used to parse as an ordinary one, so every object carried its
-    // own copy of what was written to be shared.
-    SECTION( "and on a field, which is M8's" )
-    {
-        const Parsed p( "class C { static i32 count; i32 x; };" );
-
-        INFO( p.errors() );
-        REQUIRE( p.has_errors() );
-    }
-
-    // Still a field afterwards, so the members below it parse and their errors are reported too.
-    SECTION( "and the field is parsed anyway" )
-    {
-        const Parsed p( "class C { static i32 count; i32 x; };" );
-
-        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Class_decl );
-
-        std::size_t fields = 0;
-
-        for( const Node_id member : p.ast().members( decl ) )
-        {
-            fields += p.ast().kind( member ) == Node_kind::Field_decl;
-        }
-
-        REQUIRE( fields == 2 );
-    }
-
     // The type parameter slot holds the *enclosing* aggregate's list, which is how a method of
     // `Box<T>` is generic in T without writing any of its own. A static one is generic in exactly
     // the same way and through the same slot - it has no receiver to carry `T` in instead.
@@ -9029,6 +8990,62 @@ TEST_CASE( "parser_reads_a_type_from_a_package", "[parse][packages]" )
         REQUIRE_FALSE( p.has_errors() );
         REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::Var_decl ).is_valid() );
         REQUIRE( find_first( p.ast(), p.root(), Node_kind::Call_expr ).is_valid() );
+    }
+}
+
+// A static field is a variable declared among the members, not a field carrying a flag: every pass
+// that walks fields then skips it for nothing. See PLAN §15, *M7: static fields*.
+TEST_CASE( "parser_parses_a_static_field_as_a_variable", "[parse][static]" )
+{
+    SECTION( "a member Var_decl, private by default in a class" )
+    {
+        const Parsed p( "class C { static i32 count = 0; i32 x; };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Class_decl );
+
+        REQUIRE( p.members( decl ).size() == 2 );
+        REQUIRE( p.kind( p.members( decl )[0] ) == Node_kind::Var_decl );
+        REQUIRE( p.ast().access( p.members( decl )[0] ) == Access::Private );
+        REQUIRE( p.child( p.members( decl )[0], 1 ).is_valid() ); // the initialiser
+        REQUIRE( p.kind( p.members( decl )[1] ) == Node_kind::Field_decl );
+    }
+
+    SECTION( "written public, and with no initialiser" )
+    {
+        const Parsed p( "class C { public static i32 count; i32 x; };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id member = p.members( find_first( p.ast(), p.root(), Node_kind::Class_decl ) )[0];
+
+        REQUIRE( p.kind( member ) == Node_kind::Var_decl );
+        REQUIRE( p.ast().access( member ) == Access::Public );
+        REQUIRE_FALSE( p.child( member, 1 ).is_valid() );
+    }
+
+    SECTION( "public in a struct" )
+    {
+        const Parsed p( "struct S { i32 x; static i32 count = 1; };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id member = p.members( find_first( p.ast(), p.root(), Node_kind::Struct_decl ) )[1];
+
+        REQUIRE( p.kind( member ) == Node_kind::Var_decl );
+        REQUIRE( p.ast().access( member ) == Access::Public );
+    }
+
+    // Only the static members: a struct with nothing else is still the empty aggregate it was.
+    SECTION( "it is not a field, so the struct beside it still needs one" )
+    {
+        const Parsed p( "struct S { static i32 count; };" );
+
+        REQUIRE( p.has_errors() );
     }
 }
 

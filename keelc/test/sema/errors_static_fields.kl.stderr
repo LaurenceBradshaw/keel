@@ -1,0 +1,49 @@
+error: a static field's initialiser must be a constant expression
+  --> sema/errors_static_fields.kl:23:27
+   |
+23 |     static i32 computed = one();
+   |                           ^^^^^ it may use literals and arithmetic over them, but nothing that has to run
+
+error: a struct cannot be a static field yet
+  --> sema/errors_static_fields.kl:26:12
+   |
+26 |     static Point origin;
+   |            ^^^^^^^^^^^^^
+
+error: field `id` is already declared
+  --> sema/errors_static_fields.kl:31:5
+   |
+31 |     i32 id;
+   |     ^^^^^^^ previous declaration is at: sema/errors_static_fields.kl:29:12
+
+error: a generic type cannot have a static field yet
+  --> sema/errors_static_fields.kl:39:12
+   |
+39 |     static i32 made = 0;
+   |            ^^^^^^^^^^^^^
+
+error: `limit` is static, so it belongs to `Counter` rather than to one object
+  --> sema/errors_static_fields.kl:44:12
+   |
+44 |     return c.limit;
+   |            ^^^^^^^ write `Counter::limit`
+
+error: `made` is private to `Counter`
+  --> sema/errors_static_fields.kl:49:13
+   |
+49 |     i32 b = Counter::made;  // private
+   |             ^^^^^^^^^^^^^ only that type's own members may name it
+
+error: `Counter` has no static field `nope`
+  --> sema/errors_static_fields.kl:50:13
+   |
+50 |     i32 d = Counter::nope;  // nothing of that name
+   |             ^^^^^^^^^^^^^
+
+error: `cap` is `const`
+  --> sema/errors_static_fields.kl:51:5
+   |
+51 |     Counter::cap = 4;       // const
+   |     ^^^^^^^^^^^^ remove `const` to modify it
+
+8 errors generated

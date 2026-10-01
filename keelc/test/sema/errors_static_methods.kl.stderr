@@ -34,12 +34,6 @@ error: a destructor cannot be `static`
 65 |     static ~Ctor()
    |     ^^^^^^
 
-error: a field cannot be `static` yet
-  --> sema/errors_static_methods.kl:75:5
-   |
-75 |     static i32 count;
-   |     ^^^^^^ it would be one variable shared by every object, and that is not built yet
-
 error: `f` is already declared with these parameters
   --> sema/errors_static_methods.kl:93:5
    |
@@ -58,7 +52,7 @@ error: `get` needs an object
 111 |     return P::get();
     |            ^^^^^^ call it as `value.get( ... )`
 
-error: `P` has no static method `x`
+error: `P` has no static field `x`
    --> sema/errors_static_methods.kl:116:12
     |
 116 |     return P::x;
@@ -88,4 +82,4 @@ error: `Colour` has no variant `make`
 153 |     return Colour::make( 1 );
     |            ^^^^^^^^^^^^
 
-15 errors generated
+14 errors generated

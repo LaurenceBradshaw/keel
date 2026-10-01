@@ -219,6 +219,23 @@ void Resolver::visit( Node_id id )
             visit( child );
         }
 
+        if( ast_.kind( qualifier ) == Node_kind::Name_expr && ast_.children( qualifier ).empty() )
+        {
+            const Node_id name = lookup( Symbol_id { ast_.aux( qualifier ) }, qualifier );
+            if( name.is_valid() && is_aggregate( ast_.kind( name ) ) )
+            {
+                for( const Node_id member : ast_.members( name ) )
+                {
+                    if( ast_.kind( member ) == Node_kind::Var_decl &&
+                        Symbol_id { ast_.aux( member ) } == Symbol_id { ast_.aux( id ) } )
+                    {
+                        bindings_[id.v] = member;
+                        return;
+                    }
+                }
+            }
+        }
+
         return;
     }
     case Node_kind::Named_type:
@@ -358,12 +375,20 @@ void Resolver::visit( Node_id id )
 
         for( const Node_id field : ast_.members( id ) )
         {
-            if( ast_.kind( field ) != Node_kind::Field_decl )
+            if( ast_.kind( field ) != Node_kind::Field_decl && ast_.kind( field ) != Node_kind::Var_decl )
             {
                 continue;
             }
 
-            visit( field ); // the field's type annotation still resolves through the normal path
+            if( ast_.kind( field ) == Node_kind::Field_decl )
+            {
+                visit( field ); // the field's type annotation still resolves through the normal path
+            }
+            else
+            {
+                visit( ast_.child( field, 0 ) );
+                visit( ast_.child( field, 1 ) );
+            }
 
             const Symbol_id name { ast_.aux( field ) };
 
@@ -378,7 +403,11 @@ void Resolver::visit( Node_id id )
             {
                 reporter_.error_at(
                     ast_.span( field ),
-                    fmt::format( "field `{}` is already declared", interner_.text( name ) ),
+                    fmt::format(
+                        "{}`{}` is already declared",
+                        ast_.kind( field ) == Node_kind::Var_decl ? "" : "field ",
+                        interner_.text( name )
+                    ),
                     reporter_.previous_declaration_note( ast_.span( it->second ) )
                 );
             }
@@ -2105,6 +2134,62 @@ TEST_CASE( "resolver_names_a_package's_types_and_globals", "[sema][resolve][pack
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 0 );
+    }
+}
+
+// A static field joins the member scope as a field does, and is also reached through its type's name.
+TEST_CASE( "resolver_binds_a_static_field", "[sema][resolve][static]" )
+{
+    SECTION( "a bare name in a method binds to it" )
+    {
+        const Resolved p( "class C { static i32 count = 0; i32 x; i32 get() const { return count; } };\n"
+                          "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.declaration_of( p.nth( Node_kind::Name_expr, 0 ) ) == p.nth( Node_kind::Var_decl, 0 ) );
+    }
+
+    SECTION( "and in a static method, which has no object to need" )
+    {
+        const Resolved p( "class C { static i32 count = 0; i32 x; static i32 get() { return count; } };\n"
+                          "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.declaration_of( p.nth( Node_kind::Name_expr, 0 ) ) == p.nth( Node_kind::Var_decl, 0 ) );
+    }
+
+    SECTION( "the type's name reaches it from outside" )
+    {
+        const Resolved p( "struct S { i32 x; static i32 count = 0; };\ni32 main() { return S::count; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.declaration_of( p.nth( Node_kind::Path_expr, 0 ) ) == p.nth( Node_kind::Var_decl, 0 ) );
+    }
+
+    // Two types each holding a `count` are two variables, and neither is a global called `count`.
+    SECTION( "it is not a global" )
+    {
+        const Resolved p( "struct S { i32 x; static i32 count = 0; };\ni32 main() { return count; }" );
+
+        REQUIRE( p.rendered().find( "`count` is not declared" ) != std::string::npos );
+    }
+
+    SECTION( "it shares one namespace with the fields and methods" )
+    {
+        for( const char* members :
+             { "i32 count; static i32 count;",
+               "static i32 count; static i32 count;",
+               "static i32 count; i32 count() const { return 1; }" } )
+        {
+            const Resolved p( fmt::format( "struct S {{ i32 x; {} }};\ni32 main() {{ return 0; }}", members ) );
+
+            INFO( members << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( "`count` is already declared" ) != std::string::npos );
+        }
     }
 }
 

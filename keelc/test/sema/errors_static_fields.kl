@@ -1,0 +1,54 @@
+// A static field is one variable for its whole type, so it is named through the type, takes a
+// constant initialiser as a file-scope variable does, and is refused where it is not built yet.
+
+i32 one()
+{
+    return 1;
+}
+
+struct Point
+{
+    i32 x;
+};
+
+class Counter
+{
+    static i32 made = 0;
+
+    public static i32 limit = 10;
+
+    public static const i32 cap = 3;
+
+    // Runs, so it is not a constant.
+    static i32 computed = one();
+
+    // A struct at file scope needs its literal lowered somewhere, and there is nowhere yet.
+    static Point origin;
+
+    // Shares the member namespace with the field below.
+    static i32 id;
+
+    i32 id;
+};
+
+// One variable per instantiation is not built yet.
+struct Box<T> where T : Copyable
+{
+    T v;
+
+    static i32 made = 0;
+};
+
+i32 through_an_object( const ref Counter c )
+{
+    return c.limit;
+}
+
+i32 main()
+{
+    i32 b = Counter::made;  // private
+    i32 d = Counter::nope;  // nothing of that name
+    Counter::cap = 4;       // const
+
+    return Counter::limit; // accepted
+}

@@ -141,6 +141,14 @@ Type_id Expressions::infer_name( Node_id id )
         return types_.record( id, table_.builtin( Type_kind::Error ) );
     }
 
+    if( decl_kind == Node_kind::Var_decl && enclosing_aggregate( ast_, decl ).is_valid() &&
+        !is_visible_from( ast_, decl, current_type() ) )
+    {
+        report_private( id, decl );
+
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
     return types_.record( id, types_.type_of( decl ) );
 }
 
@@ -1478,7 +1486,8 @@ Type_id Expressions::infer_unary( Node_id id )
         }
     }
 
-    if( ast_.kind( ast_.child( id, 0 ) ) == Node_kind::Path_expr )
+    if( ast_.kind( ast_.child( id, 0 ) ) == Node_kind::Path_expr &&
+        !resolution_.declaration_of( ast_.child( id, 0 ) ).is_valid() )
     {
         const Node_id qualified_declaration = qualifier_declaration( ast_.child( id, 0 ) );
         if( qualified_declaration.is_valid() && is_aggregate( ast_.kind( qualified_declaration ) ) )
@@ -2030,7 +2039,7 @@ Type_id Expressions::infer_path( Node_id id )
 
             reporter_.error_at(
                 ast_.span( id ),
-                fmt::format( "`{}` has no static method `{}`", owner, interner_.text( name ) ),
+                fmt::format( "`{}` has no static field `{}`", owner, interner_.text( name ) ),
                 field
                     ? fmt::format( "take its offset as `&{0}::{1}`, or read it as `value.{1}`", owner, interner_.text( name ) )
                     : std::string {}
@@ -2146,25 +2155,57 @@ Type_id Expressions::infer_field( Node_id id )
         return types_.record( id, table_.builtin( Type_kind::Error ) );
     }
 
-    const Node_id decl = aggregates_.find_field( object_type, Symbol_id { ast_.aux( id ) } );
-    if( !decl.is_valid() )
+    const Node_id field_decl = aggregates_.find_field( object_type, Symbol_id { ast_.aux( id ) } );
+    if( !field_decl.is_valid() )
     {
-        reporter_.error_at(
-            ast_.span( id ),
-            fmt::format( "`{}` has no field `{}`", table_.name( object_type ), interner_.text( Symbol_id { ast_.aux( id ) } ) )
-        );
+        const Node_id object_decl       = table_.get( object_type ).declaration;
+        bool          is_static_instead = false;
+
+        if( object_decl.is_valid() )
+        {
+            for( const Node_id member : ast_.members( object_decl ) )
+            {
+                if( member.is_valid() && ast_.kind( member ) == Node_kind::Var_decl && ast_.aux( member ) == ast_.aux( id ) )
+                {
+                    is_static_instead = true;
+                    break;
+                }
+            }
+        }
+
+        if( is_static_instead )
+        {
+            reporter_.error_at(
+                ast_.span( id ),
+                fmt::format(
+                    "`{}` is static, so it belongs to `{}` rather than to one object",
+                    interner_.text( Symbol_id { ast_.aux( id ) } ),
+                    table_.name( object_type )
+                ),
+                fmt::format( "write `{}::{}`", table_.name( object_type ), interner_.text( Symbol_id { ast_.aux( id ) } ) )
+            );
+        }
+        else
+        {
+            reporter_.error_at(
+                ast_.span( id ),
+                fmt::format(
+                    "`{}` has no field `{}`", table_.name( object_type ), interner_.text( Symbol_id { ast_.aux( id ) } )
+                )
+            );
+        }
 
         return types_.record( id, table_.builtin( Type_kind::Error ) );
     }
 
-    if( !is_visible_from( ast_, decl, current_type() ) )
+    if( !is_visible_from( ast_, field_decl, current_type() ) )
     {
-        report_private( id, decl );
+        report_private( id, field_decl );
 
         return types_.record( id, table_.builtin( Type_kind::Error ) );
     }
 
-    return types_.record( id, aggregates_.field_type( object_type, decl ) );
+    return types_.record( id, aggregates_.field_type( object_type, field_decl ) );
 }
 
 // Nothing named an instance of a generic declaration, so there is no type here a value can hold.
@@ -5229,7 +5270,7 @@ TEST_CASE( "type_checker_checks_a_path", "[sema][enum]" )
         const Typed p( "struct P { i32 x; };\ni32 main() { i32 n = P::x; return 0; }" );
 
         INFO( p.rendered() );
-        REQUIRE( p.rendered().find( "`P` has no static method `x`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`P` has no static field `x`" ) != std::string::npos );
         REQUIRE( p.rendered().find( "take its offset as `&P::x`" ) != std::string::npos );
     }
 
@@ -7394,6 +7435,59 @@ TEST_CASE( "type_checker_leaves_bounds_to_the_author", "[sema][types][many]" )
 
         INFO( body << "\n" << p.rendered() );
         REQUIRE( p.clean() );
+    }
+}
+
+// A static field is one variable for the whole type, so it is named through the type and never
+// through an object.
+TEST_CASE( "type_checker_types_a_static_field", "[sema][types][static]" )
+{
+    constexpr std::string_view types = "class C\n"
+                                       "{\n"
+                                       "    public static i32 count = 0;\n"
+                                       "    static i32 hidden = 0;\n"
+                                       "    static const i32 limit = 3;\n"
+                                       "    i32 x;\n"
+                                       "    C() { x = 0; count = count + 1; }\n"
+                                       "    static i32 seen() { return hidden + count; }\n"
+                                       "};\n"
+                                       "struct P { i32 x; };\n";
+
+    SECTION( "read, written and addressed through the type" )
+    {
+        const Typed p(
+            fmt::format( "{}i32 main() {{ C::count = 2; i32* at = &C::count; return C::count + C::seen(); }}\n", types )
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Var_decl, 3 ) ) == "i32*" ); // `at`, after the three members
+    }
+
+    struct Case
+    {
+        const char* body;
+        const char* message;
+        const char* help;
+    };
+
+    for( const Case c :
+         { Case {
+               "C c = C(); return c.count;",
+               "`count` is static, so it belongs to `C` rather than to one object",
+               "write `C::count`"
+           },
+           Case { "return C::hidden;", "`hidden` is private to `C`", "only that type's own members may name it" },
+           Case { "C::limit = 4; return 0;", "`limit`", "" },
+           Case { "return P::x;", "`P` has no static field `x`", "read it as `value.x`" },
+           Case { "return C::nope;", "`C` has no static field `nope`", "" } } )
+    {
+        const Typed p( fmt::format( "{}i32 main() {{ {} }}\n", types, c.body ) );
+
+        INFO( c.body << "\n" << p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( c.message ) != std::string::npos );
+        REQUIRE( p.rendered().find( c.help ) != std::string::npos );
     }
 }
 

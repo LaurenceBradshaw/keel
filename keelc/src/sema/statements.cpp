@@ -118,6 +118,30 @@ void Statements::visit( Node_id id )
         }
         return;
 
+    case Node_kind::Struct_decl:
+    case Node_kind::Class_decl:
+    {
+        for( const Node_id member : ast_.members( id ) )
+        {
+            if( ast_.kind( member ) != Node_kind::Var_decl )
+            {
+                visit( member );
+            }
+            else
+            {
+                if( !is_generic( ast_, id ) )
+                {
+                    visit_global( member );
+                }
+                else
+                {
+                    reporter_.error_at( ast_.span( member ), "a generic type cannot have a static field yet" );
+                }
+            }
+        }
+        return;
+    }
+
     default:
         // Block, and every statement not yet given a case of its own.
         for( const Node_id child : ast_.children( id ) )
@@ -514,11 +538,16 @@ void Statements::visit_global( Node_id id )
         return;
     }
 
+    const bool is_static_field = enclosing_aggregate( ast_, id ).is_valid();
+
     // A struct literal lowers to a temporary and field assignments, and there is nowhere at C file
     // scope to put those. Checked before the initialiser so `Point origin;` is caught too.
     if( table_.is_struct( type ) )
     {
-        reporter_.error_at( ast_.span( id ), "a struct cannot be a file-scope variable yet" );
+        reporter_.error_at(
+            ast_.span( id ),
+            fmt::format( "a struct cannot be a {} yet", is_static_field ? "static field" : "file-scope variable" )
+        );
         return;
     }
 
@@ -531,7 +560,7 @@ void Statements::visit_global( Node_id id )
     {
         reporter_.error_at(
             ast_.span( init ),
-            "a file-scope initialiser must be a constant expression",
+            fmt::format( "a {} initialiser must be a constant expression", is_static_field ? "static field's" : "file-scope" ),
             "it may use literals and arithmetic over them, but nothing that has to run"
         );
 
@@ -1793,6 +1822,48 @@ TEST_CASE( "type_checker_refuses_the_address_of_a_dying_local", "[sema][escape]"
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "unknown type `Nope`" ) != std::string::npos );
+    }
+}
+
+// A static field is storage for the whole program, as a file-scope variable is, and takes the same
+// rules: a constant initialiser, folded once, and no struct yet.
+TEST_CASE( "statements_check_a_static_field_as_a_global", "[sema][statements][static]" )
+{
+    SECTION( "its initialiser is folded" )
+    {
+        const Typed p( "struct S { i32 x; static i32 n = 1 + 2; };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::optional<Constant_value> value = p.constant_of( p.nth( Node_kind::Var_decl, 0 ) );
+
+        REQUIRE( value.has_value() );
+        REQUIRE( value->magnitude == 3 );
+    }
+
+    struct Case
+    {
+        const char* program;
+        const char* message;
+    };
+
+    for( const Case c :
+         { Case {
+               "i32 f() { return 1; }\nstruct S { i32 x; static i32 n = f(); };",
+               "a static field's initialiser must be a constant expression"
+           },
+           Case { "struct P { i32 x; };\nstruct S { i32 x; static P origin; };", "a struct cannot be a static field yet" },
+           Case {
+               "struct Box<T> where T : Copyable { T v; static i32 made = 0; };",
+               "a generic type cannot have a static field yet"
+           } } )
+    {
+        const Typed p( std::string( c.program ) + "\ni32 main() { return 0; }" );
+
+        INFO( c.program << "\n" << p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( c.message ) != std::string::npos );
     }
 }
 

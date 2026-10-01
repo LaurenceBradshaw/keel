@@ -1369,7 +1369,7 @@ Operand Lowering::lower_expression( Node_id id )
     }
     case Node_kind::Path_expr:
     {
-        // `kl::count`: a global named through its package, the only path the resolver binds.
+        // `kl::count`: a global named through its package or a static field, the only paths the resolver binds.
         if( const Node_id decl = resolution_.declaration_of( id ); decl.is_valid() )
         {
             return copy( place_for( decl ), type_of( id ) );

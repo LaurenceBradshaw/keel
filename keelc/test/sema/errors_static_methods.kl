@@ -67,9 +67,9 @@ class Ctor
     }
 };
 
-// Type-scoped data is M8's, after modules. Refused here rather than dropped: the keyword used to
-// parse away and leave an ordinary field, so every object carried its own copy of what was written
-// to be shared - a miscompile with no diagnostic, which is the worst class this project has.
+// A static field is one variable for the whole type, accepted since M8. It once parsed away into an
+// ordinary field, so every object carried its own copy of what was written to be shared - a
+// miscompile with no diagnostic. `sema/errors_static_fields` holds its refusals.
 class Shared
 {
     static i32 count;

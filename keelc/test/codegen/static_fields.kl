@@ -1,0 +1,71 @@
+// A static field is one variable for its whole type: every object reads and writes the same one,
+// and the exit code is what they all saw.
+class Counter
+{
+    static i32 made = 0;
+
+    public static i32 limit = 10;
+
+    public i32 id;
+
+    Counter()
+    {
+        made = made + 1;
+        id   = made;
+    }
+
+    i32 total() const
+    {
+        return made;
+    }
+
+    static i32 count()
+    {
+        return made;
+    }
+
+    void reset()
+    {
+        made = 0;
+    }
+};
+
+// Same name, different type: a separate variable, which neither object of `Counter` touches.
+struct Tally
+{
+    i32 n;
+
+    static i32 made = 100;
+};
+
+i32 main()
+{
+    Counter a = Counter();
+    Counter b = Counter();
+
+    // Written through one object's constructor, read through the other.
+    if( b.id != 2 || a.total() != 2 || Counter::count() != 2 )
+    {
+        return 1;
+    }
+
+    Tally::made = Tally::made + 1;
+
+    if( Tally::made != 101 || Counter::count() != 2 )
+    {
+        return 2;
+    }
+
+    a.reset();
+
+    if( b.total() != 0 )
+    {
+        return 3;
+    }
+
+    Counter::limit = Counter::limit + 5;
+
+    i32* at = &Counter::limit;
+
+    return *at; // 15
+}
