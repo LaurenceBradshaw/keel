@@ -1,0 +1,13 @@
+error: `Ring` contains itself, so it has no size
+ --> sema/errors_containment_through_arguments.kl:8:1
+  |
+8 | struct Ring<T> where T : Copyable
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Ring -> Box -> Ring
+
+error: `Spiral` contains itself, so it has no size
+  --> sema/errors_containment_through_arguments.kl:14:1
+   |
+14 | struct Spiral<T> where T : Copyable
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Spiral -> Box -> Spiral
+
+2 errors generated

@@ -192,8 +192,9 @@ bool Bounds::satisfies( Type_id type, Bound bound ) const
     {
     case Bound::Copyable:
     {
-        // A cycle is already reported, and walking one grows a new instance each time round.
-        if( table_.is_struct( type ) && !aggregates_.is_acyclic( table_.get( type ).declaration ) )
+        // A cycle is already reported, and walking one grows a new instance each time round. It
+        // can sit in an argument, as `Spiral` in `Box<Spiral<Box<T>>>`.
+        if( aggregates_.mentions_a_cycle( type ) )
         {
             return true;
         }

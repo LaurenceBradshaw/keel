@@ -100,19 +100,7 @@ bool Aggregates::contains_itself( Node_id decl, std::vector<Node_id>& path )
             continue;
         }
 
-        const Node_id field_decl = table_.get( field_type ).declaration;
-        if( !field_decl.is_valid() || !is_aggregate( ast_.kind( field_decl ) ) )
-        {
-            continue;
-        }
-
-        if( std::find( path.begin(), path.end(), field_decl ) != path.end() )
-        {
-            path.push_back( field_decl );
-            return true;
-        }
-
-        if( contains_itself( field_decl, path ) )
+        if( contains_through( field_type, path ) )
         {
             return true;
         }
@@ -130,9 +118,138 @@ bool Aggregates::contains_itself( Node_id decl, std::vector<Node_id>& path )
     return false;
 }
 
+// A field's type contains its declaration, and every argument that declaration holds by value.
+bool Aggregates::contains_through( Type_id type, std::vector<Node_id>& path )
+{
+    const Node_id decl = table_.get( type ).declaration;
+    if( !table_.is_struct( type ) || !is_aggregate( ast_.kind( decl ) ) )
+    {
+        return false;
+    }
+
+    if( std::find( path.begin(), path.end(), decl ) != path.end() )
+    {
+        path.push_back( decl );
+        return true;
+    }
+
+    if( contains_itself( decl, path ) )
+    {
+        return true;
+    }
+
+    for( u32 i = 0; i < table_.get( type ).arguments.size(); ++i )
+    {
+        const Type_id argument = table_.get( type ).arguments[i];
+
+        // Separate from `path`, which is the route reported, not the generics being asked about.
+        std::vector<Node_id> subpath;
+        if( holds_by_value( decl, i, subpath ) )
+        {
+            // Named in the route only once a cycle is found: being inside an argument is not being
+            // inside the fields, so `Box<Box<i32>>` must not meet `Box` on the path.
+            const u32 at = narrow_cast<u32>( path.size() );
+            if( contains_through( argument, path ) )
+            {
+                path.insert( path.begin() + at, decl );
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+// Whether `generic` holds its `index`th parameter by value. A loop between generics is
+// contains_itself's to report, so meeting one again here answers no.
+bool Aggregates::holds_by_value( Node_id generic, std::size_t index, std::vector<Node_id>& visiting ) const
+{
+    if( std::find( visiting.begin(), visiting.end(), generic ) != visiting.end() )
+    {
+        return false;
+    }
+
+    // A broken argument list can carry more arguments than the declaration has parameters.
+    std::vector<Node_id> params = type_parameters( ast_, ast_.type_param_list( generic ) );
+    if( index >= params.size() )
+    {
+        return false;
+    }
+
+    visiting.push_back( generic );
+
+    const Node_id decl = params[index];
+    const Type_id type = types_.type_of( decl );
+
+    for( Node_id field : ast_.members( generic ) )
+    {
+        if( ast_.kind( field ) != Node_kind::Field_decl )
+        {
+            continue;
+        }
+
+        const Type_id field_type = types_.type_of( field );
+
+        if( mentions_by_value( field_type, type, visiting ) )
+        {
+            visiting.pop_back();
+            return true;
+        }
+    }
+
+    visiting.pop_back();
+    return false;
+}
+
+// Whether `type` holds `parameter` by value: itself, or inside an argument held by value. A pointer
+// ends it.
+bool Aggregates::mentions_by_value( Type_id type, Type_id parameter, std::vector<Node_id>& visiting ) const
+{
+    if( type == parameter )
+    {
+        return true;
+    }
+
+    if( !table_.is_struct( type ) )
+    {
+        return false;
+    }
+
+    for( u32 i = 0; i < table_.get( type ).arguments.size(); ++i )
+    {
+        const Type_id argument = table_.get( type ).arguments[i];
+
+        if( holds_by_value( table_.get( type ).declaration, i, visiting ) &&
+            mentions_by_value( argument, parameter, visiting ) )
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 bool Aggregates::is_acyclic( Node_id decl ) const
 {
     return std::find( containment_order_.begin(), containment_order_.end(), decl ) != containment_order_.end();
+}
+
+bool Aggregates::mentions_a_cycle( Type_id type ) const
+{
+    if( table_.is_struct( type ) && !is_acyclic( table_.get( type ).declaration ) )
+    {
+        return true;
+    }
+
+    for( const Type_id argument : table_.get( type ).arguments )
+    {
+        if( mentions_a_cycle( argument ) )
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 Node_id Aggregates::find_member( Node_id decl, Node_kind kind ) const

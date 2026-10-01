@@ -778,6 +778,62 @@ TEST_CASE( "type_checker_rejects_recursive_structs", "[sema][types]" )
         INFO( p.rendered() );
         REQUIRE( p.clean() );
     }
+
+    // `Box` holds its `T` by value, so a `Ring` in `Box`'s argument is inside `Ring`.
+    SECTION( "through a type argument held by value" )
+    {
+        const Typed p( "struct Box<T> where T : Copyable { T v; };\n"
+                       "struct Ring<T> where T : Copyable { Box<Ring<T>> link; };\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`Ring` contains itself, so it has no size" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "Ring -> Box -> Ring" ) != std::string::npos );
+    }
+
+    SECTION( "and through a generic that holds it only through another" )
+    {
+        const Typed p( "struct Box<T> where T : Copyable { T v; };\n"
+                       "struct Wrap<T> where T : Copyable { Box<T> b; };\n"
+                       "struct Loop { Wrap<Loop> w; };\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "Loop -> Wrap -> Loop" ) != std::string::npos );
+    }
+
+    // `Pair`'s first argument holds nothing of `Loop`; asking about it must not hide the second.
+    SECTION( "and through the second of two parameters" )
+    {
+        const Typed p( "struct Pair<A, B> where A : Copyable, where B : Copyable { A a; B b; };\n"
+                       "struct Wrap<T> where T : Copyable { Pair<i32, T> p; };\n"
+                       "struct Loop { Wrap<Loop> w; };\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "Loop -> Wrap -> Loop" ) != std::string::npos );
+    }
+
+    // An instance inside its own argument is a finite type, not a return to a struct being expanded.
+    SECTION( "but a generic nested in itself is not a cycle" )
+    {
+        const Typed p( "struct Box<T> where T : Copyable { T v; };\n"
+                       "struct Nested { Box<Box<i32>> b; };\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // A tree holding its children through a buffer is the shape `Vector` exists for.
+    SECTION( "but an argument held through a pointer is not a cycle" )
+    {
+        const Typed p( "struct Many<T> where T : Copyable { T[*] items; };\n"
+                       "struct Hold<T> where T : Copyable { T* one; };\n"
+                       "struct Tree { Many<Tree> children; Hold<Tree> parent; };\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
 }
 
 // `main` is the one name the backend also generates a shim for, so an extern one would have the

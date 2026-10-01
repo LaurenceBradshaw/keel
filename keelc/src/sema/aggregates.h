@@ -37,6 +37,9 @@ public:
     // containment cycle. False before order_structs has run.
     bool is_acyclic( Node_id decl ) const;
 
+    // Whether any struct named in this type, its arguments included, is on a reported cycle.
+    bool mentions_a_cycle( Type_id type ) const;
+
     // The first member of a kind, or invalid. Constructors and destructors are both at most one,
     // so "the first" and "the only" coincide once check_aggregate_members has run.
     Node_id find_member( Node_id decl, Node_kind kind ) const;
@@ -58,6 +61,9 @@ public:
 private:
     void report_containment_cycle( Node_id decl, const std::vector<Node_id>& path );
     bool contains_itself( Node_id decl, std::vector<Node_id>& path );
+    bool contains_through( Type_id type, std::vector<Node_id>& path );
+    bool holds_by_value( Node_id generic, std::size_t index, std::vector<Node_id>& visiting ) const;
+    bool mentions_by_value( Type_id type, Type_id parameter, std::vector<Node_id>& visiting ) const;
 
     const Ast&      ast_;
     const Interner& interner_;
