@@ -2938,6 +2938,42 @@ TEST_CASE( "emit_kir_emits_a_generic_static_method_instantiation", "[codegen][ki
     REQUIRE( g.has( "kl__of__I3i32E__S3BoxI3i32E_3i32" ) );
 }
 
+// A static method's address is its bare symbol, as a free function's is.
+TEST_CASE( "emit_kir_writes_a_static_method_address", "[codegen][kir][static]" )
+{
+    SECTION( "on a plain type" )
+    {
+        Generated g( "struct P { i32 x; static P make( i32 v ) { return P { v }; } };\n"
+                     "i32 main() { fn( i32 ) -> P f = &P::make; P p = f( 7 ); return p.x; }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "= kl__make__S1P_3i32;" ) );
+    }
+
+    // The address alone seeds each instance, and each reads its own static storage.
+    SECTION( "on a generic instance" )
+    {
+        Generated g( "struct Box<T> where T : Copyable\n"
+                     "{\n"
+                     "    T v;\n"
+                     "    static i32 made = 0;\n"
+                     "    static i32 count( T x ) { return made; }\n"
+                     "};\n"
+                     "i32 main() { fn( i32 ) -> i32 a = &Box<i32>::count; fn( f64 ) -> i32 b = &Box<f64>::count; "
+                     "return a( 1 ) + b( 2.0 ); }" );
+
+        INFO( g.c );
+        REQUIRE( g.clean() );
+        REQUIRE( g.has( "= kl__count__I3i32E__S3BoxI3i32E_3i32;" ) );
+        REQUIRE( g.has( "= kl__count__I3f64E__S3BoxI3f64E_3f64;" ) );
+        REQUIRE( g.has( "int32_t kl__count__I3i32E__S3BoxI3i32E_3i32( int32_t kl_x_" ) );
+        REQUIRE( g.has( "int32_t kl__count__I3f64E__S3BoxI3f64E_3f64( double kl_x_" ) );
+        REQUIRE( g.has( "__I3i32E = 0;" ) );
+        REQUIRE( g.has( "__I3f64E = 0;" ) );
+    }
+}
+
 // A counted allocation goes to its own runtime entry, which multiplies with an overflow check: C's
 // `sizeof( T ) * n` would wrap silently, and a short buffer is worse than no buffer. The count is
 // converted to `size_t` in the call, so a negative one becomes a huge request that fails.

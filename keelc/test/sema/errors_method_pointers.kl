@@ -33,6 +33,11 @@ class Vault
     {
         return 1;
     }
+
+    private static i32 sealed()
+    {
+        return 1;
+    }
 };
 
 struct Box<T> where T : Copyable
@@ -57,7 +62,7 @@ struct Open<T>
 
 i32 main()
 {
-    auto a = &C::make;
+    auto a = &Vault::sealed;
     auto b = &Vault::hidden;
     auto c = &C::nope;
     auto e = &Box::value;

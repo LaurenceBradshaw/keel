@@ -1157,17 +1157,6 @@ Type_id Expressions::method_address( Node_id id, Node_id aggregate )
         return types_.record( id, table_.builtin( Type_kind::Error ) );
     }
 
-    if( is_static_method( ast_, first ) )
-    {
-        reporter_.error_at(
-            ast_.span( id ),
-            fmt::format( "`{}` is a `static` method, so its address is not supported yet", interner_.text( name ) ),
-            fmt::format( "call it as `{}::{}( ... )`", owner, interner_.text( name ) )
-        );
-
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
-    }
-
     if( !is_visible_from( ast_, first, current_type() ) )
     {
         report_private( id, first );
@@ -4144,6 +4133,111 @@ TEST_CASE( "type_checker_types_the_address_of_a_method", "[sema][types][m7][meth
     }
 }
 
+// A static method has no receiver, so its address is an ordinary function pointer with no parameter 0.
+TEST_CASE( "type_checker_types_the_address_of_a_static_method", "[sema][types][static][method]" )
+{
+    constexpr std::string_view counter = "class C\n"
+                                         "{\n"
+                                         "    i32 n;\n"
+                                         "    static i32 made = 0;\n"
+                                         "    public static i32 make( i32 by ) { return made + by; }\n"
+                                         "    public static i32 pick( i32 a ) { return a; }\n"
+                                         "    public static i32 pick( f64 a ) { return 2; }\n"
+                                         "    private static i32 sealed() { return 1; }\n"
+                                         "    public static fn() -> i32 inner() { return &C::sealed; }\n"
+                                         "};\n";
+
+    constexpr std::string_view box = "struct Box<T> where T : Copyable\n"
+                                     "{\n"
+                                     "    T v;\n"
+                                     "    static i32 made = 0;\n"
+                                     "    static Box<T> of( T x ) { return Box { x }; }\n"
+                                     "    static fn( T ) -> Box<T> maker() { return &Box<T>::of; }\n"
+                                     "};\n";
+
+    SECTION( "it has no parameter 0" )
+    {
+        const Typed p( std::string( counter ) + "i32 main() { auto p = &C::make; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 1 ) ) == "fn( i32 ) -> i32" );
+    }
+
+    SECTION( "it is called like a free function's" )
+    {
+        const Typed p( std::string( counter ) + "i32 main() { fn( i32 ) -> i32 p = &C::make; return p( 2 ); }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "the expected signature chooses an overload" )
+    {
+        const Typed p( std::string( counter ) + "i32 main() { fn( f64 ) -> i32 p = &C::pick; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 1 ) ) == "fn( f64 ) -> i32" );
+    }
+
+    SECTION( "a private one is named from inside its type" )
+    {
+        const Typed p( std::string( counter ) + "i32 main() { fn() -> i32 q = C::inner(); return q(); }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and refused from outside it" )
+    {
+        const Typed p( std::string( counter ) + "i32 main() { auto p = &C::sealed; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`sealed` is private to `C`" ) != std::string::npos );
+    }
+
+    SECTION( "an instance's parameters are substituted" )
+    {
+        const Typed p( std::string( box ) + "i32 main() { auto p = &Box<i32>::of; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Unary_expr, 1 ) ) == "fn( i32 ) -> Box<i32>" );
+    }
+
+    // Nothing passes through a receiver, so the address is the only seed for this instance.
+    SECTION( "and the instantiation is recorded" )
+    {
+        const Typed p( std::string( box ) + "i32 main() { auto p = &Box<i32>::of; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.types().instantiation_of( p.nth( Node_kind::Unary_expr, 1 ) ).has_value() );
+    }
+
+    SECTION( "the open form inside the type is the current instance's" )
+    {
+        const Typed p(
+            std::string( box ) +
+            "i32 main() { fn( i32 ) -> Box<i32> q = Box<i32>::maker(); Box<i32> b = q( 3 ); return b.v; }\n"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "the type still needs its arguments" )
+    {
+        const Typed p( std::string( box ) + "i32 main() { auto p = &Box::of; return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`Box` needs its type arguments here" ) != std::string::npos );
+    }
+}
+
 TEST_CASE( "type_checker_refuses_the_address_of_a_method_it_cannot_name", "[sema][types][m7][method]" )
 {
     constexpr std::string_view counter = "struct C\n"
@@ -4168,8 +4262,7 @@ TEST_CASE( "type_checker_refuses_the_address_of_a_method_it_cannot_name", "[sema
     };
 
     for( const Case c :
-         { Case { "auto p = &C::make;", "`make` is a `static` method, so its address is not supported yet" },
-           Case { "auto p = &Vault::hidden;", "`hidden` is private to `Vault`" },
+         { Case { "auto p = &Vault::hidden;", "`hidden` is private to `Vault`" },
            Case { "auto p = &C::nope;", "`C` has no member `nope`" },
            Case { "auto p = &Box::value;", "`Box` needs its type arguments here" },
            Case { "auto p = &C::pick;", "`pick` is overloaded, so its address names no one function" },

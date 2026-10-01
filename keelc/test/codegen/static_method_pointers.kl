@@ -1,0 +1,76 @@
+// A static method's address is an ordinary function pointer: stored, passed and called with no
+// receiver. Each instance of a generic reads its own static storage through it.
+class Counter
+{
+    static i32 total = 0;
+
+    i32 unused;
+
+    public static i32 bump( i32 by )
+    {
+        total = total + by;
+        return total;
+    }
+
+    private static i32 twice( i32 by )
+    {
+        return by * 2;
+    }
+
+    public static fn( i32 ) -> i32 doubler()
+    {
+        return &Counter::twice;
+    }
+};
+
+struct Box<T> where T : Copyable
+{
+    T v;
+
+    static i32 made = 0;
+
+    static Box<T> of( T x )
+    {
+        made = made + 1;
+        return Box { x };
+    }
+
+    static i32 count()
+    {
+        return made;
+    }
+};
+
+i32 apply( fn( i32 ) -> i32 f, i32 x )
+{
+    return f( x );
+}
+
+i32 main()
+{
+    fn( i32 ) -> i32 bump = &Counter::bump;
+
+    bump( 2 );
+    apply( bump, 3 );
+
+    if( Counter::bump( 0 ) != 5 || apply( Counter::doubler(), 4 ) != 8 )
+    {
+        return 1;
+    }
+
+    fn( i32 ) -> Box<i32> make_int   = &Box<i32>::of;
+    fn( f64 ) -> Box<f64> make_float = &Box<f64>::of;
+    fn() -> i32           ints       = &Box<i32>::count;
+    fn() -> i32           floats     = &Box<f64>::count;
+
+    Box<i32> a = make_int( 1 );
+    Box<i32> b = make_int( 2 );
+    Box<f64> c = make_float( 3.0 );
+
+    if( ints() != 2 || floats() != 1 || a.v + b.v != 3 || c.v != 3.0 )
+    {
+        return 2;
+    }
+
+    return Counter::bump( 0 ) + ints() + floats() + 3; // 11
+}

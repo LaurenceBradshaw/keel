@@ -1,49 +1,49 @@
-error: `make` is a `static` method, so its address is not supported yet
-  --> sema/errors_method_pointers.kl:60:14
+error: `sealed` is private to `Vault`
+  --> sema/errors_method_pointers.kl:65:14
    |
-60 |     auto a = &C::make;
-   |              ^^^^^^^^ call it as `C::make( ... )`
+65 |     auto a = &Vault::sealed;
+   |              ^^^^^^^^^^^^^^ only that type's own members may name it
 
 error: `hidden` is private to `Vault`
-  --> sema/errors_method_pointers.kl:61:14
+  --> sema/errors_method_pointers.kl:66:14
    |
-61 |     auto b = &Vault::hidden;
+66 |     auto b = &Vault::hidden;
    |              ^^^^^^^^^^^^^^ only that type's own members may name it
 
 error: `C` has no member `nope`
-  --> sema/errors_method_pointers.kl:62:14
+  --> sema/errors_method_pointers.kl:67:14
    |
-62 |     auto c = &C::nope;
+67 |     auto c = &C::nope;
    |              ^^^^^^^^
 
 error: `Box` needs its type arguments here
-  --> sema/errors_method_pointers.kl:63:15
+  --> sema/errors_method_pointers.kl:68:15
    |
-63 |     auto e = &Box::value;
+68 |     auto e = &Box::value;
    |               ^^^ write `Box< ... >::value`
 
 error: `pick` is overloaded, so its address names no one function
-  --> sema/errors_method_pointers.kl:64:14
+  --> sema/errors_method_pointers.kl:69:14
    |
-64 |     auto f = &C::pick;
+69 |     auto f = &C::pick;
    |              ^^^^^^^^ assigning it to a variable of one signature will choose between them
 
 error: `keep` takes `T`, which is not known to be copyable, so its address has no function type yet
-  --> sema/errors_method_pointers.kl:65:14
+  --> sema/errors_method_pointers.kl:70:14
    |
-65 |     auto k = &Open<i32>::keep;
-   |              ^^^^^^^^^^^^^^^^ add `where T : Copyable` to `Open`; the parameter of `keep` is at sema/errors_method_pointers.kl:52:15
+70 |     auto k = &Open<i32>::keep;
+   |              ^^^^^^^^^^^^^^^^ add `where T : Copyable` to `Open`; the parameter of `keep` is at sema/errors_method_pointers.kl:57:15
 
 error: no overload of `pick` has the type `fn( ref C, bool ) -> i32`
-  --> sema/errors_method_pointers.kl:67:32
+  --> sema/errors_method_pointers.kl:72:32
    |
-67 |     fn( ref C, bool )->i32 g = &C::pick;
+72 |     fn( ref C, bool )->i32 g = &C::pick;
    |                                ^^^^^^^^ its overloads are `fn( ref C, i32 ) -> i32` and `fn( ref C, f64 ) -> i32`
 
 error: `add` is a function, not a value
-  --> sema/errors_method_pointers.kl:69:14
+  --> sema/errors_method_pointers.kl:74:14
    |
-69 |     auto h = C::add;
+74 |     auto h = C::add;
    |              ^^^^^^ take its address as `&C::add`, or call it as `value.add( ... )`
 
 8 errors generated
