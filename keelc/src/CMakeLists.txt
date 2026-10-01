@@ -15,6 +15,9 @@ add_executable(keelc ${keel_sources})
 target_include_directories(keelc PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(keelc PRIVATE keel_options fmt::fmt cxxopts::cxxopts)
 
+# Where an install puts the runtime; --runtime overrides it. keel_tests passes its own path instead.
+target_compile_definitions(keelc PRIVATE KEEL_INSTALLED_RUNTIME="${CMAKE_INSTALL_PREFIX}/lib/keel/libkeel_rt.a")
+
 # Unit tests live at the bottom of the .cpp file they exercise, inside `#ifdef ENABLE_UNIT_TESTS`.
 # The test binary is therefore the same source set compiled a second time with that define, rather
 # than a shared library both binaries link: the two compilations genuinely differ.

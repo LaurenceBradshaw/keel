@@ -1,0 +1,6 @@
+// A runtime that is not there is the driver's error, reported before the front end runs and
+// before anything is written, rather than the linker's undefined reference to kl_rt_alloc.
+i32 main()
+{
+    return 0;
+}

@@ -18,6 +18,7 @@
 #include "check/drop_flags.h"
 #include "check/move_check.h"
 #include "codegen_c/emit_kir.h"
+#include "codegen_c/link.h"
 #include "common/diagnostics.h"
 #include "common/dump_util.h"
 #include "common/imports.h"
@@ -195,6 +196,7 @@ int main( int argc, char** argv )
         ( "diagnostics",   "Report diagnostics as human (on stderr) or json (lines on stdout)", cxxopts::value<std::string>()->default_value( "human" ) )
         ( "names",         "With --diagnostics=json, also say what each name refers to" )
         ( "package",       "A package and its directory, as name=<dir>; may be repeated", cxxopts::value<std::vector<std::string>>() )
+        ( "runtime",       "Link this runtime library instead of the installed one", cxxopts::value<std::string>() )
         ( "v,version",     "Print version information and exit" )
         ( "h,help",        "Print usage and exit" )
         ( "input",         "Source file",                        cxxopts::value<std::string>() );
@@ -262,6 +264,26 @@ int main( int argc, char** argv )
             }
 
             packages.push_back( keel::Package { .name = spec.substr( 0, equals ), .root = spec.substr( equals + 1 ) } );
+        }
+    }
+
+    // Asked only of a build that links, and before anything is written, so a missing runtime never reaches cc.
+    const bool links = !args.count( "check" ) && !args.count( "emit-c" ) && !args.count( "dump-tokens" ) &&
+                       !args.count( "dump-ast" ) && !args.count( "dump-kir" );
+
+    keel::Runtime runtime;
+
+    if( links )
+    {
+        const std::optional<std::string> flag =
+            args.count( "runtime" ) ? std::optional( args["runtime"].as<std::string>() ) : std::nullopt;
+
+        runtime = keel::find_runtime( flag, KEEL_INSTALLED_RUNTIME );
+
+        if( !runtime.error.empty() )
+        {
+            fmt::print( stderr, "keelc: {}\n", runtime.error );
+            return 2;
         }
     }
 
@@ -454,10 +476,11 @@ int main( int argc, char** argv )
     const char* const configured = std::getenv( "CC" );
     const std::string compiler   = configured != nullptr && *configured != '\0' ? configured : "cc";
 
-    // §7.7: C's UB becomes Keel's UB without these.
-    const std::string command = fmt::format(
-        "{} -fwrapv -fno-strict-aliasing -std=c11 \"{}\" -o \"{}\"", compiler, generated_path.string(), executable.string()
-    );
+    // $CFLAGS after keelc's own, as a build would pass them.
+    const char* const extra  = std::getenv( "CFLAGS" );
+    const std::string cflags = extra != nullptr ? extra : "";
+
+    const std::string command = keel::link_command( compiler, cflags, generated_path, runtime.path, executable );
 
     if( const int status = std::system( command.c_str() ); status != 0 )
     {

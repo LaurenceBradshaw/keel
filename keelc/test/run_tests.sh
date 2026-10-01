@@ -14,21 +14,21 @@
 # A directory holding a main.kl is one program: main.kl is its test, and its other .kl files are
 # the modules it imports rather than tests of their own.
 #
-# A suite holding a RUN file goes one step further: stdout is treated as C, compiled with $CC, and
-# executed, and the program's exit code is compared against <name>.kl.run (0 if the file is
-# absent). Without this a golden diff can only say the emitted C is unchanged, never that it is
+# A suite holding a RUN file goes one step further: keelc builds the program itself, linking the
+# runtime, and it is executed, and the program's exit code is compared against <name>.kl.run (0 if
+# the file is absent). Without this a golden diff can only say the emitted C is unchanged, never that it is
 # correct - and the codegen fixtures are written to check their own answers, which is worth
 # nothing if nothing runs them.
 #
-#   CC          the C compiler                    (default: cc)
+#   CC          the C compiler keelc runs         (default: cc)
 #   KEEL_RUN_TIMEOUT  seconds a fixture may run   (default: 10)
 #   KEEL_JOBS   fixtures checked at once          (default: nproc)
 #   KEEL_VALGRIND=1   run each fixture under valgrind too, failing on any error it reports.
 #                     M3's acceptance is that a destructor frees exactly once, which a golden
 #                     exit code cannot see - a double free or a leak both still exit 0.
-#   KEEL_CFLAGS flags for it                      (default: -std=c11 -Wall -Wextra -Werror)
-#   KEEL_RT     the C runtime source to link in   (default: ../../keel_rt/src/kl_rt.c, skipped
-#               if absent - a program that allocates will then fail to link, which is the point)
+#   KEEL_CFLAGS flags for it, passed as $CFLAGS   (default: -std=c11 -Wall -Wextra -Werror)
+#   KEEL_RT     the runtime library, as --runtime (default: the one built beside keelc; an ASan
+#               build needs one built without sanitizers)
 #   KEEL_ARTIFACTS  where the .c and binaries go  (default: ../../build/test-artifacts)
 #
 #   run_tests.sh <path-to-keelc>            check
@@ -67,25 +67,18 @@ cd "$( dirname "$0" )" || exit 2
 # is slow enough to make a link ten times slower, which is most of the suite's runtime.
 PATH="$( tr ':' '\n' <<< "$PATH" | grep -v '^/mnt/' | paste -sd: )"
 
-# The C floor a generated program links against. Compiled from source beside the emitted .c rather
-# than linked from a build directory: the suite then needs to know nothing about presets or
-# configurations, and it uses the same $CC a real Keel program would.
-#
-# Resolved after the cd above, so this is simply a path rather than a computation that can fail and
-# leave a plausible-looking wrong value behind. Empty while the runtime does not exist, so keelc
-# stays testable before it is written - and a *missing* one is reported here rather than as a
-# confusing error from the C compiler.
-runtime_sources="${KEEL_RT:-../../keel_rt/src/kl_rt.c}"
+# The runtime from the same build as keelc, so the preset under test links its own. keelc is handed
+# it with --runtime and does the linking, which is what a run fixture is testing.
+runtime="${KEEL_RT:-$( dirname "$keelc" )/../keel_rt/src/libkeel_rt.a}"
 
-if [ ! -f "$runtime_sources" ]; then
-    if [ -n "${KEEL_RT:-}" ]; then
-        echo "run_tests.sh: KEEL_RT names '$runtime_sources', which is not a file" >&2
-        exit 2
-    fi
-
-    runtime_sources=""
+if [ ! -f "$runtime" ]; then
+    echo "run_tests.sh: no runtime library at '$runtime'; build keel_rt, or name one with KEEL_RT" >&2
+    exit 2
 fi
 
+runtime="$( cd "$( dirname "$runtime" )" && pwd )/$( basename "$runtime" )"
+
+# keelc runs the C compiler; the runner only configures it.
 cc="${CC:-cc}"
 # -Werror, because a warning in emitted C is the compiler saying the code means something other
 # than intended - that is the whole reason for building it here. The unused-* family is excluded:
@@ -180,22 +173,34 @@ check_stream()
     return 0
 }
 
-# Builds and runs the C on stdout. Only suites with a RUN marker reach this: for the others stdout
-# is a token or AST dump, and handing that to a C compiler would be nonsense.
-# $1 the fixture path  -> echoes any problem, and leaves the .c behind when there is one
+# Has keelc build the program and runs it. Only suites with a RUN marker reach this: for the others
+# stdout is a token or AST dump, and there is no program.
+# $1 the fixture path  $2.. the suite's flags  -> echoes any problem, and leaves the .c behind
 check_run()
 {
     local src="$1"
-    local stem="${artifacts}/$( echo "${src%.kl}" | tr '/' '_' )"
-    local source_c="${stem}.c"
-    local build_log="${stem}.cc.log"
-    local run_log="${stem}.run.log"
+    shift
 
-    cp "$out" "$source_c"
+    # A directory each, since keelc names the .c after the input and every program is a main.kl.
+    local build_dir="${artifacts}/$( echo "${src%.kl}" | tr '/' '_' )"
+    local stem="${build_dir}/program"
+    local source_c="${build_dir}/$( basename "$src" ).c"
+    local build_log="${build_dir}/build.log"
+    local run_log="${build_dir}/run.log"
 
-    # Unquoted on purpose: cflags is a list of arguments, not one.
-    if ! $cc $cflags -o "$stem" "$source_c" $runtime_sources > "$build_log" 2>&1; then
-        echo "    the emitted C did not compile:"
+    # Emptied first, so a failed build cannot leave last run's program behind to be run.
+    rm -rf "$build_dir"
+    mkdir -p "$build_dir"
+
+    # The suite's flags without --emit-c, which would stop keelc before it builds anything.
+    local build_flags=()
+    for flag in "$@"; do
+        [ "$flag" != "--emit-c" ] && build_flags+=( "$flag" )
+    done
+
+    if ! CC="$cc" CFLAGS="$cflags" "$keelc" "${build_flags[@]}" "$src" --runtime "$runtime" -o "$stem" \
+        > "$build_log" 2>&1; then
+        echo "    keelc did not build the program:"
         sed 's/^/      /' < "$build_log"
         echo "      kept at ${source_c}"
         return 1
@@ -205,7 +210,7 @@ check_run()
     # message the caller is capturing. Under timeout because a fixture is a real program and a
     # control-flow bug is an infinite loop: without this the suite hangs instead of failing, which
     # is the worse of the two by a distance.
-    local vg_log="${stem}.vg.log"
+    local vg_log="${build_dir}/vg.log"
 
     if [ -n "$valgrind_run" ]; then
         # Its own log, and judged by that rather than by an exit code: a program killed by a signal
@@ -290,7 +295,7 @@ run_one()
         # Only when keelc succeeded: there is no C to build otherwise, and the failure above
         # already says so.
         if [ -f "$( dirname "$src" )/RUN" ] && [ "$code" -eq 0 ]; then
-            check_run "$src"
+            check_run "$src" "${suite_flags[@]}"
         fi
     )"
 

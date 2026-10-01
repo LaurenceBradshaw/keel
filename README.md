@@ -217,6 +217,15 @@ cmake --build build/debug
 
 Presets are `debug`, `asan` (ASan + UBSan) and `release`.
 
+`keelc` links every program against the runtime library, and looks for it where an install would put
+it: `/usr/local/lib/keel/libkeel_rt.a`. Nothing installs it yet, so link the release build's there
+once:
+
+```sh
+sudo mkdir -p /usr/local/lib/keel
+sudo ln -s "$PWD/build/release/keel_rt/src/libkeel_rt.a" /usr/local/lib/keel/libkeel_rt.a
+```
+
 ## Using
 
 ```sh
@@ -230,14 +239,10 @@ build/debug/bin/keelc examples/hello.kl -o hello && ./hello
 | `--names` | With `--diagnostics=json`, also report what each name refers to |
 | `--dump-tokens` / `--dump-ast` / `--dump-kir` | Print that stage and stop |
 | `--emit-c` | Print the generated C and stop |
+| `--runtime <path>` | Link this runtime library instead of the installed one |
+| `--package name=<dir>` | Make a package importable as `name`; may be repeated |
 
-`keelc` does not link the runtime yet, so a program that allocates needs `keel_rt` compiled alongside
-it:
-
-```sh
-build/debug/bin/keelc --emit-c prog.kl > prog.c
-cc -fwrapv -fno-strict-aliasing -std=c11 prog.c keel_rt/src/kl_rt.c -o prog
-```
+`keelc` compiles the generated C with `$CC` (default `cc`), adding `$CFLAGS`.
 
 ## Testing
 
@@ -245,6 +250,9 @@ cc -fwrapv -fno-strict-aliasing -std=c11 prog.c keel_rt/src/kl_rt.c -o prog
 build/debug/bin/keel_tests                              # unit tests
 keelc/test/run_tests.sh build/debug/bin/keelc           # golden-file tests
 ```
+
+The golden runner links the runtime built beside the `keelc` it is given. Under the `asan` preset,
+point `KEEL_RT` at a library built without sanitizers, such as the `debug` one.
 
 Unit tests live in the source file they test, behind `ENABLE_UNIT_TESTS`. Golden-file tests under
 `keelc/test/` cover language behaviour: one `.kl` fixture per topic, with its expected diagnostics,

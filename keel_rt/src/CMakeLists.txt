@@ -31,3 +31,7 @@ set_target_properties(keel_rt PROPERTIES
 # project, and nothing names the directory it lives in.
 target_include_directories(keel_rt PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(keel_rt PRIVATE keel_options)
+
+# DWARF 4: the library's debug info ends up in every Keel program, and valgrind before 3.20 cannot
+# read clang's DWARF 5.
+target_compile_options(keel_rt PRIVATE -gdwarf-4)
