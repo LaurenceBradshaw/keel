@@ -1,0 +1,142 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+class list<T> where T : Copyable
+{
+    list() 
+    {
+        data = nullptr;
+        count = 0;
+        cap = 0;
+    }
+
+    public static list<T> with_capacity( u64 capacity )
+    {
+        list<T> result = list<T>();
+        result.cap = capacity;
+        result.count = 0;
+
+        unsafe
+        {
+            result.data = alloc<T>( capacity );
+        }
+
+        return result;
+    }
+
+    ~list()
+    {
+        if( data != nullptr )
+        {
+            unsafe
+            {
+                free( data );
+            }
+        }
+    }
+
+    public void push( T value )
+    {
+        if( count != cap )
+        {
+            unsafe
+            {
+                data[count] = value;
+            }
+            count += 1;
+        }
+        else
+        {
+            cap = cap > 0 ? cap * 2 : 1;
+            grow( cap );
+            push( value );
+        }
+    }
+
+    public T pop()
+    {
+        count -= 1;
+        unsafe
+        {
+            return data[count];
+        }
+    }
+
+    public T get( u64 index ) const
+    {
+        // Inlight of there being no assert yet, the caller must make sure the index is in bounds.
+        unsafe
+        {
+            return data[index];
+        }
+    }
+
+    public void set( u64 index, T value )
+    {
+        // Inlight of there being no assert yet, the caller must make sure the index is in bounds.
+        unsafe
+        {
+            data[index] = value;
+        }
+    }
+
+    public u64 size() const
+    {
+        return count;
+    }
+
+    public u64 capacity() const
+    {
+        return cap;
+    }
+
+    public bool is_empty() const
+    {
+        return count == 0;
+    }
+
+    public void reserve( u64 n )
+    {
+        if( n > cap )
+        {
+            grow( n );
+        }
+    }
+
+    public void clear()
+    {
+        count = 0;
+    }
+
+    private void grow( u64 n )
+    {
+        cap = n;
+        T[*] new_data;
+        unsafe
+        {
+            new_data = alloc<T>( cap );
+        }
+
+        if( data != nullptr )
+        {
+            for( u64 i = 0; i < count; i++ )
+            {
+                unsafe
+                {
+                    new_data[i] = data[i];
+                }
+            }
+            
+            unsafe
+            {
+                free( data );
+            }
+        }
+
+        data = new_data;
+    }
+
+    private T[*] data;
+    private u64 count;
+    private u64 cap;
+};

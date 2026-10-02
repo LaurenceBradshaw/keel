@@ -5611,6 +5611,15 @@ reached in its first hour. Both modules check, build and run clean under valgrin
   something wants it gone. Tests: six `drop_flags_*` cases on reassignment; golden
   `codegen/reassignment_drops` (exits 0, clean under valgrind); `generics_owning_field` re-blessed,
   since `Box<Buf> b; b.v = ...` now flags `b`.
+  *Second, done the same day.* Lowering records a constructor's receiver and its fields, each with
+  whether it owns (`Function::constructed`, `owed_fields`), since the pass has no type table. Each
+  field gets a slot after the locals, so the lattice is unchanged. A read through `this` reaches a
+  field's slot; `this` used whole, as a method call's receiver, reads every slot; writing part of a
+  field (`p.x = 1`) reads it, stricter than a local, because the lowerer drops an owning part before
+  replacing it. `&field` assigns it, so `init( out a )` forwards. A generic class's constructor is
+  checked per instantiation, like every pass after lowering, so `list() {}` in an unused class is
+  not reported until something builds a `list<T>`. Tests: four `assign_check_*` constructor cases;
+  golden `sema/errors_constructor_fields`.
 - **One bad `for` header takes the class's fields with it.** `for( u64 i = 0; i < count; ++i )`
   reports *expected `{`, found `i`*, and recovery then closes the method's body at the wrong `}`.
   The trailing `private` fields land outside the class, and every use of them is *not declared*: 54

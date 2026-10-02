@@ -15,6 +15,7 @@ namespace keel
 struct Unassigned_error
 {
     Local_id local {};
+    Node_id  field {};      // a constructor's field, when that is what is owed
     Span     at {};         // the `return` it can reach unassigned
     bool     maybe = false; // unassigned on some paths into here, not all
 };
@@ -25,14 +26,26 @@ struct Unassigned_error
 struct Uninitialised_read
 {
     Local_id local {};
+    Node_id  field {};      // a constructor's field, when that is what was read
     Span     at {};         // the read
     bool     maybe = false; // assigned on some paths into here, not all
+    bool     whole = false; // `this` used whole, so every field is read
+};
+
+// A constructor writing an owning field that may already hold a value: the old one would need a
+// drop decided per path, so it is refused instead.
+struct Reassigned_field
+{
+    Node_id field {};
+    Span    at {};
+    bool    maybe = false; // holds a value on some paths into here, not all
 };
 
 struct Assignment_report
 {
     std::vector<Unassigned_error>   unassigned;
     std::vector<Uninitialised_read> reads;
+    std::vector<Reassigned_field>   reassigned;
 };
 
 // PLAN D9 and D31. Definite assignment, over the same CFG check_moves walks and with the opposite

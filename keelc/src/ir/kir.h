@@ -193,6 +193,12 @@ struct Block
     Terminator terminator {};
 };
 
+struct Owed_field
+{
+    Node_id field {};
+    bool    is_owning = false;
+};
+
 // Block 0 is the entry. Local 0 is the return slot, and locals 1..parameter_count are the
 // parameters, in declaration order.
 struct Function
@@ -209,6 +215,8 @@ struct Function
     // local holds a valid address, and it is the referent that is empty - so the analysis that
     // needs it cannot work it out from the graph.
     std::vector<Local_id>   out_parameters;
+    Local_id                constructed {}; // a constructor's receiver, invalid in every other function.
+    std::vector<Owed_field> owed_fields;    // in declaration order
     std::vector<Local>      locals;
     std::vector<Block>      blocks;
     std::vector<Statement>  statements;

@@ -1,0 +1,49 @@
+error: this constructor never assigns `b`
+  --> sema/errors_constructor_fields.kl:29:5
+   |
+29 |     Never()
+   |     ^^^^^^^ every field must hold a value when the constructor returns
+
+error: this constructor does not assign `a` on every path
+  --> sema/errors_constructor_fields.kl:39:5
+   |
+39 |     Sometimes( bool c )
+   |     ^^^^^^^^^^^^^^^^^^^ every field must hold a value when the constructor returns
+
+error: this constructor never assigns `a`
+  --> sema/errors_constructor_fields.kl:56:13
+   |
+56 |             return;
+   |             ^^^^^^^ every field must hold a value when the constructor returns
+
+error: `b` is used before this constructor assigns it
+  --> sema/errors_constructor_fields.kl:70:9
+   |
+70 |         a = b;
+   |         ^^^^^^ assign it before reading it
+
+error: `this` is used before this constructor assigns `a`
+  --> sema/errors_constructor_fields.kl:82:9
+   |
+82 |         touch();
+   |         ^^^^^^^ assign every field before calling a method or using `this`
+
+error: `this` is used before this constructor assigns `b`
+  --> sema/errors_constructor_fields.kl:82:9
+   |
+82 |         touch();
+   |         ^^^^^^^ assign every field before calling a method or using `this`
+
+error: `b` already holds a value here
+  --> sema/errors_constructor_fields.kl:99:9
+   |
+99 |         b = Buf();
+   |         ^^^^^^^^^^ a constructor assigns an owning field once on each path
+
+error: `b` may already hold a value here
+   --> sema/errors_constructor_fields.kl:114:9
+    |
+114 |         b = Buf();
+    |         ^^^^^^^^^^ a constructor assigns an owning field once on each path
+
+8 errors generated

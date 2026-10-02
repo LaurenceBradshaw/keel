@@ -85,6 +85,7 @@ void report_move_errors(
 // to name it.
 void report_unassigned_errors(
     const std::vector<keel::Function>& functions,
+    const keel::Ast&                   ast,
     const keel::Interner&              interner,
     keel::Diagnostics&                 diagnostics,
     const keel::Types&                 types
@@ -94,10 +95,33 @@ void report_unassigned_errors(
     {
         const keel::Assignment_report report = keel::check_assignment( function );
 
+        const auto field_name = [&]( keel::Node_id field ) { return interner.text( keel::Symbol_id { ast.aux( field ) } ); };
+
         // D9: a value read before it exists. Reported first, because when a function has both the
         // read is the mistake and the missing assignment at the exit is its consequence.
         for( const keel::Uninitialised_read& read : report.reads )
         {
+            if( read.field.is_valid() && read.whole )
+            {
+                diagnostics.error(
+                    read.at,
+                    fmt::format( "`this` is used before this constructor assigns `{}`", field_name( read.field ) ),
+                    "assign every field before calling a method or using `this`"
+                );
+                continue;
+            }
+
+            if( read.field.is_valid() )
+            {
+                diagnostics.error(
+                    read.at,
+                    read.maybe ? fmt::format( "`{}` may be used before this constructor assigns it", field_name( read.field ) )
+                               : fmt::format( "`{}` is used before this constructor assigns it", field_name( read.field ) ),
+                    read.maybe ? "it is assigned on some paths to here, but not all" : "assign it before reading it"
+                );
+                continue;
+            }
+
             const keel::Symbol_id name = function.locals[read.local.v].name;
 
             // A temporary is always written before it is read, so an unnamed local here is a
@@ -130,6 +154,18 @@ void report_unassigned_errors(
 
         for( const keel::Unassigned_error& error : report.unassigned )
         {
+            if( error.field.is_valid() )
+            {
+                diagnostics.error(
+                    error.at,
+                    error.maybe
+                        ? fmt::format( "this constructor does not assign `{}` on every path", field_name( error.field ) )
+                        : fmt::format( "this constructor never assigns `{}`", field_name( error.field ) ),
+                    "every field must hold a value when the constructor returns"
+                );
+                continue;
+            }
+
             if( error.local == keel::k_return_slot )
             {
                 const std::string_view return_type = types.table().name( function.locals[keel::k_return_slot.v].type );
@@ -174,6 +210,16 @@ void report_unassigned_errors(
                 error.maybe ? fmt::format( "{} is not assigned on every path out of this function", subject )
                             : fmt::format( "{} is never assigned", subject ),
                 "an `out` parameter is the callee's promise to assign it"
+            );
+        }
+
+        for( const keel::Reassigned_field& error : report.reassigned )
+        {
+            diagnostics.error(
+                error.at,
+                error.maybe ? fmt::format( "`{}` may already hold a value here", field_name( error.field ) )
+                            : fmt::format( "`{}` already holds a value here", field_name( error.field ) ),
+                "a constructor assigns an owning field once on each path"
             );
         }
     }
@@ -385,7 +431,7 @@ int main( int argc, char** argv )
     // an editor wants use-after-move underlined. Which is why this runs above that early return
     // rather than beside the emitter.
     report_move_errors( functions, sm, interner, diagnostics );
-    report_unassigned_errors( functions, interner, diagnostics, types );
+    report_unassigned_errors( functions, ast, interner, diagnostics, types );
 
     if( diagnostics.has_errors() )
     {

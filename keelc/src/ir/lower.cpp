@@ -277,6 +277,24 @@ Function Lowering::run()
     Function function        = builder_.finish();
     function.returns_a_value = !types_.table().is_void( function.locals[k_return_slot.v].type );
 
+    if( ast_.kind( declaration_ ) == Node_kind::Constructor_decl )
+    {
+        function.constructed   = receiver_;
+        const Type_id instance = types_.table().get( function.locals[receiver_.v].type ).element;
+
+        for( const Node_id member : ast_.members( enclosing_aggregate( ast_, declaration_ ) ) )
+        {
+            if( ast_.kind( member ) != Node_kind::Field_decl )
+            {
+                continue;
+            }
+
+            function.owed_fields.push_back(
+                Owed_field { member, owns( field_type( ast_, types_.table(), instance, member, types_.recorded() ) ) }
+            );
+        }
+    }
+
     return function;
 }
 

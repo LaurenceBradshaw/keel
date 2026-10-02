@@ -1,0 +1,68 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+import list;
+
+class string
+{
+    string() 
+    {
+        bytes = list<u8>();
+    }
+
+    public static string with_capacity( u64 capacity )
+    {
+        string result = string();
+        result.bytes = list<u8>::with_capacity( capacity );
+        return result;
+    }
+
+    public void push( u8 value )
+    {
+        bytes.push( value );
+    }
+
+    public void append( const ref string other )
+    {
+        for( u64 i = 0; i < other.size(); i++ )
+        {
+            bytes.push( other.get( i ) );
+        }
+    }
+
+    public u8 get( u64 index ) const
+    {
+        return bytes.get( index );
+    }
+
+    public u64 size() const
+    {
+        return bytes.size();
+    }
+
+    public bool is_empty() const
+    {
+        return bytes.is_empty();
+    }
+
+    public bool equals( const ref string other ) const
+    {
+        // This is a stand in for no operator== overload in keel yet
+        if ( size() != other.size() )
+        {
+            return false;
+        }
+
+        for( u64 i = 0; i < size(); i++ )
+        {
+            if( get( i ) != other.get( i ) )
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private list<u8> bytes;
+};

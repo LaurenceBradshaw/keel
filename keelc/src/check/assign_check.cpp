@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "check/assign_check.h"
+#include <optional>
 
 namespace keel
 {
@@ -76,13 +77,90 @@ void successors( const Terminator& terminator, std::vector<Block_id>& out )
     }
 }
 
+// A constructor's fields get a slot each after the locals, so the lattice and the worklist need not
+// know they exist.
+std::size_t slots( const Function& func )
+{
+    return func.locals.size() + func.owed_fields.size();
+}
+
+// The slot of the constructor field `place` reaches, `(*this).f` and anything further into it.
+std::optional<u32> field_slot( const Function& func, const Place& place )
+{
+    if( !func.constructed.is_valid() || place.is_global() || place.local != func.constructed || place.num_projections < 2 )
+    {
+        return std::nullopt;
+    }
+
+    const Projection& deref = func.projections[place.first_projection];
+    const Projection& field = func.projections[place.first_projection + 1];
+
+    if( deref.kind != Projection_kind::Deref || field.kind != Projection_kind::Field )
+    {
+        return std::nullopt;
+    }
+
+    for( std::size_t i = 0; i < func.owed_fields.size(); ++i )
+    {
+        if( func.owed_fields[i].field == field.field )
+        {
+            return static_cast<u32>( func.locals.size() + i );
+        }
+    }
+
+    return std::nullopt;
+}
+
+void read_slot(
+    const Function& func, u32 slot, Span span, bool whole, const Flow& flow, std::vector<Uninitialised_read>* reads
+)
+{
+    if( flow.always[slot] != 0 )
+    {
+        return;
+    }
+
+    reads->push_back( Uninitialised_read {
+        .local = func.constructed,
+        .field = func.owed_fields[slot - func.locals.size()].field,
+        .at    = span,
+        .maybe = flow.ever[slot] != 0,
+        .whole = whole,
+    } );
+}
+
+// A constructor's receiver: one field through it, or `this` whole, which reads every field.
+void read_receiver(
+    const Function& func, const Place& place, Span span, const Flow& flow, std::vector<Uninitialised_read>* reads
+)
+{
+    if( const std::optional<u32> slot = field_slot( func, place ) )
+    {
+        read_slot( func, *slot, span, false, flow, reads );
+        return;
+    }
+
+    for( std::size_t slot = func.locals.size(); slot < slots( func ); ++slot )
+    {
+        read_slot( func, static_cast<u32>( slot ), span, true, flow, reads );
+    }
+}
+
 // D9's half. A constant names no local and a global is not a local's storage, so neither can be
 // uninitialised; everything else is a read of whatever `place.local` names, projections included -
 // reading `_1.x` is reading `_1`.
-void read_operand( const Operand& operand, Span span, const Flow& flow, std::vector<Uninitialised_read>* reads )
+void read_operand(
+    const Function& func, const Operand& operand, Span span, const Flow& flow, std::vector<Uninitialised_read>* reads
+)
 {
     if( reads == nullptr || operand.kind == Operand_kind::Constant || operand.place.is_global() )
     {
+        return;
+    }
+
+    if( func.constructed.is_valid() && operand.place.local == func.constructed )
+    {
+        read_receiver( func, operand.place, span, flow, reads );
         return;
     }
 
@@ -106,12 +184,12 @@ void read_rvalue(
     const Function& func, const Rvalue& value, Span span, const Flow& flow, std::vector<Uninitialised_read>* reads
 )
 {
-    read_operand( value.a, span, flow, reads );
-    read_operand( value.b, span, flow, reads );
+    read_operand( func, value.a, span, flow, reads );
+    read_operand( func, value.b, span, flow, reads );
 
     for( u32 i = 0; i < value.argument_count; ++i )
     {
-        read_operand( func.operands[value.first_argument + i], span, flow, reads );
+        read_operand( func, func.operands[value.first_argument + i], span, flow, reads );
     }
 }
 
@@ -124,7 +202,13 @@ void read_rvalue(
 // `reads` is null during the fixpoint and set for the single reporting walk: reporting inside the
 // worklist would emit one error per visit for any block on a back edge, which is the same reason
 // check_moves reports in a second pass.
-void transfer_block( const Function& func, u32 block, Flow& flow, std::vector<Uninitialised_read>* reads )
+void transfer_block(
+    const Function&                  func,
+    u32                              block,
+    Flow&                            flow,
+    std::vector<Uninitialised_read>* reads,
+    std::vector<Reassigned_field>*   reassigned
+)
 {
     const Block& b = func.blocks[block];
 
@@ -142,6 +226,35 @@ void transfer_block( const Function& func, u32 block, Flow& flow, std::vector<Un
 
         if( statement.place.is_global() )
         {
+            continue;
+        }
+
+        // A constructor's field. Written whole it is assigned, and an owning one must not already
+        // hold a value; written in part it is read, since the part changes what is already there.
+        if( const std::optional<u32> slot =
+                statement.kind == Statement_kind::Assign ? field_slot( func, statement.place ) : std::nullopt )
+        {
+            if( statement.place.num_projections > 2 )
+            {
+                if( reads != nullptr )
+                {
+                    read_slot( func, *slot, statement.span, false, flow, reads );
+                }
+
+                continue;
+            }
+
+            if( reassigned != nullptr && flow.ever[*slot] != 0 && func.owed_fields[*slot - func.locals.size()].is_owning )
+            {
+                reassigned->push_back( Reassigned_field {
+                    .field = func.owed_fields[*slot - func.locals.size()].field,
+                    .at    = statement.span,
+                    .maybe = flow.always[*slot] == 0,
+                } );
+            }
+
+            flow.always[*slot] = 1;
+            flow.ever[*slot]   = 1;
             continue;
         }
 
@@ -163,8 +276,11 @@ void transfer_block( const Function& func, u32 block, Flow& flow, std::vector<Un
             // can miss a real mistake but can never invent one.
             if( statement.value.kind == Rvalue_kind::Address_of && !statement.value.a.place.is_global() )
             {
-                flow.always[statement.value.a.place.local.v] = 1;
-                flow.ever[statement.value.a.place.local.v]   = 1;
+                const std::optional<u32> slot  = field_slot( func, statement.value.a.place );
+                const u32                taken = slot ? *slot : statement.value.a.place.local.v;
+
+                flow.always[taken] = 1;
+                flow.ever[taken]   = 1;
             }
 
             break;
@@ -183,12 +299,13 @@ void transfer_block( const Function& func, u32 block, Flow& flow, std::vector<Un
 
     // On the way out, after every statement. A non-Branch terminator leaves `condition` at its
     // default, which is a Constant, so read_operand returns immediately.
-    read_operand( b.terminator.condition, b.terminator.span, flow, reads );
+    read_operand( func, b.terminator.condition, b.terminator.span, flow, reads );
 }
 
 Flow entry_flow( const Function& func )
 {
-    Flow flow { std::vector<u8>( func.locals.size(), 0 ), std::vector<u8>( func.locals.size(), 0 ), true };
+    // A constructor's field slots start empty, like the locals.
+    Flow flow { std::vector<u8>( slots( func ), 0 ), std::vector<u8>( slots( func ), 0 ), true };
 
     // Parameters arrive holding a value; locals and temporaries do not. The exceptions are the two
     // obligations this pass also reports at the exits - an `out` parameter's referent is empty until
@@ -228,7 +345,7 @@ Assignment_report check_assignment( const Function& func )
 
     // No early out any more. D9 applies to every function, so every function pays for the fixpoint -
     // the same cost check_moves has always paid on all of them.
-    std::vector<Flow> in( func.blocks.size(), bottom( func.locals.size() ) );
+    std::vector<Flow> in( func.blocks.size(), bottom( slots( func ) ) );
     in[0] = entry_flow( func );
 
     std::vector<Block_id> work { Block_id { 0 } };
@@ -244,7 +361,7 @@ Assignment_report check_assignment( const Function& func )
         work.pop_back();
 
         Flow out = in[block.v];
-        transfer_block( func, block.v, out, nullptr );
+        transfer_block( func, block.v, out, nullptr, nullptr );
 
         next.clear();
         successors( func.blocks[block.v].terminator, next );
@@ -275,7 +392,7 @@ Assignment_report check_assignment( const Function& func )
         }
 
         Flow flow = in[block];
-        transfer_block( func, block, flow, &report.reads );
+        transfer_block( func, block, flow, &report.reads, &report.reassigned );
 
         if( b.terminator.kind != Terminator_kind::Return )
         {
@@ -305,6 +422,24 @@ Assignment_report check_assignment( const Function& func )
         if( func.returns_a_value )
         {
             owed( k_return_slot );
+        }
+
+        // And every field, when this is a constructor: the instance it returns is whole.
+        for( std::size_t i = 0; i < func.owed_fields.size(); ++i )
+        {
+            const std::size_t slot = func.locals.size() + i;
+
+            if( flow.always[slot] != 0 )
+            {
+                continue;
+            }
+
+            report.unassigned.push_back( Unassigned_error {
+                .local = func.constructed,
+                .field = func.owed_fields[i].field,
+                .at    = b.terminator.span,
+                .maybe = flow.ever[slot] != 0,
+            } );
         }
     }
 
@@ -440,6 +575,27 @@ struct Checked
         }
 
         return {};
+    }
+
+    // A constructor's field obligations, gathered like the two above.
+    std::vector<Reassigned_field> reassigned() const
+    {
+        std::vector<Reassigned_field> all;
+
+        for( const Function& function : functions )
+        {
+            for( const Reassigned_field& error : check_assignment( function ).reassigned )
+            {
+                all.push_back( error );
+            }
+        }
+
+        return all;
+    }
+
+    std::string_view field_name( Node_id field ) const
+    {
+        return field.is_valid() ? interner.text( Symbol_id { ast.aux( field ) } ) : std::string_view {};
     }
 };
 
@@ -992,6 +1148,219 @@ TEST_CASE( "assign_check_accepts_a_partly_initialised_struct_for_now", "[check][
 
     INFO( p.rendered() );
     REQUIRE( p.errors().empty() );
+}
+
+// D9 for a constructor's fields: each is owed at every way out, as an `out` referent is. Before
+// this, `list() {}` compiled and its destructor read three uninitialised fields.
+TEST_CASE( "assign_check_requires_a_constructor_to_assign_every_field", "[check][assign][constructor]" )
+{
+    SECTION( "a field never assigned" )
+    {
+        const Checked c( "class C { i32 a; i32 b; C() { a = 1; } };\ni32 main() { C c = C(); return 0; }" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.errors().size() == 1 );
+        REQUIRE( c.field_name( c.errors()[0].field ) == "b" );
+        REQUIRE_FALSE( c.errors()[0].maybe );
+    }
+
+    SECTION( "assigned on one path only" )
+    {
+        const Checked c( "class C { i32 a; i32 b; C( bool x ) { a = 1; if( x ) { b = 2; } } };\n"
+                         "i32 main() { C c = C( true ); return 0; }" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.errors().size() == 1 );
+        REQUIRE( c.field_name( c.errors()[0].field ) == "b" );
+        REQUIRE( c.errors()[0].maybe );
+    }
+
+    SECTION( "an early return before the assignment" )
+    {
+        const Checked c( "class C { i32 a; i32 b; C( bool x ) { a = 1; if( x ) { return; } b = 2; } };\n"
+                         "i32 main() { C c = C( true ); return 0; }" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.errors().size() == 1 );
+        REQUIRE( c.field_name( c.errors()[0].field ) == "b" );
+    }
+
+    SECTION( "each field reported on its own" )
+    {
+        const Checked c( "class C { i32 a; i32 b; C() { } };\ni32 main() { C c = C(); return 0; }" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.errors().size() == 2 );
+        REQUIRE( c.field_name( c.errors()[0].field ) == "a" );
+        REQUIRE( c.field_name( c.errors()[1].field ) == "b" );
+    }
+}
+
+TEST_CASE( "assign_check_reports_a_field_read_before_its_constructor_assigns_it", "[check][assign][constructor]" )
+{
+    SECTION( "a plain read" )
+    {
+        const Checked c( "class C { i32 a; i32 b; C() { a = b; b = 1; } };\ni32 main() { C c = C(); return 0; }" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.reads().size() == 1 );
+        REQUIRE( c.field_name( c.reads()[0].field ) == "b" );
+        REQUIRE_FALSE( c.reads()[0].whole );
+    }
+
+    SECTION( "a compound assignment reads first" )
+    {
+        const Checked c( "class C { i32 a; C() { a += 1; } };\ni32 main() { C c = C(); return 0; }" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.reads().size() == 1 );
+        REQUIRE( c.field_name( c.reads()[0].field ) == "a" );
+    }
+
+    SECTION( "the explicit spelling is the same read" )
+    {
+        const Checked c( "class C { i32 a; i32 b; C() { a = this.b; b = 1; } };\ni32 main() { C c = C(); return 0; }" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.reads().size() == 1 );
+        REQUIRE( c.field_name( c.reads()[0].field ) == "b" );
+    }
+
+    SECTION( "writing into a field reads it" )
+    {
+        // `p.x = 1` changes part of what `p` holds, and there is nothing there yet. Stricter than a
+        // local, deliberately: the lowerer drops an owning part before replacing it.
+        const Checked c( "struct P { i32 x; i32 y; };\n"
+                         "class C { P p; C() { p.x = 1; p.y = 2; } };\ni32 main() { C c = C(); return 0; }" );
+
+        INFO( c.rendered() );
+        REQUIRE_FALSE( c.reads().empty() );
+        REQUIRE( c.field_name( c.reads()[0].field ) == "p" );
+    }
+
+    SECTION( "`this` used whole names every field still missing" )
+    {
+        const Checked c( "class C { i32 a; i32 b; i32 d; C() { a = 1; touch(); b = 2; d = 3; } void touch() { } };\n"
+                         "i32 main() { C c = C(); return 0; }" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.reads().size() == 2 );
+        REQUIRE( c.reads()[0].whole );
+        REQUIRE( c.field_name( c.reads()[0].field ) == "b" );
+        REQUIRE( c.field_name( c.reads()[1].field ) == "d" );
+    }
+
+    SECTION( "assigned on one path, then read" )
+    {
+        const Checked c( "class C { i32 a; i32 b; C( bool x ) { if( x ) { b = 1; } a = b; b = 2; } };\n"
+                         "i32 main() { C c = C( true ); return 0; }" );
+
+        INFO( c.rendered() );
+        REQUIRE( c.reads().size() == 1 );
+        REQUIRE( c.reads()[0].maybe );
+    }
+}
+
+// An owning field is written once per path. A second write would have to drop the first value, and
+// whether there is one differs by path - so the constructor is refused rather than given a flag.
+TEST_CASE( "assign_check_refuses_an_owning_field_a_constructor_may_already_have_assigned", "[check][assign][constructor]" )
+{
+    constexpr const char* buf =
+        "class Buf { u8[*] p; Buf() { unsafe { p = alloc<u8>( 4 ); } } ~Buf() { unsafe { free( p ); } } };\n";
+
+    SECTION( "assigned twice" )
+    {
+        const Checked c(
+            std::string( buf ) + "class H { Buf b; H() { b = Buf(); b = Buf(); } };\n"
+                                 "i32 main() { H h = H(); return 0; }"
+        );
+
+        INFO( c.rendered() );
+        REQUIRE( c.reassigned().size() == 1 );
+        REQUIRE( c.field_name( c.reassigned()[0].field ) == "b" );
+    }
+
+    SECTION( "assigned on one path, then on all" )
+    {
+        const Checked c(
+            std::string( buf ) + "class H { Buf b; H( bool x ) { if( x ) { b = Buf(); } b = Buf(); } };\n"
+                                 "i32 main() { H h = H( true ); return 0; }"
+        );
+
+        INFO( c.rendered() );
+        REQUIRE( c.reassigned().size() == 1 );
+        REQUIRE( c.errors().empty() );
+    }
+
+    SECTION( "inside a loop" )
+    {
+        const Checked c(
+            std::string( buf ) +
+            "class H { Buf b; H( i32 n ) { b = Buf(); i32 i = 0; while( i < n ) { b = Buf(); i = i + 1; } } };\n"
+            "i32 main() { H h = H( 2 ); return 0; }"
+        );
+
+        INFO( c.rendered() );
+        REQUIRE( c.reassigned().size() == 1 );
+    }
+
+    SECTION( "once on each arm is fine" )
+    {
+        const Checked c(
+            std::string( buf ) + "class H { Buf b; H( bool x ) { if( x ) { b = Buf(); } else { b = Buf(); } } };\n"
+                                 "i32 main() { H h = H( true ); return 0; }"
+        );
+
+        INFO( c.rendered() );
+        REQUIRE( c.reassigned().empty() );
+        REQUIRE( c.errors().empty() );
+        REQUIRE( c.reads().empty() );
+    }
+
+    SECTION( "a method may reassign it: the referent always holds a value there" )
+    {
+        const Checked c(
+            std::string( buf ) + "class H { Buf b; H() { b = Buf(); } void reset() { b = Buf(); b = Buf(); } };\n"
+                                 "i32 main() { H h = H(); h.reset(); return 0; }"
+        );
+
+        INFO( c.rendered() );
+        REQUIRE( c.reassigned().empty() );
+    }
+}
+
+// The false-positive set for fields, as the case above it is for locals.
+TEST_CASE( "assign_check_accepts_a_constructor_that_assigns_every_field", "[check][assign][constructor]" )
+{
+    for( const char* source : {
+             "class C { i32 a; i32 b; C() { a = 1; b = a; } };\ni32 main() { C c = C(); return 0; }",
+             // A field that holds no ownership may be written as often as any local.
+             "class C { i32 a; C() { a = 1; a = 2; a += 1; } };\ni32 main() { C c = C(); return 0; }",
+             "class C { i32 a; C( bool x ) { if( x ) { a = 1; } else { a = 2; } } };\ni32 main() { C c = C( true ); return 0; "
+             "}",
+             // Every field first, then `this` whole.
+             "class C { i32 a; C() { a = 1; touch(); } void touch() { } };\ni32 main() { C c = C(); return 0; }",
+             // Forwarded through `out`, which is the address-of rule again.
+             "void init( out i32 n ) { n = 1; }\n"
+             "class C { i32 a; C() { init( out a ); } };\ni32 main() { C c = C(); return 0; }",
+             "struct P { i32 x; i32 y; };\n"
+             "class C { P p; C() { p = P { 1, 2 }; p.x = 3; } };\ni32 main() { C c = C(); return 0; }",
+             "class Box<T> { T v; Box( move T x ) { v = move x; } };\ni32 main() { Box<i32> b = Box<i32>( 1 ); return 0; }",
+             // A static is not the instance's, so it is owed nothing and may be read at once.
+             "class C { static i32 made = 0; i32 a; C() { made = made + 1; a = made; } };\n"
+             "i32 main() { C c = C(); return 0; }",
+             // Every field before an early return.
+             "class C { i32 a; C( bool x ) { a = 1; if( x ) { return; } a = 2; } };\ni32 main() { C c = C( true ); return 0; }",
+         } )
+    {
+        const Checked c( source );
+
+        INFO( source << "\n" << c.rendered() );
+        REQUIRE( c.clean() );
+        REQUIRE( c.errors().empty() );
+        REQUIRE( c.reads().empty() );
+        REQUIRE( c.reassigned().empty() );
+    }
 }
 
 } // namespace keel
