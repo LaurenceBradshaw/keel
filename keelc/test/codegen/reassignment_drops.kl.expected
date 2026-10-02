@@ -1,0 +1,486 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Owned;
+struct kl__Holder;
+
+struct kl__Owned
+{
+    uint8_t* kl_p_5;
+};
+
+struct kl__Holder
+{
+    struct kl__Owned kl_b_41;
+};
+
+int32_t kl_dropped_2 = 0;
+
+void* kl_rt_alloc( size_t );
+void  kl_rt_free( void* );
+void* kl_rt_alloc_many( size_t, size_t );
+
+void kl__Owned__R5Owned__ctor( struct kl__Owned* );
+void kl__Owned__dtor( struct kl__Owned* );
+int32_t kl__count__S5Owned( void );
+void kl__Holder__R6Holder__ctor( struct kl__Holder* );
+void kl__reset__S6Holder( struct kl__Holder* );
+void kl__replace__R5Owned( struct kl__Owned* );
+void kl__consume__M5Owned( struct kl__Owned );
+int32_t kl__maybe__4bool( bool );
+int32_t kl__main__( void );
+
+void kl__Owned__R5Owned__ctor( struct kl__Owned* kl_this_1 )
+{
+    uint8_t* kl_t2;
+#line 13 "codegen/reassignment_drops.kl"
+    kl_t2 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 4, sizeof( uint8_t ) );
+    ( *kl_this_1 ).kl_p_5 = kl_t2;
+    return;
+}
+
+void kl__Owned__dtor( struct kl__Owned* kl_this_1 )
+{
+    int32_t kl_t2;
+#line 19 "codegen/reassignment_drops.kl"
+    kl_t2 = kl_dropped_2 + 1;
+    kl_dropped_2 = kl_t2;
+#line 23 "codegen/reassignment_drops.kl"
+    kl_rt_free( ( *kl_this_1 ).kl_p_5 );
+    return;
+}
+
+int32_t kl__count__S5Owned( void )
+{
+    int32_t kl_t0;
+#line 29 "codegen/reassignment_drops.kl"
+    kl_t0 = kl_dropped_2;
+    return kl_t0;
+}
+
+void kl__Holder__R6Holder__ctor( struct kl__Holder* kl_this_1 )
+{
+    struct kl__Owned kl_t2;
+    struct kl__Owned* kl_t3;
+    bool kl_t5;
+#line 40 "codegen/reassignment_drops.kl"
+    kl_t5 = false;
+    kl_t3 = &kl_t2;
+    kl_t5 = true;
+    kl__Owned__R5Owned__ctor( kl_t3 );
+    ( *kl_this_1 ).kl_b_41 = kl_t2;
+    kl_t5 = false;
+    if ( kl_t5 ) kl__Owned__dtor( &kl_t2 );
+    return;
+}
+
+void kl__reset__S6Holder( struct kl__Holder* kl_this_1 )
+{
+    struct kl__Owned kl_t2;
+    struct kl__Owned* kl_t3;
+    bool kl_t5;
+#line 45 "codegen/reassignment_drops.kl"
+    kl_t5 = false;
+    kl_t3 = &kl_t2;
+    kl_t5 = true;
+    kl__Owned__R5Owned__ctor( kl_t3 );
+    kl__Owned__dtor( &( *kl_this_1 ).kl_b_41 );
+    ( *kl_this_1 ).kl_b_41 = kl_t2;
+    kl_t5 = false;
+    if ( kl_t5 ) kl__Owned__dtor( &kl_t2 );
+    return;
+}
+
+void kl__replace__R5Owned( struct kl__Owned* kl_o_1 )
+{
+    struct kl__Owned kl_t2;
+    struct kl__Owned* kl_t3;
+    bool kl_t5;
+#line 51 "codegen/reassignment_drops.kl"
+    kl_t5 = false;
+    kl_t3 = &kl_t2;
+    kl_t5 = true;
+    kl__Owned__R5Owned__ctor( kl_t3 );
+    kl__Owned__dtor( &( *kl_o_1 ) );
+    ( *kl_o_1 ) = kl_t2;
+    kl_t5 = false;
+    if ( kl_t5 ) kl__Owned__dtor( &kl_t2 );
+    return;
+}
+
+void kl__consume__M5Owned( struct kl__Owned kl_o_1 )
+{
+#line 54 "codegen/reassignment_drops.kl"
+    kl__Owned__dtor( &kl_o_1 );
+    return;
+}
+
+int32_t kl__maybe__4bool( bool kl_c_1 )
+{
+    int32_t kl_t0;
+    struct kl__Owned kl_a_2;
+    struct kl__Owned kl_t3;
+    struct kl__Owned* kl_t4;
+    int32_t kl_t6;
+    bool kl_t7;
+    bool kl_t8;
+#line 61 "codegen/reassignment_drops.kl"
+    kl_t7 = false;
+#line 65 "codegen/reassignment_drops.kl"
+    kl_t8 = false;
+#line 61 "codegen/reassignment_drops.kl"
+    kl_t7 = false;
+    if ( kl_c_1 ) goto bb1; else goto bb2;
+    bb1:
+#line 65 "codegen/reassignment_drops.kl"
+    kl_t4 = &kl_t3;
+    kl_t8 = true;
+    kl__Owned__R5Owned__ctor( kl_t4 );
+    if ( kl_t7 ) kl__Owned__dtor( &kl_a_2 );
+    kl_a_2 = kl_t3;
+    kl_t8 = false;
+    kl_t7 = true;
+    if ( kl_t8 ) kl__Owned__dtor( &kl_t3 );
+    goto bb2;
+    bb2:
+#line 68 "codegen/reassignment_drops.kl"
+    kl_t6 = kl__count__S5Owned(  );
+    kl_t0 = kl_t6;
+    if ( kl_t7 ) kl__Owned__dtor( &kl_a_2 );
+    kl_t7 = false;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__Owned kl_a_1;
+    struct kl__Owned* kl_t2;
+    struct kl__Owned kl_t4;
+    struct kl__Owned* kl_t5;
+    int32_t kl_t7;
+    bool kl_t8;
+    int32_t kl_t9;
+    bool kl_t10;
+    struct kl__Owned kl_a_11;
+    struct kl__Owned kl_t12;
+    struct kl__Owned* kl_t13;
+    int32_t kl_t15;
+    bool kl_t16;
+    int32_t kl_t17;
+    bool kl_t18;
+    struct kl__Holder kl_h_19;
+    struct kl__Holder* kl_t20;
+    int32_t kl_t22;
+    bool kl_t23;
+    struct kl__Holder* kl_t24;
+    int32_t kl_t26;
+    bool kl_t27;
+    int32_t kl_t28;
+    bool kl_t29;
+    struct kl__Owned kl_a_30;
+    struct kl__Owned* kl_t31;
+    struct kl__Owned* kl_t33;
+    int32_t kl_t35;
+    bool kl_t36;
+    int32_t kl_t37;
+    bool kl_t38;
+    struct kl__Owned kl_a_39;
+    struct kl__Owned* kl_t40;
+    struct kl__Owned kl_t43;
+    struct kl__Owned* kl_t44;
+    int32_t kl_t46;
+    bool kl_t47;
+    int32_t kl_t48;
+    bool kl_t49;
+    struct kl__Owned kl_a_50;
+    struct kl__Owned* kl_t51;
+    struct kl__Owned kl_t53;
+    int32_t kl_t54;
+    bool kl_t55;
+    int32_t kl_t56;
+    bool kl_t57;
+    bool kl_t58;
+    int32_t kl_t59;
+    bool kl_t60;
+    int32_t kl_t61;
+    bool kl_t62;
+    bool kl_t63;
+    int32_t kl_t64;
+    bool kl_t65;
+    int32_t kl_t66;
+    bool kl_t67;
+    bool kl_t68;
+    bool kl_t69;
+    bool kl_t70;
+    bool kl_t71;
+    bool kl_t72;
+    bool kl_t73;
+    bool kl_t74;
+#line 74 "codegen/reassignment_drops.kl"
+    kl_t68 = false;
+#line 75 "codegen/reassignment_drops.kl"
+    kl_t69 = false;
+#line 90 "codegen/reassignment_drops.kl"
+    kl_t70 = false;
+#line 91 "codegen/reassignment_drops.kl"
+    kl_t71 = false;
+#line 142 "codegen/reassignment_drops.kl"
+    kl_t72 = false;
+#line 144 "codegen/reassignment_drops.kl"
+    kl_t73 = false;
+#line 159 "codegen/reassignment_drops.kl"
+    kl_t74 = false;
+#line 74 "codegen/reassignment_drops.kl"
+    kl_t68 = false;
+    kl_t2 = &kl_a_1;
+    kl_t68 = true;
+    kl__Owned__R5Owned__ctor( kl_t2 );
+#line 75 "codegen/reassignment_drops.kl"
+    kl_t5 = &kl_t4;
+    kl_t69 = true;
+    kl__Owned__R5Owned__ctor( kl_t5 );
+    if ( kl_t68 ) kl__Owned__dtor( &kl_a_1 );
+    kl_a_1 = kl_t4;
+    kl_t69 = false;
+    kl_t68 = true;
+    if ( kl_t69 ) kl__Owned__dtor( &kl_t4 );
+#line 77 "codegen/reassignment_drops.kl"
+    kl_t7 = kl__count__S5Owned(  );
+    kl_t8 = kl_t7 != 1;
+    if ( kl_t8 ) goto bb1; else goto bb2;
+    bb1:
+#line 79 "codegen/reassignment_drops.kl"
+    kl_t0 = 1;
+    if ( kl_t68 ) kl__Owned__dtor( &kl_a_1 );
+    kl_t68 = false;
+    return kl_t0;
+    bb2:
+#line 73 "codegen/reassignment_drops.kl"
+    if ( kl_t68 ) kl__Owned__dtor( &kl_a_1 );
+    kl_t68 = false;
+#line 83 "codegen/reassignment_drops.kl"
+    kl_t9 = kl__count__S5Owned(  );
+    kl_t10 = kl_t9 != 2;
+    if ( kl_t10 ) goto bb3; else goto bb4;
+    bb3:
+#line 85 "codegen/reassignment_drops.kl"
+    kl_t0 = 2;
+    return kl_t0;
+    bb4:
+#line 90 "codegen/reassignment_drops.kl"
+    kl_t70 = false;
+#line 91 "codegen/reassignment_drops.kl"
+    kl_t13 = &kl_t12;
+    kl_t71 = true;
+    kl__Owned__R5Owned__ctor( kl_t13 );
+    if ( kl_t70 ) kl__Owned__dtor( &kl_a_11 );
+    kl_a_11 = kl_t12;
+    kl_t71 = false;
+    kl_t70 = true;
+    if ( kl_t71 ) kl__Owned__dtor( &kl_t12 );
+#line 93 "codegen/reassignment_drops.kl"
+    kl_t15 = kl__count__S5Owned(  );
+    kl_t16 = kl_t15 != 2;
+    if ( kl_t16 ) goto bb5; else goto bb6;
+    bb5:
+#line 95 "codegen/reassignment_drops.kl"
+    kl_t0 = 3;
+    if ( kl_t70 ) kl__Owned__dtor( &kl_a_11 );
+    kl_t70 = false;
+    return kl_t0;
+    bb6:
+#line 89 "codegen/reassignment_drops.kl"
+    if ( kl_t70 ) kl__Owned__dtor( &kl_a_11 );
+    kl_t70 = false;
+#line 99 "codegen/reassignment_drops.kl"
+    kl_t17 = kl__count__S5Owned(  );
+    kl_t18 = kl_t17 != 3;
+    if ( kl_t18 ) goto bb7; else goto bb8;
+    bb7:
+#line 101 "codegen/reassignment_drops.kl"
+    kl_t0 = 4;
+    return kl_t0;
+    bb8:
+#line 105 "codegen/reassignment_drops.kl"
+    kl_t20 = &kl_h_19;
+    kl__Holder__R6Holder__ctor( kl_t20 );
+#line 107 "codegen/reassignment_drops.kl"
+    kl_t22 = kl__count__S5Owned(  );
+    kl_t23 = kl_t22 != 3;
+    if ( kl_t23 ) goto bb9; else goto bb10;
+    bb9:
+#line 109 "codegen/reassignment_drops.kl"
+    kl_t0 = 5;
+    kl__Owned__dtor( &kl_h_19.kl_b_41 );
+    return kl_t0;
+    bb10:
+#line 112 "codegen/reassignment_drops.kl"
+    kl_t24 = &kl_h_19;
+    kl__reset__S6Holder( kl_t24 );
+#line 114 "codegen/reassignment_drops.kl"
+    kl_t26 = kl__count__S5Owned(  );
+    kl_t27 = kl_t26 != 4;
+    if ( kl_t27 ) goto bb11; else goto bb12;
+    bb11:
+#line 116 "codegen/reassignment_drops.kl"
+    kl_t0 = 6;
+    kl__Owned__dtor( &kl_h_19.kl_b_41 );
+    return kl_t0;
+    bb12:
+#line 104 "codegen/reassignment_drops.kl"
+    kl__Owned__dtor( &kl_h_19.kl_b_41 );
+#line 120 "codegen/reassignment_drops.kl"
+    kl_t28 = kl__count__S5Owned(  );
+    kl_t29 = kl_t28 != 5;
+    if ( kl_t29 ) goto bb13; else goto bb14;
+    bb13:
+#line 122 "codegen/reassignment_drops.kl"
+    kl_t0 = 7;
+    return kl_t0;
+    bb14:
+#line 126 "codegen/reassignment_drops.kl"
+    kl_t31 = &kl_a_30;
+    kl__Owned__R5Owned__ctor( kl_t31 );
+#line 127 "codegen/reassignment_drops.kl"
+    kl_t33 = &kl_a_30;
+    kl__replace__R5Owned( kl_t33 );
+#line 129 "codegen/reassignment_drops.kl"
+    kl_t35 = kl__count__S5Owned(  );
+    kl_t36 = kl_t35 != 6;
+    if ( kl_t36 ) goto bb15; else goto bb16;
+    bb15:
+#line 131 "codegen/reassignment_drops.kl"
+    kl_t0 = 8;
+    kl__Owned__dtor( &kl_a_30 );
+    return kl_t0;
+    bb16:
+#line 125 "codegen/reassignment_drops.kl"
+    kl__Owned__dtor( &kl_a_30 );
+#line 135 "codegen/reassignment_drops.kl"
+    kl_t37 = kl__count__S5Owned(  );
+    kl_t38 = kl_t37 != 7;
+    if ( kl_t38 ) goto bb17; else goto bb18;
+    bb17:
+#line 137 "codegen/reassignment_drops.kl"
+    kl_t0 = 9;
+    return kl_t0;
+    bb18:
+#line 142 "codegen/reassignment_drops.kl"
+    kl_t72 = false;
+    kl_t40 = &kl_a_39;
+    kl_t72 = true;
+    kl__Owned__R5Owned__ctor( kl_t40 );
+#line 143 "codegen/reassignment_drops.kl"
+    kl__consume__M5Owned( kl_a_39 );
+    kl_t72 = false;
+#line 144 "codegen/reassignment_drops.kl"
+    kl_t44 = &kl_t43;
+    kl_t73 = true;
+    kl__Owned__R5Owned__ctor( kl_t44 );
+    if ( kl_t72 ) kl__Owned__dtor( &kl_a_39 );
+    kl_a_39 = kl_t43;
+    kl_t73 = false;
+    kl_t72 = true;
+    if ( kl_t73 ) kl__Owned__dtor( &kl_t43 );
+#line 146 "codegen/reassignment_drops.kl"
+    kl_t46 = kl__count__S5Owned(  );
+    kl_t47 = kl_t46 != 8;
+    if ( kl_t47 ) goto bb19; else goto bb20;
+    bb19:
+#line 148 "codegen/reassignment_drops.kl"
+    kl_t0 = 10;
+    if ( kl_t72 ) kl__Owned__dtor( &kl_a_39 );
+    kl_t72 = false;
+    return kl_t0;
+    bb20:
+#line 141 "codegen/reassignment_drops.kl"
+    if ( kl_t72 ) kl__Owned__dtor( &kl_a_39 );
+    kl_t72 = false;
+#line 152 "codegen/reassignment_drops.kl"
+    kl_t48 = kl__count__S5Owned(  );
+    kl_t49 = kl_t48 != 9;
+    if ( kl_t49 ) goto bb21; else goto bb22;
+    bb21:
+#line 154 "codegen/reassignment_drops.kl"
+    kl_t0 = 11;
+    return kl_t0;
+    bb22:
+#line 159 "codegen/reassignment_drops.kl"
+    kl_t74 = false;
+    kl_t51 = &kl_a_50;
+    kl_t74 = true;
+    kl__Owned__R5Owned__ctor( kl_t51 );
+#line 160 "codegen/reassignment_drops.kl"
+    kl_t53 = kl_a_50;
+    kl_t74 = false;
+    if ( kl_t74 ) kl__Owned__dtor( &kl_a_50 );
+    kl_a_50 = kl_t53;
+    kl_t74 = true;
+#line 162 "codegen/reassignment_drops.kl"
+    kl_t54 = kl__count__S5Owned(  );
+    kl_t55 = kl_t54 != 9;
+    if ( kl_t55 ) goto bb23; else goto bb24;
+    bb23:
+#line 164 "codegen/reassignment_drops.kl"
+    kl_t0 = 12;
+    if ( kl_t74 ) kl__Owned__dtor( &kl_a_50 );
+    kl_t74 = false;
+    return kl_t0;
+    bb24:
+#line 158 "codegen/reassignment_drops.kl"
+    if ( kl_t74 ) kl__Owned__dtor( &kl_a_50 );
+    kl_t74 = false;
+#line 168 "codegen/reassignment_drops.kl"
+    kl_t56 = kl__count__S5Owned(  );
+    kl_t57 = kl_t56 != 10;
+    if ( kl_t57 ) goto bb25; else goto bb26;
+    bb25:
+#line 170 "codegen/reassignment_drops.kl"
+    kl_t0 = 13;
+    return kl_t0;
+    bb26:
+#line 173 "codegen/reassignment_drops.kl"
+    kl_t59 = kl__maybe__4bool( false );
+    kl_t60 = kl_t59 != 10;
+    kl_t58 = kl_t60;
+    if ( kl_t58 ) goto bb28; else goto bb27;
+    bb27:
+    kl_t61 = kl__count__S5Owned(  );
+    kl_t62 = kl_t61 != 10;
+    kl_t58 = kl_t62;
+    goto bb28;
+    bb28:
+    if ( kl_t58 ) goto bb29; else goto bb30;
+    bb29:
+#line 175 "codegen/reassignment_drops.kl"
+    kl_t0 = 14;
+    return kl_t0;
+    bb30:
+#line 178 "codegen/reassignment_drops.kl"
+    kl_t64 = kl__maybe__4bool( true );
+    kl_t65 = kl_t64 != 10;
+    kl_t63 = kl_t65;
+    if ( kl_t63 ) goto bb32; else goto bb31;
+    bb31:
+    kl_t66 = kl__count__S5Owned(  );
+    kl_t67 = kl_t66 != 11;
+    kl_t63 = kl_t67;
+    goto bb32;
+    bb32:
+    if ( kl_t63 ) goto bb33; else goto bb34;
+    bb33:
+#line 180 "codegen/reassignment_drops.kl"
+    kl_t0 = 15;
+    return kl_t0;
+    bb34:
+#line 183 "codegen/reassignment_drops.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

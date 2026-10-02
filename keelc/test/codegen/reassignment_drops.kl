@@ -1,0 +1,184 @@
+// Assigning to an owning place destroys what it held first. Every destructor run is counted, each
+// check returns a distinct code, and valgrind sees every buffer freed exactly once.
+class Owned
+{
+    static i32 dropped = 0;
+
+    u8[*] p;
+
+    Owned()
+    {
+        unsafe
+        {
+            p = alloc<u8>( 4 );
+        }
+    }
+
+    ~Owned()
+    {
+        dropped = dropped + 1;
+
+        unsafe
+        {
+            free( p );
+        }
+    }
+
+    static i32 count()
+    {
+        return dropped;
+    }
+};
+
+class Holder
+{
+    Owned b;
+
+    // The first write gives `b` its value: nothing to destroy.
+    Holder()
+    {
+        b = Owned();
+    }
+
+    void reset()
+    {
+        b = Owned();
+    }
+};
+
+void replace( ref Owned o )
+{
+    o = Owned();
+}
+
+void consume( move Owned o )
+{
+}
+
+// Assigned on one path only: neither the assignment nor the scope may destroy what was never there.
+i32 maybe( bool c )
+{
+    Owned a;
+
+    if( c )
+    {
+        a = Owned();
+    }
+
+    return Owned::count();
+}
+
+i32 main()
+{
+    {
+        Owned a = Owned();
+        a       = Owned();
+
+        if( Owned::count() != 1 )
+        {
+            return 1;
+        }
+    }
+
+    if( Owned::count() != 2 )
+    {
+        return 2;
+    }
+
+    // Declared without a value, so the first assignment destroys nothing.
+    {
+        Owned a;
+        a = Owned();
+
+        if( Owned::count() != 2 )
+        {
+            return 3;
+        }
+    }
+
+    if( Owned::count() != 3 )
+    {
+        return 4;
+    }
+
+    {
+        Holder h = Holder();
+
+        if( Owned::count() != 3 )
+        {
+            return 5;
+        }
+
+        h.reset();
+
+        if( Owned::count() != 4 )
+        {
+            return 6;
+        }
+    }
+
+    if( Owned::count() != 5 )
+    {
+        return 7;
+    }
+
+    {
+        Owned a = Owned();
+        replace( ref a );
+
+        if( Owned::count() != 6 )
+        {
+            return 8;
+        }
+    }
+
+    if( Owned::count() != 7 )
+    {
+        return 9;
+    }
+
+    // Moved out, so the next assignment has nothing to destroy.
+    {
+        Owned a = Owned();
+        consume( move a );
+        a = Owned();
+
+        if( Owned::count() != 8 )
+        {
+            return 10;
+        }
+    }
+
+    if( Owned::count() != 9 )
+    {
+        return 11;
+    }
+
+    // Reads the value before anything is destroyed, so it survives to the scope's end.
+    {
+        Owned a = Owned();
+        a       = move a;
+
+        if( Owned::count() != 9 )
+        {
+            return 12;
+        }
+    }
+
+    if( Owned::count() != 10 )
+    {
+        return 13;
+    }
+
+    if( maybe( false ) != 10 || Owned::count() != 10 )
+    {
+        return 14;
+    }
+
+    if( maybe( true ) != 10 || Owned::count() != 11 )
+    {
+        return 15;
+    }
+
+    return 0;
+}

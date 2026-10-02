@@ -159,7 +159,8 @@ enum class Statement_kind : u8
 // 12 bytes there and 24 here, which is worth paying only once 72 are leaving anyway.
 struct Statement
 {
-    Statement_kind kind = Statement_kind::Assign;
+    Statement_kind kind      = Statement_kind::Assign;
+    bool           replacing = false; // Drop only: its place is assigned again.
     Span           span {};
     Place          place {};     // assigned to by Assign, dropped by Drop
     Rvalue         value {};     // Assign only
@@ -218,6 +219,21 @@ struct Function
     // recorded the same way out_parameters is, and for the same reason: the graph does not say.
     bool returns_a_value = false;
 };
+
+inline bool has_deref_projection( const Function& func, const Place& place )
+{
+    for( u32 i = 0; i < place.num_projections; ++i )
+    {
+        const Projection& projection = func.projections[place.first_projection + i];
+
+        if( projection.kind == Projection_kind::Deref )
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
 
 // Constructors for the vocabulary above. Designated initialisers throughout, for three reasons:
 // they leave every field a kind does not mean at its declared default, they name what is being set

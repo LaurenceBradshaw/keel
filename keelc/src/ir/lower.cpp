@@ -126,12 +126,15 @@ private:
     void push_scope();
     void pop_scope( Span span );
     void unwind_to( u32 depth, Span span );
-    void drop_place( Place place, Type_id type, Span span );
+    void drop_place( Place place, Type_id type, Span span, bool replacing = false );
     // Drops what the statement built, in reverse order, and clears the list. Reverse for the same
     // reason locals unwind in reverse: it is the order destructors run in.
     void drop_statement_temporaries( Span span );
     // A call whose callee names a type rather than a function.
     bool is_construction( Node_id id ) const;
+
+    bool initialises_field( const Place& target ) const;
+    bool writes_a_slot( Node_id target ) const;
 
     // Runs a construct with `target`'s address as its receiver. Not an expression: a constructor
     // returns nothing and writes through the pointer it is handed.
@@ -506,7 +509,7 @@ void Lowering::unwind_to( u32 depth, Span span )
     }
 }
 
-void Lowering::drop_place( Place place, Type_id type, Span span )
+void Lowering::drop_place( Place place, Type_id type, Span span, bool replacing )
 {
     if( !owns( type ) )
     {
@@ -520,7 +523,7 @@ void Lowering::drop_place( Place place, Type_id type, Span span )
     {
         if( ast_.kind( member ) == Node_kind::Destructor_decl )
         {
-            builder_.drop( place, span );
+            builder_.drop( place, span, replacing );
             break;
         }
     }
@@ -536,7 +539,10 @@ void Lowering::drop_place( Place place, Type_id type, Span span )
             // Through the instance being dropped, not the enclosing function: the field of a
             // `Box<Buffer>` is declared `T`, and only this instance says what that is.
             drop_place(
-                builder_.field( place, member ), field_type( ast_, types_.table(), type, member, types_.recorded() ), span
+                builder_.field( place, member ),
+                field_type( ast_, types_.table(), type, member, types_.recorded() ),
+                span,
+                replacing
             );
         }
     }
@@ -564,6 +570,21 @@ bool Lowering::is_construction( Node_id id ) const
     const Node_id decl = resolution_.declaration_of( ast_.child( id, 0 ) );
 
     return decl.is_valid() && is_aggregate( ast_.kind( decl ) );
+}
+
+bool Lowering::initialises_field( const Place& target ) const
+{
+    return ast_.kind( declaration_ ) == Node_kind::Constructor_decl && target.local == receiver_ && target.num_projections == 2;
+}
+
+bool Lowering::writes_a_slot( Node_id target ) const
+{
+    if( ast_.kind( target ) == Node_kind::Index_expr || ast_.kind( target ) == Node_kind::Unary_expr )
+    {
+        return true;
+    }
+
+    return false;
 }
 
 void Lowering::lower_construction( Place target, Node_id call_expr )
@@ -1612,23 +1633,33 @@ void Lowering::lower_assign( Node_id id )
     const Place      target = lower_place( ast_.child( id, 0 ) );
     const Operand    value  = lower_expression( ast_.child( id, 1 ) );
     const Token_kind op     = static_cast<Token_kind>( ast_.aux( id ) );
+    // The *target's* type, not type_of( id ): the checker records nothing on a statement, so that
+    // would be an invalid Type_id. It is also the type the checker measured the value against.
+    const Type_id type = type_of( ast_.child( id, 0 ) );
     if( op == Token_kind::Equal )
     {
         // Same reason as an initialiser: an owning value is never copied, or both copies would be
         // dropped. A compound assignment cannot reach here for one - arithmetic on an owning type
         // has no meaning.
-        builder_.assign( target, use( moved_if_owning( value ) ), ast_.span( id ) );
+        Operand source = moved_if_owning( value );
+
+        // The old value is destroyed first, after the new one is read: `o = move o` goes through a
+        // temporary so the drop cannot reach it.
+        if( owns( type ) && !initialises_field( target ) && !writes_a_slot( ast_.child( id, 0 ) ) )
+        {
+            if( source.kind != Operand_kind::Constant && !source.place.is_global() && source.place.local == target.local )
+            {
+                source = move( builder_.place( builder_.into_temp( use( source ), type, span ) ), type );
+            }
+
+            drop_place( target, type, span, true );
+        }
+
+        builder_.assign( target, use( source ), span );
     }
     else
     {
-        // `x += 3` is `x = x + 3`: read the target, combine, store back.
-        //
-        // The operation happens at the *target's* type, not at type_of( id ) - the
-        // checker records nothing on a statement, so that would be an invalid Type_id. It is
-        // also the type the checker measured the value against, so the two agree by
-        // construction.
-        const Type_id type = type_of( ast_.child( id, 0 ) );
-
+        // `x += 3` is `x = x + 3`: read the target, combine, store back, at the target's type.
         const bool offsets = types_.table().is_many_pointer( type );
 
         const Operand left  = copy( target, type );

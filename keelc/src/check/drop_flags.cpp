@@ -55,6 +55,7 @@ std::vector<bool> locals_needing_flags( const Function& func )
 
     // Intersected with the drops, which is what turns "was moved" into "needs a flag".
     std::vector<bool> dropped( func.locals.size(), false );
+    std::vector<bool> replaced( func.locals.size(), false );
 
     for( const Statement& statement : func.statements )
     {
@@ -64,12 +65,17 @@ std::vector<bool> locals_needing_flags( const Function& func )
         if( statement.kind == Statement_kind::Drop && !statement.place.is_global() )
         {
             dropped[statement.place.local.v] = true;
+
+            if( statement.replacing && !has_deref_projection( func, statement.place ) )
+            {
+                replaced[statement.place.local.v] = true;
+            }
         }
     }
 
     for( std::size_t i = 0; i < moved.size(); ++i )
     {
-        moved[i] = moved[i] && dropped[i];
+        moved[i] = ( moved[i] && dropped[i] ) || replaced[i];
     }
 
     return moved;
@@ -268,6 +274,8 @@ void elaborate_drops( Function& func, const Flag_vocabulary& vocabulary )
 #ifdef ENABLE_UNIT_TESTS
 #include <catch2/catch_test_macros.hpp>
 
+#include <fmt/format.h>
+
 #include "common/diagnostics.h"
 #include "common/source_manager.h"
 #include "ir/lower.h"
@@ -344,6 +352,21 @@ struct Elaborated
     std::string text( std::size_t index )
     {
         return print( functions[index], ast, types.table(), literals, interner );
+    }
+
+    std::string text_of( std::string_view name )
+    {
+        const std::string header = fmt::format( "fn {} {{", name );
+
+        for( std::size_t i = 0; i < functions.size(); ++i )
+        {
+            if( std::string rendered = text( i ); rendered.starts_with( header ) )
+            {
+                return rendered;
+            }
+        }
+
+        return {};
     }
 };
 
@@ -443,6 +466,107 @@ TEST_CASE( "drop_flags_leaves_every_function_verifiable", "[check][drop]" )
         INFO( print( function, p.ast, p.types.table(), p.literals, p.interner ) );
         REQUIRE( verify( function ).empty() );
     }
+}
+
+// Assignment replaces a value, so the old one is destroyed first.
+TEST_CASE( "drop_flags_drops_a_local_before_reassigning_it", "[check][drop]" )
+{
+    Elaborated p( std::string( k_owning ) + "i32 main() { Owned o = Owned( 1 ); o = Owned( 2 ); return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.text_of( "main" );
+
+    INFO( text );
+    REQUIRE( count( text, "drop _1" ) == 2 ); // the old value, then the scope's
+    REQUIRE( text.find( "drop _1" ) < text.find( "_1 = move" ) );
+}
+
+// Declared without a value, so the first assignment has nothing to destroy, and the drop before it
+// must not run.
+TEST_CASE( "drop_flags_guards_the_drop_before_a_first_assignment", "[check][drop]" )
+{
+    Elaborated p( std::string( k_owning ) + "i32 main() { Owned o; o = Owned( 1 ); return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.text_of( "main" );
+
+    INFO( text );
+    REQUIRE( count( text, "drop _1" ) == 2 );
+    REQUIRE( count( text, "drop _1 if _" ) == 2 );
+}
+
+// Assigned on one path only, so the scope's drop is conditional too, though nothing was moved.
+TEST_CASE( "drop_flags_guards_a_local_assigned_on_some_paths", "[check][drop]" )
+{
+    Elaborated p(
+        std::string( k_owning ) + "i32 run( bool c ) { Owned o; if ( c ) { o = Owned( 1 ); } return 0; }\n"
+                                  "i32 main() { return run( true ); }"
+    );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.text_of( "run" );
+
+    INFO( text );
+    REQUIRE( count( text, "drop _2" ) == count( text, "drop _2 if _" ) );
+}
+
+// `o = move o` must not destroy the value it is about to read.
+TEST_CASE( "drop_flags_reads_a_self_move_before_dropping", "[check][drop]" )
+{
+    Elaborated p( std::string( k_owning ) + "i32 main() { Owned o = Owned( 1 ); o = move o; return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.text_of( "main" );
+
+    INFO( text );
+    REQUIRE( text.find( "_1 = move _1" ) == std::string::npos );
+    REQUIRE( text.find( "= move _1" ) < text.find( "drop _1" ) );
+}
+
+// A field outside a constructor and a `ref` parameter's referent both hold a value already.
+TEST_CASE( "drop_flags_drops_a_projection_before_reassigning_it", "[check][drop]" )
+{
+    Elaborated p(
+        std::string( k_owning ) + "class Holder { Owned b; Holder() { b = Owned( 1 ); } void reset() { b = Owned( 2 ); } };\n"
+                                  "void put( ref Owned o ) { o = Owned( 3 ); }\n"
+                                  "i32 main() { return 0; }"
+    );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string reset = p.text_of( "reset" );
+    const std::string put   = p.text_of( "put" );
+
+    INFO( reset );
+    INFO( put );
+    REQUIRE( reset.find( "drop (*_1).b" ) < reset.find( "(*_1).b = move" ) );
+    REQUIRE( put.find( "drop (*_1)" ) < put.find( "(*_1) = move" ) );
+}
+
+// A constructor's first write to a field is what gives it a value, so there is nothing to destroy.
+TEST_CASE( "drop_flags_does_not_drop_a_field_a_constructor_initialises", "[check][drop]" )
+{
+    Elaborated p(
+        std::string( k_owning ) + "class Holder { Owned b; Holder() { b = Owned( 1 ); } };\n"
+                                  "i32 main() { return 0; }"
+    );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.text_of( "Holder" );
+
+    INFO( text );
+    REQUIRE( text.find( "drop (*_1)" ) == std::string::npos );
 }
 
 // A temporary built in one arm of a conditional has no storage_live, so nothing on the other arm's

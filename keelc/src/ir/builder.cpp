@@ -116,9 +116,9 @@ void Builder::assign( Place target, Rvalue value, Span span )
     push_statement( Statement { .kind = Statement_kind::Assign, .span = span, .place = target, .value = value } );
 }
 
-void Builder::drop( Place place, Span span )
+void Builder::drop( Place place, Span span, bool replacing )
 {
-    push_statement( Statement { .kind = Statement_kind::Drop, .span = span, .place = place } );
+    push_statement( Statement { .kind = Statement_kind::Drop, .replacing = replacing, .span = span, .place = place } );
 }
 
 void Builder::storage_live( Local_id local, Span span )
