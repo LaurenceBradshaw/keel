@@ -2022,7 +2022,7 @@ bool Parser::scan_type_arguments()
     const bool generic =
         depth == 0 && ( check( Token_kind::Colon_colon ) || check( Token_kind::L_paren ) || check( Token_kind::Semicolon ) ||
                         check( Token_kind::Comma ) || check( Token_kind::R_paren ) || check( Token_kind::R_bracket ) ||
-                        check( Token_kind::R_brace ) );
+                        check( Token_kind::R_brace ) || check( Token_kind::Dot ) );
 
     pos_ = saved;
     return generic;
@@ -2844,8 +2844,11 @@ Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing )
             // they are carried on the path instead - a static call has no receiver to read them off,
             // which makes this the only place they can come from. The trailing `( 7 )` is then an
             // ordinary call over the path, handled by the postfix branch at the top of this loop.
-            if( check( Token_kind::Colon_colon ) )
+            if( check( Token_kind::Colon_colon ) || check( Token_kind::Dot ) )
             {
+                const bool is_dot   = check( Token_kind::Dot );
+                const Span dot_span = is_dot ? peek().span : Span {};
+
                 advance();
 
                 const Symbol_id scoped = expect_member_name();
@@ -2854,6 +2857,19 @@ Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing )
                 {
                     left = error_node( Span::merge( ast_.span( left ), previous().span ) );
                     continue;
+                }
+
+                if( is_dot )
+                {
+                    error_at(
+                        dot_span,
+                        "a type's members are reached with `::`",
+                        fmt::format(
+                            "write `{}::{}`",
+                            sm_.text( Span::merge( ast_.span( left ), ast_.span( types ) ) ),
+                            sm_.text( previous().span )
+                        )
+                    );
                 }
 
                 left = ast_.add(
@@ -8619,6 +8635,59 @@ TEST_CASE( "parser_parses_a_scoped_call_on_a_generic_type", "[parse][static][gen
     SECTION( "and a comparison is still a comparison" )
     {
         const Parsed p( "i32 main() { i32 a = 1; i32 b = 2; if( a < b ) { return 1; } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::Path_expr ).is_valid() );
+    }
+}
+
+// `list<u8>.with_capacity( 4 )`: one error at the `.`, recovered as the `::` path it meant.
+TEST_CASE( "parser_refuses_dot_after_type_arguments", "[parse][static][generic]" )
+{
+    SECTION( "names the `::` spelling and points at the `.`" )
+    {
+        const Parsed p( "struct Box<T> { T v; static Box<T> of( T x ) { return Box { x }; } };\n"
+                        "i32 main() { Box<i32> b = Box<i32>.of( 7 ); return b.v; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "write `Box<i32>::of`" ) != std::string::npos );
+        REQUIRE( p.errors().find( "t.kl:2:35" ) != std::string::npos );
+
+        const Node_id path = find_first( p.ast(), p.child( p.root(), 1 ), Node_kind::Path_expr );
+
+        REQUIRE( path.is_valid() );
+        REQUIRE( p.text( path ) == "Box<i32>.of" );
+        REQUIRE( p.kind( p.child( path, 1 ) ) == Node_kind::Type_arg_list );
+        REQUIRE( find_first( p.ast(), p.child( p.root(), 1 ), Node_kind::Call_expr ).is_valid() );
+    }
+
+    // The `>>` that closes two levels is followed by the `.` just the same.
+    SECTION( "after nested type arguments" )
+    {
+        const Parsed p( "struct Box<T> { T v; static Box<T> of( T x ) { return Box { x }; } };\n"
+                        "i32 main() { Box<Box<i32>>.of( Box<i32>::of( 7 ) ); return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "write `Box<Box<i32>>::of`" ) != std::string::npos );
+    }
+
+    // The missing name is the error; the `.` is not reported on top of it.
+    SECTION( "a missing member name is reported once" )
+    {
+        const Parsed p( "struct Box<T> { T v; };\ni32 main() { Box<i32>.( 7 ); return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "write `" ) == std::string::npos );
+    }
+
+    // Field access on an ordinary value is untouched.
+    SECTION( "and `.` after a comparison operand is still field access" )
+    {
+        const Parsed p( "struct P { i32 x; };\ni32 main( P a, P b ) { if( a.x < b.x ) { return 1; } return 0; }" );
 
         INFO( p.errors() );
         REQUIRE_FALSE( p.has_errors() );

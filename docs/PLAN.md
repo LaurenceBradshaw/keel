@@ -5630,10 +5630,13 @@ reached in its first hour. Both modules check, build and run clean under valgrin
   matching `visit_assign`. The `T T`, `public:` and missing-package cascades remain, none scheduled.
   Tests: `parser_for_header_recovers_at_its_own_paren`, a `type_checker_checks_increment` section;
   golden `sema/errors_for_header`.
-- **`list<u8>.with_capacity( n )` gives three wrong errors**: *`list` is a type, not a value*, *`u8`
-  is not declared*, *expected an expression, found `.`*. `scan_type_arguments` does not accept `.`
-  after the closing `>`, though `.` cannot begin a comparison's right operand either, so the
-  generic reading is certain. One error belongs there: a static member is named with `::`.
+- ~~**`list<u8>.with_capacity( n )` gives three wrong errors**~~ **Done (2026-10-03).** It reported
+  *`list` is a type, not a value*, *`u8` is not declared*, *expected an expression, found `.`*.
+  `scan_type_arguments` now accepts `.` after the closing `>` (`.` cannot begin a comparison's right
+  operand, so the generic reading is certain), and the scoped-path branch takes `.` as it takes
+  `::`: one error at the `.`, *a type's members are reached with `::`*, help *write
+  `list<u8>::with_capacity`*, recovered as the `Path_expr` it meant. A missing member name reports
+  only that. Test: `parser_refuses_dot_after_type_arguments`.
 - Prefix `++i` is the §15 debt *decide it* (D12), met for real: written by habit in a `for`.
   **Decided the same day: refused**, with an error that says to write `i++`. **Done (2026-10-03)**
   in statement position and as a `for` update (`parse_prefix_increment_stmt`): *`++` is written
