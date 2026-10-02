@@ -1068,6 +1068,20 @@ Node_id Parser::parse_aggregate_decl()
             );
         }
 
+        if( wrote_access && check( Token_kind::Colon ) )
+        {
+            advance(); // consume the `:`
+            if( is_class )
+            {
+                error_at(
+                    Span::merge( access_span, previous().span ),
+                    fmt::format( "`{}` is written on each member, not as a label", wrote_public ? "public" : "private" ),
+                    fmt::format( "write `{}` before each member it should cover", wrote_public ? "public" : "private" )
+                );
+            }
+            continue;
+        }
+
         // Consumed before the triage below, which starts by looking for a type name: left in place
         // it would be read as one, and the member would parse as a field called `static`.
         const Span static_span = peek().span;
@@ -8638,6 +8652,81 @@ TEST_CASE( "parser_reads_a_member_s_access", "[parse][access]" )
 
         INFO( p.errors() );
         REQUIRE( p.has_errors() );
+    }
+}
+
+// A section label is reported once, and the members after it parse as if it were absent.
+TEST_CASE( "parser_refuses_an_access_label", "[parse][access]" )
+{
+    SECTION( "`public:` is one error naming the keyword" )
+    {
+        const Parsed p( "class C { public: i32 n; i32 get() { return n; } };" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "`public` is written on each member, not as a label" ) != std::string::npos );
+        REQUIRE( p.errors().find( "write `public` before each member it should cover" ) != std::string::npos );
+        REQUIRE( p.errors().find( "t.kl:1:11" ) != std::string::npos );
+    }
+
+    SECTION( "the members after it keep their shape and their default access" )
+    {
+        const Parsed p( "class C { public: i32 n; i32 get() { return n; } };" );
+
+        const Node_id decl   = find_first( p.ast(), p.root(), Node_kind::Class_decl );
+        const Node_id field  = find_first( p.ast(), decl, Node_kind::Field_decl );
+        const Node_id method = find_first( p.ast(), decl, Node_kind::Method_decl );
+
+        REQUIRE( p.ast().members( decl ).size() == 2 );
+        REQUIRE( field.is_valid() );
+        REQUIRE( p.text( p.child( field, 0 ) ) == "i32" );
+        REQUIRE( p.ast().access( field ) == Access::Private );
+        REQUIRE( method.is_valid() );
+        REQUIRE( p.ast().access( method ) == Access::Public );
+    }
+
+    SECTION( "`private:` names its own spelling" )
+    {
+        const Parsed p( "class C { i32 get() { return 0; } private: i32 n; };" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "`private` is written on each member, not as a label" ) != std::string::npos );
+        REQUIRE( p.errors().find( "write `private` before each member it should cover" ) != std::string::npos );
+    }
+
+    SECTION( "each label is its own error" )
+    {
+        const Parsed p( "class C { public: i32 get() { return 0; } private: i32 n; };" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 2 );
+
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Class_decl );
+        REQUIRE( p.ast().members( decl ).size() == 2 );
+    }
+
+    // A struct already refuses the keyword itself, which says everything the label error would.
+    SECTION( "a struct reports the keyword, not the label" )
+    {
+        const Parsed p( "struct P { public: i32 x; };" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "a `struct` has no private members" ) != std::string::npos );
+        REQUIRE( p.errors().find( "not as a label" ) == std::string::npos );
+
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Struct_decl );
+        REQUIRE( p.ast().members( decl ).size() == 1 );
+    }
+
+    // Unchanged: a marker on the member itself is not a label.
+    SECTION( "a marker followed by a member is quiet" )
+    {
+        const Parsed p( "class C { public i32 n; };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
     }
 }
 

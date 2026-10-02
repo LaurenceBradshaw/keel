@@ -5653,13 +5653,35 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      `parse_expression` takes the postfix one unless its caller passes `increment_follows`, which
      only `parse_expression_stmt`'s first operand does, so `i++;` and a `for` update are untouched.
      Test: `parser_refuses_increment_as_a_value`.
-  2. **`public:` in a class body** is five errors at the `:` (see §15's fuzz list). Should be one,
-     naming the modifier on each member.
+  2. ~~**`public:` in a class body.**~~ **Done (2026-10-03).** Was six errors at the `:`: the
+     keyword was taken as the member's marker, the `:` met `parse_field_decl` twice. Now the member
+     loop of `parse_aggregate_decl` consumes a marker followed by `:`, reports *`public` is written
+     on each member, not as a label*, help *write `public` before each member it should cover*,
+     and adds no member, so later members keep their default access. A struct reports only its
+     existing *no private members*. Test: `parser_refuses_an_access_label`.
   3. **`T T` inside type arguments.** `Box<Box<T T>>* link;` reports *expected `>`* twice at one
      place and *expected `;`* at the `>>`, closes the type early, and takes the second `T` as the
      field's name (§15, *a broken argument inside a generic cycle*).
   4. **A missing package** is 31 errors for one absent `--package` (§15's fuzz list): every
      `kl::` name after *there is no package `kl`* is reported again.
+  5. **A member that is not one.** Found by a sweep of 38 bad lines in a class body (2026-10-03).
+     The member loop of `parse_aggregate_decl` has no recovery boundary: anything that does not
+     open a member goes to `parse_field_decl`, which reports *expected an identifier* twice and
+     *expected `;`*, makes no progress, and the loop's one-token skip repeats that per token.
+     `protected:` 5, `42;` 2, `+ - *;` 11, `return 1;` 5, `if( true ) { }` 24, `class D { i32 z; };`
+     16, `template<typename T> ...` 11, a stray `;` 2, `public public` 3. A field that goes wrong
+     after its name - `i32 a = 3;` 6, `i32 a, b;` 5, `i32 a[4];` 12 - does the same from there, and
+     `virtual i32 f() { ... }` / `mutable i32 a;` become a field named `i32`, so sema then says
+     *`i32` is not a type* at every later member. Should be one error per bad member and a skip to
+     the member's end (its `;`, or past a balanced `{ }`, or before the class's `}`), the failed
+     field becoming an Error node.
+  6. **A method or constructor without its body.** `i32 f();` and `i32 f() const;` in a class
+     report *expected `{`* and then parse the rest of the class as statements: 8 errors, every
+     later member lost, and *`C` has no fields*. The top level already says *Keel has no forward
+     declarations*; a member should get the same one error. `... const override { }` (5) and
+     `C() : a( 1 ) { }` (2) are the same entry point: whatever stands where `{` should be.
+  7. Left alone: a stray `};` mid-class, and an unclosed `(` or `{` inside a member, end the class
+     where the author did not mean to; a parser cannot know better.
 
 ### M7 slice: access control - done (2026-09-25)
 
@@ -7249,10 +7271,10 @@ about debts *between* them, which is the gap this list cannot see.
     "`kl` is not declared", 6 "`::` needs the name of a type" and 10 "no module of `kl` that this
     file imports declares ...". A package that is not there should be one error (scheduled 2026-10-03, fourth of the remaining cascades).
 
-- **A C++ access label is six errors (found 2026-10-01).** `public:` on a line of its own in a
+- ~~**A C++ access label is six errors (found 2026-10-01).** `public:` on a line of its own in a
   class body reports "expected an identifier" four times and "expected `;`" twice, all at the `:`.
-  One error naming Keel's spelling, a modifier on each member, is what it should be. Scheduled
-  2026-10-03, second of the remaining cascades.
+  One error naming Keel's spelling, a modifier on each member, is what it should be.~~ **Done
+  (2026-10-03)**, second of the remaining cascades.
 
 - ~~**`void*` type-checks, though D37 says Keel has none (found 2026-09-29).** `void* q = nullptr;`
   is accepted without a word, and nothing stops `*q`. `void[*]` is refused from the start; decide
