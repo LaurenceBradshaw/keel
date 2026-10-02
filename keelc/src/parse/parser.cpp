@@ -70,6 +70,7 @@ private:
     // Panic-mode recovery: skip to something that plausibly starts a new statement, so one mistake
     // does not cascade.
     void synchronise();
+    void skip_past_closing_paren();
 
     // A failed rule returns this rather than an invalid Node_id, so the tree stays well formed and
     // arity stays fixed.
@@ -154,6 +155,7 @@ private:
     Node_id parse_return_stmt();
     Node_id parse_var_decl();
     Node_id parse_expression_stmt( bool consume_semicolon = true );
+    Node_id parse_prefix_increment_stmt( bool consume_semicolon );
 
     Node_id parse_if_stmt();
     Node_id parse_while_stmt();
@@ -583,6 +585,29 @@ void Parser::synchronise()
 
         default:
             break;
+        }
+
+        advance();
+    }
+}
+
+void Parser::skip_past_closing_paren()
+{
+    u32 depth = 1;
+    while( !at_end() && !check( Token_kind::L_brace ) && !check( Token_kind::R_brace ) )
+    {
+        if( check( Token_kind::L_paren ) )
+        {
+            ++depth;
+        }
+        else if( check( Token_kind::R_paren ) )
+        {
+            --depth;
+            if( depth == 0 )
+            {
+                advance();
+                return;
+            }
         }
 
         advance();
@@ -2290,7 +2315,8 @@ Node_id Parser::parse_statement()
 
     // Anything that can begin an expression becomes an expression statement; D15 then decides
     // whether it is one with an effect.
-    if( can_start_expression() )
+    // `++` and `--` are only accepted to be later refused. Keel has no prefix increment operators.
+    if( can_start_expression() || check( Token_kind::Plus_plus ) || check( Token_kind::Minus_minus ) )
     {
         return parse_expression_stmt();
     }
@@ -2369,6 +2395,11 @@ Node_id Parser::parse_var_decl()
 
 Node_id Parser::parse_expression_stmt( bool consume_semicolon )
 {
+    if( check( Token_kind::Plus_plus ) || check( Token_kind::Minus_minus ) )
+    {
+        return parse_prefix_increment_stmt( consume_semicolon );
+    }
+
     const Span    start = peek().span;
     const Node_id expr  = parse_expression( 0 );
 
@@ -2443,6 +2474,32 @@ Node_id Parser::parse_expression_stmt( bool consume_semicolon )
     return ast_.add( kind, Span::merge( start, previous().span ), aux, children );
 }
 
+Node_id Parser::parse_prefix_increment_stmt( bool consume_semicolon )
+{
+    const Token op = advance(); // consume ++ or --
+
+    const Span    start   = previous().span;
+    const Node_id operand = parse_expression( k_unary_power );
+
+    if( ast_.kind( operand ) != Node_kind::Error )
+    {
+        error_at(
+            Span::merge( start, previous().span ),
+            fmt::format( "`{}` is written after the variable", token_kind_spelling( op.kind ) ),
+            fmt::format( "write `{}{}`", sm_.text( ast_.span( operand ) ), token_kind_spelling( op.kind ) )
+        );
+    }
+
+    if( consume_semicolon )
+    {
+        expect( Token_kind::Semicolon );
+    }
+
+    return ast_.add(
+        Node_kind::Increment_stmt, Span::merge( start, previous().span ), static_cast<u32>( op.kind ), { operand }
+    );
+}
+
 Node_id Parser::parse_if_stmt()
 {
     assert( check_keyword( Keyword::If ) );
@@ -2486,6 +2543,7 @@ Node_id Parser::parse_for_stmt()
     const Span start = peek().span;
     advance();
     expect( Token_kind::L_paren );
+    const std::size_t errors_before = diags_.error_count();
 
     // Init. Both parse_var_decl and parse_expression_stmt consume their own `;` which is exactly
     // the first semicolon of the header - so neither needs changing
@@ -2518,7 +2576,14 @@ Node_id Parser::parse_for_stmt()
         update = parse_expression_stmt( false );
     }
 
-    expect( Token_kind::R_paren );
+    if( !match( Token_kind::R_paren ) )
+    {
+        if( diags_.error_count() == errors_before )
+        {
+            error_expected( Token_kind::R_paren );
+        }
+        skip_past_closing_paren();
+    }
     const Node_id body = parse_block();
 
     return ast_.add( Node_kind::For_stmt, Span::merge( start, previous().span ), 0, { init, condition, update, body } );
@@ -6518,6 +6583,121 @@ TEST_CASE( "parser_for_statement", "[parse]" )
     {
         const Parsed p( "i32 main() { for( ; ; ) y++; }" );
         REQUIRE( p.has_errors() );
+    }
+}
+
+// One mistake in a header is one error: the header resynchronises at its own `)`, so the body is
+// still the body and the `}` that closes it is not taken for the function's.
+TEST_CASE( "parser_for_header_recovers_at_its_own_paren", "[parse]" )
+{
+    SECTION( "a stray token before the `)`" )
+    {
+        const Parsed p( "i32 main() { for( ; ; i++ j ) { y = 1; } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "expected `)`, found `j`" ) != std::string::npos );
+
+        const Node_id stmt = first_statement( p );
+        REQUIRE( p.kind( stmt ) == Node_kind::For_stmt );
+        REQUIRE( p.kind( p.child( stmt, 2 ) ) == Node_kind::Increment_stmt );
+        REQUIRE( p.kind( p.child( stmt, 3 ) ) == Node_kind::Block );
+        REQUIRE( p.text( p.child( stmt, 3 ) ) == "{ y = 1; }" );
+    }
+
+    // The skip counts nesting: stopping at the call's `)` would leave the header's for the body.
+    SECTION( "the skip passes nested parentheses" )
+    {
+        const Parsed p( "i32 main() { for( ; ; i++ f( a ) ) { y = 1; } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.text( p.child( first_statement( p ), 3 ) ) == "{ y = 1; }" );
+    }
+
+    // A header with no `)` at all ends where its body begins.
+    SECTION( "a missing `)` stops at the body's `{`" )
+    {
+        const Parsed p( "i32 main() { for( ; ; i++ { y = 1; } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.text( p.child( first_statement( p ), 3 ) ) == "{ y = 1; }" );
+    }
+
+    // A clause that already reported is not followed by "expected `)`" for the same mistake.
+    SECTION( "a clause's own error is the only one" )
+    {
+        const Parsed p( "i32 main() { for( ; ; i += ; ) { y = 1; } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "expected an expression, found `;`" ) != std::string::npos );
+        REQUIRE( p.text( p.child( first_statement( p ), 3 ) ) == "{ y = 1; }" );
+    }
+
+    // What follows the loop is still inside the function.
+    SECTION( "the statement after the loop survives" )
+    {
+        const Parsed p( "i32 main() { for( ; ; i++ j ) { } return 0; }" );
+
+        INFO( p.errors() );
+        const Node_id body = p.child( p.child( p.root(), 0 ), 2 );
+        REQUIRE( p.children( body ).size() == 2 );
+        REQUIRE( p.kind( p.child( body, 1 ) ) == Node_kind::Return_stmt );
+    }
+}
+
+// D12: prefix `++` is refused with its postfix spelling, and recovered as that spelling so nothing
+// after it reports again.
+TEST_CASE( "parser_refuses_prefix_increment", "[parse]" )
+{
+    SECTION( "as a statement" )
+    {
+        const Parsed p( "i32 main() { ++i; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "write `i++`" ) != std::string::npos );
+
+        const Node_id stmt = first_statement( p );
+        REQUIRE( p.kind( stmt ) == Node_kind::Increment_stmt );
+        REQUIRE( static_cast<Token_kind>( p.aux( stmt ) ) == Token_kind::Plus_plus );
+        REQUIRE( p.kind( p.child( stmt, 0 ) ) == Node_kind::Name_expr );
+    }
+
+    SECTION( "`--` names its own spelling" )
+    {
+        const Parsed p( "i32 main() { --i; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "write `i--`" ) != std::string::npos );
+        REQUIRE( static_cast<Token_kind>( p.aux( first_statement( p ) ) ) == Token_kind::Minus_minus );
+    }
+
+    // The help quotes the operand's source text, not just a name.
+    SECTION( "a member operand" )
+    {
+        const Parsed p( "i32 main() { ++p.x; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "write `p.x++`" ) != std::string::npos );
+    }
+
+    // The habit this exists for.
+    SECTION( "as a `for` update" )
+    {
+        const Parsed p( "i32 main() { for( i32 i = 0; i < 3; ++i ) { y = y + i; } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "write `i++`" ) != std::string::npos );
+
+        const Node_id stmt = first_statement( p );
+        REQUIRE( p.kind( p.child( stmt, 2 ) ) == Node_kind::Increment_stmt );
+        REQUIRE( p.text( p.child( stmt, 3 ) ) == "{ y = y + i; }" );
     }
 }
 

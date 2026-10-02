@@ -486,7 +486,7 @@ void Statements::visit_increment( Node_id id )
     if( !places_.is_assignable( operand ) )
     {
         // Same split as visit_assign: infer_name already covers an unresolved name and a function.
-        if( ast_.kind( operand ) != Node_kind::Name_expr )
+        if( ast_.kind( operand ) != Node_kind::Name_expr && ast_.kind( operand ) != Node_kind::Error )
         {
             reporter_.error_at( ast_.span( operand ), fmt::format( "`{}` needs a variable", token_kind_spelling( op ) ) );
         }
@@ -791,6 +791,15 @@ TEST_CASE( "type_checker_checks_increment", "[sema][types]" )
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
+    }
+
+    // The parser already reported the operand; "needs a variable" would be a second error for it.
+    SECTION( "an operand that failed to parse is not reported again" )
+    {
+        const Typed p( "i32 main() { ( ) ++; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
     }
 }
 

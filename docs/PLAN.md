@@ -5621,17 +5621,26 @@ reached in its first hour. Both modules check, build and run clean under valgrin
   checked per instantiation, like every pass after lowering, so `list() {}` in an unused class is
   not reported until something builds a `list<T>`. Tests: four `assign_check_*` constructor cases;
   golden `sema/errors_constructor_fields`.
-- **One bad `for` header takes the class's fields with it.** `for( u64 i = 0; i < count; ++i )`
-  reports *expected `{`, found `i`*, and recovery then closes the method's body at the wrong `}`.
-  The trailing `private` fields land outside the class, and every use of them is *not declared*: 54
-  errors for one token. The `for` header should resynchronise at its own `)`. The same family as the
-  `T T`, `public:` and missing-package cascades, none scheduled.
+- ~~**One bad `for` header takes the class's fields with it.**~~ **Done (2026-10-03).**
+  `for( u64 i = 0; i < count; ++i )` reported *expected `{`, found `i`*, and recovery then closed
+  the method's body at the wrong `}`: 54 errors for one token. The header now resynchronises at its
+  own `)` (`skip_past_closing_paren`, counting nesting, stopping unconsumed at `{`, `}` or end of
+  file), and reports *expected `)`* only if no clause has already reported. Sema's
+  `visit_increment` no longer reports *needs a variable* on an operand the parser already rejected,
+  matching `visit_assign`. The `T T`, `public:` and missing-package cascades remain, none scheduled.
+  Tests: `parser_for_header_recovers_at_its_own_paren`, a `type_checker_checks_increment` section;
+  golden `sema/errors_for_header`.
 - **`list<u8>.with_capacity( n )` gives three wrong errors**: *`list` is a type, not a value*, *`u8`
   is not declared*, *expected an expression, found `.`*. `scan_type_arguments` does not accept `.`
   after the closing `>`, though `.` cannot begin a comparison's right operand either, so the
   generic reading is certain. One error belongs there: a static member is named with `::`.
 - Prefix `++i` is the §15 debt *decide it* (D12), met for real: written by habit in a `for`.
-  **Decided the same day: refused**, with an error that says to write `i++`.
+  **Decided the same day: refused**, with an error that says to write `i++`. **Done (2026-10-03)**
+  in statement position and as a `for` update (`parse_prefix_increment_stmt`): *`++` is written
+  after the variable*, help *write `p.x++`* quoting the operand, recovered as the postfix
+  `Increment_stmt` so nothing reports twice. In expression position (`k = ++i`) it is still
+  *expected an expression, found `++`*: "write `i++`" would be wrong there, since `++` is a
+  statement. Test: `parser_refuses_prefix_increment`.
 
 ### M7 slice: access control - done (2026-09-25)
 
@@ -7816,7 +7825,7 @@ All five above are **scheduled to close M8 (2026-10-01)**: see M8's row.
   4294967295 rather than an error, because both literals legitimately fit `u32`
   and nothing folds the subtraction. Catching it needs either constant folding or
   the §12 overflow decision, and is the same question either way.
-- Prefix `++` is unreachable — `can_start_expression` rejects it, so `++i;` says
+- ~~Prefix `++` is unreachable~~ **Done (2026-10-03)**, refused as below. Was: `can_start_expression` rejects it, so `++i;` says
   *expected a statement*. D12 left the postfix/prefix choice open; decide it. **Decided
   (2026-10-02): refused**, with its own error saying to write `i++`. As a statement the two spellings
   mean the same, so prefix adds nothing postfix cannot do; reopened only for a reason that is not habit.
