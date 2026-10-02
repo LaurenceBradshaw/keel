@@ -169,7 +169,8 @@ private:
     // enclosing is the operator whose recursion we are inside, or End_of_file at the top level.
     // D16 needs it: a tighter operator is consumed inside the looser one's recursion and never
     // appears with a Binary_expr on its left.
-    Node_id parse_expression( u8 min_power, Token_kind enclosing = Token_kind::End_of_file );
+    // increment_follows is true when the caller takes a trailing ++ as a statement.
+    Node_id parse_expression( u8 min_power, Token_kind enclosing = Token_kind::End_of_file, bool increment_follows = false );
 
     // Literals, names, unary operators, and `(` for grouping - which returns the inner node
     // unchanged, so the parens leave no trace.
@@ -2401,7 +2402,7 @@ Node_id Parser::parse_expression_stmt( bool consume_semicolon )
     }
 
     const Span    start = peek().span;
-    const Node_id expr  = parse_expression( 0 );
+    const Node_id expr  = parse_expression( 0, Token_kind::End_of_file, true );
 
     Node_kind            kind     = Node_kind::Expr_stmt;
     u32                  aux      = 0;
@@ -2798,13 +2799,31 @@ bool Parser::at_mode_keyword() const
     return check_keyword( Keyword::Move ) || check_keyword( Keyword::Ref ) || check_keyword( Keyword::Out );
 }
 
-Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing )
+Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing, bool increment_follows )
 {
     Node_id left = parse_prefix();
 
     while( true )
     {
         // Postfix operators first, because they bind tighter than any infix operator.
+
+        if( !increment_follows && ( check( Token_kind::Plus_plus ) || check( Token_kind::Minus_minus ) ) )
+        {
+            const Token op = advance(); // consume ++ or --
+
+            if( ast_.kind( left ) != Node_kind::Error )
+            {
+                error_at(
+                    Span::merge( ast_.span( left ), previous().span ),
+                    fmt::format( "`{}` is a statement, not a value", token_kind_spelling( op.kind ) ),
+                    fmt::format(
+                        "write `{}{};` on a line of its own", sm_.text( ast_.span( left ) ), token_kind_spelling( op.kind )
+                    )
+                );
+            }
+
+            continue;
+        }
 
         // function call is a special case: it is the only infix operator that does not produce a
         // Binary_expr node, so it does not need the parentheses check below.
@@ -3246,6 +3265,24 @@ Node_id Parser::parse_prefix()
         return ast_.add(
             Node_kind::Unary_expr, Span::merge( start, previous().span ), static_cast<u32>( op.kind ), { operand }
         );
+    }
+    case Token_kind::Plus_plus:
+    case Token_kind::Minus_minus:
+    {
+        const Token   op      = advance();
+        const Node_id operand = parse_expression( k_unary_power );
+        if( ast_.kind( operand ) != Node_kind::Error )
+        {
+            error_at(
+                Span::merge( start, previous().span ),
+                fmt::format( "`{}` is a statement, not a value", token_kind_spelling( op.kind ) ),
+                fmt::format(
+                    "write `{}{};` on a line of its own", sm_.text( ast_.span( operand ) ), token_kind_spelling( op.kind )
+                )
+            );
+        }
+
+        return operand;
     }
 
     // Grouping: the inner node is returned unchanged, so the parentheses leave no trace in the
@@ -6714,6 +6751,108 @@ TEST_CASE( "parser_refuses_prefix_increment", "[parse]" )
         const Node_id stmt = first_statement( p );
         REQUIRE( p.kind( p.child( stmt, 2 ) ) == Node_kind::Increment_stmt );
         REQUIRE( p.text( p.child( stmt, 3 ) ) == "{ y = y + i; }" );
+    }
+}
+
+// In a value position either spelling is one error, recovered as the bare operand.
+TEST_CASE( "parser_refuses_increment_as_a_value", "[parse]" )
+{
+    SECTION( "prefix in an initialiser" )
+    {
+        const Parsed p( "i32 main() { i32 i = 0; i32 k = ++i; return k; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "`++` is a statement, not a value" ) != std::string::npos );
+        REQUIRE( p.errors().find( "write `i++;`" ) != std::string::npos );
+        REQUIRE( p.errors().find( "t.kl:1:33" ) != std::string::npos );
+        REQUIRE( p.errors().find( "written after the variable" ) == std::string::npos );
+
+        const Node_id k = p.child( p.child( p.child( p.root(), 0 ), 2 ), 1 );
+        REQUIRE( p.kind( k ) == Node_kind::Var_decl );
+        REQUIRE( p.kind( p.child( k, 1 ) ) == Node_kind::Name_expr );
+    }
+
+    SECTION( "`--` names its own spelling" )
+    {
+        const Parsed p( "i32 main() { k = --i; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "`--` is a statement, not a value" ) != std::string::npos );
+        REQUIRE( p.errors().find( "write `i--;`" ) != std::string::npos );
+
+        const Node_id stmt = first_statement( p );
+        REQUIRE( p.kind( stmt ) == Node_kind::Assign_stmt );
+        REQUIRE( p.kind( p.child( stmt, 1 ) ) == Node_kind::Name_expr );
+    }
+
+    SECTION( "postfix in an initialiser" )
+    {
+        const Parsed p( "i32 main() { i32 k = i++; return k; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "`++` is a statement, not a value" ) != std::string::npos );
+        REQUIRE( p.errors().find( "t.kl:1:22" ) != std::string::npos );
+
+        const Node_id decl = first_statement( p );
+        REQUIRE( p.kind( decl ) == Node_kind::Var_decl );
+        REQUIRE( p.kind( p.child( decl, 1 ) ) == Node_kind::Name_expr );
+    }
+
+    SECTION( "postfix as an argument" )
+    {
+        const Parsed p( "i32 main() { f( i++ ); return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+
+        const Node_id stmt = first_statement( p );
+        REQUIRE( p.kind( stmt ) == Node_kind::Expr_stmt );
+        REQUIRE( p.kind( p.child( stmt, 0 ) ) == Node_kind::Call_expr );
+    }
+
+    // The help quotes the operand's source text, as the statement form does.
+    SECTION( "a member operand" )
+    {
+        const Parsed p( "i32 main() { k = p.x++; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "write `p.x++;`" ) != std::string::npos );
+    }
+
+    // The sequencing hazard D12 exists to rule out.
+    SECTION( "inside an index" )
+    {
+        const Parsed p( "i32 main() { k = a[ i++ ]; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+
+        const Node_id stmt = first_statement( p );
+        REQUIRE( p.kind( p.child( stmt, 1 ) ) == Node_kind::Index_expr );
+    }
+
+    // A missing operand is the error; the operator is not reported on top of it.
+    SECTION( "a missing operand is reported once" )
+    {
+        const Parsed p( "i32 main() { k = ++; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "not a value" ) == std::string::npos );
+    }
+
+    // The statement forms are what the value form must not swallow.
+    SECTION( "and the statement forms are untouched" )
+    {
+        const Parsed p( "i32 main() { i++; p.x--; for( i32 j = 0; j < 3; j++ ) { } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.kind( first_statement( p ) ) == Node_kind::Increment_stmt );
     }
 }
 

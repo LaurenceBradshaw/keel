@@ -5627,7 +5627,7 @@ reached in its first hour. Both modules check, build and run clean under valgrin
   own `)` (`skip_past_closing_paren`, counting nesting, stopping unconsumed at `{`, `}` or end of
   file), and reports *expected `)`* only if no clause has already reported. Sema's
   `visit_increment` no longer reports *needs a variable* on an operand the parser already rejected,
-  matching `visit_assign`. The `T T`, `public:` and missing-package cascades remain, none scheduled.
+  matching `visit_assign`. The `T T`, `public:` and missing-package cascades are scheduled below.
   Tests: `parser_for_header_recovers_at_its_own_paren`, a `type_checker_checks_increment` section;
   golden `sema/errors_for_header`.
 - ~~**`list<u8>.with_capacity( n )` gives three wrong errors**~~ **Done (2026-10-03).** It reported
@@ -5641,9 +5641,25 @@ reached in its first hour. Both modules check, build and run clean under valgrin
   **Decided the same day: refused**, with an error that says to write `i++`. **Done (2026-10-03)**
   in statement position and as a `for` update (`parse_prefix_increment_stmt`): *`++` is written
   after the variable*, help *write `p.x++`* quoting the operand, recovered as the postfix
-  `Increment_stmt` so nothing reports twice. In expression position (`k = ++i`) it is still
-  *expected an expression, found `++`*: "write `i++`" would be wrong there, since `++` is a
-  statement. Test: `parser_refuses_prefix_increment`.
+  `Increment_stmt` so nothing reports twice. In expression position (`k = ++i`) "write `i++`" would be wrong,
+  since `++` is a statement; that is the first of the cascades below. Test: `parser_refuses_prefix_increment`.
+- **The remaining error cascades, scheduled (2026-10-03)**, in this order, one commit each, until
+  none is left. Counts are today's, on the shortest program that shows each.
+  1. ~~**`++` or `--` used as a value.**~~ **Done (2026-10-03).** `i32 k = ++i;` was 3 errors
+     ending on *write `i++`*, wrong there; `k = ++i;` 2, `i32 k = i++;` 2, `f( i++ );` 4. Neither
+     spelling consumed the operator in an expression, so the statement parser met it again. Now
+     one error, *`++` is a statement, not a value*, help *write `i++;` on a line of its own*,
+     recovered as the bare operand. `parse_prefix` takes the prefix spelling; the postfix loop of
+     `parse_expression` takes the postfix one unless its caller passes `increment_follows`, which
+     only `parse_expression_stmt`'s first operand does, so `i++;` and a `for` update are untouched.
+     Test: `parser_refuses_increment_as_a_value`.
+  2. **`public:` in a class body** is five errors at the `:` (see §15's fuzz list). Should be one,
+     naming the modifier on each member.
+  3. **`T T` inside type arguments.** `Box<Box<T T>>* link;` reports *expected `>`* twice at one
+     place and *expected `;`* at the `>>`, closes the type early, and takes the second `T` as the
+     field's name (§15, *a broken argument inside a generic cycle*).
+  4. **A missing package** is 31 errors for one absent `--package` (§15's fuzz list): every
+     `kl::` name after *there is no package `kl`* is reported again.
 
 ### M7 slice: access control - done (2026-09-25)
 
@@ -7231,11 +7247,12 @@ about debts *between* them, which is the gap this list cannot see.
     itself is reported, so what aborts after it is still to find. **Found:** the untyped pattern
     binding above. It no longer aborts, but it reports 31 errors for the one missing package: 13
     "`kl` is not declared", 6 "`::` needs the name of a type" and 10 "no module of `kl` that this
-    file imports declares ...". A package that is not there should be one error (unscheduled).
+    file imports declares ...". A package that is not there should be one error (scheduled 2026-10-03, fourth of the remaining cascades).
 
 - **A C++ access label is six errors (found 2026-10-01).** `public:` on a line of its own in a
   class body reports "expected an identifier" four times and "expected `;`" twice, all at the `:`.
-  One error naming Keel's spelling, a modifier on each member, is what it should be.
+  One error naming Keel's spelling, a modifier on each member, is what it should be. Scheduled
+  2026-10-03, second of the remaining cascades.
 
 - ~~**`void*` type-checks, though D37 says Keel has none (found 2026-09-29).** `void* q = nullptr;`
   is accepted without a word, and nothing stops `*q`. `void[*]` is refused from the start; decide
