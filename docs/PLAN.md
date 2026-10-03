@@ -5726,7 +5726,19 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      would change answers (`id<const i32>( x )` is a comparison today) and belongs to its own
      step if wanted. Every save-and-restore of the cursor goes, since the scanner's cursor is
      its own. (4) Audit the parser's bespoke spelling checks against the
-     generic recovery plus a table row. A `Scanner` is a class rather than a namespace because it
+     generic recovery plus a table row. **Done (2026-10-03).** In the class body: the
+     member loop's own `extern` check goes, since it consumed only the word and `extern i32 f();`
+     then cost a second error; `extern` becomes a word row. A dropped word with a hint is named at
+     the word even when the recovery is on a later line, where the report used to fall back to the
+     scan's stop (`protected:` alone on a line said *expected an identifier, found `:`*, and its
+     row never showed). `skip_access_label` stays: it consumes exactly what it names, so it never
+     cascades, and its message depends on whether the aggregate is a class or a struct, which a
+     word row cannot see. The member parsers' remaining checks (static constructor, destructor
+     with an access, static `const` method, destructor parameters) are rules, not spellings.
+     Outside the class body, `enum class` and the top-level forward-declaration check wait for
+     `next_declaration`; statements keep theirs (`->`, `u32 *p`, `++` as a value) with
+     `synchronise()`. Tests: two sections of `parser_recovers_from_a_member_that_is_not_one`, a
+     row in `hints_name_the_keel_spelling`. A `Scanner` is a class rather than a namespace because it
      has state of its own: a cursor and an owed half of `>>`, which a rewinding scan inside the
      parser could leave behind (`scan_type_arguments` counts depth by hand for exactly that).
      Group 2 below falls out of this: `i32 f();` stops at `;` where `{` was wanted, one error,

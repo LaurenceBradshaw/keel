@@ -113,7 +113,7 @@ private:
     // The member a head scan found: its markers, then the declaration its kind names.
     Node_id parse_member( const Member_head& head, Symbol_id enclosing, Node_id type_params, bool is_class );
 
-    // One error for the tokens a chunk drops.
+    // One error for the tokens a chunk drops, at the first word when the hint table knows it.
     void    report_dropped( const Member_chunk& chunk );
     Node_id parse_enum_decl();
     Node_id parse_variant_decl();
@@ -1034,14 +1034,6 @@ Node_id Parser::parse_aggregate_decl()
     bool                 dropped = false;
     while( !check( Token_kind::R_brace ) && !at_end() )
     {
-        // Reject `extern` here: a class or struct is a Keel construct, so it cannot contain a C function.
-        if( check_keyword( Keyword::Extern ) )
-        {
-            error_at( peek().span, "`extern` is not allowed inside a class or struct" );
-            advance();
-            continue;
-        }
-
         if( skip_access_label( is_class ) )
         {
             continue;
@@ -1219,6 +1211,8 @@ void Parser::report_dropped( const Member_chunk& chunk )
 
     const bool same_line = chunk.head.has_value() && line_of( last ) == line_of( tokens_[chunk.head->start] );
 
+    const std::string_view word_hint = dropped_word_hint( sm_.text( first.span ) );
+
     Span        span;
     std::string message;
     std::string help;
@@ -1226,7 +1220,13 @@ void Parser::report_dropped( const Member_chunk& chunk )
     {
         span    = Span::merge( first.span, last.span );
         message = fmt::format( "expected a member, found `{}`", sm_.text( span ) );
-        help    = std::string( dropped_word_hint( sm_.text( first.span ) ) );
+        help    = std::string( word_hint );
+    }
+    else if( !word_hint.empty() )
+    {
+        span    = first.span;
+        message = fmt::format( "expected a member, found `{}`", sm_.text( span ) );
+        help    = std::string( word_hint );
     }
     else
     {
@@ -8611,6 +8611,59 @@ TEST_CASE( "parser_recovers_from_a_member_that_is_not_one", "[parse][recovery]" 
         REQUIRE( has( p, "expected a member, found `protected:`" ) );
         REQUIRE( has( p, "a member is `public` or `private`" ) );
         REQUIRE( member_names( p ) == "a b" );
+    }
+
+    // The word is what was wrong, so it is named rather than where the scan gave up after it.
+    SECTION( "a word with a Keel spelling is named even when the member is on a later line" )
+    {
+        const Parsed label( "class C {\n"
+                            "    i32 a;\n"
+                            "    protected:\n"
+                            "    i32 b;\n"
+                            "};" );
+        const Parsed word( "class C {\n"
+                           "    i32 a;\n"
+                           "    mutable\n"
+                           "    i32 b;\n"
+                           "};" );
+
+        INFO( label.errors() );
+        INFO( word.errors() );
+        REQUIRE( label.error_count() == 1 );
+        REQUIRE( has( label, "expected a member, found `protected`" ) );
+        REQUIRE_FALSE( has( label, "`protected:`" ) );
+        REQUIRE( has( label, "t.kl:3:5" ) );
+        REQUIRE( has( label, "a member is `public` or `private`" ) );
+        REQUIRE( member_names( label ) == "a b" );
+
+        REQUIRE( word.error_count() == 1 );
+        REQUIRE( has( word, "expected a member, found `mutable`" ) );
+        REQUIRE( has( word, "t.kl:3:5" ) );
+        REQUIRE( has( word, "fields cannot be `const` yet" ) );
+        REQUIRE( member_names( word ) == "a b" );
+    }
+
+    // No check of its own: the dropped word and its hint, like any other.
+    SECTION( "`extern` in a class is one error, at the word" )
+    {
+        const Parsed alone( "class C {\n"
+                            "    extern i32 f();\n"
+                            "    i32 a;\n"
+                            "};" );
+        const Parsed defined( "class C { extern i32 f() { return 0; } i32 a; };" );
+
+        INFO( alone.errors() );
+        INFO( defined.errors() );
+        REQUIRE( alone.error_count() == 1 );
+        REQUIRE( has( alone, "expected a member, found `extern`" ) );
+        REQUIRE( has( alone, "t.kl:2:5" ) );
+        REQUIRE( has( alone, "at file scope" ) );
+        REQUIRE( member_names( alone ) == "a" );
+
+        REQUIRE( defined.error_count() == 1 );
+        REQUIRE( has( defined, "expected a member, found `extern`" ) );
+        REQUIRE( has( defined, "at file scope" ) );
+        REQUIRE( member_names( defined ) == "f a" );
     }
 
     // `mutable i32` reads as a type and a name; the field is `b`, not one called `i32`.

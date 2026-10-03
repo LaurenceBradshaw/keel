@@ -23,13 +23,14 @@ struct Stop_hint
 
 std::string_view dropped_word_hint( std::string_view word )
 {
-    constexpr std::array<Word_hint, 6> hints = {
+    constexpr std::array<Word_hint, 7> hints = {
         Word_hint { "protected", "a member is `public` or `private`" },
         Word_hint { "template", "type parameters are written after the name, as in `class Box<T>` or `T f<T>( T a )`" },
         Word_hint { "mutable", "remove it: a field is mutable unless it is `const`, though fields cannot be `const` yet" },
         Word_hint { "unsigned", "write a sized type, such as `u32`" },
         Word_hint { "long", "write a sized type, such as `i64`" },
         Word_hint { "short", "write a sized type, such as `i16`" },
+        Word_hint { "extern", "write `extern` at file scope, where it declares a function or a variable" },
     };
 
     const auto it = std::ranges::find_if( hints, [word]( const Word_hint& h ) { return h.word == word; } );
@@ -72,6 +73,7 @@ TEST_CASE( "hints_name_the_keel_spelling", "[parse][hints]" )
         REQUIRE( has( dropped_word_hint( "unsigned" ), "`u32`" ) );
         REQUIRE( has( dropped_word_hint( "long" ), "`i64`" ) );
         REQUIRE( has( dropped_word_hint( "short" ), "`i16`" ) );
+        REQUIRE( has( dropped_word_hint( "extern" ), "at file scope" ) );
     }
 
     SECTION( "for a member that stopped short" )
