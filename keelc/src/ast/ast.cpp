@@ -100,6 +100,17 @@ void Ast::set_access( Node_id id, Access access )
     access_[id.v] = access;
 }
 
+Span Ast::name_span( Node_id decl ) const
+{
+    const auto it = name_spans_.find( decl.v );
+    return it != name_spans_.end() ? it->second : span( decl );
+}
+
+void Ast::set_name_span( Node_id decl, Span span )
+{
+    name_spans_[decl.v] = span;
+}
+
 Span Ast::type_name_span( Node_id literal ) const
 {
     assert( kind( literal ) == Node_kind::Struct_literal && "type name spans are a struct literal's, not any node's" );

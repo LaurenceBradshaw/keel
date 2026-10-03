@@ -8,3 +8,25 @@ i32 caller()
 {
     return no_such_function( 1 );
 }
+
+// Every use of a missing name is reported: each one is undeclared.
+i32 repeated()
+{
+    i32 a = missing + 1;
+    i32 b = missing * a;
+    return missing + b;
+}
+
+i32 types()
+{
+    Widgt first  = 1;
+    Widgt second = 2;
+    return 0;
+}
+
+i32 value_then_type()
+{
+    i32 a = shape;
+    shape b = 2;
+    return a;
+}

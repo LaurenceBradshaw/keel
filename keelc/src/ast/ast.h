@@ -61,6 +61,10 @@ public:
     Access access( Node_id id ) const;
     void   set_access( Node_id id, Access access );
 
+    // The span of a declaration's name, or the span of the declaration itself if no name is available.
+    Span name_span( Node_id decl ) const;
+    void set_name_span( Node_id decl, Span span );
+
     // A struct literal's type name, which its own span runs past to the `}`.
     Span type_name_span( Node_id literal ) const;
     void set_type_name_span( Node_id literal, Span span );
@@ -79,7 +83,8 @@ private:
     std::vector<Node>               nodes_;
     std::vector<Node_id>            children_; // every child of every node, back to back
     Node_id                         root_;
-    std::unordered_map<u32, Access> access_;          // members only; absence means public
+    std::unordered_map<u32, Access> access_; // members only; absence means public
+    std::unordered_map<u32, Span>   name_spans_;
     std::unordered_map<u32, Span>   type_name_spans_; // struct literals only
 };
 

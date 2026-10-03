@@ -11,10 +11,10 @@ error: a struct cannot be a static field yet
    |            ^^^^^^^^^^^^^
 
 error: field `id` is already declared
-  --> sema/errors_static_fields.kl:31:5
+  --> sema/errors_static_fields.kl:31:9
    |
 31 |     i32 id;
-   |     ^^^^^^^ previous declaration is at: sema/errors_static_fields.kl:29:12
+   |         ^^ previous declaration is at: sema/errors_static_fields.kl:29:12
 
 error: a static field's type cannot name a type parameter yet
   --> sema/errors_static_fields.kl:41:12

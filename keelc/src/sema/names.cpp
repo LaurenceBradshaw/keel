@@ -3,7 +3,6 @@
 
 #include "sema/names.h"
 #include <algorithm>
-#include <cctype>
 #include <optional>
 #include <unordered_set>
 #include "common/json.h"
@@ -239,27 +238,9 @@ Span Name_collector::name_span( Node_id id ) const
     return span;
 }
 
-// A declaration's span covers all of it, so its name is the first whole-word match inside. A type
-// spelt like the name in front of it, `meter meter_of()`, is skipped by the word test; `Point Point`
-// is not, and lands one word early.
 Span Name_collector::declared_name_span( Node_id decl ) const
 {
-    const std::string_view name = interner_.text( Symbol_id { ast_.aux( decl ) } );
-    const Span             node = ast_.span( decl );
-    const std::string_view text = std::string_view( sm_.file( node.file ).text ).substr( node.start, node.len() );
-
-    const auto is_word = []( char c ) { return std::isalnum( static_cast<unsigned char>( c ) ) || c == '_'; };
-
-    for( std::size_t at = text.find( name ); !name.empty() && at != std::string_view::npos; at = text.find( name, at + 1 ) )
-    {
-        const std::size_t after = at + name.size();
-        if( ( at == 0 || !is_word( text[at - 1] ) ) && ( after == text.size() || !is_word( text[after] ) ) )
-        {
-            return Span { node.file, node.start + static_cast<u32>( at ), node.start + static_cast<u32>( after ) };
-        }
-    }
-
-    return Span {};
+    return ast_.name_span( decl );
 }
 
 } // namespace
@@ -483,6 +464,15 @@ TEST_CASE( "names_point_past_a_type_spelt_like_a_prefix", "[sema][names]" )
     REQUIRE(
         std::ranges::any_of( names, []( const std::string& n ) { return n.starts_with( "pp@" ) && n.ends_with( "->23" ); } )
     );
+}
+
+// The parser's name token, not the first word of the declaration that matches it.
+TEST_CASE( "names_point_past_a_type_spelt_like_the_name", "[sema][names]" )
+{
+    const auto names = named( "struct Point { i32 x; };\ni32 main() { Point Point = Point { 1 }; return Point.x; }", true );
+
+    // The variable `Point` is declared at 44, after its type `Point` at 38.
+    REQUIRE( has( names, "Point@72->44" ) );
 }
 
 // Storage for the whole program, as a file-scope variable is, wherever it is declared.

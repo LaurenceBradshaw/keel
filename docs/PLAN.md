@@ -5861,7 +5861,33 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      and their errors fall from 1,184 to 674 across the single-edit ones. What is left is the
      swap itself, `i32 n` written `n i32`: the refusal, *unknown type `n`*, then *`n` is not
      declared* at every use, since the refused declaration declares nothing (96 mutants, 3.7
-     errors each).
+     errors each). That swap is two faults, not one, and the third error is the rule below:
+     a token has at most one thing wrong with it, and what is reported first should be what is
+     actually wrong, so a recovery that guesses (declaring `n` from the type slot) is refused, since
+     a wrong guess buries the real error behind an invented one.
+  2a. ~~**A declaration's errors point at its name.**~~ **Done (2026-10-03).** The refusal above, *already declared* and
+     *shadows a field* all report `ast_.span( decl )`, which starts at the type: in `n i32` the
+     refusal and *unknown type `n`* both land on `n`, and `i32`, the culprit, gets nothing. So do
+     *shadows an outer declaration*, the package-name refusal and the member duplicates; an
+     overload clash keeps the header, since there the parameters are the fault. The
+     parser records each declaration's name token in an `Ast` side table beside
+     `type_name_spans_`, falling back to the declaration's span where no name was written. Notes
+     (*previous declaration is at*) keep the declaration's position. Tests:
+     `parser_records_each_declaration's_name_span`, sema goldens `errors_builtin_type_names` and
+     `errors_redeclaration`. **Follow-up**: go-to-definition found a declaration's name by searching
+     its text for the first whole word that matches, so `Point Point = ...` jumped to the type;
+     `Name_collector::declared_name_span` now asks `Ast::name_span`. Test:
+     `names_point_past_a_type_spelt_like_the_name`. Diagnostics reach the editor through the same
+     spans unchanged (checked against `range_of` in `extension.js`, multi-byte line included).
+  2b. ~~**An undeclared name reported once per function.**~~ **Dropped (2026-10-03).** Each use
+     of an undeclared name is undeclared, so each is reported: suppressing the repeats hides true
+     statements. Nor is an error dropped because a smaller one sits inside its span: whether the
+     inner caused the outer (absorbed by the error type), the outer caused the inner (a misreading,
+     absorbed by an `Error` node) or neither (both stand) is known only to the pass that reported
+     them, and a filter on spans keeps the symptom of a misreading and drops its cause. The rule
+     is precision instead: an error covers the fewest tokens it can, and a token carries at most
+     one. The fuzz triage counts errors sharing a token rather than errors per edit. Goldens
+     `errors_unknown_name` (every use reported) and `errors_builtin_type_names` keep it.
   3. **M1: one parse error per token.** Nothing stops a second report at a token already reported:
      `return private 21;` is *expected `;`*, *expected an expression* and *expected a statement*,
      all at `private`; truncation stacks *expected `}`* per open scope at end of file; `( template

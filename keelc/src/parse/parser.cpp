@@ -796,7 +796,8 @@ Node_id Parser::parse_function_decl( std::optional<u32> commit )
     const Node_id return_type = parse_type_with_mode();
 
     // The name is a token, not a subtree, so it goes in aux rather than becoming a fourth child.
-    const Symbol_id name = expect_name();
+    const Symbol_id name      = expect_name();
+    const Span      name_span = previous().span;
 
     // The parameters and the `where` clauses that constrain them end up in one node, but they are
     // written either side of the parameter list - so the parts are collected here and the node is
@@ -861,13 +862,15 @@ Node_id Parser::parse_function_decl( std::optional<u32> commit )
 
         // The absent body is what marks it: `extern` is the only rule that can produce one, so
         // nothing needs a flag to read it back.
-        return name.is_valid() ? ast_.add(
-                                     Node_kind::Function_decl,
-                                     Span::merge( start, previous().span ),
-                                     name.v,
-                                     { return_type, params, Node_id {}, type_params }
-                                 )
-                               : error_node( Span::merge( start, previous().span ) );
+        const Node_id node = name.is_valid() ? ast_.add(
+                                                   Node_kind::Function_decl,
+                                                   Span::merge( start, previous().span ),
+                                                   name.v,
+                                                   { return_type, params, Node_id {}, type_params }
+                                               )
+                                             : error_node( Span::merge( start, previous().span ) );
+        ast_.set_name_span( node, name_span );
+        return node;
     }
 
     const Node_id body = parse_block();
@@ -882,9 +885,11 @@ Node_id Parser::parse_function_decl( std::optional<u32> commit )
         return error_node( Span::merge( start, previous().span ) );
     }
 
-    return ast_.add(
+    const Node_id node = ast_.add(
         Node_kind::Function_decl, Span::merge( start, previous().span ), name.v, { return_type, params, body, type_params }
     );
+    ast_.set_name_span( node, name_span );
+    return node;
 }
 
 Node_id Parser::parse_method_decl( Symbol_id enclosing, Node_id type_params, bool is_static, u32 commit )
@@ -892,6 +897,7 @@ Node_id Parser::parse_method_decl( Symbol_id enclosing, Node_id type_params, boo
     const Span      start       = peek().span;
     const Node_id   return_type = parse_type_with_mode();
     const Symbol_id name        = expect_name();
+    const Span      name_span   = previous().span;
 
     // The trailing `const` comes after the parameter list, but the receiver it binds is built
     // before it. The head scan ended at the body's `{`, so the token before that says.
@@ -924,9 +930,11 @@ Node_id Parser::parse_method_decl( Symbol_id enclosing, Node_id type_params, boo
     // Four children, as every function-like declaration has. The type parameter slot holds the
     // *enclosing* aggregate's list: a method of `Box<T>` is generic in T without writing any of
     // its own, and everything downstream asks this slot rather than asking who owns the member.
-    return ast_.add(
+    const Node_id node = ast_.add(
         Node_kind::Method_decl, Span::merge( start, previous().span ), name.v, { return_type, params, body, type_params }
     );
+    ast_.set_name_span( node, name_span );
+    return node;
 }
 
 Node_id Parser::parse_param_list( Node_id leading )
@@ -1115,9 +1123,13 @@ Node_id Parser::parse_aggregate_decl()
     // insert type_params as child 0
     members.insert( members.begin(), type_params );
 
-    return ast_.add(
+    const Node_id node = ast_.add(
         is_class ? Node_kind::Class_decl : Node_kind::Struct_decl, Span::merge( start, previous().span ), name.v, { members }
     );
+
+    ast_.set_name_span( node, name_span );
+
+    return node;
 }
 
 bool Parser::skip_access_label( bool is_class )
@@ -1408,13 +1420,16 @@ Node_id Parser::parse_enum_decl()
         );
     }
 
-    return ast_.add( Node_kind::Enum_decl, Span::merge( start, previous().span ), name.v, members );
+    const Node_id node = ast_.add( Node_kind::Enum_decl, Span::merge( start, previous().span ), name.v, members );
+    ast_.set_name_span( node, name_span );
+    return node;
 }
 
 Node_id Parser::parse_variant_decl()
 {
-    const Span      start = peek().span;
-    const Symbol_id name  = expect_name();
+    const Span      start     = peek().span;
+    const Symbol_id name      = expect_name();
+    const Span      name_span = previous().span;
 
     // D7: a variant may carry a payload, `Circle( f64 radius )`. The fields reuse Field_decl - a
     // name and a type is exactly what one is - so every rule the checker already has for a field
@@ -1426,14 +1441,16 @@ Node_id Parser::parse_variant_decl()
     {
         while( !check( Token_kind::R_paren ) && !at_end() )
         {
-            const u32       before      = pos_;
-            const Span      field_start = peek().span;
-            const Node_id   type        = parse_type();
-            const Symbol_id field_name  = expect_name();
+            const u32       before          = pos_;
+            const Span      field_start     = peek().span;
+            const Node_id   type            = parse_type();
+            const Symbol_id field_name      = expect_name();
+            const Span      field_name_span = previous().span;
 
             payload.push_back(
                 ast_.add( Node_kind::Field_decl, Span::merge( field_start, previous().span ), field_name.v, { type } )
             );
+            ast_.set_name_span( payload.back(), field_name_span );
 
             if( !check( Token_kind::R_paren ) )
             {
@@ -1449,7 +1466,9 @@ Node_id Parser::parse_variant_decl()
         expect( Token_kind::R_paren );
     }
 
-    return ast_.add( Node_kind::Variant_decl, Span::merge( start, previous().span ), name.v, payload );
+    const Node_id node = ast_.add( Node_kind::Variant_decl, Span::merge( start, previous().span ), name.v, payload );
+    ast_.set_name_span( node, name_span );
+    return node;
 }
 
 Node_id Parser::parse_field_decl( u32 commit )
@@ -1460,7 +1479,8 @@ Node_id Parser::parse_field_decl( u32 commit )
 
     // Same convention as Function_decl: the name is a token, so it goes in aux rather than becoming
     // a second child.
-    const Symbol_id name = expect_name();
+    const Symbol_id name      = expect_name();
+    const Span      name_span = previous().span;
 
     // Missing when the head scan kept the field because a member starts where its `;` should be.
     reach_commit( commit );
@@ -1474,7 +1494,9 @@ Node_id Parser::parse_field_decl( u32 commit )
         return error_node( Span::merge( start, previous().span ) );
     }
 
-    return ast_.add( Node_kind::Field_decl, Span::merge( start, previous().span ), name.v, { type } );
+    const Node_id node = ast_.add( Node_kind::Field_decl, Span::merge( start, previous().span ), name.v, { type } );
+    ast_.set_name_span( node, name_span );
+    return node;
 }
 
 Node_id Parser::parse_destructor_decl( Symbol_id enclosing, Node_id type_params, u32 commit )
@@ -1928,15 +1950,19 @@ Node_id Parser::parse_param()
     // Same convention as Function_decl: the name is a token, so it goes in aux rather than becoming
     // a second child. A nameless parameter stays a parameter, the way a function type's does, because
     // it still counts towards the signature.
-    const Symbol_id name = expect_name();
+    const Symbol_id name      = expect_name();
+    const Span      name_span = previous().span;
 
-    return ast_.add( Node_kind::Param_decl, Span::merge( start, previous().span ), name.v, { type } );
+    const Node_id node = ast_.add( Node_kind::Param_decl, Span::merge( start, previous().span ), name.v, { type } );
+    ast_.set_name_span( node, name_span );
+    return node;
 }
 
 Node_id Parser::parse_type_param()
 {
-    const Span      at   = peek().span;
-    const Symbol_id name = expect_name();
+    const Span      at        = peek().span;
+    const Symbol_id name      = expect_name();
+    const Span      name_span = previous().span;
 
     // `<Comparable T>` is C++'s terse form, and it is what a reader of that language writes first.
     // Naming it costs one lookahead; without it the stray name derails the parameter list and then
@@ -1960,7 +1986,9 @@ Node_id Parser::parse_type_param()
         return error_node( Span::merge( at, previous().span ) );
     }
 
-    return ast_.add( Node_kind::Type_param_decl, at, name.v, {} );
+    const Node_id node = ast_.add( Node_kind::Type_param_decl, at, name.v, {} );
+    ast_.set_name_span( node, name_span );
+    return node;
 }
 
 Node_id Parser::parse_block( u32 aux, Span opening )
@@ -2301,7 +2329,8 @@ Node_id Parser::parse_var_decl( std::optional<u32> commit )
         type = parse_type_with_mode();
     }
 
-    const Symbol_id name = expect_name();
+    const Symbol_id name      = expect_name();
+    const Span      name_span = previous().span;
 
     if( commit.has_value() )
     {
@@ -2324,7 +2353,9 @@ Node_id Parser::parse_var_decl( std::optional<u32> commit )
         return error_node( Span::merge( start, previous().span ) );
     }
 
-    return ast_.add( Node_kind::Var_decl, Span::merge( start, previous().span ), name.v, { type, value } );
+    const Node_id node = ast_.add( Node_kind::Var_decl, Span::merge( start, previous().span ), name.v, { type, value } );
+    ast_.set_name_span( node, name_span );
+    return node;
 }
 
 Node_id Parser::parse_expression_stmt( bool consume_semicolon )
@@ -3351,6 +3382,11 @@ public:
         return sm_.text( ast_.span( id ) );
     }
 
+    std::string_view text( Span span ) const
+    {
+        return sm_.text( span );
+    }
+
     std::string_view name( Node_id id ) const
     {
         return interner_.text( Symbol_id { ast_.aux( id ) } );
@@ -3552,6 +3588,54 @@ TEST_CASE( "parser_spans_cover_their_constructs", "[parse]" )
 
     const Node_id ret = p.child( p.child( func, 2 ), 0 );
     REQUIRE( p.text( ret ) == "return 0;" );
+}
+
+// A declaration's errors point at its name, which its own span runs past on both sides.
+TEST_CASE( "parser_records_each_declaration's_name_span", "[parse]" )
+{
+    struct Case
+    {
+        std::string_view source;
+        Node_kind        kind;
+        std::string_view name;
+    };
+
+    for( const Case& c : {
+             Case { "i32 add( i32 a ) { return a; }", Node_kind::Function_decl, "add" },
+             Case { "i32 add( i32 a ) { return a; }", Node_kind::Param_decl, "a" },
+             Case { "i32 g = 1;", Node_kind::Var_decl, "g" },
+             Case { "i32 main() { u8 small = 2; return 0; }", Node_kind::Var_decl, "small" },
+             Case { "struct Point { i32 x; };", Node_kind::Struct_decl, "Point" },
+             Case { "struct Point { i32 x; };", Node_kind::Field_decl, "x" },
+             Case { "class C { i32 n; i32 get() { return n; } };", Node_kind::Class_decl, "C" },
+             Case { "class C { i32 n; i32 get() { return n; } };", Node_kind::Method_decl, "get" },
+             Case { "class C { i32 n; static i32 count = 0; };", Node_kind::Var_decl, "count" },
+             Case { "enum Colour { Red };", Node_kind::Enum_decl, "Colour" },
+             Case { "enum Shape { Circle( i32 radius ) };", Node_kind::Field_decl, "radius" },
+             Case { "T id<T>( T x ) { return x; }", Node_kind::Type_param_decl, "T" },
+             Case { "i32 main() { n i32 = 0; return 0; }", Node_kind::Var_decl, "i32" },
+         } )
+    {
+        const Parsed p( c.source );
+
+        INFO( c.source );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id decl = find_first( p.ast(), p.root(), c.kind );
+
+        REQUIRE( decl.is_valid() );
+        REQUIRE( p.text( p.ast().name_span( decl ) ) == c.name );
+    }
+
+    SECTION( "a nameless parameter falls back to its own span" )
+    {
+        const Parsed p( "fn( i32 )->i32 h;" );
+
+        const Node_id param = find_first( p.ast(), p.root(), Node_kind::Param_decl );
+
+        REQUIRE( param.is_valid() );
+        REQUIRE( p.text( p.ast().name_span( param ) ) == "i32" );
+    }
 }
 
 TEST_CASE( "parser_multiple_declarations", "[parse]" )

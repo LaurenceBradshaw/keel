@@ -1,13 +1,21 @@
-// A builtin type's name is reserved. Each declaration taking one is refused once, and declares
-// nothing, so every later use of the type still names the type.
+// A builtin type's name is reserved. Each declaration taking one is refused once, at its name, and
+// declares nothing, so every later use of the type still names the type.
 i32 i32( i32 n )
 {
     return n;
+}
+
+// A swapped type and name is two faults, each at its own token. Every use of `n` is undeclared.
+i32 twice( n i32 )
+{
+    return n * 2;
 }
 
 i32 main()
 {
     i32 u8 = 1;
     u8  small = 2;
-    return small;
+    total i32 = 0;
+    total = total + small;
+    return total;
 }

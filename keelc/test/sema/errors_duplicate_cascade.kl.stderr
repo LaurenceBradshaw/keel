@@ -29,21 +29,21 @@ error: `get` is already declared with these parameters
    |     ^^^^^^^^^ previous declaration is at: sema/errors_duplicate_cascade.kl:42:5
 
 error: `counter` is already declared in this scope
-  --> sema/errors_duplicate_cascade.kl:61:1
+  --> sema/errors_duplicate_cascade.kl:61:7
    |
 61 | class counter
-   | ^^^^^^^^^^^^^ previous declaration is at: sema/errors_duplicate_cascade.kl:59:1
+   |       ^^^^^^^ previous declaration is at: sema/errors_duplicate_cascade.kl:59:1
 
 error: `Node` is already declared in this scope
-  --> sema/errors_duplicate_cascade.kl:79:1
+  --> sema/errors_duplicate_cascade.kl:79:8
    |
 79 | struct Node
-   | ^^^^^^^^^^^ previous declaration is at: sema/errors_duplicate_cascade.kl:77:1
+   |        ^^^^ previous declaration is at: sema/errors_duplicate_cascade.kl:77:1
 
 error: `Tree` is already declared in this scope
-  --> sema/errors_duplicate_cascade.kl:86:1
+  --> sema/errors_duplicate_cascade.kl:86:6
    |
 86 | enum Tree
-   | ^^^^^^^^^ previous declaration is at: sema/errors_duplicate_cascade.kl:84:1
+   |      ^^^^ previous declaration is at: sema/errors_duplicate_cascade.kl:84:1
 
 8 errors generated

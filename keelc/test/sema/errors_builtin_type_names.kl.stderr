@@ -1,13 +1,61 @@
 error: `i32` is the name of a builtin type
- --> sema/errors_builtin_type_names.kl:3:1
+ --> sema/errors_builtin_type_names.kl:3:5
   |
 3 | i32 i32( i32 n )
-  | ^^^^^^^^^^^^^^^^ a declaration may not take one
+  |     ^^^ a declaration may not take one
+
+error: unknown type `n`
+ --> sema/errors_builtin_type_names.kl:9:12
+  |
+9 | i32 twice( n i32 )
+  |            ^
+
+error: `i32` is the name of a builtin type
+ --> sema/errors_builtin_type_names.kl:9:14
+  |
+9 | i32 twice( n i32 )
+  |              ^^^ a declaration may not take one
+
+error: `n` is not declared
+  --> sema/errors_builtin_type_names.kl:11:12
+   |
+11 |     return n * 2;
+   |            ^
 
 error: `u8` is the name of a builtin type
-  --> sema/errors_builtin_type_names.kl:10:5
+  --> sema/errors_builtin_type_names.kl:16:9
    |
-10 |     i32 u8 = 1;
-   |     ^^^^^^^^^^^ a declaration may not take one
+16 |     i32 u8 = 1;
+   |         ^^ a declaration may not take one
 
-2 errors generated
+error: unknown type `total`
+  --> sema/errors_builtin_type_names.kl:18:5
+   |
+18 |     total i32 = 0;
+   |     ^^^^^
+
+error: `i32` is the name of a builtin type
+  --> sema/errors_builtin_type_names.kl:18:11
+   |
+18 |     total i32 = 0;
+   |           ^^^ a declaration may not take one
+
+error: `total` is not declared
+  --> sema/errors_builtin_type_names.kl:19:5
+   |
+19 |     total = total + small;
+   |     ^^^^^
+
+error: `total` is not declared
+  --> sema/errors_builtin_type_names.kl:19:13
+   |
+19 |     total = total + small;
+   |             ^^^^^
+
+error: `total` is not declared
+  --> sema/errors_builtin_type_names.kl:20:12
+   |
+20 |     return total;
+   |            ^^^^^
+
+10 errors generated

@@ -29,9 +29,9 @@ error: `twice` is already declared with these parameters
   | ^^^^^^^^^^^^^^^^^^ previous declaration is at: sema/modules/main.kl:5:1
 
 error: `Pair` is already declared in this scope
-  --> sema/modules/twin.kl:10:1
+  --> sema/modules/twin.kl:10:8
    |
 10 | struct Pair
-   | ^^^^^^^^^^^ previous declaration is at: sema/modules/main.kl:33:1
+   |        ^^^^ previous declaration is at: sema/modules/main.kl:33:1
 
 6 errors generated

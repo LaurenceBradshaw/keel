@@ -98,7 +98,7 @@ Resolution Resolver::run()
                 imports_.is_package( name ) )
             {
                 reporter_.error_at(
-                    ast_.span( decl ),
+                    ast_.name_span( decl ),
                     fmt::format( "`{}` is the name of a package", interner_.text( name ) ),
                     "a type may not take one"
                 );
@@ -422,7 +422,7 @@ void Resolver::visit( Node_id id )
             if( !inserted )
             {
                 reporter_.error_at(
-                    ast_.span( field ),
+                    ast_.name_span( field ),
                     fmt::format(
                         "{}`{}` is already declared",
                         ast_.kind( field ) == Node_kind::Var_decl ? "" : "field ",
@@ -463,7 +463,7 @@ void Resolver::visit( Node_id id )
             if( !inserted && !chain_overload( it->second, member ) )
             {
                 reporter_.error_at(
-                    ast_.span( member ),
+                    ast_.name_span( member ),
                     fmt::format( "`{}` is already declared", interner_.text( name ) ),
                     reporter_.previous_declaration_note( ast_.span( it->second ) )
                 );
@@ -546,7 +546,7 @@ void Resolver::declare( Scope& scope, Symbol_id name, Node_id decl )
         }
 
         reporter_.error_at(
-            ast_.span( decl ),
+            ast_.name_span( decl ),
             fmt::format( "`{}` is already declared in this scope", interner_.text( name ) ),
             reporter_.previous_declaration_note( ast_.span( it->second ) )
         );
@@ -561,7 +561,7 @@ void Resolver::declare( Scope& scope, Symbol_id name, Node_id decl )
     if( ast_.kind( decl ) != Node_kind::Param_decl && current_fields_.contains( name ) )
     {
         reporter_.error_at(
-            ast_.span( decl ),
+            ast_.name_span( decl ),
             fmt::format( "`{}` shadows a field", interner_.text( name ) ),
             "a local may not take a field's name"
         );
@@ -582,7 +582,7 @@ void Resolver::declare( Scope& scope, Symbol_id name, Node_id decl )
         if( found != s->names.end() )
         {
             reporter_.error_at(
-                ast_.span( decl ),
+                ast_.name_span( decl ),
                 fmt::format( "`{}` shadows an outer declaration", interner_.text( name ) ),
                 reporter_.previous_declaration_note( ast_.span( found->second ) )
             );
@@ -723,7 +723,7 @@ bool Resolver::refuse_builtin_name( Symbol_id name, Node_id decl )
     if( is_builtin_type_name( interner_.text( name ) ) )
     {
         reporter_.error_at(
-            ast_.span( decl ),
+            ast_.name_span( decl ),
             fmt::format( "`{}` is the name of a builtin type", interner_.text( name ) ),
             "a declaration may not take one"
         );
@@ -2281,7 +2281,7 @@ TEST_CASE( "resolver_names_a_package's_types_and_globals", "[sema][resolve][pack
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "`kl` is the name of a package" ) != std::string::npos );
-        REQUIRE( p.rendered().find( "main.kl:1:1" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "main.kl:1:8" ) != std::string::npos );
     }
 
     // Neither can stand before `::`, so neither can be mistaken for the package.
