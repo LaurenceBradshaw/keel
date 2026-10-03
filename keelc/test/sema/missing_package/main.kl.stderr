@@ -1,0 +1,7 @@
+error: there is no package `kl`
+ --> sema/missing_package/main.kl:2:1
+  |
+2 | import kl::shapes;
+  | ^^^^^^^^^^^^^^^^^^ a package is named with `--package kl=<dir>`
+
+1 error generated

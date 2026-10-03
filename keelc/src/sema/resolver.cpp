@@ -62,6 +62,7 @@ private:
     const Imports&        imports_;
 
     std::vector<Node_id> bindings_;
+    std::vector<bool>    unresolved_;
     std::vector<Node_id> next_overload_;
     std::vector<Scope>   scopes_;
 
@@ -75,6 +76,7 @@ private:
 Resolution Resolver::run()
 {
     bindings_.assign( ast_.node_count(), Node_id {} );
+    unresolved_.assign( ast_.node_count(), false );
     next_overload_.assign( ast_.node_count(), Node_id {} );
 
     // Two passes at file scope: every top-level declaration is collected before any body is
@@ -108,7 +110,7 @@ Resolution Resolver::run()
 
     visit( ast_.root() );
 
-    return Resolution( std::move( bindings_ ), std::move( next_overload_ ), imports_ );
+    return Resolution( std::move( bindings_ ), std::move( unresolved_ ), std::move( next_overload_ ), imports_ );
 }
 
 void Resolver::visit( Node_id id )
@@ -630,8 +632,9 @@ Node_id Resolver::lookup( Symbol_id name, Node_id use )
     return Node_id {};
 }
 
-// `use` names its declaration through the package `package`, a Name_expr. Invalid, and reported, when
-// no module of it that the use's file imports declares the name.
+// `use` names its declaration through the package `package`, a Name_expr. Invalid when no module of it
+// that the use's file imports declares the name: recorded as unresolved, and reported unless the
+// package is missing, whose import was reported instead.
 Node_id Resolver::lookup_qualified( Node_id package, Node_id use )
 {
     const Symbol_id package_name { ast_.aux( package ) };
@@ -640,12 +643,19 @@ Node_id Resolver::lookup_qualified( Node_id package, Node_id use )
 
     if( !decl.is_valid() )
     {
-        reporter_.error_at(
-            ast_.span( use ),
-            fmt::format(
-                "no module of `{}` that this file imports declares `{}`", interner_.text( package_name ), interner_.text( name )
-            )
-        );
+        unresolved_[use.v] = true;
+
+        if( !imports_.is_missing( package_name ) )
+        {
+            reporter_.error_at(
+                ast_.span( use ),
+                fmt::format(
+                    "no module of `{}` that this file imports declares `{}`",
+                    interner_.text( package_name ),
+                    interner_.text( name )
+                )
+            );
+        }
     }
 
     return decl;
@@ -2190,6 +2200,41 @@ TEST_CASE( "resolver_binds_a_static_field", "[sema][resolve][static]" )
             REQUIRE( p.errors() == 1 );
             REQUIRE( p.rendered().find( "`count` is already declared" ) != std::string::npos );
         }
+    }
+}
+
+// The loader reports a package that is not there, once; every name written through it is then
+// unknowable, and saying so again at each one is the cascade.
+TEST_CASE( "resolver_says_nothing_more_about_a_missing_package", "[sema][resolve][packages]" )
+{
+    SECTION( "a call, a type, a literal, a variant and a global" )
+    {
+        const Resolved_program p( {
+            { "main.kl",
+              "import foo::geom;\n"
+              "i32 main()\n"
+              "{\n"
+              "    foo::Point q = foo::Point { 1 };\n"
+              "    foo::Colour c = foo::Colour::Red;\n"
+              "    foo::made = foo::made + 1;\n"
+              "    return foo::area();\n"
+              "}\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+    }
+
+    SECTION( "a missing name in a package that is there is still reported" )
+    {
+        const Resolved_program p( {
+            { "main.kl", "import kl::geom;\ni32 main() { return kl::nothing(); }\n" },
+            { "kl/geom.kl", "i32 area() { return 4; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "no module of `kl` that this file imports declares `nothing`" ) != std::string::npos );
     }
 }
 

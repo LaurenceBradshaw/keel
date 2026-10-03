@@ -20,8 +20,11 @@ class Resolution
 {
 public:
     Resolution() = default;
-    Resolution( std::vector<Node_id> bindings, std::vector<Node_id> next_overload, const Imports& imports )
+    Resolution(
+        std::vector<Node_id> bindings, std::vector<bool> unresolved, std::vector<Node_id> next_overload, const Imports& imports
+    )
         : bindings_( std::move( bindings ) ),
+          unresolved_( std::move( unresolved ) ),
           next_overload_( std::move( next_overload ) ),
           imports_( imports )
     {
@@ -56,8 +59,15 @@ public:
         return imports_.is_package( package );
     }
 
+    // A qualified name the resolver could not bind, and has already answered for.
+    bool is_unresolved( Node_id use ) const
+    {
+        return use.v < unresolved_.size() ? unresolved_[use.v] : false;
+    }
+
 private:
     std::vector<Node_id> bindings_;
+    std::vector<bool>    unresolved_;
     std::vector<Node_id> next_overload_;
     Imports              imports_;
 };

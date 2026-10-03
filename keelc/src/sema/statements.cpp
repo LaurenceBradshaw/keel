@@ -320,9 +320,11 @@ void Statements::visit_assign( Node_id id )
     if( !places_.is_assignable( target ) )
     {
         // A name that does not resolve, or resolves to a type or function, is already reported by
-        // infer_name; a failed subtree was reported by whichever rule produced it. Anything else -
-        // a literal, a call, an arithmetic expression - has nothing else to report it.
-        if( ast_.kind( target ) != Node_kind::Name_expr && ast_.kind( target ) != Node_kind::Error )
+        // infer_name, and a qualified one the resolver could not bind by the resolver; a failed
+        // subtree was reported by whichever rule produced it. Anything else - a literal, a call, an
+        // arithmetic expression - has nothing else to report it.
+        if( ast_.kind( target ) != Node_kind::Name_expr && ast_.kind( target ) != Node_kind::Error &&
+            !resolution_.is_unresolved( target ) )
         {
             reporter_.error_at( ast_.span( target ), "cannot assign to this expression" );
         }

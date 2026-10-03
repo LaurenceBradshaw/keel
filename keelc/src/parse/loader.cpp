@@ -65,11 +65,15 @@ Program load_program(
                     }
                     else
                     {
-                        diags.error(
-                            ast.span( decl ),
-                            fmt::format( "there is no package `{}`", interner.text( package_id ) ),
-                            fmt::format( "a package is named with `--package {}=<dir>`", interner.text( package_id ) )
-                        );
+                        if( !imports.is_missing( package_id ) )
+                        {
+                            diags.error(
+                                ast.span( decl ),
+                                fmt::format( "there is no package `{}`", interner.text( package_id ) ),
+                                fmt::format( "a package is named with `--package {}=<dir>`", interner.text( package_id ) )
+                            );
+                        }
+                        imports.add_missing_package( package_id );
                         continue;
                     }
                 }
@@ -408,6 +412,17 @@ TEST_CASE( "loader_loads_modules_from_a_package", "[parse][loader][packages]" )
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "there is no package `foo`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "main.kl:1:1" ) != std::string::npos );
+    }
+
+    SECTION( "a missing package is reported once, however many imports name it" )
+    {
+        const Loaded p( {
+            { "main.kl", "import foo::geom;\nimport foo::shapes;\ni32 main() { return 0; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "main.kl:1:1" ) != std::string::npos );
     }
 

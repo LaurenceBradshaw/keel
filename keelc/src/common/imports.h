@@ -51,9 +51,21 @@ public:
         packages_.push_back( package );
     }
 
+    // Imported but not named by `--package`: still a package, so `kl::` reads as one, but nothing in it resolves.
+    void add_missing_package( Symbol_id package )
+    {
+        packages_.push_back( package );
+        missing_packages_.push_back( package );
+    }
+
     bool is_package( Symbol_id package ) const
     {
         return std::find( packages_.begin(), packages_.end(), package ) != packages_.end();
+    }
+
+    bool is_missing( Symbol_id package ) const
+    {
+        return std::find( missing_packages_.begin(), missing_packages_.end(), package ) != missing_packages_.end();
     }
 
     void place( File_id file, Symbol_id package )
@@ -74,6 +86,7 @@ private:
     // The graph is sparse, so an adjacency list is better than a matrix.
     std::vector<std::vector<File_id>> edges_;
     std::vector<Symbol_id>            packages_;
+    std::vector<Symbol_id>            missing_packages_;
     std::unordered_map<u32, u32>      file_to_package_;
 };
 

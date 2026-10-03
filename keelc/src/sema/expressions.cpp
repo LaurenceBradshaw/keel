@@ -2006,11 +2006,11 @@ Type_id Expressions::infer_path( Node_id id )
 
     const Node_id decl = qualifier_declaration( id );
 
-    // An unresolved qualifier was already reported by the resolver; anything else is not a name at
-    // all, and `f()::x` deserves its own complaint rather than a second one about the name.
+    // An unresolved qualifier was answered for by the resolver - reported, or silent through a missing
+    // package; anything else is not a name at all, and `f()::x` deserves its own complaint.
     if( !decl.is_valid() )
     {
-        if( !is_name( qualifier ) && ast_.kind( qualifier ) != Node_kind::Error )
+        if( !is_name( qualifier ) && ast_.kind( qualifier ) != Node_kind::Error && !resolution_.is_unresolved( qualifier ) )
         {
             reporter_.error_at( ast_.span( qualifier ), "`::` needs the name of a type on its left" );
         }

@@ -5677,8 +5677,25 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      an expression before any type is parsed (item 7's kind). Tests:
      `parser_recovers_from_a_broken_type_argument_list`, a section of
      `type_checker_does_not_cascade_from_an_error`.
-  4. **A missing package** is 31 errors for one absent `--package` (§15's fuzz list): every
+  4. ~~**A missing package**~~ **Done (2026-10-03)**: the 31 are now 1, two imports of one missing
+     package are 1, and a misspelt type in a package that is there is 1 rather than 2. Was 31 errors for one absent `--package` (§15's fuzz list): every
      `kl::` name after *there is no package `kl`* is reported again.
+     **Probed after item 3 (2026-10-03)**: `codegen/package_types` without its `--package` is 31:
+     13 *`kl` is not declared* (a `kl::f()` call: the loader never registered `kl`, so the
+     resolver reads it as an ordinary name), 10 *no module of `kl` ... declares* (types,
+     literals), 6 *`::` needs the name of a type on its left* (`kl::Shape::Circle`,
+     `kl::Box<i32>::of`, where the inner path was left unbound) and 1 *cannot assign* (`kl::made
+     = ...`), and two imports of one missing package report it twice. **Fix**: the loader
+     registers a missing package as a package and marks it missing, reporting it at the first
+     import only; `lookup_qualified` is silent through a missing package; and every qualified
+     name the resolver could not bind, reported or not, is recorded in `Resolution`, so the
+     checker's *`::` needs a type* and *cannot assign* treat it as already answered for, as they
+     do an Error node. The second also stops *`::` needs a type* following *no module ...
+     declares* in a package that is there. Left alone: a missing *module* (`import kl::nope;`,
+     or `import nope;`) still reports each name, since only some of a package's names could
+     have come from it and a typo would be hidden. Tests: a section of
+     `loader_loads_a_program_from_its_imports`, `resolver_says_nothing_more_about_a_missing_package`,
+     golden `sema/missing_package`.
   5. **A member that is not one.** Found by a sweep of 38 bad lines in a class body (2026-10-03).
      The member loop of `parse_aggregate_decl` has no recovery boundary: anything that does not
      open a member goes to `parse_field_decl`, which reports *expected an identifier* twice and
