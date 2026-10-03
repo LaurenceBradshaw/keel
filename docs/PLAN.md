@@ -5766,11 +5766,25 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      parser could leave behind (`scan_type_arguments` counts depth by hand for exactly that).
      Group 2 below falls out of this: `i32 f();` stops at `;` where `{` was wanted, one error,
      and its hint is a `stop_hint` row.
-  6. **A method or constructor without its body.** `i32 f();` and `i32 f() const;` in a class
+  6. ~~**A method or constructor without its body.**~~ **Done (2026-10-03)**: every probe below is
+     one error, sema included, and a misnamed constructor at a member's start still reaches sema's
+     *does not name the enclosing type*. `i32 f();` and `i32 f() const;` in a class
      report *expected `{`* and then parse the rest of the class as statements: 8 errors, every
      later member lost, and *`C` has no fields*. The top level already says *Keel has no forward
      declarations*; a member should get the same one error. `... const override { }` (5) and
      `C() : a( 1 ) { }` (2) are the same entry point: whatever stands where `{` should be.
+     **Probed after item 5 (2026-10-03)**: on its own line, a method, constructor, destructor or
+     static method with no body is now one error with the hint, and `override`, `= 0` and
+     `noexcept` one error at the word. Two gaps remain. (a) An initialiser list is 3 parse errors
+     plus sema's *`a` does not name the enclosing type*: the retry after the failed head reads
+     `a( 1 ) { }` as a constructor named `a`. Fix: a retry takes only the class's name as a
+     constructor, the rule the missing-`;` repair already uses; any name still opens one at a
+     member's start, so a misnamed constructor reaches sema. A `stop_hint` row for `:` where `{`
+     was wanted: set each field in the constructor's body. (b) On a line shared with the next
+     member, the drop is quoted whole and the stop's hint is lost (`i32 f();` says nothing of
+     forward declarations). Fix: the quoted form carries the stop's hint too, when the scan
+     stopped inside the drop. Tests: four sections of `parser_recovers_from_a_member_that_is_not_one`,
+     two of `scanner_chunks_a_class_body`, one of `hints_name_the_keel_spelling`.
   7. Left alone: a stray `};` mid-class, and an unclosed `(` or `{` inside a member, end the class
      where the author did not mean to; a parser cannot know better.
   8. **Later, not this cascade: field initialisers and fixed arrays.** `i32 a = 3;` is wanted

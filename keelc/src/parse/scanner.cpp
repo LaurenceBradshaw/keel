@@ -78,7 +78,7 @@ Member_chunk Scanner::next_member( u32 at, Symbol_id enclosing )
             break;
         }
 
-        const Head_scan retry = member_head( q, enclosing );
+        const Head_scan retry = scan_head( q, enclosing, Constructor_names::Enclosing_only );
 
         if( !retry.head.has_value() )
         {
@@ -1384,6 +1384,34 @@ TEST_CASE( "scanner_chunks_a_class_body", "[scan]" )
         const Member_chunk c = s.chunk();
 
         REQUIRE( c.dropped_end == 1 );
+        REQUIRE( c.head->kind == Member_kind::Constructor );
+    }
+
+    // Or `a( 1 ) { }` heads a constructor named `a`, and its `1` is reported as a parameter.
+    SECTION( "after a failed head, only the class's name opens a constructor" )
+    {
+        for( const std::string_view source : { "C() : a( 1 ) { } i32 b; }", "C() : a( 1 ), b( 2 ) { a = 3; } i32 b; }" } )
+        {
+            Scanned            s( source );
+            const Member_chunk c = s.chunk();
+
+            INFO( source );
+            REQUIRE( c.dropped_begin == 0 );
+            REQUIRE( c.dropped_end == s.at( "i32" ) );
+            REQUIRE( c.failure.at == s.at( ":" ) );
+            REQUIRE( c.failure.token == Token_kind::L_brace );
+            REQUIRE( c.head.has_value() );
+            REQUIRE( c.head->kind == Member_kind::Field );
+        }
+    }
+
+    // A misnamed constructor at a member's start is still one, for sema to name.
+    SECTION( "at a member's start, any name before `(` opens a constructor" )
+    {
+        Scanned            s( "a( i32 v ) { } }" );
+        const Member_chunk c = s.chunk();
+
+        REQUIRE_FALSE( c.dropped() );
         REQUIRE( c.head->kind == Member_kind::Constructor );
     }
 

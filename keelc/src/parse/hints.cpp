@@ -47,7 +47,7 @@ std::string_view dropped_word_hint( std::string_view word, Hint_place place )
 std::string_view stop_hint( Token_kind wanted, Token_kind found, Hint_place place )
 {
     // clang-format off
-    constexpr std::array<Stop_hint, 7> hints = {
+    constexpr std::array<Stop_hint, 8> hints = {
         Stop_hint { Token_kind::Semicolon, Token_kind::Equal, "a field cannot be given a value here yet: set it in the constructor", Hint_place::Member },
         Stop_hint { Token_kind::Semicolon, Token_kind::Comma, "declare each field with its own type", Hint_place::Member },
         Stop_hint { Token_kind::Semicolon, Token_kind::L_bracket, "a field cannot be a fixed-size array yet", Hint_place::Member },
@@ -55,6 +55,7 @@ std::string_view stop_hint( Token_kind wanted, Token_kind found, Hint_place plac
         Stop_hint { Token_kind::Semicolon, Token_kind::Comma, "declare each variable with its own type", Hint_place::Declaration },
         Stop_hint { Token_kind::Semicolon, Token_kind::L_bracket, "a variable cannot be a fixed-size array yet", Hint_place::Declaration },
         Stop_hint { Token_kind::L_brace, Token_kind::Semicolon, "Keel has no forward declarations: write the definition here, or `extern` if it is defined in C", Hint_place::Declaration },
+        Stop_hint { Token_kind::L_brace, Token_kind::Colon, "Keel has no initialiser lists: put the initialisation in the constructor's body", Hint_place::Member },
     };
     // clang-format on
 
@@ -133,6 +134,12 @@ TEST_CASE( "hints_name_the_keel_spelling", "[parse][hints]" )
         REQUIRE( has( stop_hint( Token_kind::L_brace, Token_kind::Semicolon, declaration ), "no forward declarations" ) );
         REQUIRE( has( stop_hint( Token_kind::L_brace, Token_kind::Semicolon, declaration ), "`extern` if it is defined in C" )
         );
+    }
+
+    SECTION( "for a constructor with an initialiser list" )
+    {
+        REQUIRE( has( stop_hint( Token_kind::L_brace, Token_kind::Colon, member ), "in the constructor's body" ) );
+        REQUIRE( stop_hint( Token_kind::L_brace, Token_kind::Colon, declaration ).empty() );
     }
 
     // A file-scope variable may have a value, so there is nothing to say.

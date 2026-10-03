@@ -1249,7 +1249,10 @@ void Parser::report_dropped( u32 begin, u32 end, const Scan_failure& failure, st
         message = fmt::format(
             "expected a {}, found `{}`", place == Hint_place::Member ? "member" : "declaration", sm_.text( span )
         );
-        help = std::string( word_hint );
+        help = !word_hint.empty() ? std::string( word_hint )
+               : failure.wanted == Wanted::Token && failure.at < end
+                   ? std::string( stop_hint( failure.token, tokens_[failure.at].kind, place ) )
+                   : std::string {};
     }
     else if( !word_hint.empty() || failure.at >= end )
     {
@@ -8780,6 +8783,90 @@ TEST_CASE( "parser_recovers_from_a_member_that_is_not_one", "[parse][recovery]" 
         REQUIRE( has( p, "expected `{`, found `;`" ) );
         REQUIRE( has( p, "no forward declarations" ) );
         REQUIRE( member_names( p ) == "c" );
+    }
+
+    SECTION( "a constructor, destructor or static method with no body is one error" )
+    {
+        for( const std::string_view member : { "C();", "~C();", "static i32 g();" } )
+        {
+            const Parsed p( std::string( "class C {\n    i32 a;\n    " ) + std::string( member ) + "\n    i32 b;\n};" );
+
+            INFO( member );
+            INFO( p.errors() );
+            REQUIRE( p.error_count() == 1 );
+            REQUIRE( has( p, "expected `{`, found `;`" ) );
+            REQUIRE( has( p, "no forward declarations" ) );
+            REQUIRE( member_names( p ) == "a b" );
+        }
+    }
+
+    // Quoted with the member after it, the help still says what stopped it.
+    SECTION( "a member with no body on a shared line keeps its help" )
+    {
+        const Parsed method( "class C { i32 a; i32 f(); i32 b; };" );
+        const Parsed constructor( "class C { i32 a; C(); i32 b; };" );
+
+        INFO( method.errors() );
+        INFO( constructor.errors() );
+        REQUIRE( method.error_count() == 1 );
+        REQUIRE( has( method, "expected a member, found `i32 f();`" ) );
+        REQUIRE( has( method, "no forward declarations" ) );
+        REQUIRE( member_names( method ) == "a b" );
+
+        REQUIRE( constructor.error_count() == 1 );
+        REQUIRE( has( constructor, "expected a member, found `C();`" ) );
+        REQUIRE( has( constructor, "no forward declarations" ) );
+        REQUIRE( member_names( constructor ) == "a b" );
+    }
+
+    // No Keel spelling for these, so no help: the stop alone.
+    SECTION( "a word where `{` should be drops the member and its body" )
+    {
+        const Parsed over( "class C {\n"
+                           "    i32 a;\n"
+                           "    i32 f() const override { return a; }\n"
+                           "    i32 b;\n"
+                           "};" );
+        const Parsed pure( "class C {\n"
+                           "    i32 a;\n"
+                           "    i32 f() = 0;\n"
+                           "    i32 b;\n"
+                           "};" );
+
+        INFO( over.errors() );
+        INFO( pure.errors() );
+        REQUIRE( over.error_count() == 1 );
+        REQUIRE( has( over, "expected `{`, found `override`" ) );
+        REQUIRE( has( over, "t.kl:3:19" ) );
+        REQUIRE( member_names( over ) == "a b" );
+
+        REQUIRE( pure.error_count() == 1 );
+        REQUIRE( has( pure, "expected `{`, found `=`" ) );
+        REQUIRE( member_names( pure ) == "a b" );
+    }
+
+    // `a( 1 ) { }` would head a constructor named `a`; after a failed head only the class's name does.
+    SECTION( "an initialiser list is one error, with the Keel spelling" )
+    {
+        const Parsed own_line( "class C {\n"
+                               "    i32 a;\n"
+                               "    C() : a( 1 ) { }\n"
+                               "    i32 b;\n"
+                               "};" );
+        const Parsed shared( "class C { i32 a; C() : a( 1 ), b( 2 ) { a = 3; } i32 b; };" );
+
+        INFO( own_line.errors() );
+        INFO( shared.errors() );
+        REQUIRE( own_line.error_count() == 1 );
+        REQUIRE( has( own_line, "expected `{`, found `:`" ) );
+        REQUIRE( has( own_line, "t.kl:3:9" ) );
+        REQUIRE( has( own_line, "in the constructor's body" ) );
+        REQUIRE( member_names( own_line ) == "a b" );
+
+        REQUIRE( shared.error_count() == 1 );
+        REQUIRE( has( shared, "expected a member, found `C() : a( 1 ), b( 2 ) { a = 3; }`" ) );
+        REQUIRE( has( shared, "in the constructor's body" ) );
+        REQUIRE( member_names( shared ) == "a b" );
     }
 
     // A member begins where the `;` should be, so the field is whole without it.
