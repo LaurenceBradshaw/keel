@@ -89,8 +89,8 @@ private:
     // --- declarations ---
 
     Node_id parse_import();
-    Node_id parse_declaration();
-    Node_id parse_function_decl();
+    Node_id parse_declaration( const Declaration_head& head );
+    Node_id parse_function_decl( std::optional<u32> commit = std::nullopt );
     Node_id parse_method_decl( Symbol_id enclosing, Node_id type_params, bool is_static, u32 commit );
     Node_id parse_param_list( Node_id leading = Node_id {} );
     // The parameters alone: the list node is built later, once the `where` clauses that belong
@@ -114,7 +114,8 @@ private:
     Node_id parse_member( const Member_head& head, Symbol_id enclosing, Node_id type_params, bool is_class );
 
     // One error for the tokens a chunk drops, at the first word when the hint table knows it.
-    void    report_dropped( const Member_chunk& chunk );
+    void    report_dropped( u32 begin, u32 end, const Scan_failure& failure, std::optional<u32> next, Hint_place place );
+    u32     line_of( const Token& token ) const;
     Node_id parse_enum_decl();
     Node_id parse_variant_decl();
     // A member parser starts where its head scan did, past the markers, and is handed its commit.
@@ -658,10 +659,40 @@ std::vector<Node_id> Parser::parse_declarations()
     std::vector<Node_id> decls;
     bool                 declared = false;
 
-    while( !at_end() )
+    std::optional<u32> reported_line;
+    for( ;; )
     {
-        const u32     before = pos_;
-        const Node_id decl   = parse_declaration();
+        Declaration_chunk chunk = scanner_.next_declaration( pos_ );
+
+        if( chunk.dropped() && ( !reported_line || line_of( tokens_[chunk.dropped_begin] ) != *reported_line ) )
+        {
+            report_dropped(
+                chunk.dropped_begin,
+                chunk.dropped_end,
+                chunk.failure,
+                chunk.head ? std::optional( chunk.head->start ) : std::nullopt,
+                Hint_place::Declaration
+            );
+        }
+
+        pos_ = chunk.dropped_end;
+
+        if( !chunk.head )
+        {
+            break;
+        }
+
+        const std::size_t errors_before = diags_.error_count();
+        const Node_id     decl          = parse_declaration( *chunk.head );
+
+        if( diags_.error_count() > errors_before )
+        {
+            reported_line = line_of( previous() );
+        }
+        else
+        {
+            reported_line = std::nullopt;
+        }
 
         if( ast_.kind( decl ) == Node_kind::Import_decl )
         {
@@ -677,12 +708,7 @@ std::vector<Node_id> Parser::parse_declarations()
 
         decls.push_back( decl );
 
-        // A rule that reports without consuming would spin here forever. Every loop in the parser
-        // needs this guard.
-        if( pos_ == before )
-        {
-            advance();
-        }
+        assert( pos_ > chunk.head->start );
     }
 
     return decls;
@@ -733,50 +759,29 @@ Node_id Parser::parse_import()
                : error_node( Span::merge( start, previous().span ) );
 }
 
-Node_id Parser::parse_declaration()
+Node_id Parser::parse_declaration( const Declaration_head& head )
 {
-    if( check_keyword( Keyword::Import ) )
+    assert( pos_ == head.start );
+    head_errors_ = diags_.error_count();
+
+    switch( head.kind )
     {
+    case Declaration_kind::Import:
         return parse_import();
-    }
-
-    if( check_keyword( Keyword::Struct ) || check_keyword( Keyword::Class ) )
-    {
+    case Declaration_kind::Aggregate:
         return parse_aggregate_decl();
-    }
-
-    if( check_keyword( Keyword::Enum ) )
-    {
+    case Declaration_kind::Enum:
         return parse_enum_decl();
+    case Declaration_kind::Function:
+        return parse_function_decl( head.commit );
+    case Declaration_kind::Variable:
+        return parse_var_decl( head.commit );
     }
 
-    if( check_keyword( Keyword::Extern ) )
-    {
-        return parse_function_decl();
-    }
-
-    // A function and a file-scope variable both open with a type and a name; only what follows the
-    // name separates them. `(` opens a parameter list, anything else belongs to a variable.
-    //
-    // A failed scan takes the variable path deliberately: `i32 = 1;` is a variable missing its
-    // name, and parse_var_decl says so, where parse_function_decl would complain about a missing
-    // `(` instead.
-    // A mode may open one too: `const ref T f( ... )` and `ref T f( ... )` are declarations.
-    if( check( Token_kind::Identifier ) || check_keyword( Keyword::Const ) || at_mode_keyword() )
-    {
-        const bool function = scanner_.looks_like_function( pos_ );
-
-        return function ? parse_function_decl() : parse_var_decl();
-    }
-
-    const Span span = peek().span;
-    error_at( span, fmt::format( "expected a declaration, found {}", found_text() ) );
-    synchronise();
-
-    return error_node( span );
+    return error_node( peek().span );
 }
 
-Node_id Parser::parse_function_decl()
+Node_id Parser::parse_function_decl( std::optional<u32> commit )
 {
     const Span start = peek().span;
 
@@ -826,6 +831,11 @@ Node_id Parser::parse_function_decl()
 
     const Node_id type_params = generic ? ast_.add( Node_kind::Type_param_list, generic_span, 0, generics ) : Node_id {};
 
+    if( commit )
+    {
+        reach_commit( *commit );
+    }
+
     // A body contradicts `extern` rather than merely being redundant. Recover as an ordinary
     // definition - the body is right there, so that is the reading that lets the rest of the file
     // compile, and leaving the braces unconsumed reads their statements as declarations.
@@ -853,19 +863,6 @@ Node_id Parser::parse_function_decl()
                                      { return_type, params, Node_id {}, type_params }
                                  )
                                : error_node( Span::merge( start, previous().span ) );
-    }
-
-    // A `;` in place of the body is a forward declaration, which D18 makes unnecessary. Return an
-    // Error node rather than a Function_decl: this declares nothing, so letting it through would
-    // also make the real definition below it look like a duplicate. Stopping here likewise keeps
-    // parse_block from reading the following declarations as statements.
-    if( check( Token_kind::Semicolon ) )
-    {
-        error_expected(
-            Token_kind::L_brace,
-            "Keel has no forward declarations: write the definition here, or `extern` if it is defined in C"
-        );
-        return error_node( Span::merge( start, advance().span ) );
     }
 
     const Node_id body = parse_block();
@@ -1041,6 +1038,7 @@ Node_id Parser::parse_aggregate_decl()
     bool                 wrote_field = false;
     std::vector<Node_id> members;
     bool                 dropped = false;
+    std::optional<u32>   reported_line;
     while( !check( Token_kind::R_brace ) && !at_end() )
     {
         if( skip_access_label( is_class ) )
@@ -1051,8 +1049,17 @@ Node_id Parser::parse_aggregate_decl()
         Member_chunk chunk = scanner_.next_member( pos_, name );
         if( chunk.dropped() )
         {
-            report_dropped( chunk );
             dropped = true;
+            if( !reported_line || line_of( tokens_[chunk.dropped_begin] ) != *reported_line )
+            {
+                report_dropped(
+                    chunk.dropped_begin,
+                    chunk.dropped_end,
+                    chunk.failure,
+                    chunk.head ? std::optional<u32>( chunk.head->start ) : std::nullopt,
+                    Hint_place::Member
+                );
+            }
         }
 
         pos_ = chunk.dropped_end;
@@ -1067,7 +1074,19 @@ Node_id Parser::parse_aggregate_decl()
             wrote_field = true;
         }
 
-        members.push_back( parse_member( *chunk.head, name, type_params, is_class ) );
+        const std::size_t errors_before = diags_.error_count();
+        const Node_id     member        = parse_member( *chunk.head, name, type_params, is_class );
+
+        if( diags_.error_count() > errors_before )
+        {
+            reported_line = line_of( previous() );
+        }
+        else
+        {
+            reported_line = std::nullopt;
+        }
+
+        members.push_back( member );
     }
 
     expect( Token_kind::R_brace );
@@ -1210,18 +1229,16 @@ Node_id Parser::parse_member( const Member_head& head, Symbol_id enclosing, Node
     return member;
 }
 
-void Parser::report_dropped( const Member_chunk& chunk )
+void Parser::report_dropped( u32 begin, u32 end, const Scan_failure& failure, std::optional<u32> next, Hint_place place )
 {
-    assert( chunk.dropped() );
+    assert( begin < end );
 
-    const Token& first = tokens_[chunk.dropped_begin];
-    const Token& last  = tokens_[chunk.dropped_end - 1];
+    const Token& first = tokens_[begin];
+    const Token& last  = tokens_[end - 1];
 
-    auto line_of = [this]( const Token& t ) -> u32 { return sm_.line_col( t.span.file, t.span.start ).line; };
+    const bool same_line = next && line_of( last ) == line_of( tokens_[*next] );
 
-    const bool same_line = chunk.head.has_value() && line_of( last ) == line_of( tokens_[chunk.head->start] );
-
-    const std::string_view word_hint = dropped_word_hint( sm_.text( first.span ), Hint_place::Member );
+    const std::string_view word_hint = dropped_word_hint( sm_.text( first.span ), place );
 
     Span        span;
     std::string message;
@@ -1229,27 +1246,30 @@ void Parser::report_dropped( const Member_chunk& chunk )
     if( same_line )
     {
         span    = Span::merge( first.span, last.span );
-        message = fmt::format( "expected a member, found `{}`", sm_.text( span ) );
-        help    = std::string( word_hint );
+        message = fmt::format(
+            "expected a {}, found `{}`", place == Hint_place::Member ? "member" : "declaration", sm_.text( span )
+        );
+        help = std::string( word_hint );
     }
-    else if( !word_hint.empty() )
+    else if( !word_hint.empty() || failure.at >= end )
     {
         span    = first.span;
-        message = fmt::format( "expected a member, found `{}`", sm_.text( span ) );
-        help    = std::string( word_hint );
+        message = fmt::format(
+            "expected a {}, found `{}`", place == Hint_place::Member ? "member" : "declaration", sm_.text( span )
+        );
+        help = std::string( word_hint );
     }
     else
     {
-        const Scan_failure& failure = chunk.failure;
-        const Token&        stop    = tokens_[failure.at];
-        span                        = stop.span;
+        const Token& stop = tokens_[failure.at];
+        span              = stop.span;
 
         message = "expected ";
         switch( failure.wanted )
         {
         case Wanted::Token:
             message += expectation( failure.token );
-            help = std::string( stop_hint( failure.token, stop.kind, Hint_place::Member ) );
+            help = std::string( stop_hint( failure.token, stop.kind, place ) );
             break;
         case Wanted::Member:
             message += "a member";
@@ -1268,6 +1288,11 @@ void Parser::report_dropped( const Member_chunk& chunk )
     }
 
     error_at( span, std::move( message ), std::move( help ) );
+}
+
+u32 Parser::line_of( const Token& token ) const
+{
+    return sm_.line_col( token.span.file, token.span.start ).line;
 }
 
 Node_id Parser::parse_enum_decl()
@@ -4441,7 +4466,7 @@ TEST_CASE( "parser_rejects_a_forward_declaration", "[parse]" )
         INFO( p.errors() );
         REQUIRE( p.error_count() == 1 );
 
-        // The prototype becomes an Error node, so it declares nothing - the two real functions are
+        // The prototype is dropped, so it declares nothing - the two real functions are
         // the only Function_decls, and sema will not see a duplicate `f`.
         std::size_t functions = 0;
         for( const Node_id decl : p.children( p.root() ) )
@@ -8695,6 +8720,23 @@ TEST_CASE( "parser_recovers_from_a_member_that_is_not_one", "[parse][recovery]" 
         REQUIRE( p.text( p.child( field, 0 ) ) == "i32" );
     }
 
+    // `foo i32` reads as a type and a name, so the scan stops in the member after it; naming that
+    // stop would point at a member that is fine.
+    SECTION( "a word on its own line is named, not where the scan through it stopped" )
+    {
+        const Parsed p( "class C {\n"
+                        "    i32 a;\n"
+                        "    foo\n"
+                        "    i32 b;\n"
+                        "};" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( has( p, "expected a member, found `foo`" ) );
+        REQUIRE( has( p, "t.kl:3:5" ) );
+        REQUIRE( member_names( p ) == "a b" );
+    }
+
     // On its own line, the member's own failure says more than quoting it would.
     SECTION( "a member stopped short says what stopped it" )
     {
@@ -8807,6 +8849,234 @@ TEST_CASE( "parser_recovers_from_a_member_that_is_not_one", "[parse][recovery]" 
         INFO( p.errors() );
         REQUIRE( p.error_count() == 1 );
         REQUIRE( has( p, "expected `;`, found `=`" ) );
+    }
+
+    // The member said what went wrong; the rest of its line is its own leftovers.
+    SECTION( "what a member that reported leaves on its line is not reported again" )
+    {
+        const Parsed p( "class C {\n"
+                        "    static i32 n = 1 2;\n"
+                        "    i32 a;\n"
+                        "};" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( has( p, "expected `;`, found `2`" ) );
+        REQUIRE( member_names( p ) == "n a" );
+    }
+}
+
+// The same chunking one level up: tokens no declaration can be read from are one error.
+TEST_CASE( "parser_recovers_from_a_declaration_that_is_not_one", "[parse][recovery]" )
+{
+    // The file's declarations, by name. Dropped tokens leave no node; Error nodes are skipped.
+    const auto names = []( const Parsed& p )
+    {
+        std::string out;
+        for( const Node_id decl : p.children( p.root() ) )
+        {
+            if( p.kind( decl ) == Node_kind::Error )
+            {
+                continue;
+            }
+            out += out.empty() ? "" : " ";
+            out += p.name( decl );
+        }
+        return out;
+    };
+
+    const auto has = []( const Parsed& p, std::string_view part ) { return p.errors().find( part ) != std::string::npos; };
+
+    SECTION( "junk on a line of its own is named alone, where it is" )
+    {
+        const Parsed p( "i32 a = 1;\n"
+                        "42\n"
+                        "i32 f() { return a; }\n" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( has( p, "expected a declaration, found `42`" ) );
+        REQUIRE( has( p, "t.kl:2:1" ) );
+        REQUIRE( names( p ) == "a f" );
+    }
+
+    SECTION( "words before a function on its line are named together" )
+    {
+        const Parsed one( "static i32 f() { return 1; }\ni32 g() { return 2; }\n" );
+        const Parsed two( "static inline i32 f() { return 1; }\ni32 g() { return 2; }\n" );
+        const Parsed virt( "virtual i32 f() { return 1; }\ni32 g() { return 2; }\n" );
+
+        INFO( one.errors() );
+        INFO( two.errors() );
+        INFO( virt.errors() );
+        REQUIRE( one.error_count() == 1 );
+        REQUIRE( has( one, "expected a declaration, found `static`" ) );
+        REQUIRE( has( one, "t.kl:1:1" ) );
+        REQUIRE( names( one ) == "f g" );
+
+        REQUIRE( two.error_count() == 1 );
+        REQUIRE( has( two, "expected a declaration, found `static inline`" ) );
+        REQUIRE( names( two ) == "f g" );
+
+        REQUIRE( virt.error_count() == 1 );
+        REQUIRE( has( virt, "expected a declaration, found `virtual`" ) );
+        REQUIRE( names( virt ) == "f g" );
+
+        const Node_id function = find_first( one.ast(), one.root(), Node_kind::Function_decl );
+        REQUIRE( one.text( one.child( function, 0 ) ) == "i32" );
+    }
+
+    SECTION( "a template header is one error, with the Keel spelling" )
+    {
+        const Parsed p( "template<typename T> T id( T v ) { return v; }\ni32 g() { return 2; }\n" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( has( p, "expected a declaration, found `template<typename T>`" ) );
+        REQUIRE( has( p, "`T f<T>( T a )`" ) );
+        REQUIRE( names( p ) == "id g" );
+    }
+
+    // A member's word means nothing here, so it is quoted like any other.
+    SECTION( "a member's word gets no member's help" )
+    {
+        const Parsed p( "mutable\ni32 a;\n" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( has( p, "expected a declaration, found `mutable`" ) );
+        REQUIRE_FALSE( has( p, "fields" ) );
+        REQUIRE( names( p ) == "a" );
+    }
+
+    SECTION( "a statement at file scope is one error" )
+    {
+        const Parsed p( "if( true ) { return; }\ni32 g() { return 2; }\n" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( has( p, "expected a declaration, found `if`" ) );
+        REQUIRE( names( p ) == "g" );
+    }
+
+    SECTION( "a declaration stopped short says what stopped it" )
+    {
+        const Parsed comma( "i32 a, b;\ni32 c;\n" );
+        const Parsed array( "i32 a[4];\ni32 c;\n" );
+
+        INFO( comma.errors() );
+        INFO( array.errors() );
+        REQUIRE( comma.error_count() == 1 );
+        REQUIRE( has( comma, "expected `;`, found `,`" ) );
+        REQUIRE( has( comma, "t.kl:1:6" ) );
+        REQUIRE( has( comma, "declare each variable with its own type" ) );
+        REQUIRE( names( comma ) == "c" );
+
+        REQUIRE( array.error_count() == 1 );
+        REQUIRE( has( array, "expected `;`, found `[`" ) );
+        REQUIRE( has( array, "a variable cannot be a fixed-size array" ) );
+        REQUIRE( names( array ) == "c" );
+    }
+
+    // The function has no object, so there is nothing for `const` to bind.
+    SECTION( "a trailing `const` on a function is one error" )
+    {
+        const Parsed p( "i32 f() const { return 1; }\ni32 g() { return 2; }\n" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( has( p, "expected `{`, found `const`" ) );
+        REQUIRE( names( p ) == "g" );
+    }
+
+    // A declaration begins where the `;` should be, so the one before it is whole without it.
+    SECTION( "a missing `;` keeps the declaration" )
+    {
+        const Parsed variable( "i32 a\ni32 b;\n" );
+        const Parsed external( "extern i32 f()\ni32 g() { return 2; }\n" );
+
+        INFO( variable.errors() );
+        INFO( external.errors() );
+        REQUIRE( variable.error_count() == 1 );
+        REQUIRE( has( variable, "expected `;`, found `i32`" ) );
+        REQUIRE( names( variable ) == "a b" );
+
+        REQUIRE( external.error_count() == 1 );
+        REQUIRE( has( external, "expected `;`, found `i32`" ) );
+        REQUIRE( names( external ) == "f g" );
+    }
+
+    SECTION( "a stray brace group is dropped whole" )
+    {
+        const Parsed p( "i32 a;\n{ i32 inner; }\ni32 b;\n" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( has( p, "expected a declaration, found `{`" ) );
+        REQUIRE( names( p ) == "a b" );
+    }
+
+    SECTION( "a stray closing brace is junk, not an end" )
+    {
+        const Parsed p( "i32 a;\n}\ni32 b;\n" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( has( p, "expected a declaration, found `}`" ) );
+        REQUIRE( names( p ) == "a b" );
+    }
+
+    // The scanner counted the parentheses; the parser stops inside them and resumes at the body.
+    SECTION( "a function that goes wrong inside its parameters still has its body read" )
+    {
+        const Parsed p( "i32 f( i32 x y ) { return 1; }\ni32 g() { return 2; }\n" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( has( p, "t.kl:1:13" ) );
+        REQUIRE( names( p ) == "f g" );
+    }
+
+    // The declaration said what went wrong; the rest of its line is its own leftovers.
+    SECTION( "what a declaration that reported leaves on its line is not reported again" )
+    {
+        const Parsed value( "i32 n = 1 2;\ni32 a;\n" );
+        const Parsed base( "class C : public B {\n"
+                           "    i32 a;\n"
+                           "};\n"
+                           "i32 f() { return 1; }\n" );
+
+        INFO( value.errors() );
+        INFO( base.errors() );
+        REQUIRE( value.error_count() == 1 );
+        REQUIRE( has( value, "expected `;`, found `2`" ) );
+        REQUIRE( names( value ) == "n a" );
+
+        REQUIRE( base.error_count() == 1 );
+        REQUIRE( has( base, "expected `{`, found `:`" ) );
+        REQUIRE( names( base ) == "f" );
+    }
+
+    // Only leftovers are excused: junk after a clean declaration is still junk.
+    SECTION( "junk after a declaration that did not report is reported" )
+    {
+        const Parsed p( "i32 a; 42\ni32 b;\n" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( has( p, "expected a declaration, found `42`" ) );
+        REQUIRE( names( p ) == "a b" );
+    }
+
+    // Dropped tokens are not a declaration, so an `import` after them is still in place.
+    SECTION( "junk does not count as a declaration before an import" )
+    {
+        const Parsed p( "42\nimport io;\ni32 a;\n" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( has( p, "expected a declaration, found `42`" ) );
+        REQUIRE( names( p ) == "io a" );
     }
 }
 

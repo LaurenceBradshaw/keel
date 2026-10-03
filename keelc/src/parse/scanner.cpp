@@ -287,14 +287,6 @@ bool Scanner::looks_like_binding( u32 at )
     return scan_type_and_name();
 }
 
-bool Scanner::looks_like_function( u32 at )
-{
-    cursor_       = at;
-    owed_greater_ = 0;
-
-    return scan_type_and_name() && ( check( Token_kind::L_paren ) || check( Token_kind::Less ) );
-}
-
 // Shape alone, with no symbol table (L17). Taking the generic reading is safe: the comparison
 // reading never type-checks (§12).
 bool Scanner::looks_like_type_arguments( u32 at )
@@ -1427,7 +1419,6 @@ TEST_CASE( "scanner_answers_the_parsers_lookahead", "[scan]" )
 {
     auto declaration    = []( std::string_view source ) { return Scanned( source ).scanner().looks_like_declaration( 0 ); };
     auto binding        = []( std::string_view source ) { return Scanned( source ).scanner().looks_like_binding( 0 ); };
-    auto function       = []( std::string_view source ) { return Scanned( source ).scanner().looks_like_function( 0 ); };
     auto type_arguments = []( std::string_view source )
     {
         const Scanned s( source );
@@ -1487,19 +1478,6 @@ TEST_CASE( "scanner_answers_the_parsers_lookahead", "[scan]" )
         CHECK_FALSE( declaration( "ref T r = x;" ) );
     }
 
-    SECTION( "a function is a declaration followed by `(` or `<`" )
-    {
-        CHECK( function( "i32 f() { }" ) );
-        CHECK( function( "T id<T>( T a ) { }" ) );
-        CHECK( function( "const ref T f() { }" ) );
-        CHECK( function( "ref T f() { }" ) );
-        CHECK( function( "Vector<i32> f() { }" ) );
-        CHECK( function( "fn( i32 ) -> i32 apply( fn( i32 ) -> i32 g ) { }" ) );
-
-        CHECK_FALSE( function( "i32 x = 0;" ) );
-        CHECK_FALSE( function( "i32 x;" ) );
-    }
-
     SECTION( "type arguments close before something no operand starts with" )
     {
         CHECK( type_arguments( "id<i32>( 1 )" ) );
@@ -1524,7 +1502,6 @@ TEST_CASE( "scanner_answers_the_parsers_lookahead", "[scan]" )
 
         CHECK( scanner.looks_like_binding( s.at( "ref" ) ) );
         CHECK( scanner.looks_like_declaration( s.at( "T" ) ) );
-        CHECK( scanner.looks_like_function( s.at( "i32" ) ) );
         CHECK( scanner.looks_like_type_arguments( s.at( "<" ) ) );
         CHECK_FALSE( scanner.looks_like_declaration( s.at( "return" ) ) );
     }

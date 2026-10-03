@@ -936,7 +936,7 @@ TEST_CASE( "type_checker_binds_the_result_of_a_const_ref_return_through_a_pointe
     {
         const Typed p( "const ref i32 pick( const ref i32 a ) { return a; }\n"
                        "fn( const ref i32 ) -> const ref i32 maker() { return &pick; }\n"
-                       "i32 main() { const ref i32 r = maker(); return r; }" );
+                       "i32 main() { const ref fn( const ref i32 ) -> const ref i32 r = maker(); return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );

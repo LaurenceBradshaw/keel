@@ -5739,7 +5739,7 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      `next_declaration`; statements keep theirs (`->`, `u32 *p`, `++` as a value) with
      `synchronise()`. Tests: two sections of `parser_recovers_from_a_member_that_is_not_one`, a
      row in `hints_name_the_keel_spelling`. (5) **Top-level declarations through the same chunking.
-     In progress (2026-10-03); (5a) and (5b) done.** Probed: `template<...>` 4 errors, `static`/`inline`/`virtual`
+     Done (2026-10-03).** Every probe below is now one error. Probed: `template<...>` 4 errors, `static`/`inline`/`virtual`
      before a function 4-9, `i32 f() const { }` 2, `i32 a, b;` 2, `if( true ) { }` 3,
      `class C : public B { ... };` 4. (5a) Prerequisite, found probing: a parse error inside a
      region the scanner counts (a parameter list) leaves the parser short of the commit, and the
@@ -5761,7 +5761,7 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      D36 makes it a function only. (5c) Wire into `parse_declarations`: the forward-declaration
      branch of `parse_function_decl` and `parse_declaration`'s `synchronise()` go, and a drop
      that starts on the line where a declaration that reported ended is not reported again
-     (`class C : public B { ... };` stays one error), in both loops. A `Scanner` is a class rather than a namespace because it
+     (`class C : public B { ... };` stays one error), in both loops. A drop's own failure is named only when the scan stopped inside the dropped tokens: `foo` on a line above `i32 b;` reads as a type and a name and stops at `b`, in a member that is fine, so the word is named instead. The old gate refused `fn`, so a file-scope function returning a function type was a parse error until now; `looks_like_function` is gone with its last caller. A `Scanner` is a class rather than a namespace because it
      has state of its own: a cursor and an owed half of `>>`, which a rewinding scan inside the
      parser could leave behind (`scan_type_arguments` counts depth by hand for exactly that).
      Group 2 below falls out of this: `i32 f();` stops at `;` where `{` was wanted, one error,
