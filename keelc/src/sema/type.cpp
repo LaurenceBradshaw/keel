@@ -938,6 +938,12 @@ Type_id Type_table::composite(
     return id;
 }
 
+bool is_builtin_type_name( std::string_view spelling )
+{
+    static const Type_table table;
+    return table.from_spelling( spelling ).is_valid();
+}
+
 } // namespace keel
 #ifdef ENABLE_UNIT_TESTS
 #include <catch2/catch_test_macros.hpp>

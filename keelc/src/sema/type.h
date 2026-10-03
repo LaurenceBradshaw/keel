@@ -78,6 +78,8 @@ struct Type
     Param_mode return_mode = Param_mode::Value;
 };
 
+bool is_builtin_type_name( std::string_view spelling );
+
 // A type parameter bound to a concrete type, keyed by the parameter's own Type_id. Named because
 // it travels from the checker's call site through to the lowerer's instantiation.
 using Bindings = std::unordered_map<u32, Type_id>;

@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include "sema/reporter.h"
+#include "sema/type.h"
 
 namespace keel
 {
@@ -51,6 +52,7 @@ private:
     Node_id lookup_in( Symbol_id package, Symbol_id name, Node_id use );
     Node_id lookup_qualified( Node_id package, Node_id use );
     Node_id visible_from( Node_id use, Node_id head );
+    bool    refuse_builtin_name( Symbol_id name, Node_id decl );
     void    refuse_unimported( Node_id use, Node_id decl );
     void    refuse_other_package( Node_id use, Node_id decl );
 
@@ -339,7 +341,10 @@ void Resolver::visit( Node_id id )
         push_scope( Scope_kind::Barrier );
         visit( ast_.type_param_list( id ) );
 
-        scopes_.back().names.emplace( Symbol_id { ast_.aux( id ) }, id );
+        if( !is_builtin_type_name( interner_.text( Symbol_id { ast_.aux( id ) } ) ) )
+        {
+            scopes_.back().names.emplace( Symbol_id { ast_.aux( id ) }, id );
+        }
 
         if( children[1].is_valid() )
         {
@@ -376,7 +381,10 @@ void Resolver::visit( Node_id id )
         push_scope( Scope_kind::Barrier );
         visit( ast_.type_param_list( id ) );
 
-        scopes_.back().names.emplace( Symbol_id { ast_.aux( id ) }, id );
+        if( !is_builtin_type_name( interner_.text( Symbol_id { ast_.aux( id ) } ) ) )
+        {
+            scopes_.back().names.emplace( Symbol_id { ast_.aux( id ) }, id );
+        }
 
         std::unordered_map<u32, Node_id> members;
 
@@ -402,6 +410,11 @@ void Resolver::visit( Node_id id )
             if( !name.is_valid() )
             {
                 continue; // the parser already reported the missing name
+            }
+
+            if( refuse_builtin_name( name, field ) )
+            {
+                continue;
             }
 
             const auto [it, inserted] = members.try_emplace( name.v, field );
@@ -436,6 +449,11 @@ void Resolver::visit( Node_id id )
             const Symbol_id name { ast_.aux( member ) };
 
             if( !name.is_valid() )
+            {
+                continue;
+            }
+
+            if( refuse_builtin_name( name, member ) )
             {
                 continue;
             }
@@ -506,6 +524,11 @@ void Resolver::pop_scope()
 void Resolver::declare( Scope& scope, Symbol_id name, Node_id decl )
 {
     if( !name.is_valid() )
+    {
+        return;
+    }
+
+    if( refuse_builtin_name( name, decl ) )
     {
         return;
     }
@@ -693,6 +716,20 @@ Node_id Resolver::visible_from( Node_id use, Node_id head )
 
     refuse_unimported( use, head );
     return head;
+}
+
+bool Resolver::refuse_builtin_name( Symbol_id name, Node_id decl )
+{
+    if( is_builtin_type_name( interner_.text( name ) ) )
+    {
+        reporter_.error_at(
+            ast_.span( decl ),
+            fmt::format( "`{}` is the name of a builtin type", interner_.text( name ) ),
+            "a declaration may not take one"
+        );
+        return true;
+    }
+    return false;
 }
 
 void Resolver::refuse_unimported( Node_id use, Node_id decl )
@@ -1545,6 +1582,102 @@ TEST_CASE( "resolver_rejects_a_local_shadowing_a_field", "[sema][resolve][aggreg
     SECTION( "a field may share a name with a top-level declaration" )
     {
         const Resolved p( "i32 count = 0;\nclass Buffer { u64 count; ~Buffer() { } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// A builtin type's name is reserved: declaring one would shadow the type for the rest of its scope.
+TEST_CASE( "resolver_refuses_a_builtin_type_name", "[sema][resolve]" )
+{
+    const auto refused = []( const Resolved& p, std::string_view name )
+    {
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( fmt::format( "`{}` is the name of a builtin type", name ) ) != std::string::npos );
+    };
+
+    SECTION( "a function, and every later use of the type still names the type" )
+    {
+        const Resolved p( "i32 i32( i32 n ) { return n; }\ni32 main() { i32 x = 1; return x; }" );
+
+        refused( p, "i32" );
+
+        for( std::size_t i = 0; p.nth( Node_kind::Named_type, i ).is_valid(); ++i )
+        {
+            INFO( i );
+            REQUIRE_FALSE( p.declaration_of( p.nth( Node_kind::Named_type, i ) ).is_valid() );
+        }
+    }
+
+    SECTION( "a local" )
+    {
+        refused( Resolved( "i32 main() { i32 i32 = 1; i32 y = 2; return y; }" ), "i32" );
+    }
+
+    SECTION( "a parameter" )
+    {
+        refused( Resolved( "i32 f( bool bool ) { return 0; }\ni32 main() { return 0; }" ), "bool" );
+    }
+
+    SECTION( "a global" )
+    {
+        refused( Resolved( "u8 u8 = 1;\ni32 main() { return 0; }" ), "u8" );
+    }
+
+    SECTION( "a struct, a class and an enum" )
+    {
+        refused( Resolved( "struct f64 { i32 x; };\ni32 main() { return 0; }" ), "f64" );
+        refused( Resolved( "class void { i32 x; };\ni32 main() { return 0; }" ), "void" );
+        refused( Resolved( "enum u16 { A, B };\ni32 main() { return 0; }" ), "u16" );
+    }
+
+    // Each also puts its own name in its own scope, where it would shadow the type all over again.
+    SECTION( "inside a refused struct and enum, the name is still the builtin" )
+    {
+        for( const std::string_view source : {
+                 "struct f64 { f64 x; };\ni32 main() { return 0; }",
+                 "enum u16 { A( u16 n ), B };\ni32 main() { return 0; }",
+             } )
+        {
+            const Resolved p( source );
+
+            INFO( source );
+            REQUIRE( p.errors() == 1 );
+
+            for( std::size_t i = 0; p.nth( Node_kind::Named_type, i ).is_valid(); ++i )
+            {
+                INFO( i );
+                REQUIRE_FALSE( p.declaration_of( p.nth( Node_kind::Named_type, i ) ).is_valid() );
+            }
+        }
+    }
+
+    SECTION( "a type parameter" )
+    {
+        refused( Resolved( "i64 id<i64>( i64 x ) { return x; }\ni32 main() { return 0; }" ), "i64" );
+    }
+
+    // Members enter no lexical scope outside a member body, but every body inside one sees them.
+    SECTION( "a field and a method" )
+    {
+        refused( Resolved( "class C { i32 i32; i32 get() { return 0; } };\ni32 main() { return 0; }" ), "i32" );
+        refused( Resolved( "class C { i32 n; i32 f32() { return n; } };\ni32 main() { return 0; }" ), "f32" );
+    }
+
+    SECTION( "two of one name are two refusals, not a redeclaration" )
+    {
+        const Resolved p( "i32 main() { i32 i8 = 1; i32 i8 = 2; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 2 );
+        REQUIRE( p.rendered().find( "already declared" ) == std::string::npos );
+    }
+
+    SECTION( "a name that only starts like one is fine" )
+    {
+        const Resolved p( "i32 i320 = 1;\nstruct u8x { i32 boolean; };\ni32 main() { i32 f = 1; i32 i = 2; return f + i; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );

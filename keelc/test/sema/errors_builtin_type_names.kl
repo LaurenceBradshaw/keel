@@ -1,0 +1,13 @@
+// A builtin type's name is reserved. Each declaration taking one is refused once, and declares
+// nothing, so every later use of the type still names the type.
+i32 i32( i32 n )
+{
+    return n;
+}
+
+i32 main()
+{
+    i32 u8 = 1;
+    u8  small = 2;
+    return small;
+}

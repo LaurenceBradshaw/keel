@@ -5848,12 +5848,20 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      misused this way aborts there rather than only under `asan` (the suite is clean with it on,
      and this is the only finding). Tests: a section of `resolver_declares_globals_at_file_scope`,
      run fixture `codegen/function_pointer_global`; both fail with the assertions on.
-  2. **A builtin type's name is accepted as a declaration's name.** `i32 i32( i32 n ) { ... }` is
+  2. ~~**A builtin type's name is accepted as a declaration's name.**~~ **Done (2026-10-03).** `i32 i32( i32 n ) { ... }` is
      silent and then every later `i32` in the file is *`i32` is not a type*; a local `i32 i32 = 1;`
      the same for its block. Swapping a return type with the function's name (`sum i32( ... )`)
      gave 44-68 errors. **Decided: builtin type names are reserved, as in C++.** Checked in
      `Resolver::declare`, which every scoped name passes, rather than by making them keywords in the
      lexer, which would touch every type parse: one error at the name, and nothing declared.
+     Fields and methods bypass `declare` but are in scope in every member body, so they are
+     refused too; enum variants and payload fields enter no scope and are left alone. Tests:
+     `resolver_refuses_a_builtin_type_name`, sema golden `errors_builtin_type_names`.
+     Replaying the 314 saved mutants whose cascade was a shadowed builtin: none still reports one,
+     and their errors fall from 1,184 to 674 across the single-edit ones. What is left is the
+     swap itself, `i32 n` written `n i32`: the refusal, *unknown type `n`*, then *`n` is not
+     declared* at every use, since the refused declaration declares nothing (96 mutants, 3.7
+     errors each).
   3. **M1: one parse error per token.** Nothing stops a second report at a token already reported:
      `return private 21;` is *expected `;`*, *expected an expression* and *expected a statement*,
      all at `private`; truncation stacks *expected `}`* per open scope at end of file; `( template
