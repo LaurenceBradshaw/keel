@@ -10,9 +10,9 @@ namespace keel
 {
 
 // Help for a word dropped from a class body, or empty when there is none.
-[[nodiscard]] std::string_view dropped_word_hint( std::string_view word );
+std::string_view dropped_word_hint( std::string_view word );
 
 // Help for a member head that stopped at `found` where it wanted `wanted`, or empty.
-[[nodiscard]] std::string_view member_stop_hint( Token_kind wanted, Token_kind found );
+std::string_view member_stop_hint( Token_kind wanted, Token_kind found );
 
 } // namespace keel

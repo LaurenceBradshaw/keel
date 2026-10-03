@@ -5704,8 +5704,19 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      **Steps.** (1) **Done (2026-10-03)**: `parse/scanner.{h,cpp}` and `parse/hints.{h,cpp}`, with the
      parser untouched - tests `scanner_recognises_each_member_head`,
      `scanner_says_where_and_why_a_head_fails`, `scanner_chunks_a_class_body`,
-     `hints_name_the_keel_spelling`. (2) Wire `next_member` into `parse_aggregate_decl`, with the
-     commit assertion and the hint lookup; parser-level tests written then. (3) Move the parser's
+     `hints_name_the_keel_spelling`. (2) **Done (2026-10-03)**: `next_member` wired into `parse_aggregate_decl`, with the
+     commit assertion and the hint lookup; test `parser_recovers_from_a_member_that_is_not_one`.
+     The head is a contract, so the parser drops what it re-checked: the member loop's own triage
+     (`is_destructor`, `is_constructor`, `looks_like_method`) and its one-token progress skip;
+     `parse_method_decl`'s paren skip-and-rewind for a trailing `const` (read at `commit - 1`);
+     the constructor's nameless path (`take_name` asserts: its head needs an identifier). A
+     keyword, digit-led name or number in a name's place fills it for the scan as it does for
+     `expect_name`, so `i32 if;` stays one *is a keyword* error on a nameless member rather than
+     a dropped one; the other member parsers keep `expect_name` and their nameless paths. A
+     dropped chunk also silences *has no fields*, since the drop may have been the field.
+     `looks_like_method` stays for `parse_declaration` until (3). Top-level declarations are the
+     second user of the chunking (`next_declaration`), after (3); statements keep `synchronise()`
+     and use the scanner only as lookahead. (3) Move the parser's
      own lookaheads (`looks_like_*`, `scan_type_and_name`, `scan_type_arguments`) into the
      scanner, unchanged in behaviour. (4) Audit the parser's bespoke spelling checks against the
      generic recovery plus a table row. A `Scanner` is a class rather than a namespace because it

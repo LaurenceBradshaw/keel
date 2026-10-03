@@ -59,7 +59,7 @@ struct Member_chunk
     Scan_failure               failure;           // why dropped_begin could not start a member
     std::optional<Member_head> head;              // empty at the body's `}` or the end of the file
 
-    [[nodiscard]] bool dropped() const
+    bool dropped() const
     {
         return dropped_end != dropped_begin;
     }
@@ -73,10 +73,10 @@ public:
     explicit Scanner( std::span<const Token> tokens );
 
     // The member head starting at `at`. `enclosing` is the class's name.
-    [[nodiscard]] Head_scan member_head( u32 at, Symbol_id enclosing );
+    Head_scan member_head( u32 at, Symbol_id enclosing );
 
     // Starting at `at`: the tokens no member can be read from, then the member after them.
-    [[nodiscard]] Member_chunk next_member( u32 at, Symbol_id enclosing );
+    Member_chunk next_member( u32 at, Symbol_id enclosing );
 
 private:
     // Whether any name before `(` opens a constructor, or only the class's own.
@@ -86,15 +86,15 @@ private:
         Enclosing_only,
     };
 
-    [[nodiscard]] Head_scan scan_head( u32 at, Symbol_id enclosing, Constructor_names names );
+    Head_scan scan_head( u32 at, Symbol_id enclosing, Constructor_names names );
 
     // --- cursor. peek() clamps to the End_of_file token. ---
 
-    [[nodiscard]] const Token& peek( u32 ahead = 0 ) const;
-    [[nodiscard]] bool         at_end() const;
-    [[nodiscard]] bool         check( Token_kind kind ) const;
-    [[nodiscard]] bool         check_keyword( Keyword keyword ) const;
-    [[nodiscard]] bool         at_mode_keyword() const;
+    const Token& peek( u32 ahead = 0 ) const;
+    bool         at_end() const;
+    bool         check( Token_kind kind ) const;
+    bool         check_keyword( Keyword keyword ) const;
+    bool         at_mode_keyword() const;
 
     void advance();
     bool match( Token_kind kind );
@@ -103,18 +103,18 @@ private:
     // --- pieces. Each consumes what it names and returns true, or records failure_ and returns false. ---
 
     // Returns false so a scan can `return fail( ... )`; called for its record alone elsewhere.
-    bool               fail( Wanted wanted, Token_kind token = Token_kind::End_of_file );
-    [[nodiscard]] bool want( Token_kind kind );
-    [[nodiscard]] bool want_name();
+    bool fail( Wanted wanted, Token_kind token = Token_kind::End_of_file );
+    bool want( Token_kind kind );
+    bool want_name();
 
     // The type grammar parse_type_with_mode and parse_type accept, including what they consume
     // only to report, such as `T&`.
-    [[nodiscard]] bool scan_type_with_mode();
-    [[nodiscard]] bool scan_type();
-    [[nodiscard]] bool scan_generic_close();
+    bool scan_type_with_mode();
+    bool scan_type();
+    bool scan_generic_close();
 
     // At `(`: past its matching `)`.
-    [[nodiscard]] bool skip_parens();
+    bool skip_parens();
 
     // At `{`: past its matching `}`, or to the end of the file.
     void skip_braces();

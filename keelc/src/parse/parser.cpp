@@ -5,8 +5,11 @@
 
 #include <fmt/format.h>
 #include <cassert>
+#include <optional>
 #include <string>
 #include <vector>
+#include "parse/hints.h"
+#include "parse/scanner.h"
 
 namespace keel
 {
@@ -63,9 +66,16 @@ private:
     // expect_name after `::`, where `~Name` is refused as one mistake rather than two.
     Symbol_id expect_member_name();
 
+    // A constructor's name, which its head scan required to be an identifier.
+    Symbol_id take_name();
+
+    // Where a member parse reaches its `{`, `=` or `;`, it is where the head scan said it would be.
+    [[maybe_unused]] void assert_at_commit( u32 commit ) const;
+
     // What peek() should be called in a message: its source text where it has one, so "found
     // `widget`" rather than "found `identifier`".
     std::string found_text() const;
+    std::string found_text( const Token& token ) const;
 
     // Panic-mode recovery: skip to something that plausibly starts a new statement, so one mistake
     // does not cascade.
@@ -81,7 +91,7 @@ private:
     Node_id parse_import();
     Node_id parse_declaration();
     Node_id parse_function_decl();
-    Node_id parse_method_decl( Symbol_id enclosing, Node_id type_params, bool is_static );
+    Node_id parse_method_decl( Symbol_id enclosing, Node_id type_params, bool is_static, u32 commit );
     Node_id parse_param_list( Node_id leading = Node_id {} );
     // The parameters alone: the list node is built later, once the `where` clauses that belong
     // beside them have been parsed too.
@@ -96,11 +106,21 @@ private:
     bool match_bound_separator();
 
     Node_id parse_aggregate_decl();
+
+    // A `public:` or `private:` label, reported and consumed. False, consuming nothing, otherwise.
+    bool skip_access_label( bool is_class );
+
+    // The member a head scan found: its markers, then the declaration its kind names.
+    Node_id parse_member( const Member_head& head, Symbol_id enclosing, Node_id type_params, bool is_class );
+
+    // One error for the tokens a chunk drops.
+    void    report_dropped( const Member_chunk& chunk );
     Node_id parse_enum_decl();
     Node_id parse_variant_decl();
-    Node_id parse_field_decl();
-    Node_id parse_destructor_decl( Symbol_id enclosing, Node_id type_params );
-    Node_id parse_constructor_decl( Symbol_id enclosing, Node_id type_params );
+    // A member parser starts where its head scan did, past the markers, and is handed its commit.
+    Node_id parse_field_decl( u32 commit );
+    Node_id parse_destructor_decl( Symbol_id enclosing, Node_id type_params, u32 commit );
+    Node_id parse_constructor_decl( Symbol_id enclosing, Node_id type_params, u32 commit );
 
     // `Point { 0.0, 0.0 }` or `Point { .x = 0.0, .y = 0.0 }`. Entered from parse_prefix once the
     // identifier is consumed and a `{` is seen behind it.
@@ -153,7 +173,8 @@ private:
     // token stream. Returns true when one closing `>` was consumed.
     bool    match_generic_close();
     Node_id parse_return_stmt();
-    Node_id parse_var_decl();
+    // A static field passes its commit; top-level and local variables have none.
+    Node_id parse_var_decl( std::optional<u32> commit = std::nullopt );
     Node_id parse_expression_stmt( bool consume_semicolon = true );
     Node_id parse_prefix_increment_stmt( bool consume_semicolon );
 
@@ -189,6 +210,7 @@ private:
 
     std::span<const Token> tokens_;
     u32                    pos_ = 0;
+    Scanner                scanner_;
     const Source_manager&  sm_;
     Ast&                   ast_;
     Diagnostics&           diags_;
@@ -400,6 +422,7 @@ bool is_assignment( Token_kind kind )
 
 Parser::Parser( std::span<const Token> tokens, const Source_manager& sm, Ast& ast, Diagnostics& diags )
     : tokens_( tokens ),
+      scanner_( tokens ),
       sm_( sm ),
       ast_( ast ),
       diags_( diags )
@@ -539,14 +562,31 @@ Symbol_id Parser::expect_member_name()
 
 std::string Parser::found_text() const
 {
+    return found_text( peek() );
+}
+
+std::string Parser::found_text( const Token& token ) const
+{
     // Quoted, because it is text the author actually wrote - except at the end of the file, where
     // there is nothing to quote and "found `end of file`" reads as though they typed that.
-    if( peek().kind == Token_kind::End_of_file )
+    if( token.kind == Token_kind::End_of_file )
     {
         return std::string( token_kind_spelling( Token_kind::End_of_file ) );
     }
 
-    return fmt::format( "`{}`", sm_.text( peek().span ) );
+    return fmt::format( "`{}`", sm_.text( token.span ) );
+}
+
+Symbol_id Parser::take_name()
+{
+    // Used where want_name in the scanner has already been satisfied.
+    assert( check( Token_kind::Identifier ) && "take_name called when peek() is not an identifier" );
+    return advance().symbol;
+}
+
+void Parser::assert_at_commit( [[maybe_unused]] u32 commit ) const
+{
+    assert( pos_ == commit );
 }
 
 void Parser::synchronise()
@@ -853,47 +893,16 @@ Node_id Parser::parse_function_decl()
     );
 }
 
-Node_id Parser::parse_method_decl( Symbol_id enclosing, Node_id type_params, bool is_static )
+Node_id Parser::parse_method_decl( Symbol_id enclosing, Node_id type_params, bool is_static, u32 commit )
 {
     const Span      start       = peek().span;
     const Node_id   return_type = parse_type_with_mode();
     const Symbol_id name        = expect_name();
 
-    const u32 before = pos_;
-
-    if( !expect( Token_kind::L_paren ) )
-    {
-        return error_node( Span::merge( start, previous().span ) );
-    }
-
-    // The trailing `const` is written *after* the parameter list, and the receiver has to exist
-    // before the list is built - so the list is skipped once to find it, then rewound and parsed
-    // properly. Nesting is counted rather than assumed: a parameter's type may contain parentheses
-    // one day, and a loop that stops at the first `)` would then read the wrong token.
-    u32 depth = 1;
-
-    while( depth > 0 && !at_end() )
-    {
-        if( check( Token_kind::L_paren ) )
-        {
-            ++depth;
-        }
-        else if( check( Token_kind::R_paren ) )
-        {
-            --depth;
-        }
-
-        advance();
-    }
-
-    if( depth != 0 )
-    {
-        return error_node( Span::merge( start, previous().span ) );
-    }
-
-    const bool is_const = check_keyword( Keyword::Const );
-
-    pos_ = before;
+    // The trailing `const` comes after the parameter list, but the receiver it binds is built
+    // before it. The head scan ended at the body's `{`, so the token before that says.
+    const Token& before_body = tokens_[commit - 1];
+    const bool   is_const    = before_body.kind == Token_kind::Keyword && before_body.keyword() == Keyword::Const;
 
     const Node_id receiver = is_static ? Node_id {} : synthesise_receiver( enclosing, type_params, start, is_const );
     const Node_id params   = parse_param_list( receiver );
@@ -910,6 +919,7 @@ Node_id Parser::parse_method_decl( Symbol_id enclosing, Node_id type_params, boo
         match_keyword( Keyword::Const );
     }
 
+    assert_at_commit( commit );
     const Node_id body = parse_block();
 
     if( !name.is_valid() )
@@ -1038,10 +1048,9 @@ Node_id Parser::parse_aggregate_decl()
 
     bool                 wrote_field = false;
     std::vector<Node_id> members;
+    bool                 dropped = false;
     while( !check( Token_kind::R_brace ) && !at_end() )
     {
-        const u32 before = pos_;
-
         // Reject `extern` here: a class or struct is a Keel construct, so it cannot contain a C function.
         if( check_keyword( Keyword::Extern ) )
         {
@@ -1050,93 +1059,31 @@ Node_id Parser::parse_aggregate_decl()
             continue;
         }
 
-        // Consumed before the `static` triage below for the reason that one is consumed before the
-        // type: left in place either would be read as a type name and the member would parse as a
-        // field called `public`.
-        const Span access_span   = peek().span;
-        const bool wrote_public  = match_keyword( Keyword::Public );
-        const bool wrote_private = !wrote_public && match_keyword( Keyword::Private );
-        const bool wrote_access  = wrote_public || wrote_private;
-
-        // Tested on what was written rather than on the resulting access, which every member has.
-        if( wrote_access && !is_class )
+        if( skip_access_label( is_class ) )
         {
-            error_at(
-                access_span,
-                "a `struct` has no private members",
-                "write `class` instead, which is the kind that hides what it holds"
-            );
-        }
-
-        if( wrote_access && check( Token_kind::Colon ) )
-        {
-            advance(); // consume the `:`
-            if( is_class )
-            {
-                error_at(
-                    Span::merge( access_span, previous().span ),
-                    fmt::format( "`{}` is written on each member, not as a label", wrote_public ? "public" : "private" ),
-                    fmt::format( "write `{}` before each member it should cover", wrote_public ? "public" : "private" )
-                );
-            }
             continue;
         }
 
-        // Consumed before the triage below, which starts by looking for a type name: left in place
-        // it would be read as one, and the member would parse as a field called `static`.
-        const Span static_span = peek().span;
-        const bool is_static   = match_keyword( Keyword::Static );
-
-        const bool is_destructor  = check( Token_kind::Tilde );
-        const bool is_constructor = check( Token_kind::Identifier ) && peek( 1 ).kind == Token_kind::L_paren;
-
-        // Both are defined by what they do to an object, so neither has a receiver to remove.
-        // Reported and then parsed anyway, so the member still reaches sema and its body is checked.
-        if( is_static && ( is_destructor || is_constructor ) )
+        Member_chunk chunk = scanner_.next_member( pos_, name );
+        if( chunk.dropped() )
         {
-            error_at( static_span, fmt::format( "a {} cannot be `static`", is_destructor ? "destructor" : "constructor" ) );
+            report_dropped( chunk );
+            dropped = true;
         }
 
-        // Same test, same reason: every destructor has an access, and almost none were written.
-        if( is_destructor && wrote_access )
+        pos_ = chunk.dropped_end;
+
+        if( !chunk.head.has_value() )
         {
-            error_at( access_span, "a destructor cannot be `public` or `private`", "it is never called by name" );
+            break;
         }
 
-        // A method is a type, a name and a parameter list - which is what scan_type_and_name finds,
-        // and it restores the cursor. A constructor is the same shape minus the type, so it has to
-        // be tested first or `Buffer( u64 n )` reads as a method returning `Buffer`.
-        const bool is_method = !is_destructor && !is_constructor && looks_like_method();
-
-        const Node_id member = is_destructor    ? parse_destructor_decl( name, type_params )
-                               : is_constructor ? parse_constructor_decl( name, type_params )
-                               : is_method      ? parse_method_decl( name, type_params, is_static )
-                               : is_static      ? parse_var_decl()
-                                                : parse_field_decl();
-
-        if( !is_destructor && !is_constructor && !is_method && !is_static )
+        if( chunk.head->kind == Member_kind::Field )
         {
             wrote_field = true;
         }
 
-        members.push_back( member );
-
-        // A `class` hides its representation, and its representation is its fields: a method, a
-        // constructor and a destructor are how one is used rather than what it holds, so the
-        // default reaches fields only. Decided after the flip was written the other way and every
-        // getter in the test suite stopped compiling - see PLAN D29.
-        const bool private_by_default = is_class && !is_method && !is_constructor && !is_destructor;
-
-        ast_.set_access(
-            members.back(),
-            wrote_access ? ( wrote_private ? Access::Private : Access::Public )
-                         : ( private_by_default ? Access::Private : Access::Public )
-        );
-
-        if( pos_ == before )
-        {
-            advance();
-        }
+        members.push_back( parse_member( *chunk.head, name, type_params, is_class ) );
     }
 
     expect( Token_kind::R_brace );
@@ -1151,7 +1098,7 @@ Node_id Parser::parse_aggregate_decl()
         return error_node( Span::merge( start, previous().span ) );
     }
 
-    if( !wrote_field )
+    if( !wrote_field && !dropped )
     {
         error_at(
             Span::merge( start, previous().span ),
@@ -1166,6 +1113,165 @@ Node_id Parser::parse_aggregate_decl()
     return ast_.add(
         is_class ? Node_kind::Class_decl : Node_kind::Struct_decl, Span::merge( start, previous().span ), name.v, { members }
     );
+}
+
+bool Parser::skip_access_label( bool is_class )
+{
+    const Span access_span = peek().span;
+
+    if( peek( 1 ).kind == Token_kind::Colon && ( check_keyword( Keyword::Public ) || check_keyword( Keyword::Private ) ) )
+    {
+        const bool wrote_public = check_keyword( Keyword::Public );
+        advance(); // consume the keyword
+        advance(); // consume the `:`
+
+        if( is_class )
+        {
+            error_at(
+                Span::merge( access_span, previous().span ),
+                fmt::format( "`{}` is written on each member, not as a label", wrote_public ? "public" : "private" ),
+                fmt::format( "write `{}` before each member it should cover", wrote_public ? "public" : "private" )
+            );
+        }
+        else
+        {
+            error_at(
+                access_span,
+                "a `struct` has no private members",
+                "write `class` instead, which is the kind that hides what it holds"
+            );
+        }
+
+        return true;
+    }
+    return false;
+}
+
+Node_id Parser::parse_member( const Member_head& head, Symbol_id enclosing, Node_id type_params, bool is_class )
+{
+    assert( pos_ == head.start );
+
+    // Consumed here because head.start includes them.
+    const Span access_span   = peek().span;
+    const bool wrote_public  = match_keyword( Keyword::Public );
+    const bool wrote_private = !wrote_public && match_keyword( Keyword::Private );
+    const bool wrote_access  = wrote_public || wrote_private;
+
+    // Tested on what was written rather than on the resulting access, which every member has.
+    if( wrote_access && !is_class )
+    {
+        error_at(
+            access_span,
+            "a `struct` has no private members",
+            "write `class` instead, which is the kind that hides what it holds"
+        );
+    }
+
+    const Span static_span = peek().span;
+    const bool is_static   = match_keyword( Keyword::Static );
+
+    const bool is_destructor  = head.kind == Member_kind::Destructor;
+    const bool is_constructor = head.kind == Member_kind::Constructor;
+
+    // Both are defined by what they do to an object, so neither has a receiver to remove.
+    // Reported and then parsed anyway, so the member still reaches sema and its body is checked.
+    if( is_static && ( is_destructor || is_constructor ) )
+    {
+        error_at( static_span, fmt::format( "a {} cannot be `static`", is_destructor ? "destructor" : "constructor" ) );
+    }
+
+    // Same test, same reason: every destructor has an access, and almost none were written.
+    if( is_destructor && wrote_access )
+    {
+        error_at( access_span, "a destructor cannot be `public` or `private`", "it is never called by name" );
+    }
+
+    Node_id member;
+    switch( head.kind )
+    {
+    case Member_kind::Field:
+        member = parse_field_decl( head.commit );
+        break;
+
+    case Member_kind::Static_var:
+        member = parse_var_decl( head.commit );
+        break;
+
+    case Member_kind::Method:
+        member = parse_method_decl( enclosing, type_params, is_static, head.commit );
+        break;
+
+    case Member_kind::Constructor:
+        member = parse_constructor_decl( enclosing, type_params, head.commit );
+        break;
+
+    case Member_kind::Destructor:
+        member = parse_destructor_decl( enclosing, type_params, head.commit );
+        break;
+    }
+
+    // A `class` hides its representation, and its representation is its fields: a method, a
+    // constructor and a destructor are how one is used rather than what it holds, so the
+    // default reaches fields only. Decided after the flip was written the other way and every
+    // getter in the test suite stopped compiling - see PLAN D29.
+    const bool private_by_default = is_class && ( head.kind == Member_kind::Field || head.kind == Member_kind::Static_var );
+
+    ast_.set_access(
+        member,
+        wrote_access ? ( wrote_private ? Access::Private : Access::Public )
+                     : ( private_by_default ? Access::Private : Access::Public )
+    );
+
+    return member;
+}
+
+void Parser::report_dropped( const Member_chunk& chunk )
+{
+    assert( chunk.dropped() );
+
+    const Token& first = tokens_[chunk.dropped_begin];
+    const Token& last  = tokens_[chunk.dropped_end - 1];
+
+    auto line_of = [this]( const Token& t ) -> u32 { return sm_.line_col( t.span.file, t.span.start ).line; };
+
+    const bool same_line = chunk.head.has_value() && line_of( last ) == line_of( tokens_[chunk.head->start] );
+
+    Span        span;
+    std::string message;
+    std::string help;
+    if( same_line )
+    {
+        span    = Span::merge( first.span, last.span );
+        message = fmt::format( "expected a member, found `{}`", sm_.text( span ) );
+        help    = std::string( dropped_word_hint( sm_.text( first.span ) ) );
+    }
+    else
+    {
+        const Scan_failure& failure = chunk.failure;
+        const Token&        stop    = tokens_[failure.at];
+        span                        = stop.span;
+
+        message = "expected ";
+        switch( failure.wanted )
+        {
+        case Wanted::Token:
+            message += expectation( failure.token );
+            help = std::string( member_stop_hint( failure.token, stop.kind ) );
+            break;
+        case Wanted::Member:
+            message += "a member";
+            break;
+        case Wanted::Type:
+            message += "a type";
+            break;
+        case Wanted::Name:
+            message += "an identifier";
+            break;
+        }
+        message += fmt::format( ", found {}", found_text( stop ) );
+    }
+
+    error_at( span, std::move( message ), std::move( help ) );
 }
 
 Node_id Parser::parse_enum_decl()
@@ -1320,7 +1426,7 @@ Node_id Parser::parse_variant_decl()
     return ast_.add( Node_kind::Variant_decl, Span::merge( start, previous().span ), name.v, payload );
 }
 
-Node_id Parser::parse_field_decl()
+Node_id Parser::parse_field_decl( u32 commit )
 {
     const Span start = peek().span;
 
@@ -1330,12 +1436,13 @@ Node_id Parser::parse_field_decl()
     // a second child.
     const Symbol_id name = expect_name();
 
+    // Missing when the head scan kept the field because a member starts where its `;` should be.
+    assert_at_commit( commit );
     expect( Token_kind::Semicolon );
 
     // A declaration with no name is not one: sema reads every declaration's name to report
     // about it, so handing one over means a keyword or a missing identifier crashes a pass
-    // that had no reason to expect it. Everything inside was still parsed, so the errors in
-    // there are already reported.
+    // that had no reason to expect it.
     if( !name.is_valid() )
     {
         return error_node( Span::merge( start, previous().span ) );
@@ -1344,11 +1451,11 @@ Node_id Parser::parse_field_decl()
     return ast_.add( Node_kind::Field_decl, Span::merge( start, previous().span ), name.v, { type } );
 }
 
-Node_id Parser::parse_destructor_decl( Symbol_id enclosing, Node_id type_params )
+Node_id Parser::parse_destructor_decl( Symbol_id enclosing, Node_id type_params, u32 commit )
 {
     const Span start = peek().span;
 
-    expect( Token_kind::Tilde );
+    advance(); // `~`
 
     const Symbol_id name = expect_name();
 
@@ -1363,10 +1470,10 @@ Node_id Parser::parse_destructor_decl( Symbol_id enclosing, Node_id type_params 
         error_at( ast_.span( params ), "destructors take no parameters" );
     }
 
+    assert_at_commit( commit );
     const Node_id body = parse_block();
 
-    // Same rule as every other declaration: sema reads a name to report about it, so a nameless one
-    // crashes a pass that had no reason to expect it.
+    // Same rule as every other declaration: sema reads a name to report about it.
     if( !name.is_valid() )
     {
         return error_node( Span::merge( start, previous().span ) );
@@ -1380,21 +1487,18 @@ Node_id Parser::parse_destructor_decl( Symbol_id enclosing, Node_id type_params 
     );
 }
 
-Node_id Parser::parse_constructor_decl( Symbol_id enclosing, Node_id type_params )
+Node_id Parser::parse_constructor_decl( Symbol_id enclosing, Node_id type_params, u32 commit )
 {
     const Span      start = peek().span;
-    const Symbol_id name  = expect_name();
+    const Symbol_id name  = take_name();
 
     // Same receiver the destructor gets, and for the same reason: as an ordinary parameter it
     // needs no special case in any later pass.
     const Node_id receiver = synthesise_receiver( enclosing, type_params, start, false );
     const Node_id params   = parse_param_list( receiver );
-    const Node_id body     = parse_block();
 
-    if( !name.is_valid() )
-    {
-        return error_node( Span::merge( start, previous().span ) );
-    }
+    assert_at_commit( commit );
+    const Node_id body = parse_block();
 
     return ast_.add(
         Node_kind::Constructor_decl, Span::merge( start, previous().span ), name.v, { Node_id {}, params, body, type_params }
@@ -2372,7 +2476,7 @@ Node_id Parser::parse_return_stmt()
     return ast_.add( Node_kind::Return_stmt, Span::merge( start, previous().span ), 0, { value } );
 }
 
-Node_id Parser::parse_var_decl()
+Node_id Parser::parse_var_decl( std::optional<u32> commit )
 {
     const Span start = peek().span;
 
@@ -2388,6 +2492,11 @@ Node_id Parser::parse_var_decl()
     }
 
     const Symbol_id name = expect_name();
+
+    if( commit.has_value() )
+    {
+        assert_at_commit( *commit );
+    }
 
     Node_id value;
     if( match( Token_kind::Equal ) )
@@ -8727,6 +8836,196 @@ TEST_CASE( "parser_refuses_an_access_label", "[parse][access]" )
 
         INFO( p.errors() );
         REQUIRE_FALSE( p.has_errors() );
+    }
+}
+
+// Tokens no member can be read from are one error, and the members around them parse whole.
+TEST_CASE( "parser_recovers_from_a_member_that_is_not_one", "[parse][recovery]" )
+{
+    // The members of the first aggregate, by name. Dropped tokens leave no node, so none appear.
+    const auto member_names = []( const Parsed& p )
+    {
+        Node_id decl = find_first( p.ast(), p.root(), Node_kind::Class_decl );
+        if( !decl.is_valid() )
+        {
+            decl = find_first( p.ast(), p.root(), Node_kind::Struct_decl );
+        }
+
+        std::string names;
+        for( const Node_id member : p.members( decl ) )
+        {
+            names += names.empty() ? "" : " ";
+            names += p.name( member );
+        }
+        return names;
+    };
+
+    const auto has = []( const Parsed& p, std::string_view part ) { return p.errors().find( part ) != std::string::npos; };
+
+    SECTION( "junk on a line of its own is named alone, where it is" )
+    {
+        const Parsed p( "class C {\n"
+                        "    i32 a;\n"
+                        "    i32 get() { return a; }\n"
+                        "    42\n"
+                        "    i32 b;\n"
+                        "};" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( has( p, "expected a member, found `42`" ) );
+        REQUIRE( has( p, "t.kl:4:5" ) );
+        REQUIRE( member_names( p ) == "a get b" );
+    }
+
+    // The member after them is on their line, so all of them are named together.
+    SECTION( "words before a member on its line are named together" )
+    {
+        const Parsed p( "class C { i32 a; virtual i32 f() { return 1; } };" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( has( p, "expected a member, found `virtual`" ) );
+        REQUIRE( has( p, "t.kl:1:18" ) );
+        REQUIRE( member_names( p ) == "a f" );
+
+        const Node_id method = find_first( p.ast(), p.root(), Node_kind::Method_decl );
+        REQUIRE( p.text( p.child( method, 0 ) ) == "i32" );
+    }
+
+    SECTION( "several dropped tokens are quoted as written" )
+    {
+        const Parsed p( "class C { i32 a; template<typename T> T id( T v ) { return v; } };" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( has( p, "expected a member, found `template<typename T>`" ) );
+        REQUIRE( has( p, "`T f<T>( T a )`" ) );
+        REQUIRE( member_names( p ) == "a id" );
+    }
+
+    SECTION( "a word with a Keel spelling gets it as help" )
+    {
+        const Parsed p( "class C { i32 a; protected: i32 b; };" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( has( p, "expected a member, found `protected:`" ) );
+        REQUIRE( has( p, "a member is `public` or `private`" ) );
+        REQUIRE( member_names( p ) == "a b" );
+    }
+
+    // `mutable i32` reads as a type and a name; the field is `b`, not one called `i32`.
+    SECTION( "the member kept is the one after the junk, not a reading of it" )
+    {
+        const Parsed p( "class C { i32 a; mutable i32 b; };" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( has( p, "expected a member, found `mutable`" ) );
+        REQUIRE( has( p, "fields cannot be `const` yet" ) );
+        REQUIRE( member_names( p ) == "a b" );
+
+        const Node_id decl  = find_first( p.ast(), p.root(), Node_kind::Class_decl );
+        const Node_id field = p.members( decl )[1];
+        REQUIRE( p.text( p.child( field, 0 ) ) == "i32" );
+    }
+
+    // On its own line, the member's own failure says more than quoting it would.
+    SECTION( "a member stopped short says what stopped it" )
+    {
+        const Parsed p( "class C {\n"
+                        "    i32 a = 5;\n"
+                        "    i32 b;\n"
+                        "};" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( has( p, "expected `;`, found `=`" ) );
+        REQUIRE( has( p, "t.kl:2:11" ) );
+        REQUIRE( has( p, "set it in the constructor" ) );
+        REQUIRE( member_names( p ) == "b" );
+    }
+
+    SECTION( "with help for each way a field is commonly written" )
+    {
+        const Parsed comma( "class C {\n    i32 a, b;\n    i32 c;\n};" );
+        const Parsed array( "class C {\n    i32 a[4];\n    i32 c;\n};" );
+
+        INFO( comma.errors() );
+        INFO( array.errors() );
+        REQUIRE( comma.error_count() == 1 );
+        REQUIRE( has( comma, "expected `;`, found `,`" ) );
+        REQUIRE( has( comma, "declare each field with its own type" ) );
+        REQUIRE( member_names( comma ) == "c" );
+
+        REQUIRE( array.error_count() == 1 );
+        REQUIRE( has( array, "expected `;`, found `[`" ) );
+        REQUIRE( has( array, "fixed-size array" ) );
+        REQUIRE( member_names( array ) == "c" );
+    }
+
+    SECTION( "a method with no body is one error" )
+    {
+        const Parsed p( "class C {\n    i32 f();\n    i32 c;\n};" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( has( p, "expected `{`, found `;`" ) );
+        REQUIRE( has( p, "no forward declarations" ) );
+        REQUIRE( member_names( p ) == "c" );
+    }
+
+    // A member begins where the `;` should be, so the field is whole without it.
+    SECTION( "a missing `;` keeps the field" )
+    {
+        const Parsed p( "class C {\n    i32 a\n    i32 b;\n};" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( has( p, "expected `;`, found `i32`" ) );
+        REQUIRE( member_names( p ) == "a b" );
+    }
+
+    // Stepped over as a group, so the field inside is neither a member nor a second error.
+    SECTION( "a stray brace group is dropped whole" )
+    {
+        const Parsed p( "class C { i32 a; { i32 inner; } i32 b; };" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( has( p, "expected a member, found `{ i32 inner; }`" ) );
+        REQUIRE( member_names( p ) == "a b" );
+    }
+
+    SECTION( "junk running to the closing brace is named from where it starts" )
+    {
+        const Parsed p( "class C { i32 a; 1 2 3 };" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( has( p, "expected a member, found `1`" ) );
+        REQUIRE( member_names( p ) == "a" );
+    }
+
+    SECTION( "a struct recovers the same way" )
+    {
+        const Parsed p( "struct S { i32 x; 42 i32 y; };" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( has( p, "expected a member, found `42`" ) );
+        REQUIRE( member_names( p ) == "x y" );
+    }
+
+    // Whatever was dropped may have been the field, so "no fields" would be a guess.
+    SECTION( "an aggregate whose only field was dropped is not also fieldless" )
+    {
+        const Parsed p( "struct S {\n    i32 a = 5;\n};" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( has( p, "expected `;`, found `=`" ) );
     }
 }
 

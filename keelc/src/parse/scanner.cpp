@@ -203,6 +203,8 @@ Head_scan Scanner::scan_head( u32 at, Symbol_id enclosing, Constructor_names nam
 
         if( check( Token_kind::L_brace ) )
         {
+            // Whether it was a static method or not does not matter to the scanner, `static` was already consumed.
+            // The parser will figure it out.
             return make_head( Member_kind::Method, start );
         }
 
@@ -311,7 +313,9 @@ bool Scanner::want( Token_kind kind )
 
 bool Scanner::want_name()
 {
-    if( match( Token_kind::Identifier ) )
+    // Follows parsers expect_name, which consumes these as the name they were meant to be.
+    if( match( Token_kind::Identifier ) || match( Token_kind::Keyword ) || match( Token_kind::Digit_name ) ||
+        match( Token_kind::Int_literal ) )
     {
         return true;
     }
@@ -690,6 +694,18 @@ TEST_CASE( "scanner_recognises_each_member_head", "[scan]" )
     SECTION( "a constructor with the wrong name is still a constructor" )
     {
         require_head( "D() { }", Member_kind::Constructor, "{" );
+    }
+
+    // expect_name consumes these as the name they were meant to be and says why each is not one.
+    SECTION( "a keyword, a digit-led name or a number holds the name's place" )
+    {
+        require_head( "i32 if;", Member_kind::Field, ";" );
+        require_head( "i32 move;", Member_kind::Field, ";" );
+        require_head( "i32 3x;", Member_kind::Field, ";" );
+        require_head( "i32 3;", Member_kind::Field, ";" );
+        require_head( "i32 case() { }", Member_kind::Method, "{" );
+        require_head( "static i32 for = 1;", Member_kind::Static_var, "=" );
+        require_head( "~if() { }", Member_kind::Destructor, "{" );
     }
 }
 
