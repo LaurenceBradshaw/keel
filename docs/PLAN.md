@@ -5738,11 +5738,34 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      Outside the class body, `enum class` and the top-level forward-declaration check wait for
      `next_declaration`; statements keep theirs (`->`, `u32 *p`, `++` as a value) with
      `synchronise()`. Tests: two sections of `parser_recovers_from_a_member_that_is_not_one`, a
-     row in `hints_name_the_keel_spelling`. A `Scanner` is a class rather than a namespace because it
+     row in `hints_name_the_keel_spelling`. (5) **Top-level declarations through the same chunking.
+     In progress (2026-10-03); (5a) and (5b) done.** Probed: `template<...>` 4 errors, `static`/`inline`/`virtual`
+     before a function 4-9, `i32 f() const { }` 2, `i32 a, b;` 2, `if( true ) { }` 3,
+     `class C : public B { ... };` 4. (5a) Prerequisite, found probing: a parse error inside a
+     region the scanner counts (a parameter list) leaves the parser short of the commit, and the
+     debug assertion aborts on `i32 f( i32 x y ) { }` in a class. A member parse that reported
+     jumps to its commit; one that did not must already be there. (5b) Scanner `declaration_head`
+     and `next_declaration`, parser untouched. `import`, `struct`, `class` and `enum` are
+     recognised by the keyword alone, committed at it: their parsers own all reporting, and their
+     heads carry type parameters and `where` clauses the scanner would mirror for nothing. A
+     function's head runs through type parameters, the counted parameter list and `where`
+     clauses to its `{`, or an extern's `;`; an extern with a body is still a head, so the
+     parser's own report stands. A variable's runs to its `=` or `;`. Type parameters and
+     `where` clauses follow the parser's grammar, accepting what it reads only to refuse (`<>`,
+     `<Comparable T>`, bounds joined by `,` or `|`); a bound must be an identifier, stricter than
+     `expect_name`, because the parser ends a clause at a keyword bound and would stop short of
+     the `{`. A stray `}` at file scope is junk, not an end. The missing-`;` repair applies as in
+     a class. Hints take a place: a member's words (`protected`, `mutable`, `extern`) mean
+     nothing at file scope, and the forward-declaration hint offers `extern` only there. The
+     `extern` hint and the statement-level `extern` message said *a function or a variable*;
+     D36 makes it a function only. (5c) Wire into `parse_declarations`: the forward-declaration
+     branch of `parse_function_decl` and `parse_declaration`'s `synchronise()` go, and a drop
+     that starts on the line where a declaration that reported ended is not reported again
+     (`class C : public B { ... };` stays one error), in both loops. A `Scanner` is a class rather than a namespace because it
      has state of its own: a cursor and an owed half of `>>`, which a rewinding scan inside the
      parser could leave behind (`scan_type_arguments` counts depth by hand for exactly that).
      Group 2 below falls out of this: `i32 f();` stops at `;` where `{` was wanted, one error,
-     and its hint is a `member_stop_hint` row.
+     and its hint is a `stop_hint` row.
   6. **A method or constructor without its body.** `i32 f();` and `i32 f() const;` in a class
      report *expected `{`* and then parse the rest of the class as statements: 8 errors, every
      later member lost, and *`C` has no fields*. The top level already says *Keel has no forward

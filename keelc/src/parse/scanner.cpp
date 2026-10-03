@@ -66,14 +66,7 @@ Member_chunk Scanner::next_member( u32 at, Symbol_id enclosing )
 
     // Drop then retry; to catch garbage at the beginning of something valid
     cursor_ = at;
-    if( check( Token_kind::L_brace ) )
-    {
-        skip_braces();
-    }
-    else
-    {
-        advance();
-    }
+    step_over_junk();
 
     u32 q = cursor_;
     while( true )
@@ -85,18 +78,13 @@ Member_chunk Scanner::next_member( u32 at, Symbol_id enclosing )
             break;
         }
 
-        if( check( Token_kind::L_brace ) )
-        {
-            skip_braces();
-            q = cursor_;
-            continue;
-        }
-
         const Head_scan retry = member_head( q, enclosing );
 
         if( !retry.head.has_value() )
         {
-            q++;
+            cursor_ = q;
+            step_over_junk();
+            q = cursor_;
             continue;
         }
 
@@ -104,6 +92,168 @@ Member_chunk Scanner::next_member( u32 at, Symbol_id enclosing )
     }
 
     return Member_chunk { .dropped_begin = at, .dropped_end = q, .failure = first.failure, .head = std::nullopt };
+}
+
+Declaration_scan Scanner::declaration_head( u32 at )
+{
+    const auto make_head = [this]( Declaration_kind kind, u32 start ) -> Declaration_scan
+    {
+        return Declaration_scan {
+            .head = Declaration_head { .kind = kind, .start = start, .commit = cursor_ }, .failure = Scan_failure {}
+        };
+    };
+    const auto make_failure = [this]() -> Declaration_scan
+    { return Declaration_scan { .head = std::nullopt, .failure = failure_ }; };
+
+    cursor_       = at;
+    owed_greater_ = 0;
+    failure_      = Scan_failure {};
+
+    if( check_keyword( Keyword::Import ) )
+    {
+        return make_head( Declaration_kind::Import, at );
+    }
+    else if( check_keyword( Keyword::Struct ) || check_keyword( Keyword::Class ) )
+    {
+        return make_head( Declaration_kind::Aggregate, at );
+    }
+    else if( check_keyword( Keyword::Enum ) )
+    {
+        return make_head( Declaration_kind::Enum, at );
+    }
+
+    const bool is_extern = match_keyword( Keyword::Extern );
+
+    if( !is_extern )
+    {
+        if( !( check( Token_kind::Identifier ) || check_keyword( Keyword::Const ) || check_keyword( Keyword::Fn ) ||
+               check_keyword( Keyword::Field ) || at_mode_keyword() ) )
+        {
+            fail( Wanted::Declaration );
+            return make_failure();
+        }
+    }
+
+    if( !scan_type_with_mode() )
+    {
+        return make_failure();
+    }
+    if( !want_name() )
+    {
+        return make_failure();
+    }
+
+    if( is_extern || check( Token_kind::L_paren ) || check( Token_kind::Less ) )
+    {
+        if( check( Token_kind::Less ) )
+        {
+            if( !scan_type_params() )
+            {
+                return make_failure();
+            }
+        }
+
+        if( !skip_parens() || !scan_where_clauses() )
+        {
+            return make_failure();
+        }
+
+        if( check( Token_kind::L_brace ) )
+        {
+            return make_head( Declaration_kind::Function, at );
+        }
+
+        if( is_extern && check( Token_kind::Semicolon ) )
+        {
+            return make_head( Declaration_kind::Function, at );
+        }
+        else if( is_extern )
+        {
+            fail( Wanted::Token, Token_kind::Semicolon );
+            return make_failure();
+        }
+
+        fail( Wanted::Token, Token_kind::L_brace );
+        return make_failure();
+    }
+
+    if( check( Token_kind::Equal ) || check( Token_kind::Semicolon ) )
+    {
+        return make_head( Declaration_kind::Variable, at );
+    }
+
+    fail( Wanted::Token, Token_kind::Semicolon );
+    return make_failure();
+}
+
+Declaration_chunk Scanner::next_declaration( u32 at )
+{
+    cursor_ = at;
+
+    if( at_end() )
+    {
+        return Declaration_chunk { .dropped_begin = at, .dropped_end = at, .failure = Scan_failure {}, .head = std::nullopt };
+    }
+
+    const Declaration_scan first = declaration_head( at );
+
+    if( first.head.has_value() )
+    {
+        return Declaration_chunk { .dropped_begin = at, .dropped_end = at, .failure = Scan_failure {}, .head = first.head };
+    }
+
+    // Missing `;` repair
+    if( first.failure.wanted == Wanted::Token && first.failure.token == Token_kind::Semicolon )
+    {
+        const Declaration_scan next = declaration_head( first.failure.at );
+
+        if( next.head.has_value() )
+        {
+            cursor_               = at;
+            Declaration_kind kind = Declaration_kind::Variable;
+
+            if( tokens_[at].kind == Token_kind::Keyword && static_cast<Keyword>( tokens_[at].symbol.v ) == Keyword::Extern )
+            {
+                kind = Declaration_kind::Function;
+            }
+
+            return Declaration_chunk {
+                .dropped_begin = at,
+                .dropped_end   = at,
+                .failure       = Scan_failure {},
+                .head          = Declaration_head { .kind = kind, .start = at, .commit = first.failure.at }
+            };
+        }
+    }
+
+    // Drop and retry; to catch garbage at the beginning of something valid
+    cursor_ = at;
+    step_over_junk();
+
+    u32 q = cursor_;
+    while( true )
+    {
+        cursor_ = q;
+
+        if( at_end() )
+        {
+            break;
+        }
+
+        const Declaration_scan retry = declaration_head( q );
+
+        if( !retry.head.has_value() )
+        {
+            cursor_ = q;
+            step_over_junk();
+            q = cursor_;
+            continue;
+        }
+
+        return Declaration_chunk { .dropped_begin = at, .dropped_end = q, .failure = first.failure, .head = retry.head };
+    }
+
+    return Declaration_chunk { .dropped_begin = at, .dropped_end = q, .failure = first.failure, .head = std::nullopt };
 }
 
 bool Scanner::looks_like_declaration( u32 at )
@@ -725,6 +875,89 @@ bool Scanner::scan_type_and_name()
     return true;
 }
 
+bool Scanner::scan_type_params()
+{
+    advance(); // the `<`
+
+    if( scan_generic_close() )
+    {
+        return true;
+    }
+
+    do
+    {
+        if( !want_name() )
+        {
+            return false;
+        }
+
+        match( Token_kind::Identifier ); // terse bound the parser reports
+    } while( match( Token_kind::Comma ) );
+
+    if( !scan_generic_close() )
+    {
+        return fail( Wanted::Token, Token_kind::Greater );
+    }
+
+    return true;
+}
+
+bool Scanner::scan_where_clauses()
+{
+    while( match_keyword( Keyword::Where ) )
+    {
+        if( !want_name() || !want( Token_kind::Colon ) )
+        {
+            return false;
+        }
+
+        bool separator = false;
+        do
+        {
+            if( !match( Token_kind::Identifier ) )
+            {
+                return fail( Wanted::Name );
+            }
+
+            if( match( Token_kind::Amp ) )
+            {
+                separator = true;
+            }
+            else if( check( Token_kind::Comma ) && !( peek( 1 ).kind == Token_kind::Keyword &&
+                                                      static_cast<Keyword>( peek( 1 ).symbol.v ) == Keyword::Where ) )
+            {
+                advance(); // `,`
+                separator = true;
+            }
+            else if( check( Token_kind::Pipe ) )
+            {
+                advance(); // `|`
+                separator = true;
+            }
+            else
+            {
+                separator = false;
+            }
+        } while( separator );
+
+        match( Token_kind::Comma ); // optional
+    }
+
+    return true;
+}
+
+void Scanner::step_over_junk()
+{
+    if( check( Token_kind::L_brace ) )
+    {
+        skip_braces();
+    }
+    else
+    {
+        advance();
+    }
+}
+
 bool Scanner::skip_parens()
 {
     if( !check( Token_kind::L_paren ) )
@@ -832,6 +1065,16 @@ public:
         return Scanner( tokens_ ).next_member( at, name_ );
     }
 
+    Declaration_scan declaration( u32 at = 0 )
+    {
+        return Scanner( tokens_ ).declaration_head( at );
+    }
+
+    Declaration_chunk declaration_chunk( u32 at = 0 )
+    {
+        return Scanner( tokens_ ).next_declaration( at );
+    }
+
     Scanner scanner() const
     {
         return Scanner( tokens_ );
@@ -889,6 +1132,41 @@ void require_failure( std::string_view source, std::string_view at, Token_kind t
 {
     Scanned   s( source );
     Head_scan scan = s.head();
+
+    INFO( source );
+    REQUIRE_FALSE( scan.head.has_value() );
+    REQUIRE( scan.failure.at == s.at( at ) );
+    REQUIRE( scan.failure.wanted == Wanted::Token );
+    REQUIRE( scan.failure.token == token );
+}
+
+void require_declaration( std::string_view source, Declaration_kind kind, std::string_view commit )
+{
+    Scanned          s( source );
+    Declaration_scan scan = s.declaration();
+
+    INFO( source );
+    REQUIRE( scan.head.has_value() );
+    REQUIRE( scan.head->kind == kind );
+    REQUIRE( scan.head->start == 0 );
+    REQUIRE( scan.head->commit == s.at( commit ) );
+}
+
+void require_declaration_failure( std::string_view source, std::string_view at, Wanted wanted )
+{
+    Scanned          s( source );
+    Declaration_scan scan = s.declaration();
+
+    INFO( source );
+    REQUIRE_FALSE( scan.head.has_value() );
+    REQUIRE( scan.failure.at == s.at( at ) );
+    REQUIRE( scan.failure.wanted == wanted );
+}
+
+void require_declaration_failure( std::string_view source, std::string_view at, Token_kind token )
+{
+    Scanned          s( source );
+    Declaration_scan scan = s.declaration();
 
     INFO( source );
     REQUIRE_FALSE( scan.head.has_value() );
@@ -1249,6 +1527,243 @@ TEST_CASE( "scanner_answers_the_parsers_lookahead", "[scan]" )
         CHECK( scanner.looks_like_function( s.at( "i32" ) ) );
         CHECK( scanner.looks_like_type_arguments( s.at( "<" ) ) );
         CHECK_FALSE( scanner.looks_like_declaration( s.at( "return" ) ) );
+    }
+}
+
+TEST_CASE( "scanner_recognises_each_declaration_head", "[scan]" )
+{
+    // Their parsers own everything after the keyword.
+    SECTION( "a keyword-led declaration is committed at its keyword" )
+    {
+        require_declaration( "import a;", Declaration_kind::Import, "import" );
+        require_declaration( "struct S { i32 a; };", Declaration_kind::Aggregate, "struct" );
+        require_declaration( "class C<T> where T : Copyable { T a; };", Declaration_kind::Aggregate, "class" );
+        require_declaration( "enum E { A, B };", Declaration_kind::Enum, "enum" );
+        require_declaration( "struct S;", Declaration_kind::Aggregate, "struct" );
+    }
+
+    SECTION( "a function runs to its body's `{`" )
+    {
+        require_declaration( "i32 f() { return 1; }", Declaration_kind::Function, "{" );
+        require_declaration( "i32 f( i32 a, ref i32 b ) { }", Declaration_kind::Function, "{" );
+        require_declaration( "Vector<Box<i32>> make() { }", Declaration_kind::Function, "{" );
+        require_declaration( "const ref T get( ref T a ) { }", Declaration_kind::Function, "{" );
+        require_declaration( "fn( i32 ) -> i32 pick() { }", Declaration_kind::Function, "{" );
+    }
+
+    SECTION( "through type parameters and `where` clauses" )
+    {
+        require_declaration( "T id<T>( T a ) { }", Declaration_kind::Function, "{" );
+        require_declaration( "T f<T, U>( T a, U b ) { }", Declaration_kind::Function, "{" );
+        require_declaration( "T f<T>( T a ) where T : Copyable { }", Declaration_kind::Function, "{" );
+        require_declaration( "T f<T>( T a ) where T : Copyable & Equatable { }", Declaration_kind::Function, "{" );
+        require_declaration( "T f<T, U>( T a ) where T : Copyable, where U : Equatable { }", Declaration_kind::Function, "{" );
+    }
+
+    SECTION( "including what the parser reads only to refuse" )
+    {
+        require_declaration( "T f<>() { }", Declaration_kind::Function, "{" );
+        require_declaration( "T f<Comparable T>( T a ) { }", Declaration_kind::Function, "{" );
+        require_declaration( "T f<T>( T a ) where T : Copyable, Equatable { }", Declaration_kind::Function, "{" );
+        require_declaration( "T f<T>( T a ) where T : Copyable | Equatable { }", Declaration_kind::Function, "{" );
+    }
+
+    SECTION( "an extern runs to its `;`, or to a body it should not have" )
+    {
+        require_declaration( "extern i32 abs( i32 v );", Declaration_kind::Function, ";" );
+        require_declaration( "extern ref i32 at( ref i32 p );", Declaration_kind::Function, ";" );
+        require_declaration( "extern i32 f() { return 1; }", Declaration_kind::Function, "{" );
+    }
+
+    SECTION( "a variable runs to its `=` or `;`" )
+    {
+        require_declaration( "i32 x = 1;", Declaration_kind::Variable, "=" );
+        require_declaration( "i32 x;", Declaration_kind::Variable, ";" );
+        require_declaration( "const i32 x = 1;", Declaration_kind::Variable, "=" );
+        require_declaration( "kl::Point p;", Declaration_kind::Variable, ";" );
+        require_declaration( "fn( i32 ) -> i32 f = g;", Declaration_kind::Variable, "=" );
+    }
+
+    SECTION( "a keyword, a digit-led name or a number holds the name's place" )
+    {
+        require_declaration( "i32 if;", Declaration_kind::Variable, ";" );
+        require_declaration( "i32 3x = 1;", Declaration_kind::Variable, "=" );
+        require_declaration( "i32 while() { }", Declaration_kind::Function, "{" );
+    }
+}
+
+TEST_CASE( "scanner_says_where_and_why_a_declaration_head_fails", "[scan]" )
+{
+    SECTION( "nothing that can start a declaration" )
+    {
+        require_declaration_failure( "42;", "42", Wanted::Declaration );
+        require_declaration_failure( "static i32 f() { }", "static", Wanted::Declaration );
+        require_declaration_failure( "return 1;", "return", Wanted::Declaration );
+        require_declaration_failure( "}", "}", Wanted::Declaration );
+    }
+
+    SECTION( "a body where `{` should be" )
+    {
+        require_declaration_failure( "i32 f();", ";", Token_kind::L_brace );
+        require_declaration_failure( "i32 f() const { }", "const", Token_kind::L_brace );
+        require_declaration_failure( "i32 f() -> i32 { }", "->", Token_kind::L_brace );
+    }
+
+    SECTION( "a variable that goes on past its name" )
+    {
+        require_declaration_failure( "i32 a, b;", ",", Token_kind::Semicolon );
+        require_declaration_failure( "i32 a[4];", "[", Token_kind::Semicolon );
+    }
+
+    SECTION( "an extern is a function" )
+    {
+        require_declaration_failure( "extern i32 x;", ";", Token_kind::L_paren );
+    }
+
+    SECTION( "a missing name" )
+    {
+        require_declaration_failure( "i32 = 1;", "=", Wanted::Name );
+    }
+
+    SECTION( "type parameters left open" )
+    {
+        require_declaration_failure( "T f<T( T a ) { }", "(", Token_kind::Greater );
+    }
+
+    // The parser ends a clause at a bound that is not a name, short of the `{`.
+    SECTION( "a `where` clause without its colon or a bound" )
+    {
+        require_declaration_failure( "T f<T>( T a ) where T { }", "{", Token_kind::Colon );
+        require_declaration_failure( "T f<T>( T a ) where T : { }", "{", Wanted::Name );
+        require_declaration_failure( "T f<T>( T a ) where T : if & A { }", "if", Wanted::Name );
+    }
+}
+
+TEST_CASE( "scanner_chunks_a_file", "[scan]" )
+{
+    SECTION( "a declaration with nothing before it" )
+    {
+        Scanned                 s( "i32 a; i32 f() { }" );
+        const Declaration_chunk c = s.declaration_chunk();
+
+        REQUIRE_FALSE( c.dropped() );
+        REQUIRE( c.head.has_value() );
+        REQUIRE( c.head->kind == Declaration_kind::Variable );
+        REQUIRE( c.head->start == 0 );
+    }
+
+    SECTION( "the end of the file" )
+    {
+        Scanned                 s( "" );
+        const Declaration_chunk c = s.declaration_chunk();
+
+        REQUIRE_FALSE( c.dropped() );
+        REQUIRE_FALSE( c.head.has_value() );
+    }
+
+    // There is no enclosing body for it to close.
+    SECTION( "a stray `}` is junk, not an end" )
+    {
+        Scanned                 s( "} i32 a;" );
+        const Declaration_chunk c = s.declaration_chunk();
+
+        REQUIRE( c.dropped_begin == 0 );
+        REQUIRE( c.dropped_end == s.at( "i32" ) );
+        REQUIRE( c.failure.wanted == Wanted::Declaration );
+        REQUIRE( c.head->start == s.at( "i32" ) );
+    }
+
+    SECTION( "junk, then the declaration after it" )
+    {
+        Scanned                 s( "42; i32 a;" );
+        const Declaration_chunk c = s.declaration_chunk();
+
+        REQUIRE( c.dropped_end == s.at( "i32" ) );
+        REQUIRE( c.failure.at == 0 );
+        REQUIRE( c.failure.wanted == Wanted::Declaration );
+        REQUIRE( c.head->kind == Declaration_kind::Variable );
+    }
+
+    SECTION( "a word before a function drops only the word" )
+    {
+        Scanned                 s( "static i32 f() { return 1; }" );
+        const Declaration_chunk c = s.declaration_chunk();
+
+        REQUIRE( c.dropped_end == s.at( "i32" ) );
+        REQUIRE( c.head->kind == Declaration_kind::Function );
+        REQUIRE( c.head->commit == s.at( "{" ) );
+    }
+
+    SECTION( "a keyword-led declaration after junk" )
+    {
+        Scanned                 s( "42 struct S { i32 a; };" );
+        const Declaration_chunk c = s.declaration_chunk();
+
+        REQUIRE( c.dropped_end == s.at( "struct" ) );
+        REQUIRE( c.head->kind == Declaration_kind::Aggregate );
+    }
+
+    // Its body's statements are not declarations to resume at.
+    SECTION( "a function whose head fails is dropped with its body" )
+    {
+        Scanned                 s( "i32 f() const { i32 inner; } i32 b;" );
+        const Declaration_chunk c = s.declaration_chunk();
+
+        REQUIRE( c.failure.at == s.at( "const" ) );
+        REQUIRE( c.failure.token == Token_kind::L_brace );
+        REQUIRE( c.dropped_end == s.at( "i32", 2 ) );
+        REQUIRE( c.head->start == s.at( "i32", 2 ) );
+    }
+
+    SECTION( "a forward declaration is dropped through its `;`" )
+    {
+        Scanned                 s( "i32 f();\ni32 g() { }" );
+        const Declaration_chunk c = s.declaration_chunk();
+
+        REQUIRE( c.failure.at == s.at( ";" ) );
+        REQUIRE( c.failure.token == Token_kind::L_brace );
+        REQUIRE( c.dropped_end == s.at( "i32", 1 ) );
+        REQUIRE( c.head->kind == Declaration_kind::Function );
+    }
+
+    SECTION( "a variable missing its `;` before another declaration is kept" )
+    {
+        Scanned                 s( "i32 a\ni32 f() { }" );
+        const Declaration_chunk c = s.declaration_chunk();
+
+        REQUIRE_FALSE( c.dropped() );
+        REQUIRE( c.head->kind == Declaration_kind::Variable );
+        REQUIRE( c.head->start == 0 );
+        REQUIRE( c.head->commit == s.at( "i32", 1 ) );
+    }
+
+    SECTION( "an extern missing its `;` is kept as the function it is" )
+    {
+        Scanned                 s( "extern i32 abs( i32 v )\ni32 f() { }" );
+        const Declaration_chunk c = s.declaration_chunk();
+
+        REQUIRE_FALSE( c.dropped() );
+        REQUIRE( c.head->kind == Declaration_kind::Function );
+        REQUIRE( c.head->commit == s.at( "i32", 2 ) );
+    }
+
+    SECTION( "junk running to the end of the file" )
+    {
+        Scanned                 s( "i32 a; 1 2 3" );
+        const Declaration_chunk c = s.declaration_chunk( s.at( "1" ) );
+
+        REQUIRE( c.dropped_begin == s.at( "1" ) );
+        REQUIRE( c.dropped_end == s.at( "3" ) + 1 );
+        REQUIRE_FALSE( c.head.has_value() );
+    }
+
+    SECTION( "scanning starts where it is told" )
+    {
+        Scanned                 s( "i32 a; 42; i32 b;" );
+        const Declaration_chunk c = s.declaration_chunk( s.at( "42" ) );
+
+        REQUIRE( c.dropped_begin == s.at( "42" ) );
+        REQUIRE( c.head->start == s.at( "i32", 1 ) );
     }
 }
 

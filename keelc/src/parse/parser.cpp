@@ -69,8 +69,8 @@ private:
     // A constructor's name, which its head scan required to be an identifier.
     Symbol_id take_name();
 
-    // Where a member parse reaches its `{`, `=` or `;`, it is where the head scan said it would be.
-    [[maybe_unused]] void assert_at_commit( u32 commit ) const;
+    // A head's parse ends at its commit. One that reported may stop short or run past, and is moved there.
+    void reach_commit( u32 commit );
 
     // What peek() should be called in a message: its source text where it has one, so "found
     // `widget`" rather than "found `identifier`".
@@ -195,6 +195,7 @@ private:
     std::span<const Token> tokens_;
     u32                    pos_ = 0;
     Scanner                scanner_;
+    std::size_t            head_errors_ = 0; // The error count when the current head's parse began.
     const Source_manager&  sm_;
     Ast&                   ast_;
     Diagnostics&           diags_;
@@ -568,9 +569,17 @@ Symbol_id Parser::take_name()
     return advance().symbol;
 }
 
-void Parser::assert_at_commit( [[maybe_unused]] u32 commit ) const
+void Parser::reach_commit( u32 commit )
 {
-    assert( pos_ == commit );
+    if( diags_.error_count() > head_errors_ )
+    {
+        pos_             = commit;
+        pending_greater_ = 0;
+    }
+    else
+    {
+        assert( pos_ == commit );
+    }
 }
 
 void Parser::synchronise()
@@ -902,7 +911,7 @@ Node_id Parser::parse_method_decl( Symbol_id enclosing, Node_id type_params, boo
         match_keyword( Keyword::Const );
     }
 
-    assert_at_commit( commit );
+    reach_commit( commit );
     const Node_id body = parse_block();
 
     if( !name.is_valid() )
@@ -1161,6 +1170,7 @@ Node_id Parser::parse_member( const Member_head& head, Symbol_id enclosing, Node
         error_at( access_span, "a destructor cannot be `public` or `private`", "it is never called by name" );
     }
 
+    head_errors_ = diags_.error_count();
     Node_id member;
     switch( head.kind )
     {
@@ -1211,7 +1221,7 @@ void Parser::report_dropped( const Member_chunk& chunk )
 
     const bool same_line = chunk.head.has_value() && line_of( last ) == line_of( tokens_[chunk.head->start] );
 
-    const std::string_view word_hint = dropped_word_hint( sm_.text( first.span ) );
+    const std::string_view word_hint = dropped_word_hint( sm_.text( first.span ), Hint_place::Member );
 
     Span        span;
     std::string message;
@@ -1239,10 +1249,13 @@ void Parser::report_dropped( const Member_chunk& chunk )
         {
         case Wanted::Token:
             message += expectation( failure.token );
-            help = std::string( member_stop_hint( failure.token, stop.kind ) );
+            help = std::string( stop_hint( failure.token, stop.kind, Hint_place::Member ) );
             break;
         case Wanted::Member:
             message += "a member";
+            break;
+        case Wanted::Declaration:
+            message += "a declaration";
             break;
         case Wanted::Type:
             message += "a type";
@@ -1420,7 +1433,7 @@ Node_id Parser::parse_field_decl( u32 commit )
     const Symbol_id name = expect_name();
 
     // Missing when the head scan kept the field because a member starts where its `;` should be.
-    assert_at_commit( commit );
+    reach_commit( commit );
     expect( Token_kind::Semicolon );
 
     // A declaration with no name is not one: sema reads every declaration's name to report
@@ -1453,7 +1466,7 @@ Node_id Parser::parse_destructor_decl( Symbol_id enclosing, Node_id type_params,
         error_at( ast_.span( params ), "destructors take no parameters" );
     }
 
-    assert_at_commit( commit );
+    reach_commit( commit );
     const Node_id body = parse_block();
 
     // Same rule as every other declaration: sema reads a name to report about it.
@@ -1480,7 +1493,7 @@ Node_id Parser::parse_constructor_decl( Symbol_id enclosing, Node_id type_params
     const Node_id receiver = synthesise_receiver( enclosing, type_params, start, false );
     const Node_id params   = parse_param_list( receiver );
 
-    assert_at_commit( commit );
+    reach_commit( commit );
     const Node_id body = parse_block();
 
     return ast_.add(
@@ -2114,7 +2127,7 @@ Node_id Parser::parse_statement()
         const Span start = peek().span;
 
         error_at(
-            start, "`extern` is not a statement", "write `extern` at file scope, where it declares a function or a variable"
+            start, "`extern` is not a statement", "write `extern` at file scope, where it declares a function defined in C"
         );
 
         // Parsed for its cursor movement, not its result: the node is not a statement, so an
@@ -2193,7 +2206,7 @@ Node_id Parser::parse_var_decl( std::optional<u32> commit )
 
     if( commit.has_value() )
     {
-        assert_at_commit( *commit );
+        reach_commit( *commit );
     }
 
     Node_id value;
@@ -8767,6 +8780,23 @@ TEST_CASE( "parser_recovers_from_a_member_that_is_not_one", "[parse][recovery]" 
         REQUIRE( p.error_count() == 1 );
         REQUIRE( has( p, "expected a member, found `42`" ) );
         REQUIRE( member_names( p ) == "x y" );
+    }
+
+    // The scanner counted the parentheses; the parser stops inside them, reports, and resumes at
+    // the body the scanner found.
+    SECTION( "a member that goes wrong inside its parameters still has its body read" )
+    {
+        const Parsed p( "class C {\n"
+                        "    C( i32 x y ) { }\n"
+                        "    i32 f( i32 x y ) { return 1; }\n"
+                        "    i32 a;\n"
+                        "};" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 2 );
+        REQUIRE( has( p, "t.kl:2:13" ) );
+        REQUIRE( has( p, "t.kl:3:17" ) );
+        REQUIRE( member_names( p ) == "C f a" );
     }
 
     // Whatever was dropped may have been the field, so "no fields" would be a guess.
