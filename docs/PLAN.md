@@ -5674,7 +5674,45 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      `virtual i32 f() { ... }` / `mutable i32 a;` become a field named `i32`, so sema then says
      *`i32` is not a type* at every later member. Should be one error per bad member and a skip to
      the member's end (its `;`, or past a balanced `{ }`, or before the class's `}`), the failed
-     field becoming an Error node.
+     field becoming an Error node. **In progress (2026-10-03), redesigned**: no case per spelling.
+     A cursor-restoring recogniser accepts a member's *head* (markers, `static`, then destructor,
+     constructor, method up to its `{`, or field up to its `;`); once it matches, the existing
+     parse functions run and report as now. On a failed head: report once, then retry quietly from
+     the token after the one that started it, stepping over a `{ }` group whole, until a head
+     matches. A `;` missing where a head matches is reported as that and the field kept - and for
+     that repair only, a constructor head must carry the class's name, or `virtual i32 f() {}`
+     reads as a field `i32` plus a constructor `f`. No operand-position rule: it removed phantom
+     fields from `i32 b = c * d;` but let a dangling operator swallow the next member, which is
+     worse. The error spans the dropped tokens when the retry recovers on the same line. C++
+     habits get their Keel hint from a table keyed on the dropped word, not from parser branches,
+     and only where Keel has a working alternative. Statements keep `synchronise()`: almost
+     anything parses as an expression statement, so a quiet retry would resync too early.
+     Prototype: 37 sweep lines + 35 adversarial, one error each bar item 7. Tests:
+     `parser_recovers_from_a_member_that_is_not_one` (to be revised for the redesign).
+     **Shape: a `Scanner` the `Parser` holds** - pure, no diagnostics or AST, told where to start,
+     returning a chunk (dropped span, the recognised head's start and kind, the first failure, a
+     missing `;`). The existing lookaheads (`looks_like_method`, `scan_type_and_name`, ...) move
+     into it. Two grammars of one head is the cost, so a debug assertion checks that each committed
+     parse ends where the scanner said it would. Two rules found by fuzzing a prototype (5000
+     random classes x 4 seeds): a retry that starts on `{` steps over the group first, and the
+     class's name before `(` is always a constructor, never a method, or a stray word before a
+     constructor reads as a method named after the class. Left: a stray `~` before a constructor
+     reads as a destructor with parameters, which that path already reports.
+     Hints decided: `= value` on a field - a field cannot be given a value here yet, set it in the
+     constructor; `mutable` - remove it, a field is mutable unless `const`, though fields cannot be
+     `const` yet; `i32 a[4]` - a field cannot be a fixed-size array yet.
+     **Steps.** (1) **Done (2026-10-03)**: `parse/scanner.{h,cpp}` and `parse/hints.{h,cpp}`, with the
+     parser untouched - tests `scanner_recognises_each_member_head`,
+     `scanner_says_where_and_why_a_head_fails`, `scanner_chunks_a_class_body`,
+     `hints_name_the_keel_spelling`. (2) Wire `next_member` into `parse_aggregate_decl`, with the
+     commit assertion and the hint lookup; parser-level tests written then. (3) Move the parser's
+     own lookaheads (`looks_like_*`, `scan_type_and_name`, `scan_type_arguments`) into the
+     scanner, unchanged in behaviour. (4) Audit the parser's bespoke spelling checks against the
+     generic recovery plus a table row. A `Scanner` is a class rather than a namespace because it
+     has state of its own: a cursor and an owed half of `>>`, which a rewinding scan inside the
+     parser could leave behind (`scan_type_arguments` counts depth by hand for exactly that).
+     Group 2 below falls out of this: `i32 f();` stops at `;` where `{` was wanted, one error,
+     and its hint is a `member_stop_hint` row.
   6. **A method or constructor without its body.** `i32 f();` and `i32 f() const;` in a class
      report *expected `{`* and then parse the rest of the class as statements: 8 errors, every
      later member lost, and *`C` has no fields*. The top level already says *Keel has no forward
@@ -5682,6 +5720,10 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      `C() : a( 1 ) { }` (2) are the same entry point: whatever stands where `{` should be.
   7. Left alone: a stray `};` mid-class, and an unclosed `(` or `{` inside a member, end the class
      where the author did not mean to; a parser cannot know better.
+  8. **Later, not this cascade: field initialisers and fixed arrays.** `i32 a = 3;` is wanted
+     eventually, and with it the assignment checker must require a constructor to initialise every
+     field that has no initialiser. A fixed-size array would likely be spelled `i32 a[4]`. Both
+     hints above are worded to be deleted when these land.
 
 ### M7 slice: access control - done (2026-09-25)
 
