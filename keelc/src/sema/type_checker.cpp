@@ -548,6 +548,16 @@ TEST_CASE( "type_checker_does_not_cascade_from_an_error", "[sema][types]" )
         REQUIRE( p.errors() == 1 );
     }
 
+    // Neither an arity complaint for `Map<i32>` nor a local named `i32` hiding the type.
+    SECTION( "a broken type argument list is the parser's error alone" )
+    {
+        const Typed p( "class Map<K, V> { K k; V v; };\n"
+                       "i32 main() { Map<i32 i32>* m; i32 b = 1; return b; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+    }
+
     SECTION( "and a parse error does not reach the checker at all" )
     {
         const Typed p( "i32 main() { return 1 +; }" );

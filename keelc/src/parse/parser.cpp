@@ -156,7 +156,11 @@ private:
     // `Vector<Vector<i32>>` closes with a single `>>` token - the lexer is right to produce it
     // (lexer_generic_close_is_two_greaters), so the parser splits it here rather than mutating the
     // token stream. Returns true when one closing `>` was consumed.
-    bool    match_generic_close();
+    bool match_generic_close();
+    // On a miss, reports once and skips to this list's `>`; false means the list was broken.
+    bool expect_generic_close();
+    // Past this list's `>`, or up to a token the list cannot reach past (`;`, `{`, an unmatched `)`).
+    void    skip_to_generic_close();
     Node_id parse_return_stmt();
     // A static field passes its commit; top-level and local variables have none.
     Node_id parse_var_decl( std::optional<u32> commit = std::nullopt );
@@ -202,7 +206,8 @@ private:
     Diagnostics&           diags_;
 
     // Half of a `>>` that has already been consumed while closing a generic argument list.
-    u32 pending_greater_ = 0;
+    u32                pending_greater_ = 0;
+    std::optional<u32> unclosed_at_;
 
     // Grouping parentheses leave no trace in the tree, so `a & b == c` and `(a & b) == c` produce
     // the same nodes. D16 needs to tell them apart, and parenthesisation is a parsing fact that
@@ -974,10 +979,7 @@ std::vector<Node_id> Parser::parse_type_params()
             params.push_back( parse_type_param() );
         } while( match( Token_kind::Comma ) );
 
-        if( !match_generic_close() )
-        {
-            error_expected( Token_kind::Greater );
-        }
+        expect_generic_close();
     }
 
     return params;
@@ -1769,14 +1771,16 @@ Node_id Parser::parse_type()
             } while( match( Token_kind::Comma ) );
         }
 
-        if( !match_generic_close() )
+        if( expect_generic_close() )
         {
-            error_expected( Token_kind::Greater );
+            const Node_id list = ast_.add( Node_kind::Type_arg_list, Span::merge( open, previous().span ), 0, arguments );
+
+            type = ast_.add( Node_kind::Generic_type, Span::merge( start, previous().span ), 0, { type, list } );
         }
-
-        const Node_id list = ast_.add( Node_kind::Type_arg_list, Span::merge( open, previous().span ), 0, arguments );
-
-        type = ast_.add( Node_kind::Generic_type, Span::merge( start, previous().span ), 0, { type, list } );
+        else
+        {
+            type = error_node( Span::merge( start, previous().span ) );
+        }
     }
 
     if( leading_const )
@@ -2031,6 +2035,73 @@ bool Parser::match_generic_close()
     }
 
     return false;
+}
+
+bool Parser::expect_generic_close()
+{
+    if( match_generic_close() )
+    {
+        return true;
+    }
+
+    if( !unclosed_at_ || pos_ != *unclosed_at_ )
+    {
+        error_expected( Token_kind::Greater );
+    }
+
+    skip_to_generic_close();
+    return false;
+}
+
+void Parser::skip_to_generic_close()
+{
+    u32 depth_less          = 0;
+    u32 depth_paren_bracket = 0;
+
+    while( true )
+    {
+        if( check( Token_kind::Semicolon ) || check( Token_kind::L_brace ) || check( Token_kind::R_brace ) ||
+            check( Token_kind::Equal ) || at_end() ||
+            ( ( check( Token_kind::R_paren ) || check( Token_kind::R_bracket ) ) && depth_paren_bracket == 0 ) )
+        {
+            unclosed_at_ = pos_;
+            break;
+        }
+
+        if( ( check( Token_kind::Greater ) || check( Token_kind::Greater_greater ) ) && depth_less == 0 )
+        {
+            match_generic_close();
+            break;
+        }
+        if( check( Token_kind::Greater_greater ) && depth_less == 1 )
+        {
+            advance();
+            break;
+        }
+
+        if( check( Token_kind::Less ) )
+        {
+            depth_less += 1;
+        }
+        else if( check( Token_kind::Greater ) )
+        {
+            depth_less -= 1;
+        }
+        else if( check( Token_kind::Greater_greater ) )
+        {
+            depth_less -= 2;
+        }
+        else if( check( Token_kind::L_paren ) || check( Token_kind::L_bracket ) )
+        {
+            depth_paren_bracket += 1;
+        }
+        else if( check( Token_kind::R_paren ) || check( Token_kind::R_bracket ) )
+        {
+            depth_paren_bracket -= 1;
+        }
+
+        advance();
+    }
 }
 
 bool Parser::can_start_expression() const
@@ -2714,10 +2785,7 @@ Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing, bool incre
                 arguments.push_back( parse_type() );
             } while( match( Token_kind::Comma ) );
 
-            if( !match_generic_close() )
-            {
-                error_expected( Token_kind::Greater );
-            }
+            expect_generic_close();
 
             const Node_id types = ast_.add( Node_kind::Type_arg_list, Span::merge( open, previous().span ), 0, arguments );
 
@@ -2973,10 +3041,7 @@ Node_id Parser::parse_keyword_prefix( Span start )
         const Node_id type = parse_type();
 
         // Not expect( Greater ): `alloc<Vector<i32>>()` closes with `>>`.
-        if( !match_generic_close() )
-        {
-            error_expected( Token_kind::Greater );
-        }
+        expect_generic_close();
 
         expect( Token_kind::L_paren );
 
@@ -3019,10 +3084,7 @@ Node_id Parser::parse_keyword_prefix( Span start )
 
         // Not expect( Greater ): `wrap<Vector<i32>>( x )` closes with `>>`, and this is the
         // helper that splits it.
-        if( !match_generic_close() )
-        {
-            error_expected( Token_kind::Greater );
-        }
+        expect_generic_close();
 
         expect( Token_kind::L_paren );
         const Node_id operand = parse_expression( 0 );
@@ -6006,6 +6068,81 @@ TEST_CASE( "parser_generic_and_qualified_types", "[parse]" )
     {
         const Parsed p( "i32 main() { Vector<i32 v; }" );
         REQUIRE( p.has_errors() );
+    }
+}
+
+// A list that does not close where expected is one error: the parser skips to its `>` and the
+// type becomes an Error node, so sema says nothing more about it.
+TEST_CASE( "parser_recovers_from_a_broken_type_argument_list", "[parse][recovery]" )
+{
+    SECTION( "a stray word in a local's type" )
+    {
+        const Parsed p( "i32 main() { Box<i32 i32>* a; i32 b = 1; return b; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "expected `>`, found `i32`" ) != std::string::npos );
+        REQUIRE( p.errors().find( "t.kl:1:21" ) != std::string::npos );
+
+        const Node_id decl = first_statement( p );
+        REQUIRE( p.kind( decl ) == Node_kind::Var_decl );
+        REQUIRE( p.name( decl ) == "a" );
+        REQUIRE( p.kind( p.child( decl, 0 ) ) == Node_kind::Pointer_type );
+        REQUIRE( p.kind( p.child( p.child( decl, 0 ), 0 ) ) == Node_kind::Error );
+    }
+
+    // The inner list skips to its half of the `>>`; the outer one closes on the other half.
+    SECTION( "nested, the inner list's error alone" )
+    {
+        const Parsed p( "i32 main() { Box<Box<i32 i32>>* a; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "t.kl:1:25" ) != std::string::npos );
+        REQUIRE( p.name( first_statement( p ) ) == "a" );
+    }
+
+    SECTION( "a `<` among the stray words is balanced" )
+    {
+        const Parsed p( "i32 main() { Box<i32 Box<i32>>* a; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.name( first_statement( p ) ) == "a" );
+    }
+
+    SECTION( "a parameter's type" )
+    {
+        const Parsed p( "void f( Box<i32 i32>* a, i32 b ) { }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+
+        const Node_id params = find_first( p.ast(), p.root(), Node_kind::Param_list );
+        REQUIRE( p.children( params ).size() == 2 );
+        REQUIRE( p.name( p.child( params, 0 ) ) == "a" );
+    }
+
+    SECTION( "an `alloc`'s type" )
+    {
+        const Parsed p( "i32 main() { unsafe { i32[*] q = alloc<i32 i32>( 4 ); } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "expected `>`, found `i32`" ) != std::string::npos );
+    }
+
+    // The skip stops at the list's `)` rather than running on to a later `>`.
+    SECTION( "no closer before the `)`" )
+    {
+        const Parsed p( "void f( Box<i32 i32 a ) { }\ni32 g() { return 1 > 0; }" );
+
+        INFO( p.errors() );
+        const std::size_t first = p.errors().find( "expected `>`" );
+        REQUIRE( first != std::string::npos );
+        REQUIRE( p.errors().find( "expected `>`", first + 1 ) == std::string::npos );
+        REQUIRE( p.errors().find( "t.kl:2:" ) == std::string::npos );
+        REQUIRE( find_first( p.ast(), p.root(), Node_kind::Return_stmt ).is_valid() );
     }
 }
 

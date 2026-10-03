@@ -5659,9 +5659,24 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      on each member, not as a label*, help *write `public` before each member it should cover*,
      and adds no member, so later members keep their default access. A struct reports only its
      existing *no private members*. Test: `parser_refuses_an_access_label`.
-  3. **`T T` inside type arguments.** `Box<Box<T T>>* link;` reports *expected `>`* twice at one
+  3. ~~**`T T` inside type arguments.**~~ **Done (2026-10-03)**: every probe below is one error, sema
+     included, and a later use of the broken local says nothing more. `Box<Box<T T>>* link;` reports *expected `>`* twice at one
      place and *expected `;`* at the `>>`, closes the type early, and takes the second `T` as the
      field's name (§15, *a broken argument inside a generic cycle*).
+     **Probed after item 6 (2026-10-03)**: in a class body and at file scope it is already one
+     error, since the scanner drops the member. What is left is wherever `parse_type` runs
+     unguarded: a local `Box<i32 i32>* a;` is 4 errors (the second `i32` becomes the local's
+     name, and sema then says *`i32` is not a type* at every later use), nested `Box<Box<...>>`
+     5, a parameter 2, `alloc<i32 i32>( 4 )` 4, and `Map<i32 i32>` adds sema's *takes 2 type
+     arguments*. **Fix**: `expect_generic_close` replaces the five `match_generic_close` + *expected `>`*
+     pairs. On a miss it reports once, then skips to this list's own `>` (balancing `<`, `>`,
+     `>>`, `(` and `)`), stopping before `;`, `{`, `}`, `=` or an unmatched `)` or `]`; a
+     generic type whose list did not close becomes an Error node, which sema already reads as
+     the silent error type. An outer list that finds the inner one's stop does not report it
+     again. Left alone: `Box<i32 x;` in a block has no closer at all, so the statement reads as
+     an expression before any type is parsed (item 7's kind). Tests:
+     `parser_recovers_from_a_broken_type_argument_list`, a section of
+     `type_checker_does_not_cascade_from_an_error`.
   4. **A missing package** is 31 errors for one absent `--package` (§15's fuzz list): every
      `kl::` name after *there is no package `kl`* is reported again.
   5. **A member that is not one.** Found by a sweep of 38 bad lines in a class body (2026-10-03).
