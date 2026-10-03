@@ -7,6 +7,7 @@
 #include <cassert>
 #include <optional>
 #include <string>
+#include <unordered_set>
 #include <vector>
 #include "parse/hints.h"
 #include "parse/scanner.h"
@@ -55,6 +56,7 @@ private:
     // --- errors ---
 
     void error_at( Span span, std::string message, std::string help = {} );
+    void report( Span span, u32 about, std::string message, std::string help );
 
     // "expected `;`, found `,`".
     void error_expected( Token_kind kind, std::string help = {} );
@@ -197,13 +199,15 @@ private:
 
     bool at_mode_keyword() const;
 
-    std::span<const Token> tokens_;
-    u32                    pos_ = 0;
-    Scanner                scanner_;
-    std::size_t            head_errors_ = 0; // The error count when the current head's parse began.
-    const Source_manager&  sm_;
-    Ast&                   ast_;
-    Diagnostics&           diags_;
+    std::span<const Token>  tokens_;
+    u32                     pos_ = 0;
+    Scanner                 scanner_;
+    std::size_t             head_errors_ = 0; // The report count when the current head's parse began.
+    std::unordered_set<u32> reported_;
+    std::size_t             reports_ = 0; // Every report attempted, including the dropped ones.
+    const Source_manager&   sm_;
+    Ast&                    ast_;
+    Diagnostics&            diags_;
 
     // Half of a `>>` that has already been consumed while closing a generic argument list.
     u32                pending_greater_ = 0;
@@ -489,6 +493,18 @@ bool Parser::expect( Token_kind kind )
 
 void Parser::error_at( Span span, std::string message, std::string help )
 {
+    report( span, span.start, std::move( message ), std::move( help ) );
+}
+
+void Parser::report( Span span, u32 about, std::string message, std::string help )
+{
+    reports_++;
+
+    if( !reported_.insert( about ).second )
+    {
+        return;
+    }
+
     diags_.error( span, std::move( message ), std::move( help ) );
 }
 
@@ -507,7 +523,9 @@ void Parser::error_expected( Token_kind kind, std::string help )
         help = fmt::format( "{} is a keyword, so it cannot be used as a name", found_text() );
     }
 
-    error_at( at, fmt::format( "expected {}, found {}", expectation( kind ), found_text() ), std::move( help ) );
+    report(
+        at, peek().span.start, fmt::format( "expected {}, found {}", expectation( kind ), found_text() ), std::move( help )
+    );
 }
 
 Symbol_id Parser::expect_name()
@@ -577,7 +595,7 @@ Symbol_id Parser::take_name()
 
 void Parser::reach_commit( u32 commit )
 {
-    if( diags_.error_count() > head_errors_ )
+    if( reports_ > head_errors_ )
     {
         pos_             = commit;
         pending_greater_ = 0;
@@ -687,10 +705,10 @@ std::vector<Node_id> Parser::parse_declarations()
             break;
         }
 
-        const std::size_t errors_before = diags_.error_count();
+        const std::size_t errors_before = reports_;
         const Node_id     decl          = parse_declaration( *chunk.head );
 
-        if( diags_.error_count() > errors_before )
+        if( reports_ > errors_before )
         {
             reported_line = line_of( previous() );
         }
@@ -767,7 +785,7 @@ Node_id Parser::parse_import()
 Node_id Parser::parse_declaration( const Declaration_head& head )
 {
     assert( pos_ == head.start );
-    head_errors_ = diags_.error_count();
+    head_errors_ = reports_;
 
     switch( head.kind )
     {
@@ -1084,10 +1102,10 @@ Node_id Parser::parse_aggregate_decl()
             wrote_field = true;
         }
 
-        const std::size_t errors_before = diags_.error_count();
+        const std::size_t errors_before = reports_;
         const Node_id     member        = parse_member( *chunk.head, name, type_params, is_class );
 
-        if( diags_.error_count() > errors_before )
+        if( reports_ > errors_before )
         {
             reported_line = line_of( previous() );
         }
@@ -1203,7 +1221,7 @@ Node_id Parser::parse_member( const Member_head& head, Symbol_id enclosing, Node
         error_at( access_span, "a destructor cannot be `public` or `private`", "it is never called by name" );
     }
 
-    head_errors_ = diags_.error_count();
+    head_errors_ = reports_;
     Node_id member;
     switch( head.kind )
     {
@@ -2508,7 +2526,7 @@ Node_id Parser::parse_for_stmt()
     const Span start = peek().span;
     advance();
     expect( Token_kind::L_paren );
-    const std::size_t errors_before = diags_.error_count();
+    const std::size_t errors_before = reports_;
 
     // Init. Both parse_var_decl and parse_expression_stmt consume their own `;` which is exactly
     // the first semicolon of the header - so neither needs changing
@@ -2543,7 +2561,7 @@ Node_id Parser::parse_for_stmt()
 
     if( !match( Token_kind::R_paren ) )
     {
-        if( diags_.error_count() == errors_before )
+        if( reports_ == errors_before )
         {
             error_expected( Token_kind::R_paren );
         }
@@ -7184,6 +7202,67 @@ TEST_CASE( "parser_recovers_and_keeps_parsing", "[parse]" )
     INFO( p.errors() );
     REQUIRE( p.children( p.root() ).size() == 2 );
     REQUIRE( p.kind( p.child( p.root(), 1 ) ) == Node_kind::Function_decl );
+}
+
+// A token carries one parse error, the first reported: the rules that fail after it at the same
+// token are failing because of it.
+TEST_CASE( "parser_reports_one_error_per_token", "[parse][recovery]" )
+{
+    const auto one_error = []( std::string_view source, std::string_view message )
+    {
+        const Parsed p( source );
+        INFO( p.errors() );
+        CHECK( p.error_count() == 1 );
+        CHECK( p.errors().find( message ) != std::string::npos );
+    };
+
+    SECTION( "a keyword where a value was wanted" )
+    {
+        one_error( "i32 main() { return private 21; }", "expected an expression, found `private`" );
+    }
+
+    SECTION( "an operand missing before the closing parenthesis" )
+    {
+        one_error( "i32 main() { i32 x = ( 1 + ; return x; }", "expected an expression, found `;`" );
+    }
+
+    SECTION( "a file cut off inside nested blocks" )
+    {
+        one_error( "i32 main() { if( true ) { while( true ) { return 1", "expected `;`, found end of file" );
+    }
+
+    SECTION( "a statement starting at a token already reported" )
+    {
+        one_error( "i32 main() { i32 x = 0; x = 1 2; return x; }", "expected `;`, found `2`" );
+    }
+
+    SECTION( "a report about an earlier token in between" )
+    {
+        const Parsed p( "i32 main() { i32 total = 0; i32 n = 1; while ( total n < ) { } return 0; }" );
+        INFO( p.errors() );
+        CHECK( p.error_count() == 2 );
+        CHECK( p.errors().find( "expected `)`, found `n`" ) != std::string::npos );
+        CHECK( p.errors().find( "expected an expression, found `)`" ) != std::string::npos );
+    }
+
+    SECTION( "a keyword as a parameter's name" )
+    {
+        const Parsed p( "i32 f( template i32 n ) { return n; }" );
+        INFO( p.errors() );
+        const std::string errors = p.errors();
+        const std::size_t first  = errors.find( "found `template`" );
+        REQUIRE( first != std::string::npos );
+        CHECK( errors.find( "found `template`", first + 1 ) == std::string::npos );
+    }
+
+    SECTION( "an error about earlier tokens leaves the next one free" )
+    {
+        const Parsed p( "i32 main() { i32 x = 0; ++x\nreturn x; }" );
+        INFO( p.errors() );
+        CHECK( p.error_count() == 2 );
+        CHECK( p.errors().find( "`++` is written after the variable" ) != std::string::npos );
+        CHECK( p.errors().find( "expected `;`, found `return`" ) != std::string::npos );
+    }
 }
 
 TEST_CASE( "parser_marks_failed_subtrees_with_an_error_node", "[parse]" )

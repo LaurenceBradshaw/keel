@@ -5888,13 +5888,30 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      is precision instead: an error covers the fewest tokens it can, and a token carries at most
      one. The fuzz triage counts errors sharing a token rather than errors per edit. Goldens
      `errors_unknown_name` (every use reported) and `errors_builtin_type_names` keep it.
-  3. **M1: one parse error per token.** Nothing stops a second report at a token already reported:
+  3. ~~**M1: one parse error per token.**~~ **Done (2026-10-04).** Nothing stops a second report at a token already reported:
      `return private 21;` is *expected `;`*, *expected an expression* and *expected a statement*,
      all at `private`; truncation stacks *expected `}`* per open scope at end of file; `( template
      i32 n )` reports *expected an identifier* at two columns. 8,640 single-edit mutants (2,770 at
-     end of file). The parser drops a report until it has consumed a token since the last one,
-     keyed on the token position, not the span, since `error_expected` points past the previous
-     token. A backstop: it does nothing for a loop that reports once per token.
+     end of file). The parser drops a report about a token any earlier report was about: the start
+     of the span, except for `error_expected`, which points past the previous token and is about
+     the one it found. Every such token, not only the last: in `while ( total n < )` the
+     *no effect* on `n` falls between two reports at `)`, so a last-only rule let 368 more
+     cascades through in 3,000 mutants. Not the cursor: `report_dropped` reports before moving it, and `++x` then a
+     missing `;` are two reports at one cursor about two tokens. **The first report is the right
+     one**, checked rather than assumed: replaying 3,000 saved mutants under gdb in emission order
+     (the printed order is sorted by position, so `( 1 + ;` prints *expected `)`* first although
+     *expected an expression* was reported first) drops 5,135 reports, and in every pair class
+     sampled the kept one names the fault and the dropped one is the rule that failed because of
+     it - *expected a statement* after *expected `;`*, nested *expected `}`* at end of file, and
+     the parser's *no effect* on a fragment starting at the reported token. A dropped report
+     still counts wherever the parser asks whether a rule reported (`head_errors_`,
+     `reach_commit`, the chunk loops, the `for` header), so recovery is unchanged. A backstop: it
+     does nothing for a loop that reports once per token. Lexer-then-parser pairs (*leading
+     zeros*, then *expected a declaration* at `007`) are two passes, and out of scope here.
+     Test: `parser_reports_one_error_per_token`. Replaying all 24,607 saved mutants: those with
+     errors sharing a token fall from 66.3% to 24.0%, and the pairs from 57,795 to 10,355, with no
+     parse-parse class left in the top 25; what remains is sema on a parse error, M2's target. The
+     debug build, asserts on, exits 0 or 1 on every single-file mutant.
   4. **M2: statements are a recovery boundary.** `parse_block`'s loop restarts at the token a
      statement stopped on, and `synchronise()` runs only when nothing can start a statement. `x = 1
      2;`, `total u8 total + 10;`, `return 1 this;`: the rest of the line parses as a new statement,
