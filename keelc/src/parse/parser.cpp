@@ -143,22 +143,6 @@ private:
     Node_id parse_unsafe_block();
     Node_id parse_statement();
 
-    // Decides whether a statement starting with an identifier is a declaration. A scan, not a trial
-    // parse: it moves the cursor, looks, and puts it back, building no nodes and reporting nothing.
-    // A speculative *parse* would emit diagnostics for guesses that turn out wrong.
-    bool looks_like_declaration();
-    bool looks_like_binding();
-    bool looks_like_method();
-
-    // Whether `<` here opens a generic call's type arguments rather than being a comparison.
-    // A scan like the ones above: no nodes, no diagnostics, cursor restored either way.
-    bool scan_type_arguments();
-
-    // Scans a type followed by the declared name, leaving pos_ just after that name. Shared by
-    // looks_like_declaration, which only wants the answer, and parse_declaration, which needs to
-    // see what follows the name.
-    bool scan_type_and_name();
-
     // Whether peek() could begin an expression. Keeps "expected a statement" for tokens that
     // cannot, rather than letting parse_prefix report the vaguer "expected an expression".
     bool can_start_expression() const;
@@ -768,11 +752,10 @@ Node_id Parser::parse_declaration()
     // A failed scan takes the variable path deliberately: `i32 = 1;` is a variable missing its
     // name, and parse_var_decl says so, where parse_function_decl would complain about a missing
     // `(` instead.
-    // A mode may open one too: `const ref T f( ... )` and `ref T f( ... )` are declarations, and
-    // scan_type_and_name below steps over the mode to find the name.
+    // A mode may open one too: `const ref T f( ... )` and `ref T f( ... )` are declarations.
     if( check( Token_kind::Identifier ) || check_keyword( Keyword::Const ) || at_mode_keyword() )
     {
-        const bool function = looks_like_method();
+        const bool function = scanner_.looks_like_function( pos_ );
 
         return function ? parse_function_decl() : parse_var_decl();
     }
@@ -1639,7 +1622,7 @@ Node_id Parser::parse_type()
 {
     const Span start = peek().span;
 
-    // A leading const wraps the whole type: `const i32`. looks_like_declaration accepts this, so
+    // A leading const wraps the whole type: `const i32`. The scanner's lookahead accepts this, so
     // parse_type has to as well, or the scan and the parse disagree.
     const bool leading_const = match_keyword( Keyword::Const );
 
@@ -2045,291 +2028,6 @@ bool Parser::can_start_expression() const
     }
 }
 
-bool Parser::looks_like_declaration()
-{
-    // `auto x = ...` is settled by its keyword; the caller checks that before asking.
-    if( !check( Token_kind::Identifier ) && !check_keyword( Keyword::Const ) && !check_keyword( Keyword::Fn ) &&
-        !check_keyword( Keyword::Field ) )
-    {
-        return false;
-    }
-
-    const u32  saved = pos_;
-    const bool found = scan_type_and_name();
-
-    pos_ = saved;
-    return found;
-}
-
-bool Parser::looks_like_binding()
-{
-    const u32 saved = pos_;
-
-    // `const ref T r` - the const leads, so it is stepped over before the mode is looked for.
-    // Restored on every path, so a `const i32 x` that is not a binding still reaches
-    // looks_like_declaration exactly as it did.
-    match_keyword( Keyword::Const );
-
-    if( !at_mode_keyword() )
-    {
-        pos_ = saved;
-        return false;
-    }
-
-    advance(); // the mode
-
-    const bool found = scan_type_and_name();
-
-    pos_ = saved;
-    return found;
-}
-
-// `id<i32>( 1 )` against `a < b > ( c )`. The parser has no symbol table (L17), so this is decided
-// on shape alone: the closing token cannot begin an operand, and a comparison always has a right operand.
-//
-// Committing to the generic reading is safe because the comparison reading has no valid typing to
-// fall back to - a comparison yields `bool`, operators are methods on the left operand's type
-// (D33), and `bool` is a builtin that can have none. See §12.
-//
-// Depth is counted here rather than by calling match_generic_close, which splits `>>` by leaving
-// `pending_greater_` set. That is parser state, and a scan that rewinds `pos_` without restoring it
-// would hand the next real `>` to whatever came after - which `Vector<Box<i32>>` reaches directly.
-bool Parser::scan_type_arguments()
-{
-    const u32 saved = pos_;
-
-    advance(); // the `<`
-
-    u32 depth = 1;
-
-    while( depth > 0 && !at_end() )
-    {
-        switch( peek().kind )
-        {
-        case Token_kind::Less:
-            depth += 1;
-            break;
-        case Token_kind::Greater:
-            depth -= 1;
-            break;
-        case Token_kind::Greater_greater:
-            // One token closing two levels. A lone `>>` at depth 1 is a shift, not a close.
-            if( depth < 2 )
-            {
-                pos_ = saved;
-                return false;
-            }
-            depth -= 2;
-            break;
-
-        // Everything a type may be made of, and nothing else: a type argument cannot contain a
-        // call, a literal or an operator, so meeting one means this was a comparison all along.
-        case Token_kind::Colon_colon:
-        case Token_kind::Identifier:
-        case Token_kind::Star:
-        case Token_kind::Comma:
-            break;
-
-        default:
-            pos_ = saved;
-            return false;
-        }
-
-        advance();
-    }
-
-    const bool generic =
-        depth == 0 && ( check( Token_kind::Colon_colon ) || check( Token_kind::L_paren ) || check( Token_kind::Semicolon ) ||
-                        check( Token_kind::Comma ) || check( Token_kind::R_paren ) || check( Token_kind::R_bracket ) ||
-                        check( Token_kind::R_brace ) || check( Token_kind::Dot ) );
-
-    pos_ = saved;
-    return generic;
-}
-
-bool Parser::looks_like_method()
-{
-    const u32  saved = pos_;
-    const bool found = scan_type_and_name() && ( check( Token_kind::L_paren ) || check( Token_kind::Less ) );
-
-    pos_ = saved;
-    return found;
-}
-
-// Leaves pos_ just after the declared name when it finds one, and restores it otherwise - so a
-// caller wanting only the answer can ignore the cursor, and one wanting to see what follows the
-// name restores it itself.
-bool Parser::scan_type_and_name()
-{
-    const u32 saved = pos_;
-
-    // A type may open with const: `const i32 x = 0;`.
-    while( match_keyword( Keyword::Const ) )
-    {
-    }
-
-    // ...and then with a mode: `const ref T r`, `ref T r`. Here rather than only in
-    // looks_like_binding because parse_declaration scans with this too, and a `const ref` return
-    // type has to be recognised as a function before its `(` is ever reached.
-    if( at_mode_keyword() )
-    {
-        advance();
-    }
-
-    // `fn( T, U ) -> R`, whose R may be another. Parens are counted rather than parsed, for the
-    // reason scan_type_arguments counts its own: parse_type reports, builds nodes and leaves
-    // pending_greater_ set, and none of the three is undone by restoring pos_.
-    while( check_keyword( Keyword::Fn ) || check_keyword( Keyword::Field ) )
-    {
-        advance();
-
-        if( !check( Token_kind::L_paren ) )
-        {
-            pos_ = saved;
-            return false;
-        }
-
-        u32 depth = 0;
-
-        do
-        {
-            if( check( Token_kind::L_paren ) )
-            {
-                depth += 1;
-            }
-            else if( check( Token_kind::R_paren ) )
-            {
-                depth -= 1;
-            }
-            else if( check( Token_kind::Semicolon ) || check( Token_kind::R_brace ) || at_end() )
-            {
-                pos_ = saved;
-                return false; // unbalanced - not a type
-            }
-
-            advance();
-        } while( depth > 0 );
-
-        // A missing arrow still scans as a declaration: nothing else starts with `fn`, so the
-        // reading is committed to here and parse_type reports the arrow rather than the statement
-        // falling through to an expression and a message about `fn` not being one.
-        if( !match( Token_kind::Arrow ) )
-        {
-            break;
-        }
-
-        // Same skips as the start of this function.
-        while( match_keyword( Keyword::Const ) )
-        {
-        }
-        if( at_mode_keyword() )
-        {
-            advance();
-        }
-    }
-
-    if( !match( Token_kind::Identifier ) )
-    {
-        pos_ = saved;
-        return false;
-    }
-
-    // `kl::Point p`: no expression is a path followed by a name.
-    if( check( Token_kind::Colon_colon ) && peek( 1 ).kind == Token_kind::Identifier )
-    {
-        advance();
-        advance();
-    }
-
-    // Whatever a type can be followed by before the declared name: `Point*`, `const T&`,
-    // `Vector<i32>`. Anything else means this was an expression after all.
-    while( true )
-    {
-        // D17 again: only an adjacent `*`/`&` is part of a type, so `a * b;` is not a declaration
-        // and falls through to being an expression statement, where D15 rejects it.
-        if( ( check( Token_kind::Star ) || check( Token_kind::Amp ) ) && peek_is_adjacent() )
-        {
-            advance();
-            continue;
-        }
-
-        if( check( Token_kind::L_bracket ) && peek( 1 ).kind == Token_kind::Star && peek( 2 ).kind == Token_kind::R_bracket )
-        {
-            advance();
-            advance();
-            advance();
-            continue;
-        }
-
-        if( match_keyword( Keyword::Const ) )
-        {
-            continue;
-        }
-
-        // A generic argument list. Nesting is counted rather than recursed, because this is only a
-        // scan - `Vector<Vector<i32>>` closes with `>>`, one token carrying two levels.
-        if( check( Token_kind::Less ) )
-        {
-            u32 depth = 0;
-
-            while( !at_end() )
-            {
-                if( match( Token_kind::Less ) )
-                {
-                    depth += 1;
-                }
-                else if( match( Token_kind::Greater ) )
-                {
-                    depth -= 1;
-                }
-                else if( match( Token_kind::Greater_greater ) )
-                {
-                    depth = depth >= 2 ? depth - 2 : 0;
-                }
-                else if( check( Token_kind::Semicolon ) || check( Token_kind::R_brace ) )
-                {
-                    break; // unbalanced - not a type
-                }
-                else
-                {
-                    advance();
-                }
-
-                if( depth == 0 )
-                {
-                    break;
-                }
-            }
-
-            if( depth != 0 )
-            {
-                pos_ = saved;
-                return false;
-            }
-
-            continue;
-        }
-
-        break;
-    }
-
-    // A type is only a declaration if a name follows it. `a * b;` scans a type-shaped `a *` and
-    // then finds `b`, which is why D15 has to make the discarded-multiply reading illegal - see
-    // PLAN §6.3 D15 and L17.
-    // A keyword here is a name that cannot be one - `i32 out = 1;`. Nothing valid has a type
-    // followed by a keyword, so taking the declaration path costs nothing and lets parse_var_decl
-    // report the real problem rather than a stray `;`.
-    if( !check( Token_kind::Identifier ) && !check( Token_kind::Keyword ) && !check( Token_kind::Digit_name ) &&
-        !check( Token_kind::Int_literal ) )
-    {
-        pos_ = saved;
-        return false;
-    }
-
-    advance(); // past the name, so a caller can see what comes after it
-    return true;
-}
-
 Node_id Parser::parse_statement()
 {
     if( check_keyword( Keyword::Return ) )
@@ -2426,8 +2124,8 @@ Node_id Parser::parse_statement()
         return error_node( Span::merge( start, previous().span ) );
     }
 
-    // The keyword test is free; looks_like_declaration() moves the cursor and puts it back.
-    if( check_keyword( Keyword::Auto ) || looks_like_binding() || looks_like_declaration() )
+    // `auto` settles it; otherwise the scanner looks ahead without moving pos_.
+    if( check_keyword( Keyword::Auto ) || scanner_.looks_like_binding( pos_ ) || scanner_.looks_like_declaration( pos_ ) )
     {
         return parse_var_decl();
     }
@@ -2674,7 +2372,7 @@ Node_id Parser::parse_for_stmt()
     Node_id init;
     if( !match( Token_kind::Semicolon ) )
     {
-        if( check_keyword( Keyword::Auto ) || looks_like_binding() || looks_like_declaration() )
+        if( check_keyword( Keyword::Auto ) || scanner_.looks_like_binding( pos_ ) || scanner_.looks_like_declaration( pos_ ) )
         {
             init = parse_var_decl();
         }
@@ -2960,9 +2658,9 @@ Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing, bool incre
             continue;
         }
 
-        // `id<i32>( 1 )`. The scan above has already proved the shape, so this parses for real -
+        // `id<i32>( 1 )`. The scanner has proved the shape, so this parses for real -
         // parse_type and match_generic_close, the same pair a `Vector<i32>` annotation uses.
-        if( check( Token_kind::Less ) && scan_type_arguments() )
+        if( check( Token_kind::Less ) && scanner_.looks_like_type_arguments( pos_ ) )
         {
             const Span open = peek().span;
 
@@ -5492,7 +5190,7 @@ TEST_CASE( "parser_parses_type_parameters", "[parse][generic]" )
 
     SECTION( "a generic is not mistaken for a variable" )
     {
-        // looks_like_method decides this, and it used to require `(` immediately after the name -
+        // looks_like_function decides this, and it used to require `(` immediately after the name -
         // so `T id<T>(` took the variable path and reported a stray `<`.
         const Parsed p( "T id<T>( T a ) { return a; }" );
 

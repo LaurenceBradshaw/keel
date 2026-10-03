@@ -106,6 +106,94 @@ Member_chunk Scanner::next_member( u32 at, Symbol_id enclosing )
     return Member_chunk { .dropped_begin = at, .dropped_end = q, .failure = first.failure, .head = std::nullopt };
 }
 
+bool Scanner::looks_like_declaration( u32 at )
+{
+    cursor_       = at;
+    owed_greater_ = 0;
+
+    // `auto x = ...` is settled by its keyword; the caller checks that before asking.
+    if( !check( Token_kind::Identifier ) && !check_keyword( Keyword::Const ) && !check_keyword( Keyword::Fn ) &&
+        !check_keyword( Keyword::Field ) )
+    {
+        return false;
+    }
+
+    return scan_type_and_name();
+}
+
+bool Scanner::looks_like_binding( u32 at )
+{
+    cursor_       = at;
+    owed_greater_ = 0;
+
+    match_keyword( Keyword::Const ); // optional
+
+    if( !at_mode_keyword() )
+    {
+        return false;
+    }
+
+    advance(); // `move`, `ref` or `out`
+    return scan_type_and_name();
+}
+
+bool Scanner::looks_like_function( u32 at )
+{
+    cursor_       = at;
+    owed_greater_ = 0;
+
+    return scan_type_and_name() && ( check( Token_kind::L_paren ) || check( Token_kind::Less ) );
+}
+
+// Shape alone, with no symbol table (L17). Taking the generic reading is safe: the comparison
+// reading never type-checks (§12).
+bool Scanner::looks_like_type_arguments( u32 at )
+{
+    cursor_       = at;
+    owed_greater_ = 0;
+
+    advance(); // the `<`
+
+    u32 depth = 1;
+
+    while( depth > 0 && !at_end() )
+    {
+        switch( peek().kind )
+        {
+        case Token_kind::Less:
+            depth += 1;
+            break;
+        case Token_kind::Greater:
+            depth -= 1;
+            break;
+        case Token_kind::Greater_greater:
+            // One token closing two levels. A lone `>>` at depth 1 is a shift, not a close.
+            if( depth < 2 )
+            {
+                return false;
+            }
+            depth -= 2;
+            break;
+
+        // A type argument holds no call, literal or operator: meeting one means a comparison.
+        case Token_kind::Colon_colon:
+        case Token_kind::Identifier:
+        case Token_kind::Star:
+        case Token_kind::Comma:
+            break;
+
+        default:
+            return false;
+        }
+
+        advance();
+    }
+
+    return depth == 0 && ( check( Token_kind::Colon_colon ) || check( Token_kind::L_paren ) || check( Token_kind::Semicolon ) ||
+                           check( Token_kind::Comma ) || check( Token_kind::R_paren ) || check( Token_kind::R_bracket ) ||
+                           check( Token_kind::R_brace ) || check( Token_kind::Dot ) );
+}
+
 Head_scan Scanner::scan_head( u32 at, Symbol_id enclosing, Constructor_names names )
 {
     auto make_head = [this]( Member_kind kind, u32 start ) -> Head_scan {
@@ -265,6 +353,17 @@ bool Scanner::check_keyword( Keyword keyword ) const
 bool Scanner::at_mode_keyword() const
 {
     return check_keyword( Keyword::Move ) || check_keyword( Keyword::Ref ) || check_keyword( Keyword::Out );
+}
+
+const Token& Scanner::previous() const
+{
+    assert( cursor_ > 0 );
+    return tokens_[cursor_ - 1];
+}
+
+bool Scanner::peek_is_adjacent() const
+{
+    return cursor_ > 0 && peek().span.file == previous().span.file && peek().span.start == previous().span.end;
 }
 
 void Scanner::advance()
@@ -476,6 +575,156 @@ bool Scanner::scan_generic_close()
     return false;
 }
 
+bool Scanner::scan_type_and_name()
+{
+    // `const i32 x`, `const ref T r`, `ref T r`.
+    while( match_keyword( Keyword::Const ) )
+    {
+    }
+
+    if( at_mode_keyword() )
+    {
+        advance();
+    }
+
+    // `fn( T, U ) -> R`, whose R may be another. Parens are counted, not read as types.
+    while( check_keyword( Keyword::Fn ) || check_keyword( Keyword::Field ) )
+    {
+        advance();
+
+        if( !check( Token_kind::L_paren ) )
+        {
+            return false;
+        }
+
+        u32 depth = 0;
+
+        do
+        {
+            if( check( Token_kind::L_paren ) )
+            {
+                depth += 1;
+            }
+            else if( check( Token_kind::R_paren ) )
+            {
+                depth -= 1;
+            }
+            else if( check( Token_kind::Semicolon ) || check( Token_kind::R_brace ) || at_end() )
+            {
+                return false; // unbalanced - not a type
+            }
+
+            advance();
+        } while( depth > 0 );
+
+        // A missing arrow still scans as a declaration, so parse_type reports the arrow.
+        if( !match( Token_kind::Arrow ) )
+        {
+            break;
+        }
+
+        // The return type's own `const` and mode.
+        while( match_keyword( Keyword::Const ) )
+        {
+        }
+        if( at_mode_keyword() )
+        {
+            advance();
+        }
+    }
+
+    if( !match( Token_kind::Identifier ) )
+    {
+        return false;
+    }
+
+    // `kl::Point p`: no expression is a path followed by a name.
+    if( check( Token_kind::Colon_colon ) && peek( 1 ).kind == Token_kind::Identifier )
+    {
+        advance();
+        advance();
+    }
+
+    // What may follow a type's name before the declared name: `Point*`, `const T&`, `Vector<i32>`.
+    while( true )
+    {
+        // Only an adjacent `*`/`&` is part of a type (D17), so `a * b;` stays an expression.
+        if( ( check( Token_kind::Star ) || check( Token_kind::Amp ) ) && peek_is_adjacent() )
+        {
+            advance();
+            continue;
+        }
+
+        if( check( Token_kind::L_bracket ) && peek( 1 ).kind == Token_kind::Star && peek( 2 ).kind == Token_kind::R_bracket )
+        {
+            advance();
+            advance();
+            advance();
+            continue;
+        }
+
+        if( match_keyword( Keyword::Const ) )
+        {
+            continue;
+        }
+
+        // Type arguments, nesting counted: `>>` closes two levels.
+        if( check( Token_kind::Less ) )
+        {
+            u32 depth = 0;
+
+            while( !at_end() )
+            {
+                if( match( Token_kind::Less ) )
+                {
+                    depth += 1;
+                }
+                else if( match( Token_kind::Greater ) )
+                {
+                    depth -= 1;
+                }
+                else if( match( Token_kind::Greater_greater ) )
+                {
+                    depth = depth >= 2 ? depth - 2 : 0;
+                }
+                else if( check( Token_kind::Semicolon ) || check( Token_kind::R_brace ) )
+                {
+                    break; // unbalanced - not a type
+                }
+                else
+                {
+                    advance();
+                }
+
+                if( depth == 0 )
+                {
+                    break;
+                }
+            }
+
+            if( depth != 0 )
+            {
+                return false;
+            }
+
+            continue;
+        }
+
+        break;
+    }
+
+    // The name. A keyword, digit-led name or number holds its place, as for expect_name, so
+    // `i32 out = 1;` reaches parse_var_decl and is reported there.
+    if( !check( Token_kind::Identifier ) && !check( Token_kind::Keyword ) && !check( Token_kind::Digit_name ) &&
+        !check( Token_kind::Int_literal ) )
+    {
+        return false;
+    }
+
+    advance(); // the name
+    return true;
+}
+
 bool Scanner::skip_parens()
 {
     if( !check( Token_kind::L_paren ) )
@@ -581,6 +830,11 @@ public:
     Member_chunk chunk( u32 at = 0 )
     {
         return Scanner( tokens_ ).next_member( at, name_ );
+    }
+
+    Scanner scanner() const
+    {
+        return Scanner( tokens_ );
     }
 
     // Index of the nth token spelled `text`.
@@ -888,6 +1142,113 @@ TEST_CASE( "scanner_chunks_a_class_body", "[scan]" )
 
         REQUIRE( c.dropped_begin == s.at( "42" ) );
         REQUIRE( c.head->start == s.at( "i32", 1 ) );
+    }
+}
+
+TEST_CASE( "scanner_answers_the_parsers_lookahead", "[scan]" )
+{
+    auto declaration    = []( std::string_view source ) { return Scanned( source ).scanner().looks_like_declaration( 0 ); };
+    auto binding        = []( std::string_view source ) { return Scanned( source ).scanner().looks_like_binding( 0 ); };
+    auto function       = []( std::string_view source ) { return Scanned( source ).scanner().looks_like_function( 0 ); };
+    auto type_arguments = []( std::string_view source )
+    {
+        const Scanned s( source );
+        return s.scanner().looks_like_type_arguments( s.at( "<" ) );
+    };
+
+    SECTION( "a declaration is a type and then a name" )
+    {
+        CHECK( declaration( "i32 x = 0;" ) );
+        CHECK( declaration( "const i32 x = 0;" ) );
+        CHECK( declaration( "kl::Point p;" ) );
+        CHECK( declaration( "Point* p;" ) );
+        CHECK( declaration( "Vector<Vector<i32>> v;" ) );
+        CHECK( declaration( "i32[*] xs;" ) );
+        CHECK( declaration( "fn( i32 ) -> i32 f;" ) );
+        CHECK( declaration( "field( Point ) -> i32 f;" ) );
+    }
+
+    SECTION( "a function type missing its arrow is still a declaration" )
+    {
+        CHECK( declaration( "fn( i32 ) i32 f;" ) );
+    }
+
+    SECTION( "a keyword, a digit-led name or a number holds the name's place" )
+    {
+        CHECK( declaration( "i32 out = 1;" ) );
+        CHECK( declaration( "i32 3x;" ) );
+        CHECK( declaration( "i32 3;" ) );
+    }
+
+    SECTION( "an expression is not a declaration" )
+    {
+        CHECK_FALSE( declaration( "f( 1 );" ) );
+        CHECK_FALSE( declaration( "x = 1;" ) );
+        CHECK_FALSE( declaration( "a < b;" ) );
+        CHECK_FALSE( declaration( "return 1;" ) );
+        CHECK_FALSE( declaration( "fn i32 f;" ) );
+    }
+
+    SECTION( "only a `*` or `&` touching the type is part of it" )
+    {
+        CHECK_FALSE( declaration( "a * b;" ) );
+        CHECK_FALSE( declaration( "a & b;" ) );
+        CHECK_FALSE( declaration( "Point *p;" ) );
+    }
+
+    SECTION( "a binding is a mode, then a declaration" )
+    {
+        CHECK( binding( "ref T r = x;" ) );
+        CHECK( binding( "const ref T r = x;" ) );
+        CHECK( binding( "move Box<i32> b = x;" ) );
+        CHECK( binding( "out i32 o;" ) );
+
+        CHECK_FALSE( binding( "const i32 x = 0;" ) );
+        CHECK_FALSE( binding( "i32 x;" ) );
+        CHECK_FALSE( binding( "ref x;" ) );
+        CHECK_FALSE( declaration( "ref T r = x;" ) );
+    }
+
+    SECTION( "a function is a declaration followed by `(` or `<`" )
+    {
+        CHECK( function( "i32 f() { }" ) );
+        CHECK( function( "T id<T>( T a ) { }" ) );
+        CHECK( function( "const ref T f() { }" ) );
+        CHECK( function( "ref T f() { }" ) );
+        CHECK( function( "Vector<i32> f() { }" ) );
+        CHECK( function( "fn( i32 ) -> i32 apply( fn( i32 ) -> i32 g ) { }" ) );
+
+        CHECK_FALSE( function( "i32 x = 0;" ) );
+        CHECK_FALSE( function( "i32 x;" ) );
+    }
+
+    SECTION( "type arguments close before something no operand starts with" )
+    {
+        CHECK( type_arguments( "id<i32>( 1 )" ) );
+        CHECK( type_arguments( "make<Box<i32>>()" ) );
+        CHECK( type_arguments( "kl::id<kl::Point*>( p )" ) );
+        CHECK( type_arguments( "id<i32>::make()" ) );
+        CHECK( type_arguments( "a < b > ( c )" ) );
+    }
+
+    SECTION( "a comparison is not type arguments" )
+    {
+        CHECK_FALSE( type_arguments( "a < b > c" ) );
+        CHECK_FALSE( type_arguments( "a < b;" ) );
+        CHECK_FALSE( type_arguments( "a < 1 > ( c )" ) );
+        CHECK_FALSE( type_arguments( "a < b >> c" ) );
+    }
+
+    SECTION( "each question starts where it is told" )
+    {
+        const Scanned s( "return 0; ref T r = x; i32 f() { } y = id<i32>( 1 );" );
+        Scanner       scanner = s.scanner();
+
+        CHECK( scanner.looks_like_binding( s.at( "ref" ) ) );
+        CHECK( scanner.looks_like_declaration( s.at( "T" ) ) );
+        CHECK( scanner.looks_like_function( s.at( "i32" ) ) );
+        CHECK( scanner.looks_like_type_arguments( s.at( "<" ) ) );
+        CHECK_FALSE( scanner.looks_like_declaration( s.at( "return" ) ) );
     }
 }
 

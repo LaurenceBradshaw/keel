@@ -5718,7 +5718,14 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      second user of the chunking (`next_declaration`), after (3); statements keep `synchronise()`
      and use the scanner only as lookahead. (3) Move the parser's
      own lookaheads (`looks_like_*`, `scan_type_and_name`, `scan_type_arguments`) into the
-     scanner, unchanged in behaviour. (4) Audit the parser's bespoke spelling checks against the
+     scanner, unchanged in behaviour. **Done (2026-10-03)**: public `looks_like_declaration`,
+     `looks_like_binding`, `looks_like_function` (was `looks_like_method`; only top-level
+     declarations ask it now) and `looks_like_type_arguments`, each told where to start; test
+     `scanner_answers_the_parsers_lookahead`. They stay the loose, comparison-tolerant shape tests
+     they were, beside `scan_type`'s exact grammar rather than built on it: folding them together
+     would change answers (`id<const i32>( x )` is a comparison today) and belongs to its own
+     step if wanted. Every save-and-restore of the cursor goes, since the scanner's cursor is
+     its own. (4) Audit the parser's bespoke spelling checks against the
      generic recovery plus a table row. A `Scanner` is a class rather than a namespace because it
      has state of its own: a cursor and an owed half of `>>`, which a rewinding scan inside the
      parser could leave behind (`scan_type_arguments` counts depth by hand for exactly that).

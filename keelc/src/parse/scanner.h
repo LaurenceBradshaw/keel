@@ -78,6 +78,14 @@ public:
     // Starting at `at`: the tokens no member can be read from, then the member after them.
     Member_chunk next_member( u32 at, Symbol_id enclosing );
 
+    // Statement and declaration lookahead, on shape alone.
+    bool looks_like_declaration( u32 at );
+    bool looks_like_binding( u32 at );
+    bool looks_like_function( u32 at );
+
+    // At `<`: whether it opens type arguments rather than a comparison.
+    bool looks_like_type_arguments( u32 at );
+
 private:
     // Whether any name before `(` opens a constructor, or only the class's own.
     enum class Constructor_names : u8
@@ -95,6 +103,8 @@ private:
     bool         check( Token_kind kind ) const;
     bool         check_keyword( Keyword keyword ) const;
     bool         at_mode_keyword() const;
+    const Token& previous() const;
+    bool         peek_is_adjacent() const;
 
     void advance();
     bool match( Token_kind kind );
@@ -112,6 +122,9 @@ private:
     bool scan_type_with_mode();
     bool scan_type();
     bool scan_generic_close();
+
+    // A loose type-then-name test, not the grammar: on success the cursor is just past the name.
+    bool scan_type_and_name();
 
     // At `(`: past its matching `)`.
     bool skip_parens();
