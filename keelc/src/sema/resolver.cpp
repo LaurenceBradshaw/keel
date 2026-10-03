@@ -161,7 +161,12 @@ void Resolver::visit( Node_id id )
         return;
     case Node_kind::Param_decl:
         visit( ast_.child( id, 0 ) ); // the type annotation, which may name a struct
-        declare( scopes_.back(), Symbol_id { ast_.aux( id ) }, id );
+
+        // A function type's parameters are nameless, and may be at file scope with no scope open.
+        if( Symbol_id { ast_.aux( id ) }.is_valid() )
+        {
+            declare( scopes_.back(), Symbol_id { ast_.aux( id ) }, id );
+        }
         return;
     case Node_kind::Type_param_decl:
         declare( scopes_.back(), Symbol_id { ast_.aux( id ) }, id );
@@ -1446,6 +1451,17 @@ TEST_CASE( "resolver_declares_globals_at_file_scope", "[sema][resolve][globals]"
     SECTION( "and its address can be taken" )
     {
         const Resolved p( "i32 counter = 1;\ni32* get() { return &counter; }\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // No scope is open at file scope, and a function type's parameters are nameless.
+    SECTION( "a global of function type declares nothing for its parameters" )
+    {
+        const Resolved p( "fn( i32 )->i32 handler;\n"
+                          "fn( fn( i32 )->i32, i32 )->i32 applier;\n"
+                          "i32 main() { return 0; }\n" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );

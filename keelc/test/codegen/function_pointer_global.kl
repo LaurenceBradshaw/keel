@@ -1,0 +1,32 @@
+// A file-scope variable of function type. Its type's parameters are nameless and declare nothing,
+// and there is no scope open at file scope to declare them into.
+i32 twice( i32 a )
+{
+    return a * 2;
+}
+
+i32 apply( fn( i32 )->i32 f, i32 v )
+{
+    return f( v );
+}
+
+fn( i32 )->i32              handler;
+fn( fn( i32 )->i32, i32 )->i32 applier;
+
+i32 main()
+{
+    handler = &twice;
+    applier = &apply;
+
+    if( handler( 21 ) != 42 )
+    {
+        return 1;
+    }
+
+    if( applier( handler, 4 ) != 8 )
+    {
+        return 2;
+    }
+
+    return 0;
+}

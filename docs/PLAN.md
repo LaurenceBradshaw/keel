@@ -5824,6 +5824,66 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      field that has no initialiser. A fixed-size array would likely be spelled `i32 a[4]`. Both
      hints above are worded to be deleted when these land.
 
+- **A second mutation fuzz, after the cascade list (2026-10-03)**, scheduled in this order, one commit
+  each. Every clean test `.kl` (135, packages and multi-file programs included) took 400 mutants of
+  one to three token edits (delete, duplicate, insert, replace or swap a token; delete or duplicate a
+  line; delete a short span; truncate), 53,454 in all, under the ASan+UBSan build; then 28,184 of up
+  to eight edits over the error fixtures too, hunting crashes. No abort, timeout, leak or silent
+  failure. Of 37,095 single-edit mutants, 3,305 still compile, 12,470 give one error, 6,493 two,
+  and 14,827 three or more (up to 105). Left out as correct: a deleted or renamed declaration whose
+  uses then fail, and every unbalanced brace (item 7 above).
+  **Shape (decided 2026-10-03).** Items 3-6 as first listed were symptoms of three missing
+  mechanisms, the class-body trap again one level down; fixed one construct at a time each would
+  come back elsewhere. Declarations and members already recover through the scanner's chunks and
+  type-argument lists through `skip_to_generic_close`; statements, comma lists and single tokens
+  have nothing. Simulated over the fuzz results, M1-M3 below take single-edit mutants with one
+  error from 33.6% to 55.2% and those with three or more from 40% to 17%, and what is left is almost
+  all *is not declared* after a name really was deleted or renamed. Re-fuzz after each
+  (`.claude/fuzz/`, untracked).
+  1. ~~**UB: a file-scope variable of function type.**~~ **Done (2026-10-03).** `fn( i32 )->i32 g;` alone, a valid program,
+     exits 0 and runs correctly, while `Resolver::visit`'s `Param_decl` case evaluates
+     `scopes_.back()` with no scope open: a function type's parameters are nameless, and `declare`
+     ignores the name only after the scope is taken. **Fix**: a nameless `Param_decl` visits its
+     type and declares nothing; and the debug build defines `_GLIBCXX_ASSERTIONS`, so a container
+     misused this way aborts there rather than only under `asan` (the suite is clean with it on,
+     and this is the only finding). Tests: a section of `resolver_declares_globals_at_file_scope`,
+     run fixture `codegen/function_pointer_global`; both fail with the assertions on.
+  2. **A builtin type's name is accepted as a declaration's name.** `i32 i32( i32 n ) { ... }` is
+     silent and then every later `i32` in the file is *`i32` is not a type*; a local `i32 i32 = 1;`
+     the same for its block. Swapping a return type with the function's name (`sum i32( ... )`)
+     gave 44-68 errors. **Decided: builtin type names are reserved, as in C++.** Checked in
+     `Resolver::declare`, which every scoped name passes, rather than by making them keywords in the
+     lexer, which would touch every type parse: one error at the name, and nothing declared.
+  3. **M1: one parse error per token.** Nothing stops a second report at a token already reported:
+     `return private 21;` is *expected `;`*, *expected an expression* and *expected a statement*,
+     all at `private`; truncation stacks *expected `}`* per open scope at end of file; `( template
+     i32 n )` reports *expected an identifier* at two columns. 8,640 single-edit mutants (2,770 at
+     end of file). The parser drops a report until it has consumed a token since the last one,
+     keyed on the token position, not the span, since `error_expected` points past the previous
+     token. A backstop: it does nothing for a loop that reports once per token.
+  4. **M2: statements are a recovery boundary.** `parse_block`'s loop restarts at the token a
+     statement stopped on, and `synchronise()` runs only when nothing can start a statement. `x = 1
+     2;`, `total u8 total + 10;`, `return 1 this;`: the rest of the line parses as a new statement,
+     and sema adds *this expression has no effect* (3,062 mutants) or *is not declared* on the
+     fragment. After a statement that reported, skip quietly to its `;` or before `}`, balancing
+     brackets (a `for` header holds `;`), unless all that went wrong was a `;` missing at the end of
+     a line, which is one error today and must stay so. *No effect* is decided only once the
+     statement ended cleanly. Risk to probe: an error inside an expression spanning lines.
+  5. **M3: every comma list skips to its separator or closer.** Each list loop stops at its first
+     bad element: `i32 add( i32 a a, i32 b )` loses `b` and says *takes 1 argument* at the call;
+     the enum variant, payload and struct-literal loops keep item 5's old one-token skip, so an
+     enum body reports per token (`enum E { A( i32 x, B, C };` 25 errors, the worst mutants
+     56-101). `skip_to_generic_close` generalises to one helper - balance brackets, stop before
+     `;`, `{` or `}` - used by parameter, argument, type-parameter, payload, variant and
+     struct-literal lists. The enum alone also ends its variant loop where the scanner sees a
+     declaration head, so a missing `}` is one error: safe there, unlike a class (item 7), since a
+     variant can never look like `type name (`.
+  6. **Left alone: a header that broke after its name drops the declaration.** `extern auto abs( i32
+     v );` makes `abs` undeclared and its `unsafe` block *does nothing unsafe*; `struct Point static
+     {` loses `Point`. About 1,000 mutants. Fixing it means salvaging a name from a dropped chunk and
+     sema staying silent about it, and a wrong guess hides real errors; the follow-ons are true and
+     point at real uses.
+
 ### M7 slice: access control - done (2026-09-25)
 
 `private` and `public` are keywords, a `class`'s fields are private unless a marker says otherwise,

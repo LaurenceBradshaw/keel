@@ -37,6 +37,10 @@ target_compile_options(keel_options INTERFACE
     $<$<BOOL:${KEEL_WERROR}>:-Werror>
 )
 
+# A misused standard container (back() on an empty vector, an index out of range) aborts in a Debug
+# build rather than being undefined behaviour only the sanitizer build sees.
+target_compile_definitions(keel_options INTERFACE $<$<CONFIG:Debug>:_GLIBCXX_ASSERTIONS>)
+
 if(KEEL_SANITIZE)
     target_compile_options(keel_options INTERFACE -fsanitize=address,undefined -fno-omit-frame-pointer)
     target_link_options(keel_options INTERFACE -fsanitize=address,undefined)

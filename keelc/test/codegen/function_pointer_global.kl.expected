@@ -1,0 +1,76 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+typedef int32_t ( *kl__fn__F3i32E3i32 )( int32_t );
+typedef int32_t ( *kl__fn__FF3i32E3i323i32E3i32 )( kl__fn__F3i32E3i32, int32_t );
+
+kl__fn__F3i32E3i32 kl_handler_32;
+kl__fn__FF3i32E3i323i32E3i32 kl_applier_44;
+
+int32_t kl__twice__3i32( int32_t );
+int32_t kl__apply__F3i32E3i32_3i32( kl__fn__F3i32E3i32, int32_t );
+int32_t kl__main__( void );
+
+int32_t kl__twice__3i32( int32_t kl_a_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t2;
+#line 5 "codegen/function_pointer_global.kl"
+    kl_t2 = kl_a_1 * 2;
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+int32_t kl__apply__F3i32E3i32_3i32( kl__fn__F3i32E3i32 kl_f_1, int32_t kl_v_2 )
+{
+    int32_t kl_t0;
+    int32_t kl_t3;
+#line 10 "codegen/function_pointer_global.kl"
+    kl_t3 = kl_f_1( kl_v_2 );
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    kl__fn__F3i32E3i32 kl_t1;
+    kl__fn__FF3i32E3i323i32E3i32 kl_t2;
+    int32_t kl_t3;
+    bool kl_t4;
+    int32_t kl_t5;
+    bool kl_t6;
+#line 18 "codegen/function_pointer_global.kl"
+    kl_t1 = kl__twice__3i32;
+    kl_handler_32 = kl_t1;
+#line 19 "codegen/function_pointer_global.kl"
+    kl_t2 = kl__apply__F3i32E3i32_3i32;
+    kl_applier_44 = kl_t2;
+#line 21 "codegen/function_pointer_global.kl"
+    kl_t3 = kl_handler_32( 21 );
+    kl_t4 = kl_t3 != 42;
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+#line 23 "codegen/function_pointer_global.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+#line 26 "codegen/function_pointer_global.kl"
+    kl_t5 = kl_applier_44( kl_handler_32, 4 );
+    kl_t6 = kl_t5 != 8;
+    if ( kl_t6 ) goto bb3; else goto bb4;
+    bb3:
+#line 28 "codegen/function_pointer_global.kl"
+    kl_t0 = 2;
+    return kl_t0;
+    bb4:
+#line 31 "codegen/function_pointer_global.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}
