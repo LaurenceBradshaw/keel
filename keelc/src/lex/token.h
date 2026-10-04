@@ -122,7 +122,8 @@ struct Token
 {
     Token_kind kind;
     Span       span;
-    Symbol_id  symbol; // Only valid for identifiers and keywords.
+    Symbol_id  symbol;      // Only valid for identifiers and keywords.
+    bool       bad = false; // The lexer reported it; nothing after judges it again.
 
     bool is( Token_kind k ) const
     {

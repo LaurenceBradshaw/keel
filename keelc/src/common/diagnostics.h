@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #pragma once
+#include <map>
 #include <string>
 #include <vector>
 #include "common/source_manager.h"
@@ -22,14 +23,18 @@ struct Diagnostic
     Severity    severity;
     Span        span;
     std::string message;
-    std::string help = {}; // Empty when no help is available.
+    std::string help   = {}; // Empty when no help is available.
+    bool        syntax = false;
 };
 
 class Diagnostics
 {
 public:
     void error( Span span, std::string message, std::string help = {} );
+    void syntax_error( Span span, std::string message, std::string help = {} );
     void warning( Span span, std::string message, std::string help = {} );
+
+    void tokens( File_id file, std::vector<Span> bounds );
 
     bool   has_errors() const;
     size_t error_count() const;
@@ -43,9 +48,11 @@ public:
     void render_json( const Source_manager& sm, std::ostream& out ) const;
 
 private:
-    std::vector<u32> in_source_order() const;
+    std::vector<u32>  in_source_order() const;
+    std::vector<bool> kept() const;
 
-    std::vector<Diagnostic> items_;
+    std::vector<Diagnostic>          items_;
+    std::map<u32, std::vector<Span>> tokens_; // keyed by File_id::v
 };
 
 // True when stderr is a terminal and NO_COLOR is unset (https://no-color.org). The golden runner

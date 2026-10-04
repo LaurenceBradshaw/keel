@@ -7,7 +7,6 @@
 #include <cassert>
 #include <optional>
 #include <string>
-#include <unordered_set>
 #include <vector>
 #include "parse/hints.h"
 #include "parse/scanner.h"
@@ -56,7 +55,6 @@ private:
     // --- errors ---
 
     void error_at( Span span, std::string message, std::string help = {} );
-    void report( Span span, u32 about, std::string message, std::string help );
 
     // "expected `;`, found `,`".
     void error_expected( Token_kind kind, std::string help = {} );
@@ -204,17 +202,16 @@ private:
 
     bool at_mode_keyword() const;
 
-    std::span<const Token>  tokens_;
-    u32                     pos_ = 0;
-    Scanner                 scanner_;
-    std::size_t             head_errors_ = 0; // The report count when the current head's parse began.
-    std::unordered_set<u32> reported_;
-    std::size_t             reports_         = 0; // Every report attempted, including the dropped ones.
-    i32                     unclosed_braces_ = 0;
-    bool                    body_cut_        = false;
-    const Source_manager&   sm_;
-    Ast&                    ast_;
-    Diagnostics&            diags_;
+    std::span<const Token> tokens_;
+    u32                    pos_ = 0;
+    Scanner                scanner_;
+    std::size_t            head_errors_     = 0; // The report count when the current head's parse began.
+    std::size_t            reports_         = 0; // Every report attempted, including the dropped ones.
+    i32                    unclosed_braces_ = 0;
+    bool                   body_cut_        = false;
+    const Source_manager&  sm_;
+    Ast&                   ast_;
+    Diagnostics&           diags_;
 
     // Half of a `>>` that has already been consumed while closing a generic argument list.
     u32                pending_greater_ = 0;
@@ -515,19 +512,8 @@ bool Parser::expect( Token_kind kind )
 
 void Parser::error_at( Span span, std::string message, std::string help )
 {
-    report( span, span.start, std::move( message ), std::move( help ) );
-}
-
-void Parser::report( Span span, u32 about, std::string message, std::string help )
-{
     reports_++;
-
-    if( !reported_.insert( about ).second )
-    {
-        return;
-    }
-
-    diags_.error( span, std::move( message ), std::move( help ) );
+    diags_.syntax_error( span, std::move( message ), std::move( help ) );
 }
 
 void Parser::error_expected( Token_kind kind, std::string help )
@@ -545,9 +531,7 @@ void Parser::error_expected( Token_kind kind, std::string help )
         help = fmt::format( "{} is a keyword, so it cannot be used as a name", found_text() );
     }
 
-    report(
-        at, peek().span.start, fmt::format( "expected {}, found {}", expectation( kind ), found_text() ), std::move( help )
-    );
+    error_at( at, fmt::format( "expected {}, found {}", expectation( kind ), found_text() ), std::move( help ) );
 }
 
 Symbol_id Parser::expect_name()
@@ -1700,9 +1684,11 @@ Node_id Parser::parse_constructor_decl( Symbol_id enclosing, Node_id type_params
     reach_commit( commit );
     const Node_id body = parse_block();
 
-    return ast_.add(
+    const Node_id node = ast_.add(
         Node_kind::Constructor_decl, Span::merge( start, previous().span ), name.v, { Node_id {}, params, body, type_params }
     );
+    ast_.set_name_span( node, start );
+    return node;
 }
 
 // D40: `&` joins bounds because all of them must hold and `&` says so. The two plausible wrong
@@ -2484,11 +2470,7 @@ Node_id Parser::dispatch_statement()
     // its stop set - `;`, `}`, statement keywords - is exactly the set of statement boundaries.
     const Span span = peek().span;
 
-    // A poisoned token: the lexer already reported it, so a second message here would be noise.
-    if( !check( Token_kind::Unknown ) )
-    {
-        error_at( span, fmt::format( "expected a statement, found {}", found_text() ) );
-    }
+    error_at( span, fmt::format( "expected a statement, found {}", found_text() ) );
 
     synchronise();
 
@@ -3374,6 +3356,12 @@ Node_id Parser::parse_prefix()
 {
     const Span start = peek().span;
 
+    // A literal the lexer reported has no value to judge.
+    if( peek().bad && !check( Token_kind::Unknown ) )
+    {
+        return error_node( advance().span );
+    }
+
     switch( peek().kind )
     {
     case Token_kind::Int_literal:
@@ -3492,11 +3480,7 @@ Node_id Parser::parse_prefix()
         break;
     }
 
-    // The lexer already reported an Unknown token; do not report it twice.
-    if( !check( Token_kind::Unknown ) )
-    {
-        error_at( peek().span, fmt::format( "expected an expression, found {}", found_text() ) );
-    }
+    error_at( peek().span, fmt::format( "expected an expression, found {}", found_text() ) );
 
     return error_node( start );
 }
@@ -7459,6 +7443,50 @@ TEST_CASE( "parser_reports_one_error_per_token", "[parse][recovery]" )
         CHECK( p.error_count() == 2 );
         CHECK( p.errors().find( "`++` is written after the variable" ) != std::string::npos );
         CHECK( p.errors().find( "expected `;`, found `return`" ) != std::string::npos );
+    }
+}
+
+// The lexer's error claims its token, so the parser's rule that then fails there says nothing new;
+// and a literal the lexer reported is an Error, so nothing after judges its value.
+TEST_CASE( "parser_stays_quiet_about_what_the_lexer_reported", "[parse][recovery]" )
+{
+    SECTION( "a character literal the lexer left open" )
+    {
+        const Parsed p( "i32 main()\n{\n    return 0'c';\n}" );
+        INFO( p.errors() );
+        CHECK( p.error_count() == 2 );
+        CHECK( p.errors().find( "unterminated character literal" ) != std::string::npos );
+        CHECK( p.errors().find( "expected `;`" ) == std::string::npos );
+    }
+
+    SECTION( "a literal where a name was wanted" )
+    {
+        const Parsed p( "i32 main() { auto 200'c = 1; return 0; }" );
+        INFO( p.errors() );
+        CHECK( p.errors().find( "digit separator" ) != std::string::npos );
+        CHECK( p.errors().find( "expected an identifier" ) == std::string::npos );
+    }
+
+    SECTION( "a bad literal is an Error" )
+    {
+        const Parsed p( "i32 main() { return 0x; }" );
+        INFO( p.errors() );
+        CHECK( p.error_count() == 1 );
+        CHECK( p.kind( parse_expression_of( p ) ) == Node_kind::Error );
+    }
+
+    SECTION( "an unknown character where an expression was wanted" )
+    {
+        const Parsed p( "i32 main() { return $; }" );
+        INFO( p.errors() );
+        CHECK( p.error_count() == 1 );
+    }
+
+    SECTION( "an unknown character where a statement was wanted" )
+    {
+        const Parsed p( "i32 main() { $ return 0; }" );
+        INFO( p.errors() );
+        CHECK( p.error_count() == 1 );
     }
 }
 

@@ -444,6 +444,24 @@ TEST_CASE( "type_checker_rejects_a_literal_that_does_not_fit", "[sema][types]" )
     }
 }
 
+// A literal the lexer reported has no value to judge: it is an Error, and its token is claimed.
+TEST_CASE( "type_checker_stays_quiet_about_a_literal_the_lexer_reported", "[sema][types]" )
+{
+    static const char* sources[] = {
+        "i32 main() { bool b = 0x; return 0; }",
+        "i32 main() { u8 b = 1.5f; return 0; }",
+        "i32 f( i32 a, i32 b ) { return a; }\ni32 main() { return f( 2.0else ); }",
+    };
+
+    for( const char* source : sources )
+    {
+        const Typed p( source );
+
+        INFO( "source: " << source << "\n" << p.rendered() );
+        REQUIRE( p.errors() == 0 );
+    }
+}
+
 // D20: a code point is a u8, so it goes through exactly the machinery integer literals do.
 TEST_CASE( "type_checker_types_a_character_literal_as_an_integer", "[sema][types]" )
 {

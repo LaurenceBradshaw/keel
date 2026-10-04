@@ -1,26 +1,26 @@
 error: `same` is already declared with these parameters
-  --> sema/errors_overloads.kl:10:1
+  --> sema/errors_overloads.kl:10:6
    |
 10 | void same( i32 b )
-   | ^^^^^^^^^^^^^^^^^^ previous declaration is at: sema/errors_overloads.kl:6:1
+   |      ^^^^ previous declaration is at: sema/errors_overloads.kl:6:1
 
 error: `returns_differ` is already declared with these parameters
-  --> sema/errors_overloads.kl:19:1
+  --> sema/errors_overloads.kl:19:5
    |
 19 | i32 returns_differ( i32 a )
-   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^ two of one name must differ in their parameters, not only in what they return
+   |     ^^^^^^^^^^^^^^ two of one name must differ in their parameters, not only in what they return
 
 error: `unmarked` is already declared with these parameters
-  --> sema/errors_overloads.kl:30:1
+  --> sema/errors_overloads.kl:30:6
    |
 30 | void unmarked( const ref i32 a )
-   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ previous declaration is at: sema/errors_overloads.kl:26:1
+   |      ^^^^^^^^ previous declaration is at: sema/errors_overloads.kl:26:1
 
 error: `outside` is defined in C, so it cannot be overloaded
-  --> sema/errors_overloads.kl:36:1
+  --> sema/errors_overloads.kl:36:13
    |
 36 | extern void outside( f64 a );
-   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ previous declaration is at: sema/errors_overloads.kl:35:1
+   |             ^^^^^^^ previous declaration is at: sema/errors_overloads.kl:35:1
 
 error: no `pick` takes 2 arguments
   --> sema/errors_overloads.kl:45:5
@@ -65,15 +65,15 @@ error: `get` takes 1 argument, but 2 were given
    |          ^^^^^^^^^^^^^^^^
 
 error: `count` is already declared with these parameters
-   --> sema/errors_overloads.kl:102:5
+   --> sema/errors_overloads.kl:102:9
     |
 102 |     i32 count() const
-    |     ^^^^^^^^^^^^^^^^^ `const` binds the receiver, which a call site does not write, so it cannot tell two apart
+    |         ^^^^^ `const` binds the receiver, which a call site does not write, so it cannot tell two apart
 
 error: `put` is already declared, and a type argument could make the two identical
-   --> sema/errors_overloads.kl:129:5
+   --> sema/errors_overloads.kl:129:9
     |
 129 |     i32 put( i32 a )
-    |     ^^^^^^^^^^^^^^^^ previous declaration is at: sema/errors_overloads.kl:124:5
+    |         ^^^ previous declaration is at: sema/errors_overloads.kl:124:5
 
 13 errors generated

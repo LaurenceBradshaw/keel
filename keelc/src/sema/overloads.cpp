@@ -997,7 +997,7 @@ std::unordered_map<u32, u32> Overloads::take_instantiations()
 
 void Overloads::refuse( Node_id second, std::string message, std::string help )
 {
-    reporter_.error_at( ast_.span( second ), std::move( message ), std::move( help ) );
+    reporter_.error_at( ast_.name_span( second ), std::move( message ), std::move( help ) );
     refused_.insert( second.v );
 }
 

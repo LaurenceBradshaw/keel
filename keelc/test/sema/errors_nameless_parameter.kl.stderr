@@ -11,10 +11,10 @@ error: expected an identifier, found `this`
    |                  ^^^^ `this` is a keyword, so it cannot be used as a name
 
 error: `twice` is already declared with these parameters
-  --> sema/errors_nameless_parameter.kl:20:1
+  --> sema/errors_nameless_parameter.kl:20:5
    |
 20 | i32 twice( i32 )
-   | ^^^^^^^^^^^^^^^^ previous declaration is at: sema/errors_nameless_parameter.kl:15:1
+   |     ^^^^^ previous declaration is at: sema/errors_nameless_parameter.kl:15:1
 
 error: expected an identifier, found `)`
   --> sema/errors_nameless_parameter.kl:20:15
@@ -29,16 +29,16 @@ error: expected an identifier, found `)`
    |                       ^
 
 error: `second` is already declared with these parameters
-  --> sema/errors_nameless_parameter.kl:30:1
+  --> sema/errors_nameless_parameter.kl:30:5
    |
 30 | i32 second( i32 a, i32 b )
-   | ^^^^^^^^^^^^^^^^^^^^^^^^^^ previous declaration is at: sema/errors_nameless_parameter.kl:25:1
+   |     ^^^^^^ previous declaration is at: sema/errors_nameless_parameter.kl:25:1
 
 error: `Counter` is already declared with these parameters
   --> sema/errors_nameless_parameter.kl:44:5
    |
 44 |     Counter( i32 )
-   |     ^^^^^^^^^^^^^^ previous declaration is at: sema/errors_nameless_parameter.kl:39:5
+   |     ^^^^^^^ previous declaration is at: sema/errors_nameless_parameter.kl:39:5
 
 error: expected an identifier, found `)`
   --> sema/errors_nameless_parameter.kl:44:17
@@ -47,10 +47,10 @@ error: expected an identifier, found `)`
    |                 ^
 
 error: `add` is already declared with these parameters
-  --> sema/errors_nameless_parameter.kl:54:5
+  --> sema/errors_nameless_parameter.kl:54:9
    |
 54 |     i32 add( i32 )
-   |     ^^^^^^^^^^^^^^ previous declaration is at: sema/errors_nameless_parameter.kl:49:5
+   |         ^^^ previous declaration is at: sema/errors_nameless_parameter.kl:49:5
 
 error: expected an identifier, found `)`
   --> sema/errors_nameless_parameter.kl:54:17

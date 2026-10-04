@@ -5888,7 +5888,7 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      is precision instead: an error covers the fewest tokens it can, and a token carries at most
      one. The fuzz triage counts errors sharing a token rather than errors per edit. Goldens
      `errors_unknown_name` (every use reported) and `errors_builtin_type_names` keep it.
-  3. ~~**M1: one parse error per token.**~~ **Done (2026-10-04).** Nothing stops a second report at a token already reported:
+  3. ~~**M1: one parse error per token.**~~ **Done (2026-10-04); moves into Diagnostics at 4b.** Nothing stops a second report at a token already reported:
      `return private 21;` is *expected `;`*, *expected an expression* and *expected a statement*,
      all at `private`; truncation stacks *expected `}`* per open scope at end of file; `( template
      i32 n )` reports *expected an identifier* at two columns. 8,640 single-edit mutants (2,770 at
@@ -5992,11 +5992,104 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      statements on one line with the `;` between them missing lose the second. *No effect* waits
      for the statement's terminator. After M1, 11 errors in golden `errors_statement_recovery`
      become 6. Tests: `parser_skips_the_rest_of_a_statement_that_reported`, that golden.
-  4a. **A token the lexer reported is not reported again.** The same audit: 42 lex-parse pairs in 26
-     mutants (*unterminated character literal* then *expected `;`*; *digit separator must be between
-     digits* then *expected an identifier*), 10 lex-lex (*digit separator* and *leading zeros* on
-     one literal) and 7 lex-sema. The parser already stays quiet at an `Unknown` token; a literal
-     the lexer reported keeps its kind, so nothing stops the next rule. Not yet designed.
+  4a. **Shape (decided 2026-10-04): errors the way Go, rustc and typescript-go handle them.** The
+     parser asked Diagnostics' question - did anything report since here? - to make parsing
+     decisions: `reports_`, `head_errors_` and a `reports_before` at fourteen sites, and M1 had to
+     count reports it dropped so recovery still saw them. Read against the three (sources in
+     `../go`, `../rust`, `../TypeScript`): **dropping is the sink's job** (gc `base.ErrorfAt`, one
+     syntax error per line; rustc `emitted_diagnostics`, exact repeats; typescript-go
+     `parseErrorAtRange`, same start); **failure lives in the tree** (typescript-go sets
+     `hasParseError` even when the report was dropped, `finishNode` flags the node and the binder
+     propagates it; gc `BadExpr`; rustc `PResult` and `ExprKind::Err`); **a production the parser
+     read but refused keeps its node** (rustc emits and recovers; only a failed one becomes `Err`);
+     **a malformed literal is flagged once** (gc `BasicLit.Bad`, types2 skips it; rustc
+     `LitKind::Err`); **sema does not judge a failure** (types2's invalid operand, rustc's
+     `ty::Error` and `tainted_by_errors`); **an unclosed list ends where an enclosing list's
+     element starts** (typescript-go `isInSomeParsingContext`). Prototyped whole and measured over
+     the 24,607 saved mutants against e74383b: errors 98,341 to 91,207, one-error mutants 4,025 to
+     5,179, three-or-more 15,392 to 14,080; 4,859 better, 19 worse (7 multi-edit, the rest a
+     follow-on traded for a second fault's error). No real error buried: an edit left with no error
+     within a line happens 36 times, every one a line cut short (`divide( 17, 5,`) whose lost errors
+     judged the misread and whose parse error lands a line or two down. **Where Keel keeps its own
+     way, measured:** (a) the sink claims tokens rather than matching starts - the others'
+     sink alone is worse on 1,896 mutants, because they also skip broken statements and
+     declarations in sema, which Keel does not yet (4g); (b) only syntax errors claim, since two
+     overlapping sema errors are independent (`g( 1, b + 1 )`'s arity and `b + 1`; `id<bool>( 1 )`'s
+     return and argument), which is item 2b's argument; (c) brace counting stays over the list
+     contexts: without it *a struct or a class cannot be declared inside a function* becomes a bare
+     *expected `}`*. **Rejected, measured:** every error claiming tokens (buries the four sema
+     pairs above); claiming a window of tokens round a syntax error, yacc-style (even one token
+     buries the next line's literal in `lex/errors_numbers`); one syntax error per line, gc-style
+     (buries `Both( f64, f64 )`'s second missing name, each `->` in a chain, each access label).
+     **Not a fix, measured:** sema skipping broken *statements* takes 91,207 to 83,613; broken
+     *declarations*, 67,276 - the granularity that matters, and what the broken flag's propagation
+     gives. A declaration's broken name still declaring itself takes an estimated 3,600 more. The
+     floor is the parser: with no sema at all (gc skips type checking after any syntax error,
+     `irgen.go:30`) it is 53,147, and 8,245 mutants still have more syntax errors than edits -
+     M3's and item 6's ground. Nothing moves past sema: lowering, the move and assignment checks
+     run only on a program that checked. Tools in `.claude/fuzz/`: `cover.py` (edits left with no
+     error near, per build), `bound.py` and `bound3.py` (the sema bounds above). Steps 4b-4h, one
+     commit each, each removing what it replaces:
+  4b. ~~**Diagnostics drops duplicates; the lexer flags what it reported.**~~ **Done (2026-10-04).** `Diagnostics::syntax_error`
+     beside `error`; the lexer hands each file's token bounds over (`Diagnostics::tokens`). A
+     syntax error claims every token its span touches, an empty span the token after it; any error
+     touching a claimed token is dropped, whichever pass reports it; sema errors claim nothing.
+     Applied when counting and rendering, so the lexer, which reports before the bounds exist, is
+     covered, and two mistakes in one literal are one error with no rule in the lexer. The lexer
+     sets `Token::bad` on a token it reported; the parser makes a bad literal an `Error` node, so
+     sema never judges it. Was item 4a: 42 lex-parse pairs (*unterminated character literal* then
+     *expected `;`*), 10 lex-lex (*digit separator* and *leading zeros* on one literal), 7
+     lex-sema. A file the lexer never handed bounds for keeps every error. **Removed:** M1's
+     `reported_`, `report` and its `about`, and the two `Unknown` checks before *expected a
+     statement* and *expected an expression*, which the claim covers. M1's rule is unchanged in
+     effect, only its home. Two spans shrink here rather than at 4f, because the claim buries
+     what they cover: *already declared with these parameters* points at the name
+     (`Overloads::refuse` asks `name_span`), and a constructor records its name span, without
+     which it fell back to the whole declaration - in `i32 twice( i32 )` both contained the
+     parse error's `)`, and `errors_nameless_parameter` lost three true errors. Six sema goldens
+     move their caret to the name and nothing else. An empty span stops at the empty end-of-file token
+     sitting at it, so *expected `;`* in the gap after a last `return` and *expected `}`* at the
+     file's end are about one token (missed, 85 mutants gained an error). Over the saved mutants
+     against e74383b: errors 98,341 to 95,220, one-error 4,025 to 4,327, three-or-more 15,392 to
+     14,812; 2,719 better, none worse, identical to the prototype. Tests:
+     `diagnostics_drop_an_error_on_a_token_a_syntax_error_claimed`, `lexer_flags_a_token_it_reported`,
+     `parser_stays_quiet_about_what_the_lexer_reported`,
+     `type_checker_stays_quiet_about_a_literal_the_lexer_reported`; M1's
+     `parser_reports_one_error_per_token` passes unchanged through Diagnostics.
+  4c. **The tree records failure; the parser asks the tree.** `Ast::fail( span )`, and `Ast::add`
+     marks a node broken when it is an `Error`, a failure lies in its span (end included, so an
+     *expected `;`* at the gap counts) or a child is broken; propagated as it is built, so no
+     later walk, and unlike typescript-go's next-node rule a judgment reported after its node
+     cannot land on the next statement. Only failures call `fail`: `error_expected`, *expected a
+     statement*, *an identifier*, *an expression*, and dropped junk; a refusal of something read
+     (D16, `->`, `++` as a value) leaves its node whole. Judgments read `!ast_.broken( node )`:
+     *no effect*, prefix and postfix `++`, type arguments, D16, a pattern's bindings, a
+     destructor's parameters. Recovery reads `failed_since( token )`: the statement skip, a
+     header's `)`, junk after a broken declaration or member. A statement short of its `;` is
+     exempt from the skip only when its brackets balance, which replaces "exactly one report".
+     **Removed:** `reports_`, `head_errors_`, every `reports_before`, `close_header`'s parameter,
+     `reach_commit`'s branch (it always moves to the commit), the count in `parse_import`.
+  4d. **A broken expression is an `Error` node.** `parse_expression` at power 0 returns `Error` for
+     a broken result, rustc's `mk_expr_err`: sema's error type then silences arity, field-count,
+     *not declared* and type follow-ons (*not declared* -1,564, mismatches -840). A `case` pattern
+     keeps its shape, as rustc's separate pattern parser would. Sema stays quiet where it judged an
+     `Error`: a `ref` binding to one, and an `unsafe` block holding one counts as used. Test
+     `parser_conditional_without_a_colon_recovers` changes contract (the node is `Error`); golden
+     `parse/errors_destructor_name` changes AST only. **Removed:** `kind != Error` tests the broken
+     flag now covers.
+  4e. **An unclosed method body ends at the class's next member.** The parser keeps the class
+     bodies it is inside; `at_unclosed_body_head` asks `member_head` with the innermost one's name,
+     so `public`, `static` and a constructor end a body as `declaration_head` already did for file
+     scope (typescript-go's list contexts). `public i32 get()` after a lost `}` was two errors,
+     a constructor five; each is one, after the method's last statement. Closes item 4's leftover.
+  4f. **Spans as small as they need to be.** *Expected an identifier* in `expect_name` points at
+     the gap as `error_expected` does, not at the next line (the redeclaration and constructor
+     spans moved to 4b).
+  4g. **Sema skips a broken declaration** (rustc's `tainted_by_errors`): estimated 91,207 to
+     67,276. Not designed.
+  4h. **A broken declaration still declares its name**, as an error symbol whose uses are silent
+     (rustc `Res::Err`, types2's invalid object): only a name the parser read before failing,
+     never one salvaged from a drop (item 6). Estimated 3,600 more. Not designed.
   5. **M3: every comma list skips to its separator or closer.** Each list loop stops at its first
      bad element: `i32 add( i32 a a, i32 b )` loses `b` and says *takes 1 argument* at the call;
      the enum variant, payload and struct-literal loops keep item 5's old one-token skip, so an

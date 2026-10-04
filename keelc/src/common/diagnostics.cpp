@@ -93,12 +93,22 @@ std::string expand_tabs( std::string_view line, std::vector<std::size_t>& col_of
 
 void Diagnostics::error( Span span, std::string message, std::string help )
 {
-    items_.push_back( { Severity::Error, span, std::move( message ), std::move( help ) } );
+    items_.push_back( { Severity::Error, span, std::move( message ), std::move( help ), false } );
+}
+
+void Diagnostics::syntax_error( Span span, std::string message, std::string help )
+{
+    items_.push_back( { Severity::Error, span, std::move( message ), std::move( help ), true } );
 }
 
 void Diagnostics::warning( Span span, std::string message, std::string help )
 {
     items_.push_back( { Severity::Warning, span, std::move( message ), std::move( help ) } );
+}
+
+void Diagnostics::tokens( File_id file, std::vector<Span> bounds )
+{
+    tokens_[file.v] = std::move( bounds );
 }
 
 bool Diagnostics::has_errors() const
@@ -116,10 +126,12 @@ bool Diagnostics::has_errors() const
 
 size_t Diagnostics::error_count() const
 {
-    size_t count = 0;
-    for( const Diagnostic& d : items_ )
+    std::vector<bool> kept_diagnostics = kept();
+    size_t            count            = 0;
+    for( u32 i = 0; i < items_.size(); ++i )
     {
-        if( d.severity == Severity::Error )
+        const Diagnostic& d = items_[i];
+        if( kept_diagnostics[i] && d.severity == Severity::Error )
         {
             ++count;
         }
@@ -138,11 +150,17 @@ std::vector<u32> Diagnostics::in_source_order() const
     // Indices rather than the items themselves so the renderers stay const: every caller holds a
     // Diagnostics by const reference. Within one file a byte offset orders identically to
     // (line, column), both being derived from it, so there is nothing to look up.
-    std::vector<u32> ordered( items_.size() );
+    std::vector<bool> kept_diagnostics = kept();
+    std::vector<u32>  ordered;
 
     for( u32 i = 0; i < items_.size(); ++i )
     {
-        ordered[i] = i;
+        if( !kept_diagnostics[i] )
+        {
+            continue;
+        }
+
+        ordered.push_back( i );
     }
 
     std::sort(
@@ -171,6 +189,71 @@ std::vector<u32> Diagnostics::in_source_order() const
     );
 
     return ordered;
+}
+
+std::vector<bool> Diagnostics::kept() const
+{
+    std::vector<bool> keep( items_.size(), false );
+
+    std::map<u32, std::vector<bool>> claimed;
+
+    for( u32 i = 0; i < items_.size(); ++i )
+    {
+        const Diagnostic& d = items_[i];
+
+        if( d.severity != Severity::Error || !d.span.is_valid() )
+        {
+            keep[i] = true;
+            continue;
+        }
+
+        const auto it = tokens_.find( d.span.file.v );
+        if( it == tokens_.end() )
+        {
+            keep[i] = true;
+            continue;
+        }
+
+        std::vector<bool>& claims = claimed[d.span.file.v];
+        if( claims.empty() )
+        {
+            claims.resize( it->second.size() + 1, false );
+        }
+
+        const std::vector<Span>& bounds = it->second;
+
+        // The tokens [first, last) the span overlaps: from the first token ending after its start (or
+        // the empty end-of-file token at it) to the first starting at or after its end.
+        const auto first = std::partition_point(
+            bounds.begin(), bounds.end(), [&]( const Span& s ) { return s.end <= d.span.start && s.start < d.span.start; }
+        );
+        const auto last = std::partition_point( first, bounds.end(), [&]( const Span& s ) { return s.start < d.span.end; } );
+
+        const u32 lo = static_cast<u32>( first - bounds.begin() );
+        // An empty span overlaps nothing; it is about the token after it.
+        const u32 hi = d.span.is_empty() ? lo + 1 : static_cast<u32>( last - bounds.begin() );
+
+        bool any_claimed = false;
+        for( u32 t = lo; t < hi; ++t )
+        {
+            any_claimed |= claims[t];
+        }
+
+        if( !any_claimed )
+        {
+            keep[i] = true;
+
+            if( d.syntax )
+            {
+                for( u32 t = lo; t < hi; ++t )
+                {
+                    claims[t] = true;
+                }
+            }
+        }
+    }
+
+    return keep;
 }
 
 void Diagnostics::render( const Source_manager& sm, std::ostream& out, bool colour ) const
@@ -629,6 +712,136 @@ TEST_CASE( "diagnostics_render_json_without_a_span", "[common][diagnostics]" )
     const auto lines = lines_of( out.str() );
     REQUIRE( lines.size() == 2 );
     REQUIRE( lines[1] == R"({"kind":"diagnostic","severity":"error","message":"no place to point","help":""})" );
+}
+
+// A syntax error claims its tokens: the text there is wrong, so anything later judged from it is
+// judging the misreading. Two semantic errors over one token are two facts and both stand.
+TEST_CASE( "diagnostics_drop_an_error_on_a_token_a_syntax_error_claimed", "[common][diagnostics]" )
+{
+    Source_manager sm;
+    const File_id  f = sm.add_file( "a.kl", "i32 x = a + b;" );
+
+    // i32 x = a + b ; <eof>
+    const std::vector<Span> bounds = {
+        { f, 0, 3 },
+        { f, 4, 5 },
+        { f, 6, 7 },
+        { f, 8, 9 },
+        { f, 10, 11 },
+        { f, 12, 13 },
+        { f, 13, 14 },
+        { f, 14, 14 },
+    };
+
+    Diagnostics diags;
+    diags.tokens( f, bounds );
+
+    SECTION( "a later error touching a claimed token is dropped" )
+    {
+        diags.syntax_error( Span { f, 8, 9 }, "the cause" );
+        diags.error( Span { f, 8, 13 }, "a judgment of the misreading" );
+
+        REQUIRE( diags.error_count() == 1 );
+        REQUIRE( render_to_string( diags, sm ).find( "misreading" ) == std::string::npos );
+    }
+
+    SECTION( "so is a later syntax error" )
+    {
+        diags.syntax_error( Span { f, 8, 9 }, "the cause" );
+        diags.syntax_error( Span { f, 8, 9 }, "the rule that failed because of it" );
+
+        REQUIRE( diags.error_count() == 1 );
+    }
+
+    SECTION( "a semantic error claims nothing" )
+    {
+        diags.error( Span { f, 8, 13 }, "about the whole" );
+        diags.error( Span { f, 8, 9 }, "about a part" );
+        diags.syntax_error( Span { f, 12, 13 }, "a syntax error after both" );
+
+        REQUIRE( diags.error_count() == 3 );
+    }
+
+    SECTION( "an empty span claims the token after it" )
+    {
+        diags.syntax_error( Span::point( f, 9 ), "expected something after `a`" );
+        diags.error( Span { f, 10, 11 }, "about the `+` it found" );
+        diags.error( Span { f, 8, 9 }, "about the `a` before it" );
+
+        REQUIRE( diags.error_count() == 2 );
+        REQUIRE( render_to_string( diags, sm ).find( "the `+` it found" ) == std::string::npos );
+    }
+
+    SECTION( "the gap after the last token is about the end of the file" )
+    {
+        // return <eof>
+        const File_id g = sm.add_file( "b.kl", "return\n" );
+        diags.tokens( g, { { g, 0, 6 }, { g, 7, 7 } } );
+
+        diags.syntax_error( Span::point( g, 6 ), "expected `;`, found end of file" );
+        diags.syntax_error( Span::point( g, 7 ), "expected `}`, found end of file" );
+
+        REQUIRE( diags.error_count() == 1 );
+    }
+
+    SECTION( "the end of the file is a token" )
+    {
+        diags.syntax_error( Span::point( f, 14 ), "expected `}`" );
+        diags.syntax_error( Span::point( f, 14 ), "expected `}` for an outer scope" );
+
+        REQUIRE( diags.error_count() == 1 );
+    }
+
+    SECTION( "part of a token claims all of it" )
+    {
+        diags.syntax_error( Span { f, 1, 2 }, "a mistake inside `i32`" );
+        diags.syntax_error( Span { f, 0, 1 }, "another inside it" );
+
+        REQUIRE( diags.error_count() == 1 );
+    }
+
+    SECTION( "a span between tokens claims nothing" )
+    {
+        diags.syntax_error( Span { f, 3, 4 }, "about the space" );
+        diags.syntax_error( Span { f, 0, 3 }, "about `i32`" );
+
+        REQUIRE( diags.error_count() == 2 );
+    }
+
+    SECTION( "each file claims its own tokens" )
+    {
+        const File_id g = sm.add_file( "b.kl", "i32 x = a + b;" );
+        diags.tokens( g, { { g, 0, 3 } } );
+
+        diags.syntax_error( Span { f, 0, 3 }, "in a.kl" );
+        diags.syntax_error( Span { g, 0, 3 }, "in b.kl" );
+
+        REQUIRE( diags.error_count() == 2 );
+    }
+
+    SECTION( "a file with no bounds keeps every error" )
+    {
+        const File_id g = sm.add_file( "b.kl", "i32" );
+
+        diags.syntax_error( Span { g, 0, 3 }, "one" );
+        diags.syntax_error( Span { g, 0, 3 }, "two" );
+
+        REQUIRE( diags.error_count() == 2 );
+    }
+
+    SECTION( "what is rendered is what is counted" )
+    {
+        diags.syntax_error( Span { f, 8, 9 }, "kept" );
+        diags.error( Span { f, 8, 9 }, "dropped" );
+        diags.warning( Span { f, 8, 9 }, "a warning always stands" );
+
+        const std::string out = render_to_string( diags, sm );
+        REQUIRE( diags.has_errors() );
+        REQUIRE( diags.error_count() == 1 );
+        REQUIRE( out.find( "kept" ) != std::string::npos );
+        REQUIRE( out.find( "dropped" ) == std::string::npos );
+        REQUIRE( out.find( "a warning always stands" ) != std::string::npos );
+    }
 }
 
 } // namespace keel

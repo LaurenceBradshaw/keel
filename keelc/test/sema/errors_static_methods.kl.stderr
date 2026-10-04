@@ -35,10 +35,10 @@ error: a destructor cannot be `static`
    |     ^^^^^^
 
 error: `f` is already declared with these parameters
-  --> sema/errors_static_methods.kl:93:5
+  --> sema/errors_static_methods.kl:93:9
    |
 93 |     i32 f( i32 a ) const
-   |     ^^^^^^^^^^^^^^^^^^^^ a `static` method and a method of one name must differ in their parameters
+   |         ^ a `static` method and a method of one name must differ in their parameters
 
 error: `make` is a `static` method of `P`, so it takes no object
    --> sema/errors_static_methods.kl:104:11

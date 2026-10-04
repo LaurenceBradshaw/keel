@@ -156,6 +156,7 @@ private:
     std::string_view   text_;
     u32                pos_ = 0;
     std::vector<Token> out_;
+    bool               bad_ = false;
 };
 
 Scanner::Scanner( File_id file, const Source_manager& sm, Interner& interner, Literal_pool& literals, Diagnostics& diags )
@@ -172,6 +173,7 @@ std::vector<Token> Scanner::run()
     while( true )
     {
         skip_trivia();
+        bad_ = false;
 
         if( at_end() )
         {
@@ -248,12 +250,13 @@ Span Scanner::span_from( u32 start ) const
 
 void Scanner::push( Token_kind kind, u32 start, Symbol_id symbol )
 {
-    out_.push_back( Token { kind, span_from( start ), symbol } );
+    out_.push_back( Token { kind, span_from( start ), symbol, bad_ } );
 }
 
 void Scanner::error_at( Span span, std::string message, std::string help )
 {
-    diags_.error( span, std::move( message ), std::move( help ) );
+    bad_ = true;
+    diags_.syntax_error( span, std::move( message ), std::move( help ) );
 }
 
 void Scanner::skip_trivia()
@@ -863,7 +866,14 @@ void Scanner::scan_punctuation( char c, u32 start )
 
 std::vector<Token> lex( File_id file, const Source_manager& sm, Interner& interner, Literal_pool& literals, Diagnostics& diags )
 {
-    return Scanner( file, sm, interner, literals, diags ).run();
+    std::vector<Token> tokens = Scanner( file, sm, interner, literals, diags ).run();
+    std::vector<Span>  token_spans;
+    for( const Token& token : tokens )
+    {
+        token_spans.push_back( token.span );
+    }
+    diags.tokens( file, std::move( token_spans ) );
+    return tokens;
 }
 
 } // namespace keel
@@ -914,6 +924,10 @@ public:
     Keyword keyword( std::size_t i ) const
     {
         return tokens_[i].keyword();
+    }
+    bool bad( std::size_t i ) const
+    {
+        return tokens_[i].bad;
     }
 
     // The value the scanner recorded, via the pool the token's Literal_id indexes.
@@ -1640,6 +1654,50 @@ TEST_CASE( "lexer_whole_function", "[lex]" )
     REQUIRE_FALSE( lexed.has_errors() );
     REQUIRE( lexed.kinds() == expected );
     REQUIRE( lexed.keyword( 10 ) == Keyword::Return );
+}
+
+// A token the lexer reported is flagged, so nothing after judges it again; and since its errors
+// claim the token, two mistakes in one literal are one error.
+TEST_CASE( "lexer_flags_a_token_it_reported", "[lex]" )
+{
+    SECTION( "a literal with a mistake" )
+    {
+        const Lexed lexed( "a 0x b" );
+
+        INFO( lexed.rendered() );
+        REQUIRE( lexed.count() == 3 );
+        REQUIRE_FALSE( lexed.bad( 0 ) );
+        REQUIRE( lexed.bad( 1 ) );
+        REQUIRE_FALSE( lexed.bad( 2 ) );
+    }
+
+    SECTION( "an unknown character" )
+    {
+        const Lexed lexed( "a $ b" );
+
+        REQUIRE( lexed.kind( 1 ) == Token_kind::Unknown );
+        REQUIRE( lexed.bad( 1 ) );
+        REQUIRE_FALSE( lexed.bad( 2 ) );
+    }
+
+    SECTION( "nothing is flagged in clean text" )
+    {
+        const Lexed lexed( "i32 x = 42 + 1.5;" );
+
+        for( std::size_t i = 0; i < lexed.count(); ++i )
+        {
+            REQUIRE_FALSE( lexed.bad( i ) );
+        }
+    }
+
+    SECTION( "two mistakes in one literal are one error" )
+    {
+        const Lexed lexed( "0'c" );
+
+        INFO( lexed.rendered() );
+        REQUIRE( lexed.error_count() == 1 );
+        REQUIRE( lexed.rendered().find( "digit separator" ) != std::string::npos );
+    }
 }
 
 } // namespace keel
