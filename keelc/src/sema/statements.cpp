@@ -168,7 +168,7 @@ void Statements::visit_return( Node_id id )
 
     if( !value.is_valid() ) // a bare `return;`
     {
-        if( current_return_.is_valid() && current_return_ != void_type )
+        if( current_return_.is_valid() && current_return_ != void_type && !table_.is_error( current_return_ ) )
         {
             reporter_.error_at(
                 ast_.span( id ),
@@ -201,7 +201,8 @@ void Statements::visit_return( Node_id id )
     {
         const Node_id root = places_.place_root( value, expressions_.current_function() );
 
-        if( !root.is_valid() || ast_.kind( root ) != Node_kind::Param_decl || !places_.returns_a_binding( root ) )
+        if( !table_.is_error( types_.type_of( value ) ) &&
+            ( !root.is_valid() || ast_.kind( root ) != Node_kind::Param_decl || !places_.returns_a_binding( root ) ) )
         {
             reporter_.error_at(
                 ast_.span( value ),
@@ -281,6 +282,10 @@ void Statements::visit_var( Node_id id )
         {
             reporter_.error_at( ast_.span( id ), "a `ref` binding must be initialised", "write `ref T r = x;`" );
         }
+        else if( table_.is_error( types_.type_of( init ) ) )
+        {
+            // Already reported; says nothing about a value that failed.
+        }
         // Not a temporary: the referent has to outlive the binding, and everything that names a
         // place was declared before this line and so outlives it. A temporary is the one thing
         // that would not, and refusing it is what keeps the rule free of any analysis.
@@ -288,7 +293,7 @@ void Statements::visit_var( Node_id id )
         {
             reporter_.error_at( ast_.span( init ), "a `ref` binding needs a variable to bind to" );
         }
-        else if( types_.type_of( init ) != type )
+        else if( types_.type_of( init ) != type && !table_.references_error( types_.type_of( init ) ) )
         {
             reporter_.error_at(
                 ast_.span( init ),
@@ -1650,6 +1655,96 @@ TEST_CASE( "type_checker_stays_quiet_about_elements_after_a_broken_one", "[sema]
         const Typed p( "enum E { A, B C, D };\ni32 main() { E e = E::D; return 0; }" );
         INFO( p.rendered() );
         CHECK( reported( p.rendered() ) == 1 );
+    }
+}
+
+TEST_CASE( "type_checker_stays_quiet_about_a_value_that_already_failed", "[sema][recovery]" )
+{
+    const auto quiet = []( const char* source, const char* first, const char* follow_on )
+    {
+        const Typed p( source );
+        INFO( p.rendered() );
+
+        std::size_t count = 0;
+        for( std::size_t at = p.rendered().find( "error:" ); at != std::string::npos;
+             at             = p.rendered().find( "error:", at + 1 ) )
+        {
+            ++count;
+        }
+
+        CHECK( count == 1 );
+        CHECK( p.rendered().find( first ) != std::string::npos );
+        CHECK( p.rendered().find( follow_on ) == std::string::npos );
+        CHECK( p.rendered().find( "<error>" ) == std::string::npos );
+    };
+
+    SECTION( "`out` on a name that is not declared" )
+    {
+        quiet(
+            "void set( out i32 x ) { x = 1; }\ni32 main() { set( out q ); return 0; }",
+            "`q` is not declared",
+            "needs a variable"
+        );
+    }
+
+    SECTION( "`ref` on a name that is not declared" )
+    {
+        quiet(
+            "void bump( ref i32 x ) { x = x + 1; }\ni32 main() { bump( ref n ); return 0; }",
+            "`n` is not declared",
+            "needs a variable"
+        );
+    }
+
+    SECTION( "`move` on a name that is not declared" )
+    {
+        quiet(
+            "i32 take( move i32 v ) { return v; }\ni32 main() { return take( move a ); }", "`a` is not declared", "can be moved"
+        );
+    }
+
+    SECTION( "a `ref` binding to a call that is not declared" )
+    {
+        quiet( "i32 main() { ref i32 r = picks( 1, 2 ); return r; }", "`picks` is not declared", "needs a variable" );
+    }
+
+    SECTION( "a returned reference to a name that is not declared" )
+    {
+        quiet(
+            "const ref i32 first( const ref i32 a ) { return p; }\ni32 main() { return 0; }",
+            "`p` is not declared",
+            "must borrow from a parameter"
+        );
+    }
+
+    SECTION( "the address of a function whose parameter type failed" )
+    {
+        quiet(
+            "i32 f( Nope x ) { return 0; }\ni32 main() { fn( i32 ) -> i32 p = &f; return 0; }", "unknown type `Nope`", "but got"
+        );
+    }
+
+    SECTION( "a borrow as a parameter whose type failed" )
+    {
+        quiet(
+            "void f( ref Nope x ) { }\ni32 main() { i32 v = 0; f( ref v ); return 0; }", "unknown type `Nope`", "cannot borrow"
+        );
+    }
+
+    SECTION( "a bare `return` in a function whose return type failed" )
+    {
+        quiet( "Nope f() { return; }\ni32 main() { return 0; }", "unknown type `Nope`", "needs a value" );
+    }
+
+    SECTION( "a type parameter deduced from a name that is not declared" )
+    {
+        quiet(
+            "struct P { i32 x; };\n"
+            "U read<C, U>( field( C ) -> U p, const ref C obj ) where U : Copyable { return p( obj ); }\n"
+            "i32 main() { field( P ) -> i32 f = &P::x; return read( f, nope ); }",
+            "`nope` is not declared",
+            "cannot be both"
+        );
     }
 }
 

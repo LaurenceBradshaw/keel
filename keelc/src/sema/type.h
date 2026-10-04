@@ -138,6 +138,7 @@ public:
     Type_id from_spelling( std::string_view spelling ) const;
 
     bool is_error( Type_id id ) const; // absorbs: checked at the top of most checker branches
+    bool references_error( Type_id id ) const;
     bool is_integer( Type_id id ) const;
     bool is_float( Type_id id ) const;
     bool is_struct( Type_id id ) const;

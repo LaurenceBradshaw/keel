@@ -154,7 +154,8 @@ bool Overloads::deduce_type_arguments(
                 continue;
             }
 
-            if( already->second == found->second )
+            if( already->second == found->second || table_.references_error( already->second ) ||
+                table_.references_error( found->second ) )
             {
                 continue;
             }
@@ -664,8 +665,8 @@ void Overloads::check_one_argument_marker( Node_id argument, Keyword wanted, Typ
     // copy to live in: `ref u8` and `ref i32` are different bindings, not convertible ones.
     // Above the agreement check, because agreeing is this rule's precondition rather than its
     // exit - and it wants both sides, so one missing marker does not report twice.
-    if( wanted == Keyword::Ref && given == Keyword::Ref && !table_.is_error( types_.type_of( argument ) ) &&
-        types_.type_of( argument ) != expected )
+    if( wanted == Keyword::Ref && given == Keyword::Ref && !table_.references_error( types_.type_of( argument ) ) &&
+        !table_.references_error( expected ) && types_.type_of( argument ) != expected )
     {
         reporter_.error_at(
             ast_.span( argument ),

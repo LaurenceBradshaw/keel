@@ -522,7 +522,7 @@ Type_id Type_table::from_spelling( std::string_view spelling ) const
 
 bool Type_table::holds( Type_id from, Type_id to ) const
 {
-    if( is_error( from ) || is_error( to ) )
+    if( references_error( from ) || references_error( to ) )
     {
         return true;
     }
@@ -713,6 +713,30 @@ Type_id Type_table::arithmetic_result( Type_id a, Type_id b ) const
 bool Type_table::is_error( Type_id id ) const
 {
     return !id.is_valid() || id == error_;
+}
+
+bool Type_table::references_error( Type_id id ) const
+{
+    if( is_error( id ) )
+    {
+        return true;
+    }
+
+    const Type& described = get( id );
+    if( described.element.is_valid() && references_error( described.element ) )
+    {
+        return true;
+    }
+
+    for( Type_id arg : described.arguments )
+    {
+        if( references_error( arg ) )
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 bool Type_table::is_integer( Type_id id ) const
@@ -1444,6 +1468,43 @@ TEST_CASE( "type_table_errors_absorb", "[sema][type]" )
         REQUIRE( table.holds( error, i32 ) );
         REQUIRE( table.holds( i32, error ) );
         REQUIRE( table.fits( 999999, false, error ) );
+    }
+}
+
+TEST_CASE( "type_table_finds_an_error_inside_a_type", "[sema][type]" )
+{
+    Type_table table;
+
+    const Type_id error = table.builtin( Type_kind::Error );
+    const Type_id i32   = table.integer( 32, true );
+
+    SECTION( "a type with no error in it is clean" )
+    {
+        REQUIRE_FALSE( table.references_error( i32 ) );
+        REQUIRE_FALSE( table.references_error( table.pointer_to( i32 ) ) );
+        REQUIRE_FALSE( table.references_error( table.function( i32, by_value( { i32 } ) ) ) );
+    }
+
+    SECTION( "the error itself, and an invalid id" )
+    {
+        REQUIRE( table.references_error( error ) );
+        REQUIRE( table.references_error( Type_id {} ) );
+    }
+
+    SECTION( "an error in a pointee, a parameter or a return type" )
+    {
+        REQUIRE( table.references_error( table.pointer_to( table.pointer_to( error ) ) ) );
+        REQUIRE( table.references_error( table.function( i32, by_value( { i32, error } ) ) ) );
+        REQUIRE( table.references_error( table.function( error, by_value( { i32 } ) ) ) );
+    }
+
+    SECTION( "so a type holding one holds anything, and is held by anything" )
+    {
+        const Type_id broken = table.function( i32, by_value( { error } ) );
+        const Type_id whole  = table.function( i32, by_value( { i32 } ) );
+
+        REQUIRE( table.holds( broken, whole ) );
+        REQUIRE( table.holds( whole, broken ) );
     }
 }
 

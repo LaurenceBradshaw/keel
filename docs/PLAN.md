@@ -6267,6 +6267,32 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      golden `errors_unbalanced_braces`; counts and wording in `parser_ends_a_body_that_was_never_closed`,
      `parser_reports_one_error_per_token`, the stray-brace section of `parser_recovers_from_a_declaration_that_is_not_one`, the enum and condition-skip
      sections, `type_checker_stays_quiet_about_uses_of_a_declaration_that_failed`.
+  8. ~~**M5: a value that already failed is not judged again.**~~ **Done (2026-10-04).** After M4 the survey counted each error
+     beyond the first, and most were right by this rule: every token speaks, two errors may stand
+     if their spans do not overlap, and sema stays out of what failed to parse. An undeclared name
+     at every use is right (rustc, Go and tsgo report each one); a declaration that lost its name
+     to a syntax error leaves its uses undeclared, which is right too. What is not right is a
+     second sema error that only exists because the first one did: 692 errors.
+     - *An operand already reported*, then a second error about the same operand: `out q`,
+       `ref n`, `move a`, `ref i32 r = picks( x, y )`, `return p.y` from a `ref` function, each
+       with the name undeclared, add *needs a variable*, *needs a variable to bind to*, *only a
+       variable or an owned temporary can be moved*, *must borrow from a parameter* (479).
+     - *A type that failed printed inside another*: a parameter whose type broke makes the
+       function's type `fn( <error> ) -> i32`, and taking its address, borrowing as it, binding
+       a type parameter to it or returning from it reports a mismatch naming `<error>` (213).
+
+     **Shape.** rustc's `references_error()` and tsgo's `errorType`: a type is poisoned when it or
+     anything inside it is the error type, and a check that reads a poisoned type, or an operand
+     whose type is the error type, says nothing. `Type_table::references_error` walks `element`
+     and `arguments`; `holds` uses it, so every mismatch built on `holds` goes quiet; the borrow,
+     binding-conflict and needs-a-value checks use it on both sides; `infer_marker` returns the
+     operand's error type before judging it, and the `ref` binding and returned-reference checks
+     skip an error-typed initialiser or value. **Measured** against M4: errors 62,789 to 62,097, all
+     213 `<error>` messages gone, none added, none left with no error, identical to the prototype
+     on every mutant; goldens unchanged. Tests: `type_table_finds_an_error_inside_a_type`,
+     `type_checker_stays_quiet_about_a_value_that_already_failed`. **Next, left out:** a builtin type name where a value goes says *`i32` is not
+     declared* (68 mutants), and a local `i32 i32 total` skips the *name of a builtin type* error a
+     parameter gives.
 
 ### M7 slice: access control - done (2026-09-25)
 

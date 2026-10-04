@@ -2529,6 +2529,11 @@ Type_id Expressions::infer_marker( Node_id id )
     {
         const Type_id value = infer( operand );
 
+        if( table_.is_error( value ) )
+        {
+            return types_.record( id, value );
+        }
+
         if( !places_.is_assignable( operand ) )
         {
             reporter_.error_at( ast_.span( operand ), "`out` needs a variable to assign to" );
@@ -2550,6 +2555,11 @@ Type_id Expressions::infer_marker( Node_id id )
     {
         const Type_id value = infer( operand );
 
+        if( table_.is_error( value ) )
+        {
+            return types_.record( id, value );
+        }
+
         if( !places_.is_assignable( operand ) )
         {
             reporter_.error_at( ast_.span( operand ), "`ref` needs a variable to borrow" );
@@ -2568,6 +2578,11 @@ Type_id Expressions::infer_marker( Node_id id )
     }
 
     const Type_id value = infer( operand );
+
+    if( table_.is_error( value ) )
+    {
+        return types_.record( id, value );
+    }
 
     // A field on its own is refused rather than lumped in with the rest, because the reason is
     // different and so is the fix: moving one would leave the object partly moved, and its own
