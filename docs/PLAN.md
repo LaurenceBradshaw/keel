@@ -6124,11 +6124,46 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      unchanged. **Measured, left out:** the same gap rule for `report_dropped`'s stop token
      (`i32` then `{` on the next line) changes no count, only carets. Test:
      `parser_points_a_missing_name_at_the_gap`.
-  4g. **Sema skips a broken declaration** (rustc's `tainted_by_errors`): estimated 91,207 to
-     67,276. Not designed.
+  4g. ~~**A syntax error silences sema in the head of its statement.**~~ **Done (2026-10-04).** Prototyped (sink filter,
+     `K4G` toggles) against 4f's 90,911. Skipping a whole broken declaration, as estimated, is not
+     rustc's way: `tainted_by_errors` hides guesses (inference, regions) and gates borrowck and MIR,
+     which Keel already skips on any error; it never stops a body being checked. Only gc skips, and
+     it skips the program. Measured, it buries true errors: top-level declarations 67,862 with 762
+     edits left with no error near, innermost declarations 71,359 with 576 (a typo'd name, a
+     duplicate field, a `return ;` in the function a second edit cut). Nearly all of those are
+     multi-edit mutants whose other edit only sema could see. Statements, whole, 76,806 with 204,
+     because an unclosed `}` breaks the struct or block around it and silences everything in it.
+     **The unit is a statement's head:** a statement, `Var_decl`, `Field_decl`, `Param_decl` or
+     `Case_arm` whose span up to its first `Block` or `Case_arm` child has a failure in it. Only its
+     non-syntax errors are dropped; a body under a broken `if` is still judged. Measured: 90,911 to
+     83,965, one-error 5,191 to 7,093, three-or-more 14,024 to 12,765; 5,555 better, none worse,
+     goldens unchanged. 47 edits are left with no error near, every one a line cut short (`Box`,
+     `operator`, `ref i32 r = a==`) whose syntax error lands a line or two down. **Measured, left
+     out:** silencing from the failure onward instead of the whole head drops 262 errors, since the
+     follow-ons are the tokens misread *before* it (`main i32()`); a function's whole head (83,743)
+     buries `errors_nameless_parameter`'s three *already declared with these parameters* at the name,
+     while `Param_decl` as its own unit keeps them. Sparing a statement whose only failure is
+     its missing `;` with the next token on a later line (84,831, 777 mutants worse): a line cut
+     short to a lone `i32`, `B` or `run` reads the same, and sema then judges the fragment
+     (*`i32` is not declared*). So `bool b = 1 + 2` before a missing `;` loses its mismatch, a
+     judgment in the failed statement itself, which is accepted: a misplaced or lost judgment beside
+     a syntax error is cheaper than a cascade. **Where:** Diagnostics, beside 4b's claims; a
+     silenced error is reported and then dropped, so sema needs no change, and sema's count gates
+     (`expressions.cpp` folding, the speculative paths) compare within one expression, which lies in
+     one head. The parser walks its declarations once after parsing and hands Diagnostics each
+     failed head. **Removed:** five of 4d's `!= Error` checks in sema, each in a head this silences
+     (a `ref` binding's initialiser, a file-scope or static initialiser, an assignment's target, an
+     increment's operand, a `::` qualifier); without them the corpus is identical and goldens
+     unchanged. The real build is identical to the prototype on every mutant. 4d's section *an
+     expression whole before a missing `;` is still judged* changes contract (not judged); its
+     intent, that such an expression keeps its node, moves to `parser_makes_a_broken_expression_an_error_node`.
+     Tests: `diagnostics_drop_a_semantic_error_in_a_silenced_span`,
+     `type_checker_stays_quiet_in_the_head_of_a_statement_that_failed`.
   4h. **A broken declaration still declares its name**, as an error symbol whose uses are silent
      (rustc `Res::Err`, types2's invalid object): only a name the parser read before failing,
-     never one salvaged from a drop (item 6). Estimated 3,600 more. Not designed.
+     never one salvaged from a drop (item 6). Not designed. Locals and parameters too: after 4g's
+     prototype, 5,334 of the *not declared* errors following a failure name something written on
+     the failure's line (`i32 = 0;` then `i`, a lost parameter's uses).
   5. **M3: every comma list skips to its separator or closer.** Each list loop stops at its first
      bad element: `i32 add( i32 a a, i32 b )` loses `b` and says *takes 1 argument* at the call;
      the enum variant, payload and struct-literal loops keep item 5's old one-token skip, so an

@@ -2017,7 +2017,7 @@ Type_id Expressions::infer_path( Node_id id )
     // package; anything else is not a name at all, and `f()::x` deserves its own complaint.
     if( !decl.is_valid() )
     {
-        if( !is_name( qualifier ) && ast_.kind( qualifier ) != Node_kind::Error && !resolution_.is_unresolved( qualifier ) )
+        if( !is_name( qualifier ) && !resolution_.is_unresolved( qualifier ) )
         {
             reporter_.error_at( ast_.span( qualifier ), "`::` needs the name of a type on its left" );
         }

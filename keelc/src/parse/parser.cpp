@@ -4,6 +4,7 @@
 #include "parse/parser.h"
 
 #include <fmt/format.h>
+#include <algorithm>
 #include <cassert>
 #include <optional>
 #include <string>
@@ -3528,6 +3529,62 @@ Node_id Parser::parse_arg_list()
     return ast_.add( Node_kind::Arg_list, Span::merge( start, previous().span ), 0, args );
 }
 
+// A failure in a statement's head, up to its body, silences sema's judgments there: the head was
+// misread. A body is its own statements.
+void silence_failed_heads( const Ast& ast, Node_id id, Diagnostics& diags )
+{
+    if( !id.is_valid() || !ast.broken( id ) )
+    {
+        return;
+    }
+
+    constexpr Node_kind units[] = {
+        Node_kind::Return_stmt,
+        Node_kind::Assign_stmt,
+        Node_kind::Increment_stmt,
+        Node_kind::Expr_stmt,
+        Node_kind::If_stmt,
+        Node_kind::While_stmt,
+        Node_kind::For_stmt,
+        Node_kind::Switch_stmt,
+        Node_kind::Break_stmt,
+        Node_kind::Continue_stmt,
+        Node_kind::Fallthrough_stmt,
+        Node_kind::Var_decl,
+        Node_kind::Field_decl,
+        Node_kind::Param_decl,
+        Node_kind::Case_arm,
+    };
+
+    if( std::find( std::begin( units ), std::end( units ), ast.kind( id ) ) != std::end( units ) )
+    {
+        Span head = ast.span( id );
+        for( const Node_id child : ast.children( id ) )
+        {
+            if( !child.is_valid() )
+            {
+                continue;
+            }
+
+            if( ast.kind( child ) == Node_kind::Block || ast.kind( child ) == Node_kind::Case_arm )
+            {
+                head.end = ast.span( child ).start;
+                break;
+            }
+        }
+
+        if( ast.failed_within( head ) )
+        {
+            diags.silence( head );
+        }
+    }
+
+    for( const Node_id child : ast.children( id ) )
+    {
+        silence_failed_heads( ast, child, diags );
+    }
+}
+
 } // namespace
 
 Ast parse( std::span<const Token> tokens, const Source_manager& sm, Diagnostics& diags )
@@ -3542,7 +3599,12 @@ Ast parse( std::span<const Token> tokens, const Source_manager& sm, Diagnostics&
 
 std::vector<Node_id> parse_into( Ast& ast, std::span<const Token> tokens, const Source_manager& sm, Diagnostics& diags )
 {
-    return Parser( tokens, sm, ast, diags ).parse_declarations();
+    std::vector<Node_id> decls = Parser( tokens, sm, ast, diags ).parse_declarations();
+    for( const Node_id decl : decls )
+    {
+        silence_failed_heads( ast, decl, diags );
+    }
+    return decls;
 }
 
 } // namespace keel
@@ -4142,6 +4204,13 @@ TEST_CASE( "parser_makes_a_broken_expression_an_error_node", "[parse][recovery]"
         const Parsed p( "i32 main() { i32 x = 0; x = 1 + ( x * 2 ); return x; }" );
         INFO( p.dump() );
         CHECK( p.kind( p.child( find_first( p.ast(), p.root(), Node_kind::Assign_stmt ), 1 ) ) == Node_kind::Binary_expr );
+    }
+
+    SECTION( "so does one before a missing `;`" )
+    {
+        const Parsed p( "i32 main() { bool b = 1 + 2\nreturn 0; }" );
+        INFO( p.dump() );
+        CHECK( p.kind( p.child( find_first( p.ast(), p.root(), Node_kind::Var_decl ), 1 ) ) == Node_kind::Binary_expr );
     }
 
     SECTION( "a refusal keeps its shape" )

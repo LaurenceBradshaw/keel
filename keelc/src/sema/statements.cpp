@@ -281,10 +281,6 @@ void Statements::visit_var( Node_id id )
         {
             reporter_.error_at( ast_.span( id ), "a `ref` binding must be initialised", "write `ref T r = x;`" );
         }
-        else if( ast_.kind( init ) == Node_kind::Error )
-        {
-            // reported where it failed to parse
-        }
         // Not a temporary: the referent has to outlive the binding, and everything that names a
         // place was declared before this line and so outlives it. A temporary is the one thing
         // that would not, and refusing it is what keeps the rule free of any analysis.
@@ -324,11 +320,9 @@ void Statements::visit_assign( Node_id id )
     if( !places_.is_assignable( target ) )
     {
         // A name that does not resolve, or resolves to a type or function, is already reported by
-        // infer_name, and a qualified one the resolver could not bind by the resolver; a failed
-        // subtree was reported by whichever rule produced it. Anything else - a literal, a call, an
-        // arithmetic expression - has nothing else to report it.
-        if( ast_.kind( target ) != Node_kind::Name_expr && ast_.kind( target ) != Node_kind::Error &&
-            !resolution_.is_unresolved( target ) )
+        // infer_name, and a qualified one the resolver could not bind by the resolver. Anything
+        // else - a literal, a call, an arithmetic expression - has nothing else to report it.
+        if( ast_.kind( target ) != Node_kind::Name_expr && !resolution_.is_unresolved( target ) )
         {
             reporter_.error_at( ast_.span( target ), "cannot assign to this expression" );
         }
@@ -492,7 +486,7 @@ void Statements::visit_increment( Node_id id )
     if( !places_.is_assignable( operand ) )
     {
         // Same split as visit_assign: infer_name already covers an unresolved name and a function.
-        if( ast_.kind( operand ) != Node_kind::Name_expr && ast_.kind( operand ) != Node_kind::Error )
+        if( ast_.kind( operand ) != Node_kind::Name_expr )
         {
             reporter_.error_at( ast_.span( operand ), fmt::format( "`{}` needs a variable", token_kind_spelling( op ) ) );
         }
@@ -559,11 +553,6 @@ void Statements::visit_global( Node_id id )
     if( !init.is_valid() )
     {
         return; // zero, which C guarantees for file-scope storage
-    }
-
-    if( ast_.kind( init ) == Node_kind::Error )
-    {
-        return;
     }
 
     if( !constant_folder_.is_constant_expression( init ) )
@@ -1522,11 +1511,64 @@ TEST_CASE( "type_checker_stays_quiet_about_a_broken_expression", "[sema][recover
         }
     }
 
-    SECTION( "an expression whole before a missing `;` is still judged" )
+    // Whole, but the line may have been cut short: a lone `i32` reads the same.
+    SECTION( "a statement before a missing `;` is not judged either" )
     {
         const Typed p( "i32 main() { bool b = 1 + 2\nreturn 0; }" );
         INFO( p.rendered() );
-        CHECK( p.errors() > 0 );
+        CHECK( p.errors() == 0 );
+    }
+}
+
+// A statement's head that failed to parse was misread, so what sema says about it judges the
+// misreading. A body under it was read whole, and so was a declaration around a failed parameter.
+TEST_CASE( "type_checker_stays_quiet_in_the_head_of_a_statement_that_failed", "[sema][recovery]" )
+{
+    const auto reported = []( const std::string& rendered )
+    {
+        std::size_t count = 0;
+        for( std::size_t at = rendered.find( "error:" ); at != std::string::npos; at = rendered.find( "error:", at + 1 ) )
+        {
+            ++count;
+        }
+        return count;
+    };
+
+    static const char* sources[] = {
+        "i32 main() { i32 v = 4; if( v auto 4 ) { return 1; } return 0; }",
+        "i32 add( i32 a, i32 b ) { return a + b; }\ni32 main() { auto x = add\"s\" ( 1, 2 ); return x; }",
+        "i32 main() { i32 i = 0; i i = + 1; return i; }",
+        "i32 f( Box ) { return 0; }\ni32 main() { return 0; }",
+        "struct P { Box x\n    i32 y;\n};\ni32 main() { return 0; }",
+        "enum Shape { Dot, Line };\ni32 main() { Shape s = Shape::Dot; switch( s ) { case Shape::Dor, : return 1; default: "
+        "return 0; } }",
+    };
+
+    SECTION( "only the parse error is reported" )
+    {
+        for( const char* source : sources )
+        {
+            const Typed       p( source );
+            const std::string rendered = p.rendered();
+            INFO( "source: " << source << "\n" << rendered );
+            CHECK( reported( rendered ) == 1 );
+        }
+    }
+
+    SECTION( "a body under a failed head is still judged" )
+    {
+        const Typed p( "i32 main() { i32 v = 4; if( v auto 4 ) { i32 y = true; } return 0; }" );
+        INFO( p.rendered() );
+        CHECK( reported( p.rendered() ) == 2 );
+        CHECK( p.rendered().find( "expected `i32`, but got `bool`" ) != std::string::npos );
+    }
+
+    SECTION( "a function whose parameter failed is still judged by its name" )
+    {
+        const Typed p( "i32 t( i32 a ) { return a; }\ni32 t( i32 ) { return 0; }\ni32 main() { return 0; }" );
+        INFO( p.rendered() );
+        CHECK( reported( p.rendered() ) == 2 );
+        CHECK( p.rendered().find( "already declared with these parameters" ) != std::string::npos );
     }
 }
 

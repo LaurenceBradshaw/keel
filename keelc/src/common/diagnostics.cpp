@@ -111,6 +111,11 @@ void Diagnostics::tokens( File_id file, std::vector<Span> bounds )
     tokens_[file.v] = std::move( bounds );
 }
 
+void Diagnostics::silence( Span span )
+{
+    silenced_.push_back( span );
+}
+
 bool Diagnostics::has_errors() const
 {
     for( const Diagnostic& d : items_ )
@@ -204,6 +209,17 @@ std::vector<bool> Diagnostics::kept() const
         if( d.severity != Severity::Error || !d.span.is_valid() )
         {
             keep[i] = true;
+            continue;
+        }
+
+        // A judgment starting in a silenced head is about the misreading.
+        if( !d.syntax &&
+            std::any_of(
+                silenced_.begin(),
+                silenced_.end(),
+                [&]( const Span& s ) { return s.file == d.span.file && s.start <= d.span.start && d.span.start < s.end; }
+            ) )
+        {
             continue;
         }
 
@@ -841,6 +857,66 @@ TEST_CASE( "diagnostics_drop_an_error_on_a_token_a_syntax_error_claimed", "[comm
         REQUIRE( out.find( "kept" ) != std::string::npos );
         REQUIRE( out.find( "dropped" ) == std::string::npos );
         REQUIRE( out.find( "a warning always stands" ) != std::string::npos );
+    }
+}
+
+// A silenced span is a statement's head that failed to parse: what sema says there judges the
+// misreading. The syntax error itself stands, and so does anything that starts outside it.
+TEST_CASE( "diagnostics_drop_a_semantic_error_in_a_silenced_span", "[common][diagnostics]" )
+{
+    Source_manager sm;
+    const File_id  f = sm.add_file( "a.kl", "i32 x = a + b;" );
+
+    Diagnostics diags;
+
+    SECTION( "a semantic error starting inside is dropped" )
+    {
+        diags.silence( Span { f, 0, 14 } );
+        diags.error( Span { f, 8, 13 }, "a judgment of the misreading" );
+
+        REQUIRE( diags.error_count() == 0 );
+        REQUIRE( render_to_string( diags, sm ).find( "misreading" ) == std::string::npos );
+    }
+
+    SECTION( "a syntax error inside stands" )
+    {
+        diags.silence( Span { f, 0, 14 } );
+        diags.syntax_error( Span { f, 12, 13 }, "the cause" );
+
+        REQUIRE( diags.error_count() == 1 );
+    }
+
+    SECTION( "an error starting before it stands" )
+    {
+        diags.silence( Span { f, 8, 14 } );
+        diags.error( Span { f, 4, 9 }, "starts at `x`" );
+
+        REQUIRE( diags.error_count() == 1 );
+    }
+
+    SECTION( "its end is outside it" )
+    {
+        diags.silence( Span { f, 0, 8 } );
+        diags.error( Span { f, 8, 9 }, "about `a`" );
+
+        REQUIRE( diags.error_count() == 1 );
+    }
+
+    SECTION( "another file is outside it" )
+    {
+        const File_id g = sm.add_file( "b.kl", "i32 x = a + b;" );
+        diags.silence( Span { f, 0, 14 } );
+        diags.error( Span { g, 8, 9 }, "in b.kl" );
+
+        REQUIRE( diags.error_count() == 1 );
+    }
+
+    SECTION( "a warning stands" )
+    {
+        diags.silence( Span { f, 0, 14 } );
+        diags.warning( Span { f, 8, 9 }, "a warning always stands" );
+
+        REQUIRE( render_to_string( diags, sm ).find( "a warning always stands" ) != std::string::npos );
     }
 }
 

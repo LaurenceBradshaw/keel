@@ -35,6 +35,7 @@ public:
     void warning( Span span, std::string message, std::string help = {} );
 
     void tokens( File_id file, std::vector<Span> bounds );
+    void silence( Span span );
 
     bool   has_errors() const;
     size_t error_count() const;
@@ -53,6 +54,7 @@ private:
 
     std::vector<Diagnostic>          items_;
     std::map<u32, std::vector<Span>> tokens_; // keyed by File_id::v
+    std::vector<Span>                silenced_;
 };
 
 // True when stderr is a terminal and NO_COLOR is unset (https://no-color.org). The golden runner
