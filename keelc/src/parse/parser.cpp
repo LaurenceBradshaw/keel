@@ -544,7 +544,13 @@ void Parser::error_expected( Token_kind kind, std::string help )
 
 Symbol_id Parser::expect_name()
 {
-    if( check( Token_kind::Keyword ) || check( Token_kind::Digit_name ) || check( Token_kind::Int_literal ) )
+    // A token on a later line starts the next statement, unless a separator came before it.
+    const bool name_missing = pos_ > 0 && line_of( peek() ) != line_of( previous() ) &&
+                              previous().kind != Token_kind::Semicolon && previous().kind != Token_kind::L_brace &&
+                              previous().kind != Token_kind::R_brace && previous().kind != Token_kind::Comma;
+
+    if( !name_missing &&
+        ( check( Token_kind::Keyword ) || check( Token_kind::Digit_name ) || check( Token_kind::Int_literal ) ) )
     {
         std::string help = "a name cannot start with a digit";
         if( check( Token_kind::Keyword ) )
@@ -5405,6 +5411,51 @@ TEST_CASE( "parser_does_not_cascade_from_a_keyword_member", "[parse][members]" )
         }
 
         REQUIRE( functions == 2 );
+    }
+}
+
+// A keyword on the next line starts the next statement; the name is missing at the gap before it.
+TEST_CASE( "parser_points_a_missing_name_at_the_gap", "[parse][members]" )
+{
+    SECTION( "a declaration cut short before the next statement" )
+    {
+        const Parsed p( "i32 main()\n{\n    i32\n    return 0;\n}\n" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "t.kl:3:8" ) != std::string::npos );
+        REQUIRE( find_first( p.ast(), p.root(), Node_kind::Return_stmt ).is_valid() );
+    }
+
+    SECTION( "a member access cut short before the next statement" )
+    {
+        const Parsed p( "struct P { i32 x; };\n"
+                        "i32 main()\n{\n    P a = P { 1 };\n    i32 v = a.\n    return v;\n}\n" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "t.kl:5:15" ) != std::string::npos );
+        REQUIRE( find_first( p.ast(), p.root(), Node_kind::Return_stmt ).is_valid() );
+    }
+
+    SECTION( "a keyword on the same line is still read as the name" )
+    {
+        const Parsed p( "i32 main() { i32 return = 0; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "t.kl:1:18" ) != std::string::npos );
+        REQUIRE( p.errors().find( "is a keyword, so it cannot be used as a name" ) != std::string::npos );
+    }
+
+    SECTION( "a name that starts its own line is still read as the name" )
+    {
+        const Parsed p( "enum E\n{\n    3,\n    B\n};\ni32 main()\n{\n    1st = 2;\n    return 0;\n}\n" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 2 );
+        REQUIRE( p.errors().find( "t.kl:3:5" ) != std::string::npos );
+        REQUIRE( p.errors().find( "t.kl:8:5" ) != std::string::npos );
     }
 }
 

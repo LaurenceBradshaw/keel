@@ -6109,9 +6109,21 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      4d missed by luck (a nameless struct; a destructor named for the next class). Goldens
      unchanged. Tests: `parser_ends_a_body_that_was_never_closed` (five sections),
      `scanner_reads_a_constructor_by_the_class_name_only`.
-  4f. **Spans as small as they need to be.** *Expected an identifier* in `expect_name` points at
-     the gap as `error_expected` does, not at the next line (the redeclaration and constructor
-     spans moved to 4b).
+  4f. ~~**A missing name points at the gap.**~~ **Done (2026-10-04).** `expect_name` reads a keyword, digit name or number
+     as the misspelt name and consumes it, which is right on its own line (`i32 return = 0;`) but
+     not when a cut leaves it to find the next statement's keyword: `i32` then `return 0;` on
+     the next line ate the `return`, two errors on the wrong line. When the token is on a later
+     line than the one before it, the name is missing: `error_expected` reports at the gap and
+     nothing is consumed. Not after `;`, `{`, `}` or `,`, where the token starts its own element
+     (an enum's `3,`, a statement's `1st = v;`): there it is still the misspelt name, and two
+     goldens hold that (`errors_enum_recovery`, `errors_digit_names`; without the exception both
+     gain an error, and 25 mutants are worse rather than 5). The redeclaration and constructor
+     spans moved to 4b. Measured against 4e: 91,206 to 90,911, one-error 5,179 to 5,191,
+     three-or-more 14,076 to 14,024; 228 better, 5 worse, every one multi-edit, two of them a true
+     second edit the eaten keyword had hidden (a `while(` cut short, a swapped `}`). Goldens
+     unchanged. **Measured, left out:** the same gap rule for `report_dropped`'s stop token
+     (`i32` then `{` on the next line) changes no count, only carets. Test:
+     `parser_points_a_missing_name_at_the_gap`.
   4g. **Sema skips a broken declaration** (rustc's `tainted_by_errors`): estimated 91,207 to
      67,276. Not designed.
   4h. **A broken declaration still declares its name**, as an error symbol whose uses are silent
