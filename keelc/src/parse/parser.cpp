@@ -169,6 +169,9 @@ private:
     bool match_generic_close();
     // On a miss, reports once and skips to this list's `>`; false means the list was broken.
     bool expect_generic_close();
+    // After a list element: at `,` or `close` true; otherwise reports once per list and skips to
+    // one, false when it stops short. `list_errors` is the error count before the list.
+    bool end_list_element( Token_kind close, std::size_t list_errors, bool in_declaration = false );
     // Past this list's `>`, or up to a token the list cannot reach past (`;`, `{`, an unmatched `)`).
     void    skip_to_generic_close();
     Node_id parse_return_stmt();
@@ -223,6 +226,8 @@ private:
     // Half of a `>>` that has already been consumed while closing a generic argument list.
     u32                pending_greater_ = 0;
     std::optional<u32> unclosed_at_;
+    std::optional<u32> statement_start_;
+    std::optional<u32> skipped_from_; // where the last list skip began
 
     // Grouping parentheses leave no trace in the tree, so `a & b == c` and `(a & b) == c` produce
     // the same nodes. D16 needs to tell them apart, and parenthesisation is a parsing fact that
@@ -534,6 +539,13 @@ void Parser::error_expected( Token_kind kind, std::string help )
     // at the end of the previous line, which is where the reader looks - pointing at the `}` on the
     // next line describes the symptom rather than the mistake.
     const Span at = pos_ > 0 ? Span::point( previous().span.file, previous().span.end ) : peek().span;
+
+    // After a list skipped tokens, where the statement ends is a guess.
+    if( kind == Token_kind::Semicolon && statement_start_ && skipped_from_ && *skipped_from_ >= *statement_start_ )
+    {
+        ast_.fail( at );
+        return;
+    }
 
     // A keyword where a name was wanted is worth saying out loud. `out`, `ref` and `move` are
     // ordinary identifiers in C++, so a program can arrive here without its author suspecting that
@@ -1124,9 +1136,14 @@ Node_id Parser::parse_param_list( Node_id leading )
 
     if( !check( Token_kind::R_paren ) )
     {
+        const std::size_t list_errors = diags_.error_count();
         do
         {
             params.push_back( parse_param() );
+            if( !end_list_element( Token_kind::R_paren, list_errors ) )
+            {
+                return ast_.add( Node_kind::Param_list, Span::merge( start, previous().span ), 0, params );
+            }
         } while( match( Token_kind::Comma ) );
     }
 
@@ -1536,17 +1553,43 @@ Node_id Parser::parse_enum_decl()
     // `enum E : Colour` is a *sema* error about the type rather than a parse error about a token.
     const Node_id underlying = match( Token_kind::Colon ) ? parse_type() : Node_id {};
 
-    expect( Token_kind::L_brace );
+    // A `{` before the declaration ends is still the body's.
+    if( !expect( Token_kind::L_brace ) )
+    {
+        u32 at = pos_;
+        while(
+            !( tokens_[at].kind == Token_kind::L_brace || tokens_[at].kind == Token_kind::Semicolon ||
+               tokens_[at].kind == Token_kind::R_brace || tokens_[at].kind == Token_kind::End_of_file ||
+               ( at > pos_ && scanner_.declaration_head( at ).head ) )
+        )
+        {
+            ++at;
+        }
+        while( tokens_[at].kind == Token_kind::L_brace && pos_ <= at )
+        {
+            advance();
+        }
+    }
 
     // Child 0 is the type parameter list and child 1 the underlying type, both invalid when
     // unwritten - the convention Var_decl uses for a missing annotation. Fixed slots rather than
     // optional ones so the variants always start at 2, which Ast::variants is the only reader of.
     // Child 0 matches an aggregate's, so Ast::type_param_list needs no separate rule for an enum.
     bool                 dropped_variant = false;
+    bool                 gave_up         = false;
+    const std::size_t    list_errors     = diags_.error_count();
     std::vector<Node_id> members { type_params, underlying };
     while( !check( Token_kind::R_brace ) && !at_end() )
     {
         const u32 before = pos_;
+
+        // The `}` is missing and the next declaration starts here.
+        if( scanner_.declaration_head( pos_ ).head )
+        {
+            error_expected( Token_kind::R_brace );
+            gave_up = true;
+            break;
+        }
 
         const Node_id variant = parse_variant_decl();
 
@@ -1559,14 +1602,12 @@ Node_id Parser::parse_enum_decl()
             dropped_variant = true;
         }
 
-        if( !check( Token_kind::R_brace ) )
+        if( !end_list_element( Token_kind::R_brace, list_errors, true ) )
         {
-            expect( Token_kind::Comma );
+            gave_up = true;
+            break;
         }
-        else if( check( Token_kind::Comma ) )
-        {
-            advance();
-        }
+        match( Token_kind::Comma );
 
         if( pos_ == before )
         {
@@ -1574,8 +1615,11 @@ Node_id Parser::parse_enum_decl()
         }
     }
 
-    expect( Token_kind::R_brace );
-    expect( Token_kind::Semicolon );
+    if( !gave_up )
+    {
+        expect( Token_kind::R_brace );
+        expect( Token_kind::Semicolon );
+    }
 
     // Same rule as every other declaration: sema reads a name to report about it, so a nameless one
     // crashes a pass that had no reason to expect it.
@@ -1613,6 +1657,7 @@ Node_id Parser::parse_variant_decl()
 
     if( match( Token_kind::L_paren ) )
     {
+        const std::size_t list_errors = diags_.error_count();
         while( !check( Token_kind::R_paren ) && !at_end() )
         {
             const u32       before          = pos_;
@@ -1626,10 +1671,11 @@ Node_id Parser::parse_variant_decl()
             );
             ast_.set_name_span( payload.back(), field_name_span );
 
-            if( !check( Token_kind::R_paren ) )
+            if( !end_list_element( Token_kind::R_paren, list_errors ) )
             {
-                expect( Token_kind::Comma );
+                break;
             }
+            match( Token_kind::Comma );
 
             if( pos_ == before )
             {
@@ -1637,7 +1683,7 @@ Node_id Parser::parse_variant_decl()
             }
         }
 
-        expect( Token_kind::R_paren );
+        match( Token_kind::R_paren );
     }
 
     const Node_id node = ast_.add( Node_kind::Variant_decl, Span::merge( start, previous().span ), name.v, payload );
@@ -1807,11 +1853,19 @@ Node_id Parser::parse_struct_literal( Span start, Symbol_id type_name, Node_id p
         initialisers.push_back( package );
     }
 
+    const std::size_t list_errors = diags_.error_count();
+    bool              closed      = true;
     while( !check( Token_kind::R_brace ) && !at_end() )
     {
         const u32 before = pos_;
 
         initialisers.push_back( parse_field_init() );
+
+        if( !end_list_element( Token_kind::R_brace, list_errors ) )
+        {
+            closed = false;
+            break;
+        }
 
         // Same guard as parse_block: a rule that reports without advancing would spin here.
         if( pos_ == before )
@@ -1823,13 +1877,13 @@ Node_id Parser::parse_struct_literal( Span start, Symbol_id type_name, Node_id p
         // A trailing comma is allowed, unlike in an argument list - C++ permits one in a braced
         // initialiser and rejects one in a call, and §5.1 says to follow it rather than to be
         // internally tidy.
-        if( !match( Token_kind::Comma ) )
-        {
-            break;
-        }
+        match( Token_kind::Comma );
     }
 
-    expect( Token_kind::R_brace );
+    if( closed )
+    {
+        expect( Token_kind::R_brace );
+    }
 
     const Node_id node =
         ast_.add( Node_kind::Struct_literal, Span::merge( start, previous().span ), type_name.v, initialisers );
@@ -1879,6 +1933,7 @@ Node_id Parser::parse_type()
 
         if( !check( Token_kind::R_paren ) )
         {
+            const std::size_t list_errors = diags_.error_count();
             do
             {
                 const Span    at   = peek().span;
@@ -1887,6 +1942,11 @@ Node_id Parser::parse_type()
                 params.push_back(
                     ast_.add( Node_kind::Param_decl, Span::merge( at, previous().span ), k_invalid_symbol, { type } )
                 );
+
+                if( !end_list_element( Token_kind::R_paren, list_errors ) )
+                {
+                    break;
+                }
             } while( match( Token_kind::Comma ) );
         }
 
@@ -2231,7 +2291,11 @@ Node_id Parser::parse_statement()
 {
     const u32 start = pos_;
 
+    const std::optional<u32> prev_statement_start = statement_start_;
+
+    statement_start_   = start;
     const Node_id node = dispatch_statement();
+    statement_start_   = prev_statement_start;
 
     const bool ended = pos_ > start && ( previous().kind == Token_kind::Semicolon || previous().kind == Token_kind::R_brace );
     i32        open  = 0;
@@ -2295,6 +2359,84 @@ bool Parser::expect_generic_close()
     }
 
     skip_to_generic_close();
+    return false;
+}
+
+bool Parser::end_list_element( Token_kind close, std::size_t list_errors, bool in_declaration )
+{
+    if( check( Token_kind::Comma ) || check( close ) )
+    {
+        return true;
+    }
+
+    if( diags_.error_count() == list_errors )
+    {
+        const Span at = pos_ > 0 ? Span::point( previous().span.file, previous().span.end ) : peek().span;
+        fail_at( at, fmt::format( "expected `,` or {}, found {}", expectation( close ), found_text() ) );
+    }
+
+    const u32 skip_from = pos_;
+    u32       depth     = 0;
+    while( !at_end() )
+    {
+        const bool opens = check( Token_kind::L_paren ) || check( Token_kind::L_bracket ) ||
+                           ( in_declaration && check( Token_kind::L_brace ) );
+        const bool closes = check( Token_kind::R_paren ) || check( Token_kind::R_bracket ) ||
+                            ( in_declaration && check( Token_kind::R_brace ) );
+
+        if( depth == 0 )
+        {
+            if( check( Token_kind::Comma ) || check( close ) )
+            {
+                break;
+            }
+
+            if( in_declaration )
+            {
+                if( scanner_.declaration_head( pos_ ).head.has_value() )
+                {
+                    break;
+                }
+
+                // A name starting a line is the next variant, its `,` missing.
+                if( check( Token_kind::Identifier ) && line_of( peek() ) != line_of( previous() ) )
+                {
+                    return true;
+                }
+            }
+            else if( closes || check( Token_kind::Semicolon ) || check( Token_kind::L_brace ) || check( Token_kind::R_brace ) ||
+                     at_statement_keyword() )
+            {
+                break;
+            }
+        }
+
+        if( opens )
+        {
+            depth += 1;
+        }
+        else if( closes && depth > 0 )
+        {
+            depth -= 1;
+        }
+
+        advance();
+    }
+
+    if( check( Token_kind::Comma ) || check( close ) )
+    {
+        if( pos_ > skip_from )
+        {
+            skipped_from_ = skip_from;
+        }
+        return true;
+    }
+
+    // Short of both: the statement's own skip knows more.
+    if( !in_declaration )
+    {
+        pos_ = skip_from;
+    }
     return false;
 }
 
@@ -3542,9 +3684,14 @@ Node_id Parser::parse_arg_list()
 
     if( !check( Token_kind::R_paren ) )
     {
+        const std::size_t list_errors = diags_.error_count();
         do
         {
             args.push_back( parse_expression( 0 ) );
+            if( !end_list_element( Token_kind::R_paren, list_errors ) )
+            {
+                return ast_.add( Node_kind::Arg_list, Span::merge( start, previous().span ), 0, args );
+            }
         } while( match( Token_kind::Comma ) );
     }
 
@@ -4290,6 +4437,110 @@ TEST_CASE( "parser_keeps_the_name_of_a_declaration_it_gave_up_on", "[parse][reco
         INFO( p.dump() );
         REQUIRE( error.is_valid() );
         CHECK( p.aux( error ) == k_invalid_symbol );
+    }
+}
+
+TEST_CASE( "parser_skips_a_broken_list_element_to_its_separator", "[parse][recovery]" )
+{
+    SECTION( "a parameter keeps the parameters after it" )
+    {
+        const Parsed p( "i32 add( i32 a a, i32 b ) { return a + b; }" );
+        INFO( p.errors() );
+        CHECK( p.error_count() == 1 );
+        CHECK( p.errors().find( "expected `,` or `)`, found `a`" ) != std::string::npos );
+        CHECK( p.children( find_first( p.ast(), p.root(), Node_kind::Param_list ) ).size() == 2 );
+    }
+
+    SECTION( "so does a function type's" )
+    {
+        const Parsed p( "i32 main() { fn( i32 i32, i32 )->i32 g = nullptr; return 0; }" );
+        INFO( p.errors() );
+        CHECK( p.error_count() == 1 );
+        const Node_id type = find_first( p.ast(), p.root(), Node_kind::Function_type );
+        REQUIRE( type.is_valid() );
+        CHECK( p.children( p.child( type, 1 ) ).size() == 2 );
+    }
+
+    SECTION( "an argument skips to the next one" )
+    {
+        const Parsed p( "i32 main() { f( 1 2, 3 );\n    return 0;\n}" );
+        INFO( p.errors() );
+        CHECK( p.error_count() == 1 );
+        CHECK( p.errors().find( "expected `,` or `)`, found `2`" ) != std::string::npos );
+        CHECK( find_first( p.ast(), p.root(), Node_kind::Return_stmt ).is_valid() );
+    }
+
+    SECTION( "a field initialiser skips to the next one" )
+    {
+        const Parsed p( "i32 main() { P p = P { 1 2, 3 };\n    return 0;\n}" );
+        INFO( p.errors() );
+        CHECK( p.error_count() == 1 );
+        CHECK( p.errors().find( "expected `,` or `}`, found `2`" ) != std::string::npos );
+        CHECK( find_first( p.ast(), p.root(), Node_kind::Return_stmt ).is_valid() );
+    }
+
+    SECTION( "a payload field keeps the ones after it" )
+    {
+        const Parsed p( "enum E { A( i32 x x, i32 y ), B };" );
+        INFO( p.errors() );
+        CHECK( p.error_count() == 1 );
+        CHECK( p.children( find_first( p.ast(), p.root(), Node_kind::Variant_decl ) ).size() == 2 );
+        CHECK( p.children( find_first( p.ast(), p.root(), Node_kind::Enum_decl ) ).size() == 4 );
+    }
+
+    SECTION( "a variant keeps the variants after it" )
+    {
+        const Parsed p( "enum E { A, B C, D };" );
+        INFO( p.errors() );
+        CHECK( p.error_count() == 1 );
+        CHECK( p.children( find_first( p.ast(), p.root(), Node_kind::Enum_decl ) ).size() == 5 );
+    }
+
+    SECTION( "a name on a new line starts the next variant" )
+    {
+        const Parsed p( "enum E\n{\n    A<\n    B,\n    C\n};" );
+        INFO( p.errors() );
+        CHECK( p.error_count() == 1 );
+        CHECK( p.children( find_first( p.ast(), p.root(), Node_kind::Enum_decl ) ).size() == 5 );
+    }
+
+    SECTION( "an enum missing its `}` ends at the next declaration" )
+    {
+        const Parsed p( "enum E { A, B\ni32 main() { return 0; }" );
+        INFO( p.errors() );
+        CHECK( p.error_count() == 1 );
+        REQUIRE( p.children( p.root() ).size() == 2 );
+        CHECK( p.kind( p.children( p.root() )[1] ) == Node_kind::Function_decl );
+    }
+
+    SECTION( "an enum missing its `{` reads the body after it" )
+    {
+        const Parsed p( "enum Colour Colour\n{\n    Red,\n    Green\n};" );
+        INFO( p.errors() );
+        CHECK( p.error_count() == 1 );
+        CHECK( p.children( find_first( p.ast(), p.root(), Node_kind::Enum_decl ) ).size() == 4 );
+    }
+
+    SECTION( "a list reports once" )
+    {
+        const Parsed p( "i32 main() { return f( i32 a, i32 b ); }" );
+        INFO( p.errors() );
+        CHECK( p.error_count() == 1 );
+    }
+
+    SECTION( "a statement whose list skipped tokens does not report its `;`" )
+    {
+        const Parsed p( "i32 main() { return f( 1, 2 v )\n{\n    return 0;\n}\n}" );
+        INFO( p.errors() );
+        CHECK( p.error_count() == 1 );
+    }
+
+    SECTION( "one whose list closed cleanly still does" )
+    {
+        const Parsed p( "i32 main() { return f( 1, 2 )\n    return 0;\n}" );
+        INFO( p.errors() );
+        CHECK( p.error_count() == 1 );
+        CHECK( p.errors().find( "expected `;`" ) != std::string::npos );
     }
 }
 
@@ -6174,7 +6425,7 @@ TEST_CASE( "parser_call_errors", "[parse]" )
         const Parsed p( "i32 main() { return f( 1; }" );
         REQUIRE( p.has_errors() );
         INFO( p.errors() );
-        REQUIRE( p.errors().find( "expected `)`" ) != std::string::npos );
+        REQUIRE( p.errors().find( "expected `,` or `)`, found `;`" ) != std::string::npos );
     }
 
     SECTION( "a missing argument reports once" )
@@ -7772,7 +8023,7 @@ TEST_CASE( "parser_skips_the_rest_of_a_statement_that_reported", "[parse][recove
         const Parsed p( "i32 main() { i32 x = 0; x = f( 1\n2 ); return x; }" );
         INFO( p.errors() );
         CHECK( p.error_count() == 1 );
-        CHECK( p.errors().find( "expected `)`, found `2`" ) != std::string::npos );
+        CHECK( p.errors().find( "expected `,` or `)`, found `2`" ) != std::string::npos );
     }
 
     SECTION( "the closing brace of the block ends the skip" )
@@ -7848,7 +8099,7 @@ TEST_CASE( "parser_skips_the_rest_of_a_statement_that_reported", "[parse][recove
         INFO( p.errors() );
         INFO( p.dump() );
         CHECK( p.error_count() == 1 );
-        CHECK( p.errors().find( "expected `)`, found `1`" ) != std::string::npos );
+        CHECK( p.errors().find( "expected `,` or `)`, found `1`" ) != std::string::npos );
         CHECK( statements( p ) == std::vector { Node_kind::Var_decl, Node_kind::If_stmt, Node_kind::Return_stmt } );
     }
 

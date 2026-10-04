@@ -1625,6 +1625,33 @@ TEST_CASE( "type_checker_stays_quiet_about_uses_of_a_declaration_that_failed", "
     }
 }
 
+TEST_CASE( "type_checker_stays_quiet_about_elements_after_a_broken_one", "[sema][recovery]" )
+{
+    const auto reported = []( const std::string& rendered )
+    {
+        std::size_t count = 0;
+        for( std::size_t at = rendered.find( "error:" ); at != std::string::npos; at = rendered.find( "error:", at + 1 ) )
+        {
+            ++count;
+        }
+        return count;
+    };
+
+    SECTION( "a call counts the parameters after a broken one" )
+    {
+        const Typed p( "i32 add( i32 a a, i32 b ) { return a + b; }\ni32 main() { return add( 1, 2 ); }" );
+        INFO( p.rendered() );
+        CHECK( reported( p.rendered() ) == 1 );
+    }
+
+    SECTION( "a variant after a broken one is declared" )
+    {
+        const Typed p( "enum E { A, B C, D };\ni32 main() { E e = E::D; return 0; }" );
+        INFO( p.rendered() );
+        CHECK( reported( p.rendered() ) == 1 );
+    }
+}
+
 // A local is not a parameter, so neither parameter mode means anything on one - and the two want
 // different helps, because `move` is about who owns the value and `out` about who writes it.
 TEST_CASE( "type_checker_refuses_out_on_a_local", "[sema][out]" )

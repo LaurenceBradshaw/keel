@@ -6190,7 +6190,7 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      the class scan dropped (`obj.m()` then reports *has no method*). Tests:
      `parser_keeps_the_name_of_a_declaration_it_gave_up_on`,
      `type_checker_stays_quiet_about_uses_of_a_declaration_that_failed`.
-  5. **M3: every comma list skips to its separator or closer.** Each list loop stops at its first
+  5. ~~**M3: every comma list skips to its separator or closer.**~~ **Done (2026-10-04).** Each list loop stops at its first
      bad element: `i32 add( i32 a a, i32 b )` loses `b` and says *takes 1 argument* at the call;
      the enum variant, payload and struct-literal loops keep item 5's old one-token skip, so an
      enum body reports per token (`enum E { A( i32 x, B, C };` 25 errors, the worst mutants
@@ -6199,6 +6199,42 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      struct-literal lists. The enum alone also ends its variant loop where the scanner sees a
      declaration head, so a missing `}` is one error: safe there, unlike a class (item 7), since a
      variant can never look like `type name (`.
+     **Shape (decided 2026-10-04), after a prototype.** rustc's `parse_fn_params`: an element that
+     fails is kept, for the count, and the parser eats to the next `,` or the closer. Not a third
+     scanner shape: a declaration's end needs a shape lookahead, a list element's is lexical (the
+     next `,` or closer outside brackets), so it is found where the element fails. One helper ends
+     every element of the parameter, function-type parameter, argument, struct-literal, payload and
+     variant lists: at `,` or the closer nothing; otherwise one report, *expected `,` or `)`* (Go's
+     *possibly missing comma or )*, rustc's *expected one of*), unless the list has reported
+     already, and a bracket-balanced skip. Two skips, by where the list lives. **Inside an
+     expression or a signature** it stops at `,`, the closer, `;`, `{`, `}`, an unmatched closer or
+     a statement keyword (Go's stop set, `at_statement_keyword`); stopping short of `,` and closer,
+     it puts the cursor back and gives up the list unreported, so the statement's own skip, which
+     knows more, takes over - consuming there turned a missing `)` into a second error at the next
+     line's `{`. **In an enum**, a declaration-level list, it balances `{}` as well, passes `;` and
+     stray closers, and stops at `,`, `}` or a declaration head; a name at the start of a new line
+     begins the next variant (rustc's sequence parser retries a missing separator by parsing the
+     next element; Keel has no speculative parse, and variants sit one to a line). An enum missing
+     its `{` skips to one if it comes before the declaration ends, as Go's `want` then `advance`
+     does; without it the balanced skip swallowed the body (`enum Colour Colour {`). **A missing
+     `;` after a skip is not reported**: once tokens were discarded the statement's end is a guess
+     (`two( x + 1, x + 2  v )` then a `{` line). Only after a skip: a statement that failed with
+     nothing skipped still reports it, since `i32 x = ( 1 + )` without `;` is two mistakes at two
+     places; quieting every failed statement's `;` measured 74,660 but hid those. Type-parameter
+     and type-argument lists keep `skip_to_generic_close`, which also splits `>>`. A function
+     type's list is reached only inside a body: at file scope the scanner refuses the head first.
+     A failed full expression is still an `Error` (4d), so argument and initialiser recovery shows
+     as the statement around it surviving, not as a kept `Arg_list`. Measured against 4h's 80,469,
+     step by step: the skip alone 76,411 (1,310 better, 335 worse); the enum's declaration-level
+     skip 76,295; its `{` and new-line rules 76,096; the cursor put back 76,008; one report per list
+     75,903; the `;` rule 75,807, one-error 7,422 to 7,718, three-or-more 12,150 to 11,704, 1,456
+     better, 95 worse; the real build identical to the prototype on every mutant. The plan's examples: `add` 3 errors to 1, `enum E { A( i32 x, B, C };` 20 to
+     4 (the payload's skip still takes `B` and `C`). Goldens: `errors_statement_recovery`'s wording.
+     **Left worse:** `{ Red,` opening an enum's variants, where the balanced skip takes the body
+     (18); a struct literal where a statement was expected (19). Tests:
+     `parser_skips_a_broken_list_element_to_its_separator`,
+     `type_checker_stays_quiet_about_elements_after_a_broken_one`; wording in `parser_call_errors`
+     and `parser_skips_the_rest_of_a_statement_that_reported`.
   6. ~~**Left alone: a header that broke after its name drops the declaration.**~~ Taken up by 4h. `extern auto abs( i32
      v );` makes `abs` undeclared and its `unsafe` block *does nothing unsafe*; `struct Point static
      {` loses `Point`. About 1,000 mutants. Fixing it means salvaging a name from a dropped chunk and

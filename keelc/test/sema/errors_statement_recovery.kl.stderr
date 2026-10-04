@@ -22,7 +22,7 @@ error: expected `;`, found `c`
 29 |     a + b c;
    |          ^
 
-error: expected `)`, found `2`
+error: expected `,` or `)`, found `2`
   --> sema/errors_statement_recovery.kl:41:18
    |
 41 |     x = negate( 1
