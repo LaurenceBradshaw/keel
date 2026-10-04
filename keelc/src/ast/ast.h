@@ -75,6 +75,10 @@ public:
     // indexes that slot by hand.
     Node_id type_param_list( Node_id id ) const;
 
+    void fail( Span at );
+    bool broken( Node_id id ) const;
+    bool failed_within( Span span ) const;
+
     Node_id     root() const;
     void        set_root( Node_id id );
     std::size_t node_count() const;
@@ -86,6 +90,8 @@ private:
     std::unordered_map<u32, Access> access_; // members only; absence means public
     std::unordered_map<u32, Span>   name_spans_;
     std::unordered_map<u32, Span>   type_name_spans_; // struct literals only
+    std::vector<bool>               broken_;
+    std::vector<Span>               failures_;
 };
 
 // The aggregate a member was declared in, or an invalid id for anything declared at the top level.

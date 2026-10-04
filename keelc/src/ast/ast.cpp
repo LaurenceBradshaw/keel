@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "ast/ast.h"
+#include <algorithm>
 #include <cassert>
 
 namespace keel
@@ -13,6 +14,11 @@ Node_id Ast::add( Node_kind kind, Span span, u32 aux, std::span<const Node_id> c
     children_.insert( children_.end(), children.begin(), children.end() );
     Node node { kind, span, aux, narrow_cast<u32>( offset ), narrow_cast<u32>( children.size() ) };
     nodes_.push_back( node );
+
+    const bool is_broken = kind == Node_kind::Error || failed_within( span ) ||
+                           std::any_of( children.begin(), children.end(), [this]( Node_id id ) { return broken( id ); } );
+
+    broken_.push_back( is_broken );
 
     return Node_id { narrow_cast<u32>( nodes_.size() - 1 ) };
 }
@@ -61,6 +67,29 @@ Node_id Ast::type_param_list( Node_id id ) const
     }
 
     return is_function_like( kind( id ) ) ? child( id, 3 ) : Node_id {};
+}
+
+void Ast::fail( Span at )
+{
+    failures_.push_back( at );
+}
+
+bool Ast::broken( Node_id id ) const
+{
+    return id.is_valid() && id.v < broken_.size() && broken_[id.v];
+}
+
+bool Ast::failed_within( Span span ) const
+{
+    for( auto it = failures_.rbegin(); it != failures_.rend(); ++it )
+    {
+        if( it->file == span.file && it->start >= span.start && it->start <= span.end )
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 std::span<const Node_id> Ast::members( Node_id id ) const
@@ -375,6 +404,57 @@ TEST_CASE( "ast_builds_a_small_function", "[ast]" )
     REQUIRE( ast.children( block ).size() == 1 );
     REQUIRE( ast.kind( ast.child( block, 0 ) ) == Node_kind::Return_stmt );
     REQUIRE( ast.span( func ) == at( 0, 24 ) );
+}
+
+TEST_CASE( "ast_marks_a_node_broken_when_a_failure_lies_in_it", "[ast]" )
+{
+    SECTION( "an Error node is broken, a node with no failure in it is not" )
+    {
+        Ast           ast;
+        const Node_id error = ast.add( Node_kind::Error, at( 0, 1 ), 0, {} );
+        const Node_id fine  = ast.add( Node_kind::Int_literal, at( 2, 3 ), 0, {} );
+        CHECK( ast.broken( error ) );
+        CHECK_FALSE( ast.broken( fine ) );
+        CHECK_FALSE( ast.broken( Node_id {} ) );
+    }
+
+    SECTION( "a failure inside the span, or at its end, breaks the node" )
+    {
+        Ast ast;
+        ast.fail( at( 4, 5 ) );
+        CHECK( ast.broken( ast.add( Node_kind::Block, at( 0, 10 ), 0, {} ) ) );
+
+        Ast at_end;
+        at_end.fail( at( 10, 10 ) ); // the gap after the node, where a missing `;` points
+        CHECK( at_end.broken( at_end.add( Node_kind::Block, at( 0, 10 ), 0, {} ) ) );
+    }
+
+    SECTION( "a failure past the end, or in another file, does not" )
+    {
+        Ast ast;
+        ast.fail( at( 11, 12 ) );
+        ast.fail( Span { File_id { 1 }, 4, 5 } );
+        CHECK_FALSE( ast.broken( ast.add( Node_kind::Block, at( 0, 10 ), 0, {} ) ) );
+        CHECK( ast.failed_within( at( 0, 11 ) ) );
+        CHECK_FALSE( ast.failed_within( at( 0, 10 ) ) );
+    }
+
+    SECTION( "a broken child breaks its parent" )
+    {
+        Ast           ast;
+        const Node_id error = ast.add( Node_kind::Error, at( 0, 1 ), 0, {} );
+        const Node_id fine  = ast.add( Node_kind::Int_literal, at( 2, 3 ), 0, {} );
+        CHECK( ast.broken( ast.add( Node_kind::Block, at( 0, 3 ), 0, { error, fine } ) ) );
+        CHECK_FALSE( ast.broken( ast.add( Node_kind::Block, at( 2, 3 ), 0, { fine } ) ) );
+    }
+
+    SECTION( "a failure recorded after a node is built leaves it whole" )
+    {
+        Ast           ast;
+        const Node_id node = ast.add( Node_kind::Block, at( 0, 10 ), 0, {} );
+        ast.fail( at( 4, 5 ) );
+        CHECK_FALSE( ast.broken( node ) );
+    }
 }
 
 TEST_CASE( "node_kind_name_covers_every_kind", "[ast]" )

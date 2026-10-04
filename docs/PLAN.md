@@ -6056,19 +6056,26 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      `parser_stays_quiet_about_what_the_lexer_reported`,
      `type_checker_stays_quiet_about_a_literal_the_lexer_reported`; M1's
      `parser_reports_one_error_per_token` passes unchanged through Diagnostics.
-  4c. **The tree records failure; the parser asks the tree.** `Ast::fail( span )`, and `Ast::add`
+  4c. ~~**The tree records failure; the parser asks the tree.**~~ **Done (2026-10-04).** `Ast::fail( span )`, and `Ast::add`
      marks a node broken when it is an `Error`, a failure lies in its span (end included, so an
      *expected `;`* at the gap counts) or a child is broken; propagated as it is built, so no
      later walk, and unlike typescript-go's next-node rule a judgment reported after its node
      cannot land on the next statement. Only failures call `fail`: `error_expected`, *expected a
-     statement*, *an identifier*, *an expression*, and dropped junk; a refusal of something read
-     (D16, `->`, `++` as a value) leaves its node whole. Judgments read `!ast_.broken( node )`:
-     *no effect*, prefix and postfix `++`, type arguments, D16, a pattern's bindings, a
-     destructor's parameters. Recovery reads `failed_since( token )`: the statement skip, a
-     header's `)`, junk after a broken declaration or member. A statement short of its `;` is
-     exempt from the skip only when its brackets balance, which replaces "exactly one report".
-     **Removed:** `reports_`, `head_errors_`, every `reports_before`, `close_header`'s parameter,
-     `reach_commit`'s branch (it always moves to the commit), the count in `parse_import`.
+     statement*, *an identifier*, *an expression*, dropped junk, and an `unsafe` with no block
+     (it gives up, so it is a failure; as a plain report the rest of its line went unskipped, 8
+     mutants); a refusal of something read (D16, `->`, `++` as a value, a struct, `extern` or
+     function inside a function) leaves its node whole. Judgments read `!ast_.broken( node )`:
+     prefix and postfix `++`, type arguments, D16, a pattern's bindings, a destructor's
+     parameters; *no effect* reads `failed_since`, which also covers its `;`. Recovery reads
+     `failed_since( token )`: the statement skip, a header's `)`, junk after a broken declaration
+     or member. A statement short of its `;` is exempt from the skip only when its brackets
+     balance, which replaces "exactly one report". Measured alone against 4b: 95,220 to 95,174,
+     35 better, 6 worse - four a refusal no longer silencing a header's missing `)` (`while( y
+     ++;`, true), two the next line now parsed after a balanced statement (true, or 4d's to
+     silence). **Removed:** `reports_`, `head_errors_`, every `reports_before`, `close_header`'s
+     parameter, `reach_commit`'s branch (it always moves to the commit), the count in
+     `parse_import`. Tests: `ast_marks_a_node_broken_when_a_failure_lies_in_it`,
+     `parser_marks_what_failed_broken`, `parser_recovers_from_failures_not_from_judgments`.
   4d. **A broken expression is an `Error` node.** `parse_expression` at power 0 returns `Error` for
      a broken result, rustc's `mk_expr_err`: sema's error type then silences arity, field-count,
      *not declared* and type follow-ons (*not declared* -1,564, mismatches -840). A `case` pattern
