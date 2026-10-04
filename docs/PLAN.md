@@ -5912,7 +5912,7 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      errors sharing a token fall from 66.3% to 24.0%, and the pairs from 57,795 to 10,355, with no
      parse-parse class left in the top 25; what remains is sema on a parse error, M2's target. The
      debug build, asserts on, exits 0 or 1 on every single-file mutant.
-  4. **M2: statements are a recovery boundary.** `parse_block`'s loop restarts at the token a
+  4. ~~**M2: statements are a recovery boundary.**~~ **Done (2026-10-04).** `parse_block`'s loop restarts at the token a
      statement stopped on, and `synchronise()` runs only when nothing can start a statement. `x = 1
      2;`, `total u8 total + 10;`, `return 1 this;`: the rest of the line parses as a new statement,
      and sema adds *this expression has no effect* (3,062 mutants) or *is not declared* on the
@@ -5920,6 +5920,83 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      brackets (a `for` header holds `;`), unless all that went wrong was a `;` missing at the end of
      a line, which is one error today and must stay so. *No effect* is decided only once the
      statement ended cleanly. Risk to probe: an error inside an expression spanning lines.
+     **Shape (2026-10-04).** At the end of `parse_statement`, so block and switch-arm loops share
+     it. A statement that reported and did not end on its own `;` or `}` is skipped by
+     `synchronise()`, which now balances `(` and `[`: a `;` ends it only outside them, while end of
+     file and a statement keyword stop it at any depth, since neither can sit inside a bracket.
+     **Braces are never crossed**: outside brackets a `{` stops it too, so a block after the error
+     (a broken `if` or function header, `i32 f() { ... }` left in a body) is parsed as a block
+     rather than entered, where the skip would end at its first `;` and its `}` close the function
+     - 164 of the 336 mutants the first cut made worse, all the rest of the body read at file scope.
+     Inside brackets a `{` is a literal's, counted separately so that its `}` does not stop the
+     skip; a `}` with no `{` counted stops it at any depth. That exposed headers: `if`, `while` and
+     `switch` went on to their block from wherever the condition broke, and `while ( total n < ) {
+     }` balanced only because the old skip stepped into the stray `{`. Each now skips past its `)`
+     as `for` already did (`skip_past_closing_paren`), so the condition's rest is one error, not
+     three. **A rule about a node already parsed judges it only if parsing it reported nothing**,
+     which is *no effect*'s gate made general. An audit pairing every two errors about one token,
+     each tagged with the pass that reported it (`--dump-tokens`, `--dump-ast`, `--check`), found
+     37 parse-parse pairs in 24,607 mutants, all sharing a token through a wide span rather than a
+     key, so M1's set could not see them: operators mixed over a missing operand (`b + >> 1`),
+     `++` before or after a broken operand, type arguments after one, a pattern with a broken
+     binding, a destructor's broken parameter list; an import whose own parse reported was still
+     handed to the loader (*there is no module `picks`*, 27 of the 37); *has no fields* and *has no
+     variants* spanned the whole body, and now point at the name (item 2a's rule). Instrumenting
+     the set found 12 A, B, A drops left, every one from a rule judging a parsed node; with those
+     gated a report about an earlier token cannot follow one about a later token, so the set is a
+     backstop and M1's A, B, A section went (rerun `aba_scan.py` after parser changes). Test:
+     `parser_judges_a_node_only_once_it_parsed_cleanly`. **A body never closed ends at the next
+     declaration head.** Not crossing braces made 1,183 mutants worse than M1: a `}` lost before
+     the next function leaves that function's header inside the body, and its block now nests
+     properly, so every later function nests too and the file ends in *expected `}`*. M1 and the
+     first cut had resynchronised by luck, a skip stepping into the block so that its `}` closed
+     the outer body. A declaration head that is not a variable, met at a statement's start while
+     the file has more `{` than `}`, ends every open body back to the declaration or member loop:
+     one *expected `}`*, the count spent, and the loop reads the head. The count is the test
+     because the braces open at a point, less the net `}` after it, is the file's `{` less its `}`:
+     when they balance the head is a function written inside a function, refused as one
+     (*a function cannot be declared inside a function*) and parsed whole, as `struct` and `extern`
+     already are. The count is signed and counts the parser's view, not the file's: a block
+     opened where its `{` is missing (`parse_block` reports and carries on) adds one, since it
+     will take a `}` the file had none to spare for - 503 of the first try's 1,354 regressions, a
+     duplicated `while ( n > 0 )` line making every later function *inside a function*; and a
+     deleted `{` whose `}` survives starts the file at -1, which that block brings back to 0.
+     Two more from the same replay: a `{` straight after a name or `>` is a struct literal's,
+     skipped whole like one inside brackets, not a block to stop at (`auto s = Point { 1, 2 };`
+     after a broken line lost `s`); and a condition's skip to its `)` stops at a statement keyword,
+     which no header holds, so `if( d ⏎ return 5; }` is one error. Not at a `;`: a broken `for`
+     update leaves one before the `)` (`for( ; ; i += ; )`). That skip also starts from the depth
+     the condition left, not 1: in `if( f( x 1 ) != 1 )` the call's `(` is still open, and a skip
+     from 1 took its `)` for the header's. And a block whose `{` is missing first looks ahead for
+     it past stray tokens, stopping where the synchronise skip would: `if( f( x ) ) != 5 ) {`
+     uses that `{` instead of opening a block without one, which then took the function's `}`.
+     Only when no `{` comes before a `;`, `}` or statement does the block open without one.
+     These two were 576 of the 1,172 mutants still worse than M1. Left: `bool if( ... ) {` reads
+     as a function head, the head scanner taking a keyword as a name for file-scope recovery (35).
+     **Result**, all 24,607 saved mutants against the M1 build: errors 119,956 to 98,341; mutants
+     with one error 2,276 to 4,025, with three or more 18,602 to 15,392; 8,870 better, 725 worse.
+     Of the 725, 200 gain only *expected `{`, found `}`* where one edit took a header's `)` and its
+     block's `{`: two missing tokens, each reported at its own, which M1 hid only because its two
+     reports fell on one token. Most of the 159 new *expected `}`* at the end of the file are a `}`
+     the mutant really deleted; 16 are the keyword-named head above; the rest are multi-edit
+     mutants a token either way. Errors sharing a token: 24.0% of mutants to 15.8%, pairs 10,355
+     to 6,898; parse-parse pairs 37 to 0; A, B, A drops 12 to 0. The debug build, asserts on,
+     exits 0 or 1 on every single-file mutant. Tools in `.claude/fuzz/`: `m2_diff.py` (two builds,
+     per mutant), `token_audit.py` (pairs by pass), `aba_scan.py` (needs an instrumented build). Left: a
+     method's `}` lost with the next member's head - in a class the next head can start with
+     `public` or `static`, which `declaration_head` does not read, and the parser keeps no
+     enclosing class to ask `member_head` with; some of those are a true *expected `}`* at the
+     end of the file that M1 was silent about by luck. Test: `parser_ends_a_body_that_was_never_closed`. The exemption is
+     exactly one report with the next token on a later line, which is the missing `;` and nothing
+     else, since a statement that stops short always also reports its `;`. Cost, accepted: two
+     statements on one line with the `;` between them missing lose the second. *No effect* waits
+     for the statement's terminator. After M1, 11 errors in golden `errors_statement_recovery`
+     become 6. Tests: `parser_skips_the_rest_of_a_statement_that_reported`, that golden.
+  4a. **A token the lexer reported is not reported again.** The same audit: 42 lex-parse pairs in 26
+     mutants (*unterminated character literal* then *expected `;`*; *digit separator must be between
+     digits* then *expected an identifier*), 10 lex-lex (*digit separator* and *leading zeros* on
+     one literal) and 7 lex-sema. The parser already stays quiet at an `Unknown` token; a literal
+     the lexer reported keeps its kind, so nothing stops the next rule. Not yet designed.
   5. **M3: every comma list skips to its separator or closer.** Each list loop stops at its first
      bad element: `i32 add( i32 a a, i32 b )` loses `b` and says *takes 1 argument* at the call;
      the enum variant, payload and struct-literal loops keep item 5's old one-token skip, so an

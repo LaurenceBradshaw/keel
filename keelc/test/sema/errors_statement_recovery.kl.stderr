@@ -1,0 +1,37 @@
+error: expected `;`, found `this`
+  --> sema/errors_statement_recovery.kl:11:13
+   |
+11 |     return 1 this;
+   |             ^
+
+error: expected `;`, found `Point`
+  --> sema/errors_statement_recovery.kl:16:22
+   |
+16 |     total = total + 1 Point;
+   |                      ^
+
+error: expected `)`, found `2`
+  --> sema/errors_statement_recovery.kl:22:12
+   |
+22 |     x = ( 1 2 );
+   |            ^
+
+error: expected `;`, found `c`
+  --> sema/errors_statement_recovery.kl:29:10
+   |
+29 |     a + b c;
+   |          ^
+
+error: expected `)`, found `2`
+  --> sema/errors_statement_recovery.kl:41:18
+   |
+41 |     x = negate( 1
+   |                  ^
+
+error: expected `;`, found `return`
+  --> sema/errors_statement_recovery.kl:49:10
+   |
+49 |     x = 1
+   |          ^
+
+6 errors generated

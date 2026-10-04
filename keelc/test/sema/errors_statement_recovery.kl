@@ -1,0 +1,56 @@
+// A statement that reported is skipped to its `;`: what is left of it is not parsed again as a
+// statement of its own, so nothing is reported about the fragment.
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+i32 trailing_this()
+{
+    return 1 this;
+}
+
+i32 trailing_type( i32 total )
+{
+    total = total + 1 Point;
+    return total;
+}
+
+i32 stray_parenthesis( i32 x )
+{
+    x = ( 1 2 );
+    return x;
+}
+
+// *No effect* is decided once the statement has ended, so a missing operator is one error.
+i32 missing_operator( i32 a, i32 b, i32 c )
+{
+    a + b c;
+    return a;
+}
+
+// An argument list broken across lines is one error.
+i32 negate( i32 n )
+{
+    return -n;
+}
+
+i32 broken_across_lines( i32 x )
+{
+    x = negate( 1
+                2 );
+    return x;
+}
+
+// A `;` missing at the end of a line is one error, and the next line is still a statement.
+i32 missing_semicolon( i32 x )
+{
+    x = 1
+    return x;
+}
+
+i32 main()
+{
+    return 0;
+}
