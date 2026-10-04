@@ -211,6 +211,7 @@ private:
     Scanner                scanner_;
     i32                    unclosed_braces_ = 0;
     bool                   body_cut_        = false;
+    std::vector<Symbol_id> classes_;
     const Source_manager&  sm_;
     Ast&                   ast_;
     Diagnostics&           diags_;
@@ -715,6 +716,15 @@ bool Parser::at_unclosed_body_head()
         return false;
     }
 
+    if( !classes_.empty() )
+    {
+        const Head_scan member = scanner_.own_member_head( pos_, classes_.back() );
+        if( member.head.has_value() && member.head->kind != Member_kind::Field )
+        {
+            return true;
+        }
+    }
+
     const Declaration_scan scan = scanner_.declaration_head( pos_ );
     return scan.head.has_value() && scan.head->kind != Declaration_kind::Variable;
 }
@@ -1182,6 +1192,7 @@ Node_id Parser::parse_aggregate_decl()
     std::vector<Node_id> members;
     bool                 dropped = false;
     std::optional<u32>   reported_line;
+    classes_.push_back( name );
     while( !check( Token_kind::R_brace ) && !at_end() )
     {
         if( skip_access_label( is_class ) )
@@ -1230,6 +1241,7 @@ Node_id Parser::parse_aggregate_decl()
 
         members.push_back( member );
     }
+    classes_.pop_back();
 
     expect( Token_kind::R_brace );
     expect( Token_kind::Semicolon );
@@ -7763,6 +7775,57 @@ TEST_CASE( "parser_ends_a_body_that_was_never_closed", "[parse][recovery]" )
         CHECK( p.error_count() == 1 );
         CHECK( count( p, "Method_decl" ) == 2 );
         CHECK( count( p, "Function_decl" ) == 1 );
+    }
+
+    SECTION( "a `public` method after a missing `}`" )
+    {
+        const Parsed p( "class C { i32 x; i32 a() { return x;\npublic i32 b() { return x; } };\ni32 main() { return 0; }\n" );
+        INFO( p.errors() );
+        INFO( p.dump() );
+        CHECK( p.error_count() == 1 );
+        CHECK( p.errors().find( "expected `}`, found `public`" ) != std::string::npos );
+        CHECK( count( p, "Method_decl" ) == 2 );
+        CHECK( count( p, "Function_decl" ) == 1 );
+    }
+
+    SECTION( "a `static` method after a missing `}`" )
+    {
+        const Parsed p( "class C { i32 x; i32 a() { return x;\nstatic i32 b() { return 1; } };\ni32 main() { return 0; }\n" );
+        INFO( p.errors() );
+        INFO( p.dump() );
+        CHECK( p.error_count() == 1 );
+        CHECK( p.errors().find( "expected `}`, found `static`" ) != std::string::npos );
+        CHECK( count( p, "Method_decl" ) == 2 );
+    }
+
+    SECTION( "a constructor after a missing `}`" )
+    {
+        const Parsed p( "class C { i32 x; i32 a() { return x;\nC( i32 v ) { x = v; } };\ni32 main() { return 0; }\n" );
+        INFO( p.errors() );
+        INFO( p.dump() );
+        CHECK( p.error_count() == 1 );
+        CHECK( p.errors().find( "expected `}`, found `C`" ) != std::string::npos );
+        CHECK( count( p, "Method_decl" ) == 1 );
+        CHECK( count( p, "Constructor_decl" ) == 1 );
+    }
+
+    SECTION( "a file-scope declaration after a missing `}` in a class" )
+    {
+        const Parsed p( "class C { i32 x; i32 a() { return x;\nstruct D { i32 y; };\ni32 main() { return 0; }\n" );
+        INFO( p.errors() );
+        INFO( p.dump() );
+        CHECK( p.errors().find( "expected `}`, found `struct`" ) != std::string::npos );
+        CHECK( p.errors().find( "cannot be declared inside a function" ) == std::string::npos );
+    }
+
+    // Only the class's own name opens a constructor here: a function's head run into a method's
+    // last line is not one.
+    SECTION( "another name before `( ) {` is not a constructor" )
+    {
+        const Parsed p( "class C { i32 x; i32 a() { return f( x  main()\n{ return 0; } };\n" );
+        INFO( p.errors() );
+        INFO( p.dump() );
+        CHECK( count( p, "Constructor_decl" ) == 0 );
     }
 
     SECTION( "a block opened without its `{`" )

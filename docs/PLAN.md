@@ -6097,6 +6097,18 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      so `public`, `static` and a constructor end a body as `declaration_head` already did for file
      scope (typescript-go's list contexts). `public i32 get()` after a lost `}` was two errors,
      a constructor five; each is one, after the method's last statement. Closes item 4's leftover.
+     **Done.** A stack, not one name: a class inside a method is refused but still parsed,
+     and its body must not end the method's. The member head is asked first and the file-scope
+     head after it, since a lost `}` before `struct D` or `i32 f()` at file scope is still common
+     (dropping the file-scope check: 35 mutants worse rather than 7). Only the class's own name
+     opens a constructor here (`Scanner::own_member_head`, `Constructor_names::Enclosing_only`):
+     with any name, a function's head run into a method's last line, `twice( x  main()`, ends the
+     body and `main` becomes the class's constructor (5 of those 7). Fields never end a body,
+     since `i32 x;` is a statement too. Measured against 4d: 91,962 to 91,206, one-error 5,110 to
+     5,179, three-or-more 14,167 to 14,076; 162 better, 2 worse, both a true *expected `}`* that
+     4d missed by luck (a nameless struct; a destructor named for the next class). Goldens
+     unchanged. Tests: `parser_ends_a_body_that_was_never_closed` (five sections),
+     `scanner_reads_a_constructor_by_the_class_name_only`.
   4f. **Spans as small as they need to be.** *Expected an identifier* in `expect_name` points at
      the gap as `error_expected` does, not at the next line (the redeclaration and constructor
      spans moved to 4b).

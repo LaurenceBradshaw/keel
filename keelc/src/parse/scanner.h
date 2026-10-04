@@ -113,6 +113,9 @@ public:
     // The member head starting at `at`. `enclosing` is the class's name.
     Head_scan member_head( u32 at, Symbol_id enclosing );
 
+    // The member head at `at`, where only `enclosing` names a constructor.
+    Head_scan own_member_head( u32 at, Symbol_id enclosing );
+
     // Starting at `at`: the tokens no member can be read from, then the member after them.
     Member_chunk next_member( u32 at, Symbol_id enclosing );
 

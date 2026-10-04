@@ -18,6 +18,11 @@ Head_scan Scanner::member_head( u32 at, Symbol_id enclosing )
     return scan_head( at, enclosing, Constructor_names::Any );
 }
 
+Head_scan Scanner::own_member_head( u32 at, Symbol_id enclosing )
+{
+    return scan_head( at, enclosing, Constructor_names::Enclosing_only );
+}
+
 Member_chunk Scanner::next_member( u32 at, Symbol_id enclosing )
 {
     cursor_ = at;
@@ -1052,6 +1057,11 @@ public:
         return Scanner( tokens_ ).member_head( at, name_ );
     }
 
+    Head_scan own_head( u32 at = 0 )
+    {
+        return Scanner( tokens_ ).own_member_head( at, name_ );
+    }
+
     Member_chunk chunk( u32 at = 0 )
     {
         return Scanner( tokens_ ).next_member( at, name_ );
@@ -1230,6 +1240,32 @@ TEST_CASE( "scanner_recognises_each_member_head", "[scan]" )
         require_head( "i32 case() { }", Member_kind::Method, "{" );
         require_head( "static i32 for = 1;", Member_kind::Static_var, "=" );
         require_head( "~if() { }", Member_kind::Destructor, "{" );
+    }
+}
+
+// What ends a method body that was never closed: a constructor of some other name there is a
+// function's head run into the body's last line.
+TEST_CASE( "scanner_reads_a_constructor_by_the_class_name_only", "[scan]" )
+{
+    SECTION( "the class's own name" )
+    {
+        Scanned s( "C( i32 v ) { }" );
+        REQUIRE( s.own_head().head.has_value() );
+        REQUIRE( s.own_head().head->kind == Member_kind::Constructor );
+    }
+
+    SECTION( "another name" )
+    {
+        Scanned s( "D() { }" );
+        REQUIRE( s.head().head.has_value() );
+        REQUIRE_FALSE( s.own_head().head.has_value() );
+    }
+
+    SECTION( "the other kinds as member_head reads them" )
+    {
+        Scanned s( "public static i32 make() { }" );
+        REQUIRE( s.own_head().head.has_value() );
+        REQUIRE( s.own_head().head->kind == Member_kind::Method );
     }
 }
 
