@@ -1,5 +1,5 @@
 // A prototype is a parse error under D18. It must not also make the definition below look like a
-// duplicate: the parser drops it rather than declaring a name.
+// duplicate: the parser keeps only its name, as an error symbol, which the definition replaces.
 i32 odd( i32 n );
 
 i32 odd( i32 n )

@@ -97,8 +97,9 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
             return types_.type_of( decl );
         }
 
-        // `kl::Missing` was reported by the resolver, and `kl::i32` is not `i32`.
-        if( !ast_.children( annotation ).empty() )
+        // `kl::Missing` was reported by the resolver, `kl::i32` is not `i32`, and an error symbol's
+        // declaration was reported where it failed.
+        if( !ast_.children( annotation ).empty() || resolution_.is_unresolved( annotation ) )
         {
             return table_.builtin( Type_kind::Error );
         }
@@ -202,8 +203,8 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
 
         const Node_id decl = resolution_.declaration_of( base );
 
-        // A qualified base was reported by the resolver.
-        if( !decl.is_valid() && !ast_.children( base ).empty() )
+        // A qualified base was reported by the resolver, and an error symbol where it failed.
+        if( !decl.is_valid() && ( !ast_.children( base ).empty() || resolution_.is_unresolved( base ) ) )
         {
             return table_.builtin( Type_kind::Error );
         }

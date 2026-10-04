@@ -92,6 +92,9 @@ private:
     // arity stays fixed.
     Node_id error_node( Span span );
 
+    // A declaration given up on after its name was read: sema declares the name as an error symbol.
+    Node_id error_node( Span span, Symbol_id name, Span name_span );
+
     // --- declarations ---
 
     Node_id parse_import();
@@ -808,7 +811,14 @@ void Parser::close_header( u32 condition_start )
 
 Node_id Parser::error_node( Span span )
 {
-    return ast_.add( Node_kind::Error, span, 0, {} );
+    return ast_.add( Node_kind::Error, span, k_invalid_symbol, {} );
+}
+
+Node_id Parser::error_node( Span span, Symbol_id name, Span name_span )
+{
+    const Node_id error = ast_.add( Node_kind::Error, span, name.v, {} );
+    ast_.set_name_span( error, name_span );
+    return error;
 }
 
 std::vector<Node_id> Parser::parse_declarations()
@@ -820,6 +830,14 @@ std::vector<Node_id> Parser::parse_declarations()
     for( ;; )
     {
         Declaration_chunk chunk = scanner_.next_declaration( pos_ );
+
+        // A function head dropped after its name still declares it, so its calls stay quiet.
+        if( chunk.dropped() && chunk.failure.name.has_value() )
+        {
+            const Token& name = tokens_[*chunk.failure.name];
+            const Span   span = Span::merge( tokens_[chunk.dropped_begin].span, tokens_[chunk.dropped_end - 1].span );
+            decls.push_back( error_node( span, name.symbol, name.span ) );
+        }
 
         if( chunk.dropped() && ( !reported_line || line_of( tokens_[chunk.dropped_begin] ) != *reported_line ) )
         {
@@ -1191,6 +1209,11 @@ Node_id Parser::parse_aggregate_decl()
         // `struct x;` is C's opaque forward declaration. Swallow the terminator so it does not
         // come back as a second complaint about a stray `;`.
         match( Token_kind::Semicolon );
+
+        if( name.is_valid() )
+        {
+            return error_node( Span::merge( start, previous().span ), name, name_span );
+        }
 
         return error_node( Span::merge( start, previous().span ) );
     }
@@ -4226,6 +4249,47 @@ TEST_CASE( "parser_makes_a_broken_expression_an_error_node", "[parse][recovery]"
                         "i32 main() { S s = S::B; switch( s ) { case S::A( w, h == ): return 1; default: return 0; } }" );
         INFO( p.dump() );
         CHECK( find_first( p.ast(), p.root(), Node_kind::Variant_pattern ).is_valid() );
+    }
+}
+
+// A declaration given up on after its name was read keeps the name on its Error node, so sema can
+// declare it and stay quiet about its uses. Any other Error has none.
+TEST_CASE( "parser_keeps_the_name_of_a_declaration_it_gave_up_on", "[parse][recovery]" )
+{
+    SECTION( "an aggregate missing its `{`" )
+    {
+        const Parsed  p( "class Owned\n    i32 n;\n};\ni32 main() { return 0; }" );
+        const Node_id decl = p.children( p.root() )[0];
+        INFO( p.dump() );
+        REQUIRE( p.kind( decl ) == Node_kind::Error );
+        CHECK( p.name( decl ) == "Owned" );
+    }
+
+    SECTION( "a function head the scan could not finish" )
+    {
+        const Parsed  p( "bool is_odd( i32 ) n\n{\n    return true;\n}\ni32 main() { return 0; }" );
+        const Node_id decl = p.children( p.root() )[0];
+        INFO( p.dump() );
+        REQUIRE( p.kind( decl ) == Node_kind::Error );
+        CHECK( p.name( decl ) == "is_odd" );
+    }
+
+    SECTION( "a declaration with no name has none" )
+    {
+        const Parsed  p( "struct\n{\n    i32 x;\n};\ni32 main() { return 0; }" );
+        const Node_id decl = p.children( p.root() )[0];
+        INFO( p.dump() );
+        REQUIRE( p.kind( decl ) == Node_kind::Error );
+        CHECK( p.aux( decl ) == k_invalid_symbol );
+    }
+
+    SECTION( "nor does a broken expression" )
+    {
+        const Parsed  p( "i32 main() { return 1 +; }" );
+        const Node_id error = find_first( p.ast(), p.root(), Node_kind::Error );
+        INFO( p.dump() );
+        REQUIRE( error.is_valid() );
+        CHECK( p.aux( error ) == k_invalid_symbol );
     }
 }
 

@@ -33,9 +33,10 @@ enum class Wanted : u8
 
 struct Scan_failure
 {
-    u32        at     = 0; // index of the token the scan stopped on
-    Wanted     wanted = Wanted::Member;
-    Token_kind token  = Token_kind::End_of_file; // meaningful only when wanted is Token
+    u32                at     = 0; // index of the token the scan stopped on
+    Wanted             wanted = Wanted::Member;
+    Token_kind         token  = Token_kind::End_of_file; // meaningful only when wanted is Token
+    std::optional<u32> name   = std::nullopt;            // a function head's name, read before the head failed
 };
 
 // Which parse function a member needs, and where. Nothing is built.

@@ -47,6 +47,7 @@ private:
     void pop_scope();
 
     void    declare( Scope& scope, Symbol_id name, Node_id decl );
+    void    bind( Node_id use, Node_id decl );
     bool    chain_overload( Node_id existing, Node_id added );
     Node_id lookup( Symbol_id name, Node_id use );
     Node_id lookup_in( Symbol_id package, Symbol_id name, Node_id use );
@@ -89,7 +90,8 @@ Resolution Resolver::run()
     for( const Node_id decl : ast_.children( ast_.root() ) )
     {
         if( ast_.kind( decl ) == Node_kind::Function_decl || ast_.kind( decl ) == Node_kind::Var_decl ||
-            ast_.kind( decl ) == Node_kind::Enum_decl || is_aggregate( ast_.kind( decl ) ) )
+            ast_.kind( decl ) == Node_kind::Enum_decl || is_aggregate( ast_.kind( decl ) ) ||
+            ( ast_.kind( decl ) == Node_kind::Error && Symbol_id { ast_.aux( decl ) }.is_valid() ) )
         {
             const Symbol_id name { ast_.aux( decl ) };
 
@@ -193,7 +195,7 @@ void Resolver::visit( Node_id id )
 
         if( decl.is_valid() )
         {
-            bindings_[id.v] = decl;
+            bind( id, decl );
         }
         else
         {
@@ -260,7 +262,7 @@ void Resolver::visit( Node_id id )
         const Node_id decl = lookup( Symbol_id { ast_.aux( id ) }, id );
         if( decl.is_valid() )
         {
-            bindings_[id.v] = decl;
+            bind( id, decl );
         }
 
         return; // Not an error when absent
@@ -275,7 +277,7 @@ void Resolver::visit( Node_id id )
         }
         else if( const Node_id decl = lookup( name, id ); decl.is_valid() )
         {
-            bindings_[id.v] = decl;
+            bind( id, decl );
         }
         else
         {
@@ -528,12 +530,30 @@ void Resolver::declare( Scope& scope, Symbol_id name, Node_id decl )
         return;
     }
 
+    // An error symbol never reports: it yields to any real declaration of its name, and under a
+    // builtin's name it would hide the type.
+    if( ast_.kind( decl ) == Node_kind::Error )
+    {
+        if( !is_builtin_type_name( interner_.text( name ) ) )
+        {
+            scope.names.try_emplace( name, decl );
+        }
+
+        return;
+    }
+
     if( refuse_builtin_name( name, decl ) )
     {
         return;
     }
 
     const auto [it, inserted] = scope.names.try_emplace( name, decl );
+
+    if( !inserted && ast_.kind( it->second ) == Node_kind::Error )
+    {
+        it->second = decl;
+        return;
+    }
 
     if( !inserted )
     {
@@ -598,6 +618,18 @@ void Resolver::declare( Scope& scope, Symbol_id name, Node_id decl )
 
 // Appended at the end of the chain, so walking it gives declaration order - which is what the
 // duplicate diagnostic needs to name the *earlier* one.
+// A use of an error symbol is unresolved and silent: the declaration failed, and was reported.
+void Resolver::bind( Node_id use, Node_id decl )
+{
+    if( ast_.kind( decl ) == Node_kind::Error )
+    {
+        unresolved_[use.v] = true;
+        return;
+    }
+
+    bindings_[use.v] = decl;
+}
+
 bool Resolver::chain_overload( Node_id existing, Node_id added )
 {
     const Node_kind kind = ast_.kind( existing );

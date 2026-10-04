@@ -6146,8 +6146,8 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      its missing `;` with the next token on a later line (84,831, 777 mutants worse): a line cut
      short to a lone `i32`, `B` or `run` reads the same, and sema then judges the fragment
      (*`i32` is not declared*). So `bool b = 1 + 2` before a missing `;` loses its mismatch, a
-     judgment in the failed statement itself, which is accepted: a misplaced or lost judgment beside
-     a syntax error is cheaper than a cascade. **Where:** Diagnostics, beside 4b's claims; a
+     judgment in the failed statement itself, which is right: with no `;` nothing confirms the statement ended there, so no type read from
+     it can be trusted. **Where:** Diagnostics, beside 4b's claims; a
      silenced error is reported and then dropped, so sema needs no change, and sema's count gates
      (`expressions.cpp` folding, the speculative paths) compare within one expression, which lies in
      one head. The parser walks its declarations once after parsing and hands Diagnostics each
@@ -6159,11 +6159,37 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      intent, that such an expression keeps its node, moves to `parser_makes_a_broken_expression_an_error_node`.
      Tests: `diagnostics_drop_a_semantic_error_in_a_silenced_span`,
      `type_checker_stays_quiet_in_the_head_of_a_statement_that_failed`.
-  4h. **A broken declaration still declares its name**, as an error symbol whose uses are silent
-     (rustc `Res::Err`, types2's invalid object): only a name the parser read before failing,
-     never one salvaged from a drop (item 6). Not designed. Locals and parameters too: after 4g's
-     prototype, 5,334 of the *not declared* errors following a failure name something written on
-     the failure's line (`i32 = 0;` then `i`, a lost parameter's uses).
+  4h. ~~**A declaration that failed after its name still declares it**~~ **Done (2026-10-04).** As an error symbol whose
+     uses are silent (rustc `Res::Err`, types2's invalid object). Surveyed after 4g: of the *not
+     declared* and *unknown type* errors naming something written on a syntax error's line
+     (11,862), 11,441 name nothing in the tree - the parser dropped the declaration. Two places
+     drop a name they read: `parse_aggregate_decl` bailing when the `{` is missing (`class Owned`
+     then a member line: every use of `Owned` reported), and the scanner dropping a function head it
+     read up to the name (`bool is_odd( i32 ) n`, `Counter make( Counter( 1 );`: every call
+     reported). The rest are M3's (a parameter after a broken one) or a name never read as a
+     declaration (`Owned` alone on its line, a `case` whose `switch` was lost). **Shape:** the
+     dropped declaration is an `Error` node carrying its name in aux and its name span; every other
+     `Error` carries the invalid symbol, since aux 0 is a real symbol (`if`). The resolver declares a
+     named `Error` at file scope; a use that finds one is marked unresolved and bound to nothing, so
+     sema's existing silence for an unresolved name covers it (`infer_name`, `infer_path`); the type
+     annotation paths gain the same check. An error symbol never reports at its own declaration
+     (*already declared*, *the name of a builtin type*): it yields to a real declaration of the
+     name, and is not declared at all under a builtin's name, where it would hide the type. The
+     scanner, not a token pattern, says where the name was: `Scan_failure` records the name it read
+     before a function head failed, which is 4h's rule rather than a guess (a pattern over the
+     dropped tokens: 80,542, three more mutants better and 50 worse than the scanner). Measured
+     against 4g's 83,965: the aggregate alone 82,348 (377 better, none worse; before the yield rule,
+     36 worse on *already declared* from a duplicated `struct Point` line), with the function heads
+     80,469, one-error 7,093 to 7,422, three-or-more 12,765 to 12,150; 1,284 better, none worse,
+     goldens unchanged, and the real build identical to the prototype (`errors_forward_declaration`'s prototype becomes a named `Error`, which its
+     definition replaces; its comment changes). 7 edits are left with no error near, each one whose
+     only nearby error was the cascade (`bucket> ( 9 )` after a lost `bucket`; a second edit
+     leaving valid code). Supersedes item 6's "left alone": the follow-ons were true only in
+     pointing at real uses, and one mistake's cascade is the cost that matters. **Not done:** a
+     struct or function refused inside a function (an `Error` in a block, not declared); a member
+     the class scan dropped (`obj.m()` then reports *has no method*). Tests:
+     `parser_keeps_the_name_of_a_declaration_it_gave_up_on`,
+     `type_checker_stays_quiet_about_uses_of_a_declaration_that_failed`.
   5. **M3: every comma list skips to its separator or closer.** Each list loop stops at its first
      bad element: `i32 add( i32 a a, i32 b )` loses `b` and says *takes 1 argument* at the call;
      the enum variant, payload and struct-literal loops keep item 5's old one-token skip, so an
@@ -6173,7 +6199,7 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      struct-literal lists. The enum alone also ends its variant loop where the scanner sees a
      declaration head, so a missing `}` is one error: safe there, unlike a class (item 7), since a
      variant can never look like `type name (`.
-  6. **Left alone: a header that broke after its name drops the declaration.** `extern auto abs( i32
+  6. ~~**Left alone: a header that broke after its name drops the declaration.**~~ Taken up by 4h. `extern auto abs( i32
      v );` makes `abs` undeclared and its `unsafe` block *does nothing unsafe*; `struct Point static
      {` loses `Point`. About 1,000 mutants. Fixing it means salvaging a name from a dropped chunk and
      sema staying silent about it, and a wrong guess hides real errors; the follow-ons are true and

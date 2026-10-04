@@ -107,8 +107,11 @@ Declaration_scan Scanner::declaration_head( u32 at )
             .head = Declaration_head { .kind = kind, .start = start, .commit = cursor_ }, .failure = Scan_failure {}
         };
     };
-    const auto make_failure = [this]() -> Declaration_scan
-    { return Declaration_scan { .head = std::nullopt, .failure = failure_ }; };
+    const auto make_failure = [this]( std::optional<u32> name = std::nullopt ) -> Declaration_scan
+    {
+        failure_.name = name;
+        return Declaration_scan { .head = std::nullopt, .failure = failure_ };
+    };
 
     cursor_       = at;
     owed_greater_ = 0;
@@ -143,6 +146,8 @@ Declaration_scan Scanner::declaration_head( u32 at )
     {
         return make_failure();
     }
+
+    const u32 name_at = cursor_;
     if( !want_name() )
     {
         return make_failure();
@@ -150,17 +155,19 @@ Declaration_scan Scanner::declaration_head( u32 at )
 
     if( is_extern || check( Token_kind::L_paren ) || check( Token_kind::Less ) )
     {
+        const std::optional<u32> name =
+            tokens_[name_at].kind == Token_kind::Identifier ? std::optional( name_at ) : std::nullopt;
         if( check( Token_kind::Less ) )
         {
             if( !scan_type_params() )
             {
-                return make_failure();
+                return make_failure( name );
             }
         }
 
         if( !skip_parens() || !scan_where_clauses() )
         {
-            return make_failure();
+            return make_failure( name );
         }
 
         if( check( Token_kind::L_brace ) )
@@ -175,11 +182,11 @@ Declaration_scan Scanner::declaration_head( u32 at )
         else if( is_extern )
         {
             fail( Wanted::Token, Token_kind::Semicolon );
-            return make_failure();
+            return make_failure( name );
         }
 
         fail( Wanted::Token, Token_kind::L_brace );
-        return make_failure();
+        return make_failure( name );
     }
 
     if( check( Token_kind::Equal ) || check( Token_kind::Semicolon ) )

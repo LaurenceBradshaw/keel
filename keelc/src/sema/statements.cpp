@@ -1540,8 +1540,7 @@ TEST_CASE( "type_checker_stays_quiet_in_the_head_of_a_statement_that_failed", "[
         "i32 main() { i32 i = 0; i i = + 1; return i; }",
         "i32 f( Box ) { return 0; }\ni32 main() { return 0; }",
         "struct P { Box x\n    i32 y;\n};\ni32 main() { return 0; }",
-        "enum Shape { Dot, Line };\ni32 main() { Shape s = Shape::Dot; switch( s ) { case Shape::Dor, : return 1; default: "
-        "return 0; } }",
+        "enum S { A, B };\ni32 main() { S s = S::A; switch( s ) { case S::C, : return 1; default: return 0; } }",
     };
 
     SECTION( "only the parse error is reported" )
@@ -1569,6 +1568,60 @@ TEST_CASE( "type_checker_stays_quiet_in_the_head_of_a_statement_that_failed", "[
         INFO( p.rendered() );
         CHECK( reported( p.rendered() ) == 2 );
         CHECK( p.rendered().find( "already declared with these parameters" ) != std::string::npos );
+    }
+}
+
+// A declaration that failed after its name still declares it, as an error symbol: its uses are
+// silent, a real declaration of the name replaces it, and it never reports on its own.
+TEST_CASE( "type_checker_stays_quiet_about_uses_of_a_declaration_that_failed", "[sema][recovery]" )
+{
+    const auto reported = []( const std::string& rendered )
+    {
+        std::size_t count = 0;
+        for( std::size_t at = rendered.find( "error:" ); at != std::string::npos; at = rendered.find( "error:", at + 1 ) )
+        {
+            ++count;
+        }
+        return count;
+    };
+
+    SECTION( "an aggregate missing its `{`" )
+    {
+        const Typed p( "class Owned\n    i32 n;\n};\n"
+                       "i32 main() { Owned o = Owned( 1 ); Owned p = Owned { 2 }; return Owned::count(); }" );
+        INFO( p.rendered() );
+        CHECK( reported( p.rendered() ) == 2 );
+        CHECK( p.rendered().find( "`Owned`" ) == std::string::npos );
+    }
+
+    SECTION( "a function head the parser dropped" )
+    {
+        const Typed p( "bool is_odd( i32 ) n\n{\n    return true;\n}\ni32 main() { if( is_odd( 3 ) ) { return 1; } return 0; }"
+        );
+        INFO( p.rendered() );
+        CHECK( reported( p.rendered() ) == 1 );
+    }
+
+    SECTION( "a real declaration of the name replaces it" )
+    {
+        const Typed p( "struct Point\nstruct Point { i32 x; };\ni32 main() { Point p = Point { 1 }; return p.x; }" );
+        INFO( p.rendered() );
+        CHECK( reported( p.rendered() ) == 1 );
+    }
+
+    SECTION( "it never takes a builtin's name" )
+    {
+        const Typed p( "struct i32\ni32 main() { i32 x = 1; return x; }" );
+        INFO( p.rendered() );
+        CHECK( reported( p.rendered() ) == 1 );
+    }
+
+    SECTION( "a name nothing declared is still reported" )
+    {
+        const Typed p( "class Owned\n    i32 n;\n};\ni32 main() { return nope; }" );
+        INFO( p.rendered() );
+        CHECK( reported( p.rendered() ) == 3 );
+        CHECK( p.rendered().find( "`nope` is not declared" ) != std::string::npos );
     }
 }
 
