@@ -4508,7 +4508,7 @@ TEST_CASE( "parser_skips_a_broken_list_element_to_its_separator", "[parse][recov
     {
         const Parsed p( "enum E { A, B\ni32 main() { return 0; }" );
         INFO( p.errors() );
-        CHECK( p.error_count() == 1 );
+        CHECK( p.error_count() == 2 );
         REQUIRE( p.children( p.root() ).size() == 2 );
         CHECK( p.kind( p.children( p.root() )[1] ) == Node_kind::Function_decl );
     }
@@ -7904,7 +7904,7 @@ TEST_CASE( "parser_reports_one_error_per_token", "[parse][recovery]" )
 
     SECTION( "a file cut off inside nested blocks" )
     {
-        one_error( "i32 main() { if( true ) { while( true ) { return 1", "expected `;`, found end of file" );
+        one_error( "i32 main() { if( true ) { while( true ) { return 1", "expected `}`, found end of file" );
     }
 
     SECTION( "a statement starting at a token already reported" )
@@ -8089,7 +8089,8 @@ TEST_CASE( "parser_skips_the_rest_of_a_statement_that_reported", "[parse][recove
         const Parsed p( "i32 main() { i32 d = 0; if( d\nreturn 5; }\nreturn 0; }" );
         INFO( p.errors() );
         INFO( p.dump() );
-        CHECK( p.error_count() == 1 );
+        CHECK( p.error_count() == 2 );
+        CHECK( p.errors().find( "unexpected `}`" ) != std::string::npos );
         CHECK( statements( p ) == std::vector { Node_kind::Var_decl, Node_kind::If_stmt, Node_kind::Return_stmt } );
     }
 
@@ -8187,8 +8188,9 @@ TEST_CASE( "parser_ends_a_body_that_was_never_closed", "[parse][recovery]" )
         const Parsed p( "i32 a() { return 1;\ni32 b() { return 2; }\ni32 c() { return 3; }\n" );
         INFO( p.errors() );
         INFO( p.dump() );
-        CHECK( p.error_count() == 1 );
+        CHECK( p.error_count() == 2 );
         CHECK( p.errors().find( "expected `}`, found `i32`" ) != std::string::npos );
+        CHECK( p.errors().find( "expected `}`, found end of file" ) != std::string::npos );
         CHECK( p.children( p.root() ).size() == 3 );
         CHECK( count( p, "Function_decl" ) == 3 );
     }
@@ -8198,7 +8200,7 @@ TEST_CASE( "parser_ends_a_body_that_was_never_closed", "[parse][recovery]" )
         const Parsed p( "i32 a() { if( true ) { return 1;\nreturn 0; }\ni32 b() { return 2; }\n" );
         INFO( p.errors() );
         INFO( p.dump() );
-        CHECK( p.error_count() == 1 );
+        CHECK( p.error_count() == 2 );
         CHECK( count( p, "Function_decl" ) == 2 );
     }
 
@@ -8207,7 +8209,7 @@ TEST_CASE( "parser_ends_a_body_that_was_never_closed", "[parse][recovery]" )
         const Parsed p( "class C { i32 x; i32 a() { return x;\ni32 b() { return x; } };\ni32 main() { return 0; }\n" );
         INFO( p.errors() );
         INFO( p.dump() );
-        CHECK( p.error_count() == 1 );
+        CHECK( p.error_count() == 2 );
         CHECK( count( p, "Method_decl" ) == 2 );
         CHECK( count( p, "Function_decl" ) == 1 );
     }
@@ -8217,7 +8219,7 @@ TEST_CASE( "parser_ends_a_body_that_was_never_closed", "[parse][recovery]" )
         const Parsed p( "class C { i32 x; i32 a() { return x;\npublic i32 b() { return x; } };\ni32 main() { return 0; }\n" );
         INFO( p.errors() );
         INFO( p.dump() );
-        CHECK( p.error_count() == 1 );
+        CHECK( p.error_count() == 2 );
         CHECK( p.errors().find( "expected `}`, found `public`" ) != std::string::npos );
         CHECK( count( p, "Method_decl" ) == 2 );
         CHECK( count( p, "Function_decl" ) == 1 );
@@ -8228,7 +8230,7 @@ TEST_CASE( "parser_ends_a_body_that_was_never_closed", "[parse][recovery]" )
         const Parsed p( "class C { i32 x; i32 a() { return x;\nstatic i32 b() { return 1; } };\ni32 main() { return 0; }\n" );
         INFO( p.errors() );
         INFO( p.dump() );
-        CHECK( p.error_count() == 1 );
+        CHECK( p.error_count() == 2 );
         CHECK( p.errors().find( "expected `}`, found `static`" ) != std::string::npos );
         CHECK( count( p, "Method_decl" ) == 2 );
     }
@@ -8238,7 +8240,7 @@ TEST_CASE( "parser_ends_a_body_that_was_never_closed", "[parse][recovery]" )
         const Parsed p( "class C { i32 x; i32 a() { return x;\nC( i32 v ) { x = v; } };\ni32 main() { return 0; }\n" );
         INFO( p.errors() );
         INFO( p.dump() );
-        CHECK( p.error_count() == 1 );
+        CHECK( p.error_count() == 2 );
         CHECK( p.errors().find( "expected `}`, found `C`" ) != std::string::npos );
         CHECK( count( p, "Method_decl" ) == 1 );
         CHECK( count( p, "Constructor_decl" ) == 1 );
@@ -8273,8 +8275,8 @@ TEST_CASE( "parser_ends_a_body_that_was_never_closed", "[parse][recovery]" )
         CHECK( count( p, "Function_decl" ) == 2 );
     }
 
-    // The `{` is gone and its `}` is not, so the file has a `}` too many until the block without
-    // one takes it: the function after is still a function inside a function.
+    // The `{` is gone and its `}` is not, so the file has a `}` too many: the first `}` with
+    // nothing open says so, and nothing after it in the file is reported.
     SECTION( "a deleted `{` balances the block opened without it" )
     {
         const Parsed p( "i32 a() { i32 d = 0; if( d\nreturn 5; }\nreturn 0; }\ni32 c() { i32 f() { return 1; } return 2; }\n" );
@@ -8282,7 +8284,7 @@ TEST_CASE( "parser_ends_a_body_that_was_never_closed", "[parse][recovery]" )
         INFO( p.dump() );
         CHECK( p.error_count() == 2 );
         CHECK( p.errors().find( "expected `)`, found `return`" ) != std::string::npos );
-        CHECK( p.errors().find( "a function cannot be declared inside a function" ) != std::string::npos );
+        CHECK( p.errors().find( "unexpected `}`" ) != std::string::npos );
     }
 
     SECTION( "a function written inside a function" )
@@ -10617,7 +10619,7 @@ TEST_CASE( "parser_recovers_from_a_declaration_that_is_not_one", "[parse][recove
 
         INFO( p.errors() );
         REQUIRE( p.error_count() == 1 );
-        REQUIRE( has( p, "expected a declaration, found `}`" ) );
+        REQUIRE( has( p, "unexpected `}`" ) );
         REQUIRE( names( p ) == "a b" );
     }
 

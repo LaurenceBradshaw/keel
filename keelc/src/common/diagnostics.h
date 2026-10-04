@@ -32,6 +32,7 @@ class Diagnostics
 public:
     void error( Span span, std::string message, std::string help = {} );
     void syntax_error( Span span, std::string message, std::string help = {} );
+    void unbalanced( Span span, std::string message, std::string help = {} );
     void warning( Span span, std::string message, std::string help = {} );
 
     void tokens( File_id file, std::vector<Span> bounds );
@@ -55,6 +56,7 @@ private:
     std::vector<Diagnostic>          items_;
     std::map<u32, std::vector<Span>> tokens_; // keyed by File_id::v
     std::vector<Span>                silenced_;
+    std::map<u32, u32>               unbalanced_; // mapping a file to the index of its brace report in items_
 };
 
 // True when stderr is a terminal and NO_COLOR is unset (https://no-color.org). The golden runner

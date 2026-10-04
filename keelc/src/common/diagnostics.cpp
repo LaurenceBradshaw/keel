@@ -5,6 +5,7 @@
 #include <fmt/format.h>
 #include <algorithm>
 #include <cstdlib>
+#include <limits>
 #include <ostream>
 #include "common/json.h"
 
@@ -99,6 +100,12 @@ void Diagnostics::error( Span span, std::string message, std::string help )
 void Diagnostics::syntax_error( Span span, std::string message, std::string help )
 {
     items_.push_back( { Severity::Error, span, std::move( message ), std::move( help ), true } );
+}
+
+void Diagnostics::unbalanced( Span span, std::string message, std::string help )
+{
+    syntax_error( span, std::move( message ), std::move( help ) );
+    unbalanced_[span.file.v] = static_cast<u32>( items_.size() - 1 );
 }
 
 void Diagnostics::warning( Span span, std::string message, std::string help )
@@ -265,6 +272,38 @@ std::vector<bool> Diagnostics::kept() const
                 {
                     claims[t] = true;
                 }
+            }
+        }
+    }
+
+    for( const auto& [file, index] : unbalanced_ )
+    {
+        u32 earliest = std::numeric_limits<u32>::max();
+        u32 winner   = std::numeric_limits<u32>::max();
+
+        for( u32 i = 0; i < items_.size(); ++i )
+        {
+            const Diagnostic& d = items_[i];
+
+            if( !keep[i] || d.severity != Severity::Error || d.span.file.v != file || i == index )
+            {
+                continue;
+            }
+
+            if( d.span.start < earliest || ( d.span.start == earliest && i < winner ) )
+            {
+                earliest = d.span.start;
+                winner   = i;
+            }
+        }
+
+        for( u32 i = 0; i < items_.size(); ++i )
+        {
+            const Diagnostic& d = items_[i];
+
+            if( d.severity == Severity::Error && d.span.file.v == file && i != index && i != winner )
+            {
+                keep[i] = false;
             }
         }
     }
@@ -915,6 +954,90 @@ TEST_CASE( "diagnostics_drop_a_semantic_error_in_a_silenced_span", "[common][dia
     {
         diags.silence( Span { f, 0, 14 } );
         diags.warning( Span { f, 8, 9 }, "a warning always stands" );
+
+        REQUIRE( render_to_string( diags, sm ).find( "a warning always stands" ) != std::string::npos );
+    }
+}
+
+TEST_CASE( "diagnostics_keep_the_first_error_of_an_unbalanced_file", "[common][diagnostics]" )
+{
+    Source_manager sm;
+    const File_id  f = sm.add_file( "a.kl", "i32 x = a + b;" );
+
+    // i32 x = a + b ; <eof>
+    const std::vector<Span> bounds = {
+        { f, 0, 3 },
+        { f, 4, 5 },
+        { f, 6, 7 },
+        { f, 8, 9 },
+        { f, 10, 11 },
+        { f, 12, 13 },
+        { f, 13, 14 },
+        { f, 14, 14 },
+    };
+
+    Diagnostics diags;
+    diags.tokens( f, bounds );
+
+    SECTION( "the earliest error and the brace stand" )
+    {
+        diags.unbalanced( Span::point( f, 14 ), "expected `}`, found end of file" );
+        diags.error( Span { f, 8, 9 }, "the first" );
+        diags.error( Span { f, 12, 13 }, "a second" );
+        diags.syntax_error( Span { f, 10, 11 }, "a third" );
+
+        const std::string out = render_to_string( diags, sm );
+        REQUIRE( diags.error_count() == 2 );
+        REQUIRE( out.find( "the first" ) != std::string::npos );
+        REQUIRE( out.find( "end of file" ) != std::string::npos );
+        REQUIRE( out.find( "a second" ) == std::string::npos );
+        REQUIRE( out.find( "a third" ) == std::string::npos );
+    }
+
+    SECTION( "earliest by place, not by when it was reported" )
+    {
+        diags.unbalanced( Span::point( f, 14 ), "expected `}`, found end of file" );
+        diags.error( Span { f, 12, 13 }, "reported first" );
+        diags.error( Span { f, 4, 5 }, "earlier in the file" );
+
+        const std::string out = render_to_string( diags, sm );
+        REQUIRE( diags.error_count() == 2 );
+        REQUIRE( out.find( "earlier in the file" ) != std::string::npos );
+        REQUIRE( out.find( "reported first" ) == std::string::npos );
+    }
+
+    SECTION( "a brace before every other error keeps the first after it" )
+    {
+        diags.unbalanced( Span { f, 0, 3 }, "unexpected `}`" );
+        diags.error( Span { f, 8, 9 }, "the first" );
+        diags.error( Span { f, 12, 13 }, "a second" );
+
+        REQUIRE( diags.error_count() == 2 );
+        REQUIRE( render_to_string( diags, sm ).find( "a second" ) == std::string::npos );
+    }
+
+    SECTION( "the brace alone is one error" )
+    {
+        diags.unbalanced( Span::point( f, 14 ), "expected `}`, found end of file" );
+
+        REQUIRE( diags.error_count() == 1 );
+    }
+
+    SECTION( "another file keeps its errors" )
+    {
+        const File_id g = sm.add_file( "b.kl", "i32 x = a + b;" );
+        diags.unbalanced( Span::point( f, 14 ), "expected `}`, found end of file" );
+        diags.error( Span { g, 8, 9 }, "in b.kl" );
+        diags.error( Span { g, 12, 13 }, "also in b.kl" );
+
+        REQUIRE( diags.error_count() == 3 );
+    }
+
+    SECTION( "a warning stands" )
+    {
+        diags.unbalanced( Span::point( f, 14 ), "expected `}`, found end of file" );
+        diags.error( Span { f, 8, 9 }, "the first" );
+        diags.warning( Span { f, 12, 13 }, "a warning always stands" );
 
         REQUIRE( render_to_string( diags, sm ).find( "a warning always stands" ) != std::string::npos );
     }

@@ -1489,7 +1489,7 @@ TEST_CASE( "type_checker_stays_quiet_about_a_broken_expression", "[sema][recover
 {
     static const char* sources[] = {
         "i32 f( i32 a, i32 b ) { return a; }\ni32 main() { i32 r = f( 1,\ni32 y = 2;\nreturn r; }",
-        "struct P { i32 x; i32 y; };\ni32 main() { P p = P { 1,\ni32 y = 2;\nreturn 0; }",
+        "struct P { i32 x; i32 y; };\ni32 main() { P p = P { 1,\ni32 y = 2 };\nreturn 0; }",
         "i32 main() { i32 x = 1; ref i32 r = x ?; return 0; }",
         "i32 main()\n{\n    unsafe\n    {\n        i32* v = alloc",
         "u32 all = wrap<u32>( 0 - 1 ;\ni32 main() { return 0; }",
@@ -1616,12 +1616,13 @@ TEST_CASE( "type_checker_stays_quiet_about_uses_of_a_declaration_that_failed", "
         CHECK( reported( p.rendered() ) == 1 );
     }
 
-    SECTION( "a name nothing declared is still reported" )
+    SECTION( "the `}` its `{` was missing for leaves the file unbalanced" )
     {
         const Typed p( "class Owned\n    i32 n;\n};\ni32 main() { return nope; }" );
         INFO( p.rendered() );
-        CHECK( reported( p.rendered() ) == 3 );
-        CHECK( p.rendered().find( "`nope` is not declared" ) != std::string::npos );
+        CHECK( reported( p.rendered() ) == 2 );
+        CHECK( p.rendered().find( "unexpected `}`" ) != std::string::npos );
+        CHECK( p.rendered().find( "`nope` is not declared" ) == std::string::npos );
     }
 }
 

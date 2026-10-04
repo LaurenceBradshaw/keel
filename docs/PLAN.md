@@ -5818,7 +5818,8 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      stopped inside the drop. Tests: four sections of `parser_recovers_from_a_member_that_is_not_one`,
      two of `scanner_chunks_a_class_body`, one of `hints_name_the_keel_spelling`.
   7. Left alone: a stray `};` mid-class, and an unclosed `(` or `{` inside a member, end the class
-     where the author did not mean to; a parser cannot know better.
+     where the author did not mean to; a parser cannot know better. Taken up as M4 below: no repair,
+     but an unbalanced file is loud and says little.
   8. **Later, not this cascade: field initialisers and fixed arrays.** `i32 a = 3;` is wanted
      eventually, and with it the assignment checker must require a constructor to initialise every
      field that has no initialiser. A fixed-size array would likely be spelled `i32 a[4]`. Both
@@ -6240,6 +6241,32 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      {` loses `Point`. About 1,000 mutants. Fixing it means salvaging a name from a dropped chunk and
      sema staying silent about it, and a wrong guess hides real errors; the follow-ons are true and
      point at real uses.
+  7. ~~**M4: an unbalanced brace is loud.**~~ **Done (2026-10-04).** Unbalanced braces are the largest cascade left after M3:
+     2,828 single-edit mutants, 3.0 errors each, 5,654 beyond the first. rustc matches delimiters
+     in its lexer (`tokentrees.rs`), reports a mismatch and does not parse the file, naming the
+     culprit by indentation. **Shape (decided 2026-10-04).** No repair and no indentation: `;` ends a
+     statement, so a construct may span lines however a formatter lays it out, and a repair placed
+     by indentation guesses. The lexer counts braces by token: the first `}` with nothing open is
+     *unexpected `}`* there, and a `{` still open at the end is *expected `}`, found end of file*
+     there, one report per file. The tokens are read as written, so the parser reports whatever
+     breaks first (a function's head inside a body that lost its `}`, 4e's *expected `}`*), and
+     `Diagnostics` keeps, in that file, the earliest error and the brace report and drops the rest:
+     a loud error, so quiet after it is acceptable. Both reports stand when the first is already
+     an *expected `}`*: the end of the file says a body is left open through all of it. Other files
+     keep their errors, warnings are untouched. The report sits at the gap the parser would use, so
+     the parser's own *expected `}`* or *expected `;`* at the end of a cut file is the same error.
+     **Measured** against M3: errors 75,807 to 62,789, one-error 7,718 to 6,778 (two-report
+     mutants), three-or-more 11,704 to 7,479, 4,227 better, 940 worse, nearly all that two-report
+     case; the nearest error within two lines of the edit 2,530 to 2,508, none left with no error.
+     The simulation before it said 62,838: the shared gap merges 52 more, and two package mutants
+     keep another file's errors, which it had lumped together. Goldens unchanged. **Rejected,
+     measured:** a repair placed by indentation (above); rustc's stop, all errors after the brace
+     report muted (55,720, but the one error lands more than ten lines from the edit in 1,681 of
+     2,832 mutants, against 63, since a lost `}` is found only at the end of the file). Tests:
+     `lexer_reports_an_unbalanced_brace`, `diagnostics_keep_the_first_error_of_an_unbalanced_file`,
+     golden `errors_unbalanced_braces`; counts and wording in `parser_ends_a_body_that_was_never_closed`,
+     `parser_reports_one_error_per_token`, the stray-brace section of `parser_recovers_from_a_declaration_that_is_not_one`, the enum and condition-skip
+     sections, `type_checker_stays_quiet_about_uses_of_a_declaration_that_failed`.
 
 ### M7 slice: access control - done (2026-09-25)
 

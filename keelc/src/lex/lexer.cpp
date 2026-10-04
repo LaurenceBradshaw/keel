@@ -78,6 +78,38 @@ bool is_literal_suffix( std::string_view word )
     return false;
 }
 
+void check_braces( const std::vector<Token>& tokens, Diagnostics& diags )
+{
+    u32 depth = 0;
+    for( const Token& t : tokens )
+    {
+        if( t.kind == Token_kind::R_brace && depth == 0 )
+        {
+            diags.unbalanced( t.span, "unexpected `}`", "every `{` before it is already closed" );
+            return;
+        }
+
+        if( t.kind == Token_kind::L_brace )
+        {
+            ++depth;
+        }
+        else if( t.kind == Token_kind::R_brace )
+        {
+            --depth;
+        }
+    }
+
+    if( depth > 0 )
+    {
+        const Token& last_before_eof = tokens.size() > 1 ? tokens[tokens.size() - 2] : tokens.back();
+        diags.unbalanced(
+            Span::point( last_before_eof.span.file, last_before_eof.span.end ),
+            "expected `}`, found end of file",
+            "a `{` above was never closed"
+        );
+    }
+}
+
 class Scanner
 {
 public:
@@ -873,6 +905,7 @@ std::vector<Token> lex( File_id file, const Source_manager& sm, Interner& intern
         token_spans.push_back( token.span );
     }
     diags.tokens( file, std::move( token_spans ) );
+    check_braces( tokens, diags );
     return tokens;
 }
 
@@ -1697,6 +1730,71 @@ TEST_CASE( "lexer_flags_a_token_it_reported", "[lex]" )
         INFO( lexed.rendered() );
         REQUIRE( lexed.error_count() == 1 );
         REQUIRE( lexed.rendered().find( "digit separator" ) != std::string::npos );
+    }
+}
+
+// Braces are counted by token, once per file: the first `}` with nothing open, or the gap after
+// the last token when a `{` is still open.
+TEST_CASE( "lexer_reports_an_unbalanced_brace", "[lex]" )
+{
+    SECTION( "balanced braces say nothing" )
+    {
+        const Lexed lexed( "i32 f()\n{\n    if( x ) { }\n}\n" );
+
+        REQUIRE( lexed.error_count() == 0 );
+    }
+
+    SECTION( "a brace in a string or a comment is not counted" )
+    {
+        const Lexed lexed( "\"{\" // {\n/* } */" );
+
+        REQUIRE( lexed.error_count() == 0 );
+    }
+
+    SECTION( "a body left open reports after the last token" )
+    {
+        const Lexed lexed( "i32 f()\n{\n    return 1;\n" );
+
+        INFO( lexed.rendered() );
+        REQUIRE( lexed.error_count() == 1 );
+        REQUIRE( lexed.rendered().find( "expected `}`, found end of file" ) != std::string::npos );
+        REQUIRE( lexed.rendered().find( "t.kl:3:14" ) != std::string::npos );
+    }
+
+    SECTION( "a `}` with nothing open reports there" )
+    {
+        const Lexed lexed( "i32 f()\n{\n}\n}\n" );
+
+        INFO( lexed.rendered() );
+        REQUIRE( lexed.error_count() == 1 );
+        REQUIRE( lexed.rendered().find( "unexpected `}`" ) != std::string::npos );
+        REQUIRE( lexed.rendered().find( "t.kl:4:1" ) != std::string::npos );
+    }
+
+    SECTION( "a `}` before its `{` is unexpected" )
+    {
+        const Lexed lexed( "} {" );
+
+        INFO( lexed.rendered() );
+        REQUIRE( lexed.error_count() == 1 );
+        REQUIRE( lexed.rendered().find( "unexpected `}`" ) != std::string::npos );
+    }
+
+    SECTION( "one report per file" )
+    {
+        const Lexed lexed( "}\n}\n{\n" );
+
+        INFO( lexed.rendered() );
+        REQUIRE( lexed.error_count() == 1 );
+        REQUIRE( lexed.rendered().find( "t.kl:1:1" ) != std::string::npos );
+    }
+
+    SECTION( "the tokens are left as written" )
+    {
+        const Lexed lexed( "{ }\n}" );
+
+        REQUIRE( lexed.count() == 3 );
+        REQUIRE( lexed.kind( 2 ) == Token_kind::R_brace );
     }
 }
 

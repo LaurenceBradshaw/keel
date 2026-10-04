@@ -1,0 +1,19 @@
+// A body that lost its `}` leaves every brace after it one level off. What breaks first reports,
+// the end of the file reports the brace, and nothing else in the file does.
+i32 first( i32 x )
+{
+    if( x > 0 )
+    {
+        return 1;
+    }
+    return 0;
+
+i32 second( i32 y )
+{
+    return y + missing;
+}
+
+i32 main()
+{
+    return first( 1 ) + second( 2 ) + also_missing;
+}
