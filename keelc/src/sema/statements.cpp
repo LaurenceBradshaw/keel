@@ -281,6 +281,10 @@ void Statements::visit_var( Node_id id )
         {
             reporter_.error_at( ast_.span( id ), "a `ref` binding must be initialised", "write `ref T r = x;`" );
         }
+        else if( ast_.kind( init ) == Node_kind::Error )
+        {
+            // reported where it failed to parse
+        }
         // Not a temporary: the referent has to outlive the binding, and everything that names a
         // place was declared before this line and so outlives it. A temporary is the one thing
         // that would not, and refusing it is what keeps the rule free of any analysis.
@@ -555,6 +559,11 @@ void Statements::visit_global( Node_id id )
     if( !init.is_valid() )
     {
         return; // zero, which C guarantees for file-scope storage
+    }
+
+    if( ast_.kind( init ) == Node_kind::Error )
+    {
+        return;
     }
 
     if( !constant_folder_.is_constant_expression( init ) )
@@ -1483,6 +1492,42 @@ TEST_CASE( "type_checker_lets_a_callee_write_an_out_parameter", "[sema][out]" )
 
     INFO( p.rendered() );
     REQUIRE( p.clean() );
+}
+
+// A broken expression was reported where it failed to parse; what sema would say about it is about
+// the misreading. Each source holds one error, the parse error.
+TEST_CASE( "type_checker_stays_quiet_about_a_broken_expression", "[sema][recovery]" )
+{
+    static const char* sources[] = {
+        "i32 f( i32 a, i32 b ) { return a; }\ni32 main() { i32 r = f( 1,\ni32 y = 2;\nreturn r; }",
+        "struct P { i32 x; i32 y; };\ni32 main() { P p = P { 1,\ni32 y = 2;\nreturn 0; }",
+        "i32 main() { i32 x = 1; ref i32 r = x ?; return 0; }",
+        "i32 main()\n{\n    unsafe\n    {\n        i32* v = alloc",
+        "u32 all = wrap<u32>( 0 - 1 ;\ni32 main() { return 0; }",
+    };
+
+    SECTION( "only the parse error is reported" )
+    {
+        for( const char* source : sources )
+        {
+            const Typed       p( source );
+            const std::string rendered = p.rendered();
+            INFO( "source: " << source << "\n" << rendered );
+            std::size_t reported = 0;
+            for( std::size_t at = rendered.find( "error:" ); at != std::string::npos; at = rendered.find( "error:", at + 1 ) )
+            {
+                ++reported;
+            }
+            CHECK( reported == 1 );
+        }
+    }
+
+    SECTION( "an expression whole before a missing `;` is still judged" )
+    {
+        const Typed p( "i32 main() { bool b = 1 + 2\nreturn 0; }" );
+        INFO( p.rendered() );
+        CHECK( p.errors() > 0 );
+    }
 }
 
 // A local is not a parameter, so neither parameter mode means anything on one - and the two want

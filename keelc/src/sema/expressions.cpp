@@ -26,7 +26,14 @@ Type_id Expressions::infer( Node_id id )
     switch( ast_.kind( id ) )
     {
     case Node_kind::Error:
+    {
+        if( unsafe_depth_ > 0 )
+        {
+            unsafe_used_ = true; // what failed to parse may have been the unsafe operation
+        }
+
         return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
 
     case Node_kind::Name_expr:
         return infer_name( id );

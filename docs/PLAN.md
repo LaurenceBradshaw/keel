@@ -6076,14 +6076,22 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      parameter, `reach_commit`'s branch (it always moves to the commit), the count in
      `parse_import`. Tests: `ast_marks_a_node_broken_when_a_failure_lies_in_it`,
      `parser_marks_what_failed_broken`, `parser_recovers_from_failures_not_from_judgments`.
-  4d. **A broken expression is an `Error` node.** `parse_expression` at power 0 returns `Error` for
+  4d. ~~**A broken expression is an `Error` node.**~~ **Done (2026-10-04).** `parse_expression` at power 0 returns `Error` for
      a broken result, rustc's `mk_expr_err`: sema's error type then silences arity, field-count,
      *not declared* and type follow-ons (*not declared* -1,564, mismatches -840). A `case` pattern
      keeps its shape, as rustc's separate pattern parser would. Sema stays quiet where it judged an
-     `Error`: a `ref` binding to one, and an `unsafe` block holding one counts as used. Test
-     `parser_conditional_without_a_colon_recovers` changes contract (the node is `Error`); golden
-     `parse/errors_destructor_name` changes AST only. **Removed:** `kind != Error` tests the broken
-     flag now covers.
+     `Error`: a `ref` binding to one; a file-scope or static initialiser that is one (else *must be
+     a constant expression*, 3 mutants); an `unsafe` block holding one counts as used, but only
+     inside a block, since a conversion outside one reads the flag (35 mutants, every one a file
+     cut off inside the block, where the claim lands on the end-of-file token outside it). Measured
+     against 4c: 95,174 to 91,962, one-error 4,335 to 5,110, three-or-more 14,807 to 14,167; 2,365
+     better, none worse. 23 edits are left with no error within a line, every one a line cut short
+     whose error lands a line or two down. Test `parser_conditional_without_a_colon_recovers`
+     changes contract (the node is `Error`); golden `parse/errors_destructor_name` changes AST
+     only. New: `parser_makes_a_broken_expression_an_error_node`,
+     `type_checker_stays_quiet_about_a_broken_expression`. **Removed:** nothing left in the
+     parser; 4c took the `!= Error` beside each `++` judgment, and *no effect*'s stays, since a
+     refused type-argument list or a bad literal is an `Error` that did not fail.
   4e. **An unclosed method body ends at the class's next member.** The parser keeps the class
      bodies it is inside; `at_unclosed_body_head` asks `member_head` with the innermost one's name,
      so `public`, `static` and a constructor end a body as `declaration_head` already did for file

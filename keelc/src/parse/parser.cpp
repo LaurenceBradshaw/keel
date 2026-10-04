@@ -186,7 +186,9 @@ private:
     // D16 needs it: a tighter operator is consumed inside the looser one's recursion and never
     // appears with a Binary_expr on its left.
     // increment_follows is true when the caller takes a trailing ++ as a statement.
-    Node_id parse_expression( u8 min_power, Token_kind enclosing = Token_kind::End_of_file, bool increment_follows = false );
+    Node_id parse_expression(
+        u8 min_power, Token_kind enclosing = Token_kind::End_of_file, bool increment_follows = false, bool keep_shape = false
+    );
 
     // Literals, names, unary operators, and `(` for grouping - which returns the inner node
     // unchanged, so the parens leave no trace.
@@ -2795,7 +2797,7 @@ Node_id Parser::parse_switch_stmt()
             }
             else
             {
-                const Node_id lower = parse_expression( 0 );
+                const Node_id lower = parse_expression( 0, Token_kind::End_of_file, false, true );
 
                 // D7: `case Shape::Circle( r ):` binds names rather than reading them. The
                 // postfix loop has already folded the `(` into a Call_expr, so the pattern is
@@ -2961,7 +2963,7 @@ bool Parser::failed_since( u32 token ) const
     return pos_ > token && ast_.failed_within( Span::merge( tokens_[token].span, previous().span ) );
 }
 
-Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing, bool increment_follows )
+Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing, bool increment_follows, bool keep_shape )
 {
     Node_id left = parse_prefix();
 
@@ -3242,6 +3244,11 @@ Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing, bool incre
             static_cast<u32>( op.kind ),
             { left, right }
         );
+    }
+
+    if( min_power == 0 && !keep_shape && ast_.broken( left ) && ast_.kind( left ) != Node_kind::Error )
+    {
+        left = error_node( ast_.span( left ) );
     }
 
     return left;
@@ -4082,20 +4089,57 @@ TEST_CASE( "parser_conditional_has_three_children_and_no_operator", "[parse]" )
     REQUIRE( p.aux( expression ) == 0 );
 }
 
-// The parser recovers rather than bailing, so a conditional missing its `:` still yields a node
-// with three children - every later pass reads child 2 without asking whether it is there.
+// The parser recovers rather than bailing: a conditional missing its `:` is reported once and the
+// whole expression is an Error, so no later pass reads the arm that was never written.
 TEST_CASE( "parser_conditional_without_a_colon_recovers", "[parse]" )
 {
     const Parsed p( "i32 main() { return a ? b; }" );
 
     REQUIRE( p.has_errors() );
     INFO( p.errors() );
+    REQUIRE( p.error_count() == 1 );
     REQUIRE( p.errors().find( "a conditional always has two arms" ) != std::string::npos );
+    REQUIRE( p.kind( parse_expression_of( p ) ) == Node_kind::Error );
+}
 
-    const Node_id expression = parse_expression_of( p );
-    REQUIRE( p.kind( expression ) == Node_kind::Conditional_expr );
-    REQUIRE( p.children( expression ).size() == 3 );
-    REQUIRE( p.kind( p.child( expression, 2 ) ) == Node_kind::Error );
+// A full expression that failed is an Error, so nothing after it judges the misreading.
+TEST_CASE( "parser_makes_a_broken_expression_an_error_node", "[parse][recovery]" )
+{
+    SECTION( "an operand missing inside a group" )
+    {
+        const Parsed p( "i32 main() { i32 x = 0; x = 1 + ( x * ); return x; }" );
+        INFO( p.dump() );
+        CHECK( p.kind( p.child( find_first( p.ast(), p.root(), Node_kind::Assign_stmt ), 1 ) ) == Node_kind::Error );
+    }
+
+    SECTION( "a call cut short" )
+    {
+        const Parsed p( "i32 main() { return f( 1,\n}" );
+        INFO( p.dump() );
+        CHECK( p.kind( parse_expression_of( p ) ) == Node_kind::Error );
+    }
+
+    SECTION( "a whole expression keeps its shape" )
+    {
+        const Parsed p( "i32 main() { i32 x = 0; x = 1 + ( x * 2 ); return x; }" );
+        INFO( p.dump() );
+        CHECK( p.kind( p.child( find_first( p.ast(), p.root(), Node_kind::Assign_stmt ), 1 ) ) == Node_kind::Binary_expr );
+    }
+
+    SECTION( "a refusal keeps its shape" )
+    {
+        const Parsed p( "i32 main() { i32 x = 0; x = x & 1 == 1; return x; }" );
+        INFO( p.dump() );
+        CHECK( p.kind( p.child( find_first( p.ast(), p.root(), Node_kind::Assign_stmt ), 1 ) ) == Node_kind::Binary_expr );
+    }
+
+    SECTION( "a case pattern keeps its shape" )
+    {
+        const Parsed p( "enum S { A( i32 w, i32 h ), B };\n"
+                        "i32 main() { S s = S::B; switch( s ) { case S::A( w, h == ): return 1; default: return 0; } }" );
+        INFO( p.dump() );
+        CHECK( find_first( p.ast(), p.root(), Node_kind::Variant_pattern ).is_valid() );
+    }
 }
 
 TEST_CASE( "parser_binary_operator_is_recorded_in_aux", "[parse]" )
