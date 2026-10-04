@@ -6290,9 +6290,27 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      skip an error-typed initialiser or value. **Measured** against M4: errors 62,789 to 62,097, all
      213 `<error>` messages gone, none added, none left with no error, identical to the prototype
      on every mutant; goldens unchanged. Tests: `type_table_finds_an_error_inside_a_type`,
-     `type_checker_stays_quiet_about_a_value_that_already_failed`. **Next, left out:** a builtin type name where a value goes says *`i32` is not
-     declared* (68 mutants), and a local `i32 i32 total` skips the *name of a builtin type* error a
-     parameter gives.
+     `type_checker_stays_quiet_about_a_value_that_already_failed`. **Next:** item 9.
+  9. **M6: a builtin type where a value goes is a type, not a value.** `i32 = 0;`, a declaration
+     whose name was deleted, says *`i32` is not declared*, which is false: it is declared, as a
+     type. A struct there already says *`P` is a type, not a value*, and rustc (*expected value,
+     found builtin type*), Go (*is not an expression*) and tsgo (*only refers to a type*) all name
+     the kind. **Shape.** The resolver's miss on a `Name_expr` asks `is_builtin_type_name` and
+     words it as `infer_name` does a struct; nothing else changes, so every count stays. As the
+     qualifier of `i32::make( 1 )` it is a type, and what is missing is the member, so the
+     resolver's `Path_expr` says *`i32` is a builtin type, and has no members* there instead.
+     **Measured** against M5: 180 reworded as a type, 3 as no members, errors 62,097 unchanged, no
+     mutant's count moves. Test: `resolver_says_a_builtin_type_is_not_a_value`; golden
+     `errors_static_methods`.
+     **Left out, measured:** a local `i32 i32 total = 0;` gets no *name of a builtin type*, which a
+     parameter does, because the `Var_decl`'s head failed and is silenced. Letting the refusal stand
+     in a silenced head gives 206 new errors, and 45 are misreadings: a lost `;` or `}` makes
+     `x` + `i32 main()` the declaration `x i32`, and under an unbalanced brace the refusal, at
+     column 1, then wins M4's earliest-error slot over the parser's own error (44 parser errors
+     lost). Neither the line nor the token before the name separates the two: 14 misreadings have
+     a builtin before them, and 63 same-line ones are a stray first word (`virtual i32 a = 1;`,
+     `auto bool value`), where blaming `i32` misleads. Waits on a rule that tells a doubled type
+     from a misread head.
 
 ### M7 slice: access control - done (2026-09-25)
 

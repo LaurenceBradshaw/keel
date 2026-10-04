@@ -64,7 +64,7 @@ error: `P` has no static method `nope`
 121 |     P p = P::nope();
     |           ^^^^^^^
 
-error: `i32` is not declared
+error: `i32` is a builtin type, and has no members
    --> sema/errors_static_methods.kl:130:12
     |
 130 |     return i32::make( 1 );

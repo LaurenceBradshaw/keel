@@ -197,6 +197,10 @@ void Resolver::visit( Node_id id )
         {
             bind( id, decl );
         }
+        else if( is_builtin_type_name( interner_.text( name ) ) )
+        {
+            reporter_.error_at( ast_.span( id ), fmt::format( "`{}` is a type, not a value", interner_.text( name ) ) );
+        }
         else
         {
             reporter_.error_at( ast_.span( id ), fmt::format( "`{}` is not declared", interner_.text( name ) ) );
@@ -220,6 +224,24 @@ void Resolver::visit( Node_id id )
             if( ast_.children( id ).size() > 1 )
             {
                 visit( ast_.child( id, 1 ) ); // type arguments
+            }
+
+            return;
+        }
+
+        if( ast_.kind( qualifier ) == Node_kind::Name_expr && ast_.children( qualifier ).empty() &&
+            is_builtin_type_name( interner_.text( Symbol_id { ast_.aux( qualifier ) } ) ) )
+        {
+            reporter_.error_at(
+                ast_.span( qualifier ),
+                fmt::format(
+                    "`{}` is a builtin type, and has no members", interner_.text( Symbol_id { ast_.aux( qualifier ) } )
+                )
+            );
+
+            if( ast_.children( id ).size() > 1 )
+            {
+                visit( ast_.child( id, 1 ) );
             }
 
             return;
@@ -1713,6 +1735,59 @@ TEST_CASE( "resolver_refuses_a_builtin_type_name", "[sema][resolve]" )
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
+    }
+}
+
+// A builtin type's name where a value goes is declared, as a type: saying it is not would be false.
+TEST_CASE( "resolver_says_a_builtin_type_is_not_a_value", "[sema][resolve]" )
+{
+    const auto typed = []( std::string_view source, std::string_view name )
+    {
+        const Resolved p( source );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        CHECK( p.rendered().find( fmt::format( "`{}` is a type, not a value", name ) ) != std::string::npos );
+        CHECK( p.rendered().find( "is not declared" ) == std::string::npos );
+    };
+
+    SECTION( "as an initialiser" )
+    {
+        typed( "i32 main() { i32 x = i32; return x; }", "i32" );
+    }
+
+    SECTION( "as an operand" )
+    {
+        typed( "i32 main() { i32 x = 1; return x + u8; }", "u8" );
+    }
+
+    SECTION( "a declaration that lost its name" )
+    {
+        typed( "i32 main() { i32 x = 0; f64 = 0.5; return x; }", "f64" );
+    }
+
+    SECTION( "as a callee" )
+    {
+        typed( "i32 main() { bool( 1 ); return 0; }", "bool" );
+    }
+
+    // There it is a type, and what is missing is the member.
+    SECTION( "as a qualifier" )
+    {
+        const Resolved p( "i32 main() { return i32::make( 1 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        CHECK( p.rendered().find( "`i32` is a builtin type, and has no members" ) != std::string::npos );
+    }
+
+    SECTION( "a name that only starts like one is still not declared" )
+    {
+        const Resolved p( "i32 main() { return i320; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        CHECK( p.rendered().find( "`i320` is not declared" ) != std::string::npos );
     }
 }
 
