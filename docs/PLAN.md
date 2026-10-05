@@ -6369,7 +6369,7 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      **Seen, not this item's:** `for e = P { 1.0, 2.0 };` is three errors with or without a
      broken literal (the head missing its `(` reads on to the file's end); a generic struct whose
      `where` clause failed makes every literal of it *nothing here says which `Box` this is*.
-  12. **M9: an unclosed payload eats the next variants** (item 5, 18 mutants). `Circle( f64
+  12. ~~**M9: an unclosed payload eats the next variants**~~ **Done (2026-10-05).** It came from item 5, 18 mutants. `Circle( f64
      radius ,` then `Rect( f64 width, f64 height ),` and `Dot` is eight errors: the payload skip
      takes `Rect` and `Dot`, so *carries 3 values* and *has no variant* at each use. **Others:**
      rustc refuses any unbalanced delimiter in the lexer (`lex_token_trees` returns `Err`, the file
@@ -6378,6 +6378,20 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      name starts a parameter too. So: a name followed by `(` cannot be a payload element, only a
      variant, so the payload list ends there (tsgo's rule with a two-token test); extending M4 to
      `(` is rustc's way but quiets the rest of the file for every lost `)`, so measure both.
+     **Prototyped (2026-10-05).** Measured against item 11. M4 over `(` (a stack of `(` and `{`,
+     a `}` meeting an open `(` reported once): errors 61,827 to 58,706 but 670 mutants worse and
+     one-error 6,878 to 6,241, since every lost `)` in an expression, which the statement already
+     reports alone, gains the earliest-error pair and quiets the rest of its file. Refused. A name
+     followed by `(` ends the payload: 7 better, 0 worse. A name followed by `}` too, since a
+     payload holds no `}` and `Dot` is the last variant, its `)` lost after the one before:
+     13 better, 0 worse, errors 61,827 to 61,768, one-error 6,878 to 6,885, three-or-more
+     7,292 to 7,282, and no *has no variant* left from an unclosed payload. The test runs at an
+     element's start and before its `,` is taken, so the `,` stays the variant list's; the one
+     error is *expected `)`* at the gap, unless the list already reported. Goldens unchanged, the
+     debug build exits 1 on every mutant. Test: `parser_ends_an_unclosed_payload_at_the_next_variant`.
+     **Built** as `Parser::starts_variant( u32 ahead )`, asked at the element's start and before
+     its `,`; the real build is identical to the prototype on every mutant. **Next:** item 13.
+     **Seen, not this item's:** a payload element that failed still counts as a value (item 14).
   13. **M10: the name of a declaration is the word before its `=`.** `i32 i32 total = 0;` is
      *expected `;`, found `total`*, then *`total` is not declared* at every use: the head is read as
      a declaration named `i32`, refused silently in the failed head, so `total` never declares. A
@@ -6397,6 +6411,22 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      then `number = 0` parses as a second declarator, so the word before `=` is declared; rustc's
      `let x y = 0;` fails the whole statement (`mk_stmt_err`) and every use is undeclared, as Keel
      today. The `=` anchor gives tsgo's outcome with Go's one error.
+  **Scheduled (2026-10-05)**, the leftovers noted under items 4f, 11 and 12, after item 13 and
+  in the same way: one commit each, prototyped and measured first. Item 9's builtin in a
+  silenced head is item 13's and not repeated here.
+  14. **M11: a payload field that failed is still a value.** `Circle( f64 radius ,, ...` or
+     `Rect( ( f64 w, f64 h ),` keeps the broken element as a `Field_decl`, so every construction
+     and pattern of the variant adds *carries 2 values, but 1 was bound*. The parse error already
+     names the fault; the count is a guess about a list the author never finished.
+  15. **M12: a `for` head missing its `(` reads to the end of the file.** `for e = P { 1.0, 2.0 };`
+     is three errors, the last an *expected `}`* at the end of the file, whether or not the
+     literal is broken.
+  16. **M13: a generic struct whose `where` clause failed blames every literal.** Each `Box { ... }`
+     says *nothing here says which `Box` this is*, though the fault is the clause, reported once
+     already.
+  17. **M14: a dropped head's stop token points at the gap.** Item 4f's rule, applied to
+     `report_dropped`'s stop token (`i32` then `{` on the next line): measured then, it changes
+     no count, only where the caret sits, so it is judged on the carets alone.
 
 ### M7 slice: access control - done (2026-09-25)
 

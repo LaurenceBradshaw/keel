@@ -127,6 +127,8 @@ private:
     u32     line_of( const Token& token ) const;
     Node_id parse_enum_decl();
     Node_id parse_variant_decl();
+    // A name before `(` or `}` is a variant, never a payload field.
+    bool starts_variant( u32 ahead ) const;
     // A member parser starts where its head scan did, past the markers, and is handed its commit.
     Node_id parse_field_decl( u32 commit );
     Node_id parse_destructor_decl( Symbol_id enclosing, Node_id type_params, u32 commit );
@@ -1667,6 +1669,15 @@ Node_id Parser::parse_variant_decl()
         const std::size_t list_errors = diags_.error_count();
         while( !check( Token_kind::R_paren ) && !at_end() )
         {
+            if( starts_variant( 0 ) )
+            {
+                if( list_errors == diags_.error_count() )
+                {
+                    error_expected( Token_kind::R_paren );
+                }
+                break;
+            }
+
             const u32       before          = pos_;
             const Span      field_start     = peek().span;
             const Node_id   type            = parse_type();
@@ -1680,6 +1691,15 @@ Node_id Parser::parse_variant_decl()
 
             if( !end_list_element( Token_kind::R_paren, list_errors ) )
             {
+                break;
+            }
+            // Before its `,` is taken, so the `,` stays the variant list's.
+            if( check( Token_kind::Comma ) && starts_variant( 1 ) )
+            {
+                if( list_errors == diags_.error_count() )
+                {
+                    error_expected( Token_kind::R_paren );
+                }
                 break;
             }
             match( Token_kind::Comma );
@@ -1696,6 +1716,12 @@ Node_id Parser::parse_variant_decl()
     const Node_id node = ast_.add( Node_kind::Variant_decl, Span::merge( start, previous().span ), name.v, payload );
     ast_.set_name_span( node, name_span );
     return node;
+}
+
+bool Parser::starts_variant( u32 ahead ) const
+{
+    return peek( ahead ).kind == Token_kind::Identifier &&
+           ( peek( ahead + 1 ).kind == Token_kind::L_paren || peek( ahead + 1 ).kind == Token_kind::R_brace );
 }
 
 Node_id Parser::parse_field_decl( u32 commit )
@@ -4594,6 +4620,45 @@ TEST_CASE( "parser_skips_a_broken_literal_element_past_braces_and_keywords", "[p
         CHECK( p.error_count() == 2 );
         CHECK( p.errors().find( "expected `}`" ) == std::string::npos );
         CHECK( find_first( p.ast(), p.root(), Node_kind::Return_stmt ).is_valid() );
+    }
+}
+
+TEST_CASE( "parser_ends_an_unclosed_payload_at_the_next_variant", "[parse][recovery]" )
+{
+    SECTION( "a name before `(` is the next variant" )
+    {
+        const Parsed p( "enum Shape\n{\n    Circle( f64 radius ,\n    Rect( f64 w, f64 h ),\n    Dot\n};" );
+        INFO( p.errors() );
+        CHECK( p.error_count() == 1 );
+        CHECK( p.errors().find( "expected `)`, found `,`" ) != std::string::npos );
+        CHECK( p.children( find_first( p.ast(), p.root(), Node_kind::Variant_decl ) ).size() == 1 );
+        CHECK( p.children( find_first( p.ast(), p.root(), Node_kind::Enum_decl ) ).size() == 5 );
+    }
+
+    SECTION( "a name before `}` is the last variant" )
+    {
+        const Parsed p( "enum Shape\n{\n    Circle( f64 radius ),\n    Rect( f64 w, f64 h ,\n    Dot\n};" );
+        INFO( p.errors() );
+        CHECK( p.error_count() == 1 );
+        CHECK( p.errors().find( "expected `)`, found `,`" ) != std::string::npos );
+        CHECK( p.children( find_first( p.ast(), p.root(), Node_kind::Enum_decl ) ).size() == 5 );
+    }
+
+    SECTION( "and so is one straight after the `(`" )
+    {
+        const Parsed p( "enum Shape\n{\n    Circle(\n    Rect( f64 w, f64 h ),\n    Dot\n};" );
+        INFO( p.errors() );
+        CHECK( p.error_count() == 1 );
+        CHECK( p.errors().find( "expected `)`, found `Rect`" ) != std::string::npos );
+        CHECK( p.children( find_first( p.ast(), p.root(), Node_kind::Enum_decl ) ).size() == 5 );
+    }
+
+    SECTION( "on one line too" )
+    {
+        const Parsed p( "enum Shape { Circle( f64 r, Rect( f64 w ), Dot };" );
+        INFO( p.errors() );
+        CHECK( p.error_count() == 1 );
+        CHECK( p.children( find_first( p.ast(), p.root(), Node_kind::Enum_decl ) ).size() == 5 );
     }
 }
 
