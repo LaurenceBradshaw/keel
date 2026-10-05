@@ -360,7 +360,8 @@ void Coverage::check_variant_pattern( Node_id pattern, Type_id type, std::vector
     const Node_id                  variant = ast_.variants( decl )[index];
     const std::span<const Node_id> payload = ast_.children( variant );
 
-    if( payload.size() != bindings.size() )
+    // A variant that failed to parse has no count to hold its uses to.
+    if( payload.size() != bindings.size() && !ast_.broken( variant ) )
     {
         reporter_.error_at(
             ast_.span( pattern ),
@@ -1437,6 +1438,57 @@ TEST_CASE( "coverage_types_the_bindings_of_a_failed_pattern", "[sema][payload]" 
         reported_once(
             "i32 f( Shape s ) { switch( s ) { case Shape:: ::Circle( r ): return r + 1; default: return 0; } }",
             "expected an identifier, found `::`"
+        );
+    }
+}
+
+// A payload that failed to parse has no count to check its uses against.
+TEST_CASE( "type_checker_counts_no_payload_of_a_variant_that_failed", "[sema][payload]" )
+{
+    const auto counts = [&]( std::string_view variants, std::string_view use, std::size_t errors )
+    {
+        const Typed p(
+            "enum Shape { " + std::string( variants ) + ", Dot };\n" + std::string( use ) + "\ni32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE_FALSE( p.clean() );
+        REQUIRE( p.errors() == errors );
+    };
+
+    constexpr std::string_view build = "Shape f() { return Shape::Rect( 1.0, 2.0 ); }";
+    constexpr std::string_view match =
+        "f64 f( Shape s ) { switch( s ) { case Shape::Rect( a, b ): return a * b; default: return 0.0; } }";
+
+    SECTION( "a construction, after a field that failed" )
+    {
+        counts( "Rect( f64 w ,, f64 h )", build, 0 );
+    }
+
+    SECTION( "a pattern, after a field that failed" )
+    {
+        counts( "Rect( f64 w ,, f64 h )", match, 0 );
+    }
+
+    // The failure lands in the variant but in no field.
+    SECTION( "a construction, after a failure between fields" )
+    {
+        counts( "Rect( f64 w( f64 h )", build, 0 );
+    }
+
+    SECTION( "a pattern, after a failure between fields" )
+    {
+        counts( "Rect( f64 w( f64 h )", match, 0 );
+    }
+
+    // Only the variant that failed: a sound one beside it still counts.
+    SECTION( "a sound variant still counts" )
+    {
+        counts( "Rect( f64 w ,, f64 h ), Circle( f64 r )", "Shape f() { return Shape::Circle( 1.0, 2.0 ); }", 1 );
+        counts(
+            "Rect( f64 w ,, f64 h ), Circle( f64 r )",
+            "f64 f( Shape s ) { switch( s ) { case Shape::Circle( a, b ): return a; default: return 0.0; } }",
+            1
         );
     }
 }

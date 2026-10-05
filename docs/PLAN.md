@@ -6392,7 +6392,8 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      **Built** as `Parser::starts_variant( u32 ahead )`, asked at the element's start and before
      its `,`; the real build is identical to the prototype on every mutant. **Next:** item 13.
      **Seen, not this item's:** a payload element that failed still counts as a value (item 14).
-  13. **M10: the name of a declaration is the word before its `=`.** `i32 i32 total = 0;` is
+  13. ~~**M10: the name of a declaration is the word before its `=`.**~~ **Dropped (2026-10-05).**
+     A head stays `[mode] type name`, and what follows the name is junk. `i32 i32 total = 0;` is
      *expected `;`, found `total`*, then *`total` is not declared* at every use: the head is read as
      a declaration named `i32`, refused silently in the failed head, so `total` never declares. A
      parameter, `i32 f( i32 i32 n )`, is *the name of a builtin type*, *expected `,` or `)`* and `n`
@@ -6411,13 +6412,54 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      then `number = 0` parses as a second declarator, so the word before `=` is declared; rustc's
      `let x y = 0;` fails the whole statement (`mk_stmt_err`) and every use is undeclared, as Keel
      today. The `=` anchor gives tsgo's outcome with Go's one error.
+     **Measured (2026-10-05)** against item 12's 61,768 errors. Each variant is a prototype
+     flag, applied in `parse_var_decl`, `parse_field_decl` and both head scans:
+     | Variant | Errors | Better | Worse |
+     |---|---|---|---|
+     | The shape as written, `=` | 61,407 | 255 | 118 |
+     | The same, `=` or `;` | 61,394 | 355 | 252 |
+     | Only when the name slot cannot hold a name, same line, `=` | 61,255 | 224 | 1 |
+     | The same, `=` or `;`, type left live | 61,258 | 232 | 42 |
+     | The same, head failed, type left live | 61,154 | 273 | 3 |
+     | **The same, head failed, type an error node** | **61,133** | **281** | **2** |
+     One-error mutants 6,885 to 7,027, three-or-more 7,282 to 7,124. **The shape was wrong
+     in one place**: it moved the name past any word. Most of its 118 worse mutants are
+     `T x junk = v`, a swapped value or a doubled name (`ref i32 r a =;`, `Point v Point = ...`),
+     where the first word was the name and moving it undeclares every use. So the name moves
+     only when the name slot holds what can never be a name: a builtin type's spelling, a
+     keyword or a literal. Expect_name refuses those already, so nothing that parses today is
+     read differently. `Foo Foo x = 1;` keeps today's errors. **The run stays on the type's
+     line**: without that, `p` then `p.y = 2;` on the next line declares `y`, 17 worse instead
+     of 3. **The type is not trusted**: `void i32 x = 1;` or `i32 i32* r = ...` leaves the
+     leftmost type live, and each use reports against it (*expected `i32*`, but got `void*`*,
+     *`i32` cannot be dereferenced*). Failing the head span and making the type an error node
+     silences those, and every lost error checked was a cascade (a field dropped from a
+     literal, a mismatch against the guessed type). The two worse: `u64 public len;` in a
+     `class` now declares `len`, private by default, so each literal of it reports that; and
+     `i32 i32* v = alloc< <i32>();` reports the stray `i32*` and the second fault both.
+     **Layering**: parse never includes sema, and the builtin spelling test is sema's
+     `is_builtin_type_name`, so it moves below both. The scanner also has no lines today.
+     **Dropped for its cost, not its result**: 1% of errors bought with four interacting
+     conditions in the declaration head (what can never be a name, the anchor, the line, an
+     error-node type), plus a spelling table moved below sema and a line bit on `Token`. Every
+     error today is true, and rustc reads `let x y = 0;` the same way. **Next:** item 14.
   **Scheduled (2026-10-05)**, the leftovers noted under items 4f, 11 and 12, after item 13 and
   in the same way: one commit each, prototyped and measured first. Item 9's builtin in a
-  silenced head is item 13's and not repeated here.
-  14. **M11: a payload field that failed is still a value.** `Circle( f64 radius ,, ...` or
+  silenced head was item 13's and was dropped with it.
+  14. ~~**M11: a payload field that failed is still a value.**~~ **Done (2026-10-05).** `Circle( f64 radius ,, ...` or
      `Rect( ( f64 w, f64 h ),` keeps the broken element as a `Field_decl`, so every construction
      and pattern of the variant adds *carries 2 values, but 1 was bound*. The parse error already
      names the fault; the count is a guess about a list the author never finished.
+     **Measured (2026-10-05)**: both count checks, construction and pattern, skip a variant
+     that `Ast::broken` reports. Errors 61,768 to 61,749, 11 mutants better and none worse,
+     every lost error a count. Skipping only when a payload field is itself broken is 6
+     better: it misses `Rect( f64 width( f64 height )` and `Rect( f64 width; , f64 height )`,
+     whose failure lands in the variant but outside any field, and the count there is as
+     much a guess.
+     **Built** as `!ast_.broken( variant )` on the count check in
+     `Expressions::infer_variant_construction` and `Coverage::check_variant_pattern`; the
+     pairwise type checks and binding types still run. The real build is identical to the
+     prototype on every mutant. **Next:** item 15.
   15. **M12: a `for` head missing its `(` reads to the end of the file.** `for e = P { 1.0, 2.0 };`
      is three errors, the last an *expected `}`* at the end of the file, whether or not the
      literal is broken.

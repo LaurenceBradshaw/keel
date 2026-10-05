@@ -1804,7 +1804,8 @@ Type_id Expressions::infer_variant_construction( Node_id id )
             "write it without arguments"
         );
     }
-    else if( payload.size() != arguments.size() )
+    // A variant that failed to parse has no count to hold its uses to.
+    else if( payload.size() != arguments.size() && !ast_.broken( variant ) )
     {
         reporter_.error_at(
             ast_.span( ast_.child( id, 1 ) ),
