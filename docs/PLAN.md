@@ -6291,7 +6291,7 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      213 `<error>` messages gone, none added, none left with no error, identical to the prototype
      on every mutant; goldens unchanged. Tests: `type_table_finds_an_error_inside_a_type`,
      `type_checker_stays_quiet_about_a_value_that_already_failed`. **Next:** item 9.
-  9. **M6: a builtin type where a value goes is a type, not a value.** `i32 = 0;`, a declaration
+  9. ~~**M6: a builtin type where a value goes is a type, not a value.**~~ **Done (2026-10-04).** `i32 = 0;`, a declaration
      whose name was deleted, says *`i32` is not declared*, which is false: it is declared, as a
      type. A struct there already says *`P` is a type, not a value*, and rustc (*expected value,
      found builtin type*), Go (*is not an expression*) and tsgo (*only refers to a type*) all name
@@ -6311,6 +6311,76 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      a builtin before them, and 63 same-line ones are a stray first word (`virtual i32 a = 1;`,
      `auto bool value`), where blaming `i32` misleads. Waits on a rule that tells a doubled type
      from a misread head.
+  **Scheduled (2026-10-05)**, the leftovers above, one commit each in this order, each prototyped
+  and measured over the saved mutants first:
+  10. ~~**M7: a keyword is not a function's name.**~~ **Done (2026-10-05).** `bool if( ... ) {` reads as a function head, the
+     head scanner taking a keyword as a name for file-scope recovery (item 4, 35 mutants). In a
+     body, `u8 if ( c )` is four errors: *a function cannot be declared inside a function*, two
+     *expected an identifier* and the `else` orphaned. **Others:** Go's statement skip stops at a
+     statement keyword (`stopset`), so it is one *unexpected keyword if at end of statement* and
+     the `if` parses; tsgo never consumes a reserved word as a name (a missing identifier, the
+     keyword left for the statement); rustc takes a keyword as a name only when what follows can
+     follow a name, which is the file-scope case Keel already handles in one error. **Shape
+     (2026-10-05).** Go's rule alone breaks item 4f's `i32 return = 0;`, a misspelt name that must
+     be consumed; rustc's alone accepts `if (`, since `(` follows a function name. A body declares
+     no function, so together: in a body, a statement keyword in the name slot is the misspelt name
+     only before `=`, `;` or `,`; otherwise one error at the gap, nothing consumed, and the keyword
+     parses as its statement. In `expect_name` and in the head scanner asked at a statement's
+     start; file scope unchanged. **Prototyped (2026-10-05)**, and `expect_name` needs nothing:
+     once the scanner refuses the keyword, the type is an expression statement short of its `;`
+     (*expected `;`, found `if`*, at the gap) and the statement skip already stops at the keyword.
+     The scanner's name slot, in a body, refuses `if`, `while`, `for` and `switch` before `(`,
+     `unsafe` before `{`, and `return` before anything but `=`, `;` or `,`; `break`, `continue`
+     and `fallthrough` stay names, since `;` follows a name as well. Measured against M6: the
+     first cut (`=`, `;`, `,` for every keyword) 115 better, 18 worse, every one a keyword *inserted*
+     between type and name (`i32 while remainder = a % b;`) starting a statement it had no `(`
+     for; requiring what the statement needs leaves 2 worse, both true errors a broken body used
+     to hide (a second edit's condition; uses of a declaration the mutant deleted). Errors 62,097
+     to 61,935, one-error 6,793 to 6,861, three-or-more 7,347 to 7,308; *a function cannot be
+     declared inside a function* 38 to 0. Without `return` only 40 better: `Box return 2;` is one
+     error rather than two, and 5 swaps (`a return * 2;`) trade a parse error for a sema one on
+     the swapped statement, which is the `n i32` swap's two faults again. Goldens unchanged, no
+     edit left with no error near, the debug build exits 1 on every mutant. Tests:
+     `scanner_ends_a_statement_head_at_a_statement_keyword`,
+     `parser_reads_a_statement_keyword_as_its_statement`. **Built** as `Scanner::Scan_site`
+     (`File`, `Statement`) and `Scanner::at_name`, which `want_name` and `scan_type_and_name`
+     share; the real build is identical to the prototype on every mutant. **Next:** item 11.
+  11. **M8: a stray `{` or keyword inside a struct literal** is worse after M3's list skip (item
+     5, 19 mutants). The element skip stops at `{` and statement keywords, gives the list up, and
+     the statement skip reads the literal's insides as statements: `Line { { 1.0, 2.0 }, ... }`
+     is three errors, `Point { for, 2.0, }` four. Unbalanced ones are now M4's. **Others:** rustc's
+     struct-literal field recovery is `recover_stmt_( Comma, BlockMode::Ignore )`, balancing `{}`
+     and stopping only at `,` or the literal's `}`: one error each. Go reads a nested `{...}` as an
+     elided literal; tsgo aborts the literal like Keel. So: inside a literal's braces the skip
+     balances `{}` and ignores statement keywords.
+  12. **M9: an unclosed payload eats the next variants** (item 5, 18 mutants). `Circle( f64
+     radius ,` then `Rect( f64 width, f64 height ),` and `Dot` is eight errors: the payload skip
+     takes `Rect` and `Dot`, so *carries 3 values* and *has no variant* at each use. **Others:**
+     rustc refuses any unbalanced delimiter in the lexer (`lex_token_trees` returns `Err`, the file
+     is not parsed): one *mismatched closing delimiter*. tsgo ends an inner list where an
+     enclosing list's element starts (`isInSomeParsingContext`), which would not fire here since a
+     name starts a parameter too. So: a name followed by `(` cannot be a payload element, only a
+     variant, so the payload list ends there (tsgo's rule with a two-token test); extending M4 to
+     `(` is rustc's way but quiets the rest of the file for every lost `)`, so measure both.
+  13. **M10: the name of a declaration is the word before its `=`.** `i32 i32 total = 0;` is
+     *expected `;`, found `total`*, then *`total` is not declared* at every use: the head is read as
+     a declaration named `i32`, refused silently in the failed head, so `total` never declares. A
+     parameter, `i32 f( i32 i32 n )`, is *the name of a builtin type*, *expected `,` or `)`* and `n`
+     undeclared. Doubling a type is not the fault to special-case; a builtin in the name slot is.
+     **Shape (2026-10-05).** A declaration is `[mode] type name`, read left to right: modes are
+     keywords, `parse_type` reads the type, and with an `=` present the word before it is the name.
+     Whatever lies between the type's end and the name is the fault and takes one error: a lone
+     builtin is *the name of a builtin type*, since it sits in the name slot; anything else one
+     syntax error over its span. No guess: the leftmost type is always the type (`Foo Foo x`
+     blames the second `Foo`), and the name moves only on an `=`. Item 9's glued misreadings
+     (`x` then the next line's `i32 main()`) have no `=`. Cost: `virtual i32 a = 1;` blames `i32`,
+     not `virtual`. Measure `=` alone, then `;` as an anchor too (`i32 i32 total;`). If it measures
+     badly, drop the item: today's errors are all true. **Others** (name before type, so the name
+     is already read when the stray word comes): Go's `var total int int = 0` keeps `total int`
+     and reports the rest once at end of statement; tsgo's `let x number = 0` is *`,` expected*,
+     then `number = 0` parses as a second declarator, so the word before `=` is declared; rustc's
+     `let x y = 0;` fails the whole statement (`mk_stmt_err`) and every use is undeclared, as Keel
+     today. The `=` anchor gives tsgo's outcome with Go's one error.
 
 ### M7 slice: access control - done (2026-09-25)
 

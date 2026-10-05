@@ -99,7 +99,7 @@ Member_chunk Scanner::next_member( u32 at, Symbol_id enclosing )
     return Member_chunk { .dropped_begin = at, .dropped_end = q, .failure = first.failure, .head = std::nullopt };
 }
 
-Declaration_scan Scanner::declaration_head( u32 at )
+Declaration_scan Scanner::declaration_head( u32 at, Scan_site site )
 {
     const auto make_head = [this]( Declaration_kind kind, u32 start ) -> Declaration_scan
     {
@@ -116,6 +116,7 @@ Declaration_scan Scanner::declaration_head( u32 at )
     cursor_       = at;
     owed_greater_ = 0;
     failure_      = Scan_failure {};
+    site_         = site;
 
     if( check_keyword( Keyword::Import ) )
     {
@@ -272,6 +273,7 @@ bool Scanner::looks_like_declaration( u32 at )
 {
     cursor_       = at;
     owed_greater_ = 0;
+    site_         = Scan_site::Statement;
 
     // `auto x = ...` is settled by its keyword; the caller checks that before asking.
     if( !check( Token_kind::Identifier ) && !check_keyword( Keyword::Const ) && !check_keyword( Keyword::Fn ) &&
@@ -287,6 +289,7 @@ bool Scanner::looks_like_binding( u32 at )
 {
     cursor_       = at;
     owed_greater_ = 0;
+    site_         = Scan_site::Statement;
 
     match_keyword( Keyword::Const ); // optional
 
@@ -363,6 +366,7 @@ Head_scan Scanner::scan_head( u32 at, Symbol_id enclosing, Constructor_names nam
     cursor_       = at;
     owed_greater_ = 0;
     failure_      = Scan_failure {};
+    site_         = Scan_site::File;
 
     // Match public, or failing that private, but never both.
     if( !match_keyword( Keyword::Public ) )
@@ -566,14 +570,52 @@ bool Scanner::want( Token_kind kind )
 
 bool Scanner::want_name()
 {
-    // Follows parsers expect_name, which consumes these as the name they were meant to be.
-    if( match( Token_kind::Identifier ) || match( Token_kind::Keyword ) || match( Token_kind::Digit_name ) ||
-        match( Token_kind::Int_literal ) )
+    if( at_name() )
     {
+        advance();
         return true;
     }
 
     return fail( Wanted::Name );
+}
+
+bool Scanner::at_name() const
+{
+    // Follows parsers expect_name, which consumes these as the name they were meant to be.
+    if( check( Token_kind::Identifier ) || check( Token_kind::Digit_name ) || check( Token_kind::Int_literal ) )
+    {
+        return true;
+    }
+
+    if( !check( Token_kind::Keyword ) )
+    {
+        return false;
+    }
+
+    if( site_ == Scan_site::File )
+    {
+        return true;
+    }
+
+    // A statement keyword starts its statement once what it needs follows; `;` follows a name too.
+    switch( peek().keyword() )
+    {
+    case Keyword::If:
+    case Keyword::While:
+    case Keyword::For:
+    case Keyword::Switch:
+        return peek( 1 ).kind != Token_kind::L_paren;
+
+    case Keyword::Unsafe:
+        return peek( 1 ).kind != Token_kind::L_brace;
+
+    case Keyword::Return:
+        return peek( 1 ).kind == Token_kind::Equal || peek( 1 ).kind == Token_kind::Semicolon ||
+               peek( 1 ).kind == Token_kind::Comma;
+
+    default:
+        return true;
+    }
 }
 
 bool Scanner::scan_type_with_mode()
@@ -868,9 +910,9 @@ bool Scanner::scan_type_and_name()
     }
 
     // The name. A keyword, digit-led name or number holds its place, as for expect_name, so
-    // `i32 out = 1;` reaches parse_var_decl and is reported there.
-    if( !check( Token_kind::Identifier ) && !check( Token_kind::Keyword ) && !check( Token_kind::Digit_name ) &&
-        !check( Token_kind::Int_literal ) )
+    // `i32 out = 1;` reaches parse_var_decl and is reported there. At a statement's start,
+    // a statement keyword followed by what it needs does not.
+    if( !at_name() )
     {
         return false;
     }
@@ -1575,6 +1617,42 @@ TEST_CASE( "scanner_answers_the_parsers_lookahead", "[scan]" )
         CHECK( scanner.looks_like_declaration( s.at( "T" ) ) );
         CHECK( scanner.looks_like_type_arguments( s.at( "<" ) ) );
         CHECK_FALSE( scanner.looks_like_declaration( s.at( "return" ) ) );
+    }
+}
+
+// A statement keyword where a body's name goes starts its statement once what it needs follows.
+TEST_CASE( "scanner_ends_a_statement_head_at_a_statement_keyword", "[scan]" )
+{
+    auto declaration = []( std::string_view source ) { return Scanned( source ).scanner().looks_like_declaration( 0 ); };
+    auto binding     = []( std::string_view source ) { return Scanned( source ).scanner().looks_like_binding( 0 ); };
+
+    SECTION( "a keyword followed by what its statement needs" )
+    {
+        CHECK_FALSE( declaration( "u8 if ( c ) { }" ) );
+        CHECK_FALSE( declaration( "i32 while ( n > 0 ) { }" ) );
+        CHECK_FALSE( declaration( "i32 for ( ; ; ) { }" ) );
+        CHECK_FALSE( declaration( "Colour switch ( c ) { }" ) );
+        CHECK_FALSE( declaration( "u8 unsafe { }" ) );
+        CHECK_FALSE( declaration( "Box return 2;" ) );
+        CHECK_FALSE( binding( "ref i32 if ( c ) { }" ) );
+    }
+
+    SECTION( "otherwise the keyword is the misspelt name" )
+    {
+        CHECK( declaration( "i32 while x = 1;" ) );
+        CHECK( declaration( "i32 if = 1;" ) );
+        CHECK( declaration( "i32 return = 0;" ) );
+        CHECK( declaration( "i32 return;" ) );
+        CHECK( declaration( "i32 unsafe = 1;" ) );
+        CHECK( declaration( "i32 break;" ) );
+    }
+
+    SECTION( "at file scope a keyword still names a function" )
+    {
+        const Declaration_scan scan = Scanned( "bool if( i32 n ) { }" ).declaration();
+
+        REQUIRE( scan.head.has_value() );
+        CHECK( scan.head->kind == Declaration_kind::Function );
     }
 }
 

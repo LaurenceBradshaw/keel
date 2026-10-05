@@ -120,8 +120,15 @@ public:
     // Starting at `at`: the tokens no member can be read from, then the member after them.
     Member_chunk next_member( u32 at, Symbol_id enclosing );
 
-    // The file-scope declaration head starting at `at`.
-    Declaration_scan declaration_head( u32 at );
+    // Where a head is scanned: at a statement's start a statement keyword is not a name.
+    enum class Scan_site : u8
+    {
+        File,
+        Statement
+    };
+
+    // The declaration head starting at `at`, scanned as `site` asks.
+    Declaration_scan declaration_head( u32 at, Scan_site site = Scan_site::File );
 
     // Starting at `at`: the tokens no declaration can be read from, then the declaration after them.
     Declaration_chunk next_declaration( u32 at );
@@ -163,6 +170,7 @@ private:
     bool fail( Wanted wanted, Token_kind token = Token_kind::End_of_file );
     bool want( Token_kind kind );
     bool want_name();
+    bool at_name() const; // Whether the token at the cursor holds a name's place, as for expect_name.
 
     // The type grammar parse_type_with_mode and parse_type accept, including what they consume
     // only to report, such as `T&`.
@@ -192,6 +200,7 @@ private:
     u32                    cursor_       = 0;
     u32                    owed_greater_ = 0;
     Scan_failure           failure_;
+    Scan_site              site_ = Scan_site::File;
 };
 
 } // namespace keel

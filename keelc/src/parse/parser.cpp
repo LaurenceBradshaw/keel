@@ -747,7 +747,7 @@ bool Parser::at_unclosed_body_head()
         }
     }
 
-    const Declaration_scan scan = scanner_.declaration_head( pos_ );
+    const Declaration_scan scan = scanner_.declaration_head( pos_, Scanner::Scan_site::Statement );
     return scan.head.has_value() && scan.head->kind != Declaration_kind::Variable;
 }
 
@@ -2623,7 +2623,7 @@ Node_id Parser::dispatch_statement()
         return error_node( Span::merge( start, previous().span ) );
     }
 
-    Declaration_scan scan = scanner_.declaration_head( pos_ );
+    Declaration_scan scan = scanner_.declaration_head( pos_, Scanner::Scan_site::Statement );
     if( scan.head.has_value() && scan.head->kind == Declaration_kind::Function )
     {
         error_at(
@@ -5840,6 +5840,51 @@ TEST_CASE( "parser_points_a_missing_name_at_the_gap", "[parse][members]" )
         REQUIRE( p.error_count() == 2 );
         REQUIRE( p.errors().find( "t.kl:3:5" ) != std::string::npos );
         REQUIRE( p.errors().find( "t.kl:8:5" ) != std::string::npos );
+    }
+}
+
+// A statement keyword in a body's name slot starts its statement when what it needs follows.
+TEST_CASE( "parser_reads_a_statement_keyword_as_its_statement", "[parse][statements]" )
+{
+    SECTION( "a type run into an `if`" )
+    {
+        const Parsed p( "i32 main()\n{\n    u8 c = 1;\n    u8 if ( c == 1 )\n    {\n        return 1;\n    }\n"
+                        "    else\n    {\n        return 2;\n    }\n}\n" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "t.kl:4:7" ) != std::string::npos );
+        REQUIRE( p.errors().find( "expected `;`, found `if`" ) != std::string::npos );
+        REQUIRE( find_first( p.ast(), p.root(), Node_kind::If_stmt ).is_valid() );
+    }
+
+    SECTION( "a stray word before `return`" )
+    {
+        const Parsed p( "i32 main() { Box return 2; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "t.kl:1:17" ) != std::string::npos );
+        REQUIRE( find_first( p.ast(), p.root(), Node_kind::Return_stmt ).is_valid() );
+    }
+
+    SECTION( "a keyword with nothing its statement needs is still the name" )
+    {
+        const Parsed p( "i32 main() { i32 while x = 1; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.errors().find( "expected an identifier, found `while`" ) != std::string::npos );
+        REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::While_stmt ).is_valid() );
+    }
+
+    SECTION( "at file scope a keyword still names a function" )
+    {
+        const Parsed p( "bool if( i32 n ) { return n > 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "expected an identifier, found `if`" ) != std::string::npos );
+        REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::If_stmt ).is_valid() );
     }
 }
 
