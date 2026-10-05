@@ -6513,9 +6513,26 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      **Built** as an error expectation set by `absorb`, read by `no_instance_named` and dropped by
      `infer_call`, with `infer_struct_literal`'s four failed paths absorbing their values; the
      real build is identical to the prototype on every mutant. **Next:** item 17.
-  17. **M14: a dropped head's stop token points at the gap.** Item 4f's rule, applied to
+  17. ~~**M14: a dropped head's stop token points at the gap.**~~ **Done (2026-10-05).** Item 4f's rule, applied to
      `report_dropped`'s stop token (`i32` then `{` on the next line): measured then, it changes
      no count, only where the caret sits, so it is judged on the carets alone.
+     **Measured (2026-10-05)** against item 16's 61,391 errors: no count changes in any variant.
+     Each moved caret is judged by its distance to the nearest line the mutant edited.
+     | Variant | Carets moved | Closer | Farther | Same |
+     |---|---|---|---|---|
+     | 4f's rule, separators excepted | 821 | 317 | 391 | 113 |
+     | The same, no separator exception | 1,506 | 500 | 827 | 179 |
+     | **4f's rule, separators excepted, and not when `{` is wanted** | **322** | **311** | **2** | **9** |
+     The first variant splits by what was wanted: a missing `)` before a `{` gains 221 of 222,
+     a wanted `{` loses 389 of 499. A body's `{` starts its own line, so a token on the next
+     line stands where the `{` goes, and a replaced `{` is exactly that token. Every other
+     wanted token, `)`, `;`, a name or a type, ends or continues the line before, and there
+     the gap is where it is missing. The two farther: `public` then `+ n;`, where the `+`
+     replaced a type, and a deleted `)` line whose gap is still where the `)` belonged.
+     Goldens unchanged. Test: `parser_points_a_dropped_head_at_the_gap`.
+     **Built** as `Parser::gap_before( u32 at )`, now 4f's test in `expect_name` too, asked by
+     `report_dropped` unless a `{` is wanted; the real build is identical to the prototype on
+     every mutant, carets included. The scheduled leftovers are all done.
 
 ### M7 slice: access control - done (2026-09-25)
 

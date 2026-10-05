@@ -125,6 +125,7 @@ private:
     // One error for the tokens a chunk drops, at the first word when the hint table knows it.
     void    report_dropped( u32 begin, u32 end, const Scan_failure& failure, std::optional<u32> next, Hint_place place );
     u32     line_of( const Token& token ) const;
+    bool    gap_before( u32 at ) const;
     Node_id parse_enum_decl();
     Node_id parse_variant_decl();
     // A name before `(` or `}` is a variant, never a payload field.
@@ -570,9 +571,7 @@ void Parser::error_expected( Token_kind kind, std::string help )
 Symbol_id Parser::expect_name()
 {
     // A token on a later line starts the next statement, unless a separator came before it.
-    const bool name_missing = pos_ > 0 && line_of( peek() ) != line_of( previous() ) &&
-                              previous().kind != Token_kind::Semicolon && previous().kind != Token_kind::L_brace &&
-                              previous().kind != Token_kind::R_brace && previous().kind != Token_kind::Comma;
+    const bool name_missing = gap_before( pos_ );
 
     if( !name_missing &&
         ( check( Token_kind::Keyword ) || check( Token_kind::Digit_name ) || check( Token_kind::Int_literal ) ) )
@@ -1481,6 +1480,12 @@ void Parser::report_dropped( u32 begin, u32 end, const Scan_failure& failure, st
         const Token& stop = tokens_[failure.at];
         span              = stop.span;
 
+        // A `{` opens its own line; anything else wanted is missing at the gap.
+        if( gap_before( failure.at ) && !( failure.wanted == Wanted::Token && failure.token == Token_kind::L_brace ) )
+        {
+            span = Span::point( tokens_[failure.at - 1].span.file, tokens_[failure.at - 1].span.end );
+        }
+
         message = "expected ";
         switch( failure.wanted )
         {
@@ -1510,6 +1515,22 @@ void Parser::report_dropped( u32 begin, u32 end, const Scan_failure& failure, st
 u32 Parser::line_of( const Token& token ) const
 {
     return sm_.line_col( token.span.file, token.span.start ).line;
+}
+
+// Whether the token at `at` starts a later line with no separator before it.
+bool Parser::gap_before( u32 at ) const
+{
+    if( at <= 0 || at >= tokens_.size() )
+    {
+        return false;
+    }
+
+    const Token&     at_token     = tokens_[at];
+    const Token&     before_token = tokens_[at - 1];
+    const Token_kind before_kind  = tokens_[at - 1].kind;
+    return before_token.span.file == at_token.span.file && line_of( before_token ) < line_of( at_token ) &&
+           before_kind != Token_kind::Semicolon && before_kind != Token_kind::L_brace && before_kind != Token_kind::R_brace &&
+           before_kind != Token_kind::Comma;
 }
 
 Node_id Parser::parse_enum_decl()
@@ -5963,6 +5984,49 @@ TEST_CASE( "parser_points_a_missing_name_at_the_gap", "[parse][members]" )
         REQUIRE( p.error_count() == 2 );
         REQUIRE( p.errors().find( "t.kl:3:5" ) != std::string::npos );
         REQUIRE( p.errors().find( "t.kl:8:5" ) != std::string::npos );
+    }
+}
+
+// A dropped head's stop token on a later line is the next thing; what it wanted is missing at the gap.
+TEST_CASE( "parser_points_a_dropped_head_at_the_gap", "[parse][members]" )
+{
+    SECTION( "a function's parameters cut short before its body" )
+    {
+        const Parsed p( "i32 f( i32 a\n{\n    return a;\n}\ni32 main() { return f( 1 ); }\n" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "t.kl:1:13" ) != std::string::npos );
+        REQUIRE( p.errors().find( "expected `)`, found `{`" ) != std::string::npos );
+    }
+
+    SECTION( "a method's parameters cut short before its body" )
+    {
+        const Parsed p( "class P\n{\n    i32 get( i32 a\n    {\n        return a;\n    }\n};\n"
+                        "i32 main() { return 0; }\n" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "t.kl:3:19" ) != std::string::npos );
+    }
+
+    SECTION( "a body's `{` on its own line is where the wrong token stands" )
+    {
+        const Parsed p( "i32 f( i32 a )\n(\n    return a;\n}\ni32 main() { return 0; }\n" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 2 );
+        REQUIRE( p.errors().find( "t.kl:2:1" ) != std::string::npos );
+        REQUIRE( p.errors().find( "expected `{`, found `(`" ) != std::string::npos );
+    }
+
+    SECTION( "a token after a separator starts its own element" )
+    {
+        const Parsed p( "i32 f( i32 a,\n{\n    return a;\n}\ni32 main() { return 0; }\n" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "t.kl:2:1" ) != std::string::npos );
     }
 }
 
