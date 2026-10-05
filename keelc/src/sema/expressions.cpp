@@ -263,7 +263,8 @@ Type_id Expressions::infer_call( Node_id id )
     // Taken and cleared, because the expectation belongs to this call and to nothing inside it:
     // in `f( g() )` the type wanted of `f` says nothing about what `g` should produce. What it
     // does say is what a type parameter appearing only in the return type must be.
-    const Type_id expectation = expected_;
+    // An error expectation names no type, so it deduces nothing.
+    const Type_id expectation = table_.is_error( expected_ ) ? Type_id {} : expected_;
     expected_                 = Type_id {};
 
     // What choosing between candidates already had to type. Empty until it does, which is every
@@ -2226,6 +2227,12 @@ Type_id Expressions::no_instance_named( Span at, Node_id declaration )
 {
     const std::string_view name = interner_.text( Symbol_id { ast_.aux( declaration ) } );
 
+    // An error expected here was reported where it failed.
+    if( expected_.is_valid() && table_.is_error( expected_ ) )
+    {
+        return table_.builtin( Type_kind::Error );
+    }
+
     if( expected_.is_valid() )
     {
         // The ordinary mismatch, stated here rather than left to check(): falling through would
@@ -2256,7 +2263,7 @@ Type_id Expressions::infer_struct_literal( Node_id id )
     {
         for( const Node_id init : ast_.initialisers( id ) )
         {
-            infer( ast_.child( init, 0 ) ); // type the values anyway
+            absorb( ast_.child( init, 0 ) ); // type the values anyway
         }
 
         return types_.record( id, error );
@@ -2277,7 +2284,7 @@ Type_id Expressions::infer_struct_literal( Node_id id )
 
         for( const Node_id init : ast_.initialisers( id ) )
         {
-            infer( ast_.child( init, 0 ) );
+            absorb( ast_.child( init, 0 ) );
         }
 
         // The declared type rather than the error type: the mistake is how it was built, not what
@@ -2321,7 +2328,7 @@ Type_id Expressions::infer_struct_literal( Node_id id )
 
             for( const Node_id init : initialisers )
             {
-                infer( ast_.child( init, 0 ) );
+                absorb( ast_.child( init, 0 ) );
             }
 
             return types_.record( id, table_.builtin( Type_kind::Error ) );
@@ -2341,7 +2348,7 @@ Type_id Expressions::infer_struct_literal( Node_id id )
 
         for( const Node_id init : initialisers )
         {
-            infer( ast_.child( init, 0 ) ); // type the values anyway
+            absorb( ast_.child( init, 0 ) ); // type the values anyway
         }
 
         return types_.record( id, poison );
@@ -2769,7 +2776,10 @@ void Expressions::absorb( Node_id id )
 {
     if( id.is_valid() && !literals_.is_literal_expression( id ) )
     {
+        // The context failed, so nothing inside may ask what it wanted.
+        expected_ = table_.builtin( Type_kind::Error );
         infer( id );
+        expected_ = Type_id {};
     }
 }
 
@@ -7663,6 +7673,48 @@ TEST_CASE( "type_checker_types_a_generic_static_field", "[sema][types][static]" 
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( c.message ) != std::string::npos );
         REQUIRE( p.rendered().find( c.help ) != std::string::npos );
+    }
+}
+
+// A value whose destination already failed has no instance to be told it lacks.
+TEST_CASE( "type_checker_names_no_instance_where_the_destination_failed", "[sema][generics]" )
+{
+    const std::string types = "struct Box<T> where T : Copyable { T v; };\n"
+                              "class C { public i32* p; C( i32* q ) { p = q; } };\n";
+
+    const auto errors = [&]( std::string_view declarations, std::string_view body, std::size_t count )
+    {
+        const Typed p( types + std::string( declarations ) + "\ni32 main() { " + std::string( body ) + " return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == count );
+    };
+
+    SECTION( "a field whose type failed" )
+    {
+        errors(
+            "struct Outer<T> where T u8 Copyable { Box<T> inner; i32 tag; };", "Outer<i32> a = Outer { Box { 11 }, 2 };", 0
+        );
+    }
+
+    SECTION( "a variable whose type failed" )
+    {
+        errors( "", "Nope<i32> a = Box { 1 };", 1 );
+    }
+
+    SECTION( "a literal of an undeclared type" )
+    {
+        errors( "", "auto a = Nope { Box { 1 } };", 0 );
+    }
+
+    SECTION( "a literal of a type with a constructor" )
+    {
+        errors( "", "C c = C { nullptr };", 1 );
+    }
+
+    SECTION( "a literal with nothing to say which instance still reports" )
+    {
+        errors( "", "auto a = Box { 1 };", 1 );
     }
 }
 

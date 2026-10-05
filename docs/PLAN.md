@@ -6486,9 +6486,33 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      Goldens unchanged. Test: `parser_reads_no_for_head_without_its_paren`.
      **Built** as `Scanner::head_closes( u32 at )`, asked by `parse_for_stmt` when its `(` is
      missing; the real build is identical to the prototype on every mutant. **Next:** item 16.
-  16. **M13: a generic struct whose `where` clause failed blames every literal.** Each `Box { ... }`
+  16. ~~**M13: a generic struct whose `where` clause failed blames every literal.**~~ **Done (2026-10-05).** Each `Box { ... }`
      says *nothing here says which `Box` this is*, though the fault is the clause, reported once
      already.
+     **Measured (2026-10-05)** against item 15's 61,494 errors. The clause is not what blames
+     the literal: a declaration whose head failed types its fields as errors, `check` hands a
+     value with an error expectation to `absorb`, and `absorb` infers it with no expectation at
+     all. A generic literal there (`Outer { Box { 11 }, 2 }`) then reads as one with nowhere
+     to land. The same holds at every `absorb`: a variable whose type failed (`Nope<i32> a =
+     Box { 1 };`), a `void` return, an unwritable target. Each caller means the destination
+     already failed and said so.
+     | Variant | Errors | Better | Worse |
+     |---|---|---|---|
+     | `absorb` infers under an error expectation, and `no_instance_named` is quiet under one | 61,428 | 45 | 0 |
+     | **The same, and a struct literal that failed absorbs its values** | **61,391** | **55** | **0** |
+     One-error 6,910 to 6,913, three-or-more 7,222 to 7,216. A call clears the expectation as
+     it starts, so an argument gets its parameter's and nothing inside a call is silenced; the
+     call drops an error expectation rather than deducing a type parameter from it. The second
+     variant's four paths (an undeclared or non-aggregate type, a constructor, a private field,
+     no instance named) inferred their values with no expectation, so a `nullptr` or a generic
+     literal inside reported again: 37 *cannot infer type of `nullptr`* lost, every one inside
+     a `Buffer { nullptr, 0 }` already refused. Every lost error checked was a cascade; the two
+     *expected `Outer<i32>`, but got `Box`* in one mutant blamed the inner literal for a field
+     whose type had failed. Goldens unchanged. Test:
+     `type_checker_names_no_instance_where_the_destination_failed`.
+     **Built** as an error expectation set by `absorb`, read by `no_instance_named` and dropped by
+     `infer_call`, with `infer_struct_literal`'s four failed paths absorbing their values; the
+     real build is identical to the prototype on every mutant. **Next:** item 17.
   17. **M14: a dropped head's stop token points at the gap.** Item 4f's rule, applied to
      `report_dropped`'s stop token (`i32` then `{` on the next line): measured then, it changes
      no count, only where the caret sits, so it is judged on the carets alone.
