@@ -6345,7 +6345,7 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      `parser_reads_a_statement_keyword_as_its_statement`. **Built** as `Scanner::Scan_site`
      (`File`, `Statement`) and `Scanner::at_name`, which `want_name` and `scan_type_and_name`
      share; the real build is identical to the prototype on every mutant. **Next:** item 11.
-  11. **M8: a stray `{` or keyword inside a struct literal** is worse after M3's list skip (item
+  11. ~~**M8: a stray `{` or keyword inside a struct literal**~~ **Done (2026-10-05).** It was worse after M3's list skip (item
      5, 19 mutants). The element skip stops at `{` and statement keywords, gives the list up, and
      the statement skip reads the literal's insides as statements: `Line { { 1.0, 2.0 }, ... }`
      is three errors, `Point { for, 2.0, }` four. Unbalanced ones are now M4's. **Others:** rustc's
@@ -6353,6 +6353,22 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      and stopping only at `,` or the literal's `}`: one error each. Go reads a nested `{...}` as an
      elided literal; tsgo aborts the literal like Keel. So: inside a literal's braces the skip
      balances `{}` and ignores statement keywords.
+     **Prototyped (2026-10-05).** `end_list_element` takes a `List_site` (`Expression`,
+     `Declaration`, `Literal`) in place of its `in_declaration` flag. In a literal the skip
+     balances `{}` as a declaration's does, stops at depth 0 only at `,`, the `}`, or an unmatched
+     `)` or `]`, and stops at a `;` at any depth. Measured against item 10: rustc's rule as written
+     (`;` stopping nothing) 65 better, 93 worse, since a literal missing its `}` runs on through
+     the statements after it; `;` at depth 0 only, 33 better, 2 worse, one of them `operator {`
+     after a `for` head, read as a literal whose skip balances the loop body and ends at the
+     function's `}`, an *expected `}`* at the end of the file. A literal holds no statement, so a
+     `;` inside one at any depth ends it: 31 better, 1 worse, the worse one two true errors the
+     broken statement used to hide (`px`, `p.y += ;`). Errors 61,935 to 61,827, one-error 6,861 to
+     6,878, three-or-more 7,308 to 7,292; goldens unchanged. Test:
+     `parser_skips_a_broken_literal_element_past_braces_and_keywords`. **Built** as prototyped; the
+     real build is identical to the prototype on every mutant. **Next:** item 12.
+     **Seen, not this item's:** `for e = P { 1.0, 2.0 };` is three errors with or without a
+     broken literal (the head missing its `(` reads on to the file's end); a generic struct whose
+     `where` clause failed makes every literal of it *nothing here says which `Box` this is*.
   12. **M9: an unclosed payload eats the next variants** (item 5, 18 mutants). `Circle( f64
      radius ,` then `Rect( f64 width, f64 height ),` and `Dot` is eight errors: the payload skip
      takes `Rect` and `Dot`, so *carries 3 values* and *has no variant* at each use. **Others:**

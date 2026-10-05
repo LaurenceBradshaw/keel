@@ -169,9 +169,16 @@ private:
     bool match_generic_close();
     // On a miss, reports once and skips to this list's `>`; false means the list was broken.
     bool expect_generic_close();
+
+    enum class List_site : u8
+    {
+        Expression,
+        Declaration,
+        Literal
+    };
     // After a list element: at `,` or `close` true; otherwise reports once per list and skips to
     // one, false when it stops short. `list_errors` is the error count before the list.
-    bool end_list_element( Token_kind close, std::size_t list_errors, bool in_declaration = false );
+    bool end_list_element( Token_kind close, std::size_t list_errors, List_site site = List_site::Expression );
     // Past this list's `>`, or up to a token the list cannot reach past (`;`, `{`, an unmatched `)`).
     void    skip_to_generic_close();
     Node_id parse_return_stmt();
@@ -1602,7 +1609,7 @@ Node_id Parser::parse_enum_decl()
             dropped_variant = true;
         }
 
-        if( !end_list_element( Token_kind::R_brace, list_errors, true ) )
+        if( !end_list_element( Token_kind::R_brace, list_errors, List_site::Declaration ) )
         {
             gave_up = true;
             break;
@@ -1861,7 +1868,7 @@ Node_id Parser::parse_struct_literal( Span start, Symbol_id type_name, Node_id p
 
         initialisers.push_back( parse_field_init() );
 
-        if( !end_list_element( Token_kind::R_brace, list_errors ) )
+        if( !end_list_element( Token_kind::R_brace, list_errors, List_site::Literal ) )
         {
             closed = false;
             break;
@@ -2362,7 +2369,7 @@ bool Parser::expect_generic_close()
     return false;
 }
 
-bool Parser::end_list_element( Token_kind close, std::size_t list_errors, bool in_declaration )
+bool Parser::end_list_element( Token_kind close, std::size_t list_errors, List_site site )
 {
     if( check( Token_kind::Comma ) || check( close ) )
     {
@@ -2375,14 +2382,21 @@ bool Parser::end_list_element( Token_kind close, std::size_t list_errors, bool i
         fail_at( at, fmt::format( "expected `,` or {}, found {}", expectation( close ), found_text() ) );
     }
 
-    const u32 skip_from = pos_;
-    u32       depth     = 0;
+    const bool braces    = site != List_site::Expression;
+    const u32  skip_from = pos_;
+    u32        depth     = 0;
     while( !at_end() )
     {
-        const bool opens = check( Token_kind::L_paren ) || check( Token_kind::L_bracket ) ||
-                           ( in_declaration && check( Token_kind::L_brace ) );
-        const bool closes = check( Token_kind::R_paren ) || check( Token_kind::R_bracket ) ||
-                            ( in_declaration && check( Token_kind::R_brace ) );
+        const bool opens =
+            check( Token_kind::L_paren ) || check( Token_kind::L_bracket ) || ( braces && check( Token_kind::L_brace ) );
+        const bool closes =
+            check( Token_kind::R_paren ) || check( Token_kind::R_bracket ) || ( braces && check( Token_kind::R_brace ) );
+
+        // A literal holds no statement, so a `;` at any depth ends it.
+        if( site == List_site::Literal && check( Token_kind::Semicolon ) )
+        {
+            break;
+        }
 
         if( depth == 0 )
         {
@@ -2391,7 +2405,7 @@ bool Parser::end_list_element( Token_kind close, std::size_t list_errors, bool i
                 break;
             }
 
-            if( in_declaration )
+            if( site == List_site::Declaration )
             {
                 if( scanner_.declaration_head( pos_ ).head.has_value() )
                 {
@@ -2402,6 +2416,14 @@ bool Parser::end_list_element( Token_kind close, std::size_t list_errors, bool i
                 if( check( Token_kind::Identifier ) && line_of( peek() ) != line_of( previous() ) )
                 {
                     return true;
+                }
+            }
+            // Not at `{` or a statement keyword: they are the element's fault, not the list's end.
+            else if( site == List_site::Literal )
+            {
+                if( closes )
+                {
+                    break;
                 }
             }
             else if( closes || check( Token_kind::Semicolon ) || check( Token_kind::L_brace ) || check( Token_kind::R_brace ) ||
@@ -2433,7 +2455,7 @@ bool Parser::end_list_element( Token_kind close, std::size_t list_errors, bool i
     }
 
     // Short of both: the statement's own skip knows more.
-    if( !in_declaration )
+    if( site != List_site::Declaration )
     {
         pos_ = skip_from;
     }
@@ -4541,6 +4563,37 @@ TEST_CASE( "parser_skips_a_broken_list_element_to_its_separator", "[parse][recov
         INFO( p.errors() );
         CHECK( p.error_count() == 1 );
         CHECK( p.errors().find( "expected `;`" ) != std::string::npos );
+    }
+}
+
+TEST_CASE( "parser_skips_a_broken_literal_element_past_braces_and_keywords", "[parse][recovery]" )
+{
+    SECTION( "a stray `{` is skipped whole" )
+    {
+        const Parsed p( "i32 main() { L l = L { { 1.0, 2.0 }, P { 3.0, 4.0 } };\n    return 0;\n}" );
+        INFO( p.errors() );
+        CHECK( p.error_count() == 1 );
+        CHECK( p.errors().find( "expected an expression, found `{`" ) != std::string::npos );
+        CHECK( find_first( p.ast(), p.root(), Node_kind::Return_stmt ).is_valid() );
+    }
+
+    SECTION( "a statement keyword does not start a statement" )
+    {
+        const Parsed p( "i32 main() { P p = P { for, 2.0, };\n    return 0;\n}" );
+        INFO( p.errors() );
+        CHECK( p.error_count() == 1 );
+        CHECK( p.errors().find( "expected an expression, found `for`" ) != std::string::npos );
+        CHECK_FALSE( find_first( p.ast(), p.root(), Node_kind::For_stmt ).is_valid() );
+        CHECK( find_first( p.ast(), p.root(), Node_kind::Return_stmt ).is_valid() );
+    }
+
+    SECTION( "a `;` ends the skip, even inside braces" )
+    {
+        const Parsed p( "i32 main() { while( true ) x { if( c ) { n++; } }\n    return 0;\n}" );
+        INFO( p.errors() );
+        CHECK( p.error_count() == 2 );
+        CHECK( p.errors().find( "expected `}`" ) == std::string::npos );
+        CHECK( find_first( p.ast(), p.root(), Node_kind::Return_stmt ).is_valid() );
     }
 }
 
