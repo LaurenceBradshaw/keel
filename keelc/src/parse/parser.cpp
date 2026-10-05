@@ -2935,7 +2935,12 @@ Node_id Parser::parse_for_stmt()
 
     const Span start = peek().span;
     advance();
-    expect( Token_kind::L_paren );
+
+    // Without its `(`, only a head that a `)` closes before a brace is read as one.
+    if( !expect( Token_kind::L_paren ) && !scanner_.head_closes( pos_ ) )
+    {
+        return error_node( Span::merge( start, previous().span ) );
+    }
     const u32 condition_start = pos_;
 
     // Init. Both parse_var_decl and parse_expression_stmt consume their own `;` which is exactly
@@ -7638,6 +7643,61 @@ TEST_CASE( "parser_for_header_recovers_at_its_own_paren", "[parse]" )
         const Node_id body = p.child( p.child( p.root(), 0 ), 2 );
         REQUIRE( p.children( body ).size() == 2 );
         REQUIRE( p.kind( p.child( body, 1 ) ) == Node_kind::Return_stmt );
+    }
+}
+
+TEST_CASE( "parser_reads_no_for_head_without_its_paren", "[parse]" )
+{
+    SECTION( "a head that lost only its `(` is still read" )
+    {
+        const Parsed p( "i32 main() { for i32 i = 0; i < 3; i++ ) { y = i; } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "expected `(`, found `i32`" ) != std::string::npos );
+
+        const Node_id stmt = first_statement( p );
+        REQUIRE( p.kind( stmt ) == Node_kind::For_stmt );
+        REQUIRE( p.kind( p.child( stmt, 0 ) ) == Node_kind::Var_decl );
+        REQUIRE( p.text( p.child( stmt, 3 ) ) == "{ y = i; }" );
+    }
+
+    SECTION( "a `for` before a statement is dropped" )
+    {
+        const Parsed p( "i32 main() { for e = P { 1.0, 2.0 }; i32 a = 1; return a; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "expected `(`, found `e`" ) != std::string::npos );
+
+        const Node_id body = p.child( p.child( p.root(), 0 ), 2 );
+        REQUIRE( p.children( body ).size() == 3 );
+        REQUIRE( p.kind( p.child( body, 0 ) ) == Node_kind::Error );
+        REQUIRE( p.kind( p.child( body, 1 ) ) == Node_kind::Var_decl );
+        REQUIRE( p.kind( p.child( body, 2 ) ) == Node_kind::Return_stmt );
+    }
+
+    // The statement keyword ends the skip, so the `return` is read.
+    SECTION( "a `for` before a statement keyword" )
+    {
+        const Parsed p( "i32 main() { for return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+
+        const Node_id body = p.child( p.child( p.root(), 0 ), 2 );
+        REQUIRE( p.children( body ).size() == 2 );
+        REQUIRE( p.kind( p.child( body, 1 ) ) == Node_kind::Return_stmt );
+    }
+
+    // A `)` that closes a group opened after the `for` is not the head's.
+    SECTION( "a balanced group is not a head" )
+    {
+        const Parsed p( "i32 main() { for run( 0 ); return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.kind( first_statement( p ) ) == Node_kind::Error );
     }
 }
 

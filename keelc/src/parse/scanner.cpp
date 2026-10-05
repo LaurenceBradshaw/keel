@@ -302,6 +302,41 @@ bool Scanner::looks_like_binding( u32 at )
     return scan_type_and_name();
 }
 
+// From `at`: whether a `)` closes a group opened before it, and a `{` follows.
+bool Scanner::head_closes( u32 at )
+{
+    u32 depth = 0;
+    cursor_   = at;
+
+    while( true )
+    {
+        if( at_end() || check( Token_kind::L_brace ) || check( Token_kind::R_brace ) )
+        {
+            return false;
+        }
+
+        switch( peek().kind )
+        {
+        case Token_kind::L_paren:
+        case Token_kind::L_bracket:
+            depth += 1;
+            break;
+        case Token_kind::R_paren:
+        case Token_kind::R_bracket:
+            if( depth == 0 )
+            {
+                return check( Token_kind::R_paren ) && peek( 1 ).kind == Token_kind::L_brace;
+            }
+            depth -= 1;
+            break;
+        default:
+            break;
+        }
+
+        advance();
+    }
+}
+
 // Shape alone, with no symbol table (L17). Taking the generic reading is safe: the comparison
 // reading never type-checks (§12).
 bool Scanner::looks_like_type_arguments( u32 at )

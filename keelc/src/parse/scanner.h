@@ -136,6 +136,7 @@ public:
     // Statement lookahead, on shape alone.
     bool looks_like_declaration( u32 at );
     bool looks_like_binding( u32 at );
+    bool head_closes( u32 at );
 
     // At `<`: whether it opens type arguments rather than a comparison.
     bool looks_like_type_arguments( u32 at );

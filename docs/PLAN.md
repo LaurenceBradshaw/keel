@@ -6460,9 +6460,32 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      `Expressions::infer_variant_construction` and `Coverage::check_variant_pattern`; the
      pairwise type checks and binding types still run. The real build is identical to the
      prototype on every mutant. **Next:** item 15.
-  15. **M12: a `for` head missing its `(` reads to the end of the file.** `for e = P { 1.0, 2.0 };`
+  15. ~~**M12: a `for` head missing its `(` reads to the end of the file.**~~ **Done (2026-10-05).** `for e = P { 1.0, 2.0 };`
      is three errors, the last an *expected `}`* at the end of the file, whether or not the
      literal is broken.
+     **Measured (2026-10-05)** against item 14's 61,749 errors. Without its `(` the head is read
+     as though it were there, so its three clauses run on over the statements after it, the
+     `{` it then misses opens a body, and that body takes the function's `}`. Three shapes in
+     the corpus: `for` over another statement's first word (`for x = 1;`, `for return 0;`), a
+     stray word before the `(` (`for i32 ( i = 0; ...`), and a head that lost only its `(`
+     (`for i32 i = 0; i < 3; i++ ) {`), which reads well today. Each variant reports
+     *expected `(`* and then:
+     | Variant | Errors | Better | Worse |
+     |---|---|---|---|
+     | Drop the `for`; the statement skip does the rest | 61,519 | 131 | 17 |
+     | **The same, unless an unmatched `)` then `{` lie ahead before any brace** | **61,494** | **113** | **0** |
+     | The same, and a `(` before the next `;` opens the head | 61,515 | 104 | 4 |
+     One-error 6,890 to 6,910, three-or-more 7,277 to 7,222. A dropped `for` leaves an
+     error node, and `parse_statement`'s skip, which stops at `;`, a statement keyword or a
+     body's `{`, takes what follows, so `for return 0;` keeps its `return`. Dropping every
+     such `for` loses the head that lost only its `(`, the 17 worse. Taking a later `(` as
+     the head's guesses: `for run( 0 );` and `for while( x )` read a call or a condition as
+     the head. Its one gain, `for :: ( ... ) { break; }`, keeps the loop the body's
+     `break` needs; with the `for` dropped the body is a bare block and the `break` reports.
+     That mutant still drops from 7 errors to 6, and every other error gained is true: `for x = 1;` was `i32 x = 1;`, so `x` is undeclared.
+     Goldens unchanged. Test: `parser_reads_no_for_head_without_its_paren`.
+     **Built** as `Scanner::head_closes( u32 at )`, asked by `parse_for_stmt` when its `(` is
+     missing; the real build is identical to the prototype on every mutant. **Next:** item 16.
   16. **M13: a generic struct whose `where` clause failed blames every literal.** Each `Box { ... }`
      says *nothing here says which `Box` this is*, though the fault is the clause, reported once
      already.
