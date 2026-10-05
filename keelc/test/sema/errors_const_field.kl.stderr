@@ -1,0 +1,79 @@
+error: `n` is a `const` field, so it cannot be modified
+  --> sema/errors_const_field.kl:47:9
+   |
+47 |         other.n = 2;
+   |         ^^^^^^^ only a constructor assigns it
+
+error: `n` is a `const` field, so it cannot be modified
+  --> sema/errors_const_field.kl:52:9
+   |
+52 |         n += 1;
+   |         ^ only a constructor assigns it
+
+error: `n` is a `const` field, so it cannot be modified
+  --> sema/errors_const_field.kl:57:9
+   |
+57 |         this.n++;
+   |         ^^^^^^ only a constructor assigns it
+
+error: `n` is a `const` field, so it cannot be modified
+  --> sema/errors_const_field.kl:62:9
+   |
+62 |         n = 0;
+   |         ^ only a constructor assigns it
+
+error: `c` is a `const` field, so it cannot be modified
+  --> sema/errors_const_field.kl:80:9
+   |
+80 |         c += 1;
+   |         ^ a constructor assigns it once, whole, with `=`
+
+error: `p` is a `const` field, so it cannot be modified
+  --> sema/errors_const_field.kl:83:9
+   |
+83 |         p.y = 3;
+   |         ^^^ a constructor assigns it once, whole, with `=`
+
+error: `i` is a `const` field, so it cannot be modified
+  --> sema/errors_const_field.kl:86:9
+   |
+86 |         i.poke();
+   |         ^ a constructor assigns it once, whole, with `=`
+
+error: `a` is a `const` field, so it cannot be modified
+  --> sema/errors_const_field.kl:91:18
+   |
+91 |         set( ref a );
+   |                  ^ a constructor assigns it once, whole, with `=`
+
+error: `b` is a `const` field, so it cannot be modified
+  --> sema/errors_const_field.kl:92:19
+   |
+92 |         init( out b );
+   |                   ^ a constructor assigns it once, whole, with `=`
+
+error: `x` is a `const` field, so it cannot be modified
+   --> sema/errors_const_field.kl:101:5
+    |
+101 |     p.x = 2;
+    |     ^^^ only a constructor assigns it
+
+error: `n` is a `const` field, so it cannot be modified
+   --> sema/errors_const_field.kl:106:5
+    |
+106 |     c.n = 2;
+    |     ^^^ only a constructor assigns it
+
+error: `x` is a `const` field, so it cannot be modified
+   --> sema/errors_const_field.kl:112:5
+    |
+112 |     p.x     = 3;
+    |     ^^^ only a constructor assigns it
+
+error: expected `i32*`, but got `const i32*`
+   --> sema/errors_const_field.kl:115:17
+    |
+115 |     i32*    q = &c.n;
+    |                 ^^^^ a pointer to `const` never converts back to one that writes
+
+13 errors generated

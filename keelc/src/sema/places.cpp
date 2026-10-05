@@ -103,7 +103,7 @@ bool Places::call_returns_a_binding( Node_id call ) const
 
 // D31/D32: what may be written. A `const` declaration says so itself; a borrow is read-only because
 // someone else owns it - different reasons, so different messages and different fixes.
-bool Places::check_writable( Node_id target, Node_id current_function )
+bool Places::check_writable( Node_id target, Node_id current_function, bool replaces )
 {
     // Above place_root, which resolves only a `Name_expr`: a call root reaches it as an invalid id
     // and the guard below reads that as permission. `returns_a_binding` rather than
@@ -171,6 +171,28 @@ bool Places::check_writable( Node_id target, Node_id current_function )
         return false;
     }
 
+    const Node_id field = const_field( target );
+    if( field.is_valid() )
+    {
+        if( replaces && initialises_const_field( target, current_function ) )
+        {
+            return true;
+        }
+
+        const bool own_constructor = ast_.kind( current_function ) == Node_kind::Constructor_decl &&
+                                     place_root( target, current_function ) == receiver_of( current_function );
+
+        reporter_.error_at(
+            ast_.span( target ),
+            fmt::format(
+                "`{}` is a `const` field, so it cannot be modified", interner_.text( Symbol_id { ast_.aux( field ) } )
+            ),
+            own_constructor ? "a constructor assigns it once, whole, with `=`" : "only a constructor assigns it"
+        );
+
+        return false;
+    }
+
     const Node_id root = place_root( target, current_function );
 
     // D7: a pattern binding is read-only. The payload is copied today, so this refuses nothing
@@ -231,11 +253,11 @@ bool Places::check_writable( Node_id target, Node_id current_function )
     return true;
 }
 
-// Whether a place may be read and not written: through a pointer to `const`, from a `const ref` return, or rooted in a `const`
-// binding, a pattern binding or a read-only borrow. A temporary is check_writable's alone.
+// Whether a place may be read and not written: through a pointer to `const` or a `const` field, from a `const ref` return, or
+// rooted in a `const` binding, a pattern binding or a read-only borrow. A temporary is check_writable's alone.
 bool Places::is_read_only( Node_id target, Node_id current_function ) const
 {
-    if( through_const_pointer( target ).is_valid() )
+    if( through_const_pointer( target ).is_valid() || const_field( target ).is_valid() )
     {
         return true;
     }
@@ -296,6 +318,77 @@ Node_id Places::through_const_pointer( Node_id place ) const
 
         return Node_id {};
     }
+}
+
+Node_id Places::const_field( Node_id place ) const
+{
+    if( ast_.kind( place ) == Node_kind::Field_expr )
+    {
+        const Type_id object_type = types_.type_of( ast_.child( place, 0 ) );
+
+        if( !object_type.is_valid() || table_.is_error( object_type ) )
+        {
+            return Node_id {};
+        }
+
+        const bool    through   = table_.is_pointer( object_type );
+        const Type_id aggregate = through ? table_.get( object_type ).element : object_type;
+
+        if( table_.is_struct( aggregate ) )
+        {
+            const std::span<const Node_id> members = ast_.members( table_.get( aggregate ).declaration );
+            for( const Node_id member : members )
+            {
+                if( ast_.kind( member ) == Node_kind::Field_decl && ast_.aux( member ) == ast_.aux( place ) &&
+                    is_const_field( ast_, member ) )
+                {
+                    return member;
+                }
+            }
+        }
+
+        if( through )
+        {
+            return Node_id();
+        }
+
+        place = ast_.child( place, 0 );
+    }
+
+    const Node_id decl = resolution_.declaration_of( place );
+    if( ast_.kind( place ) == Node_kind::Name_expr && ast_.kind( decl ) == Node_kind::Field_decl &&
+        is_const_field( ast_, decl ) )
+    {
+        return decl;
+    }
+
+    return Node_id {};
+}
+
+bool Places::initialises_const_field( Node_id place, Node_id current_function ) const
+{
+    if( ast_.kind( current_function ) != Node_kind::Constructor_decl )
+    {
+        return false;
+    }
+
+    if( ast_.kind( place ) == Node_kind::Name_expr )
+    {
+        return is_const_field( ast_, resolution_.declaration_of( place ) );
+    }
+
+    if( ast_.kind( place ) == Node_kind::Field_expr )
+    {
+        const Node_id object = ast_.child( place, 0 );
+
+        if( ast_.kind( object ) == Node_kind::Name_expr &&
+            resolution_.declaration_of( object ) == receiver_of( current_function ) )
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 // Bare and owning: the read-only borrow. `move` is not one - the callee owns what it was given -
@@ -1596,6 +1689,8 @@ TEST_CASE( "type_checker_takes_the_address_of_a_read_only_place_as_a_pointer_to_
                  Case {
                      "const ref i32 h( const ref i32 a ) { return a; }\ni32 f() { i32 y = 0; auto q = &h( y ); return 0; }", 1
                  },
+                 Case { "class C { public const i32 n; C() { n = 1; } };\ni32 f() { C c = C(); auto q = &c.n; return 0; }", 1 },
+                 Case { "class C { const i32 n; C() { n = 1; auto q = &n; } };", 0 },
              } )
         {
             const Typed p( std::string( c.program ) + "\ni32 main() { return 0; }" );
@@ -1629,6 +1724,71 @@ TEST_CASE( "type_checker_takes_the_address_of_a_read_only_place_as_a_pointer_to_
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
+    }
+}
+
+// A `const` field is assigned by its own constructor, whole, and by nothing else.
+TEST_CASE( "type_checker_lets_a_constructor_assign_its_const_field", "[sema][const][field]" )
+{
+    for( const char* program : {
+             "class C { const i32 n; C() { n = 1; } };",
+             "class C { const i32 n; C() { this.n = 1; } };",
+             "class C { public u8[*] const p; C() { unsafe { p = alloc<u8>( 1 ); } } ~C() { unsafe { free( p ); } } };",
+             "class C { public const u8[*] const p; C( const u8[*] q ) { p = q; } };",
+             "class Box<T> where T : Copyable { public const T v; Box( T x ) { v = x; } };\n"
+             "i32 f() { Box<i32> b = Box<i32>( 1 ); return b.v; }",
+             // Read like any field, from any method.
+             "class C { const i32 n; C() { n = 1; } i32 get() const { return n; } i32 twice() { return n + this.n; } };",
+             // A struct's comes from its literal, and the struct is still replaced whole.
+             "struct P { const i32 x; i32 y; };\ni32 f() { P p = P { 1, 2 }; p.y = 3; p = P { 4, 5 }; return p.x; }",
+         } )
+    {
+        const Typed p( std::string( program ) + "\ni32 main() { return 0; }" );
+
+        INFO( program << "\n" << p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+TEST_CASE( "type_checker_refuses_writes_to_a_const_field", "[sema][const][field]" )
+{
+    struct Case
+    {
+        const char* program;
+        const char* help;
+    };
+
+    constexpr const char* outside = "only a constructor assigns it";
+    constexpr const char* inside  = "a constructor assigns it once, whole, with `=`";
+
+    for( const Case c : {
+             Case { "class C { const i32 n; C() { n = 1; } void set() { n = 2; } };", outside },
+             Case { "class C { const i32 n; C() { n = 1; } void bump() { this.n++; } };", outside },
+             Case { "class C { const i32 n; C() { n = 1; } ~C() { n = 0; } };", outside },
+             Case { "class C { public const i32 n; C() { n = 1; } };\nvoid f( ref C c ) { c.n += 1; }", outside },
+             Case { "class C { public const i32 n; C() { n = 1; } };\nvoid f( C* c ) { c.n = 2; }", outside },
+             Case { "struct P { const i32 x; };\nvoid f( ref P p ) { p.x = 2; }", outside },
+             Case { "struct P { const i32 x; };\nstruct Q { P p; };\nvoid f( ref Q q ) { q.p.x = 2; }", outside },
+             // Another object of its own class is not the one being built.
+             Case { "class C { const i32 n; C() { n = 1; } C( ref C o ) { n = 1; o.n = 2; } };", outside },
+             Case { "class C { const i32 n; C() { n = 1; n += 1; } };", inside },
+             Case { "struct P { i32 x; };\nclass C { const P p; C() { p = P { 1 }; p.x = 2; } };", inside },
+             Case { "void set( ref i32 a ) { a = 1; }\nclass C { const i32 n; C() { set( ref n ); } };", inside },
+             // `out` too: only `=` sets one, so every address of it only reads.
+             Case { "void init( out i32 a ) { a = 1; }\nclass C { const i32 n; C() { init( out n ); } };", inside },
+             Case {
+                 "class In { i32 v; In() { v = 0; } void poke() { v = 1; } };\n"
+                 "class C { const In i; C() { i = In(); i.poke(); } };",
+                 inside
+             },
+         } )
+    {
+        const Typed p( std::string( c.program ) + "\ni32 main() { return 0; }" );
+
+        INFO( c.program << "\n" << p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "is a `const` field, so it cannot be modified" ) != std::string::npos );
+        REQUIRE( p.rendered().find( c.help ) != std::string::npos );
     }
 }
 

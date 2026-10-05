@@ -339,6 +339,13 @@ bool is_const_binding( const Ast& ast, Node_id decl )
     return annotation.is_valid() && ast.kind( annotation ) == Node_kind::Const_type;
 }
 
+// A field written `const`: assigned once by each constructor and never after.
+bool is_const_field( const Ast& ast, Node_id decl )
+{
+    return decl.is_valid() && ast.kind( decl ) == Node_kind::Field_decl &&
+           ast.kind( ast.child( decl, 0 ) ) == Node_kind::Const_type;
+}
+
 bool is_const_method( const Ast& ast, Node_id method )
 {
     if( !method.is_valid() || ast.kind( method ) != Node_kind::Method_decl )

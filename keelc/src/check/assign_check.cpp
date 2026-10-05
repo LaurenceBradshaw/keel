@@ -229,7 +229,7 @@ void transfer_block(
             continue;
         }
 
-        // A constructor's field. Written whole it is assigned, and an owning one must not already
+        // A constructor's field. Written whole it is assigned, and an owning or `const` one must not already
         // hold a value; written in part it is read, since the part changes what is already there.
         if( const std::optional<u32> slot =
                 statement.kind == Statement_kind::Assign ? field_slot( func, statement.place ) : std::nullopt )
@@ -244,12 +244,15 @@ void transfer_block(
                 continue;
             }
 
-            if( reassigned != nullptr && flow.ever[*slot] != 0 && func.owed_fields[*slot - func.locals.size()].is_owning )
+            const Owed_field& owed = func.owed_fields[*slot - func.locals.size()];
+
+            if( reassigned != nullptr && flow.ever[*slot] != 0 && ( owed.is_owning || owed.is_const ) )
             {
                 reassigned->push_back( Reassigned_field {
-                    .field = func.owed_fields[*slot - func.locals.size()].field,
-                    .at    = statement.span,
-                    .maybe = flow.always[*slot] == 0,
+                    .field    = owed.field,
+                    .at       = statement.span,
+                    .maybe    = flow.always[*slot] == 0,
+                    .is_const = owed.is_const,
                 } );
             }
 
@@ -278,6 +281,16 @@ void transfer_block(
             {
                 const std::optional<u32> slot  = field_slot( func, statement.value.a.place );
                 const u32                taken = slot ? *slot : statement.value.a.place.local.v;
+
+                // Nothing writes through a `const` field's address, so taking it reads the field.
+                if( slot.has_value() && func.owed_fields[*slot - func.locals.size()].is_const )
+                {
+                    if( reads != nullptr )
+                    {
+                        read_slot( func, *slot, statement.span, false, flow, reads );
+                    }
+                    break;
+                }
 
                 flow.always[taken] = 1;
                 flow.ever[taken]   = 1;
@@ -1327,6 +1340,47 @@ TEST_CASE( "assign_check_refuses_an_owning_field_a_constructor_may_already_have_
         INFO( c.rendered() );
         REQUIRE( c.reassigned().empty() );
     }
+}
+
+// A `const` field is written once per path, as an owning one is, whatever its type.
+TEST_CASE( "assign_check_refuses_a_const_field_a_constructor_may_already_have_assigned", "[check][assign][constructor]" )
+{
+    for( const char* source : {
+             "class C { const i32 n; C() { n = 1; n = 2; } };",
+             "class C { const i32 n; C( bool x ) { if( x ) { n = 1; } n = 2; } };",
+             "class C { const i32 n; C( i32 k ) { n = 0; i32 i = 0; while( i < k ) { n = i; i = i + 1; } } };",
+         } )
+    {
+        const Checked c( std::string( source ) + "\ni32 main() { return 0; }" );
+
+        INFO( source << "\n" << c.rendered() );
+        REQUIRE( c.reassigned().size() == 1 );
+        REQUIRE( c.reassigned()[0].is_const );
+        REQUIRE( c.field_name( c.reassigned()[0].field ) == "n" );
+    }
+
+    const Checked c( "class C { const i32 n; C( bool x ) { if( x ) { n = 1; } else { n = 2; } } };\ni32 main() { return 0; }" );
+
+    INFO( c.rendered() );
+    REQUIRE( c.reassigned().empty() );
+    REQUIRE( c.errors().empty() );
+}
+
+// Its address is a `const` pointer, so taking it reads the field rather than assigning it.
+TEST_CASE( "assign_check_reads_a_const_field_whose_address_is_taken", "[check][assign][constructor]" )
+{
+    const Checked early( "class C { const i32 n; C() { const i32* p = &n; n = 1; } };\ni32 main() { return 0; }" );
+
+    INFO( early.rendered() );
+    REQUIRE( early.reads().size() == 1 );
+    REQUIRE( early.field_name( early.reads()[0].field ) == "n" );
+    REQUIRE( early.reassigned().empty() );
+
+    const Checked late( "class C { const i32 n; C() { n = 1; const i32* p = &n; } };\ni32 main() { return 0; }" );
+
+    INFO( late.rendered() );
+    REQUIRE( late.reads().empty() );
+    REQUIRE( late.reassigned().empty() );
 }
 
 // The false-positive set for fields, as the case above it is for locals.

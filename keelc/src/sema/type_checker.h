@@ -212,6 +212,7 @@ Keyword    call_marker_of( Param_mode mode );
 
 bool is_borrowed_binding( const Ast& ast, const Types& types, Node_id decl );
 bool is_const_binding( const Ast& ast, Node_id decl );
+bool is_const_field( const Ast& ast, Node_id decl );
 
 // A method written with a trailing `const`, which is a `const ref` receiver. Its own name because
 // the question is asked of the *method* while the answer lives on its parameter 0.

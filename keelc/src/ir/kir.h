@@ -197,6 +197,7 @@ struct Owed_field
 {
     Node_id field {};
     bool    is_owning = false;
+    bool    is_const  = false;
 };
 
 // Block 0 is the entry. Local 0 is the return slot, and locals 1..parameter_count are the

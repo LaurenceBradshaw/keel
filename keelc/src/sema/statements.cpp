@@ -356,7 +356,7 @@ void Statements::visit_assign( Node_id id )
 
     // After infer(), not before it: place_root has to ask whether a field's object is a pointer,
     // and nothing has typed it until here.
-    if( !places_.check_writable( target, expressions_.current_function() ) )
+    if( !places_.check_writable( target, expressions_.current_function(), op == Token_kind::Equal ) )
     {
         expressions_.absorb( value );
         return;

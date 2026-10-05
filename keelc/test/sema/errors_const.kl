@@ -128,13 +128,6 @@ i32 launders_through_an_argument()
     return k;
 }
 
-// A field is not a binding, so `const` has nothing to attach to. A write-once field waits on
-// definite assignment over a constructor body - the same analysis `out` needs.
-struct HasConstField
-{
-    const i32 x;
-};
-
 // Everything below is accepted, and the fixture would be worth much less without it: it is what
 // shows the rule refuses writing a const rather than mentioning one.
 

@@ -1,0 +1,353 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Point;
+struct kl__Buffer;
+struct kl__Owner;
+struct kl__Holder__I3i32E;
+
+struct kl__Point
+{
+    int32_t kl_x_2;
+    int32_t kl_y_4;
+};
+
+struct kl__Buffer
+{
+    uint64_t kl_size_8;
+    uint64_t* kl_data_12;
+};
+
+struct kl__Owner
+{
+    struct kl__Buffer kl_buffer_100;
+    int32_t kl_tag_103;
+};
+
+struct kl__Holder__I3i32E
+{
+    int32_t kl_value_136;
+};
+
+void* kl_rt_alloc( size_t );
+void  kl_rt_free( void* );
+void* kl_rt_alloc_many( size_t, size_t );
+
+void kl__Buffer__R6Buffer_3u64__ctor( struct kl__Buffer*, uint64_t );
+void kl__Buffer__dtor( struct kl__Buffer* );
+void kl__fill__S6Buffer_3u64( struct kl__Buffer*, uint64_t );
+uint64_t kl__sum__S6Buffer( struct kl__Buffer* );
+void kl__Owner__R5Owner_M6Buffer_4bool__ctor( struct kl__Owner*, struct kl__Buffer, bool );
+int32_t kl__main__( void );
+void kl__Holder__I3i32E__R6HolderI3i32E_3i32__ctor( struct kl__Holder__I3i32E*, int32_t );
+
+void kl__Buffer__R6Buffer_3u64__ctor( struct kl__Buffer* kl_this_1, uint64_t kl_n_2 )
+{
+    uint64_t* kl_t3;
+#line 18 "codegen/const_field.kl"
+    ( *kl_this_1 ).kl_size_8 = kl_n_2;
+#line 21 "codegen/const_field.kl"
+    kl_t3 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( uint64_t ) );
+    ( *kl_this_1 ).kl_data_12 = kl_t3;
+    return;
+}
+
+void kl__Buffer__dtor( struct kl__Buffer* kl_this_1 )
+{
+#line 29 "codegen/const_field.kl"
+    kl_rt_free( ( *kl_this_1 ).kl_data_12 );
+    return;
+}
+
+void kl__fill__S6Buffer_3u64( struct kl__Buffer* kl_this_1, uint64_t kl_v_2 )
+{
+    uint64_t kl_i_3;
+    bool kl_t4;
+    uint64_t* kl_t5;
+#line 36 "codegen/const_field.kl"
+    kl_i_3 = 0;
+    goto bb1;
+    bb1:
+    kl_t4 = kl_i_3 < ( *kl_this_1 ).kl_size_8;
+    if ( kl_t4 ) goto bb2; else goto bb3;
+    bb2:
+#line 40 "codegen/const_field.kl"
+    kl_t5 = ( *kl_this_1 ).kl_data_12 + kl_i_3;
+    ( *kl_t5 ) = kl_v_2;
+    goto bb4;
+    bb3:
+    return;
+    bb4:
+#line 36 "codegen/const_field.kl"
+    kl_i_3 = kl_i_3 + 1;
+    goto bb1;
+}
+
+uint64_t kl__sum__S6Buffer( struct kl__Buffer* kl_this_1 )
+{
+    uint64_t kl_t0;
+    uint64_t kl_total_2;
+    uint64_t kl_i_3;
+    bool kl_t4;
+    uint64_t* kl_t5;
+    uint64_t kl_t6;
+#line 47 "codegen/const_field.kl"
+    kl_total_2 = 0;
+#line 48 "codegen/const_field.kl"
+    kl_i_3 = 0;
+    goto bb1;
+    bb1:
+    kl_t4 = kl_i_3 < ( *kl_this_1 ).kl_size_8;
+    if ( kl_t4 ) goto bb2; else goto bb3;
+    bb2:
+#line 52 "codegen/const_field.kl"
+    kl_t5 = ( *kl_this_1 ).kl_data_12 + kl_i_3;
+    kl_t6 = kl_total_2 + ( *kl_t5 );
+    kl_total_2 = kl_t6;
+    goto bb4;
+    bb3:
+#line 55 "codegen/const_field.kl"
+    kl_t0 = kl_total_2;
+    return kl_t0;
+    bb4:
+#line 48 "codegen/const_field.kl"
+    kl_i_3 = kl_i_3 + 1;
+    goto bb1;
+}
+
+void kl__Owner__R5Owner_M6Buffer_4bool__ctor( struct kl__Owner* kl_this_1, struct kl__Buffer kl_b_2, bool kl_odd_3 )
+{
+    bool kl_t4;
+#line 65 "codegen/const_field.kl"
+    kl_t4 = false;
+#line 67 "codegen/const_field.kl"
+    ( *kl_this_1 ).kl_buffer_100 = kl_b_2;
+    kl_t4 = false;
+    if ( kl_odd_3 ) goto bb1; else goto bb2;
+    bb1:
+#line 70 "codegen/const_field.kl"
+    ( *kl_this_1 ).kl_tag_103 = 1;
+    goto bb3;
+    bb2:
+#line 74 "codegen/const_field.kl"
+    ( *kl_this_1 ).kl_tag_103 = 2;
+    goto bb3;
+    bb3:
+#line 65 "codegen/const_field.kl"
+    if ( kl_t4 ) kl__Buffer__dtor( &kl_b_2 );
+    kl_t4 = false;
+    return;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__Point kl_p_1;
+    struct kl__Point kl_t2;
+    bool kl_t3;
+    bool kl_t4;
+    bool kl_t5;
+    struct kl__Point kl_t6;
+    bool kl_t7;
+    struct kl__Buffer kl_b_8;
+    struct kl__Buffer* kl_t9;
+    struct kl__Buffer* kl_t11;
+    bool kl_t13;
+    bool kl_t14;
+    struct kl__Buffer* kl_t15;
+    uint64_t kl_t16;
+    bool kl_t17;
+    struct kl__Buffer kl_c_18;
+    struct kl__Buffer* kl_t19;
+    struct kl__Buffer* kl_t21;
+    bool kl_t23;
+    bool kl_t24;
+    struct kl__Buffer* kl_t25;
+    uint64_t kl_t26;
+    bool kl_t27;
+    struct kl__Owner kl_o_28;
+    struct kl__Owner* kl_t29;
+    bool kl_t31;
+    bool kl_t32;
+    bool kl_t33;
+    int32_t* kl_tag_34;
+    int32_t* kl_t35;
+    bool kl_t36;
+    struct kl__Holder__I3i32E kl_h_37;
+    struct kl__Holder__I3i32E* kl_t38;
+    bool kl_t40;
+    bool kl_t41;
+    bool kl_t42;
+#line 98 "codegen/const_field.kl"
+    kl_t41 = false;
+#line 103 "codegen/const_field.kl"
+    kl_t42 = false;
+#line 91 "codegen/const_field.kl"
+    kl_t2.kl_x_2 = 1;
+    kl_t2.kl_y_4 = 2;
+    kl_p_1 = kl_t2;
+#line 92 "codegen/const_field.kl"
+    kl_p_1.kl_y_4 = 3;
+#line 93 "codegen/const_field.kl"
+    kl_t4 = kl_p_1.kl_x_2 != 1;
+    kl_t3 = kl_t4;
+    if ( kl_t3 ) goto bb2; else goto bb1;
+    bb1:
+    kl_t5 = kl_p_1.kl_y_4 != 3;
+    kl_t3 = kl_t5;
+    goto bb2;
+    bb2:
+    if ( kl_t3 ) goto bb3; else goto bb4;
+    bb3:
+    kl_t0 = 1;
+    return kl_t0;
+    bb4:
+#line 95 "codegen/const_field.kl"
+    kl_t6.kl_x_2 = 4;
+    kl_t6.kl_y_4 = 5;
+    kl_p_1 = kl_t6;
+#line 96 "codegen/const_field.kl"
+    kl_t7 = kl_p_1.kl_x_2 != 4;
+    if ( kl_t7 ) goto bb5; else goto bb6;
+    bb5:
+    kl_t0 = 2;
+    return kl_t0;
+    bb6:
+#line 98 "codegen/const_field.kl"
+    kl_t41 = false;
+    kl_t9 = &kl_b_8;
+    kl_t41 = true;
+    kl__Buffer__R6Buffer_3u64__ctor( kl_t9, 3 );
+#line 99 "codegen/const_field.kl"
+    kl_t11 = &kl_b_8;
+    kl_t41 = true;
+    kl__fill__S6Buffer_3u64( kl_t11, 7 );
+#line 100 "codegen/const_field.kl"
+    kl_t14 = kl_b_8.kl_size_8 != 3;
+    kl_t13 = kl_t14;
+    if ( kl_t13 ) goto bb8; else goto bb7;
+    bb7:
+    kl_t15 = &kl_b_8;
+    kl_t41 = true;
+    kl_t16 = kl__sum__S6Buffer( kl_t15 );
+    kl_t17 = kl_t16 != 21;
+    kl_t13 = kl_t17;
+    goto bb8;
+    bb8:
+    if ( kl_t13 ) goto bb9; else goto bb10;
+    bb9:
+    kl_t0 = 3;
+    if ( kl_t41 ) kl__Buffer__dtor( &kl_b_8 );
+    kl_t41 = false;
+    return kl_t0;
+    bb10:
+#line 103 "codegen/const_field.kl"
+    kl_t42 = false;
+    kl_t19 = &kl_c_18;
+    kl_t42 = true;
+    kl__Buffer__R6Buffer_3u64__ctor( kl_t19, 2 );
+#line 104 "codegen/const_field.kl"
+    kl_t21 = &kl_c_18;
+    kl_t42 = true;
+    kl__fill__S6Buffer_3u64( kl_t21, 1 );
+#line 105 "codegen/const_field.kl"
+    if ( kl_t41 ) kl__Buffer__dtor( &kl_b_8 );
+    kl_b_8 = kl_c_18;
+    kl_t42 = false;
+    kl_t41 = true;
+#line 106 "codegen/const_field.kl"
+    kl_t24 = kl_b_8.kl_size_8 != 2;
+    kl_t23 = kl_t24;
+    if ( kl_t23 ) goto bb12; else goto bb11;
+    bb11:
+    kl_t25 = &kl_b_8;
+    kl_t41 = true;
+    kl_t26 = kl__sum__S6Buffer( kl_t25 );
+    kl_t27 = kl_t26 != 2;
+    kl_t23 = kl_t27;
+    goto bb12;
+    bb12:
+    if ( kl_t23 ) goto bb13; else goto bb14;
+    bb13:
+    kl_t0 = 4;
+    if ( kl_t42 ) kl__Buffer__dtor( &kl_c_18 );
+    kl_t42 = false;
+    if ( kl_t41 ) kl__Buffer__dtor( &kl_b_8 );
+    kl_t41 = false;
+    return kl_t0;
+    bb14:
+#line 108 "codegen/const_field.kl"
+    kl_t29 = &kl_o_28;
+    kl__Owner__R5Owner_M6Buffer_4bool__ctor( kl_t29, kl_b_8, false );
+    kl_t41 = false;
+#line 109 "codegen/const_field.kl"
+    kl_t32 = kl_o_28.kl_tag_103 != 2;
+    kl_t31 = kl_t32;
+    if ( kl_t31 ) goto bb16; else goto bb15;
+    bb15:
+    kl_t33 = kl_o_28.kl_buffer_100.kl_size_8 != 2;
+    kl_t31 = kl_t33;
+    goto bb16;
+    bb16:
+    if ( kl_t31 ) goto bb17; else goto bb18;
+    bb17:
+    kl_t0 = 5;
+    kl__Buffer__dtor( &kl_o_28.kl_buffer_100 );
+    if ( kl_t42 ) kl__Buffer__dtor( &kl_c_18 );
+    kl_t42 = false;
+    if ( kl_t41 ) kl__Buffer__dtor( &kl_b_8 );
+    kl_t41 = false;
+    return kl_t0;
+    bb18:
+#line 112 "codegen/const_field.kl"
+    kl_t35 = &kl_o_28.kl_tag_103;
+    kl_tag_34 = kl_t35;
+#line 113 "codegen/const_field.kl"
+    kl_t36 = ( *kl_tag_34 ) != 2;
+    if ( kl_t36 ) goto bb19; else goto bb20;
+    bb19:
+    kl_t0 = 6;
+    kl__Buffer__dtor( &kl_o_28.kl_buffer_100 );
+    if ( kl_t42 ) kl__Buffer__dtor( &kl_c_18 );
+    kl_t42 = false;
+    if ( kl_t41 ) kl__Buffer__dtor( &kl_b_8 );
+    kl_t41 = false;
+    return kl_t0;
+    bb20:
+#line 115 "codegen/const_field.kl"
+    kl_t38 = &kl_h_37;
+    kl__Holder__I3i32E__R6HolderI3i32E_3i32__ctor( kl_t38, 9 );
+#line 116 "codegen/const_field.kl"
+    kl_t40 = kl_h_37.kl_value_136 != 9;
+    if ( kl_t40 ) goto bb21; else goto bb22;
+    bb21:
+    kl_t0 = 7;
+    kl__Buffer__dtor( &kl_o_28.kl_buffer_100 );
+    if ( kl_t42 ) kl__Buffer__dtor( &kl_c_18 );
+    kl_t42 = false;
+    if ( kl_t41 ) kl__Buffer__dtor( &kl_b_8 );
+    kl_t41 = false;
+    return kl_t0;
+    bb22:
+#line 118 "codegen/const_field.kl"
+    kl_t0 = 0;
+    kl__Buffer__dtor( &kl_o_28.kl_buffer_100 );
+    if ( kl_t42 ) kl__Buffer__dtor( &kl_c_18 );
+    kl_t42 = false;
+    if ( kl_t41 ) kl__Buffer__dtor( &kl_b_8 );
+    kl_t41 = false;
+    return kl_t0;
+}
+
+void kl__Holder__I3i32E__R6HolderI3i32E_3i32__ctor( struct kl__Holder__I3i32E* kl_this_1, int32_t kl_v_2 )
+{
+#line 85 "codegen/const_field.kl"
+    ( *kl_this_1 ).kl_value_136 = kl_v_2;
+    return;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

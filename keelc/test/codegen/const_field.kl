@@ -1,0 +1,119 @@
+// `const` fields end to end: a constructor assigns each once, with `=`, and every method and caller
+// reads them. A struct's comes from its literal, and the struct is still replaced whole.
+// Self-checking - exit 0 means every answer was right.
+
+struct Point
+{
+    const i32 x;
+    i32       y;
+};
+
+class Buffer
+{
+    public const u64 size;
+    public u64[*] const data;
+
+    Buffer( u64 n )
+    {
+        size = n;
+        unsafe
+        {
+            this.data = alloc<u64>( n );
+        }
+    }
+
+    ~Buffer()
+    {
+        unsafe
+        {
+            free( data );
+        }
+    }
+
+    // The pointer is fixed; what it points at is not.
+    public void fill( u64 v )
+    {
+        for( u64 i = 0; i < size; i++ )
+        {
+            unsafe
+            {
+                data[i] = v;
+            }
+        }
+    }
+
+    public u64 sum() const
+    {
+        u64 total = 0;
+        for( u64 i = 0; i < size; i++ )
+        {
+            unsafe
+            {
+                total = total + data[i];
+            }
+        }
+        return total;
+    }
+};
+
+// An owning `const` field, and one on each arm.
+class Owner
+{
+    public const Buffer buffer;
+    public const i32    tag;
+
+    Owner( move Buffer b, bool odd )
+    {
+        buffer = move b;
+        if( odd )
+        {
+            tag = 1;
+        }
+        else
+        {
+            tag = 2;
+        }
+    }
+};
+
+class Holder<T> where T : Copyable
+{
+    public const T value;
+
+    Holder( T v )
+    {
+        value = v;
+    }
+};
+
+i32 main()
+{
+    Point p = Point { 1, 2 };
+    p.y     = 3;
+    if( p.x != 1 || p.y != 3 ) { return 1; }
+
+    p = Point { 4, 5 };
+    if( p.x != 4 ) { return 2; }
+
+    Buffer b = Buffer( 3 );
+    b.fill( 7 );
+    if( b.size != 3 || b.sum() != 21 ) { return 3; }
+
+    // Replacing the whole object is not writing its fields.
+    Buffer c = Buffer( 2 );
+    c.fill( 1 );
+    b = move c;
+    if( b.size != 2 || b.sum() != 2 ) { return 4; }
+
+    Owner o = Owner( move b, false );
+    if( o.tag != 2 || o.buffer.size != 2 ) { return 5; }
+
+    // The address of a `const` field only reads it.
+    const i32* tag = &o.tag;
+    if( *tag != 2 ) { return 6; }
+
+    Holder<i32> h = Holder<i32>( 9 );
+    if( h.value != 9 ) { return 7; }
+
+    return 0;
+}

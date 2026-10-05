@@ -1,0 +1,25 @@
+error: `a` already holds a value here
+  --> sema/errors_const_field_once.kl:14:13
+   |
+14 |             a = 2;
+   |             ^^^^^^ a constructor assigns a `const` field once on each path
+
+error: `b` may already hold a value here
+  --> sema/errors_const_field_once.kl:21:9
+   |
+21 |         b = 2;
+   |         ^^^^^^ a constructor assigns a `const` field once on each path
+
+error: `c` already holds a value here
+  --> sema/errors_const_field_once.kl:27:13
+   |
+27 |             c = i;
+   |             ^^^^^^ a constructor assigns a `const` field once on each path
+
+error: `d` is used before this constructor assigns it
+  --> sema/errors_const_field_once.kl:31:28
+   |
+31 |         const i32* early = &d;
+   |                            ^^ assign it before reading it
+
+4 errors generated

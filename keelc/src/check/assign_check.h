@@ -32,13 +32,14 @@ struct Uninitialised_read
     bool     whole = false; // `this` used whole, so every field is read
 };
 
-// A constructor writing an owning field that may already hold a value: the old one would need a
-// drop decided per path, so it is refused instead.
+// A constructor writing an owning field or `const` field that may already hold a value: the old one would
+// need a drop decided per path, so it is refused instead.
 struct Reassigned_field
 {
     Node_id field {};
     Span    at {};
-    bool    maybe = false; // holds a value on some paths into here, not all
+    bool    maybe    = false; // holds a value on some paths into here, not all
+    bool    is_const = false; // refused for being const rather than for owning
 };
 
 struct Assignment_report

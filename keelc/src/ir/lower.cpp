@@ -289,9 +289,11 @@ Function Lowering::run()
                 continue;
             }
 
-            function.owed_fields.push_back(
-                Owed_field { member, owns( field_type( ast_, types_.table(), instance, member, types_.recorded() ) ) }
-            );
+            function.owed_fields.push_back( Owed_field {
+                member,
+                owns( field_type( ast_, types_.table(), instance, member, types_.recorded() ) ),
+                is_const_field( ast_, member )
+            } );
         }
     }
 

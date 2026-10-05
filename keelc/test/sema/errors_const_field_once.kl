@@ -1,0 +1,58 @@
+// A constructor assigns a `const` field once on each path, and its address only reads it.
+class Once
+{
+    const i32 a;
+    const i32 b;
+    const i32 c;
+    const i32 d;
+
+    Once( bool flag, i32 count )
+    {
+        a = 1;
+        if( flag )
+        {
+            a = 2;
+        }
+
+        if( flag )
+        {
+            b = 1;
+        }
+        b = 2;
+
+        c       = 0;
+        i32 i   = 0;
+        while( i < count )
+        {
+            c = i;
+            i = i + 1;
+        }
+
+        const i32* early = &d;
+        d                = 1;
+    }
+
+    // Once on each arm is once.
+    Once( bool flag )
+    {
+        if( flag )
+        {
+            a = 1;
+        }
+        else
+        {
+            a = 2;
+        }
+
+        b = 1;
+        c = 1;
+        d = 1;
+
+        const i32* late = &d;
+    }
+};
+
+i32 main()
+{
+    return 0;
+}

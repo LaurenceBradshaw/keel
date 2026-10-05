@@ -64,10 +64,4 @@ error: `k` is `const`
 126 |     grow( ref k );
     |               ^ remove `const` to modify it
 
-error: a field cannot be `const` yet
-   --> sema/errors_const.kl:135:5
-    |
-135 |     const i32 x;
-    |     ^^^^^^^^^ it would have to be written exactly once, during construction, and nothing checks that
-
-12 errors generated
+11 errors generated

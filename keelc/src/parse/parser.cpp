@@ -10612,7 +10612,7 @@ TEST_CASE( "parser_recovers_from_a_member_that_is_not_one", "[parse][recovery]" 
         REQUIRE( word.error_count() == 1 );
         REQUIRE( has( word, "expected a member, found `mutable`" ) );
         REQUIRE( has( word, "t.kl:3:5" ) );
-        REQUIRE( has( word, "fields cannot be `const` yet" ) );
+        REQUIRE( has( word, "a field is mutable unless it is `const`" ) );
         REQUIRE( member_names( word ) == "a b" );
     }
 
@@ -10647,7 +10647,7 @@ TEST_CASE( "parser_recovers_from_a_member_that_is_not_one", "[parse][recovery]" 
         INFO( p.errors() );
         REQUIRE( p.error_count() == 1 );
         REQUIRE( has( p, "expected a member, found `mutable`" ) );
-        REQUIRE( has( p, "fields cannot be `const` yet" ) );
+        REQUIRE( has( p, "a field is mutable unless it is `const`" ) );
         REQUIRE( member_names( p ) == "a b" );
 
         const Node_id decl  = find_first( p.ast(), p.root(), Node_kind::Class_decl );

@@ -99,19 +99,6 @@ void Signatures::declare_fields()
                 continue;
             }
 
-            const Node_id annotation = ast_.child( field, 0 );
-
-            // A field is not a binding, so `const` has nothing to attach to. Rejected rather than
-            // ignored - a keyword that silently does nothing is worse than not having one.
-            if( ast_.kind( annotation ) == Node_kind::Const_type )
-            {
-                reporter_.error_at(
-                    ast_.span( annotation ),
-                    "a field cannot be `const` yet",
-                    "it would have to be written exactly once, during construction, and nothing checks that"
-                );
-            }
-
             const Type_id field_type = annotations_.type_of( ast_.child( field, 0 ) );
 
             types_.record( field, field_type );
@@ -966,16 +953,15 @@ TEST_CASE( "type_checker_checks_constructor_declarations", "[sema][aggregates]" 
     }
 }
 
-// A field is not a binding, so `const` has nothing to attach to under this model. A write-once
-// field is a feature waiting on definite assignment over a constructor body - the same analysis
-// `out` needs - so the message says "yet" rather than pretending it is a rule of the language.
-TEST_CASE( "type_checker_refuses_const_on_a_field_for_now", "[sema][const]" )
+// The field's type is what is under the `const`.
+TEST_CASE( "type_checker_accepts_a_const_field", "[sema][const][field]" )
 {
-    const Typed p( "struct P { const i32 x; };\ni32 main() { return 0; }" );
+    const Typed p( "struct P { const i32 x; const u8[*] const s; };\ni32 main() { return 0; }" );
 
     INFO( p.rendered() );
-    REQUIRE( p.errors() == 1 );
-    REQUIRE( p.rendered().find( "a field cannot be `const` yet" ) != std::string::npos );
+    REQUIRE( p.clean() );
+    REQUIRE( p.type_name( p.nth( Node_kind::Field_decl, 0 ) ) == "i32" );
+    REQUIRE( p.type_name( p.nth( Node_kind::Field_decl, 1 ) ) == "const u8[*]" );
 }
 
 // Assigning an `out` parameter destroys nothing, so an owning one would leak whatever the caller
