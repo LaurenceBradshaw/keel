@@ -6533,6 +6533,49 @@ reached in its first hour. Both modules check, build and run clean under valgrin
      **Built** as `Parser::gap_before( u32 at )`, now 4f's test in `expect_name` too, asked by
      `report_dropped` unless a `{` is wanted; the real build is identical to the prototype on
      every mutant, carets included. The scheduled leftovers are all done.
+  **Fuzz audit (2026-10-05)**, a fresh corpus after item 17: 20,189 mutants (seed 7, 150 per
+  seed) on the asan build. No crash, sanitizer report, timeout or silent failure. Of 36,559
+  errors, 28,693 sit within three lines of an edit, 4,343 further off name something the edit
+  touched, 2,612 are a brace or the end of the file, and 911 (in 500 mutants) are neither.
+  Those 911: the first below is item 18; the rest are **shelved (2026-10-05)** for another time.
+  - `synchronise` under an unclosed `(` or `[` passes `;` and a body's `{`; it then stops at a
+    statement keyword inside that block, whose `}` ends the function (`[( c ) { return 3; }`
+    is 18 errors, the rest of the body read as file-scope declarations).
+  - An aggregate whose body failed (`i32 ;x`, `enum E { , B }`) still answers member lookups
+    and counts: *has no field*, *has no variant*, *has 1 field, but 2 were given*. Item 14's
+    rule at the aggregate; 134 mutants. Measure first: 4g found that silencing sema buries
+    true errors.
+  - A dropped declaration loses what it was: a head dropped from `extern` makes its callers'
+    `unsafe` blocks *do nothing unsafe* (39 mutants); a dropped `~B()` makes a `move` fail.
+  - A failed operand still reports *cannot assign to this expression* at the same caret (39).
+  - A generic body's diagnostics repeat per instantiation (6 exact duplicates: *never returns
+    a value*, *shadows a field*).
+  - Not cascades: an undeclared name is reported at every use (2,297 repeats in 1,031
+    mutants; GCC reports one per function), and a missing `return` is reported at the
+    function's head, not its end.
+  18. ~~**M15: a skip under an unclosed bracket stops at a block.**~~ **Done (2026-10-05).** `synchronise` balances `(` and
+     `[`, and under one it passes both `;` and a body's `{`. A stray `[` that never closes then
+     counts the block's `{`, stops at the `return` inside it, and leaves the block's `}` to end
+     the function: every later statement is a file-scope error.
+     **Measured (2026-10-05)** against item 17's 61,391 errors, and on the fresh corpus's 36,565:
+     | Variant | Errors | Better | Worse | Fresh errors | Better | Worse |
+     |---|---|---|---|---|---|---|
+     | A `;` ends the skip at any depth | 61,411 | 12 | 26 | | | |
+     | The same, and a `{` that opens no literal | 61,397 | 17 | 28 | 36,518 | 17 | 6 |
+     | The same, unless the bracket closes into a `{` (`head_closes`) | 61,367 | 16 | 13 | 36,516 | 17 | 5 |
+     | **Only a `{` that opens no literal, at any depth** | **61,378** | **5** | **3** | **36,532** | **7** | **1** |
+     The `;` is a for head's as often as a statement's end: `for i32 ( i = 0; i < n; i++ )` and
+     `struct for ( ; ; )` reach the skip, and stopping at their first `;` reads the rest of the
+     head as statements. `head_closes` saves the heads but not `alloc<i32>(;)`, whose `)` is
+     then a stray statement; the `;` rule is about as often worse as better, and is left out.
+     Keel has no lambdas, so inside a bracket a `{` that follows no name or `>` is a block.
+     The four worse: `[( i32 i = 0; ... ) { count = count + i; }` reads the body, whose `i`
+     the lost `for` declared; three gain *expected `}`* at the end of the file, a true missing
+     brace (`switch( s )` written twice) the old skip hid by running to it.
+     Goldens unchanged. Test: `parser_ends_a_skip_at_a_block_inside_an_unclosed_bracket`.
+     **Built** as `synchronise` stopping at a `{` that opens no literal whatever the depth; the
+     real build is identical to the prototype on both corpora, carets included. The rest of the
+     audit stays shelved.
 
 ### M7 slice: access control - done (2026-09-25)
 

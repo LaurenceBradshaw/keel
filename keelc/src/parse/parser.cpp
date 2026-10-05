@@ -645,7 +645,7 @@ void Parser::reach_commit( u32 commit )
 
 void Parser::synchronise()
 {
-    // Skips to the end of a statement, balancing `(` and `[` and never crosses a brace.
+    // Skips to the end of a statement, balancing `(` and `[`; a block stops it at any depth.
 
     u32 depth  = 0;
     u32 braces = 0;
@@ -698,7 +698,7 @@ void Parser::synchronise()
         {
             const bool opens_literal = previous().kind == Token_kind::Identifier || previous().kind == Token_kind::Greater ||
                                        previous().kind == Token_kind::Greater_greater;
-            if( depth == 0 && !opens_literal )
+            if( !opens_literal )
             {
                 return;
             }
@@ -7762,6 +7762,32 @@ TEST_CASE( "parser_reads_no_for_head_without_its_paren", "[parse]" )
         INFO( p.errors() );
         REQUIRE( p.error_count() == 1 );
         REQUIRE( p.kind( first_statement( p ) ) == Node_kind::Error );
+    }
+}
+
+// A skip under a bracket that never closes still stops at a block, so the block's `}` is its own.
+TEST_CASE( "parser_ends_a_skip_at_a_block_inside_an_unclosed_bracket", "[parse]" )
+{
+    SECTION( "a stray `[` before a condition and its block" )
+    {
+        const Parsed p( "i32 main()\n{\n    i32 x = 7;\n    [( x != 1 ) { return 3; }\n"
+                        "    if( x != 1 ) { return 4; }\n    return 0;\n}\n" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "t.kl:4:5" ) != std::string::npos );
+        REQUIRE( find_first( p.ast(), p.root(), Node_kind::If_stmt ).is_valid() );
+    }
+
+    SECTION( "a literal's brace inside the bracket does not stop it" )
+    {
+        const Parsed p( "struct P { i32 a; };\ni32 f( P p ) { return p.a; }\n"
+                        "i32 main()\n{\n    [ f( P { 1 } ) + 1;\n    if( f( P { 2 } ) != 2 ) { return 4; }\n"
+                        "    return 0;\n}\n" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( find_first( p.ast(), p.root(), Node_kind::If_stmt ).is_valid() );
     }
 }
 
