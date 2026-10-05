@@ -2113,6 +2113,38 @@ Node_id Parser::parse_type()
         // A trailing const applies to what precedes it: `i32* const p` is a const pointer.
         if( match_keyword( Keyword::Const ) )
         {
+            if( ast_.kind( type ) == Node_kind::Const_type )
+            {
+                error_at(
+                    previous().span,
+                    "`const` is written twice",
+                    fmt::format(
+                        "both apply to `{}`; a `const` after the `*` makes the pointer `const`",
+                        sm_.text( ast_.span( ast_.child( type, 0 ) ) )
+                    )
+                );
+                continue;
+            }
+
+            if( ast_.kind( type ) == Node_kind::Named_type || ast_.kind( type ) == Node_kind::Generic_type )
+            {
+                const bool is_pointer      = peek().kind == Token_kind::Star;
+                const bool is_many_pointer = peek().kind == Token_kind::L_bracket;
+                const bool not_pointer     = !is_pointer && !is_many_pointer;
+
+                error_at(
+                    previous().span,
+                    "`const` goes before the type",
+                    fmt::format(
+                        "write `const {}{}`",
+                        sm_.text( ast_.span( type ) ),
+                        not_pointer       ? ""
+                        : is_many_pointer ? "[*]"
+                                          : "*"
+                    )
+                );
+            }
+
             type = ast_.add( Node_kind::Const_type, Span::merge( start, previous().span ), 0, { type } );
             continue;
         }
@@ -7793,6 +7825,83 @@ TEST_CASE( "parser_ends_a_skip_at_a_block_inside_an_unclosed_bracket", "[parse]"
 
 // D12: prefix `++` is refused with its postfix spelling, and recovered as that spelling so nothing
 // after it reports again.
+// One spelling for each meaning: `const` goes before the type it applies to, and a second one
+// after it is either a C++ habit or a pointer written without its `*`.
+TEST_CASE( "parser_refuses_const_after_a_named_type", "[parse][const]" )
+{
+    SECTION( "before a pointer, it names the pointer to const" )
+    {
+        const Parsed p( "i32 main() { i32 const* q = nullptr; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "`const` goes before the type" ) != std::string::npos );
+        REQUIRE( p.errors().find( "write `const i32*`" ) != std::string::npos );
+
+        // Recovered as what it meant, so nothing downstream reports it again.
+        const Node_id type = p.child( first_statement( p ), 0 );
+        REQUIRE( p.kind( type ) == Node_kind::Pointer_type );
+        REQUIRE( p.kind( p.child( type, 0 ) ) == Node_kind::Const_type );
+    }
+
+    SECTION( "before a many-item pointer" )
+    {
+        const Parsed p( "i32 main() { i32 const[*] q = nullptr; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "write `const i32[*]`" ) != std::string::npos );
+    }
+
+    SECTION( "on a binding" )
+    {
+        const Parsed p( "i32 main() { i32 const k = 1; return k; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "write `const i32`" ) != std::string::npos );
+    }
+
+    SECTION( "after type arguments" )
+    {
+        const Parsed p( "i32 main() { list<i32> const* q = nullptr; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "write `const list<i32>*`" ) != std::string::npos );
+    }
+
+    SECTION( "after a pointer it is the pointer's, and accepted" )
+    {
+        for( const char* source :
+             { "i32 main() { i32 y = 0; i32* const q = &y; return 0; }",
+               "i32 main() { i32 y = 0; const i32* const q = &y; return 0; }",
+               "i32 main() { i32[*] const q = nullptr; return 0; }" } )
+        {
+            const Parsed p( source );
+
+            INFO( source << "\n" << p.errors() );
+            REQUIRE_FALSE( p.has_errors() );
+        }
+    }
+}
+
+TEST_CASE( "parser_refuses_const_written_twice", "[parse][const]" )
+{
+    const Parsed p( "i32 main() { const i32 const* q = nullptr; return 0; }" );
+
+    INFO( p.errors() );
+    REQUIRE( p.error_count() == 1 );
+    REQUIRE( p.errors().find( "`const` is written twice" ) != std::string::npos );
+    REQUIRE( p.errors().find( "both apply to `i32`; a `const` after the `*` makes the pointer `const`" ) != std::string::npos );
+
+    // The second is dropped rather than wrapped, so the type is the one the first spelled.
+    const Node_id type = p.child( first_statement( p ), 0 );
+    REQUIRE( p.kind( type ) == Node_kind::Pointer_type );
+    REQUIRE( p.kind( p.child( type, 0 ) ) == Node_kind::Const_type );
+    REQUIRE( p.kind( p.child( p.child( type, 0 ), 0 ) ) == Node_kind::Named_type );
+}
+
 TEST_CASE( "parser_refuses_prefix_increment", "[parse]" )
 {
     SECTION( "as a statement" )

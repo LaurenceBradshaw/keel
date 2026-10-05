@@ -1,0 +1,110 @@
+// `const T*` and `const T[*]` end to end: reading through them, adding `const` implicitly, the
+// address of a read-only place, a `const` method called through one, and overloads on the
+// element's `const`. Self-checking - exit 0 means every answer was right.
+
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+class Counter
+{
+    Counter()
+    {
+        n = 4;
+    }
+
+    public i32 peek() const
+    {
+        return n;
+    }
+
+    public const i32* at() const
+    {
+        return &n;
+    }
+
+    private i32 n;
+};
+
+i32 sum( const i32[*] values, u64 count )
+{
+    i32 total = 0;
+
+    for( u64 i = 0; i < count; i++ )
+    {
+        unsafe
+        {
+            total += values[ i ];
+        }
+    }
+
+    return total;
+}
+
+i32 read( const Point* p )
+{
+    return p.x + ( *p ).y;
+}
+
+i32 pick( i32* p )
+{
+    return 1;
+}
+
+i32 pick( const i32* p )
+{
+    return 2;
+}
+
+i32 main()
+{
+    i32        a  = 1;
+    const i32  b  = 2;
+    i32*       pa = &a;
+    const i32* r  = pa;
+    const i32* rb = &b;
+    auto       rc = &b;
+
+    if( *r != 1 ) { return 1; }
+    if( *rb != 2 || *rc != 2 ) { return 2; }
+    if( r != pa || rb != rc ) { return 3; }
+
+    i32* const fixed = &a;
+    *fixed = 5;
+    if( *r != 5 ) { return 4; }
+
+    Point        p  = Point { 10, 20 };
+    const Point* pp = &p;
+    if( read( pp ) != 30 ) { return 5; }
+
+    Counter        c  = Counter();
+    const Counter* cp = &c;
+    if( cp.peek() != 4 || *c.at() != 4 ) { return 6; }
+
+    i32[*] many = nullptr;
+    unsafe
+    {
+        many      = alloc<i32>( 3 );
+        many[ 0 ] = 1;
+        many[ 1 ] = 2;
+        many[ 2 ] = 3;
+    }
+    const i32[*] view = many;
+    if( sum( many, 3 ) != 6 || sum( view, 3 ) != 6 ) { return 7; }
+    unsafe
+    {
+        free( many );
+    }
+
+    if( pick( &a ) != 1 || pick( r ) != 2 ) { return 8; }
+
+    const i32* none = nullptr;
+    if( none != nullptr ) { return 9; }
+
+    const i32* const* rr = &r;
+    if( **rr != 5 ) { return 10; }
+
+    return 0;
+}

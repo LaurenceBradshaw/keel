@@ -95,33 +95,35 @@ Type_id Type_table::floating( u8 width ) const
     return floats_[width == 64];
 }
 
-Type_id Type_table::pointer_to( Type_id element )
+Type_id Type_table::pointer_to( Type_id element, bool const_element )
 {
+    const u32 key = element.v * 2 + ( const_element ? 1 : 0 );
     // same element -> same pointer type
-    const auto it = pointers_.find( element.v );
+    const auto it = pointers_.find( key );
     if( it != pointers_.end() )
     {
         return it->second;
     }
 
-    const std::string spelling = fmt::format( "{}*", name( element ) );
-    const Type_id     id       = add( { Type_kind::Pointer, 0, false, element }, spelling );
-    pointers_.emplace( element.v, id );
+    const std::string spelling = fmt::format( "{}*", const_spelling( element, const_element ) );
+    const Type_id     id = add( { .kind = Type_kind::Pointer, .element = element, .const_element = const_element }, spelling );
+    pointers_.emplace( key, id );
     return id;
 }
 
-Type_id Type_table::many_pointer_to( Type_id element )
+Type_id Type_table::many_pointer_to( Type_id element, bool const_element )
 {
+    const u32 key = element.v * 2 + ( const_element ? 1 : 0 );
     // same element -> same many pointer type
-    const auto it = many_pointers_.find( element.v );
+    const auto it = many_pointers_.find( key );
     if( it != many_pointers_.end() )
     {
         return it->second;
     }
 
-    const std::string spelling = fmt::format( "{}[*]", name( element ) );
-    const Type_id     id       = add( { Type_kind::Many_pointer, 0, false, element }, spelling );
-    many_pointers_.emplace( element.v, id );
+    const std::string spelling = fmt::format( "{}[*]", const_spelling( element, const_element ) );
+    const Type_id id = add( { .kind = Type_kind::Many_pointer, .element = element, .const_element = const_element }, spelling );
+    many_pointers_.emplace( key, id );
     return id;
 }
 
@@ -314,11 +316,11 @@ Type_id Type_table::substitute( Type_id type, const Bindings& bindings )
     }
     case Type_kind::Pointer:
     {
-        return pointer_to( substitute( described.element, bindings ) );
+        return pointer_to( substitute( described.element, bindings ), described.const_element );
     }
     case Type_kind::Many_pointer:
     {
-        return many_pointer_to( substitute( described.element, bindings ) );
+        return many_pointer_to( substitute( described.element, bindings ), described.const_element );
     }
     case Type_kind::Struct:
     case Type_kind::Enum:
@@ -534,6 +536,14 @@ bool Type_table::holds( Type_id from, Type_id to ) const
 
     const Type& f = get( from );
     const Type& t = get( to );
+
+    // Adding `const` to the element is safe, and only one level down: `T**` to `const T**` would let a `const T*` be stored
+    // where a `T*` is read back.
+    if( ( t.kind == Type_kind::Pointer && f.kind == Type_kind::Pointer ) ||
+        ( t.kind == Type_kind::Many_pointer && f.kind == Type_kind::Many_pointer ) )
+    {
+        return ( t.element == f.element ) && ( !f.const_element || t.const_element );
+    }
 
     // int -> int: same signdness, from.width <= to.width
     //             unsigned -> signed, to.width > from.width strictly
@@ -775,6 +785,14 @@ bool Type_table::is_many_pointer( Type_id id ) const
     return get( id ).kind == Type_kind::Many_pointer;
 }
 
+// const T* or const T[*]
+bool Type_table::points_to_const( Type_id id ) const
+{
+    assert( id.is_valid() );
+    const Type& described = get( id );
+    return ( described.kind == Type_kind::Pointer || described.kind == Type_kind::Many_pointer ) && described.const_element;
+}
+
 bool Type_table::is_parameter( Type_id id ) const
 {
     assert( id.is_valid() );
@@ -893,6 +911,22 @@ Type_id Type_table::add( const Type& type, std::string_view name )
     types_.push_back( type );
     composed_.emplace_back( name );
     return Type_id { narrow_cast<u32>( types_.size() - 1 ) };
+}
+
+// `const i32`, but `i32* const`: a leading const would bind to the innermost element
+std::string Type_table::const_spelling( Type_id element, bool const_element ) const
+{
+    if( !const_element )
+    {
+        return std::string( name( element ) );
+    }
+
+    if( is_pointer( element ) || is_many_pointer( element ) )
+    {
+        return fmt::format( "{} const", name( element ) );
+    }
+
+    return fmt::format( "const {}", name( element ) );
 }
 
 u8 Type_table::width_index( u8 width )
@@ -2214,6 +2248,60 @@ TEST_CASE( "type_table_fits_float_checks_range_only", "[sema][type]" )
         REQUIRE_FALSE( table.fits_float( 0.0, table.integer( 64, false ) ) );
         REQUIRE_FALSE( table.fits_float( 1.5, table.builtin( Type_kind::Bool ) ) );
         REQUIRE( table.fits_float( 1.5, table.builtin( Type_kind::Error ) ) ); // absorbs
+    }
+}
+
+// A pointer to const is its own type, interned beside the plain one, and the only conversion
+// between them adds `const` one level down.
+TEST_CASE( "type_table_adds_const_to_a_pointer_element", "[sema][type][const]" )
+{
+    Type_table table;
+
+    const Type_id i32          = table.integer( 32, true );
+    const Type_id to_i32       = table.pointer_to( i32 );
+    const Type_id to_const_i32 = table.pointer_to( i32, true );
+    const Type_id many         = table.many_pointer_to( i32 );
+    const Type_id many_const   = table.many_pointer_to( i32, true );
+    const Type_id to_to_i32    = table.pointer_to( to_i32 );
+    const Type_id to_to_const  = table.pointer_to( to_const_i32 );
+    const Type_id to_const_to  = table.pointer_to( to_i32, true );
+
+    SECTION( "interned apart from the plain pointer, and once" )
+    {
+        REQUIRE( to_const_i32 != to_i32 );
+        REQUIRE( table.pointer_to( i32, true ) == to_const_i32 );
+        REQUIRE( many_const != many );
+        REQUIRE( table.points_to_const( to_const_i32 ) );
+        REQUIRE( table.points_to_const( many_const ) );
+        REQUIRE_FALSE( table.points_to_const( to_i32 ) );
+        REQUIRE_FALSE( table.points_to_const( i32 ) );
+    }
+
+    SECTION( "spelled the way C++ spells it" )
+    {
+        REQUIRE( table.name( to_const_i32 ) == "const i32*" );
+        REQUIRE( table.name( many_const ) == "const i32[*]" );
+        REQUIRE( table.name( to_to_const ) == "const i32**" );
+        REQUIRE( table.name( to_const_to ) == "i32* const*" );
+    }
+
+    SECTION( "const is added, never dropped, and only one level down" )
+    {
+        REQUIRE( table.holds( to_i32, to_const_i32 ) );
+        REQUIRE( table.holds( many, many_const ) );
+        REQUIRE_FALSE( table.holds( to_const_i32, to_i32 ) );
+        REQUIRE_FALSE( table.holds( many_const, many ) );
+        REQUIRE_FALSE( table.holds( to_to_i32, to_to_const ) );
+        REQUIRE_FALSE( table.holds( to_i32, many_const ) );
+        REQUIRE_FALSE( table.holds( to_const_i32, table.pointer_to( table.integer( 8, false ), true ) ) );
+    }
+
+    SECTION( "substitution keeps it" )
+    {
+        const Type_id t = table.parameter( Node_id { 7 }, "T" );
+
+        REQUIRE( table.substitute( table.pointer_to( t, true ), { { t.v, i32 } } ) == to_const_i32 );
+        REQUIRE( table.substitute( table.many_pointer_to( t, true ), { { t.v, i32 } } ) == many_const );
     }
 }
 

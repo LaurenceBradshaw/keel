@@ -93,15 +93,15 @@ i32 reseats_a_const_pointer()
     return y;
 }
 
-// A promise about data nobody named here, which needs constness in the type. Refused rather than
-// quietly given the other meaning: silently reinterpreting valid C++ is what §5.1 forbids.
-i32 declares_a_pointer_to_const()
+// `const` on the element is C++'s promise about the data, made through this pointer, so writing
+// through it is refused the way writing a `const` binding is.
+i32 writes_through_a_pointer_to_const()
 {
-    i32 y = 1;
-
+    i32        y = 1;
     const i32* q = &y;
 
-    return *q;
+    *q = 2;
+    return y;
 }
 
 void grow( ref i32 n )

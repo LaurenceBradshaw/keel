@@ -124,15 +124,13 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
     }
 
     case Node_kind::Const_type:
-        // `const` binds the declaration, not the data, so one that is not outermost is a pointer to
-        // const. Refused rather than quietly given the other meaning: silently reinterpreting valid
-        // C++ is the one divergence §5.1 forbids.
+        // `const` binds the declaration; the one under a * is read by the pointer cases below.
         if( !outermost )
         {
             reporter_.error_at(
                 ast_.span( annotation ),
-                "a pointer to `const` is not supported yet",
-                "`const` applies to the binding; write `const ref T` to borrow one value read-only"
+                "`const` here applies to nothing",
+                "`const` makes a declaration read-only, or what a pointer points at"
             );
 
             return table_.builtin( Type_kind::Error );
@@ -141,18 +139,13 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
         return type_of( ast_.child( annotation, 0 ), false );
 
     case Node_kind::Pointer_type:
-    {
-        const Type_id element = type_of( ast_.child( annotation, 0 ), false );
-
-        // Poison propagates rather than being wrapped: `<error>*` is not the error type, so check()
-        // would not absorb it and one bad annotation would report twice.
-        return table_.is_error( element ) ? element : table_.pointer_to( element );
-    }
     case Node_kind::Many_pointer_type:
     {
-        const Type_id element = type_of( ast_.child( annotation, 0 ), false );
+        const Node_id spelled       = ast_.child( annotation, 0 );
+        const bool    const_element = ast_.kind( spelled ) == Node_kind::Const_type;
+        const Type_id element       = type_of( const_element ? ast_.child( spelled, 0 ) : spelled, false );
 
-        if( table_.is_void( element ) )
+        if( ast_.kind( annotation ) == Node_kind::Many_pointer_type && table_.is_void( element ) )
         {
             reporter_.error_at(
                 ast_.span( annotation ), "`void[*]` has no element to point at", "name the element's type, as in `u8[*]`"
@@ -161,7 +154,21 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
             return table_.builtin( Type_kind::Error );
         }
 
-        return table_.is_error( element ) ? element : table_.many_pointer_to( element );
+        // Poison propagates rather than being wrapped: `<error>*` is not the error type, so check()
+        // would not absorb it and one bad annotation would report twice.
+        if( table_.is_error( element ) )
+        {
+            return element;
+        }
+
+        if( ast_.kind( annotation ) == Node_kind::Pointer_type )
+        {
+            return table_.pointer_to( element, const_element );
+        }
+        else
+        {
+            return table_.many_pointer_to( element, const_element );
+        }
     }
 
     // D31/D32: a mode is not a type. It is unwrapped here and nowhere else, so what gets recorded
@@ -492,9 +499,10 @@ bool Annotations::resolve_type_arguments(
     {
         resolved.reserve( parameters.size() );
 
+        // Not outermost: a type argument binds nothing, so `const` on one applies to nothing.
         for( const Node_id argument : given )
         {
-            resolved.push_back( type_of( argument ) );
+            resolved.push_back( type_of( argument, false ) );
         }
     }
 
@@ -823,12 +831,6 @@ TEST_CASE( "annotations_underline_only_the_const_a_function_type_refuses", "[sem
         at     = ":1:22";
     }
 
-    SECTION( "a trailing one on the return" )
-    {
-        source = "void g( fn( i32 ) -> i32 const a ) { }";
-        at     = ":1:26";
-    }
-
     SECTION( "one on a parameter" )
     {
         source = "void g( fn( const i32 ) -> i32 a ) { }";
@@ -1021,23 +1023,62 @@ TEST_CASE( "annotations_give_a_function_type_one_type_per_mode", "[sema][annotat
     }
 }
 
-TEST_CASE( "annotations_take_const_off_the_outermost_and_refuse_it_inside", "[sema][annotation][const]" )
+TEST_CASE( "annotations_take_const_off_the_outermost_and_give_it_to_a_pointer", "[sema][annotation][const]" )
 {
-    Written p( "void g( const i32 a, const i32* q ) { }" );
+    Written p( "void g( const i32 a, const i32* q, const u8[*] b, i32* const c, const void* d ) { }" );
 
     SECTION( "outermost is the binding, and unwraps to what it binds" )
     {
         REQUIRE( p.annotations().type_of( p.parameter_annotation( 0, 0 ) ) == p.table().integer( 32, true ) );
+        REQUIRE(
+            p.annotations().type_of( p.parameter_annotation( 0, 3 ) ) == p.table().pointer_to( p.table().integer( 32, true ) )
+        );
         REQUIRE( p.errors() == 0 );
     }
 
-    SECTION( "inside a pointer it is a promise about data nobody named here" )
+    SECTION( "under a pointer it is the pointer's element" )
     {
-        const Type_id type = p.annotations().type_of( p.parameter_annotation( 0, 1 ) );
+        REQUIRE(
+            p.annotations().type_of( p.parameter_annotation( 0, 1 ) ) ==
+            p.table().pointer_to( p.table().integer( 32, true ), true )
+        );
+        REQUIRE(
+            p.annotations().type_of( p.parameter_annotation( 0, 2 ) ) ==
+            p.table().many_pointer_to( p.table().integer( 8, false ), true )
+        );
+        REQUIRE(
+            p.annotations().type_of( p.parameter_annotation( 0, 4 ) ) ==
+            p.table().pointer_to( p.table().builtin( Type_kind::Void ), true )
+        );
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+    }
+}
+
+// A type argument binds nothing, so an outer `const` on one protects nothing. It was dropped
+// without a word, which made `Box<const i32>` a second spelling of `Box<i32>`.
+TEST_CASE( "type_checker_refuses_const_on_a_type_argument", "[sema][const][generic]" )
+{
+    constexpr std::string_view box = "struct Box<T> where T : Copyable { T v; };\n";
+
+    SECTION( "on a type" )
+    {
+        const Typed p( std::string( box ) + "i32 take( Box<const i32> b ) { return 0; }\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
-        REQUIRE( p.table().is_error( type ) );
-        REQUIRE( p.rendered().find( "a pointer to `const` is not supported yet" ) != std::string::npos );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`const` here applies to nothing" ) != std::string::npos );
+        REQUIRE(
+            p.rendered().find( "`const` makes a declaration read-only, or what a pointer points at" ) != std::string::npos
+        );
+    }
+
+    SECTION( "under a pointer it is the element's" )
+    {
+        const Typed p( std::string( box ) + "i32 take( Box<const i32*> b ) { return 0; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
     }
 }
 
@@ -1171,18 +1212,23 @@ TEST_CASE( "d1_suggests_a_keel_spelling_for_every_rejected_c_type", "[sema][type
     }
 }
 
-// A pointer to const is a promise about data nobody named here, which needs constness in the type
-// rather than on the binding. Refused rather than quietly given the other meaning: silently
-// reinterpreting valid C++ is the one divergence §5.1 forbids.
-TEST_CASE( "type_checker_refuses_a_pointer_to_const", "[sema][const]" )
+// C++'s meaning: `const` on the element is a promise about the data, made through this pointer.
+TEST_CASE( "type_checker_accepts_a_pointer_to_const", "[sema][const]" )
 {
     const Typed p( "i32 main() { i32 y = 1; const i32* q = &y; return *q; }" );
 
     INFO( p.rendered() );
-    REQUIRE( p.rendered().find( "a pointer to `const` is not supported yet" ) != std::string::npos );
+    REQUIRE( p.clean() );
+    REQUIRE( p.type_name( p.nth( Node_kind::Var_decl, 1 ) ) == "const i32*" );
+}
 
-    // Exactly one. `<error>*` is not the error type, so wrapping the poison rather than propagating
-    // it made one bad annotation report twice.
+// `<error>*` is not the error type, so wrapping the poison rather than propagating it would make
+// one bad annotation report twice.
+TEST_CASE( "type_checker_reports_a_bad_const_element_once", "[sema][const]" )
+{
+    const Typed p( "i32 main() { const Nope* q = nullptr; return 0; }" );
+
+    INFO( p.rendered() );
     REQUIRE( p.errors() == 1 );
 }
 
@@ -1298,15 +1344,13 @@ TEST_CASE( "type_checker_resolves_a_many_item_pointer_annotation", "[sema][many]
         REQUIRE( p.type_name( p.nth( Node_kind::Var_decl, 0 ) ) == "i32[*]" );
     }
 
-    // The read-only buffer is decided with `String`, so until then it is the pointer-to-const
-    // refusal, word for word.
-    SECTION( "a leading const is a pointer to const, and refused" )
+    SECTION( "a leading const is the element's: a read-only buffer" )
     {
         const Typed p( "i32 main() { const i32[*] q = nullptr; return 0; }" );
 
         INFO( p.rendered() );
-        REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "a pointer to `const` is not supported yet" ) != std::string::npos );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Var_decl, 0 ) ) == "const i32[*]" );
     }
 
     SECTION( "an unknown element is reported once" )

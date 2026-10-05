@@ -301,7 +301,8 @@ Binary_result Operators::result_of_binary(
             return reject( {} );
         }
 
-        if( lhs_type != rhs_type )
+        // `const` on one side only is still one pointer type to compare.
+        if( !table_.holds( lhs_type, rhs_type ) && !table_.holds( rhs_type, lhs_type ) )
         {
             return reject(
                 table_.is_enum( lhs_type ) || table_.is_enum( rhs_type ) ? "only values of the same `enum` can be compared"

@@ -154,12 +154,24 @@ bool Places::check_writable( Node_id target, Node_id current_function )
         }
     }
 
-    const Node_id root = place_root( target, current_function );
-
-    if( !root.is_valid() )
+    if( !is_read_only( target, current_function ) )
     {
         return true;
     }
+
+    const Node_id pointer = through_const_pointer( target );
+    if( pointer.is_valid() )
+    {
+        reporter_.error_at(
+            ast_.span( target ),
+            fmt::format( "this is reached through a `{}`, so it cannot be modified", table_.name( types_.type_of( pointer ) ) ),
+            "a pointer to `const` only reads what it points at"
+        );
+
+        return false;
+    }
+
+    const Node_id root = place_root( target, current_function );
 
     // D7: a pattern binding is read-only. The payload is copied today, so this refuses nothing
     // observable - which is the point, because it becomes a borrow once payloads can own.
@@ -217,6 +229,73 @@ bool Places::check_writable( Node_id target, Node_id current_function )
     }
 
     return true;
+}
+
+// Whether a place may be read and not written: through a pointer to `const`, from a `const ref` return, or rooted in a `const`
+// binding, a pattern binding or a read-only borrow. A temporary is check_writable's alone.
+bool Places::is_read_only( Node_id target, Node_id current_function ) const
+{
+    if( through_const_pointer( target ).is_valid() )
+    {
+        return true;
+    }
+
+    const Node_id source = place_source( target );
+    if( source.is_valid() && ast_.kind( source ) == Node_kind::Call_expr && call_returns_a_binding( source ) )
+    {
+        return true;
+    }
+
+    const Node_id root = place_root( target, current_function );
+    if( root.is_valid() &&
+        ( ast_.kind( root ) == Node_kind::Binding_decl || is_borrow_binding( root ) || is_const_binding( ast_, root ) ) )
+    {
+        return true;
+    }
+
+    return false;
+}
+
+Node_id Places::through_const_pointer( Node_id place ) const
+{
+    while( true )
+    {
+        Node_id         pointer {};
+        const Node_kind kind = ast_.kind( place );
+
+        if( kind == Node_kind::Field_expr )
+        {
+            const Node_id object      = ast_.child( place, 0 );
+            const Type_id object_type = types_.type_of( object );
+            if( object_type.is_valid() && !table_.is_pointer( object_type ) )
+            {
+                place = object;
+                continue;
+            }
+            else
+            {
+                // D22's auto deref
+                pointer = object;
+            }
+        }
+
+        if( kind == Node_kind::Index_expr )
+        {
+            pointer = ast_.child( place, 0 );
+        }
+
+        if( kind == Node_kind::Unary_expr && static_cast<Token_kind>( ast_.aux( place ) ) == Token_kind::Star )
+        {
+            pointer = ast_.child( place, 0 );
+        }
+
+        if( pointer.is_valid() && table_.points_to_const( types_.type_of( pointer ) ) )
+        {
+            return pointer;
+        }
+
+        return Node_id {};
+    }
 }
 
 // Bare and owning: the read-only borrow. `move` is not one - the callee owns what it was given -
@@ -1369,6 +1448,187 @@ TEST_CASE( "type_checker_gives_a_const_many_item_pointer_its_c_meaning", "[sema]
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 ); // the reseat, not the element write
+    }
+}
+
+namespace
+{
+constexpr std::string_view pointees = "struct P { i32 x; };\n"
+                                      "class C { C() { n = 1; } public void bump() { n += 1; } "
+                                      "public i32 peek() const { return n; } private i32 n; };\n"
+                                      "void set( ref i32 v ) { v = 1; }\n";
+
+std::string in_main( std::string_view body )
+{
+    return fmt::format( "{}i32 main() {{ i32 y = 0; P p = P {{ 1 }}; C c = C(); {} return 0; }}", pointees, body );
+}
+} // namespace
+
+// A pointer to const reads what it points at and nothing writes through it: every way of naming the
+// pointee is a place check_writable refuses, the same way it refuses a `const` binding.
+TEST_CASE( "type_checker_refuses_writes_through_a_pointer_to_const", "[sema][const]" )
+{
+    struct Case
+    {
+        const char* body;
+        const char* through; // the pointer type the message names
+    };
+
+    for( const Case c : {
+             Case { "const i32* q = &y; *q = 2;", "const i32*" },
+             Case { "const P* q = &p; q.x = 2;", "const P*" },
+             Case { "const P* q = &p; ( *q ).x = 2;", "const P*" },
+             Case { "const i32[*] q = nullptr; unsafe { q[ 0 ] = 1; }", "const i32[*]" },
+             Case { "const P[*] q = nullptr; unsafe { q[ 0 ].x = 1; }", "const P[*]" },
+             Case { "const i32* q = &y; ( *q )++;", "const i32*" },
+             Case { "const i32* q = &y; set( ref *q );", "const i32*" },
+         } )
+    {
+        const Typed p( in_main( c.body ) );
+
+        INFO( c.body << "\n" << p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE(
+            p.rendered().find( fmt::format( "this is reached through a `{}`, so it cannot be modified", c.through ) ) !=
+            std::string::npos
+        );
+        REQUIRE( p.rendered().find( "a pointer to `const` only reads what it points at" ) != std::string::npos );
+    }
+}
+
+TEST_CASE( "type_checker_reads_through_a_pointer_to_const", "[sema][const]" )
+{
+    for( const char* body : {
+             "const i32* q = &y; i32 z = *q + 1;",
+             "const P* q = &p; i32 z = q.x + ( *q ).x;",
+             "const C* q = &c; i32 z = q.peek();",
+             "i32* w = &y; const i32* q = w;", // const is added implicitly
+             "i32* w = &y; const i32* q = &y; bool b = q == w && w == q;",
+             "const i32* q = nullptr; bool b = q == nullptr;",
+             "const void* q = nullptr;",
+             "i32* w = &y; const i32* const* q = nullptr; i32* const* r = &w;",
+             "const i32* q = &y; unsafe { i32* w = cast<i32*>( q ); *w = 1; }", // dropping it is unsafe
+         } )
+    {
+        const Typed p( in_main( body ) );
+
+        INFO( body << "\n" << p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+TEST_CASE( "type_checker_never_drops_const_implicitly", "[sema][const]" )
+{
+    SECTION( "into a plain pointer" )
+    {
+        const Typed p( in_main( "const i32* q = &y; i32* w = q;" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "expected `i32*`, but got `const i32*`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "a pointer to `const` never converts back to one that writes" ) != std::string::npos );
+    }
+
+    // `T**` to `const T**` would let a `const T*` be stored where a `T*` is read back.
+    SECTION( "nor adds it two levels down" )
+    {
+        const Typed p( in_main( "i32** raw = nullptr; const i32** q = raw;" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "expected `const i32**`, but got `i32**`" ) != std::string::npos );
+    }
+
+    SECTION( "a cast that drops it needs an unsafe block" )
+    {
+        const Typed p( in_main( "const i32* q = &y; i32* w = cast<i32*>( q );" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "needs an `unsafe` block" ) != std::string::npos );
+    }
+}
+
+TEST_CASE( "type_checker_calls_only_const_methods_through_a_pointer_to_const", "[sema][const]" )
+{
+    const Typed p( in_main( "const C* q = &c; q.bump();" ) );
+
+    INFO( p.rendered() );
+    REQUIRE( p.errors() == 1 );
+    REQUIRE( p.rendered().find( "`bump` may modify its object, which is reached through a `const C*`" ) != std::string::npos );
+    REQUIRE( p.rendered().find( "a pointer to `const` can call only `const` methods" ) != std::string::npos );
+}
+
+// Reported after the block is counted, so the block is not also called pointless.
+TEST_CASE( "type_checker_refuses_to_free_a_pointer_to_const", "[sema][const]" )
+{
+    const Typed p( in_main( "const i32[*] q = nullptr; unsafe { free( q ); }" ) );
+
+    INFO( p.rendered() );
+    REQUIRE( p.errors() == 1 );
+    REQUIRE( p.rendered().find( "`free` cannot release a `const i32[*]`, which points to `const`" ) != std::string::npos );
+    REQUIRE( p.rendered().find( "if it came from `alloc`, `cast<i32[*]>` it back first" ) != std::string::npos );
+}
+
+// The hole this closes: `&` on a read-only place made a pointer that wrote through it.
+TEST_CASE( "type_checker_takes_the_address_of_a_read_only_place_as_a_pointer_to_const", "[sema][const]" )
+{
+    SECTION( "each is a pointer to const" )
+    {
+        struct Case
+        {
+            const char* program;
+            std::size_t q; // which Var_decl is `q`
+        };
+
+        for( const Case c : {
+                 Case { "i32 f() { const i32 x = 1; auto q = &x; return 0; }", 1 },
+                 Case { "i32 f( const ref i32 r ) { auto q = &r; return 0; }", 0 },
+                 Case { "struct S { i32 x; };\ni32 f() { const S s = S { 1 }; auto q = &s.x; return 0; }", 1 },
+                 Case { "class C { C() { n = 1; } i32 f() const { auto q = &n; return 0; } private i32 n; };", 0 },
+                 Case { "class B { public i32 n; B() { n = 1; } ~B() { } };\ni32 f( B b ) { auto q = &b.n; return 0; }", 0 },
+                 Case {
+                     "enum Shape { Circle( i32 r ), Dot };\n"
+                     "i32 f( Shape s ) { switch( s ) { case Shape::Circle( r ): { auto q = &r; return 0; } default: return 0; "
+                     "} }",
+                     0
+                 },
+                 Case {
+                     "const ref i32 h( const ref i32 a ) { return a; }\ni32 f() { i32 y = 0; auto q = &h( y ); return 0; }", 1
+                 },
+             } )
+        {
+            const Typed p( std::string( c.program ) + "\ni32 main() { return 0; }" );
+
+            INFO( c.program << "\n" << p.rendered() );
+            REQUIRE( p.clean() );
+            REQUIRE( p.type_name( p.nth( Node_kind::Var_decl, c.q ) ) == "const i32*" );
+        }
+    }
+
+    SECTION( "and none of them converts to a pointer that writes" )
+    {
+        for( const char* program : {
+                 "i32 f() { const i32 x = 1; i32* q = &x; *q = 2; return x; }",
+                 "i32 f( const ref i32 r ) { i32* q = &r; *q = 5; return r; }",
+                 "struct S { i32 x; };\ni32 f() { const S s = S { 1 }; i32* q = &s.x; *q = 9; return s.x; }",
+                 "class C { C() { n = 1; } i32 f() const { i32* q = &n; *q = 7; return n; } private i32 n; };",
+             } )
+        {
+            const Typed p( std::string( program ) + "\ni32 main() { return 0; }" );
+
+            INFO( program << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( "expected `i32*`, but got `const i32*`" ) != std::string::npos );
+        }
+    }
+
+    SECTION( "a writable place's address still writes" )
+    {
+        const Typed p( "i32 f( ref i32 r ) { i32 y = 0; i32* a = &y; i32* b = &r; return 0; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
     }
 }
 

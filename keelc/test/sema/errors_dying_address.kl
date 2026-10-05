@@ -47,7 +47,7 @@ i32* of_a_moved_parameter( move Box b )
     return &b.n;
 }
 
-i32* of_a_pattern_binding( Shape s )
+const i32* of_a_pattern_binding( Shape s )
 {
     switch( s )
     {

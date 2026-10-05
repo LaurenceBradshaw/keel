@@ -1,0 +1,357 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+struct kl__Point;
+struct kl__Counter;
+
+struct kl__Point
+{
+    int32_t kl_x_1;
+    int32_t kl_y_3;
+};
+
+struct kl__Counter
+{
+    int32_t kl_n_38;
+};
+
+void* kl_rt_alloc( size_t );
+void  kl_rt_free( void* );
+void* kl_rt_alloc_many( size_t, size_t );
+
+void kl__Counter__R7Counter__ctor( struct kl__Counter* );
+int32_t kl__peek__S7Counter( struct kl__Counter* );
+int32_t* kl__at__S7Counter( struct kl__Counter* );
+int32_t kl__sum__NK3i32_3u64( int32_t*, uint64_t );
+int32_t kl__read__PK5Point( struct kl__Point* );
+int32_t kl__pick__P3i32( int32_t* );
+int32_t kl__pick__PK3i32( int32_t* );
+int32_t kl__main__( void );
+
+void kl__Counter__R7Counter__ctor( struct kl__Counter* kl_this_1 )
+{
+#line 15 "codegen/pointer_to_const.kl"
+    ( *kl_this_1 ).kl_n_38 = 4;
+    return;
+}
+
+int32_t kl__peek__S7Counter( struct kl__Counter* kl_this_1 )
+{
+    int32_t kl_t0;
+#line 20 "codegen/pointer_to_const.kl"
+    kl_t0 = ( *kl_this_1 ).kl_n_38;
+    return kl_t0;
+}
+
+int32_t* kl__at__S7Counter( struct kl__Counter* kl_this_1 )
+{
+    int32_t* kl_t0;
+    int32_t* kl_t2;
+#line 25 "codegen/pointer_to_const.kl"
+    kl_t2 = &( *kl_this_1 ).kl_n_38;
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+int32_t kl__sum__NK3i32_3u64( int32_t* kl_values_1, uint64_t kl_count_2 )
+{
+    int32_t kl_t0;
+    int32_t kl_total_3;
+    uint64_t kl_i_4;
+    bool kl_t5;
+    int32_t* kl_t6;
+#line 33 "codegen/pointer_to_const.kl"
+    kl_total_3 = 0;
+#line 35 "codegen/pointer_to_const.kl"
+    kl_i_4 = 0;
+    goto bb1;
+    bb1:
+    kl_t5 = kl_i_4 < kl_count_2;
+    if ( kl_t5 ) goto bb2; else goto bb3;
+    bb2:
+#line 39 "codegen/pointer_to_const.kl"
+    kl_t6 = kl_values_1 + kl_i_4;
+    kl_total_3 = kl_total_3 + ( *kl_t6 );
+    goto bb4;
+    bb3:
+#line 43 "codegen/pointer_to_const.kl"
+    kl_t0 = kl_total_3;
+    return kl_t0;
+    bb4:
+#line 35 "codegen/pointer_to_const.kl"
+    kl_i_4 = kl_i_4 + 1;
+    goto bb1;
+}
+
+int32_t kl__read__PK5Point( struct kl__Point* kl_p_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t2;
+#line 48 "codegen/pointer_to_const.kl"
+    kl_t2 = ( *kl_p_1 ).kl_x_1 + ( *kl_p_1 ).kl_y_3;
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+int32_t kl__pick__P3i32( int32_t* kl_p_1 )
+{
+    int32_t kl_t0;
+#line 53 "codegen/pointer_to_const.kl"
+    kl_t0 = 1;
+    return kl_t0;
+}
+
+int32_t kl__pick__PK3i32( int32_t* kl_p_1 )
+{
+    int32_t kl_t0;
+#line 58 "codegen/pointer_to_const.kl"
+    kl_t0 = 2;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_a_1;
+    int32_t kl_b_2;
+    int32_t* kl_pa_3;
+    int32_t* kl_t4;
+    int32_t* kl_r_5;
+    int32_t* kl_rb_6;
+    int32_t* kl_t7;
+    int32_t* kl_rc_8;
+    int32_t* kl_t9;
+    bool kl_t10;
+    bool kl_t11;
+    bool kl_t12;
+    bool kl_t13;
+    bool kl_t14;
+    uint64_t kl_t15;
+    uint64_t kl_t16;
+    bool kl_t17;
+    bool kl_t18;
+    int32_t* kl_fixed_19;
+    int32_t* kl_t20;
+    bool kl_t21;
+    struct kl__Point kl_p_22;
+    struct kl__Point kl_t23;
+    struct kl__Point* kl_pp_24;
+    struct kl__Point* kl_t25;
+    int32_t kl_t26;
+    bool kl_t27;
+    struct kl__Counter kl_c_28;
+    struct kl__Counter* kl_t29;
+    struct kl__Counter* kl_cp_31;
+    struct kl__Counter* kl_t32;
+    bool kl_t33;
+    int32_t kl_t34;
+    bool kl_t35;
+    struct kl__Counter* kl_t36;
+    int32_t* kl_t37;
+    bool kl_t38;
+    int32_t* kl_many_39;
+    int32_t* kl_t40;
+    int32_t* kl_t41;
+    int32_t* kl_t42;
+    int32_t* kl_t43;
+    int32_t* kl_view_44;
+    bool kl_t45;
+    int32_t* kl_t46;
+    int32_t kl_t47;
+    bool kl_t48;
+    int32_t kl_t49;
+    bool kl_t50;
+    bool kl_t52;
+    int32_t* kl_t53;
+    int32_t kl_t54;
+    bool kl_t55;
+    int32_t kl_t56;
+    bool kl_t57;
+    int32_t* kl_none_58;
+    bool kl_t59;
+    int32_t** kl_rr_60;
+    int32_t** kl_t61;
+    bool kl_t62;
+#line 63 "codegen/pointer_to_const.kl"
+    kl_a_1 = 1;
+#line 64 "codegen/pointer_to_const.kl"
+    kl_b_2 = 2;
+#line 65 "codegen/pointer_to_const.kl"
+    kl_t4 = &kl_a_1;
+    kl_pa_3 = kl_t4;
+#line 66 "codegen/pointer_to_const.kl"
+    kl_r_5 = kl_pa_3;
+#line 67 "codegen/pointer_to_const.kl"
+    kl_t7 = &kl_b_2;
+    kl_rb_6 = kl_t7;
+#line 68 "codegen/pointer_to_const.kl"
+    kl_t9 = &kl_b_2;
+    kl_rc_8 = kl_t9;
+#line 70 "codegen/pointer_to_const.kl"
+    kl_t10 = ( *kl_r_5 ) != 1;
+    if ( kl_t10 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+#line 71 "codegen/pointer_to_const.kl"
+    kl_t12 = ( *kl_rb_6 ) != 2;
+    kl_t11 = kl_t12;
+    if ( kl_t11 ) goto bb4; else goto bb3;
+    bb3:
+    kl_t13 = ( *kl_rc_8 ) != 2;
+    kl_t11 = kl_t13;
+    goto bb4;
+    bb4:
+    if ( kl_t11 ) goto bb5; else goto bb6;
+    bb5:
+    kl_t0 = 2;
+    return kl_t0;
+    bb6:
+#line 72 "codegen/pointer_to_const.kl"
+    kl_t15 = ( uint64_t ) kl_r_5;
+    kl_t16 = ( uint64_t ) kl_pa_3;
+    kl_t17 = kl_t15 != kl_t16;
+    kl_t14 = kl_t17;
+    if ( kl_t14 ) goto bb8; else goto bb7;
+    bb7:
+    kl_t18 = kl_rb_6 != kl_rc_8;
+    kl_t14 = kl_t18;
+    goto bb8;
+    bb8:
+    if ( kl_t14 ) goto bb9; else goto bb10;
+    bb9:
+    kl_t0 = 3;
+    return kl_t0;
+    bb10:
+#line 74 "codegen/pointer_to_const.kl"
+    kl_t20 = &kl_a_1;
+    kl_fixed_19 = kl_t20;
+#line 75 "codegen/pointer_to_const.kl"
+    ( *kl_fixed_19 ) = 5;
+#line 76 "codegen/pointer_to_const.kl"
+    kl_t21 = ( *kl_r_5 ) != 5;
+    if ( kl_t21 ) goto bb11; else goto bb12;
+    bb11:
+    kl_t0 = 4;
+    return kl_t0;
+    bb12:
+#line 78 "codegen/pointer_to_const.kl"
+    kl_t23.kl_x_1 = 10;
+    kl_t23.kl_y_3 = 20;
+    kl_p_22 = kl_t23;
+#line 79 "codegen/pointer_to_const.kl"
+    kl_t25 = &kl_p_22;
+    kl_pp_24 = kl_t25;
+#line 80 "codegen/pointer_to_const.kl"
+    kl_t26 = kl__read__PK5Point( kl_pp_24 );
+    kl_t27 = kl_t26 != 30;
+    if ( kl_t27 ) goto bb13; else goto bb14;
+    bb13:
+    kl_t0 = 5;
+    return kl_t0;
+    bb14:
+#line 82 "codegen/pointer_to_const.kl"
+    kl_t29 = &kl_c_28;
+    kl__Counter__R7Counter__ctor( kl_t29 );
+#line 83 "codegen/pointer_to_const.kl"
+    kl_t32 = &kl_c_28;
+    kl_cp_31 = kl_t32;
+#line 84 "codegen/pointer_to_const.kl"
+    kl_t34 = kl__peek__S7Counter( kl_cp_31 );
+    kl_t35 = kl_t34 != 4;
+    kl_t33 = kl_t35;
+    if ( kl_t33 ) goto bb16; else goto bb15;
+    bb15:
+    kl_t36 = &kl_c_28;
+    kl_t37 = kl__at__S7Counter( kl_t36 );
+    kl_t38 = ( *kl_t37 ) != 4;
+    kl_t33 = kl_t38;
+    goto bb16;
+    bb16:
+    if ( kl_t33 ) goto bb17; else goto bb18;
+    bb17:
+    kl_t0 = 6;
+    return kl_t0;
+    bb18:
+#line 86 "codegen/pointer_to_const.kl"
+    kl_many_39 = NULL;
+#line 89 "codegen/pointer_to_const.kl"
+    kl_t40 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 3, sizeof( int32_t ) );
+    kl_many_39 = kl_t40;
+#line 90 "codegen/pointer_to_const.kl"
+    kl_t41 = kl_many_39 + 0;
+    ( *kl_t41 ) = 1;
+#line 91 "codegen/pointer_to_const.kl"
+    kl_t42 = kl_many_39 + 1;
+    ( *kl_t42 ) = 2;
+#line 92 "codegen/pointer_to_const.kl"
+    kl_t43 = kl_many_39 + 2;
+    ( *kl_t43 ) = 3;
+#line 94 "codegen/pointer_to_const.kl"
+    kl_view_44 = kl_many_39;
+#line 95 "codegen/pointer_to_const.kl"
+    kl_t46 = ( int32_t* ) kl_many_39;
+    kl_t47 = kl__sum__NK3i32_3u64( kl_t46, 3 );
+    kl_t48 = kl_t47 != 6;
+    kl_t45 = kl_t48;
+    if ( kl_t45 ) goto bb20; else goto bb19;
+    bb19:
+    kl_t49 = kl__sum__NK3i32_3u64( kl_view_44, 3 );
+    kl_t50 = kl_t49 != 6;
+    kl_t45 = kl_t50;
+    goto bb20;
+    bb20:
+    if ( kl_t45 ) goto bb21; else goto bb22;
+    bb21:
+    kl_t0 = 7;
+    return kl_t0;
+    bb22:
+#line 98 "codegen/pointer_to_const.kl"
+    kl_rt_free( kl_many_39 );
+#line 101 "codegen/pointer_to_const.kl"
+    kl_t53 = &kl_a_1;
+    kl_t54 = kl__pick__P3i32( kl_t53 );
+    kl_t55 = kl_t54 != 1;
+    kl_t52 = kl_t55;
+    if ( kl_t52 ) goto bb24; else goto bb23;
+    bb23:
+    kl_t56 = kl__pick__PK3i32( kl_r_5 );
+    kl_t57 = kl_t56 != 2;
+    kl_t52 = kl_t57;
+    goto bb24;
+    bb24:
+    if ( kl_t52 ) goto bb25; else goto bb26;
+    bb25:
+    kl_t0 = 8;
+    return kl_t0;
+    bb26:
+#line 103 "codegen/pointer_to_const.kl"
+    kl_none_58 = NULL;
+#line 104 "codegen/pointer_to_const.kl"
+    kl_t59 = kl_none_58 != NULL;
+    if ( kl_t59 ) goto bb27; else goto bb28;
+    bb27:
+    kl_t0 = 9;
+    return kl_t0;
+    bb28:
+#line 106 "codegen/pointer_to_const.kl"
+    kl_t61 = &kl_r_5;
+    kl_rr_60 = kl_t61;
+#line 107 "codegen/pointer_to_const.kl"
+    kl_t62 = ( *( *kl_rr_60 ) ) != 5;
+    if ( kl_t62 ) goto bb29; else goto bb30;
+    bb29:
+    kl_t0 = 10;
+    return kl_t0;
+    bb30:
+#line 109 "codegen/pointer_to_const.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

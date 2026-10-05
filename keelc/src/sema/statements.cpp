@@ -2053,7 +2053,8 @@ TEST_CASE( "type_checker_refuses_the_address_of_a_dying_local", "[sema][escape]"
                  Case { "i32* f( P p ) { return &p.x; }", "p" },
                  Case { "i32* f( move B b ) { return &b.n; }", "b" },
                  Case {
-                     "i32* f( Shape s ) { switch( s ) { case Shape::Circle( r ): return &r; default: return nullptr; } }", "r"
+                     "const i32* f( Shape s ) { switch( s ) { case Shape::Circle( r ): return &r; default: return nullptr; } }",
+                     "r"
                  },
                  Case { "i32* f() { i32 x = 1; ref i32 r = x; return &r; }", "x" },
                  Case { "T* f<T>( T a ) where T : Copyable { return &a; }", "a" },
@@ -2073,10 +2074,10 @@ TEST_CASE( "type_checker_refuses_the_address_of_a_dying_local", "[sema][escape]"
                  "i32 counter = 1;\ni32* f() { return &counter; }",
                  "i32* f( ref i32 v ) { return &v; }",
                  "i32* f( out i32 v ) { v = 1; return &v; }",
-                 "i32* f( B b ) { return &b.n; }",
+                 "const i32* f( B b ) { return &b.n; }",
                  "class C { public i32 x; C() { x = 1; } i32* at() { return &x; } };",
                  "i32* f( P* p ) { return &p.x; }",
-                 "T* f<T>( T a ) { return &a; }",
+                 "const T* f<T>( T a ) { return &a; }",
                  "i32* f( ref i32 v ) { ref i32 r = v; return &r; }",
                  "i32 f() { i32 x = 1; i32* p = &x; return *p; }",
              } )

@@ -44,7 +44,10 @@ public:
     bool returns_a_binding( Node_id decl ) const;
     bool call_returns_a_binding( Node_id call ) const;
     bool check_writable( Node_id target, Node_id current_function );
-    bool is_borrow_binding( Node_id decl ) const;
+    bool is_read_only( Node_id target, Node_id current_function ) const;
+    // The pointer a place is reached through when that pointer points to const, or invalid.
+    Node_id through_const_pointer( Node_id place ) const;
+    bool    is_borrow_binding( Node_id decl ) const;
 
     // Parameter 0 of a method, constructor or destructor - the synthesised `this`. Invalid for a
     // free function, which has no receiver for a bare name to be rooted in.

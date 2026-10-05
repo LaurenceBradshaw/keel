@@ -45,6 +45,7 @@ void encode_type( std::string& out, Type_id id, const Type_table& types )
     if( types.is_pointer( id ) )
     {
         out += 'P';
+        out += types.points_to_const( id ) ? "K" : "";
         encode_type( out, types.get( id ).element, types );
         return;
     }
@@ -52,6 +53,7 @@ void encode_type( std::string& out, Type_id id, const Type_table& types )
     if( types.is_many_pointer( id ) )
     {
         out += 'N';
+        out += types.points_to_const( id ) ? "K" : "";
         encode_type( out, types.get( id ).element, types );
         return;
     }
@@ -479,6 +481,19 @@ TEST_CASE( "mangle_encodes_every_type_injectively", "[codegen][mangle]" )
         REQUIRE( mangle_function( "", "f", as_pointer, table ) != mangle_function( "", "f", as_struct, table ) );
         REQUIRE( mangle_function( "", "f", as_pointer, table ) == "kl__f__P3i32" );
         REQUIRE( mangle_function( "", "f", as_struct, table ) == "kl__f__4i32p" );
+    }
+
+    // `K` after the pointer letter, which no encoded type starts with: `f( i32* )` and
+    // `f( const i32* )` are two overloads and must be two symbols.
+    SECTION( "a pointer to const is not the plain pointer" )
+    {
+        const Mangled_parameter plain[]     = { by_value( pointer ) };
+        const Mangled_parameter read_only[] = { by_value( table.pointer_to( i32, true ) ) };
+        const Mangled_parameter many[]      = { by_value( table.many_pointer_to( i32, true ) ) };
+
+        REQUIRE( mangle_function( "", "f", read_only, table ) == "kl__f__PK3i32" );
+        REQUIRE( mangle_function( "", "f", many, table ) == "kl__f__NK3i32" );
+        REQUIRE( mangle_function( "", "f", read_only, table ) != mangle_function( "", "f", plain, table ) );
     }
 
     SECTION( "two parameters cannot be read as one" )

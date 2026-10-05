@@ -715,6 +715,21 @@ Type_id Expressions::infer_method_call( Node_id id )
 
     callees_.record( id, method );
 
+    if( !is_const_method( ast_, method ) && table_.points_to_const( types_.type_of( object ) ) )
+    {
+        reporter_.error_at(
+            ast_.span( object ),
+            fmt::format(
+                "`{}` may modify its object, which is reached through a `{}`",
+                interner_.text( Symbol_id { ast_.aux( method ) } ),
+                table_.name( types_.type_of( object ) )
+            ),
+            "a pointer to `const` can call only `const` methods"
+        );
+
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
     // A method without a trailing `const` takes its receiver as `ref T` and may write the object,
     // so calling one needs a receiver that may be written. That is exactly check_writable's
     // question - asked of the object rather than of an assignment - so a `const` local, a
@@ -1542,7 +1557,10 @@ Type_id Expressions::infer_unary( Node_id id )
             return types_.record( id, error );
         }
 
-        return types_.record( id, table_.pointer_to( operand_type ) );
+        // The address of something read-only only reads it.
+        return types_.record(
+            id, table_.pointer_to( operand_type, places_.is_read_only( ast_.child( id, 0 ), current_function_ ) )
+        );
     }
 
     if( op == Token_kind::Star )
@@ -1910,6 +1928,20 @@ Type_id Expressions::infer_free( Node_id id )
     }
 
     require_unsafe( id, "`free` needs an `unsafe` block", "the compiler cannot tell whether anything still points at it" );
+
+    if( table_.points_to_const( operand ) )
+    {
+        const Type&   described = table_.get( operand );
+        const Type_id writable_type =
+            table_.is_pointer( operand ) ? table_.pointer_to( described.element ) : table_.many_pointer_to( described.element );
+        reporter_.error_at(
+            ast_.span( id ),
+            fmt::format( "`free` cannot release a `{}`, which points to `const`", table_.name( operand ) ),
+            fmt::format( "if it came from `alloc`, `cast<{}>` it back first", table_.name( writable_type ) )
+        );
+
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
 
     return types_.record( id, table_.builtin( Type_kind::Void ) );
 }
@@ -2761,6 +2793,8 @@ Type_id Expressions::check( Node_id id, Type_id expected )
             fmt::format( "expected `{}`, but got `{}`", table_.name( expected ), table_.name( actual ) ),
             table_.is_function( expected ) && table_.is_function( actual )
                 ? "one signature is never widened into another, so the two have to match exactly"
+            : table_.points_to_const( actual ) && !table_.points_to_const( expected )
+                ? "a pointer to `const` never converts back to one that writes"
                 : ""
         );
         return expected;

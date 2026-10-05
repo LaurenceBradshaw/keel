@@ -46,11 +46,11 @@ error: `q` is `const`
 91 |     q = &z;
    |     ^ remove `const` to modify it
 
-error: a pointer to `const` is not supported yet
-   --> sema/errors_const.kl:102:5
+error: this is reached through a `const i32*`, so it cannot be modified
+   --> sema/errors_const.kl:103:5
     |
-102 |     const i32* q = &y;
-    |     ^^^^^^^^^ `const` applies to the binding; write `const ref T` to borrow one value read-only
+103 |     *q = 2;
+    |     ^^ a pointer to `const` only reads what it points at
 
 error: `k` is `const`
    --> sema/errors_const.kl:117:17
