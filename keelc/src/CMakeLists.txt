@@ -8,6 +8,13 @@
 # and a flat include path would make those ambiguous.
 file(GLOB_RECURSE keel_sources CONFIGURE_DEPENDS "*.cpp")
 
+# The prelude is Keel source compiled into keelc as a string, so keelc reads no file to find it.
+# Editing prelude.kl re-runs CMake, which regenerates the string.
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS prelude/prelude.kl)
+file(READ prelude/prelude.kl KEEL_PRELUDE)
+configure_file(prelude/prelude.cpp.in ${CMAKE_CURRENT_BINARY_DIR}/prelude/prelude.cpp @ONLY)
+list(APPEND keel_sources ${CMAKE_CURRENT_BINARY_DIR}/prelude/prelude.cpp)
+
 find_package(fmt CONFIG REQUIRED)
 find_package(cxxopts CONFIG REQUIRED)
 

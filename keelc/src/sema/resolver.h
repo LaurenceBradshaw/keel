@@ -59,6 +59,11 @@ public:
         return imports_.is_package( package );
     }
 
+    Symbol_id prelude_package() const
+    {
+        return imports_.prelude_package();
+    }
+
     // A qualified name the resolver could not bind, and has already answered for.
     bool is_unresolved( Node_id use ) const
     {

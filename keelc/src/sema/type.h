@@ -7,6 +7,7 @@
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 #include "ast/node.h"
 #include "common/types.h"
@@ -181,7 +182,7 @@ public:
     Type_id default_integer() const;
     Type_id default_float() const;
 
-    void             set_package( Node_id declaration, std::string_view package );
+    void             set_package( Node_id declaration, std::string_view package, bool shown = true );
     std::string_view package( Type_id id ) const;
 
 private:
@@ -227,6 +228,7 @@ private:
     std::vector<Type_id> fields_;
 
     std::unordered_map<u32, std::string> packages_; // Node_id of a declaration -> the package it was declared in
+    std::unordered_set<u32>              unshown_packages_;
 };
 
 } // namespace keel

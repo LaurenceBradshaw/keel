@@ -1,4 +1,5 @@
 {"kind":"file","path":"sema/json/main.kl"}
+{"kind":"file","path":"<prelude>"}
 {"kind":"file","path":"sema/json/shapes.kl"}
 {"kind":"file","path":"sema/json/clean.kl"}
 {"kind":"diagnostic","severity":"error","file":"sema/json/main.kl","line":7,"col":24,"end_line":7,"end_col":31,"message":"`missing` is not declared","help":""}

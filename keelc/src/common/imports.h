@@ -32,6 +32,11 @@ public:
 
     bool sees( File_id from, File_id to ) const
     {
+        if( to == prelude_ )
+        {
+            return true;
+        }
+
         if( from == to )
         {
             return true;
@@ -82,12 +87,26 @@ public:
         return Symbol_id {};
     }
 
+    void set_prelude( File_id file, Symbol_id package )
+    {
+        prelude_         = file;
+        prelude_package_ = package;
+        place( file, package );
+    }
+
+    Symbol_id prelude_package() const
+    {
+        return prelude_package_;
+    }
+
 private:
     // The graph is sparse, so an adjacency list is better than a matrix.
     std::vector<std::vector<File_id>> edges_;
     std::vector<Symbol_id>            packages_;
     std::vector<Symbol_id>            missing_packages_;
     std::unordered_map<u32, u32>      file_to_package_;
+    File_id                           prelude_;
+    Symbol_id                         prelude_package_;
 };
 
 // `name`, or `package::name` when there is a package. The program's own package has no name.

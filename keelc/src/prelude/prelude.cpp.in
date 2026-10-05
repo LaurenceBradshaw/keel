@@ -1,0 +1,13 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+#include "prelude/prelude.h"
+
+// Generated from prelude/prelude.kl by CMake, so edit that instead.
+
+namespace keel
+{
+std::string_view prelude_source()
+{
+    return R"keel_prelude(@KEEL_PRELUDE@)keel_prelude";
+}
+} // namespace keel

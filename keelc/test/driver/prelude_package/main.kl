@@ -1,0 +1,6 @@
+// The prelude's declarations are in a package named `prelude`, so a package of that name would share
+// their scope; the driver refuses the name before anything is loaded.
+i32 main()
+{
+    return 0;
+}

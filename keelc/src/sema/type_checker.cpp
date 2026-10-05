@@ -140,7 +140,7 @@ Types Checker::run()
 
         if( ( is_aggregate( kind ) || kind == Node_kind::Enum_decl ) && package.is_valid() )
         {
-            types_.table().set_package( decl, interner_.text( package ) );
+            types_.table().set_package( decl, interner_.text( package ), package != resolution_.prelude_package() );
         }
     }
 

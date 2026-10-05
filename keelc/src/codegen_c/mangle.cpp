@@ -638,6 +638,19 @@ TEST_CASE( "mangle_encodes_a_package's_type_with_its_package", "[codegen][mangle
         REQUIRE( mangle_struct( "kl", kl_point, table ) == "kl_2kl_Point" );
     }
 
+    // The prelude's `Point` reads as the program's does, and is still a different C type.
+    SECTION( "a package left off the type's name is still in its symbol" )
+    {
+        table.set_package( Node_id { 29 }, "prelude", false );
+
+        const Type_id           prelude_point = table.structure( Node_id { 29 }, {}, "Point" );
+        const Mangled_parameter takes[]       = { by_value( prelude_point ) };
+
+        REQUIRE( mangle_function( "", "f", takes, table ) == "kl__f__Q7prelude5Point" );
+        REQUIRE( mangle_struct( "prelude", prelude_point, table ) == "kl_7prelude_Point" );
+        REQUIRE( mangle_struct( "prelude", prelude_point, table ) != mangle_struct( "", point, table ) );
+    }
+
     SECTION( "inside a generic" )
     {
         const Type_id box_of_kl  = table.structure( Node_id { 23 }, std::array { kl_point }, "Box" );

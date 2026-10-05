@@ -480,6 +480,11 @@ std::string_view Type_table::base_name( Type_id id ) const
 
     std::string_view cut = rendered.substr( 0, rendered.find( '<' ) );
 
+    if( unshown_packages_.contains( get( id ).declaration.v ) )
+    {
+        return cut;
+    }
+
     // So `Box` is returned for `kl::Box<i32>`.
     if( !package( id ).empty() )
     {
@@ -894,8 +899,13 @@ Type_id Type_table::default_float() const
     return floating( 64 );
 }
 
-void Type_table::set_package( Node_id declaration, std::string_view package )
+void Type_table::set_package( Node_id declaration, std::string_view package, bool shown )
 {
+    if( !shown )
+    {
+        unshown_packages_.insert( declaration.v );
+    }
+
     packages_[declaration.v] = package;
 }
 
@@ -972,10 +982,13 @@ Type_id Type_table::composite(
     // `Box<Pair<i32>>` rather than anything the caller had to assemble.
     std::string spelling( name );
 
-    const auto package_it = packages_.find( declaration.v );
-    if( package_it != packages_.end() )
+    if( !unshown_packages_.contains( declaration.v ) )
     {
-        spelling = std::string( package_it->second ) + "::" + spelling;
+        const auto package_it = packages_.find( declaration.v );
+        if( package_it != packages_.end() )
+        {
+            spelling = std::string( package_it->second ) + "::" + spelling;
+        }
     }
 
     for( std::size_t i = 0; i < owned.size(); ++i )
@@ -1120,6 +1133,22 @@ TEST_CASE( "type_table_names_match_the_source_spelling", "[sema][type]" )
     REQUIRE( table.name( table.builtin( Type_kind::Bool ) ) == "bool" );
     REQUIRE( table.name( table.builtin( Type_kind::Void ) ) == "void" );
     REQUIRE( table.name( table.pointer_to( table.integer( 8, false ) ) ) == "u8*" );
+}
+
+// The prelude's package names no qualifier, so its types read bare, and still mangle apart from the program's.
+TEST_CASE( "type_table_leaves_an_unshown_package_off_the_name", "[sema][type][packages][prelude]" )
+{
+    Type_table table;
+
+    table.set_package( Node_id { 3 }, "prelude", false );
+
+    const Type_id pair = table.structure( Node_id { 3 }, {}, "Pair" );
+    const Type_id box  = table.structure( Node_id { 5 }, std::array { pair }, "Box" );
+
+    REQUIRE( table.name( pair ) == "Pair" );
+    REQUIRE( table.base_name( pair ) == "Pair" );
+    REQUIRE( table.package( pair ) == "prelude" );
+    REQUIRE( table.name( box ) == "Box<Pair>" );
 }
 
 // A package's type reads as it is written outside the package; the bare name is what C is built from.

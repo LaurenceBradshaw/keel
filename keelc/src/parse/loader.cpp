@@ -18,17 +18,22 @@ Program load_program(
     Interner&                interner,
     Literal_pool&            literals,
     Diagnostics&             diags,
-    std::span<const Package> packages
+    std::span<const Package> packages,
+    std::string_view         prelude
 )
 {
-    std::vector<File_id>    pending { input };
+    const File_id prelude_file = sm.add_file( std::string( prelude_path ), std::string( prelude ) );
+
+    std::vector<File_id>    pending { input, prelude_file };
     std::unordered_set<u32> loaded;
+    loaded.insert( prelude_file.v );
     loaded.insert( input.v );
 
     const std::filesystem::path program_folder = std::filesystem::path( sm.file( input ).path ).parent_path();
 
     Ast     ast;
     Imports imports;
+    imports.set_prelude( prelude_file, interner.intern( "prelude" ) );
 
     std::unordered_map<u32, std::filesystem::path> package_roots;
     for( const Package& package : packages )
@@ -149,7 +154,9 @@ namespace
 class Loaded
 {
 public:
-    explicit Loaded( std::initializer_list<std::pair<const char*, std::string_view>> files )
+    explicit Loaded(
+        std::initializer_list<std::pair<const char*, std::string_view>> files, std::string_view prelude = prelude_source()
+    )
     {
         for( const auto& [name, text] : files )
         {
@@ -160,11 +167,19 @@ public:
 
         REQUIRE( input.has_value() );
         const Package kl { .name = "kl", .root = dir_.path / "kl" };
-        program_ = load_program( *input, sm_, interner_, literals_, diags_, std::span( &kl, 1 ) );
+        program_ = load_program( *input, sm_, interner_, literals_, diags_, std::span( &kl, 1 ), prelude );
 
         for( const auto& [name, text] : files )
         {
             files_[name] = *sm_.load_file( dir_.path / name ); // already loaded, so the same id
+        }
+
+        for( u32 i = 0; i < sm_.file_count(); ++i )
+        {
+            if( sm_.file( File_id { i } ).path == prelude_path )
+            {
+                files_[std::string( prelude_path )] = File_id { i };
+            }
         }
     }
 
@@ -201,6 +216,12 @@ public:
         std::ostringstream out;
         diags_.render( sm_, out );
         return out.str();
+    }
+
+    // The path of the file the tree's first declaration is in.
+    std::string_view first_file() const
+    {
+        return sm_.file( ast().span( ast().children( ast().root() )[0] ).file ).path;
     }
 
     // Every top-level function's name, sorted, so a test can ask which were loaded and how often.
@@ -437,6 +458,63 @@ TEST_CASE( "loader_loads_modules_from_a_package", "[parse][loader][packages]" )
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "there is no module `kl::nope`" ) != std::string::npos );
         REQUIRE( p.rendered().find( "`nope.kl`" ) != std::string::npos );
+    }
+}
+
+TEST_CASE( "loader_loads_the_prelude_with_every_program", "[parse][loader][prelude]" )
+{
+    SECTION( "every file sees it without an import" )
+    {
+        const Loaded p(
+            {
+                { "main.kl", "import a;\ni32 main() { return answer() + fa(); }\n" },
+                { "a.kl", "i32 fa() { return answer(); }\n" },
+            },
+            "i32 answer() { return 42; }\n"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.functions() == std::vector<std::string_view> { "answer", "fa", "main" } );
+        REQUIRE( p.sees( "main.kl", "<prelude>" ) );
+        REQUIRE( p.sees( "a.kl", "<prelude>" ) );
+        REQUIRE_FALSE( p.sees( "<prelude>", "main.kl" ) );
+    }
+
+    SECTION( "its declarations lead the tree" )
+    {
+        const Loaded p( { { "main.kl", "i32 main() { return answer(); }\n" } }, "i32 answer() { return 42; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.first_file() == "<prelude>" );
+    }
+
+    // So it never shares a scope with the program's own declarations, and a qualifier cannot name it.
+    SECTION( "it is in a package of its own that is not a package by name" )
+    {
+        Loaded p( { { "main.kl", "i32 main() { return 0; }\n" } }, "i32 answer() { return 42; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.package_of( "<prelude>" ) == "prelude" );
+        REQUIRE_FALSE( p.is_package( "prelude" ) );
+    }
+
+    SECTION( "an error in it is reported at its own path" )
+    {
+        const Loaded p( { { "main.kl", "i32 main() { return 0; }\n" } }, "i32 answer( { return 42; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() >= 1 );
+        REQUIRE( p.rendered().find( "<prelude>:1:" ) != std::string::npos );
+    }
+
+    SECTION( "the shipped prelude parses cleanly" )
+    {
+        const Loaded p( { { "main.kl", "i32 main() { return 0; }\n" } } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
     }
 }
 

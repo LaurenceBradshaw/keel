@@ -696,6 +696,11 @@ Node_id Resolver::lookup( Symbol_id name, Node_id use )
         return decl;
     }
 
+    if( const Node_id decl = lookup_in( imports_.prelude_package(), name, use ); decl.is_valid() )
+    {
+        return decl;
+    }
+
     // Only a named package can be written as a qualifier, so the program's own is never offered.
     for( const auto& [package, scope] : packages_ )
     {
@@ -1860,7 +1865,9 @@ namespace
 class Resolved_program
 {
 public:
-    explicit Resolved_program( std::initializer_list<std::pair<const char*, std::string_view>> files )
+    explicit Resolved_program(
+        std::initializer_list<std::pair<const char*, std::string_view>> files, std::string_view prelude = prelude_source()
+    )
     {
         for( const auto& [name, text] : files )
         {
@@ -1873,7 +1880,7 @@ public:
         input_ = *input;
 
         const Package kl { .name = "kl", .root = dir_.path / "kl" };
-        program_    = load_program( input_, sm_, interner_, literals_, diags_, std::span( &kl, 1 ) );
+        program_    = load_program( input_, sm_, interner_, literals_, diags_, std::span( &kl, 1 ), prelude );
         earlier_    = diags_.error_count();
         resolution_ = resolve( program_.ast, sm_, interner_, diags_, program_.imports );
     }
@@ -1892,7 +1899,7 @@ public:
     }
 
     // The file, without `.kl`, whose declaration main.kl's `nth` `kind` named `name` is bound to, as
-    // `a` or `kl/geom`; empty when it is bound to nothing.
+    // `a`, `kl/geom` or `<prelude>`; empty when it is bound to nothing.
     std::string bound_into( Node_kind kind, std::string_view name, u32 nth = 0 ) const
     {
         const Ast& ast = program_.ast;
@@ -1917,6 +1924,11 @@ public:
             if( !decl.is_valid() )
             {
                 return {};
+            }
+
+            if( sm_.file( ast.span( decl ).file ).path == prelude_path )
+            {
+                return std::string( prelude_path );
             }
 
             std::filesystem::path file = std::filesystem::path( sm_.file( ast.span( decl ).file ).path );
@@ -2087,6 +2099,78 @@ TEST_CASE( "resolver_sees_only_imported_modules", "[sema][resolve][modules]" )
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 0 );
+    }
+}
+
+TEST_CASE( "resolver_looks_in_the_prelude_after_the_file's_own_package", "[sema][resolve][prelude]" )
+{
+    constexpr std::string_view prelude = "struct Pair { i32 a; };\ni32 answer() { return 42; }\n";
+
+    SECTION( "a bare name reaches it" )
+    {
+        const Resolved_program p( { { "main.kl", "i32 main() { Pair p = Pair { 1 }; return answer(); }\n" } }, prelude );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.bound_into( Node_kind::Name_expr, "answer" ) == "<prelude>" );
+    }
+
+    SECTION( "so does one in a package" )
+    {
+        const Resolved_program p(
+            {
+                { "main.kl", "import kl::geom;\ni32 main() { return kl::area(); }\n" },
+                { "kl/geom.kl", "i32 area() { Pair p = Pair { 1 }; return answer(); }\n" },
+            },
+            prelude
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+    }
+
+    // Shadowed rather than refused, so a name added to the prelude never breaks a program that had it.
+    SECTION( "the program's own declaration of a name shadows it" )
+    {
+        const Resolved_program p(
+            { { "main.kl", "struct Pair { i64 x; };\ni32 answer() { return 1; }\ni32 main() { return answer(); }\n" } }, prelude
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.bound_into( Node_kind::Name_expr, "answer" ) == "main" );
+    }
+
+    SECTION( "so does a package's" )
+    {
+        const Resolved_program p(
+            {
+                { "main.kl", "import kl::geom;\ni32 main() { return kl::area(); }\n" },
+                { "kl/geom.kl", "struct Pair { i64 x; };\ni32 answer() { return 3; }\ni32 area() { return answer(); }\n" },
+            },
+            prelude
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+    }
+
+    SECTION( "its package is not a qualifier" )
+    {
+        const Resolved_program p( { { "main.kl", "i32 main() { return prelude::answer(); }\n" } }, prelude );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`prelude` is not declared" ) != std::string::npos );
+    }
+
+    SECTION( "it sees nothing of the program" )
+    {
+        const Resolved_program p( { { "main.kl", "i32 main() { return 0; }\n" } }, "i32 answer() { return main(); }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`main` is not declared" ) != std::string::npos );
     }
 }
 

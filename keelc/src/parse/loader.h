@@ -4,12 +4,14 @@
 #pragma once
 #include <filesystem>
 #include <span>
+#include <string_view>
 #include "ast/ast.h"
 #include "common/diagnostics.h"
 #include "common/imports.h"
 #include "common/interner.h"
 #include "common/literal_pool.h"
 #include "common/source_manager.h"
+#include "prelude/prelude.h"
 
 namespace keel
 {
@@ -34,7 +36,8 @@ Program load_program(
     Interner&                interner,
     Literal_pool&            literals,
     Diagnostics&             diags,
-    std::span<const Package> packages = {}
+    std::span<const Package> packages = {},
+    std::string_view         prelude  = prelude_source()
 );
 
 } // namespace keel

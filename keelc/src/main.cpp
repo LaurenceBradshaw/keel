@@ -310,6 +310,12 @@ int main( int argc, char** argv )
                 return 2;
             }
 
+            if( spec.substr( 0, equals ) == "prelude" )
+            {
+                fmt::print( stderr, "keelc: --package cannot name a package 'prelude', which is the prelude's own\n" );
+                return 2;
+            }
+
             packages.push_back( keel::Package { .name = spec.substr( 0, equals ), .root = spec.substr( equals + 1 ) } );
         }
     }
