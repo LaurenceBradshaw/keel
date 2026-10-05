@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "methods.kl.prelude.c"
+
 struct kl__Counter;
 struct kl__Owned;
 

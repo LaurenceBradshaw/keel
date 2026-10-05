@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "destructors.kl.prelude.c"
+
 struct kl__Buffer;
 struct kl__Counter;
 struct kl__Guarded;

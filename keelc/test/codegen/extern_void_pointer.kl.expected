@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "extern_void_pointer.kl.prelude.c"
+
 void* kl_rt_alloc( size_t );
 void  kl_rt_free( void* );
 

@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "generics_conversions.kl.prelude.c"
+
 int32_t kl__main__( void );
 int32_t kl__to_i32__I2u8E__2u8( uint8_t );
 int32_t kl__to_i32__I3i16E__3i16( int16_t );

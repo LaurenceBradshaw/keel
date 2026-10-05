@@ -3,6 +3,7 @@
 
 #include "codegen_c/emit_kir.h"
 #include <fmt/format.h>
+#include <algorithm>
 #include <span>
 #include "codegen_c/mangle.h"
 #include "codegen_c/spelling.h"
@@ -225,6 +226,36 @@ std::vector<Node_id> contained_fields( const Ast& ast, Node_id declaration )
     return fields;
 }
 
+bool in_prelude( const Ast& ast, const Imports& imports, Node_id declaration )
+{
+    return ast.span( declaration ).file == imports.prelude_file();
+}
+
+// Whether a type names an aggregate declared outside the prelude.
+bool mentions_program_type( const Ast& ast, const Type_table& table, const Imports& imports, Type_id type )
+{
+    if( !type.is_valid() )
+    {
+        return false;
+    }
+
+    const Type& described = table.get( type );
+
+    if( described.declaration.is_valid() && !in_prelude( ast, imports, described.declaration ) )
+    {
+        return true;
+    }
+
+    if( mentions_program_type( ast, table, imports, described.element ) )
+    {
+        return true;
+    }
+
+    return std::ranges::any_of(
+        described.arguments, [&]( Type_id argument ) { return mentions_program_type( ast, table, imports, argument ); }
+    );
+}
+
 class Kir_emitter
 {
 public:
@@ -236,7 +267,9 @@ public:
         const Source_manager&        sm,
         const Interner&              interner,
         std::span<const Type_id>     struct_order,
-        const Imports&               imports
+        const Imports&               imports,
+        C_part                       part,
+        std::string_view             include
     );
 
     std::string run();
@@ -262,6 +295,9 @@ private:
     void emit_function( const Function& function );
 
     std::string local_name( u32 index ) const;
+
+    // Whether a top-level declaration belongs to the half being written.
+    bool shows( Node_id declaration ) const;
 
     bool uses_runtime() const;
     bool uses_counted_allocation() const;
@@ -302,6 +338,9 @@ private:
     const Source_manager&    sm_;
     const Interner&          interner_;
     const Spelling           spelling_;
+    const Imports&           imports_;
+    C_part                   part_;
+    std::string_view         include_;
 };
 
 Kir_emitter::Kir_emitter(
@@ -312,7 +351,9 @@ Kir_emitter::Kir_emitter(
     const Source_manager&        sm,
     const Interner&              interner,
     std::span<const Type_id>     struct_order,
-    const Imports&               imports
+    const Imports&               imports,
+    C_part                       part,
+    std::string_view             include
 )
     : functions_( functions ),
       ast_( ast ),
@@ -321,7 +362,10 @@ Kir_emitter::Kir_emitter(
       literal_pool_( literals ),
       sm_( sm ),
       interner_( interner ),
-      spelling_( Spelling { ast, types, interner, imports } )
+      spelling_( Spelling { ast, types, interner, imports } ),
+      imports_( imports ),
+      part_( part ),
+      include_( include )
 {
 }
 
@@ -374,6 +418,12 @@ void Kir_emitter::emit_prologue()
     write_line( "#include <stdbool.h>" );
     write_line( "#include <stddef.h>" ); // NULL
     write_line( "" );
+
+    if( !include_.empty() )
+    {
+        write_line( fmt::format( "#include \"{}\"", include_ ) );
+        write_line( "" );
+    }
 }
 
 // A C function-pointer type puts the name inside the declarator, and every caller of
@@ -388,7 +438,10 @@ void Kir_emitter::emit_function_types()
     // An open signature has no C spelling at all; the instance's own is interned beside it.
     for( const Type_id signature : types_.table().function_types() )
     {
-        if( !types_.table().mentions_parameter( signature ) )
+        // The prelude's half cannot spell a program type. One both halves write is typedef'd twice,
+        // which C11 allows.
+        if( !types_.table().mentions_parameter( signature ) &&
+            !( part_ == C_part::Prelude && mentions_program_type( ast_, types_.table(), imports_, signature ) ) )
         {
             signatures.push_back( signature );
         }
@@ -508,6 +561,11 @@ void Kir_emitter::emit_globals()
 
     for( const Node_id child : ast_.children( ast_.root() ) )
     {
+        if( !shows( child ) )
+        {
+            continue;
+        }
+
         if( is_aggregate( ast_.kind( child ) ) )
         {
             if( is_generic( ast_, child ) )
@@ -697,6 +755,11 @@ void Kir_emitter::emit_externs()
 
     for( const Node_id decl : ast_.children( ast_.root() ) )
     {
+        if( !shows( decl ) )
+        {
+            continue;
+        }
+
         if( !is_extern( ast_, decl ) )
         {
             continue;
@@ -727,6 +790,11 @@ void Kir_emitter::emit_main_shim()
 
     for( const Node_id child : ast_.children( ast_.root() ) )
     {
+        if( !shows( child ) )
+        {
+            continue;
+        }
+
         if( ast_.kind( child ) != Node_kind::Function_decl )
         {
             continue; // aux is only a Symbol_id on a declaration
@@ -996,6 +1064,11 @@ std::string Kir_emitter::local_name( u32 index ) const
     return local.name.is_valid() ? mangle_local( interner_.text( local.name ), index ) : fmt::format( "kl_t{}", index );
 }
 
+bool Kir_emitter::shows( Node_id declaration ) const
+{
+    return in_prelude( ast_, imports_, declaration ) == ( part_ == C_part::Prelude );
+}
+
 // Asked of KIR rather than the tree: the question is whether the C about to be written calls the
 // runtime, and KIR is what it is written from. The tree would answer it twice over wrongly - an
 // alloc is buried in a function body rather than being a top-level declaration, and the day
@@ -1242,7 +1315,8 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue ) const
 //
 // Terminating and acyclic by the checker's own walk: contains_itself rejected every by-value cycle
 // before this runs, and a pointer field is skipped here exactly as it is there.
-std::vector<Type_id> emitted_struct_order( const Ast& ast, Types& types )
+// Each half writes its own: the program's stops at a prelude type, which its include has defined.
+std::vector<Type_id> emitted_struct_order( const Ast& ast, Types& types, const Imports& imports, C_part part )
 {
     std::vector<Type_id> order;
     std::vector<Type_id> visiting;
@@ -1268,6 +1342,11 @@ std::vector<Type_id> emitted_struct_order( const Ast& ast, Types& types )
             return;
         }
 
+        if( part == C_part::Program && in_prelude( ast, imports, types.table().get( type ).declaration ) )
+        {
+            return;
+        }
+
         if( std::find( order.begin(), order.end(), type ) != order.end() ||
             std::find( visiting.begin(), visiting.end(), type ) != visiting.end() )
         {
@@ -1289,7 +1368,12 @@ std::vector<Type_id> emitted_struct_order( const Ast& ast, Types& types )
     // is the point: a `Box<i32>` reached only through a field is discovered exactly here.
     for( std::size_t at = 0; at < types.table().composite_types().size(); ++at )
     {
-        visit( visit, types.table().composite_types()[at] );
+        const Type_id type = types.table().composite_types()[at];
+
+        if( part == C_part::Program || in_prelude( ast, imports, types.table().get( type ).declaration ) )
+        {
+            visit( visit, type );
+        }
     }
 
     return order;
@@ -1302,12 +1386,23 @@ std::string emit_c_from_kir(
     const Literal_pool&          literals,
     const Source_manager&        sm,
     const Interner&              interner,
-    const Imports&               imports
+    const Imports&               imports,
+    C_part                       part,
+    std::string_view             include
 )
 {
-    const std::vector<Type_id> order = emitted_struct_order( ast, types );
+    const std::vector<Type_id> order = emitted_struct_order( ast, types, imports, part );
 
-    return Kir_emitter( functions, ast, types, literals, sm, interner, order, imports ).run();
+    std::vector<Function> half;
+    for( const Function& function : functions )
+    {
+        if( in_prelude( ast, imports, function.declaration ) == ( part == C_part::Prelude ) )
+        {
+            half.push_back( function );
+        }
+    }
+
+    return Kir_emitter( half, ast, types, literals, sm, interner, order, imports, part, include ).run();
 }
 
 } // namespace keel

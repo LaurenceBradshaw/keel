@@ -2,3 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 // Declared in every program, which sees them without an import.
+
+class str
+{
+    public const u8[*] const data;
+    public const u64 size;
+
+    private str( const u8[*] const data, const u64 size )
+    {
+        this.data = data;
+        this.size = size;
+    }
+};

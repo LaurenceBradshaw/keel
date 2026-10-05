@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "static_fields.kl.prelude.c"
+
 struct kl__Counter;
 struct kl__Tally;
 

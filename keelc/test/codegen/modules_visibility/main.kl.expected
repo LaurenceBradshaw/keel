@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "main.kl.prelude.c"
+
 struct kl__Point;
 
 typedef int32_t ( *kl__fn__F3i64E3i32 )( int64_t );

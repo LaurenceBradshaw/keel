@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "calls.kl.prelude.c"
+
 int32_t kl__g__3i32( int32_t );
 int32_t kl__even__3i32( int32_t );
 int32_t kl__odd__3i32( int32_t );

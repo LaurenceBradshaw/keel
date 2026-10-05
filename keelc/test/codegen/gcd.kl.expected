@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "gcd.kl.prelude.c"
+
 int32_t kl__gcd__3i32_3i32( int32_t, int32_t );
 int32_t kl__main__( void );
 

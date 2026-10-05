@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "const_ref.kl.prelude.c"
+
 struct kl__B;
 struct kl__Big;
 

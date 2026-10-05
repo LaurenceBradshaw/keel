@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "geometry.kl.prelude.c"
+
 struct kl__Vec2;
 struct kl__Point;
 struct kl__Rect;

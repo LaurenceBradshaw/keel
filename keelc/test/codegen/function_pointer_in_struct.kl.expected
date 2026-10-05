@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "function_pointer_in_struct.kl.prelude.c"
+
 struct kl__P;
 struct kl__Holder;
 

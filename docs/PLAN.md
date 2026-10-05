@@ -1202,6 +1202,7 @@ The first cut still refuses an owning payload. Destroying an enum means destroyi
 | D43 | **`const` on a pointer's element is C++'s pointer to const, written one way.** *(2026-10-05, §15, *M8 slice: pointer to const*.)* `const T*` and `const T[*]` read what they point at, and nothing writes through them. `T* const` is a pointer that cannot be reseated, as it already was, and `const T* const` is both. `const` goes before the type it applies to: **`T const*` is refused**, naming `const T*`; `const T const*` is refused as `const` written twice (both apply to `T`); `const` on a type argument is refused as applying to nothing. `T*` converts to `const T*` implicitly, one level down only, and dropping `const` is a `cast` in `unsafe`. `&` of a read-only place is a `const T*`: a `const` binding, a `const ref`, a bare borrow, a pattern binding, a `const ref` return, or a field reached through any of them. | The outer `const` already meant the binding (§15, *`const` is enforced*), so the element's `const` is the other half of the same C++ meaning, not a new one. East const is valid C++, and refusing it is a divergence taken for the reason `ref const T` was refused: one order for one meaning. Two levels down is C's known unsoundness: `T**` to `const T**` lets a `const T*` be stored where a `T*` is read back. |
 | D44 | **A `const` field is assigned once by each of its class's constructors, with `=`, and by nothing else** - a struct's, by its literal. *(2026-10-05, §15, *M8 slice: `const` fields*.)* Everywhere else it reads like any field and is refused as a write: from a method, a destructor, another object of the same class, a reference, or through a `T*`. Inside its constructor only `n = v` or `this.n = v` assigns it - not `+=`, `++`, a write to part of it, a non-`const` method, `ref` or `out` - and D9's constructor analysis refuses a second assignment on any path. Its address is a `const T*`. Replacing the whole object, `b = move c` or `p = P { ... }`, is not writing its fields and stays legal. | It is the binding `const` of §15 moved onto a field, with the one window a field needs to get its value. Java's blank `final` and Swift's `let` property are the same rule, checked the same way: definite assignment over each initialiser. Whole replacement follows Swift, not C++: C++ deletes assignment for a class with a `const` member, which would make `str` - the reason this exists - impossible to reassign. `out` is left out so that no address of a `const` field ever writes, which is what lets D9 read `&n` as a read. |
 | D45 | **The prelude is a package of its own, seen by every file without an import, and searched after the file's own package and before no other.** *(2026-10-05, §15, *M8 slice: the prelude loader*.)* So a declaration of the program's, or of a package's, with a prelude name shadows the prelude's within that package, and is not an error. No qualifier names it: `prelude::x` is an undeclared `prelude`, and `--package prelude=<dir>` is refused. Its types read bare in diagnostics - `str`, never `prelude::str` - and its symbols are mangled with the package like any other's, so the program's `Pair` and the prelude's are two C types. An error inside it is an ordinary diagnostic at `<prelude>:line:col`. | Shadowing is Rust's prelude rule, for Rust's reason: a refusal would make every name later added to the prelude a breaking change for each program that already declared it, and the prelude is going to grow (`str` now; `Result`, `box`, the bound interfaces at M9.5). A package of its own is what makes shadowing free: the resolver already keeps one scope per package and already lets two packages share a name, so the prelude is one more scope consulted in one more place. An unwritable qualifier is the smaller surface: nothing needs to reach a shadowed prelude name yet, and the one thing that will - a literal's `str` - is bound by the compiler to the declaration, not looked up by name. Bare display follows from the qualifier being unwritable, since a message should not spell a name nobody can type; the cost is *expected `Pair`, but got `Pair`* when a program shadows a prelude type and then mixes the two, which is rare and still points at the right expression. A prelude error stays ordinary because its only author is whoever edits the compiler, who wants the line and caret; a separate internal-error path would be a second renderer no user reaches. |
+| D46 | **The prelude's C is a file of its own, `<input>.kl.prelude.c`, which the program's C includes after the standard headers; and the prelude is parsed after the program.** *(2026-10-06, §15, *M8 slice: the prelude's own C*.)* Each half holds its own declarations: the program's struct walk stops at a prelude type, the prelude's writes no function-pointer typedef naming a program type, and a typedef both write is written twice, which C11 allows. `--emit-c` prints the program's half; a build writes both beside the executable. The dumps - `--dump-ast`, `--dump-kir`, `--names` - leave the prelude's declarations out. An instance of a prelude generic at a program type belongs to the program's half, and a comparison guard both halves use is written by the prelude's only. | Written into the program's C, the prelude changed every codegen golden when `str` arrived and would again with each declaration added to it. Writing only what the program reaches was prototyped and works, but is a pass every later way of reaching a function must be taught. The include is valid where nothing else is because the prelude sees nothing of the program, so its half compiles without the other; it costs one line per golden, once. Parsing it last keeps the program's node ids, and so its C names, where they were however the prelude grows; the prelude's file is then numbered after each program, which costs nothing since keelc writes it on every build - hence a per-input name, so two builds into one directory do not overwrite each other's. The generic and guard rules have no case yet: monomorphisation puts an instance where its arguments can be spelled, and a translation unit may define a `static` guard once. |
 
 
 ### 6.4 Numeric conversions (D5)
@@ -6638,7 +6639,12 @@ which §7 says the runtime provides and `kl_rt.h` does not (it has `alloc`, `all
      on `str` must open the prelude, which today names `<prelude>`, a file that is not on disk - the
      extension needs the text from keelc, say `keelc --print-prelude`, behind a virtual document.
      Unit-test harnesses that parse one file without `load_program` (`checker_test_support.h` and
-     its kin) see no prelude, so a literal in one of their sources needs them to load it too. C++, Zig and every later language carry the length beside the pointer; a
+     its kin) see no prelude, so a literal in one of their sources needs them to load it too.
+     **First, the prelude's own C (done 2026-10-06, D46)**: with `str` in it, the prelude reached
+     every program's C and every dump, and, parsed first, renumbered every C name - 149 goldens. It
+     is now parsed last, kept out of the dumps, and written to a file the program's C includes; see
+     §15, *M8 slice: the prelude's own C*. Next: literals.
+   C++, Zig and every later language carry the length beside the pointer; a
    bare `0` terminator is C's alone, and costs a scan per use and truncates `"a\0b"` silently.
    **A hole in `const` found while scoping it (2026-10-05)**: `&` on a read-only place yields a
    writable `T*`. `const i32 x = 1; i32* p = &x; *p = 2;` checks, builds and runs; so does
@@ -6805,6 +6811,54 @@ refuses a second assignment for it exactly as it already did for an owning field
 
 One commit.
 
+### M8 slice: the prelude's own C - done (2026-10-06)
+
+The first half of step 1c. D46 records the rule; this is what forced it and what was tried.
+
+**What `str` broke.** Declaring `str` in the shipped prelude failed 149 goldens and one unit test,
+for three reasons, none of them `str`'s: every dump walked the prelude (its AST under the
+program's `Source_file`, `fn str` in KIR, three `--names` records inside `<prelude>`); the C
+carried `struct kl_7prelude_str` and its constructor; and, the prelude being parsed first, every
+node id of the program's moved by the prelude's size, so `kl_n_4` became `kl_n_35` in every C
+golden. The loader test counting a two-file program's declarations counted `str` too.
+
+**Parsed last.** `load_program`'s `pending` is a stack, so `{ prelude, input }` parses the input
+first. Nothing depended on the prelude leading: the resolver collects before it looks, and the
+emitter orders structs by containment, not by the tree.
+
+**Two designs prototyped.** Writing only what the program reaches - a worklist from its own
+functions over calls and the types of locals - passed every codegen golden unchanged, but every
+new way of reaching a function would have to be taught to it: a destructor reached by a drop, an
+address taken, a guard. The second, the user's, writes the prelude's half to its own `.c` and
+includes it. It holds because the prelude sees nothing of the program, and the included file is
+compiled as part of the program's, so nothing is linked twice. It costs one `#include` per codegen
+golden, applied by hand and checked to be exactly two added lines in each of the 82.
+
+**The split.** `emit_c_from_kir` takes a `C_part` and the name to include. Functions are chosen
+by the file their declaration is in; the prelude's struct walk starts only from its own types, and
+the program's stops at a prelude type. The three emitters that walk the tree rather than the
+function list - globals, externs and the `main` shim - skip the other half's declarations;
+missed, the prelude's file wrote a `main` of its own. The prelude's half drops any function-pointer
+typedef naming a program type, which it cannot spell; one naming only prelude types is written by
+both, which C11 allows. A default `Imports` has no prelude file, so the emitter's unit harness
+still writes everything as the program's half.
+
+**The dumps** take the prelude's file and leave its declarations out. `dump_ast` decides a leaf
+by the children it will print, or `parse/empty`'s root lost its `""`. `--names` drops the records
+*inside* the prelude, which no editor can open yet, and keeps a use of a prelude name.
+
+**Decided, not built** (D46): an instance of a prelude generic at a program type goes in the
+program's half - monomorphisation puts it where its arguments can be spelled - and a comparison
+guard both halves use is written by the prelude's only, since a `static` guard defined twice in
+one translation unit does not compile. A separate guards file was considered and is a third
+artifact per build for the same effect. Neither has a case yet: nothing in the prelude is generic,
+and `str` compares nothing.
+
+| | Unit tests | Goldens |
+|---|---|---|
+| Changed | the loader and resolver harnesses inject an empty prelude by default; *its declarations follow the program's* | 82 codegen goldens gain the `#include` |
+| New | `dump_ast_leaves_out_a_hidden_file's_declarations` | `codegen/prelude_types` |
+
 ### M8 slice: the prelude loader - done (2026-10-05)
 
 Step 1b. D45 records the rule; this is how it was reached and what the prototype found.
@@ -6818,7 +6872,7 @@ so an installed keelc cannot lose it or pick up a stale one.
 **Loaded as one more file.** `load_program` takes the prelude's text (defaulting to
 `prelude_source()`, so only the loader's and resolver's tests pass their own), adds it to the
 `Source_manager` at the path `<prelude>`, and parses it before the input, so its declarations lead
-the tree. `Imports` records it: `sees` answers yes for it from every file, and it is placed in a
+the tree (since reversed, D46: it is parsed last, so the program's node ids stay put). `Imports` records it: `sees` answers yes for it from every file, and it is placed in a
 package interned as `prelude`, which `add_package` never sees, so `is_package` is false and no
 `prelude::` resolves.
 

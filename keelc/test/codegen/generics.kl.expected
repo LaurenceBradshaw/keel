@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "generics.kl.prelude.c"
+
 int32_t kl__doubled__3i32( int32_t );
 int32_t kl__main__( void );
 int32_t kl__id__I3i32E__3i32( int32_t );

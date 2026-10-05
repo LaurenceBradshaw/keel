@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "popcount.kl.prelude.c"
+
 uint32_t kl__popcount__3u32( uint32_t );
 int32_t kl__main__( void );
 

@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "arithmetic.kl.prelude.c"
+
 int32_t kl__mix__3i32_3i64_2u8( int32_t, int64_t, uint8_t );
 int32_t kl__main__( void );
 

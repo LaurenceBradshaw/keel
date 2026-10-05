@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "sample_m7.kl.prelude.c"
+
 struct kl__Fix;
 struct kl__Window;
 

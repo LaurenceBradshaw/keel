@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "function_pointer_owning_parameter.kl.prelude.c"
+
 struct kl__B;
 
 typedef uint64_t ( *kl__fn__F1BE3u64 )( struct kl__B* );

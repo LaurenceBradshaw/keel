@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "numbers.kl.prelude.c"
+
 bool kl__is_even__3i32( int32_t );
 bool kl__is_odd__3i32( int32_t );
 int32_t kl__isqrt__3i32( int32_t );

@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "generics_owning_field.kl.prelude.c"
+
 struct kl__Buf;
 struct kl__Box__I3BufE;
 struct kl__Box__I3i32E;

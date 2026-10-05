@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "generics_literals.kl.prelude.c"
+
 int32_t kl__main__( void );
 int32_t kl__abs__I3i32E__3i32( int32_t );
 double kl__abs__I3f64E__3f64( double );

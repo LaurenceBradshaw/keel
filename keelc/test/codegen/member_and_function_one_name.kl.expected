@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "member_and_function_one_name.kl.prelude.c"
+
 struct kl__Box;
 
 struct kl__Box

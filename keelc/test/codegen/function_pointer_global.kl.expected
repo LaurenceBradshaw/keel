@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "function_pointer_global.kl.prelude.c"
+
 typedef int32_t ( *kl__fn__F3i32E3i32 )( int32_t );
 typedef int32_t ( *kl__fn__FF3i32E3i323i32E3i32 )( kl__fn__F3i32E3i32, int32_t );
 

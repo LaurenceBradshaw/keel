@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "control_flow.kl.prelude.c"
+
 int32_t kl__main__( void );
 
 int32_t kl__main__( void )

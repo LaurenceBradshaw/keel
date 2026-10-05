@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "switch_ranges.kl.prelude.c"
+
 int32_t kl__bucket__3i32( int32_t );
 int32_t kl__grade__3f64( double );
 int32_t kl__main__( void );

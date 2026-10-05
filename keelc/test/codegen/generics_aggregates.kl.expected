@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "generics_aggregates.kl.prelude.c"
+
 struct kl__Box__I3i32E;
 struct kl__Box__I3f64E;
 struct kl__Pair__I3i32_3f64E;

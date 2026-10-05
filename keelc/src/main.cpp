@@ -403,7 +403,7 @@ int main( int argc, char** argv )
 
     if( args.count( "dump-ast" ) )
     {
-        keel::dump_ast( ast, sm, interner, std::cout );
+        keel::dump_ast( ast, sm, interner, std::cout, prog.imports.prelude_file() );
         return finish();
     }
 
@@ -413,6 +413,9 @@ int main( int argc, char** argv )
     if( args.count( "names" ) )
     {
         names = keel::collect_names( ast, resolution, sm, interner );
+
+        // The prelude is not on disk for an editor to open; a use of it still names it.
+        std::erase_if( names, [&]( const keel::Name& name ) { return name.span.file == prog.imports.prelude_file(); } );
     }
 
     // Type checking is part of compiling too - same reasoning as parsing and resolution.
@@ -473,6 +476,11 @@ int main( int argc, char** argv )
 
         for( const keel::Function& function : functions )
         {
+            if( ast.span( function.declaration ).file == prog.imports.prelude_file() )
+            {
+                continue;
+            }
+
             std::cout << keel::print( function, ast, types.table(), literals, interner );
 
             // A malformed function is a bug in the lowerer, not in the program - so it goes to
@@ -493,7 +501,14 @@ int main( int argc, char** argv )
         return finish();
     }
 
-    const std::string generated = keel::emit_c_from_kir( functions, ast, types, literals, sm, interner, prog.imports );
+    // Named after the input, like the .c that includes it, so two programs built side by side do not
+    // share one: its node ids are numbered after the program's.
+    const std::string prelude_name =
+        std::filesystem::path( args["input"].as<std::string>() ).filename().string() + ".prelude.c";
+
+    const std::string generated = keel::emit_c_from_kir(
+        functions, ast, types, literals, sm, interner, prog.imports, keel::C_part::Program, prelude_name
+    );
 
     if( args.count( "emit-c" ) )
     {
@@ -513,16 +528,25 @@ int main( int argc, char** argv )
     const std::filesystem::path generated_path =
         executable.parent_path() / ( std::filesystem::path( args["input"].as<std::string>() ).filename().string() + ".c" );
 
+    const std::filesystem::path prelude_c_path = executable.parent_path() / prelude_name;
+
+    const std::pair<std::filesystem::path, std::string> outputs[] = {
+        { generated_path, generated },
+        { prelude_c_path,
+          keel::emit_c_from_kir( functions, ast, types, literals, sm, interner, prog.imports, keel::C_part::Prelude ) },
+    };
+
+    for( const auto& [path, text] : outputs )
     {
-        std::ofstream out( generated_path );
+        std::ofstream out( path );
 
         if( !out )
         {
-            fmt::print( stderr, "keelc: cannot write {}\n", generated_path.string() );
+            fmt::print( stderr, "keelc: cannot write {}\n", path.string() );
             return 1;
         }
 
-        out << generated;
+        out << text;
     }
 
     // $CC if it is set, so a cross compiler or a specific clang can be selected without a flag.

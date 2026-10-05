@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "many_pointers.kl.prelude.c"
+
 struct kl__Point;
 struct kl__Tracked;
 struct kl__Ints;

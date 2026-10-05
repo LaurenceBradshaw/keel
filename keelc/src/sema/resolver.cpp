@@ -1866,7 +1866,7 @@ class Resolved_program
 {
 public:
     explicit Resolved_program(
-        std::initializer_list<std::pair<const char*, std::string_view>> files, std::string_view prelude = prelude_source()
+        std::initializer_list<std::pair<const char*, std::string_view>> files, std::string_view prelude = {}
     )
     {
         for( const auto& [name, text] : files )

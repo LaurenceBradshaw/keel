@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "conditional.kl.prelude.c"
+
 struct kl__Pair;
 struct kl__Owner;
 

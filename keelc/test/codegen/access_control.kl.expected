@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "access_control.kl.prelude.c"
+
 struct kl__Counter;
 struct kl__Sealed;
 struct kl__Pair;

@@ -1,0 +1,23 @@
+// A prelude type reaches the program's C through the prelude's file, which it includes before its
+// own structs: `Named` holds a `str` by value, and a function type names one.
+
+struct Named
+{
+    str name;
+    u64 id;
+};
+
+u64 size_of( str* s )
+{
+    return ( *s ).size;
+}
+
+u64 through( Named* n, fn( str* )->u64 f )
+{
+    return f( &( *n ).name );
+}
+
+i32 main()
+{
+    return 0;
+}

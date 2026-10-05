@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "switch.kl.prelude.c"
+
 int32_t kl__weight__6Colour( int32_t );
 int32_t kl__exhaustive__6Colour( int32_t );
 int32_t kl__main__( void );

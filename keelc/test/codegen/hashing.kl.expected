@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "hashing.kl.prelude.c"
+
 uint64_t kl__fnv_byte__3u64_2u8( uint64_t, uint8_t );
 uint64_t kl__fnv_u32__3u64_3u32( uint64_t, uint32_t );
 uint64_t kl__fnv_basis__( void );

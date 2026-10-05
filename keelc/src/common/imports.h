@@ -99,6 +99,11 @@ public:
         return prelude_package_;
     }
 
+    File_id prelude_file() const
+    {
+        return prelude_;
+    }
+
 private:
     // The graph is sparse, so an adjacency list is better than a matrix.
     std::vector<std::vector<File_id>> edges_;

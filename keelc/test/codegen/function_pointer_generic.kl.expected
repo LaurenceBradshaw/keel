@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "function_pointer_generic.kl.prelude.c"
+
 struct kl__Holder;
 
 typedef int32_t ( *kl__fn__F3i32E3i32 )( int32_t );

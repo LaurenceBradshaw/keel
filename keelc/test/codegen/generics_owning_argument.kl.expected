@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "generics_owning_argument.kl.prelude.c"
+
 struct kl__Tracked;
 struct kl__Wrap__I7TrackedE;
 struct kl__Holder;

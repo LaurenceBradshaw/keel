@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "generics_owning.kl.prelude.c"
+
 struct kl__Cell;
 
 struct kl__Cell

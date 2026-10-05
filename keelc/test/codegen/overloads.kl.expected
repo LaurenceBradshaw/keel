@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "overloads.kl.prelude.c"
+
 struct kl__Owned;
 struct kl__Two;
 struct kl__Holder__I3i32E;

@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "enums.kl.prelude.c"
+
 int32_t kl__weight__6Colour( uint8_t );
 uint8_t kl__turn__6Colour( uint8_t );
 int32_t kl__heading__9Direction( int32_t );

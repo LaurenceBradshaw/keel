@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "unsafe_blocks.kl.prelude.c"
+
 int32_t kl__bump_through_bytes__P3i32( int32_t* );
 int32_t kl__main__( void );
 

@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "function_pointer_modes.kl.prelude.c"
+
 struct kl__P;
 
 typedef int32_t ( *kl__fn__FR3i32E3i32 )( int32_t* );

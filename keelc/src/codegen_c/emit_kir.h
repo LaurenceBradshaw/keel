@@ -3,6 +3,7 @@
 
 #pragma once
 #include <string>
+#include <string_view>
 #include <vector>
 #include "ast/ast.h"
 #include "common/imports.h"
@@ -15,6 +16,15 @@
 namespace keel
 {
 
+// The prelude's C is a file of its own, which the program's includes: the prelude sees nothing of
+// the program, so its half compiles alone.
+enum class C_part : u8
+{
+    Program,
+    Prelude,
+};
+
+// `include` names the prelude's file, written after the standard headers; empty writes none.
 std::string emit_c_from_kir(
     const std::vector<Function>& functions,
     const Ast&                   ast,
@@ -22,7 +32,9 @@ std::string emit_c_from_kir(
     const Literal_pool&          literals,
     const Source_manager&        sm,
     const Interner&              interner,
-    const Imports&               imports = {}
+    const Imports&               imports = {},
+    C_part                       part    = C_part::Program,
+    std::string_view             include = {}
 );
 
 } // namespace keel

@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "globals.kl.prelude.c"
+
 int32_t kl_counter_2 = 1;
 uint8_t kl_small_5 = 200;
 double kl_ratio_8 = 1.5;

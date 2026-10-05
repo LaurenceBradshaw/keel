@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "alloc_free.kl.prelude.c"
+
 struct kl__Node;
 
 struct kl__Node

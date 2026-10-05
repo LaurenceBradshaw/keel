@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "payloads.kl.prelude.c"
+
 struct kl__Shape;
 struct kl__Slot;
 

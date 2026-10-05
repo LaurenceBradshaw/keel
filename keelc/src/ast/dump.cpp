@@ -9,6 +9,7 @@
 #include <fmt/format.h>
 
 #include <ostream>
+#include <vector>
 
 namespace keel
 {
@@ -94,7 +95,13 @@ std::string aux_note( const Ast& ast, const Interner& interner, Node_id id, std:
 }
 
 void dump_node(
-    const Ast& ast, const Source_manager& sm, const Interner& interner, std::ostream& out, Node_id id, std::size_t depth
+    const Ast&            ast,
+    const Source_manager& sm,
+    const Interner&       interner,
+    std::ostream&         out,
+    Node_id               id,
+    std::size_t           depth,
+    File_id               hidden
 )
 {
     const Span     span  = ast.span( id );
@@ -104,7 +111,14 @@ void dump_node(
     const std::string label    = std::string( depth * k_indent_step, ' ' ) + std::string( node_kind_name( ast.kind( id ) ) );
     const std::string location = fmt::format( "{}:{}-{}:{}", start.line, start.col, end.line, end.col );
 
-    const auto children = ast.children( id );
+    std::vector<Node_id> children;
+    for( const Node_id child : ast.children( id ) )
+    {
+        if( !child.is_valid() || ast.span( child ).file != hidden )
+        {
+            children.push_back( child );
+        }
+    }
 
     // Only leaves show their text: a Function_decl's span covers its whole body, which would print
     // the entire function on one line. The aux note carries what no span can - names, operators.
@@ -136,8 +150,6 @@ void dump_node(
         out << fmt::format( "{:<{}}{:<{}}{}\n", label, k_kind_width, location, k_location_width, trailing );
     }
 
-    // children() points into the Ast's storage and is only valid until the next add(); nothing
-    // mutates during a dump, so holding it across the loop is safe here.
     for( const Node_id child : children )
     {
         // An absent optional - the else of an if without one - keeps its slot so arity stays fixed.
@@ -147,20 +159,20 @@ void dump_node(
             continue;
         }
 
-        dump_node( ast, sm, interner, out, child, depth + 1 );
+        dump_node( ast, sm, interner, out, child, depth + 1, hidden );
     }
 }
 
 } // namespace
 
-void dump_ast( const Ast& ast, const Source_manager& sm, const Interner& interner, std::ostream& out )
+void dump_ast( const Ast& ast, const Source_manager& sm, const Interner& interner, std::ostream& out, File_id hidden )
 {
     if( !ast.root().is_valid() )
     {
         return;
     }
 
-    dump_node( ast, sm, interner, out, ast.root(), 0 );
+    dump_node( ast, sm, interner, out, ast.root(), 0, hidden );
 }
 
 } // namespace keel
@@ -281,6 +293,23 @@ TEST_CASE( "dump_ast_shows_text_for_leaves_only", "[ast][dump]" )
 
     REQUIRE( out.find( "\"i32\"" ) != std::string::npos );
     REQUIRE( out.find( "\"i32 main()\"" ) == std::string::npos );
+}
+
+// The prelude's declarations share the program's root and are not the program's to print.
+TEST_CASE( "dump_ast_leaves_out_a_hidden_file's_declarations", "[ast][dump]" )
+{
+    Fixture       f( "" );
+    const File_id other = f.sm.add_file( "<prelude>", "i32" );
+
+    const Node_id hidden = f.ast.add( Node_kind::Named_type, Span { other, 0, 3 }, f.interner.intern( "i32" ).v, {} );
+    f.ast.set_root( f.ast.add( Node_kind::Source_file, f.at( 0, 0 ), 0, { hidden } ) );
+
+    std::ostringstream out;
+    dump_ast( f.ast, f.sm, f.interner, out, other );
+
+    // A root left with nothing to show is a leaf again, and prints its text as one.
+    REQUIRE( out.str() == "Source_file                             1:1-1:1     \"\"\n" );
+    REQUIRE( f.dump().find( "Named_type" ) != std::string::npos );
 }
 
 TEST_CASE( "dump_ast_escapes_literal_text", "[ast][dump]" )

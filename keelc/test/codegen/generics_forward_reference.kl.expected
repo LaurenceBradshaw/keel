@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "generics_forward_reference.kl.prelude.c"
+
 struct kl__Box__I3i32E;
 struct kl__Holder;
 struct kl__Box__I3BoxI3i32EE;

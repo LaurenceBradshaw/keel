@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "inference.kl.prelude.c"
+
 struct kl__Box__I3i32E;
 struct kl__Box__I3BoxI3i32EE;
 struct kl__Held__I3i32E;

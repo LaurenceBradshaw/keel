@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "loops.kl.prelude.c"
+
 int32_t kl__never_leaves_the_loop__( void );
 int32_t kl__main__( void );
 

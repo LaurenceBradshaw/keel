@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "fib.kl.prelude.c"
+
 int32_t kl__fib__3i32( int32_t );
 int32_t kl__main__( void );
 

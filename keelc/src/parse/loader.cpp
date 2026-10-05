@@ -24,7 +24,8 @@ Program load_program(
 {
     const File_id prelude_file = sm.add_file( std::string( prelude_path ), std::string( prelude ) );
 
-    std::vector<File_id>    pending { input, prelude_file };
+    // A stack: the prelude is parsed last, so the program's node ids do not move as it grows.
+    std::vector<File_id>    pending { prelude_file, input };
     std::unordered_set<u32> loaded;
     loaded.insert( prelude_file.v );
     loaded.insert( input.v );
@@ -154,9 +155,7 @@ namespace
 class Loaded
 {
 public:
-    explicit Loaded(
-        std::initializer_list<std::pair<const char*, std::string_view>> files, std::string_view prelude = prelude_source()
-    )
+    explicit Loaded( std::initializer_list<std::pair<const char*, std::string_view>> files, std::string_view prelude = {} )
     {
         for( const auto& [name, text] : files )
         {
@@ -218,10 +217,10 @@ public:
         return out.str();
     }
 
-    // The path of the file the tree's first declaration is in.
-    std::string_view first_file() const
+    // The path of the file the tree's last declaration is in.
+    std::string_view last_file() const
     {
-        return sm_.file( ast().span( ast().children( ast().root() )[0] ).file ).path;
+        return sm_.file( ast().span( ast().children( ast().root() ).back() ).file ).path;
     }
 
     // Every top-level function's name, sorted, so a test can ask which were loaded and how often.
@@ -481,13 +480,13 @@ TEST_CASE( "loader_loads_the_prelude_with_every_program", "[parse][loader][prelu
         REQUIRE_FALSE( p.sees( "<prelude>", "main.kl" ) );
     }
 
-    SECTION( "its declarations lead the tree" )
+    SECTION( "its declarations follow the program's" )
     {
         const Loaded p( { { "main.kl", "i32 main() { return answer(); }\n" } }, "i32 answer() { return 42; }\n" );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 0 );
-        REQUIRE( p.first_file() == "<prelude>" );
+        REQUIRE( p.last_file() == "<prelude>" );
     }
 
     // So it never shares a scope with the program's own declarations, and a qualifier cannot name it.
@@ -511,7 +510,7 @@ TEST_CASE( "loader_loads_the_prelude_with_every_program", "[parse][loader][prelu
 
     SECTION( "the shipped prelude parses cleanly" )
     {
-        const Loaded p( { { "main.kl", "i32 main() { return 0; }\n" } } );
+        const Loaded p( { { "main.kl", "i32 main() { return 0; }\n" } }, prelude_source() );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 0 );

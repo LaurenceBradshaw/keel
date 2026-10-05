@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "refs.kl.prelude.c"
+
 struct kl__Point;
 
 struct kl__Point

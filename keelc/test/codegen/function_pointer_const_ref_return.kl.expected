@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "function_pointer_const_ref_return.kl.prelude.c"
+
 struct kl__Point;
 
 typedef int32_t* ( *kl__fn__FK3i32K3i32EK3i32 )( int32_t*, int32_t* );

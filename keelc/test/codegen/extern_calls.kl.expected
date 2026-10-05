@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "extern_calls.kl.prelude.c"
+
 int32_t abs( int32_t );
 
 int32_t kl__magnitude__3i32( int32_t );
