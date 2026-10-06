@@ -1,0 +1,59 @@
+fn owned {
+    let _0: void; // return slot
+    let _1: owned*; // parameter this
+
+    bb0:
+        (*_1).id = const 0
+        return
+}
+fn ~owned {
+    let _0: void; // return slot
+    let _1: owned*; // parameter this
+
+    bb0:
+        return
+}
+fn end_owned {
+    let _0: void; // return slot
+    let _1: owned[*]; // parameter slots
+    let _2: u64; // parameter count
+    let _3: owned[*];
+    let _4: u64;
+    let _5: u64;
+    let _6: bool;
+    let _7: owned[*];
+
+    bb0:
+        _3 = copy _1
+        _4 = copy _2
+        _5 = const 0
+        goto -> bb1
+
+    bb1:
+        _6 = copy _5 < copy _4
+        branch copy _6 -> bb2, bb3
+
+    bb2:
+        _7 = copy _3 + copy _5
+        drop (*_7)
+        _5 = copy _5 + const 1
+        goto -> bb1
+
+    bb3:
+        return
+}
+fn end_numbers {
+    let _0: void; // return slot
+    let _1: i32[*]; // parameter slots
+    let _2: u64; // parameter count
+
+    bb0:
+        return
+}
+fn main {
+    let _0: i32; // return slot
+
+    bb0:
+        _0 = const 0
+        return
+}

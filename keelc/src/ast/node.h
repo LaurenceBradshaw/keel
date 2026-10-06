@@ -78,6 +78,7 @@ enum class Node_kind : u16
     Alloc_expr,      // `alloc<T>()` or `alloc<T>( n )`; child 0 is the type, child 1 the count when written
     Free_expr,       // `free( p )`; child 0 is the pointer
     Assert_expr,     // assert( c ); child 0 is the condition
+    Destroy_expr,    // The children are the pointer and the count
     Fallthrough_stmt,
     // The whole generic declaration: the parameters, then the `where` clauses constraining them.
     // One node rather than two so that a function-like declaration keeps four children, and so the

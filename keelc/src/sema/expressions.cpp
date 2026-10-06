@@ -79,6 +79,9 @@ Type_id Expressions::infer( Node_id id )
     case Node_kind::Free_expr:
         return infer_free( id );
 
+    case Node_kind::Destroy_expr:
+        return infer_destroy( id );
+
     case Node_kind::Assert_expr:
         check_condition( ast_.child( id, 0 ) );
         return types_.record( id, table_.builtin( Type_kind::Void ) );
@@ -2070,6 +2073,40 @@ Type_id Expressions::infer_free( Node_id id )
             fmt::format( "if it came from `alloc`, `cast<{}>` it back first", table_.name( writable_type ) )
         );
 
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    return types_.record( id, table_.builtin( Type_kind::Void ) );
+}
+
+Type_id Expressions::infer_destroy( Node_id id )
+{
+    const Type_id pointer = infer( ast_.child( id, 0 ) );                              // the pointer
+    const Type_id element = check( ast_.child( id, 1 ), table_.integer( 64, false ) ); // the count
+
+    require_unsafe( id, "`destroy` needs an `unsafe` block", "the compiler cannot tell which slots hold a value" );
+
+    if( table_.is_error( pointer ) || table_.is_error( element ) )
+    {
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    if( !table_.is_many_pointer( pointer ) )
+    {
+        reporter_.error_at(
+            ast_.span( ast_.child( id, 0 ) ),
+            fmt::format( "`destroy` needs a `T[*]`, but got `{}`", table_.name( pointer ) ),
+            "it ends the values in a run of slots, counted from this pointer"
+        );
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    if( table_.points_to_const( pointer ) )
+    {
+        reporter_.error_at(
+            ast_.span( ast_.child( id, 0 ) ),
+            fmt::format( "`destroy` cannot end a `{}`, which points to `const`", table_.name( pointer ) )
+        );
         return types_.record( id, table_.builtin( Type_kind::Error ) );
     }
 
@@ -5040,6 +5077,56 @@ TEST_CASE( "type_checker_gates_alloc_and_free_on_unsafe", "[sema][types][alloc]"
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
+    }
+}
+
+// `destroy( p, n )` ends the values in `n` slots and releases nothing, so it takes the run's pointer
+// and a count, and it is `unsafe` for the reason indexing is.
+TEST_CASE( "type_checker_types_destroy", "[sema][types][destroy]" )
+{
+    SECTION( "it is void, and its count adopts `u64`" )
+    {
+        const Typed p( "i32 main() { i32[*] p = nullptr; unsafe { destroy( p, 2 ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Destroy_expr, 0 ) ) == "void" );
+        REQUIRE( p.type_name( p.child( p.nth( Node_kind::Destroy_expr, 0 ), 1 ) ) == "u64" );
+    }
+
+    SECTION( "it needs an `unsafe` block" )
+    {
+        const Typed p( "i32 main() { i32[*] p = nullptr; destroy( p, 2 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`destroy` needs an `unsafe` block" ) != std::string::npos );
+    }
+
+    SECTION( "and a many-item pointer" )
+    {
+        const Typed p( "i32 main() { i32 n = 1; i32* p = &n; unsafe { destroy( p, 1 ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`destroy` needs a `T[*]`, but got `i32*`" ) != std::string::npos );
+    }
+
+    SECTION( "that does not point to `const`" )
+    {
+        const Typed p( "i32 main() { const i32[*] p = nullptr; unsafe { destroy( p, 1 ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "which points to `const`" ) != std::string::npos );
+    }
+
+    SECTION( "and an integer count" )
+    {
+        const Typed p( "i32 main() { i32[*] p = nullptr; unsafe { destroy( p, true ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
     }
 }
 

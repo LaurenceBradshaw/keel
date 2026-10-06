@@ -1,0 +1,35 @@
+// `destroy( p, n )` needs `unsafe`, a `T[*]` that does not point to `const`, and an integer count.
+// A wrong operand inside `unsafe` is one error, not two: the block is not also called useless.
+void outside( i32[*] slots )
+{
+    destroy( slots, 1 );
+}
+
+void single( i32* one )
+{
+    unsafe
+    {
+        destroy( one, 1 );
+    }
+}
+
+void read_only( const i32[*] slots )
+{
+    unsafe
+    {
+        destroy( slots, 1 );
+    }
+}
+
+void counted_by_a_bool( i32[*] slots )
+{
+    unsafe
+    {
+        destroy( slots, true );
+    }
+}
+
+i32 main()
+{
+    return 0;
+}

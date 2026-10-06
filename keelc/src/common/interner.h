@@ -78,6 +78,7 @@ enum class Keyword : u32
     Field,
     Assert,
     Operator,
+    Destroy,
 
     Count
 };

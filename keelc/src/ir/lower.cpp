@@ -141,6 +141,8 @@ private:
     bool initialises_field( const Place& target ) const;
     bool writes_a_slot( Node_id target ) const;
 
+    void lower_destroy( Node_id id );
+
     // Runs a construct with `target`'s address as its receiver. Not an expression: a constructor
     // returns nothing and writes through the pointer it is handed.
     void lower_construction( Place target, Node_id call_expr );
@@ -610,6 +612,74 @@ bool Lowering::writes_a_slot( Node_id target ) const
     }
 
     return false;
+}
+
+// A loop dropping `p[0]` to `p[n - 1]`, or only the operands for a `T` that owns nothing.
+void Lowering::lower_destroy( Node_id id )
+{
+    const Span span = ast_.span( id );
+
+    Operand pointer = lower_expression( ast_.child( id, 0 ) );
+    Operand count   = lower_expression( ast_.child( id, 1 ) );
+
+    const Type_id element_type = types_.table().get( pointer.type ).element;
+
+    if( !owns( element_type ) )
+    {
+        return;
+    }
+
+    // Read once: a destructor may write the field either came from.
+    const Local_id pointer_temp = builder_.into_temp( use( pointer ), pointer.type, span );
+    const Local_id count_temp   = builder_.into_temp( use( count ), count.type, span );
+
+    const Literal_id zero  = literal_pool_.add_integer( 0 );
+    const Literal_id one   = literal_pool_.add_integer( 1 );
+    const Local_id   index = builder_.into_temp( use( constant( zero, count.type ) ), count.type, span );
+
+    const Block_id header = builder_.add_block();
+    const Block_id body   = builder_.add_block();
+    const Block_id exit   = builder_.add_block();
+
+    builder_.terminate_goto( header, span );
+    builder_.switch_to( header );
+
+    const Type_id  boolean = types_.table().builtin( Type_kind::Bool );
+    const Local_id more    = builder_.into_temp(
+        binary(
+            Token_kind::Less,
+            copy( builder_.place( index ), count.type ),
+            copy( builder_.place( count_temp ), count.type ),
+            boolean
+        ),
+        boolean,
+        span
+    );
+
+    builder_.terminate_branch( copy( builder_.place( more ), boolean ), body, exit, span );
+    builder_.switch_to( body );
+
+    const Local_id slot = builder_.into_temp(
+        binary(
+            Token_kind::Plus,
+            copy( builder_.place( pointer_temp ), pointer.type ),
+            copy( builder_.place( index ), count.type ),
+            pointer.type
+        ),
+        pointer.type,
+        span
+    );
+
+    drop_place( builder_.deref( builder_.place( slot ) ), element_type, span );
+
+    builder_.assign(
+        builder_.place( index ),
+        binary( Token_kind::Plus, copy( builder_.place( index ), count.type ), constant( one, count.type ), count.type ),
+        span
+    );
+    builder_.terminate_goto( header, span );
+
+    builder_.switch_to( exit );
 }
 
 void Lowering::lower_construction( Place target, Node_id call_expr )
@@ -1514,6 +1584,9 @@ Operand Lowering::lower_expression( Node_id id )
         // emitter drops a destination it cannot declare.
         return copy( builder_.place( builder_.into_temp( release( target ), type, ast_.span( id ) ) ), type );
     }
+    case Node_kind::Destroy_expr:
+        lower_destroy( id );
+        return Operand { .type = types_.table().builtin( Type_kind::Void ) };
     // Reading a place is a copy of it - no temporary, because a place is already readable. That is
     // the whole of what lower_place buys in value position.
     case Node_kind::Field_expr:

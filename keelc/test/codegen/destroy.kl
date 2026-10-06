@@ -1,0 +1,98 @@
+// `destroy( p, n )` ends the values in `n` slots and releases nothing; `free` then releases the
+// block. Each `owned` holds a heap block of its own, so a slot destroyed twice or never shows under
+// valgrind as well as in the count. Each check returns its own code.
+i32 live;
+
+class owned
+{
+    owned( u64 n )
+    {
+        id = n;
+        unsafe
+        {
+            block = alloc<u64>( 1 );
+        }
+        live += 1;
+    }
+
+    ~owned()
+    {
+        unsafe
+        {
+            free( block );
+        }
+        live -= 1;
+    }
+
+    private u64 id;
+    private u64[*] block;
+};
+
+// One body for any `T`: a loop of destructors for `owned`, nothing at all for `i32`.
+void end_all<T>( T[*] slots, u64 count )
+{
+    unsafe
+    {
+        destroy( slots, count );
+    }
+}
+
+i32 main()
+{
+    owned[*] slots;
+
+    unsafe
+    {
+        slots = alloc<owned>( 4 );
+        slots[0] = owned( 1 );
+        slots[1] = owned( 2 );
+        slots[2] = owned( 3 );
+    }
+
+    if( live != 3 )
+    {
+        return 1;
+    }
+
+    // A run from the middle, then from the start: the fourth slot was never filled and is never
+    // reached.
+    unsafe
+    {
+        destroy( slots + 2, 1 );
+    }
+
+    if( live != 2 )
+    {
+        return 2;
+    }
+
+    end_all( slots, 2 );
+
+    if( live != 0 )
+    {
+        return 3;
+    }
+
+    // Nothing in the slots now, so nothing to end.
+    unsafe
+    {
+        destroy( slots, 0 );
+        free( slots );
+    }
+
+    i32[*] numbers;
+
+    unsafe
+    {
+        numbers = alloc<i32>( 2 );
+    }
+
+    end_all( numbers, 2 );
+
+    unsafe
+    {
+        free( numbers );
+    }
+
+    return live;
+}

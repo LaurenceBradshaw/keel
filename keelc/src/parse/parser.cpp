@@ -2707,7 +2707,8 @@ bool Parser::can_start_expression() const
         return check_keyword( Keyword::True ) || check_keyword( Keyword::False ) || check_keyword( Keyword::Nullptr ) ||
                check_keyword( Keyword::Move ) || check_keyword( Keyword::Out ) || check_keyword( Keyword::Ref ) ||
                check_keyword( Keyword::Cast ) || check_keyword( Keyword::Wrap ) || check_keyword( Keyword::This ) ||
-               check_keyword( Keyword::Alloc ) || check_keyword( Keyword::Free ) || check_keyword( Keyword::Assert );
+               check_keyword( Keyword::Alloc ) || check_keyword( Keyword::Free ) || check_keyword( Keyword::Assert ) ||
+               check_keyword( Keyword::Destroy );
 
     default:
         return false;
@@ -2943,10 +2944,11 @@ Node_id Parser::parse_expression_stmt( bool consume_semicolon )
         kind     = Node_kind::Increment_stmt;
         aux      = static_cast<u32>( op.kind );
     }
-    // A call, an assert and a `free` are the effectful expression kinds; everything else computes a value the
+    // A call, an assert, a destroy and a `free` are the effectful expression kinds; everything else computes a value the
     // statement then discards, which is D15's rule.
     else if( ast_.kind( expr ) != Node_kind::Call_expr && ast_.kind( expr ) != Node_kind::Free_expr &&
-             ast_.kind( expr ) != Node_kind::Error && ast_.kind( expr ) != Node_kind::Assert_expr )
+             ast_.kind( expr ) != Node_kind::Error && ast_.kind( expr ) != Node_kind::Assert_expr &&
+             ast_.kind( expr ) != Node_kind::Destroy_expr )
     {
         discarded = true;
     }
@@ -3685,6 +3687,18 @@ Node_id Parser::parse_keyword_prefix( Span start )
         expect( Token_kind::R_paren );
 
         return ast_.add( Node_kind::Free_expr, Span::merge( start, previous().span ), 0, { operand } );
+    }
+
+    if( check_keyword( Keyword::Destroy ) )
+    {
+        advance();
+        expect( Token_kind::L_paren );
+        const Node_id pointer = parse_expression( 0 );
+        expect( Token_kind::Comma );
+        const Node_id count = parse_expression( 0 );
+        expect( Token_kind::R_paren );
+
+        return ast_.add( Node_kind::Destroy_expr, Span::merge( start, previous().span ), 0, { pointer, count } );
     }
 
     if( check_keyword( Keyword::Assert ) )
@@ -5840,6 +5854,40 @@ TEST_CASE( "parser_parses_assert", "[parse][assert]" )
 
         REQUIRE( p.has_errors() );
         REQUIRE( p.errors().find( "`assert` is a keyword" ) != std::string::npos );
+    }
+}
+
+// `free`'s sibling: a keyword taking the pointer and a count, effectful as a statement.
+TEST_CASE( "parser_parses_destroy", "[parse][destroy]" )
+{
+    SECTION( "it is a Destroy_expr holding its pointer and its count" )
+    {
+        const Parsed p( "i32 main() { i32[*] p = nullptr; unsafe { destroy( p + 1, 2 ); } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id node = find_first( p.ast(), p.root(), Node_kind::Destroy_expr );
+
+        REQUIRE( node.is_valid() );
+        REQUIRE( p.children( node ).size() == 2 );
+        REQUIRE( p.kind( p.child( node, 0 ) ) == Node_kind::Binary_expr );
+        REQUIRE( p.kind( p.child( node, 1 ) ) == Node_kind::Int_literal );
+    }
+
+    SECTION( "it needs both operands" )
+    {
+        const Parsed p( "i32 main() { i32[*] p = nullptr; unsafe { destroy( p ); } return 0; }" );
+
+        REQUIRE( p.has_errors() );
+    }
+
+    SECTION( "it is a keyword, not a name" )
+    {
+        const Parsed p( "i32 main() { i32 destroy = 1; return 0; }" );
+
+        REQUIRE( p.has_errors() );
+        REQUIRE( p.errors().find( "`destroy` is a keyword" ) != std::string::npos );
     }
 }
 

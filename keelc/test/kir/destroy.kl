@@ -1,0 +1,36 @@
+// `destroy` is a counted loop of drops through the run's pointer, reading the pointer and the count
+// once. For a type that owns nothing it is only its operands.
+class owned
+{
+    owned()
+    {
+        id = 0;
+    }
+
+    ~owned()
+    {
+    }
+
+    private u64 id;
+};
+
+void end_owned( owned[*] slots, u64 count )
+{
+    unsafe
+    {
+        destroy( slots, count );
+    }
+}
+
+void end_numbers( i32[*] slots, u64 count )
+{
+    unsafe
+    {
+        destroy( slots, count );
+    }
+}
+
+i32 main()
+{
+    return 0;
+}

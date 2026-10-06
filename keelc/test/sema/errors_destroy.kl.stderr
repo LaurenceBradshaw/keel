@@ -1,0 +1,25 @@
+error: `destroy` needs an `unsafe` block
+ --> sema/errors_destroy.kl:5:5
+  |
+5 |     destroy( slots, 1 );
+  |     ^^^^^^^^^^^^^^^^^^^ the compiler cannot tell which slots hold a value
+
+error: `destroy` needs a `T[*]`, but got `i32*`
+  --> sema/errors_destroy.kl:12:18
+   |
+12 |         destroy( one, 1 );
+   |                  ^^^ it ends the values in a run of slots, counted from this pointer
+
+error: `destroy` cannot end a `const i32[*]`, which points to `const`
+  --> sema/errors_destroy.kl:20:18
+   |
+20 |         destroy( slots, 1 );
+   |                  ^^^^^
+
+error: expected `u64`, but got `bool`
+  --> sema/errors_destroy.kl:28:25
+   |
+28 |         destroy( slots, true );
+   |                         ^^^^
+
+4 errors generated

@@ -24,7 +24,7 @@ Interner::Interner()
 
         "extern",   "alloc",    "free",    "fallthrough", "where",   "static",
 
-        "private",  "public",   "fn",      "field",       "assert",  "operator"
+        "private",  "public",   "fn",      "field",       "assert",  "operator", "destroy"
     };
     // clang-format on
 

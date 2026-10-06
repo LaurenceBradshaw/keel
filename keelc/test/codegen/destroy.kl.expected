@@ -1,0 +1,216 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "destroy.kl.prelude.c"
+
+struct kl__owned;
+
+struct kl__owned
+{
+    uint64_t kl_id_36;
+    uint64_t* kl_block_39;
+};
+
+int32_t kl_live_1;
+
+void* kl_rt_alloc( size_t );
+void  kl_rt_free( void* );
+void* kl_rt_alloc_many( size_t, size_t );
+
+void kl__owned__R5owned_3u64__ctor( struct kl__owned*, uint64_t );
+void kl__owned__dtor( struct kl__owned* );
+int32_t kl__main__( void );
+void kl__end_all__I5ownedE__N5owned_3u64( struct kl__owned*, uint64_t );
+void kl__end_all__I3i32E__N3i32_3u64( int32_t*, uint64_t );
+
+void kl__owned__R5owned_3u64__ctor( struct kl__owned* kl_this_1, uint64_t kl_n_2 )
+{
+    uint64_t* kl_t3;
+#line 10 "codegen/destroy.kl"
+    ( *kl_this_1 ).kl_id_36 = kl_n_2;
+#line 13 "codegen/destroy.kl"
+    kl_t3 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( uint64_t ) );
+    ( *kl_this_1 ).kl_block_39 = kl_t3;
+#line 15 "codegen/destroy.kl"
+    kl_live_1 = kl_live_1 + 1;
+    return;
+}
+
+void kl__owned__dtor( struct kl__owned* kl_this_1 )
+{
+#line 22 "codegen/destroy.kl"
+    kl_rt_free( ( *kl_this_1 ).kl_block_39 );
+#line 24 "codegen/destroy.kl"
+    kl_live_1 = kl_live_1 - 1;
+    return;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__owned* kl_slots_1;
+    struct kl__owned* kl_t2;
+    struct kl__owned* kl_t3;
+    struct kl__owned kl_t4;
+    struct kl__owned* kl_t5;
+    struct kl__owned* kl_t7;
+    struct kl__owned kl_t8;
+    struct kl__owned* kl_t9;
+    struct kl__owned* kl_t11;
+    struct kl__owned kl_t12;
+    struct kl__owned* kl_t13;
+    bool kl_t15;
+    struct kl__owned* kl_t16;
+    struct kl__owned* kl_t17;
+    uint64_t kl_t18;
+    uint64_t kl_t19;
+    bool kl_t20;
+    struct kl__owned* kl_t21;
+    bool kl_t22;
+    bool kl_t24;
+    struct kl__owned* kl_t25;
+    uint64_t kl_t26;
+    uint64_t kl_t27;
+    bool kl_t28;
+    struct kl__owned* kl_t29;
+    int32_t* kl_numbers_31;
+    int32_t* kl_t32;
+    bool kl_t35;
+    bool kl_t36;
+    bool kl_t37;
+#line 47 "codegen/destroy.kl"
+    kl_t35 = false;
+#line 48 "codegen/destroy.kl"
+    kl_t36 = false;
+#line 49 "codegen/destroy.kl"
+    kl_t37 = false;
+#line 46 "codegen/destroy.kl"
+    kl_t2 = ( struct kl__owned* ) kl_rt_alloc_many( ( size_t ) 4, sizeof( struct kl__owned ) );
+    kl_slots_1 = kl_t2;
+#line 47 "codegen/destroy.kl"
+    kl_t3 = kl_slots_1 + 0;
+    kl_t5 = &kl_t4;
+    kl_t35 = true;
+    kl__owned__R5owned_3u64__ctor( kl_t5, 1 );
+    ( *kl_t3 ) = kl_t4;
+    kl_t35 = false;
+    if ( kl_t35 ) kl__owned__dtor( &kl_t4 );
+#line 48 "codegen/destroy.kl"
+    kl_t7 = kl_slots_1 + 1;
+    kl_t9 = &kl_t8;
+    kl_t36 = true;
+    kl__owned__R5owned_3u64__ctor( kl_t9, 2 );
+    ( *kl_t7 ) = kl_t8;
+    kl_t36 = false;
+    if ( kl_t36 ) kl__owned__dtor( &kl_t8 );
+#line 49 "codegen/destroy.kl"
+    kl_t11 = kl_slots_1 + 2;
+    kl_t13 = &kl_t12;
+    kl_t37 = true;
+    kl__owned__R5owned_3u64__ctor( kl_t13, 3 );
+    ( *kl_t11 ) = kl_t12;
+    kl_t37 = false;
+    if ( kl_t37 ) kl__owned__dtor( &kl_t12 );
+#line 52 "codegen/destroy.kl"
+    kl_t15 = kl_live_1 != 3;
+    if ( kl_t15 ) goto bb1; else goto bb2;
+    bb1:
+#line 54 "codegen/destroy.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+#line 61 "codegen/destroy.kl"
+    kl_t16 = kl_slots_1 + 2;
+    kl_t17 = kl_t16;
+    kl_t18 = 1;
+    kl_t19 = 0;
+    goto bb3;
+    bb3:
+    kl_t20 = kl_t19 < kl_t18;
+    if ( kl_t20 ) goto bb4; else goto bb5;
+    bb4:
+    kl_t21 = kl_t17 + kl_t19;
+    kl__owned__dtor( &( *kl_t21 ) );
+    kl_t19 = kl_t19 + 1;
+    goto bb3;
+    bb5:
+#line 64 "codegen/destroy.kl"
+    kl_t22 = kl_live_1 != 2;
+    if ( kl_t22 ) goto bb6; else goto bb7;
+    bb6:
+#line 66 "codegen/destroy.kl"
+    kl_t0 = 2;
+    return kl_t0;
+    bb7:
+#line 69 "codegen/destroy.kl"
+    kl__end_all__I5ownedE__N5owned_3u64( kl_slots_1, 2 );
+#line 71 "codegen/destroy.kl"
+    kl_t24 = kl_live_1 != 0;
+    if ( kl_t24 ) goto bb8; else goto bb9;
+    bb8:
+#line 73 "codegen/destroy.kl"
+    kl_t0 = 3;
+    return kl_t0;
+    bb9:
+#line 79 "codegen/destroy.kl"
+    kl_t25 = kl_slots_1;
+    kl_t26 = 0;
+    kl_t27 = 0;
+    goto bb10;
+    bb10:
+    kl_t28 = kl_t27 < kl_t26;
+    if ( kl_t28 ) goto bb11; else goto bb12;
+    bb11:
+    kl_t29 = kl_t25 + kl_t27;
+    kl__owned__dtor( &( *kl_t29 ) );
+    kl_t27 = kl_t27 + 1;
+    goto bb10;
+    bb12:
+#line 80 "codegen/destroy.kl"
+    kl_rt_free( kl_slots_1 );
+#line 87 "codegen/destroy.kl"
+    kl_t32 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 2, sizeof( int32_t ) );
+    kl_numbers_31 = kl_t32;
+#line 90 "codegen/destroy.kl"
+    kl__end_all__I3i32E__N3i32_3u64( kl_numbers_31, 2 );
+#line 94 "codegen/destroy.kl"
+    kl_rt_free( kl_numbers_31 );
+#line 97 "codegen/destroy.kl"
+    kl_t0 = kl_live_1;
+    return kl_t0;
+}
+
+void kl__end_all__I5ownedE__N5owned_3u64( struct kl__owned* kl_slots_1, uint64_t kl_count_2 )
+{
+    struct kl__owned* kl_t3;
+    uint64_t kl_t4;
+    uint64_t kl_t5;
+    bool kl_t6;
+    struct kl__owned* kl_t7;
+#line 36 "codegen/destroy.kl"
+    kl_t3 = kl_slots_1;
+    kl_t4 = kl_count_2;
+    kl_t5 = 0;
+    goto bb1;
+    bb1:
+    kl_t6 = kl_t5 < kl_t4;
+    if ( kl_t6 ) goto bb2; else goto bb3;
+    bb2:
+    kl_t7 = kl_t3 + kl_t5;
+    kl__owned__dtor( &( *kl_t7 ) );
+    kl_t5 = kl_t5 + 1;
+    goto bb1;
+    bb3:
+    return;
+}
+
+void kl__end_all__I3i32E__N3i32_3u64( int32_t* kl_slots_1, uint64_t kl_count_2 )
+{
+    return;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

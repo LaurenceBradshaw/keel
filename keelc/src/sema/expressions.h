@@ -183,6 +183,7 @@ private:
 
     Type_id infer_alloc( Node_id id );
     Type_id infer_free( Node_id id );
+    Type_id infer_destroy( Node_id id );
 
     Type_id infer_index( Node_id id );
 
