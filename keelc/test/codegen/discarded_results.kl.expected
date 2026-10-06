@@ -48,6 +48,7 @@ struct kl__Counter kl__twin__S7Counter( struct kl__Counter* kl_this_1 )
     bool kl_t5;
 #line 22 "codegen/discarded_results.kl"
     kl_t5 = false;
+    kl_t5 = false;
     kl_t3 = &kl_t2;
     kl_t5 = true;
     kl__Counter__R7Counter_3u64__ctor( kl_t3, ( *kl_this_1 ).kl_n_4 );
@@ -64,6 +65,7 @@ struct kl__Counter kl__make__( void )
     struct kl__Counter* kl_t2;
     bool kl_t4;
 #line 28 "codegen/discarded_results.kl"
+    kl_t4 = false;
     kl_t4 = false;
     kl_t2 = &kl_t1;
     kl_t4 = true;

@@ -64,8 +64,10 @@ void kl__Holder__R6Holder_3i32__ctor( struct kl__Holder* kl_this_1, int32_t kl_m
 #line 40 "codegen/generics_owning_argument.kl"
     kl_t9 = false;
     kl_t10 = false;
+    kl_t9 = false;
     kl_t4 = &kl_t3;
     kl_t9 = true;
+    kl_t10 = false;
     kl_t6 = &kl_t5;
     kl_t10 = true;
     kl__Tracked__R7Tracked_3i32__ctor( kl_t6, kl_m_2 );
@@ -122,6 +124,7 @@ int32_t kl__borrow__( void )
 #line 63 "codegen/generics_owning_argument.kl"
     kl_t25 = false;
     kl_t2 = &kl_w_1;
+    kl_t25 = false;
     kl_t4 = &kl_t3;
     kl_t25 = true;
     kl__Tracked__R7Tracked_3i32__ctor( kl_t4, 7 );

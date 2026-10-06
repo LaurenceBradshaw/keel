@@ -262,6 +262,7 @@ int32_t kl__main__( void )
     kl__slots__R5slots__ctor( kl_t16 );
 #line 118 "codegen/owning_writes.kl"
     kl_t18 = &kl_s_15;
+    kl_t51 = false;
     kl_t20 = &kl_t19;
     kl_t51 = true;
     kl__owned__R5owned_3u64__ctor( kl_t20, 3 );
@@ -270,6 +271,7 @@ int32_t kl__main__( void )
     if ( kl_t51 ) kl__owned__dtor( &kl_t19 );
 #line 119 "codegen/owning_writes.kl"
     kl_t23 = &kl_s_15;
+    kl_t52 = false;
     kl_t25 = &kl_t24;
     kl_t52 = true;
     kl__owned__R5owned_3u64__ctor( kl_t25, 4 );
@@ -288,6 +290,7 @@ int32_t kl__main__( void )
 #line 126 "codegen/owning_writes.kl"
     kl_t29 = &kl_s_15;
     kl_t30 = kl__operator_index__S5slots_3u64( kl_t29, 0 );
+    kl_t53 = false;
     kl_t32 = &kl_t31;
     kl_t53 = true;
     kl__owned__R5owned_3u64__ctor( kl_t32, 5 );

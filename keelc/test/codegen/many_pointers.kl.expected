@@ -704,6 +704,7 @@ int32_t kl__main__( void )
     kl__Tracked__R7Tracked_3i32__ctor( kl_t129, 2 );
 #line 278 "codegen/many_pointers.kl"
     kl_t131 = kl_cs_126 + 0;
+    kl_t152 = false;
     kl_t133 = &kl_t132;
     kl_t152 = true;
     kl__Tracked__R7Tracked_3i32__ctor( kl_t133, 1 );

@@ -165,6 +165,7 @@ void kl__Holder__I3u64E__R6HolderI3u64E_3u64__ctor( struct kl__Holder__I3u64E* k
     bool kl_t6;
 #line 30 "codegen/generics_owning_parameter.kl"
     kl_t6 = false;
+    kl_t6 = false;
     kl_t4 = &kl_t3;
     kl_t6 = true;
     kl__Box__I3u64E__R3BoxI3u64E_3u64__ctor( kl_t4, kl_m_2 );

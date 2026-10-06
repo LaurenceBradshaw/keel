@@ -1,7 +1,8 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-class list<T> where T : Copyable
+// Slots below `count` are live, the rest are raw.
+class list<T>
 {
     list() 
     {
@@ -30,27 +31,24 @@ class list<T> where T : Copyable
         {
             unsafe
             {
+                destroy( data, count );
                 free( data );
             }
         }
     }
 
-    public void push( T value )
+    public void push( move T value )
     {
-        if( count != cap )
+        if( count == cap )
         {
-            unsafe
-            {
-                data[count] = value;
-            }
-            count += 1;
+            grow( cap > 0 ? cap * 2 : 1 );
         }
-        else
+        
+        unsafe
         {
-            cap = cap > 0 ? cap * 2 : 1;
-            grow( cap );
-            push( value );
+            data[count] = move value;
         }
+        count += 1;
     }
 
     public T pop()
@@ -59,7 +57,7 @@ class list<T> where T : Copyable
         count -= 1;
         unsafe
         {
-            return data[count];
+            return move data[count];
         }
     }
 
@@ -70,6 +68,72 @@ class list<T> where T : Copyable
         unsafe
         {
             return &data[index];
+        }
+    }
+
+    public T remove( u64 index )
+    {
+        assert( index < count );
+
+        unsafe
+        {
+            T result = move data[index];
+
+            for( u64 i = index; i < count - 1; i++ )
+            {
+                data[i] = move data[i + 1];
+            }
+
+            count -= 1;
+            return result;
+        }
+    }
+
+    public T swap_remove( u64 index )
+    {
+        assert( index < count );
+
+        count -= 1;
+        unsafe
+        {
+            T result = move data[index];
+
+            if( index != count )
+            {
+                data[index] = move data[count];
+            }
+
+            return result;
+        }
+    }
+
+    public T replace( u64 index, move T value )
+    {
+        assert( index < count );
+
+        unsafe
+        {
+            T result = move data[index];
+            data[index] = move value;
+            return result;
+        }
+    }
+
+    public void swap( u64 a, u64 b )
+    {
+        assert( a < count );
+        assert( b < count );
+
+        if( a == b )
+        {
+            return;
+        }
+
+        unsafe
+        {
+            T temp = move data[a];
+            data[a] = move data[b];
+            data[b] = move temp;
         }
     }
 
@@ -98,16 +162,19 @@ class list<T> where T : Copyable
 
     public void clear()
     {
+        unsafe
+        {
+            destroy( data, count );
+        }
         count = 0;
     }
 
     private void grow( u64 n )
     {
-        cap = n;
         T[*] new_data;
         unsafe
         {
-            new_data = alloc<T>( cap );
+            new_data = alloc<T>( n );
         }
 
         if( data != nullptr )
@@ -116,10 +183,11 @@ class list<T> where T : Copyable
             {
                 unsafe
                 {
-                    new_data[i] = data[i];
+                    new_data[i] = move data[i];
                 }
             }
             
+            // Slots are raw after the above move, so we don't need to destroy them.
             unsafe
             {
                 free( data );
@@ -127,6 +195,7 @@ class list<T> where T : Copyable
         }
 
         data = new_data;
+        cap = n;
     }
 
     private T[*] data;

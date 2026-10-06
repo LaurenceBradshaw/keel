@@ -68,6 +68,7 @@ void kl__Holder__R6Holder__ctor( struct kl__Holder* kl_this_1 )
     bool kl_t5;
 #line 40 "codegen/reassignment_drops.kl"
     kl_t5 = false;
+    kl_t5 = false;
     kl_t3 = &kl_t2;
     kl_t5 = true;
     kl__Owned__R5Owned__ctor( kl_t3 );
@@ -83,6 +84,7 @@ void kl__reset__S6Holder( struct kl__Holder* kl_this_1 )
     struct kl__Owned* kl_t3;
     bool kl_t5;
 #line 45 "codegen/reassignment_drops.kl"
+    kl_t5 = false;
     kl_t5 = false;
     kl_t3 = &kl_t2;
     kl_t5 = true;
@@ -100,6 +102,7 @@ void kl__replace__R5Owned( struct kl__Owned* kl_o_1 )
     struct kl__Owned* kl_t3;
     bool kl_t5;
 #line 51 "codegen/reassignment_drops.kl"
+    kl_t5 = false;
     kl_t5 = false;
     kl_t3 = &kl_t2;
     kl_t5 = true;
@@ -136,6 +139,7 @@ int32_t kl__maybe__4bool( bool kl_c_1 )
     if ( kl_c_1 ) goto bb1; else goto bb2;
     bb1:
 #line 65 "codegen/reassignment_drops.kl"
+    kl_t8 = false;
     kl_t4 = &kl_t3;
     kl_t8 = true;
     kl__Owned__R5Owned__ctor( kl_t4 );
@@ -240,6 +244,7 @@ int32_t kl__main__( void )
     kl_t68 = true;
     kl__Owned__R5Owned__ctor( kl_t2 );
 #line 75 "codegen/reassignment_drops.kl"
+    kl_t69 = false;
     kl_t5 = &kl_t4;
     kl_t69 = true;
     kl__Owned__R5Owned__ctor( kl_t5 );
@@ -274,6 +279,7 @@ int32_t kl__main__( void )
 #line 90 "codegen/reassignment_drops.kl"
     kl_t70 = false;
 #line 91 "codegen/reassignment_drops.kl"
+    kl_t71 = false;
     kl_t13 = &kl_t12;
     kl_t71 = true;
     kl__Owned__R5Owned__ctor( kl_t13 );
@@ -378,6 +384,7 @@ int32_t kl__main__( void )
     kl__consume__M5Owned( kl_a_39 );
     kl_t72 = false;
 #line 144 "codegen/reassignment_drops.kl"
+    kl_t73 = false;
     kl_t44 = &kl_t43;
     kl_t73 = true;
     kl__Owned__R5Owned__ctor( kl_t44 );

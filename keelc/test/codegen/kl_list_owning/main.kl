@@ -1,0 +1,198 @@
+// `kl::list` owns its elements: every one it is handed is destroyed exactly once, by whoever holds
+// it last. Each `owned` holds a heap block, so a missed destroy leaks under valgrind as well as
+// miscounting, and a second one is a double free. Each check returns its own code.
+import kl::list;
+
+i32 live;
+
+class owned
+{
+    owned( u64 n )
+    {
+        id = n;
+        unsafe
+        {
+            block = alloc<u64>( 1 );
+        }
+        live += 1;
+    }
+
+    ~owned()
+    {
+        unsafe
+        {
+            free( block );
+        }
+        live -= 1;
+    }
+
+    public u64 value() const
+    {
+        return id;
+    }
+
+    private u64 id;
+    private u64[*] block;
+};
+
+// The list's values in order, as decimal digits: [3, 0, 2] is 302.
+u64 digits( const ref kl::list<owned> values )
+{
+    u64 result = 0;
+    for( u64 i = 0; i < values.size(); i++ )
+    {
+        result = result * 10 + values[i].value();
+    }
+    return result;
+}
+
+// Five pushes grow the block from one slot to eight, moving the elements each time.
+i32 grows()
+{
+    kl::list<owned> values = kl::list<owned>();
+    for( u64 i = 0; i < 5; i++ )
+    {
+        values.push( move owned( i ) );
+    }
+
+    if( live != 5 || values.capacity() != 8 || digits( values ) != 1234 )
+    {
+        return 1;
+    }
+
+    return 0;
+}
+
+i32 takes_out()
+{
+    kl::list<owned> values = kl::list<owned>();
+    for( u64 i = 0; i < 5; i++ )
+    {
+        values.push( move owned( i ) );
+    }
+
+    {
+        owned last = values.pop();
+        if( last.value() != 4 || live != 5 || digits( values ) != 123 )
+        {
+            return 2;
+        }
+    }
+
+    {
+        owned second = values.remove( 1 );
+        if( second.value() != 1 || digits( values ) != 23 )
+        {
+            return 3;
+        }
+    }
+
+    {
+        owned first = values.swap_remove( 0 );
+        if( first.value() != 0 || digits( values ) != 32 )
+        {
+            return 4;
+        }
+    }
+
+    {
+        owned old = values.replace( 1, move owned( 9 ) );
+        if( old.value() != 2 || live != 3 || digits( values ) != 39 )
+        {
+            return 5;
+        }
+    }
+
+    values.swap( 0, 1 );
+    values.swap( 1, 1 );
+    if( live != 2 || digits( values ) != 93 )
+    {
+        return 6;
+    }
+
+    values.clear();
+    if( live != 0 || values.size() != 0 || values.capacity() != 8 )
+    {
+        return 7;
+    }
+
+    values.push( move owned( 6 ) );
+    if( live != 1 || digits( values ) != 6 )
+    {
+        return 8;
+    }
+
+    return 0;
+}
+
+// The list moves whole, so its elements end once, with the list that holds them last.
+kl::list<owned> filled()
+{
+    kl::list<owned> values = kl::list<owned>::with_capacity( 2 );
+    values.push( move owned( 1 ) );
+    values.push( move owned( 2 ) );
+    return values;
+}
+
+i32 moves_whole()
+{
+    kl::list<owned> held = filled();
+    kl::list<owned> moved = move held;
+    if( live != 2 || digits( moved ) != 12 )
+    {
+        return 9;
+    }
+
+    return 0;
+}
+
+// A list of a `struct` needs no marker to push.
+i32 copies()
+{
+    kl::list<i32> values = kl::list<i32>();
+    i32 seven = 7;
+    values.push( seven );
+    values.push( 8 );
+    values.swap( 0, 1 );
+    if( values.remove( 0 ) != 8 || values.replace( 0, 9 ) != 7 || values[0] != 9 )
+    {
+        return 11;
+    }
+
+    return 0;
+}
+
+i32 main()
+{
+    i32 code = grows();
+    if( code != 0 )
+    {
+        return code;
+    }
+    if( live != 0 )
+    {
+        return 20;
+    }
+
+    code = takes_out();
+    if( code != 0 )
+    {
+        return code;
+    }
+    if( live != 0 )
+    {
+        return 21;
+    }
+
+    code = moves_whole();
+    if( code != 0 )
+    {
+        return code;
+    }
+    if( live != 0 )
+    {
+        return 22;
+    }
+
+    return copies();
+}

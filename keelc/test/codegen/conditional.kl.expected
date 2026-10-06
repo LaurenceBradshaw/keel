@@ -129,6 +129,7 @@ int32_t kl__owning_built__4bool( bool kl_which_1 )
     kl_t12 = false;
     if ( kl_which_1 ) goto bb1; else goto bb2;
     bb1:
+    kl_t11 = false;
     kl_t5 = &kl_t4;
     kl_t11 = true;
     kl__Owner__R5Owner_3i32__ctor( kl_t5, 100 );
@@ -137,6 +138,7 @@ int32_t kl__owning_built__4bool( bool kl_which_1 )
     kl_t10 = true;
     goto bb3;
     bb2:
+    kl_t12 = false;
     kl_t8 = &kl_t7;
     kl_t12 = true;
     kl__Owner__R5Owner_3i32__ctor( kl_t8, 200 );

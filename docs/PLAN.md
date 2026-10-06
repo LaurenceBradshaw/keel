@@ -6712,14 +6712,32 @@ which §7 says the runtime provides and `kl_rt.h` does not (it has `alloc`, `all
      `codegen/destroy` (valgrind-clean, a run from the middle, a generic body at an owning `T` and
      at `i32`), `kir/destroy`, `sema/errors_destroy`, and `parser_parses_destroy` and
      `type_checker_types_destroy`. The editor grammar still lacks it, as it lacks `assert`.
-   - **4c. `kl::list` owns its elements.** The bound goes. Invariant: slots below `count` are
+   - ~~**4c. `kl::list` owns its elements.**~~ **Done (2026-10-06).** The bound goes. Invariant: slots below `count` are
      live, the rest raw. `push( move T value )` (a bare `i32` argument still needs no marker -
      checked), `pop` returns `move data[count]`, `grow` moves each element and frees the old
      block bare, `clear` and `~list` call `destroy`, and `remove`, `swap_remove`, `replace` and
      `swap` are added, each moving through raw slots inside `unsafe`. `list<i32>` call sites do
      not change. Goldens: `codegen/kl_list_owning`, a class counting constructions and
      destructions through every operation, valgrind-clean; `sema/errors_list_owning`, copying
-     and moving out of `names[0]`.
+     and moving out of `names[0]`. **Prototyped (2026-10-06)**, and it found two older holes
+     that the owning list cannot ship over:
+     - **A method call checked no marker.** `check_method_arguments` never called
+       `check_argument_markers`, so `h.bump( a )` on a `ref` parameter, `h.read( ref a )`, and
+       `v.push( b )` on a `move` one all compiled, the last moving `b` silently. It now calls it,
+       as `infer_call` does, which also covers a bare sibling call and a static one. Only
+       `codegen/owning_writes` had relied on it.
+     - **A constructed temporary moved in a loop was a use-after-move.** `take( move B( i ) )`
+       in a loop body: the construction fills the temporary through its address, which the move
+       check does not see as a write, so the back edge left it Moved. `lower_call` now opens its
+       storage with `storage_live` before constructing, as a named local's is. Its cost is a
+       redundant drop-flag reset in front of each one, which is all twelve goldens' diff.
+     - And copying through `[]` suggested `move names[0]`, which the next line refuses:
+       `check_owning_source` gives the container help for an operator index instead. `*p` has
+       the same contradiction and keeps it for now.
+     Tests: the two goldens, `type_checker_checks_a_method_calls_markers`, and a section in
+     `move_check_follows_a_back_edge`. `codegen/kl_list_bounds/main.kl.out` names a line of
+     `list.kl`, so it moves with the file. Debug under valgrind, release and asan: 277 goldens
+     and 10,506 assertions pass.
    - **4d. Refill in one statement**: `v[i] = f( move v[i] );`, `state = step( move state );`.
      Moving out of a place is allowed when the same statement's assignment refills it. Sound
      because Keel never unwinds: a failed `assert` aborts, so nothing observes the gap. Rules: the

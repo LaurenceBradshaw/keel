@@ -115,8 +115,8 @@ i32 main()
 
     {
         slots s = slots();
-        s.push( owned( 3 ) );
-        s.push( owned( 4 ) );
+        s.push( move owned( 3 ) );
+        s.push( move owned( 4 ) );
 
         if( live != 2 )
         {

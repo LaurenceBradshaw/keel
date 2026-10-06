@@ -1,0 +1,43 @@
+// A `kl::list` of an owning type keeps its elements: one is copied out of it nowhere, leaves it
+// only through a method that hands it over, and goes in only by `move`.
+import kl::list;
+
+class name
+{
+    name( u64 n )
+    {
+        id = n;
+    }
+
+    ~name()
+    {
+    }
+
+    private u64 id;
+};
+
+void reads( const ref name value )
+{
+}
+
+i32 main()
+{
+    kl::list<name> names = kl::list<name>();
+    names.push( move name( 1 ) );
+
+    name copied = names[0];
+    name taken = move names[0];
+    names.push( name( 2 ) );
+
+    name held = name( 3 );
+    names.push( held );
+    names.push( move held );
+
+    kl::list<name> twin = names;
+
+    name last = names.pop();
+    name first = names.remove( 0 );
+    reads( names[0] );
+
+    return 0;
+}

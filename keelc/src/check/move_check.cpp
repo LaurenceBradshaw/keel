@@ -505,6 +505,21 @@ TEST_CASE( "move_check_follows_a_back_edge", "[check][move]" )
         REQUIRE( errors.size() == 2 );
         REQUIRE( errors[0].use.start != errors[1].use.start );
     }
+
+    // Constructed through its address, so only its storage starting says it is fresh.
+    SECTION( "a constructed temporary is a new value on each iteration" )
+    {
+        const Checked p( "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+                         "class H { public u64 n; H() { n = 0; } public void take( move B b ) { } };\n"
+                         "void take( move B b ) { }\n"
+                         "i32 main( ) { H h = H(); u64 i = 0;\n"
+                         "  while ( i < 3 ) { take( move B( i ) ); h.take( move B( i ) ); i = i + 1; }\n"
+                         "  return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.errors().empty() );
+    }
 }
 
 TEST_CASE( "move_check_tracks_parameters", "[check][move]" )

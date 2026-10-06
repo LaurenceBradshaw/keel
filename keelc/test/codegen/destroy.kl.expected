@@ -90,6 +90,7 @@ int32_t kl__main__( void )
     kl_slots_1 = kl_t2;
 #line 47 "codegen/destroy.kl"
     kl_t3 = kl_slots_1 + 0;
+    kl_t35 = false;
     kl_t5 = &kl_t4;
     kl_t35 = true;
     kl__owned__R5owned_3u64__ctor( kl_t5, 1 );
@@ -98,6 +99,7 @@ int32_t kl__main__( void )
     if ( kl_t35 ) kl__owned__dtor( &kl_t4 );
 #line 48 "codegen/destroy.kl"
     kl_t7 = kl_slots_1 + 1;
+    kl_t36 = false;
     kl_t9 = &kl_t8;
     kl_t36 = true;
     kl__owned__R5owned_3u64__ctor( kl_t9, 2 );
@@ -106,6 +108,7 @@ int32_t kl__main__( void )
     if ( kl_t36 ) kl__owned__dtor( &kl_t8 );
 #line 49 "codegen/destroy.kl"
     kl_t11 = kl_slots_1 + 2;
+    kl_t37 = false;
     kl_t13 = &kl_t12;
     kl_t37 = true;
     kl__owned__R5owned_3u64__ctor( kl_t13, 3 );

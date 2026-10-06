@@ -1,0 +1,31 @@
+error: an owning value is transferred, not copied
+  --> sema/errors_list_owning/main.kl:28:19
+   |
+28 |     name copied = names[0];
+   |                   ^^^^^^^^ it stays in its container; take it out through one of the container's methods
+
+error: an element reached through `[]` cannot be moved out
+  --> sema/errors_list_owning/main.kl:29:23
+   |
+29 |     name taken = move names[0];
+   |                       ^^^^^^^^ it stays in its container; take it out through one of the container's methods
+
+error: `push` takes ownership of this argument
+  --> sema/errors_list_owning/main.kl:30:17
+   |
+30 |     names.push( name( 2 ) );
+   |                 ^^^^^^^^^ write `move`
+
+error: `push` takes ownership of this argument
+  --> sema/errors_list_owning/main.kl:33:17
+   |
+33 |     names.push( held );
+   |                 ^^^^ write `move`
+
+error: an owning value is transferred, not copied
+  --> sema/errors_list_owning/main.kl:36:27
+   |
+36 |     kl::list<name> twin = names;
+   |                           ^^^^^ write `move names`
+
+5 errors generated

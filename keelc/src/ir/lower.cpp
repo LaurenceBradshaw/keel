@@ -1302,8 +1302,7 @@ Operand Lowering::lower_call( Node_id id )
         return lower_variant_construction( id );
     }
 
-    // In value position there is no destination, so it constructs into a temporary. Nothing
-    // drops that temporary - the same hole an owning struct literal already has, and no new one.
+    // In value position there is no destination, so it constructs into a temporary.
     if( is_construction( id ) )
     {
         const Type_id  type  = type_of( id );
@@ -1313,6 +1312,8 @@ Operand Lowering::lower_call( Node_id id )
         {
             statement_temporaries_.push_back( local );
         }
+
+        builder_.storage_live( local, ast_.span( id ) );
 
         lower_construction( builder_.place( local ), id );
 

@@ -68,6 +68,7 @@ int32_t kl__early__3i32( int32_t kl_n_1 )
 #line 34 "codegen/generics_owning_field.kl"
     kl_t7 = false;
 #line 35 "codegen/generics_owning_field.kl"
+    kl_t8 = false;
     kl_t4 = &kl_t3;
     kl_t8 = true;
     kl__Buf__R3Buf_3i32__ctor( kl_t4, kl_n_1 );
@@ -132,6 +133,7 @@ int32_t kl__main__( void )
 #line 49 "codegen/generics_owning_field.kl"
     kl_t21 = false;
 #line 50 "codegen/generics_owning_field.kl"
+    kl_t22 = false;
     kl_t3 = &kl_t2;
     kl_t22 = true;
     kl__Buf__R3Buf_3i32__ctor( kl_t3, 7 );
@@ -174,6 +176,7 @@ int32_t kl__main__( void )
 #line 79 "codegen/generics_owning_field.kl"
     kl_t24 = false;
 #line 80 "codegen/generics_owning_field.kl"
+    kl_t25 = false;
     kl_t12 = &kl_t11;
     kl_t25 = true;
     kl__Buf__R3Buf_3i32__ctor( kl_t12, 11 );

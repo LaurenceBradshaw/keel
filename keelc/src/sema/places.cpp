@@ -551,6 +551,16 @@ void Places::check_owning_source( Node_id value, Type_id type )
         return;
     }
 
+    if( is_operator_index( value ) )
+    {
+        reporter_.error_at(
+            ast_.span( value ),
+            "an owning value is transferred, not copied",
+            "it stays in its container; take it out through one of the container's methods"
+        );
+        return;
+    }
+
     reporter_.error_at(
         ast_.span( value ),
         "an owning value is transferred, not copied",

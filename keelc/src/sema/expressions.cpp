@@ -811,6 +811,10 @@ Expressions::check_method_arguments( Node_id id, Node_id method, Type_id receive
         }
     }
 
+    std::string_view name            = interner_.text( Symbol_id { ast_.aux( method ) } );
+    u32              implicit_params = has_receiver( ast_, method ) ? 1 : 0;
+    overloads_.check_argument_markers( id, method, name, implicit_params, bindings );
+
     record_method_instantiation( id, method, receiver );
 
     return types_.record( id, table_.substitute( types_.type_of( method ), bindings ) );
@@ -6642,6 +6646,68 @@ TEST_CASE( "type_checker_reports_a_bad_method_call", "[sema][method]" )
 
         INFO( p.rendered() );
         REQUIRE( p.rendered().find( "has no method `B`" ) != std::string::npos );
+    }
+}
+
+// D2 at a method call: the markers a free call needs, by the same rule.
+TEST_CASE( "type_checker_checks_a_method_calls_markers", "[sema][method]" )
+{
+    constexpr std::string_view head = "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+                                      "class H { public u64 n; H() { n = 0; }\n"
+                                      "  public void bump( ref i32 a ) { a = a + 1; }\n"
+                                      "  public void read( i32 a ) { }\n"
+                                      "  public void take( move B b ) { }\n"
+                                      "  public void look( B b ) { }\n"
+                                      "  public void keep( move i32 a ) { }\n"
+                                      "  public static void own( move B b ) { } };\n";
+
+    struct Case
+    {
+        const char* body;
+        const char* message;
+    };
+
+    SECTION( "a missing or wrong marker is refused" )
+    {
+        for( const Case c : {
+                 Case { "i32 a = 1; h.bump( a );", "`bump` may modify this argument" },
+                 Case { "i32 a = 1; h.read( ref a );", "`read` does not modify this argument" },
+                 Case { "B b = B( 1 ); h.take( b );", "`take` takes ownership of this argument" },
+                 Case { "h.take( B( 1 ) );", "`take` takes ownership of this argument" },
+                 Case { "B b = B( 1 ); h.look( move b );", "`look` borrows this argument" },
+                 Case { "H::own( B( 1 ) );", "`own` takes ownership of this argument" },
+             } )
+        {
+            const Typed p( std::string( head ) + "i32 main() { H h = H(); " + c.body + " return 0; }\n" );
+
+            INFO( c.body << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( c.message ) != std::string::npos );
+        }
+    }
+
+    SECTION( "a bare call to a sibling too" )
+    {
+        const Typed p( "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+                       "class H { public u64 n; H() { n = 0; }\n"
+                       "  public void take( move B b ) { }\n"
+                       "  public void again( move B b ) { take( b ); } };\n"
+                       "i32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`take` takes ownership of this argument" ) != std::string::npos );
+    }
+
+    SECTION( "and a copyable argument needs no move" )
+    {
+        const Typed p(
+            std::string( head ) + "i32 main() { H h = H(); i32 a = 1; h.keep( a ); h.keep( move a ); h.read( 2 ); "
+                                  "h.take( move B( 1 ) ); return 0; }\n"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
     }
 }
 

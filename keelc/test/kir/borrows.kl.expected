@@ -73,6 +73,7 @@ fn main {
         _5 = &_1
         _6 = call forward(copy _5)
         _4 = copy _6
+        storage_live _7
         _8 = &_7
         _9 = call B(copy _8, const 2)
         _10 = &_7
@@ -80,6 +81,8 @@ fn main {
         _12 = copy _4 + copy _11
         _4 = copy _12
         drop _7
+        storage_live _13
+        _18 = const 0
         _14 = &_13
         _18 = const 1
         _15 = call B(copy _14, const 3)
