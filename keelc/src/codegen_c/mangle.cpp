@@ -3,13 +3,22 @@
 
 #include "codegen_c/mangle.h"
 #include <fmt/format.h>
-#include <string>
 
 namespace keel
 {
 
 namespace
 {
+
+std::string c_name( std::string_view name )
+{
+    if( name == "operator==" )
+    {
+        return "operator_eq";
+    }
+
+    return std::string( name );
+}
 
 std::string param_mode_prefix( Param_mode mode )
 {
@@ -196,13 +205,15 @@ std::string mangle_function(
         return fmt::format(
             "kl_{}_{}__I{}E__{}",
             module_slot( module ),
-            name,
+            c_name( name ),
             construct_arg_string( type_arguments, types ),
             construct_arg_string( params, types, enclosing )
         );
     }
 
-    return fmt::format( "kl_{}_{}__{}", module_slot( module ), name, construct_arg_string( params, types, enclosing ) );
+    return fmt::format(
+        "kl_{}_{}__{}", module_slot( module ), c_name( name ), construct_arg_string( params, types, enclosing )
+    );
 }
 
 std::string mangle_struct( std::string_view module, Type_id type, const Type_table& types )
@@ -463,6 +474,17 @@ TEST_CASE( "mangle_tells_a_member_from_a_free_function", "[codegen][mangle]" )
 // The property the length prefixes exist for. The previous scheme spelled a type's name with `*`
 // rewritten to `p`, and said in its own comment that it was safe only while every type name was a
 // plain word - a generic aggregate ends that, and a struct may be called anything L15 allows.
+// `operator==` is not a C identifier, so the punctuation is spelled out.
+TEST_CASE( "mangle_spells_an_operator_as_an_identifier", "[codegen][mangle][operator]" )
+{
+    Type_table table;
+
+    const Type_id           box     = table.structure( Node_id { 3 }, {}, "Box" );
+    const Mangled_parameter other[] = { by_value( box ) };
+
+    REQUIRE( mangle_function( "", "operator==", other, table, {}, box ) == "kl__operator_eq__S3Box_3Box" );
+}
+
 TEST_CASE( "mangle_encodes_every_type_injectively", "[codegen][mangle]" )
 {
     Type_table table;

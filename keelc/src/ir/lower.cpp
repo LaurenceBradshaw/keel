@@ -64,6 +64,8 @@ private:
     Operand lower_field_application( Node_id id );
     Operand lower_method_call( Node_id id );
     Operand lower_method_call_on( Node_id id, Node_id method, Operand receiver );
+    Operand lower_method_call_on( Node_id id, Node_id method, Operand receiver, std::span<const Node_id> arguments );
+    Operand lower_operator_call( Node_id id, Node_id method );
     Operand lower_variant_construction( Node_id id );
     Operand lower_empty_variant( Node_id id );
     void    bind_variant_pattern( Place matched, Node_id label );
@@ -893,6 +895,12 @@ Operand Lowering::lower_binary( Node_id id )
         return lower_short_circuit( id );
     }
 
+    // `a == b` on an aggregate, where the checker chose the left operand's operator.
+    if( const Node_id method = types_.callee_of( id ); method.is_valid() )
+    {
+        return lower_operator_call( id, method );
+    }
+
     const Span    span      = ast_.span( id );
     const Type_id operation = operation_type( id );
 
@@ -921,6 +929,28 @@ Operand Lowering::lower_binary( Node_id id )
     const Type_id type = type_of( id );
 
     return copy( builder_.place( builder_.into_temp( binary( op, left, right, type ), type, span ) ), type );
+}
+
+// `a == b` calls `a.operator==( b )`, and `a != b` negates it.
+Operand Lowering::lower_operator_call( Node_id id, Node_id method )
+{
+    const Span    span   = ast_.span( id );
+    const Node_id object = ast_.child( id, 0 );
+
+    const std::span<const Node_id> parameters = ast_.children( ast_.child( method, 1 ) );
+
+    const Operand receiver =
+        address_operand( lower_place( object ), binding_type_under( parameters[0], bindings_for_call( id ) ), span );
+    const Operand result = lower_method_call_on( id, method, receiver, ast_.children( id ).subspan( 1, 1 ) );
+
+    if( static_cast<Token_kind>( ast_.aux( id ) ) != Token_kind::Bang_equal )
+    {
+        return result;
+    }
+
+    return copy(
+        builder_.place( builder_.into_temp( unary( Token_kind::Bang, result, result.type ), result.type, span ) ), result.type
+    );
 }
 
 Operand Lowering::lower_unary( Node_id id )
@@ -1111,10 +1141,15 @@ Operand Lowering::lower_method_call( Node_id id )
 // written at the call site, or the one the enclosing method was given.
 Operand Lowering::lower_method_call_on( Node_id id, Node_id method, Operand receiver )
 {
+    return lower_method_call_on( id, method, receiver, ast_.children( ast_.child( id, 1 ) ) );
+}
+
+// The arguments are given rather than read from `id`, so a Binary node's right operand can be one.
+Operand Lowering::lower_method_call_on( Node_id id, Node_id method, Operand receiver, std::span<const Node_id> arguments )
+{
     const Span span = ast_.span( id );
 
     const std::span<const Node_id> parameters = ast_.children( ast_.child( method, 1 ) );
-    const std::span<const Node_id> arguments  = ast_.children( ast_.child( id, 1 ) );
 
     // The receiver's own arguments, not the enclosing function's: `p.first()` on a `Pair<i32>`
     // reads `T` out of the declaration, and only this instance says what it is.

@@ -1,0 +1,43 @@
+fn operator== {
+    let _0: bool; // return slot
+    let _1: point*; // parameter this
+    let _2: point*; // parameter other
+    let _3: bool;
+
+    bb0:
+        _3 = copy (*_1).x == copy (*_2).x
+        _0 = copy _3
+        return
+}
+fn equal {
+    let _0: bool; // return slot
+    let _1: point; // parameter a
+    let _2: point; // parameter b
+    let _3: point*;
+    let _4: point*;
+    let _5: bool;
+
+    bb0:
+        _3 = &_1
+        _4 = &_2
+        _5 = call operator==(copy _3, copy _4)
+        _0 = copy _5
+        return
+}
+fn differ {
+    let _0: bool; // return slot
+    let _1: point; // parameter a
+    let _2: point; // parameter b
+    let _3: point*;
+    let _4: point*;
+    let _5: bool;
+    let _6: bool;
+
+    bb0:
+        _3 = &_1
+        _4 = &_2
+        _5 = call operator==(copy _3, copy _4)
+        _6 = !copy _5
+        _0 = copy _6
+        return
+}

@@ -57,10 +57,9 @@ class string
         return bytes.is_empty();
     }
 
-    public bool equals( const ref string other ) const
+    public bool operator==( const ref string other ) const
     {
-        // This is a stand in for no operator== overload in keel yet
-        if ( size() != other.size() )
+        if( size() != other.size() )
         {
             return false;
         }

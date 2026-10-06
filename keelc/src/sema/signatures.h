@@ -87,6 +87,7 @@ private:
     void check_enum_payloads();
     void check_struct_ownership();
     void check_struct_fields_are_not_owning( Node_id decl );
+    void check_operators();
 
     const Ast&      ast_;
     const Interner& interner_;

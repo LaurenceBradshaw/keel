@@ -125,6 +125,7 @@ private:
     // is a question about places rather than types.
     Type_id infer_binary( Node_id id );
     Type_id infer_unary( Node_id id );
+    Type_id infer_operator_call( Node_id id, Node_id object, Node_id argument, Symbol_id name );
     // `&f`: the operand names a function, so the type is its signature and not a pointer to it.
     Type_id function_address( Node_id id, Node_id declaration );
     // `&C::f`: an instance method's signature, with its receiver as parameter 0.

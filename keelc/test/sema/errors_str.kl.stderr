@@ -34,7 +34,7 @@ error: cannot take the address of this expression
 36 |     const str* p = &"abc";
    |                    ^^^^^^ it does not name a variable
 
-error: no operator `==` for `str` and `str`
+error: `str` has no `operator==`
   --> sema/errors_str.kl:42:12
    |
 42 |     return "a" == "b";

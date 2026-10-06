@@ -77,7 +77,14 @@ enum class Keyword : u32
     Fn,
     Field,
     Assert,
+    Operator,
 
+    Count
+};
+
+enum class Operator_name : u32
+{
+    Equal_equal,
     Count
 };
 
@@ -97,6 +104,11 @@ public:
     static Symbol_id keyword( Keyword k )
     {
         return Symbol_id { static_cast<u32>( k ) };
+    }
+
+    static Symbol_id operator_name( Operator_name op )
+    {
+        return Symbol_id { static_cast<u32>( Keyword::Count ) + static_cast<u32>( op ) };
     }
 
 private:

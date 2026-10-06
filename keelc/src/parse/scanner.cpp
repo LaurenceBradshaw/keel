@@ -149,7 +149,14 @@ Declaration_scan Scanner::declaration_head( u32 at, Scan_site site )
     }
 
     const u32 name_at = cursor_;
-    if( !want_name() )
+    if( match_keyword( Keyword::Operator ) )
+    {
+        if( !check( Token_kind::L_paren ) )
+        {
+            advance();
+        }
+    }
+    else if( !want_name() )
     {
         return make_failure();
     }
@@ -468,7 +475,15 @@ Head_scan Scanner::scan_head( u32 at, Symbol_id enclosing, Constructor_names nam
         return make_failure();
     }
 
-    if( !want_name() )
+    // `operator` and whichever token follows it; the parser says which ones may be declared.
+    if( match_keyword( Keyword::Operator ) )
+    {
+        if( !check( Token_kind::L_paren ) )
+        {
+            advance();
+        }
+    }
+    else if( !want_name() )
     {
         return make_failure();
     }
@@ -1295,6 +1310,15 @@ TEST_CASE( "scanner_recognises_each_member_head", "[scan]" )
         require_head( "fn( i32, i32 ) -> i32 f;", Member_kind::Field, ";" );
     }
 
+    // Any token after `operator` scans, so the parser can say which ones may be declared.
+    SECTION( "an operator is a method" )
+    {
+        require_head( "bool operator==( const ref C other ) const { }", Member_kind::Method, "{" );
+        require_head( "bool operator!=( const ref C other ) const { }", Member_kind::Method, "{" );
+        require_head( "C operator+( const ref C other ) const { }", Member_kind::Method, "{" );
+        require_head( "bool operator( const ref C other ) const { }", Member_kind::Method, "{" );
+    }
+
     SECTION( "a method's return type may carry a mode" )
     {
         require_head( "ref i32 at( u64 i ) { }", Member_kind::Method, "{" );
@@ -1710,6 +1734,12 @@ TEST_CASE( "scanner_recognises_each_declaration_head", "[scan]" )
         require_declaration( "Vector<Box<i32>> make() { }", Declaration_kind::Function, "{" );
         require_declaration( "const ref T get( ref T a ) { }", Declaration_kind::Function, "{" );
         require_declaration( "fn( i32 ) -> i32 pick() { }", Declaration_kind::Function, "{" );
+    }
+
+    // Scanned as the function it is written as, so the parser can say where it belongs.
+    SECTION( "an operator outside a type" )
+    {
+        require_declaration( "bool operator==( const ref C l, const ref C r ) { }", Declaration_kind::Function, "{" );
     }
 
     SECTION( "through type parameters and `where` clauses" )

@@ -1,0 +1,301 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "operator_equal.kl.prelude.c"
+
+struct kl__point;
+struct kl__name;
+struct kl__pair__I3i32E;
+
+struct kl__point
+{
+    int32_t kl_x_1;
+    int32_t kl_y_3;
+};
+
+struct kl__name
+{
+    uint8_t kl_first_56;
+};
+
+struct kl__pair__I3i32E
+{
+    int32_t kl_left_111;
+    int32_t kl_right_113;
+};
+
+bool kl__operator_eq__S5point_5point( struct kl__point*, struct kl__point* );
+void kl__name__R4name_2u8__ctor( struct kl__name*, uint8_t );
+bool kl__operator_eq__S4name_4name( struct kl__name*, struct kl__name* );
+bool kl__same__4name_4name( struct kl__name*, struct kl__name* );
+int32_t kl__main__( void );
+void kl__pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( struct kl__pair__I3i32E*, int32_t, int32_t );
+bool kl__operator_eq__I3i32E__S4pairI3i32E_4pairI3i32E( struct kl__pair__I3i32E*, struct kl__pair__I3i32E* );
+
+bool kl__operator_eq__S5point_5point( struct kl__point* kl_this_1, struct kl__point* kl_other_2 )
+{
+    bool kl_t0;
+    bool kl_t3;
+    bool kl_t4;
+    bool kl_t5;
+#line 10 "codegen/operator_equal.kl"
+    kl_t4 = ( *kl_this_1 ).kl_x_1 == ( *kl_other_2 ).kl_x_1;
+    kl_t3 = kl_t4;
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t5 = ( *kl_this_1 ).kl_y_3 == ( *kl_other_2 ).kl_y_3;
+    kl_t3 = kl_t5;
+    goto bb2;
+    bb2:
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+void kl__name__R4name_2u8__ctor( struct kl__name* kl_this_1, uint8_t kl_c_2 )
+{
+#line 18 "codegen/operator_equal.kl"
+    ( *kl_this_1 ).kl_first_56 = kl_c_2;
+    return;
+}
+
+bool kl__operator_eq__S4name_4name( struct kl__name* kl_this_1, struct kl__name* kl_other_2 )
+{
+    bool kl_t0;
+    bool kl_t3;
+#line 23 "codegen/operator_equal.kl"
+    kl_t3 = ( *kl_this_1 ).kl_first_56 == ( *kl_other_2 ).kl_first_56;
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+bool kl__same__4name_4name( struct kl__name* kl_a_1, struct kl__name* kl_b_2 )
+{
+    bool kl_t0;
+    struct kl__name* kl_t3;
+    struct kl__name* kl_t4;
+    bool kl_t5;
+#line 48 "codegen/operator_equal.kl"
+    kl_t3 = &( *kl_a_1 );
+    kl_t4 = &( *kl_b_2 );
+    kl_t5 = kl__operator_eq__S4name_4name( kl_t3, kl_t4 );
+    kl_t0 = kl_t5;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__point kl_a_1;
+    struct kl__point kl_t2;
+    struct kl__point kl_b_3;
+    struct kl__point kl_t4;
+    struct kl__point kl_c_5;
+    struct kl__point kl_t6;
+    bool kl_t7;
+    bool kl_t8;
+    bool kl_t9;
+    struct kl__point* kl_t10;
+    struct kl__point* kl_t11;
+    bool kl_t12;
+    bool kl_t13;
+    struct kl__point* kl_t14;
+    struct kl__point* kl_t15;
+    bool kl_t16;
+    bool kl_t17;
+    struct kl__point* kl_t18;
+    struct kl__point* kl_t19;
+    bool kl_t20;
+    struct kl__point* kl_t21;
+    struct kl__point* kl_t22;
+    bool kl_t23;
+    bool kl_t24;
+    bool kl_t25;
+    struct kl__name kl_n_26;
+    struct kl__name* kl_t27;
+    struct kl__name kl_m_29;
+    struct kl__name* kl_t30;
+    bool kl_t32;
+    bool kl_t33;
+    struct kl__name* kl_t34;
+    struct kl__name* kl_t35;
+    bool kl_t36;
+    bool kl_t37;
+    struct kl__name* kl_t38;
+    struct kl__name* kl_t39;
+    bool kl_t40;
+    bool kl_t41;
+    struct kl__name* kl_t42;
+    struct kl__name kl_t43;
+    struct kl__name* kl_t44;
+    struct kl__name* kl_t46;
+    bool kl_t47;
+    struct kl__pair__I3i32E kl_p_48;
+    struct kl__pair__I3i32E* kl_t49;
+    bool kl_t51;
+    struct kl__pair__I3i32E* kl_t52;
+    struct kl__pair__I3i32E kl_t53;
+    struct kl__pair__I3i32E* kl_t54;
+    struct kl__pair__I3i32E* kl_t56;
+    bool kl_t57;
+    bool kl_t58;
+    struct kl__pair__I3i32E* kl_t59;
+    struct kl__pair__I3i32E kl_t60;
+    struct kl__pair__I3i32E* kl_t61;
+    struct kl__pair__I3i32E* kl_t63;
+    bool kl_t64;
+#line 53 "codegen/operator_equal.kl"
+    kl_t2.kl_x_1 = 1;
+    kl_t2.kl_y_3 = 2;
+    kl_a_1 = kl_t2;
+#line 54 "codegen/operator_equal.kl"
+    kl_t4.kl_x_1 = 1;
+    kl_t4.kl_y_3 = 2;
+    kl_b_3 = kl_t4;
+#line 55 "codegen/operator_equal.kl"
+    kl_t6.kl_x_1 = 1;
+    kl_t6.kl_y_3 = 3;
+    kl_c_5 = kl_t6;
+#line 57 "codegen/operator_equal.kl"
+    kl_t10 = &kl_a_1;
+    kl_t11 = &kl_b_3;
+    kl_t12 = kl__operator_eq__S5point_5point( kl_t10, kl_t11 );
+    kl_t13 = !kl_t12;
+    kl_t9 = kl_t13;
+    if ( kl_t9 ) goto bb2; else goto bb1;
+    bb1:
+    kl_t14 = &kl_a_1;
+    kl_t15 = &kl_b_3;
+    kl_t16 = kl__operator_eq__S5point_5point( kl_t14, kl_t15 );
+    kl_t17 = !kl_t16;
+    kl_t9 = kl_t17;
+    goto bb2;
+    bb2:
+    kl_t8 = kl_t9;
+    if ( kl_t8 ) goto bb4; else goto bb3;
+    bb3:
+    kl_t18 = &kl_a_1;
+    kl_t19 = &kl_c_5;
+    kl_t20 = kl__operator_eq__S5point_5point( kl_t18, kl_t19 );
+    kl_t8 = kl_t20;
+    goto bb4;
+    bb4:
+    kl_t7 = kl_t8;
+    if ( kl_t7 ) goto bb6; else goto bb5;
+    bb5:
+    kl_t21 = &kl_a_1;
+    kl_t22 = &kl_c_5;
+    kl_t23 = kl__operator_eq__S5point_5point( kl_t21, kl_t22 );
+    kl_t24 = !kl_t23;
+    kl_t25 = !kl_t24;
+    kl_t7 = kl_t25;
+    goto bb6;
+    bb6:
+    if ( kl_t7 ) goto bb7; else goto bb8;
+    bb7:
+#line 59 "codegen/operator_equal.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb8:
+#line 62 "codegen/operator_equal.kl"
+    kl_t27 = &kl_n_26;
+    kl__name__R4name_2u8__ctor( kl_t27, 65 );
+#line 63 "codegen/operator_equal.kl"
+    kl_t30 = &kl_m_29;
+    kl__name__R4name_2u8__ctor( kl_t30, 65 );
+#line 65 "codegen/operator_equal.kl"
+    kl_t34 = &kl_n_26;
+    kl_t35 = &kl_m_29;
+    kl_t36 = kl__operator_eq__S4name_4name( kl_t34, kl_t35 );
+    kl_t37 = !kl_t36;
+    kl_t33 = kl_t37;
+    if ( kl_t33 ) goto bb10; else goto bb9;
+    bb9:
+    kl_t38 = &kl_n_26;
+    kl_t39 = &kl_m_29;
+    kl_t40 = kl__same__4name_4name( kl_t38, kl_t39 );
+    kl_t41 = !kl_t40;
+    kl_t33 = kl_t41;
+    goto bb10;
+    bb10:
+    kl_t32 = kl_t33;
+    if ( kl_t32 ) goto bb12; else goto bb11;
+    bb11:
+    kl_t42 = &kl_n_26;
+    kl_t44 = &kl_t43;
+    kl__name__R4name_2u8__ctor( kl_t44, 66 );
+    kl_t46 = &kl_t43;
+    kl_t47 = kl__operator_eq__S4name_4name( kl_t42, kl_t46 );
+    kl_t32 = kl_t47;
+    goto bb12;
+    bb12:
+    if ( kl_t32 ) goto bb13; else goto bb14;
+    bb13:
+#line 67 "codegen/operator_equal.kl"
+    kl_t0 = 2;
+    return kl_t0;
+    bb14:
+#line 70 "codegen/operator_equal.kl"
+    kl_t49 = &kl_p_48;
+    kl__pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( kl_t49, 1, 2 );
+#line 72 "codegen/operator_equal.kl"
+    kl_t52 = &kl_p_48;
+    kl_t54 = &kl_t53;
+    kl__pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( kl_t54, 1, 2 );
+    kl_t56 = &kl_t53;
+    kl_t57 = kl__operator_eq__I3i32E__S4pairI3i32E_4pairI3i32E( kl_t52, kl_t56 );
+    kl_t58 = !kl_t57;
+    kl_t51 = kl_t58;
+    if ( kl_t51 ) goto bb16; else goto bb15;
+    bb15:
+    kl_t59 = &kl_p_48;
+    kl_t61 = &kl_t60;
+    kl__pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( kl_t61, 2, 1 );
+    kl_t63 = &kl_t60;
+    kl_t64 = kl__operator_eq__I3i32E__S4pairI3i32E_4pairI3i32E( kl_t59, kl_t63 );
+    kl_t51 = kl_t64;
+    goto bb16;
+    bb16:
+    if ( kl_t51 ) goto bb17; else goto bb18;
+    bb17:
+#line 74 "codegen/operator_equal.kl"
+    kl_t0 = 3;
+    return kl_t0;
+    bb18:
+#line 77 "codegen/operator_equal.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+void kl__pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( struct kl__pair__I3i32E* kl_this_1, int32_t kl_a_2, int32_t kl_b_3 )
+{
+#line 33 "codegen/operator_equal.kl"
+    ( *kl_this_1 ).kl_left_111 = kl_a_2;
+#line 34 "codegen/operator_equal.kl"
+    ( *kl_this_1 ).kl_right_113 = kl_b_3;
+    return;
+}
+
+bool kl__operator_eq__I3i32E__S4pairI3i32E_4pairI3i32E( struct kl__pair__I3i32E* kl_this_1, struct kl__pair__I3i32E* kl_other_2 )
+{
+    bool kl_t0;
+    bool kl_t3;
+    bool kl_t4;
+    bool kl_t5;
+#line 39 "codegen/operator_equal.kl"
+    kl_t4 = ( *kl_this_1 ).kl_left_111 == ( *kl_other_2 ).kl_left_111;
+    kl_t3 = kl_t4;
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t5 = ( *kl_this_1 ).kl_right_113 == ( *kl_other_2 ).kl_right_113;
+    kl_t3 = kl_t5;
+    goto bb2;
+    bb2:
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

@@ -1,0 +1,20 @@
+// `==` lowers to a call of the left operand's `operator==`, and `!=` to that call negated.
+struct point
+{
+    i32 x;
+
+    bool operator==( const ref point other ) const
+    {
+        return x == other.x;
+    }
+};
+
+bool equal( point a, point b )
+{
+    return a == b;
+}
+
+bool differ( point a, point b )
+{
+    return a != b;
+}

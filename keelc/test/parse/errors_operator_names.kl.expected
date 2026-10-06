@@ -1,0 +1,29 @@
+Source_file                             1:1-37:1
+  Struct_decl                           3:1-31:3    name=a
+    <none>                              -
+    Field_decl                          5:5-5:11    name=x
+      Named_type                        5:5-5:8     "i32"
+    Error                               7:5-10:6    "bool operator!=( const ref a other ) const
+    {
+        return false;
+    }"
+    Error                               12:5-15:6   "bool operator&&( const ref a other ) const
+    {
+        return false;
+    }"
+    Error                               17:5-20:6   "bool operator<( const ref a other ) const
+    {
+        return false;
+    }"
+    Error                               22:5-25:6   "a operator+( const ref a other ) const
+    {
+        return other;
+    }"
+    Error                               27:5-30:6   "bool operator( const ref a other ) const
+    {
+        return false;
+    }"
+  Error                                 33:1-36:2   "bool operator==( const ref a l, const ref a r )
+{
+    return true;
+}"

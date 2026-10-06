@@ -14,7 +14,7 @@ i32 main()
         return 1;
     }
 
-    if( !hello.equals( again ) || hello.equals( help ) )
+    if( hello != again || hello == help || !( hello == again ) || !( hello != help ) )
     {
         return 2;
     }

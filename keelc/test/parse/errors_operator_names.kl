@@ -1,0 +1,36 @@
+// `operator==` is the one operator a type may declare so far: `!=` comes from it, `&&` and `||`
+// never can be, ordering waits for `<=>`, and an operator outside a type has no left operand.
+struct a
+{
+    i32 x;
+
+    bool operator!=( const ref a other ) const
+    {
+        return false;
+    }
+
+    bool operator&&( const ref a other ) const
+    {
+        return false;
+    }
+
+    bool operator<( const ref a other ) const
+    {
+        return false;
+    }
+
+    a operator+( const ref a other ) const
+    {
+        return other;
+    }
+
+    bool operator( const ref a other ) const
+    {
+        return false;
+    }
+};
+
+bool operator==( const ref a l, const ref a r )
+{
+    return true;
+}

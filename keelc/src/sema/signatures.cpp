@@ -39,6 +39,7 @@ void Signatures::declare()
     declare_fields();
     order_structs();
     check_aggregate_members();
+    check_operators();
     check_struct_ownership();
     check_enum_payloads();
     declare_functions();
@@ -582,6 +583,82 @@ void Signatures::check_struct_fields_are_not_owning( Node_id decl )
                       interner_.text( Symbol_id { ast_.aux( decl ) } )
                   )
         );
+    }
+}
+
+void Signatures::check_operators()
+{
+    const Symbol_id equal_equal = Interner::operator_name( Operator_name::Equal_equal );
+
+    for( const Node_id decl : ast_.children( ast_.root() ) )
+    {
+        if( !is_aggregate( ast_.kind( decl ) ) )
+        {
+            continue;
+        }
+
+        Node_id first {};
+
+        for( const Node_id member : ast_.members( decl ) )
+        {
+            if( ast_.kind( member ) != Node_kind::Method_decl || Symbol_id { ast_.aux( member ) } != equal_equal )
+            {
+                continue;
+            }
+
+            if( first.is_valid() )
+            {
+                reporter_.error_at(
+                    ast_.name_span( member ),
+                    fmt::format( "`{}` already has an `operator==`", interner_.text( Symbol_id { ast_.aux( decl ) } ) ),
+                    reporter_.previous_declaration_note( ast_.span( first ) )
+                );
+                continue;
+            }
+
+            first = member;
+
+            if( is_static_method( ast_, member ) )
+            {
+                reporter_.error_at(
+                    ast_.name_span( member ), "an operator cannot be `static`", "it is called on its left operand"
+                );
+                continue;
+            }
+
+            const std::span<const Node_id> params   = ast_.children( ast_.child( member, 1 ) );
+            const Type_id                  receiver = types_.type_of( params[0] );
+            const Type_id self_type                 = table_.is_pointer( receiver ) ? table_.get( receiver ).element : receiver;
+
+            if( params.size() != 2 )
+            {
+                reporter_.error_at(
+                    ast_.span( ast_.child( member, 1 ) ), "`operator==` takes one parameter, the right-hand operand"
+                );
+            }
+            else if( !table_.is_error( types_.type_of( params[1] ) ) && types_.type_of( params[1] ) != self_type )
+            {
+                reporter_.error_at(
+                    ast_.span( params[1] ),
+                    fmt::format( "`operator==` on `{0}` must take another `{0}`", table_.name( self_type ) ),
+                    fmt::format( "write the parameter as `const ref {}`", table_.name( self_type ) )
+                );
+            }
+
+            if( !table_.is_error( types_.type_of( member ) ) && types_.type_of( member ) != table_.builtin( Type_kind::Bool ) )
+            {
+                reporter_.error_at( ast_.span( ast_.child( member, 0 ) ), "`operator==` must return `bool`" );
+            }
+
+            if( !is_const_method( ast_, member ) )
+            {
+                reporter_.error_at(
+                    ast_.name_span( member ),
+                    "`operator==` must be `const`",
+                    "write `const` after its parameter list; comparing reads both operands"
+                );
+            }
+        }
     }
 }
 

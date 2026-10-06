@@ -962,6 +962,12 @@ Type_id Expressions::infer_binary( Node_id id )
 
         const Type_id known = infer( known_side );
 
+        if( !literal_on_the_left && ( op == Token_kind::Equal_equal || op == Token_kind::Bang_equal ) &&
+            table_.is_struct( known ) )
+        {
+            return infer_operator_call( id, left, right, Interner::operator_name( Operator_name::Equal_equal ) );
+        }
+
         // D41: a literal the other operand cannot hold is not a type error, because the comparison
         // still has an answer - so it takes a type of its own to be compared in rather than
         // adopting one it never had to fit. Arithmetic keeps the adoption, because there the two
@@ -987,6 +993,12 @@ Type_id Expressions::infer_binary( Node_id id )
     else
     {
         lhs_type = infer( left );
+
+        if( ( op == Token_kind::Equal_equal || op == Token_kind::Bang_equal ) && table_.is_struct( lhs_type ) )
+        {
+            return infer_operator_call( id, left, right, Interner::operator_name( Operator_name::Equal_equal ) );
+        }
+
         rhs_type = infer( right );
     }
 
@@ -1627,6 +1639,58 @@ Type_id Expressions::infer_unary( Node_id id )
     }
 
     return constant_folder_.record_constant( id, result );
+}
+
+// `a == b` on an aggregate: a call of the left operand's operator, with the right as its argument.
+Type_id Expressions::infer_operator_call( Node_id id, Node_id object, Node_id argument, Symbol_id name )
+{
+    const Type_id object_type = types_.type_of( object );
+    const Node_id declaration = table_.get( object_type ).declaration;
+    const Node_id method      = aggregates_.find_method( declaration, name );
+
+    if( !method.is_valid() )
+    {
+        infer( argument );
+
+        // Only a type the author can edit is worth telling them to edit.
+        const bool own_package =
+            resolution_.package_of( ast_.span( declaration ).file ) == resolution_.package_of( ast_.span( id ).file );
+
+        reporter_.error_at(
+            ast_.span( id ),
+            fmt::format( "`{}` has no `{}`", table_.name( object_type ), interner_.text( name ) ),
+            own_package
+                ? fmt::format(
+                      "declare `bool {}( const ref {} other ) const` in it", interner_.text( name ), table_.name( object_type )
+                  )
+                : std::string {}
+        );
+
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    if( !is_visible_from( ast_, method, current_type() ) )
+    {
+        infer( argument );
+        report_private( id, method );
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    const std::span<const Node_id> params = ast_.children( ast_.child( method, 1 ) );
+
+    // A malformed declaration was reported where it was written.
+    if( params.size() != 2 || !is_const_method( ast_, method ) )
+    {
+        infer( argument );
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    check( argument, table_.substitute( types_.type_of( params[1] ), aggregates_.bindings_of( object_type ) ) );
+
+    callees_.record( id, method );
+    record_method_instantiation( id, method, object_type );
+
+    return types_.record( id, table_.builtin( Type_kind::Bool ) );
 }
 
 // D30: a variant is reached only through its enum - `Colour::Red`, never a bare `Red`. The

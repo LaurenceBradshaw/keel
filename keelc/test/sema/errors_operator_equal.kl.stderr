@@ -1,0 +1,67 @@
+error: `operator==` must return `bool`
+ --> sema/errors_operator_equal.kl:7:5
+  |
+7 |     i32 operator==( const ref returns_i32 other ) const
+  |     ^^^
+
+error: `operator==` must be `const`
+  --> sema/errors_operator_equal.kl:17:10
+   |
+17 |     bool operator==( const ref not_const other )
+   |          ^^^^^^^^^^ write `const` after its parameter list; comparing reads both operands
+
+error: `operator==` on `other_type` must take another `other_type`
+  --> sema/errors_operator_equal.kl:27:22
+   |
+27 |     bool operator==( i32 other ) const
+   |                      ^^^^^^^^^ write the parameter as `const ref other_type`
+
+error: `declared_twice` already has an `operator==`
+  --> sema/errors_operator_equal.kl:42:10
+   |
+42 |     bool operator==( declared_twice other ) const
+   |          ^^^^^^^^^^ previous declaration is at: sema/errors_operator_equal.kl:37:5
+
+error: an operator cannot be `static`
+  --> sema/errors_operator_equal.kl:52:17
+   |
+52 |     static bool operator==( const ref is_static other )
+   |                 ^^^^^^^^^^ it is called on its left operand
+
+error: `operator==` takes one parameter, the right-hand operand
+  --> sema/errors_operator_equal.kl:62:20
+   |
+62 |     bool operator==( const ref two_parameters p, const ref two_parameters q ) const
+   |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: `plain` has no `operator==`
+   --> sema/errors_operator_equal.kl:106:9
+    |
+106 |     if( one == two )
+    |         ^^^^^^^^^^ declare `bool operator==( const ref plain other ) const` in it
+
+error: `operator==` is private to `hidden`
+   --> sema/errors_operator_equal.kl:111:9
+    |
+111 |     if( h == k )
+    |         ^^^^^^ only that type's own members may name it
+
+error: `plain` has no `operator==`
+   --> sema/errors_operator_equal.kl:116:9
+    |
+116 |     if( one == 5 )
+    |         ^^^^^^^^ declare `bool operator==( const ref plain other ) const` in it
+
+error: expected `point`, but got an integer literal
+   --> sema/errors_operator_equal.kl:121:14
+    |
+121 |     if( p == 5 )
+    |              ^
+
+error: expected `point`, but got `plain`
+   --> sema/errors_operator_equal.kl:126:14
+    |
+126 |     if( p != one )
+    |              ^^^
+
+11 errors generated

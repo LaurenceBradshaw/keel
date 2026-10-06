@@ -24,7 +24,7 @@ Interner::Interner()
 
         "extern",   "alloc",    "free",    "fallthrough", "where",   "static",
 
-        "private",  "public",   "fn",      "field",       "assert"
+        "private",  "public",   "fn",      "field",       "assert",  "operator"
     };
     // clang-format on
 
@@ -43,6 +43,9 @@ Interner::Interner()
 
     // Catches a duplicate spelling in the table, which the static_assert cannot see.
     assert( texts_.size() == static_cast<std::size_t>( Keyword::Count ) && "duplicate keyword spelling" );
+
+    [[maybe_unused]] const Symbol_id op_equal_equal = intern( "operator==" );
+    assert( op_equal_equal.v == operator_name( Operator_name::Equal_equal ).v && "operator name id out of order" );
 }
 
 Symbol_id Interner::intern( std::string_view text )
@@ -209,13 +212,27 @@ TEST_CASE( "interner_user_identifiers_follow_the_keywords", "[common][interner]"
     Interner in;
 
     const Symbol_id first_user = in.intern( "widget" );
-    REQUIRE( first_user.v == static_cast<u32>( Keyword::Count ) );
+    REQUIRE( first_user.v == static_cast<u32>( Keyword::Count ) + static_cast<u32>( Operator_name::Count ) );
 
     REQUIRE_FALSE( in.is_keyword( first_user ) );
     REQUIRE_FALSE( in.is_keyword( in.intern( "iff" ) ) );
     REQUIRE_FALSE( in.is_keyword( in.intern( "If" ) ) );
     REQUIRE_FALSE( in.is_keyword( in.intern( "while_" ) ) );
     REQUIRE_FALSE( in.is_keyword( Symbol_id {} ) ); // the invalid sentinel
+}
+
+// An operator method's name is reserved like a keyword's, so the parser needs no interner to name one.
+TEST_CASE( "interner_reserves_operator_names_after_the_keywords", "[common][interner]" )
+{
+    Interner in;
+
+    const Symbol_id equal_equal = Interner::operator_name( Operator_name::Equal_equal );
+
+    REQUIRE( equal_equal.v == static_cast<u32>( Keyword::Count ) );
+    REQUIRE( in.text( equal_equal ) == "operator==" );
+    REQUIRE( in.intern( "operator==" ) == equal_equal );
+    REQUIRE_FALSE( in.is_keyword( equal_equal ) );
+    REQUIRE( in.is_keyword( in.intern( "operator" ) ) );
 }
 
 // PLAN §6.3 D10: `new` and `delete` are operators appearing in expression position, so the parser

@@ -68,6 +68,8 @@ private:
     // expect_name after `::`, where `~Name` is refused as one mistake rather than two.
     Symbol_id expect_member_name();
 
+    Symbol_id expect_operator_name();
+
     // A constructor's name, which its head scan required to be an identifier.
     Symbol_id take_name();
 
@@ -613,6 +615,54 @@ Symbol_id Parser::expect_member_name()
     return Symbol_id {};
 }
 
+Symbol_id Parser::expect_operator_name()
+{
+    const Span start = advance().span; // `operator`
+
+    if( check( Token_kind::L_paren ) )
+    {
+        error_at( start, "expected an operator after `operator`" );
+        return Symbol_id {};
+    }
+
+    const Token_kind op   = advance().kind;
+    const Span       span = Span::merge( start, previous().span );
+
+    switch( op )
+    {
+    case Token_kind::Equal_equal:
+        return Interner::operator_name( Operator_name::Equal_equal );
+
+    case Token_kind::Bang_equal:
+        error_at( span, "`operator!=` cannot be declared", "declare `operator==`, and `!=` is its negation" );
+        return Symbol_id {};
+
+    case Token_kind::Amp_amp:
+    case Token_kind::Pipe_pipe:
+        error_at(
+            span,
+            fmt::format( "`{}` cannot be overloaded", sm_.text( previous().span ) ),
+            "it evaluates its right operand only when needed, and a call would evaluate both"
+        );
+        return Symbol_id {};
+
+    case Token_kind::Less:
+    case Token_kind::Less_equal:
+    case Token_kind::Greater:
+    case Token_kind::Greater_equal:
+        error_at(
+            span,
+            fmt::format( "`{}` cannot be declared", sm_.text( span ) ),
+            "ordering is declared once, as `operator<=>`, which is not supported yet"
+        );
+        return Symbol_id {};
+
+    default:
+        error_at( span, fmt::format( "`{}` cannot be declared yet", sm_.text( span ) ) );
+        return Symbol_id {};
+    }
+}
+
 std::string Parser::found_text() const
 {
     return found_text( peek() );
@@ -983,8 +1033,25 @@ Node_id Parser::parse_function_decl( std::optional<u32> commit )
 
     const Node_id return_type = parse_type_with_mode();
 
+    // An operator is a method of its left operand's type. Its name is skipped and the rest parsed.
+    const bool is_operator = check_keyword( Keyword::Operator );
+    if( is_operator )
+    {
+        const Span operator_start = advance().span;
+        if( !check( Token_kind::L_paren ) )
+        {
+            advance();
+        }
+
+        error_at(
+            Span::merge( operator_start, previous().span ),
+            "an operator is declared inside the type of its left operand",
+            "move it into that type as a `const` method"
+        );
+    }
+
     // The name is a token, not a subtree, so it goes in aux rather than becoming a fourth child.
-    const Symbol_id name      = expect_name();
+    const Symbol_id name      = !is_operator && !check( Token_kind::L_paren ) ? expect_name() : Symbol_id {};
     const Span      name_span = previous().span;
 
     // The parameters and the `where` clauses that constrain them end up in one node, but they are
@@ -1084,8 +1151,9 @@ Node_id Parser::parse_method_decl( Symbol_id enclosing, Node_id type_params, boo
 {
     const Span      start       = peek().span;
     const Node_id   return_type = parse_type_with_mode();
-    const Symbol_id name        = expect_name();
-    const Span      name_span   = previous().span;
+    const Span      name_start  = peek().span;
+    const Symbol_id name        = check_keyword( Keyword::Operator ) ? expect_operator_name() : expect_name();
+    const Span      name_span   = Span::merge( name_start, previous().span );
 
     // The trailing `const` comes after the parameter list, but the receiver it binds is built
     // before it. The head scan ended at the body's `{`, so the token before that says.
@@ -10287,6 +10355,40 @@ TEST_CASE( "parser_parses_a_variant_pattern", "[parse]" )
 // decides which binding mode that parameter carries - `ref T` when the method may write the object,
 // `const ref T` when it may not. Written as C++ writes it, and meaning what Keel's `const` already
 // means, so no rule had to be invented for either half.
+TEST_CASE( "parser_names_an_operator_method", "[parse][operator]" )
+{
+    SECTION( "`operator==` is a method under its reserved name" )
+    {
+        const Parsed p( "struct P { i32 x; bool operator==( const ref P other ) const { return true; } };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id method = find_first( p.ast(), p.root(), Node_kind::Method_decl );
+
+        REQUIRE( method.is_valid() );
+        REQUIRE( Symbol_id { p.aux( method ) } == Interner::operator_name( Operator_name::Equal_equal ) );
+        REQUIRE( p.children( p.child( method, 1 ) ).size() == 2 ); // the receiver, then `other`
+    }
+
+    SECTION( "`operator!=` is refused, and points at `operator==`" )
+    {
+        const Parsed p( "struct P { i32 x; bool operator!=( const ref P other ) const { return true; } };" );
+
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "`operator!=` cannot be declared" ) != std::string::npos );
+        REQUIRE( p.errors().find( "declare `operator==`" ) != std::string::npos );
+    }
+
+    SECTION( "an operator outside a type is one error, not a cascade" )
+    {
+        const Parsed p( "struct P { i32 x; }; bool operator==( const ref P l, const ref P r ) { return true; }" );
+
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "an operator is declared inside the type of its left operand" ) != std::string::npos );
+    }
+}
+
 TEST_CASE( "parser_parses_a_method", "[parse]" )
 {
     SECTION( "the receiver is a `ref T` binding" )
