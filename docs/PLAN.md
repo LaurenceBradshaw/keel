@@ -8797,6 +8797,10 @@ about debts *between* them, which is the gap this list cannot see.
   (3) `*p = move b;` does not drop what `*p` held: `writes_a_slot` treats a dereference as a raw
   slot, as it does `data[i]`, so the old value leaks; `v[i] = move x` through `operator[]` is the
   same. (1) and (2) are double frees, (3) a leak. **Scheduled (2026-10-06)** as M8 step 4a.
+- **A moved local can still be borrowed (found 2026-10-06).** After `consume( move b );`, only a
+  second `move b` is refused. `total( b )` (a bare borrow), `fill( ref b )`, `b.set( 0, 1 )` and
+  `b.get( 0 )` all compile, and each reads or writes the freed buffer: valgrind reports an invalid
+  read in `get`. A use-after-free accepted in safe code, so it outranks features. Unscheduled.
 - **A bound's help names a method, not its type (found 2026-10-06).** `left == other` in a method
   of `class pair<T> where T : Copyable` says *write `where T : Equatable` on `same`*, but a method
   writes no `where` - its type parameters are its class's, so the clause goes on `pair`. Small;
