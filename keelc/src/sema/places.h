@@ -68,6 +68,7 @@ public:
     // D31's initialisation and assignment clause: an owning value transfers rather than copies, and
     // the transfer is written down.
     void check_owning_source( Node_id value, Type_id type );
+    bool check_owning_return( Node_id value, Type_id type );
 
     // D31: which parameters travel by address. Its own pass because ownership is asked of field
     // types, which are recorded only after both parameter loops have run.

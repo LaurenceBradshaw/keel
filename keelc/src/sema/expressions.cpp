@@ -2813,6 +2813,16 @@ Type_id Expressions::infer_marker( Node_id id )
         return types_.record( id, table_.builtin( Type_kind::Error ) );
     }
 
+    if( places_.is_operator_index( operand ) )
+    {
+        reporter_.error_at(
+            ast_.span( operand ),
+            "an element reached through `[]` cannot be moved out",
+            "it stays in its container; take it out through one of the container's methods"
+        );
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
     // Same reason as the field above: `*p` names something this function does not own, so moving
     // out of it leaves a hole nothing tracks.
     if( ast_.kind( operand ) == Node_kind::Unary_expr && static_cast<Token_kind>( ast_.aux( operand ) ) == Token_kind::Star )
@@ -5499,6 +5509,30 @@ TEST_CASE( "type_checker_types_a_move", "[sema][move]" )
 
         INFO( p.rendered() );
         REQUIRE_FALSE( p.clean() );
+    }
+
+    // Its container still counts it and would drop it again.
+    SECTION( "nor an element reached through `[]`" )
+    {
+        const Typed p( "class B { u64 n; B() { n = 0; } ~B() { } };\n"
+                       "class box { B[*] data; box() { unsafe { data = alloc<B>( 1 ); } }\n"
+                       "    public B* operator[]( u64 i ) const { unsafe { return &data[i]; } } };\n"
+                       "i32 main() { box b = box(); B x = move b[0]; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "an element reached through `[]` cannot be moved out" ) != std::string::npos );
+    }
+
+    // A raw slot is the container's own business, inside `unsafe`.
+    SECTION( "though a raw slot can be" )
+    {
+        const Typed p( "class B { u64 n; B() { n = 0; } ~B() { } };\n"
+                       "B take( B[*] data ) { unsafe { return move data[0]; } }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
     }
 
     SECTION( "moving the whole object is how you do it" )

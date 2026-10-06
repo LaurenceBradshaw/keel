@@ -558,6 +558,41 @@ void Places::check_owning_source( Node_id value, Type_id type )
     );
 }
 
+bool Places::check_owning_return( Node_id value, Type_id type )
+{
+    if( !value.is_valid() || bounds_.satisfies( type, Bound::Copyable ) || ast_.kind( value ) == Node_kind::Marker_expr )
+    {
+        return false;
+    }
+
+    if( !is_assignable( value ) )
+    {
+        return false;
+    }
+
+    const Node_id decl = resolution_.declaration_of( value );
+    if( ast_.kind( value ) == Node_kind::Name_expr &&
+        ( ast_.kind( decl ) == Node_kind::Var_decl || ast_.kind( decl ) == Node_kind::Param_decl ||
+          ast_.kind( decl ) == Node_kind::Binding_decl ) )
+    {
+        return false;
+    }
+
+    const Span  span    = ast_.span( value );
+    std::string message = "an owning value is transferred, not copied";
+
+    if( ast_.kind( value ) == Node_kind::Index_expr && !is_operator_index( value ) )
+    {
+        reporter_.error_at( span, message, fmt::format( "write `move {}`", reporter_.text( span ) ) );
+    }
+    else
+    {
+        reporter_.error_at( span, message, fmt::format( "`{}` still belongs to what holds it", reporter_.text( span ) ) );
+    }
+
+    return true;
+}
+
 void Places::record_borrowed_parameters()
 {
     // Flat rather than over root's children: parameters live under functions, constructors and
@@ -663,6 +698,62 @@ TEST_CASE( "type_checker_requires_move_when_copying_an_owning_value", "[sema][mo
 
         INFO( p.rendered() );
         REQUIRE_FALSE( p.clean() );
+    }
+
+    // Only a local is dying at a `return`, so only a local needs no marker there.
+    SECTION( "a return through a pointer" )
+    {
+        const Typed p( std::string( owning ) + "B first( B* p ) { return *p; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "an owning value is transferred, not copied" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`*p` still belongs to what holds it" ) != std::string::npos );
+    }
+
+    SECTION( "a return of a field" )
+    {
+        const Typed p(
+            std::string( owning ) + "class H { B kept; H() { kept = B( 1 ); } public B leak() const { return kept; } };\n"
+                                    "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`kept` still belongs to what holds it" ) != std::string::npos );
+    }
+
+    SECTION( "a return of a raw slot asks for the marker" )
+    {
+        const Typed p( std::string( owning ) + "B take( B[*] data ) { unsafe { return data[0]; } }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "write `move data[0]`" ) != std::string::npos );
+    }
+
+    SECTION( "and a generic one is checked once, for any `T`" )
+    {
+        const Typed p( "T first<T>( T* p ) { return *p; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "a return of a local needs no marker" )
+    {
+        const Typed p( std::string( owning ) + "B make() { B b = B( 1 ); return b; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "nor does a return of a pointee that copies freely" )
+    {
+        const Typed p( "i32 first( i32* p ) { return *p; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
     }
 
     // Nothing changes for a type that owns nothing: copying one is what it is for.

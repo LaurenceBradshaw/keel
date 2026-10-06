@@ -223,6 +223,11 @@ void Statements::visit_return( Node_id id )
         }
     }
 
+    if( !places_.returns_a_binding( expressions_.current_function() ) && places_.check_owning_return( value, current_return_ ) )
+    {
+        return;
+    }
+
     // The predicate rather than check_writable: that one reports about *modifying*, and nothing
     // is being modified here. Gated on the return type owning something, because that is the whole
     // hazard - the caller destroys the borrow too, so returning it frees one resource twice.

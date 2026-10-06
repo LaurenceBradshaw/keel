@@ -1,0 +1,147 @@
+// Writing through a `T*`, or through `[]`, replaces a live value and drops the old one first. A
+// `T[*]` slot is raw storage, so writing it drops nothing, and a value leaves it by `move`. Each
+// `owned` holds a heap block, so a missed drop leaks under valgrind as well as miscounting.
+// Each check returns its own code.
+i32 live;
+
+class owned
+{
+    owned( u64 n )
+    {
+        id = n;
+        unsafe
+        {
+            block = alloc<u64>( 1 );
+        }
+        live += 1;
+    }
+
+    ~owned()
+    {
+        unsafe
+        {
+            free( block );
+        }
+        live -= 1;
+    }
+
+    public u64 value() const
+    {
+        return id;
+    }
+
+    private u64 id;
+    private u64[*] block;
+};
+
+class slots
+{
+    slots()
+    {
+        unsafe
+        {
+            data = alloc<owned>( 2 );
+        }
+        count = 0;
+    }
+
+    ~slots()
+    {
+        while( count > 0 )
+        {
+            count -= 1;
+            unsafe
+            {
+                owned dying = move data[count];
+            }
+        }
+
+        unsafe
+        {
+            free( data );
+        }
+    }
+
+    public void push( move owned value )
+    {
+        unsafe
+        {
+            data[count] = move value;
+        }
+        count += 1;
+    }
+
+    public owned pop()
+    {
+        count -= 1;
+        unsafe
+        {
+            return move data[count];
+        }
+    }
+
+    public owned* operator[]( u64 index ) const
+    {
+        assert( index < count );
+
+        unsafe
+        {
+            return &data[index];
+        }
+    }
+
+    private owned[*] data;
+    private u64 count;
+};
+
+i32 main()
+{
+    {
+        owned a = owned( 1 );
+        owned b = owned( 2 );
+        owned* p = &a;
+        *p = move b;
+
+        if( live != 1 || a.value() != 2 )
+        {
+            return 1;
+        }
+    }
+
+    if( live != 0 )
+    {
+        return 2;
+    }
+
+    {
+        slots s = slots();
+        s.push( owned( 3 ) );
+        s.push( owned( 4 ) );
+
+        if( live != 2 )
+        {
+            return 3;
+        }
+
+        s[0] = owned( 5 );
+
+        if( live != 2 || s[0].value() != 5 )
+        {
+            return 4;
+        }
+
+        owned last = s.pop();
+
+        if( live != 2 || last.value() != 4 )
+        {
+            return 5;
+        }
+    }
+
+    if( live != 0 )
+    {
+        return 6;
+    }
+
+    return 0;
+}

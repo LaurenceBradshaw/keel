@@ -1,0 +1,79 @@
+// An owning value leaves somewhere only by `move`, and only a local or a parameter may be moved or
+// returned bare. A pointee, a field and an element reached through `[]` stay where they are, so
+// returning one would copy it and moving one would leave it counted twice.
+class owned
+{
+    owned( u64 n )
+    {
+        id = n;
+    }
+
+    ~owned()
+    {
+    }
+
+    private u64 id;
+};
+
+class box
+{
+    box()
+    {
+        unsafe
+        {
+            data = alloc<owned>( 1 );
+            data[0] = owned( 1 );
+        }
+        kept = owned( 2 );
+    }
+
+    public owned* operator[]( u64 index ) const
+    {
+        assert( index == 0 );
+
+        unsafe
+        {
+            return &data[index];
+        }
+    }
+
+    public owned leak() const
+    {
+        return kept;
+    }
+
+    // A raw slot is this class's own storage, and taking from it is still a transfer.
+    public owned take_raw()
+    {
+        unsafe
+        {
+            return data[0];
+        }
+    }
+
+    private owned[*] data;
+    private owned kept;
+};
+
+owned first( owned* p )
+{
+    return *p;
+}
+
+T first_of<T>( T* p )
+{
+    return *p;
+}
+
+owned make()
+{
+    owned made = owned( 3 );
+    return made;
+}
+
+i32 main()
+{
+    box b = box();
+    owned taken = move b[0];
+    return 0;
+}

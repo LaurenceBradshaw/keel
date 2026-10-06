@@ -604,7 +604,7 @@ bool Lowering::initialises_field( const Place& target ) const
 
 bool Lowering::writes_a_slot( Node_id target ) const
 {
-    if( ast_.kind( target ) == Node_kind::Index_expr || ast_.kind( target ) == Node_kind::Unary_expr )
+    if( ast_.kind( target ) == Node_kind::Index_expr && !types_.callee_of( target ).is_valid() )
     {
         return true;
     }

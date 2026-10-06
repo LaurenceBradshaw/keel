@@ -1,0 +1,31 @@
+error: an owning value is transferred, not copied
+  --> sema/errors_owning_escapes.kl:42:16
+   |
+42 |         return kept;
+   |                ^^^^ `kept` still belongs to what holds it
+
+error: an owning value is transferred, not copied
+  --> sema/errors_owning_escapes.kl:50:20
+   |
+50 |             return data[0];
+   |                    ^^^^^^^ write `move data[0]`
+
+error: an owning value is transferred, not copied
+  --> sema/errors_owning_escapes.kl:60:12
+   |
+60 |     return *p;
+   |            ^^ `*p` still belongs to what holds it
+
+error: an owning value is transferred, not copied
+  --> sema/errors_owning_escapes.kl:65:12
+   |
+65 |     return *p;
+   |            ^^ `*p` still belongs to what holds it
+
+error: an element reached through `[]` cannot be moved out
+  --> sema/errors_owning_escapes.kl:77:24
+   |
+77 |     owned taken = move b[0];
+   |                        ^^^^ it stays in its container; take it out through one of the container's methods
+
+5 errors generated

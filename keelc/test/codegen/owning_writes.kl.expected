@@ -1,0 +1,363 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "owning_writes.kl.prelude.c"
+
+struct kl__owned;
+struct kl__slots;
+
+struct kl__owned
+{
+    uint64_t kl_id_46;
+    uint64_t* kl_block_49;
+};
+
+struct kl__slots
+{
+    struct kl__owned* kl_data_151;
+    uint64_t kl_count_153;
+};
+
+int32_t kl_live_1;
+
+void* kl_rt_alloc( size_t );
+void  kl_rt_free( void* );
+void* kl_rt_alloc_many( size_t, size_t );
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+void kl__owned__R5owned_3u64__ctor( struct kl__owned*, uint64_t );
+void kl__owned__dtor( struct kl__owned* );
+uint64_t kl__value__S5owned( struct kl__owned* );
+void kl__slots__R5slots__ctor( struct kl__slots* );
+void kl__slots__dtor( struct kl__slots* );
+void kl__push__S5slots_M5owned( struct kl__slots*, struct kl__owned );
+struct kl__owned kl__pop__S5slots( struct kl__slots* );
+struct kl__owned* kl__operator_index__S5slots_3u64( struct kl__slots*, uint64_t );
+int32_t kl__main__( void );
+
+void kl__owned__R5owned_3u64__ctor( struct kl__owned* kl_this_1, uint64_t kl_n_2 )
+{
+    uint64_t* kl_t3;
+#line 11 "codegen/owning_writes.kl"
+    ( *kl_this_1 ).kl_id_46 = kl_n_2;
+#line 14 "codegen/owning_writes.kl"
+    kl_t3 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( uint64_t ) );
+    ( *kl_this_1 ).kl_block_49 = kl_t3;
+#line 16 "codegen/owning_writes.kl"
+    kl_live_1 = kl_live_1 + 1;
+    return;
+}
+
+void kl__owned__dtor( struct kl__owned* kl_this_1 )
+{
+#line 23 "codegen/owning_writes.kl"
+    kl_rt_free( ( *kl_this_1 ).kl_block_49 );
+#line 25 "codegen/owning_writes.kl"
+    kl_live_1 = kl_live_1 - 1;
+    return;
+}
+
+uint64_t kl__value__S5owned( struct kl__owned* kl_this_1 )
+{
+    uint64_t kl_t0;
+#line 30 "codegen/owning_writes.kl"
+    kl_t0 = ( *kl_this_1 ).kl_id_46;
+    return kl_t0;
+}
+
+void kl__slots__R5slots__ctor( struct kl__slots* kl_this_1 )
+{
+    struct kl__owned* kl_t2;
+#line 43 "codegen/owning_writes.kl"
+    kl_t2 = ( struct kl__owned* ) kl_rt_alloc_many( ( size_t ) 2, sizeof( struct kl__owned ) );
+    ( *kl_this_1 ).kl_data_151 = kl_t2;
+#line 45 "codegen/owning_writes.kl"
+    ( *kl_this_1 ).kl_count_153 = 0;
+    return;
+}
+
+void kl__slots__dtor( struct kl__slots* kl_this_1 )
+{
+    bool kl_t2;
+    struct kl__owned kl_dying_3;
+    struct kl__owned* kl_t4;
+    goto bb1;
+    bb1:
+#line 50 "codegen/owning_writes.kl"
+    kl_t2 = ( *kl_this_1 ).kl_count_153 > 0;
+    if ( kl_t2 ) goto bb2; else goto bb3;
+    bb2:
+#line 52 "codegen/owning_writes.kl"
+    ( *kl_this_1 ).kl_count_153 = ( *kl_this_1 ).kl_count_153 - 1;
+#line 55 "codegen/owning_writes.kl"
+    kl_t4 = ( *kl_this_1 ).kl_data_151 + ( *kl_this_1 ).kl_count_153;
+    kl_dying_3 = ( *kl_t4 );
+#line 53 "codegen/owning_writes.kl"
+    kl__owned__dtor( &kl_dying_3 );
+    goto bb1;
+    bb3:
+#line 61 "codegen/owning_writes.kl"
+    kl_rt_free( ( *kl_this_1 ).kl_data_151 );
+    return;
+}
+
+void kl__push__S5slots_M5owned( struct kl__slots* kl_this_1, struct kl__owned kl_value_2 )
+{
+    struct kl__owned* kl_t3;
+    bool kl_t4;
+#line 65 "codegen/owning_writes.kl"
+    kl_t4 = false;
+#line 69 "codegen/owning_writes.kl"
+    kl_t3 = ( *kl_this_1 ).kl_data_151 + ( *kl_this_1 ).kl_count_153;
+    ( *kl_t3 ) = kl_value_2;
+    kl_t4 = false;
+#line 71 "codegen/owning_writes.kl"
+    ( *kl_this_1 ).kl_count_153 = ( *kl_this_1 ).kl_count_153 + 1;
+#line 65 "codegen/owning_writes.kl"
+    if ( kl_t4 ) kl__owned__dtor( &kl_value_2 );
+    kl_t4 = false;
+    return;
+}
+
+struct kl__owned kl__pop__S5slots( struct kl__slots* kl_this_1 )
+{
+    struct kl__owned kl_t0;
+    struct kl__owned* kl_t2;
+#line 76 "codegen/owning_writes.kl"
+    ( *kl_this_1 ).kl_count_153 = ( *kl_this_1 ).kl_count_153 - 1;
+#line 79 "codegen/owning_writes.kl"
+    kl_t2 = ( *kl_this_1 ).kl_data_151 + ( *kl_this_1 ).kl_count_153;
+    kl_t0 = ( *kl_t2 );
+    return kl_t0;
+}
+
+struct kl__owned* kl__operator_index__S5slots_3u64( struct kl__slots* kl_this_1, uint64_t kl_index_2 )
+{
+    struct kl__owned* kl_t0;
+    bool kl_t3;
+    struct kl__owned* kl_t4;
+    struct kl__owned* kl_t5;
+#line 85 "codegen/owning_writes.kl"
+    kl_t3 = kl_index_2 < ( *kl_this_1 ).kl_count_153;
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 89 "codegen/owning_writes.kl"
+    kl_t4 = ( *kl_this_1 ).kl_data_151 + kl_index_2;
+    kl_t5 = &( *kl_t4 );
+    kl_t0 = kl_t5;
+    return kl_t0;
+    bb2:
+    kl_rt_panic( "codegen/owning_writes.kl", 85, "assertion failed: index < count" );
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__owned kl_a_1;
+    struct kl__owned* kl_t2;
+    struct kl__owned kl_b_4;
+    struct kl__owned* kl_t5;
+    struct kl__owned* kl_p_7;
+    struct kl__owned* kl_t8;
+    bool kl_t9;
+    bool kl_t10;
+    struct kl__owned* kl_t11;
+    uint64_t kl_t12;
+    bool kl_t13;
+    bool kl_t14;
+    struct kl__slots kl_s_15;
+    struct kl__slots* kl_t16;
+    struct kl__slots* kl_t18;
+    struct kl__owned kl_t19;
+    struct kl__owned* kl_t20;
+    struct kl__slots* kl_t23;
+    struct kl__owned kl_t24;
+    struct kl__owned* kl_t25;
+    bool kl_t28;
+    struct kl__slots* kl_t29;
+    struct kl__owned* kl_t30;
+    struct kl__owned kl_t31;
+    struct kl__owned* kl_t32;
+    bool kl_t34;
+    bool kl_t35;
+    struct kl__slots* kl_t36;
+    struct kl__owned* kl_t37;
+    struct kl__owned* kl_t38;
+    uint64_t kl_t39;
+    bool kl_t40;
+    struct kl__owned kl_last_41;
+    struct kl__slots* kl_t42;
+    struct kl__owned kl_t43;
+    bool kl_t44;
+    bool kl_t45;
+    struct kl__owned* kl_t46;
+    uint64_t kl_t47;
+    bool kl_t48;
+    bool kl_t49;
+    bool kl_t50;
+    bool kl_t51;
+    bool kl_t52;
+    bool kl_t53;
+    bool kl_t54;
+#line 101 "codegen/owning_writes.kl"
+    kl_t50 = false;
+#line 118 "codegen/owning_writes.kl"
+    kl_t51 = false;
+#line 119 "codegen/owning_writes.kl"
+    kl_t52 = false;
+#line 126 "codegen/owning_writes.kl"
+    kl_t53 = false;
+#line 133 "codegen/owning_writes.kl"
+    kl_t54 = false;
+#line 100 "codegen/owning_writes.kl"
+    kl_t2 = &kl_a_1;
+    kl__owned__R5owned_3u64__ctor( kl_t2, 1 );
+#line 101 "codegen/owning_writes.kl"
+    kl_t50 = false;
+    kl_t5 = &kl_b_4;
+    kl_t50 = true;
+    kl__owned__R5owned_3u64__ctor( kl_t5, 2 );
+#line 102 "codegen/owning_writes.kl"
+    kl_t8 = &kl_a_1;
+    kl_p_7 = kl_t8;
+#line 103 "codegen/owning_writes.kl"
+    kl__owned__dtor( &( *kl_p_7 ) );
+    ( *kl_p_7 ) = kl_b_4;
+    kl_t50 = false;
+#line 105 "codegen/owning_writes.kl"
+    kl_t10 = kl_live_1 != 1;
+    kl_t9 = kl_t10;
+    if ( kl_t9 ) goto bb2; else goto bb1;
+    bb1:
+    kl_t11 = &kl_a_1;
+    kl_t12 = kl__value__S5owned( kl_t11 );
+    kl_t13 = kl_t12 != 2;
+    kl_t9 = kl_t13;
+    goto bb2;
+    bb2:
+    if ( kl_t9 ) goto bb3; else goto bb4;
+    bb3:
+#line 107 "codegen/owning_writes.kl"
+    kl_t0 = 1;
+    if ( kl_t50 ) kl__owned__dtor( &kl_b_4 );
+    kl_t50 = false;
+    kl__owned__dtor( &kl_a_1 );
+    return kl_t0;
+    bb4:
+#line 99 "codegen/owning_writes.kl"
+    if ( kl_t50 ) kl__owned__dtor( &kl_b_4 );
+    kl_t50 = false;
+    kl__owned__dtor( &kl_a_1 );
+#line 111 "codegen/owning_writes.kl"
+    kl_t14 = kl_live_1 != 0;
+    if ( kl_t14 ) goto bb5; else goto bb6;
+    bb5:
+#line 113 "codegen/owning_writes.kl"
+    kl_t0 = 2;
+    return kl_t0;
+    bb6:
+#line 117 "codegen/owning_writes.kl"
+    kl_t16 = &kl_s_15;
+    kl__slots__R5slots__ctor( kl_t16 );
+#line 118 "codegen/owning_writes.kl"
+    kl_t18 = &kl_s_15;
+    kl_t20 = &kl_t19;
+    kl_t51 = true;
+    kl__owned__R5owned_3u64__ctor( kl_t20, 3 );
+    kl__push__S5slots_M5owned( kl_t18, kl_t19 );
+    kl_t51 = false;
+    if ( kl_t51 ) kl__owned__dtor( &kl_t19 );
+#line 119 "codegen/owning_writes.kl"
+    kl_t23 = &kl_s_15;
+    kl_t25 = &kl_t24;
+    kl_t52 = true;
+    kl__owned__R5owned_3u64__ctor( kl_t25, 4 );
+    kl__push__S5slots_M5owned( kl_t23, kl_t24 );
+    kl_t52 = false;
+    if ( kl_t52 ) kl__owned__dtor( &kl_t24 );
+#line 121 "codegen/owning_writes.kl"
+    kl_t28 = kl_live_1 != 2;
+    if ( kl_t28 ) goto bb7; else goto bb8;
+    bb7:
+#line 123 "codegen/owning_writes.kl"
+    kl_t0 = 3;
+    kl__slots__dtor( &kl_s_15 );
+    return kl_t0;
+    bb8:
+#line 126 "codegen/owning_writes.kl"
+    kl_t29 = &kl_s_15;
+    kl_t30 = kl__operator_index__S5slots_3u64( kl_t29, 0 );
+    kl_t32 = &kl_t31;
+    kl_t53 = true;
+    kl__owned__R5owned_3u64__ctor( kl_t32, 5 );
+    kl__owned__dtor( &( *kl_t30 ) );
+    ( *kl_t30 ) = kl_t31;
+    kl_t53 = false;
+    if ( kl_t53 ) kl__owned__dtor( &kl_t31 );
+#line 128 "codegen/owning_writes.kl"
+    kl_t35 = kl_live_1 != 2;
+    kl_t34 = kl_t35;
+    if ( kl_t34 ) goto bb10; else goto bb9;
+    bb9:
+    kl_t36 = &kl_s_15;
+    kl_t37 = kl__operator_index__S5slots_3u64( kl_t36, 0 );
+    kl_t38 = &( *kl_t37 );
+    kl_t39 = kl__value__S5owned( kl_t38 );
+    kl_t40 = kl_t39 != 5;
+    kl_t34 = kl_t40;
+    goto bb10;
+    bb10:
+    if ( kl_t34 ) goto bb11; else goto bb12;
+    bb11:
+#line 130 "codegen/owning_writes.kl"
+    kl_t0 = 4;
+    kl__slots__dtor( &kl_s_15 );
+    return kl_t0;
+    bb12:
+#line 133 "codegen/owning_writes.kl"
+    kl_t42 = &kl_s_15;
+    kl_t43 = kl__pop__S5slots( kl_t42 );
+    kl_t54 = true;
+    kl_last_41 = kl_t43;
+    kl_t54 = false;
+    if ( kl_t54 ) kl__owned__dtor( &kl_t43 );
+#line 135 "codegen/owning_writes.kl"
+    kl_t45 = kl_live_1 != 2;
+    kl_t44 = kl_t45;
+    if ( kl_t44 ) goto bb14; else goto bb13;
+    bb13:
+    kl_t46 = &kl_last_41;
+    kl_t47 = kl__value__S5owned( kl_t46 );
+    kl_t48 = kl_t47 != 4;
+    kl_t44 = kl_t48;
+    goto bb14;
+    bb14:
+    if ( kl_t44 ) goto bb15; else goto bb16;
+    bb15:
+#line 137 "codegen/owning_writes.kl"
+    kl_t0 = 5;
+    kl__owned__dtor( &kl_last_41 );
+    kl__slots__dtor( &kl_s_15 );
+    return kl_t0;
+    bb16:
+#line 116 "codegen/owning_writes.kl"
+    kl__owned__dtor( &kl_last_41 );
+    kl__slots__dtor( &kl_s_15 );
+#line 141 "codegen/owning_writes.kl"
+    kl_t49 = kl_live_1 != 0;
+    if ( kl_t49 ) goto bb17; else goto bb18;
+    bb17:
+#line 143 "codegen/owning_writes.kl"
+    kl_t0 = 6;
+    return kl_t0;
+    bb18:
+#line 146 "codegen/owning_writes.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}
