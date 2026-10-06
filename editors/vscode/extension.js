@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 // Runs `keelc --check --diagnostics=json --names` on each save, underlines what it reports,
-// colours each name by what it refers to, and goes from a name to its declaration.
+// colours each name by what it refers to, and goes from a name to its declaration - in the prelude
+// too, which keelc prints for it.
 
 'use strict';
 
@@ -40,16 +41,18 @@ const tokens_for = {
 // keelc's lines split on '\n' alone and its columns count bytes, so the conversion works on bytes.
 function lines_of( file )
 {
-    let bytes;
     try
     {
-        bytes = fs.readFileSync( file );
+        return split_lines( fs.readFileSync( file ) );
     }
     catch
     {
         return [];
     }
+}
 
+function split_lines( bytes )
+{
     const lines = [];
     let start = 0;
     for( let i = 0; i <= bytes.length; ++i )
@@ -67,6 +70,49 @@ function lines_of( file )
     }
 
     return lines;
+}
+
+// The prelude is compiled into keelc, so its text comes from the compiler that checked the file: a
+// read-only document under its own scheme, which keeps the `.kl` name and so Keel's highlighting.
+const prelude_path = '<prelude>';
+const prelude_scheme = 'keel-prelude';
+const preludes = new Map(); // compiler -> { mtime, bytes }
+
+function prelude_uri( compiler )
+{
+    return vscode.Uri.from( { scheme: prelude_scheme, path: '/prelude.kl', query: compiler } );
+}
+
+// Asked again only when the compiler is rebuilt; null when it cannot be run.
+function prelude_bytes( compiler )
+{
+    let mtime;
+    try
+    {
+        mtime = fs.statSync( compiler ).mtimeMs;
+    }
+    catch
+    {
+        return null;
+    }
+
+    const cached = preludes.get( compiler );
+    if( cached && cached.mtime === mtime )
+    {
+        return cached.bytes;
+    }
+
+    let bytes = null;
+    try
+    {
+        bytes = child_process.execFileSync( compiler, [ '--print-prelude' ] );
+    }
+    catch
+    {
+    }
+
+    preludes.set( compiler, { mtime, bytes } );
+    return bytes;
 }
 
 // A 1-based byte column on a 1-based line, as a 0-based UTF-16 one.
@@ -98,21 +144,27 @@ function range_of( lines, record )
     return new vscode.Range( line, start, line, end );
 }
 
-// keelc's output as diagnostics and names per absolute path. Every loaded file has an entry in
-// both, empty or not, so that fixing a file's last error clears it.
-function parse( stdout, cwd, saved )
+// keelc's output as diagnostics and names per file, keyed by URI string: an absolute path's, or the
+// prelude's. Every loaded file has an entry in both, empty or not, so that fixing a file's last error
+// clears it.
+function parse( stdout, cwd, saved, compiler )
 {
     const by_file = new Map();
     const names = new Map();
     const lines_cache = new Map();
 
-    const lines_for = ( file ) =>
+    const key_of = ( file ) =>
+        file === prelude_path ? prelude_uri( compiler ).toString() : vscode.Uri.file( path.resolve( cwd, file ) ).toString();
+
+    const lines_for = ( key ) =>
     {
-        if( !lines_cache.has( file ) )
+        if( !lines_cache.has( key ) )
         {
-            lines_cache.set( file, lines_of( file ) );
+            const uri = vscode.Uri.parse( key );
+            const bytes = uri.scheme === prelude_scheme ? prelude_bytes( compiler ) : null;
+            lines_cache.set( key, uri.scheme === prelude_scheme ? ( bytes ? split_lines( bytes ) : [] ) : lines_of( uri.fsPath ) );
         }
-        return lines_cache.get( file );
+        return lines_cache.get( key );
     };
 
     for( const text of stdout.split( '\n' ) )
@@ -134,7 +186,7 @@ function parse( stdout, cwd, saved )
 
         if( record.kind === 'file' )
         {
-            const file = path.resolve( cwd, record.path );
+            const file = key_of( record.path );
             if( !by_file.has( file ) )
             {
                 by_file.set( file, [] );
@@ -145,7 +197,7 @@ function parse( stdout, cwd, saved )
 
         if( record.kind === 'name' )
         {
-            const file = path.resolve( cwd, record.file );
+            const file = key_of( record.file );
             const kind = tokens_for[record.refers_to];
             if( kind && names.has( file ) )
             {
@@ -155,10 +207,10 @@ function parse( stdout, cwd, saved )
                 const name = { line: record.line - 1, start, length: end - start, type: kind[0], modifiers: kind[1] };
                 if( record.decl_file !== undefined )
                 {
-                    const decl_file = path.resolve( cwd, record.decl_file );
+                    const decl_file = key_of( record.decl_file );
                     const decl_lines = lines_for( decl_file );
                     name.declaration = {
-                        file: decl_file,
+                        uri: vscode.Uri.parse( decl_file ),
                         line: record.decl_line - 1,
                         start: utf16_col( decl_lines, record.decl_line, record.decl_col ),
                         end: utf16_col( decl_lines, record.decl_line, record.decl_end_col ),
@@ -175,12 +227,12 @@ function parse( stdout, cwd, saved )
         }
 
         // No span: shown at the top of the file that was saved.
-        let file = saved;
+        let file = vscode.Uri.file( saved ).toString();
         let range = new vscode.Range( 0, 0, 0, 0 );
 
         if( record.file !== undefined )
         {
-            file = path.resolve( cwd, record.file );
+            file = key_of( record.file );
             range = range_of( lines_for( file ), record );
         }
 
@@ -291,15 +343,19 @@ function activate( context )
                 return;
             }
 
-            const result = parse( stdout, cwd, saved );
-            for( const [ file, diagnostics ] of result.by_file )
+            const result = parse( stdout, cwd, saved, compiler );
+            for( const [ key, diagnostics ] of result.by_file )
             {
-                collection.set( vscode.Uri.file( file ), diagnostics );
+                collection.set( vscode.Uri.parse( key ), diagnostics );
             }
-            for( const [ file, list ] of result.names )
+            for( const [ key, list ] of result.names )
             {
-                names.set( file, list );
-                answer( file );
+                const uri = vscode.Uri.parse( key );
+                if( uri.scheme === 'file' )
+                {
+                    names.set( uri.fsPath, list );
+                    answer( uri.fsPath );
+                }
             }
             changed.fire();
         } );
@@ -313,6 +369,12 @@ function activate( context )
         onDidChangeSemanticTokens: changed.event,
         provideDocumentSemanticTokens( document, cancel )
         {
+            // keelc reports no names inside the prelude, so its document keeps the grammar's colours.
+            if( document.uri.scheme !== 'file' )
+            {
+                return null;
+            }
+
             const file = document.uri.fsPath;
 
             return new Promise( ( resolve ) =>
@@ -356,10 +418,19 @@ function activate( context )
             }
 
             const d = name.declaration;
-            return new vscode.Location( vscode.Uri.file( d.file ), new vscode.Range( d.line, d.start, d.line, d.end ) );
+            return new vscode.Location( d.uri, new vscode.Range( d.line, d.start, d.line, d.end ) );
         },
     };
     context.subscriptions.push( vscode.languages.registerDefinitionProvider( { language: 'keel' }, definitions ) );
+
+    const prelude = {
+        provideTextDocumentContent( uri )
+        {
+            const bytes = prelude_bytes( uri.query );
+            return bytes ? bytes.toString( 'utf8' ) : `// ${uri.query} could not print its prelude.\n`;
+        },
+    };
+    context.subscriptions.push( vscode.workspace.registerTextDocumentContentProvider( prelude_scheme, prelude ) );
 
     context.subscriptions.push( vscode.workspace.onDidSaveTextDocument( check ) );
     context.subscriptions.push( vscode.workspace.onDidOpenTextDocument( check ) );

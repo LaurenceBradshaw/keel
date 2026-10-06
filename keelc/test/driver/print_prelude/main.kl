@@ -1,0 +1,6 @@
+// The prelude is compiled into keelc and is no file on disk, so an editor asks keelc for its text.
+// The input is never read.
+i32 main()
+{
+    return 0;
+}

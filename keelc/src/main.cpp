@@ -244,6 +244,7 @@ int main( int argc, char** argv )
         ( "names",         "With --diagnostics=json, also say what each name refers to" )
         ( "package",       "A package and its directory, as name=<dir>; may be repeated", cxxopts::value<std::vector<std::string>>() )
         ( "runtime",       "Link this runtime library instead of the installed one", cxxopts::value<std::string>() )
+        ( "print-prelude", "Print the prelude every program sees, and exit" )
         ( "v,version",     "Print version information and exit" )
         ( "h,help",        "Print usage and exit" )
         ( "input",         "Source file",                        cxxopts::value<std::string>() );
@@ -272,6 +273,13 @@ int main( int argc, char** argv )
     if( args.count( "version" ) )
     {
         fmt::print( "{}\n", keel::version_string() );
+        return 0;
+    }
+
+    // An editor's only way to show it: `<prelude>` is no file on disk.
+    if( args.count( "print-prelude" ) )
+    {
+        fmt::print( "{}", keel::prelude_source() );
         return 0;
     }
 
