@@ -3,6 +3,7 @@
 
 #include "lex/lexer.h"
 
+#include <algorithm>
 #include <cerrno>
 #include <cstdlib>
 #include <optional>
@@ -925,6 +926,11 @@ std::vector<Token> lex( File_id file, const Source_manager& sm, Interner& intern
     diags.tokens( file, std::move( token_spans ) );
     check_braces( tokens, diags );
     return tokens;
+}
+
+bool is_identifier( std::string_view text )
+{
+    return !text.empty() && is_ident_start( text[0] ) && std::all_of( text.begin() + 1, text.end(), is_ident_continue );
 }
 
 } // namespace keel

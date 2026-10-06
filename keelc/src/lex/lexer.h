@@ -19,4 +19,6 @@ namespace keel
 std::vector<Token>
 lex( File_id file, const Source_manager& sm, Interner& interner, Literal_pool& literals, Diagnostics& diags );
 
+bool is_identifier( std::string_view text );
+
 } // namespace keel

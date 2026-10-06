@@ -304,6 +304,7 @@ int main( int argc, char** argv )
         return 2;
     }
 
+    keel::Interner             interner;
     std::vector<keel::Package> packages;
 
     if( args.count( "package" ) )
@@ -318,13 +319,27 @@ int main( int argc, char** argv )
                 return 2;
             }
 
-            if( spec.substr( 0, equals ) == "prelude" )
+            const std::string name = spec.substr( 0, equals );
+
+            if( name == "prelude" )
             {
                 fmt::print( stderr, "keelc: --package cannot name a package 'prelude', which is the prelude's own\n" );
                 return 2;
             }
 
-            packages.push_back( keel::Package { .name = spec.substr( 0, equals ), .root = spec.substr( equals + 1 ) } );
+            if( interner.is_keyword( interner.find( name ) ) )
+            {
+                fmt::print( stderr, "keelc: --package name '{}' is a keyword\n", name );
+                return 2;
+            }
+
+            if( !keel::is_identifier( name ) )
+            {
+                fmt::print( stderr, "keelc: --package name '{}' is not an identifier\n", name );
+                return 2;
+            }
+
+            packages.push_back( keel::Package { .name = name, .root = spec.substr( equals + 1 ) } );
         }
     }
 
@@ -357,7 +372,6 @@ int main( int argc, char** argv )
         return 2;
     }
 
-    keel::Interner          interner;
     keel::Diagnostics       diagnostics;
     keel::Literal_pool      literals;
     std::vector<keel::Name> names;

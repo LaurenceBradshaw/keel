@@ -1,0 +1,6 @@
+// A keyword lexes as itself, so `struct::` could never name a package; the driver refuses it before
+// anything is loaded.
+i32 main()
+{
+    return 0;
+}

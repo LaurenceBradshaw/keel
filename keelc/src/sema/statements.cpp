@@ -544,13 +544,19 @@ void Statements::visit_global( Node_id id )
         return;
     }
 
-    // A struct literal lowers to a temporary and field assignments, and there is nowhere at C file
-    // scope to put those. Checked before the initialiser so `Point origin;` is caught too.
+    // A struct literal or a class's construction lowers to a temporary and field assignments,
+    // and there is nowhere at C file scope to put those. Checked before the initialiser so
+    // `Point origin;` is caught too.
     if( table_.is_struct( type ) )
     {
+        const bool is_class = ast_.kind( table_.get( type ).declaration ) == Node_kind::Class_decl;
         reporter_.error_at(
             ast_.span( id ),
-            fmt::format( "a struct cannot be a {} yet", is_static_field ? "static field" : "file-scope variable" )
+            fmt::format(
+                "a {} cannot be a {} yet",
+                is_class ? "class" : "struct",
+                is_static_field ? "static field" : "file-scope variable"
+            )
         );
         return;
     }

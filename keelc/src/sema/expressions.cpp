@@ -347,10 +347,27 @@ Type_id Expressions::infer_call( Node_id id )
 
         if( candidates.empty() && hidden != 0 )
         {
+            const bool is_prelude_str =
+                name == "str" && resolution_.package_of( ast_.span( decl ).file ) == resolution_.prelude_package();
+
+            bool has_factory = false;
+            for( const Node_id member : ast_.members( decl ) )
+            {
+                const Type_id member_type = types_.type_of( member );
+                if( is_static_method( ast_, member ) && is_visible_from( ast_, member, current_type() ) &&
+                    member_type.is_valid() && table_.is_struct( member_type ) && table_.get( member_type ).declaration == decl )
+                {
+                    has_factory = true;
+                    break;
+                }
+            }
+
             reporter_.error_at(
                 ast_.span( callee ),
                 fmt::format( "`{}`'s constructor is private", name ),
-                "build it through one of its own static methods instead"
+                is_prelude_str ? "only a string literal makes one"
+                : has_factory  ? "build it through one of its own static methods instead"
+                               : ""
             );
             type_the_arguments_anyway();
             return types_.record( id, table_.builtin( Type_kind::Error ) );

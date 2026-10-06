@@ -46,4 +46,10 @@ error: `x` is private to `Plain`
 93 |     return p.x;
    |            ^^^ only that type's own members may name it
 
-8 errors generated
+error: `Locked`'s constructor is private
+   --> sema/errors_access_control.kl:119:16
+    |
+119 |     Locked l = Locked( 1 );
+    |                ^^^^^^
+
+9 errors generated

@@ -93,6 +93,34 @@ i32 build_from_a_literal()
     return p.x;
 }
 
+// Neither static method builds one from outside: one is private, the other returns something else.
+class Locked
+{
+    i32 v;
+
+    private Locked( i32 n )
+    {
+        v = n;
+    }
+
+    private static Locked make( i32 n )
+    {
+        return Locked( n );
+    }
+
+    static i32 count()
+    {
+        return 0;
+    }
+};
+
+i32 call_a_constructor_with_no_way_round()
+{
+    Locked l = Locked( 1 );
+
+    return 0;
+}
+
 i32 main()
 {
     return 0;

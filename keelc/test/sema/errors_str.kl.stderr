@@ -1,4 +1,4 @@
-error: a struct cannot be a file-scope variable yet
+error: a class cannot be a file-scope variable yet
  --> sema/errors_str.kl:3:1
   |
 3 | str global = "file scope";
@@ -26,7 +26,7 @@ error: `str`'s constructor is private
   --> sema/errors_str.kl:30:13
    |
 30 |     str t = str( s.data, s.size );
-   |             ^^^ build it through one of its own static methods instead
+   |             ^^^ only a string literal makes one
 
 error: cannot take the address of this expression
   --> sema/errors_str.kl:36:20

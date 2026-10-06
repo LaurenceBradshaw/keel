@@ -25,6 +25,9 @@ class Counter
     // A struct at file scope needs its literal lowered somewhere, and there is nowhere yet.
     static Point origin;
 
+    // Nor a class, for the same reason.
+    static str label;
+
     // Shares the member namespace with the field below.
     static i32 id;
 

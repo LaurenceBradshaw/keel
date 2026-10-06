@@ -1,0 +1,6 @@
+// A package is named in source as `name::`, so a name that is not an identifier could never be
+// reached; the driver refuses it before anything is loaded.
+i32 main()
+{
+    return 0;
+}
