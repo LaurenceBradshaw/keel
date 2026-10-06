@@ -1093,9 +1093,9 @@ Operand Lowering::lower_method_call_on( Node_id id, Node_id method, Operand rece
 
     // Every argument is lowered before any is converted, so the order the statements come out in is
     // the order the arguments were written - §7.1's guarantee, which C leaves unspecified.
-    for( const Node_id argument : arguments )
+    for( std::size_t i = 0; i < arguments.size(); ++i )
     {
-        operands.push_back( lower_expression( argument ) );
+        operands.push_back( lower_argument( arguments[i], parameters[i + 1], callee_bound ) );
     }
 
     // From 1: parameter 0 is the receiver, which was never written at the call site.
@@ -5514,6 +5514,41 @@ TEST_CASE( "lower_passes_arguments_after_the_receiver", "[ir][lower][method]" )
 
     INFO( caller );
     REQUIRE( caller.find( "const 7, const 9" ) != std::string::npos );
+}
+
+// A free function's borrow and a method's travel alike. The method's was cast from the value, which
+// C refuses for a struct and, for an `i32`, runs and reads address 1.
+TEST_CASE( "lower_passes_a_method's_borrowed_argument_by_address", "[ir][lower][method]" )
+{
+    SECTION( "`const ref`" )
+    {
+        Lowered p( "struct B { i32 n; bool same( const ref i32 o ) const { return n == o; } };\n"
+                   "i32 main() { B a = B { 1 }; i32 c = 1; bool r = a.same( c ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string caller = p.named( "main" );
+
+        INFO( caller );
+        REQUIRE( caller.find( "_6 = &_3" ) != std::string::npos );
+        REQUIRE( caller.find( "as i32*" ) == std::string::npos );
+    }
+
+    SECTION( "`ref`, marked at the call" )
+    {
+        Lowered p( "struct B { i32 n; void give( ref i32 o ) const { o = n; } };\n"
+                   "i32 main() { B a = B { 1 }; i32 c = 0; a.give( ref c ); return c; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string caller = p.named( "main" );
+
+        INFO( caller );
+        REQUIRE( caller.find( "= &_3" ) != std::string::npos );
+        REQUIRE( caller.find( "as i32*" ) == std::string::npos );
+    }
 }
 
 // D22 reaches through a pointer for a field, and a method is reached the same way - so the receiver

@@ -1,0 +1,58 @@
+// A method's `ref` and `const ref` parameters take the argument's address, as a free function's do,
+// whether the call names its object or is a sibling's bare call. Each check returns its own code.
+struct Counter
+{
+    i32 n;
+
+    bool same( const ref Counter other ) const
+    {
+        return n == other.n;
+    }
+
+    bool equals( const ref i32 value ) const
+    {
+        return n == value;
+    }
+
+    bool equals_through_a_sibling( const ref i32 value ) const
+    {
+        return equals( value );
+    }
+
+    void give( ref i32 into ) const
+    {
+        into = n;
+    }
+};
+
+i32 main()
+{
+    Counter a     = Counter { 3 };
+    Counter b     = Counter { 3 };
+    i32     three = 3;
+    i32     given = 0;
+
+    if( !a.same( b ) )
+    {
+        return 1;
+    }
+
+    if( !a.equals( three ) )
+    {
+        return 2;
+    }
+
+    if( !a.equals_through_a_sibling( three ) )
+    {
+        return 3;
+    }
+
+    a.give( ref given );
+
+    if( given != 3 )
+    {
+        return 4;
+    }
+
+    return 0;
+}
