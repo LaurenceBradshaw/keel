@@ -6744,7 +6744,15 @@ which §7 says the runtime provides and `kl_rt.h` does not (it has `alloc`, `all
      moved place is the target, written identically, with no call in its index, and evaluated
      once (the lowering takes its address once); the right side names the target's root nowhere
      else; the write-back initialises rather than assigns, so 4a's drop is skipped for it; a
-     global root is refused. May slip to just after M8 without blocking step 5.
+     global root is refused. May slip to just after M8 without blocking step 5. **M9's `try`
+     breaks the soundness argument** (noted 2026-10-06): `v[i] = try f( move v[i] );` returns
+     between the move and the write-back, and the return's drops destroy `v` with slot `i`
+     empty. `try` is not unwinding - it is a visible `return` the drop pass already handles - but
+     it is an exit inside the statement, so the rule gains one clause when M9 lands. Nothing in an
+     expression can leave the function before then. **Revisit with M9's `try`**: the danger is
+     an exit after the move, so the clause may be narrower than "no `try` on the right" - a
+     `try` evaluated before the move, as in `v[i] = f( try g(), move v[i] );`, leaves nothing
+     empty when it returns.
    **Moving out of a raw slot** needs no new rule: indexing a `T[*]` already needs `unsafe`, and
    `move data[i]` leaves the bytes in place and the slot logically empty, untracked. Keeping the
    container's invariant - refilling it, or moving it past `count` - is the author's part of
