@@ -145,6 +145,7 @@ private:
     Type_id indirect_call( Node_id id, Node_id declaration, Type_id signature );
 
     Type_id infer_field( Node_id id );
+    Type_id infer_string_literal( Node_id id );
 
     // A composite constructor, not a value literal: its type is fixed by its name rather than
     // adopted from context, which is why it has no place in Literals::infer_literal.

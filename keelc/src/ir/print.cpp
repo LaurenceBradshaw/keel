@@ -11,6 +11,32 @@ namespace keel
 namespace
 {
 
+// As Keel source would write them.
+std::string escape_bytes( std::string_view bytes )
+{
+    std::string out;
+
+    for( const char c : bytes )
+    {
+        const auto byte = static_cast<unsigned char>( c );
+
+        if( c == '"' || c == '\\' )
+        {
+            out += fmt::format( "\\{}", c );
+        }
+        else if( byte < 0x20 || byte >= 0x7f )
+        {
+            out += fmt::format( "\\x{:02x}", byte );
+        }
+        else
+        {
+            out.push_back( c );
+        }
+    }
+
+    return out;
+}
+
 // Everything the printer needs to turn a handle back into a name, bundled so the recursive helpers
 // below do not each carry five parameters.
 struct Printer
@@ -138,6 +164,8 @@ struct Printer
             return fmt::format( "offset {}", name_of( value.callee ) );
         case Rvalue_kind::Field_read:
             return fmt::format( "read {} at {}", operand( value.a ), operand( value.b ) );
+        case Rvalue_kind::Literal_bytes:
+            return fmt::format( "bytes \"{}\"", escape_bytes( literals.string( value.a.constant ) ) );
         }
 
         return "<bad rvalue>";

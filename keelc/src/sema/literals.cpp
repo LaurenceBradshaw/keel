@@ -518,14 +518,54 @@ TEST_CASE( "type_checker_types_a_character_literal_as_an_integer", "[sema][types
     }
 }
 
-// A string has no type until String exists (M7), so it must say so rather than vanish.
-TEST_CASE( "type_checker_rejects_a_string_literal", "[sema][types]" )
+// The prelude's `str`, built by its private constructor, which only a literal may call.
+TEST_CASE( "type_checker_types_a_string_literal_as_the_prelude's_str", "[sema][types][prelude]" )
 {
-    const Typed p( "i32 main() { u8 s = \"hello\"; return 0; }" );
+    SECTION( "a literal is a `str`" )
+    {
+        const Typed p( "i32 main() { auto s = \"hello\"; return 0; }" );
 
-    INFO( p.rendered() );
-    REQUIRE( p.errors() == 1 );
-    REQUIRE( p.rendered().find( "string literals are not supported yet" ) != std::string::npos );
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const Node_id literal = p.nth( Node_kind::String_literal, 0 );
+
+        REQUIRE( p.type_name( literal ) == "str" );
+
+        const Node_id constructor = p.types().callee_of( literal );
+
+        REQUIRE( constructor.is_valid() );
+        REQUIRE( p.ast().kind( constructor ) == Node_kind::Constructor_decl );
+    }
+
+    // Bare, as every prelude type reads.
+    SECTION( "and a mismatch names it" )
+    {
+        const Typed p( "i32 main() { u8 s = \"hello\"; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "expected `u8`, but got `str`" ) != std::string::npos );
+    }
+
+    SECTION( "even where the program declares a `str` of its own" )
+    {
+        const Typed p( "struct str { i32 n; };\ni32 main() { str mine = \"abc\"; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "expected `str`, but got `str`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "two different types are both named `str`" ) != std::string::npos );
+    }
+
+    SECTION( "which the program cannot call itself" )
+    {
+        const Typed p( "i32 main() { str s = \"abc\"; str t = str( s.data, s.size ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`str`'s constructor is private" ) != std::string::npos );
+    }
 }
 
 // A literal takes its type from the operand beside it. Without this, `u32 bits; bits != 0` compares

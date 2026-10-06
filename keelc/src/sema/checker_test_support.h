@@ -3,9 +3,9 @@
 
 #pragma once
 
-// The unit-test fixture. One `Typed` runs lex, parse, resolve and type_check over a source string
-// and answers questions about the result, so every class in sema/ asks them the same way. Included
-// only from inside `#ifdef ENABLE_UNIT_TESTS`.
+// The unit-test fixture. One `Typed` runs lex, parse, resolve and type_check over a source string,
+// with the shipped prelude, and answers questions about the result, so every class in sema/ asks
+// them the same way. Included only from inside `#ifdef ENABLE_UNIT_TESTS`.
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -13,10 +13,12 @@
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <utility>
 
 #include "common/interner.h"
 #include "common/source_manager.h"
 #include "lex/lexer.h"
+#include "parse/loader.h"
 #include "parse/parser.h"
 #include "sema/type_checker.h"
 
@@ -31,8 +33,9 @@ public:
     explicit Typed( std::string_view source )
     {
         file_          = sm_.add_file( "t.kl", std::string( source ) );
-        ast_           = parse( lex( file_, sm_, interner_, literal_pool_, diags_ ), sm_, diags_ );
-        const auto res = resolve( ast_, sm_, interner_, diags_ );
+        Program loaded = load_program( file_, sm_, interner_, literal_pool_, diags_ );
+        ast_           = std::move( loaded.ast );
+        const auto res = resolve( ast_, sm_, interner_, diags_, loaded.imports );
         earlier_       = diags_.error_count();
         types_         = type_check( ast_, res, literal_pool_, sm_, interner_, diags_ );
     }

@@ -147,6 +147,10 @@ void check_rvalue( const Function& func, const Rvalue& value, std::string_view w
         operand_at( value.a, "object" );
         operand_at( value.b, "offset" );
         return;
+
+    case Rvalue_kind::Literal_bytes:
+        operand_at( value.a, "literal" );
+        return;
     }
 }
 

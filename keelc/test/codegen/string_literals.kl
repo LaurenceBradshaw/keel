@@ -1,0 +1,68 @@
+// A string literal is the prelude's `str`: its bytes, escapes decoded, and their count, which leaves
+// out the `0` C stores after them. Each check returns its own code.
+struct Named
+{
+    str name;
+    i32 id;
+};
+
+u64 length( str s )
+{
+    return s.size;
+}
+
+str pick( bool first )
+{
+    return first ? "one" : "three";
+}
+
+i32 main()
+{
+    str s = "a\0b\"?\x41";
+
+    if( s.size != 6 )
+    {
+        return 1;
+    }
+
+    unsafe
+    {
+        if( s.data[ 0 ] != 97 || s.data[ 1 ] != 0 || s.data[ 3 ] != 34 || s.data[ 5 ] != 65 )
+        {
+            return 2;
+        }
+
+        // The `0` after the bytes, which C is given and the size leaves out.
+        if( s.data[ 6 ] != 0 )
+        {
+            return 3;
+        }
+    }
+
+    if( "".size != 0 || "hello".size != 5 )
+    {
+        return 4;
+    }
+
+    if( length( "four" ) != 4 || pick( false ).size != 5 )
+    {
+        return 5;
+    }
+
+    Named n = Named { "abc", 1 };
+
+    if( n.name.size != 3 )
+    {
+        return 6;
+    }
+
+    // Replacing the whole `str` is not writing its fields.
+    s = "yy";
+
+    if( s.size != 2 )
+    {
+        return 7;
+    }
+
+    return 0;
+}

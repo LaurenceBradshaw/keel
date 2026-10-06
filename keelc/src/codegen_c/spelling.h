@@ -59,4 +59,6 @@ std::string c_float( f64 value );
 // first would overflow before the minus ran. The temporary each operation writes into carries the
 // explicit C type instead.
 std::string c_integer( u64 value );
+
+std::string c_string( std::string_view str );
 } // namespace keel

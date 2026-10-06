@@ -120,8 +120,9 @@ enum class Rvalue_kind : u8
     Release,
     Function_address,
     Indirect_call,
-    Field_offset, // callee is the Field_decl; the aggregate is argument 0 of the field type
-    Field_read    // a is the object's address, b the offset
+    Field_offset,  // callee is the Field_decl; the aggregate is argument 0 of the field type
+    Field_read,    // a is the object's address, b the offset
+    Literal_bytes, // the address of a string literal's bytes; a is the literal
 };
 
 // How a value is produced. One tagged struct rather than a variant hierarchy, as Node and Type
@@ -330,6 +331,11 @@ inline Rvalue function_address( Node_id callee, Type_id type, std::vector<Type_i
     return Rvalue {
         .kind = Rvalue_kind::Function_address, .type = type, .callee = callee, .type_arguments = std::move( type_arguments )
     };
+}
+
+inline Rvalue literal_bytes( Literal_id literal, Type_id type )
+{
+    return Rvalue { .kind = Rvalue_kind::Literal_bytes, .type = type, .a = constant( literal, type ) };
 }
 
 inline Rvalue field_offset( Node_id field, Type_id type )

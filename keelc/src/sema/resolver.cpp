@@ -51,6 +51,7 @@ private:
     bool    chain_overload( Node_id existing, Node_id added );
     Node_id lookup( Symbol_id name, Node_id use );
     Node_id lookup_in( Symbol_id package, Symbol_id name, Node_id use );
+    Node_id prelude_str() const;
     Node_id lookup_qualified( Node_id package, Node_id use );
     Node_id visible_from( Node_id use, Node_id head );
     bool    refuse_builtin_name( Symbol_id name, Node_id decl );
@@ -187,6 +188,12 @@ void Resolver::visit( Node_id id )
         visit( ast_.child( id, 0 ) ); // type
         visit( ast_.child( id, 1 ) ); // Var_decl arity of 2: type, initialiser
         declare( scopes_.back(), Symbol_id { ast_.aux( id ) }, id );
+        return;
+    case Node_kind::String_literal:
+        if( !bindings_[id.v].is_valid() )
+        {
+            bindings_[id.v] = prelude_str();
+        }
         return;
     case Node_kind::Name_expr:
     {
@@ -759,6 +766,25 @@ Node_id Resolver::lookup_in( Symbol_id package, Symbol_id name, Node_id use )
 
     const auto found = scope->second.names.find( name );
     return found != scope->second.names.end() ? visible_from( use, found->second ) : Node_id {};
+}
+
+Node_id Resolver::prelude_str() const
+{
+    if( !imports_.prelude_package().is_valid() )
+    {
+        return Node_id {};
+    }
+
+    const auto scope = packages_.find( imports_.prelude_package() );
+
+    if( scope == packages_.end() )
+    {
+        return Node_id {};
+    }
+
+    const Symbol_id name  = interner_.find( "str" );
+    const auto      found = scope->second.names.find( name );
+    return found != scope->second.names.end() ? found->second : Node_id {};
 }
 
 Node_id Resolver::visible_from( Node_id use, Node_id head )
@@ -1899,7 +1925,7 @@ public:
     }
 
     // The file, without `.kl`, whose declaration main.kl's `nth` `kind` named `name` is bound to, as
-    // `a`, `kl/geom` or `<prelude>`; empty when it is bound to nothing.
+    // `a`, `kl/geom` or `<prelude>`; empty when it is bound to nothing. A string literal has no name.
     std::string bound_into( Node_kind kind, std::string_view name, u32 nth = 0 ) const
     {
         const Ast& ast = program_.ast;
@@ -1909,7 +1935,7 @@ public:
             const Node_id id { i };
 
             if( ast.kind( id ) != kind || ast.span( id ).file != input_ ||
-                interner_.text( Symbol_id { ast.aux( id ) } ) != name )
+                ( kind != Node_kind::String_literal && interner_.text( Symbol_id { ast.aux( id ) } ) != name ) )
             {
                 continue;
             }
@@ -2171,6 +2197,41 @@ TEST_CASE( "resolver_looks_in_the_prelude_after_the_file's_own_package", "[sema]
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "`main` is not declared" ) != std::string::npos );
+    }
+}
+
+// By declaration: the program's own `str` is a different type, and a literal is never one.
+TEST_CASE( "resolver_binds_a_string_literal_to_the_prelude's_str", "[sema][resolve][prelude]" )
+{
+    constexpr std::string_view prelude = "class str { i32 n; private str() { n = 0; } };\n";
+
+    SECTION( "a literal is bound to it" )
+    {
+        const Resolved_program p( { { "main.kl", "i32 main() { auto s = \"abc\"; return 0; }\n" } }, prelude );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.bound_into( Node_kind::String_literal, {} ) == "<prelude>" );
+    }
+
+    SECTION( "even where the program declares a `str` of its own" )
+    {
+        const Resolved_program p(
+            { { "main.kl", "struct str { i32 n; };\ni32 main() { auto s = \"abc\"; return 0; }\n" } }, prelude
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.bound_into( Node_kind::String_literal, {} ) == "<prelude>" );
+    }
+
+    SECTION( "and to nothing where the prelude has none" )
+    {
+        const Resolved_program p( { { "main.kl", "struct str { i32 n; };\ni32 main() { auto s = \"abc\"; return 0; }\n" } } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.bound_into( Node_kind::String_literal, {} ).empty() );
     }
 }
 

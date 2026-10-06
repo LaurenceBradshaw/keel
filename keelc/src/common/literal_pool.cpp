@@ -13,6 +13,7 @@ Literal_pool::Literal_pool()
     // Dummy values in slot 0
     integers_.push_back( {} );
     floats_.push_back( {} );
+    strings_.push_back( {} );
 }
 
 Literal_id Literal_pool::add_integer( u64 magnitude )
@@ -27,6 +28,12 @@ Literal_id Literal_pool::add_float( f64 value )
     return Literal_id { narrow_cast<u32>( floats_.size() - 1 ) };
 }
 
+Literal_id Literal_pool::add_string( std::string bytes )
+{
+    strings_.push_back( std::move( bytes ) );
+    return Literal_id { narrow_cast<u32>( strings_.size() - 1 ) };
+}
+
 u64 Literal_pool::integer( Literal_id id ) const
 {
     assert( id.is_valid() && id.v < integers_.size() && "invalid Literal_id" );
@@ -37,6 +44,12 @@ f64 Literal_pool::floating( Literal_id id ) const
 {
     assert( id.is_valid() && id.v < floats_.size() && "invalid Literal_id" );
     return floats_[id.v];
+}
+
+std::string_view Literal_pool::string( Literal_id id ) const
+{
+    assert( id.is_valid() && id.v < strings_.size() && "invalid Literal_id" );
+    return std::string_view( strings_[id.v] );
 }
 
 } // namespace keel
@@ -74,6 +87,17 @@ TEST_CASE( "literal_pool_round_trips_values", "[common][literals]" )
 
         REQUIRE( pool.floating( f ) == 1.5 );
         REQUIRE( pool.integer( small ) == 42 ); // unmoved by the float
+    }
+
+    // A literal's size counts the bytes, so a zero inside one is one of them.
+    SECTION( "strings keep every byte, a zero included" )
+    {
+        const Literal_id s     = pool.add_string( std::string( "a\0b", 3 ) );
+        const Literal_id empty = pool.add_string( "" );
+
+        REQUIRE( pool.string( s ) == std::string_view( "a\0b", 3 ) );
+        REQUIRE( pool.string( empty ).empty() );
+        REQUIRE( pool.integer( small ) == 42 ); // unmoved by the strings
     }
 
     SECTION( "handles stay valid as the pool grows" )

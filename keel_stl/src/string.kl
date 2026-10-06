@@ -10,6 +10,18 @@ class string
         bytes = list<u8>();
     }
 
+    string( str text )
+    {
+        bytes = list<u8>::with_capacity( text.size );
+        for( u64 i = 0; i < text.size; i++ )
+        {
+            unsafe
+            {
+                bytes.push( text.data[ i ] );
+            }
+        }
+    }
+
     public static string with_capacity( u64 capacity )
     {
         string result = string();

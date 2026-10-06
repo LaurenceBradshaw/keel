@@ -56,6 +56,7 @@ private:
     // One per construct, dispatched from lower_expression. The small cases stay inline there:
     // extracting a two-line literal would cost a name and buy nothing.
     Operand lower_struct_literal( Node_id id );
+    Operand lower_string_literal( Node_id id );
     Operand lower_binary( Node_id id );
     Operand lower_unary( Node_id id );
     Operand lower_call( Node_id id );
@@ -848,6 +849,39 @@ Operand Lowering::lower_struct_literal( Node_id id )
     return copy( builder_.place( temp ), type );
 }
 
+Operand Lowering::lower_string_literal( Node_id id )
+{
+    const Span    span        = ast_.span( id );
+    const Type_id type        = type_of( id );
+    const Node_id constructor = types_.callee_of( id );
+
+    // `str( this, data, size )`, called as the checker lets no program call it.
+    const std::span<const Node_id> parameters = ast_.children( ast_.child( constructor, 1 ) );
+
+    const Type_id    receiver_type = binding_type_under( parameters[0], {} );
+    const Type_id    data_type     = type_under( parameters[1], {} );
+    const Type_id    size_type     = type_under( parameters[2], {} );
+    const Literal_id bytes { ast_.aux( id ) };
+
+    const Local_id local = builder_.add_local( type, span );
+
+    const Operand operands[] = {
+        copy(
+            builder_.place( builder_.into_temp( address_of( builder_.place( local ), receiver_type ), receiver_type, span ) ),
+            receiver_type
+        ),
+        copy( builder_.place( builder_.into_temp( literal_bytes( bytes, data_type ), data_type, span ) ), data_type ),
+        constant( literal_pool_.add_integer( literal_pool_.string( bytes ).size() ), size_type ),
+    };
+
+    const u32     first = builder_.add_operands( operands );
+    const Type_id none  = type_of( constructor );
+
+    builder_.into_temp( call( constructor, first, 3, none ), none, span );
+
+    return copy( builder_.place( local ), type );
+}
+
 Operand Lowering::lower_binary( Node_id id )
 {
     const Token_kind op = static_cast<Token_kind>( ast_.aux( id ) );
@@ -1365,6 +1399,8 @@ Operand Lowering::lower_expression( Node_id id )
     }
     case Node_kind::Struct_literal:
         return lower_struct_literal( id );
+    case Node_kind::String_literal:
+        return lower_string_literal( id );
     case Node_kind::Binary_expr:
         return lower_binary( id );
     case Node_kind::Conditional_expr:
@@ -1533,6 +1569,7 @@ Place Lowering::lower_place( Node_id id )
     // A value, not a place - but `( c ? a : b ).t` projects from one, and lower_conditional has
     // already put the result in a local. The same answer a call in this position gets.
     case Node_kind::Conditional_expr:
+    case Node_kind::String_literal:
     {
         return lower_expression( id ).place;
     }
@@ -2429,6 +2466,7 @@ lower( const Ast& ast, const Resolution& resolution, Types& types, Literal_pool&
 #include "ir/print.h"
 #include "ir/verify.h"
 #include "lex/lexer.h"
+#include "parse/loader.h"
 #include "parse/parser.h"
 
 namespace keel
@@ -2437,7 +2475,8 @@ namespace
 {
 
 // The whole front end, so what is lowered is a genuinely typed AST rather than one assembled by
-// hand. A lowering bug that only appears on real input is the kind worth catching.
+// hand. A lowering bug that only appears on real input is the kind worth catching. The prelude is
+// empty unless a case passes one, since its functions would join every case's list.
 struct Lowered
 {
     Source_manager sm;
@@ -2450,13 +2489,14 @@ struct Lowered
 
     std::vector<Function> functions;
 
-    explicit Lowered( std::string_view source )
+    explicit Lowered( std::string_view source, std::string_view prelude = {} )
     {
         const File_id file = sm.add_file( "t.kl", std::string( source ) );
 
-        ast        = parse( lex( file, sm, interner, literals, diags ), sm, diags );
-        resolution = resolve( ast, sm, interner, diags );
-        types      = type_check( ast, resolution, literals, sm, interner, diags );
+        Program program = load_program( file, sm, interner, literals, diags, {}, prelude );
+        ast             = std::move( program.ast );
+        resolution      = resolve( ast, sm, interner, diags, program.imports );
+        types           = type_check( ast, resolution, literals, sm, interner, diags );
 
         if( !diags.has_errors() )
         {
@@ -4411,6 +4451,44 @@ TEST_CASE( "lower_lowers_a_destructor", "[ir][lower][aggregates]" )
         REQUIRE( p.clean() );
         REQUIRE( text.find( "storage_live" ) != std::string::npos );
         REQUIRE( text.find( "storage_live _1" ) == std::string::npos ); // never the receiver
+    }
+}
+
+// A literal is `str`'s constructor called on its bytes and their count, which leaves out the `0`
+// C is given after them.
+TEST_CASE( "lower_lowers_a_string_literal_to_str's_constructor", "[ir][lower][prelude]" )
+{
+    SECTION( "as a value" )
+    {
+        Lowered p( "i32 main() { str s = \"a\\0b\"; return 0; }", prelude_source() );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string text = p.named( "main" );
+
+        INFO( text );
+        REQUIRE( text.find( "_3 = &_2" ) != std::string::npos );
+        REQUIRE( text.find( "_4 = bytes \"a\\x00b\"" ) != std::string::npos );
+        REQUIRE( text.find( "call str(copy _3, copy _4, const 3)" ) != std::string::npos );
+        REQUIRE( text.find( "_1 = copy _2" ) != std::string::npos );
+        REQUIRE( verify( p.functions[0] ).empty() );
+    }
+
+    SECTION( "and as a place, for a field read off it" )
+    {
+        Lowered p( "i32 main() { u64 n = \"hello\".size; return 0; }", prelude_source() );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string text = p.named( "main" );
+
+        INFO( text );
+        REQUIRE( text.find( "bytes \"hello\"" ) != std::string::npos );
+        REQUIRE( text.find( "const 5)" ) != std::string::npos );
+        REQUIRE( text.find( ".size" ) != std::string::npos );
+        REQUIRE( verify( p.functions[0] ).empty() );
     }
 }
 

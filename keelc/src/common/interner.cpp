@@ -63,6 +63,16 @@ Symbol_id Interner::intern( std::string_view text )
     return id;
 }
 
+Symbol_id Interner::find( std::string_view text ) const
+{
+    if( const auto it = map_.find( text ); it != map_.end() )
+    {
+        return it->second;
+    }
+
+    return Symbol_id {};
+}
+
 std::string_view Interner::text( Symbol_id id ) const
 {
     assert( id.is_valid() && "invalid Symbol_id" );
@@ -89,6 +99,7 @@ std::size_t Interner::Sv_hash::operator()( std::string_view sv ) const
 #include <catch2/catch_test_macros.hpp>
 
 #include <string>
+#include <utility>
 
 namespace keel
 {
@@ -127,6 +138,18 @@ TEST_CASE( "interner_text_round_trips", "[common][interner]" )
 // The reason map_ owns the strings and texts_ holds views into its keys: unordered_map is
 // node-based, so rehashing must not move them. Short names on purpose - those are the SSO case that
 // actually dangles if the storage is a vector<std::string>.
+// A lookup that interns nothing, for a pass that holds the interner const.
+TEST_CASE( "interner_finds_only_what_was_interned", "[common][interner]" )
+{
+    Interner in;
+
+    const Symbol_id widget = in.intern( "widget" );
+
+    REQUIRE( std::as_const( in ).find( "widget" ) == widget );
+    REQUIRE_FALSE( std::as_const( in ).find( "gadget" ).is_valid() );
+    REQUIRE( std::as_const( in ).find( "if" ) == Interner::keyword( Keyword::If ) );
+}
+
 TEST_CASE( "interner_views_survive_growth", "[common][interner]" )
 {
     Interner in;

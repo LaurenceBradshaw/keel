@@ -1,0 +1,236 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "string_literals.kl.prelude.c"
+
+struct kl__Named;
+
+struct kl__Named
+{
+    struct kl_7prelude_str kl_name_1;
+    int32_t kl_id_3;
+};
+
+uint64_t kl__length__Q7prelude3str( struct kl_7prelude_str );
+struct kl_7prelude_str kl__pick__4bool( bool );
+int32_t kl__main__( void );
+
+uint64_t kl__length__Q7prelude3str( struct kl_7prelude_str kl_s_1 )
+{
+    uint64_t kl_t0;
+#line 11 "codegen/string_literals.kl"
+    kl_t0 = kl_s_1.kl_size_149;
+    return kl_t0;
+}
+
+struct kl_7prelude_str kl__pick__4bool( bool kl_first_1 )
+{
+    struct kl_7prelude_str kl_t0;
+    struct kl_7prelude_str kl_t2;
+    struct kl_7prelude_str kl_t3;
+    struct kl_7prelude_str* kl_t4;
+    uint8_t* kl_t5;
+    struct kl_7prelude_str kl_t7;
+    struct kl_7prelude_str* kl_t8;
+    uint8_t* kl_t9;
+    if ( kl_first_1 ) goto bb1; else goto bb2;
+    bb1:
+#line 16 "codegen/string_literals.kl"
+    kl_t4 = &kl_t3;
+    kl_t5 = ( uint8_t* ) "one";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 3 );
+    kl_t2 = kl_t3;
+    goto bb3;
+    bb2:
+    kl_t8 = &kl_t7;
+    kl_t9 = ( uint8_t* ) "three";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t8, kl_t9, 5 );
+    kl_t2 = kl_t7;
+    goto bb3;
+    bb3:
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl_7prelude_str kl_s_1;
+    struct kl_7prelude_str kl_t2;
+    struct kl_7prelude_str* kl_t3;
+    uint8_t* kl_t4;
+    bool kl_t6;
+    bool kl_t7;
+    bool kl_t8;
+    bool kl_t9;
+    uint8_t* kl_t10;
+    bool kl_t11;
+    uint8_t* kl_t12;
+    bool kl_t13;
+    uint8_t* kl_t14;
+    bool kl_t15;
+    uint8_t* kl_t16;
+    bool kl_t17;
+    uint8_t* kl_t18;
+    bool kl_t19;
+    bool kl_t20;
+    struct kl_7prelude_str kl_t21;
+    struct kl_7prelude_str* kl_t22;
+    uint8_t* kl_t23;
+    bool kl_t25;
+    struct kl_7prelude_str kl_t26;
+    struct kl_7prelude_str* kl_t27;
+    uint8_t* kl_t28;
+    bool kl_t30;
+    bool kl_t31;
+    struct kl_7prelude_str kl_t32;
+    struct kl_7prelude_str* kl_t33;
+    uint8_t* kl_t34;
+    uint64_t kl_t36;
+    bool kl_t37;
+    struct kl_7prelude_str kl_t38;
+    bool kl_t39;
+    struct kl__Named kl_n_40;
+    struct kl__Named kl_t41;
+    struct kl_7prelude_str kl_t42;
+    struct kl_7prelude_str* kl_t43;
+    uint8_t* kl_t44;
+    bool kl_t46;
+    struct kl_7prelude_str kl_t47;
+    struct kl_7prelude_str* kl_t48;
+    uint8_t* kl_t49;
+    bool kl_t51;
+#line 21 "codegen/string_literals.kl"
+    kl_t3 = &kl_t2;
+    kl_t4 = ( uint8_t* ) "a\000b\042\077A";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t3, kl_t4, 6 );
+    kl_s_1 = kl_t2;
+#line 23 "codegen/string_literals.kl"
+    kl_t6 = kl_s_1.kl_size_149 != 6;
+    if ( kl_t6 ) goto bb1; else goto bb2;
+    bb1:
+#line 25 "codegen/string_literals.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+#line 30 "codegen/string_literals.kl"
+    kl_t10 = kl_s_1.kl_data_146 + 0;
+    kl_t11 = ( *kl_t10 ) != 97;
+    kl_t9 = kl_t11;
+    if ( kl_t9 ) goto bb4; else goto bb3;
+    bb3:
+    kl_t12 = kl_s_1.kl_data_146 + 1;
+    kl_t13 = ( *kl_t12 ) != 0;
+    kl_t9 = kl_t13;
+    goto bb4;
+    bb4:
+    kl_t8 = kl_t9;
+    if ( kl_t8 ) goto bb6; else goto bb5;
+    bb5:
+    kl_t14 = kl_s_1.kl_data_146 + 3;
+    kl_t15 = ( *kl_t14 ) != 34;
+    kl_t8 = kl_t15;
+    goto bb6;
+    bb6:
+    kl_t7 = kl_t8;
+    if ( kl_t7 ) goto bb8; else goto bb7;
+    bb7:
+    kl_t16 = kl_s_1.kl_data_146 + 5;
+    kl_t17 = ( *kl_t16 ) != 65;
+    kl_t7 = kl_t17;
+    goto bb8;
+    bb8:
+    if ( kl_t7 ) goto bb9; else goto bb10;
+    bb9:
+#line 32 "codegen/string_literals.kl"
+    kl_t0 = 2;
+    return kl_t0;
+    bb10:
+#line 36 "codegen/string_literals.kl"
+    kl_t18 = kl_s_1.kl_data_146 + 6;
+    kl_t19 = ( *kl_t18 ) != 0;
+    if ( kl_t19 ) goto bb11; else goto bb12;
+    bb11:
+#line 38 "codegen/string_literals.kl"
+    kl_t0 = 3;
+    return kl_t0;
+    bb12:
+#line 42 "codegen/string_literals.kl"
+    kl_t22 = &kl_t21;
+    kl_t23 = ( uint8_t* ) "";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t22, kl_t23, 0 );
+    kl_t25 = kl_t21.kl_size_149 != 0;
+    kl_t20 = kl_t25;
+    if ( kl_t20 ) goto bb14; else goto bb13;
+    bb13:
+    kl_t27 = &kl_t26;
+    kl_t28 = ( uint8_t* ) "hello";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t27, kl_t28, 5 );
+    kl_t30 = kl_t26.kl_size_149 != 5;
+    kl_t20 = kl_t30;
+    goto bb14;
+    bb14:
+    if ( kl_t20 ) goto bb15; else goto bb16;
+    bb15:
+#line 44 "codegen/string_literals.kl"
+    kl_t0 = 4;
+    return kl_t0;
+    bb16:
+#line 47 "codegen/string_literals.kl"
+    kl_t33 = &kl_t32;
+    kl_t34 = ( uint8_t* ) "four";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t33, kl_t34, 4 );
+    kl_t36 = kl__length__Q7prelude3str( kl_t32 );
+    kl_t37 = kl_t36 != 4;
+    kl_t31 = kl_t37;
+    if ( kl_t31 ) goto bb18; else goto bb17;
+    bb17:
+    kl_t38 = kl__pick__4bool( false );
+    kl_t39 = kl_t38.kl_size_149 != 5;
+    kl_t31 = kl_t39;
+    goto bb18;
+    bb18:
+    if ( kl_t31 ) goto bb19; else goto bb20;
+    bb19:
+#line 49 "codegen/string_literals.kl"
+    kl_t0 = 5;
+    return kl_t0;
+    bb20:
+#line 52 "codegen/string_literals.kl"
+    kl_t43 = &kl_t42;
+    kl_t44 = ( uint8_t* ) "abc";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t43, kl_t44, 3 );
+    kl_t41.kl_name_1 = kl_t42;
+    kl_t41.kl_id_3 = 1;
+    kl_n_40 = kl_t41;
+#line 54 "codegen/string_literals.kl"
+    kl_t46 = kl_n_40.kl_name_1.kl_size_149 != 3;
+    if ( kl_t46 ) goto bb21; else goto bb22;
+    bb21:
+#line 56 "codegen/string_literals.kl"
+    kl_t0 = 6;
+    return kl_t0;
+    bb22:
+#line 60 "codegen/string_literals.kl"
+    kl_t48 = &kl_t47;
+    kl_t49 = ( uint8_t* ) "yy";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t48, kl_t49, 2 );
+    kl_s_1 = kl_t47;
+#line 62 "codegen/string_literals.kl"
+    kl_t51 = kl_s_1.kl_size_149 != 2;
+    if ( kl_t51 ) goto bb23; else goto bb24;
+    bb23:
+#line 64 "codegen/string_literals.kl"
+    kl_t0 = 7;
+    return kl_t0;
+    bb24:
+#line 67 "codegen/string_literals.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

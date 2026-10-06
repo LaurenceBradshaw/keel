@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #pragma once
+#include <string>
 #include <vector>
 #include "common/types.h"
 
@@ -35,14 +36,17 @@ public:
 
     Literal_id add_integer( u64 magnitude );
     Literal_id add_float( f64 value );
+    Literal_id add_string( std::string bytes );
 
     // The node kind chooses: Int_literal reads integer(), Float_literal reads floating().
-    u64 integer( Literal_id id ) const;
-    f64 floating( Literal_id id ) const;
+    u64              integer( Literal_id id ) const;
+    f64              floating( Literal_id id ) const;
+    std::string_view string( Literal_id id ) const;
 
 private:
-    std::vector<u64> integers_; // [0] reserved so Literal_id {} is invalid
-    std::vector<f64> floats_;   // likewise
+    std::vector<u64>         integers_; // [0] reserved so Literal_id {} is invalid
+    std::vector<f64>         floats_;   // likewise
+    std::vector<std::string> strings_;
 };
 
 } // namespace keel

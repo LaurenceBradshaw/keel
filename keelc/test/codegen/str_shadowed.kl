@@ -1,0 +1,28 @@
+// A program's own `str` shadows the prelude's for a name, and a literal is still the prelude's.
+class str
+{
+    public i32 n;
+
+    public str()
+    {
+        n = 7;
+    }
+};
+
+i32 main()
+{
+    str  mine    = str();
+    auto literal = "abc";
+
+    if( mine.n != 7 )
+    {
+        return 1;
+    }
+
+    if( literal.size != 3 )
+    {
+        return 2;
+    }
+
+    return 0;
+}

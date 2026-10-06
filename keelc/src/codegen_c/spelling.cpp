@@ -257,6 +257,25 @@ std::string c_integer( u64 value )
     return value > 9223372036854775807ull ? fmt::format( "{}ull", value ) : fmt::format( "{}", value );
 }
 
+std::string c_string( std::string_view str )
+{
+    std::string text = "\"";
+    for( const char c : str )
+    {
+        if( c == '"' || c == '\\' || c == '?' || static_cast<unsigned char>( c ) < 0x20 ||
+            static_cast<unsigned char>( c ) >= 0x7f )
+        {
+            text += fmt::format( "\\{:03o}", static_cast<unsigned char>( c ) );
+        }
+        else
+        {
+            text += c;
+        }
+    }
+    text += "\"";
+    return text;
+}
+
 std::string Spelling::global_definition( Node_id declaration, Type_id owner ) const
 {
     const Type_id            variable  = types.type_of( declaration );
@@ -350,6 +369,26 @@ TEST_CASE( "c_integer_suffixes_what_c_would_narrow", "[codegen][spelling]" )
     // One past it does: without the suffix C would pick a signed type too narrow to hold it.
     REQUIRE( c_integer( 9223372036854775808ull ) == "9223372036854775808ull" );
     REQUIRE( c_integer( 18446744073709551615ull ) == "18446744073709551615ull" );
+}
+
+// Three octal digits always: `\x` and a shorter octal escape would both swallow a digit after them.
+TEST_CASE( "c_string_escapes_every_byte_c_could_misread", "[codegen][spelling]" )
+{
+    REQUIRE( c_string( "" ) == "\"\"" );
+    REQUIRE( c_string( "hello" ) == "\"hello\"" );
+    REQUIRE(
+        c_string( std::string_view(
+            "a\0"
+            "1",
+            3
+        ) ) == "\"a\\0001\""
+    );
+    REQUIRE( c_string( "\"\\\n" ) == "\"\\042\\134\\012\"" );
+    REQUIRE(
+        c_string( "?"
+                  "?=" ) == "\"\\077\\077=\""
+    ); // a trigraph, which C11 still reads
+    REQUIRE( c_string( "\xff" ) == "\"\\377\"" );
 }
 
 } // namespace keel

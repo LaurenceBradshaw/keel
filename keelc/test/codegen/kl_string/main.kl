@@ -1,0 +1,28 @@
+// `kl::string` built from a literal rather than one `push` at a time, against the library itself.
+// Each check returns its own code.
+import kl::string;
+
+i32 main()
+{
+    kl::string hello = kl::string( "hello" );
+    kl::string again = kl::string( "hello" );
+    kl::string help  = kl::string( "help" );
+    kl::string empty = kl::string( "" );
+
+    if( hello.size() != 5 || hello.get( 0 ) != 104 || hello.get( 4 ) != 111 )
+    {
+        return 1;
+    }
+
+    if( !hello.equals( again ) || hello.equals( help ) )
+    {
+        return 2;
+    }
+
+    if( !empty.is_empty() )
+    {
+        return 3;
+    }
+
+    return 0;
+}

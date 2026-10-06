@@ -653,12 +653,22 @@ std::optional<u8> Scanner::scan_escape( u32 start )
 
 void Scanner::scan_string( u32 start )
 {
+    std::string bytes;
+    bool        ok = true;
     while( !at_end() && peek() != '\n' )
     {
         if( peek() == '"' )
         {
             advance();
-            push( Token_kind::String_literal, start );
+            if( ok )
+            {
+                Literal_id id = literal_pool_.add_string( std::move( bytes ) );
+                push( Token_kind::String_literal, start, Symbol_id { id.v } );
+            }
+            else
+            {
+                push( Token_kind::String_literal, start, Symbol_id { Literal_id {}.v } );
+            }
             return;
         }
 
@@ -666,11 +676,19 @@ void Scanner::scan_string( u32 start )
         {
             const u32 escape = pos_;
             advance();
-            scan_escape( escape );
+            std::optional<u8> escaped = scan_escape( escape );
+            if( escaped )
+            {
+                bytes += static_cast<char>( *escaped );
+            }
+            else
+            {
+                ok = false;
+            }
             continue;
         }
 
-        advance();
+        bytes += advance();
     }
 
     // Point at the opening quote: the span to the end of the line is where it went wrong, not what.
@@ -974,6 +992,11 @@ public:
         return literal_pool_.floating( tokens_[i].literal() );
     }
 
+    std::string_view bytes( std::size_t i ) const
+    {
+        return literal_pool_.string( tokens_[i].literal() );
+    }
+
     bool has_value( std::size_t i ) const
     {
         return tokens_[i].literal().is_valid();
@@ -1105,8 +1128,8 @@ TEST_CASE( "lexer_cpp_type_names_are_ordinary_identifiers", "[lex]" )
 }
 
 // The `symbol` slot means different things per token kind: a Symbol_id for identifiers and
-// keywords, a Literal_id for numeric literals. Everything else leaves it empty.
-TEST_CASE( "only_named_and_numeric_tokens_use_the_symbol_slot", "[lex]" )
+// keywords, a Literal_id for literals. Everything else leaves it empty.
+TEST_CASE( "only_named_tokens_and_literals_use_the_symbol_slot", "[lex]" )
 {
     const Lexed lexed( "x if 42 1.5 \"s\" ;" );
 
@@ -1114,7 +1137,7 @@ TEST_CASE( "only_named_and_numeric_tokens_use_the_symbol_slot", "[lex]" )
     REQUIRE( lexed.symbol( 1 ).is_valid() ); // keyword
     REQUIRE( lexed.symbol( 2 ).is_valid() ); // Int_literal   -> a Literal_id
     REQUIRE( lexed.symbol( 3 ).is_valid() ); // Float_literal -> a Literal_id
-    REQUIRE_FALSE( lexed.symbol( 4 ).is_valid() );
+    REQUIRE( lexed.symbol( 4 ).is_valid() ); // String_literal -> a Literal_id
     REQUIRE_FALSE( lexed.symbol( 5 ).is_valid() );
 }
 
@@ -1519,6 +1542,36 @@ TEST_CASE( "lexer_string_escapes", "[lex]" )
     REQUIRE( lexed.count() == 1 );
     INFO( lexed.rendered() );
     REQUIRE_FALSE( lexed.has_errors() );
+}
+
+// Decoded, so the pool holds what the program will read: a `\0` is a byte like any other.
+TEST_CASE( "lexer_records_a_string_literal's_bytes", "[lex]" )
+{
+    SECTION( "escapes decoded" )
+    {
+        const Lexed lexed( "\"a\\0b\\x41\\n\\\"\"" );
+
+        REQUIRE_FALSE( lexed.has_errors() );
+        REQUIRE( lexed.has_value( 0 ) );
+        REQUIRE( lexed.bytes( 0 ) == std::string_view( "a\0bA\n\"", 6 ) );
+    }
+
+    SECTION( "empty" )
+    {
+        const Lexed lexed( "\"\"" );
+
+        REQUIRE( lexed.has_value( 0 ) );
+        REQUIRE( lexed.bytes( 0 ).empty() );
+    }
+
+    // As a character literal: a reported literal carries nothing for sema to report again.
+    SECTION( "none for a bad escape" )
+    {
+        const Lexed lexed( "\"a\\qb\"" );
+
+        REQUIRE( lexed.has_errors() );
+        REQUIRE_FALSE( lexed.has_value( 0 ) );
+    }
 }
 
 TEST_CASE( "lexer_string_escape_errors", "[lex]" )

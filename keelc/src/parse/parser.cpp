@@ -3667,7 +3667,7 @@ Node_id Parser::parse_prefix()
 
     case Token_kind::String_literal:
         advance();
-        return ast_.add( Node_kind::String_literal, Span::merge( start, previous().span ), 0, {} );
+        return ast_.add( Node_kind::String_literal, Span::merge( start, previous().span ), previous().symbol.v, {} );
 
     case Token_kind::Char_literal:
         advance();

@@ -55,10 +55,7 @@ Type_id Expressions::infer( Node_id id )
         return literals_.infer_literal( id );
 
     case Node_kind::String_literal:
-        // Lexed and parsed, but a string has no type until there is a String, which is M7.
-        // Silence here would make it look accepted.
-        reporter_.error_at( ast_.span( id ), "string literals are not supported yet" );
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return infer_string_literal( id );
 
     case Node_kind::Field_expr:
         return infer_field( id );
@@ -2252,6 +2249,23 @@ Type_id Expressions::infer_field( Node_id id )
     return types_.record( id, aggregates_.field_type( object_type, field_decl ) );
 }
 
+Type_id Expressions::infer_string_literal( Node_id id )
+{
+    const Node_id decl = resolution_.declaration_of( id );
+
+    if( !decl.is_valid() )
+    {
+        // Only a test harness can reach this
+        reporter_.error_at( ast_.span( id ), "a string literal needs the prelude's `str`, and there is no prelude" );
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    const Type_id type        = types_.type_of( decl );
+    const Node_id constructor = aggregates_.find_member( decl, Node_kind::Constructor_decl );
+    callees_.record( id, constructor );
+    return types_.record( id, type );
+}
+
 // Nothing named an instance of a generic declaration, so there is no type here a value can hold.
 // Two causes with two different fixes, which is why one message cannot serve both: either nothing
 // was expected at all, or what was expected belongs to another declaration entirely.
@@ -2795,6 +2809,8 @@ Type_id Expressions::check( Node_id id, Type_id expected )
                 ? "one signature is never widened into another, so the two have to match exactly"
             : table_.points_to_const( actual ) && !table_.points_to_const( expected )
                 ? "a pointer to `const` never converts back to one that writes"
+            : table_.name( expected ) == table_.name( actual )
+                ? fmt::format( "two different types are both named `{}`", table_.name( expected ) )
                 : ""
         );
         return expected;

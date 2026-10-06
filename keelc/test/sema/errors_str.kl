@@ -1,0 +1,48 @@
+// A string literal is the prelude's `str`: read-only, made only by a literal, and compared with
+// nothing yet. One refusal per function, so none of them stops another being checked.
+str global = "file scope";
+
+i32 not_a_number()
+{
+    i32 x = "abc";
+    return x;
+}
+
+void size_is_read_only()
+{
+    str s  = "abc";
+    s.size = 1;
+}
+
+void bytes_are_read_only()
+{
+    str s = "abc";
+
+    unsafe
+    {
+        s.data[ 0 ] = 1;
+    }
+}
+
+u64 only_a_literal_makes_one()
+{
+    str s = "abc";
+    str t = str( s.data, s.size );
+    return t.size;
+}
+
+u64 no_address()
+{
+    const str* p = &"abc";
+    return ( *p ).size;
+}
+
+bool no_equality()
+{
+    return "a" == "b";
+}
+
+i32 main()
+{
+    return 0;
+}

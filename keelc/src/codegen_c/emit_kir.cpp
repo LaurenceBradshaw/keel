@@ -1239,6 +1239,9 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue ) const
     case Rvalue_kind::Address_of:
         return fmt::format( "&{}", place( rvalue.a.place ) );
 
+    case Rvalue_kind::Literal_bytes:
+        return fmt::format( "( {} ) {}", spelling_.type( rvalue.type ), c_string( literal_pool_.string( rvalue.a.constant ) ) );
+
     case Rvalue_kind::Call:
     case Rvalue_kind::Indirect_call:
     {

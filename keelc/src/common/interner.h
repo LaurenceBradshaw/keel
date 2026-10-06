@@ -88,6 +88,7 @@ public:
     Interner& operator=( const Interner& ) = delete;
 
     Symbol_id        intern( std::string_view text );
+    Symbol_id        find( std::string_view text ) const;
     std::string_view text( Symbol_id id ) const;
 
     bool is_keyword( Symbol_id id ) const;
