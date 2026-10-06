@@ -642,15 +642,20 @@ void Lowering::lower_construction( Place target, Node_id call_expr )
 
     // Two loops, as a plain call has, and for the same reason: every argument is lowered before any
     // is converted, so the statements come out in the order they were written (§7.1).
-    for( const Node_id argument : arguments )
+    for( std::size_t i = 0; i < arguments.size(); ++i )
     {
-        operands.push_back( lower_expression( argument ) );
+        operands.push_back( lower_argument( arguments[i], parameters[i + 1], callee_bound ) );
     }
 
     for( std::size_t i = 0; i < arguments.size(); ++i )
     {
-        const Type_id param_type = type_under( parameters[i + 1], callee_bound );
-        operands[i + 1]          = converted( operands[i + 1], param_type, ast_.span( arguments[i] ) );
+        operands[i + 1] =
+            converted( operands[i + 1], binding_type_under( parameters[i + 1], callee_bound ), ast_.span( arguments[i] ) );
+
+        if( is_move_parameter( parameters[i + 1] ) )
+        {
+            operands[i + 1] = moved_if_owning( operands[i + 1] );
+        }
     }
 
     const u32     first = builder_.add_operands( operands );

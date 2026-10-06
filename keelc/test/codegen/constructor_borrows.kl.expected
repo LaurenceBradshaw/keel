@@ -1,0 +1,167 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "constructor_borrows.kl.prelude.c"
+
+struct kl__Owned;
+struct kl__big;
+struct kl__holder;
+
+struct kl__Owned
+{
+    uint64_t kl_id_3;
+};
+
+struct kl__big
+{
+    int64_t kl_a_33;
+    int64_t kl_b_35;
+    int64_t kl_c_37;
+};
+
+struct kl__holder
+{
+    int64_t kl_sum_40;
+    struct kl__Owned kl_kept_42;
+};
+
+int32_t kl_live_1;
+
+void kl__Owned__R5Owned_3u64__ctor( struct kl__Owned*, uint64_t );
+void kl__Owned__dtor( struct kl__Owned* );
+void kl__holder__R6holder_3big_R3i32_M5Owned__ctor( struct kl__holder*, struct kl__big*, int32_t*, struct kl__Owned );
+int32_t kl__main__( void );
+
+void kl__Owned__R5Owned_3u64__ctor( struct kl__Owned* kl_this_1, uint64_t kl_n_2 )
+{
+    int32_t kl_t3;
+#line 12 "codegen/constructor_borrows.kl"
+    ( *kl_this_1 ).kl_id_3 = kl_n_2;
+#line 13 "codegen/constructor_borrows.kl"
+    kl_t3 = kl_live_1 + 1;
+    kl_live_1 = kl_t3;
+    return;
+}
+
+void kl__Owned__dtor( struct kl__Owned* kl_this_1 )
+{
+    int32_t kl_t2;
+#line 18 "codegen/constructor_borrows.kl"
+    kl_t2 = kl_live_1 - 1;
+    kl_live_1 = kl_t2;
+    return;
+}
+
+void kl__holder__R6holder_3big_R3i32_M5Owned__ctor( struct kl__holder* kl_this_1, struct kl__big* kl_source_2, int32_t* kl_counter_3, struct kl__Owned kl_o_4 )
+{
+    int64_t kl_t5;
+    int64_t kl_t6;
+    bool kl_t7;
+#line 34 "codegen/constructor_borrows.kl"
+    kl_t7 = false;
+#line 36 "codegen/constructor_borrows.kl"
+    kl_t5 = ( *kl_source_2 ).kl_a_33 + ( *kl_source_2 ).kl_b_35;
+    kl_t6 = kl_t5 + ( *kl_source_2 ).kl_c_37;
+    ( *kl_this_1 ).kl_sum_40 = kl_t6;
+#line 37 "codegen/constructor_borrows.kl"
+    ( *kl_counter_3 ) = ( *kl_counter_3 ) + 1;
+#line 38 "codegen/constructor_borrows.kl"
+    ( *kl_this_1 ).kl_kept_42 = kl_o_4;
+    kl_t7 = false;
+#line 34 "codegen/constructor_borrows.kl"
+    if ( kl_t7 ) kl__Owned__dtor( &kl_o_4 );
+    kl_t7 = false;
+    return;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__big kl_b_1;
+    struct kl__big kl_t2;
+    int32_t kl_n_3;
+    struct kl__Owned kl_o_4;
+    struct kl__Owned* kl_t5;
+    struct kl__holder kl_h_7;
+    struct kl__holder* kl_t8;
+    struct kl__big* kl_t9;
+    int32_t* kl_t10;
+    bool kl_t12;
+    bool kl_t13;
+    bool kl_t14;
+    bool kl_t15;
+    int32_t kl_t16;
+    bool kl_t17;
+    bool kl_t18;
+#line 48 "codegen/constructor_borrows.kl"
+    kl_t18 = false;
+#line 44 "codegen/constructor_borrows.kl"
+    kl_t2.kl_a_33 = 1;
+    kl_t2.kl_b_35 = 2;
+    kl_t2.kl_c_37 = 3;
+    kl_b_1 = kl_t2;
+#line 45 "codegen/constructor_borrows.kl"
+    kl_n_3 = 0;
+#line 48 "codegen/constructor_borrows.kl"
+    kl_t18 = false;
+    kl_t5 = &kl_o_4;
+    kl_t18 = true;
+    kl__Owned__R5Owned_3u64__ctor( kl_t5, 7 );
+#line 49 "codegen/constructor_borrows.kl"
+    kl_t8 = &kl_h_7;
+    kl_t9 = &kl_b_1;
+    kl_t10 = &kl_n_3;
+    kl__holder__R6holder_3big_R3i32_M5Owned__ctor( kl_t8, kl_t9, kl_t10, kl_o_4 );
+    kl_t18 = false;
+#line 51 "codegen/constructor_borrows.kl"
+    kl_t13 = kl_h_7.kl_sum_40 != 6;
+    kl_t12 = kl_t13;
+    if ( kl_t12 ) goto bb2; else goto bb1;
+    bb1:
+    kl_t14 = kl_n_3 != 1;
+    kl_t12 = kl_t14;
+    goto bb2;
+    bb2:
+    if ( kl_t12 ) goto bb3; else goto bb4;
+    bb3:
+#line 53 "codegen/constructor_borrows.kl"
+    kl_t0 = 1;
+    kl__Owned__dtor( &kl_h_7.kl_kept_42 );
+    if ( kl_t18 ) kl__Owned__dtor( &kl_o_4 );
+    kl_t18 = false;
+    return kl_t0;
+    bb4:
+#line 56 "codegen/constructor_borrows.kl"
+    kl_t15 = kl_live_1 != 1;
+    if ( kl_t15 ) goto bb5; else goto bb6;
+    bb5:
+#line 58 "codegen/constructor_borrows.kl"
+    kl_t0 = 2;
+    kl__Owned__dtor( &kl_h_7.kl_kept_42 );
+    if ( kl_t18 ) kl__Owned__dtor( &kl_o_4 );
+    kl_t18 = false;
+    return kl_t0;
+    bb6:
+#line 47 "codegen/constructor_borrows.kl"
+    kl__Owned__dtor( &kl_h_7.kl_kept_42 );
+    if ( kl_t18 ) kl__Owned__dtor( &kl_o_4 );
+    kl_t18 = false;
+#line 63 "codegen/constructor_borrows.kl"
+    kl_t17 = kl_live_1 == 0;
+    if ( kl_t17 ) goto bb7; else goto bb8;
+    bb7:
+    kl_t16 = 0;
+    goto bb9;
+    bb8:
+    kl_t16 = 3;
+    goto bb9;
+    bb9:
+    kl_t0 = kl_t16;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

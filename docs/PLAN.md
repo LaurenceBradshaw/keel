@@ -6964,9 +6964,13 @@ cases pass in the prototype on debug, release and asan, valgrind-clean.
   sound *here*; the options are to say so inside `operator[]` alone (its body still cannot write a
   field, but `&field` is `T*`), to admit a second, non-`const` declaration (constness overloading,
   which D33 avoided to keep one candidate), or to leave inline containers read-only until a
-  fixed-size array forces the question. Not needed for M8.
+  fixed-size array forces the question. Not needed for M8. **Not a blocker:** D43's `cast` in
+  `unsafe` drops the `const`, and it is sound for the reason above, so the cost is an `unsafe`
+  block in each such `operator[]`. It touches only containers with inline storage that hand out
+  writable elements - a `T[N]` wrapper, a small vector, a fixed matrix. A small-string `kl::string`
+  is untouched, since its `operator[]` is `const u8*` anyway; what that waits on is `T[N]` itself.
 - **A constructor's borrowed parameters are passed by value (found 2026-10-06).** See *Debts to pay
-  along the way*. Found writing the golden, not caused by it.
+  along the way*. Found writing the golden, not caused by it. Fixed the same day.
 
 ### M8 slice: `assert` - done (2026-10-06)
 
@@ -8707,13 +8711,13 @@ error handling, and an `Optional` that is on the not-in-v0 list. Three are now s
 recorded as unscheduled on purpose. The entries below are debts *inside* a milestone; that audit was
 about debts *between* them, which is the gap this list cannot see.
 
-- **A constructor's `ref` and `const ref` parameters are passed by value (found 2026-10-06).**
-  `holder( b )` against `holder( const ref big source )` emits C passing `struct big` where the
-  constructor takes `struct big*`, and `cc` refuses it. `Lowering::lower_construction` lowers each
-  argument with `lower_expression` where a call uses `lower_argument`, so a borrow never takes its
-  argument's address - and a `move` parameter presumably skips `moved_if_owning` too. A method or
-  free function with the same parameter is fine. Small; unscheduled, and worth taking before step 4,
-  whose owning `T` will be handed to constructors by `move`.
+- ~~**A constructor's `ref` and `const ref` parameters are passed by value (found 2026-10-06).**~~
+  **Done (2026-10-06).** `holder( b )` against `holder( const ref big source )` emitted C passing
+  `struct big` where the constructor takes `struct big*`, and `cc` refused it. `ref n` was worse: a
+  marker in value position lowers as a move, so the move check refused the next read of `n`.
+  `Lowering::lower_construction` lowered each argument with `lower_expression`; it now takes
+  `lower_argument`, `binding_type_under` and `moved_if_owning`, as `lower_method_call_on` does.
+  Golden: `codegen/constructor_borrows`.
 - **A bound's help names a method, not its type (found 2026-10-06).** `left == other` in a method
   of `class pair<T> where T : Copyable` says *write `where T : Equatable` on `same`*, but a method
   writes no `where` - its type parameters are its class's, so the clause goes on `pair`. Small;

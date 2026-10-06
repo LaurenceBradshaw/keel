@@ -1,0 +1,64 @@
+// A constructor's `ref`, `const ref` and `move` parameters are passed as a method's are: a borrow
+// takes the argument's address, and a move hands the value over, so the caller does not drop it.
+// Each check returns its own code.
+i32 live;
+
+class Owned
+{
+    u64 id;
+
+    Owned( u64 n )
+    {
+        id = n;
+        live = live + 1;
+    }
+
+    ~Owned()
+    {
+        live = live - 1;
+    }
+};
+
+struct big
+{
+    i64 a;
+    i64 b;
+    i64 c;
+};
+
+class holder
+{
+    public i64 sum;
+    Owned kept;
+
+    holder( const ref big source, ref i32 counter, move Owned o )
+    {
+        sum = source.a + source.b + source.c;
+        counter += 1;
+        kept = move o;
+    }
+};
+
+i32 main()
+{
+    big b = big { 1, 2, 3 };
+    i32 n = 0;
+
+    {
+        Owned o = Owned( 7 );
+        holder h = holder( b, ref n, move o );
+
+        if( h.sum != 6 || n != 1 )
+        {
+            return 1;
+        }
+
+        if( live != 1 )
+        {
+            return 2;
+        }
+    }
+
+    // Dropped once, by the holder that was given it.
+    return live == 0 ? 0 : 3;
+}
