@@ -1,0 +1,67 @@
+error: `[]` reaches an element for one expression, so it cannot be returned by reference
+  --> sema/errors_operator_index_uses.kl:31:16
+   |
+31 |         return this[0];
+   |                ^^^^^^^ return a copy, or its address with `&this[0]`
+
+error: `[]` reaches an element for one expression, so it cannot be returned by reference
+  --> sema/errors_operator_index_uses.kl:74:12
+   |
+74 |     return values[0];
+   |            ^^^^^^^^^ return a copy, or its address with `&values[0]`
+
+error: `values` is `const`
+  --> sema/errors_operator_index_uses.kl:79:5
+   |
+79 |     values[0] = 1;
+   |     ^^^^^^^^^ remove `const` to modify it
+
+error: `[]` reaches an element for one expression, so a `ref` cannot bind it
+  --> sema/errors_operator_index_uses.kl:95:21
+   |
+95 |     ref i32 bound = values[0];
+   |                     ^^^^^^^^^ copy it, or keep its address with `&values[0]`
+
+error: `[]` reaches an element for one expression, so a `ref` cannot bind it
+  --> sema/errors_operator_index_uses.kl:96:26
+   |
+96 |     const ref i32 seen = values[1];
+   |                          ^^^^^^^^^ copy it, or keep its address with `&values[1]`
+
+error: `fixed` is `const`
+  --> sema/errors_operator_index_uses.kl:97:5
+   |
+97 |     fixed[0] = 2;
+   |     ^^^^^^^^ remove `const` to modify it
+
+error: `read_only`'s `operator[]` only reads, so this cannot be modified
+  --> sema/errors_operator_index_uses.kl:98:5
+   |
+98 |     reads[0] = 3;
+   |     ^^^^^^^^ it returns a pointer to `const`
+
+error: this value is a temporary, so writing to it has no effect
+  --> sema/errors_operator_index_uses.kl:99:5
+   |
+99 |     make()[0] = 4;
+   |     ^^^^^^ assign it to a variable and modify that
+
+error: `operator[]` is private to `hidden`
+   --> sema/errors_operator_index_uses.kl:100:13
+    |
+100 |     i32 a = secret[0];
+    |             ^^^^^^^^^ only that type's own members may name it
+
+error: `plain` has no `operator[]`
+   --> sema/errors_operator_index_uses.kl:101:13
+    |
+101 |     i32 b = p[0];
+    |             ^^^^ declare `T* operator[]( u64 index ) const` in it
+
+error: expected `u64`, but got `bool`
+   --> sema/errors_operator_index_uses.kl:102:20
+    |
+102 |     i32 c = values[true];
+    |                    ^^^^
+
+11 errors generated

@@ -588,8 +588,6 @@ void Signatures::check_struct_fields_are_not_owning( Node_id decl )
 
 void Signatures::check_operators()
 {
-    const Symbol_id equal_equal = Interner::operator_name( Operator_name::Equal_equal );
-
     for( const Node_id decl : ast_.children( ast_.root() ) )
     {
         if( !is_aggregate( ast_.kind( decl ) ) )
@@ -597,26 +595,32 @@ void Signatures::check_operators()
             continue;
         }
 
-        Node_id first {};
+        std::array<Node_id, static_cast<size_t>( Operator_name::Count )> first {};
 
         for( const Node_id member : ast_.members( decl ) )
         {
-            if( ast_.kind( member ) != Node_kind::Method_decl || Symbol_id { ast_.aux( member ) } != equal_equal )
+            const Symbol_id name { ast_.aux( member ) };
+            if( ast_.kind( member ) != Node_kind::Method_decl || !interner_.is_operator_name( name ) )
             {
                 continue;
             }
 
-            if( first.is_valid() )
+            const Operator_name op   = static_cast<Operator_name>( name.v - Interner::operator_name( Operator_name {} ).v );
+            Node_id&            seen = first[static_cast<size_t>( op )];
+
+            if( seen.is_valid() )
             {
                 reporter_.error_at(
                     ast_.name_span( member ),
-                    fmt::format( "`{}` already has an `operator==`", interner_.text( Symbol_id { ast_.aux( decl ) } ) ),
-                    reporter_.previous_declaration_note( ast_.span( first ) )
+                    fmt::format(
+                        "`{}` already has an `{}`", interner_.text( Symbol_id { ast_.aux( decl ) } ), interner_.text( name )
+                    ),
+                    reporter_.previous_declaration_note( ast_.span( seen ) )
                 );
                 continue;
             }
 
-            first = member;
+            seen = member;
 
             if( is_static_method( ast_, member ) )
             {
@@ -626,39 +630,104 @@ void Signatures::check_operators()
                 continue;
             }
 
-            const std::span<const Node_id> params   = ast_.children( ast_.child( member, 1 ) );
-            const Type_id                  receiver = types_.type_of( params[0] );
-            const Type_id self_type                 = table_.is_pointer( receiver ) ? table_.get( receiver ).element : receiver;
+            switch( op )
+            {
+            case Operator_name::Equal_equal:
+                check_equal_operator( member );
+                break;
 
-            if( params.size() != 2 )
-            {
-                reporter_.error_at(
-                    ast_.span( ast_.child( member, 1 ) ), "`operator==` takes one parameter, the right-hand operand"
-                );
-            }
-            else if( !table_.is_error( types_.type_of( params[1] ) ) && types_.type_of( params[1] ) != self_type )
-            {
-                reporter_.error_at(
-                    ast_.span( params[1] ),
-                    fmt::format( "`operator==` on `{0}` must take another `{0}`", table_.name( self_type ) ),
-                    fmt::format( "write the parameter as `const ref {}`", table_.name( self_type ) )
-                );
-            }
+            case Operator_name::Index:
+                check_index_operator( member );
+                break;
 
-            if( !table_.is_error( types_.type_of( member ) ) && types_.type_of( member ) != table_.builtin( Type_kind::Bool ) )
-            {
-                reporter_.error_at( ast_.span( ast_.child( member, 0 ) ), "`operator==` must return `bool`" );
-            }
-
-            if( !is_const_method( ast_, member ) )
-            {
-                reporter_.error_at(
-                    ast_.name_span( member ),
-                    "`operator==` must be `const`",
-                    "write `const` after its parameter list; comparing reads both operands"
-                );
+            default:
+                break;
             }
         }
+    }
+}
+
+void Signatures::check_equal_operator( Node_id decl )
+{
+    const std::span<const Node_id> params    = ast_.children( ast_.child( decl, 1 ) );
+    const Type_id                  receiver  = types_.type_of( params[0] );
+    const Type_id                  self_type = table_.is_pointer( receiver ) ? table_.get( receiver ).element : receiver;
+
+    if( params.size() != 2 )
+    {
+        reporter_.error_at( ast_.span( ast_.child( decl, 1 ) ), "`operator==` takes one parameter, the right-hand operand" );
+    }
+    else if( !table_.is_error( types_.type_of( params[1] ) ) && types_.type_of( params[1] ) != self_type )
+    {
+        reporter_.error_at(
+            ast_.span( params[1] ),
+            fmt::format( "`operator==` on `{0}` must take another `{0}`", table_.name( self_type ) ),
+            fmt::format( "write the parameter as `const ref {}`", table_.name( self_type ) )
+        );
+    }
+
+    if( !table_.is_error( types_.type_of( decl ) ) && types_.type_of( decl ) != table_.builtin( Type_kind::Bool ) )
+    {
+        reporter_.error_at( ast_.span( ast_.child( decl, 0 ) ), "`operator==` must return `bool`" );
+    }
+
+    if( !is_const_method( ast_, decl ) )
+    {
+        reporter_.error_at(
+            ast_.name_span( decl ),
+            "`operator==` must be `const`",
+            "write `const` after its parameter list; comparing reads both operands"
+        );
+    }
+}
+
+void Signatures::check_index_operator( Node_id decl )
+{
+    const std::span<const Node_id> params = ast_.children( ast_.child( decl, 1 ) );
+
+    if( params.size() != 2 )
+    {
+        reporter_.error_at( ast_.span( ast_.child( decl, 1 ) ), "`operator[]` takes one parameter, the index" );
+    }
+    else if( const Type_id index_type = types_.type_of( params[1] );
+             !table_.is_error( index_type ) && table_.integer( 64, false ) != index_type )
+    {
+        reporter_.error_at( ast_.span( params[1] ), "`operator[]` takes a `u64` index", "write the parameter as `u64 index`" );
+    }
+
+    const Node_id annotation  = ast_.child( decl, 0 );
+    const Type_id return_type = types_.type_of( decl );
+
+    if( ast_.kind( unwrap_const( ast_, annotation ) ) == Node_kind::Mode_type )
+    {
+        reporter_.error_at(
+            ast_.span( annotation ),
+            "`operator[]` returns a pointer, not a reference",
+            "`v[i]` is the element it points at; a reference would outlive the expression"
+        );
+    }
+    else if( !table_.is_error( return_type ) && !table_.is_pointer( return_type ) )
+    {
+        reporter_.error_at(
+            ast_.span( annotation ),
+            "`operator[]` must return a pointer to the element",
+            fmt::format( "return `{}*`, and `v[i]` is the element it points at", table_.name( return_type ) )
+        );
+    }
+    else if( !table_.is_error( return_type ) && table_.get( return_type ).element == table_.builtin( Type_kind::Void ) )
+    {
+        reporter_.error_at(
+            ast_.span( annotation ), "`operator[]` must return a pointer to the element", "a `void*` points at no element"
+        );
+    }
+
+    if( !is_const_method( ast_, decl ) )
+    {
+        reporter_.error_at(
+            ast_.name_span( decl ),
+            "`operator[]` must be `const`",
+            "write `const` after its parameter list; a `const` object is indexed too"
+        );
     }
 }
 

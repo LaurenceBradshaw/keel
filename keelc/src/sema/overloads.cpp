@@ -916,8 +916,7 @@ void Overloads::check_aggregate_overloads( Node_id decl )
         }
 
         // An operator is declared once, which Signatures::check_operators enforces.
-        if( ast_.kind( member ) != Node_kind::Method_decl ||
-            Symbol_id { ast_.aux( member ) } == Interner::operator_name( Operator_name::Equal_equal ) )
+        if( ast_.kind( member ) != Node_kind::Method_decl || interner_.is_operator_name( Symbol_id { ast_.aux( member ) } ) )
         {
             continue;
         }

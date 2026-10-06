@@ -1,0 +1,158 @@
+// `v[i]` on an aggregate is the element its `operator[]` points at: read, written, compounded,
+// reached into and called on, passed by `ref`, kept by address, read through a `const` receiver,
+// indexed in a generic, and indexed on a temporary. Each check returns its own code.
+struct point
+{
+    i32 x;
+    i32 y;
+
+    void shift( i32 by )
+    {
+        x += by;
+        y += by;
+    }
+};
+
+class buffer<T> where T : Copyable
+{
+    buffer( u64 n )
+    {
+        size = n;
+        unsafe
+        {
+            data = alloc<T>( n );
+        }
+    }
+
+    ~buffer()
+    {
+        unsafe
+        {
+            free( data );
+        }
+    }
+
+    public T* operator[]( u64 index ) const
+    {
+        assert( index < size );
+
+        unsafe
+        {
+            return &data[index];
+        }
+    }
+
+    public u64 length() const
+    {
+        return size;
+    }
+
+    private T[*] data;
+    private u64 size;
+};
+
+// Read-only: its `operator[]` returns a pointer to `const`.
+class view
+{
+    view( const i32* source )
+    {
+        first = source;
+    }
+
+    public const i32* operator[]( u64 index ) const
+    {
+        assert( index == 0 );
+        return first;
+    }
+
+    private const i32* first;
+};
+
+void bump( ref i32 n )
+{
+    n += 1;
+}
+
+i32 peek( const ref point p )
+{
+    return p.x;
+}
+
+i32 total( const ref buffer<i32> values )
+{
+    i32 sum = 0;
+    for( u64 i = 0; i < values.length(); i++ )
+    {
+        sum += values[i];
+    }
+    return sum;
+}
+
+T last<T>( const ref buffer<T> values ) where T : Copyable
+{
+    return values[values.length() - 1];
+}
+
+buffer<i32> filled( i32 value )
+{
+    buffer<i32> result = buffer<i32>( 2 );
+    result[0] = value;
+    result[1] = value;
+    return result;
+}
+
+i32 main()
+{
+    buffer<i32> numbers = buffer<i32>( 3 );
+    numbers[0] = 1;
+    numbers[1] = 2;
+    numbers[2] = numbers[0] + numbers[1];
+
+    if( numbers[2] != 3 )
+    {
+        return 1;
+    }
+
+    numbers[2] += 4;
+    bump( ref numbers[0] );
+
+    if( numbers[0] != 2 || numbers[2] != 7 )
+    {
+        return 2;
+    }
+
+    i32* kept = &numbers[1];
+    *kept = 10;
+
+    if( numbers[1] != 10 || total( numbers ) != 19 || last( numbers ) != 7 )
+    {
+        return 3;
+    }
+
+    buffer<point> points = buffer<point>( 1 );
+    points[0] = point { 1, 2 };
+    points[0].x = 5;
+    points[0].shift( 1 );
+
+    if( points[0].x != 6 || points[0].y != 3 || peek( points[0] ) != 6 )
+    {
+        return 4;
+    }
+
+    i32 copied = numbers[0];
+    copied = 99;
+
+    if( numbers[0] != 2 )
+    {
+        return 5;
+    }
+
+    const view first = view( &numbers[0] );
+
+    if( first[0] != 2 || filled( 8 )[1] != 8 )
+    {
+        return 6;
+    }
+
+    return 0;
+}

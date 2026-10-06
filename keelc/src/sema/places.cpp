@@ -160,6 +160,20 @@ bool Places::check_writable( Node_id target, Node_id current_function, bool repl
     }
 
     const Node_id pointer = through_const_pointer( target );
+    if( pointer.is_valid() && ast_.kind( pointer ) == Node_kind::Index_expr )
+    {
+        reporter_.error_at(
+            ast_.span( target ),
+            fmt::format(
+                "`{}`'s `operator[]` only reads, so this cannot be modified",
+                table_.name( types_.type_of( ast_.child( pointer, 0 ) ) )
+            ),
+            "it returns a pointer to `const`"
+        );
+
+        return false;
+    }
+
     if( pointer.is_valid() )
     {
         reporter_.error_at(
@@ -303,6 +317,19 @@ Node_id Places::through_const_pointer( Node_id place ) const
 
         if( kind == Node_kind::Index_expr )
         {
+            const Node_id method = callees_.callee_of( place );
+
+            if( method.is_valid() )
+            {
+                if( table_.points_to_const( types_.type_of( method ) ) )
+                {
+                    return place;
+                }
+
+                place = ast_.child( place, 0 );
+                continue;
+            }
+
             pointer = ast_.child( place, 0 );
         }
 
@@ -437,9 +464,16 @@ Node_id Places::place_root( Node_id id, Node_id current_function ) const
 
 Node_id Places::place_source( Node_id id ) const
 {
-    while( ast_.kind( id ) == Node_kind::Field_expr )
+    while( ast_.kind( id ) == Node_kind::Field_expr || is_operator_index( id ) )
     {
         const Node_id object = ast_.child( id, 0 );
+
+        // `v[i]` is rooted in `v`: it may be written exactly when `v` may.
+        if( ast_.kind( id ) == Node_kind::Index_expr )
+        {
+            id = object;
+            continue;
+        }
 
         // D22 reaches through a pointer, and past one the borrow says nothing: what a pointer
         // points at was never part of the object that was lent. The same shallowness `const` has
@@ -453,6 +487,22 @@ Node_id Places::place_source( Node_id id ) const
     }
 
     return id;
+}
+
+bool Places::is_operator_index( Node_id id ) const
+{
+    return ast_.kind( id ) == Node_kind::Index_expr && callees_.callee_of( id ).is_valid();
+}
+
+// The `v[i]` a place is reached through, which lasts only as long as its expression.
+Node_id Places::operator_projection( Node_id place ) const
+{
+    while( ast_.kind( place ) == Node_kind::Field_expr && !table_.is_pointer( types_.type_of( ast_.child( place, 0 ) ) ) )
+    {
+        place = ast_.child( place, 0 );
+    }
+
+    return is_operator_index( place ) ? place : Node_id {};
 }
 
 Node_id Places::dying_storage( Node_id place, Node_id current_function ) const

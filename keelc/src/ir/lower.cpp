@@ -64,8 +64,10 @@ private:
     Operand lower_field_application( Node_id id );
     Operand lower_method_call( Node_id id );
     Operand lower_method_call_on( Node_id id, Node_id method, Operand receiver );
-    Operand lower_method_call_on( Node_id id, Node_id method, Operand receiver, std::span<const Node_id> arguments );
+    Operand
+    lower_method_call_on( Node_id id, Node_id method, Operand receiver, std::span<const Node_id> arguments, Type_id type );
     Operand lower_operator_call( Node_id id, Node_id method );
+    Operand lower_operator_index( Node_id id, Node_id method );
     Operand lower_variant_construction( Node_id id );
     Operand lower_empty_variant( Node_id id );
     void    bind_variant_pattern( Place matched, Node_id label );
@@ -941,7 +943,7 @@ Operand Lowering::lower_operator_call( Node_id id, Node_id method )
 
     const Operand receiver =
         address_operand( lower_place( object ), binding_type_under( parameters[0], bindings_for_call( id ) ), span );
-    const Operand result = lower_method_call_on( id, method, receiver, ast_.children( id ).subspan( 1, 1 ) );
+    const Operand result = lower_method_call_on( id, method, receiver, ast_.children( id ).subspan( 1, 1 ), type_of( id ) );
 
     if( static_cast<Token_kind>( ast_.aux( id ) ) != Token_kind::Bang_equal )
     {
@@ -951,6 +953,20 @@ Operand Lowering::lower_operator_call( Node_id id, Node_id method )
     return copy(
         builder_.place( builder_.into_temp( unary( Token_kind::Bang, result, result.type ), result.type, span ) ), result.type
     );
+}
+
+// `v[i]` calls `v.operator[]( i )`, and the place is what the returned pointer points at.
+Operand Lowering::lower_operator_index( Node_id id, Node_id method )
+{
+    const Span     span     = ast_.span( id );
+    const Bindings bindings = bindings_for_call( id );
+
+    const std::span<const Node_id> parameters = ast_.children( ast_.child( method, 1 ) );
+
+    const Operand receiver =
+        address_operand( lower_place( ast_.child( id, 0 ) ), binding_type_under( parameters[0], bindings ), span );
+
+    return lower_method_call_on( id, method, receiver, ast_.children( id ).subspan( 1, 1 ), type_under( method, bindings ) );
 }
 
 Operand Lowering::lower_unary( Node_id id )
@@ -1141,11 +1157,13 @@ Operand Lowering::lower_method_call( Node_id id )
 // written at the call site, or the one the enclosing method was given.
 Operand Lowering::lower_method_call_on( Node_id id, Node_id method, Operand receiver )
 {
-    return lower_method_call_on( id, method, receiver, ast_.children( ast_.child( id, 1 ) ) );
+    return lower_method_call_on( id, method, receiver, ast_.children( ast_.child( id, 1 ) ), type_of( id ) );
 }
 
-// The arguments are given rather than read from `id`, so a Binary node's right operand can be one.
-Operand Lowering::lower_method_call_on( Node_id id, Node_id method, Operand receiver, std::span<const Node_id> arguments )
+// The arguments and the result's type are given rather than read from `id`, so an operator's
+// operand can be one, and `v[i]`'s call can return the pointer rather than the element.
+Operand
+Lowering::lower_method_call_on( Node_id id, Node_id method, Operand receiver, std::span<const Node_id> arguments, Type_id type )
 {
     const Span span = ast_.span( id );
 
@@ -1179,8 +1197,7 @@ Operand Lowering::lower_method_call_on( Node_id id, Node_id method, Operand rece
         }
     }
 
-    const u32     first = builder_.add_operands( operands );
-    const Type_id type  = type_of( id );
+    const u32 first = builder_.add_operands( operands );
 
     // The same split lower_call makes for a free function: a callee that returns a binding hands
     // back an address, so the call's own type is that pointer and the temporary holding it is one
@@ -1609,6 +1626,11 @@ Place Lowering::lower_place( Node_id id )
     }
     case Node_kind::Index_expr:
     {
+        if( const Node_id method = types_.callee_of( id ); method.is_valid() )
+        {
+            return builder_.deref( lower_operator_index( id, method ).place );
+        }
+
         const Operand pointer   = lower_expression( ast_.child( id, 0 ) );
         const Operand index     = lower_expression( ast_.child( id, 1 ) );
         const Type_id base_type = type_of( ast_.child( id, 0 ) );

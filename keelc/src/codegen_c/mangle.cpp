@@ -17,6 +17,11 @@ std::string c_name( std::string_view name )
         return "operator_eq";
     }
 
+    if( name == "operator[]" )
+    {
+        return "operator_index";
+    }
+
     return std::string( name );
 }
 
@@ -474,7 +479,7 @@ TEST_CASE( "mangle_tells_a_member_from_a_free_function", "[codegen][mangle]" )
 // The property the length prefixes exist for. The previous scheme spelled a type's name with `*`
 // rewritten to `p`, and said in its own comment that it was safe only while every type name was a
 // plain word - a generic aggregate ends that, and a struct may be called anything L15 allows.
-// `operator==` is not a C identifier, so the punctuation is spelled out.
+// `operator==` and `operator[]` are not C identifiers, so the punctuation is spelled out.
 TEST_CASE( "mangle_spells_an_operator_as_an_identifier", "[codegen][mangle][operator]" )
 {
     Type_table table;
@@ -483,6 +488,10 @@ TEST_CASE( "mangle_spells_an_operator_as_an_identifier", "[codegen][mangle][oper
     const Mangled_parameter other[] = { by_value( box ) };
 
     REQUIRE( mangle_function( "", "operator==", other, table, {}, box ) == "kl__operator_eq__S3Box_3Box" );
+
+    const Mangled_parameter index[] = { by_value( table.integer( 64, false ) ) };
+
+    REQUIRE( mangle_function( "", "operator[]", index, table, {}, box ) == "kl__operator_index__S3Box_3u64" );
 }
 
 TEST_CASE( "mangle_encodes_every_type_injectively", "[codegen][mangle]" )

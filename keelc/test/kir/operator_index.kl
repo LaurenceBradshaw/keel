@@ -1,0 +1,29 @@
+// `v[i]` lowers to a call of `operator[]` and a place through the pointer it returns, read,
+// written, and taken the address of.
+struct span
+{
+    i32[*] items;
+
+    i32* operator[]( u64 index ) const
+    {
+        unsafe
+        {
+            return &items[index];
+        }
+    }
+};
+
+i32 read( span s )
+{
+    return s[1];
+}
+
+void write( span s )
+{
+    s[0] = 7;
+}
+
+i32* address( ref span s )
+{
+    return &s[1];
+}

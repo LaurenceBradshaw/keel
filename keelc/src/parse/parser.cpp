@@ -68,7 +68,8 @@ private:
     // expect_name after `::`, where `~Name` is refused as one mistake rather than two.
     Symbol_id expect_member_name();
 
-    Symbol_id expect_operator_name();
+    Symbol_id  expect_operator_name();
+    Token_kind take_operator_token();
 
     // A constructor's name, which its head scan required to be an identifier.
     Symbol_id take_name();
@@ -625,7 +626,7 @@ Symbol_id Parser::expect_operator_name()
         return Symbol_id {};
     }
 
-    const Token_kind op   = advance().kind;
+    const Token_kind op   = take_operator_token();
     const Span       span = Span::merge( start, previous().span );
 
     switch( op )
@@ -657,10 +658,30 @@ Symbol_id Parser::expect_operator_name()
         );
         return Symbol_id {};
 
+    case Token_kind::L_bracket:
+        if( previous().kind != Token_kind::R_bracket )
+        {
+            error_at( span, "`operator[` cannot be declared", "write `operator[]`" );
+            return Symbol_id {};
+        }
+        return Interner::operator_name( Operator_name::Index );
+
     default:
         error_at( span, fmt::format( "`{}` cannot be declared yet", sm_.text( span ) ) );
         return Symbol_id {};
     }
+}
+
+Token_kind Parser::take_operator_token()
+{
+    const Token& t = advance();
+
+    if( t.kind == Token_kind::L_bracket )
+    {
+        match( Token_kind::R_bracket );
+    }
+
+    return t.kind;
 }
 
 std::string Parser::found_text() const
@@ -1038,10 +1059,7 @@ Node_id Parser::parse_function_decl( std::optional<u32> commit )
     if( is_operator )
     {
         const Span operator_start = advance().span;
-        if( !check( Token_kind::L_paren ) )
-        {
-            advance();
-        }
+        take_operator_token();
 
         error_at(
             Span::merge( operator_start, previous().span ),
@@ -10369,6 +10387,29 @@ TEST_CASE( "parser_names_an_operator_method", "[parse][operator]" )
         REQUIRE( method.is_valid() );
         REQUIRE( Symbol_id { p.aux( method ) } == Interner::operator_name( Operator_name::Equal_equal ) );
         REQUIRE( p.children( p.child( method, 1 ) ).size() == 2 ); // the receiver, then `other`
+    }
+
+    SECTION( "`operator[]` is a method under its reserved name" )
+    {
+        const Parsed p( "class L { i32 x; i32* operator[]( u64 index ) const { return nullptr; } };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id method = find_first( p.ast(), p.root(), Node_kind::Method_decl );
+
+        REQUIRE( method.is_valid() );
+        REQUIRE( Symbol_id { p.aux( method ) } == Interner::operator_name( Operator_name::Index ) );
+        REQUIRE( p.children( p.child( method, 1 ) ).size() == 2 ); // the receiver, then `index`
+    }
+
+    SECTION( "`operator[` without its `]` is one error" )
+    {
+        const Parsed p( "class L { i32 x; i32* operator[( u64 index ) const { return nullptr; } };" );
+
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "`operator[` cannot be declared" ) != std::string::npos );
+        REQUIRE( p.errors().find( "write `operator[]`" ) != std::string::npos );
     }
 
     SECTION( "`operator!=` is refused, and points at `operator==`" )

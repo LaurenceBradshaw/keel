@@ -85,6 +85,7 @@ enum class Keyword : u32
 enum class Operator_name : u32
 {
     Equal_equal,
+    Index,
     Count
 };
 
@@ -99,7 +100,8 @@ public:
     Symbol_id        find( std::string_view text ) const;
     std::string_view text( Symbol_id id ) const;
 
-    bool is_keyword( Symbol_id id ) const;
+    bool        is_keyword( Symbol_id id ) const;
+    static bool is_operator_name( Symbol_id id );
 
     static Symbol_id keyword( Keyword k )
     {

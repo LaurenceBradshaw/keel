@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #pragma once
+#include <array>
 #include <string>
 #include <string_view>
 #include "ast/ast.h"
@@ -88,6 +89,8 @@ private:
     void check_struct_ownership();
     void check_struct_fields_are_not_owning( Node_id decl );
     void check_operators();
+    void check_equal_operator( Node_id decl );
+    void check_index_operator( Node_id decl );
 
     const Ast&      ast_;
     const Interner& interner_;

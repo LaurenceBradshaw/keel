@@ -1,0 +1,49 @@
+error: `operator[]` must return a pointer to the element
+ --> sema/errors_operator_index.kl:7:5
+  |
+7 |     i32 operator[]( u64 index ) const
+  |     ^^^ return `i32*`, and `v[i]` is the element it points at
+
+error: `operator[]` returns a pointer, not a reference
+  --> sema/errors_operator_index.kl:17:5
+   |
+17 |     const ref i32 operator[]( u64 index ) const
+   |     ^^^^^^^^^^^^^ `v[i]` is the element it points at; a reference would outlive the expression
+
+error: `operator[]` must return a pointer to the element
+  --> sema/errors_operator_index.kl:27:5
+   |
+27 |     void* operator[]( u64 index ) const
+   |     ^^^^^ a `void*` points at no element
+
+error: `operator[]` must be `const`
+  --> sema/errors_operator_index.kl:37:10
+   |
+37 |     i32* operator[]( u64 index )
+   |          ^^^^^^^^^^ write `const` after its parameter list; a `const` object is indexed too
+
+error: `operator[]` takes a `u64` index
+  --> sema/errors_operator_index.kl:47:22
+   |
+47 |     i32* operator[]( i32 index ) const
+   |                      ^^^^^^^^^ write the parameter as `u64 index`
+
+error: `operator[]` takes one parameter, the index
+  --> sema/errors_operator_index.kl:57:20
+   |
+57 |     i32* operator[]( u64 row, u64 column ) const
+   |                    ^^^^^^^^^^^^^^^^^^^^^^^
+
+error: `declared_twice` already has an `operator[]`
+  --> sema/errors_operator_index.kl:72:16
+   |
+72 |     const i32* operator[]( u64 index ) const
+   |                ^^^^^^^^^^ previous declaration is at: sema/errors_operator_index.kl:67:5
+
+error: an operator cannot be `static`
+  --> sema/errors_operator_index.kl:82:17
+   |
+82 |     static i32* operator[]( u64 index )
+   |                 ^^^^^^^^^^ it is called on its left operand
+
+8 errors generated

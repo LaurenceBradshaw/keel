@@ -1,0 +1,51 @@
+fn operator[] {
+    let _0: i32*; // return slot
+    let _1: span*; // parameter this
+    let _2: u64; // parameter index
+    let _3: i32[*];
+    let _4: i32*;
+
+    bb0:
+        _3 = copy (*_1).items + copy _2
+        _4 = &(*_3)
+        _0 = copy _4
+        return
+}
+fn read {
+    let _0: i32; // return slot
+    let _1: span; // parameter s
+    let _2: span*;
+    let _3: i32*;
+
+    bb0:
+        _2 = &_1
+        _3 = call operator[](copy _2, const 1)
+        _0 = copy (*_3)
+        return
+}
+fn write {
+    let _0: void; // return slot
+    let _1: span; // parameter s
+    let _2: span*;
+    let _3: i32*;
+
+    bb0:
+        _2 = &_1
+        _3 = call operator[](copy _2, const 0)
+        (*_3) = const 7
+        return
+}
+fn address {
+    let _0: i32*; // return slot
+    let _1: span*; // parameter s
+    let _2: span*;
+    let _3: i32*;
+    let _4: i32*;
+
+    bb0:
+        _2 = &(*_1)
+        _3 = call operator[](copy _2, const 1)
+        _4 = &(*_3)
+        _0 = copy _4
+        return
+}

@@ -1645,6 +1645,65 @@ Type_id Expressions::infer_unary( Node_id id )
 Type_id Expressions::infer_operator_call( Node_id id, Node_id object, Node_id argument, Symbol_id name )
 {
     const Type_id object_type = types_.type_of( object );
+    const Node_id method      = find_operator(
+        id,
+        object_type,
+        argument,
+        name,
+        fmt::format( "bool {}( const ref {} other ) const", interner_.text( name ), table_.name( object_type ) )
+    );
+
+    if( !method.is_valid() )
+    {
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    const std::span<const Node_id> params = ast_.children( ast_.child( method, 1 ) );
+
+    check( argument, table_.substitute( types_.type_of( params[1] ), aggregates_.bindings_of( object_type ) ) );
+
+    callees_.record( id, method );
+    record_method_instantiation( id, method, object_type );
+
+    return types_.record( id, table_.builtin( Type_kind::Bool ) );
+}
+
+// `v[i]` on an aggregate: the element its `operator[]` points at.
+Type_id Expressions::infer_index_operator( Node_id id, Type_id object_type )
+{
+    const Node_id index  = ast_.child( id, 1 );
+    const Node_id method = find_operator(
+        id, object_type, index, Interner::operator_name( Operator_name::Index ), "T* operator[]( u64 index ) const"
+    );
+
+    if( !method.is_valid() )
+    {
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    const Bindings&                bindings = aggregates_.bindings_of( object_type );
+    const std::span<const Node_id> params   = ast_.children( ast_.child( method, 1 ) );
+    const Type_id                  returned = table_.substitute( types_.type_of( method ), bindings );
+
+    check( index, table_.substitute( types_.type_of( params[1] ), bindings ) );
+
+    // A malformed return was reported where it was written.
+    if( !table_.is_pointer( returned ) )
+    {
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    callees_.record( id, method );
+    record_method_instantiation( id, method, object_type );
+
+    return types_.record( id, table_.get( returned ).element );
+}
+
+// The operator method a use calls, or nothing once reported. The argument is typed either way.
+Node_id Expressions::find_operator(
+    Node_id id, Type_id object_type, Node_id argument, Symbol_id name, std::string_view declaration_text
+)
+{
     const Node_id declaration = table_.get( object_type ).declaration;
     const Node_id method      = aggregates_.find_method( declaration, name );
 
@@ -1659,38 +1718,27 @@ Type_id Expressions::infer_operator_call( Node_id id, Node_id object, Node_id ar
         reporter_.error_at(
             ast_.span( id ),
             fmt::format( "`{}` has no `{}`", table_.name( object_type ), interner_.text( name ) ),
-            own_package
-                ? fmt::format(
-                      "declare `bool {}( const ref {} other ) const` in it", interner_.text( name ), table_.name( object_type )
-                  )
-                : std::string {}
+            own_package ? fmt::format( "declare `{}` in it", declaration_text ) : std::string {}
         );
 
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return Node_id {};
     }
 
     if( !is_visible_from( ast_, method, current_type() ) )
     {
         infer( argument );
         report_private( id, method );
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return Node_id {};
     }
-
-    const std::span<const Node_id> params = ast_.children( ast_.child( method, 1 ) );
 
     // A malformed declaration was reported where it was written.
-    if( params.size() != 2 || !is_const_method( ast_, method ) )
+    if( ast_.children( ast_.child( method, 1 ) ).size() != 2 || !is_const_method( ast_, method ) )
     {
         infer( argument );
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return Node_id {};
     }
 
-    check( argument, table_.substitute( types_.type_of( params[1] ), aggregates_.bindings_of( object_type ) ) );
-
-    callees_.record( id, method );
-    record_method_instantiation( id, method, object_type );
-
-    return types_.record( id, table_.builtin( Type_kind::Bool ) );
+    return method;
 }
 
 // D30: a variant is reached only through its enum - `Colour::Red`, never a bare `Red`. The
@@ -2030,7 +2078,13 @@ Type_id Expressions::infer_free( Node_id id )
 
 Type_id Expressions::infer_index( Node_id id )
 {
-    const Type_id base  = infer( ast_.child( id, 0 ) );
+    const Type_id base = infer( ast_.child( id, 0 ) );
+
+    if( table_.is_struct( base ) )
+    {
+        return infer_index_operator( id, base );
+    }
+
     const Type_id index = infer( ast_.child( id, 1 ) );
 
     if( table_.is_error( base ) || table_.is_error( index ) )
@@ -7312,7 +7366,7 @@ TEST_CASE( "type_checker_types_indexing", "[sema][types][many]" )
     {
         const std::pair<const char*, const char*> cases[] = {
             { "i32 r = v[0];", "`i32` cannot be indexed" },
-            { "P s = P { 1 };\n    i32 r = s[0].x;", "`P` cannot be indexed" },
+            { "P s = P { 1 };\n    i32 r = s[0].x;", "`P` has no `operator[]`" },
             { "bool b = true;\n    b = b[0];", "`bool` cannot be indexed" },
         };
 

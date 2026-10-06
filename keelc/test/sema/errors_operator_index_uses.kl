@@ -1,0 +1,105 @@
+// `v[i]` is a place for the expression it is written in: writable exactly when `v` is and its
+// `operator[]` does not return a pointer to `const`, never bound by `ref` or returned by one.
+class buffer
+{
+    buffer()
+    {
+        unsafe
+        {
+            data = alloc<i32>( 4 );
+        }
+    }
+
+    ~buffer()
+    {
+        unsafe
+        {
+            free( data );
+        }
+    }
+
+    public i32* operator[]( u64 index ) const
+    {
+        unsafe
+        {
+            return &data[index];
+        }
+    }
+
+    public const ref i32 first() const
+    {
+        return this[0];
+    }
+
+    private i32[*] data;
+};
+
+class read_only
+{
+    read_only()
+    {
+        x = 0;
+    }
+
+    public const i32* operator[]( u64 index ) const
+    {
+        return &x;
+    }
+
+    private i32 x;
+};
+
+class hidden
+{
+    hidden()
+    {
+        x = 0;
+    }
+
+    private i32* operator[]( u64 index ) const
+    {
+        return nullptr;
+    }
+
+    private i32 x;
+};
+
+struct plain
+{
+    i32 x;
+};
+
+const ref i32 element( const ref buffer values )
+{
+    return values[0];
+}
+
+void write( const ref buffer values )
+{
+    values[0] = 1;
+}
+
+buffer make()
+{
+    return buffer();
+}
+
+i32 main()
+{
+    buffer values = buffer();
+    const buffer fixed = buffer();
+    read_only reads = read_only();
+    hidden secret = hidden();
+    plain p = plain { 1 };
+
+    ref i32 bound = values[0];
+    const ref i32 seen = values[1];
+    fixed[0] = 2;
+    reads[0] = 3;
+    make()[0] = 4;
+    i32 a = secret[0];
+    i32 b = p[0];
+    i32 c = values[true];
+
+    return 0;
+}

@@ -1,0 +1,566 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "operator_index.kl.prelude.c"
+
+struct kl__point;
+struct kl__view;
+struct kl__buffer__I3i32E;
+struct kl__buffer__I5pointE;
+
+struct kl__point
+{
+    int32_t kl_x_1;
+    int32_t kl_y_3;
+};
+
+struct kl__view
+{
+    int32_t* kl_first_136;
+};
+
+struct kl__buffer__I3i32E
+{
+    int32_t* kl_data_97;
+    uint64_t kl_size_99;
+};
+
+struct kl__buffer__I5pointE
+{
+    struct kl__point* kl_data_97;
+    uint64_t kl_size_99;
+};
+
+void* kl_rt_alloc( size_t );
+void  kl_rt_free( void* );
+void* kl_rt_alloc_many( size_t, size_t );
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+void kl__shift__S5point_3i32( struct kl__point*, int32_t );
+void kl__view__R4view_PK3i32__ctor( struct kl__view*, int32_t* );
+int32_t* kl__operator_index__S4view_3u64( struct kl__view*, uint64_t );
+void kl__bump__R3i32( int32_t* );
+int32_t kl__peek__5point( struct kl__point* );
+int32_t kl__total__6bufferI3i32E( struct kl__buffer__I3i32E* );
+struct kl__buffer__I3i32E kl__filled__3i32( int32_t );
+int32_t kl__main__( void );
+uint64_t kl__length__I3i32E__S6bufferI3i32E( struct kl__buffer__I3i32E* );
+int32_t* kl__operator_index__I3i32E__S6bufferI3i32E_3u64( struct kl__buffer__I3i32E*, uint64_t );
+void kl__buffer__I3i32E__R6bufferI3i32E_3u64__ctor( struct kl__buffer__I3i32E*, uint64_t );
+int32_t kl__last__I3i32E__6bufferI3i32E( struct kl__buffer__I3i32E* );
+void kl__buffer__I5pointE__R6bufferI5pointE_3u64__ctor( struct kl__buffer__I5pointE*, uint64_t );
+struct kl__point* kl__operator_index__I5pointE__S6bufferI5pointE_3u64( struct kl__buffer__I5pointE*, uint64_t );
+void kl__buffer__I3i32E__dtor( struct kl__buffer__I3i32E* );
+void kl__buffer__I5pointE__dtor( struct kl__buffer__I5pointE* );
+
+void kl__shift__S5point_3i32( struct kl__point* kl_this_1, int32_t kl_by_2 )
+{
+#line 11 "codegen/operator_index.kl"
+    ( *kl_this_1 ).kl_x_1 = ( *kl_this_1 ).kl_x_1 + kl_by_2;
+#line 12 "codegen/operator_index.kl"
+    ( *kl_this_1 ).kl_y_3 = ( *kl_this_1 ).kl_y_3 + kl_by_2;
+    return;
+}
+
+void kl__view__R4view_PK3i32__ctor( struct kl__view* kl_this_1, int32_t* kl_source_2 )
+{
+#line 59 "codegen/operator_index.kl"
+    ( *kl_this_1 ).kl_first_136 = kl_source_2;
+    return;
+}
+
+int32_t* kl__operator_index__S4view_3u64( struct kl__view* kl_this_1, uint64_t kl_index_2 )
+{
+    int32_t* kl_t0;
+    bool kl_t3;
+#line 64 "codegen/operator_index.kl"
+    kl_t3 = kl_index_2 == 0;
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 65 "codegen/operator_index.kl"
+    kl_t0 = ( *kl_this_1 ).kl_first_136;
+    return kl_t0;
+    bb2:
+    kl_rt_panic( "codegen/operator_index.kl", 64, "assertion failed: index == 0" );
+}
+
+void kl__bump__R3i32( int32_t* kl_n_1 )
+{
+#line 73 "codegen/operator_index.kl"
+    ( *kl_n_1 ) = ( *kl_n_1 ) + 1;
+    return;
+}
+
+int32_t kl__peek__5point( struct kl__point* kl_p_1 )
+{
+    int32_t kl_t0;
+#line 78 "codegen/operator_index.kl"
+    kl_t0 = ( *kl_p_1 ).kl_x_1;
+    return kl_t0;
+}
+
+int32_t kl__total__6bufferI3i32E( struct kl__buffer__I3i32E* kl_values_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_sum_2;
+    uint64_t kl_i_3;
+    struct kl__buffer__I3i32E* kl_t4;
+    uint64_t kl_t5;
+    bool kl_t6;
+    struct kl__buffer__I3i32E* kl_t7;
+    int32_t* kl_t8;
+#line 83 "codegen/operator_index.kl"
+    kl_sum_2 = 0;
+#line 84 "codegen/operator_index.kl"
+    kl_i_3 = 0;
+    goto bb1;
+    bb1:
+    kl_t4 = &( *kl_values_1 );
+    kl_t5 = kl__length__I3i32E__S6bufferI3i32E( kl_t4 );
+    kl_t6 = kl_i_3 < kl_t5;
+    if ( kl_t6 ) goto bb2; else goto bb3;
+    bb2:
+#line 86 "codegen/operator_index.kl"
+    kl_t7 = &( *kl_values_1 );
+    kl_t8 = kl__operator_index__I3i32E__S6bufferI3i32E_3u64( kl_t7, kl_i_3 );
+    kl_sum_2 = kl_sum_2 + ( *kl_t8 );
+    goto bb4;
+    bb3:
+#line 88 "codegen/operator_index.kl"
+    kl_t0 = kl_sum_2;
+    return kl_t0;
+    bb4:
+#line 84 "codegen/operator_index.kl"
+    kl_i_3 = kl_i_3 + 1;
+    goto bb1;
+}
+
+struct kl__buffer__I3i32E kl__filled__3i32( int32_t kl_value_1 )
+{
+    struct kl__buffer__I3i32E kl_t0;
+    struct kl__buffer__I3i32E kl_result_2;
+    struct kl__buffer__I3i32E* kl_t3;
+    struct kl__buffer__I3i32E* kl_t5;
+    int32_t* kl_t6;
+    struct kl__buffer__I3i32E* kl_t7;
+    int32_t* kl_t8;
+    bool kl_t9;
+#line 98 "codegen/operator_index.kl"
+    kl_t9 = false;
+    kl_t9 = false;
+    kl_t3 = &kl_result_2;
+    kl_t9 = true;
+    kl__buffer__I3i32E__R6bufferI3i32E_3u64__ctor( kl_t3, 2 );
+#line 99 "codegen/operator_index.kl"
+    kl_t5 = &kl_result_2;
+    kl_t9 = true;
+    kl_t6 = kl__operator_index__I3i32E__S6bufferI3i32E_3u64( kl_t5, 0 );
+    ( *kl_t6 ) = kl_value_1;
+#line 100 "codegen/operator_index.kl"
+    kl_t7 = &kl_result_2;
+    kl_t9 = true;
+    kl_t8 = kl__operator_index__I3i32E__S6bufferI3i32E_3u64( kl_t7, 1 );
+    ( *kl_t8 ) = kl_value_1;
+#line 101 "codegen/operator_index.kl"
+    kl_t0 = kl_result_2;
+    kl_t9 = false;
+    if ( kl_t9 ) kl__buffer__I3i32E__dtor( &kl_result_2 );
+    kl_t9 = false;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__buffer__I3i32E kl_numbers_1;
+    struct kl__buffer__I3i32E* kl_t2;
+    struct kl__buffer__I3i32E* kl_t4;
+    int32_t* kl_t5;
+    struct kl__buffer__I3i32E* kl_t6;
+    int32_t* kl_t7;
+    struct kl__buffer__I3i32E* kl_t8;
+    int32_t* kl_t9;
+    struct kl__buffer__I3i32E* kl_t10;
+    int32_t* kl_t11;
+    struct kl__buffer__I3i32E* kl_t12;
+    int32_t* kl_t13;
+    int32_t kl_t14;
+    struct kl__buffer__I3i32E* kl_t15;
+    int32_t* kl_t16;
+    bool kl_t17;
+    struct kl__buffer__I3i32E* kl_t18;
+    int32_t* kl_t19;
+    struct kl__buffer__I3i32E* kl_t20;
+    int32_t* kl_t21;
+    int32_t* kl_t22;
+    bool kl_t24;
+    struct kl__buffer__I3i32E* kl_t25;
+    int32_t* kl_t26;
+    bool kl_t27;
+    struct kl__buffer__I3i32E* kl_t28;
+    int32_t* kl_t29;
+    bool kl_t30;
+    int32_t* kl_kept_31;
+    struct kl__buffer__I3i32E* kl_t32;
+    int32_t* kl_t33;
+    int32_t* kl_t34;
+    bool kl_t35;
+    bool kl_t36;
+    struct kl__buffer__I3i32E* kl_t37;
+    int32_t* kl_t38;
+    bool kl_t39;
+    struct kl__buffer__I3i32E* kl_t40;
+    int32_t kl_t41;
+    bool kl_t42;
+    struct kl__buffer__I3i32E* kl_t43;
+    int32_t kl_t44;
+    bool kl_t45;
+    struct kl__buffer__I5pointE kl_points_46;
+    struct kl__buffer__I5pointE* kl_t47;
+    struct kl__buffer__I5pointE* kl_t49;
+    struct kl__point* kl_t50;
+    struct kl__point kl_t51;
+    struct kl__buffer__I5pointE* kl_t52;
+    struct kl__point* kl_t53;
+    struct kl__buffer__I5pointE* kl_t54;
+    struct kl__point* kl_t55;
+    struct kl__point* kl_t56;
+    bool kl_t58;
+    bool kl_t59;
+    struct kl__buffer__I5pointE* kl_t60;
+    struct kl__point* kl_t61;
+    bool kl_t62;
+    struct kl__buffer__I5pointE* kl_t63;
+    struct kl__point* kl_t64;
+    bool kl_t65;
+    struct kl__buffer__I5pointE* kl_t66;
+    struct kl__point* kl_t67;
+    struct kl__point* kl_t68;
+    int32_t kl_t69;
+    bool kl_t70;
+    int32_t kl_copied_71;
+    struct kl__buffer__I3i32E* kl_t72;
+    int32_t* kl_t73;
+    struct kl__buffer__I3i32E* kl_t74;
+    int32_t* kl_t75;
+    bool kl_t76;
+    struct kl__view kl_first_77;
+    struct kl__view* kl_t78;
+    struct kl__buffer__I3i32E* kl_t79;
+    int32_t* kl_t80;
+    int32_t* kl_t81;
+    int32_t* kl_t82;
+    bool kl_t84;
+    struct kl__view* kl_t85;
+    int32_t* kl_t86;
+    bool kl_t87;
+    struct kl__buffer__I3i32E kl_t88;
+    struct kl__buffer__I3i32E* kl_t89;
+    int32_t* kl_t90;
+    bool kl_t91;
+#line 106 "codegen/operator_index.kl"
+    kl_t2 = &kl_numbers_1;
+    kl__buffer__I3i32E__R6bufferI3i32E_3u64__ctor( kl_t2, 3 );
+#line 107 "codegen/operator_index.kl"
+    kl_t4 = &kl_numbers_1;
+    kl_t5 = kl__operator_index__I3i32E__S6bufferI3i32E_3u64( kl_t4, 0 );
+    ( *kl_t5 ) = 1;
+#line 108 "codegen/operator_index.kl"
+    kl_t6 = &kl_numbers_1;
+    kl_t7 = kl__operator_index__I3i32E__S6bufferI3i32E_3u64( kl_t6, 1 );
+    ( *kl_t7 ) = 2;
+#line 109 "codegen/operator_index.kl"
+    kl_t8 = &kl_numbers_1;
+    kl_t9 = kl__operator_index__I3i32E__S6bufferI3i32E_3u64( kl_t8, 2 );
+    kl_t10 = &kl_numbers_1;
+    kl_t11 = kl__operator_index__I3i32E__S6bufferI3i32E_3u64( kl_t10, 0 );
+    kl_t12 = &kl_numbers_1;
+    kl_t13 = kl__operator_index__I3i32E__S6bufferI3i32E_3u64( kl_t12, 1 );
+    kl_t14 = ( *kl_t11 ) + ( *kl_t13 );
+    ( *kl_t9 ) = kl_t14;
+#line 111 "codegen/operator_index.kl"
+    kl_t15 = &kl_numbers_1;
+    kl_t16 = kl__operator_index__I3i32E__S6bufferI3i32E_3u64( kl_t15, 2 );
+    kl_t17 = ( *kl_t16 ) != 3;
+    if ( kl_t17 ) goto bb1; else goto bb2;
+    bb1:
+#line 113 "codegen/operator_index.kl"
+    kl_t0 = 1;
+    kl__buffer__I3i32E__dtor( &kl_numbers_1 );
+    return kl_t0;
+    bb2:
+#line 116 "codegen/operator_index.kl"
+    kl_t18 = &kl_numbers_1;
+    kl_t19 = kl__operator_index__I3i32E__S6bufferI3i32E_3u64( kl_t18, 2 );
+    ( *kl_t19 ) = ( *kl_t19 ) + 4;
+#line 117 "codegen/operator_index.kl"
+    kl_t20 = &kl_numbers_1;
+    kl_t21 = kl__operator_index__I3i32E__S6bufferI3i32E_3u64( kl_t20, 0 );
+    kl_t22 = &( *kl_t21 );
+    kl__bump__R3i32( kl_t22 );
+#line 119 "codegen/operator_index.kl"
+    kl_t25 = &kl_numbers_1;
+    kl_t26 = kl__operator_index__I3i32E__S6bufferI3i32E_3u64( kl_t25, 0 );
+    kl_t27 = ( *kl_t26 ) != 2;
+    kl_t24 = kl_t27;
+    if ( kl_t24 ) goto bb4; else goto bb3;
+    bb3:
+    kl_t28 = &kl_numbers_1;
+    kl_t29 = kl__operator_index__I3i32E__S6bufferI3i32E_3u64( kl_t28, 2 );
+    kl_t30 = ( *kl_t29 ) != 7;
+    kl_t24 = kl_t30;
+    goto bb4;
+    bb4:
+    if ( kl_t24 ) goto bb5; else goto bb6;
+    bb5:
+#line 121 "codegen/operator_index.kl"
+    kl_t0 = 2;
+    kl__buffer__I3i32E__dtor( &kl_numbers_1 );
+    return kl_t0;
+    bb6:
+#line 124 "codegen/operator_index.kl"
+    kl_t32 = &kl_numbers_1;
+    kl_t33 = kl__operator_index__I3i32E__S6bufferI3i32E_3u64( kl_t32, 1 );
+    kl_t34 = &( *kl_t33 );
+    kl_kept_31 = kl_t34;
+#line 125 "codegen/operator_index.kl"
+    ( *kl_kept_31 ) = 10;
+#line 127 "codegen/operator_index.kl"
+    kl_t37 = &kl_numbers_1;
+    kl_t38 = kl__operator_index__I3i32E__S6bufferI3i32E_3u64( kl_t37, 1 );
+    kl_t39 = ( *kl_t38 ) != 10;
+    kl_t36 = kl_t39;
+    if ( kl_t36 ) goto bb8; else goto bb7;
+    bb7:
+    kl_t40 = &kl_numbers_1;
+    kl_t41 = kl__total__6bufferI3i32E( kl_t40 );
+    kl_t42 = kl_t41 != 19;
+    kl_t36 = kl_t42;
+    goto bb8;
+    bb8:
+    kl_t35 = kl_t36;
+    if ( kl_t35 ) goto bb10; else goto bb9;
+    bb9:
+    kl_t43 = &kl_numbers_1;
+    kl_t44 = kl__last__I3i32E__6bufferI3i32E( kl_t43 );
+    kl_t45 = kl_t44 != 7;
+    kl_t35 = kl_t45;
+    goto bb10;
+    bb10:
+    if ( kl_t35 ) goto bb11; else goto bb12;
+    bb11:
+#line 129 "codegen/operator_index.kl"
+    kl_t0 = 3;
+    kl__buffer__I3i32E__dtor( &kl_numbers_1 );
+    return kl_t0;
+    bb12:
+#line 132 "codegen/operator_index.kl"
+    kl_t47 = &kl_points_46;
+    kl__buffer__I5pointE__R6bufferI5pointE_3u64__ctor( kl_t47, 1 );
+#line 133 "codegen/operator_index.kl"
+    kl_t49 = &kl_points_46;
+    kl_t50 = kl__operator_index__I5pointE__S6bufferI5pointE_3u64( kl_t49, 0 );
+    kl_t51.kl_x_1 = 1;
+    kl_t51.kl_y_3 = 2;
+    ( *kl_t50 ) = kl_t51;
+#line 134 "codegen/operator_index.kl"
+    kl_t52 = &kl_points_46;
+    kl_t53 = kl__operator_index__I5pointE__S6bufferI5pointE_3u64( kl_t52, 0 );
+    ( *kl_t53 ).kl_x_1 = 5;
+#line 135 "codegen/operator_index.kl"
+    kl_t54 = &kl_points_46;
+    kl_t55 = kl__operator_index__I5pointE__S6bufferI5pointE_3u64( kl_t54, 0 );
+    kl_t56 = &( *kl_t55 );
+    kl__shift__S5point_3i32( kl_t56, 1 );
+#line 137 "codegen/operator_index.kl"
+    kl_t60 = &kl_points_46;
+    kl_t61 = kl__operator_index__I5pointE__S6bufferI5pointE_3u64( kl_t60, 0 );
+    kl_t62 = ( *kl_t61 ).kl_x_1 != 6;
+    kl_t59 = kl_t62;
+    if ( kl_t59 ) goto bb14; else goto bb13;
+    bb13:
+    kl_t63 = &kl_points_46;
+    kl_t64 = kl__operator_index__I5pointE__S6bufferI5pointE_3u64( kl_t63, 0 );
+    kl_t65 = ( *kl_t64 ).kl_y_3 != 3;
+    kl_t59 = kl_t65;
+    goto bb14;
+    bb14:
+    kl_t58 = kl_t59;
+    if ( kl_t58 ) goto bb16; else goto bb15;
+    bb15:
+    kl_t66 = &kl_points_46;
+    kl_t67 = kl__operator_index__I5pointE__S6bufferI5pointE_3u64( kl_t66, 0 );
+    kl_t68 = &( *kl_t67 );
+    kl_t69 = kl__peek__5point( kl_t68 );
+    kl_t70 = kl_t69 != 6;
+    kl_t58 = kl_t70;
+    goto bb16;
+    bb16:
+    if ( kl_t58 ) goto bb17; else goto bb18;
+    bb17:
+#line 139 "codegen/operator_index.kl"
+    kl_t0 = 4;
+    kl__buffer__I5pointE__dtor( &kl_points_46 );
+    kl__buffer__I3i32E__dtor( &kl_numbers_1 );
+    return kl_t0;
+    bb18:
+#line 142 "codegen/operator_index.kl"
+    kl_t72 = &kl_numbers_1;
+    kl_t73 = kl__operator_index__I3i32E__S6bufferI3i32E_3u64( kl_t72, 0 );
+    kl_copied_71 = ( *kl_t73 );
+#line 143 "codegen/operator_index.kl"
+    kl_copied_71 = 99;
+#line 145 "codegen/operator_index.kl"
+    kl_t74 = &kl_numbers_1;
+    kl_t75 = kl__operator_index__I3i32E__S6bufferI3i32E_3u64( kl_t74, 0 );
+    kl_t76 = ( *kl_t75 ) != 2;
+    if ( kl_t76 ) goto bb19; else goto bb20;
+    bb19:
+#line 147 "codegen/operator_index.kl"
+    kl_t0 = 5;
+    kl__buffer__I5pointE__dtor( &kl_points_46 );
+    kl__buffer__I3i32E__dtor( &kl_numbers_1 );
+    return kl_t0;
+    bb20:
+#line 150 "codegen/operator_index.kl"
+    kl_t78 = &kl_first_77;
+    kl_t79 = &kl_numbers_1;
+    kl_t80 = kl__operator_index__I3i32E__S6bufferI3i32E_3u64( kl_t79, 0 );
+    kl_t81 = &( *kl_t80 );
+    kl_t82 = ( int32_t* ) kl_t81;
+    kl__view__R4view_PK3i32__ctor( kl_t78, kl_t82 );
+#line 152 "codegen/operator_index.kl"
+    kl_t85 = &kl_first_77;
+    kl_t86 = kl__operator_index__S4view_3u64( kl_t85, 0 );
+    kl_t87 = ( *kl_t86 ) != 2;
+    kl_t84 = kl_t87;
+    if ( kl_t84 ) goto bb22; else goto bb21;
+    bb21:
+    kl_t88 = kl__filled__3i32( 8 );
+    kl_t89 = &kl_t88;
+    kl_t90 = kl__operator_index__I3i32E__S6bufferI3i32E_3u64( kl_t89, 1 );
+    kl_t91 = ( *kl_t90 ) != 8;
+    kl_t84 = kl_t91;
+    goto bb22;
+    bb22:
+    kl__buffer__I3i32E__dtor( &kl_t88 );
+    if ( kl_t84 ) goto bb23; else goto bb24;
+    bb23:
+#line 154 "codegen/operator_index.kl"
+    kl_t0 = 6;
+    kl__buffer__I5pointE__dtor( &kl_points_46 );
+    kl__buffer__I3i32E__dtor( &kl_numbers_1 );
+    return kl_t0;
+    bb24:
+#line 157 "codegen/operator_index.kl"
+    kl_t0 = 0;
+    kl__buffer__I5pointE__dtor( &kl_points_46 );
+    kl__buffer__I3i32E__dtor( &kl_numbers_1 );
+    return kl_t0;
+}
+
+uint64_t kl__length__I3i32E__S6bufferI3i32E( struct kl__buffer__I3i32E* kl_this_1 )
+{
+    uint64_t kl_t0;
+#line 47 "codegen/operator_index.kl"
+    kl_t0 = ( *kl_this_1 ).kl_size_99;
+    return kl_t0;
+}
+
+int32_t* kl__operator_index__I3i32E__S6bufferI3i32E_3u64( struct kl__buffer__I3i32E* kl_this_1, uint64_t kl_index_2 )
+{
+    int32_t* kl_t0;
+    bool kl_t3;
+    int32_t* kl_t4;
+    int32_t* kl_t5;
+#line 37 "codegen/operator_index.kl"
+    kl_t3 = kl_index_2 < ( *kl_this_1 ).kl_size_99;
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 41 "codegen/operator_index.kl"
+    kl_t4 = ( *kl_this_1 ).kl_data_97 + kl_index_2;
+    kl_t5 = &( *kl_t4 );
+    kl_t0 = kl_t5;
+    return kl_t0;
+    bb2:
+    kl_rt_panic( "codegen/operator_index.kl", 37, "assertion failed: index < size" );
+}
+
+void kl__buffer__I3i32E__R6bufferI3i32E_3u64__ctor( struct kl__buffer__I3i32E* kl_this_1, uint64_t kl_n_2 )
+{
+    int32_t* kl_t3;
+#line 20 "codegen/operator_index.kl"
+    ( *kl_this_1 ).kl_size_99 = kl_n_2;
+#line 23 "codegen/operator_index.kl"
+    kl_t3 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( int32_t ) );
+    ( *kl_this_1 ).kl_data_97 = kl_t3;
+    return;
+}
+
+int32_t kl__last__I3i32E__6bufferI3i32E( struct kl__buffer__I3i32E* kl_values_1 )
+{
+    int32_t kl_t0;
+    struct kl__buffer__I3i32E* kl_t2;
+    struct kl__buffer__I3i32E* kl_t3;
+    uint64_t kl_t4;
+    uint64_t kl_t5;
+    int32_t* kl_t6;
+#line 93 "codegen/operator_index.kl"
+    kl_t2 = &( *kl_values_1 );
+    kl_t3 = &( *kl_values_1 );
+    kl_t4 = kl__length__I3i32E__S6bufferI3i32E( kl_t3 );
+    kl_t5 = kl_t4 - 1;
+    kl_t6 = kl__operator_index__I3i32E__S6bufferI3i32E_3u64( kl_t2, kl_t5 );
+    kl_t0 = ( *kl_t6 );
+    return kl_t0;
+}
+
+void kl__buffer__I5pointE__R6bufferI5pointE_3u64__ctor( struct kl__buffer__I5pointE* kl_this_1, uint64_t kl_n_2 )
+{
+    struct kl__point* kl_t3;
+#line 20 "codegen/operator_index.kl"
+    ( *kl_this_1 ).kl_size_99 = kl_n_2;
+#line 23 "codegen/operator_index.kl"
+    kl_t3 = ( struct kl__point* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( struct kl__point ) );
+    ( *kl_this_1 ).kl_data_97 = kl_t3;
+    return;
+}
+
+struct kl__point* kl__operator_index__I5pointE__S6bufferI5pointE_3u64( struct kl__buffer__I5pointE* kl_this_1, uint64_t kl_index_2 )
+{
+    struct kl__point* kl_t0;
+    bool kl_t3;
+    struct kl__point* kl_t4;
+    struct kl__point* kl_t5;
+#line 37 "codegen/operator_index.kl"
+    kl_t3 = kl_index_2 < ( *kl_this_1 ).kl_size_99;
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 41 "codegen/operator_index.kl"
+    kl_t4 = ( *kl_this_1 ).kl_data_97 + kl_index_2;
+    kl_t5 = &( *kl_t4 );
+    kl_t0 = kl_t5;
+    return kl_t0;
+    bb2:
+    kl_rt_panic( "codegen/operator_index.kl", 37, "assertion failed: index < size" );
+}
+
+void kl__buffer__I3i32E__dtor( struct kl__buffer__I3i32E* kl_this_1 )
+{
+#line 31 "codegen/operator_index.kl"
+    kl_rt_free( ( *kl_this_1 ).kl_data_97 );
+    return;
+}
+
+void kl__buffer__I5pointE__dtor( struct kl__buffer__I5pointE* kl_this_1 )
+{
+#line 31 "codegen/operator_index.kl"
+    kl_rt_free( ( *kl_this_1 ).kl_data_97 );
+    return;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

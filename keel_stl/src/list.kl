@@ -63,23 +63,13 @@ class list<T> where T : Copyable
         }
     }
 
-    public T get( u64 index ) const
+    public T* operator[]( u64 index ) const
     {
         assert( index < count );
 
         unsafe
         {
-            return data[index];
-        }
-    }
-
-    public void set( u64 index, T value )
-    {
-        assert( index < count );
-        
-        unsafe
-        {
-            data[index] = value;
+            return &data[index];
         }
     }
 

@@ -1,37 +1,49 @@
 error: `operator!=` cannot be declared
- --> parse/errors_operator_names.kl:7:10
+ --> parse/errors_operator_names.kl:8:10
   |
-7 |     bool operator!=( const ref a other ) const
+8 |     bool operator!=( const ref a other ) const
   |          ^^^^^^^^^^ declare `operator==`, and `!=` is its negation
 
 error: `&&` cannot be overloaded
-  --> parse/errors_operator_names.kl:12:10
+  --> parse/errors_operator_names.kl:13:10
    |
-12 |     bool operator&&( const ref a other ) const
+13 |     bool operator&&( const ref a other ) const
    |          ^^^^^^^^^^ it evaluates its right operand only when needed, and a call would evaluate both
 
 error: `operator<` cannot be declared
-  --> parse/errors_operator_names.kl:17:10
+  --> parse/errors_operator_names.kl:18:10
    |
-17 |     bool operator<( const ref a other ) const
+18 |     bool operator<( const ref a other ) const
    |          ^^^^^^^^^ ordering is declared once, as `operator<=>`, which is not supported yet
 
 error: `operator+` cannot be declared yet
-  --> parse/errors_operator_names.kl:22:7
+  --> parse/errors_operator_names.kl:23:7
    |
-22 |     a operator+( const ref a other ) const
+23 |     a operator+( const ref a other ) const
    |       ^^^^^^^^^
 
 error: expected an operator after `operator`
-  --> parse/errors_operator_names.kl:27:10
+  --> parse/errors_operator_names.kl:28:10
    |
-27 |     bool operator( const ref a other ) const
+28 |     bool operator( const ref a other ) const
    |          ^^^^^^^^
 
-error: an operator is declared inside the type of its left operand
-  --> parse/errors_operator_names.kl:33:6
+error: `operator[` cannot be declared
+  --> parse/errors_operator_names.kl:33:10
    |
-33 | bool operator==( const ref a l, const ref a r )
+33 |     i32* operator[( u64 index ) const
+   |          ^^^^^^^^^ write `operator[]`
+
+error: an operator is declared inside the type of its left operand
+  --> parse/errors_operator_names.kl:39:6
+   |
+39 | bool operator==( const ref a l, const ref a r )
    |      ^^^^^^^^^^ move it into that type as a `const` method
 
-6 errors generated
+error: an operator is declared inside the type of its left operand
+  --> parse/errors_operator_names.kl:44:6
+   |
+44 | i32* operator[]( u64 index )
+   |      ^^^^^^^^^^ move it into that type as a `const` method
+
+8 errors generated

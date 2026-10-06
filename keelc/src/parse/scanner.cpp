@@ -151,10 +151,7 @@ Declaration_scan Scanner::declaration_head( u32 at, Scan_site site )
     const u32 name_at = cursor_;
     if( match_keyword( Keyword::Operator ) )
     {
-        if( !check( Token_kind::L_paren ) )
-        {
-            advance();
-        }
+        skip_operator_token();
     }
     else if( !want_name() )
     {
@@ -478,10 +475,7 @@ Head_scan Scanner::scan_head( u32 at, Symbol_id enclosing, Constructor_names nam
     // `operator` and whichever token follows it; the parser says which ones may be declared.
     if( match_keyword( Keyword::Operator ) )
     {
-        if( !check( Token_kind::L_paren ) )
-        {
-            advance();
-        }
+        skip_operator_token();
     }
     else if( !want_name() )
     {
@@ -1122,6 +1116,22 @@ void Scanner::skip_braces()
     }
 }
 
+void Scanner::skip_operator_token()
+{
+    if( check( Token_kind::L_paren ) )
+    {
+        return;
+    }
+
+    const Token& t = peek();
+    advance();
+
+    if( t.kind == Token_kind::L_bracket )
+    {
+        match( Token_kind::R_bracket );
+    }
+}
+
 } // namespace keel
 
 #ifdef ENABLE_UNIT_TESTS
@@ -1317,6 +1327,8 @@ TEST_CASE( "scanner_recognises_each_member_head", "[scan]" )
         require_head( "bool operator!=( const ref C other ) const { }", Member_kind::Method, "{" );
         require_head( "C operator+( const ref C other ) const { }", Member_kind::Method, "{" );
         require_head( "bool operator( const ref C other ) const { }", Member_kind::Method, "{" );
+        require_head( "T* operator[]( u64 index ) const { }", Member_kind::Method, "{" );
+        require_head( "T* operator[( u64 index ) const { }", Member_kind::Method, "{" );
     }
 
     SECTION( "a method's return type may carry a mode" )
@@ -1740,6 +1752,7 @@ TEST_CASE( "scanner_recognises_each_declaration_head", "[scan]" )
     SECTION( "an operator outside a type" )
     {
         require_declaration( "bool operator==( const ref C l, const ref C r ) { }", Declaration_kind::Function, "{" );
+        require_declaration( "i32* operator[]( u64 index ) { }", Declaration_kind::Function, "{" );
     }
 
     SECTION( "through type parameters and `where` clauses" )

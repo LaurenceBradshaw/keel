@@ -59,6 +59,8 @@ public:
 
     Node_id place_root( Node_id id, Node_id current_function ) const;
     Node_id place_source( Node_id id ) const;
+    bool    is_operator_index( Node_id id ) const;
+    Node_id operator_projection( Node_id place ) const;
 
     // The declaration whose storage ends when `current_function` returns, or invalid.
     Node_id dying_storage( Node_id place, Node_id current_function ) const;

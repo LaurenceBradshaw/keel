@@ -201,8 +201,19 @@ void Statements::visit_return( Node_id id )
     {
         const Node_id root = places_.place_root( value, expressions_.current_function() );
 
-        if( !table_.is_error( types_.type_of( value ) ) &&
-            ( !root.is_valid() || ast_.kind( root ) != Node_kind::Param_decl || !places_.returns_a_binding( root ) ) )
+        if( table_.is_error( types_.type_of( value ) ) )
+        {
+            // Already reported.
+        }
+        else if( places_.operator_projection( value ).is_valid() )
+        {
+            reporter_.error_at(
+                ast_.span( value ),
+                "`[]` reaches an element for one expression, so it cannot be returned by reference",
+                fmt::format( "return a copy, or its address with `&{}`", reporter_.text( ast_.span( value ) ) )
+            );
+        }
+        else if( !root.is_valid() || ast_.kind( root ) != Node_kind::Param_decl || !places_.returns_a_binding( root ) )
         {
             reporter_.error_at(
                 ast_.span( value ),
@@ -292,6 +303,14 @@ void Statements::visit_var( Node_id id )
         else if( !places_.is_assignable( init ) )
         {
             reporter_.error_at( ast_.span( init ), "a `ref` binding needs a variable to bind to" );
+        }
+        else if( places_.operator_projection( init ).is_valid() )
+        {
+            reporter_.error_at(
+                ast_.span( init ),
+                "`[]` reaches an element for one expression, so a `ref` cannot bind it",
+                fmt::format( "copy it, or keep its address with `&{}`", reporter_.text( ast_.span( init ) ) )
+            );
         }
         else if( types_.type_of( init ) != type && !table_.references_error( types_.type_of( init ) ) )
         {

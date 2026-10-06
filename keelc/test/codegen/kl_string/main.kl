@@ -9,7 +9,7 @@ i32 main()
     kl::string help  = kl::string( "help" );
     kl::string empty = kl::string( "" );
 
-    if( hello.size() != 5 || hello.get( 0 ) != 104 || hello.get( 4 ) != 111 )
+    if( hello.size() != 5 || hello[0] != 104 || hello[4] != 111 )
     {
         return 1;
     }

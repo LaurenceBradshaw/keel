@@ -1,29 +1,37 @@
-Source_file                             1:1-37:1
-  Struct_decl                           3:1-31:3    name=a
+Source_file                             1:1-48:1
+  Struct_decl                           4:1-37:3    name=a
     <none>                              -
-    Field_decl                          5:5-5:11    name=x
-      Named_type                        5:5-5:8     "i32"
-    Error                               7:5-10:6    "bool operator!=( const ref a other ) const
+    Field_decl                          6:5-6:11    name=x
+      Named_type                        6:5-6:8     "i32"
+    Error                               8:5-11:6    "bool operator!=( const ref a other ) const
     {
         return false;
     }"
-    Error                               12:5-15:6   "bool operator&&( const ref a other ) const
+    Error                               13:5-16:6   "bool operator&&( const ref a other ) const
     {
         return false;
     }"
-    Error                               17:5-20:6   "bool operator<( const ref a other ) const
+    Error                               18:5-21:6   "bool operator<( const ref a other ) const
     {
         return false;
     }"
-    Error                               22:5-25:6   "a operator+( const ref a other ) const
+    Error                               23:5-26:6   "a operator+( const ref a other ) const
     {
         return other;
     }"
-    Error                               27:5-30:6   "bool operator( const ref a other ) const
+    Error                               28:5-31:6   "bool operator( const ref a other ) const
     {
         return false;
     }"
-  Error                                 33:1-36:2   "bool operator==( const ref a l, const ref a r )
+    Error                               33:5-36:6   "i32* operator[( u64 index ) const
+    {
+        return nullptr;
+    }"
+  Error                                 39:1-42:2   "bool operator==( const ref a l, const ref a r )
 {
     return true;
+}"
+  Error                                 44:1-47:2   "i32* operator[]( u64 index )
+{
+    return nullptr;
 }"

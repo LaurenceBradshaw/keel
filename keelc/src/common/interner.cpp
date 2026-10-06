@@ -46,6 +46,9 @@ Interner::Interner()
 
     [[maybe_unused]] const Symbol_id op_equal_equal = intern( "operator==" );
     assert( op_equal_equal.v == operator_name( Operator_name::Equal_equal ).v && "operator name id out of order" );
+
+    [[maybe_unused]] const Symbol_id op_index = intern( "operator[]" );
+    assert( op_index.v == operator_name( Operator_name::Index ).v && "operator name id out of order" );
 }
 
 Symbol_id Interner::intern( std::string_view text )
@@ -88,6 +91,12 @@ bool Interner::is_keyword( Symbol_id id ) const
 {
     // The invalid sentinel is far above Count, so it needs no separate check.
     return id.v < static_cast<u32>( Keyword::Count );
+}
+
+bool Interner::is_operator_name( Symbol_id id )
+{
+    return id.v >= static_cast<u32>( Keyword::Count ) &&
+           id.v < static_cast<u32>( Keyword::Count ) + static_cast<u32>( Operator_name::Count );
 }
 
 std::size_t Interner::Sv_hash::operator()( std::string_view sv ) const
@@ -233,6 +242,15 @@ TEST_CASE( "interner_reserves_operator_names_after_the_keywords", "[common][inte
     REQUIRE( in.intern( "operator==" ) == equal_equal );
     REQUIRE_FALSE( in.is_keyword( equal_equal ) );
     REQUIRE( in.is_keyword( in.intern( "operator" ) ) );
+
+    const Symbol_id index = Interner::operator_name( Operator_name::Index );
+
+    REQUIRE( in.text( index ) == "operator[]" );
+    REQUIRE( in.intern( "operator[]" ) == index );
+    REQUIRE( Interner::is_operator_name( equal_equal ) );
+    REQUIRE( Interner::is_operator_name( index ) );
+    REQUIRE_FALSE( Interner::is_operator_name( in.intern( "operator" ) ) );
+    REQUIRE_FALSE( Interner::is_operator_name( in.intern( "index" ) ) );
 }
 
 // PLAN §6.3 D10: `new` and `delete` are operators appearing in expression position, so the parser

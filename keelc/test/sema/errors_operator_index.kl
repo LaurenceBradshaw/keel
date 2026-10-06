@@ -1,0 +1,91 @@
+// What `operator[]` must be - a `const` method taking a `u64` and returning a pointer to the
+// element, declared once.
+struct returns_value
+{
+    i32 x;
+
+    i32 operator[]( u64 index ) const
+    {
+        return x;
+    }
+};
+
+struct returns_reference
+{
+    i32 x;
+
+    const ref i32 operator[]( u64 index ) const
+    {
+        return x;
+    }
+};
+
+struct returns_void_pointer
+{
+    i32 x;
+
+    void* operator[]( u64 index ) const
+    {
+        return nullptr;
+    }
+};
+
+struct not_const
+{
+    i32 x;
+
+    i32* operator[]( u64 index )
+    {
+        return &x;
+    }
+};
+
+struct signed_index
+{
+    i32 x;
+
+    i32* operator[]( i32 index ) const
+    {
+        return nullptr;
+    }
+};
+
+struct two_indices
+{
+    i32 x;
+
+    i32* operator[]( u64 row, u64 column ) const
+    {
+        return nullptr;
+    }
+};
+
+struct declared_twice
+{
+    i32 x;
+
+    i32* operator[]( u64 index ) const
+    {
+        return nullptr;
+    }
+
+    const i32* operator[]( u64 index ) const
+    {
+        return nullptr;
+    }
+};
+
+struct is_static
+{
+    i32 x;
+
+    static i32* operator[]( u64 index )
+    {
+        return nullptr;
+    }
+};
+
+i32 main()
+{
+    return 0;
+}

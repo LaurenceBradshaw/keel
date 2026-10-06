@@ -197,6 +197,8 @@ private:
     // At `{`: past its matching `}`, or to the end of the file.
     void skip_braces();
 
+    void skip_operator_token();
+
     std::span<const Token> tokens_;
     u32                    cursor_       = 0;
     u32                    owed_greater_ = 0;
