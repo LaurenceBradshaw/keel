@@ -300,6 +300,7 @@ private:
     bool shows( Node_id declaration ) const;
 
     bool uses_runtime() const;
+    bool asserts() const;
     bool uses_counted_allocation() const;
 
     // Which of D41's three guards a Binary needs, or None for the ordinary infix case. `mirror` is
@@ -640,18 +641,30 @@ void Kir_emitter::emit_prototypes()
 
 void Kir_emitter::emit_runtime_prototypes()
 {
-    if( !uses_runtime() )
+    bool any = false;
+    if( uses_runtime() )
     {
-        return;
+        write_line( "void* kl_rt_alloc( size_t );" );
+        write_line( "void  kl_rt_free( void* );" );
+        any = true;
     }
 
-    write_line( "void* kl_rt_alloc( size_t );" );
-    write_line( "void  kl_rt_free( void* );" );
     if( uses_counted_allocation() )
     {
         write_line( "void* kl_rt_alloc_many( size_t, size_t );" );
+        any = true;
     }
-    write_line( "" );
+
+    if( asserts() )
+    {
+        write_line( "_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );" );
+        any = true;
+    }
+
+    if( any )
+    {
+        write_line( "" );
+    }
 }
 
 Guard Kir_emitter::guard_for( const Rvalue& value, bool& mirror ) const
@@ -913,6 +926,32 @@ void Kir_emitter::emit_terminator( const Terminator& terminator, const Function&
         assert( false && "the lowerer emits no unreachable terminator" );
         return;
 
+    case Terminator_kind::Assert_failed:
+    {
+        // As written, on one line: each run of whitespace becomes one space.
+        std::string condition_text;
+
+        for( const char c : sm_.text( terminator.span ) )
+        {
+            if( c != ' ' && c != '\t' && c != '\n' && c != '\r' )
+            {
+                condition_text.push_back( c );
+            }
+            else if( !condition_text.empty() && condition_text.back() != ' ' )
+            {
+                condition_text.push_back( ' ' );
+            }
+        }
+
+        write_line( fmt::format(
+            "kl_rt_panic( {}, {}, {} );",
+            c_string( sm_.file( terminator.span.file ).path ),
+            sm_.line_col( terminator.span.file, terminator.span.start ).line,
+            c_string( "assertion failed: " + condition_text )
+        ) );
+        return;
+    }
+
     case Terminator_kind::Unset:
         assert( false && "block has no terminator; verify rejects this" );
         return;
@@ -1086,6 +1125,22 @@ bool Kir_emitter::uses_runtime() const
             }
 
             if( statement.value.kind == Rvalue_kind::Allocate || statement.value.kind == Rvalue_kind::Release )
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+bool Kir_emitter::asserts() const
+{
+    for( const Function& function : functions_ )
+    {
+        for( const Block& block : function.blocks )
+        {
+            if( block.terminator.kind == Terminator_kind::Assert_failed )
             {
                 return true;
             }

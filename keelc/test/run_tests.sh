@@ -18,7 +18,9 @@
 # runtime, and it is executed, and the program's exit code is compared against <name>.kl.run (0 if
 # the file is absent). Without this a golden diff can only say the emitted C is unchanged, never that it is
 # correct - and the codegen fixtures are written to check their own answers, which is worth
-# nothing if nothing runs them.
+# nothing if nothing runs them. Where <name>.kl.out exists, the program's stdout and stderr together
+# must match it too. A fixture expected to exit 134 is one that aborts, and is never run under
+# valgrind: an abort leaves memory reachable on purpose, and valgrind reports the signal.
 #
 #   CC          the C compiler keelc runs         (default: cc)
 #   KEEL_RUN_TIMEOUT  seconds a fixture may run   (default: 10)
@@ -94,6 +96,9 @@ run_timeout="${KEEL_RUN_TIMEOUT:-10}"
 # Off by default: it multiplies the suite's runtime, and most fixtures allocate nothing for it to
 # check. Turned on it is what makes "frees exactly once" a checked claim rather than an inspected one.
 valgrind_run="${KEEL_VALGRIND:-}"
+
+# A fixture that aborts would otherwise leave a core file in the suite.
+ulimit -c 0
 mkdir -p "$artifacts" || exit 2
 
 if [ -t 1 ]; then
@@ -212,14 +217,18 @@ check_run()
     # is the worse of the two by a distance.
     local vg_log="${build_dir}/vg.log"
 
-    if [ -n "$valgrind_run" ]; then
+    local expected_run=0
+    [ -f "${src}.run" ] && expected_run="$( cat "${src}.run" )"
+
+    if [ -n "$valgrind_run" ] && [ "$expected_run" -ne 134 ]; then
         # Its own log, and judged by that rather than by an exit code: a program killed by a signal
         # reports the signal, not --error-exitcode, so a segfault would otherwise slip through. With
         # -q the file stays empty unless valgrind has something to say.
         rm -f "$vg_log"
         timeout "$run_timeout" valgrind -q --leak-check=full --log-file="$vg_log" "$stem" > "$run_log" 2>&1
     else
-        timeout "$run_timeout" "$stem" > "$run_log" 2>&1
+        # The program's streams only: timeout's own word on a signal is not the program's output.
+        timeout "$run_timeout" sh -c 'exec "$0" > "$1" 2>&1' "$stem" "$run_log" 2> "${build_dir}/timeout.log"
     fi
 
     local ran=$?
@@ -237,10 +246,9 @@ check_run()
         return 1
     fi
 
-    local expected_run=0
-    [ -f "${src}.run" ] && expected_run="$( cat "${src}.run" )"
-
     if [ "$update" -eq 1 ]; then
+        [ -f "${src}.out" ] && cp "$run_log" "${src}.out"
+
         if [ "$ran" -ne 0 ]; then
             echo "$ran" > "${src}.run"
         else
@@ -252,6 +260,13 @@ check_run()
 
     if [ "$ran" -ne "$expected_run" ]; then
         echo "    the program exited ${ran}, expected ${expected_run}"
+        echo "      kept at ${source_c}"
+        return 1
+    fi
+
+    if [ -f "${src}.out" ] && ! diff -u "${src}.out" "$run_log" > "${build_dir}/out.diff"; then
+        echo "    the program's output differs:"
+        sed 's/^/      /' < "${build_dir}/out.diff"
         echo "      kept at ${source_c}"
         return 1
     fi
@@ -349,7 +364,7 @@ fi
 # and every stream comparison still passes because neither appears on stdout or stderr.
 stray="$( find . -type f \
     ! -name '*.kl' ! -name '*.kl.expected' ! -name '*.kl.stderr' ! -name '*.kl.exit' \
-    ! -name '*.kl.run' \
+    ! -name '*.kl.run' ! -name '*.kl.out' \
     ! -name FLAGS ! -name RUN ! -name run_tests.sh ! -name CMakeLists.txt | sort )"
 
 if [ -n "$stray" ]; then

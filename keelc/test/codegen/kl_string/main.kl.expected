@@ -9,9 +9,9 @@ struct kl_2kl_string;
 
 struct kl_2kl_list__I2u8E
 {
-    uint8_t* kl_data_627;
-    uint64_t kl_count_629;
-    uint64_t kl_cap_631;
+    uint8_t* kl_data_642;
+    uint64_t kl_count_644;
+    uint64_t kl_cap_646;
 };
 
 struct kl_2kl_string
@@ -22,6 +22,7 @@ struct kl_2kl_string
 void* kl_rt_alloc( size_t );
 void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t );
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
 int32_t kl__main__( void );
 void kl_2kl_string__RQ2kl6string__ctor( struct kl_2kl_string* );
@@ -216,7 +217,7 @@ void kl_2kl_string__RQ2kl6string_Q7prelude3str__ctor( struct kl_2kl_string* kl_t
     bool kl_t9;
 #line 15 "../../keel_stl/src/string.kl"
     kl_t9 = false;
-    kl_t3 = kl_2kl_with_capacity__I2u8E__SQ2kl4listI2u8E_3u64( kl_text_2.kl_size_640 );
+    kl_t3 = kl_2kl_with_capacity__I2u8E__SQ2kl4listI2u8E_3u64( kl_text_2.kl_size_655 );
     kl_t9 = true;
     ( *kl_this_1 ).kl_bytes_314 = kl_t3;
     kl_t9 = false;
@@ -225,12 +226,12 @@ void kl_2kl_string__RQ2kl6string_Q7prelude3str__ctor( struct kl_2kl_string* kl_t
     kl_i_4 = 0;
     goto bb1;
     bb1:
-    kl_t5 = kl_i_4 < kl_text_2.kl_size_640;
+    kl_t5 = kl_i_4 < kl_text_2.kl_size_655;
     if ( kl_t5 ) goto bb2; else goto bb3;
     bb2:
 #line 20 "../../keel_stl/src/string.kl"
     kl_t6 = &( *kl_this_1 ).kl_bytes_314;
-    kl_t7 = kl_text_2.kl_data_637 + kl_i_4;
+    kl_t7 = kl_text_2.kl_data_652 + kl_i_4;
     kl_2kl_push__I2u8E__SQ2kl4listI2u8E_2u8( kl_t6, ( *kl_t7 ) );
     goto bb4;
     bb3:
@@ -407,11 +408,11 @@ bool kl_2kl_equals__SQ2kl6string_Q2kl6string( struct kl_2kl_string* kl_this_1, s
 void kl_2kl_list__I2u8E__RQ2kl4listI2u8E__ctor( struct kl_2kl_list__I2u8E* kl_this_1 )
 {
 #line 8 "../../keel_stl/src/list.kl"
-    ( *kl_this_1 ).kl_data_627 = NULL;
+    ( *kl_this_1 ).kl_data_642 = NULL;
 #line 9 "../../keel_stl/src/list.kl"
-    ( *kl_this_1 ).kl_count_629 = 0;
+    ( *kl_this_1 ).kl_count_644 = 0;
 #line 10 "../../keel_stl/src/list.kl"
-    ( *kl_this_1 ).kl_cap_631 = 0;
+    ( *kl_this_1 ).kl_cap_646 = 0;
     return;
 }
 
@@ -429,14 +430,14 @@ struct kl_2kl_list__I2u8E kl_2kl_with_capacity__I2u8E__SQ2kl4listI2u8E_3u64( uin
     kl_t6 = true;
     kl_2kl_list__I2u8E__RQ2kl4listI2u8E__ctor( kl_t3 );
 #line 16 "../../keel_stl/src/list.kl"
-    kl_result_2.kl_cap_631 = kl_capacity_1;
+    kl_result_2.kl_cap_646 = kl_capacity_1;
     kl_t6 = true;
 #line 17 "../../keel_stl/src/list.kl"
-    kl_result_2.kl_count_629 = 0;
+    kl_result_2.kl_count_644 = 0;
     kl_t6 = true;
 #line 21 "../../keel_stl/src/list.kl"
     kl_t5 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_capacity_1, sizeof( uint8_t ) );
-    kl_result_2.kl_data_627 = kl_t5;
+    kl_result_2.kl_data_642 = kl_t5;
     kl_t6 = true;
 #line 24 "../../keel_stl/src/list.kl"
     kl_t0 = kl_result_2;
@@ -454,32 +455,32 @@ void kl_2kl_push__I2u8E__SQ2kl4listI2u8E_2u8( struct kl_2kl_list__I2u8E* kl_this
     bool kl_t6;
     uint64_t kl_t7;
 #line 40 "../../keel_stl/src/list.kl"
-    kl_t3 = ( *kl_this_1 ).kl_count_629 != ( *kl_this_1 ).kl_cap_631;
+    kl_t3 = ( *kl_this_1 ).kl_count_644 != ( *kl_this_1 ).kl_cap_646;
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
 #line 44 "../../keel_stl/src/list.kl"
-    kl_t4 = ( *kl_this_1 ).kl_data_627 + ( *kl_this_1 ).kl_count_629;
+    kl_t4 = ( *kl_this_1 ).kl_data_642 + ( *kl_this_1 ).kl_count_644;
     ( *kl_t4 ) = kl_value_2;
 #line 46 "../../keel_stl/src/list.kl"
-    ( *kl_this_1 ).kl_count_629 = ( *kl_this_1 ).kl_count_629 + 1;
+    ( *kl_this_1 ).kl_count_644 = ( *kl_this_1 ).kl_count_644 + 1;
     goto bb3;
     bb2:
 #line 50 "../../keel_stl/src/list.kl"
-    kl_t6 = ( *kl_this_1 ).kl_cap_631 > 0;
+    kl_t6 = ( *kl_this_1 ).kl_cap_646 > 0;
     if ( kl_t6 ) goto bb4; else goto bb5;
     bb3:
     return;
     bb4:
-    kl_t7 = ( *kl_this_1 ).kl_cap_631 * 2;
+    kl_t7 = ( *kl_this_1 ).kl_cap_646 * 2;
     kl_t5 = kl_t7;
     goto bb6;
     bb5:
     kl_t5 = 1;
     goto bb6;
     bb6:
-    ( *kl_this_1 ).kl_cap_631 = kl_t5;
+    ( *kl_this_1 ).kl_cap_646 = kl_t5;
 #line 51 "../../keel_stl/src/list.kl"
-    kl_2kl_grow__I2u8E__SQ2kl4listI2u8E_3u64( kl_this_1, ( *kl_this_1 ).kl_cap_631 );
+    kl_2kl_grow__I2u8E__SQ2kl4listI2u8E_3u64( kl_this_1, ( *kl_this_1 ).kl_cap_646 );
 #line 52 "../../keel_stl/src/list.kl"
     kl_2kl_push__I2u8E__SQ2kl4listI2u8E_2u8( kl_this_1, kl_value_2 );
     goto bb3;
@@ -488,18 +489,25 @@ void kl_2kl_push__I2u8E__SQ2kl4listI2u8E_2u8( struct kl_2kl_list__I2u8E* kl_this
 uint8_t kl_2kl_get__I2u8E__SQ2kl4listI2u8E_3u64( struct kl_2kl_list__I2u8E* kl_this_1, uint64_t kl_index_2 )
 {
     uint8_t kl_t0;
-    uint8_t* kl_t3;
-#line 70 "../../keel_stl/src/list.kl"
-    kl_t3 = ( *kl_this_1 ).kl_data_627 + kl_index_2;
-    kl_t0 = ( *kl_t3 );
+    bool kl_t3;
+    uint8_t* kl_t4;
+#line 68 "../../keel_stl/src/list.kl"
+    kl_t3 = kl_index_2 < ( *kl_this_1 ).kl_count_644;
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 72 "../../keel_stl/src/list.kl"
+    kl_t4 = ( *kl_this_1 ).kl_data_642 + kl_index_2;
+    kl_t0 = ( *kl_t4 );
     return kl_t0;
+    bb2:
+    kl_rt_panic( "../../keel_stl/src/list.kl", 68, "assertion failed: index < count" );
 }
 
 uint64_t kl_2kl_size__I2u8E__SQ2kl4listI2u8E( struct kl_2kl_list__I2u8E* kl_this_1 )
 {
     uint64_t kl_t0;
-#line 85 "../../keel_stl/src/list.kl"
-    kl_t0 = ( *kl_this_1 ).kl_count_629;
+#line 88 "../../keel_stl/src/list.kl"
+    kl_t0 = ( *kl_this_1 ).kl_count_644;
     return kl_t0;
 }
 
@@ -507,8 +515,8 @@ bool kl_2kl_is_empty__I2u8E__SQ2kl4listI2u8E( struct kl_2kl_list__I2u8E* kl_this
 {
     bool kl_t0;
     bool kl_t2;
-#line 95 "../../keel_stl/src/list.kl"
-    kl_t2 = ( *kl_this_1 ).kl_count_629 == 0;
+#line 98 "../../keel_stl/src/list.kl"
+    kl_t2 = ( *kl_this_1 ).kl_count_644 == 0;
     kl_t0 = kl_t2;
     return kl_t0;
 }
@@ -517,11 +525,11 @@ void kl_2kl_list__I2u8E__dtor( struct kl_2kl_list__I2u8E* kl_this_1 )
 {
     bool kl_t2;
 #line 29 "../../keel_stl/src/list.kl"
-    kl_t2 = ( *kl_this_1 ).kl_data_627 != NULL;
+    kl_t2 = ( *kl_this_1 ).kl_data_642 != NULL;
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
 #line 33 "../../keel_stl/src/list.kl"
-    kl_rt_free( ( *kl_this_1 ).kl_data_627 );
+    kl_rt_free( ( *kl_this_1 ).kl_data_642 );
     goto bb2;
     bb2:
     return;
@@ -536,38 +544,38 @@ void kl_2kl_grow__I2u8E__SQ2kl4listI2u8E_3u64( struct kl_2kl_list__I2u8E* kl_thi
     bool kl_t7;
     uint8_t* kl_t8;
     uint8_t* kl_t9;
-#line 113 "../../keel_stl/src/list.kl"
-    ( *kl_this_1 ).kl_cap_631 = kl_n_2;
-#line 117 "../../keel_stl/src/list.kl"
-    kl_t4 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) ( *kl_this_1 ).kl_cap_631, sizeof( uint8_t ) );
-    kl_new_data_3 = kl_t4;
+#line 116 "../../keel_stl/src/list.kl"
+    ( *kl_this_1 ).kl_cap_646 = kl_n_2;
 #line 120 "../../keel_stl/src/list.kl"
-    kl_t5 = ( *kl_this_1 ).kl_data_627 != NULL;
+    kl_t4 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) ( *kl_this_1 ).kl_cap_646, sizeof( uint8_t ) );
+    kl_new_data_3 = kl_t4;
+#line 123 "../../keel_stl/src/list.kl"
+    kl_t5 = ( *kl_this_1 ).kl_data_642 != NULL;
     if ( kl_t5 ) goto bb1; else goto bb6;
     bb1:
-#line 122 "../../keel_stl/src/list.kl"
+#line 125 "../../keel_stl/src/list.kl"
     kl_i_6 = 0;
     goto bb2;
     bb2:
-    kl_t7 = kl_i_6 < ( *kl_this_1 ).kl_count_629;
+    kl_t7 = kl_i_6 < ( *kl_this_1 ).kl_count_644;
     if ( kl_t7 ) goto bb3; else goto bb4;
     bb3:
-#line 126 "../../keel_stl/src/list.kl"
+#line 129 "../../keel_stl/src/list.kl"
     kl_t8 = kl_new_data_3 + kl_i_6;
-    kl_t9 = ( *kl_this_1 ).kl_data_627 + kl_i_6;
+    kl_t9 = ( *kl_this_1 ).kl_data_642 + kl_i_6;
     ( *kl_t8 ) = ( *kl_t9 );
     goto bb5;
     bb4:
-#line 132 "../../keel_stl/src/list.kl"
-    kl_rt_free( ( *kl_this_1 ).kl_data_627 );
+#line 135 "../../keel_stl/src/list.kl"
+    kl_rt_free( ( *kl_this_1 ).kl_data_642 );
     goto bb6;
     bb5:
-#line 122 "../../keel_stl/src/list.kl"
+#line 125 "../../keel_stl/src/list.kl"
     kl_i_6 = kl_i_6 + 1;
     goto bb2;
     bb6:
-#line 136 "../../keel_stl/src/list.kl"
-    ( *kl_this_1 ).kl_data_627 = kl_new_data_3;
+#line 139 "../../keel_stl/src/list.kl"
+    ( *kl_this_1 ).kl_data_642 = kl_new_data_3;
     return;
 }
 

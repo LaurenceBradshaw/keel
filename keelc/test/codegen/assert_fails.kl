@@ -1,0 +1,12 @@
+// A failed `assert` prints the file, the line and the condition as written, on one line, and
+// aborts: the exit code is SIGABRT's, and nothing after it runs.
+i32 main()
+{
+    i32 x = 0;
+
+    assert( x == 0 );
+    assert( x
+            > 1 );
+
+    return 7;
+}

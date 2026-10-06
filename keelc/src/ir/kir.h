@@ -174,7 +174,8 @@ enum class Terminator_kind : u8
     Goto,
     Branch,
     Return,
-    Unreachable
+    Unreachable,
+    Assert_failed // the span is the condition's; ends the program, running nothing
 };
 
 struct Terminator

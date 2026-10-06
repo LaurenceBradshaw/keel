@@ -233,6 +233,7 @@ void check_terminators( const Function& func, std::vector<std::string>& errors )
 
         case Terminator_kind::Return:
         case Terminator_kind::Unreachable:
+        case Terminator_kind::Assert_failed:
             break;
         }
     }

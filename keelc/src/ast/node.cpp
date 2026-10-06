@@ -130,6 +130,8 @@ std::string_view node_kind_name( Node_kind kind )
         return "Alloc_expr";
     case Node_kind::Free_expr:
         return "Free_expr";
+    case Node_kind::Assert_expr:
+        return "Assert_expr";
     case Node_kind::Fallthrough_stmt:
         return "Fallthrough_stmt";
     case Node_kind::Type_param_list:

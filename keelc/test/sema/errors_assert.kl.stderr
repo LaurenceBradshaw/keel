@@ -1,0 +1,19 @@
+error: expected `bool`, but got `i32`
+ --> sema/errors_assert.kl:5:13
+  |
+5 |     assert( x );
+  |             ^ there is no conversion to `bool`: compare explicitly, as in `x != 0`
+
+error: expected `i32`, but got `void`
+  --> sema/errors_assert.kl:10:13
+   |
+10 |     i32 y = assert( true );
+   |             ^^^^^^^^^^^^^^
+
+error: `nope` is not declared
+  --> sema/errors_assert.kl:15:13
+   |
+15 |     assert( nope );
+   |             ^^^^
+
+3 errors generated

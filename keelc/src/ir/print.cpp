@@ -221,6 +221,9 @@ struct Printer
         case Terminator_kind::Return:
             return "return";
 
+        case Terminator_kind::Assert_failed:
+            return "assert_failed";
+
         case Terminator_kind::Unreachable:
             return "unreachable";
         }

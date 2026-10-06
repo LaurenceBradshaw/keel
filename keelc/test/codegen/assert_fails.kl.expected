@@ -1,0 +1,39 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "assert_fails.kl.prelude.c"
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+int32_t kl__main__( void );
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_x_1;
+    bool kl_t2;
+    bool kl_t3;
+#line 5 "codegen/assert_fails.kl"
+    kl_x_1 = 0;
+#line 7 "codegen/assert_fails.kl"
+    kl_t2 = kl_x_1 == 0;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 8 "codegen/assert_fails.kl"
+    kl_t3 = kl_x_1 > 1;
+    if ( kl_t3 ) goto bb3; else goto bb4;
+    bb2:
+    kl_rt_panic( "codegen/assert_fails.kl", 7, "assertion failed: x == 0" );
+    bb3:
+#line 11 "codegen/assert_fails.kl"
+    kl_t0 = 7;
+    return kl_t0;
+    bb4:
+    kl_rt_panic( "codegen/assert_fails.kl", 8, "assertion failed: x > 1" );
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

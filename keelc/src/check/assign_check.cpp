@@ -73,6 +73,7 @@ void successors( const Terminator& terminator, std::vector<Block_id>& out )
     case Terminator_kind::Unset:
     case Terminator_kind::Return:
     case Terminator_kind::Unreachable:
+    case Terminator_kind::Assert_failed:
         return;
     }
 }

@@ -2621,7 +2621,7 @@ bool Parser::can_start_expression() const
         return check_keyword( Keyword::True ) || check_keyword( Keyword::False ) || check_keyword( Keyword::Nullptr ) ||
                check_keyword( Keyword::Move ) || check_keyword( Keyword::Out ) || check_keyword( Keyword::Ref ) ||
                check_keyword( Keyword::Cast ) || check_keyword( Keyword::Wrap ) || check_keyword( Keyword::This ) ||
-               check_keyword( Keyword::Alloc ) || check_keyword( Keyword::Free );
+               check_keyword( Keyword::Alloc ) || check_keyword( Keyword::Free ) || check_keyword( Keyword::Assert );
 
     default:
         return false;
@@ -2857,10 +2857,10 @@ Node_id Parser::parse_expression_stmt( bool consume_semicolon )
         kind     = Node_kind::Increment_stmt;
         aux      = static_cast<u32>( op.kind );
     }
-    // A call and a `free` are the effectful expression kinds; everything else computes a value the
+    // A call, an assert and a `free` are the effectful expression kinds; everything else computes a value the
     // statement then discards, which is D15's rule.
     else if( ast_.kind( expr ) != Node_kind::Call_expr && ast_.kind( expr ) != Node_kind::Free_expr &&
-             ast_.kind( expr ) != Node_kind::Error )
+             ast_.kind( expr ) != Node_kind::Error && ast_.kind( expr ) != Node_kind::Assert_expr )
     {
         discarded = true;
     }
@@ -3599,6 +3599,16 @@ Node_id Parser::parse_keyword_prefix( Span start )
         expect( Token_kind::R_paren );
 
         return ast_.add( Node_kind::Free_expr, Span::merge( start, previous().span ), 0, { operand } );
+    }
+
+    if( check_keyword( Keyword::Assert ) )
+    {
+        advance();
+        expect( Token_kind::L_paren );
+        const Node_id operand = parse_expression( 0 );
+        expect( Token_kind::R_paren );
+
+        return ast_.add( Node_kind::Assert_expr, Span::merge( start, previous().span ), 0, { operand } );
     }
 
     if( check_keyword( Keyword::Cast ) || check_keyword( Keyword::Wrap ) )
@@ -5718,6 +5728,32 @@ TEST_CASE( "parser_parses_alloc", "[parse][alloc]" )
         INFO( p.errors() );
         REQUIRE_FALSE( p.has_errors() );
         REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::Binary_expr ).is_valid() );
+    }
+}
+
+// A keyword like `free`, so an `assert` written as a statement is effectful rather than discarded.
+TEST_CASE( "parser_parses_assert", "[parse][assert]" )
+{
+    SECTION( "it is an Assert_expr holding its condition" )
+    {
+        const Parsed p( "i32 main() { i32 n = 1; assert( n > 0 ); return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id node = find_first( p.ast(), p.root(), Node_kind::Assert_expr );
+
+        REQUIRE( node.is_valid() );
+        REQUIRE( p.children( node ).size() == 1 );
+        REQUIRE( p.kind( p.child( node, 0 ) ) == Node_kind::Binary_expr );
+    }
+
+    SECTION( "it is a keyword, not a name" )
+    {
+        const Parsed p( "i32 main() { i32 assert = 1; return 0; }" );
+
+        REQUIRE( p.has_errors() );
+        REQUIRE( p.errors().find( "`assert` is a keyword" ) != std::string::npos );
     }
 }
 

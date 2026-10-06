@@ -1,0 +1,21 @@
+// `assert` takes a `bool`, has no value, and is a keyword. One refusal per function.
+void not_a_bool()
+{
+    i32 x = 1;
+    assert( x );
+}
+
+void no_value()
+{
+    i32 y = assert( true );
+}
+
+void undeclared()
+{
+    assert( nope );
+}
+
+i32 main()
+{
+    return 0;
+}

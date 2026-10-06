@@ -79,6 +79,10 @@ Type_id Expressions::infer( Node_id id )
     case Node_kind::Free_expr:
         return infer_free( id );
 
+    case Node_kind::Assert_expr:
+        check_condition( ast_.child( id, 0 ) );
+        return types_.record( id, table_.builtin( Type_kind::Void ) );
+
     case Node_kind::Marker_expr:
         return infer_marker( id );
 
@@ -5019,6 +5023,35 @@ TEST_CASE( "type_checker_types_alloc_and_free", "[sema][types][alloc]" )
 
         INFO( p.rendered() );
         REQUIRE_FALSE( p.clean() );
+    }
+}
+
+// The condition is an `if`'s, held to the same `bool`, and the `assert` itself has no value.
+TEST_CASE( "type_checker_types_assert", "[sema][types][assert]" )
+{
+    SECTION( "on a `bool`, it is `void`" )
+    {
+        const Typed p( "i32 main() { i32 n = 1; assert( n > 0 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Assert_expr, 0 ) ) == "void" );
+    }
+
+    SECTION( "nothing converts to `bool`" )
+    {
+        const Typed p( "i32 main() { i32 n = 1; assert( n ); return 0; }" );
+
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "expected `bool`, but got `i32`" ) != std::string::npos );
+    }
+
+    SECTION( "its value cannot be used" )
+    {
+        const Typed p( "i32 main() { i32 n = assert( true ); return n; }" );
+
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "expected `i32`, but got `void`" ) != std::string::npos );
     }
 }
 

@@ -3,6 +3,7 @@
 
 #include "kl_rt.h"
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 void* kl_rt_alloc( size_t size )
@@ -33,4 +34,10 @@ void kl_rt_free( void* ptr )
 {
     // free( NULL ) must be a no-op - C guarantees it
     free( ptr );
+}
+
+_Noreturn void kl_rt_panic( const char* file, uint32_t line, const char* message )
+{
+    fprintf( stderr, "%s:%u: %s\n", file, (unsigned) line, message );
+    abort();
 }

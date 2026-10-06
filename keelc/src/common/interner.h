@@ -76,6 +76,7 @@ enum class Keyword : u32
     Public,
     Fn,
     Field,
+    Assert,
 
     Count
 };

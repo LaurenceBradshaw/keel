@@ -1430,6 +1430,24 @@ Operand Lowering::lower_expression( Node_id id )
         }
         return copy( builder_.place( builder_.into_temp( allocation, type, ast_.span( id ) ) ), type );
     }
+    case Node_kind::Assert_expr:
+    {
+        const Node_id condition = ast_.child( id, 0 );
+        const Operand op        = lower_expression( condition );
+        const Span    span      = ast_.span( id );
+
+        const Block_id pass = builder_.add_block();
+        const Block_id fail = builder_.add_block();
+
+        builder_.terminate_branch( op, pass, fail, span );
+
+        builder_.switch_to( fail );
+        builder_.terminate_assert_failed( ast_.span( condition ) );
+
+        builder_.switch_to( pass );
+
+        return Operand { .type = types_.table().builtin( Type_kind::Void ) };
+    }
     case Node_kind::Free_expr:
     {
         const Operand target = lower_expression( ast_.child( id, 0 ) );
@@ -4489,6 +4507,30 @@ TEST_CASE( "lower_lowers_a_string_literal_to_str's_constructor", "[ir][lower][pr
         REQUIRE( text.find( "const 5)" ) != std::string::npos );
         REQUIRE( text.find( ".size" ) != std::string::npos );
         REQUIRE( verify( p.functions[0] ).empty() );
+    }
+}
+
+// A branch whose failing side ends the program. Nothing is dropped on that side: the program
+// aborts, and runs no destructor on the way out.
+TEST_CASE( "lower_lowers_assert_to_a_branch_and_a_failed_terminator", "[ir][lower][assert]" )
+{
+    Lowered p( "class Owner { public Owner() { unsafe { q = alloc<i32>(); } } ~Owner() { unsafe { free( q ); } } i32* q; };\n"
+               "i32 check( i32 x ) { Owner o = Owner(); assert( x > 0 ); return x; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.named( "check" );
+
+    INFO( text );
+    REQUIRE( text.find( "_5 = copy _1 > const 0" ) != std::string::npos );
+    REQUIRE( text.find( "branch copy _5 -> bb1, bb2" ) != std::string::npos );
+    REQUIRE( text.find( "bb2:\n        assert_failed\n" ) != std::string::npos );
+    REQUIRE( text.find( "drop _2" ) < text.find( "bb2:" ) ); // only on the passing side
+
+    for( const Function& function : p.functions )
+    {
+        REQUIRE( verify( function ).empty() );
     }
 }
 
