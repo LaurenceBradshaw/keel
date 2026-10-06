@@ -10,6 +10,7 @@
 #include "common/interner.h"
 #include "common/source_manager.h"
 #include "sema/resolver.h"
+#include "sema/type_checker.h"
 
 namespace keel
 {
@@ -42,9 +43,11 @@ struct Name
     Span      declaration;
 };
 
-// Every name resolution bound, plus the variants and members named through a type, in source order.
-std::vector<Name>
-collect_names( const Ast& ast, const Resolution& resolution, const Source_manager& sm, const Interner& interner );
+// Every name resolution bound, plus the variants and members named through a type and the fields and
+// methods named after a `.`, which only the checker can bind, in source order.
+std::vector<Name> collect_names(
+    const Ast& ast, const Resolution& resolution, const Types& types, const Source_manager& sm, const Interner& interner
+);
 
 // One {"kind":"name",...} line per name, after the diagnostics of --diagnostics=json.
 void render_names_json( const Source_manager& sm, const std::vector<Name>& names, std::ostream& out );

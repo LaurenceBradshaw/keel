@@ -418,16 +418,17 @@ int main( int argc, char** argv )
     // Resolution is part of compiling, not a debug feature - same reasoning as parsing.
     const keel::Resolution resolution = keel::resolve( ast, sm, interner, diagnostics, prog.imports );
 
+    // Type checking is part of compiling too - same reasoning as parsing and resolution.
+    keel::Types types = keel::type_check( ast, resolution, literals, sm, interner, diagnostics );
+
+    // After checking, which alone binds a field or method named after a `.`.
     if( args.count( "names" ) )
     {
-        names = keel::collect_names( ast, resolution, sm, interner );
+        names = keel::collect_names( ast, resolution, types, sm, interner );
 
         // The prelude is not on disk for an editor to open; a use of it still names it.
         std::erase_if( names, [&]( const keel::Name& name ) { return name.span.file == prog.imports.prelude_file(); } );
     }
-
-    // Type checking is part of compiling too - same reasoning as parsing and resolution.
-    keel::Types types = keel::type_check( ast, resolution, literals, sm, interner, diagnostics );
 
     // Nothing is emitted for a program that did not check: the emitter takes no Diagnostics
     // because by here there is nothing left for it to object to.

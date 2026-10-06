@@ -47,8 +47,9 @@ colours from its last save stay, moved along with the text, until it is saved ag
 
 F12, or Ctrl+click on a name, goes to where it is declared, in whichever file or package that is.
 It answers from the last save: after unsaved edits above a name it can find nothing or the wrong
-place until the file is saved again. A package name such as `extra` has no one declaration, and
-fields and methods after a `.` are not covered yet.
+place until the file is saved again. A package name such as `extra` has no one declaration. A field
+or method after a `.` goes to the member of the object's type, through a pointer too, and a call
+to the overload the compiler chose.
 
 A name declared in the prelude, such as `str`, opens `prelude.kl` read-only. It is not a file on
 disk: its text comes from `keelc --print-prelude`, run with `keel.compilerPath`, and is asked again

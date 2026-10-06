@@ -4,6 +4,7 @@
 #include "sema/names.h"
 #include <algorithm>
 #include <optional>
+#include <unordered_map>
 #include <unordered_set>
 #include "common/json.h"
 
@@ -15,9 +16,12 @@ namespace
 class Name_collector
 {
 public:
-    Name_collector( const Ast& ast, const Resolution& resolution, const Source_manager& sm, const Interner& interner )
+    Name_collector(
+        const Ast& ast, const Resolution& resolution, const Types& types, const Source_manager& sm, const Interner& interner
+    )
         : ast_( ast ),
           resolution_( resolution ),
+          types_( types ),
           sm_( sm ),
           interner_( interner )
     {
@@ -45,16 +49,19 @@ private:
     Node_id                  referent( Node_id id ) const;
     std::optional<Name_kind> declaration_kind( Node_id decl ) const;
     Node_id                  member_named( Node_id type, Symbol_id name ) const;
+    Node_id                  member_after_dot( Node_id id ) const;
     Span                     name_span( Node_id id ) const;
     Span                     declared_name_span( Node_id decl ) const;
     bool                     is_qualified( Node_id id ) const;
 
     const Ast&            ast_;
     const Resolution&     resolution_;
+    const Types&          types_;
     const Source_manager& sm_;
     const Interner&       interner_;
 
-    std::unordered_set<u32> top_level_;
+    std::unordered_set<u32>          top_level_;
+    std::unordered_map<u32, Node_id> called_; // a call's `.callee`, to the overload the checker chose
 };
 
 std::vector<Name> Name_collector::run()
@@ -64,6 +71,16 @@ std::vector<Name> Name_collector::run()
     if( !ast_.root().is_valid() )
     {
         return names;
+    }
+
+    for( u32 i = 0; i < ast_.node_count(); ++i )
+    {
+        const Node_id id { i };
+
+        if( ast_.kind( id ) == Node_kind::Call_expr && ast_.kind( ast_.child( id, 0 ) ) == Node_kind::Field_expr )
+        {
+            called_.emplace( ast_.child( id, 0 ).v, types_.callee_of( id ) );
+        }
     }
 
     for( u32 i = 0; i < ast_.node_count(); ++i )
@@ -123,12 +140,38 @@ Node_id Name_collector::referent( Node_id id ) const
         const Node_id type = resolution_.declaration_of( ast_.child( id, 0 ) );
         return type.is_valid() ? member_named( type, Symbol_id { ast_.aux( id ) } ) : Node_id {};
     }
+    case Node_kind::Field_expr:
+        return member_after_dot( id );
     case Node_kind::Type_param_decl:
     case Node_kind::Binding_decl:
         return id;
     default:
         return Node_id {};
     }
+}
+
+// `p.x` or `p.area()`, through a pointer as `.` reaches: the object's type says whose member it is.
+Node_id Name_collector::member_after_dot( Node_id id ) const
+{
+    if( const auto call = called_.find( id.v ); call != called_.end() && call->second.is_valid() )
+    {
+        return call->second;
+    }
+
+    Type_id type = types_.type_of( ast_.child( id, 0 ) );
+
+    if( !type.is_valid() )
+    {
+        return Node_id {};
+    }
+
+    if( types_.table().is_pointer( type ) )
+    {
+        type = types_.table().get( type ).element;
+    }
+
+    const Node_id aggregate = types_.table().get( type ).declaration;
+    return aggregate.is_valid() ? member_named( aggregate, Symbol_id { ast_.aux( id ) } ) : Node_id {};
 }
 
 std::optional<Name_kind> Name_collector::declaration_kind( Node_id decl ) const
@@ -199,6 +242,7 @@ bool Name_collector::is_qualified( Node_id id ) const
     switch( ast_.kind( id ) )
     {
     case Node_kind::Path_expr:
+    case Node_kind::Field_expr:
         return true;
     case Node_kind::Named_type:
         return !ast_.children( id ).empty();
@@ -278,10 +322,11 @@ std::string_view name_kind_name( Name_kind kind )
     return "?";
 }
 
-std::vector<Name>
-collect_names( const Ast& ast, const Resolution& resolution, const Source_manager& sm, const Interner& interner )
+std::vector<Name> collect_names(
+    const Ast& ast, const Resolution& resolution, const Types& types, const Source_manager& sm, const Interner& interner
+)
 {
-    return Name_collector( ast, resolution, sm, interner ).run();
+    return Name_collector( ast, resolution, types, sm, interner ).run();
 }
 
 void render_names_json( const Source_manager& sm, const std::vector<Name>& names, std::ostream& out )
@@ -336,9 +381,10 @@ std::vector<std::string> named( std::string_view source, bool declarations = fal
     const File_id    file       = sm.add_file( "t.kl", std::string( source ) );
     const Ast        ast        = parse( lex( file, sm, interner, literals, diags ), sm, diags );
     const Resolution resolution = resolve( ast, sm, interner, diags );
+    const Types      types      = type_check( ast, resolution, literals, sm, interner, diags );
 
     std::vector<std::string> out;
-    for( const Name& name : collect_names( ast, resolution, sm, interner ) )
+    for( const Name& name : collect_names( ast, resolution, types, sm, interner ) )
     {
         out.push_back(
             declarations ? fmt::format( "{}@{}->{}", sm.text( name.span ), name.span.start, name.declaration.start )
@@ -407,6 +453,44 @@ TEST_CASE( "names_static_methods_through_their_class", "[sema][names]" )
                "void f() { Box b = Box::of( 1 ); }" );
 
     REQUIRE( has( names, "of:method" ) );
+}
+
+// Bound by the checker, which alone knows the object's type: resolution never sees them.
+TEST_CASE( "names_fields_and_methods_after_a_dot", "[sema][names]" )
+{
+    constexpr std::string_view source = "struct P\n"
+                                        "{\n"
+                                        "    i32 x;\n"
+                                        "    i32 get() const { return x; }\n"
+                                        "    i32 add( i32 a ) const { return x + a; }\n"
+                                        "    i32 add( i32 a, i32 b ) const { return x + a + b; }\n"
+                                        "};\n"
+                                        "i32 f( P* q ) { P p = P { 1 }; return p.x + q.x + p.get() + p.add( 1, 2 ); }\n";
+
+    SECTION( "as fields and methods" )
+    {
+        const auto names = named( source );
+
+        REQUIRE( std::ranges::count( names, std::string( "x:field" ) ) == 5 ); // three bare in the methods, p.x and q.x
+        REQUIRE( has( names, "get:method" ) );
+        REQUIRE( has( names, "add:method" ) );
+    }
+
+    // `q.x` reaches through the pointer, and `add( 1, 2 )` lands on the overload the checker chose.
+    SECTION( "pointing at their declarations" )
+    {
+        const auto   names = named( source, true );
+        const auto   at    = [&]( std::string_view text, std::size_t nth = 0 ) { return source.find( text ) + nth; };
+        const u32    x     = static_cast<u32>( at( "x;" ) );
+        const u32    add2  = static_cast<u32>( source.find( "add", at( "i32 add( i32 a, i32 b )" ) ) );
+        const size_t p_x   = source.find( "p.x" ) + 2;
+        const size_t q_x   = source.find( "q.x" ) + 2;
+        const size_t call  = source.find( "add( 1, 2 )" );
+
+        REQUIRE( has( names, fmt::format( "x@{}->{}", p_x, x ) ) );
+        REQUIRE( has( names, fmt::format( "x@{}->{}", q_x, x ) ) );
+        REQUIRE( has( names, fmt::format( "add@{}->{}", call, add2 ) ) );
+    }
 }
 
 TEST_CASE( "names_struct_literals_by_their_type", "[sema][names]" )

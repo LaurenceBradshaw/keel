@@ -7,7 +7,7 @@ i32 counter = 0;
 
 class meter
 {
-    i32 count;
+    public i32 count;
 
     public meter( i32 start )
     {
@@ -17,6 +17,11 @@ class meter
     static meter zero()
     {
         return meter( 0 );
+    }
+
+    public i32 value() const
+    {
+        return count;
     }
 };
 
@@ -42,5 +47,7 @@ i32 main()
     meter z       = meter::zero();
     kl::Unit unit = kl::Unit::Foot;
     f64 r         = radius_of( Shape::Dot );
+    meter* p      = &m;
+    i32 n         = p.count + m.value();
     return larger( counter, kl::scale );
 }

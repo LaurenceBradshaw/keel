@@ -6836,8 +6836,27 @@ changes with the prelude) and by running the extension under a stub `vscode` mod
 real keelc: F12 on a `str` lands on `str` in the served text. VS Code's own handling of the
 document - its title, language and read-only state - is checked by hand.
 
-**Found, not this slice's**: a field after `.` - `s.size` - has no definition anywhere, for any
-type: `--names` reports no field uses. The README already says so.
+~~**Found, not this slice's**: a field after `.` - `s.size` - has no definition anywhere, for any
+type: `--names` reports no field uses. The README already says so.~~ **Done (2026-10-06)**, see the
+next slice.
+
+### Editor: fields and methods after a `.` - done (2026-10-06)
+
+`--names` was collected straight after resolution, and a member after `.` is bound only by the
+checker, which knows the object's type; so `s.size` and `p.area()` had neither a colour nor a
+definition. It now runs after type checking and takes `Types`. A `Field_expr` names the member
+of its object's type - through a pointer, as `.` reaches - found by name with the `member_named`
+`Colour::Red` already used; a `Field_expr` that is a call's callee takes the checker's `callee_of`
+instead, so an overloaded method lands on the overload chosen. A generic instance's declaration is
+the generic one, so `list<u8>`'s `count` lands on `list`'s. No side table was added: lowering
+already re-derives the field by name the same way. Type checking runs even after resolution
+errors, so nothing that was reported before is lost.
+
+| | Unit tests | Goldens |
+|---|---|---|
+| Changed | the names harness type-checks | `sema/names`: `meter` gains a `value()` method and a public `count`, and `main` reads `p.count` and calls `m.value()` |
+| New | `names_fields_and_methods_after_a_dot` | |
+
 
 ### M8 slice: string literals - done (2026-10-06)
 
