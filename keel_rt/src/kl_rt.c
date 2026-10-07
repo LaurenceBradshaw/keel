@@ -2,9 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "kl_rt.h"
+#include <inttypes.h>
+#include <math.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 void* kl_rt_alloc( size_t size )
 {
@@ -38,6 +42,71 @@ void kl_rt_free( void* ptr )
 
 _Noreturn void kl_rt_panic( const char* file, uint32_t line, const char* message )
 {
+    fflush( stdout );
     fprintf( stderr, "%s:%u: %s\n", file, (unsigned) line, message );
     abort();
+}
+
+static FILE* kl_rt_stream( int32_t stream )
+{
+    if( stream == 2 )
+    {
+        fflush( stdout );
+        return stderr;
+    }
+
+    return stdout;
+}
+
+void kl_rt_write( int32_t stream, const uint8_t* data, uint64_t size )
+{
+    FILE* out = kl_rt_stream( stream );
+
+    fwrite( data, 1, size, out );
+}
+
+void kl_rt_write_i64( int32_t stream, int64_t value )
+{
+    FILE* out = kl_rt_stream( stream );
+
+    fprintf( out, "%" PRId64, value );
+}
+
+void kl_rt_write_u64( int32_t stream, uint64_t value )
+{
+    FILE* out = kl_rt_stream( stream );
+
+    fprintf( out, "%" PRIu64, value );
+}
+
+void kl_rt_write_f64( int32_t stream, double value )
+{
+    FILE* out = kl_rt_stream( stream );
+
+    if( isnan( value ) )
+    {
+        fprintf( out, "nan" );
+        return;
+    }
+
+    char buf[32];
+    for( int p = 1; p <= 17; p++ )
+    {
+        snprintf( buf, sizeof buf, "%.*g", p, value );
+
+        const double parsed = strtod( buf, NULL );
+        if( parsed == value )
+        {
+            break;
+        }
+    }
+
+    const char* digits        = buf + ( buf[0] == '-' );
+    const bool  needs_decimal = digits[strspn( digits, "0123456789" )] == '\0';
+
+    fputs( buf, out );
+    if( needs_decimal )
+    {
+        fputs( ".0", out );
+    }
 }

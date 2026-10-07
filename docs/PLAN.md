@@ -835,7 +835,11 @@ optional.
 8. `bool` is `<stdbool.h>`'s. Integers are `<stdint.h>` exact-width types.
 
 **The runtime is `keel_rt`, a thin C floor**, linked into every program as `libkeel_rt.a`:
-`kl_rt_alloc`, `kl_rt_alloc_many`, `kl_rt_free` and `kl_rt_panic`. M9 adds `print` (§9). The
+`kl_rt_alloc`, `kl_rt_alloc_many`, `kl_rt_free`, `kl_rt_panic`, and the writers `kl_rt_write`,
+`kl_rt_write_i64`, `kl_rt_write_u64` and `kl_rt_write_f64`, each taking a stream, 1 for stdout and
+2 for stderr. A write to stderr, and a panic, flush stdout first, so the two streams read back in
+the order they were written. A float is written in the fewest digits that read back as the same
+value, a whole number keeps its `.0`, and a NaN is `nan` whatever its sign. The
 runtime proper is Keel above it, as the library is. libc is the floor; raw syscalls would couple the
 C backend to one compiler's `__asm__`. **Keep it under 200 lines for as long as possible.**
 

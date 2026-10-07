@@ -1,0 +1,76 @@
+// The runtime's writers, called as the prelude will call them. Stream 1 is stdout and 2 is stderr,
+// and a write to stderr flushes stdout first, so the two read back in the order they were written.
+extern void kl_rt_write( i32 stream, const u8[*] data, u64 size );
+extern void kl_rt_write_i64( i32 stream, i64 value );
+extern void kl_rt_write_u64( i32 stream, u64 value );
+extern void kl_rt_write_f64( i32 stream, f64 value );
+
+void line( i32 stream )
+{
+    unsafe
+    {
+        kl_rt_write( stream, "\n".data, "\n".size );
+    }
+}
+
+i32 main()
+{
+    f64 zero = 0.0;
+
+    unsafe
+    {
+        kl_rt_write( 1, "out ".data, "out ".size );
+        kl_rt_write( 2, "err ".data, "err ".size );
+        kl_rt_write( 1, "out".data, "out".size );
+        line( 1 );
+
+        // Only the count is written: a literal's bytes go no further than its size says.
+        kl_rt_write( 1, "abc".data, 2 );
+        line( 1 );
+
+        kl_rt_write_i64( 1, 0 );
+        line( 1 );
+        kl_rt_write_i64( 1, -42 );
+        line( 1 );
+        kl_rt_write_i64( 1, 9223372036854775807 );
+        line( 1 );
+        kl_rt_write_i64( 1, -9223372036854775807 - 1 );
+        line( 1 );
+
+        kl_rt_write_u64( 1, 18446744073709551615 );
+        line( 1 );
+
+        // The fewest digits that read back as the same value, and a whole number keeps its `.0`.
+        kl_rt_write_f64( 1, 0.1 );
+        line( 1 );
+        kl_rt_write_f64( 1, 0.1 + 0.2 );
+        line( 1 );
+        kl_rt_write_f64( 1, 1.0 / 3.0 );
+        line( 1 );
+        kl_rt_write_f64( 1, 3.0 );
+        line( 1 );
+        kl_rt_write_f64( 1, -0.0 );
+        line( 1 );
+        kl_rt_write_f64( 1, 1234567.0 );
+        line( 1 );
+        kl_rt_write_f64( 1, 1e20 );
+        line( 1 );
+        kl_rt_write_f64( 1, 1e-7 );
+        line( 1 );
+        kl_rt_write_f64( 1, 1.0 / zero );
+        line( 1 );
+        kl_rt_write_f64( 1, -1.0 / zero );
+        line( 1 );
+
+        // `nan` whatever its sign bit, which x86 sets on 0/0 and C's printf then shows.
+        kl_rt_write_f64( 1, zero / zero );
+        line( 1 );
+
+        kl_rt_write_i64( 2, -7 );
+        line( 2 );
+        kl_rt_write_f64( 1, 2.5 );
+        line( 1 );
+    }
+
+    return 0;
+}

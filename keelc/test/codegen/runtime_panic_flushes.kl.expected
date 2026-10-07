@@ -1,0 +1,37 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "runtime_panic_flushes.kl.prelude.c"
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+void kl_rt_write( int32_t, uint8_t*, uint64_t );
+
+int32_t kl__main__( void );
+
+int32_t kl__main__( void )
+{
+    struct kl_7prelude_str kl_t1;
+    struct kl_7prelude_str* kl_t2;
+    uint8_t* kl_t3;
+    struct kl_7prelude_str kl_t5;
+    struct kl_7prelude_str* kl_t6;
+    uint8_t* kl_t7;
+#line 8 "codegen/runtime_panic_flushes.kl"
+    kl_t2 = &kl_t1;
+    kl_t3 = ( uint8_t* ) "before\012";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t2, kl_t3, 7 );
+    kl_t6 = &kl_t5;
+    kl_t7 = ( uint8_t* ) "before\012";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t6, kl_t7, 7 );
+    kl_rt_write( 1, kl_t1.kl_data_34, kl_t5.kl_size_37 );
+    goto bb1;
+    bb1:
+    kl_rt_panic( "codegen/runtime_panic_flushes.kl", 11, "assertion failed: false" );
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

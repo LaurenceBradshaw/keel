@@ -1,0 +1,14 @@
+// What was written to stdout before a failed `assert` still appears, ahead of the failure.
+extern void kl_rt_write( i32 stream, const u8[*] data, u64 size );
+
+i32 main()
+{
+    unsafe
+    {
+        kl_rt_write( 1, "before\n".data, "before\n".size );
+    }
+
+    assert( false );
+
+    return 0;
+}
