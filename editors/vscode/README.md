@@ -26,8 +26,7 @@ Errors that come from how the two files use each other only show once that file 
 If keelc cannot run at all, the reason is written to the *Keel* output channel.
 
 `sample/` is for checking the highlighting by eye: two modules and a package, using every kind of
-Keel syntax except string literals, which do not type-check yet. From this folder, it passes
-`keelc --check --package extra=sample/extra sample/main.kl`.
+Keel syntax. From this folder, it passes `keelc --check --package extra=sample/extra sample/main.kl`.
 
 ## Names
 

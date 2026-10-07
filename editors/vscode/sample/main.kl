@@ -1,6 +1,5 @@
 // Every kind of Keel syntax in one program, for checking the editor's highlighting.
 // It passes `keelc --check --package extra=sample/extra sample/main.kl`, run from editors/vscode.
-// String literals are left out: they have no type yet.
 
 import geometry;
 import extra::units;
@@ -55,6 +54,7 @@ class Buffer
     {
         unsafe
         {
+            destroy( data, cast<u64>( size ) );
             free( data );
         }
     }
@@ -170,6 +170,9 @@ i32 main()
     i32 n = 5;
     reset( out n );
     bump( ref n );
+    assert( n == 1 );
+
+    str greeting = "Keel\t\"sample\"\n";
 
     Buffer buf = Buffer::of( 4 );
     Buffer buf2 = Buffer( 8 );
