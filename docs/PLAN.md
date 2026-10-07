@@ -1012,14 +1012,14 @@ keel/
   keelc/                  the compiler, C++
     src/
       main.cpp            the driver: options, the pipeline, writing outputs, invoking cc
-      common/             interner, spans, diagnostics, source manager, literal pool, import graph
-      lex/                the lexer and token tables
-      parse/              the parser, its lookahead scanner, the loader, C++-habit hints
-      ast/                Ast, Node, the dump
-      sema/               the resolver, the checker's class DAG (§3.2), names for the editor
-      ir/                 KIR, lowering and monomorphisation, simplify, verify, print
-      check/              move checking, definite assignment, drop elaboration
-      codegen_c/          the C emitter, spelling, mangling, linking
+      common/             Interner, Span, Source_manager, Diagnostics, Literal_pool, Imports
+      lex/                lex(), Token and the token tables
+      parse/              Parser (file-local), its lookahead Scanner, the loader, C++-habit hints
+      ast/                Ast, Node and Node_kind's shape table, the dump
+      sema/               Resolver; the checker's class DAG (§3.2), one class per file; collect_names for the editor
+      ir/                 KIR (kir.h), Builder, Lowering (file-local) and monomorphisation, simplify, verify, print
+      check/              check_moves, check_assignment, elaborate_drops: one pass per file
+      codegen_c/          Kir_emitter, Spelling, mangling, linking the runtime
       prelude/            prelude.kl, embedded into keelc at build time
     test/                 golden corpus and run_tests.sh (§10)
   keel_rt/                the C runtime every program links against (§7)
@@ -1129,9 +1129,10 @@ item leaves this list for `.claude/LOG.md`, with what it cost.
 
 ### Readability work (proposed 2026-10-07, not yet agreed)
 
-From `.claude/READABILITY_AUDIT.md`, chosen by what M9 to M9.6 will edit. **Before M9**: the stale
-and misplaced comments (R19, with R7's and R14's), named accessors and typed `aux` readers on `Ast`
-with a shape table in `node.h`, migrating `ir/lower.cpp` and `sema/expressions.cpp` first (R1, with
+From `.claude/READABILITY_AUDIT.md`, chosen by what M9 to M9.6 will edit. Done: R19's table, R7's
+and R14's small fixes, and `node.h`'s shape table. **Before M9**: named accessors and typed `aux`
+readers on `Ast`, written in the shape table's words, migrating `ir/lower.cpp` and
+`sema/expressions.cpp` first (R1, with
 R20's `poison` and R24's namespaces in the files it touches), one take-and-clear discipline for
 `Expressions::expected_` (R2), and `successors()` moved into `kir.h` (R17). **With M9**: splitting
 `Annotations::type_of` and renaming it `resolve` (R13), `lower_switch`'s arm extraction (R14), and
@@ -1140,7 +1141,8 @@ wording out of `main.cpp` (R10) and one test fixture that runs the real pipeline
 (R11). **At M9.5**: the parser's cursor and recovery as classes (R3, with R5 and R18), `infer_call`'s
 phases and a call-site struct (R6, R15), and the resolver's long cases (R12). **Later, or when next
 touched**: `Addresses` out of `Expressions` (R4), the `ast/queries.h` move and the `Types` renames
-(R7, R8) once files stop moving, R16 and R21.
+(R7, R8) once files stop moving, R16 and R21, and R19's comment sweep of `ir/lower.cpp`, `check/`
+and `parse/parser.cpp`.
 
 ### Carried from M8
 

@@ -238,7 +238,7 @@ struct Simplified
             return;
         }
 
-        functions = lower( ast, resolution, types, literals, interner );
+        functions = lower( ast, resolution, types, literals );
 
         for( Function& function : functions )
         {

@@ -121,7 +121,7 @@ struct Token
 {
     Token_kind kind;
     Span       span;
-    Symbol_id  symbol;      // Only valid for identifiers and keywords.
+    Symbol_id  symbol;      // An identifier's or keyword's; a literal's Literal_id shares the slot.
     bool       bad = false; // The lexer reported it; nothing after judges it again.
 
     bool is( Token_kind k ) const
@@ -135,8 +135,7 @@ struct Token
         return static_cast<Keyword>( symbol.v );
     }
 
-    // Valid only for Int_literal and Float_literal. The same slot as `symbol`, which those kinds
-    // do not use - a literal has no name.
+    // Valid only for the four literal kinds. The same slot as `symbol`, since a literal has no name.
     Literal_id literal() const
     {
         return Literal_id { symbol.v };

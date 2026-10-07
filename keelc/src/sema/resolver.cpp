@@ -357,13 +357,9 @@ void Resolver::visit( Node_id id )
     }
     case Node_kind::Enum_decl:
     {
-        // Child 0 is the underlying type and is invalid when unwritten, so it cannot go through
-        // the default walk - visit() asserts on an invalid id, which is the same convention
-        // Var_decl follows for its two optional children.
-        //
-        // The variant *names* are deliberately not declared. D30 gives them enum-class scoping, so
-        // they enter no lexical scope at all: `Colour::Red` is looked up against the enum's own
-        // type in the checker, exactly as a field name is, and a bare `Red` stays undeclared.
+        // Not the default walk, because the variant *names* are deliberately not declared. D30 gives them enum-class scoping,
+        // so they enter no lexical scope at all: `Colour::Red` is looked up against the enum's own type in the checker, exactly
+        // as a field name is, and a bare `Red` stays undeclared.
         //
         // Their payload fields still have to be *visited*, though: `Circle( Point centre )` names a
         // type, and nothing else will resolve it.
@@ -522,8 +518,7 @@ void Resolver::visit( Node_id id )
         }
 
         // clear() rather than restoring an enclosing set, because an aggregate cannot nest inside
-        // another - parse_aggregate_decl's member loop accepts only fields and destructors. If that
-        // ever changes this has to become a save and restore.
+        // another. If that ever changes this has to become a save and restore.
         current_fields_.clear();
         pop_scope();
 

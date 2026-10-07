@@ -317,7 +317,7 @@ struct Elaborated
             return;
         }
 
-        functions = lower( ast, resolution, types, literals, interner );
+        functions = lower( ast, resolution, types, literals );
 
         // The driver simplifies every function before anything reads it, so these do too.
         for( Function& function : functions )

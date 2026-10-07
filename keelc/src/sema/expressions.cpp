@@ -93,9 +93,8 @@ Type_id Expressions::infer( Node_id id )
         return infer_conditional( id );
 
     default:
-        // Every expression not yet given a case of its own - the literals, chiefly, which cannot
-        // be typed until their values survive lexing. Children are still typed, so a mistake
-        // inside one is not swallowed by the parent being unsupported.
+        // A node that is not an expression. Its children are still typed, so a mistake inside one
+        // is not swallowed by the parent being unsupported.
         for( const Node_id child : ast_.children( id ) )
         {
             infer( child );
@@ -258,8 +257,7 @@ Type_id Expressions::infer_call( Node_id id )
         return infer_method_call( id );
     }
 
-    // v0 has no function pointers, so anything but a plain name in call position has no
-    // declaration to find.
+    // Only a name or a path has a declaration to find; any other callee is a value called through.
     const Node_id decl = ast_.kind( callee ) == Node_kind::Name_expr || ast_.kind( callee ) == Node_kind::Path_expr
                              ? resolution_.declaration_of( callee )
                              : Node_id {};

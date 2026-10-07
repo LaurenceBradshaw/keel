@@ -13,80 +13,148 @@ namespace keel
 enum class Node_kind : u16
 {
     // A rule that failed. Returned instead of an invalid Node_id so the tree stays well formed and
-    // arity stays fixed; later passes skip Error subtrees silently.
+    // arity stays fixed; later passes skip Error subtrees silently. aux: the declaration's name when
+    // one was read, else invalid.
     Error,
 
+    // children: the declarations.
     Source_file,
-    Import_decl, // aux holds the module's Symbol_id, and it has no children.
+    // aux: the module; children: the package Name_expr, when written.
+    Import_decl,
+    // aux: the name; children: return type, Param_list, body Block (invalid for `extern`),
+    // Type_param_list (invalid when not generic).
     Function_decl,
+    // aux: the name; children as Function_decl, with no return type and the aggregate's type parameters.
     Destructor_decl,
+    // aux: the name; children as Destructor_decl.
     Constructor_decl,
+    // aux: the name (`this` for a receiver, invalid in a Function_type); children: the type.
     Param_decl,
+    // aux: the name; children: the package Name_expr, when written.
     Named_type,
+    // children: the pointee.
     Pointer_type,
-    Many_pointer_type, // T[*]; child 0 is the element
+    // `T[*]`; children: the element.
+    Many_pointer_type,
+    // aux: the Keyword (`ref`, `out`, `move`); children: the type.
     Mode_type,
+    // children: the type.
     Const_type,
+    // children: the Named_type, then its Type_arg_list.
     Generic_type,
-    Function_type, // child 0 is the return type, child 1 a Param_list whose children are Param_decls with aux set to the
-                   // invalid symbol.
-    Field_type,    // Child 0 is the return type and child 1 is the aggregate's spelled type
+    // children: return type, then a Param_list of unnamed Param_decls.
+    Function_type,
+    // `field( A ) -> T`; children: the field's type, then the aggregate's.
+    Field_type,
+    // children: the types.
     Type_arg_list,
+    // children: the Param_decls, the receiver first when there is one.
     Param_list,
+    // aux: 1 for `unsafe`; children: the statements.
     Block,
+    // children: the value (invalid when absent).
     Return_stmt,
+    // aux: the Literal_id.
     Int_literal,
+    // aux: the Literal_id.
     Float_literal,
+    // aux: the Literal_id.
     String_literal,
+    // aux: the Literal_id.
     Char_literal,
+    // aux: 1 for `true`.
     Bool_literal,
+    // aux: the name (`this` for the receiver); children: its Type_arg_list, when written uncalled.
     Name_expr,
+    // aux: the operator's Token_kind; children: left, then right.
     Binary_expr,
+    // aux: the operator's Token_kind; children: the operand.
     Unary_expr,
+    // children: condition, then the two arms.
     Conditional_expr,
+    // children: callee, Arg_list, Type_arg_list (invalid when not written).
     Call_expr,
+    // children: the arguments.
     Arg_list,
+    // A local, a global or a static field. aux: the name; children: the annotation (invalid for
+    // `auto`), then the initialiser (invalid when absent).
     Var_decl,
+    // aux: the operator's Token_kind; children: target, then value.
     Assign_stmt,
+    // aux: `++` or `--` as a Token_kind; children: the operand.
     Increment_stmt,
+    // children: the expression.
     Expr_stmt,
+    // children: condition, then Block, else (a Block or an If_stmt; invalid when absent).
     If_stmt,
+    // children: condition, then body.
     While_stmt,
+    // children: init (a Var_decl or a statement), condition, update, body; the first three invalid
+    // when absent.
     For_stmt,
+    // aux: the name; children: the Type_param_list (invalid when not generic), then the members:
+    // Field_decls, static Var_decls, Method_decls, Constructor_decls and the Destructor_decl.
     Struct_decl,
+    // As Struct_decl.
     Class_decl,
-    Enum_decl,    // aux is the name; children are Variant_decls, then the underlying type if written
-    Variant_decl, // aux is the name; no children until payloads (D7)
-    Path_expr,    // `Colour::Red`; aux is the name, child 0 the qualifier, child 1 its type arguments
+    // aux: the name; children: Type_param_list, underlying type (each invalid when absent), then the
+    // Variant_decls.
+    Enum_decl,
+    // aux: the name; children: the payload's Field_decls.
+    Variant_decl,
+    // `Colour::Red`; aux: the member's name; children: the qualifier, then its Type_arg_list when
+    // written.
+    Path_expr,
+    // aux: the name; children: the type.
     Field_decl,
+    // aux: the field's name; children: the object.
     Field_expr,
-    Index_expr, // p[i]; children are the pointer, then the index
+    // `p[i]`; children: the object, then the index.
+    Index_expr,
+    // aux: the type's name; children: the package Name_expr when written, then the Field_inits.
     Struct_literal,
+    // aux: the field's name (invalid when positional); children: the value.
     Field_init,
-    Marker_expr, // `move`, `out`, `ref` - a unary operator that does not change the type of its operand
+    // `move`, `out`, `ref`: an operator that does not change its operand's type. aux: the Keyword;
+    // children: the operand.
+    Marker_expr,
     Null_literal,
+    // aux: the Keyword (`cast` or `wrap`); children: the type, then the operand.
     Cast_expr,
     Break_stmt,
     Continue_stmt,
-    Switch_stmt, // children: scrutinee, then Case_arms in source order
-    Case_arm,    // children: the labels (Path_exprs), then the body Block; aux is 1 for `default`
+    // children: the scrutinee, then the Case_arms.
+    Switch_stmt,
+    // aux: 1 when `default` labels it; children: the labels (expressions, Range_exprs and
+    // Variant_patterns), then the body Block.
+    Case_arm,
+    // `1..5`, half-open; children: the two bounds.
     Range_expr,
-    Variant_pattern, // `Shape::Circle( r )` in a case; children are the Path_expr then Binding_decls
-    Binding_decl,    // a name bound by a pattern; aux is the name, and it has no annotation  // `1..5`, half-open; children are
-                     // the two bounds
-    Method_decl,     // aux is the name; children are { return type, params, body }, as Function_decl
-    Alloc_expr,      // `alloc<T>()` or `alloc<T>( n )`; child 0 is the type, child 1 the count when written
-    Free_expr,       // `free( p )`; child 0 is the pointer
-    Assert_expr,     // assert( c ); child 0 is the condition
-    Destroy_expr,    // The children are the pointer and the count
+    // `Shape::Circle( r )`; children: the Path_expr, then the Binding_decls.
+    Variant_pattern,
+    // A name bound by a pattern. aux: the name.
+    Binding_decl,
+    // aux: the name; children as Function_decl, with the enclosing aggregate's type parameters.
+    Method_decl,
+    // `alloc<T>()` or `alloc<T>( n )`; children: the type, then the count when written.
+    Alloc_expr,
+    // `free( p )`; children: the pointer.
+    Free_expr,
+    // `assert( c )`; children: the condition.
+    Assert_expr,
+    // `destroy( p, n )`; children: the pointer, then the count.
+    Destroy_expr,
     Fallthrough_stmt,
-    // The whole generic declaration: the parameters, then the `where` clauses constraining them.
-    // One node rather than two so that a function-like declaration keeps four children, and so the
-    // resolver's single visit declares the parameters before anything names one.
+    // children: the Type_param_decls, then the Where_clauses constraining them. One node, so a
+    // function-like declaration keeps four children and the resolver declares the parameters
+    // before anything names one.
     Type_param_list,
-    Type_param_decl, // aux is the name; the bounds are in a Where_clause beside it, not below it
-    Where_clause,    // aux is the parameter it constrains; children are Bound_names
-    Bound_name,      // aux is the bound's name, resolved against D40's fixed set by the checker
+    // aux: the name. Its bounds are in a Where_clause beside it.
+    Type_param_decl,
+    // aux: the parameter it constrains; children: the Bound_names.
+    Where_clause,
+    // aux: the bound's name, resolved against D40's fixed set by the checker.
+    Bound_name,
 
     Count
 };

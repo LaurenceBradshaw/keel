@@ -463,7 +463,7 @@ int main( int argc, char** argv )
 
     // Lowered once, for everything downstream: the move check, --dump-kir and the emitter all read
     // the same functions rather than each lowering a copy of its own.
-    std::vector<keel::Function> functions = keel::lower( ast, resolution, types, literals, interner );
+    std::vector<keel::Function> functions = keel::lower( ast, resolution, types, literals );
 
     for( keel::Function& function : functions )
     {

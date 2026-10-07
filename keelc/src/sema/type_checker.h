@@ -36,9 +36,9 @@ struct Constant_value
     f64  floating  = 0.0;
 };
 
-// A generic named with concrete type arguments at some call site. The seed for M6's
+// A generic named with concrete type arguments at some call site. The seed for the
 // monomorphisation worklist: recorded by the checker because that is the only pass that resolves a
-// type argument to a type, and read by nothing yet.
+// type argument to a type.
 struct Instantiation
 {
     Node_id              declaration {};
@@ -195,14 +195,14 @@ bool has_receiver( const Ast& ast, Node_id decl );
 // A member that belongs to the type rather than to an object (PLAN §6.7).
 bool is_static_method( const Ast& ast, Node_id method );
 
-// The mode a declaration was written with, or Keyword::Count for none. The one reader of a
-// Mode_type's aux: three separate copies of this test existed before it, and a fourth was about to.
 // D7: whether any variant carries a payload. That one answer decides the representation - a
 // payload-free enum is its underlying integer, and one with payloads is a struct holding a tag and
 // every payload field. Shared because lowering and the emitter must agree, and disagreeing would
 // mean writing a tag into something that has none.
 bool enum_has_payload( const Ast& ast, Node_id enum_decl );
 
+// The mode a declaration was written with, or Keyword::Count for none. The one reader of a
+// Mode_type's aux.
 Keyword parameter_mode( const Ast& ast, Node_id decl );
 
 // A mode's two spellings: a `Param_mode` in a type, and the `Keyword` a call site writes. Bare and `const ref` share the
@@ -217,9 +217,6 @@ bool is_const_field( const Ast& ast, Node_id decl );
 // A method written with a trailing `const`, which is a `const ref` receiver. Its own name because
 // the question is asked of the *method* while the answer lives on its parameter 0.
 bool is_const_method( const Ast& ast, Node_id method );
-// See the definitions: an aggregate's type-parameter bindings, and a field's type seen through
-// them. Free rather than Checker members because the emitter needs the same answers and has no
-// checker - the alternative being the rule written twice.
 // Whether a declaration declares a destructor of its own. Free because three passes and the
 // emitter all ask it, and only one of them has a checker.
 bool has_destructor( const Ast& ast, Node_id declaration );
@@ -234,7 +231,9 @@ bool may_own(
 );
 // D2 asked of an *instance*: `Box<i32>` and `Box<Buffer>` are two answers from one declaration, and
 // a drop is elaborated against this one.
-bool     instance_owns( const Ast& ast, Type_table& table, Type_id instance, std::span<const Type_id> recorded );
+bool instance_owns( const Ast& ast, Type_table& table, Type_id instance, std::span<const Type_id> recorded );
+// An aggregate's type-parameter bindings, and a field's type seen through them. Free because the
+// emitter needs the same answers and has no checker.
 Bindings aggregate_bindings( const Ast& ast, const Type_table& table, Type_id aggregate, std::span<const Type_id> recorded );
 Type_id  field_type( const Ast& ast, Type_table& table, Type_id aggregate, Node_id field, std::span<const Type_id> recorded );
 

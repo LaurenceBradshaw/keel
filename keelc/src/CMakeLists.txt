@@ -3,9 +3,7 @@
 # CMake when a file appears or disappears, so adding a source needs no edit here.
 #
 # Includes are path-qualified from src/ - `#include "lex/lexer.h"`, not `#include "lexer.h"`.
-# Only src/ goes on the include path. This matters more here than in most projects: a compiler
-# naturally grows several same-named files (ast/node.h, ir/node.h; sema/scope.h, ir/scope.h),
-# and a flat include path would make those ambiguous.
+# Only src/ goes on the include path, so two directories may hold files of the same name.
 file(GLOB_RECURSE keel_sources CONFIGURE_DEPENDS "*.cpp")
 
 # The prelude is Keel source compiled into keelc as a string, so keelc reads no file to find it.

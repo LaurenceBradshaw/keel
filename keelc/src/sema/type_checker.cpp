@@ -169,7 +169,7 @@ Types type_check(
     const Ast&            ast,
     const Resolution&     resolution,
     const Literal_pool&   literals,
-    const Source_manager& sm, // not needed yet; kept so the pass signatures match
+    const Source_manager& sm,
     const Interner&       interner,
     Diagnostics&          diags
 )

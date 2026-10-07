@@ -26,7 +26,6 @@ public:
         const Resolution& resolution,
         Types&            types,
         Literal_pool&     literals,
-        const Interner&   interner,
         Bindings          bindings = {}
     );
 
@@ -155,13 +154,6 @@ private:
 
     Local_id call_result( Node_id id, Rvalue call, Type_id result_type, Span span );
 
-    const Ast& ast_;
-
-    // Read only for `&f`, whose callee is a declaration rather than a place. Everywhere else a
-    // name arrives with its local already. literal_pool_ and interner_ may turn out unnecessary -
-    // a Literal_id comes straight off aux, and a Symbol_id is passed through without a lookup.
-    const Resolution& resolution_;
-    Types&            types_;
     // D2 for this instance rather than for the declaration: `Box<i32>` and `Box<Buffer>` are two
     // answers, and the drop being elaborated here belongs to one of them.
     bool owns( Type_id type )
@@ -169,11 +161,17 @@ private:
         return instance_owns( ast_, types_.table(), type, types_.recorded() );
     }
 
+    const Ast& ast_;
+
+    // Read only for `&f`, whose callee is a declaration rather than a place. Everywhere else a
+    // name arrives with its local already.
+    const Resolution& resolution_;
+    Types&            types_;
+
     // This instantiation's type parameters, bound. Empty for an ordinary function, which is
     // what makes the substitution below the identity and lets one path serve both.
-    Bindings                         bindings_;
-    Literal_pool&                    literal_pool_;
-    [[maybe_unused]] const Interner& interner_;
+    Bindings      bindings_;
+    Literal_pool& literal_pool_;
 
     const Node_id declaration_;
 
@@ -198,28 +196,19 @@ private:
 };
 
 Lowering::Lowering(
-    Node_id           declaration,
-    const Ast&        ast,
-    const Resolution& resolution,
-    Types&            types,
-    Literal_pool&     literals,
-    const Interner&   interner,
-    Bindings          bindings
+    Node_id declaration, const Ast& ast, const Resolution& resolution, Types& types, Literal_pool& literals, Bindings bindings
 )
     : ast_( ast ),
       resolution_( resolution ),
       types_( types ),
       bindings_( std::move( bindings ) ),
       literal_pool_( literals ),
-      interner_( interner ),
       declaration_( declaration ),
       builder_(
           declaration, types.table().substitute( binding_type( ast, types, declaration ), bindings_ ), ast_.span( declaration )
       ),
       locals_()
 {
-    // walk ast_.child( declaration, 1 ) - the Param_list - and for each Param_decl, add_parameter() and record the Local_id
-    // in locals_.
     for( const Node_id param : ast_.children( ast_.child( declaration, 1 ) ) )
     {
         if( ast_.kind( param ) == Node_kind::Param_decl )
@@ -2534,8 +2523,7 @@ Operand Lowering::address_operand( Place place, Type_id type, Span span, Address
 
 } // namespace
 
-std::vector<Function>
-lower( const Ast& ast, const Resolution& resolution, Types& types, Literal_pool& literals, const Interner& interner )
+std::vector<Function> lower( const Ast& ast, const Resolution& resolution, Types& types, Literal_pool& literals )
 {
     std::vector<Function> functions;
 
@@ -2545,7 +2533,7 @@ lower( const Ast& ast, const Resolution& resolution, Types& types, Literal_pool&
         // emitted from, and emitting it directly would try to give `T` a C spelling.
         if( is_function_like( ast.kind( id ) ) && !is_extern( ast, id ) && !is_generic( ast, id ) )
         {
-            Lowering lowering( id, ast, resolution, types, literals, interner );
+            Lowering lowering( id, ast, resolution, types, literals );
             functions.push_back( lowering.run() );
         }
     }
@@ -2676,7 +2664,7 @@ lower( const Ast& ast, const Resolution& resolution, Types& types, Literal_pool&
             bindings.emplace( types.type_of( parameters[i] ).v, instance.arguments[i] );
         }
 
-        Lowering lowering( instance.declaration, ast, resolution, types, literals, interner, std::move( bindings ) );
+        Lowering lowering( instance.declaration, ast, resolution, types, literals, std::move( bindings ) );
 
         Function emitted = lowering.run();
 
@@ -2732,7 +2720,7 @@ struct Lowered
 
         if( !diags.has_errors() )
         {
-            functions = lower( ast, resolution, types, literals, interner );
+            functions = lower( ast, resolution, types, literals );
         }
     }
 

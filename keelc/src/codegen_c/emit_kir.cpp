@@ -1502,7 +1502,7 @@ struct Generated
 
         if( !diags.has_errors() )
         {
-            std::vector<Function> functions = lower( ast, resolution, types, literals, interner );
+            std::vector<Function> functions = lower( ast, resolution, types, literals );
 
             // The driver simplifies before emitting, so the C these tests read is the C it writes.
             for( Function& function : functions )

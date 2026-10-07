@@ -450,7 +450,7 @@ struct Checked
 
         if( !diags.has_errors() )
         {
-            functions = lower( ast, resolution, types, literals, interner );
+            functions = lower( ast, resolution, types, literals );
 
             // The driver simplifies every function before anything reads it, so these do too: a
             // test that walked a graph the compiler never analyses would pin the wrong thing.
