@@ -1,0 +1,198 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "prelude_print.kl.prelude.c"
+
+int32_t kl__main__( void );
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int64_t kl_negative_1;
+    int64_t kl_t2;
+    uint64_t kl_large_3;
+    double kl_third_4;
+    double kl_t5;
+    bool kl_yes_6;
+    struct kl_7prelude_str kl_t7;
+    struct kl_7prelude_str* kl_t8;
+    uint8_t* kl_t9;
+    struct kl_7prelude_str kl_t13;
+    struct kl_7prelude_str* kl_t14;
+    uint8_t* kl_t15;
+    struct kl_7prelude_str kl_t19;
+    struct kl_7prelude_str* kl_t20;
+    uint8_t* kl_t21;
+    struct kl_7prelude_str kl_t25;
+    struct kl_7prelude_str* kl_t26;
+    uint8_t* kl_t27;
+    struct kl_7prelude_str kl_t31;
+    struct kl_7prelude_str* kl_t32;
+    uint8_t* kl_t33;
+    struct kl_7prelude_str kl_t36;
+    struct kl_7prelude_str* kl_t37;
+    uint8_t* kl_t38;
+    struct kl_7prelude_str kl_t45;
+    struct kl_7prelude_str* kl_t46;
+    uint8_t* kl_t47;
+    struct kl_7prelude_str kl_t51;
+    struct kl_7prelude_str* kl_t52;
+    uint8_t* kl_t53;
+    struct kl_7prelude_str kl_t57;
+    struct kl_7prelude_str* kl_t58;
+    uint8_t* kl_t59;
+    struct kl_7prelude_str kl_t63;
+    struct kl_7prelude_str* kl_t64;
+    uint8_t* kl_t65;
+    struct kl_7prelude_str kl_t69;
+    struct kl_7prelude_str* kl_t70;
+    uint8_t* kl_t71;
+    struct kl_7prelude_str kl_t74;
+    struct kl_7prelude_str* kl_t75;
+    uint8_t* kl_t76;
+    int8_t kl_small_83;
+    int8_t kl_t84;
+    uint8_t kl_byte_85;
+    float kl_half_86;
+    int32_t kl_count_87;
+    int64_t kl_t88;
+    uint64_t kl_t90;
+    double kl_t92;
+    int64_t kl_t94;
+#line 6 "codegen/prelude_print.kl"
+    kl_t2 = -42;
+    kl_negative_1 = kl_t2;
+#line 7 "codegen/prelude_print.kl"
+    kl_large_3 = 18446744073709551615ull;
+#line 8 "codegen/prelude_print.kl"
+    kl_t5 = 1.0 / 3.0;
+    kl_third_4 = kl_t5;
+#line 9 "codegen/prelude_print.kl"
+    kl_yes_6 = true;
+#line 11 "codegen/prelude_print.kl"
+    kl_t8 = &kl_t7;
+    kl_t9 = ( uint8_t* ) "print: ";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t8, kl_t9, 7 );
+    kl_7prelude_print__Q7prelude3str( kl_t7 );
+#line 12 "codegen/prelude_print.kl"
+    kl_7prelude_print__3i64( kl_negative_1 );
+#line 13 "codegen/prelude_print.kl"
+    kl_t14 = &kl_t13;
+    kl_t15 = ( uint8_t* ) " ";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t14, kl_t15, 1 );
+    kl_7prelude_print__Q7prelude3str( kl_t13 );
+#line 14 "codegen/prelude_print.kl"
+    kl_7prelude_print__3u64( kl_large_3 );
+#line 15 "codegen/prelude_print.kl"
+    kl_t20 = &kl_t19;
+    kl_t21 = ( uint8_t* ) " ";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t20, kl_t21, 1 );
+    kl_7prelude_print__Q7prelude3str( kl_t19 );
+#line 16 "codegen/prelude_print.kl"
+    kl_7prelude_print__3f64( kl_third_4 );
+#line 17 "codegen/prelude_print.kl"
+    kl_t26 = &kl_t25;
+    kl_t27 = ( uint8_t* ) " ";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t26, kl_t27, 1 );
+    kl_7prelude_print__Q7prelude3str( kl_t25 );
+#line 18 "codegen/prelude_print.kl"
+    kl_7prelude_print__4bool( kl_yes_6 );
+#line 19 "codegen/prelude_print.kl"
+    kl_t32 = &kl_t31;
+    kl_t33 = ( uint8_t* ) "\012";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t32, kl_t33, 1 );
+    kl_7prelude_print__Q7prelude3str( kl_t31 );
+#line 21 "codegen/prelude_print.kl"
+    kl_t37 = &kl_t36;
+    kl_t38 = ( uint8_t* ) "println";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t37, kl_t38, 7 );
+    kl_7prelude_println__Q7prelude3str( kl_t36 );
+#line 22 "codegen/prelude_print.kl"
+    kl_7prelude_println__3i64( kl_negative_1 );
+#line 23 "codegen/prelude_print.kl"
+    kl_7prelude_println__3u64( kl_large_3 );
+#line 24 "codegen/prelude_print.kl"
+    kl_7prelude_println__3f64( kl_third_4 );
+#line 25 "codegen/prelude_print.kl"
+    kl_7prelude_println__4bool( false );
+#line 27 "codegen/prelude_print.kl"
+    kl_t46 = &kl_t45;
+    kl_t47 = ( uint8_t* ) "eprint: ";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t46, kl_t47, 8 );
+    kl_7prelude_eprint__Q7prelude3str( kl_t45 );
+#line 28 "codegen/prelude_print.kl"
+    kl_7prelude_eprint__3i64( kl_negative_1 );
+#line 29 "codegen/prelude_print.kl"
+    kl_t52 = &kl_t51;
+    kl_t53 = ( uint8_t* ) " ";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t52, kl_t53, 1 );
+    kl_7prelude_eprint__Q7prelude3str( kl_t51 );
+#line 30 "codegen/prelude_print.kl"
+    kl_7prelude_eprint__3u64( kl_large_3 );
+#line 31 "codegen/prelude_print.kl"
+    kl_t58 = &kl_t57;
+    kl_t59 = ( uint8_t* ) " ";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t58, kl_t59, 1 );
+    kl_7prelude_eprint__Q7prelude3str( kl_t57 );
+#line 32 "codegen/prelude_print.kl"
+    kl_7prelude_eprint__3f64( kl_third_4 );
+#line 33 "codegen/prelude_print.kl"
+    kl_t64 = &kl_t63;
+    kl_t65 = ( uint8_t* ) " ";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t64, kl_t65, 1 );
+    kl_7prelude_eprint__Q7prelude3str( kl_t63 );
+#line 34 "codegen/prelude_print.kl"
+    kl_7prelude_eprint__4bool( kl_yes_6 );
+#line 35 "codegen/prelude_print.kl"
+    kl_t70 = &kl_t69;
+    kl_t71 = ( uint8_t* ) "\012";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t70, kl_t71, 1 );
+    kl_7prelude_eprint__Q7prelude3str( kl_t69 );
+#line 37 "codegen/prelude_print.kl"
+    kl_t75 = &kl_t74;
+    kl_t76 = ( uint8_t* ) "eprintln";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t75, kl_t76, 8 );
+    kl_7prelude_eprintln__Q7prelude3str( kl_t74 );
+#line 38 "codegen/prelude_print.kl"
+    kl_7prelude_eprintln__3i64( kl_negative_1 );
+#line 39 "codegen/prelude_print.kl"
+    kl_7prelude_eprintln__3u64( kl_large_3 );
+#line 40 "codegen/prelude_print.kl"
+    kl_7prelude_eprintln__3f64( kl_third_4 );
+#line 41 "codegen/prelude_print.kl"
+    kl_7prelude_eprintln__4bool( false );
+#line 44 "codegen/prelude_print.kl"
+    kl_t84 = -7;
+    kl_small_83 = kl_t84;
+#line 45 "codegen/prelude_print.kl"
+    kl_byte_85 = 255;
+#line 46 "codegen/prelude_print.kl"
+    kl_half_86 = 0.5;
+#line 47 "codegen/prelude_print.kl"
+    kl_count_87 = 3;
+#line 49 "codegen/prelude_print.kl"
+    kl_t88 = ( int64_t ) kl_small_83;
+    kl_7prelude_println__3i64( kl_t88 );
+#line 50 "codegen/prelude_print.kl"
+    kl_t90 = ( uint64_t ) kl_byte_85;
+    kl_7prelude_println__3u64( kl_t90 );
+#line 51 "codegen/prelude_print.kl"
+    kl_t92 = ( double ) kl_half_86;
+    kl_7prelude_println__3f64( kl_t92 );
+#line 52 "codegen/prelude_print.kl"
+    kl_t94 = ( int64_t ) kl_count_87;
+    kl_7prelude_println__3i64( kl_t94 );
+#line 55 "codegen/prelude_print.kl"
+    kl_7prelude_println__3f64( 2.5 );
+#line 56 "codegen/prelude_print.kl"
+    kl_7prelude_println__3i64( 5 );
+#line 58 "codegen/prelude_print.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

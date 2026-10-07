@@ -1,0 +1,59 @@
+// The prelude's `print`, `println`, `eprint` and `eprintln`, each over `str`, `i64`, `u64`, `f64` and
+// `bool`, with no `unsafe` at the call. The `e` forms write to stderr, which the golden captures
+// together with stdout, in the order the program wrote them.
+i32 main()
+{
+    i64 negative = -42;
+    u64 large    = 18446744073709551615;
+    f64 third    = 1.0 / 3.0;
+    bool yes     = true;
+
+    print( "print: " );
+    print( negative );
+    print( " " );
+    print( large );
+    print( " " );
+    print( third );
+    print( " " );
+    print( yes );
+    print( "\n" );
+
+    println( "println" );
+    println( negative );
+    println( large );
+    println( third );
+    println( false );
+
+    eprint( "eprint: " );
+    eprint( negative );
+    eprint( " " );
+    eprint( large );
+    eprint( " " );
+    eprint( third );
+    eprint( " " );
+    eprint( yes );
+    eprint( "\n" );
+
+    eprintln( "eprintln" );
+    eprintln( negative );
+    eprintln( large );
+    eprintln( third );
+    eprintln( false );
+
+    // Narrower numbers widen to the overload of their kind and signedness.
+    i8 small  = -7;
+    u8 byte   = 255;
+    f32 half  = 0.5;
+    i32 count = 3;
+
+    println( small );
+    println( byte );
+    println( half );
+    println( count );
+
+    // A literal of either family, once its type is written.
+    println( 2.5 );
+    println( cast<i64>( 5 ) );
+
+    return 0;
+}

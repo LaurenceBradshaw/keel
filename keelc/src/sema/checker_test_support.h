@@ -38,7 +38,7 @@ public:
     {
     }
 
-    // `prelude` in place of the shipped one, which is empty of functions until M9 adds `print`.
+    // `prelude` in place of the shipped one.
     Typed( std::string_view source, std::string_view prelude )
     {
         file_          = sm_.add_file( "t.kl", std::string( source ) );
@@ -128,24 +128,28 @@ public:
     // `t:2`, `geom:1` or `<prelude>:3` - or empty when it chose nothing.
     std::string chose( std::size_t index ) const
     {
+        const Node_id callable = callee( index );
+        if( !callable.is_valid() )
+        {
+            return {};
+        }
+
+        const Span span = ast_.span( callable );
+        return std::filesystem::path( sm_.file( span.file ).path ).stem().string() + ":" +
+               std::to_string( sm_.line_col( span.file, span.start ).line );
+    }
+
+    // The callable the `index`th call in the input file went to, or none.
+    Node_id callee( std::size_t index ) const
+    {
         for( u32 i = 0; i < ast_.node_count(); ++i )
         {
             const Node_id id { i };
 
-            if( ast_.kind( id ) != Node_kind::Call_expr || ast_.span( id ).file != file_ || index-- != 0 )
+            if( ast_.kind( id ) == Node_kind::Call_expr && ast_.span( id ).file == file_ && index-- == 0 )
             {
-                continue;
+                return types_.callee_of( id );
             }
-
-            const Node_id callable = types_.callee_of( id );
-            if( !callable.is_valid() )
-            {
-                return {};
-            }
-
-            const Span span = ast_.span( callable );
-            return std::filesystem::path( sm_.file( span.file ).path ).stem().string() + ":" +
-                   std::to_string( sm_.line_col( span.file, span.start ).line );
         }
 
         FAIL( "the input file has no such call" );

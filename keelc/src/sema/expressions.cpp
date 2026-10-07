@@ -170,8 +170,9 @@ Type_id Expressions::infer_name( Node_id id )
 }
 
 // D26: a literal has a value rather than a type, and context is what gives it one - so where the
-// context is the thing being chosen, a literal narrows the set to a family and no further. A struct
-// literal takes its instance from the expectation in the same way, so it says nothing at all.
+// context is the thing being chosen, a literal or arithmetic on literals of one family narrows the
+// set to that family and no further. A struct literal takes its instance from the expectation in the
+// same way, so it says nothing at all.
 Argument_shape Expressions::argument_shape( Node_id argument )
 {
     Argument_shape shape;
@@ -184,34 +185,23 @@ Argument_shape Expressions::argument_shape( Node_id argument )
         value        = ast_.operand( argument );
     }
 
-    if( literals_.is_literal_expression( value ) )
+    // `true` has one type, so it is as informative as a variable - it just has not been recorded
+    // yet, because Literals::check_literal is what records a literal.
+    if( ast_.kind( value ) == Node_kind::Bool_literal )
     {
-        const Node_id inner = ast_.kind( value ) == Node_kind::Unary_expr ? ast_.operand( value ) : value;
-
-        switch( ast_.kind( inner ) )
-        {
-        case Node_kind::Int_literal:
-        case Node_kind::Char_literal:
-            shape.kind = Argument_kind::Integer;
-            return shape;
-
-        case Node_kind::Float_literal:
-            shape.kind = Argument_kind::Floating;
-            return shape;
-
-        case Node_kind::Bool_literal:
-            // `true` has one type, so it is as informative as a variable - it just has not been
-            // recorded yet, because Literals::check_literal is what records a literal.
-            shape.kind = Argument_kind::Typed;
-            shape.type = table_.builtin( Type_kind::Bool );
-            return shape;
-
-        default:
-            return shape; // `nullptr`, which every pointer accepts
-        }
+        shape.kind = Argument_kind::Typed;
+        shape.type = table_.builtin( Type_kind::Bool );
+        return shape;
     }
 
-    if( ast_.kind( value ) == Node_kind::Struct_literal )
+    if( const std::optional<Argument_kind> family = literal_family( value ) )
+    {
+        shape.kind = *family;
+        return shape;
+    }
+
+    // `nullptr`, which every pointer accepts
+    if( ast_.kind( value ) == Node_kind::Null_literal || ast_.kind( value ) == Node_kind::Struct_literal )
     {
         return shape;
     }
@@ -276,7 +266,10 @@ Type_id Expressions::infer_call( Node_id id )
 
         for( std::size_t i = 0; i < list.size(); ++i )
         {
-            if( i < shapes.size() && shapes[i].recorded )
+            // A family shape was ruled on by selection, and typed with nothing to give it a type
+            // it would only settle on an `i32` the author never meant.
+            if( i < shapes.size() && ( shapes[i].recorded || shapes[i].kind == Argument_kind::Integer ||
+                                       shapes[i].kind == Argument_kind::Floating ) )
             {
                 continue;
             }
@@ -2247,6 +2240,44 @@ bool Expressions::takes_context( Node_id id ) const
     }
 
     return false;
+}
+
+// takes_context's walk, asking which family rather than whether. A mix, or a `true` among them, has
+// none, and is typed instead so that its own error is the one reported.
+std::optional<Argument_kind> Expressions::literal_family( Node_id id ) const
+{
+    switch( ast_.kind( id ) )
+    {
+    case Node_kind::Int_literal:
+    case Node_kind::Char_literal:
+        return Argument_kind::Integer;
+
+    case Node_kind::Float_literal:
+        return Argument_kind::Floating;
+
+    case Node_kind::Unary_expr:
+        return ast_.op( id ) == Token_kind::Minus ? literal_family( ast_.operand( id ) ) : std::nullopt;
+
+    case Node_kind::Binary_expr:
+        switch( operators_.result_source( ast_.op( id ) ) )
+        {
+        case Result_source::Left_operand:
+            return literal_family( ast_.lhs( id ) ); // a shift's count never decides its type
+
+        case Result_source::Operands:
+        {
+            const std::optional<Argument_kind> left = literal_family( ast_.lhs( id ) );
+
+            return left == literal_family( ast_.rhs( id ) ) ? left : std::nullopt;
+        }
+
+        default:
+            return std::nullopt;
+        }
+
+    default:
+        return std::nullopt;
+    }
 }
 
 Type_id Expressions::infer_path( Node_id id )

@@ -14,3 +14,142 @@ class str
         this.size = size;
     }
 };
+
+extern void kl_rt_write( i32 stream, const u8[*] data, u64 size );
+extern void kl_rt_write_i64( i32 stream, i64 value );
+extern void kl_rt_write_u64( i32 stream, u64 value );
+extern void kl_rt_write_f64( i32 stream, f64 value );
+
+void print( str s )
+{
+    unsafe
+    {
+        kl_rt_write( 1, s.data, s.size );
+    }
+}
+
+void print( i64 value )
+{
+    unsafe
+    {
+        kl_rt_write_i64( 1, value );
+    }
+}
+
+void print( u64 value )
+{
+    unsafe
+    {
+        kl_rt_write_u64( 1, value );
+    }
+}
+
+void print( f64 value )
+{
+    unsafe
+    {
+        kl_rt_write_f64( 1, value );
+    }
+}
+
+void print( bool value )
+{
+    print( value ? "true" : "false" );
+}
+
+void eprint( str s )
+{
+    unsafe
+    {
+        kl_rt_write( 2, s.data, s.size );
+    }
+}
+
+void eprint( i64 value )
+{
+    unsafe
+    {
+        kl_rt_write_i64( 2, value );
+    }
+}
+
+void eprint( u64 value )
+{
+    unsafe
+    {
+        kl_rt_write_u64( 2, value );
+    }
+}
+
+void eprint( f64 value )
+{
+    unsafe
+    {
+        kl_rt_write_f64( 2, value );
+    }
+}
+
+void eprint( bool value )
+{
+    eprint( value ? "true" : "false" );
+}
+
+void println( str s )
+{
+    print( s );
+    print( "\n" );
+}
+
+void println( i64 value )
+{
+    print( value );
+    print( "\n" );
+}
+
+void println( u64 value )
+{
+    print( value );
+    print( "\n" );
+}
+
+void println( f64 value )
+{
+    print( value );
+    print( "\n" );
+}
+
+void println( bool value )
+{
+    print( value );
+    print( "\n" );
+}
+
+void eprintln( str s )
+{
+    eprint( s );
+    eprint( "\n" );
+}
+
+void eprintln( i64 value )
+{
+    eprint( value );
+    eprint( "\n" );
+}
+
+void eprintln( u64 value )
+{
+    eprint( value );
+    eprint( "\n" );
+}
+
+void eprintln( f64 value )
+{
+    eprint( value );
+    eprint( "\n" );
+}
+
+void eprintln( bool value )
+{
+    eprint( value );
+    eprint( "\n" );
+}

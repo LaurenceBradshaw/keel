@@ -1986,6 +1986,175 @@ TEST_CASE( "overloads_never_fall_back_through_a_qualifier", "[sema][overload][pr
     }
 }
 
+// D26: arithmetic on literals takes its type from context as a lone literal does, so where the context
+// is what is being chosen it narrows to a family too. Typed on its own it would settle on `i32`.
+TEST_CASE( "overloads_read_arithmetic_on_literals_as_a_literal", "[sema][overload][literal]" )
+{
+    SECTION( "an integer one past `i32`" )
+    {
+        const Typed p( "i32 f( i64 a ) { return 1; }\nbool f( bool a ) { return true; }\n"
+                       "i32 main() { return f( 2000000000 + 2000000000 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.chose( 0 ) == "t:1" );
+    }
+
+    SECTION( "the least `i64`" )
+    {
+        const Typed p( "i32 f( i64 a ) { return 1; }\nbool f( bool a ) { return true; }\n"
+                       "i32 main() { return f( -9223372036854775807 - 1 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a shift, whose type is its left operand's" )
+    {
+        const Typed p( "i32 f( i64 a ) { return 1; }\nbool f( bool a ) { return true; }\n"
+                       "i32 main() { return f( 1 << 40 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a float one" )
+    {
+        const Typed p( "i32 f( f64 a ) { return 1; }\nbool f( i64 a ) { return true; }\n"
+                       "i32 main() { return f( 1.0 / 3.0 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.chose( 0 ) == "t:1" );
+    }
+
+    // One mistake, one error: no second one for the `i32` it was never meant to be.
+    SECTION( "and ambiguous between two of its family, as a literal is" )
+    {
+        const Typed p( "void f( i64 a ) { }\nvoid f( u64 a ) { }\ni32 main() { f( 3000000000 + 1 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "this call to `f` is ambiguous" ) != std::string::npos );
+    }
+
+    // A namesake in the prelude sends even one candidate through selection, which must not change
+    // what it accepts.
+    SECTION( "one candidate with a namesake in the prelude" )
+    {
+        const Typed p(
+            "void f( i64 a ) { }\ni32 main() { f( -9223372036854775807 - 1 ); return 0; }", "bool f( bool b ) { return b; }\n"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.chose( 0 ) == "t:1" );
+    }
+}
+
+// The shipped prelude's `print` family: five overloads under each of four names, called with no
+// `unsafe`, and chosen by §6.7 like any other set.
+TEST_CASE( "the_prelude_prints_text_numbers_and_truth", "[sema][overload][prelude][print]" )
+{
+    // What the `index`th call's chosen overload takes, provided it is the prelude's.
+    const auto takes = []( const Typed& p, std::size_t index ) -> std::string
+    {
+        const Node_id callable = p.callee( index );
+
+        if( !callable.is_valid() || !p.chose( index ).starts_with( "<prelude>" ) )
+        {
+            return "<not the prelude's>";
+        }
+
+        return std::string( p.type_name( p.ast().params( callable )[0] ) );
+    };
+
+    SECTION( "each of the five types reaches its own" )
+    {
+        const Typed p( "i32 main() { i64 a = -1; u64 b = 2; f64 c = 1.5; bool d = true;\n"
+                       "print( \"x\" ); print( a ); print( b ); print( c ); print( d ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( takes( p, 0 ) == "str" );
+        REQUIRE( takes( p, 1 ) == "i64" );
+        REQUIRE( takes( p, 2 ) == "u64" );
+        REQUIRE( takes( p, 3 ) == "f64" );
+        REQUIRE( takes( p, 4 ) == "bool" );
+    }
+
+    SECTION( "under every name" )
+    {
+        for( const std::string_view name : { "print", "println", "eprint", "eprintln" } )
+        {
+            const std::string call =
+                fmt::format( "{}( \"x\" ); {}( a ); {}( b ); {}( c ); {}( d );", name, name, name, name, name );
+            const Typed p( "i32 main() { i64 a = -1; u64 b = 2; f64 c = 1.5; bool d = true;\n" + call + " return 0; }" );
+
+            INFO( name );
+            INFO( p.rendered() );
+            REQUIRE( p.clean() );
+            REQUIRE( takes( p, 0 ) == "str" );
+            REQUIRE( takes( p, 4 ) == "bool" );
+        }
+    }
+
+    SECTION( "a narrower number widens to the one that keeps its kind and signedness" )
+    {
+        const Typed p( "i32 main() { i8 a = -1; i32 b = 2; u8 c = 3; u32 d = 4; f32 e = 0.5;\n"
+                       "print( a ); print( b ); print( c ); print( d ); print( e ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( takes( p, 0 ) == "i64" );
+        REQUIRE( takes( p, 1 ) == "i64" );
+        REQUIRE( takes( p, 2 ) == "u64" );
+        REQUIRE( takes( p, 3 ) == "u64" );
+        REQUIRE( takes( p, 4 ) == "f64" );
+    }
+
+    SECTION( "an integer literal is ambiguous between the two integers" )
+    {
+        const Typed p( "i32 main() { print( 5 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "this call to `print` is ambiguous" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`( i64 )` and `( u64 )`" ) != std::string::npos );
+    }
+
+    SECTION( "and a float literal is not, having one float to go to" )
+    {
+        const Typed p( "i32 main() { print( 2.5 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( takes( p, 0 ) == "f64" );
+    }
+
+    // D45's own example: the program's set takes what it can, and the prelude's the rest.
+    SECTION( "a program's `print` of its own leaves the prelude's working" )
+    {
+        const Typed p( "struct Point { i32 x; };\nvoid print( Point p ) { }\n"
+                       "i32 main() { Point q = Point { 1 }; print( q ); print( \"hi\" ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.chose( 0 ) == "t:2" );
+        REQUIRE( takes( p, 1 ) == "str" );
+    }
+
+    // The runtime's writers are declared beside them, and calling one is still an `extern` call.
+    SECTION( "the writers they call still need `unsafe`" )
+    {
+        const Typed p( "i32 main() { kl_rt_write_i64( 1, 5 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "calling `kl_rt_write_i64` needs an `unsafe` block" ) != std::string::npos );
+    }
+}
+
 // D31: a borrow is the caller's variable itself, so there is no conversion for a widened copy to
 // live in. One candidate is where this was missed, because selection never ran.
 TEST_CASE( "a_borrowed_argument_takes_exactly_its_type", "[sema][overload][constref][out]" )

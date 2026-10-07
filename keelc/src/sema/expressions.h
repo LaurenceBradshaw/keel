@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #pragma once
+#include <optional>
 #include <span>
 #include <string>
 #include "ast/ast.h"
@@ -196,6 +197,9 @@ private:
 
     // A literal, or arithmetic made only of them: what check() may give the expected type to.
     bool takes_context( Node_id id ) const;
+
+    // The family every literal deciding its type shares, or none: Integer or Floating only.
+    std::optional<Argument_kind> literal_family( Node_id id ) const;
 
     const Ast&         ast_;
     const Interner&    interner_;
