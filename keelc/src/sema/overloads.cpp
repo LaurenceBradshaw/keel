@@ -302,10 +302,13 @@ bool Overloads::candidate_accepts(
 }
 
 // §6.4's assignment widening, numeric and by value only: a borrow is the caller's variable (D31).
+// An integer reaches a float that holds it, as it does through one candidate; distance() ranks it
+// behind every integer.
 bool Overloads::widens( Node_id param, Type_id from, Type_id to ) const
 {
-    return ast_.parameter_mode( param ) == Keyword::Count && table_.holds( from, to ) &&
-           ( ( table_.is_integer( from ) && table_.is_integer( to ) ) || ( table_.is_float( from ) && table_.is_float( to ) ) );
+    const auto numeric = [&]( Type_id type ) { return table_.is_integer( type ) || table_.is_float( type ); };
+
+    return ast_.parameter_mode( param ) == Keyword::Count && numeric( from ) && numeric( to ) && table_.holds( from, to );
 }
 
 // How far `from` travels to reach `to`; smaller is closer, and 0 is exact or not a number.
@@ -1396,6 +1399,65 @@ TEST_CASE( "overloads_widen_when_nothing_matches_exactly", "[sema][overload]" )
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
+    }
+
+    SECTION( "however wide the integer and however narrow the float" )
+    {
+        const Typed p( "i32 f( u64 a ) { return 1; }\nbool f( f32 a ) { return true; }\n"
+                       "i32 main() { u8 b = 1; f( b ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.chose( 0 ) == "t:1" );
+    }
+
+    SECTION( "but an integer becomes a float where nothing else holds it" )
+    {
+        const Typed p( "f64 root( f64 x ) { return x; }\nf32 root( f32 x ) { return x; }\n"
+                       "i32 main() { i32 n = 4; root( n ); u16 s = 4; root( s ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.chose( 0 ) == "t:1" ); // an `f32` holds 24 bits, so only `f64` holds an `i32`
+        REQUIRE( p.chose( 1 ) == "t:2" ); // and both hold a `u16`, so the narrower wins
+    }
+
+    SECTION( "as it does through a single candidate" )
+    {
+        const Typed p( "f64 root( f64 x ) { return x; }\n"
+                       "i32 main() { i32 n = 4; root( n ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and never to a float that would round it" )
+    {
+        const Typed p( "f64 root( f64 x ) { return x; }\nf32 root( f32 x ) { return x; }\n"
+                       "i32 main() { i64 n = 4; root( n ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "no `root` matches these arguments" ) != std::string::npos );
+    }
+
+    SECTION( "nor a float to an integer" )
+    {
+        const Typed p( "i32 f( i64 a ) { return 1; }\nbool f( bool a ) { return true; }\n"
+                       "i32 main() { f32 b = 1.0; f( b ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "no `f` matches these arguments" ) != std::string::npos );
+    }
+
+    SECTION( "nor a `bool` to a number" )
+    {
+        const Typed p( "i32 f( i64 a ) { return 1; }\nbool f( f64 a ) { return true; }\n"
+                       "i32 main() { bool b = true; f( b ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
     }
 
     SECTION( "then the narrowest, whatever its signedness" )

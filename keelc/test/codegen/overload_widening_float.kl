@@ -1,0 +1,51 @@
+// PLAN §6.7. An integer widens to a float only where no integer candidate holds it, and only to a
+// float that holds it exactly. Each overload answers with its own number, and each echoes its
+// argument, so a wrong choice and a wrong conversion are both a wrong exit code.
+
+f64 root( f64 x )
+{
+    return x;
+}
+
+f64 root( f32 x )
+{
+    return 1000.0;
+}
+
+f64 narrow( f64 x )
+{
+    return 2000.0;
+}
+
+f64 narrow( f32 x )
+{
+    return x;
+}
+
+i64 kind( i64 x )
+{
+    return x;
+}
+
+i64 kind( f32 x )
+{
+    return 3000;
+}
+
+i32 main()
+{
+    i32 whole = -123456789;
+    u16 small = 65535;
+    i8 tiny = -7;
+
+    // 1: an `f32` holds 24 bits, so only `f64` holds an `i32`, and holds it exactly.
+    if( root( whole ) != -123456789.0 ) { return 1; }
+
+    // 2: both hold a `u16`, so the narrower wins.
+    if( narrow( small ) != 65535.0 ) { return 2; }
+
+    // 3: an integer candidate beats any float, however narrow.
+    if( kind( tiny ) != -7 ) { return 3; }
+
+    return 42;
+}

@@ -727,7 +727,9 @@ ambiguous. **With no exact match**, a candidate is viable when each numeric argu
 parameter widens by §6.4's assignment table and every other argument matches exactly; a borrow never
 widens (D31). The closest target for one argument is the one that keeps its kind (integer or float),
 then the narrowest, then the one that keeps its signedness: a `u8` against `i16` and `u32` takes
-`i16`, against `i16` and `u16` takes `u16`, and an `i32` against `i64` and `f64` takes `i64`. One
+`i16`, against `i16` and `u16` takes `u16`, and an `i32` against `i64` and `f64` takes `i64`. An
+integer reaches a float only where the float holds it exactly, as it does through one candidate, so
+an `i32` against `f32` and `f64` takes `f64` and an `i64` against them is refused. One
 candidate beats another when no argument's target is further and one is closer; a set with no
 candidate beating every other is ambiguous. So `print( i64 )` and `print( u64 )` take every integer
 type, and every program accepted before this rule means the same under it. Two members that some substitution could make identical — `at( T )` beside
