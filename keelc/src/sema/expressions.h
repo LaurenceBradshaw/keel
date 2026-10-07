@@ -21,9 +21,7 @@
 #include "sema/type_checker.h"
 #include "sema/types_builder.h"
 
-namespace keel
-{
-namespace sema
+namespace keel::sema
 {
 
 // The expression walk: `infer` and `check` and one member per node kind. Every other class in
@@ -233,5 +231,4 @@ private:
     bool unsafe_used_  = false;
 };
 
-} // namespace sema
-} // namespace keel
+} // namespace keel::sema

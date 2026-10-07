@@ -11,10 +11,7 @@
 #include "sema/resolver.h"
 #include "sema/types_builder.h"
 
-namespace keel
-{
-
-namespace sema
+namespace keel::sema
 {
 
 class Places
@@ -86,6 +83,4 @@ private:
     Reporter&         reporter_;
 };
 
-} // namespace sema
-
-} // namespace keel
+} // namespace keel::sema

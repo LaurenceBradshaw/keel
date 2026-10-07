@@ -11,10 +11,7 @@
 // aggregate's own members. The overload rules over those members are `Overloads`'; signatures.h says
 // what the pass is for and why its order is the way it is.
 
-namespace keel
-{
-
-namespace sema
+namespace keel::sema
 {
 
 namespace
@@ -729,8 +726,7 @@ void Signatures::check_index_operator( Node_id decl )
     }
 }
 
-} // namespace sema
-} // namespace keel
+} // namespace keel::sema
 
 #ifdef ENABLE_UNIT_TESTS
 #include "sema/checker_test_support.h"

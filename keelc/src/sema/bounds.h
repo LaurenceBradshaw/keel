@@ -12,9 +12,7 @@
 #include "sema/reporter.h"
 #include "sema/types_builder.h"
 
-namespace keel
-{
-namespace sema
+namespace keel::sema
 {
 
 // D40. Closed because D33 closes the operator set, so what a body can ask of a `T` is finite.
@@ -128,5 +126,4 @@ private:
     std::unordered_map<u32, Node_id>   owner_of_; // Type_param_decl -> the declaration that introduced it.
 };
 
-} // namespace sema
-} // namespace keel
+} // namespace keel::sema

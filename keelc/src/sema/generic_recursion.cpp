@@ -6,9 +6,7 @@
 #include <algorithm>
 #include <optional>
 
-namespace keel
-{
-namespace sema
+namespace keel::sema
 {
 
 // An edge exists only between generics: a call in `main` is already an instance rather than a step
@@ -220,8 +218,7 @@ std::vector<Generic_call> Generic_recursion::take_generic_calls()
     return std::move( generic_calls_ );
 }
 
-} // namespace sema
-} // namespace keel
+} // namespace keel::sema
 
 #ifdef ENABLE_UNIT_TESTS
 #include "sema/checker_test_support.h"

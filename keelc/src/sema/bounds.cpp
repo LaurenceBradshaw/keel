@@ -5,7 +5,7 @@
 #include <fmt/format.h>
 #include "sema/type_checker.h"
 
-namespace keel
+namespace keel::sema
 {
 namespace
 {
@@ -62,9 +62,6 @@ sema::Conversion conversion_for( Type_kind from, Type_kind to )
 }
 
 } // namespace
-
-namespace sema
-{
 // "Copyable, Equatable, ... and Floating", from the table above rather than from a string - so a
 // seventh bound updates every message that lists them without anyone remembering to.
 std::string known_bound_names()
@@ -646,8 +643,7 @@ std::vector<Type_id> Bounds::admissible_numeric_types( Bound_set bounds ) const
     return result;
 }
 
-} // namespace sema
-} // namespace keel
+} // namespace keel::sema
 #ifdef ENABLE_UNIT_TESTS
 #include <catch2/catch_test_macros.hpp>
 

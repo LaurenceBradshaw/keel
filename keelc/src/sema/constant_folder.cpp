@@ -5,10 +5,7 @@
 #include <fmt/format.h>
 #include <limits>
 
-namespace keel
-{
-
-namespace sema
+namespace keel::sema
 {
 
 namespace
@@ -593,7 +590,7 @@ Type_id Constant_folder::record_constant( Node_id id, Type_id type )
 {
     if( !check_constant( id, type ) )
     {
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     return types_.record( id, type );
@@ -621,8 +618,7 @@ std::unordered_map<u32, Constant_value> Constant_folder::take_values()
     return std::move( constants_ );
 }
 
-} // namespace sema
-} // namespace keel
+} // namespace keel::sema
 
 #ifdef ENABLE_UNIT_TESTS
 #include "sema/checker_test_support.h"

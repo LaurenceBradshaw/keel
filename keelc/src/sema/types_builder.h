@@ -36,6 +36,7 @@ public:
 
     // Writes the node's type and returns it, so an infer branch can end in one of these.
     Type_id record( Node_id id, Type_id type );
+    Type_id poison( Node_id id ); // records the error type
 
     // Invalid when the node was never typed - a statement, a type annotation, an error subtree, or
     // a node this pass has not reached yet.

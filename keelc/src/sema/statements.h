@@ -16,9 +16,7 @@
 #include "sema/type.h"
 #include "sema/types_builder.h"
 
-namespace keel
-{
-namespace sema
+namespace keel::sema
 {
 
 // The statement and declaration walk: one member per construct, and the dispatch that reaches them.
@@ -97,5 +95,4 @@ private:
     u32 breakable_depth_ = 0; // `break` binds to the nearest of either
 };
 
-} // namespace sema
-} // namespace keel
+} // namespace keel::sema

@@ -5,9 +5,7 @@
 #include <unordered_map>
 #include "ast/node.h"
 
-namespace keel
-{
-namespace sema
+namespace keel::sema
 {
 
 // Which callable each call resolved to. A collaborator rather than a field because Places reads it
@@ -43,5 +41,4 @@ private:
     std::unordered_map<u32, Node_id> callees_;
 };
 
-} // namespace sema
-} // namespace keel
+} // namespace keel::sema

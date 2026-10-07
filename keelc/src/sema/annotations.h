@@ -11,9 +11,7 @@
 #include "sema/resolver.h"
 #include "sema/types_builder.h"
 
-namespace keel
-{
-namespace sema
+namespace keel::sema
 {
 
 // What the author wrote in type position, read. The two members call each other - `Box<Vec<i32>>`
@@ -64,5 +62,4 @@ private:
     Reporter&         reporter_;
 };
 
-} // namespace sema
-} // namespace keel
+} // namespace keel::sema

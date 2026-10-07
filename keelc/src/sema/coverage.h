@@ -14,9 +14,7 @@
 #include "sema/type.h"
 #include "sema/types_builder.h"
 
-namespace keel
-{
-namespace sema
+namespace keel::sema
 {
 
 // PLAN D34. A `case` label over a number is an interval, half-open: `case 3:` is [3, 4) and
@@ -125,5 +123,4 @@ private:
     std::unordered_set<u32> ruled_fallthroughs_;
 };
 
-} // namespace sema
-} // namespace keel
+} // namespace keel::sema

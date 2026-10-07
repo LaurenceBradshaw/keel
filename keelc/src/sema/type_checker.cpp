@@ -31,10 +31,7 @@
 // namespace to get here, and `Bound` and `Constant` are names a later module should not have to
 // avoid. Nothing outside sema/ names `Checker`; the public surface is `type_check()` below.
 
-namespace keel
-{
-
-namespace sema
+namespace keel::sema
 {
 
 class Checker
@@ -163,7 +160,10 @@ Types Checker::run()
     );
 }
 
-} // namespace sema
+} // namespace keel::sema
+
+namespace keel
+{
 
 Types type_check(
     const Ast&            ast,

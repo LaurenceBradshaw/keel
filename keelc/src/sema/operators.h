@@ -9,9 +9,7 @@
 #include "sema/reporter.h"
 #include "sema/type_checker.h"
 
-namespace keel
-{
-namespace sema
+namespace keel::sema
 {
 
 // Where a binary operator's result type comes from. The rule table itself is private; this is the
@@ -91,5 +89,4 @@ private:
     Reporter&         reporter_;
 };
 
-} // namespace sema
-} // namespace keel
+} // namespace keel::sema

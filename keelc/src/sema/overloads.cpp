@@ -11,9 +11,7 @@
 // Overloading: which callable a name means at a call site, what its type arguments are, and
 // whether two declarations of one name could ever be told apart.
 
-namespace keel
-{
-namespace sema
+namespace keel::sema
 {
 
 namespace
@@ -1011,8 +1009,7 @@ Node_id Overloads::next_overload( Node_id id ) const
     return next;
 }
 
-} // namespace sema
-} // namespace keel
+} // namespace keel::sema
 
 #ifdef ENABLE_UNIT_TESTS
 #include "sema/checker_test_support.h"

@@ -12,9 +12,7 @@
 #include "sema/type_checker.h"
 #include "sema/types_builder.h"
 
-namespace keel
-{
-namespace sema
+namespace keel::sema
 {
 
 // Where a literal gets its type. D26: a literal has a value rather than a type until something
@@ -70,5 +68,4 @@ private:
     Reporter&              reporter_;
 };
 
-} // namespace sema
-} // namespace keel
+} // namespace keel::sema

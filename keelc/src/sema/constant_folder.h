@@ -12,9 +12,7 @@
 #include "sema/type_checker.h"
 #include "sema/types_builder.h"
 
-namespace keel
-{
-namespace sema
+namespace keel::sema
 {
 
 // A folded constant, in the sign-magnitude pair fits() already takes. Arithmetic wraps at run time
@@ -75,5 +73,4 @@ private:
 
     std::unordered_map<u32, Constant_value> constants_;
 };
-} // namespace sema
-} // namespace keel
+} // namespace keel::sema

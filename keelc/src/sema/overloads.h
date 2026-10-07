@@ -14,9 +14,7 @@
 #include "sema/type_checker.h"
 #include "sema/types_builder.h"
 
-namespace keel
-{
-namespace sema
+namespace keel::sema
 {
 
 // What an argument says about itself before a candidate has been chosen.
@@ -183,5 +181,4 @@ private:
     std::unordered_set<u32>      refused_;
 };
 
-} // namespace sema
-} // namespace keel
+} // namespace keel::sema

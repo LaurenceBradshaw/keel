@@ -5,9 +5,7 @@
 #include <fmt/format.h>
 #include <cassert>
 
-namespace keel
-{
-namespace sema
+namespace keel::sema
 {
 
 bool Literals::is_literal_expression( Node_id id ) const
@@ -63,11 +61,11 @@ Type_id Literals::infer_literal( Node_id id )
 
     case Node_kind::Null_literal:
         reporter_.error_at( ast_.span( id ), "cannot infer type of `nullptr`" );
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
 
     default:
         assert( false );
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 }
 
@@ -375,8 +373,7 @@ void Literals::warn_if_constant_comparison( Node_id id, Token_kind op, Type_id l
     }
 }
 
-} // namespace sema
-} // namespace keel
+} // namespace keel::sema
 
 #ifdef ENABLE_UNIT_TESTS
 #include "sema/checker_test_support.h"

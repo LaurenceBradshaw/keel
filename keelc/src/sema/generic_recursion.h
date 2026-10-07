@@ -11,9 +11,7 @@
 #include "sema/reporter.h"
 #include "sema/type_checker.h"
 
-namespace keel
-{
-namespace sema
+namespace keel::sema
 {
 
 // D11's other termination question. Monomorphisation emits one instance per set of type arguments,
@@ -61,5 +59,4 @@ private:
     std::vector<Generic_call> generic_calls_;
 };
 
-} // namespace sema
-} // namespace keel
+} // namespace keel::sema

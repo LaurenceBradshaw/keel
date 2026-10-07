@@ -18,6 +18,11 @@ Type_id Types_builder::record( Node_id id, Type_id type )
     return type;
 }
 
+Type_id Types_builder::poison( Node_id id )
+{
+    return record( id, table_.builtin( Type_kind::Error ) );
+}
+
 Type_id Types_builder::type_of( Node_id id ) const
 {
     return id.v < types_.size() ? types_[id.v] : Type_id {};

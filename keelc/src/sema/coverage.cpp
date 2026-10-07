@@ -11,7 +11,7 @@
 // Whether a `switch`'s labels account for its scrutinee, and whether its arms are shaped for a
 // language whose `case` does not run on. coverage.h says why the arm loop is the caller's.
 
-namespace keel
+namespace keel::sema
 {
 
 namespace
@@ -39,9 +39,6 @@ std::string quoted_list( std::span<const std::string_view> names )
 }
 
 } // namespace
-
-namespace sema
-{
 
 Switch_coverage Coverage::begin_switch( Node_id id, Type_id type )
 {
@@ -531,7 +528,7 @@ void Coverage::type_bindings_as_errors( Node_id switch_id )
 
             for( const Node_id binding : ast_.bindings( label ) )
             {
-                types_.record( binding, table_.builtin( Type_kind::Error ) );
+                types_.poison( binding );
             }
         }
     }
@@ -579,8 +576,7 @@ bool Coverage::completes_normally( Node_id id ) const
     }
 }
 
-} // namespace sema
-} // namespace keel
+} // namespace keel::sema
 
 #ifdef ENABLE_UNIT_TESTS
 #include "sema/checker_test_support.h"

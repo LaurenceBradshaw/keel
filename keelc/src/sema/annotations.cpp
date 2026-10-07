@@ -5,7 +5,7 @@
 #include <fmt/format.h>
 #include "sema/type_checker.h"
 
-namespace keel
+namespace keel::sema
 {
 
 namespace
@@ -44,9 +44,6 @@ std::string_view keel_spelling_for( std::string_view cpp_spelling )
     return {};
 }
 } // namespace
-
-namespace sema
-{
 
 Type_id Annotations::type_of( Node_id annotation, bool outermost )
 {
@@ -530,8 +527,7 @@ Span Annotations::const_keyword( Node_id const_type ) const
     }
 }
 
-} // namespace sema
-} // namespace keel
+} // namespace keel::sema
 #ifdef ENABLE_UNIT_TESTS
 #include <catch2/catch_test_macros.hpp>
 

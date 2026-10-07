@@ -10,10 +10,7 @@
 
 // The expression walk: the `infer`/`check` dispatch and one member per node kind.
 
-namespace keel
-{
-
-namespace sema
+namespace keel::sema
 {
 
 Type_id Expressions::infer( Node_id id )
@@ -32,7 +29,7 @@ Type_id Expressions::infer( Node_id id )
             unsafe_used_ = true; // what failed to parse may have been the unsafe operation
         }
 
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     case Node_kind::Name_expr:
@@ -100,7 +97,7 @@ Type_id Expressions::infer( Node_id id )
             infer( child );
         }
 
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 }
 
@@ -110,7 +107,7 @@ Type_id Expressions::infer_name( Node_id id )
 
     if( !decl.is_valid() )
     {
-        return types_.record( id, table_.builtin( Type_kind::Error ) ); // the resolver already said so
+        return types_.poison( id ); // the resolver already said so
     }
 
     const Node_kind decl_kind = ast_.kind( decl );
@@ -123,14 +120,14 @@ Type_id Expressions::infer_name( Node_id id )
             ast_.span( id ), fmt::format( "`{}` is a function, not a value", interner_.text( ast_.name( id ) ) )
         );
 
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     if( is_aggregate( decl_kind ) || decl_kind == Node_kind::Enum_decl || decl_kind == Node_kind::Type_param_decl )
     {
         reporter_.error_at( ast_.span( id ), fmt::format( "`{}` is a type, not a value", interner_.text( ast_.name( id ) ) ) );
 
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     // D22: a bare field name is `this.field` written implicitly, so it needs a receiver to be
@@ -144,7 +141,7 @@ Type_id Expressions::infer_name( Node_id id )
             "take one as a parameter, or make this a method"
         );
 
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     if( decl_kind == Node_kind::Var_decl && enclosing_aggregate( ast_, decl ).is_valid() &&
@@ -152,7 +149,7 @@ Type_id Expressions::infer_name( Node_id id )
     {
         report_private( id, decl );
 
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     const Node_id aggregate = enclosing_aggregate( ast_, decl );
@@ -161,7 +158,7 @@ Type_id Expressions::infer_name( Node_id id )
         const Type_id qualifier = qualifier_type( id, aggregate );
         if( table_.is_error( qualifier ) )
         {
-            return types_.record( id, table_.builtin( Type_kind::Error ) );
+            return types_.poison( id );
         }
         else
         {
@@ -295,7 +292,7 @@ Type_id Expressions::infer_call( Node_id id )
         }
 
         type_the_arguments_anyway();
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     const Node_id          type_args = ast_.type_arg_list( id );
@@ -366,7 +363,7 @@ Type_id Expressions::infer_call( Node_id id )
                                : ""
             );
             type_the_arguments_anyway();
-            return types_.record( id, table_.builtin( Type_kind::Error ) );
+            return types_.poison( id );
         }
 
         if( candidates.empty() )
@@ -377,7 +374,7 @@ Type_id Expressions::infer_call( Node_id id )
                 fmt::format( "build it from a literal: `{} {{ ... }}`", name )
             );
             type_the_arguments_anyway();
-            return types_.record( id, table_.builtin( Type_kind::Error ) );
+            return types_.poison( id );
         }
 
         // The receiver is an ordinary first parameter, so skipping it here is what stops every
@@ -396,7 +393,7 @@ Type_id Expressions::infer_call( Node_id id )
             table_.is_error( result ) )
         {
             type_the_arguments_anyway();
-            return types_.record( id, table_.builtin( Type_kind::Error ) );
+            return types_.poison( id );
         }
         if( ( ast_.kind( decl ) == Node_kind::Var_decl || ast_.kind( decl ) == Node_kind::Param_decl ) &&
             table_.is_function( result ) )
@@ -411,7 +408,7 @@ Type_id Expressions::infer_call( Node_id id )
 
         reporter_.error_at( ast_.span( callee ), fmt::format( "`{}` is not callable", name ) );
         type_the_arguments_anyway();
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
     else
     {
@@ -446,7 +443,7 @@ Type_id Expressions::infer_call( Node_id id )
             reporter_.error_at( ast_.span( callee ), fmt::format( "`{}` is not a generic", name ) );
 
             type_the_arguments_anyway();
-            return types_.record( id, table_.builtin( Type_kind::Error ) );
+            return types_.poison( id );
         }
     }
     else
@@ -458,7 +455,7 @@ Type_id Expressions::infer_call( Node_id id )
         if( viable.empty() )
         {
             type_the_arguments_anyway();
-            return types_.record( id, table_.builtin( Type_kind::Error ) );
+            return types_.poison( id );
         }
 
         if( viable.size() == 1 )
@@ -477,7 +474,7 @@ Type_id Expressions::infer_call( Node_id id )
             if( !callable.is_valid() )
             {
                 type_the_arguments_anyway();
-                return types_.record( id, table_.builtin( Type_kind::Error ) );
+                return types_.poison( id );
             }
         }
     }
@@ -518,7 +515,7 @@ Type_id Expressions::infer_call( Node_id id )
             ) )
         {
             type_the_arguments_anyway();
-            return types_.record( id, table_.builtin( Type_kind::Error ) );
+            return types_.poison( id );
         }
     }
 
@@ -547,7 +544,7 @@ Type_id Expressions::infer_call( Node_id id )
             if( !annotations_.resolve_type_arguments( callable, type_args, name, resolved ) )
             {
                 type_the_arguments_anyway();
-                return types_.record( id, table_.builtin( Type_kind::Error ) );
+                return types_.poison( id );
             }
         }
         else
@@ -616,13 +613,13 @@ Type_id Expressions::infer_method_call( Node_id id )
             infer( argument );
         }
 
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     if( !table_.is_struct( object_type ) )
     {
         reporter_.error_at( ast_.span( object ), fmt::format( "`{}` has no methods", table_.name( object_type ) ) );
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     // The aggregate, not the call: find_method searches a declaration's members, and hands back
@@ -649,7 +646,7 @@ Type_id Expressions::infer_method_call( Node_id id )
             infer( argument );
         }
 
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     if( !is_visible_from( ast_, first, current_type() ) )
@@ -661,7 +658,7 @@ Type_id Expressions::infer_method_call( Node_id id )
             infer( argument );
         }
 
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     if( !first.is_valid() )
@@ -680,7 +677,7 @@ Type_id Expressions::infer_method_call( Node_id id )
                 )
             );
 
-            return types_.record( id, table_.builtin( Type_kind::Error ) );
+            return types_.poison( id );
         }
 
         reporter_.error_at(
@@ -688,7 +685,7 @@ Type_id Expressions::infer_method_call( Node_id id )
             fmt::format( "`{}` has no method `{}`", table_.name( object_type ), interner_.text( ast_.name( callee ) ) )
         );
 
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     std::vector<Argument_shape> shapes;
@@ -720,7 +717,7 @@ Type_id Expressions::infer_method_call( Node_id id )
             }
         }
 
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     callees_.record( id, method );
@@ -737,7 +734,7 @@ Type_id Expressions::infer_method_call( Node_id id )
             "a pointer to `const` can call only `const` methods"
         );
 
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     // A method without a trailing `const` takes its receiver as `ref T` and may write the object,
@@ -747,7 +744,7 @@ Type_id Expressions::infer_method_call( Node_id id )
     // them elsewhere, each with its own message.
     if( !is_const_method( ast_, method ) && !places_.check_writable( object, current_function_ ) )
     {
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     return check_method_arguments( id, method, object_type, shapes );
@@ -871,7 +868,7 @@ Type_id Expressions::infer_implicit_method_call( Node_id id, Node_id method )
             infer( argument );
         }
 
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     std::vector<Argument_shape> shapes;
@@ -905,7 +902,7 @@ Type_id Expressions::infer_implicit_method_call( Node_id id, Node_id method )
             }
         }
 
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     if( !is_const_method( ast_, method ) && is_const_binding( ast_, receiver ) )
@@ -922,7 +919,7 @@ Type_id Expressions::infer_implicit_method_call( Node_id id, Node_id method )
             )
         );
 
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     callees_.record( id, method );
@@ -1192,25 +1189,25 @@ Type_id Expressions::method_address( Node_id id, Node_id aggregate )
                 fmt::format( "take the address of a function that returns `{}( ... )`", owner )
             );
 
-            return types_.record( id, table_.builtin( Type_kind::Error ) );
+            return types_.poison( id );
         }
 
         reporter_.error_at( ast_.span( id ), fmt::format( "`{}` has no member `{}`", owner, interner_.text( name ) ) );
 
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     if( !is_visible_from( ast_, first, current_type() ) )
     {
         report_private( id, first );
 
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     const Type_id qualified_type = qualifier_type( path, aggregate );
     if( table_.is_error( qualified_type ) )
     {
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     const Bindings bindings = aggregates_.bindings_of( qualified_type );
@@ -1226,7 +1223,7 @@ Type_id Expressions::method_address( Node_id id, Node_id aggregate )
 
         if( !method.is_valid() )
         {
-            return types_.record( id, table_.builtin( Type_kind::Error ) );
+            return types_.poison( id );
         }
     }
     else
@@ -1237,7 +1234,7 @@ Type_id Expressions::method_address( Node_id id, Node_id aggregate )
             "assigning it to a variable of one signature will choose between them"
         );
 
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     Node_id       refused {};
@@ -1271,7 +1268,7 @@ Type_id Expressions::method_address( Node_id id, Node_id aggregate )
                   )
         );
 
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     record_method_instantiation( id, method, qualified_type );
@@ -1285,14 +1282,14 @@ Type_id Expressions::field_address( Node_id id, Node_id aggregate, Node_id field
     {
         report_private( id, field );
 
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     const Node_id path = ast_.operand( id );
     const Type_id type = qualifier_type( path, aggregate );
     if( table_.is_error( type ) )
     {
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     const Type_id field_type = table_.substitute( types_.type_of( field ), aggregates_.bindings_of( type ) );
@@ -1308,7 +1305,7 @@ Type_id Expressions::field_address( Node_id id, Node_id aggregate, Node_id field
             "a field type that borrows is not supported yet"
         );
 
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     callees_.record( id, field );
@@ -1509,7 +1506,7 @@ Type_id Expressions::field_application( Node_id id, Type_id offset )
             fmt::format( "add `where {} : Copyable`", table_.name( member ) )
         );
 
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     return types_.record( id, member );
@@ -1645,7 +1642,7 @@ Type_id Expressions::infer_operator_call( Node_id id, Node_id object, Node_id ar
 
     if( !method.is_valid() )
     {
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     const std::span<const Node_id> params = ast_.params( method );
@@ -1668,7 +1665,7 @@ Type_id Expressions::infer_index_operator( Node_id id, Type_id object_type )
 
     if( !method.is_valid() )
     {
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     const Bindings&                bindings = aggregates_.bindings_of( object_type );
@@ -1680,7 +1677,7 @@ Type_id Expressions::infer_index_operator( Node_id id, Type_id object_type )
     // A malformed return was reported where it was written.
     if( !table_.is_pointer( returned ) )
     {
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     callees_.record( id, method );
@@ -1841,7 +1838,7 @@ Type_id Expressions::infer_static_call( Node_id id, Node_id aggregate )
             infer( argument );
         }
 
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     };
 
     const std::string_view owner  = interner_.text( ast_.name( ast_.qualifier( path ) ) );
@@ -1914,7 +1911,7 @@ Type_id Expressions::infer_variant_construction( Node_id id )
             infer( argument );
         }
 
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     // infer_path recorded the ordinal, which is how the variant is found again without a second
@@ -1925,7 +1922,7 @@ Type_id Expressions::infer_variant_construction( Node_id id )
 
     if( !ordinal || ordinal->magnitude >= variants.size() )
     {
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     const Node_id                  variant = variants[static_cast<std::size_t>( ordinal->magnitude )];
@@ -1980,7 +1977,7 @@ Type_id Expressions::infer_conditional( Node_id id )
 
     if( table_.is_error( then_type ) || table_.is_error( else_type ) )
     {
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     const Type_id result = operators_.result_of_conditional( then_type, else_type, ast_.span( id ) );
@@ -2000,7 +1997,7 @@ Type_id Expressions::infer_alloc( Node_id id )
     if( element == table_.builtin( Type_kind::Void ) )
     {
         reporter_.error_at( ast_.span( id ), "`alloc` needs a type to allocate", "`void` has no size" );
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     require_unsafe(
@@ -2021,7 +2018,7 @@ Type_id Expressions::infer_alloc( Node_id id )
                 ast_.span( ast_.count( id ) ),
                 fmt::format( "`alloc` needs an integer count, but got `{}`", table_.name( count ) )
             );
-            return types_.record( id, table_.builtin( Type_kind::Error ) );
+            return types_.poison( id );
         }
     }
 
@@ -2040,7 +2037,7 @@ Type_id Expressions::infer_free( Node_id id )
     if( !table_.is_pointer( operand ) && !table_.is_many_pointer( operand ) )
     {
         reporter_.error_at( ast_.span( id ), fmt::format( "`free` needs a pointer, but got `{}`", table_.name( operand ) ) );
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     require_unsafe( id, "`free` needs an `unsafe` block", "the compiler cannot tell whether anything still points at it" );
@@ -2056,7 +2053,7 @@ Type_id Expressions::infer_free( Node_id id )
             fmt::format( "if it came from `alloc`, `cast<{}>` it back first", table_.name( writable_type ) )
         );
 
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     return types_.record( id, table_.builtin( Type_kind::Void ) );
@@ -2071,7 +2068,7 @@ Type_id Expressions::infer_destroy( Node_id id )
 
     if( table_.is_error( pointer ) || table_.is_error( element ) )
     {
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     if( !table_.is_many_pointer( pointer ) )
@@ -2081,7 +2078,7 @@ Type_id Expressions::infer_destroy( Node_id id )
             fmt::format( "`destroy` needs a `T[*]`, but got `{}`", table_.name( pointer ) ),
             "it ends the values in a run of slots, counted from this pointer"
         );
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     if( table_.points_to_const( pointer ) )
@@ -2090,7 +2087,7 @@ Type_id Expressions::infer_destroy( Node_id id )
             ast_.span( ast_.pointer( id ) ),
             fmt::format( "`destroy` cannot end a `{}`, which points to `const`", table_.name( pointer ) )
         );
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     return types_.record( id, table_.builtin( Type_kind::Void ) );
@@ -2109,7 +2106,7 @@ Type_id Expressions::infer_index( Node_id id )
 
     if( table_.is_error( base ) || table_.is_error( index ) )
     {
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     if( table_.is_many_pointer( base ) )
@@ -2121,7 +2118,7 @@ Type_id Expressions::infer_index( Node_id id )
             reporter_.error_at(
                 ast_.span( ast_.index( id ) ), fmt::format( "an index must be an integer, but got `{}`", table_.name( index ) )
             );
-            return types_.record( id, table_.builtin( Type_kind::Error ) );
+            return types_.poison( id );
         }
 
         return types_.record( id, table_.get( base ).element );
@@ -2139,12 +2136,12 @@ Type_id Expressions::infer_index( Node_id id )
             fmt::format( "a many-item pointer, `{}[*]`, can be", table_.name( table_.get( base ).element ) )
         );
 
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     reporter_.error_at( ast_.span( id ), fmt::format( "`{}` cannot be indexed", table_.name( base ) ) );
 
-    return types_.record( id, table_.builtin( Type_kind::Error ) );
+    return types_.poison( id );
 }
 
 void Expressions::require_unsafe( Node_id id, std::string what, std::string why )
@@ -2238,7 +2235,7 @@ Type_id Expressions::infer_path( Node_id id )
             reporter_.error_at( ast_.span( qualifier ), "`::` needs the name of a type on its left" );
         }
 
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     const std::string_view owner = interner_.text( ast_.name( qualifier ) );
@@ -2255,7 +2252,7 @@ Type_id Expressions::infer_path( Node_id id )
                 ast_.span( id ), "a constructor is not a static method", fmt::format( "construct it as `{}( ... )`", owner )
             );
 
-            return types_.record( id, table_.builtin( Type_kind::Error ) );
+            return types_.poison( id );
         }
 
         if( !method.is_valid() )
@@ -2271,7 +2268,7 @@ Type_id Expressions::infer_path( Node_id id )
                     : std::string {}
             );
 
-            return types_.record( id, table_.builtin( Type_kind::Error ) );
+            return types_.poison( id );
         }
 
         // Named rather than called: an instance method's value is its address, which takes a `&`.
@@ -2285,7 +2282,7 @@ Type_id Expressions::infer_path( Node_id id )
                   )
         );
 
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     if( ast_.kind( decl ) != Node_kind::Enum_decl )
@@ -2296,7 +2293,7 @@ Type_id Expressions::infer_path( Node_id id )
             "`::` reaches a variant of an `enum` or a static method of a `struct` or `class`"
         );
 
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     const std::span<const Node_id> variants = ast_.variants( decl );
@@ -2327,7 +2324,7 @@ Type_id Expressions::infer_path( Node_id id )
                 fmt::format( "write `{}( ... )` with a value for each field", reporter_.text( ast_.span( id ) ) )
             );
 
-            return types_.record( id, table_.builtin( Type_kind::Error ) );
+            return types_.poison( id );
         }
 
         // Which instance this path names. The declaration test is what keeps a wrong expectation
@@ -2353,7 +2350,7 @@ Type_id Expressions::infer_path( Node_id id )
         ast_.span( id ), fmt::format( "`{}` has no variant `{}`", interner_.text( ast_.name( decl ) ), interner_.text( name ) )
     );
 
-    return types_.record( id, table_.builtin( Type_kind::Error ) );
+    return types_.poison( id );
 }
 
 Type_id Expressions::infer_field( Node_id id )
@@ -2363,12 +2360,12 @@ Type_id Expressions::infer_field( Node_id id )
 
     if( table_.is_error( base_type ) )
     {
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     if( refuses_many_member( id, base_type ) )
     {
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     // D22: `.` reaches through a pointer, so a pointer-to-struct base is the struct.
@@ -2377,7 +2374,7 @@ Type_id Expressions::infer_field( Node_id id )
     if( !table_.is_struct( object_type ) )
     {
         reporter_.error_at( ast_.span( base ), fmt::format( "`{}` has no fields", table_.name( object_type ) ) );
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     const Node_id field_decl = aggregates_.find_field( object_type, ast_.name( id ) );
@@ -2418,14 +2415,14 @@ Type_id Expressions::infer_field( Node_id id )
             );
         }
 
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     if( !is_visible_from( ast_, field_decl, current_type() ) )
     {
         report_private( id, field_decl );
 
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     return types_.record( id, aggregates_.field_type( object_type, field_decl ) );
@@ -2439,7 +2436,7 @@ Type_id Expressions::infer_string_literal( Node_id id )
     {
         // Only a test harness can reach this
         reporter_.error_at( ast_.span( id ), "a string literal needs the prelude's `str`, and there is no prelude" );
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     const Type_id type        = types_.type_of( decl );
@@ -2559,7 +2556,7 @@ Type_id Expressions::infer_struct_literal( Node_id id )
                 absorb( ast_.value( init ) );
             }
 
-            return types_.record( id, table_.builtin( Type_kind::Error ) );
+            return types_.poison( id );
         }
     }
 
@@ -2773,12 +2770,12 @@ Type_id Expressions::infer_marker( Node_id id )
         if( !places_.is_assignable( operand ) )
         {
             reporter_.error_at( ast_.span( operand ), "`out` needs a variable to assign to" );
-            return types_.record( id, table_.builtin( Type_kind::Error ) );
+            return types_.poison( id );
         }
 
         if( !places_.check_writable( operand, current_function_ ) )
         {
-            return types_.record( id, table_.builtin( Type_kind::Error ) );
+            return types_.poison( id );
         }
 
         return types_.record( id, value );
@@ -2799,7 +2796,7 @@ Type_id Expressions::infer_marker( Node_id id )
         if( !places_.is_assignable( operand ) )
         {
             reporter_.error_at( ast_.span( operand ), "`ref` needs a variable to borrow" );
-            return types_.record( id, table_.builtin( Type_kind::Error ) );
+            return types_.poison( id );
         }
 
         // You cannot lend mutably what you hold read-only. check_writable has already named the
@@ -2807,7 +2804,7 @@ Type_id Expressions::infer_marker( Node_id id )
         // mistake.
         if( !places_.check_writable( operand, current_function_ ) )
         {
-            return types_.record( id, table_.builtin( Type_kind::Error ) );
+            return types_.poison( id );
         }
 
         return types_.record( id, value );
@@ -2831,7 +2828,7 @@ Type_id Expressions::infer_marker( Node_id id )
             "a field cannot be moved on its own",
             "moving it would leave the object partly moved - move the whole object instead"
         );
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     // Everything else must be a plain named local or parameter. Deliberately stricter than
@@ -2851,7 +2848,7 @@ Type_id Expressions::infer_marker( Node_id id )
                 "take it as `move {} {}` to own it", table_.name( types_.type_of( decl ) ), interner_.text( ast_.name( decl ) )
             )
         );
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     if( decl.is_valid() && parameter_mode( ast_, decl ) == Keyword::Ref )
@@ -2874,7 +2871,7 @@ Type_id Expressions::infer_marker( Node_id id )
         }
 
         reporter_.error_at( ast_.span( operand ), "cannot move out of a borrow", help );
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     if( ast_.kind( operand ) == Node_kind::Name_expr &&
@@ -2886,7 +2883,7 @@ Type_id Expressions::infer_marker( Node_id id )
             "moving it would leave the object partly moved - move the whole object instead"
         );
 
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     if( places_.is_operator_index( operand ) )
@@ -2896,7 +2893,7 @@ Type_id Expressions::infer_marker( Node_id id )
             "an element reached through `[]` cannot be moved out",
             "it stays in its container; take it out through one of the container's methods"
         );
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     // Same reason as the field above: `*p` names something this function does not own, so moving
@@ -2904,7 +2901,7 @@ Type_id Expressions::infer_marker( Node_id id )
     if( ast_.kind( operand ) == Node_kind::Unary_expr && ast_.op( operand ) == Token_kind::Star )
     {
         reporter_.error_at( ast_.span( operand ), "a pointee cannot be moved", "move the variable it points into instead" );
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     // A named variable, or a temporary this scope owns. The second is what makes
@@ -2914,7 +2911,7 @@ Type_id Expressions::infer_marker( Node_id id )
     if( !named && bounds_.satisfies( value, Bound::Copyable ) )
     {
         reporter_.error_at( ast_.span( operand ), "only a variable or an owned temporary can be moved" );
-        return types_.record( id, table_.builtin( Type_kind::Error ) );
+        return types_.poison( id );
     }
 
     return types_.record( id, value );
@@ -2968,7 +2965,7 @@ Type_id Expressions::check( Node_id id, Type_id expected )
 
             if( !result.is_valid() )
             {
-                return types_.record( id, table_.builtin( Type_kind::Error ) );
+                return types_.poison( id );
             }
 
             return constant_folder_.record_constant( id, result );
@@ -3197,8 +3194,7 @@ void Expressions::step_pointer( Node_id statement, Token_kind op, Type_id pointe
     );
 }
 
-} // namespace sema
-} // namespace keel
+} // namespace keel::sema
 
 #ifdef ENABLE_UNIT_TESTS
 #include "sema/checker_test_support.h"

@@ -10,7 +10,7 @@
 // The operator rules: what each one accepts and what it answers. Every member here takes types and
 // spans, never a node, so the expression walk stays above this file.
 
-namespace keel
+namespace keel::sema
 {
 namespace
 {
@@ -137,9 +137,6 @@ bool accepts( const Type_table& table, Operands operands, Type_id type )
 }
 
 } // namespace
-
-namespace sema
-{
 
 Result_source Operators::result_source( Token_kind op ) const
 {
@@ -498,8 +495,7 @@ void Operators::refuse_single_pointer_arithmetic( Type_id pointer, Span at )
     );
 }
 
-} // namespace sema
-} // namespace keel
+} // namespace keel::sema
 
 #ifdef ENABLE_UNIT_TESTS
 #include "sema/checker_test_support.h"

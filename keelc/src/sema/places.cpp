@@ -5,9 +5,7 @@
 #include <fmt/format.h>
 #include "sema/type_checker.h"
 
-namespace keel
-{
-namespace sema
+namespace keel::sema
 {
 
 bool Places::is_assignable( Node_id id ) const
@@ -642,8 +640,7 @@ void Places::record_binding_address( Node_id annotation, Type_id type )
     types_.record( annotation, table_.pointer_to( type ) );
 }
 
-} // namespace sema
-} // namespace keel
+} // namespace keel::sema
 
 #ifdef ENABLE_UNIT_TESTS
 #include "sema/checker_test_support.h"

@@ -1134,9 +1134,9 @@ item leaves this list for `.claude/LOG.md`, with what it cost.
 
 From `.claude/READABILITY_AUDIT.md`, chosen by what M9 to M9.6 will edit. Done: R19's table, R7's
 and R14's small fixes, `node.h`'s shape table, and R1: `Ast`'s typed `aux` readers and named-child
-accessors, which every pass reads through (only `Field_type` and the tests stay positional).
-**Before M9**: R20's `poison` and R24's namespaces in `ir/lower.cpp` and `sema/expressions.cpp`,
-one take-and-clear discipline for
+accessors, which every pass reads through (only `Field_type` and the tests stay positional),
+R20's `Types_builder::poison`, and R24's one namespace spelling, `keel::sema`. **Before M9**: one
+take-and-clear discipline for
 `Expressions::expected_` (R2), and `successors()` moved into `kir.h` (R17). **With M9**: splitting
 `Annotations::type_of` and renaming it `resolve` (R13), `lower_switch`'s arm extraction (R14), and
 monomorphisation out of `lower()` into `ir/instances` (R9, then R22). **At M9.1**: the dataflow

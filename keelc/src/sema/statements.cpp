@@ -13,9 +13,7 @@
 // The statement and declaration walk, one member per construct. statements.h says why this is the
 // only class that may visit, and why the loop over a `switch`'s arms is therefore here.
 
-namespace keel
-{
-namespace sema
+namespace keel::sema
 {
 
 void Statements::visit( Node_id id )
@@ -667,8 +665,7 @@ void Statements::check_returned_address( Node_id value )
     );
 }
 
-} // namespace sema
-} // namespace keel
+} // namespace keel::sema
 
 #ifdef ENABLE_UNIT_TESTS
 #include "sema/checker_test_support.h"
