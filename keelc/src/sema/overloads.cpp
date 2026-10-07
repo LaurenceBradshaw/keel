@@ -4,9 +4,9 @@
 #include "sema/overloads.h"
 
 #include <fmt/format.h>
-
 #include <algorithm>
 #include <unordered_map>
+#include "sema/type_checker.h"
 
 // Overloading: which callable a name means at a call site, what its type arguments are, and
 // whether two declarations of one name could ever be told apart.
@@ -232,11 +232,10 @@ bool Overloads::marker_accepts( Node_id param, Keyword given, Type_id expected )
     return about_ownership && bounds_.satisfies( expected, Bound::Copyable );
 }
 
-// Exactly, or not at all. §6.4's widening is what gets an argument to a parameter *after* one has
-// been chosen; letting it choose would mean ranking two parameters that both accept, which is the
-// machinery D5 deleted.
+// Exactly, or with `widen` set, through widens(): §6.7's second tier, asked only when the first
+// found nothing.
 bool Overloads::candidate_accepts(
-    Node_id callable, u32 implicit_params, std::span<const Argument_shape> shapes, const Bindings& bindings
+    Node_id callable, u32 implicit_params, std::span<const Argument_shape> shapes, const Bindings& bindings, bool widen
 )
 {
     const std::span<const Node_id> params = ast_.params( callable ).subspan( implicit_params );
@@ -260,7 +259,7 @@ bool Overloads::candidate_accepts(
         switch( shapes[i].kind )
         {
         case Argument_kind::Typed:
-            if( shapes[i].type != expected )
+            if( shapes[i].type != expected && !( widen && widens( params[i], shapes[i].type, expected ) ) )
             {
                 return false;
             }
@@ -286,6 +285,121 @@ bool Overloads::candidate_accepts(
     }
 
     return true;
+}
+
+// §6.4's assignment widening, numeric and by value only: a borrow is the caller's variable (D31).
+bool Overloads::widens( Node_id param, Type_id from, Type_id to ) const
+{
+    return ast_.parameter_mode( param ) == Keyword::Count && table_.holds( from, to ) &&
+           ( ( table_.is_integer( from ) && table_.is_integer( to ) ) || ( table_.is_float( from ) && table_.is_float( to ) ) );
+}
+
+// How far `from` travels to reach `to`; smaller is closer, and 0 is exact or not a number.
+u32 Overloads::distance( Type_id from, Type_id to ) const
+{
+    if( from == to )
+    {
+        return 0;
+    }
+
+    const bool from_integer = table_.is_integer( from );
+    const bool to_integer   = table_.is_integer( to );
+    const bool from_float   = table_.is_float( from );
+    const bool to_float     = table_.is_float( to );
+
+    if( !( ( from_integer || from_float ) && ( to_integer || to_float ) ) )
+    {
+        return 0;
+    }
+
+    const Type& source = table_.get( from );
+    const Type& target = table_.get( to );
+
+    u32 kind  = from_integer != to_integer ? 1 : 0;
+    u32 width = target.width;
+    u32 sign  = from_integer && to_integer && source.is_signed != target.is_signed ? 1 : 0;
+
+    // Kind outranks any width (129 < 256), and width outranks signedness: §6.7's order.
+    return ( kind << 8 ) | ( width << 1 ) | sign;
+}
+
+std::vector<Type_id> Overloads::parameter_types( Node_id callable, u32 implicit_params, const Bindings& bindings )
+{
+    std::vector<Type_id> result;
+    for( const Node_id param : ast_.params( callable ).subspan( implicit_params ) )
+    {
+        result.push_back( table_.substitute( types_.type_of( param ), bindings ) );
+    }
+
+    return result;
+}
+
+// Whether `first` is no further than `second` for any argument and closer for one. A literal says
+// nothing, so it never decides.
+bool Overloads::beats( std::span<const Type_id> first, std::span<const Type_id> second, std::span<const Argument_shape> shapes )
+    const
+{
+    bool closer = false;
+    u32  i      = 0;
+    while( i < shapes.size() && i < first.size() )
+    {
+        if( shapes[i].kind != Argument_kind::Typed )
+        {
+            ++i;
+            continue;
+        }
+
+        u32 near = distance( shapes[i].type, first[i] );
+        u32 far  = distance( shapes[i].type, second[i] );
+
+        if( near > far )
+        {
+            return false;
+        }
+
+        if( near < far )
+        {
+            closer = true;
+        }
+
+        ++i;
+    }
+
+    return closer;
+}
+
+// Every widened candidate nothing beats: one is the choice, several are the ambiguity.
+std::vector<Node_id> Overloads::closest(
+    std::span<const Node_id> widened, std::span<const std::vector<Type_id>> targets, std::span<const Argument_shape> shapes
+) const
+{
+    std::vector<Node_id> result;
+
+    for( std::size_t k = 0; k < widened.size(); ++k )
+    {
+        bool beaten = false;
+
+        for( std::size_t j = 0; j < widened.size(); ++j )
+        {
+            if( j == k )
+            {
+                continue;
+            }
+
+            if( beats( targets[j], targets[k], shapes ) )
+            {
+                beaten = true;
+                break;
+            }
+        }
+
+        if( !beaten )
+        {
+            result.push_back( widened[k] );
+        }
+    }
+
+    return result;
 }
 
 // The set narrowed by what the call wrote. Empty with a diagnostic already reported, one when that
@@ -351,7 +465,9 @@ Node_id Overloads::select_overload(
     std::vector<Type_id>&           resolved
 )
 {
-    const std::size_t written = ast_.type_args( call ).size();
+    const std::size_t                 written = ast_.type_args( call ).size();
+    std::vector<Node_id>              widened;
+    std::vector<std::vector<Type_id>> targets;
 
     if( ast_.type_arg_list( call ).is_valid() )
     {
@@ -387,16 +503,24 @@ Node_id Overloads::select_overload(
         Bindings bindings = type_bindings( candidate, infers ? deduced : resolved );
         bindings.insert( from_instance.begin(), from_instance.end() );
 
-        if( candidate_accepts( candidate, implicit_params, shapes, bindings ) )
+        if( candidate_accepts( candidate, implicit_params, shapes, bindings, false ) )
         {
             matching.push_back( candidate );
         }
+        else if( candidate_accepts( candidate, implicit_params, shapes, bindings, true ) )
+        {
+            widened.push_back( candidate );
+            targets.push_back( parameter_types( candidate, implicit_params, bindings ) );
+        }
     }
 
-    // §12: a non-generic candidate beats a generic one, and two generics are ambiguous. It is one
-    // rule read off the declarations rather than a ranking of how well each fits, which is the
-    // distinction the whole feature rests on. Unreachable until the call could leave its type
-    // arguments unwritten, which is what puts both kinds in one set.
+    if( matching.empty() )
+    {
+        matching = closest( widened, targets, shapes );
+    }
+
+    // A non-generic candidate beats a generic one, and two generics are ambiguous: read off the
+    // declarations, and settling ties among exact matches or among equally close widenings.
     if( matching.size() > 1 )
     {
         Node_id     concrete {};
@@ -436,8 +560,9 @@ Node_id Overloads::select_overload(
     }
 
     // More than one matches. A literal is the usual cause: it carries a family rather than a type,
-    // so it cannot choose between two parameters in one family. Where every one left is a generic
-    // the arguments cannot say it either - both fit exactly - and only the type arguments can.
+    // so it cannot choose between two parameters in one family. The other is two widenings each
+    // closer for a different argument. Where every one left is a generic the arguments cannot say
+    // it either - both fit exactly - and only the type arguments can.
     const bool all_generic =
         std::all_of( matching.begin(), matching.end(), [&]( Node_id candidate ) { return ast_.is_generic( candidate ); } );
 
@@ -505,14 +630,26 @@ Node_id Overloads::select_method(
     const std::string_view name     = interner_.text( ast_.name( first ) );
     const Bindings         bindings = aggregates_.bindings_of( receiver );
 
-    std::vector<Node_id> matching;
+    std::vector<Node_id>              matching;
+    std::vector<Node_id>              widened;
+    std::vector<std::vector<Type_id>> targets;
 
     for( const Node_id candidate : viable )
     {
-        if( candidate_accepts( candidate, 1, shapes, bindings ) )
+        if( candidate_accepts( candidate, 1, shapes, bindings, false ) )
         {
             matching.push_back( candidate );
         }
+        else if( candidate_accepts( candidate, 1, shapes, bindings, true ) )
+        {
+            widened.push_back( candidate );
+            targets.push_back( parameter_types( candidate, 1, bindings ) );
+        }
+    }
+
+    if( matching.empty() )
+    {
+        matching = closest( widened, targets, shapes );
     }
 
     if( matching.size() == 1 )
@@ -630,31 +767,34 @@ void Overloads::check_argument_markers(
     {
         const Type_id expected = table_.substitute( types_.type_of( params[i] ), bindings );
 
-        // What a marker announces is that something happens to the caller's variable. `const ref` is
-        // the one mode where nothing does - alive and unchanged afterwards, exactly like a bare
-        // argument - so it sits with bare rather than with `ref`, and takes no marker at the call.
-        const Keyword wanted = ast_.is_const_binding( params[i] ) ? Keyword::Count : ast_.parameter_mode( params[i] );
-
-        check_one_argument_marker( arguments[i], wanted, expected, name );
+        check_one_argument_marker( arguments[i], parameter_mode_of( ast_, params[i] ), expected, name );
     }
 }
 
 // D2: transfer is visible at the call *and* in the signature, and neither alone is enough - a reader
 // of one should never have to find the other.
-void Overloads::check_one_argument_marker( Node_id argument, Keyword wanted, Type_id expected, std::string_view name )
+void Overloads::check_one_argument_marker( Node_id argument, Param_mode mode, Type_id expected, std::string_view name )
 {
-    const Keyword given = ast_.kind( argument ) == Node_kind::Marker_expr ? ast_.keyword( argument ) : Keyword::Count;
+    const Keyword wanted = call_marker_of( mode );
+    const Keyword given  = ast_.kind( argument ) == Node_kind::Marker_expr ? ast_.keyword( argument ) : Keyword::Count;
 
-    // A ref binds to the caller's object itself, so there is no conversion step for a widened
-    // copy to live in: `ref u8` and `ref i32` are different bindings, not convertible ones.
+    // D31: a borrow - `ref`, `out` or `const ref` - binds the caller's object itself, so there is no
+    // conversion step for a widened copy to live in: `ref u8` and `ref i32` are different bindings.
+    // Only a type that would convert reaches it; one that would not is check()'s error already.
     // Above the agreement check, because agreeing is this rule's precondition rather than its
     // exit - and it wants both sides, so one missing marker does not report twice.
-    if( wanted == Keyword::Ref && given == Keyword::Ref && !table_.references_error( types_.type_of( argument ) ) &&
-        !table_.references_error( expected ) && types_.type_of( argument ) != expected )
+    if( ( mode == Param_mode::Ref || mode == Param_mode::Const_ref || mode == Param_mode::Out ) && given == wanted &&
+        !table_.references_error( types_.type_of( argument ) ) && !table_.references_error( expected ) &&
+        types_.type_of( argument ) != expected && table_.holds( types_.type_of( argument ), expected ) )
     {
         reporter_.error_at(
             ast_.span( argument ),
-            fmt::format( "cannot borrow `{}` as `ref {}`", table_.name( types_.type_of( argument ) ), table_.name( expected ) ),
+            fmt::format(
+                "cannot borrow `{}` as `{}{}`",
+                table_.name( types_.type_of( argument ) ),
+                param_spelling( mode ),
+                table_.name( expected )
+            ),
             "a borrow is the variable itself, so its type must match exactly"
         );
     }
@@ -1088,18 +1228,6 @@ TEST_CASE( "type_checker_chooses_between_overloads", "[sema][overload]" )
         REQUIRE( p.clean() );
     }
 
-    // The rule that keeps §12's promise of no ranking: widening is what gets an argument to a
-    // parameter *after* one has been chosen, and two parameters that both accept would need one.
-    SECTION( "selection is by exact type, not by what §6.4 would widen" )
-    {
-        const Typed p( "void f( i32 a ) { }\nvoid f( i64 a ) { }\n"
-                       "i32 main() { u8 b = 1; f( b ); return 0; }" );
-
-        INFO( p.rendered() );
-        REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "no `f` matches these arguments" ) != std::string::npos );
-    }
-
     SECTION( "and one candidate still widens, exactly as before" )
     {
         const Typed p( "void f( i64 a ) { }\ni32 main() { u8 b = 1; f( b ); return 0; }" );
@@ -1154,6 +1282,247 @@ TEST_CASE( "type_checker_chooses_between_overloads", "[sema][overload]" )
     {
         const Typed p( "i32 f( i32 a ) { return 1; }\nbool f<T>( T a ) where T : Copyable { return true; }\n"
                        "i32 main() { bool b = f<bool>( true ); return f( 1 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// §6.7's second tier. Each case reads the choice off the return type, `i32` for the one meant and
+// `bool` for the other, which §6.4 widens into each other in neither direction.
+TEST_CASE( "overloads_widen_when_nothing_matches_exactly", "[sema][overload]" )
+{
+    SECTION( "to the one that holds the argument" )
+    {
+        const Typed p( "i32 f( i64 a ) { return 1; }\nbool f( bool a ) { return true; }\n"
+                       "i32 main() { u8 b = 1; i32 n = f( b ); return n; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "an exact match still wins over a closer-looking widening" )
+    {
+        const Typed p( "i32 f( i64 a ) { return 1; }\nbool f( i32 a ) { return true; }\n"
+                       "i32 main() { i64 b = 1; i32 n = f( b ); return n; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "an integer stays an integer before it becomes a float" )
+    {
+        const Typed p( "i32 f( i64 a ) { return 1; }\nbool f( f64 a ) { return true; }\n"
+                       "i32 main() { i32 b = 1; i32 n = f( b ); return n; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "then the narrowest, whatever its signedness" )
+    {
+        const Typed p( "i32 f( i16 a ) { return 1; }\nbool f( u32 a ) { return true; }\n"
+                       "i32 main() { u8 b = 1; i32 n = f( b ); return n; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "then the one that keeps the signedness" )
+    {
+        const Typed p( "i32 f( u16 a ) { return 1; }\nbool f( i16 a ) { return true; }\n"
+                       "i32 main() { u8 b = 1; i32 n = f( b ); return n; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "so a `u32` reaches the unsigned of two 64-bit integers" )
+    {
+        const Typed p( "i32 f( u64 a ) { return 1; }\nbool f( i64 a ) { return true; }\n"
+                       "i32 main() { u32 b = 1; i32 n = f( b ); return n; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and a float to the narrowest float" )
+    {
+        const Typed p( "i32 f( f64 a ) { return 1; }\nbool f( bool a ) { return true; }\n"
+                       "i32 main() { f32 b = 1.0; i32 n = f( b ); return n; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "never narrowing, and never signed to unsigned" )
+    {
+        const Typed p( "i32 f( i16 a ) { return 1; }\nbool f( u64 a ) { return true; }\n"
+                       "i32 main() { i32 b = 1; f( b ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "no `f` matches these arguments" ) != std::string::npos );
+    }
+
+    SECTION( "a literal is ambiguous before widening is asked" )
+    {
+        const Typed p( "void f( i64 a ) { }\nvoid f( u64 a ) { }\ni32 main() { f( 5 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "is ambiguous" ) != std::string::npos );
+    }
+
+    SECTION( "a generic that fits exactly beats a widening" )
+    {
+        const Typed p( "i32 f( i64 a ) { return 1; }\nbool f<T>( T a ) where T : Copyable { return true; }\n"
+                       "i32 main() { i32 b = 1; bool r = f( b ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "with two arguments, one closer and none further wins" )
+    {
+        const Typed p( "bool f( i64 a, i64 b ) { return true; }\ni32 f( i32 a, i64 b ) { return 1; }\n"
+                       "i32 main() { i16 a = 1; i32 b = 1; i32 n = f( a, b ); return n; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and one closer on each side is ambiguous" )
+    {
+        const Typed p( "void f( i32 a, i64 b ) { }\nvoid f( i64 a, i32 b ) { }\n"
+                       "i32 main() { i16 a = 1; f( a, a ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "is ambiguous" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`( i32, i64 )` and `( i64, i32 )`" ) != std::string::npos );
+    }
+
+    SECTION( "a `const ref` does not widen" )
+    {
+        const Typed p( "i32 f( const ref i64 a ) { return 1; }\nbool f( bool a ) { return true; }\n"
+                       "i32 main() { i32 b = 1; f( b ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "no `f` matches these arguments" ) != std::string::npos );
+    }
+
+    SECTION( "a method widens too" )
+    {
+        const Typed p( "class C { i32 x; C() { x = 0; }\n"
+                       "public i32 at( i64 n ) { return 1; } public bool at( bool n ) { return true; } };\n"
+                       "i32 main() { C c = C(); i8 b = 1; i32 n = c.at( b ); return n; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and so does a constructor" )
+    {
+        const Typed p( "class C { public i32 x; C( i64 v ) { x = 1; } C( bool v ) { x = 2; } };\n"
+                       "i32 main() { u16 b = 1; C c = C( b ); return c.x; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// D31: a borrow is the caller's variable itself, so there is no conversion for a widened copy to
+// live in. One candidate is where this was missed, because selection never ran.
+TEST_CASE( "a_borrowed_argument_takes_exactly_its_type", "[sema][overload][constref][out]" )
+{
+    SECTION( "`const ref`" )
+    {
+        const Typed p( "void f( const ref i64 a ) { }\ni32 main() { i32 b = 1; f( b ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "cannot borrow `i32` as `const ref i64`" ) != std::string::npos );
+    }
+
+    SECTION( "`const ref` of a temporary" )
+    {
+        const Typed p( "void f( const ref i64 a ) { }\ni32 main() { i32 b = 1; f( b + 1 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "cannot borrow `i32` as `const ref i64`" ) != std::string::npos );
+    }
+
+    SECTION( "`out`" )
+    {
+        const Typed p( "void f( out i64 a ) { a = 1; }\ni32 main() { i32 b; f( out b ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "cannot borrow `i32` as `out i64`" ) != std::string::npos );
+    }
+
+    SECTION( "`ref`, as before" )
+    {
+        const Typed p( "void f( ref i64 a ) { }\ni32 main() { i32 b = 1; f( ref b ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "cannot borrow `i32` as `ref i64`" ) != std::string::npos );
+    }
+
+    SECTION( "through a function pointer" )
+    {
+        const Typed p( "void f( const ref i64 a ) { }\n"
+                       "i32 main() { fn( const ref i64 ) -> void g = &f; i32 b = 1; g( b ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "cannot borrow `i32` as `const ref i64`" ) != std::string::npos );
+    }
+
+    // A type that does not convert at all is the argument check's error, and only that.
+    SECTION( "a type that does not convert is reported once" )
+    {
+        const Typed p( "void f( const ref i64 a ) { }\ni32 main() { bool b = true; f( b ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "expected `i64`, but got `bool`" ) != std::string::npos );
+    }
+
+    SECTION( "and so is one under `ref`" )
+    {
+        const Typed p( "void f( ref i64 a ) { }\ni32 main() { bool b = true; f( ref b ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "expected `i64`, but got `bool`" ) != std::string::npos );
+    }
+
+    SECTION( "and through a function pointer" )
+    {
+        const Typed p( "void f( ref i64 a ) { }\n"
+                       "i32 main() { fn( ref i64 ) -> void g = &f; bool b = true; g( ref b ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "expected `i64`, but got `bool`" ) != std::string::npos );
+    }
+
+    SECTION( "a literal takes the borrow's type, so it is not refused" )
+    {
+        const Typed p( "void f( const ref i64 a ) { }\ni32 main() { f( 5 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and a bare parameter still widens" )
+    {
+        const Typed p( "void f( i64 a ) { }\ni32 main() { i32 b = 1; f( b ); return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );

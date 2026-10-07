@@ -29,51 +29,45 @@ error: no `pick` takes 2 arguments
    |     ^^^^^^^^^^^^^^^^^^^^ the ones declared take `( i32 )` and `( f64 )`
 
 error: no `pick` matches these arguments
-  --> sema/errors_overloads.kl:49:5
+  --> sema/errors_overloads.kl:48:5
    |
-49 |     pick( true );
+48 |     pick( true );
    |     ^^^^^^^^^^^^ the ones declared take `( i32 )` and `( f64 )`
 
-error: no `pick` matches these arguments
-  --> sema/errors_overloads.kl:53:5
-   |
-53 |     pick( small );
-   |     ^^^^^^^^^^^^^ the ones declared take `( i32 )` and `( f64 )`
-
 error: this call to `ambiguous` is ambiguous
-  --> sema/errors_overloads.kl:57:5
+  --> sema/errors_overloads.kl:52:5
    |
-57 |     ambiguous( 1 );
+52 |     ambiguous( 1 );
    |     ^^^^^^^^^^^^^^ more than one matches: `( i32 )` and `( i64 )`; write a type the call can be told by
 
 error: no `ambiguous` matches these arguments
-  --> sema/errors_overloads.kl:60:5
+  --> sema/errors_overloads.kl:55:5
    |
-60 |     ambiguous( fraction );
+55 |     ambiguous( fraction );
    |     ^^^^^^^^^^^^^^^^^^^^^ the ones declared take `( i32 )` and `( i64 )`
 
 error: expected `i32`, but got `bool`
-  --> sema/errors_overloads.kl:64:12
+  --> sema/errors_overloads.kl:59:12
    |
-64 |     p.get( true );
+59 |     p.get( true );
    |            ^^^^
 
 error: `get` takes 1 argument, but 2 were given
-  --> sema/errors_overloads.kl:65:10
+  --> sema/errors_overloads.kl:60:10
    |
-65 |     p.get( whole, whole );
+60 |     p.get( whole, whole );
    |          ^^^^^^^^^^^^^^^^
 
 error: `count` is already declared with these parameters
-   --> sema/errors_overloads.kl:102:9
-    |
-102 |     i32 count() const
-    |         ^^^^^ `const` binds the receiver, which a call site does not write, so it cannot tell two apart
+  --> sema/errors_overloads.kl:97:9
+   |
+97 |     i32 count() const
+   |         ^^^^^ `const` binds the receiver, which a call site does not write, so it cannot tell two apart
 
 error: `put` is already declared, and a type argument could make the two identical
-   --> sema/errors_overloads.kl:129:9
+   --> sema/errors_overloads.kl:124:9
     |
-129 |     i32 put( i32 a )
-    |         ^^^ previous declaration is at: sema/errors_overloads.kl:124:5
+124 |     i32 put( i32 a )
+    |         ^^^ previous declaration is at: sema/errors_overloads.kl:119:5
 
-13 errors generated
+12 errors generated

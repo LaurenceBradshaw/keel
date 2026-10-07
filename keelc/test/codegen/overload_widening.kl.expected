@@ -1,0 +1,263 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "overload_widening.kl.prelude.c"
+
+struct kl__Built;
+
+struct kl__Built
+{
+    int64_t kl_held_86;
+};
+
+int64_t kl__as_signed__3i64( int64_t );
+int64_t kl__as_signed__3f64( double );
+uint64_t kl__as_unsigned__3u64( uint64_t );
+uint64_t kl__as_unsigned__3i64( int64_t );
+int32_t kl__narrowest__3i16( int16_t );
+int32_t kl__narrowest__3u32( uint32_t );
+double kl__floats__3f64( double );
+double kl__floats__4bool( bool );
+void kl__Built__R5Built_3i64__ctor( struct kl__Built*, int64_t );
+void kl__Built__R5Built_4bool__ctor( struct kl__Built*, bool );
+int64_t kl__plus__S5Built_3i64( struct kl__Built*, int64_t );
+int64_t kl__plus__S5Built_3f64( struct kl__Built*, double );
+int32_t kl__main__( void );
+
+int64_t kl__as_signed__3i64( int64_t kl_a_1 )
+{
+    int64_t kl_t0;
+#line 7 "codegen/overload_widening.kl"
+    kl_t0 = kl_a_1;
+    return kl_t0;
+}
+
+int64_t kl__as_signed__3f64( double kl_a_1 )
+{
+    int64_t kl_t0;
+    bool kl_t2;
+#line 12 "codegen/overload_widening.kl"
+    kl_t2 = kl_a_1 > 0.0;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 14 "codegen/overload_widening.kl"
+    kl_t0 = 1000;
+    return kl_t0;
+    bb2:
+#line 17 "codegen/overload_widening.kl"
+    kl_t0 = 1000;
+    return kl_t0;
+}
+
+uint64_t kl__as_unsigned__3u64( uint64_t kl_a_1 )
+{
+    uint64_t kl_t0;
+#line 22 "codegen/overload_widening.kl"
+    kl_t0 = kl_a_1;
+    return kl_t0;
+}
+
+uint64_t kl__as_unsigned__3i64( int64_t kl_a_1 )
+{
+    uint64_t kl_t0;
+    uint64_t kl_t2;
+    uint64_t kl_t3;
+    uint64_t kl_t4;
+#line 27 "codegen/overload_widening.kl"
+    kl_t2 = ( uint64_t ) kl_a_1;
+    kl_t3 = kl_t2 * 0;
+    kl_t4 = 2000 + kl_t3;
+    kl_t0 = kl_t4;
+    return kl_t0;
+}
+
+int32_t kl__narrowest__3i16( int16_t kl_a_1 )
+{
+    int32_t kl_t0;
+    int16_t kl_t2;
+#line 32 "codegen/overload_widening.kl"
+    kl_t2 = 10 + kl_a_1;
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+int32_t kl__narrowest__3u32( uint32_t kl_a_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t2;
+    int32_t kl_t3;
+    int32_t kl_t4;
+#line 37 "codegen/overload_widening.kl"
+    kl_t2 = ( int32_t ) kl_a_1;
+    kl_t3 = kl_t2 * 0;
+    kl_t4 = 20 + kl_t3;
+    kl_t0 = kl_t4;
+    return kl_t0;
+}
+
+double kl__floats__3f64( double kl_a_1 )
+{
+    double kl_t0;
+#line 42 "codegen/overload_widening.kl"
+    kl_t0 = kl_a_1;
+    return kl_t0;
+}
+
+double kl__floats__4bool( bool kl_a_1 )
+{
+    double kl_t0;
+#line 47 "codegen/overload_widening.kl"
+    kl_t0 = 0.0;
+    return kl_t0;
+}
+
+void kl__Built__R5Built_3i64__ctor( struct kl__Built* kl_this_1, int64_t kl_v_2 )
+{
+#line 56 "codegen/overload_widening.kl"
+    ( *kl_this_1 ).kl_held_86 = kl_v_2;
+    return;
+}
+
+void kl__Built__R5Built_4bool__ctor( struct kl__Built* kl_this_1, bool kl_v_2 )
+{
+#line 61 "codegen/overload_widening.kl"
+    ( *kl_this_1 ).kl_held_86 = 0;
+    return;
+}
+
+int64_t kl__plus__S5Built_3i64( struct kl__Built* kl_this_1, int64_t kl_n_2 )
+{
+    int64_t kl_t0;
+    int64_t kl_t3;
+#line 66 "codegen/overload_widening.kl"
+    kl_t3 = ( *kl_this_1 ).kl_held_86 + kl_n_2;
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+int64_t kl__plus__S5Built_3f64( struct kl__Built* kl_this_1, double kl_n_2 )
+{
+    int64_t kl_t0;
+#line 71 "codegen/overload_widening.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int8_t kl_negative_1;
+    int8_t kl_t2;
+    uint8_t kl_small_3;
+    uint32_t kl_large_4;
+    float kl_fraction_5;
+    int64_t kl_t6;
+    int64_t kl_t7;
+    int64_t kl_t8;
+    bool kl_t9;
+    int64_t kl_t10;
+    int64_t kl_t11;
+    bool kl_t12;
+    uint64_t kl_t13;
+    uint64_t kl_t14;
+    bool kl_t15;
+    int16_t kl_t16;
+    int32_t kl_t17;
+    bool kl_t18;
+    double kl_t19;
+    double kl_t20;
+    bool kl_t21;
+    struct kl__Built kl_built_22;
+    struct kl__Built* kl_t23;
+    int64_t kl_t24;
+    bool kl_t26;
+    struct kl__Built* kl_t27;
+    int64_t kl_t28;
+    int64_t kl_t29;
+    bool kl_t30;
+#line 77 "codegen/overload_widening.kl"
+    kl_t2 = -3;
+    kl_negative_1 = kl_t2;
+#line 78 "codegen/overload_widening.kl"
+    kl_small_3 = 7;
+#line 79 "codegen/overload_widening.kl"
+    kl_large_4 = 4000000000;
+#line 80 "codegen/overload_widening.kl"
+    kl_fraction_5 = 0.5;
+#line 83 "codegen/overload_widening.kl"
+    kl_t6 = ( int64_t ) kl_negative_1;
+    kl_t7 = kl__as_signed__3i64( kl_t6 );
+    kl_t8 = -3;
+    kl_t9 = kl_t7 != kl_t8;
+    if ( kl_t9 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+#line 84 "codegen/overload_widening.kl"
+    kl_t10 = ( int64_t ) kl_small_3;
+    kl_t11 = kl__as_signed__3i64( kl_t10 );
+    kl_t12 = kl_t11 != 7;
+    if ( kl_t12 ) goto bb3; else goto bb4;
+    bb3:
+    kl_t0 = 2;
+    return kl_t0;
+    bb4:
+#line 87 "codegen/overload_widening.kl"
+    kl_t13 = ( uint64_t ) kl_large_4;
+    kl_t14 = kl__as_unsigned__3u64( kl_t13 );
+    kl_t15 = kl_t14 != 4000000000;
+    if ( kl_t15 ) goto bb5; else goto bb6;
+    bb5:
+    kl_t0 = 3;
+    return kl_t0;
+    bb6:
+#line 90 "codegen/overload_widening.kl"
+    kl_t16 = ( int16_t ) kl_small_3;
+    kl_t17 = kl__narrowest__3i16( kl_t16 );
+    kl_t18 = kl_t17 != 17;
+    if ( kl_t18 ) goto bb7; else goto bb8;
+    bb7:
+    kl_t0 = 4;
+    return kl_t0;
+    bb8:
+#line 93 "codegen/overload_widening.kl"
+    kl_t19 = ( double ) kl_fraction_5;
+    kl_t20 = kl__floats__3f64( kl_t19 );
+    kl_t21 = kl_t20 != 0.5;
+    if ( kl_t21 ) goto bb9; else goto bb10;
+    bb9:
+    kl_t0 = 5;
+    return kl_t0;
+    bb10:
+#line 96 "codegen/overload_widening.kl"
+    kl_t23 = &kl_built_22;
+    kl_t24 = ( int64_t ) kl_small_3;
+    kl__Built__R5Built_3i64__ctor( kl_t23, kl_t24 );
+#line 97 "codegen/overload_widening.kl"
+    kl_t26 = kl_built_22.kl_held_86 != 7;
+    if ( kl_t26 ) goto bb11; else goto bb12;
+    bb11:
+    kl_t0 = 6;
+    return kl_t0;
+    bb12:
+#line 98 "codegen/overload_widening.kl"
+    kl_t27 = &kl_built_22;
+    kl_t28 = ( int64_t ) kl_negative_1;
+    kl_t29 = kl__plus__S5Built_3i64( kl_t27, kl_t28 );
+    kl_t30 = kl_t29 != 4;
+    if ( kl_t30 ) goto bb13; else goto bb14;
+    bb13:
+    kl_t0 = 7;
+    return kl_t0;
+    bb14:
+#line 100 "codegen/overload_widening.kl"
+    kl_t0 = 42;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

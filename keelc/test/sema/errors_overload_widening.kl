@@ -1,0 +1,37 @@
+// PLAN §6.7 and D31. A call that matches nothing exactly widens, and what widening refuses: a borrow
+// takes exactly its type, and two candidates each closer for one argument are ambiguous.
+
+void read( const ref i64 a )
+{
+}
+
+void fill( out i64 a )
+{
+    a = 1;
+}
+
+void near( i32 a, i64 b )
+{
+}
+
+void near( i64 a, i32 b )
+{
+}
+
+i32 main()
+{
+    i32 whole = 1;
+    i32 unset;
+    i16 small = 1;
+
+    // A `const ref` is the caller's variable, and an `i32` is not an `i64`.
+    read( whole );
+
+    // Nor is an `out`, which would write eight bytes into four.
+    fill( out unset );
+
+    // Each is closer for one argument and further for the other.
+    near( small, small );
+
+    return 0;
+}

@@ -12,29 +12,6 @@
 namespace keel
 {
 
-namespace
-{
-std::string param_spelling( Param_mode mode )
-{
-    switch( mode )
-    {
-    case Param_mode::Value:
-        return "";
-    case Param_mode::Ref:
-        return "ref ";
-    case Param_mode::Const_ref:
-        return "const ref ";
-    case Param_mode::Out:
-        return "out ";
-    case Param_mode::Move:
-        return "move ";
-    default:
-        assert( false );
-        return "";
-    }
-}
-} // namespace
-
 Type_table::Type_table()
 {
     // Since slot 0 is reserved for "invalid", push a dummy entry
@@ -1007,6 +984,26 @@ Type_id Type_table::composite(
     instances.push_back( Instance { .arguments = owned, .type = id } );
 
     return id;
+}
+
+std::string param_spelling( Param_mode mode )
+{
+    switch( mode )
+    {
+    case Param_mode::Value:
+        return "";
+    case Param_mode::Ref:
+        return "ref ";
+    case Param_mode::Const_ref:
+        return "const ref ";
+    case Param_mode::Out:
+        return "out ";
+    case Param_mode::Move:
+        return "move ";
+    default:
+        assert( false );
+        return "";
+    }
 }
 
 bool is_builtin_type_name( std::string_view spelling )

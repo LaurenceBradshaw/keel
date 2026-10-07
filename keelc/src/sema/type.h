@@ -50,6 +50,9 @@ enum class Param_mode : u8
     Move
 };
 
+// How a signature writes the mode: "const ref ", or nothing for a value.
+std::string param_spelling( Param_mode mode );
+
 struct Parameter
 {
     Type_id    type;

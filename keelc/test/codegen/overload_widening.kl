@@ -1,0 +1,101 @@
+// PLAN §6.7. With no exact match a call widens to the closest candidate: its kind first, then the
+// narrowest, then its signedness. Each overload answers with a different number, and each echoes
+// its argument, so a wrong choice and a wrong conversion are both a wrong exit code.
+
+i64 as_signed( i64 a )
+{
+    return a;
+}
+
+i64 as_signed( f64 a )
+{
+    if( a > 0.0 )
+    {
+        return 1000;
+    }
+
+    return 1000;
+}
+
+u64 as_unsigned( u64 a )
+{
+    return a;
+}
+
+u64 as_unsigned( i64 a )
+{
+    return 2000 + wrap<u64>( a ) * 0;
+}
+
+i32 narrowest( i16 a )
+{
+    return 10 + a;
+}
+
+i32 narrowest( u32 a )
+{
+    return 20 + wrap<i32>( a ) * 0;
+}
+
+f64 floats( f64 a )
+{
+    return a;
+}
+
+f64 floats( bool a )
+{
+    return 0.0;
+}
+
+class Built
+{
+    public i64 held;
+
+    Built( i64 v )
+    {
+        held = v;
+    }
+
+    Built( bool v )
+    {
+        held = 0;
+    }
+
+    i64 plus( i64 n )
+    {
+        return held + n;
+    }
+
+    i64 plus( f64 n )
+    {
+        return 0;
+    }
+};
+
+i32 main()
+{
+    i8 negative = -3;
+    u8 small = 7;
+    u32 large = 4000000000;
+    f32 fraction = 0.5;
+
+    // 1..2: an integer stays an integer, and a negative one keeps its sign.
+    if( as_signed( negative ) != -3 ) { return 1; }
+    if( as_signed( small ) != 7 ) { return 2; }
+
+    // 3: a `u32` keeps its signedness between two 64-bit candidates, and its value with it.
+    if( as_unsigned( large ) != 4000000000 ) { return 3; }
+
+    // 4: the narrowest target, whatever its signedness.
+    if( narrowest( small ) != 17 ) { return 4; }
+
+    // 5: a float to a float.
+    if( floats( fraction ) != 0.5 ) { return 5; }
+
+    // 6..7: a constructor and a method, chosen the same way.
+    Built built = Built( small );
+    if( built.held != 7 ) { return 6; }
+    if( built.plus( negative ) != 4 ) { return 7; }
+
+    return 42;
+}

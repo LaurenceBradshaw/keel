@@ -1426,20 +1426,13 @@ Type_id Expressions::indirect_call( Node_id id, Node_id declaration, Type_id sig
 
     for( std::size_t i = 0; i < std::min( parameters.size(), arguments.size() ); ++i )
     {
-        // A marker is inferred rather than checked: a borrow binds the caller's variable itself, so
-        // there is no conversion for it to travel through, and the exactness rule below stands in.
-        if( ast_.kind( arguments[i] ) == Node_kind::Marker_expr )
-        {
-            infer( arguments[i] );
-        }
-        else
-        {
-            check( arguments[i], parameters[i] );
-        }
+        // Checked like a call through a name, marker or not, so a type that does not convert is
+        // reported here and the borrow rule below is left only exactness.
+        check( arguments[i], parameters[i] );
 
         // The same rule a call through a name gets, with the mode read off the signature rather than
         // off a Param_decl - a variable holding an address has none.
-        overloads_.check_one_argument_marker( arguments[i], call_marker_of( modes[i] ), parameters[i], name );
+        overloads_.check_one_argument_marker( arguments[i], modes[i], parameters[i], name );
     }
 
     for( std::size_t i = parameters.size(); i < arguments.size(); ++i )
@@ -1493,7 +1486,7 @@ Type_id Expressions::field_application( Node_id id, Type_id offset )
     // The object travels as a `const ref` would, so it takes the marker that one takes: none.
     if( !arguments.empty() )
     {
-        overloads_.check_one_argument_marker( arguments[0], call_marker_of( Param_mode::Const_ref ), aggregate, name );
+        overloads_.check_one_argument_marker( arguments[0], Param_mode::Const_ref, aggregate, name );
     }
 
     if( !bounds_.satisfies( member, Bound::Copyable ) )

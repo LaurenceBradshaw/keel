@@ -1,7 +1,7 @@
 // PLAN §6.7. Two callables may share a name when a call site can tell them apart, and what tells
 // them apart is each parameter's declared type together with the marker the call has to write.
-// Selection is by exact type: §6.4's widening is what gets an argument to a parameter after one has
-// been chosen, and letting it choose would mean ranking two parameters that both accept.
+// Every call below matches one candidate exactly. overload_widening.kl has the calls that match
+// none, which widen to the closest instead.
 //
 // Only the exit code can see most of this. Every overload below returns a different number, so
 // picking the wrong one is a wrong answer rather than a wrong-looking symbol - and the ones that

@@ -44,13 +44,8 @@ i32 main()
     // No candidate takes two arguments.
     pick( whole, whole );
 
-    // No candidate takes a `bool`, and §6.4's widening is not consulted: it is what gets an
-    // argument to a parameter after one has been chosen.
+    // No candidate takes a `bool`, and nothing widens into or out of one.
     pick( true );
-
-    // A `u8` is not an `i32`, though it fits in one.
-    u8 small = 1;
-    pick( small );
 
     // A literal carries the family it is written in and no more, so it cannot choose between two
     // parameters that are both in it.

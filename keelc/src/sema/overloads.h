@@ -129,9 +129,9 @@ public:
         Node_id call, Node_id callable, std::string_view name, u32 implicit_params, const Bindings& bindings
     );
     // One argument against the one mode its parameter declares. Its own member because an indirect
-    // call asks exactly this, with `wanted` read off a function type instead of off a Param_decl -
+    // call asks exactly this, with `mode` read off a function type instead of off a Param_decl -
     // and the rule may not differ between a call through a name and a call through a variable.
-    void check_one_argument_marker( Node_id argument, Keyword wanted, Type_id expected, std::string_view name );
+    void check_one_argument_marker( Node_id argument, Param_mode mode, Type_id expected, std::string_view name );
 
     void check_overload_sets();
 
@@ -147,8 +147,15 @@ public:
 private:
     bool marker_accepts( Node_id param, Keyword given, Type_id expected );
     bool candidate_accepts(
-        Node_id callable, u32 implicit_params, std::span<const Argument_shape> shapes, const Bindings& bindings
+        Node_id callable, u32 implicit_params, std::span<const Argument_shape> shapes, const Bindings& bindings, bool widen
     );
+    bool                 widens( Node_id param, Type_id from, Type_id to ) const;
+    u32                  distance( Type_id from, Type_id to ) const;
+    std::vector<Type_id> parameter_types( Node_id callable, u32 implicit_params, const Bindings& bindings );
+    bool beats( std::span<const Type_id> first, std::span<const Type_id> second, std::span<const Argument_shape> shapes ) const;
+    std::vector<Node_id> closest(
+        std::span<const Node_id> widened, std::span<const std::vector<Type_id>> targets, std::span<const Argument_shape> shapes
+    ) const;
 
     bool deduce_for_candidate(
         Node_id callable, u32 implicit_params, std::span<const Argument_shape> shapes, std::vector<Type_id>& resolved

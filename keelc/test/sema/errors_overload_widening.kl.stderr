@@ -1,0 +1,19 @@
+error: cannot borrow `i32` as `const ref i64`
+  --> sema/errors_overload_widening.kl:28:11
+   |
+28 |     read( whole );
+   |           ^^^^^ a borrow is the variable itself, so its type must match exactly
+
+error: cannot borrow `i32` as `out i64`
+  --> sema/errors_overload_widening.kl:31:11
+   |
+31 |     fill( out unset );
+   |           ^^^^^^^^^ a borrow is the variable itself, so its type must match exactly
+
+error: this call to `near` is ambiguous
+  --> sema/errors_overload_widening.kl:34:5
+   |
+34 |     near( small, small );
+   |     ^^^^^^^^^^^^^^^^^^^^ more than one matches: `( i32, i64 )` and `( i64, i32 )`; write a type the call can be told by
+
+3 errors generated
