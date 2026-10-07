@@ -1,0 +1,43 @@
+warning: this comparison is always false
+  --> sema/errors_constant_chain.kl:16:12
+   |
+16 |     return n < 0 - 1;
+   |            ^^^^^^^^^ `-1` is outside the range of `u64`
+
+error: `260` does not fit in `u8`
+  --> sema/errors_constant_chain.kl:21:15
+   |
+21 |     u8 over = 200 + 50 + 10;
+   |               ^^^^^^^^^^^^^
+
+error: `-1` does not fit in `u32`
+  --> sema/errors_constant_chain.kl:22:20
+   |
+22 |     u32 under = -( 1 - 2 );
+   |                    ^^^^^
+
+error: `200` does not fit in `i8`
+  --> sema/errors_constant_chain.kl:23:15
+   |
+23 |     i8 step = 100 + 100 - 1;
+   |               ^^^^^^^^^
+
+error: this constant does not fit in `u64`
+  --> sema/errors_constant_chain.kl:24:16
+   |
+24 |     u64 wide = 1 << 40 << 30;
+   |                ^^^^^^^^^^^^^
+
+error: division by zero
+  --> sema/errors_constant_chain.kl:25:16
+   |
+25 |     i32 zero = 1 / ( 2 - 2 );
+   |                ^^^^^^^^^^^
+
+error: no operator `-` for `u32`
+  --> sema/errors_constant_chain.kl:26:20
+   |
+26 |     u32 negation = -( 2 - 1 );
+   |                    ^^^^^^^^^^ negation needs a signed type
+
+6 errors generated

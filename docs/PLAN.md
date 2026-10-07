@@ -6823,6 +6823,20 @@ which §7 says the runtime provides and `kl_rt.h` does not (it has `alloc`, `all
    `i64 a = 0 - 3000000000 - 1;` is refused with "`-3000000000` does not fit in `i32`" - the
    inner subtraction of a chained constant is checked against the default type rather than the
    declaration's, while `0 - 3000000000` and `1 + 3000000000` are accepted.
+   ~~**The chained constant.**~~ **Done (2026-10-07)**. Wider than the probe: `u32 a = 1 + 2 + 3;`,
+   `u8 a = 200 + 50 + 1;`, `u64 a = 1 << 3 << 2;` and `u32 y = x + 2 * 3;` were all refused, since
+   check() pushed an expectation into a binary only when both operands were bare literals, and a
+   nested one settled on i32 first. `Expressions::takes_context` now answers for a literal, an
+   arithmetic or shift operation over ones that take context, or a minus over one; check()'s
+   binary and unary cases and infer_binary's adoption use it. `is_literal_expression` itself is
+   not widened: check_literal, argument_shape and D41 read what it accepts as one literal under at
+   most one minus. A comparison keeps adopting only a bare literal, so `n < 0 - 1` on a u64 is
+   still D41's "always false" and not a refusal. A unary minus over a chain goes through
+   `result_of_unary`, so `u32 d = -( 2 - 1 );` keeps "negation needs a signed type". Each
+   operation is checked in the declared type, so `i8 d = 100 + 100 - 1;` is refused at the `200`
+   even though the whole fits. Tests: `type_checker_gives_a_constant_chain_its_context`, the
+   nested-bitwise section of `type_checker_folds_bitwise_operators` (now refused for `256`, the
+   right reason), and `sema/errors_constant_chain.kl`.
 
 Still open inside M8 and taken whenever it is forced: whether `alloc` and `free` move into a
 module over one size intrinsic.

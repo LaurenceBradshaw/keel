@@ -960,9 +960,13 @@ Type_id Expressions::infer_binary( Node_id id )
     Type_id lhs_type;
     Type_id rhs_type;
 
-    if( literals_.is_literal_expression( left ) != literals_.is_literal_expression( right ) )
+    // A comparison adopts only a bare literal: D41 answers `n < 0 - 1` rather than refusing it.
+    const auto adopts = [&]( Node_id side )
+    { return is_comparison( op ) ? literals_.is_literal_expression( side ) : takes_context( side ); };
+
+    if( adopts( left ) != adopts( right ) )
     {
-        const bool literal_on_the_left = literals_.is_literal_expression( left );
+        const bool literal_on_the_left = adopts( left );
 
         const Node_id known_side   = literal_on_the_left ? right : left;
         const Node_id literal_side = literal_on_the_left ? left : right;
@@ -2217,6 +2221,36 @@ Node_id Expressions::next_visible( Node_id use, Node_id candidate ) const
     return Node_id {};
 }
 
+bool Expressions::takes_context( Node_id id ) const
+{
+    if( literals_.is_literal_expression( id ) )
+    {
+        return true;
+    }
+
+    if( ast_.kind( id ) == Node_kind::Binary_expr &&
+        operators_.result_source( static_cast<Token_kind>( ast_.aux( id ) ) ) == Result_source::Operands &&
+        takes_context( ast_.child( id, 0 ) ) && takes_context( ast_.child( id, 1 ) ) )
+    {
+        return true;
+    }
+
+    if( ast_.kind( id ) == Node_kind::Binary_expr &&
+        operators_.result_source( static_cast<Token_kind>( ast_.aux( id ) ) ) == Result_source::Left_operand &&
+        takes_context( ast_.child( id, 0 ) ) )
+    {
+        return true;
+    }
+
+    if( ast_.kind( id ) == Node_kind::Unary_expr && static_cast<Token_kind>( ast_.aux( id ) ) == Token_kind::Minus &&
+        takes_context( ast_.child( id, 0 ) ) )
+    {
+        return true;
+    }
+
+    return false;
+}
+
 Type_id Expressions::infer_path( Node_id id )
 {
     const Node_id   qualifier = ast_.child( id, 0 );
@@ -2953,6 +2987,29 @@ Type_id Expressions::check( Node_id id, Type_id expected )
             return literals_.check_literal( id, expected );
         }
 
+        // `-( 0 - 3000000000 )`: the expectation goes through to the operation, and the minus keeps
+        // its signed-only rule.
+        if( static_cast<Token_kind>( ast_.aux( id ) ) == Token_kind::Minus && takes_context( ast_.child( id, 0 ) ) )
+        {
+            const std::size_t before = reporter_.error_count();
+
+            check( ast_.child( id, 0 ), expected );
+
+            if( reporter_.error_count() != before )
+            {
+                return types_.record( id, expected );
+            }
+
+            const Type_id result = operators_.result_of_unary( Token_kind::Minus, expected, ast_.span( id ) );
+
+            if( !result.is_valid() )
+            {
+                return types_.record( id, table_.builtin( Type_kind::Error ) );
+            }
+
+            return constant_folder_.record_constant( id, result );
+        }
+
         break;
 
     case Node_kind::Binary_expr:
@@ -2965,8 +3022,7 @@ Type_id Expressions::check( Node_id id, Type_id expected )
         // whatever it is given, and pushing the expectation into it would be nonsense.
         const Result_source source = operators_.result_source( static_cast<Token_kind>( ast_.aux( id ) ) );
 
-        if( source == Result_source::Operands && literals_.is_literal_expression( ast_.child( id, 0 ) ) &&
-            literals_.is_literal_expression( ast_.child( id, 1 ) ) )
+        if( source == Result_source::Operands && takes_context( ast_.child( id, 0 ) ) && takes_context( ast_.child( id, 1 ) ) )
         {
             const std::size_t before = reporter_.error_count();
 
@@ -2987,7 +3043,7 @@ Type_id Expressions::check( Node_id id, Type_id expected )
         // A shift's result type is its *left* operand's (§6.4), so that is the only operand an
         // expectation flows into - the count is a width, not a value in the same type. Without
         // this `u32 d = 1 << 4;` settles the literal on i32 and is then refused for being one.
-        if( source == Result_source::Left_operand && literals_.is_literal_expression( ast_.child( id, 0 ) ) )
+        if( source == Result_source::Left_operand && takes_context( ast_.child( id, 0 ) ) )
         {
             const std::size_t before = reporter_.error_count();
 

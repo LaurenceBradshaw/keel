@@ -1052,6 +1052,58 @@ TEST_CASE( "type_checker_allows_constants_that_fit", "[sema][types][constants]" 
     }
 }
 
+// Each operation in a chain once settled on i32 before the declaration's type reached it.
+TEST_CASE( "type_checker_gives_a_constant_chain_its_context", "[sema][types][constants]" )
+{
+    SECTION( "accepted in the type it is written for" )
+    {
+        for( const char* body :
+             { "i64 d = 0 - 3000000000 - 1;",
+               "i64 d = 2 * 3 * 1000000000;",
+               "i64 d = 1 - ( 0 - 3000000000 );",
+               "i64 d = -( 0 - 3000000000 );",
+               "u32 d = 1 + 2 + 3;",
+               "u8 d = 200 + 50 + 1;",
+               "u64 d = 1 << 3 << 2;",
+               "f32 d = -( 1.5 * 2.0 );",
+               "u32 x = 5; u32 d = x + 2 * 3;",
+               "u32 x = 5; u32 d = x * ( 1 + 1 );" } )
+        {
+            const Typed p( std::string( "i32 main() { " ) + body + " return 0; }" );
+
+            INFO( body << "\n" << p.rendered() );
+            REQUIRE( p.clean() );
+        }
+    }
+
+    SECTION( "refused in that type, once" )
+    {
+        for( const auto& [body, message] :
+             { std::pair { "u8 d = 200 + 50 + 10;", "`260` does not fit in `u8`" },
+               std::pair { "u32 d = -( 1 - 2 );", "`-1` does not fit in `u32`" },
+               std::pair { "i8 d = 100 + 100 - 1;", "`200` does not fit in `i8`" },
+               std::pair { "u64 d = 1 << 40 << 30;", "this constant does not fit in `u64`" },
+               std::pair { "i32 d = 1 / ( 2 - 2 );", "division by zero" } } )
+        {
+            const Typed p( std::string( "i32 main() { " ) + body + " return 0; }" );
+
+            INFO( body << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( message ) != std::string::npos );
+        }
+    }
+
+    // The minus keeps its rule: the operand is checked first, and is what fits or not.
+    SECTION( "a negation of an unsigned chain that fits is still refused" )
+    {
+        const Typed p( "i32 main() { u32 d = -( 2 - 1 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "negation needs a signed type" ) != std::string::npos );
+    }
+}
+
 // The folder was written to *detect* overflow, so it answered "not constant" for every operator
 // that cannot overflow. Evaluating a global's initialiser needs it to answer properly, and the
 // constant-overflow rule gets wider for free: `~0 + 1` is not checked today because the `~` stops
@@ -1137,16 +1189,13 @@ TEST_CASE( "type_checker_folds_bitwise_operators", "[sema][types][constants][fol
         REQUIRE( p.clean() );
     }
 
-    // Nested here is still refused for an unrelated reason: check() pushes an expectation into a
-    // binary only when both operands are literal expressions, and a Binary_expr is not one - so
-    // `( 255 & 255 )` settles on i32 before the addition. That is the inferring-where-checking-
-    // belonged family again, and widening Literals::is_literal_expression would fix it.
-    SECTION( "though a nested one is still refused, for a different reason" )
+    SECTION( "and a nested one reaches the addition, which is what overflows" )
     {
         const Typed p( "i32 main() { u8 d = ( 255 & 255 ) + 1; return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`256` does not fit in `u8`" ) != std::string::npos );
     }
 }
 

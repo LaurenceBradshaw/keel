@@ -196,6 +196,9 @@ private:
 
     Node_id next_visible( Node_id use, Node_id candidate ) const;
 
+    // A literal, or arithmetic made only of them: what check() may give the expected type to.
+    bool takes_context( Node_id id ) const;
+
     const Ast&         ast_;
     const Interner&    interner_;
     const Resolution&  resolution_;
