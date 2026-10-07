@@ -206,7 +206,7 @@ std::vector<Node_id> contained_fields( const Ast& ast, Node_id declaration )
     {
         for( const Node_id variant : ast.variants( declaration ) )
         {
-            for( const Node_id field : ast.children( variant ) )
+            for( const Node_id field : ast.payload( variant ) )
             {
                 fields.push_back( field );
             }
@@ -560,7 +560,7 @@ void Kir_emitter::emit_globals()
 {
     bool any = false;
 
-    for( const Node_id child : ast_.children( ast_.root() ) )
+    for( const Node_id child : ast_.declarations( ast_.root() ) )
     {
         if( !shows( child ) )
         {
@@ -766,7 +766,7 @@ void Kir_emitter::emit_externs()
 {
     bool any = false;
 
-    for( const Node_id decl : ast_.children( ast_.root() ) )
+    for( const Node_id decl : ast_.declarations( ast_.root() ) )
     {
         if( !shows( decl ) )
         {
@@ -801,7 +801,7 @@ void Kir_emitter::emit_main_shim()
 {
     Node_id keel_main;
 
-    for( const Node_id child : ast_.children( ast_.root() ) )
+    for( const Node_id child : ast_.declarations( ast_.root() ) )
     {
         if( !shows( child ) )
         {
@@ -813,7 +813,7 @@ void Kir_emitter::emit_main_shim()
             continue; // aux is only a Symbol_id on a declaration
         }
 
-        if( interner_.text( Symbol_id { ast_.aux( child ) } ) == "main" )
+        if( interner_.text( ast_.name( child ) ) == "main" )
         {
             keel_main = child;
             break;
@@ -1197,9 +1197,7 @@ std::string Kir_emitter::place( const Place& place ) const
     std::string text =
         !place.is_global()
             ? local_name( place.local.v )
-            : mangle_static_field(
-                  interner_.text( Symbol_id { ast_.aux( place.global ) } ), place.global.v, arguments, types_.table()
-              );
+            : mangle_static_field( interner_.text( ast_.name( place.global ) ), place.global.v, arguments, types_.table() );
 
     for( u32 i = 0; i < place.num_projections; ++i )
     {

@@ -83,7 +83,7 @@ Type_id Expressions::infer( Node_id id )
         return infer_destroy( id );
 
     case Node_kind::Assert_expr:
-        check_condition( ast_.child( id, 0 ) );
+        check_condition( ast_.condition( id ) );
         return types_.record( id, table_.builtin( Type_kind::Void ) );
 
     case Node_kind::Marker_expr:
@@ -120,7 +120,7 @@ Type_id Expressions::infer_name( Node_id id )
         // types_.type_of( decl ) holds the function's *return* type, so without this `i32 x = f;` would
         // quietly succeed whenever f happens to return an i32.
         reporter_.error_at(
-            ast_.span( id ), fmt::format( "`{}` is a function, not a value", interner_.text( Symbol_id { ast_.aux( id ) } ) )
+            ast_.span( id ), fmt::format( "`{}` is a function, not a value", interner_.text( ast_.name( id ) ) )
         );
 
         return types_.record( id, table_.builtin( Type_kind::Error ) );
@@ -128,9 +128,7 @@ Type_id Expressions::infer_name( Node_id id )
 
     if( is_aggregate( decl_kind ) || decl_kind == Node_kind::Enum_decl || decl_kind == Node_kind::Type_param_decl )
     {
-        reporter_.error_at(
-            ast_.span( id ), fmt::format( "`{}` is a type, not a value", interner_.text( Symbol_id { ast_.aux( id ) } ) )
-        );
+        reporter_.error_at( ast_.span( id ), fmt::format( "`{}` is a type, not a value", interner_.text( ast_.name( id ) ) ) );
 
         return types_.record( id, table_.builtin( Type_kind::Error ) );
     }
@@ -142,9 +140,7 @@ Type_id Expressions::infer_name( Node_id id )
     {
         reporter_.error_at(
             ast_.span( id ),
-            fmt::format(
-                "`{}` is a field, and there is no object here to read it from", interner_.text( Symbol_id { ast_.aux( id ) } )
-            ),
+            fmt::format( "`{}` is a field, and there is no object here to read it from", interner_.text( ast_.name( id ) ) ),
             "take one as a parameter, or make this a method"
         );
 
@@ -169,7 +165,7 @@ Type_id Expressions::infer_name( Node_id id )
         }
         else
         {
-            types_.record( ast_.child( id, 0 ), qualifier );
+            types_.record( ast_.qualifier( id ), qualifier );
         }
     }
 
@@ -187,13 +183,13 @@ Argument_shape Expressions::argument_shape( Node_id argument )
 
     if( ast_.kind( argument ) == Node_kind::Marker_expr )
     {
-        shape.marker = static_cast<Keyword>( ast_.aux( argument ) );
-        value        = ast_.child( argument, 0 );
+        shape.marker = ast_.keyword( argument );
+        value        = ast_.operand( argument );
     }
 
     if( literals_.is_literal_expression( value ) )
     {
-        const Node_id inner = ast_.kind( value ) == Node_kind::Unary_expr ? ast_.child( value, 0 ) : value;
+        const Node_id inner = ast_.kind( value ) == Node_kind::Unary_expr ? ast_.operand( value ) : value;
 
         switch( ast_.kind( inner ) )
         {
@@ -232,8 +228,7 @@ Argument_shape Expressions::argument_shape( Node_id argument )
 
 Type_id Expressions::infer_call( Node_id id )
 {
-    const Node_id callee = ast_.child( id, 0 );
-    const Node_id args   = ast_.child( id, 1 );
+    const Node_id callee = ast_.callee( id );
 
     // D7: `Shape::Circle( 1.0 )` constructs a variant, and M7's `P::make( 7 )` calls a static
     // method. Both are handled before the ordinary call path because the callee is a Path_expr
@@ -278,7 +273,7 @@ Type_id Expressions::infer_call( Node_id id )
     // mistake told twice.
     const auto type_the_arguments_anyway = [&]()
     {
-        const std::span<const Node_id> list = ast_.children( args );
+        const std::span<const Node_id> list = ast_.arguments( id );
 
         for( std::size_t i = 0; i < list.size(); ++i )
         {
@@ -303,8 +298,8 @@ Type_id Expressions::infer_call( Node_id id )
         return types_.record( id, table_.builtin( Type_kind::Error ) );
     }
 
-    const Node_id          type_args = ast_.child( id, 2 );
-    const std::string_view name      = interner_.text( Symbol_id { ast_.aux( callee ) } );
+    const Node_id          type_args = ast_.type_arg_list( id );
+    const std::string_view name      = interner_.text( ast_.name( callee ) );
 
     // What the arguments are checked against, what the call produces, and how many leading
     // parameters are not the author's to supply. For a plain function all three are the obvious
@@ -472,7 +467,7 @@ Type_id Expressions::infer_call( Node_id id )
         }
         else
         {
-            for( const Node_id argument : ast_.children( args ) )
+            for( const Node_id argument : ast_.arguments( id ) )
             {
                 shapes.push_back( argument_shape( argument ) );
             }
@@ -503,7 +498,7 @@ Type_id Expressions::infer_call( Node_id id )
     {
         if( shapes.empty() )
         {
-            for( const Node_id argument : ast_.children( args ) )
+            for( const Node_id argument : ast_.arguments( id ) )
             {
                 shapes.push_back( argument_shape( argument ) );
             }
@@ -513,7 +508,7 @@ Type_id Expressions::infer_call( Node_id id )
                 callable,
                 implicit_params,
                 shapes,
-                ast_.children( args ),
+                ast_.arguments( id ),
                 result,
                 expectation,
                 name,
@@ -606,8 +601,8 @@ Type_id Expressions::infer_call( Node_id id )
 
 Type_id Expressions::infer_method_call( Node_id id )
 {
-    const Node_id callee = ast_.child( id, 0 );
-    const Node_id object = ast_.child( callee, 0 );
+    const Node_id callee = ast_.callee( id );
+    const Node_id object = ast_.object( callee );
 
     const Type_id result      = infer( object );
     const Type_id object_type = table_.is_pointer( result )             ? table_.get( result ).element
@@ -616,7 +611,7 @@ Type_id Expressions::infer_method_call( Node_id id )
 
     if( table_.is_error( object_type ) )
     {
-        for( const Node_id argument : ast_.children( ast_.child( id, 1 ) ) )
+        for( const Node_id argument : ast_.arguments( id ) )
         {
             infer( argument );
         }
@@ -632,7 +627,7 @@ Type_id Expressions::infer_method_call( Node_id id )
 
     // The aggregate, not the call: find_method searches a declaration's members, and hands back
     // the first of however many share the name.
-    const Node_id first = aggregates_.find_method( table_.get( object_type ).declaration, Symbol_id { ast_.aux( callee ) } );
+    const Node_id first = aggregates_.find_method( table_.get( object_type ).declaration, ast_.name( callee ) );
 
     // M7's acceptance: a named constructor is refused as `value.make( args )`. The member exists,
     // so this is about the spelling rather than about the name - and saying which one it is costs
@@ -643,15 +638,13 @@ Type_id Expressions::infer_method_call( Node_id id )
             ast_.span( callee ),
             fmt::format(
                 "`{}` is a `static` method of `{}`, so it takes no object",
-                interner_.text( Symbol_id { ast_.aux( callee ) } ),
+                interner_.text( ast_.name( callee ) ),
                 table_.name( object_type )
             ),
-            fmt::format(
-                "call it as `{}::{}( ... )`", table_.name( object_type ), interner_.text( Symbol_id { ast_.aux( callee ) } )
-            )
+            fmt::format( "call it as `{}::{}( ... )`", table_.name( object_type ), interner_.text( ast_.name( callee ) ) )
         );
 
-        for( const Node_id argument : ast_.children( ast_.child( id, 1 ) ) )
+        for( const Node_id argument : ast_.arguments( id ) )
         {
             infer( argument );
         }
@@ -663,7 +656,7 @@ Type_id Expressions::infer_method_call( Node_id id )
     {
         report_private( callee, first );
 
-        for( const Node_id argument : ast_.children( ast_.child( id, 1 ) ) )
+        for( const Node_id argument : ast_.arguments( id ) )
         {
             infer( argument );
         }
@@ -675,14 +668,14 @@ Type_id Expressions::infer_method_call( Node_id id )
     {
         // Check if a field of the same name exists, which is a common mistake when a method is expected. The
         // field's type is not a method, so it cannot be called.
-        const Node_id field = aggregates_.find_field( object_type, Symbol_id { ast_.aux( callee ) } );
+        const Node_id field = aggregates_.find_field( object_type, ast_.name( callee ) );
         if( field.is_valid() )
         {
             reporter_.error_at(
                 ast_.span( callee ),
                 fmt::format(
                     "`{}` is a field of `{}`, not a method; it cannot be called",
-                    interner_.text( Symbol_id { ast_.aux( callee ) } ),
+                    interner_.text( ast_.name( callee ) ),
                     table_.name( object_type )
                 )
             );
@@ -692,9 +685,7 @@ Type_id Expressions::infer_method_call( Node_id id )
 
         reporter_.error_at(
             ast_.span( callee ),
-            fmt::format(
-                "`{}` has no method `{}`", table_.name( object_type ), interner_.text( Symbol_id { ast_.aux( callee ) } )
-            )
+            fmt::format( "`{}` has no method `{}`", table_.name( object_type ), interner_.text( ast_.name( callee ) ) )
         );
 
         return types_.record( id, table_.builtin( Type_kind::Error ) );
@@ -711,7 +702,7 @@ Type_id Expressions::infer_method_call( Node_id id )
     }
     else if( !viable.empty() )
     {
-        for( const Node_id argument : ast_.children( ast_.child( id, 1 ) ) )
+        for( const Node_id argument : ast_.arguments( id ) )
         {
             shapes.push_back( argument_shape( argument ) );
         }
@@ -721,11 +712,11 @@ Type_id Expressions::infer_method_call( Node_id id )
 
     if( !method.is_valid() )
     {
-        for( std::size_t i = 0; i < ast_.children( ast_.child( id, 1 ) ).size(); ++i )
+        for( std::size_t i = 0; i < ast_.arguments( id ).size(); ++i )
         {
             if( i >= shapes.size() || !shapes[i].recorded )
             {
-                infer( ast_.children( ast_.child( id, 1 ) )[i] );
+                infer( ast_.arguments( id )[i] );
             }
         }
 
@@ -740,7 +731,7 @@ Type_id Expressions::infer_method_call( Node_id id )
             ast_.span( object ),
             fmt::format(
                 "`{}` may modify its object, which is reached through a `{}`",
-                interner_.text( Symbol_id { ast_.aux( method ) } ),
+                interner_.text( ast_.name( method ) ),
                 table_.name( types_.type_of( object ) )
             ),
             "a pointer to `const` can call only `const` methods"
@@ -769,17 +760,16 @@ Expressions::check_method_arguments( Node_id id, Node_id method, Type_id receive
 {
     // One implicit parameter for a method, none for M7's static one. Asked of the signature rather
     // than assumed, because this is the only place a static call's arguments are lined up.
-    const std::span<const Node_id> params =
-        ast_.children( ast_.child( method, 1 ) ).subspan( has_receiver( ast_, method ) ? 1 : 0 );
-    const std::span<const Node_id> arguments = ast_.children( ast_.child( id, 1 ) );
+    const std::span<const Node_id> params    = ast_.explicit_params( method );
+    const std::span<const Node_id> arguments = ast_.arguments( id );
 
     if( params.size() != arguments.size() )
     {
         reporter_.error_at(
-            ast_.span( ast_.child( id, 1 ) ),
+            ast_.span( ast_.arg_list( id ) ),
             fmt::format(
                 "`{}` takes {} argument{}, but {} {} given",
-                interner_.text( Symbol_id { ast_.aux( method ) } ),
+                interner_.text( ast_.name( method ) ),
                 params.size(),
                 params.size() == 1 ? "" : "s",
                 arguments.size(),
@@ -809,7 +799,7 @@ Expressions::check_method_arguments( Node_id id, Node_id method, Type_id receive
         }
     }
 
-    std::string_view name            = interner_.text( Symbol_id { ast_.aux( method ) } );
+    std::string_view name            = interner_.text( ast_.name( method ) );
     u32              implicit_params = has_receiver( ast_, method ) ? 1 : 0;
     overloads_.check_argument_markers( id, method, name, implicit_params, bindings );
 
@@ -871,15 +861,12 @@ Type_id Expressions::infer_implicit_method_call( Node_id id, Node_id method )
     if( !receiver.is_valid() )
     {
         reporter_.error_at(
-            ast_.span( ast_.child( id, 0 ) ),
-            fmt::format(
-                "`{}` is a method, and there is no object here to call it on",
-                interner_.text( Symbol_id { ast_.aux( method ) } )
-            ),
+            ast_.span( ast_.callee( id ) ),
+            fmt::format( "`{}` is a method, and there is no object here to call it on", interner_.text( ast_.name( method ) ) ),
             "a method can only be called by bare name from inside another method of the same type"
         );
 
-        for( const Node_id argument : ast_.children( ast_.child( id, 1 ) ) )
+        for( const Node_id argument : ast_.arguments( id ) )
         {
             infer( argument );
         }
@@ -900,7 +887,7 @@ Type_id Expressions::infer_implicit_method_call( Node_id id, Node_id method )
     }
     else if( !viable.empty() )
     {
-        for( const Node_id argument : ast_.children( ast_.child( id, 1 ) ) )
+        for( const Node_id argument : ast_.arguments( id ) )
         {
             shapes.push_back( argument_shape( argument ) );
         }
@@ -910,11 +897,11 @@ Type_id Expressions::infer_implicit_method_call( Node_id id, Node_id method )
 
     if( !method.is_valid() )
     {
-        for( std::size_t i = 0; i < ast_.children( ast_.child( id, 1 ) ).size(); ++i )
+        for( std::size_t i = 0; i < ast_.arguments( id ).size(); ++i )
         {
             if( i >= shapes.size() || !shapes[i].recorded )
             {
-                infer( ast_.children( ast_.child( id, 1 ) )[i] );
+                infer( ast_.arguments( id )[i] );
             }
         }
 
@@ -924,15 +911,14 @@ Type_id Expressions::infer_implicit_method_call( Node_id id, Node_id method )
     if( !is_const_method( ast_, method ) && is_const_binding( ast_, receiver ) )
     {
         reporter_.error_at(
-            ast_.span( ast_.child( id, 0 ) ),
+            ast_.span( ast_.callee( id ) ),
             fmt::format(
-                "a `const` method cannot call `{}`, which may modify the object",
-                interner_.text( Symbol_id { ast_.aux( method ) } )
+                "a `const` method cannot call `{}`, which may modify the object", interner_.text( ast_.name( method ) )
             ),
             fmt::format(
                 "remove `const` from `{}`, or add it to `{}`",
-                interner_.text( Symbol_id { ast_.aux( current_function_ ) } ),
-                interner_.text( Symbol_id { ast_.aux( method ) } )
+                interner_.text( ast_.name( current_function_ ) ),
+                interner_.text( ast_.name( method ) )
             )
         );
 
@@ -946,9 +932,9 @@ Type_id Expressions::infer_implicit_method_call( Node_id id, Node_id method )
 
 Type_id Expressions::infer_binary( Node_id id )
 {
-    const Token_kind op    = static_cast<Token_kind>( ast_.aux( id ) );
-    const Node_id    left  = ast_.child( id, 0 );
-    const Node_id    right = ast_.child( id, 1 );
+    const Token_kind op    = ast_.op( id );
+    const Node_id    left  = ast_.lhs( id );
+    const Node_id    right = ast_.rhs( id );
     const Type_id    error = table_.builtin( Type_kind::Error );
 
     // A literal has a value, not a type, so the other operand is what gives it one. Inferring both
@@ -1052,13 +1038,9 @@ Type_id Expressions::infer_binary( Node_id id )
 Type_id Expressions::function_address( Node_id id, Node_id declaration )
 {
     const Type_id          error = table_.builtin( Type_kind::Error );
-    const std::string_view name  = interner_.text( Symbol_id { ast_.aux( ast_.child( id, 0 ) ) } );
+    const std::string_view name  = interner_.text( ast_.name( ast_.operand( id ) ) );
 
-    // A path's child 0 is its qualifier, so its type arguments come after it.
-    const Node_id                  operand   = ast_.child( id, 0 );
-    const std::span<const Node_id> children  = ast_.children( operand );
-    const std::size_t              args_slot = ast_.kind( operand ) == Node_kind::Path_expr ? 1 : 0;
-    const Node_id                  type_args = children.size() > args_slot ? children[args_slot] : Node_id {};
+    const Node_id type_args = ast_.type_arg_list( ast_.operand( id ) );
 
     const Type_id expectation = expected_;
     expected_                 = Type_id {};
@@ -1181,15 +1163,14 @@ Type_id Expressions::function_address( Node_id id, Node_id declaration )
 
 bool Expressions::names_constructor( Node_id aggregate, Symbol_id name ) const
 {
-    return name == Symbol_id { ast_.aux( aggregate ) } &&
-           aggregates_.find_member( aggregate, Node_kind::Constructor_decl ).is_valid();
+    return name == ast_.name( aggregate ) && aggregates_.find_member( aggregate, Node_kind::Constructor_decl ).is_valid();
 }
 
 Type_id Expressions::method_address( Node_id id, Node_id aggregate )
 {
-    const Node_id          path  = ast_.child( id, 0 );
-    const Symbol_id        name  = Symbol_id { ast_.aux( path ) };
-    const std::string_view owner = interner_.text( Symbol_id { ast_.aux( aggregate ) } );
+    const Node_id          path  = ast_.operand( id );
+    const Symbol_id        name  = ast_.name( path );
+    const std::string_view owner = interner_.text( ast_.name( aggregate ) );
 
     const Type_id expectation = expected_;
     expected_                 = Type_id {};
@@ -1307,7 +1288,7 @@ Type_id Expressions::field_address( Node_id id, Node_id aggregate, Node_id field
         return types_.record( id, table_.builtin( Type_kind::Error ) );
     }
 
-    const Node_id path = ast_.child( id, 0 );
+    const Node_id path = ast_.operand( id );
     const Type_id type = qualifier_type( path, aggregate );
     if( table_.is_error( type ) )
     {
@@ -1321,7 +1302,7 @@ Type_id Expressions::field_address( Node_id id, Node_id aggregate, Node_id field
             ast_.span( id ),
             fmt::format(
                 "`{}` is a `{}`, which is not copyable, so reading it through a field type would copy it",
-                interner_.text( Symbol_id { ast_.aux( field ) } ),
+                interner_.text( ast_.name( field ) ),
                 table_.name( field_type )
             ),
             "a field type that borrows is not supported yet"
@@ -1339,7 +1320,7 @@ Type_id Expressions::written_signature( Node_id declaration, const Bindings& bin
     refused = Node_id {};
     std::vector<Parameter> parameters;
 
-    for( const Node_id param : ast_.children( ast_.child( declaration, 1 ) ) )
+    for( const Node_id param : ast_.params( declaration ) )
     {
         Parameter parameter;
 
@@ -1418,23 +1399,23 @@ Node_id Expressions::overload_for_signature(
 
 Type_id Expressions::indirect_call( Node_id id, Node_id declaration, Type_id signature )
 {
-    const Node_id            callee    = ast_.child( id, 0 );
-    std::span<const Node_id> arguments = ast_.children( ast_.child( id, 1 ) );
-    std::string_view         name      = interner_.text( Symbol_id { ast_.aux( callee ) } );
+    const Node_id            callee    = ast_.callee( id );
+    std::span<const Node_id> arguments = ast_.arguments( id );
+    std::string_view         name      = interner_.text( ast_.name( callee ) );
 
     std::vector<Type_id> parameters( table_.get( signature ).arguments.begin(), table_.get( signature ).arguments.end() );
 
     types_.record( callee, signature );
 
-    if( ast_.child( id, 2 ).is_valid() )
+    if( ast_.type_arg_list( id ).is_valid() )
     {
-        reporter_.error_at( ast_.span( ast_.child( id, 2 ) ), fmt::format( "`{}` is not a generic", name ) );
+        reporter_.error_at( ast_.span( ast_.type_arg_list( id ) ), fmt::format( "`{}` is not a generic", name ) );
     }
 
     if( parameters.size() != arguments.size() )
     {
         reporter_.error_at(
-            ast_.span( ast_.child( id, 1 ) ),
+            ast_.span( ast_.arg_list( id ) ),
             fmt::format(
                 "`{}` takes {} argument{}, but {} {} given",
                 name,
@@ -1476,23 +1457,23 @@ Type_id Expressions::indirect_call( Node_id id, Node_id declaration, Type_id sig
 
 Type_id Expressions::field_application( Node_id id, Type_id offset )
 {
-    const Node_id            callee    = ast_.child( id, 0 );
-    std::span<const Node_id> arguments = ast_.children( ast_.child( id, 1 ) );
-    std::string_view         name      = interner_.text( Symbol_id { ast_.aux( callee ) } );
+    const Node_id            callee    = ast_.callee( id );
+    std::span<const Node_id> arguments = ast_.arguments( id );
+    std::string_view         name      = interner_.text( ast_.name( callee ) );
     const Type_id            aggregate = table_.get( offset ).arguments[0];
     const Type_id            member    = table_.get( offset ).element;
 
     types_.record( callee, offset );
 
-    if( ast_.child( id, 2 ).is_valid() )
+    if( ast_.type_arg_list( id ).is_valid() )
     {
-        reporter_.error_at( ast_.span( ast_.child( id, 2 ) ), fmt::format( "`{}` is not a generic", name ) );
+        reporter_.error_at( ast_.span( ast_.type_arg_list( id ) ), fmt::format( "`{}` is not a generic", name ) );
     }
 
     if( arguments.size() != 1 )
     {
         reporter_.error_at(
-            ast_.span( ast_.child( id, 1 ) ),
+            ast_.span( ast_.arg_list( id ) ),
             fmt::format(
                 "`{}` reads a field of one object, but {} {} given",
                 name,
@@ -1536,14 +1517,14 @@ Type_id Expressions::field_application( Node_id id, Type_id offset )
 
 Type_id Expressions::infer_unary( Node_id id )
 {
-    const Token_kind op = static_cast<Token_kind>( ast_.aux( id ) );
+    const Token_kind op = ast_.op( id );
 
     // Answered before the operand is inferred: infer_name reports a bare function name, and
     // nothing here could take that diagnostic back once it is written.
-    if( op == Token_kind::Amp && ( ast_.kind( ast_.child( id, 0 ) ) == Node_kind::Name_expr ||
-                                   ast_.kind( ast_.child( id, 0 ) ) == Node_kind::Path_expr ) )
+    if( op == Token_kind::Amp &&
+        ( ast_.kind( ast_.operand( id ) ) == Node_kind::Name_expr || ast_.kind( ast_.operand( id ) ) == Node_kind::Path_expr ) )
     {
-        const Node_id declaration = resolution_.declaration_of( ast_.child( id, 0 ) );
+        const Node_id declaration = resolution_.declaration_of( ast_.operand( id ) );
 
         if( declaration.is_valid() && ast_.kind( declaration ) == Node_kind::Function_decl )
         {
@@ -1551,17 +1532,17 @@ Type_id Expressions::infer_unary( Node_id id )
         }
     }
 
-    if( ast_.kind( ast_.child( id, 0 ) ) == Node_kind::Path_expr &&
-        !resolution_.declaration_of( ast_.child( id, 0 ) ).is_valid() )
+    if( ast_.kind( ast_.operand( id ) ) == Node_kind::Path_expr &&
+        !resolution_.declaration_of( ast_.operand( id ) ).is_valid() )
     {
-        const Node_id qualified_declaration = qualifier_declaration( ast_.child( id, 0 ) );
+        const Node_id qualified_declaration = qualifier_declaration( ast_.operand( id ) );
         if( qualified_declaration.is_valid() && is_aggregate( ast_.kind( qualified_declaration ) ) )
         {
             return method_address( id, qualified_declaration );
         }
     }
 
-    const Type_id operand_type = infer( ast_.child( id, 0 ) );
+    const Type_id operand_type = infer( ast_.operand( id ) );
     const Type_id error        = table_.builtin( Type_kind::Error );
 
     if( table_.is_error( operand_type ) )
@@ -1589,7 +1570,7 @@ Type_id Expressions::infer_unary( Node_id id )
         // The operand must be somewhere a value lives. `&f()` names the address of a temporary
         // that is about to vanish, and `&1` names nothing at all. Asked after infer() so that
         // errors inside the operand are reported first.
-        if( !places_.is_assignable( ast_.child( id, 0 ) ) )
+        if( !places_.is_assignable( ast_.operand( id ) ) )
         {
             reporter_.error_at( ast_.span( id ), "cannot take the address of this expression", "it does not name a variable" );
 
@@ -1598,7 +1579,7 @@ Type_id Expressions::infer_unary( Node_id id )
 
         // The address of something read-only only reads it.
         return types_.record(
-            id, table_.pointer_to( operand_type, places_.is_read_only( ast_.child( id, 0 ), current_function_ ) )
+            id, table_.pointer_to( operand_type, places_.is_read_only( ast_.operand( id ), current_function_ ) )
         );
     }
 
@@ -1613,7 +1594,7 @@ Type_id Expressions::infer_unary( Node_id id )
                     table_.name( operand_type ),
                     table_.name( table_.get( operand_type ).element )
                 ),
-                fmt::format( "write `{}[0]`", reporter_.text( ast_.span( ast_.child( id, 0 ) ) ) )
+                fmt::format( "write `{}[0]`", reporter_.text( ast_.span( ast_.operand( id ) ) ) )
             );
 
             return types_.record( id, error );
@@ -1667,7 +1648,7 @@ Type_id Expressions::infer_operator_call( Node_id id, Node_id object, Node_id ar
         return types_.record( id, table_.builtin( Type_kind::Error ) );
     }
 
-    const std::span<const Node_id> params = ast_.children( ast_.child( method, 1 ) );
+    const std::span<const Node_id> params = ast_.params( method );
 
     check( argument, table_.substitute( types_.type_of( params[1] ), aggregates_.bindings_of( object_type ) ) );
 
@@ -1680,7 +1661,7 @@ Type_id Expressions::infer_operator_call( Node_id id, Node_id object, Node_id ar
 // `v[i]` on an aggregate: the element its `operator[]` points at.
 Type_id Expressions::infer_index_operator( Node_id id, Type_id object_type )
 {
-    const Node_id index  = ast_.child( id, 1 );
+    const Node_id index  = ast_.index( id );
     const Node_id method = find_operator(
         id, object_type, index, Interner::operator_name( Operator_name::Index ), "T* operator[]( u64 index ) const"
     );
@@ -1691,7 +1672,7 @@ Type_id Expressions::infer_index_operator( Node_id id, Type_id object_type )
     }
 
     const Bindings&                bindings = aggregates_.bindings_of( object_type );
-    const std::span<const Node_id> params   = ast_.children( ast_.child( method, 1 ) );
+    const std::span<const Node_id> params   = ast_.params( method );
     const Type_id                  returned = table_.substitute( types_.type_of( method ), bindings );
 
     check( index, table_.substitute( types_.type_of( params[1] ), bindings ) );
@@ -1741,7 +1722,7 @@ Node_id Expressions::find_operator(
     }
 
     // A malformed declaration was reported where it was written.
-    if( ast_.children( ast_.child( method, 1 ) ).size() != 2 || !is_const_method( ast_, method ) )
+    if( ast_.params( method ).size() != 2 || !is_const_method( ast_, method ) )
     {
         infer( argument );
         return Node_id {};
@@ -1768,11 +1749,7 @@ void Expressions::report_private( Node_id at, Node_id member )
 
     reporter_.error_at(
         ast_.span( at ),
-        fmt::format(
-            "`{}` is private to `{}`",
-            interner_.text( Symbol_id { ast_.aux( member ) } ),
-            interner_.text( Symbol_id { ast_.aux( owner ) } )
-        ),
+        fmt::format( "`{}` is private to `{}`", interner_.text( ast_.name( member ) ), interner_.text( ast_.name( owner ) ) ),
         "only that type's own members may name it"
     );
 }
@@ -1788,7 +1765,7 @@ bool Expressions::is_name( Node_id id ) const
 // declaration to find and is refused where the path is typed, not here.
 Node_id Expressions::qualifier_declaration( Node_id path ) const
 {
-    const Node_id qualifier = ast_.child( path, 0 );
+    const Node_id qualifier = ast_.qualifier( path );
 
     return is_name( qualifier ) ? resolution_.declaration_of( qualifier ) : Node_id {};
 }
@@ -1799,17 +1776,17 @@ Node_id Expressions::qualifier_declaration( Node_id path ) const
 // type a call can be checked against, so it is refused rather than left to fail on the parameters.
 Type_id Expressions::qualifier_type( Node_id path, Node_id declaration )
 {
-    const Node_id          type_args = ast_.children( path ).size() > 1 ? ast_.child( path, 1 ) : Node_id {};
-    const std::string_view name      = interner_.text( Symbol_id { ast_.aux( ast_.child( path, 0 ) ) } );
+    const Node_id          type_args = ast_.type_arg_list( path );
+    const std::string_view name      = interner_.text( ast_.name( ast_.qualifier( path ) ) );
 
     if( !type_args.is_valid() )
     {
         if( is_generic( ast_, declaration ) )
         {
             reporter_.error_at(
-                ast_.span( ast_.child( path, 0 ) ),
+                ast_.span( ast_.qualifier( path ) ),
                 fmt::format( "`{}` needs its type arguments here", name ),
-                fmt::format( "write `{}< ... >::{}`", name, interner_.text( Symbol_id { ast_.aux( path ) } ) )
+                fmt::format( "write `{}< ... >::{}`", name, interner_.text( ast_.name( path ) ) )
             );
 
             return table_.builtin( Type_kind::Error );
@@ -1852,14 +1829,14 @@ Type_id Expressions::qualifier_type( Node_id path, Node_id declaration )
 // the receiver's, and it carries the same bindings.
 Type_id Expressions::infer_static_call( Node_id id, Node_id aggregate )
 {
-    const Node_id   path = ast_.child( id, 0 );
-    const Symbol_id name { ast_.aux( path ) };
+    const Node_id   path = ast_.callee( id );
+    const Symbol_id name = ast_.name( path );
 
     // Even on a failed call the arguments must be typed, or later passes meet untyped nodes and a
     // genuine mistake inside one goes unreported.
     const auto refuse = [&]()
     {
-        for( const Node_id argument : ast_.children( ast_.child( id, 1 ) ) )
+        for( const Node_id argument : ast_.arguments( id ) )
         {
             infer( argument );
         }
@@ -1867,7 +1844,7 @@ Type_id Expressions::infer_static_call( Node_id id, Node_id aggregate )
         return types_.record( id, table_.builtin( Type_kind::Error ) );
     };
 
-    const std::string_view owner  = interner_.text( Symbol_id { ast_.aux( ast_.child( path, 0 ) ) } );
+    const std::string_view owner  = interner_.text( ast_.name( ast_.qualifier( path ) ) );
     const Node_id          method = aggregates_.find_method( aggregate, name );
 
     if( !method.is_valid() && names_constructor( aggregate, name ) )
@@ -1922,8 +1899,8 @@ Type_id Expressions::infer_static_call( Node_id id, Node_id aggregate )
 
 Type_id Expressions::infer_variant_construction( Node_id id )
 {
-    const Node_id                  path      = ast_.child( id, 0 );
-    const std::span<const Node_id> arguments = ast_.children( ast_.child( id, 1 ) );
+    const Node_id                  path      = ast_.callee( id );
+    const std::span<const Node_id> arguments = ast_.arguments( id );
 
     // Tells infer_path the arguments account for the payload, so the bare path is not incomplete.
     naming_variant_      = true;
@@ -1952,13 +1929,13 @@ Type_id Expressions::infer_variant_construction( Node_id id )
     }
 
     const Node_id                  variant = variants[static_cast<std::size_t>( ordinal->magnitude )];
-    const std::span<const Node_id> payload = ast_.children( variant );
+    const std::span<const Node_id> payload = ast_.payload( variant );
 
     if( payload.empty() )
     {
         reporter_.error_at(
             ast_.span( id ),
-            fmt::format( "`{}` carries no payload", interner_.text( Symbol_id { ast_.aux( variant ) } ) ),
+            fmt::format( "`{}` carries no payload", interner_.text( ast_.name( variant ) ) ),
             "write it without arguments"
         );
     }
@@ -1966,10 +1943,10 @@ Type_id Expressions::infer_variant_construction( Node_id id )
     else if( payload.size() != arguments.size() && !ast_.broken( variant ) )
     {
         reporter_.error_at(
-            ast_.span( ast_.child( id, 1 ) ),
+            ast_.span( ast_.arg_list( id ) ),
             fmt::format(
                 "`{}` carries {} value{}, but {} {} given",
-                interner_.text( Symbol_id { ast_.aux( variant ) } ),
+                interner_.text( ast_.name( variant ) ),
                 payload.size(),
                 payload.size() == 1 ? "" : "s",
                 arguments.size(),
@@ -1997,9 +1974,9 @@ Type_id Expressions::infer_variant_construction( Node_id id )
 
 Type_id Expressions::infer_conditional( Node_id id )
 {
-    check_condition( ast_.child( id, 0 ) );
-    const Type_id then_type = infer( ast_.child( id, 1 ) );
-    const Type_id else_type = infer( ast_.child( id, 2 ) );
+    check_condition( ast_.condition( id ) );
+    const Type_id then_type = infer( ast_.then_branch( id ) );
+    const Type_id else_type = infer( ast_.else_branch( id ) );
 
     if( table_.is_error( then_type ) || table_.is_error( else_type ) )
     {
@@ -2013,7 +1990,7 @@ Type_id Expressions::infer_conditional( Node_id id )
 
 Type_id Expressions::infer_alloc( Node_id id )
 {
-    const Type_id element = annotations_.type_of( ast_.child( id, 0 ) );
+    const Type_id element = annotations_.type_of( ast_.written_type( id ) );
 
     if( table_.is_error( element ) )
     {
@@ -2034,14 +2011,14 @@ Type_id Expressions::infer_alloc( Node_id id )
 
     Type_id count {};
 
-    if( ast_.children( id ).size() > 1 && ast_.child( id, 1 ).is_valid() )
+    if( ast_.count( id ).is_valid() )
     {
-        count = infer( ast_.child( id, 1 ) );
+        count = infer( ast_.count( id ) );
 
         if( !table_.is_integer( count ) && !table_.is_error( count ) )
         {
             reporter_.error_at(
-                ast_.span( ast_.child( id, 1 ) ),
+                ast_.span( ast_.count( id ) ),
                 fmt::format( "`alloc` needs an integer count, but got `{}`", table_.name( count ) )
             );
             return types_.record( id, table_.builtin( Type_kind::Error ) );
@@ -2053,7 +2030,7 @@ Type_id Expressions::infer_alloc( Node_id id )
 
 Type_id Expressions::infer_free( Node_id id )
 {
-    const Type_id operand = infer( ast_.child( id, 0 ) );
+    const Type_id operand = infer( ast_.pointer( id ) );
 
     if( table_.is_error( operand ) )
     {
@@ -2087,8 +2064,8 @@ Type_id Expressions::infer_free( Node_id id )
 
 Type_id Expressions::infer_destroy( Node_id id )
 {
-    const Type_id pointer = infer( ast_.child( id, 0 ) );                              // the pointer
-    const Type_id element = check( ast_.child( id, 1 ), table_.integer( 64, false ) ); // the count
+    const Type_id pointer = infer( ast_.pointer( id ) );
+    const Type_id element = check( ast_.count( id ), table_.integer( 64, false ) );
 
     require_unsafe( id, "`destroy` needs an `unsafe` block", "the compiler cannot tell which slots hold a value" );
 
@@ -2100,7 +2077,7 @@ Type_id Expressions::infer_destroy( Node_id id )
     if( !table_.is_many_pointer( pointer ) )
     {
         reporter_.error_at(
-            ast_.span( ast_.child( id, 0 ) ),
+            ast_.span( ast_.pointer( id ) ),
             fmt::format( "`destroy` needs a `T[*]`, but got `{}`", table_.name( pointer ) ),
             "it ends the values in a run of slots, counted from this pointer"
         );
@@ -2110,7 +2087,7 @@ Type_id Expressions::infer_destroy( Node_id id )
     if( table_.points_to_const( pointer ) )
     {
         reporter_.error_at(
-            ast_.span( ast_.child( id, 0 ) ),
+            ast_.span( ast_.pointer( id ) ),
             fmt::format( "`destroy` cannot end a `{}`, which points to `const`", table_.name( pointer ) )
         );
         return types_.record( id, table_.builtin( Type_kind::Error ) );
@@ -2121,14 +2098,14 @@ Type_id Expressions::infer_destroy( Node_id id )
 
 Type_id Expressions::infer_index( Node_id id )
 {
-    const Type_id base = infer( ast_.child( id, 0 ) );
+    const Type_id base = infer( ast_.object( id ) );
 
     if( table_.is_struct( base ) )
     {
         return infer_index_operator( id, base );
     }
 
-    const Type_id index = infer( ast_.child( id, 1 ) );
+    const Type_id index = infer( ast_.index( id ) );
 
     if( table_.is_error( base ) || table_.is_error( index ) )
     {
@@ -2142,8 +2119,7 @@ Type_id Expressions::infer_index( Node_id id )
         if( !table_.is_integer( index ) )
         {
             reporter_.error_at(
-                ast_.span( ast_.child( id, 1 ) ),
-                fmt::format( "an index must be an integer, but got `{}`", table_.name( index ) )
+                ast_.span( ast_.index( id ) ), fmt::format( "an index must be an integer, but got `{}`", table_.name( index ) )
             );
             return types_.record( id, table_.builtin( Type_kind::Error ) );
         }
@@ -2195,8 +2171,8 @@ bool Expressions::refuses_many_member( Node_id field_expr, Type_id base_type )
         "`.` does not reach through a many-item pointer",
         fmt::format(
             "write `{}[0].{}`",
-            reporter_.text( ast_.span( ast_.child( field_expr, 0 ) ) ),
-            interner_.text( Symbol_id { ast_.aux( field_expr ) } )
+            reporter_.text( ast_.span( ast_.object( field_expr ) ) ),
+            interner_.text( ast_.name( field_expr ) )
         )
     );
     return true;
@@ -2226,22 +2202,19 @@ bool Expressions::takes_context( Node_id id ) const
         return true;
     }
 
-    if( ast_.kind( id ) == Node_kind::Binary_expr &&
-        operators_.result_source( static_cast<Token_kind>( ast_.aux( id ) ) ) == Result_source::Operands &&
-        takes_context( ast_.child( id, 0 ) ) && takes_context( ast_.child( id, 1 ) ) )
+    if( ast_.kind( id ) == Node_kind::Binary_expr && operators_.result_source( ast_.op( id ) ) == Result_source::Operands &&
+        takes_context( ast_.lhs( id ) ) && takes_context( ast_.rhs( id ) ) )
     {
         return true;
     }
 
-    if( ast_.kind( id ) == Node_kind::Binary_expr &&
-        operators_.result_source( static_cast<Token_kind>( ast_.aux( id ) ) ) == Result_source::Left_operand &&
-        takes_context( ast_.child( id, 0 ) ) )
+    if( ast_.kind( id ) == Node_kind::Binary_expr && operators_.result_source( ast_.op( id ) ) == Result_source::Left_operand &&
+        takes_context( ast_.lhs( id ) ) )
     {
         return true;
     }
 
-    if( ast_.kind( id ) == Node_kind::Unary_expr && static_cast<Token_kind>( ast_.aux( id ) ) == Token_kind::Minus &&
-        takes_context( ast_.child( id, 0 ) ) )
+    if( ast_.kind( id ) == Node_kind::Unary_expr && ast_.op( id ) == Token_kind::Minus && takes_context( ast_.operand( id ) ) )
     {
         return true;
     }
@@ -2251,8 +2224,8 @@ bool Expressions::takes_context( Node_id id ) const
 
 Type_id Expressions::infer_path( Node_id id )
 {
-    const Node_id   qualifier = ast_.child( id, 0 );
-    const Symbol_id name { ast_.aux( id ) };
+    const Node_id   qualifier = ast_.qualifier( id );
+    const Symbol_id name      = ast_.name( id );
 
     const Node_id decl = qualifier_declaration( id );
 
@@ -2268,7 +2241,7 @@ Type_id Expressions::infer_path( Node_id id )
         return types_.record( id, table_.builtin( Type_kind::Error ) );
     }
 
-    const std::string_view owner = interner_.text( Symbol_id { ast_.aux( qualifier ) } );
+    const std::string_view owner = interner_.text( ast_.name( qualifier ) );
 
     // M7 widened what `::` reaches, and this is where the two meet: an `enum` has variants, and a
     // struct or class has static methods. Nothing else has either.
@@ -2330,7 +2303,7 @@ Type_id Expressions::infer_path( Node_id id )
 
     for( std::size_t i = 0; i < variants.size(); ++i )
     {
-        if( Symbol_id { ast_.aux( variants[i] ) } != name )
+        if( ast_.name( variants[i] ) != name )
         {
             continue;
         }
@@ -2346,7 +2319,7 @@ Type_id Expressions::infer_path( Node_id id )
         // Naming the variant is a different thing from producing one, and the three places that do
         // it set the flag first: a construction supplies the payload, a pattern destructures it,
         // and a bare `case` label ignores it.
-        if( !ast_.children( variants[i] ).empty() && !naming_variant_ )
+        if( !ast_.payload( variants[i] ).empty() && !naming_variant_ )
         {
             reporter_.error_at(
                 ast_.span( id ),
@@ -2377,8 +2350,7 @@ Type_id Expressions::infer_path( Node_id id )
     }
 
     reporter_.error_at(
-        ast_.span( id ),
-        fmt::format( "`{}` has no variant `{}`", interner_.text( Symbol_id { ast_.aux( decl ) } ), interner_.text( name ) )
+        ast_.span( id ), fmt::format( "`{}` has no variant `{}`", interner_.text( ast_.name( decl ) ), interner_.text( name ) )
     );
 
     return types_.record( id, table_.builtin( Type_kind::Error ) );
@@ -2386,7 +2358,7 @@ Type_id Expressions::infer_path( Node_id id )
 
 Type_id Expressions::infer_field( Node_id id )
 {
-    const Node_id base      = ast_.child( id, 0 );
+    const Node_id base      = ast_.object( id );
     const Type_id base_type = infer( base );
 
     if( table_.is_error( base_type ) )
@@ -2408,7 +2380,7 @@ Type_id Expressions::infer_field( Node_id id )
         return types_.record( id, table_.builtin( Type_kind::Error ) );
     }
 
-    const Node_id field_decl = aggregates_.find_field( object_type, Symbol_id { ast_.aux( id ) } );
+    const Node_id field_decl = aggregates_.find_field( object_type, ast_.name( id ) );
     if( !field_decl.is_valid() )
     {
         const Node_id object_decl       = table_.get( object_type ).declaration;
@@ -2418,7 +2390,7 @@ Type_id Expressions::infer_field( Node_id id )
         {
             for( const Node_id member : ast_.members( object_decl ) )
             {
-                if( member.is_valid() && ast_.kind( member ) == Node_kind::Var_decl && ast_.aux( member ) == ast_.aux( id ) )
+                if( member.is_valid() && ast_.kind( member ) == Node_kind::Var_decl && ast_.name( member ) == ast_.name( id ) )
                 {
                     is_static_instead = true;
                     break;
@@ -2432,19 +2404,17 @@ Type_id Expressions::infer_field( Node_id id )
                 ast_.span( id ),
                 fmt::format(
                     "`{}` is static, so it belongs to `{}` rather than to one object",
-                    interner_.text( Symbol_id { ast_.aux( id ) } ),
+                    interner_.text( ast_.name( id ) ),
                     table_.name( object_type )
                 ),
-                fmt::format( "write `{}::{}`", table_.name( object_type ), interner_.text( Symbol_id { ast_.aux( id ) } ) )
+                fmt::format( "write `{}::{}`", table_.name( object_type ), interner_.text( ast_.name( id ) ) )
             );
         }
         else
         {
             reporter_.error_at(
                 ast_.span( id ),
-                fmt::format(
-                    "`{}` has no field `{}`", table_.name( object_type ), interner_.text( Symbol_id { ast_.aux( id ) } )
-                )
+                fmt::format( "`{}` has no field `{}`", table_.name( object_type ), interner_.text( ast_.name( id ) ) )
             );
         }
 
@@ -2483,7 +2453,7 @@ Type_id Expressions::infer_string_literal( Node_id id )
 // was expected at all, or what was expected belongs to another declaration entirely.
 Type_id Expressions::no_instance_named( Span at, Node_id declaration )
 {
-    const std::string_view name = interner_.text( Symbol_id { ast_.aux( declaration ) } );
+    const std::string_view name = interner_.text( ast_.name( declaration ) );
 
     // An error expected here was reported where it failed.
     if( expected_.is_valid() && table_.is_error( expected_ ) )
@@ -2521,7 +2491,7 @@ Type_id Expressions::infer_struct_literal( Node_id id )
     {
         for( const Node_id init : ast_.initialisers( id ) )
         {
-            absorb( ast_.child( init, 0 ) ); // type the values anyway
+            absorb( ast_.value( init ) ); // type the values anyway
         }
 
         return types_.record( id, error );
@@ -2532,7 +2502,7 @@ Type_id Expressions::infer_struct_literal( Node_id id )
     // class exception was standing in for until constructors existed.
     if( aggregates_.find_member( decl, Node_kind::Constructor_decl ).is_valid() )
     {
-        const std::string_view name = interner_.text( Symbol_id { ast_.aux( decl ) } );
+        const std::string_view name = interner_.text( ast_.name( decl ) );
 
         reporter_.error_at(
             ast_.type_name_span( id ),
@@ -2542,7 +2512,7 @@ Type_id Expressions::infer_struct_literal( Node_id id )
 
         for( const Node_id init : ast_.initialisers( id ) )
         {
-            absorb( ast_.child( init, 0 ) );
+            absorb( ast_.value( init ) );
         }
 
         // The declared type rather than the error type: the mistake is how it was built, not what
@@ -2564,7 +2534,7 @@ Type_id Expressions::infer_struct_literal( Node_id id )
         }
     }
 
-    const std::string_view struct_name = interner_.text( Symbol_id { ast_.aux( decl ) } );
+    const std::string_view struct_name = interner_.text( ast_.name( decl ) );
 
     // Every field is written by a literal, named or not, so one private field refuses the whole
     // spelling rather than the one initialiser that reaches it. The first is reported and the rest
@@ -2579,14 +2549,14 @@ Type_id Expressions::infer_struct_literal( Node_id id )
                 fmt::format(
                     "`{}` keeps `{}` private, so it cannot be built from a literal",
                     struct_name,
-                    interner_.text( Symbol_id { ast_.aux( field ) } )
+                    interner_.text( ast_.name( field ) )
                 ),
                 "give it a constructor, and build it by calling that"
             );
 
             for( const Node_id init : initialisers )
             {
-                absorb( ast_.child( init, 0 ) );
+                absorb( ast_.value( init ) );
             }
 
             return types_.record( id, table_.builtin( Type_kind::Error ) );
@@ -2606,7 +2576,7 @@ Type_id Expressions::infer_struct_literal( Node_id id )
 
         for( const Node_id init : initialisers )
         {
-            absorb( ast_.child( init, 0 ) ); // type the values anyway
+            absorb( ast_.value( init ) ); // type the values anyway
         }
 
         return types_.record( id, poison );
@@ -2618,11 +2588,11 @@ Type_id Expressions::infer_struct_literal( Node_id id )
     // problem rather than a parser's.
     std::size_t named = 0;
     Node_id     differs; // the first initialiser that breaks the convention the first one set
-    const bool  named_first = !initialisers.empty() && Symbol_id { ast_.aux( initialisers.front() ) }.is_valid();
+    const bool  named_first = !initialisers.empty() && ast_.name( initialisers.front() ).is_valid();
 
     for( const Node_id init : initialisers )
     {
-        const bool is_named = Symbol_id { ast_.aux( init ) }.is_valid();
+        const bool is_named = ast_.name( init ).is_valid();
         named += is_named ? 1 : 0;
 
         if( !differs.is_valid() && is_named != named_first )
@@ -2671,12 +2641,12 @@ Type_id Expressions::infer_struct_literal( Node_id id )
         for( std::size_t i = 0; i < shared; ++i )
         {
             // check, never infer - `Point { 1, 2 }` has to let those literals become f64.
-            check( ast_.child( initialisers[i], 0 ), aggregates_.field_type( result, fields[i] ) );
+            check( ast_.value( initialisers[i] ), aggregates_.field_type( result, fields[i] ) );
         }
 
         for( std::size_t i = shared; i < initialisers.size(); ++i )
         {
-            infer( ast_.child( initialisers[i], 0 ) );
+            infer( ast_.value( initialisers[i] ) );
         }
 
         return types_.record( id, result );
@@ -2686,8 +2656,8 @@ Type_id Expressions::infer_struct_literal( Node_id id )
 
     for( const Node_id init : initialisers )
     {
-        const Symbol_id name { ast_.aux( init ) };
-        const Node_id   value = ast_.child( init, 0 );
+        const Symbol_id name  = ast_.name( init );
+        const Node_id   value = ast_.value( init );
 
         if( !name.is_valid() )
         {
@@ -2718,7 +2688,7 @@ Type_id Expressions::infer_struct_literal( Node_id id )
     // say so once rather than over three compiles. A mixed literal's unnamed one is the same mistake.
     for( const Node_id field : mixed ? std::span<const Node_id> {} : std::span<const Node_id>( fields ) )
     {
-        const Symbol_id name { ast_.aux( field ) };
+        const Symbol_id name = ast_.name( field );
 
         if( name.is_valid() && seen.find( name.v ) == seen.end() )
         {
@@ -2733,9 +2703,9 @@ Type_id Expressions::infer_struct_literal( Node_id id )
 
 Type_id Expressions::infer_cast( Node_id id )
 {
-    const bool    is_cast = static_cast<Keyword>( ast_.aux( id ) ) == Keyword::Cast;
-    const Type_id target  = annotations_.type_of( ast_.child( id, 0 ) );
-    const Node_id operand = ast_.child( id, 1 );
+    const bool    is_cast = ast_.keyword( id ) == Keyword::Cast;
+    const Type_id target  = annotations_.type_of( ast_.written_type( id ) );
+    const Node_id operand = ast_.operand( id );
     const Type_id error   = table_.builtin( Type_kind::Error );
 
     // A literal has a value and no type, so `cast` is the context that gives it one:
@@ -2786,8 +2756,8 @@ Type_id Expressions::infer_cast( Node_id id )
 
 Type_id Expressions::infer_marker( Node_id id )
 {
-    const Keyword marker  = static_cast<Keyword>( ast_.aux( id ) );
-    const Node_id operand = ast_.child( id, 0 );
+    const Keyword marker  = ast_.keyword( id );
+    const Node_id operand = ast_.operand( id );
 
     // `out` assigns through the place, so it needs one, and one that may be written. Same test as
     // `ref` for the same reason: what may be assigned is exactly what may be lent for assignment.
@@ -2878,9 +2848,7 @@ Type_id Expressions::infer_marker( Node_id id )
             ast_.span( operand ),
             "cannot move out of a borrow",
             fmt::format(
-                "take it as `move {} {}` to own it",
-                table_.name( types_.type_of( decl ) ),
-                interner_.text( Symbol_id { ast_.aux( decl ) } )
+                "take it as `move {} {}` to own it", table_.name( types_.type_of( decl ) ), interner_.text( ast_.name( decl ) )
             )
         );
         return types_.record( id, table_.builtin( Type_kind::Error ) );
@@ -2890,16 +2858,14 @@ Type_id Expressions::infer_marker( Node_id id )
     {
         std::string help;
 
-        if( ast_.kind( decl ) == Node_kind::Param_decl && ast_.aux( decl ) == Interner::keyword( Keyword::This ).v )
+        if( ast_.kind( decl ) == Node_kind::Param_decl && ast_.name( decl ) == Interner::keyword( Keyword::This ) )
         {
             help = "a method borrows its object; move the object where the method is called instead";
         }
         else if( ast_.kind( decl ) == Node_kind::Param_decl )
         {
             help = fmt::format(
-                "take it as `move {} {}` to own it",
-                table_.name( types_.type_of( decl ) ),
-                interner_.text( Symbol_id { ast_.aux( decl ) } )
+                "take it as `move {} {}` to own it", table_.name( types_.type_of( decl ) ), interner_.text( ast_.name( decl ) )
             );
         }
         else if( ast_.kind( decl ) == Node_kind::Var_decl )
@@ -2935,7 +2901,7 @@ Type_id Expressions::infer_marker( Node_id id )
 
     // Same reason as the field above: `*p` names something this function does not own, so moving
     // out of it leaves a hole nothing tracks.
-    if( ast_.kind( operand ) == Node_kind::Unary_expr && static_cast<Token_kind>( ast_.aux( operand ) ) == Token_kind::Star )
+    if( ast_.kind( operand ) == Node_kind::Unary_expr && ast_.op( operand ) == Token_kind::Star )
     {
         reporter_.error_at( ast_.span( operand ), "a pointee cannot be moved", "move the variable it points into instead" );
         return types_.record( id, table_.builtin( Type_kind::Error ) );
@@ -2987,11 +2953,11 @@ Type_id Expressions::check( Node_id id, Type_id expected )
 
         // `-( 0 - 3000000000 )`: the expectation goes through to the operation, and the minus keeps
         // its signed-only rule.
-        if( static_cast<Token_kind>( ast_.aux( id ) ) == Token_kind::Minus && takes_context( ast_.child( id, 0 ) ) )
+        if( ast_.op( id ) == Token_kind::Minus && takes_context( ast_.operand( id ) ) )
         {
             const std::size_t before = reporter_.error_count();
 
-            check( ast_.child( id, 0 ), expected );
+            check( ast_.operand( id ), expected );
 
             if( reporter_.error_count() != before )
             {
@@ -3018,14 +2984,14 @@ Type_id Expressions::check( Node_id id, Type_id expected )
         //
         // Only for operators whose result comes from their operands: a comparison yields bool
         // whatever it is given, and pushing the expectation into it would be nonsense.
-        const Result_source source = operators_.result_source( static_cast<Token_kind>( ast_.aux( id ) ) );
+        const Result_source source = operators_.result_source( ast_.op( id ) );
 
-        if( source == Result_source::Operands && takes_context( ast_.child( id, 0 ) ) && takes_context( ast_.child( id, 1 ) ) )
+        if( source == Result_source::Operands && takes_context( ast_.lhs( id ) ) && takes_context( ast_.rhs( id ) ) )
         {
             const std::size_t before = reporter_.error_count();
 
-            check( ast_.child( id, 0 ), expected );
-            check( ast_.child( id, 1 ), expected );
+            check( ast_.lhs( id ), expected );
+            check( ast_.rhs( id ), expected );
 
             // An operand that did not fit has already been reported, and it is the cause. Folding
             // the whole thing would say the same thing again with a different number: `i8 d = 0 -
@@ -3041,12 +3007,12 @@ Type_id Expressions::check( Node_id id, Type_id expected )
         // A shift's result type is its *left* operand's (§6.4), so that is the only operand an
         // expectation flows into - the count is a width, not a value in the same type. Without
         // this `u32 d = 1 << 4;` settles the literal on i32 and is then refused for being one.
-        if( source == Result_source::Left_operand && takes_context( ast_.child( id, 0 ) ) )
+        if( source == Result_source::Left_operand && takes_context( ast_.lhs( id ) ) )
         {
             const std::size_t before = reporter_.error_count();
 
-            check( ast_.child( id, 0 ), expected );
-            infer( ast_.child( id, 1 ) );
+            check( ast_.lhs( id ), expected );
+            infer( ast_.rhs( id ) );
 
             if( reporter_.error_count() != before )
             {
@@ -3060,9 +3026,9 @@ Type_id Expressions::check( Node_id id, Type_id expected )
     }
     case Node_kind::Conditional_expr:
     {
-        check_condition( ast_.child( id, 0 ) );
-        check( ast_.child( id, 1 ), expected );
-        check( ast_.child( id, 2 ), expected );
+        check_condition( ast_.condition( id ) );
+        check( ast_.then_branch( id ), expected );
+        check( ast_.else_branch( id ), expected );
         return types_.record( id, expected );
     }
 

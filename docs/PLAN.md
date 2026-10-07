@@ -144,6 +144,9 @@ We use C++20 in a **deliberately restrained subset**:
   definitions span translation units; Keel has no form for that, so a compiler written that way
   could not be translated when it compiles itself. When a class is too large, split the class, not
   the file (§3.2).
+- **No operators on an enum.** Keel has no free operators (D33), no enum-to-integer conversion
+  (D30) and no methods on an enum. A set of `Node_kind`s is a named predicate such as
+  `is_function_like`, not `A | B`.
 
 Two reasons for the restraint: it is the correct style for compilers, and every
 line here will eventually be rewritten in Keel during bootstrap. Do not lean on
@@ -1130,10 +1133,10 @@ item leaves this list for `.claude/LOG.md`, with what it cost.
 ### Readability work (proposed 2026-10-07, not yet agreed)
 
 From `.claude/READABILITY_AUDIT.md`, chosen by what M9 to M9.6 will edit. Done: R19's table, R7's
-and R14's small fixes, and `node.h`'s shape table. **Before M9**: named accessors and typed `aux`
-readers on `Ast`, written in the shape table's words, migrating `ir/lower.cpp` and
-`sema/expressions.cpp` first (R1, with
-R20's `poison` and R24's namespaces in the files it touches), one take-and-clear discipline for
+and R14's small fixes, `node.h`'s shape table, and R1: `Ast`'s typed `aux` readers and named-child
+accessors, which every pass reads through (only `Field_type` and the tests stay positional).
+**Before M9**: R20's `poison` and R24's namespaces in `ir/lower.cpp` and `sema/expressions.cpp`,
+one take-and-clear discipline for
 `Expressions::expected_` (R2), and `successors()` moved into `kir.h` (R17). **With M9**: splitting
 `Annotations::type_of` and renaming it `resolve` (R13), `lower_switch`'s arm extraction (R14), and
 monomorphisation out of `lower()` into `ir/instances` (R9, then R22). **At M9.1**: the dataflow

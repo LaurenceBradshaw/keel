@@ -231,7 +231,7 @@ Binary_result Operators::result_of_binary(
                                        table_.name( parameter ),
                                        table_.name( other ),
                                        table_.name( parameter ),
-                                       interner_.text( Symbol_id { ast_.aux( current_function ) } )
+                                       interner_.text( ast_.name( current_function ) )
                                    )
                                  : fmt::format(
                                        "`{}` needs `{}`; write `where {} : {}` on `{}`",
@@ -239,7 +239,7 @@ Binary_result Operators::result_of_binary(
                                        name_of_bound( required ),
                                        table_.name( parameter ),
                                        name_of_bound( required ),
-                                       interner_.text( Symbol_id { ast_.aux( current_function ) } )
+                                       interner_.text( ast_.name( current_function ) )
                                    )
             );
         }

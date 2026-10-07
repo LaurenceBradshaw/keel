@@ -49,7 +49,7 @@ struct Printer
 
     std::string_view name_of( Node_id declaration ) const
     {
-        const Symbol_id name { ast.aux( declaration ) };
+        const Symbol_id name = ast.name( declaration );
 
         return name.is_valid() ? interner.text( name ) : "<unnamed>";
     }

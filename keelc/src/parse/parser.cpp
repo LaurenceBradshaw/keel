@@ -1709,7 +1709,7 @@ Node_id Parser::parse_enum_decl()
 
         const Node_id variant = parse_variant_decl();
 
-        if( ast_.aux( variant ) != k_invalid_symbol ) // Missing name
+        if( ast_.name( variant ).is_valid() ) // Missing name
         {
             members.push_back( variant );
         }
@@ -2206,7 +2206,7 @@ Node_id Parser::parse_type()
                     "`const` is written twice",
                     fmt::format(
                         "both apply to `{}`; a `const` after the `*` makes the pointer `const`",
-                        sm_.text( ast_.span( ast_.child( type, 0 ) ) )
+                        sm_.text( ast_.span( ast_.inner_type( type ) ) )
                     )
                 );
                 continue;
@@ -2964,17 +2964,16 @@ Node_id Parser::parse_expression_stmt( bool consume_semicolon )
         // the type parser: the first is a multiplication under D17, the second a bitwise and now
         // that D32 has taken `&` out of type position. Without this both land on the generic "no
         // effect" message, which explains nothing.
-        const Token_kind op =
-            ast_.kind( expr ) == Node_kind::Binary_expr ? static_cast<Token_kind>( ast_.aux( expr ) ) : Token_kind::Unknown;
+        const Token_kind op = ast_.kind( expr ) == Node_kind::Binary_expr ? ast_.op( expr ) : Token_kind::Unknown;
 
         const bool looks_like_a_declaration = ( op == Token_kind::Star || op == Token_kind::Amp ) &&
-                                              ast_.kind( ast_.child( expr, 0 ) ) == Node_kind::Name_expr &&
-                                              ast_.kind( ast_.child( expr, 1 ) ) == Node_kind::Name_expr;
+                                              ast_.kind( ast_.lhs( expr ) ) == Node_kind::Name_expr &&
+                                              ast_.kind( ast_.rhs( expr ) ) == Node_kind::Name_expr;
 
         if( looks_like_a_declaration )
         {
-            const std::string_view type = sm_.text( ast_.span( ast_.child( expr, 0 ) ) );
-            const std::string_view name = sm_.text( ast_.span( ast_.child( expr, 1 ) ) );
+            const std::string_view type = sm_.text( ast_.span( ast_.lhs( expr ) ) );
+            const std::string_view name = sm_.text( ast_.span( ast_.rhs( expr ) ) );
 
             // Different rules, so different messages: `*` is a spacing mistake, `&` is a spelling
             // that no longer exists.
@@ -3185,11 +3184,11 @@ Node_id Parser::parse_switch_stmt()
                 // Converting here is what keeps the bindings away from the resolver: as Name_exprs
                 // they would be looked up, and it would report about variables that do not exist
                 // instead of about the pattern.
-                if( ast_.kind( lower ) == Node_kind::Call_expr && ast_.kind( ast_.child( lower, 0 ) ) == Node_kind::Path_expr )
+                if( ast_.kind( lower ) == Node_kind::Call_expr && ast_.kind( ast_.callee( lower ) ) == Node_kind::Path_expr )
                 {
-                    std::vector<Node_id> parts { ast_.child( lower, 0 ) };
+                    std::vector<Node_id> parts { ast_.callee( lower ) };
 
-                    for( const Node_id argument : ast_.children( ast_.child( lower, 1 ) ) )
+                    for( const Node_id argument : ast_.arguments( lower ) )
                     {
                         if( ast_.kind( argument ) != Node_kind::Name_expr )
                         {
@@ -3302,8 +3301,7 @@ Node_id Parser::generic_self( Node_id named, Node_id type_params, Span span )
 {
     std::vector<Node_id> arguments;
 
-    // The list holds where clauses too, and a bound is not an argument.
-    for( const Node_id type_param : ast_.children( type_params ) )
+    for( const Node_id type_param : ast_.type_param_decls( type_params ) )
     {
         if( ast_.kind( type_param ) != Node_kind::Type_param_decl )
         {
@@ -3592,9 +3590,9 @@ Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing, bool incre
             conflicting = enclosing;
         }
         else if( ast_.kind( left ) == Node_kind::Binary_expr && !is_parenthesised( left ) &&
-                 needs_parentheses( static_cast<Token_kind>( ast_.aux( left ) ), peek().kind ) )
+                 needs_parentheses( ast_.op( left ), peek().kind ) )
         {
-            conflicting = static_cast<Token_kind>( ast_.aux( left ) );
+            conflicting = ast_.op( left );
         }
 
         if( conflicting != Token_kind::End_of_file && !ast_.broken( left ) )

@@ -282,7 +282,7 @@ void Bounds::check_bounds( Node_id parameter, Span at, Type_id argument, std::st
                 "add `{}` to the `where` clause for `{}` on `{}`",
                 known.name,
                 table_.name( argument ),
-                interner_.text( Symbol_id { ast_.aux( owner ) } )
+                interner_.text( ast_.name( owner ) )
             );
         }
 
@@ -294,7 +294,7 @@ void Bounds::check_bounds( Node_id parameter, Span at, Type_id argument, std::st
                 forwarded ? "does not promise" : "is not",
                 known.name,
                 callee,
-                interner_.text( Symbol_id { ast_.aux( parameter ) } )
+                interner_.text( ast_.name( parameter ) )
             ),
             std::move( help )
         );
@@ -429,7 +429,7 @@ Type_id Bounds::narrowing_witness( Type_id from, Type_id to ) const
 
 Type_id Bounds::type_the_literal_overflows( Node_id literal, bool negative, Bound_set bounds ) const
 {
-    const Literal_id value { ast_.aux( literal ) };
+    const Literal_id value = ast_.literal( literal );
 
     // A literal the lexer could not scan has no value recorded. It reported there.
     if( !value.is_valid() )
@@ -486,45 +486,43 @@ void Bounds::declare_type_parameters( Node_id declaration, Node_id list )
         return;
     }
 
-    const std::span<const Node_id> type_param_list = ast_.children( list );
+    const std::span<const Node_id> type_params = ast_.type_param_decls( list );
 
-    for( const Node_id type_param : type_param_list )
+    for( const Node_id type_param : type_params )
     {
         if( ast_.kind( type_param ) != Node_kind::Type_param_decl )
         {
             continue;
         }
 
-        types_.record( type_param, table_.parameter( type_param, interner_.text( Symbol_id { ast_.aux( type_param ) } ) ) );
+        types_.record( type_param, table_.parameter( type_param, interner_.text( ast_.name( type_param ) ) ) );
         owner_of_.emplace( type_param.v, declaration );
     }
 
-    for( const Node_id where_clause : type_param_list )
+    for( const Node_id where_clause : ast_.where_clauses( list ) )
     {
         if( ast_.kind( where_clause ) != Node_kind::Where_clause )
         {
             continue;
         }
 
-        const Symbol_id subject_name = Symbol_id { ast_.aux( where_clause ) };
+        const Symbol_id subject_name = ast_.name( where_clause );
 
         const auto it = std::find_if(
-            type_param_list.begin(),
-            type_param_list.end(),
-            [&]( const Node_id type_param ) {
-                return ast_.kind( type_param ) == Node_kind::Type_param_decl &&
-                       Symbol_id { ast_.aux( type_param ) } == subject_name;
-            }
+            type_params.begin(),
+            type_params.end(),
+            [&]( const Node_id type_param )
+            { return ast_.kind( type_param ) == Node_kind::Type_param_decl && ast_.name( type_param ) == subject_name; }
         );
 
-        if( it == type_param_list.end() )
+        if( it == type_params.end() )
         {
             reporter_.error_at(
                 ast_.span( where_clause ),
                 fmt::format(
                     "`{}` is not a type parameter of `{}`",
                     interner_.text( subject_name ),
-                    interner_.text( Symbol_id { ast_.aux( declaration ) } )
+                    interner_.text( ast_.name( declaration ) )
                 )
             );
             continue;
@@ -542,9 +540,9 @@ void Bounds::declare_type_parameters( Node_id declaration, Node_id list )
         }
 
         Bound_set direct_bounds = 0;
-        for( const Node_id bound_node : ast_.children( where_clause ) )
+        for( const Node_id bound_node : ast_.bounds( where_clause ) )
         {
-            std::string_view     bound_name = interner_.text( Symbol_id { ast_.aux( bound_node ) } );
+            std::string_view     bound_name = interner_.text( ast_.name( bound_node ) );
             std::optional<Bound> bound      = bound_for_name( bound_name );
 
             if( !bound )

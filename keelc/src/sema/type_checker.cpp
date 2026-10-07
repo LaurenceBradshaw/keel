@@ -133,7 +133,7 @@ Types Checker::run()
 {
     types_.size_to( ast_.node_count() );
 
-    for( const Node_id decl : ast_.children( ast_.root() ) )
+    for( const Node_id decl : ast_.declarations( ast_.root() ) )
     {
         const Node_kind kind    = ast_.kind( decl );
         const Symbol_id package = resolution_.package_of( ast_.span( decl ).file );
@@ -181,7 +181,7 @@ bool enum_has_payload( const Ast& ast, Node_id enum_decl )
 {
     for( const Node_id variant : ast.variants( enum_decl ) )
     {
-        if( !ast.children( variant ).empty() )
+        if( !ast.payload( variant ).empty() )
         {
             return true;
         }
@@ -192,11 +192,9 @@ bool enum_has_payload( const Ast& ast, Node_id enum_decl )
 
 Keyword parameter_mode( const Ast& ast, Node_id decl )
 {
-    const Node_id annotation = unwrap_const( ast, ast.child( decl, 0 ) );
+    const Node_id annotation = unwrap_const( ast, ast.declared_type( decl ) );
 
-    return annotation.is_valid() && ast.kind( annotation ) == Node_kind::Mode_type
-               ? static_cast<Keyword>( ast.aux( annotation ) )
-               : Keyword::Count;
+    return annotation.is_valid() && ast.kind( annotation ) == Node_kind::Mode_type ? ast.keyword( annotation ) : Keyword::Count;
 }
 
 Param_mode parameter_mode_of( const Ast& ast, Node_id param )
@@ -233,28 +231,19 @@ Keyword call_marker_of( Param_mode mode )
 
 bool is_ref_parameter( const Ast& ast, Node_id param )
 {
-    // children[0] is invalid for an `auto` local, and for a constructor or destructor, which have
-    // no return type to carry a mode. kind() asserts on an invalid id rather than answering.
-    const Node_id annotation = unwrap_const( ast, ast.child( param, 0 ) );
+    // Invalid for an `auto` local, and for a constructor or destructor, which have no return type
+    // to carry a mode. kind() asserts on an invalid id rather than answering.
+    const Node_id annotation = unwrap_const( ast, ast.declared_type( param ) );
 
-    return annotation.is_valid() && ast.kind( annotation ) == Node_kind::Mode_type &&
-           static_cast<Keyword>( ast.aux( annotation ) ) == Keyword::Ref;
+    return annotation.is_valid() && ast.kind( annotation ) == Node_kind::Mode_type && ast.keyword( annotation ) == Keyword::Ref;
 }
 
 // The type parameters of a declaration, without the `where` clauses that share their list. Four
 // places want exactly this and three of them were counting the clauses.
 std::vector<Node_id> type_parameters( const Ast& ast, Node_id decl )
 {
-    // A non-generic declaration carries the slot with nothing in it, so "no list" is the ordinary
-    // answer rather than a caller's mistake - and every caller would otherwise guard first.
-    if( !decl.is_valid() )
-    {
-        return {};
-    }
-
-    assert( ast.kind( decl ) == Node_kind::Type_param_list );
     std::vector<Node_id> result;
-    for( const Node_id param : ast.children( decl ) )
+    for( const Node_id param : ast.type_param_decls( decl ) )
     {
         if( ast.kind( param ) != Node_kind::Type_param_decl )
         {
@@ -274,7 +263,7 @@ bool is_generic( const Ast& ast, Node_id decl )
 
 bool is_extern( const Ast& ast, Node_id decl )
 {
-    return ast.kind( decl ) == Node_kind::Function_decl && !ast.child( decl, 2 ).is_valid();
+    return ast.kind( decl ) == Node_kind::Function_decl && !ast.body( decl ).is_valid();
 }
 
 // Visibility is one comparison, and `from` is an aggregate declaration rather than the function or
@@ -303,9 +292,7 @@ bool has_receiver( const Ast& ast, Node_id decl )
         return false;
     }
 
-    const std::span<const Node_id> params = ast.children( ast.child( decl, 1 ) );
-
-    return !params.empty() && Symbol_id { ast.aux( params[0] ) } == Interner::keyword( Keyword::This );
+    return ast.explicit_params( decl ).size() != ast.params( decl ).size();
 }
 
 bool is_static_method( const Ast& ast, Node_id method )
@@ -315,7 +302,7 @@ bool is_static_method( const Ast& ast, Node_id method )
 
 bool is_borrowed_binding( const Ast& ast, const Types& types, Node_id decl )
 {
-    const Node_id annotation = ast.child( decl, 0 );
+    const Node_id annotation = ast.declared_type( decl );
 
     // `auto` has no annotation node at all, so guard before asking.
     return annotation.is_valid() && types.type_of( annotation ).is_valid();
@@ -323,8 +310,8 @@ bool is_borrowed_binding( const Ast& ast, const Types& types, Node_id decl )
 
 bool is_const_binding( const Ast& ast, Node_id decl )
 {
-    // Every one of these carries its binding on children[0]: a variable's annotation, a parameter's
-    // type, a function's return type - and a method's, which is why a Method_decl belongs here even
+    // Every one of these has a declared_type: a variable's annotation, a parameter's type, a
+    // function's return type - and a method's, which is why a Method_decl belongs here even
     // though the *receiver's* constness is a different question, which is_const_method asks.
     const bool declares_a_binding =
         decl.is_valid() && ( ast.kind( decl ) == Node_kind::Var_decl || ast.kind( decl ) == Node_kind::Param_decl ||
@@ -335,7 +322,7 @@ bool is_const_binding( const Ast& ast, Node_id decl )
         return false;
     }
 
-    const Node_id annotation = ast.child( decl, 0 );
+    const Node_id annotation = ast.declared_type( decl );
     return annotation.is_valid() && ast.kind( annotation ) == Node_kind::Const_type;
 }
 
@@ -343,7 +330,7 @@ bool is_const_binding( const Ast& ast, Node_id decl )
 bool is_const_field( const Ast& ast, Node_id decl )
 {
     return decl.is_valid() && ast.kind( decl ) == Node_kind::Field_decl &&
-           ast.kind( ast.child( decl, 0 ) ) == Node_kind::Const_type;
+           ast.kind( ast.annotation( decl ) ) == Node_kind::Const_type;
 }
 
 bool is_const_method( const Ast& ast, Node_id method )
@@ -353,12 +340,10 @@ bool is_const_method( const Ast& ast, Node_id method )
         return false;
     }
 
-    // The trailing `const` marks the **receiver**, which the parser wraps as `const ref T` - child
-    // 0 of the method is its return type, which is a different `const` entirely. So this is the
-    // ordinary const-binding question, asked of parameter 0.
-    const std::span<const Node_id> params = ast.children( ast.child( method, 1 ) );
-
-    return has_receiver( ast, method ) && is_const_binding( ast, params[0] );
+    // The trailing `const` marks the **receiver**, which the parser wraps as `const ref T` - the
+    // method's return type is a different `const` entirely. So this is the ordinary const-binding
+    // question, asked of parameter 0.
+    return has_receiver( ast, method ) && is_const_binding( ast, ast.params( method )[0] );
 }
 
 // What binds an aggregate's type parameters to what it was instantiated at. Empty for a
@@ -498,12 +483,12 @@ bool instance_owns( const Ast& ast, Type_table& table, Type_id instance, std::sp
 
 Type_id binding_type( const Ast& ast, const Types& types, Node_id param )
 {
-    return is_borrowed_binding( ast, types, param ) ? types.type_of( ast.child( param, 0 ) ) : types.type_of( param );
+    return is_borrowed_binding( ast, types, param ) ? types.type_of( ast.declared_type( param ) ) : types.type_of( param );
 }
 
 Node_id unwrap_const( const Ast& ast, Node_id annotation )
 {
-    return annotation.is_valid() && ast.kind( annotation ) == Node_kind::Const_type ? ast.child( annotation, 0 ) : annotation;
+    return annotation.is_valid() && ast.kind( annotation ) == Node_kind::Const_type ? ast.inner_type( annotation ) : annotation;
 }
 
 } // namespace keel

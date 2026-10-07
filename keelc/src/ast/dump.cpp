@@ -32,7 +32,7 @@ std::string aux_note( const Ast& ast, const Interner& interner, Node_id id, std:
     // than <missing>, which would read as one.
     case Node_kind::Field_init:
     {
-        const Symbol_id name { ast.aux( id ) };
+        const Symbol_id name = ast.name( id );
         return name.is_valid() ? fmt::format( "name={}", interner.text( name ) ) : std::string {};
     }
 
@@ -50,7 +50,7 @@ std::string aux_note( const Ast& ast, const Interner& interner, Node_id id, std:
     case Node_kind::Field_expr:
     case Node_kind::Struct_literal:
     {
-        const Symbol_id name { ast.aux( id ) };
+        const Symbol_id name = ast.name( id );
         return name.is_valid() ? fmt::format( "name={}", interner.text( name ) ) : "name=<missing>";
     }
 
@@ -60,12 +60,11 @@ std::string aux_note( const Ast& ast, const Interner& interner, Node_id id, std:
     case Node_kind::Unary_expr:
     case Node_kind::Assign_stmt:
     case Node_kind::Increment_stmt:
-        return fmt::format( "op={}", token_kind_spelling( static_cast<Token_kind>( ast.aux( id ) ) ) );
+        return fmt::format( "op={}", token_kind_spelling( ast.op( id ) ) );
 
     case Node_kind::Marker_expr:
     {
-        std::string_view marker = interner.text( Symbol_id { ast.aux( id ) } );
-        return fmt::format( "marker={}", marker );
+        return fmt::format( "marker={}", interner.text( Interner::keyword( ast.keyword( id ) ) ) );
     }
 
     // A Named_type's span text is normally the name, so saying it twice is noise. It is not always:
@@ -73,20 +72,18 @@ std::string aux_note( const Ast& ast, const Interner& interner, Node_id id, std:
     // there the name is exactly what no span carries - which is what this column is for.
     case Node_kind::Named_type:
     {
-        const std::string_view name = interner.text( Symbol_id { ast.aux( id ) } );
+        const std::string_view name = interner.text( ast.name( id ) );
         return name == span_text ? std::string {} : fmt::format( "name={}", name );
     }
 
     case Node_kind::Mode_type:
     {
-        const std::string_view mode = interner.text( Symbol_id { ast.aux( id ) } );
-        return fmt::format( "mode={}", mode );
+        return fmt::format( "mode={}", interner.text( Interner::keyword( ast.keyword( id ) ) ) );
     }
 
     case Node_kind::Block:
     {
-        const u32 aux = ast.aux( id );
-        return aux == 1 ? "unsafe" : std::string {};
+        return ast.is_unsafe( id ) ? "unsafe" : std::string {};
     }
 
     default:

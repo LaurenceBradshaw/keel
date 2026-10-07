@@ -18,7 +18,7 @@ std::vector<Type_id> parameter_types_vector( const Ast& ast, const Types& types,
 {
     std::vector<Type_id> params;
 
-    for( const Node_id param : ast.children( ast.child( decl, 1 ) ) )
+    for( const Node_id param : ast.params( decl ) )
     {
         // The type is recorded on the Param_decl itself, by the declaration pass - not on the type
         // annotation beneath it, which is never typed.
@@ -34,7 +34,7 @@ std::vector<Mangled_parameter> mangled_parameters( const Ast& ast, const Types& 
 {
     std::vector<Mangled_parameter> params;
 
-    for( const Node_id param : ast.children( ast.child( decl, 1 ) ) )
+    for( const Node_id param : ast.params( decl ) )
     {
         const Keyword mode = is_const_binding( ast, param ) ? Keyword::Count : parameter_mode( ast, param );
 
@@ -119,7 +119,7 @@ std::string Spelling::structure( Type_id type ) const
 
 std::string Spelling::field( Node_id declaration ) const
 {
-    return mangle_local( interner.text( Symbol_id { ast.aux( declaration ) } ), declaration.v );
+    return mangle_local( interner.text( ast.name( declaration ) ), declaration.v );
 }
 
 std::string Spelling::function( Node_id declaration, std::span<const Type_id> type_arguments ) const
@@ -128,7 +128,7 @@ std::string Spelling::function( Node_id declaration, std::span<const Type_id> ty
     // would not link against anything.
     if( is_extern( ast, declaration ) )
     {
-        return std::string( interner.text( Symbol_id { ast.aux( declaration ) } ) );
+        return std::string( interner.text( ast.name( declaration ) ) );
     }
 
     // A destructor's aux is the type's own name, and an instantiation is told apart by its type
@@ -136,7 +136,7 @@ std::string Spelling::function( Node_id declaration, std::span<const Type_id> ty
     if( ast.kind( declaration ) == Node_kind::Destructor_decl )
     {
         return mangle_destructor(
-            package_name( declaration ), interner.text( Symbol_id { ast.aux( declaration ) } ), type_arguments, types.table()
+            package_name( declaration ), interner.text( ast.name( declaration ) ), type_arguments, types.table()
         );
     }
 
@@ -154,11 +154,7 @@ std::string Spelling::function( Node_id declaration, std::span<const Type_id> ty
     if( ast.kind( declaration ) == Node_kind::Constructor_decl )
     {
         return mangle_constructor(
-            package_name( declaration ),
-            interner.text( Symbol_id { ast.aux( declaration ) } ),
-            type_arguments,
-            params,
-            types.table()
+            package_name( declaration ), interner.text( ast.name( declaration ) ), type_arguments, params, types.table()
         );
     }
 
@@ -169,15 +165,15 @@ std::string Spelling::function( Node_id declaration, std::span<const Type_id> ty
         // static method has no receiver to read either from, so the tag is built from the aggregate
         // and every written parameter stays: that is why the tag leads the argtypes rather than
         // sitting on parameter 0, and it is the whole of what M7 asked of this scheme.
-        const bool    receiver = has_receiver( ast, declaration );
-        const Node_id owner    = receiver ? Node_id {} : enclosing_aggregate( ast, declaration );
-        const Type_id enclosing =
-            receiver ? params.front().type
-                     : types.table().structure( owner, type_arguments, interner.text( Symbol_id { ast.aux( owner ) } ) );
+        const bool    receiver  = has_receiver( ast, declaration );
+        const Node_id owner     = receiver ? Node_id {} : enclosing_aggregate( ast, declaration );
+        const Type_id enclosing = receiver
+                                      ? params.front().type
+                                      : types.table().structure( owner, type_arguments, interner.text( ast.name( owner ) ) );
 
         return mangle_function(
             package_name( declaration ),
-            interner.text( Symbol_id { ast.aux( declaration ) } ),
+            interner.text( ast.name( declaration ) ),
             std::span( params ).subspan( receiver ? 1 : 0 ),
             types.table(),
             type_arguments,
@@ -186,11 +182,7 @@ std::string Spelling::function( Node_id declaration, std::span<const Type_id> ty
     }
 
     return mangle_function(
-        package_name( declaration ),
-        interner.text( Symbol_id { ast.aux( declaration ) } ),
-        params,
-        types.table(),
-        type_arguments
+        package_name( declaration ), interner.text( ast.name( declaration ) ), params, types.table(), type_arguments
     );
 }
 
@@ -279,7 +271,7 @@ std::string c_string( std::string_view str )
 std::string Spelling::global_definition( Node_id declaration, Type_id owner ) const
 {
     const Type_id            variable  = types.type_of( declaration );
-    std::string_view         name_text = interner.text( Symbol_id { ast.aux( declaration ) } );
+    std::string_view         name_text = interner.text( ast.name( declaration ) );
     std::span<const Type_id> arguments = owner.is_valid() ? types.table().get( owner ).arguments : std::span<const Type_id>();
     const std::string        name      = mangle_static_field( name_text, declaration.v, arguments, types.table() );
 

@@ -16,7 +16,7 @@ std::vector<Node_id> Aggregates::order_structs()
 {
     std::vector<Node_id> cycle_reported {};
 
-    for( Node_id child : ast_.children( ast_.root() ) )
+    for( Node_id child : ast_.declarations( ast_.root() ) )
     {
         if( ast_.kind( child ) == Node_kind::Error )
         {
@@ -61,13 +61,11 @@ void Aggregates::report_containment_cycle( Node_id decl, const std::vector<Node_
             route += " -> ";
         }
 
-        route += interner_.text( Symbol_id { ast_.aux( node ) } );
+        route += interner_.text( ast_.name( node ) );
     }
 
     reporter_.error_at(
-        ast_.span( decl ),
-        fmt::format( "`{}` contains itself, so it has no size", interner_.text( Symbol_id { ast_.aux( decl ) } ) ),
-        route
+        ast_.span( decl ), fmt::format( "`{}` contains itself, so it has no size", interner_.text( ast_.name( decl ) ) ), route
     );
 }
 
@@ -277,7 +275,7 @@ Node_id Aggregates::find_method( Node_id decl, Symbol_id name ) const
 
     for( const Node_id member : ast_.members( decl ) )
     {
-        if( ast_.kind( member ) == Node_kind::Method_decl && Symbol_id { ast_.aux( member ) } == name )
+        if( ast_.kind( member ) == Node_kind::Method_decl && ast_.name( member ) == name )
         {
             return member;
         }
@@ -300,7 +298,7 @@ Node_id Aggregates::find_field( Type_id type, Symbol_id name ) const
         // The kind matters as much as the name. A constructor's aux is the *type's* name, so
         // without this a search for a field called `B` finds `B`'s constructor - which is how
         // `b.B( 2 )` came to report that `B` was a field of itself.
-        if( ast_.kind( field ) == Node_kind::Field_decl && ast_.aux( field ) == name.v )
+        if( ast_.kind( field ) == Node_kind::Field_decl && ast_.name( field ) == name )
         {
             return field;
         }

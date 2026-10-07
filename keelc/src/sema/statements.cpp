@@ -32,7 +32,7 @@ void Statements::visit( Node_id id )
 
     case Node_kind::Source_file:
     {
-        for( const Node_id child : ast_.children( id ) )
+        for( const Node_id child : ast_.declarations( id ) )
         {
             // A file-scope variable is checked differently from a local: its type came from the
             // signature pass, and its initialiser must be a literal. Everything else - functions
@@ -53,7 +53,7 @@ void Statements::visit( Node_id id )
         return visit_block( id );
 
     case Node_kind::Expr_stmt:
-        expressions_.infer( ast_.child( id, 0 ) );
+        expressions_.infer( ast_.expression( id ) );
         return; // discard the result. D15 already made effectless expressions a parse error
 
     case Node_kind::Function_decl:
@@ -147,8 +147,7 @@ void Statements::visit( Node_id id )
 
 void Statements::visit_function( Node_id id )
 {
-    // Children are { return_type, param_list, body }. The declaration pass already typed the first
-    // two, so only the body is left.
+    // The declaration pass already typed the signature, so only the body is left.
     //
     // Saved and restored rather than plainly assigned: M6 brings lambdas, and a nested one would
     // otherwise leave the enclosing function checking its returns against the wrong type.
@@ -156,14 +155,14 @@ void Statements::visit_function( Node_id id )
     const Node_id enclosing_function = expressions_.enter_function( id );
 
     current_return_ = types_.type_of( id );
-    visit( ast_.child( id, 2 ) );
+    visit( ast_.body( id ) );
     current_return_ = enclosing_return;
     expressions_.leave_function( enclosing_function );
 }
 
 void Statements::visit_return( Node_id id )
 {
-    const Node_id value     = ast_.child( id, 0 );
+    const Node_id value     = ast_.value( id );
     const Type_id void_type = table_.builtin( Type_kind::Void );
 
     if( !value.is_valid() ) // a bare `return;`
@@ -240,14 +239,13 @@ void Statements::visit_return( Node_id id )
 
 void Statements::visit_var( Node_id id )
 {
-    // Children are { type, init }. Either can be invalid: no annotation means `auto`, and no
-    // initialiser means the variable is only declared.
-    const Node_id annotation = ast_.child( id, 0 );
-    const Node_id init       = ast_.child( id, 1 );
+    // Either can be invalid: no annotation means `auto`, and no initialiser means the variable is
+    // only declared.
+    const Node_id annotation = ast_.annotation( id );
+    const Node_id init       = ast_.initialiser( id );
     const Node_id spelled    = unwrap_const( ast_, annotation );
-    const Keyword mode       = spelled.is_valid() && ast_.kind( spelled ) == Node_kind::Mode_type
-                                   ? static_cast<Keyword>( ast_.aux( spelled ) )
-                                   : Keyword::Count;
+    const Keyword mode =
+        spelled.is_valid() && ast_.kind( spelled ) == Node_kind::Mode_type ? ast_.keyword( spelled ) : Keyword::Count;
 
     Type_id type = annotations_.type_of( annotation );
 
@@ -338,10 +336,10 @@ void Statements::visit_var( Node_id id )
 
 void Statements::visit_assign( Node_id id )
 {
-    // Children are { target, value }; aux is the operator, which may be `+=` rather than `=`.
-    const Token_kind op     = static_cast<Token_kind>( ast_.aux( id ) );
-    const Node_id    target = ast_.child( id, 0 );
-    const Node_id    value  = ast_.child( id, 1 );
+    // The operator may be `+=` rather than `=`.
+    const Token_kind op     = ast_.op( id );
+    const Node_id    target = ast_.target( id );
+    const Node_id    value  = ast_.value( id );
 
     // Asked before infer(), which would otherwise absorb it: a literal target types as an error
     // today, so `1 = 2;` passed in silence. Parameters are assignable too - L12 is
@@ -360,7 +358,7 @@ void Statements::visit_assign( Node_id id )
         // the guard there stays quiet because it is a Name_expr. Nothing else would report it.
         const Node_id decl = resolution_.declaration_of( target );
         if( decl.is_valid() && ast_.kind( decl ) == Node_kind::Param_decl &&
-            Symbol_id { ast_.aux( decl ) } == Interner::keyword( Keyword::This ) )
+            ast_.name( decl ) == Interner::keyword( Keyword::This ) )
         {
             reporter_.error_at( ast_.span( target ), "`this` is immutable" );
         }
@@ -420,9 +418,8 @@ void Statements::visit_assign( Node_id id )
 // the enum-or-number test is here, because it is what decides which of its two strategies runs.
 void Statements::visit_switch( Node_id id )
 {
-    const std::span<const Node_id> children  = ast_.children( id );
-    const Node_id                  scrutinee = children[0];
-    const Type_id                  type      = expressions_.infer( scrutinee );
+    const Node_id scrutinee = ast_.scrutinee( id );
+    const Type_id type      = expressions_.infer( scrutinee );
 
     coverage_.type_bindings_as_errors( id );
 
@@ -430,9 +427,9 @@ void Statements::visit_switch( Node_id id )
     // not hide every mistake inside the arms.
     const auto visit_bodies = [&]()
     {
-        for( const Node_id arm : children.subspan( 1 ) )
+        for( const Node_id arm : ast_.arms( id ) )
         {
-            visit( ast_.children( arm ).back() );
+            visit( ast_.body( arm ) );
         }
     };
 
@@ -462,10 +459,10 @@ void Statements::visit_switch( Node_id id )
     Switch_coverage covered = coverage_.begin_switch( id, type );
 
     breakable_depth_ += 1;
-    for( const Node_id arm : children.subspan( 1 ) )
+    for( const Node_id arm : ast_.arms( id ) )
     {
         coverage_.check_arm_labels( arm, covered );
-        visit( ast_.children( arm ).back() );
+        visit( ast_.body( arm ) );
     }
     breakable_depth_ -= 1;
 
@@ -474,43 +471,40 @@ void Statements::visit_switch( Node_id id )
 
 void Statements::visit_if( Node_id id )
 {
-    // Children are { condition, then, else }; else is invalid when there is none, and visit()
-    // returns immediately on that.
-    expressions_.check_condition( ast_.child( id, 0 ) );
-    visit( ast_.child( id, 1 ) );
-    visit( ast_.child( id, 2 ) );
+    // visit() returns immediately on an absent else.
+    expressions_.check_condition( ast_.condition( id ) );
+    visit( ast_.then_branch( id ) );
+    visit( ast_.else_branch( id ) );
 }
 
 void Statements::visit_while( Node_id id )
 {
-    expressions_.check_condition( ast_.child( id, 0 ) );
+    expressions_.check_condition( ast_.condition( id ) );
     loop_depth_ += 1;
     breakable_depth_ += 1;
-    visit( ast_.child( id, 1 ) );
+    visit( ast_.body( id ) );
     loop_depth_ -= 1;
     breakable_depth_ -= 1;
 }
 
 void Statements::visit_for( Node_id id )
 {
-    // Children are { init, condition, update, body }, any of which `for( ; ; )` leaves invalid.
-    // init and update are ordinary statements - a declaration, an assignment, an increment - so
-    // they go through visit, not infer.
-    visit( ast_.child( id, 0 ) );
-    expressions_.check_condition( ast_.child( id, 1 ) );
-    visit( ast_.child( id, 2 ) );
+    // `for( ; ; )` leaves the first three invalid. init and update are ordinary statements - a
+    // declaration, an assignment, an increment - so they go through visit, not infer.
+    visit( ast_.init( id ) );
+    expressions_.check_condition( ast_.condition( id ) );
+    visit( ast_.update( id ) );
     loop_depth_ += 1;
     breakable_depth_ += 1;
-    visit( ast_.child( id, 3 ) );
+    visit( ast_.body( id ) );
     loop_depth_ -= 1;
     breakable_depth_ -= 1;
 }
 
 void Statements::visit_increment( Node_id id )
 {
-    // Children are { operand }; aux is `++` or `--`.
-    const Token_kind op      = static_cast<Token_kind>( ast_.aux( id ) );
-    const Node_id    operand = ast_.child( id, 0 );
+    const Token_kind op      = ast_.op( id ); // `++` or `--`
+    const Node_id    operand = ast_.operand( id );
 
     if( !places_.is_assignable( operand ) )
     {
@@ -553,7 +547,7 @@ void Statements::visit_increment( Node_id id )
 void Statements::visit_global( Node_id id )
 {
     const Type_id type = types_.type_of( id );
-    const Node_id init = ast_.child( id, 1 );
+    const Node_id init = ast_.initialiser( id );
 
     if( table_.is_error( type ) )
     {
@@ -628,7 +622,7 @@ void Statements::visit_global( Node_id id )
 
 void Statements::visit_block( Node_id id )
 {
-    if( ast_.aux( id ) != 1 )
+    if( !ast_.is_unsafe( id ) )
     {
         for( const Node_id child : ast_.children( id ) )
         {
@@ -651,13 +645,13 @@ void Statements::visit_block( Node_id id )
 
 void Statements::check_returned_address( Node_id value )
 {
-    if( ast_.kind( value ) != Node_kind::Unary_expr || static_cast<Token_kind>( ast_.aux( value ) ) != Token_kind::Amp ||
+    if( ast_.kind( value ) != Node_kind::Unary_expr || ast_.op( value ) != Token_kind::Amp ||
         table_.is_error( types_.type_of( value ) ) )
     {
         return;
     }
 
-    const Node_id dying = places_.dying_storage( ast_.child( value, 0 ), expressions_.current_function() );
+    const Node_id dying = places_.dying_storage( ast_.operand( value ), expressions_.current_function() );
 
     if( !dying.is_valid() )
     {
@@ -667,8 +661,7 @@ void Statements::check_returned_address( Node_id value )
     reporter_.error_at(
         ast_.span( value ),
         fmt::format(
-            "`{}` dies when this function returns, so its address would dangle",
-            interner_.text( Symbol_id { ast_.aux( dying ) } )
+            "`{}` dies when this function returns, so its address would dangle", interner_.text( ast_.name( dying ) )
         ),
         "return the value itself, or allocate it with `alloc` and return that"
     );

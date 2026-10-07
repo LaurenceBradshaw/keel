@@ -50,7 +50,7 @@ void Signatures::declare()
 
 void Signatures::declare_structs()
 {
-    for( Node_id child : ast_.children( ast_.root() ) )
+    for( Node_id child : ast_.declarations( ast_.root() ) )
     {
         if( ast_.kind( child ) == Node_kind::Error )
         {
@@ -73,7 +73,7 @@ void Signatures::declare_structs()
             arguments.push_back( types_.type_of( type_param ) );
         }
 
-        const std::string_view name = interner_.text( Symbol_id { ast_.aux( child ) } );
+        const std::string_view name = interner_.text( ast_.name( child ) );
 
         types_.record( child, table_.structure( child, arguments, name ) );
     }
@@ -81,7 +81,7 @@ void Signatures::declare_structs()
 
 void Signatures::declare_fields()
 {
-    for( Node_id child : ast_.children( ast_.root() ) )
+    for( Node_id child : ast_.declarations( ast_.root() ) )
     {
         if( ast_.kind( child ) == Node_kind::Error )
         {
@@ -100,7 +100,7 @@ void Signatures::declare_fields()
                 continue;
             }
 
-            const Type_id field_type = annotations_.type_of( ast_.child( field, 0 ) );
+            const Type_id field_type = annotations_.type_of( ast_.annotation( field ) );
 
             types_.record( field, field_type );
 
@@ -114,7 +114,7 @@ void Signatures::declare_fields()
 
 void Signatures::declare_functions()
 {
-    for( Node_id child : ast_.children( ast_.root() ) )
+    for( Node_id child : ast_.declarations( ast_.root() ) )
     {
         if( ast_.kind( child ) == Node_kind::Error )
         {
@@ -128,7 +128,7 @@ void Signatures::declare_functions()
 
         bounds_.declare_type_parameters( child, ast_.type_param_list( child ) );
 
-        const Node_id return_type_node = ast_.child( child, 0 );
+        const Node_id return_type_node = ast_.return_type( child );
         const Type_id return_type      = annotations_.type_of( return_type_node );
         types_.record( child, return_type );
 
@@ -163,7 +163,7 @@ void Signatures::declare_functions()
             }
         }
 
-        const Node_id param_list = ast_.child( child, 1 );
+        const Node_id param_list = ast_.param_list( child );
         for( Node_id param : ast_.children( param_list ) )
         {
             if( ast_.kind( param ) != Node_kind::Param_decl )
@@ -171,12 +171,12 @@ void Signatures::declare_functions()
                 continue;
             }
 
-            const Node_id param_type_node = ast_.child( param, 0 );
+            const Node_id param_type_node = ast_.annotation( param );
             const Type_id param_type      = annotations_.type_of( param_type_node );
             types_.record( param, param_type );
         }
 
-        if( interner_.text( Symbol_id { ast_.aux( child ) } ) == "main" )
+        if( interner_.text( ast_.name( child ) ) == "main" )
         {
             // Main may not be marked `extern`
             if( is_extern( ast_, child ) )
@@ -206,7 +206,7 @@ void Signatures::declare_functions()
 
 void Signatures::declare_member_functions()
 {
-    for( Node_id child : ast_.children( ast_.root() ) )
+    for( Node_id child : ast_.declarations( ast_.root() ) )
     {
         if( !is_aggregate( ast_.kind( child ) ) )
         {
@@ -221,9 +221,9 @@ void Signatures::declare_member_functions()
             }
 
             // A constructor and a destructor return nothing and have no annotation to read; a
-            // method has both. Child 0 is the return type either way, and is invalid for the two
+            // method has both. The return type is invalid for the two
             // that have none.
-            const Node_id return_type_node = ast_.child( member, 0 );
+            const Node_id return_type_node = ast_.return_type( member );
 
             const Type_id return_type =
                 return_type_node.is_valid() ? annotations_.type_of( return_type_node ) : table_.builtin( Type_kind::Void );
@@ -255,9 +255,9 @@ void Signatures::declare_member_functions()
                 }
             }
 
-            for( Node_id param : ast_.children( ast_.child( member, 1 ) ) )
+            for( Node_id param : ast_.params( member ) )
             {
-                const Node_id param_type_node = ast_.child( param, 0 );
+                const Node_id param_type_node = ast_.annotation( param );
                 const Type_id param_type      = annotations_.type_of( param_type_node );
                 types_.record( param, param_type );
 
@@ -272,7 +272,7 @@ void Signatures::declare_member_functions()
 
 void Signatures::declare_globals()
 {
-    for( Node_id child : ast_.children( ast_.root() ) )
+    for( Node_id child : ast_.declarations( ast_.root() ) )
     {
         if( ast_.kind( child ) == Node_kind::Error )
         {
@@ -288,7 +288,7 @@ void Signatures::declare_globals()
                     continue;
                 }
 
-                const Node_id var_type_node = ast_.child( member, 0 );
+                const Node_id var_type_node = ast_.annotation( member );
                 const Type_id var_type      = annotations_.type_of( var_type_node );
                 types_.record( member, var_type );
             }
@@ -299,7 +299,7 @@ void Signatures::declare_globals()
             continue;
         }
 
-        const Node_id var_type_node = ast_.child( child, 0 );
+        const Node_id var_type_node = ast_.annotation( child );
         const Type_id var_type      = annotations_.type_of( var_type_node );
         types_.record( child, var_type );
     }
@@ -307,7 +307,7 @@ void Signatures::declare_globals()
 
 void Signatures::declare_enums()
 {
-    for( Node_id child : ast_.children( ast_.root() ) )
+    for( Node_id child : ast_.declarations( ast_.root() ) )
     {
         if( ast_.kind( child ) == Node_kind::Error )
         {
@@ -319,7 +319,7 @@ void Signatures::declare_enums()
             continue;
         }
 
-        const std::string_view name = interner_.text( Symbol_id { ast_.aux( child ) } );
+        const std::string_view name = interner_.text( ast_.name( child ) );
 
         bounds_.declare_type_parameters( child, ast_.type_param_list( child ) );
 
@@ -330,9 +330,9 @@ void Signatures::declare_enums()
             arguments.push_back( types_.type_of( type_param ) );
         }
 
-        // Child 1 is the underlying type, invalid when unwritten. i32 by default, which is what
+        // The underlying type is invalid when unwritten. i32 by default, which is what
         // C++ gives a plain enum - D30 changed the semantics of the keyword, not its arithmetic.
-        const Node_id annotation = ast_.child( child, 1 );
+        const Node_id annotation = ast_.underlying_type( child );
         Type_id       underlying = annotation.is_valid() ? annotations_.type_of( annotation ) : table_.integer( 32, true );
 
         // Only an integer can count variants. Absorbed to i32 so the rest of the pass has a type to
@@ -357,7 +357,7 @@ void Signatures::declare_enums()
 
         for( const Node_id variant : ast_.variants( child ) )
         {
-            const Symbol_id variant_name { ast_.aux( variant ) };
+            const Symbol_id variant_name = ast_.name( variant );
 
             if( !seen.insert( variant_name.v ).second )
             {
@@ -373,7 +373,7 @@ void Signatures::declare_enums()
         // comment rather than a rule.
         for( const Node_id variant : ast_.variants( child ) )
         {
-            const Symbol_id variant_name { ast_.aux( variant ) };
+            const Symbol_id variant_name = ast_.name( variant );
 
             types_.record( variant, type );
 
@@ -381,9 +381,9 @@ void Signatures::declare_enums()
             // is the same recording declare_fields does for a struct.
             std::unordered_set<u32> fields;
 
-            for( const Node_id field : ast_.children( variant ) )
+            for( const Node_id field : ast_.payload( variant ) )
             {
-                const Type_id field_type = annotations_.type_of( ast_.child( field, 0 ) );
+                const Type_id field_type = annotations_.type_of( ast_.annotation( field ) );
 
                 types_.record( field, field_type );
 
@@ -392,7 +392,7 @@ void Signatures::declare_enums()
                     generic_recursion_.record_generic_uses( child, field_type, ast_.span( field ) );
                 }
 
-                const Symbol_id field_name { ast_.aux( field ) };
+                const Symbol_id field_name = ast_.name( field );
 
                 if( field_name.is_valid() && !fields.insert( field_name.v ).second )
                 {
@@ -420,7 +420,7 @@ void Signatures::order_structs()
 
 void Signatures::check_aggregate_members()
 {
-    for( const Node_id decl : ast_.children( ast_.root() ) )
+    for( const Node_id decl : ast_.declarations( ast_.root() ) )
     {
         if( !is_aggregate( ast_.kind( decl ) ) )
         {
@@ -437,8 +437,8 @@ void Signatures::check_aggregate_members()
 void Signatures::check_member_kind( Node_id decl, const Member_kind& kind )
 {
     const bool             on_a_struct = ast_.kind( decl ) == Node_kind::Struct_decl;
-    const Symbol_id        type_name { ast_.aux( decl ) };
-    const std::string_view type_text = interner_.text( type_name );
+    const Symbol_id        type_name   = ast_.name( decl );
+    const std::string_view type_text   = interner_.text( type_name );
 
     Node_id first {};
 
@@ -477,7 +477,7 @@ void Signatures::check_member_kind( Node_id decl, const Member_kind& kind )
 
         first = member;
 
-        const Symbol_id written { ast_.aux( member ) };
+        const Symbol_id written = ast_.name( member );
 
         if( written.is_valid() && written != type_name )
         {
@@ -499,7 +499,7 @@ void Signatures::check_member_kind( Node_id decl, const Member_kind& kind )
 // declares enums - the same ordering that made record_borrowed_parameters a pass of its own.
 void Signatures::check_enum_payloads()
 {
-    for( const Node_id decl : ast_.children( ast_.root() ) )
+    for( const Node_id decl : ast_.declarations( ast_.root() ) )
     {
         if( ast_.kind( decl ) != Node_kind::Enum_decl )
         {
@@ -508,7 +508,7 @@ void Signatures::check_enum_payloads()
 
         for( const Node_id variant : ast_.variants( decl ) )
         {
-            for( const Node_id field : ast_.children( variant ) )
+            for( const Node_id field : ast_.payload( variant ) )
             {
                 if( bounds_.satisfies( types_.type_of( field ), Bound::Copyable ) )
                 {
@@ -527,7 +527,7 @@ void Signatures::check_enum_payloads()
 
 void Signatures::check_struct_ownership()
 {
-    for( const Node_id decl : ast_.children( ast_.root() ) )
+    for( const Node_id decl : ast_.declarations( ast_.root() ) )
     {
         // A struct with a destructor of its own is already reported by check_aggregate_members,
         // and it is one decision to reverse rather than two.
@@ -580,7 +580,7 @@ void Signatures::check_struct_fields_are_not_owning( Node_id decl )
                   )
                 : fmt::format(
                       "a struct is copied freely, so declare `{}` as a class if it owns this",
-                      interner_.text( Symbol_id { ast_.aux( decl ) } )
+                      interner_.text( ast_.name( decl ) )
                   )
         );
     }
@@ -588,7 +588,7 @@ void Signatures::check_struct_fields_are_not_owning( Node_id decl )
 
 void Signatures::check_operators()
 {
-    for( const Node_id decl : ast_.children( ast_.root() ) )
+    for( const Node_id decl : ast_.declarations( ast_.root() ) )
     {
         if( !is_aggregate( ast_.kind( decl ) ) )
         {
@@ -599,7 +599,7 @@ void Signatures::check_operators()
 
         for( const Node_id member : ast_.members( decl ) )
         {
-            const Symbol_id name { ast_.aux( member ) };
+            const Symbol_id name = ast_.name( member );
             if( ast_.kind( member ) != Node_kind::Method_decl || !interner_.is_operator_name( name ) )
             {
                 continue;
@@ -612,9 +612,7 @@ void Signatures::check_operators()
             {
                 reporter_.error_at(
                     ast_.name_span( member ),
-                    fmt::format(
-                        "`{}` already has an `{}`", interner_.text( Symbol_id { ast_.aux( decl ) } ), interner_.text( name )
-                    ),
+                    fmt::format( "`{}` already has an `{}`", interner_.text( ast_.name( decl ) ), interner_.text( name ) ),
                     reporter_.previous_declaration_note( ast_.span( seen ) )
                 );
                 continue;
@@ -649,13 +647,13 @@ void Signatures::check_operators()
 
 void Signatures::check_equal_operator( Node_id decl )
 {
-    const std::span<const Node_id> params    = ast_.children( ast_.child( decl, 1 ) );
+    const std::span<const Node_id> params    = ast_.params( decl );
     const Type_id                  receiver  = types_.type_of( params[0] );
     const Type_id                  self_type = table_.is_pointer( receiver ) ? table_.get( receiver ).element : receiver;
 
     if( params.size() != 2 )
     {
-        reporter_.error_at( ast_.span( ast_.child( decl, 1 ) ), "`operator==` takes one parameter, the right-hand operand" );
+        reporter_.error_at( ast_.span( ast_.param_list( decl ) ), "`operator==` takes one parameter, the right-hand operand" );
     }
     else if( !table_.is_error( types_.type_of( params[1] ) ) && types_.type_of( params[1] ) != self_type )
     {
@@ -668,7 +666,7 @@ void Signatures::check_equal_operator( Node_id decl )
 
     if( !table_.is_error( types_.type_of( decl ) ) && types_.type_of( decl ) != table_.builtin( Type_kind::Bool ) )
     {
-        reporter_.error_at( ast_.span( ast_.child( decl, 0 ) ), "`operator==` must return `bool`" );
+        reporter_.error_at( ast_.span( ast_.return_type( decl ) ), "`operator==` must return `bool`" );
     }
 
     if( !is_const_method( ast_, decl ) )
@@ -683,11 +681,11 @@ void Signatures::check_equal_operator( Node_id decl )
 
 void Signatures::check_index_operator( Node_id decl )
 {
-    const std::span<const Node_id> params = ast_.children( ast_.child( decl, 1 ) );
+    const std::span<const Node_id> params = ast_.params( decl );
 
     if( params.size() != 2 )
     {
-        reporter_.error_at( ast_.span( ast_.child( decl, 1 ) ), "`operator[]` takes one parameter, the index" );
+        reporter_.error_at( ast_.span( ast_.param_list( decl ) ), "`operator[]` takes one parameter, the index" );
     }
     else if( const Type_id index_type = types_.type_of( params[1] );
              !table_.is_error( index_type ) && table_.integer( 64, false ) != index_type )
@@ -695,7 +693,7 @@ void Signatures::check_index_operator( Node_id decl )
         reporter_.error_at( ast_.span( params[1] ), "`operator[]` takes a `u64` index", "write the parameter as `u64 index`" );
     }
 
-    const Node_id annotation  = ast_.child( decl, 0 );
+    const Node_id annotation  = ast_.return_type( decl );
     const Type_id return_type = types_.type_of( decl );
 
     if( ast_.kind( unwrap_const( ast_, annotation ) ) == Node_kind::Mode_type )

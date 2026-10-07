@@ -140,7 +140,7 @@ bool Generic_recursion::expands_forever( Node_id generic, std::vector<Node_id>& 
         if( closes && grows )
         {
             const auto name_of = [&]( Node_id declaration )
-            { return std::string( interner_.text( Symbol_id { ast_.aux( declaration ) } ) ); };
+            { return std::string( interner_.text( ast_.name( declaration ) ) ); };
 
             // The cycle as written, from where it closes: `f` -> `g` -> `f`. A self-call renders as
             // `f` -> `f`, which reads correctly without a second phrasing for it.

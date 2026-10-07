@@ -105,7 +105,7 @@ void report_unassigned_errors(
     {
         const keel::Assignment_report report = keel::check_assignment( function );
 
-        const auto field_name = [&]( keel::Node_id field ) { return interner.text( keel::Symbol_id { ast.aux( field ) } ); };
+        const auto field_name = [&]( keel::Node_id field ) { return interner.text( ast.name( field ) ); };
 
         // D9: a value read before it exists. Reported first, because when a function has both the
         // read is the mistake and the missing assignment at the exit is its consequence.

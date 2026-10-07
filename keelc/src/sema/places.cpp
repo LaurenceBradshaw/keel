@@ -32,7 +32,7 @@ bool Places::is_assignable( Node_id id ) const
         return true; // whether the object has fields at all is infer_field's question
     }
 
-    if( ast_.kind( id ) == Node_kind::Unary_expr && static_cast<Token_kind>( ast_.aux( id ) ) == Token_kind::Star )
+    if( ast_.kind( id ) == Node_kind::Unary_expr && ast_.op( id ) == Token_kind::Star )
     {
         return true; // `*ptr = 42;` writes through the pointer. Whether ptr *is* one is infer_unary's question
     }
@@ -51,7 +51,7 @@ bool Places::is_assignable( Node_id id ) const
 
     // C++ forbids it, and `this` is an ordinary parameter here - which is what makes everything
     // else free, and is exactly why this one case has to be written down.
-    if( ast_.kind( decl ) == Node_kind::Param_decl && Symbol_id { ast_.aux( decl ) } == Interner::keyword( Keyword::This ) )
+    if( ast_.kind( decl ) == Node_kind::Param_decl && ast_.name( decl ) == Interner::keyword( Keyword::This ) )
     {
         return false;
     }
@@ -64,8 +64,8 @@ bool Places::is_assignable( Node_id id ) const
 
 // The address is recorded on the annotation exactly when a declaration is a borrow - the same
 // invariant is_borrowed_binding reads, asked from inside the checker where `Types` is not built
-// yet. Answers for a parameter as readily as for a function: children[0] is the annotation for
-// both, so "returns a binding" and "is a borrow" are one question asked of different nodes.
+// yet. Answers for a parameter as readily as for a function: declared_type is the annotation of
+// one and the return type of the other, so "returns a binding" and "is a borrow" are one question.
 bool Places::returns_a_binding( Node_id decl ) const
 {
     if( !decl.is_valid() )
@@ -73,7 +73,7 @@ bool Places::returns_a_binding( Node_id decl ) const
         return false;
     }
 
-    const Node_id annotation = ast_.child( decl, 0 );
+    const Node_id annotation = ast_.declared_type( decl );
 
     return annotation.is_valid() && types_.type_of( annotation ).is_valid();
 }
@@ -81,7 +81,7 @@ bool Places::returns_a_binding( Node_id decl ) const
 bool Places::call_returns_a_binding( Node_id call ) const
 {
     const Node_id method = callees_.callee_of( call );
-    const Node_id callee = method.is_valid() ? method : resolution_.declaration_of( ast_.child( call, 0 ) );
+    const Node_id callee = method.is_valid() ? method : resolution_.declaration_of( ast_.callee( call ) );
 
     // A callable declaration answers from its own return, and nothing below may be asked of one:
     // `fn() -> const ref i32 maker()` hands back a signature *by value*, and reading that
@@ -95,7 +95,7 @@ bool Places::call_returns_a_binding( Node_id call ) const
     // A call through a variable has no such declaration, so the signature the variable holds is what
     // answers - taken off the declaration rather than off the callee expression, because
     // visit_assign asks this before the expression has been typed at all.
-    const Type_id signature = callee.is_valid() ? types_.type_of( callee ) : types_.type_of( ast_.child( call, 0 ) );
+    const Type_id signature = callee.is_valid() ? types_.type_of( callee ) : types_.type_of( ast_.callee( call ) );
 
     return signature.is_valid() && table_.is_function( signature ) &&
            table_.get( signature ).return_mode == Param_mode::Const_ref;
@@ -119,7 +119,7 @@ bool Places::check_writable( Node_id target, Node_id current_function, bool repl
         if( ast_.kind( source ) == Node_kind::Call_expr )
         {
             const Node_id method = callees_.callee_of( source );
-            const Node_id callee = method.is_valid() ? method : resolution_.declaration_of( ast_.child( source, 0 ) );
+            const Node_id callee = method.is_valid() ? method : resolution_.declaration_of( ast_.callee( source ) );
 
             if( call_returns_a_binding( source ) )
             {
@@ -127,7 +127,7 @@ bool Places::check_writable( Node_id target, Node_id current_function, bool repl
                     ast_.span( target ),
                     fmt::format(
                         "`{}` returns a const ref, so it cannot be modified",
-                        interner_.text( Symbol_id { ast_.aux( ast_.child( source, 0 ) ) } )
+                        interner_.text( ast_.name( ast_.callee( source ) ) )
                     ),
                     "a returned reference is always read-only"
                 );
@@ -166,7 +166,7 @@ bool Places::check_writable( Node_id target, Node_id current_function, bool repl
             ast_.span( target ),
             fmt::format(
                 "`{}`'s `operator[]` only reads, so this cannot be modified",
-                table_.name( types_.type_of( ast_.child( pointer, 0 ) ) )
+                table_.name( types_.type_of( ast_.object( pointer ) ) )
             ),
             "it returns a pointer to `const`"
         );
@@ -198,9 +198,7 @@ bool Places::check_writable( Node_id target, Node_id current_function, bool repl
 
         reporter_.error_at(
             ast_.span( target ),
-            fmt::format(
-                "`{}` is a `const` field, so it cannot be modified", interner_.text( Symbol_id { ast_.aux( field ) } )
-            ),
+            fmt::format( "`{}` is a `const` field, so it cannot be modified", interner_.text( ast_.name( field ) ) ),
             own_constructor ? "a constructor assigns it once, whole, with `=`" : "only a constructor assigns it"
         );
 
@@ -215,9 +213,7 @@ bool Places::check_writable( Node_id target, Node_id current_function, bool repl
     {
         reporter_.error_at(
             ast_.span( target ),
-            fmt::format(
-                "`{}` is bound by a pattern, so it cannot be modified", interner_.text( Symbol_id { ast_.aux( root ) } )
-            ),
+            fmt::format( "`{}` is bound by a pattern, so it cannot be modified", interner_.text( ast_.name( root ) ) ),
             "it names part of the value being matched, which the `switch` does not own"
         );
 
@@ -234,9 +230,7 @@ bool Places::check_writable( Node_id target, Node_id current_function, bool repl
             reporter_.error_at(
                 ast_.span( target ),
                 "a `const` method cannot modify its object",
-                fmt::format(
-                    "remove `const` from `{}` to let it", interner_.text( Symbol_id { ast_.aux( current_function ) } )
-                )
+                fmt::format( "remove `const` from `{}` to let it", interner_.text( ast_.name( current_function ) ) )
             );
 
             return false;
@@ -244,7 +238,7 @@ bool Places::check_writable( Node_id target, Node_id current_function, bool repl
 
         reporter_.error_at(
             ast_.span( target ),
-            fmt::format( "`{}` is `const`", interner_.text( Symbol_id { ast_.aux( root ) } ) ),
+            fmt::format( "`{}` is `const`", interner_.text( ast_.name( root ) ) ),
             "remove `const` to modify it"
         );
 
@@ -253,7 +247,7 @@ bool Places::check_writable( Node_id target, Node_id current_function, bool repl
 
     if( is_borrow_binding( root ) )
     {
-        const std::string_view name = interner_.text( Symbol_id { ast_.aux( root ) } );
+        const std::string_view name = interner_.text( ast_.name( root ) );
 
         reporter_.error_at(
             ast_.span( target ),
@@ -301,7 +295,7 @@ Node_id Places::through_const_pointer( Node_id place ) const
 
         if( kind == Node_kind::Field_expr )
         {
-            const Node_id object      = ast_.child( place, 0 );
+            const Node_id object      = ast_.object( place );
             const Type_id object_type = types_.type_of( object );
             if( object_type.is_valid() && !table_.is_pointer( object_type ) )
             {
@@ -326,16 +320,16 @@ Node_id Places::through_const_pointer( Node_id place ) const
                     return place;
                 }
 
-                place = ast_.child( place, 0 );
+                place = ast_.object( place );
                 continue;
             }
 
-            pointer = ast_.child( place, 0 );
+            pointer = ast_.object( place );
         }
 
-        if( kind == Node_kind::Unary_expr && static_cast<Token_kind>( ast_.aux( place ) ) == Token_kind::Star )
+        if( kind == Node_kind::Unary_expr && ast_.op( place ) == Token_kind::Star )
         {
-            pointer = ast_.child( place, 0 );
+            pointer = ast_.operand( place );
         }
 
         if( pointer.is_valid() && table_.points_to_const( types_.type_of( pointer ) ) )
@@ -351,7 +345,7 @@ Node_id Places::const_field( Node_id place ) const
 {
     if( ast_.kind( place ) == Node_kind::Field_expr )
     {
-        const Type_id object_type = types_.type_of( ast_.child( place, 0 ) );
+        const Type_id object_type = types_.type_of( ast_.object( place ) );
 
         if( !object_type.is_valid() || table_.is_error( object_type ) )
         {
@@ -366,7 +360,7 @@ Node_id Places::const_field( Node_id place ) const
             const std::span<const Node_id> members = ast_.members( table_.get( aggregate ).declaration );
             for( const Node_id member : members )
             {
-                if( ast_.kind( member ) == Node_kind::Field_decl && ast_.aux( member ) == ast_.aux( place ) &&
+                if( ast_.kind( member ) == Node_kind::Field_decl && ast_.name( member ) == ast_.name( place ) &&
                     is_const_field( ast_, member ) )
                 {
                     return member;
@@ -379,7 +373,7 @@ Node_id Places::const_field( Node_id place ) const
             return Node_id();
         }
 
-        place = ast_.child( place, 0 );
+        place = ast_.object( place );
     }
 
     const Node_id decl = resolution_.declaration_of( place );
@@ -406,7 +400,7 @@ bool Places::initialises_const_field( Node_id place, Node_id current_function ) 
 
     if( ast_.kind( place ) == Node_kind::Field_expr )
     {
-        const Node_id object = ast_.child( place, 0 );
+        const Node_id object = ast_.object( place );
 
         if( ast_.kind( object ) == Node_kind::Name_expr &&
             resolution_.declaration_of( object ) == receiver_of( current_function ) )
@@ -433,7 +427,7 @@ Node_id Places::receiver_of( Node_id function ) const
         return Node_id {};
     }
 
-    const std::span<const Node_id> params = ast_.children( ast_.child( function, 1 ) );
+    const std::span<const Node_id> params = ast_.params( function );
 
     return params.empty() ? Node_id {} : params[0];
 }
@@ -466,7 +460,7 @@ Node_id Places::place_source( Node_id id ) const
 {
     while( ast_.kind( id ) == Node_kind::Field_expr || is_operator_index( id ) )
     {
-        const Node_id object = ast_.child( id, 0 );
+        const Node_id object = ast_.object( id );
 
         // `v[i]` is rooted in `v`: it may be written exactly when `v` may.
         if( ast_.kind( id ) == Node_kind::Index_expr )
@@ -497,9 +491,9 @@ bool Places::is_operator_index( Node_id id ) const
 // The `v[i]` a place is reached through, which lasts only as long as its expression.
 Node_id Places::operator_projection( Node_id place ) const
 {
-    while( ast_.kind( place ) == Node_kind::Field_expr && !table_.is_pointer( types_.type_of( ast_.child( place, 0 ) ) ) )
+    while( ast_.kind( place ) == Node_kind::Field_expr && !table_.is_pointer( types_.type_of( ast_.object( place ) ) ) )
     {
-        place = ast_.child( place, 0 );
+        place = ast_.object( place );
     }
 
     return is_operator_index( place ) ? place : Node_id {};
@@ -511,7 +505,7 @@ Node_id Places::dying_storage( Node_id place, Node_id current_function ) const
 
     while( root.is_valid() && ast_.kind( root ) == Node_kind::Var_decl && returns_a_binding( root ) )
     {
-        root = place_root( ast_.child( root, 1 ), current_function );
+        root = place_root( ast_.initialiser( root ), current_function );
     }
 
     if( !root.is_valid() )
@@ -639,7 +633,7 @@ void Places::record_borrowed_parameters()
             continue;
         }
 
-        record_binding_address( ast_.child( param, 0 ), type );
+        record_binding_address( ast_.annotation( param ), type );
     }
 }
 

@@ -71,8 +71,7 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
             {
                 // Resolved to a function or variable of the same name.
                 reporter_.error_at(
-                    ast_.span( annotation ),
-                    fmt::format( "`{}` is not a type", interner_.text( Symbol_id { ast_.aux( annotation ) } ) )
+                    ast_.span( annotation ), fmt::format( "`{}` is not a type", interner_.text( ast_.name( annotation ) ) )
                 );
 
                 return table_.builtin( Type_kind::Error );
@@ -83,7 +82,7 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
             // and is not taken here, so this names the explicit form rather than guessing.
             if( ( is_aggregate( ast_.kind( decl ) ) || ast_.kind( decl ) == Node_kind::Enum_decl ) && is_generic( ast_, decl ) )
             {
-                const std::string_view name = interner_.text( Symbol_id { ast_.aux( annotation ) } );
+                const std::string_view name = interner_.text( ast_.name( annotation ) );
 
                 reporter_.error_at(
                     ast_.span( annotation ),
@@ -99,12 +98,12 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
 
         // `kl::Missing` was reported by the resolver, `kl::i32` is not `i32`, and an error symbol's
         // declaration was reported where it failed.
-        if( !ast_.children( annotation ).empty() || resolution_.is_unresolved( annotation ) )
+        if( ast_.package( annotation ).is_valid() || resolution_.is_unresolved( annotation ) )
         {
             return table_.builtin( Type_kind::Error );
         }
 
-        const std::string_view spelling = interner_.text( Symbol_id { ast_.aux( annotation ) } );
+        const std::string_view spelling = interner_.text( ast_.name( annotation ) );
         const Type_id          type     = table_.from_spelling( spelling );
 
         if( type.is_valid() )
@@ -136,14 +135,14 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
             return table_.builtin( Type_kind::Error );
         }
 
-        return type_of( ast_.child( annotation, 0 ), false );
+        return type_of( ast_.inner_type( annotation ), false );
 
     case Node_kind::Pointer_type:
     case Node_kind::Many_pointer_type:
     {
-        const Node_id spelled       = ast_.child( annotation, 0 );
+        const Node_id spelled       = ast_.inner_type( annotation );
         const bool    const_element = ast_.kind( spelled ) == Node_kind::Const_type;
-        const Type_id element       = type_of( const_element ? ast_.child( spelled, 0 ) : spelled, false );
+        const Type_id element       = type_of( const_element ? ast_.inner_type( spelled ) : spelled, false );
 
         if( ast_.kind( annotation ) == Node_kind::Many_pointer_type && table_.is_void( element ) )
         {
@@ -176,9 +175,9 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
     // needing the mode reads it back off the annotation, which is what parameter_mode does.
     case Node_kind::Mode_type:
     {
-        const Keyword mode = static_cast<Keyword>( ast_.aux( annotation ) );
+        const Keyword mode = ast_.keyword( annotation );
 
-        const Type_id inner = type_of( ast_.child( annotation, 0 ), false );
+        const Type_id inner = type_of( ast_.inner_type( annotation ), false );
 
         // An `out` parameter is assigned without its old value being destroyed, so an owning one
         // would leak whatever the caller was already holding. Refused until the caller emits a
@@ -200,8 +199,8 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
     // The mirror of a generic call, asking the same three questions through the same helper.
     case Node_kind::Generic_type:
     {
-        const Node_id base      = ast_.child( annotation, 0 );
-        const Node_id type_args = ast_.child( annotation, 1 );
+        const Node_id base      = ast_.generic_name( annotation );
+        const Node_id type_args = ast_.type_arg_list( annotation );
 
         if( !base.is_valid() || !type_args.is_valid() )
         {
@@ -211,7 +210,7 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
         const Node_id decl = resolution_.declaration_of( base );
 
         // A qualified base was reported by the resolver, and an error symbol where it failed.
-        if( !decl.is_valid() && ( !ast_.children( base ).empty() || resolution_.is_unresolved( base ) ) )
+        if( !decl.is_valid() && ( ast_.package( base ).is_valid() || resolution_.is_unresolved( base ) ) )
         {
             return table_.builtin( Type_kind::Error );
         }
@@ -221,13 +220,13 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
             // The base resolved to nothing. Reporting here rather than through the Named_type case
             // keeps the span on the whole `Box<i32>`, which is what the author wrote.
             reporter_.error_at(
-                ast_.span( annotation ), fmt::format( "unknown type `{}`", interner_.text( Symbol_id { ast_.aux( base ) } ) )
+                ast_.span( annotation ), fmt::format( "unknown type `{}`", interner_.text( ast_.name( base ) ) )
             );
 
             return table_.builtin( Type_kind::Error );
         }
 
-        const std::string_view name = interner_.text( Symbol_id { ast_.aux( base ) } );
+        const std::string_view name = interner_.text( ast_.name( base ) );
 
         if( !is_aggregate( ast_.kind( decl ) ) && ast_.kind( decl ) != Node_kind::Enum_decl )
         {
@@ -266,8 +265,8 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
         Type_id instance {};
         if( ast_.kind( decl ) == Node_kind::Enum_decl )
         {
-            const Node_id child_annotation = ast_.child( decl, 1 );
-            Type_id       underlying = child_annotation.is_valid() ? type_of( child_annotation ) : table_.integer( 32, true );
+            const Node_id written    = ast_.underlying_type( decl );
+            Type_id       underlying = written.is_valid() ? type_of( written ) : table_.integer( 32, true );
             instance                 = table_.enumeration( decl, arguments, name, underlying );
         }
         else
@@ -279,7 +278,7 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
     }
     case Node_kind::Function_type:
     {
-        const Node_id spelled_return = ast_.child( annotation, 0 );
+        const Node_id spelled_return = ast_.return_type( annotation );
         const Node_id bare_return    = unwrap_const( ast_, spelled_return );
         const Keyword return_mode_kw = parameter_mode( ast_, annotation );
 
@@ -328,10 +327,10 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
 
         std::vector<Parameter> parameters;
 
-        for( const Node_id param : ast_.children( ast_.child( annotation, 1 ) ) )
+        for( const Node_id param : ast_.params( annotation ) )
         {
             Parameter     parameter;
-            const Node_id spelled = ast_.child( param, 0 );
+            const Node_id spelled = ast_.annotation( param );
 
             const Node_id bare = unwrap_const( ast_, spelled );
 
@@ -374,7 +373,7 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
         Node_id bare_aggregate = unwrap_const( ast_, spelled_aggregate );
         if( ast_.kind( bare_aggregate ) == Node_kind::Mode_type )
         {
-            bare_aggregate = ast_.child( bare_aggregate, 0 );
+            bare_aggregate = ast_.inner_type( bare_aggregate );
         }
 
         const Type_id aggregate = type_of( bare_aggregate, false );
@@ -455,7 +454,7 @@ std::string type_parameter_list( const Ast& ast, const Interner& interner, std::
             text += i + 1 == parameters.size() ? " and " : ", ";
         }
 
-        text += fmt::format( "`{}`", interner.text( Symbol_id { ast.aux( parameters[i] ) } ) );
+        text += fmt::format( "`{}`", interner.text( ast.name( parameters[i] ) ) );
     }
 
     return text;
@@ -517,7 +516,7 @@ bool Annotations::resolve_type_arguments(
 Span Annotations::const_keyword( Node_id const_type ) const
 {
     const Span const_type_span = ast_.span( const_type );
-    const Span element_span    = ast_.span( ast_.child( const_type, 0 ) );
+    const Span element_span    = ast_.span( ast_.inner_type( const_type ) );
 
     const u32 const_length = narrow_cast<u32>( interner_.text( Interner::keyword( Keyword::Const ) ).size() );
 

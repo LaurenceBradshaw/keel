@@ -30,12 +30,12 @@ bool Literals::is_literal_expression( Node_id id ) const
     {
         // `-5` and `-1.5` are negations of literals, and check_literal pushes the expectation
         // through the minus.
-        if( static_cast<Token_kind>( ast_.aux( id ) ) != Token_kind::Minus )
+        if( ast_.op( id ) != Token_kind::Minus )
         {
             return false;
         }
 
-        const Node_kind operand = ast_.kind( ast_.child( id, 0 ) );
+        const Node_kind operand = ast_.kind( ast_.operand( id ) );
 
         return operand == Node_kind::Int_literal || operand == Node_kind::Float_literal;
     }
@@ -79,10 +79,10 @@ Type_id Literals::check_literal( Node_id id, Type_id expected )
     Node_id literal  = id;
     bool    negative = false;
 
-    if( ast_.kind( id ) == Node_kind::Unary_expr && static_cast<Token_kind>( ast_.aux( id ) ) == Token_kind::Minus &&
-        is_literal_expression( ast_.child( id, 0 ) ) )
+    if( ast_.kind( id ) == Node_kind::Unary_expr && ast_.op( id ) == Token_kind::Minus &&
+        is_literal_expression( ast_.operand( id ) ) )
     {
-        literal = ast_.child( id, 0 );
+        literal = ast_.operand( id );
 
         // Only integers have an asymmetric range. A float's negation cannot take it out of range.
         negative = ast_.kind( literal ) == Node_kind::Int_literal;
@@ -156,8 +156,8 @@ Type_id Literals::check_literal( Node_id id, Type_id expected )
                 fmt::format(
                     "`{}{}` does not fit every type `{}` may be",
                     negative ? "-" : "",
-                    floating_literal ? fmt::format( "{}", literals_.floating( Literal_id { ast_.aux( literal ) } ) )
-                                     : fmt::format( "{}", literals_.integer( Literal_id { ast_.aux( literal ) } ) ),
+                    floating_literal ? fmt::format( "{}", literals_.floating( ast_.literal( literal ) ) )
+                                     : fmt::format( "{}", literals_.integer( ast_.literal( literal ) ) ),
                     table_.name( expected )
                 ),
                 fmt::format( "the bounds admit `{}`, which cannot hold it", table_.name( rejects ) )
@@ -196,7 +196,7 @@ Type_id Literals::check_literal( Node_id id, Type_id expected )
             return expected;
         }
 
-        const Literal_id value = Literal_id { ast_.aux( literal ) };
+        const Literal_id value = ast_.literal( literal );
 
         // A literal the lexer could not scan has no value recorded. It reported there.
         if( value.is_valid() && !table_.fits_float( literals_.floating( value ), expected ) )
@@ -234,7 +234,7 @@ Type_id Literals::check_literal( Node_id id, Type_id expected )
             return expected;
         }
 
-        const Literal_id value = Literal_id { ast_.aux( literal ) };
+        const Literal_id value = ast_.literal( literal );
 
         // A literal the lexer could not scan - one that overflowed a u64, say - has no value
         // recorded. It was reported there; saying so again here helps nobody.
@@ -288,10 +288,10 @@ Type_id Literals::standalone_literal_type( Node_id id, Type_id known ) const
     Node_id literal  = id;
     bool    negative = false;
 
-    if( ast_.kind( id ) == Node_kind::Unary_expr && static_cast<Token_kind>( ast_.aux( id ) ) == Token_kind::Minus &&
-        is_literal_expression( ast_.child( id, 0 ) ) )
+    if( ast_.kind( id ) == Node_kind::Unary_expr && ast_.op( id ) == Token_kind::Minus &&
+        is_literal_expression( ast_.operand( id ) ) )
     {
-        literal  = ast_.child( id, 0 );
+        literal  = ast_.operand( id );
         negative = ast_.kind( literal ) == Node_kind::Int_literal;
     }
 
@@ -300,7 +300,7 @@ Type_id Literals::standalone_literal_type( Node_id id, Type_id known ) const
         return Type_id {};
     }
 
-    const Literal_id value { ast_.aux( literal ) };
+    const Literal_id value = ast_.literal( literal );
 
     // Nothing the lexer could not scan, and nothing against a type with no range to be outside
     // of - a parameter's admissible set is slice 1e's question and is answered by check_literal.
@@ -334,7 +334,7 @@ Type_id Literals::standalone_literal_type( Node_id id, Type_id known ) const
 void Literals::warn_if_constant_comparison( Node_id id, Token_kind op, Type_id lhs_type, Type_id rhs_type )
 {
     const Folded folded[2] = {
-        constant_folder_.fold_integer( ast_.child( id, 0 ) ), constant_folder_.fold_integer( ast_.child( id, 1 ) )
+        constant_folder_.fold_integer( ast_.lhs( id ) ), constant_folder_.fold_integer( ast_.rhs( id ) )
     };
 
     // Either side may be the constant, and when both are, either may be the one out of range -

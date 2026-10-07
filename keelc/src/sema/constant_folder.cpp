@@ -126,13 +126,13 @@ bool Constant_folder::is_constant_expression( Node_id id ) const
 
     case Node_kind::Unary_expr:
         // `&x` is an address and `*p` a load; neither is a value known here.
-        switch( static_cast<Token_kind>( ast_.aux( id ) ) )
+        switch( ast_.op( id ) )
         {
         case Token_kind::Minus:
         case Token_kind::Plus:
         case Token_kind::Tilde:
         case Token_kind::Bang:
-            return is_constant_expression( ast_.child( id, 0 ) );
+            return is_constant_expression( ast_.operand( id ) );
 
         default:
             return false;
@@ -140,18 +140,18 @@ bool Constant_folder::is_constant_expression( Node_id id ) const
 
     case Node_kind::Binary_expr:
     {
-        const Token_kind op = static_cast<Token_kind>( ast_.aux( id ) );
+        const Token_kind op = ast_.op( id );
 
         if( op == Token_kind::Amp_amp || op == Token_kind::Pipe_pipe )
         {
             return false;
         }
 
-        return is_constant_expression( ast_.child( id, 0 ) ) && is_constant_expression( ast_.child( id, 1 ) );
+        return is_constant_expression( ast_.lhs( id ) ) && is_constant_expression( ast_.rhs( id ) );
     }
 
     case Node_kind::Cast_expr:
-        return is_constant_expression( ast_.child( id, 1 ) );
+        return is_constant_expression( ast_.operand( id ) );
 
     default:
         return false;
@@ -188,7 +188,7 @@ Folded Constant_folder::fold_integer( Node_id id, Type_id known ) const
     case Node_kind::Char_literal: // a code point is an integer value
     case Node_kind::Int_literal:
     {
-        const Literal_id value { ast_.aux( id ) };
+        const Literal_id value = ast_.literal( id );
 
         // A literal the lexer could not scan has no value recorded. It reported there.
         return value.is_valid() ? folded( literal_pool_.integer( value ), false ) : not_constant();
@@ -197,21 +197,21 @@ Folded Constant_folder::fold_integer( Node_id id, Type_id known ) const
     // Neither carries a Literal_id: a bool's value is in aux, and `nullptr` records nothing at
     // all. Both are integers here, which is also how the lowerer spells them.
     case Node_kind::Bool_literal:
-        return folded( ast_.aux( id ) != 0 ? 1 : 0, false );
+        return folded( ast_.is_true( id ) ? 1 : 0, false );
 
     case Node_kind::Null_literal:
         return folded( 0, false );
 
     case Node_kind::Unary_expr:
     {
-        const Folded operand = fold_integer( ast_.child( id, 0 ) );
+        const Folded operand = fold_integer( ast_.operand( id ) );
 
         if( !operand.constant || operand.overflowed )
         {
             return operand;
         }
 
-        switch( static_cast<Token_kind>( ast_.aux( id ) ) )
+        switch( ast_.op( id ) )
         {
         case Token_kind::Minus:
             return folded( operand.value.magnitude, !operand.value.negative );
@@ -242,9 +242,9 @@ Folded Constant_folder::fold_integer( Node_id id, Type_id known ) const
     // modulo the target's width.
     case Node_kind::Cast_expr:
     {
-        const Folded operand = fold_integer( ast_.child( id, 1 ) );
+        const Folded operand = fold_integer( ast_.operand( id ) );
 
-        if( !operand.constant || operand.overflowed || static_cast<Keyword>( ast_.aux( id ) ) == Keyword::Cast )
+        if( !operand.constant || operand.overflowed || ast_.keyword( id ) == Keyword::Cast )
         {
             return operand;
         }
@@ -263,8 +263,8 @@ Folded Constant_folder::fold_integer( Node_id id, Type_id known ) const
 
     case Node_kind::Binary_expr:
     {
-        const Folded left  = fold_integer( ast_.child( id, 0 ) );
-        const Folded right = fold_integer( ast_.child( id, 1 ) );
+        const Folded left  = fold_integer( ast_.lhs( id ) );
+        const Folded right = fold_integer( ast_.rhs( id ) );
 
         if( !left.constant || !right.constant )
         {
@@ -279,7 +279,7 @@ Folded Constant_folder::fold_integer( Node_id id, Type_id known ) const
         const Constant a = left.value;
         const Constant b = right.value;
 
-        switch( static_cast<Token_kind>( ast_.aux( id ) ) )
+        switch( ast_.op( id ) )
         {
         case Token_kind::Plus:
             return add_constants( a, b );
@@ -352,7 +352,7 @@ Folded Constant_folder::fold_integer( Node_id id, Type_id known ) const
             const u64   left_bits  = to_bits( a, described.width );
             const u64   right_bits = to_bits( b, described.width );
 
-            const Token_kind op = static_cast<Token_kind>( ast_.aux( id ) );
+            const Token_kind op = ast_.op( id );
 
             const u64 result = op == Token_kind::Amp    ? left_bits & right_bits
                                : op == Token_kind::Pipe ? left_bits | right_bits
@@ -383,21 +383,21 @@ std::optional<f64> Constant_folder::fold_float( Node_id id ) const
     {
     case Node_kind::Float_literal:
     {
-        const Literal_id value { ast_.aux( id ) };
+        const Literal_id value = ast_.literal( id );
 
         return value.is_valid() ? std::optional<f64>( literal_pool_.floating( value ) ) : std::nullopt;
     }
 
     case Node_kind::Unary_expr:
     {
-        const std::optional<f64> operand = fold_float( ast_.child( id, 0 ) );
+        const std::optional<f64> operand = fold_float( ast_.operand( id ) );
 
         if( !operand )
         {
             return std::nullopt;
         }
 
-        switch( static_cast<Token_kind>( ast_.aux( id ) ) )
+        switch( ast_.op( id ) )
         {
         case Token_kind::Minus:
             return -*operand;
@@ -422,24 +422,24 @@ std::optional<f64> Constant_folder::fold_float( Node_id id ) const
         return value.constant ? std::optional<f64>( static_cast<f64>( value.value.magnitude ) ) : std::nullopt;
     }
 
-    // Child 1 is the value, child 0 the annotation. The recursion settles which pool the operand
+    // The recursion settles which pool the operand
     // is in. No rounding to the target's width, which would be wrong rather than thorough:
     // check_constant measures this value with fits_float, and pre-rounding an overflow to infinity
     // is exactly the case that check exists to catch.
     case Node_kind::Cast_expr:
-        return fold_float( ast_.child( id, 1 ) );
+        return fold_float( ast_.operand( id ) );
 
     case Node_kind::Binary_expr:
     {
-        const std::optional<f64> left  = fold_float( ast_.child( id, 0 ) );
-        const std::optional<f64> right = fold_float( ast_.child( id, 1 ) );
+        const std::optional<f64> left  = fold_float( ast_.lhs( id ) );
+        const std::optional<f64> right = fold_float( ast_.rhs( id ) );
 
         if( !left || !right )
         {
             return std::nullopt;
         }
 
-        switch( static_cast<Token_kind>( ast_.aux( id ) ) )
+        switch( ast_.op( id ) )
         {
         case Token_kind::Plus:
             return *left + *right;
@@ -478,8 +478,8 @@ bool Constant_folder::check_constant( Node_id id, Type_id type )
     // being divided or shifted is not itself a constant.
     if( ast_.kind( id ) == Node_kind::Binary_expr )
     {
-        const Token_kind op    = static_cast<Token_kind>( ast_.aux( id ) );
-        const Node_id    right = ast_.child( id, 1 );
+        const Token_kind op    = ast_.op( id );
+        const Node_id    right = ast_.rhs( id );
 
         if( op == Token_kind::Slash || op == Token_kind::Percent )
         {

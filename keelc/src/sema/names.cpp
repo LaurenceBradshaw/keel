@@ -25,7 +25,7 @@ public:
           sm_( sm ),
           interner_( interner )
     {
-        for( const Node_id decl : ast_.children( ast_.root() ) )
+        for( const Node_id decl : ast_.declarations( ast_.root() ) )
         {
             if( is_aggregate( ast_.kind( decl ) ) )
             {
@@ -77,9 +77,9 @@ std::vector<Name> Name_collector::run()
     {
         const Node_id id { i };
 
-        if( ast_.kind( id ) == Node_kind::Call_expr && ast_.kind( ast_.child( id, 0 ) ) == Node_kind::Field_expr )
+        if( ast_.kind( id ) == Node_kind::Call_expr && ast_.kind( ast_.callee( id ) ) == Node_kind::Field_expr )
         {
-            called_.emplace( ast_.child( id, 0 ).v, types_.callee_of( id ) );
+            called_.emplace( ast_.callee( id ).v, types_.callee_of( id ) );
         }
     }
 
@@ -114,7 +114,7 @@ std::vector<Name> Name_collector::run()
 bool Name_collector::is_package( Node_id id ) const
 {
     return ast_.kind( id ) == Node_kind::Name_expr && !resolution_.declaration_of( id ).is_valid() &&
-           ast_.children( id ).empty() && resolution_.is_package( Symbol_id { ast_.aux( id ) } );
+           !ast_.type_arg_list( id ).is_valid() && resolution_.is_package( ast_.name( id ) );
 }
 
 // The declaration a written name refers to, or invalid when it is not a name or resolved to nothing.
@@ -125,7 +125,7 @@ Node_id Name_collector::referent( Node_id id ) const
     switch( ast_.kind( id ) )
     {
     case Node_kind::Name_expr:
-        return Symbol_id { ast_.aux( id ) } == Interner::keyword( Keyword::This ) ? Node_id {} : decl;
+        return ast_.name( id ) == Interner::keyword( Keyword::This ) ? Node_id {} : decl;
     case Node_kind::Named_type:
     case Node_kind::Struct_literal:
         return decl;
@@ -137,8 +137,8 @@ Node_id Name_collector::referent( Node_id id ) const
         }
 
         // `Colour::Red` and `Buffer::of`: the checker binds these, so the type is asked here.
-        const Node_id type = resolution_.declaration_of( ast_.child( id, 0 ) );
-        return type.is_valid() ? member_named( type, Symbol_id { ast_.aux( id ) } ) : Node_id {};
+        const Node_id type = resolution_.declaration_of( ast_.qualifier( id ) );
+        return type.is_valid() ? member_named( type, ast_.name( id ) ) : Node_id {};
     }
     case Node_kind::Field_expr:
         return member_after_dot( id );
@@ -158,7 +158,7 @@ Node_id Name_collector::member_after_dot( Node_id id ) const
         return call->second;
     }
 
-    Type_id type = types_.type_of( ast_.child( id, 0 ) );
+    Type_id type = types_.type_of( ast_.object( id ) );
 
     if( !type.is_valid() )
     {
@@ -171,7 +171,7 @@ Node_id Name_collector::member_after_dot( Node_id id ) const
     }
 
     const Node_id aggregate = types_.table().get( type ).declaration;
-    return aggregate.is_valid() ? member_named( aggregate, Symbol_id { ast_.aux( id ) } ) : Node_id {};
+    return aggregate.is_valid() ? member_named( aggregate, ast_.name( id ) ) : Node_id {};
 }
 
 std::optional<Name_kind> Name_collector::declaration_kind( Node_id decl ) const
@@ -216,7 +216,7 @@ Node_id Name_collector::member_named( Node_id type, Symbol_id name ) const
     {
         for( const Node_id variant : ast_.variants( type ) )
         {
-            if( Symbol_id { ast_.aux( variant ) } == name )
+            if( ast_.name( variant ) == name )
             {
                 return variant;
             }
@@ -226,7 +226,7 @@ Node_id Name_collector::member_named( Node_id type, Symbol_id name ) const
     {
         for( const Node_id member : ast_.members( type ) )
         {
-            if( Symbol_id { ast_.aux( member ) } == name &&
+            if( ast_.name( member ) == name &&
                 ( ast_.kind( member ) == Node_kind::Method_decl || ast_.kind( member ) == Node_kind::Field_decl ) )
             {
                 return member;
@@ -245,9 +245,8 @@ bool Name_collector::is_qualified( Node_id id ) const
     case Node_kind::Field_expr:
         return true;
     case Node_kind::Named_type:
-        return !ast_.children( id ).empty();
     case Node_kind::Struct_literal:
-        return ast_.initialisers( id ).size() != ast_.children( id ).size();
+        return ast_.package( id ).is_valid();
     default:
         return false;
     }
@@ -261,7 +260,7 @@ Span Name_collector::name_span( Node_id id ) const
         return ast_.type_name_span( id );
     }
 
-    const std::string_view name = interner_.text( Symbol_id { ast_.aux( id ) } );
+    const std::string_view name = interner_.text( ast_.name( id ) );
     const Span             node = ast_.span( id );
     const std::string_view text = sm_.file( node.file ).text;
 

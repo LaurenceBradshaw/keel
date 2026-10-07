@@ -88,13 +88,13 @@ Resolution Resolver::run()
     // declarations. Inside a function, scopes are populated as the walk proceeds, so using a local
     // before its declaration stays an error.
 
-    for( const Node_id decl : ast_.children( ast_.root() ) )
+    for( const Node_id decl : ast_.declarations( ast_.root() ) )
     {
         if( ast_.kind( decl ) == Node_kind::Function_decl || ast_.kind( decl ) == Node_kind::Var_decl ||
             ast_.kind( decl ) == Node_kind::Enum_decl || is_aggregate( ast_.kind( decl ) ) ||
-            ( ast_.kind( decl ) == Node_kind::Error && Symbol_id { ast_.aux( decl ) }.is_valid() ) )
+            ( ast_.kind( decl ) == Node_kind::Error && ast_.name( decl ).is_valid() ) )
         {
-            const Symbol_id name { ast_.aux( decl ) };
+            const Symbol_id name = ast_.name( decl );
 
             // Otherwise `kl::x` could name a member of the type as well as a declaration of the package.
             if( ( ast_.kind( decl ) == Node_kind::Enum_decl || is_aggregate( ast_.kind( decl ) ) ) &&
@@ -130,15 +130,15 @@ void Resolver::visit( Node_id id )
     case Node_kind::Error:
         return; // already reported; resolving inside it only cascades
     case Node_kind::Source_file:
-        for( const Node_id decl : ast_.children( id ) )
+        for( const Node_id decl : ast_.declarations( id ) )
         {
             // Declared already by the pre-pass. Going through the Var_decl case would declare it a
             // second time and report it against itself. Functions and structs do not hit this
             // because their cases do not declare - only Var_decl does.
             if( ast_.kind( decl ) == Node_kind::Var_decl )
             {
-                visit( ast_.child( decl, 0 ) ); // the type annotation
-                visit( ast_.child( decl, 1 ) ); // the initialiser
+                visit( ast_.annotation( decl ) );
+                visit( ast_.initialiser( decl ) );
                 continue;
             }
 
@@ -158,23 +158,23 @@ void Resolver::visit( Node_id id )
     case Node_kind::Method_decl:
     case Node_kind::Function_decl:
         push_scope( Scope_kind::Barrier );
-        visit( ast_.child( id, 3 ) ); // type parameters, before anything that can name one
-        visit( ast_.child( id, 0 ) ); // return type; invalid for Destructor_decl
-        visit( ast_.child( id, 1 ) ); // param list
-        visit( ast_.child( id, 2 ) ); // body
+        visit( ast_.type_param_list( id ) ); // before anything that can name one
+        visit( ast_.return_type( id ) );
+        visit( ast_.param_list( id ) );
+        visit( ast_.body( id ) );
         pop_scope();
         return;
     case Node_kind::Param_decl:
-        visit( ast_.child( id, 0 ) ); // the type annotation, which may name a struct
+        visit( ast_.annotation( id ) ); // which may name a struct
 
         // A function type's parameters are nameless, and may be at file scope with no scope open.
-        if( Symbol_id { ast_.aux( id ) }.is_valid() )
+        if( ast_.name( id ).is_valid() )
         {
-            declare( scopes_.back(), Symbol_id { ast_.aux( id ) }, id );
+            declare( scopes_.back(), ast_.name( id ), id );
         }
         return;
     case Node_kind::Type_param_decl:
-        declare( scopes_.back(), Symbol_id { ast_.aux( id ) }, id );
+        declare( scopes_.back(), ast_.name( id ), id );
         return;
     case Node_kind::For_stmt:
         push_scope();
@@ -185,9 +185,9 @@ void Resolver::visit( Node_id id )
         pop_scope();
         return;
     case Node_kind::Var_decl:
-        visit( ast_.child( id, 0 ) ); // type
-        visit( ast_.child( id, 1 ) ); // Var_decl arity of 2: type, initialiser
-        declare( scopes_.back(), Symbol_id { ast_.aux( id ) }, id );
+        visit( ast_.annotation( id ) );
+        visit( ast_.initialiser( id ) );
+        declare( scopes_.back(), ast_.name( id ), id );
         return;
     case Node_kind::String_literal:
         if( !bindings_[id.v].is_valid() )
@@ -197,7 +197,7 @@ void Resolver::visit( Node_id id )
         return;
     case Node_kind::Name_expr:
     {
-        const Symbol_id name { ast_.aux( id ) };
+        const Symbol_id name = ast_.name( id );
         const Node_id   decl = lookup( name, id );
 
         if( decl.is_valid() )
@@ -213,43 +213,32 @@ void Resolver::visit( Node_id id )
             reporter_.error_at( ast_.span( id ), fmt::format( "`{}` is not declared", interner_.text( name ) ) );
         }
 
-        if( !ast_.children( id ).empty() )
-        {
-            visit( ast_.child( id, 0 ) ); // type arguments, if any
-        }
+        visit( ast_.type_arg_list( id ) );
 
         return;
     }
     case Node_kind::Path_expr:
     {
-        const Node_id qualifier = ast_.child( id, 0 );
-        if( ast_.kind( qualifier ) == Node_kind::Name_expr && ast_.children( qualifier ).empty() &&
-            imports_.is_package( Symbol_id { ast_.aux( qualifier ) } ) )
+        const Node_id qualifier = ast_.qualifier( id );
+        if( ast_.kind( qualifier ) == Node_kind::Name_expr && !ast_.type_arg_list( qualifier ).is_valid() &&
+            imports_.is_package( ast_.name( qualifier ) ) )
         {
             bindings_[id.v] = lookup_qualified( qualifier, id );
 
-            if( ast_.children( id ).size() > 1 )
-            {
-                visit( ast_.child( id, 1 ) ); // type arguments
-            }
+            visit( ast_.type_arg_list( id ) );
 
             return;
         }
 
-        if( ast_.kind( qualifier ) == Node_kind::Name_expr && ast_.children( qualifier ).empty() &&
-            is_builtin_type_name( interner_.text( Symbol_id { ast_.aux( qualifier ) } ) ) )
+        if( ast_.kind( qualifier ) == Node_kind::Name_expr && !ast_.type_arg_list( qualifier ).is_valid() &&
+            is_builtin_type_name( interner_.text( ast_.name( qualifier ) ) ) )
         {
             reporter_.error_at(
                 ast_.span( qualifier ),
-                fmt::format(
-                    "`{}` is a builtin type, and has no members", interner_.text( Symbol_id { ast_.aux( qualifier ) } )
-                )
+                fmt::format( "`{}` is a builtin type, and has no members", interner_.text( ast_.name( qualifier ) ) )
             );
 
-            if( ast_.children( id ).size() > 1 )
-            {
-                visit( ast_.child( id, 1 ) );
-            }
+            visit( ast_.type_arg_list( id ) );
 
             return;
         }
@@ -259,15 +248,14 @@ void Resolver::visit( Node_id id )
             visit( child );
         }
 
-        if( ast_.kind( qualifier ) == Node_kind::Name_expr && ast_.children( qualifier ).empty() )
+        if( ast_.kind( qualifier ) == Node_kind::Name_expr && !ast_.type_arg_list( qualifier ).is_valid() )
         {
-            const Node_id name = lookup( Symbol_id { ast_.aux( qualifier ) }, qualifier );
+            const Node_id name = lookup( ast_.name( qualifier ), qualifier );
             if( name.is_valid() && is_aggregate( ast_.kind( name ) ) )
             {
                 for( const Node_id member : ast_.members( name ) )
                 {
-                    if( ast_.kind( member ) == Node_kind::Var_decl &&
-                        Symbol_id { ast_.aux( member ) } == Symbol_id { ast_.aux( id ) } )
+                    if( ast_.kind( member ) == Node_kind::Var_decl && ast_.name( member ) == ast_.name( id ) )
                     {
                         bindings_[id.v] = member;
                         return;
@@ -282,13 +270,13 @@ void Resolver::visit( Node_id id )
     {
         // `kl::Point`, whose one child is the package. A miss there is reported, since nothing
         // later can tell a qualified name from a misspelt builtin.
-        if( !ast_.children( id ).empty() )
+        if( ast_.package( id ).is_valid() )
         {
-            bindings_[id.v] = lookup_qualified( ast_.child( id, 0 ), id );
+            bindings_[id.v] = lookup_qualified( ast_.package( id ), id );
             return;
         }
 
-        const Node_id decl = lookup( Symbol_id { ast_.aux( id ) }, id );
+        const Node_id decl = lookup( ast_.name( id ), id );
         if( decl.is_valid() )
         {
             bind( id, decl );
@@ -298,11 +286,11 @@ void Resolver::visit( Node_id id )
     }
     case Node_kind::Struct_literal:
     {
-        const Symbol_id name { ast_.aux( id ) };
+        const Symbol_id name = ast_.name( id );
 
-        if( ast_.initialisers( id ).size() != ast_.children( id ).size() )
+        if( ast_.package( id ).is_valid() )
         {
-            bindings_[id.v] = lookup_qualified( ast_.child( id, 0 ), id );
+            bindings_[id.v] = lookup_qualified( ast_.package( id ), id );
         }
         else if( const Node_id decl = lookup( name, id ); decl.is_valid() )
         {
@@ -330,9 +318,7 @@ void Resolver::visit( Node_id id )
         // both is what makes `r` visible in the body and invisible in the next arm.
         push_scope();
 
-        const std::span<const Node_id> parts = ast_.children( id );
-
-        for( const Node_id label : parts.subspan( 0, parts.size() - 1 ) )
+        for( const Node_id label : ast_.labels( id ) )
         {
             if( ast_.kind( label ) != Node_kind::Variant_pattern )
             {
@@ -341,17 +327,15 @@ void Resolver::visit( Node_id id )
             }
 
             // The path resolves like any other; the bindings are declarations rather than uses.
-            const std::span<const Node_id> pattern = ast_.children( label );
+            visit( ast_.variant_path( label ) );
 
-            visit( pattern[0] );
-
-            for( const Node_id binding : pattern.subspan( 1 ) )
+            for( const Node_id binding : ast_.bindings( label ) )
             {
-                declare( scopes_.back(), Symbol_id { ast_.aux( binding ) }, binding );
+                declare( scopes_.back(), ast_.name( binding ), binding );
             }
         }
 
-        visit( parts.back() );
+        visit( ast_.body( id ) );
         pop_scope();
         return;
     }
@@ -363,26 +347,21 @@ void Resolver::visit( Node_id id )
         //
         // Their payload fields still have to be *visited*, though: `Circle( Point centre )` names a
         // type, and nothing else will resolve it.
-        const std::span<const Node_id> children = ast_.children( id );
-
         push_scope( Scope_kind::Barrier );
         visit( ast_.type_param_list( id ) );
 
-        if( !is_builtin_type_name( interner_.text( Symbol_id { ast_.aux( id ) } ) ) )
+        if( !is_builtin_type_name( interner_.text( ast_.name( id ) ) ) )
         {
-            scopes_.back().names.emplace( Symbol_id { ast_.aux( id ) }, id );
+            scopes_.back().names.emplace( ast_.name( id ), id );
         }
 
-        if( children[1].is_valid() )
-        {
-            visit( children[1] );
-        }
+        visit( ast_.underlying_type( id ) );
 
-        for( const Node_id variant : children.subspan( 2 ) )
+        for( const Node_id variant : ast_.variants( id ) )
         {
-            for( const Node_id field : ast_.children( variant ) )
+            for( const Node_id field : ast_.payload( variant ) )
             {
-                visit( ast_.child( field, 0 ) );
+                visit( ast_.annotation( field ) );
             }
         }
 
@@ -408,9 +387,9 @@ void Resolver::visit( Node_id id )
         push_scope( Scope_kind::Barrier );
         visit( ast_.type_param_list( id ) );
 
-        if( !is_builtin_type_name( interner_.text( Symbol_id { ast_.aux( id ) } ) ) )
+        if( !is_builtin_type_name( interner_.text( ast_.name( id ) ) ) )
         {
-            scopes_.back().names.emplace( Symbol_id { ast_.aux( id ) }, id );
+            scopes_.back().names.emplace( ast_.name( id ), id );
         }
 
         std::unordered_map<u32, Node_id> members;
@@ -428,11 +407,11 @@ void Resolver::visit( Node_id id )
             }
             else
             {
-                visit( ast_.child( field, 0 ) );
-                visit( ast_.child( field, 1 ) );
+                visit( ast_.annotation( field ) );
+                visit( ast_.initialiser( field ) );
             }
 
-            const Symbol_id name { ast_.aux( field ) };
+            const Symbol_id name = ast_.name( field );
 
             if( !name.is_valid() )
             {
@@ -473,7 +452,7 @@ void Resolver::visit( Node_id id )
                 continue;
             }
 
-            const Symbol_id name { ast_.aux( member ) };
+            const Symbol_id name = ast_.name( member );
 
             if( !name.is_valid() )
             {
@@ -726,9 +705,9 @@ Node_id Resolver::lookup( Symbol_id name, Node_id use )
 // package is missing, whose import was reported instead.
 Node_id Resolver::lookup_qualified( Node_id package, Node_id use )
 {
-    const Symbol_id package_name { ast_.aux( package ) };
-    const Symbol_id name { ast_.aux( use ) };
-    const Node_id   decl = lookup_in( package_name, name, use );
+    const Symbol_id package_name = ast_.name( package );
+    const Symbol_id name         = ast_.name( use );
+    const Node_id   decl         = lookup_in( package_name, name, use );
 
     if( !decl.is_valid() )
     {
@@ -815,7 +794,7 @@ bool Resolver::refuse_builtin_name( Symbol_id name, Node_id decl )
 void Resolver::refuse_unimported( Node_id use, Node_id decl )
 {
     const File_id     file = ast_.span( decl ).file;
-    std::string_view  name = interner_.text( Symbol_id { ast_.aux( decl ) } );
+    std::string_view  name = interner_.text( ast_.name( decl ) );
     const std::string module_name =
         qualified( interner_, imports_.package_of( file ), std::filesystem::path( sm_.file( file ).path ).stem().string() );
 
@@ -829,7 +808,7 @@ void Resolver::refuse_unimported( Node_id use, Node_id decl )
 void Resolver::refuse_other_package( Node_id use, Node_id decl )
 {
     const Symbol_id  package = imports_.package_of( ast_.span( decl ).file );
-    std::string_view name    = interner_.text( Symbol_id { ast_.aux( decl ) } );
+    std::string_view name    = interner_.text( ast_.name( decl ) );
 
     reporter_.error_at(
         ast_.span( use ),

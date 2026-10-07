@@ -23,6 +23,36 @@ Node_id Ast::add( Node_kind kind, Span span, u32 aux, std::span<const Node_id> c
     return Node_id { narrow_cast<u32>( nodes_.size() - 1 ) };
 }
 
+void Ast::set_root( Node_id id )
+{
+    root_ = id;
+}
+
+void Ast::set_access( Node_id id, Access access )
+{
+    access_[id.v] = access;
+}
+
+void Ast::set_name_span( Node_id decl, Span span )
+{
+    name_spans_[decl.v] = span;
+}
+
+void Ast::set_type_name_span( Node_id literal, Span span )
+{
+    type_name_spans_[literal.v] = span;
+}
+
+Node_id Ast::root() const
+{
+    return root_;
+}
+
+std::size_t Ast::node_count() const
+{
+    return nodes_.size();
+}
+
 Node_kind Ast::kind( Node_id id ) const
 {
     assert( id.is_valid() && id.v < nodes_.size() && "invalid node id" );
@@ -46,7 +76,6 @@ std::span<const Node_id> Ast::children( Node_id id ) const
     assert( id.is_valid() && id.v < nodes_.size() && "invalid node id" );
     const Node& node = nodes_[id.v];
 
-    // Note: this span is invalidated by any later add() call
     return std::span<const Node_id>( children_.data() + node.first_child, node.child_count );
 }
 
@@ -59,14 +88,23 @@ Node_id Ast::child( Node_id id, std::size_t index ) const
     return all[index];
 }
 
-Node_id Ast::type_param_list( Node_id id ) const
+Access Ast::access( Node_id id ) const
 {
-    if( is_aggregate( kind( id ) ) || kind( id ) == Node_kind::Enum_decl )
-    {
-        return child( id, 0 );
-    }
+    const auto it = access_.find( id.v );
+    return it != access_.end() ? it->second : Access::Public;
+}
 
-    return is_function_like( kind( id ) ) ? child( id, 3 ) : Node_id {};
+Span Ast::name_span( Node_id decl ) const
+{
+    const auto it = name_spans_.find( decl.v );
+    return it != name_spans_.end() ? it->second : span( decl );
+}
+
+Span Ast::type_name_span( Node_id literal ) const
+{
+    assert( kind( literal ) == Node_kind::Struct_literal && "type name spans are a struct literal's, not any node's" );
+    const auto it = type_name_spans_.find( literal.v );
+    return it != type_name_spans_.end() ? it->second : Span::none();
 }
 
 void Ast::fail( Span at )
@@ -92,74 +130,488 @@ bool Ast::failed_within( Span span ) const
     return false;
 }
 
+Symbol_id Ast::name( Node_id id ) const
+{
+    switch( kind( id ) )
+    {
+    case Node_kind::Error:
+    case Node_kind::Import_decl:
+    case Node_kind::Function_decl:
+    case Node_kind::Destructor_decl:
+    case Node_kind::Constructor_decl:
+    case Node_kind::Method_decl:
+    case Node_kind::Param_decl:
+    case Node_kind::Named_type:
+    case Node_kind::Name_expr:
+    case Node_kind::Var_decl:
+    case Node_kind::Struct_decl:
+    case Node_kind::Class_decl:
+    case Node_kind::Enum_decl:
+    case Node_kind::Variant_decl:
+    case Node_kind::Path_expr:
+    case Node_kind::Field_decl:
+    case Node_kind::Field_expr:
+    case Node_kind::Struct_literal:
+    case Node_kind::Field_init:
+    case Node_kind::Binding_decl:
+    case Node_kind::Type_param_decl:
+    case Node_kind::Where_clause:
+    case Node_kind::Bound_name:
+        return Symbol_id { aux( id ) };
+    default:
+        assert( false && "this kind's aux is not a name" );
+        return Symbol_id {};
+    }
+}
+
+Token_kind Ast::op( Node_id id ) const
+{
+    assert(
+        ( kind( id ) == Node_kind::Binary_expr || kind( id ) == Node_kind::Unary_expr || kind( id ) == Node_kind::Assign_stmt ||
+          kind( id ) == Node_kind::Increment_stmt ) &&
+        "this kind's aux is not an operator"
+    );
+    return static_cast<Token_kind>( aux( id ) );
+}
+
+Keyword Ast::keyword( Node_id id ) const
+{
+    assert(
+        ( kind( id ) == Node_kind::Mode_type || kind( id ) == Node_kind::Marker_expr || kind( id ) == Node_kind::Cast_expr ) &&
+        "this kind's aux is not a keyword"
+    );
+    return static_cast<Keyword>( aux( id ) );
+}
+
+Literal_id Ast::literal( Node_id id ) const
+{
+    assert(
+        ( kind( id ) == Node_kind::Int_literal || kind( id ) == Node_kind::Float_literal ||
+          kind( id ) == Node_kind::String_literal || kind( id ) == Node_kind::Char_literal ) &&
+        "this kind's aux is not a literal"
+    );
+    return Literal_id { aux( id ) };
+}
+
+bool Ast::is_true( Node_id literal ) const
+{
+    assert( kind( literal ) == Node_kind::Bool_literal );
+    return aux( literal ) != 0;
+}
+
+bool Ast::is_unsafe( Node_id block ) const
+{
+    assert( kind( block ) == Node_kind::Block );
+    return aux( block ) != 0;
+}
+
+bool Ast::is_default_arm( Node_id arm ) const
+{
+    assert( kind( arm ) == Node_kind::Case_arm );
+    return aux( arm ) != 0;
+}
+
+std::span<const Node_id> Ast::declarations( Node_id source_file ) const
+{
+    assert( kind( source_file ) == Node_kind::Source_file );
+    return children( source_file );
+}
+
+Node_id Ast::package( Node_id id ) const
+{
+    const std::span<const Node_id> all = children( id );
+
+    switch( kind( id ) )
+    {
+    case Node_kind::Import_decl:
+    case Node_kind::Named_type:
+        return all.empty() ? Node_id {} : all[0];
+    case Node_kind::Struct_literal:
+        return !all.empty() && kind( all[0] ) == Node_kind::Name_expr ? all[0] : Node_id {};
+    default:
+        assert( false && "this kind has no package" );
+        return Node_id {};
+    }
+}
+
+Node_id Ast::return_type( Node_id id ) const
+{
+    assert( ( is_function_like( kind( id ) ) || kind( id ) == Node_kind::Function_type ) && "no return type here" );
+    return child( id, 0 );
+}
+
+Node_id Ast::param_list( Node_id id ) const
+{
+    assert( ( is_function_like( kind( id ) ) || kind( id ) == Node_kind::Function_type ) && "no parameters here" );
+    return child( id, 1 );
+}
+
+std::span<const Node_id> Ast::params( Node_id id ) const
+{
+    return children( param_list( id ) );
+}
+
+std::span<const Node_id> Ast::explicit_params( Node_id fn ) const
+{
+    assert( is_function_like( kind( fn ) ) );
+    const std::span<const Node_id> all = params( fn );
+
+    return !all.empty() && name( all[0] ) == Interner::keyword( Keyword::This ) ? all.subspan( 1 ) : all;
+}
+
+Node_id Ast::body( Node_id id ) const
+{
+    switch( kind( id ) )
+    {
+    case Node_kind::While_stmt:
+        return child( id, 1 );
+    case Node_kind::For_stmt:
+        return child( id, 3 );
+    case Node_kind::Case_arm:
+        return children( id ).back();
+    default:
+        assert( is_function_like( kind( id ) ) && "this kind has no body" );
+        return child( id, 2 );
+    }
+}
+
+Node_id Ast::type_param_list( Node_id id ) const
+{
+    if( is_aggregate( kind( id ) ) || kind( id ) == Node_kind::Enum_decl )
+    {
+        return child( id, 0 );
+    }
+
+    return is_function_like( kind( id ) ) ? child( id, 3 ) : Node_id {};
+}
+
+// The parameters come before the clauses. An invalid list has neither.
+static std::size_t first_where_clause( const Ast& ast, Node_id list )
+{
+    const std::span<const Node_id> all = ast.children( list );
+
+    return static_cast<std::size_t>(
+        std::find_if( all.begin(), all.end(), [&]( Node_id n ) { return ast.kind( n ) == Node_kind::Where_clause; } ) -
+        all.begin()
+    );
+}
+
+std::span<const Node_id> Ast::type_param_decls( Node_id list ) const
+{
+    if( !list.is_valid() )
+    {
+        return {};
+    }
+
+    assert( kind( list ) == Node_kind::Type_param_list );
+    return children( list ).first( first_where_clause( *this, list ) );
+}
+
+std::span<const Node_id> Ast::where_clauses( Node_id list ) const
+{
+    if( !list.is_valid() )
+    {
+        return {};
+    }
+
+    assert( kind( list ) == Node_kind::Type_param_list );
+    return children( list ).subspan( first_where_clause( *this, list ) );
+}
+
+std::span<const Node_id> Ast::bounds( Node_id where_clause ) const
+{
+    assert( kind( where_clause ) == Node_kind::Where_clause );
+    return children( where_clause );
+}
+
+Node_id Ast::type_arg_list( Node_id id ) const
+{
+    const std::span<const Node_id> all = children( id );
+
+    switch( kind( id ) )
+    {
+    case Node_kind::Generic_type:
+        return all[1];
+    case Node_kind::Call_expr:
+        return all[2];
+    case Node_kind::Name_expr:
+        return all.empty() ? Node_id {} : all[0];
+    case Node_kind::Path_expr:
+        return all.size() > 1 ? all[1] : Node_id {};
+    default:
+        assert( false && "this kind has no type arguments" );
+        return Node_id {};
+    }
+}
+
+std::span<const Node_id> Ast::type_args( Node_id id ) const
+{
+    const Node_id list = type_arg_list( id );
+    return list.is_valid() ? children( list ) : std::span<const Node_id> {};
+}
+
 std::span<const Node_id> Ast::members( Node_id id ) const
 {
     assert( is_aggregate( kind( id ) ) && "members are a struct's or a class's, not any node's" );
-
-    // Child 0 is the type parameter list, invalid when the aggregate is not generic - always
-    // present either way, so that this is a subspan rather than a question about the node.
-    return children( id ).subspan( 1 );
+    return children( id ).subspan( 1 ); // past the Type_param_list slot
 }
 
 std::span<const Node_id> Ast::variants( Node_id id ) const
 {
     assert( kind( id ) == Node_kind::Enum_decl && "variants are an enum's, not any node's" );
+    return children( id ).subspan( 2 ); // past the Type_param_list and underlying-type slots
+}
 
-    // Child 0 is the type parameter list, child 1 is the underlying type, and the rest are the variants.
-    return children( id ).subspan( 2 );
+Node_id Ast::underlying_type( Node_id enum_decl ) const
+{
+    assert( kind( enum_decl ) == Node_kind::Enum_decl );
+    return child( enum_decl, 1 );
+}
+
+std::span<const Node_id> Ast::payload( Node_id variant ) const
+{
+    assert( kind( variant ) == Node_kind::Variant_decl );
+    return children( variant );
+}
+
+Node_id Ast::annotation( Node_id decl ) const
+{
+    assert(
+        ( kind( decl ) == Node_kind::Param_decl || kind( decl ) == Node_kind::Var_decl || kind( decl ) == Node_kind::Field_decl
+        ) &&
+        "this kind has no annotation"
+    );
+    return child( decl, 0 );
+}
+
+Node_id Ast::initialiser( Node_id decl ) const
+{
+    assert( kind( decl ) == Node_kind::Var_decl );
+    return child( decl, 1 );
+}
+
+Node_id Ast::declared_type( Node_id decl ) const
+{
+    switch( kind( decl ) )
+    {
+    case Node_kind::Function_type:
+        return return_type( decl );
+    case Node_kind::Field_type:
+        return child( decl, 0 );
+    default:
+        return is_function_like( kind( decl ) ) ? return_type( decl ) : annotation( decl );
+    }
+}
+
+Node_id Ast::inner_type( Node_id id ) const
+{
+    assert(
+        ( kind( id ) == Node_kind::Pointer_type || kind( id ) == Node_kind::Many_pointer_type ||
+          kind( id ) == Node_kind::Mode_type || kind( id ) == Node_kind::Const_type ) &&
+        "this kind wraps no type"
+    );
+    return child( id, 0 );
+}
+
+Node_id Ast::generic_name( Node_id generic_type ) const
+{
+    assert( kind( generic_type ) == Node_kind::Generic_type );
+    return child( generic_type, 0 );
+}
+
+Node_id Ast::lhs( Node_id binary ) const
+{
+    assert( kind( binary ) == Node_kind::Binary_expr );
+    return child( binary, 0 );
+}
+
+Node_id Ast::rhs( Node_id binary ) const
+{
+    assert( kind( binary ) == Node_kind::Binary_expr );
+    return child( binary, 1 );
+}
+
+Node_id Ast::operand( Node_id id ) const
+{
+    switch( kind( id ) )
+    {
+    case Node_kind::Cast_expr:
+        return child( id, 1 );
+    default:
+        assert(
+            ( kind( id ) == Node_kind::Unary_expr || kind( id ) == Node_kind::Marker_expr ||
+              kind( id ) == Node_kind::Increment_stmt ) &&
+            "this kind has no operand"
+        );
+        return child( id, 0 );
+    }
+}
+
+Node_id Ast::callee( Node_id call ) const
+{
+    assert( kind( call ) == Node_kind::Call_expr );
+    return child( call, 0 );
+}
+
+Node_id Ast::arg_list( Node_id call ) const
+{
+    assert( kind( call ) == Node_kind::Call_expr );
+    return child( call, 1 );
+}
+
+std::span<const Node_id> Ast::arguments( Node_id call ) const
+{
+    return children( arg_list( call ) );
+}
+
+Node_id Ast::object( Node_id id ) const
+{
+    assert( ( kind( id ) == Node_kind::Field_expr || kind( id ) == Node_kind::Index_expr ) && "this kind has no object" );
+    return child( id, 0 );
+}
+
+Node_id Ast::index( Node_id index_expr ) const
+{
+    assert( kind( index_expr ) == Node_kind::Index_expr );
+    return child( index_expr, 1 );
+}
+
+Node_id Ast::qualifier( Node_id path ) const
+{
+    assert( kind( path ) == Node_kind::Path_expr );
+    return child( path, 0 );
 }
 
 std::span<const Node_id> Ast::initialisers( Node_id id ) const
 {
     assert( kind( id ) == Node_kind::Struct_literal && "initialisers are a struct literal's, not any node's" );
+    return children( id ).subspan( package( id ).is_valid() ? 1 : 0 );
+}
 
+Node_id Ast::value( Node_id id ) const
+{
+    switch( kind( id ) )
+    {
+    case Node_kind::Assign_stmt:
+        return child( id, 1 );
+    default:
+        assert( ( kind( id ) == Node_kind::Return_stmt || kind( id ) == Node_kind::Field_init ) && "this kind has no value" );
+        return child( id, 0 );
+    }
+}
+
+Node_id Ast::target( Node_id assign ) const
+{
+    assert( kind( assign ) == Node_kind::Assign_stmt );
+    return child( assign, 0 );
+}
+
+Node_id Ast::written_type( Node_id id ) const
+{
+    assert( ( kind( id ) == Node_kind::Cast_expr || kind( id ) == Node_kind::Alloc_expr ) && "this kind names no type" );
+    return child( id, 0 );
+}
+
+Node_id Ast::pointer( Node_id id ) const
+{
+    assert( ( kind( id ) == Node_kind::Free_expr || kind( id ) == Node_kind::Destroy_expr ) && "this kind has no pointer" );
+    return child( id, 0 );
+}
+
+Node_id Ast::count( Node_id id ) const
+{
+    assert( ( kind( id ) == Node_kind::Alloc_expr || kind( id ) == Node_kind::Destroy_expr ) && "this kind has no count" );
     const std::span<const Node_id> all = children( id );
-
-    return !all.empty() && kind( all.front() ) == Node_kind::Name_expr ? all.subspan( 1 ) : all;
+    return all.size() > 1 ? all[1] : Node_id {};
 }
 
-Access Ast::access( Node_id id ) const
+Node_id Ast::lower( Node_id range ) const
 {
-    const auto it = access_.find( id.v );
-    return it != access_.end() ? it->second : Access::Public;
+    assert( kind( range ) == Node_kind::Range_expr );
+    return child( range, 0 );
 }
 
-void Ast::set_access( Node_id id, Access access )
+Node_id Ast::upper( Node_id range ) const
 {
-    access_[id.v] = access;
+    assert( kind( range ) == Node_kind::Range_expr );
+    return child( range, 1 );
 }
 
-Span Ast::name_span( Node_id decl ) const
+Node_id Ast::condition( Node_id id ) const
 {
-    const auto it = name_spans_.find( decl.v );
-    return it != name_spans_.end() ? it->second : span( decl );
+    switch( kind( id ) )
+    {
+    case Node_kind::For_stmt:
+        return child( id, 1 );
+    default:
+        assert(
+            ( kind( id ) == Node_kind::If_stmt || kind( id ) == Node_kind::Conditional_expr ||
+              kind( id ) == Node_kind::While_stmt || kind( id ) == Node_kind::Assert_expr ) &&
+            "this kind has no condition"
+        );
+        return child( id, 0 );
+    }
 }
 
-void Ast::set_name_span( Node_id decl, Span span )
+Node_id Ast::then_branch( Node_id id ) const
 {
-    name_spans_[decl.v] = span;
+    assert( ( kind( id ) == Node_kind::If_stmt || kind( id ) == Node_kind::Conditional_expr ) && "no branches here" );
+    return child( id, 1 );
 }
 
-Span Ast::type_name_span( Node_id literal ) const
+Node_id Ast::else_branch( Node_id id ) const
 {
-    assert( kind( literal ) == Node_kind::Struct_literal && "type name spans are a struct literal's, not any node's" );
-    const auto it = type_name_spans_.find( literal.v );
-    return it != type_name_spans_.end() ? it->second : Span::none();
+    assert( ( kind( id ) == Node_kind::If_stmt || kind( id ) == Node_kind::Conditional_expr ) && "no branches here" );
+    return child( id, 2 );
 }
 
-void Ast::set_type_name_span( Node_id literal, Span span )
+Node_id Ast::expression( Node_id expr_stmt ) const
 {
-    type_name_spans_[literal.v] = span;
+    assert( kind( expr_stmt ) == Node_kind::Expr_stmt );
+    return child( expr_stmt, 0 );
 }
 
-Node_id Ast::root() const
+Node_id Ast::init( Node_id for_stmt ) const
 {
-    return root_;
+    assert( kind( for_stmt ) == Node_kind::For_stmt );
+    return child( for_stmt, 0 );
 }
 
-void Ast::set_root( Node_id id )
+Node_id Ast::update( Node_id for_stmt ) const
 {
-    root_ = id;
+    assert( kind( for_stmt ) == Node_kind::For_stmt );
+    return child( for_stmt, 2 );
+}
+
+Node_id Ast::scrutinee( Node_id switch_stmt ) const
+{
+    assert( kind( switch_stmt ) == Node_kind::Switch_stmt );
+    return child( switch_stmt, 0 );
+}
+
+std::span<const Node_id> Ast::arms( Node_id switch_stmt ) const
+{
+    assert( kind( switch_stmt ) == Node_kind::Switch_stmt );
+    return children( switch_stmt ).subspan( 1 );
+}
+
+std::span<const Node_id> Ast::labels( Node_id arm ) const
+{
+    assert( kind( arm ) == Node_kind::Case_arm );
+    const std::span<const Node_id> all = children( arm );
+    return all.first( all.size() - 1 ); // all but the body
+}
+
+Node_id Ast::variant_path( Node_id pattern ) const
+{
+    assert( kind( pattern ) == Node_kind::Variant_pattern );
+    return child( pattern, 0 );
+}
+
+std::span<const Node_id> Ast::bindings( Node_id pattern ) const
+{
+    assert( kind( pattern ) == Node_kind::Variant_pattern );
+    return children( pattern ).subspan( 1 );
 }
 
 Node_id enclosing_aggregate( const Ast& ast, Node_id member )
@@ -186,11 +638,6 @@ Node_id enclosing_aggregate( const Ast& ast, Node_id member )
     }
 
     return Node_id {};
-}
-
-std::size_t Ast::node_count() const
-{
-    return nodes_.size();
 }
 
 } // namespace keel
@@ -326,15 +773,15 @@ TEST_CASE( "ast_children_remain_correct_after_growth", "[ast]" )
     REQUIRE( kids[1] == y );
 }
 
-// Fixed arity with an invalid child in the slot, rather than a shorter list: If_stmt always has
-// three children and children()[2].is_valid() says whether there is an else.
+// An absent optional is an invalid id in its slot, not a shorter list: an If_stmt without `else`
+// still has three children.
 TEST_CASE( "ast_invalid_child_marks_an_absent_optional", "[ast]" )
 {
     Ast ast;
 
-    const Node_id cond = ast.add( Node_kind::Int_literal, at( 0, 1 ), 0, {} );
+    const Node_id cond = ast.add( Node_kind::Bool_literal, at( 0, 1 ), 1, {} );
     const Node_id then = ast.add( Node_kind::Block, at( 2, 4 ), 0, {} );
-    const Node_id stmt = ast.add( Node_kind::Return_stmt, at( 0, 4 ), 0, { cond, then, Node_id {} } );
+    const Node_id stmt = ast.add( Node_kind::If_stmt, at( 0, 4 ), 0, { cond, then, Node_id {} } );
 
     const auto kids = ast.children( stmt );
 
@@ -372,8 +819,7 @@ TEST_CASE( "ast_accepts_a_span_as_well_as_a_braced_list", "[ast]" )
     REQUIRE( ast.child( list, 0 ) == a );
 }
 
-// The shape the parser must produce for `i32 main() { return 0; }`, built by hand. Also the tree
-// the dumper will be developed against.
+// The shape the parser produces for `i32 main() { return 0; }`, built by hand.
 TEST_CASE( "ast_builds_a_small_function", "[ast]" )
 {
     Ast ast;
@@ -383,7 +829,7 @@ TEST_CASE( "ast_builds_a_small_function", "[ast]" )
     const Node_id zero     = ast.add( Node_kind::Int_literal, at( 20, 21 ), 0, {} );
     const Node_id ret      = ast.add( Node_kind::Return_stmt, at( 13, 22 ), 0, { zero } );
     const Node_id body     = ast.add( Node_kind::Block, at( 11, 24 ), 0, { ret } );
-    const Node_id func     = ast.add( Node_kind::Function_decl, at( 0, 24 ), 0, { ret_type, params, body } );
+    const Node_id func     = ast.add( Node_kind::Function_decl, at( 0, 24 ), 0, { ret_type, params, body, Node_id {} } );
     const Node_id file     = ast.add( Node_kind::Source_file, at( 0, 24 ), 0, { func } );
 
     ast.set_root( file );
@@ -394,11 +840,11 @@ TEST_CASE( "ast_builds_a_small_function", "[ast]" )
     const Node_id only = ast.child( ast.root(), 0 );
     REQUIRE( ast.kind( only ) == Node_kind::Function_decl );
 
-    // Function_decl arity is fixed at three: return type, parameter list, body.
-    REQUIRE( ast.children( only ).size() == 3 );
+    REQUIRE( ast.children( only ).size() == 4 );
     REQUIRE( ast.kind( ast.child( only, 0 ) ) == Node_kind::Named_type );
     REQUIRE( ast.kind( ast.child( only, 1 ) ) == Node_kind::Param_list );
     REQUIRE( ast.kind( ast.child( only, 2 ) ) == Node_kind::Block );
+    REQUIRE_FALSE( ast.child( only, 3 ).is_valid() );
 
     const Node_id block = ast.child( only, 2 );
     REQUIRE( ast.children( block ).size() == 1 );

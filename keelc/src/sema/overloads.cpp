@@ -58,7 +58,7 @@ bool Overloads::deduce_for_candidate(
     Node_id callable, u32 implicit_params, std::span<const Argument_shape> shapes, std::vector<Type_id>& resolved
 )
 {
-    const std::span<const Node_id> params = ast_.children( ast_.child( callable, 1 ) ).subspan( implicit_params );
+    const std::span<const Node_id> params = ast_.params( callable ).subspan( implicit_params );
 
     Bindings bindings;
 
@@ -118,7 +118,7 @@ bool Overloads::deduce_type_arguments(
 )
 {
     const std::vector<Node_id>     parameters = type_parameters( ast_, ast_.type_param_list( callable ) );
-    const std::span<const Node_id> params     = ast_.children( ast_.child( callable, 1 ) ).subspan( implicit_params );
+    const std::span<const Node_id> params     = ast_.params( callable ).subspan( implicit_params );
 
     Bindings                         bindings;
     std::unordered_map<u32, Node_id> from; // which argument bound each parameter, for the messages
@@ -164,7 +164,7 @@ bool Overloads::deduce_type_arguments(
                 ast_.span( arguments[i] ),
                 fmt::format(
                     "`{}` cannot be both `{}` and `{}`",
-                    interner_.text( Symbol_id { ast_.aux( parameter ) } ),
+                    interner_.text( ast_.name( parameter ) ),
                     table_.name( already->second ),
                     table_.name( found->second )
                 ),
@@ -205,9 +205,7 @@ bool Overloads::deduce_type_arguments(
         {
             reporter_.error_at(
                 at,
-                fmt::format(
-                    "nothing here says what `{}` is in `{}`", interner_.text( Symbol_id { ast_.aux( parameter ) } ), name
-                ),
+                fmt::format( "nothing here says what `{}` is in `{}`", interner_.text( ast_.name( parameter ) ), name ),
                 fmt::format( "write the type arguments, as in `{}<i32>( ... )`", name )
             );
 
@@ -251,7 +249,7 @@ bool Overloads::candidate_accepts(
     Node_id callable, u32 implicit_params, std::span<const Argument_shape> shapes, const Bindings& bindings
 )
 {
-    const std::span<const Node_id> params = ast_.children( ast_.child( callable, 1 ) ).subspan( implicit_params );
+    const std::span<const Node_id> params = ast_.params( callable ).subspan( implicit_params );
 
     for( std::size_t i = 0; i < params.size() && i < shapes.size(); ++i )
     {
@@ -307,9 +305,8 @@ std::vector<Node_id> Overloads::viable_overloads(
     Node_id call, std::string_view name, std::span<const Node_id> candidates, u32 implicit_params, Type_id instance
 )
 {
-    const std::span<const Node_id> arguments = ast_.children( ast_.child( call, 1 ) );
-    const Node_id                  type_args = ast_.child( call, 2 );
-    const std::size_t              written   = type_args.is_valid() ? ast_.children( type_args ).size() : 0;
+    const std::span<const Node_id> arguments = ast_.arguments( call );
+    const std::size_t              written   = ast_.type_args( call ).size();
 
     // How many arguments and how many type arguments are what the call *says*, so they narrow the
     // set before anything is typed - and typing an argument is what cannot be taken back.
@@ -317,7 +314,7 @@ std::vector<Node_id> Overloads::viable_overloads(
 
     for( const Node_id candidate : candidates )
     {
-        const std::size_t params = ast_.children( ast_.child( candidate, 1 ) ).size() - implicit_params;
+        const std::size_t params = ast_.params( candidate ).size() - implicit_params;
 
         // A call that wrote type arguments means them, so a candidate has to take exactly that many
         // - which keeps a non-generic out of `f<i32>( x )`. A call that wrote none says nothing
@@ -336,8 +333,7 @@ std::vector<Node_id> Overloads::viable_overloads(
         const bool arity = std::none_of(
             candidates.begin(),
             candidates.end(),
-            [&]( Node_id candidate )
-            { return ast_.children( ast_.child( candidate, 1 ) ).size() - implicit_params == arguments.size(); }
+            [&]( Node_id candidate ) { return ast_.params( candidate ).size() - implicit_params == arguments.size(); }
         );
 
         reporter_.error_at(
@@ -365,12 +361,11 @@ Node_id Overloads::select_overload(
     std::vector<Type_id>&           resolved
 )
 {
-    const Node_id     type_args = ast_.child( call, 2 );
-    const std::size_t written   = type_args.is_valid() ? ast_.children( type_args ).size() : 0;
+    const std::size_t written = ast_.type_args( call ).size();
 
-    if( type_args.is_valid() )
+    if( ast_.type_arg_list( call ).is_valid() )
     {
-        for( const Node_id written_argument : ast_.children( type_args ) )
+        for( const Node_id written_argument : ast_.type_args( call ) )
         {
             resolved.push_back( annotations_.type_of( written_argument ) );
         }
@@ -486,15 +481,15 @@ std::vector<Node_id> Overloads::viable_methods( Node_id call, Node_id first, Typ
         return candidates; // one is the ordinary path, and the arity below is check_call_arguments'
     }
 
-    const std::span<const Node_id> arguments = ast_.children( ast_.child( call, 1 ) );
-    const std::string_view         name      = interner_.text( Symbol_id { ast_.aux( first ) } );
+    const std::span<const Node_id> arguments = ast_.arguments( call );
+    const std::string_view         name      = interner_.text( ast_.name( first ) );
     const Bindings                 bindings  = aggregates_.bindings_of( receiver );
 
     std::vector<Node_id> viable;
 
     for( const Node_id candidate : candidates )
     {
-        if( ast_.children( ast_.child( candidate, 1 ) ).size() - 1 == arguments.size() )
+        if( ast_.params( candidate ).size() - 1 == arguments.size() )
         {
             viable.push_back( candidate );
         }
@@ -517,7 +512,7 @@ Node_id Overloads::select_method(
     Node_id call, Node_id first, Type_id receiver, std::span<const Node_id> viable, std::span<const Argument_shape> shapes
 )
 {
-    const std::string_view name     = interner_.text( Symbol_id { ast_.aux( first ) } );
+    const std::string_view name     = interner_.text( ast_.name( first ) );
     const Bindings         bindings = aggregates_.bindings_of( receiver );
 
     std::vector<Node_id> matching;
@@ -569,16 +564,16 @@ std::vector<Argument_work> Overloads::check_call_arguments(
     std::span<const Argument_shape> shapes
 )
 {
-    const std::span<const Node_id> declared  = ast_.children( ast_.child( callable, 1 ) );
+    const std::span<const Node_id> declared  = ast_.params( callable );
     const std::span<const Node_id> params    = declared.subspan( implicit_params );
-    const std::span<const Node_id> arguments = ast_.children( ast_.child( call, 1 ) );
+    const std::span<const Node_id> arguments = ast_.arguments( call );
 
     std::vector<Argument_work> work;
 
     if( params.size() != arguments.size() )
     {
         reporter_.error_at(
-            ast_.span( ast_.child( call, 1 ) ),
+            ast_.span( ast_.arg_list( call ) ),
             fmt::format(
                 "`{}` takes {} argument{}, but {} {} given",
                 name,
@@ -638,8 +633,8 @@ void Overloads::check_argument_markers(
     Node_id call, Node_id callable, std::string_view name, u32 implicit_params, const Bindings& bindings
 )
 {
-    const std::span<const Node_id> params    = ast_.children( ast_.child( callable, 1 ) ).subspan( implicit_params );
-    const std::span<const Node_id> arguments = ast_.children( ast_.child( call, 1 ) );
+    const std::span<const Node_id> params    = ast_.params( callable ).subspan( implicit_params );
+    const std::span<const Node_id> arguments = ast_.arguments( call );
 
     for( std::size_t i = 0; i < std::min( params.size(), arguments.size() ); ++i )
     {
@@ -658,8 +653,7 @@ void Overloads::check_argument_markers(
 // of one should never have to find the other.
 void Overloads::check_one_argument_marker( Node_id argument, Keyword wanted, Type_id expected, std::string_view name )
 {
-    const Keyword given =
-        ast_.kind( argument ) == Node_kind::Marker_expr ? static_cast<Keyword>( ast_.aux( argument ) ) : Keyword::Count;
+    const Keyword given = ast_.kind( argument ) == Node_kind::Marker_expr ? ast_.keyword( argument ) : Keyword::Count;
 
     // A ref binds to the caller's object itself, so there is no conversion step for a widened
     // copy to live in: `ref u8` and `ref i32` are different bindings, not convertible ones.
@@ -728,10 +722,8 @@ bool Overloads::parameters_collide( Node_id first, Node_id second, bool member )
     // only in it, `area()` and `area() const`, are one signature and have to be refused here. Asked
     // of each signature rather than of the kind, and separately: M7's static method is a member with
     // no receiver, so a pair may legitimately disagree about whether there is one to skip.
-    const std::span<const Node_id> mine =
-        ast_.children( ast_.child( first, 1 ) ).subspan( has_receiver( ast_, first ) ? 1 : 0 );
-    const std::span<const Node_id> theirs =
-        ast_.children( ast_.child( second, 1 ) ).subspan( has_receiver( ast_, second ) ? 1 : 0 );
+    const std::span<const Node_id> mine   = ast_.explicit_params( first );
+    const std::span<const Node_id> theirs = ast_.explicit_params( second );
 
     if( mine.size() != theirs.size() )
     {
@@ -791,7 +783,7 @@ void Overloads::check_overloaded_pair( Node_id first, Node_id second, bool membe
         return;
     }
 
-    const std::string_view name = interner_.text( Symbol_id { ast_.aux( second ) } );
+    const std::string_view name = interner_.text( ast_.name( second ) );
 
     // An extern names a symbol someone else defined, and `main` is the program's entry point:
     // both keep their spelling in C, so a second of either has nowhere to differ.
@@ -883,7 +875,7 @@ void Overloads::check_overloaded_pair( Node_id first, Node_id second, bool membe
 // follows it.
 void Overloads::check_overload_sets()
 {
-    for( const Node_id decl : ast_.children( ast_.root() ) )
+    for( const Node_id decl : ast_.declarations( ast_.root() ) )
     {
         if( ast_.kind( decl ) == Node_kind::Function_decl )
         {
@@ -916,7 +908,7 @@ void Overloads::check_aggregate_overloads( Node_id decl )
         }
 
         // An operator is declared once, which Signatures::check_operators enforces.
-        if( ast_.kind( member ) != Node_kind::Method_decl || interner_.is_operator_name( Symbol_id { ast_.aux( member ) } ) )
+        if( ast_.kind( member ) != Node_kind::Method_decl || interner_.is_operator_name( ast_.name( member ) ) )
         {
             continue;
         }
@@ -941,7 +933,7 @@ void Overloads::check_aggregate_overloads( Node_id decl )
 // author could have meant.
 std::string Overloads::signature_of( Node_id callable, u32 implicit_params, const Bindings& bindings )
 {
-    const std::span<const Node_id> params = ast_.children( ast_.child( callable, 1 ) ).subspan( implicit_params );
+    const std::span<const Node_id> params = ast_.params( callable ).subspan( implicit_params );
 
     // A list of candidates can hold a generic nothing has instantiated - the call wrote the wrong
     // number of type arguments, or none - and substituting a `T` the map has no entry for asserts.

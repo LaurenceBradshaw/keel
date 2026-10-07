@@ -64,7 +64,7 @@ Switch_coverage Coverage::begin_switch( Node_id id, Type_id type )
 
 void Coverage::check_arm_labels( Node_id arm, Switch_coverage& state )
 {
-    state.has_default = state.has_default || ast_.aux( arm ) == 1;
+    state.has_default = state.has_default || ast_.is_default_arm( arm );
 
     if( state.numeric )
     {
@@ -90,10 +90,7 @@ void Coverage::check_enum_arm_labels( Node_id arm, Switch_coverage& state )
 {
     std::vector<Node_id>& covered = state.variants;
 
-    const std::span<const Node_id> arm_children = ast_.children( arm );
-
-    // The last child is the body; everything before it is a label.
-    for( const Node_id label : arm_children.subspan( 0, arm_children.size() - 1 ) )
+    for( const Node_id label : ast_.labels( arm ) )
     {
         // D7: a pattern names a variant *and* binds its payload. The path inside it is what
         // covers the variant, so coverage is asked of that and the bindings are declared into the
@@ -151,7 +148,7 @@ void Coverage::check_enum_arm_labels( Node_id arm, Switch_coverage& state )
         {
             reporter_.error_at(
                 ast_.span( label ),
-                fmt::format( "`{}` is already covered", interner_.text( Symbol_id { ast_.aux( label ) } ) ),
+                fmt::format( "`{}` is already covered", interner_.text( ast_.name( label ) ) ),
                 reporter_.previous_declaration_note( ast_.span( covered[ordinal] ) )
             );
 
@@ -175,7 +172,7 @@ void Coverage::finish_enum_switch( const Switch_coverage& state )
     {
         if( !covered[i].is_valid() )
         {
-            missing.push_back( interner_.text( Symbol_id { ast_.aux( variants[i] ) } ) );
+            missing.push_back( interner_.text( ast_.name( variants[i] ) ) );
         }
     }
 
@@ -207,9 +204,7 @@ void Coverage::check_numeric_arm_labels( Node_id arm, Switch_coverage& state )
 {
     std::vector<Interval>& covered = state.intervals;
 
-    const std::span<const Node_id> arm_children = ast_.children( arm );
-
-    for( const Node_id label : arm_children.subspan( 0, arm_children.size() - 1 ) )
+    for( const Node_id label : ast_.labels( arm ) )
     {
         const bool is_range = ast_.kind( label ) == Node_kind::Range_expr;
 
@@ -230,8 +225,8 @@ void Coverage::check_numeric_arm_labels( Node_id arm, Switch_coverage& state )
 
         if( is_range )
         {
-            const std::optional<i64> low  = fold_bound( ast_.child( label, 0 ), state.type );
-            const std::optional<i64> high = fold_bound( ast_.child( label, 1 ), state.type );
+            const std::optional<i64> low  = fold_bound( ast_.lower( label ), state.type );
+            const std::optional<i64> high = fold_bound( ast_.upper( label ), state.type );
 
             if( !low.has_value() || !high.has_value() )
             {
@@ -315,9 +310,8 @@ void Coverage::finish_numeric_switch( const Switch_coverage& state )
 // which point writing through it would be writing into a value the enum still owns.
 void Coverage::check_variant_pattern( Node_id pattern, Type_id type, std::vector<Node_id>& covered )
 {
-    const std::span<const Node_id> parts    = ast_.children( pattern );
-    const Node_id                  path     = parts[0];
-    const std::span<const Node_id> bindings = parts.subspan( 1 );
+    const Node_id                  path     = ast_.variant_path( pattern );
+    const std::span<const Node_id> bindings = ast_.bindings( pattern );
 
     // The pattern accounts for the payload, so the path inside it names a variant rather than
     // standing for a value.
@@ -347,7 +341,7 @@ void Coverage::check_variant_pattern( Node_id pattern, Type_id type, std::vector
     {
         reporter_.error_at(
             ast_.span( path ),
-            fmt::format( "`{}` is already covered", interner_.text( Symbol_id { ast_.aux( path ) } ) ),
+            fmt::format( "`{}` is already covered", interner_.text( ast_.name( path ) ) ),
             reporter_.previous_declaration_note( ast_.span( covered[index] ) )
         );
 
@@ -358,7 +352,7 @@ void Coverage::check_variant_pattern( Node_id pattern, Type_id type, std::vector
 
     const Node_id                  decl    = table_.get( type ).declaration;
     const Node_id                  variant = ast_.variants( decl )[index];
-    const std::span<const Node_id> payload = ast_.children( variant );
+    const std::span<const Node_id> payload = ast_.payload( variant );
 
     // A variant that failed to parse has no count to hold its uses to.
     if( payload.size() != bindings.size() && !ast_.broken( variant ) )
@@ -367,7 +361,7 @@ void Coverage::check_variant_pattern( Node_id pattern, Type_id type, std::vector
             ast_.span( pattern ),
             fmt::format(
                 "`{}` carries {} value{}, but {} {} bound",
-                interner_.text( Symbol_id { ast_.aux( variant ) } ),
+                interner_.text( ast_.name( variant ) ),
                 payload.size(),
                 payload.size() == 1 ? "" : "s",
                 bindings.size(),
@@ -427,13 +421,11 @@ std::optional<i64> Coverage::fold_bound( Node_id bound, Type_id scrutinee )
 
 bool Coverage::arm_binds( Node_id arm ) const
 {
-    const std::span<const Node_id> children = ast_.children( arm );
-
-    for( const Node_id label : children.subspan( 0, children.size() - 1 ) )
+    for( const Node_id label : ast_.labels( arm ) )
     {
         // A Variant_pattern is the only label form that introduces names, and it carries one
         // Binding_decl per bound field - so an empty one binds nothing despite being a pattern.
-        if( ast_.kind( label ) == Node_kind::Variant_pattern && ast_.children( label ).size() > 1 )
+        if( ast_.kind( label ) == Node_kind::Variant_pattern && !ast_.bindings( label ).empty() )
         {
             return true;
         }
@@ -448,19 +440,18 @@ bool Coverage::arm_binds( Node_id arm ) const
 // have.
 void Coverage::check_arm_structure( Node_id id )
 {
-    const std::span<const Node_id> arms = ast_.children( id ).subspan( 1 );
+    const std::span<const Node_id> arms = ast_.arms( id );
 
     for( std::size_t i = 0; i < arms.size(); ++i )
     {
-        const Node_id                  arm      = arms[i];
-        const std::span<const Node_id> children = ast_.children( arm );
-        const Node_id                  body     = children.back();
-        const bool                     last     = i + 1 == arms.size();
+        const Node_id arm  = arms[i];
+        const Node_id body = ast_.body( arm );
+        const bool    last = i + 1 == arms.size();
 
         // Stacked labels share one body, so they must agree on what is in scope in it. The only
         // way to agree is to bind nothing: `case Circle( r ): case Rect( w, h ):` would read `r`
         // out of a Rect, which is a field that variant does not have.
-        if( children.size() > 2 && arm_binds( arm ) )
+        if( ast_.labels( arm ).size() > 1 && arm_binds( arm ) )
         {
             reporter_.error_at(
                 ast_.span( arm ),
@@ -529,19 +520,18 @@ void Coverage::check_arm_structure( Node_id id )
 
 void Coverage::type_bindings_as_errors( Node_id switch_id )
 {
-    for( const Node_id arm : ast_.children( switch_id ).subspan( 1 ) )
+    for( const Node_id arm : ast_.arms( switch_id ) )
     {
-        for( const Node_id label : ast_.children( arm ).subspan( 0, ast_.children( arm ).size() - 1 ) )
+        for( const Node_id label : ast_.labels( arm ) )
         {
             if( ast_.kind( label ) != Node_kind::Variant_pattern )
             {
                 continue;
             }
 
-            const std::span<const Node_id> children = ast_.children( label ).subspan( 1 );
-            for( const Node_id child : children )
+            for( const Node_id binding : ast_.bindings( label ) )
             {
-                types_.record( child, table_.builtin( Type_kind::Error ) );
+                types_.record( binding, table_.builtin( Type_kind::Error ) );
             }
         }
     }
@@ -574,19 +564,15 @@ bool Coverage::completes_normally( Node_id id ) const
     }
     case Node_kind::If_stmt:
     {
-        const std::span<const Node_id> children  = ast_.children( id );
-        const Node_id                  otherwise = children[2];
+        const Node_id otherwise = ast_.else_branch( id );
 
-        // Arity is fixed at three and the else *slot* survives when there is no else - so the test
-        // is whether that child is valid, never how many there are.
-        //
         // With no else the false path falls straight out, so the statement always completes.
         if( !otherwise.is_valid() )
         {
             return true;
         }
 
-        return completes_normally( children[1] ) || completes_normally( otherwise );
+        return completes_normally( ast_.then_branch( id ) ) || completes_normally( otherwise );
     }
     default:
         return true;

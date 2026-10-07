@@ -59,8 +59,8 @@ Program load_program(
         {
             if( ast.kind( decl ) == Node_kind::Import_decl )
             {
-                Symbol_id package_id = !ast.children( decl ).empty() ? Symbol_id { ast.aux( ast.child( decl, 0 ) ) }
-                                                                     : imports.package_of( current );
+                Symbol_id package_id =
+                    ast.package( decl ).is_valid() ? ast.name( ast.package( decl ) ) : imports.package_of( current );
 
                 std::filesystem::path module_folder = program_folder;
                 if( package_id.is_valid() )
@@ -84,7 +84,7 @@ Program load_program(
                     }
                 }
 
-                const std::string_view      module_name = interner.text( Symbol_id { ast.aux( decl ) } );
+                const std::string_view      module_name = interner.text( ast.name( decl ) );
                 const std::filesystem::path module_path = module_folder / ( std::string( module_name ) + ".kl" );
 
                 // Dedupes by canonical path, which is what stops cycles and diamonds
