@@ -17,9 +17,9 @@ fn twice {
     let _5: void;
 
     bb0:
-        _2 = &(*_1)
+        _2 = &borrow (*_1)
         _3 = call bump(copy _2)
-        _4 = &(*_1)
+        _4 = &borrow (*_1)
         _5 = call bump(copy _4)
         return
 }
@@ -30,7 +30,7 @@ fn slide {
     let _3: void;
 
     bb0:
-        _2 = &(*_1).x
+        _2 = &borrow (*_1).x
         _3 = call bump(copy _2)
         return
 }
@@ -50,14 +50,14 @@ fn main {
     bb0:
         storage_live _1
         _1 = const 1
-        _2 = &_1
+        _2 = &borrow _1
         _3 = call bump(copy _2)
-        _4 = &_1
+        _4 = &borrow _1
         _5 = call twice(copy _4)
         storage_live _6
         _7.x = const 10
         _6 = copy _7
-        _8 = &_6
+        _8 = &borrow _6
         _9 = call slide(copy _8)
         _10 = copy _1 + copy _6.x
         _0 = copy _10

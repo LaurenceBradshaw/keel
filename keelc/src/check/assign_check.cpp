@@ -179,12 +179,18 @@ void read_operand(
 // operands its kind does not use at their Constant default, so reading all of them needs no switch -
 // the same shape check_moves' read_rvalue has, and for the same reason.
 //
-// Address_of reads a place rather than a value: `&x` does not look at what is in x, and the rule
-// below treats it as putting something there. Deliberately nothing here for it.
+// A borrow reads its place; an Initialise address is the rule below's.
 void read_rvalue(
     const Function& func, const Rvalue& value, Span span, const Flow& flow, std::vector<Uninitialised_read>* reads
 )
 {
+    if( value.kind == Rvalue_kind::Address_of && value.address_purpose == Address_purpose::Borrow )
+    {
+        Operand borrowed = value.a;
+        borrowed.kind    = Operand_kind::Copy;
+        read_operand( func, borrowed, span, flow, reads );
+    }
+
     read_operand( func, value.a, span, flow, reads );
     read_operand( func, value.b, span, flow, reads );
 
@@ -270,28 +276,14 @@ void transfer_block(
             flow.always[local] = 1;
             flow.ever[local]   = 1;
 
-            // Taking a place's address counts as assigning it. The analysis cannot see what happens
-            // through a pointer, and this is the only thing that makes forwarding work:
-            // `void forward( out i32 n ) { init( out n ); }` lowers to `&n`, and the callee's
-            // promise to assign it is exactly what the marker at that call site says.
-            //
-            // It is the same shallowness place_root already has, and it errs in the safe direction
-            // for a *must* analysis - a `const ref` argument is treated as assigning too, so this
-            // can miss a real mistake but can never invent one.
-            if( statement.value.kind == Rvalue_kind::Address_of && !statement.value.a.place.is_global() )
+            // Only an `out` argument and a constructor's target assign through an address. The
+            // callee's promise to assign it is what the marker or the construction says, which is
+            // what makes `void forward( out i32 n ) { init( out n ); }` work.
+            if( statement.value.kind == Rvalue_kind::Address_of && !statement.value.a.place.is_global() &&
+                statement.value.address_purpose == Address_purpose::Initialise )
             {
                 const std::optional<u32> slot  = field_slot( func, statement.value.a.place );
                 const u32                taken = slot ? *slot : statement.value.a.place.local.v;
-
-                // Nothing writes through a `const` field's address, so taking it reads the field.
-                if( slot.has_value() && func.owed_fields[*slot - func.locals.size()].is_const )
-                {
-                    if( reads != nullptr )
-                    {
-                        read_slot( func, *slot, statement.span, false, flow, reads );
-                    }
-                    break;
-                }
 
                 flow.always[taken] = 1;
                 flow.ever[taken]   = 1;
@@ -760,7 +752,6 @@ TEST_CASE( "assign_check_accepts_what_is_initialised_indirectly", "[check][assig
              // wrong on its face, not because a case here can tell the difference.
              "i32 main() { i32 t = 0; i32 i = 0; while( i < 3 ) { i32 z; z = i; t = t + z; i = i + 1; } return t; }",
              // The address is taken and written through; the analysis cannot follow the pointer.
-             "i32 main() { i32 x; i32* q = &x; *q = 1; return x; }",
              "void bump( ref i32 v ) { v = v + 1; }\ni32 main() { i32 x = 1; bump( ref x ); return x; }",
              "struct N { i32 v; };\n"
              "i32 main() { i32 r = 0; unsafe { N* n = alloc<N>(); n.v = 7; r = n.v; free( n ); } return r; }",
@@ -798,19 +789,28 @@ TEST_CASE( "assign_check_ignores_unreachable_code", "[check][assign][d9]" )
     REQUIRE( c.functions.front().blocks.size() == 1 );
 }
 
-// Recorded rather than fixed: both err in the safe direction - they can miss a real mistake, never
-// invent one - and closing either needs a bigger lattice. Pinned so that the day one is closed,
-// this says so.
-TEST_CASE( "assign_check_is_shallow_in_two_known_ways", "[check][assign][d9]" )
+// A `T*` points at a live `T`, so borrowing an unassigned local is the read.
+TEST_CASE( "assign_check_reads_a_borrowed_place", "[check][assign][d9]" )
 {
-    SECTION( "taking the address counts as initialising, even if nothing writes through it" )
+    for( const char* source : {
+             "i32 main() { i32 x; i32* q = &x; return x; }",
+             "i32 main() { i32 x; i32* q = &x; *q = 1; return x; }",
+             "i32 peek( const ref i32 n ) { return n; }\ni32 main() { i32 x; return peek( x ); }",
+             "void bump( ref i32 v ) { v = v + 1; }\ni32 main() { i32 x; bump( ref x ); return x; }",
+         } )
     {
-        const Checked c( "i32 main() { i32 x; i32* q = &x; return x; }" );
+        const Checked c( source );
 
-        INFO( c.rendered() );
-        REQUIRE( c.reads().empty() );
+        INFO( source << "\n" << c.rendered() );
+        REQUIRE_FALSE( c.reads().empty() );
     }
+}
 
+// Recorded rather than fixed: it errs in the safe direction - it can miss a real mistake, never
+// invent one - and closing it needs a bigger lattice. Pinned so that the day it is closed, this
+// says so.
+TEST_CASE( "assign_check_is_shallow_in_one_known_way", "[check][assign][d9]" )
+{
     SECTION( "writing one field counts as initialising the whole struct" )
     {
         const Checked c( "struct P { i32 x; i32 y; };\ni32 main() { P p; p.x = 1; return p.y; }" );
@@ -1096,18 +1096,17 @@ TEST_CASE( "assign_check_accepts_a_forwarded_out_parameter", "[check][assign]" )
     REQUIRE( p.errors().empty() );
 }
 
-// The cost of that rule, pinned so it is a known trade rather than a surprise: a `const ref`
-// argument takes an address without assigning anything, and is treated as an assignment anyway.
-// Sound in the direction that matters - it can only fail to report - and the fix is for KIR to
-// record which arguments are `out`, which is worth doing when something needs it.
-TEST_CASE( "assign_check_is_satisfied_by_any_address_taken_for_now", "[check][assign]" )
+// Only `out` assigns through an address: a `const ref` argument reads, so passing an unwritten
+// `out` parameter to one is a read before assignment.
+TEST_CASE( "assign_check_is_not_satisfied_by_a_borrow", "[check][assign]" )
 {
     Checked p( "i32 peek( const ref i32 n ) { return n; }\n"
-               "void init( out i32 n ) { i32 ignored = peek( n ); }\n"
+               "void init( out i32 n ) { i32 ignored = peek( n ); n = 1; }\n"
                "i32 main() { i32 x = 0; init( out x ); return x; }" );
 
     INFO( p.rendered() );
     REQUIRE( p.errors().empty() );
+    REQUIRE( p.reads().size() == 1 );
 }
 
 // The pass asks whether a place was written, never what was written into it. An `out` parameter of

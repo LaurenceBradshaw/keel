@@ -238,13 +238,13 @@ Folded Constant_folder::fold_integer( Node_id id, Type_id known ) const
         }
     }
 
-    // Either a widening `cast` or a `wrap` - narrowing `cast` is refused until there is something
-    // to trap with - so this is a reduction modulo the target's width either way.
+    // `cast` keeps the value, so check_constant refuses one that does not fit; `wrap` reduces it
+    // modulo the target's width.
     case Node_kind::Cast_expr:
     {
         const Folded operand = fold_integer( ast_.child( id, 1 ) );
 
-        if( !operand.constant || operand.overflowed )
+        if( !operand.constant || operand.overflowed || static_cast<Keyword>( ast_.aux( id ) ) == Keyword::Cast )
         {
             return operand;
         }
@@ -1024,13 +1024,23 @@ TEST_CASE( "type_checker_allows_constants_that_fit", "[sema][types][constants]" 
         REQUIRE( p.clean() );
     }
 
-    // cast pushes the type in, so the constant is measured against u32 and refused.
+    // cast keeps the value, so a constant one is measured against u32 and refused here rather than
+    // failing at run time.
     SECTION( "and cast is not" )
     {
         const Typed p( "i32 main() { u32 mask = cast<u32>( 0 - 1 ); return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`-1` does not fit in `u32`" ) != std::string::npos );
+    }
+
+    SECTION( "a constant cast that fits is folded" )
+    {
+        const Typed p( "u8 g = cast<u8>( 100 + 100 );\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
     }
 
     SECTION( "comparisons cannot overflow and are left alone" )

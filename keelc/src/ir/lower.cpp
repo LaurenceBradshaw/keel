@@ -78,7 +78,7 @@ private:
     Operand lower_argument( Node_id argument, Node_id parameter, const Bindings& bindings );
     Operand borrowed_argument( Node_id argument, Type_id address );
 
-    Operand address_operand( Place place, Type_id type, Span span );
+    Operand address_operand( Place place, Type_id type, Span span, Address_purpose purpose );
 
     // One per construct, dispatched from lower_statement - the shape visit_* uses next door.
     void lower_block( Node_id id );
@@ -123,6 +123,7 @@ private:
     Type_id operation_type( Node_id node );
     Type_id comparison_width( Type_id type ) const;
     Operand converted( Operand operand, Type_id to, Span span );
+    Operand checked_cast( Operand operand, Type_id to, Span span );
     Operand moved_if_owning( Operand operand );
 
     bool is_move_parameter( Node_id param ) const;
@@ -485,6 +486,59 @@ Operand Lowering::converted( Operand operand, Type_id to, Span span )
     return copy( builder_.place( builder_.into_temp( cast_to( operand, to ), to, span ) ), to );
 }
 
+// D28: a narrowing `cast` ends the program unless the value comes back unchanged, sign included.
+Operand Lowering::checked_cast( Operand operand, Type_id to, Span span )
+{
+    const Type_table& table = types_.table();
+    const Type_id     from  = operand.type;
+    const Operand     value = converted( operand, to, span );
+
+    if( !table.is_integer( from ) || !table.is_integer( to ) )
+    {
+        return value;
+    }
+
+    const Type& source = table.get( from );
+    const Type& target = table.get( to );
+
+    const bool holds =
+        source.is_signed == target.is_signed ? target.width >= source.width : target.is_signed && target.width > source.width;
+    if( holds )
+    {
+        return value;
+    }
+
+    const Type_id  boolean = table.builtin( Type_kind::Bool );
+    const Block_id fail    = builder_.add_block();
+
+    const auto require = [&]( Rvalue condition )
+    {
+        const Block_id pass = builder_.add_block();
+        builder_.terminate_branch(
+            copy( builder_.place( builder_.into_temp( condition, boolean, span ) ), boolean ), pass, fail, span
+        );
+        builder_.switch_to( pass );
+    };
+
+    // A round trip misses a change of sign: -1 as a u32 comes back as -1.
+    require( binary( Token_kind::Equal_equal, converted( value, from, span ), operand, boolean ) );
+
+    if( source.is_signed != target.is_signed )
+    {
+        const Operand signed_side = source.is_signed ? operand : value;
+        require( binary(
+            Token_kind::Greater_equal, signed_side, constant( literal_pool_.add_integer( 0 ), signed_side.type ), boolean
+        ) );
+    }
+
+    const Block_id pass = builder_.current();
+    builder_.switch_to( fail );
+    builder_.terminate_assert_failed( span, Failure::Cast );
+    builder_.switch_to( pass );
+
+    return value;
+}
+
 Operand Lowering::moved_if_owning( Operand operand )
 {
     if( operand.kind != Operand_kind::Copy || !owns( operand.type ) )
@@ -706,9 +760,12 @@ void Lowering::lower_construction( Place target, Node_id call_expr )
     std::vector<Operand> operands;
 
     operands.reserve( arguments.size() + 1 );
-    operands.push_back(
-        copy( builder_.place( builder_.into_temp( address_of( target, receiver_type ), receiver_type, span ) ), receiver_type )
-    );
+    operands.push_back( copy(
+        builder_.place(
+            builder_.into_temp( address_of( target, receiver_type, Address_purpose::Initialise ), receiver_type, span )
+        ),
+        receiver_type
+    ) );
 
     // Two loops, as a plain call has, and for the same reason: every argument is lowered before any
     // is converted, so the statements come out in the order they were written (§7.1).
@@ -946,7 +1003,9 @@ Operand Lowering::lower_string_literal( Node_id id )
 
     const Operand operands[] = {
         copy(
-            builder_.place( builder_.into_temp( address_of( builder_.place( local ), receiver_type ), receiver_type, span ) ),
+            builder_.place( builder_.into_temp(
+                address_of( builder_.place( local ), receiver_type, Address_purpose::Initialise ), receiver_type, span
+            ) ),
             receiver_type
         ),
         copy( builder_.place( builder_.into_temp( literal_bytes( bytes, data_type ), data_type, span ) ), data_type ),
@@ -1016,8 +1075,9 @@ Operand Lowering::lower_operator_call( Node_id id, Node_id method )
 
     const std::span<const Node_id> parameters = ast_.children( ast_.child( method, 1 ) );
 
-    const Operand receiver =
-        address_operand( lower_place( object ), binding_type_under( parameters[0], bindings_for_call( id ) ), span );
+    const Operand receiver = address_operand(
+        lower_place( object ), binding_type_under( parameters[0], bindings_for_call( id ) ), span, Address_purpose::Borrow
+    );
     const Operand result = lower_method_call_on( id, method, receiver, ast_.children( id ).subspan( 1, 1 ), type_of( id ) );
 
     if( static_cast<Token_kind>( ast_.aux( id ) ) != Token_kind::Bang_equal )
@@ -1038,8 +1098,9 @@ Operand Lowering::lower_operator_index( Node_id id, Node_id method )
 
     const std::span<const Node_id> parameters = ast_.children( ast_.child( method, 1 ) );
 
-    const Operand receiver =
-        address_operand( lower_place( ast_.child( id, 0 ) ), binding_type_under( parameters[0], bindings ), span );
+    const Operand receiver = address_operand(
+        lower_place( ast_.child( id, 0 ) ), binding_type_under( parameters[0], bindings ), span, Address_purpose::Borrow
+    );
 
     return lower_method_call_on( id, method, receiver, ast_.children( id ).subspan( 1, 1 ), type_under( method, bindings ) );
 }
@@ -1081,7 +1142,7 @@ Operand Lowering::lower_unary( Node_id id )
 
         // A place, not an operand - which is why verify's Address_of case looks at a.place and
         // ignores the operand's kind.
-        const Rvalue address = address_of( lower_place( ast_.child( id, 0 ) ), type );
+        const Rvalue address = address_of( lower_place( ast_.child( id, 0 ) ), type, Address_purpose::Borrow );
 
         return copy( builder_.place( builder_.into_temp( address, type, span ) ), type );
     }
@@ -1220,10 +1281,14 @@ Operand Lowering::lower_method_call( Node_id id )
     // instead would hand the method a `Point**`, which type-checks nowhere and miscompiles here.
     const Type_id object_type = type_of( object );
 
-    const Operand receiver =
-        types_.table().is_pointer( object_type )
-            ? lower_expression( object )
-            : address_operand( lower_place( object ), binding_type_under( parameters[0], bindings_for_call( id ) ), span );
+    const Operand receiver = types_.table().is_pointer( object_type )
+                                 ? lower_expression( object )
+                                 : address_operand(
+                                       lower_place( object ),
+                                       binding_type_under( parameters[0], bindings_for_call( id ) ),
+                                       span,
+                                       Address_purpose::Borrow
+                                   );
 
     return lower_method_call_on( id, method, receiver );
 }
@@ -1540,7 +1605,10 @@ Operand Lowering::lower_expression( Node_id id )
     case Node_kind::Call_expr:
         return lower_call( id );
     case Node_kind::Cast_expr:
-        // TODO: distinguish between cast and wrap.
+        if( static_cast<Keyword>( ast_.aux( id ) ) == Keyword::Cast )
+        {
+            return checked_cast( lower_expression( ast_.child( id, 1 ) ), type_of( id ), ast_.span( id ) );
+        }
         return converted( lower_expression( ast_.child( id, 1 ) ), type_of( id ), ast_.span( id ) );
     case Node_kind::Alloc_expr:
     {
@@ -1570,7 +1638,7 @@ Operand Lowering::lower_expression( Node_id id )
         builder_.terminate_branch( op, pass, fail, span );
 
         builder_.switch_to( fail );
-        builder_.terminate_assert_failed( ast_.span( condition ) );
+        builder_.terminate_assert_failed( ast_.span( condition ), Failure::Assert );
 
         builder_.switch_to( pass );
 
@@ -1779,7 +1847,9 @@ void Lowering::lower_return( Node_id id )
             // form would buy nothing.
             const Type_id address = binding_type_of( declaration_ );
 
-            builder_.assign( builder_.place( k_return_slot ), address_of( lower_place( value ), address ), span );
+            builder_.assign(
+                builder_.place( k_return_slot ), address_of( lower_place( value ), address, Address_purpose::Borrow ), span
+            );
         }
         else
         {
@@ -1819,7 +1889,7 @@ void Lowering::lower_var( Node_id id )
         // owns nothing, so no drop is elaborated for it.
         if( borrowed )
         {
-            builder_.assign( builder_.place( local ), address_of( lower_place( init ), type ), span );
+            builder_.assign( builder_.place( local ), address_of( lower_place( init ), type, Address_purpose::Borrow ), span );
         }
         else if( is_construction( init ) )
         {
@@ -2432,7 +2502,13 @@ Operand Lowering::borrowed_argument( Node_id argument, Type_id address )
     // wherever it landed, which is also what drops the temporary afterwards.
     if( ast_.kind( argument ) == Node_kind::Marker_expr )
     {
-        return address_operand( lower_place( ast_.child( argument, 0 ) ), address, span );
+        const Keyword marker = static_cast<Keyword>( ast_.aux( argument ) );
+        return address_operand(
+            lower_place( ast_.child( argument, 0 ) ),
+            address,
+            span,
+            marker == Keyword::Out ? Address_purpose::Initialise : Address_purpose::Borrow
+        );
     }
 
     const Operand value = lower_expression( argument );
@@ -2446,12 +2522,12 @@ Operand Lowering::borrowed_argument( Node_id argument, Type_id address )
                             ? builder_.place( builder_.into_temp( use( value ), value.type, span ) )
                             : value.place;
 
-    return address_operand( place, address, span );
+    return address_operand( place, address, span, Address_purpose::Borrow );
 }
 
-Operand Lowering::address_operand( Place place, Type_id type, Span span )
+Operand Lowering::address_operand( Place place, Type_id type, Span span, Address_purpose purpose )
 {
-    return copy( builder_.place( builder_.into_temp( address_of( place, type ), type, span ) ), type );
+    return copy( builder_.place( builder_.into_temp( address_of( place, type, purpose ), type, span ) ), type );
 }
 
 } // namespace
@@ -4008,7 +4084,7 @@ TEST_CASE( "lower_takes_addresses_of_places", "[ir][lower][places]" )
         const std::string text = p.text( 0 );
 
         INFO( text );
-        REQUIRE( text.find( "_3 = &_1" ) != std::string::npos );
+        REQUIRE( text.find( "_3 = &borrow _1" ) != std::string::npos );
         REQUIRE( verify( p.functions[0] ).empty() );
     }
 
@@ -4018,7 +4094,7 @@ TEST_CASE( "lower_takes_addresses_of_places", "[ir][lower][places]" )
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.text( 0 ).find( "_3 = &_1.x" ) != std::string::npos );
+        REQUIRE( p.text( 0 ).find( "_3 = &borrow _1.x" ) != std::string::npos );
     }
 }
 
@@ -4212,7 +4288,7 @@ TEST_CASE( "lower_roots_places_in_globals", "[ir][lower][globals]" )
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.text( 0 ).find( "&counter" ) != std::string::npos );
+        REQUIRE( p.text( 0 ).find( "&borrow counter" ) != std::string::npos );
         REQUIRE( verify( p.functions[0] ).empty() );
     }
 
@@ -4622,7 +4698,7 @@ TEST_CASE( "lower_lowers_a_string_literal_to_str's_constructor", "[ir][lower][pr
         const std::string text = p.named( "main" );
 
         INFO( text );
-        REQUIRE( text.find( "_3 = &_2" ) != std::string::npos );
+        REQUIRE( text.find( "_3 = &init _2" ) != std::string::npos );
         REQUIRE( text.find( "_4 = bytes \"a\\x00b\"" ) != std::string::npos );
         REQUIRE( text.find( "call str(copy _3, copy _4, const 3)" ) != std::string::npos );
         REQUIRE( text.find( "_1 = copy _2" ) != std::string::npos );
@@ -4670,6 +4746,58 @@ TEST_CASE( "lower_lowers_assert_to_a_branch_and_a_failed_terminator", "[ir][lowe
     }
 }
 
+// The value must survive the round trip, and keep its sign when the signedness changes.
+TEST_CASE( "lower_checks_a_narrowing_cast", "[ir][lower][cast]" )
+{
+    SECTION( "narrower" )
+    {
+        Lowered p( "u8 f( i32 x ) { return cast<u8>( x ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string text = p.named( "f" );
+
+        INFO( text );
+        REQUIRE( text.find( "copy _1 as u8" ) != std::string::npos );
+        REQUIRE( text.find( "as i32" ) != std::string::npos );
+        REQUIRE( text.find( "== copy _1" ) != std::string::npos );
+        REQUIRE( text.find( "copy _1 >= const 0" ) != std::string::npos );
+        REQUIRE( text.find( "cast_failed" ) != std::string::npos );
+        REQUIRE( verify( p.functions[0] ).empty() );
+    }
+
+    // Unsigned to signed: the converted value is the one whose sign is tested.
+    SECTION( "same width, signedness changed" )
+    {
+        Lowered p( "i32 f( u32 x ) { return cast<i32>( x ); }" );
+
+        INFO( p.rendered() );
+
+        const std::string text = p.named( "f" );
+
+        INFO( text );
+        REQUIRE( text.find( "cast_failed" ) != std::string::npos );
+        REQUIRE( text.find( "copy _1 >= const 0" ) == std::string::npos );
+        REQUIRE( text.find( ">= const 0" ) != std::string::npos );
+    }
+
+    SECTION( "but not one that widens, nor a wrap" )
+    {
+        for( const char* body :
+             { "i64 f( i32 x ) { return cast<i64>( x ); }",
+               "i64 f( u32 x ) { return cast<i64>( x ); }",
+               "u8 f( i32 x ) { return wrap<u8>( x ); }" } )
+        {
+            Lowered p( body );
+
+            INFO( body << "\n" << p.rendered() );
+            REQUIRE( p.clean() );
+            REQUIRE( p.named( "f" ).find( "cast_failed" ) == std::string::npos );
+        }
+    }
+}
+
 // A constructor lowers like a destructor - an ordinary Function whose first parameter is the
 // receiver - but its *call* is a new shape: it returns nothing and writes through `this`, so an
 // initialisation is a call taking the local's address rather than an assignment.
@@ -4708,7 +4836,7 @@ TEST_CASE( "lower_lowers_a_constructor", "[ir][lower][aggregates]" )
         INFO( text );
         REQUIRE( p.clean() );
         REQUIRE( text.find( "storage_live _1" ) != std::string::npos );
-        REQUIRE( text.find( "&_1" ) != std::string::npos );
+        REQUIRE( text.find( "&init _1" ) != std::string::npos );
         REQUIRE( text.find( "call" ) != std::string::npos );
         REQUIRE( verify( p.functions[1] ).empty() );
     }
@@ -4829,7 +4957,7 @@ TEST_CASE( "lower_passes_a_ref_argument_as_an_address", "[ir][lower][ref]" )
 
     // The address goes into a temporary first, because an operand carries a place and not an
     // rvalue - the same step the synthesised destructor call already takes.
-    REQUIRE( text.find( "_2 = &_1" ) != std::string::npos );
+    REQUIRE( text.find( "_2 = &borrow _1" ) != std::string::npos );
     REQUIRE( text.find( "call bump(copy _2)" ) != std::string::npos );
 
     // And the caller's own local is untouched: a borrow is not a transfer, so nothing here is a
@@ -4851,7 +4979,7 @@ TEST_CASE( "lower_forwards_a_ref_binding", "[ir][lower][ref]" )
     const std::string text = p.text( 1 );
 
     INFO( text );
-    REQUIRE( text.find( "= &(*_1)" ) != std::string::npos );
+    REQUIRE( text.find( "= &borrow (*_1)" ) != std::string::npos );
 }
 
 // A class travels the same way, and the field reached through the binding is the caller's field.
@@ -4906,7 +5034,7 @@ TEST_CASE( "lower_borrows_at_the_call_without_moving", "[ir][lower][borrow]" )
     const std::string text = p.named( "main" );
 
     INFO( text );
-    REQUIRE( text.find( "= &_1" ) != std::string::npos );
+    REQUIRE( text.find( "= &borrow _1" ) != std::string::npos );
 
     // The two halves that make it a borrow: nothing is moved, and the caller still drops. Before
     // this, the argument was `copy _1` - a struct copy of an owning value, which is the one thing
@@ -4929,7 +5057,7 @@ TEST_CASE( "lower_drops_a_borrowed_temporary", "[ir][lower][borrow]" )
     const std::string text = p.named( "main" );
 
     INFO( text );
-    REQUIRE( text.find( "= &_1" ) != std::string::npos );
+    REQUIRE( text.find( "= &borrow _1" ) != std::string::npos );
     REQUIRE( text.find( "drop _1" ) != std::string::npos );
 }
 
@@ -5069,7 +5197,7 @@ TEST_CASE( "lower_forwards_a_bare_borrow", "[ir][lower][borrow]" )
 
     INFO( text );
     REQUIRE( text.find( "let _1: B*; // parameter b" ) != std::string::npos );
-    REQUIRE( text.find( "= &(*_1)" ) != std::string::npos );
+    REQUIRE( text.find( "= &borrow (*_1)" ) != std::string::npos );
 }
 
 // The regression the borrow rule broke once, and the reason it tests the *mode* rather than only
@@ -5110,7 +5238,7 @@ TEST_CASE( "lower_binds_a_ref_local_to_an_address", "[ir][lower][binding]" )
 
     INFO( text );
     REQUIRE( text.find( "let _2: i32*; // r" ) != std::string::npos );
-    REQUIRE( text.find( "_2 = &_1" ) != std::string::npos );
+    REQUIRE( text.find( "_2 = &borrow _1" ) != std::string::npos );
 
     // Writing through the binding reaches the referent, and reading `x` afterwards reads the same
     // place - which is what makes the exit code of the codegen fixture mean anything.
@@ -5128,7 +5256,7 @@ TEST_CASE( "lower_binds_a_ref_local_to_a_field", "[ir][lower][binding]" )
     const std::string text = p.named( "main" );
 
     INFO( text );
-    REQUIRE( text.find( "= &_1.x" ) != std::string::npos );
+    REQUIRE( text.find( "= &borrow _1.x" ) != std::string::npos );
 }
 
 // A binding owns nothing, so no drop is elaborated for it - the local it points at is dropped
@@ -5183,7 +5311,7 @@ TEST_CASE( "lower_passes_a_const_ref_parameter_by_address", "[ir][lower][constre
     const std::string caller = p.named( "main" );
 
     INFO( caller );
-    REQUIRE( caller.find( "= &_1" ) != std::string::npos );
+    REQUIRE( caller.find( "= &borrow _1" ) != std::string::npos );
     REQUIRE( caller.find( "call peek(copy _1)" ) == std::string::npos );
 }
 
@@ -5198,7 +5326,7 @@ TEST_CASE( "lower_binds_a_const_ref_local_to_an_address", "[ir][lower][constref]
 
     INFO( text );
     REQUIRE( text.find( "let _2: i32*; // r" ) != std::string::npos );
-    REQUIRE( text.find( "_2 = &_1" ) != std::string::npos );
+    REQUIRE( text.find( "_2 = &borrow _1" ) != std::string::npos );
     REQUIRE( text.find( "copy (*_2)" ) != std::string::npos );
 }
 
@@ -5216,7 +5344,7 @@ TEST_CASE( "lower_borrows_a_class_by_const_ref", "[ir][lower][constref]" )
     const std::string text = p.named( "main" );
 
     INFO( text );
-    REQUIRE( text.find( "= &_1" ) != std::string::npos );
+    REQUIRE( text.find( "= &borrow _1" ) != std::string::npos );
     REQUIRE( text.find( "move" ) == std::string::npos );
     REQUIRE( text.find( "drop _1" ) != std::string::npos );
 }
@@ -5242,7 +5370,7 @@ TEST_CASE( "lower_returns_a_const_ref_as_an_address", "[ir][lower][escape]" )
     // would buy nothing. It comes out as `&(*_1)` rather than `copy _1` because the parameter is
     // itself a binding, so lower_place derefs it and the address is taken straight back: the same
     // round trip forwarding a borrow already prints, and one a C compiler folds for free.
-    REQUIRE( callee.find( "_0 = &(*_1)" ) != std::string::npos );
+    REQUIRE( callee.find( "_0 = &borrow (*_1)" ) != std::string::npos );
 }
 
 // A field of a parameter is where the form earns its keep, and the address is of the projection.
@@ -5258,7 +5386,7 @@ TEST_CASE( "lower_returns_a_const_ref_to_a_field", "[ir][lower][escape]" )
     const std::string callee = p.named( "get" );
 
     INFO( callee );
-    REQUIRE( callee.find( "= &(*_1).x" ) != std::string::npos );
+    REQUIRE( callee.find( "= &borrow (*_1).x" ) != std::string::npos );
 }
 
 // At the caller the result is already an address, so binding takes it directly and copying derefs
@@ -5318,7 +5446,7 @@ TEST_CASE( "lower_passes_an_out_parameter_by_address", "[ir][lower][out]" )
     const std::string caller = p.named( "main" );
 
     INFO( caller );
-    REQUIRE( caller.find( "= &_1" ) != std::string::npos );
+    REQUIRE( caller.find( "= &init _1" ) != std::string::npos );
 }
 
 TEST_CASE( "lower_records_which_parameters_are_out", "[ir][lower][out]" )
@@ -5752,7 +5880,7 @@ TEST_CASE( "lower_passes_the_receiver_by_address", "[ir][lower][method]" )
     const std::string caller = p.named( "main" );
 
     INFO( caller );
-    REQUIRE( caller.find( "= &_1" ) != std::string::npos );
+    REQUIRE( caller.find( "= &borrow _1" ) != std::string::npos );
     REQUIRE( caller.find( "call get(copy _" ) != std::string::npos );
 }
 
@@ -5787,7 +5915,7 @@ TEST_CASE( "lower_passes_a_method's_borrowed_argument_by_address", "[ir][lower][
         const std::string caller = p.named( "main" );
 
         INFO( caller );
-        REQUIRE( caller.find( "_6 = &_3" ) != std::string::npos );
+        REQUIRE( caller.find( "_6 = &borrow _3" ) != std::string::npos );
         REQUIRE( caller.find( "as i32*" ) == std::string::npos );
     }
 
@@ -5802,7 +5930,7 @@ TEST_CASE( "lower_passes_a_method's_borrowed_argument_by_address", "[ir][lower][
         const std::string caller = p.named( "main" );
 
         INFO( caller );
-        REQUIRE( caller.find( "= &_3" ) != std::string::npos );
+        REQUIRE( caller.find( "= &borrow _3" ) != std::string::npos );
         REQUIRE( caller.find( "as i32*" ) == std::string::npos );
     }
 }
@@ -5842,7 +5970,7 @@ TEST_CASE( "lower_returns_a_reference_from_a_method", "[ir][lower][method]" )
 
     INFO( callee );
     REQUIRE( callee.find( "let _0: i32*; // return slot" ) != std::string::npos );
-    REQUIRE( callee.find( "_0 = &(*_1).x" ) != std::string::npos );
+    REQUIRE( callee.find( "_0 = &borrow (*_1).x" ) != std::string::npos );
 
     // And the caller binds the pointer it was handed rather than the address of a copy of it.
     const std::string caller = p.named( "main" );
@@ -5973,7 +6101,7 @@ TEST_CASE( "lower_indexes_through_an_offset", "[ir][lower][many]" )
         const std::string text = p.named( "at" );
 
         INFO( text );
-        REQUIRE( text.find( "= &(*_" ) != std::string::npos );
+        REQUIRE( text.find( "= &borrow (*_" ) != std::string::npos );
         REQUIRE( every_function_verifies( p ) );
     }
 

@@ -51,7 +51,7 @@ fn address_of_local {
         storage_live _1
         _1 = const 1
         storage_live _2
-        _3 = &_1
+        _3 = &borrow _1
         _2 = copy _3
         _0 = copy (*_2)
         storage_dead _2
@@ -66,7 +66,7 @@ fn address_of_field {
 
     bb0:
         storage_live _2
-        _3 = &_1.x
+        _3 = &borrow _1.x
         _2 = copy _3
         _0 = copy (*_2)
         storage_dead _2

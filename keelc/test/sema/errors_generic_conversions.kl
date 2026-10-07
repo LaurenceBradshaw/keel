@@ -11,6 +11,12 @@ i32 fine_wrap<T>( T v ) where T : Copyable & Integral
     return wrap<i32>( v );
 }
 
+// Narrowing is checked at run time in each instance that needs it.
+i8 fine_narrowing_cast<T>( T v ) where T : Copyable & Integral
+{
+    return cast<i8>( v );
+}
+
 f64 fine_cast<T>( T v ) where T : Copyable & Floating
 {
     return cast<f64>( v );
@@ -44,31 +50,9 @@ i32 numeric_to_int<T>( T v ) where T : Copyable & Numeric
     return cast<i32>( v );
 }
 
-// `Integral` rules the floats out, and `cast` still fails - on narrowing rather than on the pair.
-// `u8` is admissible and does not fit an `i8`.
-i8 integral_narrows<T>( T v ) where T : Copyable & Integral
-{
-    return cast<i8>( v );
-}
-
-// The widest target does not help: `Integral` admits `u64`, which reaches a signed type only at a
-// strictly greater width, so no concrete integer target survives this bound.
-i64 integral_narrows_wide<T>( T v ) where T : Copyable & Integral
-{
-    return cast<i64>( v );
-}
-
 // The parameter as the target rather than the source. The witness is drawn from the admissible set
 // on that side instead.
 T into_integral<T>( f64 v ) where T : Copyable & Integral
-{
-    return cast<T>( v );
-}
-
-// The parameter as the target with the pair table satisfied, so it is narrowing that refuses this
-// one. The witness has to come from the admissible set on the *target* side - `i8` is what an `i32`
-// will not fit, and `i32` is not news to anybody.
-T narrow_into_integral<T>( i32 v ) where T : Copyable & Integral
 {
     return cast<T>( v );
 }

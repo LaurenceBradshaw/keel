@@ -1,0 +1,63 @@
+// Each object is destroyed once: after a move and a refill, and when one path moves and the other
+// borrows. A borrow once re-armed the drop flag, so the moved value was destroyed again.
+i32 alive = 0;
+
+class Counted
+{
+    public u64 n;
+
+    Counted( u64 v )
+    {
+        n = v;
+        alive++;
+    }
+
+    ~Counted()
+    {
+        alive--;
+    }
+};
+
+void take( move Counted c )
+{
+}
+
+u64 look( Counted c )
+{
+    return c.n;
+}
+
+u64 refill()
+{
+    Counted c = Counted( 1 );
+    take( move c );
+    c = Counted( 2 );
+    return look( c );
+}
+
+u64 one_path( bool moved )
+{
+    Counted c = Counted( 3 );
+    u64     n = 0;
+
+    if( moved )
+    {
+        take( move c );
+    }
+    else
+    {
+        n = look( c );
+    }
+
+    return n;
+}
+
+i32 main()
+{
+    if( refill() != 2 || one_path( true ) != 0 || one_path( false ) != 3 )
+    {
+        return 1;
+    }
+
+    return alive;
+}

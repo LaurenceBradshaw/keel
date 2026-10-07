@@ -154,12 +154,10 @@ struct kl__buffer__I3i32E kl__filled__3i32( int32_t kl_value_1 )
     kl__buffer__I3i32E__R6bufferI3i32E_3u64__ctor( kl_t3, 2 );
 #line 99 "codegen/operator_index.kl"
     kl_t5 = &kl_result_2;
-    kl_t9 = true;
     kl_t6 = kl__operator_index__I3i32E__S6bufferI3i32E_3u64( kl_t5, 0 );
     ( *kl_t6 ) = kl_value_1;
 #line 100 "codegen/operator_index.kl"
     kl_t7 = &kl_result_2;
-    kl_t9 = true;
     kl_t8 = kl__operator_index__I3i32E__S6bufferI3i32E_3u64( kl_t7, 1 );
     ( *kl_t8 ) = kl_value_1;
 #line 101 "codegen/operator_index.kl"

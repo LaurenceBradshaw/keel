@@ -15,7 +15,7 @@ fn forwards {
     let _3: i32;
 
     bb0:
-        _2 = &(*_1)
+        _2 = &borrow (*_1)
         _3 = call sums(copy _2)
         _0 = copy _3
         return
@@ -30,7 +30,7 @@ fn binds_a_local {
         storage_live _1
         _1 = const 1
         storage_live _2
-        _2 = &_1
+        _2 = &borrow _1
         _3 = copy (*_2) + const 1
         _0 = copy _3
         storage_dead _2
@@ -49,7 +49,7 @@ fn main {
         _2.x = const 1
         _2.y = const 2
         _1 = copy _2
-        _3 = &_1
+        _3 = &borrow _1
         _4 = call forwards(copy _3)
         _0 = copy _4
         storage_dead _1

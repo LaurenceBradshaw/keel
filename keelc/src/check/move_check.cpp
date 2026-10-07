@@ -124,6 +124,25 @@ void read_operand( const Operand& operand, Span span, Flow& flow, std::vector<Mo
 // value.a, value.b, and operands[first_argument .. + argument_count].
 void read_rvalue( const Function& func, const Rvalue& value, Span span, Flow& flow, std::vector<Move_error>* errors )
 {
+    if( value.kind == Rvalue_kind::Address_of && !value.a.place.is_global() )
+    {
+        const u32   local = value.a.place.local.v;
+        const State state = flow.state[local];
+        if( value.address_purpose == Address_purpose::Borrow && ( state == State::Moved || state == State::Maybe_moved ) &&
+            errors != nullptr )
+        {
+            errors->push_back( Move_error {
+                .local = value.a.place.local, .use = span, .moved = flow.moved_at[local], .maybe = state == State::Maybe_moved
+            } );
+        }
+
+        if( value.address_purpose == Address_purpose::Initialise )
+        {
+            flow.state[local]    = State::Live;
+            flow.moved_at[local] = Span {};
+        }
+    }
+
     // a and b cover Use, Binary, Unary and Cast; the argument range cover Call. An Rvalue leaves
     // the operands its kind does not use at their Constant default, so reading all of them is safe
     // and needs no switch - which is the point of that default in kir.h
@@ -532,6 +551,40 @@ TEST_CASE( "move_check_tracks_parameters", "[check][move]" )
     INFO( p.rendered() );
     REQUIRE( p.clean() );
     REQUIRE( check_moves( p.functions[1] ).size() == 1 );
+}
+
+// A borrow reads the value, so one after a move is a use; only a constructor or an `out` argument
+// gives the local a value again.
+TEST_CASE( "move_check_finds_a_borrow_after_move", "[check][move]" )
+{
+    constexpr std::string_view k_owned =
+        "class B { public u64 n; B() { n = 0; } ~B() { } public u64 get() const { return n; } };\n"
+        "void take( move B b ) { }\n"
+        "u64 look( B b ) { return b.n; }\n"
+        "void poke( ref B b ) { }\n";
+
+    for( const char* use : { "u64 r = look( b );", "poke( ref b );", "u64 r = b.get();", "B* p = &b;", "u64 r = b.n;" } )
+    {
+        const Checked p( std::string( k_owned ) + "i32 main() { B b = B(); take( move b ); " + use + " return 0; }" );
+
+        INFO( use << "\n" << p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.errors().size() == 1 );
+    }
+
+    const Checked refilled(
+        std::string( k_owned ) + "i32 main() { B b = B(); take( move b ); b = B(); u64 r = look( b ); return 0; }"
+    );
+
+    INFO( refilled.rendered() );
+    REQUIRE( refilled.errors().empty() );
+
+    const Checked out( "void init( out i32 n ) { n = 1; }\nvoid bump( ref i32 n ) { }\n"
+                       "i32 main() { i32 a = 1; i32 c = move a; init( out a ); bump( ref a ); return a; }" );
+
+    INFO( out.rendered() );
+    REQUIRE( out.clean() );
+    REQUIRE( out.errors().empty() );
 }
 
 // The spans are what the driver turns into a message, so they have to name the right places.

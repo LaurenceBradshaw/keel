@@ -55,20 +55,20 @@ fn main {
     bb0:
         storage_live _1
         _1 = const 0
-        _2 = &_1
+        _2 = &init _1
         _3 = call init(copy _2)
         storage_live _4
         _4 = const 0
         storage_live _5
         _5 = const 0
-        _6 = &_4
-        _7 = &_5
+        _6 = &init _4
+        _7 = &init _5
         _8 = call divide(const 17, const 5, copy _6, copy _7)
         storage_live _9
         _10.x = const 0
         _10.y = const 0
         _9 = copy _10
-        _11 = &_9
+        _11 = &init _9
         _12 = call build(copy _11)
         _13 = copy _1 + copy _4
         _14 = copy _13 + copy _5

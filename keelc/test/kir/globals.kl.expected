@@ -24,7 +24,7 @@ fn address {
     let _1: i32*;
 
     bb0:
-        _1 = &counter
+        _1 = &borrow counter
         _0 = copy _1
         return
 }

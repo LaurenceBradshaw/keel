@@ -2749,7 +2749,7 @@ Type_id Expressions::infer_cast( Node_id id )
         }
     }
 
-    return types_.record( id, result.type );
+    return is_cast ? constant_folder_.record_constant( id, result.type ) : types_.record( id, result.type );
 }
 
 Type_id Expressions::infer_marker( Node_id id )

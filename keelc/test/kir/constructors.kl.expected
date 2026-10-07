@@ -50,13 +50,13 @@ fn main {
 
     bb0:
         storage_live _1
-        _2 = &_1
+        _2 = &init _1
         _3 = call Buffer(copy _2, const 4)
         storage_live _4
-        _5 = &_4
+        _5 = &init _4
         _6 = call Shadowed(copy _5, const 7)
         storage_live _7
-        _8 = &_7
+        _8 = &init _7
         _9 = call Owned(copy _8, const 1)
         drop _7
         storage_dead _7

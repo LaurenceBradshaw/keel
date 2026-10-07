@@ -223,7 +223,6 @@ int32_t kl__main__( void )
     kl__Buffer__R6Buffer_3u64__ctor( kl_t9, 3 );
 #line 99 "codegen/const_field.kl"
     kl_t11 = &kl_b_8;
-    kl_t41 = true;
     kl__fill__S6Buffer_3u64( kl_t11, 7 );
 #line 100 "codegen/const_field.kl"
     kl_t14 = kl_b_8.kl_size_8 != 3;
@@ -231,7 +230,6 @@ int32_t kl__main__( void )
     if ( kl_t13 ) goto bb8; else goto bb7;
     bb7:
     kl_t15 = &kl_b_8;
-    kl_t41 = true;
     kl_t16 = kl__sum__S6Buffer( kl_t15 );
     kl_t17 = kl_t16 != 21;
     kl_t13 = kl_t17;
@@ -251,7 +249,6 @@ int32_t kl__main__( void )
     kl__Buffer__R6Buffer_3u64__ctor( kl_t19, 2 );
 #line 104 "codegen/const_field.kl"
     kl_t21 = &kl_c_18;
-    kl_t42 = true;
     kl__fill__S6Buffer_3u64( kl_t21, 1 );
 #line 105 "codegen/const_field.kl"
     if ( kl_t41 ) kl__Buffer__dtor( &kl_b_8 );
@@ -264,7 +261,6 @@ int32_t kl__main__( void )
     if ( kl_t23 ) goto bb12; else goto bb11;
     bb11:
     kl_t25 = &kl_b_8;
-    kl_t41 = true;
     kl_t26 = kl__sum__S6Buffer( kl_t25 );
     kl_t27 = kl_t26 != 2;
     kl_t23 = kl_t27;

@@ -609,7 +609,6 @@ struct kl_2kl_list__I5ownedE kl__filled__( void )
     if ( kl_t14 ) kl_2kl_list__I5ownedE__dtor( &kl_t2 );
 #line 132 "codegen/kl_list_owning/main.kl"
     kl_t3 = &kl_values_1;
-    kl_t13 = true;
     kl_t15 = false;
     kl_t5 = &kl_t4;
     kl_t15 = true;
@@ -619,7 +618,6 @@ struct kl_2kl_list__I5ownedE kl__filled__( void )
     if ( kl_t15 ) kl__owned__dtor( &kl_t4 );
 #line 133 "codegen/kl_list_owning/main.kl"
     kl_t8 = &kl_values_1;
-    kl_t13 = true;
     kl_t16 = false;
     kl_t10 = &kl_t9;
     kl_t16 = true;

@@ -60,7 +60,7 @@ public:
     void terminate_goto( Block_id target, Span span );
     void terminate_branch( Operand condition, Block_id true_target, Block_id false_target, Span span );
     void terminate_return( Span span );
-    void terminate_assert_failed( Span condition );
+    void terminate_assert_failed( Span span, Failure failure );
 
     bool is_terminated() const;
 

@@ -929,17 +929,17 @@ void Kir_emitter::emit_terminator( const Terminator& terminator, const Function&
     case Terminator_kind::Assert_failed:
     {
         // As written, on one line: each run of whitespace becomes one space.
-        std::string condition_text;
+        std::string text;
 
         for( const char c : sm_.text( terminator.span ) )
         {
             if( c != ' ' && c != '\t' && c != '\n' && c != '\r' )
             {
-                condition_text.push_back( c );
+                text.push_back( c );
             }
-            else if( !condition_text.empty() && condition_text.back() != ' ' )
+            else if( !text.empty() && text.back() != ' ' )
             {
-                condition_text.push_back( ' ' );
+                text.push_back( ' ' );
             }
         }
 
@@ -947,7 +947,7 @@ void Kir_emitter::emit_terminator( const Terminator& terminator, const Function&
             "kl_rt_panic( {}, {}, {} );",
             c_string( sm_.file( terminator.span.file ).path ),
             sm_.line_col( terminator.span.file, terminator.span.start ).line,
-            c_string( "assertion failed: " + condition_text )
+            c_string( ( terminator.failure == Failure::Cast ? "cast out of range: " : "assertion failed: " ) + text )
         ) );
         return;
     }

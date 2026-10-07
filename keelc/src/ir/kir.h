@@ -125,6 +125,12 @@ enum class Rvalue_kind : u8
     Literal_bytes, // the address of a string literal's bytes; a is the literal
 };
 
+enum class Address_purpose : u8
+{
+    Borrow,
+    Initialise
+};
+
 // How a value is produced. One tagged struct rather than a variant hierarchy, as Node and Type
 // already are, so -Wswitch keeps every consumer exhaustive.
 struct Rvalue
@@ -142,6 +148,7 @@ struct Rvalue
     // identifies a function once one declaration can be emitted more than once. Defaulted like
     // every other field here, so the designated-initialiser factories below need not list it.
     std::vector<Type_id> type_arguments {};
+    Address_purpose      address_purpose = Address_purpose::Borrow;
 };
 
 enum class Statement_kind : u8
@@ -175,12 +182,20 @@ enum class Terminator_kind : u8
     Branch,
     Return,
     Unreachable,
-    Assert_failed // the span is the condition's; ends the program, running nothing
+    Assert_failed // the span is the failed expression's; ends the program, running nothing
+};
+
+// What an Assert_failed reports.
+enum class Failure : u8
+{
+    Assert, // span: the condition
+    Cast    // span: the whole `cast<T>( x )`
 };
 
 struct Terminator
 {
-    Terminator_kind kind = Terminator_kind::Unset;
+    Terminator_kind kind    = Terminator_kind::Unset;
+    Failure         failure = Failure::Assert; // Assert_failed
     Span            span {};
     Operand         condition {};  // Branch
     Block_id        targets[2] {}; // [0] for Goto; [0] true and [1] false for Branch
@@ -322,9 +337,11 @@ inline Rvalue release( Operand a ) // type is void
 
 // The operand carries only its place. An address is not a read of what lives there, so the
 // operand's kind means nothing here and verify does not look at it.
-inline Rvalue address_of( Place place, Type_id type )
+inline Rvalue address_of( Place place, Type_id type, Address_purpose purpose )
 {
-    return Rvalue { .kind = Rvalue_kind::Address_of, .type = type, .a = Operand { .place = place } };
+    return Rvalue {
+        .kind = Rvalue_kind::Address_of, .type = type, .a = Operand { .place = place }, .address_purpose = purpose
+    };
 }
 
 inline Rvalue function_address( Node_id callee, Type_id type, std::vector<Type_id> type_arguments = {} )

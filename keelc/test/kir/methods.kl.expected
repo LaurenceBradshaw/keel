@@ -55,9 +55,9 @@ fn main {
         _2.x = const 1
         _2.y = const 2
         _1 = copy _2
-        _3 = &_1
+        _3 = &borrow _1
         _4 = call shift(copy _3, const 10)
-        _5 = &_1
+        _5 = &borrow _1
         _6 = call sum(copy _5)
         _0 = copy _6
         storage_dead _1

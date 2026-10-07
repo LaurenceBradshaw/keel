@@ -1,0 +1,32 @@
+// A narrowing `cast` that fits: each way it can narrow, and a generic whose `u8` instance needs no
+// check and whose `i64` instance does.
+u8 down<T>( T v ) where T : Copyable & Integral
+{
+    return cast<u8>( v );
+}
+
+i32 main()
+{
+    i32 a = 200;
+    i64 b = -128;
+    u32 c = 2147483647;
+    i32 d = 0;
+
+    u8  narrower = cast<u8>( a );
+    i8  signed_narrower = cast<i8>( b );
+    i32 to_signed = cast<i32>( c );
+    u32 to_unsigned = cast<u32>( d );
+    i64 wider = cast<i64>( a );
+
+    if( narrower != 200 || signed_narrower != -128 || to_signed != 2147483647 || to_unsigned != 0 || wider != 200 )
+    {
+        return 1;
+    }
+
+    if( down<u8>( 5 ) != 5 || down<i64>( 255 ) != 255 )
+    {
+        return 2;
+    }
+
+    return 0;
+}

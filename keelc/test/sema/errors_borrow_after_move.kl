@@ -1,0 +1,87 @@
+// A borrow reads the value, so borrowing a moved local is a use after move in every form a borrow
+// takes. One function each, since a local is reported once.
+class Buffer
+{
+    public u64 size;
+
+    Buffer()
+    {
+        size = 0;
+    }
+
+    ~Buffer()
+    {
+    }
+
+    public u64 count() const
+    {
+        return size;
+    }
+};
+
+void take( move Buffer b )
+{
+}
+
+u64 look( Buffer b )
+{
+    return b.size;
+}
+
+void poke( ref Buffer b )
+{
+}
+
+void bare()
+{
+    Buffer b = Buffer();
+    take( move b );
+    u64 n = look( b );
+}
+
+void by_ref()
+{
+    Buffer b = Buffer();
+    take( move b );
+    poke( ref b );
+}
+
+void receiver()
+{
+    Buffer b = Buffer();
+    take( move b );
+    u64 n = b.count();
+}
+
+void address()
+{
+    Buffer b = Buffer();
+    take( move b );
+    Buffer* p = &b;
+}
+
+void maybe( bool c )
+{
+    Buffer b = Buffer();
+
+    if( c )
+    {
+        take( move b );
+    }
+
+    u64 n = look( b );
+}
+
+// Built again, it can be borrowed again.
+void refilled()
+{
+    Buffer b = Buffer();
+    take( move b );
+    b = Buffer();
+    u64 n = look( b );
+}
+
+i32 main()
+{
+    return 0;
+}

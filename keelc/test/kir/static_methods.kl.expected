@@ -52,11 +52,11 @@ fn main {
         storage_live _1
         _2 = call make(const 7)
         _1 = copy _2
-        _3 = &_1
+        _3 = &borrow _1
         _4 = call get(copy _3)
         _5 = call twice(const 1)
         _6 = copy _4 + copy _5
-        _7 = &_1
+        _7 = &borrow _1
         _8 = call doubled(copy _7)
         _9 = copy _6 + copy _8
         _0 = copy _9

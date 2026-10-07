@@ -26,12 +26,6 @@ enum class Operands : u8
     Comparable, // numeric, or two bools
 };
 
-// Remove when the KIR can emit the check. `cast` is defined to test the value at run time and
-// nothing can do that yet, so a narrowing `cast` would silently truncate - which is `wrap`'s
-// behaviour wearing `cast`'s name. Deleting this and the one branch that reads it is the whole
-// change; no program that compiles today changes meaning when it goes.
-constexpr bool k_narrowing_cast_needs_a_run_time_check = true;
-
 enum class Result : u8
 {
     Common, // the §6.4 result of the two operands
@@ -485,31 +479,6 @@ Conversion_result Operators::convert( bool is_cast, Type_id value, Type_id targe
         break;
 
     case Conversion::Both:
-        // Narrowing is the one place the two operators disagree, and the check that makes `cast`
-        // safe there does not exist yet.
-        if( k_narrowing_cast_needs_a_run_time_check && is_cast )
-        {
-            const Type_id narrows = bounds_.narrowing_witness( value, target );
-
-            if( narrows.is_valid() )
-            {
-                std::string help =
-                    fmt::format( "the run-time check is unimplemented; `wrap<{}>` truncates instead", table_.name( target ) );
-
-                if( generic.is_valid() )
-                {
-                    help = fmt::format(
-                        "`{}` may be `{}`, and {}", table_.name( generic ), table_.name( narrows ), std::move( help )
-                    );
-                }
-
-                return reject(
-                    fmt::format( "`cast` cannot narrow `{}` to `{}` yet", table_.name( value ), table_.name( target ) ),
-                    std::move( help )
-                );
-            }
-        }
-
         break;
     }
 
@@ -943,40 +912,6 @@ TEST_CASE( "type_checker_rejects_the_conversions_outside_the_table", "[sema][typ
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
-    }
-}
-
-// Narrowing is the one cell where the two operators disagree, and `cast` is defined to check the
-// value at run time. Nothing can do that yet, so it is refused rather than silently truncating -
-// which would be `wrap`'s behaviour under `cast`'s name. Delete these when the check exists.
-TEST_CASE( "type_checker_holds_back_a_narrowing_cast", "[sema][types][cast]" )
-{
-    SECTION( "narrowing the width" )
-    {
-        const Typed p( "i32 main() { i32 x = 300; u8 y = cast<u8>( x ); return 0; }" );
-
-        INFO( p.rendered() );
-        REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "cannot narrow" ) != std::string::npos );
-        REQUIRE( p.rendered().find( "wrap<u8>" ) != std::string::npos );
-    }
-
-    // u32 cannot hold a negative i32, so this narrows even though the widths match.
-    SECTION( "changing the signedness" )
-    {
-        const Typed p( "i32 main() { i32 x = 1; u32 y = cast<u32>( x ); return 0; }" );
-
-        INFO( p.rendered() );
-        REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "cannot narrow" ) != std::string::npos );
-    }
-
-    SECTION( "but wrap says the same thing and is allowed" )
-    {
-        const Typed p( "i32 main() { i32 x = 300; u8 y = wrap<u8>( x ); return 0; }" );
-
-        INFO( p.rendered() );
-        REQUIRE( p.clean() );
     }
 }
 

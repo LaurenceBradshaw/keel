@@ -1,0 +1,31 @@
+error: `b` is used after it was moved
+  --> sema/errors_borrow_after_move.kl:39:19
+   |
+39 |     u64 n = look( b );
+   |                   ^ moved at 38:5
+
+error: `b` is used after it was moved
+  --> sema/errors_borrow_after_move.kl:46:11
+   |
+46 |     poke( ref b );
+   |           ^^^^^ moved at 45:5
+
+error: `b` is used after it was moved
+  --> sema/errors_borrow_after_move.kl:53:13
+   |
+53 |     u64 n = b.count();
+   |             ^^^^^^^^^ moved at 52:5
+
+error: `b` is used after it was moved
+  --> sema/errors_borrow_after_move.kl:60:17
+   |
+60 |     Buffer* p = &b;
+   |                 ^^ moved at 59:5
+
+error: `b` may already have been moved
+  --> sema/errors_borrow_after_move.kl:72:19
+   |
+72 |     u64 n = look( b );
+   |                   ^ moved at 69:9 on some path to here
+
+5 errors generated

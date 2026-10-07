@@ -92,7 +92,7 @@ i32 main()
 
     fill( ref b );
     i32 sum = total( b );                    // 0 + 1 + 2 + 3
-    consume( move b );                       // b is freed in consume, and moving it again is an error
+    consume( move b );                       // using b after this is a compile error
 
     f64 big = larger( area( Shape::Circle( 1.0 ) ), area( Shape::Rect( 2.0, 2.0 ) ) );
 
@@ -197,7 +197,7 @@ noted in its row.
 | Fixed-width primitives only: `i32`, `u64`, `f64`. `int`, `long`, `char` and `unsigned` are hard errors naming the replacement. | Sizes are a platform question. | One spelling per type. Aliases would mean every reader has to know both. |
 | No lossy implicit conversions. A binary operator widens both sides to the smallest type that holds both, and is an error where C++'s result type would not. | Integral promotion and the usual arithmetic conversions. | The conversions that lose information are the ones nobody writes on purpose. |
 | Mixed-signedness and int/float comparisons are answered by cases. | Compiles, and answers thirteen pairs wrongly. | The one divergence in the permissive direction: it removes a silent wrong answer rather than creating one. |
-| `cast<T>( x )` preserves the value, `wrap<T>( x )` keeps the low bits. Neither does float↔int or int↔bool. | `static_cast`, C casts, implicit narrowing. | The failure policy is the interesting part, and one spelling hides which you meant. |
+| `cast<T>( x )` preserves the value, and aborts at run time if it does not fit; `wrap<T>( x )` keeps the low bits. Neither does float↔int or int↔bool. | `static_cast`, C casts, implicit narrowing. | The failure policy is the interesting part, and one spelling hides which you meant. |
 | A leading zero on a decimal is an error: `010` does not compile. | `010` is octal, so it is 8. | Keel has no octal, so accepting it would silently change the value of valid C++. |
 | `'A'` is a `u8` holding one byte. | `char` exists; `'ab'` is implementation-defined. | There is no `char` to give them, and inventing one for literals would be a second spelling for `u8`. |
 | A string literal is a `str`: its bytes and their count, read-only. `kl::string` owns and grows. | `const char[N]`, decaying to a pointer, its length found by a `strlen`. | The length travels with the bytes, so nothing walks to a terminator, and a `\0` inside is just a byte. |

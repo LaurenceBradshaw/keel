@@ -9,11 +9,11 @@ fn picks {
         branch copy _3 -> bb1, bb2
 
     bb1:
-        _0 = &(*_1)
+        _0 = &borrow (*_1)
         return
 
     bb2:
-        _0 = &(*_2)
+        _0 = &borrow (*_2)
         return
 }
 fn gets {
@@ -21,7 +21,7 @@ fn gets {
     let _1: Point*; // parameter p
 
     bb0:
-        _0 = &(*_1).y
+        _0 = &borrow (*_1).y
         return
 }
 fn main {
@@ -45,16 +45,16 @@ fn main {
         storage_live _2
         _2 = const 2
         storage_live _3
-        _4 = &_1
-        _5 = &_2
+        _4 = &borrow _1
+        _5 = &borrow _2
         _6 = call picks(copy _4, copy _5)
-        _3 = &(*_6)
+        _3 = &borrow (*_6)
         storage_live _7
         _8.x = const 3
         _8.y = const 4
         _7 = copy _8
         storage_live _9
-        _10 = &_7
+        _10 = &borrow _7
         _11 = call gets(copy _10)
         _9 = copy (*_11)
         _12 = copy (*_3) + copy _9

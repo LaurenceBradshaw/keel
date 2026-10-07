@@ -1,0 +1,206 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "cast_checked.kl.prelude.c"
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+int32_t kl__main__( void );
+uint8_t kl__down__I2u8E__2u8( uint8_t );
+uint8_t kl__down__I3i64E__3i64( int64_t );
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_a_1;
+    int64_t kl_b_2;
+    int64_t kl_t3;
+    uint32_t kl_c_4;
+    int32_t kl_d_5;
+    uint8_t kl_narrower_6;
+    uint8_t kl_t7;
+    int32_t kl_t8;
+    bool kl_t9;
+    bool kl_t10;
+    int8_t kl_signed_narrower_11;
+    int8_t kl_t12;
+    int64_t kl_t13;
+    bool kl_t14;
+    int32_t kl_to_signed_15;
+    int32_t kl_t16;
+    uint32_t kl_t17;
+    bool kl_t18;
+    bool kl_t19;
+    uint32_t kl_to_unsigned_20;
+    uint32_t kl_t21;
+    int32_t kl_t22;
+    bool kl_t23;
+    bool kl_t24;
+    int64_t kl_wider_25;
+    int64_t kl_t26;
+    bool kl_t27;
+    bool kl_t28;
+    bool kl_t29;
+    bool kl_t30;
+    bool kl_t31;
+    int8_t kl_t32;
+    bool kl_t33;
+    bool kl_t34;
+    bool kl_t35;
+    bool kl_t36;
+    bool kl_t37;
+    uint8_t kl_t38;
+    bool kl_t39;
+    uint8_t kl_t40;
+    bool kl_t41;
+#line 10 "codegen/cast_checked.kl"
+    kl_a_1 = 200;
+#line 11 "codegen/cast_checked.kl"
+    kl_t3 = -128;
+    kl_b_2 = kl_t3;
+#line 12 "codegen/cast_checked.kl"
+    kl_c_4 = 2147483647;
+#line 13 "codegen/cast_checked.kl"
+    kl_d_5 = 0;
+#line 15 "codegen/cast_checked.kl"
+    kl_t7 = ( uint8_t ) kl_a_1;
+    kl_t8 = ( int32_t ) kl_t7;
+    kl_t9 = kl_t8 == kl_a_1;
+    if ( kl_t9 ) goto bb2; else goto bb1;
+    bb1:
+    kl_rt_panic( "codegen/cast_checked.kl", 15, "cast out of range: cast<u8>( a )" );
+    bb2:
+    kl_t10 = kl_a_1 >= 0;
+    if ( kl_t10 ) goto bb3; else goto bb1;
+    bb3:
+    kl_narrower_6 = kl_t7;
+#line 16 "codegen/cast_checked.kl"
+    kl_t12 = ( int8_t ) kl_b_2;
+    kl_t13 = ( int64_t ) kl_t12;
+    kl_t14 = kl_t13 == kl_b_2;
+    if ( kl_t14 ) goto bb5; else goto bb4;
+    bb4:
+    kl_rt_panic( "codegen/cast_checked.kl", 16, "cast out of range: cast<i8>( b )" );
+    bb5:
+    kl_signed_narrower_11 = kl_t12;
+#line 17 "codegen/cast_checked.kl"
+    kl_t16 = ( int32_t ) kl_c_4;
+    kl_t17 = ( uint32_t ) kl_t16;
+    kl_t18 = kl_t17 == kl_c_4;
+    if ( kl_t18 ) goto bb7; else goto bb6;
+    bb6:
+    kl_rt_panic( "codegen/cast_checked.kl", 17, "cast out of range: cast<i32>( c )" );
+    bb7:
+    kl_t19 = kl_t16 >= 0;
+    if ( kl_t19 ) goto bb8; else goto bb6;
+    bb8:
+    kl_to_signed_15 = kl_t16;
+#line 18 "codegen/cast_checked.kl"
+    kl_t21 = ( uint32_t ) kl_d_5;
+    kl_t22 = ( int32_t ) kl_t21;
+    kl_t23 = kl_t22 == kl_d_5;
+    if ( kl_t23 ) goto bb10; else goto bb9;
+    bb9:
+    kl_rt_panic( "codegen/cast_checked.kl", 18, "cast out of range: cast<u32>( d )" );
+    bb10:
+    kl_t24 = kl_d_5 >= 0;
+    if ( kl_t24 ) goto bb11; else goto bb9;
+    bb11:
+    kl_to_unsigned_20 = kl_t21;
+#line 19 "codegen/cast_checked.kl"
+    kl_t26 = ( int64_t ) kl_a_1;
+    kl_wider_25 = kl_t26;
+#line 21 "codegen/cast_checked.kl"
+    kl_t31 = kl_narrower_6 != 200;
+    kl_t30 = kl_t31;
+    if ( kl_t30 ) goto bb13; else goto bb12;
+    bb12:
+    kl_t32 = -128;
+    kl_t33 = kl_signed_narrower_11 != kl_t32;
+    kl_t30 = kl_t33;
+    goto bb13;
+    bb13:
+    kl_t29 = kl_t30;
+    if ( kl_t29 ) goto bb15; else goto bb14;
+    bb14:
+    kl_t34 = kl_to_signed_15 != 2147483647;
+    kl_t29 = kl_t34;
+    goto bb15;
+    bb15:
+    kl_t28 = kl_t29;
+    if ( kl_t28 ) goto bb17; else goto bb16;
+    bb16:
+    kl_t35 = kl_to_unsigned_20 != 0;
+    kl_t28 = kl_t35;
+    goto bb17;
+    bb17:
+    kl_t27 = kl_t28;
+    if ( kl_t27 ) goto bb19; else goto bb18;
+    bb18:
+    kl_t36 = kl_wider_25 != 200;
+    kl_t27 = kl_t36;
+    goto bb19;
+    bb19:
+    if ( kl_t27 ) goto bb20; else goto bb21;
+    bb20:
+#line 23 "codegen/cast_checked.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb21:
+#line 26 "codegen/cast_checked.kl"
+    kl_t38 = kl__down__I2u8E__2u8( 5 );
+    kl_t39 = kl_t38 != 5;
+    kl_t37 = kl_t39;
+    if ( kl_t37 ) goto bb23; else goto bb22;
+    bb22:
+    kl_t40 = kl__down__I3i64E__3i64( 255 );
+    kl_t41 = kl_t40 != 255;
+    kl_t37 = kl_t41;
+    goto bb23;
+    bb23:
+    if ( kl_t37 ) goto bb24; else goto bb25;
+    bb24:
+#line 28 "codegen/cast_checked.kl"
+    kl_t0 = 2;
+    return kl_t0;
+    bb25:
+#line 31 "codegen/cast_checked.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+uint8_t kl__down__I2u8E__2u8( uint8_t kl_v_1 )
+{
+    uint8_t kl_t0;
+#line 5 "codegen/cast_checked.kl"
+    kl_t0 = kl_v_1;
+    return kl_t0;
+}
+
+uint8_t kl__down__I3i64E__3i64( int64_t kl_v_1 )
+{
+    uint8_t kl_t0;
+    uint8_t kl_t2;
+    int64_t kl_t3;
+    bool kl_t4;
+    bool kl_t5;
+#line 5 "codegen/cast_checked.kl"
+    kl_t2 = ( uint8_t ) kl_v_1;
+    kl_t3 = ( int64_t ) kl_t2;
+    kl_t4 = kl_t3 == kl_v_1;
+    if ( kl_t4 ) goto bb2; else goto bb1;
+    bb1:
+    kl_rt_panic( "codegen/cast_checked.kl", 5, "cast out of range: cast<u8>( v )" );
+    bb2:
+    kl_t5 = kl_v_1 >= 0;
+    if ( kl_t5 ) goto bb3; else goto bb1;
+    bb3:
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

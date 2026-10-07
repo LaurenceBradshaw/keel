@@ -34,22 +34,10 @@ error: `cast` cannot convert `Point` to `i32`
 18 |     i32 flattened = cast<i32>( origin );
    |                     ^^^^^^^^^^^^^^^^^^^
 
-error: `cast` cannot narrow `i32` to `u8` yet
-  --> sema/errors_conversions.kl:19:20
-   |
-19 |     u8  narrowed = cast<u8>( whole );
-   |                    ^^^^^^^^^^^^^^^^^ the run-time check is unimplemented; `wrap<u8>` truncates instead
-
-error: `cast` cannot narrow `i32` to `u32` yet
-  --> sema/errors_conversions.kl:20:20
-   |
-20 |     u32 resigned = cast<u32>( whole );
-   |                    ^^^^^^^^^^^^^^^^^^ the run-time check is unimplemented; `wrap<u32>` truncates instead
-
 error: `300` does not fit in `u8`
-  --> sema/errors_conversions.kl:21:31
+  --> sema/errors_conversions.kl:19:31
    |
-21 |     u8  overlarge = cast<u8>( 300 );
+19 |     u8  overlarge = cast<u8>( 300 );
    |                               ^^^
 
-9 errors generated
+7 errors generated

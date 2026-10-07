@@ -88,7 +88,6 @@ int32_t kl__main__( void )
     kl_q_6 = kl_t7;
 #line 39 "codegen/function_pointer_owning_parameter.kl"
     kl_t8 = &kl_b_1;
-    kl_t22 = true;
     kl_t9 = kl_p_4( kl_t8 );
     kl_t10 = kl_t9 != 7;
     if ( kl_t10 ) goto bb1; else goto bb2;
@@ -101,7 +100,6 @@ int32_t kl__main__( void )
     bb2:
 #line 44 "codegen/function_pointer_owning_parameter.kl"
     kl_t11 = &kl_b_1;
-    kl_t22 = true;
     kl_t12 = kl_p_4( kl_t11 );
     kl_t13 = kl_t12 != 7;
     if ( kl_t13 ) goto bb3; else goto bb4;

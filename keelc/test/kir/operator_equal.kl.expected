@@ -18,8 +18,8 @@ fn equal {
     let _5: bool;
 
     bb0:
-        _3 = &_1
-        _4 = &_2
+        _3 = &borrow _1
+        _4 = &borrow _2
         _5 = call operator==(copy _3, copy _4)
         _0 = copy _5
         return
@@ -34,8 +34,8 @@ fn differ {
     let _6: bool;
 
     bb0:
-        _3 = &_1
-        _4 = &_2
+        _3 = &borrow _1
+        _4 = &borrow _2
         _5 = call operator==(copy _3, copy _4)
         _6 = !copy _5
         _0 = copy _6

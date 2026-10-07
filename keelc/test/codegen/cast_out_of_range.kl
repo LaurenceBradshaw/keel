@@ -1,0 +1,12 @@
+// A `cast` whose value does not survive prints the file, the line and the cast as written, and
+// aborts. `-1` comes back as `-1` from a `u32`, so only the sign test catches this one.
+i32 main()
+{
+    i32 x = 7;
+    u32 fits = cast<u32>( x );
+
+    x = -1;
+    u32 negative = cast<u32>( x );
+
+    return 7;
+}

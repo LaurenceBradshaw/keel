@@ -7,7 +7,7 @@ fn binds_a_local {
         storage_live _1
         _1 = const 1
         storage_live _2
-        _2 = &_1
+        _2 = &borrow _1
         (*_2) = const 5
         _0 = copy _1
         storage_dead _2
@@ -21,7 +21,7 @@ fn binds_a_field {
 
     bb0:
         storage_live _2
-        _2 = &_1.y
+        _2 = &borrow _1.y
         (*_2) = const 5
         _0 = copy _1.y
         storage_dead _2
@@ -34,7 +34,7 @@ fn binds_a_binding {
 
     bb0:
         storage_live _2
-        _2 = &(*_1)
+        _2 = &borrow (*_1)
         (*_2) = const 5
         storage_dead _2
         return

@@ -1179,7 +1179,7 @@ overflows; what happens then is the open overflow question in §12.
 | D25 | `int`, `float` and `double` stay **hard errors**, never aliases. | D1's suggestion path is implemented and works: the message names the replacement, so the cost is one compile the first time. Accepting them would buy that same first hour at the price of a permanent second spelling for every type — every reader thereafter has to know both, and every code base picks one by accident. |
 | D26 | `nullptr` is the null pointer, spelled as in C++, and it is a **literal** whose type comes from context: `u8* p = nullptr;` adopts, `auto p = nullptr;` is an error. | The spelling is C++'s because §5.1 has no reason to invent another for an identical concept. Making it a literal rather than a value of some `nullptr_t` reuses `check_literal` wholesale and keeps D5 intact — no conversion happens, the literal simply *becomes* that type, exactly as `42` becomes a `u32`. The `auto` case then falls out as an error for the same reason it does for any literal with nothing to adopt from. |
 | D27 | **No pointer arithmetic on `*T`**, which points at exactly one `T`. Arithmetic belongs to a many-item pointer, `[*]T` in Zig's notation, ~~which v0 does not have~~ **scheduled as M8's first slice, ahead of modules and the library (2026-09-24)** — it had no milestone at all while five entries deferred to it, see §9. | `p + 1` on a single-item pointer is not dangerous, it is *nonsense*, and a type distinction catches it statically at no cost. Note the performance argument for C's arithmetic does not hold: `*(p + i)` and `p[i]` compile to identical machine code, so what buys speed is the capability of touching raw memory, which survives either spelling. ~~C's implicit scaling by element size is the wart — a named `offset` operation says what it does.~~ **Reversed (2026-09-29)**: `p + i` on a `T[*]` counts elements, because scaling was a wart only on a type that never said it pointed at many. See §15, *`[*]T`: the design*. §6.4 already answers nothing for a pointer, so rejection is the default rather than a rule to add. `==` and `!=` between two pointers of the **same** type are allowed, since that is how a null check is written; ordering is not, because comparing pointers into different allocations is meaningless. |
-| D28 | Conversions are written `cast<T>( x )` and `wrap<T>( x )`, both **keywords**. `cast` preserves the value; `wrap` keeps the low bits. Neither converts float to integer, and neither converts integer to bool. §6.5 has the table. **Narrowing `cast` is refused until the run-time check exists.** | Two spellings rather than one because the failure policy is the interesting part, and an unqualified cast lets an author avoid stating it — which is how C's `(u8)x` silently truncates. Keywords because as identifiers they walk into §12's `a < b > ( c )` ambiguity; as keywords the `<` can only be a bracket. Both spellings are new notation, so §5.1 is satisfied for free. Float to integer is rejected because `cast<i32>( 1.9 )` has no obvious answer — truncate, round, floor and ceil are four operations and C picks one silently; they arrive as library functions at M6. Integer to bool is rejected because `x != 0` says it better and modular arithmetic down to one bit says something else again. Float *rounding* is accepted (`cast<f32>( some_f64 )`), because a float that cannot hold the value gives an infinity rather than a plausible wrong number — the line is that `cast` refuses to turn a value into a *different* value, not that it refuses to lose precision. |
+| D28 | Conversions are written `cast<T>( x )` and `wrap<T>( x )`, both **keywords**. `cast` preserves the value; `wrap` keeps the low bits. Neither converts float to integer, and neither converts integer to bool. §6.5 has the table. ~~**Narrowing `cast` is refused until the run-time check exists.**~~ **A narrowing `cast` is checked at run time (2026-10-07)**: a value that does not fit prints `file:line: cast out of range: <the cast>` and aborts, as a failed `assert` does; a constant one that does not fit is refused at compile time. | Two spellings rather than one because the failure policy is the interesting part, and an unqualified cast lets an author avoid stating it — which is how C's `(u8)x` silently truncates. Keywords because as identifiers they walk into §12's `a < b > ( c )` ambiguity; as keywords the `<` can only be a bracket. Both spellings are new notation, so §5.1 is satisfied for free. Float to integer is rejected because `cast<i32>( 1.9 )` has no obvious answer — truncate, round, floor and ceil are four operations and C picks one silently; they arrive as library functions at M6. Integer to bool is rejected because `x != 0` says it better and modular arithmetic down to one bit says something else again. Float *rounding* is accepted (`cast<f32>( some_f64 )`), because a float that cannot hold the value gives an infinity rather than a plausible wrong number — the line is that `cast` refuses to turn a value into a *different* value, not that it refuses to lose precision. |
 | D29 | **Two aggregate kinds, split by one principle: a `struct` is a type whose representation is its interface; a `class` is a type whose interface hides its representation.** **Both may have methods** (M5.5), written as C++ writes them, with a **trailing `const`** saying the method does not modify its object. A `struct` has all fields public, is trivially copyable, may not have a destructor, and may not contain an owning member (transitively); it is built from a struct literal (D23). A `class` has fields private by default, may own resources, may have a constructor and a destructor, is moved rather than copied, and is built by a constructor. **Both may have methods.** Neither inherits and neither is virtual **in v0**; dynamic dispatch through interfaces is planned and unscheduled, and D29's split is drawn so as not to foreclose it — the line is copyability, which says nothing about whether a type may later implement an interface. *(2026-10-02: a `class` will never have a base — §15.)* A `struct` with a destructor, and a `struct` with an access marker, are hard errors naming `class` as the fix. **Two details settled when this was built (2026-09-25), neither of them this entry's principle.** *The marker is written on the member, not as a section label*: `private i32 x;` rather than `private:`. A label is parser state that outlives the declaration it applies to, and every other marker Keel has - `static`, `const`, `ref`, `move`, `out` - is written on the thing it changes; §5.1 permits it because `private int x;` is a syntax error in C++ rather than a reinterpretation. *The default reaches **fields only***: a `class`'s fields are private and its methods, constructors and destructors are public. This entry's own principle is what picks that - a class hides its **representation**, and its representation is what it holds rather than how it is used. The alternative was written first and measured: defaulting every member private broke every getter in the suite, which is the shape D29 exists to make writable. A destructor takes no marker at all, since nothing ever names one. | C++ has two keywords for one job — the only difference is default access, kept so that C headers would compile — and Keel pays no C-compatibility tax, so the second word is free to earn its keep. The line is drawn at **trivial copyability** rather than at "may have methods", because only the first has semantic consequences: a trivially copyable type cannot have a destructor (copy plus destructor is a double free, which is why Rust makes `Copy` and `Drop` mutually exclusive), is never moved, and never enters §8's drop analysis. "May have methods" has no consequences at all, and the motivating examples for restricting it — `Node_id::is_valid()` — need them anyway. The two initialisation syntaxes stop competing as a side effect: literals belong to structs, constructors to classes, so `Buffer { ... }` versus `Buffer( 16 )` never has to be disambiguated. Enforcement is free: `struct` is legal exactly when D2's owning query says no. Safe under §5.1 because both rejected spellings are errors rather than reinterpretations. Prior art cuts both ways and is worth recording: the languages that keep two aggregate keywords (C#, Swift, D) split on value-versus-reference semantics, and the C++ successors that exist (Carbon, Cpp2, Hylo) collapse to one kind. This splits on copyability, which is the ownership-language analogue of the first — Keel has no garbage collector, so "reference type" has nothing to mean. |
 | D30 | **One `enum` keyword**, carrying `enum class`'s semantics: scoped (`Shape::Circle`), with no implicit conversion to an integer. **Scoped everywhere, including a `case` label** - `case Shape::Circle( r ):`, never a bare `Circle`. The underlying type is spelled as in C++: `enum Shape : u8 { ... }`. `enum class E` is a hard error saying to drop the `class`. | The same C-compatibility tax as D29, with the opposite answer, and the asymmetry is the point: `struct`/`class` are two words for one job, so the job gets split; `enum`/`enum class` are two words for one job where only one of them does it correctly, so there is nothing to split. C++'s plain `enum` leaked its variant names into the enclosing scope and converted implicitly to `int`; both were mistakes, `enum class` fixed them in C++11, and the broken spelling survives only for C. Safe under §5.1 because every point where the two meanings diverge is an error rather than a reinterpretation: `Shape s = Circle;` is an unknown name, and `i32 x = Circle;` and `if ( s == 0 )` have no conversion to reach for. Rejecting `enum class` follows D22's pattern — keep the spelling recognised so the diagnostic can name the fix. **Answered at M5, and the answer is smaller than the question looked.** Ownership is **inherited, not chosen**: an enum is owning exactly when any variant's payload is owning, which is D2's query extended to variants with no new rule. That is why D29's question does not really transfer - D29 forced `struct` against `class` because the *author* had to say which they meant, and here there is nothing to say, since every variant is visible in the declaration and the compiler already knows. No annotation, no `enum class` equivalent, no way to get it wrong.
 
@@ -1299,12 +1299,11 @@ keeps the low bits.
 | **pointer** | — | — | — | *unsafe* | — |
 | **struct**  | — | — | — | — | — |
 
-`—` is a hard error. `*` marks the one cell held back: a **narrowing** integer
-`cast` (one where the target cannot hold the source type, which includes a
-same-width change of signedness) is refused until the KIR can emit the run-time
-check that makes it safe. `wrap` covers that cell today. Widening `cast` is
-allowed now and does not change meaning when the block goes, so no program that
-compiles today is affected by lifting it.
+`—` is a hard error. `*` marks a **narrowing** integer `cast` (one where the
+target cannot hold the source type, which includes a same-width change of
+signedness): it is checked at run time and aborts when the value does not fit
+*(2026-10-07; refused until then)*. A constant that does not fit is refused at
+compile time instead.
 
 *unsafe* marks a real conversion rather than nonsense, so it is **gated rather
 than refused**: legal inside an `unsafe` block, an error outside one naming that
@@ -8797,10 +8796,26 @@ about debts *between* them, which is the gap this list cannot see.
   (3) `*p = move b;` does not drop what `*p` held: `writes_a_slot` treats a dereference as a raw
   slot, as it does `data[i]`, so the old value leaks; `v[i] = move x` through `operator[]` is the
   same. (1) and (2) are double frees, (3) a leak. **Scheduled (2026-10-06)** as M8 step 4a.
-- **A moved local can still be borrowed (found 2026-10-06).** After `consume( move b );`, only a
+- ~~**A moved local can still be borrowed (found 2026-10-06).**~~ **Done (2026-10-07)**, see the end. After `consume( move b );`, only a
   second `move b` is refused. `total( b )` (a bare borrow), `fill( ref b )`, `b.set( 0, 1 )` and
   `b.get( 0 )` all compile, and each reads or writes the freed buffer: valgrind reports an invalid
-  read in `get`. A use-after-free accepted in safe code, so it outranks features. Unscheduled.
+  read in `get`. A use-after-free accepted in safe code, so it outranks features. **Cause**: every
+  borrow lowers to KIR's `Address_of`, which does not say why the address is taken, so all three
+  analyses read it as "may initialise", which only a constructor's target and an `out` argument
+  do. `check_moves` skips it, drop-flag elaboration re-arms the flag after it (so `b` is also
+  destroyed a second time at scope exit), and definite assignment counts it as an assignment (the
+  D9 leniency debt). **Scheduled (2026-10-06)** before step 5: `Address_of` carries its purpose,
+  `Borrow` or `Initialise`, chosen at each lowering site, and each analysis reads it.
+  **Done (2026-10-07).** `Rvalue::address_purpose`; `Initialise` at a constructor's target, a
+  string literal's `str` and an `out` argument, `Borrow` everywhere else, and KIR prints them
+  `&init` and `&borrow`. `check_moves` reports a borrow of a moved local and revives one on an
+  `Initialise`; drop flags are set only by `Initialise`; `check_assignment` assigns only on
+  `Initialise` and reads a `Borrow`'s place. Tests: `move_check_finds_a_borrow_after_move`,
+  `drop_flags_is_not_set_by_a_borrow`, `assign_check_reads_a_borrowed_place`; goldens
+  `sema/errors_borrow_after_move` and `codegen/borrow_after_refill`, which counts live objects
+  to show each is destroyed once. 17 goldens changed only in that text and in drop-flag writes
+  that are now gone. Debug under valgrind, release and asan: 281 goldens and 10,537 assertions
+  pass.
 - **A bound's help names a method, not its type (found 2026-10-06).** `left == other` in a method
   of `class pair<T> where T : Copyable` says *write `where T : Equatable` on `same`*, but a method
   writes no `where` - its type parameters are its class's, so the clause goes on `pair`. Small;
@@ -9207,7 +9222,7 @@ All five above are **scheduled to close M8 (2026-10-01)**: see M8's row.
   lines. `parse/parser.cpp` is unsplit and now the largest file in the tree; the same audit would
   have to be redone for it, because `Parser` is not `Checker` and the answer is not assumable.
 
-- **Narrowing `cast` is blocked, not implemented.** D28 defines `cast` as checking the value at
+- ~~**Narrowing `cast` is blocked, not implemented.**~~ **Done (2026-10-07)**, see the last paragraph. D28 defines `cast` as checking the value at
   run time and trapping when it does not fit, and nothing in the pipeline can emit that check yet.
   Rather than let a narrowing `cast` silently truncate — which is `wrap`'s behaviour wearing
   `cast`'s name, exactly the silent wrong answer D5 exists to remove — the checker refuses it. The
@@ -9215,6 +9230,21 @@ All five above are **scheduled to close M8 (2026-10-01)**: see M8's row.
   and the single branch that reads it; deleting both is the whole change once the KIR can trap.
   Nothing that compiles today changes meaning when it goes, because the cell is currently empty.
   The three tests under `type_checker_holds_back_a_narrowing_cast` go at the same time.
+  **Scheduled (2026-10-06)**, after the moved-borrow fix and before step 5: D48 gave KIR a
+  terminator that ends the program, so the check can now be emitted. The lowering converts, converts
+  back, and fails unless the round trip gives the same value - plus a sign test when the
+  signedness changes, which a round trip misses (`-1` as `u32` comes back as `-1`). No range
+  constants are needed, and the failure prints `cast out of range: <the cast as written>`.
+  **Done (2026-10-07).** `Lowering::checked_cast` emits the check per instance, so a generic's
+  `u8` instance has none and its `i64` one does. The failing block is `Assert_failed` with a new
+  `Failure::Cast` on the terminator, so no analysis changed; it prints as `cast_failed`. The
+  constant folder had folded every `cast` modulo the target's width, `wrap`'s answer, which was
+  safe only while narrowing was refused: it now keeps a `cast`'s value, and `infer_cast` records
+  the result through `record_constant`, so `cast<u32>( 0 - 1 )` is *`-1` does not fit in `u32`*
+  at compile time rather than an abort. `Bounds::narrowing_witness` is now read only by its own
+  tests. Goldens: `codegen/cast_checked`, `codegen/cast_out_of_range`; the narrowing cases left
+  `sema/errors_conversions` and `sema/errors_generic_conversions`, which gains a generic
+  narrowing `cast` among its correct code.
 
 - `mangle_function` is not injective. Argument types are spelled with `Type_table::name()`, the
   plain Keel spelling, so `i32*` becomes `i32p` and a struct genuinely named `i32p` collides with
@@ -9339,7 +9369,13 @@ All five above are **scheduled to close M8 (2026-10-01)**: see M8's row.
   work. And writing one field counts as initialising the whole struct, so
   `P p; p.x = 1; return p.y;` is accepted; closing that needs per-field state,
   which is a much larger lattice. Both are pinned in the tests as *accepted*, so
-  the day either is closed a test says so.
+  the day either is closed a test says so. **The first did not err safe for drop
+  flags** (2026-10-06): a borrow after a move re-armed the flag and destroyed the
+  value twice. **Closed (2026-10-07)** with the moved-borrow debt: only an
+  `Initialise` address assigns, and a `Borrow` reads its place, so `&x`, a bare or
+  `const ref` argument and `ref x` on an unassigned `x` are each a read before
+  assignment. Test `assign_check_reads_a_borrowed_place` replaces the pinned one;
+  the field shallowness is still pinned.
 - **Two guards in `check_assignment` are defensive and unexercised.** The
   reporting walk skips unreached blocks, and `Storage_live` clears a local's
   answer. Neither can change a verdict today: the lowerer discards statements

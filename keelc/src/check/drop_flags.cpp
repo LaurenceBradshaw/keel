@@ -175,7 +175,7 @@ void append_flag_writes(
         // marks an uninitialised local as needing a drop, which is exactly what happens today
         // without flags, so this is no worse than the status quo for a program D9 will reject
         // anyway.
-        if( statement.value.kind == Rvalue_kind::Address_of )
+        if( statement.value.kind == Rvalue_kind::Address_of && statement.value.address_purpose == Address_purpose::Initialise )
         {
             if( const Local_id flag = flag_of( flags, statement.value.a.place ); flag.is_valid() )
             {
@@ -594,6 +594,34 @@ TEST_CASE( "drop_flags_clears_every_flag_on_entry", "[check][drop]" )
         INFO( flag );
         REQUIRE( entry.find( flag + " = const 0" ) != std::string::npos );
     }
+}
+
+// Only construction sets the flag. A borrow once set it too, so one after a move destroyed the
+// value a second time.
+TEST_CASE( "drop_flags_is_not_set_by_a_borrow", "[check][drop]" )
+{
+    Elaborated p(
+        std::string( k_owning ) + "u64 peek( Owned o ) { return 0; }\n"
+                                  "i32 run( i32 c ) {\n"
+                                  "  Owned o = Owned( 1 );\n"
+                                  "  if ( c == 0 ) { consume( move o ); } else { u64 n = peek( o ); }\n"
+                                  "  return 0; }\n"
+                                  "i32 main() { return run( 0 ); }"
+    );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.text( p.functions.size() - 2 ); // run
+    const std::size_t at   = text.find( "drop _2 if _" );
+
+    INFO( text );
+    REQUIRE( at != std::string::npos );
+
+    const std::string flag = text.substr( at + 10, text.find( '\n', at ) - at - 10 );
+
+    INFO( flag );
+    REQUIRE( count( text, flag + " = const 1" ) == 1 );
 }
 
 } // namespace keel

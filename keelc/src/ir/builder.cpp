@@ -155,9 +155,9 @@ void Builder::terminate_return( Span span )
     set_terminator( Terminator { .kind = Terminator_kind::Return, .span = span } );
 }
 
-void Builder::terminate_assert_failed( Span condition )
+void Builder::terminate_assert_failed( Span span, Failure failure )
 {
-    set_terminator( Terminator { .kind = Terminator_kind::Assert_failed, .span = condition } );
+    set_terminator( Terminator { .kind = Terminator_kind::Assert_failed, .failure = failure, .span = span } );
 }
 
 bool Builder::is_terminated() const

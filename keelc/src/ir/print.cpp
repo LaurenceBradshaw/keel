@@ -129,7 +129,13 @@ struct Printer
             return fmt::format( "{} as {}", operand( value.a ), type_name( value.type ) );
 
         case Rvalue_kind::Address_of:
-            return fmt::format( "&{}", place( value.a.place ) );
+            switch( value.address_purpose )
+            {
+            case Address_purpose::Initialise:
+                return fmt::format( "&init {}", place( value.a.place ) );
+            case Address_purpose::Borrow:
+                return fmt::format( "&borrow {}", place( value.a.place ) );
+            }
 
         case Rvalue_kind::Call:
         case Rvalue_kind::Indirect_call:
@@ -222,7 +228,7 @@ struct Printer
             return "return";
 
         case Terminator_kind::Assert_failed:
-            return "assert_failed";
+            return terminator.failure == Failure::Cast ? "cast_failed" : "assert_failed";
 
         case Terminator_kind::Unreachable:
             return "unreachable";
@@ -420,7 +426,7 @@ TEST_CASE( "print_spells_each_rvalue", "[ir][print]" )
     builder.assign( p, binary( Token_kind::Plus, copy( p, i32 ), two, i32 ), Span {} );
     builder.assign( p, unary( Token_kind::Minus, copy( p, i32 ), i32 ), Span {} );
     builder.assign( p, cast_to( copy( p, i32 ), f.table.integer( 8, false ) ), Span {} );
-    builder.assign( p, address_of( p, i32 ), Span {} );
+    builder.assign( p, address_of( p, i32, Address_purpose::Borrow ), Span {} );
 
     const u32 first = builder.add_operands( std::array { two, two } );
     builder.assign( p, call( f.first( Node_kind::Function_decl ), first, 2, i32 ), Span {} );
@@ -439,7 +445,7 @@ TEST_CASE( "print_spells_each_rvalue", "[ir][print]" )
     REQUIRE( has( text, "_1 = copy _1 + const 2" ) );
     REQUIRE( has( text, "_1 = -copy _1" ) );
     REQUIRE( has( text, "_1 = copy _1 as u8" ) );
-    REQUIRE( has( text, "_1 = &_1" ) );
+    REQUIRE( has( text, "_1 = &borrow _1" ) );
     REQUIRE( has( text, "_1 = call helper(const 2, const 2)" ) );
     REQUIRE( has( text, "_1 = call copy _1(const 2, const 2)" ) );
 }
