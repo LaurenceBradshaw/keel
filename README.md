@@ -362,9 +362,10 @@ could consume it, and eventually one will, most likely LLVM.
 
 ## Documents
 
-- [`docs/PLAN.md`](docs/PLAN.md) — the engineering plan. Every decision above is a numbered entry there
-  with the reasoning, the alternatives, and what it cost. §6.3 is the complete divergence list and the
-  audit surface for the containment rule; §15 is the live work tracker.
+- [`docs/PLAN.md`](docs/PLAN.md) — the engineering plan, as the rules stand. Every decision above is
+  a numbered entry there with its reasoning. §6.3 is the complete divergence list and the audit
+  surface for the containment rule, §6.7 holds the designs that are not divergences, §9 the
+  milestones, and §15 the open work.
 - [`docs/MANIFESTO.md`](docs/MANIFESTO.md) — the vision document that started it. Deliberately
   unresolved on syntax and semantics; the plan inverts its phase ordering on purpose and says why.
 

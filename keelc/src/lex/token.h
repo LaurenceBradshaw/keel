@@ -89,8 +89,7 @@ enum class Token_kind : u16
     Less_less_equal,       // <<=
     Greater_greater_equal, // >>=
 
-    // PLAN §6.3 D6: error propagation. No C++ meaning, so it is a pure addition.
-    Question, // ?
+    Question, // ? - the conditional's, `a ? b : c`
 
     // Statements, never expressions (PLAN §6.3 D12): `i++;` is fine, `x = a[i++]` is an error.
     Plus_plus,   // ++

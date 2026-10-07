@@ -1847,7 +1847,7 @@ Type_id Expressions::qualifier_type( Node_id path, Node_id declaration )
     return table_.structure( declaration, arguments, name );
 }
 
-// PLAN §12, M7. `P::make( 7 )` - a member that belongs to the type rather than to an object. The
+// PLAN §6.7. `P::make( 7 )` - a member that belongs to the type rather than to an object. The
 // arguments are the written ones and nothing precedes them, which is the whole of what separates
 // this from a method call. Everything else is what check_method_arguments already does for a
 // receiver, including the instantiation a generic one seeds - the qualifier's type stands in for
@@ -3310,7 +3310,7 @@ TEST_CASE( "expressions_refuse_a_type_used_as_a_value", "[sema][types]" )
     }
 }
 
-// PLAN §12. A conditional has two rules and the split between them is the whole decision: an
+// PLAN §6.7. A conditional has two rules and the split between them is the whole decision: an
 // expectation reaches both arms, and with none the arms must match exactly. Widening happens after
 // a type is settled, never to settle one - the same correction the overloading slice owes.
 TEST_CASE( "type_checker_types_conditional_expressions", "[sema][types]" )
@@ -7211,7 +7211,7 @@ TEST_CASE( "expressions_record_the_instantiation_a_method_call_chose", "[sema][m
     REQUIRE( p.types().instantiation_of( call ).has_value() );
 }
 
-// PLAN §12, M7. D30 already spells the call - `Type::name( args )`, the same scoped form a variant
+// PLAN §6.7. D30 already spells the call - `Type::name( args )`, the same scoped form a variant
 // uses - so what M7 adds on this side is a second thing `::` can reach. Until now it reached a
 // variant and nothing else, which is why every case below that still refuses one matters as much as
 // the case that now succeeds.

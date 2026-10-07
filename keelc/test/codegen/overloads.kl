@@ -1,4 +1,4 @@
-// PLAN §12. Two callables may share a name when a call site can tell them apart, and what tells
+// PLAN §6.7. Two callables may share a name when a call site can tell them apart, and what tells
 // them apart is each parameter's declared type together with the marker the call has to write.
 // Selection is by exact type: §6.4's widening is what gets an argument to a parameter after one has
 // been chosen, and letting it choose would mean ranking two parameters that both accept.

@@ -502,7 +502,7 @@ int main( int argc, char** argv )
     }
 
     // Additive: the C path below is untouched, and nothing consumes KIR yet. This is what makes
-    // each step of the lowerer visible as it lands (PLAN §3.3).
+    // each step of the lowerer visible as it lands.
     if( args.count( "dump-kir" ) )
     {
         bool well_formed = true;

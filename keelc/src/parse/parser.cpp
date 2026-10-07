@@ -11326,7 +11326,7 @@ TEST_CASE( "parser_recovers_from_a_declaration_that_is_not_one", "[parse][recove
     }
 }
 
-// PLAN §12, M7. A static method is a member with no receiver, and `static` is what says so. The
+// PLAN §6.7. A static method is a member with no receiver, and `static` is what says so. The
 // declaration is otherwise a method's, so it stays a Method_decl - the difference is an absence, the
 // same shape `extern` already has as a Function_decl with no body rather than a kind of its own.
 TEST_CASE( "parser_parses_a_static_method", "[parse][static]" )
@@ -11423,7 +11423,7 @@ TEST_CASE( "parser_parses_a_static_method", "[parse][static]" )
     }
 }
 
-// PLAN §12, M7. `Vector<i32>::with_capacity( n )` is the shape M8's first customer is written in,
+// PLAN §6.7. `Vector<i32>::with_capacity( n )` is the shape M8's first customer is written in,
 // and the qualifier is where it breaks before the call is ever reached: a type-argument list in
 // expression position is only recognised when a `(` follows it, which is true of `id<i32>( 1 )` and
 // false of every scoped spelling. The type arguments are also the only place a static call can read
@@ -12067,7 +12067,7 @@ TEST_CASE( "parser_reads_a_type_from_a_package", "[parse][packages]" )
 }
 
 // A static field is a variable declared among the members, not a field carrying a flag: every pass
-// that walks fields then skips it for nothing. See PLAN §15, *M7: static fields*.
+// that walks fields then skips it for nothing.
 TEST_CASE( "parser_parses_a_static_field_as_a_variable", "[parse][static]" )
 {
     SECTION( "a member Var_decl, private by default in a class" )

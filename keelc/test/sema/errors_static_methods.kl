@@ -1,4 +1,4 @@
-// PLAN §12, M7. A static method belongs to a type and takes no receiver, so every route that
+// PLAN §6.7. A static method belongs to a type and takes no receiver, so every route that
 // reaches an object implicitly is closed to it - and the two call spellings stop being
 // interchangeable in both directions. Each refusal below is a diagnostic rather than a miscompile:
 // without them the lowerer adopts the first written parameter as `this` and projects a field off it.

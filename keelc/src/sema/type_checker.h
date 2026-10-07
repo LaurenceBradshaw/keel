@@ -192,7 +192,7 @@ bool is_visible_from( const Ast& ast, Node_id member, Node_id from );
 // false of a free function and of M7's static method. The node kind cannot answer it any more.
 bool has_receiver( const Ast& ast, Node_id decl );
 
-// A member that belongs to the type rather than to an object (PLAN §12, M7).
+// A member that belongs to the type rather than to an object (PLAN §6.7).
 bool is_static_method( const Ast& ast, Node_id method );
 
 // The mode a declaration was written with, or Keyword::Count for none. The one reader of a

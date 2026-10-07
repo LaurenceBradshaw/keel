@@ -1,4 +1,4 @@
-// PLAN §12. A conditional has two type rules: an expectation reaches both arms, and with none the
+// PLAN §6.7. A conditional has two type rules: an expectation reaches both arms, and with none the
 // arms must match exactly. Widening happens after a type is settled, never to settle one - so two
 // arms that §6.4 would happily widen to a common type are still refused when nothing else decides.
 i32 arms_must_agree()

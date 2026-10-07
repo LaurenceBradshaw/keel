@@ -1390,7 +1390,7 @@ TEST_CASE( "type_checker_scopes_type_parameters", "[sema][generic]" )
     }
 }
 
-// PLAN §12. An aggregate with no fields is refused by the parser, which alone can tell one from
+// PLAN §6.7. An aggregate with no fields is refused by the parser, which alone can tell one from
 // fields it left out; these are the alternatives that refusal recommends, and they must stay legal.
 TEST_CASE( "type_checker_accepts_what_replaces_an_empty_aggregate", "[sema][types]" )
 {

@@ -5982,7 +5982,7 @@ TEST_CASE( "lower_returns_a_reference_from_a_method", "[ir][lower][method]" )
     REQUIRE( caller.find( "copy (*_3)" ) != std::string::npos );
 }
 
-// PLAN §12, M7. The parameter walk captures the receiver from the first parameter of anything that
+// PLAN §6.7. The parameter walk captures the receiver from the first parameter of anything that
 // is not a free function, which is the node kind standing in for a question about the signature. A
 // static method is the second declaration with no receiver, and without this the walk adopts its
 // first written parameter as `this` - so a bare field name would project off an `i32`.

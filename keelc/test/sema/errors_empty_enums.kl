@@ -1,4 +1,4 @@
-// PLAN §12. An `enum` with no variants has no values at all - nothing can ever construct one - so
+// PLAN §6.7. An `enum` with no variants has no values at all - nothing can ever construct one - so
 // it is refused rather than left as the accidental spelling of a concept the language has not
 // decided it wants. A different fact from the empty aggregate beside it: that one has no *size*.
 

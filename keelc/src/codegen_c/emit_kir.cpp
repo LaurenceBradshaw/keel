@@ -3042,7 +3042,7 @@ TEST_CASE( "emit_kir_guards_a_comparison_with_no_common_type", "[codegen][kir]" 
     }
 }
 
-// PLAN §12, M7 and §7.5. The category tag leads a member's argtypes as `S<type>` rather than sitting
+// PLAN §6.7 and §7.5. The category tag leads a member's argtypes as `S<type>` rather than sitting
 // on parameter 0, which is what lets it survive the receiver not existing - the reason M6.5 moved it
 // there. So a static method needs the tag from its enclosing aggregate instead, the one place the
 // receiver was the only source.

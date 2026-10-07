@@ -1869,7 +1869,7 @@ TEST_CASE( "overloads_underline_the_argument_that_chose_the_type", "[sema][gener
     REQUIRE( p.rendered().find( "^^ ordering needs a number" ) == std::string::npos );
 }
 
-// PLAN §12, M7. A member's parameter 0 is the receiver and the overload check drops it before
+// PLAN §6.7. A member's parameter 0 is the receiver and the overload check drops it before
 // comparing, which is what makes `area()` and `area() const` one signature. A static method has no
 // parameter 0 to drop, so a check that decides how many to skip from the *node kind* compares the
 // wrong lists - and the pair it then fails to separate emit one C symbol, which is the collision

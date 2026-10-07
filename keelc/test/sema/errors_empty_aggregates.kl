@@ -1,4 +1,4 @@
-// PLAN §12. An aggregate with no fields emits a C struct with no members, which standard C does not
+// PLAN §6.7. An aggregate with no fields emits a C struct with no members, which standard C does not
 // have - so it is refused, and an `enum` with one variant is the spelling for a type with one value.
 // The rule is "no fields", not "no members": a method-only class is just as empty once emitted.
 struct Empty

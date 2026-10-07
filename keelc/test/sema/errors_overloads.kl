@@ -1,4 +1,4 @@
-// PLAN §12. What overloading refuses, and it is one question throughout: could a call site say
+// PLAN §6.7. What overloading refuses, and it is one question throughout: could a call site say
 // which of these it meant? Two that it could never tell apart are refused where they are written,
 // and a call that cannot be told apart is refused where it is made.
 

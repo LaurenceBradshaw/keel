@@ -1,4 +1,4 @@
-// PLAN §12, M7. The parameter walk captures the receiver from the first parameter of anything that
+// PLAN §6.7. The parameter walk captures the receiver from the first parameter of anything that
 // is not a free function, which is the node kind standing in for a question about the signature. A
 // static method is the second declaration with no receiver, and this dump is where the difference is
 // visible: `make` opens on its written parameter, `get` opens on the synthesised `this`.

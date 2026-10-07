@@ -1,4 +1,4 @@
-// PLAN §12. A conditional is control flow, not an operation: only the arm that was chosen runs.
+// PLAN §6.7. A conditional is control flow, not an operation: only the arm that was chosen runs.
 // Numbered early returns, so a failure names the property that broke.
 i32 calls;
 

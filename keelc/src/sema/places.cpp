@@ -1523,7 +1523,7 @@ TEST_CASE( "type_checker_gives_a_const_pointer_its_c_meaning", "[sema][const]" )
     }
 }
 
-// PLAN §12. A place rooted in a call reached check_writable as an invalid `Node_id`, because
+// PLAN §6.7. A place rooted in a call reached check_writable as an invalid `Node_id`, because
 // place_root resolved only a `Name_expr` - and the guard that treats an unrooted place as writable
 // then skipped every rule below it. Two different bugs shared that one line.
 TEST_CASE( "type_checker_refuses_a_write_through_a_returned_reference", "[sema][constref]" )
@@ -1574,7 +1574,7 @@ TEST_CASE( "type_checker_refuses_a_write_through_a_returned_reference", "[sema][
     }
 }
 
-// PLAN §12. The other half: a value with no storage of its own. This replaces a case that asserted
+// PLAN §6.7. The other half: a value with no storage of its own. This replaces a case that asserted
 // the opposite - it held that refusing this needed value categories v0 does not have, and naming
 // what the place came from turned out to be enough.
 TEST_CASE( "type_checker_refuses_a_write_to_a_temporary", "[sema][places]" )

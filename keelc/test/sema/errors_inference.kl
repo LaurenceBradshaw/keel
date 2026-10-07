@@ -1,4 +1,4 @@
-// PLAN §12. A call's type arguments are deduced from the argument types and, for whatever they
+// PLAN §6.7. A call's type arguments are deduced from the argument types and, for whatever they
 // leave open, from the expectation at the call site. These are the calls where that is not enough,
 // and each one has its own message: nothing said what a parameter is, or two things said different.
 

@@ -1,4 +1,4 @@
-// PLAN §12. A call's type arguments are deduced where possible and written where not. Two sources,
+// PLAN §6.7. A call's type arguments are deduced where possible and written where not. Two sources,
 // and they are not equal: the arguments decide, and the expectation at the call site fills only
 // what they left. A literal contributes nothing - its own type is what is being deduced - and a
 // struct literal contributes nothing for the same reason.

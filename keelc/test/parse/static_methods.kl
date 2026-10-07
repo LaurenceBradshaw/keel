@@ -1,4 +1,4 @@
-// PLAN §12, M7. A static method is a member with no receiver, and `static` is what says so. The
+// PLAN §6.7. A static method is a member with no receiver, and `static` is what says so. The
 // declaration is otherwise a method's, so it parses to a Method_decl - the difference is an absence,
 // the same shape `extern` already has as a Function_decl with no body rather than a kind of its own.
 //
