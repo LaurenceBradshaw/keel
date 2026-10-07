@@ -73,26 +73,6 @@ bool merge_into( Flow& into, const Flow& from )
     return changed;
 }
 
-// 0, 1 or 2 of them, by terminator kind.
-void successors( const Terminator& terminator, std::vector<Block_id>& out )
-{
-    switch( terminator.kind )
-    {
-    case Terminator_kind::Goto:
-        out.push_back( terminator.targets[0] );
-        return;
-    case Terminator_kind::Branch:
-        out.push_back( terminator.targets[0] );
-        out.push_back( terminator.targets[1] );
-        return;
-    case Terminator_kind::Return:
-    case Terminator_kind::Unreachable:
-    case Terminator_kind::Assert_failed:
-    case Terminator_kind::Unset:
-        return;
-    }
-}
-
 // Reads one operand: reports if it names a moved local, then applies the move if it is one.
 // `errors` is null during the fixpoint and non-null on the reporting pass - which is what lets
 // both use this rather than keeping two traversals in step by hand.

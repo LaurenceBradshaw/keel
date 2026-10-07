@@ -75,7 +75,8 @@ public:
     Type_id check( Node_id id, Type_id expected ); // expression, with one
 
     // Walks an expression only for the errors inside it, in a context that has already failed.
-    void absorb( Node_id id );
+    void    absorb( Node_id id );
+    Type_id take_expectation(); // expected_, cleared
 
     // D5: this expression has to be a `bool` already. A rule about one expression rather than about
     // the statement around it, which is why `if`, `while`, `for` and the ternary all reach it here.
@@ -152,7 +153,7 @@ private:
     // A composite constructor, not a value literal: its type is fixed by its name rather than
     // adopted from context, which is why it has no place in Literals::infer_literal.
     Type_id infer_struct_literal( Node_id id );
-    Type_id no_instance_named( Span at, Node_id declaration );
+    Type_id no_instance_named( Span at, Node_id declaration, Type_id expectation );
 
     Type_id infer_cast( Node_id id ); // D35's unsafe gate is here rather than in Operators::convert
     Type_id infer_marker( Node_id id );
@@ -221,9 +222,9 @@ private:
 
     // What the surrounding context wants this expression to be. Set by check() around the
     // expectation it is testing, and by the two places a pattern already knows the scrutinee. Read
-    // by a variant path and a struct literal to say which instance they name, and by a call to
-    // deduce the type arguments nobody wrote. A consumer takes it and clears it, so nothing nested
-    // inside the expression reads an expectation that belongs to its parent.
+    // only through take_expectation, by a variant path and a struct literal to say which instance
+    // they name, by a call to deduce the type arguments nobody wrote, and by `&f` to choose an
+    // overload - so nothing nested inside reads an expectation that belongs to its parent.
     Type_id expected_;
     Node_id current_function_; // whose annotation the escape rule reads
 

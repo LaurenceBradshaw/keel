@@ -284,6 +284,26 @@ void for_each_operand( const Function& func, const Rvalue& value, Fn fn )
     }
 }
 
+// A block's successors, 0, 1 or 2 of them by terminator kind, appended to `out`.
+inline void successors( const Terminator& terminator, std::vector<Block_id>& out )
+{
+    switch( terminator.kind )
+    {
+    case Terminator_kind::Goto:
+        out.push_back( terminator.targets[0] );
+        return;
+    case Terminator_kind::Branch:
+        out.push_back( terminator.targets[0] );
+        out.push_back( terminator.targets[1] );
+        return;
+    case Terminator_kind::Return:
+    case Terminator_kind::Unreachable:
+    case Terminator_kind::Assert_failed:
+    case Terminator_kind::Unset:
+        return;
+    }
+}
+
 inline Operand copy( Place place, Type_id type )
 {
     return Operand { .kind = Operand_kind::Copy, .place = place, .type = type };

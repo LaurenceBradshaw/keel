@@ -57,27 +57,6 @@ bool merge_into( Flow& into, const Flow& from )
     return changed;
 }
 
-// 0, 1 or 2 of them, by terminator kind. Deliberately the same shape as check_moves', because it is
-// the same question about the same graph.
-void successors( const Terminator& terminator, std::vector<Block_id>& out )
-{
-    switch( terminator.kind )
-    {
-    case Terminator_kind::Goto:
-        out.push_back( terminator.targets[0] );
-        return;
-    case Terminator_kind::Branch:
-        out.push_back( terminator.targets[0] );
-        out.push_back( terminator.targets[1] );
-        return;
-    case Terminator_kind::Unset:
-    case Terminator_kind::Return:
-    case Terminator_kind::Unreachable:
-    case Terminator_kind::Assert_failed:
-        return;
-    }
-}
-
 // A constructor's fields get a slot each after the locals, so the lattice and the worklist need not
 // know they exist.
 std::size_t slots( const Function& func )

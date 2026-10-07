@@ -258,8 +258,8 @@ Type_id Expressions::infer_call( Node_id id )
     // in `f( g() )` the type wanted of `f` says nothing about what `g` should produce. What it
     // does say is what a type parameter appearing only in the return type must be.
     // An error expectation names no type, so it deduces nothing.
-    const Type_id expectation = table_.is_error( expected_ ) ? Type_id {} : expected_;
-    expected_                 = Type_id {};
+    const Type_id taken       = take_expectation();
+    const Type_id expectation = table_.is_error( taken ) ? Type_id {} : taken;
 
     // What choosing between candidates already had to type. Empty until it does, which is every
     // call with one candidate - so the ordinary path types each argument exactly once, as before.
@@ -1039,8 +1039,7 @@ Type_id Expressions::function_address( Node_id id, Node_id declaration )
 
     const Node_id type_args = ast_.type_arg_list( ast_.operand( id ) );
 
-    const Type_id expectation = expected_;
-    expected_                 = Type_id {};
+    const Type_id expectation = take_expectation();
 
     if( next_visible( id, declaration ).is_valid() )
     {
@@ -1169,8 +1168,7 @@ Type_id Expressions::method_address( Node_id id, Node_id aggregate )
     const Symbol_id        name  = ast_.name( path );
     const std::string_view owner = interner_.text( ast_.name( aggregate ) );
 
-    const Type_id expectation = expected_;
-    expected_                 = Type_id {};
+    const Type_id expectation = take_expectation();
 
     const Node_id first = aggregates_.find_method( aggregate, name );
     if( !first.is_valid() )
@@ -2221,8 +2219,9 @@ bool Expressions::takes_context( Node_id id ) const
 
 Type_id Expressions::infer_path( Node_id id )
 {
-    const Node_id   qualifier = ast_.qualifier( id );
-    const Symbol_id name      = ast_.name( id );
+    const Type_id   expectation = take_expectation();
+    const Node_id   qualifier   = ast_.qualifier( id );
+    const Symbol_id name        = ast_.name( id );
 
     const Node_id decl = qualifier_declaration( id );
 
@@ -2330,9 +2329,9 @@ Type_id Expressions::infer_path( Node_id id )
         // Which instance this path names. The declaration test is what keeps a wrong expectation
         // out: `Opt<i32> x = Plain::One;` falls through to the open form and is refused below by
         // the ordinary mismatch, rather than being quietly retyped to whatever was wanted.
-        if( expected_.is_valid() && table_.get( expected_ ).declaration == decl )
+        if( expectation.is_valid() && table_.get( expectation ).declaration == decl )
         {
-            return types_.record( id, expected_ );
+            return types_.record( id, expectation );
         }
 
         // Nothing named an instance, and a generic declaration's own type is the open form -
@@ -2340,7 +2339,7 @@ Type_id Expressions::infer_path( Node_id id )
         // below it would escape through `auto`, which has no expectation to disagree with.
         if( is_generic( ast_, decl ) )
         {
-            return types_.record( id, no_instance_named( ast_.span( id ), decl ) );
+            return types_.record( id, no_instance_named( ast_.span( id ), decl, expectation ) );
         }
 
         return types_.record( id, types_.type_of( decl ) );
@@ -2448,21 +2447,21 @@ Type_id Expressions::infer_string_literal( Node_id id )
 // Nothing named an instance of a generic declaration, so there is no type here a value can hold.
 // Two causes with two different fixes, which is why one message cannot serve both: either nothing
 // was expected at all, or what was expected belongs to another declaration entirely.
-Type_id Expressions::no_instance_named( Span at, Node_id declaration )
+Type_id Expressions::no_instance_named( Span at, Node_id declaration, Type_id expectation )
 {
     const std::string_view name = interner_.text( ast_.name( declaration ) );
 
     // An error expected here was reported where it failed.
-    if( expected_.is_valid() && table_.is_error( expected_ ) )
+    if( expectation.is_valid() && table_.is_error( expectation ) )
     {
         return table_.builtin( Type_kind::Error );
     }
 
-    if( expected_.is_valid() )
+    if( expectation.is_valid() )
     {
         // The ordinary mismatch, stated here rather than left to check(): falling through would
         // name the open form - `Box<T>`, a type the author never wrote - on the `got` side.
-        reporter_.error_at( at, fmt::format( "expected `{}`, but got `{}`", table_.name( expected_ ), name ) );
+        reporter_.error_at( at, fmt::format( "expected `{}`, but got `{}`", table_.name( expectation ), name ) );
     }
     else
     {
@@ -2478,7 +2477,8 @@ Type_id Expressions::no_instance_named( Span at, Node_id declaration )
 
 Type_id Expressions::infer_struct_literal( Node_id id )
 {
-    const Type_id error = table_.builtin( Type_kind::Error );
+    const Type_id expectation = take_expectation();
+    const Type_id error       = table_.builtin( Type_kind::Error );
 
     // The resolver already bound the type name, so there is no scope lookup here - and if it
     // failed, it reported. Saying so again is the cascade the error type exists to prevent.
@@ -2563,13 +2563,11 @@ Type_id Expressions::infer_struct_literal( Node_id id )
     // Which instance this literal builds. The declaration test is what keeps a wrong expectation
     // out: `Box<i32> x = Plain { 1 };` falls through and is refused by the ordinary mismatch below,
     // rather than being quietly retyped to whatever was wanted.
-    const bool names_an_instance = expected_.is_valid() && table_.get( expected_ ).declaration == decl;
+    const bool names_an_instance = expectation.is_valid() && table_.get( expectation ).declaration == decl;
 
     if( !names_an_instance && is_generic( ast_, decl ) )
     {
-        // Reported before the values are typed, because typing one runs check(), which is what
-        // sets expected_ - and the message depends on it.
-        const Type_id poison = no_instance_named( ast_.type_name_span( id ), decl );
+        const Type_id poison = no_instance_named( ast_.type_name_span( id ), decl, expectation );
 
         for( const Node_id init : initialisers )
         {
@@ -2579,7 +2577,7 @@ Type_id Expressions::infer_struct_literal( Node_id id )
         return types_.record( id, poison );
     }
 
-    const Type_id result = names_an_instance ? expected_ : types_.type_of( decl );
+    const Type_id result = names_an_instance ? expectation : types_.type_of( decl );
 
     // One convention per literal, as C++20 requires. Two in the same literal is a reader's
     // problem rather than a parser's.
@@ -3075,6 +3073,13 @@ void Expressions::absorb( Node_id id )
         infer( id );
         expected_ = Type_id {};
     }
+}
+
+Type_id Expressions::take_expectation()
+{
+    const Type_id taken = expected_;
+    expected_           = Type_id {};
+    return taken;
 }
 
 void Expressions::check_condition( Node_id id )
