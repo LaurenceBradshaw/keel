@@ -1153,20 +1153,20 @@ item leaves this list for `.claude/LOG.md`, with what it cost.
 
 From `.claude/READABILITY_AUDIT.md`, chosen by what M9 to M9.6 will edit. Done: R19's table, R7's
 and R14's small fixes, `node.h`'s shape table, and R1: `Ast`'s typed `aux` readers and named-child
-accessors, which every pass reads through (only `Field_type` and the tests stay positional),
-R20's `Types_builder::poison`, R24's one namespace spelling, `keel::sema`, R2's single
-take-and-clear discipline for `Expressions::expected_`, R17's `successors()` in `kir.h`, R14's
-`lower_arm_body`, R7's tree queries as `Ast` members, R18's `Lookahead`, and R13's
-`Annotations::resolve` with its long cases as members. Nothing is left before
-M9. A query that reads only the tree and the nodes it is given is a member of `Ast`; one that needs
-anything more (`parameter_mode_of`, which answers in sema's `Param_mode`, and the ownership and
-binding-type questions) stays in sema. **With M9**:
-monomorphisation out of `lower()` into `ir/instances` (R9, then R22). **At M9.1**: the dataflow
+accessors, which every pass reads through (only `Field_type` and the tests stay positional), R20's
+`Types_builder::poison`, R24's one namespace spelling, `keel::sema`, R2's single take-and-clear
+discipline for `Expressions::expected_`, R17's `successors()` in `kir.h`, R14's `lower_arm_body`,
+R7's tree queries as `Ast` members, R18's `Lookahead`, R13's `Annotations::resolve` with its long
+cases as members, and R9's `ir/instances`, which owns monomorphisation (`instances_to_emit`,
+`bindings_for`). A query that reads only the tree and the nodes it is given is a member of `Ast`; one
+that needs anything more (`parameter_mode_of`, which answers in sema's `Param_mode`, and the
+ownership and binding-type questions) stays in sema. **With M9**: interning every substituted type in
+`instances_to_emit` so lowering and emission take `const Types&` (R22). **At M9.1**: the dataflow
 wording out of `main.cpp` (R10) and one test fixture that runs the real pipeline, prelude included
 (R11). **At M9.5**: the parser's cursor and recovery as classes (R3, with R5 and R18), `infer_call`'s
 phases and a call-site struct (R6, R15), and the resolver's long cases (R12). **Later, or when next
-touched**: `Addresses` out of `Expressions` (R4), the `Types` renames (R8) once files stop moving, R16 and R21, and R19's comment sweep of `ir/lower.cpp`, `check/`
-and `parse/parser.cpp`.
+touched**: `Addresses` out of `Expressions` (R4), the `Types` renames (R8) once files stop moving, R16
+and R21, and R19's comment sweep of `ir/lower.cpp`, `check/` and `parse/parser.cpp`.
 
 ### Carried from M8
 

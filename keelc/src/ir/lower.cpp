@@ -10,6 +10,7 @@
 #include <vector>
 #include "ast/node.h"
 #include "ir/builder.h"
+#include "ir/instances.h"
 
 namespace keel
 {
@@ -2529,133 +2530,9 @@ std::vector<Function> lower( const Ast& ast, const Resolution& resolution, Types
         }
     }
 
-    // One function per set of type arguments, and the checker's list is only the seed. A call site
-    // inside a generic writes `g<T>`, which names no instance at all until `T` is known - so the
-    // real set is the closure of that list under the generic call graph, and reaching it needs a
-    // worklist rather than a pass.
-    //
-    // It terminates because Generic_recursion::check refused the shape that would not: a cycle whose
-    // arguments grow a level each time round. Every other cycle forwards its parameters unchanged,
-    // so going round it twice produces an instantiation that is already in the set.
-    std::vector<Instantiation> pending;
-
-    const auto already_queued = [&pending]( const Instantiation& candidate )
+    for( const Instantiation& instance : instances_to_emit( ast, types ) )
     {
-        return std::any_of(
-            pending.begin(),
-            pending.end(),
-            [&candidate]( const Instantiation& seen )
-            { return seen.declaration == candidate.declaration && seen.arguments == candidate.arguments; }
-        );
-    };
-
-    // An argument mentioning a type parameter - `T`, or `T*` - means the call was written inside a
-    // generic and names a template rather than an instance. Those are the edges, not the seeds.
-    const auto is_closed = [&types]( const Instantiation& candidate )
-    {
-        return std::none_of(
-            candidate.arguments.begin(),
-            candidate.arguments.end(),
-            [&types]( Type_id argument ) { return types.table().mentions_parameter( argument ); }
-        );
-    };
-
-    for( const Instantiation& seed : types.instantiations() )
-    {
-        if( is_closed( seed ) && !already_queued( seed ) )
-        {
-            pending.push_back( seed );
-        }
-    }
-
-    for( const Type_id composite_type_id : types.table().composite_types() )
-    {
-        const Type                 composite_type = types.table().get( composite_type_id );
-        const std::vector<Type_id> arguments { composite_type.arguments.begin(), composite_type.arguments.end() };
-        Instantiation              instance { .declaration = composite_type.declaration, .arguments = arguments };
-
-        // An enum is skipped rather than walked: D30 refuses an owning payload, so it has no
-        // destructor to seed - and ast.members asserts on one.
-        if( !composite_type.declaration.is_valid() || !ast.is_generic( composite_type.declaration ) ||
-            ast.kind( composite_type.declaration ) == Node_kind::Enum_decl )
-        {
-            continue;
-        }
-
-        bool destructor_found = false;
-        for( const auto& decl : ast.members( composite_type.declaration ) )
-        {
-            if( ast.kind( decl ) == Node_kind::Destructor_decl )
-            {
-                instance.declaration = decl;
-                destructor_found     = true;
-                break;
-            }
-        }
-
-        if( !destructor_found )
-        {
-            continue;
-        }
-
-        if( !is_closed( instance ) || already_queued( instance ) )
-        {
-            continue;
-        }
-
-        pending.push_back( std::move( instance ) );
-    }
-
-    // Indexed rather than iterated: the loop below appends to what it is walking.
-    for( std::size_t at = 0; at < pending.size(); ++at )
-    {
-        const Instantiation        instance   = pending[at];
-        const std::vector<Node_id> parameters = ast.type_parameters( ast.type_param_list( instance.declaration ) );
-
-        Bindings bindings;
-
-        for( std::size_t i = 0; i < parameters.size() && i < instance.arguments.size(); ++i )
-        {
-            bindings.emplace( types.type_of( parameters[i] ).v, instance.arguments[i] );
-        }
-
-        // What this instance's body reaches. `g<T>` under `{ T -> i32 }` is `g<i32>`, which no call
-        // site ever wrote and which nothing else would ever emit.
-        for( const Generic_call& edge : types.generic_calls() )
-        {
-            if( edge.from != instance.declaration )
-            {
-                continue;
-            }
-
-            Instantiation reached { .declaration = edge.to, .arguments = {} };
-
-            for( const Type_id argument : edge.arguments )
-            {
-                reached.arguments.push_back( types.table().substitute( argument, bindings ) );
-            }
-
-            if( is_closed( reached ) && !already_queued( reached ) )
-            {
-                pending.push_back( std::move( reached ) );
-            }
-        }
-    }
-
-    for( const Instantiation& instance : pending )
-    {
-        const std::vector<Node_id> parameters = ast.type_parameters( ast.type_param_list( instance.declaration ) );
-
-        Bindings bindings;
-
-        // Positional, which is what D39's spelling guarantees: the nth type argument binds the nth
-        // parameter.
-        for( std::size_t i = 0; i < parameters.size() && i < instance.arguments.size(); ++i )
-        {
-            bindings.emplace( types.type_of( parameters[i] ).v, instance.arguments[i] );
-        }
-
-        Lowering lowering( instance.declaration, ast, resolution, types, literals, std::move( bindings ) );
+        Lowering lowering( instance.declaration, ast, resolution, types, literals, bindings_for( ast, types, instance ) );
 
         Function emitted = lowering.run();
 
