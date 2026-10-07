@@ -97,7 +97,7 @@ void Signatures::declare_fields()
                 continue;
             }
 
-            const Type_id field_type = annotations_.type_of( ast_.annotation( field ) );
+            const Type_id field_type = annotations_.resolve( ast_.annotation( field ) );
 
             types_.record( field, field_type );
 
@@ -126,7 +126,7 @@ void Signatures::declare_functions()
         bounds_.declare_type_parameters( child, ast_.type_param_list( child ) );
 
         const Node_id return_type_node = ast_.return_type( child );
-        const Type_id return_type      = annotations_.type_of( return_type_node );
+        const Type_id return_type      = annotations_.resolve( return_type_node );
         types_.record( child, return_type );
 
         const Keyword return_mode = ast_.parameter_mode( child );
@@ -169,7 +169,7 @@ void Signatures::declare_functions()
             }
 
             const Node_id param_type_node = ast_.annotation( param );
-            const Type_id param_type      = annotations_.type_of( param_type_node );
+            const Type_id param_type      = annotations_.resolve( param_type_node );
             types_.record( param, param_type );
         }
 
@@ -223,7 +223,7 @@ void Signatures::declare_member_functions()
             const Node_id return_type_node = ast_.return_type( member );
 
             const Type_id return_type =
-                return_type_node.is_valid() ? annotations_.type_of( return_type_node ) : table_.builtin( Type_kind::Void );
+                return_type_node.is_valid() ? annotations_.resolve( return_type_node ) : table_.builtin( Type_kind::Void );
 
             types_.record( member, return_type );
 
@@ -255,7 +255,7 @@ void Signatures::declare_member_functions()
             for( Node_id param : ast_.params( member ) )
             {
                 const Node_id param_type_node = ast_.annotation( param );
-                const Type_id param_type      = annotations_.type_of( param_type_node );
+                const Type_id param_type      = annotations_.resolve( param_type_node );
                 types_.record( param, param_type );
 
                 if( ast_.is_generic( child ) )
@@ -286,7 +286,7 @@ void Signatures::declare_globals()
                 }
 
                 const Node_id var_type_node = ast_.annotation( member );
-                const Type_id var_type      = annotations_.type_of( var_type_node );
+                const Type_id var_type      = annotations_.resolve( var_type_node );
                 types_.record( member, var_type );
             }
         }
@@ -297,7 +297,7 @@ void Signatures::declare_globals()
         }
 
         const Node_id var_type_node = ast_.annotation( child );
-        const Type_id var_type      = annotations_.type_of( var_type_node );
+        const Type_id var_type      = annotations_.resolve( var_type_node );
         types_.record( child, var_type );
     }
 }
@@ -330,7 +330,7 @@ void Signatures::declare_enums()
         // The underlying type is invalid when unwritten. i32 by default, which is what
         // C++ gives a plain enum - D30 changed the semantics of the keyword, not its arithmetic.
         const Node_id annotation = ast_.underlying_type( child );
-        Type_id       underlying = annotation.is_valid() ? annotations_.type_of( annotation ) : table_.integer( 32, true );
+        Type_id       underlying = annotation.is_valid() ? annotations_.resolve( annotation ) : table_.integer( 32, true );
 
         // Only an integer can count variants. Absorbed to i32 so the rest of the pass has a type to
         // record; nothing downstream sees it, because a program with an error never reaches the emitter.
@@ -380,7 +380,7 @@ void Signatures::declare_enums()
 
             for( const Node_id field : ast_.payload( variant ) )
             {
-                const Type_id field_type = annotations_.type_of( ast_.annotation( field ) );
+                const Type_id field_type = annotations_.resolve( ast_.annotation( field ) );
 
                 types_.record( field, field_type );
 
@@ -781,7 +781,7 @@ TEST_CASE( "type_checker_constrains_the_signature_of_main", "[sema][types]" )
         REQUIRE( p.errors() == 2 );
     }
 
-    // The unknown type is reported by Annotations::type_of; saying `main` must return i32 on top of
+    // The unknown type is reported by Annotations::resolve; saying `main` must return i32 on top of
     // that would be two messages for one mistake.
     SECTION( "an unresolved return type reports once, as the unknown type" )
     {

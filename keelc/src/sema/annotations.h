@@ -42,7 +42,7 @@ public:
     // already recorded. Invalid for `auto`, which the parser writes as an invalid Node_id.
     // `outermost` is false inside a wrapper, which is what tells a pointer to `const` from a
     // `const` binding.
-    Type_id type_of( Node_id annotation, bool outermost = true );
+    Type_id resolve( Node_id annotation, bool outermost = true );
 
     // False only when the *count* is wrong, which is the one failure that leaves nothing usable
     // behind. An argument that failed to resolve, or that broke a bound, is reported and still
@@ -51,6 +51,12 @@ public:
     resolve_type_arguments( Node_id declaration, Node_id type_args, std::string_view name, std::vector<Type_id>& resolved );
 
 private:
+    // The long cases of resolve().
+    Type_id resolve_named( Node_id annotation );
+    Type_id resolve_generic( Node_id annotation );
+    Type_id resolve_function_type( Node_id annotation );
+    Type_id resolve_field_type( Node_id annotation );
+
     Span const_keyword( Node_id const_type ) const;
 
     const Ast&        ast_;

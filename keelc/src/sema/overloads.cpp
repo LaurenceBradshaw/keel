@@ -28,7 +28,7 @@ Bindings Overloads::type_bindings( Node_id callable, std::span<const Type_id> ar
 
     for( std::size_t i = 0; i < parameters.size() && i < arguments.size(); ++i )
     {
-        // Annotations::type_of has already reported an unknown type. Binding the error type keeps
+        // Annotations::resolve has already reported an unknown type. Binding the error type keeps
         // every later substitution total, and check() absorbs it at each argument.
         bindings.emplace( types_.type_of( parameters[i] ).v, arguments[i] );
     }
@@ -538,7 +538,7 @@ Node_id Overloads::select_overload(
     {
         for( const Node_id written_argument : ast_.type_args( call ) )
         {
-            resolved.push_back( annotations_.type_of( written_argument ) );
+            resolved.push_back( annotations_.resolve( written_argument ) );
         }
     }
 
@@ -1199,7 +1199,7 @@ bool Overloads::applies(
     {
         for( const Node_id written_argument : ast_.type_args( call ) )
         {
-            resolved.push_back( annotations_.type_of( written_argument ) );
+            resolved.push_back( annotations_.resolve( written_argument ) );
         }
     }
 

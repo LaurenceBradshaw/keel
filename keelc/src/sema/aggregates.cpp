@@ -87,7 +87,7 @@ bool Aggregates::contains_itself( Node_id decl, std::vector<Node_id>& path )
             continue;
         }
 
-        // Read back what the field pass recorded. Calling Annotations::type_of again would report
+        // Read back what the field pass recorded. Calling Annotations::resolve again would report
         // every unknown type and D1 suggestion a second time.
         const Type_id field_type = types_.type_of( field );
 

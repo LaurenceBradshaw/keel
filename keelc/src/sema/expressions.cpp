@@ -2010,7 +2010,7 @@ Type_id Expressions::infer_conditional( Node_id id )
 
 Type_id Expressions::infer_alloc( Node_id id )
 {
-    const Type_id element = annotations_.type_of( ast_.written_type( id ) );
+    const Type_id element = annotations_.resolve( ast_.written_type( id ) );
 
     if( table_.is_error( element ) )
     {
@@ -2762,7 +2762,7 @@ Type_id Expressions::infer_struct_literal( Node_id id )
 Type_id Expressions::infer_cast( Node_id id )
 {
     const bool    is_cast = ast_.keyword( id ) == Keyword::Cast;
-    const Type_id target  = annotations_.type_of( ast_.written_type( id ) );
+    const Type_id target  = annotations_.resolve( ast_.written_type( id ) );
     const Node_id operand = ast_.operand( id );
     const Type_id error   = table_.builtin( Type_kind::Error );
 

@@ -45,7 +45,7 @@ std::string_view keel_spelling_for( std::string_view cpp_spelling )
 }
 } // namespace
 
-Type_id Annotations::type_of( Node_id annotation, bool outermost )
+Type_id Annotations::resolve( Node_id annotation, bool outermost )
 {
     // An invalid Node_id is `auto`, not a mistake - the parser writes one deliberately.
     if( !annotation.is_valid() )
@@ -56,68 +56,7 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
     switch( ast_.kind( annotation ) )
     {
     case Node_kind::Named_type:
-    {
-        const Node_id decl = resolution_.declaration_of( annotation );
-
-        if( decl.is_valid() )
-        {
-            // An enum names a type as much as an aggregate does. Not folded into is_aggregate(),
-            // which gates the struct/class member rules and has no business answering this.
-            if( !is_aggregate( ast_.kind( decl ) ) && ast_.kind( decl ) != Node_kind::Enum_decl &&
-                ast_.kind( decl ) != Node_kind::Type_param_decl )
-            {
-                // Resolved to a function or variable of the same name.
-                reporter_.error_at(
-                    ast_.span( annotation ), fmt::format( "`{}` is not a type", interner_.text( ast_.name( annotation ) ) )
-                );
-
-                return table_.builtin( Type_kind::Error );
-            }
-
-            // The mirror of a generic call written without its type arguments: what `Box` names on
-            // its own is the open form, which no value can have. Inference is a decision of its own
-            // and is not taken here, so this names the explicit form rather than guessing.
-            if( ( is_aggregate( ast_.kind( decl ) ) || ast_.kind( decl ) == Node_kind::Enum_decl ) && ast_.is_generic( decl ) )
-            {
-                const std::string_view name = interner_.text( ast_.name( annotation ) );
-
-                reporter_.error_at(
-                    ast_.span( annotation ),
-                    fmt::format( "`{}` is generic, so its type arguments must be written", name ),
-                    fmt::format( "as in `{}<i32>`", name )
-                );
-
-                return table_.builtin( Type_kind::Error );
-            }
-
-            return types_.type_of( decl );
-        }
-
-        // `kl::Missing` was reported by the resolver, `kl::i32` is not `i32`, and an error symbol's
-        // declaration was reported where it failed.
-        if( ast_.package( annotation ).is_valid() || resolution_.is_unresolved( annotation ) )
-        {
-            return table_.builtin( Type_kind::Error );
-        }
-
-        const std::string_view spelling = interner_.text( ast_.name( annotation ) );
-        const Type_id          type     = table_.from_spelling( spelling );
-
-        if( type.is_valid() )
-        {
-            return type;
-        }
-
-        const std::string_view suggestion = keel_spelling_for( spelling );
-
-        reporter_.error_at(
-            ast_.span( annotation ),
-            fmt::format( "unknown type `{}`", spelling ),
-            suggestion.empty() ? std::string {} : fmt::format( "Keel spells this `{}`", suggestion )
-        );
-
-        return table_.builtin( Type_kind::Error );
-    }
+        return resolve_named( annotation );
 
     case Node_kind::Const_type:
         // `const` binds the declaration; the one under a * is read by the pointer cases below.
@@ -132,14 +71,14 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
             return table_.builtin( Type_kind::Error );
         }
 
-        return type_of( ast_.inner_type( annotation ), false );
+        return resolve( ast_.inner_type( annotation ), false );
 
     case Node_kind::Pointer_type:
     case Node_kind::Many_pointer_type:
     {
         const Node_id spelled       = ast_.inner_type( annotation );
         const bool    const_element = ast_.kind( spelled ) == Node_kind::Const_type;
-        const Type_id element       = type_of( const_element ? ast_.inner_type( spelled ) : spelled, false );
+        const Type_id element       = resolve( const_element ? ast_.inner_type( spelled ) : spelled, false );
 
         if( ast_.kind( annotation ) == Node_kind::Many_pointer_type && table_.is_void( element ) )
         {
@@ -174,7 +113,7 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
     {
         const Keyword mode = ast_.keyword( annotation );
 
-        const Type_id inner = type_of( ast_.inner_type( annotation ), false );
+        const Type_id inner = resolve( ast_.inner_type( annotation ), false );
 
         // An `out` parameter is assigned without its old value being destroyed, so an owning one
         // would leak whatever the caller was already holding. Refused until the caller emits a
@@ -193,247 +132,317 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
         return inner;
     }
 
-    // The mirror of a generic call, asking the same three questions through the same helper.
     case Node_kind::Generic_type:
-    {
-        const Node_id base      = ast_.generic_name( annotation );
-        const Node_id type_args = ast_.type_arg_list( annotation );
-
-        if( !base.is_valid() || !type_args.is_valid() )
-        {
-            return table_.builtin( Type_kind::Error );
-        }
-
-        const Node_id decl = resolution_.declaration_of( base );
-
-        // A qualified base was reported by the resolver, and an error symbol where it failed.
-        if( !decl.is_valid() && ( ast_.package( base ).is_valid() || resolution_.is_unresolved( base ) ) )
-        {
-            return table_.builtin( Type_kind::Error );
-        }
-
-        if( !decl.is_valid() )
-        {
-            // The base resolved to nothing. Reporting here rather than through the Named_type case
-            // keeps the span on the whole `Box<i32>`, which is what the author wrote.
-            reporter_.error_at(
-                ast_.span( annotation ), fmt::format( "unknown type `{}`", interner_.text( ast_.name( base ) ) )
-            );
-
-            return table_.builtin( Type_kind::Error );
-        }
-
-        const std::string_view name = interner_.text( ast_.name( base ) );
-
-        if( !is_aggregate( ast_.kind( decl ) ) && ast_.kind( decl ) != Node_kind::Enum_decl )
-        {
-            reporter_.error_at( ast_.span( annotation ), fmt::format( "`{}` is not a generic", name ) );
-            return table_.builtin( Type_kind::Error );
-        }
-
-        if( !ast_.is_generic( decl ) )
-        {
-            reporter_.error_at(
-                ast_.span( annotation ),
-                fmt::format( "`{}` is not a generic", name ),
-                fmt::format( "it takes no type arguments, so write `{}` on its own", name )
-            );
-
-            return table_.builtin( Type_kind::Error );
-        }
-
-        std::vector<Type_id> arguments;
-
-        if( !resolve_type_arguments( decl, type_args, name, arguments ) )
-        {
-            return table_.builtin( Type_kind::Error );
-        }
-
-        // An argument that failed to resolve makes the whole type an error rather than interning
-        // `Box<<error>>` - which would spell nothing, and which every later diagnostic would name.
-        for( const Type_id argument : arguments )
-        {
-            if( !argument.is_valid() || table_.is_error( argument ) )
-            {
-                return table_.builtin( Type_kind::Error );
-            }
-        }
-
-        Type_id instance {};
-        if( ast_.kind( decl ) == Node_kind::Enum_decl )
-        {
-            const Node_id written    = ast_.underlying_type( decl );
-            Type_id       underlying = written.is_valid() ? type_of( written ) : table_.integer( 32, true );
-            instance                 = table_.enumeration( decl, arguments, name, underlying );
-        }
-        else
-        {
-            instance = table_.structure( decl, arguments, name );
-        }
-
-        return instance;
-    }
+        return resolve_generic( annotation );
     case Node_kind::Function_type:
-    {
-        const Node_id spelled_return = ast_.return_type( annotation );
-        const Node_id bare_return    = ast_.unwrap_const( spelled_return );
-        const Keyword return_mode_kw = ast_.parameter_mode( annotation );
-
-        // The unwrapped node, not what was written: `const ref i32` reaches here as a Const_type,
-        // and typing that with outermost false is what reports a pointer to `const` - the right
-        // refusal for the wrong reason, and a second diagnostic under every one below.
-        //
-        // Nothing written inside a function type is a declaration, so none of it is outermost.
-        const Type_id return_type = type_of( bare_return, false );
-        bool          poisoned    = table_.is_error( return_type );
-
-        Param_mode return_mode = Param_mode::Value;
-        if( return_mode_kw == Keyword::Ref && bare_return != spelled_return )
-        {
-            return_mode = Param_mode::Const_ref;
-        }
-        else if( return_mode_kw == Keyword::Ref )
-        {
-            reporter_.error_at(
-                ast_.span( spelled_return ),
-                "only a `const ref` may be returned",
-                fmt::format( "write `const ref {}`", table_.name( return_type ) )
-            );
-            poisoned = true;
-        }
-        else if( return_mode_kw == Keyword::Out || return_mode_kw == Keyword::Move )
-        {
-            const std::string_view mode_text = interner_.text( Interner::keyword( return_mode_kw ) );
-
-            reporter_.error_at(
-                ast_.span( spelled_return ),
-                fmt::format( "`{}` is not a return mode", mode_text ),
-                fmt::format( "`{}` says how an argument travels, and a return is not an argument", mode_text )
-            );
-            poisoned = true;
-        }
-        else if( return_mode_kw == Keyword::Count && bare_return != spelled_return )
-        {
-            reporter_.error_at(
-                const_keyword( spelled_return ),
-                "a `const` here binds nothing, because a function type has no callee",
-                "remove it - whether the callee copies is its own business"
-            );
-            poisoned = true;
-        }
-
-        std::vector<Parameter> parameters;
-
-        for( const Node_id param : ast_.params( annotation ) )
-        {
-            Parameter     parameter;
-            const Node_id spelled = ast_.annotation( param );
-
-            const Node_id bare = ast_.unwrap_const( spelled );
-
-            // A `const` with no mode under it: the only thing it could bind is a callee's own copy,
-            // and a type has no callee. `const ref` reaches the Mode_type and is a mode like the rest.
-            if( bare != spelled && ast_.kind( bare ) != Node_kind::Mode_type )
-            {
-                reporter_.error_at(
-                    const_keyword( spelled ),
-                    "a `const` here binds nothing, because a function type has no callee",
-                    "remove it - whether the callee copies is its own business"
-                );
-
-                poisoned = true;
-                continue;
-            }
-
-            parameter.mode = parameter_mode_of( ast_, param );
-
-            const Type_id param_type = type_of( bare, false );
-
-            poisoned = poisoned || table_.is_error( param_type );
-
-            parameter.type = param_type;
-            parameters.push_back( parameter );
-        }
-
-        // Poison propagates rather than being wrapped, for the reason Pointer_type's does: a
-        // `fn( <error> ) -> i32` is not the error type, so one bad annotation would report twice.
-        return poisoned ? table_.builtin( Type_kind::Error ) : table_.function( return_type, parameters, return_mode );
-    }
+        return resolve_function_type( annotation );
     case Node_kind::Field_type:
-    {
-        const Node_id spelled_member    = ast_.child( annotation, 0 );
-        const Node_id bare_member       = ast_.unwrap_const( spelled_member );
-        const Node_id spelled_aggregate = ast_.child( annotation, 1 );
-        const Keyword member_mode       = ast_.parameter_mode( annotation );
-
-        // Stripped by hand rather than typed through: a Mode_type reports its own refusals, and a mode here is refused whole.
-        Node_id bare_aggregate = ast_.unwrap_const( spelled_aggregate );
-        if( ast_.kind( bare_aggregate ) == Node_kind::Mode_type )
-        {
-            bare_aggregate = ast_.inner_type( bare_aggregate );
-        }
-
-        const Type_id aggregate = type_of( bare_aggregate, false );
-        bool          poisoned  = table_.is_error( aggregate );
-
-        if( bare_aggregate != spelled_aggregate )
-        {
-            reporter_.error_at(
-                ast_.span( spelled_aggregate ),
-                "the aggregate of a field type takes no mode",
-                "one offset serves every object of the type, so write the type alone"
-            );
-            poisoned = true;
-        }
-        else if( !poisoned && !table_.is_struct( aggregate ) && !table_.is_parameter( aggregate ) )
-        {
-            reporter_.error_at(
-                ast_.span( spelled_aggregate ),
-                fmt::format( "`{}` has no fields", table_.name( aggregate ) ),
-                "a field type reads a field of a `struct` or a `class`"
-            );
-            poisoned = true;
-        }
-
-        if( member_mode == Keyword::Ref && bare_member != spelled_member )
-        {
-            reporter_.error_at( ast_.span( spelled_member ), "a field type that borrows is not supported yet" );
-            poisoned = true;
-        }
-        else if( member_mode == Keyword::Ref )
-        {
-            reporter_.error_at( ast_.span( spelled_member ), "writing through a field type is not supported yet" );
-            poisoned = true;
-        }
-        else if( member_mode == Keyword::Out || member_mode == Keyword::Move )
-        {
-            const std::string_view mode_text = interner_.text( Interner::keyword( member_mode ) );
-
-            reporter_.error_at(
-                ast_.span( spelled_member ),
-                fmt::format( "`{}` is not a return mode", mode_text ),
-                fmt::format( "`{}` says how an argument travels, and a return is not an argument", mode_text )
-            );
-            poisoned = true;
-        }
-        else if( member_mode == Keyword::Count && bare_member != spelled_member )
-        {
-            reporter_.error_at(
-                const_keyword( spelled_member ), "a `const` here binds nothing, because a field type only reads", "remove it"
-            );
-            poisoned = true;
-        }
-
-        // Typed only without a mode, since a Mode_type would add its own refusals under the one above.
-        const Type_id member =
-            member_mode == Keyword::Count ? type_of( bare_member, false ) : table_.builtin( Type_kind::Error );
-
-        return poisoned || table_.is_error( member ) ? table_.builtin( Type_kind::Error ) : table_.field( aggregate, member );
-    }
+        return resolve_field_type( annotation );
     default:
         // Error nodes, and anything the parser puts in type position that is not a type.
         return table_.builtin( Type_kind::Error );
     }
+}
+
+Type_id Annotations::resolve_named( Node_id annotation )
+{
+    const Node_id decl = resolution_.declaration_of( annotation );
+
+    if( decl.is_valid() )
+    {
+        // An enum names a type as much as an aggregate does. Not folded into is_aggregate(),
+        // which gates the struct/class member rules and has no business answering this.
+        if( !is_aggregate( ast_.kind( decl ) ) && ast_.kind( decl ) != Node_kind::Enum_decl &&
+            ast_.kind( decl ) != Node_kind::Type_param_decl )
+        {
+            // Resolved to a function or variable of the same name.
+            reporter_.error_at(
+                ast_.span( annotation ), fmt::format( "`{}` is not a type", interner_.text( ast_.name( annotation ) ) )
+            );
+
+            return table_.builtin( Type_kind::Error );
+        }
+
+        // The mirror of a generic call written without its type arguments: what `Box` names on
+        // its own is the open form, which no value can have. Inference is a decision of its own
+        // and is not taken here, so this names the explicit form rather than guessing.
+        if( ( is_aggregate( ast_.kind( decl ) ) || ast_.kind( decl ) == Node_kind::Enum_decl ) && ast_.is_generic( decl ) )
+        {
+            const std::string_view name = interner_.text( ast_.name( annotation ) );
+
+            reporter_.error_at(
+                ast_.span( annotation ),
+                fmt::format( "`{}` is generic, so its type arguments must be written", name ),
+                fmt::format( "as in `{}<i32>`", name )
+            );
+
+            return table_.builtin( Type_kind::Error );
+        }
+
+        return types_.type_of( decl );
+    }
+
+    // `kl::Missing` was reported by the resolver, `kl::i32` is not `i32`, and an error symbol's
+    // declaration was reported where it failed.
+    if( ast_.package( annotation ).is_valid() || resolution_.is_unresolved( annotation ) )
+    {
+        return table_.builtin( Type_kind::Error );
+    }
+
+    const std::string_view spelling = interner_.text( ast_.name( annotation ) );
+    const Type_id          type     = table_.from_spelling( spelling );
+
+    if( type.is_valid() )
+    {
+        return type;
+    }
+
+    const std::string_view suggestion = keel_spelling_for( spelling );
+
+    reporter_.error_at(
+        ast_.span( annotation ),
+        fmt::format( "unknown type `{}`", spelling ),
+        suggestion.empty() ? std::string {} : fmt::format( "Keel spells this `{}`", suggestion )
+    );
+
+    return table_.builtin( Type_kind::Error );
+}
+
+// The mirror of a generic call, asking the same three questions through the same helper.
+Type_id Annotations::resolve_generic( Node_id annotation )
+{
+    const Node_id base      = ast_.generic_name( annotation );
+    const Node_id type_args = ast_.type_arg_list( annotation );
+
+    if( !base.is_valid() || !type_args.is_valid() )
+    {
+        return table_.builtin( Type_kind::Error );
+    }
+
+    const Node_id decl = resolution_.declaration_of( base );
+
+    // A qualified base was reported by the resolver, and an error symbol where it failed.
+    if( !decl.is_valid() && ( ast_.package( base ).is_valid() || resolution_.is_unresolved( base ) ) )
+    {
+        return table_.builtin( Type_kind::Error );
+    }
+
+    if( !decl.is_valid() )
+    {
+        // The base resolved to nothing. Reporting here rather than through the Named_type case
+        // keeps the span on the whole `Box<i32>`, which is what the author wrote.
+        reporter_.error_at( ast_.span( annotation ), fmt::format( "unknown type `{}`", interner_.text( ast_.name( base ) ) ) );
+
+        return table_.builtin( Type_kind::Error );
+    }
+
+    const std::string_view name = interner_.text( ast_.name( base ) );
+
+    if( !is_aggregate( ast_.kind( decl ) ) && ast_.kind( decl ) != Node_kind::Enum_decl )
+    {
+        reporter_.error_at( ast_.span( annotation ), fmt::format( "`{}` is not a generic", name ) );
+        return table_.builtin( Type_kind::Error );
+    }
+
+    if( !ast_.is_generic( decl ) )
+    {
+        reporter_.error_at(
+            ast_.span( annotation ),
+            fmt::format( "`{}` is not a generic", name ),
+            fmt::format( "it takes no type arguments, so write `{}` on its own", name )
+        );
+
+        return table_.builtin( Type_kind::Error );
+    }
+
+    std::vector<Type_id> arguments;
+
+    if( !resolve_type_arguments( decl, type_args, name, arguments ) )
+    {
+        return table_.builtin( Type_kind::Error );
+    }
+
+    // An argument that failed to resolve makes the whole type an error rather than interning
+    // `Box<<error>>` - which would spell nothing, and which every later diagnostic would name.
+    for( const Type_id argument : arguments )
+    {
+        if( !argument.is_valid() || table_.is_error( argument ) )
+        {
+            return table_.builtin( Type_kind::Error );
+        }
+    }
+
+    Type_id instance {};
+    if( ast_.kind( decl ) == Node_kind::Enum_decl )
+    {
+        const Node_id written    = ast_.underlying_type( decl );
+        Type_id       underlying = written.is_valid() ? resolve( written ) : table_.integer( 32, true );
+        instance                 = table_.enumeration( decl, arguments, name, underlying );
+    }
+    else
+    {
+        instance = table_.structure( decl, arguments, name );
+    }
+
+    return instance;
+}
+
+Type_id Annotations::resolve_function_type( Node_id annotation )
+{
+    const Node_id spelled_return = ast_.return_type( annotation );
+    const Node_id bare_return    = ast_.unwrap_const( spelled_return );
+    const Keyword return_mode_kw = ast_.parameter_mode( annotation );
+
+    // The unwrapped node, not what was written: `const ref i32` reaches here as a Const_type,
+    // and typing that with outermost false is what reports a pointer to `const` - the right
+    // refusal for the wrong reason, and a second diagnostic under every one below.
+    //
+    // Nothing written inside a function type is a declaration, so none of it is outermost.
+    const Type_id return_type = resolve( bare_return, false );
+    bool          poisoned    = table_.is_error( return_type );
+
+    Param_mode return_mode = Param_mode::Value;
+    if( return_mode_kw == Keyword::Ref && bare_return != spelled_return )
+    {
+        return_mode = Param_mode::Const_ref;
+    }
+    else if( return_mode_kw == Keyword::Ref )
+    {
+        reporter_.error_at(
+            ast_.span( spelled_return ),
+            "only a `const ref` may be returned",
+            fmt::format( "write `const ref {}`", table_.name( return_type ) )
+        );
+        poisoned = true;
+    }
+    else if( return_mode_kw == Keyword::Out || return_mode_kw == Keyword::Move )
+    {
+        const std::string_view mode_text = interner_.text( Interner::keyword( return_mode_kw ) );
+
+        reporter_.error_at(
+            ast_.span( spelled_return ),
+            fmt::format( "`{}` is not a return mode", mode_text ),
+            fmt::format( "`{}` says how an argument travels, and a return is not an argument", mode_text )
+        );
+        poisoned = true;
+    }
+    else if( return_mode_kw == Keyword::Count && bare_return != spelled_return )
+    {
+        reporter_.error_at(
+            const_keyword( spelled_return ),
+            "a `const` here binds nothing, because a function type has no callee",
+            "remove it - whether the callee copies is its own business"
+        );
+        poisoned = true;
+    }
+
+    std::vector<Parameter> parameters;
+
+    for( const Node_id param : ast_.params( annotation ) )
+    {
+        Parameter     parameter;
+        const Node_id spelled = ast_.annotation( param );
+
+        const Node_id bare = ast_.unwrap_const( spelled );
+
+        // A `const` with no mode under it: the only thing it could bind is a callee's own copy,
+        // and a type has no callee. `const ref` reaches the Mode_type and is a mode like the rest.
+        if( bare != spelled && ast_.kind( bare ) != Node_kind::Mode_type )
+        {
+            reporter_.error_at(
+                const_keyword( spelled ),
+                "a `const` here binds nothing, because a function type has no callee",
+                "remove it - whether the callee copies is its own business"
+            );
+
+            poisoned = true;
+            continue;
+        }
+
+        parameter.mode = parameter_mode_of( ast_, param );
+
+        const Type_id param_type = resolve( bare, false );
+
+        poisoned = poisoned || table_.is_error( param_type );
+
+        parameter.type = param_type;
+        parameters.push_back( parameter );
+    }
+
+    // Poison propagates rather than being wrapped, for the reason Pointer_type's does: a
+    // `fn( <error> ) -> i32` is not the error type, so one bad annotation would report twice.
+    return poisoned ? table_.builtin( Type_kind::Error ) : table_.function( return_type, parameters, return_mode );
+}
+
+Type_id Annotations::resolve_field_type( Node_id annotation )
+{
+    const Node_id spelled_member    = ast_.child( annotation, 0 );
+    const Node_id bare_member       = ast_.unwrap_const( spelled_member );
+    const Node_id spelled_aggregate = ast_.child( annotation, 1 );
+    const Keyword member_mode       = ast_.parameter_mode( annotation );
+
+    // Stripped by hand rather than typed through: a Mode_type reports its own refusals, and a mode here is refused whole.
+    Node_id bare_aggregate = ast_.unwrap_const( spelled_aggregate );
+    if( ast_.kind( bare_aggregate ) == Node_kind::Mode_type )
+    {
+        bare_aggregate = ast_.inner_type( bare_aggregate );
+    }
+
+    const Type_id aggregate = resolve( bare_aggregate, false );
+    bool          poisoned  = table_.is_error( aggregate );
+
+    if( bare_aggregate != spelled_aggregate )
+    {
+        reporter_.error_at(
+            ast_.span( spelled_aggregate ),
+            "the aggregate of a field type takes no mode",
+            "one offset serves every object of the type, so write the type alone"
+        );
+        poisoned = true;
+    }
+    else if( !poisoned && !table_.is_struct( aggregate ) && !table_.is_parameter( aggregate ) )
+    {
+        reporter_.error_at(
+            ast_.span( spelled_aggregate ),
+            fmt::format( "`{}` has no fields", table_.name( aggregate ) ),
+            "a field type reads a field of a `struct` or a `class`"
+        );
+        poisoned = true;
+    }
+
+    if( member_mode == Keyword::Ref && bare_member != spelled_member )
+    {
+        reporter_.error_at( ast_.span( spelled_member ), "a field type that borrows is not supported yet" );
+        poisoned = true;
+    }
+    else if( member_mode == Keyword::Ref )
+    {
+        reporter_.error_at( ast_.span( spelled_member ), "writing through a field type is not supported yet" );
+        poisoned = true;
+    }
+    else if( member_mode == Keyword::Out || member_mode == Keyword::Move )
+    {
+        const std::string_view mode_text = interner_.text( Interner::keyword( member_mode ) );
+
+        reporter_.error_at(
+            ast_.span( spelled_member ),
+            fmt::format( "`{}` is not a return mode", mode_text ),
+            fmt::format( "`{}` says how an argument travels, and a return is not an argument", mode_text )
+        );
+        poisoned = true;
+    }
+    else if( member_mode == Keyword::Count && bare_member != spelled_member )
+    {
+        reporter_.error_at(
+            const_keyword( spelled_member ), "a `const` here binds nothing, because a field type only reads", "remove it"
+        );
+        poisoned = true;
+    }
+
+    // Typed only without a mode, since a Mode_type would add its own refusals under the one above.
+    const Type_id member = member_mode == Keyword::Count ? resolve( bare_member, false ) : table_.builtin( Type_kind::Error );
+
+    return poisoned || table_.is_error( member ) ? table_.builtin( Type_kind::Error ) : table_.field( aggregate, member );
 }
 
 namespace
@@ -498,7 +507,7 @@ bool Annotations::resolve_type_arguments(
         // Not outermost: a type argument binds nothing, so `const` on one applies to nothing.
         for( const Node_id argument : given )
         {
-            resolved.push_back( type_of( argument, false ) );
+            resolved.push_back( resolve( argument, false ) );
         }
     }
 
@@ -656,10 +665,10 @@ TEST_CASE( "annotations_read_a_builtin_and_leave_auto_alone", "[sema][annotation
 {
     Written p( "i32 f( i32 a ) { return a; }" );
 
-    REQUIRE( p.annotations().type_of( p.parameter_annotation( 0, 0 ) ) == p.table().integer( 32, true ) );
+    REQUIRE( p.annotations().resolve( p.parameter_annotation( 0, 0 ) ) == p.table().integer( 32, true ) );
 
     // `auto` is an invalid Node_id the parser writes deliberately, not a mistake to report.
-    REQUIRE_FALSE( p.annotations().type_of( Node_id {} ).is_valid() );
+    REQUIRE_FALSE( p.annotations().resolve( Node_id {} ).is_valid() );
     REQUIRE( p.errors() == 0 );
 }
 
@@ -667,7 +676,7 @@ TEST_CASE( "annotations_refuse_a_name_that_is_not_a_type", "[sema][annotation]" 
 {
     Written p( "i32 f() { return 0; }\nvoid g( f x ) { }" );
 
-    const Type_id type = p.annotations().type_of( p.parameter_annotation( 1, 0 ) );
+    const Type_id type = p.annotations().resolve( p.parameter_annotation( 1, 0 ) );
 
     INFO( p.rendered() );
     REQUIRE( p.table().is_error( type ) );
@@ -678,7 +687,7 @@ TEST_CASE( "annotations_refuse_a_generic_named_without_its_arguments", "[sema][a
 {
     Written p( "struct Box<T> { T v; };\nvoid g( Box b ) { }" );
 
-    const Type_id type = p.annotations().type_of( p.parameter_annotation( 1, 0 ) );
+    const Type_id type = p.annotations().resolve( p.parameter_annotation( 1, 0 ) );
 
     INFO( p.rendered() );
     REQUIRE( p.table().is_error( type ) );
@@ -689,7 +698,7 @@ TEST_CASE( "annotations_propagate_the_poison_out_of_a_pointer", "[sema][annotati
 {
     Written p( "void g( Nope* q ) { }" );
 
-    const Type_id type = p.annotations().type_of( p.parameter_annotation( 0, 0 ) );
+    const Type_id type = p.annotations().resolve( p.parameter_annotation( 0, 0 ) );
 
     INFO( p.rendered() );
 
@@ -703,9 +712,9 @@ TEST_CASE( "annotations_read_a_function_type", "[sema][annotation][m7]" )
 {
     Written p( "void g( fn( i32 ) -> bool a, fn() -> void b, fn( fn( i32 ) -> i32 ) -> i32 c ) { }" );
 
-    REQUIRE( p.table().name( p.annotations().type_of( p.parameter_annotation( 0, 0 ) ) ) == "fn( i32 ) -> bool" );
-    REQUIRE( p.table().name( p.annotations().type_of( p.parameter_annotation( 0, 1 ) ) ) == "fn() -> void" );
-    REQUIRE( p.table().name( p.annotations().type_of( p.parameter_annotation( 0, 2 ) ) ) == "fn( fn( i32 ) -> i32 ) -> i32" );
+    REQUIRE( p.table().name( p.annotations().resolve( p.parameter_annotation( 0, 0 ) ) ) == "fn( i32 ) -> bool" );
+    REQUIRE( p.table().name( p.annotations().resolve( p.parameter_annotation( 0, 1 ) ) ) == "fn() -> void" );
+    REQUIRE( p.table().name( p.annotations().resolve( p.parameter_annotation( 0, 2 ) ) ) == "fn( fn( i32 ) -> i32 ) -> i32" );
 
     INFO( p.rendered() );
     REQUIRE( p.errors() == 0 );
@@ -715,8 +724,8 @@ TEST_CASE( "annotations_read_a_field_type", "[sema][annotation][m7][field]" )
 {
     Written p( "struct P { i32 x; };\nvoid g( field( P ) -> i32 a, const field( P ) -> i32 b ) { }" );
 
-    REQUIRE( p.table().name( p.annotations().type_of( p.parameter_annotation( 1, 0 ) ) ) == "field( P ) -> i32" );
-    REQUIRE( p.table().name( p.annotations().type_of( p.parameter_annotation( 1, 1 ) ) ) == "field( P ) -> i32" );
+    REQUIRE( p.table().name( p.annotations().resolve( p.parameter_annotation( 1, 0 ) ) ) == "field( P ) -> i32" );
+    REQUIRE( p.table().name( p.annotations().resolve( p.parameter_annotation( 1, 1 ) ) ) == "field( P ) -> i32" );
 
     INFO( p.rendered() );
     REQUIRE( p.errors() == 0 );
@@ -743,7 +752,7 @@ TEST_CASE( "annotations_refuse_a_field_type_that_is_not_a_read", "[sema][annotat
     {
         Written p( fmt::format( "struct P {{ i32 x; }};\nvoid g( {} a ) {{ }}", c.type ) );
 
-        const Type_id type = p.annotations().type_of( p.parameter_annotation( 1, 0 ) );
+        const Type_id type = p.annotations().resolve( p.parameter_annotation( 1, 0 ) );
 
         INFO( c.type << "\n" << p.rendered() );
         REQUIRE( type == p.table().builtin( Type_kind::Error ) );
@@ -760,7 +769,7 @@ TEST_CASE( "annotations_propagate_the_poison_out_of_a_function_type", "[sema][an
     {
         Written p( "void g( fn( Nope ) -> i32 a ) { }" );
 
-        const Type_id type = p.annotations().type_of( p.parameter_annotation( 0, 0 ) );
+        const Type_id type = p.annotations().resolve( p.parameter_annotation( 0, 0 ) );
 
         INFO( p.rendered() );
         REQUIRE( type == p.table().builtin( Type_kind::Error ) );
@@ -771,7 +780,7 @@ TEST_CASE( "annotations_propagate_the_poison_out_of_a_function_type", "[sema][an
     {
         Written p( "void g( fn( i32 ) -> Nope a ) { }" );
 
-        const Type_id type = p.annotations().type_of( p.parameter_annotation( 0, 0 ) );
+        const Type_id type = p.annotations().resolve( p.parameter_annotation( 0, 0 ) );
 
         INFO( p.rendered() );
         REQUIRE( type == p.table().builtin( Type_kind::Error ) );
@@ -785,7 +794,7 @@ TEST_CASE( "annotations_refuse_const_inside_a_function_type", "[sema][annotation
     {
         Written p( "void g( const fn( i32 ) -> i32 a ) { }" );
 
-        REQUIRE( p.table().name( p.annotations().type_of( p.parameter_annotation( 0, 0 ) ) ) == "fn( i32 ) -> i32" );
+        REQUIRE( p.table().name( p.annotations().resolve( p.parameter_annotation( 0, 0 ) ) ) == "fn( i32 ) -> i32" );
         REQUIRE( p.errors() == 0 );
     }
 
@@ -795,7 +804,7 @@ TEST_CASE( "annotations_refuse_const_inside_a_function_type", "[sema][annotation
     {
         Written p( "void g( fn( i32 ) -> const i32 a ) { }" );
 
-        const Type_id type = p.annotations().type_of( p.parameter_annotation( 0, 0 ) );
+        const Type_id type = p.annotations().resolve( p.parameter_annotation( 0, 0 ) );
 
         INFO( p.rendered() );
         REQUIRE( p.table().is_error( type ) );
@@ -806,7 +815,7 @@ TEST_CASE( "annotations_refuse_const_inside_a_function_type", "[sema][annotation
     {
         Written p( "void g( fn( const i32 ) -> i32 a ) { }" );
 
-        const Type_id type = p.annotations().type_of( p.parameter_annotation( 0, 0 ) );
+        const Type_id type = p.annotations().resolve( p.parameter_annotation( 0, 0 ) );
 
         INFO( p.rendered() );
         REQUIRE( p.table().is_error( type ) );
@@ -833,7 +842,7 @@ TEST_CASE( "annotations_underline_only_the_const_a_function_type_refuses", "[sem
     }
 
     Written p( source );
-    p.annotations().type_of( p.parameter_annotation( 0, 0 ) );
+    p.annotations().resolve( p.parameter_annotation( 0, 0 ) );
 
     const std::string rendered = p.rendered();
 
@@ -855,7 +864,7 @@ TEST_CASE( "annotations_give_a_function_type_one_type_per_mode", "[sema][annotat
         {
             Written p( fmt::format( "void g( {} a ) {{ }}", spelling ) );
 
-            const Type_id type = p.annotations().type_of( p.parameter_annotation( 0, 0 ) );
+            const Type_id type = p.annotations().resolve( p.parameter_annotation( 0, 0 ) );
 
             INFO( spelling << "\n" << p.rendered() );
             REQUIRE( p.errors() == 0 );
@@ -873,7 +882,7 @@ TEST_CASE( "annotations_give_a_function_type_one_type_per_mode", "[sema][annotat
 
         for( std::size_t i = 0; i < 5; ++i )
         {
-            seen.push_back( p.annotations().type_of( p.parameter_annotation( 0, i ) ) );
+            seen.push_back( p.annotations().resolve( p.parameter_annotation( 0, i ) ) );
         }
 
         INFO( p.rendered() );
@@ -898,8 +907,8 @@ TEST_CASE( "annotations_give_a_function_type_one_type_per_mode", "[sema][annotat
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 0 );
-        const Type_id pointer = p.annotations().type_of( p.parameter_annotation( 0, 0 ) );
-        const Type_id borrow  = p.annotations().type_of( p.parameter_annotation( 0, 1 ) );
+        const Type_id pointer = p.annotations().resolve( p.parameter_annotation( 0, 0 ) );
+        const Type_id borrow  = p.annotations().resolve( p.parameter_annotation( 0, 1 ) );
 
         REQUIRE( pointer != borrow );
     }
@@ -910,7 +919,7 @@ TEST_CASE( "annotations_give_a_function_type_one_type_per_mode", "[sema][annotat
     {
         Written p( "void g( fn( const i32 ) -> i32 a ) { }" );
 
-        const Type_id type = p.annotations().type_of( p.parameter_annotation( 0, 0 ) );
+        const Type_id type = p.annotations().resolve( p.parameter_annotation( 0, 0 ) );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
@@ -937,7 +946,7 @@ TEST_CASE( "annotations_give_a_function_type_one_type_per_mode", "[sema][annotat
     {
         Written p( "void g( fn( i32 ) -> const ref i32 a ) { }" );
 
-        const Type_id type = p.annotations().type_of( p.parameter_annotation( 0, 0 ) );
+        const Type_id type = p.annotations().resolve( p.parameter_annotation( 0, 0 ) );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 0 );
@@ -951,8 +960,8 @@ TEST_CASE( "annotations_give_a_function_type_one_type_per_mode", "[sema][annotat
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 0 );
-        const Type_id value  = p.annotations().type_of( p.parameter_annotation( 0, 0 ) );
-        const Type_id borrow = p.annotations().type_of( p.parameter_annotation( 0, 1 ) );
+        const Type_id value  = p.annotations().resolve( p.parameter_annotation( 0, 0 ) );
+        const Type_id borrow = p.annotations().resolve( p.parameter_annotation( 0, 1 ) );
 
         REQUIRE( value != borrow );
     }
@@ -964,7 +973,7 @@ TEST_CASE( "annotations_give_a_function_type_one_type_per_mode", "[sema][annotat
     {
         Written p( "void g( fn( i32 ) -> ref i32 a ) { }" );
 
-        const Type_id type = p.annotations().type_of( p.parameter_annotation( 0, 0 ) );
+        const Type_id type = p.annotations().resolve( p.parameter_annotation( 0, 0 ) );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
@@ -979,7 +988,7 @@ TEST_CASE( "annotations_give_a_function_type_one_type_per_mode", "[sema][annotat
         {
             Written p( fmt::format( "void g( fn( i32 ) -> {} i32 a ) {{ }}", mode ) );
 
-            const Type_id type = p.annotations().type_of( p.parameter_annotation( 0, 0 ) );
+            const Type_id type = p.annotations().resolve( p.parameter_annotation( 0, 0 ) );
 
             INFO( mode << "\n" << p.rendered() );
             REQUIRE( p.errors() == 1 );
@@ -994,7 +1003,7 @@ TEST_CASE( "annotations_give_a_function_type_one_type_per_mode", "[sema][annotat
     {
         Written p( "void g( fn( i32 ) -> const i32 a ) { }" );
 
-        const Type_id type = p.annotations().type_of( p.parameter_annotation( 0, 0 ) );
+        const Type_id type = p.annotations().resolve( p.parameter_annotation( 0, 0 ) );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
@@ -1010,7 +1019,7 @@ TEST_CASE( "annotations_give_a_function_type_one_type_per_mode", "[sema][annotat
         Written p( "class B { i32 n; ~B() { } };\nvoid g( fn( out B ) -> i32 a ) { }" );
 
         // Declaration 1: the class is declaration 0.
-        p.annotations().type_of( p.parameter_annotation( 1, 0 ) );
+        p.annotations().resolve( p.parameter_annotation( 1, 0 ) );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
@@ -1024,9 +1033,9 @@ TEST_CASE( "annotations_take_const_off_the_outermost_and_give_it_to_a_pointer", 
 
     SECTION( "outermost is the binding, and unwraps to what it binds" )
     {
-        REQUIRE( p.annotations().type_of( p.parameter_annotation( 0, 0 ) ) == p.table().integer( 32, true ) );
+        REQUIRE( p.annotations().resolve( p.parameter_annotation( 0, 0 ) ) == p.table().integer( 32, true ) );
         REQUIRE(
-            p.annotations().type_of( p.parameter_annotation( 0, 3 ) ) == p.table().pointer_to( p.table().integer( 32, true ) )
+            p.annotations().resolve( p.parameter_annotation( 0, 3 ) ) == p.table().pointer_to( p.table().integer( 32, true ) )
         );
         REQUIRE( p.errors() == 0 );
     }
@@ -1034,15 +1043,15 @@ TEST_CASE( "annotations_take_const_off_the_outermost_and_give_it_to_a_pointer", 
     SECTION( "under a pointer it is the pointer's element" )
     {
         REQUIRE(
-            p.annotations().type_of( p.parameter_annotation( 0, 1 ) ) ==
+            p.annotations().resolve( p.parameter_annotation( 0, 1 ) ) ==
             p.table().pointer_to( p.table().integer( 32, true ), true )
         );
         REQUIRE(
-            p.annotations().type_of( p.parameter_annotation( 0, 2 ) ) ==
+            p.annotations().resolve( p.parameter_annotation( 0, 2 ) ) ==
             p.table().many_pointer_to( p.table().integer( 8, false ), true )
         );
         REQUIRE(
-            p.annotations().type_of( p.parameter_annotation( 0, 4 ) ) ==
+            p.annotations().resolve( p.parameter_annotation( 0, 4 ) ) ==
             p.table().pointer_to( p.table().builtin( Type_kind::Void ), true )
         );
         INFO( p.rendered() );
@@ -1083,7 +1092,7 @@ TEST_CASE( "annotations_unwrap_a_mode_and_refuse_out_for_an_owning_type", "[sema
     {
         Written p( "void g( out i32 v ) { }" );
 
-        REQUIRE( p.annotations().type_of( p.parameter_annotation( 0, 0 ) ) == p.table().integer( 32, true ) );
+        REQUIRE( p.annotations().resolve( p.parameter_annotation( 0, 0 ) ) == p.table().integer( 32, true ) );
         REQUIRE( p.errors() == 0 );
     }
 
@@ -1091,7 +1100,7 @@ TEST_CASE( "annotations_unwrap_a_mode_and_refuse_out_for_an_owning_type", "[sema
     {
         Written p( "class R { i32 x; ~R() { } };\nvoid g( out R r ) { }" );
 
-        const Type_id type = p.annotations().type_of( p.parameter_annotation( 1, 0 ) );
+        const Type_id type = p.annotations().resolve( p.parameter_annotation( 1, 0 ) );
 
         INFO( p.rendered() );
         REQUIRE( p.table().is_error( type ) );
@@ -1135,7 +1144,7 @@ TEST_CASE( "annotations_refuse_a_non_generic_given_type_arguments", "[sema][anno
 {
     Written p( "struct Plain { i32 x; };\nvoid g( Plain<i32> b ) { }" );
 
-    const Type_id type = p.annotations().type_of( p.parameter_annotation( 1, 0 ) );
+    const Type_id type = p.annotations().resolve( p.parameter_annotation( 1, 0 ) );
 
     INFO( p.rendered() );
     REQUIRE( p.table().is_error( type ) );
@@ -1146,7 +1155,7 @@ TEST_CASE( "annotations_make_the_whole_type_an_error_when_an_argument_is", "[sem
 {
     Written p( "struct Box<T> { T v; };\nvoid g( Box<Nope> b ) { }" );
 
-    const Type_id type = p.annotations().type_of( p.parameter_annotation( 1, 0 ) );
+    const Type_id type = p.annotations().resolve( p.parameter_annotation( 1, 0 ) );
 
     INFO( p.rendered() );
 

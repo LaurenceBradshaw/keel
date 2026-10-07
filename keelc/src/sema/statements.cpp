@@ -245,13 +245,13 @@ void Statements::visit_var( Node_id id )
     const Keyword mode =
         spelled.is_valid() && ast_.kind( spelled ) == Node_kind::Mode_type ? ast_.keyword( spelled ) : Keyword::Count;
 
-    Type_id type = annotations_.type_of( annotation );
+    Type_id type = annotations_.resolve( annotation );
 
     if( type.is_valid() )
     {
         // Annotated. Checking rather than inferring is what lets a literal adopt the declared
         // type, so `u32 x = 42;` needs no suffix. An unknown annotation is the error type, which
-        // check() absorbs - one diagnostic, from Annotations::type_of.
+        // check() absorbs - one diagnostic, from Annotations::resolve.
         if( init.is_valid() )
         {
             expressions_.check( init, type );
