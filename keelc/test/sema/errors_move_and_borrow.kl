@@ -1,0 +1,68 @@
+// One call cannot take a value and borrow it: the callee would own it and read it through the
+// borrow, and could destroy it first.
+class Buffer
+{
+    public u64 size;
+
+    Buffer()
+    {
+        size = 0;
+    }
+
+    ~Buffer()
+    {
+    }
+
+    public void absorb( move Buffer other )
+    {
+    }
+
+    public bool operator==( move Buffer other ) const
+    {
+        return size == other.size;
+    }
+};
+
+void move_then_ref( move Buffer a, ref Buffer b )
+{
+}
+
+void ref_then_move( ref Buffer b, move Buffer a )
+{
+}
+
+void read_then_move( const ref Buffer b, move Buffer a )
+{
+}
+
+void sized( u64 n, move Buffer a )
+{
+}
+
+i32 main()
+{
+    Buffer b = Buffer();
+    move_then_ref( move b, ref b );
+
+    Buffer c = Buffer();
+    ref_then_move( ref c, move c );
+
+    Buffer d = Buffer();
+    read_then_move( d, move d );
+
+    Buffer e = Buffer();
+    e.absorb( move e );
+
+    Buffer f = Buffer();
+    bool same = f == move f;
+
+    Buffer g = Buffer();
+    ref Buffer r = g;
+    ref_then_move( ref r, move g );
+
+    // The size is copied before the call, and `h` is not borrowed.
+    Buffer h = Buffer();
+    sized( h.size, move h );
+
+    return 0;
+}

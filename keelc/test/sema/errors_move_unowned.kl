@@ -1,0 +1,88 @@
+// `move` takes what the function owns. A borrow, `this`, and a field reached through `this` are
+// the caller's, and the caller destroys them too.
+class Buffer
+{
+    public u64 size;
+
+    Buffer()
+    {
+        size = 0;
+    }
+
+    ~Buffer()
+    {
+    }
+};
+
+void take( move Buffer b )
+{
+}
+
+void from_ref( ref Buffer b )
+{
+    take( move b );
+}
+
+void from_const_ref( const ref Buffer b )
+{
+    take( move b );
+}
+
+void from_binding( move Buffer b )
+{
+    ref Buffer r = b;
+    take( move r );
+}
+
+class Holder
+{
+    public Buffer kept;
+
+    Holder()
+    {
+        kept = Buffer();
+    }
+
+    ~Holder()
+    {
+    }
+
+    void give()
+    {
+        take( move kept );
+    }
+
+    Buffer give_back()
+    {
+        return move kept;
+    }
+
+    void give_self()
+    {
+        take_holder( move this );
+    }
+};
+
+void take_holder( move Holder h )
+{
+}
+
+void generic_take<T>( move T x )
+{
+}
+
+void from_generic_ref<T>( ref T x )
+{
+    generic_take( move x );
+}
+
+// Owned, so moved.
+void owned( move Buffer b )
+{
+    take( move b );
+}
+
+i32 main()
+{
+    return 0;
+}

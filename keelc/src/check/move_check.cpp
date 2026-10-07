@@ -3,6 +3,8 @@
 
 #include "check/move_check.h"
 
+#include <span>
+
 namespace keel
 {
 
@@ -136,10 +138,29 @@ void read_rvalue( const Function& func, const Rvalue& value, Span span, Flow& fl
             } );
         }
 
+        // Only a whole local is refilled; `out b.n` into a moved `b` is a use, as `b.n = ...` is.
         if( value.address_purpose == Address_purpose::Initialise )
         {
-            flow.state[local]    = State::Live;
-            flow.moved_at[local] = Span {};
+            if( value.a.place.num_projections != 0 )
+            {
+                if( state == State::Moved || state == State::Maybe_moved )
+                {
+                    if( errors != nullptr )
+                    {
+                        errors->push_back( Move_error {
+                            .local = value.a.place.local,
+                            .use   = span,
+                            .moved = flow.moved_at[local],
+                            .maybe = state == State::Maybe_moved
+                        } );
+                    }
+                }
+            }
+            else
+            {
+                flow.state[local]    = State::Live;
+                flow.moved_at[local] = Span {};
+            }
         }
     }
 
@@ -174,12 +195,28 @@ void transfer_block( const Function& func, u32 block, Flow& flow, std::vector<Mo
             // // `_1 = move _1 + 1` reads _1 and then re-initialises it, and is legal
             read_rvalue( func, statement.value, statement.span, flow, errors );
 
-            // A projected target counts too: nothing can be partially moved, so `_1.x = ...` is a
-            // step in building _1 rather than a write into a half-moved object. Without this a
-            // struct literal is never Live - it is assembled entirely through projections - so in a
-            // loop its temporary reports a false use-after-move on the second iteration.
+            // `_1.x = ...` fills a fresh or live _1, as a struct literal does, but is a use of a moved
+            // one: it would fill a field and leave the rest gone.
             if( !statement.place.is_global() )
             {
+                if( statement.place.num_projections != 0 )
+                {
+                    const State state = flow.state[statement.place.local.v];
+                    if( state == State::Moved || state == State::Maybe_moved )
+                    {
+                        if( errors != nullptr )
+                        {
+                            errors->push_back( Move_error {
+                                .local = statement.place.local,
+                                .use   = statement.span,
+                                .moved = flow.moved_at[statement.place.local.v],
+                                .maybe = state == State::Maybe_moved
+                            } );
+                        }
+                        break;
+                    }
+                }
+
                 flow.state[statement.place.local.v]    = State::Live;
                 flow.moved_at[statement.place.local.v] = Span {};
             }
@@ -203,6 +240,101 @@ void transfer_block( const Function& func, u32 block, Flow& flow, std::vector<Mo
     // default, which is Operand_kind::Constant, so read_operand returns immediately - no kind test
     // is needed here.
     read_operand( b.terminator.condition, b.terminator.span, flow, errors );
+}
+
+// The local a pointer local borrows from, and where. Valid only for one assigned exactly once, as a
+// borrowed argument's temporary is, so the answer needs no flow.
+struct Borrow
+{
+    Local_id of {};
+    Span     at {};
+    u32      assignments = 0;
+};
+
+std::vector<Borrow> borrows_of( const Function& func )
+{
+    std::vector<Borrow> borrows( func.locals.size() );
+
+    for( const Statement& statement : func.statements )
+    {
+        if( statement.kind != Statement_kind::Assign || statement.place.is_global() || statement.place.num_projections != 0 )
+        {
+            continue;
+        }
+
+        Borrow&       borrow = borrows[statement.place.local.v];
+        const Rvalue& value  = statement.value;
+        const Place&  source = value.a.place;
+
+        borrow.assignments++;
+        borrow.of = Local_id {};
+
+        if( borrow.assignments != 1 || source.is_global() )
+        {
+            continue;
+        }
+
+        if( value.kind == Rvalue_kind::Address_of && value.address_purpose == Address_purpose::Borrow )
+        {
+            // Through a `ref` binding, `&(*r)`, it is what `r` borrows.
+            borrow.of = borrows[source.local.v].of.is_valid() ? borrows[source.local.v].of : source.local;
+            borrow.at = statement.span;
+        }
+        // A conversion of the address, such as to a pointer to `const`, still points at the same local.
+        else if( ( value.kind == Rvalue_kind::Use || value.kind == Rvalue_kind::Cast ) && value.a.kind == Operand_kind::Copy &&
+                 source.num_projections == 0 )
+        {
+            borrow.of = borrows[source.local.v].of;
+            borrow.at = borrows[source.local.v].at;
+        }
+    }
+
+    return borrows;
+}
+
+// A call handed a local both by `move` and by address: the callee would own it and borrow it at once.
+// Every borrowed argument is lowered to an address taken before the call, so the flow never sees it.
+void find_moves_into_borrowing_calls( const Function& func, std::vector<Move_error>& errors )
+{
+    const std::vector<Borrow> borrows = borrows_of( func );
+
+    for( const Statement& statement : func.statements )
+    {
+        const Rvalue& value = statement.value;
+
+        if( statement.kind != Statement_kind::Assign ||
+            ( value.kind != Rvalue_kind::Call && value.kind != Rvalue_kind::Indirect_call ) )
+        {
+            continue;
+        }
+
+        const std::span<const Operand> arguments( func.operands.data() + value.first_argument, value.argument_count );
+
+        for( const Operand& moved : arguments )
+        {
+            if( moved.kind != Operand_kind::Move || moved.place.is_global() || moved.place.num_projections != 0 )
+            {
+                continue;
+            }
+
+            for( const Operand& borrowed : arguments )
+            {
+                if( borrowed.kind != Operand_kind::Copy || borrowed.place.is_global() || borrowed.place.num_projections != 0 )
+                {
+                    continue;
+                }
+
+                const Borrow& borrow = borrows[borrowed.place.local.v];
+
+                if( borrow.of == moved.place.local )
+                {
+                    errors.push_back(
+                        Move_error { .local = moved.place.local, .use = borrow.at, .moved = statement.span, .borrowed = true }
+                    );
+                }
+            }
+        }
+    }
 }
 
 // Parameters Live, everything else Uninitialised. Locals 1..parameter_count are the parameters,
@@ -268,6 +400,8 @@ std::vector<Move_error> check_moves( const Function& func )
         Flow flow = in[block];
         transfer_block( func, block, in[block], &errors );
     }
+
+    find_moves_into_borrowing_calls( func, errors );
 
     return errors;
 }
@@ -536,6 +670,97 @@ TEST_CASE( "move_check_follows_a_back_edge", "[check][move]" )
                          "  return 0; }" );
 
         INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.errors().empty() );
+    }
+
+    // Built field by field, so again only its storage starting says it is fresh.
+    SECTION( "a struct literal is a new value on each iteration" )
+    {
+        const Checked p( "class P { public u64 n; ~P() { } };\n"
+                         "void eat( move P p ) { }\n"
+                         "i32 main( ) { u64 i = 0;\n"
+                         "  while ( i < 3 ) { eat( move P { i } ); i = i + 1; }\n"
+                         "  return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.errors().empty() );
+    }
+}
+
+// A write through a projection fills part of a value, so it cannot bring a moved one back.
+TEST_CASE( "move_check_finds_a_write_into_a_moved_local", "[check][move]" )
+{
+    constexpr std::string_view k_owned = "class B { public u64 n; B() { n = 0; } ~B() { } };\n"
+                                         "void take( move B b ) { }\n"
+                                         "void fill( out u64 n ) { n = 1; }\n";
+
+    for( const char* write : { "b.n = 4;", "fill( out b.n );" } )
+    {
+        const Checked moved( std::string( k_owned ) + "i32 main() { B b = B(); take( move b ); " + write + " return 0; }" );
+
+        INFO( write << "\n" << moved.rendered() );
+        REQUIRE( moved.clean() );
+        REQUIRE( moved.errors().size() == 1 );
+        REQUIRE_FALSE( moved.errors()[0].maybe );
+
+        const Checked maybe(
+            std::string( k_owned ) + "i32 main() { B b = B(); u64 c = 0; if ( c == 0 ) { take( move b ); } " + write +
+            " return 0; }"
+        );
+
+        INFO( maybe.rendered() );
+        REQUIRE( maybe.clean() );
+        REQUIRE( maybe.errors().size() == 1 );
+        REQUIRE( maybe.errors()[0].maybe );
+
+        const Checked live( std::string( k_owned ) + "i32 main() { B b = B(); " + write + " take( move b ); return 0; }" );
+
+        INFO( live.rendered() );
+        REQUIRE( live.errors().empty() );
+    }
+}
+
+// Every borrowed argument's address is taken before the call, so the move inside it is checked
+// against the call's own arguments rather than the flow.
+TEST_CASE( "move_check_refuses_a_move_and_a_borrow_in_one_call", "[check][move]" )
+{
+    constexpr std::string_view k_owned = "class B { public u64 n; B() { n = 0; } ~B() { } public void eat( move B o ) { } "
+                                         "public bool operator==( move B o ) const { return true; } };\n"
+                                         "void two( move B a, ref B b ) { }\n"
+                                         "void owt( ref B b, move B a ) { }\n"
+                                         "void read( const ref B b, move B a ) { }\n"
+                                         "void count( u64 n, move B a ) { }\n"
+                                         "void take( move B b ) { }\n";
+
+    for( const char* call :
+         { "two( move b, ref b );",
+           "owt( ref b, move b );",
+           "read( b, move b );",
+           "b.eat( move b );",
+           "bool r = b == move b;",
+           "ref B r = b; owt( ref r, move b );",
+           "fn( ref B, move B ) -> void f = &owt; f( ref b, move b );" } )
+    {
+        const Checked p( std::string( k_owned ) + "i32 main() { B b = B(); " + call + " return 0; }" );
+
+        INFO( call << "\n" << p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::vector<Move_error> errors = p.errors();
+
+        REQUIRE( errors.size() == 1 );
+        REQUIRE( errors[0].borrowed );
+    }
+
+    // A copied field is read before the call, and borrowing one local while moving another is fine.
+    for( const char* call :
+         { "count( b.n, move b );", "B c = B(); two( move b, ref c );", "take( move b ); b = B(); owt( ref b, move B() );" } )
+    {
+        const Checked p( std::string( k_owned ) + "i32 main() { B b = B(); " + call + " return 0; }" );
+
+        INFO( call << "\n" << p.rendered() );
         REQUIRE( p.clean() );
         REQUIRE( p.errors().empty() );
     }

@@ -2854,6 +2854,43 @@ Type_id Expressions::infer_marker( Node_id id )
         return types_.record( id, table_.builtin( Type_kind::Error ) );
     }
 
+    if( decl.is_valid() && parameter_mode( ast_, decl ) == Keyword::Ref )
+    {
+        std::string help;
+
+        if( ast_.kind( decl ) == Node_kind::Param_decl && ast_.aux( decl ) == Interner::keyword( Keyword::This ).v )
+        {
+            help = "a method borrows its object; move the object where the method is called instead";
+        }
+        else if( ast_.kind( decl ) == Node_kind::Param_decl )
+        {
+            help = fmt::format(
+                "take it as `move {} {}` to own it",
+                table_.name( types_.type_of( decl ) ),
+                interner_.text( Symbol_id { ast_.aux( decl ) } )
+            );
+        }
+        else if( ast_.kind( decl ) == Node_kind::Var_decl )
+        {
+            help = "move the variable it refers to instead";
+        }
+
+        reporter_.error_at( ast_.span( operand ), "cannot move out of a borrow", help );
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
+    if( ast_.kind( operand ) == Node_kind::Name_expr &&
+        ast_.kind( resolution_.declaration_of( operand ) ) == Node_kind::Field_decl )
+    {
+        reporter_.error_at(
+            ast_.span( operand ),
+            "a field cannot be moved on its own",
+            "moving it would leave the object partly moved - move the whole object instead"
+        );
+
+        return types_.record( id, table_.builtin( Type_kind::Error ) );
+    }
+
     if( places_.is_operator_index( operand ) )
     {
         reporter_.error_at(
@@ -5590,6 +5627,51 @@ TEST_CASE( "type_checker_types_a_move", "[sema][move]" )
         INFO( p.rendered() );
         REQUIRE_FALSE( p.clean() );
         REQUIRE( p.rendered().find( "a field cannot be moved on its own" ) != std::string::npos );
+    }
+
+    // Spelled bare inside a method it is the same field, and the method only borrows its object.
+    SECTION( "nor a field named bare in a method" )
+    {
+        for( const char* body : { "void give() { take( move b ); }", "B give() { return move b; }" } )
+        {
+            const Typed p(
+                std::string( "class B { public u64 n; B() { n = 0; } ~B() { } };\n"
+                             "void take( move B b ) { }\n"
+                             "class H { public B b; H() { b = B(); } " ) +
+                body + " };\ni32 main() { return 0; }"
+            );
+
+            INFO( body << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( "a field cannot be moved on its own" ) != std::string::npos );
+        }
+    }
+
+    // A borrow is the caller's value: moving it would destroy it twice.
+    SECTION( "nor anything borrowed" )
+    {
+        constexpr std::string_view k_owned = "class B { public u64 n; B() { n = 0; } ~B() { } };\n"
+                                             "void take( move B b ) { }\n";
+
+        const std::pair<const char*, const char*> cases[] = {
+            { "void f( ref B b ) { take( move b ); }", "take it as `move B b` to own it" },
+            { "void f( const ref B b ) { take( move b ); }", "take it as `move B b` to own it" },
+            { "void f( move B a ) { ref B r = a; take( move r ); }", "move the variable it refers to instead" },
+            { "void take_h( move H h ) { }\nclass H { public u64 n; H() { n = 0; } ~H() { } void f() { take_h( move this ); } "
+              "};",
+              "a method borrows its object" },
+            { "void g<T>( move T x ) { }\nvoid f<T>( ref T x ) { g( move x ); }", "take it as `move T x` to own it" },
+        };
+
+        for( const auto& [code, help] : cases )
+        {
+            const Typed p( std::string( k_owned ) + code + "\ni32 main() { return 0; }" );
+
+            INFO( code << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( "cannot move out of a borrow" ) != std::string::npos );
+            REQUIRE( p.rendered().find( help ) != std::string::npos );
+        }
     }
 
     // Nor through a pointer: `*p` names something this function does not own, so moving out of it

@@ -52,6 +52,7 @@ fn main {
 
     bb0:
         storage_live _1
+        storage_live _2
         _2.x = const 1
         _2.y = const 2
         _1 = copy _2

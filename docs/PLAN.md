@@ -6783,19 +6783,34 @@ which §7 says the runtime provides and `kl_rt.h` does not (it has `alloc`, `all
    generics, compiled and run under valgrind. `destroy`, `cast`, `alloc`/`free`, `assert`,
    `out`'s own rules, `static` and function pointers held. **Three holes, all double frees the
    compiler accepts, scheduled before M8 is called done:**
-   - **A. `move` of something the function does not own.** `move b` on a `ref` or `const ref`
+   - ~~**A. `move` of something the function does not own.**~~ **Done (2026-10-07)**: two
+     refusals in `infer_marker` after the default-mode one - a declaration whose mode is `ref`
+     ("cannot move out of a borrow", with help for `this`, a parameter and a binding) and a bare
+     name resolving to a `Field_decl`. Tests: sections in `type_checker_types_a_move` and
+     `sema/errors_move_unowned.kl`. `move b` on a `ref` or `const ref`
      parameter, on a `ref` binding, on `this`, and on a bare field inside a method
      (`take( move b )`, `return move b;`), generic bodies included. `infer_marker` refuses a
      `Field_expr` and a default-mode owning parameter, and otherwise accepts any non-copyable
      operand as an "owned temporary"; a bare field is a `Name_expr` resolving to a `Field_decl`,
      and the others resolve to a declaration whose mode is `ref`. `a == move a` and
      `h.eat( move h )` belong to B.
-   - **B. A call that moves a local and borrows it.** `two( ref b, move b )`,
+   - ~~**B. A call that moves a local and borrows it.**~~ **Done (2026-10-07)**:
+     `find_moves_into_borrowing_calls`, run once after the flow, over `borrows_of`'s map from each
+     pointer local assigned exactly once to the local it borrows (through a conversion, and through
+     a `ref` binding's `&(*r)`). `Move_error::borrowed` gives it its own message. A receiver's
+     borrow carries the whole call's span, so `h.eat( move h )` underlines the call. No golden
+     changed. Tests: `move_check_refuses_a_move_and_a_borrow_in_one_call` and
+     `sema/errors_move_and_borrow.kl`. With A-C in, every probe the audit marked as a hole is
+     refused; debug under valgrind, release and asan pass 286 goldens and 10,599 assertions. `two( ref b, move b )`,
      `two( move b, ref b )`, `h.eat( move h )`, `a == move a`. Lowering takes every argument's
      address before the call, and the `move` is an operand of the call itself, so the move check
      sees the borrow first and nothing after it. Caught in KIR rather than per spelling: a call
      whose `Move` operand names a local that another of its operands borrowed.
-   - **C. A write into a moved local revives it.** `take( move b ); b.n = 4;` and
+   - ~~**C. A write into a moved local revives it.**~~ **Done (2026-10-07)**: as below, with a
+     projected `Initialise` of a local that is not moved leaving its state alone. Eight goldens
+     changed, only by the new `storage_live` and the drop-flag resets it brings. Tests:
+     `move_check_finds_a_write_into_a_moved_local`, a struct-literal section in
+     `move_check_follows_a_back_edge`, and `sema/errors_write_after_move.kl`. `take( move b ); b.n = 4;` and
      `fill( out b.n );` both double free. move_check sets a local `Live` on any assignment to a
      projection of it, so that a struct literal, built field by field into a temporary that never
      opens its storage, is not a use-after-move on a loop's second iteration. The fix is in two

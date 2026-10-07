@@ -13,9 +13,10 @@ namespace keel
 struct Move_error
 {
     Local_id local {};
-    Span     use {};        // the read
-    Span     moved {};      // the move that killed it
-    bool     maybe = false; // moved on some paths into here, not all
+    Span     use {};           // the read
+    Span     moved {};         // the move that killed it
+    bool     maybe    = false; // moved on some paths into here, not all
+    bool     borrowed = false; // moved into the call at `moved` that also borrows it at `use`
 };
 
 // PLAN §8. Flow-sensitive, per local, over the CFG. Takes nothing but the function: everything it

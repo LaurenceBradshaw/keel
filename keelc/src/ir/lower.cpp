@@ -952,6 +952,8 @@ Operand Lowering::lower_struct_literal( Node_id id )
         statement_temporaries_.push_back( temp );
     }
 
+    builder_.storage_live( temp, span );
+
     // Positional form names no field, so the i-th initialiser fills the i-th field. The two
     // forms cannot be mixed - the checker rejects that - so an index is enough here.
     const std::span<const Node_id> fields = ast_.members( types_.table().get( type ).declaration );

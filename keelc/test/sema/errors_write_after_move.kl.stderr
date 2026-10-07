@@ -1,0 +1,19 @@
+error: `b` is used after it was moved
+  --> sema/errors_write_after_move.kl:39:5
+   |
+39 |     b.size = 8;
+   |     ^^^^^^^^^^^ moved at 38:5
+
+error: `b` is used after it was moved
+  --> sema/errors_write_after_move.kl:46:11
+   |
+46 |     fill( out b.size );
+   |           ^^^^^^^^^^ moved at 45:5
+
+error: `b` may already have been moved
+  --> sema/errors_write_after_move.kl:56:5
+   |
+56 |     b.size = 8;
+   |     ^^^^^^^^^^^ moved at 54:9 on some path to here
+
+3 errors generated

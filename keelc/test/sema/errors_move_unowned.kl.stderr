@@ -1,0 +1,43 @@
+error: cannot move out of a borrow
+  --> sema/errors_move_unowned.kl:23:16
+   |
+23 |     take( move b );
+   |                ^ take it as `move Buffer b` to own it
+
+error: cannot move out of a borrow
+  --> sema/errors_move_unowned.kl:28:16
+   |
+28 |     take( move b );
+   |                ^ take it as `move Buffer b` to own it
+
+error: cannot move out of a borrow
+  --> sema/errors_move_unowned.kl:34:16
+   |
+34 |     take( move r );
+   |                ^ move the variable it refers to instead
+
+error: a field cannot be moved on its own
+  --> sema/errors_move_unowned.kl:52:20
+   |
+52 |         take( move kept );
+   |                    ^^^^ moving it would leave the object partly moved - move the whole object instead
+
+error: a field cannot be moved on its own
+  --> sema/errors_move_unowned.kl:57:21
+   |
+57 |         return move kept;
+   |                     ^^^^ moving it would leave the object partly moved - move the whole object instead
+
+error: cannot move out of a borrow
+  --> sema/errors_move_unowned.kl:62:27
+   |
+62 |         take_holder( move this );
+   |                           ^^^^ a method borrows its object; move the object where the method is called instead
+
+error: cannot move out of a borrow
+  --> sema/errors_move_unowned.kl:76:24
+   |
+76 |     generic_take( move x );
+   |                        ^ take it as `move T x` to own it
+
+7 errors generated

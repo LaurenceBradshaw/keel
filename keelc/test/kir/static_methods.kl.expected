@@ -4,6 +4,7 @@ fn make {
     let _2: P;
 
     bb0:
+        storage_live _2
         _2.x = copy _1
         _0 = copy _2
         return

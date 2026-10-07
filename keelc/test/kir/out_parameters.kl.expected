@@ -65,6 +65,7 @@ fn main {
         _7 = &init _5
         _8 = call divide(const 17, const 5, copy _6, copy _7)
         storage_live _9
+        storage_live _10
         _10.x = const 0
         _10.y = const 0
         _9 = copy _10

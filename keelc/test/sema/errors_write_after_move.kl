@@ -1,0 +1,71 @@
+// A write into part of a moved value does not make it whole again: the field is filled, the rest
+// is gone, and the scope would destroy it a second time.
+class Buffer
+{
+    public u8[*] bytes;
+    public u64   size;
+
+    Buffer( u64 n )
+    {
+        unsafe
+        {
+            bytes = alloc<u8>( n );
+        }
+        size = n;
+    }
+
+    ~Buffer()
+    {
+        unsafe
+        {
+            free( bytes );
+        }
+    }
+};
+
+void take( move Buffer b )
+{
+}
+
+void fill( out u64 n )
+{
+    n = 1;
+}
+
+void assigned()
+{
+    Buffer b = Buffer( 4 );
+    take( move b );
+    b.size = 8;
+}
+
+void through_out()
+{
+    Buffer b = Buffer( 4 );
+    take( move b );
+    fill( out b.size );
+}
+
+void on_one_path( bool give )
+{
+    Buffer b = Buffer( 4 );
+    if( give )
+    {
+        take( move b );
+    }
+    b.size = 8;
+}
+
+// Writing the whole value is the refill, and is fine.
+void refilled()
+{
+    Buffer b = Buffer( 4 );
+    take( move b );
+    b = Buffer( 8 );
+    b.size = 2;
+}
+
+i32 main()
+{
+    return 0;
+}

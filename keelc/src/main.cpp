@@ -62,6 +62,16 @@ void report_move_errors(
             const std::string subject =
                 name.is_valid() ? fmt::format( "`{}`", interner.text( name ) ) : std::string( "this value" );
 
+            if( error.borrowed )
+            {
+                diagnostics.error(
+                    error.use,
+                    fmt::format( "{} is moved into this call, so the call cannot also borrow it", subject ),
+                    "a call cannot take a value and borrow it at once"
+                );
+                continue;
+            }
+
             const keel::Line_col at = sm.line_col( error.moved.file, error.moved.start );
 
             // The two must read differently: `maybe` is the compiler refusing an ambiguity rather
