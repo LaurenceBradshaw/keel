@@ -144,6 +144,17 @@ public:
     bool    refused( Node_id id ) const;
     Node_id next_overload( Node_id id ) const;
 
+    // D45's quiet trial: whether any of `candidates` takes the call, by either tier. Reports nothing.
+    bool applies(
+        Node_id                         call,
+        std::span<const Node_id>        candidates,
+        std::span<const Argument_shape> shapes,
+        bool                            ignore_markers,
+        std::vector<Type_id>&           resolved
+    );
+    // Neither set took the call: one error listing both.
+    void refuse_both( Node_id call, std::string_view name, std::span<const Node_id> own, std::span<const Node_id> prelude );
+
 private:
     bool marker_accepts( Node_id param, Keyword given, Type_id expected );
     bool candidate_accepts(
@@ -156,10 +167,20 @@ private:
     std::vector<Node_id> closest(
         std::span<const Node_id> widened, std::span<const std::vector<Type_id>> targets, std::span<const Argument_shape> shapes
     ) const;
+    std::vector<Node_id> matching(
+        Node_id                         call,
+        std::span<const Node_id>        viable,
+        u32                             implicit_params,
+        Type_id                         instance,
+        std::span<const Argument_shape> shapes,
+        std::span<const Type_id>        resolved
+    );
 
     bool deduce_for_candidate(
         Node_id callable, u32 implicit_params, std::span<const Argument_shape> shapes, std::vector<Type_id>& resolved
     );
+
+    bool fits( Node_id call, Node_id candidate, u32 implicit_params ) const;
 
     // The signature as a call site would have to write it, and a list of them - both read four
     // collaborators, which is what keeps them members rather than file-local free functions.

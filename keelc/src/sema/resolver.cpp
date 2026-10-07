@@ -68,6 +68,7 @@ private:
     std::vector<Node_id> bindings_;
     std::vector<bool>    unresolved_;
     std::vector<Node_id> next_overload_;
+    std::vector<Node_id> fallbacks_;
     std::vector<Scope>   scopes_;
 
     // The enclosing aggregate's field names, for D19's member clause. Empty outside a member body,
@@ -82,6 +83,7 @@ Resolution Resolver::run()
     bindings_.assign( ast_.node_count(), Node_id {} );
     unresolved_.assign( ast_.node_count(), false );
     next_overload_.assign( ast_.node_count(), Node_id {} );
+    fallbacks_.assign( ast_.node_count(), Node_id {} );
 
     // Two passes at file scope: every top-level declaration is collected before any body is
     // resolved, which is what makes recursion and mutual recursion work with no forward
@@ -115,7 +117,9 @@ Resolution Resolver::run()
 
     visit( ast_.root() );
 
-    return Resolution( std::move( bindings_ ), std::move( unresolved_ ), std::move( next_overload_ ), imports_ );
+    return Resolution(
+        std::move( bindings_ ), std::move( unresolved_ ), std::move( next_overload_ ), std::move( fallbacks_ ), imports_
+    );
 }
 
 void Resolver::visit( Node_id id )
@@ -674,6 +678,16 @@ Node_id Resolver::lookup( Symbol_id name, Node_id use )
 
     if( const Node_id decl = lookup_in( own, name, use ); decl.is_valid() )
     {
+        // A function's set shadows nothing in the prelude's: it falls back to it (D45).
+        if( ast_.kind( decl ) == Node_kind::Function_decl && own != imports_.prelude_package() )
+        {
+            const Node_id prelude_decl = lookup_in( imports_.prelude_package(), name, use );
+            if( prelude_decl.is_valid() && ast_.kind( prelude_decl ) == Node_kind::Function_decl )
+            {
+                fallbacks_[decl.v] = prelude_decl;
+            }
+        }
+
         return decl;
     }
 

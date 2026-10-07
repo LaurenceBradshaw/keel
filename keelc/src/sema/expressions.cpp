@@ -216,9 +216,11 @@ Argument_shape Expressions::argument_shape( Node_id argument )
         return shape;
     }
 
-    shape.kind     = Argument_kind::Typed;
     shape.type     = infer( argument );
     shape.recorded = true;
+
+    // A broken argument is already reported, so it rules out no candidate.
+    shape.kind = table_.is_error( shape.type ) ? Argument_kind::Anything : Argument_kind::Typed;
 
     return shape;
 }
@@ -305,6 +307,11 @@ Type_id Expressions::infer_call( Node_id id )
     u32     implicit_params = 0;
 
     std::vector<Node_id> candidates;
+
+    // Resolved once and read by every candidate: resolving inside the loop would report an unknown
+    // type once per candidate. Left empty on the one-candidate path, where the call below fills it,
+    // unless trying the program's set against the prelude's already did.
+    std::vector<Type_id> resolved;
 
     if( is_aggregate( ast_.kind( decl ) ) )
     {
@@ -416,6 +423,37 @@ Type_id Expressions::infer_call( Node_id id )
         {
             candidates.push_back( candidate );
         }
+
+        // D45: the prelude's set only when the program's has nothing viable, and never through a
+        // qualifier, which names one package.
+        const Node_id fallback = ast_.kind( callee ) == Node_kind::Name_expr ? resolution_.fallback_of( decl ) : Node_id {};
+
+        if( fallback.is_valid() )
+        {
+            for( const Node_id argument : ast_.arguments( id ) )
+            {
+                shapes.push_back( argument_shape( argument ) );
+            }
+
+            if( !overloads_.applies( id, candidates, shapes, true, resolved ) )
+            {
+                std::vector<Node_id> prelude;
+
+                for( Node_id candidate = fallback; candidate.is_valid(); candidate = next_visible( callee, candidate ) )
+                {
+                    prelude.push_back( candidate );
+                }
+
+                if( !overloads_.applies( id, prelude, shapes, false, resolved ) )
+                {
+                    overloads_.refuse_both( id, name, candidates, prelude );
+                    type_the_arguments_anyway();
+                    return types_.poison( id );
+                }
+
+                candidates = std::move( prelude );
+            }
+        }
     }
 
     // Which instance a failed candidate list should be spelled in terms of. A construction has one
@@ -423,9 +461,6 @@ Type_id Expressions::infer_call( Node_id id )
     // not, and `f` there is what the author wrote.
     const Type_id constructed = is_aggregate( ast_.kind( decl ) ) ? expectation : Type_id {};
 
-    // Resolved once and read by every candidate: resolving inside the loop would report an unknown
-    // type once per candidate. Left empty on the one-candidate path, where the call below fills it.
-    std::vector<Type_id> resolved;
     // Parallel to `resolved`, and empty unless the arguments deduced it: which argument settled
     // each type parameter, so a broken bound underlines the argument that chose the type rather
     // than the whole call. Invalid where the expectation is what settled it.
@@ -464,9 +499,13 @@ Type_id Expressions::infer_call( Node_id id )
         }
         else
         {
-            for( const Node_id argument : ast_.arguments( id ) )
+            // Already shaped where the call could fall back.
+            if( shapes.empty() )
             {
-                shapes.push_back( argument_shape( argument ) );
+                for( const Node_id argument : ast_.arguments( id ) )
+                {
+                    shapes.push_back( argument_shape( argument ) );
+                }
             }
 
             callable = overloads_.select_overload( id, name, viable, implicit_params, constructed, shapes, resolved );

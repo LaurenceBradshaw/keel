@@ -21,11 +21,16 @@ class Resolution
 public:
     Resolution() = default;
     Resolution(
-        std::vector<Node_id> bindings, std::vector<bool> unresolved, std::vector<Node_id> next_overload, const Imports& imports
+        std::vector<Node_id> bindings,
+        std::vector<bool>    unresolved,
+        std::vector<Node_id> next_overload,
+        std::vector<Node_id> fallbacks,
+        const Imports&       imports
     )
         : bindings_( std::move( bindings ) ),
           unresolved_( std::move( unresolved ) ),
           next_overload_( std::move( next_overload ) ),
+          fallbacks_( std::move( fallbacks ) ),
           imports_( imports )
     {
     }
@@ -35,6 +40,13 @@ public:
     Node_id declaration_of( Node_id use ) const
     {
         return use.v < bindings_.size() ? bindings_[use.v] : Node_id {};
+    }
+
+    // D45: the prelude's set a function's own set falls back to, keyed by the own set's first
+    // declaration; invalid where there is none. Only an unqualified call may ask.
+    Node_id fallback_of( Node_id decl ) const
+    {
+        return decl.v < fallbacks_.size() ? fallbacks_[decl.v] : Node_id {};
     }
 
     // The next declaration of the same name in the same scope, or invalid at the end of the chain.
@@ -74,6 +86,7 @@ private:
     std::vector<Node_id> bindings_;
     std::vector<bool>    unresolved_;
     std::vector<Node_id> next_overload_;
+    std::vector<Node_id> fallbacks_;
     Imports              imports_;
 };
 

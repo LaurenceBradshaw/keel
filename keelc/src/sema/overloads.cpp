@@ -86,6 +86,20 @@ bool Overloads::deduce_for_candidate(
     return true;
 }
 
+// Whether `candidate` takes as many arguments and type arguments as the call wrote.
+bool Overloads::fits( Node_id call, Node_id candidate, u32 implicit_params ) const
+{
+    const std::span<const Node_id> arguments = ast_.arguments( call );
+    const std::size_t              written   = ast_.type_args( call ).size();
+    const std::size_t              params    = ast_.params( candidate ).size() - implicit_params;
+
+    // A call that wrote type arguments means them, so a candidate has to take exactly that many
+    // - which keeps a non-generic out of `f<i32>( x )`. A call that wrote none says nothing
+    // about genericity, so both kinds stay and the types decide below.
+    return params == arguments.size() &&
+           ( written == 0 || ast_.type_parameters( ast_.type_param_list( candidate ) ).size() == written );
+}
+
 // §12: inferred where possible, written where not. Two sources, and they are not equal - the
 // arguments decide, and the expectation fills only what they left. `i64 x = id( a );` on an `i32`
 // therefore instantiates `id<i32>` and widens the result, exactly as the written `id<i32>( a )`
@@ -402,6 +416,64 @@ std::vector<Node_id> Overloads::closest(
     return result;
 }
 
+// Both tiers over `viable`, reporting nothing: the exact matches, else the closest widenings.
+std::vector<Node_id> Overloads::matching(
+    Node_id                         call,
+    std::span<const Node_id>        viable,
+    u32                             implicit_params,
+    Type_id                         instance,
+    std::span<const Argument_shape> shapes,
+    std::span<const Type_id>        resolved
+)
+{
+    const std::size_t                 written = ast_.type_args( call ).size();
+    std::vector<Node_id>              widened_candidates;
+    std::vector<std::vector<Type_id>> targets;
+    std::vector<Node_id>              matching_candidates;
+
+    // A construction's type parameters are the aggregate's, and the instance already says what they
+    // are - so `Box<i32> b = Box( 7, true );` settles `T` before an argument is read. That is the
+    // receiver's role in select_method rather than selection by return type, which
+    // deduce_for_candidate refuses for a function and still refuses here.
+    const Bindings from_instance = aggregates_.bindings_of( instance );
+
+    for( const Node_id candidate : viable )
+    {
+        // Deduced only to ask whether this one could have been meant. What it found is thrown
+        // away: the caller deduces again once the callable is settled, with the expectation in
+        // hand and with a diagnostic to give, and keeping it here would be two answers to keep
+        // in step.
+        std::vector<Type_id> deduced;
+        const bool           infers = written == 0 && from_instance.empty() && ast_.is_generic( candidate );
+
+        if( infers && !deduce_for_candidate( candidate, implicit_params, shapes, deduced ) )
+        {
+            continue; // nothing here says what its parameters are, so it is not what was meant
+        }
+
+        // What the call wrote or the arguments deduced wins; the instance fills what is left.
+        Bindings bindings = type_bindings( candidate, infers ? deduced : resolved );
+        bindings.insert( from_instance.begin(), from_instance.end() );
+
+        if( candidate_accepts( candidate, implicit_params, shapes, bindings, false ) )
+        {
+            matching_candidates.push_back( candidate );
+        }
+        else if( candidate_accepts( candidate, implicit_params, shapes, bindings, true ) )
+        {
+            widened_candidates.push_back( candidate );
+            targets.push_back( parameter_types( candidate, implicit_params, bindings ) );
+        }
+    }
+
+    if( matching_candidates.empty() )
+    {
+        matching_candidates = closest( widened_candidates, targets, shapes );
+    }
+
+    return matching_candidates;
+}
+
 // The set narrowed by what the call wrote. Empty with a diagnostic already reported, one when that
 // settled it, or the rest for the caller to shape its arguments for. Only ever reached with two or
 // more candidates: one is the ordinary path, which this must leave exactly as it was.
@@ -418,13 +490,7 @@ std::vector<Node_id> Overloads::viable_overloads(
 
     for( const Node_id candidate : candidates )
     {
-        const std::size_t params = ast_.params( candidate ).size() - implicit_params;
-
-        // A call that wrote type arguments means them, so a candidate has to take exactly that many
-        // - which keeps a non-generic out of `f<i32>( x )`. A call that wrote none says nothing
-        // about genericity, so both kinds stay and the types decide below.
-        if( params == arguments.size() &&
-            ( written == 0 || ast_.type_parameters( ast_.type_param_list( candidate ) ).size() == written ) )
+        if( fits( call, candidate, implicit_params ) )
         {
             viable.push_back( candidate );
         }
@@ -465,11 +531,7 @@ Node_id Overloads::select_overload(
     std::vector<Type_id>&           resolved
 )
 {
-    const std::size_t                 written = ast_.type_args( call ).size();
-    std::vector<Node_id>              widened;
-    std::vector<std::vector<Type_id>> targets;
-
-    if( ast_.type_arg_list( call ).is_valid() )
+    if( ast_.type_arg_list( call ).is_valid() && resolved.empty() )
     {
         for( const Node_id written_argument : ast_.type_args( call ) )
         {
@@ -477,56 +539,16 @@ Node_id Overloads::select_overload(
         }
     }
 
-    // A construction's type parameters are the aggregate's, and the instance already says what they
-    // are - so `Box<i32> b = Box( 7, true );` settles `T` before an argument is read. That is the
-    // receiver's role in select_method rather than selection by return type, which
-    // deduce_for_candidate refuses for a function and still refuses here.
-    const Bindings from_instance = aggregates_.bindings_of( instance );
-
-    std::vector<Node_id> matching;
-
-    for( const Node_id candidate : viable )
-    {
-        // Deduced only to ask whether this one could have been meant. What it found is thrown
-        // away: the caller deduces again once the callable is settled, with the expectation in
-        // hand and with a diagnostic to give, and keeping it here would be two answers to keep
-        // in step.
-        std::vector<Type_id> deduced;
-        const bool           infers = written == 0 && from_instance.empty() && ast_.is_generic( candidate );
-
-        if( infers && !deduce_for_candidate( candidate, implicit_params, shapes, deduced ) )
-        {
-            continue; // nothing here says what its parameters are, so it is not what was meant
-        }
-
-        // What the call wrote or the arguments deduced wins; the instance fills what is left.
-        Bindings bindings = type_bindings( candidate, infers ? deduced : resolved );
-        bindings.insert( from_instance.begin(), from_instance.end() );
-
-        if( candidate_accepts( candidate, implicit_params, shapes, bindings, false ) )
-        {
-            matching.push_back( candidate );
-        }
-        else if( candidate_accepts( candidate, implicit_params, shapes, bindings, true ) )
-        {
-            widened.push_back( candidate );
-            targets.push_back( parameter_types( candidate, implicit_params, bindings ) );
-        }
-    }
-
-    if( matching.empty() )
-    {
-        matching = closest( widened, targets, shapes );
-    }
+    std::vector<Node_id> matching_candidates = matching( call, viable, implicit_params, instance, shapes, resolved );
 
     // A non-generic candidate beats a generic one, and two generics are ambiguous: read off the
     // declarations, and settling ties among exact matches or among equally close widenings.
-    if( matching.size() > 1 )
+    if( matching_candidates.size() > 1 )
     {
         Node_id     concrete {};
         std::size_t found = 0;
 
-        for( const Node_id candidate : matching )
+        for( const Node_id candidate : matching_candidates )
         {
             if( !ast_.is_generic( candidate ) )
             {
@@ -541,12 +563,12 @@ Node_id Overloads::select_overload(
         }
     }
 
-    if( matching.size() == 1 )
+    if( matching_candidates.size() == 1 )
     {
-        return matching.front();
+        return matching_candidates.front();
     }
 
-    if( matching.empty() )
+    if( matching_candidates.empty() )
     {
         reporter_.error_at(
             ast_.span( call ),
@@ -563,15 +585,18 @@ Node_id Overloads::select_overload(
     // so it cannot choose between two parameters in one family. The other is two widenings each
     // closer for a different argument. Where every one left is a generic the arguments cannot say
     // it either - both fit exactly - and only the type arguments can.
-    const bool all_generic =
-        std::all_of( matching.begin(), matching.end(), [&]( Node_id candidate ) { return ast_.is_generic( candidate ); } );
+    const bool all_generic = std::all_of(
+        matching_candidates.begin(),
+        matching_candidates.end(),
+        [&]( Node_id candidate ) { return ast_.is_generic( candidate ); }
+    );
 
     reporter_.error_at(
         ast_.span( call ),
         fmt::format( "this call to `{}` is ambiguous", name ),
         fmt::format(
             "more than one matches: {}; {}",
-            candidate_list( matching, implicit_params, aggregates_.bindings_of( instance ) ),
+            candidate_list( matching_candidates, implicit_params, aggregates_.bindings_of( instance ) ),
             all_generic ? fmt::format( "write the type arguments, as in `{}<i32>( ... )`", name )
                         : std::string( "write a type the call can be told by" )
         )
@@ -1141,6 +1166,60 @@ Node_id Overloads::next_overload( Node_id id ) const
     return next;
 }
 
+bool Overloads::applies(
+    Node_id                         call,
+    std::span<const Node_id>        candidates,
+    std::span<const Argument_shape> shapes,
+    bool                            ignore_markers,
+    std::vector<Type_id>&           resolved
+)
+{
+    if( resolved.empty() )
+    {
+        for( const Node_id written_argument : ast_.type_args( call ) )
+        {
+            resolved.push_back( annotations_.type_of( written_argument ) );
+        }
+    }
+
+    // With `ignore_markers`, a missing `ref` is a mistake to report against this set rather than a
+    // reason to call a by-value candidate in another.
+    for( const Node_id candidate : candidates )
+    {
+        if( !fits( call, candidate, 0 ) )
+        {
+            continue;
+        }
+
+        std::vector<Argument_shape>    unmarked( shapes.begin(), shapes.end() );
+        const std::span<const Node_id> params = ast_.params( candidate );
+
+        for( std::size_t i = 0; ignore_markers && i < unmarked.size() && i < params.size(); ++i )
+        {
+            unmarked[i].marker = ast_.call_marker( params[i] );
+        }
+
+        if( !matching( call, std::span( &candidate, 1 ), 0, Type_id {}, unmarked, resolved ).empty() )
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void Overloads::refuse_both(
+    Node_id call, std::string_view name, std::span<const Node_id> own, std::span<const Node_id> prelude
+)
+{
+    std::string message = fmt::format( "no `{}` matches these arguments", name );
+    std::string help    = fmt::format(
+        "the ones declared take {}; the prelude's take {}", candidate_list( own, 0, {} ), candidate_list( prelude, 0, {} )
+    );
+
+    reporter_.error_at( ast_.span( call ), std::move( message ), std::move( help ) );
+}
+
 } // namespace keel::sema
 
 #ifdef ENABLE_UNIT_TESTS
@@ -1430,6 +1509,418 @@ TEST_CASE( "overloads_widen_when_nothing_matches_exactly", "[sema][overload]" )
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
+    }
+}
+
+// D45: the program's set first, by both tiers, and the prelude's only when it has nothing viable.
+// `chose` names the declaration each call went to, so no section infers it from a return type.
+TEST_CASE( "overloads_fall_back_to_the_prelude's_set", "[sema][overload][prelude]" )
+{
+    constexpr std::string_view prelude = "bool f( i64 n ) { return true; }\nbool f( bool b ) { return b; }\n";
+
+    SECTION( "the prelude's set alone is unchanged" )
+    {
+        const Typed p( "i32 main() { f( 1 ); f( true ); return 0; }", prelude );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.chose( 0 ) == "<prelude>:1" );
+        REQUIRE( p.chose( 1 ) == "<prelude>:2" );
+    }
+
+    SECTION( "the prelude's set is tried when the program's matches no type" )
+    {
+        const Typed p(
+            "struct Point { i32 x; };\ni32 f( Point p ) { return p.x; }\n"
+            "i32 main() { Point q = Point { 1 }; f( 5 ); f( true ); f( q ); return 0; }",
+            prelude
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.chose( 0 ) == "<prelude>:1" );
+        REQUIRE( p.chose( 1 ) == "<prelude>:2" );
+        REQUIRE( p.chose( 2 ) == "t:2" );
+    }
+
+    SECTION( "and when it matches no count" )
+    {
+        const Typed p(
+            "i32 f( i64 a, i64 b ) { return 1; }\n"
+            "i32 main() { f( 1 ); f( 1, 2 ); return 0; }",
+            prelude
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.chose( 0 ) == "<prelude>:1" );
+        REQUIRE( p.chose( 1 ) == "t:1" );
+    }
+
+    SECTION( "and when one argument fits it and another does not" )
+    {
+        const Typed p(
+            "i32 f( i64 n ) { return 1; }\n"
+            "i32 main() { f( true ); f( 1 ); return 0; }",
+            prelude
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.chose( 0 ) == "<prelude>:2" );
+        REQUIRE( p.chose( 1 ) == "t:1" );
+    }
+
+    SECTION( "the prelude's set widens once it is the one tried" )
+    {
+        const Typed p(
+            "struct Point { i32 x; };\ni32 f( Point p ) { return p.x; }\n"
+            "i32 main() { u8 x = 1; f( x ); return 0; }",
+            prelude
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.chose( 0 ) == "<prelude>:1" );
+    }
+
+    SECTION( "to its closest candidate" )
+    {
+        const Typed p(
+            "struct Point { i32 x; };\ni32 f( Point p ) { return p.x; }\n"
+            "i32 main() { i8 x = 1; f( x ); return 0; }",
+            "bool f( i64 n ) { return true; }\nbool f( i32 n ) { return false; }\n"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.chose( 0 ) == "<prelude>:2" );
+    }
+
+    SECTION( "and the result is the prelude's candidate's" )
+    {
+        const Typed p(
+            "struct Point { i32 x; };\ni32 f( Point p ) { return p.x; }\n"
+            "i32 main() { i32 n = f( 5 ); return n; }",
+            prelude
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "expected `i32`, but got `bool`" ) != std::string::npos );
+    }
+
+    SECTION( "a generic in the prelude's set is reached" )
+    {
+        const Typed p(
+            "struct Point { i32 x; };\ni32 f( Point p ) { return p.x; }\n"
+            "i32 main() { u16 x = 1; f( x ); return 0; }",
+            "bool f<T>( T x ) { return true; }\n"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.chose( 0 ) == "<prelude>:1" );
+    }
+
+    SECTION( "and so is one the call names the type arguments of" )
+    {
+        const Typed p(
+            "struct Point { i32 x; };\ni32 f( Point p ) { return p.x; }\n"
+            "i32 main() { f<i64>( 5 ); return 0; }",
+            "bool f<T>( T x ) { return true; }\n"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.chose( 0 ) == "<prelude>:1" );
+    }
+
+    SECTION( "an argument is typed once, whichever set is tried" )
+    {
+        const Typed p(
+            "struct Point { i32 x; };\ni32 f( Point p ) { return p.x; }\n"
+            "i32 main() { f( 1 + true ); return 0; }",
+            prelude
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "no operator `+`" ) != std::string::npos );
+    }
+}
+
+// The other half of D45: a set with anything viable keeps the call, however much closer the
+// prelude's would have been. A flat merge would get every section here wrong.
+TEST_CASE( "overloads_keep_the_program's_set_when_it_takes_the_call", "[sema][overload][prelude]" )
+{
+    constexpr std::string_view prelude = "bool f( i64 n ) { return true; }\nbool f( bool b ) { return b; }\n";
+
+    SECTION( "when it matches exactly what the prelude's also does" )
+    {
+        const Typed p(
+            "i32 f( i64 n ) { return 1; }\n"
+            "i32 main() { i64 x = 1; f( x ); return 0; }",
+            prelude
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.chose( 0 ) == "t:1" );
+    }
+
+    SECTION( "when only a widening matches, and the prelude's would match exactly" )
+    {
+        const Typed p(
+            "i32 f( i64 n ) { return 1; }\n"
+            "i32 main() { i32 x = 1; f( x ); return 0; }",
+            "bool f( i32 n ) { return true; }\n"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.chose( 0 ) == "t:1" );
+    }
+
+    SECTION( "when a literal fits both families" )
+    {
+        const Typed p(
+            "i32 f( i32 n ) { return 1; }\n"
+            "i32 main() { f( 5 ); return 0; }",
+            prelude
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.chose( 0 ) == "t:1" );
+    }
+
+    SECTION( "when its candidate is a generic and the prelude's is not" )
+    {
+        const Typed p(
+            "i32 f<T>( T x ) { return 1; }\n"
+            "i32 main() { f( true ); return 0; }",
+            prelude
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.chose( 0 ) == "t:1" );
+    }
+
+    SECTION( "when the call names type arguments only its own candidate takes" )
+    {
+        const Typed p(
+            "i32 f<T>( T x ) { return 1; }\n"
+            "i32 main() { f<i64>( 5 ); return 0; }",
+            "bool f<T>( T x ) { return true; }\n"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.chose( 0 ) == "t:1" );
+    }
+
+    SECTION( "and its own ambiguity is reported, not fallen through" )
+    {
+        const Typed p(
+            "i32 f( i32 n ) { return 1; }\ni32 f( i64 n ) { return 2; }\n"
+            "i32 main() { f( 5 ); return 0; }",
+            "bool f( f64 d ) { return true; }\n"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "this call to `f` is ambiguous" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "f64" ) == std::string::npos );
+        REQUIRE( p.chose( 0 ).empty() );
+    }
+
+    // A marker the call left off is a mistake in the call, not a sign it meant the prelude.
+    SECTION( "and so is a missing `ref`" )
+    {
+        const Typed p(
+            "i32 f( ref i64 n ) { return 1; }\n"
+            "i32 main() { i64 x = 1; f( x ); return 0; }",
+            prelude
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "ref" ) != std::string::npos );
+        REQUIRE( p.chose( 0 ) == "t:1" );
+    }
+
+    SECTION( "and a missing `out`" )
+    {
+        const Typed p(
+            "void f( out i64 n ) { n = 1; }\n"
+            "i32 main() { i64 x; f( x ); return 0; }",
+            prelude
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "out" ) != std::string::npos );
+        REQUIRE( p.chose( 0 ) == "t:1" );
+    }
+
+    SECTION( "and a `ref` written where its candidate takes a copy" )
+    {
+        const Typed p(
+            "i32 f( i64 n ) { return 1; }\n"
+            "i32 main() { i64 x = 1; f( ref x ); return 0; }",
+            "bool f( ref i64 n ) { return true; }\n"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.chose( 0 ) == "t:1" );
+    }
+}
+
+TEST_CASE( "overloads_report_a_call_neither_set_takes", "[sema][overload][prelude]" )
+{
+    constexpr std::string_view prelude = "bool f( i64 n ) { return true; }\nbool f( bool b ) { return b; }\n";
+    constexpr std::string_view both    = "the ones declared take `( Point )`; the prelude's take `( i64 )` and `( bool )`";
+
+    SECTION( "by type, listing both sets" )
+    {
+        const Typed p(
+            "struct Point { i32 x; };\ni32 f( Point p ) { return p.x; }\n"
+            "i32 main() { f( 1.5 ); return 0; }",
+            prelude
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "no `f` matches these arguments" ) != std::string::npos );
+        REQUIRE( p.rendered().find( both ) != std::string::npos );
+        REQUIRE( p.chose( 0 ).empty() );
+    }
+
+    SECTION( "by count" )
+    {
+        const Typed p(
+            "struct Point { i32 x; };\ni32 f( Point p ) { return p.x; }\n"
+            "i32 main() { f( 1, 2 ); return 0; }",
+            prelude
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "no `f` matches these arguments" ) != std::string::npos );
+        REQUIRE( p.rendered().find( both ) != std::string::npos );
+    }
+
+    // Never answered with a by-value candidate in the prelude's set: the call wrote `ref`.
+    SECTION( "a borrow its own set refuses for its width" )
+    {
+        const Typed p(
+            "i32 f( ref i64 n ) { return 1; }\n"
+            "i32 main() { i32 x = 1; f( ref x ); return 0; }",
+            prelude
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "no `f` matches these arguments" ) != std::string::npos );
+        REQUIRE( p.chose( 0 ).empty() );
+    }
+
+    SECTION( "an ambiguity in the prelude's set names only its candidates" )
+    {
+        const Typed p(
+            "struct Point { i32 x; };\ni32 f( Point p ) { return p.x; }\n"
+            "i32 main() { f( 5 ); return 0; }",
+            "bool f( i32 n ) { return true; }\nbool f( i64 n ) { return false; }\n"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "this call to `f` is ambiguous" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`( i32 )` and `( i64 )`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "Point" ) == std::string::npos );
+    }
+}
+
+// What is not a function's overload set does not fall back: it shadows, as any other name does.
+TEST_CASE( "overloads_fall_back_only_from_a_function", "[sema][overload][prelude]" )
+{
+    constexpr std::string_view prelude = "bool f( i64 n ) { return true; }\n";
+
+    SECTION( "a struct of the name shadows it" )
+    {
+        const Typed p(
+            "struct f { i32 x; };\n"
+            "i32 main() { f( 5 ); return 0; }",
+            prelude
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`f` has no constructor" ) != std::string::npos );
+    }
+
+    SECTION( "and so does a local" )
+    {
+        const Typed p( "i32 main() { i32 f = 1; f( 5 ); return 0; }", prelude );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`f` is not callable" ) != std::string::npos );
+    }
+
+    SECTION( "and so does a parameter" )
+    {
+        const Typed p( "i32 g( fn( bool ) -> i32 f ) { return f( 5 ); }\ni32 main() { return 0; }", prelude );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+}
+
+// A package's own unqualified call falls back like the program's; a qualified one names a single
+// package and never does, even where that package's own calls would.
+TEST_CASE( "overloads_never_fall_back_through_a_qualifier", "[sema][overload][prelude][packages]" )
+{
+    constexpr std::string_view prelude = "bool f( i64 n ) { return true; }\n";
+    constexpr std::string_view geom    = "struct Point { i32 x; };\n"
+                                         "i32 f( Point p ) { return p.x; }\n"
+                                         "bool g() { return f( 5 ); }\n";
+
+    SECTION( "inside the package, a bare call falls back" )
+    {
+        const Typed p(
+            { { "main.kl", "import kl::geom;\ni32 main() { bool b = kl::g(); return 0; }\n" }, { "kl/geom.kl", geom } }, prelude
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "from outside it, a qualified call does not" )
+    {
+        const Typed p(
+            { { "main.kl", "import kl::geom;\ni32 main() { kl::f( 5 ); return 0; }\n" }, { "kl/geom.kl", geom } }, prelude
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "Point" ) != std::string::npos );
+        REQUIRE( p.chose( 0 ) == "geom:2" );
+    }
+
+    SECTION( "and a qualified call it does take is unchanged" )
+    {
+        const Typed p(
+            { { "main.kl", "import kl::geom;\ni32 main() { return kl::f( kl::Point { 3 } ); }\n" }, { "kl/geom.kl", geom } },
+            prelude
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.chose( 0 ) == "geom:2" );
     }
 }
 

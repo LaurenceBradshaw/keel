@@ -9,6 +9,8 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <filesystem>
+#include <initializer_list>
 #include <optional>
 #include <sstream>
 #include <string>
@@ -17,6 +19,7 @@
 
 #include "common/interner.h"
 #include "common/source_manager.h"
+#include "common/temp_dir.h"
 #include "lex/lexer.h"
 #include "parse/loader.h"
 #include "parse/parser.h"
@@ -31,13 +34,42 @@ class Typed
 {
 public:
     explicit Typed( std::string_view source )
+        : Typed( source, prelude_source() )
+    {
+    }
+
+    // `prelude` in place of the shipped one, which is empty of functions until M9 adds `print`.
+    Typed( std::string_view source, std::string_view prelude )
     {
         file_          = sm_.add_file( "t.kl", std::string( source ) );
-        Program loaded = load_program( file_, sm_, interner_, literal_pool_, diags_ );
+        Program loaded = load_program( file_, sm_, interner_, literal_pool_, diags_, {}, prelude );
         ast_           = std::move( loaded.ast );
         const auto res = resolve( ast_, sm_, interner_, diags_, loaded.imports );
         earlier_       = diags_.error_count();
         types_         = type_check( ast_, res, literal_pool_, sm_, interner_, diags_ );
+    }
+
+    // A program on disk: `main.kl` and its files beside it, with the package `kl` under `kl/`.
+    Typed( std::initializer_list<std::pair<const char*, std::string_view>> files, std::string_view prelude )
+    {
+        dir_.emplace();
+
+        for( const auto& [name, text] : files )
+        {
+            dir_->write( name, text );
+        }
+
+        const std::optional<File_id> input = sm_.load_file( dir_->path / "main.kl" );
+
+        REQUIRE( input.has_value() );
+        file_ = *input;
+
+        const Package kl { .name = "kl", .root = dir_->path / "kl" };
+        Program       loaded = load_program( file_, sm_, interner_, literal_pool_, diags_, std::span( &kl, 1 ), prelude );
+        ast_                 = std::move( loaded.ast );
+        const auto res       = resolve( ast_, sm_, interner_, diags_, loaded.imports );
+        earlier_             = diags_.error_count();
+        types_               = type_check( ast_, res, literal_pool_, sm_, interner_, diags_ );
     }
 
     // Errors from type checking only, so a fixture with a deliberate parse or name error still
@@ -92,6 +124,34 @@ public:
         return ast_;
     }
 
+    // Where the `index`th call in the input file went, as `file:line` of the callable it chose -
+    // `t:2`, `geom:1` or `<prelude>:3` - or empty when it chose nothing.
+    std::string chose( std::size_t index ) const
+    {
+        for( u32 i = 0; i < ast_.node_count(); ++i )
+        {
+            const Node_id id { i };
+
+            if( ast_.kind( id ) != Node_kind::Call_expr || ast_.span( id ).file != file_ || index-- != 0 )
+            {
+                continue;
+            }
+
+            const Node_id callable = types_.callee_of( id );
+            if( !callable.is_valid() )
+            {
+                return {};
+            }
+
+            const Span span = ast_.span( callable );
+            return std::filesystem::path( sm_.file( span.file ).path ).stem().string() + ":" +
+                   std::to_string( sm_.line_col( span.file, span.start ).line );
+        }
+
+        FAIL( "the input file has no such call" );
+        return {};
+    }
+
     Node_id nth( Node_kind kind, std::size_t index ) const
     {
         for( u32 i = 0; i < ast_.node_count(); ++i )
@@ -106,14 +166,15 @@ public:
     }
 
 private:
-    Source_manager sm_;
-    Interner       interner_;
-    Literal_pool   literal_pool_;
-    Diagnostics    diags_;
-    File_id        file_;
-    Ast            ast_;
-    Types          types_;
-    std::size_t    earlier_ = 0;
+    std::optional<Temp_dir> dir_; // first, so the files outlive everything read from them
+    Source_manager          sm_;
+    Interner                interner_;
+    Literal_pool            literal_pool_;
+    Diagnostics             diags_;
+    File_id                 file_;
+    Ast                     ast_;
+    Types                   types_;
+    std::size_t             earlier_ = 0;
 };
 
 } // namespace
