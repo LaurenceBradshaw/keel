@@ -573,6 +573,24 @@ Node_id Overloads::select_overload(
 
     if( matching_candidates.empty() )
     {
+        // A wrong marker on the one candidate the call reaches without it: chosen, and the marker reported.
+        std::vector<Node_id> reached;
+
+        for( const Node_id candidate : viable )
+        {
+            const std::vector<Argument_shape> shapes_aside = unmarked( candidate, implicit_params, shapes );
+
+            if( !matching( call, std::span( &candidate, 1 ), implicit_params, instance, shapes_aside, resolved ).empty() )
+            {
+                reached.push_back( candidate );
+            }
+        }
+
+        if( reached.size() == 1 )
+        {
+            return reached.front();
+        }
+
         reporter_.error_at(
             ast_.span( call ),
             fmt::format( "no `{}` matches these arguments", name ),
@@ -1194,21 +1212,30 @@ bool Overloads::applies(
             continue;
         }
 
-        std::vector<Argument_shape>    unmarked( shapes.begin(), shapes.end() );
-        const std::span<const Node_id> params = ast_.params( candidate );
+        const std::vector<Argument_shape> tried =
+            ignore_markers ? unmarked( candidate, 0, shapes ) : std::vector<Argument_shape>( shapes.begin(), shapes.end() );
 
-        for( std::size_t i = 0; ignore_markers && i < unmarked.size() && i < params.size(); ++i )
-        {
-            unmarked[i].marker = ast_.call_marker( params[i] );
-        }
-
-        if( !matching( call, std::span( &candidate, 1 ), 0, Type_id {}, unmarked, resolved ).empty() )
+        if( !matching( call, std::span( &candidate, 1 ), 0, Type_id {}, tried, resolved ).empty() )
         {
             return true;
         }
     }
 
     return false;
+}
+
+std::vector<Argument_shape>
+Overloads::unmarked( Node_id candidate, u32 implicit_params, std::span<const Argument_shape> shapes ) const
+{
+    std::vector<Argument_shape>    unmarked( shapes.begin(), shapes.end() );
+    const std::span<const Node_id> params = ast_.params( candidate ).subspan( implicit_params );
+
+    for( std::size_t i = 0; i < unmarked.size() && i < params.size(); ++i )
+    {
+        unmarked[i].marker = ast_.call_marker( params[i] );
+    }
+
+    return unmarked;
 }
 
 void Overloads::refuse_both(
@@ -1903,6 +1930,60 @@ TEST_CASE( "overloads_report_a_call_neither_set_takes", "[sema][overload][prelud
         REQUIRE( p.rendered().find( "this call to `f` is ambiguous" ) != std::string::npos );
         REQUIRE( p.rendered().find( "`( i32 )` and `( i64 )`" ) != std::string::npos );
         REQUIRE( p.rendered().find( "Point" ) == std::string::npos );
+    }
+}
+
+// A set the call reaches only with its markers aside takes it, and the marker is what is reported.
+TEST_CASE( "overloads_report_a_wrong_marker_against_the_one_it_would_reach", "[sema][overload][prelude]" )
+{
+    SECTION( "an `out` on the prelude's `print`" )
+    {
+        const Typed p( "i32 main() { i64 v = 0; print( out v ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "remove `out`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "no `print` matches" ) == std::string::npos );
+        REQUIRE( p.chose( 0 ).starts_with( "<prelude>" ) );
+    }
+
+    // D45: a marker never carries the call out of its own set to one taking a copy.
+    SECTION( "but not past a set of the program's" )
+    {
+        const Typed p( "struct Point { i64 x; };\n"
+                       "void print( Point p ) { }\n"
+                       "i32 main() { i64 v = 0; print( out v ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "no `print` matches" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "the prelude's take" ) != std::string::npos );
+        REQUIRE( p.chose( 0 ).empty() );
+    }
+
+    SECTION( "a missing `ref` in a set of the program's" )
+    {
+        const Typed p( "i32 f( ref i64 n ) { return 1; }\n"
+                       "i32 f( bool b ) { return 2; }\n"
+                       "i32 main() { i64 x = 1; f( x ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "ref" ) != std::string::npos );
+        REQUIRE( p.chose( 0 ) == "t:1" );
+    }
+
+    // Two reached with the markers aside is no answer, so nothing is guessed.
+    SECTION( "but not when two would take it" )
+    {
+        const Typed p( "i32 f( ref i64 n ) { return 1; }\n"
+                       "i32 f( ref u64 n ) { return 2; }\n"
+                       "i32 main() { f( 5 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "no `f` matches these arguments" ) != std::string::npos );
+        REQUIRE( p.chose( 0 ).empty() );
     }
 }
 

@@ -1,0 +1,38 @@
+// PLAN D45. A program's overloads of a prelude name fall back rather than shadow: its own set takes
+// a call first, and the prelude's only when its own takes nothing.
+struct Point
+{
+    i64 x;
+    i64 y;
+};
+
+// Inside it, every `print` falls back: no `print( Point )` takes text or an `i64`.
+void print( Point p )
+{
+    print( "(" );
+    print( p.x );
+    print( ", " );
+    print( p.y );
+    print( ")" );
+}
+
+void println( i64 value )
+{
+    print( "mine: " );
+    print( value );
+    print( "\n" );
+}
+
+i32 main()
+{
+    Point p = Point { 1, 2 };
+
+    print( p );
+    print( "\n" );
+
+    // Its one candidate takes the literal, so the prelude's `i64` and `u64` never make it ambiguous.
+    println( 5 );
+    println( "prelude" );
+
+    return 0;
+}

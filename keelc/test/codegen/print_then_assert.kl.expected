@@ -1,0 +1,66 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "print_then_assert.kl.prelude.c"
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+int32_t kl__main__( void );
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_x_1;
+    struct kl_7prelude_str kl_t2;
+    struct kl_7prelude_str* kl_t3;
+    uint8_t* kl_t4;
+    struct kl_7prelude_str kl_t8;
+    struct kl_7prelude_str* kl_t9;
+    uint8_t* kl_t10;
+    struct kl_7prelude_str kl_t13;
+    struct kl_7prelude_str* kl_t14;
+    uint8_t* kl_t15;
+    bool kl_t18;
+    struct kl_7prelude_str kl_t19;
+    struct kl_7prelude_str* kl_t20;
+    uint8_t* kl_t21;
+#line 5 "codegen/print_then_assert.kl"
+    kl_x_1 = 0;
+#line 7 "codegen/print_then_assert.kl"
+    kl_t3 = &kl_t2;
+    kl_t4 = ( uint8_t* ) "before ";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t3, kl_t4, 7 );
+    kl_7prelude_print__Q7prelude3str( kl_t2 );
+#line 8 "codegen/print_then_assert.kl"
+    kl_7prelude_println__3i64( 42 );
+#line 9 "codegen/print_then_assert.kl"
+    kl_t9 = &kl_t8;
+    kl_t10 = ( uint8_t* ) "to stderr";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t9, kl_t10, 9 );
+    kl_7prelude_eprintln__Q7prelude3str( kl_t8 );
+#line 10 "codegen/print_then_assert.kl"
+    kl_t14 = &kl_t13;
+    kl_t15 = ( uint8_t* ) "unterminated";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t14, kl_t15, 12 );
+    kl_7prelude_print__Q7prelude3str( kl_t13 );
+#line 12 "codegen/print_then_assert.kl"
+    kl_t18 = kl_x_1 == 1;
+    if ( kl_t18 ) goto bb1; else goto bb2;
+    bb1:
+#line 14 "codegen/print_then_assert.kl"
+    kl_t20 = &kl_t19;
+    kl_t21 = ( uint8_t* ) "never";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t20, kl_t21, 5 );
+    kl_7prelude_println__Q7prelude3str( kl_t19 );
+#line 15 "codegen/print_then_assert.kl"
+    kl_t0 = 0;
+    return kl_t0;
+    bb2:
+    kl_rt_panic( "codegen/print_then_assert.kl", 12, "assertion failed: x == 1" );
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

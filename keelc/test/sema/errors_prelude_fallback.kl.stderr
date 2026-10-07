@@ -1,0 +1,25 @@
+error: no `print` matches these arguments
+  --> sema/errors_prelude_fallback.kl:30:5
+   |
+30 |     print( o );
+   |     ^^^^^^^^^^ the ones declared take `( Point )`; the prelude's take `( str )`, `( i64 )`, `( u64 )`, `( f64 )` and `( bool )`
+
+error: no `print` matches these arguments
+  --> sema/errors_prelude_fallback.kl:33:5
+   |
+33 |     print( out v );
+   |     ^^^^^^^^^^^^^^ the ones declared take `( Point )`; the prelude's take `( str )`, `( i64 )`, `( u64 )`, `( f64 )` and `( bool )`
+
+error: `draw` may modify this argument
+  --> sema/errors_prelude_fallback.kl:35:11
+   |
+35 |     draw( v );
+   |           ^ write `ref`
+
+error: `println` does not assign this argument
+  --> sema/errors_prelude_fallback.kl:36:14
+   |
+36 |     println( out v );
+   |              ^^^^^ remove `out`
+
+4 errors generated

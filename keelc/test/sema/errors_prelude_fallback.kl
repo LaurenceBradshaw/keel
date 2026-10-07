@@ -1,0 +1,38 @@
+// PLAN D45. A call neither set takes lists both, and a wrong marker is reported against the one
+// candidate the call reaches without it - but never by crossing to the prelude's set.
+struct Point
+{
+    i64 x;
+};
+
+struct Other
+{
+    i64 x;
+};
+
+void print( Point p )
+{
+}
+
+i32 draw( ref i64 n )
+{
+    return 1;
+}
+
+i32 draw( bool b )
+{
+    return 2;
+}
+
+i32 main()
+{
+    Other o = Other { 1 };
+    print( o );
+
+    i64 v = 0;
+    print( out v );
+
+    draw( v );
+    println( out v );
+    return 0;
+}

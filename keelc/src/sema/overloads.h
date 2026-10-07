@@ -157,6 +157,9 @@ public:
 
 private:
     bool marker_accepts( Node_id param, Keyword given, Type_id expected );
+    // `shapes` with each marker the one its parameter in `candidate` wants.
+    std::vector<Argument_shape>
+         unmarked( Node_id candidate, u32 implicit_params, std::span<const Argument_shape> shapes ) const;
     bool candidate_accepts(
         Node_id callable, u32 implicit_params, std::span<const Argument_shape> shapes, const Bindings& bindings, bool widen
     );

@@ -1,0 +1,112 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "prelude_fallback.kl.prelude.c"
+
+struct kl__Point;
+
+struct kl__Point
+{
+    int64_t kl_x_1;
+    int64_t kl_y_3;
+};
+
+void kl__print__5Point( struct kl__Point );
+void kl__println__3i64( int64_t );
+int32_t kl__main__( void );
+
+void kl__print__5Point( struct kl__Point kl_p_1 )
+{
+    struct kl_7prelude_str kl_t2;
+    struct kl_7prelude_str* kl_t3;
+    uint8_t* kl_t4;
+    struct kl_7prelude_str kl_t8;
+    struct kl_7prelude_str* kl_t9;
+    uint8_t* kl_t10;
+    struct kl_7prelude_str kl_t14;
+    struct kl_7prelude_str* kl_t15;
+    uint8_t* kl_t16;
+#line 12 "codegen/prelude_fallback.kl"
+    kl_t3 = &kl_t2;
+    kl_t4 = ( uint8_t* ) "(";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t3, kl_t4, 1 );
+    kl_7prelude_print__Q7prelude3str( kl_t2 );
+#line 13 "codegen/prelude_fallback.kl"
+    kl_7prelude_print__3i64( kl_p_1.kl_x_1 );
+#line 14 "codegen/prelude_fallback.kl"
+    kl_t9 = &kl_t8;
+    kl_t10 = ( uint8_t* ) ", ";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t9, kl_t10, 2 );
+    kl_7prelude_print__Q7prelude3str( kl_t8 );
+#line 15 "codegen/prelude_fallback.kl"
+    kl_7prelude_print__3i64( kl_p_1.kl_y_3 );
+#line 16 "codegen/prelude_fallback.kl"
+    kl_t15 = &kl_t14;
+    kl_t16 = ( uint8_t* ) ")";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t15, kl_t16, 1 );
+    kl_7prelude_print__Q7prelude3str( kl_t14 );
+    return;
+}
+
+void kl__println__3i64( int64_t kl_value_1 )
+{
+    struct kl_7prelude_str kl_t2;
+    struct kl_7prelude_str* kl_t3;
+    uint8_t* kl_t4;
+    struct kl_7prelude_str kl_t8;
+    struct kl_7prelude_str* kl_t9;
+    uint8_t* kl_t10;
+#line 21 "codegen/prelude_fallback.kl"
+    kl_t3 = &kl_t2;
+    kl_t4 = ( uint8_t* ) "mine: ";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t3, kl_t4, 6 );
+    kl_7prelude_print__Q7prelude3str( kl_t2 );
+#line 22 "codegen/prelude_fallback.kl"
+    kl_7prelude_print__3i64( kl_value_1 );
+#line 23 "codegen/prelude_fallback.kl"
+    kl_t9 = &kl_t8;
+    kl_t10 = ( uint8_t* ) "\012";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t9, kl_t10, 1 );
+    kl_7prelude_print__Q7prelude3str( kl_t8 );
+    return;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__Point kl_p_1;
+    struct kl__Point kl_t2;
+    struct kl_7prelude_str kl_t4;
+    struct kl_7prelude_str* kl_t5;
+    uint8_t* kl_t6;
+    struct kl_7prelude_str kl_t10;
+    struct kl_7prelude_str* kl_t11;
+    uint8_t* kl_t12;
+#line 28 "codegen/prelude_fallback.kl"
+    kl_t2.kl_x_1 = 1;
+    kl_t2.kl_y_3 = 2;
+    kl_p_1 = kl_t2;
+#line 30 "codegen/prelude_fallback.kl"
+    kl__print__5Point( kl_p_1 );
+#line 31 "codegen/prelude_fallback.kl"
+    kl_t5 = &kl_t4;
+    kl_t6 = ( uint8_t* ) "\012";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 1 );
+    kl_7prelude_print__Q7prelude3str( kl_t4 );
+#line 34 "codegen/prelude_fallback.kl"
+    kl__println__3i64( 5 );
+#line 35 "codegen/prelude_fallback.kl"
+    kl_t11 = &kl_t10;
+    kl_t12 = ( uint8_t* ) "prelude";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t11, kl_t12, 7 );
+    kl_7prelude_println__Q7prelude3str( kl_t10 );
+#line 37 "codegen/prelude_fallback.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

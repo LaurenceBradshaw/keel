@@ -1,0 +1,3 @@
+before 42
+to stderr
+unterminatedcodegen/print_then_assert.kl:12: assertion failed: x == 1

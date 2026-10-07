@@ -1,0 +1,16 @@
+// A failed `assert` after a `print` still shows what was printed: the panic flushes stdout first, so
+// both streams read back in the order the program wrote them, and nothing after the assert runs.
+i32 main()
+{
+    i32 x = 0;
+
+    print( "before " );
+    println( cast<i64>( 42 ) );
+    eprintln( "to stderr" );
+    print( "unterminated" );
+
+    assert( x == 1 );
+
+    println( "never" );
+    return 0;
+}
