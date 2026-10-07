@@ -1,0 +1,31 @@
+error: `x` dies when this function returns, so its address would dangle
+  --> sema/errors_sample_m8.kl:43:12
+   |
+43 |     return &x;
+   |            ^^ return the value itself, or allocate it with `alloc` and return that
+
+error: `i32*` points at one `i32`, so it cannot be indexed
+  --> sema/errors_sample_m8.kl:51:18
+   |
+51 |     i32 second = p[1];
+   |                  ^^^^ a many-item pointer, `i32[*]`, can be
+
+error: `i32*` points at one `i32`, so it has no arithmetic
+  --> sema/errors_sample_m8.kl:52:18
+   |
+52 |     i32* next  = p + 1;
+   |                  ^ a many-item pointer, `i32[*]`, can be offset
+
+error: this is reached through a `const u8[*]`, so it cannot be modified
+  --> sema/errors_sample_m8.kl:64:9
+   |
+64 |         hello.data[0] = 72;
+   |         ^^^^^^^^^^^^^ a pointer to `const` only reads what it points at
+
+error: an element reached through `[]` cannot be moved out
+  --> sema/errors_sample_m8.kl:68:16
+   |
+68 |     keep( move bag[0] );
+   |                ^^^^^^ it stays in its container; take it out through one of the container's methods
+
+5 errors generated

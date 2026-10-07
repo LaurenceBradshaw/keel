@@ -1,0 +1,175 @@
+// M8's acceptance program: what the milestone added that runs, in one program that checks its own
+// answer. Each check returns its own code, and the last returns the live count of an owning type.
+// The refusals the acceptance names are sema/errors_sample_m8.kl; a failed `assert` is
+// codegen/assert_fails.kl.
+import kl::list;
+import kl::string;
+import geo::shapes;
+import ledger;
+
+i32 alive = 0;
+
+class Ticket
+{
+    public u64 id;
+
+    Ticket( u64 v )
+    {
+        id = v;
+        alive++;
+    }
+
+    ~Ticket()
+    {
+        alive--;
+    }
+};
+
+// One `readings` for every Gauge, written from a method and read from a static method.
+class Gauge
+{
+    static i32 readings = 0;
+
+    public i32 last;
+
+    Gauge()
+    {
+        last = 0;
+    }
+
+    void read( i32 v )
+    {
+        last     = v;
+        readings = readings + 1;
+    }
+
+    static i32 total()
+    {
+        return readings;
+    }
+
+    static Gauge make()
+    {
+        readings = readings + 100;
+        return Gauge();
+    }
+};
+
+// One `made` per instantiation.
+class Tally<T> where T : Copyable
+{
+    static i32 made = 0;
+
+    public T v;
+
+    Tally( T x )
+    {
+        v    = x;
+        made = made + 1;
+    }
+
+    static i32 count()
+    {
+        return made;
+    }
+};
+
+// A run of slots: alloc<T>( n ) gives a T[*], indexed and offset.
+i32 raw_sum( u64 n )
+{
+    i32 total = 0;
+
+    unsafe
+    {
+        i32[*] p = alloc<i32>( n );
+
+        for( u64 i = 0; i < n; i++ )
+        {
+            p[i] = cast<i32>( i ) * 2;
+        }
+
+        i32[*] q = p + 1;
+        total    = q[0] + q[1];
+        free( p );
+    }
+
+    return total;
+}
+
+// Every operation that moves an owning element in or out of a slot.
+u64 shuffle()
+{
+    kl::list<Ticket> v = kl::list<Ticket>();
+
+    for( u64 i = 1; i <= 5; i++ )
+    {
+        v.push( move Ticket( i ) );
+    }
+
+    Ticket last  = v.pop();                   // 1 2 3 4
+    Ticket first = v.remove( 0 );             // 2 3 4
+    Ticket two   = v.swap_remove( 0 );        // 4 3
+    Ticket old   = v.replace( 1, move last ); // 4 5
+    v.swap( 0, 1 );                           // 5 4
+    v.push( move first );                     // 5 4 1
+
+    u64 seen = v[0].id * 100 + v[1].id * 10 + v[2].id + two.id * 1000 + old.id * 10000;
+    v.clear();
+
+    return seen;
+}
+
+i32 main()
+{
+    if( raw_sum( 4 ) != 6 ) { return 1; }
+
+    // Two modules and a package.
+    post( 3 );
+    post( geo::unit );
+    if( posted != 5 ) { return 2; }
+
+    geo::Rect r = geo::Rect { 2, 3 };
+    if( geo::area( geo::Shape::Box( r ) ) + geo::area( geo::Shape::Square( 4 ) ) != 22 ) { return 3; }
+    if( geo::area( geo::Shape::Empty ) != 0 ) { return 4; }
+
+    // Static fields, and a static method's address.
+    Gauge a = Gauge();
+    Gauge b = Gauge();
+    a.read( 1 );
+    b.read( 2 );
+    if( Gauge::total() != 2 || a.last != 1 || b.last != 2 ) { return 5; }
+
+    fn() -> Gauge make = &Gauge::make;
+    Gauge c = make();
+    if( Gauge::total() != 102 || c.last != 0 ) { return 6; }
+
+    Tally<i32> t1 = Tally<i32>( 1 );
+    Tally<i32> t2 = Tally<i32>( 2 );
+    Tally<f64> t3 = Tally<f64>( 3.0 );
+    if( Tally<i32>::count() != 2 || Tally<f64>::count() != 1 || t1.v + t2.v != 3 || t3.v != 3.0 ) { return 7; }
+
+    // A string from a literal, and two compared with ==.
+    kl::string hello = kl::string( "hello" );
+    kl::string again = kl::string( "hel" );
+    again.push( 108 );
+    again.push( 111 );
+    if( hello != again || hello == kl::string( "help" ) || hello[1] != 101 ) { return 8; }
+
+    // A list<i32> that grows from nothing, indexed with operator[].
+    kl::list<i32> v = kl::list<i32>();
+    for( i32 i = 0; i < 20; i++ )
+    {
+        v.push( i * i );
+    }
+    assert( v.size() == 20 && v.capacity() >= 20 );
+    if( v[7] != 49 || v[19] != 361 ) { return 9; }
+
+    v[0] = 5;
+    if( v[0] != 5 || v.pop() != 361 || v.size() != 19 ) { return 10; }
+
+    if( cast<u8>( v[15] ) != 225 ) { return 11; }
+
+    if( shuffle() != 32541 ) { return 12; }
+
+    return alive;
+}

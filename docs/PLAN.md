@@ -6763,8 +6763,51 @@ which §7 says the runtime provides and `kl_rt.h` does not (it has `alloc`, `all
    `f( ref v, ref v[0] )` - belongs with M9's borrow work. Also deferred: growing by one `realloc`.
    A Keel move is a byte copy, so relocating any `T` is a `memcpy`; it needs a
    `kl_rt_realloc_many` and is only an optimisation.
-5. **The acceptance goldens**: a `kl::list<i32>` that grows and frees, valgrind-clean, and the
-   rest of M8's acceptance column.
+5. ~~**The acceptance goldens**: a `kl::list<i32>` that grows and frees, valgrind-clean, and the
+   rest of M8's acceptance column.~~ **Done (2026-10-07).** The program is the directory fixture
+   `codegen/sample_m8`: `main.kl`, a module `ledger.kl` imported bare, and a package `geo` named
+   by a second `--package` beside `kl`, so the package's function, type, variant and global are
+   written `geo::` (keel_stl declares no variant or global). It covers `alloc<T>( n )`, `p[i]` and
+   `p + i` on a `T[*]`, a static field shared by two objects and absent from the emitted struct,
+   one per instantiation, `&Gauge::make` reading a static, `kl::string` from a literal and `==`,
+   a `kl::list<i32>` grown from empty through `operator[]`, a passing `assert`, a checked `cast`,
+   and a `kl::list<Ticket>` through `pop`, `remove`, `swap_remove`, `replace`, `swap`, `push` and
+   `clear`, exiting with the live count. Each check has its own code; changing an expected value
+   changes the exit code. The refusals are `sema/errors_sample_m8.kl`: `p[1]` and `p + 1` on an
+   `i32*`, `return &x`, a write through a literal's `const u8[*]`, and `move bag[0]`. A failed
+   `assert` stays `codegen/assert_fails.kl`, and a missing runtime `driver/runtime_missing.kl`.
+   Debug under valgrind, release and asan: 283 goldens pass. The editor items are not goldens.
+
+   **The keyword audit (2026-10-07)**, run with step 5: about ninety probes of `move`, `out`,
+   `ref`, `destroy`, `cast`, `alloc`/`free`, `assert`, `operator`, `static`, `fn`/`field` and
+   generics, compiled and run under valgrind. `destroy`, `cast`, `alloc`/`free`, `assert`,
+   `out`'s own rules, `static` and function pointers held. **Three holes, all double frees the
+   compiler accepts, scheduled before M8 is called done:**
+   - **A. `move` of something the function does not own.** `move b` on a `ref` or `const ref`
+     parameter, on a `ref` binding, on `this`, and on a bare field inside a method
+     (`take( move b )`, `return move b;`), generic bodies included. `infer_marker` refuses a
+     `Field_expr` and a default-mode owning parameter, and otherwise accepts any non-copyable
+     operand as an "owned temporary"; a bare field is a `Name_expr` resolving to a `Field_decl`,
+     and the others resolve to a declaration whose mode is `ref`. `a == move a` and
+     `h.eat( move h )` belong to B.
+   - **B. A call that moves a local and borrows it.** `two( ref b, move b )`,
+     `two( move b, ref b )`, `h.eat( move h )`, `a == move a`. Lowering takes every argument's
+     address before the call, and the `move` is an operand of the call itself, so the move check
+     sees the borrow first and nothing after it. Caught in KIR rather than per spelling: a call
+     whose `Move` operand names a local that another of its operands borrowed.
+   - **C. A write into a moved local revives it.** `take( move b ); b.n = 4;` and
+     `fill( out b.n );` both double free. move_check sets a local `Live` on any assignment to a
+     projection of it, so that a struct literal, built field by field into a temporary that never
+     opens its storage, is not a use-after-move on a loop's second iteration. The fix is in two
+     parts: `lower_struct_literal` opens the temporary with `storage_live`, as 4c did for a
+     constructed one, and a write or `Initialise` through a projection of a Moved local is then a
+     use-after-move instead of a revival.
+   **Found and left where they belong:** a pointer kept past its object (`&V()[0]`, `&v[0]` held
+   across a `push`, `&b` across `move b`, a `ref` binding across a `move`) and `f( out v, out v )`
+   are M9's borrow work, beside `f( ref v, ref v[0] )`. And one bug outside the keywords:
+   `i64 a = 0 - 3000000000 - 1;` is refused with "`-3000000000` does not fit in `i32`" - the
+   inner subtraction of a chained constant is checked against the default type rather than the
+   declaration's, while `0 - 3000000000` and `1 + 3000000000` are accepted.
 
 Still open inside M8 and taken whenever it is forced: whether `alloc` and `free` move into a
 module over one size intrinsic.

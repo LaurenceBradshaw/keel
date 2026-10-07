@@ -1,0 +1,71 @@
+// The refusals M8's acceptance names, beside the program in codegen/sample_m8 that is accepted: a
+// single-item pointer walked like a run, an address that outlives its local, a write through a
+// literal's read-only bytes, and an element moved out through `[]`.
+class Item
+{
+    public i32 n;
+
+    Item()
+    {
+        n = 0;
+    }
+
+    ~Item()
+    {
+    }
+};
+
+class Bag
+{
+    Item[*] slots;
+
+    Bag()
+    {
+        slots = nullptr;
+    }
+
+    public Item* operator[]( u64 index ) const
+    {
+        unsafe
+        {
+            return &slots[index];
+        }
+    }
+};
+
+void keep( move Item item )
+{
+}
+
+i32* dangle()
+{
+    i32 x = 1;
+    return &x;
+}
+
+i32 main()
+{
+    i32  x = 1;
+    i32* p = &x;
+
+    i32 second = p[1];
+    i32* next  = p + 1;
+
+    unsafe
+    {
+        i32[*] run = alloc<i32>( 2 );
+        run[1]     = 2;
+        free( run );
+    }
+
+    str hello = "hello";
+    unsafe
+    {
+        hello.data[0] = 72;
+    }
+
+    Bag bag = Bag();
+    keep( move bag[0] );
+
+    return 0;
+}

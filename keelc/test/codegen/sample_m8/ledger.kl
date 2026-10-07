@@ -1,0 +1,7 @@
+// A module of the program itself, imported bare, with a global main.kl writes.
+i32 posted = 0;
+
+void post( i32 amount )
+{
+    posted = posted + amount;
+}

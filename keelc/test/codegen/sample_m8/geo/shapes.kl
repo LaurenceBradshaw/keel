@@ -1,0 +1,29 @@
+// The package `geo`, named by --package: a function, a type, a variant and a global, each reached
+// from main.kl as `geo::`.
+i32 unit = 2;
+
+struct Rect
+{
+    i32 w;
+    i32 h;
+};
+
+enum Shape
+{
+    Square( i32 side ),
+    Box( Rect r ),
+    Empty
+};
+
+i32 area( Shape s )
+{
+    switch( s )
+    {
+        case Shape::Square( side ):
+            return side * side;
+        case Shape::Box( r ):
+            return r.w * r.h;
+        case Shape::Empty:
+            return 0;
+    }
+}
