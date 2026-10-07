@@ -13,7 +13,7 @@ namespace keel::sema
 // towards one, so the caller is the guard rather than the call site.
 void Generic_recursion::record_call( Node_id from, Node_id to, std::vector<Type_id> arguments, Span at )
 {
-    if( is_generic( ast_, from ) )
+    if( ast_.is_generic( from ) )
     {
         generic_calls_.push_back( Generic_call { .from = from, .to = to, .arguments = std::move( arguments ), .at = at } );
     }
@@ -44,7 +44,7 @@ void Generic_recursion::record_generic_uses( Node_id from, Type_id type, Span at
 
     case Type_kind::Struct:
     case Type_kind::Enum:
-        if( described.declaration.is_valid() && is_generic( ast_, described.declaration ) )
+        if( described.declaration.is_valid() && ast_.is_generic( described.declaration ) )
         {
             const std::vector<Type_id> arguments { described.arguments.begin(), described.arguments.end() };
 

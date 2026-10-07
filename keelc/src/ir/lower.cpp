@@ -88,6 +88,7 @@ private:
     void lower_if( Node_id id );
     void lower_switch( Node_id id );
     void lower_case_test( Operand scrutinee, Node_id label, Block_id body );
+    void lower_arm_body( Node_id arm, Place matched, Block_id fallthrough_to );
     void lower_while( Node_id id );
     void lower_for( Node_id id );
 
@@ -224,7 +225,7 @@ Lowering::Lowering(
                 borrowed_bindings_.insert( param.v );
             }
 
-            if( parameter_mode( ast_, param ) == Keyword::Out )
+            if( ast_.parameter_mode( param ) == Keyword::Out )
             {
                 builder_.mark_out_parameter( local );
             }
@@ -237,7 +238,7 @@ Lowering::Lowering(
             // The parser puts the receiver first, and it is what a bare field name is reached
             // through. Captured from the walk rather than assumed to be local 1, so it survives
             // anything that adds a local before this runs.
-            if( !receiver_.is_valid() && has_receiver( ast_, declaration ) )
+            if( !receiver_.is_valid() && ast_.has_receiver( declaration ) )
             {
                 receiver_             = local;
                 receiver_declaration_ = param;
@@ -279,7 +280,7 @@ Function Lowering::run()
         function.constructed   = receiver_;
         const Type_id instance = types_.table().get( function.locals[receiver_.v].type ).element;
 
-        for( const Node_id member : ast_.members( enclosing_aggregate( ast_, declaration_ ) ) )
+        for( const Node_id member : ast_.members( ast_.enclosing_aggregate( declaration_ ) ) )
         {
             if( ast_.kind( member ) != Node_kind::Field_decl )
             {
@@ -289,7 +290,7 @@ Function Lowering::run()
             function.owed_fields.push_back( Owed_field {
                 member,
                 owns( field_type( ast_, types_.table(), instance, member, types_.recorded() ) ),
-                is_const_field( ast_, member )
+                ast_.is_const_field( member )
             } );
         }
     }
@@ -346,7 +347,7 @@ Bindings Lowering::bindings_for_call( Node_id call )
     }
 
     const Instantiation&       chosen     = types_.instantiations()[*instance];
-    const std::vector<Node_id> parameters = type_parameters( ast_, ast_.type_param_list( chosen.declaration ) );
+    const std::vector<Node_id> parameters = ast_.type_parameters( ast_.type_param_list( chosen.declaration ) );
 
     Bindings bindings;
 
@@ -390,9 +391,9 @@ Place Lowering::place_for( Node_id declaration, Type_id owner )
 
 Type_id Lowering::static_owner( Node_id named, Node_id decl )
 {
-    const Node_id aggregate = enclosing_aggregate( ast_, decl );
+    const Node_id aggregate = ast_.enclosing_aggregate( decl );
 
-    if( !aggregate.is_valid() || !is_generic( ast_, aggregate ) || ast_.kind( decl ) != Node_kind::Var_decl )
+    if( !aggregate.is_valid() || !ast_.is_generic( aggregate ) || ast_.kind( decl ) != Node_kind::Var_decl )
     {
         return Type_id {};
     }
@@ -1396,7 +1397,7 @@ Operand Lowering::lower_call( Node_id id )
     // local already holds the address - so unlike every other call shape there is nothing to take
     // the address *of*. A static method has none to pass, so it falls through to the ordinary path
     // below, where its written parameters are the whole of its signature.
-    if( callee.is_valid() && ast_.kind( callee ) == Node_kind::Method_decl && has_receiver( ast_, callee ) )
+    if( callee.is_valid() && ast_.kind( callee ) == Node_kind::Method_decl && ast_.has_receiver( callee ) )
     {
         return lower_method_call_on( id, callee, copy( builder_.place( receiver_ ), builder_.type_of( receiver_ ) ) );
     }
@@ -1414,7 +1415,7 @@ Operand Lowering::lower_call( Node_id id )
     }
 
     assert(
-        callee.is_valid() && ( ast_.kind( callee ) == Node_kind::Function_decl || is_static_method( ast_, callee ) ) &&
+        callee.is_valid() && ( ast_.kind( callee ) == Node_kind::Function_decl || ast_.is_static_method( callee ) ) &&
         "checker should have rejected an unresolved call"
     );
     const std::span<const Node_id> arguments = ast_.arguments( id );
@@ -1688,7 +1689,7 @@ Operand Lowering::lower_expression( Node_id id )
         // be built rather than named. The checker has already refused a bare path to a variant that
         // carries one.
         if( types_.table().is_enum( type_of( id ) ) &&
-            enum_has_payload( ast_, types_.table().get( type_of( id ) ).declaration ) )
+            ast_.enum_has_payload( types_.table().get( type_of( id ) ).declaration ) )
         {
             return lower_empty_variant( id );
         }
@@ -1993,7 +1994,7 @@ void Lowering::lower_case_test( Operand scrutinee, Node_id label, Block_id body 
         const Type_id bound_type = type_of( bound );
 
         if( ast_.kind( bound ) == Node_kind::Path_expr && types_.table().is_enum( bound_type ) &&
-            enum_has_payload( ast_, types_.table().get( bound_type ).declaration ) )
+            ast_.enum_has_payload( types_.table().get( bound_type ).declaration ) )
         {
             const std::optional<Constant_value> ordinal = types_.constant_of( bound );
 
@@ -2046,6 +2047,25 @@ void Lowering::lower_case_test( Operand scrutinee, Node_id label, Block_id body 
     builder_.switch_to( resume );
 }
 
+// The fallback arm goes through here too, so it binds its pattern like any other - easy to miss,
+// since the last arm of an exhaustive switch is the fallback and may well destructure.
+void Lowering::lower_arm_body( Node_id arm, Place matched, Block_id fallthrough_to )
+{
+    // D7: a pattern's bindings are written at the top of the arm's own block, before anything in it
+    // runs - so the names are live exactly where the resolver put them in scope, and nowhere else.
+    for( const Node_id label : ast_.labels( arm ) )
+    {
+        bind_variant_pattern( matched, label );
+    }
+
+    const Block_id enclosing_fallthrough = fallthrough_target_;
+    fallthrough_target_                  = fallthrough_to;
+
+    lower_statement( ast_.body( arm ) );
+
+    fallthrough_target_ = enclosing_fallthrough;
+}
+
 void Lowering::lower_switch( Node_id id )
 {
     const std::span<const Node_id> arms = ast_.arms( id );
@@ -2057,7 +2077,7 @@ void Lowering::lower_switch( Node_id id )
     // alongside the scrutinee, so the arms below are unchanged - they still compare one operand
     // against one constant, and never learn that payloads exist.
     const bool payloads =
-        types_.table().is_enum( scrutinee.type ) && enum_has_payload( ast_, types_.table().get( scrutinee.type ).declaration );
+        types_.table().is_enum( scrutinee.type ) && ast_.enum_has_payload( types_.table().get( scrutinee.type ).declaration );
 
     const Place matched = scrutinee.place;
 
@@ -2151,24 +2171,10 @@ void Lowering::lower_switch( Node_id id )
 
         builder_.switch_to( body );
 
-        // D7: a pattern's bindings are written at the top of the arm's own block, before anything
-        // in it runs - so the names are live exactly where the resolver put them in scope, and
-        // nowhere else.
-        for( const Node_id label : labels )
-        {
-            bind_variant_pattern( matched, label );
-        }
-
-        const Block_id enclosing_fallthrough = fallthrough_target_;
-
         // The checker has already refused a `fallthrough` in the last arm, so an invalid target
         // here is never reached.
-        fallthrough_target_ = index + 1 < bodies.size() ? bodies[index + 1] : Block_id {};
-
-        lower_statement( ast_.body( arm ) );
+        lower_arm_body( arm, matched, index + 1 < bodies.size() ? bodies[index + 1] : Block_id {} );
         leave();
-
-        fallthrough_target_ = enclosing_fallthrough;
 
         builder_.switch_to( resume );
     }
@@ -2179,24 +2185,10 @@ void Lowering::lower_switch( Node_id id )
         builder_.terminate_goto( fallback_block, span );
         builder_.switch_to( fallback_block );
 
-        // The fallback arm binds its pattern like any other. It is easy to miss because it is the
-        // one arm the loop above skips - and when the fallback is the *last arm* of an exhaustive
-        // switch rather than a `default`, it is an ordinary arm that may well destructure.
-        for( const Node_id label : ast_.labels( fallback ) )
-        {
-            bind_variant_pattern( matched, label );
-        }
-
-        const Block_id enclosing_fallthrough = fallthrough_target_;
-
         // The fallback is lowered last but sits wherever it was written, so its `fallthrough` goes
         // to whatever follows it in source order - which may be a block lowered long ago. An edge
         // backwards is still just an edge.
-        fallthrough_target_ = fallback_index + 1 < bodies.size() ? bodies[fallback_index + 1] : Block_id {};
-
-        lower_statement( ast_.body( fallback ) );
-
-        fallthrough_target_ = enclosing_fallthrough;
+        lower_arm_body( fallback, matched, fallback_index + 1 < bodies.size() ? bodies[fallback_index + 1] : Block_id {} );
     }
 
     leave();
@@ -2530,7 +2522,7 @@ std::vector<Function> lower( const Ast& ast, const Resolution& resolution, Types
     {
         // A generic has no code of its own - it is the template the instantiations below are
         // emitted from, and emitting it directly would try to give `T` a C spelling.
-        if( is_function_like( ast.kind( id ) ) && !is_extern( ast, id ) && !is_generic( ast, id ) )
+        if( is_function_like( ast.kind( id ) ) && !ast.is_extern( id ) && !ast.is_generic( id ) )
         {
             Lowering lowering( id, ast, resolution, types, literals );
             functions.push_back( lowering.run() );
@@ -2584,7 +2576,7 @@ std::vector<Function> lower( const Ast& ast, const Resolution& resolution, Types
 
         // An enum is skipped rather than walked: D30 refuses an owning payload, so it has no
         // destructor to seed - and ast.members asserts on one.
-        if( !composite_type.declaration.is_valid() || !is_generic( ast, composite_type.declaration ) ||
+        if( !composite_type.declaration.is_valid() || !ast.is_generic( composite_type.declaration ) ||
             ast.kind( composite_type.declaration ) == Node_kind::Enum_decl )
         {
             continue;
@@ -2618,7 +2610,7 @@ std::vector<Function> lower( const Ast& ast, const Resolution& resolution, Types
     for( std::size_t at = 0; at < pending.size(); ++at )
     {
         const Instantiation        instance   = pending[at];
-        const std::vector<Node_id> parameters = type_parameters( ast, ast.type_param_list( instance.declaration ) );
+        const std::vector<Node_id> parameters = ast.type_parameters( ast.type_param_list( instance.declaration ) );
 
         Bindings bindings;
 
@@ -2652,7 +2644,7 @@ std::vector<Function> lower( const Ast& ast, const Resolution& resolution, Types
 
     for( const Instantiation& instance : pending )
     {
-        const std::vector<Node_id> parameters = type_parameters( ast, ast.type_param_list( instance.declaration ) );
+        const std::vector<Node_id> parameters = ast.type_parameters( ast.type_param_list( instance.declaration ) );
 
         Bindings bindings;
 

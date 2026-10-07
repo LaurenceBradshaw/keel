@@ -108,7 +108,7 @@ bool Aggregates::contains_itself( Node_id decl, std::vector<Node_id>& path )
     // by-value members. A generic aggregate is walked for the cycle above and then left out of this
     // order, but still recorded in containment_order_.
     containment_order_.push_back( decl );
-    if( !is_generic( ast_, decl ) )
+    if( !ast_.is_generic( decl ) )
     {
         struct_order_.push_back( decl );
     }
@@ -168,7 +168,7 @@ bool Aggregates::holds_by_value( Node_id generic, std::size_t index, std::vector
     }
 
     // A broken argument list can carry more arguments than the declaration has parameters.
-    std::vector<Node_id> params = type_parameters( ast_, ast_.type_param_list( generic ) );
+    std::vector<Node_id> params = ast_.type_parameters( ast_.type_param_list( generic ) );
     if( index >= params.size() )
     {
         return false;

@@ -144,15 +144,15 @@ Type_id Expressions::infer_name( Node_id id )
         return types_.poison( id );
     }
 
-    if( decl_kind == Node_kind::Var_decl && enclosing_aggregate( ast_, decl ).is_valid() &&
-        !is_visible_from( ast_, decl, current_type() ) )
+    if( decl_kind == Node_kind::Var_decl && ast_.enclosing_aggregate( decl ).is_valid() &&
+        !ast_.is_visible_from( decl, current_type() ) )
     {
         report_private( id, decl );
 
         return types_.poison( id );
     }
 
-    const Node_id aggregate = enclosing_aggregate( ast_, decl );
+    const Node_id aggregate = ast_.enclosing_aggregate( decl );
     if( ast_.kind( id ) == Node_kind::Path_expr && aggregate.is_valid() )
     {
         const Type_id qualifier = qualifier_type( id, aggregate );
@@ -328,7 +328,7 @@ Type_id Expressions::infer_call( Node_id id )
             // Filtered rather than refused as a set: overloading means one constructor may be
             // reachable while its sibling is not, and hiding the ordinary one behind a named
             // constructor is the whole reason a type would write `private` on it.
-            if( is_visible_from( ast_, member, current_type() ) )
+            if( ast_.is_visible_from( member, current_type() ) )
             {
                 candidates.push_back( member );
             }
@@ -347,7 +347,7 @@ Type_id Expressions::infer_call( Node_id id )
             for( const Node_id member : ast_.members( decl ) )
             {
                 const Type_id member_type = types_.type_of( member );
-                if( is_static_method( ast_, member ) && is_visible_from( ast_, member, current_type() ) &&
+                if( ast_.is_static_method( member ) && ast_.is_visible_from( member, current_type() ) &&
                     member_type.is_valid() && table_.is_struct( member_type ) && table_.get( member_type ).declaration == decl )
                 {
                     has_factory = true;
@@ -438,7 +438,7 @@ Type_id Expressions::infer_call( Node_id id )
 
         // A generic call on something that is not generic. After 1b the parser reads `a < b > ( c )`
         // this way, so this is the message that shape produces - it has to name the real problem.
-        if( type_args.is_valid() && !is_generic( ast_, callable ) )
+        if( type_args.is_valid() && !ast_.is_generic( callable ) )
         {
             reporter_.error_at( ast_.span( callee ), fmt::format( "`{}` is not a generic", name ) );
 
@@ -491,7 +491,7 @@ Type_id Expressions::infer_call( Node_id id )
     // answer by arity alone as readily as by type, and a candidate chosen that way still has its
     // parameters to deduce. One place deduces, whichever way the callable was arrived at.
     // Deduction reports its own failure - which parameter, and why - so there is nothing to add.
-    if( !type_args.is_valid() && is_generic( ast_, callable ) )
+    if( !type_args.is_valid() && ast_.is_generic( callable ) )
     {
         if( shapes.empty() )
         {
@@ -523,7 +523,7 @@ Type_id Expressions::infer_call( Node_id id )
     // making it, and a rule applied in one pass and repeated in another is a rule that drifts.
     callees_.record( id, callable );
 
-    if( is_extern( ast_, callable ) )
+    if( ast_.is_extern( callable ) )
     {
         require_unsafe(
             callee,
@@ -551,7 +551,7 @@ Type_id Expressions::infer_call( Node_id id )
         {
             // Deduced, so there is no written annotation to count or to underline - but a bound is
             // a promise about the type argument however it was arrived at.
-            const std::vector<Node_id> parameters = type_parameters( ast_, ast_.type_param_list( callable ) );
+            const std::vector<Node_id> parameters = ast_.type_parameters( ast_.type_param_list( callable ) );
 
             for( std::size_t i = 0; i < parameters.size() && i < resolved.size(); ++i )
             {
@@ -629,7 +629,7 @@ Type_id Expressions::infer_method_call( Node_id id )
     // M7's acceptance: a named constructor is refused as `value.make( args )`. The member exists,
     // so this is about the spelling rather than about the name - and saying which one it is costs
     // nothing here and everything at the point of confusion.
-    if( is_static_method( ast_, first ) )
+    if( ast_.is_static_method( first ) )
     {
         reporter_.error_at(
             ast_.span( callee ),
@@ -649,7 +649,7 @@ Type_id Expressions::infer_method_call( Node_id id )
         return types_.poison( id );
     }
 
-    if( !is_visible_from( ast_, first, current_type() ) )
+    if( !ast_.is_visible_from( first, current_type() ) )
     {
         report_private( callee, first );
 
@@ -722,7 +722,7 @@ Type_id Expressions::infer_method_call( Node_id id )
 
     callees_.record( id, method );
 
-    if( !is_const_method( ast_, method ) && table_.points_to_const( types_.type_of( object ) ) )
+    if( !ast_.is_const_method( method ) && table_.points_to_const( types_.type_of( object ) ) )
     {
         reporter_.error_at(
             ast_.span( object ),
@@ -742,7 +742,7 @@ Type_id Expressions::infer_method_call( Node_id id )
     // question - asked of the object rather than of an assignment - so a `const` local, a
     // read-only borrow and a pattern binding are all refused here by the rules that already refuse
     // them elsewhere, each with its own message.
-    if( !is_const_method( ast_, method ) && !places_.check_writable( object, current_function_ ) )
+    if( !ast_.is_const_method( method ) && !places_.check_writable( object, current_function_ ) )
     {
         return types_.poison( id );
     }
@@ -797,7 +797,7 @@ Expressions::check_method_arguments( Node_id id, Node_id method, Type_id receive
     }
 
     std::string_view name            = interner_.text( ast_.name( method ) );
-    u32              implicit_params = has_receiver( ast_, method ) ? 1 : 0;
+    u32              implicit_params = ast_.has_receiver( method ) ? 1 : 0;
     overloads_.check_argument_markers( id, method, name, implicit_params, bindings );
 
     record_method_instantiation( id, method, receiver );
@@ -842,9 +842,9 @@ Type_id Expressions::infer_implicit_method_call( Node_id id, Node_id method )
     // as it is between free functions - and from an instance method, which has a receiver it simply
     // does not use. Settled before the receiver is demanded below, and before the constness
     // question, which asks about an object neither of them touches.
-    if( is_static_method( ast_, method ) )
+    if( ast_.is_static_method( method ) )
     {
-        const Node_id owner = enclosing_aggregate( ast_, method );
+        const Node_id owner = ast_.enclosing_aggregate( method );
 
         // The enclosing instance when there is one, so a sibling of `Box<i32>` is checked in terms
         // of `i32` rather than of `T`. Its open form otherwise, which is all a static body knows.
@@ -905,7 +905,7 @@ Type_id Expressions::infer_implicit_method_call( Node_id id, Node_id method )
         return types_.poison( id );
     }
 
-    if( !is_const_method( ast_, method ) && is_const_binding( ast_, receiver ) )
+    if( !ast_.is_const_method( method ) && ast_.is_const_binding( receiver ) )
     {
         reporter_.error_at(
             ast_.span( ast_.callee( id ) ),
@@ -1075,7 +1075,7 @@ Type_id Expressions::function_address( Node_id id, Node_id declaration )
         }
     }
 
-    if( is_generic( ast_, declaration ) && !type_args.is_valid() )
+    if( ast_.is_generic( declaration ) && !type_args.is_valid() )
     {
         reporter_.error_at(
             ast_.span( id ),
@@ -1086,7 +1086,7 @@ Type_id Expressions::function_address( Node_id id, Node_id declaration )
         return types_.record( id, error );
     }
 
-    if( !is_generic( ast_, declaration ) && type_args.is_valid() )
+    if( !ast_.is_generic( declaration ) && type_args.is_valid() )
     {
         reporter_.error_at(
             ast_.span( type_args ), fmt::format( "`{}` is not generic, so it takes no type arguments", name ), "remove them"
@@ -1095,7 +1095,7 @@ Type_id Expressions::function_address( Node_id id, Node_id declaration )
         return types_.record( id, error );
     }
 
-    if( is_extern( ast_, declaration ) )
+    if( ast_.is_extern( declaration ) )
     {
         require_unsafe(
             id,
@@ -1195,7 +1195,7 @@ Type_id Expressions::method_address( Node_id id, Node_id aggregate )
         return types_.poison( id );
     }
 
-    if( !is_visible_from( ast_, first, current_type() ) )
+    if( !ast_.is_visible_from( first, current_type() ) )
     {
         report_private( id, first );
 
@@ -1276,7 +1276,7 @@ Type_id Expressions::method_address( Node_id id, Node_id aggregate )
 
 Type_id Expressions::field_address( Node_id id, Node_id aggregate, Node_id field )
 {
-    if( !is_visible_from( ast_, field, current_type() ) )
+    if( !ast_.is_visible_from( field, current_type() ) )
     {
         report_private( id, field );
 
@@ -1350,7 +1350,7 @@ Node_id Expressions::overload_for_signature(
     std::vector<std::string> offered;
     for( Node_id candidate = first; candidate.is_valid(); candidate = next_visible( id, candidate ) )
     {
-        if( is_generic( ast_, candidate ) && bindings.empty() )
+        if( ast_.is_generic( candidate ) && bindings.empty() )
         {
             continue;
         }
@@ -1709,7 +1709,7 @@ Node_id Expressions::find_operator(
         return Node_id {};
     }
 
-    if( !is_visible_from( ast_, method, current_type() ) )
+    if( !ast_.is_visible_from( method, current_type() ) )
     {
         infer( argument );
         report_private( id, method );
@@ -1717,7 +1717,7 @@ Node_id Expressions::find_operator(
     }
 
     // A malformed declaration was reported where it was written.
-    if( ast_.params( method ).size() != 2 || !is_const_method( ast_, method ) )
+    if( ast_.params( method ).size() != 2 || !ast_.is_const_method( method ) )
     {
         infer( argument );
         return Node_id {};
@@ -1735,12 +1735,12 @@ Node_id Expressions::find_operator(
 // question only `switch` may ask.
 Node_id Expressions::current_type() const
 {
-    return enclosing_aggregate( ast_, current_function_ );
+    return ast_.enclosing_aggregate( current_function_ );
 }
 
 void Expressions::report_private( Node_id at, Node_id member )
 {
-    const Node_id owner = enclosing_aggregate( ast_, member );
+    const Node_id owner = ast_.enclosing_aggregate( member );
 
     reporter_.error_at(
         ast_.span( at ),
@@ -1776,7 +1776,7 @@ Type_id Expressions::qualifier_type( Node_id path, Node_id declaration )
 
     if( !type_args.is_valid() )
     {
-        if( is_generic( ast_, declaration ) )
+        if( ast_.is_generic( declaration ) )
         {
             reporter_.error_at(
                 ast_.span( ast_.qualifier( path ) ),
@@ -1790,7 +1790,7 @@ Type_id Expressions::qualifier_type( Node_id path, Node_id declaration )
         return types_.type_of( declaration );
     }
 
-    if( !is_generic( ast_, declaration ) )
+    if( !ast_.is_generic( declaration ) )
     {
         reporter_.error_at( ast_.span( path ), fmt::format( "`{}` is not a generic", name ) );
 
@@ -1860,7 +1860,7 @@ Type_id Expressions::infer_static_call( Node_id id, Node_id aggregate )
 
     // The two spellings are not interchangeable. An instance method has a receiver the type cannot
     // supply, so this is refused rather than called with nothing.
-    if( !is_static_method( ast_, method ) )
+    if( !ast_.is_static_method( method ) )
     {
         reporter_.error_at(
             ast_.span( path ),
@@ -1871,7 +1871,7 @@ Type_id Expressions::infer_static_call( Node_id id, Node_id aggregate )
         return refuse();
     }
 
-    if( !is_visible_from( ast_, method, current_type() ) )
+    if( !ast_.is_visible_from( method, current_type() ) )
     {
         report_private( path, method );
 
@@ -2274,7 +2274,7 @@ Type_id Expressions::infer_path( Node_id id )
         reporter_.error_at(
             ast_.span( id ),
             fmt::format( "`{}` is a function, not a value", interner_.text( name ) ),
-            is_static_method( ast_, method )
+            ast_.is_static_method( method )
                 ? fmt::format( "call it as `{}::{}( ... )`", owner, interner_.text( name ) )
                 : fmt::format(
                       "take its address as `&{0}::{1}`, or call it as `value.{1}( ... )`", owner, interner_.text( name )
@@ -2337,7 +2337,7 @@ Type_id Expressions::infer_path( Node_id id )
         // Nothing named an instance, and a generic declaration's own type is the open form -
         // `Opt<T>`, which is a template rather than anything a value can hold. Left to the mismatch
         // below it would escape through `auto`, which has no expectation to disagree with.
-        if( is_generic( ast_, decl ) )
+        if( ast_.is_generic( decl ) )
         {
             return types_.record( id, no_instance_named( ast_.span( id ), decl, expectation ) );
         }
@@ -2417,7 +2417,7 @@ Type_id Expressions::infer_field( Node_id id )
         return types_.poison( id );
     }
 
-    if( !is_visible_from( ast_, field_decl, current_type() ) )
+    if( !ast_.is_visible_from( field_decl, current_type() ) )
     {
         report_private( id, field_decl );
 
@@ -2539,7 +2539,7 @@ Type_id Expressions::infer_struct_literal( Node_id id )
     // times.
     for( const Node_id field : fields )
     {
-        if( !is_visible_from( ast_, field, current_type() ) )
+        if( !ast_.is_visible_from( field, current_type() ) )
         {
             reporter_.error_at(
                 ast_.type_name_span( id ),
@@ -2565,7 +2565,7 @@ Type_id Expressions::infer_struct_literal( Node_id id )
     // rather than being quietly retyped to whatever was wanted.
     const bool names_an_instance = expectation.is_valid() && table_.get( expectation ).declaration == decl;
 
-    if( !names_an_instance && is_generic( ast_, decl ) )
+    if( !names_an_instance && ast_.is_generic( decl ) )
     {
         const Type_id poison = no_instance_named( ast_.type_name_span( id ), decl, expectation );
 
@@ -2849,7 +2849,7 @@ Type_id Expressions::infer_marker( Node_id id )
         return types_.poison( id );
     }
 
-    if( decl.is_valid() && parameter_mode( ast_, decl ) == Keyword::Ref )
+    if( decl.is_valid() && ast_.parameter_mode( decl ) == Keyword::Ref )
     {
         std::string help;
 

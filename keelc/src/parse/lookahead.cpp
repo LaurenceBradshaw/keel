@@ -1,29 +1,29 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "parse/scanner.h"
+#include "parse/lookahead.h"
 #include <algorithm>
 #include <cassert>
 
 namespace keel
 {
 
-Scanner::Scanner( std::span<const Token> tokens )
+Lookahead::Lookahead( std::span<const Token> tokens )
     : tokens_( tokens )
 {
 }
 
-Head_scan Scanner::member_head( u32 at, Symbol_id enclosing )
+Head_scan Lookahead::member_head( u32 at, Symbol_id enclosing )
 {
     return scan_head( at, enclosing, Constructor_names::Any );
 }
 
-Head_scan Scanner::own_member_head( u32 at, Symbol_id enclosing )
+Head_scan Lookahead::own_member_head( u32 at, Symbol_id enclosing )
 {
     return scan_head( at, enclosing, Constructor_names::Enclosing_only );
 }
 
-Member_chunk Scanner::next_member( u32 at, Symbol_id enclosing )
+Member_chunk Lookahead::next_member( u32 at, Symbol_id enclosing )
 {
     cursor_ = at;
 
@@ -99,7 +99,7 @@ Member_chunk Scanner::next_member( u32 at, Symbol_id enclosing )
     return Member_chunk { .dropped_begin = at, .dropped_end = q, .failure = first.failure, .head = std::nullopt };
 }
 
-Declaration_scan Scanner::declaration_head( u32 at, Scan_site site )
+Declaration_scan Lookahead::declaration_head( u32 at, Scan_site site )
 {
     const auto make_head = [this]( Declaration_kind kind, u32 start ) -> Declaration_scan
     {
@@ -203,7 +203,7 @@ Declaration_scan Scanner::declaration_head( u32 at, Scan_site site )
     return make_failure();
 }
 
-Declaration_chunk Scanner::next_declaration( u32 at )
+Declaration_chunk Lookahead::next_declaration( u32 at )
 {
     cursor_ = at;
 
@@ -273,7 +273,7 @@ Declaration_chunk Scanner::next_declaration( u32 at )
     return Declaration_chunk { .dropped_begin = at, .dropped_end = q, .failure = first.failure, .head = std::nullopt };
 }
 
-bool Scanner::looks_like_declaration( u32 at )
+bool Lookahead::looks_like_declaration( u32 at )
 {
     cursor_       = at;
     owed_greater_ = 0;
@@ -289,7 +289,7 @@ bool Scanner::looks_like_declaration( u32 at )
     return scan_type_and_name();
 }
 
-bool Scanner::looks_like_binding( u32 at )
+bool Lookahead::looks_like_binding( u32 at )
 {
     cursor_       = at;
     owed_greater_ = 0;
@@ -307,7 +307,7 @@ bool Scanner::looks_like_binding( u32 at )
 }
 
 // From `at`: whether a `)` closes a group opened before it, and a `{` follows.
-bool Scanner::head_closes( u32 at )
+bool Lookahead::head_closes( u32 at )
 {
     u32 depth = 0;
     cursor_   = at;
@@ -343,7 +343,7 @@ bool Scanner::head_closes( u32 at )
 
 // Shape alone, with no symbol table (L17). Taking the generic reading is safe: the comparison
 // reading never type-checks (§12).
-bool Scanner::looks_like_type_arguments( u32 at )
+bool Lookahead::looks_like_type_arguments( u32 at )
 {
     cursor_       = at;
     owed_greater_ = 0;
@@ -390,7 +390,7 @@ bool Scanner::looks_like_type_arguments( u32 at )
                            check( Token_kind::R_brace ) || check( Token_kind::Dot ) );
 }
 
-Head_scan Scanner::scan_head( u32 at, Symbol_id enclosing, Constructor_names names )
+Head_scan Lookahead::scan_head( u32 at, Symbol_id enclosing, Constructor_names names )
 {
     auto make_head = [this]( Member_kind kind, u32 start ) -> Head_scan {
         return Head_scan {
@@ -493,7 +493,7 @@ Head_scan Scanner::scan_head( u32 at, Symbol_id enclosing, Constructor_names nam
 
         if( check( Token_kind::L_brace ) )
         {
-            // Whether it was a static method or not does not matter to the scanner, `static` was already consumed.
+            // Whether it was a static method or not does not matter to the lookahead; `static` was already consumed.
             // The parser will figure it out.
             return make_head( Member_kind::Method, start );
         }
@@ -530,45 +530,45 @@ Head_scan Scanner::scan_head( u32 at, Symbol_id enclosing, Constructor_names nam
     }
 }
 
-const Token& Scanner::peek( u32 ahead ) const
+const Token& Lookahead::peek( u32 ahead ) const
 {
     assert( !tokens_.empty() );
     u32 tokens_end = narrow_cast<u32>( tokens_.size() - 1 );
     return tokens_[std::min( cursor_ + ahead, tokens_end )];
 }
 
-bool Scanner::at_end() const
+bool Lookahead::at_end() const
 {
     return peek().kind == Token_kind::End_of_file;
 }
 
-bool Scanner::check( Token_kind kind ) const
+bool Lookahead::check( Token_kind kind ) const
 {
     return peek().kind == kind;
 }
 
-bool Scanner::check_keyword( Keyword keyword ) const
+bool Lookahead::check_keyword( Keyword keyword ) const
 {
     return peek().kind == Token_kind::Keyword && peek().keyword() == keyword;
 }
 
-bool Scanner::at_mode_keyword() const
+bool Lookahead::at_mode_keyword() const
 {
     return check_keyword( Keyword::Move ) || check_keyword( Keyword::Ref ) || check_keyword( Keyword::Out );
 }
 
-const Token& Scanner::previous() const
+const Token& Lookahead::previous() const
 {
     assert( cursor_ > 0 );
     return tokens_[cursor_ - 1];
 }
 
-bool Scanner::peek_is_adjacent() const
+bool Lookahead::peek_is_adjacent() const
 {
     return cursor_ > 0 && peek().span.file == previous().span.file && peek().span.start == previous().span.end;
 }
 
-void Scanner::advance()
+void Lookahead::advance()
 {
     if( !at_end() )
     {
@@ -576,7 +576,7 @@ void Scanner::advance()
     }
 }
 
-bool Scanner::match( Token_kind kind )
+bool Lookahead::match( Token_kind kind )
 {
     if( check( kind ) )
     {
@@ -586,7 +586,7 @@ bool Scanner::match( Token_kind kind )
     return false;
 }
 
-bool Scanner::match_keyword( Keyword keyword )
+bool Lookahead::match_keyword( Keyword keyword )
 {
     if( check_keyword( keyword ) )
     {
@@ -596,13 +596,13 @@ bool Scanner::match_keyword( Keyword keyword )
     return false;
 }
 
-bool Scanner::fail( Wanted wanted, Token_kind token )
+bool Lookahead::fail( Wanted wanted, Token_kind token )
 {
     failure_ = Scan_failure { .at = cursor_, .wanted = wanted, .token = token };
     return false;
 }
 
-bool Scanner::want( Token_kind kind )
+bool Lookahead::want( Token_kind kind )
 {
     if( match( kind ) )
     {
@@ -612,7 +612,7 @@ bool Scanner::want( Token_kind kind )
     return fail( Wanted::Token, kind );
 }
 
-bool Scanner::want_name()
+bool Lookahead::want_name()
 {
     if( at_name() )
     {
@@ -623,7 +623,7 @@ bool Scanner::want_name()
     return fail( Wanted::Name );
 }
 
-bool Scanner::at_name() const
+bool Lookahead::at_name() const
 {
     // Follows parsers expect_name, which consumes these as the name they were meant to be.
     if( check( Token_kind::Identifier ) || check( Token_kind::Digit_name ) || check( Token_kind::Int_literal ) )
@@ -662,7 +662,7 @@ bool Scanner::at_name() const
     }
 }
 
-bool Scanner::scan_type_with_mode()
+bool Lookahead::scan_type_with_mode()
 {
     if( check_keyword( Keyword::Const ) && peek( 1 ).kind == Token_kind::Keyword && peek( 1 ).keyword() == Keyword::Ref )
     {
@@ -680,7 +680,7 @@ bool Scanner::scan_type_with_mode()
     return scan_type();
 }
 
-bool Scanner::scan_type()
+bool Lookahead::scan_type()
 {
     match_keyword( Keyword::Const );
 
@@ -789,7 +789,7 @@ bool Scanner::scan_type()
     return true;
 }
 
-bool Scanner::scan_generic_close()
+bool Lookahead::scan_generic_close()
 {
     if( owed_greater_ > 0 )
     {
@@ -815,7 +815,7 @@ bool Scanner::scan_generic_close()
     return false;
 }
 
-bool Scanner::scan_type_and_name()
+bool Lookahead::scan_type_and_name()
 {
     // `const i32 x`, `const ref T r`, `ref T r`.
     while( match_keyword( Keyword::Const ) )
@@ -965,7 +965,7 @@ bool Scanner::scan_type_and_name()
     return true;
 }
 
-bool Scanner::scan_type_params()
+bool Lookahead::scan_type_params()
 {
     advance(); // the `<`
 
@@ -992,7 +992,7 @@ bool Scanner::scan_type_params()
     return true;
 }
 
-bool Scanner::scan_where_clauses()
+bool Lookahead::scan_where_clauses()
 {
     while( match_keyword( Keyword::Where ) )
     {
@@ -1036,7 +1036,7 @@ bool Scanner::scan_where_clauses()
     return true;
 }
 
-void Scanner::step_over_junk()
+void Lookahead::step_over_junk()
 {
     if( check( Token_kind::L_brace ) )
     {
@@ -1048,7 +1048,7 @@ void Scanner::step_over_junk()
     }
 }
 
-bool Scanner::skip_parens()
+bool Lookahead::skip_parens()
 {
     if( !check( Token_kind::L_paren ) )
     {
@@ -1083,7 +1083,7 @@ bool Scanner::skip_parens()
     return depth == 0;
 }
 
-void Scanner::skip_braces()
+void Lookahead::skip_braces()
 {
     if( !check( Token_kind::L_brace ) )
     {
@@ -1116,7 +1116,7 @@ void Scanner::skip_braces()
     }
 }
 
-void Scanner::skip_operator_token()
+void Lookahead::skip_operator_token()
 {
     if( check( Token_kind::L_paren ) )
     {
@@ -1163,32 +1163,32 @@ public:
 
     Head_scan head( u32 at = 0 )
     {
-        return Scanner( tokens_ ).member_head( at, name_ );
+        return Lookahead( tokens_ ).member_head( at, name_ );
     }
 
     Head_scan own_head( u32 at = 0 )
     {
-        return Scanner( tokens_ ).own_member_head( at, name_ );
+        return Lookahead( tokens_ ).own_member_head( at, name_ );
     }
 
     Member_chunk chunk( u32 at = 0 )
     {
-        return Scanner( tokens_ ).next_member( at, name_ );
+        return Lookahead( tokens_ ).next_member( at, name_ );
     }
 
     Declaration_scan declaration( u32 at = 0 )
     {
-        return Scanner( tokens_ ).declaration_head( at );
+        return Lookahead( tokens_ ).declaration_head( at );
     }
 
     Declaration_chunk declaration_chunk( u32 at = 0 )
     {
-        return Scanner( tokens_ ).next_declaration( at );
+        return Lookahead( tokens_ ).next_declaration( at );
     }
 
-    Scanner scanner() const
+    Lookahead lookahead() const
     {
-        return Scanner( tokens_ );
+        return Lookahead( tokens_ );
     }
 
     // Index of the nth token spelled `text`.
@@ -1288,7 +1288,7 @@ void require_declaration_failure( std::string_view source, std::string_view at, 
 
 } // namespace
 
-TEST_CASE( "scanner_recognises_each_member_head", "[scan]" )
+TEST_CASE( "lookahead_recognises_each_member_head", "[scan]" )
 {
     SECTION( "the five kinds, committed at their `{`, `=` or `;`" )
     {
@@ -1365,7 +1365,7 @@ TEST_CASE( "scanner_recognises_each_member_head", "[scan]" )
 
 // What ends a method body that was never closed: a constructor of some other name there is a
 // function's head run into the body's last line.
-TEST_CASE( "scanner_reads_a_constructor_by_the_class_name_only", "[scan]" )
+TEST_CASE( "lookahead_reads_a_constructor_by_the_class_name_only", "[scan]" )
 {
     SECTION( "the class's own name" )
     {
@@ -1389,7 +1389,7 @@ TEST_CASE( "scanner_reads_a_constructor_by_the_class_name_only", "[scan]" )
     }
 }
 
-TEST_CASE( "scanner_says_where_and_why_a_head_fails", "[scan]" )
+TEST_CASE( "lookahead_says_where_and_why_a_head_fails", "[scan]" )
 {
     SECTION( "nothing that can start a member" )
     {
@@ -1433,7 +1433,7 @@ TEST_CASE( "scanner_says_where_and_why_a_head_fails", "[scan]" )
     }
 }
 
-TEST_CASE( "scanner_chunks_a_class_body", "[scan]" )
+TEST_CASE( "lookahead_chunks_a_class_body", "[scan]" )
 {
     SECTION( "a member with nothing before it" )
     {
@@ -1599,14 +1599,14 @@ TEST_CASE( "scanner_chunks_a_class_body", "[scan]" )
     }
 }
 
-TEST_CASE( "scanner_answers_the_parsers_lookahead", "[scan]" )
+TEST_CASE( "lookahead_answers_the_parsers_lookahead", "[scan]" )
 {
-    auto declaration    = []( std::string_view source ) { return Scanned( source ).scanner().looks_like_declaration( 0 ); };
-    auto binding        = []( std::string_view source ) { return Scanned( source ).scanner().looks_like_binding( 0 ); };
+    auto declaration    = []( std::string_view source ) { return Scanned( source ).lookahead().looks_like_declaration( 0 ); };
+    auto binding        = []( std::string_view source ) { return Scanned( source ).lookahead().looks_like_binding( 0 ); };
     auto type_arguments = []( std::string_view source )
     {
         const Scanned s( source );
-        return s.scanner().looks_like_type_arguments( s.at( "<" ) );
+        return s.lookahead().looks_like_type_arguments( s.at( "<" ) );
     };
 
     SECTION( "a declaration is a type and then a name" )
@@ -1682,20 +1682,20 @@ TEST_CASE( "scanner_answers_the_parsers_lookahead", "[scan]" )
     SECTION( "each question starts where it is told" )
     {
         const Scanned s( "return 0; ref T r = x; i32 f() { } y = id<i32>( 1 );" );
-        Scanner       scanner = s.scanner();
+        Lookahead     lookahead = s.lookahead();
 
-        CHECK( scanner.looks_like_binding( s.at( "ref" ) ) );
-        CHECK( scanner.looks_like_declaration( s.at( "T" ) ) );
-        CHECK( scanner.looks_like_type_arguments( s.at( "<" ) ) );
-        CHECK_FALSE( scanner.looks_like_declaration( s.at( "return" ) ) );
+        CHECK( lookahead.looks_like_binding( s.at( "ref" ) ) );
+        CHECK( lookahead.looks_like_declaration( s.at( "T" ) ) );
+        CHECK( lookahead.looks_like_type_arguments( s.at( "<" ) ) );
+        CHECK_FALSE( lookahead.looks_like_declaration( s.at( "return" ) ) );
     }
 }
 
 // A statement keyword where a body's name goes starts its statement once what it needs follows.
-TEST_CASE( "scanner_ends_a_statement_head_at_a_statement_keyword", "[scan]" )
+TEST_CASE( "lookahead_ends_a_statement_head_at_a_statement_keyword", "[scan]" )
 {
-    auto declaration = []( std::string_view source ) { return Scanned( source ).scanner().looks_like_declaration( 0 ); };
-    auto binding     = []( std::string_view source ) { return Scanned( source ).scanner().looks_like_binding( 0 ); };
+    auto declaration = []( std::string_view source ) { return Scanned( source ).lookahead().looks_like_declaration( 0 ); };
+    auto binding     = []( std::string_view source ) { return Scanned( source ).lookahead().looks_like_binding( 0 ); };
 
     SECTION( "a keyword followed by what its statement needs" )
     {
@@ -1727,7 +1727,7 @@ TEST_CASE( "scanner_ends_a_statement_head_at_a_statement_keyword", "[scan]" )
     }
 }
 
-TEST_CASE( "scanner_recognises_each_declaration_head", "[scan]" )
+TEST_CASE( "lookahead_recognises_each_declaration_head", "[scan]" )
 {
     // Their parsers own everything after the keyword.
     SECTION( "a keyword-led declaration is committed at its keyword" )
@@ -1796,7 +1796,7 @@ TEST_CASE( "scanner_recognises_each_declaration_head", "[scan]" )
     }
 }
 
-TEST_CASE( "scanner_says_where_and_why_a_declaration_head_fails", "[scan]" )
+TEST_CASE( "lookahead_says_where_and_why_a_declaration_head_fails", "[scan]" )
 {
     SECTION( "nothing that can start a declaration" )
     {
@@ -1843,7 +1843,7 @@ TEST_CASE( "scanner_says_where_and_why_a_declaration_head_fails", "[scan]" )
     }
 }
 
-TEST_CASE( "scanner_chunks_a_file", "[scan]" )
+TEST_CASE( "lookahead_chunks_a_file", "[scan]" )
 {
     SECTION( "a declaration with nothing before it" )
     {

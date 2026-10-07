@@ -9,7 +9,6 @@
 #include "sema/bounds.h"
 #include "sema/constant_folder.h"
 #include "sema/reporter.h"
-#include "sema/type_checker.h"
 #include "sema/types_builder.h"
 
 namespace keel::sema

@@ -36,7 +36,7 @@ std::vector<Mangled_parameter> mangled_parameters( const Ast& ast, const Types& 
 
     for( const Node_id param : ast.params( decl ) )
     {
-        const Keyword mode = is_const_binding( ast, param ) ? Keyword::Count : parameter_mode( ast, param );
+        const Keyword mode = ast.call_marker( param );
 
         const char marker = mode == Keyword::Ref ? 'R' : mode == Keyword::Move ? 'M' : mode == Keyword::Out ? 'O' : '\0';
 
@@ -51,7 +51,7 @@ std::vector<Mangled_parameter> mangled_parameters( const Ast& ast, const Types& 
 // declaration and must come back through the instance, like everything else that reaches that way.
 Bindings instance_bindings( const Ast& ast, const Types& types, Node_id declaration, std::span<const Type_id> type_arguments )
 {
-    const std::vector<Node_id> parameters = type_parameters( ast, ast.type_param_list( declaration ) );
+    const std::vector<Node_id> parameters = ast.type_parameters( ast.type_param_list( declaration ) );
 
     Bindings bindings;
 
@@ -102,7 +102,7 @@ std::string Spelling::type( Type_id type ) const
     // implementation-defined and which would buy nothing, since by here Keel has already erased the
     // distinction the tag existed for. One carrying payloads is a struct: a tag and the fields.
     case Type_kind::Enum:
-        return enum_has_payload( ast, described.declaration ) ? structure( type ) : this->type( described.element );
+        return ast.enum_has_payload( described.declaration ) ? structure( type ) : this->type( described.element );
 
     default:
         assert( false && "no C spelling for this type" );
@@ -126,7 +126,7 @@ std::string Spelling::function( Node_id declaration, std::span<const Type_id> ty
 {
     // An extern names a symbol someone else defined, so the Keel name is the C name: `kl__malloc__u64`
     // would not link against anything.
-    if( is_extern( ast, declaration ) )
+    if( ast.is_extern( declaration ) )
     {
         return std::string( interner.text( ast.name( declaration ) ) );
     }
@@ -165,8 +165,8 @@ std::string Spelling::function( Node_id declaration, std::span<const Type_id> ty
         // static method has no receiver to read either from, so the tag is built from the aggregate
         // and every written parameter stays: that is why the tag leads the argtypes rather than
         // sitting on parameter 0, and it is the whole of what M7 asked of this scheme.
-        const bool    receiver  = has_receiver( ast, declaration );
-        const Node_id owner     = receiver ? Node_id {} : enclosing_aggregate( ast, declaration );
+        const bool    receiver  = ast.has_receiver( declaration );
+        const Node_id owner     = receiver ? Node_id {} : ast.enclosing_aggregate( declaration );
         const Type_id enclosing = receiver
                                       ? params.front().type
                                       : types.table().structure( owner, type_arguments, interner.text( ast.name( owner ) ) );

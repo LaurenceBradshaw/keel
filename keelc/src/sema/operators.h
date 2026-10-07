@@ -7,7 +7,6 @@
 #include "lex/token.h"
 #include "sema/bounds.h"
 #include "sema/reporter.h"
-#include "sema/type_checker.h"
 
 namespace keel::sema
 {

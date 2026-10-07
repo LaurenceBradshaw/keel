@@ -106,10 +106,10 @@ struct Declaration_chunk
 
 // Lookahead for the parser. Reads tokens and reports nothing. Its cursor and its half of a split
 // `>>` are its own, so no scan can leave either behind in the parser.
-class Scanner
+class Lookahead
 {
 public:
-    explicit Scanner( std::span<const Token> tokens );
+    explicit Lookahead( std::span<const Token> tokens );
 
     // The member head starting at `at`. `enclosing` is the class's name.
     Head_scan member_head( u32 at, Symbol_id enclosing );

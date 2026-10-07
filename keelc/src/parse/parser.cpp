@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 #include "parse/hints.h"
-#include "parse/scanner.h"
+#include "parse/lookahead.h"
 
 namespace keel
 {
@@ -228,7 +228,7 @@ private:
 
     std::span<const Token> tokens_;
     u32                    pos_ = 0;
-    Scanner                scanner_;
+    Lookahead              lookahead_;
     i32                    unclosed_braces_ = 0;
     bool                   body_cut_        = false;
     std::vector<Symbol_id> classes_;
@@ -446,7 +446,7 @@ bool is_assignment( Token_kind kind )
 
 Parser::Parser( std::span<const Token> tokens, const Source_manager& sm, Ast& ast, Diagnostics& diags )
     : tokens_( tokens ),
-      scanner_( tokens ),
+      lookahead_( tokens ),
       sm_( sm ),
       ast_( ast ),
       diags_( diags )
@@ -703,7 +703,7 @@ std::string Parser::found_text( const Token& token ) const
 
 Symbol_id Parser::take_name()
 {
-    // Used where want_name in the scanner has already been satisfied.
+    // Used where want_name in the lookahead has already been satisfied.
     assert( check( Token_kind::Identifier ) && "take_name called when peek() is not an identifier" );
     return advance().symbol;
 }
@@ -819,14 +819,14 @@ bool Parser::at_unclosed_body_head()
 
     if( !classes_.empty() )
     {
-        const Head_scan member = scanner_.own_member_head( pos_, classes_.back() );
+        const Head_scan member = lookahead_.own_member_head( pos_, classes_.back() );
         if( member.head.has_value() && member.head->kind != Member_kind::Field )
         {
             return true;
         }
     }
 
-    const Declaration_scan scan = scanner_.declaration_head( pos_, Scanner::Scan_site::Statement );
+    const Declaration_scan scan = lookahead_.declaration_head( pos_, Lookahead::Scan_site::Statement );
     return scan.head.has_value() && scan.head->kind != Declaration_kind::Variable;
 }
 
@@ -920,7 +920,7 @@ std::vector<Node_id> Parser::parse_declarations()
     std::optional<u32> reported_line;
     for( ;; )
     {
-        Declaration_chunk chunk = scanner_.next_declaration( pos_ );
+        Declaration_chunk chunk = lookahead_.next_declaration( pos_ );
 
         // A function head dropped after its name still declares it, so its calls stay quiet.
         if( chunk.dropped() && chunk.failure.name.has_value() )
@@ -1341,7 +1341,7 @@ Node_id Parser::parse_aggregate_decl()
             continue;
         }
 
-        Member_chunk chunk = scanner_.next_member( pos_, name );
+        Member_chunk chunk = lookahead_.next_member( pos_, name );
         if( chunk.dropped() )
         {
             dropped = true;
@@ -1676,7 +1676,7 @@ Node_id Parser::parse_enum_decl()
         while(
             !( tokens_[at].kind == Token_kind::L_brace || tokens_[at].kind == Token_kind::Semicolon ||
                tokens_[at].kind == Token_kind::R_brace || tokens_[at].kind == Token_kind::End_of_file ||
-               ( at > pos_ && scanner_.declaration_head( at ).head ) )
+               ( at > pos_ && lookahead_.declaration_head( at ).head ) )
         )
         {
             ++at;
@@ -1700,7 +1700,7 @@ Node_id Parser::parse_enum_decl()
         const u32 before = pos_;
 
         // The `}` is missing and the next declaration starts here.
-        if( scanner_.declaration_head( pos_ ).head )
+        if( lookahead_.declaration_head( pos_ ).head )
         {
             error_expected( Token_kind::R_brace );
             gave_up = true;
@@ -2057,7 +2057,7 @@ Node_id Parser::parse_type()
 {
     const Span start = peek().span;
 
-    // A leading const wraps the whole type: `const i32`. The scanner's lookahead accepts this, so
+    // A leading const wraps the whole type: `const i32`. The lookahead accepts this, so
     // parse_type has to as well, or the scan and the parse disagree.
     const bool leading_const = match_keyword( Keyword::Const );
 
@@ -2572,7 +2572,7 @@ bool Parser::end_list_element( Token_kind close, std::size_t list_errors, List_s
 
             if( site == List_site::Declaration )
             {
-                if( scanner_.declaration_head( pos_ ).head.has_value() )
+                if( lookahead_.declaration_head( pos_ ).head.has_value() )
                 {
                     break;
                 }
@@ -2811,7 +2811,7 @@ Node_id Parser::dispatch_statement()
         return error_node( Span::merge( start, previous().span ) );
     }
 
-    Declaration_scan scan = scanner_.declaration_head( pos_, Scanner::Scan_site::Statement );
+    Declaration_scan scan = lookahead_.declaration_head( pos_, Lookahead::Scan_site::Statement );
     if( scan.head.has_value() && scan.head->kind == Declaration_kind::Function )
     {
         error_at(
@@ -2825,8 +2825,8 @@ Node_id Parser::dispatch_statement()
         return error_node( Span::merge( start, previous().span ) );
     }
 
-    // `auto` settles it; otherwise the scanner looks ahead without moving pos_.
-    if( check_keyword( Keyword::Auto ) || scanner_.looks_like_binding( pos_ ) || scanner_.looks_like_declaration( pos_ ) )
+    // `auto` settles it; otherwise the lookahead reads ahead without moving pos_.
+    if( check_keyword( Keyword::Auto ) || lookahead_.looks_like_binding( pos_ ) || lookahead_.looks_like_declaration( pos_ ) )
     {
         return parse_var_decl();
     }
@@ -3077,7 +3077,7 @@ Node_id Parser::parse_for_stmt()
     advance();
 
     // Without its `(`, only a head that a `)` closes before a brace is read as one.
-    if( !expect( Token_kind::L_paren ) && !scanner_.head_closes( pos_ ) )
+    if( !expect( Token_kind::L_paren ) && !lookahead_.head_closes( pos_ ) )
     {
         return error_node( Span::merge( start, previous().span ) );
     }
@@ -3088,7 +3088,8 @@ Node_id Parser::parse_for_stmt()
     Node_id init;
     if( !match( Token_kind::Semicolon ) )
     {
-        if( check_keyword( Keyword::Auto ) || scanner_.looks_like_binding( pos_ ) || scanner_.looks_like_declaration( pos_ ) )
+        if( check_keyword( Keyword::Auto ) || lookahead_.looks_like_binding( pos_ ) ||
+            lookahead_.looks_like_declaration( pos_ ) )
         {
             init = parse_var_decl();
         }
@@ -3301,13 +3302,8 @@ Node_id Parser::generic_self( Node_id named, Node_id type_params, Span span )
 {
     std::vector<Node_id> arguments;
 
-    for( const Node_id type_param : ast_.type_param_decls( type_params ) )
+    for( const Node_id type_param : ast_.type_parameters( type_params ) )
     {
-        if( ast_.kind( type_param ) != Node_kind::Type_param_decl )
-        {
-            continue;
-        }
-
         arguments.push_back( ast_.add( Node_kind::Named_type, span, ast_.aux( type_param ), {} ) );
     }
 
@@ -3377,9 +3373,9 @@ Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing, bool incre
             continue;
         }
 
-        // `id<i32>( 1 )`. The scanner has proved the shape, so this parses for real -
+        // `id<i32>( 1 )`. The lookahead has proved the shape, so this parses for real -
         // parse_type and match_generic_close, the same pair a `Vector<i32>` annotation uses.
-        if( check( Token_kind::Less ) && scanner_.looks_like_type_arguments( pos_ ) )
+        if( check( Token_kind::Less ) && lookahead_.looks_like_type_arguments( pos_ ) )
         {
             const Span open = peek().span;
 
@@ -11068,8 +11064,8 @@ TEST_CASE( "parser_recovers_from_a_member_that_is_not_one", "[parse][recovery]" 
         REQUIRE( member_names( p ) == "x y" );
     }
 
-    // The scanner counted the parentheses; the parser stops inside them, reports, and resumes at
-    // the body the scanner found.
+    // The lookahead counted the parentheses; the parser stops inside them, reports, and resumes at
+    // the body the lookahead found.
     SECTION( "a member that goes wrong inside its parameters still has its body read" )
     {
         const Parsed p( "class C {\n"

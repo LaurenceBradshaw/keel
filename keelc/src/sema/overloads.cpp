@@ -16,21 +16,13 @@ namespace keel::sema
 
 namespace
 {
-// D31's markers are part of what a call site writes, so this is the whole of what a call can say
-// about one parameter. `const ref T` takes no marker, which is exactly why it cannot be told from a
-// bare `T` - and `ref T` and `T*` differ here, which is why they can coexist.
-Keyword call_marker( const Ast& ast, Node_id param )
-{
-    return is_const_binding( ast, param ) ? Keyword::Count : parameter_mode( ast, param );
-}
-
 } // namespace
 
 // The types the call wrote, mapped onto the callable's own type parameters. Positional, because
 // that is the only correspondence there is - `f<T>` and `f<U>` name theirs differently.
 Bindings Overloads::type_bindings( Node_id callable, std::span<const Type_id> arguments ) const
 {
-    const std::vector<Node_id> parameters = type_parameters( ast_, ast_.type_param_list( callable ) );
+    const std::vector<Node_id> parameters = ast_.type_parameters( ast_.type_param_list( callable ) );
 
     Bindings bindings;
 
@@ -79,7 +71,7 @@ bool Overloads::deduce_for_candidate(
         }
     }
 
-    for( const Node_id parameter : type_parameters( ast_, ast_.type_param_list( callable ) ) )
+    for( const Node_id parameter : ast_.type_parameters( ast_.type_param_list( callable ) ) )
     {
         const auto found = bindings.find( types_.type_of( parameter ).v );
 
@@ -115,7 +107,7 @@ bool Overloads::deduce_type_arguments(
     std::vector<Node_id>&           bound_by
 )
 {
-    const std::vector<Node_id>     parameters = type_parameters( ast_, ast_.type_param_list( callable ) );
+    const std::vector<Node_id>     parameters = ast_.type_parameters( ast_.type_param_list( callable ) );
     const std::span<const Node_id> params     = ast_.params( callable ).subspan( implicit_params );
 
     Bindings                         bindings;
@@ -227,7 +219,7 @@ bool Overloads::deduce_type_arguments(
 // about its variable, which the callee never sees.
 bool Overloads::marker_accepts( Node_id param, Keyword given, Type_id expected )
 {
-    const Keyword wanted = call_marker( ast_, param );
+    const Keyword wanted = ast_.call_marker( param );
 
     if( wanted == given )
     {
@@ -318,7 +310,7 @@ std::vector<Node_id> Overloads::viable_overloads(
         // - which keeps a non-generic out of `f<i32>( x )`. A call that wrote none says nothing
         // about genericity, so both kinds stay and the types decide below.
         if( params == arguments.size() &&
-            ( written == 0 || type_parameters( ast_, ast_.type_param_list( candidate ) ).size() == written ) )
+            ( written == 0 || ast_.type_parameters( ast_.type_param_list( candidate ) ).size() == written ) )
         {
             viable.push_back( candidate );
         }
@@ -384,7 +376,7 @@ Node_id Overloads::select_overload(
         // hand and with a diagnostic to give, and keeping it here would be two answers to keep
         // in step.
         std::vector<Type_id> deduced;
-        const bool           infers = written == 0 && from_instance.empty() && is_generic( ast_, candidate );
+        const bool           infers = written == 0 && from_instance.empty() && ast_.is_generic( candidate );
 
         if( infers && !deduce_for_candidate( candidate, implicit_params, shapes, deduced ) )
         {
@@ -412,7 +404,7 @@ Node_id Overloads::select_overload(
 
         for( const Node_id candidate : matching )
         {
-            if( !is_generic( ast_, candidate ) )
+            if( !ast_.is_generic( candidate ) )
             {
                 concrete = candidate;
                 ++found;
@@ -447,7 +439,7 @@ Node_id Overloads::select_overload(
     // so it cannot choose between two parameters in one family. Where every one left is a generic
     // the arguments cannot say it either - both fit exactly - and only the type arguments can.
     const bool all_generic =
-        std::all_of( matching.begin(), matching.end(), [&]( Node_id candidate ) { return is_generic( ast_, candidate ); } );
+        std::all_of( matching.begin(), matching.end(), [&]( Node_id candidate ) { return ast_.is_generic( candidate ); } );
 
     reporter_.error_at(
         ast_.span( call ),
@@ -641,7 +633,7 @@ void Overloads::check_argument_markers(
         // What a marker announces is that something happens to the caller's variable. `const ref` is
         // the one mode where nothing does - alive and unchanged afterwards, exactly like a bare
         // argument - so it sits with bare rather than with `ref`, and takes no marker at the call.
-        const Keyword wanted = is_const_binding( ast_, params[i] ) ? Keyword::Count : parameter_mode( ast_, params[i] );
+        const Keyword wanted = ast_.is_const_binding( params[i] ) ? Keyword::Count : ast_.parameter_mode( params[i] );
 
         check_one_argument_marker( arguments[i], wanted, expected, name );
     }
@@ -728,8 +720,8 @@ bool Overloads::parameters_collide( Node_id first, Node_id second, bool member )
         return false;
     }
 
-    const std::vector<Node_id> my_parameters    = type_parameters( ast_, ast_.type_param_list( first ) );
-    const std::vector<Node_id> their_parameters = type_parameters( ast_, ast_.type_param_list( second ) );
+    const std::vector<Node_id> my_parameters    = ast_.type_parameters( ast_.type_param_list( first ) );
+    const std::vector<Node_id> their_parameters = ast_.type_parameters( ast_.type_param_list( second ) );
 
     // A call writes its type arguments, so a different count is something the call site says.
     if( my_parameters.size() != their_parameters.size() )
@@ -748,7 +740,7 @@ bool Overloads::parameters_collide( Node_id first, Node_id second, bool member )
 
     for( std::size_t i = 0; i < mine.size(); ++i )
     {
-        if( call_marker( ast_, mine[i] ) != call_marker( ast_, theirs[i] ) )
+        if( ast_.call_marker( mine[i] ) != ast_.call_marker( theirs[i] ) )
         {
             return false;
         }
@@ -785,7 +777,7 @@ void Overloads::check_overloaded_pair( Node_id first, Node_id second, bool membe
 
     // An extern names a symbol someone else defined, and `main` is the program's entry point:
     // both keep their spelling in C, so a second of either has nowhere to differ.
-    if( is_extern( ast_, first ) || is_extern( ast_, second ) )
+    if( ast_.is_extern( first ) || ast_.is_extern( second ) )
     {
         refuse(
             second,
@@ -838,7 +830,7 @@ void Overloads::check_overloaded_pair( Node_id first, Node_id second, bool membe
     // call site is ambiguous - but the category tag names the enclosing type either way and the
     // receiver is among the parameters in neither, so the two emit one symbol. Reported before the
     // `const` clause below, which would otherwise blame a keyword whose removal changes nothing.
-    if( member && has_receiver( ast_, first ) != has_receiver( ast_, second ) )
+    if( member && ast_.has_receiver( first ) != ast_.has_receiver( second ) )
     {
         refuse(
             second,
@@ -851,7 +843,7 @@ void Overloads::check_overloaded_pair( Node_id first, Node_id second, bool membe
 
     // And the same for a trailing `const`, which is a habit worth naming: it binds the receiver,
     // and a call writes the object rather than how the method holds it.
-    if( member && is_const_method( ast_, first ) != is_const_method( ast_, second ) )
+    if( member && ast_.is_const_method( first ) != ast_.is_const_method( second ) )
     {
         refuse(
             second,
@@ -938,7 +930,7 @@ std::string Overloads::signature_of( Node_id callable, u32 implicit_params, cons
     // Unbound, the declaration is what the author wrote and is what the message should show.
     bool bound = true;
 
-    for( const Node_id parameter : type_parameters( ast_, ast_.type_param_list( callable ) ) )
+    for( const Node_id parameter : ast_.type_parameters( ast_.type_param_list( callable ) ) )
     {
         bound = bound && bindings.contains( types_.type_of( parameter ).v );
     }
@@ -947,7 +939,7 @@ std::string Overloads::signature_of( Node_id callable, u32 implicit_params, cons
 
     for( std::size_t i = 0; i < params.size(); ++i )
     {
-        const Keyword marker = call_marker( ast_, params[i] );
+        const Keyword marker = ast_.call_marker( params[i] );
 
         text += fmt::format(
             "{}{}{}",

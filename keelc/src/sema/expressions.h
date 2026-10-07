@@ -18,7 +18,6 @@
 #include "sema/places.h"
 #include "sema/reporter.h"
 #include "sema/resolver.h"
-#include "sema/type_checker.h"
 #include "sema/types_builder.h"
 
 namespace keel::sema

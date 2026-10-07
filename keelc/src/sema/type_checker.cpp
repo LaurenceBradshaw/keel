@@ -177,32 +177,12 @@ Types type_check(
     return sema::Checker( ast, interner, resolution, sm, literals, diags ).run();
 }
 
-bool enum_has_payload( const Ast& ast, Node_id enum_decl )
-{
-    for( const Node_id variant : ast.variants( enum_decl ) )
-    {
-        if( !ast.payload( variant ).empty() )
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-Keyword parameter_mode( const Ast& ast, Node_id decl )
-{
-    const Node_id annotation = unwrap_const( ast, ast.declared_type( decl ) );
-
-    return annotation.is_valid() && ast.kind( annotation ) == Node_kind::Mode_type ? ast.keyword( annotation ) : Keyword::Count;
-}
-
 Param_mode parameter_mode_of( const Ast& ast, Node_id param )
 {
-    switch( parameter_mode( ast, param ) )
+    switch( ast.parameter_mode( param ) )
     {
     case Keyword::Ref:
-        return is_const_binding( ast, param ) ? Param_mode::Const_ref : Param_mode::Ref;
+        return ast.is_const_binding( param ) ? Param_mode::Const_ref : Param_mode::Ref;
     case Keyword::Out:
         return Param_mode::Out;
     case Keyword::Move:
@@ -229,121 +209,12 @@ Keyword call_marker_of( Param_mode mode )
     }
 }
 
-bool is_ref_parameter( const Ast& ast, Node_id param )
-{
-    // Invalid for an `auto` local, and for a constructor or destructor, which have no return type
-    // to carry a mode. kind() asserts on an invalid id rather than answering.
-    const Node_id annotation = unwrap_const( ast, ast.declared_type( param ) );
-
-    return annotation.is_valid() && ast.kind( annotation ) == Node_kind::Mode_type && ast.keyword( annotation ) == Keyword::Ref;
-}
-
-// The type parameters of a declaration, without the `where` clauses that share their list. Four
-// places want exactly this and three of them were counting the clauses.
-std::vector<Node_id> type_parameters( const Ast& ast, Node_id decl )
-{
-    std::vector<Node_id> result;
-    for( const Node_id param : ast.type_param_decls( decl ) )
-    {
-        if( ast.kind( param ) != Node_kind::Type_param_decl )
-        {
-            continue;
-        }
-
-        result.push_back( param );
-    }
-
-    return result;
-}
-
-bool is_generic( const Ast& ast, Node_id decl )
-{
-    return ast.type_param_list( decl ).is_valid();
-}
-
-bool is_extern( const Ast& ast, Node_id decl )
-{
-    return ast.kind( decl ) == Node_kind::Function_decl && !ast.body( decl ).is_valid();
-}
-
-// Visibility is one comparison, and `from` is an aggregate declaration rather than the function or
-// the receiver the access was written in: asking anything else forces every caller to convert, and
-// the conversion is where the two halves stop meaning the same thing.
-//
-// An invalid `from` is a free function, which is outside every type and so sees nothing private.
-bool is_visible_from( const Ast& ast, Node_id member, Node_id from )
-{
-    if( !member.is_valid() || ast.access( member ) != Access::Private )
-    {
-        return true;
-    }
-
-    return from.is_valid() && enclosing_aggregate( ast, member ) == from;
-}
-
-// Whether parameter 0 is the synthesised `this`. Asked of the parameter rather than of the node
-// kind, because three kinds have a receiver and two do not, and M7 made the second group hold both
-// a free function and a member. `this` is a keyword, so no written parameter can carry its name and
-// the test is exact.
-bool has_receiver( const Ast& ast, Node_id decl )
-{
-    if( !decl.is_valid() || !is_function_like( ast.kind( decl ) ) )
-    {
-        return false;
-    }
-
-    return ast.explicit_params( decl ).size() != ast.params( decl ).size();
-}
-
-bool is_static_method( const Ast& ast, Node_id method )
-{
-    return method.is_valid() && ast.kind( method ) == Node_kind::Method_decl && !has_receiver( ast, method );
-}
-
 bool is_borrowed_binding( const Ast& ast, const Types& types, Node_id decl )
 {
     const Node_id annotation = ast.declared_type( decl );
 
     // `auto` has no annotation node at all, so guard before asking.
     return annotation.is_valid() && types.type_of( annotation ).is_valid();
-}
-
-bool is_const_binding( const Ast& ast, Node_id decl )
-{
-    // Every one of these has a declared_type: a variable's annotation, a parameter's type, a
-    // function's return type - and a method's, which is why a Method_decl belongs here even
-    // though the *receiver's* constness is a different question, which is_const_method asks.
-    const bool declares_a_binding =
-        decl.is_valid() && ( ast.kind( decl ) == Node_kind::Var_decl || ast.kind( decl ) == Node_kind::Param_decl ||
-                             ast.kind( decl ) == Node_kind::Function_decl || ast.kind( decl ) == Node_kind::Method_decl );
-
-    if( !declares_a_binding )
-    {
-        return false;
-    }
-
-    const Node_id annotation = ast.declared_type( decl );
-    return annotation.is_valid() && ast.kind( annotation ) == Node_kind::Const_type;
-}
-
-// A field written `const`: assigned once by each constructor and never after.
-bool is_const_field( const Ast& ast, Node_id decl )
-{
-    return decl.is_valid() && ast.kind( decl ) == Node_kind::Field_decl &&
-           ast.kind( ast.annotation( decl ) ) == Node_kind::Const_type;
-}
-
-bool is_const_method( const Ast& ast, Node_id method )
-{
-    if( !method.is_valid() || ast.kind( method ) != Node_kind::Method_decl )
-    {
-        return false;
-    }
-
-    // The trailing `const` marks the **receiver**, which the parser wraps as `const ref T` - the
-    // method's return type is a different `const` entirely. So this is the ordinary const-binding
-    // question, asked of parameter 0.
-    return has_receiver( ast, method ) && is_const_binding( ast, ast.params( method )[0] );
 }
 
 // What binds an aggregate's type parameters to what it was instantiated at. Empty for a
@@ -360,7 +231,7 @@ Bindings aggregate_bindings( const Ast& ast, const Type_table& table, Type_id ag
 
     const std::span<const Type_id> arguments = table.get( aggregate ).arguments;
 
-    const std::vector<Node_id> parameters = type_parameters( ast, ast.type_param_list( table.get( aggregate ).declaration ) );
+    const std::vector<Node_id> parameters = ast.type_parameters( ast.type_param_list( table.get( aggregate ).declaration ) );
 
     Bindings bindings;
 
@@ -388,24 +259,6 @@ Type_id field_type( const Ast& ast, Type_table& table, Type_id aggregate, Node_i
     // An empty map makes this the identity, which is every non-generic aggregate - so the ordinary
     // path costs a lookup that finds nothing rather than a branch here.
     return table.substitute( recorded[field.v], aggregate_bindings( ast, table, aggregate, recorded ) );
-}
-
-bool has_destructor( const Ast& ast, Node_id declaration )
-{
-    if( !declaration.is_valid() || !is_aggregate( ast.kind( declaration ) ) )
-    {
-        return false;
-    }
-
-    for( const Node_id member : ast.members( declaration ) )
-    {
-        if( ast.kind( member ) == Node_kind::Destructor_decl )
-        {
-            return true;
-        }
-    }
-
-    return false;
 }
 
 // The recursion behind instance_owns. `visiting` is not a cycle *check* - order_structs already
@@ -442,7 +295,7 @@ bool may_own(
         return false;
     }
 
-    if( has_destructor( ast, declaration ) )
+    if( ast.has_destructor( declaration ) )
     {
         return true;
     }
@@ -484,11 +337,6 @@ bool instance_owns( const Ast& ast, Type_table& table, Type_id instance, std::sp
 Type_id binding_type( const Ast& ast, const Types& types, Node_id param )
 {
     return is_borrowed_binding( ast, types, param ) ? types.type_of( ast.declared_type( param ) ) : types.type_of( param );
-}
-
-Node_id unwrap_const( const Ast& ast, Node_id annotation )
-{
-    return annotation.is_valid() && ast.kind( annotation ) == Node_kind::Const_type ? ast.inner_type( annotation ) : annotation;
 }
 
 } // namespace keel

@@ -614,21 +614,150 @@ std::span<const Node_id> Ast::bindings( Node_id pattern ) const
     return children( pattern ).subspan( 1 );
 }
 
-Node_id enclosing_aggregate( const Ast& ast, Node_id member )
+bool Ast::enum_has_payload( Node_id enum_decl ) const
+{
+    for( const Node_id variant : variants( enum_decl ) )
+    {
+        if( !payload( variant ).empty() )
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+Keyword Ast::parameter_mode( Node_id decl ) const
+{
+    const Node_id annotation = unwrap_const( declared_type( decl ) );
+
+    return annotation.is_valid() && kind( annotation ) == Node_kind::Mode_type ? keyword( annotation ) : Keyword::Count;
+}
+
+bool Ast::is_ref_parameter( Node_id param ) const
+{
+    // Invalid for an `auto` local, and for a constructor or destructor, which have no return type
+    // to carry a mode. kind() asserts on an invalid id rather than answering.
+    const Node_id annotation = unwrap_const( declared_type( param ) );
+
+    return annotation.is_valid() && kind( annotation ) == Node_kind::Mode_type && keyword( annotation ) == Keyword::Ref;
+}
+
+std::vector<Node_id> Ast::type_parameters( Node_id list ) const
+{
+    std::vector<Node_id> result;
+    for( const Node_id param : type_param_decls( list ) )
+    {
+        if( kind( param ) != Node_kind::Type_param_decl )
+        {
+            continue;
+        }
+
+        result.push_back( param );
+    }
+
+    return result;
+}
+
+bool Ast::is_generic( Node_id decl ) const
+{
+    return type_param_list( decl ).is_valid();
+}
+
+bool Ast::is_extern( Node_id decl ) const
+{
+    return kind( decl ) == Node_kind::Function_decl && !body( decl ).is_valid();
+}
+
+bool Ast::has_receiver( Node_id decl ) const
+{
+    if( !decl.is_valid() || !is_function_like( kind( decl ) ) )
+    {
+        return false;
+    }
+
+    return explicit_params( decl ).size() != params( decl ).size();
+}
+
+bool Ast::is_static_method( Node_id method ) const
+{
+    return method.is_valid() && kind( method ) == Node_kind::Method_decl && !has_receiver( method );
+}
+
+bool Ast::is_const_binding( Node_id decl ) const
+{
+    // Every one of these has a declared_type: a variable's annotation, a parameter's type, a
+    // function's return type - and a method's, which is why a Method_decl belongs here even
+    // though the *receiver's* constness is a different question, which is_const_method asks.
+    const bool declares_a_binding =
+        decl.is_valid() && ( kind( decl ) == Node_kind::Var_decl || kind( decl ) == Node_kind::Param_decl ||
+                             kind( decl ) == Node_kind::Function_decl || kind( decl ) == Node_kind::Method_decl );
+
+    if( !declares_a_binding )
+    {
+        return false;
+    }
+
+    const Node_id annotation = declared_type( decl );
+    return annotation.is_valid() && kind( annotation ) == Node_kind::Const_type;
+}
+
+bool Ast::is_const_field( Node_id decl ) const
+{
+    return decl.is_valid() && kind( decl ) == Node_kind::Field_decl && kind( annotation( decl ) ) == Node_kind::Const_type;
+}
+
+bool Ast::is_const_method( Node_id method ) const
+{
+    if( !method.is_valid() || kind( method ) != Node_kind::Method_decl )
+    {
+        return false;
+    }
+
+    // The trailing `const` marks the **receiver**, which the parser wraps as `const ref T` - the
+    // method's return type is a different `const` entirely. So this is the ordinary const-binding
+    // question, asked of parameter 0.
+    return has_receiver( method ) && is_const_binding( params( method )[0] );
+}
+
+bool Ast::has_destructor( Node_id declaration ) const
+{
+    if( !declaration.is_valid() || !is_aggregate( kind( declaration ) ) )
+    {
+        return false;
+    }
+
+    for( const Node_id member : members( declaration ) )
+    {
+        if( kind( member ) == Node_kind::Destructor_decl )
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+Node_id Ast::unwrap_const( Node_id annotation ) const
+{
+    return annotation.is_valid() && kind( annotation ) == Node_kind::Const_type ? inner_type( annotation ) : annotation;
+}
+
+Node_id Ast::enclosing_aggregate( Node_id member ) const
 {
     if( !member.is_valid() )
     {
         return Node_id {};
     }
 
-    for( const Node_id decl : ast.children( ast.root() ) )
+    for( const Node_id decl : declarations( root() ) )
     {
-        if( !is_aggregate( ast.kind( decl ) ) )
+        if( !is_aggregate( kind( decl ) ) )
         {
             continue;
         }
 
-        for( const Node_id candidate : ast.members( decl ) )
+        for( const Node_id candidate : members( decl ) )
         {
             if( candidate == member )
             {
@@ -638,6 +767,56 @@ Node_id enclosing_aggregate( const Ast& ast, Node_id member )
     }
 
     return Node_id {};
+}
+
+// `from` is an aggregate rather than the function or receiver the access was written in: asking
+// anything else makes every caller convert, and the conversion is where the two halves drift.
+bool Ast::is_visible_from( Node_id member, Node_id from ) const
+{
+    if( !member.is_valid() || access( member ) != Access::Private )
+    {
+        return true;
+    }
+
+    return from.is_valid() && enclosing_aggregate( member ) == from;
+}
+
+std::vector<Node_id> Ast::contained_fields( Node_id declaration ) const
+{
+    std::vector<Node_id> fields;
+
+    if( !declaration.is_valid() )
+    {
+        return fields;
+    }
+
+    if( kind( declaration ) == Node_kind::Enum_decl )
+    {
+        for( const Node_id variant : variants( declaration ) )
+        {
+            for( const Node_id field : payload( variant ) )
+            {
+                fields.push_back( field );
+            }
+        }
+
+        return fields;
+    }
+
+    for( const Node_id member : members( declaration ) )
+    {
+        if( kind( member ) == Node_kind::Field_decl )
+        {
+            fields.push_back( member );
+        }
+    }
+
+    return fields;
+}
+
+Keyword Ast::call_marker( Node_id param ) const
+{
+    return is_const_binding( param ) ? Keyword::Count : parameter_mode( param );
 }
 
 } // namespace keel

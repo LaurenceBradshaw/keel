@@ -65,7 +65,7 @@ void Signatures::declare_structs()
 
         std::vector<Type_id> arguments;
 
-        for( const Node_id type_param : type_parameters( ast_, ast_.type_param_list( child ) ) )
+        for( const Node_id type_param : ast_.type_parameters( ast_.type_param_list( child ) ) )
         {
             arguments.push_back( types_.type_of( type_param ) );
         }
@@ -101,7 +101,7 @@ void Signatures::declare_fields()
 
             types_.record( field, field_type );
 
-            if( is_generic( ast_, child ) )
+            if( ast_.is_generic( child ) )
             {
                 generic_recursion_.record_generic_uses( child, field_type, ast_.span( field ) );
             }
@@ -129,14 +129,14 @@ void Signatures::declare_functions()
         const Type_id return_type      = annotations_.type_of( return_type_node );
         types_.record( child, return_type );
 
-        const Keyword return_mode = parameter_mode( ast_, child );
+        const Keyword return_mode = ast_.parameter_mode( child );
 
         // §8 allows exactly one reference return, and only the read-only one: a mutable one would
         // let a caller write through a reference it never asked for. Any other mode says how an
         // argument travels, and a return is not one.
         if( return_mode != Keyword::Count && !table_.is_error( return_type ) )
         {
-            if( return_mode == Keyword::Ref && is_const_binding( ast_, child ) )
+            if( return_mode == Keyword::Ref && ast_.is_const_binding( child ) )
             {
                 places_.record_binding_address( return_type_node, return_type );
             }
@@ -176,7 +176,7 @@ void Signatures::declare_functions()
         if( interner_.text( ast_.name( child ) ) == "main" )
         {
             // Main may not be marked `extern`
-            if( is_extern( ast_, child ) )
+            if( ast_.is_extern( child ) )
             {
                 reporter_.error_at( ast_.span( child ), "`main` may not be marked `extern`" );
             }
@@ -227,7 +227,7 @@ void Signatures::declare_member_functions()
 
             types_.record( member, return_type );
 
-            if( is_generic( ast_, child ) && return_type_node.is_valid() )
+            if( ast_.is_generic( child ) && return_type_node.is_valid() )
             {
                 generic_recursion_.record_generic_uses( child, return_type, ast_.span( return_type_node ) );
             }
@@ -236,9 +236,9 @@ void Signatures::declare_member_functions()
             // declare_functions applies to a free function. Without this a method
             // could write `const ref T` and have it silently mean `T`: the recorded address is what
             // every consumer reads to know a binding travels by address, and nothing else sets it.
-            if( is_ref_parameter( ast_, member ) && !table_.is_error( return_type ) )
+            if( ast_.is_ref_parameter( member ) && !table_.is_error( return_type ) )
             {
-                if( !is_const_binding( ast_, member ) )
+                if( !ast_.is_const_binding( member ) )
                 {
                     reporter_.error_at(
                         ast_.span( return_type_node ),
@@ -258,7 +258,7 @@ void Signatures::declare_member_functions()
                 const Type_id param_type      = annotations_.type_of( param_type_node );
                 types_.record( param, param_type );
 
-                if( is_generic( ast_, child ) )
+                if( ast_.is_generic( child ) )
                 {
                     generic_recursion_.record_generic_uses( child, param_type, ast_.span( param_type_node ) );
                 }
@@ -322,7 +322,7 @@ void Signatures::declare_enums()
 
         std::vector<Type_id> arguments;
 
-        for( const Node_id type_param : type_parameters( ast_, ast_.type_param_list( child ) ) )
+        for( const Node_id type_param : ast_.type_parameters( ast_.type_param_list( child ) ) )
         {
             arguments.push_back( types_.type_of( type_param ) );
         }
@@ -384,7 +384,7 @@ void Signatures::declare_enums()
 
                 types_.record( field, field_type );
 
-                if( is_generic( ast_, child ) )
+                if( ast_.is_generic( child ) )
                 {
                     generic_recursion_.record_generic_uses( child, field_type, ast_.span( field ) );
                 }
@@ -528,7 +528,7 @@ void Signatures::check_struct_ownership()
     {
         // A struct with a destructor of its own is already reported by check_aggregate_members,
         // and it is one decision to reverse rather than two.
-        if( ast_.kind( decl ) == Node_kind::Struct_decl && !keel::has_destructor( ast_, decl ) )
+        if( ast_.kind( decl ) == Node_kind::Struct_decl && !ast_.has_destructor( decl ) )
         {
             check_struct_fields_are_not_owning( decl );
         }
@@ -567,9 +567,9 @@ void Signatures::check_struct_fields_are_not_owning( Node_id decl )
             fmt::format(
                 "a struct cannot contain `{}`, which {}",
                 table_.name( field_type ),
-                table_.mentions_parameter( field_type )    ? "may own a resource"
-                : keel::has_destructor( ast_, field_decl ) ? "has a destructor"
-                                                           : "owns a resource"
+                table_.mentions_parameter( field_type ) ? "may own a resource"
+                : ast_.has_destructor( field_decl )     ? "has a destructor"
+                                                        : "owns a resource"
             ),
             table_.is_parameter( field_type )
                 ? fmt::format(
@@ -617,7 +617,7 @@ void Signatures::check_operators()
 
             seen = member;
 
-            if( is_static_method( ast_, member ) )
+            if( ast_.is_static_method( member ) )
             {
                 reporter_.error_at(
                     ast_.name_span( member ), "an operator cannot be `static`", "it is called on its left operand"
@@ -666,7 +666,7 @@ void Signatures::check_equal_operator( Node_id decl )
         reporter_.error_at( ast_.span( ast_.return_type( decl ) ), "`operator==` must return `bool`" );
     }
 
-    if( !is_const_method( ast_, decl ) )
+    if( !ast_.is_const_method( decl ) )
     {
         reporter_.error_at(
             ast_.name_span( decl ),
@@ -693,7 +693,7 @@ void Signatures::check_index_operator( Node_id decl )
     const Node_id annotation  = ast_.return_type( decl );
     const Type_id return_type = types_.type_of( decl );
 
-    if( ast_.kind( unwrap_const( ast_, annotation ) ) == Node_kind::Mode_type )
+    if( ast_.kind( ast_.unwrap_const( annotation ) ) == Node_kind::Mode_type )
     {
         reporter_.error_at(
             ast_.span( annotation ),
@@ -716,7 +716,7 @@ void Signatures::check_index_operator( Node_id decl )
         );
     }
 
-    if( !is_const_method( ast_, decl ) )
+    if( !ast_.is_const_method( decl ) )
     {
         reporter_.error_at(
             ast_.name_span( decl ),
@@ -1000,12 +1000,12 @@ TEST_CASE( "type_checker_is_extern_reads_the_absent_body", "[sema][types][extern
     INFO( p.rendered() );
     REQUIRE( p.clean() );
 
-    REQUIRE( is_extern( p.ast(), p.nth( Node_kind::Function_decl, 0 ) ) );       // the extern
-    REQUIRE_FALSE( is_extern( p.ast(), p.nth( Node_kind::Function_decl, 1 ) ) ); // main
-    REQUIRE_FALSE( is_extern( p.ast(), p.nth( Node_kind::Constructor_decl, 0 ) ) );
-    REQUIRE_FALSE( is_extern( p.ast(), p.nth( Node_kind::Destructor_decl, 0 ) ) );
-    REQUIRE_FALSE( is_extern( p.ast(), p.nth( Node_kind::Method_decl, 0 ) ) );
-    REQUIRE_FALSE( is_extern( p.ast(), p.nth( Node_kind::Class_decl, 0 ) ) );
+    REQUIRE( p.ast().is_extern( p.nth( Node_kind::Function_decl, 0 ) ) );       // the extern
+    REQUIRE_FALSE( p.ast().is_extern( p.nth( Node_kind::Function_decl, 1 ) ) ); // main
+    REQUIRE_FALSE( p.ast().is_extern( p.nth( Node_kind::Constructor_decl, 0 ) ) );
+    REQUIRE_FALSE( p.ast().is_extern( p.nth( Node_kind::Destructor_decl, 0 ) ) );
+    REQUIRE_FALSE( p.ast().is_extern( p.nth( Node_kind::Method_decl, 0 ) ) );
+    REQUIRE_FALSE( p.ast().is_extern( p.nth( Node_kind::Class_decl, 0 ) ) );
 }
 
 // D29: a class is built by a constructor and a struct from a literal, which is what stops the two

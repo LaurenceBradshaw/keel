@@ -483,15 +483,10 @@ void Bounds::declare_type_parameters( Node_id declaration, Node_id list )
         return;
     }
 
-    const std::span<const Node_id> type_params = ast_.type_param_decls( list );
+    const std::vector<Node_id> type_params = ast_.type_parameters( list );
 
     for( const Node_id type_param : type_params )
     {
-        if( ast_.kind( type_param ) != Node_kind::Type_param_decl )
-        {
-            continue;
-        }
-
         types_.record( type_param, table_.parameter( type_param, interner_.text( ast_.name( type_param ) ) ) );
         owner_of_.emplace( type_param.v, declaration );
     }
@@ -508,8 +503,7 @@ void Bounds::declare_type_parameters( Node_id declaration, Node_id list )
         const auto it = std::find_if(
             type_params.begin(),
             type_params.end(),
-            [&]( const Node_id type_param )
-            { return ast_.kind( type_param ) == Node_kind::Type_param_decl && ast_.name( type_param ) == subject_name; }
+            [&]( const Node_id type_param ) { return ast_.name( type_param ) == subject_name; }
         );
 
         if( it == type_params.end() )

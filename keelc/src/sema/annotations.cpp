@@ -77,7 +77,7 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
             // The mirror of a generic call written without its type arguments: what `Box` names on
             // its own is the open form, which no value can have. Inference is a decision of its own
             // and is not taken here, so this names the explicit form rather than guessing.
-            if( ( is_aggregate( ast_.kind( decl ) ) || ast_.kind( decl ) == Node_kind::Enum_decl ) && is_generic( ast_, decl ) )
+            if( ( is_aggregate( ast_.kind( decl ) ) || ast_.kind( decl ) == Node_kind::Enum_decl ) && ast_.is_generic( decl ) )
             {
                 const std::string_view name = interner_.text( ast_.name( annotation ) );
 
@@ -231,7 +231,7 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
             return table_.builtin( Type_kind::Error );
         }
 
-        if( !is_generic( ast_, decl ) )
+        if( !ast_.is_generic( decl ) )
         {
             reporter_.error_at(
                 ast_.span( annotation ),
@@ -276,8 +276,8 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
     case Node_kind::Function_type:
     {
         const Node_id spelled_return = ast_.return_type( annotation );
-        const Node_id bare_return    = unwrap_const( ast_, spelled_return );
-        const Keyword return_mode_kw = parameter_mode( ast_, annotation );
+        const Node_id bare_return    = ast_.unwrap_const( spelled_return );
+        const Keyword return_mode_kw = ast_.parameter_mode( annotation );
 
         // The unwrapped node, not what was written: `const ref i32` reaches here as a Const_type,
         // and typing that with outermost false is what reports a pointer to `const` - the right
@@ -329,7 +329,7 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
             Parameter     parameter;
             const Node_id spelled = ast_.annotation( param );
 
-            const Node_id bare = unwrap_const( ast_, spelled );
+            const Node_id bare = ast_.unwrap_const( spelled );
 
             // A `const` with no mode under it: the only thing it could bind is a callee's own copy,
             // and a type has no callee. `const ref` reaches the Mode_type and is a mode like the rest.
@@ -362,12 +362,12 @@ Type_id Annotations::type_of( Node_id annotation, bool outermost )
     case Node_kind::Field_type:
     {
         const Node_id spelled_member    = ast_.child( annotation, 0 );
-        const Node_id bare_member       = unwrap_const( ast_, spelled_member );
+        const Node_id bare_member       = ast_.unwrap_const( spelled_member );
         const Node_id spelled_aggregate = ast_.child( annotation, 1 );
-        const Keyword member_mode       = parameter_mode( ast_, annotation );
+        const Keyword member_mode       = ast_.parameter_mode( annotation );
 
         // Stripped by hand rather than typed through: a Mode_type reports its own refusals, and a mode here is refused whole.
-        Node_id bare_aggregate = unwrap_const( ast_, spelled_aggregate );
+        Node_id bare_aggregate = ast_.unwrap_const( spelled_aggregate );
         if( ast_.kind( bare_aggregate ) == Node_kind::Mode_type )
         {
             bare_aggregate = ast_.inner_type( bare_aggregate );
@@ -466,7 +466,7 @@ bool Annotations::resolve_type_arguments(
     Node_id declaration, Node_id type_args, std::string_view name, std::vector<Type_id>& resolved
 )
 {
-    const std::vector<Node_id>     parameters = type_parameters( ast_, ast_.type_param_list( declaration ) );
+    const std::vector<Node_id>     parameters = ast_.type_parameters( ast_.type_param_list( declaration ) );
     const std::span<const Node_id> given      = ast_.children( type_args );
 
     if( parameters.size() != given.size() )
@@ -578,7 +578,7 @@ public:
 
             std::vector<Type_id> arguments;
 
-            for( const Node_id type_param : type_parameters( ast_, ast_.type_param_list( decl ) ) )
+            for( const Node_id type_param : ast_.type_parameters( ast_.type_param_list( decl ) ) )
             {
                 arguments.push_back( types_.type_of( type_param ) );
             }

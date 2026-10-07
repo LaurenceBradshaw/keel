@@ -218,7 +218,7 @@ bool Places::check_writable( Node_id target, Node_id current_function, bool repl
         return false;
     }
 
-    if( is_const_binding( ast_, root ) )
+    if( ast_.is_const_binding( root ) )
     {
         // The receiver reads differently from any other const binding: the `const` that made it one
         // is written on the *method*, so naming the variable would point at a word the author never
@@ -276,7 +276,7 @@ bool Places::is_read_only( Node_id target, Node_id current_function ) const
 
     const Node_id root = place_root( target, current_function );
     if( root.is_valid() &&
-        ( ast_.kind( root ) == Node_kind::Binding_decl || is_borrow_binding( root ) || is_const_binding( ast_, root ) ) )
+        ( ast_.kind( root ) == Node_kind::Binding_decl || is_borrow_binding( root ) || ast_.is_const_binding( root ) ) )
     {
         return true;
     }
@@ -359,7 +359,7 @@ Node_id Places::const_field( Node_id place ) const
             for( const Node_id member : members )
             {
                 if( ast_.kind( member ) == Node_kind::Field_decl && ast_.name( member ) == ast_.name( place ) &&
-                    is_const_field( ast_, member ) )
+                    ast_.is_const_field( member ) )
                 {
                     return member;
                 }
@@ -376,7 +376,7 @@ Node_id Places::const_field( Node_id place ) const
 
     const Node_id decl = resolution_.declaration_of( place );
     if( ast_.kind( place ) == Node_kind::Name_expr && ast_.kind( decl ) == Node_kind::Field_decl &&
-        is_const_field( ast_, decl ) )
+        ast_.is_const_field( decl ) )
     {
         return decl;
     }
@@ -393,7 +393,7 @@ bool Places::initialises_const_field( Node_id place, Node_id current_function ) 
 
     if( ast_.kind( place ) == Node_kind::Name_expr )
     {
-        return is_const_field( ast_, resolution_.declaration_of( place ) );
+        return ast_.is_const_field( resolution_.declaration_of( place ) );
     }
 
     if( ast_.kind( place ) == Node_kind::Field_expr )
@@ -414,13 +414,13 @@ bool Places::initialises_const_field( Node_id place, Node_id current_function ) 
 // and `ref` is the mutable borrow, which every question here is asked in contrast to.
 bool Places::is_borrow_binding( Node_id decl ) const
 {
-    return decl.is_valid() && ast_.kind( decl ) == Node_kind::Param_decl && parameter_mode( ast_, decl ) == Keyword::Count &&
+    return decl.is_valid() && ast_.kind( decl ) == Node_kind::Param_decl && ast_.parameter_mode( decl ) == Keyword::Count &&
            !bounds_.satisfies( types_.type_of( decl ), Bound::Copyable );
 }
 
 Node_id Places::receiver_of( Node_id function ) const
 {
-    if( !has_receiver( ast_, function ) )
+    if( !ast_.has_receiver( function ) )
     {
         return Node_id {};
     }
@@ -618,7 +618,7 @@ void Places::record_borrowed_parameters()
             continue;
         }
 
-        const Keyword mode = parameter_mode( ast_, param );
+        const Keyword mode = ast_.parameter_mode( param );
 
         // D31's two borrows, plus `out` for the same reason `ref` has. A bare parameter of an
         // owning type is the read-only borrow, forced rather than chosen: a class cannot be

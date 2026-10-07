@@ -167,59 +167,12 @@ private:
 
 Types type_check( const Ast&, const Resolution&, const Literal_pool&, const Source_manager&, const Interner&, Diagnostics& );
 
-// What a parameter is actually passed as: its own type, except a `ref` binding, which travels as
-// an address. Shared because lowering, the prototype and the mangled name must all agree.
-bool is_ref_parameter( const Ast& ast, Node_id param );
-
-// The type parameters of a declaration, without the `where` clauses that share their list. Four
-// places want exactly this and three of them were counting the clauses.
-std::vector<Node_id> type_parameters( const Ast& ast, Node_id decl );
-
-// Whether a declaration carries type parameters. The kind is checked first: only a function-like
-// declaration has a fixed fourth slot, and a call's callee may be an aggregate, whose children are
-// its members.
-bool is_generic( const Ast& ast, Node_id decl );
-
-// An FFI declaration: a function with no body. `extern` is the only rule that produces one (D18's
-// corollary makes a bare prototype an error), so the absent body is the marker and there is no flag.
-bool is_extern( const Ast& ast, Node_id decl );
-
-// Whether `member` may be named from inside the aggregate `from`, which is `enclosing_aggregate` of
-// whatever function the access was written in - and an invalid id when that was a free function.
-bool is_visible_from( const Ast& ast, Node_id member, Node_id from );
-
-// Whether parameter 0 is the synthesised `this`: true of a method, constructor and destructor,
-// false of a free function and of M7's static method. The node kind cannot answer it any more.
-bool has_receiver( const Ast& ast, Node_id decl );
-
-// A member that belongs to the type rather than to an object (PLAN §6.7).
-bool is_static_method( const Ast& ast, Node_id method );
-
-// D7: whether any variant carries a payload. That one answer decides the representation - a
-// payload-free enum is its underlying integer, and one with payloads is a struct holding a tag and
-// every payload field. Shared because lowering and the emitter must agree, and disagreeing would
-// mean writing a tag into something that has none.
-bool enum_has_payload( const Ast& ast, Node_id enum_decl );
-
-// The mode a declaration was written with, or Keyword::Count for none. The one reader of a
-// Mode_type's aux.
-Keyword parameter_mode( const Ast& ast, Node_id decl );
-
 // A mode's two spellings: a `Param_mode` in a type, and the `Keyword` a call site writes. Bare and `const ref` share the
 // empty marker, since after either the caller's variable is unchanged (D31), but stay two modes, so neither maps back.
 Param_mode parameter_mode_of( const Ast& ast, Node_id param );
 Keyword    call_marker_of( Param_mode mode );
 
 bool is_borrowed_binding( const Ast& ast, const Types& types, Node_id decl );
-bool is_const_binding( const Ast& ast, Node_id decl );
-bool is_const_field( const Ast& ast, Node_id decl );
-
-// A method written with a trailing `const`, which is a `const ref` receiver. Its own name because
-// the question is asked of the *method* while the answer lives on its parameter 0.
-bool is_const_method( const Ast& ast, Node_id method );
-// Whether a declaration declares a destructor of its own. Free because three passes and the
-// emitter all ask it, and only one of them has a checker.
-bool has_destructor( const Ast& ast, Node_id declaration );
 // instance_owns for a type that may still hold a parameter, which `parameter_owns` answers
 bool may_own(
     const Ast&                            ast,
@@ -238,8 +191,5 @@ Bindings aggregate_bindings( const Ast& ast, const Type_table& table, Type_id ag
 Type_id  field_type( const Ast& ast, Type_table& table, Type_id aggregate, Node_id field, std::span<const Type_id> recorded );
 
 Type_id binding_type( const Ast& ast, const Types& types, Node_id decl );
-// `const ref T` wraps the mode: Const_type( Mode_type( T ) ). Every question about a mode goes
-// through here, so adding the spelling cannot quietly turn a `const ref` into a bare parameter.
-Node_id unwrap_const( const Ast& ast, Node_id annotation );
 
 } // namespace keel

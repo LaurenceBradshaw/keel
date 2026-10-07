@@ -241,7 +241,7 @@ void Statements::visit_var( Node_id id )
     // only declared.
     const Node_id annotation = ast_.annotation( id );
     const Node_id init       = ast_.initialiser( id );
-    const Node_id spelled    = unwrap_const( ast_, annotation );
+    const Node_id spelled    = ast_.unwrap_const( annotation );
     const Keyword mode =
         spelled.is_valid() && ast_.kind( spelled ) == Node_kind::Mode_type ? ast_.keyword( spelled ) : Keyword::Count;
 
@@ -323,7 +323,7 @@ void Statements::visit_var( Node_id id )
         }
         // Only a *mutable* binding would launder a read-only one. A `const ref` onto a const is
         // exactly what the const half buys, so it skips the test rather than failing it.
-        else if( is_const_binding( ast_, id ) || places_.check_writable( init, expressions_.current_function() ) )
+        else if( ast_.is_const_binding( id ) || places_.check_writable( init, expressions_.current_function() ) )
         {
             places_.record_binding_address( annotation, type );
         }
@@ -552,7 +552,7 @@ void Statements::visit_global( Node_id id )
         return;
     }
 
-    const bool is_static_field = enclosing_aggregate( ast_, id ).is_valid();
+    const bool is_static_field = ast_.enclosing_aggregate( id ).is_valid();
 
     if( is_static_field && table_.mentions_parameter( type ) )
     {

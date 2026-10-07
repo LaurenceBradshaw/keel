@@ -190,42 +190,6 @@ std::string float_guard( Guard guard, Token_kind op )
     );
 }
 
-// The fields a composite holds by value, in the order C declares them. A struct's are its
-// Field_decl members; an enum's are every payload field of every variant, side by side - the layout
-// emit_composites writes, and so the set the containment walk has to follow.
-std::vector<Node_id> contained_fields( const Ast& ast, Node_id declaration )
-{
-    std::vector<Node_id> fields;
-
-    if( !declaration.is_valid() )
-    {
-        return fields;
-    }
-
-    if( ast.kind( declaration ) == Node_kind::Enum_decl )
-    {
-        for( const Node_id variant : ast.variants( declaration ) )
-        {
-            for( const Node_id field : ast.payload( variant ) )
-            {
-                fields.push_back( field );
-            }
-        }
-
-        return fields;
-    }
-
-    for( const Node_id member : ast.members( declaration ) )
-    {
-        if( ast.kind( member ) == Node_kind::Field_decl )
-        {
-            fields.push_back( member );
-        }
-    }
-
-    return fields;
-}
-
 bool in_prelude( const Ast& ast, const Imports& imports, Node_id declaration )
 {
     return ast.span( declaration ).file == imports.prelude_file();
@@ -538,7 +502,7 @@ void Kir_emitter::emit_composites()
             write_line( fmt::format( "{} tag;", spelling_.type( types_.table().get( type ).element ) ) );
         }
 
-        for( const Node_id field : contained_fields( ast_, declaration ) )
+        for( const Node_id field : ast_.contained_fields( declaration ) )
         {
             // The field's type through *this* instance: what the declaration says is `T`, which is
             // true of the template and has no C spelling. Every instance was interned while the
@@ -569,7 +533,7 @@ void Kir_emitter::emit_globals()
 
         if( is_aggregate( ast_.kind( child ) ) )
         {
-            if( is_generic( ast_, child ) )
+            if( ast_.is_generic( child ) )
             {
                 for( const Type_id instance : types_.table().composite_types() )
                 {
@@ -773,7 +737,7 @@ void Kir_emitter::emit_externs()
             continue;
         }
 
-        if( !is_extern( ast_, decl ) )
+        if( !ast_.is_extern( decl ) )
         {
             continue;
         }
@@ -1391,7 +1355,7 @@ std::vector<Type_id> emitted_struct_order( const Ast& ast, Types& types, const I
         // checked first because enum_has_payload asserts on anything but an Enum_decl.
         const bool writes_a_struct =
             types.table().is_struct( type ) ||
-            ( types.table().is_enum( type ) && enum_has_payload( ast, types.table().get( type ).declaration ) );
+            ( types.table().is_enum( type ) && ast.enum_has_payload( types.table().get( type ).declaration ) );
 
         if( !writes_a_struct )
         {
@@ -1411,7 +1375,7 @@ std::vector<Type_id> emitted_struct_order( const Ast& ast, Types& types, const I
 
         visiting.push_back( type );
 
-        for( const Node_id member : contained_fields( ast, types.table().get( type ).declaration ) )
+        for( const Node_id member : ast.contained_fields( types.table().get( type ).declaration ) )
         {
             self( self, field_type( ast, types.table(), type, member, types.recorded() ) );
         }

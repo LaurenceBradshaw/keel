@@ -1017,7 +1017,7 @@ keel/
       main.cpp            the driver: options, the pipeline, writing outputs, invoking cc
       common/             Interner, Span, Source_manager, Diagnostics, Literal_pool, Imports
       lex/                lex(), Token and the token tables
-      parse/              Parser (file-local), its lookahead Scanner, the loader, C++-habit hints
+      parse/              Parser (file-local), its Lookahead, the loader, C++-habit hints
       ast/                Ast, Node and Node_kind's shape table, the dump
       sema/               Resolver; the checker's class DAG (§3.2), one class per file; collect_names for the editor
       ir/                 KIR (kir.h), Builder, Lowering (file-local) and monomorphisation, simplify, verify, print
@@ -1136,15 +1136,16 @@ From `.claude/READABILITY_AUDIT.md`, chosen by what M9 to M9.6 will edit. Done: 
 and R14's small fixes, `node.h`'s shape table, and R1: `Ast`'s typed `aux` readers and named-child
 accessors, which every pass reads through (only `Field_type` and the tests stay positional),
 R20's `Types_builder::poison`, R24's one namespace spelling, `keel::sema`, R2's single
-take-and-clear discipline for `Expressions::expected_`, and R17's `successors()` in `kir.h`.
-Nothing is left before M9. **With M9**: splitting
-`Annotations::type_of` and renaming it `resolve` (R13), `lower_switch`'s arm extraction (R14), and
+take-and-clear discipline for `Expressions::expected_`, R17's `successors()` in `kir.h`, R14's
+`lower_arm_body`, R7's tree queries as `Ast` members, and R18's `Lookahead`. Nothing is left before
+M9. A query that reads only the tree and the nodes it is given is a member of `Ast`; one that needs
+anything more (`parameter_mode_of`, which answers in sema's `Param_mode`, and the ownership and
+binding-type questions) stays in sema. **With M9**: splitting `Annotations::type_of` and renaming it `resolve` (R13), and
 monomorphisation out of `lower()` into `ir/instances` (R9, then R22). **At M9.1**: the dataflow
 wording out of `main.cpp` (R10) and one test fixture that runs the real pipeline, prelude included
 (R11). **At M9.5**: the parser's cursor and recovery as classes (R3, with R5 and R18), `infer_call`'s
 phases and a call-site struct (R6, R15), and the resolver's long cases (R12). **Later, or when next
-touched**: `Addresses` out of `Expressions` (R4), the `ast/queries.h` move and the `Types` renames
-(R7, R8) once files stop moving, R16 and R21, and R19's comment sweep of `ir/lower.cpp`, `check/`
+touched**: `Addresses` out of `Expressions` (R4), the `Types` renames (R8) once files stop moving, R16 and R21, and R19's comment sweep of `ir/lower.cpp`, `check/`
 and `parse/parser.cpp`.
 
 ### Carried from M8

@@ -98,8 +98,8 @@ public:
     Node_id                  body( Node_id id ) const;            // also While_stmt, For_stmt, Case_arm; invalid for `extern`
 
     // Type parameters and arguments.
-    Node_id                  type_param_list( Node_id id ) const;    // aggregate, Enum_decl, function-like
-    std::span<const Node_id> type_param_decls( Node_id list ) const; // empty for an invalid list; may hold Errors
+    Node_id                  type_param_list( Node_id id ) const;   // aggregate, Enum_decl, function-like
+    std::vector<Node_id>     type_parameters( Node_id list ) const; // the Type_param_decls; empty for an invalid list
     std::span<const Node_id> where_clauses( Node_id list ) const;
     std::span<const Node_id> bounds( Node_id where_clause ) const;
     Node_id                  type_arg_list( Node_id id ) const; // Generic_type, Call_expr, Name_expr, Path_expr
@@ -154,7 +154,40 @@ public:
     Node_id                  variant_path( Node_id pattern ) const;
     std::span<const Node_id> bindings( Node_id pattern ) const;
 
+    // ---- Questions about a declaration ----
+
+    bool    is_generic( Node_id decl ) const;
+    bool    is_extern( Node_id decl ) const;          // a function with no body; `extern` is the only way to write one
+    bool    has_receiver( Node_id decl ) const;       // parameter 0 is the synthesised `this`
+    bool    is_static_method( Node_id method ) const; // a method with no receiver (PLAN §6.7)
+    bool    is_const_method( Node_id method ) const;  // written with a trailing `const`: a `const ref` receiver
+    bool    has_destructor( Node_id declaration ) const;
+    bool    enum_has_payload( Node_id enum_decl ) const; // D7: decides whether the enum is an integer or a tagged struct
+    Node_id enclosing_aggregate( Node_id member ) const; // invalid for a top-level declaration
+
+    // Whether `member` may be named from inside the aggregate `from`: the enclosing_aggregate of the
+    // function the access is written in, and invalid for a free function, which sees nothing private.
+    bool is_visible_from( Node_id member, Node_id from ) const;
+
+    // The fields a composite holds by value, in C declaration order: a struct's Field_decls, or every
+    // variant's payload fields side by side.
+    std::vector<Node_id> contained_fields( Node_id declaration ) const;
+
+    // ---- Questions about a binding ----
+    // Asked of a Param_decl, Var_decl or Field_decl, or of a function through its return type.
+
+    Keyword parameter_mode( Node_id decl ) const; // `ref`, `out`, `move`, or Keyword::Count for none
+    Keyword call_marker( Node_id param ) const;   // what a call site writes; `const ref` writes none (D31)
+    bool    is_ref_parameter( Node_id param ) const;
+    bool    is_const_binding( Node_id decl ) const;
+    bool    is_const_field( Node_id decl ) const;
+
+    // `const ref T` is Const_type( Mode_type( T ) ); this steps through the Const_type.
+    Node_id unwrap_const( Node_id annotation ) const;
+
 private:
+    std::span<const Node_id> type_param_decls( Node_id list ) const; // may hold Errors
+
     std::vector<Node>    nodes_;
     std::vector<Node_id> children_; // every child of every node, back to back
     Node_id              root_;
@@ -166,8 +199,5 @@ private:
     std::vector<bool> broken_;
     std::vector<Span> failures_;
 };
-
-// The aggregate declaring `member`, or an invalid id for a top-level declaration.
-Node_id enclosing_aggregate( const Ast& ast, Node_id member );
 
 } // namespace keel
