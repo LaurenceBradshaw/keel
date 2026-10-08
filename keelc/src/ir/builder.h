@@ -42,6 +42,7 @@ public:
     // D7: the discriminant. A payload enum is a struct in C, and this is the field that says which
     // variant is live - the only part of one a `switch` reads without a pattern.
     Place tag( Place base );
+    Place member( Place base, Type_id member );
 
     Type_id type_of( Local_id id ) const;
 

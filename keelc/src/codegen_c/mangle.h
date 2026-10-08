@@ -50,6 +50,8 @@ std::string mangle_function(
 // `kl_<module>_<Name>`, plus `__I<args>E` when the aggregate is an instantiation. The type rather
 // than a name, because `Box<i32>` and `Box<f64>` are two C structs from one declaration.
 std::string mangle_struct( std::string_view module, Type_id type, const Type_table& types );
+// `kl__U<members>E`: no package declares a union, and its members name one each.
+std::string mangle_union( Type_id type, const Type_table& types );
 // `kl_<module>_fn__F<params>E<return>`, the name of the C typedef a function type is spelled
 // through. A typedef because a C function-pointer type is a declarator, with the name inside it,
 // and every caller of Spelling::type writes the type and then the name.

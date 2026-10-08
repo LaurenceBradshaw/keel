@@ -299,6 +299,21 @@ bool may_own(
         return parameter_owns( instance );
     }
 
+    if( table.is_union( instance ) )
+    {
+        const std::span<const Type_id> members = table.get( instance ).arguments;
+
+        for( const Type_id member : members )
+        {
+            if( may_own( ast, table, member, recorded, visiting, parameter_owns ) )
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     if( !table.is_struct( instance ) && !table.is_enum( instance ) )
     {
         return false;

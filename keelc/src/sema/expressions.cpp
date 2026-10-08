@@ -2420,9 +2420,14 @@ Type_id Expressions::infer_path( Node_id id )
         // Which instance this path names. The declaration test is what keeps a wrong expectation
         // out: `Opt<i32> x = Plain::One;` falls through to the open form and is refused below by
         // the ordinary mismatch, rather than being quietly retyped to whatever was wanted.
-        if( expectation.is_valid() && table_.get( expectation ).declaration == decl )
+        // §6.7: against a union, the member this enum declares.
+        const Type_id named = expectation.is_valid() && table_.is_union( expectation )
+                                  ? table_.member_declared_by( expectation, decl )
+                                  : expectation;
+
+        if( named.is_valid() && table_.get( named ).declaration == decl )
         {
-            return types_.record( id, expectation );
+            return types_.record( id, named );
         }
 
         // Nothing named an instance, and a generic declaration's own type is the open form -
@@ -3087,13 +3092,33 @@ Type_id Expressions::infer_try( Node_id id )
         return types_.record( id, payload );
     }
 
-    if( !error_travels( error, table_.get( returned ).arguments[1] ) )
+    const Type_id held = table_.get( returned ).arguments[1];
+
+    if( !error_travels( error, held ) )
     {
+        // Against a union, the members it lacks.
+        std::string lacking;
+
+        if( table_.is_union( held ) )
+        {
+            const std::span<const Type_id> passed =
+                table_.is_union( error ) ? table_.get( error ).arguments : std::span<const Type_id>( &error, 1 );
+
+            for( const Type_id member : passed )
+            {
+                if( !table_.has_member( held, member ) )
+                {
+                    lacking += fmt::format( "{}`{}`", lacking.empty() ? "" : ", ", table_.name( member ) );
+                }
+            }
+        }
+
         reporter_.error_at(
             ast_.span( id ),
             fmt::format(
                 "`try` passes on a `{}` error, but `{}` returns `{}`", table_.name( error ), function, table_.name( returned )
-            )
+            ),
+            lacking.empty() ? std::string {} : fmt::format( "add {} to `{}`", lacking, table_.name( held ) )
         );
     }
 
@@ -3105,10 +3130,39 @@ bool Expressions::is_result( Type_id type, Node_id result ) const
     return result.is_valid() && table_.is_enum( type ) && table_.get( type ).declaration == result;
 }
 
-// Identity until the error union, whose subset test belongs here.
+// §6.7: the same error, a member of `to`, or a union whose members `to` all holds.
 bool Expressions::error_travels( Type_id from, Type_id to ) const
 {
-    return from == to;
+    if( from == to )
+    {
+        return true;
+    }
+
+    if( table_.is_union( to ) )
+    {
+        for( const Type_id member : table_.get( to ).arguments )
+        {
+            if( from == member )
+            {
+                return true;
+            }
+        }
+    }
+
+    if( table_.is_union( from ) )
+    {
+        for( const Type_id member : table_.get( from ).arguments )
+        {
+            if( !error_travels( member, to ) )
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    return false;
 }
 
 Type_id Expressions::check( Node_id id, Type_id expected )
@@ -3251,7 +3305,8 @@ Type_id Expressions::check( Node_id id, Type_id expected )
                 ? "a pointer to `const` never converts back to one that writes"
             : table_.name( expected ) == table_.name( actual )
                 ? fmt::format( "two different types are both named `{}`", table_.name( expected ) )
-                : ""
+            : table_.is_union( expected ) && table_.is_union( actual ) ? "one union widens into another only through `try`"
+                                                                       : ""
         );
         return expected;
     }

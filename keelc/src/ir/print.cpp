@@ -81,6 +81,10 @@ struct Printer
             case Projection_kind::Tag:
                 text = fmt::format( "{}.tag", text );
                 break;
+
+            case Projection_kind::Member:
+                text = fmt::format( "{}.({})", text, type_name( projection.member ) );
+                break;
             }
         }
 
@@ -251,8 +255,15 @@ print( const Function& func, const Ast& ast, const Type_table& types, const Lite
     const bool destructor = func.declaration.is_valid() && ( ast.kind( func.declaration ) == Node_kind::Destructor_decl ||
                                                              ast.kind( func.declaration ) == Node_kind::Enum_decl );
 
+    // A union's destructor is declared by nothing, and named for the union.
+    const bool united = !func.declaration.is_valid() && !func.type_arguments.empty();
+
     std::string out = fmt::format(
-        "fn {}{} {{\n", destructor ? "~" : "", func.declaration.is_valid() ? printer.name_of( func.declaration ) : "<unnamed>"
+        "fn {}{} {{\n",
+        destructor || united ? "~" : "",
+        united                        ? types.name( func.type_arguments[0] )
+        : func.declaration.is_valid() ? printer.name_of( func.declaration )
+                                      : "<unnamed>"
     );
 
     for( u32 i = 0; i < func.locals.size(); ++i )

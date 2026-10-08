@@ -84,6 +84,11 @@ Place Builder::tag( Place base )
     return projected( base, Projection { Projection_kind::Tag, Node_id {} } );
 }
 
+Place Builder::member( Place base, Type_id member )
+{
+    return projected( base, Projection { .kind = Projection_kind::Member, .member = member } );
+}
+
 Type_id Builder::type_of( Local_id id ) const
 {
     assert( id.v < function_.locals.size() && "type_of on a local that does not exist" );

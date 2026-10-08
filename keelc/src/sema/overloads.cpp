@@ -859,7 +859,9 @@ void Overloads::check_one_argument_marker( Node_id argument, Param_mode mode, Ty
     // The substituted type, not the declared one: whether `T` owns is a property of the
     // instantiation, and a bare `Parameter` owns nothing - which would wave every `move`
     // through unmarked.
-    if( about_ownership && bounds_.satisfies( expected, Bound::Copyable ) )
+    // The argument's own type as well: a copyable member converting into an owning union gives up nothing.
+    if( about_ownership && ( bounds_.satisfies( expected, Bound::Copyable ) ||
+                             ( given == Keyword::Count && bounds_.satisfies( types_.type_of( argument ), Bound::Copyable ) ) ) )
     {
         return;
     }

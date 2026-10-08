@@ -53,7 +53,24 @@ Switch_coverage Coverage::begin_switch( Node_id id, Type_id type )
     // nameable: the missing variants are the entries nothing wrote to.
     if( !state.numeric )
     {
-        state.variants.assign( ast_.variants( table_.get( type ).declaration ).size(), Node_id {} );
+        if( table_.is_union( type ) )
+        {
+            state.members.assign( table_.get( type ).arguments.begin(), table_.get( type ).arguments.end() );
+        }
+        else
+        {
+            state.members.push_back( type );
+        }
+
+        std::size_t count = 0;
+
+        for( const Type_id member : state.members )
+        {
+            state.offsets.push_back( count );
+            count += ast_.variants( table_.get( member ).declaration ).size();
+        }
+
+        state.variants.assign( count, Node_id {} );
     }
 
     return state;
@@ -94,7 +111,7 @@ void Coverage::check_enum_arm_labels( Node_id arm, Switch_coverage& state )
         // arm's scope - which is why the caller visits the body only after this returns.
         if( ast_.kind( label ) == Node_kind::Variant_pattern )
         {
-            check_variant_pattern( label, state.type, covered );
+            check_variant_pattern( label, state );
             continue;
         }
 
@@ -121,12 +138,10 @@ void Coverage::check_enum_arm_labels( Node_id arm, Switch_coverage& state )
             continue;
         }
 
-        if( label_type != state.type )
-        {
-            reporter_.error_at(
-                ast_.span( label ), fmt::format( "a `case` label must be a variant of `{}`", table_.name( state.type ) )
-            );
+        const std::optional<std::size_t> offset = member_offset( state, label_type, label );
 
+        if( !offset )
+        {
             continue;
         }
 
@@ -134,12 +149,12 @@ void Coverage::check_enum_arm_labels( Node_id arm, Switch_coverage& state )
         // than a search.
         const std::optional<Constant_value> value = constant_folder_.value_of( label );
 
-        if( !value || value->magnitude >= covered.size() )
+        if( !value || *offset + value->magnitude >= covered.size() )
         {
             continue;
         }
 
-        const std::size_t ordinal = static_cast<std::size_t>( value->magnitude );
+        const std::size_t ordinal = *offset + static_cast<std::size_t>( value->magnitude );
 
         if( covered[ordinal].is_valid() )
         {
@@ -158,19 +173,34 @@ void Coverage::check_enum_arm_labels( Node_id arm, Switch_coverage& state )
 
 void Coverage::finish_enum_switch( const Switch_coverage& state )
 {
-    const std::span<const Node_id> variants = ast_.variants( table_.get( state.type ).declaration );
-    const std::vector<Node_id>&    covered  = state.variants;
+    const std::vector<Node_id>& covered = state.variants;
+    const bool                  united  = table_.is_union( state.type );
 
     // Named rather than counted: "missing `Green` and `Blue`" is the diagnostic this whole feature
-    // exists to produce, and "not exhaustive" would leave the author to work it out.
+    // exists to produce, and "not exhaustive" would leave the author to work it out. A union's are
+    // qualified, since two members may share a variant's name.
+    std::vector<std::string>      qualified;
     std::vector<std::string_view> missing;
 
-    for( std::size_t i = 0; i < variants.size(); ++i )
+    for( std::size_t m = 0; m < state.members.size(); ++m )
     {
-        if( !covered[i].is_valid() )
+        const std::span<const Node_id> variants = ast_.variants( table_.get( state.members[m] ).declaration );
+
+        for( std::size_t i = 0; i < variants.size(); ++i )
         {
-            missing.push_back( interner_.text( ast_.name( variants[i] ) ) );
+            if( !covered[state.offsets[m] + i].is_valid() )
+            {
+                const std::string_view name = interner_.text( ast_.name( variants[i] ) );
+                qualified.push_back(
+                    united ? fmt::format( "{}::{}", table_.base_name( state.members[m] ), name ) : std::string( name )
+                );
+            }
         }
+    }
+
+    for( const std::string& name : qualified )
+    {
+        missing.push_back( name );
     }
 
     if( !missing.empty() && !state.has_default )
@@ -305,34 +335,36 @@ void Coverage::finish_numeric_switch( const Switch_coverage& state )
 // D7. `case Shape::Circle( r ):` covers `Circle` and binds `r` to its payload. The binding is
 // read-only: an owning payload is borrowed in place, and writing through it would be writing into a
 // value the enum still owns.
-void Coverage::check_variant_pattern( Node_id pattern, Type_id type, std::vector<Node_id>& covered )
+void Coverage::check_variant_pattern( Node_id pattern, Switch_coverage& state )
 {
     const Node_id                  path     = ast_.variant_path( pattern );
     const std::span<const Node_id> bindings = ast_.bindings( pattern );
+    std::vector<Node_id>&          covered  = state.variants;
 
     // The pattern accounts for the payload, so the path inside it names a variant rather than
     // standing for a value.
-    const Type_id path_type = expressions_.infer_in_pattern( path, type );
+    const Type_id type = expressions_.infer_in_pattern( path, state.type );
 
-    if( table_.is_error( path_type ) )
+    if( table_.is_error( type ) )
     {
         return;
     }
 
-    if( path_type != type )
+    const std::optional<std::size_t> offset = member_offset( state, type, path );
+
+    if( !offset )
     {
-        reporter_.error_at( ast_.span( path ), fmt::format( "a `case` label must be a variant of `{}`", table_.name( type ) ) );
         return;
     }
 
     const std::optional<Constant_value> ordinal = constant_folder_.value_of( path );
 
-    if( !ordinal || ordinal->magnitude >= covered.size() )
+    if( !ordinal || *offset + ordinal->magnitude >= covered.size() )
     {
         return;
     }
 
-    const std::size_t index = static_cast<std::size_t>( ordinal->magnitude );
+    const std::size_t index = *offset + static_cast<std::size_t>( ordinal->magnitude );
 
     if( covered[index].is_valid() )
     {
@@ -348,7 +380,7 @@ void Coverage::check_variant_pattern( Node_id pattern, Type_id type, std::vector
     covered[index] = path;
 
     const Node_id              decl    = table_.get( type ).declaration;
-    const Node_id              variant = ast_.variants( decl )[index];
+    const Node_id              variant = ast_.variants( decl )[index - *offset];
     const std::vector<Node_id> carried = aggregates_.carried_payload( type, variant ); // D51: no `void`
 
     // A variant that failed to parse has no count to hold its uses to.
@@ -378,6 +410,22 @@ void Coverage::check_variant_pattern( Node_id pattern, Type_id type, std::vector
         // A pattern's bindings are the one thing this class writes a type for.
         types_.record( bindings[i], aggregates_.field_type( type, carried[i] ) );
     }
+}
+
+std::optional<std::size_t> Coverage::member_offset( const Switch_coverage& state, Type_id label_type, Node_id label )
+{
+    for( std::size_t m = 0; m < state.members.size(); ++m )
+    {
+        if( state.members[m] == label_type )
+        {
+            return state.offsets[m];
+        }
+    }
+
+    reporter_.error_at(
+        ast_.span( label ), fmt::format( "a `case` label must be a variant of `{}`", table_.name( state.type ) )
+    );
+    return std::nullopt;
 }
 
 // A `case` bound is always an integer, whatever the scrutinee is - D34 gives `..` one meaning, and

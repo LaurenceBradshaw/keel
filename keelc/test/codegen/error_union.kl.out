@@ -1,0 +1,27 @@
+load
+missing
+gone 10
+drop 10
+bad line 7
+empty
+ok 7
+peek
+peek gone 10
+drop 10
+peek other
+peek ok 9
+locals
+drop 50
+gone
+drop 51
+io
+drop 50
+io
+io
+held
+drop 60
+held
+drop 61
+optional
+some 70
+none

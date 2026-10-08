@@ -46,6 +46,8 @@ enum class Node_kind : u16
     Function_type,
     // `field( A ) -> T`; children: the field's type, then the aggregate's.
     Field_type,
+    // `A | B`; children: the members as written.
+    Union_type,
     // children: the types.
     Type_arg_list,
     // children: the Param_decls, the receiver first when there is one.

@@ -1,0 +1,17 @@
+// §6.7: `A | B` is a type wherever one is written - a type argument, a return type, a parameter, a
+// field and a local - and a `>>` after one still closes two lists.
+A | B pick( A | B | C e )
+{
+    A | B local = e;
+    return local;
+}
+
+class Holder
+{
+    Io_error | kl::Parse_error last;
+};
+
+result<u64, A | B> load( Opt<result<u64, A | B>> nested )
+{
+    return fail<A | B>();
+}

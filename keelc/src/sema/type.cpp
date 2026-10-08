@@ -237,6 +237,7 @@ bool Type_table::mentions_parameter( Type_id id ) const
         return mentions_parameter( described.element );
     case Type_kind::Enum:
     case Type_kind::Struct:
+    case Type_kind::Union:
         for( Type_id arg : described.arguments )
         {
             if( mentions_parameter( arg ) )
@@ -351,6 +352,79 @@ Type_id Type_table::substitute( Type_id type, const Bindings& bindings )
     }
 
     return type;
+}
+
+Type_id Type_table::error_union( std::span<const Type_id> members )
+{
+    std::vector<Type_id> flattened;
+    for( Type_id member : members )
+    {
+        if( !member.is_valid() )
+        {
+            continue;
+        }
+
+        const Type& described = get( member );
+
+        if( described.kind == Type_kind::Union )
+        {
+            flattened.insert( flattened.end(), described.arguments.begin(), described.arguments.end() );
+        }
+        else
+        {
+            flattened.push_back( member );
+        }
+    }
+
+    std::sort( flattened.begin(), flattened.end(), []( Type_id a, Type_id b ) { return a.v < b.v; } );
+    flattened.erase( std::unique( flattened.begin(), flattened.end() ), flattened.end() );
+
+    if( flattened.empty() )
+    {
+        return Type_id {};
+    }
+
+    if( flattened.size() == 1 )
+    {
+        return flattened[0];
+    }
+
+    const auto it = std::find_if(
+        unions_.begin(),
+        unions_.end(),
+        [&]( Type_id id )
+        {
+            const Type& described = get( id );
+            return described.arguments.size() == flattened.size() &&
+                   std::equal( described.arguments.begin(), described.arguments.end(), flattened.begin() );
+        }
+    );
+    if( it != unions_.end() )
+    {
+        return *it;
+    }
+
+    std::string spelling;
+    for( std::size_t i = 0; i < flattened.size(); ++i )
+    {
+        if( i != 0 )
+        {
+            spelling += " | ";
+        }
+        spelling += name( flattened[i] );
+    }
+
+    // A tag is kept once given.
+    for( Type_id member : flattened )
+    {
+        error_tags_.try_emplace( member.v, narrow_cast<u32>( error_tags_.size() ) );
+    }
+
+    const std::vector<Type_id>& stored = arguments_.emplace_back( std::move( flattened ) );
+
+    const Type_id id = add( Type { .kind = Type_kind::Union, .element = integer( 32, false ), .arguments = stored }, spelling );
+    unions_.push_back( id );
+    return id;
 }
 
 bool Type_table::deduce( Type_id pattern, Type_id actual, Bindings& into ) const
@@ -518,6 +592,11 @@ bool Type_table::holds( Type_id from, Type_id to ) const
 
     const Type& f = get( from );
     const Type& t = get( to );
+
+    if( is_union( to ) )
+    {
+        return !is_union( from ) && has_member( to, from );
+    }
 
     // Adding `const` to the element is safe, and only one level down: `T**` to `const T**` would let a `const T*` be stored
     // where a `T*` is read back.
@@ -893,6 +972,47 @@ std::string_view Type_table::package( Type_id id ) const
     return it == packages_.end() ? std::string_view {} : it->second;
 }
 
+std::vector<Type_id> Type_table::union_types() const
+{
+    return unions_;
+}
+
+u32 Type_table::error_tag( Type_id member ) const
+{
+    const auto it = error_tags_.find( member.v );
+    assert( it != error_tags_.end() && "a tag is given to every member of a union" );
+    return it->second;
+}
+
+bool Type_table::has_member( Type_id union_type, Type_id member ) const
+{
+    assert( is_union( union_type ) );
+    const Type& described = get( union_type );
+    return std::find( described.arguments.begin(), described.arguments.end(), member ) != described.arguments.end();
+}
+
+Type_id Type_table::member_declared_by( Type_id union_type, Node_id declaration ) const
+{
+    assert( is_union( union_type ) );
+    const Type& described = get( union_type );
+
+    for( Type_id member : described.arguments )
+    {
+        if( get( member ).declaration == declaration )
+        {
+            return member;
+        }
+    }
+
+    return Type_id {};
+}
+
+bool Type_table::is_union( Type_id id ) const
+{
+    assert( id.is_valid() );
+    return get( id ).kind == Type_kind::Union;
+}
+
 Type_id Type_table::add( const Type& type, std::string_view name )
 {
     types_.push_back( type );
@@ -903,9 +1023,16 @@ Type_id Type_table::add( const Type& type, std::string_view name )
 // `const i32`, but `i32* const`: a leading const would bind to the innermost element
 std::string Type_table::const_spelling( Type_id element, bool const_element ) const
 {
+    std::string spelling = std::string( name( element ) );
+
+    if( is_union( element ) )
+    {
+        spelling = fmt::format( "({})", spelling );
+    }
+
     if( !const_element )
     {
-        return std::string( name( element ) );
+        return spelling;
     }
 
     if( is_pointer( element ) || is_many_pointer( element ) )

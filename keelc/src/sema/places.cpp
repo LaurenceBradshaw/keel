@@ -546,7 +546,9 @@ Node_id Places::dying_storage( Node_id place, Node_id current_function ) const
 
 void Places::check_owning_source( Node_id value, Type_id type )
 {
-    if( !value.is_valid() || bounds_.satisfies( type, Bound::Copyable ) || ast_.kind( value ) == Node_kind::Marker_expr )
+    // The value's own type as well: a copyable member converting into an owning union gives up nothing.
+    if( !value.is_valid() || bounds_.satisfies( type, Bound::Copyable ) || ast_.kind( value ) == Node_kind::Marker_expr ||
+        bounds_.satisfies( types_.type_of( value ), Bound::Copyable ) )
     {
         return;
     }

@@ -58,6 +58,12 @@ void Generic_recursion::record_generic_uses( Node_id from, Type_id type, Span at
             }
         }
         break;
+    case Type_kind::Union:
+        for( const Type_id member : described.arguments )
+        {
+            record_generic_uses( from, member, at );
+        }
+        break;
 
     // A bare `T` forwards rather than builds, and nothing else can hold a type argument at all.
     default:

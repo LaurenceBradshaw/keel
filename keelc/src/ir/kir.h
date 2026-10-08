@@ -64,13 +64,15 @@ enum class Projection_kind : u8
 {
     Field,
     Deref,
-    Tag // D7: the discriminant of an enum that carries payloads; `field` is unused
+    Tag,   // D7: the discriminant of an enum that carries payloads, or of a union; `field` is unused
+    Member // §6.7: one member of a union
 };
 
 struct Projection
 {
     Projection_kind kind = Projection_kind::Deref;
-    Node_id         field {}; // the Field_decl; valid only for kind == Field
+    Node_id         field {};  // the Field_decl; valid only for kind == Field
+    Type_id         member {}; // valid only for kind == Member
 };
 
 // Somewhere a value lives: `x`, `p.y`, `(*q).z`. The same split the C emitter found as lower()

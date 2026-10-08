@@ -1,0 +1,57 @@
+Source_file                             1:1-18:1
+  Function_decl                         3:1-7:2     name=pick
+    Union_type                          3:1-3:6
+      Named_type                        3:1-3:2     "A"
+      Named_type                        3:5-3:6     "B"
+    Param_list                          3:11-3:26
+      Param_decl                        3:13-3:24   name=e
+        Union_type                      3:13-3:22
+          Named_type                    3:13-3:14   "A"
+          Named_type                    3:17-3:18   "B"
+          Named_type                    3:21-3:22   "C"
+    Block                               4:1-7:2
+      Var_decl                          5:5-5:21    name=local
+        Union_type                      5:5-5:10
+          Named_type                    5:5-5:6     "A"
+          Named_type                    5:9-5:10    "B"
+        Name_expr                       5:19-5:20   "e"
+      Return_stmt                       6:5-6:18
+        Name_expr                       6:12-6:17   "local"
+    <none>                              -
+  Class_decl                            9:1-12:3    name=Holder
+    <none>                              -
+    Field_decl                          11:5-11:37  name=last
+      Union_type                        11:5-11:31
+        Named_type                      11:5-11:13  "Io_error"
+        Named_type                      11:16-11:31 name=Parse_error
+          Name_expr                     11:16-11:18 "kl"
+  Function_decl                         14:1-17:2   name=load
+    Generic_type                        14:1-14:19
+      Named_type                        14:1-14:7   "result"
+      Type_arg_list                     14:7-14:19
+        Named_type                      14:8-14:11  "u64"
+        Union_type                      14:13-14:18
+          Named_type                    14:13-14:14 "A"
+          Named_type                    14:17-14:18 "B"
+    Param_list                          14:24-14:58
+      Param_decl                        14:26-14:56 name=nested
+        Generic_type                    14:26-14:49
+          Named_type                    14:26-14:29 "Opt"
+          Type_arg_list                 14:29-14:49
+            Generic_type                14:30-14:49
+              Named_type                14:30-14:36 "result"
+              Type_arg_list             14:36-14:49
+                Named_type              14:37-14:40 "u64"
+                Union_type              14:42-14:47
+                  Named_type            14:42-14:43 "A"
+                  Named_type            14:46-14:47 "B"
+    Block                               15:1-17:2
+      Return_stmt                       16:5-16:26
+        Call_expr                       16:12-16:25
+          Name_expr                     16:12-16:16 "fail"
+          Arg_list                      16:23-16:25 "()"
+          Type_arg_list                 16:16-16:23
+            Union_type                  16:17-16:22
+              Named_type                16:17-16:18 "A"
+              Named_type                16:21-16:22 "B"
+    <none>                              -

@@ -221,14 +221,16 @@ bool mentions_program_type( const Ast& ast, const Type_table& table, const Impor
 }
 
 // D46: an instance of a prelude generic at a program type is the program's.
+// A union is the program's: nothing in the prelude names one.
 bool in_prelude_half( const Ast& ast, const Type_table& table, const Imports& imports, Type_id type )
 {
-    return in_prelude( ast, imports, table.get( type ).declaration ) && !mentions_program_type( ast, table, imports, type );
+    return table.get( type ).declaration.is_valid() && in_prelude( ast, imports, table.get( type ).declaration ) &&
+           !mentions_program_type( ast, table, imports, type );
 }
 
 bool in_prelude_half( const Ast& ast, const Type_table& table, const Imports& imports, const Function& function )
 {
-    return in_prelude( ast, imports, function.declaration ) &&
+    return function.declaration.is_valid() && in_prelude( ast, imports, function.declaration ) &&
            std::ranges::none_of(
                function.type_arguments,
                [&]( Type_id argument ) { return mentions_program_type( ast, table, imports, argument ); }
@@ -517,6 +519,27 @@ void Kir_emitter::emit_composites()
         write_line( spelling_.structure( type ) );
         write_line( "{" );
         indent_ += 4;
+
+        // §6.7: the live member's tag, then the members overlaid.
+        if( types_.table().is_union( type ) )
+        {
+            write_line( fmt::format( "{} tag;", spelling_.type( types_.table().get( type ).element ) ) );
+            write_line( "union" );
+            write_line( "{" );
+            indent_ += 4;
+
+            for( const Type_id member : types_.table().get( type ).arguments )
+            {
+                write_line( fmt::format( "{} e{};", spelling_.type( member ), types_.table().error_tag( member ) ) );
+            }
+
+            indent_ -= 4;
+            write_line( "};" );
+            indent_ -= 4;
+            write_line( "};" );
+            write_line( "" );
+            continue;
+        }
 
         // Which variant is held is not a field of any variant, so it is written first and once.
         if( types_.table().is_enum( type ) )
@@ -1222,8 +1245,9 @@ Type_id Kir_emitter::type_of( const Place& place ) const
         // Deref is the pointee, Field is the field's type *through this instance* - the declaration
         // records `Box<T>`'s field as a `T`, and a drop of it has to name the `Buf` - and a Tag is
         // the enum's underlying integer, which is also `element`. Mirrors place()'s walk.
-        type = proj.kind == Projection_kind::Field ? field_type( ast_, types_.table(), type, proj.field, types_.recorded() )
-                                                   : types_.table().get( type ).element;
+        type = proj.kind == Projection_kind::Field    ? field_type( ast_, types_.table(), type, proj.field, types_.recorded() )
+               : proj.kind == Projection_kind::Member ? proj.member
+                                                      : types_.table().get( type ).element;
     }
 
     return type;
@@ -1253,6 +1277,9 @@ std::string Kir_emitter::place( const Place& place ) const
             break;
         case Projection_kind::Tag:
             text = fmt::format( "{}.tag", text );
+            break;
+        case Projection_kind::Member:
+            text = fmt::format( "{}.e{}", text, types_.table().error_tag( proj.member ) );
             break;
         }
     }
@@ -1439,7 +1466,7 @@ std::vector<Type_id> emitted_struct_order( const Ast& ast, Types& types, const I
         // integer - so admitting one would forward-declare a struct that is an `int`. The kind is
         // checked first because enum_has_payload asserts on anything but an Enum_decl.
         const bool writes_a_struct =
-            types.table().is_struct( type ) ||
+            types.table().is_struct( type ) || types.table().is_union( type ) ||
             ( types.table().is_enum( type ) && ast.enum_has_payload( types.table().get( type ).declaration ) );
 
         if( !writes_a_struct )
@@ -1460,9 +1487,19 @@ std::vector<Type_id> emitted_struct_order( const Ast& ast, Types& types, const I
 
         visiting.push_back( type );
 
-        for( const Node_id member : ast.contained_fields( types.table().get( type ).declaration ) )
+        if( types.table().is_union( type ) )
         {
-            self( self, field_type( ast, types.table(), type, member, types.recorded() ) );
+            for( const Type_id member : types.table().get( type ).arguments )
+            {
+                self( self, member );
+            }
+        }
+        else
+        {
+            for( const Node_id member : ast.contained_fields( types.table().get( type ).declaration ) )
+            {
+                self( self, field_type( ast, types.table(), type, member, types.recorded() ) );
+            }
         }
 
         visiting.pop_back();
@@ -1476,6 +1513,14 @@ std::vector<Type_id> emitted_struct_order( const Ast& ast, Types& types, const I
         const Type_id type = types.table().composite_types()[at];
 
         if( part == C_part::Program || in_prelude_half( ast, types.table(), imports, type ) )
+        {
+            visit( visit, type );
+        }
+    }
+
+    if( part == C_part::Program )
+    {
+        for( const Type_id type : types.table().union_types() )
         {
             visit( visit, type );
         }

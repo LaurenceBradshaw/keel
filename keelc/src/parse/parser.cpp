@@ -150,6 +150,7 @@ private:
     // --- types. `u32*` is a type *expression* and gets nodes of its own. ---
 
     Node_id parse_type();
+    Node_id parse_type_term();
     Node_id parse_type_with_mode();
     Node_id parse_param();
 
@@ -2053,7 +2054,26 @@ Node_id Parser::parse_field_init()
     return ast_.add( Node_kind::Field_init, Span::merge( start, previous().span ), name.v, { value } );
 }
 
+// `A | B`: an error union (§6.7), of every term written.
 Node_id Parser::parse_type()
+{
+    std::vector<Node_id> type_terms;
+    do
+    {
+        type_terms.push_back( parse_type_term() );
+    } while( pending_greater_ == 0 && match( Token_kind::Pipe ) );
+
+    if( type_terms.size() == 1 )
+    {
+        return type_terms[0];
+    }
+
+    return ast_.add(
+        Node_kind::Union_type, Span::merge( ast_.span( type_terms[0] ), ast_.span( type_terms.back() ) ), 0, type_terms
+    );
+}
+
+Node_id Parser::parse_type_term()
 {
     const Span start = peek().span;
 

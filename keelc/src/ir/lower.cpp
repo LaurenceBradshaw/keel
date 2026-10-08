@@ -29,8 +29,8 @@ void drop_place( Builder& builder, const Ast& ast, Types& types, Place place, Ty
     }
 
     // Which payload is live is known only at run time, so the drop is a call to the enum's
-    // synthesised destructor rather than an expansion here (D30).
-    if( types.table().is_enum( type ) )
+    // synthesised destructor rather than an expansion here (D30); a union's likewise.
+    if( types.table().is_enum( type ) || types.table().is_union( type ) )
     {
         builder.drop( place, span, replacing );
         return;
@@ -119,7 +119,7 @@ private:
     Operand lower_variant_construction( Node_id id );
     Operand lower_try( Node_id id );
     Operand lower_empty_variant( Node_id id );
-    void    bind_variant_pattern( Place matched, Node_id label, bool consumes );
+    void    bind_variant_pattern( Place matched, Type_id matched_type, Node_id label, bool consumes );
     Place   lower_place( Node_id id );     // names where a value lives
     void    lower_statement( Node_id id ); // emits, produces nothing
     // `bindings` are the *callee's*: the parameter's type is written in its declaration, so
@@ -137,8 +137,8 @@ private:
     void lower_increment( Node_id id );
     void lower_if( Node_id id );
     void lower_switch( Node_id id );
-    void lower_case_test( Operand scrutinee, Node_id label, Block_id body );
-    void lower_arm_body( Node_id arm, Place matched, Block_id fallthrough_to, bool consumes );
+    void lower_case_test( Operand scrutinee, Place matched, Type_id matched_type, Node_id label, Block_id body );
+    void lower_arm_body( Node_id arm, Place matched, Type_id matched_type, Block_id fallthrough_to, bool consumes );
     void lower_while( Node_id id );
     void lower_for( Node_id id );
 
@@ -173,6 +173,11 @@ private:
     Type_id operation_type( Node_id node );
     Type_id comparison_width( Type_id type ) const;
     Operand converted( Operand operand, Type_id to, Span span );
+    // §6.7: a member into a union holding it, in a temporary of the union; anything else as it is.
+    Operand united( Operand operand, Type_id to, Span span );
+    // An error written into `target` as it is, into a union holding it, or into a wider union
+    // keeping its tag. `source` is storage nothing drops.
+    void    write_error( Place target, Type_id to, Place source, Type_id from, Span span );
     Operand checked_cast( Operand operand, Type_id to, Span span );
     Operand moved_if_owning( Operand operand );
 
@@ -530,7 +535,103 @@ Operand Lowering::converted( Operand operand, Type_id to, Span span )
         return operand;
     }
 
+    if( types_.table().is_union( to ) )
+    {
+        return united( operand, to, span );
+    }
+
     return copy( builder_.place( builder_.into_temp( cast_to( operand, to ), to, span ) ), to );
+}
+
+Operand Lowering::united( Operand operand, Type_id to, Span span )
+{
+    if( operand.type == to || !types_.table().is_union( to ) )
+    {
+        return operand;
+    }
+
+    const Type_id  tag_type = types_.table().get( to ).element;
+    const Local_id local    = builder_.add_local( to, span );
+    const Place    place    = builder_.place( local );
+
+    builder_.assign(
+        builder_.tag( place ),
+        use( constant( literal_pool_.add_integer( types_.table().error_tag( operand.type ) ), tag_type ) ),
+        span
+    );
+    builder_.assign( builder_.member( place, operand.type ), use( moved_if_owning( operand ) ), span );
+
+    if( owns( to ) )
+    {
+        statement_temporaries_.push_back( local );
+    }
+
+    return copy( place, to );
+}
+
+void Lowering::write_error( Place target, Type_id to, Place source, Type_id from, Span span )
+{
+    const Type_table& table = types_.table();
+
+    if( from == to )
+    {
+        builder_.assign( target, use( copy( source, from ) ), span );
+        return;
+    }
+
+    const Type_id tag_type = table.get( to ).element;
+
+    if( !table.is_union( from ) )
+    {
+        builder_.assign(
+            builder_.tag( target ), use( constant( literal_pool_.add_integer( table.error_tag( from ) ), tag_type ) ), span
+        );
+        builder_.assign( builder_.member( target, from ), use( copy( source, from ) ), span );
+        return;
+    }
+
+    // The tag is kept, and the live member copied across; the last needs no test.
+    builder_.assign( builder_.tag( target ), use( copy( builder_.tag( source ), tag_type ) ), span );
+
+    const Type_id                  boolean = table.builtin( Type_kind::Bool );
+    const Block_id                 done    = builder_.add_block();
+    const std::span<const Type_id> members = table.get( from ).arguments;
+
+    for( std::size_t i = 0; i < members.size(); ++i )
+    {
+        const Type_id member = members[i];
+
+        if( i + 1 < members.size() )
+        {
+            const Local_id live = builder_.into_temp(
+                binary(
+                    Token_kind::Equal_equal,
+                    copy( builder_.tag( source ), tag_type ),
+                    constant( literal_pool_.add_integer( table.error_tag( member ) ), tag_type ),
+                    boolean
+                ),
+                boolean,
+                span
+            );
+
+            const Block_id body = builder_.add_block();
+            const Block_id next = builder_.add_block();
+
+            builder_.terminate_branch( copy( builder_.place( live ), boolean ), body, next, span );
+            builder_.switch_to( body );
+            builder_.assign(
+                builder_.member( target, member ), use( copy( builder_.member( source, member ), member ) ), span
+            );
+            builder_.terminate_goto( done, span );
+            builder_.switch_to( next );
+            continue;
+        }
+
+        builder_.assign( builder_.member( target, member ), use( copy( builder_.member( source, member ), member ) ), span );
+        builder_.terminate_goto( done, span );
+    }
+
+    builder_.switch_to( done );
 }
 
 // D28: a narrowing `cast` ends the program unless the value comes back unchanged, sign included.
@@ -1226,7 +1327,7 @@ Operand Lowering::lower_unary( Node_id id )
 // D7. `case Shape::Circle( r ):` gives `r` a local. An owning field is borrowed in place, as D31
 // borrows a bare owning parameter; anything else is copied. A consuming switch moves the whole value
 // out first, so the switch's own drop is skipped, and each binding owns its field.
-void Lowering::bind_variant_pattern( Place matched, Node_id label, bool consumes )
+void Lowering::bind_variant_pattern( Place matched, Type_id matched_type, Node_id label, bool consumes )
 {
     if( ast_.kind( label ) != Node_kind::Variant_pattern )
     {
@@ -1252,6 +1353,12 @@ void Lowering::bind_variant_pattern( Place matched, Node_id label, bool consumes
         const Type_id whole = builder_.type_of( matched.local );
 
         matched = builder_.place( builder_.into_temp( use( move( matched, whole ) ), whole, ast_.span( label ) ) );
+    }
+
+    // §6.7: the payload is the live member's.
+    if( types_.table().is_union( matched_type ) )
+    {
+        matched = builder_.member( matched, enum_type );
     }
 
     for( std::size_t i = 0; i < bindings.size() && i < payload.size(); ++i )
@@ -1410,9 +1517,11 @@ Operand Lowering::lower_try( Node_id id )
     const std::vector<Node_id> err_fields = carried_payload( ast_, types_.table(), type, err, types_.recorded() );
     for( const Node_id field : err_fields )
     {
-        builder_.assign(
+        write_error(
             builder_.field( slot, field ),
-            use( copy( builder_.field( taken, field ), field_type( ast_, types_.table(), type, field, types_.recorded() ) ) ),
+            field_type( ast_, types_.table(), slot_type, field, types_.recorded() ),
+            builder_.field( taken, field ),
+            field_type( ast_, types_.table(), type, field, types_.recorded() ),
             span
         );
     }
@@ -2033,7 +2142,11 @@ void Lowering::lower_return( Node_id id )
         }
         else
         {
-            builder_.assign( builder_.place( k_return_slot ), use( moved_if_owning( lower_expression( value ) ) ), span );
+            builder_.assign(
+                builder_.place( k_return_slot ),
+                use( moved_if_owning( united( lower_expression( value ), builder_.type_of( k_return_slot ), span ) ) ),
+                span
+            );
         }
     }
     drop_statement_temporaries( span );
@@ -2079,7 +2192,9 @@ void Lowering::lower_var( Node_id id )
             // An owning value is never copied: the copy would share the resource, and both would be
             // dropped. Where the source is a temporary that is exactly right - it has no other
             // owner.
-            builder_.assign( builder_.place( local ), use( moved_if_owning( lower_expression( init ) ) ), span );
+            builder_.assign(
+                builder_.place( local ), use( moved_if_owning( united( lower_expression( init ), type, span ) ) ), span
+            );
         }
     }
     // In scope only once it holds a value: a `try` in the initialiser leaves before then.
@@ -2101,7 +2216,7 @@ void Lowering::lower_assign( Node_id id )
         // Same reason as an initialiser: an owning value is never copied, or both copies would be
         // dropped. A compound assignment cannot reach here for one - arithmetic on an owning type
         // has no meaning.
-        Operand source = moved_if_owning( value );
+        Operand source = moved_if_owning( united( value, type, span ) );
 
         // The old value is destroyed first, after the new one is read: `o = move o` goes through a
         // temporary so the drop cannot reach it.
@@ -2166,7 +2281,7 @@ void Lowering::lower_increment( Node_id id )
 // and the lowerer already builds that out of blocks. So a range is one more link in the same chain:
 // `low <= x` failing leaves the arm exactly as a failed equality does, and succeeding falls into a
 // block that tests `x < high`. No new rvalue, and nothing downstream learns that ranges exist.
-void Lowering::lower_case_test( Operand scrutinee, Node_id label, Block_id body )
+void Lowering::lower_case_test( Operand scrutinee, Place matched, Type_id matched_type, Node_id label, Block_id body )
 {
     const Span    span    = ast_.span( label );
     const Type_id boolean = types_.table().builtin( Type_kind::Bool );
@@ -2201,6 +2316,43 @@ void Lowering::lower_case_test( Operand scrutinee, Node_id label, Block_id body 
         builder_.switch_to( next );
     };
 
+    const Node_id path = ast_.kind( label ) == Node_kind::Variant_pattern ? ast_.variant_path( label ) : label;
+
+    // §6.7: over a union, the member's tag and then its variant, chained as a range's two tests are.
+    if( types_.table().is_union( matched_type ) )
+    {
+        const Type_id  member   = type_of( path );
+        const Type_id  tag_type = types_.table().get( matched_type ).element;
+        const Block_id inner    = builder_.add_block();
+
+        const Local_id held = builder_.into_temp(
+            binary(
+                Token_kind::Equal_equal,
+                scrutinee,
+                constant( literal_pool_.add_integer( types_.table().error_tag( member ) ), tag_type ),
+                boolean
+            ),
+            boolean,
+            span
+        );
+        const Block_id missed = builder_.add_block();
+
+        builder_.terminate_branch( copy( builder_.place( held ), boolean ), inner, missed, span );
+        builder_.switch_to( inner );
+
+        const Place   value   = builder_.member( matched, member );
+        const bool    tagged  = ast_.enum_has_payload( types_.table().get( member ).declaration );
+        const Type_id ordinal = tagged ? types_.table().get( member ).element : member;
+        const Operand read    = copy( tagged ? builder_.tag( value ) : value, ordinal );
+
+        const Local_id test =
+            builder_.into_temp( binary( Token_kind::Equal_equal, read, value_of( path ), boolean ), boolean, span );
+
+        builder_.terminate_branch( copy( builder_.place( test ), boolean ), body, missed, span );
+        builder_.switch_to( missed );
+        return;
+    }
+
     // A pattern's test is its path: the bindings are written inside the arm, once the test has
     // already said which variant is live.
     if( ast_.kind( label ) == Node_kind::Variant_pattern )
@@ -2234,7 +2386,7 @@ void Lowering::lower_case_test( Operand scrutinee, Node_id label, Block_id body 
 
 // The fallback arm goes through here too, so it binds its pattern like any other - easy to miss,
 // since the last arm of an exhaustive switch is the fallback and may well destructure.
-void Lowering::lower_arm_body( Node_id arm, Place matched, Block_id fallthrough_to, bool consumes )
+void Lowering::lower_arm_body( Node_id arm, Place matched, Type_id matched_type, Block_id fallthrough_to, bool consumes )
 {
     // A consuming switch's bindings own their payloads, so they drop when the arm ends.
     if( consumes )
@@ -2246,7 +2398,7 @@ void Lowering::lower_arm_body( Node_id arm, Place matched, Block_id fallthrough_
     // runs - so the names are live exactly where the resolver put them in scope, and nowhere else.
     for( const Node_id label : ast_.labels( arm ) )
     {
-        bind_variant_pattern( matched, label, consumes );
+        bind_variant_pattern( matched, matched_type, label, consumes );
     }
 
     const Block_id enclosing_fallthrough = fallthrough_target_;
@@ -2267,13 +2419,15 @@ void Lowering::lower_switch( Node_id id )
     const std::span<const Node_id> arms = ast_.arms( id );
     const Span                     span = ast_.span( id );
 
-    Operand scrutinee = lower_expression( ast_.scrutinee( id ) );
+    Operand       scrutinee      = lower_expression( ast_.scrutinee( id ) );
+    const Type_id scrutinee_type = scrutinee.type;
 
     // D7: a payload enum is a struct, so what a label compares against is its *tag*. Read once here
     // alongside the scrutinee, so the arms below are unchanged - they still compare one operand
     // against one constant, and never learn that payloads exist.
-    const bool payloads =
-        types_.table().is_enum( scrutinee.type ) && ast_.enum_has_payload( types_.table().get( scrutinee.type ).declaration );
+    const bool payloads = types_.table().is_union( scrutinee.type ) ||
+                          ( types_.table().is_enum( scrutinee.type ) &&
+                            ast_.enum_has_payload( types_.table().get( scrutinee.type ).declaration ) );
 
     const bool consumes = ast_.consumes( id ) && owns( scrutinee.type );
 
@@ -2386,7 +2540,7 @@ void Lowering::lower_switch( Node_id id )
 
         for( const Node_id label : labels )
         {
-            lower_case_test( scrutinee, label, body );
+            lower_case_test( scrutinee, matched, scrutinee_type, label, body );
         }
 
         // The block the last false edge left us in, so the arms chain without any block needing to
@@ -2397,7 +2551,7 @@ void Lowering::lower_switch( Node_id id )
 
         // The checker has already refused a `fallthrough` in the last arm, so an invalid target
         // here is never reached.
-        lower_arm_body( arm, matched, index + 1 < bodies.size() ? bodies[index + 1] : Block_id {}, consumes );
+        lower_arm_body( arm, matched, scrutinee_type, index + 1 < bodies.size() ? bodies[index + 1] : Block_id {}, consumes );
         leave();
 
         builder_.switch_to( resume );
@@ -2413,7 +2567,11 @@ void Lowering::lower_switch( Node_id id )
         // to whatever follows it in source order - which may be a block lowered long ago. An edge
         // backwards is still just an edge.
         lower_arm_body(
-            fallback, matched, fallback_index + 1 < bodies.size() ? bodies[fallback_index + 1] : Block_id {}, consumes
+            fallback,
+            matched,
+            scrutinee_type,
+            fallback_index + 1 < bodies.size() ? bodies[fallback_index + 1] : Block_id {},
+            consumes
         );
     }
 
@@ -2821,6 +2979,59 @@ Function enum_destructor( const Ast& ast, Types& types, Literal_pool& literals, 
     return function;
 }
 
+// §6.7: `~( A | B )( self )`, testing the tag against each member that owns. Declared by nothing;
+// its type argument is the union.
+Function union_destructor( const Ast& ast, Types& types, Literal_pool& literals, Type_id united )
+{
+    const std::span<const Type_id> members  = types.table().get( united ).arguments;
+    const Span                     span     = ast.span( types.table().get( members[0] ).declaration );
+    const Type_id                  tag_type = types.table().get( united ).element;
+    const Type_id                  boolean  = types.table().builtin( Type_kind::Bool );
+
+    Builder builder( Node_id {}, types.table().builtin( Type_kind::Void ), span );
+
+    const Local_id self  = builder.add_parameter( types.table().pointer_to( united ), span, Symbol_id {} );
+    const Place    value = builder.deref( builder.place( self ) );
+    const Block_id done  = builder.add_block();
+
+    for( const Type_id member : members )
+    {
+        if( !instance_owns( ast, types.table(), member, types.recorded() ) )
+        {
+            continue;
+        }
+
+        const Block_id body = builder.add_block();
+        const Block_id next = builder.add_block();
+
+        const Local_id live = builder.into_temp(
+            binary(
+                Token_kind::Equal_equal,
+                copy( builder.tag( value ), tag_type ),
+                constant( literals.add_integer( types.table().error_tag( member ) ), tag_type ),
+                boolean
+            ),
+            boolean,
+            span
+        );
+
+        builder.terminate_branch( copy( builder.place( live ), boolean ), body, next, span );
+        builder.switch_to( body );
+        drop_place( builder, ast, types, builder.member( value, member ), member, span, false );
+        builder.terminate_goto( done, span );
+        builder.switch_to( next );
+    }
+
+    builder.terminate_goto( done, span );
+    builder.switch_to( done );
+    builder.terminate_return( span );
+
+    Function function = builder.finish();
+    function.type_arguments.push_back( united );
+
+    return function;
+}
+
 // Every closed owning enum the table holds. Repeated until nothing new appears, because lowering
 // one destructor can intern another: `Option<Option<Buf>>` names `Option<Buf>`.
 void append_enum_destructors( const Ast& ast, Types& types, Literal_pool& literals, std::vector<Function>& functions )
@@ -2843,6 +3054,14 @@ void append_enum_destructors( const Ast& ast, Types& types, Literal_pool& litera
             done.push_back( type );
             functions.push_back( enum_destructor( ast, types, literals, type ) );
             grew = true;
+        }
+    }
+
+    for( const Type_id type : types.table().union_types() )
+    {
+        if( instance_owns( ast, types.table(), type, types.recorded() ) )
+        {
+            functions.push_back( union_destructor( ast, types, literals, type ) );
         }
     }
 }

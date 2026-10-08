@@ -1,0 +1,281 @@
+// §6.7. An error union names its members, and `switch` matches their variants directly. `try` widens
+// an error into a union holding it; a member converts into one wherever a value meets a known type.
+// Each Buf holds heap memory and says when it goes, so the output is the drop order and
+// KEEL_VALGRIND=1 sees a drop missed, run twice, or run on the wrong member.
+class Buf
+{
+    u64* data;
+
+    Buf( u64 n )
+    {
+        unsafe
+        {
+            data = alloc<u64>();
+        }
+
+        *data = n;
+    }
+
+    ~Buf()
+    {
+        print( "drop " );
+        println( *data );
+
+        unsafe
+        {
+            free( data );
+        }
+    }
+
+    u64 get() const
+    {
+        return *data;
+    }
+};
+
+enum Io_error
+{
+    missing,
+    denied
+};
+
+enum Parse_error
+{
+    bad_line( u64 line ),
+    empty
+};
+
+enum Lost
+{
+    gone( Buf why )
+};
+
+enum Opt<T>
+{
+    some( T v ),
+    none
+};
+
+result<u64, Io_error> read( u64 n )
+{
+    if( n == 0 )
+    {
+        return result::err( Io_error::missing );
+    }
+
+    return result::ok( n );
+}
+
+result<u64, Parse_error> parse( u64 n )
+{
+    if( n == 7 )
+    {
+        return result::err( Parse_error::bad_line( n ) );
+    }
+
+    return result::ok( n * 2 );
+}
+
+result<u64, Lost> fetch( u64 n )
+{
+    if( n == 1 )
+    {
+        return result::err( Lost::gone( Buf( 10 ) ) );
+    }
+
+    return result::ok( n );
+}
+
+// Each `try` widens its own error; a member is returned straight into the union.
+result<u64, Io_error | Parse_error> load( u64 n )
+{
+    if( n == 9 )
+    {
+        return result::err( Parse_error::empty );
+    }
+
+    u64 text = try read( n );
+    return result::ok( try parse( text ) );
+}
+
+// A union into a wider one, an owning member among them.
+result<u64, Lost | Parse_error | Io_error> wider( u64 n )
+{
+    u64 got = try fetch( n );
+    return result::ok( try load( got ) + 1 );
+}
+
+// The same union travels as it is, written in the other order.
+result<u64, Io_error | Lost | Parse_error> same( u64 n )
+{
+    return result::ok( try wider( n ) );
+}
+
+// Leaves matched directly, a payload bound from its member, and every member's variants listed.
+void report( move Parse_error | Io_error | Lost e )
+{
+    switch( move e )
+    {
+    case Io_error::missing:
+        println( "missing" );
+        break;
+    case Io_error::denied:
+        println( "denied" );
+        break;
+    case Parse_error::bad_line( line ):
+        print( "bad line " );
+        println( line );
+        break;
+    case Parse_error::empty:
+        println( "empty" );
+        break;
+    case Lost::gone( b ):
+        print( "gone " );
+        println( b.get() );
+        break;
+    }
+}
+
+void show( move result<u64, Io_error | Lost | Parse_error> r )
+{
+    switch( move r )
+    {
+    case result::ok( v ):
+        print( "ok " );
+        println( v );
+        break;
+    case result::err( e ):
+        report( move e );
+        break;
+    }
+}
+
+// Borrowed, with a `default`: the union drops with `r`.
+void peek( result<u64, Io_error | Lost | Parse_error> r )
+{
+    switch( r )
+    {
+    case result::ok( v ):
+        print( "peek ok " );
+        println( v );
+        break;
+    case result::err( e ):
+        switch( e )
+        {
+        case Lost::gone( b ):
+            print( "peek gone " );
+            println( b.get() );
+            break;
+        default:
+            println( "peek other" );
+            break;
+        }
+        break;
+    }
+}
+
+// Consumed with bare labels: the union drops when the `switch` ends.
+void bare( move Io_error | Lost e )
+{
+    switch( move e )
+    {
+    case Io_error::missing:
+    case Io_error::denied:
+        println( "io" );
+        break;
+    case Lost::gone:
+        println( "gone" );
+        break;
+    }
+}
+
+// Into a local, a reassignment dropping the member before, a `?:`, and a copyable member passed bare.
+void locals( bool c )
+{
+    Io_error | Lost e = Io_error::denied;
+    e                 = Lost::gone( Buf( 50 ) );
+    e                 = Io_error::missing;
+
+    Io_error | Lost chosen = c ? Lost::gone( Buf( 51 ) ) : Io_error::denied;
+    bare( move chosen );
+    bare( Io_error::missing );
+}
+
+class Holder
+{
+    public Io_error | Lost last;
+};
+
+// A field and a generic's argument.
+void held()
+{
+    Holder h = Holder { Lost::gone( Buf( 60 ) ) };
+    h.last   = Io_error::denied;
+
+    Opt<Io_error | Lost> o = Opt::some( Lost::gone( Buf( 61 ) ) );
+    println( "held" );
+}
+
+// A generic member, found by its declaration.
+result<u64, Opt<u64> | Io_error> optional( bool some )
+{
+    if( some )
+    {
+        return result::err( Opt::some( 70 ) );
+    }
+
+    return result::err( Opt::none );
+}
+
+void show_optional( result<u64, Io_error | Opt<u64>> r )
+{
+    switch( r )
+    {
+    case result::ok( v ):
+        println( v );
+        break;
+    case result::err( e ):
+        switch( e )
+        {
+        case Opt::some( v ):
+            print( "some " );
+            println( v );
+            break;
+        case Opt::none:
+            println( "none" );
+            break;
+        case Io_error::missing:
+        case Io_error::denied:
+            println( "io" );
+            break;
+        }
+        break;
+    }
+}
+
+i32 main()
+{
+    println( "load" );
+    show( move same( 0 ) );
+    show( move same( 1 ) );
+    show( move same( 7 ) );
+    show( move same( 9 ) );
+    show( move same( 3 ) );
+
+    println( "peek" );
+    peek( same( 1 ) );
+    peek( same( 0 ) );
+    peek( same( 4 ) );
+
+    println( "locals" );
+    locals( true );
+    locals( false );
+
+    println( "held" );
+    held();
+
+    println( "optional" );
+    show_optional( optional( true ) );
+    show_optional( optional( false ) );
+    return 0;
+}

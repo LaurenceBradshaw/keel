@@ -509,7 +509,7 @@ int main( int argc, char** argv )
 
         for( const keel::Function& function : functions )
         {
-            if( ast.span( function.declaration ).file == prog.imports.prelude_file() )
+            if( function.declaration.is_valid() && ast.span( function.declaration ).file == prog.imports.prelude_file() )
             {
                 continue;
             }

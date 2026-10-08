@@ -277,6 +277,14 @@ void check_projections( const Function& func, std::vector<std::string>& errors )
             }
 
             break;
+
+        case Projection_kind::Member:
+            if( projection.field.is_valid() || !projection.member.is_valid() )
+            {
+                errors.push_back( fmt::format( "projection {}: a member carries its type and no field", i ) );
+            }
+
+            break;
         }
     }
 }

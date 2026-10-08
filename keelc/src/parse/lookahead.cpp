@@ -376,6 +376,7 @@ bool Lookahead::looks_like_type_arguments( u32 at )
         case Token_kind::Identifier:
         case Token_kind::Star:
         case Token_kind::Comma:
+        case Token_kind::Pipe:
             break;
 
         default:
@@ -682,6 +683,18 @@ bool Lookahead::scan_type_with_mode()
 
 bool Lookahead::scan_type()
 {
+    do
+    {
+        if( !scan_type_term() )
+        {
+            return false;
+        }
+    } while( owed_greater_ == 0 && match( Token_kind::Pipe ) );
+    return true;
+}
+
+bool Lookahead::scan_type_term()
+{
     match_keyword( Keyword::Const );
 
     if( check_keyword( Keyword::Fn ) || check_keyword( Keyword::Field ) )
@@ -873,85 +886,90 @@ bool Lookahead::scan_type_and_name()
         }
     }
 
-    if( !match( Token_kind::Identifier ) )
+    // `A | B e`: no expression is a union followed by a name.
+    do
     {
-        return false;
-    }
-
-    // `kl::Point p`: no expression is a path followed by a name.
-    if( check( Token_kind::Colon_colon ) && peek( 1 ).kind == Token_kind::Identifier )
-    {
-        advance();
-        advance();
-    }
-
-    // What may follow a type's name before the declared name: `Point*`, `const T&`, `Vector<i32>`.
-    while( true )
-    {
-        // Only an adjacent `*`/`&` is part of a type (D17), so `a * b;` stays an expression.
-        if( ( check( Token_kind::Star ) || check( Token_kind::Amp ) ) && peek_is_adjacent() )
+        if( !match( Token_kind::Identifier ) )
         {
-            advance();
-            continue;
+            return false;
         }
 
-        if( check( Token_kind::L_bracket ) && peek( 1 ).kind == Token_kind::Star && peek( 2 ).kind == Token_kind::R_bracket )
+        // `kl::Point p`: no expression is a path followed by a name.
+        if( check( Token_kind::Colon_colon ) && peek( 1 ).kind == Token_kind::Identifier )
         {
             advance();
             advance();
-            advance();
-            continue;
         }
 
-        if( match_keyword( Keyword::Const ) )
+        // What may follow a type's name before the declared name: `Point*`, `const T&`, `Vector<i32>`.
+        while( true )
         {
-            continue;
-        }
-
-        // Type arguments, nesting counted: `>>` closes two levels.
-        if( check( Token_kind::Less ) )
-        {
-            u32 depth = 0;
-
-            while( !at_end() )
+            // Only an adjacent `*`/`&` is part of a type (D17), so `a * b;` stays an expression.
+            if( ( check( Token_kind::Star ) || check( Token_kind::Amp ) ) && peek_is_adjacent() )
             {
-                if( match( Token_kind::Less ) )
-                {
-                    depth += 1;
-                }
-                else if( match( Token_kind::Greater ) )
-                {
-                    depth -= 1;
-                }
-                else if( match( Token_kind::Greater_greater ) )
-                {
-                    depth = depth >= 2 ? depth - 2 : 0;
-                }
-                else if( check( Token_kind::Semicolon ) || check( Token_kind::R_brace ) )
-                {
-                    break; // unbalanced - not a type
-                }
-                else
-                {
-                    advance();
-                }
-
-                if( depth == 0 )
-                {
-                    break;
-                }
+                advance();
+                continue;
             }
 
-            if( depth != 0 )
+            if( check( Token_kind::L_bracket ) && peek( 1 ).kind == Token_kind::Star &&
+                peek( 2 ).kind == Token_kind::R_bracket )
             {
-                return false;
+                advance();
+                advance();
+                advance();
+                continue;
             }
 
-            continue;
-        }
+            if( match_keyword( Keyword::Const ) )
+            {
+                continue;
+            }
 
-        break;
-    }
+            // Type arguments, nesting counted: `>>` closes two levels.
+            if( check( Token_kind::Less ) )
+            {
+                u32 depth = 0;
+
+                while( !at_end() )
+                {
+                    if( match( Token_kind::Less ) )
+                    {
+                        depth += 1;
+                    }
+                    else if( match( Token_kind::Greater ) )
+                    {
+                        depth -= 1;
+                    }
+                    else if( match( Token_kind::Greater_greater ) )
+                    {
+                        depth = depth >= 2 ? depth - 2 : 0;
+                    }
+                    else if( check( Token_kind::Semicolon ) || check( Token_kind::R_brace ) )
+                    {
+                        break; // unbalanced - not a type
+                    }
+                    else
+                    {
+                        advance();
+                    }
+
+                    if( depth == 0 )
+                    {
+                        break;
+                    }
+                }
+
+                if( depth != 0 )
+                {
+                    return false;
+                }
+
+                continue;
+            }
+
+            break;
+        }
+    } while( owed_greater_ == 0 && match( Token_kind::Pipe ) );
 
     // The name. A keyword, digit-led name or number holds its place, as for expect_name, so
     // `i32 out = 1;` reaches parse_var_decl and is reported there. At a statement's start,

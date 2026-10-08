@@ -39,6 +39,7 @@ enum class Type_kind : u8
     Parameter, // a generic type parameter.
     Function,
     Field,
+    Union, // `A | B`; `arguments` are the members, sorted
 };
 
 enum class Param_mode : u8
@@ -117,6 +118,10 @@ public:
     // constructor as readily as alone, and `T*` is reachable the moment anyone writes it.
     Type_id substitute( Type_id type, const Bindings& bindings );
 
+    // §6.7: nested unions flatten and members sort by id and deduplicate, so `A | B` and `B | A` are
+    // one type. A single member left is that member.
+    Type_id error_union( std::span<const Type_id> members );
+
     // The inverse: `T` against an `i32` binds `T`, `Box<T>` against a `Box<i32>` binds it one level
     // down. Structural for the same reason substitute() is. False means the two do not match at
     // all, which is not an error here - the ordinary argument check reports that - so a caller
@@ -188,6 +193,14 @@ public:
     void             set_package( Node_id declaration, std::string_view package, bool shown = true );
     std::string_view package( Type_id id ) const;
 
+    std::vector<Type_id> union_types() const; // in interning order
+    // A member's tag, the same in every union holding it, so widening keeps it.
+    u32  error_tag( Type_id member ) const;
+    bool has_member( Type_id union_type, Type_id member ) const;
+    // The member declared by `declaration`, or invalid: how a variant's path finds its instance.
+    Type_id member_declared_by( Type_id union_type, Node_id declaration ) const;
+    bool    is_union( Type_id id ) const;
+
 private:
     Type_id     add( const Type& type, std::string_view name );
     std::string const_spelling( Type_id element, bool const_element ) const;
@@ -227,8 +240,10 @@ private:
     std::unordered_map<std::string_view, Type_id>
         by_spelling_; // views into composed_ // "u8*" etc; name() returns views into these
 
-    std::vector<Type_id> functions_;
-    std::vector<Type_id> fields_;
+    std::vector<Type_id>         functions_;
+    std::vector<Type_id>         fields_;
+    std::vector<Type_id>         unions_;     // every union type the table has interned, in interning order
+    std::unordered_map<u32, u32> error_tags_; // member -> its tag
 
     std::unordered_map<u32, std::string> packages_; // Node_id of a declaration -> the package it was declared in
     std::unordered_set<u32>              unshown_packages_;

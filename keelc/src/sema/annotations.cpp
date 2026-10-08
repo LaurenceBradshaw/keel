@@ -138,6 +138,8 @@ Type_id Annotations::resolve( Node_id annotation, bool outermost )
         return resolve_function_type( annotation );
     case Node_kind::Field_type:
         return resolve_field_type( annotation );
+    case Node_kind::Union_type:
+        return resolve_union( annotation );
     default:
         // Error nodes, and anything the parser puts in type position that is not a type.
         return table_.builtin( Type_kind::Error );
@@ -443,6 +445,48 @@ Type_id Annotations::resolve_field_type( Node_id annotation )
     const Type_id member = member_mode == Keyword::Count ? resolve( bare_member, false ) : table_.builtin( Type_kind::Error );
 
     return poisoned || table_.is_error( member ) ? table_.builtin( Type_kind::Error ) : table_.field( aggregate, member );
+}
+
+// §6.7: each member is an `enum`, written once.
+Type_id Annotations::resolve_union( Node_id annotation )
+{
+    std::vector<Type_id> members;
+    bool                 failed = false;
+
+    for( const Node_id written : ast_.children( annotation ) )
+    {
+        const Type_id member = resolve( written, false );
+
+        if( table_.is_error( member ) )
+        {
+            failed = true;
+            continue;
+        }
+
+        if( !table_.is_enum( member ) )
+        {
+            reporter_.error_at(
+                ast_.span( written ),
+                fmt::format( "`{}` cannot be a member of an error union", table_.name( member ) ),
+                table_.is_parameter( member ) ? "a union's members are known where it is written, so none is a type parameter"
+                                              : "each member is an `enum`, matched by its variants"
+            );
+
+            failed = true;
+            continue;
+        }
+
+        if( std::ranges::find( members, member ) != members.end() )
+        {
+            reporter_.error_at( ast_.span( written ), fmt::format( "`{}` is written twice", table_.name( member ) ) );
+            failed = true;
+            continue;
+        }
+
+        members.push_back( member );
+    }
+
+    return failed ? table_.builtin( Type_kind::Error ) : table_.error_union( members );
 }
 
 namespace

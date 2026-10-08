@@ -58,6 +58,7 @@ private:
     Type_id resolve_generic( Node_id annotation );
     Type_id resolve_function_type( Node_id annotation );
     Type_id resolve_field_type( Node_id annotation );
+    Type_id resolve_union( Node_id annotation );
 
     Span const_keyword( Node_id const_type ) const;
 

@@ -1,0 +1,138 @@
+// §6.7. A union's members are enums, each written once and known where the union is written.
+// `try` widens an error into a union holding all of it, and nothing else widens one union into
+// another; `switch` over a union lists every member's variants, and nothing else.
+enum A
+{
+    a1,
+    a2
+};
+
+enum B
+{
+    b1( u64 n )
+};
+
+enum C
+{
+    c1
+};
+
+struct P
+{
+    i32 x;
+};
+
+result<u64, A | B> make_ab()
+{
+    return result::ok( 2 );
+}
+
+result<u64, C> make_c()
+{
+    return result::ok( 3 );
+}
+
+result<u64, A | i32> not_enum()
+{
+    return result::ok( 0 );
+}
+
+result<u64, A | P> struct_member()
+{
+    return result::ok( 0 );
+}
+
+result<u64, A | A> twice()
+{
+    return result::ok( 0 );
+}
+
+result<T, A | T> generic<T>( T v )
+{
+    return result::ok( v );
+}
+
+result<u64, A | B> lacks_c()
+{
+    u64 n = try make_c();
+    return result::ok( n );
+}
+
+result<u64, A | C> lacks_b()
+{
+    u64 n = try make_ab();
+    return result::ok( n );
+}
+
+void widened( A | B ab )
+{
+    A | B | C abc = ab;
+}
+
+void not_member()
+{
+    A | B e = C::c1;
+}
+
+void missing( A | B e )
+{
+    switch( e )
+    {
+    case A::a1:
+        break;
+    case B::b1( n ):
+        break;
+    }
+}
+
+void foreign( A | B e )
+{
+    switch( e )
+    {
+    case C::c1:
+        break;
+    default:
+        break;
+    }
+}
+
+void covered( A | B e )
+{
+    switch( e )
+    {
+    case A::a1:
+    case A::a2:
+        break;
+    case B::b1( n ):
+        break;
+    default:
+        break;
+    }
+}
+
+void repeated( A | B e )
+{
+    switch( e )
+    {
+    case A::a1:
+        break;
+    case A::a1:
+        break;
+    default:
+        break;
+    }
+}
+
+// One type, so one signature.
+void same( A | B e )
+{
+}
+
+void same( B | A e )
+{
+}
+
+i32 main()
+{
+    return 0;
+}

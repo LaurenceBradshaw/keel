@@ -40,6 +40,8 @@ std::string_view node_kind_name( Node_kind kind )
         return "Function_type";
     case Node_kind::Field_type:
         return "Field_type";
+    case Node_kind::Union_type:
+        return "Union_type";
     case Node_kind::Type_arg_list:
         return "Type_arg_list";
     case Node_kind::Param_list:

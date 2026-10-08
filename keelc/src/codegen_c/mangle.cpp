@@ -102,6 +102,20 @@ void encode_type( std::string& out, Type_id id, const Type_table& types )
         return;
     }
 
+    // `A | B` is `U1A1BE`: the members in their sorted order, so `B | A` is the same.
+    if( types.is_union( id ) )
+    {
+        out += 'U';
+
+        for( const Type_id member : types.get( id ).arguments )
+        {
+            encode_type( out, member, types );
+        }
+
+        out += 'E';
+        return;
+    }
+
     std::string_view package = types.package( id );
     if( !package.empty() )
     {
@@ -234,6 +248,15 @@ std::string mangle_struct( std::string_view module, Type_id type, const Type_tab
     }
 
     return fmt::format( "kl_{}_{}__I{}E", module_slot( module ), base, construct_arg_string( arguments, types ) );
+}
+
+std::string mangle_union( Type_id type, const Type_table& types )
+{
+    std::string encoded;
+
+    encode_type( encoded, type, types );
+
+    return fmt::format( "kl__{}", encoded );
 }
 
 std::string mangle_function_type( std::string_view module, Type_id type, const Type_table& types )

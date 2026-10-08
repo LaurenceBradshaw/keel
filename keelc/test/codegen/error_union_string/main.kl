@@ -1,0 +1,71 @@
+// §6.7, as M9's acceptance states it: `load_config` passes on the `Io_error` of a callee returning
+// `result<kl::string, Io_error>` and the `Parse_error` of another, with no conversion written. The
+// string is dropped on every path, which KEEL_VALGRIND=1 checks.
+import kl::string;
+
+enum Io_error
+{
+    missing
+};
+
+enum Parse_error
+{
+    empty
+};
+
+result<kl::string, Io_error> read_file( bool there, bool blank )
+{
+    if( !there )
+    {
+        return result::err( Io_error::missing );
+    }
+
+    return result::ok( kl::string( blank ? "" : "port=80" ) );
+}
+
+result<u64, Parse_error> parse_config( const ref kl::string text )
+{
+    if( text.is_empty() )
+    {
+        return result::err( Parse_error::empty );
+    }
+
+    return result::ok( text.size() );
+}
+
+result<u64, Io_error | Parse_error> load_config( bool there, bool blank )
+{
+    auto text   = try read_file( there, blank );
+    auto config = try parse_config( text );
+    return result::ok( config );
+}
+
+void show( result<u64, Parse_error | Io_error> r )
+{
+    switch( r )
+    {
+    case result::ok( size ):
+        print( "loaded " );
+        println( size );
+        break;
+    case result::err( e ):
+        switch( e )
+        {
+        case Io_error::missing:
+            println( "missing" );
+            break;
+        case Parse_error::empty:
+            println( "empty" );
+            break;
+        }
+        break;
+    }
+}
+
+i32 main()
+{
+    show( load_config( true, false ) );
+    show( load_config( false, false ) );
+    show( load_config( true, true ) );
+    return 0;
+}

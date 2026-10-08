@@ -84,6 +84,7 @@ std::string Spelling::type( Type_id type ) const
         return described.width == 32 ? "float" : "double";
 
     case Type_kind::Struct:
+    case Type_kind::Union:
         return structure( type );
 
     case Type_kind::Pointer:
@@ -112,6 +113,11 @@ std::string Spelling::type( Type_id type ) const
 
 std::string Spelling::structure( Type_id type ) const
 {
+    if( types.table().is_union( type ) )
+    {
+        return fmt::format( "struct {}", mangle_union( type, types.table() ) );
+    }
+
     return fmt::format(
         "struct {}", mangle_struct( package_name( types.table().get( type ).declaration ), type, types.table() )
     );
@@ -124,6 +130,12 @@ std::string Spelling::field( Node_id declaration ) const
 
 std::string Spelling::function( Node_id declaration, std::span<const Type_id> type_arguments ) const
 {
+    // A union's destructor is declared by nothing, and named for the union.
+    if( !declaration.is_valid() )
+    {
+        return destructor_of( type_arguments[0] );
+    }
+
     // An extern names a symbol someone else defined, so the Keel name is the C name: `kl__malloc__u64`
     // would not link against anything.
     if( ast.is_extern( declaration ) )
@@ -188,6 +200,11 @@ std::string Spelling::function( Node_id declaration, std::span<const Type_id> ty
 
 std::string Spelling::destructor_of( Type_id type ) const
 {
+    if( types.table().is_union( type ) )
+    {
+        return fmt::format( "{}__dtor", mangle_union( type, types.table() ) );
+    }
+
     const Node_id declaration = types.table().get( type ).declaration;
 
     if( types.table().is_enum( type ) )

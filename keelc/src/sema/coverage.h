@@ -31,13 +31,15 @@ struct Interval
 // bodies are visited between arms and only the caller may visit - see the class comment.
 struct Switch_coverage
 {
-    Node_id               switch_id {};
-    Type_id               type {};
-    bool                  numeric     = false;
-    bool                  floating    = false;
-    bool                  has_default = false;
-    std::vector<Node_id>  variants;  // the label that covered each ordinal, empty over a number
-    std::vector<Interval> intervals; // what the labels cover, empty over an enum
+    Node_id                  switch_id {};
+    Type_id                  type {};
+    bool                     numeric     = false;
+    bool                     floating    = false;
+    bool                     has_default = false;
+    std::vector<Node_id>     variants;  // the label that covered each ordinal, empty over a number
+    std::vector<Type_id>     members;   // the enums whose variants are listed: one, or a union's
+    std::vector<std::size_t> offsets;   // where each member's variants start in `variants`
+    std::vector<Interval>    intervals; // what the labels cover, empty over an enum
 };
 
 // Whether a `switch`'s labels account for its scrutinee, and whether its arms are shaped the way a
@@ -99,7 +101,10 @@ private:
     void finish_enum_switch( const Switch_coverage& state );
     void finish_numeric_switch( const Switch_coverage& state );
 
-    void check_variant_pattern( Node_id pattern, Type_id type, std::vector<Node_id>& covered );
+    void check_variant_pattern( Node_id pattern, Switch_coverage& state );
+
+    // Where a label's enum starts among the switch's variants, or nothing once reported.
+    std::optional<std::size_t> member_offset( const Switch_coverage& state, Type_id label_type, Node_id label );
 
     std::optional<i64> fold_bound( Node_id bound, Type_id expected );
 

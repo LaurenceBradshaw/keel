@@ -177,6 +177,7 @@ private:
     // only to report, such as `T&`.
     bool scan_type_with_mode();
     bool scan_type();
+    bool scan_type_term();
     bool scan_generic_close();
 
     // A loose type-then-name test, not the grammar: on success the cursor is just past the name.

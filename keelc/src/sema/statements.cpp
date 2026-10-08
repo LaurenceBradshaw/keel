@@ -467,7 +467,7 @@ void Statements::visit_switch( Node_id id )
 
     const bool numeric = table_.is_integer( type ) || table_.is_float( type );
 
-    if( !table_.is_enum( type ) && !numeric )
+    if( !table_.is_enum( type ) && !numeric && !table_.is_union( type ) )
     {
         reporter_.error_at(
             ast_.span( scrutinee ),
