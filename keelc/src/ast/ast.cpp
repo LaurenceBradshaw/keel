@@ -440,7 +440,7 @@ Node_id Ast::operand( Node_id id ) const
     default:
         assert(
             ( kind( id ) == Node_kind::Unary_expr || kind( id ) == Node_kind::Marker_expr ||
-              kind( id ) == Node_kind::Increment_stmt ) &&
+              kind( id ) == Node_kind::Increment_stmt || kind( id ) == Node_kind::Try_expr ) &&
             "this kind has no operand"
         );
         return child( id, 0 );

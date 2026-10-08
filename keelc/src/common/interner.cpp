@@ -20,10 +20,11 @@ Interner::Interner()
         "new",      "delete",
 
         // New Keel keywords
-        "move",     "out",      "ref",     "cast",        "wrap",    "this",
+        "move",     "out",      "ref",     "cast",        "wrap",    "this",     "try",
 
+        // Back to old existing keywords. TODO: split properly between regular programming keywords, ones new to keel, 
+        // and ones from c++ that do not exist in keel.
         "extern",   "alloc",    "free",    "fallthrough", "where",   "static",
-
         "private",  "public",   "fn",      "field",       "assert",  "operator", "destroy"
     };
     // clang-format on

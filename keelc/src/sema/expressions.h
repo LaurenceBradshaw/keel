@@ -158,6 +158,10 @@ private:
     Type_id infer_cast( Node_id id ); // D35's unsafe gate is here rather than in Operators::convert
     Type_id infer_marker( Node_id id );
 
+    Type_id infer_try( Node_id id );
+    bool    is_result( Type_id type, Node_id result ) const; // an instance of the prelude's `result`
+    bool    error_travels( Type_id from, Type_id to ) const; // whether `try` may pass `from` up as `to`
+
     Type_id infer_path( Node_id id );
     Type_id infer_variant_construction( Node_id id );
 

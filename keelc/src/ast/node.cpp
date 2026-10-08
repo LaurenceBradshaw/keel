@@ -144,6 +144,8 @@ std::string_view node_kind_name( Node_kind kind )
         return "Where_clause";
     case Node_kind::Bound_name:
         return "Bound_name";
+    case Node_kind::Try_expr:
+        return "Try_expr";
 
     case Node_kind::Count:
         break;

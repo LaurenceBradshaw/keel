@@ -83,6 +83,9 @@ Type_id Expressions::infer( Node_id id )
         check_condition( ast_.condition( id ) );
         return types_.record( id, table_.builtin( Type_kind::Void ) );
 
+    case Node_kind::Try_expr:
+        return infer_try( id );
+
     case Node_kind::Marker_expr:
         return infer_marker( id );
 
@@ -3030,6 +3033,81 @@ Type_id Expressions::infer_marker( Node_id id )
     }
 
     return types_.record( id, value );
+}
+
+Type_id Expressions::infer_try( Node_id id )
+{
+    const Node_id operand      = ast_.operand( id );
+    const Type_id operand_type = infer( operand );
+
+    if( table_.is_error( operand_type ) )
+    {
+        return types_.poison( id );
+    }
+
+    const Node_id result = resolution_.declaration_of( id );
+
+    if( !is_result( operand_type, result ) )
+    {
+        reporter_.error_at(
+            ast_.span( operand ), fmt::format( "`try` needs a `result`, and this is `{}`", table_.name( operand_type ) )
+        );
+
+        return types_.poison( id );
+    }
+
+    places_.check_owning_source( operand, operand_type );
+
+    const Type_id payload = table_.get( operand_type ).arguments[0];
+    const Type_id error   = table_.get( operand_type ).arguments[1];
+
+    // The payload is recorded even when refused, so the use of a refused `try` does not fail too.
+    if( !current_function_.is_valid() )
+    {
+        return types_.record( id, payload );
+    }
+
+    const Type_id          returned = types_.type_of( current_function_ );
+    const std::string_view function = interner_.text( ast_.name( current_function_ ) );
+
+    if( !returned.is_valid() || table_.is_error( returned ) )
+    {
+        return types_.record( id, payload );
+    }
+
+    if( !is_result( returned, result ) )
+    {
+        reporter_.error_at(
+            ast_.span( id ),
+            fmt::format( "`try` passes an error on to the caller, so `{}` must return a `result`", function ),
+            fmt::format( "it returns `{}`", table_.name( returned ) )
+        );
+
+        return types_.record( id, payload );
+    }
+
+    if( !error_travels( error, table_.get( returned ).arguments[1] ) )
+    {
+        reporter_.error_at(
+            ast_.span( id ),
+            fmt::format(
+                "`try` passes on a `{}` error, but `{}` returns `{}`", table_.name( error ), function, table_.name( returned )
+            )
+        );
+    }
+
+    return types_.record( id, payload );
+}
+
+bool Expressions::is_result( Type_id type, Node_id result ) const
+{
+    return result.is_valid() && table_.is_enum( type ) && table_.get( type ).declaration == result;
+}
+
+// Identity until the error union, whose subset test belongs here.
+bool Expressions::error_travels( Type_id from, Type_id to ) const
+{
+    return from == to;
 }
 
 Type_id Expressions::check( Node_id id, Type_id expected )
@@ -8412,6 +8490,144 @@ TEST_CASE( "type_checker_names_no_instance_where_the_destination_failed", "[sema
     SECTION( "a literal with nothing to say which instance still reports" )
     {
         errors( "", "auto a = Box { 1 };", 1 );
+    }
+}
+
+// D6. `try` is the `ok` payload's type, and the error travels to a function returning `result`.
+TEST_CASE( "type_checker_types_try", "[sema][types][try]" )
+{
+    constexpr std::string_view held = "enum Bad { nope };\n"
+                                      "enum Other { worse };\n"
+                                      "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+                                      "result<i32, Bad> parse() { return result::ok( 1 ); }\n"
+                                      "result<B, Bad> fill() { return result::ok( B( 4 ) ); }\n"
+                                      "i32 twice( i32 n ) { return n * 2; }\n";
+
+    const auto program = [held]( std::string_view function )
+    { return std::string( held ) + std::string( function ) + "\ni32 main() { return 0; }"; };
+
+    SECTION( "it is the `ok` payload" )
+    {
+        const Typed p( program( "result<i32, Bad> f() { auto n = try parse(); return result::ok( n ); }" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Try_expr, 0 ) ) == "i32" );
+    }
+
+    SECTION( "it binds tighter than arithmetic" )
+    {
+        const Typed p( program( "result<i32, Bad> f() { return result::ok( try parse() + 1 ); }" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "it may stand as a statement" )
+    {
+        const Typed p( program( "result<i32, Bad> f() { try parse(); return result::ok( 0 ); }" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "it nests" )
+    {
+        const Typed p( program( "result<i32, Bad> lift( i32 n ) { return result::ok( n ); }\n"
+                                "result<i32, Bad> f() { return result::ok( try lift( try parse() ) ); }" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Try_expr, 0 ) ) == "i32" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Try_expr, 1 ) ) == "i32" );
+    }
+
+    SECTION( "the caller's `ok` type need not match" )
+    {
+        const Typed p( program( "result<u64, Bad> f() { B b = try fill(); return result::ok( b.n ); }" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a copyable local is copied" )
+    {
+        const Typed p( program( "result<i32, Bad> f() { result<i32, Bad> r = parse(); return result::ok( try r ); }" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "an owning local is taken with `move`" )
+    {
+        const Typed p(
+            program( "result<u64, Bad> f() { result<B, Bad> r = fill(); B b = try move r; return result::ok( b.n ); }" )
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and not without it" )
+    {
+        const Typed p( program( "result<u64, Bad> f() { result<B, Bad> r = fill(); B b = try r; return result::ok( b.n ); }" )
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "write `move r`" ) != std::string::npos );
+    }
+
+    SECTION( "the operand must be a `result`" )
+    {
+        const Typed p( program( "result<i32, Bad> f() { return result::ok( try twice( 1 ) ); }" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`try` needs a `result`, and this is `i32`" ) != std::string::npos );
+    }
+
+    SECTION( "and so must the function" )
+    {
+        const Typed p( program( "i32 f() { return try parse(); }" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "so `f` must return a `result`" ) != std::string::npos );
+    }
+
+    SECTION( "whose error type is the operand's" )
+    {
+        const Typed p( program( "result<i32, Other> f() { return result::ok( try parse() ); }" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE(
+            p.rendered().find( "`try` passes on a `Bad` error, but `f` returns `result<i32, Other>`" ) != std::string::npos
+        );
+    }
+
+    // Recorded as the payload anyway, so a refused `try` does not also fail its initialiser.
+    SECTION( "a refusal does not cascade" )
+    {
+        const Typed p( program( "void f() { i32 n = try parse(); i32 m = n + 1; }" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+
+    // By declaration, as a string literal's `str` is.
+    SECTION( "a program's own `result` is not the prelude's" )
+    {
+        const Typed p( "enum result<T, E> { ok( T value ), err( E error ) };\n"
+                       "enum Bad { nope };\n"
+                       "result<i32, Bad> parse() { return result::ok( 1 ); }\n"
+                       "result<i32, Bad> f() { return result::ok( try parse() ); }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`try` needs a `result`" ) != std::string::npos );
     }
 }
 

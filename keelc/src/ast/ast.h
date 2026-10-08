@@ -123,7 +123,7 @@ public:
     // Expressions.
     Node_id                  lhs( Node_id binary ) const;
     Node_id                  rhs( Node_id binary ) const;
-    Node_id                  operand( Node_id id ) const; // Unary_expr, Marker_expr, Cast_expr, Increment_stmt
+    Node_id                  operand( Node_id id ) const; // Unary_expr, Marker_expr, Cast_expr, Increment_stmt, Try_expr
     Node_id                  callee( Node_id call ) const;
     Node_id                  arg_list( Node_id call ) const;
     std::span<const Node_id> arguments( Node_id call ) const;

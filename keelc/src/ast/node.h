@@ -155,6 +155,8 @@ enum class Node_kind : u16
     Where_clause,
     // aux: the bound's name, resolved against D40's fixed set by the checker.
     Bound_name,
+    // TODO: write this comment.
+    Try_expr,
 
     Count
 };

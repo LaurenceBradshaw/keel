@@ -153,3 +153,9 @@ void eprintln( bool value )
     eprint( value );
     eprint( "\n" );
 }
+
+enum result<T, E>
+{
+    ok( T value ),
+    err( E error )
+};

@@ -51,7 +51,7 @@ private:
     bool    chain_overload( Node_id existing, Node_id added );
     Node_id lookup( Symbol_id name, Node_id use );
     Node_id lookup_in( Symbol_id package, Symbol_id name, Node_id use );
-    Node_id prelude_str() const;
+    Node_id prelude_declaration( std::string_view name ) const;
     Node_id lookup_qualified( Node_id package, Node_id use );
     Node_id visible_from( Node_id use, Node_id head );
     bool    refuse_builtin_name( Symbol_id name, Node_id decl );
@@ -196,7 +196,14 @@ void Resolver::visit( Node_id id )
     case Node_kind::String_literal:
         if( !bindings_[id.v].is_valid() )
         {
-            bindings_[id.v] = prelude_str();
+            bindings_[id.v] = prelude_declaration( "str" );
+        }
+        return;
+    case Node_kind::Try_expr:
+        visit( ast_.operand( id ) );
+        if( !bindings_[id.v].is_valid() )
+        {
+            bindings_[id.v] = prelude_declaration( "result" );
         }
         return;
     case Node_kind::Name_expr:
@@ -756,7 +763,7 @@ Node_id Resolver::lookup_in( Symbol_id package, Symbol_id name, Node_id use )
     return found != scope->second.names.end() ? visible_from( use, found->second ) : Node_id {};
 }
 
-Node_id Resolver::prelude_str() const
+Node_id Resolver::prelude_declaration( std::string_view name ) const
 {
     if( !imports_.prelude_package().is_valid() )
     {
@@ -770,8 +777,8 @@ Node_id Resolver::prelude_str() const
         return Node_id {};
     }
 
-    const Symbol_id name  = interner_.find( "str" );
-    const auto      found = scope->second.names.find( name );
+    const Symbol_id decl_symbol = interner_.find( name );
+    const auto      found       = scope->second.names.find( decl_symbol );
     return found != scope->second.names.end() ? found->second : Node_id {};
 }
 
@@ -1923,7 +1930,8 @@ public:
             const Node_id id { i };
 
             if( ast.kind( id ) != kind || ast.span( id ).file != input_ ||
-                ( kind != Node_kind::String_literal && interner_.text( Symbol_id { ast.aux( id ) } ) != name ) )
+                ( kind != Node_kind::String_literal && kind != Node_kind::Try_expr &&
+                  interner_.text( Symbol_id { ast.aux( id ) } ) != name ) )
             {
                 continue;
             }
@@ -2220,6 +2228,42 @@ TEST_CASE( "resolver_binds_a_string_literal_to_the_prelude's_str", "[sema][resol
         INFO( p.rendered() );
         REQUIRE( p.errors() == 0 );
         REQUIRE( p.bound_into( Node_kind::String_literal, {} ).empty() );
+    }
+}
+
+// The same link for `try`, so a program's own `result` only shadows the name.
+TEST_CASE( "resolver_binds_try_to_the_prelude's_result", "[sema][resolve][prelude]" )
+{
+    constexpr std::string_view prelude = "enum result<T, E> { ok( T value ), err( E error ) };\n";
+    constexpr std::string_view body    = "i32 f() { return 1; }\ni32 main() { return try f(); }\n";
+
+    SECTION( "a `try` is bound to it" )
+    {
+        const Resolved_program p( { { "main.kl", body } }, prelude );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.bound_into( Node_kind::Try_expr, {} ) == "<prelude>" );
+    }
+
+    SECTION( "even where the program declares a `result` of its own" )
+    {
+        const Resolved_program p(
+            { { "main.kl", "enum result<T, E> { ok( T value ), err( E error ) };\n" + std::string( body ) } }, prelude
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.bound_into( Node_kind::Try_expr, {} ) == "<prelude>" );
+    }
+
+    SECTION( "and to nothing where the prelude has none" )
+    {
+        const Resolved_program p( { { "main.kl", body } } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.bound_into( Node_kind::Try_expr, {} ).empty() );
     }
 }
 

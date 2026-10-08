@@ -65,6 +65,7 @@ enum class Keyword : u32
     Cast,
     Wrap,
     This,
+    Try,
 
     Extern,
     Alloc,

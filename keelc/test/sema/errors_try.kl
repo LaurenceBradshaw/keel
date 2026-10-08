@@ -1,0 +1,75 @@
+// D6. `try` takes the payload out of an `ok` and returns an `err` to the caller, so its operand must
+// be a `result`, and so must what the function returns, with the same error type.
+class Buf
+{
+    public u64 n;
+
+    Buf( u64 m )
+    {
+        n = m;
+    }
+
+    ~Buf()
+    {
+    }
+};
+
+enum Bad
+{
+    nope
+};
+
+enum Other
+{
+    worse
+};
+
+result<i32, Bad> parse()
+{
+    return result::ok( 1 );
+}
+
+result<Buf, Bad> fill()
+{
+    return result::ok( Buf( 4 ) );
+}
+
+i32 plain()
+{
+    return 1;
+}
+
+result<i32, Bad> not_a_result()
+{
+    i32 n = try plain();
+    return result::ok( n );
+}
+
+i32 returns_plain()
+{
+    i32 n = try parse();
+    return n + 1;
+}
+
+void returns_nothing()
+{
+    try parse();
+}
+
+result<i32, Other> wrong_error()
+{
+    i32 n = try parse();
+    return result::ok( n );
+}
+
+result<u64, Bad> copied()
+{
+    result<Buf, Bad> r = fill();
+    Buf b = try r;
+    return result::ok( b.n );
+}
+
+i32 main()
+{
+    return try parse();
+}

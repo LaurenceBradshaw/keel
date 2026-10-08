@@ -2708,7 +2708,7 @@ bool Parser::can_start_expression() const
                check_keyword( Keyword::Move ) || check_keyword( Keyword::Out ) || check_keyword( Keyword::Ref ) ||
                check_keyword( Keyword::Cast ) || check_keyword( Keyword::Wrap ) || check_keyword( Keyword::This ) ||
                check_keyword( Keyword::Alloc ) || check_keyword( Keyword::Free ) || check_keyword( Keyword::Assert ) ||
-               check_keyword( Keyword::Destroy );
+               check_keyword( Keyword::Destroy ) || check_keyword( Keyword::Try );
 
     default:
         return false;
@@ -2948,7 +2948,7 @@ Node_id Parser::parse_expression_stmt( bool consume_semicolon )
     // statement then discards, which is D15's rule.
     else if( ast_.kind( expr ) != Node_kind::Call_expr && ast_.kind( expr ) != Node_kind::Free_expr &&
              ast_.kind( expr ) != Node_kind::Error && ast_.kind( expr ) != Node_kind::Assert_expr &&
-             ast_.kind( expr ) != Node_kind::Destroy_expr )
+             ast_.kind( expr ) != Node_kind::Destroy_expr && ast_.kind( expr ) != Node_kind::Try_expr )
     {
         discarded = true;
     }
@@ -3736,6 +3736,13 @@ Node_id Parser::parse_keyword_prefix( Span start )
         return ast_.add(
             Node_kind::Marker_expr, Span::merge( start, previous().span ), static_cast<u32>( marker ), { operand }
         );
+    }
+
+    if( check_keyword( Keyword::Try ) )
+    {
+        advance();
+        const Node_id operand = parse_expression( k_unary_power );
+        return ast_.add( Node_kind::Try_expr, Span::merge( start, previous().span ), 0, { operand } );
     }
 
     if( check_keyword( Keyword::This ) )
@@ -5209,6 +5216,74 @@ TEST_CASE( "parser_reaches_a_marker_in_statement_position", "[parse]" )
     REQUIRE( find_first( p.ast(), p.root(), Node_kind::Marker_expr ).is_valid() );
     REQUIRE( p.errors().find( "no effect" ) != std::string::npos );
     REQUIRE( p.errors().find( "expected a statement" ) == std::string::npos );
+}
+
+// D6. `try` is a prefix operator, binding as `-` does, so `try f() + 1` adds to the payload.
+TEST_CASE( "parser_reads_try_as_a_prefix_operator", "[parse][try]" )
+{
+    SECTION( "its operand is the call" )
+    {
+        const Parsed p( "i32 main() { return try f() + 1; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id sum = find_first( p.ast(), p.root(), Node_kind::Binary_expr );
+
+        REQUIRE( sum.is_valid() );
+        REQUIRE( p.kind( p.child( sum, 0 ) ) == Node_kind::Try_expr );
+        REQUIRE( p.kind( p.child( p.child( sum, 0 ), 0 ) ) == Node_kind::Call_expr );
+    }
+
+    SECTION( "a method chain is part of it" )
+    {
+        const Parsed p( "i32 main() { return try a.b().c(); }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id taken = find_first( p.ast(), p.root(), Node_kind::Try_expr );
+
+        REQUIRE( taken.is_valid() );
+        REQUIRE( p.kind( p.child( taken, 0 ) ) == Node_kind::Call_expr );
+        REQUIRE( p.text( p.child( taken, 0 ) ) == "a.b().c()" );
+    }
+
+    SECTION( "it nests" )
+    {
+        const Parsed p( "i32 main() { return try f( try g() ); }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id outer = find_first( p.ast(), p.root(), Node_kind::Try_expr );
+
+        REQUIRE( outer.is_valid() );
+        REQUIRE( find_first( p.ast(), p.child( outer, 0 ), Node_kind::Try_expr ).is_valid() );
+    }
+
+    SECTION( "it takes a `move`" )
+    {
+        const Parsed p( "i32 main() { return try move r; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id taken = find_first( p.ast(), p.root(), Node_kind::Try_expr );
+
+        REQUIRE( taken.is_valid() );
+        REQUIRE( p.kind( p.child( taken, 0 ) ) == Node_kind::Marker_expr );
+    }
+
+    // It may return, so it has an effect even where its payload is discarded.
+    SECTION( "it stands as a statement" )
+    {
+        const Parsed p( "i32 main() { try f(); return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( find_first( p.ast(), p.root(), Node_kind::Try_expr ).is_valid() );
+    }
 }
 
 TEST_CASE( "parser_reports_a_marker_with_no_operand", "[parse]" )
