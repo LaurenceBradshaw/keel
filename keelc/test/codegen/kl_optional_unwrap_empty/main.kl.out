@@ -1,0 +1,2 @@
+looking
+../../keel_stl/src/optional.kl:17: panic: unwrap on an empty optional

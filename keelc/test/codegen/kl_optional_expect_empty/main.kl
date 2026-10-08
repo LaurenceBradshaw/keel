@@ -1,0 +1,8 @@
+// `expect` on an empty `kl::optional` panics with the caller's message.
+import kl::optional;
+
+i32 main()
+{
+    kl::optional<i32> missing = kl::optional::none;
+    return kl::expect( missing, "the config names a port" );
+}

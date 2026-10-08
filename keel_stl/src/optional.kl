@@ -1,0 +1,63 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+enum optional<T>
+{
+    some( T value ),
+    none
+};
+
+T unwrap<T>( move optional<T> o )
+{
+    switch( move o )
+    {
+        case optional::some( v ):
+            return v;
+        case optional::none:
+            panic( "unwrap on an empty optional" );
+    }
+}
+
+T expect<T>( move optional<T> o, str message )
+{
+    switch( move o )
+    {
+        case optional::some( v ):
+            return v;
+        case optional::none:
+            panic( message );
+    }
+}
+
+T value_or<T>( move optional<T> o, move T fallback )
+{
+    switch( move o )
+    {
+        case optional::some( v ):
+            return v;
+        case optional::none:
+            return fallback;
+    }
+}
+
+bool is_some<T>( const ref optional<T> o )
+{
+    switch( o )
+    {
+        case optional::some( v ):
+            return true;
+        case optional::none:
+            return false;
+    }
+}
+
+bool is_none<T>( const ref optional<T> o )
+{
+    switch( o )
+    {
+        case optional::some( v ):
+            return false;
+        case optional::none:
+            return true;
+    }
+}

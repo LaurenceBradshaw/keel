@@ -1213,6 +1213,7 @@ the `Types` renames (R8) once files stop moving, R16 and R21, and R19's comment 
 - **Definite assignment is per local**, so `P p; p.x = 1; return p.y;` is accepted and a struct `out`
   parameter may be left half-written. Per-field state fixes this and lets a field be moved on its
   own; neither is worth it alone, and together they are one change. Pinned as accepted in the tests.
+  Until then `kl::pair`'s halves are read and replaced in place, and leave only with the whole pair.
 - **A temporary cannot reach a `move` parameter bare**: `consume( Buffer( 16 ) )` is refused, and
   `consume( move Buffer( 16 ) )` is the spelling. Worth lifting with M9.1's temporary-lifetime rule.
 - **A payload enum is a struct of every variant's fields, not a union**, so it is as large as all

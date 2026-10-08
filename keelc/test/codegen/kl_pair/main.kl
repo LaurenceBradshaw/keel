@@ -1,0 +1,123 @@
+// `kl::pair` owns both halves: each is destroyed exactly once, when the pair that holds it last ends
+// or when a write replaces it. Each `owned` holds a heap block, so a missed destroy leaks under
+// valgrind as well as miscounting. Each check returns its own code.
+import kl::optional;
+import kl::pair;
+
+i32 live;
+
+class owned
+{
+    owned( u64 n )
+    {
+        id = n;
+        unsafe
+        {
+            block = alloc<u64>( 1 );
+        }
+        live += 1;
+    }
+
+    ~owned()
+    {
+        unsafe
+        {
+            free( block );
+        }
+        live -= 1;
+    }
+
+    public u64 value() const
+    {
+        return id;
+    }
+
+    private u64 id;
+    private u64[*] block;
+};
+
+// Both halves are read in place, and writing one drops what it held.
+i32 holds()
+{
+    kl::pair<owned, u64> p = kl::pair<owned, u64>( move owned( 1 ), 2 );
+    if( live != 1 || p.first.value() != 1 || p.second != 2 )
+    {
+        return 1;
+    }
+
+    p.first = move owned( 3 );
+    p.second = 4;
+    if( live != 1 || p.first.value() != 3 || p.second != 4 )
+    {
+        return 2;
+    }
+
+    return 0;
+}
+
+// The pair moves whole, so its halves end once, with the pair that holds them last.
+kl::pair<owned, owned> made()
+{
+    owned left = owned( 5 );
+    return kl::pair<owned, owned>( move left, move owned( 6 ) );
+}
+
+i32 moves_whole()
+{
+    kl::pair<owned, owned> held = made();
+    kl::pair<owned, owned> moved = move held;
+    if( live != 2 || moved.first.value() != 5 || moved.second.value() != 6 )
+    {
+        return 3;
+    }
+
+    return 0;
+}
+
+// A pair inside an optional: unwrapping hands the whole pair out.
+i32 nests()
+{
+    kl::optional<kl::pair<owned, u64>> found = kl::optional::some( kl::pair<owned, u64>( move owned( 7 ), 8 ) );
+    kl::pair<owned, u64> p = kl::unwrap( move found );
+    if( live != 1 || p.first.value() != 7 || p.second != 8 )
+    {
+        return 4;
+    }
+
+    return 0;
+}
+
+i32 main()
+{
+    i32 code = holds();
+    if( code != 0 )
+    {
+        return code;
+    }
+    if( live != 0 )
+    {
+        return 20;
+    }
+
+    code = moves_whole();
+    if( code != 0 )
+    {
+        return code;
+    }
+    if( live != 0 )
+    {
+        return 21;
+    }
+
+    code = nests();
+    if( code != 0 )
+    {
+        return code;
+    }
+    if( live != 0 )
+    {
+        return 22;
+    }
+
+    return 0;
+}

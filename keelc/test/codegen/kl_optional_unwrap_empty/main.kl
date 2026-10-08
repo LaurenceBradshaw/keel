@@ -1,0 +1,10 @@
+// `unwrap` on an empty `kl::optional` panics: what was printed shows, then the panic names the line
+// in the library, and the program aborts.
+import kl::optional;
+
+i32 main()
+{
+    kl::optional<i32> missing = kl::optional::none;
+    println( "looking" );
+    return kl::unwrap( missing );
+}

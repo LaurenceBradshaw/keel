@@ -1,0 +1,255 @@
+// `kl::optional` owns what it holds: a value handed in is destroyed exactly once, by the caller of
+// `unwrap`, `expect` or `value_or` when taken out, by the optional when it is not. Each `owned` holds a heap block,
+// so a missed destroy leaks under valgrind as well as miscounting. Each check returns its own code.
+import kl::optional;
+
+i32 live;
+
+class owned
+{
+    owned( u64 n )
+    {
+        id = n;
+        unsafe
+        {
+            block = alloc<u64>( 1 );
+        }
+        live += 1;
+    }
+
+    ~owned()
+    {
+        unsafe
+        {
+            free( block );
+        }
+        live -= 1;
+    }
+
+    public u64 value() const
+    {
+        return id;
+    }
+
+    private u64 id;
+    private u64[*] block;
+};
+
+kl::optional<owned> lookup( u64 n )
+{
+    if( n == 0 )
+    {
+        return kl::optional::none;
+    }
+
+    return kl::optional::some( owned( n ) );
+}
+
+// `unwrap` and `expect` take the value out, so it ends with the local that receives it.
+i32 takes_out()
+{
+    {
+        kl::optional<owned> found = lookup( 4 );
+        owned four = kl::unwrap( move found );
+        if( four.value() != 4 || live != 1 )
+        {
+            return 1;
+        }
+    }
+    if( live != 0 )
+    {
+        return 2;
+    }
+
+    {
+        owned five = kl::expect( move lookup( 5 ), "five is there" );
+        if( five.value() != 5 || live != 1 )
+        {
+            return 3;
+        }
+    }
+
+    return 0;
+}
+
+// An optional never unwrapped drops its value, and one written over drops the value it held.
+i32 drops()
+{
+    {
+        kl::optional<owned> held = lookup( 6 );
+        if( live != 1 )
+        {
+            return 4;
+        }
+    }
+    if( live != 0 )
+    {
+        return 5;
+    }
+
+    kl::optional<owned> slot = lookup( 7 );
+    slot = kl::optional::none;
+    if( live != 0 )
+    {
+        return 6;
+    }
+
+    slot = lookup( 8 );
+    slot = lookup( 9 );
+    if( live != 1 )
+    {
+        return 7;
+    }
+
+    return 0;
+}
+
+// A `switch` that does not consume reads the value in place and leaves it held.
+i32 reads()
+{
+    kl::optional<owned> found = lookup( 3 );
+    switch( found )
+    {
+        case kl::optional::some( v ):
+            if( v.value() != 3 )
+            {
+                return 8;
+            }
+            break;
+        case kl::optional::none:
+            return 9;
+    }
+
+    switch( lookup( 0 ) )
+    {
+        case kl::optional::some( v ):
+            return 10;
+        case kl::optional::none:
+            break;
+    }
+
+    if( live != 1 || kl::unwrap( move found ).value() != 3 )
+    {
+        return 11;
+    }
+
+    return 0;
+}
+
+// `value_or` hands out one of its two values and drops the other.
+i32 falls_back()
+{
+    {
+        owned held = kl::value_or( move lookup( 1 ), move owned( 2 ) );
+        if( held.value() != 1 || live != 1 )
+        {
+            return 12;
+        }
+    }
+    if( live != 0 )
+    {
+        return 13;
+    }
+
+    {
+        owned fallback = owned( 3 );
+        owned held = kl::value_or( move lookup( 0 ), move fallback );
+        if( held.value() != 3 || live != 1 )
+        {
+            return 14;
+        }
+    }
+
+    return 0;
+}
+
+// `is_some` and `is_none` borrow, so the value is still there to take.
+i32 asks()
+{
+    kl::optional<owned> found = lookup( 2 );
+    kl::optional<owned> missing = lookup( 0 );
+    if( !kl::is_some( found ) || kl::is_none( found ) || kl::is_some( missing ) || !kl::is_none( missing ) )
+    {
+        return 15;
+    }
+
+    if( live != 1 || kl::unwrap( move found ).value() != 2 )
+    {
+        return 16;
+    }
+
+    return 0;
+}
+
+// A copyable value needs no marker, and the type argument is deduced.
+i32 copies()
+{
+    kl::optional<i32> seven = kl::optional::some( 7 );
+    if( kl::unwrap( seven ) != 7 || kl::expect( seven, "still there" ) != 7 )
+    {
+        return 17;
+    }
+
+    kl::optional<i32> empty = kl::optional::none;
+    if( kl::value_or( seven, 0 ) != 7 || kl::value_or( empty, 5 ) != 5 || !kl::is_none( empty ) )
+    {
+        return 18;
+    }
+
+    return 0;
+}
+
+i32 main()
+{
+    i32 code = takes_out();
+    if( code != 0 )
+    {
+        return code;
+    }
+    if( live != 0 )
+    {
+        return 20;
+    }
+
+    code = drops();
+    if( code != 0 )
+    {
+        return code;
+    }
+    if( live != 0 )
+    {
+        return 21;
+    }
+
+    code = reads();
+    if( code != 0 )
+    {
+        return code;
+    }
+    if( live != 0 )
+    {
+        return 22;
+    }
+
+    code = falls_back();
+    if( code != 0 )
+    {
+        return code;
+    }
+    if( live != 0 )
+    {
+        return 23;
+    }
+
+    code = asks();
+    if( code != 0 )
+    {
+        return code;
+    }
+    if( live != 0 )
+    {
+        return 24;
+    }
+
+    return copies();
+}

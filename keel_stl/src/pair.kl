@@ -1,0 +1,14 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+class pair<A, B>
+{
+    pair( move A a, move B b )
+    {
+        first  = move a;
+        second = move b;
+    }
+
+    public A first;
+    public B second;
+};
