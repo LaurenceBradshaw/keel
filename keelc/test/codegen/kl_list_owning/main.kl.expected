@@ -880,7 +880,7 @@ void kl_2kl_push__I5ownedE__SQ2kl4listI5ownedE_M5owned( struct kl_2kl_list__I5ow
     struct kl__owned* kl_t8;
     bool kl_t9;
 #line 40 "../../keel_stl/src/list.kl"
-    kl_t9 = false;
+    kl_t9 = true;
 #line 42 "../../keel_stl/src/list.kl"
     kl_t3 = ( *kl_this_1 ).kl_count_1080 == ( *kl_this_1 ).kl_cap_1082;
     if ( kl_t3 ) goto bb1; else goto bb5;
@@ -1046,7 +1046,7 @@ struct kl__owned kl_2kl_replace__I5ownedE__SQ2kl4listI5ownedE_3u64_M5owned( stru
     bool kl_t8;
     bool kl_t9;
 #line 110 "../../keel_stl/src/list.kl"
-    kl_t8 = false;
+    kl_t8 = true;
 #line 116 "../../keel_stl/src/list.kl"
     kl_t9 = false;
 #line 112 "../../keel_stl/src/list.kl"

@@ -230,7 +230,7 @@ void kl__Wrap__I7TrackedE__R4WrapI7TrackedE_M7Tracked__ctor( struct kl__Wrap__I7
 {
     bool kl_t3;
 #line 27 "codegen/generics_owning_argument.kl"
-    kl_t3 = false;
+    kl_t3 = true;
 #line 29 "codegen/generics_owning_argument.kl"
     ( *kl_this_1 ).kl_v_31 = kl_x_2;
     kl_t3 = false;

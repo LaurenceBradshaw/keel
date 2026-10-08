@@ -122,7 +122,7 @@ void kl__Owner__R5Owner_M6Buffer_4bool__ctor( struct kl__Owner* kl_this_1, struc
 {
     bool kl_t4;
 #line 65 "codegen/const_field.kl"
-    kl_t4 = false;
+    kl_t4 = true;
 #line 67 "codegen/const_field.kl"
     ( *kl_this_1 ).kl_buffer_100 = kl_b_2;
     kl_t4 = false;

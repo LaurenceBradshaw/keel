@@ -1,0 +1,92 @@
+// D31. A conditional hands on whichever arm it picks, so a named owning arm is written `move`:
+// without it the caller's variable was taken silently, even by a call that only borrows.
+class Buf
+{
+    u64 n;
+
+    Buf( u64 m )
+    {
+        n = m;
+    }
+
+    ~Buf()
+    {
+    }
+};
+
+enum Holder
+{
+    Full( Buf b ),
+    Empty
+};
+
+u64 peek( Buf b )
+{
+    return 0;
+}
+
+void initialises( bool c )
+{
+    Buf a = Buf( 1 );
+    Buf b = Buf( 2 );
+    Buf x = c ? a : b;
+}
+
+void assigns( bool c )
+{
+    Buf a = Buf( 1 );
+    Buf x = Buf( 2 );
+    x     = c ? a : Buf( 3 );
+}
+
+// The path with no expected type.
+void infers( bool c )
+{
+    Buf  a = Buf( 1 );
+    auto x = c ? Buf( 2 ) : a;
+}
+
+Buf returns( bool c, move Buf a, move Buf b )
+{
+    return c ? a : b;
+}
+
+// A borrow takes nothing, yet the arm was moved into a temporary and dropped with it.
+u64 lends( bool c )
+{
+    Buf a = Buf( 1 );
+    Buf b = Buf( 2 );
+
+    return peek( c ? a : b );
+}
+
+Holder wraps( bool c )
+{
+    Buf a = Buf( 1 );
+
+    return Holder::Full( c ? a : Buf( 2 ) );
+}
+
+void enums( bool c )
+{
+    Holder a = Holder::Empty;
+    Holder b = Holder::Empty;
+    Holder x = c ? a : b;
+}
+
+// A pattern binding cannot be moved at all, so its help says why rather than asking for `move`.
+Buf binds( bool c, Holder h )
+{
+    switch( h )
+    {
+        case Holder::Full( b ):
+            return c ? b : Buf( 0 );
+        case Holder::Empty:
+            return Buf( 0 );
+    }
+}
+
+i32 main()
+{
+    return 0;
+}

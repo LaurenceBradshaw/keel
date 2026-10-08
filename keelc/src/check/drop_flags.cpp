@@ -203,7 +203,8 @@ void rewrite_statements( Function& func, const Flag_map& flags, const Flag_vocab
         const u32 count     = block.statement_count;
         const u32 new_first = narrow_cast<u32>( rebuilt.size() );
 
-        // Clear every flag on entry: an arm's temporary has no storage_live to do it on the path that skips it.
+        // Set every flag on entry: a parameter arrives holding its value, and anything else starts empty,
+        // since an arm's temporary has no storage_live to clear it on the path that skips it.
         if( &block == &func.blocks.front() )
         {
             for( u32 local = 0; local < flags.size(); ++local )
@@ -214,7 +215,9 @@ void rewrite_statements( Function& func, const Flag_map& flags, const Flag_vocab
                     continue;
                 }
 
-                rebuilt.push_back( set_flag( flag, false, func.locals[local].span, vocabulary ) );
+                rebuilt.push_back(
+                    set_flag( flag, local >= 1 && local <= func.parameter_count, func.locals[local].span, vocabulary )
+                );
             }
         }
 
@@ -594,6 +597,31 @@ TEST_CASE( "drop_flags_clears_every_flag_on_entry", "[check][drop]" )
         INFO( flag );
         REQUIRE( entry.find( flag + " = const 0" ) != std::string::npos );
     }
+}
+
+// A parameter arrives holding its value, so a `move` parameter moved on only some paths is still
+// dropped on the others. Its flag once started false like a local's, and that path leaked.
+TEST_CASE( "drop_flags_sets_a_parameter's_flag_on_entry", "[check][drop]" )
+{
+    Elaborated p(
+        std::string( k_owning ) + "void maybe( bool c, move Owned o ) { if ( c ) { consume( move o ); } }\n"
+                                  "i32 main() { maybe( true, move Owned( 1 ) ); return 0; }"
+    );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.text_of( "maybe" );
+    const std::size_t at   = text.find( "drop _2 if _" );
+
+    INFO( text );
+    REQUIRE( at != std::string::npos );
+
+    const std::string flag  = text.substr( at + 11, text.find( '\n', at ) - at - 11 );
+    const std::string entry = text.substr( text.find( "bb0:" ), text.find( "bb1:" ) - text.find( "bb0:" ) );
+
+    INFO( flag );
+    REQUIRE( entry.find( flag + " = const 1" ) != std::string::npos );
 }
 
 // Only construction sets the flag. A borrow once set it too, so one after a move destroyed the

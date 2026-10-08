@@ -1218,6 +1218,9 @@ the `Types` renames (R8) once files stop moving, R16 and R21, and R19's comment 
   answers over the AST and treats every `while` as finishing. It needs to ask whether the condition is
   the literal `true` and no `break` binds to the loop. Pinned as accepted in
   `type_checker_reports_an_arm_that_falls_out`.
+- **Before M9 closes: an owning enum at file scope gets the wrong refusal.** `Holder g = Holder::Empty;`
+  says *a file-scope initialiser must be a constant expression*; a class gets *a class cannot be a
+  file-scope variable yet*, and an owning enum should get the same.
 - **A receiver's borrow in a move-and-borrow error underlines the whole call** (`h.eat( move h )`),
   since KIR operands carry no span. The `TODO` on `Statement` in `kir.h` is the fix.
 

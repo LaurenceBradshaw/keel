@@ -1,0 +1,486 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "owning_conditional.kl.prelude.c"
+
+struct kl__Buf;
+struct kl__Holder;
+
+struct kl__Buf
+{
+    uint64_t* kl_data_2;
+};
+
+struct kl__Holder
+{
+    int32_t tag;
+    struct kl__Buf kl_b_54;
+};
+
+void* kl_rt_alloc( size_t );
+void  kl_rt_free( void* );
+
+void kl__Buf__R3Buf_3u64__ctor( struct kl__Buf*, uint64_t );
+void kl__Buf__dtor( struct kl__Buf* );
+uint64_t kl__get__S3Buf( struct kl__Buf* );
+uint64_t kl__peek__3Buf( struct kl__Buf* );
+void kl__eat__M3Buf( struct kl__Buf );
+uint64_t kl__size__6Holder( struct kl__Holder* );
+struct kl__Buf kl__pick__4bool_M3Buf_M3Buf( bool, struct kl__Buf, struct kl__Buf );
+int32_t kl__main__( void );
+void kl__Holder__dtor( struct kl__Holder* );
+
+void kl__Buf__R3Buf_3u64__ctor( struct kl__Buf* kl_this_1, uint64_t kl_n_2 )
+{
+    uint64_t* kl_t3;
+#line 12 "codegen/owning_conditional.kl"
+    kl_t3 = ( uint64_t* ) kl_rt_alloc( sizeof( uint64_t ) );
+    ( *kl_this_1 ).kl_data_2 = kl_t3;
+#line 15 "codegen/owning_conditional.kl"
+    ( *( *kl_this_1 ).kl_data_2 ) = kl_n_2;
+    return;
+}
+
+void kl__Buf__dtor( struct kl__Buf* kl_this_1 )
+{
+    struct kl_7prelude_str kl_t2;
+    struct kl_7prelude_str* kl_t3;
+    uint8_t* kl_t4;
+#line 20 "codegen/owning_conditional.kl"
+    kl_t3 = &kl_t2;
+    kl_t4 = ( uint8_t* ) "drop ";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t3, kl_t4, 5 );
+    kl_7prelude_print__Q7prelude3str( kl_t2 );
+#line 21 "codegen/owning_conditional.kl"
+    kl_7prelude_println__3u64( ( *( *kl_this_1 ).kl_data_2 ) );
+#line 25 "codegen/owning_conditional.kl"
+    kl_rt_free( ( *kl_this_1 ).kl_data_2 );
+    return;
+}
+
+uint64_t kl__get__S3Buf( struct kl__Buf* kl_this_1 )
+{
+    uint64_t kl_t0;
+#line 31 "codegen/owning_conditional.kl"
+    kl_t0 = ( *( *kl_this_1 ).kl_data_2 );
+    return kl_t0;
+}
+
+uint64_t kl__peek__3Buf( struct kl__Buf* kl_b_1 )
+{
+    uint64_t kl_t0;
+    struct kl__Buf* kl_t2;
+    uint64_t kl_t3;
+#line 43 "codegen/owning_conditional.kl"
+    kl_t2 = &( *kl_b_1 );
+    kl_t3 = kl__get__S3Buf( kl_t2 );
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+void kl__eat__M3Buf( struct kl__Buf kl_b_1 )
+{
+    struct kl_7prelude_str kl_t2;
+    struct kl_7prelude_str* kl_t3;
+    uint8_t* kl_t4;
+    struct kl__Buf* kl_t7;
+    uint64_t kl_t8;
+#line 48 "codegen/owning_conditional.kl"
+    kl_t3 = &kl_t2;
+    kl_t4 = ( uint8_t* ) "ate ";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t3, kl_t4, 4 );
+    kl_7prelude_print__Q7prelude3str( kl_t2 );
+#line 49 "codegen/owning_conditional.kl"
+    kl_t7 = &kl_b_1;
+    kl_t8 = kl__get__S3Buf( kl_t7 );
+    kl_7prelude_println__3u64( kl_t8 );
+#line 46 "codegen/owning_conditional.kl"
+    kl__Buf__dtor( &kl_b_1 );
+    return;
+}
+
+uint64_t kl__size__6Holder( struct kl__Holder* kl_h_1 )
+{
+    uint64_t kl_t0;
+    bool kl_t2;
+    struct kl__Buf* kl_b_3;
+    struct kl__Buf* kl_t4;
+    uint64_t kl_t5;
+#line 56 "codegen/owning_conditional.kl"
+    kl_t2 = ( *kl_h_1 ).tag == 0;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_b_3 = &( *kl_h_1 ).kl_b_54;
+#line 57 "codegen/owning_conditional.kl"
+    kl_t4 = &( *kl_b_3 );
+    kl_t5 = kl__get__S3Buf( kl_t4 );
+    kl_t0 = kl_t5;
+    return kl_t0;
+    bb2:
+#line 59 "codegen/owning_conditional.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+struct kl__Buf kl__pick__4bool_M3Buf_M3Buf( bool kl_c_1, struct kl__Buf kl_a_2, struct kl__Buf kl_b_3 )
+{
+    struct kl__Buf kl_t0;
+    struct kl__Buf kl_t4;
+    bool kl_t5;
+    bool kl_t6;
+    bool kl_t7;
+#line 64 "codegen/owning_conditional.kl"
+    kl_t5 = true;
+    kl_t6 = true;
+#line 66 "codegen/owning_conditional.kl"
+    kl_t7 = false;
+    if ( kl_c_1 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t4 = kl_a_2;
+    kl_t5 = false;
+    kl_t7 = true;
+    goto bb3;
+    bb2:
+    kl_t4 = kl_b_3;
+    kl_t6 = false;
+    kl_t7 = true;
+    goto bb3;
+    bb3:
+    kl_t0 = kl_t4;
+    kl_t7 = false;
+    if ( kl_t7 ) kl__Buf__dtor( &kl_t4 );
+    if ( kl_t6 ) kl__Buf__dtor( &kl_b_3 );
+    kl_t6 = false;
+    if ( kl_t5 ) kl__Buf__dtor( &kl_a_2 );
+    kl_t5 = false;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    bool kl_yes_1;
+    bool kl_no_2;
+    struct kl__Buf kl_a_3;
+    struct kl__Buf* kl_t4;
+    struct kl__Buf kl_b_6;
+    struct kl__Buf* kl_t7;
+    struct kl__Buf kl_x_9;
+    struct kl__Buf kl_t10;
+    struct kl__Buf* kl_t11;
+    uint64_t kl_t12;
+    struct kl__Buf kl_t_14;
+    struct kl__Buf kl_t15;
+    struct kl__Buf kl_t16;
+    struct kl__Buf* kl_t17;
+    struct kl__Buf kl_t19;
+    struct kl__Buf* kl_t20;
+    struct kl__Buf* kl_t22;
+    uint64_t kl_t23;
+    struct kl__Buf kl_c_25;
+    struct kl__Buf* kl_t26;
+    struct kl__Buf kl_d_28;
+    struct kl__Buf* kl_t29;
+    struct kl__Buf kl_t31;
+    struct kl__Buf* kl_t32;
+    uint64_t kl_t33;
+    struct kl_7prelude_str kl_t35;
+    struct kl_7prelude_str* kl_t36;
+    uint8_t* kl_t37;
+    struct kl__Buf kl_g_40;
+    struct kl__Buf* kl_t41;
+    struct kl__Buf kl_t43;
+    struct kl__Buf kl_t44;
+    struct kl__Buf* kl_t45;
+    struct kl__Buf kl_t48;
+    struct kl__Buf* kl_t49;
+    struct kl__Buf kl_t51;
+    struct kl__Buf* kl_t52;
+    struct kl__Buf kl_t54;
+    struct kl__Buf* kl_t55;
+    uint64_t kl_t56;
+    struct kl__Holder kl_f_58;
+    struct kl__Holder kl_t59;
+    struct kl__Buf kl_t60;
+    struct kl__Buf* kl_t61;
+    struct kl__Holder kl_e_63;
+    struct kl__Holder kl_t64;
+    struct kl__Holder kl_h_65;
+    struct kl__Holder kl_t66;
+    struct kl__Holder* kl_t67;
+    uint64_t kl_t68;
+    struct kl_7prelude_str kl_t70;
+    struct kl_7prelude_str* kl_t71;
+    uint8_t* kl_t72;
+    bool kl_t75;
+    bool kl_t76;
+    bool kl_t77;
+    bool kl_t78;
+    bool kl_t79;
+    bool kl_t80;
+    bool kl_t81;
+    bool kl_t82;
+    bool kl_t83;
+    bool kl_t84;
+    bool kl_t85;
+    bool kl_t86;
+    bool kl_t87;
+    bool kl_t88;
+    bool kl_t89;
+    bool kl_t90;
+    bool kl_t91;
+    bool kl_t92;
+#line 74 "codegen/owning_conditional.kl"
+    kl_t75 = false;
+#line 75 "codegen/owning_conditional.kl"
+    kl_t76 = false;
+#line 76 "codegen/owning_conditional.kl"
+    kl_t77 = false;
+#line 80 "codegen/owning_conditional.kl"
+    kl_t78 = false;
+    kl_t79 = false;
+    kl_t80 = false;
+#line 84 "codegen/owning_conditional.kl"
+    kl_t81 = false;
+#line 85 "codegen/owning_conditional.kl"
+    kl_t82 = false;
+#line 90 "codegen/owning_conditional.kl"
+    kl_t83 = false;
+#line 91 "codegen/owning_conditional.kl"
+    kl_t84 = false;
+    kl_t85 = false;
+#line 93 "codegen/owning_conditional.kl"
+    kl_t86 = false;
+    kl_t87 = false;
+#line 95 "codegen/owning_conditional.kl"
+    kl_t88 = false;
+    kl_t89 = false;
+    kl_t90 = false;
+#line 96 "codegen/owning_conditional.kl"
+    kl_t91 = false;
+#line 97 "codegen/owning_conditional.kl"
+    kl_t92 = false;
+#line 71 "codegen/owning_conditional.kl"
+    kl_yes_1 = true;
+#line 72 "codegen/owning_conditional.kl"
+    kl_no_2 = false;
+#line 74 "codegen/owning_conditional.kl"
+    kl_t75 = false;
+    kl_t4 = &kl_a_3;
+    kl_t75 = true;
+    kl__Buf__R3Buf_3u64__ctor( kl_t4, 1 );
+#line 75 "codegen/owning_conditional.kl"
+    kl_t76 = false;
+    kl_t7 = &kl_b_6;
+    kl_t76 = true;
+    kl__Buf__R3Buf_3u64__ctor( kl_t7, 2 );
+    if ( kl_yes_1 ) goto bb1; else goto bb2;
+    bb1:
+#line 76 "codegen/owning_conditional.kl"
+    kl_t10 = kl_a_3;
+    kl_t75 = false;
+    kl_t77 = true;
+    goto bb3;
+    bb2:
+    kl_t10 = kl_b_6;
+    kl_t76 = false;
+    kl_t77 = true;
+    goto bb3;
+    bb3:
+    kl_x_9 = kl_t10;
+    kl_t77 = false;
+    if ( kl_t77 ) kl__Buf__dtor( &kl_t10 );
+#line 77 "codegen/owning_conditional.kl"
+    kl_t11 = &kl_x_9;
+    kl_t12 = kl__get__S3Buf( kl_t11 );
+    kl_7prelude_println__3u64( kl_t12 );
+    if ( kl_no_2 ) goto bb4; else goto bb5;
+    bb4:
+#line 80 "codegen/owning_conditional.kl"
+    kl_t79 = false;
+    kl_t17 = &kl_t16;
+    kl_t79 = true;
+    kl__Buf__R3Buf_3u64__ctor( kl_t17, 3 );
+    kl_t15 = kl_t16;
+    kl_t79 = false;
+    kl_t78 = true;
+    goto bb6;
+    bb5:
+    kl_t80 = false;
+    kl_t20 = &kl_t19;
+    kl_t80 = true;
+    kl__Buf__R3Buf_3u64__ctor( kl_t20, 4 );
+    kl_t15 = kl_t19;
+    kl_t80 = false;
+    kl_t78 = true;
+    goto bb6;
+    bb6:
+    kl_t_14 = kl_t15;
+    kl_t78 = false;
+    if ( kl_t80 ) kl__Buf__dtor( &kl_t19 );
+    if ( kl_t79 ) kl__Buf__dtor( &kl_t16 );
+    if ( kl_t78 ) kl__Buf__dtor( &kl_t15 );
+#line 81 "codegen/owning_conditional.kl"
+    kl_t22 = &kl_t_14;
+    kl_t23 = kl__get__S3Buf( kl_t22 );
+    kl_7prelude_println__3u64( kl_t23 );
+#line 84 "codegen/owning_conditional.kl"
+    kl_t81 = false;
+    kl_t26 = &kl_c_25;
+    kl_t81 = true;
+    kl__Buf__R3Buf_3u64__ctor( kl_t26, 5 );
+#line 85 "codegen/owning_conditional.kl"
+    kl_t82 = false;
+    kl_t29 = &kl_d_28;
+    kl_t82 = true;
+    kl__Buf__R3Buf_3u64__ctor( kl_t29, 6 );
+    if ( kl_no_2 ) goto bb7; else goto bb8;
+    bb7:
+#line 86 "codegen/owning_conditional.kl"
+    kl_t31 = kl_c_25;
+    kl_t81 = false;
+    goto bb9;
+    bb8:
+    kl_t31 = kl_d_28;
+    kl_t82 = false;
+    goto bb9;
+    bb9:
+    kl_t32 = &kl_t31;
+    kl_t33 = kl__peek__3Buf( kl_t32 );
+    kl_7prelude_println__3u64( kl_t33 );
+    kl__Buf__dtor( &kl_t31 );
+#line 87 "codegen/owning_conditional.kl"
+    kl_t36 = &kl_t35;
+    kl_t37 = ( uint8_t* ) "after peek";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t36, kl_t37, 10 );
+    kl_7prelude_println__Q7prelude3str( kl_t35 );
+#line 90 "codegen/owning_conditional.kl"
+    kl_t83 = false;
+    kl_t41 = &kl_g_40;
+    kl_t83 = true;
+    kl__Buf__R3Buf_3u64__ctor( kl_t41, 7 );
+    if ( kl_yes_1 ) goto bb10; else goto bb11;
+    bb10:
+#line 91 "codegen/owning_conditional.kl"
+    kl_t43 = kl_g_40;
+    kl_t83 = false;
+    kl_t84 = true;
+    goto bb12;
+    bb11:
+    kl_t85 = false;
+    kl_t45 = &kl_t44;
+    kl_t85 = true;
+    kl__Buf__R3Buf_3u64__ctor( kl_t45, 70 );
+    kl_t43 = kl_t44;
+    kl_t85 = false;
+    kl_t84 = true;
+    goto bb12;
+    bb12:
+    kl__eat__M3Buf( kl_t43 );
+    kl_t84 = false;
+    if ( kl_t85 ) kl__Buf__dtor( &kl_t44 );
+    if ( kl_t84 ) kl__Buf__dtor( &kl_t43 );
+#line 93 "codegen/owning_conditional.kl"
+    kl_t86 = false;
+    kl_t49 = &kl_t48;
+    kl_t86 = true;
+    kl__Buf__R3Buf_3u64__ctor( kl_t49, 8 );
+    kl_t87 = false;
+    kl_t52 = &kl_t51;
+    kl_t87 = true;
+    kl__Buf__R3Buf_3u64__ctor( kl_t52, 9 );
+    kl_t54 = kl__pick__4bool_M3Buf_M3Buf( kl_no_2, kl_t48, kl_t51 );
+    kl_t86 = false;
+    kl_t87 = false;
+    kl_t55 = &kl_t54;
+    kl_t56 = kl__get__S3Buf( kl_t55 );
+    kl_7prelude_println__3u64( kl_t56 );
+    kl__Buf__dtor( &kl_t54 );
+    if ( kl_t87 ) kl__Buf__dtor( &kl_t51 );
+    if ( kl_t86 ) kl__Buf__dtor( &kl_t48 );
+#line 95 "codegen/owning_conditional.kl"
+    kl_t88 = false;
+    kl_t59.tag = 0;
+    kl_t89 = true;
+    kl_t90 = false;
+    kl_t61 = &kl_t60;
+    kl_t90 = true;
+    kl__Buf__R3Buf_3u64__ctor( kl_t61, 10 );
+    kl_t59.kl_b_54 = kl_t60;
+    kl_t90 = false;
+    kl_t89 = true;
+    kl_f_58 = kl_t59;
+    kl_t89 = false;
+    kl_t88 = true;
+    if ( kl_t90 ) kl__Buf__dtor( &kl_t60 );
+    if ( kl_t89 ) kl__Holder__dtor( &kl_t59 );
+#line 96 "codegen/owning_conditional.kl"
+    kl_t91 = false;
+    kl_t64.tag = 1;
+    kl_e_63 = kl_t64;
+    kl_t91 = true;
+    if ( kl_yes_1 ) goto bb13; else goto bb14;
+    bb13:
+#line 97 "codegen/owning_conditional.kl"
+    kl_t66 = kl_f_58;
+    kl_t88 = false;
+    kl_t92 = true;
+    goto bb15;
+    bb14:
+    kl_t66 = kl_e_63;
+    kl_t91 = false;
+    kl_t92 = true;
+    goto bb15;
+    bb15:
+    kl_h_65 = kl_t66;
+    kl_t92 = false;
+    if ( kl_t92 ) kl__Holder__dtor( &kl_t66 );
+#line 98 "codegen/owning_conditional.kl"
+    kl_t67 = &kl_h_65;
+    kl_t68 = kl__size__6Holder( kl_t67 );
+    kl_7prelude_println__3u64( kl_t68 );
+#line 100 "codegen/owning_conditional.kl"
+    kl_t71 = &kl_t70;
+    kl_t72 = ( uint8_t* ) "end";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t71, kl_t72, 3 );
+    kl_7prelude_println__Q7prelude3str( kl_t70 );
+#line 101 "codegen/owning_conditional.kl"
+    kl_t0 = 0;
+    kl__Holder__dtor( &kl_h_65 );
+    if ( kl_t91 ) kl__Holder__dtor( &kl_e_63 );
+    kl_t91 = false;
+    if ( kl_t88 ) kl__Holder__dtor( &kl_f_58 );
+    kl_t88 = false;
+    if ( kl_t83 ) kl__Buf__dtor( &kl_g_40 );
+    kl_t83 = false;
+    if ( kl_t82 ) kl__Buf__dtor( &kl_d_28 );
+    kl_t82 = false;
+    if ( kl_t81 ) kl__Buf__dtor( &kl_c_25 );
+    kl_t81 = false;
+    kl__Buf__dtor( &kl_t_14 );
+    kl__Buf__dtor( &kl_x_9 );
+    if ( kl_t76 ) kl__Buf__dtor( &kl_b_6 );
+    kl_t76 = false;
+    if ( kl_t75 ) kl__Buf__dtor( &kl_a_3 );
+    kl_t75 = false;
+    return kl_t0;
+}
+
+void kl__Holder__dtor( struct kl__Holder* kl_t1 )
+{
+    bool kl_t2;
+#line 35 "codegen/owning_conditional.kl"
+    kl_t2 = ( *kl_t1 ).tag == 0;
+    if ( kl_t2 ) goto bb2; else goto bb1;
+    bb1:
+    return;
+    bb2:
+    kl__Buf__dtor( &( *kl_t1 ).kl_b_54 );
+    goto bb1;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

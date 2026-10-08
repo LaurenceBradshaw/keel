@@ -59,7 +59,7 @@ void kl__holder__R6holder_3big_R3i32_M5Owned__ctor( struct kl__holder* kl_this_1
     int64_t kl_t6;
     bool kl_t7;
 #line 34 "codegen/constructor_borrows.kl"
-    kl_t7 = false;
+    kl_t7 = true;
 #line 36 "codegen/constructor_borrows.kl"
     kl_t5 = ( *kl_source_2 ).kl_a_33 + ( *kl_source_2 ).kl_b_35;
     kl_t6 = kl_t5 + ( *kl_source_2 ).kl_c_37;

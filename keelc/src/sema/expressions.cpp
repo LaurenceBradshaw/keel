@@ -2023,6 +2023,12 @@ Type_id Expressions::infer_conditional( Node_id id )
 
     const Type_id result = operators_.result_of_conditional( then_type, else_type, ast_.span( id ) );
 
+    if( result.is_valid() )
+    {
+        places_.check_owning_source( ast_.then_branch( id ), result );
+        places_.check_owning_source( ast_.else_branch( id ), result );
+    }
+
     return types_.record( id, result.is_valid() ? result : table_.builtin( Type_kind::Error ) );
 }
 
@@ -3129,6 +3135,8 @@ Type_id Expressions::check( Node_id id, Type_id expected )
         check_condition( ast_.condition( id ) );
         check( ast_.then_branch( id ), expected );
         check( ast_.else_branch( id ), expected );
+        places_.check_owning_source( ast_.then_branch( id ), expected );
+        places_.check_owning_source( ast_.else_branch( id ), expected );
         return types_.record( id, expected );
     }
 
@@ -3483,6 +3491,76 @@ TEST_CASE( "type_checker_types_conditional_expressions", "[sema][types]" )
         INFO( p.rendered() );
         REQUIRE( p.clean() );
         REQUIRE( p.type_name( p.nth( Node_kind::Conditional_expr, 0 ) ) == "Owner" );
+    }
+}
+
+// D31. A conditional hands on whichever arm it picks, so a named owning arm is written `move`. Both
+// paths are covered: with an expected type each arm is checked against it, and without one the
+// conditional is inferred.
+TEST_CASE( "type_checker_requires_move_in_an_owning_conditional", "[sema][move]" )
+{
+    constexpr std::string_view owning = "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+                                        "u64 peek( B b ) { return 0; }\n";
+
+    const auto body = [owning]( std::string_view statements )
+    {
+        return std::string( owning ) + "void f( bool c ) { B a = B( 1 ); B b = B( 2 ); " + std::string( statements ) +
+               " }\ni32 main() { return 0; }";
+    };
+
+    SECTION( "with an expected type, each named arm" )
+    {
+        const Typed p( body( "B x = c ? a : b;" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 2 );
+        REQUIRE( p.rendered().find( "write `move a`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "write `move b`" ) != std::string::npos );
+    }
+
+    SECTION( "with none" )
+    {
+        const Typed p( body( "auto x = c ? B( 3 ) : a;" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "write `move a`" ) != std::string::npos );
+    }
+
+    SECTION( "even where the result is only borrowed" )
+    {
+        const Typed p( body( "u64 n = peek( c ? a : b );" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 2 );
+    }
+
+    SECTION( "an owning enum the same" )
+    {
+        const Typed p(
+            std::string( owning ) + "enum H { Full( B v ), Empty };\n"
+                                    "void f( bool c ) { H a = H::Empty; H b = H::Empty; H x = c ? a : b; }\n"
+                                    "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 2 );
+    }
+
+    SECTION( "moved arms and temporaries are accepted" )
+    {
+        const Typed p( body( "B x = c ? move a : B( 3 ); u64 n = peek( c ? B( 4 ) : move b );" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and a copyable conditional is untouched" )
+    {
+        const Typed p( "i32 f( bool c ) { i32 a = 1; i32 b = 2; return c ? a : b; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
     }
 }
 

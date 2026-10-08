@@ -1,0 +1,102 @@
+// D31. A conditional over owning values: each named arm is moved, a temporary arm needs nothing,
+// and only the arm taken is moved. Each Buf holds heap memory and says when it goes, so the output
+// is the drop order and KEEL_VALGRIND=1 sees a drop missed or run twice.
+class Buf
+{
+    u64* data;
+
+    Buf( u64 n )
+    {
+        unsafe
+        {
+            data = alloc<u64>();
+        }
+
+        *data = n;
+    }
+
+    ~Buf()
+    {
+        print( "drop " );
+        println( *data );
+
+        unsafe
+        {
+            free( data );
+        }
+    }
+
+    u64 get() const
+    {
+        return *data;
+    }
+};
+
+enum Holder
+{
+    Full( Buf b ),
+    Empty
+};
+
+u64 peek( Buf b )
+{
+    return b.get();
+}
+
+void eat( move Buf b )
+{
+    print( "ate " );
+    println( b.get() );
+}
+
+u64 size( Holder h )
+{
+    switch( h )
+    {
+        case Holder::Full( b ):
+            return b.get();
+        case Holder::Empty:
+            return 0;
+    }
+}
+
+// The arm not taken is still owned here, and dropped at the end of the function.
+Buf pick( bool c, move Buf a, move Buf b )
+{
+    return c ? move a : move b;
+}
+
+i32 main()
+{
+    bool yes = true;
+    bool no  = false;
+
+    Buf a = Buf( 1 );
+    Buf b = Buf( 2 );
+    Buf x = yes ? move a : move b;
+    println( x.get() );
+
+    // Temporaries: the one not built is never dropped.
+    Buf t = no ? Buf( 3 ) : Buf( 4 );
+    println( t.get() );
+
+    // A borrow of the result: the moved arm's temporary drops at the end of the statement.
+    Buf c = Buf( 5 );
+    Buf d = Buf( 6 );
+    println( peek( no ? move c : move d ) );
+    println( "after peek" );
+
+    // A `move` parameter takes the conditional itself with `move`, as it takes any temporary.
+    Buf g = Buf( 7 );
+    eat( move ( yes ? move g : Buf( 70 ) ) );
+
+    println( pick( no, move Buf( 8 ), move Buf( 9 ) ).get() );
+
+    Holder f = Holder::Full( Buf( 10 ) );
+    Holder e = Holder::Empty;
+    Holder h = yes ? move f : move e;
+    println( size( h ) );
+
+    println( "end" );
+    return 0;
+}

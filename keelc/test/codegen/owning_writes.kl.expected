@@ -107,7 +107,7 @@ void kl__push__S5slots_M5owned( struct kl__slots* kl_this_1, struct kl__owned kl
     struct kl__owned* kl_t3;
     bool kl_t4;
 #line 65 "codegen/owning_writes.kl"
-    kl_t4 = false;
+    kl_t4 = true;
 #line 69 "codegen/owning_writes.kl"
     kl_t3 = ( *kl_this_1 ).kl_data_151 + ( *kl_this_1 ).kl_count_153;
     ( *kl_t3 ) = kl_value_2;

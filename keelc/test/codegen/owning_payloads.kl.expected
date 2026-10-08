@@ -98,7 +98,7 @@ void kl__Keeper__R6Keeper_M6Holder__ctor( struct kl__Keeper* kl_this_1, struct k
 {
     bool kl_t3;
 #line 53 "codegen/owning_payloads.kl"
-    kl_t3 = false;
+    kl_t3 = true;
 #line 55 "codegen/owning_payloads.kl"
     ( *kl_this_1 ).kl_held_73 = kl_h_2;
     kl_t3 = false;
