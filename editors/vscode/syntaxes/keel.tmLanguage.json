@@ -205,7 +205,7 @@
                 },
                 {
                     "name": "keyword.other.keel",
-                    "match": "\\b(?:unsafe|where|cast|wrap|alloc|free|destroy|assert|template|new|delete|operator)\\b"
+                    "match": "\\b(?:unsafe|where|cast|wrap|alloc|free|destroy|assert|panic|template|new|delete|operator)\\b"
                 },
                 {
                     "name": "keyword.other.discard.keel",
@@ -225,7 +225,7 @@
             "patterns": [
                 {
                     "name": "storage.type.built-in.primitive.keel",
-                    "match": "\\b(?:[iu](?:8|16|32|64)|f32|f64|bool|void)\\b"
+                    "match": "\\b(?:[iu](?:8|16|32|64)|f32|f64|bool|void|never)\\b"
                 },
                 {
                     "name": "support.type.bound.keel",

@@ -77,6 +77,9 @@ public:
     // ruled_fallthrough below be an answer rather than a guess.
     void check_arm_structure( Node_id id );
 
+    // After the arms are visited: whether an arm ends depends on its calls' types (`never`).
+    void check_arm_endings( Node_id id ) const;
+
     // Every binding starts as an error, and check_variant_pattern overwrites the ones that match.
     void type_bindings_as_errors( Node_id switch_id );
 

@@ -146,6 +146,8 @@ enum class Node_kind : u16
     Free_expr,
     // `assert( c )`; children: the condition.
     Assert_expr,
+    // `panic( "message" )`; children: the message.
+    Panic_expr,
     // `destroy( p, n )`; children: the pointer, then the count.
     Destroy_expr,
     Fallthrough_stmt,

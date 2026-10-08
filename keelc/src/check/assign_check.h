@@ -47,6 +47,7 @@ struct Assignment_report
     std::vector<Unassigned_error>   unassigned;
     std::vector<Uninitialised_read> reads;
     std::vector<Reassigned_field>   reassigned;
+    std::vector<Span>               diverging_returns; // a reachable Return in a `never` function
 };
 
 // PLAN D9 and D31. Definite assignment, over the same CFG check_moves walks and with the opposite

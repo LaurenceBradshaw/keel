@@ -335,7 +335,8 @@ Function Lowering::run()
     }
 
     Function function        = builder_.finish();
-    function.returns_a_value = !types_.table().is_void( function.locals[k_return_slot.v].type );
+    function.diverges        = types_.table().is_never( function.locals[k_return_slot.v].type );
+    function.returns_a_value = !types_.table().is_void( function.locals[k_return_slot.v].type ) && !function.diverges;
 
     if( ast_.kind( declaration_ ) == Node_kind::Constructor_decl )
     {
@@ -681,7 +682,7 @@ Operand Lowering::checked_cast( Operand operand, Type_id to, Span span )
 
     const Block_id pass = builder_.current();
     builder_.switch_to( fail );
-    builder_.terminate_assert_failed( span, Failure::Cast );
+    builder_.terminate_panic( span, Failure::Cast );
     builder_.switch_to( pass );
 
     return value;
@@ -955,6 +956,14 @@ Lowering::Loop_targets& Lowering::enclosing_loop()
 
 Local_id Lowering::call_result( Node_id id, Rvalue call, Type_id result_type, Span span )
 {
+    // A `never` call is a statement (§6.7), so nothing reads past it.
+    if( types_.table().is_never( result_type ) )
+    {
+        const Local_id result = builder_.into_temp( call, types_.table().builtin( Type_kind::Void ), span );
+        builder_.terminate_unreachable( span );
+        return result;
+    }
+
     if( id == discarded_ && !owns( result_type ) )
     {
         return builder_.into_temp( call, types_.table().builtin( Type_kind::Void ), span );
@@ -1925,10 +1934,16 @@ Operand Lowering::lower_expression( Node_id id )
         builder_.terminate_branch( op, pass, fail, span );
 
         builder_.switch_to( fail );
-        builder_.terminate_assert_failed( ast_.span( condition ), Failure::Assert );
+        builder_.terminate_panic( ast_.span( condition ), Failure::Assert );
 
         builder_.switch_to( pass );
 
+        return Operand { .type = types_.table().builtin( Type_kind::Void ) };
+    }
+    case Node_kind::Panic_expr:
+    {
+        Operand op = lower_expression( ast_.operand( id ) );
+        builder_.terminate_panic( ast_.span( id ), Failure::Message, op );
         return Operand { .type = types_.table().builtin( Type_kind::Void ) };
     }
     case Node_kind::Free_expr:

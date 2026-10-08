@@ -89,6 +89,13 @@ Type_id Annotations::resolve( Node_id annotation, bool outermost )
             return table_.builtin( Type_kind::Error );
         }
 
+        if( table_.is_never( element ) )
+        {
+            reporter_.error_at( ast_.span( annotation ), "`never` is only a return type" );
+
+            return table_.builtin( Type_kind::Error );
+        }
+
         // Poison propagates rather than being wrapped: `<error>*` is not the error type, so check()
         // would not absorb it and one bad annotation would report twice.
         if( table_.is_error( element ) )
@@ -365,7 +372,8 @@ Type_id Annotations::resolve_function_type( Node_id annotation )
 
         const Type_id param_type = resolve( bare, false );
 
-        poisoned = poisoned || table_.is_error( param_type ) || refuse_void( spelled, param_type, "parameter", "passes" );
+        poisoned = poisoned || table_.is_error( param_type ) || refuse_void( spelled, param_type, "parameter", "passes" ) ||
+                   refuse_never( spelled, param_type, "parameter" );
 
         parameter.type = param_type;
         parameters.push_back( parameter );
@@ -551,7 +559,8 @@ bool Annotations::resolve_type_arguments(
         // Not outermost: a type argument binds nothing, so `const` on one applies to nothing.
         for( const Node_id argument : given )
         {
-            resolved.push_back( resolve( argument, false ) );
+            const Type_id type = resolve( argument, false );
+            resolved.push_back( refuse_never( argument, type, "type argument" ) ? table_.builtin( Type_kind::Error ) : type );
         }
     }
 
@@ -571,6 +580,20 @@ bool Annotations::refuse_void( Node_id annotation, Type_id type, std::string_vie
             ast_.span( annotation ),
             fmt::format( "a {} cannot be `void`", what ),
             fmt::format( "it {} nothing; remove it", does )
+        );
+
+        return true;
+    }
+
+    return false;
+}
+
+bool Annotations::refuse_never( Node_id annotation, Type_id type, std::string_view what )
+{
+    if( table_.is_never( type ) )
+    {
+        reporter_.error_at(
+            ast_.span( annotation ), fmt::format( "a {} cannot be `never`", what ), "only a function returns `never`"
         );
 
         return true;

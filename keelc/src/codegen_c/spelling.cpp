@@ -71,6 +71,7 @@ std::string Spelling::type( Type_id type ) const
     switch( described.kind )
     {
     case Type_kind::Void:
+    case Type_kind::Never:
         return "void";
 
     case Type_kind::Bool:

@@ -231,8 +231,16 @@ struct Printer
         case Terminator_kind::Return:
             return "return";
 
-        case Terminator_kind::Assert_failed:
-            return terminator.failure == Failure::Cast ? "cast_failed" : "assert_failed";
+        case Terminator_kind::Panic:
+            switch( terminator.failure )
+            {
+            case Failure::Assert:
+                return "assert_failed";
+            case Failure::Message:
+                return fmt::format( "panic {}", operand( terminator.message ) );
+            case Failure::Cast:
+                return "cast_failed";
+            }
 
         case Terminator_kind::Unreachable:
             return "unreachable";

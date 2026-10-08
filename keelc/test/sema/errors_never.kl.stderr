@@ -1,0 +1,91 @@
+error: `never` is the name of a builtin type
+ --> sema/errors_never.kl:4:7
+  |
+4 | class never
+  |       ^^^^^ a declaration may not take one
+
+error: a field cannot be `never`
+  --> sema/errors_never.kl:11:5
+   |
+11 |     never n;
+   |     ^^^^^ only a function returns `never`
+
+error: a field cannot be `never`
+  --> sema/errors_never.kl:16:10
+   |
+16 |     one( never n )
+   |          ^^^^^ only a function returns `never`
+
+error: a parameter cannot be `never`
+  --> sema/errors_never.kl:24:17
+   |
+24 | void parameter( never n )
+   |                 ^^^^^ only a function returns `never`
+
+error: a variable cannot be `never`
+  --> sema/errors_never.kl:30:5
+   |
+30 |     never n;
+   |     ^^^^^ only a function returns `never`
+
+error: `never` is only a return type
+  --> sema/errors_never.kl:35:5
+   |
+35 |     never* p = nullptr;
+   |     ^^^^^^
+
+error: a type argument cannot be `never`
+  --> sema/errors_never.kl:40:12
+   |
+40 |     result<never, i32> r = result::err( 1 );
+   |            ^^^^^ only a function returns `never`
+
+error: a `never` function cannot return
+  --> sema/errors_never.kl:45:5
+   |
+45 |     return;
+   |     ^^^^^^^ end it in `panic`, or a call of another `never` function
+
+error: expected `i32`, but got `never`
+  --> sema/errors_never.kl:50:13
+   |
+50 |     i32 x = panic( "no" );
+   |             ^^^^^^^^^^^^^ it never produces a value; call it as a statement
+
+error: expected `i32`, but got `never`
+  --> sema/errors_never.kl:56:12
+   |
+56 |     return stop();
+   |            ^^^^^^ it never produces a value; call it as a statement
+
+error: a variable cannot be `never`
+  --> sema/errors_never.kl:61:14
+   |
+61 |     auto x = stop();
+   |              ^^^^^^ only a function returns `never`
+
+error: expected `i32`, but got `never`
+  --> sema/errors_never.kl:66:20
+   |
+66 |     return c ? 1 : stop();
+   |                    ^^^^^^ it never produces a value; call it as a statement
+
+error: expected `i32`, but got `never`
+  --> sema/errors_never.kl:75:12
+   |
+75 |     takes( stop() );
+   |            ^^^^^^ it never produces a value; call it as a statement
+
+error: expected `str`, but got an integer literal
+  --> sema/errors_never.kl:80:12
+   |
+80 |     panic( 5 );
+   |            ^
+
+error: expected an identifier, found `panic`
+  --> sema/errors_never.kl:85:9
+   |
+85 |     i32 panic = 1;
+   |         ^^^^^ `panic` is a keyword, so it cannot be used as a name
+
+15 errors generated

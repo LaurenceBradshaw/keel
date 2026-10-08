@@ -29,6 +29,7 @@ enum class Type_kind : u8
 {
     Error, // poison
     Void,
+    Never,
     Bool,
     Int, // signedness is a field, not a kind
     Float,
@@ -159,7 +160,7 @@ public:
     bool is_parameter( Type_id id ) const; // a `T`, before an instantiation substitutes it away
     bool is_function( Type_id id ) const;
     bool is_field( Type_id id ) const;
-
+    bool is_never( Type_id id ) const;
     // Whether a parameter appears anywhere inside, not only at the top: `T` and `T*` both do, `i32*`
     // does not. What separates a type an instance can be emitted at from one that is still a
     // template, and structural for the same reason substitute() is.
@@ -212,8 +213,8 @@ private:
 
     std::deque<Type> types_; // types_[0] reserved so Type_id{} is invalid
 
-    Type_id error_, void_, bool_; // what the constructor made
-    Type_id integers_[4][2];      // [width index][0 = signed, 1 = unsigned]
+    Type_id error_, void_, bool_, never_; // what the constructor made
+    Type_id integers_[4][2];              // [width index][0 = signed, 1 = unsigned]
     Type_id floats_[2];
 
     std::unordered_map<u32, Type_id> pointers_;      // element.v * 2 + const -> pointer id

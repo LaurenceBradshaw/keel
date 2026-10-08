@@ -199,6 +199,13 @@ void Resolver::visit( Node_id id )
             bindings_[id.v] = prelude_declaration( "str" );
         }
         return;
+    case Node_kind::Panic_expr:
+        visit( ast_.operand( id ) );
+        if( !bindings_[id.v].is_valid() )
+        {
+            bindings_[id.v] = prelude_declaration( "str" );
+        }
+        return;
     case Node_kind::Try_expr:
         visit( ast_.operand( id ) );
         if( !bindings_[id.v].is_valid() )

@@ -1,0 +1,14 @@
+// A `never` function that can reach its end is refused. Found over the lowered graph, which a
+// program with other errors never reaches, so it has a fixture of its own.
+never ends( bool c )
+{
+    if( c )
+    {
+        panic( "c" );
+    }
+}
+
+i32 main()
+{
+    return 0;
+}

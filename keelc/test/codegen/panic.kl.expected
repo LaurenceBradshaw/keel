@@ -1,0 +1,77 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "panic.kl.prelude.c"
+
+struct kl__Noisy;
+
+struct kl__Noisy
+{
+    int32_t kl_id_1;
+};
+
+_Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
+_Noreturn void kl_rt_unreachable( void );
+
+void kl__Noisy__R5Noisy_3i32__ctor( struct kl__Noisy*, int32_t );
+void kl__Noisy__dtor( struct kl__Noisy* );
+_Noreturn void kl__fail__Q7prelude3str( struct kl_7prelude_str );
+int32_t kl__main__( void );
+
+void kl__Noisy__R5Noisy_3i32__ctor( struct kl__Noisy* kl_this_1, int32_t kl_id_2 )
+{
+#line 10 "codegen/panic.kl"
+    ( *kl_this_1 ).kl_id_1 = kl_id_2;
+    return;
+}
+
+void kl__Noisy__dtor( struct kl__Noisy* kl_this_1 )
+{
+    struct kl_7prelude_str kl_t2;
+    struct kl_7prelude_str* kl_t3;
+    uint8_t* kl_t4;
+    ( void ) kl_this_1;
+#line 15 "codegen/panic.kl"
+    kl_t3 = &kl_t2;
+    kl_t4 = ( uint8_t* ) "dropped";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t3, kl_t4, 7 );
+    kl_7prelude_println__Q7prelude3str( kl_t2 );
+    return;
+}
+
+_Noreturn void kl__fail__Q7prelude3str( struct kl_7prelude_str kl_why_1 )
+{
+    kl_rt_panic_message( "codegen/panic.kl", 21, kl_why_1.kl_data_59, kl_why_1.kl_size_62 );
+}
+
+int32_t kl__main__( void )
+{
+    struct kl__Noisy kl_n_1;
+    struct kl__Noisy* kl_t2;
+    struct kl_7prelude_str kl_t4;
+    struct kl_7prelude_str* kl_t5;
+    uint8_t* kl_t6;
+    struct kl_7prelude_str kl_t9;
+    struct kl_7prelude_str* kl_t10;
+    uint8_t* kl_t11;
+#line 26 "codegen/panic.kl"
+    kl_t2 = &kl_n_1;
+    kl__Noisy__R5Noisy_3i32__ctor( kl_t2, 1 );
+#line 28 "codegen/panic.kl"
+    kl_t5 = &kl_t4;
+    kl_t6 = ( uint8_t* ) "before";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 6 );
+    kl_7prelude_println__Q7prelude3str( kl_t4 );
+#line 29 "codegen/panic.kl"
+    kl_t10 = &kl_t9;
+    kl_t11 = ( uint8_t* ) "out of cheese";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t10, kl_t11, 13 );
+    kl__fail__Q7prelude3str( kl_t9 );
+    kl_rt_unreachable();
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

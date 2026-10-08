@@ -7,7 +7,7 @@
 // Its own fixture, and the reason is the one already recorded for errors_owning_copies.kl: these
 // are reported after lowering, so a *type* error anywhere in the file stops the driver before this
 // pass ever runs and every diagnostic below vanishes from the golden.
-void never( out i32 n )
+void skips( out i32 n )
 {
 }
 

@@ -548,14 +548,22 @@ void Coverage::check_arm_structure( Node_id id )
                 );
             }
         }
+    }
+}
 
-        // The divergence this whole rule exists for: the same source runs on into the next arm in
-        // C, and ends here. So an arm with a body has to say which it means. The last arm is
-        // exempt - there is nothing after it either way.
-        if( !last && completes_normally( body ) )
+// The divergence this whole rule exists for: the same source runs on into the next arm in C, and
+// ends here. So an arm with a body has to say which it means. The last arm is exempt - there is
+// nothing after it either way.
+void Coverage::check_arm_endings( Node_id id ) const
+{
+    const std::span<const Node_id> arms = ast_.arms( id );
+
+    for( std::size_t i = 0; i + 1 < arms.size(); ++i )
+    {
+        if( completes_normally( ast_.body( arms[i] ) ) )
         {
             reporter_.error_at(
-                ast_.span( arm ),
+                ast_.span( arms[i] ),
                 "a `case` with a body must say how it ends",
                 "end it with `break;` or `return;`, or `fallthrough;` to run on into the next `case`"
             );
@@ -618,6 +626,12 @@ bool Coverage::completes_normally( Node_id id ) const
         }
 
         return completes_normally( ast_.then_branch( id ) ) || completes_normally( otherwise );
+    }
+    case Node_kind::Expr_stmt:
+    {
+        // A call of a `never` function, or `panic`. Unrecorded when a mistake stopped its typing.
+        const Type_id type = types_.type_of( ast_.expression( id ) );
+        return !type.is_valid() || !table_.is_never( type );
     }
     default:
         return true;

@@ -179,8 +179,18 @@ void Statements::visit_function( Node_id id )
 
 void Statements::visit_return( Node_id id )
 {
-    const Node_id value     = ast_.value( id );
-    const Type_id void_type = table_.builtin( Type_kind::Void );
+    const Node_id value      = ast_.value( id );
+    const Type_id void_type  = table_.builtin( Type_kind::Void );
+    const Type_id never_type = table_.builtin( Type_kind::Never );
+
+    if( current_return_ == never_type )
+    {
+        reporter_.error_at(
+            ast_.span( id ), "a `never` function cannot return", "end it in `panic`, or a call of another `never` function"
+        );
+
+        return;
+    }
 
     if( !value.is_valid() ) // a bare `return;`
     {
@@ -282,6 +292,7 @@ void Statements::visit_var( Node_id id )
             }
         }
 
+        annotations_.refuse_never( spelled, type, "variable" );
         if( table_.is_void( type ) && expressions_.current_function().is_valid() )
         {
             reporter_.warn_at(
@@ -295,6 +306,7 @@ void Statements::visit_var( Node_id id )
     {
         type = expressions_.infer( init ); // `auto`: L6's one form of inference
         places_.check_owning_source( init, type );
+        annotations_.refuse_never( init, type, "variable" );
     }
     else
     {
@@ -494,6 +506,7 @@ void Statements::visit_switch( Node_id id )
     }
     breakable_depth_ -= 1;
 
+    coverage_.check_arm_endings( id );
     coverage_.finish_switch( covered );
 }
 

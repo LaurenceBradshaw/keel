@@ -165,9 +165,14 @@ void Builder::terminate_return( Span span )
     set_terminator( Terminator { .kind = Terminator_kind::Return, .span = span } );
 }
 
-void Builder::terminate_assert_failed( Span span, Failure failure )
+void Builder::terminate_panic( Span span, Failure failure, Operand message )
 {
-    set_terminator( Terminator { .kind = Terminator_kind::Assert_failed, .failure = failure, .span = span } );
+    set_terminator( Terminator { .kind = Terminator_kind::Panic, .failure = failure, .span = span, .message = message } );
+}
+
+void Builder::terminate_unreachable( Span span )
+{
+    set_terminator( Terminator { .kind = Terminator_kind::Unreachable, .span = span } );
 }
 
 bool Builder::is_terminated() const

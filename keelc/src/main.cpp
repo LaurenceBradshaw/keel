@@ -223,6 +223,15 @@ void report_unassigned_errors(
             );
         }
 
+        for( const keel::Span at : report.diverging_returns )
+        {
+            diagnostics.error(
+                at,
+                "this function returns `never`, but can reach its end",
+                "end every path in `panic`, a call of another `never` function, or a loop that never exits"
+            );
+        }
+
         for( const keel::Reassigned_field& error : report.reassigned )
         {
             diagnostics.error(

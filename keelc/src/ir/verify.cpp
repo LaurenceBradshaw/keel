@@ -231,9 +231,15 @@ void check_terminators( const Function& func, std::vector<std::string>& errors )
             check_target( terminator.targets[1], "Branch false target" );
             break;
 
+        case Terminator_kind::Panic:
+            if( terminator.failure == Failure::Message )
+            {
+                check_operand( func, terminator.message, fmt::format( "{} message", where ), errors );
+            }
+            break;
+
         case Terminator_kind::Return:
         case Terminator_kind::Unreachable:
-        case Terminator_kind::Assert_failed:
             break;
         }
     }

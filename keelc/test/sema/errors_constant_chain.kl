@@ -11,7 +11,7 @@ u32 beside( u32 x )
 }
 
 // A comparison still answers rather than refusing.
-bool never( u64 n )
+bool impossible( u64 n )
 {
     return n < 0 - 1;
 }

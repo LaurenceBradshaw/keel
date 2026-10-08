@@ -81,6 +81,7 @@ enum class Keyword : u32
     Operator,
     Destroy,
     Underscore,
+    Panic,
 
     Count
 };

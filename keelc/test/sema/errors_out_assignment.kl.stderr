@@ -1,7 +1,7 @@
 error: `n` is never assigned
   --> sema/errors_out_assignment.kl:10:1
    |
-10 | void never( out i32 n )
+10 | void skips( out i32 n )
    | ^^^^^^^^^^^^^^^^^^^^^^^ an `out` parameter is the callee's promise to assign it
 
 error: `n` is not assigned on every path out of this function

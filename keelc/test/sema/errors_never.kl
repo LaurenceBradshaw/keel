@@ -1,0 +1,91 @@
+// `never` is a return type and nothing else, a `never` function may not return, a call of one is a
+// statement and has no value, `panic` takes a `str`, and both names are taken. One refusal per
+// declaration.
+class never
+{
+    i32 x;
+};
+
+struct Holds
+{
+    never n;
+};
+
+enum Payload
+{
+    one( never n )
+};
+
+never stop()
+{
+    panic( "stop" );
+}
+
+void parameter( never n )
+{
+}
+
+void local()
+{
+    never n;
+}
+
+void pointer()
+{
+    never* p = nullptr;
+}
+
+void argument()
+{
+    result<never, i32> r = result::err( 1 );
+}
+
+never returns()
+{
+    return;
+}
+
+i32 initialised()
+{
+    i32 x = panic( "no" );
+    return x;
+}
+
+i32 returned()
+{
+    return stop();
+}
+
+void inferred()
+{
+    auto x = stop();
+}
+
+i32 arm( bool c )
+{
+    return c ? 1 : stop();
+}
+
+void takes( i32 v )
+{
+}
+
+void passed()
+{
+    takes( stop() );
+}
+
+void not_a_str()
+{
+    panic( 5 );
+}
+
+void named()
+{
+    i32 panic = 1;
+}
+
+i32 main()
+{
+    return 0;
+}

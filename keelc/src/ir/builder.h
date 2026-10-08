@@ -63,7 +63,8 @@ public:
     void terminate_goto( Block_id target, Span span );
     void terminate_branch( Operand condition, Block_id true_target, Block_id false_target, Span span );
     void terminate_return( Span span );
-    void terminate_assert_failed( Span span, Failure failure );
+    void terminate_panic( Span span, Failure failure, Operand message = {} );
+    void terminate_unreachable( Span span );
 
     bool is_terminated() const;
 

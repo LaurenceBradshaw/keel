@@ -1,0 +1,30 @@
+// `panic` prints its line and message after what the program printed, and aborts: no destructor
+// runs, so `dropped` never appears. The message is a `str` from the caller, not a literal at the
+// `panic`, and the line is the `panic`'s, inside `fail`.
+class Noisy
+{
+    i32 id;
+
+    Noisy( i32 id )
+    {
+        this.id = id;
+    }
+
+    ~Noisy()
+    {
+        println( "dropped" );
+    }
+};
+
+never fail( str why )
+{
+    panic( why );
+}
+
+i32 main()
+{
+    Noisy n = Noisy( 1 );
+
+    println( "before" );
+    fail( "out of cheese" );
+}

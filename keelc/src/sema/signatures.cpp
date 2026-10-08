@@ -99,6 +99,7 @@ void Signatures::declare_fields()
             const Node_id annotation = ast_.annotation( field );
             const Type_id field_type = annotations_.resolve( annotation );
             annotations_.refuse_void( annotation, field_type, "field", "holds" );
+            annotations_.refuse_never( annotation, field_type, "field" );
 
             types_.record( field, field_type );
 
@@ -172,6 +173,7 @@ void Signatures::declare_functions()
             const Node_id param_type_node = ast_.annotation( param );
             const Type_id param_type      = annotations_.resolve( param_type_node );
             annotations_.refuse_void( bare_type( param_type_node ), param_type, "parameter", "passes" );
+            annotations_.refuse_never( bare_type( param_type_node ), param_type, "parameter" );
             types_.record( param, param_type );
         }
 
@@ -259,6 +261,7 @@ void Signatures::declare_member_functions()
                 const Node_id param_type_node = ast_.annotation( param );
                 const Type_id param_type      = annotations_.resolve( param_type_node );
                 annotations_.refuse_void( bare_type( param_type_node ), param_type, "parameter", "passes" );
+                annotations_.refuse_never( bare_type( param_type_node ), param_type, "parameter" );
                 types_.record( param, param_type );
 
                 if( ast_.is_generic( child ) )
@@ -298,6 +301,7 @@ void Signatures::declare_globals()
                 const Node_id var_type_node = ast_.annotation( member );
                 const Type_id var_type      = annotations_.resolve( var_type_node );
                 annotations_.refuse_void( var_type_node, var_type, "global", "holds" );
+                annotations_.refuse_never( var_type_node, var_type, "global" );
                 types_.record( member, var_type );
             }
         }
@@ -310,6 +314,7 @@ void Signatures::declare_globals()
         const Node_id var_type_node = ast_.annotation( child );
         const Type_id var_type      = annotations_.resolve( var_type_node );
         annotations_.refuse_void( var_type_node, var_type, "global", "holds" );
+        annotations_.refuse_never( var_type_node, var_type, "global" );
         types_.record( child, var_type );
     }
 }
@@ -395,6 +400,7 @@ void Signatures::declare_enums()
                 const Node_id field_annotation = ast_.annotation( field );
                 const Type_id field_type       = annotations_.resolve( field_annotation );
                 annotations_.refuse_void( field_annotation, field_type, "field", "holds" );
+                annotations_.refuse_never( field_annotation, field_type, "field" );
 
                 types_.record( field, field_type );
 

@@ -1,0 +1,25 @@
+// `assert`, a checked `cast` and `panic` each end a block in `Panic`, which names what failed; a
+// call of a `never` function ends its block in `unreachable`, and nothing after either is lowered.
+never fail( str why )
+{
+    panic( why );
+}
+
+i32 pick( i32 v, i64 w )
+{
+    assert( v != 3 );
+
+    i32 narrowed = cast<i32>( w );
+
+    if( v > narrowed )
+    {
+        fail( "too big" );
+    }
+
+    return v;
+}
+
+i32 main()
+{
+    return pick( 1, 2 );
+}

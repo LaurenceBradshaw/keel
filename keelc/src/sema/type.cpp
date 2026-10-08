@@ -21,6 +21,7 @@ Type_table::Type_table()
     error_ = add( { Type_kind::Error, 0, false, Type_id {} }, "<error>" );
     void_  = add( { Type_kind::Void, 0, false, Type_id {} }, "void" );
     bool_  = add( { Type_kind::Bool, 1, false, Type_id {} }, "bool" );
+    never_ = add( { Type_kind::Never, 0, false, Type_id {} }, "never" );
 
     for( u8 i = 0; i < 4; ++i )
     {
@@ -33,7 +34,7 @@ Type_table::Type_table()
     floats_[1] = add( { Type_kind::Float, 64, false, Type_id {} }, "f64" );
 
     // Built last, from the names already in composed_ - a deque, so these views stay valid.
-    for( const Type_id id : { void_, bool_, floats_[0], floats_[1] } )
+    for( const Type_id id : { void_, bool_, never_, floats_[0], floats_[1] } )
     {
         by_spelling_.emplace( composed_[id.v], id );
     }
@@ -55,6 +56,8 @@ Type_id Type_table::builtin( Type_kind kind ) const
         return void_;
     case Type_kind::Bool:
         return bool_;
+    case Type_kind::Never:
+        return never_;
     default:
         assert( false );
         return Type_id {};
@@ -870,6 +873,12 @@ bool Type_table::is_field( Type_id id ) const
 {
     assert( id.is_valid() );
     return get( id ).kind == Type_kind::Field;
+}
+
+bool Type_table::is_never( Type_id id ) const
+{
+    assert( id.is_valid() );
+    return get( id ).kind == Type_kind::Never;
 }
 
 bool Type_table::is_void( Type_id id ) const
@@ -2148,6 +2157,7 @@ TEST_CASE( "type_table_from_spelling_round_trips_every_builtin", "[sema][type]" 
 
     REQUIRE( table.from_spelling( "bool" ) == table.builtin( Type_kind::Bool ) );
     REQUIRE( table.from_spelling( "void" ) == table.builtin( Type_kind::Void ) );
+    REQUIRE( table.from_spelling( "never" ) == table.builtin( Type_kind::Never ) );
 
     SECTION( "an unknown spelling has no type" )
     {

@@ -184,14 +184,15 @@ enum class Terminator_kind : u8
     Branch,
     Return,
     Unreachable,
-    Assert_failed // the span is the failed expression's; ends the program, running nothing
+    Panic // ends the program, running nothing
 };
 
-// What an Assert_failed reports.
+// What a Panic reports.
 enum class Failure : u8
 {
-    Assert, // span: the condition
-    Cast    // span: the whole `cast<T>( x )`
+    Assert,  // span: the condition
+    Message, // span: the whole `panic( ... )`
+    Cast     // span: the whole `cast<T>( x )`
 };
 
 struct Terminator
@@ -201,6 +202,7 @@ struct Terminator
     Span            span {};
     Operand         condition {};  // Branch
     Block_id        targets[2] {}; // [0] for Goto; [0] true and [1] false for Branch
+    Operand         message {};    // Panic: the message
 };
 
 // Exactly one terminator, and terminators appear nowhere else. verify() checks this first: it is
@@ -247,6 +249,8 @@ struct Function
     // Whether local 0 is a value the body must produce. The passes have no Type_table, so this is
     // recorded the same way out_parameters is, and for the same reason: the graph does not say.
     bool returns_a_value = false;
+
+    bool diverges = false; // returns `never`, so no path may reach a Return
 };
 
 inline bool has_deref_projection( const Function& func, const Place& place )
@@ -301,7 +305,7 @@ inline void successors( const Terminator& terminator, std::vector<Block_id>& out
         return;
     case Terminator_kind::Return:
     case Terminator_kind::Unreachable:
-    case Terminator_kind::Assert_failed:
+    case Terminator_kind::Panic:
     case Terminator_kind::Unset:
         return;
     }

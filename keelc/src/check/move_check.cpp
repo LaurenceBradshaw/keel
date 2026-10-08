@@ -216,10 +216,11 @@ void transfer_block( const Function& func, u32 block, Flow& flow, std::vector<Mo
         }
     }
 
-    // Read on the way out, after every statement. A non-Branch terminator leaves `condition` at its
+    // Read on the way out, after every statement. A terminator leaves an operand it lacks at its
     // default, which is Operand_kind::Constant, so read_operand returns immediately - no kind test
     // is needed here.
     read_operand( b.terminator.condition, b.terminator.span, flow, errors );
+    read_operand( b.terminator.message, b.terminator.span, flow, errors );
 }
 
 // The local a pointer local borrows from, and where. Valid only for one assigned exactly once, as a

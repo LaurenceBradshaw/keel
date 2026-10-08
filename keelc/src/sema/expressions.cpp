@@ -83,6 +83,10 @@ Type_id Expressions::infer( Node_id id )
         check_condition( ast_.condition( id ) );
         return types_.record( id, table_.builtin( Type_kind::Void ) );
 
+    case Node_kind::Panic_expr:
+        check( ast_.operand( id ), types_.type_of( resolution_.declaration_of( id ) ) );
+        return types_.record( id, table_.builtin( Type_kind::Never ) );
+
     case Node_kind::Try_expr:
         return infer_try( id );
 
@@ -3306,6 +3310,7 @@ Type_id Expressions::check( Node_id id, Type_id expected )
             : table_.name( expected ) == table_.name( actual )
                 ? fmt::format( "two different types are both named `{}`", table_.name( expected ) )
             : table_.is_union( expected ) && table_.is_union( actual ) ? "one union widens into another only through `try`"
+            : table_.is_never( actual )                                ? "it never produces a value; call it as a statement"
                                                                        : ""
         );
         return expected;

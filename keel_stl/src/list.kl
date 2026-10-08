@@ -6,20 +6,20 @@ class list<T>
 {
     list() 
     {
-        data = nullptr;
-        count = 0;
-        cap = 0;
+        data_ = nullptr;
+        count_ = 0;
+        cap_ = 0;
     }
 
     public static list<T> with_capacity( u64 capacity )
     {
         list<T> result = list<T>();
-        result.cap = capacity;
-        result.count = 0;
+        result.cap_ = capacity;
+        result.count_ = 0;
 
         unsafe
         {
-            result.data = alloc<T>( capacity );
+            result.data_ = alloc<T>( capacity );
         }
 
         return result;
@@ -27,80 +27,80 @@ class list<T>
 
     ~list()
     {
-        if( data != nullptr )
+        if( data_ != nullptr )
         {
             unsafe
             {
-                destroy( data, count );
-                free( data );
+                destroy( data_, count_ );
+                free( data_ );
             }
         }
     }
 
     public void push( move T value )
     {
-        if( count == cap )
+        if( count_ == cap_ )
         {
-            grow( cap > 0 ? cap * 2 : 1 );
+            grow( cap_ > 0 ? cap_ * 2 : 1 );
         }
         
         unsafe
         {
-            data[count] = move value;
+            data_[count_] = move value;
         }
-        count += 1;
+        count_ += 1;
     }
 
     public T pop()
     {
-        assert( count > 0 );
-        count -= 1;
+        assert( count_ > 0 );
+        count_ -= 1;
         unsafe
         {
-            return move data[count];
+            return move data_[count_];
         }
     }
 
     public T* operator[]( u64 index ) const
     {
-        assert( index < count );
+        assert( index < count_ );
 
         unsafe
         {
-            return &data[index];
+            return &data_[index];
         }
     }
 
     public T remove( u64 index )
     {
-        assert( index < count );
+        assert( index < count_ );
 
         unsafe
         {
-            T result = move data[index];
+            T result = move data_[index];
 
-            for( u64 i = index; i < count - 1; i++ )
+            for( u64 i = index; i < count_ - 1; i++ )
             {
-                data[i] = move data[i + 1];
+                data_[i] = move data_[i + 1];
             }
 
-            count -= 1;
+            count_ -= 1;
             return result;
         }
     }
 
     public T swap_remove( u64 index )
     {
-        assert( index < count );
+        assert( index < count_ );
 
-        count -= 1;
+        count_ -= 1;
         unsafe
         {
-            T result = move data[index];
+            T result = move data_[index];
 
-            if( index != count )
+            if( index != count_ )
             {
-                data[index] = move data[count];
+                data_[index] = move data_[count_];
             }
 
             return result;
@@ -109,20 +109,20 @@ class list<T>
 
     public T replace( u64 index, move T value )
     {
-        assert( index < count );
+        assert( index < count_ );
 
         unsafe
         {
-            T result = move data[index];
-            data[index] = move value;
+            T result = move data_[index];
+            data_[index] = move value;
             return result;
         }
     }
 
     public void swap( u64 a, u64 b )
     {
-        assert( a < count );
-        assert( b < count );
+        assert( a < count_ );
+        assert( b < count_ );
 
         if( a == b )
         {
@@ -131,30 +131,30 @@ class list<T>
 
         unsafe
         {
-            T temp = move data[a];
-            data[a] = move data[b];
-            data[b] = move temp;
+            T temp = move data_[a];
+            data_[a] = move data_[b];
+            data_[b] = move temp;
         }
     }
 
     public u64 size() const
     {
-        return count;
+        return count_;
     }
 
     public u64 capacity() const
     {
-        return cap;
+        return cap_;
     }
 
     public bool is_empty() const
     {
-        return count == 0;
+        return count_ == 0;
     }
 
     public void reserve( u64 n )
     {
-        if( n > cap )
+        if( n > cap_ )
         {
             grow( n );
         }
@@ -164,9 +164,9 @@ class list<T>
     {
         unsafe
         {
-            destroy( data, count );
+            destroy( data_, count_ );
         }
-        count = 0;
+        count_ = 0;
     }
 
     private void grow( u64 n )
@@ -177,28 +177,28 @@ class list<T>
             new_data = alloc<T>( n );
         }
 
-        if( data != nullptr )
+        if( data_ != nullptr )
         {
-            for( u64 i = 0; i < count; i++ )
+            for( u64 i = 0; i < count_; i++ )
             {
                 unsafe
                 {
-                    new_data[i] = move data[i];
+                    new_data[i] = move data_[i];
                 }
             }
             
             // Slots are raw after the above move, so we don't need to destroy them.
             unsafe
             {
-                free( data );
+                free( data_ );
             }
         }
 
-        data = new_data;
-        cap = n;
+        data_ = new_data;
+        cap_ = n;
     }
 
-    private T[*] data;
-    private u64 count;
-    private u64 cap;
+    private T[*] data_;
+    private u64 count_;
+    private u64 cap_;
 };

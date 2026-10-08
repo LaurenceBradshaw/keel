@@ -281,7 +281,8 @@ private:
     bool shows( Node_id declaration ) const;
 
     bool uses_runtime() const;
-    bool asserts() const;
+    // Whether any block ends in `kind`; for Panic, `with_message` picks `panic` from `assert` and `cast`.
+    bool ends_a_block( Terminator_kind kind, bool with_message = false ) const;
     bool uses_counted_allocation() const;
 
     // Which of D41's three guards a Binary needs, or None for the ordinary infix case. `mirror` is
@@ -675,9 +676,21 @@ void Kir_emitter::emit_runtime_prototypes()
         any = true;
     }
 
-    if( asserts() )
+    if( ends_a_block( Terminator_kind::Panic ) )
     {
         write_line( "_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );" );
+        any = true;
+    }
+
+    if( ends_a_block( Terminator_kind::Panic, true ) )
+    {
+        write_line( "_Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );" );
+        any = true;
+    }
+
+    if( ends_a_block( Terminator_kind::Unreachable ) )
+    {
+        write_line( "_Noreturn void kl_rt_unreachable( void );" );
         any = true;
     }
 
@@ -858,9 +871,11 @@ void Kir_emitter::emit_main_shim()
     write_line( "}" );
 }
 
+// `never` too: only a return slot has it, and it holds nothing.
 bool Kir_emitter::is_void( Type_id type ) const
 {
-    return type.is_valid() && types_.table().get( type ).kind == Type_kind::Void;
+    return type.is_valid() &&
+           ( types_.table().get( type ).kind == Type_kind::Void || types_.table().get( type ).kind == Type_kind::Never );
 }
 
 bool Kir_emitter::is_void( const Operand& operand ) const
@@ -971,12 +986,41 @@ void Kir_emitter::emit_terminator( const Terminator& terminator, const Function&
         write_line( fmt::format( "return {};", local_name( 0 ) ) );
         return;
 
+    // After a `never` call. A call through a pointer is not `_Noreturn` to C, so the body still
+    // needs an end it accepts.
     case Terminator_kind::Unreachable:
-        assert( false && "the lowerer emits no unreachable terminator" );
+        write_line( "kl_rt_unreachable();" );
         return;
 
-    case Terminator_kind::Assert_failed:
+    case Terminator_kind::Panic:
     {
+        const std::string file = c_string( sm_.file( terminator.span.file ).path );
+        const u32         line = sm_.line_col( terminator.span.file, terminator.span.start ).line;
+
+        // A `str` carries its length and no terminator, so its two fields go across.
+        if( terminator.failure == Failure::Message )
+        {
+            const std::string message = operand( terminator.message );
+            const Node_id     str     = types_.table().get( terminator.message.type ).declaration;
+
+            const auto field = [&]( std::string_view name )
+            {
+                for( const Node_id member : ast_.members( str ) )
+                {
+                    if( ast_.kind( member ) == Node_kind::Field_decl && interner_.text( ast_.name( member ) ) == name )
+                    {
+                        return fmt::format( "{}.{}", message, spelling_.field( member ) );
+                    }
+                }
+
+                assert( false && "the prelude's `str` has `data` and `size`" );
+                return std::string {};
+            };
+
+            write_line( fmt::format( "kl_rt_panic_message( {}, {}, {}, {} );", file, line, field( "data" ), field( "size" ) ) );
+            return;
+        }
+
         // As written, on one line: each run of whitespace becomes one space.
         std::string text;
 
@@ -994,8 +1038,8 @@ void Kir_emitter::emit_terminator( const Terminator& terminator, const Function&
 
         write_line( fmt::format(
             "kl_rt_panic( {}, {}, {} );",
-            c_string( sm_.file( terminator.span.file ).path ),
-            sm_.line_col( terminator.span.file, terminator.span.start ).line,
+            file,
+            line,
             c_string( ( terminator.failure == Failure::Cast ? "cast out of range: " : "assertion failed: " ) + text )
         ) );
         return;
@@ -1040,6 +1084,7 @@ std::vector<bool> mentioned_locals( const Function& function )
     for( const Block& block : function.blocks )
     {
         mark( block.terminator.condition.place );
+        mark( block.terminator.message.place );
     }
 
     return mentioned;
@@ -1081,6 +1126,7 @@ std::vector<bool> read_locals( const Function& function )
     for( const Block& block : function.blocks )
     {
         mark( block.terminator.condition.place );
+        mark( block.terminator.message.place );
     }
 
     if( function.returns_a_value )
@@ -1113,7 +1159,8 @@ void Kir_emitter::emit_function( const Function& function )
     }
 
     write_line( fmt::format(
-        "{} {}( {} )",
+        "{}{} {}( {} )",
+        function.diverges ? "_Noreturn " : "",
         spelling_.type( function.locals[k_return_slot.v].type ),
         spelling_.function( function.declaration, function.type_arguments ), // matches the prototype
         params.empty() ? "void" : params
@@ -1188,7 +1235,8 @@ std::string Kir_emitter::prototype( Node_id decl, std::span<const Type_id> type_
     const std::string params = spelling_.parameter_types( decl );
 
     return fmt::format(
-        "{} {}( {} )",
+        "{}{} {}( {} )",
+        types_.table().is_never( binding_type( ast_, types_, decl ) ) ? "_Noreturn " : "",
         spelling_.return_type( decl ), // on the declaration, and a pointer when it returns a binding
         spelling_.function( decl, type_arguments ),
         params
@@ -1212,7 +1260,8 @@ std::string Kir_emitter::prototype( const Function& function ) const
     }
 
     return fmt::format(
-        "{} {}( {} )",
+        "{}{} {}( {} )",
+        function.diverges ? "_Noreturn " : "",
         spelling_.type( function.locals[k_return_slot.v].type ),
         spelling_.function( function.declaration, function.type_arguments ),
         params.empty() ? "void" : params
@@ -1257,13 +1306,13 @@ bool Kir_emitter::uses_runtime() const
     return false;
 }
 
-bool Kir_emitter::asserts() const
+bool Kir_emitter::ends_a_block( Terminator_kind kind, bool with_message ) const
 {
     for( const Function& function : functions_ )
     {
         for( const Block& block : function.blocks )
         {
-            if( block.terminator.kind == Terminator_kind::Assert_failed )
+            if( block.terminator.kind == kind && ( block.terminator.failure == Failure::Message ) == with_message )
             {
                 return true;
             }

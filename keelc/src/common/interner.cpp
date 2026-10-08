@@ -26,7 +26,7 @@ Interner::Interner()
         // and ones from c++ that do not exist in keel.
         "extern",   "alloc",    "free",    "fallthrough", "where",   "static",
         "private",  "public",   "fn",      "field",       "assert",  "operator", "destroy",
-        "_"
+        "_",        "panic"
     };
     // clang-format on
 

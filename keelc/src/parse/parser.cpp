@@ -2728,7 +2728,8 @@ bool Parser::can_start_expression() const
                check_keyword( Keyword::Move ) || check_keyword( Keyword::Out ) || check_keyword( Keyword::Ref ) ||
                check_keyword( Keyword::Cast ) || check_keyword( Keyword::Wrap ) || check_keyword( Keyword::This ) ||
                check_keyword( Keyword::Alloc ) || check_keyword( Keyword::Free ) || check_keyword( Keyword::Assert ) ||
-               check_keyword( Keyword::Destroy ) || check_keyword( Keyword::Try ) || check_keyword( Keyword::Underscore );
+               check_keyword( Keyword::Destroy ) || check_keyword( Keyword::Try ) || check_keyword( Keyword::Underscore ) ||
+               check_keyword( Keyword::Panic );
 
     default:
         return false;
@@ -2981,11 +2982,12 @@ Node_id Parser::parse_expression_stmt( bool consume_semicolon )
         kind     = Node_kind::Increment_stmt;
         aux      = static_cast<u32>( op.kind );
     }
-    // A call, an assert, a destroy and a `free` are the effectful expression kinds; everything else computes a value the
-    // statement then discards, which is D15's rule.
+    // A call, an assert, a panic, a destroy and a `free` are the effectful expression kinds; everything else computes a value
+    // the statement then discards, which is D15's rule.
     else if( ast_.kind( expr ) != Node_kind::Call_expr && ast_.kind( expr ) != Node_kind::Free_expr &&
              ast_.kind( expr ) != Node_kind::Error && ast_.kind( expr ) != Node_kind::Assert_expr &&
-             ast_.kind( expr ) != Node_kind::Destroy_expr && ast_.kind( expr ) != Node_kind::Try_expr )
+             ast_.kind( expr ) != Node_kind::Destroy_expr && ast_.kind( expr ) != Node_kind::Try_expr &&
+             ast_.kind( expr ) != Node_kind::Panic_expr )
     {
         discarded = true;
     }
@@ -3740,6 +3742,16 @@ Node_id Parser::parse_keyword_prefix( Span start )
         expect( Token_kind::R_paren );
 
         return ast_.add( Node_kind::Assert_expr, Span::merge( start, previous().span ), 0, { operand } );
+    }
+
+    if( check_keyword( Keyword::Panic ) )
+    {
+        advance();
+        expect( Token_kind::L_paren );
+        const Node_id message = parse_expression( 0 );
+        expect( Token_kind::R_paren );
+
+        return ast_.add( Node_kind::Panic_expr, Span::merge( start, previous().span ), 0, { message } );
     }
 
     if( check_keyword( Keyword::Cast ) || check_keyword( Keyword::Wrap ) )

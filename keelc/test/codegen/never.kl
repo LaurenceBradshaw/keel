@@ -1,0 +1,159 @@
+// A call of a `never` function ends its path: an arm ending in one needs no `break`, a value
+// assigned on every other path is definitely assigned, and an `i32` function ending in one needs
+// no `return`. Every `panic` here is on a path the program does not take, so it exits 0, and the
+// one `dropped` is `got`'s, valgrind-clean.
+class Noisy
+{
+    public i32 id;
+
+    Noisy( i32 id )
+    {
+        this.id = id;
+    }
+
+    ~Noisy()
+    {
+        println( "dropped" );
+    }
+};
+
+enum opt<T>
+{
+    none,
+    some( T value )
+};
+
+enum Light
+{
+    red,
+    amber,
+    flashing,
+    green
+};
+
+struct Gauge
+{
+    i32 level;
+
+    never overflow() const
+    {
+        panic( "overflow" );
+    }
+};
+
+extern never abort();
+
+never fail( str why )
+{
+    panic( why );
+}
+
+// One `never` function ending in another.
+never refuse( i32 code )
+{
+    fail( "refused" );
+}
+
+// Ends in a loop nothing leaves, which is as good as a `panic`.
+never spin()
+{
+    while( true )
+    {
+    }
+}
+
+// What the library's `unwrap` will be, owning `T` included.
+T unwrap<T>( move opt<T> o )
+{
+    switch( move o )
+    {
+        case opt::some( v ):
+            return v;
+        case opt::none:
+            panic( "unwrap on none" );
+    }
+}
+
+// The C compiler cannot see that a call through a pointer does not return, so this pins that the
+// emitted body still ends in something it accepts.
+i32 through( fn( str ) -> never stop )
+{
+    stop( "through" );
+}
+
+i32 checked( i32 v )
+{
+    i32 result;
+
+    if( v >= 0 )
+    {
+        result = v * 2;
+    }
+    else
+    {
+        panic( v < -100 ? "far below zero" : "negative" );
+    }
+
+    return result;
+}
+
+i32 sign( i32 v )
+{
+    if( v > 0 )
+    {
+        return 1;
+    }
+
+    if( v == 0 )
+    {
+        return 0;
+    }
+
+    refuse( v );
+}
+
+i32 wait( Light l )
+{
+    switch( l )
+    {
+        case Light::red:
+            return 3;
+        case Light::amber:
+            panic( "amber is not a state" );
+        case Light::flashing:
+            fail( "flashing is not a state" );
+        case Light::green:
+            return 0;
+    }
+}
+
+i32 main()
+{
+    if( checked( 4 ) != 8 ) { return 1; }
+    if( sign( 5 ) != 1 ) { return 2; }
+    if( wait( Light::red ) != 3 ) { return 3; }
+
+    opt<Noisy> o = opt::some( move Noisy( 7 ) );
+    Noisy got = unwrap<Noisy>( move o );
+
+    if( got.id != 7 ) { return 4; }
+
+    Gauge g = Gauge { 3 };
+
+    if( g.level > 10 ) { g.overflow(); }
+
+    fn( str ) -> never stop = &fail;
+
+    if( g.level > 100 ) { stop( "too high" ); }
+    if( g.level > 200 ) { return through( stop ); }
+
+    if( g.level > 1000 )
+    {
+        unsafe
+        {
+            abort();
+        }
+    }
+
+    return 0;
+}

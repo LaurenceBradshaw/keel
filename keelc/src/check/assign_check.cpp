@@ -282,9 +282,10 @@ void transfer_block(
         }
     }
 
-    // On the way out, after every statement. A non-Branch terminator leaves `condition` at its
+    // On the way out, after every statement. A terminator leaves an operand it lacks at its
     // default, which is a Constant, so read_operand returns immediately.
     read_operand( func, b.terminator.condition, b.terminator.span, flow, reads );
+    read_operand( func, b.terminator.message, b.terminator.span, flow, reads );
 }
 
 Flow entry_flow( const Function& func )
@@ -381,6 +382,12 @@ Assignment_report check_assignment( const Function& func )
 
         if( b.terminator.kind != Terminator_kind::Return )
         {
+            continue;
+        }
+
+        if( func.diverges )
+        {
+            report.diverging_returns.push_back( b.terminator.span );
             continue;
         }
 

@@ -47,6 +47,23 @@ _Noreturn void kl_rt_panic( const char* file, uint32_t line, const char* message
     abort();
 }
 
+_Noreturn void kl_rt_panic_message( const char* file, uint32_t line, const uint8_t* data, uint64_t size )
+{
+    fflush( stdout );
+    fprintf( stderr, "%s:%u: panic: ", file, (unsigned) line );
+    fwrite( data, 1, size, stderr );
+    fputc( '\n', stderr );
+    abort();
+}
+
+// Reached only if a `never` function returned, which its body check refuses.
+_Noreturn void kl_rt_unreachable( void )
+{
+    fflush( stdout );
+    fputs( "a `never` call returned\n", stderr );
+    abort();
+}
+
 static FILE* kl_rt_stream( int32_t stream )
 {
     if( stream == 2 )

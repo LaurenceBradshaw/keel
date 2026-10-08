@@ -7,17 +7,17 @@ class string
 {
     string() 
     {
-        bytes = list<u8>();
+        bytes_ = list<u8>();
     }
 
     string( str text )
     {
-        bytes = list<u8>::with_capacity( text.size );
+        bytes_ = list<u8>::with_capacity( text.size );
         for( u64 i = 0; i < text.size; i++ )
         {
             unsafe
             {
-                bytes.push( text.data[ i ] );
+                bytes_.push( text.data[ i ] );
             }
         }
     }
@@ -25,36 +25,36 @@ class string
     public static string with_capacity( u64 capacity )
     {
         string result = string();
-        result.bytes = list<u8>::with_capacity( capacity );
+        result.bytes_ = list<u8>::with_capacity( capacity );
         return result;
     }
 
     public void push( u8 value )
     {
-        bytes.push( value );
+        bytes_.push( value );
     }
 
     public void append( const ref string other )
     {
         for( u64 i = 0; i < other.size(); i++ )
         {
-            bytes.push( other[i] );
+            bytes_.push( other[i] );
         }
     }
 
     public const u8* operator[]( u64 index ) const
     {
-        return &bytes[index];
+        return &bytes_[index];
     }
 
     public u64 size() const
     {
-        return bytes.size();
+        return bytes_.size();
     }
 
     public bool is_empty() const
     {
-        return bytes.is_empty();
+        return bytes_.is_empty();
     }
 
     public bool operator==( const ref string other ) const
@@ -66,7 +66,7 @@ class string
 
         for( u64 i = 0; i < size(); i++ )
         {
-            if( bytes[i] != other[i] )
+            if( bytes_[i] != other[i] )
             {
                 return false;
             }
@@ -75,5 +75,5 @@ class string
         return true;
     }
 
-    private list<u8> bytes;
+    private list<u8> bytes_;
 };
