@@ -1,0 +1,51 @@
+// Nothing drops a file-scope variable or a static field, so neither may own anything: an enum or a
+// `result` that carries an owning payload is refused, initialised or not. A copyable one is zero,
+// its first variant, as an integer global is. An error union's zero tag need not name one of its
+// members, so a union is refused whatever it holds.
+class Buf
+{
+    u64* p;
+
+    ~Buf()
+    {
+    }
+};
+
+enum Holds
+{
+    one( Buf b ),
+    none
+};
+
+enum Plain
+{
+    a,
+    b( u64 n )
+};
+
+Holds held;
+Holds initialised = Holds::none;
+result<Buf, i32> wrapped;
+Holds | Plain united;
+
+struct Registry
+{
+    i32 count;
+
+    static Holds last;
+    static Plain kind;
+};
+
+Plain fine;
+result<u64, i32> copied;
+Plain | Bad copyable;
+
+enum Bad
+{
+    nope
+};
+
+i32 main()
+{
+    return 0;
+}
