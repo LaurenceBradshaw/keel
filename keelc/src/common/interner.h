@@ -80,6 +80,7 @@ enum class Keyword : u32
     Assert,
     Operator,
     Destroy,
+    Underscore,
 
     Count
 };

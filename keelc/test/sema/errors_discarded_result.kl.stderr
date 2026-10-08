@@ -1,0 +1,25 @@
+error: a `result` cannot be discarded
+  --> sema/errors_discarded_result.kl:41:5
+   |
+41 |     try nested();
+   |     ^^^^^^^^^^^^ use `try` to pass its error on, or `_ = try nested();` to discard it
+
+error: a `result` cannot be discarded
+  --> sema/errors_discarded_result.kl:48:5
+   |
+48 |     parse();
+   |     ^^^^^^^ use `try` to pass its error on, or `_ = parse();` to discard it
+
+error: a `result` cannot be discarded
+  --> sema/errors_discarded_result.kl:49:5
+   |
+49 |     step();
+   |     ^^^^^^ use `try` to pass its error on, or `_ = step();` to discard it
+
+error: an owning value is transferred, not copied
+  --> sema/errors_discarded_result.kl:53:9
+   |
+53 |     _ = held;
+   |         ^^^^ write `move held`
+
+4 errors generated

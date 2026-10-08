@@ -78,6 +78,8 @@ std::string_view node_kind_name( Node_kind kind )
         return "Increment_stmt";
     case Node_kind::Expr_stmt:
         return "Expr_stmt";
+    case Node_kind::Discard_stmt:
+        return "Discard_stmt";
     case Node_kind::If_stmt:
         return "If_stmt";
     case Node_kind::While_stmt:

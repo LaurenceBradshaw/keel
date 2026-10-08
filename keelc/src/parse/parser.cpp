@@ -2708,7 +2708,7 @@ bool Parser::can_start_expression() const
                check_keyword( Keyword::Move ) || check_keyword( Keyword::Out ) || check_keyword( Keyword::Ref ) ||
                check_keyword( Keyword::Cast ) || check_keyword( Keyword::Wrap ) || check_keyword( Keyword::This ) ||
                check_keyword( Keyword::Alloc ) || check_keyword( Keyword::Free ) || check_keyword( Keyword::Assert ) ||
-               check_keyword( Keyword::Destroy ) || check_keyword( Keyword::Try );
+               check_keyword( Keyword::Destroy ) || check_keyword( Keyword::Try ) || check_keyword( Keyword::Underscore );
 
     default:
         return false;
@@ -2922,7 +2922,24 @@ Node_id Parser::parse_expression_stmt( bool consume_semicolon )
         return parse_prefix_increment_stmt( consume_semicolon );
     }
 
-    const Span    start = peek().span;
+    const Span start = peek().span;
+
+    // `_ = e;` says the discard is meant, so D15's effect check does not apply.
+    if( check_keyword( Keyword::Underscore ) && peek( 1 ).kind == Token_kind::Equal )
+    {
+        advance(); // consume `_`
+        advance(); // consume `=`
+
+        const Node_id expr = parse_expression( 0 );
+
+        if( consume_semicolon )
+        {
+            expect( Token_kind::Semicolon );
+        }
+
+        return ast_.add( Node_kind::Discard_stmt, Span::merge( start, previous().span ), 0, { expr } );
+    }
+
     const u32     first = pos_;
     const Node_id expr  = parse_expression( 0, Token_kind::End_of_file, true );
 
@@ -3745,6 +3762,13 @@ Node_id Parser::parse_keyword_prefix( Span start )
         return ast_.add( Node_kind::Try_expr, Span::merge( start, previous().span ), 0, { operand } );
     }
 
+    if( check_keyword( Keyword::Underscore ) )
+    {
+        advance();
+        error_at( previous().span, "`_` can only be assigned to", "`_ = f();` calls `f` and discards what it returns" );
+        return error_node( Span::merge( start, previous().span ) );
+    }
+
     if( check_keyword( Keyword::This ) )
     {
         advance();
@@ -3941,6 +3965,7 @@ void silence_failed_heads( const Ast& ast, Node_id id, Diagnostics& diags )
         Node_kind::Field_decl,
         Node_kind::Param_decl,
         Node_kind::Case_arm,
+        Node_kind::Discard_stmt
     };
 
     if( std::find( std::begin( units ), std::end( units ), ast.kind( id ) ) != std::end( units ) )
@@ -5283,6 +5308,67 @@ TEST_CASE( "parser_reads_try_as_a_prefix_operator", "[parse][try]" )
         INFO( p.errors() );
         REQUIRE_FALSE( p.has_errors() );
         REQUIRE( find_first( p.ast(), p.root(), Node_kind::Try_expr ).is_valid() );
+    }
+}
+
+// D52. `_ = e;` evaluates `e` and discards it. Its own statement, so neither D15 nor an assignment's
+// rules see it.
+TEST_CASE( "parser_reads_a_discard", "[parse][discard]" )
+{
+    SECTION( "of a call" )
+    {
+        const Parsed p( "i32 main() { _ = f(); return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id discard = find_first( p.ast(), p.root(), Node_kind::Discard_stmt );
+
+        REQUIRE( discard.is_valid() );
+        REQUIRE( p.kind( p.child( discard, 0 ) ) == Node_kind::Call_expr );
+        REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::Assign_stmt ).is_valid() );
+        REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::Expr_stmt ).is_valid() );
+    }
+
+    SECTION( "of a `move` or a `try`" )
+    {
+        for( const char* source : { "i32 main() { _ = move h; return 0; }", "i32 main() { _ = try f(); return 0; }" } )
+        {
+            const Parsed p( source );
+
+            INFO( "source: " << source << "\n" << p.errors() );
+            REQUIRE_FALSE( p.has_errors() );
+            REQUIRE( find_first( p.ast(), p.root(), Node_kind::Discard_stmt ).is_valid() );
+        }
+    }
+
+    SECTION( "in a `for` update" )
+    {
+        const Parsed p( "i32 main() { for( i32 i = 0; i < 3; _ = f() ) { } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( find_first( p.ast(), p.root(), Node_kind::Discard_stmt ).is_valid() );
+    }
+}
+
+// `_` is a discard target only on the left of `=`; anywhere else it is one error, at the `_`.
+TEST_CASE( "parser_refuses_underscore_outside_a_discard", "[parse][discard]" )
+{
+    for( const char* source : {
+             "i32 main() { x = _; return 0; }",
+             "i32 main() { _ += 1; return 0; }",
+             "i32 main() { f( _ ); return 0; }",
+             "i32 main() { return _; }",
+         } )
+    {
+        const Parsed p( source );
+
+        INFO( "source: " << source << "\n" << p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "error: `_` can only be assigned to" ) != std::string::npos );
+        REQUIRE( p.errors().find( "`_ = f();` calls `f` and discards what it returns" ) != std::string::npos );
+        REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::Discard_stmt ).is_valid() );
     }
 }
 

@@ -51,8 +51,27 @@ void Statements::visit( Node_id id )
         return visit_block( id );
 
     case Node_kind::Expr_stmt:
-        expressions_.infer( ast_.expression( id ) );
-        return; // discard the result. D15 already made effectless expressions a parse error
+    {
+        const Type_id type = expressions_.infer( ast_.expression( id ) );
+        if( expressions_.is_result( type, resolution_.declaration_of( id ) ) )
+        {
+            const Span span = ast_.span( ast_.expression( id ) );
+            reporter_.error_at(
+                span,
+                "a `result` cannot be discarded",
+                fmt::format( "use `try` to pass its error on, or `_ = {};` to discard it", reporter_.text( span ) )
+            );
+        }
+        return; // D15 already made an effectless one a parse error
+    }
+
+    case Node_kind::Discard_stmt:
+    {
+        const Node_id expr = ast_.expression( id );
+        const Type_id type = expressions_.infer( expr );
+        places_.check_owning_source( expr, type );
+        return;
+    }
 
     case Node_kind::Function_decl:
     case Node_kind::Destructor_decl:
@@ -2226,6 +2245,97 @@ TEST_CASE( "statements_warn_about_a_written_void_local", "[sema][void]" )
         INFO( p.rendered() );
         REQUIRE( p.clean() );
         REQUIRE( p.rendered().empty() );
+    }
+}
+
+// D52. Discarding a `result` loses its error, so a statement may not, unless it says so with `_ =`.
+TEST_CASE( "statements_refuse_a_discarded_result", "[sema][discard]" )
+{
+    constexpr std::string_view decls = "enum Bad { nope };\n"
+                                       "result<i32, Bad> parse() { return result::ok( 1 ); }\n"
+                                       "result<void, Bad> step() { return result::ok(); }\n";
+
+    SECTION( "a call's" )
+    {
+        const Typed p( std::string( decls ) + "i32 main() { parse(); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "error: a `result` cannot be discarded" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "use `try` to pass its error on, or `_ = parse();` to discard it" ) != std::string::npos );
+    }
+
+    SECTION( "one that carries nothing" )
+    {
+        const Typed p( std::string( decls ) + "i32 main() { step(); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`_ = step();`" ) != std::string::npos );
+    }
+
+    SECTION( "a `try` whose payload is one" )
+    {
+        const Typed p(
+            std::string( decls ) +
+            "result<result<i32, Bad>, Bad> nested() { result<i32, Bad> r = parse(); return result::ok( r ); }\n"
+            "result<void, Bad> f() { try nested(); return result::ok(); }\ni32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`_ = try nested();`" ) != std::string::npos );
+    }
+
+    SECTION( "but not a `try` whose payload is not" )
+    {
+        const Typed p(
+            std::string( decls ) +
+            "result<void, Bad> f() { try step(); try parse(); return result::ok(); }\ni32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "nor one discarded with `_ =`" )
+    {
+        const Typed p( std::string( decls ) + "i32 main() { _ = parse(); _ = step(); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "nor a program's own `result`" )
+    {
+        const Typed p( "enum result { ok, err };\nresult f() { return result::ok; }\ni32 main() { f(); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+// `_ =` takes its value as a binding would, so an owning place needs `move`.
+TEST_CASE( "statements_check_a_discarded_owning_value", "[sema][discard]" )
+{
+    constexpr std::string_view buf = "class Buf { public u64 n; Buf( u64 m ) { n = m; } ~Buf() { } };\n";
+
+    SECTION( "a place is refused without `move`" )
+    {
+        const Typed p( std::string( buf ) + "i32 main() { Buf b = Buf( 1 ); _ = b; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "error: an owning value is transferred, not copied" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "write `move b`" ) != std::string::npos );
+    }
+
+    SECTION( "but taken with it, as a temporary is" )
+    {
+        const Typed p( std::string( buf ) + "i32 main() { Buf b = Buf( 1 ); _ = move b; _ = Buf( 2 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
     }
 }
 

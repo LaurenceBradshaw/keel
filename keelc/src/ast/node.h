@@ -85,6 +85,8 @@ enum class Node_kind : u16
     Increment_stmt,
     // children: the expression.
     Expr_stmt,
+    // `_ = e;`. children: the expression.
+    Discard_stmt,
     // children: condition, then Block, else (a Block or an If_stmt; invalid when absent).
     If_stmt,
     // children: condition, then body.
@@ -155,7 +157,7 @@ enum class Node_kind : u16
     Where_clause,
     // aux: the bound's name, resolved against D40's fixed set by the checker.
     Bound_name,
-    // TODO: write this comment.
+    // aux: 0. children: the operand.
     Try_expr,
 
     Count

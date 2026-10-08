@@ -1,0 +1,65 @@
+// D52. `_ = e;` evaluates `e` and drops what it gives at the end of the statement, as a discarded
+// call's result is dropped. Each destructor run counts one, so the exit code is how many ran.
+i32 drops = 0;
+
+class Counter
+{
+    public u64 n;
+
+    Counter( u64 v )
+    {
+        n = v;
+    }
+
+    ~Counter()
+    {
+        drops = drops + 1;
+    }
+};
+
+enum Bad
+{
+    nope
+};
+
+result<Counter, Bad> make( bool fail )
+{
+    if( fail )
+    {
+        return result::err( Bad::nope );
+    }
+
+    return result::ok( Counter( 1 ) );
+}
+
+result<void, Bad> step( bool fail )
+{
+    if( fail )
+    {
+        return result::err( Bad::nope );
+    }
+
+    println( "step" );
+    return result::ok();
+}
+
+Counter plain()
+{
+    return Counter( 2 );
+}
+
+i32 main()
+{
+    _ = step( false );
+    _ = step( true );
+    _ = make( false ); // 1
+    _ = make( true );  // an `err`, so nothing to drop
+    _ = plain();       // 2
+
+    Counter held = Counter( 3 );
+    _ = move held; // 3, and not again at the end of `main`
+
+    _ = drops;
+    println( drops );
+    return drops;
+}

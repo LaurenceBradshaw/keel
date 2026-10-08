@@ -1,0 +1,56 @@
+// D52. A statement may not discard a `result`, since the error it may hold would be lost. `_ = `
+// discards one on purpose, and takes an owning place only by `move`.
+class Buf
+{
+    public u64 n;
+
+    Buf( u64 m )
+    {
+        n = m;
+    }
+
+    ~Buf()
+    {
+    }
+};
+
+enum Bad
+{
+    nope
+};
+
+result<i32, Bad> parse()
+{
+    return result::ok( 1 );
+}
+
+result<void, Bad> step()
+{
+    return result::ok();
+}
+
+result<result<i32, Bad>, Bad> nested()
+{
+    result<i32, Bad> inner = parse();
+    return result::ok( inner );
+}
+
+result<void, Bad> passes()
+{
+    try step();
+    try nested();
+    _ = try nested();
+    return result::ok();
+}
+
+i32 main()
+{
+    parse();
+    step();
+    _ = parse();
+    _ = step();
+    Buf held = Buf( 1 );
+    _ = held;
+    _ = move held;
+    return 0;
+}

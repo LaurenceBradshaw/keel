@@ -1094,7 +1094,7 @@ TEST_CASE( "lexer_identifiers_and_keywords", "[lex]" )
 
 TEST_CASE( "lexer_identifier_charset", "[lex]" )
 {
-    const Lexed lexed( "_ _a a1 _1_a" );
+    const Lexed lexed( "_a a1 _1_a __" );
 
     REQUIRE( lexed.count() == 4 );
     for( std::size_t i = 0; i < 4; ++i )
@@ -1102,7 +1102,18 @@ TEST_CASE( "lexer_identifier_charset", "[lex]" )
         INFO( "token " << i );
         REQUIRE( lexed.kind( i ) == Token_kind::Identifier );
     }
-    REQUIRE( lexed.text( 3 ) == "_1_a" );
+    REQUIRE( lexed.text( 2 ) == "_1_a" );
+}
+
+// D52. A lone `_` is the discard target, so it is never a name.
+TEST_CASE( "lexer_reserves_a_lone_underscore", "[lex]" )
+{
+    const Lexed lexed( "_ _x" );
+
+    REQUIRE( lexed.count() == 2 );
+    REQUIRE( lexed.kind( 0 ) == Token_kind::Keyword );
+    REQUIRE( lexed.keyword( 0 ) == Keyword::Underscore );
+    REQUIRE( lexed.kind( 1 ) == Token_kind::Identifier );
 }
 
 // PLAN §6.3 D10: `new` and `delete` appear in expression position, where an unknown identifier

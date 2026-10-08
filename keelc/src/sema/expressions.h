@@ -98,6 +98,8 @@ public:
         return current_function_;
     }
 
+    bool is_result( Type_id type, Node_id result ) const; // an instance of the prelude's `result`
+
     // D35's block. The caller visits the children between these two - they are statements, which is
     // why the block cannot move here - and both of the block's own diagnostics are statements about
     // the flag, so they belong to whoever owns it.
@@ -159,7 +161,6 @@ private:
     Type_id infer_marker( Node_id id );
 
     Type_id infer_try( Node_id id );
-    bool    is_result( Type_id type, Node_id result ) const; // an instance of the prelude's `result`
     bool    error_travels( Type_id from, Type_id to ) const; // whether `try` may pass `from` up as `to`
 
     Type_id infer_path( Node_id id );

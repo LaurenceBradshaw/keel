@@ -4,9 +4,16 @@
 
 #include "void_type_argument.kl.prelude.c"
 
+struct kl_7prelude_result__I4void_3BadE;
 struct kl__Box__I4voidE;
 struct kl__Pair__I4voidE;
 struct kl__Two__I4voidE;
+
+struct kl_7prelude_result__I4void_3BadE
+{
+    int32_t tag;
+    int32_t kl_error_681;
+};
 
 struct kl__Box__I4voidE
 {

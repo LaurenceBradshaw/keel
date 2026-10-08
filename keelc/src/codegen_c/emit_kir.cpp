@@ -220,6 +220,21 @@ bool mentions_program_type( const Ast& ast, const Type_table& table, const Impor
     );
 }
 
+// D46: an instance of a prelude generic at a program type is the program's.
+bool in_prelude_half( const Ast& ast, const Type_table& table, const Imports& imports, Type_id type )
+{
+    return in_prelude( ast, imports, table.get( type ).declaration ) && !mentions_program_type( ast, table, imports, type );
+}
+
+bool in_prelude_half( const Ast& ast, const Type_table& table, const Imports& imports, const Function& function )
+{
+    return in_prelude( ast, imports, function.declaration ) &&
+           std::ranges::none_of(
+               function.type_arguments,
+               [&]( Type_id argument ) { return mentions_program_type( ast, table, imports, argument ); }
+           );
+}
+
 class Kir_emitter
 {
 public:
@@ -1432,7 +1447,7 @@ std::vector<Type_id> emitted_struct_order( const Ast& ast, Types& types, const I
             return;
         }
 
-        if( part == C_part::Program && in_prelude( ast, imports, types.table().get( type ).declaration ) )
+        if( part == C_part::Program && in_prelude_half( ast, types.table(), imports, type ) )
         {
             return;
         }
@@ -1460,7 +1475,7 @@ std::vector<Type_id> emitted_struct_order( const Ast& ast, Types& types, const I
     {
         const Type_id type = types.table().composite_types()[at];
 
-        if( part == C_part::Program || in_prelude( ast, imports, types.table().get( type ).declaration ) )
+        if( part == C_part::Program || in_prelude_half( ast, types.table(), imports, type ) )
         {
             visit( visit, type );
         }
@@ -1486,7 +1501,7 @@ std::string emit_c_from_kir(
     std::vector<Function> half;
     for( const Function& function : functions )
     {
-        if( in_prelude( ast, imports, function.declaration ) == ( part == C_part::Prelude ) )
+        if( in_prelude_half( ast, types.table(), imports, function ) == ( part == C_part::Prelude ) )
         {
             half.push_back( function );
         }

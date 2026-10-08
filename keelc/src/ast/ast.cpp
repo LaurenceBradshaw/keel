@@ -567,7 +567,7 @@ Node_id Ast::else_branch( Node_id id ) const
 
 Node_id Ast::expression( Node_id expr_stmt ) const
 {
-    assert( kind( expr_stmt ) == Node_kind::Expr_stmt );
+    assert( kind( expr_stmt ) == Node_kind::Expr_stmt || kind( expr_stmt ) == Node_kind::Discard_stmt );
     return child( expr_stmt, 0 );
 }
 

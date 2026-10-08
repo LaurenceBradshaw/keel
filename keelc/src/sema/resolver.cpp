@@ -206,6 +206,13 @@ void Resolver::visit( Node_id id )
             bindings_[id.v] = prelude_declaration( "result" );
         }
         return;
+    case Node_kind::Expr_stmt:
+        visit( ast_.expression( id ) );
+        if( !bindings_[id.v].is_valid() )
+        {
+            bindings_[id.v] = prelude_declaration( "result" );
+        }
+        return;
     case Node_kind::Name_expr:
     {
         const Symbol_id name = ast_.name( id );
@@ -1930,7 +1937,7 @@ public:
             const Node_id id { i };
 
             if( ast.kind( id ) != kind || ast.span( id ).file != input_ ||
-                ( kind != Node_kind::String_literal && kind != Node_kind::Try_expr &&
+                ( kind != Node_kind::String_literal && kind != Node_kind::Try_expr && kind != Node_kind::Expr_stmt &&
                   interner_.text( Symbol_id { ast.aux( id ) } ) != name ) )
             {
                 continue;
@@ -2264,6 +2271,33 @@ TEST_CASE( "resolver_binds_try_to_the_prelude's_result", "[sema][resolve][prelud
         INFO( p.rendered() );
         REQUIRE( p.errors() == 0 );
         REQUIRE( p.bound_into( Node_kind::Try_expr, {} ).empty() );
+    }
+}
+
+// And for an expression statement, which may not discard one (D52).
+TEST_CASE( "resolver_binds_an_expression_statement_to_the_prelude's_result", "[sema][resolve][prelude]" )
+{
+    constexpr std::string_view prelude = "enum result<T, E> { ok( T value ), err( E error ) };\n";
+    constexpr std::string_view body    = "void f() { }\ni32 main() { f(); return 0; }\n";
+
+    SECTION( "even where the program declares a `result` of its own" )
+    {
+        const Resolved_program p(
+            { { "main.kl", "enum result<T, E> { ok( T value ), err( E error ) };\n" + std::string( body ) } }, prelude
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.bound_into( Node_kind::Expr_stmt, {} ) == "<prelude>" );
+    }
+
+    SECTION( "and to nothing where the prelude has none" )
+    {
+        const Resolved_program p( { { "main.kl", body } } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.bound_into( Node_kind::Expr_stmt, {} ).empty() );
     }
 }
 

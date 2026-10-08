@@ -2529,13 +2529,21 @@ void Lowering::lower_statement( Node_id id )
 
     // Small enough to read here. Extracting them would cost a name and buy nothing.
     case Node_kind::Expr_stmt:
+    case Node_kind::Discard_stmt:
     {
-        // Discard the operand. D15 means the only thing that reaches here is a call.
+        // Discard the operand: a call (D15), or anything after `_ =`.
         Node_id old_discarded = discarded_;
         discarded_            = ast_.expression( id );
-        lower_expression( ast_.expression( id ) );
+        const Type_id type    = type_of( discarded_ );
+        Operand       operand = lower_expression( ast_.expression( id ) );
+        const Span    span    = ast_.span( id );
+        if( ast_.kind( id ) == Node_kind::Discard_stmt && ast_.kind( discarded_ ) == Node_kind::Marker_expr && owns( type ) )
+        {
+            const Local_id temp = builder_.into_temp( use( operand ), type, span );
+            statement_temporaries_.push_back( temp );
+        }
         discarded_ = old_discarded;
-        drop_statement_temporaries( ast_.span( id ) );
+        drop_statement_temporaries( span );
         return;
     }
 
