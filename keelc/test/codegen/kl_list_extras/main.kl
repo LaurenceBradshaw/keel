@@ -1,0 +1,353 @@
+// `kl::list`'s reshaping operations keep ownership exact: an element moved in, shifted, reversed,
+// reallocated or moved across from another list is destroyed exactly once, and one cut off by
+// `truncate` is destroyed there. Each `owned` holds a heap block, so a missed destroy leaks under
+// valgrind as well as miscounting. Each check returns its own code.
+import kl::list;
+import kl::optional;
+
+i32 live;
+
+class owned
+{
+    owned( u64 n )
+    {
+        id = n;
+        unsafe
+        {
+            block = alloc<u64>( 1 );
+        }
+        live += 1;
+    }
+
+    ~owned()
+    {
+        unsafe
+        {
+            free( block );
+        }
+        live -= 1;
+    }
+
+    public u64 value() const
+    {
+        return id;
+    }
+
+    private u64 id;
+    private u64[*] block;
+};
+
+// The list's values in order, as decimal digits: [3, 1, 2] is 312.
+u64 digits( const ref kl::list<owned> values )
+{
+    u64 result = 0;
+    for( u64 i = 0; i < values.size(); i++ )
+    {
+        result = result * 10 + values[i].value();
+    }
+    return result;
+}
+
+kl::list<owned> counting( u64 n )
+{
+    kl::list<owned> values = kl::list<owned>();
+    for( u64 i = 1; i <= n; i++ )
+    {
+        values.push( move owned( i ) );
+    }
+    return values;
+}
+
+// `insert` shifts the tail up one, at the front, the middle and the end, growing when full.
+i32 inserts()
+{
+    kl::list<owned> values = kl::list<owned>();
+    values.insert( 0, move owned( 2 ) );
+    values.push( move owned( 4 ) );
+    values.insert( 1, move owned( 3 ) );
+    values.insert( 0, move owned( 1 ) );
+    values.insert( 4, move owned( 5 ) );
+    if( live != 5 || values.size() != 5 || values.capacity() != 8 || digits( values ) != 12345 )
+    {
+        return 1;
+    }
+
+    return 0;
+}
+
+// `truncate` destroys the elements past its length and keeps the block; a longer length is no change.
+i32 truncates()
+{
+    kl::list<owned> values = counting( 5 );
+    values.truncate( 7 );
+    if( live != 5 || digits( values ) != 12345 )
+    {
+        return 2;
+    }
+
+    values.truncate( 2 );
+    if( live != 2 || digits( values ) != 12 || values.capacity() != 8 )
+    {
+        return 3;
+    }
+
+    values.truncate( 0 );
+    if( live != 0 || !values.is_empty() )
+    {
+        return 4;
+    }
+
+    return 0;
+}
+
+// `first` and `last` point at the ends in place, and writing through one drops what it held.
+i32 ends()
+{
+    kl::list<owned> values = counting( 3 );
+    if( values.first().value() != 1 || values.last().value() != 3 )
+    {
+        return 5;
+    }
+
+    *values.first() = move owned( 7 );
+    *values.last() = move owned( 9 );
+    if( live != 3 || digits( values ) != 729 )
+    {
+        return 6;
+    }
+
+    kl::list<owned> one = counting( 1 );
+    if( one.first() != one.last() )
+    {
+        return 7;
+    }
+
+    return 0;
+}
+
+// `try_pop` hands the last element out in an optional, and answers none once the list is empty.
+i32 try_pops()
+{
+    kl::list<owned> values = counting( 3 );
+    {
+        owned three = kl::unwrap( move values.try_pop() );
+        if( three.value() != 3 || live != 3 || digits( values ) != 12 )
+        {
+            return 8;
+        }
+    }
+
+    {
+        kl::optional<owned> held = values.try_pop();
+        if( !kl::is_some( held ) || live != 2 )
+        {
+            return 9;
+        }
+    }
+    if( live != 1 )
+    {
+        return 10;
+    }
+
+    _ = values.try_pop();
+    if( live != 0 || !kl::is_none( values.try_pop() ) )
+    {
+        return 11;
+    }
+
+    return 0;
+}
+
+// `reverse` swaps in place, around a middle element when the count is odd.
+i32 reverses()
+{
+    kl::list<owned> values = kl::list<owned>();
+    values.reverse();
+
+    values.push( move owned( 1 ) );
+    values.reverse();
+    if( digits( values ) != 1 )
+    {
+        return 12;
+    }
+
+    kl::list<owned> even = counting( 4 );
+    even.reverse();
+    kl::list<owned> odd = counting( 5 );
+    odd.reverse();
+    if( live != 10 || digits( even ) != 4321 || digits( odd ) != 54321 )
+    {
+        return 13;
+    }
+
+    return 0;
+}
+
+// `shrink_to_fit` moves the elements to a block of exactly their count, and frees the block of an
+// empty list.
+i32 shrinks()
+{
+    kl::list<owned> values = kl::list<owned>::with_capacity( 8 );
+    values.push( move owned( 1 ) );
+    values.push( move owned( 2 ) );
+    values.push( move owned( 3 ) );
+    values.shrink_to_fit();
+    if( live != 3 || values.capacity() != 3 || digits( values ) != 123 )
+    {
+        return 14;
+    }
+
+    values.shrink_to_fit();
+    if( values.capacity() != 3 || digits( values ) != 123 )
+    {
+        return 15;
+    }
+
+    values.clear();
+    values.shrink_to_fit();
+    if( live != 0 || values.capacity() != 0 )
+    {
+        return 16;
+    }
+
+    values.push( move owned( 4 ) );
+    if( live != 1 || values.capacity() != 1 || digits( values ) != 4 )
+    {
+        return 17;
+    }
+
+    return 0;
+}
+
+// `append` moves every element of the other list across, in order, and the other list ends with
+// nothing left to destroy.
+i32 appends()
+{
+    kl::list<owned> values = counting( 2 );
+    kl::list<owned> more = kl::list<owned>();
+    more.push( move owned( 3 ) );
+    more.push( move owned( 4 ) );
+    more.push( move owned( 5 ) );
+    values.append( move more );
+    if( live != 5 || digits( values ) != 12345 )
+    {
+        return 18;
+    }
+
+    values.append( move kl::list<owned>() );
+    kl::list<owned> empty = kl::list<owned>();
+    empty.append( move counting( 3 ) );
+    if( live != 8 || digits( values ) != 12345 || digits( empty ) != 123 )
+    {
+        return 19;
+    }
+
+    return 0;
+}
+
+// A list of a `struct` needs no marker, and `try_pop` pairs with `value_or`.
+i32 copies()
+{
+    kl::list<i32> values = kl::list<i32>();
+    values.push( 3 );
+    values.insert( 0, 1 );
+    values.insert( 1, 2 );
+    values.reverse();
+    if( *values.first() != 3 || *values.last() != 1 || values[1] != 2 )
+    {
+        return 30;
+    }
+
+    kl::list<i32> more = kl::list<i32>();
+    more.push( 4 );
+    values.append( move more );
+    values.truncate( 3 );
+    values.shrink_to_fit();
+    if( values.size() != 3 || values.capacity() != 3 || kl::value_or( values.try_pop(), 0 ) != 1 )
+    {
+        return 31;
+    }
+
+    values.clear();
+    if( kl::value_or( values.try_pop(), 6 ) != 6 )
+    {
+        return 32;
+    }
+
+    return 0;
+}
+
+i32 main()
+{
+    i32 code = inserts();
+    if( code != 0 )
+    {
+        return code;
+    }
+    if( live != 0 )
+    {
+        return 20;
+    }
+
+    code = truncates();
+    if( code != 0 )
+    {
+        return code;
+    }
+    if( live != 0 )
+    {
+        return 21;
+    }
+
+    code = ends();
+    if( code != 0 )
+    {
+        return code;
+    }
+    if( live != 0 )
+    {
+        return 22;
+    }
+
+    code = try_pops();
+    if( code != 0 )
+    {
+        return code;
+    }
+    if( live != 0 )
+    {
+        return 23;
+    }
+
+    code = reverses();
+    if( code != 0 )
+    {
+        return code;
+    }
+    if( live != 0 )
+    {
+        return 24;
+    }
+
+    code = shrinks();
+    if( code != 0 )
+    {
+        return code;
+    }
+    if( live != 0 )
+    {
+        return 25;
+    }
+
+    code = appends();
+    if( code != 0 )
+    {
+        return code;
+    }
+    if( live != 0 )
+    {
+        return 26;
+    }
+
+    return copies();
+}

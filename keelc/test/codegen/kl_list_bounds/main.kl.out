@@ -1,1 +1,1 @@
-../../keel_stl/src/list.kl:66: assertion failed: index < count_
+../../keel_stl/src/list.kl:145: assertion failed: index < count_

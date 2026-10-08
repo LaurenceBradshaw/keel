@@ -1,0 +1,10 @@
+// `first` on an empty `kl::list` aborts, naming the check in the library; `try_pop` is the way to
+// ask without one.
+import kl::list;
+
+i32 main()
+{
+    kl::list<i32> values = kl::list<i32>();
+    println( "looking" );
+    return *values.first();
+}

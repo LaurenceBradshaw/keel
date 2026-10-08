@@ -1,6 +1,8 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+import optional;
+
 // Slots below `count` are live, the rest are raw.
 class list<T>
 {
@@ -39,10 +41,7 @@ class list<T>
 
     public void push( move T value )
     {
-        if( count_ == cap_ )
-        {
-            grow( cap_ > 0 ? cap_ * 2 : 1 );
-        }
+        reallocate_if_needed();
         
         unsafe
         {
@@ -58,6 +57,86 @@ class list<T>
         unsafe
         {
             return move data_[count_];
+        }
+    }
+
+    public optional<T> try_pop()
+    {
+        if( count_ == 0 )
+        {
+            return optional::none;
+        }
+
+        return optional::some( pop() );
+    }
+
+    public void insert( u64 index, move T value )
+    {
+        assert( index <= count_ );
+
+        reallocate_if_needed();
+
+        unsafe
+        {
+            for( u64 i = count_; i > index; i-- )
+            {
+                data_[i] = move data_[i - 1];
+            }
+
+            data_[index] = move value;
+        }
+
+        count_ += 1;
+    }
+
+    public void append( move list<T> other )
+    {
+        reserve( count_ + other.count_ );
+
+        unsafe
+        {
+            for( u64 i = 0; i < other.count_; i++ )
+            {
+                data_[count_ + i] = move other.data_[i];
+            }
+        }
+
+        count_ += other.count_;
+        other.count_ = 0; // Its slots are raw now, so its destructor only frees the block.
+    }
+
+    public void truncate( u64 n )
+    {
+        if( n >= count_ )
+        {
+            return;
+        }
+
+        unsafe
+        {
+            destroy( data_ + n, count_ - n );
+        }
+
+        count_ = n;
+    }
+
+    public T* first() const
+    {
+        assert( count_ > 0 );
+
+        unsafe
+        {
+            return &data_[0];
+        }
+    }
+
+    public T* last() const
+    {
+        assert( count_ > 0 );
+
+        unsafe
+        {
+            return &data_[count_ - 1];
         }
     }
 
@@ -137,6 +216,19 @@ class list<T>
         }
     }
 
+    public void reverse()
+    {
+        if( count_ < 2 )
+        {
+            return;
+        }
+
+        for( u64 i = 0; i < count_ / 2; i++ )
+        {
+            swap( i, count_ - 1 - i );
+        }
+    }
+
     public u64 size() const
     {
         return count_;
@@ -156,8 +248,29 @@ class list<T>
     {
         if( n > cap_ )
         {
-            grow( n );
+            reallocate( n );
         }
+    }
+
+    public void shrink_to_fit()
+    {
+        if( count_ == cap_ )
+        {
+            return;
+        }
+
+        if( count_ == 0 )
+        {
+            unsafe
+            {
+                free( data_ );
+            }
+            data_ = nullptr;
+            cap_ = 0;
+            return;
+        }
+        
+        reallocate( count_ );
     }
 
     public void clear()
@@ -169,7 +282,7 @@ class list<T>
         count_ = 0;
     }
 
-    private void grow( u64 n )
+    private void reallocate( u64 n )
     {
         T[*] new_data;
         unsafe
@@ -196,6 +309,14 @@ class list<T>
 
         data_ = new_data;
         cap_ = n;
+    }
+
+    private void reallocate_if_needed()
+    {
+        if( count_ == cap_ )
+        {
+            reallocate( cap_ > 0 ? cap_ * 2 : 1 );
+        }
     }
 
     private T[*] data_;
