@@ -17,10 +17,10 @@ struct Flag_vocabulary
     Literal_id true_literal {};
 };
 
-// PLAN §7. A local moved on only some paths cannot be dropped unconditionally, so it gets a hidden
-// bool: false while its storage is empty, true once assigned, false again once moved, tested at the
-// drop. Exact on every path *by construction*, because it records what happened rather than what
-// might have - which is why this needs no dataflow, unlike move_check's diagnostics.
+// PLAN §7. A local moved, or a temporary built, on only some paths cannot be dropped
+// unconditionally, so it gets a hidden bool: false while its storage is empty, true once assigned,
+// false again once moved or its storage ends, tested at the drop. Exact on every path *by construction*, because it records
+// what happened rather than what might have - which is why this needs no dataflow, unlike move_check's diagnostics.
 void elaborate_drops( Function& func, const Flag_vocabulary& vocabulary );
 
 } // namespace keel

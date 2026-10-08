@@ -172,6 +172,7 @@ void kl__Holder__I3u64E__R6HolderI3u64E_3u64__ctor( struct kl__Holder__I3u64E* k
     ( *kl_this_1 ).kl_inner_42 = kl_t3;
     kl_t6 = false;
     if ( kl_t6 ) kl__Box__I3u64E__dtor( &kl_t3 );
+    kl_t6 = false;
     return;
 }
 

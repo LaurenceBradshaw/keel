@@ -343,6 +343,7 @@ uint64_t kl__shuffle__( void )
     kl_2kl_push__I6TicketE__SQ2kl4listI6TicketE_M6Ticket( kl_t6, kl_t7 );
     kl_t44 = false;
     if ( kl_t44 ) kl__Ticket__dtor( &kl_t7 );
+    kl_t44 = false;
     goto bb4;
     bb3:
 #line 109 "codegen/sample_m8/main.kl"
@@ -354,6 +355,7 @@ uint64_t kl__shuffle__( void )
     kl_t46 = false;
     kl_t45 = true;
     if ( kl_t46 ) kl__Ticket__dtor( &kl_t13 );
+    kl_t46 = false;
 #line 110 "codegen/sample_m8/main.kl"
     kl_t47 = false;
     kl_t15 = &kl_v_1;
@@ -363,6 +365,7 @@ uint64_t kl__shuffle__( void )
     kl_t48 = false;
     kl_t47 = true;
     if ( kl_t48 ) kl__Ticket__dtor( &kl_t16 );
+    kl_t48 = false;
 #line 111 "codegen/sample_m8/main.kl"
     kl_t18 = &kl_v_1;
     kl_t19 = kl_2kl_swap_remove__I6TicketE__SQ2kl4listI6TicketE_3u64( kl_t18, 0 );
@@ -370,6 +373,7 @@ uint64_t kl__shuffle__( void )
     kl_two_17 = kl_t19;
     kl_t49 = false;
     if ( kl_t49 ) kl__Ticket__dtor( &kl_t19 );
+    kl_t49 = false;
 #line 112 "codegen/sample_m8/main.kl"
     kl_t21 = &kl_v_1;
     kl_t22 = kl_2kl_replace__I6TicketE__SQ2kl4listI6TicketE_3u64_M6Ticket( kl_t21, 1, kl_last_11 );
@@ -378,6 +382,7 @@ uint64_t kl__shuffle__( void )
     kl_old_20 = kl_t22;
     kl_t50 = false;
     if ( kl_t50 ) kl__Ticket__dtor( &kl_t22 );
+    kl_t50 = false;
 #line 113 "codegen/sample_m8/main.kl"
     kl_t23 = &kl_v_1;
     kl_2kl_swap__I6TicketE__SQ2kl4listI6TicketE_3u64_3u64( kl_t23, 0, 1 );
@@ -544,6 +549,9 @@ int32_t kl__main__( void )
     bool kl_t138;
     uint64_t kl_t139;
     bool kl_t140;
+    bool kl_t141;
+#line 156 "codegen/sample_m8/main.kl"
+    kl_t141 = false;
 #line 124 "codegen/sample_m8/main.kl"
     kl_t1 = kl__raw_sum__3u64( 4 );
     kl_t2 = kl_t1 != 6;
@@ -712,7 +720,9 @@ int32_t kl__main__( void )
     if ( kl_t79 ) goto bb28; else goto bb27;
     bb27:
     kl_t84 = &kl_hello_60;
+    kl_t141 = false;
     kl_t86 = &kl_t85;
+    kl_t141 = true;
     kl_t88 = &kl_t87;
     kl_t89 = ( uint8_t* ) "help";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t88, kl_t89, 4 );
@@ -731,7 +741,8 @@ int32_t kl__main__( void )
     kl_t78 = kl_t96;
     goto bb30;
     bb30:
-    kl_2kl_list__I2u8E__dtor( &kl_t85.kl_bytes_958 );
+    if ( kl_t141 ) kl_2kl_list__I2u8E__dtor( &kl_t85.kl_bytes_958 );
+    kl_t141 = false;
     if ( kl_t78 ) goto bb31; else goto bb32;
     bb31:
     kl_t0 = 8;
@@ -931,6 +942,7 @@ void kl_2kl_string__RQ2kl6string__ctor( struct kl_2kl_string* kl_this_1 )
     ( *kl_this_1 ).kl_bytes_958 = kl_t2;
     kl_t5 = false;
     if ( kl_t5 ) kl_2kl_list__I2u8E__dtor( &kl_t2 );
+    kl_t5 = false;
     return;
 }
 
@@ -949,6 +961,7 @@ void kl_2kl_string__RQ2kl6string_Q7prelude3str__ctor( struct kl_2kl_string* kl_t
     ( *kl_this_1 ).kl_bytes_958 = kl_t3;
     kl_t9 = false;
     if ( kl_t9 ) kl_2kl_list__I2u8E__dtor( &kl_t3 );
+    kl_t9 = false;
 #line 16 "../../keel_stl/src/string.kl"
     kl_i_4 = 0;
     goto bb1;
@@ -994,6 +1007,7 @@ struct kl_2kl_string kl_2kl_with_capacity__SQ2kl6string_3u64( uint64_t kl_capaci
     kl_t7 = false;
     kl_t6 = true;
     if ( kl_t7 ) kl_2kl_list__I2u8E__dtor( &kl_t5 );
+    kl_t7 = false;
 #line 29 "../../keel_stl/src/string.kl"
     kl_t0 = kl_result_2;
     kl_t6 = false;

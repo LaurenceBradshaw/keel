@@ -129,6 +129,7 @@ int32_t kl__early__3i32( int32_t kl_n_1 )
     kl_b_2 = kl_t3;
     kl_t5 = false;
     if ( kl_t5 ) kl__Buffer__dtor( &kl_t3 );
+    kl_t5 = false;
 #line 82 "codegen/destructors.kl"
     kl_t4 = kl_n_1 == 0;
     if ( kl_t4 ) goto bb1; else goto bb2;
@@ -190,6 +191,7 @@ int32_t kl__main__( void )
     kl_b_5 = kl_t6;
     kl_t19 = false;
     if ( kl_t19 ) kl__Buffer__dtor( &kl_t6 );
+    kl_t19 = false;
 #line 96 "codegen/destructors.kl"
     kl__Buffer__dtor( &kl_b_5 );
 #line 102 "codegen/destructors.kl"
@@ -206,6 +208,8 @@ int32_t kl__main__( void )
     kl_t20 = false;
     if ( kl_t20 ) kl__Buffer__dtor( &kl_t8.kl_inner_97 );
     if ( kl_t21 ) kl__Buffer__dtor( &kl_t9 );
+    kl_t21 = false;
+    kl_t20 = false;
 #line 101 "codegen/destructors.kl"
     kl__Buffer__dtor( &kl_w_7.kl_inner_97 );
 #line 106 "codegen/destructors.kl"
@@ -225,6 +229,7 @@ int32_t kl__main__( void )
     kl_b_12 = kl_t13;
     kl_t22 = false;
     if ( kl_t22 ) kl__Buffer__dtor( &kl_t13 );
+    kl_t22 = false;
 #line 110 "codegen/destructors.kl"
     kl_t14 = kl_i_10 + 1;
     kl_i_10 = kl_t14;

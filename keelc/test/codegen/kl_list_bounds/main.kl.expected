@@ -46,6 +46,7 @@ int32_t kl__main__( void )
     kl_values_1 = kl_t2;
     kl_t12 = false;
     if ( kl_t12 ) kl_2kl_list__I3i32E__dtor( &kl_t2 );
+    kl_t12 = false;
 #line 7 "codegen/kl_list_bounds/main.kl"
     kl_t3 = &kl_values_1;
     kl_2kl_push__I3i32E__SQ2kl4listI3i32E_M3i32( kl_t3, 10 );

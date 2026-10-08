@@ -233,8 +233,9 @@ struct Function
     // local holds a valid address, and it is the referent that is empty - so the analysis that
     // needs it cannot work it out from the graph.
     std::vector<Local_id>   out_parameters;
-    Local_id                constructed {}; // a constructor's receiver, invalid in every other function.
-    std::vector<Owed_field> owed_fields;    // in declaration order
+    std::vector<Local_id>   one_path_temporaries; // built on one path, so dropped under a flag
+    Local_id                constructed {};       // a constructor's receiver, invalid in every other function.
+    std::vector<Owed_field> owed_fields;          // in declaration order
     std::vector<Local>      locals;
     std::vector<Block>      blocks;
     std::vector<Statement>  statements;

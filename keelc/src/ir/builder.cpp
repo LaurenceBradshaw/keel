@@ -27,6 +27,11 @@ void Builder::mark_out_parameter( Local_id local )
     function_.out_parameters.push_back( local );
 }
 
+void Builder::mark_one_path( Local_id local )
+{
+    function_.one_path_temporaries.push_back( local );
+}
+
 Local_id Builder::add_local( Type_id type, Span span, Symbol_id name )
 {
     function_.locals.push_back( Local { .type = type, .span = span, .name = name } );

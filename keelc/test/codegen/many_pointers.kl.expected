@@ -711,6 +711,7 @@ int32_t kl__main__( void )
     ( *kl_t131 ) = kl_t132;
     kl_t152 = false;
     if ( kl_t152 ) kl__Tracked__dtor( &kl_t132 );
+    kl_t152 = false;
 #line 279 "codegen/many_pointers.kl"
     kl_t135 = kl_cs_126 + 1;
     ( *kl_t135 ) = kl_t_128;

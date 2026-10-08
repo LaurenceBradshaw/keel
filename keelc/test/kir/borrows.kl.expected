@@ -81,6 +81,7 @@ fn main {
         _12 = copy _4 + copy _11
         _4 = copy _12
         drop _7
+        storage_dead _7
         storage_live _13
         _18 = const 0
         _14 = &init _13
@@ -89,6 +90,8 @@ fn main {
         _16 = call own(move _13)
         _18 = const 0
         drop _13 if _18
+        storage_dead _13
+        _18 = const 0
         _17 = copy _4 as i32
         _0 = copy _17
         storage_dead _4

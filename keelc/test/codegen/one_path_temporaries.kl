@@ -1,0 +1,151 @@
+// An owning temporary built on one path of an expression - one arm of `?:`, or the right of `&&` or
+// `||` - drops at the end of its statement only if that path ran. Each Buf holds heap memory and says
+// when it goes, so the output is the drop order and KEEL_VALGRIND=1 sees a drop of a Buf never built.
+class Buf
+{
+    public u64 n;
+    u64*       data;
+
+    Buf( u64 v )
+    {
+        n = v;
+
+        unsafe
+        {
+            data = alloc<u64>();
+        }
+
+        *data = v;
+    }
+
+    ~Buf()
+    {
+        print( "drop " );
+        println( *data );
+
+        unsafe
+        {
+            free( data );
+        }
+    }
+
+    u64 get() const
+    {
+        return *data;
+    }
+
+    bool positive() const
+    {
+        return *data > 0;
+    }
+};
+
+u64 peek( Buf b )
+{
+    return b.get();
+}
+
+// A field of the temporary, then a method on it, one in each arm.
+u64 projected( bool c )
+{
+    return c ? Buf( 1 ).n : 2;
+}
+
+u64 method( bool c )
+{
+    return c ? 3 : Buf( 4 ).get();
+}
+
+bool both( bool c )
+{
+    return c && Buf( 5 ).positive();
+}
+
+bool either( bool c )
+{
+    return c || Buf( 6 ).positive();
+}
+
+// Only the innermost arm taken is built.
+u64 nested( bool c, bool d )
+{
+    return c ? ( d ? Buf( 7 ).n : Buf( 8 ).n ) : 9;
+}
+
+// Borrowed by a call, not moved.
+u64 lent( bool c )
+{
+    return c ? peek( Buf( 10 ) ) : 0;
+}
+
+// The condition's temporary is built on every path, the arm's on one; both drop at the end.
+u64 mixed( bool c )
+{
+    return Buf( 11 ).positive() && c ? Buf( 12 ).n : 0;
+}
+
+// Built on alternate iterations: one built last time is not dropped again this time.
+u64 looped( u64 count )
+{
+    u64 all = 0;
+
+    for( u64 i = 0; i < count; i++ )
+    {
+        u64 got = i % 2 == 0 ? Buf( 20 + i ).n : 0;
+        all     = all + got;
+    }
+
+    return all;
+}
+
+// In a loop's condition, the last test of which builds nothing.
+u64 guarded()
+{
+    u64 i = 0;
+
+    while( i < 2 && Buf( 30 + i ).positive() )
+    {
+        i++;
+    }
+
+    return i;
+}
+
+i32 main()
+{
+    println( "projected" );
+    println( projected( true ) );
+    println( projected( false ) );
+
+    println( "method" );
+    println( method( true ) );
+    println( method( false ) );
+
+    println( "both" );
+    println( both( true ) );
+    println( both( false ) );
+
+    println( "either" );
+    println( either( true ) );
+    println( either( false ) );
+
+    println( "nested" );
+    println( nested( true, true ) );
+    println( nested( true, false ) );
+    println( nested( false, true ) );
+
+    println( "lent" );
+    println( lent( true ) );
+    println( lent( false ) );
+
+    println( "mixed" );
+    println( mixed( true ) );
+    println( mixed( false ) );
+
+    println( "looped" );
+    println( looped( 4 ) );
+
+    println( "guarded" );
+    println( guarded() );
+    return 0;
+}

@@ -237,6 +237,7 @@ void kl_2kl_string__RQ2kl6string__ctor( struct kl_2kl_string* kl_this_1 )
     ( *kl_this_1 ).kl_bytes_311 = kl_t2;
     kl_t5 = false;
     if ( kl_t5 ) kl_2kl_list__I2u8E__dtor( &kl_t2 );
+    kl_t5 = false;
     return;
 }
 
@@ -255,6 +256,7 @@ void kl_2kl_string__RQ2kl6string_Q7prelude3str__ctor( struct kl_2kl_string* kl_t
     ( *kl_this_1 ).kl_bytes_311 = kl_t3;
     kl_t9 = false;
     if ( kl_t9 ) kl_2kl_list__I2u8E__dtor( &kl_t3 );
+    kl_t9 = false;
 #line 16 "../../keel_stl/src/string.kl"
     kl_i_4 = 0;
     goto bb1;
@@ -300,6 +302,7 @@ struct kl_2kl_string kl_2kl_with_capacity__SQ2kl6string_3u64( uint64_t kl_capaci
     kl_t7 = false;
     kl_t6 = true;
     if ( kl_t7 ) kl_2kl_list__I2u8E__dtor( &kl_t5 );
+    kl_t7 = false;
 #line 29 "../../keel_stl/src/string.kl"
     kl_t0 = kl_result_2;
     kl_t6 = false;

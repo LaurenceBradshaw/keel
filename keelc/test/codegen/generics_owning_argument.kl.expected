@@ -77,6 +77,8 @@ void kl__Holder__R6Holder_3i32__ctor( struct kl__Holder* kl_this_1, int32_t kl_m
     kl_t9 = false;
     if ( kl_t9 ) kl__Tracked__dtor( &kl_t3.kl_v_31 );
     if ( kl_t10 ) kl__Tracked__dtor( &kl_t5 );
+    kl_t10 = false;
+    kl_t9 = false;
     return;
 }
 
@@ -131,6 +133,7 @@ int32_t kl__borrow__( void )
     kl__Wrap__I7TrackedE__R4WrapI7TrackedE_M7Tracked__ctor( kl_t2, kl_t3 );
     kl_t25 = false;
     if ( kl_t25 ) kl__Tracked__dtor( &kl_t3 );
+    kl_t25 = false;
 #line 64 "codegen/generics_owning_argument.kl"
     kl_t8 = &kl_h_7;
     kl__Holder__R6Holder_3i32__ctor( kl_t8, 5 );

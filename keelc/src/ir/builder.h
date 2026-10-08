@@ -24,7 +24,9 @@ public:
 
     // An `out` parameter's local holds a valid address; it is the *referent* that starts empty, and
     // nothing else in KIR says so. Recorded here because the lowerer is the only thing that knows.
-    void     mark_out_parameter( Local_id local );
+    void mark_out_parameter( Local_id local );
+    // A temporary built in one arm of `?:` or on the right of `&&` or `||`: dropped under a flag.
+    void     mark_one_path( Local_id local );
     Local_id add_local( Type_id type, Span span, Symbol_id name = {} );
 
     Block_id add_block();

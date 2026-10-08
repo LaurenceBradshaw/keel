@@ -150,6 +150,7 @@ struct kl__Buf kl__pick__4bool_M3Buf_M3Buf( bool kl_c_1, struct kl__Buf kl_a_2, 
     kl_t0 = kl_t4;
     kl_t7 = false;
     if ( kl_t7 ) kl__Buf__dtor( &kl_t4 );
+    kl_t7 = false;
     if ( kl_t6 ) kl__Buf__dtor( &kl_b_3 );
     kl_t6 = false;
     if ( kl_t5 ) kl__Buf__dtor( &kl_a_2 );
@@ -291,6 +292,7 @@ int32_t kl__main__( void )
     kl_x_9 = kl_t10;
     kl_t77 = false;
     if ( kl_t77 ) kl__Buf__dtor( &kl_t10 );
+    kl_t77 = false;
 #line 77 "codegen/owning_conditional.kl"
     kl_t11 = &kl_x_9;
     kl_t12 = kl__get__S3Buf( kl_t11 );
@@ -321,6 +323,9 @@ int32_t kl__main__( void )
     if ( kl_t78 ) kl__Buf__dtor( &kl_t15 );
     if ( kl_t80 ) kl__Buf__dtor( &kl_t19 );
     if ( kl_t79 ) kl__Buf__dtor( &kl_t16 );
+    kl_t79 = false;
+    kl_t80 = false;
+    kl_t78 = false;
 #line 81 "codegen/owning_conditional.kl"
     kl_t22 = &kl_t_14;
     kl_t23 = kl__get__S3Buf( kl_t22 );
@@ -381,6 +386,8 @@ int32_t kl__main__( void )
     kl_t84 = false;
     if ( kl_t84 ) kl__Buf__dtor( &kl_t43 );
     if ( kl_t85 ) kl__Buf__dtor( &kl_t44 );
+    kl_t85 = false;
+    kl_t84 = false;
 #line 93 "codegen/owning_conditional.kl"
     kl_t86 = false;
     kl_t49 = &kl_t48;
@@ -399,6 +406,8 @@ int32_t kl__main__( void )
     kl__Buf__dtor( &kl_t54 );
     if ( kl_t87 ) kl__Buf__dtor( &kl_t51 );
     if ( kl_t86 ) kl__Buf__dtor( &kl_t48 );
+    kl_t86 = false;
+    kl_t87 = false;
 #line 95 "codegen/owning_conditional.kl"
     kl_t88 = false;
     kl_t90 = false;
@@ -415,6 +424,8 @@ int32_t kl__main__( void )
     kl_t88 = true;
     if ( kl_t89 ) kl__Holder__dtor( &kl_t59 );
     if ( kl_t90 ) kl__Buf__dtor( &kl_t60 );
+    kl_t90 = false;
+    kl_t89 = false;
 #line 96 "codegen/owning_conditional.kl"
     kl_t91 = false;
     kl_t64.tag = 1;
@@ -436,6 +447,7 @@ int32_t kl__main__( void )
     kl_h_65 = kl_t66;
     kl_t92 = false;
     if ( kl_t92 ) kl__Holder__dtor( &kl_t66 );
+    kl_t92 = false;
 #line 98 "codegen/owning_conditional.kl"
     kl_t67 = &kl_h_65;
     kl_t68 = kl__size__6Holder( kl_t67 );

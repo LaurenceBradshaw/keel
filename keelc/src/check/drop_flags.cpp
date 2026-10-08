@@ -25,7 +25,8 @@ Local_id flag_of( const Flag_map& flags, const Place& place )
     return flags[place.local.v];
 }
 
-// Locals that are both moved somewhere and dropped somewhere. Moved alone is not enough: a flag
+// Locals that are both moved somewhere and dropped somewhere, and temporaries built on one path of an
+// expression, which lowering lists and which are dropped wherever the statement ends. Moved alone is not enough: a flag
 // exists to guard a drop, so a local with none - every non-owning `move a` - would get a bool and
 // three assignments guarding nothing. Dropped alone is not enough either: a local never moved is
 // always live at its drop, and an unconditional drop is what it should keep.
@@ -71,6 +72,11 @@ std::vector<bool> locals_needing_flags( const Function& func )
                 replaced[statement.place.local.v] = true;
             }
         }
+    }
+
+    for( const Local_id local : func.one_path_temporaries )
+    {
+        moved[local.v] = true;
     }
 
     for( std::size_t i = 0; i < moved.size(); ++i )
@@ -650,6 +656,78 @@ TEST_CASE( "drop_flags_is_not_set_by_a_borrow", "[check][drop]" )
 
     INFO( flag );
     REQUIRE( count( text, flag + " = const 1" ) == 1 );
+}
+
+// A class whose field a temporary can be read through, so nothing moves the temporary.
+constexpr std::string_view k_tagged = "class Tagged { public u64 id; Tagged( u64 n ) { id = n; } ~Tagged() { } };\n";
+
+// Built in one arm, or on the right of `&&`, so the end of the statement drops it only if it was.
+TEST_CASE( "drop_flags_guards_a_temporary_built_on_one_path", "[check][drop]" )
+{
+    Elaborated p(
+        std::string( k_tagged ) + "u64 arm( bool c ) { return c ? Tagged( 1 ).id : 2; }\n"
+                                  "bool right( bool c ) { return c && Tagged( 1 ).id > 0; }\n"
+                                  "bool other( bool c ) { return c || Tagged( 1 ).id > 0; }\n"
+                                  "i32 main() { return 0; }"
+    );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    for( const std::string_view name : { "arm", "right", "other" } )
+    {
+        const std::string text = p.text_of( name );
+
+        INFO( text );
+        REQUIRE( count( text, "drop " ) == 1 );
+        REQUIRE( count( text, " if _" ) == 1 );
+    }
+}
+
+// The condition's temporary is built on every path, so only the arm's is guarded.
+TEST_CASE( "drop_flags_leaves_a_temporary_built_on_every_path_alone", "[check][drop]" )
+{
+    Elaborated p(
+        std::string( k_tagged ) + "u64 run( bool c ) { return Tagged( 1 ).id > 0 && c ? Tagged( 2 ).id : 0; }\n"
+                                  "i32 main() { return 0; }"
+    );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.text_of( "run" );
+
+    INFO( text );
+    REQUIRE( count( text, "drop " ) == 2 );
+    REQUIRE( count( text, " if _" ) == 1 );
+}
+
+// Its statement ends its storage, so a temporary built on one iteration is not dropped again on the
+// next, which skips building it.
+TEST_CASE( "drop_flags_clears_a_one_path_temporary's_flag_after_its_drop", "[check][drop]" )
+{
+    Elaborated p(
+        std::string( k_tagged ) +
+        "u64 run( u64 n ) {\n"
+        "  u64 all = 0;\n"
+        "  for ( u64 i = 0; i < n; i++ ) { u64 got = i % 2 == 0 ? Tagged( i ).id : 0; all = all + got; }\n"
+        "  return all; }\n"
+        "i32 main() { return 0; }"
+    );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::string text = p.text_of( "run" );
+    const std::size_t at   = text.find( " if _" );
+
+    INFO( text );
+    REQUIRE( at != std::string::npos );
+
+    const std::string flag = text.substr( at + 4, text.find( '\n', at ) - at - 4 );
+
+    INFO( flag );
+    REQUIRE( text.find( flag + " = const 0", at ) != std::string::npos );
 }
 
 } // namespace keel

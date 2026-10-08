@@ -97,6 +97,7 @@ int32_t kl__main__( void )
     ( *kl_t3 ) = kl_t4;
     kl_t35 = false;
     if ( kl_t35 ) kl__owned__dtor( &kl_t4 );
+    kl_t35 = false;
 #line 48 "codegen/destroy.kl"
     kl_t7 = kl_slots_1 + 1;
     kl_t36 = false;
@@ -106,6 +107,7 @@ int32_t kl__main__( void )
     ( *kl_t7 ) = kl_t8;
     kl_t36 = false;
     if ( kl_t36 ) kl__owned__dtor( &kl_t8 );
+    kl_t36 = false;
 #line 49 "codegen/destroy.kl"
     kl_t11 = kl_slots_1 + 2;
     kl_t37 = false;
@@ -115,6 +117,7 @@ int32_t kl__main__( void )
     ( *kl_t11 ) = kl_t12;
     kl_t37 = false;
     if ( kl_t37 ) kl__owned__dtor( &kl_t12 );
+    kl_t37 = false;
 #line 52 "codegen/destroy.kl"
     kl_t15 = kl_live_1 != 3;
     if ( kl_t15 ) goto bb1; else goto bb2;

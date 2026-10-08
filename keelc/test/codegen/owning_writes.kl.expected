@@ -269,6 +269,7 @@ int32_t kl__main__( void )
     kl__push__S5slots_M5owned( kl_t18, kl_t19 );
     kl_t51 = false;
     if ( kl_t51 ) kl__owned__dtor( &kl_t19 );
+    kl_t51 = false;
 #line 119 "codegen/owning_writes.kl"
     kl_t23 = &kl_s_15;
     kl_t52 = false;
@@ -278,6 +279,7 @@ int32_t kl__main__( void )
     kl__push__S5slots_M5owned( kl_t23, kl_t24 );
     kl_t52 = false;
     if ( kl_t52 ) kl__owned__dtor( &kl_t24 );
+    kl_t52 = false;
 #line 121 "codegen/owning_writes.kl"
     kl_t28 = kl_live_1 != 2;
     if ( kl_t28 ) goto bb7; else goto bb8;
@@ -298,6 +300,7 @@ int32_t kl__main__( void )
     ( *kl_t30 ) = kl_t31;
     kl_t53 = false;
     if ( kl_t53 ) kl__owned__dtor( &kl_t31 );
+    kl_t53 = false;
 #line 128 "codegen/owning_writes.kl"
     kl_t35 = kl_live_1 != 2;
     kl_t34 = kl_t35;
@@ -325,6 +328,7 @@ int32_t kl__main__( void )
     kl_last_41 = kl_t43;
     kl_t54 = false;
     if ( kl_t54 ) kl__owned__dtor( &kl_t43 );
+    kl_t54 = false;
 #line 135 "codegen/owning_writes.kl"
     kl_t45 = kl_live_1 != 2;
     kl_t44 = kl_t45;

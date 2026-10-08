@@ -1,0 +1,40 @@
+projected
+drop 1
+1
+2
+method
+3
+drop 4
+4
+both
+drop 5
+true
+false
+either
+true
+drop 6
+true
+nested
+drop 7
+7
+drop 8
+8
+9
+lent
+drop 10
+10
+0
+mixed
+drop 12
+drop 11
+12
+drop 11
+0
+looped
+drop 20
+drop 22
+42
+guarded
+drop 30
+drop 31
+2

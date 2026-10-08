@@ -91,6 +91,7 @@ int32_t kl__main__( void )
     kl_c_8 = kl_t9;
     kl_t19 = false;
     if ( kl_t19 ) kl__Cell__dtor( &kl_t9 );
+    kl_t19 = false;
 #line 55 "codegen/generics_owning.kl"
     kl_t11 = &kl_d_10;
     kl__Cell__R4Cell__ctor( kl_t11 );

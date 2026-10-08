@@ -257,6 +257,9 @@ int32_t kl__main__( void )
     struct kl__buffer__I3i32E* kl_t89;
     int32_t* kl_t90;
     bool kl_t91;
+    bool kl_t92;
+#line 152 "codegen/operator_index.kl"
+    kl_t92 = false;
 #line 106 "codegen/operator_index.kl"
     kl_t2 = &kl_numbers_1;
     kl__buffer__I3i32E__R6bufferI3i32E_3u64__ctor( kl_t2, 3 );
@@ -436,13 +439,15 @@ int32_t kl__main__( void )
     if ( kl_t84 ) goto bb22; else goto bb21;
     bb21:
     kl_t88 = kl__filled__3i32( 8 );
+    kl_t92 = true;
     kl_t89 = &kl_t88;
     kl_t90 = kl__operator_index__I3i32E__S6bufferI3i32E_3u64( kl_t89, 1 );
     kl_t91 = ( *kl_t90 ) != 8;
     kl_t84 = kl_t91;
     goto bb22;
     bb22:
-    kl__buffer__I3i32E__dtor( &kl_t88 );
+    if ( kl_t92 ) kl__buffer__I3i32E__dtor( &kl_t88 );
+    kl_t92 = false;
     if ( kl_t84 ) goto bb23; else goto bb24;
     bb23:
 #line 154 "codegen/operator_index.kl"

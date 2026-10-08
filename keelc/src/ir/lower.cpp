@@ -184,7 +184,8 @@ private:
     void unwind_to( u32 depth, Span span );
     void drop_place( Place place, Type_id type, Span span, bool replacing = false );
     // Drop what the statement has built so far, in reverse: the order destructors run in. The
-    // first clears the list; a `try`'s exit uses the second, since the `ok` path still owns it.
+    // first also ends their storage, clearing a one-path flag for the next time round a loop, and
+    // clears the list; a `try`'s exit uses the second, since the `ok` path still owns it.
     void drop_statement_temporaries( Span span );
     void drop_built_temporaries( Span span );
     // A call whose callee names a type rather than a function.
@@ -198,6 +199,9 @@ private:
     // Runs a construct with `target`'s address as its receiver. Not an expression: a constructor
     // returns nothing and writes through the pointer it is handed.
     void lower_construction( Place target, Node_id call_expr );
+
+    // Each temporary listed from `first` on was built in a branch, so its drop needs a flag.
+    void mark_one_path_since( std::size_t first );
 
     // `break` binds to the nearest enclosing loop *or* switch, so it is always loops_.back() and
     // needs no finder. `continue` looks past switches, and needs the entry rather than just its
@@ -641,6 +645,10 @@ void Lowering::drop_place( Place place, Type_id type, Span span, bool replacing 
 void Lowering::drop_statement_temporaries( Span span )
 {
     drop_built_temporaries( span );
+    for( const Local_id temporary : statement_temporaries_ )
+    {
+        builder_.storage_dead( temporary, span );
+    }
     statement_temporaries_.clear();
 }
 
@@ -808,6 +816,14 @@ void Lowering::lower_construction( Place target, Node_id call_expr )
     );
 }
 
+void Lowering::mark_one_path_since( std::size_t first )
+{
+    for( std::size_t i = first; i < statement_temporaries_.size(); ++i )
+    {
+        builder_.mark_one_path( statement_temporaries_[i] );
+    }
+}
+
 Block_id Lowering::break_target()
 {
     assert( !loops_.empty() && "the checker rejects a break outside a loop or switch" );
@@ -906,12 +922,14 @@ Operand Lowering::lower_short_circuit( Node_id id )
         copy( builder_.place( result ), type ), is_and ? right_block : join, is_and ? join : right_block, span
     );
 
+    std::size_t first = statement_temporaries_.size();
     builder_.switch_to( right_block );
     builder_.assign( builder_.place( result ), use( lower_expression( ast_.rhs( id ) ) ), span );
 
     // From wherever lowering ended up, not from right_block: a nested `&&` on the right leaves the
     // cursor in its own join.
     builder_.terminate_goto( join, span );
+    mark_one_path_since( first );
 
     builder_.switch_to( join );
 
@@ -939,10 +957,12 @@ Operand Lowering::lower_conditional( Node_id id )
         // Widened, because an expectation reaches an arm without retyping it - `i64 x = c ? a :
         // b;` leaves both arms i32 - and moved when it owns, because a copy would leave the arm
         // and the result holding one resource between them.
+        std::size_t   first = statement_temporaries_.size();
         const Operand value = converted( lower_expression( arm ), type, ast_.span( arm ) );
 
         builder_.assign( builder_.place( result ), use( moved_if_owning( value ) ), ast_.span( arm ) );
         builder_.terminate_goto( join, span );
+        mark_one_path_since( first );
     };
 
     builder_.switch_to( then_block );

@@ -195,6 +195,8 @@ struct kl__Holder kl__make__3u64( uint64_t kl_n_1 )
     kl_t6 = false;
     if ( kl_t6 ) kl__Holder__dtor( &kl_t2 );
     if ( kl_t7 ) kl__Buf__dtor( &kl_t3 );
+    kl_t7 = false;
+    kl_t6 = false;
     return kl_t0;
 }
 
@@ -358,6 +360,7 @@ int32_t kl__main__( void )
     kl_t74 = false;
     kl_t73 = true;
     if ( kl_t74 ) kl__Holder__dtor( &kl_t5 );
+    kl_t74 = false;
 #line 104 "codegen/owning_payloads.kl"
     kl_t6 = &kl_h_4;
     kl_t7 = kl__size__6Holder( kl_t6 );
@@ -386,6 +389,9 @@ int32_t kl__main__( void )
     if ( kl_t75 ) kl__Holder__dtor( &kl_t10 );
     if ( kl_t77 ) kl__Buf__dtor( &kl_t14 );
     if ( kl_t76 ) kl__Buf__dtor( &kl_t11 );
+    kl_t76 = false;
+    kl_t77 = false;
+    kl_t75 = false;
 #line 108 "codegen/owning_payloads.kl"
     kl_t17 = &kl_p_9;
     kl_t18 = kl__size__6Holder( kl_t17 );
@@ -420,6 +426,8 @@ int32_t kl__main__( void )
     kl_t78 = true;
     if ( kl_t79 ) kl__Holder__dtor( &kl_t27 );
     if ( kl_t80 ) kl__Buf__dtor( &kl_t28 );
+    kl_t80 = false;
+    kl_t79 = false;
 #line 118 "codegen/owning_payloads.kl"
     kl_t82 = false;
     kl_t33 = &kl_t32;
@@ -436,6 +444,8 @@ int32_t kl__main__( void )
     kl_t78 = true;
     if ( kl_t81 ) kl__Holder__dtor( &kl_t31 );
     if ( kl_t82 ) kl__Buf__dtor( &kl_t32 );
+    kl_t82 = false;
+    kl_t81 = false;
 #line 120 "codegen/owning_payloads.kl"
     kl_t84 = false;
     kl_t38 = &kl_t37;
@@ -450,6 +460,8 @@ int32_t kl__main__( void )
     kl_t83 = false;
     if ( kl_t83 ) kl__Option__I3BufE__dtor( &kl_t36 );
     if ( kl_t84 ) kl__Buf__dtor( &kl_t37 );
+    kl_t84 = false;
+    kl_t83 = false;
 #line 121 "codegen/owning_payloads.kl"
     kl_t41.tag = 1;
     kl_none_40 = kl_t41;
@@ -523,6 +535,8 @@ int32_t kl__main__( void )
     kl__Option__I6HolderE__dtor( &kl_t52 );
     if ( kl_t85 ) kl__Holder__dtor( &kl_t53 );
     if ( kl_t86 ) kl__Buf__dtor( &kl_t54 );
+    kl_t86 = false;
+    kl_t85 = false;
 #line 137 "codegen/owning_payloads.kl"
     kl_t61 = &kl_k_60;
     kl_t88 = false;
@@ -538,6 +552,8 @@ int32_t kl__main__( void )
     kl_t87 = false;
     if ( kl_t87 ) kl__Holder__dtor( &kl_t62 );
     if ( kl_t88 ) kl__Buf__dtor( &kl_t63 );
+    kl_t88 = false;
+    kl_t87 = false;
 #line 139 "codegen/owning_payloads.kl"
     kl_t68 = &kl_t67;
     kl_t69 = ( uint8_t* ) "end";

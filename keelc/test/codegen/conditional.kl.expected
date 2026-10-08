@@ -101,6 +101,7 @@ int32_t kl__owning__4bool( bool kl_which_1 )
     kl_c_8 = kl_t9;
     kl_t12 = false;
     if ( kl_t12 ) kl__Owner__dtor( &kl_t9 );
+    kl_t12 = false;
 #line 41 "codegen/conditional.kl"
     kl_t0 = kl_c_8.kl_tag_23;
     kl__Owner__dtor( &kl_c_8 );
@@ -152,6 +153,9 @@ int32_t kl__owning_built__4bool( bool kl_which_1 )
     if ( kl_t10 ) kl__Owner__dtor( &kl_t3 );
     if ( kl_t12 ) kl__Owner__dtor( &kl_t7 );
     if ( kl_t11 ) kl__Owner__dtor( &kl_t4 );
+    kl_t11 = false;
+    kl_t12 = false;
+    kl_t10 = false;
 #line 50 "codegen/conditional.kl"
     kl_t0 = kl_c_2.kl_tag_23;
     kl__Owner__dtor( &kl_c_2 );

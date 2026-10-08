@@ -55,6 +55,7 @@ struct kl__Counter kl__twin__S7Counter( struct kl__Counter* kl_this_1 )
     kl_t0 = kl_t2;
     kl_t5 = false;
     if ( kl_t5 ) kl__Counter__dtor( &kl_t2 );
+    kl_t5 = false;
     return kl_t0;
 }
 
@@ -73,6 +74,7 @@ struct kl__Counter kl__make__( void )
     kl_t0 = kl_t1;
     kl_t4 = false;
     if ( kl_t4 ) kl__Counter__dtor( &kl_t1 );
+    kl_t4 = false;
     return kl_t0;
 }
 
@@ -171,6 +173,7 @@ int32_t kl__main__( void )
     kl_kept_20 = kl_t21;
     kl_t25 = false;
     if ( kl_t25 ) kl__Counter__dtor( &kl_t21 );
+    kl_t25 = false;
 #line 65 "codegen/discarded_results.kl"
     kl__Counter__dtor( &kl_kept_20 );
 #line 70 "codegen/discarded_results.kl"

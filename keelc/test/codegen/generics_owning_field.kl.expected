@@ -77,6 +77,7 @@ int32_t kl__early__3i32( int32_t kl_n_1 )
     kl_t8 = false;
     kl_t7 = true;
     if ( kl_t8 ) kl__Buf__dtor( &kl_t3 );
+    kl_t8 = false;
 #line 37 "codegen/generics_owning_field.kl"
     kl_t6 = kl_n_1 > 2;
     if ( kl_t6 ) goto bb1; else goto bb2;
@@ -142,6 +143,7 @@ int32_t kl__main__( void )
     kl_t22 = false;
     kl_t21 = true;
     if ( kl_t22 ) kl__Buf__dtor( &kl_t2 );
+    kl_t22 = false;
 #line 48 "codegen/generics_owning_field.kl"
     if ( kl_t21 ) kl__Buf__dtor( &kl_a_1.kl_v_31 );
     kl_t21 = false;
@@ -185,6 +187,7 @@ int32_t kl__main__( void )
     kl_t25 = false;
     kl_t24 = true;
     if ( kl_t25 ) kl__Buf__dtor( &kl_t11 );
+    kl_t25 = false;
 #line 81 "codegen/generics_owning_field.kl"
     if ( kl_t23 ) kl__Buf__dtor( &kl_outer_9.kl_v_31.kl_v_31 );
     kl_outer_9.kl_v_31 = kl_inner_10;

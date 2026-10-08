@@ -77,6 +77,7 @@ struct kl_7prelude_result__I7Counter_3BadE kl__make__4bool( bool kl_fail_1 )
     kl_t0 = kl_t2;
     kl_t7 = false;
     if ( kl_t7 ) kl_7prelude_result__I7Counter_3BadE__dtor( &kl_t2 );
+    kl_t7 = false;
     return kl_t0;
     bb2:
 #line 32 "codegen/discards.kl"
@@ -93,6 +94,8 @@ struct kl_7prelude_result__I7Counter_3BadE kl__make__4bool( bool kl_fail_1 )
     kl_t8 = false;
     if ( kl_t8 ) kl_7prelude_result__I7Counter_3BadE__dtor( &kl_t3 );
     if ( kl_t9 ) kl__Counter__dtor( &kl_t4 );
+    kl_t9 = false;
+    kl_t8 = false;
     return kl_t0;
 }
 
@@ -138,6 +141,7 @@ struct kl__Counter kl__plain__( void )
     kl_t0 = kl_t1;
     kl_t4 = false;
     if ( kl_t4 ) kl__Counter__dtor( &kl_t1 );
+    kl_t4 = false;
     return kl_t0;
 }
 

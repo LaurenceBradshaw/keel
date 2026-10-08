@@ -85,6 +85,7 @@ uint64_t kl__refill__( void )
     kl_t11 = false;
     kl_t10 = true;
     if ( kl_t11 ) kl__Counted__dtor( &kl_t5 );
+    kl_t11 = false;
 #line 35 "codegen/borrow_after_refill.kl"
     kl_t8 = &kl_c_1;
     kl_t9 = kl__look__7Counted( kl_t8 );
