@@ -665,41 +665,6 @@ Type_id Expressions::infer_method_call( Node_id id )
     // the first of however many share the name.
     const Node_id first = aggregates_.find_method( table_.get( object_type ).declaration, ast_.name( callee ) );
 
-    // M7's acceptance: a named constructor is refused as `value.make( args )`. The member exists,
-    // so this is about the spelling rather than about the name - and saying which one it is costs
-    // nothing here and everything at the point of confusion.
-    if( ast_.is_static_method( first ) )
-    {
-        reporter_.error_at(
-            ast_.span( callee ),
-            fmt::format(
-                "`{}` is a `static` method of `{}`, so it takes no object",
-                interner_.text( ast_.name( callee ) ),
-                table_.name( object_type )
-            ),
-            fmt::format( "call it as `{}::{}( ... )`", table_.name( object_type ), interner_.text( ast_.name( callee ) ) )
-        );
-
-        for( const Node_id argument : ast_.arguments( id ) )
-        {
-            infer( argument );
-        }
-
-        return types_.poison( id );
-    }
-
-    if( !ast_.is_visible_from( first, current_type() ) )
-    {
-        report_private( callee, first );
-
-        for( const Node_id argument : ast_.arguments( id ) )
-        {
-            infer( argument );
-        }
-
-        return types_.poison( id );
-    }
-
     if( !first.is_valid() )
     {
         // Check if a field of the same name exists, which is a common mistake when a method is expected. The
@@ -729,34 +694,36 @@ Type_id Expressions::infer_method_call( Node_id id )
 
     std::vector<Argument_shape> shapes;
 
-    const std::vector<Node_id> viable = overloads_.viable_methods( id, first, object_type );
-    Node_id                    method {};
-
-    if( viable.size() == 1 )
-    {
-        method = viable.front();
-    }
-    else if( !viable.empty() )
-    {
-        for( const Node_id argument : ast_.arguments( id ) )
-        {
-            shapes.push_back( argument_shape( argument ) );
-        }
-
-        method = overloads_.select_method( id, first, object_type, viable, shapes );
-    }
+    const Node_id method = choose_method( id, first, object_type, shapes );
 
     if( !method.is_valid() )
     {
-        for( std::size_t i = 0; i < ast_.arguments( id ).size(); ++i )
-        {
-            if( i >= shapes.size() || !shapes[i].recorded )
-            {
-                infer( ast_.arguments( id )[i] );
-            }
-        }
+        return refuse_method_call( id, shapes );
+    }
 
-        return types_.poison( id );
+    // M7's acceptance: a named constructor is refused as `value.make( args )`. The member exists,
+    // so this is about the spelling rather than about the name - and saying which one it is costs
+    // nothing here and everything at the point of confusion.
+    if( ast_.is_static_method( method ) )
+    {
+        reporter_.error_at(
+            ast_.span( callee ),
+            fmt::format(
+                "`{}` is a `static` method of `{}`, so it takes no object",
+                interner_.text( ast_.name( callee ) ),
+                table_.name( object_type )
+            ),
+            fmt::format( "call it as `{}::{}( ... )`", table_.name( object_type ), interner_.text( ast_.name( callee ) ) )
+        );
+
+        return refuse_method_call( id, shapes );
+    }
+
+    if( !ast_.is_visible_from( method, current_type() ) )
+    {
+        report_private( callee, method );
+
+        return refuse_method_call( id, shapes );
     }
 
     callees_.record( id, method );
@@ -873,25 +840,34 @@ void Expressions::record_method_instantiation( Node_id id, Node_id method, Type_
 // D29/D32. `add( by )` inside a method: the receiver is the one this function was given, so there
 // is no object expression to check - the constness question is asked of the *enclosing* method's
 // receiver instead, which is what stops a `const` method calling a mutating sibling.
-Type_id Expressions::infer_implicit_method_call( Node_id id, Node_id method )
+Type_id Expressions::infer_implicit_method_call( Node_id id, Node_id first )
 {
     const Node_id receiver = places_.receiver_of( current_function_ );
 
+    // The enclosing instance when there is one, so a sibling of `Box<i32>` is checked in terms of
+    // `i32` rather than of `T`. Its open form otherwise, which is all a static body knows.
+    const Type_id enclosing =
+        receiver.is_valid() ? types_.type_of( receiver ) : types_.type_of( ast_.enclosing_aggregate( first ) );
+    const Type_id instance = table_.is_pointer( enclosing ) ? table_.get( enclosing ).element : enclosing;
+
+    std::vector<Argument_shape> shapes;
+
+    const Node_id method = choose_method( id, first, instance, shapes );
+
+    if( !method.is_valid() )
+    {
+        return refuse_method_call( id, shapes );
+    }
+
     // M7: a static sibling needs no object, so a bare call to one is as legal from a static method
     // as it is between free functions - and from an instance method, which has a receiver it simply
-    // does not use. Settled before the receiver is demanded below, and before the constness
-    // question, which asks about an object neither of them touches.
+    // does not use. The method the arguments chose settles it, before the receiver is demanded
+    // below and before the constness question, which asks about an object neither of them touches.
     if( ast_.is_static_method( method ) )
     {
-        const Node_id owner = ast_.enclosing_aggregate( method );
-
-        // The enclosing instance when there is one, so a sibling of `Box<i32>` is checked in terms
-        // of `i32` rather than of `T`. Its open form otherwise, which is all a static body knows.
-        const Type_id instance = receiver.is_valid() ? types_.type_of( receiver ) : types_.type_of( owner );
-
         callees_.record( id, method );
 
-        return check_method_arguments( id, method, table_.is_pointer( instance ) ? table_.get( instance ).element : instance );
+        return check_method_arguments( id, method, instance, shapes );
     }
 
     if( !receiver.is_valid() )
@@ -902,46 +878,7 @@ Type_id Expressions::infer_implicit_method_call( Node_id id, Node_id method )
             "a method can only be called by bare name from inside another method of the same type"
         );
 
-        for( const Node_id argument : ast_.arguments( id ) )
-        {
-            infer( argument );
-        }
-
-        return types_.poison( id );
-    }
-
-    std::vector<Argument_shape> shapes;
-
-    const std::vector<Node_id> viable = overloads_.viable_methods( id, method, types_.type_of( receiver ) );
-    const Node_id              first  = method;
-
-    method = Node_id {};
-
-    if( viable.size() == 1 )
-    {
-        method = viable.front();
-    }
-    else if( !viable.empty() )
-    {
-        for( const Node_id argument : ast_.arguments( id ) )
-        {
-            shapes.push_back( argument_shape( argument ) );
-        }
-
-        method = overloads_.select_method( id, first, types_.type_of( receiver ), viable, shapes );
-    }
-
-    if( !method.is_valid() )
-    {
-        for( std::size_t i = 0; i < ast_.arguments( id ).size(); ++i )
-        {
-            if( i >= shapes.size() || !shapes[i].recorded )
-            {
-                infer( ast_.arguments( id )[i] );
-            }
-        }
-
-        return types_.poison( id );
+        return refuse_method_call( id, shapes );
     }
 
     if( !ast_.is_const_method( method ) && ast_.is_const_binding( receiver ) )
@@ -980,6 +917,45 @@ Type_id Expressions::infer_implicit_method_call( Node_id id, Node_id method )
     callees_.record( id, method );
 
     return check_method_arguments( id, method, types_.type_of( receiver ), shapes );
+}
+
+// The overloaded half of a method call, shared by its three spellings: `p.f()`, a bare `f()` and
+// `T::f()`.
+Node_id Expressions::choose_method( Node_id id, Node_id first, Type_id receiver, std::vector<Argument_shape>& shapes )
+{
+    const std::vector<Node_id> viable = overloads_.viable_methods( id, first, receiver );
+    Node_id                    method {};
+
+    if( viable.size() == 1 )
+    {
+        method = viable.front();
+    }
+    else if( !viable.empty() )
+    {
+        for( const Node_id argument : ast_.arguments( id ) )
+        {
+            shapes.push_back( argument_shape( argument ) );
+        }
+
+        method = overloads_.select_method( id, first, receiver, viable, shapes );
+    }
+
+    return method;
+}
+
+Type_id Expressions::refuse_method_call( Node_id id, std::span<const Argument_shape> shapes )
+{
+    const std::span<const Node_id> arguments = ast_.arguments( id );
+
+    for( std::size_t i = 0; i < arguments.size(); ++i )
+    {
+        if( i >= shapes.size() || !shapes[i].recorded )
+        {
+            infer( arguments[i] );
+        }
+    }
+
+    return types_.poison( id );
 }
 
 Type_id Expressions::infer_binary( Node_id id )
@@ -1876,34 +1852,40 @@ Type_id Expressions::infer_static_call( Node_id id, Node_id aggregate )
     const Symbol_id name = ast_.name( path );
 
     // Even on a failed call the arguments must be typed, or later passes meet untyped nodes and a
-    // genuine mistake inside one goes unreported.
-    const auto refuse = [&]()
-    {
-        for( const Node_id argument : ast_.arguments( id ) )
-        {
-            infer( argument );
-        }
+    // genuine mistake inside one goes unreported. Those selection typed are not typed again.
+    std::vector<Argument_shape> shapes;
 
-        return types_.poison( id );
-    };
+    const std::string_view owner = interner_.text( ast_.name( ast_.qualifier( path ) ) );
+    const Node_id          first = aggregates_.find_method( aggregate, name );
 
-    const std::string_view owner  = interner_.text( ast_.name( ast_.qualifier( path ) ) );
-    const Node_id          method = aggregates_.find_method( aggregate, name );
-
-    if( !method.is_valid() && names_constructor( aggregate, name ) )
+    if( !first.is_valid() && names_constructor( aggregate, name ) )
     {
         reporter_.error_at(
             ast_.span( path ), "a constructor is not a static method", fmt::format( "construct it as `{}( ... )`", owner )
         );
 
-        return refuse();
+        return refuse_method_call( id, shapes );
     }
 
-    if( !method.is_valid() )
+    if( !first.is_valid() )
     {
         reporter_.error_at( ast_.span( path ), fmt::format( "`{}` has no static method `{}`", owner, interner_.text( name ) ) );
 
-        return refuse();
+        return refuse_method_call( id, shapes );
+    }
+
+    const Type_id instance = qualifier_type( path, aggregate );
+
+    if( table_.is_error( instance ) )
+    {
+        return refuse_method_call( id, shapes );
+    }
+
+    const Node_id method = choose_method( id, first, instance, shapes );
+
+    if( !method.is_valid() )
+    {
+        return refuse_method_call( id, shapes );
     }
 
     // The two spellings are not interchangeable. An instance method has a receiver the type cannot
@@ -1916,28 +1898,21 @@ Type_id Expressions::infer_static_call( Node_id id, Node_id aggregate )
             fmt::format( "call it as `value.{}( ... )`", interner_.text( name ) )
         );
 
-        return refuse();
+        return refuse_method_call( id, shapes );
     }
 
     if( !ast_.is_visible_from( method, current_type() ) )
     {
         report_private( path, method );
 
-        return refuse();
-    }
-
-    const Type_id instance = qualifier_type( path, aggregate );
-
-    if( table_.is_error( instance ) )
-    {
-        return refuse();
+        return refuse_method_call( id, shapes );
     }
 
     // Which callable this call chose. Lowering reads it to tell a static call from the variant
     // construction it otherwise looks exactly like - both are a call whose callee is a path.
     callees_.record( id, method );
 
-    return check_method_arguments( id, method, instance );
+    return check_method_arguments( id, method, instance, shapes );
 }
 
 Type_id Expressions::infer_variant_construction( Node_id id )

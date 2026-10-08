@@ -513,9 +513,7 @@ std::vector<Node_id> Overloads::viable_overloads(
             ast_.span( call ),
             arity ? fmt::format( "no `{}` takes {} argument{}", name, arguments.size(), arguments.size() == 1 ? "" : "s" )
                   : fmt::format( "no `{}` takes {} type argument{}", name, written, written == 1 ? "" : "s" ),
-            fmt::format(
-                "the ones declared take {}", candidate_list( candidates, implicit_params, aggregates_.bindings_of( instance ) )
-            )
+            fmt::format( "the ones declared take {}", candidate_list( candidates, aggregates_.bindings_of( instance ) ) )
         );
     }
 
@@ -594,9 +592,7 @@ Node_id Overloads::select_overload(
         reporter_.error_at(
             ast_.span( call ),
             fmt::format( "no `{}` matches these arguments", name ),
-            fmt::format(
-                "the ones declared take {}", candidate_list( viable, implicit_params, aggregates_.bindings_of( instance ) )
-            )
+            fmt::format( "the ones declared take {}", candidate_list( viable, aggregates_.bindings_of( instance ) ) )
         );
 
         return Node_id {};
@@ -617,7 +613,7 @@ Node_id Overloads::select_overload(
         fmt::format( "this call to `{}` is ambiguous", name ),
         fmt::format(
             "more than one matches: {}; {}",
-            candidate_list( matching_candidates, implicit_params, aggregates_.bindings_of( instance ) ),
+            candidate_list( matching_candidates, aggregates_.bindings_of( instance ) ),
             all_generic ? fmt::format( "write the type arguments, as in `{}<i32>( ... )`", name )
                         : std::string( "write a type the call can be told by" )
         )
@@ -650,7 +646,7 @@ std::vector<Node_id> Overloads::viable_methods( Node_id call, Node_id first, Typ
 
     for( const Node_id candidate : candidates )
     {
-        if( ast_.params( candidate ).size() - 1 == arguments.size() )
+        if( ast_.explicit_params( candidate ).size() == arguments.size() )
         {
             viable.push_back( candidate );
         }
@@ -661,7 +657,7 @@ std::vector<Node_id> Overloads::viable_methods( Node_id call, Node_id first, Typ
         reporter_.error_at(
             ast_.span( call ),
             fmt::format( "no `{}` takes {} argument{}", name, arguments.size(), arguments.size() == 1 ? "" : "s" ),
-            fmt::format( "the ones declared take {}", candidate_list( candidates, 1, bindings ) )
+            fmt::format( "the ones declared take {}", candidate_list( candidates, bindings ) )
         );
     }
 
@@ -682,14 +678,14 @@ Node_id Overloads::select_method(
 
     for( const Node_id candidate : viable )
     {
-        if( candidate_accepts( candidate, 1, shapes, bindings, false ) )
+        if( candidate_accepts( candidate, receiver_params( candidate ), shapes, bindings, false ) )
         {
             matching.push_back( candidate );
         }
-        else if( candidate_accepts( candidate, 1, shapes, bindings, true ) )
+        else if( candidate_accepts( candidate, receiver_params( candidate ), shapes, bindings, true ) )
         {
             widened.push_back( candidate );
-            targets.push_back( parameter_types( candidate, 1, bindings ) );
+            targets.push_back( parameter_types( candidate, receiver_params( candidate ), bindings ) );
         }
     }
 
@@ -708,7 +704,7 @@ Node_id Overloads::select_method(
         reporter_.error_at(
             ast_.span( call ),
             fmt::format( "no `{}` matches these arguments", name ),
-            fmt::format( "the ones declared take {}", candidate_list( viable, 1, bindings ) )
+            fmt::format( "the ones declared take {}", candidate_list( viable, bindings ) )
         );
 
         return Node_id {};
@@ -717,9 +713,7 @@ Node_id Overloads::select_method(
     reporter_.error_at(
         ast_.span( call ),
         fmt::format( "this call to `{}` is ambiguous", name ),
-        fmt::format(
-            "more than one matches: {}; write a type the call can be told by", candidate_list( matching, 1, bindings )
-        )
+        fmt::format( "more than one matches: {}; write a type the call can be told by", candidate_list( matching, bindings ) )
     );
 
     return Node_id {};
@@ -1109,9 +1103,9 @@ void Overloads::check_aggregate_overloads( Node_id decl )
 
 // The signature as a call site would have to write it, for a diagnostic that has to say what the
 // author could have meant.
-std::string Overloads::signature_of( Node_id callable, u32 implicit_params, const Bindings& bindings )
+std::string Overloads::signature_of( Node_id callable, const Bindings& bindings )
 {
-    const std::span<const Node_id> params = ast_.params( callable ).subspan( implicit_params );
+    const std::span<const Node_id> params = ast_.explicit_params( callable );
 
     // A list of candidates can hold a generic nothing has instantiated - the call wrote the wrong
     // number of type arguments, or none - and substituting a `T` the map has no entry for asserts.
@@ -1140,7 +1134,12 @@ std::string Overloads::signature_of( Node_id callable, u32 implicit_params, cons
     return text + ( params.empty() ? ")" : " )" );
 }
 
-std::string Overloads::candidate_list( std::span<const Node_id> candidates, u32 implicit_params, const Bindings& bindings )
+u32 Overloads::receiver_params( Node_id method ) const
+{
+    return ast_.has_receiver( method ) ? 1 : 0;
+}
+
+std::string Overloads::candidate_list( std::span<const Node_id> candidates, const Bindings& bindings )
 {
     std::string text;
 
@@ -1151,7 +1150,7 @@ std::string Overloads::candidate_list( std::span<const Node_id> candidates, u32 
             text += i + 1 == candidates.size() ? " and " : ", ";
         }
 
-        text += fmt::format( "`{}`", signature_of( candidates[i], implicit_params, bindings ) );
+        text += fmt::format( "`{}`", signature_of( candidates[i], bindings ) );
     }
 
     return text;
@@ -1246,7 +1245,7 @@ void Overloads::refuse_both(
 {
     std::string message = fmt::format( "no `{}` matches these arguments", name );
     std::string help    = fmt::format(
-        "the ones declared take {}; the prelude's take {}", candidate_list( own, 0, {} ), candidate_list( prelude, 0, {} )
+        "the ones declared take {}; the prelude's take {}", candidate_list( own, {} ), candidate_list( prelude, {} )
     );
 
     reporter_.error_at( ast_.span( call ), std::move( message ), std::move( help ) );

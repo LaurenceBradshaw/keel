@@ -187,8 +187,10 @@ private:
 
     // The signature as a call site would have to write it, and a list of them - both read four
     // collaborators, which is what keeps them members rather than file-local free functions.
-    std::string signature_of( Node_id callable, u32 implicit_params, const Bindings& bindings );
-    std::string candidate_list( std::span<const Node_id> candidates, u32 implicit_params, const Bindings& bindings );
+    std::string signature_of( Node_id callable, const Bindings& bindings );
+    // A set may hold static and instance methods together, so the count is asked per candidate.
+    u32         receiver_params( Node_id method ) const;
+    std::string candidate_list( std::span<const Node_id> candidates, const Bindings& bindings );
 
     bool parameters_collide( Node_id first, Node_id second, bool member );
     void check_overloaded_pair( Node_id first, Node_id second, bool member );

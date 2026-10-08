@@ -1,0 +1,101 @@
+// A static method overloads as any method does, and `T::f( ... )` chooses among the set by its
+// arguments, with the refusals a free call gets. Its candidates list only the written parameters,
+// since a static method has no receiver to leave out. A set may hold static and instance methods
+// at once; the one chosen decides which spelling may call it.
+
+struct Number
+{
+    i32 x;
+
+    static i32 from( i64 value )
+    {
+        return 1;
+    }
+
+    static i32 from( u64 value )
+    {
+        return 2;
+    }
+
+    static i32 mixed( i64 value )
+    {
+        return 3;
+    }
+
+    i32 mixed( u64 value ) const
+    {
+        return x;
+    }
+
+    // A bare call chooses among its siblings by the same rules.
+    static i32 bare_ambiguous()
+    {
+        return from( 5 );
+    }
+};
+
+// A literal fits both, as it does `print`'s family.
+i32 ambiguous()
+{
+    return Number::from( 5 );
+}
+
+i32 matches_none()
+{
+    return Number::from( true );
+}
+
+i32 wrong_count()
+{
+    return Number::from( 1, 2 );
+}
+
+// The instance overload is the match, and the type cannot supply its receiver.
+i32 chooses_an_instance_method()
+{
+    u64 n = 4;
+    return Number::mixed( n );
+}
+
+// Everything below is accepted.
+
+struct Accepted
+{
+    i32 x;
+
+    static i32 from( i64 value )
+    {
+        return 1;
+    }
+
+    static i32 from( u64 value )
+    {
+        return 2;
+    }
+
+    static i32 from_both()
+    {
+        i64 a = 1;
+        u64 b = 2;
+        return from( a ) + from( b );
+    }
+
+    i32 from_an_instance() const
+    {
+        u64 b = 2;
+        return from( b ) + x;
+    }
+};
+
+i32 accepted()
+{
+    i64 a = 1;
+    u64 b = 2;
+    i8  small = 3;
+    return Accepted::from( a ) + Accepted::from( b ) + Accepted::from( small ) + Accepted::from_both();
+}
+
+i32 main()
+{
+    return 0;
+}

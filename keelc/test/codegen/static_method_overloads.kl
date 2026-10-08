@@ -1,0 +1,97 @@
+// `T::f( ... )` and a bare sibling call each run the overload their arguments chose, on a plain
+// type, on a generic instance, and in a set that mixes static and instance methods. Each check
+// returns its own code.
+
+struct Number
+{
+    i32 x;
+
+    static i32 from( i64 value )
+    {
+        return 1;
+    }
+
+    static i32 from( u64 value )
+    {
+        return 2;
+    }
+
+    static i32 from( bool value )
+    {
+        return 3;
+    }
+
+    static i32 mixed( i64 value )
+    {
+        return 4;
+    }
+
+    i32 mixed( u64 value ) const
+    {
+        return x;
+    }
+
+    static i32 bare_from_static()
+    {
+        u64 b = 0;
+        return from( b );
+    }
+
+    i32 bare_from_instance() const
+    {
+        i64 a = 0;
+        u64 b = 0;
+        return from( a ) * 10 + mixed( b );
+    }
+};
+
+// A generic's static overloads are chosen with its argument applied.
+struct Box<T>
+{
+    i32 unused;
+
+    static i32 kind( T value )
+    {
+        return 1;
+    }
+
+    static i32 kind( T value, bool flag )
+    {
+        return 2;
+    }
+};
+
+i32 main()
+{
+    i64 a = 0;
+    u64 b = 0;
+    i8  small = 0;
+    if( Number::from( a ) != 1 || Number::from( b ) != 2 || Number::from( true ) != 3 )
+    {
+        return 1;
+    }
+
+    // An `i8` widens to `i64` only.
+    if( Number::from( small ) != 1 )
+    {
+        return 2;
+    }
+
+    Number n = Number { 7 };
+    if( Number::mixed( a ) != 4 || n.mixed( b ) != 7 )
+    {
+        return 3;
+    }
+
+    if( Number::bare_from_static() != 2 || n.bare_from_instance() != 17 )
+    {
+        return 4;
+    }
+
+    if( Box<i32>::kind( 5 ) != 1 || Box<i32>::kind( 5, true ) != 2 )
+    {
+        return 5;
+    }
+
+    return 0;
+}
