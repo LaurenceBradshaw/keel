@@ -185,7 +185,7 @@
                 },
                 {
                     "name": "keyword.control.keel",
-                    "match": "\\b(?:if|else|while|for|return|switch|case|default|break|continue|fallthrough)\\b"
+                    "match": "\\b(?:if|else|while|for|return|switch|case|default|break|continue|fallthrough|try)\\b"
                 },
                 {
                     "name": "storage.type.function.keel",
@@ -208,6 +208,10 @@
                     "match": "\\b(?:unsafe|where|cast|wrap|alloc|free|destroy|assert|template|new|delete|operator)\\b"
                 },
                 {
+                    "name": "keyword.other.discard.keel",
+                    "match": "\\b_\\b"
+                },
+                {
                     "name": "constant.language.keel",
                     "match": "\\b(?:true|false|nullptr)\\b"
                 },
@@ -228,7 +232,7 @@
                     "match": "\\b(?:Copyable|Equatable|Comparable|Numeric|Integral|Floating)\\b"
                 },
                 {
-                    "match": "(&)\\s*((?:[A-Za-z_]\\w*(?:<[\\w\\s,:*\\[\\]<>]*>)?::)+)([A-Za-z_]\\w*)",
+                    "match": "(&)\\s*((?:[A-Za-z_]\\w*(?:<[\\w\\s,:*|\\[\\]<>]*>)?::)+)([A-Za-z_]\\w*)",
                     "captures": {
                         "1": {
                             "name": "keyword.operator.address.keel"
@@ -249,27 +253,49 @@
                     }
                 },
                 {
+                    "match": "(?<=<)(\\s*)([A-Za-z_]\\w*)(::)([A-Za-z_]\\w*)(?=\\s*,)",
+                    "captures": {
+                        "2": {
+                            "name": "entity.name.scope.keel entity.name.namespace.keel"
+                        },
+                        "3": {
+                            "name": "punctuation.separator.scope-resolution.keel"
+                        },
+                        "4": {
+                            "name": "entity.name.type.keel"
+                        }
+                    }
+                },
+                {
                     "name": "entity.name.scope.keel entity.name.namespace.keel",
                     "match": "\\b[A-Za-z_]\\w*(?=::)"
                 },
                 {
                     "name": "entity.name.type.keel",
-                    "match": "\\b[A-Za-z_]\\w*(?=\\s*(?:<[\\w\\s,:*\\[\\]<>]*>)?\\s*\\{)"
+                    "match": "\\b[A-Za-z_]\\w*(?=(?:\\s*\\|\\s*(?:[A-Za-z_]\\w*::)?[A-Za-z_]\\w*(?:<[\\w\\s,:*|\\[\\]<>]*>)?)+\\s+[A-Za-z_]\\w*\\b)"
                 },
                 {
                     "name": "entity.name.type.keel",
-                    "match": "\\b[A-Za-z_]\\w*(?=\\s*(?:<[\\w\\s,:*\\[\\]<>]*>)?(?:\\[\\*\\])?\\s+[A-Za-z_]\\w*\\b)"
+                    "match": "\\b[A-Za-z_]\\w*(?=\\s*(?:<[\\w\\s,:*|\\[\\]<>]*>)?\\s*\\{)"
+                },
+                {
+                    "name": "entity.name.type.keel",
+                    "match": "\\b[A-Za-z_]\\w*(?=\\s*(?:<[\\w\\s,:*|\\[\\]<>]*>)?(?:\\[\\*\\])?\\s+[A-Za-z_]\\w*\\b)"
+                },
+                {
+                    "name": "entity.name.type.keel",
+                    "match": "(?<=::)[A-Za-z_]\\w*\\b(?=\\s*(?:>|\\|(?!\\|)|\\*|\\[\\*\\]))"
                 },
                 {
                     "name": "variable.other.enummember.keel",
-                    "match": "(?<=::)[A-Za-z_]\\w*\\b(?!\\s*(?:\\(|<|::|\\{|[A-Za-z_]))"
+                    "match": "(?<=::)[A-Za-z_]\\w*\\b(?!\\s*(?:\\(|<|>|\\|(?!\\|)|\\*|\\[\\*\\]|::|\\{|[A-Za-z_]))"
                 }
             ]
         },
         "functions": {
             "patterns": [
                 {
-                    "match": "\\b([A-Za-z_]\\w*)(?=\\s*(?:<[\\w\\s,:*\\[\\]<>]*>)?\\s*\\()",
+                    "match": "\\b([A-Za-z_]\\w*)(?=\\s*(?:<[\\w\\s,:*|\\[\\]<>]*>)?\\s*\\()",
                     "captures": {
                         "1": {
                             "name": "entity.name.function.keel"

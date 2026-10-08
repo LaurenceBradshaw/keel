@@ -154,6 +154,60 @@ i32 bucket( i32 n )
     }
 }
 
+// Errors: `result`, `try`, a discard, an error union, and a `switch` over its leaf variants.
+enum Fault
+{
+    Lost( i32 code ),
+    Late
+};
+
+result<extra::Unit, Fault> unit_of( i32 n )
+{
+    if( n < 0 )
+    {
+        return result::err( Fault::Lost( n ) );
+    }
+
+    return result::ok( extra::Unit::Metre );
+}
+
+result<void, Fault | Colour> checked( i32 n )
+{
+    extra::Unit unit = try unit_of( n );
+    _ = unit_of( n + 1 );
+
+    if( n == 0 )
+    {
+        return result::err( Colour::Red );
+    }
+
+    println( "checked" );
+    return result::ok();
+}
+
+void report( result<void, Fault | Colour> r )
+{
+    switch( move r )
+    {
+    case result::ok:
+        break;
+    case result::err( e ):
+        switch( e )
+        {
+        case Fault::Lost( code ):
+            eprintln( code );
+            break;
+        case Fault::Late:
+        case Colour::Red:
+        case Colour::Green:
+        case Colour::Blue:
+            eprint( "other\n" );
+            break;
+        }
+        break;
+    }
+}
+
 i32 main()
 {
     Point p = Point { 3, -4 };
@@ -188,6 +242,8 @@ i32 main()
     bool both = !ready || ( n != 1 && n >= 0 );
 
     f64 a = area( Shape::Rect( 2.0, 3.0 ) );
+
+    report( checked( n ) );
 
     meter tally = meter( 1 );
 
