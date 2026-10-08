@@ -1,0 +1,31 @@
+error: an owning value is transferred, not copied
+  --> sema/errors_consuming_switch.kl:39:21
+   |
+39 |             Buf c = b;
+   |                     ^ write `move b`
+
+error: `sink` takes ownership of this argument
+  --> sema/errors_consuming_switch.kl:51:19
+   |
+51 |             sink( b );
+   |                   ^ write `move`
+
+error: cannot move out of a borrow
+  --> sema/errors_consuming_switch.kl:60:18
+   |
+60 |     switch( move h )
+   |                  ^ take it as `move Holder h` to own it
+
+error: a field cannot be moved on its own
+  --> sema/errors_consuming_switch.kl:80:22
+   |
+80 |         switch( move held )
+   |                      ^^^^ moving it would leave the object partly moved - move the whole object instead
+
+error: a binding cannot be moved
+  --> sema/errors_consuming_switch.kl:96:26
+   |
+96 |             switch( move h )
+   |                          ^ `h` is part of the value being matched, which still owns it
+
+5 errors generated

@@ -589,6 +589,13 @@ Node_id Ast::scrutinee( Node_id switch_stmt ) const
     return child( switch_stmt, 0 );
 }
 
+bool Ast::consumes( Node_id switch_stmt ) const
+{
+    const Node_id value = scrutinee( switch_stmt );
+
+    return value.is_valid() && kind( value ) == Node_kind::Marker_expr && keyword( value ) == Keyword::Move;
+}
+
 std::span<const Node_id> Ast::arms( Node_id switch_stmt ) const
 {
     assert( kind( switch_stmt ) == Node_kind::Switch_stmt );

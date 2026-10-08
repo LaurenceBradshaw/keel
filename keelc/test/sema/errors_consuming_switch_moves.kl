@@ -1,0 +1,95 @@
+// D7. A `switch` over `move x` moves `x` where it is written, and a binding it owns moves like a
+// local: each use after is caught by the same flow analysis.
+class Buf
+{
+    u64 n;
+
+    Buf( u64 m )
+    {
+        n = m;
+    }
+
+    ~Buf()
+    {
+    }
+};
+
+enum Holder
+{
+    Full( Buf b ),
+    Empty
+};
+
+u64 peek( Holder h )
+{
+    return 0;
+}
+
+u64 read( Buf b )
+{
+    return 0;
+}
+
+void sink( move Buf b )
+{
+}
+
+void after( move Holder h )
+{
+    switch( move h )
+    {
+        case Holder::Full( b ):
+            break;
+        case Holder::Empty:
+            break;
+    }
+
+    peek( h );
+}
+
+void inside( move Holder h )
+{
+    switch( move h )
+    {
+        case Holder::Full( b ):
+            peek( h );
+            return;
+        case Holder::Empty:
+            return;
+    }
+}
+
+void twice( move Holder h )
+{
+    switch( move h )
+    {
+        case Holder::Full( b ):
+            sink( move b );
+            sink( move b );
+            return;
+        case Holder::Empty:
+            return;
+    }
+}
+
+void sometimes( bool c, move Holder h )
+{
+    switch( move h )
+    {
+        case Holder::Full( b ):
+            if( c )
+            {
+                sink( move b );
+            }
+
+            read( b );
+            return;
+        case Holder::Empty:
+            return;
+    }
+}
+
+i32 main()
+{
+    return 0;
+}

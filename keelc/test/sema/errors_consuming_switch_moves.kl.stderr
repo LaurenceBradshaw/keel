@@ -1,0 +1,25 @@
+error: `h` is used after it was moved
+  --> sema/errors_consuming_switch_moves.kl:47:11
+   |
+47 |     peek( h );
+   |           ^ moved at 39:13
+
+error: `h` is used after it was moved
+  --> sema/errors_consuming_switch_moves.kl:55:19
+   |
+55 |             peek( h );
+   |                   ^ moved at 52:13
+
+error: `b` is used after it was moved
+  --> sema/errors_consuming_switch_moves.kl:68:13
+   |
+68 |             sink( move b );
+   |             ^^^^^^^^^^^^^^ moved at 67:13
+
+error: `b` may already have been moved
+  --> sema/errors_consuming_switch_moves.kl:85:19
+   |
+85 |             read( b );
+   |                   ^ moved at 82:17 on some path to here
+
+4 errors generated

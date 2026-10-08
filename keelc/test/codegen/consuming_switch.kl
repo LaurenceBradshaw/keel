@@ -1,0 +1,174 @@
+// D7. A `switch` over `move x` takes the value: each binding owns its payload and drops when its arm
+// ends unless moved out, and an arm that binds nothing leaves the value whole, to drop when the switch
+// ends. Each Buf holds heap memory and says when it goes, so the output is the drop order and
+// KEEL_VALGRIND=1 sees a drop missed or run twice.
+class Buf
+{
+    u64* data;
+
+    Buf( u64 n )
+    {
+        unsafe
+        {
+            data = alloc<u64>();
+        }
+
+        *data = n;
+    }
+
+    ~Buf()
+    {
+        print( "drop " );
+        println( *data );
+
+        unsafe
+        {
+            free( data );
+        }
+    }
+
+    u64 get() const
+    {
+        return *data;
+    }
+};
+
+enum Holder
+{
+    Full( Buf b ),
+    Empty,
+    Pair( u64 extra, Buf left, Buf right )
+};
+
+Holder make( u64 n )
+{
+    return Holder::Full( Buf( n ) );
+}
+
+// One payload leaves; one left behind drops as its arm ends.
+Buf take( move Holder h )
+{
+    switch( move h )
+    {
+        case Holder::Full( b ):
+            return b;
+        case Holder::Pair( extra, left, right ):
+            return move right;
+        case Holder::Empty:
+            return Buf( 0 );
+    }
+}
+
+// Moved on one path only.
+Buf maybe( bool c, move Holder h )
+{
+    switch( move h )
+    {
+        case Holder::Full( b ):
+            if( c )
+            {
+                return move b;
+            }
+
+            println( "kept" );
+            return Buf( 0 );
+        case Holder::Pair( extra, left, right ):
+            return Buf( extra );
+        case Holder::Empty:
+            return Buf( 0 );
+    }
+}
+
+// Nothing bound, so the value drops whole when the switch ends. Bindings drop right before left.
+u64 count( move Holder h )
+{
+    switch( move h )
+    {
+        case Holder::Full:
+            println( "full" );
+            break;
+        case Holder::Pair( extra, left, right ):
+            return extra;
+        case Holder::Empty:
+            break;
+    }
+
+    println( "after" );
+    return 0;
+}
+
+// The switch has taken the value, so the variable is empty and may be filled again.
+u64 refill( move Holder h )
+{
+    switch( move h )
+    {
+        case Holder::Full( b ):
+            h = Holder::Full( Buf( b.get() + 100 ) );
+            break;
+        case Holder::Pair( extra, left, right ):
+            return extra;
+        case Holder::Empty:
+            return 0;
+    }
+
+    return take( move h ).get();
+}
+
+// The binding drops as its arm falls through, and the next arm finds nothing left to drop.
+void through( move Holder h )
+{
+    switch( move h )
+    {
+        case Holder::Full( b ):
+            println( b.get() );
+            fallthrough;
+        case Holder::Empty:
+            println( "through" );
+            break;
+        case Holder::Pair( extra, left, right ):
+            break;
+    }
+
+    println( "done" );
+}
+
+i32 main()
+{
+    Buf a = take( move Holder::Full( Buf( 1 ) ) );
+    println( a.get() );
+
+    Buf r = take( move Holder::Pair( 5, Buf( 2 ), Buf( 3 ) ) );
+    println( r.get() );
+
+    Buf m = maybe( true, move make( 4 ) );
+    println( m.get() );
+
+    Buf k = maybe( false, move make( 5 ) );
+    println( k.get() );
+
+    println( count( move make( 6 ) ) );
+    println( count( move Holder::Pair( 7, Buf( 8 ), Buf( 9 ) ) ) );
+
+    println( refill( move make( 10 ) ) );
+
+    through( move make( 11 ) );
+
+    // A temporary scrutinee, its payload kept past the switch.
+    Buf kept = Buf( 12 );
+
+    switch( move make( 13 ) )
+    {
+        case Holder::Full( b ):
+            kept = move b;
+            break;
+        case Holder::Empty:
+            break;
+        case Holder::Pair( extra, left, right ):
+            break;
+    }
+
+    println( kept.get() );
+
+    println( "end" );
+    return 0;
+}

@@ -2938,6 +2938,12 @@ Type_id Expressions::infer_marker( Node_id id )
         return types_.poison( id );
     }
 
+    // A consuming switch's binding owns its payload as a local owns its value.
+    if( places_.owns_binding( decl ) )
+    {
+        return types_.record( id, value );
+    }
+
     if( decl.is_valid() && ast_.kind( decl ) == Node_kind::Binding_decl )
     {
         reporter_.error_at(

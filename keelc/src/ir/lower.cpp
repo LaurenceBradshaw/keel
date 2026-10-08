@@ -118,7 +118,7 @@ private:
     Operand lower_operator_index( Node_id id, Node_id method );
     Operand lower_variant_construction( Node_id id );
     Operand lower_empty_variant( Node_id id );
-    void    bind_variant_pattern( Place matched, Node_id label );
+    void    bind_variant_pattern( Place matched, Node_id label, bool consumes );
     Place   lower_place( Node_id id );     // names where a value lives
     void    lower_statement( Node_id id ); // emits, produces nothing
     // `bindings` are the *callee's*: the parameter's type is written in its declaration, so
@@ -137,7 +137,7 @@ private:
     void lower_if( Node_id id );
     void lower_switch( Node_id id );
     void lower_case_test( Operand scrutinee, Node_id label, Block_id body );
-    void lower_arm_body( Node_id arm, Place matched, Block_id fallthrough_to );
+    void lower_arm_body( Node_id arm, Place matched, Block_id fallthrough_to, bool consumes );
     void lower_while( Node_id id );
     void lower_for( Node_id id );
 
@@ -1171,8 +1171,9 @@ Operand Lowering::lower_unary( Node_id id )
 // A variant with no payload, in an enum that has them elsewhere: still a struct, so it is a local
 // with its tag written and nothing else.
 // D7. `case Shape::Circle( r ):` gives `r` a local. An owning field is borrowed in place, as D31
-// borrows a bare owning parameter; anything else is copied.
-void Lowering::bind_variant_pattern( Place matched, Node_id label )
+// borrows a bare owning parameter; anything else is copied. A consuming switch moves the whole value
+// out first, so the switch's own drop is skipped, and each binding owns its field.
+void Lowering::bind_variant_pattern( Place matched, Node_id label, bool consumes )
 {
     if( ast_.kind( label ) != Node_kind::Variant_pattern )
     {
@@ -1192,19 +1193,32 @@ void Lowering::bind_variant_pattern( Place matched, Node_id label )
 
     const std::span<const Node_id> payload = ast_.payload( variant );
 
+    // Moved into storage nothing drops: its fields are the bindings' now.
+    if( consumes && !bindings.empty() )
+    {
+        const Type_id whole = builder_.type_of( matched.local );
+
+        matched = builder_.place( builder_.into_temp( use( move( matched, whole ) ), whole, ast_.span( label ) ) );
+    }
+
     for( std::size_t i = 0; i < bindings.size() && i < payload.size(); ++i )
     {
         const Type_id field_type = keel::field_type( ast_, types_.table(), enum_type, payload[i], types_.recorded() );
         const Span    span       = ast_.span( bindings[i] );
         const Place   field      = builder_.field( matched, payload[i] );
 
-        const bool     borrowed   = owns( field_type );
+        const bool     borrowed   = !consumes && owns( field_type );
         const Type_id  local_type = borrowed ? types_.table().pointer_to( field_type ) : field_type;
         const Local_id local      = builder_.add_local( local_type, span, ast_.name( bindings[i] ) );
 
         locals_.emplace( bindings[i].v, local );
 
         builder_.storage_live( local, span );
+
+        if( consumes )
+        {
+            scope_locals_.push_back( local );
+        }
 
         if( borrowed )
         {
@@ -2081,13 +2095,19 @@ void Lowering::lower_case_test( Operand scrutinee, Node_id label, Block_id body 
 
 // The fallback arm goes through here too, so it binds its pattern like any other - easy to miss,
 // since the last arm of an exhaustive switch is the fallback and may well destructure.
-void Lowering::lower_arm_body( Node_id arm, Place matched, Block_id fallthrough_to )
+void Lowering::lower_arm_body( Node_id arm, Place matched, Block_id fallthrough_to, bool consumes )
 {
+    // A consuming switch's bindings own their payloads, so they drop when the arm ends.
+    if( consumes )
+    {
+        push_scope();
+    }
+
     // D7: a pattern's bindings are written at the top of the arm's own block, before anything in it
     // runs - so the names are live exactly where the resolver put them in scope, and nowhere else.
     for( const Node_id label : ast_.labels( arm ) )
     {
-        bind_variant_pattern( matched, label );
+        bind_variant_pattern( matched, label, consumes );
     }
 
     const Block_id enclosing_fallthrough = fallthrough_target_;
@@ -2096,6 +2116,11 @@ void Lowering::lower_arm_body( Node_id arm, Place matched, Block_id fallthrough_
     lower_statement( ast_.body( arm ) );
 
     fallthrough_target_ = enclosing_fallthrough;
+
+    if( consumes )
+    {
+        pop_scope( ast_.span( arm ) );
+    }
 }
 
 void Lowering::lower_switch( Node_id id )
@@ -2111,11 +2136,27 @@ void Lowering::lower_switch( Node_id id )
     const bool payloads =
         types_.table().is_enum( scrutinee.type ) && ast_.enum_has_payload( types_.table().get( scrutinee.type ).declaration );
 
-    const Place matched = scrutinee.place;
+    const bool consumes = ast_.consumes( id ) && owns( scrutinee.type );
+
+    Place matched = scrutinee.place;
 
     // The switch's own scope, which keeps an owning temporary alive across the arms: a binding
     // borrows it in place.
     push_scope();
+
+    // D7: a consuming switch moves the value into a local of its own, dropped at the end unless an
+    // arm takes its payload.
+    if( consumes )
+    {
+        const Span     taken_span = ast_.span( ast_.scrutinee( id ) );
+        const Local_id taken      = builder_.add_local( scrutinee.type, taken_span );
+
+        builder_.storage_live( taken, taken_span );
+        builder_.assign( builder_.place( taken ), use( scrutinee ), taken_span );
+        scope_locals_.push_back( taken );
+
+        matched = builder_.place( taken );
+    }
 
     const auto held = std::find( statement_temporaries_.begin(), statement_temporaries_.end(), matched.local );
 
@@ -2217,7 +2258,7 @@ void Lowering::lower_switch( Node_id id )
 
         // The checker has already refused a `fallthrough` in the last arm, so an invalid target
         // here is never reached.
-        lower_arm_body( arm, matched, index + 1 < bodies.size() ? bodies[index + 1] : Block_id {} );
+        lower_arm_body( arm, matched, index + 1 < bodies.size() ? bodies[index + 1] : Block_id {}, consumes );
         leave();
 
         builder_.switch_to( resume );
@@ -2232,7 +2273,9 @@ void Lowering::lower_switch( Node_id id )
         // The fallback is lowered last but sits wherever it was written, so its `fallthrough` goes
         // to whatever follows it in source order - which may be a block lowered long ago. An edge
         // backwards is still just an edge.
-        lower_arm_body( fallback, matched, fallback_index + 1 < bodies.size() ? bodies[fallback_index + 1] : Block_id {} );
+        lower_arm_body(
+            fallback, matched, fallback_index + 1 < bodies.size() ? bodies[fallback_index + 1] : Block_id {}, consumes
+        );
     }
 
     leave();
@@ -5980,6 +6023,27 @@ TEST_CASE( "lower_keeps_an_owning_scrutinee_alive_across_the_arms", "[ir][lower]
 
     INFO( text );
     REQUIRE( text.find( "drop _1" ) > text.find( "= copy (*_3).n" ) );
+}
+
+// D7. A switch over `move h` moves `h` whole, and a binding holds its payload by value rather than
+// borrowing it.
+TEST_CASE( "lower_moves_a_consumed_scrutinee_into_its_bindings", "[ir][lower][payload][move]" )
+{
+    Lowered p( "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+               "enum H { Full( B b ), Empty };\n"
+               "B f( move H h ) { switch( move h ) { case H::Full( b ): return b; case H::Empty: return B( 0 ); } }\n"
+               "i32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+    REQUIRE( every_function_verifies( p ) );
+
+    const std::string text = p.named( "f" );
+
+    INFO( text );
+    REQUIRE( text.find( "= move _1" ) != std::string::npos );
+    REQUIRE( text.find( ": B; // b" ) != std::string::npos );
+    REQUIRE( text.find( "&borrow" ) == std::string::npos );
 }
 
 // PLAN D32. A method call is an ordinary call whose first argument is the receiver's **address** -

@@ -149,6 +149,7 @@ public:
 
     // `switch`.
     Node_id                  scrutinee( Node_id switch_stmt ) const;
+    bool                     consumes( Node_id switch_stmt ) const; // D7: the scrutinee is written `move`
     std::span<const Node_id> arms( Node_id switch_stmt ) const;
     std::span<const Node_id> labels( Node_id arm ) const;
     Node_id                  variant_path( Node_id pattern ) const;

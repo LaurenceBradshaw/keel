@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #pragma once
+#include <unordered_set>
 #include "ast/ast.h"
 #include "common/interner.h"
 #include "lex/token.h"
@@ -68,10 +69,12 @@ public:
     bool check_owning_return( Node_id value, Type_id type );
 
     // D7: while an arm's binding borrows an owning payload, the scrutinee's root may be neither
-    // written nor moved. Pushed per arm; nothing is held for a temporary or a pointer's referent.
-    void    hold_payload( Node_id arm, Node_id scrutinee, Node_id current_function );
+    // written nor moved. Pushed per arm; nothing is held for a temporary or a pointer's referent,
+    // nor by a switch that consumes, whose bindings own their payloads instead.
+    void    hold_payload( Node_id arm, Node_id switch_stmt, Node_id current_function );
     void    release_payload();
     Node_id borrowing_binding( Node_id root ) const; // the binding holding `root`, or invalid
+    bool    owns_binding( Node_id decl ) const;      // bound by a switch that consumes
 
     // D31: which parameters travel by address. Its own pass because ownership is asked of field
     // types, which are recorded only after both parameter loops have run.
@@ -95,6 +98,7 @@ private:
     };
 
     std::vector<Held_payload> held_; // innermost last
+    std::unordered_set<u32>   owned_bindings_;
 };
 
 } // namespace keel::sema

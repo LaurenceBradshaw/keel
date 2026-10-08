@@ -1977,5 +1977,79 @@ TEST_CASE( "type_checker_holds_the_scrutinee_while_a_payload_is_borrowed", "[sem
     }
 }
 
+// D7. A `switch` over `move h` takes the value, so each binding owns its payload as a local owns its
+// value, and nothing is left to hold.
+TEST_CASE( "type_checker_lets_a_consuming_switch_take_its_payload", "[sema][payload][move]" )
+{
+    constexpr std::string_view held = "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+                                      "enum H { Full( B b ), Empty };\n"
+                                      "H make() { return H::Empty; }\n";
+
+    const auto arm = [held]( std::string_view body, std::string_view scrutinee = "move h" )
+    {
+        return std::string( held ) + "B f( move H h ) { switch( " + std::string( scrutinee ) +
+               " ) { case H::Full( b ): " + std::string( body ) +
+               " case H::Empty: return B( 0 ); } }\ni32 main() { return 0; }";
+    };
+
+    SECTION( "returned as a local is" )
+    {
+        const Typed p( arm( "return b;" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "moved" )
+    {
+        const Typed p( arm( "B c = move b; return c;" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "written, as a local may be" )
+    {
+        const Typed p( arm( "b.n = 2; return b;" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "but copied only by `move`" )
+    {
+        const Typed p( arm( "B c = b; return c;" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "write `move b`" ) != std::string::npos );
+    }
+
+    SECTION( "and the variable it came from may be filled again" )
+    {
+        const Typed p( arm( "h = H::Empty; return b;" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a temporary is taken by `move` too" )
+    {
+        const Typed p( arm( "return b;", "move make()" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and without it is only borrowed" )
+    {
+        const Typed p( arm( "return b;", "make()" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`b` still belongs to what holds it" ) != std::string::npos );
+    }
+}
+
 } // namespace keel
 #endif

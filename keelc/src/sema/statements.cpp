@@ -460,7 +460,7 @@ void Statements::visit_switch( Node_id id )
     for( const Node_id arm : ast_.arms( id ) )
     {
         coverage_.check_arm_labels( arm, covered );
-        places_.hold_payload( arm, scrutinee, expressions_.current_function() );
+        places_.hold_payload( arm, id, expressions_.current_function() );
         visit( ast_.body( arm ) );
         places_.release_payload();
     }

@@ -221,8 +221,8 @@ bool Places::check_writable( Node_id target, Node_id current_function, bool repl
     const Node_id root = place_root( target, current_function );
 
     // D7: a pattern binding is read-only. An owning payload is borrowed in place, and a copyable one
-    // is held to the same rule so the two read alike.
-    if( root.is_valid() && ast_.kind( root ) == Node_kind::Binding_decl )
+    // is held to the same rule so the two read alike. A consuming switch's binding is a local.
+    if( root.is_valid() && ast_.kind( root ) == Node_kind::Binding_decl && !owns_binding( root ) )
     {
         reporter_.error_at(
             ast_.span( target ),
@@ -290,8 +290,8 @@ bool Places::is_read_only( Node_id target, Node_id current_function ) const
     }
 
     const Node_id root = place_root( target, current_function );
-    if( root.is_valid() &&
-        ( ast_.kind( root ) == Node_kind::Binding_decl || is_borrow_binding( root ) || ast_.is_const_binding( root ) ) )
+    if( root.is_valid() && ( ( ast_.kind( root ) == Node_kind::Binding_decl && !owns_binding( root ) ) ||
+                             is_borrow_binding( root ) || ast_.is_const_binding( root ) ) )
     {
         return true;
     }
@@ -569,7 +569,8 @@ void Places::check_owning_source( Node_id value, Type_id type )
     }
 
     if( ast_.kind( value ) == Node_kind::Name_expr &&
-        ast_.kind( resolution_.declaration_of( value ) ) == Node_kind::Binding_decl )
+        ast_.kind( resolution_.declaration_of( value ) ) == Node_kind::Binding_decl &&
+        !owns_binding( resolution_.declaration_of( value ) ) )
     {
         reporter_.error_at(
             ast_.span( value ),
@@ -600,7 +601,7 @@ bool Places::check_owning_return( Node_id value, Type_id type )
 
     const Node_id decl = resolution_.declaration_of( value );
     if( ast_.kind( value ) == Node_kind::Name_expr &&
-        ( ast_.kind( decl ) == Node_kind::Var_decl || ast_.kind( decl ) == Node_kind::Param_decl ) )
+        ( ast_.kind( decl ) == Node_kind::Var_decl || ast_.kind( decl ) == Node_kind::Param_decl || owns_binding( decl ) ) )
     {
         return false;
     }
@@ -620,9 +621,10 @@ bool Places::check_owning_return( Node_id value, Type_id type )
     return true;
 }
 
-void Places::hold_payload( Node_id arm, Node_id scrutinee, Node_id current_function )
+void Places::hold_payload( Node_id arm, Node_id switch_stmt, Node_id current_function )
 {
-    Node_id binding;
+    const bool consumes = ast_.consumes( switch_stmt );
+    Node_id    binding;
 
     for( const Node_id label : ast_.labels( arm ) )
     {
@@ -633,14 +635,20 @@ void Places::hold_payload( Node_id arm, Node_id scrutinee, Node_id current_funct
 
         for( const Node_id bound : ast_.bindings( label ) )
         {
-            if( !binding.is_valid() && !bounds_.satisfies( types_.type_of( bound ), Bound::Copyable ) )
+            if( consumes )
+            {
+                owned_bindings_.insert( bound.v );
+            }
+            else if( !binding.is_valid() && !bounds_.satisfies( types_.type_of( bound ), Bound::Copyable ) )
             {
                 binding = bound;
             }
         }
     }
 
-    held_.push_back( { binding.is_valid() ? place_root( scrutinee, current_function ) : Node_id {}, binding } );
+    held_.push_back(
+        { binding.is_valid() ? place_root( ast_.scrutinee( switch_stmt ), current_function ) : Node_id {}, binding }
+    );
 }
 
 void Places::release_payload()
@@ -664,6 +672,11 @@ Node_id Places::borrowing_binding( Node_id root ) const
     }
 
     return Node_id {};
+}
+
+bool Places::owns_binding( Node_id decl ) const
+{
+    return decl.is_valid() && owned_bindings_.contains( decl.v );
 }
 
 void Places::record_borrowed_parameters()

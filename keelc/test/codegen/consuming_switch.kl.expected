@@ -1,0 +1,916 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "consuming_switch.kl.prelude.c"
+
+struct kl__Buf;
+struct kl__Holder;
+
+struct kl__Buf
+{
+    uint64_t* kl_data_2;
+};
+
+struct kl__Holder
+{
+    int32_t tag;
+    struct kl__Buf kl_b_54;
+    uint64_t kl_extra_58;
+    struct kl__Buf kl_left_60;
+    struct kl__Buf kl_right_62;
+};
+
+void* kl_rt_alloc( size_t );
+void  kl_rt_free( void* );
+
+void kl__Buf__R3Buf_3u64__ctor( struct kl__Buf*, uint64_t );
+void kl__Buf__dtor( struct kl__Buf* );
+uint64_t kl__get__S3Buf( struct kl__Buf* );
+struct kl__Holder kl__make__3u64( uint64_t );
+struct kl__Buf kl__take__M6Holder( struct kl__Holder );
+struct kl__Buf kl__maybe__4bool_M6Holder( bool, struct kl__Holder );
+uint64_t kl__count__M6Holder( struct kl__Holder );
+uint64_t kl__refill__M6Holder( struct kl__Holder );
+void kl__through__M6Holder( struct kl__Holder );
+int32_t kl__main__( void );
+void kl__Holder__dtor( struct kl__Holder* );
+
+void kl__Buf__R3Buf_3u64__ctor( struct kl__Buf* kl_this_1, uint64_t kl_n_2 )
+{
+    uint64_t* kl_t3;
+#line 13 "codegen/consuming_switch.kl"
+    kl_t3 = ( uint64_t* ) kl_rt_alloc( sizeof( uint64_t ) );
+    ( *kl_this_1 ).kl_data_2 = kl_t3;
+#line 16 "codegen/consuming_switch.kl"
+    ( *( *kl_this_1 ).kl_data_2 ) = kl_n_2;
+    return;
+}
+
+void kl__Buf__dtor( struct kl__Buf* kl_this_1 )
+{
+    struct kl_7prelude_str kl_t2;
+    struct kl_7prelude_str* kl_t3;
+    uint8_t* kl_t4;
+#line 21 "codegen/consuming_switch.kl"
+    kl_t3 = &kl_t2;
+    kl_t4 = ( uint8_t* ) "drop ";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t3, kl_t4, 5 );
+    kl_7prelude_print__Q7prelude3str( kl_t2 );
+#line 22 "codegen/consuming_switch.kl"
+    kl_7prelude_println__3u64( ( *( *kl_this_1 ).kl_data_2 ) );
+#line 26 "codegen/consuming_switch.kl"
+    kl_rt_free( ( *kl_this_1 ).kl_data_2 );
+    return;
+}
+
+uint64_t kl__get__S3Buf( struct kl__Buf* kl_this_1 )
+{
+    uint64_t kl_t0;
+#line 32 "codegen/consuming_switch.kl"
+    kl_t0 = ( *( *kl_this_1 ).kl_data_2 );
+    return kl_t0;
+}
+
+struct kl__Holder kl__make__3u64( uint64_t kl_n_1 )
+{
+    struct kl__Holder kl_t0;
+    struct kl__Holder kl_t2;
+    struct kl__Buf kl_t3;
+    struct kl__Buf* kl_t4;
+    bool kl_t6;
+    bool kl_t7;
+#line 45 "codegen/consuming_switch.kl"
+    kl_t6 = false;
+    kl_t7 = false;
+    kl_t2.tag = 0;
+    kl_t6 = true;
+    kl_t7 = false;
+    kl_t4 = &kl_t3;
+    kl_t7 = true;
+    kl__Buf__R3Buf_3u64__ctor( kl_t4, kl_n_1 );
+    kl_t2.kl_b_54 = kl_t3;
+    kl_t7 = false;
+    kl_t6 = true;
+    kl_t0 = kl_t2;
+    kl_t6 = false;
+    if ( kl_t7 ) kl__Buf__dtor( &kl_t3 );
+    if ( kl_t6 ) kl__Holder__dtor( &kl_t2 );
+    return kl_t0;
+}
+
+struct kl__Buf kl__take__M6Holder( struct kl__Holder kl_h_1 )
+{
+    struct kl__Buf kl_t0;
+    struct kl__Holder kl_t2;
+    bool kl_t3;
+    struct kl__Holder kl_t4;
+    struct kl__Buf kl_b_5;
+    bool kl_t6;
+    struct kl__Holder kl_t7;
+    uint64_t kl_extra_8;
+    struct kl__Buf kl_left_9;
+    struct kl__Buf kl_right_10;
+    struct kl__Buf kl_t11;
+    struct kl__Buf* kl_t12;
+    bool kl_t14;
+    bool kl_t15;
+    bool kl_t16;
+    bool kl_t17;
+    bool kl_t18;
+#line 49 "codegen/consuming_switch.kl"
+    kl_t14 = true;
+#line 51 "codegen/consuming_switch.kl"
+    kl_t15 = false;
+#line 53 "codegen/consuming_switch.kl"
+    kl_t16 = false;
+#line 55 "codegen/consuming_switch.kl"
+    kl_t17 = false;
+#line 58 "codegen/consuming_switch.kl"
+    kl_t18 = false;
+#line 51 "codegen/consuming_switch.kl"
+    kl_t15 = false;
+    kl_t2 = kl_h_1;
+    kl_t14 = false;
+    kl_t15 = true;
+#line 53 "codegen/consuming_switch.kl"
+    kl_t3 = kl_t2.tag == 0;
+    if ( kl_t3 ) goto bb1; else goto bb4;
+    bb1:
+    kl_t4 = kl_t2;
+    kl_t15 = false;
+    kl_t16 = false;
+    kl_b_5 = kl_t4.kl_b_54;
+    kl_t16 = true;
+#line 54 "codegen/consuming_switch.kl"
+    kl_t0 = kl_b_5;
+    kl_t16 = false;
+    if ( kl_t16 ) kl__Buf__dtor( &kl_b_5 );
+    kl_t16 = false;
+    if ( kl_t15 ) kl__Holder__dtor( &kl_t2 );
+    kl_t15 = false;
+    if ( kl_t14 ) kl__Holder__dtor( &kl_h_1 );
+    kl_t14 = false;
+    return kl_t0;
+    bb2:
+#line 55 "codegen/consuming_switch.kl"
+    kl_t7 = kl_t2;
+    kl_t15 = false;
+    kl_extra_8 = kl_t7.kl_extra_58;
+    kl_left_9 = kl_t7.kl_left_60;
+    kl_t17 = false;
+    kl_right_10 = kl_t7.kl_right_62;
+    kl_t17 = true;
+#line 56 "codegen/consuming_switch.kl"
+    kl_t0 = kl_right_10;
+    kl_t17 = false;
+    if ( kl_t17 ) kl__Buf__dtor( &kl_right_10 );
+    kl_t17 = false;
+    kl__Buf__dtor( &kl_left_9 );
+    if ( kl_t15 ) kl__Holder__dtor( &kl_t2 );
+    kl_t15 = false;
+    if ( kl_t14 ) kl__Holder__dtor( &kl_h_1 );
+    kl_t14 = false;
+    return kl_t0;
+    bb3:
+#line 58 "codegen/consuming_switch.kl"
+    kl_t18 = false;
+    kl_t12 = &kl_t11;
+    kl_t18 = true;
+    kl__Buf__R3Buf_3u64__ctor( kl_t12, 0 );
+    kl_t0 = kl_t11;
+    kl_t18 = false;
+    if ( kl_t18 ) kl__Buf__dtor( &kl_t11 );
+    if ( kl_t15 ) kl__Holder__dtor( &kl_t2 );
+    kl_t15 = false;
+    if ( kl_t14 ) kl__Holder__dtor( &kl_h_1 );
+    kl_t14 = false;
+    return kl_t0;
+    bb4:
+#line 55 "codegen/consuming_switch.kl"
+    kl_t6 = kl_t2.tag == 2;
+    if ( kl_t6 ) goto bb2; else goto bb3;
+}
+
+struct kl__Buf kl__maybe__4bool_M6Holder( bool kl_c_1, struct kl__Holder kl_h_2 )
+{
+    struct kl__Buf kl_t0;
+    struct kl__Holder kl_t3;
+    bool kl_t4;
+    struct kl__Holder kl_t5;
+    struct kl__Buf kl_b_6;
+    struct kl_7prelude_str kl_t7;
+    struct kl_7prelude_str* kl_t8;
+    uint8_t* kl_t9;
+    struct kl__Buf kl_t12;
+    struct kl__Buf* kl_t13;
+    bool kl_t15;
+    struct kl__Holder kl_t16;
+    uint64_t kl_extra_17;
+    struct kl__Buf kl_left_18;
+    struct kl__Buf kl_right_19;
+    struct kl__Buf kl_t20;
+    struct kl__Buf* kl_t21;
+    struct kl__Buf kl_t23;
+    struct kl__Buf* kl_t24;
+    bool kl_t26;
+    bool kl_t27;
+    bool kl_t28;
+    bool kl_t29;
+    bool kl_t30;
+    bool kl_t31;
+#line 63 "codegen/consuming_switch.kl"
+    kl_t26 = true;
+#line 65 "codegen/consuming_switch.kl"
+    kl_t27 = false;
+#line 67 "codegen/consuming_switch.kl"
+    kl_t28 = false;
+#line 74 "codegen/consuming_switch.kl"
+    kl_t29 = false;
+#line 76 "codegen/consuming_switch.kl"
+    kl_t30 = false;
+#line 78 "codegen/consuming_switch.kl"
+    kl_t31 = false;
+#line 65 "codegen/consuming_switch.kl"
+    kl_t27 = false;
+    kl_t3 = kl_h_2;
+    kl_t26 = false;
+    kl_t27 = true;
+#line 67 "codegen/consuming_switch.kl"
+    kl_t4 = kl_t3.tag == 0;
+    if ( kl_t4 ) goto bb1; else goto bb4;
+    bb1:
+    kl_t5 = kl_t3;
+    kl_t27 = false;
+    kl_t28 = false;
+    kl_b_6 = kl_t5.kl_b_54;
+    kl_t28 = true;
+    if ( kl_c_1 ) goto bb5; else goto bb6;
+    bb2:
+#line 75 "codegen/consuming_switch.kl"
+    kl_t16 = kl_t3;
+    kl_t27 = false;
+    kl_extra_17 = kl_t16.kl_extra_58;
+    kl_left_18 = kl_t16.kl_left_60;
+    kl_right_19 = kl_t16.kl_right_62;
+#line 76 "codegen/consuming_switch.kl"
+    kl_t30 = false;
+    kl_t21 = &kl_t20;
+    kl_t30 = true;
+    kl__Buf__R3Buf_3u64__ctor( kl_t21, kl_extra_17 );
+    kl_t0 = kl_t20;
+    kl_t30 = false;
+    if ( kl_t30 ) kl__Buf__dtor( &kl_t20 );
+    kl__Buf__dtor( &kl_right_19 );
+    kl__Buf__dtor( &kl_left_18 );
+    if ( kl_t27 ) kl__Holder__dtor( &kl_t3 );
+    kl_t27 = false;
+    if ( kl_t26 ) kl__Holder__dtor( &kl_h_2 );
+    kl_t26 = false;
+    return kl_t0;
+    bb3:
+#line 78 "codegen/consuming_switch.kl"
+    kl_t31 = false;
+    kl_t24 = &kl_t23;
+    kl_t31 = true;
+    kl__Buf__R3Buf_3u64__ctor( kl_t24, 0 );
+    kl_t0 = kl_t23;
+    kl_t31 = false;
+    if ( kl_t31 ) kl__Buf__dtor( &kl_t23 );
+    if ( kl_t27 ) kl__Holder__dtor( &kl_t3 );
+    kl_t27 = false;
+    if ( kl_t26 ) kl__Holder__dtor( &kl_h_2 );
+    kl_t26 = false;
+    return kl_t0;
+    bb4:
+#line 75 "codegen/consuming_switch.kl"
+    kl_t15 = kl_t3.tag == 2;
+    if ( kl_t15 ) goto bb2; else goto bb3;
+    bb5:
+#line 70 "codegen/consuming_switch.kl"
+    kl_t0 = kl_b_6;
+    kl_t28 = false;
+    if ( kl_t28 ) kl__Buf__dtor( &kl_b_6 );
+    kl_t28 = false;
+    if ( kl_t27 ) kl__Holder__dtor( &kl_t3 );
+    kl_t27 = false;
+    if ( kl_t26 ) kl__Holder__dtor( &kl_h_2 );
+    kl_t26 = false;
+    return kl_t0;
+    bb6:
+#line 73 "codegen/consuming_switch.kl"
+    kl_t8 = &kl_t7;
+    kl_t9 = ( uint8_t* ) "kept";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t8, kl_t9, 4 );
+    kl_7prelude_println__Q7prelude3str( kl_t7 );
+#line 74 "codegen/consuming_switch.kl"
+    kl_t29 = false;
+    kl_t13 = &kl_t12;
+    kl_t29 = true;
+    kl__Buf__R3Buf_3u64__ctor( kl_t13, 0 );
+    kl_t0 = kl_t12;
+    kl_t29 = false;
+    if ( kl_t29 ) kl__Buf__dtor( &kl_t12 );
+    if ( kl_t28 ) kl__Buf__dtor( &kl_b_6 );
+    kl_t28 = false;
+    if ( kl_t27 ) kl__Holder__dtor( &kl_t3 );
+    kl_t27 = false;
+    if ( kl_t26 ) kl__Holder__dtor( &kl_h_2 );
+    kl_t26 = false;
+    return kl_t0;
+}
+
+uint64_t kl__count__M6Holder( struct kl__Holder kl_h_1 )
+{
+    uint64_t kl_t0;
+    struct kl__Holder kl_t2;
+    bool kl_t3;
+    struct kl_7prelude_str kl_t4;
+    struct kl_7prelude_str* kl_t5;
+    uint8_t* kl_t6;
+    bool kl_t9;
+    struct kl__Holder kl_t10;
+    uint64_t kl_extra_11;
+    struct kl__Buf kl_left_12;
+    struct kl__Buf kl_right_13;
+    struct kl_7prelude_str kl_t14;
+    struct kl_7prelude_str* kl_t15;
+    uint8_t* kl_t16;
+    bool kl_t19;
+    bool kl_t20;
+#line 83 "codegen/consuming_switch.kl"
+    kl_t19 = true;
+#line 85 "codegen/consuming_switch.kl"
+    kl_t20 = false;
+    kl_t20 = false;
+    kl_t2 = kl_h_1;
+    kl_t19 = false;
+    kl_t20 = true;
+#line 87 "codegen/consuming_switch.kl"
+    kl_t3 = kl_t2.tag == 0;
+    if ( kl_t3 ) goto bb1; else goto bb3;
+    bb1:
+#line 88 "codegen/consuming_switch.kl"
+    kl_t5 = &kl_t4;
+    kl_t6 = ( uint8_t* ) "full";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 4 );
+    kl_7prelude_println__Q7prelude3str( kl_t4 );
+    goto bb4;
+    bb2:
+#line 90 "codegen/consuming_switch.kl"
+    kl_t10 = kl_t2;
+    kl_t20 = false;
+    kl_extra_11 = kl_t10.kl_extra_58;
+    kl_left_12 = kl_t10.kl_left_60;
+    kl_right_13 = kl_t10.kl_right_62;
+#line 91 "codegen/consuming_switch.kl"
+    kl_t0 = kl_extra_11;
+    kl__Buf__dtor( &kl_right_13 );
+    kl__Buf__dtor( &kl_left_12 );
+    if ( kl_t20 ) kl__Holder__dtor( &kl_t2 );
+    kl_t20 = false;
+    if ( kl_t19 ) kl__Holder__dtor( &kl_h_1 );
+    kl_t19 = false;
+    return kl_t0;
+    bb3:
+#line 90 "codegen/consuming_switch.kl"
+    kl_t9 = kl_t2.tag == 2;
+    if ( kl_t9 ) goto bb2; else goto bb4;
+    bb4:
+#line 85 "codegen/consuming_switch.kl"
+    if ( kl_t20 ) kl__Holder__dtor( &kl_t2 );
+    kl_t20 = false;
+#line 96 "codegen/consuming_switch.kl"
+    kl_t15 = &kl_t14;
+    kl_t16 = ( uint8_t* ) "after";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t15, kl_t16, 5 );
+    kl_7prelude_println__Q7prelude3str( kl_t14 );
+#line 97 "codegen/consuming_switch.kl"
+    kl_t0 = 0;
+    if ( kl_t19 ) kl__Holder__dtor( &kl_h_1 );
+    kl_t19 = false;
+    return kl_t0;
+}
+
+uint64_t kl__refill__M6Holder( struct kl__Holder kl_h_1 )
+{
+    uint64_t kl_t0;
+    struct kl__Holder kl_t2;
+    bool kl_t3;
+    struct kl__Holder kl_t4;
+    struct kl__Buf kl_b_5;
+    struct kl__Holder kl_t6;
+    struct kl__Buf kl_t7;
+    struct kl__Buf* kl_t8;
+    struct kl__Buf* kl_t9;
+    uint64_t kl_t10;
+    uint64_t kl_t11;
+    bool kl_t13;
+    struct kl__Holder kl_t14;
+    uint64_t kl_extra_15;
+    struct kl__Buf kl_left_16;
+    struct kl__Buf kl_right_17;
+    struct kl__Buf kl_t18;
+    struct kl__Buf* kl_t19;
+    uint64_t kl_t20;
+    bool kl_t21;
+    bool kl_t22;
+    bool kl_t23;
+    bool kl_t24;
+#line 101 "codegen/consuming_switch.kl"
+    kl_t21 = true;
+#line 103 "codegen/consuming_switch.kl"
+    kl_t22 = false;
+#line 106 "codegen/consuming_switch.kl"
+    kl_t23 = false;
+    kl_t24 = false;
+#line 103 "codegen/consuming_switch.kl"
+    kl_t22 = false;
+    kl_t2 = kl_h_1;
+    kl_t21 = false;
+    kl_t22 = true;
+#line 105 "codegen/consuming_switch.kl"
+    kl_t3 = kl_t2.tag == 0;
+    if ( kl_t3 ) goto bb1; else goto bb4;
+    bb1:
+    kl_t4 = kl_t2;
+    kl_t22 = false;
+    kl_b_5 = kl_t4.kl_b_54;
+#line 106 "codegen/consuming_switch.kl"
+    kl_t6.tag = 0;
+    kl_t23 = true;
+    kl_t24 = false;
+    kl_t8 = &kl_t7;
+    kl_t24 = true;
+    kl_t9 = &kl_b_5;
+    kl_t10 = kl__get__S3Buf( kl_t9 );
+    kl_t11 = kl_t10 + 100;
+    kl__Buf__R3Buf_3u64__ctor( kl_t8, kl_t11 );
+    kl_t6.kl_b_54 = kl_t7;
+    kl_t24 = false;
+    kl_t23 = true;
+    if ( kl_t21 ) kl__Holder__dtor( &kl_h_1 );
+    kl_h_1 = kl_t6;
+    kl_t23 = false;
+    kl_t21 = true;
+    if ( kl_t24 ) kl__Buf__dtor( &kl_t7 );
+    if ( kl_t23 ) kl__Holder__dtor( &kl_t6 );
+#line 107 "codegen/consuming_switch.kl"
+    kl__Buf__dtor( &kl_b_5 );
+    goto bb5;
+    bb2:
+#line 108 "codegen/consuming_switch.kl"
+    kl_t14 = kl_t2;
+    kl_t22 = false;
+    kl_extra_15 = kl_t14.kl_extra_58;
+    kl_left_16 = kl_t14.kl_left_60;
+    kl_right_17 = kl_t14.kl_right_62;
+#line 109 "codegen/consuming_switch.kl"
+    kl_t0 = kl_extra_15;
+    kl__Buf__dtor( &kl_right_17 );
+    kl__Buf__dtor( &kl_left_16 );
+    if ( kl_t22 ) kl__Holder__dtor( &kl_t2 );
+    kl_t22 = false;
+    if ( kl_t21 ) kl__Holder__dtor( &kl_h_1 );
+    kl_t21 = false;
+    return kl_t0;
+    bb3:
+#line 111 "codegen/consuming_switch.kl"
+    kl_t0 = 0;
+    if ( kl_t22 ) kl__Holder__dtor( &kl_t2 );
+    kl_t22 = false;
+    if ( kl_t21 ) kl__Holder__dtor( &kl_h_1 );
+    kl_t21 = false;
+    return kl_t0;
+    bb4:
+#line 108 "codegen/consuming_switch.kl"
+    kl_t13 = kl_t2.tag == 2;
+    if ( kl_t13 ) goto bb2; else goto bb3;
+    bb5:
+#line 103 "codegen/consuming_switch.kl"
+    if ( kl_t22 ) kl__Holder__dtor( &kl_t2 );
+    kl_t22 = false;
+#line 114 "codegen/consuming_switch.kl"
+    kl_t18 = kl__take__M6Holder( kl_h_1 );
+    kl_t21 = false;
+    kl_t19 = &kl_t18;
+    kl_t20 = kl__get__S3Buf( kl_t19 );
+    kl_t0 = kl_t20;
+    kl__Buf__dtor( &kl_t18 );
+    if ( kl_t21 ) kl__Holder__dtor( &kl_h_1 );
+    kl_t21 = false;
+    return kl_t0;
+}
+
+void kl__through__M6Holder( struct kl__Holder kl_h_1 )
+{
+    struct kl__Holder kl_t2;
+    bool kl_t3;
+    struct kl__Holder kl_t4;
+    struct kl__Buf kl_b_5;
+    struct kl__Buf* kl_t6;
+    uint64_t kl_t7;
+    bool kl_t9;
+    struct kl_7prelude_str kl_t10;
+    struct kl_7prelude_str* kl_t11;
+    uint8_t* kl_t12;
+    struct kl__Holder kl_t15;
+    uint64_t kl_extra_16;
+    struct kl__Buf kl_left_17;
+    struct kl__Buf kl_right_18;
+    struct kl_7prelude_str kl_t19;
+    struct kl_7prelude_str* kl_t20;
+    uint8_t* kl_t21;
+    bool kl_t24;
+    bool kl_t25;
+#line 118 "codegen/consuming_switch.kl"
+    kl_t24 = true;
+#line 120 "codegen/consuming_switch.kl"
+    kl_t25 = false;
+    kl_t25 = false;
+    kl_t2 = kl_h_1;
+    kl_t24 = false;
+    kl_t25 = true;
+#line 122 "codegen/consuming_switch.kl"
+    kl_t3 = kl_t2.tag == 0;
+    if ( kl_t3 ) goto bb1; else goto bb4;
+    bb1:
+    kl_t4 = kl_t2;
+    kl_t25 = false;
+    kl_b_5 = kl_t4.kl_b_54;
+#line 123 "codegen/consuming_switch.kl"
+    kl_t6 = &kl_b_5;
+    kl_t7 = kl__get__S3Buf( kl_t6 );
+    kl_7prelude_println__3u64( kl_t7 );
+#line 124 "codegen/consuming_switch.kl"
+    kl__Buf__dtor( &kl_b_5 );
+    goto bb2;
+    bb2:
+#line 126 "codegen/consuming_switch.kl"
+    kl_t11 = &kl_t10;
+    kl_t12 = ( uint8_t* ) "through";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t11, kl_t12, 7 );
+    kl_7prelude_println__Q7prelude3str( kl_t10 );
+    goto bb5;
+    bb3:
+#line 128 "codegen/consuming_switch.kl"
+    kl_t15 = kl_t2;
+    kl_t25 = false;
+    kl_extra_16 = kl_t15.kl_extra_58;
+    kl_left_17 = kl_t15.kl_left_60;
+    kl_right_18 = kl_t15.kl_right_62;
+#line 129 "codegen/consuming_switch.kl"
+    kl__Buf__dtor( &kl_right_18 );
+    kl__Buf__dtor( &kl_left_17 );
+    goto bb5;
+    bb4:
+#line 125 "codegen/consuming_switch.kl"
+    kl_t9 = kl_t2.tag == 1;
+    if ( kl_t9 ) goto bb2; else goto bb3;
+    bb5:
+#line 120 "codegen/consuming_switch.kl"
+    if ( kl_t25 ) kl__Holder__dtor( &kl_t2 );
+    kl_t25 = false;
+#line 132 "codegen/consuming_switch.kl"
+    kl_t20 = &kl_t19;
+    kl_t21 = ( uint8_t* ) "done";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t20, kl_t21, 4 );
+    kl_7prelude_println__Q7prelude3str( kl_t19 );
+#line 118 "codegen/consuming_switch.kl"
+    if ( kl_t24 ) kl__Holder__dtor( &kl_h_1 );
+    kl_t24 = false;
+    return;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__Buf kl_a_1;
+    struct kl__Holder kl_t2;
+    struct kl__Buf kl_t3;
+    struct kl__Buf* kl_t4;
+    struct kl__Buf kl_t6;
+    struct kl__Buf* kl_t7;
+    uint64_t kl_t8;
+    struct kl__Buf kl_r_10;
+    struct kl__Holder kl_t11;
+    struct kl__Buf kl_t12;
+    struct kl__Buf* kl_t13;
+    struct kl__Buf kl_t15;
+    struct kl__Buf* kl_t16;
+    struct kl__Buf kl_t18;
+    struct kl__Buf* kl_t19;
+    uint64_t kl_t20;
+    struct kl__Buf kl_m_22;
+    struct kl__Holder kl_t23;
+    struct kl__Buf kl_t24;
+    struct kl__Buf* kl_t25;
+    uint64_t kl_t26;
+    struct kl__Buf kl_k_28;
+    struct kl__Holder kl_t29;
+    struct kl__Buf kl_t30;
+    struct kl__Buf* kl_t31;
+    uint64_t kl_t32;
+    struct kl__Holder kl_t34;
+    uint64_t kl_t35;
+    struct kl__Holder kl_t37;
+    struct kl__Buf kl_t38;
+    struct kl__Buf* kl_t39;
+    struct kl__Buf kl_t41;
+    struct kl__Buf* kl_t42;
+    uint64_t kl_t44;
+    struct kl__Holder kl_t46;
+    uint64_t kl_t47;
+    struct kl__Holder kl_t49;
+    struct kl__Buf kl_kept_51;
+    struct kl__Buf* kl_t52;
+    struct kl__Holder kl_t54;
+    struct kl__Holder kl_t55;
+    bool kl_t56;
+    struct kl__Holder kl_t57;
+    struct kl__Buf kl_b_58;
+    bool kl_t59;
+    struct kl__Holder kl_t60;
+    uint64_t kl_extra_61;
+    struct kl__Buf kl_left_62;
+    struct kl__Buf kl_right_63;
+    struct kl__Buf* kl_t64;
+    uint64_t kl_t65;
+    struct kl_7prelude_str kl_t67;
+    struct kl_7prelude_str* kl_t68;
+    uint8_t* kl_t69;
+    bool kl_t72;
+    bool kl_t73;
+    bool kl_t74;
+    bool kl_t75;
+    bool kl_t76;
+    bool kl_t77;
+    bool kl_t78;
+    bool kl_t79;
+    bool kl_t80;
+    bool kl_t81;
+    bool kl_t82;
+    bool kl_t83;
+    bool kl_t84;
+    bool kl_t85;
+    bool kl_t86;
+    bool kl_t87;
+    bool kl_t88;
+    bool kl_t89;
+    bool kl_t90;
+    bool kl_t91;
+    bool kl_t92;
+#line 137 "codegen/consuming_switch.kl"
+    kl_t72 = false;
+    kl_t73 = false;
+    kl_t74 = false;
+#line 140 "codegen/consuming_switch.kl"
+    kl_t75 = false;
+    kl_t76 = false;
+    kl_t77 = false;
+    kl_t78 = false;
+#line 143 "codegen/consuming_switch.kl"
+    kl_t79 = false;
+    kl_t80 = false;
+#line 146 "codegen/consuming_switch.kl"
+    kl_t81 = false;
+    kl_t82 = false;
+#line 149 "codegen/consuming_switch.kl"
+    kl_t83 = false;
+#line 150 "codegen/consuming_switch.kl"
+    kl_t84 = false;
+    kl_t85 = false;
+    kl_t86 = false;
+#line 152 "codegen/consuming_switch.kl"
+    kl_t87 = false;
+#line 154 "codegen/consuming_switch.kl"
+    kl_t88 = false;
+#line 157 "codegen/consuming_switch.kl"
+    kl_t89 = false;
+#line 159 "codegen/consuming_switch.kl"
+    kl_t90 = false;
+    kl_t91 = false;
+#line 161 "codegen/consuming_switch.kl"
+    kl_t92 = false;
+#line 137 "codegen/consuming_switch.kl"
+    kl_t2.tag = 0;
+    kl_t72 = true;
+    kl_t73 = false;
+    kl_t4 = &kl_t3;
+    kl_t73 = true;
+    kl__Buf__R3Buf_3u64__ctor( kl_t4, 1 );
+    kl_t2.kl_b_54 = kl_t3;
+    kl_t73 = false;
+    kl_t72 = true;
+    kl_t6 = kl__take__M6Holder( kl_t2 );
+    kl_t72 = false;
+    kl_t74 = true;
+    kl_a_1 = kl_t6;
+    kl_t74 = false;
+    if ( kl_t74 ) kl__Buf__dtor( &kl_t6 );
+    if ( kl_t73 ) kl__Buf__dtor( &kl_t3 );
+    if ( kl_t72 ) kl__Holder__dtor( &kl_t2 );
+#line 138 "codegen/consuming_switch.kl"
+    kl_t7 = &kl_a_1;
+    kl_t8 = kl__get__S3Buf( kl_t7 );
+    kl_7prelude_println__3u64( kl_t8 );
+#line 140 "codegen/consuming_switch.kl"
+    kl_t11.tag = 2;
+    kl_t75 = true;
+    kl_t11.kl_extra_58 = 5;
+    kl_t75 = true;
+    kl_t76 = false;
+    kl_t13 = &kl_t12;
+    kl_t76 = true;
+    kl__Buf__R3Buf_3u64__ctor( kl_t13, 2 );
+    kl_t11.kl_left_60 = kl_t12;
+    kl_t76 = false;
+    kl_t75 = true;
+    kl_t77 = false;
+    kl_t16 = &kl_t15;
+    kl_t77 = true;
+    kl__Buf__R3Buf_3u64__ctor( kl_t16, 3 );
+    kl_t11.kl_right_62 = kl_t15;
+    kl_t77 = false;
+    kl_t75 = true;
+    kl_t18 = kl__take__M6Holder( kl_t11 );
+    kl_t75 = false;
+    kl_t78 = true;
+    kl_r_10 = kl_t18;
+    kl_t78 = false;
+    if ( kl_t78 ) kl__Buf__dtor( &kl_t18 );
+    if ( kl_t77 ) kl__Buf__dtor( &kl_t15 );
+    if ( kl_t76 ) kl__Buf__dtor( &kl_t12 );
+    if ( kl_t75 ) kl__Holder__dtor( &kl_t11 );
+#line 141 "codegen/consuming_switch.kl"
+    kl_t19 = &kl_r_10;
+    kl_t20 = kl__get__S3Buf( kl_t19 );
+    kl_7prelude_println__3u64( kl_t20 );
+#line 143 "codegen/consuming_switch.kl"
+    kl_t23 = kl__make__3u64( 4 );
+    kl_t79 = true;
+    kl_t24 = kl__maybe__4bool_M6Holder( true, kl_t23 );
+    kl_t79 = false;
+    kl_t80 = true;
+    kl_m_22 = kl_t24;
+    kl_t80 = false;
+    if ( kl_t80 ) kl__Buf__dtor( &kl_t24 );
+    if ( kl_t79 ) kl__Holder__dtor( &kl_t23 );
+#line 144 "codegen/consuming_switch.kl"
+    kl_t25 = &kl_m_22;
+    kl_t26 = kl__get__S3Buf( kl_t25 );
+    kl_7prelude_println__3u64( kl_t26 );
+#line 146 "codegen/consuming_switch.kl"
+    kl_t29 = kl__make__3u64( 5 );
+    kl_t81 = true;
+    kl_t30 = kl__maybe__4bool_M6Holder( false, kl_t29 );
+    kl_t81 = false;
+    kl_t82 = true;
+    kl_k_28 = kl_t30;
+    kl_t82 = false;
+    if ( kl_t82 ) kl__Buf__dtor( &kl_t30 );
+    if ( kl_t81 ) kl__Holder__dtor( &kl_t29 );
+#line 147 "codegen/consuming_switch.kl"
+    kl_t31 = &kl_k_28;
+    kl_t32 = kl__get__S3Buf( kl_t31 );
+    kl_7prelude_println__3u64( kl_t32 );
+#line 149 "codegen/consuming_switch.kl"
+    kl_t34 = kl__make__3u64( 6 );
+    kl_t83 = true;
+    kl_t35 = kl__count__M6Holder( kl_t34 );
+    kl_t83 = false;
+    kl_7prelude_println__3u64( kl_t35 );
+    if ( kl_t83 ) kl__Holder__dtor( &kl_t34 );
+#line 150 "codegen/consuming_switch.kl"
+    kl_t37.tag = 2;
+    kl_t84 = true;
+    kl_t37.kl_extra_58 = 7;
+    kl_t84 = true;
+    kl_t85 = false;
+    kl_t39 = &kl_t38;
+    kl_t85 = true;
+    kl__Buf__R3Buf_3u64__ctor( kl_t39, 8 );
+    kl_t37.kl_left_60 = kl_t38;
+    kl_t85 = false;
+    kl_t84 = true;
+    kl_t86 = false;
+    kl_t42 = &kl_t41;
+    kl_t86 = true;
+    kl__Buf__R3Buf_3u64__ctor( kl_t42, 9 );
+    kl_t37.kl_right_62 = kl_t41;
+    kl_t86 = false;
+    kl_t84 = true;
+    kl_t44 = kl__count__M6Holder( kl_t37 );
+    kl_t84 = false;
+    kl_7prelude_println__3u64( kl_t44 );
+    if ( kl_t86 ) kl__Buf__dtor( &kl_t41 );
+    if ( kl_t85 ) kl__Buf__dtor( &kl_t38 );
+    if ( kl_t84 ) kl__Holder__dtor( &kl_t37 );
+#line 152 "codegen/consuming_switch.kl"
+    kl_t46 = kl__make__3u64( 10 );
+    kl_t87 = true;
+    kl_t47 = kl__refill__M6Holder( kl_t46 );
+    kl_t87 = false;
+    kl_7prelude_println__3u64( kl_t47 );
+    if ( kl_t87 ) kl__Holder__dtor( &kl_t46 );
+#line 154 "codegen/consuming_switch.kl"
+    kl_t49 = kl__make__3u64( 11 );
+    kl_t88 = true;
+    kl__through__M6Holder( kl_t49 );
+    kl_t88 = false;
+    if ( kl_t88 ) kl__Holder__dtor( &kl_t49 );
+#line 157 "codegen/consuming_switch.kl"
+    kl_t89 = false;
+    kl_t52 = &kl_kept_51;
+    kl_t89 = true;
+    kl__Buf__R3Buf_3u64__ctor( kl_t52, 12 );
+#line 159 "codegen/consuming_switch.kl"
+    kl_t54 = kl__make__3u64( 13 );
+    kl_t90 = true;
+    kl_t91 = false;
+    kl_t55 = kl_t54;
+    kl_t90 = false;
+    kl_t91 = true;
+    if ( kl_t90 ) kl__Holder__dtor( &kl_t54 );
+#line 161 "codegen/consuming_switch.kl"
+    kl_t56 = kl_t55.tag == 0;
+    if ( kl_t56 ) goto bb1; else goto bb3;
+    bb1:
+    kl_t57 = kl_t55;
+    kl_t91 = false;
+    kl_t92 = false;
+    kl_b_58 = kl_t57.kl_b_54;
+    kl_t92 = true;
+#line 162 "codegen/consuming_switch.kl"
+    if ( kl_t89 ) kl__Buf__dtor( &kl_kept_51 );
+    kl_kept_51 = kl_b_58;
+    kl_t92 = false;
+    kl_t89 = true;
+#line 163 "codegen/consuming_switch.kl"
+    if ( kl_t92 ) kl__Buf__dtor( &kl_b_58 );
+    kl_t92 = false;
+    goto bb4;
+    bb2:
+#line 166 "codegen/consuming_switch.kl"
+    kl_t60 = kl_t55;
+    kl_t91 = false;
+    kl_extra_61 = kl_t60.kl_extra_58;
+    kl_left_62 = kl_t60.kl_left_60;
+    kl_right_63 = kl_t60.kl_right_62;
+#line 167 "codegen/consuming_switch.kl"
+    kl__Buf__dtor( &kl_right_63 );
+    kl__Buf__dtor( &kl_left_62 );
+    goto bb4;
+    bb3:
+#line 164 "codegen/consuming_switch.kl"
+    kl_t59 = kl_t55.tag == 1;
+    if ( kl_t59 ) goto bb4; else goto bb2;
+    bb4:
+#line 159 "codegen/consuming_switch.kl"
+    if ( kl_t91 ) kl__Holder__dtor( &kl_t55 );
+    kl_t91 = false;
+#line 170 "codegen/consuming_switch.kl"
+    kl_t64 = &kl_kept_51;
+    kl_t65 = kl__get__S3Buf( kl_t64 );
+    kl_7prelude_println__3u64( kl_t65 );
+#line 172 "codegen/consuming_switch.kl"
+    kl_t68 = &kl_t67;
+    kl_t69 = ( uint8_t* ) "end";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t68, kl_t69, 3 );
+    kl_7prelude_println__Q7prelude3str( kl_t67 );
+#line 173 "codegen/consuming_switch.kl"
+    kl_t0 = 0;
+    if ( kl_t89 ) kl__Buf__dtor( &kl_kept_51 );
+    kl_t89 = false;
+    kl__Buf__dtor( &kl_k_28 );
+    kl__Buf__dtor( &kl_m_22 );
+    kl__Buf__dtor( &kl_r_10 );
+    kl__Buf__dtor( &kl_a_1 );
+    return kl_t0;
+}
+
+void kl__Holder__dtor( struct kl__Holder* kl_t1 )
+{
+    bool kl_t2;
+    bool kl_t3;
+#line 36 "codegen/consuming_switch.kl"
+    kl_t2 = ( *kl_t1 ).tag == 0;
+    if ( kl_t2 ) goto bb2; else goto bb3;
+    bb1:
+    return;
+    bb2:
+    kl__Buf__dtor( &( *kl_t1 ).kl_b_54 );
+    goto bb1;
+    bb3:
+    kl_t3 = ( *kl_t1 ).tag == 2;
+    if ( kl_t3 ) goto bb4; else goto bb1;
+    bb4:
+    kl__Buf__dtor( &( *kl_t1 ).kl_right_62 );
+    kl__Buf__dtor( &( *kl_t1 ).kl_left_60 );
+    goto bb1;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

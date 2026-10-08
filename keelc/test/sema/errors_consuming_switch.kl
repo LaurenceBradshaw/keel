@@ -1,0 +1,115 @@
+// D7. A `switch` over `move x` takes the value, so each binding owns its payload as a local owns its
+// value: returned as a local is, taken elsewhere only with `move`. The scrutinee is moved by the
+// ordinary rules, so only what this function owns whole can be.
+class Buf
+{
+    u64 n;
+
+    Buf( u64 m )
+    {
+        n = m;
+    }
+
+    ~Buf()
+    {
+    }
+};
+
+enum Holder
+{
+    Full( Buf b ),
+    Empty
+};
+
+enum Option<T>
+{
+    Some( T value ),
+    None
+};
+
+void sink( move Buf b )
+{
+}
+
+void copies( move Holder h )
+{
+    switch( move h )
+    {
+        case Holder::Full( b ):
+            Buf c = b;
+            return;
+        case Holder::Empty:
+            return;
+    }
+}
+
+void passes( move Holder h )
+{
+    switch( move h )
+    {
+        case Holder::Full( b ):
+            sink( b );
+            return;
+        case Holder::Empty:
+            return;
+    }
+}
+
+void borrowed( ref Holder h )
+{
+    switch( move h )
+    {
+        case Holder::Full( b ):
+            return;
+        case Holder::Empty:
+            return;
+    }
+}
+
+class Keeper
+{
+    Holder held;
+
+    Keeper( move Holder h )
+    {
+        held = move h;
+    }
+
+    u64 peek()
+    {
+        switch( move held )
+        {
+            case Holder::Full( b ):
+                return 1;
+            case Holder::Empty:
+                return 0;
+        }
+    }
+};
+
+// The outer switch only borrows, so its binding still belongs to the outer value.
+u64 nested( Option<Holder> o )
+{
+    switch( o )
+    {
+        case Option::Some( h ):
+            switch( move h )
+            {
+                case Holder::Full( b ):
+                    return 1;
+                case Holder::Empty:
+                    return 0;
+            }
+
+            break;
+        case Option::None:
+            break;
+    }
+
+    return 0;
+}
+
+i32 main()
+{
+    return 0;
+}
