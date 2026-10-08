@@ -317,6 +317,11 @@ Type_id Aggregates::field_type( Type_id aggregate, Node_id field )
     return keel::field_type( ast_, table_, aggregate, field, types_.recorded() );
 }
 
+std::vector<Node_id> Aggregates::carried_payload( Type_id instance, Node_id variant )
+{
+    return keel::carried_payload( ast_, table_, instance, variant, types_.recorded() );
+}
+
 std::vector<Node_id> Aggregates::take_struct_order()
 {
     return std::move( struct_order_ );

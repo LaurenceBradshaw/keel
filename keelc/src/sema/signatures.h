@@ -79,6 +79,8 @@ private:
     void declare_globals();
     void declare_enums();
 
+    Node_id bare_type( Node_id annotation ) const; // a parameter's type without `const` or its mode
+
     // Ordering is Aggregates'; this only keeps D42 quiet about the aggregates it reported.
     void order_structs();
 

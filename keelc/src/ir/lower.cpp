@@ -211,6 +211,8 @@ private:
         return instance_owns( ast_, types_.table(), type, types_.recorded() );
     }
 
+    std::vector<Node_id> paired_payload( Type_id instance, Node_id variant, std::size_t count );
+
     const Ast& ast_;
 
     // Read only for `&f`, whose callee is a declaration rather than a place. Everywhere else a
@@ -847,6 +849,18 @@ Local_id Lowering::call_result( Node_id id, Rvalue call, Type_id result_type, Sp
     }
 }
 
+std::vector<Node_id> Lowering::paired_payload( Type_id instance, Node_id variant, std::size_t count )
+{
+    std::span<const Node_id> payload = ast_.payload( variant );
+
+    if( count == payload.size() )
+    {
+        return std::vector<Node_id>( payload.begin(), payload.end() );
+    }
+
+    return carried_payload( ast_, types_.table(), instance, variant, types_.recorded() );
+}
+
 Block_id Lowering::continue_target()
 {
     assert( !loops_.empty() && "the checker rejects a continue outside a loop" );
@@ -1191,7 +1205,7 @@ void Lowering::bind_variant_pattern( Place matched, Node_id label, bool consumes
 
     const Node_id variant = ast_.variants( decl )[static_cast<std::size_t>( ordinal->magnitude )];
 
-    const std::span<const Node_id> payload = ast_.payload( variant );
+    const std::vector<Node_id> payload = paired_payload( enum_type, variant, bindings.size() );
 
     // Moved into storage nothing drops: its fields are the bindings' now.
     if( consumes && !bindings.empty() )
@@ -1284,7 +1298,7 @@ Operand Lowering::lower_variant_construction( Node_id id )
     const Node_id decl    = types_.table().get( type ).declaration;
     const Node_id variant = ast_.variants( decl )[static_cast<std::size_t>( ordinal->magnitude )];
 
-    const std::span<const Node_id> payload = ast_.payload( variant );
+    const std::vector<Node_id> payload = paired_payload( type, variant, arguments.size() );
 
     // Each field's type through *this* instance: the declaration records `T`, which no local can
     // hold. `type` is already substituted through the enclosing instantiation, so this is concrete.

@@ -1969,6 +1969,7 @@ Type_id Expressions::infer_variant_construction( Node_id id )
 
     const Node_id                  variant = variants[static_cast<std::size_t>( ordinal->magnitude )];
     const std::span<const Node_id> payload = ast_.payload( variant );
+    const std::vector<Node_id>     carried = aggregates_.carried_payload( result, variant ); // D51: no `void`
 
     if( payload.empty() )
     {
@@ -1979,15 +1980,15 @@ Type_id Expressions::infer_variant_construction( Node_id id )
         );
     }
     // A variant that failed to parse has no count to hold its uses to.
-    else if( payload.size() != arguments.size() && !ast_.broken( variant ) )
+    else if( carried.size() != arguments.size() && !ast_.broken( variant ) )
     {
         reporter_.error_at(
             ast_.span( ast_.arg_list( id ) ),
             fmt::format(
                 "`{}` carries {} value{}, but {} {} given",
                 interner_.text( ast_.name( variant ) ),
-                payload.size(),
-                payload.size() == 1 ? "" : "s",
+                carried.size(),
+                carried.size() == 1 ? "" : "s",
                 arguments.size(),
                 arguments.size() == 1 ? "was" : "were"
             )
@@ -1996,11 +1997,11 @@ Type_id Expressions::infer_variant_construction( Node_id id )
 
     // The pairs that do line up are checked even when the count is wrong: one missing value should
     // not hide a type error in the others.
-    const std::size_t shared = std::min( payload.size(), arguments.size() );
+    const std::size_t shared = std::min( carried.size(), arguments.size() );
 
     for( std::size_t i = 0; i < shared; ++i )
     {
-        const Type_id field_type = aggregates_.field_type( result, payload[i] );
+        const Type_id field_type = aggregates_.field_type( result, carried[i] );
         check( arguments[i], field_type );
         places_.check_owning_source( arguments[i], field_type );
     }
@@ -8628,6 +8629,73 @@ TEST_CASE( "type_checker_types_try", "[sema][types][try]" )
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "`try` needs a `result`" ) != std::string::npos );
+    }
+}
+
+// D51. A payload position whose type is `void` takes no argument, so `result<void, E>` succeeds with
+// `result::ok()`. Counted at the instance: inside a generic body `T` is not `void`, so `ok( v )` there
+// is the written count and stays legal for every instance.
+TEST_CASE( "type_checker_lets_a_void_payload_take_no_argument", "[sema][void][payload]" )
+{
+    const char* prelude = "enum Bad { nope };\nvoid e() { }\n";
+
+    SECTION( "`ok()` builds a `result<void, E>`" )
+    {
+        const Typed p( std::string( prelude ) + "result<void, Bad> f() { return result::ok(); }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and a `void` argument is one too many" )
+    {
+        const Typed p(
+            std::string( prelude ) + "result<void, Bad> f() { return result::ok( e() ); }\ni32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`ok` carries 0 values, but 1 was given" ) != std::string::npos );
+    }
+
+    // The arguments pair with the positions that remain, so `5` meets `y` and not `x`.
+    SECTION( "the other positions keep their order" )
+    {
+        const char* two = "enum Two<T> { a( T x, i32 y ) };\n";
+
+        const Typed fine( std::string( prelude ) + two + "i32 main() { Two<void> t = Two<void>::a( 5 ); return 0; }" );
+
+        INFO( fine.rendered() );
+        REQUIRE( fine.clean() );
+
+        const Typed wrong( std::string( prelude ) + two + "i32 main() { Two<void> t = Two<void>::a( true ); return 0; }" );
+
+        INFO( wrong.rendered() );
+        REQUIRE( wrong.errors() == 1 );
+        REQUIRE( wrong.rendered().find( "expected `i32`, but got `bool`" ) != std::string::npos );
+    }
+
+    SECTION( "a generic body keeps its written count" )
+    {
+        const Typed p(
+            std::string( prelude ) + "result<T, Bad> lift<T>( T v ) where T : Copyable { return result::ok( v ); }\n"
+                                     "i32 main() { result<void, Bad> r = lift( e() ); return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and `try` on one is `void`" )
+    {
+        const Typed p(
+            std::string( prelude ) + "result<void, Bad> f() { return result::ok(); }\n"
+                                     "result<void, Bad> g() { try f(); return result::ok(); }\ni32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Try_expr, 0 ) ) == "void" );
     }
 }
 

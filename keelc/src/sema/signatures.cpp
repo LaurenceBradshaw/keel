@@ -96,7 +96,9 @@ void Signatures::declare_fields()
                 continue;
             }
 
-            const Type_id field_type = annotations_.resolve( ast_.annotation( field ) );
+            const Node_id annotation = ast_.annotation( field );
+            const Type_id field_type = annotations_.resolve( annotation );
+            annotations_.refuse_void( annotation, field_type, "field", "holds" );
 
             types_.record( field, field_type );
 
@@ -169,6 +171,7 @@ void Signatures::declare_functions()
 
             const Node_id param_type_node = ast_.annotation( param );
             const Type_id param_type      = annotations_.resolve( param_type_node );
+            annotations_.refuse_void( bare_type( param_type_node ), param_type, "parameter", "passes" );
             types_.record( param, param_type );
         }
 
@@ -255,6 +258,7 @@ void Signatures::declare_member_functions()
             {
                 const Node_id param_type_node = ast_.annotation( param );
                 const Type_id param_type      = annotations_.resolve( param_type_node );
+                annotations_.refuse_void( bare_type( param_type_node ), param_type, "parameter", "passes" );
                 types_.record( param, param_type );
 
                 if( ast_.is_generic( child ) )
@@ -264,6 +268,13 @@ void Signatures::declare_member_functions()
             }
         }
     }
+}
+
+Node_id Signatures::bare_type( Node_id annotation ) const
+{
+    const Node_id spelled = ast_.unwrap_const( annotation );
+
+    return ast_.kind( spelled ) == Node_kind::Mode_type ? ast_.inner_type( spelled ) : spelled;
 }
 
 void Signatures::declare_globals()
@@ -286,6 +297,7 @@ void Signatures::declare_globals()
 
                 const Node_id var_type_node = ast_.annotation( member );
                 const Type_id var_type      = annotations_.resolve( var_type_node );
+                annotations_.refuse_void( var_type_node, var_type, "global", "holds" );
                 types_.record( member, var_type );
             }
         }
@@ -297,6 +309,7 @@ void Signatures::declare_globals()
 
         const Node_id var_type_node = ast_.annotation( child );
         const Type_id var_type      = annotations_.resolve( var_type_node );
+        annotations_.refuse_void( var_type_node, var_type, "global", "holds" );
         types_.record( child, var_type );
     }
 }
@@ -379,7 +392,9 @@ void Signatures::declare_enums()
 
             for( const Node_id field : ast_.payload( variant ) )
             {
-                const Type_id field_type = annotations_.resolve( ast_.annotation( field ) );
+                const Node_id field_annotation = ast_.annotation( field );
+                const Type_id field_type       = annotations_.resolve( field_annotation );
+                annotations_.refuse_void( field_annotation, field_type, "field", "holds" );
 
                 types_.record( field, field_type );
 
@@ -2048,6 +2063,72 @@ TEST_CASE( "type_checker_lets_a_consuming_switch_take_its_payload", "[sema][payl
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "`b` still belongs to what holds it" ) != std::string::npos );
+    }
+}
+
+// D51. `void` written where something is declared holds nothing, so it is refused there; a `void`
+// that arrived as a type argument is the generic's business and is not.
+TEST_CASE( "signatures_refuse_a_written_void", "[sema][void]" )
+{
+    struct Case
+    {
+        const char* source;
+        const char* message;
+    };
+
+    SECTION( "as a parameter, a field, a payload or a global" )
+    {
+        const Case cases[] = {
+            { "void f( void a ) { }", "a parameter cannot be `void`" },
+            { "void f( ref void a ) { }", "a parameter cannot be `void`" },
+            { "void f( fn( void ) -> i32 p ) { }", "a parameter cannot be `void`" },
+            { "struct S { i32 n; void m( const ref void a ) { } };", "a parameter cannot be `void`" },
+            { "struct S { i32 n; void v; };", "a field cannot be `void`" },
+            { "enum E { a( void v ), b };", "a field cannot be `void`" },
+            { "void g;", "a global cannot be `void`" },
+            { "struct S { i32 n; static void g; };", "a global cannot be `void`" },
+        };
+
+        for( const Case& c : cases )
+        {
+            const Typed p( std::string( c.source ) + "\ni32 main() { return 0; }" );
+
+            INFO( c.source << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( c.message ) != std::string::npos );
+        }
+    }
+
+    // Poisoned once refused, so its uses say nothing more.
+    SECTION( "and reported once" )
+    {
+        const Typed p( "void e() { }\nvoid f( void a ) { }\nstruct S { void v; i32 n; };\n"
+                       "i32 main() { f( e() ); S s = S { e(), 1 }; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 2 );
+    }
+
+    SECTION( "but not when a type argument made it `void`" )
+    {
+        const Typed p( "struct Box<T> where T : Copyable { T v; };\n"
+                       "enum Maybe<T> { some( T v ), none };\n"
+                       "T same<T>( T a ) where T : Copyable { return a; }\n"
+                       "void e() { }\n"
+                       "i32 main() { Box<void> b; Maybe<void> m = Maybe<void>::none; same( e() ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.rendered().empty() );
+    }
+
+    // `void` behind a pointer is the address of something unnamed, not a value of nothing.
+    SECTION( "nor behind a pointer" )
+    {
+        const Typed p( "struct S { void* p; };\nvoid f( void* p ) { }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
     }
 }
 

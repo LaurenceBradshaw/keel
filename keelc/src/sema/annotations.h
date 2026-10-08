@@ -50,6 +50,8 @@ public:
     bool
     resolve_type_arguments( Node_id declaration, Node_id type_args, std::string_view name, std::vector<Type_id>& resolved );
 
+    bool refuse_void( Node_id annotation, Type_id type, std::string_view what, std::string_view does );
+
 private:
     // The long cases of resolve().
     Type_id resolve_named( Node_id annotation );

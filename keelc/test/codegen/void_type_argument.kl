@@ -1,0 +1,106 @@
+// D51. `void` as a type argument takes no storage: a generic over it compiles with the `void` parts
+// left out, a struct left with no fields keeps one placeholder byte, and `result<void, E>` succeeds
+// with `result::ok()`.
+struct Box<T> where T : Copyable
+{
+    T v;
+};
+
+struct Pair<T> where T : Copyable
+{
+    T first;
+    i32 second;
+};
+
+enum Two<T>
+{
+    a( T x, i32 y ),
+    b
+};
+
+enum Bad
+{
+    nope
+};
+
+void note()
+{
+    println( "note" );
+}
+
+T same<T>( T a ) where T : Copyable
+{
+    T held = a;
+    return held;
+}
+
+void look<T>( const ref T a )
+{
+    println( "look" );
+}
+
+Box<T> boxed<T>( T v ) where T : Copyable
+{
+    return Box { v };
+}
+
+result<void, Bad> step( bool fail )
+{
+    if( fail )
+    {
+        return result::err( Bad::nope );
+    }
+
+    println( "step" );
+    return result::ok();
+}
+
+result<void, Bad> steps( bool fail )
+{
+    switch( step( fail ) )
+    {
+        case result::ok:
+            println( "done" );
+            return result::ok();
+        case result::err( e ):
+            return result::err( e );
+    }
+}
+
+i32 report( result<void, Bad> r )
+{
+    switch( r )
+    {
+        case result::ok:
+            println( "ok" );
+            return 0;
+        case result::err( e ):
+            println( "err" );
+            return 1;
+    }
+}
+
+i32 main()
+{
+    same( note() );
+    Box<void> b = boxed( note() );
+    look( b.v );
+    Box<void> c = b;
+    look( c );
+    Pair<void> p = Pair { note(), 7 };
+    println( p.second );
+
+    Two<void> t = Two<void>::a( 9 );
+    switch( t )
+    {
+        case Two::a( y ):
+            println( y );
+            break;
+        case Two::b:
+            break;
+    }
+
+    i32 failures = report( steps( false ) ) + report( steps( true ) );
+    println( failures );
+    return failures - 1;
+}

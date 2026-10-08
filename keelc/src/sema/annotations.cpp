@@ -363,7 +363,7 @@ Type_id Annotations::resolve_function_type( Node_id annotation )
 
         const Type_id param_type = resolve( bare, false );
 
-        poisoned = poisoned || table_.is_error( param_type );
+        poisoned = poisoned || table_.is_error( param_type ) || refuse_void( spelled, param_type, "parameter", "passes" );
 
         parameter.type = param_type;
         parameters.push_back( parameter );
@@ -517,6 +517,22 @@ bool Annotations::resolve_type_arguments(
     }
 
     return true;
+}
+
+bool Annotations::refuse_void( Node_id annotation, Type_id type, std::string_view what, std::string_view does )
+{
+    if( table_.is_void( type ) )
+    {
+        reporter_.error_at(
+            ast_.span( annotation ),
+            fmt::format( "a {} cannot be `void`", what ),
+            fmt::format( "it {} nothing; remove it", does )
+        );
+
+        return true;
+    }
+
+    return false;
 }
 
 Span Annotations::const_keyword( Node_id const_type ) const

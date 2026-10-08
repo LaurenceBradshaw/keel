@@ -55,6 +55,8 @@ public:
     // goes through here rather than through the recorded type of the field declaration.
     Type_id field_type( Type_id aggregate, Node_id field );
 
+    std::vector<Node_id> carried_payload( Type_id instance, Node_id variant );
+
     // Handing the run's result to Types. Leaves this object empty; nothing reads it after.
     std::vector<Node_id> take_struct_order();
 

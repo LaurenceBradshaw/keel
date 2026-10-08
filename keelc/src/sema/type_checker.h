@@ -189,6 +189,8 @@ bool instance_owns( const Ast& ast, Type_table& table, Type_id instance, std::sp
 // emitter needs the same answers and has no checker.
 Bindings aggregate_bindings( const Ast& ast, const Type_table& table, Type_id aggregate, std::span<const Type_id> recorded );
 Type_id  field_type( const Ast& ast, Type_table& table, Type_id aggregate, Node_id field, std::span<const Type_id> recorded );
+std::vector<Node_id>
+carried_payload( const Ast& ast, Type_table& table, Type_id instance, Node_id variant, std::span<const Type_id> recorded );
 
 Type_id binding_type( const Ast& ast, const Types& types, Node_id decl );
 

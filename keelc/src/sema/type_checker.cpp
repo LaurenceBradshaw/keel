@@ -261,6 +261,22 @@ Type_id field_type( const Ast& ast, Type_table& table, Type_id aggregate, Node_i
     return table.substitute( recorded[field.v], aggregate_bindings( ast, table, aggregate, recorded ) );
 }
 
+std::vector<Node_id>
+carried_payload( const Ast& ast, Type_table& table, Type_id instance, Node_id variant, std::span<const Type_id> recorded )
+{
+    const std::span<const Node_id> payload = ast.payload( variant );
+    std::vector<Node_id>           carried;
+    for( const Node_id field : payload )
+    {
+        if( !table.is_void( field_type( ast, table, instance, field, recorded ) ) )
+        {
+            carried.push_back( field );
+        }
+    }
+
+    return carried;
+}
+
 // The recursion behind instance_owns. `visiting` is not a cycle *check* - order_structs already
 // refuses a by-value cycle between declarations - but instances are interned as they are asked
 // about, and answering the same one twice down a chain would not terminate.

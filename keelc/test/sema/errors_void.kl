@@ -1,0 +1,67 @@
+// D51. `void` holds nothing: written as a parameter, field, payload or global it is refused, and as
+// a local it is warned about. None of it is reported when `void` arrives as a type argument.
+void takes( void v )
+{
+}
+
+void calls( fn( void ) -> i32 p )
+{
+}
+
+struct Holder
+{
+    i32 n;
+    void v;
+
+    void take( ref void r )
+    {
+    }
+};
+
+enum Shape
+{
+    dot( void nothing ),
+    circle( f64 radius )
+};
+
+void global;
+
+void effect()
+{
+}
+
+T same<T>( T a ) where T : Copyable
+{
+    T held = a;
+    return held;
+}
+
+enum Bad
+{
+    nope
+};
+
+result<void, Bad> fine()
+{
+    return result::ok();
+}
+
+result<void, Bad> extra()
+{
+    return result::ok( effect() );
+}
+
+i32 main()
+{
+    void x = effect();
+    void y;
+    same( effect() );
+    switch( fine() )
+    {
+        case result::ok( v ):
+            break;
+        case result::err:
+            break;
+    }
+    return 0;
+}

@@ -262,6 +262,15 @@ void Statements::visit_var( Node_id id )
                 places_.check_owning_source( init, type );
             }
         }
+
+        if( table_.is_void( type ) && expressions_.current_function().is_valid() )
+        {
+            reporter_.warn_at(
+                ast_.span( annotation ),
+                fmt::format( "`{}` is `void`, so it holds nothing", interner_.text( ast_.name( id ) ) ),
+                init.is_valid() ? fmt::format( "write `{};` on its own", reporter_.text( ast_.span( init ) ) ) : "remove it"
+            );
+        }
     }
     else if( init.is_valid() )
     {
@@ -2181,6 +2190,42 @@ TEST_CASE( "statements_check_a_static_field_as_a_global", "[sema][statements][st
         INFO( c.program << "\n" << p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( c.message ) != std::string::npos );
+    }
+}
+
+// D51. A local written `void` holds nothing, which is worth saying but not refusing; one whose
+// `void` came from a type argument, or from `auto`, was not written that way and says nothing.
+TEST_CASE( "statements_warn_about_a_written_void_local", "[sema][void]" )
+{
+    SECTION( "initialised from a call" )
+    {
+        const Typed p( "void e() { }\ni32 main() { void x = e(); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.rendered().find( "warning: `x` is `void`, so it holds nothing" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "write `e();` on its own" ) != std::string::npos );
+    }
+
+    SECTION( "or declared alone" )
+    {
+        const Typed p( "i32 main() { void y; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.rendered().find( "warning: `y` is `void`, so it holds nothing" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "remove it" ) != std::string::npos );
+    }
+
+    SECTION( "but not through a type argument or `auto`" )
+    {
+        const Typed p( "T same<T>( T a ) where T : Copyable { T held = a; return held; }\n"
+                       "void e() { }\n"
+                       "i32 main() { same( e() ); auto z = e(); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.rendered().empty() );
     }
 }
 

@@ -1,0 +1,61 @@
+error: a parameter cannot be `void`
+ --> sema/errors_void.kl:3:13
+  |
+3 | void takes( void v )
+  |             ^^^^ it passes nothing; remove it
+
+error: a parameter cannot be `void`
+ --> sema/errors_void.kl:7:17
+  |
+7 | void calls( fn( void ) -> i32 p )
+  |                 ^^^^ it passes nothing; remove it
+
+error: a field cannot be `void`
+  --> sema/errors_void.kl:14:5
+   |
+14 |     void v;
+   |     ^^^^ it holds nothing; remove it
+
+error: a parameter cannot be `void`
+  --> sema/errors_void.kl:16:20
+   |
+16 |     void take( ref void r )
+   |                    ^^^^ it passes nothing; remove it
+
+error: a field cannot be `void`
+  --> sema/errors_void.kl:23:10
+   |
+23 |     dot( void nothing ),
+   |          ^^^^ it holds nothing; remove it
+
+error: a global cannot be `void`
+  --> sema/errors_void.kl:27:1
+   |
+27 | void global;
+   | ^^^^ it holds nothing; remove it
+
+error: `ok` carries 0 values, but 1 was given
+  --> sema/errors_void.kl:51:22
+   |
+51 |     return result::ok( effect() );
+   |                      ^^^^^^^^^^^^
+
+warning: `x` is `void`, so it holds nothing
+  --> sema/errors_void.kl:56:5
+   |
+56 |     void x = effect();
+   |     ^^^^ write `effect();` on its own
+
+warning: `y` is `void`, so it holds nothing
+  --> sema/errors_void.kl:57:5
+   |
+57 |     void y;
+   |     ^^^^ remove it
+
+error: `ok` carries 0 values, but 1 was bound
+  --> sema/errors_void.kl:61:14
+   |
+61 |         case result::ok( v ):
+   |              ^^^^^^^^^^^^^^^ write it without a pattern
+
+8 errors generated

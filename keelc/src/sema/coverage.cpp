@@ -347,36 +347,36 @@ void Coverage::check_variant_pattern( Node_id pattern, Type_id type, std::vector
 
     covered[index] = path;
 
-    const Node_id                  decl    = table_.get( type ).declaration;
-    const Node_id                  variant = ast_.variants( decl )[index];
-    const std::span<const Node_id> payload = ast_.payload( variant );
+    const Node_id              decl    = table_.get( type ).declaration;
+    const Node_id              variant = ast_.variants( decl )[index];
+    const std::vector<Node_id> carried = aggregates_.carried_payload( type, variant ); // D51: no `void`
 
     // A variant that failed to parse has no count to hold its uses to.
-    if( payload.size() != bindings.size() && !ast_.broken( variant ) )
+    if( carried.size() != bindings.size() && !ast_.broken( variant ) )
     {
         reporter_.error_at(
             ast_.span( pattern ),
             fmt::format(
                 "`{}` carries {} value{}, but {} {} bound",
                 interner_.text( ast_.name( variant ) ),
-                payload.size(),
-                payload.size() == 1 ? "" : "s",
+                carried.size(),
+                carried.size() == 1 ? "" : "s",
                 bindings.size(),
                 bindings.size() == 1 ? "was" : "were"
             ),
-            payload.empty() ? "write it without a pattern" : "bind a name for each field of the payload"
+            carried.empty() ? "write it without a pattern" : "bind a name for each field of the payload"
         );
     }
 
     // Each binding takes its field's type *through this instance*: what the declaration records for
     // `Opt<T>`'s payload is a `T`. The resolver has already put the names in the arm's scope, so all
     // that is left here is to say what they hold.
-    const std::size_t shared = std::min( payload.size(), bindings.size() );
+    const std::size_t shared = std::min( carried.size(), bindings.size() );
 
     for( std::size_t i = 0; i < shared; ++i )
     {
         // A pattern's bindings are the one thing this class writes a type for.
-        types_.record( bindings[i], aggregates_.field_type( type, payload[i] ) );
+        types_.record( bindings[i], aggregates_.field_type( type, carried[i] ) );
     }
 }
 
@@ -1472,6 +1472,49 @@ TEST_CASE( "type_checker_counts_no_payload_of_a_variant_that_failed", "[sema][pa
             "f64 f( Shape s ) { switch( s ) { case Shape::Circle( a, b ): return a; default: return 0.0; } }",
             1
         );
+    }
+}
+
+// D51. A pattern binds the payload positions that hold something, the mirror of construction.
+TEST_CASE( "coverage_binds_no_name_for_a_void_payload", "[sema][void][switch]" )
+{
+    const char* prelude = "enum Bad { nope };\nresult<void, Bad> f() { return result::ok(); }\n"
+                          "enum Two<T> { a( T x, i32 y ) };\n";
+
+    SECTION( "a name for a `void` payload is one too many" )
+    {
+        const Typed p(
+            std::string( prelude ) +
+            "i32 main() { switch( f() ) { case result::ok( v ): break; case result::err: break; } return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`ok` carries 0 values, but 1 was bound" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "write it without a pattern" ) != std::string::npos );
+    }
+
+    SECTION( "so the arm is a bare label" )
+    {
+        const Typed p(
+            std::string( prelude ) +
+            "i32 main() { switch( f() ) { case result::ok: break; case result::err: break; } return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // `y` binds the `i32`, the one position left.
+    SECTION( "and the names that remain bind in order" )
+    {
+        const Typed p(
+            std::string( prelude ) +
+            "i32 g( Two<void> t ) { switch( t ) { case Two::a( y ): return y; } }\ni32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
     }
 }
 

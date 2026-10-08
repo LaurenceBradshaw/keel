@@ -275,6 +275,8 @@ private:
     // *kind* rather than is_valid() - a void local's Type_id is perfectly valid, it just names the
     // one type C cannot hold.
     bool is_void( Type_id type ) const;
+    bool is_void( const Operand& operand ) const; // D51: a `void` value is spelled nowhere
+    bool holds_nothing( Type_id type ) const;     // a struct whose every field is `void`, as `Box<void>`
     bool assigns_to_void( const Place& place ) const;
     // A place's type, walked the same way place() walks its text. Drop needs it to name the
     // destructor to call.
@@ -425,6 +427,11 @@ void Kir_emitter::emit_function_types()
 
         for( std::size_t i = 0; i < described.arguments.size(); ++i )
         {
+            if( is_void( described.arguments[i] ) )
+            {
+                continue;
+            }
+
             // `move` travels by value, and a bare parameter's type decides
             const Param_mode mode       = described.modes[i];
             const bool       by_address = ( mode != Param_mode::Value && mode != Param_mode::Move ) ||
@@ -511,7 +518,18 @@ void Kir_emitter::emit_composites()
                 types_.type_of( field ), aggregate_bindings( ast_, types_.table(), type, types_.recorded() )
             );
 
+            if( is_void( spelled ) )
+            {
+                continue;
+            }
+
             write_line( fmt::format( "{} {};", spelling_.type( spelled ), spelling_.field( field ) ) );
+        }
+
+        // C has no zero-size struct.
+        if( holds_nothing( type ) )
+        {
+            write_line( "unsigned char kl_empty;" );
         }
 
         indent_ -= 4;
@@ -807,9 +825,32 @@ bool Kir_emitter::is_void( Type_id type ) const
     return type.is_valid() && types_.table().get( type ).kind == Type_kind::Void;
 }
 
+bool Kir_emitter::is_void( const Operand& operand ) const
+{
+    return operand.kind == Operand_kind::Constant ? is_void( operand.type ) : is_void( type_of( operand.place ) );
+}
+
+bool Kir_emitter::holds_nothing( Type_id type ) const
+{
+    if( !type.is_valid() || types_.table().get( type ).kind != Type_kind::Struct )
+    {
+        return false;
+    }
+
+    for( const Node_id field : ast_.contained_fields( types_.table().get( type ).declaration ) )
+    {
+        if( !is_void( field_type( ast_, types_.table(), type, field, types_.recorded() ) ) )
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 bool Kir_emitter::assigns_to_void( const Place& target ) const
 {
-    return !target.is_global() && target.num_projections == 0 && is_void( current_->locals[target.local.v].type );
+    return is_void( type_of( target ) );
 }
 
 void Kir_emitter::emit_statement( const Statement& statement )
@@ -819,6 +860,12 @@ void Kir_emitter::emit_statement( const Statement& statement )
     {
     case Statement_kind::Assign:
     {
+        // Copying nothing: neither side has storage.
+        if( statement.value.kind == Rvalue_kind::Use && is_void( statement.value.a ) )
+        {
+            return;
+        }
+
         line_directive( statement.span );
         const std::string value = rvalue( statement.value );
 
@@ -973,7 +1020,12 @@ void Kir_emitter::emit_function( const Function& function )
 
     for( u32 i = 1; i <= function.parameter_count; ++i )
     {
-        params += fmt::format( "{}{} {}", i == 1 ? "" : ", ", spelling_.type( function.locals[i].type ), local_name( i ) );
+        if( !is_void( function.locals[i].type ) )
+        {
+            params += fmt::format(
+                "{}{} {}", params.empty() ? "" : ", ", spelling_.type( function.locals[i].type ), local_name( i )
+            );
+        }
     }
 
     write_line( fmt::format(
@@ -1003,7 +1055,13 @@ void Kir_emitter::emit_function( const Function& function )
             continue;
         }
 
-        write_line( fmt::format( "{} {};", spelling_.type( function.locals[i].type ), local_name( i ) ) );
+        // Nothing ever writes the placeholder byte, and copying it unwritten is what C warns about.
+        write_line( fmt::format(
+            "{} {}{};",
+            spelling_.type( function.locals[i].type ),
+            local_name( i ),
+            holds_nothing( function.locals[i].type ) ? " = { 0 }" : ""
+        ) );
     }
 
     for( u32 i = 0; i < function.blocks.size(); ++i )
@@ -1049,7 +1107,10 @@ std::string Kir_emitter::prototype( const Function& function ) const
 
     for( u32 i = 1; i <= function.parameter_count; ++i )
     {
-        params += fmt::format( "{}{}", i == 1 ? "" : ", ", spelling_.type( function.locals[i].type ) );
+        if( !is_void( function.locals[i].type ) )
+        {
+            params += fmt::format( "{}{}", params.empty() ? "" : ", ", spelling_.type( function.locals[i].type ) );
+        }
     }
 
     return fmt::format(
@@ -1254,6 +1315,12 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue ) const
         return fmt::format( "( {} ) {}", spelling_.type( rvalue.type ), operand( rvalue.a ) );
 
     case Rvalue_kind::Address_of:
+        // Nothing is there to point at, and nothing reads a `void` through it.
+        if( is_void( type_of( rvalue.a.place ) ) )
+        {
+            return fmt::format( "( {} ) 0", spelling_.type( rvalue.type ) );
+        }
+
         return fmt::format( "&{}", place( rvalue.a.place ) );
 
     case Rvalue_kind::Literal_bytes:
@@ -1265,11 +1332,14 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue ) const
         std::string args;
         for( u32 i = 0; i < rvalue.argument_count; ++i )
         {
-            if( i != 0 )
+            const Operand& argument = current_->operands[rvalue.first_argument + i];
+
+            if( is_void( argument ) )
             {
-                args += ", ";
+                continue;
             }
-            args += operand( current_->operands[rvalue.first_argument + i] );
+
+            args += fmt::format( "{}{}", args.empty() ? "" : ", ", operand( argument ) );
         }
         std::string callee_name =
             rvalue.kind == Rvalue_kind::Call ? spelling_.function( rvalue.callee, rvalue.type_arguments ) : operand( rvalue.a );
