@@ -166,6 +166,7 @@ int32_t kl__main__( void )
 void kl__Counted__I3i32E__dtor( struct kl__Counted__I3i32E* kl_this_1 )
 {
     int32_t kl_t2;
+    ( void ) kl_this_1;
 #line 120 "codegen/generics_forward_reference.kl"
     kl_t2 = kl_destroyed_2 + 1;
     kl_destroyed_2 = kl_t2;

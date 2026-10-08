@@ -1,0 +1,113 @@
+// The C keelc emits compiles under `-Wall -Wextra -Werror` whatever the program leaves unread: a
+// parameter, a receiver, a local, and a `case` binding, copied, borrowed or owned. A call whose
+// result goes unread still runs, and an owning binding left unread is still dropped.
+class Noisy
+{
+    u64 n;
+
+    Noisy( u64 v )
+    {
+        n = v;
+    }
+
+    ~Noisy()
+    {
+        print( "drop " );
+        println( n );
+    }
+};
+
+// Its destructor's receiver goes unread, and so does a method's.
+class Quiet
+{
+    u64 n;
+
+    Quiet( u64 v )
+    {
+        n = v;
+    }
+
+    ~Quiet()
+    {
+    }
+
+    u64 seven() const
+    {
+        return 7;
+    }
+};
+
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+enum Lost
+{
+    gone( Noisy why )
+};
+
+u64 noisy( u64 v )
+{
+    println( "noisy" );
+    return v;
+}
+
+void ignores( u64 unused )
+{
+}
+
+result<u64, Lost> fetch( bool fine )
+{
+    if( fine )
+    {
+        return result::ok( 1 );
+    }
+
+    return result::err( Lost::gone( Noisy( 9 ) ) );
+}
+
+// A copied binding and a borrowed one, neither read.
+void borrowed( bool fine )
+{
+    switch( fetch( fine ) )
+    {
+    case result::ok( v ):
+        println( "ok" );
+        break;
+    case result::err( e ):
+        println( "err" );
+        break;
+    }
+}
+
+// An owned binding, not read, and dropped when its arm ends.
+void consumed( bool fine )
+{
+    switch( move fetch( fine ) )
+    {
+    case result::ok( v ):
+        println( "ok" );
+        break;
+    case result::err( e ):
+        println( "err" );
+        break;
+    }
+}
+
+i32 main()
+{
+    u64   from_call = noisy( 1 );
+    u64   constant  = 3;
+    Point p         = Point { 1, 2 };
+    Quiet q         = Quiet( 4 );
+    u64   seven     = q.seven();
+
+    ignores( 5 );
+    borrowed( true );
+    borrowed( false );
+    consumed( true );
+    consumed( false );
+    return 0;
+}

@@ -206,6 +206,7 @@ double kl__scaled__3f64( double kl_v_1 )
 double kl__scaled__3i32( int32_t kl_v_1 )
 {
     double kl_t0;
+    ( void ) kl_v_1;
 #line 92 "codegen/sample_m7.kl"
     kl_t0 = 0.0;
     return kl_t0;

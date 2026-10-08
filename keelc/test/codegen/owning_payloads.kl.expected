@@ -318,6 +318,9 @@ int32_t kl__main__( void )
     bool kl_t86;
     bool kl_t87;
     bool kl_t88;
+    ( void ) kl_extra_49;
+    ( void ) kl_left_50;
+    ( void ) kl_right_51;
 #line 102 "codegen/owning_payloads.kl"
     kl_t72 = false;
 #line 103 "codegen/owning_payloads.kl"

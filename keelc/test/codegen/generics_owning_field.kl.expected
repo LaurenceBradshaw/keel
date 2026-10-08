@@ -46,6 +46,7 @@ void kl__Buf__R3Buf_3i32__ctor( struct kl__Buf* kl_this_1, int32_t kl_n_2 )
 void kl__Buf__dtor( struct kl__Buf* kl_this_1 )
 {
     int32_t kl_t2;
+    ( void ) kl_this_1;
 #line 20 "codegen/generics_owning_field.kl"
     kl_t2 = kl_destroyed_2 + 1;
     kl_destroyed_2 = kl_t2;

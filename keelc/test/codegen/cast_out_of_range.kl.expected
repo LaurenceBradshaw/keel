@@ -23,6 +23,8 @@ int32_t kl__main__( void )
     int32_t kl_t10;
     bool kl_t11;
     bool kl_t12;
+    ( void ) kl_fits_2;
+    ( void ) kl_negative_8;
 #line 5 "codegen/cast_out_of_range.kl"
     kl_x_1 = 7;
 #line 6 "codegen/cast_out_of_range.kl"

@@ -41,6 +41,7 @@ void kl__Counter__R7Counter__ctor( struct kl__Counter* kl_this_1 )
 int32_t kl__total__S7Counter( struct kl__Counter* kl_this_1 )
 {
     int32_t kl_t0;
+    ( void ) kl_this_1;
 #line 19 "codegen/static_fields.kl"
     kl_t0 = kl_made_2;
     return kl_t0;
@@ -56,6 +57,7 @@ int32_t kl__count__S7Counter( void )
 
 void kl__reset__S7Counter( struct kl__Counter* kl_this_1 )
 {
+    ( void ) kl_this_1;
 #line 29 "codegen/static_fields.kl"
     kl_made_2 = 0;
     return;

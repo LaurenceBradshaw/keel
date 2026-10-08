@@ -34,6 +34,7 @@ void kl__Counter__R7Counter_3u64__ctor( struct kl__Counter* kl_this_1, uint64_t 
 void kl__Counter__dtor( struct kl__Counter* kl_this_1 )
 {
     int32_t kl_t2;
+    ( void ) kl_this_1;
 #line 17 "codegen/discarded_results.kl"
     kl_t2 = kl_drops_2 + 1;
     kl_drops_2 = kl_t2;
@@ -127,6 +128,8 @@ int32_t kl__main__( void )
     struct kl__Counter kl_t21;
     struct kl__Counter* kl_t22;
     bool kl_t25;
+    ( void ) kl_n_10;
+    ( void ) kl_m_12;
 #line 66 "codegen/discarded_results.kl"
     kl_t25 = false;
 #line 48 "codegen/discarded_results.kl"

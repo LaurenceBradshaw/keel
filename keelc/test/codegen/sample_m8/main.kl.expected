@@ -151,6 +151,7 @@ void kl__Ticket__R6Ticket_3u64__ctor( struct kl__Ticket* kl_this_1, uint64_t kl_
 
 void kl__Ticket__dtor( struct kl__Ticket* kl_this_1 )
 {
+    ( void ) kl_this_1;
 #line 24 "codegen/sample_m8/main.kl"
     kl_alive_9 = kl_alive_9 - 1;
     return;

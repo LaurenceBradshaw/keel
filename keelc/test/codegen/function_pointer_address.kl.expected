@@ -33,6 +33,8 @@ int32_t kl__main__( void )
     kl__fn__F3i32E3i32 kl_t2;
     kl__fn__FE4void kl_q_3;
     kl__fn__FE4void kl_t4;
+    ( void ) kl_p_1;
+    ( void ) kl_q_3;
 #line 15 "codegen/function_pointer_address.kl"
     kl_t2 = kl__twice__3i32;
     kl_p_1 = kl_t2;

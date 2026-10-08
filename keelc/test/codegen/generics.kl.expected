@@ -117,6 +117,7 @@ bool kl__id__I4boolE__4bool( bool kl_a_1 )
 int32_t kl__pick__I3i32_4boolE__3i32_4bool( int32_t kl_a_1, bool kl_b_2 )
 {
     int32_t kl_t0;
+    ( void ) kl_b_2;
 #line 11 "codegen/generics.kl"
     kl_t0 = kl_a_1;
     return kl_t0;
@@ -149,6 +150,7 @@ int32_t kl__relay__I4boolE__4bool( bool kl_ignored_1 )
     int32_t kl_t0;
     int32_t kl_t2;
     int32_t kl_t3;
+    ( void ) kl_ignored_1;
 #line 40 "codegen/generics.kl"
     kl_t2 = kl__id__I3i32E__3i32( 2 );
     kl_t3 = kl__doubled__3i32( kl_t2 );

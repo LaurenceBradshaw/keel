@@ -32,6 +32,7 @@ void kl__Counted__R7Counted_3u64__ctor( struct kl__Counted* kl_this_1, uint64_t 
 
 void kl__Counted__dtor( struct kl__Counted* kl_this_1 )
 {
+    ( void ) kl_this_1;
 #line 17 "codegen/borrow_after_refill.kl"
     kl_alive_2 = kl_alive_2 - 1;
     return;

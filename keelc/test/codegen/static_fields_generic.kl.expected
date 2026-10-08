@@ -171,6 +171,7 @@ int32_t kl__count__I3f64E__S3BoxI3f64E( void )
 
 void kl__reset__I3i32E__S3BoxI3i32E( struct kl__Box__I3i32E* kl_this_1 )
 {
+    ( void ) kl_this_1;
 #line 25 "codegen/static_fields_generic.kl"
     kl_made_6__I3i32E = 0;
     return;

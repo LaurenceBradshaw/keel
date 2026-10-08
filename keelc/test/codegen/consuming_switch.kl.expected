@@ -120,6 +120,7 @@ struct kl__Buf kl__take__M6Holder( struct kl__Holder kl_h_1 )
     bool kl_t16;
     bool kl_t17;
     bool kl_t18;
+    ( void ) kl_extra_8;
 #line 49 "codegen/consuming_switch.kl"
     kl_t14 = true;
 #line 51 "codegen/consuming_switch.kl"
@@ -531,6 +532,7 @@ void kl__through__M6Holder( struct kl__Holder kl_h_1 )
     uint8_t* kl_t21;
     bool kl_t24;
     bool kl_t25;
+    ( void ) kl_extra_16;
 #line 118 "codegen/consuming_switch.kl"
     kl_t24 = true;
 #line 120 "codegen/consuming_switch.kl"
@@ -668,6 +670,7 @@ int32_t kl__main__( void )
     bool kl_t90;
     bool kl_t91;
     bool kl_t92;
+    ( void ) kl_extra_61;
 #line 137 "codegen/consuming_switch.kl"
     kl_t72 = false;
     kl_t73 = false;

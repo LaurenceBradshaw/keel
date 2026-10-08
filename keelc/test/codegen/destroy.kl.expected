@@ -213,6 +213,8 @@ void kl__end_all__I5ownedE__N5owned_3u64( struct kl__owned* kl_slots_1, uint64_t
 
 void kl__end_all__I3i32E__N3i32_3u64( int32_t* kl_slots_1, uint64_t kl_count_2 )
 {
+    ( void ) kl_slots_1;
+    ( void ) kl_count_2;
     return;
 }
 

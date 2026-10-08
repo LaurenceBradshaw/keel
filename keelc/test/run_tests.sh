@@ -83,10 +83,9 @@ runtime="$( cd "$( dirname "$runtime" )" && pwd )/$( basename "$runtime" )"
 # keelc runs the C compiler; the runner only configures it.
 cc="${CC:-cc}"
 # -Werror, because a warning in emitted C is the compiler saying the code means something other
-# than intended - that is the whole reason for building it here. The unused-* family is excluded:
-# a local the Keel program never reads becomes a local the C program never reads, which is faithful
-# emission rather than a fault, and no amount of it can change what the program computes.
-cflags="${KEEL_CFLAGS:--std=c11 -Wall -Wextra -Werror -Wno-unused-variable -Wno-unused-parameter -Wno-unused-but-set-variable}"
+# than intended - that is the whole reason for building it here. The unused-* family included: a
+# name the program never reads is marked used in the C, and `codegen/unused_names` checks it.
+cflags="${KEEL_CFLAGS:--std=c11 -Wall -Wextra -Werror}"
 
 # Deliberately outside tests/: the stray-file check below treats anything in a suite directory as a
 # bug, and that check is worth more than the convenience of building in place.

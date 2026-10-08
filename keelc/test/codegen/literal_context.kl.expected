@@ -10,6 +10,7 @@ int32_t kl__main__( void );
 int32_t kl__takes_u8__2u8( uint8_t kl_v_1 )
 {
     int32_t kl_t0;
+    ( void ) kl_v_1;
 #line 4 "codegen/literal_context.kl"
     kl_t0 = 0;
     return kl_t0;
@@ -61,6 +62,10 @@ int32_t kl__main__( void )
     int32_t kl_t41;
     int32_t kl_t42;
     int32_t kl_t43;
+    ( void ) kl_b_3;
+    ( void ) kl_k_16;
+    ( void ) kl_l_18;
+    ( void ) kl_p_26;
 #line 8 "codegen/literal_context.kl"
     kl_t2 = -1.5;
     kl_a_1 = kl_t2;

@@ -160,6 +160,7 @@ struct kl__Cell kl__relay__I4CellE__M4Cell( struct kl__Cell kl_a_1 )
 
 void kl__inspect__I4CellE__4Cell( struct kl__Cell* kl_a_1 )
 {
+    ( void ) kl_a_1;
     return;
 }
 

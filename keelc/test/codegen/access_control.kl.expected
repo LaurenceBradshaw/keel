@@ -37,6 +37,7 @@ int32_t kl__main__( void );
 int32_t kl__step__S7Counter( struct kl__Counter* kl_this_1 )
 {
     int32_t kl_t0;
+    ( void ) kl_this_1;
 #line 15 "codegen/access_control.kl"
     kl_t0 = 2;
     return kl_t0;

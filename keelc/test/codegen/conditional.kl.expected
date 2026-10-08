@@ -51,6 +51,7 @@ void kl__Owner__R5Owner_3i32__ctor( struct kl__Owner* kl_this_1, int32_t kl_t_2 
 void kl__Owner__dtor( struct kl__Owner* kl_this_1 )
 {
     int32_t kl_t2;
+    ( void ) kl_this_1;
 #line 30 "codegen/conditional.kl"
     kl_t2 = kl_drops_21 + 1;
     kl_drops_21 = kl_t2;

@@ -210,6 +210,7 @@ double kl__get__I3f64E__S3BoxI3f64E( struct kl__Box__I3f64E* kl_this_1 )
 void kl__Box__I3i32E__dtor( struct kl__Box__I3i32E* kl_this_1 )
 {
     int32_t kl_t2;
+    ( void ) kl_this_1;
 #line 19 "codegen/generics_destructors.kl"
     kl_t2 = kl_live_1 - 1;
     kl_live_1 = kl_t2;
@@ -219,6 +220,7 @@ void kl__Box__I3i32E__dtor( struct kl__Box__I3i32E* kl_this_1 )
 void kl__Box__I3f64E__dtor( struct kl__Box__I3f64E* kl_this_1 )
 {
     int32_t kl_t2;
+    ( void ) kl_this_1;
 #line 19 "codegen/generics_destructors.kl"
     kl_t2 = kl_live_1 - 1;
     kl_live_1 = kl_t2;

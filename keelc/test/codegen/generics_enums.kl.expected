@@ -113,6 +113,7 @@ int32_t kl__main__( void )
     int32_t kl_t37;
     int32_t kl_t38;
     int32_t kl_t39;
+    ( void ) kl_late_1;
 #line 68 "codegen/generics_enums.kl"
     kl_t3.tag = 1;
     kl_t3.kl_v_16 = 7;

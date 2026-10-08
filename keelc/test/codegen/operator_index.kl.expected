@@ -258,6 +258,7 @@ int32_t kl__main__( void )
     int32_t* kl_t90;
     bool kl_t91;
     bool kl_t92;
+    ( void ) kl_copied_71;
 #line 152 "codegen/operator_index.kl"
     kl_t92 = false;
 #line 106 "codegen/operator_index.kl"

@@ -47,6 +47,7 @@ void kl__Owned__R5Owned_3u64__ctor( struct kl__Owned* kl_this_1, uint64_t kl_n_2
 void kl__Owned__dtor( struct kl__Owned* kl_this_1 )
 {
     int32_t kl_t2;
+    ( void ) kl_this_1;
 #line 18 "codegen/constructor_borrows.kl"
     kl_t2 = kl_live_1 - 1;
     kl_live_1 = kl_t2;

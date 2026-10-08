@@ -1045,6 +1045,52 @@ std::vector<bool> mentioned_locals( const Function& function )
     return mentioned;
 }
 
+// Every local something reads; a store into one, or into its field, is not a read.
+std::vector<bool> read_locals( const Function& function )
+{
+    std::vector<bool> read( function.locals.size(), false );
+
+    const auto mark = [&]( const Place& place )
+    {
+        if( !place.is_global() && place.local.is_valid() )
+        {
+            read[place.local.v] = true;
+        }
+    };
+
+    for( const Statement& statement : function.statements )
+    {
+        for_each_operand( function, statement.value, [&]( const Operand& operand ) { mark( operand.place ); } );
+
+        if( has_deref_projection( function, statement.place ) )
+        {
+            mark( statement.place );
+        }
+
+        if( statement.kind == Statement_kind::Drop )
+        {
+            mark( statement.place );
+
+            if( statement.drop_flag.is_valid() )
+            {
+                read[statement.drop_flag.v] = true;
+            }
+        }
+    }
+
+    for( const Block& block : function.blocks )
+    {
+        mark( block.terminator.condition.place );
+    }
+
+    if( function.returns_a_value )
+    {
+        read[0] = true;
+    }
+
+    return read;
+}
+
 void Kir_emitter::emit_function( const Function& function )
 {
     current_   = &function;
@@ -1100,6 +1146,20 @@ void Kir_emitter::emit_function( const Function& function )
             local_name( i ),
             holds_nothing( function.locals[i].type ) ? " = { 0 }" : ""
         ) );
+    }
+
+    // gcc warns on a name nothing reads; the dead store itself is M11's to remove.
+    const std::vector<bool> read = read_locals( function );
+
+    for( u32 i = 1; i < function.locals.size(); ++i )
+    {
+        const bool never_declared = i > function.parameter_count && !mentioned[i];
+        if( is_void( function.locals[i].type ) || never_declared || read[i] )
+        {
+            continue;
+        }
+
+        write_line( fmt::format( "( void ) {};", local_name( i ) ) );
     }
 
     for( u32 i = 0; i < function.blocks.size(); ++i )

@@ -136,6 +136,7 @@ void kl__Owned__R5Owned_3u64__ctor( struct kl__Owned* kl_this_1, uint64_t kl_sta
 void kl__Owned__dtor( struct kl__Owned* kl_this_1 )
 {
     uint64_t kl_t2;
+    ( void ) kl_this_1;
 #line 83 "codegen/static_methods.kl"
     kl_t2 = kl_freed_118 + 1;
     kl_freed_118 = kl_t2;

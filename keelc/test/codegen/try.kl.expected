@@ -994,6 +994,7 @@ void kl__show__Q7prelude6resultI3u64_3BadE( struct kl_7prelude_result__I3u64_3Ba
     struct kl_7prelude_str kl_t11;
     struct kl_7prelude_str* kl_t12;
     uint8_t* kl_t13;
+    ( void ) kl_e_10;
 #line 188 "codegen/try.kl"
     kl_t2 = kl_r_1.tag == 0;
     if ( kl_t2 ) goto bb1; else goto bb2;
@@ -1030,6 +1031,7 @@ void kl__show_void__Q7prelude6resultI4void_3BadE( struct kl_7prelude_result__I4v
     struct kl_7prelude_str kl_t9;
     struct kl_7prelude_str* kl_t10;
     uint8_t* kl_t11;
+    ( void ) kl_e_8;
 #line 202 "codegen/try.kl"
     kl_t2 = kl_r_1.tag == 0;
     if ( kl_t2 ) goto bb1; else goto bb2;
@@ -1071,6 +1073,7 @@ void kl__show_buf__MQ7prelude6resultI3Buf_3BadE( struct kl_7prelude_result__I3Bu
     uint8_t* kl_t18;
     bool kl_t21;
     bool kl_t22;
+    ( void ) kl_e_15;
 #line 211 "codegen/try.kl"
     kl_t21 = true;
 #line 213 "codegen/try.kl"

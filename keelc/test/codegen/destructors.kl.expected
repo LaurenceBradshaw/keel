@@ -56,6 +56,7 @@ int32_t kl__main__( void );
 void kl__release__P2u8( uint8_t* kl_p_1 )
 {
     int32_t kl_t2;
+    ( void ) kl_p_1;
 #line 8 "codegen/destructors.kl"
     kl_t2 = kl_released_1 + 1;
     kl_released_1 = kl_t2;
@@ -168,6 +169,7 @@ int32_t kl__main__( void )
     bool kl_t20;
     bool kl_t21;
     bool kl_t22;
+    ( void ) kl_h_3;
 #line 97 "codegen/destructors.kl"
     kl_t19 = false;
 #line 102 "codegen/destructors.kl"
