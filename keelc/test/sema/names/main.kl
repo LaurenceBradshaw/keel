@@ -1,7 +1,7 @@
 // What each name refers to: the names a grammar cannot classify by position alone.
 
 import shapes;
-import kl::units;
+import metric::units;
 
 i32 counter = 0;
 
@@ -45,9 +45,9 @@ i32 main()
 {
     meter m       = meter( 1 );
     meter z       = meter::zero();
-    kl::Unit unit = kl::Unit::Foot;
+    metric::Unit unit = metric::Unit::Foot;
     f64 r         = radius_of( Shape::Dot );
     meter* p      = &m;
     i32 n         = p.count + m.value();
-    return larger( counter, kl::scale );
+    return larger( counter, metric::scale );
 }

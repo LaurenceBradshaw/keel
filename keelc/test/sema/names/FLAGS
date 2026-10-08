@@ -1,1 +1,1 @@
---check --diagnostics=json --names --package kl=sema/names/kl
+--check --diagnostics=json --names --package metric=sema/names/metric

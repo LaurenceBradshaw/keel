@@ -1,4 +1,4 @@
-// The same names as the program's, and a module of kl imported bare.
+// The same names as the program's, and a module of plane imported bare.
 import shape;
 
 struct Point
@@ -18,7 +18,7 @@ i32 area( i32 side )
 
 i32 cube( i32 s )
 {
-    return area( s ) * kl::identity( s );
+    return area( s ) * plane::identity( s );
 }
 
 i32 pick( i32 v )

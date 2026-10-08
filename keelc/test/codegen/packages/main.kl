@@ -1,14 +1,14 @@
-// A program calling into the package `kl`, which FLAGS names. Every check returns a distinct code.
+// A program calling into the package `plane`, which FLAGS names. Every check returns a distinct code.
 import geom;
-import kl::geom;
+import plane::geom;
 
-// kl::area's name and parameters, in this program's own package.
+// plane::area's name and parameters, in this program's own package.
 i32 area( i32 side )
 {
     return side;
 }
 
-// kl::pick( i32 ) matches an i32 exactly, and never meets this one.
+// plane::pick( i32 ) matches an i32 exactly, and never meets this one.
 i32 pick( i64 v )
 {
     return 1;
@@ -24,24 +24,24 @@ i32 main()
     i32 x = 3;
 
     if( area( x ) != 3 ) { return 1; }
-    if( kl::area( x ) != 9 ) { return 2; }
+    if( plane::area( x ) != 9 ) { return 2; }
 
-    // kl's own bare `area` is kl's, and its bare `import shape;` is kl's shape.kl.
-    if( kl::cube( 2 ) != 8 ) { return 3; }
+    // plane's own bare `area` is plane's, and its bare `import shape;` is plane's shape.kl.
+    if( plane::cube( 2 ) != 8 ) { return 3; }
 
-    auto f = &kl::area;
+    auto f = &plane::area;
     if( f( 4 ) != 16 ) { return 4; }
 
-    // A kl Point and this program's Point, both held.
-    auto p = kl::origin();
+    // A plane Point and this program's Point, both held.
+    auto p = plane::origin();
     Point q = Point { 5 };
     if( p.x + q.x != 12 ) { return 5; }
 
-    // This program's geom.kl, beside kl's.
+    // This program's geom.kl, beside plane's.
     if( perimeter( 2 ) != 8 ) { return 6; }
 
     if( pick( x ) != 1 ) { return 7; }
-    if( kl::pick( x ) != 2 ) { return 8; }
+    if( plane::pick( x ) != 2 ) { return 8; }
 
     return 0;
 }

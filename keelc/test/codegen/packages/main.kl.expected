@@ -5,7 +5,7 @@
 #include "main.kl.prelude.c"
 
 struct kl__Point;
-struct kl_2kl_Point;
+struct kl_5plane_Point;
 
 typedef int32_t ( *kl__fn__F3i32E3i32 )( int32_t );
 
@@ -14,7 +14,7 @@ struct kl__Point
     int32_t kl_x_20;
 };
 
-struct kl_2kl_Point
+struct kl_5plane_Point
 {
     int32_t kl_x_131;
 };
@@ -22,11 +22,11 @@ struct kl_2kl_Point
 int32_t kl__area__3i32( int32_t );
 int32_t kl__pick__3i64( int64_t );
 int32_t kl__main__( void );
-struct kl_2kl_Point kl_2kl_origin__( void );
-int32_t kl_2kl_area__3i32( int32_t );
-int32_t kl_2kl_cube__3i32( int32_t );
-int32_t kl_2kl_pick__3i32( int32_t );
-int32_t kl_2kl_identity__3i32( int32_t );
+struct kl_5plane_Point kl_5plane_origin__( void );
+int32_t kl_5plane_area__3i32( int32_t );
+int32_t kl_5plane_cube__3i32( int32_t );
+int32_t kl_5plane_pick__3i32( int32_t );
+int32_t kl_5plane_identity__3i32( int32_t );
 int32_t kl__perimeter__3i32( int32_t );
 
 int32_t kl__area__3i32( int32_t kl_side_1 )
@@ -59,8 +59,8 @@ int32_t kl__main__( void )
     kl__fn__F3i32E3i32 kl_t9;
     int32_t kl_t10;
     bool kl_t11;
-    struct kl_2kl_Point kl_p_12;
-    struct kl_2kl_Point kl_t13;
+    struct kl_5plane_Point kl_p_12;
+    struct kl_5plane_Point kl_t13;
     struct kl__Point kl_q_14;
     struct kl__Point kl_t15;
     int32_t kl_t16;
@@ -83,7 +83,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb2:
 #line 27 "codegen/packages/main.kl"
-    kl_t4 = kl_2kl_area__3i32( kl_x_1 );
+    kl_t4 = kl_5plane_area__3i32( kl_x_1 );
     kl_t5 = kl_t4 != 9;
     if ( kl_t5 ) goto bb3; else goto bb4;
     bb3:
@@ -91,7 +91,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb4:
 #line 30 "codegen/packages/main.kl"
-    kl_t6 = kl_2kl_cube__3i32( 2 );
+    kl_t6 = kl_5plane_cube__3i32( 2 );
     kl_t7 = kl_t6 != 8;
     if ( kl_t7 ) goto bb5; else goto bb6;
     bb5:
@@ -99,7 +99,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb6:
 #line 32 "codegen/packages/main.kl"
-    kl_t9 = kl_2kl_area__3i32;
+    kl_t9 = kl_5plane_area__3i32;
     kl_f_8 = kl_t9;
 #line 33 "codegen/packages/main.kl"
     kl_t10 = kl_f_8( 4 );
@@ -110,7 +110,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb8:
 #line 36 "codegen/packages/main.kl"
-    kl_t13 = kl_2kl_origin__(  );
+    kl_t13 = kl_5plane_origin__(  );
     kl_p_12 = kl_t13;
 #line 37 "codegen/packages/main.kl"
     kl_t15.kl_x_20 = 5;
@@ -141,7 +141,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb14:
 #line 44 "codegen/packages/main.kl"
-    kl_t23 = kl_2kl_pick__3i32( kl_x_1 );
+    kl_t23 = kl_5plane_pick__3i32( kl_x_1 );
     kl_t24 = kl_t23 != 2;
     if ( kl_t24 ) goto bb15; else goto bb16;
     bb15:
@@ -153,52 +153,52 @@ int32_t kl__main__( void )
     return kl_t0;
 }
 
-struct kl_2kl_Point kl_2kl_origin__( void )
+struct kl_5plane_Point kl_5plane_origin__( void )
 {
-    struct kl_2kl_Point kl_t0;
-    struct kl_2kl_Point kl_t1;
-#line 11 "codegen/packages/kl/geom.kl"
+    struct kl_5plane_Point kl_t0;
+    struct kl_5plane_Point kl_t1;
+#line 11 "codegen/packages/plane/geom.kl"
     kl_t1.kl_x_131 = 7;
     kl_t0 = kl_t1;
     return kl_t0;
 }
 
-int32_t kl_2kl_area__3i32( int32_t kl_side_1 )
+int32_t kl_5plane_area__3i32( int32_t kl_side_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
-#line 16 "codegen/packages/kl/geom.kl"
+#line 16 "codegen/packages/plane/geom.kl"
     kl_t2 = kl_side_1 * kl_side_1;
     kl_t0 = kl_t2;
     return kl_t0;
 }
 
-int32_t kl_2kl_cube__3i32( int32_t kl_s_1 )
+int32_t kl_5plane_cube__3i32( int32_t kl_s_1 )
 {
     int32_t kl_t0;
     int32_t kl_t2;
     int32_t kl_t3;
     int32_t kl_t4;
-#line 21 "codegen/packages/kl/geom.kl"
-    kl_t2 = kl_2kl_area__3i32( kl_s_1 );
-    kl_t3 = kl_2kl_identity__3i32( kl_s_1 );
+#line 21 "codegen/packages/plane/geom.kl"
+    kl_t2 = kl_5plane_area__3i32( kl_s_1 );
+    kl_t3 = kl_5plane_identity__3i32( kl_s_1 );
     kl_t4 = kl_t2 * kl_t3;
     kl_t0 = kl_t4;
     return kl_t0;
 }
 
-int32_t kl_2kl_pick__3i32( int32_t kl_v_1 )
+int32_t kl_5plane_pick__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
-#line 26 "codegen/packages/kl/geom.kl"
+#line 26 "codegen/packages/plane/geom.kl"
     kl_t0 = 2;
     return kl_t0;
 }
 
-int32_t kl_2kl_identity__3i32( int32_t kl_v_1 )
+int32_t kl_5plane_identity__3i32( int32_t kl_v_1 )
 {
     int32_t kl_t0;
-#line 3 "codegen/packages/kl/shape.kl"
+#line 3 "codegen/packages/plane/shape.kl"
     kl_t0 = kl_v_1;
     return kl_t0;
 }

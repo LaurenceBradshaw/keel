@@ -1,23 +1,23 @@
 // Every refusal a package brings, in one program. What is accepted is in codegen/packages.
 import route;
-import kl::geom;
-import kl::nope;
+import atlas::geom;
+import atlas::nope;
 import foo::geom;
-import kl::core::list;
+import atlas::core::list;
 
 // A type may not take a package's name.
-struct kl
+struct atlas
 {
     i32 x;
 };
 
 i32 main()
 {
-    i32 a = area( 1 );      // kl's, named bare
-    i32 b = kl::hidden();   // in kl::deep, which only route.kl imports
-    i32 c = kl::nothing();  // no module of kl this file imports declares it
-    Point p = kl::origin(); // kl's type, named bare
-    kl::Missing m;          // no module of kl this file imports declares it
-    kl::Missing<i32> g;     // the same, reported once though it is generic
+    i32 a = area( 1 );         // atlas's, named bare
+    i32 b = atlas::hidden();   // in atlas::deep, which only route.kl imports
+    i32 c = atlas::nothing();  // no module of atlas this file imports declares it
+    Point p = atlas::origin(); // atlas's type, named bare
+    atlas::Missing m;          // no module of atlas this file imports declares it
+    atlas::Missing<i32> g;     // the same, reported once though it is generic
     return a + b + c + p.x + count;
 }

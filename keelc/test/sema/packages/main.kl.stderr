@@ -1,8 +1,8 @@
-error: there is no module `kl::nope`
+error: there is no module `atlas::nope`
  --> sema/packages/main.kl:4:1
   |
-4 | import kl::nope;
-  | ^^^^^^^^^^^^^^^^ it would be `nope.kl` in the package `kl`
+4 | import atlas::nope;
+  | ^^^^^^^^^^^^^^^^^^^ it would be `nope.kl` in the package `atlas`
 
 error: there is no package `foo`
  --> sema/packages/main.kl:5:1
@@ -13,55 +13,55 @@ error: there is no package `foo`
 error: an import names a module, or a package and one of its modules
  --> sema/packages/main.kl:6:1
   |
-6 | import kl::core::list;
-  | ^^^^^^^^^^^^^^^^^
+6 | import atlas::core::list;
+  | ^^^^^^^^^^^^^^^^^^^^
 
-error: `kl` is the name of a package
+error: `atlas` is the name of a package
  --> sema/packages/main.kl:9:8
   |
-9 | struct kl
-  |        ^^ a type may not take one
+9 | struct atlas
+  |        ^^^^^ a type may not take one
 
-error: `area` is in the package `kl`
+error: `area` is in the package `atlas`
   --> sema/packages/main.kl:16:13
    |
-16 |     i32 a = area( 1 );      // kl's, named bare
-   |             ^^^^ write `kl::area`
+16 |     i32 a = area( 1 );         // atlas's, named bare
+   |             ^^^^ write `atlas::area`
 
-error: `hidden` is in `kl::deep`, which this file does not import
+error: `hidden` is in `atlas::deep`, which this file does not import
   --> sema/packages/main.kl:17:13
    |
-17 |     i32 b = kl::hidden();   // in kl::deep, which only route.kl imports
-   |             ^^^^^^^^^^ write `import kl::deep;` at the top of the file
+17 |     i32 b = atlas::hidden();   // in atlas::deep, which only route.kl imports
+   |             ^^^^^^^^^^^^^ write `import atlas::deep;` at the top of the file
 
-error: no module of `kl` that this file imports declares `nothing`
+error: no module of `atlas` that this file imports declares `nothing`
   --> sema/packages/main.kl:18:13
    |
-18 |     i32 c = kl::nothing();  // no module of kl this file imports declares it
-   |             ^^^^^^^^^^^
+18 |     i32 c = atlas::nothing();  // no module of atlas this file imports declares it
+   |             ^^^^^^^^^^^^^^
 
-error: `Point` is in the package `kl`
+error: `Point` is in the package `atlas`
   --> sema/packages/main.kl:19:5
    |
-19 |     Point p = kl::origin(); // kl's type, named bare
-   |     ^^^^^ write `kl::Point`
+19 |     Point p = atlas::origin(); // atlas's type, named bare
+   |     ^^^^^ write `atlas::Point`
 
-error: no module of `kl` that this file imports declares `Missing`
+error: no module of `atlas` that this file imports declares `Missing`
   --> sema/packages/main.kl:20:5
    |
-20 |     kl::Missing m;          // no module of kl this file imports declares it
-   |     ^^^^^^^^^^^
+20 |     atlas::Missing m;          // no module of atlas this file imports declares it
+   |     ^^^^^^^^^^^^^^
 
-error: no module of `kl` that this file imports declares `Missing`
+error: no module of `atlas` that this file imports declares `Missing`
   --> sema/packages/main.kl:21:5
    |
-21 |     kl::Missing<i32> g;     // the same, reported once though it is generic
-   |     ^^^^^^^^^^^
+21 |     atlas::Missing<i32> g;     // the same, reported once though it is generic
+   |     ^^^^^^^^^^^^^^
 
-error: `count` is in the package `kl`
+error: `count` is in the package `atlas`
   --> sema/packages/main.kl:22:30
    |
 22 |     return a + b + c + p.x + count;
-   |                              ^^^^^ write `kl::count`
+   |                              ^^^^^ write `atlas::count`
 
 11 errors generated

@@ -39,10 +39,15 @@
         "editor.formatOnSave": false,
         "editor.formatOnPaste": false
     },
-    // The standard library, and the editor sample's package. A few fixtures name a `kl` of their own
-    // in their FLAGS instead, and show this one's errors in the editor.
+    // Every package a golden fixture or the editor sample names, so each checks clean in the editor.
+    // Package names are unique across the fixtures for this reason: `kl` is only ever the library.
     "keel.packages": [
         "kl=keel_stl/src",
-        "extra=editors/vscode/sample/extra"
+        "extra=editors/vscode/sample/extra",
+        "geo=keelc/test/codegen/sample_m8/geo",
+        "atlas=keelc/test/sema/packages/atlas",
+        "metric=keelc/test/sema/names/metric",
+        "plane=keelc/test/codegen/packages/plane",
+        "kinds=keelc/test/codegen/package_types/kinds"
     ]
 }

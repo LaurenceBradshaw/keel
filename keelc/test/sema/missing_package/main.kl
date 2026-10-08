@@ -1,24 +1,24 @@
 // A package the command line does not name is one error, at the import, and nothing at each use.
-import kl::shapes;
+import absent::shapes;
 
-i32 measure( kl::Shape s )
+i32 measure( absent::Shape s )
 {
     switch( s )
     {
-        case kl::Shape::Circle( r ):
+        case absent::Shape::Circle( r ):
             return 3 * r * r;
-        case kl::Shape::Square( a ):
+        case absent::Shape::Square( a ):
             return a * a;
     }
 }
 
 i32 main()
 {
-    kl::Point p = kl::origin();
-    kl::Point q = kl::Point { 1, 2 };
-    kl::Box<i32> b = kl::Box<i32>::of( 9 );
-    kl::Colour c = kl::Colour::Green;
-    kl::Counter k = kl::Counter::zero();
-    kl::made = kl::made + 10;
-    return measure( kl::Shape::Circle( 2 ) ) + p.x + q.y + b.v + k.get();
+    absent::Point p = absent::origin();
+    absent::Point q = absent::Point { 1, 2 };
+    absent::Box<i32> b = absent::Box<i32>::of( 9 );
+    absent::Colour c = absent::Colour::Green;
+    absent::Counter k = absent::Counter::zero();
+    absent::made = absent::made + 10;
+    return measure( absent::Shape::Circle( 2 ) ) + p.x + q.y + b.v + k.get();
 }

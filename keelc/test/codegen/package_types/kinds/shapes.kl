@@ -1,4 +1,4 @@
-// One of each kind of declaration a package holds, for main.kl to name through `kl::`.
+// One of each kind of declaration a package holds, for main.kl to name through `kinds::`.
 struct Point
 {
     i32 x;

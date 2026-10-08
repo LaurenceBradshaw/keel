@@ -1,4 +1,4 @@
-// A module of the package `kl`.
+// A module of the package `metric`.
 
 i32 scale = 10;
 

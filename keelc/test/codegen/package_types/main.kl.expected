@@ -5,58 +5,58 @@
 #include "main.kl.prelude.c"
 
 struct kl__Point;
-struct kl_2kl_Point;
-struct kl_2kl_Counter;
-struct kl_2kl_Shape;
-struct kl_2kl_Box__I3i32E;
-struct kl_2kl_Box__IQ2kl5PointE;
+struct kl_5kinds_Point;
+struct kl_5kinds_Counter;
+struct kl_5kinds_Shape;
+struct kl_5kinds_Box__I3i32E;
+struct kl_5kinds_Box__IQ5kinds5PointE;
 
 struct kl__Point
 {
     int32_t kl_x_3;
 };
 
-struct kl_2kl_Point
+struct kl_5kinds_Point
 {
     int32_t kl_x_252;
     int32_t kl_y_254;
 };
 
-struct kl_2kl_Counter
+struct kl_5kinds_Counter
 {
     int32_t kl_n_287;
 };
 
-struct kl_2kl_Shape
+struct kl_5kinds_Shape
 {
     int32_t tag;
     int32_t kl_radius_280;
     int32_t kl_side_283;
 };
 
-struct kl_2kl_Box__I3i32E
+struct kl_5kinds_Box__I3i32E
 {
     int32_t kl_v_261;
 };
 
-struct kl_2kl_Box__IQ2kl5PointE
+struct kl_5kinds_Box__IQ5kinds5PointE
 {
-    struct kl_2kl_Point kl_v_261;
+    struct kl_5kinds_Point kl_v_261;
 };
 
 int32_t kl_made_321 = 0;
 
-int32_t kl__measure__Q2kl5Shape( struct kl_2kl_Shape );
+int32_t kl__measure__Q5kinds5Shape( struct kl_5kinds_Shape );
 int32_t kl__main__( void );
-void kl_2kl_Counter__RQ2kl7Counter_3i32__ctor( struct kl_2kl_Counter*, int32_t );
-struct kl_2kl_Counter kl_2kl_zero__SQ2kl7Counter( void );
-int32_t kl_2kl_get__SQ2kl7Counter( struct kl_2kl_Counter* );
-struct kl_2kl_Point kl_2kl_origin__( void );
-struct kl_2kl_Point kl__same__IQ2kl5PointE__Q2kl5Point( struct kl_2kl_Point );
+void kl_5kinds_Counter__RQ5kinds7Counter_3i32__ctor( struct kl_5kinds_Counter*, int32_t );
+struct kl_5kinds_Counter kl_5kinds_zero__SQ5kinds7Counter( void );
+int32_t kl_5kinds_get__SQ5kinds7Counter( struct kl_5kinds_Counter* );
+struct kl_5kinds_Point kl_5kinds_origin__( void );
+struct kl_5kinds_Point kl__same__IQ5kinds5PointE__Q5kinds5Point( struct kl_5kinds_Point );
 struct kl__Point kl__same__I5PointE__5Point( struct kl__Point );
-struct kl_2kl_Box__I3i32E kl_2kl_of__I3i32E__SQ2kl3BoxI3i32E_3i32( int32_t );
+struct kl_5kinds_Box__I3i32E kl_5kinds_of__I3i32E__SQ5kinds3BoxI3i32E_3i32( int32_t );
 
-int32_t kl__measure__Q2kl5Shape( struct kl_2kl_Shape kl_s_1 )
+int32_t kl__measure__Q5kinds5Shape( struct kl_5kinds_Shape kl_s_1 )
 {
     int32_t kl_t0;
     bool kl_t2;
@@ -87,52 +87,52 @@ int32_t kl__measure__Q2kl5Shape( struct kl_2kl_Shape kl_s_1 )
 int32_t kl__main__( void )
 {
     int32_t kl_t0;
-    struct kl_2kl_Point kl_p_1;
-    struct kl_2kl_Point kl_t2;
+    struct kl_5kinds_Point kl_p_1;
+    struct kl_5kinds_Point kl_t2;
     bool kl_t3;
     bool kl_t4;
     bool kl_t5;
-    struct kl_2kl_Point kl_q_6;
-    struct kl_2kl_Point kl_t7;
+    struct kl_5kinds_Point kl_q_6;
+    struct kl_5kinds_Point kl_t7;
     struct kl__Point kl_own_8;
     struct kl__Point kl_t9;
     int32_t kl_t10;
     bool kl_t11;
     bool kl_t12;
-    struct kl_2kl_Point kl_t13;
+    struct kl_5kinds_Point kl_t13;
     bool kl_t14;
     struct kl__Point kl_t15;
     bool kl_t16;
-    struct kl_2kl_Box__I3i32E kl_b_17;
-    struct kl_2kl_Box__I3i32E kl_t18;
-    struct kl_2kl_Box__IQ2kl5PointE kl_boxed_19;
-    struct kl_2kl_Box__IQ2kl5PointE kl_t20;
+    struct kl_5kinds_Box__I3i32E kl_b_17;
+    struct kl_5kinds_Box__I3i32E kl_t18;
+    struct kl_5kinds_Box__IQ5kinds5PointE kl_boxed_19;
+    struct kl_5kinds_Box__IQ5kinds5PointE kl_t20;
     bool kl_t21;
     bool kl_t22;
     bool kl_t23;
     int32_t kl_c_24;
     bool kl_t25;
     bool kl_t26;
-    struct kl_2kl_Shape kl_t27;
+    struct kl_5kinds_Shape kl_t27;
     int32_t kl_t28;
     bool kl_t29;
-    struct kl_2kl_Shape kl_t30;
+    struct kl_5kinds_Shape kl_t30;
     int32_t kl_t31;
     bool kl_t32;
-    struct kl_2kl_Counter kl_k_33;
-    struct kl_2kl_Counter* kl_t34;
+    struct kl_5kinds_Counter kl_k_33;
+    struct kl_5kinds_Counter* kl_t34;
     bool kl_t36;
-    struct kl_2kl_Counter* kl_t37;
+    struct kl_5kinds_Counter* kl_t37;
     int32_t kl_t38;
     bool kl_t39;
-    struct kl_2kl_Counter kl_t40;
-    struct kl_2kl_Counter* kl_t41;
+    struct kl_5kinds_Counter kl_t40;
+    struct kl_5kinds_Counter* kl_t41;
     int32_t kl_t42;
     bool kl_t43;
     int32_t kl_t44;
     bool kl_t45;
 #line 30 "codegen/package_types/main.kl"
-    kl_t2 = kl_2kl_origin__(  );
+    kl_t2 = kl_5kinds_origin__(  );
     kl_p_1 = kl_t2;
 #line 31 "codegen/package_types/main.kl"
     kl_t4 = kl_p_1.kl_x_252 != 7;
@@ -164,7 +164,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb6:
 #line 37 "codegen/package_types/main.kl"
-    kl_t13 = kl__same__IQ2kl5PointE__Q2kl5Point( kl_p_1 );
+    kl_t13 = kl__same__IQ5kinds5PointE__Q5kinds5Point( kl_p_1 );
     kl_t14 = kl_t13.kl_y_254 != 8;
     kl_t12 = kl_t14;
     if ( kl_t12 ) goto bb8; else goto bb7;
@@ -180,7 +180,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb10:
 #line 39 "codegen/package_types/main.kl"
-    kl_t18 = kl_2kl_of__I3i32E__SQ2kl3BoxI3i32E_3i32( 9 );
+    kl_t18 = kl_5kinds_of__I3i32E__SQ5kinds3BoxI3i32E_3i32( 9 );
     kl_b_17 = kl_t18;
 #line 40 "codegen/package_types/main.kl"
     kl_t20.kl_v_261 = kl_q_6;
@@ -211,14 +211,14 @@ int32_t kl__main__( void )
 #line 46 "codegen/package_types/main.kl"
     kl_t27.tag = 0;
     kl_t27.kl_radius_280 = 2;
-    kl_t28 = kl__measure__Q2kl5Shape( kl_t27 );
+    kl_t28 = kl__measure__Q5kinds5Shape( kl_t27 );
     kl_t29 = kl_t28 != 12;
     kl_t26 = kl_t29;
     if ( kl_t26 ) goto bb18; else goto bb17;
     bb17:
     kl_t30.tag = 1;
     kl_t30.kl_side_283 = 3;
-    kl_t31 = kl__measure__Q2kl5Shape( kl_t30 );
+    kl_t31 = kl__measure__Q5kinds5Shape( kl_t30 );
     kl_t32 = kl_t31 != 9;
     kl_t26 = kl_t32;
     goto bb18;
@@ -230,17 +230,17 @@ int32_t kl__main__( void )
     bb20:
 #line 48 "codegen/package_types/main.kl"
     kl_t34 = &kl_k_33;
-    kl_2kl_Counter__RQ2kl7Counter_3i32__ctor( kl_t34, 4 );
+    kl_5kinds_Counter__RQ5kinds7Counter_3i32__ctor( kl_t34, 4 );
 #line 49 "codegen/package_types/main.kl"
     kl_t37 = &kl_k_33;
-    kl_t38 = kl_2kl_get__SQ2kl7Counter( kl_t37 );
+    kl_t38 = kl_5kinds_get__SQ5kinds7Counter( kl_t37 );
     kl_t39 = kl_t38 != 4;
     kl_t36 = kl_t39;
     if ( kl_t36 ) goto bb22; else goto bb21;
     bb21:
-    kl_t40 = kl_2kl_zero__SQ2kl7Counter(  );
+    kl_t40 = kl_5kinds_zero__SQ5kinds7Counter(  );
     kl_t41 = &kl_t40;
-    kl_t42 = kl_2kl_get__SQ2kl7Counter( kl_t41 );
+    kl_t42 = kl_5kinds_get__SQ5kinds7Counter( kl_t41 );
     kl_t43 = kl_t42 != 0;
     kl_t36 = kl_t43;
     goto bb22;
@@ -265,51 +265,51 @@ int32_t kl__main__( void )
     return kl_t0;
 }
 
-void kl_2kl_Counter__RQ2kl7Counter_3i32__ctor( struct kl_2kl_Counter* kl_this_1, int32_t kl_start_2 )
+void kl_5kinds_Counter__RQ5kinds7Counter_3i32__ctor( struct kl_5kinds_Counter* kl_this_1, int32_t kl_start_2 )
 {
-#line 36 "codegen/package_types/kl/shapes.kl"
+#line 36 "codegen/package_types/kinds/shapes.kl"
     ( *kl_this_1 ).kl_n_287 = kl_start_2;
     return;
 }
 
-struct kl_2kl_Counter kl_2kl_zero__SQ2kl7Counter( void )
+struct kl_5kinds_Counter kl_5kinds_zero__SQ5kinds7Counter( void )
 {
-    struct kl_2kl_Counter kl_t0;
-    struct kl_2kl_Counter kl_t1;
-    struct kl_2kl_Counter* kl_t2;
-#line 41 "codegen/package_types/kl/shapes.kl"
+    struct kl_5kinds_Counter kl_t0;
+    struct kl_5kinds_Counter kl_t1;
+    struct kl_5kinds_Counter* kl_t2;
+#line 41 "codegen/package_types/kinds/shapes.kl"
     kl_t2 = &kl_t1;
-    kl_2kl_Counter__RQ2kl7Counter_3i32__ctor( kl_t2, 0 );
+    kl_5kinds_Counter__RQ5kinds7Counter_3i32__ctor( kl_t2, 0 );
     kl_t0 = kl_t1;
     return kl_t0;
 }
 
-int32_t kl_2kl_get__SQ2kl7Counter( struct kl_2kl_Counter* kl_this_1 )
+int32_t kl_5kinds_get__SQ5kinds7Counter( struct kl_5kinds_Counter* kl_this_1 )
 {
     int32_t kl_t0;
-#line 46 "codegen/package_types/kl/shapes.kl"
+#line 46 "codegen/package_types/kinds/shapes.kl"
     kl_t0 = ( *kl_this_1 ).kl_n_287;
     return kl_t0;
 }
 
-struct kl_2kl_Point kl_2kl_origin__( void )
+struct kl_5kinds_Point kl_5kinds_origin__( void )
 {
-    struct kl_2kl_Point kl_t0;
+    struct kl_5kinds_Point kl_t0;
     int32_t kl_t1;
-    struct kl_2kl_Point kl_t2;
-#line 54 "codegen/package_types/kl/shapes.kl"
+    struct kl_5kinds_Point kl_t2;
+#line 54 "codegen/package_types/kinds/shapes.kl"
     kl_t1 = kl_made_321 + 1;
     kl_made_321 = kl_t1;
-#line 55 "codegen/package_types/kl/shapes.kl"
+#line 55 "codegen/package_types/kinds/shapes.kl"
     kl_t2.kl_x_252 = 7;
     kl_t2.kl_y_254 = 8;
     kl_t0 = kl_t2;
     return kl_t0;
 }
 
-struct kl_2kl_Point kl__same__IQ2kl5PointE__Q2kl5Point( struct kl_2kl_Point kl_v_1 )
+struct kl_5kinds_Point kl__same__IQ5kinds5PointE__Q5kinds5Point( struct kl_5kinds_Point kl_v_1 )
 {
-    struct kl_2kl_Point kl_t0;
+    struct kl_5kinds_Point kl_t0;
 #line 14 "codegen/package_types/main.kl"
     kl_t0 = kl_v_1;
     return kl_t0;
@@ -323,11 +323,11 @@ struct kl__Point kl__same__I5PointE__5Point( struct kl__Point kl_v_1 )
     return kl_t0;
 }
 
-struct kl_2kl_Box__I3i32E kl_2kl_of__I3i32E__SQ2kl3BoxI3i32E_3i32( int32_t kl_x_1 )
+struct kl_5kinds_Box__I3i32E kl_5kinds_of__I3i32E__SQ5kinds3BoxI3i32E_3i32( int32_t kl_x_1 )
 {
-    struct kl_2kl_Box__I3i32E kl_t0;
-    struct kl_2kl_Box__I3i32E kl_t2;
-#line 14 "codegen/package_types/kl/shapes.kl"
+    struct kl_5kinds_Box__I3i32E kl_t0;
+    struct kl_5kinds_Box__I3i32E kl_t2;
+#line 14 "codegen/package_types/kinds/shapes.kl"
     kl_t2.kl_v_261 = kl_x_1;
     kl_t0 = kl_t2;
     return kl_t0;

@@ -1,1 +1,1 @@
---check --package kl=sema/packages/kl
+--check --package atlas=sema/packages/atlas

@@ -1,8 +1,8 @@
-// Every kind of declaration in the package `kl`, named from outside it. Every check returns a
+// Every kind of declaration in the package `kinds`, named from outside it. Every check returns a
 // distinct code.
-import kl::shapes;
+import kinds::shapes;
 
-// kl::Point's name, in this program's own package.
+// kinds::Point's name, in this program's own package.
 struct Point
 {
     i32 x;
@@ -14,42 +14,42 @@ T same<T>( T v ) where T : Copyable
     return v;
 }
 
-i32 measure( kl::Shape s )
+i32 measure( kinds::Shape s )
 {
     switch( s )
     {
-        case kl::Shape::Circle( r ):
+        case kinds::Shape::Circle( r ):
             return 3 * r * r;
-        case kl::Shape::Square( a ):
+        case kinds::Shape::Square( a ):
             return a * a;
     }
 }
 
 i32 main()
 {
-    kl::Point p = kl::origin();
+    kinds::Point p = kinds::origin();
     if( p.x != 7 || p.y != 8 ) { return 1; }
 
-    kl::Point q = kl::Point { 1, 2 };
+    kinds::Point q = kinds::Point { 1, 2 };
     Point own = Point { 5 };
     if( q.x + own.x != 6 ) { return 2; }
 
     if( same( p ).y != 8 || same( own ).x != 5 ) { return 3; }
 
-    kl::Box<i32> b = kl::Box<i32>::of( 9 );
-    kl::Box<kl::Point> boxed = kl::Box { q };
+    kinds::Box<i32> b = kinds::Box<i32>::of( 9 );
+    kinds::Box<kinds::Point> boxed = kinds::Box { q };
     if( b.v != 9 || boxed.v.y != 2 ) { return 4; }
 
-    kl::Colour c = kl::Colour::Green;
-    if( c == kl::Colour::Red ) { return 5; }
+    kinds::Colour c = kinds::Colour::Green;
+    if( c == kinds::Colour::Red ) { return 5; }
 
-    if( measure( kl::Shape::Circle( 2 ) ) != 12 || measure( kl::Shape::Square( 3 ) ) != 9 ) { return 6; }
+    if( measure( kinds::Shape::Circle( 2 ) ) != 12 || measure( kinds::Shape::Square( 3 ) ) != 9 ) { return 6; }
 
-    kl::Counter k = kl::Counter( 4 );
-    if( k.get() != 4 || kl::Counter::zero().get() != 0 ) { return 7; }
+    kinds::Counter k = kinds::Counter( 4 );
+    if( k.get() != 4 || kinds::Counter::zero().get() != 0 ) { return 7; }
 
-    kl::made = kl::made + 10;
-    if( kl::made != 11 ) { return 8; }
+    kinds::made = kinds::made + 10;
+    if( kinds::made != 11 ) { return 8; }
 
     return 0;
 }

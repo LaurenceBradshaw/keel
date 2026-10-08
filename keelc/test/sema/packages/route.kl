@@ -1,6 +1,6 @@
-import kl::deep;
+import atlas::deep;
 
 i32 via()
 {
-    return kl::hidden();
+    return atlas::hidden();
 }

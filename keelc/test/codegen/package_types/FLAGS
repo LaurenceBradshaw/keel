@@ -1,1 +1,1 @@
---emit-c --package kl=codegen/package_types/kl
+--emit-c --package kinds=codegen/package_types/kinds
