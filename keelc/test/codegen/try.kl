@@ -1,0 +1,282 @@
+// D6. `try` yields an `ok` payload, and passes an `err` on to the caller through the drops the
+// function owes. Each Buf holds heap memory and says when it goes, so the output is the drop order
+// and KEEL_VALGRIND=1 sees a drop missed, run twice, or run on a value never built.
+class Buf
+{
+    u64* data;
+
+    Buf( u64 n )
+    {
+        unsafe
+        {
+            data = alloc<u64>();
+        }
+
+        *data = n;
+    }
+
+    ~Buf()
+    {
+        print( "drop " );
+        println( *data );
+
+        unsafe
+        {
+            free( data );
+        }
+    }
+
+    u64 get() const
+    {
+        return *data;
+    }
+};
+
+class Pair
+{
+    public Buf left;
+    public Buf right;
+};
+
+enum Bad
+{
+    nope
+};
+
+enum Lost
+{
+    gone( Buf why )
+};
+
+result<u64, Bad> size( u64 n )
+{
+    if( n == 3 )
+    {
+        return result::err( Bad::nope );
+    }
+
+    return result::ok( n );
+}
+
+result<Buf, Bad> make( u64 n )
+{
+    return result::ok( Buf( try size( n ) ) );
+}
+
+result<void, Bad> check( bool fine )
+{
+    if( !fine )
+    {
+        return result::err( Bad::nope );
+    }
+
+    println( "checked" );
+    return result::ok();
+}
+
+// A local built before the `try` drops on both paths; the payload is the caller's.
+result<u64, Bad> one( u64 n )
+{
+    Buf before = Buf( 100 + n );
+    Buf got    = try make( n );
+    return result::ok( got.get() + before.get() );
+}
+
+// A `result<void, E>` yields nothing.
+result<void, Bad> steps( bool fine )
+{
+    try check( true );
+    try check( fine );
+    println( "after" );
+    return result::ok();
+}
+
+u64 sum( move Buf b, u64 n )
+{
+    return b.get() + n;
+}
+
+// A temporary built earlier in the statement drops when the `try` returns.
+result<u64, Bad> early( u64 n )
+{
+    return result::ok( sum( move Buf( 7 ), try size( n ) ) );
+}
+
+// An aggregate is written once its values exist, so an exit between them leaves nothing half-built.
+result<Buf, Bad> wrapped( u64 n )
+{
+    return result::ok( try make( n ) );
+}
+
+result<u64, Bad> paired( u64 n )
+{
+    Pair p = Pair { Buf( 1 ), try make( n ) };
+    return result::ok( p.left.get() + p.right.get() );
+}
+
+// A conditional's result is the statement's to drop only once an arm has filled it.
+result<u64, Bad> chosen( u64 n )
+{
+    Buf b = n > 5 ? Buf( n ) : Buf( try size( n ) );
+    return result::ok( b.get() );
+}
+
+// An owning error travels whole.
+result<u64, Lost> fetch( bool fine )
+{
+    if( !fine )
+    {
+        return result::err( Lost::gone( Buf( 9 ) ) );
+    }
+
+    return result::ok( 1 );
+}
+
+result<u64, Lost> relay( bool fine )
+{
+    u64 v = try fetch( fine );
+    return result::ok( v + 1 );
+}
+
+// A refill in one statement: when the `try` returns, `state` is already moved, so nothing drops it.
+result<Buf, Bad> grow( move Buf b )
+{
+    return result::ok( Buf( try size( b.get() + 1 ) ) );
+}
+
+result<u64, Bad> refill( u64 n )
+{
+    Buf state = Buf( n );
+    state     = try grow( move state );
+    state     = try grow( move state );
+    return result::ok( state.get() );
+}
+
+// Out of a loop, through its body's locals; nested, and in a condition.
+result<u64, Bad> total( u64 count )
+{
+    u64 all = 0;
+
+    for( u64 i = 0; i < count; i++ )
+    {
+        Buf held = Buf( 10 + i );
+        all      = all + try size( try size( i ) );
+    }
+
+    return result::ok( all );
+}
+
+result<bool, Bad> small( u64 n )
+{
+    return result::ok( try size( n ) < 2 );
+}
+
+result<u64, Bad> branch( u64 n )
+{
+    if( try small( n ) )
+    {
+        return result::ok( 1 );
+    }
+
+    return result::ok( 2 );
+}
+
+void show( result<u64, Bad> r )
+{
+    switch( r )
+    {
+    case result::ok( v ):
+        print( "ok " );
+        println( v );
+        break;
+    case result::err( e ):
+        println( "err" );
+        break;
+    }
+}
+
+void show_void( result<void, Bad> r )
+{
+    switch( r )
+    {
+    case result::ok:
+        println( "ok" );
+        break;
+    case result::err( e ):
+        println( "err" );
+        break;
+    }
+}
+
+void show_buf( move result<Buf, Bad> r )
+{
+    switch( move r )
+    {
+    case result::ok( b ):
+        print( "ok " );
+        println( b.get() );
+        break;
+    case result::err( e ):
+        println( "err" );
+        break;
+    }
+}
+
+void show_lost( move result<u64, Lost> r )
+{
+    switch( move r )
+    {
+    case result::ok( v ):
+        print( "ok " );
+        println( v );
+        break;
+    case result::err( e ):
+        println( "err" );
+        break;
+    }
+}
+
+i32 main()
+{
+    println( "one" );
+    show( one( 1 ) );
+    show( one( 3 ) );
+
+    println( "steps" );
+    show_void( steps( true ) );
+    show_void( steps( false ) );
+
+    println( "early" );
+    show( early( 2 ) );
+    show( early( 3 ) );
+
+    println( "wrapped" );
+    show_buf( move wrapped( 2 ) );
+    show_buf( move wrapped( 3 ) );
+
+    println( "paired" );
+    show( paired( 2 ) );
+    show( paired( 3 ) );
+
+    println( "chosen" );
+    show( chosen( 2 ) );
+    show( chosen( 3 ) );
+
+    println( "relay" );
+    show_lost( move relay( true ) );
+    show_lost( move relay( false ) );
+
+    println( "refill" );
+    show( refill( 0 ) );
+    show( refill( 1 ) );
+
+    println( "total" );
+    show( total( 3 ) );
+    show( total( 5 ) );
+
+    println( "branch" );
+    show( branch( 1 ) );
+    show( branch( 2 ) );
+    show( branch( 3 ) );
+    return 0;
+}

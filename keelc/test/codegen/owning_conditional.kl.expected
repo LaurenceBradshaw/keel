@@ -318,9 +318,9 @@ int32_t kl__main__( void )
     bb6:
     kl_t_14 = kl_t15;
     kl_t78 = false;
+    if ( kl_t78 ) kl__Buf__dtor( &kl_t15 );
     if ( kl_t80 ) kl__Buf__dtor( &kl_t19 );
     if ( kl_t79 ) kl__Buf__dtor( &kl_t16 );
-    if ( kl_t78 ) kl__Buf__dtor( &kl_t15 );
 #line 81 "codegen/owning_conditional.kl"
     kl_t22 = &kl_t_14;
     kl_t23 = kl__get__S3Buf( kl_t22 );
@@ -379,8 +379,8 @@ int32_t kl__main__( void )
     bb12:
     kl__eat__M3Buf( kl_t43 );
     kl_t84 = false;
-    if ( kl_t85 ) kl__Buf__dtor( &kl_t44 );
     if ( kl_t84 ) kl__Buf__dtor( &kl_t43 );
+    if ( kl_t85 ) kl__Buf__dtor( &kl_t44 );
 #line 93 "codegen/owning_conditional.kl"
     kl_t86 = false;
     kl_t49 = &kl_t48;
@@ -401,20 +401,20 @@ int32_t kl__main__( void )
     if ( kl_t86 ) kl__Buf__dtor( &kl_t48 );
 #line 95 "codegen/owning_conditional.kl"
     kl_t88 = false;
-    kl_t59.tag = 0;
-    kl_t89 = true;
     kl_t90 = false;
     kl_t61 = &kl_t60;
     kl_t90 = true;
     kl__Buf__R3Buf_3u64__ctor( kl_t61, 10 );
+    kl_t59.tag = 0;
+    kl_t89 = true;
     kl_t59.kl_b_54 = kl_t60;
     kl_t90 = false;
     kl_t89 = true;
     kl_f_58 = kl_t59;
     kl_t89 = false;
     kl_t88 = true;
-    if ( kl_t90 ) kl__Buf__dtor( &kl_t60 );
     if ( kl_t89 ) kl__Holder__dtor( &kl_t59 );
+    if ( kl_t90 ) kl__Buf__dtor( &kl_t60 );
 #line 96 "codegen/owning_conditional.kl"
     kl_t91 = false;
     kl_t64.tag = 1;

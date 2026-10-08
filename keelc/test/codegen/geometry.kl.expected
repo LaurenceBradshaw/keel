@@ -47,8 +47,8 @@ struct kl__Vec2 kl__add__4Vec2_4Vec2( struct kl__Vec2 kl_a_1, struct kl__Vec2 kl
     double kl_t5;
 #line 30 "codegen/geometry.kl"
     kl_t4 = kl_a_1.kl_x_1 + kl_b_2.kl_x_1;
-    kl_t3.kl_x_1 = kl_t4;
     kl_t5 = kl_a_1.kl_y_3 + kl_b_2.kl_y_3;
+    kl_t3.kl_x_1 = kl_t4;
     kl_t3.kl_y_3 = kl_t5;
     kl_t0 = kl_t3;
     return kl_t0;
@@ -62,8 +62,8 @@ struct kl__Vec2 kl__scale__4Vec2_3f64( struct kl__Vec2 kl_v_1, double kl_factor_
     double kl_t5;
 #line 35 "codegen/geometry.kl"
     kl_t4 = kl_v_1.kl_x_1 * kl_factor_2;
-    kl_t3.kl_x_1 = kl_t4;
     kl_t5 = kl_v_1.kl_y_3 * kl_factor_2;
+    kl_t3.kl_x_1 = kl_t4;
     kl_t3.kl_y_3 = kl_t5;
     kl_t0 = kl_t3;
     return kl_t0;
@@ -267,14 +267,14 @@ struct kl__Rect kl__intersection__4Rect_4Rect( struct kl__Rect kl_a_1, struct kl
     struct kl__Rect kl_t11;
 #line 107 "codegen/geometry.kl"
     kl_t5 = kl__larger__3i32_3i32( kl_a_1.kl_low_11.kl_x_6, kl_b_2.kl_low_11.kl_x_6 );
-    kl_t4.kl_x_6 = kl_t5;
     kl_t6 = kl__larger__3i32_3i32( kl_a_1.kl_low_11.kl_y_8, kl_b_2.kl_low_11.kl_y_8 );
+    kl_t4.kl_x_6 = kl_t5;
     kl_t4.kl_y_8 = kl_t6;
     kl_low_3 = kl_t4;
 #line 108 "codegen/geometry.kl"
     kl_t9 = kl__smaller__3i32_3i32( kl_a_1.kl_high_13.kl_x_6, kl_b_2.kl_high_13.kl_x_6 );
-    kl_t8.kl_x_6 = kl_t9;
     kl_t10 = kl__smaller__3i32_3i32( kl_a_1.kl_high_13.kl_y_8, kl_b_2.kl_high_13.kl_y_8 );
+    kl_t8.kl_x_6 = kl_t9;
     kl_t8.kl_y_8 = kl_t10;
     kl_high_7 = kl_t8;
 #line 110 "codegen/geometry.kl"
@@ -438,9 +438,9 @@ int32_t kl__main__( void )
 #line 134 "codegen/geometry.kl"
     kl_t24.kl_x_6 = 0;
     kl_t24.kl_y_8 = 0;
-    kl_t23.kl_low_11 = kl_t24;
     kl_t25.kl_x_6 = 4;
     kl_t25.kl_y_8 = 3;
+    kl_t23.kl_low_11 = kl_t24;
     kl_t23.kl_high_13 = kl_t25;
     kl_unit_22 = kl_t23;
 #line 136 "codegen/geometry.kl"
@@ -500,9 +500,9 @@ int32_t kl__main__( void )
 #line 146 "codegen/geometry.kl"
     kl_t42.kl_x_6 = 6;
     kl_t42.kl_y_8 = 5;
-    kl_t41.kl_high_13 = kl_t42;
     kl_t43.kl_x_6 = 2;
     kl_t43.kl_y_8 = 1;
+    kl_t41.kl_high_13 = kl_t42;
     kl_t41.kl_low_11 = kl_t43;
     kl_offset_40 = kl_t41;
 #line 148 "codegen/geometry.kl"
@@ -563,9 +563,9 @@ int32_t kl__main__( void )
 #line 161 "codegen/geometry.kl"
     kl_t58.kl_x_6 = 100;
     kl_t58.kl_y_8 = 100;
-    kl_t57.kl_low_11 = kl_t58;
     kl_t59.kl_x_6 = 110;
     kl_t59.kl_y_8 = 110;
+    kl_t57.kl_low_11 = kl_t58;
     kl_t57.kl_high_13 = kl_t59;
     kl_far_56 = kl_t57;
 #line 162 "codegen/geometry.kl"
@@ -597,9 +597,9 @@ int32_t kl__main__( void )
 #line 169 "codegen/geometry.kl"
     kl_t69.kl_x_6 = 0;
     kl_t69.kl_y_8 = 0;
-    kl_t68.kl_low_11 = kl_t69;
     kl_t70.kl_x_6 = 100000;
     kl_t70.kl_y_8 = 100000;
+    kl_t68.kl_low_11 = kl_t69;
     kl_t68.kl_high_13 = kl_t70;
     kl_huge_67 = kl_t68;
 #line 171 "codegen/geometry.kl"

@@ -119,8 +119,8 @@ struct kl__Vec kl__of__3i32_3i32( int32_t kl_x_1, int32_t kl_y_2 )
     int32_t kl_t5;
 #line 54 "codegen/static_methods.kl"
     kl_t4 = kl_x_1 + 100;
-    kl_t3.kl_a_1 = kl_t4;
     kl_t5 = kl_y_2 + 100;
+    kl_t3.kl_a_1 = kl_t4;
     kl_t3.kl_b_3 = kl_t5;
     kl_t0 = kl_t3;
     return kl_t0;

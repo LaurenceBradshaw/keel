@@ -75,8 +75,8 @@ void kl__Holder__R6Holder_3i32__ctor( struct kl__Holder* kl_this_1, int32_t kl_m
     kl_t10 = false;
     ( *kl_this_1 ).kl_w_53 = kl_t3;
     kl_t9 = false;
-    if ( kl_t10 ) kl__Tracked__dtor( &kl_t5 );
     if ( kl_t9 ) kl__Tracked__dtor( &kl_t3.kl_v_31 );
+    if ( kl_t10 ) kl__Tracked__dtor( &kl_t5 );
     return;
 }
 

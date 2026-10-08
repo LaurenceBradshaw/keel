@@ -82,9 +82,9 @@ int32_t kl__main__( void )
 #line 31 "codegen/structs.kl"
     kl_t3.kl_x_6 = 1.0;
     kl_t3.kl_y_8 = 2.0;
-    kl_t2.kl_a_1 = kl_t3;
     kl_t4.kl_x_6 = 4.0;
     kl_t4.kl_y_8 = 6.0;
+    kl_t2.kl_a_1 = kl_t3;
     kl_t2.kl_b_3 = kl_t4;
     kl_l_1 = kl_t2;
 #line 33 "codegen/structs.kl"
@@ -98,9 +98,9 @@ int32_t kl__main__( void )
 #line 37 "codegen/structs.kl"
     kl_t9.kl_y_8 = 2.0;
     kl_t9.kl_x_6 = 1.0;
-    kl_t8.kl_b_3 = kl_t9;
     kl_t10.kl_x_6 = 4.0;
     kl_t10.kl_y_8 = 6.0;
+    kl_t8.kl_b_3 = kl_t9;
     kl_t8.kl_a_1 = kl_t10;
     kl_flipped_7 = kl_t8;
 #line 39 "codegen/structs.kl"

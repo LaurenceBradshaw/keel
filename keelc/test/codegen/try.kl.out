@@ -1,0 +1,58 @@
+one
+drop 1
+drop 101
+ok 102
+drop 103
+err
+steps
+checked
+checked
+after
+ok
+checked
+err
+early
+drop 7
+ok 9
+drop 7
+err
+wrapped
+ok 2
+drop 2
+err
+paired
+drop 2
+drop 1
+ok 3
+drop 1
+err
+chosen
+drop 2
+ok 2
+err
+relay
+ok 2
+err
+drop 9
+refill
+drop 0
+drop 1
+drop 2
+ok 2
+drop 1
+drop 2
+err
+total
+drop 10
+drop 11
+drop 12
+ok 3
+drop 10
+drop 11
+drop 12
+drop 13
+err
+branch
+ok 1
+ok 2
+err

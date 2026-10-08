@@ -117,6 +117,7 @@ private:
     Operand lower_operator_call( Node_id id, Node_id method );
     Operand lower_operator_index( Node_id id, Node_id method );
     Operand lower_variant_construction( Node_id id );
+    Operand lower_try( Node_id id );
     Operand lower_empty_variant( Node_id id );
     void    bind_variant_pattern( Place matched, Node_id label, bool consumes );
     Place   lower_place( Node_id id );     // names where a value lives
@@ -182,9 +183,10 @@ private:
     void pop_scope( Span span );
     void unwind_to( u32 depth, Span span );
     void drop_place( Place place, Type_id type, Span span, bool replacing = false );
-    // Drops what the statement built, in reverse order, and clears the list. Reverse for the same
-    // reason locals unwind in reverse: it is the order destructors run in.
+    // Drop what the statement has built so far, in reverse: the order destructors run in. The
+    // first clears the list; a `try`'s exit uses the second, since the `ok` path still owns it.
     void drop_statement_temporaries( Span span );
+    void drop_built_temporaries( Span span );
     // A call whose callee names a type rather than a function.
     bool is_construction( Node_id id ) const;
 
@@ -638,14 +640,18 @@ void Lowering::drop_place( Place place, Type_id type, Span span, bool replacing 
 
 void Lowering::drop_statement_temporaries( Span span )
 {
+    drop_built_temporaries( span );
+    statement_temporaries_.clear();
+}
+
+void Lowering::drop_built_temporaries( Span span )
+{
     for( std::size_t i = statement_temporaries_.size(); i > 0; --i )
     {
         const Local_id temporary = statement_temporaries_[i - 1];
 
         drop_place( builder_.place( temporary ), builder_.type_of( temporary ), span );
     }
-
-    statement_temporaries_.clear();
 }
 
 bool Lowering::is_construction( Node_id id ) const
@@ -919,13 +925,6 @@ Operand Lowering::lower_conditional( Node_id id )
 
     const Local_id result = builder_.add_local( type, span );
 
-    // Nothing else drops the result when the arms own - the same hole an owning struct literal
-    // has, and closed the same way.
-    if( owns( type ) )
-    {
-        statement_temporaries_.push_back( result );
-    }
-
     const Block_id then_block = builder_.add_block();
     const Block_id else_block = builder_.add_block();
     const Block_id join       = builder_.add_block();
@@ -954,22 +953,23 @@ Operand Lowering::lower_conditional( Node_id id )
 
     builder_.switch_to( join );
 
+    // Nothing else drops the result when the arms own. Listed after the join, once an arm has
+    // filled it.
+    if( owns( type ) )
+    {
+        statement_temporaries_.push_back( result );
+    }
+
     return copy( builder_.place( result ), type );
 }
 
 Operand Lowering::lower_struct_literal( Node_id id )
 {
-    // A temporary, then one assignment per field. Lowered and assigned in a single pass, so the
-    // order the fields are *written* is the order they run - which is what §7.1 asks for, and
-    // what the C emitter needed two phases to achieve because it was building one expression.
+    // A temporary, then one assignment per field. Every value is lowered before any field is
+    // written, so a `try` that leaves between them finds nothing half-built.
     const Type_id  type = type_of( id );
     const Span     span = ast_.span( id );
     const Local_id temp = builder_.add_local( type, span );
-
-    if( owns( type ) )
-    {
-        statement_temporaries_.push_back( temp );
-    }
 
     builder_.storage_live( temp, span );
 
@@ -977,7 +977,8 @@ Operand Lowering::lower_struct_literal( Node_id id )
     // forms cannot be mixed - the checker rejects that - so an index is enough here.
     const std::span<const Node_id> fields = ast_.members( types_.table().get( type ).declaration );
 
-    std::size_t index = 0;
+    std::vector<std::pair<Node_id, Operand>> values;
+    std::size_t                              index = 0;
 
     for( const Node_id initialiser : ast_.initialisers( id ) )
     {
@@ -988,19 +989,37 @@ Operand Lowering::lower_struct_literal( Node_id id )
 
         // §6.4 may have widened the value to reach the field, the same as an argument reaching
         // a parameter. Saying so here is what keeps a backend from re-deriving it.
-        const Operand value = lower_expression( ast_.value( initialiser ) );
-
-        builder_.assign(
-            builder_.field( builder_.place( temp ), field ),
-            // Moved, not copied, when the field owns something: a copy would leave the temporary
-            // and the field holding one resource between them, and both would be dropped.
-            use( moved_if_owning(
-                converted( value, field_type( ast_, types_.table(), type, field, types_.recorded() ), ast_.span( initialiser ) )
-            ) ),
-            ast_.span( initialiser )
+        values.emplace_back(
+            initialiser,
+            converted(
+                lower_expression( ast_.value( initialiser ) ),
+                field_type( ast_, types_.table(), type, field, types_.recorded() ),
+                ast_.span( initialiser )
+            )
         );
 
         index += 1;
+    }
+
+    index = 0;
+
+    for( const auto& [initialiser, value] : values )
+    {
+        const Symbol_id name  = ast_.name( initialiser );
+        const Node_id   field = name.is_valid() ? field_of( type, name ) : fields[index];
+
+        // Moved, not copied, when the field owns something: a copy would leave the temporary and
+        // the field holding one resource between them, and both would be dropped.
+        builder_.assign(
+            builder_.field( builder_.place( temp ), field ), use( moved_if_owning( value ) ), ast_.span( initialiser )
+        );
+
+        index += 1;
+    }
+
+    if( owns( type ) )
+    {
+        statement_temporaries_.push_back( temp );
     }
 
     return copy( builder_.place( temp ), type );
@@ -1277,22 +1296,11 @@ Operand Lowering::lower_variant_construction( Node_id id )
     const Local_id local = builder_.add_local( type, span );
     const Place    place = builder_.place( local );
 
-    if( owns( type ) )
-    {
-        statement_temporaries_.push_back( local );
-    }
-
     // The ordinal the checker recorded on the path, which is the same number a payload-free variant
     // lowers to on its own.
     const std::optional<Constant_value> ordinal = types_.constant_of( path );
 
     assert( ordinal.has_value() && "the checker records an ordinal for every variant it accepts" );
-
-    const Type_id tag_type = types_.table().get( type ).element;
-
-    builder_.assign(
-        builder_.tag( place ), use( constant( literal_pool_.add_integer( ordinal->magnitude ), tag_type ) ), span
-    );
 
     // The payload fields, in declaration order - which is the order the arguments were checked in.
     const Node_id decl    = types_.table().get( type ).declaration;
@@ -1302,19 +1310,113 @@ Operand Lowering::lower_variant_construction( Node_id id )
 
     // Each field's type through *this* instance: the declaration records `T`, which no local can
     // hold. `type` is already substituted through the enclosing instantiation, so this is concrete.
+    // Every value is lowered before the tag is written, as a struct literal's are.
+    std::vector<Operand> values;
+
     for( std::size_t i = 0; i < arguments.size() && i < payload.size(); ++i )
     {
-        const Operand value = converted(
+        values.push_back( converted(
             lower_expression( arguments[i] ),
             keel::field_type( ast_, types_.table(), type, payload[i], types_.recorded() ),
             span
-        );
+        ) );
+    }
 
-        // The variant owns what it was given, so a temporary is moved in rather than dropped twice.
-        builder_.assign( builder_.field( place, payload[i] ), use( moved_if_owning( value ) ), span );
+    const Type_id tag_type = types_.table().get( type ).element;
+
+    builder_.assign(
+        builder_.tag( place ), use( constant( literal_pool_.add_integer( ordinal->magnitude ), tag_type ) ), span
+    );
+
+    // The variant owns what it was given, so a temporary is moved in rather than dropped twice.
+    for( std::size_t i = 0; i < values.size(); ++i )
+    {
+        builder_.assign( builder_.field( place, payload[i] ), use( moved_if_owning( values[i] ) ), span );
+    }
+
+    if( owns( type ) )
+    {
+        statement_temporaries_.push_back( local );
     }
 
     return copy( place, type );
+}
+
+// D6. The operand moves into storage nothing drops. `ok` yields its payload; `err` is written into
+// the return slot and returned through every drop the function owes.
+Operand Lowering::lower_try( Node_id id )
+{
+    const Node_id operand    = ast_.operand( id );
+    const Span    span       = ast_.span( id );
+    const Operand expression = moved_if_owning( lower_expression( operand ) );
+    const Type_id type       = expression.type;
+    const Type_id yielded    = type_of( id );
+
+    const Local_id local = builder_.into_temp( use( expression ), type, span );
+    const Place    taken = builder_.place( local );
+
+    const std::span<const Node_id> variants = ast_.variants( types_.table().get( type ).declaration );
+
+    // The prelude's order.
+    const Node_id ok  = variants[0];
+    const Node_id err = variants[1];
+
+    const Type_id boolean  = types_.table().builtin( Type_kind::Bool );
+    const Type_id tag_type = types_.table().get( type ).element;
+
+    const Local_id test = builder_.into_temp(
+        binary(
+            Token_kind::Equal_equal,
+            copy( builder_.tag( taken ), tag_type ),
+            constant( literal_pool_.add_integer( 0 ), tag_type ),
+            boolean
+        ),
+        boolean,
+        span
+    );
+
+    const Block_id ok_block  = builder_.add_block();
+    const Block_id err_block = builder_.add_block();
+
+    builder_.terminate_branch( copy( builder_.place( test ), boolean ), ok_block, err_block, span );
+
+    builder_.switch_to( err_block );
+    const Place   slot      = builder_.place( k_return_slot );
+    const Type_id slot_type = builder_.type_of( k_return_slot );
+    builder_.assign(
+        builder_.tag( slot ), use( constant( literal_pool_.add_integer( 1 ), types_.table().get( slot_type ).element ) ), span
+    );
+
+    const std::vector<Node_id> err_fields = carried_payload( ast_, types_.table(), type, err, types_.recorded() );
+    for( const Node_id field : err_fields )
+    {
+        builder_.assign(
+            builder_.field( slot, field ),
+            use( copy( builder_.field( taken, field ), field_type( ast_, types_.table(), type, field, types_.recorded() ) ) ),
+            span
+        );
+    }
+
+    drop_built_temporaries( span );
+    unwind_to( 0, span );
+    builder_.terminate_return( span );
+
+    builder_.switch_to( ok_block );
+    const std::vector<Node_id> ok_fields = carried_payload( ast_, types_.table(), type, ok, types_.recorded() );
+
+    if( ok_fields.empty() )
+    {
+        return Operand { .type = types_.table().builtin( Type_kind::Void ) };
+    }
+
+    const Local_id value = builder_.into_temp( use( copy( builder_.field( taken, ok_fields[0] ), yielded ) ), yielded, span );
+
+    if( owns( yielded ) )
+    {
+        statement_temporaries_.push_back( value );
+    }
+
+    return copy( builder_.place( value ), yielded );
 }
 
 // D29/D32. A method call is an ordinary call whose first argument is the receiver's **address**.
@@ -1430,14 +1532,14 @@ Operand Lowering::lower_call( Node_id id )
         const Type_id  type  = type_of( id );
         const Local_id local = builder_.add_local( type, ast_.span( id ) );
 
+        builder_.storage_live( local, ast_.span( id ) );
+
+        lower_construction( builder_.place( local ), id );
+
         if( owns( type ) )
         {
             statement_temporaries_.push_back( local );
         }
-
-        builder_.storage_live( local, ast_.span( id ) );
-
-        lower_construction( builder_.place( local ), id );
 
         return copy( builder_.place( local ), type );
     }
@@ -1737,6 +1839,8 @@ Operand Lowering::lower_expression( Node_id id )
 
         return move( built.place, type );
     }
+    case Node_kind::Try_expr:
+        return lower_try( id );
     case Node_kind::Path_expr:
     {
         // `kl::count`: a global named through its package or a static field, the only paths the resolver binds.
@@ -1929,7 +2033,6 @@ void Lowering::lower_var( Node_id id )
 
     locals_.emplace( id.v, local );
     builder_.storage_live( local, span );
-    scope_locals_.push_back( local );
     if( borrowed )
     {
         borrowed_bindings_.insert( id.v );
@@ -1959,6 +2062,8 @@ void Lowering::lower_var( Node_id id )
             builder_.assign( builder_.place( local ), use( moved_if_owning( lower_expression( init ) ) ), span );
         }
     }
+    // In scope only once it holds a value: a `try` in the initialiser leaves before then.
+    scope_locals_.push_back( local );
     drop_statement_temporaries( span );
 }
 
@@ -6066,6 +6171,143 @@ TEST_CASE( "lower_moves_a_consumed_scrutinee_into_its_bindings", "[ir][lower][pa
     REQUIRE( text.find( "= move _1" ) != std::string::npos );
     REQUIRE( text.find( ": B; // b" ) != std::string::npos );
     REQUIRE( text.find( "&borrow" ) == std::string::npos );
+}
+
+constexpr std::string_view k_result = "enum result<T, E> { ok( T value ), err( E error ) };\n";
+
+// D6. `try` tests the tag: `ok` yields the payload, and `err` is written into the return slot and
+// returned through every drop the function owes.
+TEST_CASE( "lower_try_returns_the_error_through_the_drops", "[ir][lower][try]" )
+{
+    Lowered p(
+        "enum Bad { nope };\n"
+        "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+        "result<B, Bad> make() { return result::ok( B( 1 ) ); }\n"
+        "result<u64, Bad> f() { B keep = B( 2 ); B v = try make(); return result::ok( v.n ); }\n"
+        "i32 main() { return 0; }",
+        k_result
+    );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+    REQUIRE( every_function_verifies( p ) );
+
+    const std::string text = p.named( "f" );
+
+    INFO( text );
+    REQUIRE( text.find( ".tag == const 0" ) != std::string::npos );
+    REQUIRE( text.find( "_0.tag = const 1" ) != std::string::npos );
+    REQUIRE( text.find( "_0.error = copy" ) != std::string::npos );
+    REQUIRE( count( text, "return\n" ) == 2 );
+    REQUIRE( count( text, "drop _1\n" ) == 2 ); // `keep`, once on each path
+
+    // `v` holds nothing yet when the `err` leaves, so only the `ok` path drops it.
+    const std::size_t named = text.find( ": B; // v\n" );
+
+    REQUIRE( named != std::string::npos );
+
+    const std::size_t start = text.rfind( "let ", named ) + 4;
+
+    REQUIRE( count( text, "drop " + text.substr( start, named - start ) + "\n" ) == 1 );
+}
+
+// D51. An `ok` of `void` carries nothing, so nothing is read out of it.
+TEST_CASE( "lower_try_yields_nothing_from_a_void_result", "[ir][lower][try]" )
+{
+    Lowered p(
+        "enum Bad { nope };\n"
+        "result<void, Bad> step() { return result::ok(); }\n"
+        "result<void, Bad> f() { try step(); return result::ok(); }\n"
+        "i32 main() { return 0; }",
+        k_result
+    );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+    REQUIRE( every_function_verifies( p ) );
+
+    const std::string text = p.named( "f" );
+
+    INFO( text );
+    REQUIRE( text.find( "_0.tag = const 1" ) != std::string::npos );
+    REQUIRE( text.find( ".value" ) == std::string::npos );
+}
+
+// What the statement built before the `try` is the statement's to drop, on the way out as well.
+TEST_CASE( "lower_try_drops_the_statement's_earlier_temporaries", "[ir][lower][try]" )
+{
+    Lowered p(
+        "enum Bad { nope };\n"
+        "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+        "result<u64, Bad> size() { return result::ok( 1 ); }\n"
+        "u64 sum( move B b, u64 n ) { return n; }\n"
+        "result<u64, Bad> f() { u64 r = sum( move B( 7 ), try size() ); return result::ok( r ); }\n"
+        "i32 main() { return 0; }",
+        k_result
+    );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+    REQUIRE( every_function_verifies( p ) );
+
+    const std::string text = p.named( "f" );
+
+    INFO( text );
+
+    const std::size_t declared = text.find( ": B;" );
+
+    REQUIRE( declared != std::string::npos );
+
+    const std::size_t start     = text.rfind( "let ", declared ) + 4;
+    const std::string temporary = text.substr( start, declared - start );
+
+    REQUIRE( count( text, "drop " + temporary + "\n" ) == 2 );
+}
+
+// An aggregate is written once every value in it exists, so an `err` leaves none half-built for the
+// statement's drops to reach.
+TEST_CASE( "lower_try_runs_before_an_aggregate_is_written", "[ir][lower][try]" )
+{
+    constexpr std::string_view held = "enum Bad { nope };\n"
+                                      "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+                                      "class P { public B a; public B b; };\n"
+                                      "result<B, Bad> make() { return result::ok( B( 1 ) ); }\n";
+
+    SECTION( "a variant" )
+    {
+        Lowered p(
+            std::string( held ) + "result<B, Bad> f() { return result::ok( try make() ); }\n"
+                                  "i32 main() { return 0; }",
+            k_result
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( every_function_verifies( p ) );
+
+        const std::string text = p.named( "f" );
+
+        INFO( text );
+        REQUIRE( text.find( ".tag = const 0" ) > text.find( ".tag == const 0" ) );
+    }
+
+    SECTION( "a struct literal" )
+    {
+        Lowered p(
+            std::string( held ) + "result<u64, Bad> f() { P p = P { B( 1 ), try make() }; return result::ok( 0 ); }\n"
+                                  "i32 main() { return 0; }",
+            k_result
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( every_function_verifies( p ) );
+
+        const std::string text = p.named( "f" );
+
+        INFO( text );
+        REQUIRE( text.find( ".a = move" ) > text.find( ".tag == const 0" ) );
+    }
 }
 
 // PLAN D32. A method call is an ordinary call whose first argument is the receiver's **address** -

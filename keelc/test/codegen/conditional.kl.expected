@@ -149,9 +149,9 @@ int32_t kl__owning_built__4bool( bool kl_which_1 )
     bb3:
     kl_c_2 = kl_t3;
     kl_t10 = false;
+    if ( kl_t10 ) kl__Owner__dtor( &kl_t3 );
     if ( kl_t12 ) kl__Owner__dtor( &kl_t7 );
     if ( kl_t11 ) kl__Owner__dtor( &kl_t4 );
-    if ( kl_t10 ) kl__Owner__dtor( &kl_t3 );
 #line 50 "codegen/conditional.kl"
     kl_t0 = kl_c_2.kl_tag_23;
     kl__Owner__dtor( &kl_c_2 );

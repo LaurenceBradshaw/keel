@@ -204,8 +204,8 @@ int32_t kl__main__( void )
     kl_t20 = true;
     kl_w_7 = kl_t8;
     kl_t20 = false;
-    if ( kl_t21 ) kl__Buffer__dtor( &kl_t9 );
     if ( kl_t20 ) kl__Buffer__dtor( &kl_t8.kl_inner_97 );
+    if ( kl_t21 ) kl__Buffer__dtor( &kl_t9 );
 #line 101 "codegen/destructors.kl"
     kl__Buffer__dtor( &kl_w_7.kl_inner_97 );
 #line 106 "codegen/destructors.kl"

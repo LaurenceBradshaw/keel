@@ -267,23 +267,23 @@ int32_t kl__main__( void )
     kl_t2.kl_next_4 = NULL;
     kl_fifth_1 = kl_t2;
 #line 125 "codegen/linked_list.kl"
-    kl_t4.kl_value_1 = 4;
     kl_t5 = &kl_fifth_1;
+    kl_t4.kl_value_1 = 4;
     kl_t4.kl_next_4 = kl_t5;
     kl_fourth_3 = kl_t4;
 #line 126 "codegen/linked_list.kl"
-    kl_t7.kl_value_1 = 3;
     kl_t8 = &kl_fourth_3;
+    kl_t7.kl_value_1 = 3;
     kl_t7.kl_next_4 = kl_t8;
     kl_third_6 = kl_t7;
 #line 127 "codegen/linked_list.kl"
-    kl_t10.kl_value_1 = 2;
     kl_t11 = &kl_third_6;
+    kl_t10.kl_value_1 = 2;
     kl_t10.kl_next_4 = kl_t11;
     kl_second_9 = kl_t10;
 #line 128 "codegen/linked_list.kl"
-    kl_t13.kl_value_1 = 1;
     kl_t14 = &kl_second_9;
+    kl_t13.kl_value_1 = 1;
     kl_t13.kl_next_4 = kl_t14;
     kl_first_12 = kl_t13;
 #line 130 "codegen/linked_list.kl"
