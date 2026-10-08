@@ -132,8 +132,8 @@ std::string Spelling::function( Node_id declaration, std::span<const Type_id> ty
     }
 
     // A destructor's aux is the type's own name, and an instantiation is told apart by its type
-    // arguments alone - the same rule mangle_function follows.
-    if( ast.kind( declaration ) == Node_kind::Destructor_decl )
+    // arguments alone - the same rule mangle_function follows. An enum names its synthesised one.
+    if( ast.kind( declaration ) == Node_kind::Destructor_decl || ast.kind( declaration ) == Node_kind::Enum_decl )
     {
         return mangle_destructor(
             package_name( declaration ), interner.text( ast.name( declaration ) ), type_arguments, types.table()
@@ -189,6 +189,11 @@ std::string Spelling::function( Node_id declaration, std::span<const Type_id> ty
 std::string Spelling::destructor_of( Type_id type ) const
 {
     const Node_id declaration = types.table().get( type ).declaration;
+
+    if( types.table().is_enum( type ) )
+    {
+        return function( declaration, types.table().get( type ).arguments );
+    }
 
     for( const Node_id member : ast.members( declaration ) )
     {

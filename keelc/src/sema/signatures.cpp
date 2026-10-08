@@ -38,7 +38,6 @@ void Signatures::declare()
     check_aggregate_members();
     check_operators();
     check_struct_ownership();
-    check_enum_payloads();
     declare_functions();
     declare_globals();
     places_.record_borrowed_parameters();
@@ -483,41 +482,6 @@ void Signatures::check_member_kind( Node_id decl, const Member_kind& kind )
                 fmt::format( "`{}{}` does not name the enclosing type", kind.prefix, interner_.text( written ) ),
                 fmt::format( "write `{}{}`", kind.prefix, type_text )
             );
-        }
-    }
-}
-
-// D30's first cut. Destroying an enum means destroying only the *active* variant, chosen at run
-// time - which needs a destructor that switches on the tag, and is the first run-time-dependent
-// destructor the language would have. Until that exists an owning payload would leak on every path
-// that did not construct it, so it is refused here rather than mis-destroyed there.
-//
-// Its own pass because ownership is asked of field types, which are recorded after the pass that
-// declares enums - the same ordering that made record_borrowed_parameters a pass of its own.
-void Signatures::check_enum_payloads()
-{
-    for( const Node_id decl : ast_.declarations( ast_.root() ) )
-    {
-        if( ast_.kind( decl ) != Node_kind::Enum_decl )
-        {
-            continue;
-        }
-
-        for( const Node_id variant : ast_.variants( decl ) )
-        {
-            for( const Node_id field : ast_.payload( variant ) )
-            {
-                if( bounds_.satisfies( types_.type_of( field ), Bound::Copyable ) )
-                {
-                    continue;
-                }
-
-                reporter_.error_at(
-                    ast_.span( field ),
-                    fmt::format( "a variant cannot carry `{}`, which owns a resource", table_.name( types_.type_of( field ) ) ),
-                    "destroying an enum means destroying only the active variant, which is not implemented yet"
-                );
-            }
         }
     }
 }
@@ -1842,17 +1806,175 @@ TEST_CASE( "type_checker_answers_ownership_per_instantiation", "[sema][generic][
     }
 }
 
-// D30's first cut. Destroying an enum means destroying only the *active* variant, which needs a
-// destructor that switches on the tag - the first run-time-dependent destructor in the language.
-// Until that exists, an owning payload would leak or double-free, so it is refused.
-TEST_CASE( "type_checker_refuses_an_owning_payload_for_now", "[sema][payload]" )
+// D30. An enum owns exactly when a payload does - through any variant, and per instance.
+TEST_CASE( "instance_owns_an_enum_through_its_payload", "[sema][payload][move]" )
 {
-    const Typed p( "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
-                   "enum Holder { Full( B value ), Empty };\ni32 main() { return 0; }" );
+    constexpr std::string_view owning = "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n";
 
-    INFO( p.rendered() );
-    REQUIRE_FALSE( p.clean() );
-    REQUIRE( p.rendered().find( "owns a resource" ) != std::string::npos );
+    const auto owns = []( Typed& p, Type_id type )
+    { return instance_owns( p.ast(), p.types().table(), type, p.types().recorded() ); };
+
+    SECTION( "a payload that owns makes the enum own" )
+    {
+        Typed p( std::string( owning ) + "enum H { Empty, Full( B value ) };\ni32 main() { H h = H::Empty; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( owns( p, p.types().type_of( p.nth( Node_kind::Var_decl, 0 ) ) ) );
+    }
+
+    SECTION( "copyable payloads do not" )
+    {
+        Typed p( "enum Shape { Circle( f64 r ), Dot };\ni32 main() { Shape s = Shape::Dot; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE_FALSE( owns( p, p.types().type_of( p.nth( Node_kind::Var_decl, 0 ) ) ) );
+    }
+
+    SECTION( "a generic one owns at the instances whose argument does" )
+    {
+        Typed p(
+            std::string( owning ) + "enum Option<T> { Some( T value ), None };\n"
+                                    "i32 main() { Option<B> a = Option::None; Option<i32> b = Option::None; return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( owns( p, p.types().type_of( p.nth( Node_kind::Var_decl, 0 ) ) ) );
+        REQUIRE_FALSE( owns( p, p.types().type_of( p.nth( Node_kind::Var_decl, 1 ) ) ) );
+    }
+
+    SECTION( "so a struct may not hold one" )
+    {
+        Typed p( std::string( owning ) + "enum H { Empty, Full( B value ) };\nstruct S { H h; };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "a struct cannot contain `H`, which owns a resource" ) != std::string::npos );
+    }
+}
+
+// D7. A pattern binding borrows its payload in place, and the enum still owns it - so nothing takes
+// it out: not a copy, not a `move`, not a `return`.
+TEST_CASE( "type_checker_keeps_an_owning_payload_in_its_enum", "[sema][payload][move]" )
+{
+    constexpr std::string_view held = "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+                                      "enum H { Full( B b ), Empty };\n";
+
+    const auto arm = [held]( std::string_view body )
+    {
+        return std::string( held ) + "B f( H h ) { switch( h ) { case H::Full( b ): " + std::string( body ) +
+               " case H::Empty: return B( 0 ); } }\ni32 main() { return 0; }";
+    };
+
+    SECTION( "a copy" )
+    {
+        const Typed p( arm( "B c = b; return B( 1 );" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`b` still belongs to what holds it" ) != std::string::npos );
+    }
+
+    SECTION( "a move" )
+    {
+        const Typed p( arm( "B c = move b; return B( 1 );" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "a binding cannot be moved" ) != std::string::npos );
+    }
+
+    SECTION( "a return" )
+    {
+        const Typed p( arm( "return b;" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`b` still belongs to what holds it" ) != std::string::npos );
+    }
+
+    SECTION( "but reading through it is fine" )
+    {
+        const Typed p( arm( "return B( b.n );" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "and the variant takes a named value only by `move`" )
+    {
+        const Typed p( std::string( held ) + "H g() { B b = B( 1 ); return H::Full( b ); }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "write `move b`" ) != std::string::npos );
+    }
+}
+
+// D7. A binding borrows the payload in place, so until its `case` ends the matched value may be
+// neither written nor moved - either would destroy what the binding points at.
+TEST_CASE( "type_checker_holds_the_scrutinee_while_a_payload_is_borrowed", "[sema][payload][borrow]" )
+{
+    constexpr std::string_view held = "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+                                      "enum H { Full( B b ), Empty };\n"
+                                      "void reset( ref H h ) { h = H::Empty; }\n"
+                                      "void take( move H h ) { }\n";
+
+    const auto arm = [held]( std::string_view full, std::string_view empty = "" )
+    {
+        return std::string( held ) + "void f( move H h ) { switch( h ) { case H::Full( b ): " + std::string( full ) +
+               " return; case H::Empty: " + std::string( empty ) + " return; } h = H::Empty; }\ni32 main() { return 0; }";
+    };
+
+    SECTION( "an assignment" )
+    {
+        Typed p( arm( "h = H::Empty;" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`h` cannot be modified while `b` borrows its payload" ) != std::string::npos );
+    }
+
+    SECTION( "a `ref` argument" )
+    {
+        Typed p( arm( "reset( ref h );" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`h` cannot be modified while `b` borrows its payload" ) != std::string::npos );
+    }
+
+    SECTION( "a move" )
+    {
+        Typed p( arm( "take( move h );" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`h` cannot be moved while `b` borrows its payload" ) != std::string::npos );
+    }
+
+    SECTION( "a method that may modify the object" )
+    {
+        Typed p(
+            std::string( held ) + "class K { H held; K( move H h ) { held = move h; } void clear() { held = H::Empty; }\n"
+                                  "u64 peek() { switch( held ) { case H::Full( b ): clear(); return b.n;"
+                                  " case H::Empty: return 0; } } };\ni32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`clear` may modify the object while `b` borrows its payload" ) != std::string::npos );
+    }
+
+    SECTION( "but not in an arm that borrows nothing, nor after the switch" )
+    {
+        Typed p( arm( "", "h = H::Empty;" ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
 }
 
 } // namespace keel

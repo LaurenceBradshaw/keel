@@ -25,6 +25,7 @@ enum class C_part : u8
 };
 
 // `include` names the prelude's file, written after the standard headers; empty writes none.
+// Types is mutable only for its table, which a struct reached only through a field grows.
 std::string emit_c_from_kir(
     const std::vector<Function>& functions,
     const Ast&                   ast,

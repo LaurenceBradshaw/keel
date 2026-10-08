@@ -94,10 +94,4 @@ error: `r` is bound by a pattern, so it cannot be modified
 156 |             r = 2.0;
     |             ^ it names part of the value being matched, which the `switch` does not own
 
-error: a variant cannot carry `Owned`, which owns a resource
-   --> sema/errors_enums.kl:181:11
-    |
-181 |     Full( Owned value ),
-    |           ^^^^^^^^^^^ destroying an enum means destroying only the active variant, which is not implemented yet
-
-17 errors generated
+16 errors generated

@@ -877,7 +877,7 @@ void Kir_emitter::emit_terminator( const Terminator& terminator, const Function&
 
     // The terminator carries no value: the lowerer put it in the return slot, which is local 0.
     case Terminator_kind::Return:
-        if( is_void( types_.type_of( function.declaration ) ) )
+        if( !function.returns_a_value )
         {
             write_line( "return;" );
             return;

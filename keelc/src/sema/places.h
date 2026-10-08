@@ -67,6 +67,12 @@ public:
     void check_owning_source( Node_id value, Type_id type );
     bool check_owning_return( Node_id value, Type_id type );
 
+    // D7: while an arm's binding borrows an owning payload, the scrutinee's root may be neither
+    // written nor moved. Pushed per arm; nothing is held for a temporary or a pointer's referent.
+    void    hold_payload( Node_id arm, Node_id scrutinee, Node_id current_function );
+    void    release_payload();
+    Node_id borrowing_binding( Node_id root ) const; // the binding holding `root`, or invalid
+
     // D31: which parameters travel by address. Its own pass because ownership is asked of field
     // types, which are recorded only after both parameter loops have run.
     void record_borrowed_parameters();
@@ -81,6 +87,14 @@ private:
     Bounds&           bounds_;
     const Callees&    callees_;
     Reporter&         reporter_;
+
+    struct Held_payload
+    {
+        Node_id root;
+        Node_id binding;
+    };
+
+    std::vector<Held_payload> held_; // innermost last
 };
 
 } // namespace keel::sema

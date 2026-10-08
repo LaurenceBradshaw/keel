@@ -47,8 +47,8 @@ void queue_destructors( const Ast& ast, const Types& types, std::vector<Instanti
     {
         const Type& composite_type = types.table().get( composite_type_id );
 
-        // An enum is skipped rather than walked: D30 refuses an owning payload, so it has no
-        // destructor to seed - and ast.members asserts on one.
+        // An enum is skipped rather than walked: its destructor is synthesised by lower(), not
+        // declared - and ast.members asserts on one.
         if( !composite_type.declaration.is_valid() || !ast.is_generic( composite_type.declaration ) ||
             ast.kind( composite_type.declaration ) == Node_kind::Enum_decl )
         {

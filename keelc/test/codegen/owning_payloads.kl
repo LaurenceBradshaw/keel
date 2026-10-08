@@ -1,0 +1,141 @@
+// PLAN D30. An enum whose payload owns is destroyed by a synthesised destructor that drops the
+// active variant only. Each Buf holds heap memory and says when it goes, so the output is the drop
+// order and KEEL_VALGRIND=1 sees a drop missed or run twice.
+class Buf
+{
+    u64* data;
+
+    Buf( u64 n )
+    {
+        unsafe
+        {
+            data = alloc<u64>();
+        }
+
+        *data = n;
+    }
+
+    ~Buf()
+    {
+        print( "drop " );
+        println( *data );
+
+        unsafe
+        {
+            free( data );
+        }
+    }
+
+    u64 get() const
+    {
+        return *data;
+    }
+};
+
+enum Holder
+{
+    Full( Buf b ),
+    Empty,
+    Pair( u64 extra, Buf left, Buf right )
+};
+
+enum Option<T>
+{
+    Some( T value ),
+    None
+};
+
+// An owning enum as a field: the class's drop reaches it through the per-field expansion.
+class Keeper
+{
+    Holder held;
+
+    Keeper( move Holder h )
+    {
+        held = move h;
+    }
+};
+
+u64 read( Buf b )
+{
+    return b.get();
+}
+
+// A binding borrows its payload in place, so it can be lent on.
+u64 size( Holder h )
+{
+    switch( h )
+    {
+        case Holder::Full( b ):
+            return read( b );
+        case Holder::Pair( extra, left, right ):
+            return extra + left.get() + right.get();
+        case Holder::Empty:
+            return 0;
+    }
+}
+
+Holder make( u64 n )
+{
+    return Holder::Full( Buf( n ) );
+}
+
+void consume( move Holder h )
+{
+    print( "consumed " );
+    println( size( h ) );
+}
+
+u64 nested( Option<Holder> o )
+{
+    switch( o )
+    {
+        case Option::Some( h ):
+            return size( h );
+        case Option::None:
+            return 0;
+    }
+}
+
+i32 main()
+{
+    Buf    x = Buf( 1 );
+    Holder h = Holder::Full( move x );
+    println( size( h ) );
+
+    // Right before left: a payload drops in reverse, as fields do.
+    Holder p = Holder::Pair( 10, Buf( 2 ), Buf( 3 ) );
+    println( size( p ) );
+
+    // A temporary, dropped at the end of its statement.
+    println( size( make( 4 ) ) );
+
+    consume( move h );
+
+    // Assignment drops the variant it replaces, and an empty one drops nothing.
+    Holder e = Holder::Empty;
+    e        = Holder::Full( Buf( 5 ) );
+    e        = Holder::Full( Buf( 6 ) );
+
+    Option<Buf> o = Option::Some( Buf( 7 ) );
+    Option<Buf> none = Option::None;
+
+    // The scrutinee is a temporary that lives until the switch ends, so the binding stays valid.
+    switch( make( 8 ) )
+    {
+        case Holder::Full( b ):
+            println( b.get() );
+            break;
+        case Holder::Pair( extra, left, right ):
+            return 1;
+        case Holder::Empty:
+            return 2;
+    }
+
+    println( nested( Option::Some( Holder::Full( Buf( 9 ) ) ) ) );
+
+    Keeper k = Keeper( move Holder::Full( Buf( 11 ) ) );
+
+    println( "end" );
+    return 0;
+}

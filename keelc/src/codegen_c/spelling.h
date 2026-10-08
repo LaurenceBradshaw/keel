@@ -15,7 +15,7 @@ namespace keel
 struct Spelling
 {
     const Ast&      ast;
-    Types&          types;
+    Types&          types; // mutable only for its table: an instance's symbol interns its types
     const Interner& interner;
     const Imports&  imports;
 
@@ -26,9 +26,8 @@ struct Spelling
     // type arguments, so they are part of the symbol.
     std::string function( Node_id declaration, std::span<const Type_id> type_arguments = {} ) const;
 
-    // The symbol a Drop calls. A Drop always names a type with a destructor of its own - the
-    // lowerer expands a compound into per-field drops - so a type without one is a lowering bug
-    // rather than a case to handle.
+    // The symbol a Drop calls. A Drop always names a type with a destructor of its own, or an enum
+    // with its synthesised one - the lowerer expands any other compound into per-field drops.
     std::string destructor_of( Type_id type ) const;
     // The types alone: `int32_t, uint8_t`. That is all a prototype needs, and all a definition can
     // use - the body names its parameters by Local_id, so nothing here may name them at all.

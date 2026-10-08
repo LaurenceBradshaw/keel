@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "ir/lower.h"
+#include <algorithm>
 #include <cassert>
 #include <unordered_map>
 #include <unordered_set>
@@ -17,6 +18,53 @@ namespace keel
 
 namespace
 {
+
+// D2's drop of one place, expanded: a destructor of its own, then each field in reverse. Free
+// because an enum's synthesised destructor drops its payload the same way and has no Lowering.
+void drop_place( Builder& builder, const Ast& ast, Types& types, Place place, Type_id type, Span span, bool replacing )
+{
+    if( !instance_owns( ast, types.table(), type, types.recorded() ) )
+    {
+        return;
+    }
+
+    // Which payload is live is known only at run time, so the drop is a call to the enum's
+    // synthesised destructor rather than an expansion here (D30).
+    if( types.table().is_enum( type ) )
+    {
+        builder.drop( place, span, replacing );
+        return;
+    }
+
+    const Node_id decl = types.table().get( type ).declaration;
+
+    if( ast.has_destructor( decl ) )
+    {
+        builder.drop( place, span, replacing );
+    }
+
+    // Reverse declaration order.
+    const auto members = ast.members( decl );
+    for( std::size_t i = members.size(); i > 0; --i )
+    {
+        const Node_id member = members[i - 1];
+
+        if( ast.kind( member ) == Node_kind::Field_decl )
+        {
+            // Through the instance being dropped, not the enclosing function: the field of a
+            // `Box<Buffer>` is declared `T`, and only this instance says what that is.
+            drop_place(
+                builder,
+                ast,
+                types,
+                builder.field( place, member ),
+                field_type( ast, types.table(), type, member, types.recorded() ),
+                span,
+                replacing
+            );
+        }
+    }
+}
 
 class Lowering
 {
@@ -183,7 +231,7 @@ private:
     // Parameters the callee owns, and therefore drops. Collected in the constructor and put in a
     // scope by run(), because scope_locals_ has no scope to go into until then.
     std::vector<Local_id>   owned_parameters_;
-    std::unordered_set<u32> borrowed_bindings_;       // Param_decl ids whose local holds an address
+    std::unordered_set<u32> borrowed_bindings_;       // declarations whose local holds an address
     Node_id                 receiver_declaration_ {}; // the Param_decl, so place_for can be reused for it
 
     // Owning temporaries built by the statement being lowered. They have an owner - the caller -
@@ -583,41 +631,7 @@ void Lowering::unwind_to( u32 depth, Span span )
 
 void Lowering::drop_place( Place place, Type_id type, Span span, bool replacing )
 {
-    if( !owns( type ) )
-    {
-        return;
-    }
-
-    const Node_id decl = types_.table().get( type ).declaration;
-
-    // Its own destructor first, then its members.
-    for( const Node_id member : ast_.members( decl ) )
-    {
-        if( ast_.kind( member ) == Node_kind::Destructor_decl )
-        {
-            builder_.drop( place, span, replacing );
-            break;
-        }
-    }
-
-    // Reverse declaration order.
-    const auto members = ast_.members( decl );
-    for( std::size_t i = members.size(); i > 0; --i )
-    {
-        const Node_id member = members[i - 1];
-
-        if( ast_.kind( member ) == Node_kind::Field_decl )
-        {
-            // Through the instance being dropped, not the enclosing function: the field of a
-            // `Box<Buffer>` is declared `T`, and only this instance says what that is.
-            drop_place(
-                builder_.field( place, member ),
-                field_type( ast_, types_.table(), type, member, types_.recorded() ),
-                span,
-                replacing
-            );
-        }
-    }
+    keel::drop_place( builder_, ast_, types_, place, type, span, replacing );
 }
 
 void Lowering::drop_statement_temporaries( Span span )
@@ -1156,10 +1170,8 @@ Operand Lowering::lower_unary( Node_id id )
 // than copied in from somewhere.
 // A variant with no payload, in an enum that has them elsewhere: still a struct, so it is a local
 // with its tag written and nothing else.
-// D7. `case Shape::Circle( r ):` gives `r` a local holding a copy of the payload field. A copy
-// because the first cut refuses owning payloads, so there is nothing a borrow would protect; when
-// they arrive this becomes an address and the local becomes a binding, which is why the checker
-// already refuses to write through one.
+// D7. `case Shape::Circle( r ):` gives `r` a local. An owning field is borrowed in place, as D31
+// borrows a bare owning parameter; anything else is copied.
 void Lowering::bind_variant_pattern( Place matched, Node_id label )
 {
     if( ast_.kind( label ) != Node_kind::Variant_pattern )
@@ -1182,14 +1194,27 @@ void Lowering::bind_variant_pattern( Place matched, Node_id label )
 
     for( std::size_t i = 0; i < bindings.size() && i < payload.size(); ++i )
     {
-        const Type_id  field_type = keel::field_type( ast_, types_.table(), enum_type, payload[i], types_.recorded() );
-        const Span     span       = ast_.span( bindings[i] );
-        const Local_id local      = builder_.add_local( field_type, span, ast_.name( bindings[i] ) );
+        const Type_id field_type = keel::field_type( ast_, types_.table(), enum_type, payload[i], types_.recorded() );
+        const Span    span       = ast_.span( bindings[i] );
+        const Place   field      = builder_.field( matched, payload[i] );
+
+        const bool     borrowed   = owns( field_type );
+        const Type_id  local_type = borrowed ? types_.table().pointer_to( field_type ) : field_type;
+        const Local_id local      = builder_.add_local( local_type, span, ast_.name( bindings[i] ) );
 
         locals_.emplace( bindings[i].v, local );
 
         builder_.storage_live( local, span );
-        builder_.assign( builder_.place( local ), use( copy( builder_.field( matched, payload[i] ), field_type ) ), span );
+
+        if( borrowed )
+        {
+            borrowed_bindings_.insert( bindings[i].v );
+            builder_.assign( builder_.place( local ), address_of( field, local_type, Address_purpose::Borrow ), span );
+        }
+        else
+        {
+            builder_.assign( builder_.place( local ), use( copy( field, field_type ) ), span );
+        }
     }
 }
 
@@ -1224,6 +1249,11 @@ Operand Lowering::lower_variant_construction( Node_id id )
     const Local_id local = builder_.add_local( type, span );
     const Place    place = builder_.place( local );
 
+    if( owns( type ) )
+    {
+        statement_temporaries_.push_back( local );
+    }
+
     // The ordinal the checker recorded on the path, which is the same number a payload-free variant
     // lowers to on its own.
     const std::optional<Constant_value> ordinal = types_.constant_of( path );
@@ -1252,7 +1282,8 @@ Operand Lowering::lower_variant_construction( Node_id id )
             span
         );
 
-        builder_.assign( builder_.field( place, payload[i] ), use( value ), span );
+        // The variant owns what it was given, so a temporary is moved in rather than dropped twice.
+        builder_.assign( builder_.field( place, payload[i] ), use( moved_if_owning( value ) ), span );
     }
 
     return copy( place, type );
@@ -2082,6 +2113,18 @@ void Lowering::lower_switch( Node_id id )
 
     const Place matched = scrutinee.place;
 
+    // The switch's own scope, which keeps an owning temporary alive across the arms: a binding
+    // borrows it in place.
+    push_scope();
+
+    const auto held = std::find( statement_temporaries_.begin(), statement_temporaries_.end(), matched.local );
+
+    if( !matched.is_global() && matched.num_projections == 0 && held != statement_temporaries_.end() )
+    {
+        scope_locals_.push_back( *held );
+        statement_temporaries_.erase( held );
+    }
+
     if( payloads )
     {
         const Type_id tag_type = types_.table().get( scrutinee.type ).element;
@@ -2202,6 +2245,8 @@ void Lowering::lower_switch( Node_id id )
     {
         builder_.switch_to( after );
     }
+
+    pop_scope( span );
 }
 
 void Lowering::lower_if( Node_id id )
@@ -2513,6 +2558,105 @@ Operand Lowering::address_operand( Place place, Type_id type, Span span, Address
     return copy( builder_.place( builder_.into_temp( address_of( place, type, purpose ), type, span ) ), type );
 }
 
+// D30: `~E( E* self )`, testing the tag against each variant whose payload owns and dropping that
+// payload. A variant that owns nothing gets no test.
+Function enum_destructor( const Ast& ast, Types& types, Literal_pool& literals, Type_id enumeration )
+{
+    const Node_id decl     = types.table().get( enumeration ).declaration;
+    const Span    span     = ast.span( decl );
+    const Type_id tag_type = types.table().get( enumeration ).element;
+    const Type_id boolean  = types.table().builtin( Type_kind::Bool );
+
+    Builder builder( decl, types.table().builtin( Type_kind::Void ), span );
+
+    const Local_id self  = builder.add_parameter( types.table().pointer_to( enumeration ), span, Symbol_id {} );
+    const Place    value = builder.deref( builder.place( self ) );
+    const Block_id done  = builder.add_block();
+
+    const std::span<const Node_id> variants = ast.variants( decl );
+
+    for( std::size_t ordinal = 0; ordinal < variants.size(); ++ordinal )
+    {
+        const std::span<const Node_id> payload = ast.payload( variants[ordinal] );
+
+        std::vector<Type_id> field_types;
+        bool                 owning = false;
+
+        for( const Node_id field : payload )
+        {
+            field_types.push_back( field_type( ast, types.table(), enumeration, field, types.recorded() ) );
+            owning = owning || instance_owns( ast, types.table(), field_types.back(), types.recorded() );
+        }
+
+        if( !owning )
+        {
+            continue;
+        }
+
+        const Block_id body = builder.add_block();
+        const Block_id next = builder.add_block();
+
+        const Local_id active = builder.into_temp(
+            binary(
+                Token_kind::Equal_equal,
+                copy( builder.tag( value ), tag_type ),
+                constant( literals.add_integer( ordinal ), tag_type ),
+                boolean
+            ),
+            boolean,
+            span
+        );
+
+        builder.terminate_branch( copy( builder.place( active ), boolean ), body, next, span );
+        builder.switch_to( body );
+
+        for( std::size_t i = payload.size(); i > 0; --i )
+        {
+            drop_place( builder, ast, types, builder.field( value, payload[i - 1] ), field_types[i - 1], span, false );
+        }
+
+        builder.terminate_goto( done, span );
+        builder.switch_to( next );
+    }
+
+    builder.terminate_goto( done, span );
+    builder.switch_to( done );
+    builder.terminate_return( span );
+
+    Function function = builder.finish();
+
+    const std::span<const Type_id> arguments = types.table().get( enumeration ).arguments;
+    function.type_arguments.assign( arguments.begin(), arguments.end() );
+
+    return function;
+}
+
+// Every closed owning enum the table holds. Repeated until nothing new appears, because lowering
+// one destructor can intern another: `Option<Option<Buf>>` names `Option<Buf>`.
+void append_enum_destructors( const Ast& ast, Types& types, Literal_pool& literals, std::vector<Function>& functions )
+{
+    std::vector<Type_id> done;
+
+    for( bool grew = true; grew; )
+    {
+        grew = false;
+
+        for( const Type_id type : types.table().composite_types() )
+        {
+            if( !types.table().is_enum( type ) || types.table().mentions_parameter( type ) ||
+                std::find( done.begin(), done.end(), type ) != done.end() ||
+                !instance_owns( ast, types.table(), type, types.recorded() ) )
+            {
+                continue;
+            }
+
+            done.push_back( type );
+            functions.push_back( enum_destructor( ast, types, literals, type ) );
+            grew = true;
+        }
+    }
+}
+
 } // namespace
 
 std::vector<Function> lower( const Ast& ast, const Resolution& resolution, Types& types, Literal_pool& literals )
@@ -2540,6 +2684,8 @@ std::vector<Function> lower( const Ast& ast, const Resolution& resolution, Types
 
         functions.push_back( std::move( emitted ) );
     }
+
+    append_enum_destructors( ast, types, literals, functions );
 
     return functions;
 }
@@ -5708,11 +5854,132 @@ TEST_CASE( "lower_switches_on_the_tag_and_binds_the_payload", "[ir][lower][paylo
     REQUIRE( text.find( ".tag == const 0" ) != std::string::npos );
     REQUIRE( text.find( ".tag == const 1" ) != std::string::npos );
 
-    // The bindings are locals holding a copy of the field, written at the top of the arm's own
-    // block so the names are live exactly where the resolver put them in scope.
+    // The bindings are locals holding a copy of the field - nothing here owns - written at the top
+    // of the arm's own block so the names are live exactly where the resolver put them in scope.
     REQUIRE( text.find( "// r" ) != std::string::npos );
     REQUIRE( text.find( "// w" ) != std::string::npos );
     REQUIRE( text.find( "// h" ) != std::string::npos );
+}
+
+// PLAN D30. An owning enum is dropped by one synthesised destructor that tests the tag and drops
+// only the live variant's payload; a variant that owns nothing gets no test.
+TEST_CASE( "lower_synthesises_an_owning_enum's_destructor", "[ir][lower][payload][drop]" )
+{
+    constexpr std::string_view owning = "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n";
+
+    SECTION( "it drops the active variant's payload, right to left" )
+    {
+        Lowered p(
+            std::string( owning ) + "enum H { Full( B b ), Empty, Pair( u64 k, B l, B r ) };\n"
+                                    "i32 main() { H h = H::Empty; return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( every_function_verifies( p ) );
+
+        const std::string text = p.named( "~H" );
+
+        INFO( text );
+        REQUIRE( text.find( "let _1: H*; // parameter" ) != std::string::npos );
+        REQUIRE( text.find( "(*_1).tag == const 0" ) != std::string::npos );
+        REQUIRE( text.find( "(*_1).tag == const 2" ) != std::string::npos );
+        REQUIRE( text.find( "(*_1).tag == const 1" ) == std::string::npos );
+        REQUIRE( text.find( "drop (*_1).b" ) != std::string::npos );
+        REQUIRE( text.find( "drop (*_1).r" ) < text.find( "drop (*_1).l" ) );
+    }
+
+    SECTION( "and a drop site calls it rather than expanding the payload" )
+    {
+        Lowered p(
+            std::string( owning ) + "enum H { Full( B b ), Empty };\n"
+                                    "i32 main() { H h = H::Full( B( 1 ) ); return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string text = p.named( "main" );
+
+        INFO( text );
+        REQUIRE( text.find( "drop _" ) != std::string::npos );
+
+        std::istringstream lines( text );
+
+        for( std::string line; std::getline( lines, line ); )
+        {
+            REQUIRE_FALSE( ( line.find( "drop " ) != std::string::npos && line.find( ".b" ) != std::string::npos ) );
+        }
+    }
+
+    SECTION( "one per instance, including one only a payload names" )
+    {
+        Lowered p(
+            std::string( owning ) + "enum Option<T> { Some( T value ), None };\n"
+                                    "enum H { Full( Option<B> o ), Empty };\n"
+                                    "i32 main() { H h = H::Empty; return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( every_function_verifies( p ) );
+        REQUIRE_FALSE( p.named( "~H" ).empty() );
+        REQUIRE_FALSE( p.named( "~Option" ).empty() );
+    }
+
+    SECTION( "never for an enum that owns nothing" )
+    {
+        Lowered p( "enum Shape { Circle( f64 r ), Dot };\ni32 main() { Shape s = Shape::Dot; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.named( "~Shape" ).empty() );
+    }
+}
+
+// D7. A binding of an owning payload is the payload's address, and the variant takes what it is
+// built from.
+TEST_CASE( "lower_borrows_an_owning_payload_and_moves_one_in", "[ir][lower][payload][borrow]" )
+{
+    Lowered p( "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+               "enum H { Full( B b ), Empty };\n"
+               "u64 size( H h ) { switch( h ) { case H::Full( b ): return b.n; case H::Empty: return 0; } }\n"
+               "i32 main() { B x = B( 1 ); H h = H::Full( move x ); return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+    REQUIRE( every_function_verifies( p ) );
+
+    const std::string size = p.named( "size" );
+
+    INFO( size );
+    REQUIRE( size.find( "B*; // b" ) != std::string::npos );
+    REQUIRE( size.find( "= &borrow (*_1).b" ) != std::string::npos );
+
+    const std::string main = p.named( "main" );
+
+    INFO( main );
+    REQUIRE( main.find( ".b = move _1" ) != std::string::npos );
+}
+
+// A binding borrows the scrutinee in place, so a temporary one is dropped when the switch ends
+// rather than when the statement that built it does - which would be before any arm ran.
+TEST_CASE( "lower_keeps_an_owning_scrutinee_alive_across_the_arms", "[ir][lower][payload][drop]" )
+{
+    Lowered p( "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+               "enum H { Full( B b ), Empty };\n"
+               "H make() { return H::Full( B( 1 ) ); }\n"
+               "u64 f() { switch( make() ) { case H::Full( b ): return b.n; case H::Empty: return 0; } }\n"
+               "i32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+    REQUIRE( every_function_verifies( p ) );
+
+    const std::string text = p.named( "f" );
+
+    INFO( text );
+    REQUIRE( text.find( "drop _1" ) > text.find( "= copy (*_3).n" ) );
 }
 
 // PLAN D32. A method call is an ordinary call whose first argument is the receiver's **address** -

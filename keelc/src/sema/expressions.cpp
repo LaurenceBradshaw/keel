@@ -954,6 +954,22 @@ Type_id Expressions::infer_implicit_method_call( Node_id id, Node_id method )
         return types_.poison( id );
     }
 
+    // The implicit receiver never reaches check_writable, so the held-payload rule is asked here.
+    if( const Node_id binding = places_.borrowing_binding( receiver ); binding.is_valid() && !ast_.is_const_method( method ) )
+    {
+        reporter_.error_at(
+            ast_.span( ast_.callee( id ) ),
+            fmt::format(
+                "`{}` may modify the object while `{}` borrows its payload",
+                interner_.text( ast_.name( method ) ),
+                interner_.text( ast_.name( binding ) )
+            ),
+            "the borrow lasts until this `case` ends"
+        );
+
+        return types_.poison( id );
+    }
+
     callees_.record( id, method );
 
     return check_method_arguments( id, method, types_.type_of( receiver ), shapes );
@@ -1981,7 +1997,9 @@ Type_id Expressions::infer_variant_construction( Node_id id )
 
     for( std::size_t i = 0; i < shared; ++i )
     {
-        check( arguments[i], aggregates_.field_type( result, payload[i] ) );
+        const Type_id field_type = aggregates_.field_type( result, payload[i] );
+        check( arguments[i], field_type );
+        places_.check_owning_source( arguments[i], field_type );
     }
 
     for( std::size_t i = shared; i < arguments.size(); ++i )
@@ -2899,6 +2917,30 @@ Type_id Expressions::infer_marker( Node_id id )
     const Node_id decl = ast_.kind( operand ) == Node_kind::Name_expr ? resolution_.declaration_of( operand ) : Node_id {};
     const bool    named =
         decl.is_valid() && ( ast_.kind( decl ) == Node_kind::Var_decl || ast_.kind( decl ) == Node_kind::Param_decl );
+
+    if( const Node_id binding = places_.borrowing_binding( decl ); binding.is_valid() )
+    {
+        reporter_.error_at(
+            ast_.span( operand ),
+            fmt::format(
+                "`{}` cannot be moved while `{}` borrows its payload",
+                interner_.text( ast_.name( decl ) ),
+                interner_.text( ast_.name( binding ) )
+            ),
+            "the borrow lasts until this `case` ends"
+        );
+        return types_.poison( id );
+    }
+
+    if( decl.is_valid() && ast_.kind( decl ) == Node_kind::Binding_decl )
+    {
+        reporter_.error_at(
+            ast_.span( operand ),
+            "a binding cannot be moved",
+            fmt::format( "`{}` is part of the value being matched, which still owns it", interner_.text( ast_.name( decl ) ) )
+        );
+        return types_.poison( id );
+    }
 
     if( places_.is_borrow_binding( decl ) )
     {

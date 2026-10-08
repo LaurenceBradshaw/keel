@@ -303,8 +303,8 @@ void Coverage::finish_numeric_switch( const Switch_coverage& state )
 // Coverage as a vector indexed by ordinal, which is what makes a gap nameable: the missing variants
 // are the entries nothing wrote to.
 // D7. `case Shape::Circle( r ):` covers `Circle` and binds `r` to its payload. The binding is
-// read-only: today the payload is copied, and when owning payloads arrive it becomes a borrow - at
-// which point writing through it would be writing into a value the enum still owns.
+// read-only: an owning payload is borrowed in place, and writing through it would be writing into a
+// value the enum still owns.
 void Coverage::check_variant_pattern( Node_id pattern, Type_id type, std::vector<Node_id>& covered )
 {
     const Node_id                  path     = ast_.variant_path( pattern );
@@ -1236,8 +1236,8 @@ TEST_CASE( "type_checker_switches_on_a_float_by_range_only", "[sema][range]" )
     }
 }
 
-// A pattern binds the payload by name. The binding is read-only: when owning payloads arrive it
-// becomes a borrow, and writing through it would then be writing into a value the enum still owns.
+// A pattern binds the payload by name. The binding is read-only: an owning payload is borrowed, and
+// writing through it would be writing into a value the enum still owns.
 TEST_CASE( "type_checker_binds_a_variant_pattern", "[sema][payload]" )
 {
     constexpr std::string_view shape = "enum Shape { Circle( f64 radius ), Rect( f64 w, f64 h ), Dot };\n";

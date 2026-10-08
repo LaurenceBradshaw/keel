@@ -1,0 +1,67 @@
+error: a struct cannot contain `Holder`, which owns a resource
+  --> sema/errors_owning_payloads.kl:32:5
+   |
+32 |     Holder h;
+   |     ^^^^^^^^^ a struct is copied freely, so declare `Pair` as a class if it owns this
+
+error: an owning value is transferred, not copied
+  --> sema/errors_owning_payloads.kl:37:16
+   |
+37 |     Holder c = h;
+   |                ^ write `move h`
+
+error: an owning value is transferred, not copied
+  --> sema/errors_owning_payloads.kl:45:26
+   |
+45 |     return Holder::Full( b );
+   |                          ^ write `move b`
+
+error: an owning value is transferred, not copied
+  --> sema/errors_owning_payloads.kl:53:20
+   |
+53 |             return b;
+   |                    ^ `b` still belongs to what holds it
+
+error: a binding cannot be moved
+  --> sema/errors_owning_payloads.kl:64:30
+   |
+64 |             Buf taken = move b;
+   |                              ^ `b` is part of the value being matched, which still owns it
+
+error: an owning value is transferred, not copied
+  --> sema/errors_owning_payloads.kl:76:26
+   |
+76 |             Buf copied = b;
+   |                          ^ `b` still belongs to what holds it
+
+error: an owning value is transferred, not copied
+  --> sema/errors_owning_payloads.kl:89:20
+   |
+89 |             return value;
+   |                    ^^^^^ `value` still belongs to what holds it
+
+error: `h` cannot be modified while `b` borrows its payload
+   --> sema/errors_owning_payloads.kl:111:13
+    |
+111 |             h = Holder::Empty;
+    |             ^ the borrow lasts until this `case` ends
+
+error: `h` cannot be modified while `b` borrows its payload
+   --> sema/errors_owning_payloads.kl:124:24
+    |
+124 |             reset( ref h );
+    |                        ^ the borrow lasts until this `case` ends
+
+error: `h` cannot be moved while `b` borrows its payload
+   --> sema/errors_owning_payloads.kl:125:24
+    |
+125 |             take( move h );
+    |                        ^ the borrow lasts until this `case` ends
+
+error: `clear` may modify the object while `b` borrows its payload
+   --> sema/errors_owning_payloads.kl:151:17
+    |
+151 |                 clear();
+    |                 ^^^^^ the borrow lasts until this `case` ends
+
+11 errors generated

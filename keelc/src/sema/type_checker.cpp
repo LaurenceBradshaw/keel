@@ -283,7 +283,7 @@ bool may_own(
         return parameter_owns( instance );
     }
 
-    if( !table.is_struct( instance ) )
+    if( !table.is_struct( instance ) && !table.is_enum( instance ) )
     {
         return false;
     }
@@ -309,13 +309,8 @@ bool may_own(
 
     // Only by-value containment, exactly as D2 counts it everywhere else: an address says nothing
     // about who frees what it points at, and field_type is what applies this instance's bindings.
-    for( const Node_id field : ast.members( declaration ) )
+    for( const Node_id field : ast.contained_fields( declaration ) )
     {
-        if( ast.kind( field ) != Node_kind::Field_decl )
-        {
-            continue;
-        }
-
         if( may_own( ast, table, field_type( ast, table, instance, field, recorded ), recorded, visiting, parameter_owns ) )
         {
             visiting.pop_back();

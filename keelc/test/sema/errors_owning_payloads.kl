@@ -1,0 +1,162 @@
+// PLAN D30 and D7. An enum owns exactly when a payload does, so it is moved rather than copied, and
+// a pattern binding borrows the payload in place: nothing may take it out of the enum.
+class Buf
+{
+    u64 n;
+
+    Buf( u64 m )
+    {
+        n = m;
+    }
+
+    ~Buf()
+    {
+    }
+};
+
+enum Holder
+{
+    Full( Buf b ),
+    Empty
+};
+
+enum Option<T>
+{
+    Some( T value ),
+    None
+};
+
+// Owning through a payload is owning: a struct may not hold one.
+struct Pair
+{
+    Holder h;
+};
+
+void copies( Holder h )
+{
+    Holder c = h;
+}
+
+// The variant takes its payload over, so a named one is moved in.
+Holder wraps()
+{
+    Buf b = Buf( 1 );
+
+    return Holder::Full( b );
+}
+
+Buf returns_binding( Holder h )
+{
+    switch( h )
+    {
+        case Holder::Full( b ):
+            return b;
+        case Holder::Empty:
+            return Buf( 0 );
+    }
+}
+
+void moves_binding( Holder h )
+{
+    switch( h )
+    {
+        case Holder::Full( b ):
+            Buf taken = move b;
+            return;
+        case Holder::Empty:
+            return;
+    }
+}
+
+void copies_binding( Holder h )
+{
+    switch( h )
+    {
+        case Holder::Full( b ):
+            Buf copied = b;
+            return;
+        case Holder::Empty:
+            return;
+    }
+}
+
+// An unbounded `T` may own, so the generic is refused before any instance exists.
+T unwrap<T>( Option<T> o, move T fallback )
+{
+    switch( o )
+    {
+        case Option::Some( value ):
+            return value;
+        case Option::None:
+            return move fallback;
+    }
+}
+
+void reset( ref Holder h )
+{
+    h = Holder::Empty;
+}
+
+void take( move Holder h )
+{
+}
+
+// While a binding borrows the payload, what was matched is neither written nor moved: either would
+// destroy the payload the binding still points at.
+u64 replaces( move Holder h )
+{
+    switch( h )
+    {
+        case Holder::Full( b ):
+            h = Holder::Empty;
+            return 1;
+        case Holder::Empty:
+            h = Holder::Empty;
+            return 0;
+    }
+}
+
+void lends( move Holder h )
+{
+    switch( h )
+    {
+        case Holder::Full( b ):
+            reset( ref h );
+            take( move h );
+            return;
+        case Holder::Empty:
+            return;
+    }
+}
+
+class Keeper
+{
+    Holder held;
+
+    Keeper( move Holder h )
+    {
+        held = move h;
+    }
+
+    void clear()
+    {
+        held = Holder::Empty;
+    }
+
+    u64 peek()
+    {
+        switch( held )
+        {
+            case Holder::Full( b ):
+                clear();
+                return 1;
+            case Holder::Empty:
+                return 0;
+        }
+    }
+};
+
+i32 main()
+{
+    return 0;
+}

@@ -159,25 +159,3 @@ i32 writes_a_binding( Shape s )
             return 0;
     }
 }
-
-// D30's first cut: destroying an enum means destroying only the active variant, which needs a
-// destructor that switches on the tag - the first run-time-dependent destructor in the language.
-class Owned
-{
-    u64 n;
-
-    Owned( u64 x )
-    {
-        n = x;
-    }
-
-    ~Owned()
-    {
-    }
-};
-
-enum Holder
-{
-    Full( Owned value ),
-    Vacant
-};

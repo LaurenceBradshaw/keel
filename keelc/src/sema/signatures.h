@@ -85,7 +85,6 @@ private:
     // D29's rules, split out because check_struct_ownership cannot run before every field's type is recorded.
     void check_aggregate_members();
     void check_member_kind( Node_id decl, const Member_kind& kind );
-    void check_enum_payloads();
     void check_struct_ownership();
     void check_struct_fields_are_not_owning( Node_id decl );
     void check_operators();

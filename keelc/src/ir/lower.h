@@ -12,10 +12,11 @@
 namespace keel
 {
 
-// A Function per Function_decl, in declaration order.
+// A Function per Function_decl, in declaration order, then one per instance, then a destructor
+// per closed owning enum.
 std::vector<Function>
-// Types is mutable because an instantiation substitutes its parameters away, and `T*` becoming
-// `i32*` interns a type that may not exist yet.
+// Types is mutable only for its table: lowering interns types the checker never named - `T*` as
+// `i32*` in an instance, `i32*` for a borrowed argument. Nothing the checker recorded changes.
 lower( const Ast& ast, const Resolution& resolution, Types& types, Literal_pool& literals );
 
 } // namespace keel
