@@ -1,0 +1,348 @@
+// `kl::ring` owns its elements across the wrap: an element pushed at either end, popped, evicted,
+// refused, moved by `reserve` or cleared is destroyed exactly once, and a ring dropped while it wraps
+// destroys what it holds. Each `owned` holds a heap block, so a missed destroy leaks under valgrind
+// as well as miscounting. Each check returns its own code.
+import kl::ring;
+import kl::optional;
+
+i32 live;
+
+class owned
+{
+    owned( u64 n )
+    {
+        id = n;
+        unsafe
+        {
+            block = alloc<u64>( 1 );
+        }
+        live += 1;
+    }
+
+    ~owned()
+    {
+        unsafe
+        {
+            free( block );
+        }
+        live -= 1;
+    }
+
+    public u64 value() const
+    {
+        return id;
+    }
+
+    private u64 id;
+    private u64[*] block;
+};
+
+// The ring's values from front to back, as decimal digits: [3, 1, 2] is 312.
+u64 digits( const ref kl::ring<owned> values )
+{
+    u64 result = 0;
+    for( u64 i = 0; i < values.size(); i++ )
+    {
+        result = result * 10 + values[i].value();
+    }
+    return result;
+}
+
+// A ring of three holding 1, 2, 3, with nothing wrapped yet.
+kl::ring<owned> counting()
+{
+    kl::ring<owned> values = kl::ring<owned>::with_capacity( 3 );
+    for( u64 i = 1; i <= 3; i++ )
+    {
+        values.push_back( move owned( i ) );
+    }
+    return values;
+}
+
+// Pushing at the back after popping the front reuses the freed slot, so the ring wraps.
+i32 wraps_at_the_back()
+{
+    kl::ring<owned> values = counting();
+    if( !values.is_full() || values.capacity() != 3 || digits( values ) != 123 )
+    {
+        return 1;
+    }
+
+    {
+        owned one = values.pop_front();
+        if( one.value() != 1 || live != 3 || values.is_full() )
+        {
+            return 2;
+        }
+    }
+
+    values.push_back( move owned( 4 ) );
+    _ = values.pop_front();
+    values.push_back( move owned( 5 ) );
+    if( live != 3 || digits( values ) != 345 || values.first().value() != 3 || values.last().value() != 5 )
+    {
+        return 3;
+    }
+
+    return 0;
+}
+
+// Pushing at the front of an empty ring wraps backwards from the first slot.
+i32 wraps_at_the_front()
+{
+    kl::ring<owned> values = kl::ring<owned>::with_capacity( 3 );
+    values.push_front( move owned( 1 ) );
+    values.push_back( move owned( 2 ) );
+    values.push_front( move owned( 3 ) );
+    if( live != 3 || digits( values ) != 312 )
+    {
+        return 4;
+    }
+
+    {
+        owned two = values.pop_back();
+        owned three = values.pop_front();
+        if( two.value() != 2 || three.value() != 3 || live != 3 || digits( values ) != 1 )
+        {
+            return 5;
+        }
+    }
+
+    if( live != 1 || values.first().value() != 1 || values.last().value() != 1 )
+    {
+        return 6;
+    }
+
+    return 0;
+}
+
+// `try_push` on a full ring hands the element back in an `err`, and on one with room answers `ok`.
+i32 try_pushes()
+{
+    kl::ring<owned> values = counting();
+    _ = values.pop_front();
+
+    result<void, owned> room = values.try_push_front( move owned( 7 ) );
+    switch( move room )
+    {
+        case result::ok:
+            break;
+        case result::err( e ):
+            return 7;
+    }
+
+    result<void, owned> full = values.try_push_back( move owned( 9 ) );
+    switch( move full )
+    {
+        case result::ok:
+            return 8;
+        case result::err( e ):
+            if( e.value() != 9 || live != 4 )
+            {
+                return 9;
+            }
+            break;
+    }
+
+    _ = values.try_push_front( move owned( 8 ) );
+    if( live != 3 || digits( values ) != 723 )
+    {
+        return 10;
+    }
+
+    return 0;
+}
+
+// `_evict` on a full ring removes the element at the other end and hands it out; with room, it
+// evicts nothing.
+i32 evicts()
+{
+    kl::ring<owned> values = counting();
+    {
+        owned one = kl::unwrap( move values.push_back_evict( move owned( 4 ) ) );
+        if( one.value() != 1 || live != 4 || digits( values ) != 234 )
+        {
+            return 11;
+        }
+    }
+
+    {
+        owned four = kl::unwrap( move values.push_front_evict( move owned( 5 ) ) );
+        if( four.value() != 4 || digits( values ) != 523 )
+        {
+            return 12;
+        }
+    }
+
+    _ = values.pop_back();
+    if( !kl::is_none( values.push_back_evict( move owned( 6 ) ) ) || live != 3 || digits( values ) != 526 )
+    {
+        return 13;
+    }
+
+    return 0;
+}
+
+// `try_pop` hands an end's element out in an optional, and answers none once the ring is empty.
+i32 try_pops()
+{
+    kl::ring<owned> values = counting();
+    {
+        owned three = kl::unwrap( move values.try_pop_back() );
+        owned one = kl::unwrap( move values.try_pop_front() );
+        if( three.value() != 3 || one.value() != 1 || digits( values ) != 2 )
+        {
+            return 14;
+        }
+    }
+
+    _ = values.try_pop_front();
+    if( live != 0 || !values.is_empty() || !kl::is_none( values.try_pop_front() ) || !kl::is_none( values.try_pop_back() ) )
+    {
+        return 15;
+    }
+
+    return 0;
+}
+
+// `reserve` unwraps the elements into the new block in order; one no larger than the capacity does
+// nothing.
+i32 reserves()
+{
+    kl::ring<owned> values = counting();
+    _ = values.pop_front();
+    values.push_back( move owned( 4 ) );
+
+    values.reserve( 2 );
+    if( values.capacity() != 3 )
+    {
+        return 16;
+    }
+
+    values.reserve( 5 );
+    if( values.capacity() != 5 || live != 3 || digits( values ) != 234 || values.is_full() )
+    {
+        return 17;
+    }
+
+    values.push_back( move owned( 5 ) );
+    values.push_front( move owned( 1 ) );
+    if( !values.is_full() || live != 5 || digits( values ) != 12345 )
+    {
+        return 18;
+    }
+
+    return 0;
+}
+
+// `clear` drops a wrapped ring's elements and keeps its capacity.
+i32 clears()
+{
+    kl::ring<owned> values = counting();
+    _ = values.pop_front();
+    values.push_back( move owned( 4 ) );
+
+    values.clear();
+    if( live != 0 || !values.is_empty() || values.capacity() != 3 )
+    {
+        return 19;
+    }
+
+    values.push_back( move owned( 6 ) );
+    if( live != 1 || digits( values ) != 6 )
+    {
+        return 20;
+    }
+
+    return 0;
+}
+
+// A ring dropped while it wraps destroys both runs of its elements.
+i32 drops_wrapped()
+{
+    kl::ring<owned> values = counting();
+    _ = values.pop_front();
+    values.push_back( move owned( 4 ) );
+    return live == 3 ? 0 : 21;
+}
+
+// The ring moves whole, so its elements end once, with the ring that holds them last.
+i32 moves_whole()
+{
+    kl::ring<owned> held = counting();
+    kl::ring<owned> moved = move held;
+    if( live != 3 || digits( moved ) != 123 )
+    {
+        return 22;
+    }
+
+    return 0;
+}
+
+// A ring of a `struct` needs no marker, and `operator[]` writes through.
+i32 copies()
+{
+    kl::ring<i32> values = kl::ring<i32>::with_capacity( 2 );
+    i32 seven = 7;
+    values.push_back( seven );
+    values.push_front( 8 );
+    values[1] = 9;
+    if( values.pop_front() != 8 || values.pop_back() != 9 || !values.is_empty() )
+    {
+        return 23;
+    }
+
+    return 0;
+}
+
+// A check's own code, or `leaked` if it left an element alive.
+i32 settled( i32 code, i32 leaked )
+{
+    if( code != 0 )
+    {
+        return code;
+    }
+    return live == 0 ? 0 : leaked;
+}
+
+i32 main()
+{
+    i32 code = settled( wraps_at_the_back(), 30 );
+    if( code == 0 )
+    {
+        code = settled( wraps_at_the_front(), 31 );
+    }
+    if( code == 0 )
+    {
+        code = settled( try_pushes(), 32 );
+    }
+    if( code == 0 )
+    {
+        code = settled( evicts(), 33 );
+    }
+    if( code == 0 )
+    {
+        code = settled( try_pops(), 34 );
+    }
+    if( code == 0 )
+    {
+        code = settled( reserves(), 35 );
+    }
+    if( code == 0 )
+    {
+        code = settled( clears(), 36 );
+    }
+    if( code == 0 )
+    {
+        code = settled( drops_wrapped(), 37 );
+    }
+    if( code == 0 )
+    {
+        code = settled( moves_whole(), 38 );
+    }
+    if( code == 0 )
+    {
+        code = copies();
+    }
+    return code;
+}

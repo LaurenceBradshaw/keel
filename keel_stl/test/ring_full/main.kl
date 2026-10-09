@@ -1,0 +1,17 @@
+// `kl::ring` never grows on its own: pushing onto a full ring aborts, naming the check in the library.
+import kl::ring;
+
+i32 main()
+{
+    kl::ring<i32> values = kl::ring<i32>::with_capacity( 2 );
+    values.push_back( 10 );
+    values.push_front( 20 );
+
+    if( !values.is_full() )
+    {
+        return 1;
+    }
+
+    values.push_back( 30 );
+    return 0;
+}

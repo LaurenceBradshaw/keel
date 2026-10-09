@@ -1,0 +1,3074 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "main.kl.prelude.c"
+
+struct kl__owned;
+struct kl_2kl_ring__I5ownedE;
+struct kl_7prelude_result__I4void_5ownedE;
+struct kl_2kl_optional__I5ownedE;
+struct kl_2kl_ring__I3i32E;
+
+struct kl__owned
+{
+    uint64_t kl_id_50;
+    uint64_t* kl_block_53;
+};
+
+struct kl_2kl_ring__I5ownedE
+{
+    struct kl__owned* kl_data__2165;
+    uint64_t kl_head__2167;
+    uint64_t kl_count__2169;
+    uint64_t kl_cap__2171;
+};
+
+struct kl_7prelude_result__I4void_5ownedE
+{
+    int32_t tag;
+    struct kl__owned kl_error_2541;
+};
+
+struct kl_2kl_optional__I5ownedE
+{
+    int32_t tag;
+    struct kl__owned kl_value_1237;
+};
+
+struct kl_2kl_ring__I3i32E
+{
+    int32_t* kl_data__2165;
+    uint64_t kl_head__2167;
+    uint64_t kl_count__2169;
+    uint64_t kl_cap__2171;
+};
+
+int32_t kl_live_5;
+
+void* kl_rt_alloc( size_t );
+void  kl_rt_free( void* );
+void* kl_rt_alloc_many( size_t, size_t );
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+_Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
+
+void kl__owned__R5owned_3u64__ctor( struct kl__owned*, uint64_t );
+void kl__owned__dtor( struct kl__owned* );
+uint64_t kl__value__S5owned( struct kl__owned* );
+uint64_t kl__digits__Q2kl4ringI5ownedE( struct kl_2kl_ring__I5ownedE* );
+struct kl_2kl_ring__I5ownedE kl__counting__( void );
+int32_t kl__wraps_at_the_back__( void );
+int32_t kl__wraps_at_the_front__( void );
+int32_t kl__try_pushes__( void );
+int32_t kl__evicts__( void );
+int32_t kl__try_pops__( void );
+int32_t kl__reserves__( void );
+int32_t kl__clears__( void );
+int32_t kl__drops_wrapped__( void );
+int32_t kl__moves_whole__( void );
+int32_t kl__copies__( void );
+int32_t kl__settled__3i32_3i32( int32_t, int32_t );
+int32_t kl__main__( void );
+uint64_t kl_2kl_size__I5ownedE__SQ2kl4ringI5ownedE( struct kl_2kl_ring__I5ownedE* );
+struct kl__owned* kl_2kl_operator_index__I5ownedE__SQ2kl4ringI5ownedE_3u64( struct kl_2kl_ring__I5ownedE*, uint64_t );
+struct kl_2kl_ring__I5ownedE kl_2kl_with_capacity__I5ownedE__SQ2kl4ringI5ownedE_3u64( uint64_t );
+void kl_2kl_push_back__I5ownedE__SQ2kl4ringI5ownedE_M5owned( struct kl_2kl_ring__I5ownedE*, struct kl__owned );
+bool kl_2kl_is_full__I5ownedE__SQ2kl4ringI5ownedE( struct kl_2kl_ring__I5ownedE* );
+uint64_t kl_2kl_capacity__I5ownedE__SQ2kl4ringI5ownedE( struct kl_2kl_ring__I5ownedE* );
+struct kl__owned kl_2kl_pop_front__I5ownedE__SQ2kl4ringI5ownedE( struct kl_2kl_ring__I5ownedE* );
+struct kl__owned* kl_2kl_first__I5ownedE__SQ2kl4ringI5ownedE( struct kl_2kl_ring__I5ownedE* );
+struct kl__owned* kl_2kl_last__I5ownedE__SQ2kl4ringI5ownedE( struct kl_2kl_ring__I5ownedE* );
+void kl_2kl_push_front__I5ownedE__SQ2kl4ringI5ownedE_M5owned( struct kl_2kl_ring__I5ownedE*, struct kl__owned );
+struct kl__owned kl_2kl_pop_back__I5ownedE__SQ2kl4ringI5ownedE( struct kl_2kl_ring__I5ownedE* );
+struct kl_7prelude_result__I4void_5ownedE kl_2kl_try_push_front__I5ownedE__SQ2kl4ringI5ownedE_M5owned( struct kl_2kl_ring__I5ownedE*, struct kl__owned );
+struct kl_7prelude_result__I4void_5ownedE kl_2kl_try_push_back__I5ownedE__SQ2kl4ringI5ownedE_M5owned( struct kl_2kl_ring__I5ownedE*, struct kl__owned );
+struct kl_2kl_optional__I5ownedE kl_2kl_push_back_evict__I5ownedE__SQ2kl4ringI5ownedE_M5owned( struct kl_2kl_ring__I5ownedE*, struct kl__owned );
+struct kl__owned kl_2kl_unwrap__I5ownedE__MQ2kl8optionalI5ownedE( struct kl_2kl_optional__I5ownedE );
+struct kl_2kl_optional__I5ownedE kl_2kl_push_front_evict__I5ownedE__SQ2kl4ringI5ownedE_M5owned( struct kl_2kl_ring__I5ownedE*, struct kl__owned );
+bool kl_2kl_is_none__I5ownedE__Q2kl8optionalI5ownedE( struct kl_2kl_optional__I5ownedE* );
+struct kl_2kl_optional__I5ownedE kl_2kl_try_pop_back__I5ownedE__SQ2kl4ringI5ownedE( struct kl_2kl_ring__I5ownedE* );
+struct kl_2kl_optional__I5ownedE kl_2kl_try_pop_front__I5ownedE__SQ2kl4ringI5ownedE( struct kl_2kl_ring__I5ownedE* );
+bool kl_2kl_is_empty__I5ownedE__SQ2kl4ringI5ownedE( struct kl_2kl_ring__I5ownedE* );
+void kl_2kl_reserve__I5ownedE__SQ2kl4ringI5ownedE_3u64( struct kl_2kl_ring__I5ownedE*, uint64_t );
+void kl_2kl_clear__I5ownedE__SQ2kl4ringI5ownedE( struct kl_2kl_ring__I5ownedE* );
+struct kl_2kl_ring__I3i32E kl_2kl_with_capacity__I3i32E__SQ2kl4ringI3i32E_3u64( uint64_t );
+void kl_2kl_push_back__I3i32E__SQ2kl4ringI3i32E_M3i32( struct kl_2kl_ring__I3i32E*, int32_t );
+void kl_2kl_push_front__I3i32E__SQ2kl4ringI3i32E_M3i32( struct kl_2kl_ring__I3i32E*, int32_t );
+int32_t* kl_2kl_operator_index__I3i32E__SQ2kl4ringI3i32E_3u64( struct kl_2kl_ring__I3i32E*, uint64_t );
+int32_t kl_2kl_pop_front__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl_ring__I3i32E* );
+int32_t kl_2kl_pop_back__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl_ring__I3i32E* );
+bool kl_2kl_is_empty__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl_ring__I3i32E* );
+void kl_2kl_ring__I5ownedE__dtor( struct kl_2kl_ring__I5ownedE* );
+void kl_2kl_ring__I3i32E__dtor( struct kl_2kl_ring__I3i32E* );
+uint64_t kl_2kl_slot__I5ownedE__SQ2kl4ringI5ownedE_3u64( struct kl_2kl_ring__I5ownedE*, uint64_t );
+void kl_2kl_ring__I5ownedE__RQ2kl4ringI5ownedE_3u64__ctor( struct kl_2kl_ring__I5ownedE*, uint64_t );
+void kl_2kl_advance_head__I5ownedE__SQ2kl4ringI5ownedE( struct kl_2kl_ring__I5ownedE* );
+void kl_2kl_retreat_head__I5ownedE__SQ2kl4ringI5ownedE( struct kl_2kl_ring__I5ownedE* );
+void kl_2kl_destroy_live__I5ownedE__SQ2kl4ringI5ownedE( struct kl_2kl_ring__I5ownedE* );
+void kl_2kl_ring__I3i32E__RQ2kl4ringI3i32E_3u64__ctor( struct kl_2kl_ring__I3i32E*, uint64_t );
+uint64_t kl_2kl_slot__I3i32E__SQ2kl4ringI3i32E_3u64( struct kl_2kl_ring__I3i32E*, uint64_t );
+void kl_2kl_retreat_head__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl_ring__I3i32E* );
+void kl_2kl_advance_head__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl_ring__I3i32E* );
+void kl_2kl_destroy_live__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl_ring__I3i32E* );
+void kl_7prelude_result__I4void_5ownedE__dtor( struct kl_7prelude_result__I4void_5ownedE* );
+void kl_2kl_optional__I5ownedE__dtor( struct kl_2kl_optional__I5ownedE* );
+
+void kl__owned__R5owned_3u64__ctor( struct kl__owned* kl_this_1, uint64_t kl_n_2 )
+{
+    uint64_t* kl_t3;
+#line 14 "ring_owning/main.kl"
+    ( *kl_this_1 ).kl_id_50 = kl_n_2;
+#line 17 "ring_owning/main.kl"
+    kl_t3 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( uint64_t ) );
+    ( *kl_this_1 ).kl_block_53 = kl_t3;
+#line 19 "ring_owning/main.kl"
+    kl_live_5 = kl_live_5 + 1;
+    return;
+}
+
+void kl__owned__dtor( struct kl__owned* kl_this_1 )
+{
+#line 26 "ring_owning/main.kl"
+    kl_rt_free( ( *kl_this_1 ).kl_block_53 );
+#line 28 "ring_owning/main.kl"
+    kl_live_5 = kl_live_5 - 1;
+    return;
+}
+
+uint64_t kl__value__S5owned( struct kl__owned* kl_this_1 )
+{
+    uint64_t kl_t0;
+#line 33 "ring_owning/main.kl"
+    kl_t0 = ( *kl_this_1 ).kl_id_50;
+    return kl_t0;
+}
+
+uint64_t kl__digits__Q2kl4ringI5ownedE( struct kl_2kl_ring__I5ownedE* kl_values_1 )
+{
+    uint64_t kl_t0;
+    uint64_t kl_result_2;
+    uint64_t kl_i_3;
+    struct kl_2kl_ring__I5ownedE* kl_t4;
+    uint64_t kl_t5;
+    bool kl_t6;
+    uint64_t kl_t7;
+    struct kl_2kl_ring__I5ownedE* kl_t8;
+    struct kl__owned* kl_t9;
+    struct kl__owned* kl_t10;
+    uint64_t kl_t11;
+    uint64_t kl_t12;
+#line 43 "ring_owning/main.kl"
+    kl_result_2 = 0;
+#line 44 "ring_owning/main.kl"
+    kl_i_3 = 0;
+    goto bb1;
+    bb1:
+    kl_t4 = &( *kl_values_1 );
+    kl_t5 = kl_2kl_size__I5ownedE__SQ2kl4ringI5ownedE( kl_t4 );
+    kl_t6 = kl_i_3 < kl_t5;
+    if ( kl_t6 ) goto bb2; else goto bb3;
+    bb2:
+#line 46 "ring_owning/main.kl"
+    kl_t7 = kl_result_2 * 10;
+    kl_t8 = &( *kl_values_1 );
+    kl_t9 = kl_2kl_operator_index__I5ownedE__SQ2kl4ringI5ownedE_3u64( kl_t8, kl_i_3 );
+    kl_t10 = &( *kl_t9 );
+    kl_t11 = kl__value__S5owned( kl_t10 );
+    kl_t12 = kl_t7 + kl_t11;
+    kl_result_2 = kl_t12;
+    goto bb4;
+    bb3:
+#line 48 "ring_owning/main.kl"
+    kl_t0 = kl_result_2;
+    return kl_t0;
+    bb4:
+#line 44 "ring_owning/main.kl"
+    kl_i_3 = kl_i_3 + 1;
+    goto bb1;
+}
+
+struct kl_2kl_ring__I5ownedE kl__counting__( void )
+{
+    struct kl_2kl_ring__I5ownedE kl_t0;
+    struct kl_2kl_ring__I5ownedE kl_values_1;
+    struct kl_2kl_ring__I5ownedE kl_t2;
+    uint64_t kl_i_3;
+    bool kl_t4;
+    struct kl_2kl_ring__I5ownedE* kl_t5;
+    struct kl__owned kl_t6;
+    struct kl__owned* kl_t7;
+    bool kl_t10;
+    bool kl_t11;
+    bool kl_t12;
+#line 54 "ring_owning/main.kl"
+    kl_t10 = false;
+    kl_t11 = false;
+#line 57 "ring_owning/main.kl"
+    kl_t12 = false;
+#line 54 "ring_owning/main.kl"
+    kl_t10 = false;
+    kl_t2 = kl_2kl_with_capacity__I5ownedE__SQ2kl4ringI5ownedE_3u64( 3 );
+    kl_t11 = true;
+    kl_values_1 = kl_t2;
+    kl_t11 = false;
+    kl_t10 = true;
+    if ( kl_t11 ) kl_2kl_ring__I5ownedE__dtor( &kl_t2 );
+    kl_t11 = false;
+#line 55 "ring_owning/main.kl"
+    kl_i_3 = 1;
+    goto bb1;
+    bb1:
+    kl_t4 = kl_i_3 <= 3;
+    if ( kl_t4 ) goto bb2; else goto bb3;
+    bb2:
+#line 57 "ring_owning/main.kl"
+    kl_t5 = &kl_values_1;
+    kl_t12 = false;
+    kl_t7 = &kl_t6;
+    kl_t12 = true;
+    kl__owned__R5owned_3u64__ctor( kl_t7, kl_i_3 );
+    kl_2kl_push_back__I5ownedE__SQ2kl4ringI5ownedE_M5owned( kl_t5, kl_t6 );
+    kl_t12 = false;
+    if ( kl_t12 ) kl__owned__dtor( &kl_t6 );
+    kl_t12 = false;
+    goto bb4;
+    bb3:
+#line 59 "ring_owning/main.kl"
+    kl_t0 = kl_values_1;
+    kl_t10 = false;
+    if ( kl_t10 ) kl_2kl_ring__I5ownedE__dtor( &kl_values_1 );
+    kl_t10 = false;
+    return kl_t0;
+    bb4:
+#line 55 "ring_owning/main.kl"
+    kl_i_3 = kl_i_3 + 1;
+    goto bb1;
+}
+
+int32_t kl__wraps_at_the_back__( void )
+{
+    int32_t kl_t0;
+    struct kl_2kl_ring__I5ownedE kl_values_1;
+    struct kl_2kl_ring__I5ownedE kl_t2;
+    bool kl_t3;
+    bool kl_t4;
+    struct kl_2kl_ring__I5ownedE* kl_t5;
+    bool kl_t6;
+    bool kl_t7;
+    struct kl_2kl_ring__I5ownedE* kl_t8;
+    uint64_t kl_t9;
+    bool kl_t10;
+    struct kl_2kl_ring__I5ownedE* kl_t11;
+    uint64_t kl_t12;
+    bool kl_t13;
+    struct kl__owned kl_one_14;
+    struct kl_2kl_ring__I5ownedE* kl_t15;
+    struct kl__owned kl_t16;
+    bool kl_t17;
+    bool kl_t18;
+    struct kl__owned* kl_t19;
+    uint64_t kl_t20;
+    bool kl_t21;
+    bool kl_t22;
+    struct kl_2kl_ring__I5ownedE* kl_t23;
+    bool kl_t24;
+    struct kl_2kl_ring__I5ownedE* kl_t25;
+    struct kl__owned kl_t26;
+    struct kl__owned* kl_t27;
+    struct kl_2kl_ring__I5ownedE* kl_t30;
+    struct kl__owned kl_t31;
+    struct kl_2kl_ring__I5ownedE* kl_t32;
+    struct kl__owned kl_t33;
+    struct kl__owned* kl_t34;
+    bool kl_t37;
+    bool kl_t38;
+    bool kl_t39;
+    bool kl_t40;
+    struct kl_2kl_ring__I5ownedE* kl_t41;
+    uint64_t kl_t42;
+    bool kl_t43;
+    struct kl_2kl_ring__I5ownedE* kl_t44;
+    struct kl__owned* kl_t45;
+    uint64_t kl_t46;
+    bool kl_t47;
+    struct kl_2kl_ring__I5ownedE* kl_t48;
+    struct kl__owned* kl_t49;
+    uint64_t kl_t50;
+    bool kl_t51;
+    bool kl_t52;
+    bool kl_t53;
+    bool kl_t54;
+    bool kl_t55;
+#line 65 "ring_owning/main.kl"
+    kl_t52 = false;
+#line 72 "ring_owning/main.kl"
+    kl_t53 = false;
+#line 79 "ring_owning/main.kl"
+    kl_t54 = false;
+#line 81 "ring_owning/main.kl"
+    kl_t55 = false;
+#line 65 "ring_owning/main.kl"
+    kl_t2 = kl__counting__(  );
+    kl_t52 = true;
+    kl_values_1 = kl_t2;
+    kl_t52 = false;
+    if ( kl_t52 ) kl_2kl_ring__I5ownedE__dtor( &kl_t2 );
+    kl_t52 = false;
+#line 66 "ring_owning/main.kl"
+    kl_t5 = &kl_values_1;
+    kl_t6 = kl_2kl_is_full__I5ownedE__SQ2kl4ringI5ownedE( kl_t5 );
+    kl_t7 = !kl_t6;
+    kl_t4 = kl_t7;
+    if ( kl_t4 ) goto bb2; else goto bb1;
+    bb1:
+    kl_t8 = &kl_values_1;
+    kl_t9 = kl_2kl_capacity__I5ownedE__SQ2kl4ringI5ownedE( kl_t8 );
+    kl_t10 = kl_t9 != 3;
+    kl_t4 = kl_t10;
+    goto bb2;
+    bb2:
+    kl_t3 = kl_t4;
+    if ( kl_t3 ) goto bb4; else goto bb3;
+    bb3:
+    kl_t11 = &kl_values_1;
+    kl_t12 = kl__digits__Q2kl4ringI5ownedE( kl_t11 );
+    kl_t13 = kl_t12 != 123;
+    kl_t3 = kl_t13;
+    goto bb4;
+    bb4:
+    if ( kl_t3 ) goto bb5; else goto bb6;
+    bb5:
+#line 68 "ring_owning/main.kl"
+    kl_t0 = 1;
+    kl_2kl_ring__I5ownedE__dtor( &kl_values_1 );
+    return kl_t0;
+    bb6:
+#line 72 "ring_owning/main.kl"
+    kl_t15 = &kl_values_1;
+    kl_t16 = kl_2kl_pop_front__I5ownedE__SQ2kl4ringI5ownedE( kl_t15 );
+    kl_t53 = true;
+    kl_one_14 = kl_t16;
+    kl_t53 = false;
+    if ( kl_t53 ) kl__owned__dtor( &kl_t16 );
+    kl_t53 = false;
+#line 73 "ring_owning/main.kl"
+    kl_t19 = &kl_one_14;
+    kl_t20 = kl__value__S5owned( kl_t19 );
+    kl_t21 = kl_t20 != 1;
+    kl_t18 = kl_t21;
+    if ( kl_t18 ) goto bb8; else goto bb7;
+    bb7:
+    kl_t22 = kl_live_5 != 3;
+    kl_t18 = kl_t22;
+    goto bb8;
+    bb8:
+    kl_t17 = kl_t18;
+    if ( kl_t17 ) goto bb10; else goto bb9;
+    bb9:
+    kl_t23 = &kl_values_1;
+    kl_t24 = kl_2kl_is_full__I5ownedE__SQ2kl4ringI5ownedE( kl_t23 );
+    kl_t17 = kl_t24;
+    goto bb10;
+    bb10:
+    if ( kl_t17 ) goto bb11; else goto bb12;
+    bb11:
+#line 75 "ring_owning/main.kl"
+    kl_t0 = 2;
+    kl__owned__dtor( &kl_one_14 );
+    kl_2kl_ring__I5ownedE__dtor( &kl_values_1 );
+    return kl_t0;
+    bb12:
+#line 71 "ring_owning/main.kl"
+    kl__owned__dtor( &kl_one_14 );
+#line 79 "ring_owning/main.kl"
+    kl_t25 = &kl_values_1;
+    kl_t54 = false;
+    kl_t27 = &kl_t26;
+    kl_t54 = true;
+    kl__owned__R5owned_3u64__ctor( kl_t27, 4 );
+    kl_2kl_push_back__I5ownedE__SQ2kl4ringI5ownedE_M5owned( kl_t25, kl_t26 );
+    kl_t54 = false;
+    if ( kl_t54 ) kl__owned__dtor( &kl_t26 );
+    kl_t54 = false;
+#line 80 "ring_owning/main.kl"
+    kl_t30 = &kl_values_1;
+    kl_t31 = kl_2kl_pop_front__I5ownedE__SQ2kl4ringI5ownedE( kl_t30 );
+    kl__owned__dtor( &kl_t31 );
+#line 81 "ring_owning/main.kl"
+    kl_t32 = &kl_values_1;
+    kl_t55 = false;
+    kl_t34 = &kl_t33;
+    kl_t55 = true;
+    kl__owned__R5owned_3u64__ctor( kl_t34, 5 );
+    kl_2kl_push_back__I5ownedE__SQ2kl4ringI5ownedE_M5owned( kl_t32, kl_t33 );
+    kl_t55 = false;
+    if ( kl_t55 ) kl__owned__dtor( &kl_t33 );
+    kl_t55 = false;
+#line 82 "ring_owning/main.kl"
+    kl_t40 = kl_live_5 != 3;
+    kl_t39 = kl_t40;
+    if ( kl_t39 ) goto bb14; else goto bb13;
+    bb13:
+    kl_t41 = &kl_values_1;
+    kl_t42 = kl__digits__Q2kl4ringI5ownedE( kl_t41 );
+    kl_t43 = kl_t42 != 345;
+    kl_t39 = kl_t43;
+    goto bb14;
+    bb14:
+    kl_t38 = kl_t39;
+    if ( kl_t38 ) goto bb16; else goto bb15;
+    bb15:
+    kl_t44 = &kl_values_1;
+    kl_t45 = kl_2kl_first__I5ownedE__SQ2kl4ringI5ownedE( kl_t44 );
+    kl_t46 = kl__value__S5owned( kl_t45 );
+    kl_t47 = kl_t46 != 3;
+    kl_t38 = kl_t47;
+    goto bb16;
+    bb16:
+    kl_t37 = kl_t38;
+    if ( kl_t37 ) goto bb18; else goto bb17;
+    bb17:
+    kl_t48 = &kl_values_1;
+    kl_t49 = kl_2kl_last__I5ownedE__SQ2kl4ringI5ownedE( kl_t48 );
+    kl_t50 = kl__value__S5owned( kl_t49 );
+    kl_t51 = kl_t50 != 5;
+    kl_t37 = kl_t51;
+    goto bb18;
+    bb18:
+    if ( kl_t37 ) goto bb19; else goto bb20;
+    bb19:
+#line 84 "ring_owning/main.kl"
+    kl_t0 = 3;
+    kl_2kl_ring__I5ownedE__dtor( &kl_values_1 );
+    return kl_t0;
+    bb20:
+#line 87 "ring_owning/main.kl"
+    kl_t0 = 0;
+    kl_2kl_ring__I5ownedE__dtor( &kl_values_1 );
+    return kl_t0;
+}
+
+int32_t kl__wraps_at_the_front__( void )
+{
+    int32_t kl_t0;
+    struct kl_2kl_ring__I5ownedE kl_values_1;
+    struct kl_2kl_ring__I5ownedE kl_t2;
+    struct kl_2kl_ring__I5ownedE* kl_t3;
+    struct kl__owned kl_t4;
+    struct kl__owned* kl_t5;
+    struct kl_2kl_ring__I5ownedE* kl_t8;
+    struct kl__owned kl_t9;
+    struct kl__owned* kl_t10;
+    struct kl_2kl_ring__I5ownedE* kl_t13;
+    struct kl__owned kl_t14;
+    struct kl__owned* kl_t15;
+    bool kl_t18;
+    bool kl_t19;
+    struct kl_2kl_ring__I5ownedE* kl_t20;
+    uint64_t kl_t21;
+    bool kl_t22;
+    struct kl__owned kl_two_23;
+    struct kl_2kl_ring__I5ownedE* kl_t24;
+    struct kl__owned kl_t25;
+    struct kl__owned kl_three_26;
+    struct kl_2kl_ring__I5ownedE* kl_t27;
+    struct kl__owned kl_t28;
+    bool kl_t29;
+    bool kl_t30;
+    bool kl_t31;
+    struct kl__owned* kl_t32;
+    uint64_t kl_t33;
+    bool kl_t34;
+    struct kl__owned* kl_t35;
+    uint64_t kl_t36;
+    bool kl_t37;
+    bool kl_t38;
+    struct kl_2kl_ring__I5ownedE* kl_t39;
+    uint64_t kl_t40;
+    bool kl_t41;
+    bool kl_t42;
+    bool kl_t43;
+    bool kl_t44;
+    struct kl_2kl_ring__I5ownedE* kl_t45;
+    struct kl__owned* kl_t46;
+    uint64_t kl_t47;
+    bool kl_t48;
+    struct kl_2kl_ring__I5ownedE* kl_t49;
+    struct kl__owned* kl_t50;
+    uint64_t kl_t51;
+    bool kl_t52;
+    bool kl_t53;
+    bool kl_t54;
+    bool kl_t55;
+    bool kl_t56;
+    bool kl_t57;
+    bool kl_t58;
+#line 93 "ring_owning/main.kl"
+    kl_t53 = false;
+#line 94 "ring_owning/main.kl"
+    kl_t54 = false;
+#line 95 "ring_owning/main.kl"
+    kl_t55 = false;
+#line 96 "ring_owning/main.kl"
+    kl_t56 = false;
+#line 103 "ring_owning/main.kl"
+    kl_t57 = false;
+#line 104 "ring_owning/main.kl"
+    kl_t58 = false;
+#line 93 "ring_owning/main.kl"
+    kl_t2 = kl_2kl_with_capacity__I5ownedE__SQ2kl4ringI5ownedE_3u64( 3 );
+    kl_t53 = true;
+    kl_values_1 = kl_t2;
+    kl_t53 = false;
+    if ( kl_t53 ) kl_2kl_ring__I5ownedE__dtor( &kl_t2 );
+    kl_t53 = false;
+#line 94 "ring_owning/main.kl"
+    kl_t3 = &kl_values_1;
+    kl_t54 = false;
+    kl_t5 = &kl_t4;
+    kl_t54 = true;
+    kl__owned__R5owned_3u64__ctor( kl_t5, 1 );
+    kl_2kl_push_front__I5ownedE__SQ2kl4ringI5ownedE_M5owned( kl_t3, kl_t4 );
+    kl_t54 = false;
+    if ( kl_t54 ) kl__owned__dtor( &kl_t4 );
+    kl_t54 = false;
+#line 95 "ring_owning/main.kl"
+    kl_t8 = &kl_values_1;
+    kl_t55 = false;
+    kl_t10 = &kl_t9;
+    kl_t55 = true;
+    kl__owned__R5owned_3u64__ctor( kl_t10, 2 );
+    kl_2kl_push_back__I5ownedE__SQ2kl4ringI5ownedE_M5owned( kl_t8, kl_t9 );
+    kl_t55 = false;
+    if ( kl_t55 ) kl__owned__dtor( &kl_t9 );
+    kl_t55 = false;
+#line 96 "ring_owning/main.kl"
+    kl_t13 = &kl_values_1;
+    kl_t56 = false;
+    kl_t15 = &kl_t14;
+    kl_t56 = true;
+    kl__owned__R5owned_3u64__ctor( kl_t15, 3 );
+    kl_2kl_push_front__I5ownedE__SQ2kl4ringI5ownedE_M5owned( kl_t13, kl_t14 );
+    kl_t56 = false;
+    if ( kl_t56 ) kl__owned__dtor( &kl_t14 );
+    kl_t56 = false;
+#line 97 "ring_owning/main.kl"
+    kl_t19 = kl_live_5 != 3;
+    kl_t18 = kl_t19;
+    if ( kl_t18 ) goto bb2; else goto bb1;
+    bb1:
+    kl_t20 = &kl_values_1;
+    kl_t21 = kl__digits__Q2kl4ringI5ownedE( kl_t20 );
+    kl_t22 = kl_t21 != 312;
+    kl_t18 = kl_t22;
+    goto bb2;
+    bb2:
+    if ( kl_t18 ) goto bb3; else goto bb4;
+    bb3:
+#line 99 "ring_owning/main.kl"
+    kl_t0 = 4;
+    kl_2kl_ring__I5ownedE__dtor( &kl_values_1 );
+    return kl_t0;
+    bb4:
+#line 103 "ring_owning/main.kl"
+    kl_t24 = &kl_values_1;
+    kl_t25 = kl_2kl_pop_back__I5ownedE__SQ2kl4ringI5ownedE( kl_t24 );
+    kl_t57 = true;
+    kl_two_23 = kl_t25;
+    kl_t57 = false;
+    if ( kl_t57 ) kl__owned__dtor( &kl_t25 );
+    kl_t57 = false;
+#line 104 "ring_owning/main.kl"
+    kl_t27 = &kl_values_1;
+    kl_t28 = kl_2kl_pop_front__I5ownedE__SQ2kl4ringI5ownedE( kl_t27 );
+    kl_t58 = true;
+    kl_three_26 = kl_t28;
+    kl_t58 = false;
+    if ( kl_t58 ) kl__owned__dtor( &kl_t28 );
+    kl_t58 = false;
+#line 105 "ring_owning/main.kl"
+    kl_t32 = &kl_two_23;
+    kl_t33 = kl__value__S5owned( kl_t32 );
+    kl_t34 = kl_t33 != 2;
+    kl_t31 = kl_t34;
+    if ( kl_t31 ) goto bb6; else goto bb5;
+    bb5:
+    kl_t35 = &kl_three_26;
+    kl_t36 = kl__value__S5owned( kl_t35 );
+    kl_t37 = kl_t36 != 3;
+    kl_t31 = kl_t37;
+    goto bb6;
+    bb6:
+    kl_t30 = kl_t31;
+    if ( kl_t30 ) goto bb8; else goto bb7;
+    bb7:
+    kl_t38 = kl_live_5 != 3;
+    kl_t30 = kl_t38;
+    goto bb8;
+    bb8:
+    kl_t29 = kl_t30;
+    if ( kl_t29 ) goto bb10; else goto bb9;
+    bb9:
+    kl_t39 = &kl_values_1;
+    kl_t40 = kl__digits__Q2kl4ringI5ownedE( kl_t39 );
+    kl_t41 = kl_t40 != 1;
+    kl_t29 = kl_t41;
+    goto bb10;
+    bb10:
+    if ( kl_t29 ) goto bb11; else goto bb12;
+    bb11:
+#line 107 "ring_owning/main.kl"
+    kl_t0 = 5;
+    kl__owned__dtor( &kl_three_26 );
+    kl__owned__dtor( &kl_two_23 );
+    kl_2kl_ring__I5ownedE__dtor( &kl_values_1 );
+    return kl_t0;
+    bb12:
+#line 102 "ring_owning/main.kl"
+    kl__owned__dtor( &kl_three_26 );
+    kl__owned__dtor( &kl_two_23 );
+#line 111 "ring_owning/main.kl"
+    kl_t44 = kl_live_5 != 1;
+    kl_t43 = kl_t44;
+    if ( kl_t43 ) goto bb14; else goto bb13;
+    bb13:
+    kl_t45 = &kl_values_1;
+    kl_t46 = kl_2kl_first__I5ownedE__SQ2kl4ringI5ownedE( kl_t45 );
+    kl_t47 = kl__value__S5owned( kl_t46 );
+    kl_t48 = kl_t47 != 1;
+    kl_t43 = kl_t48;
+    goto bb14;
+    bb14:
+    kl_t42 = kl_t43;
+    if ( kl_t42 ) goto bb16; else goto bb15;
+    bb15:
+    kl_t49 = &kl_values_1;
+    kl_t50 = kl_2kl_last__I5ownedE__SQ2kl4ringI5ownedE( kl_t49 );
+    kl_t51 = kl__value__S5owned( kl_t50 );
+    kl_t52 = kl_t51 != 1;
+    kl_t42 = kl_t52;
+    goto bb16;
+    bb16:
+    if ( kl_t42 ) goto bb17; else goto bb18;
+    bb17:
+#line 113 "ring_owning/main.kl"
+    kl_t0 = 6;
+    kl_2kl_ring__I5ownedE__dtor( &kl_values_1 );
+    return kl_t0;
+    bb18:
+#line 116 "ring_owning/main.kl"
+    kl_t0 = 0;
+    kl_2kl_ring__I5ownedE__dtor( &kl_values_1 );
+    return kl_t0;
+}
+
+int32_t kl__try_pushes__( void )
+{
+    int32_t kl_t0;
+    struct kl_2kl_ring__I5ownedE kl_values_1;
+    struct kl_2kl_ring__I5ownedE kl_t2;
+    struct kl_2kl_ring__I5ownedE* kl_t3;
+    struct kl__owned kl_t4;
+    struct kl_7prelude_result__I4void_5ownedE kl_room_5;
+    struct kl_2kl_ring__I5ownedE* kl_t6;
+    struct kl__owned kl_t7;
+    struct kl__owned* kl_t8;
+    struct kl_7prelude_result__I4void_5ownedE kl_t10;
+    struct kl_7prelude_result__I4void_5ownedE kl_t11;
+    bool kl_t12;
+    struct kl_7prelude_result__I4void_5ownedE kl_t13;
+    struct kl__owned kl_e_14;
+    struct kl_7prelude_result__I4void_5ownedE kl_full_15;
+    struct kl_2kl_ring__I5ownedE* kl_t16;
+    struct kl__owned kl_t17;
+    struct kl__owned* kl_t18;
+    struct kl_7prelude_result__I4void_5ownedE kl_t20;
+    struct kl_7prelude_result__I4void_5ownedE kl_t21;
+    bool kl_t22;
+    struct kl_7prelude_result__I4void_5ownedE kl_t23;
+    struct kl__owned kl_e_24;
+    bool kl_t25;
+    struct kl__owned* kl_t26;
+    uint64_t kl_t27;
+    bool kl_t28;
+    bool kl_t29;
+    struct kl_2kl_ring__I5ownedE* kl_t30;
+    struct kl__owned kl_t31;
+    struct kl__owned* kl_t32;
+    struct kl_7prelude_result__I4void_5ownedE kl_t34;
+    bool kl_t35;
+    bool kl_t36;
+    struct kl_2kl_ring__I5ownedE* kl_t37;
+    uint64_t kl_t38;
+    bool kl_t39;
+    bool kl_t40;
+    bool kl_t41;
+    bool kl_t42;
+    bool kl_t43;
+    bool kl_t44;
+    bool kl_t45;
+    bool kl_t46;
+    bool kl_t47;
+    bool kl_t48;
+    bool kl_t49;
+#line 122 "ring_owning/main.kl"
+    kl_t40 = false;
+#line 125 "ring_owning/main.kl"
+    kl_t41 = false;
+    kl_t42 = false;
+    kl_t43 = false;
+#line 126 "ring_owning/main.kl"
+    kl_t44 = false;
+#line 134 "ring_owning/main.kl"
+    kl_t45 = false;
+    kl_t46 = false;
+    kl_t47 = false;
+#line 135 "ring_owning/main.kl"
+    kl_t48 = false;
+#line 147 "ring_owning/main.kl"
+    kl_t49 = false;
+#line 122 "ring_owning/main.kl"
+    kl_t2 = kl__counting__(  );
+    kl_t40 = true;
+    kl_values_1 = kl_t2;
+    kl_t40 = false;
+    if ( kl_t40 ) kl_2kl_ring__I5ownedE__dtor( &kl_t2 );
+    kl_t40 = false;
+#line 123 "ring_owning/main.kl"
+    kl_t3 = &kl_values_1;
+    kl_t4 = kl_2kl_pop_front__I5ownedE__SQ2kl4ringI5ownedE( kl_t3 );
+    kl__owned__dtor( &kl_t4 );
+#line 125 "ring_owning/main.kl"
+    kl_t41 = false;
+    kl_t6 = &kl_values_1;
+    kl_t42 = false;
+    kl_t8 = &kl_t7;
+    kl_t42 = true;
+    kl__owned__R5owned_3u64__ctor( kl_t8, 7 );
+    kl_t10 = kl_2kl_try_push_front__I5ownedE__SQ2kl4ringI5ownedE_M5owned( kl_t6, kl_t7 );
+    kl_t42 = false;
+    kl_t43 = true;
+    kl_room_5 = kl_t10;
+    kl_t43 = false;
+    kl_t41 = true;
+    if ( kl_t43 ) kl_7prelude_result__I4void_5ownedE__dtor( &kl_t10 );
+    if ( kl_t42 ) kl__owned__dtor( &kl_t7 );
+    kl_t42 = false;
+    kl_t43 = false;
+#line 126 "ring_owning/main.kl"
+    kl_t44 = false;
+    kl_t11 = kl_room_5;
+    kl_t41 = false;
+    kl_t44 = true;
+#line 128 "ring_owning/main.kl"
+    kl_t12 = kl_t11.tag == 0;
+    if ( kl_t12 ) goto bb2; else goto bb1;
+    bb1:
+#line 130 "ring_owning/main.kl"
+    kl_t13 = kl_t11;
+    kl_t44 = false;
+    kl_e_14 = kl_t13.kl_error_2541;
+#line 131 "ring_owning/main.kl"
+    kl_t0 = 7;
+    kl__owned__dtor( &kl_e_14 );
+    if ( kl_t44 ) kl_7prelude_result__I4void_5ownedE__dtor( &kl_t11 );
+    kl_t44 = false;
+    if ( kl_t41 ) kl_7prelude_result__I4void_5ownedE__dtor( &kl_room_5 );
+    kl_t41 = false;
+    kl_2kl_ring__I5ownedE__dtor( &kl_values_1 );
+    return kl_t0;
+    bb2:
+#line 126 "ring_owning/main.kl"
+    if ( kl_t44 ) kl_7prelude_result__I4void_5ownedE__dtor( &kl_t11 );
+    kl_t44 = false;
+#line 134 "ring_owning/main.kl"
+    kl_t45 = false;
+    kl_t16 = &kl_values_1;
+    kl_t46 = false;
+    kl_t18 = &kl_t17;
+    kl_t46 = true;
+    kl__owned__R5owned_3u64__ctor( kl_t18, 9 );
+    kl_t20 = kl_2kl_try_push_back__I5ownedE__SQ2kl4ringI5ownedE_M5owned( kl_t16, kl_t17 );
+    kl_t46 = false;
+    kl_t47 = true;
+    kl_full_15 = kl_t20;
+    kl_t47 = false;
+    kl_t45 = true;
+    if ( kl_t47 ) kl_7prelude_result__I4void_5ownedE__dtor( &kl_t20 );
+    if ( kl_t46 ) kl__owned__dtor( &kl_t17 );
+    kl_t46 = false;
+    kl_t47 = false;
+#line 135 "ring_owning/main.kl"
+    kl_t48 = false;
+    kl_t21 = kl_full_15;
+    kl_t45 = false;
+    kl_t48 = true;
+#line 137 "ring_owning/main.kl"
+    kl_t22 = kl_t21.tag == 0;
+    if ( kl_t22 ) goto bb3; else goto bb4;
+    bb3:
+#line 138 "ring_owning/main.kl"
+    kl_t0 = 8;
+    if ( kl_t48 ) kl_7prelude_result__I4void_5ownedE__dtor( &kl_t21 );
+    kl_t48 = false;
+    if ( kl_t45 ) kl_7prelude_result__I4void_5ownedE__dtor( &kl_full_15 );
+    kl_t45 = false;
+    if ( kl_t41 ) kl_7prelude_result__I4void_5ownedE__dtor( &kl_room_5 );
+    kl_t41 = false;
+    kl_2kl_ring__I5ownedE__dtor( &kl_values_1 );
+    return kl_t0;
+    bb4:
+#line 139 "ring_owning/main.kl"
+    kl_t23 = kl_t21;
+    kl_t48 = false;
+    kl_e_24 = kl_t23.kl_error_2541;
+#line 140 "ring_owning/main.kl"
+    kl_t26 = &kl_e_24;
+    kl_t27 = kl__value__S5owned( kl_t26 );
+    kl_t28 = kl_t27 != 9;
+    kl_t25 = kl_t28;
+    if ( kl_t25 ) goto bb6; else goto bb5;
+    bb5:
+    kl_t29 = kl_live_5 != 4;
+    kl_t25 = kl_t29;
+    goto bb6;
+    bb6:
+    if ( kl_t25 ) goto bb7; else goto bb8;
+    bb7:
+#line 142 "ring_owning/main.kl"
+    kl_t0 = 9;
+    kl__owned__dtor( &kl_e_24 );
+    if ( kl_t48 ) kl_7prelude_result__I4void_5ownedE__dtor( &kl_t21 );
+    kl_t48 = false;
+    if ( kl_t45 ) kl_7prelude_result__I4void_5ownedE__dtor( &kl_full_15 );
+    kl_t45 = false;
+    if ( kl_t41 ) kl_7prelude_result__I4void_5ownedE__dtor( &kl_room_5 );
+    kl_t41 = false;
+    kl_2kl_ring__I5ownedE__dtor( &kl_values_1 );
+    return kl_t0;
+    bb8:
+#line 144 "ring_owning/main.kl"
+    kl__owned__dtor( &kl_e_24 );
+    goto bb9;
+    bb9:
+#line 135 "ring_owning/main.kl"
+    if ( kl_t48 ) kl_7prelude_result__I4void_5ownedE__dtor( &kl_t21 );
+    kl_t48 = false;
+#line 147 "ring_owning/main.kl"
+    kl_t30 = &kl_values_1;
+    kl_t49 = false;
+    kl_t32 = &kl_t31;
+    kl_t49 = true;
+    kl__owned__R5owned_3u64__ctor( kl_t32, 8 );
+    kl_t34 = kl_2kl_try_push_front__I5ownedE__SQ2kl4ringI5ownedE_M5owned( kl_t30, kl_t31 );
+    kl_t49 = false;
+    kl_7prelude_result__I4void_5ownedE__dtor( &kl_t34 );
+    if ( kl_t49 ) kl__owned__dtor( &kl_t31 );
+    kl_t49 = false;
+#line 148 "ring_owning/main.kl"
+    kl_t36 = kl_live_5 != 3;
+    kl_t35 = kl_t36;
+    if ( kl_t35 ) goto bb11; else goto bb10;
+    bb10:
+    kl_t37 = &kl_values_1;
+    kl_t38 = kl__digits__Q2kl4ringI5ownedE( kl_t37 );
+    kl_t39 = kl_t38 != 723;
+    kl_t35 = kl_t39;
+    goto bb11;
+    bb11:
+    if ( kl_t35 ) goto bb12; else goto bb13;
+    bb12:
+#line 150 "ring_owning/main.kl"
+    kl_t0 = 10;
+    if ( kl_t45 ) kl_7prelude_result__I4void_5ownedE__dtor( &kl_full_15 );
+    kl_t45 = false;
+    if ( kl_t41 ) kl_7prelude_result__I4void_5ownedE__dtor( &kl_room_5 );
+    kl_t41 = false;
+    kl_2kl_ring__I5ownedE__dtor( &kl_values_1 );
+    return kl_t0;
+    bb13:
+#line 153 "ring_owning/main.kl"
+    kl_t0 = 0;
+    if ( kl_t45 ) kl_7prelude_result__I4void_5ownedE__dtor( &kl_full_15 );
+    kl_t45 = false;
+    if ( kl_t41 ) kl_7prelude_result__I4void_5ownedE__dtor( &kl_room_5 );
+    kl_t41 = false;
+    kl_2kl_ring__I5ownedE__dtor( &kl_values_1 );
+    return kl_t0;
+}
+
+int32_t kl__evicts__( void )
+{
+    int32_t kl_t0;
+    struct kl_2kl_ring__I5ownedE kl_values_1;
+    struct kl_2kl_ring__I5ownedE kl_t2;
+    struct kl__owned kl_one_3;
+    struct kl_2kl_ring__I5ownedE* kl_t4;
+    struct kl__owned kl_t5;
+    struct kl__owned* kl_t6;
+    struct kl_2kl_optional__I5ownedE kl_t8;
+    struct kl__owned kl_t9;
+    bool kl_t10;
+    bool kl_t11;
+    struct kl__owned* kl_t12;
+    uint64_t kl_t13;
+    bool kl_t14;
+    bool kl_t15;
+    struct kl_2kl_ring__I5ownedE* kl_t16;
+    uint64_t kl_t17;
+    bool kl_t18;
+    struct kl__owned kl_four_19;
+    struct kl_2kl_ring__I5ownedE* kl_t20;
+    struct kl__owned kl_t21;
+    struct kl__owned* kl_t22;
+    struct kl_2kl_optional__I5ownedE kl_t24;
+    struct kl__owned kl_t25;
+    bool kl_t26;
+    struct kl__owned* kl_t27;
+    uint64_t kl_t28;
+    bool kl_t29;
+    struct kl_2kl_ring__I5ownedE* kl_t30;
+    uint64_t kl_t31;
+    bool kl_t32;
+    struct kl_2kl_ring__I5ownedE* kl_t33;
+    struct kl__owned kl_t34;
+    bool kl_t35;
+    bool kl_t36;
+    struct kl_2kl_ring__I5ownedE* kl_t37;
+    struct kl__owned kl_t38;
+    struct kl__owned* kl_t39;
+    struct kl_2kl_optional__I5ownedE kl_t41;
+    struct kl_2kl_optional__I5ownedE* kl_t42;
+    bool kl_t43;
+    bool kl_t44;
+    bool kl_t45;
+    struct kl_2kl_ring__I5ownedE* kl_t46;
+    uint64_t kl_t47;
+    bool kl_t48;
+    bool kl_t49;
+    bool kl_t50;
+    bool kl_t51;
+    bool kl_t52;
+    bool kl_t53;
+    bool kl_t54;
+    bool kl_t55;
+    bool kl_t56;
+#line 160 "ring_owning/main.kl"
+    kl_t49 = false;
+#line 162 "ring_owning/main.kl"
+    kl_t50 = false;
+    kl_t51 = false;
+    kl_t52 = false;
+#line 170 "ring_owning/main.kl"
+    kl_t53 = false;
+    kl_t54 = false;
+    kl_t55 = false;
+#line 178 "ring_owning/main.kl"
+    kl_t56 = false;
+#line 160 "ring_owning/main.kl"
+    kl_t2 = kl__counting__(  );
+    kl_t49 = true;
+    kl_values_1 = kl_t2;
+    kl_t49 = false;
+    if ( kl_t49 ) kl_2kl_ring__I5ownedE__dtor( &kl_t2 );
+    kl_t49 = false;
+#line 162 "ring_owning/main.kl"
+    kl_t4 = &kl_values_1;
+    kl_t50 = false;
+    kl_t6 = &kl_t5;
+    kl_t50 = true;
+    kl__owned__R5owned_3u64__ctor( kl_t6, 4 );
+    kl_t8 = kl_2kl_push_back_evict__I5ownedE__SQ2kl4ringI5ownedE_M5owned( kl_t4, kl_t5 );
+    kl_t50 = false;
+    kl_t51 = true;
+    kl_t9 = kl_2kl_unwrap__I5ownedE__MQ2kl8optionalI5ownedE( kl_t8 );
+    kl_t51 = false;
+    kl_t52 = true;
+    kl_one_3 = kl_t9;
+    kl_t52 = false;
+    if ( kl_t52 ) kl__owned__dtor( &kl_t9 );
+    if ( kl_t51 ) kl_2kl_optional__I5ownedE__dtor( &kl_t8 );
+    if ( kl_t50 ) kl__owned__dtor( &kl_t5 );
+    kl_t50 = false;
+    kl_t51 = false;
+    kl_t52 = false;
+#line 163 "ring_owning/main.kl"
+    kl_t12 = &kl_one_3;
+    kl_t13 = kl__value__S5owned( kl_t12 );
+    kl_t14 = kl_t13 != 1;
+    kl_t11 = kl_t14;
+    if ( kl_t11 ) goto bb2; else goto bb1;
+    bb1:
+    kl_t15 = kl_live_5 != 4;
+    kl_t11 = kl_t15;
+    goto bb2;
+    bb2:
+    kl_t10 = kl_t11;
+    if ( kl_t10 ) goto bb4; else goto bb3;
+    bb3:
+    kl_t16 = &kl_values_1;
+    kl_t17 = kl__digits__Q2kl4ringI5ownedE( kl_t16 );
+    kl_t18 = kl_t17 != 234;
+    kl_t10 = kl_t18;
+    goto bb4;
+    bb4:
+    if ( kl_t10 ) goto bb5; else goto bb6;
+    bb5:
+#line 165 "ring_owning/main.kl"
+    kl_t0 = 11;
+    kl__owned__dtor( &kl_one_3 );
+    kl_2kl_ring__I5ownedE__dtor( &kl_values_1 );
+    return kl_t0;
+    bb6:
+#line 161 "ring_owning/main.kl"
+    kl__owned__dtor( &kl_one_3 );
+#line 170 "ring_owning/main.kl"
+    kl_t20 = &kl_values_1;
+    kl_t53 = false;
+    kl_t22 = &kl_t21;
+    kl_t53 = true;
+    kl__owned__R5owned_3u64__ctor( kl_t22, 5 );
+    kl_t24 = kl_2kl_push_front_evict__I5ownedE__SQ2kl4ringI5ownedE_M5owned( kl_t20, kl_t21 );
+    kl_t53 = false;
+    kl_t54 = true;
+    kl_t25 = kl_2kl_unwrap__I5ownedE__MQ2kl8optionalI5ownedE( kl_t24 );
+    kl_t54 = false;
+    kl_t55 = true;
+    kl_four_19 = kl_t25;
+    kl_t55 = false;
+    if ( kl_t55 ) kl__owned__dtor( &kl_t25 );
+    if ( kl_t54 ) kl_2kl_optional__I5ownedE__dtor( &kl_t24 );
+    if ( kl_t53 ) kl__owned__dtor( &kl_t21 );
+    kl_t53 = false;
+    kl_t54 = false;
+    kl_t55 = false;
+#line 171 "ring_owning/main.kl"
+    kl_t27 = &kl_four_19;
+    kl_t28 = kl__value__S5owned( kl_t27 );
+    kl_t29 = kl_t28 != 4;
+    kl_t26 = kl_t29;
+    if ( kl_t26 ) goto bb8; else goto bb7;
+    bb7:
+    kl_t30 = &kl_values_1;
+    kl_t31 = kl__digits__Q2kl4ringI5ownedE( kl_t30 );
+    kl_t32 = kl_t31 != 523;
+    kl_t26 = kl_t32;
+    goto bb8;
+    bb8:
+    if ( kl_t26 ) goto bb9; else goto bb10;
+    bb9:
+#line 173 "ring_owning/main.kl"
+    kl_t0 = 12;
+    kl__owned__dtor( &kl_four_19 );
+    kl_2kl_ring__I5ownedE__dtor( &kl_values_1 );
+    return kl_t0;
+    bb10:
+#line 169 "ring_owning/main.kl"
+    kl__owned__dtor( &kl_four_19 );
+#line 177 "ring_owning/main.kl"
+    kl_t33 = &kl_values_1;
+    kl_t34 = kl_2kl_pop_back__I5ownedE__SQ2kl4ringI5ownedE( kl_t33 );
+    kl__owned__dtor( &kl_t34 );
+#line 178 "ring_owning/main.kl"
+    kl_t37 = &kl_values_1;
+    kl_t56 = false;
+    kl_t39 = &kl_t38;
+    kl_t56 = true;
+    kl__owned__R5owned_3u64__ctor( kl_t39, 6 );
+    kl_t41 = kl_2kl_push_back_evict__I5ownedE__SQ2kl4ringI5ownedE_M5owned( kl_t37, kl_t38 );
+    kl_t56 = false;
+    kl_t42 = &kl_t41;
+    kl_t43 = kl_2kl_is_none__I5ownedE__Q2kl8optionalI5ownedE( kl_t42 );
+    kl_t44 = !kl_t43;
+    kl_t36 = kl_t44;
+    if ( kl_t36 ) goto bb12; else goto bb11;
+    bb11:
+    kl_t45 = kl_live_5 != 3;
+    kl_t36 = kl_t45;
+    goto bb12;
+    bb12:
+    kl_t35 = kl_t36;
+    if ( kl_t35 ) goto bb14; else goto bb13;
+    bb13:
+    kl_t46 = &kl_values_1;
+    kl_t47 = kl__digits__Q2kl4ringI5ownedE( kl_t46 );
+    kl_t48 = kl_t47 != 526;
+    kl_t35 = kl_t48;
+    goto bb14;
+    bb14:
+    kl_2kl_optional__I5ownedE__dtor( &kl_t41 );
+    if ( kl_t56 ) kl__owned__dtor( &kl_t38 );
+    kl_t56 = false;
+    if ( kl_t35 ) goto bb15; else goto bb16;
+    bb15:
+#line 180 "ring_owning/main.kl"
+    kl_t0 = 13;
+    kl_2kl_ring__I5ownedE__dtor( &kl_values_1 );
+    return kl_t0;
+    bb16:
+#line 183 "ring_owning/main.kl"
+    kl_t0 = 0;
+    kl_2kl_ring__I5ownedE__dtor( &kl_values_1 );
+    return kl_t0;
+}
+
+int32_t kl__try_pops__( void )
+{
+    int32_t kl_t0;
+    struct kl_2kl_ring__I5ownedE kl_values_1;
+    struct kl_2kl_ring__I5ownedE kl_t2;
+    struct kl__owned kl_three_3;
+    struct kl_2kl_ring__I5ownedE* kl_t4;
+    struct kl_2kl_optional__I5ownedE kl_t5;
+    struct kl__owned kl_t6;
+    struct kl__owned kl_one_7;
+    struct kl_2kl_ring__I5ownedE* kl_t8;
+    struct kl_2kl_optional__I5ownedE kl_t9;
+    struct kl__owned kl_t10;
+    bool kl_t11;
+    bool kl_t12;
+    struct kl__owned* kl_t13;
+    uint64_t kl_t14;
+    bool kl_t15;
+    struct kl__owned* kl_t16;
+    uint64_t kl_t17;
+    bool kl_t18;
+    struct kl_2kl_ring__I5ownedE* kl_t19;
+    uint64_t kl_t20;
+    bool kl_t21;
+    struct kl_2kl_ring__I5ownedE* kl_t22;
+    struct kl_2kl_optional__I5ownedE kl_t23;
+    bool kl_t24;
+    bool kl_t25;
+    bool kl_t26;
+    bool kl_t27;
+    struct kl_2kl_ring__I5ownedE* kl_t28;
+    bool kl_t29;
+    bool kl_t30;
+    struct kl_2kl_ring__I5ownedE* kl_t31;
+    struct kl_2kl_optional__I5ownedE kl_t32;
+    struct kl_2kl_optional__I5ownedE* kl_t33;
+    bool kl_t34;
+    bool kl_t35;
+    struct kl_2kl_ring__I5ownedE* kl_t36;
+    struct kl_2kl_optional__I5ownedE kl_t37;
+    struct kl_2kl_optional__I5ownedE* kl_t38;
+    bool kl_t39;
+    bool kl_t40;
+    bool kl_t41;
+    bool kl_t42;
+    bool kl_t43;
+    bool kl_t44;
+    bool kl_t45;
+    bool kl_t46;
+    bool kl_t47;
+#line 189 "ring_owning/main.kl"
+    kl_t41 = false;
+#line 191 "ring_owning/main.kl"
+    kl_t42 = false;
+    kl_t43 = false;
+#line 192 "ring_owning/main.kl"
+    kl_t44 = false;
+    kl_t45 = false;
+#line 200 "ring_owning/main.kl"
+    kl_t46 = false;
+    kl_t47 = false;
+#line 189 "ring_owning/main.kl"
+    kl_t2 = kl__counting__(  );
+    kl_t41 = true;
+    kl_values_1 = kl_t2;
+    kl_t41 = false;
+    if ( kl_t41 ) kl_2kl_ring__I5ownedE__dtor( &kl_t2 );
+    kl_t41 = false;
+#line 191 "ring_owning/main.kl"
+    kl_t4 = &kl_values_1;
+    kl_t5 = kl_2kl_try_pop_back__I5ownedE__SQ2kl4ringI5ownedE( kl_t4 );
+    kl_t42 = true;
+    kl_t6 = kl_2kl_unwrap__I5ownedE__MQ2kl8optionalI5ownedE( kl_t5 );
+    kl_t42 = false;
+    kl_t43 = true;
+    kl_three_3 = kl_t6;
+    kl_t43 = false;
+    if ( kl_t43 ) kl__owned__dtor( &kl_t6 );
+    if ( kl_t42 ) kl_2kl_optional__I5ownedE__dtor( &kl_t5 );
+    kl_t42 = false;
+    kl_t43 = false;
+#line 192 "ring_owning/main.kl"
+    kl_t8 = &kl_values_1;
+    kl_t9 = kl_2kl_try_pop_front__I5ownedE__SQ2kl4ringI5ownedE( kl_t8 );
+    kl_t44 = true;
+    kl_t10 = kl_2kl_unwrap__I5ownedE__MQ2kl8optionalI5ownedE( kl_t9 );
+    kl_t44 = false;
+    kl_t45 = true;
+    kl_one_7 = kl_t10;
+    kl_t45 = false;
+    if ( kl_t45 ) kl__owned__dtor( &kl_t10 );
+    if ( kl_t44 ) kl_2kl_optional__I5ownedE__dtor( &kl_t9 );
+    kl_t44 = false;
+    kl_t45 = false;
+#line 193 "ring_owning/main.kl"
+    kl_t13 = &kl_three_3;
+    kl_t14 = kl__value__S5owned( kl_t13 );
+    kl_t15 = kl_t14 != 3;
+    kl_t12 = kl_t15;
+    if ( kl_t12 ) goto bb2; else goto bb1;
+    bb1:
+    kl_t16 = &kl_one_7;
+    kl_t17 = kl__value__S5owned( kl_t16 );
+    kl_t18 = kl_t17 != 1;
+    kl_t12 = kl_t18;
+    goto bb2;
+    bb2:
+    kl_t11 = kl_t12;
+    if ( kl_t11 ) goto bb4; else goto bb3;
+    bb3:
+    kl_t19 = &kl_values_1;
+    kl_t20 = kl__digits__Q2kl4ringI5ownedE( kl_t19 );
+    kl_t21 = kl_t20 != 2;
+    kl_t11 = kl_t21;
+    goto bb4;
+    bb4:
+    if ( kl_t11 ) goto bb5; else goto bb6;
+    bb5:
+#line 195 "ring_owning/main.kl"
+    kl_t0 = 14;
+    kl__owned__dtor( &kl_one_7 );
+    kl__owned__dtor( &kl_three_3 );
+    kl_2kl_ring__I5ownedE__dtor( &kl_values_1 );
+    return kl_t0;
+    bb6:
+#line 190 "ring_owning/main.kl"
+    kl__owned__dtor( &kl_one_7 );
+    kl__owned__dtor( &kl_three_3 );
+#line 199 "ring_owning/main.kl"
+    kl_t22 = &kl_values_1;
+    kl_t23 = kl_2kl_try_pop_front__I5ownedE__SQ2kl4ringI5ownedE( kl_t22 );
+    kl_2kl_optional__I5ownedE__dtor( &kl_t23 );
+#line 200 "ring_owning/main.kl"
+    kl_t27 = kl_live_5 != 0;
+    kl_t26 = kl_t27;
+    if ( kl_t26 ) goto bb8; else goto bb7;
+    bb7:
+    kl_t28 = &kl_values_1;
+    kl_t29 = kl_2kl_is_empty__I5ownedE__SQ2kl4ringI5ownedE( kl_t28 );
+    kl_t30 = !kl_t29;
+    kl_t26 = kl_t30;
+    goto bb8;
+    bb8:
+    kl_t25 = kl_t26;
+    if ( kl_t25 ) goto bb10; else goto bb9;
+    bb9:
+    kl_t31 = &kl_values_1;
+    kl_t32 = kl_2kl_try_pop_front__I5ownedE__SQ2kl4ringI5ownedE( kl_t31 );
+    kl_t46 = true;
+    kl_t33 = &kl_t32;
+    kl_t34 = kl_2kl_is_none__I5ownedE__Q2kl8optionalI5ownedE( kl_t33 );
+    kl_t35 = !kl_t34;
+    kl_t25 = kl_t35;
+    goto bb10;
+    bb10:
+    kl_t24 = kl_t25;
+    if ( kl_t24 ) goto bb12; else goto bb11;
+    bb11:
+    kl_t36 = &kl_values_1;
+    kl_t37 = kl_2kl_try_pop_back__I5ownedE__SQ2kl4ringI5ownedE( kl_t36 );
+    kl_t47 = true;
+    kl_t38 = &kl_t37;
+    kl_t39 = kl_2kl_is_none__I5ownedE__Q2kl8optionalI5ownedE( kl_t38 );
+    kl_t40 = !kl_t39;
+    kl_t24 = kl_t40;
+    goto bb12;
+    bb12:
+    if ( kl_t47 ) kl_2kl_optional__I5ownedE__dtor( &kl_t37 );
+    if ( kl_t46 ) kl_2kl_optional__I5ownedE__dtor( &kl_t32 );
+    kl_t46 = false;
+    kl_t47 = false;
+    if ( kl_t24 ) goto bb13; else goto bb14;
+    bb13:
+#line 202 "ring_owning/main.kl"
+    kl_t0 = 15;
+    kl_2kl_ring__I5ownedE__dtor( &kl_values_1 );
+    return kl_t0;
+    bb14:
+#line 205 "ring_owning/main.kl"
+    kl_t0 = 0;
+    kl_2kl_ring__I5ownedE__dtor( &kl_values_1 );
+    return kl_t0;
+}
+
+int32_t kl__reserves__( void )
+{
+    int32_t kl_t0;
+    struct kl_2kl_ring__I5ownedE kl_values_1;
+    struct kl_2kl_ring__I5ownedE kl_t2;
+    struct kl_2kl_ring__I5ownedE* kl_t3;
+    struct kl__owned kl_t4;
+    struct kl_2kl_ring__I5ownedE* kl_t5;
+    struct kl__owned kl_t6;
+    struct kl__owned* kl_t7;
+    struct kl_2kl_ring__I5ownedE* kl_t10;
+    struct kl_2kl_ring__I5ownedE* kl_t12;
+    uint64_t kl_t13;
+    bool kl_t14;
+    struct kl_2kl_ring__I5ownedE* kl_t15;
+    bool kl_t17;
+    bool kl_t18;
+    bool kl_t19;
+    struct kl_2kl_ring__I5ownedE* kl_t20;
+    uint64_t kl_t21;
+    bool kl_t22;
+    bool kl_t23;
+    struct kl_2kl_ring__I5ownedE* kl_t24;
+    uint64_t kl_t25;
+    bool kl_t26;
+    struct kl_2kl_ring__I5ownedE* kl_t27;
+    bool kl_t28;
+    struct kl_2kl_ring__I5ownedE* kl_t29;
+    struct kl__owned kl_t30;
+    struct kl__owned* kl_t31;
+    struct kl_2kl_ring__I5ownedE* kl_t34;
+    struct kl__owned kl_t35;
+    struct kl__owned* kl_t36;
+    bool kl_t39;
+    bool kl_t40;
+    struct kl_2kl_ring__I5ownedE* kl_t41;
+    bool kl_t42;
+    bool kl_t43;
+    bool kl_t44;
+    struct kl_2kl_ring__I5ownedE* kl_t45;
+    uint64_t kl_t46;
+    bool kl_t47;
+    bool kl_t48;
+    bool kl_t49;
+    bool kl_t50;
+    bool kl_t51;
+#line 212 "ring_owning/main.kl"
+    kl_t48 = false;
+#line 214 "ring_owning/main.kl"
+    kl_t49 = false;
+#line 228 "ring_owning/main.kl"
+    kl_t50 = false;
+#line 229 "ring_owning/main.kl"
+    kl_t51 = false;
+#line 212 "ring_owning/main.kl"
+    kl_t2 = kl__counting__(  );
+    kl_t48 = true;
+    kl_values_1 = kl_t2;
+    kl_t48 = false;
+    if ( kl_t48 ) kl_2kl_ring__I5ownedE__dtor( &kl_t2 );
+    kl_t48 = false;
+#line 213 "ring_owning/main.kl"
+    kl_t3 = &kl_values_1;
+    kl_t4 = kl_2kl_pop_front__I5ownedE__SQ2kl4ringI5ownedE( kl_t3 );
+    kl__owned__dtor( &kl_t4 );
+#line 214 "ring_owning/main.kl"
+    kl_t5 = &kl_values_1;
+    kl_t49 = false;
+    kl_t7 = &kl_t6;
+    kl_t49 = true;
+    kl__owned__R5owned_3u64__ctor( kl_t7, 4 );
+    kl_2kl_push_back__I5ownedE__SQ2kl4ringI5ownedE_M5owned( kl_t5, kl_t6 );
+    kl_t49 = false;
+    if ( kl_t49 ) kl__owned__dtor( &kl_t6 );
+    kl_t49 = false;
+#line 216 "ring_owning/main.kl"
+    kl_t10 = &kl_values_1;
+    kl_2kl_reserve__I5ownedE__SQ2kl4ringI5ownedE_3u64( kl_t10, 2 );
+#line 217 "ring_owning/main.kl"
+    kl_t12 = &kl_values_1;
+    kl_t13 = kl_2kl_capacity__I5ownedE__SQ2kl4ringI5ownedE( kl_t12 );
+    kl_t14 = kl_t13 != 3;
+    if ( kl_t14 ) goto bb1; else goto bb2;
+    bb1:
+#line 219 "ring_owning/main.kl"
+    kl_t0 = 16;
+    kl_2kl_ring__I5ownedE__dtor( &kl_values_1 );
+    return kl_t0;
+    bb2:
+#line 222 "ring_owning/main.kl"
+    kl_t15 = &kl_values_1;
+    kl_2kl_reserve__I5ownedE__SQ2kl4ringI5ownedE_3u64( kl_t15, 5 );
+#line 223 "ring_owning/main.kl"
+    kl_t20 = &kl_values_1;
+    kl_t21 = kl_2kl_capacity__I5ownedE__SQ2kl4ringI5ownedE( kl_t20 );
+    kl_t22 = kl_t21 != 5;
+    kl_t19 = kl_t22;
+    if ( kl_t19 ) goto bb4; else goto bb3;
+    bb3:
+    kl_t23 = kl_live_5 != 3;
+    kl_t19 = kl_t23;
+    goto bb4;
+    bb4:
+    kl_t18 = kl_t19;
+    if ( kl_t18 ) goto bb6; else goto bb5;
+    bb5:
+    kl_t24 = &kl_values_1;
+    kl_t25 = kl__digits__Q2kl4ringI5ownedE( kl_t24 );
+    kl_t26 = kl_t25 != 234;
+    kl_t18 = kl_t26;
+    goto bb6;
+    bb6:
+    kl_t17 = kl_t18;
+    if ( kl_t17 ) goto bb8; else goto bb7;
+    bb7:
+    kl_t27 = &kl_values_1;
+    kl_t28 = kl_2kl_is_full__I5ownedE__SQ2kl4ringI5ownedE( kl_t27 );
+    kl_t17 = kl_t28;
+    goto bb8;
+    bb8:
+    if ( kl_t17 ) goto bb9; else goto bb10;
+    bb9:
+#line 225 "ring_owning/main.kl"
+    kl_t0 = 17;
+    kl_2kl_ring__I5ownedE__dtor( &kl_values_1 );
+    return kl_t0;
+    bb10:
+#line 228 "ring_owning/main.kl"
+    kl_t29 = &kl_values_1;
+    kl_t50 = false;
+    kl_t31 = &kl_t30;
+    kl_t50 = true;
+    kl__owned__R5owned_3u64__ctor( kl_t31, 5 );
+    kl_2kl_push_back__I5ownedE__SQ2kl4ringI5ownedE_M5owned( kl_t29, kl_t30 );
+    kl_t50 = false;
+    if ( kl_t50 ) kl__owned__dtor( &kl_t30 );
+    kl_t50 = false;
+#line 229 "ring_owning/main.kl"
+    kl_t34 = &kl_values_1;
+    kl_t51 = false;
+    kl_t36 = &kl_t35;
+    kl_t51 = true;
+    kl__owned__R5owned_3u64__ctor( kl_t36, 1 );
+    kl_2kl_push_front__I5ownedE__SQ2kl4ringI5ownedE_M5owned( kl_t34, kl_t35 );
+    kl_t51 = false;
+    if ( kl_t51 ) kl__owned__dtor( &kl_t35 );
+    kl_t51 = false;
+#line 230 "ring_owning/main.kl"
+    kl_t41 = &kl_values_1;
+    kl_t42 = kl_2kl_is_full__I5ownedE__SQ2kl4ringI5ownedE( kl_t41 );
+    kl_t43 = !kl_t42;
+    kl_t40 = kl_t43;
+    if ( kl_t40 ) goto bb12; else goto bb11;
+    bb11:
+    kl_t44 = kl_live_5 != 5;
+    kl_t40 = kl_t44;
+    goto bb12;
+    bb12:
+    kl_t39 = kl_t40;
+    if ( kl_t39 ) goto bb14; else goto bb13;
+    bb13:
+    kl_t45 = &kl_values_1;
+    kl_t46 = kl__digits__Q2kl4ringI5ownedE( kl_t45 );
+    kl_t47 = kl_t46 != 12345;
+    kl_t39 = kl_t47;
+    goto bb14;
+    bb14:
+    if ( kl_t39 ) goto bb15; else goto bb16;
+    bb15:
+#line 232 "ring_owning/main.kl"
+    kl_t0 = 18;
+    kl_2kl_ring__I5ownedE__dtor( &kl_values_1 );
+    return kl_t0;
+    bb16:
+#line 235 "ring_owning/main.kl"
+    kl_t0 = 0;
+    kl_2kl_ring__I5ownedE__dtor( &kl_values_1 );
+    return kl_t0;
+}
+
+int32_t kl__clears__( void )
+{
+    int32_t kl_t0;
+    struct kl_2kl_ring__I5ownedE kl_values_1;
+    struct kl_2kl_ring__I5ownedE kl_t2;
+    struct kl_2kl_ring__I5ownedE* kl_t3;
+    struct kl__owned kl_t4;
+    struct kl_2kl_ring__I5ownedE* kl_t5;
+    struct kl__owned kl_t6;
+    struct kl__owned* kl_t7;
+    struct kl_2kl_ring__I5ownedE* kl_t10;
+    bool kl_t12;
+    bool kl_t13;
+    bool kl_t14;
+    struct kl_2kl_ring__I5ownedE* kl_t15;
+    bool kl_t16;
+    bool kl_t17;
+    struct kl_2kl_ring__I5ownedE* kl_t18;
+    uint64_t kl_t19;
+    bool kl_t20;
+    struct kl_2kl_ring__I5ownedE* kl_t21;
+    struct kl__owned kl_t22;
+    struct kl__owned* kl_t23;
+    bool kl_t26;
+    bool kl_t27;
+    struct kl_2kl_ring__I5ownedE* kl_t28;
+    uint64_t kl_t29;
+    bool kl_t30;
+    bool kl_t31;
+    bool kl_t32;
+    bool kl_t33;
+#line 241 "ring_owning/main.kl"
+    kl_t31 = false;
+#line 243 "ring_owning/main.kl"
+    kl_t32 = false;
+#line 251 "ring_owning/main.kl"
+    kl_t33 = false;
+#line 241 "ring_owning/main.kl"
+    kl_t2 = kl__counting__(  );
+    kl_t31 = true;
+    kl_values_1 = kl_t2;
+    kl_t31 = false;
+    if ( kl_t31 ) kl_2kl_ring__I5ownedE__dtor( &kl_t2 );
+    kl_t31 = false;
+#line 242 "ring_owning/main.kl"
+    kl_t3 = &kl_values_1;
+    kl_t4 = kl_2kl_pop_front__I5ownedE__SQ2kl4ringI5ownedE( kl_t3 );
+    kl__owned__dtor( &kl_t4 );
+#line 243 "ring_owning/main.kl"
+    kl_t5 = &kl_values_1;
+    kl_t32 = false;
+    kl_t7 = &kl_t6;
+    kl_t32 = true;
+    kl__owned__R5owned_3u64__ctor( kl_t7, 4 );
+    kl_2kl_push_back__I5ownedE__SQ2kl4ringI5ownedE_M5owned( kl_t5, kl_t6 );
+    kl_t32 = false;
+    if ( kl_t32 ) kl__owned__dtor( &kl_t6 );
+    kl_t32 = false;
+#line 245 "ring_owning/main.kl"
+    kl_t10 = &kl_values_1;
+    kl_2kl_clear__I5ownedE__SQ2kl4ringI5ownedE( kl_t10 );
+#line 246 "ring_owning/main.kl"
+    kl_t14 = kl_live_5 != 0;
+    kl_t13 = kl_t14;
+    if ( kl_t13 ) goto bb2; else goto bb1;
+    bb1:
+    kl_t15 = &kl_values_1;
+    kl_t16 = kl_2kl_is_empty__I5ownedE__SQ2kl4ringI5ownedE( kl_t15 );
+    kl_t17 = !kl_t16;
+    kl_t13 = kl_t17;
+    goto bb2;
+    bb2:
+    kl_t12 = kl_t13;
+    if ( kl_t12 ) goto bb4; else goto bb3;
+    bb3:
+    kl_t18 = &kl_values_1;
+    kl_t19 = kl_2kl_capacity__I5ownedE__SQ2kl4ringI5ownedE( kl_t18 );
+    kl_t20 = kl_t19 != 3;
+    kl_t12 = kl_t20;
+    goto bb4;
+    bb4:
+    if ( kl_t12 ) goto bb5; else goto bb6;
+    bb5:
+#line 248 "ring_owning/main.kl"
+    kl_t0 = 19;
+    kl_2kl_ring__I5ownedE__dtor( &kl_values_1 );
+    return kl_t0;
+    bb6:
+#line 251 "ring_owning/main.kl"
+    kl_t21 = &kl_values_1;
+    kl_t33 = false;
+    kl_t23 = &kl_t22;
+    kl_t33 = true;
+    kl__owned__R5owned_3u64__ctor( kl_t23, 6 );
+    kl_2kl_push_back__I5ownedE__SQ2kl4ringI5ownedE_M5owned( kl_t21, kl_t22 );
+    kl_t33 = false;
+    if ( kl_t33 ) kl__owned__dtor( &kl_t22 );
+    kl_t33 = false;
+#line 252 "ring_owning/main.kl"
+    kl_t27 = kl_live_5 != 1;
+    kl_t26 = kl_t27;
+    if ( kl_t26 ) goto bb8; else goto bb7;
+    bb7:
+    kl_t28 = &kl_values_1;
+    kl_t29 = kl__digits__Q2kl4ringI5ownedE( kl_t28 );
+    kl_t30 = kl_t29 != 6;
+    kl_t26 = kl_t30;
+    goto bb8;
+    bb8:
+    if ( kl_t26 ) goto bb9; else goto bb10;
+    bb9:
+#line 254 "ring_owning/main.kl"
+    kl_t0 = 20;
+    kl_2kl_ring__I5ownedE__dtor( &kl_values_1 );
+    return kl_t0;
+    bb10:
+#line 257 "ring_owning/main.kl"
+    kl_t0 = 0;
+    kl_2kl_ring__I5ownedE__dtor( &kl_values_1 );
+    return kl_t0;
+}
+
+int32_t kl__drops_wrapped__( void )
+{
+    int32_t kl_t0;
+    struct kl_2kl_ring__I5ownedE kl_values_1;
+    struct kl_2kl_ring__I5ownedE kl_t2;
+    struct kl_2kl_ring__I5ownedE* kl_t3;
+    struct kl__owned kl_t4;
+    struct kl_2kl_ring__I5ownedE* kl_t5;
+    struct kl__owned kl_t6;
+    struct kl__owned* kl_t7;
+    int32_t kl_t10;
+    bool kl_t11;
+    bool kl_t12;
+    bool kl_t13;
+#line 263 "ring_owning/main.kl"
+    kl_t12 = false;
+#line 265 "ring_owning/main.kl"
+    kl_t13 = false;
+#line 263 "ring_owning/main.kl"
+    kl_t2 = kl__counting__(  );
+    kl_t12 = true;
+    kl_values_1 = kl_t2;
+    kl_t12 = false;
+    if ( kl_t12 ) kl_2kl_ring__I5ownedE__dtor( &kl_t2 );
+    kl_t12 = false;
+#line 264 "ring_owning/main.kl"
+    kl_t3 = &kl_values_1;
+    kl_t4 = kl_2kl_pop_front__I5ownedE__SQ2kl4ringI5ownedE( kl_t3 );
+    kl__owned__dtor( &kl_t4 );
+#line 265 "ring_owning/main.kl"
+    kl_t5 = &kl_values_1;
+    kl_t13 = false;
+    kl_t7 = &kl_t6;
+    kl_t13 = true;
+    kl__owned__R5owned_3u64__ctor( kl_t7, 4 );
+    kl_2kl_push_back__I5ownedE__SQ2kl4ringI5ownedE_M5owned( kl_t5, kl_t6 );
+    kl_t13 = false;
+    if ( kl_t13 ) kl__owned__dtor( &kl_t6 );
+    kl_t13 = false;
+#line 266 "ring_owning/main.kl"
+    kl_t11 = kl_live_5 == 3;
+    if ( kl_t11 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t10 = 0;
+    goto bb3;
+    bb2:
+    kl_t10 = 21;
+    goto bb3;
+    bb3:
+    kl_t0 = kl_t10;
+    kl_2kl_ring__I5ownedE__dtor( &kl_values_1 );
+    return kl_t0;
+}
+
+int32_t kl__moves_whole__( void )
+{
+    int32_t kl_t0;
+    struct kl_2kl_ring__I5ownedE kl_held_1;
+    struct kl_2kl_ring__I5ownedE kl_t2;
+    struct kl_2kl_ring__I5ownedE kl_moved_3;
+    bool kl_t4;
+    bool kl_t5;
+    struct kl_2kl_ring__I5ownedE* kl_t6;
+    uint64_t kl_t7;
+    bool kl_t8;
+    bool kl_t9;
+    bool kl_t10;
+#line 272 "ring_owning/main.kl"
+    kl_t9 = false;
+    kl_t10 = false;
+    kl_t9 = false;
+    kl_t2 = kl__counting__(  );
+    kl_t10 = true;
+    kl_held_1 = kl_t2;
+    kl_t10 = false;
+    kl_t9 = true;
+    if ( kl_t10 ) kl_2kl_ring__I5ownedE__dtor( &kl_t2 );
+    kl_t10 = false;
+#line 273 "ring_owning/main.kl"
+    kl_moved_3 = kl_held_1;
+    kl_t9 = false;
+#line 274 "ring_owning/main.kl"
+    kl_t5 = kl_live_5 != 3;
+    kl_t4 = kl_t5;
+    if ( kl_t4 ) goto bb2; else goto bb1;
+    bb1:
+    kl_t6 = &kl_moved_3;
+    kl_t7 = kl__digits__Q2kl4ringI5ownedE( kl_t6 );
+    kl_t8 = kl_t7 != 123;
+    kl_t4 = kl_t8;
+    goto bb2;
+    bb2:
+    if ( kl_t4 ) goto bb3; else goto bb4;
+    bb3:
+#line 276 "ring_owning/main.kl"
+    kl_t0 = 22;
+    kl_2kl_ring__I5ownedE__dtor( &kl_moved_3 );
+    if ( kl_t9 ) kl_2kl_ring__I5ownedE__dtor( &kl_held_1 );
+    kl_t9 = false;
+    return kl_t0;
+    bb4:
+#line 279 "ring_owning/main.kl"
+    kl_t0 = 0;
+    kl_2kl_ring__I5ownedE__dtor( &kl_moved_3 );
+    if ( kl_t9 ) kl_2kl_ring__I5ownedE__dtor( &kl_held_1 );
+    kl_t9 = false;
+    return kl_t0;
+}
+
+int32_t kl__copies__( void )
+{
+    int32_t kl_t0;
+    struct kl_2kl_ring__I3i32E kl_values_1;
+    struct kl_2kl_ring__I3i32E kl_t2;
+    int32_t kl_seven_3;
+    struct kl_2kl_ring__I3i32E* kl_t4;
+    struct kl_2kl_ring__I3i32E* kl_t6;
+    struct kl_2kl_ring__I3i32E* kl_t8;
+    int32_t* kl_t9;
+    bool kl_t10;
+    bool kl_t11;
+    struct kl_2kl_ring__I3i32E* kl_t12;
+    int32_t kl_t13;
+    bool kl_t14;
+    struct kl_2kl_ring__I3i32E* kl_t15;
+    int32_t kl_t16;
+    bool kl_t17;
+    struct kl_2kl_ring__I3i32E* kl_t18;
+    bool kl_t19;
+    bool kl_t20;
+    bool kl_t21;
+#line 285 "ring_owning/main.kl"
+    kl_t21 = false;
+    kl_t2 = kl_2kl_with_capacity__I3i32E__SQ2kl4ringI3i32E_3u64( 2 );
+    kl_t21 = true;
+    kl_values_1 = kl_t2;
+    kl_t21 = false;
+    if ( kl_t21 ) kl_2kl_ring__I3i32E__dtor( &kl_t2 );
+    kl_t21 = false;
+#line 286 "ring_owning/main.kl"
+    kl_seven_3 = 7;
+#line 287 "ring_owning/main.kl"
+    kl_t4 = &kl_values_1;
+    kl_2kl_push_back__I3i32E__SQ2kl4ringI3i32E_M3i32( kl_t4, kl_seven_3 );
+#line 288 "ring_owning/main.kl"
+    kl_t6 = &kl_values_1;
+    kl_2kl_push_front__I3i32E__SQ2kl4ringI3i32E_M3i32( kl_t6, 8 );
+#line 289 "ring_owning/main.kl"
+    kl_t8 = &kl_values_1;
+    kl_t9 = kl_2kl_operator_index__I3i32E__SQ2kl4ringI3i32E_3u64( kl_t8, 1 );
+    ( *kl_t9 ) = 9;
+#line 290 "ring_owning/main.kl"
+    kl_t12 = &kl_values_1;
+    kl_t13 = kl_2kl_pop_front__I3i32E__SQ2kl4ringI3i32E( kl_t12 );
+    kl_t14 = kl_t13 != 8;
+    kl_t11 = kl_t14;
+    if ( kl_t11 ) goto bb2; else goto bb1;
+    bb1:
+    kl_t15 = &kl_values_1;
+    kl_t16 = kl_2kl_pop_back__I3i32E__SQ2kl4ringI3i32E( kl_t15 );
+    kl_t17 = kl_t16 != 9;
+    kl_t11 = kl_t17;
+    goto bb2;
+    bb2:
+    kl_t10 = kl_t11;
+    if ( kl_t10 ) goto bb4; else goto bb3;
+    bb3:
+    kl_t18 = &kl_values_1;
+    kl_t19 = kl_2kl_is_empty__I3i32E__SQ2kl4ringI3i32E( kl_t18 );
+    kl_t20 = !kl_t19;
+    kl_t10 = kl_t20;
+    goto bb4;
+    bb4:
+    if ( kl_t10 ) goto bb5; else goto bb6;
+    bb5:
+#line 292 "ring_owning/main.kl"
+    kl_t0 = 23;
+    kl_2kl_ring__I3i32E__dtor( &kl_values_1 );
+    return kl_t0;
+    bb6:
+#line 295 "ring_owning/main.kl"
+    kl_t0 = 0;
+    kl_2kl_ring__I3i32E__dtor( &kl_values_1 );
+    return kl_t0;
+}
+
+int32_t kl__settled__3i32_3i32( int32_t kl_code_1, int32_t kl_leaked_2 )
+{
+    int32_t kl_t0;
+    bool kl_t3;
+    int32_t kl_t4;
+    bool kl_t5;
+#line 301 "ring_owning/main.kl"
+    kl_t3 = kl_code_1 != 0;
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 303 "ring_owning/main.kl"
+    kl_t0 = kl_code_1;
+    return kl_t0;
+    bb2:
+#line 305 "ring_owning/main.kl"
+    kl_t5 = kl_live_5 == 0;
+    if ( kl_t5 ) goto bb3; else goto bb4;
+    bb3:
+    kl_t4 = 0;
+    goto bb5;
+    bb4:
+    kl_t4 = kl_leaked_2;
+    goto bb5;
+    bb5:
+    kl_t0 = kl_t4;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_code_1;
+    int32_t kl_t2;
+    int32_t kl_t3;
+    bool kl_t4;
+    int32_t kl_t5;
+    int32_t kl_t6;
+    bool kl_t7;
+    int32_t kl_t8;
+    int32_t kl_t9;
+    bool kl_t10;
+    int32_t kl_t11;
+    int32_t kl_t12;
+    bool kl_t13;
+    int32_t kl_t14;
+    int32_t kl_t15;
+    bool kl_t16;
+    int32_t kl_t17;
+    int32_t kl_t18;
+    bool kl_t19;
+    int32_t kl_t20;
+    int32_t kl_t21;
+    bool kl_t22;
+    int32_t kl_t23;
+    int32_t kl_t24;
+    bool kl_t25;
+    int32_t kl_t26;
+    int32_t kl_t27;
+    bool kl_t28;
+    int32_t kl_t29;
+#line 310 "ring_owning/main.kl"
+    kl_t2 = kl__wraps_at_the_back__(  );
+    kl_t3 = kl__settled__3i32_3i32( kl_t2, 30 );
+    kl_code_1 = kl_t3;
+#line 311 "ring_owning/main.kl"
+    kl_t4 = kl_code_1 == 0;
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+#line 313 "ring_owning/main.kl"
+    kl_t5 = kl__wraps_at_the_front__(  );
+    kl_t6 = kl__settled__3i32_3i32( kl_t5, 31 );
+    kl_code_1 = kl_t6;
+    goto bb2;
+    bb2:
+#line 315 "ring_owning/main.kl"
+    kl_t7 = kl_code_1 == 0;
+    if ( kl_t7 ) goto bb3; else goto bb4;
+    bb3:
+#line 317 "ring_owning/main.kl"
+    kl_t8 = kl__try_pushes__(  );
+    kl_t9 = kl__settled__3i32_3i32( kl_t8, 32 );
+    kl_code_1 = kl_t9;
+    goto bb4;
+    bb4:
+#line 319 "ring_owning/main.kl"
+    kl_t10 = kl_code_1 == 0;
+    if ( kl_t10 ) goto bb5; else goto bb6;
+    bb5:
+#line 321 "ring_owning/main.kl"
+    kl_t11 = kl__evicts__(  );
+    kl_t12 = kl__settled__3i32_3i32( kl_t11, 33 );
+    kl_code_1 = kl_t12;
+    goto bb6;
+    bb6:
+#line 323 "ring_owning/main.kl"
+    kl_t13 = kl_code_1 == 0;
+    if ( kl_t13 ) goto bb7; else goto bb8;
+    bb7:
+#line 325 "ring_owning/main.kl"
+    kl_t14 = kl__try_pops__(  );
+    kl_t15 = kl__settled__3i32_3i32( kl_t14, 34 );
+    kl_code_1 = kl_t15;
+    goto bb8;
+    bb8:
+#line 327 "ring_owning/main.kl"
+    kl_t16 = kl_code_1 == 0;
+    if ( kl_t16 ) goto bb9; else goto bb10;
+    bb9:
+#line 329 "ring_owning/main.kl"
+    kl_t17 = kl__reserves__(  );
+    kl_t18 = kl__settled__3i32_3i32( kl_t17, 35 );
+    kl_code_1 = kl_t18;
+    goto bb10;
+    bb10:
+#line 331 "ring_owning/main.kl"
+    kl_t19 = kl_code_1 == 0;
+    if ( kl_t19 ) goto bb11; else goto bb12;
+    bb11:
+#line 333 "ring_owning/main.kl"
+    kl_t20 = kl__clears__(  );
+    kl_t21 = kl__settled__3i32_3i32( kl_t20, 36 );
+    kl_code_1 = kl_t21;
+    goto bb12;
+    bb12:
+#line 335 "ring_owning/main.kl"
+    kl_t22 = kl_code_1 == 0;
+    if ( kl_t22 ) goto bb13; else goto bb14;
+    bb13:
+#line 337 "ring_owning/main.kl"
+    kl_t23 = kl__drops_wrapped__(  );
+    kl_t24 = kl__settled__3i32_3i32( kl_t23, 37 );
+    kl_code_1 = kl_t24;
+    goto bb14;
+    bb14:
+#line 339 "ring_owning/main.kl"
+    kl_t25 = kl_code_1 == 0;
+    if ( kl_t25 ) goto bb15; else goto bb16;
+    bb15:
+#line 341 "ring_owning/main.kl"
+    kl_t26 = kl__moves_whole__(  );
+    kl_t27 = kl__settled__3i32_3i32( kl_t26, 38 );
+    kl_code_1 = kl_t27;
+    goto bb16;
+    bb16:
+#line 343 "ring_owning/main.kl"
+    kl_t28 = kl_code_1 == 0;
+    if ( kl_t28 ) goto bb17; else goto bb18;
+    bb17:
+#line 345 "ring_owning/main.kl"
+    kl_t29 = kl__copies__(  );
+    kl_code_1 = kl_t29;
+    goto bb18;
+    bb18:
+#line 347 "ring_owning/main.kl"
+    kl_t0 = kl_code_1;
+    return kl_t0;
+}
+
+uint64_t kl_2kl_size__I5ownedE__SQ2kl4ringI5ownedE( struct kl_2kl_ring__I5ownedE* kl_this_1 )
+{
+    uint64_t kl_t0;
+#line 252 "../src/ring.kl"
+    kl_t0 = ( *kl_this_1 ).kl_count__2169;
+    return kl_t0;
+}
+
+struct kl__owned* kl_2kl_operator_index__I5ownedE__SQ2kl4ringI5ownedE_3u64( struct kl_2kl_ring__I5ownedE* kl_this_1, uint64_t kl_index_2 )
+{
+    struct kl__owned* kl_t0;
+    bool kl_t3;
+    uint64_t kl_t4;
+    struct kl__owned* kl_t5;
+    struct kl__owned* kl_t6;
+#line 202 "../src/ring.kl"
+    kl_t3 = kl_index_2 < ( *kl_this_1 ).kl_count__2169;
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 205 "../src/ring.kl"
+    kl_t4 = kl_2kl_slot__I5ownedE__SQ2kl4ringI5ownedE_3u64( kl_this_1, kl_index_2 );
+    kl_t5 = ( *kl_this_1 ).kl_data__2165 + kl_t4;
+    kl_t6 = &( *kl_t5 );
+    kl_t0 = kl_t6;
+    return kl_t0;
+    bb2:
+    kl_rt_panic( "../src/ring.kl", 202, "assertion failed: index < count_" );
+}
+
+struct kl_2kl_ring__I5ownedE kl_2kl_with_capacity__I5ownedE__SQ2kl4ringI5ownedE_3u64( uint64_t kl_capacity_1 )
+{
+    struct kl_2kl_ring__I5ownedE kl_t0;
+    bool kl_t2;
+    struct kl_2kl_ring__I5ownedE kl_t3;
+    struct kl_2kl_ring__I5ownedE* kl_t4;
+    bool kl_t6;
+#line 22 "../src/ring.kl"
+    kl_t6 = false;
+#line 21 "../src/ring.kl"
+    kl_t2 = kl_capacity_1 > 0;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 22 "../src/ring.kl"
+    kl_t6 = false;
+    kl_t4 = &kl_t3;
+    kl_t6 = true;
+    kl_2kl_ring__I5ownedE__RQ2kl4ringI5ownedE_3u64__ctor( kl_t4, kl_capacity_1 );
+    kl_t0 = kl_t3;
+    kl_t6 = false;
+    if ( kl_t6 ) kl_2kl_ring__I5ownedE__dtor( &kl_t3 );
+    kl_t6 = false;
+    return kl_t0;
+    bb2:
+    kl_rt_panic( "../src/ring.kl", 21, "assertion failed: capacity > 0" );
+}
+
+void kl_2kl_push_back__I5ownedE__SQ2kl4ringI5ownedE_M5owned( struct kl_2kl_ring__I5ownedE* kl_this_1, struct kl__owned kl_value_2 )
+{
+    bool kl_t3;
+    uint64_t kl_t4;
+    struct kl__owned* kl_t5;
+    bool kl_t6;
+#line 50 "../src/ring.kl"
+    kl_t6 = true;
+#line 52 "../src/ring.kl"
+    kl_t3 = ( *kl_this_1 ).kl_count__2169 < ( *kl_this_1 ).kl_cap__2171;
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 56 "../src/ring.kl"
+    kl_t4 = kl_2kl_slot__I5ownedE__SQ2kl4ringI5ownedE_3u64( kl_this_1, ( *kl_this_1 ).kl_count__2169 );
+    kl_t5 = ( *kl_this_1 ).kl_data__2165 + kl_t4;
+    ( *kl_t5 ) = kl_value_2;
+    kl_t6 = false;
+#line 58 "../src/ring.kl"
+    ( *kl_this_1 ).kl_count__2169 = ( *kl_this_1 ).kl_count__2169 + 1;
+#line 50 "../src/ring.kl"
+    if ( kl_t6 ) kl__owned__dtor( &kl_value_2 );
+    kl_t6 = false;
+    return;
+    bb2:
+    kl_rt_panic( "../src/ring.kl", 52, "assertion failed: count_ < cap_" );
+}
+
+bool kl_2kl_is_full__I5ownedE__SQ2kl4ringI5ownedE( struct kl_2kl_ring__I5ownedE* kl_this_1 )
+{
+    bool kl_t0;
+    bool kl_t2;
+#line 240 "../src/ring.kl"
+    kl_t2 = ( *kl_this_1 ).kl_count__2169 == ( *kl_this_1 ).kl_cap__2171;
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+uint64_t kl_2kl_capacity__I5ownedE__SQ2kl4ringI5ownedE( struct kl_2kl_ring__I5ownedE* kl_this_1 )
+{
+    uint64_t kl_t0;
+#line 258 "../src/ring.kl"
+    kl_t0 = ( *kl_this_1 ).kl_cap__2171;
+    return kl_t0;
+}
+
+struct kl__owned kl_2kl_pop_front__I5ownedE__SQ2kl4ringI5ownedE( struct kl_2kl_ring__I5ownedE* kl_this_1 )
+{
+    struct kl__owned kl_t0;
+    bool kl_t2;
+    struct kl__owned kl_result_3;
+    struct kl__owned* kl_t4;
+    bool kl_t6;
+#line 144 "../src/ring.kl"
+    kl_t6 = false;
+#line 142 "../src/ring.kl"
+    kl_t2 = ( *kl_this_1 ).kl_count__2169 > 0;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 144 "../src/ring.kl"
+    kl_t6 = false;
+#line 147 "../src/ring.kl"
+    kl_t4 = ( *kl_this_1 ).kl_data__2165 + ( *kl_this_1 ).kl_head__2167;
+    if ( kl_t6 ) kl__owned__dtor( &kl_result_3 );
+    kl_result_3 = ( *kl_t4 );
+    kl_t6 = true;
+#line 150 "../src/ring.kl"
+    kl_2kl_advance_head__I5ownedE__SQ2kl4ringI5ownedE( kl_this_1 );
+#line 152 "../src/ring.kl"
+    ( *kl_this_1 ).kl_count__2169 = ( *kl_this_1 ).kl_count__2169 - 1;
+#line 153 "../src/ring.kl"
+    kl_t0 = kl_result_3;
+    kl_t6 = false;
+    if ( kl_t6 ) kl__owned__dtor( &kl_result_3 );
+    kl_t6 = false;
+    return kl_t0;
+    bb2:
+    kl_rt_panic( "../src/ring.kl", 142, "assertion failed: count_ > 0" );
+}
+
+struct kl__owned* kl_2kl_first__I5ownedE__SQ2kl4ringI5ownedE( struct kl_2kl_ring__I5ownedE* kl_this_1 )
+{
+    struct kl__owned* kl_t0;
+    bool kl_t2;
+    struct kl__owned* kl_t3;
+    struct kl__owned* kl_t4;
+#line 216 "../src/ring.kl"
+    kl_t2 = ( *kl_this_1 ).kl_count__2169 > 0;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 219 "../src/ring.kl"
+    kl_t3 = ( *kl_this_1 ).kl_data__2165 + ( *kl_this_1 ).kl_head__2167;
+    kl_t4 = &( *kl_t3 );
+    kl_t0 = kl_t4;
+    return kl_t0;
+    bb2:
+    kl_rt_panic( "../src/ring.kl", 216, "assertion failed: count_ > 0" );
+}
+
+struct kl__owned* kl_2kl_last__I5ownedE__SQ2kl4ringI5ownedE( struct kl_2kl_ring__I5ownedE* kl_this_1 )
+{
+    struct kl__owned* kl_t0;
+    bool kl_t2;
+    uint64_t kl_t3;
+    uint64_t kl_t4;
+    struct kl__owned* kl_t5;
+    struct kl__owned* kl_t6;
+#line 230 "../src/ring.kl"
+    kl_t2 = ( *kl_this_1 ).kl_count__2169 > 0;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 233 "../src/ring.kl"
+    kl_t3 = ( *kl_this_1 ).kl_count__2169 - 1;
+    kl_t4 = kl_2kl_slot__I5ownedE__SQ2kl4ringI5ownedE_3u64( kl_this_1, kl_t3 );
+    kl_t5 = ( *kl_this_1 ).kl_data__2165 + kl_t4;
+    kl_t6 = &( *kl_t5 );
+    kl_t0 = kl_t6;
+    return kl_t0;
+    bb2:
+    kl_rt_panic( "../src/ring.kl", 230, "assertion failed: count_ > 0" );
+}
+
+void kl_2kl_push_front__I5ownedE__SQ2kl4ringI5ownedE_M5owned( struct kl_2kl_ring__I5ownedE* kl_this_1, struct kl__owned kl_value_2 )
+{
+    bool kl_t3;
+    struct kl__owned* kl_t5;
+    bool kl_t6;
+#line 66 "../src/ring.kl"
+    kl_t6 = true;
+#line 68 "../src/ring.kl"
+    kl_t3 = ( *kl_this_1 ).kl_count__2169 < ( *kl_this_1 ).kl_cap__2171;
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 70 "../src/ring.kl"
+    kl_2kl_retreat_head__I5ownedE__SQ2kl4ringI5ownedE( kl_this_1 );
+#line 74 "../src/ring.kl"
+    kl_t5 = ( *kl_this_1 ).kl_data__2165 + ( *kl_this_1 ).kl_head__2167;
+    ( *kl_t5 ) = kl_value_2;
+    kl_t6 = false;
+#line 76 "../src/ring.kl"
+    ( *kl_this_1 ).kl_count__2169 = ( *kl_this_1 ).kl_count__2169 + 1;
+#line 66 "../src/ring.kl"
+    if ( kl_t6 ) kl__owned__dtor( &kl_value_2 );
+    kl_t6 = false;
+    return;
+    bb2:
+    kl_rt_panic( "../src/ring.kl", 68, "assertion failed: count_ < cap_" );
+}
+
+struct kl__owned kl_2kl_pop_back__I5ownedE__SQ2kl4ringI5ownedE( struct kl_2kl_ring__I5ownedE* kl_this_1 )
+{
+    struct kl__owned kl_t0;
+    bool kl_t2;
+    struct kl__owned kl_result_3;
+    uint64_t kl_t4;
+    struct kl__owned* kl_t5;
+    bool kl_t6;
+#line 168 "../src/ring.kl"
+    kl_t6 = false;
+#line 163 "../src/ring.kl"
+    kl_t2 = ( *kl_this_1 ).kl_count__2169 > 0;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 165 "../src/ring.kl"
+    ( *kl_this_1 ).kl_count__2169 = ( *kl_this_1 ).kl_count__2169 - 1;
+#line 168 "../src/ring.kl"
+    kl_t6 = false;
+    kl_t4 = kl_2kl_slot__I5ownedE__SQ2kl4ringI5ownedE_3u64( kl_this_1, ( *kl_this_1 ).kl_count__2169 );
+    kl_t5 = ( *kl_this_1 ).kl_data__2165 + kl_t4;
+    kl_result_3 = ( *kl_t5 );
+    kl_t6 = true;
+#line 169 "../src/ring.kl"
+    kl_t0 = kl_result_3;
+    kl_t6 = false;
+    if ( kl_t6 ) kl__owned__dtor( &kl_result_3 );
+    kl_t6 = false;
+    return kl_t0;
+    bb2:
+    kl_rt_panic( "../src/ring.kl", 163, "assertion failed: count_ > 0" );
+}
+
+struct kl_7prelude_result__I4void_5ownedE kl_2kl_try_push_front__I5ownedE__SQ2kl4ringI5ownedE_M5owned( struct kl_2kl_ring__I5ownedE* kl_this_1, struct kl__owned kl_value_2 )
+{
+    struct kl_7prelude_result__I4void_5ownedE kl_t0;
+    bool kl_t3;
+    struct kl_7prelude_result__I4void_5ownedE kl_t4;
+    struct kl_7prelude_result__I4void_5ownedE kl_t6;
+    bool kl_t7;
+    bool kl_t8;
+    bool kl_t9;
+#line 92 "../src/ring.kl"
+    kl_t7 = true;
+#line 96 "../src/ring.kl"
+    kl_t8 = false;
+#line 100 "../src/ring.kl"
+    kl_t9 = false;
+#line 94 "../src/ring.kl"
+    kl_t3 = kl_2kl_is_full__I5ownedE__SQ2kl4ringI5ownedE( kl_this_1 );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 96 "../src/ring.kl"
+    kl_t4.tag = 1;
+    kl_t8 = true;
+    kl_t4.kl_error_2541 = kl_value_2;
+    kl_t7 = false;
+    kl_t8 = true;
+    kl_t0 = kl_t4;
+    kl_t8 = false;
+    if ( kl_t8 ) kl_7prelude_result__I4void_5ownedE__dtor( &kl_t4 );
+    kl_t8 = false;
+    if ( kl_t7 ) kl__owned__dtor( &kl_value_2 );
+    kl_t7 = false;
+    return kl_t0;
+    bb2:
+#line 99 "../src/ring.kl"
+    kl_2kl_push_front__I5ownedE__SQ2kl4ringI5ownedE_M5owned( kl_this_1, kl_value_2 );
+    kl_t7 = false;
+#line 100 "../src/ring.kl"
+    kl_t6.tag = 0;
+    kl_t9 = true;
+    kl_t0 = kl_t6;
+    kl_t9 = false;
+    if ( kl_t9 ) kl_7prelude_result__I4void_5ownedE__dtor( &kl_t6 );
+    kl_t9 = false;
+    if ( kl_t7 ) kl__owned__dtor( &kl_value_2 );
+    kl_t7 = false;
+    return kl_t0;
+}
+
+struct kl_7prelude_result__I4void_5ownedE kl_2kl_try_push_back__I5ownedE__SQ2kl4ringI5ownedE_M5owned( struct kl_2kl_ring__I5ownedE* kl_this_1, struct kl__owned kl_value_2 )
+{
+    struct kl_7prelude_result__I4void_5ownedE kl_t0;
+    bool kl_t3;
+    struct kl_7prelude_result__I4void_5ownedE kl_t4;
+    struct kl_7prelude_result__I4void_5ownedE kl_t6;
+    bool kl_t7;
+    bool kl_t8;
+    bool kl_t9;
+#line 80 "../src/ring.kl"
+    kl_t7 = true;
+#line 84 "../src/ring.kl"
+    kl_t8 = false;
+#line 88 "../src/ring.kl"
+    kl_t9 = false;
+#line 82 "../src/ring.kl"
+    kl_t3 = kl_2kl_is_full__I5ownedE__SQ2kl4ringI5ownedE( kl_this_1 );
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 84 "../src/ring.kl"
+    kl_t4.tag = 1;
+    kl_t8 = true;
+    kl_t4.kl_error_2541 = kl_value_2;
+    kl_t7 = false;
+    kl_t8 = true;
+    kl_t0 = kl_t4;
+    kl_t8 = false;
+    if ( kl_t8 ) kl_7prelude_result__I4void_5ownedE__dtor( &kl_t4 );
+    kl_t8 = false;
+    if ( kl_t7 ) kl__owned__dtor( &kl_value_2 );
+    kl_t7 = false;
+    return kl_t0;
+    bb2:
+#line 87 "../src/ring.kl"
+    kl_2kl_push_back__I5ownedE__SQ2kl4ringI5ownedE_M5owned( kl_this_1, kl_value_2 );
+    kl_t7 = false;
+#line 88 "../src/ring.kl"
+    kl_t6.tag = 0;
+    kl_t9 = true;
+    kl_t0 = kl_t6;
+    kl_t9 = false;
+    if ( kl_t9 ) kl_7prelude_result__I4void_5ownedE__dtor( &kl_t6 );
+    kl_t9 = false;
+    if ( kl_t7 ) kl__owned__dtor( &kl_value_2 );
+    kl_t7 = false;
+    return kl_t0;
+}
+
+struct kl_2kl_optional__I5ownedE kl_2kl_push_back_evict__I5ownedE__SQ2kl4ringI5ownedE_M5owned( struct kl_2kl_ring__I5ownedE* kl_this_1, struct kl__owned kl_value_2 )
+{
+    struct kl_2kl_optional__I5ownedE kl_t0;
+    bool kl_t3;
+    bool kl_t4;
+    struct kl_2kl_optional__I5ownedE kl_t6;
+    struct kl__owned kl_old_7;
+    struct kl__owned kl_t8;
+    struct kl_2kl_optional__I5ownedE kl_t10;
+    bool kl_t11;
+    bool kl_t12;
+    bool kl_t13;
+    bool kl_t14;
+#line 106 "../src/ring.kl"
+    kl_t11 = true;
+#line 114 "../src/ring.kl"
+    kl_t12 = false;
+    kl_t13 = false;
+#line 116 "../src/ring.kl"
+    kl_t14 = false;
+#line 108 "../src/ring.kl"
+    kl_t3 = kl_2kl_is_full__I5ownedE__SQ2kl4ringI5ownedE( kl_this_1 );
+    kl_t4 = !kl_t3;
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+#line 110 "../src/ring.kl"
+    kl_2kl_push_back__I5ownedE__SQ2kl4ringI5ownedE_M5owned( kl_this_1, kl_value_2 );
+    kl_t11 = false;
+#line 111 "../src/ring.kl"
+    kl_t6.tag = 1;
+    kl_t0 = kl_t6;
+    if ( kl_t11 ) kl__owned__dtor( &kl_value_2 );
+    kl_t11 = false;
+    return kl_t0;
+    bb2:
+#line 114 "../src/ring.kl"
+    kl_t12 = false;
+    kl_t8 = kl_2kl_pop_front__I5ownedE__SQ2kl4ringI5ownedE( kl_this_1 );
+    kl_t13 = true;
+    kl_old_7 = kl_t8;
+    kl_t13 = false;
+    kl_t12 = true;
+    if ( kl_t13 ) kl__owned__dtor( &kl_t8 );
+    kl_t13 = false;
+#line 115 "../src/ring.kl"
+    kl_2kl_push_back__I5ownedE__SQ2kl4ringI5ownedE_M5owned( kl_this_1, kl_value_2 );
+    kl_t11 = false;
+#line 116 "../src/ring.kl"
+    kl_t10.tag = 0;
+    kl_t14 = true;
+    kl_t10.kl_value_1237 = kl_old_7;
+    kl_t12 = false;
+    kl_t14 = true;
+    kl_t0 = kl_t10;
+    kl_t14 = false;
+    if ( kl_t14 ) kl_2kl_optional__I5ownedE__dtor( &kl_t10 );
+    kl_t14 = false;
+    if ( kl_t12 ) kl__owned__dtor( &kl_old_7 );
+    kl_t12 = false;
+    if ( kl_t11 ) kl__owned__dtor( &kl_value_2 );
+    kl_t11 = false;
+    return kl_t0;
+}
+
+struct kl__owned kl_2kl_unwrap__I5ownedE__MQ2kl8optionalI5ownedE( struct kl_2kl_optional__I5ownedE kl_o_1 )
+{
+    struct kl__owned kl_t0;
+    struct kl_2kl_optional__I5ownedE kl_t2;
+    bool kl_t3;
+    struct kl_2kl_optional__I5ownedE kl_t4;
+    struct kl__owned kl_v_5;
+    struct kl_7prelude_str kl_t6;
+    struct kl_7prelude_str* kl_t7;
+    uint8_t* kl_t8;
+    bool kl_t10;
+    bool kl_t11;
+    bool kl_t12;
+#line 18 "../src/optional.kl"
+    kl_t10 = true;
+#line 20 "../src/optional.kl"
+    kl_t11 = false;
+#line 22 "../src/optional.kl"
+    kl_t12 = false;
+#line 20 "../src/optional.kl"
+    kl_t11 = false;
+    kl_t2 = kl_o_1;
+    kl_t10 = false;
+    kl_t11 = true;
+#line 22 "../src/optional.kl"
+    kl_t3 = kl_t2.tag == 0;
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t4 = kl_t2;
+    kl_t11 = false;
+    kl_t12 = false;
+    kl_v_5 = kl_t4.kl_value_1237;
+    kl_t12 = true;
+#line 23 "../src/optional.kl"
+    kl_t0 = kl_v_5;
+    kl_t12 = false;
+    if ( kl_t12 ) kl__owned__dtor( &kl_v_5 );
+    kl_t12 = false;
+    if ( kl_t11 ) kl_2kl_optional__I5ownedE__dtor( &kl_t2 );
+    kl_t11 = false;
+    if ( kl_t10 ) kl_2kl_optional__I5ownedE__dtor( &kl_o_1 );
+    kl_t10 = false;
+    return kl_t0;
+    bb2:
+#line 25 "../src/optional.kl"
+    kl_t7 = &kl_t6;
+    kl_t8 = ( uint8_t* ) "unwrap on an empty optional";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t7, kl_t8, 27 );
+    kl_rt_panic_message( "../src/optional.kl", 25, kl_t6.kl_data_2177, kl_t6.kl_size_2180 );
+}
+
+struct kl_2kl_optional__I5ownedE kl_2kl_push_front_evict__I5ownedE__SQ2kl4ringI5ownedE_M5owned( struct kl_2kl_ring__I5ownedE* kl_this_1, struct kl__owned kl_value_2 )
+{
+    struct kl_2kl_optional__I5ownedE kl_t0;
+    bool kl_t3;
+    bool kl_t4;
+    struct kl_2kl_optional__I5ownedE kl_t6;
+    struct kl__owned kl_old_7;
+    struct kl__owned kl_t8;
+    struct kl_2kl_optional__I5ownedE kl_t10;
+    bool kl_t11;
+    bool kl_t12;
+    bool kl_t13;
+    bool kl_t14;
+#line 122 "../src/ring.kl"
+    kl_t11 = true;
+#line 130 "../src/ring.kl"
+    kl_t12 = false;
+    kl_t13 = false;
+#line 132 "../src/ring.kl"
+    kl_t14 = false;
+#line 124 "../src/ring.kl"
+    kl_t3 = kl_2kl_is_full__I5ownedE__SQ2kl4ringI5ownedE( kl_this_1 );
+    kl_t4 = !kl_t3;
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+#line 126 "../src/ring.kl"
+    kl_2kl_push_front__I5ownedE__SQ2kl4ringI5ownedE_M5owned( kl_this_1, kl_value_2 );
+    kl_t11 = false;
+#line 127 "../src/ring.kl"
+    kl_t6.tag = 1;
+    kl_t0 = kl_t6;
+    if ( kl_t11 ) kl__owned__dtor( &kl_value_2 );
+    kl_t11 = false;
+    return kl_t0;
+    bb2:
+#line 130 "../src/ring.kl"
+    kl_t12 = false;
+    kl_t8 = kl_2kl_pop_back__I5ownedE__SQ2kl4ringI5ownedE( kl_this_1 );
+    kl_t13 = true;
+    kl_old_7 = kl_t8;
+    kl_t13 = false;
+    kl_t12 = true;
+    if ( kl_t13 ) kl__owned__dtor( &kl_t8 );
+    kl_t13 = false;
+#line 131 "../src/ring.kl"
+    kl_2kl_push_front__I5ownedE__SQ2kl4ringI5ownedE_M5owned( kl_this_1, kl_value_2 );
+    kl_t11 = false;
+#line 132 "../src/ring.kl"
+    kl_t10.tag = 0;
+    kl_t14 = true;
+    kl_t10.kl_value_1237 = kl_old_7;
+    kl_t12 = false;
+    kl_t14 = true;
+    kl_t0 = kl_t10;
+    kl_t14 = false;
+    if ( kl_t14 ) kl_2kl_optional__I5ownedE__dtor( &kl_t10 );
+    kl_t14 = false;
+    if ( kl_t12 ) kl__owned__dtor( &kl_old_7 );
+    kl_t12 = false;
+    if ( kl_t11 ) kl__owned__dtor( &kl_value_2 );
+    kl_t11 = false;
+    return kl_t0;
+}
+
+bool kl_2kl_is_none__I5ownedE__Q2kl8optionalI5ownedE( struct kl_2kl_optional__I5ownedE* kl_o_1 )
+{
+    bool kl_t0;
+    bool kl_t2;
+    struct kl__owned* kl_v_3;
+    ( void ) kl_v_3;
+#line 76 "../src/optional.kl"
+    kl_t2 = ( *kl_o_1 ).tag == 0;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_v_3 = &( *kl_o_1 ).kl_value_1237;
+#line 77 "../src/optional.kl"
+    kl_t0 = false;
+    return kl_t0;
+    bb2:
+#line 79 "../src/optional.kl"
+    kl_t0 = true;
+    return kl_t0;
+}
+
+struct kl_2kl_optional__I5ownedE kl_2kl_try_pop_back__I5ownedE__SQ2kl4ringI5ownedE( struct kl_2kl_ring__I5ownedE* kl_this_1 )
+{
+    struct kl_2kl_optional__I5ownedE kl_t0;
+    bool kl_t2;
+    struct kl_2kl_optional__I5ownedE kl_t3;
+    struct kl_2kl_optional__I5ownedE kl_t4;
+    struct kl__owned kl_t5;
+    bool kl_t6;
+    bool kl_t7;
+#line 192 "../src/ring.kl"
+    kl_t6 = false;
+    kl_t7 = false;
+#line 187 "../src/ring.kl"
+    kl_t2 = ( *kl_this_1 ).kl_count__2169 == 0;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 189 "../src/ring.kl"
+    kl_t3.tag = 1;
+    kl_t0 = kl_t3;
+    return kl_t0;
+    bb2:
+#line 192 "../src/ring.kl"
+    kl_t5 = kl_2kl_pop_back__I5ownedE__SQ2kl4ringI5ownedE( kl_this_1 );
+    kl_t7 = true;
+    kl_t4.tag = 0;
+    kl_t6 = true;
+    kl_t4.kl_value_1237 = kl_t5;
+    kl_t7 = false;
+    kl_t6 = true;
+    kl_t0 = kl_t4;
+    kl_t6 = false;
+    if ( kl_t6 ) kl_2kl_optional__I5ownedE__dtor( &kl_t4 );
+    if ( kl_t7 ) kl__owned__dtor( &kl_t5 );
+    kl_t7 = false;
+    kl_t6 = false;
+    return kl_t0;
+}
+
+struct kl_2kl_optional__I5ownedE kl_2kl_try_pop_front__I5ownedE__SQ2kl4ringI5ownedE( struct kl_2kl_ring__I5ownedE* kl_this_1 )
+{
+    struct kl_2kl_optional__I5ownedE kl_t0;
+    bool kl_t2;
+    struct kl_2kl_optional__I5ownedE kl_t3;
+    struct kl_2kl_optional__I5ownedE kl_t4;
+    struct kl__owned kl_t5;
+    bool kl_t6;
+    bool kl_t7;
+#line 181 "../src/ring.kl"
+    kl_t6 = false;
+    kl_t7 = false;
+#line 176 "../src/ring.kl"
+    kl_t2 = ( *kl_this_1 ).kl_count__2169 == 0;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 178 "../src/ring.kl"
+    kl_t3.tag = 1;
+    kl_t0 = kl_t3;
+    return kl_t0;
+    bb2:
+#line 181 "../src/ring.kl"
+    kl_t5 = kl_2kl_pop_front__I5ownedE__SQ2kl4ringI5ownedE( kl_this_1 );
+    kl_t7 = true;
+    kl_t4.tag = 0;
+    kl_t6 = true;
+    kl_t4.kl_value_1237 = kl_t5;
+    kl_t7 = false;
+    kl_t6 = true;
+    kl_t0 = kl_t4;
+    kl_t6 = false;
+    if ( kl_t6 ) kl_2kl_optional__I5ownedE__dtor( &kl_t4 );
+    if ( kl_t7 ) kl__owned__dtor( &kl_t5 );
+    kl_t7 = false;
+    kl_t6 = false;
+    return kl_t0;
+}
+
+bool kl_2kl_is_empty__I5ownedE__SQ2kl4ringI5ownedE( struct kl_2kl_ring__I5ownedE* kl_this_1 )
+{
+    bool kl_t0;
+    bool kl_t2;
+#line 246 "../src/ring.kl"
+    kl_t2 = ( *kl_this_1 ).kl_count__2169 == 0;
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+void kl_2kl_reserve__I5ownedE__SQ2kl4ringI5ownedE_3u64( struct kl_2kl_ring__I5ownedE* kl_this_1, uint64_t kl_n_2 )
+{
+    bool kl_t3;
+    struct kl__owned* kl_new_data_4;
+    struct kl__owned* kl_t5;
+    uint64_t kl_i_6;
+    bool kl_t7;
+    struct kl__owned* kl_t8;
+    uint64_t kl_t9;
+    struct kl__owned* kl_t10;
+#line 265 "../src/ring.kl"
+    kl_t3 = kl_n_2 <= ( *kl_this_1 ).kl_cap__2171;
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    return;
+    bb2:
+#line 273 "../src/ring.kl"
+    kl_t5 = ( struct kl__owned* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( struct kl__owned ) );
+    kl_new_data_4 = kl_t5;
+#line 275 "../src/ring.kl"
+    kl_i_6 = 0;
+    goto bb3;
+    bb3:
+    kl_t7 = kl_i_6 < ( *kl_this_1 ).kl_count__2169;
+    if ( kl_t7 ) goto bb4; else goto bb5;
+    bb4:
+#line 277 "../src/ring.kl"
+    kl_t8 = kl_new_data_4 + kl_i_6;
+    kl_t9 = kl_2kl_slot__I5ownedE__SQ2kl4ringI5ownedE_3u64( kl_this_1, kl_i_6 );
+    kl_t10 = ( *kl_this_1 ).kl_data__2165 + kl_t9;
+    ( *kl_t8 ) = ( *kl_t10 );
+    goto bb6;
+    bb5:
+#line 280 "../src/ring.kl"
+    kl_rt_free( ( *kl_this_1 ).kl_data__2165 );
+#line 282 "../src/ring.kl"
+    ( *kl_this_1 ).kl_head__2167 = 0;
+#line 283 "../src/ring.kl"
+    ( *kl_this_1 ).kl_cap__2171 = kl_n_2;
+#line 284 "../src/ring.kl"
+    ( *kl_this_1 ).kl_data__2165 = kl_new_data_4;
+    return;
+    bb6:
+#line 275 "../src/ring.kl"
+    kl_i_6 = kl_i_6 + 1;
+    goto bb3;
+}
+
+void kl_2kl_clear__I5ownedE__SQ2kl4ringI5ownedE( struct kl_2kl_ring__I5ownedE* kl_this_1 )
+{
+#line 290 "../src/ring.kl"
+    kl_2kl_destroy_live__I5ownedE__SQ2kl4ringI5ownedE( kl_this_1 );
+#line 291 "../src/ring.kl"
+    ( *kl_this_1 ).kl_head__2167 = 0;
+#line 292 "../src/ring.kl"
+    ( *kl_this_1 ).kl_count__2169 = 0;
+    return;
+}
+
+struct kl_2kl_ring__I3i32E kl_2kl_with_capacity__I3i32E__SQ2kl4ringI3i32E_3u64( uint64_t kl_capacity_1 )
+{
+    struct kl_2kl_ring__I3i32E kl_t0;
+    bool kl_t2;
+    struct kl_2kl_ring__I3i32E kl_t3;
+    struct kl_2kl_ring__I3i32E* kl_t4;
+    bool kl_t6;
+#line 22 "../src/ring.kl"
+    kl_t6 = false;
+#line 21 "../src/ring.kl"
+    kl_t2 = kl_capacity_1 > 0;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 22 "../src/ring.kl"
+    kl_t6 = false;
+    kl_t4 = &kl_t3;
+    kl_t6 = true;
+    kl_2kl_ring__I3i32E__RQ2kl4ringI3i32E_3u64__ctor( kl_t4, kl_capacity_1 );
+    kl_t0 = kl_t3;
+    kl_t6 = false;
+    if ( kl_t6 ) kl_2kl_ring__I3i32E__dtor( &kl_t3 );
+    kl_t6 = false;
+    return kl_t0;
+    bb2:
+    kl_rt_panic( "../src/ring.kl", 21, "assertion failed: capacity > 0" );
+}
+
+void kl_2kl_push_back__I3i32E__SQ2kl4ringI3i32E_M3i32( struct kl_2kl_ring__I3i32E* kl_this_1, int32_t kl_value_2 )
+{
+    bool kl_t3;
+    uint64_t kl_t4;
+    int32_t* kl_t5;
+#line 52 "../src/ring.kl"
+    kl_t3 = ( *kl_this_1 ).kl_count__2169 < ( *kl_this_1 ).kl_cap__2171;
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 56 "../src/ring.kl"
+    kl_t4 = kl_2kl_slot__I3i32E__SQ2kl4ringI3i32E_3u64( kl_this_1, ( *kl_this_1 ).kl_count__2169 );
+    kl_t5 = ( *kl_this_1 ).kl_data__2165 + kl_t4;
+    ( *kl_t5 ) = kl_value_2;
+#line 58 "../src/ring.kl"
+    ( *kl_this_1 ).kl_count__2169 = ( *kl_this_1 ).kl_count__2169 + 1;
+    return;
+    bb2:
+    kl_rt_panic( "../src/ring.kl", 52, "assertion failed: count_ < cap_" );
+}
+
+void kl_2kl_push_front__I3i32E__SQ2kl4ringI3i32E_M3i32( struct kl_2kl_ring__I3i32E* kl_this_1, int32_t kl_value_2 )
+{
+    bool kl_t3;
+    int32_t* kl_t5;
+#line 68 "../src/ring.kl"
+    kl_t3 = ( *kl_this_1 ).kl_count__2169 < ( *kl_this_1 ).kl_cap__2171;
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 70 "../src/ring.kl"
+    kl_2kl_retreat_head__I3i32E__SQ2kl4ringI3i32E( kl_this_1 );
+#line 74 "../src/ring.kl"
+    kl_t5 = ( *kl_this_1 ).kl_data__2165 + ( *kl_this_1 ).kl_head__2167;
+    ( *kl_t5 ) = kl_value_2;
+#line 76 "../src/ring.kl"
+    ( *kl_this_1 ).kl_count__2169 = ( *kl_this_1 ).kl_count__2169 + 1;
+    return;
+    bb2:
+    kl_rt_panic( "../src/ring.kl", 68, "assertion failed: count_ < cap_" );
+}
+
+int32_t* kl_2kl_operator_index__I3i32E__SQ2kl4ringI3i32E_3u64( struct kl_2kl_ring__I3i32E* kl_this_1, uint64_t kl_index_2 )
+{
+    int32_t* kl_t0;
+    bool kl_t3;
+    uint64_t kl_t4;
+    int32_t* kl_t5;
+    int32_t* kl_t6;
+#line 202 "../src/ring.kl"
+    kl_t3 = kl_index_2 < ( *kl_this_1 ).kl_count__2169;
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+#line 205 "../src/ring.kl"
+    kl_t4 = kl_2kl_slot__I3i32E__SQ2kl4ringI3i32E_3u64( kl_this_1, kl_index_2 );
+    kl_t5 = ( *kl_this_1 ).kl_data__2165 + kl_t4;
+    kl_t6 = &( *kl_t5 );
+    kl_t0 = kl_t6;
+    return kl_t0;
+    bb2:
+    kl_rt_panic( "../src/ring.kl", 202, "assertion failed: index < count_" );
+}
+
+int32_t kl_2kl_pop_front__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl_ring__I3i32E* kl_this_1 )
+{
+    int32_t kl_t0;
+    bool kl_t2;
+    int32_t kl_result_3;
+    int32_t* kl_t4;
+#line 142 "../src/ring.kl"
+    kl_t2 = ( *kl_this_1 ).kl_count__2169 > 0;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 147 "../src/ring.kl"
+    kl_t4 = ( *kl_this_1 ).kl_data__2165 + ( *kl_this_1 ).kl_head__2167;
+    kl_result_3 = ( *kl_t4 );
+#line 150 "../src/ring.kl"
+    kl_2kl_advance_head__I3i32E__SQ2kl4ringI3i32E( kl_this_1 );
+#line 152 "../src/ring.kl"
+    ( *kl_this_1 ).kl_count__2169 = ( *kl_this_1 ).kl_count__2169 - 1;
+#line 153 "../src/ring.kl"
+    kl_t0 = kl_result_3;
+    return kl_t0;
+    bb2:
+    kl_rt_panic( "../src/ring.kl", 142, "assertion failed: count_ > 0" );
+}
+
+int32_t kl_2kl_pop_back__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl_ring__I3i32E* kl_this_1 )
+{
+    int32_t kl_t0;
+    bool kl_t2;
+    int32_t kl_result_3;
+    uint64_t kl_t4;
+    int32_t* kl_t5;
+#line 163 "../src/ring.kl"
+    kl_t2 = ( *kl_this_1 ).kl_count__2169 > 0;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 165 "../src/ring.kl"
+    ( *kl_this_1 ).kl_count__2169 = ( *kl_this_1 ).kl_count__2169 - 1;
+#line 168 "../src/ring.kl"
+    kl_t4 = kl_2kl_slot__I3i32E__SQ2kl4ringI3i32E_3u64( kl_this_1, ( *kl_this_1 ).kl_count__2169 );
+    kl_t5 = ( *kl_this_1 ).kl_data__2165 + kl_t4;
+    kl_result_3 = ( *kl_t5 );
+#line 169 "../src/ring.kl"
+    kl_t0 = kl_result_3;
+    return kl_t0;
+    bb2:
+    kl_rt_panic( "../src/ring.kl", 163, "assertion failed: count_ > 0" );
+}
+
+bool kl_2kl_is_empty__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl_ring__I3i32E* kl_this_1 )
+{
+    bool kl_t0;
+    bool kl_t2;
+#line 246 "../src/ring.kl"
+    kl_t2 = ( *kl_this_1 ).kl_count__2169 == 0;
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+void kl_2kl_ring__I5ownedE__dtor( struct kl_2kl_ring__I5ownedE* kl_this_1 )
+{
+#line 40 "../src/ring.kl"
+    kl_2kl_destroy_live__I5ownedE__SQ2kl4ringI5ownedE( kl_this_1 );
+#line 41 "../src/ring.kl"
+    kl_rt_free( ( *kl_this_1 ).kl_data__2165 );
+    return;
+}
+
+void kl_2kl_ring__I3i32E__dtor( struct kl_2kl_ring__I3i32E* kl_this_1 )
+{
+#line 40 "../src/ring.kl"
+    kl_2kl_destroy_live__I3i32E__SQ2kl4ringI3i32E( kl_this_1 );
+#line 41 "../src/ring.kl"
+    kl_rt_free( ( *kl_this_1 ).kl_data__2165 );
+    return;
+}
+
+uint64_t kl_2kl_slot__I5ownedE__SQ2kl4ringI5ownedE_3u64( struct kl_2kl_ring__I5ownedE* kl_this_1, uint64_t kl_index_2 )
+{
+    uint64_t kl_t0;
+    uint64_t kl_t3;
+    uint64_t kl_t4;
+    uint64_t kl_t5;
+    bool kl_t6;
+    uint64_t kl_t7;
+#line 298 "../src/ring.kl"
+    kl_t3 = ( *kl_this_1 ).kl_head__2167 + kl_index_2;
+    kl_t5 = ( *kl_this_1 ).kl_head__2167 + kl_index_2;
+    kl_t6 = kl_t5 >= ( *kl_this_1 ).kl_cap__2171;
+    if ( kl_t6 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t4 = ( *kl_this_1 ).kl_cap__2171;
+    goto bb3;
+    bb2:
+    kl_t4 = 0;
+    goto bb3;
+    bb3:
+    kl_t7 = kl_t3 - kl_t4;
+    kl_t0 = kl_t7;
+    return kl_t0;
+}
+
+void kl_2kl_ring__I5ownedE__RQ2kl4ringI5ownedE_3u64__ctor( struct kl_2kl_ring__I5ownedE* kl_this_1, uint64_t kl_capacity_2 )
+{
+    struct kl__owned* kl_t3;
+#line 29 "../src/ring.kl"
+    kl_t3 = ( struct kl__owned* ) kl_rt_alloc_many( ( size_t ) kl_capacity_2, sizeof( struct kl__owned ) );
+    ( *kl_this_1 ).kl_data__2165 = kl_t3;
+#line 31 "../src/ring.kl"
+    ( *kl_this_1 ).kl_head__2167 = 0;
+#line 32 "../src/ring.kl"
+    ( *kl_this_1 ).kl_count__2169 = 0;
+#line 33 "../src/ring.kl"
+    ( *kl_this_1 ).kl_cap__2171 = kl_capacity_2;
+    return;
+}
+
+void kl_2kl_advance_head__I5ownedE__SQ2kl4ringI5ownedE( struct kl_2kl_ring__I5ownedE* kl_this_1 )
+{
+    bool kl_t2;
+#line 319 "../src/ring.kl"
+    ( *kl_this_1 ).kl_head__2167 = ( *kl_this_1 ).kl_head__2167 + 1;
+#line 320 "../src/ring.kl"
+    kl_t2 = ( *kl_this_1 ).kl_head__2167 == ( *kl_this_1 ).kl_cap__2171;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 322 "../src/ring.kl"
+    ( *kl_this_1 ).kl_head__2167 = 0;
+    goto bb2;
+    bb2:
+    return;
+}
+
+void kl_2kl_retreat_head__I5ownedE__SQ2kl4ringI5ownedE( struct kl_2kl_ring__I5ownedE* kl_this_1 )
+{
+    bool kl_t2;
+    uint64_t kl_t3;
+#line 329 "../src/ring.kl"
+    kl_t2 = ( *kl_this_1 ).kl_head__2167 == 0;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 331 "../src/ring.kl"
+    kl_t3 = ( *kl_this_1 ).kl_cap__2171 - 1;
+    ( *kl_this_1 ).kl_head__2167 = kl_t3;
+    goto bb3;
+    bb2:
+#line 335 "../src/ring.kl"
+    ( *kl_this_1 ).kl_head__2167 = ( *kl_this_1 ).kl_head__2167 - 1;
+    goto bb3;
+    bb3:
+    return;
+}
+
+void kl_2kl_destroy_live__I5ownedE__SQ2kl4ringI5ownedE( struct kl_2kl_ring__I5ownedE* kl_this_1 )
+{
+    uint64_t kl_run_2;
+    uint64_t kl_t3;
+    uint64_t kl_t4;
+    bool kl_t5;
+    uint64_t kl_t6;
+    struct kl__owned* kl_t7;
+    struct kl__owned* kl_t8;
+    uint64_t kl_t9;
+    uint64_t kl_t10;
+    bool kl_t11;
+    struct kl__owned* kl_t12;
+    bool kl_t13;
+    uint64_t kl_t14;
+    struct kl__owned* kl_t15;
+    uint64_t kl_t16;
+    uint64_t kl_t17;
+    bool kl_t18;
+    struct kl__owned* kl_t19;
+#line 304 "../src/ring.kl"
+    kl_t4 = ( *kl_this_1 ).kl_cap__2171 - ( *kl_this_1 ).kl_head__2167;
+    kl_t5 = ( *kl_this_1 ).kl_count__2169 < kl_t4;
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t3 = ( *kl_this_1 ).kl_count__2169;
+    goto bb3;
+    bb2:
+    kl_t6 = ( *kl_this_1 ).kl_cap__2171 - ( *kl_this_1 ).kl_head__2167;
+    kl_t3 = kl_t6;
+    goto bb3;
+    bb3:
+    kl_run_2 = kl_t3;
+#line 307 "../src/ring.kl"
+    kl_t7 = ( *kl_this_1 ).kl_data__2165 + ( *kl_this_1 ).kl_head__2167;
+    kl_t8 = kl_t7;
+    kl_t9 = kl_run_2;
+    kl_t10 = 0;
+    goto bb4;
+    bb4:
+    kl_t11 = kl_t10 < kl_t9;
+    if ( kl_t11 ) goto bb5; else goto bb6;
+    bb5:
+    kl_t12 = kl_t8 + kl_t10;
+    kl__owned__dtor( &( *kl_t12 ) );
+    kl_t10 = kl_t10 + 1;
+    goto bb4;
+    bb6:
+#line 309 "../src/ring.kl"
+    kl_t13 = ( *kl_this_1 ).kl_count__2169 > kl_run_2;
+    if ( kl_t13 ) goto bb7; else goto bb10;
+    bb7:
+#line 311 "../src/ring.kl"
+    kl_t14 = ( *kl_this_1 ).kl_count__2169 - kl_run_2;
+    kl_t15 = ( *kl_this_1 ).kl_data__2165;
+    kl_t16 = kl_t14;
+    kl_t17 = 0;
+    goto bb8;
+    bb8:
+    kl_t18 = kl_t17 < kl_t16;
+    if ( kl_t18 ) goto bb9; else goto bb10;
+    bb9:
+    kl_t19 = kl_t15 + kl_t17;
+    kl__owned__dtor( &( *kl_t19 ) );
+    kl_t17 = kl_t17 + 1;
+    goto bb8;
+    bb10:
+    return;
+}
+
+void kl_2kl_ring__I3i32E__RQ2kl4ringI3i32E_3u64__ctor( struct kl_2kl_ring__I3i32E* kl_this_1, uint64_t kl_capacity_2 )
+{
+    int32_t* kl_t3;
+#line 29 "../src/ring.kl"
+    kl_t3 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_capacity_2, sizeof( int32_t ) );
+    ( *kl_this_1 ).kl_data__2165 = kl_t3;
+#line 31 "../src/ring.kl"
+    ( *kl_this_1 ).kl_head__2167 = 0;
+#line 32 "../src/ring.kl"
+    ( *kl_this_1 ).kl_count__2169 = 0;
+#line 33 "../src/ring.kl"
+    ( *kl_this_1 ).kl_cap__2171 = kl_capacity_2;
+    return;
+}
+
+uint64_t kl_2kl_slot__I3i32E__SQ2kl4ringI3i32E_3u64( struct kl_2kl_ring__I3i32E* kl_this_1, uint64_t kl_index_2 )
+{
+    uint64_t kl_t0;
+    uint64_t kl_t3;
+    uint64_t kl_t4;
+    uint64_t kl_t5;
+    bool kl_t6;
+    uint64_t kl_t7;
+#line 298 "../src/ring.kl"
+    kl_t3 = ( *kl_this_1 ).kl_head__2167 + kl_index_2;
+    kl_t5 = ( *kl_this_1 ).kl_head__2167 + kl_index_2;
+    kl_t6 = kl_t5 >= ( *kl_this_1 ).kl_cap__2171;
+    if ( kl_t6 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t4 = ( *kl_this_1 ).kl_cap__2171;
+    goto bb3;
+    bb2:
+    kl_t4 = 0;
+    goto bb3;
+    bb3:
+    kl_t7 = kl_t3 - kl_t4;
+    kl_t0 = kl_t7;
+    return kl_t0;
+}
+
+void kl_2kl_retreat_head__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl_ring__I3i32E* kl_this_1 )
+{
+    bool kl_t2;
+    uint64_t kl_t3;
+#line 329 "../src/ring.kl"
+    kl_t2 = ( *kl_this_1 ).kl_head__2167 == 0;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 331 "../src/ring.kl"
+    kl_t3 = ( *kl_this_1 ).kl_cap__2171 - 1;
+    ( *kl_this_1 ).kl_head__2167 = kl_t3;
+    goto bb3;
+    bb2:
+#line 335 "../src/ring.kl"
+    ( *kl_this_1 ).kl_head__2167 = ( *kl_this_1 ).kl_head__2167 - 1;
+    goto bb3;
+    bb3:
+    return;
+}
+
+void kl_2kl_advance_head__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl_ring__I3i32E* kl_this_1 )
+{
+    bool kl_t2;
+#line 319 "../src/ring.kl"
+    ( *kl_this_1 ).kl_head__2167 = ( *kl_this_1 ).kl_head__2167 + 1;
+#line 320 "../src/ring.kl"
+    kl_t2 = ( *kl_this_1 ).kl_head__2167 == ( *kl_this_1 ).kl_cap__2171;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 322 "../src/ring.kl"
+    ( *kl_this_1 ).kl_head__2167 = 0;
+    goto bb2;
+    bb2:
+    return;
+}
+
+void kl_2kl_destroy_live__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl_ring__I3i32E* kl_this_1 )
+{
+    uint64_t kl_run_2;
+    uint64_t kl_t3;
+    uint64_t kl_t4;
+    bool kl_t5;
+    uint64_t kl_t6;
+    int32_t* kl_t7;
+    bool kl_t8;
+    uint64_t kl_t9;
+    ( void ) kl_t7;
+    ( void ) kl_t9;
+#line 304 "../src/ring.kl"
+    kl_t4 = ( *kl_this_1 ).kl_cap__2171 - ( *kl_this_1 ).kl_head__2167;
+    kl_t5 = ( *kl_this_1 ).kl_count__2169 < kl_t4;
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t3 = ( *kl_this_1 ).kl_count__2169;
+    goto bb3;
+    bb2:
+    kl_t6 = ( *kl_this_1 ).kl_cap__2171 - ( *kl_this_1 ).kl_head__2167;
+    kl_t3 = kl_t6;
+    goto bb3;
+    bb3:
+    kl_run_2 = kl_t3;
+#line 307 "../src/ring.kl"
+    kl_t7 = ( *kl_this_1 ).kl_data__2165 + ( *kl_this_1 ).kl_head__2167;
+#line 309 "../src/ring.kl"
+    kl_t8 = ( *kl_this_1 ).kl_count__2169 > kl_run_2;
+    if ( kl_t8 ) goto bb4; else goto bb5;
+    bb4:
+#line 311 "../src/ring.kl"
+    kl_t9 = ( *kl_this_1 ).kl_count__2169 - kl_run_2;
+    goto bb5;
+    bb5:
+    return;
+}
+
+void kl_7prelude_result__I4void_5ownedE__dtor( struct kl_7prelude_result__I4void_5ownedE* kl_t1 )
+{
+    bool kl_t2;
+#line 193 "<prelude>"
+    kl_t2 = ( *kl_t1 ).tag == 1;
+    if ( kl_t2 ) goto bb2; else goto bb1;
+    bb1:
+    return;
+    bb2:
+    kl__owned__dtor( &( *kl_t1 ).kl_error_2541 );
+    goto bb1;
+}
+
+void kl_2kl_optional__I5ownedE__dtor( struct kl_2kl_optional__I5ownedE* kl_t1 )
+{
+    bool kl_t2;
+#line 5 "../src/optional.kl"
+    kl_t2 = ( *kl_t1 ).tag == 0;
+    if ( kl_t2 ) goto bb2; else goto bb1;
+    bb1:
+    return;
+    bb2:
+    kl__owned__dtor( &( *kl_t1 ).kl_value_1237 );
+    goto bb1;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

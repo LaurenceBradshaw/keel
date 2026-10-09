@@ -1,0 +1,344 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+import optional;
+
+/// A fixed-capacity double-ended queue of `T` that owns its elements and the block holding them.
+///
+/// Elements are added and removed at either end in constant time, and indexed from 0 at the
+/// front. A ring never grows on its own: pushing onto a full one panics, `try_push_back` hands the
+/// element back, and `push_back_evict` makes room by removing the element at the other end. Only
+/// `reserve` changes the capacity. Dropping the ring drops every element.
+class ring<T>
+{
+    /// An empty ring with room for exactly `capacity` elements.
+    ///
+    /// ### Panics
+    ///
+    /// If `capacity` is 0.
+    public static ring<T> with_capacity( u64 capacity )
+    {
+        assert( capacity > 0 );
+        return ring<T>( capacity );
+    }
+
+    private ring( u64 capacity )
+    {
+        unsafe
+        {
+            data_ = alloc<T>( capacity );
+        }
+        head_ = 0;
+        count_ = 0;
+        cap_ = capacity;
+    }
+
+    ~ring()
+    {
+        unsafe
+        {
+            destroy_live();
+            free( data_ );
+        }
+    }
+
+    /// Adds `value` at the back.
+    ///
+    /// ### Panics
+    ///
+    /// If the ring is full; `try_push_back` hands the element back instead.
+    public void push_back( move T value )
+    {
+        assert( count_ < cap_ );
+
+        unsafe
+        {
+            data_[slot( count_ )] = move value;
+        }
+        count_ += 1;
+    }
+
+    /// Adds `value` at the front, so it becomes the element at index 0.
+    ///
+    /// ### Panics
+    ///
+    /// If the ring is full; `try_push_front` hands the element back instead.
+    public void push_front( move T value )
+    {
+        assert( count_ < cap_ );
+
+        retreat_head();
+
+        unsafe
+        {
+            data_[head_] = move value;
+        }
+        count_ += 1;
+    }
+
+    /// Adds `value` at the back, or hands it back in an `err` if the ring is full.
+    public result<void, T> try_push_back( move T value )
+    {
+        if( is_full() )
+        {
+            return result::err( move value );
+        }
+
+        push_back( move value );
+        return result::ok();
+    }
+
+    /// Adds `value` at the front, or hands it back in an `err` if the ring is full.
+    public result<void, T> try_push_front( move T value )
+    {
+        if( is_full() )
+        {
+            return result::err( move value );
+        }
+
+        push_front( move value );
+        return result::ok();
+    }
+
+    /// Adds `value` at the back, first removing and returning the front element if the ring is full.
+    ///
+    /// Returns `none` when there was room, so nothing was removed.
+    public optional<T> push_back_evict( move T value )
+    {
+        if( !is_full() )
+        {
+            push_back( move value );
+            return optional::none;
+        }
+
+        T old = pop_front();
+        push_back( move value );
+        return optional::some( move old );
+    }
+
+    /// Adds `value` at the front, first removing and returning the back element if the ring is full.
+    ///
+    /// Returns `none` when there was room, so nothing was removed.
+    public optional<T> push_front_evict( move T value )
+    {
+        if( !is_full() )
+        {
+            push_front( move value );
+            return optional::none;
+        }
+
+        T old = pop_back();
+        push_front( move value );
+        return optional::some( move old );
+    }
+
+    /// Removes the front element and returns it.
+    ///
+    /// ### Panics
+    ///
+    /// If the ring is empty; `try_pop_front` answers `none` instead.
+    public T pop_front()
+    {
+        assert( count_ > 0 );
+
+        T result;
+        unsafe
+        {
+            result = move data_[head_];
+        }
+        
+        advance_head();
+
+        count_ -= 1;
+        return result;
+    }
+
+    /// Removes the back element and returns it.
+    ///
+    /// ### Panics
+    ///
+    /// If the ring is empty; `try_pop_back` answers `none` instead.
+    public T pop_back()
+    {
+        assert( count_ > 0 );
+
+        count_ -= 1;
+        unsafe
+        {
+            T result = move data_[slot( count_ )];
+            return result;
+        }
+    }
+
+    /// Removes the front element and returns it, or `none` if the ring is empty.
+    public optional<T> try_pop_front()
+    {
+        if( count_ == 0 )
+        {
+            return optional::none;
+        }
+
+        return optional::some( pop_front() );
+    }
+
+    /// Removes the back element and returns it, or `none` if the ring is empty.
+    public optional<T> try_pop_back()
+    {
+        if( count_ == 0 )
+        {
+            return optional::none;
+        }
+
+        return optional::some( pop_back() );
+    }
+
+    /// A pointer to the element `index` places from the front.
+    ///
+    /// ### Panics
+    ///
+    /// If `index` is not less than `size()`.
+    public T* operator[]( u64 index ) const
+    {
+        assert( index < count_ );
+        unsafe
+        {
+            return &data_[slot( index )];
+        }
+    }
+
+    /// A pointer to the front element.
+    ///
+    /// ### Panics
+    ///
+    /// If the ring is empty.
+    public T* first() const
+    {
+        assert( count_ > 0 );
+        unsafe
+        {
+            return &data_[head_];
+        }
+    }
+
+    /// A pointer to the back element.
+    ///
+    /// ### Panics
+    ///
+    /// If the ring is empty.
+    public T* last() const
+    {
+        assert( count_ > 0 );
+        unsafe
+        {
+            return &data_[slot( count_ - 1 )];
+        }
+    }
+
+    /// Whether the ring holds as many elements as its capacity, so a push would panic.
+    public bool is_full() const
+    {
+        return count_ == cap_;
+    }
+
+    /// Whether the ring holds no elements.
+    public bool is_empty() const
+    {
+        return count_ == 0;
+    }
+
+    /// The number of elements.
+    public u64 size() const
+    {
+        return count_;
+    }
+
+    /// How many elements the ring holds when full.
+    public u64 capacity() const
+    {
+        return cap_;
+    }
+
+    /// Makes room for at least `n` elements in all, not `n` more, moving the elements into a new
+    /// block in order. Does nothing if the capacity is already that large.
+    public void reserve( u64 n )
+    {
+        if( n <= cap_ )
+        {
+            return;
+        }
+
+        T[*] new_data;
+        unsafe
+        {
+            new_data = alloc<T>( n );
+
+            for( u64 i = 0; i < count_; i++ )
+            {
+                new_data[i] = move data_[slot( i )];
+            }
+
+            free( data_ );
+        }
+        head_ = 0;
+        cap_ = n;
+        data_ = new_data;
+    }
+
+    /// Drops every element; the capacity is kept.
+    public void clear()
+    {
+        destroy_live();
+        head_ = 0;
+        count_ = 0;
+    }
+
+    // The slot holding the element `index` places from the front, for `index` up to `cap_`.
+    private u64 slot( u64 index ) const
+    {
+        return head_ + index - ( head_ + index >= cap_ ? cap_ : cast<u64>( 0 ) );
+    }
+
+    // Destroys the live elements, which run from `head_` and may wrap to the start of the block.
+    private void destroy_live()
+    {
+        u64 run = count_ < cap_ - head_ ? count_ : cap_ - head_;
+        unsafe
+        {
+            destroy( data_ + head_, run );
+
+            if( count_ > run )
+            {
+                destroy( data_, count_ - run );
+            }
+        }
+    }
+
+    // Moves the front one slot later, as a pop from the front does.
+    private void advance_head()
+    {
+        head_++;
+        if( head_ == cap_ )
+        {
+            head_ = 0;
+        }
+    }
+
+    // Moves the front one slot earlier, as a push at the front does.
+    private void retreat_head()
+    {
+        if( head_ == 0 )
+        {
+            head_ = cap_ - 1;
+        }
+        else
+        {
+            head_--;
+        }
+    }
+
+    // `count_` elements are live, from slot `head_` on, wrapping at `cap_`; the rest are raw.
+    private T[*] data_;
+    private u64 head_;
+    private u64 count_;
+    private u64 cap_;
+};

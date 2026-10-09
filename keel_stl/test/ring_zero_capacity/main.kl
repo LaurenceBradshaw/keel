@@ -1,0 +1,8 @@
+// A `kl::ring` that could never hold an element is refused when it is made.
+import kl::ring;
+
+i32 main()
+{
+    kl::ring<i32> values = kl::ring<i32>::with_capacity( 0 );
+    return 0;
+}

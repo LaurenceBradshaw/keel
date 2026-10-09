@@ -1,0 +1,1 @@
+../src/ring.kl:52: assertion failed: count_ < cap_
