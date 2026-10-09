@@ -286,77 +286,20 @@ void elaborate_drops( Function& func, const Flag_vocabulary& vocabulary )
 
 #include <fmt/format.h>
 
-#include "common/diagnostics.h"
-#include "common/source_manager.h"
-#include "ir/lower.h"
+#include "check/pipeline_test_support.h"
 #include "ir/print.h"
-#include "ir/simplify.h"
 #include "ir/verify.h"
-#include "lex/lexer.h"
-#include "parse/parser.h"
-#include "sema/resolver.h"
-#include "sema/type_checker.h"
 
 namespace keel
 {
 namespace
 {
 
-struct Elaborated
+struct Elaborated : Compiled
 {
-    Source_manager sm;
-    Interner       interner;
-    Literal_pool   literals;
-    Diagnostics    diags;
-    Ast            ast;
-    Resolution     resolution;
-    Types          types;
-
-    std::vector<Function> functions;
-
     explicit Elaborated( std::string_view source )
+        : Compiled( source, Through::elaborate )
     {
-        const File_id file = sm.add_file( "t.kl", std::string( source ) );
-
-        ast        = parse( lex( file, sm, interner, literals, diags ), sm, diags );
-        resolution = resolve( ast, sm, interner, diags );
-        types      = type_check( ast, resolution, literals, sm, interner, diags );
-
-        if( diags.has_errors() )
-        {
-            return;
-        }
-
-        functions = lower( ast, resolution, types, literals );
-
-        // The driver simplifies every function before anything reads it, so these do too.
-        for( Function& function : functions )
-        {
-            simplify( function, literals );
-        }
-
-        const Flag_vocabulary vocabulary {
-            .bool_type     = types.table().builtin( Type_kind::Bool ),
-            .false_literal = literals.add_integer( 0 ),
-            .true_literal  = literals.add_integer( 1 )
-        };
-
-        for( Function& function : functions )
-        {
-            elaborate_drops( function, vocabulary );
-        }
-    }
-
-    bool clean() const
-    {
-        return !diags.has_errors();
-    }
-
-    std::string rendered() const
-    {
-        std::ostringstream out;
-        diags.render( sm, out );
-        return out.str();
     }
 
     std::string text( std::size_t index )
@@ -463,7 +406,7 @@ TEST_CASE( "drop_flags_leaves_every_function_verifiable", "[check][drop]" )
         std::string( k_owning ) + "i32 run( i32 c ) {\n"
                                   "  Owned o = Owned( 1 );\n"
                                   "  i32 i = 0;\n"
-                                  "  while ( i < 3 ) { if ( c == 0 ) { consume( move o ); } i = i + 1; }\n"
+                                  "  while ( i < 3 ) { if ( c == 0 ) { consume( move o ); break; } i = i + 1; }\n"
                                   "  return 0; }\n"
                                   "i32 main() { return run( 1 ); }"
     );

@@ -236,65 +236,18 @@ void report_dataflow_errors(
 #ifdef ENABLE_UNIT_TESTS
 #include <catch2/catch_test_macros.hpp>
 
-#include <sstream>
-#include "common/literal_pool.h"
-#include "ir/lower.h"
-#include "ir/simplify.h"
-#include "lex/lexer.h"
-#include "parse/parser.h"
-#include "sema/resolver.h"
+#include "check/pipeline_test_support.h"
 
 namespace keel
 {
-namespace
-{
-
-// Source run through the front end and the dataflow checks, as the driver runs them, and rendered.
-struct Reported
-{
-    Source_manager sm;
-    Interner       interner;
-    Literal_pool   literals;
-    Diagnostics    diags;
-    Ast            ast;
-    Resolution     resolution;
-    Types          types;
-
-    std::vector<Function> functions;
-
-    explicit Reported( std::string_view source )
-    {
-        const File_id file = sm.add_file( "t.kl", std::string( source ) );
-
-        ast        = parse( lex( file, sm, interner, literals, diags ), sm, diags );
-        resolution = resolve( ast, sm, interner, diags );
-        types      = type_check( ast, resolution, literals, sm, interner, diags );
-
-        if( !diags.has_errors() )
-        {
-            functions = lower( ast, resolution, types, literals );
-            for( Function& function : functions )
-            {
-                simplify( function, literals );
-            }
-            report_dataflow_errors( functions, ast, sm, interner, types, diags );
-        }
-    }
-
-    std::string rendered() const
-    {
-        std::ostringstream out;
-        diags.render( sm, out );
-        return out.str();
-    }
-};
-
-} // namespace
 
 TEST_CASE( "report_names_the_moved_local", "[check][report]" )
 {
-    const Reported p( "void sink( i32 x ) { }\n"
-                      "i32 main() { i32 a = 1; sink( move a ); sink( a ); return 0; }\n" );
+    const Compiled p(
+        "void sink( i32 x ) { }\n"
+        "i32 main() { i32 a = 1; sink( move a ); sink( a ); return 0; }\n",
+        Through::report
+    );
 
     REQUIRE( p.rendered().find( "`a` is used after it was moved" ) != std::string::npos );
     REQUIRE( p.rendered().find( "moved at 2:25" ) != std::string::npos );
@@ -302,8 +255,11 @@ TEST_CASE( "report_names_the_moved_local", "[check][report]" )
 
 TEST_CASE( "report_names_the_unassigned_out_parameter", "[check][report]" )
 {
-    const Reported p( "void fill( out i32 v ) { }\n"
-                      "i32 main() { return 0; }\n" );
+    const Compiled p(
+        "void fill( out i32 v ) { }\n"
+        "i32 main() { return 0; }\n",
+        Through::report
+    );
 
     REQUIRE( p.rendered().find( "`v` is never assigned" ) != std::string::npos );
 }

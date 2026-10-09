@@ -195,14 +195,8 @@ void simplify( Function& func, const Literal_pool& literals )
 #include <sstream>
 
 #include "check/assign_check.h"
-#include "common/diagnostics.h"
-#include "common/source_manager.h"
-#include "ir/lower.h"
+#include "check/pipeline_test_support.h"
 #include "ir/verify.h"
-#include "lex/lexer.h"
-#include "parse/parser.h"
-#include "sema/resolver.h"
-#include "sema/type_checker.h"
 
 namespace keel
 {
@@ -213,49 +207,11 @@ namespace
 // worth testing here is a loop header, a join and a back edge, and those are the graphs that are
 // worst to assemble by hand. The function under test is always the first one; `main` is there
 // because a program needs one.
-struct Simplified
+struct Simplified : Compiled
 {
-    Source_manager sm;
-    Interner       interner;
-    Literal_pool   literals;
-    Diagnostics    diags;
-    Ast            ast;
-    Resolution     resolution;
-    Types          types;
-
-    std::vector<Function> functions;
-
     explicit Simplified( std::string_view source )
+        : Compiled( source )
     {
-        const File_id file = sm.add_file( "t.kl", std::string( source ) );
-
-        ast        = parse( lex( file, sm, interner, literals, diags ), sm, diags );
-        resolution = resolve( ast, sm, interner, diags );
-        types      = type_check( ast, resolution, literals, sm, interner, diags );
-
-        if( diags.has_errors() )
-        {
-            return;
-        }
-
-        functions = lower( ast, resolution, types, literals );
-
-        for( Function& function : functions )
-        {
-            simplify( function, literals );
-        }
-    }
-
-    bool clean() const
-    {
-        return !diags.has_errors();
-    }
-
-    std::string rendered() const
-    {
-        std::ostringstream out;
-        diags.render( sm, out );
-        return out.str();
     }
 
     const Function& first() const

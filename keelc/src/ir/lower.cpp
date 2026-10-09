@@ -3120,12 +3120,9 @@ std::vector<Function> lower( const Ast& ast, const Resolution& resolution, Types
 #include <fmt/ranges.h>
 #include <catch2/catch_test_macros.hpp>
 
-#include "common/source_manager.h"
+#include "check/pipeline_test_support.h"
 #include "ir/print.h"
 #include "ir/verify.h"
-#include "lex/lexer.h"
-#include "parse/loader.h"
-#include "parse/parser.h"
 
 namespace keel
 {
@@ -3133,45 +3130,12 @@ namespace
 {
 
 // The whole front end, so what is lowered is a genuinely typed AST rather than one assembled by
-// hand. A lowering bug that only appears on real input is the kind worth catching. The prelude is
-// empty unless a case passes one, since its functions would join every case's list.
-struct Lowered
+// hand. A lowering bug that only appears on real input is the kind worth catching.
+struct Lowered : Compiled
 {
-    Source_manager sm;
-    Interner       interner;
-    Literal_pool   literals;
-    Diagnostics    diags;
-    Ast            ast;
-    Resolution     resolution;
-    Types          types;
-
-    std::vector<Function> functions;
-
-    explicit Lowered( std::string_view source, std::string_view prelude = {} )
+    explicit Lowered( std::string_view source )
+        : Compiled( source, Through::lower )
     {
-        const File_id file = sm.add_file( "t.kl", std::string( source ) );
-
-        Program program = load_program( file, sm, interner, literals, diags, {}, prelude );
-        ast             = std::move( program.ast );
-        resolution      = resolve( ast, sm, interner, diags, program.imports );
-        types           = type_check( ast, resolution, literals, sm, interner, diags );
-
-        if( !diags.has_errors() )
-        {
-            functions = lower( ast, resolution, types, literals );
-        }
-    }
-
-    bool clean() const
-    {
-        return !diags.has_errors();
-    }
-
-    std::string rendered() const
-    {
-        std::ostringstream out;
-        diags.render( sm, out );
-        return out.str();
     }
 
     std::string text( std::size_t index = 0 )
@@ -5142,7 +5106,7 @@ TEST_CASE( "lower_lowers_a_string_literal_to_str's_constructor", "[ir][lower][pr
 {
     SECTION( "as a value" )
     {
-        Lowered p( "i32 main() { str s = \"a\\0b\"; return 0; }", prelude_source() );
+        Lowered p( "i32 main() { str s = \"a\\0b\"; return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
@@ -5159,7 +5123,7 @@ TEST_CASE( "lower_lowers_a_string_literal_to_str's_constructor", "[ir][lower][pr
 
     SECTION( "and as a place, for a field read off it" )
     {
-        Lowered p( "i32 main() { u64 n = \"hello\".size; return 0; }", prelude_source() );
+        Lowered p( "i32 main() { u64 n = \"hello\".size; return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
@@ -6451,20 +6415,15 @@ TEST_CASE( "lower_moves_a_consumed_scrutinee_into_its_bindings", "[ir][lower][pa
     REQUIRE( text.find( "&borrow" ) == std::string::npos );
 }
 
-constexpr std::string_view k_result = "enum result<T, E> { ok( T value ), err( E error ) };\n";
-
 // D6. `try` tests the tag: `ok` yields the payload, and `err` is written into the return slot and
 // returned through every drop the function owes.
 TEST_CASE( "lower_try_returns_the_error_through_the_drops", "[ir][lower][try]" )
 {
-    Lowered p(
-        "enum Bad { nope };\n"
-        "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
-        "result<B, Bad> make() { return result::ok( B( 1 ) ); }\n"
-        "result<u64, Bad> f() { B keep = B( 2 ); B v = try make(); return result::ok( v.n ); }\n"
-        "i32 main() { return 0; }",
-        k_result
-    );
+    Lowered p( "enum Bad { nope };\n"
+               "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+               "result<B, Bad> make() { return result::ok( B( 1 ) ); }\n"
+               "result<u64, Bad> f() { B keep = B( 2 ); B v = try make(); return result::ok( v.n ); }\n"
+               "i32 main() { return 0; }" );
 
     INFO( p.rendered() );
     REQUIRE( p.clean() );
@@ -6492,13 +6451,10 @@ TEST_CASE( "lower_try_returns_the_error_through_the_drops", "[ir][lower][try]" )
 // D51. An `ok` of `void` carries nothing, so nothing is read out of it.
 TEST_CASE( "lower_try_yields_nothing_from_a_void_result", "[ir][lower][try]" )
 {
-    Lowered p(
-        "enum Bad { nope };\n"
-        "result<void, Bad> step() { return result::ok(); }\n"
-        "result<void, Bad> f() { try step(); return result::ok(); }\n"
-        "i32 main() { return 0; }",
-        k_result
-    );
+    Lowered p( "enum Bad { nope };\n"
+               "result<void, Bad> step() { return result::ok(); }\n"
+               "result<void, Bad> f() { try step(); return result::ok(); }\n"
+               "i32 main() { return 0; }" );
 
     INFO( p.rendered() );
     REQUIRE( p.clean() );
@@ -6514,15 +6470,12 @@ TEST_CASE( "lower_try_yields_nothing_from_a_void_result", "[ir][lower][try]" )
 // What the statement built before the `try` is the statement's to drop, on the way out as well.
 TEST_CASE( "lower_try_drops_the_statement's_earlier_temporaries", "[ir][lower][try]" )
 {
-    Lowered p(
-        "enum Bad { nope };\n"
-        "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
-        "result<u64, Bad> size() { return result::ok( 1 ); }\n"
-        "u64 sum( move B b, u64 n ) { return n; }\n"
-        "result<u64, Bad> f() { u64 r = sum( move B( 7 ), try size() ); return result::ok( r ); }\n"
-        "i32 main() { return 0; }",
-        k_result
-    );
+    Lowered p( "enum Bad { nope };\n"
+               "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+               "result<u64, Bad> size() { return result::ok( 1 ); }\n"
+               "u64 sum( move B b, u64 n ) { return n; }\n"
+               "result<u64, Bad> f() { u64 r = sum( move B( 7 ), try size() ); return result::ok( r ); }\n"
+               "i32 main() { return 0; }" );
 
     INFO( p.rendered() );
     REQUIRE( p.clean() );
@@ -6555,8 +6508,7 @@ TEST_CASE( "lower_try_runs_before_an_aggregate_is_written", "[ir][lower][try]" )
     {
         Lowered p(
             std::string( held ) + "result<B, Bad> f() { return result::ok( try make() ); }\n"
-                                  "i32 main() { return 0; }",
-            k_result
+                                  "i32 main() { return 0; }"
         );
 
         INFO( p.rendered() );
@@ -6573,8 +6525,7 @@ TEST_CASE( "lower_try_runs_before_an_aggregate_is_written", "[ir][lower][try]" )
     {
         Lowered p(
             std::string( held ) + "result<u64, Bad> f() { P p = P { B( 1 ), try make() }; return result::ok( 0 ); }\n"
-                                  "i32 main() { return 0; }",
-            k_result
+                                  "i32 main() { return 0; }"
         );
 
         INFO( p.rendered() );

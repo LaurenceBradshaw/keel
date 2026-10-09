@@ -1194,7 +1194,8 @@ that needs anything more (`parameter_mode_of`, which answers in sema's `Param_mo
 ownership and binding-type questions) stays in sema. R22 (`const Types&` past the checker) is
 declined: lowering and emission intern types the checker never named, and `table()` is `Types`' only
 mutable member. **At M9.1**: the dataflow wording out of `main.cpp` into `check/report` (R10), **done**, and one
-test fixture that runs the real pipeline, prelude included (R11). **At M9.5**: the parser's cursor and recovery as
+test fixture that runs the real pipeline, prelude included (R11), **done**: `check/pipeline_test_support.h`'s
+`Compiled`. **At M9.5**: the parser's cursor and recovery as
 classes (R3, with R5 and R18), `infer_call`'s phases and a call-site struct (R6, R15), and the
 resolver's long cases (R12). **Later, or when next touched**: `Addresses` out of `Expressions` (R4),
 the `Types` renames (R8) once files stop moving, R16 and R21, and R19's comment sweep of

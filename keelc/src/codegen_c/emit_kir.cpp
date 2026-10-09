@@ -1668,12 +1668,7 @@ std::string emit_c_from_kir(
 #ifdef ENABLE_UNIT_TESTS
 #include <catch2/catch_test_macros.hpp>
 
-#include "common/diagnostics.h"
-#include "ir/lower.h"
-#include "ir/simplify.h"
-#include "lex/lexer.h"
-#include "parse/parser.h"
-#include "sema/resolver.h"
+#include "check/pipeline_test_support.h"
 
 namespace keel
 {
@@ -1682,42 +1677,17 @@ namespace
 
 // The whole pipeline, so what is emitted came from a real lowering rather than a hand-built
 // Function. A backend bug that only shows on real input is the kind worth catching.
-struct Generated
+struct Generated : Compiled
 {
-    Source_manager sm;
-    Interner       interner;
-    Literal_pool   literals;
-    Diagnostics    diags;
-    Ast            ast;
-    Resolution     resolution;
-    Types          types;
-    std::string    c;
+    std::string c;
 
     explicit Generated( std::string_view source )
+        : Compiled( source, Through::elaborate )
     {
-        const File_id file = sm.add_file( "t.kl", std::string( source ) );
-
-        ast        = parse( lex( file, sm, interner, literals, diags ), sm, diags );
-        resolution = resolve( ast, sm, interner, diags );
-        types      = type_check( ast, resolution, literals, sm, interner, diags );
-
-        if( !diags.has_errors() )
+        if( clean() )
         {
-            std::vector<Function> functions = lower( ast, resolution, types, literals );
-
-            // The driver simplifies before emitting, so the C these tests read is the C it writes.
-            for( Function& function : functions )
-            {
-                simplify( function, literals );
-            }
-
-            c = emit_c_from_kir( functions, ast, types, literals, sm, interner );
+            c = emit_c_from_kir( all, ast, types, literals, sm, interner );
         }
-    }
-
-    bool clean() const
-    {
-        return !diags.has_errors();
     }
 
     bool has( std::string_view needle ) const
@@ -2602,8 +2572,9 @@ TEST_CASE( "emit_kir_writes_an_allocation", "[codegen][kir][alloc]" )
         const std::size_t body = g.c.find( "int32_t kl__main__( void )\n{" );
 
         REQUIRE( body != std::string::npos );
-        REQUIRE( g.c.find( "kl__C__dtor(", body ) == std::string::npos );
-        REQUIRE( g.c.find( "ctor", body ) == std::string::npos );
+        const std::string main_body = g.c.substr( body, g.c.find( "\n}\n", body ) - body );
+        REQUIRE( main_body.find( "kl__C__dtor(" ) == std::string::npos );
+        REQUIRE( main_body.find( "ctor" ) == std::string::npos );
     }
 }
 
@@ -2653,7 +2624,8 @@ TEST_CASE( "emit_kir_declares_the_runtime_when_it_is_used", "[codegen][kir][allo
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE_FALSE( g.has( "kl_rt_" ) );
+        REQUIRE_FALSE( g.has( alloc_prototype ) );
+        REQUIRE_FALSE( g.has( free_prototype ) );
     }
 
     SECTION( "an allocation buried several levels down is still found" )

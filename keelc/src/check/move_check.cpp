@@ -392,15 +392,7 @@ std::vector<Move_error> check_moves( const Function& func )
 #ifdef ENABLE_UNIT_TESTS
 #include <catch2/catch_test_macros.hpp>
 
-#include "common/diagnostics.h"
-#include "common/literal_pool.h"
-#include "common/source_manager.h"
-#include "ir/lower.h"
-#include "ir/simplify.h"
-#include "lex/lexer.h"
-#include "parse/parser.h"
-#include "sema/resolver.h"
-#include "sema/type_checker.h"
+#include "check/pipeline_test_support.h"
 
 namespace keel
 {
@@ -409,49 +401,11 @@ namespace
 
 // Real source rather than hand-built CFGs: what needs testing here is what happens at a branch, a
 // join and a back edge, and those are precisely the graphs that are worst to assemble by hand.
-struct Checked
+struct Checked : Compiled
 {
-    Source_manager sm;
-    Interner       interner;
-    Literal_pool   literals;
-    Diagnostics    diags;
-    Ast            ast;
-    Resolution     resolution;
-    Types          types;
-
-    std::vector<Function> functions;
-
     explicit Checked( std::string_view source )
+        : Compiled( source )
     {
-        const File_id file = sm.add_file( "t.kl", std::string( source ) );
-
-        ast        = parse( lex( file, sm, interner, literals, diags ), sm, diags );
-        resolution = resolve( ast, sm, interner, diags );
-        types      = type_check( ast, resolution, literals, sm, interner, diags );
-
-        if( !diags.has_errors() )
-        {
-            functions = lower( ast, resolution, types, literals );
-
-            // The driver simplifies every function before anything reads it, so these do too: a
-            // test that walked a graph the compiler never analyses would pin the wrong thing.
-            for( Function& function : functions )
-            {
-                simplify( function, literals );
-            }
-        }
-    }
-
-    bool clean() const
-    {
-        return !diags.has_errors();
-    }
-
-    std::string rendered() const
-    {
-        std::ostringstream out;
-        diags.render( sm, out );
-        return out.str();
     }
 
     // The function under test is always the last one lowered: every fixture below puts the
