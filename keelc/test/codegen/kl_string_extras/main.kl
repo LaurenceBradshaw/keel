@@ -1,0 +1,251 @@
+// `kl::string`'s searching, cutting, emptying and number conversions. Every string owns its block, so
+// one that is not freed leaks under valgrind. Each check returns its own code.
+import kl::string;
+import kl::optional;
+
+// `starts_with`, `ends_with` and `find` take a literal; the empty one is at every position.
+i32 searches()
+{
+    kl::string text = kl::string( "hello, world" );
+    if( !text.starts_with( "hello" ) || !text.starts_with( "" ) || !text.starts_with( "hello, world" ) )
+    {
+        return 1;
+    }
+
+    if( text.starts_with( "world" ) || text.starts_with( "hello, world!" ) || text.starts_with( "Hello" ) )
+    {
+        return 2;
+    }
+
+    if( !text.ends_with( "world" ) || !text.ends_with( "" ) || text.ends_with( "hello" ) || text.ends_with( "!hello, world" ) )
+    {
+        return 3;
+    }
+
+    // The first match, a match at either end, none, and a needle longer than the text.
+    if( kl::value_or( text.find( "o" ), 99 ) != 4 || kl::value_or( text.find( "hello" ), 99 ) != 0
+        || kl::value_or( text.find( "ld" ), 99 ) != 10 || kl::value_or( text.find( "" ), 99 ) != 0 )
+    {
+        return 4;
+    }
+
+    if( !kl::is_none( text.find( "worlds" ) ) || !kl::is_none( text.find( "hello, world, hello" ) ) )
+    {
+        return 5;
+    }
+
+    // A partial match that fails on its last byte does not hide the full one after it.
+    kl::string repeats = kl::string( "aab" );
+    kl::string empty = kl::string();
+    if( kl::value_or( repeats.find( "ab" ), 99 ) != 1 || kl::value_or( empty.find( "" ), 99 ) != 0
+        || !kl::is_none( empty.find( "a" ) ) || !empty.starts_with( "" ) || empty.ends_with( "a" ) )
+    {
+        return 6;
+    }
+
+    return 0;
+}
+
+// `substring` copies a run out; the original is unchanged.
+i32 cuts()
+{
+    kl::string text = kl::string( "hello, world" );
+    if( text.substring( 7, 5 ) != kl::string( "world" ) || text.substring( 0, 5 ) != kl::string( "hello" ) )
+    {
+        return 7;
+    }
+
+    if( !text.substring( 12, 0 ).is_empty() || !text.substring( 3, 0 ).is_empty() || text.substring( 0, 12 ) != text )
+    {
+        return 8;
+    }
+
+    if( text != kl::string( "hello, world" ) )
+    {
+        return 9;
+    }
+
+    return 0;
+}
+
+// `pop` hands back the last byte, and `clear` empties the string for reuse.
+i32 sizes()
+{
+    kl::string text = kl::string( "abc" );
+    if( text.pop() != 99 || text.pop() != 98 || text != kl::string( "a" ) )
+    {
+        return 10;
+    }
+
+    text.clear();
+    if( !text.is_empty() )
+    {
+        return 11;
+    }
+
+    text.push( 122 );
+    if( text != kl::string( "z" ) )
+    {
+        return 12;
+    }
+
+    return 0;
+}
+
+// `string::from` writes a number in decimal, with no leading zeros, and both ends of each range.
+i32 formats()
+{
+    i64 zero = 0;
+    i64 negative = -42;
+    i64 lowest = -9223372036854775807 - 1;
+    i64 highest = 9223372036854775807;
+    if( kl::string::from( zero ) != kl::string( "0" ) || kl::string::from( negative ) != kl::string( "-42" ) )
+    {
+        return 13;
+    }
+
+    if( kl::string::from( lowest ) != kl::string( "-9223372036854775808" )
+        || kl::string::from( highest ) != kl::string( "9223372036854775807" ) )
+    {
+        return 14;
+    }
+
+    u64 unsigned_zero = 0;
+    u64 round = 1000;
+    u64 top = 18446744073709551615;
+    if( kl::string::from( unsigned_zero ) != kl::string( "0" ) || kl::string::from( round ) != kl::string( "1000" )
+        || kl::string::from( top ) != kl::string( "18446744073709551615" ) )
+    {
+        return 15;
+    }
+
+    // An `i32` widens to `i64`, and a `u8` to `u64`.
+    i32 small = -7;
+    u8  byte = 255;
+    if( kl::string::from( small ) != kl::string( "-7" ) || kl::string::from( byte ) != kl::string( "255" ) )
+    {
+        return 16;
+    }
+
+    return 0;
+}
+
+// Whether `text` parses to `expected`.
+bool parses_to( str text, i64 expected )
+{
+    switch( kl::string( text ).parse_i64() )
+    {
+    case result::ok( value ):
+        return value == expected;
+    case result::err( e ):
+        return false;
+    }
+}
+
+// Why a parse was refused: the index of a bad byte, -1 for `no_digits` and -2 for `overflow`.
+i64 reason( kl::parse_error e )
+{
+    switch( e )
+    {
+    case kl::parse_error::invalid_digit( at ):
+        return cast<i64>( at );
+    case kl::parse_error::no_digits:
+        return -1;
+    case kl::parse_error::overflow:
+        return -2;
+    }
+}
+
+// Why `text` is refused, as `reason` gives it, or -3 if it parses.
+i64 refusal( str text )
+{
+    switch( kl::string( text ).parse_i64() )
+    {
+    case result::ok( value ):
+        return -3;
+    case result::err( e ):
+        return reason( e );
+    }
+}
+
+// `parse_i64` reads an optional `-` and then decimal digits only, refusing at the first byte that
+// cannot continue a number in range.
+i32 parses()
+{
+    if( !parses_to( "0", 0 ) || !parses_to( "42", 42 ) || !parses_to( "-42", -42 ) || !parses_to( "007", 7 ) || !parses_to( "-0", 0 ) )
+    {
+        return 17;
+    }
+
+    if( !parses_to( "9223372036854775807", 9223372036854775807 ) || !parses_to( "-9223372036854775808", -9223372036854775807 - 1 ) )
+    {
+        return 18;
+    }
+
+    if( refusal( "" ) != -1 || refusal( "-" ) != -1 )
+    {
+        return 19;
+    }
+
+    if( refusal( "9223372036854775808" ) != -2 || refusal( "-9223372036854775809" ) != -2 || refusal( "99999999999999999999" ) != -2 )
+    {
+        return 20;
+    }
+
+    // A `+`, a space, a second `-` and a letter are each a bad byte, named by where it is.
+    if( refusal( "+5" ) != 0 || refusal( " 5" ) != 0 || refusal( "5 " ) != 1 || refusal( "--5" ) != 1 || refusal( "12a4" ) != 2 )
+    {
+        return 21;
+    }
+
+    // Scanning stops at the first refusal, so an overflow before a bad byte is the overflow.
+    if( refusal( "99999999999999999999x" ) != -2 || refusal( "9x99999999999999999999" ) != 1 )
+    {
+        return 22;
+    }
+
+    // A formatted number parses back to itself.
+    i64 lowest = -9223372036854775807 - 1;
+    switch( kl::string::from( lowest ).parse_i64() )
+    {
+    case result::ok( value ):
+        if( value != lowest )
+        {
+            return 23;
+        }
+        break;
+    case result::err( e ):
+        return 24;
+    }
+
+    return 0;
+}
+
+i32 main()
+{
+    i32 code = searches();
+    if( code != 0 )
+    {
+        return code;
+    }
+
+    code = cuts();
+    if( code != 0 )
+    {
+        return code;
+    }
+
+    code = sizes();
+    if( code != 0 )
+    {
+        return code;
+    }
+
+    code = formats();
+    if( code != 0 )
+    {
+        return code;
+    }
+
+    return parses();
+}

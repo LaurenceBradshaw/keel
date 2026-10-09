@@ -1,0 +1,12 @@
+// `substring` running past the end aborts, naming the check in the library, and frees nothing on
+// the way out. The count alone is longer than the string, so a check written as `size() - count`
+// wraps and lets it through to the list's.
+import kl::string;
+
+i32 main()
+{
+    kl::string text = kl::string( "hello" );
+    println( "cutting" );
+    kl::string tail = text.substring( 1, 7 );
+    return 0;
+}
