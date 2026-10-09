@@ -1070,7 +1070,7 @@ keel/
       prelude/            prelude.kl, embedded into keelc at build time
     test/                 golden corpus and run_tests.sh (§10)
   keel_rt/                the C runtime every program links against (§7); its edge cases in test/
-  keel_stl/               the kl package, written in Keel: list.kl, string.kl; its generated pages in docs/, its programs in test/
+  keel_stl/               the kl package, written in Keel, in src/; its generated pages in docs/, its programs in test/
   keeldoc/                the doc tool, C++: runs keelc for --declarations and writes a package's HTML pages
   editors/vscode/         the editor extension: grammar, diagnostics, semantic tokens
   examples/
