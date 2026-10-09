@@ -48,20 +48,20 @@ int32_t kl_2kl_unwrap__I3i32E__MQ2kl8optionalI3i32E( struct kl_2kl_optional__I3i
     struct kl_7prelude_str kl_t4;
     struct kl_7prelude_str* kl_t5;
     uint8_t* kl_t6;
-#line 14 "../../keel_stl/src/optional.kl"
+#line 22 "../../keel_stl/src/optional.kl"
     kl_t2 = kl_o_1.tag == 0;
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
     kl_v_3 = kl_o_1.kl_value_29;
-#line 15 "../../keel_stl/src/optional.kl"
+#line 23 "../../keel_stl/src/optional.kl"
     kl_t0 = kl_v_3;
     return kl_t0;
     bb2:
-#line 17 "../../keel_stl/src/optional.kl"
+#line 25 "../../keel_stl/src/optional.kl"
     kl_t5 = &kl_t4;
     kl_t6 = ( uint8_t* ) "unwrap on an empty optional";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 27 );
-    kl_rt_panic_message( "../../keel_stl/src/optional.kl", 17, kl_t4.kl_data_204, kl_t4.kl_size_207 );
+    kl_rt_panic_message( "../../keel_stl/src/optional.kl", 25, kl_t4.kl_data_204, kl_t4.kl_size_207 );
 }
 
 int main( void )

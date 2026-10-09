@@ -1,2 +1,2 @@
 cutting
-../../keel_stl/src/string.kl:199: assertion failed: count <= size() - start
+../../keel_stl/src/string.kl:244: assertion failed: count <= size() - start

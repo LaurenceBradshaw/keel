@@ -493,14 +493,14 @@ int32_t kl__main__( void )
 void kl_2kl_pair__I5owned_3u64E__RQ2kl4pairI5owned_3u64E_M5owned_M3u64__ctor( struct kl_2kl_pair__I5owned_3u64E* kl_this_1, struct kl__owned kl_a_2, uint64_t kl_b_3 )
 {
     bool kl_t4;
-#line 6 "../../keel_stl/src/pair.kl"
-    kl_t4 = true;
 #line 8 "../../keel_stl/src/pair.kl"
+    kl_t4 = true;
+#line 10 "../../keel_stl/src/pair.kl"
     ( *kl_this_1 ).kl_first_370 = kl_a_2;
     kl_t4 = false;
-#line 9 "../../keel_stl/src/pair.kl"
+#line 11 "../../keel_stl/src/pair.kl"
     ( *kl_this_1 ).kl_second_372 = kl_b_3;
-#line 6 "../../keel_stl/src/pair.kl"
+#line 8 "../../keel_stl/src/pair.kl"
     if ( kl_t4 ) kl__owned__dtor( &kl_a_2 );
     kl_t4 = false;
     return;
@@ -510,16 +510,16 @@ void kl_2kl_pair__I5owned_5ownedE__RQ2kl4pairI5owned_5ownedE_M5owned_M5owned__ct
 {
     bool kl_t4;
     bool kl_t5;
-#line 6 "../../keel_stl/src/pair.kl"
+#line 8 "../../keel_stl/src/pair.kl"
     kl_t4 = true;
     kl_t5 = true;
-#line 8 "../../keel_stl/src/pair.kl"
+#line 10 "../../keel_stl/src/pair.kl"
     ( *kl_this_1 ).kl_first_370 = kl_a_2;
     kl_t4 = false;
-#line 9 "../../keel_stl/src/pair.kl"
+#line 11 "../../keel_stl/src/pair.kl"
     ( *kl_this_1 ).kl_second_372 = kl_b_3;
     kl_t5 = false;
-#line 6 "../../keel_stl/src/pair.kl"
+#line 8 "../../keel_stl/src/pair.kl"
     if ( kl_t5 ) kl__owned__dtor( &kl_b_3 );
     kl_t5 = false;
     if ( kl_t4 ) kl__owned__dtor( &kl_a_2 );
@@ -540,18 +540,18 @@ struct kl_2kl_pair__I5owned_3u64E kl_2kl_unwrap__IQ2kl4pairI5owned_3u64EE__MQ2kl
     bool kl_t10;
     bool kl_t11;
     bool kl_t12;
-#line 10 "../../keel_stl/src/optional.kl"
+#line 18 "../../keel_stl/src/optional.kl"
     kl_t10 = true;
-#line 12 "../../keel_stl/src/optional.kl"
+#line 20 "../../keel_stl/src/optional.kl"
     kl_t11 = false;
-#line 14 "../../keel_stl/src/optional.kl"
+#line 22 "../../keel_stl/src/optional.kl"
     kl_t12 = false;
-#line 12 "../../keel_stl/src/optional.kl"
+#line 20 "../../keel_stl/src/optional.kl"
     kl_t11 = false;
     kl_t2 = kl_o_1;
     kl_t10 = false;
     kl_t11 = true;
-#line 14 "../../keel_stl/src/optional.kl"
+#line 22 "../../keel_stl/src/optional.kl"
     kl_t3 = kl_t2.tag == 0;
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
@@ -560,7 +560,7 @@ struct kl_2kl_pair__I5owned_3u64E kl_2kl_unwrap__IQ2kl4pairI5owned_3u64EE__MQ2kl
     kl_t12 = false;
     kl_v_5 = kl_t4.kl_value_377;
     kl_t12 = true;
-#line 15 "../../keel_stl/src/optional.kl"
+#line 23 "../../keel_stl/src/optional.kl"
     kl_t0 = kl_v_5;
     kl_t12 = false;
     if ( kl_t12 ) kl__owned__dtor( &kl_v_5.kl_first_370 );
@@ -571,17 +571,17 @@ struct kl_2kl_pair__I5owned_3u64E kl_2kl_unwrap__IQ2kl4pairI5owned_3u64EE__MQ2kl
     kl_t10 = false;
     return kl_t0;
     bb2:
-#line 17 "../../keel_stl/src/optional.kl"
+#line 25 "../../keel_stl/src/optional.kl"
     kl_t7 = &kl_t6;
     kl_t8 = ( uint8_t* ) "unwrap on an empty optional";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t7, kl_t8, 27 );
-    kl_rt_panic_message( "../../keel_stl/src/optional.kl", 17, kl_t6.kl_data_552, kl_t6.kl_size_555 );
+    kl_rt_panic_message( "../../keel_stl/src/optional.kl", 25, kl_t6.kl_data_552, kl_t6.kl_size_555 );
 }
 
 void kl_2kl_optional__IQ2kl4pairI5owned_3u64EE__dtor( struct kl_2kl_optional__IQ2kl4pairI5owned_3u64EE* kl_t1 )
 {
     bool kl_t2;
-#line 4 "../../keel_stl/src/optional.kl"
+#line 5 "../../keel_stl/src/optional.kl"
     kl_t2 = ( *kl_t1 ).tag == 0;
     if ( kl_t2 ) goto bb2; else goto bb1;
     bb1:

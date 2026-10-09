@@ -43,16 +43,16 @@ int32_t kl_2kl_expect__I3i32E__MQ2kl8optionalI3i32E_Q7prelude3str( struct kl_2kl
     int32_t kl_t0;
     bool kl_t3;
     int32_t kl_v_4;
-#line 25 "../../keel_stl/src/optional.kl"
+#line 38 "../../keel_stl/src/optional.kl"
     kl_t3 = kl_o_1.tag == 0;
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
     kl_v_4 = kl_o_1.kl_value_25;
-#line 26 "../../keel_stl/src/optional.kl"
+#line 39 "../../keel_stl/src/optional.kl"
     kl_t0 = kl_v_4;
     return kl_t0;
     bb2:
-    kl_rt_panic_message( "../../keel_stl/src/optional.kl", 28, kl_message_2.kl_data_200, kl_message_2.kl_size_203 );
+    kl_rt_panic_message( "../../keel_stl/src/optional.kl", 41, kl_message_2.kl_data_200, kl_message_2.kl_size_203 );
 }
 
 int main( void )

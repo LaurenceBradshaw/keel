@@ -3,9 +3,13 @@
 
 import optional;
 
-// Slots below `count` are live, the rest are raw.
+/// A growable array of `T` that owns its elements and the block holding them.
+///
+/// Elements sit side by side, indexed from 0. A full list doubles its capacity, so `push` takes
+/// amortised constant time. Dropping the list drops every element.
 class list<T>
 {
+    /// An empty list. Allocates nothing until the first element arrives.
     list() 
     {
         data_ = nullptr;
@@ -13,6 +17,7 @@ class list<T>
         cap_ = 0;
     }
 
+    /// An empty list with room for `capacity` elements before it reallocates.
     public static list<T> with_capacity( u64 capacity )
     {
         list<T> result = list<T>();
@@ -39,6 +44,7 @@ class list<T>
         }
     }
 
+    /// Adds `value` at the end, growing the storage if it is full.
     public void push( move T value )
     {
         reallocate_if_needed();
@@ -50,6 +56,11 @@ class list<T>
         count_ += 1;
     }
 
+    /// Removes the last element and returns it.
+    ///
+    /// # Panics
+    ///
+    /// If the list is empty; `try_pop` answers `none` instead.
     public T pop()
     {
         assert( count_ > 0 );
@@ -60,6 +71,7 @@ class list<T>
         }
     }
 
+    /// Removes the last element and returns it, or `none` if the list is empty.
     public optional<T> try_pop()
     {
         if( count_ == 0 )
@@ -70,6 +82,11 @@ class list<T>
         return optional::some( pop() );
     }
 
+    /// Puts `value` at `index`, moving every element from there one place later.
+    ///
+    /// # Panics
+    ///
+    /// If `index` is greater than `size()`. An index equal to it adds at the end.
     public void insert( u64 index, move T value )
     {
         assert( index <= count_ );
@@ -89,6 +106,7 @@ class list<T>
         count_ += 1;
     }
 
+    /// Moves every element of `other` onto the end, in order.
     public void append( move list<T> other )
     {
         reserve( count_ + other.count_ );
@@ -105,6 +123,8 @@ class list<T>
         other.count_ = 0; // Its slots are raw now, so its destructor only frees the block.
     }
 
+    /// Drops every element from index `n` on, keeping the first `n`; the capacity is unchanged.
+    /// Does nothing if `n` is at least `size()`.
     public void truncate( u64 n )
     {
         if( n >= count_ )
@@ -120,6 +140,11 @@ class list<T>
         count_ = n;
     }
 
+    /// A pointer to the first element.
+    ///
+    /// # Panics
+    ///
+    /// If the list is empty.
     public T* first() const
     {
         assert( count_ > 0 );
@@ -130,6 +155,11 @@ class list<T>
         }
     }
 
+    /// A pointer to the last element.
+    ///
+    /// # Panics
+    ///
+    /// If the list is empty.
     public T* last() const
     {
         assert( count_ > 0 );
@@ -140,6 +170,11 @@ class list<T>
         }
     }
 
+    /// A pointer to the element at `index`.
+    ///
+    /// # Panics
+    ///
+    /// If `index` is not less than `size()`.
     public T* operator[]( u64 index ) const
     {
         assert( index < count_ );
@@ -150,6 +185,12 @@ class list<T>
         }
     }
 
+    /// Removes the element at `index` and returns it, moving every later element one place earlier.
+    /// Keeps the order and takes linear time; `swap_remove` does neither.
+    ///
+    /// # Panics
+    ///
+    /// If `index` is not less than `size()`.
     public T remove( u64 index )
     {
         assert( index < count_ );
@@ -168,6 +209,12 @@ class list<T>
         }
     }
 
+    /// Removes the element at `index` and returns it, moving the last element into its place.
+    /// Takes constant time and does not keep the order.
+    ///
+    /// # Panics
+    ///
+    /// If `index` is not less than `size()`.
     public T swap_remove( u64 index )
     {
         assert( index < count_ );
@@ -186,6 +233,11 @@ class list<T>
         }
     }
 
+    /// Puts `value` at `index` and returns the element that was there.
+    ///
+    /// # Panics
+    ///
+    /// If `index` is not less than `size()`.
     public T replace( u64 index, move T value )
     {
         assert( index < count_ );
@@ -198,6 +250,11 @@ class list<T>
         }
     }
 
+    /// Exchanges the elements at `a` and `b`.
+    ///
+    /// # Panics
+    ///
+    /// If either is not less than `size()`.
     public void swap( u64 a, u64 b )
     {
         assert( a < count_ );
@@ -216,6 +273,7 @@ class list<T>
         }
     }
 
+    /// Reverses the order of the elements in place.
     public void reverse()
     {
         if( count_ < 2 )
@@ -229,21 +287,26 @@ class list<T>
         }
     }
 
+    /// The number of elements.
     public u64 size() const
     {
         return count_;
     }
 
+    /// How many elements fit before the list reallocates.
     public u64 capacity() const
     {
         return cap_;
     }
 
+    /// Whether the list holds no elements.
     public bool is_empty() const
     {
         return count_ == 0;
     }
 
+    /// Makes room for at least `n` elements in all, not `n` more.
+    /// Does nothing if the capacity is already that large.
     public void reserve( u64 n )
     {
         if( n > cap_ )
@@ -252,6 +315,7 @@ class list<T>
         }
     }
 
+    /// Reduces the capacity to the number of elements, freeing the block if there are none.
     public void shrink_to_fit()
     {
         if( count_ == cap_ )
@@ -273,6 +337,7 @@ class list<T>
         reallocate( count_ );
     }
 
+    /// Drops every element; the capacity is kept.
     public void clear()
     {
         unsafe
@@ -282,6 +347,7 @@ class list<T>
         count_ = 0;
     }
 
+    /// Moves the elements into a new block of `n` slots and frees the old one.
     private void reallocate( u64 n )
     {
         T[*] new_data;
@@ -311,6 +377,7 @@ class list<T>
         cap_ = n;
     }
 
+    /// Doubles the capacity if the list is full, or makes it 1 if it is 0.
     private void reallocate_if_needed()
     {
         if( count_ == cap_ )
@@ -319,6 +386,7 @@ class list<T>
         }
     }
 
+    // Slots below `count_` are live, the rest are raw.
     private T[*] data_;
     private u64 count_;
     private u64 cap_;

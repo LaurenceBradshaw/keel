@@ -1,14 +1,18 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+/// Two values, of possibly different types, held together.
 class pair<A, B>
 {
+    /// A pair holding `a` and `b`.
     pair( move A a, move B b )
     {
         first  = move a;
         second = move b;
     }
 
+    /// The first value.
     public A first;
+    /// The second value.
     public B second;
 };

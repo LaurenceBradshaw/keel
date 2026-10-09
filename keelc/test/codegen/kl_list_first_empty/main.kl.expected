@@ -50,11 +50,11 @@ int32_t kl__main__( void )
 
 void kl_2kl_list__I3i32E__RQ2kl4listI3i32E__ctor( struct kl_2kl_list__I3i32E* kl_this_1 )
 {
-#line 11 "../../keel_stl/src/list.kl"
+#line 15 "../../keel_stl/src/list.kl"
     ( *kl_this_1 ).kl_data__819 = NULL;
-#line 12 "../../keel_stl/src/list.kl"
+#line 16 "../../keel_stl/src/list.kl"
     ( *kl_this_1 ).kl_count__821 = 0;
-#line 13 "../../keel_stl/src/list.kl"
+#line 17 "../../keel_stl/src/list.kl"
     ( *kl_this_1 ).kl_cap__823 = 0;
     return;
 }
@@ -65,27 +65,27 @@ int32_t* kl_2kl_first__I3i32E__SQ2kl4listI3i32E( struct kl_2kl_list__I3i32E* kl_
     bool kl_t2;
     int32_t* kl_t3;
     int32_t* kl_t4;
-#line 125 "../../keel_stl/src/list.kl"
+#line 150 "../../keel_stl/src/list.kl"
     kl_t2 = ( *kl_this_1 ).kl_count__821 > 0;
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
-#line 129 "../../keel_stl/src/list.kl"
+#line 154 "../../keel_stl/src/list.kl"
     kl_t3 = ( *kl_this_1 ).kl_data__819 + 0;
     kl_t4 = &( *kl_t3 );
     kl_t0 = kl_t4;
     return kl_t0;
     bb2:
-    kl_rt_panic( "../../keel_stl/src/list.kl", 125, "assertion failed: count_ > 0" );
+    kl_rt_panic( "../../keel_stl/src/list.kl", 150, "assertion failed: count_ > 0" );
 }
 
 void kl_2kl_list__I3i32E__dtor( struct kl_2kl_list__I3i32E* kl_this_1 )
 {
     bool kl_t2;
-#line 32 "../../keel_stl/src/list.kl"
+#line 37 "../../keel_stl/src/list.kl"
     kl_t2 = ( *kl_this_1 ).kl_data__819 != NULL;
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
-#line 37 "../../keel_stl/src/list.kl"
+#line 42 "../../keel_stl/src/list.kl"
     kl_rt_free( ( *kl_this_1 ).kl_data__819 );
     goto bb2;
     bb2:

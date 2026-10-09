@@ -4,20 +4,29 @@
 import list;
 import optional;
 
+/// Why `string::parse_i64` refused its text.
 enum parse_error
 {
+    /// There are no digits: the text is empty, or only `-`.
     no_digits,
+    /// The byte at `index` cannot continue the number.
     invalid_digit( u64 index ),
+    /// The number lies outside the range of `i64`.
     overflow
 };
 
+/// A growable sequence of bytes that owns its storage.
+///
+/// The bytes are not checked to be UTF-8, and every index and size counts bytes.
 class string
 {
+    /// An empty string.
     string() 
     {
         bytes_ = list<u8>();
     }
 
+    /// A string holding a copy of the bytes of `text`.
     string( str text )
     {
         bytes_ = list<u8>::with_capacity( text.size );
@@ -30,6 +39,7 @@ class string
         }
     }
 
+    /// An empty string with room for `capacity` bytes before it reallocates.
     public static string with_capacity( u64 capacity )
     {
         string result = string();
@@ -37,6 +47,7 @@ class string
         return result;
     }
 
+    /// `value` written in decimal, with no leading zeros.
     public static string from( u64 value )
     {
         if( value == 0 )
@@ -56,6 +67,7 @@ class string
         return result;
     }
 
+    /// `value` written in decimal, with a leading `-` if it is negative and no leading zeros.
     public static string from( i64 value )
     {
         if( value >= 0 )
@@ -71,6 +83,15 @@ class string
         return result;
     }
 
+    /// The `i64` the string writes in decimal.
+    ///
+    /// The text is an optional `-` and then one or more digits `0` to `9`, which may have leading
+    /// zeros. Nothing else is read: not a `+`, whitespace or a separator.
+    ///
+    /// # Errors
+    ///
+    /// `no_digits` if there are no digits, `invalid_digit` naming the first byte that cannot continue
+    /// the number, and `overflow` as soon as the number leaves the range of `i64`.
     public result<i64, parse_error> parse_i64() const
     {
         const bool is_negative = !is_empty() && bytes_[0] == 45; // '-'
@@ -104,16 +125,23 @@ class string
         return result::ok( is_negative ? wrap<i64>( 0 - magnitude ) : cast<i64>( magnitude ) );
     }
 
+    /// Adds the byte `value` at the end.
     public void push( u8 value )
     {
         bytes_.push( value );
     }
 
+    /// Removes the last byte and returns it.
+    ///
+    /// # Panics
+    ///
+    /// If the string is empty.
     public u8 pop()
     {
         return bytes_.pop();
     }
 
+    /// Adds a copy of every byte of `other` at the end.
     public void append( const ref string other )
     {
         for( u64 i = 0; i < other.size(); i++ )
@@ -122,26 +150,35 @@ class string
         }
     }
 
+    /// Removes every byte and releases the storage.
     public void clear()
     {
         bytes_ = list<u8>();
     }
 
+    /// A pointer to the byte at `index`.
+    ///
+    /// # Panics
+    ///
+    /// If `index` is not less than `size()`.
     public const u8* operator[]( u64 index ) const
     {
         return &bytes_[index];
     }
 
+    /// The number of bytes.
     public u64 size() const
     {
         return bytes_.size();
     }
 
+    /// Whether the string holds no bytes.
     public bool is_empty() const
     {
         return bytes_.is_empty();
     }
 
+    /// Whether both strings hold the same bytes in the same order.
     public bool operator==( const ref string other ) const
     {
         if( size() != other.size() )
@@ -160,11 +197,13 @@ class string
         return true;
     }
 
+    /// Whether the string begins with the bytes of `prefix`; every string begins with `""`.
     public bool starts_with( str prefix ) const
     {
         return matches_at( 0, prefix );
     }
 
+    /// Whether the string ends with the bytes of `suffix`; every string ends with `""`.
     public bool ends_with( str suffix ) const
     {
         if( suffix.size > size() )
@@ -175,6 +214,7 @@ class string
         return matches_at( size() - suffix.size, suffix );
     }
 
+    /// The index of the first place `needle` occurs, or `none`. `""` is found at 0.
     public optional<u64> find( str needle ) const
     {
         if( needle.size > size() )
@@ -193,6 +233,11 @@ class string
         return optional::none;
     }
 
+    /// A new string holding the `count` bytes from index `start` on.
+    ///
+    /// # Panics
+    ///
+    /// If those bytes do not all lie within the string.
     public string substring( u64 start, u64 count ) const
     {
         assert( start <= size() );
@@ -207,6 +252,7 @@ class string
         return result;
     }
 
+    /// Whether the bytes of `text` occur at index `at`.
     private bool matches_at( u64 at, str text ) const
     {
         if( at + text.size > size() )

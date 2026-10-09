@@ -945,18 +945,18 @@ struct kl__owned kl_2kl_unwrap__I5ownedE__MQ2kl8optionalI5ownedE( struct kl_2kl_
     bool kl_t10;
     bool kl_t11;
     bool kl_t12;
-#line 10 "../../keel_stl/src/optional.kl"
+#line 18 "../../keel_stl/src/optional.kl"
     kl_t10 = true;
-#line 12 "../../keel_stl/src/optional.kl"
+#line 20 "../../keel_stl/src/optional.kl"
     kl_t11 = false;
-#line 14 "../../keel_stl/src/optional.kl"
+#line 22 "../../keel_stl/src/optional.kl"
     kl_t12 = false;
-#line 12 "../../keel_stl/src/optional.kl"
+#line 20 "../../keel_stl/src/optional.kl"
     kl_t11 = false;
     kl_t2 = kl_o_1;
     kl_t10 = false;
     kl_t11 = true;
-#line 14 "../../keel_stl/src/optional.kl"
+#line 22 "../../keel_stl/src/optional.kl"
     kl_t3 = kl_t2.tag == 0;
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
@@ -965,7 +965,7 @@ struct kl__owned kl_2kl_unwrap__I5ownedE__MQ2kl8optionalI5ownedE( struct kl_2kl_
     kl_t12 = false;
     kl_v_5 = kl_t4.kl_value_648;
     kl_t12 = true;
-#line 15 "../../keel_stl/src/optional.kl"
+#line 23 "../../keel_stl/src/optional.kl"
     kl_t0 = kl_v_5;
     kl_t12 = false;
     if ( kl_t12 ) kl__owned__dtor( &kl_v_5 );
@@ -976,11 +976,11 @@ struct kl__owned kl_2kl_unwrap__I5ownedE__MQ2kl8optionalI5ownedE( struct kl_2kl_
     kl_t10 = false;
     return kl_t0;
     bb2:
-#line 17 "../../keel_stl/src/optional.kl"
+#line 25 "../../keel_stl/src/optional.kl"
     kl_t7 = &kl_t6;
     kl_t8 = ( uint8_t* ) "unwrap on an empty optional";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t7, kl_t8, 27 );
-    kl_rt_panic_message( "../../keel_stl/src/optional.kl", 17, kl_t6.kl_data_823, kl_t6.kl_size_826 );
+    kl_rt_panic_message( "../../keel_stl/src/optional.kl", 25, kl_t6.kl_data_823, kl_t6.kl_size_826 );
 }
 
 struct kl__owned kl_2kl_expect__I5ownedE__MQ2kl8optionalI5ownedE_Q7prelude3str( struct kl_2kl_optional__I5ownedE kl_o_1, struct kl_7prelude_str kl_message_2 )
@@ -993,18 +993,18 @@ struct kl__owned kl_2kl_expect__I5ownedE__MQ2kl8optionalI5ownedE_Q7prelude3str( 
     bool kl_t7;
     bool kl_t8;
     bool kl_t9;
-#line 21 "../../keel_stl/src/optional.kl"
+#line 34 "../../keel_stl/src/optional.kl"
     kl_t7 = true;
-#line 23 "../../keel_stl/src/optional.kl"
+#line 36 "../../keel_stl/src/optional.kl"
     kl_t8 = false;
-#line 25 "../../keel_stl/src/optional.kl"
+#line 38 "../../keel_stl/src/optional.kl"
     kl_t9 = false;
-#line 23 "../../keel_stl/src/optional.kl"
+#line 36 "../../keel_stl/src/optional.kl"
     kl_t8 = false;
     kl_t3 = kl_o_1;
     kl_t7 = false;
     kl_t8 = true;
-#line 25 "../../keel_stl/src/optional.kl"
+#line 38 "../../keel_stl/src/optional.kl"
     kl_t4 = kl_t3.tag == 0;
     if ( kl_t4 ) goto bb1; else goto bb2;
     bb1:
@@ -1013,7 +1013,7 @@ struct kl__owned kl_2kl_expect__I5ownedE__MQ2kl8optionalI5ownedE_Q7prelude3str( 
     kl_t9 = false;
     kl_v_6 = kl_t5.kl_value_648;
     kl_t9 = true;
-#line 26 "../../keel_stl/src/optional.kl"
+#line 39 "../../keel_stl/src/optional.kl"
     kl_t0 = kl_v_6;
     kl_t9 = false;
     if ( kl_t9 ) kl__owned__dtor( &kl_v_6 );
@@ -1024,7 +1024,7 @@ struct kl__owned kl_2kl_expect__I5ownedE__MQ2kl8optionalI5ownedE_Q7prelude3str( 
     kl_t7 = false;
     return kl_t0;
     bb2:
-    kl_rt_panic_message( "../../keel_stl/src/optional.kl", 28, kl_message_2.kl_data_823, kl_message_2.kl_size_826 );
+    kl_rt_panic_message( "../../keel_stl/src/optional.kl", 41, kl_message_2.kl_data_823, kl_message_2.kl_size_826 );
 }
 
 struct kl__owned kl_2kl_value_or__I5ownedE__MQ2kl8optionalI5ownedE_M5owned( struct kl_2kl_optional__I5ownedE kl_o_1, struct kl__owned kl_fallback_2 )
@@ -1038,19 +1038,19 @@ struct kl__owned kl_2kl_value_or__I5ownedE__MQ2kl8optionalI5ownedE_M5owned( stru
     bool kl_t8;
     bool kl_t9;
     bool kl_t10;
-#line 32 "../../keel_stl/src/optional.kl"
+#line 46 "../../keel_stl/src/optional.kl"
     kl_t7 = true;
     kl_t8 = true;
-#line 34 "../../keel_stl/src/optional.kl"
+#line 48 "../../keel_stl/src/optional.kl"
     kl_t9 = false;
-#line 36 "../../keel_stl/src/optional.kl"
+#line 50 "../../keel_stl/src/optional.kl"
     kl_t10 = false;
-#line 34 "../../keel_stl/src/optional.kl"
+#line 48 "../../keel_stl/src/optional.kl"
     kl_t9 = false;
     kl_t3 = kl_o_1;
     kl_t7 = false;
     kl_t9 = true;
-#line 36 "../../keel_stl/src/optional.kl"
+#line 50 "../../keel_stl/src/optional.kl"
     kl_t4 = kl_t3.tag == 0;
     if ( kl_t4 ) goto bb1; else goto bb2;
     bb1:
@@ -1059,7 +1059,7 @@ struct kl__owned kl_2kl_value_or__I5ownedE__MQ2kl8optionalI5ownedE_M5owned( stru
     kl_t10 = false;
     kl_v_6 = kl_t5.kl_value_648;
     kl_t10 = true;
-#line 37 "../../keel_stl/src/optional.kl"
+#line 51 "../../keel_stl/src/optional.kl"
     kl_t0 = kl_v_6;
     kl_t10 = false;
     if ( kl_t10 ) kl__owned__dtor( &kl_v_6 );
@@ -1072,7 +1072,7 @@ struct kl__owned kl_2kl_value_or__I5ownedE__MQ2kl8optionalI5ownedE_M5owned( stru
     kl_t7 = false;
     return kl_t0;
     bb2:
-#line 39 "../../keel_stl/src/optional.kl"
+#line 53 "../../keel_stl/src/optional.kl"
     kl_t0 = kl_fallback_2;
     kl_t8 = false;
     if ( kl_t9 ) kl_2kl_optional__I5ownedE__dtor( &kl_t3 );
@@ -1090,16 +1090,16 @@ bool kl_2kl_is_some__I5ownedE__Q2kl8optionalI5ownedE( struct kl_2kl_optional__I5
     bool kl_t2;
     struct kl__owned* kl_v_3;
     ( void ) kl_v_3;
-#line 47 "../../keel_stl/src/optional.kl"
+#line 62 "../../keel_stl/src/optional.kl"
     kl_t2 = ( *kl_o_1 ).tag == 0;
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
     kl_v_3 = &( *kl_o_1 ).kl_value_648;
-#line 48 "../../keel_stl/src/optional.kl"
+#line 63 "../../keel_stl/src/optional.kl"
     kl_t0 = true;
     return kl_t0;
     bb2:
-#line 50 "../../keel_stl/src/optional.kl"
+#line 65 "../../keel_stl/src/optional.kl"
     kl_t0 = false;
     return kl_t0;
 }
@@ -1110,16 +1110,16 @@ bool kl_2kl_is_none__I5ownedE__Q2kl8optionalI5ownedE( struct kl_2kl_optional__I5
     bool kl_t2;
     struct kl__owned* kl_v_3;
     ( void ) kl_v_3;
-#line 58 "../../keel_stl/src/optional.kl"
+#line 74 "../../keel_stl/src/optional.kl"
     kl_t2 = ( *kl_o_1 ).tag == 0;
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
     kl_v_3 = &( *kl_o_1 ).kl_value_648;
-#line 59 "../../keel_stl/src/optional.kl"
+#line 75 "../../keel_stl/src/optional.kl"
     kl_t0 = false;
     return kl_t0;
     bb2:
-#line 61 "../../keel_stl/src/optional.kl"
+#line 77 "../../keel_stl/src/optional.kl"
     kl_t0 = true;
     return kl_t0;
 }
@@ -1132,20 +1132,20 @@ int32_t kl_2kl_unwrap__I3i32E__MQ2kl8optionalI3i32E( struct kl_2kl_optional__I3i
     struct kl_7prelude_str kl_t4;
     struct kl_7prelude_str* kl_t5;
     uint8_t* kl_t6;
-#line 14 "../../keel_stl/src/optional.kl"
+#line 22 "../../keel_stl/src/optional.kl"
     kl_t2 = kl_o_1.tag == 0;
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
     kl_v_3 = kl_o_1.kl_value_648;
-#line 15 "../../keel_stl/src/optional.kl"
+#line 23 "../../keel_stl/src/optional.kl"
     kl_t0 = kl_v_3;
     return kl_t0;
     bb2:
-#line 17 "../../keel_stl/src/optional.kl"
+#line 25 "../../keel_stl/src/optional.kl"
     kl_t5 = &kl_t4;
     kl_t6 = ( uint8_t* ) "unwrap on an empty optional";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 27 );
-    kl_rt_panic_message( "../../keel_stl/src/optional.kl", 17, kl_t4.kl_data_823, kl_t4.kl_size_826 );
+    kl_rt_panic_message( "../../keel_stl/src/optional.kl", 25, kl_t4.kl_data_823, kl_t4.kl_size_826 );
 }
 
 int32_t kl_2kl_expect__I3i32E__MQ2kl8optionalI3i32E_Q7prelude3str( struct kl_2kl_optional__I3i32E kl_o_1, struct kl_7prelude_str kl_message_2 )
@@ -1153,16 +1153,16 @@ int32_t kl_2kl_expect__I3i32E__MQ2kl8optionalI3i32E_Q7prelude3str( struct kl_2kl
     int32_t kl_t0;
     bool kl_t3;
     int32_t kl_v_4;
-#line 25 "../../keel_stl/src/optional.kl"
+#line 38 "../../keel_stl/src/optional.kl"
     kl_t3 = kl_o_1.tag == 0;
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
     kl_v_4 = kl_o_1.kl_value_648;
-#line 26 "../../keel_stl/src/optional.kl"
+#line 39 "../../keel_stl/src/optional.kl"
     kl_t0 = kl_v_4;
     return kl_t0;
     bb2:
-    kl_rt_panic_message( "../../keel_stl/src/optional.kl", 28, kl_message_2.kl_data_823, kl_message_2.kl_size_826 );
+    kl_rt_panic_message( "../../keel_stl/src/optional.kl", 41, kl_message_2.kl_data_823, kl_message_2.kl_size_826 );
 }
 
 int32_t kl_2kl_value_or__I3i32E__MQ2kl8optionalI3i32E_M3i32( struct kl_2kl_optional__I3i32E kl_o_1, int32_t kl_fallback_2 )
@@ -1170,16 +1170,16 @@ int32_t kl_2kl_value_or__I3i32E__MQ2kl8optionalI3i32E_M3i32( struct kl_2kl_optio
     int32_t kl_t0;
     bool kl_t3;
     int32_t kl_v_4;
-#line 36 "../../keel_stl/src/optional.kl"
+#line 50 "../../keel_stl/src/optional.kl"
     kl_t3 = kl_o_1.tag == 0;
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
     kl_v_4 = kl_o_1.kl_value_648;
-#line 37 "../../keel_stl/src/optional.kl"
+#line 51 "../../keel_stl/src/optional.kl"
     kl_t0 = kl_v_4;
     return kl_t0;
     bb2:
-#line 39 "../../keel_stl/src/optional.kl"
+#line 53 "../../keel_stl/src/optional.kl"
     kl_t0 = kl_fallback_2;
     return kl_t0;
 }
@@ -1190,16 +1190,16 @@ bool kl_2kl_is_none__I3i32E__Q2kl8optionalI3i32E( struct kl_2kl_optional__I3i32E
     bool kl_t2;
     int32_t kl_v_3;
     ( void ) kl_v_3;
-#line 58 "../../keel_stl/src/optional.kl"
+#line 74 "../../keel_stl/src/optional.kl"
     kl_t2 = ( *kl_o_1 ).tag == 0;
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
     kl_v_3 = ( *kl_o_1 ).kl_value_648;
-#line 59 "../../keel_stl/src/optional.kl"
+#line 75 "../../keel_stl/src/optional.kl"
     kl_t0 = false;
     return kl_t0;
     bb2:
-#line 61 "../../keel_stl/src/optional.kl"
+#line 77 "../../keel_stl/src/optional.kl"
     kl_t0 = true;
     return kl_t0;
 }
@@ -1207,7 +1207,7 @@ bool kl_2kl_is_none__I3i32E__Q2kl8optionalI3i32E( struct kl_2kl_optional__I3i32E
 void kl_2kl_optional__I5ownedE__dtor( struct kl_2kl_optional__I5ownedE* kl_t1 )
 {
     bool kl_t2;
-#line 4 "../../keel_stl/src/optional.kl"
+#line 5 "../../keel_stl/src/optional.kl"
     kl_t2 = ( *kl_t1 ).tag == 0;
     if ( kl_t2 ) goto bb2; else goto bb1;
     bb1:

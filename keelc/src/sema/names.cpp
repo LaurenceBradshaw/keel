@@ -50,6 +50,7 @@ private:
     std::optional<Name_kind> declaration_kind( Node_id decl ) const;
     Node_id                  member_named( Node_id type, Symbol_id name ) const;
     Node_id                  member_after_dot( Node_id id ) const;
+    Node_id                  chosen( Node_id use, Node_id found ) const;
     Span                     name_span( Node_id id ) const;
     Span                     declared_name_span( Node_id decl ) const;
     bool                     is_qualified( Node_id id ) const;
@@ -61,7 +62,7 @@ private:
     const Interner&       interner_;
 
     std::unordered_set<u32>          top_level_;
-    std::unordered_map<u32, Node_id> called_; // a call's `.callee`, to the overload the checker chose
+    std::unordered_map<u32, Node_id> called_; // a call's callee, to the callable the checker chose
 };
 
 std::vector<Name> Name_collector::run()
@@ -77,7 +78,7 @@ std::vector<Name> Name_collector::run()
     {
         const Node_id id { i };
 
-        if( ast_.kind( id ) == Node_kind::Call_expr && ast_.kind( ast_.callee( id ) ) == Node_kind::Field_expr )
+        if( ast_.kind( id ) == Node_kind::Call_expr )
         {
             called_.emplace( ast_.callee( id ).v, types_.callee_of( id ) );
         }
@@ -125,7 +126,7 @@ Node_id Name_collector::referent( Node_id id ) const
     switch( ast_.kind( id ) )
     {
     case Node_kind::Name_expr:
-        return ast_.name( id ) == Interner::keyword( Keyword::This ) ? Node_id {} : decl;
+        return ast_.name( id ) == Interner::keyword( Keyword::This ) ? Node_id {} : chosen( id, decl );
     case Node_kind::Named_type:
     case Node_kind::Struct_literal:
         return decl;
@@ -133,12 +134,12 @@ Node_id Name_collector::referent( Node_id id ) const
     {
         if( decl.is_valid() )
         {
-            return decl;
+            return chosen( id, decl );
         }
 
         // `Colour::Red` and `Buffer::of`: the checker binds these, so the type is asked here.
         const Node_id type = resolution_.declaration_of( ast_.qualifier( id ) );
-        return type.is_valid() ? member_named( type, ast_.name( id ) ) : Node_id {};
+        return type.is_valid() ? chosen( id, member_named( type, ast_.name( id ) ) ) : Node_id {};
     }
     case Node_kind::Field_expr:
         return member_after_dot( id );
@@ -153,11 +154,6 @@ Node_id Name_collector::referent( Node_id id ) const
 // `p.x` or `p.area()`, through a pointer as `.` reaches: the object's type says whose member it is.
 Node_id Name_collector::member_after_dot( Node_id id ) const
 {
-    if( const auto call = called_.find( id.v ); call != called_.end() && call->second.is_valid() )
-    {
-        return call->second;
-    }
-
     Type_id type = types_.type_of( ast_.object( id ) );
 
     if( !type.is_valid() )
@@ -171,7 +167,21 @@ Node_id Name_collector::member_after_dot( Node_id id ) const
     }
 
     const Node_id aggregate = types_.table().get( type ).declaration;
-    return aggregate.is_valid() ? member_named( aggregate, ast_.name( id ) ) : Node_id {};
+    return aggregate.is_valid() ? chosen( id, member_named( aggregate, ast_.name( id ) ) ) : Node_id {};
+}
+
+// A callee found by name is the first of its overload set; the checker's choice replaces it. Only a
+// function's or method's: a constructor call names its type, and a call through a pointer its variable.
+Node_id Name_collector::chosen( Node_id use, Node_id found ) const
+{
+    if( !found.is_valid() ||
+        ( ast_.kind( found ) != Node_kind::Function_decl && ast_.kind( found ) != Node_kind::Method_decl ) )
+    {
+        return found;
+    }
+
+    const auto call = called_.find( use.v );
+    return call != called_.end() && call->second.is_valid() ? call->second : found;
 }
 
 std::optional<Name_kind> Name_collector::declaration_kind( Node_id decl ) const
@@ -489,6 +499,43 @@ TEST_CASE( "names_fields_and_methods_after_a_dot", "[sema][names]" )
         REQUIRE( has( names, fmt::format( "x@{}->{}", p_x, x ) ) );
         REQUIRE( has( names, fmt::format( "x@{}->{}", q_x, x ) ) );
         REQUIRE( has( names, fmt::format( "add@{}->{}", call, add2 ) ) );
+    }
+}
+
+// Every spelling of a call names the overload the checker chose, never the first one declared.
+TEST_CASE( "names_point_at_the_overload_chosen", "[sema][names]" )
+{
+    constexpr std::string_view source = "i32 f( i64 v ) { return 1; }\n"
+                                        "i32 f( bool v ) { return 2; }\n"
+                                        "struct N\n"
+                                        "{\n"
+                                        "    i32 x;\n"
+                                        "    static i32 g( i64 v ) { return 1; }\n"
+                                        "    static i32 g( bool v ) { return 2; }\n"
+                                        "    i32 h() const { return g( true ); }\n"
+                                        "};\n"
+                                        "i32 main() { return f( true ) + N::g( true ); }\n";
+
+    const auto names = named( source, true );
+    const auto at    = [&]( std::string_view text, std::size_t skip = 0 )
+    { return static_cast<u32>( source.find( text ) + skip ); };
+
+    const u32 f_bool = at( "f( bool v )" );
+    const u32 g_bool = at( "g( bool v )" );
+
+    SECTION( "a free function" )
+    {
+        REQUIRE( has( names, fmt::format( "f@{}->{}", at( "f( true )" ), f_bool ) ) );
+    }
+
+    SECTION( "a static method through its type" )
+    {
+        REQUIRE( has( names, fmt::format( "g@{}->{}", at( "N::g( true )", 3 ), g_bool ) ) );
+    }
+
+    SECTION( "a bare sibling call in a method" )
+    {
+        REQUIRE( has( names, fmt::format( "g@{}->{}", at( "g( true ); }" ), g_bool ) ) );
     }
 }
 

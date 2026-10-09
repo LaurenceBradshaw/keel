@@ -1,12 +1,20 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+/// A value of type `T`, or nothing.
 enum optional<T>
 {
+    /// Holds a value.
     some( T value ),
+    /// Holds nothing.
     none
 };
 
+/// The value `o` holds.
+///
+/// # Panics
+///
+/// If `o` is `none`.
 T unwrap<T>( move optional<T> o )
 {
     switch( move o )
@@ -18,6 +26,11 @@ T unwrap<T>( move optional<T> o )
     }
 }
 
+/// The value `o` holds.
+///
+/// # Panics
+///
+/// If `o` is `none`, with `message`.
 T expect<T>( move optional<T> o, str message )
 {
     switch( move o )
@@ -29,6 +42,7 @@ T expect<T>( move optional<T> o, str message )
     }
 }
 
+/// The value `o` holds, or `fallback` if it is `none`. An unused `fallback` is dropped.
 T value_or<T>( move optional<T> o, move T fallback )
 {
     switch( move o )
@@ -40,6 +54,7 @@ T value_or<T>( move optional<T> o, move T fallback )
     }
 }
 
+/// Whether `o` holds a value.
 bool is_some<T>( const ref optional<T> o )
 {
     switch( o )
@@ -51,6 +66,7 @@ bool is_some<T>( const ref optional<T> o )
     }
 }
 
+/// Whether `o` holds nothing.
 bool is_none<T>( const ref optional<T> o )
 {
     switch( o )

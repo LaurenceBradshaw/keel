@@ -1,2 +1,2 @@
 looking
-../../keel_stl/src/list.kl:125: assertion failed: count_ > 0
+../../keel_stl/src/list.kl:150: assertion failed: count_ > 0
