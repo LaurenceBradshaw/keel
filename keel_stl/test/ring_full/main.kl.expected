@@ -106,16 +106,18 @@ struct kl_2kl_ring__I3i32E kl_2kl_with_capacity__I3i32E__SQ2kl4ringI3i32E_3u64( 
 void kl_2kl_push_back__I3i32E__SQ2kl4ringI3i32E_M3i32( struct kl_2kl_ring__I3i32E* kl_this_1, int32_t kl_value_2 )
 {
     bool kl_t3;
-    uint64_t kl_t4;
-    int32_t* kl_t5;
+    struct kl_2kl_ring__I3i32E* kl_t4;
+    uint64_t kl_t5;
+    int32_t* kl_t6;
 #line 52 "../src/ring.kl"
     kl_t3 = ( *kl_this_1 ).kl_count__810 < ( *kl_this_1 ).kl_cap__812;
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
 #line 56 "../src/ring.kl"
-    kl_t4 = kl_2kl_slot__I3i32E__SQ2kl4ringI3i32E_3u64( kl_this_1, ( *kl_this_1 ).kl_count__810 );
-    kl_t5 = ( *kl_this_1 ).kl_data__806 + kl_t4;
-    ( *kl_t5 ) = kl_value_2;
+    kl_t4 = &( *kl_this_1 );
+    kl_t5 = kl_2kl_slot__I3i32E__SQ2kl4ringI3i32E_3u64( kl_t4, ( *kl_this_1 ).kl_count__810 );
+    kl_t6 = ( *kl_this_1 ).kl_data__806 + kl_t5;
+    ( *kl_t6 ) = kl_value_2;
 #line 58 "../src/ring.kl"
     ( *kl_this_1 ).kl_count__810 = ( *kl_this_1 ).kl_count__810 + 1;
     return;
@@ -126,16 +128,18 @@ void kl_2kl_push_back__I3i32E__SQ2kl4ringI3i32E_M3i32( struct kl_2kl_ring__I3i32
 void kl_2kl_push_front__I3i32E__SQ2kl4ringI3i32E_M3i32( struct kl_2kl_ring__I3i32E* kl_this_1, int32_t kl_value_2 )
 {
     bool kl_t3;
-    int32_t* kl_t5;
+    struct kl_2kl_ring__I3i32E* kl_t4;
+    int32_t* kl_t6;
 #line 68 "../src/ring.kl"
     kl_t3 = ( *kl_this_1 ).kl_count__810 < ( *kl_this_1 ).kl_cap__812;
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
 #line 70 "../src/ring.kl"
-    kl_2kl_retreat_head__I3i32E__SQ2kl4ringI3i32E( kl_this_1 );
+    kl_t4 = &( *kl_this_1 );
+    kl_2kl_retreat_head__I3i32E__SQ2kl4ringI3i32E( kl_t4 );
 #line 74 "../src/ring.kl"
-    kl_t5 = ( *kl_this_1 ).kl_data__806 + ( *kl_this_1 ).kl_head__808;
-    ( *kl_t5 ) = kl_value_2;
+    kl_t6 = ( *kl_this_1 ).kl_data__806 + ( *kl_this_1 ).kl_head__808;
+    ( *kl_t6 ) = kl_value_2;
 #line 76 "../src/ring.kl"
     ( *kl_this_1 ).kl_count__810 = ( *kl_this_1 ).kl_count__810 + 1;
     return;
@@ -155,8 +159,10 @@ bool kl_2kl_is_full__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl_ring__I3i32E* kl_th
 
 void kl_2kl_ring__I3i32E__dtor( struct kl_2kl_ring__I3i32E* kl_this_1 )
 {
+    struct kl_2kl_ring__I3i32E* kl_t2;
 #line 40 "../src/ring.kl"
-    kl_2kl_destroy_live__I3i32E__SQ2kl4ringI3i32E( kl_this_1 );
+    kl_t2 = &( *kl_this_1 );
+    kl_2kl_destroy_live__I3i32E__SQ2kl4ringI3i32E( kl_t2 );
 #line 41 "../src/ring.kl"
     kl_rt_free( ( *kl_this_1 ).kl_data__806 );
     return;

@@ -1,0 +1,167 @@
+// D54: a callee borrows through one parameter and changes another, so a call may not pass one
+// object to both when either may change it.
+class Buf
+{
+    u64* data;
+
+    Buf( u64 n )
+    {
+        unsafe { data = alloc<u64>(); }
+        *data = n;
+    }
+
+    ~Buf()
+    {
+        unsafe { free( data ); }
+    }
+
+    u64 get() const
+    {
+        return *data;
+    }
+};
+
+enum Holder
+{
+    Full( Buf b ),
+    Empty
+};
+
+class buffer
+{
+    buffer()
+    {
+        unsafe { data = alloc<i32>( 4 ); data[0] = 1; }
+    }
+
+    ~buffer()
+    {
+        unsafe { free( data ); }
+    }
+
+    public i32* operator[]( u64 index ) const
+    {
+        unsafe { return &data[index]; }
+    }
+
+    public void grow()
+    {
+        unsafe { free( data ); data = alloc<i32>( 4 ); data[0] = 2; }
+    }
+
+    private i32[*] data;
+};
+
+class M
+{
+    public buffer inner;
+
+    M()
+    {
+        inner = buffer();
+    }
+
+    i32 borrow_then_grow( ref M other )
+    {
+        ref i32 x = inner[0];
+        other.inner.grow();
+        return x;
+    }
+};
+
+u64 match_then_assign( ref Holder a, ref Holder b )
+{
+    switch( a )
+    {
+        case Holder::Full( x ):
+            b = Holder::Empty;
+            return x.get();
+        case Holder::Empty:
+            return 0;
+    }
+}
+
+i32 borrow_then_grow( ref buffer a, ref buffer b )
+{
+    ref i32 x = a[0];
+    b.grow();
+    return x;
+}
+
+void grow_it( ref buffer b )
+{
+    b.grow();
+}
+
+i32 borrow_then_lend( ref buffer a, ref buffer b )
+{
+    ref i32 x = a[0];
+    grow_it( ref b );
+    return x;
+}
+
+u64 same_holder_twice()
+{
+    Holder h = Holder::Full( Buf( 1 ) );
+    return match_then_assign( ref h, ref h );
+}
+
+i32 same_buffer_twice()
+{
+    buffer v = buffer();
+    return borrow_then_grow( ref v, ref v );
+}
+
+i32 buffer_and_alias()
+{
+    buffer v = buffer();
+    ref buffer r = v;
+    return borrow_then_lend( ref v, ref r );
+}
+
+i32 receiver_and_alias()
+{
+    M m = M();
+    ref M r = m;
+    return m.borrow_then_grow( ref r );
+}
+
+// Accepted: neither argument can change.
+i32 both_const( const ref buffer a, const ref buffer b )
+{
+    return a[0] + b[0];
+}
+
+i32 same_buffer_twice_const()
+{
+    buffer v = buffer();
+    return both_const( v, v );
+}
+
+// Accepted: `x` owns nothing, so neither name can free what the other reaches.
+class Counter
+{
+    public i32 x;
+
+    Counter()
+    {
+        x = 0;
+    }
+
+    void add( const ref i32 by )
+    {
+        x = x + by;
+    }
+};
+
+i32 self_add()
+{
+    Counter c = Counter();
+    c.add( c.x );
+    return c.x;
+}
+
+i32 main()
+{
+    return 0;
+}

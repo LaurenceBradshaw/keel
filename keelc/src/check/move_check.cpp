@@ -274,8 +274,11 @@ void find_moves_into_borrowing_calls(
 }
 
 // D54: each borrowed argument is a loan for the whole call, so an element may not travel beside a
-// borrow of its whole that could change it, and one place may not be `out` twice.
-void find_aliased_arguments( const Function& func, const std::vector<Borrow>& borrows, std::vector<Move_error>& errors )
+// borrow of its whole that could change it, one place may not be `out` twice, and one object may
+// not travel under two names when the call could change it.
+void find_aliased_arguments(
+    const Function& func, const std::vector<Borrow>& borrows, const std::vector<bool>& owning, std::vector<Move_error>& errors
+)
 {
     const auto borrow_of = [&]( const Operand& operand ) -> const Borrow*
     {
@@ -311,6 +314,17 @@ void find_aliased_arguments( const Function& func, const std::vector<Borrow>& bo
                 if( i == j || a == nullptr || b == nullptr )
                 {
                     continue;
+                }
+
+                // Only an owner can be freed under the other name, so `v.grow( v.x )` is accepted.
+                if( i < j && a->of.is_valid() && b->of.is_valid() && overlaps( func, a->place, b->place ) &&
+                    owning[arguments[i].place.local.v] && owning[arguments[j].place.local.v] &&
+                    ( a->purpose != Address_purpose::Read || b->purpose != Address_purpose::Read ) &&
+                    a->purpose != Address_purpose::Initialise && b->purpose != Address_purpose::Initialise )
+                {
+                    errors.push_back(
+                        Move_error { .local = b->of, .use = b->at, .conflict = Call_conflict::Aliased, .other = a->at }
+                    );
                 }
 
                 // Reported at the later of the two.
@@ -353,7 +367,7 @@ Flow entry_flow( const Function& func )
 
 } // namespace
 
-std::vector<Move_error> check_moves( const Function& func )
+std::vector<Move_error> check_moves( const Function& func, const std::vector<bool>& owning )
 {
     const Flow bottom = {
         std::vector<State>( func.locals.size(), State::Uninitialised ), std::vector<Span>( func.locals.size(), Span {} )
@@ -402,7 +416,7 @@ std::vector<Move_error> check_moves( const Function& func )
     }
 
     find_moves_into_borrowing_calls( func, borrows, errors );
-    find_aliased_arguments( func, borrows, errors );
+    find_aliased_arguments( func, borrows, owning, errors );
 
     return errors;
 }
@@ -412,6 +426,7 @@ std::vector<Move_error> check_moves( const Function& func )
 #ifdef ENABLE_UNIT_TESTS
 #include <catch2/catch_test_macros.hpp>
 
+#include "check/borrow_check.h"
 #include "check/pipeline_test_support.h"
 
 namespace keel
@@ -426,14 +441,20 @@ struct Checked : Compiled
     explicit Checked( std::string_view source )
         : Compiled( source )
     {
+        for( const Function& function : functions )
+        {
+            owning.push_back( owning_locals( function, ast, types ) );
+        }
     }
 
     // The function under test is always the last one lowered: every fixture below puts the
     // interesting code in main, and declares whatever it calls above it.
     std::vector<Move_error> errors() const
     {
-        return check_moves( functions.back() );
+        return check_moves( functions.back(), owning.back() );
     }
+
+    std::vector<std::vector<bool>> owning; // per function
 
     std::string_view text_at( Span span ) const
     {
@@ -722,12 +743,14 @@ TEST_CASE( "move_check_refuses_a_move_and_a_borrow_in_one_call", "[check][move]"
 }
 
 // D54's one-call rule: each borrowed argument is a loan for the whole call, so an element may not
-// be passed beside a borrow of its whole that could change it, and one place may not be `out` twice.
+// be passed beside a borrow of its whole that could change it, one place may not be `out` twice, and
+// an owner may not reach the call under two names when the call could change it.
 TEST_CASE( "move_check_refuses_aliased_arguments_in_one_call", "[check][move][m9]" )
 {
     constexpr std::string_view k_aliased =
         "class V { public i32 x; V() { x = 0; } ~V() { } public i32* operator[]( u64 i ) const { return nullptr; } "
-        "public const ref i32 get() const { return x; } public void grow( const ref i32 e ) { } };\n"
+        "public const ref i32 get() const { return x; } public void grow( const ref i32 e ) { } "
+        "public void absorb( ref V o ) { } };\n"
         "class W { public V a; public V b; W() { a = V(); b = V(); } };\n"
         "struct P { i32 a; i32 b; };\n"
         "struct S { i32* q; i32* operator[]( u64 i ) const { return q; } };\n"
@@ -740,7 +763,11 @@ TEST_CASE( "move_check_refuses_aliased_arguments_in_one_call", "[check][move][m9
         "void same( out P a, ref P b ) { a = P { 1, 2 }; }\n"
         "void outs( out i32 a, out i32 b ) { a = 1; b = 2; }\n"
         "void outp( out P a, out i32 b ) { a = P { 1, 2 }; b = 2; }\n"
-        "void elems( ref i32 a, ref i32 b ) { }\n";
+        "void elems( ref i32 a, ref i32 b ) { }\n"
+        "void both( ref V a, ref V b ) { }\n"
+        "void read_both( const ref V a, const ref V b ) { }\n"
+        "void mixed( const ref V a, ref V b ) { }\n"
+        "void part( ref W w, ref V a ) { }\n";
 
     constexpr std::string_view k_locals = "V v = V(); V u = V(); W w = W(); P p = P { 1, 2 }; S s = S { nullptr }; ";
 
@@ -777,6 +804,11 @@ TEST_CASE( "move_check_refuses_aliased_arguments_in_one_call", "[check][move][m9
                  Refused { "two( out p, out p );", Call_conflict::Out_twice, "out p", "out p" },
                  Refused { "outs( out p.a, out p.a );", Call_conflict::Out_twice, "out p.a", "out p.a" },
                  Refused { "outp( out p, out p.b );", Call_conflict::Out_twice, "out p.b", "out p" },
+                 Refused { "both( ref v, ref v );", Call_conflict::Aliased, "ref v", "ref v" },
+                 Refused { "ref V r = v; both( ref v, ref r );", Call_conflict::Aliased, "ref r", "ref v" },
+                 Refused { "mixed( v, ref v );", Call_conflict::Aliased, "ref v", "v" },
+                 Refused { "part( ref w, ref w.a );", Call_conflict::Aliased, "ref w.a", "ref w" },
+                 Refused { "ref V r = v; v.absorb( ref r );", Call_conflict::Aliased, "ref r", "v" },
              } )
         {
             const Checked p = checked( refused.call );
@@ -823,7 +855,10 @@ TEST_CASE( "move_check_refuses_aliased_arguments_in_one_call", "[check][move][m9
                  "outs( out p.a, out p.b );",
                  "same( out p, ref p );",
                  "pair( ref v, ref v.x );",
+                 "look( v, ref v.x );",
                  "v.grow( v.x );",
+                 "elems( ref p.a, ref p.a );",
+                 "read_both( v, v );",
                  "u.grow( v.get() );",
                  "see( ref u, v.get() );",
              } )
@@ -846,7 +881,7 @@ TEST_CASE( "move_check_tracks_parameters", "[check][move]" )
 
     INFO( p.rendered() );
     REQUIRE( p.clean() );
-    REQUIRE( check_moves( p.functions[1] ).size() == 1 );
+    REQUIRE( check_moves( p.functions[1], p.owning[1] ).size() == 1 );
 }
 
 // A borrow reads the value, so one after a move is a use; only a constructor or an `out` argument

@@ -1,0 +1,49 @@
+error: `h` is assigned while `b` still borrows from it
+  --> sema/errors_payload_aliases.kl:54:13
+   |
+54 |             h = Holder::Empty;
+   |             ^^^^^^^^^^^^^^^^^^ `b` is used after this; it was bound at 53:28
+
+error: `h` is assigned while `b` still borrows from it
+  --> sema/errors_payload_aliases.kl:69:13
+   |
+69 |             r = Holder::Empty;
+   |             ^^^^^^^^^^^^^^^^^^ `b` is used after this; it was bound at 68:28
+
+error: this could change `h` while `b` still borrows from it
+  --> sema/errors_payload_aliases.kl:84:20
+   |
+84 |             clear( ref r );
+   |                    ^^^^^ `b` is used after this; it was bound at 83:28
+
+error: `w` is assigned while `b` still borrows from it
+   --> sema/errors_payload_aliases.kl:100:13
+    |
+100 |             r = Wh();
+    |             ^^^^^^^^^ `b` is used after this; it was bound at 99:28
+
+error: `h` is assigned while `b` still borrows from it
+   --> sema/errors_payload_aliases.kl:116:13
+    |
+116 |             h = Holder::Empty;
+    |             ^^^^^^^^^^^^^^^^^^ `b` is used after this; it was bound at 115:28
+
+error: this could change `h` while `b` still borrows from it
+   --> sema/errors_payload_aliases.kl:128:20
+    |
+128 |             clear( ref h );
+    |                    ^^^^^ `b` is used after this; it was bound at 127:28
+
+error: `h` is moved while `b` still borrows it
+   --> sema/errors_payload_aliases.kl:140:13
+    |
+140 |             take( move h );
+    |             ^^^^^^^^^^^^^^ `b` is used after this; it was bound at 139:28
+
+error: this could change `this` while `b` still borrows from it
+   --> sema/errors_payload_aliases.kl:166:17
+    |
+166 |                 clear();
+    |                 ^^^^^^^ `b` is used after this; it was bound at 165:32
+
+8 errors generated

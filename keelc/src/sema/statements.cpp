@@ -222,28 +222,29 @@ void Statements::visit_return( Node_id id )
     // §8's non-escaping rule. A `ref` binding is initialised at its declaration and never reseated,
     // so everything nameable at a call site outlives any binding declared there - which is why
     // *which* parameter the result came from does not matter, and why this needs no dataflow.
-    // Syntactic: trace the returned expression to its root and require a parameter that travels by
-    // address. A bare parameter of an owning type is one, since the caller owns the object.
-    if( places_.returns_a_binding( expressions_.current_function() ) )
+    // Syntactic: trace the returned expression, and the borrowed arguments of any call returning a
+    // reference, to their roots, and require a parameter that travels by address. A bare parameter
+    // of an owning type is one, since the caller owns the object.
+    if( places_.returns_a_binding( expressions_.current_function() ) && !table_.is_error( types_.type_of( value ) ) )
     {
-        const Node_id root = places_.place_root( value, expressions_.current_function() );
+        const Node_id part = places_.escaping_part( value, expressions_.current_function() );
 
-        if( table_.is_error( types_.type_of( value ) ) )
+        if( !part.is_valid() )
         {
-            // Already reported.
+            // Every part borrows from a parameter.
         }
-        else if( places_.operator_projection( value ).is_valid() )
+        else if( places_.operator_projection( part ).is_valid() )
         {
             reporter_.error_at(
-                ast_.span( value ),
+                ast_.span( part ),
                 "`[]` reaches an element for one expression, so it cannot be returned by reference",
-                fmt::format( "return a copy, or its address with `&{}`", reporter_.text( ast_.span( value ) ) )
+                fmt::format( "return a copy, or its address with `&{}`", reporter_.text( ast_.span( part ) ) )
             );
         }
-        else if( !root.is_valid() || ast_.kind( root ) != Node_kind::Param_decl || !places_.returns_a_binding( root ) )
+        else
         {
             reporter_.error_at(
-                ast_.span( value ),
+                ast_.span( part ),
                 "a returned reference must borrow from a parameter",
                 "anything else here dies when this function returns"
             );
@@ -508,9 +509,8 @@ void Statements::visit_switch( Node_id id )
     for( const Node_id arm : ast_.arms( id ) )
     {
         coverage_.check_arm_labels( arm, covered );
-        places_.hold_payload( arm, id, expressions_.current_function() );
+        places_.record_owned_bindings( arm, id );
         visit( ast_.body( arm ) );
-        places_.release_payload();
     }
     breakable_depth_ -= 1;
 

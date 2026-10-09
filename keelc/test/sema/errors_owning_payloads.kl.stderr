@@ -40,28 +40,4 @@ error: an owning value is transferred, not copied
 89 |             return value;
    |                    ^^^^^ `value` still belongs to what holds it
 
-error: `h` cannot be modified while `b` borrows its payload
-   --> sema/errors_owning_payloads.kl:111:13
-    |
-111 |             h = Holder::Empty;
-    |             ^ the borrow lasts until this `case` ends
-
-error: `h` cannot be modified while `b` borrows its payload
-   --> sema/errors_owning_payloads.kl:124:24
-    |
-124 |             reset( ref h );
-    |                        ^ the borrow lasts until this `case` ends
-
-error: `h` cannot be moved while `b` borrows its payload
-   --> sema/errors_owning_payloads.kl:125:24
-    |
-125 |             take( move h );
-    |                        ^ the borrow lasts until this `case` ends
-
-error: `clear` may modify the object while `b` borrows its payload
-   --> sema/errors_owning_payloads.kl:151:17
-    |
-151 |                 clear();
-    |                 ^^^^^ the borrow lasts until this `case` ends
-
-11 errors generated
+7 errors generated

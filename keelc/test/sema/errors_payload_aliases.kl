@@ -1,0 +1,193 @@
+// D54: a pattern binding borrows its payload until its last use, and a change to what was matched
+// breaks it whichever name the change is made through.
+class Buf
+{
+    u64* data;
+
+    Buf( u64 n )
+    {
+        unsafe { data = alloc<u64>(); }
+        *data = n;
+    }
+
+    ~Buf()
+    {
+        unsafe { free( data ); }
+    }
+
+    u64 get() const
+    {
+        return *data;
+    }
+};
+
+enum Holder
+{
+    Full( Buf b ),
+    Empty
+};
+
+class Wh
+{
+    public Holder held;
+
+    Wh()
+    {
+        held = Holder::Full( Buf( 3 ) );
+    }
+};
+
+void clear( ref Holder h )
+{
+    h = Holder::Empty;
+}
+
+// The scrutinee is an alias; the assignment names the object itself.
+u64 switch_on_alias()
+{
+    Holder h = Holder::Full( Buf( 1 ) );
+    ref Holder r = h;
+
+    switch( r )
+    {
+        case Holder::Full( b ):
+            h = Holder::Empty;
+            return b.get();
+        case Holder::Empty:
+            return 0;
+    }
+}
+
+u64 assign_alias()
+{
+    Holder h = Holder::Full( Buf( 1 ) );
+    ref Holder r = h;
+
+    switch( h )
+    {
+        case Holder::Full( b ):
+            r = Holder::Empty;
+            return b.get();
+        case Holder::Empty:
+            return 0;
+    }
+}
+
+u64 lend_alias()
+{
+    Holder h = Holder::Full( Buf( 1 ) );
+    ref Holder r = h;
+
+    switch( h )
+    {
+        case Holder::Full( b ):
+            clear( ref r );
+            return b.get();
+        case Holder::Empty:
+            return 0;
+    }
+}
+
+// The scrutinee is a field; the assignment replaces its owner through an alias.
+u64 assign_alias_of_owner()
+{
+    Wh w = Wh();
+    ref Wh r = w;
+
+    switch( w.held )
+    {
+        case Holder::Full( b ):
+            r = Wh();
+            return b.get();
+        case Holder::Empty:
+            return 0;
+    }
+}
+
+void take( move Holder h )
+{
+}
+
+u64 replaces( move Holder h )
+{
+    switch( h )
+    {
+        case Holder::Full( b ):
+            h = Holder::Empty;
+            return b.get();
+        case Holder::Empty:
+            return 0;
+    }
+}
+
+u64 lends( move Holder h )
+{
+    switch( h )
+    {
+        case Holder::Full( b ):
+            clear( ref h );
+            return b.get();
+        case Holder::Empty:
+            return 0;
+    }
+}
+
+u64 gives( move Holder h )
+{
+    switch( h )
+    {
+        case Holder::Full( b ):
+            take( move h );
+            return b.get();
+        case Holder::Empty:
+            return 0;
+    }
+}
+
+class Keeper
+{
+    Holder held;
+
+    Keeper( move Holder h )
+    {
+        held = move h;
+    }
+
+    void clear()
+    {
+        held = Holder::Empty;
+    }
+
+    u64 peek()
+    {
+        switch( held )
+        {
+            case Holder::Full( b ):
+                clear();
+                return b.get();
+            case Holder::Empty:
+                return 0;
+        }
+    }
+};
+
+// Accepted: `b` is not used after the assignment.
+u64 assign_after_last_use()
+{
+    Holder h = Holder::Full( Buf( 1 ) );
+
+    switch( h )
+    {
+        case Holder::Full( b ):
+            u64 n = b.get();
+            h = Holder::Empty;
+            return n;
+        case Holder::Empty:
+            return 0;
+    }
+}
+
+i32 main()
+{
+    return 0;
+}

@@ -1,0 +1,40 @@
+// D54: a reference returned from a call borrows what the call's arguments borrow, so passing one on
+// from a parameter's field still borrows from that parameter.
+class Buf
+{
+    u64 n;
+
+    Buf( u64 m )
+    {
+        n = m;
+    }
+
+    ~Buf()
+    {
+    }
+};
+
+class Bx
+{
+    public Buf b;
+
+    Bx()
+    {
+        b = Buf( 5 );
+    }
+};
+
+const ref Buf pick( const ref Buf a )
+{
+    return a;
+}
+
+const ref Buf deep( const ref Bx x )
+{
+    return pick( x.b );
+}
+
+i32 main()
+{
+    return 0;
+}

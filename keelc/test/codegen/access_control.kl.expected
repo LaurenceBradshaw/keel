@@ -60,12 +60,14 @@ void kl__Counter__R7Counter_3i32__ctor( struct kl__Counter* kl_this_1, int32_t k
 
 void kl__bump__S7Counter( struct kl__Counter* kl_this_1 )
 {
-    int32_t kl_t2;
+    struct kl__Counter* kl_t2;
     int32_t kl_t3;
+    int32_t kl_t4;
 #line 31 "codegen/access_control.kl"
-    kl_t2 = kl__step__S7Counter( kl_this_1 );
-    kl_t3 = ( *kl_this_1 ).kl_n_1 + kl_t2;
-    ( *kl_this_1 ).kl_n_1 = kl_t3;
+    kl_t2 = &( *kl_this_1 );
+    kl_t3 = kl__step__S7Counter( kl_t2 );
+    kl_t4 = ( *kl_this_1 ).kl_n_1 + kl_t3;
+    ( *kl_this_1 ).kl_n_1 = kl_t4;
     return;
 }
 

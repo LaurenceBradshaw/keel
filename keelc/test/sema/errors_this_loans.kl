@@ -1,0 +1,67 @@
+// D54: `this` is a place like any other, so a loan from a field is kept, and broken by a non-`const`
+// method of `this`, whether `this` is written or implied.
+class buffer
+{
+    buffer()
+    {
+        unsafe { data = alloc<i32>( 4 ); data[0] = 1; }
+    }
+
+    ~buffer()
+    {
+        unsafe { free( data ); }
+    }
+
+    public i32* operator[]( u64 index ) const
+    {
+        unsafe { return &data[index]; }
+    }
+
+    public void grow()
+    {
+        unsafe { free( data ); data = alloc<i32>( 4 ); data[0] = 2; }
+    }
+
+    private i32[*] data;
+};
+
+class M
+{
+    public buffer inner;
+
+    M()
+    {
+        inner = buffer();
+    }
+
+    void reset()
+    {
+        inner.grow();
+    }
+
+    i32 implicit_this()
+    {
+        ref i32 x = inner[0];
+        reset();
+        return x;
+    }
+
+    i32 explicit_this()
+    {
+        ref i32 x = this.inner[0];
+        this.reset();
+        return x;
+    }
+
+    // Accepted: nothing changes `this` while `r` is live.
+    i32 field_of_this()
+    {
+        const ref buffer r = this.inner;
+        return r[0];
+    }
+};
+
+i32 main()
+{
+    return 0;
+}

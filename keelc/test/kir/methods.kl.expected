@@ -23,12 +23,16 @@ fn shift_twice {
     let _0: void; // return slot
     let _1: Point*; // parameter this
     let _2: i32; // parameter by
-    let _3: void;
+    let _3: Point*;
     let _4: void;
+    let _5: Point*;
+    let _6: void;
 
     bb0:
-        _3 = call shift(copy _1, copy _2)
-        _4 = call shift(copy _1, copy _2)
+        _3 = &borrow (*_1)
+        _4 = call shift(copy _3, copy _2)
+        _5 = &borrow (*_1)
+        _6 = call shift(copy _5, copy _2)
         return
 }
 fn through_a_pointer {

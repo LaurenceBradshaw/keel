@@ -220,8 +220,9 @@ bool is_holder( const Function& func, const Borrow& borrow, Local_id local )
            ( borrow.of.is_valid() || borrow.through != nullptr ) && borrow.purpose != Address_purpose::Initialise;
 }
 
-// D54: a direct loan is broken only by a move; an indirect one by anything reaching its object, if
-// that object owns something, since otherwise it has nothing to free or relocate.
+// D54: a payload's loan is broken by anything reaching it, since another variant destroys it; a
+// direct loan only by a move; an indirect one by anything reaching its object, if that object owns
+// something, since otherwise it has nothing to free or relocate.
 bool conflicts(
     const Function&            func,
     const std::vector<Borrow>& borrows,
@@ -230,6 +231,11 @@ bool conflicts(
     const Effect&              effect
 )
 {
+    if( loan.purpose == Address_purpose::Payload )
+    {
+        return overlaps( func, loan.place, effect.place );
+    }
+
     if( loan.of.is_valid() )
     {
         return effect.conflict == Loan_conflict::Moved && overlaps( func, loan.place, effect.place );
@@ -338,26 +344,31 @@ namespace
 
 struct Loaned : Compiled
 {
-    explicit Loaned( std::string_view source )
+    // By name, since an enum's destructor is lowered after the functions written.
+    explicit Loaned( std::string_view source, std::string_view under_test = "main" )
         : Compiled( source )
     {
-        if( !functions.empty() )
+        for( std::size_t f = 0; f < functions.size(); ++f )
         {
-            owning = owning_locals( functions.back(), ast, types );
+            if( interner.text( ast.name( functions[f].declaration ) ) == under_test )
+            {
+                tested = f;
+                owning = owning_locals( functions[f], ast, types );
+            }
         }
     }
 
-    // The function under test is the last one lowered.
     std::vector<Loan_error> errors() const
     {
-        return check_loans( functions.back(), owning );
+        return check_loans( functions[tested], owning );
     }
 
+    std::size_t       tested = 0;
     std::vector<bool> owning;
 
     std::string_view name_of( Local_id local ) const
     {
-        return interner.text( functions.back().locals[local.v].name );
+        return interner.text( functions[tested].locals[local.v].name );
     }
 };
 
@@ -418,6 +429,13 @@ constexpr std::string_view k_plain = "struct P { i32 x; i32 y; };\n"
                                      "void bump( ref P p ) { }\n";
 
 constexpr std::string_view k_plain_locals = "i32 a = 1; i32 c = 2; P p = P { 1, 2 }; ";
+
+constexpr std::string_view k_payload = "class B { public u64 n; B( u64 x ) { n = x; } ~B() { } };\n"
+                                       "enum H { Full( B b ), Empty };\n"
+                                       "void reset( ref H h ) { h = H::Empty; }\n"
+                                       "void take( move H h ) { }\n";
+
+constexpr std::string_view k_payload_locals = "H h = H::Full( B( 1 ) ); u64 c = 0; ";
 
 } // namespace
 
@@ -525,7 +543,8 @@ TEST_CASE( "borrow_check_freezes_the_object_of_an_indirect_loan", "[check][borro
     {
         const Loaned p(
             std::string( k_vector ) + "i32 main() { return 0; }\n"
-                                      "i32 first( ref V v ) { ref i32 x = v[0]; v.push( 1 ); return x; }\n"
+                                      "i32 first( ref V v ) { ref i32 x = v[0]; v.push( 1 ); return x; }\n",
+            "first"
         );
 
         INFO( p.rendered() );
@@ -556,6 +575,47 @@ TEST_CASE( "borrow_check_freezes_only_an_owner", "[check][borrow][m9]" )
          } )
     {
         require_accepted( k_plain, k_plain_locals, body );
+    }
+}
+
+// D54: a pattern binding borrows its payload, and assigning another variant destroys it, so
+// anything reaching what was matched breaks the loan, whichever name it goes through.
+TEST_CASE( "borrow_check_holds_what_a_payload_binding_borrows", "[check][borrow][m9]" )
+{
+    const auto arm = []( std::string_view scrutinee, std::string_view full )
+    {
+        return std::string( "switch( " ) + std::string( scrutinee ) + " ) { case H::Full( b ): " + std::string( full ) +
+               " c = b.n; break; case H::Empty: break; }";
+    };
+
+    struct Case
+    {
+        std::string   body;
+        Loan_conflict conflict;
+        const char*   at;
+    };
+
+    for( const Case& refused : {
+             Case { arm( "h", "h = H::Empty;" ), Loan_conflict::Assigned, "h" },
+             Case { arm( "h", "reset( ref h );" ), Loan_conflict::Changed, "h" },
+             Case { arm( "h", "take( move h );" ), Loan_conflict::Moved, "h" },
+             Case { "ref H r = h; " + arm( "r", "h = H::Empty;" ), Loan_conflict::Assigned, "h" },
+             Case { "ref H r = h; " + arm( "h", "r = H::Empty;" ), Loan_conflict::Assigned, "r" },
+         } )
+    {
+        require_refused(
+            k_payload, k_payload_locals, Refused { refused.body.c_str(), refused.conflict, refused.at, "b", "h" }
+        );
+    }
+
+    // After the binding's last use, after the switch, or in an arm that borrows nothing.
+    for( const std::string& body : {
+             std::string( "switch( h ) { case H::Full( b ): c = b.n; h = H::Empty; break; case H::Empty: break; }" ),
+             arm( "h", "" ) + " h = H::Empty;",
+             std::string( "switch( h ) { case H::Full( b ): break; case H::Empty: h = H::Empty; break; }" ),
+         } )
+    {
+        require_accepted( k_payload, k_payload_locals, body );
     }
 }
 

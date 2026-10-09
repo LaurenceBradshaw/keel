@@ -74,8 +74,10 @@ struct kl_2kl_ring__I3i32E kl_2kl_with_capacity__I3i32E__SQ2kl4ringI3i32E_3u64( 
 
 void kl_2kl_ring__I3i32E__dtor( struct kl_2kl_ring__I3i32E* kl_this_1 )
 {
+    struct kl_2kl_ring__I3i32E* kl_t2;
 #line 40 "../src/ring.kl"
-    kl_2kl_destroy_live__I3i32E__SQ2kl4ringI3i32E( kl_this_1 );
+    kl_t2 = &( *kl_this_1 );
+    kl_2kl_destroy_live__I3i32E__SQ2kl4ringI3i32E( kl_t2 );
 #line 41 "../src/ring.kl"
     kl_rt_free( ( *kl_this_1 ).kl_data__779 );
     return;

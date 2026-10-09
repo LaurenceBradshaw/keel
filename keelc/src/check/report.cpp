@@ -22,12 +22,17 @@ namespace
 // move site becomes a line:col in the help - the shape the resolver's previous-declaration note
 // already uses.
 void report_move_errors(
-    const std::vector<Function>& functions, const Source_manager& sm, const Interner& interner, Diagnostics& diagnostics
+    const std::vector<Function>& functions,
+    const Ast&                   ast,
+    const Source_manager&        sm,
+    const Interner&              interner,
+    Types&                       types,
+    Diagnostics&                 diagnostics
 )
 {
     for( const Function& function : functions )
     {
-        for( const Move_error& error : check_moves( function ) )
+        for( const Move_error& error : check_moves( function, owning_locals( function, ast, types ) ) )
         {
             const Symbol_id name = function.locals[error.local.v].name;
 
@@ -54,6 +59,22 @@ void report_move_errors(
                     "one place is passed `out` twice to this call",
                     fmt::format(
                         "`{}` at {}:{} overlaps it; give each result its own variable",
+                        sm.text( error.other ),
+                        other.line,
+                        other.col
+                    )
+                );
+                continue;
+            }
+            case Call_conflict::Aliased:
+            {
+                const Line_col other = sm.line_col( error.other.file, error.other.start );
+
+                diagnostics.error(
+                    error.use,
+                    "one object is passed twice to this call, which could change it",
+                    fmt::format(
+                        "`{}` at {}:{} is the same object; the callee would see it under two names",
                         sm.text( error.other ),
                         other.line,
                         other.col
@@ -302,7 +323,7 @@ void report_dataflow_errors(
     Diagnostics&                 diagnostics
 )
 {
-    report_move_errors( functions, sm, interner, diagnostics );
+    report_move_errors( functions, ast, sm, interner, types, diagnostics );
     report_loan_errors( functions, ast, sm, interner, types, diagnostics );
     report_unassigned_errors( functions, ast, interner, diagnostics, types );
 }

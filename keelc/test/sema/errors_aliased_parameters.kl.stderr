@@ -1,0 +1,25 @@
+error: one object is passed twice to this call, which could change it
+   --> sema/errors_aliased_parameters.kl:106:38
+    |
+106 |     return match_then_assign( ref h, ref h );
+    |                                      ^^^^^ `ref h` at 106:31 is the same object; the callee would see it under two names
+
+error: one object is passed twice to this call, which could change it
+   --> sema/errors_aliased_parameters.kl:112:37
+    |
+112 |     return borrow_then_grow( ref v, ref v );
+    |                                     ^^^^^ `ref v` at 112:30 is the same object; the callee would see it under two names
+
+error: one object is passed twice to this call, which could change it
+   --> sema/errors_aliased_parameters.kl:119:37
+    |
+119 |     return borrow_then_lend( ref v, ref r );
+    |                                     ^^^^^ `ref v` at 119:30 is the same object; the callee would see it under two names
+
+error: one object is passed twice to this call, which could change it
+   --> sema/errors_aliased_parameters.kl:126:32
+    |
+126 |     return m.borrow_then_grow( ref r );
+    |                                ^^^^^ `m` at 126:12 is the same object; the callee would see it under two names
+
+4 errors generated

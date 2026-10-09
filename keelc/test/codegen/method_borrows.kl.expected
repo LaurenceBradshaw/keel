@@ -40,12 +40,14 @@ bool kl__equals__S7Counter_3i32( struct kl__Counter* kl_this_1, int32_t* kl_valu
 bool kl__equals_through_a_sibling__S7Counter_3i32( struct kl__Counter* kl_this_1, int32_t* kl_value_2 )
 {
     bool kl_t0;
-    int32_t* kl_t3;
-    bool kl_t4;
+    struct kl__Counter* kl_t3;
+    int32_t* kl_t4;
+    bool kl_t5;
 #line 19 "codegen/method_borrows.kl"
-    kl_t3 = &( *kl_value_2 );
-    kl_t4 = kl__equals__S7Counter_3i32( kl_this_1, kl_t3 );
-    kl_t0 = kl_t4;
+    kl_t3 = &( *kl_this_1 );
+    kl_t4 = &( *kl_value_2 );
+    kl_t5 = kl__equals__S7Counter_3i32( kl_t3, kl_t4 );
+    kl_t0 = kl_t5;
     return kl_t0;
 }
 

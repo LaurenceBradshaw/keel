@@ -93,8 +93,9 @@ int32_t kl__bare_from_instance__S6Number( struct kl__Number* kl_this_1 )
     uint64_t kl_b_3;
     int32_t kl_t4;
     int32_t kl_t5;
-    int32_t kl_t6;
+    struct kl__Number* kl_t6;
     int32_t kl_t7;
+    int32_t kl_t8;
 #line 42 "codegen/static_method_overloads.kl"
     kl_a_2 = 0;
 #line 43 "codegen/static_method_overloads.kl"
@@ -102,9 +103,10 @@ int32_t kl__bare_from_instance__S6Number( struct kl__Number* kl_this_1 )
 #line 44 "codegen/static_method_overloads.kl"
     kl_t4 = kl__from__S6Number_3i64( kl_a_2 );
     kl_t5 = kl_t4 * 10;
-    kl_t6 = kl__mixed__S6Number_3u64( kl_this_1, kl_b_3 );
-    kl_t7 = kl_t5 + kl_t6;
-    kl_t0 = kl_t7;
+    kl_t6 = &( *kl_this_1 );
+    kl_t7 = kl__mixed__S6Number_3u64( kl_t6, kl_b_3 );
+    kl_t8 = kl_t5 + kl_t7;
+    kl_t0 = kl_t8;
     return kl_t0;
 }
 

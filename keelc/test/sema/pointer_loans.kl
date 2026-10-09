@@ -1,0 +1,64 @@
+// D54: raw pointers are outside the tracking. Both are accepted, and both read freed memory.
+class buffer
+{
+    buffer()
+    {
+        unsafe { data = alloc<i32>( 4 ); data[0] = 1; }
+    }
+
+    ~buffer()
+    {
+        unsafe { free( data ); }
+    }
+
+    public i32* operator[]( u64 index ) const
+    {
+        unsafe { return &data[index]; }
+    }
+
+    public void grow()
+    {
+        unsafe { free( data ); data = alloc<i32>( 4 ); data[0] = 2; }
+    }
+
+    private i32[*] data;
+};
+
+class Keeper
+{
+    buffer* p;
+
+    Keeper( buffer* q )
+    {
+        p = q;
+    }
+
+    void poke()
+    {
+        (*p).grow();
+    }
+};
+
+// The pointer itself dangles.
+i32 element_pointer()
+{
+    buffer v = buffer();
+    i32* p = &v[0];
+    v.grow();
+    return *p;
+}
+
+// A pointer held elsewhere changes `v` behind a live loan.
+i32 kept_pointer()
+{
+    buffer v = buffer();
+    Keeper k = Keeper( &v );
+    ref i32 x = v[0];
+    k.poke();
+    return x;
+}
+
+i32 main()
+{
+    return 0;
+}

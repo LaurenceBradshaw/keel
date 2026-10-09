@@ -255,14 +255,18 @@ int32_t kl__at__S3Two_4bool( struct kl__Two* kl_this_1, bool kl_n_2 )
 int32_t kl__both__S3Two_3i32( struct kl__Two* kl_this_1, int32_t kl_n_2 )
 {
     int32_t kl_t0;
-    int32_t kl_t3;
+    struct kl__Two* kl_t3;
     int32_t kl_t4;
-    int32_t kl_t5;
+    struct kl__Two* kl_t5;
+    int32_t kl_t6;
+    int32_t kl_t7;
 #line 133 "codegen/overloads.kl"
-    kl_t3 = kl__at__S3Two_3i32( kl_this_1, kl_n_2 );
-    kl_t4 = kl__at__S3Two_4bool( kl_this_1, true );
-    kl_t5 = kl_t3 + kl_t4;
-    kl_t0 = kl_t5;
+    kl_t3 = &( *kl_this_1 );
+    kl_t4 = kl__at__S3Two_3i32( kl_t3, kl_n_2 );
+    kl_t5 = &( *kl_this_1 );
+    kl_t6 = kl__at__S3Two_4bool( kl_t5, true );
+    kl_t7 = kl_t4 + kl_t6;
+    kl_t0 = kl_t7;
     return kl_t0;
 }
 

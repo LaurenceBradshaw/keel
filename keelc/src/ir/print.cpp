@@ -141,6 +141,8 @@ struct Printer
                 return fmt::format( "&read {}", place( value.a.place ) );
             case Address_purpose::Borrow:
                 return fmt::format( "&borrow {}", place( value.a.place ) );
+            case Address_purpose::Payload:
+                return fmt::format( "&payload {}", place( value.a.place ) );
             }
 
         case Rvalue_kind::Call:

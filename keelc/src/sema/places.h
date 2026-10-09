@@ -3,6 +3,7 @@
 
 #pragma once
 #include <unordered_set>
+#include <vector>
 #include "ast/ast.h"
 #include "common/interner.h"
 #include "lex/token.h"
@@ -66,18 +67,19 @@ public:
     // D54: the temporary a place depends on, through any calls returning a reference, or invalid.
     Node_id borrowed_temporary( Node_id place ) const;
 
+    // §8: the part of a returned reference that is not a borrowed parameter, through any calls
+    // returning a reference, or invalid.
+    Node_id escaping_part( Node_id value, Node_id current_function ) const;
+
     // D31's initialisation and assignment clause: an owning value transfers rather than copies, and
     // the transfer is written down.
     void check_owning_source( Node_id value, Type_id type );
     bool check_owning_return( Node_id value, Type_id type );
 
-    // D7: while an arm's binding borrows an owning payload, the scrutinee's root may be neither
-    // written nor moved. Pushed per arm; nothing is held for a temporary or a pointer's referent,
-    // nor by a switch that consumes, whose bindings own their payloads instead.
-    void    hold_payload( Node_id arm, Node_id switch_stmt, Node_id current_function );
-    void    release_payload();
-    Node_id borrowing_binding( Node_id root ) const; // the binding holding `root`, or invalid
-    bool    owns_binding( Node_id decl ) const;      // bound by a switch that consumes
+    // D7: a consuming switch's bindings own their payloads; any other binding borrows its payload,
+    // which check/borrow_check holds as a loan.
+    void record_owned_bindings( Node_id arm, Node_id switch_stmt );
+    bool owns_binding( Node_id decl ) const; // bound by a switch that consumes
 
     // D31: which parameters travel by address. Its own pass because ownership is asked of field
     // types, which are recorded only after both parameter loops have run.
@@ -85,7 +87,8 @@ public:
     void record_binding_address( Node_id annotation, Type_id type );
 
 private:
-    bool borrows( Param_mode mode, Type_id type ) const; // travels by address
+    bool                 borrows( Param_mode mode, Type_id type ) const; // travels by address
+    std::vector<Node_id> borrowed_arguments( Node_id call ) const;       // the receiver's object first
 
     const Ast&        ast_;
     const Interner&   interner_;
@@ -96,14 +99,7 @@ private:
     const Callees&    callees_;
     Reporter&         reporter_;
 
-    struct Held_payload
-    {
-        Node_id root;
-        Node_id binding;
-    };
-
-    std::vector<Held_payload> held_; // innermost last
-    std::unordered_set<u32>   owned_bindings_;
+    std::unordered_set<u32> owned_bindings_;
 };
 
 } // namespace keel::sema

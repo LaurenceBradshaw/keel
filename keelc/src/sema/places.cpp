@@ -152,21 +152,6 @@ bool Places::check_writable( Node_id target, Node_id current_function, bool repl
         }
     }
 
-    if( const Node_id binding = borrowing_binding( place_root( target, current_function ) ); binding.is_valid() )
-    {
-        reporter_.error_at(
-            ast_.span( target ),
-            fmt::format(
-                "`{}` cannot be modified while `{}` borrows its payload",
-                reporter_.text( ast_.span( place_source( target ) ) ),
-                interner_.text( ast_.name( binding ) )
-            ),
-            "the borrow lasts until this `case` ends"
-        );
-
-        return false;
-    }
-
     if( !is_read_only( target, current_function ) )
     {
         return true;
@@ -556,7 +541,10 @@ Node_id Places::borrowed_temporary( Node_id place ) const
 
     if( ast_.kind( source ) != Node_kind::Call_expr )
     {
-        if( is_assignable( source ) )
+        // A parameter outlives its body, `this` included, though `this` is not assignable.
+        const Node_id decl = resolution_.declaration_of( source );
+
+        if( is_assignable( source ) || ( decl.is_valid() && ast_.kind( decl ) == Node_kind::Param_decl ) )
         {
             return Node_id {};
         }
@@ -571,45 +559,84 @@ Node_id Places::borrowed_temporary( Node_id place ) const
     }
 
     // The call returns a reference, so it lasts as long as the shortest of what it borrows.
-    const Node_id method   = callees_.callee_of( source );
-    const Node_id callee   = method.is_valid() ? method : resolution_.declaration_of( ast_.callee( source ) );
-    const bool    declared = callee.is_valid() &&
-                          ( ast_.kind( callee ) == Node_kind::Function_decl || ast_.kind( callee ) == Node_kind::Method_decl );
-    const bool receiver = declared && ast_.has_receiver( callee );
-
-    if( receiver && ast_.kind( ast_.callee( source ) ) == Node_kind::Field_expr )
+    for( const Node_id argument : borrowed_arguments( source ) )
     {
-        if( const Node_id temporary = borrowed_temporary( ast_.object( ast_.callee( source ) ) ); temporary.is_valid() )
+        if( const Node_id temporary = borrowed_temporary( argument ); temporary.is_valid() )
         {
             return temporary;
         }
     }
 
+    return Node_id {};
+}
+
+Node_id Places::escaping_part( Node_id value, Node_id current_function ) const
+{
+    if( operator_projection( value ).is_valid() )
+    {
+        return value;
+    }
+
+    // A returned reference borrows what the call's arguments borrow, so each of them must not escape.
+    const Node_id source = place_source( value );
+
+    if( source.is_valid() && ast_.kind( source ) == Node_kind::Call_expr && call_returns_a_binding( source ) )
+    {
+        for( const Node_id argument : borrowed_arguments( source ) )
+        {
+            if( const Node_id part = escaping_part( argument, current_function ); part.is_valid() )
+            {
+                return part;
+            }
+        }
+
+        return Node_id {};
+    }
+
+    const Node_id root = place_root( value, current_function );
+
+    if( root.is_valid() && ast_.kind( root ) == Node_kind::Param_decl && returns_a_binding( root ) )
+    {
+        return Node_id {};
+    }
+
+    return value;
+}
+
+std::vector<Node_id> Places::borrowed_arguments( Node_id call ) const
+{
+    const Node_id method   = callees_.callee_of( call );
+    const Node_id callee   = method.is_valid() ? method : resolution_.declaration_of( ast_.callee( call ) );
+    const bool    declared = callee.is_valid() &&
+                          ( ast_.kind( callee ) == Node_kind::Function_decl || ast_.kind( callee ) == Node_kind::Method_decl );
+    const bool receiver = declared && ast_.has_receiver( callee );
+
+    std::vector<Node_id> borrowed;
+
+    if( receiver && ast_.kind( ast_.callee( call ) ) == Node_kind::Field_expr )
+    {
+        borrowed.push_back( ast_.object( ast_.callee( call ) ) );
+    }
+
     // A declaration's parameters lead with `this`; a signature held in a variable has none.
-    const std::span<const Node_id> args = ast_.arguments( source );
+    const std::span<const Node_id> args = ast_.arguments( call );
     const std::span<const Node_id> params =
         declared ? ast_.params( callee ).subspan( receiver ? 1 : 0 ) : std::span<const Node_id> {};
     const std::span<const Param_mode> modes =
-        declared ? std::span<const Param_mode> {} : table_.get( types_.type_of( ast_.callee( source ) ) ).modes;
+        declared ? std::span<const Param_mode> {} : table_.get( types_.type_of( ast_.callee( call ) ) ).modes;
     const std::size_t shared = std::min( args.size(), declared ? params.size() : modes.size() );
 
     for( std::size_t i = 0; i < shared; ++i )
     {
         const Param_mode mode = declared ? parameter_mode_of( ast_, params[i] ) : modes[i];
 
-        if( !borrows( mode, types_.type_of( args[i] ) ) )
+        if( borrows( mode, types_.type_of( args[i] ) ) )
         {
-            continue;
-        }
-
-        if( const Node_id temporary = borrowed_temporary( args[i] ); temporary.is_valid() )
-        {
-            return temporary;
+            borrowed.push_back( args[i] );
         }
     }
 
-    // Nothing borrowed was a temporary.
-    return Node_id {};
+    return borrowed;
 }
 
 void Places::check_owning_source( Node_id value, Type_id type )
@@ -691,10 +718,12 @@ bool Places::check_owning_return( Node_id value, Type_id type )
     return true;
 }
 
-void Places::hold_payload( Node_id arm, Node_id switch_stmt, Node_id current_function )
+void Places::record_owned_bindings( Node_id arm, Node_id switch_stmt )
 {
-    const bool consumes = ast_.consumes( switch_stmt );
-    Node_id    binding;
+    if( !ast_.consumes( switch_stmt ) )
+    {
+        return;
+    }
 
     for( const Node_id label : ast_.labels( arm ) )
     {
@@ -705,43 +734,9 @@ void Places::hold_payload( Node_id arm, Node_id switch_stmt, Node_id current_fun
 
         for( const Node_id bound : ast_.bindings( label ) )
         {
-            if( consumes )
-            {
-                owned_bindings_.insert( bound.v );
-            }
-            else if( !binding.is_valid() && !bounds_.satisfies( types_.type_of( bound ), Bound::Copyable ) )
-            {
-                binding = bound;
-            }
+            owned_bindings_.insert( bound.v );
         }
     }
-
-    held_.push_back(
-        { binding.is_valid() ? place_root( ast_.scrutinee( switch_stmt ), current_function ) : Node_id {}, binding }
-    );
-}
-
-void Places::release_payload()
-{
-    held_.pop_back();
-}
-
-Node_id Places::borrowing_binding( Node_id root ) const
-{
-    if( !root.is_valid() )
-    {
-        return Node_id {};
-    }
-
-    for( const Held_payload& held : held_ )
-    {
-        if( held.root == root )
-        {
-            return held.binding;
-        }
-    }
-
-    return Node_id {};
 }
 
 bool Places::owns_binding( Node_id decl ) const
@@ -1266,6 +1261,17 @@ TEST_CASE( "type_checker_accepts_a_const_ref_return_from_a_parameter", "[sema][e
         INFO( p.rendered() );
         REQUIRE( p.clean() );
     }
+
+    // The call's result borrows what its arguments borrow, so it is passed on from a parameter too.
+    SECTION( "or through a call returning a reference into one" )
+    {
+        const Typed p( "struct P { i32 x; };\nconst ref i32 pick( const ref i32 a ) { return a; }\n"
+                       "const ref i32 deep( const ref P p ) { return pick( p.x ); }\n"
+                       "i32 main() { P v = P { 1 }; return deep( v ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
 }
 
 TEST_CASE( "type_checker_refuses_an_escaping_reference", "[sema][escape]" )
@@ -1315,6 +1321,16 @@ TEST_CASE( "type_checker_refuses_an_escaping_reference", "[sema][escape]" )
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
+    }
+
+    SECTION( "and a call returning a reference into a local is still local" )
+    {
+        const Typed p( "const ref i32 pick( const ref i32 a, const ref i32 b ) { return a; }\n"
+                       "const ref i32 bad( const ref i32 a ) { i32 v = 1; return pick( a, v ); }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "must borrow from a parameter" ) != std::string::npos );
     }
 }
 

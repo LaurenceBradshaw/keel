@@ -1,0 +1,112 @@
+// D54: loans that end in time, or survive the change, are accepted, and read only live memory.
+class Buf
+{
+    u64* data;
+
+    Buf( u64 n )
+    {
+        unsafe { data = alloc<u64>(); }
+        *data = n;
+    }
+
+    ~Buf()
+    {
+        unsafe { free( data ); }
+    }
+
+    u64 get() const
+    {
+        return *data;
+    }
+};
+
+enum Holder
+{
+    Full( Buf b ),
+    Empty
+};
+
+class buffer
+{
+    buffer()
+    {
+        unsafe { data = alloc<i32>( 4 ); data[0] = 1; }
+    }
+
+    ~buffer()
+    {
+        unsafe { free( data ); }
+    }
+
+    public i32* operator[]( u64 index ) const
+    {
+        unsafe { return &data[index]; }
+    }
+
+    public void grow()
+    {
+        unsafe { free( data ); data = alloc<i32>( 4 ); data[0] = 2; }
+    }
+
+    private i32[*] data;
+};
+
+class W
+{
+    public Buf one;
+
+    W( u64 n )
+    {
+        one = Buf( n );
+    }
+};
+
+// A direct loan of a field sees the field's new value.
+u64 field_across_owner()
+{
+    W w = W( 4 );
+    ref Buf b = w.one;
+    w = W( 6 );
+    return b.get();
+}
+
+// Each iteration takes a fresh loan, dead before the change.
+i32 fresh_each_iteration()
+{
+    buffer v = buffer();
+    i32 s = 0;
+
+    for( i32 i = 0; i < 3; i = i + 1 )
+    {
+        ref i32 x = v[0];
+        s = s + x;
+        v.grow();
+    }
+
+    return s; // 1 + 2 + 2
+}
+
+// The payload's loan ends with the `case`.
+u64 payload_before_assign()
+{
+    Holder h = Holder::Full( Buf( 7 ) );
+    u64 n = 0;
+
+    switch( h )
+    {
+        case Holder::Full( b ):
+            const ref Buf k = b;
+            n = k.get();
+            break;
+        case Holder::Empty:
+            break;
+    }
+
+    h = Holder::Empty;
+    return n;
+}
+
+i32 main()
+{
+    return cast<i32>( field_across_owner() ) + fresh_each_iteration() + cast<i32>( payload_before_assign() ); // 6 + 5 + 7
+}

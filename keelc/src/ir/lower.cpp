@@ -1389,7 +1389,7 @@ void Lowering::bind_variant_pattern( Place matched, Type_id matched_type, Node_i
         if( borrowed )
         {
             borrowed_bindings_.insert( bindings[i].v );
-            builder_.assign( builder_.place( local ), address_of( field, local_type, Address_purpose::Borrow ), span );
+            builder_.assign( builder_.place( local ), address_of( field, local_type, Address_purpose::Payload ), span );
         }
         else
         {
@@ -1689,13 +1689,22 @@ Operand Lowering::lower_call( Node_id id )
     // name alone names only the first candidate of an overload set.
     const Node_id callee = types_.callee_of( id );
 
-    // A bare `add( by )` inside a method. The receiver is the one this function was given, and its
-    // local already holds the address - so unlike every other call shape there is nothing to take
-    // the address *of*. A static method has none to pass, so it falls through to the ordinary path
-    // below, where its written parameters are the whole of its signature.
+    // A bare `add( by )` inside a method. The receiver is the one this function was given, borrowed
+    // again as `&(*this)` as an explicit `this.add( by )` is, so the loans pass sees the call may
+    // change it. A static method has none to pass, so it falls through to the ordinary path below,
+    // where its written parameters are the whole of its signature.
     if( callee.is_valid() && ast_.kind( callee ) == Node_kind::Method_decl && ast_.has_receiver( callee ) )
     {
-        return lower_method_call_on( id, callee, copy( builder_.place( receiver_ ), builder_.type_of( receiver_ ) ) );
+        return lower_method_call_on(
+            id,
+            callee,
+            address_operand(
+                builder_.deref( builder_.place( receiver_ ) ),
+                binding_type_under( ast_.params( callee )[0], bindings_for_call( id ) ),
+                ast_.span( id ),
+                ast_.is_const_method( callee ) ? Address_purpose::Read : Address_purpose::Borrow
+            )
+        );
     }
 
     if( !callee.is_valid() && type_of( ast_.callee( id ) ).is_valid() &&
@@ -6368,7 +6377,7 @@ TEST_CASE( "lower_borrows_an_owning_payload_and_moves_one_in", "[ir][lower][payl
 
     INFO( size );
     REQUIRE( size.find( "B*; // b" ) != std::string::npos );
-    REQUIRE( size.find( "= &borrow (*_1).b" ) != std::string::npos );
+    REQUIRE( size.find( "= &payload (*_1).b" ) != std::string::npos );
 
     const std::string main = p.named( "main" );
 

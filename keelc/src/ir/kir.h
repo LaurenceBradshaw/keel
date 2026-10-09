@@ -131,7 +131,8 @@ enum class Address_purpose : u8
 {
     Borrow,
     Read, // a `const ref` or a `const` method's receiver: nothing is written through it
-    Initialise
+    Initialise,
+    Payload // a pattern binding's payload: changing the variant destroys it
 };
 
 // How a value is produced. One tagged struct rather than a variant hierarchy, as Node and Type
