@@ -1,0 +1,61 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "main.kl.prelude.c"
+
+struct kl_2kl_optional__I3i32E;
+
+struct kl_2kl_optional__I3i32E
+{
+    int32_t tag;
+    int32_t kl_value_25;
+};
+
+_Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
+
+int32_t kl__main__( void );
+int32_t kl_2kl_expect__I3i32E__MQ2kl8optionalI3i32E_Q7prelude3str( struct kl_2kl_optional__I3i32E, struct kl_7prelude_str );
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl_2kl_optional__I3i32E kl_missing_1;
+    struct kl_2kl_optional__I3i32E kl_t2;
+    struct kl_7prelude_str kl_t3;
+    struct kl_7prelude_str* kl_t4;
+    uint8_t* kl_t5;
+    int32_t kl_t7;
+#line 6 "optional_expect_empty/main.kl"
+    kl_t2.tag = 1;
+    kl_missing_1 = kl_t2;
+#line 7 "optional_expect_empty/main.kl"
+    kl_t4 = &kl_t3;
+    kl_t5 = ( uint8_t* ) "the config names a port";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 23 );
+    kl_t7 = kl_2kl_expect__I3i32E__MQ2kl8optionalI3i32E_Q7prelude3str( kl_missing_1, kl_t3 );
+    kl_t0 = kl_t7;
+    return kl_t0;
+}
+
+int32_t kl_2kl_expect__I3i32E__MQ2kl8optionalI3i32E_Q7prelude3str( struct kl_2kl_optional__I3i32E kl_o_1, struct kl_7prelude_str kl_message_2 )
+{
+    int32_t kl_t0;
+    bool kl_t3;
+    int32_t kl_v_4;
+#line 38 "../src/optional.kl"
+    kl_t3 = kl_o_1.tag == 0;
+    if ( kl_t3 ) goto bb1; else goto bb2;
+    bb1:
+    kl_v_4 = kl_o_1.kl_value_25;
+#line 39 "../src/optional.kl"
+    kl_t0 = kl_v_4;
+    return kl_t0;
+    bb2:
+    kl_rt_panic_message( "../src/optional.kl", 41, kl_message_2.kl_data_200, kl_message_2.kl_size_203 );
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

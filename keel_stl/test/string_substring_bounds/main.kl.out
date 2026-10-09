@@ -1,0 +1,2 @@
+cutting
+../src/string.kl:244: assertion failed: count <= size() - start

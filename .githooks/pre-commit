@@ -126,9 +126,8 @@ check_headers()
     return "$bad"
 }
 
-# Each project registers its own golden suite by having a runner, the same way its CMakeLists does.
-# A project without one is skipped rather than failing, so keel_rt and keel_stl cost nothing until
-# they have something to run.
+# Each project registers its own golden suite by having a runner. A project without one is skipped
+# rather than failing, so keel_rt costs nothing until it has something to run.
 check_goldens()
 {
     local any=0

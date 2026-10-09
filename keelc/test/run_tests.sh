@@ -35,6 +35,7 @@
 #
 #   run_tests.sh <path-to-keelc>            check
 #   run_tests.sh <path-to-keelc> --update   rewrite every expectation from current behaviour
+#   run_tests.sh <path-to-keelc> --tests <dir>   check another project's corpus, laid out as this one
 #
 # --update records what the compiler does, not what it should do. Read the diff before committing.
 
@@ -50,11 +51,15 @@ keelc="$( cd "$( dirname "$1" )" && pwd )/$( basename "$1" )"
 shift
 
 update=0
-for arg in "$@"; do
-    case "$arg" in
+tests="$( dirname "$0" )"
+while [ $# -gt 0 ]; do
+    case "$1" in
         -u | --update ) update=1 ;;
-        * ) echo "run_tests.sh: unknown option '$arg'" >&2; exit 2 ;;
+        --tests ) [ $# -ge 2 ] || { echo "run_tests.sh: --tests needs a directory" >&2; exit 2; }
+                  tests="$2"; shift ;;
+        * ) echo "run_tests.sh: unknown option '$1'" >&2; exit 2 ;;
     esac
+    shift
 done
 
 if [ ! -x "$keelc" ]; then
@@ -63,7 +68,7 @@ if [ ! -x "$keelc" ]; then
 fi
 
 # Paths appear in diagnostics, so run from tests/ to keep them stable regardless of caller cwd.
-cd "$( dirname "$0" )" || exit 2
+cd "$tests" || exit 2
 
 # WSL appends the Windows PATH, and the C linker probes every entry for itself. Over /mnt each probe
 # is slow enough to make a link ten times slower, which is most of the suite's runtime.
