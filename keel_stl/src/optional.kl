@@ -12,7 +12,7 @@ enum optional<T>
 
 /// The value `o` holds.
 ///
-/// # Panics
+/// ### Panics
 ///
 /// If `o` is `none`.
 T unwrap<T>( move optional<T> o )
@@ -28,7 +28,7 @@ T unwrap<T>( move optional<T> o )
 
 /// The value `o` holds.
 ///
-/// # Panics
+/// ### Panics
 ///
 /// If `o` is `none`, with `message`.
 T expect<T>( move optional<T> o, str message )

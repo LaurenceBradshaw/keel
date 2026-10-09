@@ -37,7 +37,7 @@ class Counter
 
     /// Adds one.
     ///
-    /// # Panics
+    /// ### Panics
     ///
     /// If the count would overflow.
     public void bump()

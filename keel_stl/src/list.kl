@@ -58,7 +58,7 @@ class list<T>
 
     /// Removes the last element and returns it.
     ///
-    /// # Panics
+    /// ### Panics
     ///
     /// If the list is empty; `try_pop` answers `none` instead.
     public T pop()
@@ -84,7 +84,7 @@ class list<T>
 
     /// Puts `value` at `index`, moving every element from there one place later.
     ///
-    /// # Panics
+    /// ### Panics
     ///
     /// If `index` is greater than `size()`. An index equal to it adds at the end.
     public void insert( u64 index, move T value )
@@ -142,7 +142,7 @@ class list<T>
 
     /// A pointer to the first element.
     ///
-    /// # Panics
+    /// ### Panics
     ///
     /// If the list is empty.
     public T* first() const
@@ -157,7 +157,7 @@ class list<T>
 
     /// A pointer to the last element.
     ///
-    /// # Panics
+    /// ### Panics
     ///
     /// If the list is empty.
     public T* last() const
@@ -172,7 +172,7 @@ class list<T>
 
     /// A pointer to the element at `index`.
     ///
-    /// # Panics
+    /// ### Panics
     ///
     /// If `index` is not less than `size()`.
     public T* operator[]( u64 index ) const
@@ -188,7 +188,7 @@ class list<T>
     /// Removes the element at `index` and returns it, moving every later element one place earlier.
     /// Keeps the order and takes linear time; `swap_remove` does neither.
     ///
-    /// # Panics
+    /// ### Panics
     ///
     /// If `index` is not less than `size()`.
     public T remove( u64 index )
@@ -212,7 +212,7 @@ class list<T>
     /// Removes the element at `index` and returns it, moving the last element into its place.
     /// Takes constant time and does not keep the order.
     ///
-    /// # Panics
+    /// ### Panics
     ///
     /// If `index` is not less than `size()`.
     public T swap_remove( u64 index )
@@ -235,7 +235,7 @@ class list<T>
 
     /// Puts `value` at `index` and returns the element that was there.
     ///
-    /// # Panics
+    /// ### Panics
     ///
     /// If `index` is not less than `size()`.
     public T replace( u64 index, move T value )
@@ -252,7 +252,7 @@ class list<T>
 
     /// Exchanges the elements at `a` and `b`.
     ///
-    /// # Panics
+    /// ### Panics
     ///
     /// If either is not less than `size()`.
     public void swap( u64 a, u64 b )

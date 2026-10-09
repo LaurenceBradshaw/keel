@@ -88,7 +88,7 @@ class string
     /// The text is an optional `-` and then one or more digits `0` to `9`, which may have leading
     /// zeros. Nothing else is read: not a `+`, whitespace or a separator.
     ///
-    /// # Errors
+    /// ### Errors
     ///
     /// `no_digits` if there are no digits, `invalid_digit` naming the first byte that cannot continue
     /// the number, and `overflow` as soon as the number leaves the range of `i64`.
@@ -133,7 +133,7 @@ class string
 
     /// Removes the last byte and returns it.
     ///
-    /// # Panics
+    /// ### Panics
     ///
     /// If the string is empty.
     public u8 pop()
@@ -158,7 +158,7 @@ class string
 
     /// A pointer to the byte at `index`.
     ///
-    /// # Panics
+    /// ### Panics
     ///
     /// If `index` is not less than `size()`.
     public const u8* operator[]( u64 index ) const
@@ -235,7 +235,7 @@ class string
 
     /// A new string holding the `count` bytes from index `start` on.
     ///
-    /// # Panics
+    /// ### Panics
     ///
     /// If those bytes do not all lie within the string.
     public string substring( u64 start, u64 count ) const
