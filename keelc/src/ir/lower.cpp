@@ -1249,7 +1249,7 @@ Operand Lowering::lower_operator_call( Node_id id, Node_id method )
         lower_place( ast_.lhs( id ) ),
         binding_type_under( parameters[0], bindings_for_call( id ) ),
         span,
-        Address_purpose::Borrow
+        ast_.is_const_method( method ) ? Address_purpose::Read : Address_purpose::Borrow
     );
     const Operand result = lower_method_call_on( id, method, receiver, { &rhs, 1 }, type_of( id ) );
 
@@ -1272,10 +1272,7 @@ Operand Lowering::lower_operator_index( Node_id id, Node_id method )
     const Node_id index = ast_.index( id );
 
     const Operand receiver = address_operand(
-        lower_place( ast_.object( id ) ),
-        binding_type_under( ast_.params( method )[0], bindings ),
-        span,
-        Address_purpose::Borrow
+        lower_place( ast_.object( id ) ), binding_type_under( ast_.params( method )[0], bindings ), span, Address_purpose::Read
     );
 
     return lower_method_call_on( id, method, receiver, { &index, 1 }, type_under( method, bindings ) );
@@ -1565,7 +1562,6 @@ Operand Lowering::lower_method_call( Node_id id )
 {
     const Node_id callee = ast_.callee( id );
     const Node_id object = ast_.object( callee );
-    const Span    span   = ast_.span( id );
 
     const Node_id method = types_.callee_of( id );
 
@@ -1583,8 +1579,8 @@ Operand Lowering::lower_method_call( Node_id id )
                                  : address_operand(
                                        lower_place( object ),
                                        binding_type_under( parameters[0], bindings_for_call( id ) ),
-                                       span,
-                                       Address_purpose::Borrow
+                                       ast_.span( object ),
+                                       ast_.is_const_method( method ) ? Address_purpose::Read : Address_purpose::Borrow
                                    );
 
     return lower_method_call_on( id, method, receiver );
@@ -2152,7 +2148,7 @@ void Lowering::lower_return( Node_id id )
             const Type_id address = binding_type_of( declaration_ );
 
             builder_.assign(
-                builder_.place( k_return_slot ), address_of( lower_place( value ), address, Address_purpose::Borrow ), span
+                builder_.place( k_return_slot ), address_of( lower_place( value ), address, Address_purpose::Read ), span
             );
         }
         else
@@ -2194,7 +2190,13 @@ void Lowering::lower_var( Node_id id )
         // owns nothing, so no drop is elaborated for it.
         if( borrowed )
         {
-            builder_.assign( builder_.place( local ), address_of( lower_place( init ), type, Address_purpose::Borrow ), span );
+            builder_.assign(
+                builder_.place( local ),
+                address_of(
+                    lower_place( init ), type, ast_.is_const_binding( id ) ? Address_purpose::Read : Address_purpose::Borrow
+                ),
+                span
+            );
         }
         else if( is_construction( init ) )
         {
@@ -2913,7 +2915,7 @@ Operand Lowering::borrowed_argument( Node_id argument, Type_id address )
                             ? builder_.place( builder_.into_temp( use( value ), value.type, span ) )
                             : value.place;
 
-    return address_operand( place, address, span, Address_purpose::Borrow );
+    return address_operand( place, address, span, Address_purpose::Read );
 }
 
 Operand Lowering::address_operand( Place place, Type_id type, Span span, Address_purpose purpose )
@@ -5450,7 +5452,7 @@ TEST_CASE( "lower_borrows_at_the_call_without_moving", "[ir][lower][borrow]" )
     const std::string text = p.named( "main" );
 
     INFO( text );
-    REQUIRE( text.find( "= &borrow _1" ) != std::string::npos );
+    REQUIRE( text.find( "= &read _1" ) != std::string::npos );
 
     // The two halves that make it a borrow: nothing is moved, and the caller still drops. Before
     // this, the argument was `copy _1` - a struct copy of an owning value, which is the one thing
@@ -5473,7 +5475,7 @@ TEST_CASE( "lower_drops_a_borrowed_temporary", "[ir][lower][borrow]" )
     const std::string text = p.named( "main" );
 
     INFO( text );
-    REQUIRE( text.find( "= &borrow _1" ) != std::string::npos );
+    REQUIRE( text.find( "= &read _1" ) != std::string::npos );
     REQUIRE( text.find( "drop _1" ) != std::string::npos );
 }
 
@@ -5613,7 +5615,7 @@ TEST_CASE( "lower_forwards_a_bare_borrow", "[ir][lower][borrow]" )
 
     INFO( text );
     REQUIRE( text.find( "let _1: B*; // parameter b" ) != std::string::npos );
-    REQUIRE( text.find( "= &borrow (*_1)" ) != std::string::npos );
+    REQUIRE( text.find( "= &read (*_1)" ) != std::string::npos );
 }
 
 // The regression the borrow rule broke once, and the reason it tests the *mode* rather than only
@@ -5704,8 +5706,8 @@ TEST_CASE( "lower_never_drops_a_ref_binding", "[ir][lower][binding]" )
     REQUIRE( text.find( "move" ) == std::string::npos );
 }
 
-// PLAN D32. `const ref` travels by address exactly as `ref` does - the const half is a rule the
-// checker enforces and nothing below sema knows about, so KIR shows the two as one shape.
+// PLAN D32. `const ref` travels by address exactly as `ref` does, marked as only read through, which
+// is what lets a borrow check tell a call that could change its argument from one that cannot.
 TEST_CASE( "lower_passes_a_const_ref_parameter_by_address", "[ir][lower][constref]" )
 {
     Lowered p( "struct P { i32 x; };\n"
@@ -5727,7 +5729,7 @@ TEST_CASE( "lower_passes_a_const_ref_parameter_by_address", "[ir][lower][constre
     const std::string caller = p.named( "main" );
 
     INFO( caller );
-    REQUIRE( caller.find( "= &borrow _1" ) != std::string::npos );
+    REQUIRE( caller.find( "= &read _1" ) != std::string::npos );
     REQUIRE( caller.find( "call peek(copy _1)" ) == std::string::npos );
 }
 
@@ -5742,7 +5744,7 @@ TEST_CASE( "lower_binds_a_const_ref_local_to_an_address", "[ir][lower][constref]
 
     INFO( text );
     REQUIRE( text.find( "let _2: i32*; // r" ) != std::string::npos );
-    REQUIRE( text.find( "_2 = &borrow _1" ) != std::string::npos );
+    REQUIRE( text.find( "_2 = &read _1" ) != std::string::npos );
     REQUIRE( text.find( "copy (*_2)" ) != std::string::npos );
 }
 
@@ -5760,7 +5762,7 @@ TEST_CASE( "lower_borrows_a_class_by_const_ref", "[ir][lower][constref]" )
     const std::string text = p.named( "main" );
 
     INFO( text );
-    REQUIRE( text.find( "= &borrow _1" ) != std::string::npos );
+    REQUIRE( text.find( "= &read _1" ) != std::string::npos );
     REQUIRE( text.find( "move" ) == std::string::npos );
     REQUIRE( text.find( "drop _1" ) != std::string::npos );
 }
@@ -5786,7 +5788,7 @@ TEST_CASE( "lower_returns_a_const_ref_as_an_address", "[ir][lower][escape]" )
     // would buy nothing. It comes out as `&(*_1)` rather than `copy _1` because the parameter is
     // itself a binding, so lower_place derefs it and the address is taken straight back: the same
     // round trip forwarding a borrow already prints, and one a C compiler folds for free.
-    REQUIRE( callee.find( "_0 = &borrow (*_1)" ) != std::string::npos );
+    REQUIRE( callee.find( "_0 = &read (*_1)" ) != std::string::npos );
 }
 
 // A field of a parameter is where the form earns its keep, and the address is of the projection.
@@ -5802,7 +5804,7 @@ TEST_CASE( "lower_returns_a_const_ref_to_a_field", "[ir][lower][escape]" )
     const std::string callee = p.named( "get" );
 
     INFO( callee );
-    REQUIRE( callee.find( "= &borrow (*_1).x" ) != std::string::npos );
+    REQUIRE( callee.find( "= &read (*_1).x" ) != std::string::npos );
 }
 
 // At the caller the result is already an address, so binding takes it directly and copying derefs
@@ -6561,8 +6563,9 @@ TEST_CASE( "lower_passes_the_receiver_by_address", "[ir][lower][method]" )
 
     const std::string caller = p.named( "main" );
 
+    // A `const` method's receiver is only read through.
     INFO( caller );
-    REQUIRE( caller.find( "= &borrow _1" ) != std::string::npos );
+    REQUIRE( caller.find( "= &read _1" ) != std::string::npos );
     REQUIRE( caller.find( "call get(copy _" ) != std::string::npos );
 }
 
@@ -6597,7 +6600,7 @@ TEST_CASE( "lower_passes_a_method's_borrowed_argument_by_address", "[ir][lower][
         const std::string caller = p.named( "main" );
 
         INFO( caller );
-        REQUIRE( caller.find( "_6 = &borrow _3" ) != std::string::npos );
+        REQUIRE( caller.find( "_6 = &read _3" ) != std::string::npos );
         REQUIRE( caller.find( "as i32*" ) == std::string::npos );
     }
 
@@ -6652,7 +6655,7 @@ TEST_CASE( "lower_returns_a_reference_from_a_method", "[ir][lower][method]" )
 
     INFO( callee );
     REQUIRE( callee.find( "let _0: i32*; // return slot" ) != std::string::npos );
-    REQUIRE( callee.find( "_0 = &borrow (*_1).x" ) != std::string::npos );
+    REQUIRE( callee.find( "_0 = &read (*_1).x" ) != std::string::npos );
 
     // And the caller binds the pointer it was handed rather than the address of a copy of it.
     const std::string caller = p.named( "main" );

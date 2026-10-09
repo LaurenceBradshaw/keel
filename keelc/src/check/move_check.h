@@ -8,15 +8,25 @@
 namespace keel
 {
 
-// Where a value was read after it was moved. Carries spans rather than a message, so the pass
-// needs no Interner and no Diagnostics - check/report does the wording.
+// D54: what is wrong with one call's arguments, when the error is about them rather than the flow.
+enum class Call_conflict : u8
+{
+    None,
+    Moved_and_borrowed, // moved into the call at `moved` that also borrows it at `use`
+    Out_twice,          // `use` and `other` overlap, and both are `out`
+    Element_and_whole   // `use` reaches inside what `other` lets the call change
+};
+
+// Where a value was read after it was moved, or a call's arguments conflict. Carries spans rather
+// than a message, so the pass needs no Interner and no Diagnostics - check/report does the wording.
 struct Move_error
 {
-    Local_id local {};
-    Span     use {};           // the read
-    Span     moved {};         // the move that killed it
-    bool     maybe    = false; // moved on some paths into here, not all
-    bool     borrowed = false; // moved into the call at `moved` that also borrows it at `use`
+    Local_id      local {};
+    Span          use {};           // the read
+    Span          moved {};         // the move that killed it
+    bool          maybe    = false; // moved on some paths into here, not all
+    Call_conflict conflict = Call_conflict::None;
+    Span          other {}; // the call's other argument, for Out_twice and Element_and_whole
 };
 
 // PLAN §8. Flow-sensitive, per local, over the CFG. Takes nothing but the function: everything it

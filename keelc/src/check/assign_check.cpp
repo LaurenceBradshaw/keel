@@ -163,7 +163,7 @@ void read_rvalue(
     const Function& func, const Rvalue& value, Span span, const Flow& flow, std::vector<Uninitialised_read>* reads
 )
 {
-    if( value.kind == Rvalue_kind::Address_of && value.address_purpose == Address_purpose::Borrow )
+    if( value.kind == Rvalue_kind::Address_of && value.address_purpose != Address_purpose::Initialise )
     {
         Operand borrowed = value.a;
         borrowed.kind    = Operand_kind::Copy;

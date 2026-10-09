@@ -35,14 +35,45 @@ void report_move_errors(
             const std::string subject =
                 name.is_valid() ? fmt::format( "`{}`", interner.text( name ) ) : std::string( "this value" );
 
-            if( error.borrowed )
+            switch( error.conflict )
             {
+            case Call_conflict::Moved_and_borrowed:
                 diagnostics.error(
                     error.use,
                     fmt::format( "{} is moved into this call, so the call cannot also borrow it", subject ),
                     "a call cannot take a value and borrow it at once"
                 );
                 continue;
+            case Call_conflict::Out_twice:
+            {
+                const Line_col other = sm.line_col( error.other.file, error.other.start );
+
+                diagnostics.error(
+                    error.use,
+                    "one place is passed `out` twice to this call",
+                    fmt::format(
+                        "`{}` at {}:{} overlaps it; give each result its own variable",
+                        sm.text( error.other ),
+                        other.line,
+                        other.col
+                    )
+                );
+                continue;
+            }
+            case Call_conflict::Element_and_whole:
+                diagnostics.error(
+                    error.use,
+                    fmt::format(
+                        "`{}` reaches into {}, which this call is also passed by `{}`",
+                        sm.text( error.use ),
+                        subject,
+                        sm.text( error.other )
+                    ),
+                    fmt::format( "the call could change {} under it; copy the element out before the call", subject )
+                );
+                continue;
+            case Call_conflict::None:
+                break;
             }
 
             const Line_col at = sm.line_col( error.moved.file, error.moved.start );
@@ -251,6 +282,32 @@ TEST_CASE( "report_names_the_moved_local", "[check][report]" )
 
     REQUIRE( p.rendered().find( "`a` is used after it was moved" ) != std::string::npos );
     REQUIRE( p.rendered().find( "moved at 2:25" ) != std::string::npos );
+}
+
+// D54: a refusal within one call names both arguments.
+TEST_CASE( "report_names_both_aliased_arguments", "[check][report][m9]" )
+{
+    const Compiled element(
+        "class V { i32 x; V() { x = 0; } ~V() { } public i32* operator[]( u64 i ) const { return nullptr; } };\n"
+        "void pair( ref V v, ref i32 e ) { }\n"
+        "i32 main() { V v = V(); pair( ref v, ref v[0] ); return 0; }\n",
+        Through::report
+    );
+
+    INFO( element.rendered() );
+    REQUIRE(
+        element.rendered().find( "`ref v[0]` reaches into `v`, which this call is also passed by `ref v`" ) != std::string::npos
+    );
+
+    const Compiled twice(
+        "void outs( out i32 a, out i32 b ) { a = 1; b = 2; }\n"
+        "i32 main() { i32 n = 0; outs( out n, out n ); return n; }\n",
+        Through::report
+    );
+
+    INFO( twice.rendered() );
+    REQUIRE( twice.rendered().find( "one place is passed `out` twice to this call" ) != std::string::npos );
+    REQUIRE( twice.rendered().find( "`out n` at 2:31 overlaps it" ) != std::string::npos );
 }
 
 TEST_CASE( "report_names_the_unassigned_out_parameter", "[check][report]" )

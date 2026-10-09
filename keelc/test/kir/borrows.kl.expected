@@ -29,7 +29,7 @@ fn forward {
     let _3: u64;
 
     bb0:
-        _2 = &borrow (*_1)
+        _2 = &read (*_1)
         _3 = call peek(copy _2)
         _0 = copy _3
         return
@@ -70,13 +70,13 @@ fn main {
         _2 = &init _1
         _3 = call B(copy _2, const 1)
         storage_live _4
-        _5 = &borrow _1
+        _5 = &read _1
         _6 = call forward(copy _5)
         _4 = copy _6
         storage_live _7
         _8 = &init _7
         _9 = call B(copy _8, const 2)
-        _10 = &borrow _7
+        _10 = &read _7
         _11 = call peek(copy _10)
         _12 = copy _4 + copy _11
         _4 = copy _12

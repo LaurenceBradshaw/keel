@@ -14,7 +14,7 @@ error: `b` is used after it was moved
   --> sema/errors_borrow_after_move.kl:53:13
    |
 53 |     u64 n = b.count();
-   |             ^^^^^^^^^ moved at 52:5
+   |             ^ moved at 52:5
 
 error: `b` is used after it was moved
   --> sema/errors_borrow_after_move.kl:60:17

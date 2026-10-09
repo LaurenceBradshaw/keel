@@ -20,7 +20,7 @@ error: `e` is moved into this call, so the call cannot also borrow it
   --> sema/errors_move_and_borrow.kl:54:5
    |
 54 |     e.absorb( move e );
-   |     ^^^^^^^^^^^^^^^^^^ a call cannot take a value and borrow it at once
+   |     ^ a call cannot take a value and borrow it at once
 
 error: `f` is moved into this call, so the call cannot also borrow it
   --> sema/errors_move_and_borrow.kl:57:17

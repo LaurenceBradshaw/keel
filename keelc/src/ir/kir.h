@@ -130,6 +130,7 @@ enum class Rvalue_kind : u8
 enum class Address_purpose : u8
 {
     Borrow,
+    Read, // a `const ref` or a `const` method's receiver: nothing is written through it
     Initialise
 };
 

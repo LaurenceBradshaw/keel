@@ -110,7 +110,7 @@ void read_rvalue( const Function& func, const Rvalue& value, Span span, Flow& fl
     {
         const u32   local = value.a.place.local.v;
         const State state = flow.state[local];
-        if( value.address_purpose == Address_purpose::Borrow && ( state == State::Moved || state == State::Maybe_moved ) &&
+        if( value.address_purpose != Address_purpose::Initialise && ( state == State::Moved || state == State::Maybe_moved ) &&
             errors != nullptr )
         {
             errors->push_back( Move_error {
@@ -223,13 +223,17 @@ void transfer_block( const Function& func, u32 block, Flow& flow, std::vector<Mo
     read_operand( b.terminator.message, b.terminator.span, flow, errors );
 }
 
-// The local a pointer local borrows from, and where. Valid only for one assigned exactly once, as a
-// borrowed argument's temporary is, so the answer needs no flow.
+// What a pointer local borrows: a local's place (`of`), or what a call returned (`through`), never
+// both. Valid only for one assigned exactly once, as a borrowed argument's temporary is, so the
+// answer needs no flow.
 struct Borrow
 {
-    Local_id of {};
-    Span     at {};
-    u32      assignments = 0;
+    Local_id        of {};
+    Span            at {};
+    u32             assignments = 0;
+    Place           place {};                          // what is borrowed; only when `of` is valid
+    Address_purpose purpose = Address_purpose::Borrow; // what the borrow is for
+    const Rvalue*   through = nullptr;                 // the call that returned this address
 };
 
 std::vector<Borrow> borrows_of( const Function& func )
@@ -248,37 +252,132 @@ std::vector<Borrow> borrows_of( const Function& func )
         const Place&  source = value.a.place;
 
         borrow.assignments++;
-        borrow.of = Local_id {};
+        borrow.of      = Local_id {};
+        borrow.through = nullptr;
 
         if( borrow.assignments != 1 || source.is_global() )
         {
             continue;
         }
 
-        if( value.kind == Rvalue_kind::Address_of && value.address_purpose == Address_purpose::Borrow )
+        const bool derefs =
+            source.num_projections != 0 && func.projections[source.first_projection].kind == Projection_kind::Deref;
+        // A call's or a constant's `a` names no local.
+        const Borrow inner = source.local.is_valid() ? borrows[source.local.v] : Borrow {};
+
+        if( value.kind == Rvalue_kind::Address_of )
         {
-            // Through a `ref` binding, `&(*r)`, it is what `r` borrows.
-            borrow.of = borrows[source.local.v].of.is_valid() ? borrows[source.local.v].of : source.local;
-            borrow.at = statement.span;
+            borrow.at      = statement.span;
+            borrow.purpose = value.address_purpose;
+
+            // `&(*_t)` after `_t = call operator[](...)`: an element, reached through the call.
+            if( derefs && inner.through != nullptr )
+            {
+                borrow.through = inner.through;
+            }
+            // Through a `ref` binding, `&(*r)`, it is the whole of what `r` borrows.
+            else if( derefs && inner.of.is_valid() )
+            {
+                borrow.of    = inner.of;
+                borrow.place = Place { .local = inner.of };
+            }
+            else
+            {
+                borrow.of    = source.local;
+                borrow.place = source;
+            }
         }
         // A conversion of the address, such as to a pointer to `const`, still points at the same local.
         else if( ( value.kind == Rvalue_kind::Use || value.kind == Rvalue_kind::Cast ) && value.a.kind == Operand_kind::Copy &&
                  source.num_projections == 0 )
         {
-            borrow.of = borrows[source.local.v].of;
-            borrow.at = borrows[source.local.v].at;
+            borrow.of      = inner.of;
+            borrow.place   = inner.place;
+            borrow.at      = inner.at;
+            borrow.purpose = inner.purpose;
+            borrow.through = inner.through;
+        }
+        else if( value.kind == Rvalue_kind::Call || value.kind == Rvalue_kind::Indirect_call )
+        {
+            borrow.through = &value;
         }
     }
 
     return borrows;
 }
 
+// One place is a prefix of the other: `p` overlaps `p.b`, and `p.a` does not.
+bool overlaps( const Function& func, const Place& a, const Place& b )
+{
+    if( a.local != b.local )
+    {
+        return false;
+    }
+
+    u32 min_projections = std::min( a.num_projections, b.num_projections );
+    for( u32 k = 0; k < min_projections; ++k )
+    {
+        const Projection& pa = func.projections[a.first_projection + k];
+        const Projection& pb = func.projections[b.first_projection + k];
+
+        if( pa.kind != pb.kind )
+        {
+            return false;
+        }
+
+        if( pa.kind == Projection_kind::Field && pa.field != pb.field )
+        {
+            return false;
+        }
+
+        if( pa.kind == Projection_kind::Member && pa.member != pb.member )
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+// D54: a call's returned address borrows each of its borrowed arguments, the receiver included.
+// Ends because `through` names an earlier statement, assigned once.
+bool reaches( const Function& func, const std::vector<Borrow>& borrows, const Borrow& element, const Place& whole )
+{
+    const std::span<const Operand> arguments(
+        func.operands.data() + element.through->first_argument, element.through->argument_count
+    );
+
+    for( const Operand& operand : arguments )
+    {
+        if( operand.kind != Operand_kind::Copy || operand.place.is_global() || operand.place.num_projections != 0 )
+        {
+            continue;
+        }
+
+        const Borrow& inner = borrows[operand.place.local.v];
+
+        if( inner.through != nullptr )
+        {
+            if( reaches( func, borrows, inner, whole ) )
+            {
+                return true;
+            }
+        }
+        else if( inner.of.is_valid() && overlaps( func, inner.place, whole ) )
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 // A call handed a local both by `move` and by address: the callee would own it and borrow it at once.
 // Every borrowed argument is lowered to an address taken before the call, so the flow never sees it.
-void find_moves_into_borrowing_calls( const Function& func, std::vector<Move_error>& errors )
+void find_moves_into_borrowing_calls(
+    const Function& func, const std::vector<Borrow>& borrows, std::vector<Move_error>& errors
+)
 {
-    const std::vector<Borrow> borrows = borrows_of( func );
-
     for( const Statement& statement : func.statements )
     {
         const Rvalue& value = statement.value;
@@ -307,11 +406,77 @@ void find_moves_into_borrowing_calls( const Function& func, std::vector<Move_err
 
                 const Borrow& borrow = borrows[borrowed.place.local.v];
 
-                if( borrow.of == moved.place.local )
+                if( borrow.of == moved.place.local ||
+                    ( borrow.through != nullptr && reaches( func, borrows, borrow, Place { .local = moved.place.local } ) ) )
+                {
+                    errors.push_back( Move_error {
+                        .local    = moved.place.local,
+                        .use      = borrow.at,
+                        .moved    = statement.span,
+                        .conflict = Call_conflict::Moved_and_borrowed
+                    } );
+                }
+            }
+        }
+    }
+}
+
+// D54: each borrowed argument is a loan for the whole call, so an element may not travel beside a
+// borrow of its whole that could change it, and one place may not be `out` twice.
+void find_aliased_arguments( const Function& func, const std::vector<Borrow>& borrows, std::vector<Move_error>& errors )
+{
+    const auto borrow_of = [&]( const Operand& operand ) -> const Borrow*
+    {
+        if( operand.kind != Operand_kind::Copy || operand.place.is_global() || operand.place.num_projections != 0 )
+        {
+            return nullptr;
+        }
+
+        const Borrow& borrow = borrows[operand.place.local.v];
+
+        return borrow.of.is_valid() || borrow.through != nullptr ? &borrow : nullptr;
+    };
+
+    for( const Statement& statement : func.statements )
+    {
+        const Rvalue& value = statement.value;
+
+        if( statement.kind != Statement_kind::Assign ||
+            ( value.kind != Rvalue_kind::Call && value.kind != Rvalue_kind::Indirect_call ) )
+        {
+            continue;
+        }
+
+        const std::span<const Operand> arguments( func.operands.data() + value.first_argument, value.argument_count );
+
+        for( std::size_t i = 0; i < arguments.size(); ++i )
+        {
+            for( std::size_t j = 0; j < arguments.size(); ++j )
+            {
+                const Borrow* a = borrow_of( arguments[i] );
+                const Borrow* b = borrow_of( arguments[j] );
+
+                if( i == j || a == nullptr || b == nullptr )
+                {
+                    continue;
+                }
+
+                // Reported at the later of the two.
+                if( i < j && a->purpose == Address_purpose::Initialise && b->purpose == Address_purpose::Initialise &&
+                    a->of.is_valid() && b->of.is_valid() && overlaps( func, a->place, b->place ) )
                 {
                     errors.push_back(
-                        Move_error { .local = moved.place.local, .use = borrow.at, .moved = statement.span, .borrowed = true }
+                        Move_error { .local = b->of, .use = b->at, .conflict = Call_conflict::Out_twice, .other = a->at }
                     );
+                }
+
+                // Only `a` can be the element, so a pair is reported once.
+                if( a->through != nullptr && b->through == nullptr && b->of.is_valid() && b->purpose != Address_purpose::Read &&
+                    reaches( func, borrows, *a, b->place ) )
+                {
+                    errors.push_back( Move_error {
+                        .local = b->of, .use = a->at, .conflict = Call_conflict::Element_and_whole, .other = b->at
+                    } );
                 }
             }
         }
@@ -372,6 +537,8 @@ std::vector<Move_error> check_moves( const Function& func )
         }
     }
 
+    const std::vector<Borrow> borrows = borrows_of( func );
+
     // A second walk, each block exactly once. Reporting inside the loop above would emit one error
     // per visit for any block on a back edge - which is what the "reports once" test pins.
     std::vector<Move_error> errors;
@@ -382,7 +549,8 @@ std::vector<Move_error> check_moves( const Function& func )
         transfer_block( func, block, in[block], &errors );
     }
 
-    find_moves_into_borrowing_calls( func, errors );
+    find_moves_into_borrowing_calls( func, borrows, errors );
+    find_aliased_arguments( func, borrows, errors );
 
     return errors;
 }
@@ -686,7 +854,7 @@ TEST_CASE( "move_check_refuses_a_move_and_a_borrow_in_one_call", "[check][move]"
         const std::vector<Move_error> errors = p.errors();
 
         REQUIRE( errors.size() == 1 );
-        REQUIRE( errors[0].borrowed );
+        REQUIRE( errors[0].conflict == Call_conflict::Moved_and_borrowed );
     }
 
     // A copied field is read before the call, and borrowing one local while moving another is fine.
@@ -698,6 +866,122 @@ TEST_CASE( "move_check_refuses_a_move_and_a_borrow_in_one_call", "[check][move]"
         INFO( call << "\n" << p.rendered() );
         REQUIRE( p.clean() );
         REQUIRE( p.errors().empty() );
+    }
+}
+
+// D54's one-call rule: each borrowed argument is a loan for the whole call, so an element may not
+// be passed beside a borrow of its whole that could change it, and one place may not be `out` twice.
+TEST_CASE( "move_check_refuses_aliased_arguments_in_one_call", "[check][move][m9]" )
+{
+    constexpr std::string_view k_aliased =
+        "class V { public i32 x; V() { x = 0; } ~V() { } public i32* operator[]( u64 i ) const { return nullptr; } "
+        "public const ref i32 get() const { return x; } public void grow( const ref i32 e ) { } };\n"
+        "class W { public V a; public V b; W() { a = V(); b = V(); } };\n"
+        "struct P { i32 a; i32 b; };\n"
+        "struct S { i32* q; i32* operator[]( u64 i ) const { return q; } };\n"
+        "void pair( ref V v, ref i32 e ) { }\n"
+        "void see( ref V v, const ref i32 e ) { }\n"
+        "void look( const ref V v, ref i32 e ) { }\n"
+        "void fill( out S s, ref i32 e ) { s = S { nullptr }; }\n"
+        "void eat( move V v, ref i32 e ) { }\n"
+        "void two( out P a, out P b ) { a = P { 1, 2 }; b = P { 1, 2 }; }\n"
+        "void same( out P a, ref P b ) { a = P { 1, 2 }; }\n"
+        "void outs( out i32 a, out i32 b ) { a = 1; b = 2; }\n"
+        "void outp( out P a, out i32 b ) { a = P { 1, 2 }; b = 2; }\n"
+        "void elems( ref i32 a, ref i32 b ) { }\n";
+
+    constexpr std::string_view k_locals = "V v = V(); V u = V(); W w = W(); P p = P { 1, 2 }; S s = S { nullptr }; ";
+
+    const auto checked = [&]( std::string_view call )
+    {
+        return Checked(
+            std::string( k_aliased ) + "i32 main() { " + std::string( k_locals ) + std::string( call ) + " return 0; }"
+        );
+    };
+
+    struct Refused
+    {
+        const char*   call;
+        Call_conflict conflict;
+        const char*   use;   // the argument refused
+        const char*   other; // the argument it conflicts with
+    };
+
+    SECTION( "refused, naming both arguments" )
+    {
+        for( const Refused& refused : {
+                 Refused { "pair( ref v, ref v[0] );", Call_conflict::Element_and_whole, "ref v[0]", "ref v" },
+                 Refused { "see( ref v, v.get() );", Call_conflict::Element_and_whole, "v.get()", "ref v" },
+                 Refused { "v.grow( v.get() );", Call_conflict::Element_and_whole, "v.get()", "v" },
+                 Refused { "fill( out s, ref s[0] );", Call_conflict::Element_and_whole, "ref s[0]", "out s" },
+                 Refused { "ref V r = v; pair( ref r, ref v[0] );", Call_conflict::Element_and_whole, "ref v[0]", "ref r" },
+                 Refused { "pair( ref w.b, ref w.b[0] );", Call_conflict::Element_and_whole, "ref w.b[0]", "ref w.b" },
+                 Refused {
+                     "fn( ref V, ref i32 ) -> void f = &pair; f( ref v, ref v[0] );",
+                     Call_conflict::Element_and_whole,
+                     "ref v[0]",
+                     "ref v"
+                 },
+                 Refused { "two( out p, out p );", Call_conflict::Out_twice, "out p", "out p" },
+                 Refused { "outs( out p.a, out p.a );", Call_conflict::Out_twice, "out p.a", "out p.a" },
+                 Refused { "outp( out p, out p.b );", Call_conflict::Out_twice, "out p.b", "out p" },
+             } )
+        {
+            const Checked p = checked( refused.call );
+
+            INFO( refused.call << "\n" << p.rendered() );
+            REQUIRE( p.clean() );
+
+            const std::vector<Move_error> errors = p.errors();
+
+            REQUIRE( errors.size() == 1 );
+            REQUIRE( errors[0].conflict == refused.conflict );
+            REQUIRE( p.text_at( errors[0].use ) == refused.use );
+            REQUIRE( p.text_at( errors[0].other ) == refused.other );
+
+            // A place `out` twice is refused at the second.
+            if( refused.conflict == Call_conflict::Out_twice )
+            {
+                REQUIRE( errors[0].other.start < errors[0].use.start );
+            }
+        }
+    }
+
+    SECTION( "an element moved with its whole is a move into a borrowing call" )
+    {
+        const Checked p = checked( "eat( move v, ref v[0] );" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::vector<Move_error> errors = p.errors();
+
+        REQUIRE( errors.size() == 1 );
+        REQUIRE( errors[0].conflict == Call_conflict::Moved_and_borrowed );
+        REQUIRE( p.text_at( errors[0].use ) == "ref v[0]" );
+    }
+
+    // A whole only read, a field beside it, and an element of another field cannot reach the element.
+    SECTION( "accepted" )
+    {
+        for( const char* call : {
+                 "look( v, ref v[0] );",
+                 "pair( ref w.a, ref w.b[0] );",
+                 "elems( ref v[0], ref v[1] );",
+                 "outs( out p.a, out p.b );",
+                 "same( out p, ref p );",
+                 "pair( ref v, ref v.x );",
+                 "v.grow( v.x );",
+                 "u.grow( v.get() );",
+                 "see( ref u, v.get() );",
+             } )
+        {
+            const Checked p = checked( call );
+
+            INFO( call << "\n" << p.rendered() );
+            REQUIRE( p.clean() );
+            REQUIRE( p.errors().empty() );
+        }
     }
 }
 

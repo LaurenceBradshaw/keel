@@ -137,6 +137,8 @@ struct Printer
             {
             case Address_purpose::Initialise:
                 return fmt::format( "&init {}", place( value.a.place ) );
+            case Address_purpose::Read:
+                return fmt::format( "&read {}", place( value.a.place ) );
             case Address_purpose::Borrow:
                 return fmt::format( "&borrow {}", place( value.a.place ) );
             }
