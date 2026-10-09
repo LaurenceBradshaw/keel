@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include "common/json.h"
+#include "sema/signature_printer.h"
 
 namespace keel
 {
@@ -51,6 +52,7 @@ private:
     Node_id                  member_named( Node_id type, Symbol_id name ) const;
     Node_id                  member_after_dot( Node_id id ) const;
     Node_id                  chosen( Node_id use, Node_id found ) const;
+    Bindings                 bindings_at( Node_id use ) const;
     Span                     name_span( Node_id id ) const;
     Span                     declared_name_span( Node_id decl ) const;
     bool                     is_qualified( Node_id id ) const;
@@ -63,6 +65,7 @@ private:
 
     std::unordered_set<u32>          top_level_;
     std::unordered_map<u32, Node_id> called_; // a call's callee, to the callable the checker chose
+    std::unordered_map<u32, Node_id> calls_;  // a call's callee, to the call
 };
 
 std::vector<Name> Name_collector::run()
@@ -81,6 +84,7 @@ std::vector<Name> Name_collector::run()
         if( ast_.kind( id ) == Node_kind::Call_expr )
         {
             called_.emplace( ast_.callee( id ).v, types_.callee_of( id ) );
+            calls_.emplace( ast_.callee( id ).v, id );
         }
     }
 
@@ -94,7 +98,19 @@ std::vector<Name> Name_collector::run()
         // Synthesised nodes carry a borrowed span, which the name's text will not match.
         if( const Span span = kind ? name_span( id ) : Span {}; span.is_valid() )
         {
-            names.push_back( { span, *kind, decl.is_valid() ? declared_name_span( decl ) : Span {} } );
+            if( !decl.is_valid() )
+            {
+                names.push_back( { span, *kind, Span {} } );
+                continue;
+            }
+
+            names.push_back(
+                { span,
+                  *kind,
+                  declared_name_span( decl ),
+                  print_signature( ast_, resolution_, types_, interner_, decl, bindings_at( id ) ),
+                  documentation( ast_, sm_, decl ) }
+            );
         }
     }
 
@@ -182,6 +198,47 @@ Node_id Name_collector::chosen( Node_id use, Node_id found ) const
 
     const auto call = called_.find( use.v );
     return call != called_.end() && call->second.is_valid() ? call->second : found;
+}
+
+// What the use binds its declaration's type parameters to: the instance a generic call reached, the
+// object's after a `.`, or the enum a variant builds. None inside the generic itself, where `T` is `T`.
+Bindings Name_collector::bindings_at( Node_id use ) const
+{
+    const auto call = calls_.find( use.v );
+
+    if( call != calls_.end() )
+    {
+        if( const auto which = types_.instantiation_of( call->second ) )
+        {
+            const Instantiation&       instance = types_.instantiations()[*which];
+            const std::vector<Node_id> params   = ast_.type_parameters( ast_.type_param_list( instance.declaration ) );
+
+            Bindings bindings;
+            for( std::size_t i = 0; i < params.size() && i < instance.arguments.size(); ++i )
+            {
+                bindings.emplace( types_.type_of( params[i] ).v, instance.arguments[i] );
+            }
+            return bindings;
+        }
+    }
+
+    Type_id instance {};
+
+    if( ast_.kind( use ) == Node_kind::Field_expr )
+    {
+        instance = types_.type_of( ast_.object( use ) );
+
+        if( instance.is_valid() && types_.table().is_pointer( instance ) )
+        {
+            instance = types_.table().get( instance ).element;
+        }
+    }
+    else if( ast_.kind( use ) == Node_kind::Path_expr )
+    {
+        instance = types_.type_of( call != calls_.end() ? call->second : use );
+    }
+
+    return aggregate_bindings( ast_, types_.table(), instance, types_.recorded() );
 }
 
 std::optional<Name_kind> Name_collector::declaration_kind( Node_id decl ) const
@@ -356,7 +413,13 @@ void render_names_json( const Source_manager& sm, const std::vector<Name>& names
             const Line_col decl_end   = sm.line_col( name.declaration.file, name.declaration.end );
 
             out << R"(,"decl_file":")" << json_escape( sm.file( name.declaration.file ).path ) << R"(","decl_line":)"
-                << decl_start.line << R"(,"decl_col":)" << decl_start.col << R"(,"decl_end_col":)" << decl_end.col;
+                << decl_start.line << R"(,"decl_col":)" << decl_start.col << R"(,"decl_end_col":)" << decl_end.col
+                << R"(,"signature":")" << json_escape( name.signature ) << '"';
+
+            if( !name.doc.empty() )
+            {
+                out << R"(,"doc":")" << json_escape( name.doc ) << '"';
+            }
         }
 
         out << "}\n";
@@ -399,6 +462,29 @@ std::vector<std::string> named( std::string_view source, bool declarations = fal
             declarations ? fmt::format( "{}@{}->{}", sm.text( name.span ), name.span.start, name.declaration.start )
                          : fmt::format( "{}:{}", sm.text( name.span ), name_kind_name( name.kind ) )
         );
+    }
+    return out;
+}
+
+// Each name with a declaration as "text@offset: signature", in source order.
+std::vector<std::string> signed_names( std::string_view source )
+{
+    Source_manager sm;
+    Interner       interner;
+    Literal_pool   literals;
+    Diagnostics    diags;
+
+    const File_id    file       = sm.add_file( "t.kl", std::string( source ) );
+    const Ast        ast        = parse( lex( file, sm, interner, literals, diags ), sm, diags );
+    const Resolution resolution = resolve( ast, sm, interner, diags );
+    const Types      types      = type_check( ast, resolution, literals, sm, interner, diags );
+
+    REQUIRE_FALSE( diags.has_errors() );
+
+    std::vector<std::string> out;
+    for( const Name& name : collect_names( ast, resolution, types, sm, interner ) )
+    {
+        out.push_back( fmt::format( "{}@{}: {}", sm.text( name.span ), name.span.start, name.signature ) );
     }
     return out;
 }
@@ -539,6 +625,75 @@ TEST_CASE( "names_point_at_the_overload_chosen", "[sema][names]" )
     }
 }
 
+// Hover's text: at an instance every type parameter reads as its argument; inside the generic, `T` stays.
+TEST_CASE( "names_carry_the_signature_their_use_sees", "[sema][names]" )
+{
+    constexpr std::string_view source =
+        "struct Box<T>\n"
+        "{\n"
+        "    T* item;\n"
+        "    void put( T* p ) { item = p; }\n"
+        "    void again( T* p ) { put( p ); }\n"
+        "};\n"
+        "enum maybe<T> { some( T value ), none };\n"
+        "T first<T>( T a, T b ) where T : Copyable { return a; }\n"
+        "void f( Box<i32> b, i32* p ) { b.put( p ); i64 n = first( cast<i64>( 1 ), cast<i64>( 2 ) ); "
+        "maybe<bool> m = maybe::some( true ); }\n";
+
+    const auto names = signed_names( source );
+    const auto at    = [&]( std::string_view text, std::size_t skip = 0 ) { return source.find( text ) + skip; };
+
+    SECTION( "a method through an instance" )
+    {
+        REQUIRE( has( names, fmt::format( "put@{}: public void put( i32* p )", at( "b.put", 2 ) ) ) );
+    }
+
+    SECTION( "a method inside its generic" )
+    {
+        REQUIRE( has( names, fmt::format( "put@{}: public void put( T* p )", at( "put( p );" ) ) ) );
+    }
+
+    SECTION( "a generic function at the call's instance" )
+    {
+        REQUIRE( has( names, fmt::format( "first@{}: i64 first<i64>( i64 a, i64 b )", at( "first( cast" ) ) ) );
+    }
+
+    SECTION( "a variant at the enum it builds" )
+    {
+        REQUIRE( has( names, fmt::format( "some@{}: some( bool value )", at( "maybe::some", 7 ) ) ) );
+    }
+
+    SECTION( "a variable as declared" )
+    {
+        REQUIRE( has( names, fmt::format( "b@{}: Box<i32> b", at( "b.put" ) ) ) );
+    }
+}
+
+TEST_CASE( "names_carry_their_declaration's_doc", "[sema][names]" )
+{
+    Source_manager sm;
+    Interner       interner;
+    Literal_pool   literals;
+    Diagnostics    diags;
+
+    const File_id file = sm.add_file(
+        "t.kl",
+        "/// Twice `v`.\n///\n/// Exactly.\ni32 twice( i32 v ) { return v * 2; }\n"
+        "i32 g() { return twice( 1 ); }"
+    );
+    const Ast        ast        = parse( lex( file, sm, interner, literals, diags ), sm, diags );
+    const Resolution resolution = resolve( ast, sm, interner, diags );
+    const Types      types      = type_check( ast, resolution, literals, sm, interner, diags );
+
+    const auto names = collect_names( ast, resolution, types, sm, interner );
+    const auto call =
+        std::ranges::find_if( names, [&]( const Name& n ) { return sm.text( n.span ) == "twice" && n.span.start > 40; } );
+
+    REQUIRE( call != names.end() );
+    REQUIRE( call->signature == "i32 twice( i32 v )" );
+    REQUIRE( call->doc == "Twice `v`.\n\nExactly." );
+}
+
 TEST_CASE( "names_struct_literals_by_their_type", "[sema][names]" )
 {
     const auto names = named( "struct Point { i32 x; i32 y; };\nvoid f() { Point p = Point { 1, 2 }; }" );
@@ -565,14 +720,15 @@ TEST_CASE( "names_render_as_json_lines", "[sema][names]" )
     std::ostringstream out;
     render_names_json(
         sm,
-        { { Span { file, 9, 10 }, Name_kind::Global, Span { file, 4, 5 } }, { Span { file, 7, 8 }, Name_kind::Package, Span {} }
-        },
+        { { Span { file, 9, 10 }, Name_kind::Global, Span { file, 4, 5 }, "i32 x", "The \"x\".\nSecond." },
+          { Span { file, 7, 8 }, Name_kind::Package, Span {} } },
         out
     );
 
     REQUIRE(
         out.str() == "{\"kind\":\"name\",\"refers_to\":\"global\",\"file\":\"a.kl\",\"line\":2,\"col\":3,\"end_col\":4,"
-                     "\"decl_file\":\"a.kl\",\"decl_line\":1,\"decl_col\":5,\"decl_end_col\":6}\n"
+                     "\"decl_file\":\"a.kl\",\"decl_line\":1,\"decl_col\":5,\"decl_end_col\":6,"
+                     "\"signature\":\"i32 x\",\"doc\":\"The \\\"x\\\".\\nSecond.\"}\n"
                      "{\"kind\":\"name\",\"refers_to\":\"package\",\"file\":\"a.kl\",\"line\":2,\"col\":1,\"end_col\":2}\n"
     );
 }

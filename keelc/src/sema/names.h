@@ -4,6 +4,7 @@
 #pragma once
 
 #include <ostream>
+#include <string>
 #include <string_view>
 #include <vector>
 #include "ast/ast.h"
@@ -35,12 +36,14 @@ enum class Name_kind : u8
 std::string_view name_kind_name( Name_kind kind );
 
 // One identifier: its span covers the name alone, and `declaration` the name where it is declared,
-// invalid for a package.
+// invalid for a package. `signature` is the declaration as this use sees it, and `doc` its `///`.
 struct Name
 {
-    Span      span;
-    Name_kind kind;
-    Span      declaration;
+    Span        span;
+    Name_kind   kind;
+    Span        declaration;
+    std::string signature = {};
+    std::string doc       = {};
 };
 
 // Every name resolution bound, plus the variants and members named through a type and the fields and

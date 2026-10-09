@@ -1,0 +1,9 @@
+// Every declaration with its signature as declared, its parent and its doc, after each package's doc.
+
+import geo::shapes;
+
+/// Where the program starts.
+i32 main()
+{
+    return 0;
+}

@@ -1,0 +1,5 @@
+// A plain comment is not documentation.
+
+//! Plane geometry.
+//!
+//! Every length is in metres.

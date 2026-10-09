@@ -1,0 +1,65 @@
+/// A shape in the plane.
+enum Shape
+{
+    /// A circle about the origin.
+    Circle( f64 radius ),
+    Dot
+};
+
+/// A pair of values of one type.
+struct Pair<T> where T : Copyable
+{
+    /// The first value.
+    T first;
+    T second;
+
+    /// The first value, copied.
+    T left() const
+    {
+        return first;
+    }
+
+    /// A pair holding `value` twice.
+    static Pair<T> twice( T value )
+    {
+        return Pair { value, value };
+    }
+};
+
+/// A counter that only grows.
+class Counter
+{
+    /// A counter at zero.
+    public Counter()
+    {
+        count_ = 0;
+    }
+
+    /// Adds one.
+    ///
+    /// # Panics
+    ///
+    /// If the count would overflow.
+    public void bump()
+    {
+        count_++;
+    }
+
+    //// A plain comment: four slashes document nothing.
+    private u64 count_;
+};
+
+/// How many shapes have been drawn.
+i32 drawn = 0;
+
+/// The area of `s`.
+f64 area( Shape s )
+{
+    switch( s )
+    {
+        case Shape::Circle( r ):
+            return 3.0 * r * r;
+        default:
+            return 0.0;
+    }
+}

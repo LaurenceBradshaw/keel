@@ -1872,7 +1872,8 @@ Node_id Parser::parse_destructor_decl( Symbol_id enclosing, Node_id type_params,
 
     advance(); // `~`
 
-    const Symbol_id name = expect_name();
+    const Symbol_id name      = expect_name();
+    const Span      name_span = Span::merge( start, previous().span );
 
     // C++ writes `this` implicitly; Keel writes it down. As an ordinary parameter it needs no
     // special case in the resolver, the checker, mangling or lowering - it is simply parameter 0.
@@ -1894,12 +1895,14 @@ Node_id Parser::parse_destructor_decl( Symbol_id enclosing, Node_id type_params,
         return error_node( Span::merge( start, previous().span ) );
     }
 
-    return ast_.add( // no return type in children; the type parameters are the aggregate's
+    const Node_id node = ast_.add( // no return type in children; the type parameters are the aggregate's
         Node_kind::Destructor_decl,
         Span::merge( start, previous().span ),
         name.v,
         { Node_id {}, params, body, type_params }
     );
+    ast_.set_name_span( node, name_span );
+    return node;
 }
 
 Node_id Parser::parse_constructor_decl( Symbol_id enclosing, Node_id type_params, u32 commit )
@@ -4367,6 +4370,7 @@ TEST_CASE( "parser_records_each_declaration's_name_span", "[parse]" )
              Case { "class C { i32 n; i32 get() { return n; } };", Node_kind::Class_decl, "C" },
              Case { "class C { i32 n; i32 get() { return n; } };", Node_kind::Method_decl, "get" },
              Case { "class C { i32 n; static i32 count = 0; };", Node_kind::Var_decl, "count" },
+             Case { "class C { i32 n; ~C() { } };", Node_kind::Destructor_decl, "~C" },
              Case { "enum Colour { Red };", Node_kind::Enum_decl, "Colour" },
              Case { "enum Shape { Circle( i32 radius ) };", Node_kind::Field_decl, "radius" },
              Case { "T id<T>( T x ) { return x; }", Node_kind::Type_param_decl, "T" },

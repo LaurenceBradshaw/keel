@@ -1,0 +1,22 @@
+{"kind":"file","path":"sema/declarations/main.kl"}
+{"kind":"file","path":"<prelude>"}
+{"kind":"file","path":"sema/declarations/packageinfo.kl"}
+{"kind":"file","path":"sema/declarations/geo/packageinfo.kl"}
+{"kind":"file","path":"sema/declarations/geo/shapes.kl"}
+{"kind":"package","name":"","doc":"The program's own package: its documentation, keyed by the empty name."}
+{"kind":"package","name":"geo","doc":"Plane geometry.\n\nEvery length is in metres."}
+{"kind":"declaration","declares":"function","file":"sema/declarations/main.kl","line":6,"col":5,"end_col":9,"access":"public","signature":"i32 main()","doc":"Where the program starts."}
+{"kind":"declaration","declares":"enum","file":"sema/declarations/geo/shapes.kl","line":2,"col":6,"end_col":11,"access":"public","signature":"enum Shape","doc":"A shape in the plane."}
+{"kind":"declaration","declares":"variant","file":"sema/declarations/geo/shapes.kl","line":5,"col":5,"end_col":11,"access":"public","signature":"Circle( f64 radius )","parent":"Shape","doc":"A circle about the origin."}
+{"kind":"declaration","declares":"variant","file":"sema/declarations/geo/shapes.kl","line":6,"col":5,"end_col":8,"access":"public","signature":"Dot","parent":"Shape"}
+{"kind":"declaration","declares":"struct","file":"sema/declarations/geo/shapes.kl","line":10,"col":8,"end_col":12,"access":"public","signature":"struct Pair<T> where T : Copyable","doc":"A pair of values of one type."}
+{"kind":"declaration","declares":"field","file":"sema/declarations/geo/shapes.kl","line":13,"col":7,"end_col":12,"access":"public","signature":"public T first","parent":"Pair","doc":"The first value."}
+{"kind":"declaration","declares":"field","file":"sema/declarations/geo/shapes.kl","line":14,"col":7,"end_col":13,"access":"public","signature":"public T second","parent":"Pair"}
+{"kind":"declaration","declares":"method","file":"sema/declarations/geo/shapes.kl","line":17,"col":7,"end_col":11,"access":"public","signature":"public T left() const","parent":"Pair","doc":"The first value, copied."}
+{"kind":"declaration","declares":"method","file":"sema/declarations/geo/shapes.kl","line":23,"col":20,"end_col":25,"access":"public","signature":"public static Pair<T> twice( T value )","parent":"Pair","doc":"A pair holding `value` twice."}
+{"kind":"declaration","declares":"class","file":"sema/declarations/geo/shapes.kl","line":30,"col":7,"end_col":14,"access":"public","signature":"class Counter","doc":"A counter that only grows."}
+{"kind":"declaration","declares":"constructor","file":"sema/declarations/geo/shapes.kl","line":33,"col":12,"end_col":19,"access":"public","signature":"public Counter()","parent":"Counter","doc":"A counter at zero."}
+{"kind":"declaration","declares":"method","file":"sema/declarations/geo/shapes.kl","line":43,"col":17,"end_col":21,"access":"public","signature":"public void bump()","parent":"Counter","doc":"Adds one.\n\n# Panics\n\nIf the count would overflow."}
+{"kind":"declaration","declares":"field","file":"sema/declarations/geo/shapes.kl","line":49,"col":17,"end_col":23,"access":"private","signature":"private u64 count_","parent":"Counter"}
+{"kind":"declaration","declares":"global","file":"sema/declarations/geo/shapes.kl","line":53,"col":5,"end_col":10,"access":"public","signature":"i32 drawn","doc":"How many shapes have been drawn."}
+{"kind":"declaration","declares":"function","file":"sema/declarations/geo/shapes.kl","line":56,"col":5,"end_col":9,"access":"public","signature":"f64 area( Shape s )","doc":"The area of `s`."}

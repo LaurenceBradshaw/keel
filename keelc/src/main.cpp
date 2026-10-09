@@ -12,6 +12,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <vector>
 #include "ast/dump.h"
 #include "check/assign_check.h"
@@ -31,6 +32,7 @@
 #include "ir/verify.h"
 #include "lex/lexer.h"
 #include "parse/loader.h"
+#include "sema/declarations.h"
 #include "sema/names.h"
 #include "sema/resolver.h"
 #include "sema/type_checker.h"
@@ -261,6 +263,7 @@ int main( int argc, char** argv )
         ( "check",         "Run the front end and report diagnostics, emitting nothing" )
         ( "diagnostics",   "Report diagnostics as human (on stderr) or json (lines on stdout)", cxxopts::value<std::string>()->default_value( "human" ) )
         ( "names",         "With --diagnostics=json, also say what each name refers to" )
+        ( "declarations",  "With --diagnostics=json, also list every declaration with its signature and doc" )
         ( "package",       "A package and its directory, as name=<dir>; may be repeated", cxxopts::value<std::vector<std::string>>() )
         ( "runtime",       "Link this runtime library instead of the installed one", cxxopts::value<std::string>() )
         ( "print-prelude", "Print the prelude every program sees, and exit" )
@@ -317,10 +320,13 @@ int main( int argc, char** argv )
         return 2;
     }
 
-    if( args.count( "names" ) && diagnostics_format != "json" )
+    for( const char* flag : { "names", "declarations" } )
     {
-        fmt::print( stderr, "keelc: --names needs --diagnostics=json\n" );
-        return 2;
+        if( args.count( flag ) && diagnostics_format != "json" )
+        {
+            fmt::print( stderr, "keelc: --{} needs --diagnostics=json\n", flag );
+            return 2;
+        }
     }
 
     keel::Interner             interner;
@@ -391,9 +397,11 @@ int main( int argc, char** argv )
         return 2;
     }
 
-    keel::Diagnostics       diagnostics;
-    keel::Literal_pool      literals;
-    std::vector<keel::Name> names;
+    keel::Diagnostics                          diagnostics;
+    keel::Literal_pool                         literals;
+    std::vector<keel::Name>                    names;
+    std::vector<keel::Declaration>             declarations;
+    std::unordered_map<keel::u32, std::string> package_docs;
 
     // Reporting is the same wherever we stop, and each --dump flag stops after its own phase.
     const auto finish = [&]() -> int
@@ -402,6 +410,11 @@ int main( int argc, char** argv )
         {
             diagnostics.render_json( sm, std::cout );
             keel::render_names_json( sm, names, std::cout );
+
+            if( args.count( "declarations" ) )
+            {
+                keel::render_declarations_json( sm, interner, package_docs, declarations, std::cout );
+            }
             return diagnostics.has_errors() ? 1 : 0;
         }
 
@@ -461,6 +474,17 @@ int main( int argc, char** argv )
 
         // The prelude is not on disk for an editor to open; a use of it still names it.
         std::erase_if( names, [&]( const keel::Name& name ) { return name.span.file == prog.imports.prelude_file(); } );
+    }
+
+    if( args.count( "declarations" ) )
+    {
+        declarations = keel::collect_declarations( ast, resolution, types, sm, interner );
+
+        // The prelude belongs to no package, so no page lists it; hover reads its docs through --names.
+        std::erase_if(
+            declarations, [&]( const keel::Declaration& decl ) { return decl.span.file == prog.imports.prelude_file(); }
+        );
+        package_docs = prog.package_docs;
     }
 
     // Nothing is emitted for a program that did not check: the emitter takes no Diagnostics
