@@ -1,0 +1,72 @@
+import measure;
+
+/// A shape in the plane.
+enum shape
+{
+    /// A circle about the origin, of radius `r`.
+    circle( f64 r ),
+    dot
+};
+
+/// A polygon that owns its corners.
+///
+/// Corners go anticlockwise:
+///
+/// 1. the first is the lowest,
+/// 2. each after it turns left.
+///
+/// ```
+/// polygon p = polygon( 3 );
+/// p.add( 1.0, 2.0 );
+/// ```
+class polygon
+{
+    /// A polygon with room for `n` corners.
+    public polygon( u64 n )
+    {
+        size_ = 0;
+        room_ = n;
+    }
+
+    /// An empty polygon.
+    public polygon()
+    {
+        size_ = 0;
+        room_ = 0;
+    }
+
+    ~polygon()
+    {
+    }
+
+    /// Adds a corner at `x`, `y`.
+    ///
+    /// ### Panics
+    ///
+    /// If the polygon is full.
+    public void add( f64 x, f64 y )
+    {
+        assert( size_ < room_ );
+        size_++;
+    }
+
+    /// Adds a corner `m` along the x axis.
+    public void add( metres m )
+    {
+        add( m.value, 0.0 );
+    }
+
+    /// Whether the two have the same corners.
+    public bool operator==( const ref polygon other ) const
+    {
+        return size_ == other.size_;
+    }
+
+    /// Hidden: private members are left out.
+    private void grow()
+    {
+    }
+
+    private u64 size_;
+    private u64 room_;
+};

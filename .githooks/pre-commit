@@ -61,7 +61,7 @@ done
 check_format()
 {
     local files
-    mapfile -d '' -t files < <( find keelc keel_rt keel_stl \( -name '*.cpp' -o -name '*.h' -o -name '*.c' \) -print0 2>/dev/null )
+    mapfile -d '' -t files < <( find keelc keel_rt keel_stl keeldoc \( -name '*.cpp' -o -name '*.h' -o -name '*.c' \) -print0 2>/dev/null )
 
     if [ "${#files[@]}" -eq 0 ]; then
         echo "no sources found to format-check - has the layout moved?"
@@ -115,7 +115,7 @@ check_headers()
             echo "$f: changed this year, so its copyright year should be $year, not ${BASH_REMATCH[1]}"
             bad=1
         fi
-    done < <( find keelc keel_rt keel_stl -path '*/test/*' -prune -o -type f \
+    done < <( find keelc keel_rt keel_stl keeldoc -path '*/test/*' -prune -o -type f \
                   \( -name '*.cpp' -o -name '*.h' -o -name '*.c' -o -name '*.kl' \) -print 2>/dev/null )
 
     if [ "$seen" -eq 0 ]; then
@@ -148,6 +148,25 @@ check_goldens()
     return 0
 }
 
+# keeldoc's own pages for its test package, then the stl's pages: regenerated into a scratch
+# directory, so a doc comment changed without regenerating fails here rather than going stale.
+check_docs()
+{
+    keeldoc/test/run_tests.sh ./build/debug/bin/keeldoc ./build/debug/bin/keelc || return 1
+
+    local out; out="$( mktemp -d )"
+    ./build/debug/bin/keeldoc --keelc ./build/debug/bin/keelc -o "$out" kl=keel_stl/src || { rm -rf "$out"; return 1; }
+
+    if ! diff -ru keel_stl/docs "$out"; then
+        echo "keel_stl/docs is stale - regenerate it with:"
+        echo "    build/debug/bin/keeldoc -o keel_stl/docs kl=keel_stl/src"
+        rm -rf "$out"
+        return 1
+    fi
+
+    rm -rf "$out"
+}
+
 echo "pre-commit:"
 
 # Cheapest first, and build before the things that need a binary.
@@ -155,7 +174,9 @@ step "copyright headers"   check_headers                             || exit 1
 step "clang-format"        check_format                              || exit 1
 step "build (debug)"       cmake --build --preset debug              || exit 1
 step "unit tests"          ./build/debug/bin/keel_tests              || exit 1
+step "keeldoc unit tests"  ./build/debug/bin/keeldoc_tests           || exit 1
 step "golden tests"        check_goldens                             || exit 1
+step "docs up to date"     check_docs                                || exit 1
 step "build (release -Werror)" cmake --build --preset release        || exit 1
 
 echo "  ${green}all checks passed${reset}"

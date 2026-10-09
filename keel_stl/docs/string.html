@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kl::string</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header><nav><a href="index.html">kl</a><span class="sep">::</span><span class="here">string</span></nav></header>
+<main>
+<h1><span class="kind">module</span> kl::string</h1>
+<ul class="contents">
+<li><a href="#parse_error"><code>parse_error</code></a> <span class="kind">enum</span></li>
+<li><a href="#string"><code>string</code></a> <span class="kind">class</span></li>
+</ul>
+<section class="entry">
+<h2><span class="kind">enum</span> parse_error</h2>
+<div class="group" id="parse_error">
+<pre class="signature"><a class="anchor" href="#parse_error" aria-label="Link to parse_error">#</a><code><span class="kw">enum</span> parse_error</code></pre>
+<div class="doc">
+<p>Why <code>string::parse_i64</code> refused its text.</p>
+</div>
+</div>
+<h3>Variants</h3>
+<div class="group" id="parse_error.no_digits">
+<pre class="signature"><a class="anchor" href="#parse_error.no_digits" aria-label="Link to no_digits">#</a><code>no_digits</code></pre>
+<div class="doc">
+<p>There are no digits: the text is empty, or only <code>-</code>.</p>
+</div>
+</div>
+<div class="group" id="parse_error.invalid_digit">
+<pre class="signature"><a class="anchor" href="#parse_error.invalid_digit" aria-label="Link to invalid_digit">#</a><code>invalid_digit( <span class="prim">u64</span> index )</code></pre>
+<div class="doc">
+<p>The byte at <code>index</code> cannot continue the number.</p>
+</div>
+</div>
+<div class="group" id="parse_error.overflow">
+<pre class="signature"><a class="anchor" href="#parse_error.overflow" aria-label="Link to overflow">#</a><code>overflow</code></pre>
+<div class="doc">
+<p>The number lies outside the range of <code>i64</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">class</span> string</h2>
+<div class="group" id="string">
+<pre class="signature"><a class="anchor" href="#string" aria-label="Link to string">#</a><code><span class="kw">class</span> string</code></pre>
+<div class="doc">
+<p>A growable sequence of bytes that owns its storage.</p>
+<p>The bytes are not checked to be UTF-8, and every index and size counts bytes.</p>
+</div>
+</div>
+<h3>Constructors</h3>
+<div class="group" id="string.string">
+<pre class="signature"><a class="anchor" href="#string.string" aria-label="Link to string">#</a><code><span class="kw">public</span> string()</code></pre>
+<div class="doc">
+<p>An empty string.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#string.string" aria-label="Link to string">#</a><code><span class="kw">public</span> string( str text )</code></pre>
+<div class="doc">
+<p>A string holding a copy of the bytes of <code>text</code>.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="string.with_capacity">
+<pre class="signature"><a class="anchor" href="#string.with_capacity" aria-label="Link to with_capacity">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#string">string</a> with_capacity( <span class="prim">u64</span> capacity )</code></pre>
+<div class="doc">
+<p>An empty string with room for <code>capacity</code> bytes before it reallocates.</p>
+</div>
+</div>
+<div class="group" id="string.from">
+<pre class="signature"><a class="anchor" href="#string.from" aria-label="Link to from">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#string">string</a> from( <span class="prim">u64</span> value )</code></pre>
+<div class="doc">
+<p><code>value</code> written in decimal, with no leading zeros.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#string.from" aria-label="Link to from">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#string">string</a> from( <span class="prim">i64</span> value )</code></pre>
+<div class="doc">
+<p><code>value</code> written in decimal, with a leading <code>-</code> if it is negative and no leading zeros.</p>
+</div>
+</div>
+<div class="group" id="string.parse_i64">
+<pre class="signature"><a class="anchor" href="#string.parse_i64" aria-label="Link to parse_i64">#</a><code><span class="kw">public</span> result&lt;<span class="prim">i64</span>, <a class="type" href="#parse_error">parse_error</a>&gt; parse_i64() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The <code>i64</code> the string writes in decimal.</p>
+<p>The text is an optional <code>-</code> and then one or more digits <code>0</code> to <code>9</code>, which may have leading
+zeros. Nothing else is read: not a <code>+</code>, whitespace or a separator.</p>
+<h4>Errors</h4>
+<p><code>no_digits</code> if there are no digits, <code>invalid_digit</code> naming the first byte that cannot continue
+the number, and <code>overflow</code> as soon as the number leaves the range of <code>i64</code>.</p>
+</div>
+</div>
+<div class="group" id="string.push">
+<pre class="signature"><a class="anchor" href="#string.push" aria-label="Link to push">#</a><code><span class="kw">public</span> <span class="prim">void</span> push( <span class="prim">u8</span> value )</code></pre>
+<div class="doc">
+<p>Adds the byte <code>value</code> at the end.</p>
+</div>
+</div>
+<div class="group" id="string.pop">
+<pre class="signature"><a class="anchor" href="#string.pop" aria-label="Link to pop">#</a><code><span class="kw">public</span> <span class="prim">u8</span> pop()</code></pre>
+<div class="doc">
+<p>Removes the last byte and returns it.</p>
+<h4>Panics</h4>
+<p>If the string is empty.</p>
+</div>
+</div>
+<div class="group" id="string.append">
+<pre class="signature"><a class="anchor" href="#string.append" aria-label="Link to append">#</a><code><span class="kw">public</span> <span class="prim">void</span> append( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#string">string</a> other )</code></pre>
+<div class="doc">
+<p>Adds a copy of every byte of <code>other</code> at the end.</p>
+</div>
+</div>
+<div class="group" id="string.clear">
+<pre class="signature"><a class="anchor" href="#string.clear" aria-label="Link to clear">#</a><code><span class="kw">public</span> <span class="prim">void</span> clear()</code></pre>
+<div class="doc">
+<p>Removes every byte and releases the storage.</p>
+</div>
+</div>
+<div class="group" id="string.operator[]">
+<pre class="signature"><a class="anchor" href="#string.operator[]" aria-label="Link to operator[]">#</a><code><span class="kw">public</span> <span class="kw">const</span> <span class="prim">u8</span>* <span class="kw">operator</span>[]( <span class="prim">u64</span> index ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>A pointer to the byte at <code>index</code>.</p>
+<h4>Panics</h4>
+<p>If <code>index</code> is not less than <code>size()</code>.</p>
+</div>
+</div>
+<div class="group" id="string.size">
+<pre class="signature"><a class="anchor" href="#string.size" aria-label="Link to size">#</a><code><span class="kw">public</span> <span class="prim">u64</span> size() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The number of bytes.</p>
+</div>
+</div>
+<div class="group" id="string.is_empty">
+<pre class="signature"><a class="anchor" href="#string.is_empty" aria-label="Link to is_empty">#</a><code><span class="kw">public</span> <span class="prim">bool</span> is_empty() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether the string holds no bytes.</p>
+</div>
+</div>
+<div class="group" id="string.operator==">
+<pre class="signature"><a class="anchor" href="#string.operator==" aria-label="Link to operator==">#</a><code><span class="kw">public</span> <span class="prim">bool</span> <span class="kw">operator</span>==( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#string">string</a> other ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether both strings hold the same bytes in the same order.</p>
+</div>
+</div>
+<div class="group" id="string.starts_with">
+<pre class="signature"><a class="anchor" href="#string.starts_with" aria-label="Link to starts_with">#</a><code><span class="kw">public</span> <span class="prim">bool</span> starts_with( str prefix ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether the string begins with the bytes of <code>prefix</code>; every string begins with <code>&quot;&quot;</code>.</p>
+</div>
+</div>
+<div class="group" id="string.ends_with">
+<pre class="signature"><a class="anchor" href="#string.ends_with" aria-label="Link to ends_with">#</a><code><span class="kw">public</span> <span class="prim">bool</span> ends_with( str suffix ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether the string ends with the bytes of <code>suffix</code>; every string ends with <code>&quot;&quot;</code>.</p>
+</div>
+</div>
+<div class="group" id="string.find">
+<pre class="signature"><a class="anchor" href="#string.find" aria-label="Link to find">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;<span class="prim">u64</span>&gt; find( str needle ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The index of the first place <code>needle</code> occurs, or <code>none</code>. <code>&quot;&quot;</code> is found at 0.</p>
+</div>
+</div>
+<div class="group" id="string.substring">
+<pre class="signature"><a class="anchor" href="#string.substring" aria-label="Link to substring">#</a><code><span class="kw">public</span> <a class="type" href="#string">string</a> substring( <span class="prim">u64</span> start, <span class="prim">u64</span> count ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>A new string holding the <code>count</code> bytes from index <code>start</code> on.</p>
+<h4>Panics</h4>
+<p>If those bytes do not all lie within the string.</p>
+</div>
+</div>
+</section>
+</main>
+<footer>Copyright 2026 Laurence Bradshaw. Licensed under Apache-2.0 WITH LLVM-exception.</footer>
+</body>
+</html>

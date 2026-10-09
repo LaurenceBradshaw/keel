@@ -162,10 +162,11 @@ void render_declarations_json(
         const Line_col start = sm.line_col( decl.span.file, decl.span.start );
         const Line_col end   = sm.line_col( decl.span.file, decl.span.end );
 
-        out << R"({"kind":"declaration","declares":")" << decl.kind << R"(","file":")"
-            << json_escape( sm.file( decl.span.file ).path ) << R"(","line":)" << start.line << R"(,"col":)" << start.col
-            << R"(,"end_col":)" << end.col << R"(,"access":")" << ( decl.access == Access::Private ? "private" : "public" )
-            << R"(","signature":")" << json_escape( decl.signature ) << '"';
+        out << R"({"kind":"declaration","declares":")" << decl.kind << R"(","name":")" << json_escape( sm.text( decl.span ) )
+            << R"(","file":")" << json_escape( sm.file( decl.span.file ).path ) << R"(","line":)" << start.line << R"(,"col":)"
+            << start.col << R"(,"end_col":)" << end.col << R"(,"access":")"
+            << ( decl.access == Access::Private ? "private" : "public" ) << R"(","signature":")"
+            << json_escape( decl.signature ) << '"';
 
         if( !decl.parent.empty() )
         {
@@ -263,7 +264,8 @@ TEST_CASE( "declarations_render_as_json_lines_after_their_packages", "[sema][dec
 
     REQUIRE(
         out.str() == "{\"kind\":\"package\",\"name\":\"kl\",\"doc\":\"The library.\"}\n"
-                     "{\"kind\":\"declaration\",\"declares\":\"method\",\"file\":\"a.kl\",\"line\":1,\"col\":6,\"end_col\":9,"
+                     "{\"kind\":\"declaration\",\"declares\":\"method\",\"name\":\"get\",\"file\":\"a.kl\",\"line\":1,\"col\":"
+                     "6,\"end_col\":9,"
                      "\"access\":\"private\",\"signature\":\"private void get()\",\"parent\":\"Box\","
                      "\"doc\":\"Gets \\\"it\\\".\"}\n"
     );

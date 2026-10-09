@@ -10,7 +10,7 @@ enum optional<T>
     none
 };
 
-/// The value `o` holds.
+/// Takes the value out of an optional, panicking if there is none.
 ///
 /// ### Panics
 ///
@@ -26,7 +26,7 @@ T unwrap<T>( move optional<T> o )
     }
 }
 
-/// The value `o` holds.
+/// Takes the value out of an optional, panicking with a given message if there is none.
 ///
 /// ### Panics
 ///
@@ -42,7 +42,9 @@ T expect<T>( move optional<T> o, str message )
     }
 }
 
-/// The value `o` holds, or `fallback` if it is `none`. An unused `fallback` is dropped.
+/// Takes the value out of an optional, or a fallback if there is none.
+///
+/// Returns `fallback` if `o` is `none`; an unused `fallback` is dropped.
 T value_or<T>( move optional<T> o, move T fallback )
 {
     switch( move o )
@@ -54,7 +56,7 @@ T value_or<T>( move optional<T> o, move T fallback )
     }
 }
 
-/// Whether `o` holds a value.
+/// Whether an optional holds a value.
 bool is_some<T>( const ref optional<T> o )
 {
     switch( o )
@@ -66,7 +68,7 @@ bool is_some<T>( const ref optional<T> o )
     }
 }
 
-/// Whether `o` holds nothing.
+/// Whether an optional holds nothing.
 bool is_none<T>( const ref optional<T> o )
 {
     switch( o )

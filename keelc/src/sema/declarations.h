@@ -36,7 +36,8 @@ std::vector<Declaration> collect_declarations(
 );
 
 // One {"kind":"package",...} line per package with a `//!` doc, by name, then one
-// {"kind":"declaration",...} line per declaration, after the diagnostics of --diagnostics=json.
+// {"kind":"declaration",...} line per declaration, naming it as its span spells it ("~list",
+// "operator[]"), after the diagnostics of --diagnostics=json.
 void render_declarations_json(
     const Source_manager&                       sm,
     const Interner&                             interner,

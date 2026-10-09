@@ -1,0 +1,6 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+//! Plane geometry, for keeldoc's tests.
+//!
+//! Lengths are in **metres** and angles in *radians*. See [the plan](../../docs/PLAN.md).

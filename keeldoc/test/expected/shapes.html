@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>geo::shapes</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header><nav><a href="index.html">geo</a><span class="sep">::</span><span class="here">shapes</span></nav></header>
+<main>
+<h1><span class="kind">module</span> geo::shapes</h1>
+<ul class="contents">
+<li><a href="#shape"><code>shape</code></a> <span class="kind">enum</span></li>
+<li><a href="#polygon"><code>polygon</code></a> <span class="kind">class</span></li>
+</ul>
+<section class="entry">
+<h2><span class="kind">enum</span> shape</h2>
+<div class="group" id="shape">
+<pre class="signature"><a class="anchor" href="#shape" aria-label="Link to shape">#</a><code><span class="kw">enum</span> shape</code></pre>
+<div class="doc">
+<p>A shape in the plane.</p>
+</div>
+</div>
+<h3>Variants</h3>
+<div class="group" id="shape.circle">
+<pre class="signature"><a class="anchor" href="#shape.circle" aria-label="Link to circle">#</a><code>circle( <span class="prim">f64</span> r )</code></pre>
+<div class="doc">
+<p>A circle about the origin, of radius <code>r</code>.</p>
+</div>
+</div>
+<div class="group" id="shape.dot">
+<pre class="signature"><a class="anchor" href="#shape.dot" aria-label="Link to dot">#</a><code>dot</code></pre>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">class</span> polygon</h2>
+<div class="group" id="polygon">
+<pre class="signature"><a class="anchor" href="#polygon" aria-label="Link to polygon">#</a><code><span class="kw">class</span> polygon</code></pre>
+<div class="doc">
+<p>A polygon that owns its corners.</p>
+<p>Corners go anticlockwise:</p>
+<ol>
+<li>the first is the lowest,</li>
+<li>each after it turns left.</li>
+</ol>
+<pre><code>polygon p = polygon( 3 );
+p.add( 1.0, 2.0 );
+</code></pre>
+</div>
+</div>
+<h3>Constructors</h3>
+<div class="group" id="polygon.polygon">
+<pre class="signature"><a class="anchor" href="#polygon.polygon" aria-label="Link to polygon">#</a><code><span class="kw">public</span> polygon( <span class="prim">u64</span> n )</code></pre>
+<div class="doc">
+<p>A polygon with room for <code>n</code> corners.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#polygon.polygon" aria-label="Link to polygon">#</a><code><span class="kw">public</span> polygon()</code></pre>
+<div class="doc">
+<p>An empty polygon.</p>
+</div>
+</div>
+<div class="group" id="polygon.~polygon">
+<pre class="signature"><a class="anchor" href="#polygon.~polygon" aria-label="Link to ~polygon">#</a><code>~polygon()</code></pre>
+</div>
+<h3>Methods</h3>
+<div class="group" id="polygon.add">
+<pre class="signature"><a class="anchor" href="#polygon.add" aria-label="Link to add">#</a><code><span class="kw">public</span> <span class="prim">void</span> add( <span class="prim">f64</span> x, <span class="prim">f64</span> y )</code></pre>
+<div class="doc">
+<p>Adds a corner at <code>x</code>, <code>y</code>.</p>
+<h4>Panics</h4>
+<p>If the polygon is full.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#polygon.add" aria-label="Link to add">#</a><code><span class="kw">public</span> <span class="prim">void</span> add( <a class="type" href="measure.html#metres">metres</a> m )</code></pre>
+<div class="doc">
+<p>Adds a corner <code>m</code> along the x axis.</p>
+</div>
+</div>
+<div class="group" id="polygon.operator==">
+<pre class="signature"><a class="anchor" href="#polygon.operator==" aria-label="Link to operator==">#</a><code><span class="kw">public</span> <span class="prim">bool</span> <span class="kw">operator</span>==( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#polygon">polygon</a> other ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether the two have the same corners.</p>
+</div>
+</div>
+</section>
+</main>
+<footer>Copyright 2026 Laurence Bradshaw. Licensed under Apache-2.0 WITH LLVM-exception.</footer>
+</body>
+</html>

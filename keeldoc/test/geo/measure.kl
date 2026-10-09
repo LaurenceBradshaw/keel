@@ -1,0 +1,27 @@
+/// A length along one axis.
+struct metres
+{
+    /// The length, which may be negative.
+    f64 value;
+
+    /// The shortest length a shape may have.
+    static const f64 least = 0.001;
+};
+
+/// The larger of `a` and `b`.
+f64 larger( f64 a, f64 b )
+{
+    return a > b ? a : b;
+}
+
+/// The larger of `a` and `b`, in metres.
+metres larger( metres a, metres b )
+{
+    return metres { larger( a.value, b.value ) };
+}
+
+/// `n` times `<b>` & more.
+i32 times( i32 n )
+{
+    return n;
+}

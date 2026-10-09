@@ -315,6 +315,7 @@ build/debug/bin/keelc --package kl=keel_stl/src prog.kl -o prog
 | `--check` | Run the front end and report diagnostics, emitting nothing |
 | `--diagnostics=json` | Report diagnostics as JSON lines on stdout, for an editor |
 | `--names` | With `--diagnostics=json`, also report what each name refers to |
+| `--declarations` | With `--diagnostics=json`, also list every declaration with its signature and doc |
 | `--dump-tokens` / `--dump-ast` / `--dump-kir` | Print that stage and stop |
 | `--emit-c` | Print the generated C and stop |
 | `--print-prelude` | Print the prelude every program sees, and exit |
@@ -324,13 +325,22 @@ build/debug/bin/keelc --package kl=keel_stl/src prog.kl -o prog
 `keelc` compiles the generated C with `$CC` (default `cc`), adding `$CFLAGS`.
 
 [`editors/vscode`](editors/vscode) is a VS Code extension: highlighting, keelc's errors underlined on
-save, names coloured by what they refer to, and go-to-definition. Its README says how to install it.
+save, names coloured by what they refer to, hovers, and go-to-definition. Its README says how to install it.
+
+`keeldoc` writes a package's documentation as HTML pages from its `///` and `//!` comments. The
+library's are in [`keel_stl/docs`](keel_stl/docs); after changing a doc comment, regenerate them:
+
+```sh
+build/debug/bin/keeldoc -o keel_stl/docs kl=keel_stl/src
+```
 
 ## Testing
 
 ```sh
 build/debug/bin/keel_tests                              # unit tests
 keelc/test/run_tests.sh build/debug/bin/keelc           # golden-file tests
+build/debug/bin/keeldoc_tests                           # keeldoc's unit tests
+keeldoc/test/run_tests.sh build/debug/bin/keeldoc build/debug/bin/keelc   # keeldoc's pages
 ```
 
 The golden runner links the runtime built beside the `keelc` it is given. Under the `asan` preset,
@@ -355,7 +365,8 @@ keelc/src/check      move checking and definite assignment over the KIR CFG
 keelc/src/codegen_c  KIR to C11
 keelc/src/prelude    the prelude, Keel source built into the compiler
 keel_rt              the runtime floor (allocation, aborts)
-keel_stl             the standard library, the `kl` package
+keel_stl             the standard library, the `kl` package, and its pages in docs/
+keeldoc              the doc tool: keelc's --declarations to HTML pages
 editors/vscode       the VS Code extension
 ```
 

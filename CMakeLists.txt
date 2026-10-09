@@ -50,10 +50,11 @@ if(KEEL_TESTS)
     include(CTest)
 endif()
 
-# One repository, three projects, three languages: keelc is C++, keel_rt is the C floor every Keel
-# program links against, and keel_stl is Keel compiled by keelc. Each is buildable from here, and
-# each keeps its own include root - so keelc's sources still say `#include "lex/lexer.h"` and never
-# name the project they are in.
+# One repository, four projects, three languages: keelc is C++, keel_rt is the C floor every Keel
+# program links against, keel_stl is Keel compiled by keelc, and keeldoc is the C++ tool writing a
+# package's pages from keelc's records. Each is buildable from here, and each keeps its own include
+# root - so keelc's sources still say `#include "lex/lexer.h"` and never name the project they are in.
 add_subdirectory(keelc)
 add_subdirectory(keel_rt)
 add_subdirectory(keel_stl)
+add_subdirectory(keeldoc)

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kl</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header><nav><span class="here">kl</span></nav></header>
+<main>
+<h1><span class="kind">package</span> kl</h1>
+<div class="doc">
+<p>The Keel standard library.</p>
+<p>Each module is imported by name through the package, <code>import kl::list;</code>, and its declarations
+are written through the package too, <code>kl::list&lt;i32&gt;</code>.</p>
+<ul>
+<li><code>list</code>: <code>list&lt;T&gt;</code>, a growable array.</li>
+<li><code>string</code>: <code>string</code>, a growable sequence of bytes, and <code>parse_error</code>.</li>
+<li><code>optional</code>: <code>optional&lt;T&gt;</code>, a value or nothing, and the functions that take one apart.</li>
+<li><code>pair</code>: <code>pair&lt;A, B&gt;</code>, two values held together.</li>
+</ul>
+</div>
+<h2>Modules</h2>
+<section class="module">
+<h3><a href="list.html">list</a></h3>
+<dl class="summaries">
+<dt><a href="list.html#list"><code>list</code></a> <span class="kind">class</span></dt>
+<dd>A growable array of <code>T</code> that owns its elements and the block holding them.</dd>
+</dl>
+</section>
+<section class="module">
+<h3><a href="optional.html">optional</a></h3>
+<dl class="summaries">
+<dt><a href="optional.html#optional"><code>optional</code></a> <span class="kind">enum</span></dt>
+<dd>A value of type <code>T</code>, or nothing.</dd>
+<dt><a href="optional.html#unwrap"><code>unwrap</code></a> <span class="kind">function</span></dt>
+<dd>Takes the value out of an optional, panicking if there is none.</dd>
+<dt><a href="optional.html#expect"><code>expect</code></a> <span class="kind">function</span></dt>
+<dd>Takes the value out of an optional, panicking with a given message if there is none.</dd>
+<dt><a href="optional.html#value_or"><code>value_or</code></a> <span class="kind">function</span></dt>
+<dd>Takes the value out of an optional, or a fallback if there is none.</dd>
+<dt><a href="optional.html#is_some"><code>is_some</code></a> <span class="kind">function</span></dt>
+<dd>Whether an optional holds a value.</dd>
+<dt><a href="optional.html#is_none"><code>is_none</code></a> <span class="kind">function</span></dt>
+<dd>Whether an optional holds nothing.</dd>
+</dl>
+</section>
+<section class="module">
+<h3><a href="pair.html">pair</a></h3>
+<dl class="summaries">
+<dt><a href="pair.html#pair"><code>pair</code></a> <span class="kind">class</span></dt>
+<dd>Two values, of possibly different types, held together.</dd>
+</dl>
+</section>
+<section class="module">
+<h3><a href="string.html">string</a></h3>
+<dl class="summaries">
+<dt><a href="string.html#parse_error"><code>parse_error</code></a> <span class="kind">enum</span></dt>
+<dd>Why <code>string::parse_i64</code> refused its text.</dd>
+<dt><a href="string.html#string"><code>string</code></a> <span class="kind">class</span></dt>
+<dd>A growable sequence of bytes that owns its storage.</dd>
+</dl>
+</section>
+</main>
+<footer>Copyright 2026 Laurence Bradshaw. Licensed under Apache-2.0 WITH LLVM-exception.</footer>
+</body>
+</html>

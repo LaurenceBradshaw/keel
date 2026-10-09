@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kl::optional</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header><nav><a href="index.html">kl</a><span class="sep">::</span><span class="here">optional</span></nav></header>
+<main>
+<h1><span class="kind">module</span> kl::optional</h1>
+<ul class="contents">
+<li><a href="#optional"><code>optional</code></a> <span class="kind">enum</span></li>
+<li><a href="#unwrap"><code>unwrap</code></a> <span class="kind">function</span></li>
+<li><a href="#expect"><code>expect</code></a> <span class="kind">function</span></li>
+<li><a href="#value_or"><code>value_or</code></a> <span class="kind">function</span></li>
+<li><a href="#is_some"><code>is_some</code></a> <span class="kind">function</span></li>
+<li><a href="#is_none"><code>is_none</code></a> <span class="kind">function</span></li>
+</ul>
+<section class="entry">
+<h2><span class="kind">enum</span> optional</h2>
+<div class="group" id="optional">
+<pre class="signature"><a class="anchor" href="#optional" aria-label="Link to optional">#</a><code><span class="kw">enum</span> optional&lt;T&gt;</code></pre>
+<div class="doc">
+<p>A value of type <code>T</code>, or nothing.</p>
+</div>
+</div>
+<h3>Variants</h3>
+<div class="group" id="optional.some">
+<pre class="signature"><a class="anchor" href="#optional.some" aria-label="Link to some">#</a><code>some( T value )</code></pre>
+<div class="doc">
+<p>Holds a value.</p>
+</div>
+</div>
+<div class="group" id="optional.none">
+<pre class="signature"><a class="anchor" href="#optional.none" aria-label="Link to none">#</a><code>none</code></pre>
+<div class="doc">
+<p>Holds nothing.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> unwrap</h2>
+<div class="group" id="unwrap">
+<pre class="signature"><a class="anchor" href="#unwrap" aria-label="Link to unwrap">#</a><code>T unwrap&lt;T&gt;( <span class="kw">move</span> <a class="type" href="#optional">optional</a>&lt;T&gt; o )</code></pre>
+<div class="doc">
+<p>Takes the value out of an optional, panicking if there is none.</p>
+<h4>Panics</h4>
+<p>If <code>o</code> is <code>none</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> expect</h2>
+<div class="group" id="expect">
+<pre class="signature"><a class="anchor" href="#expect" aria-label="Link to expect">#</a><code>T expect&lt;T&gt;( <span class="kw">move</span> <a class="type" href="#optional">optional</a>&lt;T&gt; o, str message )</code></pre>
+<div class="doc">
+<p>Takes the value out of an optional, panicking with a given message if there is none.</p>
+<h4>Panics</h4>
+<p>If <code>o</code> is <code>none</code>, with <code>message</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> value_or</h2>
+<div class="group" id="value_or">
+<pre class="signature"><a class="anchor" href="#value_or" aria-label="Link to value_or">#</a><code>T value_or&lt;T&gt;( <span class="kw">move</span> <a class="type" href="#optional">optional</a>&lt;T&gt; o, <span class="kw">move</span> T fallback )</code></pre>
+<div class="doc">
+<p>Takes the value out of an optional, or a fallback if there is none.</p>
+<p>Returns <code>fallback</code> if <code>o</code> is <code>none</code>; an unused <code>fallback</code> is dropped.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> is_some</h2>
+<div class="group" id="is_some">
+<pre class="signature"><a class="anchor" href="#is_some" aria-label="Link to is_some">#</a><code><span class="prim">bool</span> is_some&lt;T&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#optional">optional</a>&lt;T&gt; o )</code></pre>
+<div class="doc">
+<p>Whether an optional holds a value.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> is_none</h2>
+<div class="group" id="is_none">
+<pre class="signature"><a class="anchor" href="#is_none" aria-label="Link to is_none">#</a><code><span class="prim">bool</span> is_none&lt;T&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#optional">optional</a>&lt;T&gt; o )</code></pre>
+<div class="doc">
+<p>Whether an optional holds nothing.</p>
+</div>
+</div>
+</section>
+</main>
+<footer>Copyright 2026 Laurence Bradshaw. Licensed under Apache-2.0 WITH LLVM-exception.</footer>
+</body>
+</html>
