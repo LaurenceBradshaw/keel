@@ -47,13 +47,14 @@ public:
 
 private:
     bool                     is_package( Node_id id ) const;
+    bool                     declares_here( Node_id id ) const;
     Node_id                  referent( Node_id id ) const;
     std::optional<Name_kind> declaration_kind( Node_id decl ) const;
     Node_id                  member_named( Node_id type, Symbol_id name ) const;
     Node_id                  member_after_dot( Node_id id ) const;
     Node_id                  chosen( Node_id use, Node_id found ) const;
     Bindings                 bindings_at( Node_id use ) const;
-    Span                     name_span( Node_id id ) const;
+    Span                     name_span( Node_id id, bool declares ) const;
     Span                     declared_name_span( Node_id decl ) const;
     bool                     is_qualified( Node_id id ) const;
 
@@ -66,6 +67,7 @@ private:
     std::unordered_set<u32>          top_level_;
     std::unordered_map<u32, Node_id> called_; // a call's callee, to the callable the checker chose
     std::unordered_map<u32, Node_id> calls_;  // a call's callee, to the call
+    std::unordered_map<u32, Node_id> owners_; // a type parameter, to the declaration it parameterises
 };
 
 std::vector<Name> Name_collector::run()
@@ -86,17 +88,24 @@ std::vector<Name> Name_collector::run()
             called_.emplace( ast_.callee( id ).v, types_.callee_of( id ) );
             calls_.emplace( ast_.callee( id ).v, id );
         }
+
+        // A method lists its aggregate's parameters too; the aggregate comes after it, and wins.
+        for( const Node_id param : ast_.type_parameters( ast_.type_param_list( id ) ) )
+        {
+            owners_.insert_or_assign( param.v, id );
+        }
     }
 
     for( u32 i = 0; i < ast_.node_count(); ++i )
     {
         const Node_id id { i };
 
-        const Node_id                  decl = referent( id );
-        const std::optional<Name_kind> kind = is_package( id ) ? Name_kind::Package : declaration_kind( decl );
+        const bool                     declares = declares_here( id );
+        const Node_id                  decl     = declares ? id : referent( id );
+        const std::optional<Name_kind> kind     = is_package( id ) ? Name_kind::Package : declaration_kind( decl );
 
         // Synthesised nodes carry a borrowed span, which the name's text will not match.
-        if( const Span span = kind ? name_span( id ) : Span {}; span.is_valid() )
+        if( const Span span = kind ? name_span( id, declares ) : Span {}; span.is_valid() )
         {
             if( !decl.is_valid() )
             {
@@ -104,12 +113,15 @@ std::vector<Name> Name_collector::run()
                 continue;
             }
 
+            const auto owner = owners_.find( decl.v );
+
             names.push_back(
                 { span,
                   *kind,
                   declared_name_span( decl ),
                   print_signature( ast_, resolution_, types_, interner_, decl, bindings_at( id ) ),
-                  documentation( ast_, sm_, decl ) }
+                  documentation( ast_, sm_, decl ),
+                  owner != owners_.end() ? print_signature( ast_, resolution_, types_, interner_, owner->second ) : "" }
             );
         }
     }
@@ -132,6 +144,27 @@ bool Name_collector::is_package( Node_id id ) const
 {
     return ast_.kind( id ) == Node_kind::Name_expr && !resolution_.declaration_of( id ).is_valid() &&
            !ast_.type_arg_list( id ).is_valid() && resolution_.is_package( ast_.name( id ) );
+}
+
+// A declaration whose own name is written here; a type parameter and a pattern binding are named
+// through `referent`, and a constructor or destructor by its type.
+bool Name_collector::declares_here( Node_id id ) const
+{
+    switch( ast_.kind( id ) )
+    {
+    case Node_kind::Function_decl:
+    case Node_kind::Method_decl:
+    case Node_kind::Struct_decl:
+    case Node_kind::Class_decl:
+    case Node_kind::Enum_decl:
+    case Node_kind::Variant_decl:
+    case Node_kind::Field_decl:
+    case Node_kind::Var_decl:
+    case Node_kind::Param_decl:
+        return ast_.name( id ).is_valid() && ast_.name( id ) != Interner::keyword( Keyword::This );
+    default:
+        return false;
+    }
 }
 
 // The declaration a written name refers to, or invalid when it is not a name or resolved to nothing.
@@ -319,8 +352,9 @@ bool Name_collector::is_qualified( Node_id id ) const
     }
 }
 
-// The parser ends a qualified name's span on the name, and starts every other one with it.
-Span Name_collector::name_span( Node_id id ) const
+// The parser records a declaration's name span, ends a qualified name's span on the name, and starts
+// every other one with it.
+Span Name_collector::name_span( Node_id id, bool declares ) const
 {
     if( ast_.kind( id ) == Node_kind::Struct_literal )
     {
@@ -328,7 +362,7 @@ Span Name_collector::name_span( Node_id id ) const
     }
 
     const std::string_view name = interner_.text( ast_.name( id ) );
-    const Span             node = ast_.span( id );
+    const Span             node = declares ? ast_.name_span( id ) : ast_.span( id );
     const std::string_view text = sm_.file( node.file ).text;
 
     u32 start = node.start;
@@ -416,6 +450,11 @@ void render_names_json( const Source_manager& sm, const std::vector<Name>& names
                 << decl_start.line << R"(,"decl_col":)" << decl_start.col << R"(,"decl_end_col":)" << decl_end.col
                 << R"(,"signature":")" << json_escape( name.signature ) << '"';
 
+            if( !name.owner.empty() )
+            {
+                out << R"(,"owner":")" << json_escape( name.owner ) << '"';
+            }
+
             if( !name.doc.empty() )
             {
                 out << R"(,"doc":")" << json_escape( name.doc ) << '"';
@@ -499,8 +538,8 @@ TEST_CASE( "names_a_lowercase_class_called_as_a_constructor", "[sema][names]" )
     const auto names = named( "class meter { i32 n; public meter( i32 s ) { n = s; } };\n"
                               "void f() { meter m = meter( 1 ); }" );
 
-    // The constructor's own name, the annotation and the call.
-    REQUIRE( std::ranges::count( names, std::string( "meter:class" ) ) == 3 );
+    // The class's own name, the constructor's, the annotation and the call.
+    REQUIRE( std::ranges::count( names, std::string( "meter:class" ) ) == 4 );
     REQUIRE( has( names, "n:field" ) );
     REQUIRE( has( names, "s:parameter" ) );
 }
@@ -566,7 +605,9 @@ TEST_CASE( "names_fields_and_methods_after_a_dot", "[sema][names]" )
     {
         const auto names = named( source );
 
-        REQUIRE( std::ranges::count( names, std::string( "x:field" ) ) == 5 ); // three bare in the methods, p.x and q.x
+        REQUIRE(
+            std::ranges::count( names, std::string( "x:field" ) ) == 6
+        ); // its declaration, three bare in the methods, p.x and q.x
         REQUIRE( has( names, "get:method" ) );
         REQUIRE( has( names, "add:method" ) );
     }
@@ -669,6 +710,50 @@ TEST_CASE( "names_carry_the_signature_their_use_sees", "[sema][names]" )
     }
 }
 
+// Hovering a declaration shows it as its uses do; a type parameter shows what it parameterises.
+TEST_CASE( "names_name_each_declaration_where_written", "[sema][names]" )
+{
+    constexpr std::string_view source = "i32 total = 0;\n"
+                                        "class Box<T> where T : Copyable\n"
+                                        "{\n"
+                                        "    T item;\n"
+                                        "    public static Box<T> of( T v ) { return Box<T>( v ); }\n"
+                                        "    public Box( T v ) { item = v; }\n"
+                                        "};\n"
+                                        "enum Colour { Red( i32 shade ) };\n";
+
+    const auto names = signed_names( source );
+    const auto at    = [&]( std::string_view text, std::size_t skip = 0 ) { return source.find( text ) + skip; };
+
+    REQUIRE( has( names, fmt::format( "total@{}: i32 total", at( "total" ) ) ) );
+    REQUIRE( has( names, fmt::format( "Box@{}: class Box<T> where T : Copyable", at( "Box" ) ) ) );
+    REQUIRE( has( names, fmt::format( "item@{}: private T item", at( "item" ) ) ) );
+    REQUIRE( has( names, fmt::format( "of@{}: public static Box<T> of( T v )", at( "of(" ) ) ) );
+    REQUIRE( has( names, fmt::format( "v@{}: T v", at( "T v )", 2 ) ) ) );
+    REQUIRE( has( names, fmt::format( "Colour@{}: enum Colour", at( "Colour" ) ) ) );
+    REQUIRE( has( names, fmt::format( "Red@{}: Red( i32 shade )", at( "Red" ) ) ) );
+    REQUIRE( has( names, fmt::format( "shade@{}: i32 shade", at( "shade" ) ) ) );
+
+    SECTION( "a type parameter carries its owner" )
+    {
+        Source_manager sm;
+        Interner       interner;
+        Literal_pool   literals;
+        Diagnostics    diags;
+
+        const File_id    file       = sm.add_file( "t.kl", std::string( source ) );
+        const Ast        ast        = parse( lex( file, sm, interner, literals, diags ), sm, diags );
+        const Resolution resolution = resolve( ast, sm, interner, diags );
+        const Types      types      = type_check( ast, resolution, literals, sm, interner, diags );
+
+        for( const Name& name : collect_names( ast, resolution, types, sm, interner ) )
+        {
+            const bool is_type_parameter = name.kind == Name_kind::Type_parameter;
+            REQUIRE( ( name.owner == "class Box<T> where T : Copyable" ) == is_type_parameter );
+        }
+    }
+}
+
 TEST_CASE( "names_carry_their_declaration's_doc", "[sema][names]" )
 {
     Source_manager sm;
@@ -698,7 +783,7 @@ TEST_CASE( "names_struct_literals_by_their_type", "[sema][names]" )
 {
     const auto names = named( "struct Point { i32 x; i32 y; };\nvoid f() { Point p = Point { 1, 2 }; }" );
 
-    REQUIRE( std::ranges::count( names, std::string( "Point:struct" ) ) == 2 );
+    REQUIRE( std::ranges::count( names, std::string( "Point:struct" ) ) == 3 );
 }
 
 TEST_CASE( "names_skip_this_and_builtins", "[sema][names]" )
@@ -720,7 +805,7 @@ TEST_CASE( "names_render_as_json_lines", "[sema][names]" )
     std::ostringstream out;
     render_names_json(
         sm,
-        { { Span { file, 9, 10 }, Name_kind::Global, Span { file, 4, 5 }, "i32 x", "The \"x\".\nSecond." },
+        { { Span { file, 9, 10 }, Name_kind::Global, Span { file, 4, 5 }, "i32 x", "The \"x\".\nSecond.", "struct S" },
           { Span { file, 7, 8 }, Name_kind::Package, Span {} } },
         out
     );
@@ -728,7 +813,7 @@ TEST_CASE( "names_render_as_json_lines", "[sema][names]" )
     REQUIRE(
         out.str() == "{\"kind\":\"name\",\"refers_to\":\"global\",\"file\":\"a.kl\",\"line\":2,\"col\":3,\"end_col\":4,"
                      "\"decl_file\":\"a.kl\",\"decl_line\":1,\"decl_col\":5,\"decl_end_col\":6,"
-                     "\"signature\":\"i32 x\",\"doc\":\"The \\\"x\\\".\\nSecond.\"}\n"
+                     "\"signature\":\"i32 x\",\"owner\":\"struct S\",\"doc\":\"The \\\"x\\\".\\nSecond.\"}\n"
                      "{\"kind\":\"name\",\"refers_to\":\"package\",\"file\":\"a.kl\",\"line\":2,\"col\":1,\"end_col\":2}\n"
     );
 }

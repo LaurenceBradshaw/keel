@@ -36,7 +36,8 @@ enum class Name_kind : u8
 std::string_view name_kind_name( Name_kind kind );
 
 // One identifier: its span covers the name alone, and `declaration` the name where it is declared,
-// invalid for a package. `signature` is the declaration as this use sees it, and `doc` its `///`.
+// invalid for a package. `signature` is the declaration as this use sees it, `doc` its `///`, and
+// `owner` the declaration a type parameter belongs to, as written.
 struct Name
 {
     Span        span;
@@ -44,6 +45,7 @@ struct Name
     Span        declaration;
     std::string signature = {};
     std::string doc       = {};
+    std::string owner     = {};
 };
 
 // Every name resolution bound, plus the variants and members named through a type and the fields and

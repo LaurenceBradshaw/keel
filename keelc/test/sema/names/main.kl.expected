@@ -3,38 +3,56 @@
 {"kind":"file","path":"sema/names/shapes.kl"}
 {"kind":"file","path":"sema/names/metric/units.kl"}
 {"kind":"name","refers_to":"package","file":"sema/names/main.kl","line":4,"col":8,"end_col":14}
+{"kind":"name","refers_to":"global","file":"sema/names/main.kl","line":6,"col":5,"end_col":12,"decl_file":"sema/names/main.kl","decl_line":6,"decl_col":5,"decl_end_col":12,"signature":"i32 counter"}
+{"kind":"name","refers_to":"class","file":"sema/names/main.kl","line":8,"col":7,"end_col":12,"decl_file":"sema/names/main.kl","decl_line":8,"decl_col":7,"decl_end_col":12,"signature":"class meter"}
+{"kind":"name","refers_to":"field","file":"sema/names/main.kl","line":10,"col":16,"end_col":21,"decl_file":"sema/names/main.kl","decl_line":10,"decl_col":16,"decl_end_col":21,"signature":"public i32 count"}
 {"kind":"name","refers_to":"class","file":"sema/names/main.kl","line":12,"col":12,"end_col":17,"decl_file":"sema/names/main.kl","decl_line":8,"decl_col":7,"decl_end_col":12,"signature":"class meter"}
+{"kind":"name","refers_to":"parameter","file":"sema/names/main.kl","line":12,"col":23,"end_col":28,"decl_file":"sema/names/main.kl","decl_line":12,"decl_col":23,"decl_end_col":28,"signature":"i32 start"}
 {"kind":"name","refers_to":"field","file":"sema/names/main.kl","line":14,"col":9,"end_col":14,"decl_file":"sema/names/main.kl","decl_line":10,"decl_col":16,"decl_end_col":21,"signature":"public i32 count"}
 {"kind":"name","refers_to":"parameter","file":"sema/names/main.kl","line":14,"col":17,"end_col":22,"decl_file":"sema/names/main.kl","decl_line":12,"decl_col":23,"decl_end_col":28,"signature":"i32 start"}
 {"kind":"name","refers_to":"class","file":"sema/names/main.kl","line":17,"col":12,"end_col":17,"decl_file":"sema/names/main.kl","decl_line":8,"decl_col":7,"decl_end_col":12,"signature":"class meter"}
+{"kind":"name","refers_to":"method","file":"sema/names/main.kl","line":17,"col":18,"end_col":22,"decl_file":"sema/names/main.kl","decl_line":17,"decl_col":18,"decl_end_col":22,"signature":"public static meter zero()"}
 {"kind":"name","refers_to":"class","file":"sema/names/main.kl","line":19,"col":16,"end_col":21,"decl_file":"sema/names/main.kl","decl_line":8,"decl_col":7,"decl_end_col":12,"signature":"class meter"}
+{"kind":"name","refers_to":"method","file":"sema/names/main.kl","line":22,"col":16,"end_col":21,"decl_file":"sema/names/main.kl","decl_line":22,"decl_col":16,"decl_end_col":21,"signature":"public i32 value() const"}
 {"kind":"name","refers_to":"field","file":"sema/names/main.kl","line":24,"col":16,"end_col":21,"decl_file":"sema/names/main.kl","decl_line":10,"decl_col":16,"decl_end_col":21,"signature":"public i32 count"}
-{"kind":"name","refers_to":"type_parameter","file":"sema/names/main.kl","line":28,"col":1,"end_col":2,"decl_file":"sema/names/main.kl","decl_line":28,"decl_col":10,"decl_end_col":11,"signature":"T"}
-{"kind":"name","refers_to":"type_parameter","file":"sema/names/main.kl","line":28,"col":10,"end_col":11,"decl_file":"sema/names/main.kl","decl_line":28,"decl_col":10,"decl_end_col":11,"signature":"T"}
-{"kind":"name","refers_to":"type_parameter","file":"sema/names/main.kl","line":28,"col":14,"end_col":15,"decl_file":"sema/names/main.kl","decl_line":28,"decl_col":10,"decl_end_col":11,"signature":"T"}
-{"kind":"name","refers_to":"type_parameter","file":"sema/names/main.kl","line":28,"col":19,"end_col":20,"decl_file":"sema/names/main.kl","decl_line":28,"decl_col":10,"decl_end_col":11,"signature":"T"}
+{"kind":"name","refers_to":"type_parameter","file":"sema/names/main.kl","line":28,"col":1,"end_col":2,"decl_file":"sema/names/main.kl","decl_line":28,"decl_col":10,"decl_end_col":11,"signature":"T","owner":"T larger<T>( T a, T b ) where T : Copyable"}
+{"kind":"name","refers_to":"function","file":"sema/names/main.kl","line":28,"col":3,"end_col":9,"decl_file":"sema/names/main.kl","decl_line":28,"decl_col":3,"decl_end_col":9,"signature":"T larger<T>( T a, T b ) where T : Copyable"}
+{"kind":"name","refers_to":"type_parameter","file":"sema/names/main.kl","line":28,"col":10,"end_col":11,"decl_file":"sema/names/main.kl","decl_line":28,"decl_col":10,"decl_end_col":11,"signature":"T","owner":"T larger<T>( T a, T b ) where T : Copyable"}
+{"kind":"name","refers_to":"type_parameter","file":"sema/names/main.kl","line":28,"col":14,"end_col":15,"decl_file":"sema/names/main.kl","decl_line":28,"decl_col":10,"decl_end_col":11,"signature":"T","owner":"T larger<T>( T a, T b ) where T : Copyable"}
+{"kind":"name","refers_to":"parameter","file":"sema/names/main.kl","line":28,"col":16,"end_col":17,"decl_file":"sema/names/main.kl","decl_line":28,"decl_col":16,"decl_end_col":17,"signature":"T a"}
+{"kind":"name","refers_to":"type_parameter","file":"sema/names/main.kl","line":28,"col":19,"end_col":20,"decl_file":"sema/names/main.kl","decl_line":28,"decl_col":10,"decl_end_col":11,"signature":"T","owner":"T larger<T>( T a, T b ) where T : Copyable"}
+{"kind":"name","refers_to":"parameter","file":"sema/names/main.kl","line":28,"col":21,"end_col":22,"decl_file":"sema/names/main.kl","decl_line":28,"decl_col":21,"decl_end_col":22,"signature":"T b"}
 {"kind":"name","refers_to":"parameter","file":"sema/names/main.kl","line":30,"col":12,"end_col":13,"decl_file":"sema/names/main.kl","decl_line":28,"decl_col":16,"decl_end_col":17,"signature":"T a"}
+{"kind":"name","refers_to":"function","file":"sema/names/main.kl","line":33,"col":5,"end_col":14,"decl_file":"sema/names/main.kl","decl_line":33,"decl_col":5,"decl_end_col":14,"signature":"f64 radius_of( Shape s )"}
 {"kind":"name","refers_to":"enum","file":"sema/names/main.kl","line":33,"col":16,"end_col":21,"decl_file":"sema/names/shapes.kl","decl_line":3,"decl_col":6,"decl_end_col":11,"signature":"enum Shape"}
+{"kind":"name","refers_to":"parameter","file":"sema/names/main.kl","line":33,"col":22,"end_col":23,"decl_file":"sema/names/main.kl","decl_line":33,"decl_col":22,"decl_end_col":23,"signature":"Shape s"}
 {"kind":"name","refers_to":"parameter","file":"sema/names/main.kl","line":35,"col":13,"end_col":14,"decl_file":"sema/names/main.kl","decl_line":33,"decl_col":22,"decl_end_col":23,"signature":"Shape s"}
 {"kind":"name","refers_to":"enum","file":"sema/names/main.kl","line":37,"col":14,"end_col":19,"decl_file":"sema/names/shapes.kl","decl_line":3,"decl_col":6,"decl_end_col":11,"signature":"enum Shape"}
 {"kind":"name","refers_to":"variant","file":"sema/names/main.kl","line":37,"col":21,"end_col":27,"decl_file":"sema/names/shapes.kl","decl_line":5,"decl_col":5,"decl_end_col":11,"signature":"Circle( f64 radius )"}
 {"kind":"name","refers_to":"variable","file":"sema/names/main.kl","line":37,"col":29,"end_col":30,"decl_file":"sema/names/main.kl","decl_line":37,"decl_col":29,"decl_end_col":30,"signature":"f64 r"}
 {"kind":"name","refers_to":"variable","file":"sema/names/main.kl","line":38,"col":20,"end_col":21,"decl_file":"sema/names/main.kl","decl_line":37,"decl_col":29,"decl_end_col":30,"signature":"f64 r"}
+{"kind":"name","refers_to":"function","file":"sema/names/main.kl","line":44,"col":5,"end_col":9,"decl_file":"sema/names/main.kl","decl_line":44,"decl_col":5,"decl_end_col":9,"signature":"i32 main()"}
 {"kind":"name","refers_to":"class","file":"sema/names/main.kl","line":46,"col":5,"end_col":10,"decl_file":"sema/names/main.kl","decl_line":8,"decl_col":7,"decl_end_col":12,"signature":"class meter"}
+{"kind":"name","refers_to":"variable","file":"sema/names/main.kl","line":46,"col":11,"end_col":12,"decl_file":"sema/names/main.kl","decl_line":46,"decl_col":11,"decl_end_col":12,"signature":"meter m"}
 {"kind":"name","refers_to":"class","file":"sema/names/main.kl","line":46,"col":21,"end_col":26,"decl_file":"sema/names/main.kl","decl_line":8,"decl_col":7,"decl_end_col":12,"signature":"class meter"}
 {"kind":"name","refers_to":"class","file":"sema/names/main.kl","line":47,"col":5,"end_col":10,"decl_file":"sema/names/main.kl","decl_line":8,"decl_col":7,"decl_end_col":12,"signature":"class meter"}
+{"kind":"name","refers_to":"variable","file":"sema/names/main.kl","line":47,"col":11,"end_col":12,"decl_file":"sema/names/main.kl","decl_line":47,"decl_col":11,"decl_end_col":12,"signature":"meter z"}
 {"kind":"name","refers_to":"class","file":"sema/names/main.kl","line":47,"col":21,"end_col":26,"decl_file":"sema/names/main.kl","decl_line":8,"decl_col":7,"decl_end_col":12,"signature":"class meter"}
 {"kind":"name","refers_to":"method","file":"sema/names/main.kl","line":47,"col":28,"end_col":32,"decl_file":"sema/names/main.kl","decl_line":17,"decl_col":18,"decl_end_col":22,"signature":"public static meter zero()"}
 {"kind":"name","refers_to":"package","file":"sema/names/main.kl","line":48,"col":5,"end_col":11}
 {"kind":"name","refers_to":"enum","file":"sema/names/main.kl","line":48,"col":13,"end_col":17,"decl_file":"sema/names/metric/units.kl","decl_line":5,"decl_col":6,"decl_end_col":10,"signature":"enum Unit"}
+{"kind":"name","refers_to":"variable","file":"sema/names/main.kl","line":48,"col":18,"end_col":22,"decl_file":"sema/names/main.kl","decl_line":48,"decl_col":18,"decl_end_col":22,"signature":"metric::Unit unit"}
 {"kind":"name","refers_to":"package","file":"sema/names/main.kl","line":48,"col":25,"end_col":31}
 {"kind":"name","refers_to":"enum","file":"sema/names/main.kl","line":48,"col":33,"end_col":37,"decl_file":"sema/names/metric/units.kl","decl_line":5,"decl_col":6,"decl_end_col":10,"signature":"enum Unit"}
 {"kind":"name","refers_to":"variant","file":"sema/names/main.kl","line":48,"col":39,"end_col":43,"decl_file":"sema/names/metric/units.kl","decl_line":8,"decl_col":5,"decl_end_col":9,"signature":"Foot"}
+{"kind":"name","refers_to":"variable","file":"sema/names/main.kl","line":49,"col":9,"end_col":10,"decl_file":"sema/names/main.kl","decl_line":49,"decl_col":9,"decl_end_col":10,"signature":"f64 r"}
 {"kind":"name","refers_to":"function","file":"sema/names/main.kl","line":49,"col":21,"end_col":30,"decl_file":"sema/names/main.kl","decl_line":33,"decl_col":5,"decl_end_col":14,"signature":"f64 radius_of( Shape s )"}
 {"kind":"name","refers_to":"enum","file":"sema/names/main.kl","line":49,"col":32,"end_col":37,"decl_file":"sema/names/shapes.kl","decl_line":3,"decl_col":6,"decl_end_col":11,"signature":"enum Shape"}
 {"kind":"name","refers_to":"variant","file":"sema/names/main.kl","line":49,"col":39,"end_col":42,"decl_file":"sema/names/shapes.kl","decl_line":6,"decl_col":5,"decl_end_col":8,"signature":"Dot"}
 {"kind":"name","refers_to":"class","file":"sema/names/main.kl","line":50,"col":5,"end_col":10,"decl_file":"sema/names/main.kl","decl_line":8,"decl_col":7,"decl_end_col":12,"signature":"class meter"}
+{"kind":"name","refers_to":"variable","file":"sema/names/main.kl","line":50,"col":12,"end_col":13,"decl_file":"sema/names/main.kl","decl_line":50,"decl_col":12,"decl_end_col":13,"signature":"meter* p"}
 {"kind":"name","refers_to":"variable","file":"sema/names/main.kl","line":50,"col":22,"end_col":23,"decl_file":"sema/names/main.kl","decl_line":46,"decl_col":11,"decl_end_col":12,"signature":"meter m"}
+{"kind":"name","refers_to":"variable","file":"sema/names/main.kl","line":51,"col":9,"end_col":10,"decl_file":"sema/names/main.kl","decl_line":51,"decl_col":9,"decl_end_col":10,"signature":"i32 n"}
 {"kind":"name","refers_to":"variable","file":"sema/names/main.kl","line":51,"col":21,"end_col":22,"decl_file":"sema/names/main.kl","decl_line":50,"decl_col":12,"decl_end_col":13,"signature":"meter* p"}
 {"kind":"name","refers_to":"field","file":"sema/names/main.kl","line":51,"col":23,"end_col":28,"decl_file":"sema/names/main.kl","decl_line":10,"decl_col":16,"decl_end_col":21,"signature":"public i32 count"}
 {"kind":"name","refers_to":"variable","file":"sema/names/main.kl","line":51,"col":31,"end_col":32,"decl_file":"sema/names/main.kl","decl_line":46,"decl_col":11,"decl_end_col":12,"signature":"meter m"}
@@ -43,3 +61,11 @@
 {"kind":"name","refers_to":"global","file":"sema/names/main.kl","line":52,"col":20,"end_col":27,"decl_file":"sema/names/main.kl","decl_line":6,"decl_col":5,"decl_end_col":12,"signature":"i32 counter"}
 {"kind":"name","refers_to":"package","file":"sema/names/main.kl","line":52,"col":29,"end_col":35}
 {"kind":"name","refers_to":"global","file":"sema/names/main.kl","line":52,"col":37,"end_col":42,"decl_file":"sema/names/metric/units.kl","decl_line":3,"decl_col":5,"decl_end_col":10,"signature":"i32 scale"}
+{"kind":"name","refers_to":"enum","file":"sema/names/shapes.kl","line":3,"col":6,"end_col":11,"decl_file":"sema/names/shapes.kl","decl_line":3,"decl_col":6,"decl_end_col":11,"signature":"enum Shape"}
+{"kind":"name","refers_to":"variant","file":"sema/names/shapes.kl","line":5,"col":5,"end_col":11,"decl_file":"sema/names/shapes.kl","decl_line":5,"decl_col":5,"decl_end_col":11,"signature":"Circle( f64 radius )"}
+{"kind":"name","refers_to":"field","file":"sema/names/shapes.kl","line":5,"col":17,"end_col":23,"decl_file":"sema/names/shapes.kl","decl_line":5,"decl_col":17,"decl_end_col":23,"signature":"f64 radius"}
+{"kind":"name","refers_to":"variant","file":"sema/names/shapes.kl","line":6,"col":5,"end_col":8,"decl_file":"sema/names/shapes.kl","decl_line":6,"decl_col":5,"decl_end_col":8,"signature":"Dot"}
+{"kind":"name","refers_to":"global","file":"sema/names/metric/units.kl","line":3,"col":5,"end_col":10,"decl_file":"sema/names/metric/units.kl","decl_line":3,"decl_col":5,"decl_end_col":10,"signature":"i32 scale"}
+{"kind":"name","refers_to":"enum","file":"sema/names/metric/units.kl","line":5,"col":6,"end_col":10,"decl_file":"sema/names/metric/units.kl","decl_line":5,"decl_col":6,"decl_end_col":10,"signature":"enum Unit"}
+{"kind":"name","refers_to":"variant","file":"sema/names/metric/units.kl","line":7,"col":5,"end_col":10,"decl_file":"sema/names/metric/units.kl","decl_line":7,"decl_col":5,"decl_end_col":10,"signature":"Metre"}
+{"kind":"name","refers_to":"variant","file":"sema/names/metric/units.kl","line":8,"col":5,"end_col":9,"decl_file":"sema/names/metric/units.kl","decl_line":8,"decl_col":5,"decl_end_col":9,"signature":"Foot"}

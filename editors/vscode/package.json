@@ -1,7 +1,7 @@
 {
     "name": "keel",
     "displayName": "Keel",
-    "description": "Keel language support: highlighting, editing rules, and keelc's errors and name colours on save.",
+    "description": "Keel language support: highlighting, editing rules, and keelc's errors, name colours and hovers on save.",
     "version": "0.0.1",
     "publisher": "keel",
     "license": "Apache-2.0 WITH LLVM-exception",

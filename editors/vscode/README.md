@@ -1,7 +1,7 @@
 # Keel for VS Code
 
 Highlighting and editing rules for `.kl` files, keelc's errors underlined in the editor, names
-coloured by what they refer to, and go-to-definition.
+coloured by what they refer to, hovers, and go-to-definition.
 
 Install by linking this folder into VS Code's extensions directory, then reloading the window:
 
@@ -41,6 +41,15 @@ includes them:
 The same run also reports what each name resolved to, and the extension paints that over the
 grammar: after a save, each of these takes the right colour. While a file has unsaved edits the
 colours from its last save stay, moved along with the text, until it is saved again.
+
+## Hover
+
+Hovering a name shows its declaration on one line as the source writes it, without its body: a
+`public void push( move T value )`. A member of a generic type shows its type parameters bound,
+so `v.push` on a `list<i32>` reads `public void push( move i32 value )`. Below that comes the
+declaration's `///` doc comment, as Markdown. A declaration's own name hovers as its uses do, and a
+type parameter shows the declaration it parameterises, `where` clauses included. Like
+go-to-definition, it answers from the last save. A package name has no hover.
 
 ## Go to definition
 

@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 // Runs `keelc --check --diagnostics=json --names` on each save, underlines what it reports,
-// colours each name by what it refers to, and goes from a name to its declaration - in the prelude
-// too, which keelc prints for it.
+// colours each name by what it refers to, shows its declaration and doc on hover, and goes from a name
+// to its declaration - in the prelude too, which keelc prints for it.
 
 'use strict';
 
@@ -204,7 +204,7 @@ function parse( stdout, cwd, saved, compiler )
                 const lines = lines_for( file );
                 const start = utf16_col( lines, record.line, record.col );
                 const end = utf16_col( lines, record.line, record.end_col );
-                const name = { line: record.line - 1, start, length: end - start, type: kind[0], modifiers: kind[1] };
+                const name = { line: record.line - 1, start, length: end - start, type: kind[0], modifiers: kind[1], signature: record.signature, doc: record.doc, owner: record.owner };
                 if( record.decl_file !== undefined )
                 {
                     const decl_file = key_of( record.decl_file );
@@ -407,11 +407,16 @@ function activate( context )
     context.subscriptions.push( vscode.languages.registerDocumentSemanticTokensProvider( { language: 'keel' }, provider, legend ) );
 
     // Positions are the last save's, so after unsaved edits above a name it can miss or land wrong.
+    function name_at( document, position, wanted )
+    {
+        return ( names.get( document.uri.fsPath ) ?? [] ).find( ( n ) =>
+            wanted( n ) && n.line === position.line && n.start <= position.character && position.character <= n.start + n.length );
+    }
+
     const definitions = {
         provideDefinition( document, position )
         {
-            const name = ( names.get( document.uri.fsPath ) ?? [] ).find( ( n ) =>
-                n.declaration && n.line === position.line && n.start <= position.character && position.character <= n.start + n.length );
+            const name = name_at( document, position, ( n ) => n.declaration );
             if( !name )
             {
                 return null;
@@ -422,6 +427,31 @@ function activate( context )
         },
     };
     context.subscriptions.push( vscode.languages.registerDefinitionProvider( { language: 'keel' }, definitions ) );
+
+    const hovers = {
+        provideHover( document, position )
+        {
+            const name = name_at( document, position, ( n ) => n.signature );
+            if( !name )
+            {
+                return null;
+            }
+
+            // A type parameter alone says nothing; what it parameterises, with its bounds, does.
+            const text = new vscode.MarkdownString();
+            text.appendCodeblock( name.owner ?? name.signature, 'keel' );
+            if( name.owner )
+            {
+                text.appendMarkdown( `Type parameter \`${name.signature}\`.` );
+            }
+            else if( name.doc )
+            {
+                text.appendMarkdown( '\n---\n\n' + name.doc );
+            }
+            return new vscode.Hover( text, new vscode.Range( name.line, name.start, name.line, name.start + name.length ) );
+        },
+    };
+    context.subscriptions.push( vscode.languages.registerHoverProvider( { language: 'keel' }, hovers ) );
 
     const prelude = {
         provideTextDocumentContent( uri )
