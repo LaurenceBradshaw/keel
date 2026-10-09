@@ -1684,7 +1684,7 @@ Operand Lowering::lower_call( Node_id id )
 
     // `p.area()` - the callee is a Field_expr rather than a name, and the receiver is its object.
     // Handled before the lookup below, which reaches for a declaration a Field_expr does not have.
-    if( ast_.kind( ast_.callee( id ) ) == Node_kind::Field_expr )
+    if( ast_.kind( ast_.callee( id ) ) == Node_kind::Field_expr && types_.callee_of( id ).is_valid() )
     {
         return lower_method_call( id );
     }
@@ -4131,6 +4131,30 @@ TEST_CASE( "lower_calls_through_a_function_typed_variable", "[ir][lower][calls][
         INFO( text );
         REQUIRE( text.find( "= call copy _1(copy _2)" ) != std::string::npos );
         REQUIRE( verify( p.functions[0] ).empty() );
+    }
+
+    // M9: a field called by its name is read where it is called, through the receiver in a method.
+    SECTION( "and through a field, read at the call" )
+    {
+        Lowered p( "i32 twice( i32 a ) { return a * 2; }\n"
+                   "struct H { fn( i32 ) -> i32 cb; i32 bare() const { return cb( 1 ); } };\n"
+                   "i32 main() { H h = H { &twice }; return h.cb( 21 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string method = p.text( 1 );
+
+        INFO( method );
+        REQUIRE( method.find( "= call copy (*_1).cb(const 1)" ) != std::string::npos );
+        REQUIRE( verify( p.functions[1] ).empty() );
+
+        const std::string text = p.text( 2 );
+
+        INFO( text );
+        REQUIRE( text.find( ".cb(const 21)" ) != std::string::npos );
+        REQUIRE( text.find( "call bare" ) == std::string::npos );
+        REQUIRE( verify( p.functions[2] ).empty() );
     }
 }
 

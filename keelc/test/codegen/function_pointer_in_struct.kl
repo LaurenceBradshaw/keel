@@ -27,7 +27,7 @@ i32 main()
 {
     Holder h = Holder { &twice };
 
-    // Read out of the field, not called through it: calling a field by its name is a later slice.
+    // Read out of the field, not called through it; function_pointer_field_call.kl calls one.
     fn( i32 ) -> i32 p = h.cb;
     fn( P ) -> P     q = &bump;
 

@@ -1,0 +1,82 @@
+// A field holding a function is called by its name: `h.cb( 1 )`, `this.cb( 1 )` and, in a method,
+// a bare `cb( 1 )` each read the field and call through it.
+i32 twice( i32 a )
+{
+    return a * 2;
+}
+
+i32 negate( i32 a )
+{
+    return -a;
+}
+
+i32 twice_moved( move i32 a )
+{
+    return a * 2;
+}
+
+void bump( ref i32 v )
+{
+    v = v + 1;
+}
+
+struct Holder
+{
+    fn( i32 ) -> i32 cb;
+
+    i32 through_this( i32 v ) const
+    {
+        return this.cb( v );
+    }
+
+    i32 bare( i32 v ) const
+    {
+        return cb( v );
+    }
+};
+
+struct Box<T>
+{
+    fn( move T ) -> T f;
+
+    T apply( move T v ) const
+    {
+        return f( move v );
+    }
+};
+
+struct Counter
+{
+    fn( ref i32 ) -> void step;
+};
+
+i32 main()
+{
+    Holder h = Holder { &twice };
+
+    if( h.cb( 21 ) != 42 ) { return 1; }
+    if( h.through_this( 4 ) != 8 ) { return 2; }
+    if( h.bare( 5 ) != 10 ) { return 3; }
+
+    // Reassigned, so the call reads the field each time rather than once.
+    h.cb = &negate;
+    if( h.cb( 3 ) != -3 ) { return 4; }
+
+    // Through a pointer, as `.` reaches a field through one.
+    Holder* p = &h;
+    if( p.cb( 6 ) != -6 ) { return 5; }
+
+    Box<i32> b     = Box { &twice_moved };
+    i32      two   = 2;
+    i32      seven = 7;
+    if( b.f( move two ) != 4 ) { return 6; }
+    if( b.apply( move seven ) != 14 ) { return 7; }
+
+    // A borrow travels as a call through a variable passes one.
+    Counter c = Counter { &bump };
+    i32     n = 1;
+    c.step( ref n );
+    if( n != 2 ) { return 8; }
+
+    return 0;
+}

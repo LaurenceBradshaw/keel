@@ -412,6 +412,22 @@ Type_id Expressions::infer_call( Node_id id )
         {
             return field_application( id, result );
         }
+        // A bare field in a method is `this.field`, so one holding a function is called through.
+        if( ast_.kind( decl ) == Node_kind::Field_decl )
+        {
+            const Type_id callee_type = infer( callee );
+
+            if( table_.is_error( callee_type ) )
+            {
+                type_the_arguments_anyway();
+                return types_.poison( id );
+            }
+
+            if( table_.is_function( callee_type ) )
+            {
+                return indirect_call( id, decl, callee_type );
+            }
+        }
 
         reporter_.error_at( ast_.span( callee ), fmt::format( "`{}` is not callable", name ) );
         type_the_arguments_anyway();
@@ -667,11 +683,23 @@ Type_id Expressions::infer_method_call( Node_id id )
 
     if( !first.is_valid() )
     {
-        // Check if a field of the same name exists, which is a common mistake when a method is expected. The
-        // field's type is not a method, so it cannot be called.
+        // A field holding a function is called through; any other field is a mistake worth naming.
         const Node_id field = aggregates_.find_field( object_type, ast_.name( callee ) );
         if( field.is_valid() )
         {
+            if( !ast_.is_visible_from( field, current_type() ) )
+            {
+                report_private( callee, field );
+
+                return types_.poison( id );
+            }
+
+            const Type_id field_type = aggregates_.field_type( object_type, field );
+            if( table_.is_function( field_type ) )
+            {
+                return indirect_call( id, field, field_type );
+            }
+
             reporter_.error_at(
                 ast_.span( callee ),
                 fmt::format(
@@ -5206,17 +5234,6 @@ TEST_CASE( "type_checker_checks_a_call_through_a_variable_against_its_signature"
         REQUIRE( p.rendered().find( "`x` is not callable" ) != std::string::npos );
     }
 
-    // A field holding one lowers and emits correctly today, so this refusal is a scope boundary
-    // rather than a guard - and a boundary nothing asserts is a boundary that moves by accident.
-    SECTION( "a field holding one is not callable by its bare name yet" )
-    {
-        const Typed p( "struct S { fn() -> i32 cb; i32 run() { return cb(); } };\ni32 main() { return 0; }\n" );
-
-        INFO( p.rendered() );
-        REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "`cb` is not callable" ) != std::string::npos );
-    }
-
     SECTION( "a variable whose type failed to resolve says nothing further" )
     {
         const Typed p( "i32 main() { fn( Missing ) -> i32 p; return p( 1 ); }\n" );
@@ -5224,6 +5241,105 @@ TEST_CASE( "type_checker_checks_a_call_through_a_variable_against_its_signature"
         INFO( p.rendered() );
         REQUIRE( p.rendered().find( "is not callable" ) == std::string::npos );
         REQUIRE( p.rendered().find( "takes" ) == std::string::npos );
+    }
+}
+
+// M9: a field holding a function is called by its name, through the same check a variable gets.
+TEST_CASE( "type_checker_calls_a_function_field_by_its_name", "[sema][types][m9]" )
+{
+    constexpr std::string_view holder = "i32 twice( i32 a ) { return a * 2; }\n"
+                                        "struct H { fn( i32 ) -> i32 cb; i32 n;\n"
+                                        "  i32 through_this() const { return this.cb( 1 ); }\n"
+                                        "  i32 bare() const { return cb( 1 ); } };\n";
+
+    SECTION( "through an object" )
+    {
+        const Typed p( std::string( holder ) + "i32 main() { H h = H { &twice, 0 }; return h.cb( 21 ); }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Call_expr, 2 ) ) == "i32" );
+    }
+
+    SECTION( "through `this` and by its bare name in a method" )
+    {
+        const Typed p( std::string( holder ) + "i32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Call_expr, 0 ) ) == "i32" );
+        REQUIRE( p.type_name( p.nth( Node_kind::Call_expr, 1 ) ) == "i32" );
+    }
+
+    // What lowering reads to tell a call through a field from a method call.
+    SECTION( "no callable is recorded for it" )
+    {
+        const Typed p( std::string( holder ) + "i32 main() { H h = H { &twice, 0 }; return h.cb( 21 ); }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        for( std::size_t i = 0; i < 3; ++i )
+        {
+            REQUIRE_FALSE( p.types().callee_of( p.nth( Node_kind::Call_expr, i ) ).is_valid() );
+        }
+    }
+
+    SECTION( "through a pointer" )
+    {
+        const Typed p( std::string( holder ) + "i32 main() { H h = H { &twice, 0 }; H* q = &h; return q.cb( 21 ); }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "at a generic aggregate's instance" )
+    {
+        const Typed p( "i32 twice( i32 a ) { return a * 2; }\n"
+                       "struct B<T> { fn( T ) -> T f; };\n"
+                       "i32 main() { B<i32> b = B { &twice }; return b.f( 2 ); }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Call_expr, 0 ) ) == "i32" );
+    }
+
+    SECTION( "the arguments are checked against the field's signature" )
+    {
+        const Typed p( std::string( holder ) + "i32 main() { H h = H { &twice, 0 }; return h.cb(); }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`cb` takes 1 argument, but 0 were given" ) != std::string::npos );
+    }
+
+    SECTION( "a private field is refused outside its type" )
+    {
+        const Typed p( "i32 one() { return 1; }\n"
+                       "class G { fn() -> i32 hidden; G() { hidden = &one; } };\n"
+                       "i32 main() { G g = G(); return g.hidden(); }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`hidden` is private to `G`" ) != std::string::npos );
+    }
+
+    SECTION( "a field of any other type is still not callable" )
+    {
+        const Typed p( std::string( holder ) + "i32 main() { H h = H { &twice, 0 }; return h.n(); }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`n` is a field of `H`, not a method" ) != std::string::npos );
+    }
+
+    SECTION( "and a static method has no object to read one from" )
+    {
+        const Typed p( "struct S { fn() -> i32 cb; static i32 run() { return cb(); } };\ni32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "there is no object here to read it from" ) != std::string::npos );
     }
 }
 
