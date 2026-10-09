@@ -1532,6 +1532,45 @@ TEST_CASE( "type_checker_refuses_a_ref_binding_through_a_call_to_a_temporary", "
     }
 }
 
+// PLAN D54. An element is an indirect loan, which check/borrow_check freezes the object for, so a
+// binding may hold one; a temporary's element still ends with the statement.
+TEST_CASE( "type_checker_binds_a_ref_local_to_an_element", "[sema][binding][m9]" )
+{
+    constexpr std::string_view v =
+        "class V { public i32 x; V() { x = 0; } ~V() { } public i32* operator[]( u64 i ) const { return nullptr; } };\n"
+        "class R { public i32 x; R() { x = 0; } public const i32* operator[]( u64 i ) const { return &x; } };\n"
+        "V make() { return V(); }\n";
+
+    SECTION( "accepted" )
+    {
+        const Typed p(
+            std::string( v ) + "i32 main() { V v = V(); ref i32 x = v[0]; const ref i32 y = v[1]; "
+                               "R r = R(); const ref i32 z = r[0]; return x + y + z; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+    }
+
+    SECTION( "a temporary's element" )
+    {
+        const Typed p( std::string( v ) + "i32 main() { const ref i32 x = make()[0]; return x; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "cannot borrow from a temporary" ) != std::string::npos );
+    }
+
+    SECTION( "an element `operator[]` only reads, bound by `ref`" )
+    {
+        const Typed p( std::string( v ) + "i32 main() { R r = R(); ref i32 x = r[0]; return x; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "only reads" ) != std::string::npos );
+    }
+}
+
 TEST_CASE( "type_checker_accepts_a_temporary_the_reference_cannot_outlive", "[sema][escape][m9]" )
 {
     constexpr std::string_view a = "class A { public i32 n; A( i32 x ) { n = x; } ~A() { } };\n"

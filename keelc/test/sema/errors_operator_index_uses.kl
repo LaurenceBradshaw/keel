@@ -1,5 +1,5 @@
 // `v[i]` is a place for the expression it is written in: writable exactly when `v` is and its
-// `operator[]` does not return a pointer to `const`, never bound by `ref` or returned by one.
+// `operator[]` does not return a pointer to `const`, never returned by `ref`.
 class buffer
 {
     buffer()

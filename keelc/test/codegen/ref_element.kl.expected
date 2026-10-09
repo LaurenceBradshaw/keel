@@ -1,0 +1,92 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "ref_element.kl.prelude.c"
+
+struct kl__buffer;
+
+struct kl__buffer
+{
+    int32_t* kl_data_41;
+};
+
+void* kl_rt_alloc( size_t );
+void  kl_rt_free( void* );
+void* kl_rt_alloc_many( size_t, size_t );
+
+void kl__buffer__R6buffer__ctor( struct kl__buffer* );
+void kl__buffer__dtor( struct kl__buffer* );
+int32_t* kl__operator_index__S6buffer_3u64( struct kl__buffer*, uint64_t );
+int32_t kl__main__( void );
+
+void kl__buffer__R6buffer__ctor( struct kl__buffer* kl_this_1 )
+{
+    int32_t* kl_t2;
+#line 5 "codegen/ref_element.kl"
+    kl_t2 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 4, sizeof( int32_t ) );
+    ( *kl_this_1 ).kl_data_41 = kl_t2;
+    return;
+}
+
+void kl__buffer__dtor( struct kl__buffer* kl_this_1 )
+{
+#line 6 "codegen/ref_element.kl"
+    kl_rt_free( ( *kl_this_1 ).kl_data_41 );
+    return;
+}
+
+int32_t* kl__operator_index__S6buffer_3u64( struct kl__buffer* kl_this_1, uint64_t kl_index_2 )
+{
+    int32_t* kl_t0;
+    int32_t* kl_t3;
+    int32_t* kl_t4;
+#line 7 "codegen/ref_element.kl"
+    kl_t3 = ( *kl_this_1 ).kl_data_41 + kl_index_2;
+    kl_t4 = &( *kl_t3 );
+    kl_t0 = kl_t4;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__buffer kl_values_1;
+    struct kl__buffer* kl_t2;
+    struct kl__buffer* kl_t4;
+    int32_t* kl_t5;
+    int32_t* kl_bound_6;
+    struct kl__buffer* kl_t7;
+    int32_t* kl_t8;
+    int32_t kl_t9;
+    int32_t* kl_seen_10;
+    struct kl__buffer* kl_t11;
+    int32_t* kl_t12;
+#line 13 "codegen/ref_element.kl"
+    kl_t2 = &kl_values_1;
+    kl__buffer__R6buffer__ctor( kl_t2 );
+#line 14 "codegen/ref_element.kl"
+    kl_t4 = &kl_values_1;
+    kl_t5 = kl__operator_index__S6buffer_3u64( kl_t4, 1 );
+    ( *kl_t5 ) = 5;
+#line 15 "codegen/ref_element.kl"
+    kl_t7 = &kl_values_1;
+    kl_t8 = kl__operator_index__S6buffer_3u64( kl_t7, 1 );
+    kl_bound_6 = &( *kl_t8 );
+#line 16 "codegen/ref_element.kl"
+    kl_t9 = ( *kl_bound_6 ) + 2;
+    ( *kl_bound_6 ) = kl_t9;
+#line 17 "codegen/ref_element.kl"
+    kl_t11 = &kl_values_1;
+    kl_t12 = kl__operator_index__S6buffer_3u64( kl_t11, 1 );
+    kl_seen_10 = &( *kl_t12 );
+#line 18 "codegen/ref_element.kl"
+    kl_t0 = ( *kl_seen_10 );
+    kl__buffer__dtor( &kl_values_1 );
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

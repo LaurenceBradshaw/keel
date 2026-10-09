@@ -16,18 +16,6 @@ error: `values` is `const`
 79 |     values[0] = 1;
    |     ^^^^^^^^^ remove `const` to modify it
 
-error: `[]` reaches an element for one expression, so a `ref` cannot bind it
-  --> sema/errors_operator_index_uses.kl:95:21
-   |
-95 |     ref i32 bound = values[0];
-   |                     ^^^^^^^^^ copy it, or keep its address with `&values[0]`
-
-error: `[]` reaches an element for one expression, so a `ref` cannot bind it
-  --> sema/errors_operator_index_uses.kl:96:26
-   |
-96 |     const ref i32 seen = values[1];
-   |                          ^^^^^^^^^ copy it, or keep its address with `&values[1]`
-
 error: `fixed` is `const`
   --> sema/errors_operator_index_uses.kl:97:5
    |
@@ -64,4 +52,4 @@ error: expected `u64`, but got `bool`
 102 |     i32 c = values[true];
     |                    ^^^^
 
-11 errors generated
+9 errors generated

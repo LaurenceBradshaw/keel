@@ -351,14 +351,6 @@ void Statements::visit_var( Node_id id )
         {
             reporter_.error_at( ast_.span( init ), "a `ref` binding needs a variable to bind to" );
         }
-        else if( places_.operator_projection( init ).is_valid() )
-        {
-            reporter_.error_at(
-                ast_.span( init ),
-                "`[]` reaches an element for one expression, so a `ref` cannot bind it",
-                fmt::format( "copy it, or keep its address with `&{}`", reporter_.text( ast_.span( init ) ) )
-            );
-        }
         // D54: a place inside a temporary, or a call's reference to one, ends with the statement too.
         else if( const Node_id temporary = places_.borrowed_temporary( init ); temporary.is_valid() )
         {

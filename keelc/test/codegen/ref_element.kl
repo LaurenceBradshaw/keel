@@ -1,0 +1,19 @@
+// D54: a `ref` binding of an element writes through to it, and a `const ref` one sees the write;
+// check/borrow_check freezes `values` while either is live.
+class buffer
+{
+    buffer() { unsafe { data = alloc<i32>( 4 ); } }
+    ~buffer() { unsafe { free( data ); } }
+    public i32* operator[]( u64 index ) const { unsafe { return &data[index]; } }
+    private i32[*] data;
+};
+
+i32 main()
+{
+    buffer values = buffer();
+    values[1] = 5;
+    ref i32 bound = values[1];
+    bound = bound + 2;
+    const ref i32 seen = values[1];
+    return seen; // 5 + 2
+}

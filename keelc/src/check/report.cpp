@@ -8,6 +8,7 @@
 #include <string>
 #include <string_view>
 #include "check/assign_check.h"
+#include "check/borrow_check.h"
 #include "check/move_check.h"
 
 namespace keel
@@ -86,6 +87,49 @@ void report_move_errors(
                             : fmt::format( "{} is used after it was moved", subject ),
                 error.maybe ? fmt::format( "moved at {}:{} on some path to here", at.line, at.col )
                             : fmt::format( "moved at {}:{}", at.line, at.col )
+            );
+        }
+    }
+}
+
+// D54: a loan broken while its holder is still used, named with where the holder was bound.
+void report_loan_errors(
+    const std::vector<Function>& functions,
+    const Ast&                   ast,
+    const Source_manager&        sm,
+    const Interner&              interner,
+    Types&                       types,
+    Diagnostics&                 diagnostics
+)
+{
+    for( const Function& function : functions )
+    {
+        for( const Loan_error& error : check_loans( function, owning_locals( function, ast, types ) ) )
+        {
+            const Symbol_id   name = function.locals[error.object.v].name;
+            const std::string object =
+                name.is_valid() ? fmt::format( "`{}`", interner.text( name ) ) : std::string( "this value" );
+            const std::string_view holder = interner.text( function.locals[error.holder.v].name );
+            const Line_col         taken  = sm.line_col( error.taken.file, error.taken.start );
+
+            std::string message;
+            switch( error.conflict )
+            {
+            case Loan_conflict::Moved:
+                message = fmt::format( "{} is moved while `{}` still borrows it", object, holder );
+                break;
+            case Loan_conflict::Assigned:
+                message = fmt::format( "{} is assigned while `{}` still borrows from it", object, holder );
+                break;
+            case Loan_conflict::Changed:
+                message = fmt::format( "this could change {} while `{}` still borrows from it", object, holder );
+                break;
+            }
+
+            diagnostics.error(
+                error.at,
+                message,
+                fmt::format( "`{}` is used after this; it was bound at {}:{}", holder, taken.line, taken.col )
             );
         }
     }
@@ -254,11 +298,12 @@ void report_dataflow_errors(
     const Ast&                   ast,
     const Source_manager&        sm,
     const Interner&              interner,
-    const Types&                 types,
+    Types&                       types,
     Diagnostics&                 diagnostics
 )
 {
     report_move_errors( functions, sm, interner, diagnostics );
+    report_loan_errors( functions, ast, sm, interner, types, diagnostics );
     report_unassigned_errors( functions, ast, interner, diagnostics, types );
 }
 
@@ -308,6 +353,39 @@ TEST_CASE( "report_names_both_aliased_arguments", "[check][report][m9]" )
     INFO( twice.rendered() );
     REQUIRE( twice.rendered().find( "one place is passed `out` twice to this call" ) != std::string::npos );
     REQUIRE( twice.rendered().find( "`out n` at 2:31 overlaps it" ) != std::string::npos );
+}
+
+// D54: a broken loan names the object, the binding still using it, and where that was bound.
+TEST_CASE( "report_names_a_broken_loan", "[check][report][m9]" )
+{
+    const Compiled moved(
+        "class B { public u64 n; B() { n = 0; } ~B() { } };\n"
+        "void take( move B b ) { }\n"
+        "i32 main() { B b = B(); ref B r = b; take( move b ); u64 k = r.n; return 0; }\n",
+        Through::report
+    );
+
+    INFO( moved.rendered() );
+    REQUIRE( moved.rendered().find( "`b` is moved while `r` still borrows it" ) != std::string::npos );
+    REQUIRE( moved.rendered().find( "`r` is used after this; it was bound at 3:25" ) != std::string::npos );
+
+    constexpr std::string_view k_vector =
+        "class V { public i32 x; V() { x = 0; } ~V() { } public i32* operator[]( u64 i ) const { return nullptr; } "
+        "public void push( i32 e ) { } };\n";
+
+    const Compiled changed(
+        std::string( k_vector ) + "i32 main() { V v = V(); ref i32 x = v[0]; v.push( 1 ); return x; }\n", Through::report
+    );
+
+    INFO( changed.rendered() );
+    REQUIRE( changed.rendered().find( "this could change `v` while `x` still borrows from it" ) != std::string::npos );
+
+    const Compiled assigned(
+        std::string( k_vector ) + "i32 main() { V v = V(); ref i32 x = v[0]; v = V(); return x; }\n", Through::report
+    );
+
+    INFO( assigned.rendered() );
+    REQUIRE( assigned.rendered().find( "`v` is assigned while `x` still borrows from it" ) != std::string::npos );
 }
 
 TEST_CASE( "report_names_the_unassigned_out_parameter", "[check][report]" )

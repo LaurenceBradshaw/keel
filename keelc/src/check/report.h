@@ -13,15 +13,15 @@
 namespace keel
 {
 
-// The wording for what the dataflow checks find: use after move (§8), and D9's and D31's
-// unassigned reads, `out` parameters and return slot. The passes return spans and locals; this
-// names them.
+// The wording for what the dataflow checks find: use after move (§8), D54's broken loans, and D9's
+// and D31's unassigned reads, `out` parameters and return slot. The passes return spans and locals;
+// this names them.
 void report_dataflow_errors(
     const std::vector<Function>& functions,
     const Ast&                   ast,
     const Source_manager&        sm,
     const Interner&              interner,
-    const Types&                 types,
+    Types&                       types,
     Diagnostics&                 diagnostics
 );
 
