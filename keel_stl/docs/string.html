@@ -7,17 +7,17 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header><nav><a href="index.html">kl</a><span class="sep">::</span><span class="here">string</span></nav></header>
+<header><nav><a href="index.html">The Keel standard library</a></nav></header>
 <main>
-<h1><span class="kind">module</span> kl::string</h1>
+<h1><span class="kind">module</span> <a class="package" href="index.html">kl</a>::string</h1>
 <ul class="contents">
 <li><a href="#parse_error"><code>parse_error</code></a> <span class="kind">enum</span></li>
 <li><a href="#string"><code>string</code></a> <span class="kind">class</span></li>
 </ul>
 <section class="entry">
-<h2><span class="kind">enum</span> parse_error</h2>
+<h2><span class="kind">enum</span> <span class="type">parse_error</span></h2>
 <div class="group" id="parse_error">
-<pre class="signature"><a class="anchor" href="#parse_error" aria-label="Link to parse_error">#</a><code><span class="kw">enum</span> parse_error</code></pre>
+<pre class="signature"><a class="anchor" href="#parse_error" aria-label="Link to parse_error">#</a><code><span class="kw">enum</span> <span class="type">parse_error</span></code></pre>
 <div class="doc">
 <p>Why <code>string::parse_i64</code> refused its text.</p>
 </div>
@@ -43,9 +43,9 @@
 </div>
 </section>
 <section class="entry">
-<h2><span class="kind">class</span> string</h2>
+<h2><span class="kind">class</span> <span class="type">string</span></h2>
 <div class="group" id="string">
-<pre class="signature"><a class="anchor" href="#string" aria-label="Link to string">#</a><code><span class="kw">class</span> string</code></pre>
+<pre class="signature"><a class="anchor" href="#string" aria-label="Link to string">#</a><code><span class="kw">class</span> <span class="type">string</span></code></pre>
 <div class="doc">
 <p>A growable sequence of bytes that owns its storage.</p>
 <p>The bytes are not checked to be UTF-8, and every index and size counts bytes.</p>
@@ -53,34 +53,34 @@
 </div>
 <h3>Constructors</h3>
 <div class="group" id="string.string">
-<pre class="signature"><a class="anchor" href="#string.string" aria-label="Link to string">#</a><code><span class="kw">public</span> string()</code></pre>
+<pre class="signature"><a class="anchor" href="#string.string" aria-label="Link to string">#</a><code><span class="kw">public</span> <span class="type">string</span>()</code></pre>
 <div class="doc">
 <p>An empty string.</p>
 </div>
-<pre class="signature"><a class="anchor" href="#string.string" aria-label="Link to string">#</a><code><span class="kw">public</span> string( <a class="type" href="prelude.html#str">str</a> text )</code></pre>
+<pre class="signature"><a class="anchor" href="#string.string" aria-label="Link to string">#</a><code><span class="kw">public</span> <span class="type">string</span>( <a class="type" href="prelude.html#str">str</a> text )</code></pre>
 <div class="doc">
 <p>A string holding a copy of the bytes of <code>text</code>.</p>
 </div>
 </div>
 <h3>Methods</h3>
 <div class="group" id="string.with_capacity">
-<pre class="signature"><a class="anchor" href="#string.with_capacity" aria-label="Link to with_capacity">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#string">string</a> with_capacity( <a class="prim" href="prelude.html#u64">u64</a> capacity )</code></pre>
+<pre class="signature"><a class="anchor" href="#string.with_capacity" aria-label="Link to with_capacity">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#string">string</a> <span class="fn">with_capacity</span>( <a class="prim" href="prelude.html#u64">u64</a> capacity )</code></pre>
 <div class="doc">
 <p>An empty string with room for <code>capacity</code> bytes before it reallocates.</p>
 </div>
 </div>
 <div class="group" id="string.from">
-<pre class="signature"><a class="anchor" href="#string.from" aria-label="Link to from">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#string">string</a> from( <a class="prim" href="prelude.html#u64">u64</a> value )</code></pre>
+<pre class="signature"><a class="anchor" href="#string.from" aria-label="Link to from">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#string">string</a> <span class="fn">from</span>( <a class="prim" href="prelude.html#u64">u64</a> value )</code></pre>
 <div class="doc">
 <p><code>value</code> written in decimal, with no leading zeros.</p>
 </div>
-<pre class="signature"><a class="anchor" href="#string.from" aria-label="Link to from">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#string">string</a> from( <a class="prim" href="prelude.html#i64">i64</a> value )</code></pre>
+<pre class="signature"><a class="anchor" href="#string.from" aria-label="Link to from">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#string">string</a> <span class="fn">from</span>( <a class="prim" href="prelude.html#i64">i64</a> value )</code></pre>
 <div class="doc">
 <p><code>value</code> written in decimal, with a leading <code>-</code> if it is negative and no leading zeros.</p>
 </div>
 </div>
 <div class="group" id="string.parse_i64">
-<pre class="signature"><a class="anchor" href="#string.parse_i64" aria-label="Link to parse_i64">#</a><code><span class="kw">public</span> <a class="type" href="prelude.html#result">result</a>&lt;<a class="prim" href="prelude.html#i64">i64</a>, <a class="type" href="#parse_error">parse_error</a>&gt; parse_i64() <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#string.parse_i64" aria-label="Link to parse_i64">#</a><code><span class="kw">public</span> <a class="type" href="prelude.html#result">result</a>&lt;<a class="prim" href="prelude.html#i64">i64</a>, <a class="type" href="#parse_error">parse_error</a>&gt; <span class="fn">parse_i64</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>The <code>i64</code> the string writes in decimal.</p>
 <p>The text is an optional <code>-</code> and then one or more digits <code>0</code> to <code>9</code>, which may have leading
@@ -91,13 +91,13 @@ the number, and <code>overflow</code> as soon as the number leaves the range of 
 </div>
 </div>
 <div class="group" id="string.push">
-<pre class="signature"><a class="anchor" href="#string.push" aria-label="Link to push">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> push( <a class="prim" href="prelude.html#u8">u8</a> value )</code></pre>
+<pre class="signature"><a class="anchor" href="#string.push" aria-label="Link to push">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">push</span>( <a class="prim" href="prelude.html#u8">u8</a> value )</code></pre>
 <div class="doc">
 <p>Adds the byte <code>value</code> at the end.</p>
 </div>
 </div>
 <div class="group" id="string.pop">
-<pre class="signature"><a class="anchor" href="#string.pop" aria-label="Link to pop">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u8">u8</a> pop()</code></pre>
+<pre class="signature"><a class="anchor" href="#string.pop" aria-label="Link to pop">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u8">u8</a> <span class="fn">pop</span>()</code></pre>
 <div class="doc">
 <p>Removes the last byte and returns it.</p>
 <h4>Panics</h4>
@@ -105,19 +105,19 @@ the number, and <code>overflow</code> as soon as the number leaves the range of 
 </div>
 </div>
 <div class="group" id="string.append">
-<pre class="signature"><a class="anchor" href="#string.append" aria-label="Link to append">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> append( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#string">string</a> other )</code></pre>
+<pre class="signature"><a class="anchor" href="#string.append" aria-label="Link to append">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">append</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#string">string</a> other )</code></pre>
 <div class="doc">
 <p>Adds a copy of every byte of <code>other</code> at the end.</p>
 </div>
 </div>
 <div class="group" id="string.clear">
-<pre class="signature"><a class="anchor" href="#string.clear" aria-label="Link to clear">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> clear()</code></pre>
+<pre class="signature"><a class="anchor" href="#string.clear" aria-label="Link to clear">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">clear</span>()</code></pre>
 <div class="doc">
 <p>Removes every byte and releases the storage.</p>
 </div>
 </div>
 <div class="group" id="string.operator[]">
-<pre class="signature"><a class="anchor" href="#string.operator[]" aria-label="Link to operator[]">#</a><code><span class="kw">public</span> <span class="kw">const</span> <a class="prim" href="prelude.html#u8">u8</a>* <span class="kw">operator</span>[]( <a class="prim" href="prelude.html#u64">u64</a> index ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#string.operator[]" aria-label="Link to operator[]">#</a><code><span class="kw">public</span> <span class="kw">const</span> <a class="prim" href="prelude.html#u8">u8</a>* <span class="fn">operator[]</span>( <a class="prim" href="prelude.html#u64">u64</a> index ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>A pointer to the byte at <code>index</code>.</p>
 <h4>Panics</h4>
@@ -125,43 +125,43 @@ the number, and <code>overflow</code> as soon as the number leaves the range of 
 </div>
 </div>
 <div class="group" id="string.size">
-<pre class="signature"><a class="anchor" href="#string.size" aria-label="Link to size">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> size() <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#string.size" aria-label="Link to size">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">size</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>The number of bytes.</p>
 </div>
 </div>
 <div class="group" id="string.is_empty">
-<pre class="signature"><a class="anchor" href="#string.is_empty" aria-label="Link to is_empty">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> is_empty() <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#string.is_empty" aria-label="Link to is_empty">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">is_empty</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Whether the string holds no bytes.</p>
 </div>
 </div>
 <div class="group" id="string.operator==">
-<pre class="signature"><a class="anchor" href="#string.operator==" aria-label="Link to operator==">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="kw">operator</span>==( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#string">string</a> other ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#string.operator==" aria-label="Link to operator==">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">operator==</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#string">string</a> other ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Whether both strings hold the same bytes in the same order.</p>
 </div>
 </div>
 <div class="group" id="string.starts_with">
-<pre class="signature"><a class="anchor" href="#string.starts_with" aria-label="Link to starts_with">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> starts_with( <a class="type" href="prelude.html#str">str</a> prefix ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#string.starts_with" aria-label="Link to starts_with">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">starts_with</span>( <a class="type" href="prelude.html#str">str</a> prefix ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Whether the string begins with the bytes of <code>prefix</code>; every string begins with <code>&quot;&quot;</code>.</p>
 </div>
 </div>
 <div class="group" id="string.ends_with">
-<pre class="signature"><a class="anchor" href="#string.ends_with" aria-label="Link to ends_with">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> ends_with( <a class="type" href="prelude.html#str">str</a> suffix ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#string.ends_with" aria-label="Link to ends_with">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">ends_with</span>( <a class="type" href="prelude.html#str">str</a> suffix ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Whether the string ends with the bytes of <code>suffix</code>; every string ends with <code>&quot;&quot;</code>.</p>
 </div>
 </div>
 <div class="group" id="string.find">
-<pre class="signature"><a class="anchor" href="#string.find" aria-label="Link to find">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;<a class="prim" href="prelude.html#u64">u64</a>&gt; find( <a class="type" href="prelude.html#str">str</a> needle ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#string.find" aria-label="Link to find">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;<a class="prim" href="prelude.html#u64">u64</a>&gt; <span class="fn">find</span>( <a class="type" href="prelude.html#str">str</a> needle ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>The index of the first place <code>needle</code> occurs, or <code>none</code>. <code>&quot;&quot;</code> is found at 0.</p>
 </div>
 </div>
 <div class="group" id="string.substring">
-<pre class="signature"><a class="anchor" href="#string.substring" aria-label="Link to substring">#</a><code><span class="kw">public</span> <a class="type" href="#string">string</a> substring( <a class="prim" href="prelude.html#u64">u64</a> start, <a class="prim" href="prelude.html#u64">u64</a> count ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#string.substring" aria-label="Link to substring">#</a><code><span class="kw">public</span> <a class="type" href="#string">string</a> <span class="fn">substring</span>( <a class="prim" href="prelude.html#u64">u64</a> start, <a class="prim" href="prelude.html#u64">u64</a> count ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>A new string holding the <code>count</code> bytes from index <code>start</code> on.</p>
 <h4>Panics</h4>

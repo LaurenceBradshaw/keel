@@ -7,13 +7,13 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header><nav><a href="index.html">kl</a><span class="sep">::</span><span class="here">ring</span></nav></header>
+<header><nav><a href="index.html">The Keel standard library</a></nav></header>
 <main>
-<h1><span class="kind">module</span> kl::ring</h1>
+<h1><span class="kind">module</span> <a class="package" href="index.html">kl</a>::ring</h1>
 <section class="entry">
-<h2><span class="kind">class</span> ring</h2>
+<h2><span class="kind">class</span> <span class="type">ring</span></h2>
 <div class="group" id="ring">
-<pre class="signature"><a class="anchor" href="#ring" aria-label="Link to ring">#</a><code><span class="kw">class</span> ring&lt;T&gt;</code></pre>
+<pre class="signature"><a class="anchor" href="#ring" aria-label="Link to ring">#</a><code><span class="kw">class</span> <span class="type">ring</span>&lt;T&gt;</code></pre>
 <div class="doc">
 <p>A fixed-capacity double-ended queue of <code>T</code> that owns its elements and the block holding them.</p>
 <p>Elements are added and removed at either end in constant time, and indexed from 0 at the
@@ -24,11 +24,11 @@ element back, and <code>push_back_evict</code> makes room by removing the elemen
 </div>
 <h3>Constructors</h3>
 <div class="group" id="ring.~ring">
-<pre class="signature"><a class="anchor" href="#ring.~ring" aria-label="Link to ~ring">#</a><code>~ring()</code></pre>
+<pre class="signature"><a class="anchor" href="#ring.~ring" aria-label="Link to ~ring">#</a><code><span class="type">~ring</span>()</code></pre>
 </div>
 <h3>Methods</h3>
 <div class="group" id="ring.with_capacity">
-<pre class="signature"><a class="anchor" href="#ring.with_capacity" aria-label="Link to with_capacity">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#ring">ring</a>&lt;T&gt; with_capacity( <a class="prim" href="prelude.html#u64">u64</a> capacity )</code></pre>
+<pre class="signature"><a class="anchor" href="#ring.with_capacity" aria-label="Link to with_capacity">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#ring">ring</a>&lt;T&gt; <span class="fn">with_capacity</span>( <a class="prim" href="prelude.html#u64">u64</a> capacity )</code></pre>
 <div class="doc">
 <p>An empty ring with room for exactly <code>capacity</code> elements.</p>
 <h4>Panics</h4>
@@ -36,7 +36,7 @@ element back, and <code>push_back_evict</code> makes room by removing the elemen
 </div>
 </div>
 <div class="group" id="ring.push_back">
-<pre class="signature"><a class="anchor" href="#ring.push_back" aria-label="Link to push_back">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> push_back( <span class="kw">move</span> T value )</code></pre>
+<pre class="signature"><a class="anchor" href="#ring.push_back" aria-label="Link to push_back">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">push_back</span>( <span class="kw">move</span> T value )</code></pre>
 <div class="doc">
 <p>Adds <code>value</code> at the back.</p>
 <h4>Panics</h4>
@@ -44,7 +44,7 @@ element back, and <code>push_back_evict</code> makes room by removing the elemen
 </div>
 </div>
 <div class="group" id="ring.push_front">
-<pre class="signature"><a class="anchor" href="#ring.push_front" aria-label="Link to push_front">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> push_front( <span class="kw">move</span> T value )</code></pre>
+<pre class="signature"><a class="anchor" href="#ring.push_front" aria-label="Link to push_front">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">push_front</span>( <span class="kw">move</span> T value )</code></pre>
 <div class="doc">
 <p>Adds <code>value</code> at the front, so it becomes the element at index 0.</p>
 <h4>Panics</h4>
@@ -52,33 +52,33 @@ element back, and <code>push_back_evict</code> makes room by removing the elemen
 </div>
 </div>
 <div class="group" id="ring.try_push_back">
-<pre class="signature"><a class="anchor" href="#ring.try_push_back" aria-label="Link to try_push_back">#</a><code><span class="kw">public</span> <a class="type" href="prelude.html#result">result</a>&lt;<a class="prim" href="prelude.html#void">void</a>, T&gt; try_push_back( <span class="kw">move</span> T value )</code></pre>
+<pre class="signature"><a class="anchor" href="#ring.try_push_back" aria-label="Link to try_push_back">#</a><code><span class="kw">public</span> <a class="type" href="prelude.html#result">result</a>&lt;<a class="prim" href="prelude.html#void">void</a>, T&gt; <span class="fn">try_push_back</span>( <span class="kw">move</span> T value )</code></pre>
 <div class="doc">
 <p>Adds <code>value</code> at the back, or hands it back in an <code>err</code> if the ring is full.</p>
 </div>
 </div>
 <div class="group" id="ring.try_push_front">
-<pre class="signature"><a class="anchor" href="#ring.try_push_front" aria-label="Link to try_push_front">#</a><code><span class="kw">public</span> <a class="type" href="prelude.html#result">result</a>&lt;<a class="prim" href="prelude.html#void">void</a>, T&gt; try_push_front( <span class="kw">move</span> T value )</code></pre>
+<pre class="signature"><a class="anchor" href="#ring.try_push_front" aria-label="Link to try_push_front">#</a><code><span class="kw">public</span> <a class="type" href="prelude.html#result">result</a>&lt;<a class="prim" href="prelude.html#void">void</a>, T&gt; <span class="fn">try_push_front</span>( <span class="kw">move</span> T value )</code></pre>
 <div class="doc">
 <p>Adds <code>value</code> at the front, or hands it back in an <code>err</code> if the ring is full.</p>
 </div>
 </div>
 <div class="group" id="ring.push_back_evict">
-<pre class="signature"><a class="anchor" href="#ring.push_back_evict" aria-label="Link to push_back_evict">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;T&gt; push_back_evict( <span class="kw">move</span> T value )</code></pre>
+<pre class="signature"><a class="anchor" href="#ring.push_back_evict" aria-label="Link to push_back_evict">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;T&gt; <span class="fn">push_back_evict</span>( <span class="kw">move</span> T value )</code></pre>
 <div class="doc">
 <p>Adds <code>value</code> at the back, first removing and returning the front element if the ring is full.</p>
 <p>Returns <code>none</code> when there was room, so nothing was removed.</p>
 </div>
 </div>
 <div class="group" id="ring.push_front_evict">
-<pre class="signature"><a class="anchor" href="#ring.push_front_evict" aria-label="Link to push_front_evict">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;T&gt; push_front_evict( <span class="kw">move</span> T value )</code></pre>
+<pre class="signature"><a class="anchor" href="#ring.push_front_evict" aria-label="Link to push_front_evict">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;T&gt; <span class="fn">push_front_evict</span>( <span class="kw">move</span> T value )</code></pre>
 <div class="doc">
 <p>Adds <code>value</code> at the front, first removing and returning the back element if the ring is full.</p>
 <p>Returns <code>none</code> when there was room, so nothing was removed.</p>
 </div>
 </div>
 <div class="group" id="ring.pop_front">
-<pre class="signature"><a class="anchor" href="#ring.pop_front" aria-label="Link to pop_front">#</a><code><span class="kw">public</span> T pop_front()</code></pre>
+<pre class="signature"><a class="anchor" href="#ring.pop_front" aria-label="Link to pop_front">#</a><code><span class="kw">public</span> T <span class="fn">pop_front</span>()</code></pre>
 <div class="doc">
 <p>Removes the front element and returns it.</p>
 <h4>Panics</h4>
@@ -86,7 +86,7 @@ element back, and <code>push_back_evict</code> makes room by removing the elemen
 </div>
 </div>
 <div class="group" id="ring.pop_back">
-<pre class="signature"><a class="anchor" href="#ring.pop_back" aria-label="Link to pop_back">#</a><code><span class="kw">public</span> T pop_back()</code></pre>
+<pre class="signature"><a class="anchor" href="#ring.pop_back" aria-label="Link to pop_back">#</a><code><span class="kw">public</span> T <span class="fn">pop_back</span>()</code></pre>
 <div class="doc">
 <p>Removes the back element and returns it.</p>
 <h4>Panics</h4>
@@ -94,19 +94,19 @@ element back, and <code>push_back_evict</code> makes room by removing the elemen
 </div>
 </div>
 <div class="group" id="ring.try_pop_front">
-<pre class="signature"><a class="anchor" href="#ring.try_pop_front" aria-label="Link to try_pop_front">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;T&gt; try_pop_front()</code></pre>
+<pre class="signature"><a class="anchor" href="#ring.try_pop_front" aria-label="Link to try_pop_front">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;T&gt; <span class="fn">try_pop_front</span>()</code></pre>
 <div class="doc">
 <p>Removes the front element and returns it, or <code>none</code> if the ring is empty.</p>
 </div>
 </div>
 <div class="group" id="ring.try_pop_back">
-<pre class="signature"><a class="anchor" href="#ring.try_pop_back" aria-label="Link to try_pop_back">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;T&gt; try_pop_back()</code></pre>
+<pre class="signature"><a class="anchor" href="#ring.try_pop_back" aria-label="Link to try_pop_back">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;T&gt; <span class="fn">try_pop_back</span>()</code></pre>
 <div class="doc">
 <p>Removes the back element and returns it, or <code>none</code> if the ring is empty.</p>
 </div>
 </div>
 <div class="group" id="ring.operator[]">
-<pre class="signature"><a class="anchor" href="#ring.operator[]" aria-label="Link to operator[]">#</a><code><span class="kw">public</span> T* <span class="kw">operator</span>[]( <a class="prim" href="prelude.html#u64">u64</a> index ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#ring.operator[]" aria-label="Link to operator[]">#</a><code><span class="kw">public</span> T* <span class="fn">operator[]</span>( <a class="prim" href="prelude.html#u64">u64</a> index ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>A pointer to the element <code>index</code> places from the front.</p>
 <h4>Panics</h4>
@@ -114,7 +114,7 @@ element back, and <code>push_back_evict</code> makes room by removing the elemen
 </div>
 </div>
 <div class="group" id="ring.first">
-<pre class="signature"><a class="anchor" href="#ring.first" aria-label="Link to first">#</a><code><span class="kw">public</span> T* first() <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#ring.first" aria-label="Link to first">#</a><code><span class="kw">public</span> T* <span class="fn">first</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>A pointer to the front element.</p>
 <h4>Panics</h4>
@@ -122,7 +122,7 @@ element back, and <code>push_back_evict</code> makes room by removing the elemen
 </div>
 </div>
 <div class="group" id="ring.last">
-<pre class="signature"><a class="anchor" href="#ring.last" aria-label="Link to last">#</a><code><span class="kw">public</span> T* last() <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#ring.last" aria-label="Link to last">#</a><code><span class="kw">public</span> T* <span class="fn">last</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>A pointer to the back element.</p>
 <h4>Panics</h4>
@@ -130,38 +130,38 @@ element back, and <code>push_back_evict</code> makes room by removing the elemen
 </div>
 </div>
 <div class="group" id="ring.is_full">
-<pre class="signature"><a class="anchor" href="#ring.is_full" aria-label="Link to is_full">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> is_full() <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#ring.is_full" aria-label="Link to is_full">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">is_full</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Whether the ring holds as many elements as its capacity, so a push would panic.</p>
 </div>
 </div>
 <div class="group" id="ring.is_empty">
-<pre class="signature"><a class="anchor" href="#ring.is_empty" aria-label="Link to is_empty">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> is_empty() <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#ring.is_empty" aria-label="Link to is_empty">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">is_empty</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Whether the ring holds no elements.</p>
 </div>
 </div>
 <div class="group" id="ring.size">
-<pre class="signature"><a class="anchor" href="#ring.size" aria-label="Link to size">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> size() <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#ring.size" aria-label="Link to size">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">size</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>The number of elements.</p>
 </div>
 </div>
 <div class="group" id="ring.capacity">
-<pre class="signature"><a class="anchor" href="#ring.capacity" aria-label="Link to capacity">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> capacity() <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#ring.capacity" aria-label="Link to capacity">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">capacity</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>How many elements the ring holds when full.</p>
 </div>
 </div>
 <div class="group" id="ring.reserve">
-<pre class="signature"><a class="anchor" href="#ring.reserve" aria-label="Link to reserve">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> reserve( <a class="prim" href="prelude.html#u64">u64</a> n )</code></pre>
+<pre class="signature"><a class="anchor" href="#ring.reserve" aria-label="Link to reserve">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">reserve</span>( <a class="prim" href="prelude.html#u64">u64</a> n )</code></pre>
 <div class="doc">
 <p>Makes room for at least <code>n</code> elements in all, not <code>n</code> more, moving the elements into a new
 block in order. Does nothing if the capacity is already that large.</p>
 </div>
 </div>
 <div class="group" id="ring.clear">
-<pre class="signature"><a class="anchor" href="#ring.clear" aria-label="Link to clear">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> clear()</code></pre>
+<pre class="signature"><a class="anchor" href="#ring.clear" aria-label="Link to clear">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">clear</span>()</code></pre>
 <div class="doc">
 <p>Drops every element; the capacity is kept.</p>
 </div>

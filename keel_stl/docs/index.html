@@ -7,19 +7,13 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header><nav><span class="here">kl</span></nav></header>
+<header><nav><a href="index.html">The Keel standard library</a></nav></header>
 <main>
 <h1><span class="kind">package</span> kl</h1>
 <div class="doc">
 <p>The Keel standard library.</p>
 <p>Each module is imported by name through the package, <code>import kl::list;</code>, and its declarations
 are written through the package too, <code>kl::list&lt;i32&gt;</code>.</p>
-<ul>
-<li><code>list</code>: <code>list&lt;T&gt;</code>, a growable array.</li>
-<li><code>string</code>: <code>string</code>, a growable sequence of bytes, and <code>parse_error</code>.</li>
-<li><code>optional</code>: <code>optional&lt;T&gt;</code>, a value or nothing, and the functions that take one apart.</li>
-<li><code>pair</code>: <code>pair&lt;A, B&gt;</code>, two values held together.</li>
-</ul>
 </div>
 <h2>Modules</h2>
 <section class="module">

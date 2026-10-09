@@ -5,8 +5,3 @@
 //!
 //! Each module is imported by name through the package, `import kl::list;`, and its declarations
 //! are written through the package too, `kl::list<i32>`.
-//!
-//! - `list`: `list<T>`, a growable array.
-//! - `string`: `string`, a growable sequence of bytes, and `parse_error`.
-//! - `optional`: `optional<T>`, a value or nothing, and the functions that take one apart.
-//! - `pair`: `pair<A, B>`, two values held together.
