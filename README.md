@@ -125,6 +125,19 @@ and discarding the parts that are historical: implicit copies, the preprocessor,
 undefined behaviour as a routine consequence of ordinary code, and a type system that reports template
 errors at the expansion instead of at the definition.
 
+Moves checked at compile time, sum types, `result` and a borrow check can read as Rust with C++'s
+spelling. Keel is not that, and the difference is in the reference. In Rust a reference is a type:
+it can sit in a struct, be returned freely and be passed as a type argument, so the compiler has to
+know how long each one lives, and lifetimes become part of every signature that touches one. In Keel
+`ref` is only a way to bind a parameter or a local. It is never stored, and it is returned only as a
+`const ref` into an argument. That small rule leaves the borrow check almost nothing to prove: it
+refuses a borrow only when its object could be destroyed or moved out from under it, and it never
+asks the programmer to describe a lifetime. Two mutable references to one value are allowed, as in
+C++. A raw pointer stays an ordinary C++ pointer, whose type already warns that it can dangle. The
+model underneath is still C++'s: classes with constructors and destructors, RAII, value semantics
+and generics checked at the definition. Keel removes C++'s accidents and adds no new discipline to
+learn in their place.
+
 The name is the shipbuilding one. The keel is the first member laid down and the hull is built off it;
 the ownership and lifetime model is that member here.
 
