@@ -9,6 +9,7 @@
 #include <optional>
 #include <string>
 #include <vector>
+#include "lex/lexer.h"
 #include "parse/hints.h"
 #include "parse/lookahead.h"
 
@@ -226,6 +227,9 @@ private:
 
     bool at_mode_keyword() const;
     bool failed_since( u32 token ) const;
+
+    // D53: the `///` lines between `first_token` and the token before it document `decl`.
+    void attach_doc( Node_id decl, u32 first_token );
 
     std::span<const Token> tokens_;
     u32                    pos_ = 0;
@@ -972,6 +976,7 @@ std::vector<Node_id> Parser::parse_declarations()
             declared = true;
         }
 
+        attach_doc( decl, chunk.head->start );
         decls.push_back( decl );
 
         assert( pos_ > chunk.head->start );
@@ -1380,7 +1385,7 @@ Node_id Parser::parse_aggregate_decl()
         {
             reported_line = std::nullopt;
         }
-
+        attach_doc( member, chunk.head->start );
         members.push_back( member );
     }
     classes_.pop_back();
@@ -1712,6 +1717,7 @@ Node_id Parser::parse_enum_decl()
 
         if( ast_.name( variant ).is_valid() ) // Missing name
         {
+            attach_doc( variant, before );
             members.push_back( variant );
         }
         else
@@ -3374,6 +3380,23 @@ bool Parser::failed_since( u32 token ) const
     return pos_ > token && ast_.failed_within( Span::merge( tokens_[token].span, previous().span ) );
 }
 
+void Parser::attach_doc( Node_id decl, u32 first_token )
+{
+    const u32  gap_start = first_token == 0 ? 0 : tokens_[first_token - 1].span.end;
+    const u32  gap_end   = tokens_[first_token].span.start;
+    const Span gap_span { tokens_[first_token].span.file, gap_start, gap_end };
+
+    const std::string_view gap_text = sm_.text( gap_span );
+    const std::string      doc      = doc_comment( gap_text, "///" );
+
+    if( doc.empty() )
+    {
+        return;
+    }
+
+    ast_.set_doc_span( decl, gap_span );
+}
+
 Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing, bool increment_follows, bool keep_shape )
 {
     Node_id left = parse_prefix();
@@ -4369,6 +4392,100 @@ TEST_CASE( "parser_records_each_declaration's_name_span", "[parse]" )
 
         REQUIRE( param.is_valid() );
         REQUIRE( p.text( p.ast().name_span( param ) ) == "i32" );
+    }
+}
+
+// D53: a `///` block belongs to the declaration whose first token follows it.
+TEST_CASE( "parser_attaches_doc_comments", "[parse][docs]" )
+{
+    const auto doc_of = []( const Parsed& p, Node_id decl )
+    {
+        const Span span = p.ast().doc_span( decl );
+        return span.is_valid() ? doc_comment( p.text( span ), "///" ) : std::string {};
+    };
+
+    struct Case
+    {
+        std::string_view source;
+        Node_kind        kind;
+    };
+
+    for( const Case& c : {
+             Case { "/// Doc.\ni32 add( i32 a ) { return a; }", Node_kind::Function_decl },
+             Case { "/// Doc.\ni32 g = 1;", Node_kind::Var_decl },
+             Case { "/// Doc.\nstruct Point { i32 x; };", Node_kind::Struct_decl },
+             Case { "struct Point\n{\n    /// Doc.\n    i32 x;\n};", Node_kind::Field_decl },
+             Case { "/// Doc.\nclass C { i32 n; C() { } };", Node_kind::Class_decl },
+             Case { "class C\n{\n    i32 n;\n    /// Doc.\n    C() { }\n};", Node_kind::Constructor_decl },
+             Case { "class C\n{\n    i32 n;\n    C() { }\n    /// Doc.\n    ~C() { }\n};", Node_kind::Destructor_decl },
+             Case {
+                 "class C\n{\n    i32 n;\n    /// Doc.\n    public i32 get() const { return 0; }\n};", Node_kind::Method_decl
+             },
+             Case {
+                 "class C\n{\n    i32 n;\n    /// Doc.\n    public static i32 make() { return 0; }\n};", Node_kind::Method_decl
+             },
+             Case { "class C\n{\n    /// Doc.\n    private i32 n;\n};", Node_kind::Field_decl },
+             Case { "class C { i32 n; /// Doc.\n static i32 count = 0; };", Node_kind::Var_decl },
+             Case { "/// Doc.\nenum Colour { Red };", Node_kind::Enum_decl },
+             Case { "enum Colour\n{\n    /// Doc.\n    Red\n};", Node_kind::Variant_decl },
+             Case { "enum Shape\n{\n    Square,\n    /// Doc.\n    Circle( i32 radius )\n};", Node_kind::Variant_decl },
+             Case { "/// Doc.\nT id<T>( T x ) { return x; }", Node_kind::Function_decl },
+             Case { "/// Doc.\n// a note\ni32 g = 1;", Node_kind::Var_decl },
+         } )
+    {
+        const Parsed p( c.source );
+
+        INFO( c.source );
+        REQUIRE_FALSE( p.has_errors() );
+
+        // The last of its kind, so `Square` above `Circle` is passed over.
+        Node_id decl;
+        for( u32 i = 0; i < p.ast().node_count(); ++i )
+        {
+            if( p.kind( Node_id { i } ) == c.kind && p.ast().doc_span( Node_id { i } ).is_valid() )
+            {
+                decl = Node_id { i };
+            }
+        }
+
+        REQUIRE( decl.is_valid() );
+        REQUIRE( doc_of( p, decl ) == "Doc." );
+    }
+
+    SECTION( "a block belongs to one declaration only" )
+    {
+        const Parsed p( "/// A.\ni32 a = 1;\ni32 b = 2;\nenum E\n{\n    /// X.\n    X,\n    Y\n};" );
+
+        REQUIRE_FALSE( p.has_errors() );
+
+        u32 documented = 0;
+        for( u32 i = 0; i < p.ast().node_count(); ++i )
+        {
+            documented += p.ast().doc_span( Node_id { i } ).is_valid() ? 1 : 0;
+        }
+
+        REQUIRE( documented == 2 );
+    }
+
+    // Cosmetic, so never an error: the block before a `}` or at the end of the file documents nothing.
+    SECTION( "a block followed by no declaration is ignored" )
+    {
+        const Parsed p( "struct P\n{\n    i32 x;\n    /// Nothing.\n};\n/// Nothing either.\n" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        for( u32 i = 0; i < p.ast().node_count(); ++i )
+        {
+            REQUIRE_FALSE( p.ast().doc_span( Node_id { i } ).is_valid() );
+        }
+    }
+
+    SECTION( "the copyright lines above a declaration are not its documentation" )
+    {
+        const Parsed p( "// Copyright\n// SPDX\n\ni32 g = 1;" );
+
+        REQUIRE_FALSE( p.ast().doc_span( find_first( p.ast(), p.root(), Node_kind::Var_decl ) ).is_valid() );
     }
 }
 

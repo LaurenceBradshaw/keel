@@ -928,6 +928,78 @@ std::vector<Token> lex( File_id file, const Source_manager& sm, Interner& intern
     return tokens;
 }
 
+std::string doc_comment( std::string_view trivia, std::string_view marker )
+{
+    std::string out;
+    std::size_t pos = 0;
+    while( pos < trivia.size() )
+    {
+        // Skip whitespace.
+        while( pos < trivia.size() && is_space( trivia[pos] ) )
+        {
+            ++pos;
+        }
+
+        if( pos + 1 < trivia.size() && trivia[pos] == '/' && trivia[pos + 1] == '*' )
+        {
+            // Skip block comment.
+            pos += 2;
+            while( pos + 1 < trivia.size() && !( trivia[pos] == '*' && trivia[pos + 1] == '/' ) )
+            {
+                ++pos;
+            }
+
+            if( pos + 1 < trivia.size() )
+            {
+                pos += 2; // Skip closing */
+            }
+        }
+        else if( pos + marker.size() <= trivia.size() && trivia.substr( pos, marker.size() ) == marker )
+        {
+            // Keep line starting with marker.
+            pos += marker.size();
+
+            // `////` is a plain comment.
+            if( pos < trivia.size() && trivia[pos] == '/' )
+            {
+                while( pos < trivia.size() && trivia[pos] != '\n' )
+                {
+                    ++pos;
+                }
+                continue;
+            }
+
+            if( pos < trivia.size() && trivia[pos] == ' ' )
+            {
+                ++pos; // Skip one space after marker.
+            }
+
+            std::size_t line_start = pos;
+            while( pos < trivia.size() && trivia[pos] != '\n' )
+            {
+                ++pos;
+            }
+
+            if( !out.empty() )
+            {
+                out.push_back( '\n' );
+            }
+
+            out.append( trivia.substr( line_start, pos - line_start ) );
+        }
+        else
+        {
+            // Skip line not starting with marker.
+            while( pos < trivia.size() && trivia[pos] != '\n' )
+            {
+                ++pos;
+            }
+        }
+    }
+
+    return out;
+}
+
 bool is_identifier( std::string_view text )
 {
     return !text.empty() && is_ident_start( text[0] ) && std::all_of( text.begin() + 1, text.end(), is_ident_continue );
@@ -1328,6 +1400,40 @@ TEST_CASE( "lexer_block_comments_do_not_nest", "[lex]" )
     REQUIRE( lexed.count() == 1 );
     REQUIRE( lexed.text( 0 ) == "a" );
     REQUIRE_FALSE( lexed.has_errors() );
+}
+
+// D53: the text between two tokens, reduced to the lines its marker opens.
+TEST_CASE( "lexer_doc_comments", "[lex][docs]" )
+{
+    SECTION( "the marker and one space go, and a bare marker is a blank line" )
+    {
+        REQUIRE( doc_comment( "\n    /// Adds one.\n    ", "///" ) == "Adds one." );
+        REQUIRE( doc_comment( "/// a\n///\n/// b\n", "///" ) == "a\n\nb" );
+        REQUIRE( doc_comment( "///  indented\n", "///" ) == " indented" );
+        REQUIRE( doc_comment( "///tight", "///" ) == "tight" );
+    }
+
+    SECTION( "plain comments and blank lines between doc lines are dropped" )
+    {
+        REQUIRE( doc_comment( "/// a\n\n// note\n/* aside */\n/// b\n", "///" ) == "a\nb" );
+    }
+
+    SECTION( "nothing else is a doc line" )
+    {
+        REQUIRE( doc_comment( "", "///" ).empty() );
+        REQUIRE( doc_comment( "\n  \n", "///" ).empty() );
+        REQUIRE( doc_comment( "//// banner\n", "///" ).empty() );
+        REQUIRE( doc_comment( "// see ///\n", "///" ).empty() );
+        REQUIRE( doc_comment( "/* /// inside */\n", "///" ).empty() );
+        REQUIRE( doc_comment( "/*\n/// inside\n*/\n", "///" ).empty() );
+    }
+
+    SECTION( "the package marker is its own" )
+    {
+        REQUIRE( doc_comment( "// Copyright\n//! The kl package.\n//!\n//! More.\n", "//!" ) == "The kl package.\n\nMore." );
+        REQUIRE( doc_comment( "//! package\n", "///" ).empty() );
+        REQUIRE( doc_comment( "/// declaration\n", "//!" ).empty() );
+    }
 }
 
 TEST_CASE( "lexer_unterminated_block_comment", "[lex]" )

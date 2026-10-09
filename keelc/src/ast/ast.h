@@ -186,6 +186,12 @@ public:
     // `const ref T` is Const_type( Mode_type( T ) ); this steps through the Const_type.
     Node_id unwrap_const( Node_id annotation ) const;
 
+    // ---- Documentation ----
+    // The span of a declaration's doc comment, or an invalid span when absent.
+
+    void set_doc_span( Node_id id, Span span );
+    Span doc_span( Node_id id ) const;
+
 private:
     std::span<const Node_id> type_param_decls( Node_id list ) const; // may hold Errors
 
@@ -199,6 +205,8 @@ private:
 
     std::vector<bool> broken_;
     std::vector<Span> failures_;
+
+    std::unordered_map<u32, Span> doc_spans_;
 };
 
 } // namespace keel

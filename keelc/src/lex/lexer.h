@@ -19,6 +19,9 @@ namespace keel
 std::vector<Token>
 lex( File_id file, const Source_manager& sm, Interner& interner, Literal_pool& literals, Diagnostics& diags );
 
+// D53: the lines `marker` opens in `trivia`, text between two tokens, without the marker and one space.
+std::string doc_comment( std::string_view trivia, std::string_view marker );
+
 bool is_identifier( std::string_view text );
 
 } // namespace keel

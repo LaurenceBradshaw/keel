@@ -296,6 +296,16 @@ static std::size_t first_where_clause( const Ast& ast, Node_id list )
     );
 }
 
+void Ast::set_doc_span( Node_id id, Span span )
+{
+    doc_spans_[id.v] = span;
+}
+
+Span Ast::doc_span( Node_id id ) const
+{
+    return doc_spans_.find( id.v ) != doc_spans_.end() ? doc_spans_.at( id.v ) : Span::none();
+}
+
 std::span<const Node_id> Ast::type_param_decls( Node_id list ) const
 {
     if( !list.is_valid() )

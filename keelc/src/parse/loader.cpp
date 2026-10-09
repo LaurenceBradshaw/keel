@@ -12,6 +12,39 @@
 
 namespace keel
 {
+namespace
+{
+
+// A package's `//!` documentation, from `packageinfo.kl` in its folder: empty when there is none.
+// Lexed and never parsed, so nothing written in it is declared or imported.
+std::string read_package_info(
+    const std::filesystem::path& folder, Source_manager& sm, Interner& interner, Literal_pool& literals, Diagnostics& diags
+)
+{
+    const std::optional<File_id> file = sm.load_file( folder / "packageinfo.kl" );
+
+    if( !file.has_value() )
+    {
+        return {};
+    }
+
+    const std::vector<Token> tokens = lex( *file, sm, interner, literals, diags );
+
+    if( !tokens.front().is( Token_kind::End_of_file ) )
+    {
+        diags.error(
+            tokens.front().span,
+            "`packageinfo.kl` holds only comments",
+            "it is the package's `//!` documentation; move this into a module"
+        );
+        return {};
+    }
+
+    return doc_comment( sm.file( *file ).text, "//!" );
+}
+
+} // namespace
+
 Program load_program(
     File_id                  input,
     Source_manager&          sm,
@@ -36,6 +69,9 @@ Program load_program(
     Imports imports;
     imports.set_prelude( prelude_file, interner.intern( "prelude" ) );
 
+    std::unordered_map<u32, std::string> package_docs;
+    package_docs[Symbol_id {}.v] = read_package_info( program_folder, sm, interner, literals, diags );
+
     std::unordered_map<u32, std::filesystem::path> package_roots;
     for( const Package& package : packages )
     {
@@ -43,6 +79,7 @@ Program load_program(
         imports.add_package( package_id );
 
         package_roots[package_id.v] = package.root;
+        package_docs[package_id.v]  = read_package_info( package.root, sm, interner, literals, diags );
     }
 
     std::vector<Node_id> decls;
@@ -84,7 +121,18 @@ Program load_program(
                     }
                 }
 
-                const std::string_view      module_name = interner.text( ast.name( decl ) );
+                const std::string_view module_name = interner.text( ast.name( decl ) );
+
+                if( module_name == "packageinfo" )
+                {
+                    diags.error(
+                        ast.span( decl ),
+                        "`packageinfo` is not a module",
+                        "`packageinfo.kl` holds the package's documentation, which nothing imports"
+                    );
+                    continue;
+                }
+
                 const std::filesystem::path module_path = module_folder / ( std::string( module_name ) + ".kl" );
 
                 // Dedupes by canonical path, which is what stops cycles and diamonds
@@ -123,8 +171,9 @@ Program load_program(
     ast.set_root( root );
 
     Program prog;
-    prog.ast     = std::move( ast );
-    prog.imports = std::move( imports );
+    prog.ast          = std::move( ast );
+    prog.imports      = std::move( imports );
+    prog.package_docs = std::move( package_docs );
     return prog;
 }
 } // namespace keel
@@ -203,6 +252,14 @@ public:
     bool is_package( std::string_view name )
     {
         return program_.imports.is_package( interner_.intern( name ) );
+    }
+
+    // The package's `//!` documentation; empty names the program's own package.
+    std::string package_doc( std::string_view package )
+    {
+        const Symbol_id id    = package.empty() ? Symbol_id {} : interner_.intern( package );
+        const auto      found = program_.package_docs.find( id.v );
+        return found == program_.package_docs.end() ? std::string {} : found->second;
     }
 
     std::size_t errors() const
@@ -514,6 +571,80 @@ TEST_CASE( "loader_loads_the_prelude_with_every_program", "[parse][loader][prelu
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 0 );
+    }
+}
+
+// D53: a package's documentation is its `packageinfo.kl`, which holds nothing but comments.
+TEST_CASE( "loader_reads_a_package's_packageinfo", "[parse][loader][packages][docs]" )
+{
+    constexpr std::string_view info = "// Copyright\n//! The kl package.\n//!\n//! More.\n";
+
+    SECTION( "a package's `//!` lines are its documentation" )
+    {
+        Loaded p( {
+            { "main.kl", "import kl::geom;\ni32 main() { return 0; }\n" },
+            { "kl/geom.kl", "i32 area() { return 4; }\n" },
+            { "kl/packageinfo.kl", info },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.package_doc( "kl" ) == "The kl package.\n\nMore." );
+        REQUIRE( p.package_doc( "" ).empty() );
+    }
+
+    SECTION( "and so are the program's own" )
+    {
+        Loaded p( {
+            { "main.kl", "i32 main() { return 0; }\n" },
+            { "packageinfo.kl", "//! The program.\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.package_doc( "" ) == "The program." );
+    }
+
+    SECTION( "a package without one has none" )
+    {
+        Loaded p( {
+            { "main.kl", "import kl::geom;\ni32 main() { return 0; }\n" },
+            { "kl/geom.kl", "i32 area() { return 4; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.package_doc( "kl" ).empty() );
+    }
+
+    // One error for the file, however much is in it.
+    SECTION( "anything but comments in it is refused" )
+    {
+        const Loaded p( {
+            { "main.kl", "import kl::geom;\ni32 main() { return 0; }\n" },
+            { "kl/geom.kl", "i32 area() { return 4; }\n" },
+            { "kl/packageinfo.kl", "//! The kl package.\nimport geom;\ni32 stray() { return 1; }\n" },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`packageinfo.kl` holds only comments" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "packageinfo.kl:2:1" ) != std::string::npos );
+    }
+
+    SECTION( "it is not a module, so nothing imports it" )
+    {
+        const Loaded p( {
+            { "main.kl", "import kl::packageinfo;\nimport packageinfo;\ni32 main() { return 0; }\n" },
+            { "packageinfo.kl", "//! The program.\n" },
+            { "kl/packageinfo.kl", info },
+        } );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 2 );
+        REQUIRE( p.rendered().find( "`packageinfo` is not a module" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "main.kl:1:1" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "main.kl:2:1" ) != std::string::npos );
     }
 }
 

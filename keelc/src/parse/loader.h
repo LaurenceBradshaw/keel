@@ -4,7 +4,9 @@
 #pragma once
 #include <filesystem>
 #include <span>
+#include <string>
 #include <string_view>
+#include <unordered_map>
 #include "ast/ast.h"
 #include "common/diagnostics.h"
 #include "common/imports.h"
@@ -20,6 +22,8 @@ struct Program
 {
     Ast     ast;
     Imports imports;
+
+    std::unordered_map<u32, std::string> package_docs; // by package symbol, the program's own under Symbol_id {}
 };
 
 struct Package
