@@ -126,13 +126,12 @@ check_headers()
     return "$bad"
 }
 
-# Each project registers its own golden suite by having a runner. A project without one is skipped
-# rather than failing, so keel_rt costs nothing until it has something to run.
+# Each Keel project's golden suite. keel_rt's tests are a C binary instead, run as its own step.
 check_goldens()
 {
     local any=0
 
-    for runner in keelc/test/run_tests.sh keel_rt/test/run_tests.sh keel_stl/test/run_tests.sh; do
+    for runner in keelc/test/run_tests.sh keel_stl/test/run_tests.sh; do
         [ -x "$runner" ] || continue
 
         any=1
@@ -174,6 +173,7 @@ step "clang-format"        check_format                              || exit 1
 step "build (debug)"       cmake --build --preset debug              || exit 1
 step "unit tests"          ./build/debug/bin/keel_tests              || exit 1
 step "keeldoc unit tests"  ./build/debug/bin/keeldoc_tests           || exit 1
+step "runtime tests"       ./build/debug/bin/keel_rt_tests           || exit 1
 step "golden tests"        check_goldens                             || exit 1
 step "docs up to date"     check_docs                                || exit 1
 step "build (release -Werror)" cmake --build --preset release        || exit 1

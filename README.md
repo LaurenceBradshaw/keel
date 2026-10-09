@@ -340,6 +340,7 @@ build/debug/bin/keeldoc -o keel_stl/docs kl=keel_stl/src
 build/debug/bin/keel_tests                              # unit tests
 keelc/test/run_tests.sh build/debug/bin/keelc           # golden-file tests
 keel_stl/test/run_tests.sh build/debug/bin/keelc        # the kl package's programs
+build/debug/bin/keel_rt_tests                           # the runtime's edge cases
 build/debug/bin/keeldoc_tests                           # keeldoc's unit tests
 keeldoc/test/run_tests.sh build/debug/bin/keeldoc build/debug/bin/keelc   # keeldoc's pages
 ```
