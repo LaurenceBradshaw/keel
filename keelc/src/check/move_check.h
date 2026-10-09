@@ -9,7 +9,7 @@ namespace keel
 {
 
 // Where a value was read after it was moved. Carries spans rather than a message, so the pass
-// needs no Interner and no Diagnostics - the driver has both and does the wording.
+// needs no Interner and no Diagnostics - check/report does the wording.
 struct Move_error
 {
     Local_id local {};

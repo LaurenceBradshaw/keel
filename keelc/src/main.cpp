@@ -3,7 +3,6 @@
 
 #include <fmt/core.h>
 #include <fmt/format.h>
-#include <algorithm>
 #include <cstdlib>
 #include <cxxopts.hpp>
 #include <filesystem>
@@ -15,9 +14,8 @@
 #include <unordered_map>
 #include <vector>
 #include "ast/dump.h"
-#include "check/assign_check.h"
 #include "check/drop_flags.h"
-#include "check/move_check.h"
+#include "check/report.h"
 #include "codegen_c/emit_kir.h"
 #include "codegen_c/link.h"
 #include "common/diagnostics.h"
@@ -39,216 +37,6 @@
 
 // Excluded from the unit-test binary, which provides its own main() via Catch2.
 #ifndef ENABLE_UNIT_TESTS
-namespace
-{
-
-// check_moves reports spans and a Local_id; the wording is the driver's, because this is the only
-// place with an Interner to turn that local into a name. Diagnostics carries one span and a help
-// string rather than a second underlined snippet, so the move site becomes a line:col in the help -
-// the shape the resolver's previous-declaration note already uses.
-void report_move_errors(
-    const std::vector<keel::Function>& functions,
-    const keel::Source_manager&        sm,
-    const keel::Interner&              interner,
-    keel::Diagnostics&                 diagnostics
-)
-{
-    for( const keel::Function& function : functions )
-    {
-        for( const keel::Move_error& error : keel::check_moves( function ) )
-        {
-            const keel::Symbol_id name = function.locals[error.local.v].name;
-
-            // A temporary can be moved too - the lowerer synthesises one wherever an owning value
-            // is handed over - so a move error does not always name something the author wrote.
-            const std::string subject =
-                name.is_valid() ? fmt::format( "`{}`", interner.text( name ) ) : std::string( "this value" );
-
-            if( error.borrowed )
-            {
-                diagnostics.error(
-                    error.use,
-                    fmt::format( "{} is moved into this call, so the call cannot also borrow it", subject ),
-                    "a call cannot take a value and borrow it at once"
-                );
-                continue;
-            }
-
-            const keel::Line_col at = sm.line_col( error.moved.file, error.moved.start );
-
-            // The two must read differently: `maybe` is the compiler refusing an ambiguity rather
-            // than reporting a certainty, and that is the whole reason the state exists.
-            diagnostics.error(
-                error.use,
-                error.maybe ? fmt::format( "{} may already have been moved", subject )
-                            : fmt::format( "{} is used after it was moved", subject ),
-                error.maybe ? fmt::format( "moved at {}:{} on some path to here", at.line, at.col )
-                            : fmt::format( "moved at {}:{}", at.line, at.col )
-            );
-        }
-    }
-}
-
-// Two rules out of one analysis. D31: an `out` parameter is one the callee assigns, and "the callee
-// must assign it" is a promise to the caller rather than advice - so a path that returns without
-// writing one is an error, and the return slot is the same obligation under another name. D9: a
-// value read before anything put one there. Same shape as report_move_errors above, and for the
-// same reason: the pass reports spans and a Local_id, and this is the only place with an Interner
-// to name it.
-void report_unassigned_errors(
-    const std::vector<keel::Function>& functions,
-    const keel::Ast&                   ast,
-    const keel::Interner&              interner,
-    keel::Diagnostics&                 diagnostics,
-    const keel::Types&                 types
-)
-{
-    for( const keel::Function& function : functions )
-    {
-        const keel::Assignment_report report = keel::check_assignment( function );
-
-        const auto field_name = [&]( keel::Node_id field ) { return interner.text( ast.name( field ) ); };
-
-        // D9: a value read before it exists. Reported first, because when a function has both the
-        // read is the mistake and the missing assignment at the exit is its consequence.
-        for( const keel::Uninitialised_read& read : report.reads )
-        {
-            if( read.field.is_valid() && read.whole )
-            {
-                diagnostics.error(
-                    read.at,
-                    fmt::format( "`this` is used before this constructor assigns `{}`", field_name( read.field ) ),
-                    "assign every field before calling a method or using `this`"
-                );
-                continue;
-            }
-
-            if( read.field.is_valid() )
-            {
-                diagnostics.error(
-                    read.at,
-                    read.maybe ? fmt::format( "`{}` may be used before this constructor assigns it", field_name( read.field ) )
-                               : fmt::format( "`{}` is used before this constructor assigns it", field_name( read.field ) ),
-                    read.maybe ? "it is assigned on some paths to here, but not all" : "assign it before reading it"
-                );
-                continue;
-            }
-
-            const keel::Symbol_id name = function.locals[read.local.v].name;
-
-            // A temporary is always written before it is read, so an unnamed local here is a
-            // lowering bug rather than the author's - say something rather than nothing.
-            const std::string subject =
-                name.is_valid() ? fmt::format( "`{}`", interner.text( name ) ) : std::string( "this value" );
-
-            const bool is_out = std::find( function.out_parameters.begin(), function.out_parameters.end(), read.local ) !=
-                                function.out_parameters.end();
-
-            // An `out` parameter gets its own wording: the author did write it, so "used before it
-            // is initialised" would read as though they had forgotten a declaration.
-            if( is_out )
-            {
-                diagnostics.error(
-                    read.at,
-                    fmt::format( "{} is read before this function assigns it", subject ),
-                    "an `out` parameter holds no value on entry - the caller supplies the storage, not the value"
-                );
-                continue;
-            }
-
-            diagnostics.error(
-                read.at,
-                read.maybe ? fmt::format( "{} may be used before it is initialised", subject )
-                           : fmt::format( "{} is used before it is initialised", subject ),
-                read.maybe ? "it is assigned on some paths to here, but not all" : "give it a value at its declaration"
-            );
-        }
-
-        for( const keel::Unassigned_error& error : report.unassigned )
-        {
-            if( error.field.is_valid() )
-            {
-                diagnostics.error(
-                    error.at,
-                    error.maybe
-                        ? fmt::format( "this constructor does not assign `{}` on every path", field_name( error.field ) )
-                        : fmt::format( "this constructor never assigns `{}`", field_name( error.field ) ),
-                    "every field must hold a value when the constructor returns"
-                );
-                continue;
-            }
-
-            if( error.local == keel::k_return_slot )
-            {
-                const std::string_view return_type = types.table().name( function.locals[keel::k_return_slot.v].type );
-
-                // Not error.maybe, which cannot answer this one. A path that returns *leaves* the
-                // graph, so it never joins the block this is reported at, and `ever` there is
-                // always 0 - the flag is meaningful for an `out` parameter, whose paths do join,
-                // and structurally false for the return slot. The question the wording wants is
-                // about the whole function, so it is asked of the whole function.
-                const bool returns_somewhere = std::any_of(
-                    function.statements.begin(),
-                    function.statements.end(),
-                    []( const keel::Statement& statement )
-                    {
-                        return statement.kind == keel::Statement_kind::Assign && !statement.place.is_global() &&
-                               statement.place.local == keel::k_return_slot;
-                    }
-                );
-
-                diagnostics.error(
-                    error.at,
-                    returns_somewhere ? "this function does not return a value on every path"
-                                      : "this function never returns a value",
-                    fmt::format( "it returns `{}`, so every path out of it must produce one", return_type )
-                );
-                continue;
-            }
-
-            const keel::Symbol_id name = function.locals[error.local.v].name;
-
-            // An `out` parameter always has one, unlike a moved temporary - but reading it from the
-            // same place keeps the two reporters saying the same thing about the same field.
-            const std::string subject =
-                name.is_valid() ? fmt::format( "`{}`", interner.text( name ) ) : std::string( "this parameter" );
-
-            // The two read differently on purpose: one is a path the author missed, the other is a
-            // parameter they never wrote to at all. Neither says "this `return`", because the
-            // caret is the *function* when the path that misses it is the fall off the end - which
-            // is the common case, and the one where naming a return would point at nothing.
-            diagnostics.error(
-                error.at,
-                error.maybe ? fmt::format( "{} is not assigned on every path out of this function", subject )
-                            : fmt::format( "{} is never assigned", subject ),
-                "an `out` parameter is the callee's promise to assign it"
-            );
-        }
-
-        for( const keel::Span at : report.diverging_returns )
-        {
-            diagnostics.error(
-                at,
-                "this function returns `never`, but can reach its end",
-                "end every path in `panic`, a call of another `never` function, or a loop that never exits"
-            );
-        }
-
-        for( const keel::Reassigned_field& error : report.reassigned )
-        {
-            diagnostics.error(
-                error.at,
-                error.maybe ? fmt::format( "`{}` may already hold a value here", field_name( error.field ) )
-                            : fmt::format( "`{}` already holds a value here", field_name( error.field ) ),
-                error.is_const ? "a constructor assigns a `const` field once on each path"
-                               : "a constructor assigns an owning field once on each path"
-            );
-        }
-    }
-}
-
-} // namespace
-
 int main( int argc, char** argv )
 {
     cxxopts::Options options( "keelc", "The Keel compiler" );
@@ -516,8 +304,7 @@ int main( int argc, char** argv )
     // Move checking is part of the front end, not of emission: --check is what an editor wants, and
     // an editor wants use-after-move underlined. Which is why this runs above that early return
     // rather than beside the emitter.
-    report_move_errors( functions, sm, interner, diagnostics );
-    report_unassigned_errors( functions, ast, interner, diagnostics, types );
+    keel::report_dataflow_errors( functions, ast, sm, interner, types, diagnostics );
 
     if( diagnostics.has_errors() )
     {

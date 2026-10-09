@@ -11,7 +11,7 @@ namespace keel
 
 // An obligation a path can reach a way out of the function without meeting: an `out` parameter
 // (D31) or the return slot (D9). Carries a span rather than a message, so the pass needs no
-// Interner and no Diagnostics - the driver has both.
+// Interner and no Diagnostics - check/report does the wording.
 struct Unassigned_error
 {
     Local_id local {};

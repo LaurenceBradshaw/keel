@@ -1,0 +1,312 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+#include "check/report.h"
+
+#include <fmt/format.h>
+#include <algorithm>
+#include <string>
+#include <string_view>
+#include "check/assign_check.h"
+#include "check/move_check.h"
+
+namespace keel
+{
+
+namespace
+{
+
+// check_moves reports spans and a Local_id; the Interner here turns that local into a name.
+// Diagnostics carries one span and a help string rather than a second underlined snippet, so the
+// move site becomes a line:col in the help - the shape the resolver's previous-declaration note
+// already uses.
+void report_move_errors(
+    const std::vector<Function>& functions, const Source_manager& sm, const Interner& interner, Diagnostics& diagnostics
+)
+{
+    for( const Function& function : functions )
+    {
+        for( const Move_error& error : check_moves( function ) )
+        {
+            const Symbol_id name = function.locals[error.local.v].name;
+
+            // A temporary can be moved too - the lowerer synthesises one wherever an owning value
+            // is handed over - so a move error does not always name something the author wrote.
+            const std::string subject =
+                name.is_valid() ? fmt::format( "`{}`", interner.text( name ) ) : std::string( "this value" );
+
+            if( error.borrowed )
+            {
+                diagnostics.error(
+                    error.use,
+                    fmt::format( "{} is moved into this call, so the call cannot also borrow it", subject ),
+                    "a call cannot take a value and borrow it at once"
+                );
+                continue;
+            }
+
+            const Line_col at = sm.line_col( error.moved.file, error.moved.start );
+
+            // The two must read differently: `maybe` is the compiler refusing an ambiguity rather
+            // than reporting a certainty, and that is the whole reason the state exists.
+            diagnostics.error(
+                error.use,
+                error.maybe ? fmt::format( "{} may already have been moved", subject )
+                            : fmt::format( "{} is used after it was moved", subject ),
+                error.maybe ? fmt::format( "moved at {}:{} on some path to here", at.line, at.col )
+                            : fmt::format( "moved at {}:{}", at.line, at.col )
+            );
+        }
+    }
+}
+
+// Two rules out of one analysis. D31: an `out` parameter is one the callee assigns, and "the callee
+// must assign it" is a promise to the caller rather than advice - so a path that returns without
+// writing one is an error, and the return slot is the same obligation under another name. D9: a
+// value read before anything put one there. Same shape as report_move_errors above: the pass
+// reports spans and a Local_id, and this names it.
+void report_unassigned_errors(
+    const std::vector<Function>& functions,
+    const Ast&                   ast,
+    const Interner&              interner,
+    Diagnostics&                 diagnostics,
+    const Types&                 types
+)
+{
+    for( const Function& function : functions )
+    {
+        const Assignment_report report = check_assignment( function );
+
+        const auto field_name = [&]( Node_id field ) { return interner.text( ast.name( field ) ); };
+
+        // D9: a value read before it exists. Reported first, because when a function has both the
+        // read is the mistake and the missing assignment at the exit is its consequence.
+        for( const Uninitialised_read& read : report.reads )
+        {
+            if( read.field.is_valid() && read.whole )
+            {
+                diagnostics.error(
+                    read.at,
+                    fmt::format( "`this` is used before this constructor assigns `{}`", field_name( read.field ) ),
+                    "assign every field before calling a method or using `this`"
+                );
+                continue;
+            }
+
+            if( read.field.is_valid() )
+            {
+                diagnostics.error(
+                    read.at,
+                    read.maybe ? fmt::format( "`{}` may be used before this constructor assigns it", field_name( read.field ) )
+                               : fmt::format( "`{}` is used before this constructor assigns it", field_name( read.field ) ),
+                    read.maybe ? "it is assigned on some paths to here, but not all" : "assign it before reading it"
+                );
+                continue;
+            }
+
+            const Symbol_id name = function.locals[read.local.v].name;
+
+            // A temporary is always written before it is read, so an unnamed local here is a
+            // lowering bug rather than the author's - say something rather than nothing.
+            const std::string subject =
+                name.is_valid() ? fmt::format( "`{}`", interner.text( name ) ) : std::string( "this value" );
+
+            const bool is_out = std::find( function.out_parameters.begin(), function.out_parameters.end(), read.local ) !=
+                                function.out_parameters.end();
+
+            // An `out` parameter gets its own wording: the author did write it, so "used before it
+            // is initialised" would read as though they had forgotten a declaration.
+            if( is_out )
+            {
+                diagnostics.error(
+                    read.at,
+                    fmt::format( "{} is read before this function assigns it", subject ),
+                    "an `out` parameter holds no value on entry - the caller supplies the storage, not the value"
+                );
+                continue;
+            }
+
+            diagnostics.error(
+                read.at,
+                read.maybe ? fmt::format( "{} may be used before it is initialised", subject )
+                           : fmt::format( "{} is used before it is initialised", subject ),
+                read.maybe ? "it is assigned on some paths to here, but not all" : "give it a value at its declaration"
+            );
+        }
+
+        for( const Unassigned_error& error : report.unassigned )
+        {
+            if( error.field.is_valid() )
+            {
+                diagnostics.error(
+                    error.at,
+                    error.maybe
+                        ? fmt::format( "this constructor does not assign `{}` on every path", field_name( error.field ) )
+                        : fmt::format( "this constructor never assigns `{}`", field_name( error.field ) ),
+                    "every field must hold a value when the constructor returns"
+                );
+                continue;
+            }
+
+            if( error.local == k_return_slot )
+            {
+                const std::string_view return_type = types.table().name( function.locals[k_return_slot.v].type );
+
+                // Not error.maybe, which cannot answer this one. A path that returns *leaves* the
+                // graph, so it never joins the block this is reported at, and `ever` there is
+                // always 0 - the flag is meaningful for an `out` parameter, whose paths do join,
+                // and structurally false for the return slot. The question the wording wants is
+                // about the whole function, so it is asked of the whole function.
+                const bool returns_somewhere = std::any_of(
+                    function.statements.begin(),
+                    function.statements.end(),
+                    []( const Statement& statement ) {
+                        return statement.kind == Statement_kind::Assign && !statement.place.is_global() &&
+                               statement.place.local == k_return_slot;
+                    }
+                );
+
+                diagnostics.error(
+                    error.at,
+                    returns_somewhere ? "this function does not return a value on every path"
+                                      : "this function never returns a value",
+                    fmt::format( "it returns `{}`, so every path out of it must produce one", return_type )
+                );
+                continue;
+            }
+
+            const Symbol_id name = function.locals[error.local.v].name;
+
+            // An `out` parameter always has one, unlike a moved temporary - but reading it from the
+            // same place keeps the two reporters saying the same thing about the same field.
+            const std::string subject =
+                name.is_valid() ? fmt::format( "`{}`", interner.text( name ) ) : std::string( "this parameter" );
+
+            // The two read differently on purpose: one is a path the author missed, the other is a
+            // parameter they never wrote to at all. Neither says "this `return`", because the
+            // caret is the *function* when the path that misses it is the fall off the end - which
+            // is the common case, and the one where naming a return would point at nothing.
+            diagnostics.error(
+                error.at,
+                error.maybe ? fmt::format( "{} is not assigned on every path out of this function", subject )
+                            : fmt::format( "{} is never assigned", subject ),
+                "an `out` parameter is the callee's promise to assign it"
+            );
+        }
+
+        for( const Span at : report.diverging_returns )
+        {
+            diagnostics.error(
+                at,
+                "this function returns `never`, but can reach its end",
+                "end every path in `panic`, a call of another `never` function, or a loop that never exits"
+            );
+        }
+
+        for( const Reassigned_field& error : report.reassigned )
+        {
+            diagnostics.error(
+                error.at,
+                error.maybe ? fmt::format( "`{}` may already hold a value here", field_name( error.field ) )
+                            : fmt::format( "`{}` already holds a value here", field_name( error.field ) ),
+                error.is_const ? "a constructor assigns a `const` field once on each path"
+                               : "a constructor assigns an owning field once on each path"
+            );
+        }
+    }
+}
+
+} // namespace
+
+void report_dataflow_errors(
+    const std::vector<Function>& functions,
+    const Ast&                   ast,
+    const Source_manager&        sm,
+    const Interner&              interner,
+    const Types&                 types,
+    Diagnostics&                 diagnostics
+)
+{
+    report_move_errors( functions, sm, interner, diagnostics );
+    report_unassigned_errors( functions, ast, interner, diagnostics, types );
+}
+
+} // namespace keel
+
+#ifdef ENABLE_UNIT_TESTS
+#include <catch2/catch_test_macros.hpp>
+
+#include <sstream>
+#include "common/literal_pool.h"
+#include "ir/lower.h"
+#include "ir/simplify.h"
+#include "lex/lexer.h"
+#include "parse/parser.h"
+#include "sema/resolver.h"
+
+namespace keel
+{
+namespace
+{
+
+// Source run through the front end and the dataflow checks, as the driver runs them, and rendered.
+struct Reported
+{
+    Source_manager sm;
+    Interner       interner;
+    Literal_pool   literals;
+    Diagnostics    diags;
+    Ast            ast;
+    Resolution     resolution;
+    Types          types;
+
+    std::vector<Function> functions;
+
+    explicit Reported( std::string_view source )
+    {
+        const File_id file = sm.add_file( "t.kl", std::string( source ) );
+
+        ast        = parse( lex( file, sm, interner, literals, diags ), sm, diags );
+        resolution = resolve( ast, sm, interner, diags );
+        types      = type_check( ast, resolution, literals, sm, interner, diags );
+
+        if( !diags.has_errors() )
+        {
+            functions = lower( ast, resolution, types, literals );
+            for( Function& function : functions )
+            {
+                simplify( function, literals );
+            }
+            report_dataflow_errors( functions, ast, sm, interner, types, diags );
+        }
+    }
+
+    std::string rendered() const
+    {
+        std::ostringstream out;
+        diags.render( sm, out );
+        return out.str();
+    }
+};
+
+} // namespace
+
+TEST_CASE( "report_names_the_moved_local", "[check][report]" )
+{
+    const Reported p( "void sink( i32 x ) { }\n"
+                      "i32 main() { i32 a = 1; sink( move a ); sink( a ); return 0; }\n" );
+
+    REQUIRE( p.rendered().find( "`a` is used after it was moved" ) != std::string::npos );
+    REQUIRE( p.rendered().find( "moved at 2:25" ) != std::string::npos );
+}
+
+TEST_CASE( "report_names_the_unassigned_out_parameter", "[check][report]" )
+{
+    const Reported p( "void fill( out i32 v ) { }\n"
+                      "i32 main() { return 0; }\n" );
+
+    REQUIRE( p.rendered().find( "`v` is never assigned" ) != std::string::npos );
+}
+
+} // namespace keel
+#endif

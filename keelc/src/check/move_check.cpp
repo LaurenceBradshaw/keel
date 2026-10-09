@@ -793,7 +793,7 @@ TEST_CASE( "move_check_finds_a_borrow_after_move", "[check][move]" )
     REQUIRE( out.errors().empty() );
 }
 
-// The spans are what the driver turns into a message, so they have to name the right places.
+// The spans are what check/report turns into a message, so they have to name the right places.
 TEST_CASE( "move_check_reports_both_ends", "[check][move]" )
 {
     const Checked p( std::string( k_sink ) + "i32 main() { i32 a = 1; sink( move a ); sink( a ); return 0; }" );

@@ -555,7 +555,7 @@ struct Checked
     }
 
     // Which parameter an error is about. The whole point of carrying a Local_id rather than a
-    // message is that the driver names it, so a case can check the naming too.
+    // message is that check/report names it, so a case can check the naming too.
     std::string_view name_of( const Unassigned_error& error ) const
     {
         for( const Function& function : functions )
