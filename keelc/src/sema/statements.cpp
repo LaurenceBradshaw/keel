@@ -217,6 +217,7 @@ void Statements::visit_return( Node_id id )
 
     // The `T*` half of §8's rule, for a local whose storage ends here.
     check_returned_address( value );
+    check_kept_address( value ); // and D54's, for a temporary's
 
     // §8's non-escaping rule. A `ref` binding is initialised at its declaration and never reseated,
     // so everything nameable at a call site outlives any binding declared there - which is why
@@ -312,6 +313,12 @@ void Statements::visit_var( Node_id id )
     {
         reporter_.error_at( ast_.span( id ), "`auto` needs an initialiser to infer from" );
         type = table_.builtin( Type_kind::Error );
+    }
+
+    // Both paths above, annotated and `auto`.
+    if( init.is_valid() )
+    {
+        check_kept_address( init );
     }
 
     // Both are modes a *parameter* carries, and neither says anything a local could mean - so the
@@ -434,6 +441,7 @@ void Statements::visit_assign( Node_id id )
     {
         expressions_.check( value, target_type );
         places_.check_owning_source( value, target_type );
+        check_kept_address( value );
         return;
     }
 
@@ -730,6 +738,30 @@ void Statements::check_returned_address( Node_id value )
             "`{}` dies when this function returns, so its address would dangle", interner_.text( ast_.name( dying ) )
         ),
         "return the value itself, or allocate it with `alloc` and return that"
+    );
+}
+
+// D54: a pointer kept past its statement certainly dangles when it points into a temporary.
+void Statements::check_kept_address( Node_id value )
+{
+    // A function's address or a field's offset is no pointer, so it points into nothing.
+    if( ast_.kind( value ) != Node_kind::Unary_expr || ast_.op( value ) != Token_kind::Amp ||
+        !table_.is_pointer( types_.type_of( value ) ) )
+    {
+        return;
+    }
+
+    const Node_id temporary = places_.borrowed_temporary( ast_.operand( value ) );
+
+    if( !temporary.is_valid() )
+    {
+        return;
+    }
+
+    reporter_.error_at(
+        ast_.span( temporary ),
+        "the address of a temporary cannot be kept",
+        "it ends with this statement; give it a variable of its own first"
     );
 }
 
@@ -2184,6 +2216,66 @@ TEST_CASE( "type_checker_refuses_the_address_of_a_dying_local", "[sema][escape]"
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "unknown type `Nope`" ) != std::string::npos );
+    }
+}
+
+TEST_CASE( "type_checker_refuses_a_kept_address_of_a_temporary", "[sema][escape][m9]" )
+{
+    constexpr std::string_view types =
+        "class A { public i32 n; A( i32 x ) { n = x; } ~A() { } const ref i32 get() const { return n; } };\n"
+        "struct P { i32 x; };\n"
+        "struct V { i32 x; const i32* operator[]( u64 i ) const { return nullptr; } };\n"
+        "const ref i32 id( const ref i32 a ) { return a; }\n"
+        "A make() { return A( 1 ); }\n"
+        "V view() { return V { 1 }; }\n";
+
+    SECTION( "reported where the temporary is made" )
+    {
+        const Typed p( std::string( types ) + "i32 main() { const i32* p = &make().n; return *p; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "the address of a temporary cannot be kept" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "t.kl:7:30" ) != std::string::npos );
+    }
+
+    SECTION( "each of these keeps it past the statement" )
+    {
+        for( const char* program : {
+                 "i32 main() { auto p = &make().n; return *p; }",
+                 "i32 main() { A a = A( 2 ); const i32* p = &a.n; p = &make().n; return *p; }",
+                 "const i32* f() { return &make().n; }\ni32 main() { return 0; }",
+                 "i32 main() { const i32* p = &id( make().n ); return *p; }",
+                 "i32 main() { const i32* p = &make().get(); return *p; }",
+                 "i32 main() { const i32* p = &view()[0]; return 0; }",
+                 "i32 main() { const i32* p = &P { 1 }.x; return *p; }",
+                 "i32 main() { bool c = true; const i32* p = &( c ? P { 1 } : P { 2 } ).x; return *p; }",
+             } )
+        {
+            const Typed p( std::string( types ) + program );
+
+            INFO( program << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( "the address of a temporary cannot be kept" ) != std::string::npos );
+        }
+    }
+
+    // Only the certain case: a pointer handed on through a call may or may not be the argument's.
+    SECTION( "each of these does not" )
+    {
+        for( const char* program : {
+                 "void use( const i32* p ) { }\ni32 main() { use( &make().n ); return 0; }",
+                 "i32 main() { i32 k = *( &make().n ); return k; }",
+                 "const i32* pass( const i32* p ) { return p; }\ni32 main() { const i32* p = pass( &make().n ); return 0; }",
+                 "i32 main() { A a = A( 2 ); const i32* p = &id( a.n ); return *p; }",
+                 "A* at( A* q ) { return q; }\ni32 main() { A a = A( 2 ); i32* p = &at( &a ).n; return *p; }",
+             } )
+        {
+            const Typed p( std::string( types ) + program );
+
+            INFO( program << "\n" << p.rendered() );
+            REQUIRE( p.clean() );
+        }
     }
 }
 

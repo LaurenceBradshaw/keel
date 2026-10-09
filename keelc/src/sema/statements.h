@@ -75,6 +75,7 @@ private:
     void visit_block( Node_id id );
 
     void check_returned_address( Node_id value );
+    void check_kept_address( Node_id value );
 
     const Ast&        ast_;
     const Interner&   interner_;
