@@ -14,9 +14,13 @@ namespace keeldoc
 // Each module of the package in `dir`: its .kl files but packageinfo.kl, as `name::module`, sorted.
 std::vector<std::string> package_modules( const std::string& name, const std::filesystem::path& dir );
 
-// keelc's records for a program importing every module of the package `name` in `dir`. Empty, with
-// `error` set, when keelc could not run.
+// keelc's records for a program importing every module of the package `name` in `dir`, and the
+// prelude's. Empty, with `error` set, when keelc could not run.
 std::vector<Record>
 run_keelc( const std::filesystem::path& keelc, const std::string& name, const std::filesystem::path& dir, std::string& error );
+
+// The prelude's source, as `keelc --print-prelude` prints it. Empty, with `error` set, when keelc
+// could not print it.
+std::string print_prelude( const std::filesystem::path& keelc, std::string& error );
 
 } // namespace keeldoc

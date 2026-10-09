@@ -5,9 +5,12 @@
 #include <fmt/format.h>
 #include <algorithm>
 #include <fstream>
+#include <iterator>
 #include <map>
 #include <optional>
 #include <set>
+#include <sstream>
+#include "primitives.h"
 
 namespace keeldoc
 {
@@ -22,6 +25,9 @@ constexpr std::string_view k_sections[][2] = {
     { "destructor", "Constructors" },
     { "method", "Methods" },
 };
+
+// keelc's name for the prelude's source, which is no file on disk.
+constexpr std::string_view k_prelude_file = "<prelude>";
 
 constexpr std::string_view k_section_order[] = { "Variants", "Fields", "Constructors", "Methods" };
 
@@ -81,10 +87,10 @@ void add_overload( std::vector<Group>& groups, Declaration decl )
     groups.push_back( { std::move( name ), { std::move( decl ) } } );
 }
 
-// The copyright and licence from the plain comments opening `dir`'s packageinfo.kl.
-void read_notice( const std::filesystem::path& dir, Package& package )
+// The copyright and licence from the plain comments opening `in`.
+Notice read_notice( std::istream& in )
 {
-    std::ifstream in( dir / "packageinfo.kl" );
+    Notice notice;
 
     for( std::string line; std::getline( in, line ) && line.starts_with( "// " ); )
     {
@@ -92,13 +98,15 @@ void read_notice( const std::filesystem::path& dir, Package& package )
 
         if( text.starts_with( "Copyright " ) )
         {
-            package.copyright = text;
+            notice.copyright = text;
         }
         else if( text.starts_with( "SPDX-License-Identifier: " ) )
         {
-            package.license = text.substr( std::string_view( "SPDX-License-Identifier: " ).size() );
+            notice.license = text.substr( std::string_view( "SPDX-License-Identifier: " ).size() );
         }
     }
+
+    return notice;
 }
 
 } // namespace
@@ -107,11 +115,15 @@ Package build_package(
     const std::string&           name,
     const std::filesystem::path& dir,
     const std::vector<Record>&   records,
+    std::string_view             prelude_source,
     std::vector<std::string>&    errors
 )
 {
-    Package package { name, {}, {}, {}, {} };
-    read_notice( dir, package );
+    std::ifstream      packageinfo( dir / "packageinfo.kl" );
+    std::istringstream prelude( std::string { prelude_source } );
+
+    Package package { name, {}, {}, read_notice( packageinfo ), { {}, {}, read_notice( prelude ) } };
+    package.prelude.entries = parse_primitives( primitives_source(), package.prelude.doc );
 
     std::map<std::string, std::vector<Group>>                                                     top_level;
     std::map<std::pair<std::string, std::string>, std::map<std::string_view, std::vector<Group>>> members;
@@ -140,7 +152,8 @@ Package build_package(
             continue;
         }
 
-        const std::optional<std::string> module = module_of( dir, record.get( "file" ) );
+        const std::optional<std::string> module =
+            record.get( "file" ) == k_prelude_file ? std::string( k_prelude_file ) : module_of( dir, record.get( "file" ) );
         if( !module )
         {
             continue;
@@ -153,6 +166,12 @@ Package build_package(
             std::string( record.get( "signature" ) ),
             std::string( record.get( "doc" ) ),
         };
+
+        // An undocumented extern is C the reader should not call or is documented elsewhere.
+        if( decl.signature.starts_with( "extern " ) && decl.doc.empty() )
+        {
+            continue;
+        }
 
         // A private type's members go with it, whatever their own access.
         if( record.get( "access" ) == "private" || hidden.contains( { *module, parent } ) )
@@ -197,6 +216,12 @@ Package build_package(
             module.entries.push_back( std::move( entry ) );
         }
 
+        if( module_name == k_prelude_file )
+        {
+            std::ranges::move( module.entries, std::back_inserter( package.prelude.entries ) );
+            continue;
+        }
+
         package.modules.push_back( std::move( module ) );
     }
 
@@ -224,7 +249,7 @@ std::vector<Record> parse_all( std::initializer_list<std::string_view> lines )
     return records;
 }
 
-TEST_CASE( "package_groups_overloads_and_sections_and_drops_private", "[package]" )
+TEST_CASE( "package_groups_overloads_and_sections_and_drops_private_and_bare_externs", "[package]" )
 {
     // clang-format off
     const std::vector<Record> records = parse_all( {
@@ -241,11 +266,15 @@ TEST_CASE( "package_groups_overloads_and_sections_and_drops_private", "[package]
         R"json({"kind":"declaration","declares":"field","name":"x","file":"geo/box.kl","access":"public","signature":"public i32 x","parent":"Secret"})json",
         R"json({"kind":"declaration","declares":"function","name":"area","file":"geo/box.kl","access":"public","signature":"f64 area( i32 side )"})json",
         R"json({"kind":"declaration","declares":"function","name":"elsewhere","file":"lib/x.kl","access":"public","signature":"void elsewhere()"})json",
+        R"json({"kind":"declaration","declares":"function","name":"c_only","file":"geo/box.kl","access":"public","signature":"extern void c_only()"})json",
+        R"json({"kind":"declaration","declares":"function","name":"c_doc","file":"geo/box.kl","access":"public","signature":"extern void c_doc()","doc":"Ours."})json",
+        R"json({"kind":"declaration","declares":"class","name":"str","file":"<prelude>","access":"public","signature":"class str"})json",
+        R"json({"kind":"declaration","declares":"constructor","name":"str","file":"<prelude>","access":"private","signature":"private str()","parent":"str"})json",
     } );
     // clang-format on
 
     std::vector<std::string> errors;
-    const Package            package = build_package( "geo", "geo", records, errors );
+    const Package            package = build_package( "geo", "geo", records, "", errors );
 
     REQUIRE( errors.empty() );
     REQUIRE( package.doc == "Plane geometry." );
@@ -253,9 +282,10 @@ TEST_CASE( "package_groups_overloads_and_sections_and_drops_private", "[package]
 
     const Module& box = package.modules[0];
     REQUIRE( box.name == "box" );
-    REQUIRE( box.entries.size() == 2 );
+    REQUIRE( box.entries.size() == 3 );
     REQUIRE( box.entries[0].group.name == "Box" );
     REQUIRE( box.entries[1].group.overloads.size() == 2 );
+    REQUIRE( box.entries[2].group.name == "c_doc" );
 
     const std::vector<Section>& sections = box.entries[0].sections;
     REQUIRE( sections.size() == 2 );
@@ -264,9 +294,15 @@ TEST_CASE( "package_groups_overloads_and_sections_and_drops_private", "[package]
     REQUIRE( sections[0].groups[0].overloads.size() == 2 );
     REQUIRE( sections[0].groups[0].overloads[0].doc == "Empty." );
     REQUIRE( sections[1].title == "Methods" );
+
+    // The primitives, then the prelude's own declarations, never a module of the package.
+    const std::vector<Entry>& prelude = package.prelude.entries;
+    REQUIRE( prelude.front().group.declares() == "primitive" );
+    REQUIRE( prelude.back().group.name == "str" );
+    REQUIRE( prelude.back().sections.empty() );
 }
 
-TEST_CASE( "package_reads_its_notice_from_packageinfo", "[package]" )
+TEST_CASE( "package_reads_its_notice_and_the_prelude's", "[package]" )
 {
     const std::filesystem::path dir = std::filesystem::temp_directory_path() / "keeldoc_test_notice";
     std::filesystem::remove_all( dir );
@@ -278,13 +314,15 @@ TEST_CASE( "package_reads_its_notice_from_packageinfo", "[package]" )
                                                "// Copyright 1999 Not this one\n";
 
     std::vector<std::string> errors;
-    const Package            package = build_package( "geo", dir, {}, errors );
+    const Package            package = build_package( "geo", dir, {}, "// Copyright 2025 B\n", errors );
 
-    REQUIRE( package.copyright == "Copyright 2026 A. Author" );
-    REQUIRE( package.license == "MIT" );
+    REQUIRE( package.notice.copyright == "Copyright 2026 A. Author" );
+    REQUIRE( package.notice.license == "MIT" );
+    REQUIRE( package.prelude.notice.copyright == "Copyright 2025 B" );
+    REQUIRE( package.prelude.notice.license.empty() );
 
     std::filesystem::remove_all( dir );
-    REQUIRE( build_package( "geo", dir, {}, errors ).copyright.empty() );
+    REQUIRE( build_package( "geo", dir, {}, "", errors ).notice.copyright.empty() );
 }
 
 TEST_CASE( "package_reports_keelc_errors", "[package]" )
@@ -295,7 +333,7 @@ TEST_CASE( "package_reports_keelc_errors", "[package]" )
     } );
 
     std::vector<std::string> errors;
-    build_package( "geo", "geo", records, errors );
+    build_package( "geo", "geo", records, "", errors );
 
     REQUIRE( errors == std::vector<std::string> { "geo/a.kl:3:4: error: no such name" } );
 }

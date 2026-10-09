@@ -24,7 +24,7 @@
 </div>
 <h3>Variants</h3>
 <div class="group" id="shape.circle">
-<pre class="signature"><a class="anchor" href="#shape.circle" aria-label="Link to circle">#</a><code>circle( <span class="prim">f64</span> r )</code></pre>
+<pre class="signature"><a class="anchor" href="#shape.circle" aria-label="Link to circle">#</a><code>circle( <a class="prim" href="prelude.html#f64">f64</a> r )</code></pre>
 <div class="doc">
 <p>A circle about the origin, of radius <code>r</code>.</p>
 </div>
@@ -51,7 +51,7 @@ p.add( 1.0, 2.0 );
 </div>
 <h3>Constructors</h3>
 <div class="group" id="polygon.polygon">
-<pre class="signature"><a class="anchor" href="#polygon.polygon" aria-label="Link to polygon">#</a><code><span class="kw">public</span> polygon( <span class="prim">u64</span> n )</code></pre>
+<pre class="signature"><a class="anchor" href="#polygon.polygon" aria-label="Link to polygon">#</a><code><span class="kw">public</span> polygon( <a class="prim" href="prelude.html#u64">u64</a> n )</code></pre>
 <div class="doc">
 <p>A polygon with room for <code>n</code> corners.</p>
 </div>
@@ -65,19 +65,19 @@ p.add( 1.0, 2.0 );
 </div>
 <h3>Methods</h3>
 <div class="group" id="polygon.add">
-<pre class="signature"><a class="anchor" href="#polygon.add" aria-label="Link to add">#</a><code><span class="kw">public</span> <span class="prim">void</span> add( <span class="prim">f64</span> x, <span class="prim">f64</span> y )</code></pre>
+<pre class="signature"><a class="anchor" href="#polygon.add" aria-label="Link to add">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> add( <a class="prim" href="prelude.html#f64">f64</a> x, <a class="prim" href="prelude.html#f64">f64</a> y )</code></pre>
 <div class="doc">
 <p>Adds a corner at <code>x</code>, <code>y</code>.</p>
 <h4>Panics</h4>
 <p>If the polygon is full.</p>
 </div>
-<pre class="signature"><a class="anchor" href="#polygon.add" aria-label="Link to add">#</a><code><span class="kw">public</span> <span class="prim">void</span> add( <a class="type" href="measure.html#metres">metres</a> m )</code></pre>
+<pre class="signature"><a class="anchor" href="#polygon.add" aria-label="Link to add">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> add( <a class="type" href="measure.html#metres">metres</a> m )</code></pre>
 <div class="doc">
 <p>Adds a corner <code>m</code> along the x axis.</p>
 </div>
 </div>
 <div class="group" id="polygon.operator==">
-<pre class="signature"><a class="anchor" href="#polygon.operator==" aria-label="Link to operator==">#</a><code><span class="kw">public</span> <span class="prim">bool</span> <span class="kw">operator</span>==( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#polygon">polygon</a> other ) <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#polygon.operator==" aria-label="Link to operator==">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="kw">operator</span>==( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#polygon">polygon</a> other ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Whether the two have the same corners.</p>
 </div>

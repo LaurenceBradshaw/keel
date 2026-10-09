@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>prelude</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header><nav><a href="index.html">kl</a><span class="sep"> | </span><span class="here">prelude</span></nav></header>
+<main>
+<h1>prelude</h1>
+<div class="doc">
+<p>Every program sees these without an import: the built-in types, <code>str</code>, <code>result</code> and the printing
+functions.</p>
+</div>
+<ul class="contents">
+<li><a href="#bool"><code>bool</code></a> <span class="kind">primitive</span></li>
+<li><a href="#i8"><code>i8</code></a> <span class="kind">primitive</span></li>
+<li><a href="#i16"><code>i16</code></a> <span class="kind">primitive</span></li>
+<li><a href="#i32"><code>i32</code></a> <span class="kind">primitive</span></li>
+<li><a href="#i64"><code>i64</code></a> <span class="kind">primitive</span></li>
+<li><a href="#u8"><code>u8</code></a> <span class="kind">primitive</span></li>
+<li><a href="#u16"><code>u16</code></a> <span class="kind">primitive</span></li>
+<li><a href="#u32"><code>u32</code></a> <span class="kind">primitive</span></li>
+<li><a href="#u64"><code>u64</code></a> <span class="kind">primitive</span></li>
+<li><a href="#f32"><code>f32</code></a> <span class="kind">primitive</span></li>
+<li><a href="#f64"><code>f64</code></a> <span class="kind">primitive</span></li>
+<li><a href="#void"><code>void</code></a> <span class="kind">primitive</span></li>
+<li><a href="#never"><code>never</code></a> <span class="kind">primitive</span></li>
+<li><a href="#str"><code>str</code></a> <span class="kind">class</span></li>
+<li><a href="#print"><code>print</code></a> <span class="kind">function</span></li>
+<li><a href="#eprint"><code>eprint</code></a> <span class="kind">function</span></li>
+<li><a href="#println"><code>println</code></a> <span class="kind">function</span></li>
+<li><a href="#eprintln"><code>eprintln</code></a> <span class="kind">function</span></li>
+<li><a href="#result"><code>result</code></a> <span class="kind">enum</span></li>
+</ul>
+<section class="entry">
+<h2><span class="kind">primitive</span> bool</h2>
+<div class="group" id="bool">
+<pre class="signature"><a class="anchor" href="#bool" aria-label="Link to bool">#</a><code><span class="prim">bool</span></code></pre>
+<div class="doc">
+<p><code>true</code> or <code>false</code>.</p>
+<p>Conditions, <code>&amp;&amp;</code>, <code>||</code>, <code>==</code> and <code>!=</code> take one. Nothing converts to a <code>bool</code>, and <code>cast</code> makes an
+integer of one.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">primitive</span> i8</h2>
+<div class="group" id="i8">
+<pre class="signature"><a class="anchor" href="#i8" aria-label="Link to i8">#</a><code><span class="prim">i8</span></code></pre>
+<div class="doc">
+<p>A signed 8-bit integer, from -128 to 127.</p>
+<p>Arithmetic on it wraps, and a constant out of its range is refused. It converts implicitly to <code>i16</code>,
+<code>i32</code>, <code>i64</code>, <code>f32</code> and <code>f64</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">primitive</span> i16</h2>
+<div class="group" id="i16">
+<pre class="signature"><a class="anchor" href="#i16" aria-label="Link to i16">#</a><code><span class="prim">i16</span></code></pre>
+<div class="doc">
+<p>A signed 16-bit integer, from -32768 to 32767.</p>
+<p>Arithmetic on it wraps, and a constant out of its range is refused. It converts implicitly to <code>i32</code>,
+<code>i64</code>, <code>f32</code> and <code>f64</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">primitive</span> i32</h2>
+<div class="group" id="i32">
+<pre class="signature"><a class="anchor" href="#i32" aria-label="Link to i32">#</a><code><span class="prim">i32</span></code></pre>
+<div class="doc">
+<p>A signed 32-bit integer, from -2147483648 to 2147483647.</p>
+<p>Arithmetic on it wraps, and a constant out of its range is refused. It converts implicitly to <code>i64</code>
+and <code>f64</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">primitive</span> i64</h2>
+<div class="group" id="i64">
+<pre class="signature"><a class="anchor" href="#i64" aria-label="Link to i64">#</a><code><span class="prim">i64</span></code></pre>
+<div class="doc">
+<p>A signed 64-bit integer, from -9223372036854775808 to 9223372036854775807.</p>
+<p>Arithmetic on it wraps, and a constant out of its range is refused. No other type holds all its
+values, so it converts to none implicitly.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">primitive</span> u8</h2>
+<div class="group" id="u8">
+<pre class="signature"><a class="anchor" href="#u8" aria-label="Link to u8">#</a><code><span class="prim">u8</span></code></pre>
+<div class="doc">
+<p>An unsigned 8-bit integer, from 0 to 255.</p>
+<p>Arithmetic on it wraps, and a constant out of its range is refused. It converts implicitly to <code>i16</code>,
+<code>i32</code>, <code>i64</code>, <code>u16</code>, <code>u32</code>, <code>u64</code>, <code>f32</code> and <code>f64</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">primitive</span> u16</h2>
+<div class="group" id="u16">
+<pre class="signature"><a class="anchor" href="#u16" aria-label="Link to u16">#</a><code><span class="prim">u16</span></code></pre>
+<div class="doc">
+<p>An unsigned 16-bit integer, from 0 to 65535.</p>
+<p>Arithmetic on it wraps, and a constant out of its range is refused. It converts implicitly to <code>i32</code>,
+<code>i64</code>, <code>u32</code>, <code>u64</code>, <code>f32</code> and <code>f64</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">primitive</span> u32</h2>
+<div class="group" id="u32">
+<pre class="signature"><a class="anchor" href="#u32" aria-label="Link to u32">#</a><code><span class="prim">u32</span></code></pre>
+<div class="doc">
+<p>An unsigned 32-bit integer, from 0 to 4294967295.</p>
+<p>Arithmetic on it wraps, and a constant out of its range is refused. It converts implicitly to <code>i64</code>,
+<code>u64</code> and <code>f64</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">primitive</span> u64</h2>
+<div class="group" id="u64">
+<pre class="signature"><a class="anchor" href="#u64" aria-label="Link to u64">#</a><code><span class="prim">u64</span></code></pre>
+<div class="doc">
+<p>An unsigned 64-bit integer, from 0 to 18446744073709551615.</p>
+<p>Arithmetic on it wraps, and a constant out of its range is refused. No other type holds all its
+values, so it converts to none implicitly.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">primitive</span> f32</h2>
+<div class="group" id="f32">
+<pre class="signature"><a class="anchor" href="#f32" aria-label="Link to f32">#</a><code><span class="prim">f32</span></code></pre>
+<div class="doc">
+<p>A 32-bit floating-point number.</p>
+<p>It converts implicitly to <code>f64</code>. Nothing converts it to an integer.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">primitive</span> f64</h2>
+<div class="group" id="f64">
+<pre class="signature"><a class="anchor" href="#f64" aria-label="Link to f64">#</a><code><span class="prim">f64</span></code></pre>
+<div class="doc">
+<p>A 64-bit floating-point number.</p>
+<p>No other type holds all its values, so it converts to none implicitly. Nothing converts it to an
+integer.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">primitive</span> void</h2>
+<div class="group" id="void">
+<pre class="signature"><a class="anchor" href="#void" aria-label="Link to void">#</a><code><span class="prim">void</span></code></pre>
+<div class="doc">
+<p>No value: what a function that yields nothing returns.</p>
+<p>It takes no storage. As a type argument it is accepted, so <code>result&lt;void, E&gt;</code> succeeds with
+<code>result::ok()</code>; written directly, a <code>void</code> parameter, field or global is refused.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">primitive</span> never</h2>
+<div class="group" id="never">
+<pre class="signature"><a class="anchor" href="#never" aria-label="Link to never">#</a><code><span class="prim">never</span></code></pre>
+<div class="doc">
+<p>The return type of a function that does not return.</p>
+<p>A call of one ends its block, and a <code>switch</code> arm ending in one needs no <code>break</code>. It is a return type
+and nothing else: a function's, an <code>extern</code>'s or a function pointer's.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">class</span> str</h2>
+<div class="group" id="str">
+<pre class="signature"><a class="anchor" href="#str" aria-label="Link to str">#</a><code><span class="kw">class</span> str</code></pre>
+<div class="doc">
+<p>Text: a run of bytes and their count.</p>
+<p>A string literal is a <code>str</code>, and only a literal makes one. Its <code>size</code> counts the bytes after
+escapes are decoded, a <code>\0</code> included.</p>
+</div>
+</div>
+<h3>Fields</h3>
+<div class="group" id="str.data">
+<pre class="signature"><a class="anchor" href="#str.data" aria-label="Link to data">#</a><code><span class="kw">public</span> <span class="kw">const</span> <a class="prim" href="#u8">u8</a>[*] <span class="kw">const</span> data</code></pre>
+<div class="doc">
+<p>The first byte.</p>
+</div>
+</div>
+<div class="group" id="str.size">
+<pre class="signature"><a class="anchor" href="#str.size" aria-label="Link to size">#</a><code><span class="kw">public</span> <span class="kw">const</span> <a class="prim" href="#u64">u64</a> size</code></pre>
+<div class="doc">
+<p>How many bytes there are.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> print</h2>
+<div class="group" id="print">
+<pre class="signature"><a class="anchor" href="#print" aria-label="Link to print">#</a><code><a class="prim" href="#void">void</a> print( <a class="type" href="#str">str</a> s )</code></pre>
+<div class="doc">
+<p>Writes text to standard output, ending no line.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#print" aria-label="Link to print">#</a><code><a class="prim" href="#void">void</a> print( <a class="prim" href="#i64">i64</a> value )</code></pre>
+<div class="doc">
+<p>Writes an integer in decimal.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#print" aria-label="Link to print">#</a><code><a class="prim" href="#void">void</a> print( <a class="prim" href="#u64">u64</a> value )</code></pre>
+<div class="doc">
+<p>Writes an integer in decimal.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#print" aria-label="Link to print">#</a><code><a class="prim" href="#void">void</a> print( <a class="prim" href="#f64">f64</a> value )</code></pre>
+<div class="doc">
+<p>Writes a float in the fewest digits that read back as the same value.</p>
+<p>A whole number gains <code>.0</code>, and a NaN is written <code>nan</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#print" aria-label="Link to print">#</a><code><a class="prim" href="#void">void</a> print( <a class="prim" href="#bool">bool</a> value )</code></pre>
+<div class="doc">
+<p>Writes <code>true</code> or <code>false</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> eprint</h2>
+<div class="group" id="eprint">
+<pre class="signature"><a class="anchor" href="#eprint" aria-label="Link to eprint">#</a><code><a class="prim" href="#void">void</a> eprint( <a class="type" href="#str">str</a> s )</code></pre>
+<div class="doc">
+<p>Writes text to standard error, ending no line.</p>
+<p>Standard output is flushed first, so what both show stays in order.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#eprint" aria-label="Link to eprint">#</a><code><a class="prim" href="#void">void</a> eprint( <a class="prim" href="#i64">i64</a> value )</code></pre>
+<div class="doc">
+<p>Writes an integer in decimal.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#eprint" aria-label="Link to eprint">#</a><code><a class="prim" href="#void">void</a> eprint( <a class="prim" href="#u64">u64</a> value )</code></pre>
+<div class="doc">
+<p>Writes an integer in decimal.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#eprint" aria-label="Link to eprint">#</a><code><a class="prim" href="#void">void</a> eprint( <a class="prim" href="#f64">f64</a> value )</code></pre>
+<div class="doc">
+<p>Writes a float in the fewest digits that read back as the same value.</p>
+<p>A whole number gains <code>.0</code>, and a NaN is written <code>nan</code>.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#eprint" aria-label="Link to eprint">#</a><code><a class="prim" href="#void">void</a> eprint( <a class="prim" href="#bool">bool</a> value )</code></pre>
+<div class="doc">
+<p>Writes <code>true</code> or <code>false</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> println</h2>
+<div class="group" id="println">
+<pre class="signature"><a class="anchor" href="#println" aria-label="Link to println">#</a><code><a class="prim" href="#void">void</a> println( <a class="type" href="#str">str</a> s )</code></pre>
+<div class="doc">
+<p>Writes text and then a newline, as <code>print</code> does.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#println" aria-label="Link to println">#</a><code><a class="prim" href="#void">void</a> println( <a class="prim" href="#i64">i64</a> value )</code></pre>
+<div class="doc">
+<p>Writes a value and then a newline, as <code>print</code> does.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#println" aria-label="Link to println">#</a><code><a class="prim" href="#void">void</a> println( <a class="prim" href="#u64">u64</a> value )</code></pre>
+<div class="doc">
+<p>Writes a value and then a newline, as <code>print</code> does.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#println" aria-label="Link to println">#</a><code><a class="prim" href="#void">void</a> println( <a class="prim" href="#f64">f64</a> value )</code></pre>
+<div class="doc">
+<p>Writes a value and then a newline, as <code>print</code> does.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#println" aria-label="Link to println">#</a><code><a class="prim" href="#void">void</a> println( <a class="prim" href="#bool">bool</a> value )</code></pre>
+<div class="doc">
+<p>Writes a value and then a newline, as <code>print</code> does.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">function</span> eprintln</h2>
+<div class="group" id="eprintln">
+<pre class="signature"><a class="anchor" href="#eprintln" aria-label="Link to eprintln">#</a><code><a class="prim" href="#void">void</a> eprintln( <a class="type" href="#str">str</a> s )</code></pre>
+<div class="doc">
+<p>Writes text and then a newline, as <code>eprint</code> does.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#eprintln" aria-label="Link to eprintln">#</a><code><a class="prim" href="#void">void</a> eprintln( <a class="prim" href="#i64">i64</a> value )</code></pre>
+<div class="doc">
+<p>Writes a value and then a newline, as <code>eprint</code> does.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#eprintln" aria-label="Link to eprintln">#</a><code><a class="prim" href="#void">void</a> eprintln( <a class="prim" href="#u64">u64</a> value )</code></pre>
+<div class="doc">
+<p>Writes a value and then a newline, as <code>eprint</code> does.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#eprintln" aria-label="Link to eprintln">#</a><code><a class="prim" href="#void">void</a> eprintln( <a class="prim" href="#f64">f64</a> value )</code></pre>
+<div class="doc">
+<p>Writes a value and then a newline, as <code>eprint</code> does.</p>
+</div>
+<pre class="signature"><a class="anchor" href="#eprintln" aria-label="Link to eprintln">#</a><code><a class="prim" href="#void">void</a> eprintln( <a class="prim" href="#bool">bool</a> value )</code></pre>
+<div class="doc">
+<p>Writes a value and then a newline, as <code>eprint</code> does.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">enum</span> result</h2>
+<div class="group" id="result">
+<pre class="signature"><a class="anchor" href="#result" aria-label="Link to result">#</a><code><span class="kw">enum</span> result&lt;T, E&gt;</code></pre>
+<div class="doc">
+<p>The outcome of something that can fail: a <code>T</code>, or an <code>E</code> saying why not.</p>
+<p><code>try</code> takes the value out of an <code>ok</code>, or returns an <code>err</code> from the function it is in. A
+<code>result</code> left unused is refused; <code>_ = f();</code> discards one on purpose.</p>
+</div>
+</div>
+<h3>Variants</h3>
+<div class="group" id="result.ok">
+<pre class="signature"><a class="anchor" href="#result.ok" aria-label="Link to ok">#</a><code>ok( T value )</code></pre>
+<div class="doc">
+<p>Succeeded, with a value.</p>
+</div>
+</div>
+<div class="group" id="result.err">
+<pre class="signature"><a class="anchor" href="#result.err" aria-label="Link to err">#</a><code>err( E error )</code></pre>
+<div class="doc">
+<p>Failed, with why.</p>
+</div>
+</div>
+</section>
+</main>
+<footer>Copyright 2026 Laurence Bradshaw. Licensed under Apache-2.0 WITH LLVM-exception.</footer>
+</body>
+</html>

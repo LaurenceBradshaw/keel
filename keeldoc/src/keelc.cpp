@@ -74,7 +74,7 @@ run_keelc( const std::filesystem::path& keelc, const std::string& name, const st
     }
 
     const std::string command = fmt::format(
-        "{} --check --diagnostics=json --declarations --package {} {} 2>&1",
+        "{} --check --diagnostics=json --declarations --with-prelude --package {} {} 2>&1",
         shell_quote( keelc.string() ),
         shell_quote( name + "=" + dir.string() ),
         shell_quote( root.string() )
@@ -126,6 +126,34 @@ run_keelc( const std::filesystem::path& keelc, const std::string& name, const st
     return records;
 }
 
+std::string print_prelude( const std::filesystem::path& keelc, std::string& error )
+{
+    const std::string command = shell_quote( keelc.string() ) + " --print-prelude 2>&1";
+
+    std::string source;
+    FILE*       pipe = popen( command.c_str(), "r" );
+    if( pipe == nullptr )
+    {
+        error = fmt::format( "cannot run '{}'", keelc.string() );
+        return {};
+    }
+
+    std::array<char, 4096> buffer {};
+    for( std::size_t n; ( n = std::fread( buffer.data(), 1, buffer.size(), pipe ) ) > 0; )
+    {
+        source.append( buffer.data(), n );
+    }
+
+    if( const int status = pclose( pipe ); status != 0 )
+    {
+        error =
+            fmt::format( "'{}' could not print the prelude (status {}): {}", keelc.string(), WEXITSTATUS( status ), source );
+        return {};
+    }
+
+    return source;
+}
+
 } // namespace keeldoc
 
 #ifdef ENABLE_UNIT_TESTS
@@ -166,6 +194,9 @@ TEST_CASE( "keelc_says_when_it_cannot_run", "[keelc]" )
     REQUIRE( error == "'" + ( dir / "missing" ).string() + "' holds no module" );
 
     std::filesystem::remove_all( dir );
+
+    REQUIRE( print_prelude( dir / "no-such-keelc", error ).empty() );
+    REQUIRE( error.starts_with( "'" + ( dir / "no-such-keelc" ).string() + "' could not print the prelude" ) );
 }
 
 } // namespace

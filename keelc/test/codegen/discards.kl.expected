@@ -194,7 +194,7 @@ int32_t kl__main__( void )
 void kl_7prelude_result__I7Counter_3BadE__dtor( struct kl_7prelude_result__I7Counter_3BadE* kl_t1 )
 {
     bool kl_t2;
-#line 157 "<prelude>"
+#line 193 "<prelude>"
     kl_t2 = ( *kl_t1 ).tag == 0;
     if ( kl_t2 ) goto bb2; else goto bb1;
     bb1:

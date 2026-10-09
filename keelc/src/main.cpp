@@ -264,6 +264,7 @@ int main( int argc, char** argv )
         ( "diagnostics",   "Report diagnostics as human (on stderr) or json (lines on stdout)", cxxopts::value<std::string>()->default_value( "human" ) )
         ( "names",         "With --diagnostics=json, also say what each name refers to" )
         ( "declarations",  "With --diagnostics=json, also list every declaration with its signature and doc" )
+        ( "with-prelude",  "With --declarations, list the prelude's declarations too" )
         ( "package",       "A package and its directory, as name=<dir>; may be repeated", cxxopts::value<std::vector<std::string>>() )
         ( "runtime",       "Link this runtime library instead of the installed one", cxxopts::value<std::string>() )
         ( "print-prelude", "Print the prelude every program sees, and exit" )
@@ -327,6 +328,12 @@ int main( int argc, char** argv )
             fmt::print( stderr, "keelc: --{} needs --diagnostics=json\n", flag );
             return 2;
         }
+    }
+
+    if( args.count( "with-prelude" ) && !args.count( "declarations" ) )
+    {
+        fmt::print( stderr, "keelc: --with-prelude needs --declarations\n" );
+        return 2;
     }
 
     keel::Interner             interner;
@@ -480,10 +487,13 @@ int main( int argc, char** argv )
     {
         declarations = keel::collect_declarations( ast, resolution, types, sm, interner );
 
-        // The prelude belongs to no package, so no page lists it; hover reads its docs through --names.
-        std::erase_if(
-            declarations, [&]( const keel::Declaration& decl ) { return decl.span.file == prog.imports.prelude_file(); }
-        );
+        // The prelude belongs to no package, so only a doc tool writing its page asks for it.
+        if( !args.count( "with-prelude" ) )
+        {
+            std::erase_if(
+                declarations, [&]( const keel::Declaration& decl ) { return decl.span.file == prog.imports.prelude_file(); }
+            );
+        }
         package_docs = prog.package_docs;
     }
 

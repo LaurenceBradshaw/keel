@@ -8,6 +8,7 @@
 #include <set>
 #include "html.h"
 #include "markdown.h"
+#include "primitives.h"
 #include "style.h"
 
 namespace keeldoc
@@ -33,21 +34,6 @@ const std::set<std::string_view> k_keywords = {
     "where",
 };
 
-const std::set<std::string_view> k_primitives = {
-    "bool",
-    "f32",
-    "f64",
-    "i8",
-    "i16",
-    "i32",
-    "i64",
-    "u8",
-    "u16",
-    "u32",
-    "u64",
-    "void",
-};
-
 bool is_type( std::string_view declares )
 {
     return declares == "struct" || declares == "class" || declares == "enum";
@@ -60,6 +46,7 @@ public:
 
     std::string index() const;
     std::string module( const Module& module ) const;
+    std::string prelude() const;
 
 private:
     // A signature with its keywords marked and each of the package's types linked from `page`,
@@ -69,12 +56,15 @@ private:
     void
     group( std::string& out, const Group& group, const std::string& id, const std::string& page, std::string_view self ) const;
 
-    std::string head( std::string_view title ) const;
-    std::string foot() const;
+    // A page's contents list, when it has more than one entry, then each entry and its members.
+    void entries( std::string& out, const std::vector<Entry>& entries, const std::string& page ) const;
+
+    std::string        head( std::string_view title ) const;
+    static std::string foot( const Notice& notice );
 
     const Package& package_;
 
-    // Each type's page and anchor, by name.
+    // Each type's page and anchor, by name: the package's, then the prelude's and the primitives.
     std::map<std::string, std::pair<std::string, std::string>, std::less<>> types_;
 };
 
@@ -89,6 +79,14 @@ Page_writer::Page_writer( const Package& package )
             {
                 types_.try_emplace( entry.group.name, page_of( module ), entry.group.name );
             }
+        }
+    }
+
+    for( const Entry& entry : package.prelude.entries )
+    {
+        if( is_type( entry.group.declares() ) || entry.group.declares() == "primitive" )
+        {
+            types_.try_emplace( entry.group.name, k_prelude_page, entry.group.name );
         }
     }
 }
@@ -109,20 +107,20 @@ std::string Page_writer::head( std::string_view title ) const
     );
 }
 
-std::string Page_writer::foot() const
+std::string Page_writer::foot( const Notice& notice )
 {
-    if( package_.copyright.empty() && package_.license.empty() )
+    if( notice.copyright.empty() && notice.license.empty() )
     {
         return {};
     }
 
-    std::string notice = html_escape( package_.copyright );
-    if( !package_.license.empty() )
+    std::string text = html_escape( notice.copyright );
+    if( !notice.license.empty() )
     {
-        notice += fmt::format( "{}Licensed under {}.", notice.empty() ? "" : ". ", html_escape( package_.license ) );
+        text += fmt::format( "{}Licensed under {}.", text.empty() ? "" : ". ", html_escape( notice.license ) );
     }
 
-    return "<footer>" + notice + "</footer>\n";
+    return "<footer>" + text + "</footer>\n";
 }
 
 std::string Page_writer::signature( std::string_view text, const std::string& page, std::string_view self ) const
@@ -151,16 +149,20 @@ std::string Page_writer::signature( std::string_view text, const std::string& pa
         {
             out += fmt::format( "<span class=\"kw\">{}</span>", word );
         }
-        else if( k_primitives.contains( word ) )
-        {
-            out += fmt::format( "<span class=\"prim\">{}</span>", word );
-        }
         else if( const auto type = types_.find( word ); type != types_.end() && word != self )
         {
             const auto& [type_page, anchor] = type->second;
             out += fmt::format(
-                "<a class=\"type\" href=\"{}#{}\">{}</a>", type_page == page ? "" : type_page, html_escape( anchor ), word
+                "<a class=\"{}\" href=\"{}#{}\">{}</a>",
+                is_primitive( word ) ? "prim" : "type",
+                type_page == page ? "" : type_page,
+                html_escape( anchor ),
+                word
             );
+        }
+        else if( is_primitive( word ) )
+        {
+            out += fmt::format( "<span class=\"prim\">{}</span>", word );
         }
         else
         {
@@ -236,7 +238,10 @@ std::string Page_writer::index() const
         out += "</dl>\n</section>\n";
     }
 
-    out += "</main>\n" + foot() + "</body>\n</html>\n";
+    out += fmt::format(
+        "<h2>Prelude</h2>\n<p>Every program also sees the <a href=\"{}\">prelude</a> without an import.</p>\n", k_prelude_page
+    );
+    out += "</main>\n" + foot( package_.notice ) + "</body>\n</html>\n";
     return out;
 }
 
@@ -256,11 +261,41 @@ std::string Page_writer::module( const Module& module ) const
     out += "<main>\n";
     out += fmt::format( "<h1><span class=\"kind\">module</span> {}</h1>\n", html_escape( title ) );
 
+    entries( out, module.entries, page );
+
+    out += "</main>\n" + foot( package_.notice ) + "</body>\n</html>\n";
+    return out;
+}
+
+std::string Page_writer::prelude() const
+{
+    std::string out = head( "prelude" );
+
+    out += fmt::format(
+        "<header><nav><a href=\"index.html\">{}</a><span class=\"sep\"> | </span><span "
+        "class=\"here\">prelude</span></nav></header>\n",
+        html_escape( package_.name )
+    );
+    out += "<main>\n<h1>prelude</h1>\n";
+
+    if( !package_.prelude.doc.empty() )
+    {
+        out += "<div class=\"doc\">\n" + render_markdown( package_.prelude.doc ) + "</div>\n";
+    }
+
+    entries( out, package_.prelude.entries, std::string( k_prelude_page ) );
+
+    out += "</main>\n" + foot( package_.prelude.notice ) + "</body>\n</html>\n";
+    return out;
+}
+
+void Page_writer::entries( std::string& out, const std::vector<Entry>& entries, const std::string& page ) const
+{
     // A contents list only when there is more than one thing to find.
-    if( module.entries.size() > 1 )
+    if( entries.size() > 1 )
     {
         out += "<ul class=\"contents\">\n";
-        for( const Entry& entry : module.entries )
+        for( const Entry& entry : entries )
         {
             out += fmt::format(
                 "<li><a href=\"#{}\"><code>{}</code></a> <span class=\"kind\">{}</span></li>\n",
@@ -272,10 +307,11 @@ std::string Page_writer::module( const Module& module ) const
         out += "</ul>\n";
     }
 
-    for( const Entry& entry : module.entries )
+    for( const Entry& entry : entries )
     {
-        const std::string&     name = entry.group.name;
-        const std::string_view self = is_type( entry.group.declares() ) ? std::string_view( name ) : std::string_view {};
+        const std::string&     name  = entry.group.name;
+        const bool             named = is_type( entry.group.declares() ) || entry.group.declares() == "primitive";
+        const std::string_view self  = named ? std::string_view( name ) : std::string_view {};
 
         out += fmt::format(
             "<section class=\"entry\">\n<h2><span class=\"kind\">{}</span> {}</h2>\n",
@@ -300,9 +336,6 @@ std::string Page_writer::module( const Module& module ) const
 
         out += "</section>\n";
     }
-
-    out += "</main>\n" + foot() + "</body>\n</html>\n";
-    return out;
 }
 
 } // namespace
@@ -325,6 +358,7 @@ std::map<std::string, std::string> render_pages( const Package& package )
     std::map<std::string, std::string> pages;
     pages.emplace( "index.html", writer.index() );
     pages.emplace( "style.css", std::string( k_style ) );
+    pages.emplace( k_prelude_page, writer.prelude() );
 
     for( const Module& module : package.modules )
     {
@@ -385,7 +419,7 @@ TEST_CASE( "pages_name_one_file_per_module", "[pages]" )
         names.push_back( name );
     }
 
-    REQUIRE( names == std::vector<std::string> { "index.html", "shapes.html", "style.css", "util.more.html" } );
+    REQUIRE( names == std::vector<std::string> { "index.html", "prelude.html", "shapes.html", "style.css", "util.more.html" } );
 }
 
 TEST_CASE( "pages_mark_keywords_and_link_types", "[pages]" )
@@ -417,16 +451,46 @@ TEST_CASE( "pages_end_with_the_package's_notice", "[pages]" )
     Package package = sample();
     REQUIRE( render_pages( package ).at( "index.html" ).find( "<footer>" ) == std::string::npos );
 
-    package.copyright = "Copyright 2026 A. Author";
-    package.license   = "Apache-2.0 WITH LLVM-exception";
+    package.notice         = { "Copyright 2026 A. Author", "Apache-2.0 WITH LLVM-exception" };
+    package.prelude.notice = { "Copyright 2025 B", "" };
     for( const auto& [name, page] : render_pages( package ) )
     {
-        if( name.ends_with( ".html" ) )
+        if( name == "prelude.html" )
+        {
+            REQUIRE( page.ends_with( "</main>\n<footer>Copyright 2025 B</footer>\n</body>\n</html>\n" ) );
+        }
+        else if( name.ends_with( ".html" ) )
         {
             REQUIRE( page.ends_with( "</main>\n<footer>Copyright 2026 A. Author. Licensed under Apache-2.0 WITH "
                                      "LLVM-exception.</footer>\n</body>\n</html>\n" ) );
         }
     }
+}
+
+TEST_CASE( "pages_link_the_prelude_and_primitives", "[pages]" )
+{
+    Package package = sample();
+    package.prelude = {
+        "Seen *everywhere*.",
+        {
+            Entry { Group { "void", { { "primitive", "void", "void", "No value." } } }, {} },
+            Entry { Group { "str", { { "class", "str", "class str", "Text." } } }, {} },
+        },
+        {},
+    };
+
+    const std::map<std::string, std::string> pages   = render_pages( package );
+    const std::string&                       shapes  = pages.at( "shapes.html" );
+    const std::string&                       prelude = pages.at( "prelude.html" );
+
+    REQUIRE( shapes.find( "<a class=\"prim\" href=\"prelude.html#void\">void</a> grow" ) != std::string::npos );
+    REQUIRE( shapes.find( "<span class=\"prim\">u64</span>" ) != std::string::npos );
+
+    // A primitive's own entry does not link to itself.
+    REQUIRE( prelude.find( "<p>Seen <em>everywhere</em>.</p>" ) != std::string::npos );
+    REQUIRE( prelude.find( "<code><span class=\"prim\">void</span></code>" ) != std::string::npos );
+    REQUIRE( prelude.find( "<h2><span class=\"kind\">primitive</span> void</h2>" ) != std::string::npos );
+    REQUIRE( pages.at( "index.html" ).find( "<a href=\"prelude.html\">prelude</a>" ) != std::string::npos );
 }
 
 TEST_CASE( "pages_index_lists_each_module_with_summaries", "[pages]" )

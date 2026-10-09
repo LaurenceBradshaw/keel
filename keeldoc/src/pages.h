@@ -5,12 +5,17 @@
 
 #include <map>
 #include <string>
+#include <string_view>
 #include "package.h"
 
 namespace keeldoc
 {
 
-// Every file of the package's pages by name: index.html, one page per module and style.css. The
+// The prelude's page, which comes with every package's.
+inline constexpr std::string_view k_prelude_page = "prelude.html";
+
+// Every file of the package's pages by name: index.html, one page per module, the prelude's page and
+// style.css. The
 // same package always gives the same bytes.
 std::map<std::string, std::string> render_pages( const Package& package );
 

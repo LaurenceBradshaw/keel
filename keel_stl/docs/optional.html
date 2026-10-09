@@ -54,7 +54,7 @@
 <section class="entry">
 <h2><span class="kind">function</span> expect</h2>
 <div class="group" id="expect">
-<pre class="signature"><a class="anchor" href="#expect" aria-label="Link to expect">#</a><code>T expect&lt;T&gt;( <span class="kw">move</span> <a class="type" href="#optional">optional</a>&lt;T&gt; o, str message )</code></pre>
+<pre class="signature"><a class="anchor" href="#expect" aria-label="Link to expect">#</a><code>T expect&lt;T&gt;( <span class="kw">move</span> <a class="type" href="#optional">optional</a>&lt;T&gt; o, <a class="type" href="prelude.html#str">str</a> message )</code></pre>
 <div class="doc">
 <p>Takes the value out of an optional, panicking with a given message if there is none.</p>
 <h4>Panics</h4>
@@ -75,7 +75,7 @@
 <section class="entry">
 <h2><span class="kind">function</span> is_some</h2>
 <div class="group" id="is_some">
-<pre class="signature"><a class="anchor" href="#is_some" aria-label="Link to is_some">#</a><code><span class="prim">bool</span> is_some&lt;T&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#optional">optional</a>&lt;T&gt; o )</code></pre>
+<pre class="signature"><a class="anchor" href="#is_some" aria-label="Link to is_some">#</a><code><a class="prim" href="prelude.html#bool">bool</a> is_some&lt;T&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#optional">optional</a>&lt;T&gt; o )</code></pre>
 <div class="doc">
 <p>Whether an optional holds a value.</p>
 </div>
@@ -84,7 +84,7 @@
 <section class="entry">
 <h2><span class="kind">function</span> is_none</h2>
 <div class="group" id="is_none">
-<pre class="signature"><a class="anchor" href="#is_none" aria-label="Link to is_none">#</a><code><span class="prim">bool</span> is_none&lt;T&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#optional">optional</a>&lt;T&gt; o )</code></pre>
+<pre class="signature"><a class="anchor" href="#is_none" aria-label="Link to is_none">#</a><code><a class="prim" href="prelude.html#bool">bool</a> is_none&lt;T&gt;( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#optional">optional</a>&lt;T&gt; o )</code></pre>
 <div class="doc">
 <p>Whether an optional holds nothing.</p>
 </div>

@@ -5,16 +5,22 @@ the `//!` comments of its `packageinfo.kl`.
 
     build/debug/bin/keeldoc -o keel_stl/docs kl=keel_stl/src
 
-It runs keelc with `--declarations` on a program importing every module of the package. If keelc
-reports an error, keeldoc prints it and writes nothing. `--keelc <path>` names the keelc to run;
-by default it is the one beside keeldoc.
+It runs keelc with `--declarations --with-prelude` on a program importing every module of the
+package. If keelc reports an error, keeldoc prints it and writes nothing. `--keelc <path>` names
+the keelc to run; by default it is the one beside keeldoc.
 
 The pages are `index.html`, with the package's doc and a summary line for each module's
-declarations; one page per module, `a::b` at `a.b.html`; and `style.css`. Only public declarations
-appear, and a function's or method's overloads share one entry. A type's members are grouped as
-variants, fields, constructors and methods, each group in source order.
+declarations; one page per module, `a::b` at `a.b.html`; `prelude.html`; and `style.css`. Only
+public declarations appear, an `extern` only with a doc, and a function's or method's overloads share one entry. A type's
+members are grouped as variants, fields, constructors and methods, each group in source order.
 
-Every page ends with the package's notice, taken from the `// Copyright ...` and
+Every package's pages include `prelude.html`, which documents what every program sees without an
+import: the primitives, then the prelude's declarations. The primitives have no declaration, so
+their docs are `src/primitives.md`, compiled into keeldoc: its opening text introduces the page, and
+each `# name` heading starts a primitive. Every signature links `str`, `result` and the primitives
+there. The prelude page's footer is the notice opening the prelude's source.
+
+Every other page ends with the package's notice, taken from the `// Copyright ...` and
 `// SPDX-License-Identifier: ...` lines that open its `packageinfo.kl`; a package without them gets
 no footer.
 

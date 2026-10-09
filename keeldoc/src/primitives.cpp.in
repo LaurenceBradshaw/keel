@@ -1,0 +1,13 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+#include "primitives.h"
+
+// Generated from primitives.md by CMake, so edit that instead.
+
+namespace keeldoc
+{
+std::string_view primitives_source()
+{
+    return R"primitives_md(@KEELDOC_PRIMITIVES@)primitives_md";
+}
+} // namespace keeldoc

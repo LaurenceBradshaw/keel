@@ -86,8 +86,15 @@ int main( int argc, char** argv )
         return 1;
     }
 
+    const std::string prelude = keeldoc::print_prelude( keelc, error );
+    if( !error.empty() )
+    {
+        fmt::print( stderr, "keeldoc: {}\n", error );
+        return 1;
+    }
+
     std::vector<std::string> errors;
-    const keeldoc::Package   documented = keeldoc::build_package( name, dir, records, errors );
+    const keeldoc::Package   documented = keeldoc::build_package( name, dir, records, prelude, errors );
     for( const std::string& message : errors )
     {
         fmt::print( stderr, "{}\n", message );
@@ -106,9 +113,9 @@ int main( int argc, char** argv )
 
     for( const keeldoc::Module& module : documented.modules )
     {
-        if( keeldoc::page_of( module ) == "index.html" )
+        if( keeldoc::page_of( module ) == "index.html" || keeldoc::page_of( module ) == keeldoc::k_prelude_page )
         {
-            fmt::print( stderr, "keeldoc: a module named `index` would overwrite the package's page\n" );
+            fmt::print( stderr, "keeldoc: a module named `{}` would overwrite another page\n", module.name );
             return 1;
         }
     }

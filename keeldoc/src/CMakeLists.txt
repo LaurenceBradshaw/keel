@@ -1,6 +1,13 @@
 # Sources are globbed, as keelc's are, so adding one needs no edit here.
 file(GLOB_RECURSE keeldoc_sources CONFIGURE_DEPENDS "*.cpp")
 
+# The primitives' docs are compiled in as a string, as keelc's prelude is, so keeldoc reads no file to
+# find them. Editing primitives.md re-runs CMake, which regenerates the string.
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS primitives.md)
+file(READ primitives.md KEELDOC_PRIMITIVES)
+configure_file(primitives.cpp.in ${CMAKE_CURRENT_BINARY_DIR}/primitives_source.cpp @ONLY)
+list(APPEND keeldoc_sources ${CMAKE_CURRENT_BINARY_DIR}/primitives_source.cpp)
+
 find_package(fmt CONFIG REQUIRED)
 find_package(cxxopts CONFIG REQUIRED)
 
