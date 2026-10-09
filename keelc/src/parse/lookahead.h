@@ -8,6 +8,7 @@
 #include "common/interner.h"
 #include "common/types.h"
 #include "lex/token.h"
+#include "parse/token_cursor.h"
 
 namespace keel
 {
@@ -151,20 +152,6 @@ private:
 
     Head_scan scan_head( u32 at, Symbol_id enclosing, Constructor_names names );
 
-    // --- cursor. peek() clamps to the End_of_file token. ---
-
-    const Token& peek( u32 ahead = 0 ) const;
-    bool         at_end() const;
-    bool         check( Token_kind kind ) const;
-    bool         check_keyword( Keyword keyword ) const;
-    bool         at_mode_keyword() const;
-    const Token& previous() const;
-    bool         peek_is_adjacent() const;
-
-    void advance();
-    bool match( Token_kind kind );
-    bool match_keyword( Keyword keyword );
-
     // --- pieces. Each consumes what it names and returns true, or records failure_ and returns false. ---
 
     // Returns false so a scan can `return fail( ... )`; called for its record alone elsewhere.
@@ -178,7 +165,6 @@ private:
     bool scan_type_with_mode();
     bool scan_type();
     bool scan_type_term();
-    bool scan_generic_close();
 
     // A loose type-then-name test, not the grammar: on success the cursor is just past the name.
     bool scan_type_and_name();
@@ -200,11 +186,9 @@ private:
 
     void skip_operator_token();
 
-    std::span<const Token> tokens_;
-    u32                    cursor_       = 0;
-    u32                    owed_greater_ = 0;
-    Scan_failure           failure_;
-    Scan_site              site_ = Scan_site::File;
+    Token_cursor cursor_;
+    Scan_failure failure_;
+    Scan_site    site_ = Scan_site::File;
 };
 
 } // namespace keel

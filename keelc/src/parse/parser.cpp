@@ -12,6 +12,8 @@
 #include "lex/lexer.h"
 #include "parse/hints.h"
 #include "parse/lookahead.h"
+#include "parse/recovery.h"
+#include "parse/token_cursor.h"
 
 namespace keel
 {
@@ -34,33 +36,7 @@ public:
     std::vector<Node_id> parse_declarations();
 
 private:
-    // --- cursor. peek() clamps to the End_of_file token, so no rule needs a bounds check. ---
-
-    const Token& peek( u32 ahead = 0 ) const;
-
-    // The last consumed token. Every rule's span is merge( first token, previous() ).
-    const Token& previous() const;
-
-    bool at_end() const;
-
-    const Token& advance();
-
-    bool check( Token_kind kind ) const;
-    bool check_keyword( Keyword keyword ) const;
-
-    bool match( Token_kind kind );
-    bool match_keyword( Keyword keyword );
-
-    // Consume or report. Never throws - the parser reports and keeps going.
-    bool expect( Token_kind kind );
-
-    // --- errors ---
-
-    void error_at( Span span, std::string message, std::string help = {} );
-    void fail_at( Span span, std::string message, std::string help = {} );
-
-    // "expected `;`, found `,`".
-    void error_expected( Token_kind kind, std::string help = {} );
+    // --- names and nodes ---
 
     // A declared name, or nothing plus a report. A keyword found here was meant as the name, so it
     // is consumed as well: leaving it in place trips every rule after this one.
@@ -78,26 +54,18 @@ private:
     // A head's parse ends at its commit. One that reported may stop short or run past, and is moved there.
     void reach_commit( u32 commit );
 
-    // What peek() should be called in a message: its source text where it has one, so "found
-    // `widget`" rather than "found `identifier`".
-    std::string found_text() const;
-    std::string found_text( const Token& token ) const;
-
-    // Panic-mode recovery: skip to something that plausibly starts a new statement, so one mistake
-    // does not cascade.
-    void synchronise();
-    bool at_statement_keyword() const;
-    bool at_unclosed_body_head();
-    bool body_ends_here();
-    void skip_past_closing_paren( u32 depth );
-    void close_header( u32 condition_start );
-
     // A failed rule returns this rather than an invalid Node_id, so the tree stays well formed and
     // arity stays fixed.
     Node_id error_node( Span span );
 
     // A declaration given up on after its name was read: sema declares the name as an error symbol.
     Node_id error_node( Span span, Symbol_id name, Span name_span );
+
+    Node_id generic_self( Node_id named, Node_id type_params, Span span );
+    Node_id synthesise_receiver( Symbol_id enclosing, Node_id type_params, Span span, bool is_const );
+
+    // D53: the `///` lines between `first_token` and the token before it document `decl`.
+    void attach_doc( Node_id decl, u32 first_token );
 
     // --- declarations ---
 
@@ -126,10 +94,6 @@ private:
     // The member a head scan found: its markers, then the declaration its kind names.
     Node_id parse_member( const Member_head& head, Symbol_id enclosing, Node_id type_params, bool is_class );
 
-    // One error for the tokens a chunk drops, at the first word when the hint table knows it.
-    void    report_dropped( u32 begin, u32 end, const Scan_failure& failure, std::optional<u32> next, Hint_place place );
-    u32     line_of( const Token& token ) const;
-    bool    gap_before( u32 at ) const;
     Node_id parse_enum_decl();
     Node_id parse_variant_decl();
     // A name before `(` or `}` is a variant, never a payload field.
@@ -138,15 +102,6 @@ private:
     Node_id parse_field_decl( u32 commit );
     Node_id parse_destructor_decl( Symbol_id enclosing, Node_id type_params, u32 commit );
     Node_id parse_constructor_decl( Symbol_id enclosing, Node_id type_params, u32 commit );
-
-    // `Point { 0.0, 0.0 }` or `Point { .x = 0.0, .y = 0.0 }`. Entered from parse_prefix once the
-    // identifier is consumed and a `{` is seen behind it.
-    Node_id parse_struct_literal( Span start, Symbol_id type_name, Node_id package = {} );
-
-    // One initialiser. aux carries the field name in the designated form and stays invalid in the
-    // positional one - Symbol_id has its own sentinel, so "no name" is representable rather than
-    // borrowed from a real id.
-    Node_id parse_field_init();
 
     // --- types. `u32*` is a type *expression* and gets nodes of its own. ---
 
@@ -166,29 +121,6 @@ private:
     // cannot, rather than letting parse_prefix report the vaguer "expected an expression".
     bool can_start_expression() const;
 
-    // Whether peek() begins exactly where the previous token ended, with no space between. Spans
-    // are byte offsets, so this is the whole test. PLAN §6.3 D17 uses it to bind `*` to the type:
-    // `u32* p` is a pointer declaration, `u32 * p` is a multiplication.
-    bool peek_is_adjacent() const;
-
-    // `Vector<Vector<i32>>` closes with a single `>>` token - the lexer is right to produce it
-    // (lexer_generic_close_is_two_greaters), so the parser splits it here rather than mutating the
-    // token stream. Returns true when one closing `>` was consumed.
-    bool match_generic_close();
-    // On a miss, reports once and skips to this list's `>`; false means the list was broken.
-    bool expect_generic_close();
-
-    enum class List_site : u8
-    {
-        Expression,
-        Declaration,
-        Literal
-    };
-    // After a list element: at `,` or `close` true; otherwise reports once per list and skips to
-    // one, false when it stops short. `list_errors` is the error count before the list.
-    bool end_list_element( Token_kind close, std::size_t list_errors, List_site site = List_site::Expression );
-    // Past this list's `>`, or up to a token the list cannot reach past (`;`, `{`, an unmatched `)`).
-    void    skip_to_generic_close();
     Node_id parse_return_stmt();
     // A static field passes its commit; top-level and local variables have none.
     Node_id parse_var_decl( std::optional<u32> commit = std::nullopt );
@@ -202,15 +134,26 @@ private:
 
     // --- expressions ---
 
+    enum class Expression_use : u8
+    {
+        Value,
+        Before_increment, // a trailing `++` is the statement's, not a misplaced postfix
+        Case_bound        // kept whole when broken, so a pattern can still be read from it
+    };
+
     // Pratt: consumes only operators binding at least as tightly as min_power. Left associativity
-    // comes from recursing with power + 1.
-    // enclosing is the operator whose recursion we are inside, or End_of_file at the top level.
-    // D16 needs it: a tighter operator is consumed inside the looser one's recursion and never
-    // appears with a Binary_expr on its left.
-    // increment_follows is true when the caller takes a trailing ++ as a statement.
+    // comes from recursing with power + 1. `enclosing` is the operator whose recursion we are inside,
+    // or End_of_file at the top level: D16 needs it, since a tighter operator is consumed inside the
+    // looser one's recursion and never appears with a Binary_expr on its left.
     Node_id parse_expression(
-        u8 min_power, Token_kind enclosing = Token_kind::End_of_file, bool increment_follows = false, bool keep_shape = false
+        u8 min_power, Token_kind enclosing = Token_kind::End_of_file, Expression_use use = Expression_use::Value
     );
+    Node_id parse_expression_before_increment();
+    Node_id parse_case_bound();
+
+    Node_id parse_postfix( Node_id left, bool increment_follows );
+    Node_id parse_type_argument_suffix( Node_id left );
+    Node_id member_access( Node_id left, Node_kind kind, Symbol_id name, Node_id type_arguments = {} );
 
     // Literals, names, unary operators, and `(` for grouping - which returns the inner node
     // unchanged, so the parens leave no trace.
@@ -219,33 +162,25 @@ private:
 
     Node_id parse_arg_list();
 
+    // `Point { 0.0, 0.0 }` or `Point { .x = 0.0, .y = 0.0 }`. Entered from parse_prefix once the
+    // identifier is consumed and a `{` is seen behind it.
+    Node_id parse_struct_literal( Span start, Symbol_id type_name, Node_id package = {} );
+
+    // One initialiser. aux carries the field name in the designated form and stays invalid in the
+    // positional one - Symbol_id has its own sentinel, so "no name" is representable rather than
+    // borrowed from a real id.
+    Node_id parse_field_init();
+
     void mark_parenthesised( Node_id id );
     bool is_parenthesised( Node_id id ) const;
 
-    Node_id generic_self( Node_id named, Node_id type_params, Span span );
-    Node_id synthesise_receiver( Symbol_id enclosing, Node_id type_params, Span span, bool is_const );
-
-    bool at_mode_keyword() const;
-    bool failed_since( u32 token ) const;
-
-    // D53: the `///` lines between `first_token` and the token before it document `decl`.
-    void attach_doc( Node_id decl, u32 first_token );
-
-    std::span<const Token> tokens_;
-    u32                    pos_ = 0;
+    Token_cursor           cursor_;
     Lookahead              lookahead_;
-    i32                    unclosed_braces_ = 0;
-    bool                   body_cut_        = false;
     std::vector<Symbol_id> classes_;
     const Source_manager&  sm_;
     Ast&                   ast_;
     Diagnostics&           diags_;
-
-    // Half of a `>>` that has already been consumed while closing a generic argument list.
-    u32                pending_greater_ = 0;
-    std::optional<u32> unclosed_at_;
-    std::optional<u32> statement_start_;
-    std::optional<u32> skipped_from_; // where the last list skip began
+    Recovery               recovery_;
 
     // Grouping parentheses leave no trace in the tree, so `a & b == c` and `(a & b) == c` produce
     // the same nodes. D16 needs to tell them apart, and parenthesisation is a parsing fact that
@@ -258,34 +193,6 @@ private:
 //
 // Assignment and `++`/`--` are deliberately absent: both are statements (L11, D12), so `if( x = 5 )`
 // and `a[i++]` cannot parse at all rather than needing a special check.
-// How a token kind reads in "expected ...". Punctuation is quoted because it is what the author
-// would type; a category is prose with its own article, because "identifier" is not something you
-// can write.
-std::string expectation( Token_kind kind )
-{
-    switch( kind )
-    {
-    case Token_kind::Identifier:
-        return "an identifier";
-    case Token_kind::Int_literal:
-        return "an integer literal";
-    case Token_kind::Float_literal:
-        return "a floating-point literal";
-    case Token_kind::String_literal:
-        return "a string literal";
-    case Token_kind::Char_literal:
-        return "a character literal";
-    case Token_kind::Keyword:
-        return "a keyword";
-    case Token_kind::End_of_file:
-        return "end of file";
-    case Token_kind::Unknown:
-        return "a valid character";
-    default:
-        return fmt::format( "`{}`", token_kind_spelling( kind ) );
-    }
-}
-
 u8 binding_power( Token_kind kind )
 {
     switch( kind )
@@ -450,153 +357,38 @@ bool is_assignment( Token_kind kind )
 }
 
 Parser::Parser( std::span<const Token> tokens, const Source_manager& sm, Ast& ast, Diagnostics& diags )
-    : tokens_( tokens ),
+    : cursor_( tokens ),
       lookahead_( tokens ),
       sm_( sm ),
       ast_( ast ),
-      diags_( diags )
+      diags_( diags ),
+      recovery_( cursor_, lookahead_, classes_, sm, ast, diags )
 {
-    u32 l_brace_count = 0;
-    u32 r_brace_count = 0;
-    for( const Token& token : tokens_ )
-    {
-        if( token.kind == Token_kind::L_brace )
-        {
-            l_brace_count++;
-        }
-        else if( token.kind == Token_kind::R_brace )
-        {
-            r_brace_count++;
-        }
-    }
-
-    unclosed_braces_ = narrow_cast<i32>( l_brace_count ) - narrow_cast<i32>( r_brace_count );
-}
-
-const Token& Parser::peek( u32 ahead ) const
-{
-    assert( !tokens_.empty() );
-    return tokens_[std::min( pos_ + ahead, narrow_cast<u32>( tokens_.size() - 1 ) )];
-}
-
-const Token& Parser::previous() const
-{
-    assert( pos_ > 0 && "previous() called at start of token stream" );
-    return tokens_[pos_ - 1];
-}
-
-bool Parser::at_end() const
-{
-    return peek().kind == Token_kind::End_of_file;
-}
-
-const Token& Parser::advance()
-{
-    if( at_end() )
-    {
-        return peek();
-    }
-    return tokens_[pos_++];
-}
-
-bool Parser::check( Token_kind kind ) const
-{
-    return peek().kind == kind;
-}
-
-bool Parser::check_keyword( Keyword keyword ) const
-{
-    return peek().kind == Token_kind::Keyword && peek().keyword() == keyword;
-}
-
-bool Parser::match( Token_kind kind )
-{
-    if( check( kind ) )
-    {
-        advance();
-        return true;
-    }
-    return false;
-}
-
-bool Parser::match_keyword( Keyword keyword )
-{
-    if( check_keyword( keyword ) )
-    {
-        advance();
-        return true;
-    }
-    return false;
-}
-
-bool Parser::expect( Token_kind kind )
-{
-    if( !match( kind ) )
-    {
-        error_expected( kind );
-        return false;
-    }
-
-    return true;
-}
-
-void Parser::error_at( Span span, std::string message, std::string help )
-{
-    diags_.syntax_error( span, std::move( message ), std::move( help ) );
-}
-
-void Parser::fail_at( Span span, std::string message, std::string help )
-{
-    ast_.fail( span );
-    error_at( span, std::move( message ), std::move( help ) );
-}
-
-void Parser::error_expected( Token_kind kind, std::string help )
-{
-    // Point just past the last token we accepted, not at the one we found. A missing `;` is missing
-    // at the end of the previous line, which is where the reader looks - pointing at the `}` on the
-    // next line describes the symptom rather than the mistake.
-    const Span at = pos_ > 0 ? Span::point( previous().span.file, previous().span.end ) : peek().span;
-
-    // After a list skipped tokens, where the statement ends is a guess.
-    if( kind == Token_kind::Semicolon && statement_start_ && skipped_from_ && *skipped_from_ >= *statement_start_ )
-    {
-        ast_.fail( at );
-        return;
-    }
-
-    // A keyword where a name was wanted is worth saying out loud. `out`, `ref` and `move` are
-    // ordinary identifiers in C++, so a program can arrive here without its author suspecting that
-    // the name is the problem.
-    if( help.empty() && kind == Token_kind::Identifier && check( Token_kind::Keyword ) )
-    {
-        help = fmt::format( "{} is a keyword, so it cannot be used as a name", found_text() );
-    }
-
-    fail_at( at, fmt::format( "expected {}, found {}", expectation( kind ), found_text() ), std::move( help ) );
 }
 
 Symbol_id Parser::expect_name()
 {
     // A token on a later line starts the next statement, unless a separator came before it.
-    const bool name_missing = gap_before( pos_ );
+    const bool name_missing = recovery_.gap_before( cursor_.position() );
 
-    if( !name_missing &&
-        ( check( Token_kind::Keyword ) || check( Token_kind::Digit_name ) || check( Token_kind::Int_literal ) ) )
+    if( !name_missing && ( cursor_.check( Token_kind::Keyword ) || cursor_.check( Token_kind::Digit_name ) ||
+                           cursor_.check( Token_kind::Int_literal ) ) )
     {
         std::string help = "a name cannot start with a digit";
-        if( check( Token_kind::Keyword ) )
+        if( cursor_.check( Token_kind::Keyword ) )
         {
-            help = fmt::format( "{} is a keyword, so it cannot be used as a name", found_text() );
+            help = fmt::format( "{} is a keyword, so it cannot be used as a name", recovery_.found_text() );
         }
-        fail_at( peek().span, fmt::format( "expected an identifier, found {}", found_text() ), std::move( help ) );
-        advance();
+        recovery_.fail_at(
+            cursor_.peek().span, fmt::format( "expected an identifier, found {}", recovery_.found_text() ), std::move( help )
+        );
+        cursor_.advance();
         return Symbol_id {};
     }
 
-    if( expect( Token_kind::Identifier ) )
+    if( recovery_.expect( Token_kind::Identifier ) )
     {
-        return previous().symbol;
+        return cursor_.previous().symbol;
     }
 
     return Symbol_id {};
@@ -604,16 +396,16 @@ Symbol_id Parser::expect_name()
 
 Symbol_id Parser::expect_member_name()
 {
-    if( !check( Token_kind::Tilde ) )
+    if( !cursor_.check( Token_kind::Tilde ) )
     {
         return expect_name();
     }
 
-    const Span tilde = advance().span;
-    match( Token_kind::Identifier );
+    const Span tilde = cursor_.advance().span;
+    cursor_.match( Token_kind::Identifier );
 
-    error_at(
-        Span::merge( tilde, previous().span ),
+    recovery_.error_at(
+        Span::merge( tilde, cursor_.previous().span ),
         "a destructor cannot be named",
         "it runs by itself when the value's lifetime ends"
     );
@@ -623,16 +415,16 @@ Symbol_id Parser::expect_member_name()
 
 Symbol_id Parser::expect_operator_name()
 {
-    const Span start = advance().span; // `operator`
+    const Span start = cursor_.advance().span; // `operator`
 
-    if( check( Token_kind::L_paren ) )
+    if( cursor_.check( Token_kind::L_paren ) )
     {
-        error_at( start, "expected an operator after `operator`" );
+        recovery_.error_at( start, "expected an operator after `operator`" );
         return Symbol_id {};
     }
 
     const Token_kind op   = take_operator_token();
-    const Span       span = Span::merge( start, previous().span );
+    const Span       span = Span::merge( start, cursor_.previous().span );
 
     switch( op )
     {
@@ -640,14 +432,14 @@ Symbol_id Parser::expect_operator_name()
         return Interner::operator_name( Operator_name::Equal_equal );
 
     case Token_kind::Bang_equal:
-        error_at( span, "`operator!=` cannot be declared", "declare `operator==`, and `!=` is its negation" );
+        recovery_.error_at( span, "`operator!=` cannot be declared", "declare `operator==`, and `!=` is its negation" );
         return Symbol_id {};
 
     case Token_kind::Amp_amp:
     case Token_kind::Pipe_pipe:
-        error_at(
+        recovery_.error_at(
             span,
-            fmt::format( "`{}` cannot be overloaded", sm_.text( previous().span ) ),
+            fmt::format( "`{}` cannot be overloaded", sm_.text( cursor_.previous().span ) ),
             "it evaluates its right operand only when needed, and a call would evaluate both"
         );
         return Symbol_id {};
@@ -656,7 +448,7 @@ Symbol_id Parser::expect_operator_name()
     case Token_kind::Less_equal:
     case Token_kind::Greater:
     case Token_kind::Greater_equal:
-        error_at(
+        recovery_.error_at(
             span,
             fmt::format( "`{}` cannot be declared", sm_.text( span ) ),
             "ordering is declared once, as `operator<=>`, which is not supported yet"
@@ -664,245 +456,41 @@ Symbol_id Parser::expect_operator_name()
         return Symbol_id {};
 
     case Token_kind::L_bracket:
-        if( previous().kind != Token_kind::R_bracket )
+        if( cursor_.previous().kind != Token_kind::R_bracket )
         {
-            error_at( span, "`operator[` cannot be declared", "write `operator[]`" );
+            recovery_.error_at( span, "`operator[` cannot be declared", "write `operator[]`" );
             return Symbol_id {};
         }
         return Interner::operator_name( Operator_name::Index );
 
     default:
-        error_at( span, fmt::format( "`{}` cannot be declared yet", sm_.text( span ) ) );
+        recovery_.error_at( span, fmt::format( "`{}` cannot be declared yet", sm_.text( span ) ) );
         return Symbol_id {};
     }
 }
 
 Token_kind Parser::take_operator_token()
 {
-    const Token& t = advance();
+    const Token& t = cursor_.advance();
 
     if( t.kind == Token_kind::L_bracket )
     {
-        match( Token_kind::R_bracket );
+        cursor_.match( Token_kind::R_bracket );
     }
 
     return t.kind;
 }
 
-std::string Parser::found_text() const
-{
-    return found_text( peek() );
-}
-
-std::string Parser::found_text( const Token& token ) const
-{
-    // Quoted, because it is text the author actually wrote - except at the end of the file, where
-    // there is nothing to quote and "found `end of file`" reads as though they typed that.
-    if( token.kind == Token_kind::End_of_file )
-    {
-        return std::string( token_kind_spelling( Token_kind::End_of_file ) );
-    }
-
-    return fmt::format( "`{}`", sm_.text( token.span ) );
-}
-
 Symbol_id Parser::take_name()
 {
     // Used where want_name in the lookahead has already been satisfied.
-    assert( check( Token_kind::Identifier ) && "take_name called when peek() is not an identifier" );
-    return advance().symbol;
+    assert( cursor_.check( Token_kind::Identifier ) && "take_name called when peek() is not an identifier" );
+    return cursor_.advance().symbol;
 }
 
 void Parser::reach_commit( u32 commit )
 {
-    pos_             = commit;
-    pending_greater_ = 0;
-}
-
-void Parser::synchronise()
-{
-    // Skips to the end of a statement, balancing `(` and `[`; a block stops it at any depth.
-
-    u32 depth  = 0;
-    u32 braces = 0;
-
-    while( !at_end() )
-    {
-        if( depth == 0 && match( Token_kind::Semicolon ) )
-        {
-            return;
-        }
-
-        if( at_unclosed_body_head() )
-        {
-            return;
-        }
-
-        switch( peek().kind )
-        {
-        case Token_kind::End_of_file:
-            return;
-        case Token_kind::R_brace:
-            if( braces > 0 )
-            {
-                braces--;
-                break;
-            }
-            else
-            {
-                return;
-            }
-
-        case Token_kind::Keyword:
-            if( at_statement_keyword() )
-            {
-                return;
-            }
-            break;
-        case Token_kind::L_paren:
-        case Token_kind::L_bracket:
-            ++depth;
-            break;
-        case Token_kind::R_paren:
-        case Token_kind::R_bracket:
-            if( depth > 0 )
-            {
-                --depth;
-            }
-            break;
-        case Token_kind::L_brace:
-        {
-            const bool opens_literal = previous().kind == Token_kind::Identifier || previous().kind == Token_kind::Greater ||
-                                       previous().kind == Token_kind::Greater_greater;
-            if( !opens_literal )
-            {
-                return;
-            }
-            braces++;
-            break;
-        }
-
-        default:
-            break;
-        }
-
-        advance();
-    }
-}
-
-bool Parser::at_statement_keyword() const
-{
-    if( peek().kind != Token_kind::Keyword )
-    {
-        return false;
-    }
-
-    switch( peek().keyword() )
-    {
-    case Keyword::Return:
-    case Keyword::If:
-    case Keyword::While:
-    case Keyword::For:
-    case Keyword::Switch:
-    case Keyword::Break:
-    case Keyword::Continue:
-    case Keyword::Fallthrough:
-    case Keyword::Unsafe:
-        return true;
-
-    default:
-        return false;
-    }
-}
-
-bool Parser::at_unclosed_body_head()
-{
-    if( unclosed_braces_ <= 0 )
-    {
-        return false;
-    }
-
-    if( !classes_.empty() )
-    {
-        const Head_scan member = lookahead_.own_member_head( pos_, classes_.back() );
-        if( member.head.has_value() && member.head->kind != Member_kind::Field )
-        {
-            return true;
-        }
-    }
-
-    const Declaration_scan scan = lookahead_.declaration_head( pos_, Lookahead::Scan_site::Statement );
-    return scan.head.has_value() && scan.head->kind != Declaration_kind::Variable;
-}
-
-bool Parser::body_ends_here()
-{
-    if( body_cut_ )
-    {
-        return true;
-    }
-
-    if( !at_unclosed_body_head() )
-    {
-        return false;
-    }
-
-    error_expected( Token_kind::R_brace );
-    unclosed_braces_--;
-    body_cut_ = true;
-    return true;
-}
-
-void Parser::skip_past_closing_paren( u32 depth )
-{
-    while( !at_end() && !check( Token_kind::L_brace ) && !check( Token_kind::R_brace ) && !at_statement_keyword() )
-    {
-        if( check( Token_kind::L_paren ) )
-        {
-            ++depth;
-        }
-        else if( check( Token_kind::R_paren ) )
-        {
-            --depth;
-            if( depth == 0 )
-            {
-                advance();
-                return;
-            }
-        }
-
-        advance();
-    }
-}
-
-// Closes a control-flow header, skipping what is left of a condition that broke.
-void Parser::close_header( u32 condition_start )
-{
-    if( !match( Token_kind::R_paren ) )
-    {
-        if( !failed_since( condition_start ) )
-        {
-            error_expected( Token_kind::R_paren );
-        }
-        u32 depth = 1;
-        for( u32 i = condition_start; i < pos_; ++i )
-        {
-            const Token& token = tokens_[i];
-
-            if( token.kind == Token_kind::L_paren )
-            {
-                ++depth;
-            }
-            else if( token.kind == Token_kind::R_paren )
-            {
-                if( depth > 1 )
-                {
-                    --depth;
-                }
-            }
-        }
-        skip_past_closing_paren( depth );
-    }
+    cursor_.seek( commit );
 }
 
 Node_id Parser::error_node( Span span )
@@ -917,6 +505,53 @@ Node_id Parser::error_node( Span span, Symbol_id name, Span name_span )
     return error;
 }
 
+// `Box` inside `Box<T>` is `Box<T>`: the arguments are the parameters, by name. Built as the
+// arguments a written annotation would have - fresh Named_type nodes rather than the
+// Type_param_decls themselves - so the receiver resolves through the ordinary path.
+Node_id Parser::generic_self( Node_id named, Node_id type_params, Span span )
+{
+    std::vector<Node_id> arguments;
+
+    for( const Node_id type_param : ast_.type_parameters( type_params ) )
+    {
+        arguments.push_back( ast_.add( Node_kind::Named_type, span, ast_.aux( type_param ), {} ) );
+    }
+
+    const Node_id list = ast_.add( Node_kind::Type_arg_list, span, 0, arguments );
+
+    return ast_.add( Node_kind::Generic_type, span, 0, { named, list } );
+}
+
+// D32: the receiver is a binding, not a pointer. `ref T` when the method may write the object,
+// `const ref T` when it may not, which is what a trailing `const` on the method says. Built out of
+// the same nodes a written parameter would be, so nothing downstream learns it was synthesised.
+Node_id Parser::synthesise_receiver( Symbol_id enclosing, Node_id type_params, Span span, bool is_const )
+{
+    const Node_id named = ast_.add( Node_kind::Named_type, span, enclosing.v, {} );
+    const Node_id param = type_params.is_valid() ? generic_self( named, type_params, span ) : named;
+    const Node_id mode  = ast_.add( Node_kind::Mode_type, span, static_cast<u32>( Keyword::Ref ), { param } );
+    const Node_id type  = is_const ? ast_.add( Node_kind::Const_type, span, 0, { mode } ) : mode;
+
+    return ast_.add( Node_kind::Param_decl, span, Interner::keyword( Keyword::This ).v, { type } );
+}
+
+void Parser::attach_doc( Node_id decl, u32 first_token )
+{
+    const u32  gap_start = first_token == 0 ? 0 : cursor_.tokens()[first_token - 1].span.end;
+    const u32  gap_end   = cursor_.tokens()[first_token].span.start;
+    const Span gap_span { cursor_.tokens()[first_token].span.file, gap_start, gap_end };
+
+    const std::string_view gap_text = sm_.text( gap_span );
+    const std::string      doc      = doc_comment( gap_text, "///" );
+
+    if( doc.empty() )
+    {
+        return;
+    }
+
+    ast_.set_doc_span( decl, gap_span );
+}
+
 std::vector<Node_id> Parser::parse_declarations()
 {
     std::vector<Node_id> decls;
@@ -925,19 +560,21 @@ std::vector<Node_id> Parser::parse_declarations()
     std::optional<u32> reported_line;
     for( ;; )
     {
-        Declaration_chunk chunk = lookahead_.next_declaration( pos_ );
+        Declaration_chunk chunk = lookahead_.next_declaration( cursor_.position() );
 
         // A function head dropped after its name still declares it, so its calls stay quiet.
         if( chunk.dropped() && chunk.failure.name.has_value() )
         {
-            const Token& name = tokens_[*chunk.failure.name];
-            const Span   span = Span::merge( tokens_[chunk.dropped_begin].span, tokens_[chunk.dropped_end - 1].span );
+            const Token& name = cursor_.tokens()[*chunk.failure.name];
+            const Span   span =
+                Span::merge( cursor_.tokens()[chunk.dropped_begin].span, cursor_.tokens()[chunk.dropped_end - 1].span );
             decls.push_back( error_node( span, name.symbol, name.span ) );
         }
 
-        if( chunk.dropped() && ( !reported_line || line_of( tokens_[chunk.dropped_begin] ) != *reported_line ) )
+        if( chunk.dropped() &&
+            ( !reported_line || recovery_.line_of( cursor_.tokens()[chunk.dropped_begin] ) != *reported_line ) )
         {
-            report_dropped(
+            recovery_.report_dropped(
                 chunk.dropped_begin,
                 chunk.dropped_end,
                 chunk.failure,
@@ -946,7 +583,7 @@ std::vector<Node_id> Parser::parse_declarations()
             );
         }
 
-        pos_ = chunk.dropped_end;
+        cursor_.seek( chunk.dropped_end );
 
         if( !chunk.head )
         {
@@ -957,7 +594,7 @@ std::vector<Node_id> Parser::parse_declarations()
 
         if( ast_.broken( decl ) )
         {
-            reported_line = line_of( previous() );
+            reported_line = recovery_.line_of( cursor_.previous() );
         }
         else
         {
@@ -968,7 +605,9 @@ std::vector<Node_id> Parser::parse_declarations()
         {
             if( declared )
             {
-                error_at( ast_.span( decl ), "an `import` goes before every declaration", "move it to the top of the file" );
+                recovery_.error_at(
+                    ast_.span( decl ), "an `import` goes before every declaration", "move it to the top of the file"
+                );
             }
         }
         else
@@ -979,7 +618,7 @@ std::vector<Node_id> Parser::parse_declarations()
         attach_doc( decl, chunk.head->start );
         decls.push_back( decl );
 
-        assert( pos_ > chunk.head->start );
+        assert( cursor_.position() > chunk.head->start );
     }
 
     return decls;
@@ -987,14 +626,14 @@ std::vector<Node_id> Parser::parse_declarations()
 
 Node_id Parser::parse_import()
 {
-    const Span start = peek().span;
-    advance(); // consume `import`
+    const Span start = cursor_.peek().span;
+    cursor_.advance(); // consume `import`
 
-    const Span package_span = peek().span;
+    const Span package_span = cursor_.peek().span;
     Symbol_id  package      = expect_name();
     bool       well_formed  = package.is_valid();
     Symbol_id  module {};
-    if( match( Token_kind::Colon_colon ) )
+    if( cursor_.match( Token_kind::Colon_colon ) )
     {
         module = expect_name();
     }
@@ -1007,32 +646,36 @@ Node_id Parser::parse_import()
     const Node_id package_node =
         package.is_valid() ? ast_.add( Node_kind::Name_expr, package_span, package.v, {} ) : Node_id {};
 
-    if( check( Token_kind::Colon_colon ) )
+    if( cursor_.check( Token_kind::Colon_colon ) )
     {
-        error_at( Span::merge( start, peek().span ), "an import names a module, or a package and one of its modules" );
+        recovery_.error_at(
+            Span::merge( start, cursor_.peek().span ), "an import names a module, or a package and one of its modules"
+        );
         well_formed = false;
 
         // Consume the rest of the qualification so the next rule sees a semicolon rather than
         // thinking it is a declaration.
-        while( match( Token_kind::Colon_colon ) )
+        while( cursor_.match( Token_kind::Colon_colon ) )
         {
             expect_name();
         }
     }
 
-    well_formed &= expect( Token_kind::Semicolon );
+    well_formed &= recovery_.expect( Token_kind::Semicolon );
 
     return module.is_valid() && well_formed
                ? package_node.is_valid()
-                     ? ast_.add( Node_kind::Import_decl, Span::merge( start, previous().span ), module.v, { package_node } )
-                     : ast_.add( Node_kind::Import_decl, Span::merge( start, previous().span ), module.v, {} )
-               : error_node( Span::merge( start, previous().span ) );
+                     ? ast_.add(
+                           Node_kind::Import_decl, Span::merge( start, cursor_.previous().span ), module.v, { package_node }
+                       )
+                     : ast_.add( Node_kind::Import_decl, Span::merge( start, cursor_.previous().span ), module.v, {} )
+               : error_node( Span::merge( start, cursor_.previous().span ) );
 }
 
 Node_id Parser::parse_declaration( const Declaration_head& head )
 {
-    assert( pos_ == head.start );
-    body_cut_ = false;
+    assert( cursor_.position() == head.start );
+    recovery_.begin_body();
 
     switch( head.kind )
     {
@@ -1048,51 +691,51 @@ Node_id Parser::parse_declaration( const Declaration_head& head )
         return parse_var_decl( head.commit );
     }
 
-    return error_node( peek().span );
+    return error_node( cursor_.peek().span );
 }
 
 Node_id Parser::parse_function_decl( std::optional<u32> commit )
 {
-    const Span start = peek().span;
+    const Span start = cursor_.peek().span;
 
     // Check for extern keyword first, and consume it if present.
-    bool is_extern = match_keyword( Keyword::Extern );
+    bool is_extern = cursor_.match_keyword( Keyword::Extern );
 
     const Node_id return_type = parse_type_with_mode();
 
     // An operator is a method of its left operand's type. Its name is skipped and the rest parsed.
-    const bool is_operator = check_keyword( Keyword::Operator );
+    const bool is_operator = cursor_.check_keyword( Keyword::Operator );
     if( is_operator )
     {
-        const Span operator_start = advance().span;
+        const Span operator_start = cursor_.advance().span;
         take_operator_token();
 
-        error_at(
-            Span::merge( operator_start, previous().span ),
+        recovery_.error_at(
+            Span::merge( operator_start, cursor_.previous().span ),
             "an operator is declared inside the type of its left operand",
             "move it into that type as a `const` method"
         );
     }
 
     // The name is a token, not a subtree, so it goes in aux rather than becoming a fourth child.
-    const Symbol_id name      = !is_operator && !check( Token_kind::L_paren ) ? expect_name() : Symbol_id {};
-    const Span      name_span = previous().span;
+    const Symbol_id name      = !is_operator && !cursor_.check( Token_kind::L_paren ) ? expect_name() : Symbol_id {};
+    const Span      name_span = cursor_.previous().span;
 
     // The parameters and the `where` clauses that constrain them end up in one node, but they are
     // written either side of the parameter list - so the parts are collected here and the node is
     // built once both halves are in hand.
-    const Span           generic_start = peek().span;
-    const bool           generic       = check( Token_kind::Less );
+    const Span           generic_start = cursor_.peek().span;
+    const bool           generic       = cursor_.check( Token_kind::Less );
     std::vector<Node_id> generics      = generic ? parse_type_params() : std::vector<Node_id> {};
 
     // Captured before the parameter list is parsed: with no `where` clause the node ends at the
     // `>`, and merging with previous() later would stretch it over the parameters.
-    Span generic_span = Span::merge( generic_start, previous().span );
+    Span generic_span = Span::merge( generic_start, cursor_.previous().span );
 
     // No early return on a missing name: keep parsing so the body's errors are reported too.
     const Node_id params = parse_param_list();
 
-    while( check_keyword( Keyword::Where ) )
+    while( cursor_.check_keyword( Keyword::Where ) )
     {
         const Node_id clause = parse_where_clause();
 
@@ -1100,7 +743,7 @@ Node_id Parser::parse_function_decl( std::optional<u32> commit )
         // without it the declaration would look generic to everything downstream.
         if( !generic )
         {
-            error_at(
+            recovery_.error_at(
                 ast_.span( clause ),
                 "a `where` clause needs type parameters",
                 "write them on the name, as in `T f<T>( T a ) where T : Copyable`"
@@ -1124,10 +767,10 @@ Node_id Parser::parse_function_decl( std::optional<u32> commit )
     // A body contradicts `extern` rather than merely being redundant. Recover as an ordinary
     // definition - the body is right there, so that is the reading that lets the rest of the file
     // compile, and leaving the braces unconsumed reads their statements as declarations.
-    if( is_extern && check( Token_kind::L_brace ) )
+    if( is_extern && cursor_.check( Token_kind::L_brace ) )
     {
-        error_at(
-            peek().span,
+        recovery_.error_at(
+            cursor_.peek().span,
             "an `extern` function cannot have a body",
             "`extern` says the definition is in C: remove the body, or remove `extern` to define it here"
         );
@@ -1137,17 +780,17 @@ Node_id Parser::parse_function_decl( std::optional<u32> commit )
 
     if( is_extern )
     {
-        expect( Token_kind::Semicolon );
+        recovery_.expect( Token_kind::Semicolon );
 
         // The absent body is what marks it: `extern` is the only rule that can produce one, so
         // nothing needs a flag to read it back.
         const Node_id node = name.is_valid() ? ast_.add(
                                                    Node_kind::Function_decl,
-                                                   Span::merge( start, previous().span ),
+                                                   Span::merge( start, cursor_.previous().span ),
                                                    name.v,
                                                    { return_type, params, Node_id {}, type_params }
                                                )
-                                             : error_node( Span::merge( start, previous().span ) );
+                                             : error_node( Span::merge( start, cursor_.previous().span ) );
         ast_.set_name_span( node, name_span );
         return node;
     }
@@ -1161,11 +804,14 @@ Node_id Parser::parse_function_decl( std::optional<u32> commit )
     // there are already reported.
     if( !name.is_valid() )
     {
-        return error_node( Span::merge( start, previous().span ) );
+        return error_node( Span::merge( start, cursor_.previous().span ) );
     }
 
     const Node_id node = ast_.add(
-        Node_kind::Function_decl, Span::merge( start, previous().span ), name.v, { return_type, params, body, type_params }
+        Node_kind::Function_decl,
+        Span::merge( start, cursor_.previous().span ),
+        name.v,
+        { return_type, params, body, type_params }
     );
     ast_.set_name_span( node, name_span );
     return node;
@@ -1173,15 +819,15 @@ Node_id Parser::parse_function_decl( std::optional<u32> commit )
 
 Node_id Parser::parse_method_decl( Symbol_id enclosing, Node_id type_params, bool is_static, u32 commit )
 {
-    const Span      start       = peek().span;
+    const Span      start       = cursor_.peek().span;
     const Node_id   return_type = parse_type_with_mode();
-    const Span      name_start  = peek().span;
-    const Symbol_id name        = check_keyword( Keyword::Operator ) ? expect_operator_name() : expect_name();
-    const Span      name_span   = Span::merge( name_start, previous().span );
+    const Span      name_start  = cursor_.peek().span;
+    const Symbol_id name        = cursor_.check_keyword( Keyword::Operator ) ? expect_operator_name() : expect_name();
+    const Span      name_span   = Span::merge( name_start, cursor_.previous().span );
 
     // The trailing `const` comes after the parameter list, but the receiver it binds is built
     // before it. The head scan ended at the body's `{`, so the token before that says.
-    const Token& before_body = tokens_[commit - 1];
+    const Token& before_body = cursor_.tokens()[commit - 1];
     const bool   is_const    = before_body.kind == Token_kind::Keyword && before_body.keyword() == Keyword::Const;
 
     const Node_id receiver = is_static ? Node_id {} : synthesise_receiver( enclosing, type_params, start, is_const );
@@ -1193,10 +839,10 @@ Node_id Parser::parse_method_decl( Symbol_id enclosing, Node_id type_params, boo
         // at the keyword rather than after it, and still consumed, so the body parses either way.
         if( is_static )
         {
-            error_at( peek().span, "a `static` method has no object, so it cannot be `const`" );
+            recovery_.error_at( cursor_.peek().span, "a `static` method has no object, so it cannot be `const`" );
         }
 
-        match_keyword( Keyword::Const );
+        cursor_.match_keyword( Keyword::Const );
     }
 
     reach_commit( commit );
@@ -1204,14 +850,17 @@ Node_id Parser::parse_method_decl( Symbol_id enclosing, Node_id type_params, boo
 
     if( !name.is_valid() )
     {
-        return error_node( Span::merge( start, previous().span ) );
+        return error_node( Span::merge( start, cursor_.previous().span ) );
     }
 
     // Four children, as every function-like declaration has. The type parameter slot holds the
     // *enclosing* aggregate's list: a method of `Box<T>` is generic in T without writing any of
     // its own, and everything downstream asks this slot rather than asking who owns the member.
     const Node_id node = ast_.add(
-        Node_kind::Method_decl, Span::merge( start, previous().span ), name.v, { return_type, params, body, type_params }
+        Node_kind::Method_decl,
+        Span::merge( start, cursor_.previous().span ),
+        name.v,
+        { return_type, params, body, type_params }
     );
     ast_.set_name_span( node, name_span );
     return node;
@@ -1219,7 +868,7 @@ Node_id Parser::parse_method_decl( Symbol_id enclosing, Node_id type_params, boo
 
 Node_id Parser::parse_param_list( Node_id leading )
 {
-    const Span start = peek().span;
+    const Span start = cursor_.peek().span;
 
     std::vector<Node_id> params;
 
@@ -1228,74 +877,142 @@ Node_id Parser::parse_param_list( Node_id leading )
         params.push_back( leading );
     }
 
-    if( !expect( Token_kind::L_paren ) )
+    if( !recovery_.expect( Token_kind::L_paren ) )
     {
         // Empty param list, with a span of start..start
         return ast_.add( Node_kind::Param_list, start, 0, params );
     }
 
-    if( !check( Token_kind::R_paren ) )
+    if( !cursor_.check( Token_kind::R_paren ) )
     {
         const std::size_t list_errors = diags_.error_count();
         do
         {
             params.push_back( parse_param() );
-            if( !end_list_element( Token_kind::R_paren, list_errors ) )
+            if( !recovery_.end_list_element( Token_kind::R_paren, list_errors ) )
             {
-                return ast_.add( Node_kind::Param_list, Span::merge( start, previous().span ), 0, params );
+                return ast_.add( Node_kind::Param_list, Span::merge( start, cursor_.previous().span ), 0, params );
             }
-        } while( match( Token_kind::Comma ) );
+        } while( cursor_.match( Token_kind::Comma ) );
     }
 
-    expect( Token_kind::R_paren );
+    recovery_.expect( Token_kind::R_paren );
 
-    return ast_.add( Node_kind::Param_list, Span::merge( start, previous().span ), 0, params );
+    return ast_.add( Node_kind::Param_list, Span::merge( start, cursor_.previous().span ), 0, params );
 }
 
 std::vector<Node_id> Parser::parse_type_params()
 {
-    expect( Token_kind::Less );
-    const Span start = peek().span;
+    recovery_.expect( Token_kind::Less );
+    const Span start = cursor_.peek().span;
 
     std::vector<Node_id> params;
 
     // `<>` declares a generic with nothing to instantiate over. Reported rather than treated as an
     // absent list, which would make `T id<>( T a )` a function whose return type names nothing.
-    if( match_generic_close() )
+    if( cursor_.match_generic_close() )
     {
-        error_at( Span::merge( start, previous().span ), "a generic needs at least one type parameter" );
+        recovery_.error_at( Span::merge( start, cursor_.previous().span ), "a generic needs at least one type parameter" );
     }
     else
     {
         do
         {
             params.push_back( parse_type_param() );
-        } while( match( Token_kind::Comma ) );
+        } while( cursor_.match( Token_kind::Comma ) );
 
-        expect_generic_close();
+        recovery_.expect_generic_close();
     }
 
     return params;
 }
 
+// D40: `&` joins bounds because all of them must hold and `&` says so. The two plausible wrong
+// guesses are `,` - which C# and Swift use - and `|`, which reads as the opposite of what this
+// means. Both are named once here; left unhandled they derail the clause and then the signature.
+bool Parser::match_bound_separator()
+{
+    if( cursor_.match( Token_kind::Amp ) )
+    {
+        return true;
+    }
+
+    // A comma *does* separate clauses, but only when a `where` follows it.
+    const bool clause_follows =
+        cursor_.peek( 1 ).kind == Token_kind::Keyword && static_cast<Keyword>( cursor_.peek( 1 ).symbol.v ) == Keyword::Where;
+
+    if( ( cursor_.check( Token_kind::Comma ) && !clause_follows ) || cursor_.check( Token_kind::Pipe ) )
+    {
+        recovery_.error_at(
+            cursor_.peek().span, "bounds are joined with `&`", "every one of them has to hold, and `&` says so"
+        );
+
+        cursor_.advance();
+        return true;
+    }
+
+    return false;
+}
+
+Node_id Parser::parse_where_clause()
+{
+    const Span start = cursor_.peek().span;
+
+    cursor_.advance(); // the `where`, which parse_function_decl has already seen
+
+    const Symbol_id subject = expect_name();
+
+    recovery_.expect( Token_kind::Colon );
+
+    std::vector<Node_id> bounds;
+
+    do
+    {
+        const Span      at   = cursor_.peek().span;
+        const Symbol_id name = expect_name();
+
+        // Stop rather than spin: expect_name reports and consumes a keyword, but anything else
+        // leaves the cursor where it was, and the loop below would keep asking.
+        if( !name.is_valid() )
+        {
+            break;
+        }
+
+        bounds.push_back( ast_.add( Node_kind::Bound_name, at, name.v, {} ) );
+    } while( match_bound_separator() );
+
+    // The comma before a following `where` is for the reader; `where` is what the loop in
+    // parse_function_decl keys on, so it is stepped over here rather than being its business.
+    cursor_.match( Token_kind::Comma );
+
+    // No subject, no clause. The bounds inside were still parsed, so anything wrong with them is
+    // already reported; what a nameless clause would cost is the pass that looks the subject up.
+    if( !subject.is_valid() )
+    {
+        return error_node( Span::merge( start, cursor_.previous().span ) );
+    }
+
+    return ast_.add( Node_kind::Where_clause, Span::merge( start, cursor_.previous().span ), subject.v, bounds );
+}
+
 Node_id Parser::parse_aggregate_decl()
 {
-    const Span start    = peek().span;
-    const bool is_class = match_keyword( Keyword::Class );
+    const Span start    = cursor_.peek().span;
+    const bool is_class = cursor_.match_keyword( Keyword::Class );
 
-    match_keyword( is_class ? Keyword::Class : Keyword::Struct );
+    cursor_.match_keyword( is_class ? Keyword::Class : Keyword::Struct );
 
     // The name is a token, so it goes in aux rather than becoming a child.
-    const Span      name_span = peek().span;
+    const Span      name_span = cursor_.peek().span;
     const Symbol_id name      = expect_name();
 
-    const Span           generic_start = peek().span;
-    const bool           generic       = check( Token_kind::Less );
+    const Span           generic_start = cursor_.peek().span;
+    const bool           generic       = cursor_.check( Token_kind::Less );
     std::vector<Node_id> generics      = generic ? parse_type_params() : std::vector<Node_id> {};
 
-    Span generic_span = Span::merge( generic_start, previous().span );
+    Span generic_span = Span::merge( generic_start, cursor_.previous().span );
 
-    while( check_keyword( Keyword::Where ) )
+    while( cursor_.check_keyword( Keyword::Where ) )
     {
         const Node_id clause = parse_where_clause();
 
@@ -1303,7 +1020,7 @@ Node_id Parser::parse_aggregate_decl()
         // without it the declaration would look generic to everything downstream.
         if( !generic )
         {
-            error_at(
+            recovery_.error_at(
                 ast_.span( clause ),
                 "a `where` clause needs type parameters",
                 "write them on the name, as in `T f<T>( T a ) where T : Copyable`"
@@ -1321,18 +1038,18 @@ Node_id Parser::parse_aggregate_decl()
 
     // Bail rather than carry on: with no brace there is no field list to find, and scanning for
     // one runs to the next `}` - which belongs to whatever encloses this.
-    if( !expect( Token_kind::L_brace ) )
+    if( !recovery_.expect( Token_kind::L_brace ) )
     {
         // `struct x;` is C's opaque forward declaration. Swallow the terminator so it does not
         // come back as a second complaint about a stray `;`.
-        match( Token_kind::Semicolon );
+        cursor_.match( Token_kind::Semicolon );
 
         if( name.is_valid() )
         {
-            return error_node( Span::merge( start, previous().span ), name, name_span );
+            return error_node( Span::merge( start, cursor_.previous().span ), name, name_span );
         }
 
-        return error_node( Span::merge( start, previous().span ) );
+        return error_node( Span::merge( start, cursor_.previous().span ) );
     }
 
     bool                 wrote_field = false;
@@ -1340,20 +1057,20 @@ Node_id Parser::parse_aggregate_decl()
     bool                 dropped = false;
     std::optional<u32>   reported_line;
     classes_.push_back( name );
-    while( !check( Token_kind::R_brace ) && !at_end() )
+    while( !cursor_.check( Token_kind::R_brace ) && !cursor_.at_end() )
     {
         if( skip_access_label( is_class ) )
         {
             continue;
         }
 
-        Member_chunk chunk = lookahead_.next_member( pos_, name );
+        Member_chunk chunk = lookahead_.next_member( cursor_.position(), name );
         if( chunk.dropped() )
         {
             dropped = true;
-            if( !reported_line || line_of( tokens_[chunk.dropped_begin] ) != *reported_line )
+            if( !reported_line || recovery_.line_of( cursor_.tokens()[chunk.dropped_begin] ) != *reported_line )
             {
-                report_dropped(
+                recovery_.report_dropped(
                     chunk.dropped_begin,
                     chunk.dropped_end,
                     chunk.failure,
@@ -1363,7 +1080,7 @@ Node_id Parser::parse_aggregate_decl()
             }
         }
 
-        pos_ = chunk.dropped_end;
+        cursor_.seek( chunk.dropped_end );
 
         if( !chunk.head.has_value() )
         {
@@ -1379,7 +1096,7 @@ Node_id Parser::parse_aggregate_decl()
 
         if( ast_.broken( member ) )
         {
-            reported_line = line_of( previous() );
+            reported_line = recovery_.line_of( cursor_.previous() );
         }
         else
         {
@@ -1390,8 +1107,8 @@ Node_id Parser::parse_aggregate_decl()
     }
     classes_.pop_back();
 
-    expect( Token_kind::R_brace );
-    expect( Token_kind::Semicolon );
+    recovery_.expect( Token_kind::R_brace );
+    recovery_.expect( Token_kind::Semicolon );
 
     // A declaration with no name is not one: sema reads every declaration's name to report
     // about it, so handing one over means a keyword or a missing identifier crashes a pass
@@ -1399,12 +1116,12 @@ Node_id Parser::parse_aggregate_decl()
     // there are already reported.
     if( !name.is_valid() )
     {
-        return error_node( Span::merge( start, previous().span ) );
+        return error_node( Span::merge( start, cursor_.previous().span ) );
     }
 
     if( !wrote_field && !dropped )
     {
-        error_at(
+        recovery_.error_at(
             name_span,
             fmt::format( "`{}` has no fields, so it has no size", sm_.text( name_span ) ),
             "use an `enum` with one variant for a type with one value"
@@ -1415,7 +1132,10 @@ Node_id Parser::parse_aggregate_decl()
     members.insert( members.begin(), type_params );
 
     const Node_id node = ast_.add(
-        is_class ? Node_kind::Class_decl : Node_kind::Struct_decl, Span::merge( start, previous().span ), name.v, { members }
+        is_class ? Node_kind::Class_decl : Node_kind::Struct_decl,
+        Span::merge( start, cursor_.previous().span ),
+        name.v,
+        { members }
     );
 
     ast_.set_name_span( node, name_span );
@@ -1425,25 +1145,26 @@ Node_id Parser::parse_aggregate_decl()
 
 bool Parser::skip_access_label( bool is_class )
 {
-    const Span access_span = peek().span;
+    const Span access_span = cursor_.peek().span;
 
-    if( peek( 1 ).kind == Token_kind::Colon && ( check_keyword( Keyword::Public ) || check_keyword( Keyword::Private ) ) )
+    if( cursor_.peek( 1 ).kind == Token_kind::Colon &&
+        ( cursor_.check_keyword( Keyword::Public ) || cursor_.check_keyword( Keyword::Private ) ) )
     {
-        const bool wrote_public = check_keyword( Keyword::Public );
-        advance(); // consume the keyword
-        advance(); // consume the `:`
+        const bool wrote_public = cursor_.check_keyword( Keyword::Public );
+        cursor_.advance(); // consume the keyword
+        cursor_.advance(); // consume the `:`
 
         if( is_class )
         {
-            error_at(
-                Span::merge( access_span, previous().span ),
+            recovery_.error_at(
+                Span::merge( access_span, cursor_.previous().span ),
                 fmt::format( "`{}` is written on each member, not as a label", wrote_public ? "public" : "private" ),
                 fmt::format( "write `{}` before each member it should cover", wrote_public ? "public" : "private" )
             );
         }
         else
         {
-            error_at(
+            recovery_.error_at(
                 access_span,
                 "a `struct` has no private members",
                 "write `class` instead, which is the kind that hides what it holds"
@@ -1457,26 +1178,26 @@ bool Parser::skip_access_label( bool is_class )
 
 Node_id Parser::parse_member( const Member_head& head, Symbol_id enclosing, Node_id type_params, bool is_class )
 {
-    assert( pos_ == head.start );
+    assert( cursor_.position() == head.start );
 
     // Consumed here because head.start includes them.
-    const Span access_span   = peek().span;
-    const bool wrote_public  = match_keyword( Keyword::Public );
-    const bool wrote_private = !wrote_public && match_keyword( Keyword::Private );
+    const Span access_span   = cursor_.peek().span;
+    const bool wrote_public  = cursor_.match_keyword( Keyword::Public );
+    const bool wrote_private = !wrote_public && cursor_.match_keyword( Keyword::Private );
     const bool wrote_access  = wrote_public || wrote_private;
 
     // Tested on what was written rather than on the resulting access, which every member has.
     if( wrote_access && !is_class )
     {
-        error_at(
+        recovery_.error_at(
             access_span,
             "a `struct` has no private members",
             "write `class` instead, which is the kind that hides what it holds"
         );
     }
 
-    const Span static_span = peek().span;
-    const bool is_static   = match_keyword( Keyword::Static );
+    const Span static_span = cursor_.peek().span;
+    const bool is_static   = cursor_.match_keyword( Keyword::Static );
 
     const bool is_destructor  = head.kind == Member_kind::Destructor;
     const bool is_constructor = head.kind == Member_kind::Constructor;
@@ -1485,16 +1206,18 @@ Node_id Parser::parse_member( const Member_head& head, Symbol_id enclosing, Node
     // Reported and then parsed anyway, so the member still reaches sema and its body is checked.
     if( is_static && ( is_destructor || is_constructor ) )
     {
-        error_at( static_span, fmt::format( "a {} cannot be `static`", is_destructor ? "destructor" : "constructor" ) );
+        recovery_.error_at(
+            static_span, fmt::format( "a {} cannot be `static`", is_destructor ? "destructor" : "constructor" )
+        );
     }
 
     // Same test, same reason: every destructor has an access, and almost none were written.
     if( is_destructor && wrote_access )
     {
-        error_at( access_span, "a destructor cannot be `public` or `private`", "it is never called by name" );
+        recovery_.error_at( access_span, "a destructor cannot be `public` or `private`", "it is never called by name" );
     }
 
-    body_cut_ = false;
+    recovery_.begin_body();
     Node_id member;
     switch( head.kind )
     {
@@ -1534,120 +1257,31 @@ Node_id Parser::parse_member( const Member_head& head, Symbol_id enclosing, Node
     return member;
 }
 
-void Parser::report_dropped( u32 begin, u32 end, const Scan_failure& failure, std::optional<u32> next, Hint_place place )
-{
-    assert( begin < end );
-
-    const Token& first = tokens_[begin];
-    const Token& last  = tokens_[end - 1];
-
-    const bool same_line = next && line_of( last ) == line_of( tokens_[*next] );
-
-    const std::string_view word_hint = dropped_word_hint( sm_.text( first.span ), place );
-
-    Span        span;
-    std::string message;
-    std::string help;
-    if( same_line )
-    {
-        span    = Span::merge( first.span, last.span );
-        message = fmt::format(
-            "expected a {}, found `{}`", place == Hint_place::Member ? "member" : "declaration", sm_.text( span )
-        );
-        help = !word_hint.empty() ? std::string( word_hint )
-               : failure.wanted == Wanted::Token && failure.at < end
-                   ? std::string( stop_hint( failure.token, tokens_[failure.at].kind, place ) )
-                   : std::string {};
-    }
-    else if( !word_hint.empty() || failure.at >= end )
-    {
-        span    = first.span;
-        message = fmt::format(
-            "expected a {}, found `{}`", place == Hint_place::Member ? "member" : "declaration", sm_.text( span )
-        );
-        help = std::string( word_hint );
-    }
-    else
-    {
-        const Token& stop = tokens_[failure.at];
-        span              = stop.span;
-
-        // A `{` opens its own line; anything else wanted is missing at the gap.
-        if( gap_before( failure.at ) && !( failure.wanted == Wanted::Token && failure.token == Token_kind::L_brace ) )
-        {
-            span = Span::point( tokens_[failure.at - 1].span.file, tokens_[failure.at - 1].span.end );
-        }
-
-        message = "expected ";
-        switch( failure.wanted )
-        {
-        case Wanted::Token:
-            message += expectation( failure.token );
-            help = std::string( stop_hint( failure.token, stop.kind, place ) );
-            break;
-        case Wanted::Member:
-            message += "a member";
-            break;
-        case Wanted::Declaration:
-            message += "a declaration";
-            break;
-        case Wanted::Type:
-            message += "a type";
-            break;
-        case Wanted::Name:
-            message += "an identifier";
-            break;
-        }
-        message += fmt::format( ", found {}", found_text( stop ) );
-    }
-
-    fail_at( span, std::move( message ), std::move( help ) );
-}
-
-u32 Parser::line_of( const Token& token ) const
-{
-    return sm_.line_col( token.span.file, token.span.start ).line;
-}
-
-// Whether the token at `at` starts a later line with no separator before it.
-bool Parser::gap_before( u32 at ) const
-{
-    if( at <= 0 || at >= tokens_.size() )
-    {
-        return false;
-    }
-
-    const Token&     at_token     = tokens_[at];
-    const Token&     before_token = tokens_[at - 1];
-    const Token_kind before_kind  = tokens_[at - 1].kind;
-    return before_token.span.file == at_token.span.file && line_of( before_token ) < line_of( at_token ) &&
-           before_kind != Token_kind::Semicolon && before_kind != Token_kind::L_brace && before_kind != Token_kind::R_brace &&
-           before_kind != Token_kind::Comma;
-}
-
 Node_id Parser::parse_enum_decl()
 {
-    const Span start = peek().span;
-    match_keyword( Keyword::Enum );
+    const Span start = cursor_.peek().span;
+    cursor_.match_keyword( Keyword::Enum );
 
     // D30: one `enum` keyword. `enum class E` is recognised so the diagnostic can name the fix,
     // which is D22's pattern for `->`.
-    if( check_keyword( Keyword::Class ) )
+    if( cursor_.check_keyword( Keyword::Class ) )
     {
-        error_at( peek().span, "`enum class` is not a spelling in Keel", "write `enum` - it already means this" );
-        advance();
+        recovery_.error_at(
+            cursor_.peek().span, "`enum class` is not a spelling in Keel", "write `enum` - it already means this"
+        );
+        cursor_.advance();
     }
 
-    const Span      name_span = peek().span;
+    const Span      name_span = cursor_.peek().span;
     const Symbol_id name      = expect_name();
 
-    const Span           generic_start = peek().span;
-    const bool           generic       = check( Token_kind::Less );
+    const Span           generic_start = cursor_.peek().span;
+    const bool           generic       = cursor_.check( Token_kind::Less );
     std::vector<Node_id> generics      = generic ? parse_type_params() : std::vector<Node_id> {};
 
-    Span generic_span = Span::merge( generic_start, previous().span );
+    Span generic_span = Span::merge( generic_start, cursor_.previous().span );
 
-    while( check_keyword( Keyword::Where ) )
+    while( cursor_.check_keyword( Keyword::Where ) )
     {
         const Node_id clause = parse_where_clause();
 
@@ -1655,7 +1289,7 @@ Node_id Parser::parse_enum_decl()
         // without it the declaration would look generic to everything downstream.
         if( !generic )
         {
-            error_at(
+            recovery_.error_at(
                 ast_.span( clause ),
                 "a `where` clause needs type parameters",
                 "write them on the name, as in `enum Opt<T> where T : Copyable`"
@@ -1673,23 +1307,23 @@ Node_id Parser::parse_enum_decl()
 
     // D30: the underlying type is spelled as in C++. parse_type() rather than a bare name, so
     // `enum E : Colour` is a *sema* error about the type rather than a parse error about a token.
-    const Node_id underlying = match( Token_kind::Colon ) ? parse_type() : Node_id {};
+    const Node_id underlying = cursor_.match( Token_kind::Colon ) ? parse_type() : Node_id {};
 
     // A `{` before the declaration ends is still the body's.
-    if( !expect( Token_kind::L_brace ) )
+    if( !recovery_.expect( Token_kind::L_brace ) )
     {
-        u32 at = pos_;
+        u32 at = cursor_.position();
         while(
-            !( tokens_[at].kind == Token_kind::L_brace || tokens_[at].kind == Token_kind::Semicolon ||
-               tokens_[at].kind == Token_kind::R_brace || tokens_[at].kind == Token_kind::End_of_file ||
-               ( at > pos_ && lookahead_.declaration_head( at ).head ) )
+            !( cursor_.tokens()[at].kind == Token_kind::L_brace || cursor_.tokens()[at].kind == Token_kind::Semicolon ||
+               cursor_.tokens()[at].kind == Token_kind::R_brace || cursor_.tokens()[at].kind == Token_kind::End_of_file ||
+               ( at > cursor_.position() && lookahead_.declaration_head( at ).head ) )
         )
         {
             ++at;
         }
-        while( tokens_[at].kind == Token_kind::L_brace && pos_ <= at )
+        while( cursor_.tokens()[at].kind == Token_kind::L_brace && cursor_.position() <= at )
         {
-            advance();
+            cursor_.advance();
         }
     }
 
@@ -1701,14 +1335,14 @@ Node_id Parser::parse_enum_decl()
     bool                 gave_up         = false;
     const std::size_t    list_errors     = diags_.error_count();
     std::vector<Node_id> members { type_params, underlying };
-    while( !check( Token_kind::R_brace ) && !at_end() )
+    while( !cursor_.check( Token_kind::R_brace ) && !cursor_.at_end() )
     {
-        const u32 before = pos_;
+        const u32 before = cursor_.position();
 
         // The `}` is missing and the next declaration starts here.
-        if( lookahead_.declaration_head( pos_ ).head )
+        if( lookahead_.declaration_head( cursor_.position() ).head )
         {
-            error_expected( Token_kind::R_brace );
+            recovery_.error_expected( Token_kind::R_brace );
             gave_up = true;
             break;
         }
@@ -1725,52 +1359,52 @@ Node_id Parser::parse_enum_decl()
             dropped_variant = true;
         }
 
-        if( !end_list_element( Token_kind::R_brace, list_errors, List_site::Declaration ) )
+        if( !recovery_.end_list_element( Token_kind::R_brace, list_errors, Recovery::List_site::Declaration ) )
         {
             gave_up = true;
             break;
         }
-        match( Token_kind::Comma );
+        cursor_.match( Token_kind::Comma );
 
-        if( pos_ == before )
+        if( cursor_.position() == before )
         {
-            advance();
+            cursor_.advance();
         }
     }
 
     if( !gave_up )
     {
-        expect( Token_kind::R_brace );
-        expect( Token_kind::Semicolon );
+        recovery_.expect( Token_kind::R_brace );
+        recovery_.expect( Token_kind::Semicolon );
     }
 
     // Same rule as every other declaration: sema reads a name to report about it, so a nameless one
     // crashes a pass that had no reason to expect it.
     if( !name.is_valid() )
     {
-        return error_node( Span::merge( start, previous().span ) );
+        return error_node( Span::merge( start, cursor_.previous().span ) );
     }
 
     // Only the parser can tell {} from variants it left out
     if( members.size() == 2 && !dropped_variant )
     {
-        error_at(
+        recovery_.error_at(
             name_span,
             fmt::format( "`{}` has no variants, so it has no values", sm_.text( name_span ) ),
             "add a variant, or delete the type"
         );
     }
 
-    const Node_id node = ast_.add( Node_kind::Enum_decl, Span::merge( start, previous().span ), name.v, members );
+    const Node_id node = ast_.add( Node_kind::Enum_decl, Span::merge( start, cursor_.previous().span ), name.v, members );
     ast_.set_name_span( node, name_span );
     return node;
 }
 
 Node_id Parser::parse_variant_decl()
 {
-    const Span      start     = peek().span;
+    const Span      start     = cursor_.peek().span;
     const Symbol_id name      = expect_name();
-    const Span      name_span = previous().span;
+    const Span      name_span = cursor_.previous().span;
 
     // D7: a variant may carry a payload, `Circle( f64 radius )`. The fields reuse Field_decl - a
     // name and a type is exactly what one is - so every rule the checker already has for a field
@@ -1778,102 +1412,102 @@ Node_id Parser::parse_variant_decl()
     // semicolon-terminated, because a payload reads as a parameter list and is one.
     std::vector<Node_id> payload;
 
-    if( match( Token_kind::L_paren ) )
+    if( cursor_.match( Token_kind::L_paren ) )
     {
         const std::size_t list_errors = diags_.error_count();
-        while( !check( Token_kind::R_paren ) && !at_end() )
+        while( !cursor_.check( Token_kind::R_paren ) && !cursor_.at_end() )
         {
             if( starts_variant( 0 ) )
             {
                 if( list_errors == diags_.error_count() )
                 {
-                    error_expected( Token_kind::R_paren );
+                    recovery_.error_expected( Token_kind::R_paren );
                 }
                 break;
             }
 
-            const u32       before          = pos_;
-            const Span      field_start     = peek().span;
+            const u32       before          = cursor_.position();
+            const Span      field_start     = cursor_.peek().span;
             const Node_id   type            = parse_type();
             const Symbol_id field_name      = expect_name();
-            const Span      field_name_span = previous().span;
+            const Span      field_name_span = cursor_.previous().span;
 
             payload.push_back(
-                ast_.add( Node_kind::Field_decl, Span::merge( field_start, previous().span ), field_name.v, { type } )
+                ast_.add( Node_kind::Field_decl, Span::merge( field_start, cursor_.previous().span ), field_name.v, { type } )
             );
             ast_.set_name_span( payload.back(), field_name_span );
 
-            if( !end_list_element( Token_kind::R_paren, list_errors ) )
+            if( !recovery_.end_list_element( Token_kind::R_paren, list_errors ) )
             {
                 break;
             }
             // Before its `,` is taken, so the `,` stays the variant list's.
-            if( check( Token_kind::Comma ) && starts_variant( 1 ) )
+            if( cursor_.check( Token_kind::Comma ) && starts_variant( 1 ) )
             {
                 if( list_errors == diags_.error_count() )
                 {
-                    error_expected( Token_kind::R_paren );
+                    recovery_.error_expected( Token_kind::R_paren );
                 }
                 break;
             }
-            match( Token_kind::Comma );
+            cursor_.match( Token_kind::Comma );
 
-            if( pos_ == before )
+            if( cursor_.position() == before )
             {
-                advance();
+                cursor_.advance();
             }
         }
 
-        match( Token_kind::R_paren );
+        cursor_.match( Token_kind::R_paren );
     }
 
-    const Node_id node = ast_.add( Node_kind::Variant_decl, Span::merge( start, previous().span ), name.v, payload );
+    const Node_id node = ast_.add( Node_kind::Variant_decl, Span::merge( start, cursor_.previous().span ), name.v, payload );
     ast_.set_name_span( node, name_span );
     return node;
 }
 
 bool Parser::starts_variant( u32 ahead ) const
 {
-    return peek( ahead ).kind == Token_kind::Identifier &&
-           ( peek( ahead + 1 ).kind == Token_kind::L_paren || peek( ahead + 1 ).kind == Token_kind::R_brace );
+    return cursor_.peek( ahead ).kind == Token_kind::Identifier &&
+           ( cursor_.peek( ahead + 1 ).kind == Token_kind::L_paren || cursor_.peek( ahead + 1 ).kind == Token_kind::R_brace );
 }
 
 Node_id Parser::parse_field_decl( u32 commit )
 {
-    const Span start = peek().span;
+    const Span start = cursor_.peek().span;
 
     const Node_id type = parse_type();
 
     // Same convention as Function_decl: the name is a token, so it goes in aux rather than becoming
     // a second child.
     const Symbol_id name      = expect_name();
-    const Span      name_span = previous().span;
+    const Span      name_span = cursor_.previous().span;
 
     // Missing when the head scan kept the field because a member starts where its `;` should be.
     reach_commit( commit );
-    expect( Token_kind::Semicolon );
+    recovery_.expect( Token_kind::Semicolon );
 
     // A declaration with no name is not one: sema reads every declaration's name to report
     // about it, so handing one over means a keyword or a missing identifier crashes a pass
     // that had no reason to expect it.
     if( !name.is_valid() )
     {
-        return error_node( Span::merge( start, previous().span ) );
+        return error_node( Span::merge( start, cursor_.previous().span ) );
     }
 
-    const Node_id node = ast_.add( Node_kind::Field_decl, Span::merge( start, previous().span ), name.v, { type } );
+    const Node_id node = ast_.add( Node_kind::Field_decl, Span::merge( start, cursor_.previous().span ), name.v, { type } );
     ast_.set_name_span( node, name_span );
     return node;
 }
 
 Node_id Parser::parse_destructor_decl( Symbol_id enclosing, Node_id type_params, u32 commit )
 {
-    const Span start = peek().span;
+    const Span start = cursor_.peek().span;
 
-    advance(); // `~`
+    cursor_.advance(); // `~`
 
     const Symbol_id name      = expect_name();
-    const Span      name_span = Span::merge( start, previous().span );
+    const Span      name_span = Span::merge( start, cursor_.previous().span );
 
     // C++ writes `this` implicitly; Keel writes it down. As an ordinary parameter it needs no
     // special case in the resolver, the checker, mangling or lowering - it is simply parameter 0.
@@ -1883,7 +1517,7 @@ Node_id Parser::parse_destructor_decl( Symbol_id enclosing, Node_id type_params,
 
     if( ast_.children( params ).size() > 1 && !ast_.broken( params ) ) // only receiver is implicitly allowed.
     {
-        error_at( ast_.span( params ), "destructors take no parameters" );
+        recovery_.error_at( ast_.span( params ), "destructors take no parameters" );
     }
 
     reach_commit( commit );
@@ -1892,12 +1526,12 @@ Node_id Parser::parse_destructor_decl( Symbol_id enclosing, Node_id type_params,
     // Same rule as every other declaration: sema reads a name to report about it.
     if( !name.is_valid() )
     {
-        return error_node( Span::merge( start, previous().span ) );
+        return error_node( Span::merge( start, cursor_.previous().span ) );
     }
 
     const Node_id node = ast_.add( // no return type in children; the type parameters are the aggregate's
         Node_kind::Destructor_decl,
-        Span::merge( start, previous().span ),
+        Span::merge( start, cursor_.previous().span ),
         name.v,
         { Node_id {}, params, body, type_params }
     );
@@ -1907,7 +1541,7 @@ Node_id Parser::parse_destructor_decl( Symbol_id enclosing, Node_id type_params,
 
 Node_id Parser::parse_constructor_decl( Symbol_id enclosing, Node_id type_params, u32 commit )
 {
-    const Span      start = peek().span;
+    const Span      start = cursor_.peek().span;
     const Symbol_id name  = take_name();
 
     // Same receiver the destructor gets, and for the same reason: as an ordinary parameter it
@@ -1919,148 +1553,13 @@ Node_id Parser::parse_constructor_decl( Symbol_id enclosing, Node_id type_params
     const Node_id body = parse_block();
 
     const Node_id node = ast_.add(
-        Node_kind::Constructor_decl, Span::merge( start, previous().span ), name.v, { Node_id {}, params, body, type_params }
+        Node_kind::Constructor_decl,
+        Span::merge( start, cursor_.previous().span ),
+        name.v,
+        { Node_id {}, params, body, type_params }
     );
     ast_.set_name_span( node, start );
     return node;
-}
-
-// D40: `&` joins bounds because all of them must hold and `&` says so. The two plausible wrong
-// guesses are `,` - which C# and Swift use - and `|`, which reads as the opposite of what this
-// means. Both are named once here; left unhandled they derail the clause and then the signature.
-bool Parser::match_bound_separator()
-{
-    if( match( Token_kind::Amp ) )
-    {
-        return true;
-    }
-
-    // A comma *does* separate clauses, but only when a `where` follows it.
-    const bool clause_follows =
-        peek( 1 ).kind == Token_kind::Keyword && static_cast<Keyword>( peek( 1 ).symbol.v ) == Keyword::Where;
-
-    if( ( check( Token_kind::Comma ) && !clause_follows ) || check( Token_kind::Pipe ) )
-    {
-        error_at( peek().span, "bounds are joined with `&`", "every one of them has to hold, and `&` says so" );
-
-        advance();
-        return true;
-    }
-
-    return false;
-}
-
-Node_id Parser::parse_where_clause()
-{
-    const Span start = peek().span;
-
-    advance(); // the `where`, which parse_function_decl has already seen
-
-    const Symbol_id subject = expect_name();
-
-    expect( Token_kind::Colon );
-
-    std::vector<Node_id> bounds;
-
-    do
-    {
-        const Span      at   = peek().span;
-        const Symbol_id name = expect_name();
-
-        // Stop rather than spin: expect_name reports and consumes a keyword, but anything else
-        // leaves the cursor where it was, and the loop below would keep asking.
-        if( !name.is_valid() )
-        {
-            break;
-        }
-
-        bounds.push_back( ast_.add( Node_kind::Bound_name, at, name.v, {} ) );
-    } while( match_bound_separator() );
-
-    // The comma before a following `where` is for the reader; `where` is what the loop in
-    // parse_function_decl keys on, so it is stepped over here rather than being its business.
-    match( Token_kind::Comma );
-
-    // No subject, no clause. The bounds inside were still parsed, so anything wrong with them is
-    // already reported; what a nameless clause would cost is the pass that looks the subject up.
-    if( !subject.is_valid() )
-    {
-        return error_node( Span::merge( start, previous().span ) );
-    }
-
-    return ast_.add( Node_kind::Where_clause, Span::merge( start, previous().span ), subject.v, bounds );
-}
-
-Node_id Parser::parse_struct_literal( Span start, Symbol_id type_name, Node_id package )
-{
-    const Span name = previous().span; // both callers have just consumed the type's name
-    expect( Token_kind::L_brace );
-
-    std::vector<Node_id> initialisers;
-
-    if( package.is_valid() )
-    {
-        initialisers.push_back( package );
-    }
-
-    const std::size_t list_errors = diags_.error_count();
-    bool              closed      = true;
-    while( !check( Token_kind::R_brace ) && !at_end() )
-    {
-        const u32 before = pos_;
-
-        initialisers.push_back( parse_field_init() );
-
-        if( !end_list_element( Token_kind::R_brace, list_errors, List_site::Literal ) )
-        {
-            closed = false;
-            break;
-        }
-
-        // Same guard as parse_block: a rule that reports without advancing would spin here.
-        if( pos_ == before )
-        {
-            advance();
-            continue;
-        }
-
-        // A trailing comma is allowed, unlike in an argument list - C++ permits one in a braced
-        // initialiser and rejects one in a call, and §5.1 says to follow it rather than to be
-        // internally tidy.
-        match( Token_kind::Comma );
-    }
-
-    if( closed )
-    {
-        expect( Token_kind::R_brace );
-    }
-
-    const Node_id node =
-        ast_.add( Node_kind::Struct_literal, Span::merge( start, previous().span ), type_name.v, initialisers );
-    ast_.set_type_name_span( node, name );
-    return node;
-}
-
-Node_id Parser::parse_field_init()
-{
-    const Span start = peek().span;
-
-    Symbol_id name; // left invalid by the positional form
-
-    if( match( Token_kind::Dot ) )
-    {
-        // Only on success: a failed expect() does not advance, so previous() would be the dot.
-        if( expect( Token_kind::Identifier ) )
-        {
-            name = previous().symbol;
-        }
-
-        expect( Token_kind::Equal );
-    }
-
-    const Node_id value = parse_expression( 0 );
-
-    return ast_.add( Node_kind::Field_init, Span::merge( start, previous().span ), name.v, { value } );
 }
 
 // `A | B`: an error union (§6.7), of every term written.
@@ -2070,7 +1569,7 @@ Node_id Parser::parse_type()
     do
     {
         type_terms.push_back( parse_type_term() );
-    } while( pending_greater_ == 0 && match( Token_kind::Pipe ) );
+    } while( !cursor_.owes_greater() && cursor_.match( Token_kind::Pipe ) );
 
     if( type_terms.size() == 1 )
     {
@@ -2084,135 +1583,137 @@ Node_id Parser::parse_type()
 
 Node_id Parser::parse_type_term()
 {
-    const Span start = peek().span;
+    const Span start = cursor_.peek().span;
 
     // A leading const wraps the whole type: `const i32`. The lookahead accepts this, so
     // parse_type has to as well, or the scan and the parse disagree.
-    const bool leading_const = match_keyword( Keyword::Const );
+    const bool leading_const = cursor_.match_keyword( Keyword::Const );
 
-    if( match_keyword( Keyword::Fn ) )
+    if( cursor_.match_keyword( Keyword::Fn ) )
     {
-        const Span open = peek().span;
+        const Span open = cursor_.peek().span;
 
-        expect( Token_kind::L_paren );
+        recovery_.expect( Token_kind::L_paren );
 
         // The same shape as parse_param_list, so that a trailing comma is refused in a function
         // type exactly as it is in the signature the type stands for.
         std::vector<Node_id> params;
 
-        if( !check( Token_kind::R_paren ) )
+        if( !cursor_.check( Token_kind::R_paren ) )
         {
             const std::size_t list_errors = diags_.error_count();
             do
             {
-                const Span    at   = peek().span;
+                const Span    at   = cursor_.peek().span;
                 const Node_id type = parse_type_with_mode();
 
                 params.push_back(
-                    ast_.add( Node_kind::Param_decl, Span::merge( at, previous().span ), k_invalid_symbol, { type } )
+                    ast_.add( Node_kind::Param_decl, Span::merge( at, cursor_.previous().span ), k_invalid_symbol, { type } )
                 );
 
-                if( !end_list_element( Token_kind::R_paren, list_errors ) )
+                if( !recovery_.end_list_element( Token_kind::R_paren, list_errors ) )
                 {
                     break;
                 }
-            } while( match( Token_kind::Comma ) );
+            } while( cursor_.match( Token_kind::Comma ) );
         }
 
-        expect( Token_kind::R_paren );
+        recovery_.expect( Token_kind::R_paren );
 
-        const Node_id param_list = ast_.add( Node_kind::Param_list, Span::merge( open, previous().span ), 0, params );
+        const Node_id param_list = ast_.add( Node_kind::Param_list, Span::merge( open, cursor_.previous().span ), 0, params );
 
-        expect( Token_kind::Arrow );
+        recovery_.expect( Token_kind::Arrow );
         const Node_id return_type = parse_type_with_mode();
 
         Node_id fn_type =
-            ast_.add( Node_kind::Function_type, Span::merge( start, previous().span ), 0, { return_type, param_list } );
+            ast_.add( Node_kind::Function_type, Span::merge( start, cursor_.previous().span ), 0, { return_type, param_list } );
 
         if( leading_const )
         {
-            fn_type = ast_.add( Node_kind::Const_type, Span::merge( start, previous().span ), 0, { fn_type } );
+            fn_type = ast_.add( Node_kind::Const_type, Span::merge( start, cursor_.previous().span ), 0, { fn_type } );
         }
         return fn_type;
     }
 
-    if( match_keyword( Keyword::Field ) )
+    if( cursor_.match_keyword( Keyword::Field ) )
     {
-        expect( Token_kind::L_paren );
+        recovery_.expect( Token_kind::L_paren );
 
         const Node_id aggregate_type = parse_type_with_mode();
 
-        expect( Token_kind::R_paren );
-        expect( Token_kind::Arrow );
+        recovery_.expect( Token_kind::R_paren );
+        recovery_.expect( Token_kind::Arrow );
 
         const Node_id return_type = parse_type_with_mode();
 
-        Node_id field_type =
-            ast_.add( Node_kind::Field_type, Span::merge( start, previous().span ), 0, { return_type, aggregate_type } );
+        Node_id field_type = ast_.add(
+            Node_kind::Field_type, Span::merge( start, cursor_.previous().span ), 0, { return_type, aggregate_type }
+        );
 
         if( leading_const )
         {
-            field_type = ast_.add( Node_kind::Const_type, Span::merge( start, previous().span ), 0, { field_type } );
+            field_type = ast_.add( Node_kind::Const_type, Span::merge( start, cursor_.previous().span ), 0, { field_type } );
         }
         return field_type;
     }
 
-    if( !expect( Token_kind::Identifier ) )
+    if( !recovery_.expect( Token_kind::Identifier ) )
     {
         return error_node( start );
     }
 
-    Symbol_id  name       = previous().symbol;
-    const Span name_start = previous().span;
+    Symbol_id  name       = cursor_.previous().symbol;
+    const Span name_start = cursor_.previous().span;
 
     // `kl::Point`: the first name was the package, kept as a Name_expr child as an import keeps it.
     Node_id package_node {};
 
-    if( check( Token_kind::Colon_colon ) && peek( 1 ).kind == Token_kind::Identifier )
+    if( cursor_.check( Token_kind::Colon_colon ) && cursor_.peek( 1 ).kind == Token_kind::Identifier )
     {
         package_node = ast_.add( Node_kind::Name_expr, name_start, name.v, {} );
-        advance(); // the `::`
+        cursor_.advance(); // the `::`
         name = expect_name();
     }
 
     // The Named_type covers only the name, qualified or not: a leading const belongs to the
     // Const_type that wraps it.
-    const Span named_span = Span::merge( name_start, previous().span );
+    const Span named_span = Span::merge( name_start, cursor_.previous().span );
 
     Node_id type = package_node.is_valid() ? ast_.add( Node_kind::Named_type, named_span, name.v, { package_node } )
                                            : ast_.add( Node_kind::Named_type, named_span, name.v, {} );
 
     // Generic arguments. Nesting works because match_generic_close splits `>>`.
-    if( check( Token_kind::Less ) )
+    if( cursor_.check( Token_kind::Less ) )
     {
-        const Span           open = peek().span;
+        const Span           open = cursor_.peek().span;
         std::vector<Node_id> arguments;
 
-        advance();
+        cursor_.advance();
 
-        if( !check( Token_kind::Greater ) && !check( Token_kind::Greater_greater ) )
+        if( !cursor_.check( Token_kind::Greater ) && !cursor_.check( Token_kind::Greater_greater ) )
         {
             do
             {
                 arguments.push_back( parse_type() );
-            } while( match( Token_kind::Comma ) );
+            } while( cursor_.match( Token_kind::Comma ) );
         }
 
-        if( expect_generic_close() )
+        if( recovery_.expect_generic_close() )
         {
-            const Node_id list = ast_.add( Node_kind::Type_arg_list, Span::merge( open, previous().span ), 0, arguments );
+            const Node_id list =
+                ast_.add( Node_kind::Type_arg_list, Span::merge( open, cursor_.previous().span ), 0, arguments );
 
-            type = ast_.add( Node_kind::Generic_type, Span::merge( start, previous().span ), 0, { type, list } );
+            type = ast_.add( Node_kind::Generic_type, Span::merge( start, cursor_.previous().span ), 0, { type, list } );
         }
         else
         {
-            type = error_node( Span::merge( start, previous().span ) );
+            type = error_node( Span::merge( start, cursor_.previous().span ) );
         }
     }
 
     if( leading_const )
     {
-        type = ast_.add( Node_kind::Const_type, Span::merge( start, previous().span ), 0, { type } );
+        type = ast_.add( Node_kind::Const_type, Span::merge( start, cursor_.previous().span ), 0, { type } );
     }
 
     while( true )
@@ -2220,18 +1721,18 @@ Node_id Parser::parse_type_term()
         // A `>` from a split `>>` is still owed to whoever opened the enclosing list, and every
         // token after it belongs to *them*. Without this, the inner type in `Bad<Box<T>>*` reads
         // the `*` as its own and the field becomes `Bad<Box<T>*>` - a different type, silently.
-        if( pending_greater_ > 0 )
+        if( cursor_.owes_greater() )
         {
             break;
         }
 
         // A trailing const applies to what precedes it: `i32* const p` is a const pointer.
-        if( match_keyword( Keyword::Const ) )
+        if( cursor_.match_keyword( Keyword::Const ) )
         {
             if( ast_.kind( type ) == Node_kind::Const_type )
             {
-                error_at(
-                    previous().span,
+                recovery_.error_at(
+                    cursor_.previous().span,
                     "`const` is written twice",
                     fmt::format(
                         "both apply to `{}`; a `const` after the `*` makes the pointer `const`",
@@ -2243,12 +1744,12 @@ Node_id Parser::parse_type_term()
 
             if( ast_.kind( type ) == Node_kind::Named_type || ast_.kind( type ) == Node_kind::Generic_type )
             {
-                const bool is_pointer      = peek().kind == Token_kind::Star;
-                const bool is_many_pointer = peek().kind == Token_kind::L_bracket;
+                const bool is_pointer      = cursor_.peek().kind == Token_kind::Star;
+                const bool is_many_pointer = cursor_.peek().kind == Token_kind::L_bracket;
                 const bool not_pointer     = !is_pointer && !is_many_pointer;
 
-                error_at(
-                    previous().span,
+                recovery_.error_at(
+                    cursor_.previous().span,
                     "`const` goes before the type",
                     fmt::format(
                         "write `const {}{}`",
@@ -2260,43 +1761,44 @@ Node_id Parser::parse_type_term()
                 );
             }
 
-            type = ast_.add( Node_kind::Const_type, Span::merge( start, previous().span ), 0, { type } );
+            type = ast_.add( Node_kind::Const_type, Span::merge( start, cursor_.previous().span ), 0, { type } );
             continue;
         }
 
-        if( check( Token_kind::L_bracket ) && peek( 1 ).kind == Token_kind::Star && peek( 2 ).kind == Token_kind::R_bracket )
+        if( cursor_.check( Token_kind::L_bracket ) && cursor_.peek( 1 ).kind == Token_kind::Star &&
+            cursor_.peek( 2 ).kind == Token_kind::R_bracket )
         {
-            const Span many_item_start = peek().span;
-            bool       detatched       = !peek_is_adjacent();
+            const Span many_item_start = cursor_.peek().span;
+            bool       detatched       = !cursor_.peek_is_adjacent();
             if( detatched )
             {
-                error_at(
+                recovery_.error_at(
                     many_item_start,
                     "`[*]` must touch the type it modifies",
                     fmt::format( "write `{}[*]`", sm_.text( ast_.span( type ) ) )
                 );
             }
 
-            advance(); // [
-            bool spaced = !peek_is_adjacent();
-            advance(); // *
-            spaced |= !peek_is_adjacent();
-            advance(); // ]
+            cursor_.advance(); // [
+            bool spaced = !cursor_.peek_is_adjacent();
+            cursor_.advance(); // *
+            spaced |= !cursor_.peek_is_adjacent();
+            cursor_.advance(); // ]
 
             if( spaced && !detatched )
             {
-                error_at(
-                    Span::merge( many_item_start, previous().span ),
+                recovery_.error_at(
+                    Span::merge( many_item_start, cursor_.previous().span ),
                     "`[*]` is written without spaces",
                     fmt::format( "write `{}[*]`", sm_.text( ast_.span( type ) ) )
                 );
             }
 
-            type = ast_.add( Node_kind::Many_pointer_type, Span::merge( start, previous().span ), 0, { type } );
+            type = ast_.add( Node_kind::Many_pointer_type, Span::merge( start, cursor_.previous().span ), 0, { type } );
             continue;
         }
 
-        if( !check( Token_kind::Star ) && !check( Token_kind::Amp ) )
+        if( !cursor_.check( Token_kind::Star ) && !cursor_.check( Token_kind::Amp ) )
         {
             break;
         }
@@ -2304,28 +1806,28 @@ Node_id Parser::parse_type_term()
         // D32: `&` means address-of and nothing else. Reported before D17's adjacency check below,
         // or `i32 &r` would give two diagnostics for one mistake - and the first of them would be
         // advice about how to space a spelling that no longer exists.
-        if( check( Token_kind::Amp ) )
+        if( cursor_.check( Token_kind::Amp ) )
         {
-            error_at( peek().span, "`&` is not a type", "write `ref T` for a reference binding" );
-            advance();
+            recovery_.error_at( cursor_.peek().span, "`&` is not a type", "write `ref T` for a reference binding" );
+            cursor_.advance();
             continue;
         }
 
         // D17: `*` belongs to the type, so it must touch it. `u32 *p` is rejected rather than
         // silently read as a multiplication, which is what C's declarator syntax does. `&` is no
         // longer among them, which is why this reads as one token rather than two.
-        if( !peek_is_adjacent() )
+        if( !cursor_.peek_is_adjacent() )
         {
-            error_at(
-                peek().span,
+            recovery_.error_at(
+                cursor_.peek().span,
                 "`*` must touch the type it modifies",
                 fmt::format( "write `{}*` rather than `{} *`", sm_.text( ast_.span( type ) ), sm_.text( ast_.span( type ) ) )
             );
         }
 
-        advance();
+        cursor_.advance();
 
-        type = ast_.add( Node_kind::Pointer_type, Span::merge( start, previous().span ), 0, { type } );
+        type = ast_.add( Node_kind::Pointer_type, Span::merge( start, cursor_.previous().span ), 0, { type } );
     }
 
     return type;
@@ -2333,43 +1835,46 @@ Node_id Parser::parse_type_term()
 
 Node_id Parser::parse_type_with_mode()
 {
-    const Span start = peek().span;
+    const Span start = cursor_.peek().span;
 
     // `const ref T`, in that order and only that order. Looked for before the mode so the const
     // ends up outermost, which is what makes it the *binding* that is const rather than the type.
-    const bool leading_const = check_keyword( Keyword::Const ) && peek( 1 ).keyword() == Keyword::Ref;
+    const bool leading_const = cursor_.check_keyword( Keyword::Const ) && cursor_.peek( 1 ).keyword() == Keyword::Ref;
 
     if( leading_const )
     {
-        advance();
+        cursor_.advance();
     }
 
-    if( !at_mode_keyword() )
+    if( !cursor_.at_mode_keyword() )
     {
         return parse_type();
     }
 
-    const Keyword mode = peek().keyword();
-    advance();
+    const Keyword mode = cursor_.peek().keyword();
+    cursor_.advance();
 
     // D32 gives one order. Without this, `ref const T` falls through to parse_type's leading-const
     // branch and becomes Mode_type( Const_type( T ) ) - an inner const, which the checker reports as
     // "a pointer to `const` is not supported yet": the right refusal for the wrong reason.
-    if( check_keyword( Keyword::Const ) )
+    if( cursor_.check_keyword( Keyword::Const ) )
     {
-        error_at(
-            peek().span, "`const` comes before the mode", fmt::format( "write `const {} T`", sm_.text( previous().span ) )
+        recovery_.error_at(
+            cursor_.peek().span,
+            "`const` comes before the mode",
+            fmt::format( "write `const {} T`", sm_.text( cursor_.previous().span ) )
         );
 
-        advance();
+        cursor_.advance();
     }
 
-    Node_id type =
-        ast_.add( Node_kind::Mode_type, Span::merge( start, previous().span ), static_cast<u32>( mode ), { parse_type() } );
+    Node_id type = ast_.add(
+        Node_kind::Mode_type, Span::merge( start, cursor_.previous().span ), static_cast<u32>( mode ), { parse_type() }
+    );
 
     if( leading_const )
     {
-        type = ast_.add( Node_kind::Const_type, Span::merge( start, previous().span ), 0, { type } );
+        type = ast_.add( Node_kind::Const_type, Span::merge( start, cursor_.previous().span ), 0, { type } );
     }
 
     return type;
@@ -2377,7 +1882,7 @@ Node_id Parser::parse_type_with_mode()
 
 Node_id Parser::parse_param()
 {
-    const Span start = peek().span;
+    const Span start = cursor_.peek().span;
 
     // D31: the marker appears in the signature as well as at the call site, and the two must agree.
     // Wrapped around the type rather than stored on the Param_decl, because aux already holds the
@@ -2388,31 +1893,31 @@ Node_id Parser::parse_param()
     // a second child. A nameless parameter stays a parameter, the way a function type's does, because
     // it still counts towards the signature.
     const Symbol_id name      = expect_name();
-    const Span      name_span = previous().span;
+    const Span      name_span = cursor_.previous().span;
 
-    const Node_id node = ast_.add( Node_kind::Param_decl, Span::merge( start, previous().span ), name.v, { type } );
+    const Node_id node = ast_.add( Node_kind::Param_decl, Span::merge( start, cursor_.previous().span ), name.v, { type } );
     ast_.set_name_span( node, name_span );
     return node;
 }
 
 Node_id Parser::parse_type_param()
 {
-    const Span      at        = peek().span;
+    const Span      at        = cursor_.peek().span;
     const Symbol_id name      = expect_name();
-    const Span      name_span = previous().span;
+    const Span      name_span = cursor_.previous().span;
 
     // `<Comparable T>` is C++'s terse form, and it is what a reader of that language writes first.
     // Naming it costs one lookahead; without it the stray name derails the parameter list and then
     // the signature after it, which is a dozen diagnostics for one habit.
-    if( check( Token_kind::Identifier ) )
+    if( cursor_.check( Token_kind::Identifier ) )
     {
-        error_at(
-            peek().span,
+        recovery_.error_at(
+            cursor_.peek().span,
             "a type parameter is a name on its own here",
             "write the bound in a `where` clause after the parameter list"
         );
 
-        advance();
+        cursor_.advance();
     }
 
     // A parameter with no name is not one: every pass downstream reads the name to report about
@@ -2420,7 +1925,7 @@ Node_id Parser::parse_type_param()
     // expect it. The same reading parse_aggregate_decl takes of a nameless declaration.
     if( !name.is_valid() )
     {
-        return error_node( Span::merge( at, previous().span ) );
+        return error_node( Span::merge( at, cursor_.previous().span ) );
     }
 
     const Node_id node = ast_.add( Node_kind::Type_param_decl, at, name.v, {} );
@@ -2430,58 +1935,55 @@ Node_id Parser::parse_type_param()
 
 Node_id Parser::parse_block( u32 aux, Span opening )
 {
-    const Span start = opening.is_valid() ? opening : peek().span;
+    const Span start = opening.is_valid() ? opening : cursor_.peek().span;
 
     // A missing `{` may follow stray tokens; failing that, the block opens without one.
-    if( !expect( Token_kind::L_brace ) )
+    if( !recovery_.expect( Token_kind::L_brace ) )
     {
-        const u32 from = pos_;
-        synchronise();
+        const u32 from = cursor_.position();
+        recovery_.synchronise();
 
-        if( check( Token_kind::L_brace ) )
+        if( cursor_.check( Token_kind::L_brace ) )
         {
-            advance();
+            cursor_.advance();
         }
         else
         {
-            pos_ = from;
-            unclosed_braces_++;
+            cursor_.seek( from );
+            recovery_.open_without_brace();
         }
     }
 
     std::vector<Node_id> statements;
 
-    while( !check( Token_kind::R_brace ) && !at_end() && !body_ends_here() )
+    while( !cursor_.check( Token_kind::R_brace ) && !cursor_.at_end() && !recovery_.body_ends_here() )
     {
-        const u32 before = pos_;
+        const u32 before = cursor_.position();
 
         statements.push_back( parse_statement() );
 
         // The continuation condition does not itself consume, so a rule that reports without
         // advancing would spin here. Unlike parse_param_list, whose loop requires eating a comma.
-        if( pos_ == before )
+        if( cursor_.position() == before )
         {
-            advance();
+            cursor_.advance();
         }
     }
 
-    if( !body_cut_ )
-    {
-        expect( Token_kind::R_brace );
-    }
+    recovery_.close_body();
 
-    return ast_.add( Node_kind::Block, Span::merge( start, previous().span ), aux, statements );
+    return ast_.add( Node_kind::Block, Span::merge( start, cursor_.previous().span ), aux, statements );
 }
 
 Node_id Parser::parse_unsafe_block()
 {
-    const Span start = peek().span;
-    advance(); // the `unsafe` keyword
+    const Span start = cursor_.peek().span;
+    cursor_.advance(); // the `unsafe` keyword
 
-    if( !check( Token_kind::L_brace ) )
+    if( !cursor_.check( Token_kind::L_brace ) )
     {
-        fail_at( start, "`unsafe` must be followed by a block", "write `unsafe { ... }`" );
-        return error_node( Span::merge( start, previous().span ) );
+        recovery_.fail_at( start, "`unsafe` must be followed by a block", "write `unsafe { ... }`" );
+        return error_node( Span::merge( start, cursor_.previous().span ) );
     }
 
     return parse_block( 1, start );
@@ -2490,226 +1992,35 @@ Node_id Parser::parse_unsafe_block()
 // A statement that failed is skipped to its end, unless it balanced and only its trailing `;` is missing
 Node_id Parser::parse_statement()
 {
-    const u32 start = pos_;
+    const u32 start = cursor_.position();
 
-    const std::optional<u32> prev_statement_start = statement_start_;
+    const std::optional<u32> enclosing = recovery_.begin_statement( start );
+    const Node_id            node      = dispatch_statement();
+    recovery_.end_statement( enclosing );
 
-    statement_start_   = start;
-    const Node_id node = dispatch_statement();
-    statement_start_   = prev_statement_start;
-
-    const bool ended = pos_ > start && ( previous().kind == Token_kind::Semicolon || previous().kind == Token_kind::R_brace );
-    i32        open  = 0;
-    for( u32 i = start; i < pos_; ++i )
+    const bool ended = cursor_.position() > start &&
+                       ( cursor_.previous().kind == Token_kind::Semicolon || cursor_.previous().kind == Token_kind::R_brace );
+    i32 open = 0;
+    for( u32 i = start; i < cursor_.position(); ++i )
     {
-        const Token_kind kind = tokens_[i].kind;
+        const Token_kind kind = cursor_.tokens()[i].kind;
         open += kind == Token_kind::L_paren || kind == Token_kind::L_bracket || kind == Token_kind::L_brace;
         open -= kind == Token_kind::R_paren || kind == Token_kind::R_bracket || kind == Token_kind::R_brace;
     }
-    const bool missing_semicolon = pos_ > start && open == 0 && line_of( peek() ) != line_of( previous() );
+    const bool missing_semicolon = cursor_.position() > start && open == 0 &&
+                                   recovery_.line_of( cursor_.peek() ) != recovery_.line_of( cursor_.previous() );
 
-    if( failed_since( start ) && !ended && !missing_semicolon )
+    if( recovery_.failed_since( start ) && !ended && !missing_semicolon )
     {
-        synchronise();
+        recovery_.synchronise();
     }
 
     return node;
 }
 
-bool Parser::peek_is_adjacent() const
-{
-    return pos_ > 0 && peek().span.file == previous().span.file && peek().span.start == previous().span.end;
-}
-
-bool Parser::match_generic_close()
-{
-    if( pending_greater_ > 0 )
-    {
-        pending_greater_ -= 1;
-        return true;
-    }
-
-    if( match( Token_kind::Greater ) )
-    {
-        return true;
-    }
-
-    if( check( Token_kind::Greater_greater ) )
-    {
-        advance();
-
-        // Incremented rather than set: one pending close is all the current grammar can produce,
-        // and a counter that cannot lose one is worth more than the assumption.
-        pending_greater_ += 1;
-        return true;
-    }
-
-    return false;
-}
-
-bool Parser::expect_generic_close()
-{
-    if( match_generic_close() )
-    {
-        return true;
-    }
-
-    if( !unclosed_at_ || pos_ != *unclosed_at_ )
-    {
-        error_expected( Token_kind::Greater );
-    }
-
-    skip_to_generic_close();
-    return false;
-}
-
-bool Parser::end_list_element( Token_kind close, std::size_t list_errors, List_site site )
-{
-    if( check( Token_kind::Comma ) || check( close ) )
-    {
-        return true;
-    }
-
-    if( diags_.error_count() == list_errors )
-    {
-        const Span at = pos_ > 0 ? Span::point( previous().span.file, previous().span.end ) : peek().span;
-        fail_at( at, fmt::format( "expected `,` or {}, found {}", expectation( close ), found_text() ) );
-    }
-
-    const bool braces    = site != List_site::Expression;
-    const u32  skip_from = pos_;
-    u32        depth     = 0;
-    while( !at_end() )
-    {
-        const bool opens =
-            check( Token_kind::L_paren ) || check( Token_kind::L_bracket ) || ( braces && check( Token_kind::L_brace ) );
-        const bool closes =
-            check( Token_kind::R_paren ) || check( Token_kind::R_bracket ) || ( braces && check( Token_kind::R_brace ) );
-
-        // A literal holds no statement, so a `;` at any depth ends it.
-        if( site == List_site::Literal && check( Token_kind::Semicolon ) )
-        {
-            break;
-        }
-
-        if( depth == 0 )
-        {
-            if( check( Token_kind::Comma ) || check( close ) )
-            {
-                break;
-            }
-
-            if( site == List_site::Declaration )
-            {
-                if( lookahead_.declaration_head( pos_ ).head.has_value() )
-                {
-                    break;
-                }
-
-                // A name starting a line is the next variant, its `,` missing.
-                if( check( Token_kind::Identifier ) && line_of( peek() ) != line_of( previous() ) )
-                {
-                    return true;
-                }
-            }
-            // Not at `{` or a statement keyword: they are the element's fault, not the list's end.
-            else if( site == List_site::Literal )
-            {
-                if( closes )
-                {
-                    break;
-                }
-            }
-            else if( closes || check( Token_kind::Semicolon ) || check( Token_kind::L_brace ) || check( Token_kind::R_brace ) ||
-                     at_statement_keyword() )
-            {
-                break;
-            }
-        }
-
-        if( opens )
-        {
-            depth += 1;
-        }
-        else if( closes && depth > 0 )
-        {
-            depth -= 1;
-        }
-
-        advance();
-    }
-
-    if( check( Token_kind::Comma ) || check( close ) )
-    {
-        if( pos_ > skip_from )
-        {
-            skipped_from_ = skip_from;
-        }
-        return true;
-    }
-
-    // Short of both: the statement's own skip knows more.
-    if( site != List_site::Declaration )
-    {
-        pos_ = skip_from;
-    }
-    return false;
-}
-
-void Parser::skip_to_generic_close()
-{
-    u32 depth_less          = 0;
-    u32 depth_paren_bracket = 0;
-
-    while( true )
-    {
-        if( check( Token_kind::Semicolon ) || check( Token_kind::L_brace ) || check( Token_kind::R_brace ) ||
-            check( Token_kind::Equal ) || at_end() ||
-            ( ( check( Token_kind::R_paren ) || check( Token_kind::R_bracket ) ) && depth_paren_bracket == 0 ) )
-        {
-            unclosed_at_ = pos_;
-            break;
-        }
-
-        if( ( check( Token_kind::Greater ) || check( Token_kind::Greater_greater ) ) && depth_less == 0 )
-        {
-            match_generic_close();
-            break;
-        }
-        if( check( Token_kind::Greater_greater ) && depth_less == 1 )
-        {
-            advance();
-            break;
-        }
-
-        if( check( Token_kind::Less ) )
-        {
-            depth_less += 1;
-        }
-        else if( check( Token_kind::Greater ) )
-        {
-            depth_less -= 1;
-        }
-        else if( check( Token_kind::Greater_greater ) )
-        {
-            depth_less -= 2;
-        }
-        else if( check( Token_kind::L_paren ) || check( Token_kind::L_bracket ) )
-        {
-            depth_paren_bracket += 1;
-        }
-        else if( check( Token_kind::R_paren ) || check( Token_kind::R_bracket ) )
-        {
-            depth_paren_bracket -= 1;
-        }
-
-        advance();
-    }
-}
-
 bool Parser::can_start_expression() const
 {
-    switch( peek().kind )
+    switch( cursor_.peek().kind )
     {
     case Token_kind::Identifier:
     case Token_kind::Digit_name:
@@ -2733,12 +2044,14 @@ bool Parser::can_start_expression() const
     // features in a row have needed both edited together; a keyword missing from here parses fine
     // in an argument or an initialiser and fails only in statement position.
     case Token_kind::Keyword:
-        return check_keyword( Keyword::True ) || check_keyword( Keyword::False ) || check_keyword( Keyword::Nullptr ) ||
-               check_keyword( Keyword::Move ) || check_keyword( Keyword::Out ) || check_keyword( Keyword::Ref ) ||
-               check_keyword( Keyword::Cast ) || check_keyword( Keyword::Wrap ) || check_keyword( Keyword::This ) ||
-               check_keyword( Keyword::Alloc ) || check_keyword( Keyword::Free ) || check_keyword( Keyword::Assert ) ||
-               check_keyword( Keyword::Destroy ) || check_keyword( Keyword::Try ) || check_keyword( Keyword::Underscore ) ||
-               check_keyword( Keyword::Panic );
+        return cursor_.check_keyword( Keyword::True ) || cursor_.check_keyword( Keyword::False ) ||
+               cursor_.check_keyword( Keyword::Nullptr ) || cursor_.check_keyword( Keyword::Move ) ||
+               cursor_.check_keyword( Keyword::Out ) || cursor_.check_keyword( Keyword::Ref ) ||
+               cursor_.check_keyword( Keyword::Cast ) || cursor_.check_keyword( Keyword::Wrap ) ||
+               cursor_.check_keyword( Keyword::This ) || cursor_.check_keyword( Keyword::Alloc ) ||
+               cursor_.check_keyword( Keyword::Free ) || cursor_.check_keyword( Keyword::Assert ) ||
+               cursor_.check_keyword( Keyword::Destroy ) || cursor_.check_keyword( Keyword::Try ) ||
+               cursor_.check_keyword( Keyword::Underscore ) || cursor_.check_keyword( Keyword::Panic );
 
     default:
         return false;
@@ -2747,61 +2060,61 @@ bool Parser::can_start_expression() const
 
 Node_id Parser::dispatch_statement()
 {
-    if( check_keyword( Keyword::Return ) )
+    if( cursor_.check_keyword( Keyword::Return ) )
     {
         return parse_return_stmt();
     }
 
-    if( check_keyword( Keyword::Break ) )
+    if( cursor_.check_keyword( Keyword::Break ) )
     {
-        const Span start = peek().span;
-        advance();
-        expect( Token_kind::Semicolon );
-        return ast_.add( Node_kind::Break_stmt, Span::merge( start, previous().span ), 0, {} );
+        const Span start = cursor_.peek().span;
+        cursor_.advance();
+        recovery_.expect( Token_kind::Semicolon );
+        return ast_.add( Node_kind::Break_stmt, Span::merge( start, cursor_.previous().span ), 0, {} );
     }
 
-    if( check_keyword( Keyword::Continue ) )
+    if( cursor_.check_keyword( Keyword::Continue ) )
     {
-        const Span start = peek().span;
-        advance();
-        expect( Token_kind::Semicolon );
-        return ast_.add( Node_kind::Continue_stmt, Span::merge( start, previous().span ), 0, {} );
+        const Span start = cursor_.peek().span;
+        cursor_.advance();
+        recovery_.expect( Token_kind::Semicolon );
+        return ast_.add( Node_kind::Continue_stmt, Span::merge( start, cursor_.previous().span ), 0, {} );
     }
 
-    if( check_keyword( Keyword::Fallthrough ) )
+    if( cursor_.check_keyword( Keyword::Fallthrough ) )
     {
-        const Span start = peek().span;
-        advance();
-        expect( Token_kind::Semicolon );
-        return ast_.add( Node_kind::Fallthrough_stmt, Span::merge( start, previous().span ), 0, {} );
+        const Span start = cursor_.peek().span;
+        cursor_.advance();
+        recovery_.expect( Token_kind::Semicolon );
+        return ast_.add( Node_kind::Fallthrough_stmt, Span::merge( start, cursor_.previous().span ), 0, {} );
     }
 
-    if( check_keyword( Keyword::Unsafe ) )
+    if( cursor_.check_keyword( Keyword::Unsafe ) )
     {
         return parse_unsafe_block();
     }
 
-    if( check( Token_kind::L_brace ) )
+    if( cursor_.check( Token_kind::L_brace ) )
     {
         return parse_block();
     }
 
-    if( check_keyword( Keyword::If ) )
+    if( cursor_.check_keyword( Keyword::If ) )
     {
         return parse_if_stmt();
     }
 
-    if( check_keyword( Keyword::Switch ) )
+    if( cursor_.check_keyword( Keyword::Switch ) )
     {
         return parse_switch_stmt();
     }
 
-    if( check_keyword( Keyword::While ) )
+    if( cursor_.check_keyword( Keyword::While ) )
     {
         return parse_while_stmt();
     }
 
-    if( check_keyword( Keyword::For ) )
+    if( cursor_.check_keyword( Keyword::For ) )
     {
         return parse_for_stmt();
     }
@@ -2809,11 +2122,11 @@ Node_id Parser::dispatch_statement()
     // A struct in a function body. Recognised here so it can be consumed whole: synchronise()
     // would stop at the first `;` *inside* the struct, and everything after it would then be read
     // as a top-level declaration - one mistake becoming five.
-    if( check_keyword( Keyword::Struct ) || check_keyword( Keyword::Class ) )
+    if( cursor_.check_keyword( Keyword::Struct ) || cursor_.check_keyword( Keyword::Class ) )
     {
-        const Span start = peek().span;
+        const Span start = cursor_.peek().span;
 
-        error_at(
+        recovery_.error_at(
             start,
             "a struct or a class cannot be declared inside a function",
             "declare it at file scope, where it is visible throughout the file"
@@ -2823,14 +2136,14 @@ Node_id Parser::dispatch_statement()
         // Error node stands in its place. A malformed struct still reports from in there.
         parse_aggregate_decl();
 
-        return error_node( Span::merge( start, previous().span ) );
+        return error_node( Span::merge( start, cursor_.previous().span ) );
     }
 
-    if( check_keyword( Keyword::Extern ) )
+    if( cursor_.check_keyword( Keyword::Extern ) )
     {
-        const Span start = peek().span;
+        const Span start = cursor_.peek().span;
 
-        error_at(
+        recovery_.error_at(
             start, "`extern` is not a statement", "write `extern` at file scope, where it declares a function defined in C"
         );
 
@@ -2838,25 +2151,26 @@ Node_id Parser::dispatch_statement()
         // Error node stands in its place. A malformed extern still reports from in there.
         parse_function_decl();
 
-        return error_node( Span::merge( start, previous().span ) );
+        return error_node( Span::merge( start, cursor_.previous().span ) );
     }
 
-    Declaration_scan scan = lookahead_.declaration_head( pos_, Lookahead::Scan_site::Statement );
+    Declaration_scan scan = lookahead_.declaration_head( cursor_.position(), Lookahead::Scan_site::Statement );
     if( scan.head.has_value() && scan.head->kind == Declaration_kind::Function )
     {
-        error_at(
-            peek().span,
+        recovery_.error_at(
+            cursor_.peek().span,
             "a function cannot be declared inside a function",
             "declare it at file scope, where it is visible throughout the file"
         );
 
-        const Span start = peek().span;
+        const Span start = cursor_.peek().span;
         parse_function_decl();
-        return error_node( Span::merge( start, previous().span ) );
+        return error_node( Span::merge( start, cursor_.previous().span ) );
     }
 
-    // `auto` settles it; otherwise the lookahead reads ahead without moving pos_.
-    if( check_keyword( Keyword::Auto ) || lookahead_.looks_like_binding( pos_ ) || lookahead_.looks_like_declaration( pos_ ) )
+    // `auto` settles it; otherwise the lookahead reads ahead without moving the cursor.
+    if( cursor_.check_keyword( Keyword::Auto ) || lookahead_.looks_like_binding( cursor_.position() ) ||
+        lookahead_.looks_like_declaration( cursor_.position() ) )
     {
         return parse_var_decl();
     }
@@ -2864,18 +2178,18 @@ Node_id Parser::dispatch_statement()
     // Anything that can begin an expression becomes an expression statement; D15 then decides
     // whether it is one with an effect.
     // `++` and `--` are only accepted to be later refused. Keel has no prefix increment operators.
-    if( can_start_expression() || check( Token_kind::Plus_plus ) || check( Token_kind::Minus_minus ) )
+    if( can_start_expression() || cursor_.check( Token_kind::Plus_plus ) || cursor_.check( Token_kind::Minus_minus ) )
     {
         return parse_expression_stmt();
     }
 
     // Statements are the recovery boundary: this is the one place synchronise() belongs, because
     // its stop set - `;`, `}`, statement keywords - is exactly the set of statement boundaries.
-    const Span span = peek().span;
+    const Span span = cursor_.peek().span;
 
-    fail_at( span, fmt::format( "expected a statement, found {}", found_text() ) );
+    recovery_.fail_at( span, fmt::format( "expected a statement, found {}", recovery_.found_text() ) );
 
-    synchronise();
+    recovery_.synchronise();
 
     return error_node( span );
 }
@@ -2884,31 +2198,31 @@ Node_id Parser::parse_return_stmt()
 {
     // parse_statement only routes here after seeing the keyword, so this is a precondition rather
     // than an error path - and error_expected( Keyword ) could only say "expected `keyword`".
-    assert( check_keyword( Keyword::Return ) && "parse_return_stmt called without `return`" );
+    assert( cursor_.check_keyword( Keyword::Return ) && "parse_return_stmt called without `return`" );
 
-    const Span start = peek().span;
-    advance();
+    const Span start = cursor_.peek().span;
+    cursor_.advance();
 
     // Always one child, invalid when there is no value, so the arity stays fixed.
     Node_id value;
-    if( !check( Token_kind::Semicolon ) )
+    if( !cursor_.check( Token_kind::Semicolon ) )
     {
         value = parse_expression( 0 );
     }
 
-    expect( Token_kind::Semicolon );
+    recovery_.expect( Token_kind::Semicolon );
 
-    return ast_.add( Node_kind::Return_stmt, Span::merge( start, previous().span ), 0, { value } );
+    return ast_.add( Node_kind::Return_stmt, Span::merge( start, cursor_.previous().span ), 0, { value } );
 }
 
 Node_id Parser::parse_var_decl( std::optional<u32> commit )
 {
-    const Span start = peek().span;
+    const Span start = cursor_.peek().span;
 
     Node_id type;
-    if( check_keyword( Keyword::Auto ) )
+    if( cursor_.check_keyword( Keyword::Auto ) )
     {
-        advance();         // consume auto
+        cursor_.advance(); // consume auto
         type = Node_id {}; // placeholder for type to be inferred later
     }
     else
@@ -2917,7 +2231,7 @@ Node_id Parser::parse_var_decl( std::optional<u32> commit )
     }
 
     const Symbol_id name      = expect_name();
-    const Span      name_span = previous().span;
+    const Span      name_span = cursor_.previous().span;
 
     if( commit.has_value() )
     {
@@ -2925,69 +2239,70 @@ Node_id Parser::parse_var_decl( std::optional<u32> commit )
     }
 
     Node_id value;
-    if( match( Token_kind::Equal ) )
+    if( cursor_.match( Token_kind::Equal ) )
     {
         value = parse_expression( 0 );
     }
 
-    expect( Token_kind::Semicolon );
+    recovery_.expect( Token_kind::Semicolon );
     // A declaration with no name is not one: sema reads every declaration's name to report
     // about it, so handing one over means a keyword or a missing identifier crashes a pass
     // that had no reason to expect it. Everything inside was still parsed, so the errors in
     // there are already reported.
     if( !name.is_valid() )
     {
-        return error_node( Span::merge( start, previous().span ) );
+        return error_node( Span::merge( start, cursor_.previous().span ) );
     }
 
-    const Node_id node = ast_.add( Node_kind::Var_decl, Span::merge( start, previous().span ), name.v, { type, value } );
+    const Node_id node =
+        ast_.add( Node_kind::Var_decl, Span::merge( start, cursor_.previous().span ), name.v, { type, value } );
     ast_.set_name_span( node, name_span );
     return node;
 }
 
 Node_id Parser::parse_expression_stmt( bool consume_semicolon )
 {
-    if( check( Token_kind::Plus_plus ) || check( Token_kind::Minus_minus ) )
+    if( cursor_.check( Token_kind::Plus_plus ) || cursor_.check( Token_kind::Minus_minus ) )
     {
         return parse_prefix_increment_stmt( consume_semicolon );
     }
 
-    const Span start = peek().span;
+    const Span start = cursor_.peek().span;
 
     // `_ = e;` says the discard is meant, so D15's effect check does not apply.
-    if( check_keyword( Keyword::Underscore ) && peek( 1 ).kind == Token_kind::Equal )
+    if( cursor_.check_keyword( Keyword::Underscore ) && cursor_.peek( 1 ).kind == Token_kind::Equal )
     {
-        advance(); // consume `_`
-        advance(); // consume `=`
+        cursor_.advance(); // consume `_`
+        cursor_.advance(); // consume `=`
 
         const Node_id expr = parse_expression( 0 );
 
         if( consume_semicolon )
         {
-            expect( Token_kind::Semicolon );
+            recovery_.expect( Token_kind::Semicolon );
         }
 
-        return ast_.add( Node_kind::Discard_stmt, Span::merge( start, previous().span ), 0, { expr } );
+        return ast_.add( Node_kind::Discard_stmt, Span::merge( start, cursor_.previous().span ), 0, { expr } );
     }
 
-    const u32     first = pos_;
-    const Node_id expr  = parse_expression( 0, Token_kind::End_of_file, true );
+    const u32     first = cursor_.position();
+    const Node_id expr  = parse_expression_before_increment();
 
     Node_kind            kind      = Node_kind::Expr_stmt;
     u32                  aux       = 0;
     std::vector<Node_id> children  = { expr };
     bool                 discarded = false;
 
-    if( is_assignment( peek().kind ) )
+    if( is_assignment( cursor_.peek().kind ) )
     {
-        Token op = advance();
+        Token op = cursor_.advance();
         children.push_back( parse_expression( 0 ) );
         kind = Node_kind::Assign_stmt;
         aux  = static_cast<u32>( op.kind );
     }
-    else if( check( Token_kind::Plus_plus ) || check( Token_kind::Minus_minus ) )
+    else if( cursor_.check( Token_kind::Plus_plus ) || cursor_.check( Token_kind::Minus_minus ) )
     {
-        Token op = advance();
+        Token op = cursor_.advance();
         kind     = Node_kind::Increment_stmt;
         aux      = static_cast<u32>( op.kind );
     }
@@ -3003,10 +2318,10 @@ Node_id Parser::parse_expression_stmt( bool consume_semicolon )
 
     if( consume_semicolon )
     {
-        expect( Token_kind::Semicolon );
+        recovery_.expect( Token_kind::Semicolon );
     }
 
-    if( discarded && !failed_since( first ) && ( consume_semicolon || check( Token_kind::R_paren ) ) )
+    if( discarded && !recovery_.failed_since( first ) && ( consume_semicolon || cursor_.check( Token_kind::R_paren ) ) )
     {
         // `u32 *ptr;` and `u32 &r;` are what a C++ programmer writes from habit, and neither reaches
         // the type parser: the first is a multiplication under D17, the second a bitwise and now
@@ -3027,7 +2342,7 @@ Node_id Parser::parse_expression_stmt( bool consume_semicolon )
             // that no longer exists.
             if( op == Token_kind::Star )
             {
-                error_at(
+                recovery_.error_at(
                     ast_.span( expr ),
                     "`*` must touch the type it modifies",
                     fmt::format( "write `{}* {}` to declare a pointer", type, name )
@@ -3035,7 +2350,7 @@ Node_id Parser::parse_expression_stmt( bool consume_semicolon )
             }
             else
             {
-                error_at(
+                recovery_.error_at(
                     ast_.span( expr ),
                     "`&` is not a type",
                     fmt::format( "write `ref {} {}` for a reference binding", type, name )
@@ -3044,24 +2359,24 @@ Node_id Parser::parse_expression_stmt( bool consume_semicolon )
         }
         else
         {
-            error_at( ast_.span( expr ), "this expression has no effect", "assign the result, or remove it" );
+            recovery_.error_at( ast_.span( expr ), "this expression has no effect", "assign the result, or remove it" );
         }
     }
 
-    return ast_.add( kind, Span::merge( start, previous().span ), aux, children );
+    return ast_.add( kind, Span::merge( start, cursor_.previous().span ), aux, children );
 }
 
 Node_id Parser::parse_prefix_increment_stmt( bool consume_semicolon )
 {
-    const Token op = advance(); // consume ++ or --
+    const Token op = cursor_.advance(); // consume ++ or --
 
-    const Span    start   = previous().span;
+    const Span    start   = cursor_.previous().span;
     const Node_id operand = parse_expression( k_unary_power );
 
     if( !ast_.broken( operand ) )
     {
-        error_at(
-            Span::merge( start, previous().span ),
+        recovery_.error_at(
+            Span::merge( start, cursor_.previous().span ),
             fmt::format( "`{}` is written after the variable", token_kind_spelling( op.kind ) ),
             fmt::format( "write `{}{}`", sm_.text( ast_.span( operand ) ), token_kind_spelling( op.kind ) )
         );
@@ -3069,75 +2384,77 @@ Node_id Parser::parse_prefix_increment_stmt( bool consume_semicolon )
 
     if( consume_semicolon )
     {
-        expect( Token_kind::Semicolon );
+        recovery_.expect( Token_kind::Semicolon );
     }
 
     return ast_.add(
-        Node_kind::Increment_stmt, Span::merge( start, previous().span ), static_cast<u32>( op.kind ), { operand }
+        Node_kind::Increment_stmt, Span::merge( start, cursor_.previous().span ), static_cast<u32>( op.kind ), { operand }
     );
 }
 
 Node_id Parser::parse_if_stmt()
 {
-    assert( check_keyword( Keyword::If ) );
+    assert( cursor_.check_keyword( Keyword::If ) );
 
-    const Span start = peek().span;
-    advance();
+    const Span start = cursor_.peek().span;
+    cursor_.advance();
 
-    expect( Token_kind::L_paren );
-    const u32     condition_start = pos_;
+    recovery_.expect( Token_kind::L_paren );
+    const u32     condition_start = cursor_.position();
     const Node_id condition       = parse_expression( 0 );
-    close_header( condition_start );
+    recovery_.close_header( condition_start );
 
     const Node_id then_branch = parse_block();
 
     Node_id else_branch; // invalid when absent
-    if( match_keyword( Keyword::Else ) )
+    if( cursor_.match_keyword( Keyword::Else ) )
     {
         // The one exception to D3: `else if` chains rather than demanding braces.
-        else_branch = check_keyword( Keyword::If ) ? parse_if_stmt() : parse_block();
+        else_branch = cursor_.check_keyword( Keyword::If ) ? parse_if_stmt() : parse_block();
     }
 
-    return ast_.add( Node_kind::If_stmt, Span::merge( start, previous().span ), 0, { condition, then_branch, else_branch } );
+    return ast_.add(
+        Node_kind::If_stmt, Span::merge( start, cursor_.previous().span ), 0, { condition, then_branch, else_branch }
+    );
 }
 
 Node_id Parser::parse_while_stmt()
 {
-    assert( check_keyword( Keyword::While ) );
+    assert( cursor_.check_keyword( Keyword::While ) );
 
-    const Span start = peek().span;
-    advance();
+    const Span start = cursor_.peek().span;
+    cursor_.advance();
 
-    expect( Token_kind::L_paren );
-    const u32     condition_start = pos_;
+    recovery_.expect( Token_kind::L_paren );
+    const u32     condition_start = cursor_.position();
     const Node_id condition       = parse_expression( 0 );
-    close_header( condition_start );
+    recovery_.close_header( condition_start );
 
     const Node_id body = parse_block();
-    return ast_.add( Node_kind::While_stmt, Span::merge( start, previous().span ), 0, { condition, body } );
+    return ast_.add( Node_kind::While_stmt, Span::merge( start, cursor_.previous().span ), 0, { condition, body } );
 }
 
 Node_id Parser::parse_for_stmt()
 {
-    assert( check_keyword( Keyword::For ) );
+    assert( cursor_.check_keyword( Keyword::For ) );
 
-    const Span start = peek().span;
-    advance();
+    const Span start = cursor_.peek().span;
+    cursor_.advance();
 
     // Without its `(`, only a head that a `)` closes before a brace is read as one.
-    if( !expect( Token_kind::L_paren ) && !lookahead_.head_closes( pos_ ) )
+    if( !recovery_.expect( Token_kind::L_paren ) && !lookahead_.head_closes( cursor_.position() ) )
     {
-        return error_node( Span::merge( start, previous().span ) );
+        return error_node( Span::merge( start, cursor_.previous().span ) );
     }
-    const u32 condition_start = pos_;
+    const u32 condition_start = cursor_.position();
 
     // Init. Both parse_var_decl and parse_expression_stmt consume their own `;` which is exactly
     // the first semicolon of the header - so neither needs changing
     Node_id init;
-    if( !match( Token_kind::Semicolon ) )
+    if( !cursor_.match( Token_kind::Semicolon ) )
     {
-        if( check_keyword( Keyword::Auto ) || lookahead_.looks_like_binding( pos_ ) ||
-            lookahead_.looks_like_declaration( pos_ ) )
+        if( cursor_.check_keyword( Keyword::Auto ) || lookahead_.looks_like_binding( cursor_.position() ) ||
+            lookahead_.looks_like_declaration( cursor_.position() ) )
         {
             init = parse_var_decl();
         }
@@ -3149,24 +2466,24 @@ Node_id Parser::parse_for_stmt()
 
     // Condition. An expression, then the second `;`.
     Node_id condition;
-    if( !check( Token_kind::Semicolon ) )
+    if( !cursor_.check( Token_kind::Semicolon ) )
     {
         condition = parse_expression( 0 );
     }
-    expect( Token_kind::Semicolon );
+    recovery_.expect( Token_kind::Semicolon );
 
     // Update. Followed by `)` rather than `;`, which is the one place the statement rules cannot
     // be reused unchanged - hence the flag. Assignment, increment and D15 all still apply.
     Node_id update;
-    if( !check( Token_kind::R_paren ) )
+    if( !cursor_.check( Token_kind::R_paren ) )
     {
         update = parse_expression_stmt( false );
     }
 
-    close_header( condition_start );
+    recovery_.close_header( condition_start );
     const Node_id body = parse_block();
 
-    return ast_.add( Node_kind::For_stmt, Span::merge( start, previous().span ), 0, { init, condition, update, body } );
+    return ast_.add( Node_kind::For_stmt, Span::merge( start, cursor_.previous().span ), 0, { init, condition, update, body } );
 }
 
 Node_id Parser::parse_switch_stmt()
@@ -3174,28 +2491,28 @@ Node_id Parser::parse_switch_stmt()
     // `switch( e )` then a braced list of arms. The parenthesised scrutinee is C++'s spelling, and
     // D3's mandatory braces apply to the switch body as to every other control-flow construct -
     // but *not* to an arm, which is a label group rather than a body.
-    assert( check_keyword( Keyword::Switch ) );
+    assert( cursor_.check_keyword( Keyword::Switch ) );
 
-    const Span start = peek().span;
+    const Span start = cursor_.peek().span;
 
-    advance();
+    cursor_.advance();
 
-    expect( Token_kind::L_paren );
-    const u32     condition_start = pos_;
+    recovery_.expect( Token_kind::L_paren );
+    const u32     condition_start = cursor_.position();
     const Node_id scrutinee       = parse_expression( 0 );
-    close_header( condition_start );
+    recovery_.close_header( condition_start );
 
-    expect( Token_kind::L_brace );
+    recovery_.expect( Token_kind::L_brace );
 
     // Child 0 is the scrutinee; the arms follow in source order.
     std::vector<Node_id> arms { scrutinee };
 
     bool seen_default = false;
 
-    while( !check( Token_kind::R_brace ) && !at_end() && !body_ends_here() )
+    while( !cursor_.check( Token_kind::R_brace ) && !cursor_.at_end() && !recovery_.body_ends_here() )
     {
-        const u32  before    = pos_;
-        const Span arm_start = peek().span;
+        const u32  before    = cursor_.position();
+        const Span arm_start = cursor_.peek().span;
 
         // Labels first, as many as are stacked. An arm ends when something that is not a label
         // appears, which is what makes `case A: case B:` share one body with no fallthrough rule
@@ -3204,18 +2521,18 @@ Node_id Parser::parse_switch_stmt()
 
         bool is_default = false;
 
-        while( ( check_keyword( Keyword::Case ) || check_keyword( Keyword::Default ) ) )
+        while( ( cursor_.check_keyword( Keyword::Case ) || cursor_.check_keyword( Keyword::Default ) ) )
         {
-            const bool labels_default = check_keyword( Keyword::Default );
-            const Span label_span     = peek().span;
+            const bool labels_default = cursor_.check_keyword( Keyword::Default );
+            const Span label_span     = cursor_.peek().span;
 
-            advance();
+            cursor_.advance();
 
             if( labels_default )
             {
                 if( seen_default )
                 {
-                    error_at( label_span, "a `switch` has only one `default`" );
+                    recovery_.error_at( label_span, "a `switch` has only one `default`" );
                 }
 
                 seen_default = true;
@@ -3223,7 +2540,7 @@ Node_id Parser::parse_switch_stmt()
             }
             else
             {
-                const Node_id lower = parse_expression( 0, Token_kind::End_of_file, false, true );
+                const Node_id lower = parse_case_bound();
 
                 // D7: `case Shape::Circle( r ):` binds names rather than reading them. The
                 // postfix loop has already folded the `(` into a Call_expr, so the pattern is
@@ -3243,7 +2560,7 @@ Node_id Parser::parse_switch_stmt()
                         {
                             if( !ast_.broken( lower ) )
                             {
-                                error_at(
+                                recovery_.error_at(
                                     ast_.span( argument ), "a pattern binds names", "write a name for each field of the payload"
                                 );
                             }
@@ -3255,14 +2572,14 @@ Node_id Parser::parse_switch_stmt()
 
                     children.push_back( ast_.add( Node_kind::Variant_pattern, ast_.span( lower ), 0, parts ) );
 
-                    expect( Token_kind::Colon );
+                    recovery_.expect( Token_kind::Colon );
                     continue;
                 }
 
                 // D34: a range is syntax and lives only here, so it is parsed where it is legal
                 // rather than in the expression grammar - which would make `i32 x = 1..5;` parse
                 // and need a diagnostic to un-parse it.
-                if( match( Token_kind::Dot_dot ) )
+                if( cursor_.match( Token_kind::Dot_dot ) )
                 {
                     const Node_id upper = parse_expression( 0 );
 
@@ -3276,13 +2593,13 @@ Node_id Parser::parse_switch_stmt()
                 }
             }
 
-            expect( Token_kind::Colon );
+            recovery_.expect( Token_kind::Colon );
         }
 
         if( children.empty() && !is_default )
         {
-            error_at(
-                peek().span,
+            recovery_.error_at(
+                cursor_.peek().span,
                 "this statement is not inside a `case`",
                 "every statement in a `switch` belongs to an arm; add a `case` or `default` above it"
             );
@@ -3292,326 +2609,57 @@ Node_id Parser::parse_switch_stmt()
         // lowering treat an arm like any other. Synthesised rather than parsed: an arm has no
         // braces of its own, and giving it a Block anyway is what keeps every consumer from having
         // to special-case a bare statement list.
-        const Span body_start = peek().span;
+        const Span body_start = cursor_.peek().span;
 
         std::vector<Node_id> statements;
 
-        while( !check( Token_kind::R_brace ) && !at_end() && !check_keyword( Keyword::Case ) &&
-               !check_keyword( Keyword::Default ) && !body_ends_here() )
+        while( !cursor_.check( Token_kind::R_brace ) && !cursor_.at_end() && !cursor_.check_keyword( Keyword::Case ) &&
+               !cursor_.check_keyword( Keyword::Default ) && !recovery_.body_ends_here() )
         {
-            const u32 statement_before = pos_;
+            const u32 statement_before = cursor_.position();
 
             statements.push_back( parse_statement() );
 
-            if( pos_ == statement_before )
+            if( cursor_.position() == statement_before )
             {
-                advance();
+                cursor_.advance();
             }
         }
 
-        children.push_back( ast_.add( Node_kind::Block, Span::merge( body_start, previous().span ), 0, statements ) );
+        children.push_back( ast_.add( Node_kind::Block, Span::merge( body_start, cursor_.previous().span ), 0, statements ) );
 
         arms.push_back(
-            ast_.add( Node_kind::Case_arm, Span::merge( arm_start, previous().span ), is_default ? 1u : 0u, children )
+            ast_.add( Node_kind::Case_arm, Span::merge( arm_start, cursor_.previous().span ), is_default ? 1u : 0u, children )
         );
 
-        if( pos_ == before )
+        if( cursor_.position() == before )
         {
-            advance();
+            cursor_.advance();
         }
     }
 
-    if( !body_cut_ )
-    {
-        expect( Token_kind::R_brace );
-    }
+    recovery_.close_body();
 
-    return ast_.add( Node_kind::Switch_stmt, Span::merge( start, previous().span ), 0, arms );
+    return ast_.add( Node_kind::Switch_stmt, Span::merge( start, cursor_.previous().span ), 0, arms );
 }
 
-void Parser::mark_parenthesised( Node_id id )
+Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing, Expression_use use )
 {
-    if( parenthesised_.size() <= id.v )
-    {
-        parenthesised_.resize( id.v + 1, false );
-    }
-    parenthesised_[id.v] = true;
-}
-
-bool Parser::is_parenthesised( Node_id id ) const
-{
-    return id.v < parenthesised_.size() && parenthesised_[id.v];
-}
-
-// `Box` inside `Box<T>` is `Box<T>`: the arguments are the parameters, by name. Built as the
-// arguments a written annotation would have - fresh Named_type nodes rather than the
-// Type_param_decls themselves - so the receiver resolves through the ordinary path.
-Node_id Parser::generic_self( Node_id named, Node_id type_params, Span span )
-{
-    std::vector<Node_id> arguments;
-
-    for( const Node_id type_param : ast_.type_parameters( type_params ) )
-    {
-        arguments.push_back( ast_.add( Node_kind::Named_type, span, ast_.aux( type_param ), {} ) );
-    }
-
-    const Node_id list = ast_.add( Node_kind::Type_arg_list, span, 0, arguments );
-
-    return ast_.add( Node_kind::Generic_type, span, 0, { named, list } );
-}
-
-// D32: the receiver is a binding, not a pointer. `ref T` when the method may write the object,
-// `const ref T` when it may not, which is what a trailing `const` on the method says. Built out of
-// the same nodes a written parameter would be, so nothing downstream learns it was synthesised.
-Node_id Parser::synthesise_receiver( Symbol_id enclosing, Node_id type_params, Span span, bool is_const )
-{
-    const Node_id named = ast_.add( Node_kind::Named_type, span, enclosing.v, {} );
-    const Node_id param = type_params.is_valid() ? generic_self( named, type_params, span ) : named;
-    const Node_id mode  = ast_.add( Node_kind::Mode_type, span, static_cast<u32>( Keyword::Ref ), { param } );
-    const Node_id type  = is_const ? ast_.add( Node_kind::Const_type, span, 0, { mode } ) : mode;
-
-    return ast_.add( Node_kind::Param_decl, span, Interner::keyword( Keyword::This ).v, { type } );
-}
-
-bool Parser::at_mode_keyword() const
-{
-    return check_keyword( Keyword::Move ) || check_keyword( Keyword::Ref ) || check_keyword( Keyword::Out );
-}
-
-bool Parser::failed_since( u32 token ) const
-{
-    return pos_ > token && ast_.failed_within( Span::merge( tokens_[token].span, previous().span ) );
-}
-
-void Parser::attach_doc( Node_id decl, u32 first_token )
-{
-    const u32  gap_start = first_token == 0 ? 0 : tokens_[first_token - 1].span.end;
-    const u32  gap_end   = tokens_[first_token].span.start;
-    const Span gap_span { tokens_[first_token].span.file, gap_start, gap_end };
-
-    const std::string_view gap_text = sm_.text( gap_span );
-    const std::string      doc      = doc_comment( gap_text, "///" );
-
-    if( doc.empty() )
-    {
-        return;
-    }
-
-    ast_.set_doc_span( decl, gap_span );
-}
-
-Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing, bool increment_follows, bool keep_shape )
-{
-    Node_id left = parse_prefix();
+    Node_id left = parse_postfix( parse_prefix(), use == Expression_use::Before_increment );
 
     while( true )
     {
-        // Postfix operators first, because they bind tighter than any infix operator.
-
-        if( !increment_follows && ( check( Token_kind::Plus_plus ) || check( Token_kind::Minus_minus ) ) )
-        {
-            const Token op = advance(); // consume ++ or --
-
-            if( !ast_.broken( left ) )
-            {
-                error_at(
-                    Span::merge( ast_.span( left ), previous().span ),
-                    fmt::format( "`{}` is a statement, not a value", token_kind_spelling( op.kind ) ),
-                    fmt::format(
-                        "write `{}{};` on a line of its own", sm_.text( ast_.span( left ) ), token_kind_spelling( op.kind )
-                    )
-                );
-            }
-
-            continue;
-        }
-
-        // function call is a special case: it is the only infix operator that does not produce a
-        // Binary_expr node, so it does not need the parentheses check below.
-        if( check( Token_kind::L_paren ) )
-        {
-            Node_id args = parse_arg_list();
-
-            left = ast_.add(
-                Node_kind::Call_expr, Span::merge( ast_.span( left ), ast_.span( args ) ), 0, { left, args, Node_id {} }
-            );
-            continue;
-        }
-
-        // `id<i32>( 1 )`. The lookahead has proved the shape, so this parses for real -
-        // parse_type and match_generic_close, the same pair a `Vector<i32>` annotation uses.
-        if( check( Token_kind::Less ) && lookahead_.looks_like_type_arguments( pos_ ) )
-        {
-            const Span open = peek().span;
-
-            advance(); // the `<`
-
-            std::vector<Node_id> arguments;
-
-            do
-            {
-                arguments.push_back( parse_type() );
-            } while( match( Token_kind::Comma ) );
-
-            expect_generic_close();
-
-            const Node_id types = ast_.add( Node_kind::Type_arg_list, Span::merge( open, previous().span ), 0, arguments );
-
-            // `Box<i32>::of( 7 )`. The arguments belong to the *qualifier* rather than to a call, so
-            // they are carried on the path instead - a static call has no receiver to read them off,
-            // which makes this the only place they can come from. The trailing `( 7 )` is then an
-            // ordinary call over the path, handled by the postfix branch at the top of this loop.
-            if( check( Token_kind::Colon_colon ) || check( Token_kind::Dot ) )
-            {
-                const bool is_dot   = check( Token_kind::Dot );
-                const Span dot_span = is_dot ? peek().span : Span {};
-
-                advance();
-
-                const Symbol_id scoped = expect_member_name();
-
-                if( !scoped.is_valid() )
-                {
-                    left = error_node( Span::merge( ast_.span( left ), previous().span ) );
-                    continue;
-                }
-
-                if( is_dot )
-                {
-                    error_at(
-                        dot_span,
-                        "a type's members are reached with `::`",
-                        fmt::format(
-                            "write `{}::{}`",
-                            sm_.text( Span::merge( ast_.span( left ), ast_.span( types ) ) ),
-                            sm_.text( previous().span )
-                        )
-                    );
-                }
-
-                left = ast_.add(
-                    Node_kind::Path_expr, Span::merge( ast_.span( left ), previous().span ), scoped.v, { left, types }
-                );
-                continue;
-            }
-
-            // The list belongs to the name because there is no call to hang it on, the same slot a path already gives its
-            // qualifier.
-            if( !check( Token_kind::L_paren ) )
-            {
-                if( ast_.kind( left ) != Node_kind::Name_expr )
-                {
-                    if( !ast_.broken( left ) )
-                    {
-                        error_at(
-                            Span::merge( ast_.span( left ), previous().span ),
-                            "only a name can take type arguments",
-                            "`<` after anything else is a comparison, and its right operand is missing"
-                        );
-                    }
-                    left = error_node( Span::merge( ast_.span( left ), previous().span ) );
-                    continue;
-                }
-                else
-                {
-                    left = ast_.add(
-                        Node_kind::Name_expr, Span::merge( ast_.span( left ), previous().span ), ast_.aux( left ), { types }
-                    );
-                    continue;
-                }
-            }
-
-            const Node_id args = parse_arg_list();
-
-            left =
-                ast_.add( Node_kind::Call_expr, Span::merge( ast_.span( left ), ast_.span( args ) ), 0, { left, args, types } );
-            continue;
-        }
-
-        // Field access binds tightest, like a call, and for the same reason produces its own node
-        // rather than a Binary_expr. The field name goes in aux, not into a Name_expr child: it
-        // resolves against the object's type, not through the scope stack, and a child would
-        // invite the resolver to look for a variable called `x` in `p.x`.
-        // D22: `.` reaches through a pointer, so `->` has no work left to do. It is rejected by
-        // name rather than left to lex as `-` then `>`, which would produce a message about
-        // arithmetic - and then recovered *as* the field access it was meant to be. Reporting
-        // without consuming would drop it into the infix path below and build a Binary_expr whose
-        // operator is `->`, which sema would have to reject all over again.
-        const bool arrow = check( Token_kind::Arrow );
-
-        if( arrow || check( Token_kind::Dot ) )
-        {
-            if( arrow )
-            {
-                error_at( peek().span, "`->` is not a Keel operator", "use `.`, which reaches through a pointer" );
-            }
-
-            advance();
-
-            // expect_name rather than a bare expect: a keyword here was meant as the member name,
-            // so it is consumed as well. Left in place it is re-parsed as the start of a new
-            // statement and one mistake becomes a dozen.
-            const Symbol_id name = expect_name();
-
-            // A member access with no name is not one - the same rule parse_function_decl applies to
-            // a declaration, and for the same reason: every later pass reads the name to report
-            // about it, and an invalid Symbol_id aborts the interner rather than degrading. The
-            // parser has already said what it found in the name's place.
-            if( !name.is_valid() )
-            {
-                left = error_node( Span::merge( ast_.span( left ), previous().span ) );
-                continue;
-            }
-
-            left = ast_.add( Node_kind::Field_expr, Span::merge( ast_.span( left ), previous().span ), name.v, { left } );
-            continue;
-        }
-
-        if( check( Token_kind::Colon_colon ) )
-        {
-            advance();
-
-            const Symbol_id name = expect_member_name();
-
-            // A member access with no name is not one - the same rule parse_function_decl applies to
-            // a declaration, and for the same reason: every later pass reads the name to report
-            // about it, and an invalid Symbol_id aborts the interner rather than degrading. The
-            // parser has already said what it found in the name's place.
-            if( !name.is_valid() )
-            {
-                left = error_node( Span::merge( ast_.span( left ), previous().span ) );
-                continue;
-            }
-
-            left = ast_.add( Node_kind::Path_expr, Span::merge( ast_.span( left ), previous().span ), name.v, { left } );
-            continue;
-        }
-
-        if( check( Token_kind::L_bracket ) )
-        {
-            advance();
-
-            const Node_id index = parse_expression( 0 );
-
-            expect( Token_kind::R_bracket );
-
-            left = ast_.add( Node_kind::Index_expr, Span::merge( ast_.span( left ), previous().span ), 0, { left, index } );
-            continue;
-        }
-
-        // Now deal with actual infix operators.
-
         // 0 means "not an infix operator". Without that test, `0 >= min_power` is true for every
         // token and the loop never ends.
-        const u8 power = binding_power( peek().kind );
+        const u8 power = binding_power( cursor_.peek().kind );
         if( power == 0 || power < min_power )
         {
             break;
         }
 
-        if( check( Token_kind::Question ) )
+        if( cursor_.check( Token_kind::Question ) )
         {
-            advance();
+            cursor_.advance();
 
             // Both arms are delimited - the first by `?` and `:`, the second by whatever ends the
             // expression - so neither sits beside an infix operator D16 could object to.
@@ -3619,7 +2667,7 @@ Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing, bool incre
 
             Node_id else_branch {};
 
-            if( match( Token_kind::Colon ) )
+            if( cursor_.match( Token_kind::Colon ) )
             {
                 // `power` rather than `power + 1`: right-associative, so `a ? b : c ? d : e` is
                 // `a ? b : (c ? d : e)`, as in C.
@@ -3627,8 +2675,8 @@ Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing, bool incre
             }
             else
             {
-                error_expected( Token_kind::Colon, "a conditional always has two arms: write `a ? b : c`" );
-                else_branch = error_node( previous().span );
+                recovery_.error_expected( Token_kind::Colon, "a conditional always has two arms: write `a ? b : c`" );
+                else_branch = error_node( cursor_.previous().span );
             }
 
             left = ast_.add(
@@ -3646,30 +2694,30 @@ Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing, bool incre
         // catches. Parenthesised operands are unambiguous by construction.
         Token_kind conflicting = Token_kind::End_of_file;
 
-        if( needs_parentheses( enclosing, peek().kind ) )
+        if( needs_parentheses( enclosing, cursor_.peek().kind ) )
         {
             conflicting = enclosing;
         }
         else if( ast_.kind( left ) == Node_kind::Binary_expr && !is_parenthesised( left ) &&
-                 needs_parentheses( ast_.op( left ), peek().kind ) )
+                 needs_parentheses( ast_.op( left ), cursor_.peek().kind ) )
         {
             conflicting = ast_.op( left );
         }
 
         if( conflicting != Token_kind::End_of_file && !ast_.broken( left ) )
         {
-            error_at(
-                Span::merge( ast_.span( left ), peek().span ),
+            recovery_.error_at(
+                Span::merge( ast_.span( left ), cursor_.peek().span ),
                 fmt::format(
                     "`{}` and `{}` cannot be mixed without parentheses",
                     token_kind_spelling( conflicting ),
-                    token_kind_spelling( peek().kind )
+                    token_kind_spelling( cursor_.peek().kind )
                 ),
                 "add parentheses to say which grouping you mean"
             );
         }
 
-        const Token op = advance();
+        const Token op = cursor_.advance();
 
         // Left associativity: recurse one above this operator's power, so an equally tight operator
         // to the right belongs to the *next* iteration rather than becoming our right child.
@@ -3683,7 +2731,7 @@ Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing, bool incre
         );
     }
 
-    if( min_power == 0 && !keep_shape && ast_.broken( left ) && ast_.kind( left ) != Node_kind::Error )
+    if( min_power == 0 && use != Expression_use::Case_bound && ast_.broken( left ) && ast_.kind( left ) != Node_kind::Error )
     {
         left = error_node( ast_.span( left ) );
     }
@@ -3691,146 +2739,347 @@ Node_id Parser::parse_expression( u8 min_power, Token_kind enclosing, bool incre
     return left;
 }
 
+Node_id Parser::parse_expression_before_increment()
+{
+    return parse_expression( 0, Token_kind::End_of_file, Expression_use::Before_increment );
+}
+
+Node_id Parser::parse_case_bound()
+{
+    return parse_expression( 0, Token_kind::End_of_file, Expression_use::Case_bound );
+}
+
+// The postfix forms, which bind tighter than any infix operator: calls, type arguments, `.`, `::`,
+// `[]`, and a misplaced `++`.
+Node_id Parser::parse_postfix( Node_id left, bool increment_follows )
+{
+    while( true )
+    {
+        if( !increment_follows && ( cursor_.check( Token_kind::Plus_plus ) || cursor_.check( Token_kind::Minus_minus ) ) )
+        {
+            const Token op = cursor_.advance(); // consume ++ or --
+
+            if( !ast_.broken( left ) )
+            {
+                recovery_.error_at(
+                    Span::merge( ast_.span( left ), cursor_.previous().span ),
+                    fmt::format( "`{}` is a statement, not a value", token_kind_spelling( op.kind ) ),
+                    fmt::format(
+                        "write `{}{};` on a line of its own", sm_.text( ast_.span( left ) ), token_kind_spelling( op.kind )
+                    )
+                );
+            }
+
+            continue;
+        }
+
+        // function call is a special case: it is the only infix operator that does not produce a
+        // Binary_expr node, so it does not need the parentheses check below.
+        if( cursor_.check( Token_kind::L_paren ) )
+        {
+            Node_id args = parse_arg_list();
+
+            left = ast_.add(
+                Node_kind::Call_expr, Span::merge( ast_.span( left ), ast_.span( args ) ), 0, { left, args, Node_id {} }
+            );
+            continue;
+        }
+
+        if( cursor_.check( Token_kind::Less ) && lookahead_.looks_like_type_arguments( cursor_.position() ) )
+        {
+            left = parse_type_argument_suffix( left );
+            continue;
+        }
+
+        // Field access produces its own node rather than a Binary_expr. The field name goes in aux, not
+        // into a Name_expr child: it resolves against the object's type, not through the scope stack.
+        // D22: `.` reaches through a pointer, so `->` is refused by name and recovered as `.`, rather than
+        // lexed as `-` then `>` and reported as arithmetic.
+        const bool arrow = cursor_.check( Token_kind::Arrow );
+
+        if( arrow || cursor_.check( Token_kind::Dot ) )
+        {
+            if( arrow )
+            {
+                recovery_.error_at(
+                    cursor_.peek().span, "`->` is not a Keel operator", "use `.`, which reaches through a pointer"
+                );
+            }
+
+            cursor_.advance();
+
+            // expect_name rather than a bare expect: a keyword here was meant as the member name.
+            left = member_access( left, Node_kind::Field_expr, expect_name() );
+            continue;
+        }
+
+        if( cursor_.match( Token_kind::Colon_colon ) )
+        {
+            left = member_access( left, Node_kind::Path_expr, expect_member_name() );
+            continue;
+        }
+
+        if( cursor_.check( Token_kind::L_bracket ) )
+        {
+            cursor_.advance();
+
+            const Node_id index = parse_expression( 0 );
+
+            recovery_.expect( Token_kind::R_bracket );
+
+            left = ast_.add(
+                Node_kind::Index_expr, Span::merge( ast_.span( left ), cursor_.previous().span ), 0, { left, index }
+            );
+            continue;
+        }
+
+        return left;
+    }
+}
+
+// `id<i32>( 1 )`, `Box<i32>::of`, or a name carrying its type arguments. The lookahead has proved the
+// shape, so this parses for real: parse_type and expect_generic_close, as a `Vector<i32>` annotation does.
+Node_id Parser::parse_type_argument_suffix( Node_id left )
+{
+    const Span open = cursor_.peek().span;
+
+    cursor_.advance(); // the `<`
+
+    std::vector<Node_id> arguments;
+
+    do
+    {
+        arguments.push_back( parse_type() );
+    } while( cursor_.match( Token_kind::Comma ) );
+
+    recovery_.expect_generic_close();
+
+    const Node_id types = ast_.add( Node_kind::Type_arg_list, Span::merge( open, cursor_.previous().span ), 0, arguments );
+
+    // `Box<i32>::of( 7 )`. The arguments belong to the *qualifier* rather than to a call, so
+    // they are carried on the path instead - a static call has no receiver to read them off,
+    // which makes this the only place they can come from. The trailing `( 7 )` is then an
+    // ordinary call over the path, handled by parse_postfix.
+    if( cursor_.check( Token_kind::Colon_colon ) || cursor_.check( Token_kind::Dot ) )
+    {
+        const bool is_dot   = cursor_.check( Token_kind::Dot );
+        const Span dot_span = is_dot ? cursor_.peek().span : Span {};
+
+        cursor_.advance();
+
+        const Symbol_id scoped = expect_member_name();
+
+        if( !scoped.is_valid() )
+        {
+            return member_access( left, Node_kind::Path_expr, scoped );
+        }
+
+        if( is_dot )
+        {
+            recovery_.error_at(
+                dot_span,
+                "a type's members are reached with `::`",
+                fmt::format(
+                    "write `{}::{}`",
+                    sm_.text( Span::merge( ast_.span( left ), ast_.span( types ) ) ),
+                    sm_.text( cursor_.previous().span )
+                )
+            );
+        }
+
+        return member_access( left, Node_kind::Path_expr, scoped, types );
+    }
+
+    // The list belongs to the name because there is no call to hang it on, the same slot a path already gives its
+    // qualifier.
+    if( !cursor_.check( Token_kind::L_paren ) )
+    {
+        if( ast_.kind( left ) != Node_kind::Name_expr )
+        {
+            if( !ast_.broken( left ) )
+            {
+                recovery_.error_at(
+                    Span::merge( ast_.span( left ), cursor_.previous().span ),
+                    "only a name can take type arguments",
+                    "`<` after anything else is a comparison, and its right operand is missing"
+                );
+            }
+            return error_node( Span::merge( ast_.span( left ), cursor_.previous().span ) );
+        }
+
+        return ast_.add(
+            Node_kind::Name_expr, Span::merge( ast_.span( left ), cursor_.previous().span ), ast_.aux( left ), { types }
+        );
+    }
+
+    const Node_id args = parse_arg_list();
+
+    return ast_.add( Node_kind::Call_expr, Span::merge( ast_.span( left ), ast_.span( args ) ), 0, { left, args, types } );
+}
+
+// A member access with no name is not one: every later pass reads the name to report about it, and
+// an invalid Symbol_id aborts the interner rather than degrading. The parser has already said what it
+// found in the name's place.
+Node_id Parser::member_access( Node_id left, Node_kind kind, Symbol_id name, Node_id type_arguments )
+{
+    const Span span = Span::merge( ast_.span( left ), cursor_.previous().span );
+
+    if( !name.is_valid() )
+    {
+        return error_node( span );
+    }
+
+    if( type_arguments.is_valid() )
+    {
+        return ast_.add( kind, span, name.v, { left, type_arguments } );
+    }
+
+    return ast_.add( kind, span, name.v, { left } );
+}
+
 // The keyword-headed expressions: literals with no digits, the three call-site markers, and the
 // two conversions. Split out because it is the only case here with real branching - the rest of
 // parse_prefix is one line per token kind.
 Node_id Parser::parse_keyword_prefix( Span start )
 {
-    if( check_keyword( Keyword::True ) || check_keyword( Keyword::False ) )
+    if( cursor_.check_keyword( Keyword::True ) || cursor_.check_keyword( Keyword::False ) )
     {
-        const bool value = check_keyword( Keyword::True );
-        advance();
-        return ast_.add( Node_kind::Bool_literal, Span::merge( start, previous().span ), value ? 1u : 0u, {} );
+        const bool value = cursor_.check_keyword( Keyword::True );
+        cursor_.advance();
+        return ast_.add( Node_kind::Bool_literal, Span::merge( start, cursor_.previous().span ), value ? 1u : 0u, {} );
     }
 
-    if( check_keyword( Keyword::Nullptr ) )
+    if( cursor_.check_keyword( Keyword::Nullptr ) )
     {
-        advance();
-        return ast_.add( Node_kind::Null_literal, Span::merge( start, previous().span ), 0, {} );
+        cursor_.advance();
+        return ast_.add( Node_kind::Null_literal, Span::merge( start, cursor_.previous().span ), 0, {} );
     }
 
-    if( check_keyword( Keyword::Alloc ) )
+    if( cursor_.check_keyword( Keyword::Alloc ) )
     {
-        advance();
+        cursor_.advance();
 
-        expect( Token_kind::Less );
+        recovery_.expect( Token_kind::Less );
         const Node_id type = parse_type();
 
         // Not expect( Greater ): `alloc<Vector<i32>>()` closes with `>>`.
-        expect_generic_close();
+        recovery_.expect_generic_close();
 
-        expect( Token_kind::L_paren );
+        recovery_.expect( Token_kind::L_paren );
 
         Node_id count {};
-        if( !check( Token_kind::R_paren ) )
+        if( !cursor_.check( Token_kind::R_paren ) )
         {
             count = parse_expression( 0 );
         }
-        expect( Token_kind::R_paren );
+        recovery_.expect( Token_kind::R_paren );
 
         if( count.is_valid() )
         {
-            return ast_.add( Node_kind::Alloc_expr, Span::merge( start, previous().span ), 0, { type, count } );
+            return ast_.add( Node_kind::Alloc_expr, Span::merge( start, cursor_.previous().span ), 0, { type, count } );
         }
         else
         {
-            return ast_.add( Node_kind::Alloc_expr, Span::merge( start, previous().span ), 0, { type } );
+            return ast_.add( Node_kind::Alloc_expr, Span::merge( start, cursor_.previous().span ), 0, { type } );
         }
     }
 
-    if( check_keyword( Keyword::Free ) )
+    if( cursor_.check_keyword( Keyword::Free ) )
     {
-        advance();
-        expect( Token_kind::L_paren );
+        cursor_.advance();
+        recovery_.expect( Token_kind::L_paren );
         const Node_id operand = parse_expression( 0 );
-        expect( Token_kind::R_paren );
+        recovery_.expect( Token_kind::R_paren );
 
-        return ast_.add( Node_kind::Free_expr, Span::merge( start, previous().span ), 0, { operand } );
+        return ast_.add( Node_kind::Free_expr, Span::merge( start, cursor_.previous().span ), 0, { operand } );
     }
 
-    if( check_keyword( Keyword::Destroy ) )
+    if( cursor_.check_keyword( Keyword::Destroy ) )
     {
-        advance();
-        expect( Token_kind::L_paren );
+        cursor_.advance();
+        recovery_.expect( Token_kind::L_paren );
         const Node_id pointer = parse_expression( 0 );
-        expect( Token_kind::Comma );
+        recovery_.expect( Token_kind::Comma );
         const Node_id count = parse_expression( 0 );
-        expect( Token_kind::R_paren );
+        recovery_.expect( Token_kind::R_paren );
 
-        return ast_.add( Node_kind::Destroy_expr, Span::merge( start, previous().span ), 0, { pointer, count } );
+        return ast_.add( Node_kind::Destroy_expr, Span::merge( start, cursor_.previous().span ), 0, { pointer, count } );
     }
 
-    if( check_keyword( Keyword::Assert ) )
+    if( cursor_.check_keyword( Keyword::Assert ) )
     {
-        advance();
-        expect( Token_kind::L_paren );
+        cursor_.advance();
+        recovery_.expect( Token_kind::L_paren );
         const Node_id operand = parse_expression( 0 );
-        expect( Token_kind::R_paren );
+        recovery_.expect( Token_kind::R_paren );
 
-        return ast_.add( Node_kind::Assert_expr, Span::merge( start, previous().span ), 0, { operand } );
+        return ast_.add( Node_kind::Assert_expr, Span::merge( start, cursor_.previous().span ), 0, { operand } );
     }
 
-    if( check_keyword( Keyword::Panic ) )
+    if( cursor_.check_keyword( Keyword::Panic ) )
     {
-        advance();
-        expect( Token_kind::L_paren );
+        cursor_.advance();
+        recovery_.expect( Token_kind::L_paren );
         const Node_id message = parse_expression( 0 );
-        expect( Token_kind::R_paren );
+        recovery_.expect( Token_kind::R_paren );
 
-        return ast_.add( Node_kind::Panic_expr, Span::merge( start, previous().span ), 0, { message } );
+        return ast_.add( Node_kind::Panic_expr, Span::merge( start, cursor_.previous().span ), 0, { message } );
     }
 
-    if( check_keyword( Keyword::Cast ) || check_keyword( Keyword::Wrap ) )
+    if( cursor_.check_keyword( Keyword::Cast ) || cursor_.check_keyword( Keyword::Wrap ) )
     {
         // aux carries which of the two, the way Marker_expr does: one node kind, and sema
         // reads the operator back off it.
-        const Keyword which = peek().keyword();
-        advance();
+        const Keyword which = cursor_.peek().keyword();
+        cursor_.advance();
 
-        expect( Token_kind::Less );
+        recovery_.expect( Token_kind::Less );
         const Node_id type = parse_type();
 
         // Not expect( Greater ): `wrap<Vector<i32>>( x )` closes with `>>`, and this is the
         // helper that splits it.
-        expect_generic_close();
+        recovery_.expect_generic_close();
 
-        expect( Token_kind::L_paren );
+        recovery_.expect( Token_kind::L_paren );
         const Node_id operand = parse_expression( 0 );
-        expect( Token_kind::R_paren );
+        recovery_.expect( Token_kind::R_paren );
 
         return ast_.add(
-            Node_kind::Cast_expr, Span::merge( start, previous().span ), static_cast<u32>( which ), { type, operand }
+            Node_kind::Cast_expr, Span::merge( start, cursor_.previous().span ), static_cast<u32>( which ), { type, operand }
         );
     }
 
-    if( check_keyword( Keyword::Move ) || check_keyword( Keyword::Out ) || check_keyword( Keyword::Ref ) )
+    if( cursor_.check_keyword( Keyword::Move ) || cursor_.check_keyword( Keyword::Out ) ||
+        cursor_.check_keyword( Keyword::Ref ) )
     {
-        const Keyword marker = peek().keyword();
-        advance();
+        const Keyword marker = cursor_.peek().keyword();
+        cursor_.advance();
         const Node_id operand = parse_expression( 0 );
         return ast_.add(
-            Node_kind::Marker_expr, Span::merge( start, previous().span ), static_cast<u32>( marker ), { operand }
+            Node_kind::Marker_expr, Span::merge( start, cursor_.previous().span ), static_cast<u32>( marker ), { operand }
         );
     }
 
-    if( check_keyword( Keyword::Try ) )
+    if( cursor_.check_keyword( Keyword::Try ) )
     {
-        advance();
+        cursor_.advance();
         const Node_id operand = parse_expression( k_unary_power );
-        return ast_.add( Node_kind::Try_expr, Span::merge( start, previous().span ), 0, { operand } );
+        return ast_.add( Node_kind::Try_expr, Span::merge( start, cursor_.previous().span ), 0, { operand } );
     }
 
-    if( check_keyword( Keyword::Underscore ) )
+    if( cursor_.check_keyword( Keyword::Underscore ) )
     {
-        advance();
-        error_at( previous().span, "`_` can only be assigned to", "`_ = f();` calls `f` and discards what it returns" );
-        return error_node( Span::merge( start, previous().span ) );
+        cursor_.advance();
+        recovery_.error_at(
+            cursor_.previous().span, "`_` can only be assigned to", "`_ = f();` calls `f` and discards what it returns"
+        );
+        return error_node( Span::merge( start, cursor_.previous().span ) );
     }
 
-    if( check_keyword( Keyword::This ) )
+    if( cursor_.check_keyword( Keyword::This ) )
     {
-        advance();
-        return ast_.add( Node_kind::Name_expr, previous().span, Interner::keyword( Keyword::This ).v, {} );
+        cursor_.advance();
+        return ast_.add( Node_kind::Name_expr, cursor_.previous().span, Interner::keyword( Keyword::This ).v, {} );
     }
 
     // Not a keyword that starts an expression. Invalid rather than a diagnostic, so the caller
@@ -3840,64 +3089,72 @@ Node_id Parser::parse_keyword_prefix( Span start )
 
 Node_id Parser::parse_prefix()
 {
-    const Span start = peek().span;
+    const Span start = cursor_.peek().span;
 
     // A literal the lexer reported has no value to judge.
-    if( peek().bad && !check( Token_kind::Unknown ) )
+    if( cursor_.peek().bad && !cursor_.check( Token_kind::Unknown ) )
     {
-        return error_node( advance().span );
+        return error_node( cursor_.advance().span );
     }
 
-    switch( peek().kind )
+    switch( cursor_.peek().kind )
     {
     case Token_kind::Int_literal:
-        advance();
-        return ast_.add( Node_kind::Int_literal, Span::merge( start, previous().span ), previous().symbol.v, {} );
+        cursor_.advance();
+        return ast_.add(
+            Node_kind::Int_literal, Span::merge( start, cursor_.previous().span ), cursor_.previous().symbol.v, {}
+        );
 
     case Token_kind::Float_literal:
-        advance();
-        return ast_.add( Node_kind::Float_literal, Span::merge( start, previous().span ), previous().symbol.v, {} );
+        cursor_.advance();
+        return ast_.add(
+            Node_kind::Float_literal, Span::merge( start, cursor_.previous().span ), cursor_.previous().symbol.v, {}
+        );
 
     case Token_kind::String_literal:
-        advance();
-        return ast_.add( Node_kind::String_literal, Span::merge( start, previous().span ), previous().symbol.v, {} );
+        cursor_.advance();
+        return ast_.add(
+            Node_kind::String_literal, Span::merge( start, cursor_.previous().span ), cursor_.previous().symbol.v, {}
+        );
 
     case Token_kind::Char_literal:
-        advance();
-        return ast_.add( Node_kind::Char_literal, Span::merge( start, previous().span ), previous().symbol.v, {} );
+        cursor_.advance();
+        return ast_.add(
+            Node_kind::Char_literal, Span::merge( start, cursor_.previous().span ), cursor_.previous().symbol.v, {}
+        );
 
     case Token_kind::Identifier:
     {
-        advance();
+        cursor_.advance();
 
-        const Symbol_id name = previous().symbol;
+        const Symbol_id name = cursor_.previous().symbol;
 
-        if( check( Token_kind::Colon_colon ) && peek( 1 ).kind == Token_kind::Identifier &&
-            peek( 2 ).kind == Token_kind::L_brace )
+        if( cursor_.check( Token_kind::Colon_colon ) && cursor_.peek( 1 ).kind == Token_kind::Identifier &&
+            cursor_.peek( 2 ).kind == Token_kind::L_brace )
         {
-            const Node_id package_node = ast_.add( Node_kind::Name_expr, previous().span, name.v, {} );
+            const Node_id package_node = ast_.add( Node_kind::Name_expr, cursor_.previous().span, name.v, {} );
 
-            advance(); // the `::`
-            advance(); // the type's name
+            cursor_.advance(); // the `::`
+            cursor_.advance(); // the type's name
 
-            return parse_struct_literal( start, previous().symbol, package_node );
+            return parse_struct_literal( start, cursor_.previous().symbol, package_node );
         }
 
         // No ambiguity with a block: a block is a statement and starts with `{`, so an expression
         // is never followed by one. Rust needs a rule here only because its `if` takes no
         // parentheses - Keel's conditions end at `)`.
-        if( check( Token_kind::L_brace ) )
+        if( cursor_.check( Token_kind::L_brace ) )
         {
             return parse_struct_literal( start, name );
         }
 
-        return ast_.add( Node_kind::Name_expr, Span::merge( start, previous().span ), name.v, {} );
+        return ast_.add( Node_kind::Name_expr, Span::merge( start, cursor_.previous().span ), name.v, {} );
     }
 
     case Token_kind::Digit_name:
     {
         expect_name();
-        return error_node( previous().span );
+        return error_node( cursor_.previous().span );
     }
 
     case Token_kind::Minus:
@@ -3907,7 +3164,7 @@ Node_id Parser::parse_prefix()
     case Token_kind::Amp:
     {
         // The operator is captured before the operand is parsed, and the span read after it.
-        const Token op = advance();
+        const Token op = cursor_.advance();
 
         // Recursing at the same power makes unary right-associative, so `- -x` nests. No enclosing
         // operator is passed: unary is not in D16's classification, and claiming it were would make
@@ -3915,18 +3172,18 @@ Node_id Parser::parse_prefix()
         const Node_id operand = parse_expression( k_unary_power );
 
         return ast_.add(
-            Node_kind::Unary_expr, Span::merge( start, previous().span ), static_cast<u32>( op.kind ), { operand }
+            Node_kind::Unary_expr, Span::merge( start, cursor_.previous().span ), static_cast<u32>( op.kind ), { operand }
         );
     }
     case Token_kind::Plus_plus:
     case Token_kind::Minus_minus:
     {
-        const Token   op      = advance();
+        const Token   op      = cursor_.advance();
         const Node_id operand = parse_expression( k_unary_power );
         if( !ast_.broken( operand ) )
         {
-            error_at(
-                Span::merge( start, previous().span ),
+            recovery_.error_at(
+                Span::merge( start, cursor_.previous().span ),
                 fmt::format( "`{}` is a statement, not a value", token_kind_spelling( op.kind ) ),
                 fmt::format(
                     "write `{}{};` on a line of its own", sm_.text( ast_.span( operand ) ), token_kind_spelling( op.kind )
@@ -3941,9 +3198,9 @@ Node_id Parser::parse_prefix()
     // tree. Only D16 needs to know they were there, which is what mark_parenthesised records.
     case Token_kind::L_paren:
     {
-        advance();
+        cursor_.advance();
         const Node_id inner = parse_expression( 0 );
-        expect( Token_kind::R_paren );
+        recovery_.expect( Token_kind::R_paren );
         mark_parenthesised( inner );
         return inner;
     }
@@ -3965,37 +3222,123 @@ Node_id Parser::parse_prefix()
         break;
     }
 
-    fail_at( peek().span, fmt::format( "expected an expression, found {}", found_text() ) );
+    recovery_.fail_at( cursor_.peek().span, fmt::format( "expected an expression, found {}", recovery_.found_text() ) );
 
     return error_node( start );
 }
 
 Node_id Parser::parse_arg_list()
 {
-    const Span start = peek().span;
+    const Span start = cursor_.peek().span;
 
     std::vector<Node_id> args;
 
-    if( !expect( Token_kind::L_paren ) )
+    if( !recovery_.expect( Token_kind::L_paren ) )
     {
         return ast_.add( Node_kind::Arg_list, start, 0, args );
     }
 
-    if( !check( Token_kind::R_paren ) )
+    if( !cursor_.check( Token_kind::R_paren ) )
     {
         const std::size_t list_errors = diags_.error_count();
         do
         {
             args.push_back( parse_expression( 0 ) );
-            if( !end_list_element( Token_kind::R_paren, list_errors ) )
+            if( !recovery_.end_list_element( Token_kind::R_paren, list_errors ) )
             {
-                return ast_.add( Node_kind::Arg_list, Span::merge( start, previous().span ), 0, args );
+                return ast_.add( Node_kind::Arg_list, Span::merge( start, cursor_.previous().span ), 0, args );
             }
-        } while( match( Token_kind::Comma ) );
+        } while( cursor_.match( Token_kind::Comma ) );
     }
 
-    expect( Token_kind::R_paren );
-    return ast_.add( Node_kind::Arg_list, Span::merge( start, previous().span ), 0, args );
+    recovery_.expect( Token_kind::R_paren );
+    return ast_.add( Node_kind::Arg_list, Span::merge( start, cursor_.previous().span ), 0, args );
+}
+
+Node_id Parser::parse_struct_literal( Span start, Symbol_id type_name, Node_id package )
+{
+    const Span name = cursor_.previous().span; // both callers have just consumed the type's name
+    recovery_.expect( Token_kind::L_brace );
+
+    std::vector<Node_id> initialisers;
+
+    if( package.is_valid() )
+    {
+        initialisers.push_back( package );
+    }
+
+    const std::size_t list_errors = diags_.error_count();
+    bool              closed      = true;
+    while( !cursor_.check( Token_kind::R_brace ) && !cursor_.at_end() )
+    {
+        const u32 before = cursor_.position();
+
+        initialisers.push_back( parse_field_init() );
+
+        if( !recovery_.end_list_element( Token_kind::R_brace, list_errors, Recovery::List_site::Literal ) )
+        {
+            closed = false;
+            break;
+        }
+
+        // Same guard as parse_block: a rule that reports without advancing would spin here.
+        if( cursor_.position() == before )
+        {
+            cursor_.advance();
+            continue;
+        }
+
+        // A trailing comma is allowed, unlike in an argument list - C++ permits one in a braced
+        // initialiser and rejects one in a call, and §5.1 says to follow it rather than to be
+        // internally tidy.
+        cursor_.match( Token_kind::Comma );
+    }
+
+    if( closed )
+    {
+        recovery_.expect( Token_kind::R_brace );
+    }
+
+    const Node_id node =
+        ast_.add( Node_kind::Struct_literal, Span::merge( start, cursor_.previous().span ), type_name.v, initialisers );
+    ast_.set_type_name_span( node, name );
+    return node;
+}
+
+Node_id Parser::parse_field_init()
+{
+    const Span start = cursor_.peek().span;
+
+    Symbol_id name; // left invalid by the positional form
+
+    if( cursor_.match( Token_kind::Dot ) )
+    {
+        // Only on success: a failed expect() does not advance, so previous() would be the dot.
+        if( recovery_.expect( Token_kind::Identifier ) )
+        {
+            name = cursor_.previous().symbol;
+        }
+
+        recovery_.expect( Token_kind::Equal );
+    }
+
+    const Node_id value = parse_expression( 0 );
+
+    return ast_.add( Node_kind::Field_init, Span::merge( start, cursor_.previous().span ), name.v, { value } );
+}
+
+void Parser::mark_parenthesised( Node_id id )
+{
+    if( parenthesised_.size() <= id.v )
+    {
+        parenthesised_.resize( id.v + 1, false );
+    }
+    parenthesised_[id.v] = true;
+}
+
+bool Parser::is_parenthesised( Node_id id ) const
+{
+    return id.v < parenthesised_.size() && parenthesised_[id.v];
 }
 
 // A failure in a statement's head, up to its body, silences sema's judgments there: the head was
@@ -7119,9 +6462,8 @@ TEST_CASE( "parser_still_reads_comparisons_as_comparisons", "[parse][generic]" )
     }
 }
 
-// match_generic_close splits `>>` by leaving `pending_greater_` set, and that is parser state. A
-// scan that rewound the cursor without restoring it would hand the next real `>` to whatever came
-// after - so the scan counts depth itself and never calls that helper.
+// A split `>>` leaves half a `>` owed in the cursor. A scan sharing the parser's cursor would hand
+// the next real `>` to whatever came after, so the lookahead holds its own.
 TEST_CASE( "parser_leaves_no_state_behind_after_a_scan", "[parse][generic]" )
 {
     SECTION( "a shift after a nested generic call still shifts" )

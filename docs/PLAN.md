@@ -284,7 +284,11 @@ declaration first and work its callers one at a time; the compiler cannot check 
 predicate. A move can widen linkage and leave stale cross-references, which only reading finds.
 
 **The file-local classes still growing** are `Parser` and `Lowering`, and `Expressions` is the
-largest class. The readability work that addresses them is proposed in §15.
+largest class. `Parser` holds the grammar only (3,400 code lines, ordered names, declarations,
+types, statements, expressions); its cursor is `parse/token_cursor`, shared in shape with
+`Lookahead`, and its syntax errors and recovery are `parse/recovery`, which builds no node. Splitting
+the grammar itself into a DAG of classes waits on the lambda decision, since a lambda puts
+statements inside expressions. The readability work that addresses the rest is proposed in §15.
 
 ---
 
@@ -1061,7 +1065,7 @@ keel/
       main.cpp            the driver: options, the pipeline, writing outputs, invoking cc
       common/             Interner, Span, Source_manager, Diagnostics, Literal_pool, Imports
       lex/                lex(), Token and the token tables
-      parse/              Parser (file-local), its Lookahead, the loader, C++-habit hints
+      parse/              Parser (file-local), Token_cursor, Recovery, Lookahead, the loader, C++-habit hints
       ast/                Ast, Node and Node_kind's shape table, the dump
       sema/               Resolver; the checker's class DAG (§3.2), one class per file; collect_names for the editor
       ir/                 KIR (kir.h), Builder, Lowering (file-local) and monomorphisation, simplify, verify, print
@@ -1197,10 +1201,11 @@ declined: lowering and emission intern types the checker never named, and `table
 mutable member. **At M9.1**: the dataflow wording out of `main.cpp` into `check/report` (R10), **done**, and one
 test fixture that runs the real pipeline, prelude included (R11), **done**: `check/pipeline_test_support.h`'s
 `Compiled`. **At M9.5**: the parser's cursor and recovery as
-classes (R3, with R5 and R18), `infer_call`'s phases and a call-site struct (R6, R15), and the
+classes (R3, with R5 and R18), **done**: `Token_cursor`, `Recovery`, `parse_expression` split into prefix,
+postfix and infix with named entry points; `infer_call`'s phases and a call-site struct (R6, R15), and the
 resolver's long cases (R12). **Later, or when next touched**: `Addresses` out of `Expressions` (R4),
 the `Types` renames (R8) once files stop moving, R16 and R21, and R19's comment sweep of
-`ir/lower.cpp`, `check/` and `parse/parser.cpp`.
+`ir/lower.cpp` and `parse/parser.cpp` (`check/` **done**).
 
 ### Carried from M8
 

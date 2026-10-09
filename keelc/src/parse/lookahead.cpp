@@ -9,7 +9,7 @@ namespace keel
 {
 
 Lookahead::Lookahead( std::span<const Token> tokens )
-    : tokens_( tokens )
+    : cursor_( tokens )
 {
 }
 
@@ -25,9 +25,9 @@ Head_scan Lookahead::own_member_head( u32 at, Symbol_id enclosing )
 
 Member_chunk Lookahead::next_member( u32 at, Symbol_id enclosing )
 {
-    cursor_ = at;
+    cursor_.seek( at );
 
-    if( check( Token_kind::R_brace ) || at_end() )
+    if( cursor_.check( Token_kind::R_brace ) || cursor_.at_end() )
     {
         return Member_chunk { .dropped_begin = at, .dropped_end = at, .failure = Scan_failure {}, .head = std::nullopt };
     }
@@ -46,16 +46,16 @@ Member_chunk Lookahead::next_member( u32 at, Symbol_id enclosing )
 
         if( next.head.has_value() )
         {
-            cursor_          = at;
+            cursor_.seek( at );
             Member_kind kind = Member_kind::Field;
 
             // Match public, or failing that private, but never both.
-            if( !match_keyword( Keyword::Public ) )
+            if( !cursor_.match_keyword( Keyword::Public ) )
             {
-                match_keyword( Keyword::Private );
+                cursor_.match_keyword( Keyword::Private );
             }
 
-            if( match_keyword( Keyword::Static ) )
+            if( cursor_.match_keyword( Keyword::Static ) )
             {
                 kind = Member_kind::Static_var;
             }
@@ -70,15 +70,15 @@ Member_chunk Lookahead::next_member( u32 at, Symbol_id enclosing )
     }
 
     // Drop then retry; to catch garbage at the beginning of something valid
-    cursor_ = at;
+    cursor_.seek( at );
     step_over_junk();
 
-    u32 q = cursor_;
+    u32 q = cursor_.position();
     while( true )
     {
-        cursor_ = q;
+        cursor_.seek( q );
 
-        if( check( Token_kind::R_brace ) || at_end() )
+        if( cursor_.check( Token_kind::R_brace ) || cursor_.at_end() )
         {
             break;
         }
@@ -87,9 +87,9 @@ Member_chunk Lookahead::next_member( u32 at, Symbol_id enclosing )
 
         if( !retry.head.has_value() )
         {
-            cursor_ = q;
+            cursor_.seek( q );
             step_over_junk();
-            q = cursor_;
+            q = cursor_.position();
             continue;
         }
 
@@ -104,7 +104,7 @@ Declaration_scan Lookahead::declaration_head( u32 at, Scan_site site )
     const auto make_head = [this]( Declaration_kind kind, u32 start ) -> Declaration_scan
     {
         return Declaration_scan {
-            .head = Declaration_head { .kind = kind, .start = start, .commit = cursor_ }, .failure = Scan_failure {}
+            .head = Declaration_head { .kind = kind, .start = start, .commit = cursor_.position() }, .failure = Scan_failure {}
         };
     };
     const auto make_failure = [this]( std::optional<u32> name = std::nullopt ) -> Declaration_scan
@@ -113,30 +113,29 @@ Declaration_scan Lookahead::declaration_head( u32 at, Scan_site site )
         return Declaration_scan { .head = std::nullopt, .failure = failure_ };
     };
 
-    cursor_       = at;
-    owed_greater_ = 0;
-    failure_      = Scan_failure {};
-    site_         = site;
+    cursor_.seek( at );
+    failure_ = Scan_failure {};
+    site_    = site;
 
-    if( check_keyword( Keyword::Import ) )
+    if( cursor_.check_keyword( Keyword::Import ) )
     {
         return make_head( Declaration_kind::Import, at );
     }
-    else if( check_keyword( Keyword::Struct ) || check_keyword( Keyword::Class ) )
+    else if( cursor_.check_keyword( Keyword::Struct ) || cursor_.check_keyword( Keyword::Class ) )
     {
         return make_head( Declaration_kind::Aggregate, at );
     }
-    else if( check_keyword( Keyword::Enum ) )
+    else if( cursor_.check_keyword( Keyword::Enum ) )
     {
         return make_head( Declaration_kind::Enum, at );
     }
 
-    const bool is_extern = match_keyword( Keyword::Extern );
+    const bool is_extern = cursor_.match_keyword( Keyword::Extern );
 
     if( !is_extern )
     {
-        if( !( check( Token_kind::Identifier ) || check_keyword( Keyword::Const ) || check_keyword( Keyword::Fn ) ||
-               check_keyword( Keyword::Field ) || at_mode_keyword() ) )
+        if( !( cursor_.check( Token_kind::Identifier ) || cursor_.check_keyword( Keyword::Const ) ||
+               cursor_.check_keyword( Keyword::Fn ) || cursor_.check_keyword( Keyword::Field ) || cursor_.at_mode_keyword() ) )
         {
             fail( Wanted::Declaration );
             return make_failure();
@@ -148,8 +147,8 @@ Declaration_scan Lookahead::declaration_head( u32 at, Scan_site site )
         return make_failure();
     }
 
-    const u32 name_at = cursor_;
-    if( match_keyword( Keyword::Operator ) )
+    const u32 name_at = cursor_.position();
+    if( cursor_.match_keyword( Keyword::Operator ) )
     {
         skip_operator_token();
     }
@@ -158,11 +157,11 @@ Declaration_scan Lookahead::declaration_head( u32 at, Scan_site site )
         return make_failure();
     }
 
-    if( is_extern || check( Token_kind::L_paren ) || check( Token_kind::Less ) )
+    if( is_extern || cursor_.check( Token_kind::L_paren ) || cursor_.check( Token_kind::Less ) )
     {
         const std::optional<u32> name =
-            tokens_[name_at].kind == Token_kind::Identifier ? std::optional( name_at ) : std::nullopt;
-        if( check( Token_kind::Less ) )
+            cursor_.tokens()[name_at].kind == Token_kind::Identifier ? std::optional( name_at ) : std::nullopt;
+        if( cursor_.check( Token_kind::Less ) )
         {
             if( !scan_type_params() )
             {
@@ -175,12 +174,12 @@ Declaration_scan Lookahead::declaration_head( u32 at, Scan_site site )
             return make_failure( name );
         }
 
-        if( check( Token_kind::L_brace ) )
+        if( cursor_.check( Token_kind::L_brace ) )
         {
             return make_head( Declaration_kind::Function, at );
         }
 
-        if( is_extern && check( Token_kind::Semicolon ) )
+        if( is_extern && cursor_.check( Token_kind::Semicolon ) )
         {
             return make_head( Declaration_kind::Function, at );
         }
@@ -194,7 +193,7 @@ Declaration_scan Lookahead::declaration_head( u32 at, Scan_site site )
         return make_failure( name );
     }
 
-    if( check( Token_kind::Equal ) || check( Token_kind::Semicolon ) )
+    if( cursor_.check( Token_kind::Equal ) || cursor_.check( Token_kind::Semicolon ) )
     {
         return make_head( Declaration_kind::Variable, at );
     }
@@ -205,9 +204,9 @@ Declaration_scan Lookahead::declaration_head( u32 at, Scan_site site )
 
 Declaration_chunk Lookahead::next_declaration( u32 at )
 {
-    cursor_ = at;
+    cursor_.seek( at );
 
-    if( at_end() )
+    if( cursor_.at_end() )
     {
         return Declaration_chunk { .dropped_begin = at, .dropped_end = at, .failure = Scan_failure {}, .head = std::nullopt };
     }
@@ -226,10 +225,11 @@ Declaration_chunk Lookahead::next_declaration( u32 at )
 
         if( next.head.has_value() )
         {
-            cursor_               = at;
+            cursor_.seek( at );
             Declaration_kind kind = Declaration_kind::Variable;
 
-            if( tokens_[at].kind == Token_kind::Keyword && static_cast<Keyword>( tokens_[at].symbol.v ) == Keyword::Extern )
+            if( cursor_.tokens()[at].kind == Token_kind::Keyword &&
+                static_cast<Keyword>( cursor_.tokens()[at].symbol.v ) == Keyword::Extern )
             {
                 kind = Declaration_kind::Function;
             }
@@ -244,15 +244,15 @@ Declaration_chunk Lookahead::next_declaration( u32 at )
     }
 
     // Drop and retry; to catch garbage at the beginning of something valid
-    cursor_ = at;
+    cursor_.seek( at );
     step_over_junk();
 
-    u32 q = cursor_;
+    u32 q = cursor_.position();
     while( true )
     {
-        cursor_ = q;
+        cursor_.seek( q );
 
-        if( at_end() )
+        if( cursor_.at_end() )
         {
             break;
         }
@@ -261,9 +261,9 @@ Declaration_chunk Lookahead::next_declaration( u32 at )
 
         if( !retry.head.has_value() )
         {
-            cursor_ = q;
+            cursor_.seek( q );
             step_over_junk();
-            q = cursor_;
+            q = cursor_.position();
             continue;
         }
 
@@ -275,13 +275,12 @@ Declaration_chunk Lookahead::next_declaration( u32 at )
 
 bool Lookahead::looks_like_declaration( u32 at )
 {
-    cursor_       = at;
-    owed_greater_ = 0;
-    site_         = Scan_site::Statement;
+    cursor_.seek( at );
+    site_ = Scan_site::Statement;
 
     // `auto x = ...` is settled by its keyword; the caller checks that before asking.
-    if( !check( Token_kind::Identifier ) && !check_keyword( Keyword::Const ) && !check_keyword( Keyword::Fn ) &&
-        !check_keyword( Keyword::Field ) )
+    if( !cursor_.check( Token_kind::Identifier ) && !cursor_.check_keyword( Keyword::Const ) &&
+        !cursor_.check_keyword( Keyword::Fn ) && !cursor_.check_keyword( Keyword::Field ) )
     {
         return false;
     }
@@ -291,18 +290,17 @@ bool Lookahead::looks_like_declaration( u32 at )
 
 bool Lookahead::looks_like_binding( u32 at )
 {
-    cursor_       = at;
-    owed_greater_ = 0;
-    site_         = Scan_site::Statement;
+    cursor_.seek( at );
+    site_ = Scan_site::Statement;
 
-    match_keyword( Keyword::Const ); // optional
+    cursor_.match_keyword( Keyword::Const ); // optional
 
-    if( !at_mode_keyword() )
+    if( !cursor_.at_mode_keyword() )
     {
         return false;
     }
 
-    advance(); // `move`, `ref` or `out`
+    cursor_.advance(); // `move`, `ref` or `out`
     return scan_type_and_name();
 }
 
@@ -310,16 +308,16 @@ bool Lookahead::looks_like_binding( u32 at )
 bool Lookahead::head_closes( u32 at )
 {
     u32 depth = 0;
-    cursor_   = at;
+    cursor_.seek( at );
 
     while( true )
     {
-        if( at_end() || check( Token_kind::L_brace ) || check( Token_kind::R_brace ) )
+        if( cursor_.at_end() || cursor_.check( Token_kind::L_brace ) || cursor_.check( Token_kind::R_brace ) )
         {
             return false;
         }
 
-        switch( peek().kind )
+        switch( cursor_.peek().kind )
         {
         case Token_kind::L_paren:
         case Token_kind::L_bracket:
@@ -329,7 +327,7 @@ bool Lookahead::head_closes( u32 at )
         case Token_kind::R_bracket:
             if( depth == 0 )
             {
-                return check( Token_kind::R_paren ) && peek( 1 ).kind == Token_kind::L_brace;
+                return cursor_.check( Token_kind::R_paren ) && cursor_.peek( 1 ).kind == Token_kind::L_brace;
             }
             depth -= 1;
             break;
@@ -337,7 +335,7 @@ bool Lookahead::head_closes( u32 at )
             break;
         }
 
-        advance();
+        cursor_.advance();
     }
 }
 
@@ -345,16 +343,15 @@ bool Lookahead::head_closes( u32 at )
 // reading never type-checks (§12).
 bool Lookahead::looks_like_type_arguments( u32 at )
 {
-    cursor_       = at;
-    owed_greater_ = 0;
+    cursor_.seek( at );
 
-    advance(); // the `<`
+    cursor_.advance(); // the `<`
 
     u32 depth = 1;
 
-    while( depth > 0 && !at_end() )
+    while( depth > 0 && !cursor_.at_end() )
     {
-        switch( peek().kind )
+        switch( cursor_.peek().kind )
         {
         case Token_kind::Less:
             depth += 1;
@@ -383,19 +380,21 @@ bool Lookahead::looks_like_type_arguments( u32 at )
             return false;
         }
 
-        advance();
+        cursor_.advance();
     }
 
-    return depth == 0 && ( check( Token_kind::Colon_colon ) || check( Token_kind::L_paren ) || check( Token_kind::Semicolon ) ||
-                           check( Token_kind::Comma ) || check( Token_kind::R_paren ) || check( Token_kind::R_bracket ) ||
-                           check( Token_kind::R_brace ) || check( Token_kind::Dot ) );
+    return depth == 0 && ( cursor_.check( Token_kind::Colon_colon ) || cursor_.check( Token_kind::L_paren ) ||
+                           cursor_.check( Token_kind::Semicolon ) || cursor_.check( Token_kind::Comma ) ||
+                           cursor_.check( Token_kind::R_paren ) || cursor_.check( Token_kind::R_bracket ) ||
+                           cursor_.check( Token_kind::R_brace ) || cursor_.check( Token_kind::Dot ) );
 }
 
 Head_scan Lookahead::scan_head( u32 at, Symbol_id enclosing, Constructor_names names )
 {
-    auto make_head = [this]( Member_kind kind, u32 start ) -> Head_scan {
+    auto make_head = [this]( Member_kind kind, u32 start ) -> Head_scan
+    {
         return Head_scan {
-            .head = Member_head { .kind = kind, .start = start, .commit = cursor_ }, .failure = Scan_failure {}
+            .head = Member_head { .kind = kind, .start = start, .commit = cursor_.position() }, .failure = Scan_failure {}
         };
     };
 
@@ -403,27 +402,26 @@ Head_scan Lookahead::scan_head( u32 at, Symbol_id enclosing, Constructor_names n
 
     const u32 start = at;
 
-    cursor_       = at;
-    owed_greater_ = 0;
-    failure_      = Scan_failure {};
-    site_         = Scan_site::File;
+    cursor_.seek( at );
+    failure_ = Scan_failure {};
+    site_    = Scan_site::File;
 
     // Match public, or failing that private, but never both.
-    if( !match_keyword( Keyword::Public ) )
+    if( !cursor_.match_keyword( Keyword::Public ) )
     {
-        match_keyword( Keyword::Private );
+        cursor_.match_keyword( Keyword::Private );
     }
 
-    const bool is_static = match_keyword( Keyword::Static );
+    const bool is_static = cursor_.match_keyword( Keyword::Static );
 
-    if( match( Token_kind::Tilde ) )
+    if( cursor_.match( Token_kind::Tilde ) )
     {
         if( !want_name() || !skip_parens() )
         {
             return make_failure();
         }
 
-        if( check( Token_kind::L_brace ) )
+        if( cursor_.check( Token_kind::L_brace ) )
         {
             return make_head( Member_kind::Destructor, start );
         }
@@ -432,17 +430,17 @@ Head_scan Lookahead::scan_head( u32 at, Symbol_id enclosing, Constructor_names n
         return make_failure();
     }
 
-    if( check( Token_kind::Identifier ) && peek( 1 ).kind == Token_kind::L_paren &&
-        ( names == Constructor_names::Any || peek().symbol == enclosing ) )
+    if( cursor_.check( Token_kind::Identifier ) && cursor_.peek( 1 ).kind == Token_kind::L_paren &&
+        ( names == Constructor_names::Any || cursor_.peek().symbol == enclosing ) )
     {
-        advance(); // identifier
+        cursor_.advance(); // identifier
 
         if( !skip_parens() )
         {
             return make_failure();
         }
 
-        if( check( Token_kind::L_brace ) )
+        if( cursor_.check( Token_kind::L_brace ) )
         {
             return make_head( Member_kind::Constructor, start );
         }
@@ -451,30 +449,33 @@ Head_scan Lookahead::scan_head( u32 at, Symbol_id enclosing, Constructor_names n
         return make_failure();
     }
 
-    if( cursor_ == start && !( check( Token_kind::Identifier ) || check_keyword( Keyword::Const ) ||
-                               check_keyword( Keyword::Fn ) || check_keyword( Keyword::Field ) || at_mode_keyword() ) )
+    if( cursor_.position() == start &&
+        !( cursor_.check( Token_kind::Identifier ) || cursor_.check_keyword( Keyword::Const ) ||
+           cursor_.check_keyword( Keyword::Fn ) || cursor_.check_keyword( Keyword::Field ) || cursor_.at_mode_keyword() ) )
     {
         fail( Wanted::Member );
         return make_failure();
     }
 
-    const u32  type_start = cursor_;
-    const bool moded      = at_mode_keyword() || ( check_keyword( Keyword::Const ) && peek( 1 ).kind == Token_kind::Keyword &&
-                                              peek( 1 ).keyword() == Keyword::Ref );
+    const u32  type_start = cursor_.position();
+    const bool moded      = cursor_.at_mode_keyword() ||
+                       ( cursor_.check_keyword( Keyword::Const ) && cursor_.peek( 1 ).kind == Token_kind::Keyword &&
+                         cursor_.peek( 1 ).keyword() == Keyword::Ref );
 
     if( !scan_type_with_mode() )
     {
         return make_failure();
     }
 
-    if( check( Token_kind::Identifier ) && peek().symbol == enclosing && peek( 1 ).kind == Token_kind::L_paren )
+    if( cursor_.check( Token_kind::Identifier ) && cursor_.peek().symbol == enclosing &&
+        cursor_.peek( 1 ).kind == Token_kind::L_paren )
     {
         fail( Wanted::Name );
         return make_failure();
     }
 
     // `operator` and whichever token follows it; the parser says which ones may be declared.
-    if( match_keyword( Keyword::Operator ) )
+    if( cursor_.match_keyword( Keyword::Operator ) )
     {
         skip_operator_token();
     }
@@ -483,16 +484,16 @@ Head_scan Lookahead::scan_head( u32 at, Symbol_id enclosing, Constructor_names n
         return make_failure();
     }
 
-    if( check( Token_kind::L_paren ) )
+    if( cursor_.check( Token_kind::L_paren ) )
     {
         if( !skip_parens() )
         {
             return make_failure();
         }
 
-        match_keyword( Keyword::Const ); // optional
+        cursor_.match_keyword( Keyword::Const ); // optional
 
-        if( check( Token_kind::L_brace ) )
+        if( cursor_.check( Token_kind::L_brace ) )
         {
             // Whether it was a static method or not does not matter to the lookahead; `static` was already consumed.
             // The parser will figure it out.
@@ -505,7 +506,7 @@ Head_scan Lookahead::scan_head( u32 at, Symbol_id enclosing, Constructor_names n
 
     if( is_static )
     {
-        if( check( Token_kind::Equal ) || check( Token_kind::Semicolon ) )
+        if( cursor_.check( Token_kind::Equal ) || cursor_.check( Token_kind::Semicolon ) )
         {
             return make_head( Member_kind::Static_var, start );
         }
@@ -521,7 +522,7 @@ Head_scan Lookahead::scan_head( u32 at, Symbol_id enclosing, Constructor_names n
     }
     else
     {
-        if( check( Token_kind::Semicolon ) )
+        if( cursor_.check( Token_kind::Semicolon ) )
         {
             return make_head( Member_kind::Field, start );
         }
@@ -531,81 +532,15 @@ Head_scan Lookahead::scan_head( u32 at, Symbol_id enclosing, Constructor_names n
     }
 }
 
-const Token& Lookahead::peek( u32 ahead ) const
-{
-    assert( !tokens_.empty() );
-    u32 tokens_end = narrow_cast<u32>( tokens_.size() - 1 );
-    return tokens_[std::min( cursor_ + ahead, tokens_end )];
-}
-
-bool Lookahead::at_end() const
-{
-    return peek().kind == Token_kind::End_of_file;
-}
-
-bool Lookahead::check( Token_kind kind ) const
-{
-    return peek().kind == kind;
-}
-
-bool Lookahead::check_keyword( Keyword keyword ) const
-{
-    return peek().kind == Token_kind::Keyword && peek().keyword() == keyword;
-}
-
-bool Lookahead::at_mode_keyword() const
-{
-    return check_keyword( Keyword::Move ) || check_keyword( Keyword::Ref ) || check_keyword( Keyword::Out );
-}
-
-const Token& Lookahead::previous() const
-{
-    assert( cursor_ > 0 );
-    return tokens_[cursor_ - 1];
-}
-
-bool Lookahead::peek_is_adjacent() const
-{
-    return cursor_ > 0 && peek().span.file == previous().span.file && peek().span.start == previous().span.end;
-}
-
-void Lookahead::advance()
-{
-    if( !at_end() )
-    {
-        cursor_++;
-    }
-}
-
-bool Lookahead::match( Token_kind kind )
-{
-    if( check( kind ) )
-    {
-        advance();
-        return true;
-    }
-    return false;
-}
-
-bool Lookahead::match_keyword( Keyword keyword )
-{
-    if( check_keyword( keyword ) )
-    {
-        advance();
-        return true;
-    }
-    return false;
-}
-
 bool Lookahead::fail( Wanted wanted, Token_kind token )
 {
-    failure_ = Scan_failure { .at = cursor_, .wanted = wanted, .token = token };
+    failure_ = Scan_failure { .at = cursor_.position(), .wanted = wanted, .token = token };
     return false;
 }
 
 bool Lookahead::want( Token_kind kind )
 {
-    if( match( kind ) )
+    if( cursor_.match( kind ) )
     {
         return true;
     }
@@ -617,7 +552,7 @@ bool Lookahead::want_name()
 {
     if( at_name() )
     {
-        advance();
+        cursor_.advance();
         return true;
     }
 
@@ -627,12 +562,13 @@ bool Lookahead::want_name()
 bool Lookahead::at_name() const
 {
     // Follows parsers expect_name, which consumes these as the name they were meant to be.
-    if( check( Token_kind::Identifier ) || check( Token_kind::Digit_name ) || check( Token_kind::Int_literal ) )
+    if( cursor_.check( Token_kind::Identifier ) || cursor_.check( Token_kind::Digit_name ) ||
+        cursor_.check( Token_kind::Int_literal ) )
     {
         return true;
     }
 
-    if( !check( Token_kind::Keyword ) )
+    if( !cursor_.check( Token_kind::Keyword ) )
     {
         return false;
     }
@@ -643,20 +579,20 @@ bool Lookahead::at_name() const
     }
 
     // A statement keyword starts its statement once what it needs follows; `;` follows a name too.
-    switch( peek().keyword() )
+    switch( cursor_.peek().keyword() )
     {
     case Keyword::If:
     case Keyword::While:
     case Keyword::For:
     case Keyword::Switch:
-        return peek( 1 ).kind != Token_kind::L_paren;
+        return cursor_.peek( 1 ).kind != Token_kind::L_paren;
 
     case Keyword::Unsafe:
-        return peek( 1 ).kind != Token_kind::L_brace;
+        return cursor_.peek( 1 ).kind != Token_kind::L_brace;
 
     case Keyword::Return:
-        return peek( 1 ).kind == Token_kind::Equal || peek( 1 ).kind == Token_kind::Semicolon ||
-               peek( 1 ).kind == Token_kind::Comma;
+        return cursor_.peek( 1 ).kind == Token_kind::Equal || cursor_.peek( 1 ).kind == Token_kind::Semicolon ||
+               cursor_.peek( 1 ).kind == Token_kind::Comma;
 
     default:
         return true;
@@ -665,18 +601,19 @@ bool Lookahead::at_name() const
 
 bool Lookahead::scan_type_with_mode()
 {
-    if( check_keyword( Keyword::Const ) && peek( 1 ).kind == Token_kind::Keyword && peek( 1 ).keyword() == Keyword::Ref )
+    if( cursor_.check_keyword( Keyword::Const ) && cursor_.peek( 1 ).kind == Token_kind::Keyword &&
+        cursor_.peek( 1 ).keyword() == Keyword::Ref )
     {
-        advance(); // `const`
+        cursor_.advance(); // `const`
     }
 
-    if( !at_mode_keyword() )
+    if( !cursor_.at_mode_keyword() )
     {
         return scan_type();
     }
 
-    advance();                       // `move`, `ref` or `out`
-    match_keyword( Keyword::Const ); // optional; parser reports
+    cursor_.advance();                       // `move`, `ref` or `out`
+    cursor_.match_keyword( Keyword::Const ); // optional; parser reports
 
     return scan_type();
 }
@@ -689,18 +626,18 @@ bool Lookahead::scan_type()
         {
             return false;
         }
-    } while( owed_greater_ == 0 && match( Token_kind::Pipe ) );
+    } while( !cursor_.owes_greater() && cursor_.match( Token_kind::Pipe ) );
     return true;
 }
 
 bool Lookahead::scan_type_term()
 {
-    match_keyword( Keyword::Const );
+    cursor_.match_keyword( Keyword::Const );
 
-    if( check_keyword( Keyword::Fn ) || check_keyword( Keyword::Field ) )
+    if( cursor_.check_keyword( Keyword::Fn ) || cursor_.check_keyword( Keyword::Field ) )
     {
-        bool is_fn = check_keyword( Keyword::Fn );
-        advance(); // `fn` or `field`
+        bool is_fn = cursor_.check_keyword( Keyword::Fn );
+        cursor_.advance(); // `fn` or `field`
 
         if( !want( Token_kind::L_paren ) )
         {
@@ -709,7 +646,7 @@ bool Lookahead::scan_type_term()
 
         if( is_fn )
         {
-            if( !check( Token_kind::R_paren ) )
+            if( !cursor_.check( Token_kind::R_paren ) )
             {
                 do
                 {
@@ -717,7 +654,7 @@ bool Lookahead::scan_type_term()
                     {
                         return false;
                     }
-                } while( match( Token_kind::Comma ) );
+                } while( cursor_.match( Token_kind::Comma ) );
             }
         }
         else // field
@@ -741,20 +678,20 @@ bool Lookahead::scan_type_term()
         return scan_type_with_mode();
     }
 
-    if( !match( Token_kind::Identifier ) )
+    if( !cursor_.match( Token_kind::Identifier ) )
     {
         return fail( Wanted::Type );
     }
 
-    if( check( Token_kind::Colon_colon ) && peek( 1 ).kind == Token_kind::Identifier )
+    if( cursor_.check( Token_kind::Colon_colon ) && cursor_.peek( 1 ).kind == Token_kind::Identifier )
     {
-        advance(); // `::`
-        advance(); // identifier
+        cursor_.advance(); // `::`
+        cursor_.advance(); // identifier
     }
 
-    if( match( Token_kind::Less ) )
+    if( cursor_.match( Token_kind::Less ) )
     {
-        if( !check( Token_kind::Greater ) && !check( Token_kind::Greater_greater ) )
+        if( !cursor_.check( Token_kind::Greater ) && !cursor_.check( Token_kind::Greater_greater ) )
         {
             do
             {
@@ -762,10 +699,10 @@ bool Lookahead::scan_type_term()
                 {
                     return false;
                 }
-            } while( match( Token_kind::Comma ) );
+            } while( cursor_.match( Token_kind::Comma ) );
         }
 
-        if( !scan_generic_close() )
+        if( !cursor_.match_generic_close() )
         {
             return fail( Wanted::Token, Token_kind::Greater );
         }
@@ -773,25 +710,26 @@ bool Lookahead::scan_type_term()
 
     while( true )
     {
-        if( owed_greater_ > 0 )
+        if( cursor_.owes_greater() )
         {
             break;
         }
 
-        if( match_keyword( Keyword::Const ) )
+        if( cursor_.match_keyword( Keyword::Const ) )
         {
             continue;
         }
 
-        if( check( Token_kind::L_bracket ) && peek( 1 ).kind == Token_kind::Star && peek( 2 ).kind == Token_kind::R_bracket )
+        if( cursor_.check( Token_kind::L_bracket ) && cursor_.peek( 1 ).kind == Token_kind::Star &&
+            cursor_.peek( 2 ).kind == Token_kind::R_bracket )
         {
-            advance(); // `[`
-            advance(); // `*`
-            advance(); // `]`
+            cursor_.advance(); // `[`
+            cursor_.advance(); // `*`
+            cursor_.advance(); // `]`
             continue;
         }
 
-        if( match( Token_kind::Star ) || match( Token_kind::Amp ) )
+        if( cursor_.match( Token_kind::Star ) || cursor_.match( Token_kind::Amp ) )
         {
             continue;
         }
@@ -802,50 +740,24 @@ bool Lookahead::scan_type_term()
     return true;
 }
 
-bool Lookahead::scan_generic_close()
-{
-    if( owed_greater_ > 0 )
-    {
-        owed_greater_ -= 1;
-        return true;
-    }
-
-    if( match( Token_kind::Greater ) )
-    {
-        return true;
-    }
-
-    if( check( Token_kind::Greater_greater ) )
-    {
-        advance();
-
-        // Incremented rather than set: one pending close is all the current grammar can produce,
-        // and a counter that cannot lose one is worth more than the assumption.
-        owed_greater_ += 1;
-        return true;
-    }
-
-    return false;
-}
-
 bool Lookahead::scan_type_and_name()
 {
     // `const i32 x`, `const ref T r`, `ref T r`.
-    while( match_keyword( Keyword::Const ) )
+    while( cursor_.match_keyword( Keyword::Const ) )
     {
     }
 
-    if( at_mode_keyword() )
+    if( cursor_.at_mode_keyword() )
     {
-        advance();
+        cursor_.advance();
     }
 
     // `fn( T, U ) -> R`, whose R may be another. Parens are counted, not read as types.
-    while( check_keyword( Keyword::Fn ) || check_keyword( Keyword::Field ) )
+    while( cursor_.check_keyword( Keyword::Fn ) || cursor_.check_keyword( Keyword::Field ) )
     {
-        advance();
+        cursor_.advance();
 
-        if( !check( Token_kind::L_paren ) )
+        if( !cursor_.check( Token_kind::L_paren ) )
         {
             return false;
         }
@@ -854,103 +766,103 @@ bool Lookahead::scan_type_and_name()
 
         do
         {
-            if( check( Token_kind::L_paren ) )
+            if( cursor_.check( Token_kind::L_paren ) )
             {
                 depth += 1;
             }
-            else if( check( Token_kind::R_paren ) )
+            else if( cursor_.check( Token_kind::R_paren ) )
             {
                 depth -= 1;
             }
-            else if( check( Token_kind::Semicolon ) || check( Token_kind::R_brace ) || at_end() )
+            else if( cursor_.check( Token_kind::Semicolon ) || cursor_.check( Token_kind::R_brace ) || cursor_.at_end() )
             {
                 return false; // unbalanced - not a type
             }
 
-            advance();
+            cursor_.advance();
         } while( depth > 0 );
 
         // A missing arrow still scans as a declaration, so parse_type reports the arrow.
-        if( !match( Token_kind::Arrow ) )
+        if( !cursor_.match( Token_kind::Arrow ) )
         {
             break;
         }
 
         // The return type's own `const` and mode.
-        while( match_keyword( Keyword::Const ) )
+        while( cursor_.match_keyword( Keyword::Const ) )
         {
         }
-        if( at_mode_keyword() )
+        if( cursor_.at_mode_keyword() )
         {
-            advance();
+            cursor_.advance();
         }
     }
 
     // `A | B e`: no expression is a union followed by a name.
     do
     {
-        if( !match( Token_kind::Identifier ) )
+        if( !cursor_.match( Token_kind::Identifier ) )
         {
             return false;
         }
 
         // `kl::Point p`: no expression is a path followed by a name.
-        if( check( Token_kind::Colon_colon ) && peek( 1 ).kind == Token_kind::Identifier )
+        if( cursor_.check( Token_kind::Colon_colon ) && cursor_.peek( 1 ).kind == Token_kind::Identifier )
         {
-            advance();
-            advance();
+            cursor_.advance();
+            cursor_.advance();
         }
 
         // What may follow a type's name before the declared name: `Point*`, `const T&`, `Vector<i32>`.
         while( true )
         {
             // Only an adjacent `*`/`&` is part of a type (D17), so `a * b;` stays an expression.
-            if( ( check( Token_kind::Star ) || check( Token_kind::Amp ) ) && peek_is_adjacent() )
+            if( ( cursor_.check( Token_kind::Star ) || cursor_.check( Token_kind::Amp ) ) && cursor_.peek_is_adjacent() )
             {
-                advance();
+                cursor_.advance();
                 continue;
             }
 
-            if( check( Token_kind::L_bracket ) && peek( 1 ).kind == Token_kind::Star &&
-                peek( 2 ).kind == Token_kind::R_bracket )
+            if( cursor_.check( Token_kind::L_bracket ) && cursor_.peek( 1 ).kind == Token_kind::Star &&
+                cursor_.peek( 2 ).kind == Token_kind::R_bracket )
             {
-                advance();
-                advance();
-                advance();
+                cursor_.advance();
+                cursor_.advance();
+                cursor_.advance();
                 continue;
             }
 
-            if( match_keyword( Keyword::Const ) )
+            if( cursor_.match_keyword( Keyword::Const ) )
             {
                 continue;
             }
 
             // Type arguments, nesting counted: `>>` closes two levels.
-            if( check( Token_kind::Less ) )
+            if( cursor_.check( Token_kind::Less ) )
             {
                 u32 depth = 0;
 
-                while( !at_end() )
+                while( !cursor_.at_end() )
                 {
-                    if( match( Token_kind::Less ) )
+                    if( cursor_.match( Token_kind::Less ) )
                     {
                         depth += 1;
                     }
-                    else if( match( Token_kind::Greater ) )
+                    else if( cursor_.match( Token_kind::Greater ) )
                     {
                         depth -= 1;
                     }
-                    else if( match( Token_kind::Greater_greater ) )
+                    else if( cursor_.match( Token_kind::Greater_greater ) )
                     {
                         depth = depth >= 2 ? depth - 2 : 0;
                     }
-                    else if( check( Token_kind::Semicolon ) || check( Token_kind::R_brace ) )
+                    else if( cursor_.check( Token_kind::Semicolon ) || cursor_.check( Token_kind::R_brace ) )
                     {
                         break; // unbalanced - not a type
                     }
                     else
                     {
-                        advance();
+                        cursor_.advance();
                     }
 
                     if( depth == 0 )
@@ -969,7 +881,7 @@ bool Lookahead::scan_type_and_name()
 
             break;
         }
-    } while( owed_greater_ == 0 && match( Token_kind::Pipe ) );
+    } while( !cursor_.owes_greater() && cursor_.match( Token_kind::Pipe ) );
 
     // The name. A keyword, digit-led name or number holds its place, as for expect_name, so
     // `i32 out = 1;` reaches parse_var_decl and is reported there. At a statement's start,
@@ -979,15 +891,15 @@ bool Lookahead::scan_type_and_name()
         return false;
     }
 
-    advance(); // the name
+    cursor_.advance(); // the name
     return true;
 }
 
 bool Lookahead::scan_type_params()
 {
-    advance(); // the `<`
+    cursor_.advance(); // the `<`
 
-    if( scan_generic_close() )
+    if( cursor_.match_generic_close() )
     {
         return true;
     }
@@ -999,10 +911,10 @@ bool Lookahead::scan_type_params()
             return false;
         }
 
-        match( Token_kind::Identifier ); // terse bound the parser reports
-    } while( match( Token_kind::Comma ) );
+        cursor_.match( Token_kind::Identifier ); // terse bound the parser reports
+    } while( cursor_.match( Token_kind::Comma ) );
 
-    if( !scan_generic_close() )
+    if( !cursor_.match_generic_close() )
     {
         return fail( Wanted::Token, Token_kind::Greater );
     }
@@ -1012,7 +924,7 @@ bool Lookahead::scan_type_params()
 
 bool Lookahead::scan_where_clauses()
 {
-    while( match_keyword( Keyword::Where ) )
+    while( cursor_.match_keyword( Keyword::Where ) )
     {
         if( !want_name() || !want( Token_kind::Colon ) )
         {
@@ -1022,24 +934,25 @@ bool Lookahead::scan_where_clauses()
         bool separator = false;
         do
         {
-            if( !match( Token_kind::Identifier ) )
+            if( !cursor_.match( Token_kind::Identifier ) )
             {
                 return fail( Wanted::Name );
             }
 
-            if( match( Token_kind::Amp ) )
+            if( cursor_.match( Token_kind::Amp ) )
             {
                 separator = true;
             }
-            else if( check( Token_kind::Comma ) && !( peek( 1 ).kind == Token_kind::Keyword &&
-                                                      static_cast<Keyword>( peek( 1 ).symbol.v ) == Keyword::Where ) )
+            else if( cursor_.check( Token_kind::Comma ) &&
+                     !( cursor_.peek( 1 ).kind == Token_kind::Keyword &&
+                        static_cast<Keyword>( cursor_.peek( 1 ).symbol.v ) == Keyword::Where ) )
             {
-                advance(); // `,`
+                cursor_.advance(); // `,`
                 separator = true;
             }
-            else if( check( Token_kind::Pipe ) )
+            else if( cursor_.check( Token_kind::Pipe ) )
             {
-                advance(); // `|`
+                cursor_.advance(); // `|`
                 separator = true;
             }
             else
@@ -1048,7 +961,7 @@ bool Lookahead::scan_where_clauses()
             }
         } while( separator );
 
-        match( Token_kind::Comma ); // optional
+        cursor_.match( Token_kind::Comma ); // optional
     }
 
     return true;
@@ -1056,46 +969,47 @@ bool Lookahead::scan_where_clauses()
 
 void Lookahead::step_over_junk()
 {
-    if( check( Token_kind::L_brace ) )
+    if( cursor_.check( Token_kind::L_brace ) )
     {
         skip_braces();
     }
     else
     {
-        advance();
+        cursor_.advance();
     }
 }
 
 bool Lookahead::skip_parens()
 {
-    if( !check( Token_kind::L_paren ) )
+    if( !cursor_.check( Token_kind::L_paren ) )
     {
         return fail( Wanted::Token, Token_kind::L_paren );
     }
 
     u32 depth = 0;
-    while( !check( Token_kind::R_paren ) || depth > 0 )
+    while( !cursor_.check( Token_kind::R_paren ) || depth > 0 )
     {
-        if( at_end() || check( Token_kind::L_brace ) || check( Token_kind::R_brace ) || check( Token_kind::Semicolon ) )
+        if( cursor_.at_end() || cursor_.check( Token_kind::L_brace ) || cursor_.check( Token_kind::R_brace ) ||
+            cursor_.check( Token_kind::Semicolon ) )
         {
             return fail( Wanted::Token, Token_kind::R_paren );
         }
 
-        if( check( Token_kind::L_paren ) )
+        if( cursor_.check( Token_kind::L_paren ) )
         {
             depth++;
         }
-        else if( check( Token_kind::R_paren ) )
+        else if( cursor_.check( Token_kind::R_paren ) )
         {
             depth--;
             if( depth == 0 )
             {
-                advance(); // consume the `)`
+                cursor_.advance(); // consume the `)`
                 return true;
             }
         }
 
-        advance();
+        cursor_.advance();
     }
 
     return depth == 0;
@@ -1103,50 +1017,50 @@ bool Lookahead::skip_parens()
 
 void Lookahead::skip_braces()
 {
-    if( !check( Token_kind::L_brace ) )
+    if( !cursor_.check( Token_kind::L_brace ) )
     {
         return;
     }
 
     u32 depth = 0;
-    while( !check( Token_kind::R_brace ) || depth > 0 )
+    while( !cursor_.check( Token_kind::R_brace ) || depth > 0 )
     {
-        if( at_end() )
+        if( cursor_.at_end() )
         {
             return;
         }
 
-        if( check( Token_kind::L_brace ) )
+        if( cursor_.check( Token_kind::L_brace ) )
         {
             depth++;
         }
-        else if( check( Token_kind::R_brace ) )
+        else if( cursor_.check( Token_kind::R_brace ) )
         {
             depth--;
             if( depth == 0 )
             {
-                advance(); // consume the `}`
+                cursor_.advance(); // consume the `}`
                 return;
             }
         }
 
-        advance();
+        cursor_.advance();
     }
 }
 
 void Lookahead::skip_operator_token()
 {
-    if( check( Token_kind::L_paren ) )
+    if( cursor_.check( Token_kind::L_paren ) )
     {
         return;
     }
 
-    const Token& t = peek();
-    advance();
+    const Token& t = cursor_.peek();
+    cursor_.advance();
 
     if( t.kind == Token_kind::L_bracket )
     {
-        match( Token_kind::R_bracket );
+        cursor_.match( Token_kind::R_bracket );
     }
 }
 
