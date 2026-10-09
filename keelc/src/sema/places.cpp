@@ -544,6 +544,74 @@ Node_id Places::dying_storage( Node_id place, Node_id current_function ) const
     return Node_id {};
 }
 
+Node_id Places::borrowed_temporary( Node_id place ) const
+{
+    const Node_id source = place_source( place );
+
+    // The place goes through a pointer.
+    if( !source.is_valid() )
+    {
+        return Node_id {};
+    }
+
+    if( ast_.kind( source ) != Node_kind::Call_expr )
+    {
+        if( is_assignable( source ) )
+        {
+            return Node_id {};
+        }
+
+        return source;
+    }
+
+    // The call itself is the temporary.
+    if( !call_returns_a_binding( source ) )
+    {
+        return source;
+    }
+
+    // The call returns a reference, so it lasts as long as the shortest of what it borrows.
+    const Node_id method   = callees_.callee_of( source );
+    const Node_id callee   = method.is_valid() ? method : resolution_.declaration_of( ast_.callee( source ) );
+    const bool    declared = callee.is_valid() &&
+                          ( ast_.kind( callee ) == Node_kind::Function_decl || ast_.kind( callee ) == Node_kind::Method_decl );
+    const bool receiver = declared && ast_.has_receiver( callee );
+
+    if( receiver && ast_.kind( ast_.callee( source ) ) == Node_kind::Field_expr )
+    {
+        if( const Node_id temporary = borrowed_temporary( ast_.object( ast_.callee( source ) ) ); temporary.is_valid() )
+        {
+            return temporary;
+        }
+    }
+
+    // A declaration's parameters lead with `this`; a signature held in a variable has none.
+    const std::span<const Node_id> args = ast_.arguments( source );
+    const std::span<const Node_id> params =
+        declared ? ast_.params( callee ).subspan( receiver ? 1 : 0 ) : std::span<const Node_id> {};
+    const std::span<const Param_mode> modes =
+        declared ? std::span<const Param_mode> {} : table_.get( types_.type_of( ast_.callee( source ) ) ).modes;
+    const std::size_t shared = std::min( args.size(), declared ? params.size() : modes.size() );
+
+    for( std::size_t i = 0; i < shared; ++i )
+    {
+        const Param_mode mode = declared ? parameter_mode_of( ast_, params[i] ) : modes[i];
+
+        if( !borrows( mode, types_.type_of( args[i] ) ) )
+        {
+            continue;
+        }
+
+        if( const Node_id temporary = borrowed_temporary( args[i] ); temporary.is_valid() )
+        {
+            return temporary;
+        }
+    }
+
+    // Nothing borrowed was a temporary.
+    return Node_id {};
+}
+
 void Places::check_owning_source( Node_id value, Type_id type )
 {
     // The value's own type as well: a copyable member converting into an owning union gives up nothing.
@@ -704,15 +772,7 @@ void Places::record_borrowed_parameters()
             continue;
         }
 
-        const Keyword mode = ast_.parameter_mode( param );
-
-        // D31's two borrows, plus `out` for the same reason `ref` has. A bare parameter of an
-        // owning type is the read-only borrow, forced rather than chosen: a class cannot be
-        // copied. `move` is neither - the callee owns it and destroys it, so it travels by value.
-        const bool by_address = mode == Keyword::Ref || mode == Keyword::Out ||
-                                ( mode == Keyword::Count && !bounds_.satisfies( type, Bound::Copyable ) );
-
-        if( !by_address )
+        if( !borrows( parameter_mode_of( ast_, param ), type ) )
         {
             continue;
         }
@@ -724,6 +784,28 @@ void Places::record_borrowed_parameters()
 void Places::record_binding_address( Node_id annotation, Type_id type )
 {
     types_.record( annotation, table_.pointer_to( type ) );
+}
+
+// D31's two borrows, plus `out` for the same reason `ref` has. A bare parameter of an owning type
+// is the read-only borrow, forced rather than chosen: a class cannot be copied. `move` is neither -
+// the callee owns it and destroys it, so it travels by value.
+bool Places::borrows( Param_mode mode, Type_id type ) const
+{
+    switch( mode )
+    {
+    case Param_mode::Const_ref:
+    case Param_mode::Ref:
+    case Param_mode::Out:
+        return true;
+
+    case Param_mode::Value:
+        return !bounds_.satisfies( type, Bound::Copyable );
+
+    case Param_mode::Move:
+        return false;
+    }
+
+    return false;
 }
 
 } // namespace keel::sema
@@ -1353,6 +1435,147 @@ TEST_CASE( "type_checker_binds_the_result_of_a_const_ref_return_through_a_pointe
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "needs a variable to bind to" ) != std::string::npos );
+    }
+}
+
+// PLAN D54. A returned `const ref` may be any borrowed argument or the receiver, so binding one
+// outlives each of them - and a temporary among them ends with the statement.
+TEST_CASE( "type_checker_refuses_a_ref_binding_through_a_call_to_a_temporary", "[sema][escape][m9]" )
+{
+    constexpr std::string_view a =
+        "class A { public i32 n; A( i32 x ) { n = x; } ~A() { } const ref i32 get() const { return n; } };\n"
+        "const ref A pick( const ref A a, const ref A b ) { return a; }\n"
+        "const ref i32 id( const ref i32 a ) { return a; }\n"
+        "A make() { return A( 1 ); }\n";
+
+    SECTION( "a temporary argument, reported where it is made" )
+    {
+        const Typed p( std::string( a ) + "i32 main() { A b = A( 2 ); const ref A r = pick( A( 1 ), b ); return r.n; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "cannot borrow from a temporary" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "t.kl:5:50" ) != std::string::npos );
+    }
+
+    SECTION( "a temporary receiver" )
+    {
+        const Typed p( std::string( a ) + "i32 main() { const ref i32 r = make().get(); return r; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "cannot borrow from a temporary" ) != std::string::npos );
+    }
+
+    // The inner call is a place, but only as long as what it was handed.
+    SECTION( "a temporary handed to a call whose result is handed on" )
+    {
+        const Typed p(
+            std::string( a ) + "i32 main() { A b = A( 2 ); const ref A r = pick( pick( make(), b ), b ); return r.n; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "cannot borrow from a temporary" ) != std::string::npos );
+    }
+
+    SECTION( "a field of a temporary" )
+    {
+        const Typed p( std::string( a ) + "i32 main() { const ref i32 r = id( make().n ); return r; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "cannot borrow from a temporary" ) != std::string::npos );
+    }
+
+    // No call between them: a field is a place, but not one that outlives its object.
+    SECTION( "and a field of a temporary bound directly" )
+    {
+        const Typed p( std::string( a ) + "i32 main() { const ref i32 r = make().n; return r; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "cannot borrow from a temporary" ) != std::string::npos );
+    }
+
+    SECTION( "a struct literal" )
+    {
+        const Typed p( "struct P { i32 x; };\nconst ref i32 get( const ref P p ) { return p.x; }\n"
+                       "i32 main() { const ref i32 r = get( P { 1 } ); return r; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "cannot borrow from a temporary" ) != std::string::npos );
+    }
+
+    // A copyable value is borrowed as well when the parameter says `const ref`.
+    SECTION( "a literal" )
+    {
+        const Typed p( std::string( a ) + "i32 main() { const ref i32 r = id( 1 ); return r; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "cannot borrow from a temporary" ) != std::string::npos );
+    }
+
+    // No declaration says which parameters borrow, so the signature the variable holds does.
+    SECTION( "through a pointer to the function" )
+    {
+        const Typed p(
+            std::string( a ) + "i32 main() { A b = A( 2 ); fn( const ref A, const ref A ) -> const ref A p = &pick; "
+                               "const ref A r = p( A( 1 ), b ); return r.n; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "cannot borrow from a temporary" ) != std::string::npos );
+    }
+}
+
+TEST_CASE( "type_checker_accepts_a_temporary_the_reference_cannot_outlive", "[sema][escape][m9]" )
+{
+    constexpr std::string_view a = "class A { public i32 n; A( i32 x ) { n = x; } ~A() { } };\n"
+                                   "const ref A pick( const ref A a, const ref A b ) { return a; }\n"
+                                   "const ref i32 id( const ref i32 a ) { return a; }\n"
+                                   "const ref A keep( i32 n, const ref A b ) { return b; }\n";
+
+    // Read before the statement ends, so nothing is kept.
+    SECTION( "used within its statement" )
+    {
+        const Typed p(
+            std::string( a ) + "i32 main() { i32 v = id( 1 ); A b = A( 2 ); i32 w = pick( A( 1 ), b ).n; return v + w; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // The callee copied it, and a copy cannot be what a `const ref` return names.
+    SECTION( "handed to a by-value parameter" )
+    {
+        const Typed p( std::string( a ) + "i32 main() { A b = A( 2 ); const ref A r = keep( 1 + 2, b ); return r.n; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "every borrowed argument a variable" )
+    {
+        const Typed p(
+            std::string( a ) + "i32 main() { A b = A( 2 ); A c = A( 3 ); const ref A r = pick( c, b ); return r.n; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // What a pointer points at is not the call's to end.
+    SECTION( "reached through a pointer" )
+    {
+        const Typed p( std::string( a ) + "i32 main() { i32 x = 1; i32* q = &x; const ref i32 r = id( *q ); return r; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
     }
 }
 

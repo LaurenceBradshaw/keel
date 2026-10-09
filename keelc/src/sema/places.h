@@ -63,6 +63,9 @@ public:
     // The declaration whose storage ends when `current_function` returns, or invalid.
     Node_id dying_storage( Node_id place, Node_id current_function ) const;
 
+    // D54: the temporary a place depends on, through any calls returning a reference, or invalid.
+    Node_id borrowed_temporary( Node_id place ) const;
+
     // D31's initialisation and assignment clause: an owning value transfers rather than copies, and
     // the transfer is written down.
     void check_owning_source( Node_id value, Type_id type );
@@ -82,6 +85,8 @@ public:
     void record_binding_address( Node_id annotation, Type_id type );
 
 private:
+    bool borrows( Param_mode mode, Type_id type ) const; // travels by address
+
     const Ast&        ast_;
     const Interner&   interner_;
     const Resolution& resolution_;

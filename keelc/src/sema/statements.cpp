@@ -338,9 +338,8 @@ void Statements::visit_var( Node_id id )
         {
             // Already reported; says nothing about a value that failed.
         }
-        // Not a temporary: the referent has to outlive the binding, and everything that names a
-        // place was declared before this line and so outlives it. A temporary is the one thing
-        // that would not, and refusing it is what keeps the rule free of any analysis.
+        // Not a temporary: the referent has to outlive the binding, and a variable named here was
+        // declared before this line and so outlives it. A temporary is the one thing that would not.
         else if( !places_.is_assignable( init ) )
         {
             reporter_.error_at( ast_.span( init ), "a `ref` binding needs a variable to bind to" );
@@ -351,6 +350,15 @@ void Statements::visit_var( Node_id id )
                 ast_.span( init ),
                 "`[]` reaches an element for one expression, so a `ref` cannot bind it",
                 fmt::format( "copy it, or keep its address with `&{}`", reporter_.text( ast_.span( init ) ) )
+            );
+        }
+        // D54: a place inside a temporary, or a call's reference to one, ends with the statement too.
+        else if( const Node_id temporary = places_.borrowed_temporary( init ); temporary.is_valid() )
+        {
+            reporter_.error_at(
+                ast_.span( temporary ),
+                "a `ref` binding cannot borrow from a temporary",
+                "it ends with this statement; give it a variable of its own first"
             );
         }
         else if( types_.type_of( init ) != type && !table_.references_error( types_.type_of( init ) ) )
