@@ -18,8 +18,7 @@ enum class Call_conflict : u8
     Aliased             // `use` and `other` are one object, and the call could change it through either
 };
 
-// Where a value was read after it was moved, or a call's arguments conflict. Carries spans rather
-// than a message, so the pass needs no Interner and no Diagnostics - check/report does the wording.
+// A read after a move, or a call's conflicting arguments. Spans only; check/report does the wording.
 struct Move_error
 {
     Local_id      local {};
@@ -27,7 +26,7 @@ struct Move_error
     Span          moved {};         // the move that killed it
     bool          maybe    = false; // moved on some paths into here, not all
     Call_conflict conflict = Call_conflict::None;
-    Span          other {}; // the call's other argument, for Out_twice and Element_and_whole
+    Span          other {}; // the call's other argument, for the one-call errors
 };
 
 // PLAN §8. Flow-sensitive, per local, over the CFG. `owning` is check/borrow_check's

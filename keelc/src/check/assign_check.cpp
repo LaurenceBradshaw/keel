@@ -10,15 +10,9 @@ namespace keel
 namespace
 {
 
-// A *must* analysis, which is the whole reason this is not a question inside check_moves. There the
-// bottom is "no information" and merging raises a local up the lattice; here the bottom is "assigned
-// everywhere" and merging can only lower it, because a value is definitely assigned only if every
-// path assigned it.
-//
-// `reached` is what keeps that honest. A block the worklist has not visited yet holds the identity -
-// all assigned - and intersecting with it would be a lie, so it is skipped until something reaches
-// it. `ever` is the same information joined the other way, and exists only so the diagnostic can
-// say "on some paths" rather than "never".
+// A *must* analysis: a block starts "assigned everywhere" and merging only lowers it. `reached`
+// skips a block not yet visited, whose identity would be a lie to intersect with; `ever` is the
+// same bits joined the other way, so a diagnostic can say "on some paths".
 struct Flow
 {
     std::vector<u8> always; // assigned on every path into here
@@ -31,8 +25,7 @@ Flow bottom( std::size_t locals )
     return Flow { std::vector<u8>( locals, 1 ), std::vector<u8>( locals, 0 ), false };
 }
 
-// Merges `from` into `into`, returning whether anything changed - the worklist's only termination
-// signal, exactly as in check_moves.
+// Merges `from` into `into`; whether anything changed is the worklist's termination signal.
 bool merge_into( Flow& into, const Flow& from )
 {
     if( !into.reached )
@@ -126,9 +119,7 @@ void read_receiver(
     }
 }
 
-// D9's half. A constant names no local and a global is not a local's storage, so neither can be
-// uninitialised; everything else is a read of whatever `place.local` names, projections included -
-// reading `_1.x` is reading `_1`.
+// D9's half. A constant or a global cannot be unassigned; a projection reads its local.
 void read_operand(
     const Function& func, const Operand& operand, Span span, const Flow& flow, std::vector<Uninitialised_read>* reads
 )
@@ -154,11 +145,8 @@ void read_operand(
     reads->push_back( Uninitialised_read { .local = operand.place.local, .at = span, .maybe = flow.ever[local] != 0 } );
 }
 
-// a and b cover Use, Binary, Unary and Cast; the argument range covers Call. An Rvalue leaves the
-// operands its kind does not use at their Constant default, so reading all of them needs no switch -
-// the same shape check_moves' read_rvalue has, and for the same reason.
-//
-// A borrow reads its place; an Initialise address is the rule below's.
+// a and b cover Use, Binary, Unary and Cast, the argument range Call; an unused operand is a
+// Constant. A borrow reads its place; an Initialise address is the rule below's.
 void read_rvalue(
     const Function& func, const Rvalue& value, Span span, const Flow& flow, std::vector<Uninitialised_read>* reads
 )
@@ -179,15 +167,9 @@ void read_rvalue(
     }
 }
 
-// Only an Assign matters. A projected target counts: `(*_1).x = ...` is a step in building the
-// referent, and an `out` parameter is written exactly that way when its type is a struct.
-//
-// Storage_live and Storage_dead both clear, so a local entering or leaving scope carries no answer
-// from the last time round a loop.
-//
-// `reads` is null during the fixpoint and set for the single reporting walk: reporting inside the
-// worklist would emit one error per visit for any block on a back edge, which is the same reason
-// check_moves reports in a second pass.
+// Only an Assign writes, a projected target included: an `out` struct is built through `(*_1).x`.
+// Storage_live and Storage_dead clear, so a loop carries no answer round. `reads` is null during
+// the fixpoint and set for the one reporting walk.
 void transfer_block(
     const Function&                  func,
     u32                              block,
@@ -202,9 +184,8 @@ void transfer_block(
     {
         const Statement& statement = func.statements[b.first_statement + i];
 
-        // Reads happen before the write, which is the order the statement happens in: `_1 = _1 + 1`
-        // looks at _1 and then replaces it. Outside the is_global guard below, because a global
-        // target does not stop its rvalue reading locals.
+        // Reads before the write: `_1 = _1 + 1`. Outside the is_global guard, since a global target's
+        // rvalue still reads locals.
         if( statement.kind == Statement_kind::Assign )
         {
             read_rvalue( func, statement.value, statement.span, flow, reads );
@@ -255,9 +236,8 @@ void transfer_block(
             flow.always[local] = 1;
             flow.ever[local]   = 1;
 
-            // Only an `out` argument and a constructor's target assign through an address. The
-            // callee's promise to assign it is what the marker or the construction says, which is
-            // what makes `void forward( out i32 n ) { init( out n ); }` work.
+            // Only an `out` argument and a constructor's target assign through an address, so
+            // `void forward( out i32 n ) { init( out n ); }` works.
             if( statement.value.kind == Rvalue_kind::Address_of && !statement.value.a.place.is_global() &&
                 statement.value.address_purpose == Address_purpose::Initialise )
             {
@@ -275,15 +255,12 @@ void transfer_block(
             flow.ever[local]   = 0;
             break;
         case Statement_kind::Drop:
-            // Silent, as in check_moves: whether a drop of something uninitialised is reachable is
-            // drop elaboration's question, and reporting it here would blame the author for where
-            // the compiler put a drop.
+            // Silent: whether a drop of something unassigned is reachable is drop elaboration's question.
             break;
         }
     }
 
-    // On the way out, after every statement. A terminator leaves an operand it lacks at its
-    // default, which is a Constant, so read_operand returns immediately.
+    // The terminator's operand, after every statement; one it lacks is a Constant and reads nothing.
     read_operand( func, b.terminator.condition, b.terminator.span, flow, reads );
     read_operand( func, b.terminator.message, b.terminator.span, flow, reads );
 }
@@ -293,27 +270,21 @@ Flow entry_flow( const Function& func )
     // A constructor's field slots start empty, like the locals.
     Flow flow { std::vector<u8>( slots( func ), 0 ), std::vector<u8>( slots( func ), 0 ), true };
 
-    // Parameters arrive holding a value; locals and temporaries do not. The exceptions are the two
-    // obligations this pass also reports at the exits - an `out` parameter's referent is empty until
-    // the body writes it, and so is the return slot.
+    // Parameters arrive holding a value.
     for( u32 i = 1; i <= func.parameter_count; ++i )
     {
         flow.always[i] = 1;
         flow.ever[i]   = 1;
     }
 
-    // An `out` parameter is the exception among parameters: the caller supplies storage, not a
-    // value, so its referent is empty until the body writes it. Reading one before then is D9's
-    // error as much as reading an unassigned local is.
+    // An `out` parameter's referent is empty until the body writes it.
     for( const Local_id local : func.out_parameters )
     {
         flow.always[local.v] = 0;
         flow.ever[local.v]   = 0;
     }
 
-    // The return slot is an `out` parameter of the function: the caller supplies the storage and the
-    // body's obligation is to have written it before any way out. Seeded here rather than given a
-    // pass of its own, because it is the same question on the same graph.
+    // The return slot is the function's own `out` parameter, owed at every way out.
     if( func.returns_a_value )
     {
         flow.always[k_return_slot.v] = 0;
@@ -329,18 +300,14 @@ Assignment_report check_assignment( const Function& func )
 {
     Assignment_report report;
 
-    // No early out any more. D9 applies to every function, so every function pays for the fixpoint -
-    // the same cost check_moves has always paid on all of them.
+    // D9 applies to every function, so every function pays for the fixpoint.
     std::vector<Flow> in( func.blocks.size(), bottom( slots( func ) ) );
     in[0] = entry_flow( func );
 
     std::vector<Block_id> work { Block_id { 0 } };
     std::vector<Block_id> next;
 
-    // Forward, pushing into successors rather than pulling from predecessors, so no predecessor map
-    // is needed. Terminates because a local's `always` only ever falls and its `ever` only ever
-    // rises, both are one bit, and there are finitely many blocks - so merge_into eventually
-    // returns false everywhere and the worklist drains.
+    // Forward, pushing into successors. Terminates: `always` only falls and `ever` only rises.
     while( !work.empty() )
     {
         const Block_id block = work.back();
@@ -361,13 +328,8 @@ Assignment_report check_assignment( const Function& func )
         }
     }
 
-    // One walk, each block exactly once, doing both halves. Reported here rather than inside the
-    // loop above, which would emit one error per visit for any block on a back edge - the same
-    // reason check_moves reports in a second walk.
-    //
-    // An unreached block is skipped outright. check_moves can afford to walk one because its
-    // unreached state is all-Uninitialised and it reports on Moved; here an unreached block holds
-    // nothing assigned, so every read in it would be reported.
+    // One walk, each block once, so a block on a back edge reports once. An unreached block is
+    // skipped: it holds nothing assigned, so every read in it would report.
     for( u32 block = 0; block < func.blocks.size(); ++block )
     {
         const Block& b = func.blocks[block];
@@ -391,9 +353,7 @@ Assignment_report check_assignment( const Function& func )
             continue;
         }
 
-        // What this exit owes: every `out` parameter, and the return slot when the function has
-        // one. The two are reported through one lambda so that the set checked here cannot drift
-        // from the set entry_flow seeds - they have to name exactly the same locals.
+        // What this exit owes. One lambda for both, so the set cannot drift from what entry_flow seeds.
         const auto owed = [&]( Local_id local )
         {
             if( flow.always[local.v] != 0 )
@@ -450,9 +410,7 @@ namespace keel
 namespace
 {
 
-// Real source rather than hand-built CFGs, for the same reason check_moves' tests use it: what is
-// worth testing here is what happens at a branch, a join and a back edge, and those are the graphs
-// that are worst to assemble by hand.
+// Real source rather than hand-built CFGs, as check_moves' tests use.
 struct Checked : Compiled
 {
     explicit Checked( std::string_view source )
@@ -460,9 +418,7 @@ struct Checked : Compiled
     {
     }
 
-    // Every function of the input file, as the driver checks every function. Note a case must now keep its *other* functions
-    // returning properly and reading nothing uninitialised: both halves are checked, so a stray
-    // `i32 helper() { }` in a fixture would add an error of its own.
+    // Every function of the input file, as the driver checks, so a fixture's helpers must be clean too.
     std::vector<Unassigned_error> errors() const
     {
         std::vector<Unassigned_error> all;
@@ -508,8 +464,7 @@ struct Checked : Compiled
         return {};
     }
 
-    // Which parameter an error is about. The whole point of carrying a Local_id rather than a
-    // message is that check/report names it, so a case can check the naming too.
+    // Which parameter an error is about, so a case can check check/report's naming.
     std::string_view name_of( const Unassigned_error& error ) const
     {
         for( const Function& function : functions )
@@ -547,12 +502,8 @@ struct Checked : Compiled
 
 } // namespace
 
-// The return slot is local 0, and `return x` lowers to an Assign into it - so "can a path reach a
-// return without having produced a value" is this pass's own question asked of one more local.
-// Before this, `i32 f() { }` compiled and returned whatever was in the slot.
-// D9. Note this cannot live beside `move`: check_moves' Uninitialised is a lattice bottom meaning
-// "no information yet", so join( Uninitialised, Live ) is Live - exactly the wrong answer for a
-// value assigned on one branch and not the other. Must-analysis, so it belongs here.
+// The return slot is local 0 and `return x` assigns it, so a missing return is this pass's question
+// asked of one more local.
 TEST_CASE( "assign_check_reports_a_read_before_initialisation", "[check][assign][d9]" )
 {
     SECTION( "a plain read" )
@@ -573,15 +524,13 @@ TEST_CASE( "assign_check_reports_a_read_before_initialisation", "[check][assign]
         REQUIRE( c.reads().size() == 1 );
         REQUIRE( c.name_of_read( c.reads()[0] ) == "x" );
 
-        // The distinction the flag exists for: one path did assign it, so this is an ambiguity
-        // rather than a certainty.
+        // One path did assign it, so this is an ambiguity, not a certainty.
         REQUIRE( c.reads()[0].maybe );
     }
 
     SECTION( "read in a condition" )
     {
-        // The terminator's operand is a read like any other, and is the one a transfer that only
-        // walked statements would miss.
+        // The terminator's operand is a read too.
         const Checked c( "i32 main() { i32 x; if( x > 0 ) { return 1; } return 0; }" );
 
         INFO( c.rendered() );
@@ -625,8 +574,7 @@ TEST_CASE( "assign_check_reports_a_read_before_initialisation", "[check][assign]
 
     SECTION( "reported once, not once per visit" )
     {
-        // A read on a back edge would be re-reported on every worklist visit without the second
-        // walk - the same shape check_moves' "reports once" case pins.
+        // One report despite the back edge.
         const Checked c( "i32 main() { i32 x; i32 i = 0; i32 t = 0; while( i < 3 ) { t = t + x; i = i + 1; } return t; }" );
 
         INFO( c.rendered() );
@@ -634,9 +582,8 @@ TEST_CASE( "assign_check_reports_a_read_before_initialisation", "[check][assign]
     }
 }
 
-// An `out` parameter holds storage, not a value, so reading one before the body writes it is the
-// same mistake - and the one D31's exit check could never see, because it only looked at the ways
-// out.
+// An `out` parameter holds storage, not a value, so reading one before the body writes it is D9's
+// error.
 TEST_CASE( "assign_check_reports_a_read_of_an_unwritten_out_parameter", "[check][assign][d9]" )
 {
     SECTION( "read before assigning" )
@@ -658,8 +605,7 @@ TEST_CASE( "assign_check_reports_a_read_of_an_unwritten_out_parameter", "[check]
 
     SECTION( "forwarding still works" )
     {
-        // `init( out n )` lowers to `&n`, and the address-of rule is what makes the callee's
-        // promise count as the assignment. Without it every forwarder would report.
+        // `init( out n )` takes `&n`, and the address-of rule counts the callee's promise as the write.
         const Checked c( "void init( out i32 n ) { n = 1; }\n"
                          "void forward( out i32 n ) { init( out n ); }\n"
                          "i32 main() { i32 x; forward( out x ); return x; }" );
@@ -670,9 +616,8 @@ TEST_CASE( "assign_check_reports_a_read_of_an_unwritten_out_parameter", "[check]
     }
 }
 
-// The false-positive set, and it is the whole game: this pass now looks at every local in every
-// function, so a rule that is slightly too strict breaks working programs rather than catching
-// bugs. Each of these is a shape whose initialisation the analysis cannot see directly.
+// The false-positive set: each shape initialises in a way the analysis cannot see directly, and a
+// rule slightly too strict here breaks working programs.
 TEST_CASE( "assign_check_accepts_what_is_initialised_indirectly", "[check][assign][d9]" )
 {
     for( const char* source : {
@@ -685,11 +630,8 @@ TEST_CASE( "assign_check_accepts_what_is_initialised_indirectly", "[check][assig
              "i32 main() { i32 x; x = 1; return x; }",
              "i32 f( bool b ) { i32 x; if( b ) { x = 1; } else { x = 2; } return x; }\ni32 main() { return f( true ); }",
              "i32 main() { i32 t = 0; i32 i = 0; while( i < 3 ) { t = t + i; i = i + 1; } return t; }",
-             // Fresh every iteration, and assigned before it is read every time. Note this passes
-             // whether or not Storage_live clears: `always` is an intersection and the entry path
-             // reaches the body before any back edge does, so the first iteration settles it. The
-             // clear is kept because a local entering scope holding an answer from last time is
-             // wrong on its face, not because a case here can tell the difference.
+             // Fresh every iteration. Passes whether or not Storage_live clears; the clear is kept because a
+             // local entering scope with last time's answer is wrong on its face.
              "i32 main() { i32 t = 0; i32 i = 0; while( i < 3 ) { i32 z; z = i; t = t + z; i = i + 1; } return t; }",
              // The address is taken and written through; the analysis cannot follow the pointer.
              "void bump( ref i32 v ) { v = v + 1; }\ni32 main() { i32 x = 1; bump( ref x ); return x; }",
@@ -710,14 +652,8 @@ TEST_CASE( "assign_check_accepts_what_is_initialised_indirectly", "[check][assig
     }
 }
 
-// Statements after a terminator are discarded by the lowerer, so this never becomes a block at
-// all - which is why it passes with or without the `reached` guard in the reporting walk.
-//
-// That guard is kept deliberately and is currently unexercised: an unreached block holds nothing
-// assigned, so every read in one would be reported, and check_moves can walk unreached blocks only
-// because its unreached state reports nothing. The day the lowerer leaves one behind - folding a
-// constant branch would do it - this is the rule that stops a cascade, and there is no way to
-// write a case for it until then.
+// The lowerer discards statements after a terminator, so this is one block. The `reached` guard
+// in the reporting walk is unexercised until something leaves an unreached block behind.
 TEST_CASE( "assign_check_ignores_unreachable_code", "[check][assign][d9]" )
 {
     const Checked c( "i32 f( i32 n ) { return n; i32 x; return x; }\ni32 main() { return f( 1 ); }" );
@@ -746,9 +682,7 @@ TEST_CASE( "assign_check_reads_a_borrowed_place", "[check][assign][d9]" )
     }
 }
 
-// Recorded rather than fixed: it errs in the safe direction - it can miss a real mistake, never
-// invent one - and closing it needs a bigger lattice. Pinned so that the day it is closed, this
-// says so.
+// Recorded rather than fixed (§12): it can miss a mistake, never invent one.
 TEST_CASE( "assign_check_is_shallow_in_one_known_way", "[check][assign][d9]" )
 {
     SECTION( "writing one field counts as initialising the whole struct" )
@@ -799,9 +733,7 @@ TEST_CASE( "assign_check_requires_a_value_on_every_path_out", "[check][assign][r
 
     SECTION( "an arm that breaks out of the switch and returns nothing" )
     {
-        // The arm leaves the `switch` rather than the function, so control reaches the end of `f`
-        // with the slot unwritten. Note the `break` is what keeps this a *return* error: without
-        // it the arm would run on into the next one in C++, which the checker now refuses first.
+        // The arm leaves the `switch`, not the function, so the end of `f` is reached unwritten.
         const Checked c( "enum E { A, B };\n"
                          "i32 f( E e ) { switch( e ) { case E::A: break; case E::B: return 2; } }\n"
                          "i32 main() { return f( E::A ); }" );
@@ -819,9 +751,8 @@ TEST_CASE( "assign_check_requires_a_value_on_every_path_out", "[check][assign][r
     }
 }
 
-// Each of these is a shape that could plausibly report and must not. The enum switch is the one
-// worth having: it has no `default` and no block after it, so nothing falls through - and if the
-// lowerer ever starts emitting one, this is what says so.
+// Shapes that could plausibly report and must not. The enum switch has no `default` and no block
+// after it.
 TEST_CASE( "assign_check_accepts_every_path_that_does_return", "[check][assign][returns]" )
 {
     for( const char* source : {
@@ -847,9 +778,7 @@ TEST_CASE( "assign_check_accepts_every_path_that_does_return", "[check][assign][
     }
 }
 
-// A `void` return slot is not an obligation, so nothing that has one may report. Constructors and
-// destructors are the cases that would be easy to miss - they have a return slot like any other
-// function, and it is `void`.
+// A `void` return slot is owed nothing; constructors and destructors have one too.
 TEST_CASE( "assign_check_leaves_void_functions_alone", "[check][assign][returns]" )
 {
     for( const char* source : {
@@ -868,11 +797,8 @@ TEST_CASE( "assign_check_leaves_void_functions_alone", "[check][assign][returns]
     }
 }
 
-// This was the pass's one known false positive, pinned so that the day constant branches were
-// folded the test would say so rather than the behaviour changing quietly. That day came:
-// `while( true )` left a loop-exit block reachable in the graph and never taken at run time, and
-// simplify() folds the branch and prunes the block before this pass ever sees it. The two spellings
-// now answer alike, which is the point - `for( ; ; )` was only ever the workaround.
+// `while( true )` once left a reachable loop-exit block; simplify() folds the branch and prunes it,
+// so both spellings answer alike.
 TEST_CASE( "assign_check_accepts_a_constantly_true_loop", "[check][assign][returns]" )
 {
     const Checked folded( "i32 f() { while( true ) { return 1; } }\ni32 main() { return f(); }" );
@@ -925,9 +851,8 @@ TEST_CASE( "assign_check_accepts_an_out_parameter_assigned_on_every_path", "[che
     }
 }
 
-// The two failures read differently because they are different mistakes: one is a path the author
-// missed, the other a parameter they never wrote to at all. That distinction is the only reason the
-// pass tracks a second bit.
+// A missed path and a parameter never written are different mistakes, which is why the pass tracks
+// a second bit.
 TEST_CASE( "assign_check_reports_an_out_parameter_that_can_go_unassigned", "[check][assign]" )
 {
     SECTION( "never assigned" )
@@ -956,9 +881,7 @@ TEST_CASE( "assign_check_reports_an_out_parameter_that_can_go_unassigned", "[che
         REQUIRE( errors[0].maybe );
     }
 
-    // The case a *may* analysis gets wrong: a loop body assigns it, so "assigned somewhere" is
-    // true, and the loop can still run zero times. This is why the pass exists separately from
-    // check_moves rather than as a second question inside it.
+    // A *may* analysis gets this wrong: the loop assigns it, and can run zero times.
     SECTION( "assigned only inside a loop body" )
     {
         Checked p( "void init( out i32 n, i32 c ) { while( c > 0 ) { n = 1; c = c - 1; } }\n"
@@ -986,9 +909,7 @@ TEST_CASE( "assign_check_reports_an_out_parameter_that_can_go_unassigned", "[che
     }
 }
 
-// One error per return that can be reached unassigned, not one per visit. A back edge makes the
-// worklist revisit a block, and reporting inside the fixpoint would multiply the message by however
-// many times it converged - the same property check_moves pins for the same reason.
+// One error per return reached unassigned, not one per worklist visit.
 TEST_CASE( "assign_check_reports_once_across_a_back_edge", "[check][assign]" )
 {
     Checked p( "void init( out i32 n, i32 c ) { while( c > 0 ) { c = c - 1; } }\n"
@@ -1011,8 +932,6 @@ TEST_CASE( "assign_check_reports_each_out_parameter_separately", "[check][assign
     REQUIRE( p.name_of( errors[0] ) == "b" );
 }
 
-// A function with no `out` parameters has nothing to prove, and says so before building any state -
-// which is what keeps the pass free for the whole existing test suite.
 TEST_CASE( "assign_check_says_nothing_about_a_function_with_no_out_parameters", "[check][assign]" )
 {
     Checked p( "i32 add( i32 a, i32 b ) { return a + b; }\ni32 main() { return add( 1, 2 ); }" );
@@ -1021,10 +940,7 @@ TEST_CASE( "assign_check_says_nothing_about_a_function_with_no_out_parameters", 
     REQUIRE( p.errors().empty() );
 }
 
-// Forwarding: passing an `out` parameter straight on as an `out` argument satisfies it, because
-// the callee's promise to assign it is what the marker at that call site means. It works because
-// taking a place's address counts as assigning it - see transfer_block - which also means a
-// `const ref` argument counts, so this errs towards missing a mistake rather than inventing one.
+// Passing an `out` parameter on as an `out` argument satisfies it: the address-of rule again.
 TEST_CASE( "assign_check_accepts_a_forwarded_out_parameter", "[check][assign]" )
 {
     Checked p( "void init( out i32 n ) { n = 1; }\n"
@@ -1049,9 +965,7 @@ TEST_CASE( "assign_check_is_not_satisfied_by_a_borrow", "[check][assign]" )
     REQUIRE( p.reads().size() == 1 );
 }
 
-// The pass asks whether a place was written, never what was written into it. An `out` parameter of
-// pointer type is the case where that distinction is visible: `nullptr` satisfies it as completely
-// as a real address would, because "the callee assigned it" is the entire promise `out` makes.
+// The pass asks whether a place was written, never with what: `nullptr` satisfies a pointer `out`.
 TEST_CASE( "assign_check_asks_only_whether_a_place_was_written", "[check][assign]" )
 {
     SECTION( "nullptr satisfies an out pointer" )
@@ -1074,10 +988,7 @@ TEST_CASE( "assign_check_asks_only_whether_a_place_was_written", "[check][assign
         REQUIRE( p.errors().empty() );
     }
 
-    // And the consequence, pinned because it is deliberate rather than missed: a raw pointer is
-    // outside §8's structural rule, so a callee may hand back the address of one of its own locals
-    // and nothing objects. `ref` is the spelling that cannot dangle; `T*` is the one that can, and
-    // D2 already says an address tells you nothing about who owns what is at the other end.
+    // Deliberate: a raw pointer is outside §8's rule, and `T*` is the spelling that can dangle.
     SECTION( "including the address of a local, which dangles and is still accepted" )
     {
         Checked p( "void escapes( out i32* p ) { i32 local = 7; p = &local; }\n"
@@ -1089,10 +1000,8 @@ TEST_CASE( "assign_check_asks_only_whether_a_place_was_written", "[check][assign
     }
 }
 
-// A known limitation, pinned so that fixing it is a deliberate change rather than a surprise: the
-// analysis is per local, so writing one field of a struct `out` parameter satisfies it. Partial
-// initialisation is the same granularity problem that stops a field being moved on its own, and it
-// wants the same answer - per-field state - whenever either is addressed.
+// Known limitation (§12): the analysis is per local, so writing one field of a struct `out`
+// parameter satisfies it.
 TEST_CASE( "assign_check_accepts_a_partly_initialised_struct_for_now", "[check][assign]" )
 {
     Checked p( "struct P { i32 x; i32 y; };\n"
@@ -1103,8 +1012,7 @@ TEST_CASE( "assign_check_accepts_a_partly_initialised_struct_for_now", "[check][
     REQUIRE( p.errors().empty() );
 }
 
-// D9 for a constructor's fields: each is owed at every way out, as an `out` referent is. Before
-// this, `list() {}` compiled and its destructor read three uninitialised fields.
+// D9 for a constructor's fields: each is owed at every way out, as an `out` referent is.
 TEST_CASE( "assign_check_requires_a_constructor_to_assign_every_field", "[check][assign][constructor]" )
 {
     SECTION( "a field never assigned" )

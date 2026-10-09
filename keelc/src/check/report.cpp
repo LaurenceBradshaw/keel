@@ -17,10 +17,8 @@ namespace keel
 namespace
 {
 
-// check_moves reports spans and a Local_id; the Interner here turns that local into a name.
-// Diagnostics carries one span and a help string rather than a second underlined snippet, so the
-// move site becomes a line:col in the help - the shape the resolver's previous-declaration note
-// already uses.
+// The passes report spans and a Local_id; this names the local. A second site goes in the help as
+// line:col, since a diagnostic carries one span.
 void report_move_errors(
     const std::vector<Function>& functions,
     const Ast&                   ast,
@@ -36,8 +34,7 @@ void report_move_errors(
         {
             const Symbol_id name = function.locals[error.local.v].name;
 
-            // A temporary can be moved too - the lowerer synthesises one wherever an owning value
-            // is handed over - so a move error does not always name something the author wrote.
+            // The lowerer moves temporaries too, so the moved value may have no name the author wrote.
             const std::string subject =
                 name.is_valid() ? fmt::format( "`{}`", interner.text( name ) ) : std::string( "this value" );
 
@@ -100,8 +97,7 @@ void report_move_errors(
 
             const Line_col at = sm.line_col( error.moved.file, error.moved.start );
 
-            // The two must read differently: `maybe` is the compiler refusing an ambiguity rather
-            // than reporting a certainty, and that is the whole reason the state exists.
+            // `maybe` is an ambiguity refused, not a certainty reported, so it must read differently.
             diagnostics.error(
                 error.use,
                 error.maybe ? fmt::format( "{} may already have been moved", subject )
@@ -156,11 +152,8 @@ void report_loan_errors(
     }
 }
 
-// Two rules out of one analysis. D31: an `out` parameter is one the callee assigns, and "the callee
-// must assign it" is a promise to the caller rather than advice - so a path that returns without
-// writing one is an error, and the return slot is the same obligation under another name. D9: a
-// value read before anything put one there. Same shape as report_move_errors above: the pass
-// reports spans and a Local_id, and this names it.
+// D31: a path out without writing an `out` parameter or the return slot. D9: a value read before
+// anything put one there.
 void report_unassigned_errors(
     const std::vector<Function>& functions,
     const Ast&                   ast,
@@ -175,8 +168,7 @@ void report_unassigned_errors(
 
         const auto field_name = [&]( Node_id field ) { return interner.text( ast.name( field ) ); };
 
-        // D9: a value read before it exists. Reported first, because when a function has both the
-        // read is the mistake and the missing assignment at the exit is its consequence.
+        // D9 first: when a function has both, the read is the mistake and the exit its consequence.
         for( const Uninitialised_read& read : report.reads )
         {
             if( read.field.is_valid() && read.whole )
@@ -202,16 +194,14 @@ void report_unassigned_errors(
 
             const Symbol_id name = function.locals[read.local.v].name;
 
-            // A temporary is always written before it is read, so an unnamed local here is a
-            // lowering bug rather than the author's - say something rather than nothing.
+            // A temporary is always written before it is read, so this is a lowering bug; say something.
             const std::string subject =
                 name.is_valid() ? fmt::format( "`{}`", interner.text( name ) ) : std::string( "this value" );
 
             const bool is_out = std::find( function.out_parameters.begin(), function.out_parameters.end(), read.local ) !=
                                 function.out_parameters.end();
 
-            // An `out` parameter gets its own wording: the author did write it, so "used before it
-            // is initialised" would read as though they had forgotten a declaration.
+            // The author wrote an `out` parameter, so "used before it is initialised" would mislead.
             if( is_out )
             {
                 diagnostics.error(
@@ -248,11 +238,7 @@ void report_unassigned_errors(
             {
                 const std::string_view return_type = types.table().name( function.locals[k_return_slot.v].type );
 
-                // Not error.maybe, which cannot answer this one. A path that returns *leaves* the
-                // graph, so it never joins the block this is reported at, and `ever` there is
-                // always 0 - the flag is meaningful for an `out` parameter, whose paths do join,
-                // and structurally false for the return slot. The question the wording wants is
-                // about the whole function, so it is asked of the whole function.
+                // Not error.maybe: a returning path leaves the graph and joins nothing, so ask the whole function.
                 const bool returns_somewhere = std::any_of(
                     function.statements.begin(),
                     function.statements.end(),
@@ -273,15 +259,10 @@ void report_unassigned_errors(
 
             const Symbol_id name = function.locals[error.local.v].name;
 
-            // An `out` parameter always has one, unlike a moved temporary - but reading it from the
-            // same place keeps the two reporters saying the same thing about the same field.
             const std::string subject =
                 name.is_valid() ? fmt::format( "`{}`", interner.text( name ) ) : std::string( "this parameter" );
 
-            // The two read differently on purpose: one is a path the author missed, the other is a
-            // parameter they never wrote to at all. Neither says "this `return`", because the
-            // caret is the *function* when the path that misses it is the fall off the end - which
-            // is the common case, and the one where naming a return would point at nothing.
+            // Neither names a `return`: the caret is the function when the missing path falls off its end.
             diagnostics.error(
                 error.at,
                 error.maybe ? fmt::format( "{} is not assigned on every path out of this function", subject )

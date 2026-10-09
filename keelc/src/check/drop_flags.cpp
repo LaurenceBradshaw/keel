@@ -13,8 +13,7 @@ namespace
 // Indexed by local; each entry is that local's flag, or invalid when it needs none.
 using Flag_map = std::vector<Local_id>;
 
-// The flag for a place, or invalid. A global or a projection has none: nothing can be moved but a
-// whole local, so nothing else needs tracking.
+// The flag for a place, or invalid: only a whole local can be moved.
 Local_id flag_of( const Flag_map& flags, const Place& place )
 {
     if( place.is_global() )
@@ -25,11 +24,9 @@ Local_id flag_of( const Flag_map& flags, const Place& place )
     return flags[place.local.v];
 }
 
-// Locals that are both moved somewhere and dropped somewhere, and temporaries built on one path of an
-// expression, which lowering lists and which are dropped wherever the statement ends. Moved alone is not enough: a flag
-// exists to guard a drop, so a local with none - every non-owning `move a` - would get a bool and
-// three assignments guarding nothing. Dropped alone is not enough either: a local never moved is
-// always live at its drop, and an unconditional drop is what it should keep.
+// Locals both moved and dropped somewhere, and temporaries built on one path of an expression. A
+// flag guards a drop, so a moved local never dropped needs none, and one never moved is always live
+// at its drop.
 std::vector<bool> locals_needing_flags( const Function& func )
 {
     std::vector<bool> moved( func.locals.size(), false );
@@ -47,8 +44,7 @@ std::vector<bool> locals_needing_flags( const Function& func )
         for_each_operand( func, statement.value, note );
     }
 
-    // A condition can move too - `if ( move ready )` is legal - and its flag write lands at the end
-    // of the block's statements, which is before the terminator reads it.
+    // A condition can move (`if ( move ready )`); its flag write lands before the terminator reads it.
     for( const Block& block : func.blocks )
     {
         note( block.terminator.condition );
@@ -61,9 +57,7 @@ std::vector<bool> locals_needing_flags( const Function& func )
 
     for( const Statement& statement : func.statements )
     {
-        // Projections count: a compound with no destructor of its own has its drop expanded into
-        // per-field drops, so `drop _8.inner` is how `_8` is dropped. Requiring an unprojected drop
-        // here left such a local unflagged, and moving it out then freed the field twice.
+        // Projections count: a compound without a destructor drops field by field, as `drop _8.inner`.
         if( statement.kind == Statement_kind::Drop && !statement.place.is_global() )
         {
             dropped[statement.place.local.v] = true;
@@ -88,9 +82,7 @@ std::vector<bool> locals_needing_flags( const Function& func )
     return moved;
 }
 
-// Appends a bool local per moved local and returns the map. The flags are unnamed - the pass has no
-// Interner to name them with, and a flag is not something the author wrote - so a dump reads them as
-// plain temporaries: `drop _1 if _7`.
+// Appends an unnamed bool local per flagged local, so a dump reads `drop _1 if _7`.
 Flag_map allocate_flags( Function& func, const std::vector<bool>& moved, const Flag_vocabulary& vocabulary )
 {
     Flag_map flags( func.locals.size(), Local_id {} );
@@ -102,23 +94,20 @@ Flag_map allocate_flags( Function& func, const std::vector<bool>& moved, const F
             continue;
         }
 
-        // Read out before the push_back, which may reallocate the vector this refers into. The flag
-        // borrows the local's span so a diagnostic about it points somewhere the author recognises.
+        // Read before the push_back, which may reallocate. The flag borrows the local's span.
         const Span span = func.locals[local].span;
 
         flags[local] = Local_id { narrow_cast<u32>( func.locals.size() ) };
         func.locals.push_back( Local { .type = vocabulary.bool_type, .span = span } );
     }
 
-    // Grown to the final local count, so flag_of can be asked about any place at all - including
-    // one naming a flag, which correctly answers that it needs none of its own.
+    // Grown to the final local count, so flag_of answers any place, a flag included.
     flags.resize( func.locals.size(), Local_id {} );
 
     return flags;
 }
 
-// `flag = true` or `flag = false`, as an ordinary Assign of a bool constant - so nothing downstream
-// needs a new statement kind.
+// An ordinary Assign of a bool constant, so nothing downstream needs a new statement kind.
 Statement set_flag( Local_id flag, bool value, Span span, const Flag_vocabulary& vocabulary )
 {
     return Statement {
@@ -149,11 +138,8 @@ void append_flag_writes(
         }
         return;
     case Statement_kind::Assign:
-        // The move first, then the assignment: that is the order the statement happens in, and it
-        // is what makes `_1 = move _1` end with the flag set rather than cleared.
-        //
-        // Driven off the operands rather than by testing every flagged local, so this stays linear
-        // in the statement's size instead of in the function's locals.
+        // The move first, then the assignment, so `_1 = move _1` ends with the flag set. Driven off the
+        // operands, so linear in the statement rather than in the locals.
         for_each_operand(
             func,
             statement.value,
@@ -175,13 +161,8 @@ void append_flag_writes(
             out.push_back( set_flag( flag, true, statement.span, vocabulary ) );
         }
 
-        // Taking a local's address counts as initialising it, because a constructed local is never
-        // assigned to: `Owned o = Owned( 1 );` lowers to `_3 = &_2` and a call that writes through
-        // _3, so the local is never an Assign target and its flag would otherwise stay false and
-        // its drop never run. The looseness is deliberate and bounded - `Owned o; Owned* p = &o;`
-        // marks an uninitialised local as needing a drop, which is exactly what happens today
-        // without flags, so this is no worse than the status quo for a program D9 will reject
-        // anyway.
+        // A constructed local is written through its Initialise address (`_3 = &_2`), never assigned, so
+        // that address sets its flag. A borrow does not, or one after a move would revive it.
         if( statement.value.kind == Rvalue_kind::Address_of && statement.value.address_purpose == Address_purpose::Initialise )
         {
             if( const Local_id flag = flag_of( flags, statement.value.a.place ); flag.is_valid() )
@@ -204,8 +185,7 @@ void rewrite_statements( Function& func, const Flag_map& flags, const Flag_vocab
     rebuilt.reserve( func.statements.size() * 2 ); // a guess
     for( Block& block : func.blocks )
     {
-        // Read the old range out *before* writing the new one: the loop below indexes the original
-        // vector, and overwriting first_statement first would make it index the wrong statements.
+        // Read the old range before overwriting it; the loop below indexes the original vector.
         const u32 old_first = block.first_statement;
         const u32 count     = block.statement_count;
         const u32 new_first = narrow_cast<u32>( rebuilt.size() );
@@ -232,8 +212,7 @@ void rewrite_statements( Function& func, const Flag_map& flags, const Flag_vocab
         {
             Statement statement = func.statements[old_first + i];
 
-            // A drop reads its flag rather than being followed by one, so this is set on the way
-            // past rather than appended after.
+            // A drop reads its flag rather than being followed by a write.
             if( statement.kind == Statement_kind::Drop )
             {
                 statement.drop_flag = flag_of( flags, statement.place );
@@ -243,9 +222,7 @@ void rewrite_statements( Function& func, const Flag_map& flags, const Flag_vocab
             append_flag_writes( func, statement, flags, vocabulary, rebuilt );
         }
 
-        // A condition can move - `if ( move ready )` is legal - and its flag write belongs at the
-        // end of the block's statements, which is before the terminator reads it. Without this the
-        // pass would notice such a move in find_moved_locals and then silently never clear it.
+        // A moving condition clears its flag before the terminator reads it.
         if( block.terminator.condition.kind == Operand_kind::Move )
         {
             if( const Local_id flag = flag_of( flags, block.terminator.condition.place ); flag.is_valid() )
@@ -267,8 +244,7 @@ void elaborate_drops( Function& func, const Flag_vocabulary& vocabulary )
 {
     const std::vector<bool> moved = locals_needing_flags( func );
 
-    // Nothing moved means nothing conditional: every drop stays unconditional, the statement vector
-    // is untouched, and no golden that does not use `move` can shift.
+    // Nothing flagged: the function is left untouched.
     if( std::find( moved.begin(), moved.end(), true ) == moved.end() )
     {
         return;
@@ -341,8 +317,7 @@ std::size_t count( const std::string& text, std::string_view needle )
 
 } // namespace
 
-// The early return in elaborate_drops is what makes this true by construction rather than by luck:
-// a function that moves nothing is not rewritten at all.
+// A function that moves nothing is not rewritten at all.
 TEST_CASE( "drop_flags_leaves_a_function_that_moves_nothing_alone", "[check][drop]" )
 {
     Elaborated p( std::string( k_owning ) + "i32 main() { { Owned o = Owned( 1 ); } return 0; }" );
@@ -381,17 +356,14 @@ TEST_CASE( "drop_flags_guards_a_conditionally_moved_local", "[check][drop]" )
         REQUIRE( text.find( "drop _2 if _" ) != std::string::npos );
     }
 
-    // One drop, one flag on it. Counting bool locals instead would also catch the `c == 0`
-    // comparison's temporary, which is not a flag.
+    // Counted by drop, since the `c == 0` comparison's temporary is a bool too.
     SECTION( "and there is exactly one of them" )
     {
         REQUIRE( count( text, "drop " ) == 1 );
         REQUIRE( count( text, " if _" ) == 1 );
     }
 
-    // False on entry, true once constructed, false again once moved. A constructed local is never
-    // an Assign target - the constructor writes through a pointer - so the true comes from the
-    // address being taken, which is the one place that says "this local now holds something".
+    // False on entry, true once constructed (its Initialise address), false once moved.
     SECTION( "the flag is cleared, set and cleared again" )
     {
         REQUIRE( count( text, "= const 0" ) >= 2 );
@@ -522,8 +494,7 @@ TEST_CASE( "drop_flags_does_not_drop_a_field_a_constructor_initialises", "[check
     REQUIRE( text.find( "drop (*_1)" ) == std::string::npos );
 }
 
-// A temporary built in one arm of a conditional has no storage_live, so nothing on the other arm's
-// path would clear its flag - and the join tests both.
+// An arm's temporary has no storage_live on the other arm's path, and the join tests both.
 TEST_CASE( "drop_flags_clears_every_flag_on_entry", "[check][drop]" )
 {
     Elaborated p(
@@ -549,8 +520,8 @@ TEST_CASE( "drop_flags_clears_every_flag_on_entry", "[check][drop]" )
     }
 }
 
-// A parameter arrives holding its value, so a `move` parameter moved on only some paths is still
-// dropped on the others. Its flag once started false like a local's, and that path leaked.
+// A `move` parameter moved on only some paths is still dropped on the others, so its flag starts
+// true.
 TEST_CASE( "drop_flags_sets_a_parameter's_flag_on_entry", "[check][drop]" )
 {
     Elaborated p(
@@ -574,8 +545,7 @@ TEST_CASE( "drop_flags_sets_a_parameter's_flag_on_entry", "[check][drop]" )
     REQUIRE( entry.find( flag + " = const 1" ) != std::string::npos );
 }
 
-// Only construction sets the flag. A borrow once set it too, so one after a move destroyed the
-// value a second time.
+// Only construction sets the flag, so a borrow after a move does not revive the value.
 TEST_CASE( "drop_flags_is_not_set_by_a_borrow", "[check][drop]" )
 {
     Elaborated p(

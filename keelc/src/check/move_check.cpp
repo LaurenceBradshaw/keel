@@ -12,8 +12,7 @@ namespace keel
 namespace
 {
 
-// PLAN §8. Uninitialised is the bottom - "no information yet" - so joining it with anything gives
-// the other side, which is what lets a block start empty and be filled by its predecessors.
+// PLAN §8. Uninitialised is the bottom, so a block starts empty and is filled by its predecessors.
 enum class State : u8
 {
     Uninitialised,
@@ -52,8 +51,7 @@ Span join_span( Span a, Span b )
     return a.start <= b.start ? a : b;
 }
 
-// Merges `from` into `into`, returning whether anything changed. That answer is the worklist's
-// only termination signal.
+// Merges `from` into `into`; whether anything changed is the worklist's termination signal.
 bool merge_into( Flow& into, const Flow& from )
 {
     bool changed = false;
@@ -63,8 +61,7 @@ bool merge_into( Flow& into, const Flow& from )
         const State merged = join( into.state[i], from.state[i] );
         const Span  span   = join_span( into.moved_at[i], from.moved_at[i] );
 
-        // The span changing counts: two paths can agree a local is Moved while disagreeing
-        // about where, and the message names the place.
+        // Two paths can agree a local is Moved and disagree about where, and the message names the place.
         changed = changed || merged != into.state[i] || span.start != into.moved_at[i].start;
 
         into.state[i]    = merged;
@@ -74,9 +71,8 @@ bool merge_into( Flow& into, const Flow& from )
     return changed;
 }
 
-// Reads one operand: reports if it names a moved local, then applies the move if it is one.
-// `errors` is null during the fixpoint and non-null on the reporting pass - which is what lets
-// both use this rather than keeping two traversals in step by hand.
+// Reports a read of a moved local, then applies a move. `errors` is null during the fixpoint, so
+// both walks share one traversal.
 void read_operand( const Operand& operand, Span span, Flow& flow, std::vector<Move_error>* errors )
 {
     // A constant names no local, and a global has no scope to be moved out of.
@@ -96,7 +92,7 @@ void read_operand( const Operand& operand, Span span, Flow& flow, std::vector<Mo
         } );
     }
 
-    // Moveing twice is itself a use-after-move, so this runs after the check rather than instead.
+    // Moving twice is a use after move, so this runs after the check.
     if( operand.kind == Operand_kind::Move && operand.place.num_projections == 0 )
     {
         flow.state[local]    = State::Moved;
@@ -145,9 +141,8 @@ void read_rvalue( const Function& func, const Rvalue& value, Span span, Flow& fl
         }
     }
 
-    // a and b cover Use, Binary, Unary and Cast; the argument range cover Call. An Rvalue leaves
-    // the operands its kind does not use at their Constant default, so reading all of them is safe
-    // and needs no switch - which is the point of that default in kir.h
+    // a and b cover Use, Binary, Unary and Cast, the argument range Call; an unused operand is a
+    // Constant, so reading all of them needs no switch.
     read_operand( value.a, span, flow, errors );
     read_operand( value.b, span, flow, errors );
 
@@ -156,8 +151,7 @@ void read_rvalue( const Function& func, const Rvalue& value, Span span, Flow& fl
         read_operand( func.operands[value.first_argument + i], span, flow, errors );
     }
 
-    // Address_of reads a place rather than an operand, and taking the address of a moved local is
-    // not a use of its value - so there is deliberately nothing here for it.
+    // Taking a moved local's address is not a use of its value, so Address_of reads nothing here.
 }
 
 // Every statement of a block, then its terminator's condition. Mutates `flow` in place.
@@ -172,8 +166,7 @@ void transfer_block( const Function& func, u32 block, Flow& flow, std::vector<Mo
         switch( statement.kind )
         {
         case Statement_kind::Assign:
-            // Reads before the write, which is the order the statement happens in:
-            // // `_1 = move _1 + 1` reads _1 and then re-initialises it, and is legal
+            // Reads before the write: `_1 = move _1 + 1` is legal.
             read_rvalue( func, statement.value, statement.span, flow, errors );
 
             // `_1.x = ...` fills a fresh or live _1, as a struct literal does, but is a use of a moved
@@ -204,22 +197,17 @@ void transfer_block( const Function& func, u32 block, Flow& flow, std::vector<Mo
             break;
         case Statement_kind::Storage_live:
         case Statement_kind::Storage_dead:
-            // Storage begins and ends empty either way. Both only ever name a whole local -
-            // verify's check_place already rejects a projection here.
+            // Both name a whole local (verify's check_place), and storage begins and ends empty.
             flow.state[statement.place.local.v]    = State::Uninitialised;
             flow.moved_at[statement.place.local.v] = Span {};
             break;
         case Statement_kind::Drop:
-            // Deliberately silent. A drop of a moved value is not the author's mistake - eliding it
-            // is drop elaboration's job, and reporting it here would blame them for where the
-            // compiler chose to put a drop.
+            // Silent: eliding a drop of a moved value is drop elaboration's job, not the author's mistake.
             break;
         }
     }
 
-    // Read on the way out, after every statement. A terminator leaves an operand it lacks at its
-    // default, which is Operand_kind::Constant, so read_operand returns immediately - no kind test
-    // is needed here.
+    // The terminator's operand, after every statement; one it lacks is a Constant and reads nothing.
     read_operand( b.terminator.condition, b.terminator.span, flow, errors );
     read_operand( b.terminator.message, b.terminator.span, flow, errors );
 }
@@ -379,10 +367,7 @@ std::vector<Move_error> check_moves( const Function& func, const std::vector<boo
     std::vector<Block_id> work { Block_id { 0 } };
     std::vector<Block_id> next;
 
-    // Forward, pushing into successors rather than pulling from predecessors, so no predecessor map
-    // is needed. Terminates because there are four states, join never moves a local back down the
-    // lattice, and there are finitely many blocks - so merge_into eventually returns false
-    // everywhere and the worklist drains.
+    // Forward, pushing into successors. Terminates: four states, join only rises, finitely many blocks.
     while( !work.empty() )
     {
         const Block_id block = work.back();
@@ -405,8 +390,7 @@ std::vector<Move_error> check_moves( const Function& func, const std::vector<boo
 
     const std::vector<Borrow> borrows = borrows_of( func );
 
-    // A second walk, each block exactly once. Reporting inside the loop above would emit one error
-    // per visit for any block on a back edge - which is what the "reports once" test pins.
+    // A second walk, each block once, so a block on a back edge reports once.
     std::vector<Move_error> errors;
 
     for( u32 block = 0; block < func.blocks.size(); ++block )
@@ -434,8 +418,7 @@ namespace keel
 namespace
 {
 
-// Real source rather than hand-built CFGs: what needs testing here is what happens at a branch, a
-// join and a back edge, and those are precisely the graphs that are worst to assemble by hand.
+// Real source rather than hand-built CFGs: branches, joins and back edges are worst built by hand.
 struct Checked : Compiled
 {
     explicit Checked( std::string_view source )
@@ -447,8 +430,7 @@ struct Checked : Compiled
         }
     }
 
-    // The function under test is always the last one lowered: every fixture below puts the
-    // interesting code in main, and declares whatever it calls above it.
+    // The function under test is the last one lowered, `main`.
     std::vector<Move_error> errors() const
     {
         return check_moves( functions.back(), owning.back() );
@@ -491,8 +473,7 @@ TEST_CASE( "move_check_finds_a_use_after_move", "[check][move]" )
         REQUIRE_FALSE( errors[0].maybe );
     }
 
-    // Moving twice is itself a use of something already gone, which is why the report runs before
-    // the state changes rather than instead of it.
+    // Reported before the state changes, not instead of changing it.
     SECTION( "moving twice" )
     {
         const Checked p( std::string( k_sink ) + "i32 main() { i32 a = 1; sink( move a ); sink( move a ); return 0; }" );
@@ -509,8 +490,7 @@ TEST_CASE( "move_check_finds_a_use_after_move", "[check][move]" )
         REQUIRE( p.errors().empty() );
     }
 
-    // Re-initialising clears both the state and the recorded move, or a later join would carry a
-    // span pointing at a move the program already recovered from.
+    // Re-initialising clears the recorded move too, or a later join would name a move already undone.
     SECTION( "assigning it again brings it back" )
     {
         const Checked p( std::string( k_sink ) + "i32 main() { i32 a = 1; sink( move a ); a = 2; sink( a ); return 0; }" );
@@ -519,9 +499,7 @@ TEST_CASE( "move_check_finds_a_use_after_move", "[check][move]" )
         REQUIRE( p.errors().empty() );
     }
 
-    // The read happens before the write, so a self-referential assignment is legal. Parenthesised
-    // because a marker takes the whole expression to its boundary: `move a + 1` is `move ( a + 1 )`,
-    // which is not a variable and is refused.
+    // Read before written, so this is legal. Parenthesised because `move a + 1` is `move ( a + 1 )`.
     SECTION( "a move on the right of an assignment to the same local" )
     {
         const Checked p( "i32 main() { i32 a = 1; a = ( move a ) + 1; return a; }" );
@@ -615,10 +593,7 @@ TEST_CASE( "move_check_follows_a_back_edge", "[check][move]" )
         REQUIRE( p.errors().empty() );
     }
 
-    // Two bad sites here, and both are real: `sink( a )` reads what the move above it killed, and
-    // `sink( move a )` reads what the back edge left moved. What must not happen is either being
-    // reported once per visit - which is why reporting is a second walk rather than part of the
-    // fixpoint.
+    // Both sites are real; neither may be reported once per visit.
     SECTION( "each bad site is reported once, however often its block is visited" )
     {
         const Checked p(
@@ -932,8 +907,7 @@ TEST_CASE( "move_check_reports_both_ends", "[check][move]" )
     REQUIRE( p.text_at( errors[0].use ).find( "sink( a )" ) != std::string_view::npos );
 }
 
-// Drop elaboration puts a drop at every scope exit, including for a local that has been moved out
-// of. Eliding it is drop elaboration's job; blaming the author for it here would be wrong.
+// Drop elaboration drops a moved local at every scope exit; eliding it is its job, not an error.
 TEST_CASE( "move_check_says_nothing_about_drops", "[check][move]" )
 {
     const Checked p( "class Buffer { public u64 len; ~Buffer() { } };\n"

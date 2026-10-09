@@ -8,8 +8,7 @@
 namespace keel
 {
 
-// What a flag is made of, none of which the Function carries. Passed in as data rather than as a
-// Type_table and a Literal_pool to look them up in, so the pass stays a function of its inputs.
+// What a flag is made of, passed as data so the pass stays a function of its inputs.
 struct Flag_vocabulary
 {
     Type_id    bool_type {};
@@ -17,10 +16,9 @@ struct Flag_vocabulary
     Literal_id true_literal {};
 };
 
-// PLAN §7. A local moved, or a temporary built, on only some paths cannot be dropped
-// unconditionally, so it gets a hidden bool: false while its storage is empty, true once assigned,
-// false again once moved or its storage ends, tested at the drop. Exact on every path *by construction*, because it records
-// what happened rather than what might have - which is why this needs no dataflow, unlike move_check's diagnostics.
+// PLAN §7. A local moved, or a temporary built, on only some paths gets a hidden bool tested at its
+// drop: set once assigned, cleared once moved or its storage ends. Exact by construction, since it
+// records what happened, so it needs no dataflow.
 void elaborate_drops( Function& func, const Flag_vocabulary& vocabulary );
 
 } // namespace keel
