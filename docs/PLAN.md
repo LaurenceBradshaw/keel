@@ -1204,7 +1204,8 @@ test fixture that runs the real pipeline, prelude included (R11), **done**: `che
 classes (R3, with R5 and R18), **done**: `Token_cursor`, `Recovery`, `parse_expression` split into prefix,
 postfix and infix with named entry points; `infer_call`'s phases and a call-site struct (R6, R15),
 **done**: `Call_site`, `Deduction`, `refuse_call`, `constructor_candidates`, `call_through_value`,
-`select_callable`, `instantiate` and `record_instance`; and the resolver's long cases (R12). **Later, or when next touched**: `Addresses` out of `Expressions` (R4),
+`select_callable`, `instantiate` and `record_instance`; and the resolver's long cases (R12), **done**: `visit_path`, `visit_case_arm`, `visit_enum`,
+`visit_aggregate` and `declare_members`. **Later, or when next touched**: `Addresses` out of `Expressions` (R4),
 the `Types` renames (R8) once files stop moving, R16 and R21, and R19's comment sweep of
 `ir/lower.cpp` and `parse/parser.cpp` (`check/` **done**).
 

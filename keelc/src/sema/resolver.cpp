@@ -42,6 +42,12 @@ private:
     };
 
     void visit( Node_id id );
+    void visit_path( Node_id id );
+    void visit_case_arm( Node_id id );
+    void visit_enum( Node_id id );
+    void visit_aggregate( Node_id id );
+
+    std::unordered_map<u32, Node_id> declare_members( Node_id aggregate );
 
     void push_scope( Scope_kind kind = Scope_kind::Transparent );
     void pop_scope();
@@ -243,54 +249,8 @@ void Resolver::visit( Node_id id )
         return;
     }
     case Node_kind::Path_expr:
-    {
-        const Node_id qualifier = ast_.qualifier( id );
-        if( ast_.kind( qualifier ) == Node_kind::Name_expr && !ast_.type_arg_list( qualifier ).is_valid() &&
-            imports_.is_package( ast_.name( qualifier ) ) )
-        {
-            bindings_[id.v] = lookup_qualified( qualifier, id );
-
-            visit( ast_.type_arg_list( id ) );
-
-            return;
-        }
-
-        if( ast_.kind( qualifier ) == Node_kind::Name_expr && !ast_.type_arg_list( qualifier ).is_valid() &&
-            is_builtin_type_name( interner_.text( ast_.name( qualifier ) ) ) )
-        {
-            reporter_.error_at(
-                ast_.span( qualifier ),
-                fmt::format( "`{}` is a builtin type, and has no members", interner_.text( ast_.name( qualifier ) ) )
-            );
-
-            visit( ast_.type_arg_list( id ) );
-
-            return;
-        }
-
-        for( const Node_id child : ast_.children( id ) )
-        {
-            visit( child );
-        }
-
-        if( ast_.kind( qualifier ) == Node_kind::Name_expr && !ast_.type_arg_list( qualifier ).is_valid() )
-        {
-            const Node_id name = lookup( ast_.name( qualifier ), qualifier );
-            if( name.is_valid() && is_aggregate( ast_.kind( name ) ) )
-            {
-                for( const Node_id member : ast_.members( name ) )
-                {
-                    if( ast_.kind( member ) == Node_kind::Var_decl && ast_.name( member ) == ast_.name( id ) )
-                    {
-                        bindings_[id.v] = member;
-                        return;
-                    }
-                }
-            }
-        }
-
+        visit_path( id );
         return;
-    }
     case Node_kind::Named_type:
     {
         // `kl::Point`, whose one child is the package. A miss there is reported, since nothing
@@ -337,200 +297,15 @@ void Resolver::visit( Node_id id )
         return;
     }
     case Node_kind::Case_arm:
-    {
-        // The arm is the scope, not its body: a pattern's bindings are written *outside* the
-        // block - `case Shape::Circle( r ):` - and have to be in scope inside it. One scope over
-        // both is what makes `r` visible in the body and invisible in the next arm.
-        push_scope();
-
-        for( const Node_id label : ast_.labels( id ) )
-        {
-            if( ast_.kind( label ) != Node_kind::Variant_pattern )
-            {
-                visit( label );
-                continue;
-            }
-
-            // The path resolves like any other; the bindings are declarations rather than uses.
-            visit( ast_.variant_path( label ) );
-
-            for( const Node_id binding : ast_.bindings( label ) )
-            {
-                declare( scopes_.back(), ast_.name( binding ), binding );
-            }
-        }
-
-        visit( ast_.body( id ) );
-        pop_scope();
+        visit_case_arm( id );
         return;
-    }
     case Node_kind::Enum_decl:
-    {
-        // Not the default walk, because the variant *names* are deliberately not declared. D30 gives them enum-class scoping,
-        // so they enter no lexical scope at all: `Colour::Red` is looked up against the enum's own type in the checker, exactly
-        // as a field name is, and a bare `Red` stays undeclared.
-        //
-        // Their payload fields still have to be *visited*, though: `Circle( Point centre )` names a
-        // type, and nothing else will resolve it.
-        push_scope( Scope_kind::Barrier );
-        visit( ast_.type_param_list( id ) );
-
-        if( !is_builtin_type_name( interner_.text( ast_.name( id ) ) ) )
-        {
-            scopes_.back().names.emplace( ast_.name( id ), id );
-        }
-
-        visit( ast_.underlying_type( id ) );
-
-        for( const Node_id variant : ast_.variants( id ) )
-        {
-            for( const Node_id field : ast_.payload( variant ) )
-            {
-                visit( ast_.annotation( field ) );
-            }
-        }
-
-        pop_scope();
+        visit_enum( id );
         return;
-    }
     case Node_kind::Class_decl:
     case Node_kind::Struct_decl:
-    {
-        // Fields are a member namespace, not a lexical one, so for the struct body itself they are
-        // deliberately *not* in scopes_: doing that would put `Point` in scope as a field and let
-        // it shadow the type `Point` while the fields' own annotations are being resolved. A local
-        // map gives the duplicate check without the pollution, and without D19's shadowing walk,
-        // which does not apply between members.
-        //
-        // A destructor body is the exception, and gets them in a scope of its own below - no
-        // annotation is ever inside it, so the hazard above cannot arise there. Two passes rather
-        // than one, because declaration order carries meaning inside a function body and none
-        // between members: a field written after the destructor must still be visible in it.
-        // The type parameters, before anything that can name one. A barrier for the reason a
-        // function's is: `T` belongs to this declaration and to nothing outside it, and a scope
-        // that carried outer names in would let a top-level `T` be found from a member body.
-        push_scope( Scope_kind::Barrier );
-        visit( ast_.type_param_list( id ) );
-
-        if( !is_builtin_type_name( interner_.text( ast_.name( id ) ) ) )
-        {
-            scopes_.back().names.emplace( ast_.name( id ), id );
-        }
-
-        std::unordered_map<u32, Node_id> members;
-
-        for( const Node_id field : ast_.members( id ) )
-        {
-            if( ast_.kind( field ) != Node_kind::Field_decl && ast_.kind( field ) != Node_kind::Var_decl )
-            {
-                continue;
-            }
-
-            if( ast_.kind( field ) == Node_kind::Field_decl )
-            {
-                visit( field ); // the field's type annotation still resolves through the normal path
-            }
-            else
-            {
-                visit( ast_.annotation( field ) );
-                visit( ast_.initialiser( field ) );
-            }
-
-            const Symbol_id name = ast_.name( field );
-
-            if( !name.is_valid() )
-            {
-                continue; // the parser already reported the missing name
-            }
-
-            if( refuse_builtin_name( name, field ) )
-            {
-                continue;
-            }
-
-            const auto [it, inserted] = members.try_emplace( name.v, field );
-
-            if( !inserted )
-            {
-                reporter_.error_at(
-                    ast_.name_span( field ),
-                    fmt::format(
-                        "{}`{}` is already declared",
-                        ast_.kind( field ) == Node_kind::Var_decl ? "" : "field ",
-                        interner_.text( name )
-                    ),
-                    reporter_.previous_declaration_note( ast_.span( it->second ) )
-                );
-            }
-        }
-
-        // Methods join the member scope, so a sibling is callable by bare name: `add( by )` rather
-        // than `this.add( by )`, which is what C++ does and what any real class needs - a type whose
-        // methods have to qualify each other is tiring to write long before it is large.
-        //
-        // A second loop rather than a branch in the one above, because a method's own annotations
-        // are resolved when its body is visited below, not here.
-        for( const Node_id member : ast_.members( id ) )
-        {
-            if( ast_.kind( member ) != Node_kind::Method_decl )
-            {
-                continue;
-            }
-
-            const Symbol_id name = ast_.name( member );
-
-            if( !name.is_valid() )
-            {
-                continue;
-            }
-
-            if( refuse_builtin_name( name, member ) )
-            {
-                continue;
-            }
-
-            const auto [it, inserted] = members.try_emplace( name.v, member );
-
-            if( !inserted && !chain_overload( it->second, member ) )
-            {
-                reporter_.error_at(
-                    ast_.name_span( member ),
-                    fmt::format( "`{}` is already declared", interner_.text( name ) ),
-                    reporter_.previous_declaration_note( ast_.span( it->second ) )
-                );
-            }
-        }
-
-        push_scope();
-
-        for( const auto& [name, decl] : members )
-        {
-            // Straight into the scope rather than through declare(): members are not lexical,
-            // duplicates were already reported above, and declare()'s walk reads a barrier scope's
-            // names before noticing it is a barrier - so it would call a field that happens to
-            // share a top-level name a shadow. The set beside it is what D19's member clause reads.
-            scopes_.back().names.emplace( Symbol_id { name }, decl );
-            current_fields_.insert( Symbol_id { name } );
-        }
-
-        for( const Node_id member : ast_.members( id ) )
-        {
-            if( is_function_like( ast_.kind( member ) ) )
-            {
-                visit( member );
-            }
-        }
-
-        // clear() rather than restoring an enclosing set, because an aggregate cannot nest inside
-        // another. If that ever changes this has to become a save and restore.
-        current_fields_.clear();
-        pop_scope();
-
-        pop_scope(); // the type parameters
-
+        visit_aggregate( id );
         return;
-    }
-
     default:
         for( const Node_id child : ast_.children( id ) )
         {
@@ -538,6 +313,253 @@ void Resolver::visit( Node_id id )
         }
         return;
     }
+}
+
+// `pkg::x`, a builtin's misuse, or an aggregate's static field.
+void Resolver::visit_path( Node_id id )
+{
+    const Node_id qualifier = ast_.qualifier( id );
+    const bool    bare      = ast_.kind( qualifier ) == Node_kind::Name_expr && !ast_.type_arg_list( qualifier ).is_valid();
+
+    if( bare && imports_.is_package( ast_.name( qualifier ) ) )
+    {
+        bindings_[id.v] = lookup_qualified( qualifier, id );
+
+        visit( ast_.type_arg_list( id ) );
+
+        return;
+    }
+
+    if( bare && is_builtin_type_name( interner_.text( ast_.name( qualifier ) ) ) )
+    {
+        reporter_.error_at(
+            ast_.span( qualifier ),
+            fmt::format( "`{}` is a builtin type, and has no members", interner_.text( ast_.name( qualifier ) ) )
+        );
+
+        visit( ast_.type_arg_list( id ) );
+
+        return;
+    }
+
+    for( const Node_id child : ast_.children( id ) )
+    {
+        visit( child );
+    }
+
+    if( !bare )
+    {
+        return;
+    }
+
+    const Node_id name = lookup( ast_.name( qualifier ), qualifier );
+    if( name.is_valid() && is_aggregate( ast_.kind( name ) ) )
+    {
+        for( const Node_id member : ast_.members( name ) )
+        {
+            if( ast_.kind( member ) == Node_kind::Var_decl && ast_.name( member ) == ast_.name( id ) )
+            {
+                bindings_[id.v] = member;
+                return;
+            }
+        }
+    }
+}
+
+void Resolver::visit_case_arm( Node_id id )
+{
+    // The arm is the scope, not its body: a pattern's bindings are written *outside* the
+    // block - `case Shape::Circle( r ):` - and have to be in scope inside it. One scope over
+    // both is what makes `r` visible in the body and invisible in the next arm.
+    push_scope();
+
+    for( const Node_id label : ast_.labels( id ) )
+    {
+        if( ast_.kind( label ) != Node_kind::Variant_pattern )
+        {
+            visit( label );
+            continue;
+        }
+
+        // The path resolves like any other; the bindings are declarations rather than uses.
+        visit( ast_.variant_path( label ) );
+
+        for( const Node_id binding : ast_.bindings( label ) )
+        {
+            declare( scopes_.back(), ast_.name( binding ), binding );
+        }
+    }
+
+    visit( ast_.body( id ) );
+    pop_scope();
+}
+
+void Resolver::visit_enum( Node_id id )
+{
+    // Not the default walk, because the variant *names* are deliberately not declared. D30 gives them enum-class scoping,
+    // so they enter no lexical scope at all: `Colour::Red` is looked up against the enum's own type in the checker, exactly
+    // as a field name is, and a bare `Red` stays undeclared.
+    //
+    // Their payload fields still have to be *visited*, though: `Circle( Point centre )` names a
+    // type, and nothing else will resolve it.
+    push_scope( Scope_kind::Barrier );
+    visit( ast_.type_param_list( id ) );
+
+    if( !is_builtin_type_name( interner_.text( ast_.name( id ) ) ) )
+    {
+        scopes_.back().names.emplace( ast_.name( id ), id );
+    }
+
+    visit( ast_.underlying_type( id ) );
+
+    for( const Node_id variant : ast_.variants( id ) )
+    {
+        for( const Node_id field : ast_.payload( variant ) )
+        {
+            visit( ast_.annotation( field ) );
+        }
+    }
+
+    pop_scope();
+}
+
+void Resolver::visit_aggregate( Node_id id )
+{
+    // The type parameters, before anything that can name one. A barrier for the reason a
+    // function's is: `T` belongs to this declaration and to nothing outside it, and a scope
+    // that carried outer names in would let a top-level `T` be found from a member body.
+    push_scope( Scope_kind::Barrier );
+    visit( ast_.type_param_list( id ) );
+
+    if( !is_builtin_type_name( interner_.text( ast_.name( id ) ) ) )
+    {
+        scopes_.back().names.emplace( ast_.name( id ), id );
+    }
+
+    const std::unordered_map<u32, Node_id> members = declare_members( id );
+
+    // Member bodies are the exception to declare_members' rule, and see every member in a scope of
+    // their own: declaration order carries meaning inside a body and none between members, so a
+    // field written after a method must still be visible in it.
+    push_scope();
+
+    for( const auto& [name, decl] : members )
+    {
+        // Straight into the scope rather than through declare(): members are not lexical,
+        // duplicates were already reported, and declare()'s walk reads a barrier scope's
+        // names before noticing it is a barrier - so it would call a field that happens to
+        // share a top-level name a shadow. The set beside it is what D19's member clause reads.
+        scopes_.back().names.emplace( Symbol_id { name }, decl );
+        current_fields_.insert( Symbol_id { name } );
+    }
+
+    for( const Node_id member : ast_.members( id ) )
+    {
+        if( is_function_like( ast_.kind( member ) ) )
+        {
+            visit( member );
+        }
+    }
+
+    // clear() rather than restoring an enclosing set, because an aggregate cannot nest inside
+    // another. If that ever changes this has to become a save and restore.
+    current_fields_.clear();
+    pop_scope();
+
+    pop_scope(); // the type parameters
+}
+
+// Fields are a member namespace, not a lexical one, so they are deliberately *not* in scopes_ here:
+// that would put `Point` in scope as a field and let it shadow the type `Point` while the fields'
+// own annotations are resolved. A local map gives the duplicate check without the pollution, and
+// without D19's shadowing walk, which does not apply between members.
+std::unordered_map<u32, Node_id> Resolver::declare_members( Node_id aggregate )
+{
+    std::unordered_map<u32, Node_id> members;
+
+    for( const Node_id field : ast_.members( aggregate ) )
+    {
+        if( ast_.kind( field ) != Node_kind::Field_decl && ast_.kind( field ) != Node_kind::Var_decl )
+        {
+            continue;
+        }
+
+        if( ast_.kind( field ) == Node_kind::Field_decl )
+        {
+            visit( field ); // the field's type annotation still resolves through the normal path
+        }
+        else
+        {
+            visit( ast_.annotation( field ) );
+            visit( ast_.initialiser( field ) );
+        }
+
+        const Symbol_id name = ast_.name( field );
+
+        if( !name.is_valid() )
+        {
+            continue; // the parser already reported the missing name
+        }
+
+        if( refuse_builtin_name( name, field ) )
+        {
+            continue;
+        }
+
+        const auto [it, inserted] = members.try_emplace( name.v, field );
+
+        if( !inserted )
+        {
+            reporter_.error_at(
+                ast_.name_span( field ),
+                fmt::format(
+                    "{}`{}` is already declared",
+                    ast_.kind( field ) == Node_kind::Var_decl ? "" : "field ",
+                    interner_.text( name )
+                ),
+                reporter_.previous_declaration_note( ast_.span( it->second ) )
+            );
+        }
+    }
+
+    // Methods join the member scope, so a sibling is callable by bare name: `add( by )` rather
+    // than `this.add( by )`, which is what C++ does and what any real class needs - a type whose
+    // methods have to qualify each other is tiring to write long before it is large.
+    //
+    // A second loop rather than a branch in the one above, because a method's own annotations
+    // are resolved when its body is visited, not here.
+    for( const Node_id member : ast_.members( aggregate ) )
+    {
+        if( ast_.kind( member ) != Node_kind::Method_decl )
+        {
+            continue;
+        }
+
+        const Symbol_id name = ast_.name( member );
+
+        if( !name.is_valid() )
+        {
+            continue;
+        }
+
+        if( refuse_builtin_name( name, member ) )
+        {
+            continue;
+        }
+
+        const auto [it, inserted] = members.try_emplace( name.v, member );
+
+        if( !inserted && !chain_overload( it->second, member ) )
+        {
+            reporter_.error_at(
+                ast_.name_span( member ),
+                fmt::format( "`{}` is already declared", interner_.text( name ) ),
+                reporter_.previous_declaration_note( ast_.span( it->second ) )
+            );
+        }
+    }
+
+    return members;
 }
 
 void Resolver::push_scope( Scope_kind kind )
