@@ -1,0 +1,166 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "evaluation_order.kl.prelude.c"
+
+struct kl__P;
+
+struct kl__P
+{
+    int32_t kl_a_30;
+    int32_t kl_b_32;
+};
+
+int32_t kl_trace_1;
+
+void* kl_rt_alloc( size_t );
+void  kl_rt_free( void* );
+void* kl_rt_alloc_many( size_t, size_t );
+
+int32_t kl__note__3i32( int32_t );
+int32_t kl__first__3i32_3i32_3i32( int32_t, int32_t, int32_t );
+int32_t kl__main__( void );
+
+int32_t kl__note__3i32( int32_t kl_digit_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_t2;
+    int32_t kl_t3;
+#line 8 "codegen/evaluation_order.kl"
+    kl_t2 = kl_trace_1 * 10;
+    kl_t3 = kl_t2 + kl_digit_1;
+    kl_trace_1 = kl_t3;
+#line 9 "codegen/evaluation_order.kl"
+    kl_t0 = kl_digit_1;
+    return kl_t0;
+}
+
+int32_t kl__first__3i32_3i32_3i32( int32_t kl_a_1, int32_t kl_b_2, int32_t kl_c_3 )
+{
+    int32_t kl_t0;
+    ( void ) kl_b_2;
+    ( void ) kl_c_3;
+#line 14 "codegen/evaluation_order.kl"
+    kl_t0 = kl_a_1;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_t1;
+    int32_t kl_t2;
+    int32_t kl_t3;
+    bool kl_t5;
+    int32_t kl_sum_6;
+    int32_t kl_t7;
+    int32_t kl_t8;
+    int32_t kl_t9;
+    int32_t kl_t10;
+    int32_t kl_t11;
+    bool kl_t12;
+    bool kl_t13;
+    bool kl_t14;
+    struct kl__P kl_p_15;
+    struct kl__P kl_t16;
+    int32_t kl_t17;
+    int32_t kl_t18;
+    bool kl_t19;
+    bool kl_t20;
+    bool kl_t21;
+    int32_t* kl_slots_22;
+    int32_t* kl_t23;
+    int32_t kl_t24;
+    int32_t* kl_t25;
+    int32_t kl_t26;
+    bool kl_t28;
+#line 25 "codegen/evaluation_order.kl"
+    kl_t1 = kl__note__3i32( 1 );
+    kl_t2 = kl__note__3i32( 2 );
+    kl_t3 = kl__note__3i32( 3 );
+    kl__first__3i32_3i32_3i32( kl_t1, kl_t2, kl_t3 );
+#line 26 "codegen/evaluation_order.kl"
+    kl_t5 = kl_trace_1 != 123;
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb1:
+#line 28 "codegen/evaluation_order.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+#line 31 "codegen/evaluation_order.kl"
+    kl_trace_1 = 0;
+#line 32 "codegen/evaluation_order.kl"
+    kl_t7 = kl__note__3i32( 1 );
+    kl_t8 = kl__note__3i32( 2 );
+    kl_t9 = kl__note__3i32( 3 );
+    kl_t10 = kl_t8 * kl_t9;
+    kl_t11 = kl_t7 + kl_t10;
+    kl_sum_6 = kl_t11;
+#line 33 "codegen/evaluation_order.kl"
+    kl_t13 = kl_trace_1 != 123;
+    kl_t12 = kl_t13;
+    if ( kl_t12 ) goto bb4; else goto bb3;
+    bb3:
+    kl_t14 = kl_sum_6 != 7;
+    kl_t12 = kl_t14;
+    goto bb4;
+    bb4:
+    if ( kl_t12 ) goto bb5; else goto bb6;
+    bb5:
+#line 35 "codegen/evaluation_order.kl"
+    kl_t0 = 2;
+    return kl_t0;
+    bb6:
+#line 38 "codegen/evaluation_order.kl"
+    kl_trace_1 = 0;
+#line 39 "codegen/evaluation_order.kl"
+    kl_t17 = kl__note__3i32( 1 );
+    kl_t18 = kl__note__3i32( 2 );
+    kl_t16.kl_a_30 = kl_t17;
+    kl_t16.kl_b_32 = kl_t18;
+    kl_p_15 = kl_t16;
+#line 40 "codegen/evaluation_order.kl"
+    kl_t20 = kl_trace_1 != 12;
+    kl_t19 = kl_t20;
+    if ( kl_t19 ) goto bb8; else goto bb7;
+    bb7:
+    kl_t21 = kl_p_15.kl_b_32 != 2;
+    kl_t19 = kl_t21;
+    goto bb8;
+    bb8:
+    if ( kl_t19 ) goto bb9; else goto bb10;
+    bb9:
+#line 42 "codegen/evaluation_order.kl"
+    kl_t0 = 3;
+    return kl_t0;
+    bb10:
+#line 45 "codegen/evaluation_order.kl"
+    kl_trace_1 = 0;
+#line 49 "codegen/evaluation_order.kl"
+    kl_t23 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 4, sizeof( int32_t ) );
+    kl_slots_22 = kl_t23;
+#line 50 "codegen/evaluation_order.kl"
+    kl_t24 = kl__note__3i32( 1 );
+    kl_t25 = kl_slots_22 + kl_t24;
+    kl_t26 = kl__note__3i32( 2 );
+    ( *kl_t25 ) = kl_t26;
+#line 51 "codegen/evaluation_order.kl"
+    kl_rt_free( kl_slots_22 );
+#line 53 "codegen/evaluation_order.kl"
+    kl_t28 = kl_trace_1 != 12;
+    if ( kl_t28 ) goto bb11; else goto bb12;
+    bb11:
+#line 55 "codegen/evaluation_order.kl"
+    kl_t0 = 4;
+    return kl_t0;
+    bb12:
+#line 58 "codegen/evaluation_order.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

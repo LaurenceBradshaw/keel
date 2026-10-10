@@ -1,0 +1,59 @@
+// Operands run left to right wherever C leaves the order unspecified: arguments, both sides of an
+// operator, an aggregate's fields, and an indexed store's index before its value. Each `note`
+// appends a digit, so the order is read back as a number.
+i32 trace;
+
+i32 note( i32 digit )
+{
+    trace = trace * 10 + digit;
+    return digit;
+}
+
+i32 first( i32 a, i32 b, i32 c )
+{
+    return a;
+}
+
+struct P
+{
+    i32 a;
+    i32 b;
+};
+
+i32 main()
+{
+    first( note( 1 ), note( 2 ), note( 3 ) );
+    if( trace != 123 )
+    {
+        return 1;
+    }
+
+    trace = 0;
+    i32 sum = note( 1 ) + note( 2 ) * note( 3 );
+    if( trace != 123 || sum != 7 )
+    {
+        return 2;
+    }
+
+    trace = 0;
+    P p = P { note( 1 ), note( 2 ) };
+    if( trace != 12 || p.b != 2 )
+    {
+        return 3;
+    }
+
+    trace = 0;
+    i32[*] slots;
+    unsafe
+    {
+        slots = alloc<i32>( 4 );
+        slots[note( 1 )] = note( 2 );
+        free( slots );
+    }
+    if( trace != 12 )
+    {
+        return 4;
+    }
+
+    return 0;
+}
