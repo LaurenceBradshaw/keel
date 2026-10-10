@@ -58,7 +58,7 @@ f64 area( Shape s )
 }
 
 // Generics are checked once, at the definition, against their bounds.
-T larger<T>( T a, T b ) where T : Comparable
+T larger<T>( T a, T b ) where T : Copyable & Comparable
 {
     return a < b ? b : a;
 }
@@ -145,39 +145,56 @@ the ownership and lifetime model is that member here.
 
 ## Status
 
-This is an in-progress compiler, not a released language. The front end, the IR, the move checker and
-the C backend all work, and the standard library has begun: `kl::list<T>` and `kl::string`, written in
-Keel.
+This is an in-progress compiler, not a released language. The front end, the IR, the move and borrow
+checks and the C backend all work, and the standard library has begun: `kl::list<T>`, `kl::string`,
+`kl::optional<T>`, `kl::pair<A, B>` and `kl::ring<T>`, written in Keel.
 
 **Working today:** functions, control flow, fixed-width primitives, `struct` and `class`, methods,
 constructors, destructors, access control, `const` fields, static methods and static fields,
 payload-carrying `enum`s with exhaustive `switch`, generics by monomorphisation with definition-time
-bound checking, function and constructor overloading, `operator==` and `operator[]`, function pointers,
-method pointers and field types, single-item and many-item pointers, pointer to `const`, string
-literals, `assert`, modules and packages, move checking on the IR's CFG, `unsafe`, `extern`, native
-executables via `cc`, and a VS Code extension.
+bound checking, generic methods, function and constructor overloading, `operator==` and `operator[]`,
+function pointers, method pointers and field types, single-item and many-item pointers, pointer to
+`const`, string literals, `print` and its kin, `assert`, `panic` and `never`, `result<T, E>` with `try`
+and anonymous error unions, modules and packages, move checking and a borrow check on the IR's CFG,
+`unsafe`, `extern`, native executables via `cc`, doc comments with generated pages, and a VS Code
+extension.
 
 ```cpp
 import kl::list;
 import kl::string;
 
+// `try` hands an error to the caller, running the drops this function owes on the way out.
+result<i64, kl::parse_error> sum( const ref kl::list<kl::string> numbers )
+{
+    i64 total = 0;
+    for( u64 i = 0; i < numbers.size(); i++ )
+    {
+        total += try numbers[i].parse_i64();
+    }
+    return result::ok( total );
+}
+
 i32 main()
 {
-    kl::list<kl::string> names = kl::list<kl::string>();
-    names.push( move kl::string( "ada" ) );
-    names.push( move kl::string( "grace" ) );
-    names[1].append( kl::string( "!" ) );
+    kl::list<kl::string> numbers = kl::list<kl::string>();
+    numbers.push( move kl::string( "40" ) );
+    numbers.push( move kl::string( "2" ) );
 
-    assert( names[0] == kl::string( "ada" ) );
-
-    kl::string last = names.pop();
-    return last.size() == 6 ? 0 : 1;
+    switch( sum( numbers ) )
+    {
+        case result::ok( total ):
+            println( total );                // 42
+            return 0;
+        case result::err:
+            eprintln( "not a number" );
+            return 1;
+    }
 }
 ```
 
-**Designed and not yet built:** error handling (`Result<T, E>`, a `try` prefix, and anonymous error
-unions), interfaces with dynamic dispatch, the remaining operators, and most of the library, printing
-included. Anything in that list appearing below is marked *(planned)*.
+**Designed and not yet built:** interfaces with dynamic dispatch, the remaining operators, and most of
+the library: `box`, `map`, `set`, and printing a `kl::string`. Anything in that list appearing below is
+marked *(planned)*.
 
 ---
 
@@ -210,6 +227,7 @@ noted in its row.
 | Fixed-width primitives only: `i32`, `u64`, `f64`. `int`, `long`, `char` and `unsigned` are hard errors naming the replacement. | Sizes are a platform question. | One spelling per type. Aliases would mean every reader has to know both. |
 | No lossy implicit conversions. A binary operator widens both sides to the smallest type that holds both, and is an error where C++'s result type would not. | Integral promotion and the usual arithmetic conversions. | The conversions that lose information are the ones nobody writes on purpose. |
 | Functions, methods and constructors overload, and selection is by exact type first. Only when nothing matches does an argument widen, to the closest candidate: the same kind (integer or float), then the narrowest, then the same signedness. A literal carries a family, not a type, so `f( 1 )` against `f( i32 )` and `f( i64 )` is ambiguous. | Every viable candidate is ranked across promotions, standard conversions and user-defined conversions. | One widening step ranked by one rule is enough for `print( i64 )` to take any integer, and a call either matches exactly or says why not. |
+| Integer arithmetic wraps. A variable shift count is masked to the operand's width, dividing by zero panics, and `MIN / -1` wraps to `MIN`. | Signed overflow, an oversized shift and `MIN / -1` are undefined behaviour. | Each is defined at the cost of nothing a programmer would want, and the division check is one branch the hardware needs anyway. |
 | Mixed-signedness and int/float comparisons are answered by cases. | Compiles, and answers thirteen pairs wrongly. | The one divergence in the permissive direction: it removes a silent wrong answer rather than creating one. |
 | `cast<T>( x )` preserves the value, and aborts at run time if it does not fit; `wrap<T>( x )` keeps the low bits. Neither does float↔int or int↔bool. | `static_cast`, C casts, implicit narrowing. | The failure policy is the interesting part, and one spelling hides which you meant. |
 | A leading zero on a decimal is an error: `010` does not compile. | `010` is octal, so it is 8. | Keel has no octal, so accepting it would silently change the value of valid C++. |
@@ -236,6 +254,7 @@ noted in its row.
 | `import kl::list;` loads a module; the package is the namespace, so its names are written `kl::list<i32>`. Imports are not transitive, and there is no `using`. | `#include`, `namespace` and `using`, three mechanisms. | A file's imports list what it uses, and a library name can never collide with a local one. |
 | A few declarations every program needs, `str` among them, live in a prelude seen without an import. A program's own declaration of the same name shadows it, except a function's overloads, which fall back: a call goes to the prelude's set only when the program's has no candidate for it, so declaring `print( Point )` leaves `print( "hi" )` working. `--print-prelude` shows it. | The language and `std` are separate; overloads in different namespaces are merged into one set. | Adding to the prelude must never break a program that already used the name, and a merged set would let a closer prelude overload silently take a call. |
 | `assert( cond )` is a keyword, always on, and a failure prints the file, line and condition, then aborts without running any destructor. | A macro that `NDEBUG` removes. | There is no debug mode yet to turn it off in, and destructors run on state the program has just said is broken would make things worse. |
+| `panic( "message" )` is a keyword that prints the file, line and message and aborts the same way. A function that never returns is declared `never`, and one that could is refused. | `std::abort`, and `[[noreturn]]` as an unchecked promise. | Only the compiler knows the caller's line, and a promise the compiler checks is one a reader can rely on. |
 
 ### Aggregates
 
@@ -261,14 +280,16 @@ noted in its row.
 | Five argument forms, and the call site names every one that affects the caller's variable: `f( x )`, `f( move x )`, `f( ref x )`, `f( out x )`, and `const ref` called bare, because like `f( x )` it leaves your variable unchanged. | The signature decides, invisibly at the call. | You can see what a call does to your variables without opening the callee. |
 | A borrow takes exactly its type: an `i32` cannot be passed as a `const ref i64` or an `out i64`, though a bare `i64` parameter widens it. | `const T&` binds a converted temporary; a non-`const` reference refuses. | A borrow is your variable itself, so there is nowhere for a widened copy to live, and an `out` would write eight bytes into four. |
 | `ref` is a binding mode, not a type. `ref T x` replaces `T&`, which is an error in type position, leaving `&` to mean address-of only. | `T&` is a type, and `&` means two things. | Treating a reference as a type is what makes `T&&`, reference collapsing and `std::forward` necessary. |
-| A `ref` is never reseated, may not be stored or captured, and may be returned only as a `const ref` derived from a reference parameter. | References may dangle, silently. | Dangling becomes unrepresentable by construction — no borrow checker and no lifetime annotations. |
-| No `new`/`delete` in safe code. `alloc<T>( n )`, `free( p )` and `destroy( p, n )` are keywords needing `unsafe`: memory, its release, and ending the values in it are three separate steps. | `new`/`delete`, and owning raw pointers as an idiom. | An address says nothing about who frees it. Manual allocation is the exception, spelled as one. |
+| A `ref` is never reseated, may not be stored or captured, and may be returned only as a `const ref` derived from a reference parameter. | References may dangle, silently. | A reference cannot outlive its object by construction, so nothing needs a lifetime annotation. |
+| A borrow is refused while its object could be destroyed or relocated under it: `ref i32 x = v[0]; v.push( 9 );` is an error while `x` is still used. Two mutable borrows of one value are fine. | Compiles, and `x` dangles once `v` grows. | Only storage ending or moving makes a borrow dangle, and the syntax marks every way into storage that can move (`[]`, or a call returning a reference), so the check needs no lifetimes. |
+| No `new`/`delete` in safe code. `alloc<T>( n )`, `free( p )` and `destroy( p, n )` are keywords needing `unsafe`: memory, its release, and ending the values in it are three separate steps. A failed `alloc` panics rather than answering null. | `new`/`delete`, and owning raw pointers as an idiom. | An address says nothing about who frees it. Manual allocation is the exception, spelled as one. |
 | `unsafe` is a block, and it permits operations rather than disabling checks. | Unmarked, and available everywhere. | The permission is always a pair of braces you can see, and everything checked outside one is checked inside. |
 | `T*` points at exactly one live `T` and has no arithmetic. `T[*]` points at many slots of raw storage; indexing it and `+` need `unsafe`. | Any pointer is an iterator. | `p + 1` on a single-item pointer is not dangerous, it is nonsense. |
 | Writing through a `T*` destroys the old value first; writing a `T[*]` slot initialises it. | `*p = x` assigns, and raw memory needs placement `new`. | The pointer's type already says whether a live value is there. |
 | An owning value leaves a place only by `move`, and only a local, a parameter or a raw slot may be moved out. `return field;` is an error. | Copies, or moves anything `std::move` names. | A field or an element outlives the return, so copying it would destroy it twice, and moving it would leave a hole its owner still counts. |
 | `extern` declares a C function, is not mangled, and calling one needs `unsafe`. | `extern "C"`, and calls are unchecked but unmarked. | The FFI boundary is where the compiler's guarantees stop, so the marker goes there. |
-| No exceptions and no unwinding. Errors are `Result<T, E>`, propagated with a `try` prefix *(planned)*. | Exceptions and exception safety as a discipline. | An invisible second path through every call is the feature most C++ code bases turn off. |
+| No exceptions and no unwinding. Errors are `result<T, E>`, propagated with a `try` prefix, and `E` may be an anonymous union of error enums, `Io_error \| Parse_error`, matched leaf by leaf. | Exceptions and exception safety as a discipline. | An invisible second path through every call is the feature most C++ code bases turn off. |
+| A statement may not discard a `result`; `_ = f();` discards one on purpose. | `[[nodiscard]]`, a warning, opted into per function. | A dropped error loses exactly what the type promised to bring to the caller's attention. |
 
 ### Generics
 
@@ -277,6 +298,7 @@ noted in its row.
 | Type parameters go on the name, bounds in a trailing `where`: `T max<T>( T a, T b ) where T : Comparable`. `template` is an error naming the replacement. | `template<typename T>` on a preceding line. | Both new forms are hard errors in C++, so this is new notation rather than a reinterpretation. |
 | Bounds come from a closed, compiler-provided set, joined with `&`. | Concepts: open, structural, arbitrarily complex. | A closed set can be checked completely at the definition; an open one cannot. |
 | Generics are checked at the definition, not at the instantiation. | Both, and the interesting errors surface at the expansion. | Errors point at the generic you wrote, not at the expansion you did not. |
+| `void` is a type with one value, and may be a type argument: `result<void, E>` succeeds with `result::ok()`. | `void` is irregular, so `std::expected<void, E>` is a specialisation of its own. | One rule in lowering, "a `void` value takes no storage", instead of a special case in every generic. |
 | Monomorphised. | Monomorphised. | No divergence — this one C++ got right. |
 
 ### Function and member pointers
@@ -329,6 +351,7 @@ build/debug/bin/keelc --package kl=keel_stl/src prog.kl -o prog
 | `--diagnostics=json` | Report diagnostics as JSON lines on stdout, for an editor |
 | `--names` | With `--diagnostics=json`, also report what each name refers to |
 | `--declarations` | With `--diagnostics=json`, also list every declaration with its signature and doc |
+| `--with-prelude` | With `--declarations`, list the prelude's declarations too |
 | `--dump-tokens` / `--dump-ast` / `--dump-kir` | Print that stage and stop |
 | `--emit-c` | Print the generated C and stop |
 | `--print-prelude` | Print the prelude every program sees, and exit |
@@ -350,6 +373,7 @@ build/debug/bin/keeldoc -o keel_stl/docs kl=keel_stl/src
 ## Testing
 
 ```sh
+ctest --preset debug                                    # all of the below
 build/debug/bin/keel_tests                              # unit tests
 keelc/test/run_tests.sh build/debug/bin/keelc           # golden-file tests
 keel_stl/test/run_tests.sh build/debug/bin/keelc        # the kl package's programs
@@ -361,6 +385,9 @@ keeldoc/test/run_tests.sh build/debug/bin/keeldoc build/debug/bin/keelc   # keel
 The golden runner links the runtime built beside the `keelc` it is given. Under the `asan` preset,
 point `KEEL_RT` at a library built without sanitizers, such as the `debug` one. Set `KEEL_VALGRIND=1`
 to run every executed fixture under valgrind.
+
+`.githooks/pre-commit` runs formatting, every suite, the docs check and the release build; install it
+with `git config core.hooksPath .githooks`.
 
 Unit tests live in the source file they test, behind `ENABLE_UNIT_TESTS`. Golden-file tests under
 `keelc/test/` cover language behaviour: one `.kl` fixture per topic, with its expected diagnostics,
@@ -379,7 +406,7 @@ keelc/src/ir         lowering to KIR and simplification
 keelc/src/check      move checking and definite assignment over the KIR CFG
 keelc/src/codegen_c  KIR to C11
 keelc/src/prelude    the prelude, Keel source built into the compiler
-keel_rt              the runtime floor (allocation, aborts)
+keel_rt              the runtime floor (allocation, writing, panics), and its tests
 keel_stl             the standard library, the `kl` package, and its pages in docs/
 keeldoc              the doc tool: keelc's --declarations to HTML pages
 editors/vscode       the VS Code extension
