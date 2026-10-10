@@ -4,6 +4,8 @@
 
 #include "numbers.kl.prelude.c"
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 bool kl__is_even__3i32( int32_t );
 bool kl__is_odd__3i32( int32_t );
 int32_t kl__isqrt__3i32( int32_t );
@@ -65,13 +67,21 @@ int32_t kl__isqrt__3i32( int32_t kl_value_1 )
     bool kl_t2;
     int32_t kl_estimate_3;
     int32_t kl_next_4;
-    int32_t kl_t5;
+    bool kl_t5;
     int32_t kl_t6;
     int32_t kl_t7;
     bool kl_t8;
     int32_t kl_t9;
     int32_t kl_t10;
     int32_t kl_t11;
+    bool kl_t12;
+    bool kl_t13;
+    int32_t kl_t14;
+    int32_t kl_t15;
+    bool kl_t16;
+    int32_t kl_t17;
+    int32_t kl_t18;
+    int32_t kl_t19;
 #line 37 "codegen/numbers.kl"
     kl_t2 = kl_value_1 < 2;
     if ( kl_t2 ) goto bb1; else goto bb2;
@@ -83,28 +93,59 @@ int32_t kl__isqrt__3i32( int32_t kl_value_1 )
 #line 42 "codegen/numbers.kl"
     kl_estimate_3 = kl_value_1;
 #line 43 "codegen/numbers.kl"
-    kl_t5 = kl_value_1 / kl_estimate_3;
-    kl_t6 = kl_estimate_3 + kl_t5;
-    kl_t7 = kl_t6 / 2;
-    kl_next_4 = kl_t7;
-    goto bb3;
+    kl_t5 = kl_estimate_3 != 0;
+    if ( kl_t5 ) goto bb4; else goto bb3;
     bb3:
-#line 45 "codegen/numbers.kl"
-    kl_t8 = kl_next_4 < kl_estimate_3;
-    if ( kl_t8 ) goto bb4; else goto bb5;
+    kl_rt_panic( "codegen/numbers.kl", 43, "division by zero: value / estimate" );
     bb4:
-#line 47 "codegen/numbers.kl"
-    kl_estimate_3 = kl_next_4;
-#line 48 "codegen/numbers.kl"
-    kl_t9 = kl_value_1 / kl_estimate_3;
+    kl_t6 = -1;
+    kl_t8 = kl_estimate_3 == kl_t6;
+    if ( kl_t8 ) goto bb5; else goto bb6;
+    bb5:
+    kl_t7 = -kl_value_1;
+    goto bb7;
+    bb6:
+    kl_t7 = kl_value_1 / kl_estimate_3;
+    goto bb7;
+    bb7:
+    kl_t9 = kl_t7;
     kl_t10 = kl_estimate_3 + kl_t9;
     kl_t11 = kl_t10 / 2;
     kl_next_4 = kl_t11;
-    goto bb3;
-    bb5:
+    goto bb8;
+    bb8:
+#line 45 "codegen/numbers.kl"
+    kl_t12 = kl_next_4 < kl_estimate_3;
+    if ( kl_t12 ) goto bb9; else goto bb10;
+    bb9:
+#line 47 "codegen/numbers.kl"
+    kl_estimate_3 = kl_next_4;
+#line 48 "codegen/numbers.kl"
+    kl_t13 = kl_estimate_3 != 0;
+    if ( kl_t13 ) goto bb12; else goto bb11;
+    bb10:
 #line 51 "codegen/numbers.kl"
     kl_t0 = kl_estimate_3;
     return kl_t0;
+    bb11:
+    kl_rt_panic( "codegen/numbers.kl", 48, "division by zero: value / estimate" );
+    bb12:
+#line 48 "codegen/numbers.kl"
+    kl_t14 = -1;
+    kl_t16 = kl_estimate_3 == kl_t14;
+    if ( kl_t16 ) goto bb13; else goto bb14;
+    bb13:
+    kl_t15 = -kl_value_1;
+    goto bb15;
+    bb14:
+    kl_t15 = kl_value_1 / kl_estimate_3;
+    goto bb15;
+    bb15:
+    kl_t17 = kl_t15;
+    kl_t18 = kl_estimate_3 + kl_t17;
+    kl_t19 = kl_t18 / 2;
+    kl_next_4 = kl_t19;
+    goto bb8;
 }
 
 bool kl__is_prime__3i32( int32_t kl_n_1 )
@@ -118,8 +159,12 @@ bool kl__is_prime__3i32( int32_t kl_n_1 )
     int32_t kl_t7;
     int32_t kl_divisor_8;
     bool kl_t9;
-    int32_t kl_t10;
-    bool kl_t11;
+    bool kl_t10;
+    int32_t kl_t11;
+    int32_t kl_t12;
+    bool kl_t13;
+    int32_t kl_t14;
+    bool kl_t15;
 #line 58 "codegen/numbers.kl"
     kl_t2 = kl_n_1 < 2;
     if ( kl_t2 ) goto bb1; else goto bb2;
@@ -150,18 +195,34 @@ bool kl__is_prime__3i32( int32_t kl_n_1 )
     if ( kl_t9 ) goto bb6; else goto bb7;
     bb6:
 #line 73 "codegen/numbers.kl"
-    kl_t10 = kl_n_1 % kl_divisor_8;
-    kl_t11 = kl_t10 == 0;
-    if ( kl_t11 ) goto bb8; else goto bb9;
+    kl_t10 = kl_divisor_8 != 0;
+    if ( kl_t10 ) goto bb9; else goto bb8;
     bb7:
 #line 81 "codegen/numbers.kl"
     kl_t0 = true;
     return kl_t0;
     bb8:
+    kl_rt_panic( "codegen/numbers.kl", 73, "remainder by zero: n % divisor" );
+    bb9:
+#line 73 "codegen/numbers.kl"
+    kl_t11 = -1;
+    kl_t13 = kl_divisor_8 == kl_t11;
+    if ( kl_t13 ) goto bb10; else goto bb11;
+    bb10:
+    kl_t12 = 0;
+    goto bb12;
+    bb11:
+    kl_t12 = kl_n_1 % kl_divisor_8;
+    goto bb12;
+    bb12:
+    kl_t14 = kl_t12;
+    kl_t15 = kl_t14 == 0;
+    if ( kl_t15 ) goto bb13; else goto bb14;
+    bb13:
 #line 75 "codegen/numbers.kl"
     kl_t0 = false;
     return kl_t0;
-    bb9:
+    bb14:
 #line 78 "codegen/numbers.kl"
     kl_divisor_8 = kl_divisor_8 + 2;
     goto bb5;

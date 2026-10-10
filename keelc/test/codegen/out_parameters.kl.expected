@@ -12,6 +12,8 @@ struct kl__Point
     int32_t kl_y_3;
 };
 
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
 void kl__divide__3i32_3i32_O3i32_O3i32( int32_t, int32_t, int32_t*, int32_t* );
 void kl__classify__3i32_O3i32( int32_t, int32_t* );
 void kl__build__3i32_O5Point( int32_t, struct kl__Point* );
@@ -21,16 +23,35 @@ int32_t kl__main__( void );
 
 void kl__divide__3i32_3i32_O3i32_O3i32( int32_t kl_a_1, int32_t kl_b_2, int32_t* kl_quotient_3, int32_t* kl_remainder_4 )
 {
-    int32_t kl_t5;
+    bool kl_t5;
     int32_t kl_t6;
     int32_t kl_t7;
+    bool kl_t8;
+    int32_t kl_t9;
+    int32_t kl_t10;
+    int32_t kl_t11;
 #line 12 "codegen/out_parameters.kl"
-    kl_t5 = kl_a_1 / kl_b_2;
-    ( *kl_quotient_3 ) = kl_t5;
+    kl_t5 = kl_b_2 != 0;
+    if ( kl_t5 ) goto bb2; else goto bb1;
+    bb1:
+    kl_rt_panic( "codegen/out_parameters.kl", 12, "division by zero: a / b" );
+    bb2:
+    kl_t6 = -1;
+    kl_t8 = kl_b_2 == kl_t6;
+    if ( kl_t8 ) goto bb3; else goto bb4;
+    bb3:
+    kl_t7 = -kl_a_1;
+    goto bb5;
+    bb4:
+    kl_t7 = kl_a_1 / kl_b_2;
+    goto bb5;
+    bb5:
+    kl_t9 = kl_t7;
+    ( *kl_quotient_3 ) = kl_t9;
 #line 13 "codegen/out_parameters.kl"
-    kl_t6 = ( *kl_quotient_3 ) * kl_b_2;
-    kl_t7 = kl_a_1 - kl_t6;
-    ( *kl_remainder_4 ) = kl_t7;
+    kl_t10 = ( *kl_quotient_3 ) * kl_b_2;
+    kl_t11 = kl_a_1 - kl_t10;
+    ( *kl_remainder_4 ) = kl_t11;
     return;
 }
 

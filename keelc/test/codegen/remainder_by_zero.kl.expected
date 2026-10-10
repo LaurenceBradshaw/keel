@@ -1,0 +1,35 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "remainder_by_zero.kl.prelude.c"
+
+uint64_t kl_zero_1;
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+int32_t kl__main__( void );
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    uint64_t kl_x_1;
+    bool kl_t2;
+#line 6 "codegen/remainder_by_zero.kl"
+    kl_x_1 = 7;
+#line 7 "codegen/remainder_by_zero.kl"
+    kl_t2 = kl_zero_1 != 0;
+    if ( kl_t2 ) goto bb2; else goto bb1;
+    bb1:
+    kl_rt_panic( "codegen/remainder_by_zero.kl", 7, "remainder by zero: x %= zero;" );
+    bb2:
+    kl_x_1 = kl_x_1 % kl_zero_1;
+#line 9 "codegen/remainder_by_zero.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

@@ -179,6 +179,8 @@ private:
     // keeping its tag. `source` is storage nothing drops.
     void    write_error( Place target, Type_id to, Place source, Type_id from, Span span );
     Operand checked_cast( Operand operand, Type_id to, Span span );
+    // A variable shift count is masked to the width; a variable divisor panics at zero, and MIN / -1 wraps.
+    Rvalue  checked_arithmetic( Token_kind op, Operand left, Operand right, Type_id type, Span span );
     Operand moved_if_owning( Operand operand );
 
     bool is_move_parameter( Node_id param ) const;
@@ -686,6 +688,85 @@ Operand Lowering::checked_cast( Operand operand, Type_id to, Span span )
     builder_.switch_to( pass );
 
     return value;
+}
+
+Rvalue Lowering::checked_arithmetic( Token_kind op, Operand left, Operand right, Type_id type, Span span )
+{
+    const Type_table& table   = types_.table();
+    const Type_id     boolean = table.builtin( Type_kind::Bool );
+
+    const auto temp = [&]( Rvalue value, Type_id type ) -> Operand
+    { return copy( builder_.place( builder_.into_temp( value, type, span ) ), type ); };
+
+    if( !table.is_integer( type ) || right.kind == Operand_kind::Constant ||
+        ( op != Token_kind::Slash && op != Token_kind::Percent && op != Token_kind::Less_less &&
+          op != Token_kind::Greater_greater ) )
+    {
+        return binary( op, left, right, type );
+    }
+
+    if( op == Token_kind::Less_less || op == Token_kind::Greater_greater )
+    {
+        Operand masked = temp(
+            binary(
+                Token_kind::Amp,
+                right,
+                constant( literal_pool_.add_integer( table.get( type ).width - 1u ), right.type ),
+                right.type
+            ),
+            right.type
+        );
+
+        return binary( op, left, masked, type );
+    }
+
+    const Block_id fail = builder_.add_block();
+    const Block_id pass = builder_.add_block();
+
+    builder_.terminate_branch(
+        temp(
+            binary( Token_kind::Bang_equal, right, constant( literal_pool_.add_integer( 0 ), right.type ), boolean ), boolean
+        ),
+        pass,
+        fail,
+        span
+    );
+
+    builder_.switch_to( fail );
+    builder_.terminate_panic( span, op == Token_kind::Slash ? Failure::Division : Failure::Remainder );
+    builder_.switch_to( pass );
+
+    if( !table.get( type ).is_signed )
+    {
+        return binary( op, left, right, type );
+    }
+
+    const Operand  minus_one = temp( unary( Token_kind::Minus, constant( literal_pool_.add_integer( 1 ), type ), type ), type );
+    const Local_id result    = builder_.add_local( type, span );
+
+    const Block_id negate = builder_.add_block();
+    const Block_id divide = builder_.add_block();
+    const Block_id join   = builder_.add_block();
+
+    builder_.terminate_branch(
+        temp( binary( Token_kind::Equal_equal, right, minus_one, boolean ), boolean ), negate, divide, span
+    );
+
+    builder_.switch_to( negate );
+    builder_.assign(
+        builder_.place( result ),
+        op == Token_kind::Slash ? unary( Token_kind::Minus, left, type )
+                                : use( constant( literal_pool_.add_integer( 0 ), type ) ),
+        span
+    );
+    builder_.terminate_goto( join, span );
+
+    builder_.switch_to( divide );
+    builder_.assign( builder_.place( result ), binary( op, left, right, type ), span );
+    builder_.terminate_goto( join, span );
+
+    builder_.switch_to( join );
+    return use( copy( builder_.place( result ), type ) );
 }
 
 Operand Lowering::moved_if_owning( Operand operand )
@@ -1234,7 +1315,7 @@ Operand Lowering::lower_binary( Node_id id )
     // The type the operation *produces*, which for a comparison is bool.
     const Type_id type = type_of( id );
 
-    return copy( builder_.place( builder_.into_temp( binary( op, left, right, type ), type, span ) ), type );
+    return copy( builder_.place( builder_.into_temp( checked_arithmetic( op, left, right, type, span ), type, span ) ), type );
 }
 
 // `a == b` calls `a.operator==( b )`, and `a != b` negates it.
@@ -2266,7 +2347,7 @@ void Lowering::lower_assign( Node_id id )
         const Operand left  = copy( target, type );
         const Operand right = offsets ? value : converted( value, type, span );
 
-        builder_.assign( target, binary( base_operator( op ), left, right, type ), span );
+        builder_.assign( target, checked_arithmetic( base_operator( op ), left, right, type, span ), span );
     }
     drop_statement_temporaries( span );
 }
@@ -3507,7 +3588,8 @@ TEST_CASE( "lower_makes_conversions_explicit", "[ir][lower]" )
 
         INFO( text );
         REQUIRE( text.find( " as " ) == std::string::npos );
-        REQUIRE( text.find( "_3 = copy _1 << copy _2" ) != std::string::npos );
+        REQUIRE( text.find( "_3 = copy _2 & const 31" ) != std::string::npos );
+        REQUIRE( text.find( "_4 = copy _1 << copy _3" ) != std::string::npos );
     }
 }
 

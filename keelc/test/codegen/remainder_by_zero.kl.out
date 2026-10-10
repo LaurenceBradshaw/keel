@@ -1,0 +1,1 @@
+codegen/remainder_by_zero.kl:7: remainder by zero: x %= zero;

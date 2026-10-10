@@ -1,0 +1,62 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "division_by_zero.kl.prelude.c"
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+int32_t kl__divide__3i32_3i32( int32_t, int32_t );
+int32_t kl__main__( void );
+
+int32_t kl__divide__3i32_3i32( int32_t kl_a_1, int32_t kl_b_2 )
+{
+    int32_t kl_t0;
+    bool kl_t3;
+    int32_t kl_t4;
+    int32_t kl_t5;
+    bool kl_t6;
+    int32_t kl_t7;
+#line 5 "codegen/division_by_zero.kl"
+    kl_t3 = kl_b_2 != 0;
+    if ( kl_t3 ) goto bb2; else goto bb1;
+    bb1:
+    kl_rt_panic( "codegen/division_by_zero.kl", 5, "division by zero: a / b" );
+    bb2:
+    kl_t4 = -1;
+    kl_t6 = kl_b_2 == kl_t4;
+    if ( kl_t6 ) goto bb3; else goto bb4;
+    bb3:
+    kl_t5 = -kl_a_1;
+    goto bb5;
+    bb4:
+    kl_t5 = kl_a_1 / kl_b_2;
+    goto bb5;
+    bb5:
+    kl_t7 = kl_t5;
+    kl_t0 = kl_t7;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl_7prelude_str kl_t1;
+    struct kl_7prelude_str* kl_t2;
+    uint8_t* kl_t3;
+    int32_t kl_t6;
+#line 10 "codegen/division_by_zero.kl"
+    kl_t2 = &kl_t1;
+    kl_t3 = ( uint8_t* ) "before";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t2, kl_t3, 6 );
+    kl_7prelude_println__Q7prelude3str( kl_t1 );
+#line 11 "codegen/division_by_zero.kl"
+    kl_t6 = kl__divide__3i32_3i32( 7, 0 );
+    kl_t0 = kl_t6;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

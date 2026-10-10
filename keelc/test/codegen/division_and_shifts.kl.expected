@@ -1,0 +1,629 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "division_and_shifts.kl.prelude.c"
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+int64_t kl__id__3i64( int64_t );
+int32_t kl__main__( void );
+
+int64_t kl__id__3i64( int64_t kl_x_1 )
+{
+    int64_t kl_t0;
+#line 6 "codegen/division_and_shifts.kl"
+    kl_t0 = kl_x_1;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_neg_one_1;
+    int64_t kl_t2;
+    int64_t kl_t3;
+    int32_t kl_t4;
+    int64_t kl_t5;
+    bool kl_t6;
+    int8_t kl_min8_7;
+    int8_t kl_t8;
+    int8_t kl_t9;
+    int8_t kl_t10;
+    int32_t kl_t11;
+    bool kl_t12;
+    bool kl_t13;
+    int8_t kl_t14;
+    int8_t kl_t15;
+    bool kl_t16;
+    int8_t kl_t17;
+    bool kl_t18;
+    int8_t kl_t19;
+    int32_t kl_t20;
+    bool kl_t21;
+    bool kl_t22;
+    int8_t kl_t23;
+    int8_t kl_t24;
+    bool kl_t25;
+    int8_t kl_t26;
+    bool kl_t27;
+    int32_t kl_min32_28;
+    int32_t kl_t29;
+    int32_t kl_t30;
+    bool kl_t31;
+    int32_t kl_t32;
+    int32_t kl_t33;
+    bool kl_t34;
+    int32_t kl_t35;
+    bool kl_t36;
+    bool kl_t37;
+    int32_t kl_t38;
+    int32_t kl_t39;
+    bool kl_t40;
+    int32_t kl_t41;
+    bool kl_t42;
+    int64_t kl_min64_43;
+    int64_t kl_t44;
+    int64_t kl_t45;
+    int64_t kl_t46;
+    int64_t kl_t47;
+    bool kl_t48;
+    int64_t kl_t49;
+    int64_t kl_t50;
+    bool kl_t51;
+    int64_t kl_t52;
+    bool kl_t53;
+    int64_t kl_t54;
+    int64_t kl_t55;
+    bool kl_t56;
+    int64_t kl_t57;
+    int64_t kl_t58;
+    bool kl_t59;
+    int64_t kl_t60;
+    bool kl_t61;
+    int32_t kl_two_62;
+    int64_t kl_t63;
+    int32_t kl_t64;
+    int64_t kl_t65;
+    bool kl_t66;
+    int32_t kl_t67;
+    bool kl_t68;
+    int32_t kl_t69;
+    int32_t kl_t70;
+    bool kl_t71;
+    int32_t kl_t72;
+    int32_t kl_t73;
+    bool kl_t74;
+    int32_t kl_t75;
+    bool kl_t76;
+    int32_t kl_t77;
+    int32_t kl_t78;
+    bool kl_t79;
+    int32_t kl_t80;
+    int32_t kl_t81;
+    bool kl_t82;
+    uint32_t kl_big_83;
+    uint32_t kl_t84;
+    int32_t kl_t85;
+    bool kl_t86;
+    bool kl_t87;
+    bool kl_t88;
+    uint32_t kl_t89;
+    bool kl_t90;
+    int32_t kl_x_91;
+    bool kl_t92;
+    int32_t kl_t93;
+    int32_t kl_t94;
+    bool kl_t95;
+    bool kl_t96;
+    bool kl_t97;
+    int32_t kl_t98;
+    int32_t kl_t99;
+    bool kl_t100;
+    bool kl_t101;
+    int32_t kl_count_102;
+    int64_t kl_t103;
+    int32_t kl_t104;
+    int64_t kl_t105;
+    bool kl_t106;
+    int32_t kl_t107;
+    int32_t kl_t108;
+    bool kl_t109;
+    int32_t kl_t110;
+    int32_t kl_t111;
+    int32_t kl_t112;
+    int32_t kl_t113;
+    bool kl_t114;
+    uint8_t kl_one8_115;
+    int64_t kl_t116;
+    uint8_t kl_t117;
+    int64_t kl_t118;
+    bool kl_t119;
+    bool kl_t120;
+    uint8_t kl_t121;
+    uint8_t kl_t122;
+    bool kl_t123;
+    int64_t kl_t124;
+    int64_t kl_t125;
+    int64_t kl_t126;
+    int64_t kl_t127;
+    bool kl_t128;
+    int64_t kl_t129;
+    int64_t kl_t130;
+    uint8_t kl_t131;
+    int64_t kl_t132;
+    bool kl_t133;
+    bool kl_t134;
+    uint8_t kl_t135;
+    int64_t kl_t136;
+    bool kl_t137;
+    int32_t kl_t138;
+    int32_t kl_t139;
+    bool kl_t140;
+    int32_t kl_y_141;
+    int64_t kl_t142;
+    int32_t kl_t143;
+    int64_t kl_t144;
+    bool kl_t145;
+    int32_t kl_t146;
+    bool kl_t147;
+    int64_t kl_t148;
+    int32_t kl_t149;
+    int64_t kl_t150;
+    bool kl_t151;
+    int32_t kl_t152;
+    bool kl_t153;
+#line 11 "codegen/division_and_shifts.kl"
+    kl_t2 = -1;
+    kl_t3 = kl__id__3i64( kl_t2 );
+    kl_t4 = ( int32_t ) kl_t3;
+    kl_t5 = ( int64_t ) kl_t4;
+    kl_t6 = kl_t5 == kl_t3;
+    if ( kl_t6 ) goto bb2; else goto bb1;
+    bb1:
+    kl_rt_panic( "codegen/division_and_shifts.kl", 11, "cast out of range: cast<i32>( id( -1 ) )" );
+    bb2:
+    kl_neg_one_1 = kl_t4;
+#line 13 "codegen/division_and_shifts.kl"
+    kl_t8 = -127;
+    kl_t9 = kl_t8 - 1;
+    kl_min8_7 = kl_t9;
+#line 14 "codegen/division_and_shifts.kl"
+    kl_t10 = ( int8_t ) kl_neg_one_1;
+    kl_t11 = ( int32_t ) kl_t10;
+    kl_t12 = kl_t11 == kl_neg_one_1;
+    if ( kl_t12 ) goto bb4; else goto bb3;
+    bb3:
+    kl_rt_panic( "codegen/division_and_shifts.kl", 14, "cast out of range: cast<i8>( neg_one )" );
+    bb4:
+    kl_t13 = kl_t10 != 0;
+    if ( kl_t13 ) goto bb6; else goto bb5;
+    bb5:
+    kl_rt_panic( "codegen/division_and_shifts.kl", 14, "division by zero: min8 / cast<i8>( neg_one )" );
+    bb6:
+    kl_t14 = -1;
+    kl_t16 = kl_t10 == kl_t14;
+    if ( kl_t16 ) goto bb7; else goto bb8;
+    bb7:
+    kl_t15 = -kl_min8_7;
+    goto bb9;
+    bb8:
+    kl_t15 = kl_min8_7 / kl_t10;
+    goto bb9;
+    bb9:
+    kl_t17 = kl_t15;
+    kl_t18 = kl_t17 != kl_min8_7;
+    if ( kl_t18 ) goto bb10; else goto bb11;
+    bb10:
+    kl_t0 = 1;
+    return kl_t0;
+    bb11:
+#line 15 "codegen/division_and_shifts.kl"
+    kl_t19 = ( int8_t ) kl_neg_one_1;
+    kl_t20 = ( int32_t ) kl_t19;
+    kl_t21 = kl_t20 == kl_neg_one_1;
+    if ( kl_t21 ) goto bb13; else goto bb12;
+    bb12:
+    kl_rt_panic( "codegen/division_and_shifts.kl", 15, "cast out of range: cast<i8>( neg_one )" );
+    bb13:
+    kl_t22 = kl_t19 != 0;
+    if ( kl_t22 ) goto bb15; else goto bb14;
+    bb14:
+    kl_rt_panic( "codegen/division_and_shifts.kl", 15, "remainder by zero: min8 % cast<i8>( neg_one )" );
+    bb15:
+    kl_t23 = -1;
+    kl_t25 = kl_t19 == kl_t23;
+    if ( kl_t25 ) goto bb16; else goto bb17;
+    bb16:
+    kl_t24 = 0;
+    goto bb18;
+    bb17:
+    kl_t24 = kl_min8_7 % kl_t19;
+    goto bb18;
+    bb18:
+    kl_t26 = kl_t24;
+    kl_t27 = kl_t26 != 0;
+    if ( kl_t27 ) goto bb19; else goto bb20;
+    bb19:
+    kl_t0 = 2;
+    return kl_t0;
+    bb20:
+#line 17 "codegen/division_and_shifts.kl"
+    kl_t29 = -2147483647;
+    kl_t30 = kl_t29 - 1;
+    kl_min32_28 = kl_t30;
+#line 18 "codegen/division_and_shifts.kl"
+    kl_t31 = kl_neg_one_1 != 0;
+    if ( kl_t31 ) goto bb22; else goto bb21;
+    bb21:
+    kl_rt_panic( "codegen/division_and_shifts.kl", 18, "division by zero: min32 / neg_one" );
+    bb22:
+    kl_t32 = -1;
+    kl_t34 = kl_neg_one_1 == kl_t32;
+    if ( kl_t34 ) goto bb23; else goto bb24;
+    bb23:
+    kl_t33 = -kl_min32_28;
+    goto bb25;
+    bb24:
+    kl_t33 = kl_min32_28 / kl_neg_one_1;
+    goto bb25;
+    bb25:
+    kl_t35 = kl_t33;
+    kl_t36 = kl_t35 != kl_min32_28;
+    if ( kl_t36 ) goto bb26; else goto bb27;
+    bb26:
+    kl_t0 = 3;
+    return kl_t0;
+    bb27:
+#line 19 "codegen/division_and_shifts.kl"
+    kl_t37 = kl_neg_one_1 != 0;
+    if ( kl_t37 ) goto bb29; else goto bb28;
+    bb28:
+    kl_rt_panic( "codegen/division_and_shifts.kl", 19, "remainder by zero: min32 % neg_one" );
+    bb29:
+    kl_t38 = -1;
+    kl_t40 = kl_neg_one_1 == kl_t38;
+    if ( kl_t40 ) goto bb30; else goto bb31;
+    bb30:
+    kl_t39 = 0;
+    goto bb32;
+    bb31:
+    kl_t39 = kl_min32_28 % kl_neg_one_1;
+    goto bb32;
+    bb32:
+    kl_t41 = kl_t39;
+    kl_t42 = kl_t41 != 0;
+    if ( kl_t42 ) goto bb33; else goto bb34;
+    bb33:
+    kl_t0 = 4;
+    return kl_t0;
+    bb34:
+#line 21 "codegen/division_and_shifts.kl"
+    kl_t44 = -9223372036854775807;
+    kl_t45 = kl_t44 - 1;
+    kl_min64_43 = kl_t45;
+#line 22 "codegen/division_and_shifts.kl"
+    kl_t46 = -1;
+    kl_t47 = kl__id__3i64( kl_t46 );
+    kl_t48 = kl_t47 != 0;
+    if ( kl_t48 ) goto bb36; else goto bb35;
+    bb35:
+    kl_rt_panic( "codegen/division_and_shifts.kl", 22, "division by zero: min64 / id( -1 )" );
+    bb36:
+    kl_t49 = -1;
+    kl_t51 = kl_t47 == kl_t49;
+    if ( kl_t51 ) goto bb37; else goto bb38;
+    bb37:
+    kl_t50 = -kl_min64_43;
+    goto bb39;
+    bb38:
+    kl_t50 = kl_min64_43 / kl_t47;
+    goto bb39;
+    bb39:
+    kl_t52 = kl_t50;
+    kl_t53 = kl_t52 != kl_min64_43;
+    if ( kl_t53 ) goto bb40; else goto bb41;
+    bb40:
+    kl_t0 = 5;
+    return kl_t0;
+    bb41:
+#line 23 "codegen/division_and_shifts.kl"
+    kl_t54 = -1;
+    kl_t55 = kl__id__3i64( kl_t54 );
+    kl_t56 = kl_t55 != 0;
+    if ( kl_t56 ) goto bb43; else goto bb42;
+    bb42:
+    kl_rt_panic( "codegen/division_and_shifts.kl", 23, "remainder by zero: min64 % id( -1 )" );
+    bb43:
+    kl_t57 = -1;
+    kl_t59 = kl_t55 == kl_t57;
+    if ( kl_t59 ) goto bb44; else goto bb45;
+    bb44:
+    kl_t58 = 0;
+    goto bb46;
+    bb45:
+    kl_t58 = kl_min64_43 % kl_t55;
+    goto bb46;
+    bb46:
+    kl_t60 = kl_t58;
+    kl_t61 = kl_t60 != 0;
+    if ( kl_t61 ) goto bb47; else goto bb48;
+    bb47:
+    kl_t0 = 6;
+    return kl_t0;
+    bb48:
+#line 26 "codegen/division_and_shifts.kl"
+    kl_t63 = kl__id__3i64( 2 );
+    kl_t64 = ( int32_t ) kl_t63;
+    kl_t65 = ( int64_t ) kl_t64;
+    kl_t66 = kl_t65 == kl_t63;
+    if ( kl_t66 ) goto bb50; else goto bb49;
+    bb49:
+    kl_rt_panic( "codegen/division_and_shifts.kl", 26, "cast out of range: cast<i32>( id( 2 ) )" );
+    bb50:
+    kl_two_62 = kl_t64;
+#line 27 "codegen/division_and_shifts.kl"
+    kl_t67 = -7;
+    kl_t68 = kl_two_62 != 0;
+    if ( kl_t68 ) goto bb52; else goto bb51;
+    bb51:
+    kl_rt_panic( "codegen/division_and_shifts.kl", 27, "division by zero: -7 / two" );
+    bb52:
+    kl_t69 = -1;
+    kl_t71 = kl_two_62 == kl_t69;
+    if ( kl_t71 ) goto bb53; else goto bb54;
+    bb53:
+    kl_t70 = -kl_t67;
+    goto bb55;
+    bb54:
+    kl_t70 = kl_t67 / kl_two_62;
+    goto bb55;
+    bb55:
+    kl_t72 = kl_t70;
+    kl_t73 = -3;
+    kl_t74 = kl_t72 != kl_t73;
+    if ( kl_t74 ) goto bb56; else goto bb57;
+    bb56:
+    kl_t0 = 7;
+    return kl_t0;
+    bb57:
+#line 28 "codegen/division_and_shifts.kl"
+    kl_t75 = -7;
+    kl_t76 = kl_two_62 != 0;
+    if ( kl_t76 ) goto bb59; else goto bb58;
+    bb58:
+    kl_rt_panic( "codegen/division_and_shifts.kl", 28, "remainder by zero: -7 % two" );
+    bb59:
+    kl_t77 = -1;
+    kl_t79 = kl_two_62 == kl_t77;
+    if ( kl_t79 ) goto bb60; else goto bb61;
+    bb60:
+    kl_t78 = 0;
+    goto bb62;
+    bb61:
+    kl_t78 = kl_t75 % kl_two_62;
+    goto bb62;
+    bb62:
+    kl_t80 = kl_t78;
+    kl_t81 = -1;
+    kl_t82 = kl_t80 != kl_t81;
+    if ( kl_t82 ) goto bb63; else goto bb64;
+    bb63:
+    kl_t0 = 8;
+    return kl_t0;
+    bb64:
+#line 30 "codegen/division_and_shifts.kl"
+    kl_big_83 = 4294967295;
+#line 31 "codegen/division_and_shifts.kl"
+    kl_t84 = ( uint32_t ) kl_two_62;
+    kl_t85 = ( int32_t ) kl_t84;
+    kl_t86 = kl_t85 == kl_two_62;
+    if ( kl_t86 ) goto bb66; else goto bb65;
+    bb65:
+    kl_rt_panic( "codegen/division_and_shifts.kl", 31, "cast out of range: cast<u32>( two )" );
+    bb66:
+    kl_t87 = kl_two_62 >= 0;
+    if ( kl_t87 ) goto bb67; else goto bb65;
+    bb67:
+    kl_t88 = kl_t84 != 0;
+    if ( kl_t88 ) goto bb69; else goto bb68;
+    bb68:
+    kl_rt_panic( "codegen/division_and_shifts.kl", 31, "division by zero: big / cast<u32>( two )" );
+    bb69:
+    kl_t89 = kl_big_83 / kl_t84;
+    kl_t90 = kl_t89 != 2147483647;
+    if ( kl_t90 ) goto bb70; else goto bb71;
+    bb70:
+    kl_t0 = 9;
+    return kl_t0;
+    bb71:
+#line 33 "codegen/division_and_shifts.kl"
+    kl_x_91 = kl_min32_28;
+#line 34 "codegen/division_and_shifts.kl"
+    kl_t92 = kl_neg_one_1 != 0;
+    if ( kl_t92 ) goto bb73; else goto bb72;
+    bb72:
+    kl_rt_panic( "codegen/division_and_shifts.kl", 34, "division by zero: x /= neg_one;" );
+    bb73:
+    kl_t93 = -1;
+    kl_t95 = kl_neg_one_1 == kl_t93;
+    if ( kl_t95 ) goto bb74; else goto bb75;
+    bb74:
+    kl_t94 = -kl_x_91;
+    goto bb76;
+    bb75:
+    kl_t94 = kl_x_91 / kl_neg_one_1;
+    goto bb76;
+    bb76:
+    kl_x_91 = kl_t94;
+#line 35 "codegen/division_and_shifts.kl"
+    kl_t96 = kl_x_91 != kl_min32_28;
+    if ( kl_t96 ) goto bb77; else goto bb78;
+    bb77:
+    kl_t0 = 10;
+    return kl_t0;
+    bb78:
+#line 37 "codegen/division_and_shifts.kl"
+    kl_t97 = kl_neg_one_1 != 0;
+    if ( kl_t97 ) goto bb80; else goto bb79;
+    bb79:
+    kl_rt_panic( "codegen/division_and_shifts.kl", 37, "remainder by zero: x %= neg_one;" );
+    bb80:
+    kl_t98 = -1;
+    kl_t100 = kl_neg_one_1 == kl_t98;
+    if ( kl_t100 ) goto bb81; else goto bb82;
+    bb81:
+    kl_t99 = 0;
+    goto bb83;
+    bb82:
+    kl_t99 = kl_x_91 % kl_neg_one_1;
+    goto bb83;
+    bb83:
+    kl_x_91 = kl_t99;
+#line 38 "codegen/division_and_shifts.kl"
+    kl_t101 = kl_x_91 != 0;
+    if ( kl_t101 ) goto bb84; else goto bb85;
+    bb84:
+    kl_t0 = 11;
+    return kl_t0;
+    bb85:
+#line 41 "codegen/division_and_shifts.kl"
+    kl_t103 = kl__id__3i64( 33 );
+    kl_t104 = ( int32_t ) kl_t103;
+    kl_t105 = ( int64_t ) kl_t104;
+    kl_t106 = kl_t105 == kl_t103;
+    if ( kl_t106 ) goto bb87; else goto bb86;
+    bb86:
+    kl_rt_panic( "codegen/division_and_shifts.kl", 41, "cast out of range: cast<i32>( id( 33 ) )" );
+    bb87:
+    kl_count_102 = kl_t104;
+#line 42 "codegen/division_and_shifts.kl"
+    kl_t107 = kl_count_102 & 31;
+    kl_t108 = 1 << kl_t107;
+    kl_t109 = kl_t108 != 2;
+    if ( kl_t109 ) goto bb88; else goto bb89;
+    bb88:
+    kl_t0 = 12;
+    return kl_t0;
+    bb89:
+#line 43 "codegen/division_and_shifts.kl"
+    kl_t110 = -8;
+    kl_t111 = kl_count_102 & 31;
+    kl_t112 = kl_t110 >> kl_t111;
+    kl_t113 = -4;
+    kl_t114 = kl_t112 != kl_t113;
+    if ( kl_t114 ) goto bb90; else goto bb91;
+    bb90:
+    kl_t0 = 13;
+    return kl_t0;
+    bb91:
+#line 45 "codegen/division_and_shifts.kl"
+    kl_one8_115 = 1;
+#line 46 "codegen/division_and_shifts.kl"
+    kl_t116 = kl__id__3i64( 9 );
+    kl_t117 = ( uint8_t ) kl_t116;
+    kl_t118 = ( int64_t ) kl_t117;
+    kl_t119 = kl_t118 == kl_t116;
+    if ( kl_t119 ) goto bb93; else goto bb92;
+    bb92:
+    kl_rt_panic( "codegen/division_and_shifts.kl", 46, "cast out of range: cast<u8>( id( 9 ) )" );
+    bb93:
+    kl_t120 = kl_t116 >= 0;
+    if ( kl_t120 ) goto bb94; else goto bb92;
+    bb94:
+    kl_t121 = kl_t117 & 7;
+    kl_t122 = kl_one8_115 << kl_t121;
+    kl_t123 = kl_t122 != 2;
+    if ( kl_t123 ) goto bb95; else goto bb96;
+    bb95:
+    kl_t0 = 14;
+    return kl_t0;
+    bb96:
+#line 48 "codegen/division_and_shifts.kl"
+    kl_t124 = kl__id__3i64( 1 );
+    kl_t125 = kl__id__3i64( 65 );
+    kl_t126 = kl_t125 & 63;
+    kl_t127 = kl_t124 << kl_t126;
+    kl_t128 = kl_t127 != 2;
+    if ( kl_t128 ) goto bb97; else goto bb98;
+    bb97:
+    kl_t0 = 15;
+    return kl_t0;
+    bb98:
+#line 51 "codegen/division_and_shifts.kl"
+    kl_t129 = kl__id__3i64( 1 );
+    kl_t130 = kl__id__3i64( 70 );
+    kl_t131 = ( uint8_t ) kl_t130;
+    kl_t132 = ( int64_t ) kl_t131;
+    kl_t133 = kl_t132 == kl_t130;
+    if ( kl_t133 ) goto bb100; else goto bb99;
+    bb99:
+    kl_rt_panic( "codegen/division_and_shifts.kl", 51, "cast out of range: cast<u8>( id( 70 ) )" );
+    bb100:
+    kl_t134 = kl_t130 >= 0;
+    if ( kl_t134 ) goto bb101; else goto bb99;
+    bb101:
+    kl_t135 = kl_t131 & 63;
+    kl_t136 = kl_t129 << kl_t135;
+    kl_t137 = kl_t136 != 64;
+    if ( kl_t137 ) goto bb102; else goto bb103;
+    bb102:
+    kl_t0 = 16;
+    return kl_t0;
+    bb103:
+#line 54 "codegen/division_and_shifts.kl"
+    kl_t138 = kl_neg_one_1 & 31;
+    kl_t139 = 1 << kl_t138;
+    kl_t140 = kl_t139 != kl_min32_28;
+    if ( kl_t140 ) goto bb104; else goto bb105;
+    bb104:
+    kl_t0 = 17;
+    return kl_t0;
+    bb105:
+#line 56 "codegen/division_and_shifts.kl"
+    kl_y_141 = 5;
+#line 57 "codegen/division_and_shifts.kl"
+    kl_t142 = kl__id__3i64( 32 );
+    kl_t143 = ( int32_t ) kl_t142;
+    kl_t144 = ( int64_t ) kl_t143;
+    kl_t145 = kl_t144 == kl_t142;
+    if ( kl_t145 ) goto bb107; else goto bb106;
+    bb106:
+    kl_rt_panic( "codegen/division_and_shifts.kl", 57, "cast out of range: cast<i32>( id( 32 ) )" );
+    bb107:
+    kl_t146 = kl_t143 & 31;
+    kl_y_141 = kl_y_141 << kl_t146;
+#line 58 "codegen/division_and_shifts.kl"
+    kl_t147 = kl_y_141 != 5;
+    if ( kl_t147 ) goto bb108; else goto bb109;
+    bb108:
+    kl_t0 = 18;
+    return kl_t0;
+    bb109:
+#line 60 "codegen/division_and_shifts.kl"
+    kl_t148 = kl__id__3i64( 34 );
+    kl_t149 = ( int32_t ) kl_t148;
+    kl_t150 = ( int64_t ) kl_t149;
+    kl_t151 = kl_t150 == kl_t148;
+    if ( kl_t151 ) goto bb111; else goto bb110;
+    bb110:
+    kl_rt_panic( "codegen/division_and_shifts.kl", 60, "cast out of range: cast<i32>( id( 34 ) )" );
+    bb111:
+    kl_t152 = kl_t149 & 31;
+    kl_y_141 = kl_y_141 >> kl_t152;
+#line 61 "codegen/division_and_shifts.kl"
+    kl_t153 = kl_y_141 != 1;
+    if ( kl_t153 ) goto bb112; else goto bb113;
+    bb112:
+    kl_t0 = 19;
+    return kl_t0;
+    bb113:
+#line 63 "codegen/division_and_shifts.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

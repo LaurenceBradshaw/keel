@@ -1,0 +1,64 @@
+// A divisor or a shift count the compiler cannot see is still defined: `MIN / -1` wraps to `MIN`,
+// `MIN % -1` is 0, and a shift count is masked to the left operand's width, so a negative count
+// is too. Every value arrives through `id` so no operand is a constant. Exits with the failing check.
+i64 id( i64 x )
+{
+    return x;
+}
+
+i32 main()
+{
+    i32 neg_one = cast<i32>( id( -1 ) );
+
+    i8 min8 = -127 - 1;
+    if( min8 / cast<i8>( neg_one ) != min8 ) { return 1; }
+    if( min8 % cast<i8>( neg_one ) != 0 ) { return 2; }
+
+    i32 min32 = -2147483647 - 1;
+    if( min32 / neg_one != min32 ) { return 3; }
+    if( min32 % neg_one != 0 ) { return 4; }
+
+    i64 min64 = -9223372036854775807 - 1;
+    if( min64 / id( -1 ) != min64 ) { return 5; }
+    if( min64 % id( -1 ) != 0 ) { return 6; }
+
+    // Division truncates toward zero, and the remainder takes the dividend's sign.
+    i32 two = cast<i32>( id( 2 ) );
+    if( -7 / two != -3 ) { return 7; }
+    if( -7 % two != -1 ) { return 8; }
+
+    u32 big = 4294967295;
+    if( big / cast<u32>( two ) != 2147483647 ) { return 9; }
+
+    i32 x = min32;
+    x /= neg_one;
+    if( x != min32 ) { return 10; }
+
+    x %= neg_one;
+    if( x != 0 ) { return 11; }
+
+    // 33 is 1 past i32's mask, 9 is 1 past u8's, 65 is 1 past i64's.
+    i32 count = cast<i32>( id( 33 ) );
+    if( ( 1 << count ) != 2 ) { return 12; }
+    if( ( -8 >> count ) != -4 ) { return 13; }
+
+    u8 one8 = 1;
+    if( ( one8 << cast<u8>( id( 9 ) ) ) != 2 ) { return 14; }
+
+    if( ( id( 1 ) << id( 65 ) ) != 2 ) { return 15; }
+
+    // A count of another type masks to the left operand's width: 70 is 6 past 64.
+    if( ( id( 1 ) << cast<u8>( id( 70 ) ) ) != 64 ) { return 16; }
+
+    // -1 masks to 31.
+    if( ( 1 << neg_one ) != min32 ) { return 17; }
+
+    i32 y = 5;
+    y <<= cast<i32>( id( 32 ) );
+    if( y != 5 ) { return 18; }
+
+    y >>= cast<i32>( id( 34 ) );
+    if( y != 1 ) { return 19; }
+
+    return 0;
+}

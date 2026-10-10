@@ -1,0 +1,12 @@
+// A zero divisor the compiler cannot see prints the file, the line and the division as written,
+// and aborts.
+i32 divide( i32 a, i32 b )
+{
+    return a / b;
+}
+
+i32 main()
+{
+    println( "before" );
+    return divide( 7, 0 );
+}

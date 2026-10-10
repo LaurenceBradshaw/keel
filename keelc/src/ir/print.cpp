@@ -244,6 +244,10 @@ struct Printer
                 return fmt::format( "panic {}", operand( terminator.message ) );
             case Failure::Cast:
                 return "cast_failed";
+            case Failure::Division:
+                return "division_by_zero";
+            case Failure::Remainder:
+                return "remainder_by_zero";
             }
 
         case Terminator_kind::Unreachable:

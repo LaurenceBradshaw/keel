@@ -55,6 +55,23 @@ Token_kind mirrored( Token_kind op )
     }
 }
 
+std::string_view failure_prefix( Failure failure )
+{
+    switch( failure )
+    {
+    case Failure::Assert:
+        return "assertion failed: ";
+    case Failure::Message:
+        return "panic: ";
+    case Failure::Cast:
+        return "cast out of range: ";
+    case Failure::Division:
+        return "division by zero: ";
+    case Failure::Remainder:
+        return "remainder by zero: ";
+    }
+}
+
 std::string_view guard_suffix( Token_kind op )
 {
     switch( op )
@@ -1037,10 +1054,7 @@ void Kir_emitter::emit_terminator( const Terminator& terminator, const Function&
         }
 
         write_line( fmt::format(
-            "kl_rt_panic( {}, {}, {} );",
-            file,
-            line,
-            c_string( ( terminator.failure == Failure::Cast ? "cast out of range: " : "assertion failed: " ) + text )
+            "kl_rt_panic( {}, {}, {} );", file, line, c_string( std::string( failure_prefix( terminator.failure ) ) + text )
         ) );
         return;
     }

@@ -1,0 +1,2 @@
+before
+codegen/division_by_zero.kl:5: division by zero: a / b

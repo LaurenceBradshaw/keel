@@ -192,9 +192,11 @@ enum class Terminator_kind : u8
 // What a Panic reports.
 enum class Failure : u8
 {
-    Assert,  // span: the condition
-    Message, // span: the whole `panic( ... )`
-    Cast     // span: the whole `cast<T>( x )`
+    Assert,   // span: the condition
+    Message,  // span: the whole `panic( ... )`
+    Cast,     // span: the whole `cast<T>( x )`
+    Division, // span: the operation
+    Remainder // span: the operation
 };
 
 struct Terminator

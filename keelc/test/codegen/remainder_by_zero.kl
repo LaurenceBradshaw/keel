@@ -1,0 +1,10 @@
+// The same for a remainder, through a compound assignment and at an unsigned type.
+u64 zero;
+
+i32 main()
+{
+    u64 x = 7;
+    x %= zero;
+
+    return 0;
+}
