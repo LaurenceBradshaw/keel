@@ -285,6 +285,11 @@ Node_id Ast::type_param_list( Node_id id ) const
     return is_function_like( kind( id ) ) ? child( id, 3 ) : Node_id {};
 }
 
+Node_id Ast::own_type_param_list( Node_id id ) const
+{
+    return kind( id ) == Node_kind::Method_decl ? child( id, 4 ) : Node_id {};
+}
+
 // The parameters come before the clauses. An invalid list has neither.
 static std::size_t first_where_clause( const Ast& ast, Node_id list )
 {

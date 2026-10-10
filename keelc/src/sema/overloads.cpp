@@ -109,12 +109,16 @@ bool Overloads::fits( Node_id call, Node_id candidate, u32 implicit_params ) con
 // would have produced, so everything downstream - the bounds, the instantiation, the call graph,
 // the mangled name - cannot tell a deduced call from a written one.
 std::optional<Deduction> Overloads::deduce_type_arguments(
-    const Call_site& site, Node_id callable, std::span<const Argument_shape> shapes, Type_id result, Type_id expectation
+    std::span<const Node_id>        parameters,
+    const Call_site&                site,
+    Node_id                         callable,
+    std::span<const Argument_shape> shapes,
+    Type_id                         result,
+    Type_id                         expectation
 )
 {
-    const std::vector<Node_id>     parameters = ast_.type_parameters( ast_.type_param_list( callable ) );
-    const std::span<const Node_id> params     = ast_.params( callable ).subspan( site.implicit_params );
-    const std::span<const Node_id> arguments  = ast_.arguments( site.call );
+    const std::span<const Node_id> params    = ast_.params( callable ).subspan( site.implicit_params );
+    const std::span<const Node_id> arguments = ast_.arguments( site.call );
 
     Bindings                         bindings;
     std::unordered_map<u32, Node_id> from; // which argument bound each parameter, for the messages
@@ -755,7 +759,8 @@ std::vector<Argument_work> Overloads::check_call_arguments(
         {
             reporter_.error_at(
                 ast_.span( arguments[i] ),
-                fmt::format( "expected `{}`, but got `{}`", table_.name( expected ), table_.name( shapes[i].type ) )
+                fmt::format( "expected `{}`, but got `{}`", table_.name( expected ), table_.name( shapes[i].type ) ),
+                mismatch_hint( table_, expected, shapes[i].type )
             );
         }
     }
@@ -949,6 +954,19 @@ void Overloads::check_overloaded_pair( Node_id first, Node_id second, bool membe
     if( ast_.kind( second ) == Node_kind::Function_decl && name == "main" )
     {
         refuse( second, "a program has one `main`", reporter_.previous_declaration_note( ast_.span( first ) ) );
+
+        return;
+    }
+
+    // Selection would have to bind a method's own type parameters before the arguments chose
+    // between the two, and it reads the parameter types to choose.
+    if( member && ( ast_.own_type_param_list( first ).is_valid() || ast_.own_type_param_list( second ).is_valid() ) )
+    {
+        refuse(
+            second,
+            fmt::format( "`{}` has type parameters of its own, so it cannot be overloaded", name ),
+            reporter_.previous_declaration_note( ast_.span( first ) )
+        );
 
         return;
     }

@@ -78,6 +78,8 @@ public:
     void    absorb( Node_id id );
     Type_id take_expectation(); // expected_, cleared
 
+    Type_id take_call_expectation();
+
     // D5: this expression has to be a `bool` already. A rule about one expression rather than about
     // the statement around it, which is why `if`, `while`, `for` and the ternary all reach it here.
     void check_condition( Node_id id );
@@ -132,15 +134,27 @@ private:
     Argument_shape argument_shape( Node_id argument );
 
     Type_id infer_method_call( Node_id id );
-    Type_id infer_implicit_method_call( Node_id id, Node_id first );
+    Type_id infer_implicit_method_call( Node_id id, Node_id first, Type_id expectation );
     // Which of the methods named like `first` this call means, or none after reporting why. `shapes`
     // holds the arguments selection typed, for check_method_arguments.
     Node_id choose_method( Node_id id, Node_id first, Type_id receiver, std::vector<Argument_shape>& shapes );
     // A refused call still types its arguments, once each, or a mistake inside one goes unreported.
     Type_id refuse_call( Node_id id, std::span<const Argument_shape> shapes = {} );
-    Type_id check_method_arguments( Node_id id, Node_id method, Type_id receiver, std::span<const Argument_shape> shapes = {} );
-    void    shape_arguments( Node_id call, std::vector<Argument_shape>& shapes ); // no-op once shaped
-    void    record_method_instantiation( Node_id id, Node_id method, Type_id receiver );
+    Type_id check_method_arguments(
+        Node_id id, Node_id method, Type_id receiver, Type_id expectation, std::span<const Argument_shape> shapes = {}
+    );
+    void shape_arguments( Node_id call, std::vector<Argument_shape>& shapes ); // no-op once shaped
+    void record_method_instantiation( Node_id id, Node_id method, Type_id receiver, std::span<const Type_id> own = {} );
+
+    void check_deduced_bounds(
+        std::span<const Node_id> parameters,
+        std::span<const Type_id> resolved,
+        std::span<const Node_id> bound_by,
+        const Call_site&         site
+    );
+
+    std::optional<std::vector<Type_id>>
+    method_type_arguments( const Call_site& site, Node_id method, std::vector<Argument_shape>& shapes, Type_id expectation );
 
     // These two infer their operands and hand the types to `Operators`, which holds the rules.
     // Address-of and dereference stay in infer_unary: neither is in the rule table, and the first

@@ -287,6 +287,23 @@ class list<T>
         }
     }
 
+    /// A new list holding `f` applied to each element, in order. This list is unchanged.
+    public list<U> map<U>( fn( const ref T ) -> U f ) const
+    {
+        list<U> result = list<U>::with_capacity( count_ );
+
+        unsafe
+        {
+            for( u64 i = 0; i < count_; i++ )
+            {
+                U value = f( data_[i] );
+                result.push( move value );
+            }
+        }
+
+        return result;
+    }
+
     /// The number of elements.
     public u64 size() const
     {

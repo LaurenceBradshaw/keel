@@ -269,6 +269,49 @@ TEST_CASE( "instances_to_emit_seeds_a_generic_aggregate's_destructor", "[ir][ins
     }
 }
 
+// A generic method's instance carries the receiver's arguments and then its own, which is the
+// order of the parameters in its slot.
+TEST_CASE( "instances_to_emit_gives_a_generic_method_one_instance_per_call", "[ir][instances][generic]" )
+{
+    SECTION( "two of the method's own arguments on one receiver are two instances" )
+    {
+        Reached r(
+            "struct Box<T> where T : Copyable\n"
+            "{\n"
+            "    T v;\n"
+            "    U as<U>( U u ) const where U : Copyable { return u; }\n"
+            "};\n"
+            "i32 main() { Box<i32> b = Box { 1 }; i64 x = b.as( cast<i64>( 2 ) ); bool y = b.as<bool>( true ); return 0; }"
+        );
+
+        REQUIRE( r.clean() );
+        REQUIRE( r.instances == std::vector<std::string> { "as<i32, i64>", "as<i32, bool>" } );
+    }
+
+    SECTION( "on a type that is not generic, only its own" )
+    {
+        Reached r( "struct Plain { i32 n; U as<U>( U u ) const where U : Copyable { return u; } };\n"
+                   "i32 main() { Plain p = Plain { 1 }; return p.as<i32>( 3 ); }" );
+
+        REQUIRE( r.clean() );
+        REQUIRE( r.instances == std::vector<std::string> { "as<i32>" } );
+    }
+
+    SECTION( "one generic method calling another reaches it through the caller's instance" )
+    {
+        Reached r( "struct Box<T> where T : Copyable\n"
+                   "{\n"
+                   "    T v;\n"
+                   "    U inner<U>( U u ) const where U : Copyable { return u; }\n"
+                   "    U outer<U>( U u ) const where U : Copyable { return inner<U>( u ); }\n"
+                   "};\n"
+                   "i32 main() { Box<bool> b = Box { true }; return b.outer<i32>( 3 ); }" );
+
+        REQUIRE( r.clean() );
+        REQUIRE( r.instances == std::vector<std::string> { "outer<bool, i32>", "inner<bool, i32>" } );
+    }
+}
+
 TEST_CASE( "bindings_for_binds_parameters_in_order", "[ir][instances][generic]" )
 {
     Reached r( "A first<A, B>( A a, B b ) where A : Copyable { return a; }\n"

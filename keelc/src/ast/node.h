@@ -138,7 +138,8 @@ enum class Node_kind : u16
     Variant_pattern,
     // A name bound by a pattern. aux: the name.
     Binding_decl,
-    // aux: the name; children as Function_decl, with the enclosing aggregate's type parameters.
+    // aux: the name; children as Function_decl, the Type_param_list holding the enclosing aggregate's
+    // type parameters then the method's own, and then the method's own list (invalid when it has none).
     Method_decl,
     // `alloc<T>()` or `alloc<T>( n )`; children: the type, then the count when written.
     Alloc_expr,

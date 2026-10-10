@@ -8,9 +8,9 @@ struct kl_2kl_list__I3i32E;
 
 struct kl_2kl_list__I3i32E
 {
-    int32_t* kl_data__819;
-    uint64_t kl_count__821;
-    uint64_t kl_cap__823;
+    int32_t* kl_data__884;
+    uint64_t kl_count__886;
+    uint64_t kl_cap__888;
 };
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
@@ -51,11 +51,11 @@ int32_t kl__main__( void )
 void kl_2kl_list__I3i32E__RQ2kl4listI3i32E__ctor( struct kl_2kl_list__I3i32E* kl_this_1 )
 {
 #line 15 "../src/list.kl"
-    ( *kl_this_1 ).kl_data__819 = NULL;
+    ( *kl_this_1 ).kl_data__884 = NULL;
 #line 16 "../src/list.kl"
-    ( *kl_this_1 ).kl_count__821 = 0;
+    ( *kl_this_1 ).kl_count__886 = 0;
 #line 17 "../src/list.kl"
-    ( *kl_this_1 ).kl_cap__823 = 0;
+    ( *kl_this_1 ).kl_cap__888 = 0;
     return;
 }
 
@@ -66,11 +66,11 @@ int32_t* kl_2kl_first__I3i32E__SQ2kl4listI3i32E( struct kl_2kl_list__I3i32E* kl_
     int32_t* kl_t3;
     int32_t* kl_t4;
 #line 150 "../src/list.kl"
-    kl_t2 = ( *kl_this_1 ).kl_count__821 > 0;
+    kl_t2 = ( *kl_this_1 ).kl_count__886 > 0;
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
 #line 154 "../src/list.kl"
-    kl_t3 = ( *kl_this_1 ).kl_data__819 + 0;
+    kl_t3 = ( *kl_this_1 ).kl_data__884 + 0;
     kl_t4 = &( *kl_t3 );
     kl_t0 = kl_t4;
     return kl_t0;
@@ -82,11 +82,11 @@ void kl_2kl_list__I3i32E__dtor( struct kl_2kl_list__I3i32E* kl_this_1 )
 {
     bool kl_t2;
 #line 37 "../src/list.kl"
-    kl_t2 = ( *kl_this_1 ).kl_data__819 != NULL;
+    kl_t2 = ( *kl_this_1 ).kl_data__884 != NULL;
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
 #line 42 "../src/list.kl"
-    kl_rt_free( ( *kl_this_1 ).kl_data__819 );
+    kl_rt_free( ( *kl_this_1 ).kl_data__884 );
     goto bb2;
     bb2:
     return;

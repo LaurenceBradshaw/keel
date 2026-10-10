@@ -66,14 +66,17 @@ std::string Signature_printer::declaration( Node_id decl ) const
             where_clauses( ast_.type_param_list( decl ) )
         );
     case Node_kind::Method_decl:
+        // Its own type parameters only: the aggregate's are on the aggregate's line.
         return fmt::format(
-            "{}{}{} {}{}{}",
+            "{}{}{} {}{}{}{}{}",
             access( decl ),
             ast_.is_static_method( decl ) ? "static " : "",
             type( ast_.return_type( decl ) ),
             text( ast_.name( decl ) ),
+            type_parameters( ast_.own_type_param_list( decl ) ),
             parameters( decl ),
-            ast_.is_const_method( decl ) ? " const" : ""
+            ast_.is_const_method( decl ) ? " const" : "",
+            where_clauses( ast_.own_type_param_list( decl ) )
         );
     case Node_kind::Constructor_decl:
         return fmt::format( "{}{}{}", access( decl ), text( ast_.name( decl ) ), parameters( decl ) );
@@ -344,7 +347,9 @@ public:
     {
         for( u32 i = 0; i < ast_.node_count(); ++i )
         {
-            if( ast_.kind( Node_id { i } ) == kind && interner_.text( ast_.name( Node_id { i } ) ) == name )
+            // A function type's parameters are nameless.
+            if( ast_.kind( Node_id { i } ) == kind && ast_.name( Node_id { i } ).is_valid() &&
+                interner_.text( ast_.name( Node_id { i } ) ) == name )
             {
                 return Node_id { i };
             }
@@ -459,6 +464,28 @@ TEST_CASE( "signatures_print_a_member_at_an_instance", "[sema][signature]" )
     REQUIRE( printed( Node_kind::Struct_decl, "Pair", at ) == "struct Pair<i32, bool>" );
     REQUIRE( printed( Node_kind::Field_decl, "second", at ) == "public bool* second" );
     REQUIRE( printed( Node_kind::Method_decl, "set", at ) == "public void set( move i32 a, Pair<bool, i32>* other )" );
+}
+
+// A method's own type parameters follow its name and its own clauses its `const`; the aggregate's
+// stay on the aggregate. At an instance they are still open, since the receiver does not bind them.
+TEST_CASE( "signatures_print_a_generic_method", "[sema][signature][generic]" )
+{
+    const Printed printed( "struct Box<T> where T : Copyable\n"
+                           "{\n"
+                           "    T value;\n"
+                           "    U map<U>( fn( const ref T ) -> U f ) const where U : Copyable { return f( value ); }\n"
+                           "    static V of<V>( V v ) where V : Copyable { return v; }\n"
+                           "};\n"
+                           "void f( Box<i32> b ) {}\n" );
+
+    REQUIRE(
+        printed( Node_kind::Method_decl, "map" ) == "public U map<U>( fn( const ref T ) -> U f ) const where U : Copyable"
+    );
+    REQUIRE( printed( Node_kind::Method_decl, "of" ) == "public static V of<V>( V v ) where V : Copyable" );
+    REQUIRE(
+        printed( Node_kind::Method_decl, "map", printed.bindings_of( "b" ) ) ==
+        "public U map<U>( fn( const ref i32 ) -> U f ) const where U : Copyable"
+    );
 }
 
 } // namespace

@@ -177,12 +177,16 @@ std::string Spelling::function( Node_id declaration, std::span<const Type_id> ty
         // then dropped from the parameters, since it can never be what tells two members apart. A
         // static method has no receiver to read either from, so the tag is built from the aggregate
         // and every written parameter stays: that is why the tag leads the argtypes rather than
-        // sitting on parameter 0, and it is the whole of what M7 asked of this scheme.
-        const bool    receiver  = ast.has_receiver( declaration );
-        const Node_id owner     = receiver ? Node_id {} : ast.enclosing_aggregate( declaration );
-        const Type_id enclosing = receiver
-                                      ? params.front().type
-                                      : types.table().structure( owner, type_arguments, interner.text( ast.name( owner ) ) );
+        // sitting on parameter 0, and it is the whole of what M7 asked of this scheme. The tag takes
+        // only the aggregate's arguments; a generic method's own follow them.
+        const bool        receiver      = ast.has_receiver( declaration );
+        const Node_id     owner         = receiver ? Node_id {} : ast.enclosing_aggregate( declaration );
+        const std::size_t num_type_args = receiver ? 0 : ast.type_parameters( ast.type_param_list( owner ) ).size();
+        const Type_id     enclosing =
+            receiver ? params.front().type
+                         : types.table().structure(
+                           owner, std::span( type_arguments ).first( num_type_args ), interner.text( ast.name( owner ) )
+                       );
 
         return mangle_function(
             package_name( declaration ),

@@ -98,8 +98,9 @@ public:
     Node_id                  body( Node_id id ) const;            // also While_stmt, For_stmt, Case_arm; invalid for `extern`
 
     // Type parameters and arguments.
-    Node_id                  type_param_list( Node_id id ) const;   // aggregate, Enum_decl, function-like
-    std::vector<Node_id>     type_parameters( Node_id list ) const; // the Type_param_decls; empty for an invalid list
+    Node_id                  type_param_list( Node_id id ) const;     // aggregate, Enum_decl, function-like
+    Node_id                  own_type_param_list( Node_id id ) const; // a method's own; invalid for anything else
+    std::vector<Node_id>     type_parameters( Node_id list ) const;   // the Type_param_decls; empty for an invalid list
     std::span<const Node_id> where_clauses( Node_id list ) const;
     std::span<const Node_id> bounds( Node_id where_clause ) const;
     Node_id                  type_arg_list( Node_id id ) const; // Generic_type, Call_expr, Name_expr, Path_expr

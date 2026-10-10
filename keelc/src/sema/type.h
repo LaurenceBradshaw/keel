@@ -250,4 +250,8 @@ private:
     std::unordered_set<u32>              unshown_packages_;
 };
 
+// The help under "expected `X`, but got `Y`", or empty. Only a few mismatches get one: everywhere
+// else §6.4 does widen, so the mismatch is a mismatch and saying more would be saying it twice.
+std::string mismatch_hint( const Type_table& table, Type_id expected, Type_id actual );
+
 } // namespace keel

@@ -80,6 +80,7 @@ Source_file                             1:1-50:1
         Return_stmt                     31:17-31:30
           Name_expr                     31:24-31:29 "value"
       <none>                            -
+      <none>                            -
   Function_decl                         37:1-44:2   name=uses_them
     Named_type                          37:1-37:4   "i32"
     Param_list                          37:14-37:16 "()"

@@ -1142,6 +1142,36 @@ std::string param_spelling( Param_mode mode )
     }
 }
 
+std::string mismatch_hint( const Type_table& table, Type_id expected, Type_id actual )
+{
+    if( table.is_function( expected ) && table.is_function( actual ) )
+    {
+        return "one signature is never widened into another, so the two have to match exactly";
+    }
+
+    if( table.points_to_const( actual ) && !table.points_to_const( expected ) )
+    {
+        return "a pointer to `const` never converts back to one that writes";
+    }
+
+    if( table.name( expected ) == table.name( actual ) )
+    {
+        return fmt::format( "two different types are both named `{}`", table.name( expected ) );
+    }
+
+    if( table.is_union( expected ) && table.is_union( actual ) )
+    {
+        return "one union widens into another only through `try`";
+    }
+
+    if( table.is_never( actual ) )
+    {
+        return "it never produces a value; call it as a statement";
+    }
+
+    return "";
+}
+
 bool is_builtin_type_name( std::string_view spelling )
 {
     static const Type_table table;

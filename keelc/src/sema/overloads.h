@@ -93,7 +93,12 @@ public:
     Bindings type_bindings( Node_id callable, std::span<const Type_id> arguments ) const;
 
     std::optional<Deduction> deduce_type_arguments(
-        const Call_site& site, Node_id callable, std::span<const Argument_shape> shapes, Type_id result, Type_id expectation
+        std::span<const Node_id>        parameters,
+        const Call_site&                site,
+        Node_id                         callable,
+        std::span<const Argument_shape> shapes,
+        Type_id                         result,
+        Type_id                         expectation
     );
 
     // Selection is two calls because it is lazy, and the laziness is a rule rather than an

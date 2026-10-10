@@ -1,0 +1,94 @@
+// `kl::list<T>::map<U>`: one `list<i32>` mapped at two `U`s, each its own instance. An owning `U`
+// is built once per element and dropped once, and an owning `T` is read through the borrow and
+// left where it was; a missed or doubled drop miscounts and shows under valgrind. Each check
+// returns its own code.
+import kl::list;
+
+i32 live;
+
+class owned
+{
+    owned( u64 n )
+    {
+        id = n;
+        unsafe
+        {
+            block = alloc<u64>( 1 );
+        }
+        live += 1;
+    }
+
+    ~owned()
+    {
+        unsafe
+        {
+            free( block );
+        }
+        live -= 1;
+    }
+
+    public u64 value() const
+    {
+        return id;
+    }
+
+    u64    id;
+    u64[*] block;
+};
+
+i64 widen( const ref i32 x )
+{
+    return cast<i64>( x ) * 1000000000;
+}
+
+bool odd( const ref i32 x )
+{
+    return x % 2 != 0;
+}
+
+owned own( const ref i32 x )
+{
+    return owned( cast<u64>( x ) );
+}
+
+u64 value_of( const ref owned o )
+{
+    return o.value();
+}
+
+i32 main()
+{
+    kl::list<i32> numbers = kl::list<i32>();
+    numbers.push( 1 );
+    numbers.push( 2 );
+    numbers.push( 3 );
+
+    kl::list<i64> wide = numbers.map( &widen );
+    if( wide.size() != 3 || wide[2] != 3000000000 ) { return 1; }
+
+    kl::list<bool> odds = numbers.map<bool>( &odd );
+    if( odds.size() != 3 || !odds[0] || odds[1] || !odds[2] ) { return 2; }
+
+    // The source is unchanged.
+    if( numbers.size() != 3 || numbers[1] != 2 ) { return 3; }
+
+    // Through a `const ref`, since `map` only reads.
+    const ref kl::list<i32> view = numbers;
+    if( view.map( &odd ).size() != 3 ) { return 4; }
+
+    // An empty list maps to an empty list.
+    kl::list<i32> none = kl::list<i32>();
+    if( none.map( &widen ).size() != 0 ) { return 5; }
+
+    {
+        kl::list<owned> made = numbers.map( &own );
+        if( live != 3 ) { return 6; }
+
+        kl::list<u64> values = made.map( &value_of );
+        if( values[0] != 1 || values[2] != 3 || live != 3 ) { return 7; }
+    }
+
+    if( live != 0 ) { return 8; }
+
+    return 0;
+}

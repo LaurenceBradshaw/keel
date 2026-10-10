@@ -1,0 +1,97 @@
+// M9.5: a method with type parameters of its own beside its aggregate's. Each call is its own
+// instance, keyed on the receiver's arguments then the method's, however the method's were
+// arrived at: written, deduced from the arguments, or read off what the result is wanted for.
+// Exits with the failing check.
+class Box<T> where T : Copyable
+{
+    T value;
+
+    public Box( T v ) { value = v; }
+
+    U map<U>( fn( const ref T ) -> U f ) const { return f( value ); }
+
+    // One generic method calling another, through the caller's instance.
+    U map_twice<U>( fn( const ref T ) -> U f, fn( const ref U ) -> U g ) const
+        where U : Copyable
+    {
+        U once = map<U>( f );
+        return g( once );
+    }
+
+    static U make<U>( U u ) where U : Copyable { return u; }
+};
+
+// Not generic itself, so a method's instance carries only its own arguments.
+struct Plain
+{
+    i32 n;
+
+    U as<U>( U u ) const where U : Copyable { return u; }
+
+    // A bare call to a sibling, with the expectation saying what `U` is.
+    i64 widened() const
+    {
+        i64 x = as( 5 );
+        return x + cast<i64>( n );
+    }
+};
+
+// An owning `U`: moved in, moved out, and dropped once.
+class Buffer
+{
+    u8[*] bytes;
+    u64   size;
+
+    public Buffer( u64 n )
+    {
+        unsafe { bytes = alloc<u8>( n ); }
+        size = n;
+    }
+
+    ~Buffer()
+    {
+        unsafe { free( bytes ); }
+    }
+
+    public u64 length() const { return size; }
+};
+
+struct Holder
+{
+    i32 tag;
+
+    U pass<U>( move U u ) const { return move u; }
+};
+
+i64 widen( const ref i32 x ) { return cast<i64>( x ); }
+bool positive( const ref i32 x ) { return x > 0; }
+i64 double_it( const ref i64 x ) { return x * 2; }
+
+i32 main()
+{
+    Box<i32> b = Box<i32>( 7 );
+
+    if( b.map<i64>( &widen ) != 7 ) { return 1; }
+    if( !b.map( &positive ) ) { return 2; }
+    if( b.map_twice( &widen, &double_it ) != 14 ) { return 3; }
+
+    if( Box<i32>::make<i32>( 3 ) != 3 ) { return 4; }
+
+    // `U` from the expectation alone.
+    i32 made = Box<i32>::make( 4 );
+    if( made != 4 ) { return 5; }
+
+    Plain p = Plain { 1 };
+    if( p.as<bool>( true ) != true ) { return 6; }
+
+    i32 read = p.as( 8 );
+    if( read != 8 ) { return 7; }
+
+    if( p.widened() != 6 ) { return 8; }
+
+    Holder h = Holder { 0 };
+    Buffer kept = h.pass( move Buffer( 16 ) );
+    if( kept.length() != 16 ) { return 9; }
+
+    return 0;
+}

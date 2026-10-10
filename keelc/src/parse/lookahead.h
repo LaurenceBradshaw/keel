@@ -43,9 +43,10 @@ struct Scan_failure
 // Which parse function a member needs, and where. Nothing is built.
 struct Member_head
 {
-    Member_kind kind   = Member_kind::Field;
-    u32         start  = 0; // first token, access marker and `static` included
-    u32         commit = 0; // the body's `{`, a static's `=`, or where a field's `;` is or should be
+    Member_kind kind     = Member_kind::Field;
+    u32         start    = 0;     // first token, access marker and `static` included
+    u32         commit   = 0;     // the body's `{`, a static's `=`, or where a field's `;` is or should be
+    bool        is_const = false; // a method's trailing `const`, which a `where` clause may follow
 };
 
 struct Head_scan

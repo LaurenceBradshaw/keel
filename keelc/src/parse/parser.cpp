@@ -72,7 +72,7 @@ private:
     Node_id parse_import();
     Node_id parse_declaration( const Declaration_head& head );
     Node_id parse_function_decl( std::optional<u32> commit = std::nullopt );
-    Node_id parse_method_decl( Symbol_id enclosing, Node_id type_params, bool is_static, u32 commit );
+    Node_id parse_method_decl( Symbol_id enclosing, Node_id type_params, bool is_static, const Member_head& head );
     Node_id parse_param_list( Node_id leading = Node_id {} );
     // The parameters alone: the list node is built later, once the `where` clauses that belong
     // beside them have been parsed too.
@@ -82,6 +82,8 @@ private:
     // One `where T : A & B`. Several are separated by `, where` - the comma is for the reader, and
     // `where` is what the parser keys on.
     Node_id parse_where_clause();
+    // Every `where` clause at the cursor, appended to `generics`; refused when `generic` is false.
+    void parse_where_clauses( bool generic, std::vector<Node_id>& generics, Span& generic_span, std::string_view help );
 
     // `&` between bounds, and a diagnostic for the two plausible wrong guesses.
     bool match_bound_separator();
@@ -735,27 +737,7 @@ Node_id Parser::parse_function_decl( std::optional<u32> commit )
     // No early return on a missing name: keep parsing so the body's errors are reported too.
     const Node_id params = parse_param_list();
 
-    while( cursor_.check_keyword( Keyword::Where ) )
-    {
-        const Node_id clause = parse_where_clause();
-
-        // A clause with nothing to constrain. Reported here rather than left to sema, because
-        // without it the declaration would look generic to everything downstream.
-        if( !generic )
-        {
-            recovery_.error_at(
-                ast_.span( clause ),
-                "a `where` clause needs type parameters",
-                "write them on the name, as in `T f<T>( T a ) where T : Copyable`"
-            );
-
-            continue;
-        }
-
-        generics.push_back( clause );
-
-        generic_span = Span::merge( generic_span, ast_.span( clause ) );
-    }
+    parse_where_clauses( generic, generics, generic_span, "write them on the name, as in `T f<T>( T a ) where T : Copyable`" );
 
     const Node_id type_params = generic ? ast_.add( Node_kind::Type_param_list, generic_span, 0, generics ) : Node_id {};
 
@@ -817,7 +799,7 @@ Node_id Parser::parse_function_decl( std::optional<u32> commit )
     return node;
 }
 
-Node_id Parser::parse_method_decl( Symbol_id enclosing, Node_id type_params, bool is_static, u32 commit )
+Node_id Parser::parse_method_decl( Symbol_id enclosing, Node_id type_params, bool is_static, const Member_head& head )
 {
     const Span      start       = cursor_.peek().span;
     const Node_id   return_type = parse_type_with_mode();
@@ -825,11 +807,17 @@ Node_id Parser::parse_method_decl( Symbol_id enclosing, Node_id type_params, boo
     const Symbol_id name        = cursor_.check_keyword( Keyword::Operator ) ? expect_operator_name() : expect_name();
     const Span      name_span   = Span::merge( name_start, cursor_.previous().span );
 
-    // The trailing `const` comes after the parameter list, but the receiver it binds is built
-    // before it. The head scan ended at the body's `{`, so the token before that says.
-    const Token& before_body = cursor_.tokens()[commit - 1];
-    const bool   is_const    = before_body.kind == Token_kind::Keyword && before_body.keyword() == Keyword::Const;
+    // The method's own type parameters, collected as parse_function_decl collects a function's.
+    const Span           generic_start = cursor_.peek().span;
+    const bool           generic       = cursor_.check( Token_kind::Less );
+    std::vector<Node_id> generics      = generic ? parse_type_params() : std::vector<Node_id> {};
+    Span                 generic_span  = Span::merge( generic_start, cursor_.previous().span );
 
+    // The trailing `const` comes after the parameter list, but the receiver it binds is built
+    // before it, so the head scan says.
+    const bool is_const = head.is_const;
+
+    // The aggregate's list alone: the receiver is `Box<T>` whatever the method adds.
     const Node_id receiver = is_static ? Node_id {} : synthesise_receiver( enclosing, type_params, start, is_const );
     const Node_id params   = parse_param_list( receiver );
 
@@ -845,7 +833,11 @@ Node_id Parser::parse_method_decl( Symbol_id enclosing, Node_id type_params, boo
         cursor_.match_keyword( Keyword::Const );
     }
 
-    reach_commit( commit );
+    parse_where_clauses(
+        generic, generics, generic_span, "write them on the name, as in `U map<U>( U a ) where U : Copyable`"
+    );
+
+    reach_commit( head.commit );
     const Node_id body = parse_block();
 
     if( !name.is_valid() )
@@ -853,17 +845,64 @@ Node_id Parser::parse_method_decl( Symbol_id enclosing, Node_id type_params, boo
         return error_node( Span::merge( start, cursor_.previous().span ) );
     }
 
-    // Four children, as every function-like declaration has. The type parameter slot holds the
-    // *enclosing* aggregate's list: a method of `Box<T>` is generic in T without writing any of
-    // its own, and everything downstream asks this slot rather than asking who owns the member.
+    const Node_id own = generic ? ast_.add( Node_kind::Type_param_list, generic_span, 0, generics ) : Node_id {};
+
+    // The aggregate's parameters then the method's, and the same for their clauses, so binding an
+    // instance's arguments by position covers both. A method of `Box<T>` is generic in T without
+    // writing any of its own, and everything downstream asks this slot rather than who owns it.
+    Node_id combined = type_params.is_valid() ? type_params : own;
+
+    if( type_params.is_valid() && own.is_valid() )
+    {
+        std::vector<Node_id> children;
+
+        for( const Node_id list : { type_params, own } )
+        {
+            const std::vector<Node_id> decls = ast_.type_parameters( list );
+            children.insert( children.end(), decls.begin(), decls.end() );
+        }
+
+        for( const Node_id list : { type_params, own } )
+        {
+            const std::span<const Node_id> clauses = ast_.where_clauses( list );
+            children.insert( children.end(), clauses.begin(), clauses.end() );
+        }
+
+        combined = ast_.add( Node_kind::Type_param_list, generic_span, 0, children );
+    }
+
+    // The four children every function-like declaration has, then the method's own list: what
+    // declares its parameters, and what a call's type arguments are counted against.
     const Node_id node = ast_.add(
         Node_kind::Method_decl,
         Span::merge( start, cursor_.previous().span ),
         name.v,
-        { return_type, params, body, type_params }
+        { return_type, params, body, combined, own }
     );
     ast_.set_name_span( node, name_span );
     return node;
+}
+
+// Written after the parameter list on a function or method, after the name on a type.
+void Parser::parse_where_clauses( bool generic, std::vector<Node_id>& generics, Span& generic_span, std::string_view help )
+{
+    while( cursor_.check_keyword( Keyword::Where ) )
+    {
+        const Node_id clause = parse_where_clause();
+
+        // A clause with nothing to constrain. Reported here rather than left to sema, because
+        // without it the declaration would look generic to everything downstream.
+        if( !generic )
+        {
+            recovery_.error_at( ast_.span( clause ), "a `where` clause needs type parameters", std::string( help ) );
+
+            continue;
+        }
+
+        generics.push_back( clause );
+
+        generic_span = Span::merge( generic_span, ast_.span( clause ) );
+    }
 }
 
 Node_id Parser::parse_param_list( Node_id leading )
@@ -1012,27 +1051,7 @@ Node_id Parser::parse_aggregate_decl()
 
     Span generic_span = Span::merge( generic_start, cursor_.previous().span );
 
-    while( cursor_.check_keyword( Keyword::Where ) )
-    {
-        const Node_id clause = parse_where_clause();
-
-        // A clause with nothing to constrain. Reported here rather than left to sema, because
-        // without it the declaration would look generic to everything downstream.
-        if( !generic )
-        {
-            recovery_.error_at(
-                ast_.span( clause ),
-                "a `where` clause needs type parameters",
-                "write them on the name, as in `T f<T>( T a ) where T : Copyable`"
-            );
-
-            continue;
-        }
-
-        generics.push_back( clause );
-
-        generic_span = Span::merge( generic_span, ast_.span( clause ) );
-    }
+    parse_where_clauses( generic, generics, generic_span, "write them on the name, as in `T f<T>( T a ) where T : Copyable`" );
 
     const Node_id type_params = generic ? ast_.add( Node_kind::Type_param_list, generic_span, 0, generics ) : Node_id {};
 
@@ -1230,7 +1249,7 @@ Node_id Parser::parse_member( const Member_head& head, Symbol_id enclosing, Node
         break;
 
     case Member_kind::Method:
-        member = parse_method_decl( enclosing, type_params, is_static, head.commit );
+        member = parse_method_decl( enclosing, type_params, is_static, head );
         break;
 
     case Member_kind::Constructor:
@@ -1281,27 +1300,7 @@ Node_id Parser::parse_enum_decl()
 
     Span generic_span = Span::merge( generic_start, cursor_.previous().span );
 
-    while( cursor_.check_keyword( Keyword::Where ) )
-    {
-        const Node_id clause = parse_where_clause();
-
-        // A clause with nothing to constrain. Reported here rather than left to sema, because
-        // without it the declaration would look generic to everything downstream.
-        if( !generic )
-        {
-            recovery_.error_at(
-                ast_.span( clause ),
-                "a `where` clause needs type parameters",
-                "write them on the name, as in `enum Opt<T> where T : Copyable`"
-            );
-
-            continue;
-        }
-
-        generics.push_back( clause );
-
-        generic_span = Span::merge( generic_span, ast_.span( clause ) );
-    }
+    parse_where_clauses( generic, generics, generic_span, "write them on the name, as in `enum Opt<T> where T : Copyable`" );
 
     const Node_id type_params = generic ? ast_.add( Node_kind::Type_param_list, generic_span, 0, generics ) : Node_id {};
 
@@ -6167,8 +6166,8 @@ TEST_CASE( "parser_parses_type_parameters", "[parse][generic]" )
 }
 
 // Every function-like declaration carries the same four children, so the one walk that visits them
-// does not have to ask which kind it is looking at. Three separate out-of-bounds reads came from
-// the two shapes disagreeing while this was being added.
+// does not have to ask which kind it is looking at. A method adds a fifth, its own type parameters. Three separate
+// out-of-bounds reads came from the two shapes disagreeing while this was being added.
 TEST_CASE( "parser_gives_every_declaration_the_same_arity", "[parse][generic]" )
 {
     SECTION( "a plain function" )
@@ -6205,7 +6204,7 @@ TEST_CASE( "parser_gives_every_declaration_the_same_arity", "[parse][generic]" )
 
             INFO( node_kind_name( kind ) );
             REQUIRE( decl.is_valid() );
-            REQUIRE( p.children( decl ).size() == 4 );
+            REQUIRE( p.children( decl ).size() == ( kind == Node_kind::Method_decl ? 5u : 4u ) );
             REQUIRE_FALSE( p.child( decl, 3 ).is_valid() );
         }
     }
@@ -10188,6 +10187,103 @@ TEST_CASE( "parser_parses_a_method", "[parse]" )
         INFO( p.errors() );
         REQUIRE_FALSE( p.has_errors() );
         REQUIRE_FALSE( find_first( p.ast(), p.root(), Node_kind::Method_decl ).is_valid() );
+    }
+}
+
+// M9.5. A method's own type parameters follow its name, and its `where` clauses its trailing
+// `const`. Slot 3 lists the aggregate's parameters then the method's, so an instance's arguments
+// bind by position; slot 4 is the method's own.
+TEST_CASE( "parser_parses_a_generic_method", "[parse][generic]" )
+{
+    SECTION( "on a type that is not generic, both slots are its own list" )
+    {
+        const Parsed p( "struct P { i32 x; U as<U>( U a ) { return a; } };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id method = find_first( p.ast(), p.root(), Node_kind::Method_decl );
+        const Node_id own    = p.child( method, 4 );
+
+        REQUIRE( p.kind( own ) == Node_kind::Type_param_list );
+        REQUIRE( p.child( method, 3 ) == own );
+        REQUIRE( p.children( own ).size() == 1 );
+        REQUIRE( p.text( p.child( own, 0 ) ) == "U" );
+    }
+
+    SECTION( "on a generic type, the aggregate's parameters and clauses come first" )
+    {
+        const Parsed p( "class Box<T> where T : Copyable\n"
+                        "{\n"
+                        "    T v;\n"
+                        "    U map<U, V>( U a, V b ) const where U : Copyable { return a; }\n"
+                        "};" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id method   = find_first( p.ast(), p.root(), Node_kind::Method_decl );
+        const Node_id combined = p.child( method, 3 );
+        const Node_id own      = p.child( method, 4 );
+
+        const std::vector<Node_id> all = p.ast().type_parameters( combined );
+
+        REQUIRE( all.size() == 3 );
+        REQUIRE( p.text( all[0] ) == "T" );
+        REQUIRE( p.text( all[1] ) == "U" );
+        REQUIRE( p.text( all[2] ) == "V" );
+
+        const std::span<const Node_id> clauses = p.ast().where_clauses( combined );
+
+        REQUIRE( clauses.size() == 2 );
+        REQUIRE( p.text( clauses[0] ) == "where T : Copyable" );
+        REQUIRE( p.text( clauses[1] ) == "where U : Copyable" );
+
+        REQUIRE( p.ast().type_parameters( own ).size() == 2 );
+        REQUIRE( p.ast().where_clauses( own ).size() == 1 );
+
+        // The declaration's own list for the aggregate, whose parameters are not repeated.
+        REQUIRE( p.child( p.child( p.root(), 0 ), 0 ) != combined );
+    }
+
+    // The receiver is `Box<T>`: the method's own parameters are not the type's.
+    SECTION( "the receiver names only the aggregate's parameters, and stays `const`" )
+    {
+        const Parsed p( "class Box<T> where T : Copyable { T v; U map<U>( U a ) const where U : Copyable { return a; } };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id method   = find_first( p.ast(), p.root(), Node_kind::Method_decl );
+        const Node_id receiver = p.child( p.child( method, 1 ), 0 );
+        const Node_id moded    = p.child( p.child( receiver, 0 ), 0 );
+
+        REQUIRE( p.kind( p.child( receiver, 0 ) ) == Node_kind::Const_type );
+        REQUIRE( p.kind( moded ) == Node_kind::Mode_type );
+        REQUIRE( p.kind( p.child( moded, 0 ) ) == Node_kind::Generic_type );
+        REQUIRE( p.children( p.child( p.child( moded, 0 ), 1 ) ).size() == 1 );
+    }
+
+    SECTION( "a method with none of its own has no fifth list" )
+    {
+        const Parsed p( "class Box<T> where T : Copyable { T v; T get() const { return v; } };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id method = find_first( p.ast(), p.root(), Node_kind::Method_decl );
+
+        REQUIRE( p.child( method, 3 ) == p.child( p.child( p.root(), 0 ), 0 ) );
+        REQUIRE_FALSE( p.child( method, 4 ).is_valid() );
+    }
+
+    SECTION( "a `where` clause on a method with no parameters of its own is refused" )
+    {
+        const Parsed p( "class Box<T> { T v; T get() const where T : Copyable { return v; } };" );
+
+        REQUIRE( p.has_errors() );
+        REQUIRE( p.errors().find( "a `where` clause needs type parameters" ) != std::string::npos );
+        REQUIRE( p.errors().find( "U map<U>( U a ) where U : Copyable" ) != std::string::npos );
     }
 }
 

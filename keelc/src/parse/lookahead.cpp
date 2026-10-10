@@ -391,10 +391,12 @@ bool Lookahead::looks_like_type_arguments( u32 at )
 
 Head_scan Lookahead::scan_head( u32 at, Symbol_id enclosing, Constructor_names names )
 {
-    auto make_head = [this]( Member_kind kind, u32 start ) -> Head_scan
+    bool is_const  = false;
+    auto make_head = [this, &is_const]( Member_kind kind, u32 start ) -> Head_scan
     {
         return Head_scan {
-            .head = Member_head { .kind = kind, .start = start, .commit = cursor_.position() }, .failure = Scan_failure {}
+            .head    = Member_head { .kind = kind, .start = start, .commit = cursor_.position(), .is_const = is_const },
+            .failure = Scan_failure {}
         };
     };
 
@@ -484,6 +486,14 @@ Head_scan Lookahead::scan_head( u32 at, Symbol_id enclosing, Constructor_names n
         return make_failure();
     }
 
+    if( cursor_.check( Token_kind::Less ) )
+    {
+        if( !scan_type_params() )
+        {
+            return make_failure();
+        }
+    }
+
     if( cursor_.check( Token_kind::L_paren ) )
     {
         if( !skip_parens() )
@@ -491,7 +501,12 @@ Head_scan Lookahead::scan_head( u32 at, Symbol_id enclosing, Constructor_names n
             return make_failure();
         }
 
-        cursor_.match_keyword( Keyword::Const ); // optional
+        is_const = cursor_.match_keyword( Keyword::Const ); // optional
+
+        if( !scan_where_clauses() )
+        {
+            return make_failure();
+        }
 
         if( cursor_.check( Token_kind::L_brace ) )
         {
@@ -1261,6 +1276,18 @@ TEST_CASE( "lookahead_recognises_each_member_head", "[scan]" )
         require_head( "bool operator( const ref C other ) const { }", Member_kind::Method, "{" );
         require_head( "T* operator[]( u64 index ) const { }", Member_kind::Method, "{" );
         require_head( "T* operator[( u64 index ) const { }", Member_kind::Method, "{" );
+    }
+
+    SECTION( "a method may have type parameters, and `where` clauses after its `const`" )
+    {
+        require_head( "U map<U>( U a ) { }", Member_kind::Method, "{" );
+        require_head( "U map<U, V>( U a ) const where U : Copyable, where V : Copyable { }", Member_kind::Method, "{" );
+
+        Scanned s( "U map<U>( U a ) const where U : Copyable { }" );
+        REQUIRE( s.head().head->is_const );
+
+        Scanned plain( "U map<U>( U a ) where U : Copyable { }" );
+        REQUIRE_FALSE( plain.head().head->is_const );
     }
 
     SECTION( "a method's return type may carry a mode" )

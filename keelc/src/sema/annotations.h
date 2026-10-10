@@ -47,8 +47,9 @@ public:
     // False only when the *count* is wrong, which is the one failure that leaves nothing usable
     // behind. An argument that failed to resolve, or that broke a bound, is reported and still
     // handed back, so the rest of the annotation or call is checked against something.
-    bool
-    resolve_type_arguments( Node_id declaration, Node_id type_args, std::string_view name, std::vector<Type_id>& resolved );
+    bool resolve_type_arguments(
+        std::span<const Node_id> parameters, Node_id type_args, std::string_view name, std::vector<Type_id>& resolved
+    );
 
     bool refuse_void( Node_id annotation, Type_id type, std::string_view what, std::string_view does );
     bool refuse_never( Node_id annotation, Type_id type, std::string_view what );

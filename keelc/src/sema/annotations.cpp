@@ -266,7 +266,7 @@ Type_id Annotations::resolve_generic( Node_id annotation )
 
     std::vector<Type_id> arguments;
 
-    if( !resolve_type_arguments( decl, type_args, name, arguments ) )
+    if( !resolve_type_arguments( ast_.type_parameters( ast_.type_param_list( decl ) ), type_args, name, arguments ) )
     {
         return table_.builtin( Type_kind::Error );
     }
@@ -524,11 +524,10 @@ std::string type_parameter_list( const Ast& ast, const Interner& interner, std::
 // and do they keep the promises - and two copies of that would drift the first time either grew a
 // rule.
 bool Annotations::resolve_type_arguments(
-    Node_id declaration, Node_id type_args, std::string_view name, std::vector<Type_id>& resolved
+    std::span<const Node_id> parameters, Node_id type_args, std::string_view name, std::vector<Type_id>& resolved
 )
 {
-    const std::vector<Node_id>     parameters = ast_.type_parameters( ast_.type_param_list( declaration ) );
-    const std::span<const Node_id> given      = ast_.children( type_args );
+    const std::span<const Node_id> given = ast_.children( type_args );
 
     if( parameters.size() != given.size() )
     {
@@ -699,6 +698,11 @@ public:
     Node_id declaration( std::size_t index ) const
     {
         return ast_.children( ast_.root() )[index];
+    }
+
+    std::vector<Node_id> type_parameters( std::size_t index ) const
+    {
+        return ast_.type_parameters( ast_.type_param_list( declaration( index ) ) );
     }
 
     // Reached through its declaration rather than by walking the node array for a Param_decl: a
@@ -1199,7 +1203,7 @@ TEST_CASE( "annotations_count_the_type_arguments", "[sema][annotation][generic]"
 
     const Node_id type_args = p.child( p.parameter_annotation( 1, 0 ), 1 );
 
-    REQUIRE_FALSE( p.annotations().resolve_type_arguments( p.declaration( 0 ), type_args, "Box", resolved ) );
+    REQUIRE_FALSE( p.annotations().resolve_type_arguments( p.type_parameters( 0 ), type_args, "Box", resolved ) );
 
     INFO( p.rendered() );
     REQUIRE( p.rendered().find( "`Box` takes 1 type argument, but 2 were given" ) != std::string::npos );
@@ -1215,7 +1219,7 @@ TEST_CASE( "annotations_keep_the_arguments_a_caller_already_resolved", "[sema][a
 
     std::vector<Type_id> resolved { p.table().integer( 32, true ) };
 
-    REQUIRE( p.annotations().resolve_type_arguments( p.declaration( 0 ), type_args, "Box", resolved ) );
+    REQUIRE( p.annotations().resolve_type_arguments( p.type_parameters( 0 ), type_args, "Box", resolved ) );
 
     INFO( p.rendered() );
     REQUIRE( resolved.size() == 1 );

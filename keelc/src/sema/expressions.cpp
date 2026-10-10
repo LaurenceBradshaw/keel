@@ -253,12 +253,7 @@ Type_id Expressions::infer_call( Node_id id )
                              ? resolution_.declaration_of( callee )
                              : Node_id {};
 
-    // Taken and cleared, because the expectation belongs to this call and to nothing inside it:
-    // in `f( g() )` the type wanted of `f` says nothing about what `g` should produce. What it
-    // does say is what a type parameter appearing only in the return type must be.
-    // An error expectation names no type, so it deduces nothing.
-    const Type_id taken       = take_expectation();
-    const Type_id expectation = table_.is_error( taken ) ? Type_id {} : taken;
+    const Type_id expectation = take_call_expectation();
 
     // What choosing between candidates already had to type. Empty until it does, which is every
     // call with one candidate - so the ordinary path types each argument exactly once, as before.
@@ -308,7 +303,7 @@ Type_id Expressions::infer_call( Node_id id )
     {
         // A bare `add( by )` inside a method is `this.add( by )`: the member scope puts a sibling
         // in reach by name, and the receiver is the one this function was given.
-        return infer_implicit_method_call( id, decl );
+        return infer_implicit_method_call( id, decl, expectation );
     }
     else if( ast_.kind( decl ) != Node_kind::Function_decl )
     {
@@ -383,7 +378,9 @@ Type_id Expressions::infer_call( Node_id id )
     {
         shape_arguments( id, shapes );
 
-        std::optional<Deduction> deduced = overloads_.deduce_type_arguments( site, callable, shapes, result, expectation );
+        std::optional<Deduction> deduced = overloads_.deduce_type_arguments(
+            ast_.type_parameters( ast_.type_param_list( callable ) ), site, callable, shapes, result, expectation
+        );
 
         if( !deduced )
         {
@@ -599,7 +596,9 @@ std::optional<Bindings> Expressions::instantiate(
 
     if( type_args.is_valid() )
     {
-        if( !annotations_.resolve_type_arguments( callable, type_args, site.name, resolved ) )
+        if( !annotations_.resolve_type_arguments(
+                ast_.type_parameters( ast_.type_param_list( callable ) ), type_args, site.name, resolved
+            ) )
         {
             return std::nullopt;
         }
@@ -610,15 +609,7 @@ std::optional<Bindings> Expressions::instantiate(
         // a promise about the type argument however it was arrived at.
         const std::vector<Node_id> parameters = ast_.type_parameters( ast_.type_param_list( callable ) );
 
-        for( std::size_t i = 0; i < parameters.size() && i < resolved.size(); ++i )
-        {
-            bounds_.check_bounds(
-                parameters[i],
-                i < bound_by.size() && bound_by[i].is_valid() ? ast_.span( bound_by[i] ) : site.at,
-                resolved[i],
-                site.name
-            );
-        }
+        check_deduced_bounds( parameters, resolved, bound_by, site );
     }
 
     Bindings bindings = overloads_.type_bindings( callable, resolved );
@@ -639,8 +630,9 @@ void Expressions::record_instance( Node_id call, Node_id callable, std::vector<T
 
 Type_id Expressions::infer_method_call( Node_id id )
 {
-    const Node_id callee = ast_.callee( id );
-    const Node_id object = ast_.object( callee );
+    const Node_id callee      = ast_.callee( id );
+    const Node_id object      = ast_.object( callee );
+    const Type_id expectation = take_call_expectation();
 
     const Type_id result      = infer( object );
     const Type_id object_type = table_.is_pointer( result )             ? table_.get( result ).element
@@ -767,61 +759,61 @@ Type_id Expressions::infer_method_call( Node_id id )
         return types_.poison( id );
     }
 
-    return check_method_arguments( id, method, object_type, shapes );
+    return check_method_arguments( id, method, object_type, expectation, shapes );
 }
 
-// Shared by both call shapes - `p.area()` and a bare `area()` inside a method - because what is
-// checked is the same: the parameters from 1, the receiver having been supplied either way.
-Type_id
-Expressions::check_method_arguments( Node_id id, Node_id method, Type_id receiver, std::span<const Argument_shape> shapes )
+// Shared by every call shape - `p.area()`, a bare `area()` inside a method and `T::make()` -
+// because what is checked is the same: the parameters from 1, the receiver having been supplied.
+Type_id Expressions::check_method_arguments(
+    Node_id id, Node_id method, Type_id receiver, Type_id expectation, std::span<const Argument_shape> shapes
+)
 {
     // One implicit parameter for a method, none for M7's static one. Asked of the signature rather
     // than assumed, because this is the only place a static call's arguments are lined up.
-    const std::span<const Node_id> params    = ast_.explicit_params( method );
-    const std::span<const Node_id> arguments = ast_.arguments( id );
+    const Call_site site {
+        id, interner_.text( ast_.name( method ) ), ast_.span( ast_.callee( id ) ), ast_.has_receiver( method ) ? 1u : 0u
+    };
 
-    if( params.size() != arguments.size() )
+    // Copied because deduction may type arguments, and the checks below must see which it did.
+    std::vector<Argument_shape> shaped( shapes.begin(), shapes.end() );
+
+    const std::optional<std::vector<Type_id>> own_arguments = method_type_arguments( site, method, shaped, expectation );
+
+    if( !own_arguments )
     {
-        reporter_.error_at(
-            ast_.span( ast_.arg_list( id ) ),
-            fmt::format(
-                "`{}` takes {} argument{}, but {} {} given",
-                interner_.text( ast_.name( method ) ),
-                params.size(),
-                params.size() == 1 ? "" : "s",
-                arguments.size(),
-                arguments.size() == 1 ? "was" : "were"
-            )
-        );
+        return refuse_call( id, shaped );
     }
-
-    // Check the pairs that do line up even when the count is wrong: one missing argument should
-    // not hide a type error in the others.
-    const std::size_t shared = std::min( params.size(), arguments.size() );
 
     // The receiver's arguments are the method's: `p.first()` on a `Pair<i32>` is that instance's
     // `first`, and the declaration's `T` means nothing until they are applied. Reading either the
     // parameters or the result without them is how a method returns `T` to a caller expecting i32.
-    const Bindings bindings = aggregates_.bindings_of( receiver );
+    // A generic method's own arguments are bound beside them.
+    Bindings bindings = aggregates_.bindings_of( receiver );
 
-    for( std::size_t i = 0; i < shared; ++i )
+    const std::vector<Node_id> own = ast_.type_parameters( ast_.own_type_param_list( method ) );
+
+    for( std::size_t i = 0; i < own.size() && i < own_arguments->size(); ++i )
     {
-        const Node_id param = params[i];
-        const Node_id arg   = arguments[i];
+        bindings.insert_or_assign( types_.type_of( own[i] ).v, ( *own_arguments )[i] );
+    }
 
-        // Already typed by selection, which had to know what it was choosing between.
-        if( i >= shapes.size() || !shapes[i].recorded )
+    // The same walk a function call does. An argument deduction typed is checked here too, which
+    // selection alone used to vouch for.
+    for( const Argument_work& work : overloads_.check_call_arguments( site, method, bindings, shaped ) )
+    {
+        if( work.with_expectation )
         {
-            check( arg, table_.substitute( types_.type_of( param ), bindings ) );
+            check( work.argument, work.expected );
+        }
+        else
+        {
+            infer( work.argument );
         }
     }
 
-    const Call_site site {
-        id, interner_.text( ast_.name( method ) ), ast_.span( ast_.callee( id ) ), ast_.has_receiver( method ) ? 1u : 0u
-    };
     overloads_.check_argument_markers( site, method, bindings );
 
-    record_method_instantiation( id, method, receiver );
+    record_method_instantiation( id, method, receiver, *own_arguments );
 
     return types_.record( id, table_.substitute( types_.type_of( method ), bindings ) );
 }
@@ -837,17 +829,20 @@ void Expressions::shape_arguments( Node_id call, std::vector<Argument_shape>& sh
     }
 }
 
-// A method call writes no type arguments - the receiver carries them - so the explicit path that
-// records an instantiation never runs for one. Without this a method of a generic is checked and
-// then emitted by nobody.
-void Expressions::record_method_instantiation( Node_id id, Node_id method, Type_id receiver )
+// The receiver's type arguments, then the method's own. A call on a receiver writes the first
+// nowhere, so the path that records a written call's instantiation never runs for one; without
+// this a method of a generic is checked and then emitted by nobody.
+void Expressions::record_method_instantiation( Node_id id, Node_id method, Type_id receiver, std::span<const Type_id> own )
 {
-    if( !receiver.is_valid() || !table_.is_struct( receiver ) )
+    std::vector<Type_id> arguments;
+
+    if( receiver.is_valid() && table_.is_struct( receiver ) )
     {
-        return;
+        const std::span<const Type_id> from_receiver = table_.get( receiver ).arguments;
+        arguments.assign( from_receiver.begin(), from_receiver.end() );
     }
 
-    const std::span<const Type_id> arguments = table_.get( receiver ).arguments;
+    arguments.insert( arguments.end(), own.begin(), own.end() );
 
     if( arguments.empty() )
     {
@@ -856,13 +851,83 @@ void Expressions::record_method_instantiation( Node_id id, Node_id method, Type_
 
     // The same edge a written call records: from inside a generic this names a template, and the
     // worklist is what turns it into an instance once the enclosing one is known.
-    record_instance( id, method, std::vector<Type_id>( arguments.begin(), arguments.end() ) );
+    record_instance( id, method, std::move( arguments ) );
+}
+
+// A bound is a promise about the type argument however it was arrived at. Underlined at the
+// argument that settled each, or the call where nothing did.
+void Expressions::check_deduced_bounds(
+    std::span<const Node_id> parameters,
+    std::span<const Type_id> resolved,
+    std::span<const Node_id> bound_by,
+    const Call_site&         site
+)
+{
+    for( std::size_t i = 0; i < parameters.size() && i < resolved.size(); ++i )
+    {
+        bounds_.check_bounds(
+            parameters[i],
+            i < bound_by.size() && bound_by[i].is_valid() ? ast_.span( bound_by[i] ) : site.at,
+            resolved[i],
+            site.name
+        );
+    }
+}
+
+// A generic method's own type arguments, written or deduced, in declaration order. Empty when it
+// has none, and none at all once a mistake is reported. Only its own: the receiver supplies the
+// rest, so a `T` the arguments would also deduce is not asked about.
+std::optional<std::vector<Type_id>> Expressions::method_type_arguments(
+    const Call_site& site, Node_id method, std::vector<Argument_shape>& shapes, Type_id expectation
+)
+{
+    const std::vector<Node_id> own       = ast_.type_parameters( ast_.own_type_param_list( method ) );
+    const Node_id              type_args = ast_.type_arg_list( site.call );
+
+    // `b.get<i64>()` on a `get` with none: refused rather than dropped.
+    if( type_args.is_valid() && own.empty() )
+    {
+        reporter_.error_at( site.at, fmt::format( "`{}` is not a generic method", site.name ) );
+
+        return std::nullopt;
+    }
+
+    if( own.empty() )
+    {
+        return std::vector<Type_id>();
+    }
+
+    if( type_args.is_valid() )
+    {
+        std::vector<Type_id> resolved;
+
+        if( !annotations_.resolve_type_arguments( own, type_args, site.name, resolved ) )
+        {
+            return std::nullopt;
+        }
+
+        return resolved;
+    }
+
+    // The arguments first, then the expectation for what they leave open, as for a function.
+    shape_arguments( site.call, shapes );
+    std::optional<Deduction> deduced =
+        overloads_.deduce_type_arguments( own, site, method, shapes, types_.type_of( method ), expectation );
+
+    if( !deduced )
+    {
+        return std::nullopt;
+    }
+
+    check_deduced_bounds( own, deduced->resolved, deduced->bound_by, site );
+
+    return deduced->resolved;
 }
 
 // D29/D32. `add( by )` inside a method: the receiver is the one this function was given, so there
 // is no object expression to check - the constness question is asked of the *enclosing* method's
 // receiver instead, which is what stops a `const` method calling a mutating sibling.
-Type_id Expressions::infer_implicit_method_call( Node_id id, Node_id first )
+Type_id Expressions::infer_implicit_method_call( Node_id id, Node_id first, Type_id expectation )
 {
     const Node_id receiver = places_.receiver_of( current_function_ );
 
@@ -889,7 +954,7 @@ Type_id Expressions::infer_implicit_method_call( Node_id id, Node_id first )
     {
         callees_.record( id, method );
 
-        return check_method_arguments( id, method, instance, shapes );
+        return check_method_arguments( id, method, instance, expectation, shapes );
     }
 
     if( !receiver.is_valid() )
@@ -922,7 +987,7 @@ Type_id Expressions::infer_implicit_method_call( Node_id id, Node_id first )
 
     callees_.record( id, method );
 
-    return check_method_arguments( id, method, types_.type_of( receiver ), shapes );
+    return check_method_arguments( id, method, types_.type_of( receiver ), expectation, shapes );
 }
 
 // The overloaded half of a method call, shared by its three spellings: `p.f()`, a bare `f()` and
@@ -1146,7 +1211,9 @@ Type_id Expressions::function_address( Node_id id, Node_id declaration )
     Bindings             bindings;
     if( type_args.is_valid() )
     {
-        bool success = annotations_.resolve_type_arguments( declaration, type_args, name, resolved );
+        bool success = annotations_.resolve_type_arguments(
+            ast_.type_parameters( ast_.type_param_list( declaration ) ), type_args, name, resolved
+        );
         if( !success )
         {
             return types_.record( id, error );
@@ -1267,6 +1334,17 @@ Type_id Expressions::method_address( Node_id id, Node_id aggregate )
             ast_.span( id ),
             fmt::format( "`{}` is overloaded, so its address names no one function", interner_.text( name ) ),
             "assigning it to a variable of one signature will choose between them"
+        );
+
+        return types_.poison( id );
+    }
+
+    if( ast_.own_type_param_list( method ).is_valid() )
+    {
+        reporter_.error_at(
+            ast_.span( id ),
+            fmt::format( "`{}` has type parameters of its own, so its address names no one function", interner_.text( name ) ),
+            "wrap the call you want in a function, and take that function's address"
         );
 
         return types_.poison( id );
@@ -1829,7 +1907,9 @@ Type_id Expressions::qualifier_type( Node_id path, Node_id declaration )
 
     std::vector<Type_id> arguments;
 
-    if( !annotations_.resolve_type_arguments( declaration, type_args, name, arguments ) )
+    if( !annotations_.resolve_type_arguments(
+            ast_.type_parameters( ast_.type_param_list( declaration ) ), type_args, name, arguments
+        ) )
     {
         return table_.builtin( Type_kind::Error );
     }
@@ -1854,8 +1934,9 @@ Type_id Expressions::qualifier_type( Node_id path, Node_id declaration )
 // the receiver's, and it carries the same bindings.
 Type_id Expressions::infer_static_call( Node_id id, Node_id aggregate )
 {
-    const Node_id   path = ast_.callee( id );
-    const Symbol_id name = ast_.name( path );
+    const Node_id   path        = ast_.callee( id );
+    const Symbol_id name        = ast_.name( path );
+    const Type_id   expectation = take_call_expectation();
 
     // Even on a failed call the arguments must be typed, or later passes meet untyped nodes and a
     // genuine mistake inside one goes unreported. Those selection typed are not typed again.
@@ -1918,7 +1999,7 @@ Type_id Expressions::infer_static_call( Node_id id, Node_id aggregate )
     // construction it otherwise looks exactly like - both are a call whose callee is a path.
     callees_.record( id, method );
 
-    return check_method_arguments( id, method, instance, shapes );
+    return check_method_arguments( id, method, instance, expectation, shapes );
 }
 
 Type_id Expressions::infer_variant_construction( Node_id id )
@@ -3265,20 +3346,10 @@ Type_id Expressions::check( Node_id id, Type_id expected )
 
     if( !table_.holds( actual, expected ) )
     {
-        // Only signatures get a hint: everywhere else §6.4 does widen, so the mismatch is a
-        // mismatch and saying more would be saying it twice.
         reporter_.error_at(
             ast_.span( id ),
             fmt::format( "expected `{}`, but got `{}`", table_.name( expected ), table_.name( actual ) ),
-            table_.is_function( expected ) && table_.is_function( actual )
-                ? "one signature is never widened into another, so the two have to match exactly"
-            : table_.points_to_const( actual ) && !table_.points_to_const( expected )
-                ? "a pointer to `const` never converts back to one that writes"
-            : table_.name( expected ) == table_.name( actual )
-                ? fmt::format( "two different types are both named `{}`", table_.name( expected ) )
-            : table_.is_union( expected ) && table_.is_union( actual ) ? "one union widens into another only through `try`"
-            : table_.is_never( actual )                                ? "it never produces a value; call it as a statement"
-                                                                       : ""
+            mismatch_hint( table_, expected, actual )
         );
         return expected;
     }
@@ -3304,6 +3375,21 @@ Type_id Expressions::take_expectation()
 {
     const Type_id taken = expected_;
     expected_           = Type_id {};
+    return taken;
+}
+
+// Taken and cleared, because the expectation belongs to this call and to nothing inside it: in
+// `f( g() )` the type wanted of `f` says nothing about what `g` should produce, and in `g().f()`
+// nothing about `g`. What it does say is what a type parameter appearing only in the return type
+// must be. An error expectation names no type, so it deduces nothing.
+Type_id Expressions::take_call_expectation()
+{
+    const Type_id taken = take_expectation();
+    if( !taken.is_valid() || table_.is_error( taken ) )
+    {
+        return Type_id {};
+    }
+
     return taken;
 }
 

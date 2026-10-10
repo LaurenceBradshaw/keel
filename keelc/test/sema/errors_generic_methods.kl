@@ -1,0 +1,66 @@
+// A method's own type parameters: what a call writes or leaves to deduction, and the shapes that
+// cannot have them. Each mistake is reported once, at the call or member that made it.
+class Box<T> where T : Copyable
+{
+    T value;
+
+    Box( T v ) { value = v; }
+
+    T get() const { return value; }
+
+    U map<U>( fn( const ref T ) -> U f ) const { return f( value ); }
+
+    U pick<U>( U a ) const where U : Integral { return a; }
+
+    U make<U>() const where U : Numeric { return cast<U>( 0 ); }
+
+    // Overloading one would mean binding `U` before the arguments chose between the two.
+    V convert<V>( V v ) const where V : Copyable { return v; }
+    i32 convert( i32 v ) const { return v; }
+
+    // An operator call writes no type arguments.
+    bool operator==<U>( const ref Box<T> other ) const { return true; }
+
+    // The aggregate's `T` is already in scope.
+    V over<T, V>( V v ) const where V : Copyable { return v; }
+
+    // A clause names the method's own parameters, not the aggregate's.
+    U bounded<U>( U u ) const where U : Copyable, where T : Numeric { return u; }
+
+    // A clause with no parameters of its own to constrain.
+    T plain() const where T : Numeric { return value; }
+};
+
+T mk<T>() where T : Numeric { return cast<T>( 0 ); }
+
+i64 wide( const ref i64 x ) { return x; }
+
+i32 main()
+{
+    Box<i32> b = Box<i32>( 7 );
+
+    // Type arguments on a method that declares none.
+    i32 g = b.get<i64>();
+
+    // Written and deduced, a signature that is not the one the receiver needs.
+    i64 w = b.map<i64>( &wide );
+    i64 d = b.map( &wide );
+
+    // A broken bound, written and deduced.
+    f64 f = b.pick<f64>( 1.0 );
+    f64 e = b.pick( 1.0 );
+
+    // The wrong count.
+    i32 c = b.pick<i32, i32>( 1 );
+
+    // Nothing to deduce `U` from: no argument, and no expectation to read.
+    b.make();
+
+    // `mk` is not told what `.get()` is wanted for.
+    i32 n = mk().get();
+
+    // No one function to take the address of.
+    auto a = &Box<i32>::map;
+
+    return 0;
+}

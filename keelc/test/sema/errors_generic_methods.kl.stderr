@@ -1,0 +1,85 @@
+error: `convert` has type parameters of its own, so it cannot be overloaded
+  --> sema/errors_generic_methods.kl:19:9
+   |
+19 |     i32 convert( i32 v ) const { return v; }
+   |         ^^^^^^^ previous declaration is at: sema/errors_generic_methods.kl:18:5
+
+error: an operator cannot have type parameters of its own
+  --> sema/errors_generic_methods.kl:22:20
+   |
+22 |     bool operator==<U>( const ref Box<T> other ) const { return true; }
+   |                    ^^^ it is called without any, so nothing could say what they are
+
+error: `T` is already declared in this scope
+  --> sema/errors_generic_methods.kl:25:12
+   |
+25 |     V over<T, V>( V v ) const where V : Copyable { return v; }
+   |            ^ previous declaration is at: sema/errors_generic_methods.kl:3:11
+
+error: `T` is not a type parameter of `bounded`
+  --> sema/errors_generic_methods.kl:28:51
+   |
+28 |     U bounded<U>( U u ) const where U : Copyable, where T : Numeric { return u; }
+   |                                                   ^^^^^^^^^^^^^^^^^
+
+error: a `where` clause needs type parameters
+  --> sema/errors_generic_methods.kl:31:21
+   |
+31 |     T plain() const where T : Numeric { return value; }
+   |                     ^^^^^^^^^^^^^^^^^ write them on the name, as in `U map<U>( U a ) where U : Copyable`
+
+error: `get` is not a generic method
+  --> sema/errors_generic_methods.kl:43:13
+   |
+43 |     i32 g = b.get<i64>();
+   |             ^^^^^
+
+error: expected `fn( const ref i32 ) -> i64`, but got `fn( const ref i64 ) -> i64`
+  --> sema/errors_generic_methods.kl:46:25
+   |
+46 |     i64 w = b.map<i64>( &wide );
+   |                         ^^^^^ one signature is never widened into another, so the two have to match exactly
+
+error: expected `fn( const ref i32 ) -> i64`, but got `fn( const ref i64 ) -> i64`
+  --> sema/errors_generic_methods.kl:47:20
+   |
+47 |     i64 d = b.map( &wide );
+   |                    ^^^^^ one signature is never widened into another, so the two have to match exactly
+
+error: `f64` is not `Integral`, and `pick` requires it of `U`
+  --> sema/errors_generic_methods.kl:50:20
+   |
+50 |     f64 f = b.pick<f64>( 1.0 );
+   |                    ^^^ it has to be an integer
+
+error: `f64` is not `Integral`, and `pick` requires it of `U`
+  --> sema/errors_generic_methods.kl:51:13
+   |
+51 |     f64 e = b.pick( 1.0 );
+   |             ^^^^^^ it has to be an integer
+
+error: `pick` takes 1 type argument, but 2 were given
+  --> sema/errors_generic_methods.kl:54:19
+   |
+54 |     i32 c = b.pick<i32, i32>( 1 );
+   |                   ^^^^^^^^^^ `pick` declares `U`
+
+error: nothing here says what `U` is in `make`
+  --> sema/errors_generic_methods.kl:57:5
+   |
+57 |     b.make();
+   |     ^^^^^^ write the type arguments, as in `make<i32>( ... )`
+
+error: nothing here says what `T` is in `mk`
+  --> sema/errors_generic_methods.kl:60:13
+   |
+60 |     i32 n = mk().get();
+   |             ^^ write the type arguments, as in `mk<i32>( ... )`
+
+error: `map` has type parameters of its own, so its address names no one function
+  --> sema/errors_generic_methods.kl:63:14
+   |
+63 |     auto a = &Box<i32>::map;
+   |              ^^^^^^^^^^^^^^ wrap the call you want in a function, and take that function's address
+
+14 errors generated

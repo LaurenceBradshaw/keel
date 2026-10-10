@@ -221,6 +221,8 @@ void Signatures::declare_member_functions()
                 continue;
             }
 
+            bounds_.declare_type_parameters( member, ast_.own_type_param_list( member ) );
+
             // A constructor and a destructor return nothing and have no annotation to read; a
             // method has both. The return type is invalid for the two
             // that have none.
@@ -231,7 +233,7 @@ void Signatures::declare_member_functions()
 
             types_.record( member, return_type );
 
-            if( ast_.is_generic( child ) && return_type_node.is_valid() )
+            if( ast_.is_generic( child ) && return_type_node.is_valid() && !ast_.own_type_param_list( member ).is_valid() )
             {
                 generic_recursion_.record_generic_uses( child, return_type, ast_.span( return_type_node ) );
             }
@@ -264,7 +266,7 @@ void Signatures::declare_member_functions()
                 annotations_.refuse_never( bare_type( param_type_node ), param_type, "parameter" );
                 types_.record( param, param_type );
 
-                if( ast_.is_generic( child ) )
+                if( ast_.is_generic( child ) && !ast_.own_type_param_list( member ).is_valid() )
                 {
                     generic_recursion_.record_generic_uses( child, param_type, ast_.span( param_type_node ) );
                 }
@@ -601,6 +603,17 @@ void Signatures::check_operators()
             }
 
             seen = member;
+
+            // An operator call writes no type arguments, and its operands are its only arguments.
+            if( ast_.own_type_param_list( member ).is_valid() )
+            {
+                reporter_.error_at(
+                    ast_.span( ast_.own_type_param_list( member ) ),
+                    "an operator cannot have type parameters of its own",
+                    "it is called without any, so nothing could say what they are"
+                );
+                continue;
+            }
 
             if( ast_.is_static_method( member ) )
             {

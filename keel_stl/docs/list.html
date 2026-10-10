@@ -142,6 +142,12 @@ Takes constant time and does not keep the order.</p>
 <p>Reverses the order of the elements in place.</p>
 </div>
 </div>
+<div class="group" id="list.map">
+<pre class="signature"><a class="anchor" href="#list.map" aria-label="Link to map">#</a><code><span class="kw">public</span> <a class="type" href="#list">list</a>&lt;U&gt; <span class="fn">map</span>&lt;U&gt;( <span class="kw">fn</span>( <span class="kw">const</span> <span class="kw">ref</span> T ) -&gt; U f ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>A new list holding <code>f</code> applied to each element, in order. This list is unchanged.</p>
+</div>
+</div>
 <div class="group" id="list.size">
 <pre class="signature"><a class="anchor" href="#list.size" aria-label="Link to size">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">size</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
