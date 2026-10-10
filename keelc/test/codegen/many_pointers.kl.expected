@@ -29,9 +29,9 @@ struct kl__Ints
 
 int32_t kl_live_2 = 0;
 
-void* kl_rt_alloc( size_t );
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
-void* kl_rt_alloc_many( size_t, size_t );
+void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 
 int32_t kl__sum__S5Point( struct kl__Point* );
 void kl__Tracked__R7Tracked_3i32__ctor( struct kl__Tracked*, int32_t );
@@ -83,7 +83,7 @@ void kl__Ints__R4Ints_3u64__ctor( struct kl__Ints* kl_this_1, uint64_t kl_n_2 )
 {
     int32_t* kl_t3;
 #line 44 "codegen/many_pointers.kl"
-    kl_t3 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( int32_t ) );
+    kl_t3 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( int32_t ), "codegen/many_pointers.kl", 44, "out of memory: alloc<i32>( n )" );
     ( *kl_this_1 ).kl_data_52 = kl_t3;
 #line 46 "codegen/many_pointers.kl"
     ( *kl_this_1 ).kl_size_54 = kl_n_2;
@@ -348,23 +348,19 @@ int32_t kl__main__( void )
     int32_t kl_t139;
     bool kl_t141;
     bool kl_t142;
-    uint64_t* kl_huge_143;
-    uint8_t* kl_none_144;
-    uint64_t kl_wraps_145;
-    uint64_t* kl_t146;
-    uint8_t* kl_t147;
+    uint8_t* kl_none_143;
+    uint8_t* kl_t144;
+    bool kl_t145;
+    bool kl_t147;
     bool kl_t148;
-    bool kl_t149;
-    bool kl_t151;
-    bool kl_t152;
 #line 275 "codegen/many_pointers.kl"
-    kl_t151 = false;
+    kl_t147 = false;
 #line 278 "codegen/many_pointers.kl"
-    kl_t152 = false;
+    kl_t148 = false;
 #line 140 "codegen/many_pointers.kl"
     kl_a_1 = NULL;
 #line 144 "codegen/many_pointers.kl"
-    kl_t2 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 5, sizeof( int32_t ) );
+    kl_t2 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 5, sizeof( int32_t ), "codegen/many_pointers.kl", 144, "out of memory: alloc<i32>( 5 )" );
     kl_a_1 = kl_t2;
 #line 146 "codegen/many_pointers.kl"
     kl_i_3 = 0;
@@ -547,7 +543,7 @@ int32_t kl__main__( void )
 #line 207 "codegen/many_pointers.kl"
     kl_points_sum_58 = 0;
 #line 210 "codegen/many_pointers.kl"
-    kl_t59 = ( struct kl__Point* ) kl_rt_alloc_many( ( size_t ) 2, sizeof( struct kl__Point ) );
+    kl_t59 = ( struct kl__Point* ) kl_rt_alloc_many( ( size_t ) 2, sizeof( struct kl__Point ), "codegen/many_pointers.kl", 210, "out of memory: alloc<Point>( 2 )" );
     kl_points_57 = kl_t59;
 #line 211 "codegen/many_pointers.kl"
     kl_t60 = kl_points_57 + 0;
@@ -583,15 +579,15 @@ int32_t kl__main__( void )
 #line 221 "codegen/many_pointers.kl"
     kl_corner_74 = 0;
 #line 224 "codegen/many_pointers.kl"
-    kl_t75 = ( uint8_t** ) kl_rt_alloc_many( ( size_t ) 2, sizeof( uint8_t* ) );
+    kl_t75 = ( uint8_t** ) kl_rt_alloc_many( ( size_t ) 2, sizeof( uint8_t* ), "codegen/many_pointers.kl", 224, "out of memory: alloc<u8[*]>( 2 )" );
     kl_rows_73 = kl_t75;
 #line 225 "codegen/many_pointers.kl"
     kl_t76 = kl_rows_73 + 0;
-    kl_t77 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 3, sizeof( uint8_t ) );
+    kl_t77 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 3, sizeof( uint8_t ), "codegen/many_pointers.kl", 225, "out of memory: alloc<u8>( 3 )" );
     ( *kl_t76 ) = kl_t77;
 #line 226 "codegen/many_pointers.kl"
     kl_t78 = kl_rows_73 + 1;
-    kl_t79 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 3, sizeof( uint8_t ) );
+    kl_t79 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 3, sizeof( uint8_t ), "codegen/many_pointers.kl", 226, "out of memory: alloc<u8>( 3 )" );
     ( *kl_t78 ) = kl_t79;
 #line 227 "codegen/many_pointers.kl"
     kl_t80 = kl_rows_73 + 1;
@@ -621,7 +617,7 @@ int32_t kl__main__( void )
 #line 237 "codegen/many_pointers.kl"
     kl_total_91 = 0.0;
 #line 238 "codegen/many_pointers.kl"
-    kl_t92 = ( double* ) kl_rt_alloc_many( ( size_t ) 4, sizeof( double ) );
+    kl_t92 = ( double* ) kl_rt_alloc_many( ( size_t ) 4, sizeof( double ), "codegen/many_pointers.kl", 238, "out of memory: alloc<f64>( 4 )" );
     kl_halves_90 = kl_t92;
 #line 239 "codegen/many_pointers.kl"
     kl__fill__I3f64E__N3f64_3u64_3f64( kl_halves_90, 4, 0.5 );
@@ -651,7 +647,7 @@ int32_t kl__main__( void )
 #line 250 "codegen/many_pointers.kl"
     kl_through_pointer_106 = 0;
 #line 253 "codegen/many_pointers.kl"
-    kl_t107 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 2, sizeof( int32_t ) );
+    kl_t107 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 2, sizeof( int32_t ), "codegen/many_pointers.kl", 253, "out of memory: alloc<i32>( 2 )" );
     kl_two_105 = kl_t107;
 #line 254 "codegen/many_pointers.kl"
     kl_t108 = kl_two_105 + 0;
@@ -698,30 +694,30 @@ int32_t kl__main__( void )
 #line 272 "codegen/many_pointers.kl"
     kl_cs_126 = NULL;
 #line 273 "codegen/many_pointers.kl"
-    kl_t127 = ( struct kl__Tracked* ) kl_rt_alloc_many( ( size_t ) 2, sizeof( struct kl__Tracked ) );
+    kl_t127 = ( struct kl__Tracked* ) kl_rt_alloc_many( ( size_t ) 2, sizeof( struct kl__Tracked ), "codegen/many_pointers.kl", 273, "out of memory: alloc<Tracked>( 2 )" );
     kl_cs_126 = kl_t127;
 #line 275 "codegen/many_pointers.kl"
-    kl_t151 = false;
+    kl_t147 = false;
     kl_t129 = &kl_t_128;
-    kl_t151 = true;
+    kl_t147 = true;
     kl__Tracked__R7Tracked_3i32__ctor( kl_t129, 2 );
 #line 278 "codegen/many_pointers.kl"
     kl_t131 = kl_cs_126 + 0;
-    kl_t152 = false;
+    kl_t148 = false;
     kl_t133 = &kl_t132;
-    kl_t152 = true;
+    kl_t148 = true;
     kl__Tracked__R7Tracked_3i32__ctor( kl_t133, 1 );
     ( *kl_t131 ) = kl_t132;
-    kl_t152 = false;
-    if ( kl_t152 ) kl__Tracked__dtor( &kl_t132 );
-    kl_t152 = false;
+    kl_t148 = false;
+    if ( kl_t148 ) kl__Tracked__dtor( &kl_t132 );
+    kl_t148 = false;
 #line 279 "codegen/many_pointers.kl"
     kl_t135 = kl_cs_126 + 1;
     ( *kl_t135 ) = kl_t_128;
-    kl_t151 = false;
+    kl_t147 = false;
 #line 274 "codegen/many_pointers.kl"
-    if ( kl_t151 ) kl__Tracked__dtor( &kl_t_128 );
-    kl_t151 = false;
+    if ( kl_t147 ) kl__Tracked__dtor( &kl_t_128 );
+    kl_t147 = false;
 #line 282 "codegen/many_pointers.kl"
     kl_held_136 = 0;
 #line 285 "codegen/many_pointers.kl"
@@ -746,34 +742,20 @@ int32_t kl__main__( void )
     return kl_t0;
     bb42:
 #line 292 "codegen/many_pointers.kl"
-    kl_huge_143 = NULL;
+    kl_none_143 = NULL;
 #line 293 "codegen/many_pointers.kl"
-    kl_none_144 = NULL;
+    kl_t144 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 0, sizeof( uint8_t ), "codegen/many_pointers.kl", 293, "out of memory: alloc<u8>( 0 )" );
+    kl_none_143 = kl_t144;
 #line 294 "codegen/many_pointers.kl"
-    kl_wraps_145 = 2305843009213693953;
-#line 297 "codegen/many_pointers.kl"
-    kl_t146 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_wraps_145, sizeof( uint64_t ) );
-    kl_huge_143 = kl_t146;
-#line 298 "codegen/many_pointers.kl"
-    kl_t147 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 0, sizeof( uint8_t ) );
-    kl_none_144 = kl_t147;
-#line 300 "codegen/many_pointers.kl"
-    kl_t148 = kl_huge_143 != NULL;
-    if ( kl_t148 ) goto bb43; else goto bb44;
+    kl_t145 = kl_none_143 == NULL;
+    if ( kl_t145 ) goto bb43; else goto bb44;
     bb43:
     kl_t0 = 19;
     return kl_t0;
     bb44:
-#line 301 "codegen/many_pointers.kl"
-    kl_t149 = kl_none_144 == NULL;
-    if ( kl_t149 ) goto bb45; else goto bb46;
-    bb45:
-    kl_t0 = 20;
-    return kl_t0;
-    bb46:
-#line 302 "codegen/many_pointers.kl"
-    kl_rt_free( kl_none_144 );
-#line 304 "codegen/many_pointers.kl"
+#line 295 "codegen/many_pointers.kl"
+    kl_rt_free( kl_none_143 );
+#line 297 "codegen/many_pointers.kl"
     kl_t0 = 0;
     return kl_t0;
 }

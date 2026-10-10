@@ -105,9 +105,9 @@ int32_t kl_made_91__I3f64E = 0;
 int32_t kl_posted_669 = 0;
 int32_t kl_unit_683 = 2;
 
-void* kl_rt_alloc( size_t );
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
-void* kl_rt_alloc_many( size_t, size_t );
+void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
 void kl__Ticket__R6Ticket_3u64__ctor( struct kl__Ticket*, uint64_t );
@@ -259,7 +259,7 @@ int32_t kl__raw_sum__3u64( uint64_t kl_n_1 )
 #line 80 "codegen/sample_m8/main.kl"
     kl_total_2 = 0;
 #line 84 "codegen/sample_m8/main.kl"
-    kl_t4 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_1, sizeof( int32_t ) );
+    kl_t4 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_1, sizeof( int32_t ), "codegen/sample_m8/main.kl", 84, "out of memory: alloc<i32>( n )" );
     kl_p_3 = kl_t4;
 #line 86 "codegen/sample_m8/main.kl"
     kl_i_5 = 0;
@@ -2225,7 +2225,7 @@ struct kl_2kl_list__I2u8E kl_2kl_with_capacity__I2u8E__SQ2kl4listI2u8E_3u64( uin
     kl_result_2.kl_count__2403 = 0;
     kl_t6 = true;
 #line 29 "../../keel_stl/src/list.kl"
-    kl_t5 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_capacity_1, sizeof( uint8_t ) );
+    kl_t5 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_capacity_1, sizeof( uint8_t ), "../../keel_stl/src/list.kl", 29, "out of memory: alloc<T>( capacity )" );
     kl_result_2.kl_data__2401 = kl_t5;
     kl_t6 = true;
 #line 32 "../../keel_stl/src/list.kl"
@@ -2543,7 +2543,7 @@ void kl_2kl_reallocate__I6TicketE__SQ2kl4listI6TicketE_3u64( struct kl_2kl_list_
     struct kl__Ticket* kl_t8;
     struct kl__Ticket* kl_t9;
 #line 356 "../../keel_stl/src/list.kl"
-    kl_t4 = ( struct kl__Ticket* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( struct kl__Ticket ) );
+    kl_t4 = ( struct kl__Ticket* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( struct kl__Ticket ), "../../keel_stl/src/list.kl", 356, "out of memory: alloc<T>( n )" );
     kl_new_data_3 = kl_t4;
 #line 359 "../../keel_stl/src/list.kl"
     kl_t5 = ( *kl_this_1 ).kl_data__2401 != NULL;
@@ -2587,7 +2587,7 @@ void kl_2kl_reallocate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl_list__I3i32
     int32_t* kl_t8;
     int32_t* kl_t9;
 #line 356 "../../keel_stl/src/list.kl"
-    kl_t4 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( int32_t ) );
+    kl_t4 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( int32_t ), "../../keel_stl/src/list.kl", 356, "out of memory: alloc<T>( n )" );
     kl_new_data_3 = kl_t4;
 #line 359 "../../keel_stl/src/list.kl"
     kl_t5 = ( *kl_this_1 ).kl_data__2401 != NULL;
@@ -2631,7 +2631,7 @@ void kl_2kl_reallocate__I2u8E__SQ2kl4listI2u8E_3u64( struct kl_2kl_list__I2u8E* 
     uint8_t* kl_t8;
     uint8_t* kl_t9;
 #line 356 "../../keel_stl/src/list.kl"
-    kl_t4 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( uint8_t ) );
+    kl_t4 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( uint8_t ), "../../keel_stl/src/list.kl", 356, "out of memory: alloc<T>( n )" );
     kl_new_data_3 = kl_t4;
 #line 359 "../../keel_stl/src/list.kl"
     kl_t5 = ( *kl_this_1 ).kl_data__2401 != NULL;

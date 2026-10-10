@@ -14,9 +14,9 @@ struct kl_2kl_ring__I3i32E
     uint64_t kl_cap__812;
 };
 
-void* kl_rt_alloc( size_t );
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
-void* kl_rt_alloc_many( size_t, size_t );
+void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
 int32_t kl__main__( void );
@@ -172,7 +172,7 @@ void kl_2kl_ring__I3i32E__RQ2kl4ringI3i32E_3u64__ctor( struct kl_2kl_ring__I3i32
 {
     int32_t* kl_t3;
 #line 29 "../src/ring.kl"
-    kl_t3 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_capacity_2, sizeof( int32_t ) );
+    kl_t3 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_capacity_2, sizeof( int32_t ), "../src/ring.kl", 29, "out of memory: alloc<T>( capacity )" );
     ( *kl_this_1 ).kl_data__806 = kl_t3;
 #line 31 "../src/ring.kl"
     ( *kl_this_1 ).kl_head__808 = 0;

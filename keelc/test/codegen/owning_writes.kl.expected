@@ -21,9 +21,9 @@ struct kl__slots
 
 int32_t kl_live_1;
 
-void* kl_rt_alloc( size_t );
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
-void* kl_rt_alloc_many( size_t, size_t );
+void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
 void kl__owned__R5owned_3u64__ctor( struct kl__owned*, uint64_t );
@@ -42,7 +42,7 @@ void kl__owned__R5owned_3u64__ctor( struct kl__owned* kl_this_1, uint64_t kl_n_2
 #line 11 "codegen/owning_writes.kl"
     ( *kl_this_1 ).kl_id_46 = kl_n_2;
 #line 14 "codegen/owning_writes.kl"
-    kl_t3 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( uint64_t ) );
+    kl_t3 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( uint64_t ), "codegen/owning_writes.kl", 14, "out of memory: alloc<u64>( 1 )" );
     ( *kl_this_1 ).kl_block_49 = kl_t3;
 #line 16 "codegen/owning_writes.kl"
     kl_live_1 = kl_live_1 + 1;
@@ -70,7 +70,7 @@ void kl__slots__R5slots__ctor( struct kl__slots* kl_this_1 )
 {
     struct kl__owned* kl_t2;
 #line 43 "codegen/owning_writes.kl"
-    kl_t2 = ( struct kl__owned* ) kl_rt_alloc_many( ( size_t ) 2, sizeof( struct kl__owned ) );
+    kl_t2 = ( struct kl__owned* ) kl_rt_alloc_many( ( size_t ) 2, sizeof( struct kl__owned ), "codegen/owning_writes.kl", 43, "out of memory: alloc<owned>( 2 )" );
     ( *kl_this_1 ).kl_data_151 = kl_t2;
 #line 45 "codegen/owning_writes.kl"
     ( *kl_this_1 ).kl_count_153 = 0;

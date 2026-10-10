@@ -18,9 +18,9 @@ struct kl__Counter
     int32_t kl_n_38;
 };
 
-void* kl_rt_alloc( size_t );
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
-void* kl_rt_alloc_many( size_t, size_t );
+void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 
 void kl__Counter__R7Counter__ctor( struct kl__Counter* );
 int32_t kl__peek__S7Counter( struct kl__Counter* );
@@ -282,7 +282,7 @@ int32_t kl__main__( void )
 #line 86 "codegen/pointer_to_const.kl"
     kl_many_39 = NULL;
 #line 89 "codegen/pointer_to_const.kl"
-    kl_t40 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 3, sizeof( int32_t ) );
+    kl_t40 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 3, sizeof( int32_t ), "codegen/pointer_to_const.kl", 89, "out of memory: alloc<i32>( 3 )" );
     kl_many_39 = kl_t40;
 #line 90 "codegen/pointer_to_const.kl"
     kl_t41 = kl_many_39 + 0;

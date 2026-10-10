@@ -28,9 +28,9 @@ struct kl_2kl_optional__I3i32E
 
 int32_t kl_live_3;
 
-void* kl_rt_alloc( size_t );
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
-void* kl_rt_alloc_many( size_t, size_t );
+void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic_message( const char*, uint32_t, const uint8_t*, uint64_t );
 
 void kl__owned__R5owned_3u64__ctor( struct kl__owned*, uint64_t );
@@ -61,7 +61,7 @@ void kl__owned__R5owned_3u64__ctor( struct kl__owned* kl_this_1, uint64_t kl_n_2
 #line 12 "optional/main.kl"
     ( *kl_this_1 ).kl_id_48 = kl_n_2;
 #line 15 "optional/main.kl"
-    kl_t3 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( uint64_t ) );
+    kl_t3 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( uint64_t ), "optional/main.kl", 15, "out of memory: alloc<u64>( 1 )" );
     ( *kl_this_1 ).kl_block_51 = kl_t3;
 #line 17 "optional/main.kl"
     kl_live_3 = kl_live_3 + 1;

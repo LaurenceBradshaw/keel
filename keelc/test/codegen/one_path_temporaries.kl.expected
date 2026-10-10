@@ -12,7 +12,7 @@ struct kl__Buf
     uint64_t* kl_data_4;
 };
 
-void* kl_rt_alloc( size_t );
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 
 void kl__Buf__R3Buf_3u64__ctor( struct kl__Buf*, uint64_t );
@@ -37,7 +37,7 @@ void kl__Buf__R3Buf_3u64__ctor( struct kl__Buf* kl_this_1, uint64_t kl_v_2 )
 #line 11 "codegen/one_path_temporaries.kl"
     ( *kl_this_1 ).kl_n_1 = kl_v_2;
 #line 15 "codegen/one_path_temporaries.kl"
-    kl_t3 = ( uint64_t* ) kl_rt_alloc( sizeof( uint64_t ) );
+    kl_t3 = ( uint64_t* ) kl_rt_alloc( sizeof( uint64_t ), "codegen/one_path_temporaries.kl", 15, "out of memory: alloc<u64>()" );
     ( *kl_this_1 ).kl_data_4 = kl_t3;
 #line 18 "codegen/one_path_temporaries.kl"
     ( *( *kl_this_1 ).kl_data_4 ) = kl_v_2;

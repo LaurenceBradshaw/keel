@@ -7,8 +7,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
-void*          kl_rt_alloc( size_t size );
-void*          kl_rt_alloc_many( size_t count, size_t size );
+void*          kl_rt_alloc( size_t size, const char* file, uint32_t line, const char* message );
+void*          kl_rt_alloc_many( size_t count, size_t size, const char* file, uint32_t line, const char* message );
 void           kl_rt_free( void* ptr );
 _Noreturn void kl_rt_panic( const char* file, uint32_t line, const char* message );
 _Noreturn void kl_rt_panic_message( const char* file, uint32_t line, const uint8_t* data, uint64_t size );

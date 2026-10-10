@@ -32,9 +32,9 @@ struct kl__buffer__I5pointE
     uint64_t kl_size_99;
 };
 
-void* kl_rt_alloc( size_t );
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
-void* kl_rt_alloc_many( size_t, size_t );
+void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
 void kl__shift__S5point_3i32( struct kl__point*, int32_t );
@@ -497,7 +497,7 @@ void kl__buffer__I3i32E__R6bufferI3i32E_3u64__ctor( struct kl__buffer__I3i32E* k
 #line 20 "codegen/operator_index.kl"
     ( *kl_this_1 ).kl_size_99 = kl_n_2;
 #line 23 "codegen/operator_index.kl"
-    kl_t3 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( int32_t ) );
+    kl_t3 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( int32_t ), "codegen/operator_index.kl", 23, "out of memory: alloc<T>( n )" );
     ( *kl_this_1 ).kl_data_97 = kl_t3;
     return;
 }
@@ -526,7 +526,7 @@ void kl__buffer__I5pointE__R6bufferI5pointE_3u64__ctor( struct kl__buffer__I5poi
 #line 20 "codegen/operator_index.kl"
     ( *kl_this_1 ).kl_size_99 = kl_n_2;
 #line 23 "codegen/operator_index.kl"
-    kl_t3 = ( struct kl__point* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( struct kl__point ) );
+    kl_t3 = ( struct kl__point* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( struct kl__point ), "codegen/operator_index.kl", 23, "out of memory: alloc<T>( n )" );
     ( *kl_this_1 ).kl_data_97 = kl_t3;
     return;
 }

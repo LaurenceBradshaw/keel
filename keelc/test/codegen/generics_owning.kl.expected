@@ -14,7 +14,7 @@ struct kl__Cell
 int32_t kl_built_2 = 0;
 int32_t kl_destroyed_5 = 0;
 
-void* kl_rt_alloc( size_t );
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 
 void kl__Cell__R4Cell__ctor( struct kl__Cell* );
@@ -29,7 +29,7 @@ void kl__Cell__R4Cell__ctor( struct kl__Cell* kl_this_1 )
     int32_t* kl_t2;
     int32_t kl_t3;
 #line 16 "codegen/generics_owning.kl"
-    kl_t2 = ( int32_t* ) kl_rt_alloc( sizeof( int32_t ) );
+    kl_t2 = ( int32_t* ) kl_rt_alloc( sizeof( int32_t ), "codegen/generics_owning.kl", 16, "out of memory: alloc<i32>()" );
     ( *kl_this_1 ).kl_slot_8 = kl_t2;
 #line 17 "codegen/generics_owning.kl"
     kl_t3 = kl_built_2 + 1;

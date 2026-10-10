@@ -11,7 +11,7 @@ struct kl__Owner
     int32_t* kl_p_23;
 };
 
-void* kl_rt_alloc( size_t );
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
@@ -24,7 +24,7 @@ void kl__Owner__R5Owner__ctor( struct kl__Owner* kl_this_1 )
 {
     int32_t* kl_t2;
 #line 9 "codegen/assert.kl"
-    kl_t2 = ( int32_t* ) kl_rt_alloc( sizeof( int32_t ) );
+    kl_t2 = ( int32_t* ) kl_rt_alloc( sizeof( int32_t ), "codegen/assert.kl", 9, "out of memory: alloc<i32>()" );
     ( *kl_this_1 ).kl_p_23 = kl_t2;
     return;
 }

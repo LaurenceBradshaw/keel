@@ -1,0 +1,41 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "alloc_too_large.kl.prelude.c"
+
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
+void  kl_rt_free( void* );
+void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+
+int32_t kl__main__( void );
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl_7prelude_str kl_t1;
+    struct kl_7prelude_str* kl_t2;
+    uint8_t* kl_t3;
+    uint64_t kl_n_6;
+    uint8_t* kl_bytes_7;
+    uint8_t* kl_t8;
+    ( void ) kl_bytes_7;
+#line 4 "codegen/alloc_too_large.kl"
+    kl_t2 = &kl_t1;
+    kl_t3 = ( uint8_t* ) "before";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t2, kl_t3, 6 );
+    kl_7prelude_println__Q7prelude3str( kl_t1 );
+#line 6 "codegen/alloc_too_large.kl"
+    kl_n_6 = 4611686018427387904;
+#line 10 "codegen/alloc_too_large.kl"
+    kl_t8 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_n_6, sizeof( uint8_t ), "codegen/alloc_too_large.kl", 10, "out of memory: alloc<u8>( n )" );
+    kl_bytes_7 = kl_t8;
+#line 13 "codegen/alloc_too_large.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

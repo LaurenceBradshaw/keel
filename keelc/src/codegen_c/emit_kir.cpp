@@ -319,10 +319,13 @@ private:
     std::string place( const Place& place ) const;
     std::string constant( Literal_id literal, Type_id type ) const;
     std::string operand( const Operand& operand ) const;
-    std::string rvalue( const Rvalue& rvalue ) const;
+    std::string rvalue( const Rvalue& rvalue, Span span ) const;
 
     std::string prototype( Node_id decl, std::span<const Type_id> type_arguments = {} ) const;
     std::string prototype( const Function& function ) const;
+
+    std::string location( Span span ) const;
+    std::string as_written( Span span ) const;
 
     std::string     out_;
     u32             indent_    = 0;
@@ -682,14 +685,14 @@ void Kir_emitter::emit_runtime_prototypes()
     bool any = false;
     if( uses_runtime() )
     {
-        write_line( "void* kl_rt_alloc( size_t );" );
+        write_line( "void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );" );
         write_line( "void  kl_rt_free( void* );" );
         any = true;
     }
 
     if( uses_counted_allocation() )
     {
-        write_line( "void* kl_rt_alloc_many( size_t, size_t );" );
+        write_line( "void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );" );
         any = true;
     }
 
@@ -937,7 +940,7 @@ void Kir_emitter::emit_statement( const Statement& statement )
         }
 
         line_directive( statement.span );
-        const std::string value = rvalue( statement.value );
+        const std::string value = rvalue( statement.value, statement.span );
 
         // A void local is not declared, so there is nothing to assign into - the call is the whole
         // statement. Keeping Assign total in KIR is what confines this to one rule, in one place.
@@ -1011,9 +1014,6 @@ void Kir_emitter::emit_terminator( const Terminator& terminator, const Function&
 
     case Terminator_kind::Panic:
     {
-        const std::string file = c_string( sm_.file( terminator.span.file ).path );
-        const u32         line = sm_.line_col( terminator.span.file, terminator.span.start ).line;
-
         // A `str` carries its length and no terminator, so its two fields go across.
         if( terminator.failure == Failure::Message )
         {
@@ -1034,27 +1034,16 @@ void Kir_emitter::emit_terminator( const Terminator& terminator, const Function&
                 return std::string {};
             };
 
-            write_line( fmt::format( "kl_rt_panic_message( {}, {}, {}, {} );", file, line, field( "data" ), field( "size" ) ) );
+            write_line( fmt::format(
+                "kl_rt_panic_message( {}, {}, {} );", location( terminator.span ), field( "data" ), field( "size" )
+            ) );
             return;
         }
 
-        // As written, on one line: each run of whitespace becomes one space.
-        std::string text;
-
-        for( const char c : sm_.text( terminator.span ) )
-        {
-            if( c != ' ' && c != '\t' && c != '\n' && c != '\r' )
-            {
-                text.push_back( c );
-            }
-            else if( !text.empty() && text.back() != ' ' )
-            {
-                text.push_back( ' ' );
-            }
-        }
-
         write_line( fmt::format(
-            "kl_rt_panic( {}, {}, {} );", file, line, c_string( std::string( failure_prefix( terminator.failure ) ) + text )
+            "kl_rt_panic( {}, {} );",
+            location( terminator.span ),
+            c_string( std::string( failure_prefix( terminator.failure ) ) + as_written( terminator.span ) )
         ) );
         return;
     }
@@ -1282,6 +1271,32 @@ std::string Kir_emitter::prototype( const Function& function ) const
     );
 }
 
+// The file and line, as two C arguments.
+std::string Kir_emitter::location( Span span ) const
+{
+    return fmt::format( "{}, {}", c_string( sm_.file( span.file ).path ), sm_.line_col( span.file, span.start ).line );
+}
+
+// The source as written, on one line: each run of whitespace becomes one space.
+std::string Kir_emitter::as_written( Span span ) const
+{
+    std::string text;
+
+    for( const char c : sm_.text( span ) )
+    {
+        if( c != ' ' && c != '\t' && c != '\n' && c != '\r' )
+        {
+            text.push_back( c );
+        }
+        else if( !text.empty() && text.back() != ' ' )
+        {
+            text.push_back( ' ' );
+        }
+    }
+
+    return text;
+}
+
 std::string Kir_emitter::local_name( u32 index ) const
 {
     const Local& local = current_->locals[index];
@@ -1447,7 +1462,7 @@ std::string Kir_emitter::operand( const Operand& operand ) const
     }
 }
 
-std::string Kir_emitter::rvalue( const Rvalue& rvalue ) const
+std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
 {
     switch( rvalue.kind )
     {
@@ -1516,18 +1531,22 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue ) const
         if( rvalue.a.type.is_valid() )
         {
             return fmt::format(
-                "( {} ) kl_rt_alloc_many( ( size_t ) {}, sizeof( {} ) )",
+                "( {} ) kl_rt_alloc_many( ( size_t ) {}, sizeof( {} ), {}, {} )",
                 spelling_.type( rvalue.type ),
                 operand( rvalue.a ),
-                spelling_.type( types_.table().get( rvalue.type ).element )
+                spelling_.type( types_.table().get( rvalue.type ).element ),
+                location( span ),
+                c_string( "out of memory: " + as_written( span ) )
             );
         }
         else
         {
             return fmt::format(
-                "( {} ) kl_rt_alloc( sizeof( {} ) )",
+                "( {} ) kl_rt_alloc( sizeof( {} ), {}, {} )",
                 spelling_.type( rvalue.type ),
-                spelling_.type( types_.table().get( rvalue.type ).element )
+                spelling_.type( types_.table().get( rvalue.type ).element ),
+                location( span ),
+                c_string( "out of memory: " + as_written( span ) )
             );
         }
     case Rvalue_kind::Release:
@@ -2539,7 +2558,8 @@ TEST_CASE( "emit_kir_writes_an_allocation", "[codegen][kir][alloc]" )
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "( struct kl__N* ) kl_rt_alloc( sizeof( struct kl__N ) )" ) );
+        REQUIRE( g.has( "( struct kl__N* ) kl_rt_alloc( sizeof( struct kl__N ), \"t.kl\", 2, \"out of memory: alloc<N>()\" )" )
+        );
     }
 
     SECTION( "a builtin" )
@@ -2548,7 +2568,7 @@ TEST_CASE( "emit_kir_writes_an_allocation", "[codegen][kir][alloc]" )
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "( int32_t* ) kl_rt_alloc( sizeof( int32_t ) )" ) );
+        REQUIRE( g.has( "( int32_t* ) kl_rt_alloc( sizeof( int32_t ), \"t.kl\", 1, \"out of memory: alloc<i32>()\" )" ) );
     }
 
     SECTION( "a pointer" )
@@ -2557,7 +2577,7 @@ TEST_CASE( "emit_kir_writes_an_allocation", "[codegen][kir][alloc]" )
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "( int32_t** ) kl_rt_alloc( sizeof( int32_t* ) )" ) );
+        REQUIRE( g.has( "( int32_t** ) kl_rt_alloc( sizeof( int32_t* ), \"t.kl\", 1, \"out of memory: alloc<i32*>()\" )" ) );
     }
 
     SECTION( "free is a statement of its own, with no destination" )
@@ -2597,7 +2617,7 @@ TEST_CASE( "emit_kir_writes_an_allocation", "[codegen][kir][alloc]" )
 // emitted C called kl_rt_alloc undeclared.
 TEST_CASE( "emit_kir_declares_the_runtime_when_it_is_used", "[codegen][kir][alloc]" )
 {
-    const std::string_view alloc_prototype = "void* kl_rt_alloc( size_t );";
+    const std::string_view alloc_prototype = "void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );";
     const std::string_view free_prototype  = "void  kl_rt_free( void* );";
 
     SECTION( "a program that allocates gets both" )
@@ -3325,7 +3345,8 @@ TEST_CASE( "emit_kir_writes_a_counted_allocation", "[codegen][kir][alloc][many]"
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_1, sizeof( int32_t ) )" ) );
+        REQUIRE( g.has( "( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_1, sizeof( int32_t ), \"t.kl\", 1, \"out of memory: "
+                        "alloc<i32>( n )\" )" ) );
     }
 
     SECTION( "a literal count" )
@@ -3334,7 +3355,7 @@ TEST_CASE( "emit_kir_writes_a_counted_allocation", "[codegen][kir][alloc][many]"
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "kl_rt_alloc_many( ( size_t ) 4, sizeof( int32_t ) )" ) );
+        REQUIRE( g.has( "kl_rt_alloc_many( ( size_t ) 4, sizeof( int32_t )," ) );
     }
 
     SECTION( "a struct element" )
@@ -3343,7 +3364,7 @@ TEST_CASE( "emit_kir_writes_a_counted_allocation", "[codegen][kir][alloc][many]"
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "( struct kl__N* ) kl_rt_alloc_many( ( size_t ) 2, sizeof( struct kl__N ) )" ) );
+        REQUIRE( g.has( "( struct kl__N* ) kl_rt_alloc_many( ( size_t ) 2, sizeof( struct kl__N )," ) );
     }
 
     SECTION( "a many-item element" )
@@ -3352,12 +3373,12 @@ TEST_CASE( "emit_kir_writes_a_counted_allocation", "[codegen][kir][alloc][many]"
 
         INFO( g.c );
         REQUIRE( g.clean() );
-        REQUIRE( g.has( "( uint8_t** ) kl_rt_alloc_many( ( size_t ) 2, sizeof( uint8_t* ) )" ) );
+        REQUIRE( g.has( "( uint8_t** ) kl_rt_alloc_many( ( size_t ) 2, sizeof( uint8_t* )," ) );
     }
 
     SECTION( "the entry is declared only when a counted allocation is made" )
     {
-        const std::string_view prototype = "void* kl_rt_alloc_many( size_t, size_t );";
+        const std::string_view prototype = "void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );";
 
         Generated counted( "i32 main() { unsafe { i32[*] a = alloc<i32>( 2 ); free( a ); } return 0; }" );
         Generated single( "i32 main() { unsafe { i32* a = alloc<i32>(); free( a ); } return 0; }" );

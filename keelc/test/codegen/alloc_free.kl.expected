@@ -12,7 +12,7 @@ struct kl__Node
     struct kl__Node* kl_next_4;
 };
 
-void* kl_rt_alloc( size_t );
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 
 struct kl__Node* kl__push__P4Node_3i32( struct kl__Node*, int32_t );
@@ -27,7 +27,7 @@ struct kl__Node* kl__push__P4Node_3i32( struct kl__Node* kl_head_1, int32_t kl_v
 #line 14 "codegen/alloc_free.kl"
     kl_node_3 = NULL;
 #line 18 "codegen/alloc_free.kl"
-    kl_t4 = ( struct kl__Node* ) kl_rt_alloc( sizeof( struct kl__Node ) );
+    kl_t4 = ( struct kl__Node* ) kl_rt_alloc( sizeof( struct kl__Node ), "codegen/alloc_free.kl", 18, "out of memory: alloc<Node>()" );
     kl_node_3 = kl_t4;
 #line 23 "codegen/alloc_free.kl"
     ( *kl_node_3 ).kl_value_1 = kl_value_2;

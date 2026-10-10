@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void* kl_rt_alloc( size_t size )
+void* kl_rt_alloc( size_t size, const char* file, uint32_t line, const char* message )
 {
     // A zero request allocates one byte rather than asking malloc, whose answer for 0 is
     // implementation-defined and may be NULL - which is how failure is reported. Kept deliberately
@@ -21,17 +21,23 @@ void* kl_rt_alloc( size_t size )
         size = 1;
     }
 
-    return malloc( size );
+    void* ptr = malloc( size );
+    if( ptr == NULL )
+    {
+        kl_rt_panic( file, line, message );
+    }
+
+    return ptr;
 }
 
-void* kl_rt_alloc_many( size_t count, size_t size )
+void* kl_rt_alloc_many( size_t count, size_t size, const char* file, uint32_t line, const char* message )
 {
     if( size != 0 && count > SIZE_MAX / size )
     {
-        return NULL;
+        kl_rt_panic( file, line, message );
     }
 
-    return kl_rt_alloc( count * size );
+    return kl_rt_alloc( count * size, file, line, message );
 }
 
 void kl_rt_free( void* ptr )

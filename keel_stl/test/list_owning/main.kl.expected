@@ -30,9 +30,9 @@ struct kl_2kl_list__I3i32E
 
 int32_t kl_live_3;
 
-void* kl_rt_alloc( size_t );
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
-void* kl_rt_alloc_many( size_t, size_t );
+void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
 void kl__owned__R5owned_3u64__ctor( struct kl__owned*, uint64_t );
@@ -76,7 +76,7 @@ void kl__owned__R5owned_3u64__ctor( struct kl__owned* kl_this_1, uint64_t kl_n_2
 #line 12 "list_owning/main.kl"
     ( *kl_this_1 ).kl_id_48 = kl_n_2;
 #line 15 "list_owning/main.kl"
-    kl_t3 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( uint64_t ) );
+    kl_t3 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( uint64_t ), "list_owning/main.kl", 15, "out of memory: alloc<u64>( 1 )" );
     ( *kl_this_1 ).kl_block_51 = kl_t3;
 #line 17 "list_owning/main.kl"
     kl_live_3 = kl_live_3 + 1;
@@ -1166,7 +1166,7 @@ struct kl_2kl_list__I5ownedE kl_2kl_with_capacity__I5ownedE__SQ2kl4listI5ownedE_
     kl_result_2.kl_count__1386 = 0;
     kl_t6 = true;
 #line 29 "../src/list.kl"
-    kl_t5 = ( struct kl__owned* ) kl_rt_alloc_many( ( size_t ) kl_capacity_1, sizeof( struct kl__owned ) );
+    kl_t5 = ( struct kl__owned* ) kl_rt_alloc_many( ( size_t ) kl_capacity_1, sizeof( struct kl__owned ), "../src/list.kl", 29, "out of memory: alloc<T>( capacity )" );
     kl_result_2.kl_data__1384 = kl_t5;
     kl_t6 = true;
 #line 32 "../src/list.kl"
@@ -1449,7 +1449,7 @@ void kl_2kl_reallocate__I5ownedE__SQ2kl4listI5ownedE_3u64( struct kl_2kl_list__I
     struct kl__owned* kl_t8;
     struct kl__owned* kl_t9;
 #line 356 "../src/list.kl"
-    kl_t4 = ( struct kl__owned* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( struct kl__owned ) );
+    kl_t4 = ( struct kl__owned* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( struct kl__owned ), "../src/list.kl", 356, "out of memory: alloc<T>( n )" );
     kl_new_data_3 = kl_t4;
 #line 359 "../src/list.kl"
     kl_t5 = ( *kl_this_1 ).kl_data__1384 != NULL;
@@ -1493,7 +1493,7 @@ void kl_2kl_reallocate__I3i32E__SQ2kl4listI3i32E_3u64( struct kl_2kl_list__I3i32
     int32_t* kl_t8;
     int32_t* kl_t9;
 #line 356 "../src/list.kl"
-    kl_t4 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( int32_t ) );
+    kl_t4 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( int32_t ), "../src/list.kl", 356, "out of memory: alloc<T>( n )" );
     kl_new_data_3 = kl_t4;
 #line 359 "../src/list.kl"
     kl_t5 = ( *kl_this_1 ).kl_data__1384 != NULL;

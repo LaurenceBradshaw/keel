@@ -14,9 +14,9 @@ struct kl__P
 
 int32_t kl_trace_1;
 
-void* kl_rt_alloc( size_t );
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
-void* kl_rt_alloc_many( size_t, size_t );
+void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 
 int32_t kl__note__3i32( int32_t );
 int32_t kl__first__3i32_3i32_3i32( int32_t, int32_t, int32_t );
@@ -138,7 +138,7 @@ int32_t kl__main__( void )
 #line 45 "codegen/evaluation_order.kl"
     kl_trace_1 = 0;
 #line 49 "codegen/evaluation_order.kl"
-    kl_t23 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 4, sizeof( int32_t ) );
+    kl_t23 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 4, sizeof( int32_t ), "codegen/evaluation_order.kl", 49, "out of memory: alloc<i32>( 4 )" );
     kl_slots_22 = kl_t23;
 #line 50 "codegen/evaluation_order.kl"
     kl_t24 = kl__note__3i32( 1 );

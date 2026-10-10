@@ -1,0 +1,14 @@
+// A count whose size in bytes overflows is refused the same way, before anything is asked of the
+// system: 2^61 + 1 eight-byte elements would wrap to 8 bytes.
+u64 n = 2305843009213693953;
+
+i32 main()
+{
+    u64[*] words;
+    unsafe
+    {
+        words = alloc<u64>( n );
+    }
+
+    return 0;
+}

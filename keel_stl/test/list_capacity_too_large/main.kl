@@ -1,0 +1,11 @@
+// A capacity too large to allocate aborts in `with_capacity`, rather than leaving a list whose first
+// `push` writes through a null pointer.
+import kl::list;
+
+i32 main()
+{
+    kl::list<i32> values = kl::list<i32>::with_capacity( 4611686018427387904 );
+    values.push( 1 );
+
+    return 0;
+}

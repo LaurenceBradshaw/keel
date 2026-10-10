@@ -13,7 +13,7 @@ struct kl_2kl_list__I3i32E
     uint64_t kl_cap__823;
 };
 
-void* kl_rt_alloc( size_t );
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 

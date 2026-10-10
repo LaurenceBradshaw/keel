@@ -64,7 +64,7 @@ struct kl_7prelude_result__I4bool_3BadE
     int32_t kl_error_1368;
 };
 
-void* kl_rt_alloc( size_t );
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 
 void kl__Buf__R3Buf_3u64__ctor( struct kl__Buf*, uint64_t );
@@ -100,7 +100,7 @@ void kl__Buf__R3Buf_3u64__ctor( struct kl__Buf* kl_this_1, uint64_t kl_n_2 )
 {
     uint64_t* kl_t3;
 #line 12 "codegen/try.kl"
-    kl_t3 = ( uint64_t* ) kl_rt_alloc( sizeof( uint64_t ) );
+    kl_t3 = ( uint64_t* ) kl_rt_alloc( sizeof( uint64_t ), "codegen/try.kl", 12, "out of memory: alloc<u64>()" );
     ( *kl_this_1 ).kl_data_2 = kl_t3;
 #line 15 "codegen/try.kl"
     ( *( *kl_this_1 ).kl_data_2 ) = kl_n_2;

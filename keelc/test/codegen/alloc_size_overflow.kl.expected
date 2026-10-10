@@ -1,0 +1,32 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "alloc_size_overflow.kl.prelude.c"
+
+uint64_t kl_n_2 = 2305843009213693953;
+
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
+void  kl_rt_free( void* );
+void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+
+int32_t kl__main__( void );
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    uint64_t* kl_words_1;
+    uint64_t* kl_t2;
+    ( void ) kl_words_1;
+#line 10 "codegen/alloc_size_overflow.kl"
+    kl_t2 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( uint64_t ), "codegen/alloc_size_overflow.kl", 10, "out of memory: alloc<u64>( n )" );
+    kl_words_1 = kl_t2;
+#line 13 "codegen/alloc_size_overflow.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

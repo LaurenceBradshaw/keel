@@ -32,9 +32,9 @@ struct kl__Holder__I3i32E
     int32_t kl_value_136;
 };
 
-void* kl_rt_alloc( size_t );
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
-void* kl_rt_alloc_many( size_t, size_t );
+void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 
 void kl__Buffer__R6Buffer_3u64__ctor( struct kl__Buffer*, uint64_t );
 void kl__Buffer__dtor( struct kl__Buffer* );
@@ -50,7 +50,7 @@ void kl__Buffer__R6Buffer_3u64__ctor( struct kl__Buffer* kl_this_1, uint64_t kl_
 #line 18 "codegen/const_field.kl"
     ( *kl_this_1 ).kl_size_8 = kl_n_2;
 #line 21 "codegen/const_field.kl"
-    kl_t3 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( uint64_t ) );
+    kl_t3 = ( uint64_t* ) kl_rt_alloc_many( ( size_t ) kl_n_2, sizeof( uint64_t ), "codegen/const_field.kl", 21, "out of memory: alloc<u64>( n )" );
     ( *kl_this_1 ).kl_data_12 = kl_t3;
     return;
 }

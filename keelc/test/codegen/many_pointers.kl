@@ -288,17 +288,10 @@ i32 main()
     if( held != 3 ) { return 17; }
     if( live != 2 ) { return 18; }
 
-    // 2^61 + 1 eight-byte elements wrap to 8 bytes, so only the overflow check refuses it; zero succeeds.
-    u64[*] huge = nullptr;
-    u8[*]  none = nullptr;
-    u64    wraps = 2305843009213693953;
-    unsafe
-    {
-        huge = alloc<u64>( wraps );
-        none = alloc<u8>( 0 );
-    }
-    if( huge != nullptr ) { return 19; }
-    if( none == nullptr ) { return 20; }
+    // Zero succeeds; a count too large aborts, in `alloc_size_overflow.kl`.
+    u8[*] none = nullptr;
+    unsafe { none = alloc<u8>( 0 ); }
+    if( none == nullptr ) { return 19; }
     unsafe { free( none ); }
 
     return 0;

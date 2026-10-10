@@ -41,7 +41,7 @@ struct kl__Option__I3BufE
     struct kl__Buf kl_value_68;
 };
 
-void* kl_rt_alloc( size_t );
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
 void  kl_rt_free( void* );
 
 void kl__Buf__R3Buf_3u64__ctor( struct kl__Buf*, uint64_t );
@@ -62,7 +62,7 @@ void kl__Buf__R3Buf_3u64__ctor( struct kl__Buf* kl_this_1, uint64_t kl_n_2 )
 {
     uint64_t* kl_t3;
 #line 12 "codegen/owning_payloads.kl"
-    kl_t3 = ( uint64_t* ) kl_rt_alloc( sizeof( uint64_t ) );
+    kl_t3 = ( uint64_t* ) kl_rt_alloc( sizeof( uint64_t ), "codegen/owning_payloads.kl", 12, "out of memory: alloc<u64>()" );
     ( *kl_this_1 ).kl_data_2 = kl_t3;
 #line 15 "codegen/owning_payloads.kl"
     ( *( *kl_this_1 ).kl_data_2 ) = kl_n_2;
