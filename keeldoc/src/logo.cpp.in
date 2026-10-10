@@ -1,0 +1,13 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+#include "style.h"
+
+// Generated from logo.svg by CMake, so edit that instead.
+
+namespace keeldoc
+{
+std::string_view logo_source()
+{
+    return R"logo_svg(@KEELDOC_LOGO@)logo_svg";
+}
+} // namespace keeldoc

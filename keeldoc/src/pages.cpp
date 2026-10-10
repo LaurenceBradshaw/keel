@@ -150,6 +150,7 @@ std::string Page_writer::head( std::string_view title ) const
         "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n"
         "<title>{}</title>\n"
         "<link rel=\"stylesheet\" href=\"style.css\">\n"
+        "<link rel=\"icon\" href=\"logo.svg\" type=\"image/svg+xml\">\n"
         "</head>\n"
         "<body>\n",
         html_escape( title )
@@ -269,7 +270,8 @@ std::string Page_writer::banner() const
     }
 
     return fmt::format(
-        "<header><nav><a href=\"index.html\">{}</a></nav></header>\n", title.empty() ? html_escape( package_.name ) : title
+        "<header><nav><a href=\"index.html\"><img src=\"logo.svg\" alt=\"\">{}</a></nav></header>\n",
+        title.empty() ? html_escape( package_.name ) : title
     );
 }
 
@@ -430,6 +432,7 @@ std::map<std::string, std::string> render_pages( const Package& package )
     std::map<std::string, std::string> pages;
     pages.emplace( "index.html", writer.index() );
     pages.emplace( "style.css", std::string( k_style ) );
+    pages.emplace( "logo.svg", std::string( logo_source() ) );
     pages.emplace( k_prelude_page, writer.prelude() );
 
     for( const Module& module : package.modules )
@@ -491,7 +494,10 @@ TEST_CASE( "pages_name_one_file_per_module", "[pages]" )
         names.push_back( name );
     }
 
-    REQUIRE( names == std::vector<std::string> { "index.html", "prelude.html", "shapes.html", "style.css", "util.more.html" } );
+    REQUIRE(
+        names ==
+        std::vector<std::string> { "index.html", "logo.svg", "prelude.html", "shapes.html", "style.css", "util.more.html" }
+    );
 }
 
 TEST_CASE( "pages_mark_keywords_and_link_types", "[pages]" )
@@ -527,8 +533,8 @@ TEST_CASE( "pages_head_with_the_package's_summary", "[pages]" )
         if( name.ends_with( ".html" ) )
         {
             REQUIRE(
-                page.find( "<header><nav><a href=\"index.html\">Plane <em>geometry</em></a></nav></header>" ) !=
-                std::string::npos
+                page.find( "<header><nav><a href=\"index.html\"><img src=\"logo.svg\" alt=\"\">Plane "
+                           "<em>geometry</em></a></nav></header>" ) != std::string::npos
             );
         }
     }
@@ -538,7 +544,9 @@ TEST_CASE( "pages_head_with_the_package's_summary", "[pages]" )
 
     package.doc = "";
     REQUIRE(
-        render_pages( package ).at( "index.html" ).find( "<nav><a href=\"index.html\">geo</a></nav>" ) != std::string::npos
+        render_pages( package )
+            .at( "index.html" )
+            .find( "<nav><a href=\"index.html\"><img src=\"logo.svg\" alt=\"\">geo</a></nav>" ) != std::string::npos
     );
 }
 

@@ -72,6 +72,25 @@ header {
 
 header a { color: inherit; font-weight: 700; }
 
+header nav { position: relative; }
+
+header img {
+  height: 2.5rem;
+  margin: -0.75rem 0.25rem -0.75rem -0.5rem;
+  vertical-align: middle;
+}
+
+/* Wide enough for the logo to sit in the margin left of the body, below the header. */
+@media (min-width: 74rem) {
+  header img {
+    position: absolute;
+    top: calc(100% + 1.5rem);
+    right: 100%;
+    height: 9rem;
+    margin: 0;
+  }
+}
+
 main { padding-bottom: 4rem; }
 
 footer {
@@ -179,5 +198,8 @@ pre {
   h1 { font-size: 1.5rem; }
 }
 )css";
+
+// logo.svg, compiled in from src/logo.svg: the header's mark and each page's icon.
+std::string_view logo_source();
 
 } // namespace keeldoc

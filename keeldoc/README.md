@@ -10,9 +10,11 @@ package. If keelc reports an error, keeldoc prints it and writes nothing. `--kee
 the keelc to run; by default it is the one beside keeldoc.
 
 The pages are `index.html`, with the package's doc and a summary line for each module's
-declarations; one page per module, `a::b` at `a.b.html`; `prelude.html`; and `style.css`. Only
-public declarations appear, an `extern` only with a doc, and a function's or method's overloads share one entry. A type's
-members are grouped as variants, fields, constructors and methods, each group in source order.
+declarations; one page per module, `a::b` at `a.b.html`; `prelude.html`; `style.css`; and
+`logo.svg`, the header's mark and each page's icon, compiled into keeldoc from `src/logo.svg`. Only
+public declarations appear, an `extern` only with a doc, and a function's or method's overloads
+share one entry. A type's members are grouped as variants, fields, constructors and methods, each
+group in source order.
 
 Every package's pages include `prelude.html`, which documents what every program sees without an
 import: the primitives, then the prelude's declarations. The primitives have no declaration, so

@@ -8,6 +8,12 @@ file(READ primitives.md KEELDOC_PRIMITIVES)
 configure_file(primitives.cpp.in ${CMAKE_CURRENT_BINARY_DIR}/primitives_source.cpp @ONLY)
 list(APPEND keeldoc_sources ${CMAKE_CURRENT_BINARY_DIR}/primitives_source.cpp)
 
+# The logo likewise, written beside the pages as logo.svg.
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS logo.svg)
+file(READ logo.svg KEELDOC_LOGO)
+configure_file(logo.cpp.in ${CMAKE_CURRENT_BINARY_DIR}/logo_source.cpp @ONLY)
+list(APPEND keeldoc_sources ${CMAKE_CURRENT_BINARY_DIR}/logo_source.cpp)
+
 find_package(fmt CONFIG REQUIRED)
 find_package(cxxopts CONFIG REQUIRED)
 
