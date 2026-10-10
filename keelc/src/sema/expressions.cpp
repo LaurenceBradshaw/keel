@@ -264,27 +264,6 @@ Type_id Expressions::infer_call( Node_id id )
     // call with one candidate - so the ordinary path types each argument exactly once, as before.
     std::vector<Argument_shape> shapes;
 
-    // Even on a failed call the arguments must be typed, or later passes meet untyped nodes and a
-    // genuine mistake inside one goes unreported. Typed *once*: an argument reported twice is one
-    // mistake told twice.
-    const auto type_the_arguments_anyway = [&]()
-    {
-        const std::span<const Node_id> list = ast_.arguments( id );
-
-        for( std::size_t i = 0; i < list.size(); ++i )
-        {
-            // A family shape was ruled on by selection, and typed with nothing to give it a type
-            // it would only settle on an `i32` the author never meant.
-            if( i < shapes.size() && ( shapes[i].recorded || shapes[i].kind == Argument_kind::Integer ||
-                                       shapes[i].kind == Argument_kind::Floating ) )
-            {
-                continue;
-            }
-
-            infer( list[i] );
-        }
-    };
-
     if( !decl.is_valid() )
     {
         // An unknown name was already reported by the resolver; say nothing twice.
@@ -293,8 +272,7 @@ Type_id Expressions::infer_call( Node_id id )
             reporter_.error_at( ast_.span( callee ), "this expression is not callable" );
         }
 
-        type_the_arguments_anyway();
-        return types_.poison( id );
+        return refuse_call( id, shapes );
     }
 
     const Node_id          type_args = ast_.type_arg_list( id );
@@ -315,73 +293,11 @@ Type_id Expressions::infer_call( Node_id id )
 
     if( is_aggregate( ast_.kind( decl ) ) )
     {
-        // `Buffer( 16 )` names a type, not a function: the arguments belong to its constructors,
-        // but the result is the type itself - a constructor returns nothing and writes through
-        // `this`. They share the type's name rather than a scope, so they have no chain to walk.
-        std::size_t hidden = 0;
-
-        for( const Node_id member : ast_.members( decl ) )
-        {
-            if( ast_.kind( member ) != Node_kind::Constructor_decl )
-            {
-                continue;
-            }
-
-            if( overloads_.refused( member ) )
-            {
-                continue;
-            }
-
-            // Filtered rather than refused as a set: overloading means one constructor may be
-            // reachable while its sibling is not, and hiding the ordinary one behind a named
-            // constructor is the whole reason a type would write `private` on it.
-            if( ast_.is_visible_from( member, current_type() ) )
-            {
-                candidates.push_back( member );
-            }
-            else
-            {
-                ++hidden;
-            }
-        }
-
-        if( candidates.empty() && hidden != 0 )
-        {
-            const bool is_prelude_str =
-                name == "str" && resolution_.package_of( ast_.span( decl ).file ) == resolution_.prelude_package();
-
-            bool has_factory = false;
-            for( const Node_id member : ast_.members( decl ) )
-            {
-                const Type_id member_type = types_.type_of( member );
-                if( ast_.is_static_method( member ) && ast_.is_visible_from( member, current_type() ) &&
-                    member_type.is_valid() && table_.is_struct( member_type ) && table_.get( member_type ).declaration == decl )
-                {
-                    has_factory = true;
-                    break;
-                }
-            }
-
-            reporter_.error_at(
-                ast_.span( callee ),
-                fmt::format( "`{}`'s constructor is private", name ),
-                is_prelude_str ? "only a string literal makes one"
-                : has_factory  ? "build it through one of its own static methods instead"
-                               : ""
-            );
-            type_the_arguments_anyway();
-            return types_.poison( id );
-        }
+        candidates = constructor_candidates( callee, decl );
 
         if( candidates.empty() )
         {
-            reporter_.error_at(
-                ast_.span( callee ),
-                fmt::format( "`{}` has no constructor", name ),
-                fmt::format( "build it from a literal: `{} {{ ... }}`", name )
-            );
-            type_the_arguments_anyway();
-            return types_.poison( id );
+            return refuse_call( id );
         }
 
         // The receiver is an ordinary first parameter, so skipping it here is what stops every
@@ -396,42 +312,7 @@ Type_id Expressions::infer_call( Node_id id )
     }
     else if( ast_.kind( decl ) != Node_kind::Function_decl )
     {
-        if( ( ast_.kind( decl ) == Node_kind::Var_decl || ast_.kind( decl ) == Node_kind::Param_decl ) &&
-            table_.is_error( result ) )
-        {
-            type_the_arguments_anyway();
-            return types_.poison( id );
-        }
-        if( ( ast_.kind( decl ) == Node_kind::Var_decl || ast_.kind( decl ) == Node_kind::Param_decl ) &&
-            table_.is_function( result ) )
-        {
-            return indirect_call( id, decl, result );
-        }
-        if( ( ast_.kind( decl ) == Node_kind::Var_decl || ast_.kind( decl ) == Node_kind::Param_decl ) &&
-            table_.is_field( result ) )
-        {
-            return field_application( id, result );
-        }
-        // A bare field in a method is `this.field`, so one holding a function is called through.
-        if( ast_.kind( decl ) == Node_kind::Field_decl )
-        {
-            const Type_id callee_type = infer( callee );
-
-            if( table_.is_error( callee_type ) )
-            {
-                type_the_arguments_anyway();
-                return types_.poison( id );
-            }
-
-            if( table_.is_function( callee_type ) )
-            {
-                return indirect_call( id, decl, callee_type );
-            }
-        }
-
-        reporter_.error_at( ast_.span( callee ), fmt::format( "`{}` is not callable", name ) );
-        type_the_arguments_anyway();
-        return types_.poison( id );
+        return call_through_value( id, decl );
     }
     else
     {
@@ -446,10 +327,7 @@ Type_id Expressions::infer_call( Node_id id )
 
         if( fallback.is_valid() )
         {
-            for( const Node_id argument : ast_.arguments( id ) )
-            {
-                shapes.push_back( argument_shape( argument ) );
-            }
+            shape_arguments( id, shapes );
 
             if( !overloads_.applies( id, candidates, shapes, true, resolved ) )
             {
@@ -463,8 +341,7 @@ Type_id Expressions::infer_call( Node_id id )
                 if( !overloads_.applies( id, prelude, shapes, false, resolved ) )
                 {
                     overloads_.refuse_both( id, name, candidates, prelude );
-                    type_the_arguments_anyway();
-                    return types_.poison( id );
+                    return refuse_call( id, shapes );
                 }
 
                 candidates = std::move( prelude );
@@ -475,63 +352,14 @@ Type_id Expressions::infer_call( Node_id id )
     // Which instance a failed candidate list should be spelled in terms of. A construction has one
     // before anything is deduced, because the expectation already names it; a free function does
     // not, and `f` there is what the author wrote.
-    const Type_id constructed = is_aggregate( ast_.kind( decl ) ) ? expectation : Type_id {};
+    const Type_id   constructed = is_aggregate( ast_.kind( decl ) ) ? expectation : Type_id {};
+    const Call_site site { id, name, ast_.span( callee ), implicit_params, constructed };
 
-    // Parallel to `resolved`, and empty unless the arguments deduced it: which argument settled
-    // each type parameter, so a broken bound underlines the argument that chose the type rather
-    // than the whole call. Invalid where the expectation is what settled it.
-    std::vector<Node_id> bound_by;
-    Node_id              callable {};
+    const Node_id callable = select_callable( site, candidates, shapes, resolved );
 
-    if( candidates.size() == 1 )
+    if( !callable.is_valid() )
     {
-        callable = candidates.front();
-
-        // A generic call on something that is not generic. After 1b the parser reads `a < b > ( c )`
-        // this way, so this is the message that shape produces - it has to name the real problem.
-        if( type_args.is_valid() && !ast_.is_generic( callable ) )
-        {
-            reporter_.error_at( ast_.span( callee ), fmt::format( "`{}` is not a generic", name ) );
-
-            type_the_arguments_anyway();
-            return types_.poison( id );
-        }
-    }
-    else
-    {
-        // Two calls because selection is lazy: what the call wrote narrows the set first, and only
-        // a set still holding two is worth typing an argument for - which is what cannot be undone.
-        const std::vector<Node_id> viable = overloads_.viable_overloads( id, name, candidates, implicit_params, constructed );
-
-        if( viable.empty() )
-        {
-            type_the_arguments_anyway();
-            return types_.poison( id );
-        }
-
-        if( viable.size() == 1 )
-        {
-            callable = viable.front();
-        }
-        else
-        {
-            // Already shaped where the call could fall back.
-            if( shapes.empty() )
-            {
-                for( const Node_id argument : ast_.arguments( id ) )
-                {
-                    shapes.push_back( argument_shape( argument ) );
-                }
-            }
-
-            callable = overloads_.select_overload( id, name, viable, implicit_params, constructed, shapes, resolved );
-
-            if( !callable.is_valid() )
-            {
-                type_the_arguments_anyway();
-                return types_.poison( id );
-            }
-        }
+        return refuse_call( id, shapes );
     }
 
     // The chosen callable's return type, not the name's. `decl` is only the first candidate, so
@@ -541,37 +369,29 @@ Type_id Expressions::infer_call( Node_id id )
         result = types_.type_of( callable );
     }
 
+    // Parallel to `resolved`, and empty unless the arguments deduced it: which argument settled
+    // each type parameter, so a broken bound underlines the argument that chose the type rather
+    // than the whole call. Invalid where the expectation is what settled it.
+    std::vector<Node_id> bound_by;
+
     // A generic whose type arguments were not written, which is the ordinary way to call one.
-    // *After* the callable is settled rather than inside either branch above: selection reaches an
+    // *After* the callable is settled rather than inside select_callable: selection reaches an
     // answer by arity alone as readily as by type, and a candidate chosen that way still has its
     // parameters to deduce. One place deduces, whichever way the callable was arrived at.
     // Deduction reports its own failure - which parameter, and why - so there is nothing to add.
     if( !type_args.is_valid() && ast_.is_generic( callable ) )
     {
-        if( shapes.empty() )
+        shape_arguments( id, shapes );
+
+        std::optional<Deduction> deduced = overloads_.deduce_type_arguments( site, callable, shapes, result, expectation );
+
+        if( !deduced )
         {
-            for( const Node_id argument : ast_.arguments( id ) )
-            {
-                shapes.push_back( argument_shape( argument ) );
-            }
+            return refuse_call( id, shapes );
         }
 
-        if( !overloads_.deduce_type_arguments(
-                callable,
-                implicit_params,
-                shapes,
-                ast_.arguments( id ),
-                result,
-                expectation,
-                name,
-                ast_.span( callee ),
-                resolved,
-                bound_by
-            ) )
-        {
-            type_the_arguments_anyway();
-            return types_.poison( id );
-        }
+        resolved = std::move( deduced->resolved );
+        bound_by = std::move( deduced->bound_by );
     }
 
     // Recorded for every call, not only an overloaded one: lowering reads the choice rather than
@@ -587,52 +407,16 @@ Type_id Expressions::infer_call( Node_id id )
         );
     }
 
-    Bindings bindings;
+    const std::optional<Bindings> bindings = instantiate( site, callable, std::move( resolved ), bound_by );
 
-    // Written or deduced, it is the same call from here on. Two conditions rather than one because
-    // a written list is resolved *inside* this block, so it is still empty when the block is
-    // entered - and a deduced one was filled before the callable was even settled.
-    if( type_args.is_valid() || !resolved.empty() )
+    if( !bindings )
     {
-        if( type_args.is_valid() )
-        {
-            if( !annotations_.resolve_type_arguments( callable, type_args, name, resolved ) )
-            {
-                type_the_arguments_anyway();
-                return types_.poison( id );
-            }
-        }
-        else
-        {
-            // Deduced, so there is no written annotation to count or to underline - but a bound is
-            // a promise about the type argument however it was arrived at.
-            const std::vector<Node_id> parameters = ast_.type_parameters( ast_.type_param_list( callable ) );
-
-            for( std::size_t i = 0; i < parameters.size() && i < resolved.size(); ++i )
-            {
-                bounds_.check_bounds(
-                    parameters[i],
-                    i < bound_by.size() && bound_by[i].is_valid() ? ast_.span( bound_by[i] ) : ast_.span( callee ),
-                    resolved[i],
-                    name
-                );
-            }
-        }
-
-        bindings = overloads_.type_bindings( callable, resolved );
-
-        // The edge, before `resolved` is consumed. Only from inside a generic: a call in `main` is
-        // already an instance rather than a step towards one.
-        generic_recursion_.record_call( current_function_, callable, resolved, ast_.span( id ) );
-
-        const std::size_t instance = generic_recursion_.record_instantiation( callable, std::move( resolved ) );
-
-        overloads_.record_instantiation( id, instance );
+        return refuse_call( id, shapes );
     }
 
     // `Overloads` answers what each argument still needs and the walk is done here, because the
     // walk is the one thing a class below may not re-enter.
-    for( const Argument_work& work : overloads_.check_call_arguments( id, callable, name, implicit_params, bindings, shapes ) )
+    for( const Argument_work& work : overloads_.check_call_arguments( site, callable, *bindings, shapes ) )
     {
         if( work.with_expectation )
         {
@@ -644,11 +428,213 @@ Type_id Expressions::infer_call( Node_id id )
         }
     }
 
-    overloads_.check_argument_markers( id, callable, name, implicit_params, bindings );
+    overloads_.check_argument_markers( site, callable, *bindings );
 
     // Substituted here rather than where `result` is set: the aggregate path overwrites it with
     // the type being constructed, so doing it earlier would substitute the wrong thing or twice.
-    return types_.record( id, table_.substitute( result, bindings ) );
+    return types_.record( id, table_.substitute( result, *bindings ) );
+}
+
+// `Buffer( 16 )` names a type, not a function: the arguments belong to its constructors, but the
+// result is the type itself - a constructor returns nothing and writes through `this`. They share
+// the type's name rather than a scope, so they have no chain to walk.
+std::vector<Node_id> Expressions::constructor_candidates( Node_id callee, Node_id aggregate )
+{
+    const std::string_view name = interner_.text( ast_.name( callee ) );
+
+    std::vector<Node_id> candidates;
+    std::size_t          hidden = 0;
+
+    for( const Node_id member : ast_.members( aggregate ) )
+    {
+        if( ast_.kind( member ) != Node_kind::Constructor_decl )
+        {
+            continue;
+        }
+
+        if( overloads_.refused( member ) )
+        {
+            continue;
+        }
+
+        // Filtered rather than refused as a set: overloading means one constructor may be
+        // reachable while its sibling is not, and hiding the ordinary one behind a named
+        // constructor is the whole reason a type would write `private` on it.
+        if( ast_.is_visible_from( member, current_type() ) )
+        {
+            candidates.push_back( member );
+        }
+        else
+        {
+            ++hidden;
+        }
+    }
+
+    if( candidates.empty() && hidden != 0 )
+    {
+        const bool is_prelude_str =
+            name == "str" && resolution_.package_of( ast_.span( aggregate ).file ) == resolution_.prelude_package();
+
+        bool has_factory = false;
+        for( const Node_id member : ast_.members( aggregate ) )
+        {
+            const Type_id member_type = types_.type_of( member );
+            if( ast_.is_static_method( member ) && ast_.is_visible_from( member, current_type() ) && member_type.is_valid() &&
+                table_.is_struct( member_type ) && table_.get( member_type ).declaration == aggregate )
+            {
+                has_factory = true;
+                break;
+            }
+        }
+
+        reporter_.error_at(
+            ast_.span( callee ),
+            fmt::format( "`{}`'s constructor is private", name ),
+            is_prelude_str ? "only a string literal makes one"
+            : has_factory  ? "build it through one of its own static methods instead"
+                           : ""
+        );
+    }
+    else if( candidates.empty() )
+    {
+        reporter_.error_at(
+            ast_.span( callee ),
+            fmt::format( "`{}` has no constructor", name ),
+            fmt::format( "build it from a literal: `{} {{ ... }}`", name )
+        );
+    }
+
+    return candidates;
+}
+
+Type_id Expressions::call_through_value( Node_id id, Node_id decl )
+{
+    const Node_id callee = ast_.callee( id );
+    const Type_id type   = types_.type_of( decl );
+
+    if( ast_.kind( decl ) == Node_kind::Var_decl || ast_.kind( decl ) == Node_kind::Param_decl )
+    {
+        if( table_.is_error( type ) )
+        {
+            return refuse_call( id );
+        }
+        if( table_.is_function( type ) )
+        {
+            return indirect_call( id, decl, type );
+        }
+        if( table_.is_field( type ) )
+        {
+            return field_application( id, type );
+        }
+    }
+
+    // A bare field in a method is `this.field`, so one holding a function is called through.
+    if( ast_.kind( decl ) == Node_kind::Field_decl )
+    {
+        const Type_id callee_type = infer( callee );
+
+        if( table_.is_error( callee_type ) )
+        {
+            return refuse_call( id );
+        }
+
+        if( table_.is_function( callee_type ) )
+        {
+            return indirect_call( id, decl, callee_type );
+        }
+    }
+
+    reporter_.error_at( ast_.span( callee ), fmt::format( "`{}` is not callable", interner_.text( ast_.name( callee ) ) ) );
+    return refuse_call( id );
+}
+
+Node_id Expressions::select_callable(
+    const Call_site&             site,
+    std::span<const Node_id>     candidates,
+    std::vector<Argument_shape>& shapes,
+    std::vector<Type_id>&        resolved
+)
+{
+    if( candidates.size() == 1 )
+    {
+        // A generic call on something that is not generic. After 1b the parser reads `a < b > ( c )`
+        // this way, so this is the message that shape produces - it has to name the real problem.
+        if( ast_.type_arg_list( site.call ).is_valid() && !ast_.is_generic( candidates.front() ) )
+        {
+            reporter_.error_at( site.at, fmt::format( "`{}` is not a generic", site.name ) );
+            return Node_id {};
+        }
+
+        return candidates.front();
+    }
+
+    // Two calls because selection is lazy: what the call wrote narrows the set first, and only
+    // a set still holding two is worth typing an argument for - which is what cannot be undone.
+    const std::vector<Node_id> viable = overloads_.viable_overloads( site, candidates );
+
+    if( viable.size() <= 1 )
+    {
+        return viable.empty() ? Node_id {} : viable.front();
+    }
+
+    // Already shaped where the call could fall back.
+    shape_arguments( site.call, shapes );
+
+    return overloads_.select_overload( site, viable, shapes, resolved );
+}
+
+// Written or deduced, it is the same call from here on. Two conditions rather than one because a
+// written list is resolved *here*, so it is still empty on entry - and a deduced one was filled
+// before the callable was even settled.
+std::optional<Bindings> Expressions::instantiate(
+    const Call_site& site, Node_id callable, std::vector<Type_id> resolved, std::span<const Node_id> bound_by
+)
+{
+    const Node_id type_args = ast_.type_arg_list( site.call );
+
+    if( !type_args.is_valid() && resolved.empty() )
+    {
+        return Bindings {};
+    }
+
+    if( type_args.is_valid() )
+    {
+        if( !annotations_.resolve_type_arguments( callable, type_args, site.name, resolved ) )
+        {
+            return std::nullopt;
+        }
+    }
+    else
+    {
+        // Deduced, so there is no written annotation to count or to underline - but a bound is
+        // a promise about the type argument however it was arrived at.
+        const std::vector<Node_id> parameters = ast_.type_parameters( ast_.type_param_list( callable ) );
+
+        for( std::size_t i = 0; i < parameters.size() && i < resolved.size(); ++i )
+        {
+            bounds_.check_bounds(
+                parameters[i],
+                i < bound_by.size() && bound_by[i].is_valid() ? ast_.span( bound_by[i] ) : site.at,
+                resolved[i],
+                site.name
+            );
+        }
+    }
+
+    Bindings bindings = overloads_.type_bindings( callable, resolved );
+
+    record_instance( site.call, callable, std::move( resolved ) );
+
+    return bindings;
+}
+
+// The edge, then the instance. The edge only matters from inside a generic: a call in `main` is
+// already an instance rather than a step towards one.
+void Expressions::record_instance( Node_id call, Node_id callable, std::vector<Type_id> resolved )
+{
+    generic_recursion_.record_call( current_function_, callable, resolved, ast_.span( call ) );
+
+    overloads_.record_instantiation( call, generic_recursion_.record_instantiation( callable, std::move( resolved ) ) );
 }
 
 Type_id Expressions::infer_method_call( Node_id id )
@@ -726,7 +712,7 @@ Type_id Expressions::infer_method_call( Node_id id )
 
     if( !method.is_valid() )
     {
-        return refuse_method_call( id, shapes );
+        return refuse_call( id, shapes );
     }
 
     // M7's acceptance: a named constructor is refused as `value.make( args )`. The member exists,
@@ -744,14 +730,14 @@ Type_id Expressions::infer_method_call( Node_id id )
             fmt::format( "call it as `{}::{}( ... )`", table_.name( object_type ), interner_.text( ast_.name( callee ) ) )
         );
 
-        return refuse_method_call( id, shapes );
+        return refuse_call( id, shapes );
     }
 
     if( !ast_.is_visible_from( method, current_type() ) )
     {
         report_private( callee, method );
 
-        return refuse_method_call( id, shapes );
+        return refuse_call( id, shapes );
     }
 
     callees_.record( id, method );
@@ -830,13 +816,25 @@ Expressions::check_method_arguments( Node_id id, Node_id method, Type_id receive
         }
     }
 
-    std::string_view name            = interner_.text( ast_.name( method ) );
-    u32              implicit_params = ast_.has_receiver( method ) ? 1 : 0;
-    overloads_.check_argument_markers( id, method, name, implicit_params, bindings );
+    const Call_site site {
+        id, interner_.text( ast_.name( method ) ), ast_.span( ast_.callee( id ) ), ast_.has_receiver( method ) ? 1u : 0u
+    };
+    overloads_.check_argument_markers( site, method, bindings );
 
     record_method_instantiation( id, method, receiver );
 
     return types_.record( id, table_.substitute( types_.type_of( method ), bindings ) );
+}
+
+void Expressions::shape_arguments( Node_id call, std::vector<Argument_shape>& shapes )
+{
+    if( shapes.empty() )
+    {
+        for( const Node_id argument : ast_.arguments( call ) )
+        {
+            shapes.push_back( argument_shape( argument ) );
+        }
+    }
 }
 
 // A method call writes no type arguments - the receiver carries them - so the explicit path that
@@ -856,13 +854,9 @@ void Expressions::record_method_instantiation( Node_id id, Node_id method, Type_
         return;
     }
 
-    const std::vector<Type_id> resolved( arguments.begin(), arguments.end() );
-
     // The same edge a written call records: from inside a generic this names a template, and the
     // worklist is what turns it into an instance once the enclosing one is known.
-    generic_recursion_.record_call( current_function_, method, resolved, ast_.span( id ) );
-
-    overloads_.record_instantiation( id, generic_recursion_.record_instantiation( method, resolved ) );
+    record_instance( id, method, std::vector<Type_id>( arguments.begin(), arguments.end() ) );
 }
 
 // D29/D32. `add( by )` inside a method: the receiver is the one this function was given, so there
@@ -884,7 +878,7 @@ Type_id Expressions::infer_implicit_method_call( Node_id id, Node_id first )
 
     if( !method.is_valid() )
     {
-        return refuse_method_call( id, shapes );
+        return refuse_call( id, shapes );
     }
 
     // M7: a static sibling needs no object, so a bare call to one is as legal from a static method
@@ -906,7 +900,7 @@ Type_id Expressions::infer_implicit_method_call( Node_id id, Node_id first )
             "a method can only be called by bare name from inside another method of the same type"
         );
 
-        return refuse_method_call( id, shapes );
+        return refuse_call( id, shapes );
     }
 
     if( !ast_.is_const_method( method ) && ast_.is_const_binding( receiver ) )
@@ -944,27 +938,28 @@ Node_id Expressions::choose_method( Node_id id, Node_id first, Type_id receiver,
     }
     else if( !viable.empty() )
     {
-        for( const Node_id argument : ast_.arguments( id ) )
-        {
-            shapes.push_back( argument_shape( argument ) );
-        }
-
+        shape_arguments( id, shapes );
         method = overloads_.select_method( id, first, receiver, viable, shapes );
     }
 
     return method;
 }
 
-Type_id Expressions::refuse_method_call( Node_id id, std::span<const Argument_shape> shapes )
+Type_id Expressions::refuse_call( Node_id id, std::span<const Argument_shape> shapes )
 {
     const std::span<const Node_id> arguments = ast_.arguments( id );
 
     for( std::size_t i = 0; i < arguments.size(); ++i )
     {
-        if( i >= shapes.size() || !shapes[i].recorded )
+        // A family shape was ruled on by selection, and typed with nothing to give it a type it
+        // would only settle on an `i32` the author never meant.
+        if( i < shapes.size() &&
+            ( shapes[i].recorded || shapes[i].kind == Argument_kind::Integer || shapes[i].kind == Argument_kind::Floating ) )
         {
-            infer( arguments[i] );
+            continue;
         }
+
+        infer( arguments[i] );
     }
 
     return types_.poison( id );
@@ -1192,8 +1187,7 @@ Type_id Expressions::function_address( Node_id id, Node_id declaration )
     // Recorded after the refusal, because a refused address seeds no instance.
     if( type_args.is_valid() )
     {
-        generic_recursion_.record_call( current_function_, declaration, resolved, ast_.span( id ) );
-        overloads_.record_instantiation( id, generic_recursion_.record_instantiation( declaration, std::move( resolved ) ) );
+        record_instance( id, declaration, std::move( resolved ) );
     }
 
     callees_.record( id, declaration );
@@ -1876,28 +1870,28 @@ Type_id Expressions::infer_static_call( Node_id id, Node_id aggregate )
             ast_.span( path ), "a constructor is not a static method", fmt::format( "construct it as `{}( ... )`", owner )
         );
 
-        return refuse_method_call( id, shapes );
+        return refuse_call( id, shapes );
     }
 
     if( !first.is_valid() )
     {
         reporter_.error_at( ast_.span( path ), fmt::format( "`{}` has no static method `{}`", owner, interner_.text( name ) ) );
 
-        return refuse_method_call( id, shapes );
+        return refuse_call( id, shapes );
     }
 
     const Type_id instance = qualifier_type( path, aggregate );
 
     if( table_.is_error( instance ) )
     {
-        return refuse_method_call( id, shapes );
+        return refuse_call( id, shapes );
     }
 
     const Node_id method = choose_method( id, first, instance, shapes );
 
     if( !method.is_valid() )
     {
-        return refuse_method_call( id, shapes );
+        return refuse_call( id, shapes );
     }
 
     // The two spellings are not interchangeable. An instance method has a receiver the type cannot
@@ -1910,14 +1904,14 @@ Type_id Expressions::infer_static_call( Node_id id, Node_id aggregate )
             fmt::format( "call it as `value.{}( ... )`", interner_.text( name ) )
         );
 
-        return refuse_method_call( id, shapes );
+        return refuse_call( id, shapes );
     }
 
     if( !ast_.is_visible_from( method, current_type() ) )
     {
         report_private( path, method );
 
-        return refuse_method_call( id, shapes );
+        return refuse_call( id, shapes );
     }
 
     // Which callable this call chose. Lowering reads it to tell a static call from the variant

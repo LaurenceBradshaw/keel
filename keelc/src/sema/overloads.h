@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #pragma once
+#include <optional>
 #include <unordered_map>
 #include <unordered_set>
 #include "ast/ast.h"
@@ -45,6 +46,21 @@ struct Argument_work
     bool    with_expectation = false;
 };
 
+struct Call_site
+{
+    Node_id          call;
+    std::string_view name {};
+    Span             at {}; // the callee's span
+    u32              implicit_params = 0;
+    Type_id          instance        = {}; // the constructed aggregate; invalid for a free function
+};
+
+struct Deduction
+{
+    std::vector<Type_id> resolved;
+    std::vector<Node_id> bound_by;
+};
+
 // Which callable a call names, and what its arguments then have to be. None of these re-enters the
 // expression walk, which is the rule every class below it obeys: selection takes the argument
 // *shapes* the caller reduced them to, and argument checking hands the walk back a list to perform.
@@ -76,17 +92,8 @@ public:
 
     Bindings type_bindings( Node_id callable, std::span<const Type_id> arguments ) const;
 
-    bool deduce_type_arguments(
-        Node_id                         callable,
-        u32                             implicit_params,
-        std::span<const Argument_shape> shapes,
-        std::span<const Node_id>        arguments,
-        Type_id                         result,
-        Type_id                         expectation,
-        std::string_view                name,
-        Span                            at,
-        std::vector<Type_id>&           resolved,
-        std::vector<Node_id>&           bound_by
+    std::optional<Deduction> deduce_type_arguments(
+        const Call_site& site, Node_id callable, std::span<const Argument_shape> shapes, Type_id result, Type_id expectation
     );
 
     // Selection is two calls because it is lazy, and the laziness is a rule rather than an
@@ -97,17 +104,12 @@ public:
     // `instance` is the aggregate a construction is for, so its candidate list can spell `Box<i32>`'s
     // parameters rather than the declaration's `T`. Invalid for a free function, which is named
     // rather than instantiated - the method pair below takes the receiver for the same reason.
-    std::vector<Node_id> viable_overloads(
-        Node_id call, std::string_view name, std::span<const Node_id> candidates, u32 implicit_params, Type_id instance
-    );
+    std::vector<Node_id> viable_overloads( const Call_site& site, std::span<const Node_id> candidates );
     std::vector<Node_id> viable_methods( Node_id call, Node_id first, Type_id receiver );
 
     Node_id select_overload(
-        Node_id                         call,
-        std::string_view                name,
+        const Call_site&                site,
         std::span<const Node_id>        viable,
-        u32                             implicit_params,
-        Type_id                         instance,
         std::span<const Argument_shape> shapes,
         std::vector<Type_id>&           resolved
     );
@@ -118,16 +120,9 @@ public:
     // Everything about the arguments that is the callable's business - arity, types, and D2's
     // markers - reported here; the walking the answers imply is handed back in order.
     std::vector<Argument_work> check_call_arguments(
-        Node_id                         call,
-        Node_id                         callable,
-        std::string_view                name,
-        u32                             implicit_params,
-        const Bindings&                 bindings,
-        std::span<const Argument_shape> shapes
+        const Call_site& site, Node_id callable, const Bindings& bindings, std::span<const Argument_shape> shapes
     );
-    void check_argument_markers(
-        Node_id call, Node_id callable, std::string_view name, u32 implicit_params, const Bindings& bindings
-    );
+    void check_argument_markers( const Call_site& site, Node_id callable, const Bindings& bindings );
     // One argument against the one mode its parameter declares. Its own member because an indirect
     // call asks exactly this, with `mode` read off a function type instead of off a Param_decl -
     // and the rule may not differ between a call through a name and a call through a variable.
@@ -171,10 +166,8 @@ private:
         std::span<const Node_id> widened, std::span<const std::vector<Type_id>> targets, std::span<const Argument_shape> shapes
     ) const;
     std::vector<Node_id> matching(
-        Node_id                         call,
+        const Call_site&                site,
         std::span<const Node_id>        viable,
-        u32                             implicit_params,
-        Type_id                         instance,
         std::span<const Argument_shape> shapes,
         std::span<const Type_id>        resolved
     );

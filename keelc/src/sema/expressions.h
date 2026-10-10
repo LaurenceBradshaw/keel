@@ -111,6 +111,21 @@ public:
 private:
     Type_id infer_name( Node_id id );
     Type_id infer_call( Node_id id );
+    // Empty after reporting why none can be called.
+    std::vector<Node_id> constructor_candidates( Node_id callee, Node_id aggregate );
+    // A callee that names a variable, parameter or field rather than a function.
+    Type_id call_through_value( Node_id id, Node_id decl );
+    // Invalid after reporting why none was chosen.
+    Node_id select_callable(
+        const Call_site&             site,
+        std::span<const Node_id>     candidates,
+        std::vector<Argument_shape>& shapes,
+        std::vector<Type_id>&        resolved
+    );
+    // Bindings of a written or deduced instance, empty for a non-generic; none after reporting.
+    std::optional<Bindings>
+    instantiate( const Call_site& site, Node_id callable, std::vector<Type_id> resolved, std::span<const Node_id> bound_by );
+    void record_instance( Node_id call, Node_id callable, std::vector<Type_id> resolved );
 
     // What an argument can say about itself before a candidate has been chosen. It takes a node and
     // infers it, which is the half `Overloads` may not do - so the walk keeps it.
@@ -121,9 +136,10 @@ private:
     // Which of the methods named like `first` this call means, or none after reporting why. `shapes`
     // holds the arguments selection typed, for check_method_arguments.
     Node_id choose_method( Node_id id, Node_id first, Type_id receiver, std::vector<Argument_shape>& shapes );
-    // A refused method call: types the arguments selection did not, so none is left untyped.
-    Type_id refuse_method_call( Node_id id, std::span<const Argument_shape> shapes );
+    // A refused call still types its arguments, once each, or a mistake inside one goes unreported.
+    Type_id refuse_call( Node_id id, std::span<const Argument_shape> shapes = {} );
     Type_id check_method_arguments( Node_id id, Node_id method, Type_id receiver, std::span<const Argument_shape> shapes = {} );
+    void    shape_arguments( Node_id call, std::vector<Argument_shape>& shapes ); // no-op once shaped
     void    record_method_instantiation( Node_id id, Node_id method, Type_id receiver );
 
     // These two infer their operands and hand the types to `Operators`, which holds the rules.

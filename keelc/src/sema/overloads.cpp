@@ -105,24 +105,16 @@ bool Overloads::fits( Node_id call, Node_id candidate, u32 implicit_params ) con
 // therefore instantiates `id<i32>` and widens the result, exactly as the written `id<i32>( a )`
 // does: an expectation is where a value is going, not a constraint on how it was made.
 //
-// False with a diagnostic already reported. `resolved` comes back as the vector a written list
+// Empty with a diagnostic already reported. `resolved` comes back as the vector a written list
 // would have produced, so everything downstream - the bounds, the instantiation, the call graph,
 // the mangled name - cannot tell a deduced call from a written one.
-bool Overloads::deduce_type_arguments(
-    Node_id                         callable,
-    u32                             implicit_params,
-    std::span<const Argument_shape> shapes,
-    std::span<const Node_id>        arguments,
-    Type_id                         result,
-    Type_id                         expectation,
-    std::string_view                name,
-    Span                            at,
-    std::vector<Type_id>&           resolved,
-    std::vector<Node_id>&           bound_by
+std::optional<Deduction> Overloads::deduce_type_arguments(
+    const Call_site& site, Node_id callable, std::span<const Argument_shape> shapes, Type_id result, Type_id expectation
 )
 {
     const std::vector<Node_id>     parameters = ast_.type_parameters( ast_.type_param_list( callable ) );
-    const std::span<const Node_id> params     = ast_.params( callable ).subspan( implicit_params );
+    const std::span<const Node_id> params     = ast_.params( callable ).subspan( site.implicit_params );
+    const std::span<const Node_id> arguments  = ast_.arguments( site.call );
 
     Bindings                         bindings;
     std::unordered_map<u32, Node_id> from; // which argument bound each parameter, for the messages
@@ -175,7 +167,7 @@ bool Overloads::deduce_type_arguments(
                 fmt::format( "an earlier argument already made it `{}`", table_.name( already->second ) )
             );
 
-            return false;
+            return std::nullopt;
         }
     }
 
@@ -198,8 +190,9 @@ bool Overloads::deduce_type_arguments(
 
     // All or nothing: a partial list is a rule nobody can recite, so one parameter left open sends
     // the author to the explicit form for the whole call.
-    resolved.reserve( parameters.size() );
-    bound_by.reserve( parameters.size() );
+    Deduction deduction;
+    deduction.resolved.reserve( parameters.size() );
+    deduction.bound_by.reserve( parameters.size() );
 
     for( const Node_id parameter : parameters )
     {
@@ -208,24 +201,22 @@ bool Overloads::deduce_type_arguments(
         if( found == bindings.end() )
         {
             reporter_.error_at(
-                at,
-                fmt::format( "nothing here says what `{}` is in `{}`", interner_.text( ast_.name( parameter ) ), name ),
-                fmt::format( "write the type arguments, as in `{}<i32>( ... )`", name )
+                site.at,
+                fmt::format( "nothing here says what `{}` is in `{}`", interner_.text( ast_.name( parameter ) ), site.name ),
+                fmt::format( "write the type arguments, as in `{}<i32>( ... )`", site.name )
             );
 
-            resolved.clear();
-            bound_by.clear();
-            return false;
+            return std::nullopt;
         }
 
-        resolved.push_back( found->second );
+        deduction.resolved.push_back( found->second );
 
         const auto bound = from.find( found->first );
 
-        bound_by.push_back( bound == from.end() ? Node_id {} : bound->second );
+        deduction.bound_by.push_back( bound == from.end() ? Node_id {} : bound->second );
     }
 
-    return true;
+    return deduction;
 }
 
 // D31's marker is part of what the call says, so it selects as much as the type does. The exemption
@@ -421,15 +412,13 @@ std::vector<Node_id> Overloads::closest(
 
 // Both tiers over `viable`, reporting nothing: the exact matches, else the closest widenings.
 std::vector<Node_id> Overloads::matching(
-    Node_id                         call,
+    const Call_site&                site,
     std::span<const Node_id>        viable,
-    u32                             implicit_params,
-    Type_id                         instance,
     std::span<const Argument_shape> shapes,
     std::span<const Type_id>        resolved
 )
 {
-    const std::size_t                 written = ast_.type_args( call ).size();
+    const std::size_t                 written = ast_.type_args( site.call ).size();
     std::vector<Node_id>              widened_candidates;
     std::vector<std::vector<Type_id>> targets;
     std::vector<Node_id>              matching_candidates;
@@ -438,7 +427,7 @@ std::vector<Node_id> Overloads::matching(
     // are - so `Box<i32> b = Box( 7, true );` settles `T` before an argument is read. That is the
     // receiver's role in select_method rather than selection by return type, which
     // deduce_for_candidate refuses for a function and still refuses here.
-    const Bindings from_instance = aggregates_.bindings_of( instance );
+    const Bindings from_instance = aggregates_.bindings_of( site.instance );
 
     for( const Node_id candidate : viable )
     {
@@ -449,7 +438,7 @@ std::vector<Node_id> Overloads::matching(
         std::vector<Type_id> deduced;
         const bool           infers = written == 0 && from_instance.empty() && ast_.is_generic( candidate );
 
-        if( infers && !deduce_for_candidate( candidate, implicit_params, shapes, deduced ) )
+        if( infers && !deduce_for_candidate( candidate, site.implicit_params, shapes, deduced ) )
         {
             continue; // nothing here says what its parameters are, so it is not what was meant
         }
@@ -458,14 +447,14 @@ std::vector<Node_id> Overloads::matching(
         Bindings bindings = type_bindings( candidate, infers ? deduced : resolved );
         bindings.insert( from_instance.begin(), from_instance.end() );
 
-        if( candidate_accepts( candidate, implicit_params, shapes, bindings, false ) )
+        if( candidate_accepts( candidate, site.implicit_params, shapes, bindings, false ) )
         {
             matching_candidates.push_back( candidate );
         }
-        else if( candidate_accepts( candidate, implicit_params, shapes, bindings, true ) )
+        else if( candidate_accepts( candidate, site.implicit_params, shapes, bindings, true ) )
         {
             widened_candidates.push_back( candidate );
-            targets.push_back( parameter_types( candidate, implicit_params, bindings ) );
+            targets.push_back( parameter_types( candidate, site.implicit_params, bindings ) );
         }
     }
 
@@ -480,12 +469,10 @@ std::vector<Node_id> Overloads::matching(
 // The set narrowed by what the call wrote. Empty with a diagnostic already reported, one when that
 // settled it, or the rest for the caller to shape its arguments for. Only ever reached with two or
 // more candidates: one is the ordinary path, which this must leave exactly as it was.
-std::vector<Node_id> Overloads::viable_overloads(
-    Node_id call, std::string_view name, std::span<const Node_id> candidates, u32 implicit_params, Type_id instance
-)
+std::vector<Node_id> Overloads::viable_overloads( const Call_site& site, std::span<const Node_id> candidates )
 {
-    const std::span<const Node_id> arguments = ast_.arguments( call );
-    const std::size_t              written   = ast_.type_args( call ).size();
+    const std::span<const Node_id> arguments = ast_.arguments( site.call );
+    const std::size_t              written   = ast_.type_args( site.call ).size();
 
     // How many arguments and how many type arguments are what the call *says*, so they narrow the
     // set before anything is typed - and typing an argument is what cannot be taken back.
@@ -493,7 +480,7 @@ std::vector<Node_id> Overloads::viable_overloads(
 
     for( const Node_id candidate : candidates )
     {
-        if( fits( call, candidate, implicit_params ) )
+        if( fits( site.call, candidate, site.implicit_params ) )
         {
             viable.push_back( candidate );
         }
@@ -506,14 +493,14 @@ std::vector<Node_id> Overloads::viable_overloads(
         const bool arity = std::none_of(
             candidates.begin(),
             candidates.end(),
-            [&]( Node_id candidate ) { return ast_.params( candidate ).size() - implicit_params == arguments.size(); }
+            [&]( Node_id candidate ) { return ast_.params( candidate ).size() - site.implicit_params == arguments.size(); }
         );
 
         reporter_.error_at(
-            ast_.span( call ),
-            arity ? fmt::format( "no `{}` takes {} argument{}", name, arguments.size(), arguments.size() == 1 ? "" : "s" )
-                  : fmt::format( "no `{}` takes {} type argument{}", name, written, written == 1 ? "" : "s" ),
-            fmt::format( "the ones declared take {}", candidate_list( candidates, aggregates_.bindings_of( instance ) ) )
+            ast_.span( site.call ),
+            arity ? fmt::format( "no `{}` takes {} argument{}", site.name, arguments.size(), arguments.size() == 1 ? "" : "s" )
+                  : fmt::format( "no `{}` takes {} type argument{}", site.name, written, written == 1 ? "" : "s" ),
+            fmt::format( "the ones declared take {}", candidate_list( candidates, aggregates_.bindings_of( site.instance ) ) )
         );
     }
 
@@ -523,24 +510,21 @@ std::vector<Node_id> Overloads::viable_overloads(
 // The rest of the choice, over the shapes the caller reduced the arguments to. `viable` is what the
 // call above handed back, so the counts it already ruled on are not asked again.
 Node_id Overloads::select_overload(
-    Node_id                         call,
-    std::string_view                name,
+    const Call_site&                site,
     std::span<const Node_id>        viable,
-    u32                             implicit_params,
-    Type_id                         instance,
     std::span<const Argument_shape> shapes,
     std::vector<Type_id>&           resolved
 )
 {
-    if( ast_.type_arg_list( call ).is_valid() && resolved.empty() )
+    if( ast_.type_arg_list( site.call ).is_valid() && resolved.empty() )
     {
-        for( const Node_id written_argument : ast_.type_args( call ) )
+        for( const Node_id written_argument : ast_.type_args( site.call ) )
         {
             resolved.push_back( annotations_.resolve( written_argument ) );
         }
     }
 
-    std::vector<Node_id> matching_candidates = matching( call, viable, implicit_params, instance, shapes, resolved );
+    std::vector<Node_id> matching_candidates = matching( site, viable, shapes, resolved );
 
     // A non-generic candidate beats a generic one, and two generics are ambiguous: read off the
     // declarations, and settling ties among exact matches or among equally close widenings.
@@ -576,9 +560,9 @@ Node_id Overloads::select_overload(
 
         for( const Node_id candidate : viable )
         {
-            const std::vector<Argument_shape> shapes_aside = unmarked( candidate, implicit_params, shapes );
+            const std::vector<Argument_shape> shapes_aside = unmarked( candidate, site.implicit_params, shapes );
 
-            if( !matching( call, std::span( &candidate, 1 ), implicit_params, instance, shapes_aside, resolved ).empty() )
+            if( !matching( site, std::span( &candidate, 1 ), shapes_aside, resolved ).empty() )
             {
                 reached.push_back( candidate );
             }
@@ -590,9 +574,9 @@ Node_id Overloads::select_overload(
         }
 
         reporter_.error_at(
-            ast_.span( call ),
-            fmt::format( "no `{}` matches these arguments", name ),
-            fmt::format( "the ones declared take {}", candidate_list( viable, aggregates_.bindings_of( instance ) ) )
+            ast_.span( site.call ),
+            fmt::format( "no `{}` matches these arguments", site.name ),
+            fmt::format( "the ones declared take {}", candidate_list( viable, aggregates_.bindings_of( site.instance ) ) )
         );
 
         return Node_id {};
@@ -609,12 +593,12 @@ Node_id Overloads::select_overload(
     );
 
     reporter_.error_at(
-        ast_.span( call ),
-        fmt::format( "this call to `{}` is ambiguous", name ),
+        ast_.span( site.call ),
+        fmt::format( "this call to `{}` is ambiguous", site.name ),
         fmt::format(
             "more than one matches: {}; {}",
-            candidate_list( matching_candidates, aggregates_.bindings_of( instance ) ),
-            all_generic ? fmt::format( "write the type arguments, as in `{}<i32>( ... )`", name )
+            candidate_list( matching_candidates, aggregates_.bindings_of( site.instance ) ),
+            all_generic ? fmt::format( "write the type arguments, as in `{}<i32>( ... )`", site.name )
                         : std::string( "write a type the call can be told by" )
         )
     );
@@ -723,27 +707,21 @@ Node_id Overloads::select_method(
 // and on the overloaded one it says which arguments selection has already typed. What is left for
 // the walk comes back in argument order rather than being walked here - §4.3.
 std::vector<Argument_work> Overloads::check_call_arguments(
-    Node_id                         call,
-    Node_id                         callable,
-    std::string_view                name,
-    u32                             implicit_params,
-    const Bindings&                 bindings,
-    std::span<const Argument_shape> shapes
+    const Call_site& site, Node_id callable, const Bindings& bindings, std::span<const Argument_shape> shapes
 )
 {
     const std::span<const Node_id> declared  = ast_.params( callable );
-    const std::span<const Node_id> params    = declared.subspan( implicit_params );
-    const std::span<const Node_id> arguments = ast_.arguments( call );
-
-    std::vector<Argument_work> work;
+    const std::span<const Node_id> params    = declared.subspan( site.implicit_params );
+    const std::span<const Node_id> arguments = ast_.arguments( site.call );
+    std::vector<Argument_work>     work;
 
     if( params.size() != arguments.size() )
     {
         reporter_.error_at(
-            ast_.span( ast_.arg_list( call ) ),
+            ast_.span( ast_.arg_list( site.call ) ),
             fmt::format(
                 "`{}` takes {} argument{}, but {} {} given",
-                name,
+                site.name,
                 params.size(),
                 params.size() == 1 ? "" : "s",
                 arguments.size(),
@@ -796,18 +774,16 @@ std::vector<Argument_work> Overloads::check_call_arguments(
 // D2's markers, after the caller has walked the work above. A second member rather than the second
 // half of the first: the borrow rule below reads the argument's recorded type, which is not written
 // until the walk this class handed back has run.
-void Overloads::check_argument_markers(
-    Node_id call, Node_id callable, std::string_view name, u32 implicit_params, const Bindings& bindings
-)
+void Overloads::check_argument_markers( const Call_site& site, Node_id callable, const Bindings& bindings )
 {
-    const std::span<const Node_id> params    = ast_.params( callable ).subspan( implicit_params );
-    const std::span<const Node_id> arguments = ast_.arguments( call );
+    const std::span<const Node_id> params    = ast_.params( callable ).subspan( site.implicit_params );
+    const std::span<const Node_id> arguments = ast_.arguments( site.call );
 
     for( std::size_t i = 0; i < std::min( params.size(), arguments.size() ); ++i )
     {
         const Type_id expected = table_.substitute( types_.type_of( params[i] ), bindings );
 
-        check_one_argument_marker( arguments[i], parameter_mode_of( ast_, params[i] ), expected, name );
+        check_one_argument_marker( arguments[i], parameter_mode_of( ast_, params[i] ), expected, site.name );
     }
 }
 
@@ -1216,7 +1192,7 @@ bool Overloads::applies(
         const std::vector<Argument_shape> tried =
             ignore_markers ? unmarked( candidate, 0, shapes ) : std::vector<Argument_shape>( shapes.begin(), shapes.end() );
 
-        if( !matching( call, std::span( &candidate, 1 ), 0, Type_id {}, tried, resolved ).empty() )
+        if( !matching( Call_site { call }, std::span( &candidate, 1 ), tried, resolved ).empty() )
         {
             return true;
         }

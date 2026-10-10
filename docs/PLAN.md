@@ -1202,8 +1202,9 @@ mutable member. **At M9.1**: the dataflow wording out of `main.cpp` into `check/
 test fixture that runs the real pipeline, prelude included (R11), **done**: `check/pipeline_test_support.h`'s
 `Compiled`. **At M9.5**: the parser's cursor and recovery as
 classes (R3, with R5 and R18), **done**: `Token_cursor`, `Recovery`, `parse_expression` split into prefix,
-postfix and infix with named entry points; `infer_call`'s phases and a call-site struct (R6, R15), and the
-resolver's long cases (R12). **Later, or when next touched**: `Addresses` out of `Expressions` (R4),
+postfix and infix with named entry points; `infer_call`'s phases and a call-site struct (R6, R15),
+**done**: `Call_site`, `Deduction`, `refuse_call`, `constructor_candidates`, `call_through_value`,
+`select_callable`, `instantiate` and `record_instance`; and the resolver's long cases (R12). **Later, or when next touched**: `Addresses` out of `Expressions` (R4),
 the `Types` renames (R8) once files stop moving, R16 and R21, and R19's comment sweep of
 `ir/lower.cpp` and `parse/parser.cpp` (`check/` **done**).
 
