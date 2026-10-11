@@ -13,6 +13,7 @@
 #include "common/interner.h"
 #include "common/literal_pool.h"
 #include "common/source_manager.h"
+#include "sema/conformances.h"
 #include "sema/resolver.h"
 #include "sema/type.h"
 
@@ -70,7 +71,8 @@ public:
         std::unordered_map<u32, Node_id>        callees,
         std::vector<Instantiation>              instantiations,
         std::unordered_map<u32, u32>            instantiation_of,
-        std::vector<Generic_call>               generic_calls
+        std::vector<Generic_call>               generic_calls,
+        Conformances                            conformances
     )
         : table_( std::move( table ) ),
           types_( std::move( types ) ),
@@ -79,7 +81,8 @@ public:
           callees_( std::move( callees ) ),
           instantiations_( std::move( instantiations ) ),
           instantiation_of_( std::move( instantiation_of ) ),
-          generic_calls_( std::move( generic_calls ) )
+          generic_calls_( std::move( generic_calls ) ),
+          conformances_( std::move( conformances ) )
     {
     }
 
@@ -154,6 +157,12 @@ public:
         return found == instantiation_of_.end() ? std::nullopt : std::optional<std::size_t>( found->second );
     }
 
+    // Which method answers each interface's, for every `implements` written.
+    const Conformances& conformances() const
+    {
+        return conformances_;
+    }
+
 private:
     Type_table                              table_;
     std::vector<Type_id>                    types_;
@@ -163,6 +172,7 @@ private:
     std::vector<Instantiation>              instantiations_;
     std::unordered_map<u32, u32>            instantiation_of_;
     std::vector<Generic_call>               generic_calls_;
+    Conformances                            conformances_;
 };
 
 Types type_check( const Ast&, const Resolution&, const Literal_pool&, const Source_manager&, const Interner&, Diagnostics& );

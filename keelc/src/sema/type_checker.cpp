@@ -142,6 +142,11 @@ Types Checker::run()
     }
 
     signatures_.declare();
+
+    // Every signature is typed by here, and nothing below reads the answer before a body does.
+    Conformances conformances = check_conformances( ast_, table_, types_.recorded() );
+    report_conformance_errors( ast_, interner_, table_, conformances.errors, reporter_ );
+
     statements_.visit( ast_.root() );
 
     // After the bodies: the graph it walks is built one edge per generic call typed, so it is not
@@ -156,7 +161,8 @@ Types Checker::run()
         callees_.take(),
         generic_recursion_.take_instantiations(),
         overloads_.take_instantiations(),
-        generic_recursion_.take_generic_calls()
+        generic_recursion_.take_generic_calls(),
+        std::move( conformances )
     );
 }
 
