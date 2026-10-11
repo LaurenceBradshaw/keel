@@ -1,0 +1,414 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "interfaces.kl.prelude.c"
+
+struct kl__Circle;
+struct kl__Square;
+struct kl__Pair__I3i32E;
+
+struct kl__Shape__vtable;
+struct kl__Shape__ref { void* self; const struct kl__Shape__vtable* vtable; };
+
+struct kl__Circle
+{
+    double kl_r_19;
+};
+
+struct kl__Square
+{
+    double kl_side_63;
+};
+
+struct kl__Pair__I3i32E
+{
+    int32_t kl_a_98;
+    int32_t kl_b_100;
+};
+
+struct kl__Shape__vtable
+{
+    double ( *kl_area_6 )( void* );
+    void ( *kl_grow_14 )( void*, double );
+};
+
+void kl__Circle__R6Circle_3f64__ctor( struct kl__Circle*, double );
+double kl__area__S6Circle( struct kl__Circle* );
+void kl__grow__S6Circle_3f64( struct kl__Circle*, double );
+double kl__area__S6Square( struct kl__Square* );
+void kl__grow__S6Square_3f64( struct kl__Square*, double );
+double kl__measure__5Shape( struct kl__Shape__ref );
+void kl__enlarge__R5Shape( struct kl__Shape__ref );
+double kl__through_pointer__P5Shape( struct kl__Shape__ref );
+int32_t kl__main__( void );
+double kl__statically__I6CircleE__6Circle( struct kl__Circle* );
+double kl__statically__I6SquareE__6Square( struct kl__Square* );
+double kl__statically__I4PairI3i32EE__4PairI3i32E( struct kl__Pair__I3i32E* );
+double kl__area__I3i32E__S4PairI3i32E( struct kl__Pair__I3i32E* );
+void kl__grow__I3i32E__S4PairI3i32E_3f64( struct kl__Pair__I3i32E*, double );
+
+static double kl__Circle__as_kl__Shape__kl_area_6( void* self )
+{
+    return kl__area__S6Circle( ( struct kl__Circle* ) self );
+}
+
+static void kl__Circle__as_kl__Shape__kl_grow_14( void* self, double p0 )
+{
+    kl__grow__S6Circle_3f64( ( struct kl__Circle* ) self, p0 );
+}
+
+static const struct kl__Shape__vtable kl__Circle__as_kl__Shape = { kl__Circle__as_kl__Shape__kl_area_6, kl__Circle__as_kl__Shape__kl_grow_14 };
+
+static double kl__Square__as_kl__Shape__kl_area_6( void* self )
+{
+    return kl__area__S6Square( ( struct kl__Square* ) self );
+}
+
+static void kl__Square__as_kl__Shape__kl_grow_14( void* self, double p0 )
+{
+    kl__grow__S6Square_3f64( ( struct kl__Square* ) self, p0 );
+}
+
+static const struct kl__Shape__vtable kl__Square__as_kl__Shape = { kl__Square__as_kl__Shape__kl_area_6, kl__Square__as_kl__Shape__kl_grow_14 };
+
+static double kl__Pair__I3i32E__as_kl__Shape__kl_area_6( void* self )
+{
+    return kl__area__I3i32E__S4PairI3i32E( ( struct kl__Pair__I3i32E* ) self );
+}
+
+static void kl__Pair__I3i32E__as_kl__Shape__kl_grow_14( void* self, double p0 )
+{
+    kl__grow__I3i32E__S4PairI3i32E_3f64( ( struct kl__Pair__I3i32E* ) self, p0 );
+}
+
+static const struct kl__Shape__vtable kl__Pair__I3i32E__as_kl__Shape = { kl__Pair__I3i32E__as_kl__Shape__kl_area_6, kl__Pair__I3i32E__as_kl__Shape__kl_grow_14 };
+
+void kl__Circle__R6Circle_3f64__ctor( struct kl__Circle* kl_this_1, double kl_radius_2 )
+{
+#line 14 "codegen/interfaces.kl"
+    ( *kl_this_1 ).kl_r_19 = kl_radius_2;
+    return;
+}
+
+double kl__area__S6Circle( struct kl__Circle* kl_this_1 )
+{
+    double kl_t0;
+    double kl_t2;
+    double kl_t3;
+#line 16 "codegen/interfaces.kl"
+    kl_t2 = 3.0 * ( *kl_this_1 ).kl_r_19;
+    kl_t3 = kl_t2 * ( *kl_this_1 ).kl_r_19;
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+void kl__grow__S6Circle_3f64( struct kl__Circle* kl_this_1, double kl_by_2 )
+{
+    double kl_t3;
+#line 17 "codegen/interfaces.kl"
+    kl_t3 = ( *kl_this_1 ).kl_r_19 + kl_by_2;
+    ( *kl_this_1 ).kl_r_19 = kl_t3;
+    return;
+}
+
+double kl__area__S6Square( struct kl__Square* kl_this_1 )
+{
+    double kl_t0;
+    double kl_t2;
+#line 24 "codegen/interfaces.kl"
+    kl_t2 = ( *kl_this_1 ).kl_side_63 * ( *kl_this_1 ).kl_side_63;
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+void kl__grow__S6Square_3f64( struct kl__Square* kl_this_1, double kl_by_2 )
+{
+    double kl_t3;
+#line 25 "codegen/interfaces.kl"
+    kl_t3 = ( *kl_this_1 ).kl_side_63 + kl_by_2;
+    ( *kl_this_1 ).kl_side_63 = kl_t3;
+    return;
+}
+
+double kl__measure__5Shape( struct kl__Shape__ref kl_s_1 )
+{
+    double kl_t0;
+    struct kl__Shape__ref kl_t2;
+    double kl_t3;
+#line 37 "codegen/interfaces.kl"
+    kl_t2 = kl_s_1;
+    kl_t3 = kl_t2.vtable->kl_area_6( kl_t2.self );
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+void kl__enlarge__R5Shape( struct kl__Shape__ref kl_s_1 )
+{
+    struct kl__Shape__ref kl_t2;
+#line 39 "codegen/interfaces.kl"
+    kl_t2 = kl_s_1;
+    kl_t2.vtable->kl_grow_14( kl_t2.self, 1.0 );
+    return;
+}
+
+double kl__through_pointer__P5Shape( struct kl__Shape__ref kl_s_1 )
+{
+    double kl_t0;
+    double kl_t2;
+#line 41 "codegen/interfaces.kl"
+    kl_t2 = kl_s_1.vtable->kl_area_6( kl_s_1.self );
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__Circle kl_c_1;
+    struct kl__Circle* kl_t2;
+    struct kl__Square kl_q_4;
+    struct kl__Square kl_t5;
+    struct kl__Shape__ref kl_t6;
+    double kl_t7;
+    bool kl_t8;
+    struct kl__Shape__ref kl_t9;
+    double kl_t10;
+    bool kl_t11;
+    struct kl__Shape__ref kl_t12;
+    struct kl__Shape__ref kl_t14;
+    struct kl__Shape__ref kl_t16;
+    double kl_t17;
+    bool kl_t18;
+    struct kl__Shape__ref kl_t19;
+    double kl_t20;
+    bool kl_t21;
+    struct kl__Shape__ref kl_p_22;
+    struct kl__Square* kl_t23;
+    struct kl__Shape__ref kl_t24;
+    double kl_t25;
+    bool kl_t26;
+    struct kl__Shape__ref kl_none_27;
+    bool kl_t28;
+    bool kl_t29;
+    bool kl_t30;
+    struct kl__Circle* kl_t31;
+    struct kl__Shape__ref kl_t32;
+    double kl_t33;
+    bool kl_t34;
+    struct kl__Circle* kl_t35;
+    double kl_t36;
+    bool kl_t37;
+    struct kl__Square* kl_t38;
+    double kl_t39;
+    bool kl_t40;
+    struct kl__Shape__ref kl_held_41;
+    struct kl__Shape__ref kl_t42;
+    double kl_t43;
+    bool kl_t44;
+    struct kl__Pair__I3i32E kl_two_45;
+    struct kl__Pair__I3i32E kl_t46;
+    struct kl__Shape__ref kl_t47;
+    double kl_t48;
+    bool kl_t49;
+    struct kl__Pair__I3i32E* kl_t50;
+    double kl_t51;
+    bool kl_t52;
+#line 47 "codegen/interfaces.kl"
+    kl_t2 = &kl_c_1;
+    kl__Circle__R6Circle_3f64__ctor( kl_t2, 1.0 );
+#line 48 "codegen/interfaces.kl"
+    kl_t5.kl_side_63 = 2.0;
+    kl_q_4 = kl_t5;
+#line 50 "codegen/interfaces.kl"
+    kl_t6 = ( struct kl__Shape__ref ) { ( void* ) &kl_c_1, &kl__Circle__as_kl__Shape };
+    kl_t7 = kl__measure__5Shape( kl_t6 );
+    kl_t8 = kl_t7 != 3.0;
+    if ( kl_t8 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+#line 51 "codegen/interfaces.kl"
+    kl_t9 = ( struct kl__Shape__ref ) { ( void* ) &kl_q_4, &kl__Square__as_kl__Shape };
+    kl_t10 = kl__measure__5Shape( kl_t9 );
+    kl_t11 = kl_t10 != 4.0;
+    if ( kl_t11 ) goto bb3; else goto bb4;
+    bb3:
+    kl_t0 = 2;
+    return kl_t0;
+    bb4:
+#line 53 "codegen/interfaces.kl"
+    kl_t12 = ( struct kl__Shape__ref ) { ( void* ) &kl_c_1, &kl__Circle__as_kl__Shape };
+    kl__enlarge__R5Shape( kl_t12 );
+#line 54 "codegen/interfaces.kl"
+    kl_t14 = ( struct kl__Shape__ref ) { ( void* ) &kl_q_4, &kl__Square__as_kl__Shape };
+    kl__enlarge__R5Shape( kl_t14 );
+#line 56 "codegen/interfaces.kl"
+    kl_t16 = ( struct kl__Shape__ref ) { ( void* ) &kl_c_1, &kl__Circle__as_kl__Shape };
+    kl_t17 = kl__measure__5Shape( kl_t16 );
+    kl_t18 = kl_t17 != 12.0;
+    if ( kl_t18 ) goto bb5; else goto bb6;
+    bb5:
+    kl_t0 = 3;
+    return kl_t0;
+    bb6:
+#line 57 "codegen/interfaces.kl"
+    kl_t19 = ( struct kl__Shape__ref ) { ( void* ) &kl_q_4, &kl__Square__as_kl__Shape };
+    kl_t20 = kl__measure__5Shape( kl_t19 );
+    kl_t21 = kl_t20 != 9.0;
+    if ( kl_t21 ) goto bb7; else goto bb8;
+    bb7:
+    kl_t0 = 4;
+    return kl_t0;
+    bb8:
+#line 59 "codegen/interfaces.kl"
+    kl_t23 = &kl_q_4;
+    kl_t24 = ( struct kl__Shape__ref ) { ( void* ) kl_t23, &kl__Square__as_kl__Shape };
+    kl_p_22 = kl_t24;
+#line 60 "codegen/interfaces.kl"
+    kl_t25 = kl__through_pointer__P5Shape( kl_p_22 );
+    kl_t26 = kl_t25 != 9.0;
+    if ( kl_t26 ) goto bb9; else goto bb10;
+    bb9:
+    kl_t0 = 5;
+    return kl_t0;
+    bb10:
+#line 62 "codegen/interfaces.kl"
+    kl_none_27 = ( struct kl__Shape__ref ) { NULL, NULL };
+#line 63 "codegen/interfaces.kl"
+    kl_t29 = ( kl_none_27 ).self != ( ( struct kl__Shape__ref ) { NULL, NULL } ).self;
+    kl_t28 = kl_t29;
+    if ( kl_t28 ) goto bb12; else goto bb11;
+    bb11:
+    kl_t30 = ( kl_p_22 ).self == ( ( struct kl__Shape__ref ) { NULL, NULL } ).self;
+    kl_t28 = kl_t30;
+    goto bb12;
+    bb12:
+    if ( kl_t28 ) goto bb13; else goto bb14;
+    bb13:
+    kl_t0 = 12;
+    return kl_t0;
+    bb14:
+#line 64 "codegen/interfaces.kl"
+    kl_t31 = &kl_c_1;
+    kl_t32 = ( struct kl__Shape__ref ) { ( void* ) kl_t31, &kl__Circle__as_kl__Shape };
+    kl_t33 = kl__through_pointer__P5Shape( kl_t32 );
+    kl_t34 = kl_t33 != 12.0;
+    if ( kl_t34 ) goto bb15; else goto bb16;
+    bb15:
+    kl_t0 = 6;
+    return kl_t0;
+    bb16:
+#line 66 "codegen/interfaces.kl"
+    kl_t35 = &kl_c_1;
+    kl_t36 = kl__statically__I6CircleE__6Circle( kl_t35 );
+    kl_t37 = kl_t36 != 12.0;
+    if ( kl_t37 ) goto bb17; else goto bb18;
+    bb17:
+    kl_t0 = 7;
+    return kl_t0;
+    bb18:
+#line 67 "codegen/interfaces.kl"
+    kl_t38 = &kl_q_4;
+    kl_t39 = kl__statically__I6SquareE__6Square( kl_t38 );
+    kl_t40 = kl_t39 != 9.0;
+    if ( kl_t40 ) goto bb19; else goto bb20;
+    bb19:
+    kl_t0 = 8;
+    return kl_t0;
+    bb20:
+#line 69 "codegen/interfaces.kl"
+    kl_held_41 = ( struct kl__Shape__ref ) { ( void* ) &kl_c_1, &kl__Circle__as_kl__Shape };
+#line 70 "codegen/interfaces.kl"
+    kl_t42 = kl_held_41;
+    kl_t43 = kl_t42.vtable->kl_area_6( kl_t42.self );
+    kl_t44 = kl_t43 != 12.0;
+    if ( kl_t44 ) goto bb21; else goto bb22;
+    bb21:
+    kl_t0 = 9;
+    return kl_t0;
+    bb22:
+#line 72 "codegen/interfaces.kl"
+    kl_t46.kl_a_98 = 1;
+    kl_t46.kl_b_100 = 2;
+    kl_two_45 = kl_t46;
+#line 73 "codegen/interfaces.kl"
+    kl_t47 = ( struct kl__Shape__ref ) { ( void* ) &kl_two_45, &kl__Pair__I3i32E__as_kl__Shape };
+    kl_t48 = kl__measure__5Shape( kl_t47 );
+    kl_t49 = kl_t48 != 2.0;
+    if ( kl_t49 ) goto bb23; else goto bb24;
+    bb23:
+    kl_t0 = 10;
+    return kl_t0;
+    bb24:
+#line 74 "codegen/interfaces.kl"
+    kl_t50 = &kl_two_45;
+    kl_t51 = kl__statically__I4PairI3i32EE__4PairI3i32E( kl_t50 );
+    kl_t52 = kl_t51 != 2.0;
+    if ( kl_t52 ) goto bb25; else goto bb26;
+    bb25:
+    kl_t0 = 11;
+    return kl_t0;
+    bb26:
+#line 76 "codegen/interfaces.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+double kl__statically__I6CircleE__6Circle( struct kl__Circle* kl_t_1 )
+{
+    double kl_t0;
+    struct kl__Circle* kl_t2;
+    double kl_t3;
+#line 43 "codegen/interfaces.kl"
+    kl_t2 = &( *kl_t_1 );
+    kl_t3 = kl__area__S6Circle( kl_t2 );
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+double kl__statically__I6SquareE__6Square( struct kl__Square* kl_t_1 )
+{
+    double kl_t0;
+    struct kl__Square* kl_t2;
+    double kl_t3;
+#line 43 "codegen/interfaces.kl"
+    kl_t2 = &( *kl_t_1 );
+    kl_t3 = kl__area__S6Square( kl_t2 );
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+double kl__statically__I4PairI3i32EE__4PairI3i32E( struct kl__Pair__I3i32E* kl_t_1 )
+{
+    double kl_t0;
+    struct kl__Pair__I3i32E* kl_t2;
+    double kl_t3;
+#line 43 "codegen/interfaces.kl"
+    kl_t2 = &( *kl_t_1 );
+    kl_t3 = kl__area__I3i32E__S4PairI3i32E( kl_t2 );
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+double kl__area__I3i32E__S4PairI3i32E( struct kl__Pair__I3i32E* kl_this_1 )
+{
+    double kl_t0;
+    ( void ) kl_this_1;
+#line 33 "codegen/interfaces.kl"
+    kl_t0 = 2.0;
+    return kl_t0;
+}
+
+void kl__grow__I3i32E__S4PairI3i32E_3f64( struct kl__Pair__I3i32E* kl_this_1, double kl_by_2 )
+{
+    ( void ) kl_this_1;
+    ( void ) kl_by_2;
+    return;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

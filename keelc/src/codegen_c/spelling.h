@@ -21,6 +21,13 @@ struct Spelling
 
     std::string type( Type_id type ) const; // "int32_t", "struct kl__Point", "int32_t*"
     std::string structure( Type_id type ) const;
+
+    // §6.7's interfaces: a `Shape*` is a struct of the object's address and its vtable's, and each
+    // implementer seen as one gets a vtable of thunks, one per slot.
+    std::string interface_reference( Type_id interface ) const; // "struct kl__Shape__ref"
+    std::string vtable_type( Type_id interface ) const;         // "struct kl__Shape__vtable"
+    std::string vtable( Type_id implementer, Type_id interface ) const;
+    std::string thunk( Type_id implementer, Type_id interface, Node_id requirement ) const;
     std::string field( Node_id declaration ) const;
     // The declaration alone no longer names a function: one generic is emitted once per set of
     // type arguments, so they are part of the symbol.

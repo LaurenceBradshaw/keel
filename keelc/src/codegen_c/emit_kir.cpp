@@ -7,6 +7,7 @@
 #include <span>
 #include "codegen_c/mangle.h"
 #include "codegen_c/spelling.h"
+#include "codegen_c/vtables.h"
 #include "common/types.h"
 
 namespace keel
@@ -278,7 +279,10 @@ private:
 
     void emit_prologue();
     void emit_composite_forwards();
+    void emit_interface_references();
     void emit_composites();
+    void emit_vtable_types();
+    void emit_vtables();
     void emit_function_types();
     void emit_globals();
     void emit_prototypes();
@@ -321,6 +325,10 @@ private:
     std::string operand( const Operand& operand ) const;
     std::string rvalue( const Rvalue& rvalue, Span span ) const;
 
+    // A `Shape*` made from the address of an implementer: the address beside its vtable's.
+    std::string interface_reference( Type_id interface, Type_id implementer, std::string_view address ) const;
+    std::string dynamic_call( const Rvalue& rvalue ) const;
+
     std::string prototype( Node_id decl, std::span<const Type_id> type_arguments = {} ) const;
     std::string prototype( const Function& function ) const;
 
@@ -346,6 +354,7 @@ private:
     const Imports&           imports_;
     C_part                   part_;
     std::string_view         include_;
+    std::vector<Vtable>      vtables_; // the program's half only; no interface reaches the prelude yet
 };
 
 Kir_emitter::Kir_emitter(
@@ -370,7 +379,8 @@ Kir_emitter::Kir_emitter(
       spelling_( Spelling { ast, types, interner, imports } ),
       imports_( imports ),
       part_( part ),
-      include_( include )
+      include_( include ),
+      vtables_( part == C_part::Program ? vtables_needed( ast, types, functions ) : std::vector<Vtable> {} )
 {
 }
 
@@ -378,13 +388,16 @@ std::string Kir_emitter::run()
 {
     emit_prologue();
     emit_composite_forwards();
+    emit_interface_references();
     emit_function_types();
     emit_composites();
+    emit_vtable_types();
     emit_globals();
     emit_runtime_prototypes();
     emit_comparison_guards();
     emit_externs();
     emit_prototypes();
+    emit_vtables();
     emit_functions();
     emit_main_shim();
 
@@ -476,8 +489,16 @@ void Kir_emitter::emit_function_types()
                                     ( mode == Param_mode::Value &&
                                       instance_owns( ast_, types_.table(), described.arguments[i], types_.recorded() ) );
 
+            // A borrowed interface travels as its reference, which is one struct rather than a `*`.
+            const Type_id spelled = by_address && types_.table().is_interface( described.arguments[i] )
+                                        ? types_.table().pointer_to( described.arguments[i] )
+                                        : described.arguments[i];
+
             parameters += fmt::format(
-                "{}{}{}", parameters.empty() ? "" : ", ", spelling_.type( described.arguments[i] ), by_address ? "*" : ""
+                "{}{}{}",
+                parameters.empty() ? "" : ", ",
+                spelling_.type( spelled ),
+                by_address && spelled == described.arguments[i] ? "*" : ""
             );
         }
 
@@ -593,6 +614,139 @@ void Kir_emitter::emit_composites()
 
         indent_ -= 4;
         write_line( "};" );
+        write_line( "" );
+    }
+}
+
+// Before the function typedefs and the structs, either of which may hold a `Shape*` by value; its
+// vtable needs only to be declared.
+void Kir_emitter::emit_interface_references()
+{
+    if( part_ != C_part::Program )
+    {
+        return;
+    }
+
+    const std::vector<Type_id> interfaces = types_.table().interface_types();
+
+    for( const Type_id interface : interfaces )
+    {
+        write_line( fmt::format( "{};", spelling_.vtable_type( interface ) ) );
+        write_line( fmt::format(
+            "{} {{ void* self; const {}* vtable; }};",
+            spelling_.interface_reference( interface ),
+            spelling_.vtable_type( interface )
+        ) );
+    }
+
+    if( !interfaces.empty() )
+    {
+        write_line( "" );
+    }
+}
+
+// One function pointer per method, taking the object as a `void*`. After the structs, since a slot
+// may take one by value.
+void Kir_emitter::emit_vtable_types()
+{
+    if( part_ != C_part::Program )
+    {
+        return;
+    }
+
+    for( const Type_id interface : types_.table().interface_types() )
+    {
+        write_line( spelling_.vtable_type( interface ) );
+        write_line( "{" );
+        indent_ += 4;
+
+        for( const Node_id requirement : ast_.members( types_.table().get( interface ).declaration ) )
+        {
+            std::string parameters = "void*";
+
+            for( const Node_id param : ast_.explicit_params( requirement ) )
+            {
+                if( !is_void( binding_type( ast_, types_, param ) ) )
+                {
+                    parameters += fmt::format( ", {}", spelling_.type( binding_type( ast_, types_, param ) ) );
+                }
+            }
+
+            write_line( fmt::format(
+                "{} ( *{} )( {} );",
+                spelling_.type( binding_type( ast_, types_, requirement ) ),
+                spelling_.field( requirement ),
+                parameters
+            ) );
+        }
+
+        indent_ -= 4;
+        write_line( "};" );
+        write_line( "" );
+    }
+}
+
+// For each implementer seen as an interface: a thunk per slot, turning the `void*` back into the
+// implementer's address, and the table of them. After the prototypes, which name what each calls.
+void Kir_emitter::emit_vtables()
+{
+    for( const Vtable& vtable : vtables_ )
+    {
+        const std::span<const Type_id> type_arguments = types_.table().get( vtable.implementer ).arguments;
+        const std::string              self_type      = spelling_.type( types_.table().pointer_to( vtable.implementer ) );
+
+        std::vector<std::string> slots;
+
+        for( std::size_t i = 0; i < vtable.requirements.size(); ++i )
+        {
+            const Node_id requirement = vtable.requirements[i];
+            const Type_id returned    = binding_type( ast_, types_, requirement );
+
+            std::string parameters = "void* self";
+            std::string arguments  = fmt::format( "( {} ) self", self_type );
+
+            for( std::size_t p = 0; p < ast_.explicit_params( requirement ).size(); ++p )
+            {
+                const Type_id type = binding_type( ast_, types_, ast_.explicit_params( requirement )[p] );
+
+                if( !is_void( type ) )
+                {
+                    parameters += fmt::format( ", {} p{}", spelling_.type( type ), p );
+                    arguments += fmt::format( ", p{}", p );
+                }
+            }
+
+            const std::string thunk = spelling_.thunk( vtable.implementer, vtable.interface, requirement );
+
+            write_line( fmt::format( "static {} {}( {} )", spelling_.type( returned ), thunk, parameters ) );
+            write_line( "{" );
+            indent_ += 4;
+            write_line( fmt::format(
+                "{}{}( {} );",
+                is_void( returned ) ? "" : "return ",
+                spelling_.function( vtable.methods[i], type_arguments ),
+                arguments
+            ) );
+            indent_ -= 4;
+            write_line( "}" );
+            write_line( "" );
+
+            slots.push_back( thunk );
+        }
+
+        std::string table;
+
+        for( const std::string& slot : slots )
+        {
+            table += fmt::format( "{}{}", table.empty() ? "" : ", ", slot );
+        }
+
+        write_line( fmt::format(
+            "static const {} {} = {{ {} }};",
+            spelling_.vtable_type( vtable.interface ),
+            spelling_.vtable( vtable.implementer, vtable.interface ),
+            table
+        ) );
         write_line( "" );
     }
 }
@@ -1432,6 +1586,12 @@ std::string Kir_emitter::constant( Literal_id literal, Type_id type ) const
     case Type_kind::Bool:
         return literal_pool_.integer( literal ) != 0 ? "true" : "false";
     case Type_kind::Pointer:
+        if( types_.table().is_interface_pointer( type ) )
+        {
+            return fmt::format( "( {} ) {{ NULL, NULL }}", spelling_.type( type ) );
+        }
+
+        return "NULL";
     case Type_kind::Many_pointer:
         return "NULL";
     case Type_kind::Float:
@@ -1485,6 +1645,14 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
             );
         }
 
+        // Two `Shape*` are the same pointer when they hold the same object.
+        if( types_.table().is_interface_pointer( rvalue.a.type ) )
+        {
+            return fmt::format(
+                "( {} ).self {} ( {} ).self", operand( rvalue.a ), token_kind_spelling( rvalue.op ), operand( rvalue.b )
+            );
+        }
+
         return fmt::format( "{} {} {}", operand( rvalue.a ), token_kind_spelling( rvalue.op ), operand( rvalue.b ) );
     }
 
@@ -1492,6 +1660,15 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
         return fmt::format( "{}{}", token_kind_spelling( rvalue.op ), operand( rvalue.a ) );
 
     case Rvalue_kind::Cast:
+        if( types_.table().is_interface_pointer( rvalue.type ) )
+        {
+            const Type_id from = types_.table().get( rvalue.a.type ).element;
+
+            return types_.table().is_interface( from )
+                       ? operand( rvalue.a )
+                       : interface_reference( types_.table().get( rvalue.type ).element, from, operand( rvalue.a ) );
+        }
+
         return fmt::format( "( {} ) {}", spelling_.type( rvalue.type ), operand( rvalue.a ) );
 
     case Rvalue_kind::Address_of:
@@ -1501,12 +1678,36 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
             return fmt::format( "( {} ) 0", spelling_.type( rvalue.type ) );
         }
 
+        // `&(*s)` of a `Shape*` is `s` itself: an interface is never a place of its own.
+        if( types_.table().is_interface_pointer( rvalue.type ) )
+        {
+            const Type_id from = type_of( rvalue.a.place );
+
+            if( !types_.table().is_interface( from ) )
+            {
+                return interface_reference(
+                    types_.table().get( rvalue.type ).element, from, fmt::format( "&{}", place( rvalue.a.place ) )
+                );
+            }
+
+            Place reference = rvalue.a.place;
+            assert( reference.num_projections > 0 && "an interface is reached only through a pointer" );
+            reference.num_projections -= 1;
+
+            return place( reference );
+        }
+
         return fmt::format( "&{}", place( rvalue.a.place ) );
 
     case Rvalue_kind::Literal_bytes:
         return fmt::format( "( {} ) {}", spelling_.type( rvalue.type ), c_string( literal_pool_.string( rvalue.a.constant ) ) );
 
     case Rvalue_kind::Call:
+        if( ast_.is_requirement( rvalue.callee ) )
+        {
+            return dynamic_call( rvalue );
+        }
+        [[fallthrough]];
     case Rvalue_kind::Indirect_call:
     {
         std::string args;
@@ -1574,6 +1775,36 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
         assert( false && "unknown rvalue kind" );
         return "<unknown>";
     }
+}
+
+std::string Kir_emitter::interface_reference( Type_id interface, Type_id implementer, std::string_view address ) const
+{
+    return fmt::format(
+        "( {} ) {{ ( void* ) {}, &{} }}",
+        spelling_.interface_reference( interface ),
+        address,
+        spelling_.vtable( implementer, interface )
+    );
+}
+
+// `s.area()` on a `Shape*`: the slot of the receiver's vtable, given the receiver's object.
+std::string Kir_emitter::dynamic_call( const Rvalue& rvalue ) const
+{
+    const std::string receiver = operand( current_->operands[rvalue.first_argument] );
+
+    std::string args = fmt::format( "{}.self", receiver );
+
+    for( u32 i = 1; i < rvalue.argument_count; ++i )
+    {
+        const Operand& argument = current_->operands[rvalue.first_argument + i];
+
+        if( !is_void( argument ) )
+        {
+            args += fmt::format( ", {}", operand( argument ) );
+        }
+    }
+
+    return fmt::format( "{}.vtable->{}( {} )", receiver, spelling_.field( rvalue.callee ), args );
 }
 
 } // namespace

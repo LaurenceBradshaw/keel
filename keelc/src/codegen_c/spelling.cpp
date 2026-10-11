@@ -89,6 +89,13 @@ std::string Spelling::type( Type_id type ) const
         return structure( type );
 
     case Type_kind::Pointer:
+        if( types.table().is_interface( described.element ) )
+        {
+            return interface_reference( described.element );
+        }
+
+        return fmt::format( "{}*", this->type( described.element ) );
+
     case Type_kind::Many_pointer:
         return fmt::format( "{}*", this->type( described.element ) );
 
@@ -122,6 +129,35 @@ std::string Spelling::structure( Type_id type ) const
     return fmt::format(
         "struct {}", mangle_struct( package_name( types.table().get( type ).declaration ), type, types.table() )
     );
+}
+
+std::string Spelling::interface_reference( Type_id interface ) const
+{
+    return fmt::format(
+        "struct {}__ref", mangle_struct( package_name( types.table().get( interface ).declaration ), interface, types.table() )
+    );
+}
+
+std::string Spelling::vtable_type( Type_id interface ) const
+{
+    return fmt::format(
+        "struct {}__vtable",
+        mangle_struct( package_name( types.table().get( interface ).declaration ), interface, types.table() )
+    );
+}
+
+std::string Spelling::vtable( Type_id implementer, Type_id interface ) const
+{
+    return fmt::format(
+        "{}__as_{}",
+        mangle_struct( package_name( types.table().get( implementer ).declaration ), implementer, types.table() ),
+        mangle_struct( package_name( types.table().get( interface ).declaration ), interface, types.table() )
+    );
+}
+
+std::string Spelling::thunk( Type_id implementer, Type_id interface, Node_id requirement ) const
+{
+    return fmt::format( "{}__{}", vtable( implementer, interface ), field( requirement ) );
 }
 
 std::string Spelling::field( Node_id declaration ) const

@@ -1,0 +1,61 @@
+// M9.5: a `kl::list<Shape*>` holding two implementers, each called through its own vtable, and an
+// owning implementer reached through the interface and dropped once by its own scope. Exits with
+// the failing check.
+import kl::list;
+import kl::string;
+
+interface Shape
+{
+    f64 area() const;
+    u64 label_size() const;
+};
+
+struct Square implements Shape
+{
+    f64 side;
+
+    f64 area() const { return side * side; }
+    u64 label_size() const { return 0; }
+};
+
+class Labelled implements Shape
+{
+    kl::string label;
+
+    public Labelled( u64 n )
+    {
+        label = kl::string();
+        for( u64 i = 0; i < n; i++ )
+        {
+            label.push( 'x' );
+        }
+    }
+
+    public f64 area() const { return 1.0; }
+    public u64 label_size() const { return label.size(); }
+};
+
+i32 main()
+{
+    Square   a = Square { 2.0 };
+    Labelled b = Labelled( 5 );
+
+    kl::list<Shape*> shapes = kl::list<Shape*>();
+    shapes.push( &a );
+    shapes.push( &b );
+    shapes.push( &a );
+
+    f64 total = 0.0;
+    u64 sizes = 0;
+
+    for( u64 i = 0; i < shapes.size(); i++ )
+    {
+        total = total + ( *shapes[i] ).area();
+        sizes = sizes + ( *shapes[i] ).label_size();
+    }
+
+    if( total != 9.0 ) { return 1; }
+    if( sizes != 5 ) { return 2; }
+
+    return 0;
+}
