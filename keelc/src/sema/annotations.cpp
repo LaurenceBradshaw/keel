@@ -301,6 +301,11 @@ Type_id Annotations::resolve_generic( Node_id annotation )
 
     std::vector<Type_id> arguments;
 
+    if( decl == table_.box_declaration() && ast_.children( type_args ).size() == 1 )
+    {
+        addressed_ = ast_.children( type_args )[0];
+    }
+
     if( !resolve_type_arguments( ast_.type_parameters( ast_.type_param_list( decl ) ), type_args, name, arguments ) )
     {
         return table_.builtin( Type_kind::Error );

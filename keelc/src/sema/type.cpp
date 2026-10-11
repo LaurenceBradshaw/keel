@@ -648,6 +648,11 @@ bool Type_table::holds( Type_id from, Type_id to ) const
         return implements( from, to );
     }
 
+    if( is_box( from ) && is_box( to ) && is_interface( t.arguments[0] ) )
+    {
+        return implements( f.arguments[0], t.arguments[0] );
+    }
+
     if( t.kind == Type_kind::Pointer && f.kind == Type_kind::Pointer && is_interface( t.element ) )
     {
         return implements( f.element, t.element ) && ( !f.const_element || t.const_element );
@@ -1114,6 +1119,26 @@ bool Type_table::implements( Type_id type, Type_id interface ) const
 
     const std::vector<Type_id>& implemented = it->second;
     return std::find( implemented.begin(), implemented.end(), interface ) != implemented.end();
+}
+
+void keel::Type_table::declare_box( Node_id declaration )
+{
+    box_ = declaration;
+}
+
+bool keel::Type_table::is_box( Type_id type ) const
+{
+    if( !type.is_valid() || !box_.is_valid() )
+    {
+        return false;
+    }
+
+    return get( type ).declaration == box_;
+}
+
+Node_id keel::Type_table::box_declaration() const
+{
+    return box_;
 }
 
 Type_id Type_table::add( const Type& type, std::string_view name )
@@ -2847,6 +2872,43 @@ TEST_CASE( "type_table_holds_an_implementer_as_its_interface", "[sema][type][int
     REQUIRE_FALSE( table.holds( table.pointer_to( table.pointer_to( point ) ), table.pointer_to( table.pointer_to( shape ) ) )
     );
     REQUIRE_FALSE( table.holds( table.many_pointer_to( point ), table.pointer_to( shape ) ) );
+}
+
+// Only the declared box, only towards an interface, and only from an implementer.
+TEST_CASE( "type_table_holds_a_box_of_an_implementer_as_a_box_of_its_interface", "[sema][type][interfaces]" )
+{
+    Type_table table;
+
+    const Type_id shape = table.interface( Node_id { 5 }, "Shape" );
+    const Type_id point = table.structure( Node_id { 3 }, {}, "Point" );
+    const Type_id other = table.structure( Node_id { 4 }, {}, "Other" );
+
+    table.declare_implements( Node_id { 3 }, shape );
+
+    const auto boxed = [&]( Type_id held ) { return table.structure( Node_id { 9 }, std::array { held }, "box" ); };
+
+    SECTION( "before the box is declared, it is any generic" )
+    {
+        REQUIRE_FALSE( table.is_box( boxed( point ) ) );
+        REQUIRE_FALSE( table.holds( boxed( point ), boxed( shape ) ) );
+    }
+
+    table.declare_box( Node_id { 9 } );
+
+    REQUIRE( table.is_box( boxed( point ) ) );
+    REQUIRE( table.is_box( boxed( shape ) ) );
+    REQUIRE_FALSE( table.is_box( point ) );
+    REQUIRE_FALSE( table.is_box( table.pointer_to( boxed( point ) ) ) );
+
+    REQUIRE( table.holds( boxed( point ), boxed( shape ) ) );
+
+    REQUIRE_FALSE( table.holds( boxed( other ), boxed( shape ) ) );
+    REQUIRE_FALSE( table.holds( boxed( shape ), boxed( point ) ) );
+    REQUIRE_FALSE( table.holds( boxed( point ), boxed( other ) ) );
+    REQUIRE_FALSE( table.holds(
+        table.structure( Node_id { 10 }, std::array { point }, "Holder" ),
+        table.structure( Node_id { 10 }, std::array { shape }, "Holder" )
+    ) );
 }
 
 } // namespace keel

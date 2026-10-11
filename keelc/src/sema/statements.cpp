@@ -361,9 +361,10 @@ void Statements::visit_var( Node_id id )
                 "it ends with this statement; give it a variable of its own first"
             );
         }
-        // An implementer borrowed as its interface is still that very object.
+        // A type that does not convert was already reported by check(); an implementer borrowed
+        // as its interface is still that very object.
         else if( types_.type_of( init ) != type && !table_.references_error( types_.type_of( init ) ) &&
-                 !( table_.is_interface( type ) && table_.holds( types_.type_of( init ), type ) ) )
+                 table_.holds( types_.type_of( init ), type ) && !table_.is_interface( type ) )
         {
             reporter_.error_at(
                 ast_.span( init ),
@@ -1428,6 +1429,17 @@ TEST_CASE( "type_checker_checks_a_ref_binding", "[sema][binding]" )
         INFO( p.rendered() );
         REQUIRE_FALSE( p.clean() );
         REQUIRE( p.rendered().find( "cannot borrow `u8` as `ref i32`" ) != std::string::npos );
+    }
+
+    // A type that does not even convert was reported by the initialiser's check, so once.
+    SECTION( "and a type that does not convert is reported once" )
+    {
+        const Typed p( "struct A { i32 x; };\nstruct B { i32 y; };\n"
+                       "i32 main() { B b = B { 1 }; const ref A a = b; return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "expected `A`, but got `B`" ) != std::string::npos );
     }
 
     SECTION( "`move` is not a binding mode" )

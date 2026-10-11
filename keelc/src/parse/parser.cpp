@@ -3130,9 +3130,18 @@ Node_id Parser::parse_keyword_prefix( Span start )
         cursor_.advance();
         recovery_.expect( Token_kind::L_paren );
         const Node_id pointer = parse_expression( 0 );
-        recovery_.expect( Token_kind::Comma );
-        const Node_id count = parse_expression( 0 );
+        Node_id       count   = Node_id {};
+        if( cursor_.check( Token_kind::Comma ) )
+        {
+            cursor_.advance();
+            count = parse_expression( 0 );
+        }
         recovery_.expect( Token_kind::R_paren );
+
+        if( !count.is_valid() )
+        {
+            return ast_.add( Node_kind::Destroy_expr, Span::merge( start, cursor_.previous().span ), 0, { pointer } );
+        }
 
         return ast_.add( Node_kind::Destroy_expr, Span::merge( start, cursor_.previous().span ), 0, { pointer, count } );
     }
@@ -5657,9 +5666,22 @@ TEST_CASE( "parser_parses_destroy", "[parse][destroy]" )
         REQUIRE( p.kind( p.child( node, 1 ) ) == Node_kind::Int_literal );
     }
 
-    SECTION( "it needs both operands" )
+    SECTION( "its count is optional, which `destroy` on a `T*` leaves out" )
     {
-        const Parsed p( "i32 main() { i32[*] p = nullptr; unsafe { destroy( p ); } return 0; }" );
+        const Parsed p( "i32 main() { i32* p = nullptr; unsafe { destroy( p ); } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id node = find_first( p.ast(), p.root(), Node_kind::Destroy_expr );
+
+        REQUIRE( p.children( node ).size() == 1 );
+        REQUIRE_FALSE( p.ast().count( node ).is_valid() );
+    }
+
+    SECTION( "it needs its pointer" )
+    {
+        const Parsed p( "i32 main() { unsafe { destroy(); } return 0; }" );
 
         REQUIRE( p.has_errors() );
     }

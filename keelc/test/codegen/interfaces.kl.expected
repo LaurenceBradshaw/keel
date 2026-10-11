@@ -29,6 +29,7 @@ struct kl__Pair__I3i32E
 
 struct kl__Shape__vtable
 {
+    void ( *drop )( void* );
     double ( *kl_area_6 )( void* );
     void ( *kl_grow_14 )( void*, double );
 };
@@ -48,6 +49,11 @@ double kl__statically__I4PairI3i32EE__4PairI3i32E( struct kl__Pair__I3i32E* );
 double kl__area__I3i32E__S4PairI3i32E( struct kl__Pair__I3i32E* );
 void kl__grow__I3i32E__S4PairI3i32E_3f64( struct kl__Pair__I3i32E*, double );
 
+static void kl__Circle__as_kl__Shape__drop( void* self )
+{
+    ( void ) self;
+}
+
 static double kl__Circle__as_kl__Shape__kl_area_6( void* self )
 {
     return kl__area__S6Circle( ( struct kl__Circle* ) self );
@@ -58,7 +64,12 @@ static void kl__Circle__as_kl__Shape__kl_grow_14( void* self, double p0 )
     kl__grow__S6Circle_3f64( ( struct kl__Circle* ) self, p0 );
 }
 
-static const struct kl__Shape__vtable kl__Circle__as_kl__Shape = { kl__Circle__as_kl__Shape__kl_area_6, kl__Circle__as_kl__Shape__kl_grow_14 };
+static const struct kl__Shape__vtable kl__Circle__as_kl__Shape = { kl__Circle__as_kl__Shape__drop, kl__Circle__as_kl__Shape__kl_area_6, kl__Circle__as_kl__Shape__kl_grow_14 };
+
+static void kl__Square__as_kl__Shape__drop( void* self )
+{
+    ( void ) self;
+}
 
 static double kl__Square__as_kl__Shape__kl_area_6( void* self )
 {
@@ -70,7 +81,12 @@ static void kl__Square__as_kl__Shape__kl_grow_14( void* self, double p0 )
     kl__grow__S6Square_3f64( ( struct kl__Square* ) self, p0 );
 }
 
-static const struct kl__Shape__vtable kl__Square__as_kl__Shape = { kl__Square__as_kl__Shape__kl_area_6, kl__Square__as_kl__Shape__kl_grow_14 };
+static const struct kl__Shape__vtable kl__Square__as_kl__Shape = { kl__Square__as_kl__Shape__drop, kl__Square__as_kl__Shape__kl_area_6, kl__Square__as_kl__Shape__kl_grow_14 };
+
+static void kl__Pair__I3i32E__as_kl__Shape__drop( void* self )
+{
+    ( void ) self;
+}
 
 static double kl__Pair__I3i32E__as_kl__Shape__kl_area_6( void* self )
 {
@@ -82,7 +98,7 @@ static void kl__Pair__I3i32E__as_kl__Shape__kl_grow_14( void* self, double p0 )
     kl__grow__I3i32E__S4PairI3i32E_3f64( ( struct kl__Pair__I3i32E* ) self, p0 );
 }
 
-static const struct kl__Shape__vtable kl__Pair__I3i32E__as_kl__Shape = { kl__Pair__I3i32E__as_kl__Shape__kl_area_6, kl__Pair__I3i32E__as_kl__Shape__kl_grow_14 };
+static const struct kl__Shape__vtable kl__Pair__I3i32E__as_kl__Shape = { kl__Pair__I3i32E__as_kl__Shape__drop, kl__Pair__I3i32E__as_kl__Shape__kl_area_6, kl__Pair__I3i32E__as_kl__Shape__kl_grow_14 };
 
 void kl__Circle__R6Circle_3f64__ctor( struct kl__Circle* kl_this_1, double kl_radius_2 )
 {

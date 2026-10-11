@@ -660,6 +660,10 @@ void Kir_emitter::emit_vtable_types()
         write_line( "{" );
         indent_ += 4;
 
+        // First, so a slot's place never depends on the interface's methods. A requirement's slot is
+        // spelled `kl_<name>_<id>`, so one called `drop` cannot collide.
+        write_line( "void ( *drop )( void* );" );
+
         for( const Node_id requirement : ast_.members( types_.table().get( interface ).declaration ) )
         {
             std::string parameters = "void*";
@@ -696,6 +700,26 @@ void Kir_emitter::emit_vtables()
         const std::string              self_type      = spelling_.type( types_.table().pointer_to( vtable.implementer ) );
 
         std::vector<std::string> slots;
+
+        // Dropping through the interface: the implementer's drop function, or nothing if it owns nothing.
+        const std::string drop = fmt::format( "{}__drop", spelling_.vtable( vtable.implementer, vtable.interface ) );
+
+        write_line( fmt::format( "static void {}( void* self )", drop ) );
+        write_line( "{" );
+        indent_ += 4;
+        if( instance_owns( ast_, types_.table(), vtable.implementer, types_.recorded() ) )
+        {
+            write_line( fmt::format( "{}( ( {} ) self );", spelling_.drop_function( vtable.implementer ), self_type ) );
+        }
+        else
+        {
+            write_line( "( void ) self;" );
+        }
+        indent_ -= 4;
+        write_line( "}" );
+        write_line( "" );
+
+        slots.push_back( drop );
 
         for( std::size_t i = 0; i < vtable.requirements.size(); ++i )
         {
@@ -1111,10 +1135,24 @@ void Kir_emitter::emit_statement( const Statement& statement )
     // By address, because a destructor takes the receiver as a pointer.
     case Statement_kind::Drop:
     {
-
         line_directive( statement.span );
-        const std::string call =
-            fmt::format( "{}( &{} );", spelling_.destructor_of( type_of( statement.place ) ), place( statement.place ) );
+
+        std::string call;
+
+        // `*s` of a `Shape*`: no place of its own, so the drop goes through the reference's vtable.
+        if( types_.table().is_interface( type_of( statement.place ) ) )
+        {
+            Place reference = statement.place;
+            assert( reference.num_projections > 0 && "an interface is reached only through a pointer" );
+            reference.num_projections -= 1;
+
+            const std::string object = place( reference );
+            call                     = fmt::format( "{0}.vtable->drop( {0}.self );", object );
+        }
+        else
+        {
+            call = fmt::format( "{}( &{} );", spelling_.destructor_of( type_of( statement.place ) ), place( statement.place ) );
+        }
 
         // The flag is the whole of what a conditional drop costs in C.
         write_line(
@@ -1669,6 +1707,24 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
                        : interface_reference( types_.table().get( rvalue.type ).element, from, operand( rvalue.a ) );
         }
 
+        // `box<Circle>` to `box<Shape>`: the same allocation, its pointer widened to a `Shape*`.
+        // Positional, so it relies on `box` having one field.
+        if( types_.table().is_box( rvalue.type ) )
+        {
+            const Type&   to      = types_.table().get( rvalue.type );
+            const Node_id pointer = ast_.contained_fields( to.declaration )[0];
+
+            return fmt::format(
+                "( {} ) {{ {} }}",
+                spelling_.type( rvalue.type ),
+                interface_reference(
+                    to.arguments[0],
+                    types_.table().get( rvalue.a.type ).arguments[0],
+                    fmt::format( "{}.{}", operand( rvalue.a ), spelling_.field( pointer ) )
+                )
+            );
+        }
+
         return fmt::format( "( {} ) {}", spelling_.type( rvalue.type ), operand( rvalue.a ) );
 
     case Rvalue_kind::Address_of:
@@ -1751,6 +1807,12 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
             );
         }
     case Rvalue_kind::Release:
+        // A `Shape*` frees the object it carries, not the reference.
+        if( types_.table().is_interface_pointer( rvalue.a.type ) )
+        {
+            return fmt::format( "kl_rt_free( ( {} ).self )", operand( rvalue.a ) );
+        }
+
         return fmt::format( "kl_rt_free( {} )", operand( rvalue.a ) );
 
     // No `&`: a function name already decays to its address in C, and the operator would be a
@@ -3782,6 +3844,34 @@ TEST_CASE( "emit_kir_emits_a_generic_static_field_per_instantiation", "[codegen]
     // `count` on `Box<i32>` reads the variable `Box<i32>::made` wrote; nothing reads `Box<f64>`'s.
     REQUIRE( g.has( " = " + name + "__I3i32E;" ) );
     REQUIRE_FALSE( g.has( " = " + name + "__I3f64E;" ) );
+}
+
+// §6.7: a `box<Shape>` is dropped through the vtable's first slot and freed through `.self`. The
+// slot calls the implementer's drop function when it owns, and nothing when it does not.
+TEST_CASE( "emit_kir_drops_a_box_of_an_interface_through_its_vtable", "[codegen][kir][interfaces]" )
+{
+    Generated g( "interface Shape { f64 area() const; };\n"
+                 "class Buf { u8[*] b; public Buf() { unsafe { b = alloc<u8>( 1 ); } } ~Buf() { unsafe { free( b ); } } };\n"
+                 "class Framed implements Shape { Buf frame; public Framed() { frame = Buf(); } "
+                 "public f64 area() const { return 1.0; } };\n"
+                 "struct Sq implements Shape { f64 side; f64 area() const { return side; } };\n"
+                 "i32 main()\n"
+                 "{\n"
+                 "    box<Shape> a = box<Sq>( Sq { 1.0 } );\n"
+                 "    box<Shape> b = box<Framed>( move Framed() );\n"
+                 "    return 0;\n"
+                 "}\n" );
+
+    INFO( g.c );
+    REQUIRE( g.clean() );
+
+    REQUIRE( g.has( "void ( *drop )( void* );" ) );
+    REQUIRE( g.has( "static const struct kl__Shape__vtable kl__Sq__as_kl__Shape = { kl__Sq__as_kl__Shape__drop," ) );
+    REQUIRE( g.has( "kl__Framed__drop( ( struct kl__Framed* ) self );" ) );
+    REQUIRE( g.has( "void kl__Framed__drop( struct kl__Framed* " ) );
+    REQUIRE( g.has( ".vtable->drop( " ) );
+    REQUIRE( g.has( ".self )" ) );
+    REQUIRE_FALSE( g.has( "void kl__Sq__drop(" ) );
 }
 
 } // namespace keel

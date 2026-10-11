@@ -1,0 +1,116 @@
+// M9.5: `box<T>` owns one value on the heap, and a `box<Circle>` goes wherever a `box<Shape>` is
+// wanted: a call through it uses the vtable, and dropping it drops the implementer through the
+// vtable's drop slot. `Framed` declares no `~` but owns a `Buffer`, so only its drop function frees
+// it. A construction converts as any other value does, whether it initialises, assigns or sets a
+// field. Exits with the failing check.
+interface Shape
+{
+    f64 area() const;
+    void grow( f64 by );
+};
+
+struct Square implements Shape
+{
+    f64 side;
+
+    f64 area() const { return side * side; }
+    void grow( f64 by ) { side = side + by; }
+};
+
+class Buffer
+{
+    u8[*] bytes;
+    u64   size;
+
+    public Buffer( u64 n )
+    {
+        unsafe
+        {
+            bytes = alloc<u8>( n );
+        }
+        size = n;
+    }
+
+    ~Buffer()
+    {
+        unsafe
+        {
+            free( bytes );
+        }
+    }
+
+    public u64 count() const { return size; }
+};
+
+class Framed implements Shape
+{
+    Buffer frame;
+    f64    extra;
+
+    public Framed( u64 n )
+    {
+        frame = Buffer( n );
+        extra = 0.0;
+    }
+
+    public f64 area() const { return cast<f64>( frame.count() ) + extra; }
+    public void grow( f64 by ) { extra = extra + by; }
+};
+
+class Scene
+{
+    box<Shape> main;
+
+    public Scene() { main = box<Framed>( move Framed( 2 ) ); }
+
+    public f64 area() const { return main.get().area(); }
+};
+
+box<Shape> make( bool square )
+{
+    if( square )
+    {
+        return box<Square>( Square { 3.0 } );
+    }
+
+    box<Framed> framed = box<Framed>( move Framed( 4 ) );
+    return framed;
+}
+
+f64 measure( move box<Shape> shape )
+{
+    return shape.get().area();
+}
+
+i32 main()
+{
+    box<Square> plain = box<Square>( Square { 1.0 } );
+    if( plain.get().area() != 1.0 ) { return 1; }
+
+    box<Shape> one = move plain;
+    Shape*     s   = one.get();
+    s.grow( 1.0 );
+    if( one.get().area() != 4.0 ) { return 2; }
+
+    box<Shape> framed = make( false );
+    Shape*     f      = framed.get();
+    f.grow( 2.0 );
+    if( framed.get().area() != 6.0 ) { return 3; }
+
+    if( measure( move make( true ) ) != 9.0 ) { return 4; }
+    if( measure( move box<Framed>( move Framed( 7 ) ) ) != 7.0 ) { return 5; }
+
+    one = move framed;
+    if( one.get().area() != 6.0 ) { return 6; }
+
+    box<Shape> direct = box<Square>( Square { 2.0 } );
+    if( direct.get().area() != 4.0 ) { return 7; }
+
+    direct = box<Framed>( move Framed( 5 ) );
+    if( direct.get().area() != 5.0 ) { return 8; }
+
+    Scene scene = Scene();
+    if( scene.area() != 2.0 ) { return 9; }
+
+    return 0;
+}

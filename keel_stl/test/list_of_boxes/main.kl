@@ -1,0 +1,77 @@
+// M9.5: a `kl::list<box<Shape>>` owning implementers of different sizes, one of them owning a
+// `kl::string`. Each is called through its vtable, and dropped through it when the list drops,
+// including those `truncate` and `pop` end early. Exits with the failing check.
+import kl::list;
+import kl::string;
+
+interface Shape
+{
+    f64 area() const;
+    void grow( f64 by );
+};
+
+struct Square implements Shape
+{
+    f64 side;
+
+    f64 area() const { return side * side; }
+    void grow( f64 by ) { side = side + by; }
+};
+
+class Labelled implements Shape
+{
+    kl::string label;
+
+    public Labelled( u64 n )
+    {
+        label = kl::string();
+        for( u64 i = 0; i < n; i++ )
+        {
+            label.push( 'x' );
+        }
+    }
+
+    public f64 area() const { return cast<f64>( label.size() ); }
+    public void grow( f64 by ) { label.push( 'y' ); }
+};
+
+box<Shape> make( u64 i )
+{
+    if( i % 2 == 0 )
+    {
+        return box<Square>( Square { cast<f64>( i ) } );
+    }
+
+    box<Labelled> labelled = box<Labelled>( move Labelled( i ) );
+    return labelled;
+}
+
+i32 main()
+{
+    kl::list<box<Shape>> shapes = kl::list<box<Shape>>();
+
+    for( u64 i = 0; i < 6; i++ )
+    {
+        shapes.push( move make( i ) );
+    }
+
+    f64 total = 0.0;
+
+    for( u64 i = 0; i < shapes.size(); i++ )
+    {
+        Shape* shape = shapes[i].get();
+        shape.grow( 1.0 );
+        total = total + shape.area();
+    }
+
+    // Squares 0, 2, 4 grown to 1, 3, 5; labels 1, 3, 5 grown to 2, 4, 6.
+    if( total != 1.0 + 9.0 + 25.0 + 2.0 + 4.0 + 6.0 ) { return 1; }
+
+    box<Shape> last = shapes.pop();
+    if( last.get().area() != 6.0 ) { return 2; }
+
+    shapes.truncate( 2 );
+    if( shapes.size() != 2 ) { return 3; }
+
+    return 0;
+}

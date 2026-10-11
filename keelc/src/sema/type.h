@@ -215,6 +215,10 @@ public:
     void declare_implements( Node_id aggregate, Type_id interface );
     bool implements( Type_id type, Type_id interface ) const; // `type` is an aggregate or an instance of one
 
+    void    declare_box( Node_id declaration );
+    bool    is_box( Type_id type ) const;
+    Node_id box_declaration() const;
+
 private:
     Type_id     add( const Type& type, std::string_view name );
     std::string const_spelling( Type_id element, bool const_element ) const;
@@ -247,6 +251,8 @@ private:
     std::unordered_map<u32, Type_id>               params_;     // Type_param_decl node -> type parameter
     std::unordered_map<u32, Type_id>               interfaces_; // Interface_decl node -> its type
     std::deque<std::string>                        composed_;
+
+    Node_id box_ {};
 
     // Backs Type::arguments. A deque for the reason composed_ is one: the views handed out have to
     // survive every later insertion.

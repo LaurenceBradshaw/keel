@@ -2221,22 +2221,39 @@ Type_id Expressions::infer_free( Node_id id )
 
 Type_id Expressions::infer_destroy( Node_id id )
 {
-    const Type_id pointer = infer( ast_.pointer( id ) );
-    const Type_id element = check( ast_.count( id ), table_.integer( 64, false ) );
+    const Type_id pointer   = infer( ast_.pointer( id ) );
+    const bool    has_count = ast_.count( id ).is_valid();
+    const Type_id count     = has_count ? check( ast_.count( id ), table_.integer( 64, false ) ) : Type_id {};
 
     require_unsafe( id, "`destroy` needs an `unsafe` block", "the compiler cannot tell which slots hold a value" );
 
-    if( table_.is_error( pointer ) || table_.is_error( element ) )
+    if( table_.is_error( pointer ) || ( has_count && table_.is_error( count ) ) )
     {
         return types_.poison( id );
     }
 
-    if( !table_.is_many_pointer( pointer ) )
+    if( !table_.is_many_pointer( pointer ) && !table_.is_pointer( pointer ) )
     {
         reporter_.error_at(
             ast_.span( ast_.pointer( id ) ),
-            fmt::format( "`destroy` needs a `T[*]`, but got `{}`", table_.name( pointer ) ),
-            "it ends the values in a run of slots, counted from this pointer"
+            fmt::format( "`destroy` needs a `T*` or a `T[*]`, but got `{}`", table_.name( pointer ) ),
+            "it ends the value a `T*` points at, or a run of `T[*]` slots"
+        );
+        return types_.poison( id );
+    }
+
+    if( table_.is_many_pointer( pointer ) && !has_count )
+    {
+        reporter_.error_at(
+            ast_.span( id ), "`destroy` of a `T[*]` needs a count", "write `destroy( p, n )` to end the first `n` slots"
+        );
+        return types_.poison( id );
+    }
+
+    if( table_.is_pointer( pointer ) && has_count )
+    {
+        reporter_.error_at(
+            ast_.span( ast_.count( id ) ), "a `T*` holds one value, so `destroy` takes no count", "write `destroy( p )`"
         );
         return types_.poison( id );
     }
@@ -5677,13 +5694,39 @@ TEST_CASE( "type_checker_types_destroy", "[sema][types][destroy]" )
         REQUIRE( p.rendered().find( "`destroy` needs an `unsafe` block" ) != std::string::npos );
     }
 
-    SECTION( "and a many-item pointer" )
+    SECTION( "and a pointer" )
+    {
+        const Typed p( "i32 main() { i32 n = 1; unsafe { destroy( n ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`destroy` needs a `T*` or a `T[*]`, but got `i32`" ) != std::string::npos );
+    }
+
+    SECTION( "a count with a many-item pointer" )
+    {
+        const Typed p( "i32 main() { i32[*] p = nullptr; unsafe { destroy( p ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`destroy` of a `T[*]` needs a count" ) != std::string::npos );
+    }
+
+    SECTION( "and none with a pointer to one value" )
     {
         const Typed p( "i32 main() { i32 n = 1; i32* p = &n; unsafe { destroy( p, 1 ); } return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "`destroy` needs a `T[*]`, but got `i32*`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "a `T*` holds one value, so `destroy` takes no count" ) != std::string::npos );
+    }
+
+    SECTION( "which a pointer to one value does not need" )
+    {
+        const Typed p( "i32 main() { i32 n = 1; i32* p = &n; unsafe { destroy( p ); } return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
     }
 
     SECTION( "that does not point to `const`" )

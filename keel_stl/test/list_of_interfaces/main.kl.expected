@@ -66,6 +66,7 @@ struct kl_2kl_list__IP5ShapeE
 
 struct kl__Shape__vtable
 {
+    void ( *drop )( void* );
     double ( *kl_area_10 )( void* );
     uint64_t ( *kl_label_size_17 )( void* );
 };
@@ -119,6 +120,12 @@ void kl_2kl_reallocate_if_needed__I2u8E__SQ2kl4listI2u8E( struct kl_2kl_list__I2
 void kl_2kl_swap__I2u8E__SQ2kl4listI2u8E_3u64_3u64( struct kl_2kl_list__I2u8E*, uint64_t, uint64_t );
 void kl_2kl_reallocate__IP5ShapeE__SQ2kl4listIP5ShapeE_3u64( struct kl_2kl_list__IP5ShapeE*, uint64_t );
 void kl_2kl_reallocate__I2u8E__SQ2kl4listI2u8E_3u64( struct kl_2kl_list__I2u8E*, uint64_t );
+void kl__Labelled__drop( struct kl__Labelled* );
+
+static void kl__Square__as_kl__Shape__drop( void* self )
+{
+    ( void ) self;
+}
 
 static double kl__Square__as_kl__Shape__kl_area_10( void* self )
 {
@@ -130,7 +137,12 @@ static uint64_t kl__Square__as_kl__Shape__kl_label_size_17( void* self )
     return kl__label_size__S6Square( ( struct kl__Square* ) self );
 }
 
-static const struct kl__Shape__vtable kl__Square__as_kl__Shape = { kl__Square__as_kl__Shape__kl_area_10, kl__Square__as_kl__Shape__kl_label_size_17 };
+static const struct kl__Shape__vtable kl__Square__as_kl__Shape = { kl__Square__as_kl__Shape__drop, kl__Square__as_kl__Shape__kl_area_10, kl__Square__as_kl__Shape__kl_label_size_17 };
+
+static void kl__Labelled__as_kl__Shape__drop( void* self )
+{
+    kl__Labelled__drop( ( struct kl__Labelled* ) self );
+}
 
 static double kl__Labelled__as_kl__Shape__kl_area_10( void* self )
 {
@@ -142,7 +154,7 @@ static uint64_t kl__Labelled__as_kl__Shape__kl_label_size_17( void* self )
     return kl__label_size__S8Labelled( ( struct kl__Labelled* ) self );
 }
 
-static const struct kl__Shape__vtable kl__Labelled__as_kl__Shape = { kl__Labelled__as_kl__Shape__kl_area_10, kl__Labelled__as_kl__Shape__kl_label_size_17 };
+static const struct kl__Shape__vtable kl__Labelled__as_kl__Shape = { kl__Labelled__as_kl__Shape__drop, kl__Labelled__as_kl__Shape__kl_area_10, kl__Labelled__as_kl__Shape__kl_label_size_17 };
 
 double kl__area__S6Square( struct kl__Square* kl_this_1 )
 {
@@ -1577,6 +1589,13 @@ void kl_2kl_reallocate__I2u8E__SQ2kl4listI2u8E_3u64( struct kl_2kl_list__I2u8E* 
     ( *kl_this_1 ).kl_data__1937 = kl_new_data_3;
 #line 394 "../src/list.kl"
     ( *kl_this_1 ).kl_cap__1941 = kl_n_2;
+    return;
+}
+
+void kl__Labelled__drop( struct kl__Labelled* kl_t1 )
+{
+#line 21 "list_of_interfaces/main.kl"
+    kl_2kl_list__I2u8E__dtor( &( *kl_t1 ).kl_label_50.kl_bytes__906 );
     return;
 }
 

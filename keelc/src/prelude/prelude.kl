@@ -197,3 +197,40 @@ enum result<T, E>
     /// Failed, with why.
     err( E error )
 };
+
+/// One `T` on the heap, owned: dropping the box drops the value and frees its memory.
+///
+/// A `box<Circle>` goes wherever a `box<Shape>` is wanted when `Circle` implements `Shape`, and the
+/// value is then called and dropped through `Shape`'s vtable. `box` is the one type that takes an
+/// interface as its type argument.
+class box<T>
+{
+    /// Moves `value` onto the heap.
+    public box( move T value )
+    {
+        unsafe
+        {
+            // A raw slot, so the write drops nothing: there is nothing there yet.
+            T[*] slot = alloc<T>( 1 );
+            slot[0] = move value;
+            p_ = &slot[0];
+        }
+    }
+
+    ~box()
+    {
+        unsafe
+        {
+            destroy( p_ );
+            free( p_ );
+        }
+    }
+
+    /// The value, where it lives.
+    public T* get() const
+    {
+        return p_;
+    }
+
+    private T* p_;
+};

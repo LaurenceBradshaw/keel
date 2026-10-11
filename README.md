@@ -192,8 +192,8 @@ i32 main()
 }
 ```
 
-**Designed and not yet built:** the remaining operators, and most of the library: `box`, `map`,
-`set`, and printing a `kl::string`. Anything in that list appearing below is
+**Designed and not yet built:** the remaining operators, and most of the library: `map`, `set`,
+and printing a `kl::string`. Anything in that list appearing below is
 marked *(planned)*.
 
 ---
@@ -270,7 +270,7 @@ noted in its row.
 | One `enum` keyword with `enum class`'s semantics: always scoped, never an integer. `enum class E` is an error saying to drop the `class`. | Two kinds, one of which leaks into the integers. | Nobody wants the unscoped one. |
 | `enum` variants carry payloads — `Shape::Circle( 1.0 )` — destructured in a `case`, and destroyed by reading the tag. | No sum types; `union` maintains its tag by hand. | A union is safe only when the tag is right every time, and this is the one legitimate use of one. |
 | `switch` has no fallthrough, needs no `break`, and must be exhaustive. Running on is written `fallthrough;`. | Fallthrough by default; a missing case is a silent skip. | The default is backwards. The keyword keeps the ability without the hazard. |
-| No inheritance. Interfaces give dynamic dispatch: an `interface` of method signatures, conformance declared with `implements`, and no implementation inheritance. An interface is reached only through `ref Shape` or `Shape*`, or used as a bound, `where T : Shape`, with no vtable. | Inheritance, virtual dispatch, multiple inheritance and RTTI. | Polymorphism needs a shared interface, not a shared base. RTTI and downcasting stay refused. |
+| No inheritance. Interfaces give dynamic dispatch: an `interface` of method signatures, conformance declared with `implements`, and no implementation inheritance. An interface is reached only through `ref Shape`, `Shape*` or an owning `box<Shape>`, or used as a bound, `where T : Shape`, with no vtable. | Inheritance, virtual dispatch, multiple inheritance and RTTI. | Polymorphism needs a shared interface, not a shared base. RTTI and downcasting stay refused. |
 
 ### Ownership, references and memory
 

@@ -99,7 +99,12 @@ struct Compiled
 
         for( const Function& function : all )
         {
-            if( ast.span( function.declaration ).file == file )
+            // A synthesised drop is declared by nothing, so it belongs where its type was declared;
+            // a union was declared nowhere, so it is the program's.
+            const Node_id home = function.declaration.is_valid() ? function.declaration
+                                                                 : types.table().get( function.type_arguments[0] ).declaration;
+
+            if( !home.is_valid() || ast.span( home ).file == file )
             {
                 functions.push_back( function );
             }

@@ -35,6 +35,7 @@ functions.</p>
 <li><a href="#println"><code>println</code></a> <span class="kind">function</span></li>
 <li><a href="#eprintln"><code>eprintln</code></a> <span class="kind">function</span></li>
 <li><a href="#result"><code>result</code></a> <span class="kind">enum</span></li>
+<li><a href="#box"><code>box</code></a> <span class="kind">class</span></li>
 </ul>
 <section class="entry">
 <h2><span class="kind">primitive</span> <span class="prim">bool</span></h2>
@@ -326,6 +327,35 @@ escapes are decoded, a <code>\0</code> included.</p>
 <pre class="signature"><a class="anchor" href="#result.err" aria-label="Link to err">#</a><code>err( E error )</code></pre>
 <div class="doc">
 <p>Failed, with why.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">class</span> <span class="type">box</span></h2>
+<div class="group" id="box">
+<pre class="signature"><a class="anchor" href="#box" aria-label="Link to box">#</a><code><span class="kw">class</span> <span class="type">box</span>&lt;T&gt;</code></pre>
+<div class="doc">
+<p>One <code>T</code> on the heap, owned: dropping the box drops the value and frees its memory.</p>
+<p>A <code>box&lt;Circle&gt;</code> goes wherever a <code>box&lt;Shape&gt;</code> is wanted when <code>Circle</code> implements <code>Shape</code>, and the
+value is then called and dropped through <code>Shape</code>'s vtable. <code>box</code> is the one type that takes an
+interface as its type argument.</p>
+</div>
+</div>
+<h3>Constructors</h3>
+<div class="group" id="box.box">
+<pre class="signature"><a class="anchor" href="#box.box" aria-label="Link to box">#</a><code><span class="kw">public</span> <span class="type">box</span>( <span class="kw">move</span> T value )</code></pre>
+<div class="doc">
+<p>Moves <code>value</code> onto the heap.</p>
+</div>
+</div>
+<div class="group" id="box.~box">
+<pre class="signature"><a class="anchor" href="#box.~box" aria-label="Link to ~box">#</a><code><span class="type">~box</span>()</code></pre>
+</div>
+<h3>Methods</h3>
+<div class="group" id="box.get">
+<pre class="signature"><a class="anchor" href="#box.get" aria-label="Link to get">#</a><code><span class="kw">public</span> T* <span class="fn">get</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The value, where it lives.</p>
 </div>
 </div>
 </section>

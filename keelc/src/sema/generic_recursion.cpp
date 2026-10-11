@@ -232,6 +232,14 @@ std::vector<Generic_call> Generic_recursion::take_generic_calls()
 namespace keel
 {
 
+// The program's edges only: the prelude's `box<T>` has its own, from its constructor to `box<T>`.
+std::size_t program_edges( const Typed& p )
+{
+    return static_cast<std::size_t>( std::ranges::count_if(
+        p.types().generic_calls(), [&]( const Generic_call& call ) { return call.to != p.types().table().box_declaration(); }
+    ) );
+}
+
 // The graph is between generics only. A call in `main` already names an instance, so an edge from
 // it would be a step towards something that has already arrived - and the walk reads every edge as
 // a step.
@@ -243,7 +251,7 @@ TEST_CASE( "generic_recursion_records_an_edge_only_from_inside_a_generic", "[sem
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.types().generic_calls().empty() );
+        REQUIRE( program_edges( p ) == 0 );
         REQUIRE( p.types().instantiations().size() == 1 );
     }
 
@@ -255,7 +263,7 @@ TEST_CASE( "generic_recursion_records_an_edge_only_from_inside_a_generic", "[sem
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.types().generic_calls().size() == 1 );
+        REQUIRE( program_edges( p ) == 1 );
     }
 }
 

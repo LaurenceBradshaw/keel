@@ -29,8 +29,9 @@ void drop_place( Builder& builder, const Ast& ast, Types& types, Place place, Ty
     }
 
     // Which payload is live is known only at run time, so the drop is a call to the enum's
-    // synthesised destructor rather than an expansion here (D30); a union's likewise.
-    if( types.table().is_enum( type ) || types.table().is_union( type ) )
+    // synthesised destructor rather than an expansion here (D30); a union's likewise, and an
+    // interface's goes through its vtable.
+    if( types.table().is_enum( type ) || types.table().is_union( type ) || types.table().is_interface( type ) )
     {
         builder.drop( place, span, replacing );
         return;
@@ -548,7 +549,7 @@ Operand Lowering::converted( Operand operand, Type_id to, Span span )
         return operand;
     }
 
-    if( types_.table().is_union( to ) )
+    if( types_.table().is_union( to ) || types_.table().is_box( to ) )
     {
         return united( operand, to, span );
     }
@@ -562,6 +563,11 @@ Operand Lowering::united( Operand operand, Type_id to, Span span )
     if( operand.type != to && types_.table().is_interface_pointer( to ) && types_.table().is_pointer( operand.type ) )
     {
         return copy( builder_.place( builder_.into_temp( cast_to( operand, to ), to, span ) ), to );
+    }
+
+    if( operand.type != to && types_.table().is_box( to ) && types_.table().is_box( operand.type ) )
+    {
+        return move( builder_.place( builder_.into_temp( cast_to( moved_if_owning( operand ), to ), to, span ) ), to );
     }
 
     if( operand.type == to || !types_.table().is_union( to ) )
@@ -894,7 +900,10 @@ void Lowering::lower_destroy( Node_id id )
     const Span span = ast_.span( id );
 
     Operand pointer = lower_expression( ast_.pointer( id ) );
-    Operand count   = lower_expression( ast_.count( id ) );
+
+    // Evaluated whether or not anything owns: the count may be a call.
+    const bool has_count = ast_.count( id ).is_valid();
+    Operand    count     = has_count ? lower_expression( ast_.count( id ) ) : Operand {};
 
     const Type_id element_type = types_.table().get( pointer.type ).element;
 
@@ -905,7 +914,14 @@ void Lowering::lower_destroy( Node_id id )
 
     // Read once: a destructor may write the field either came from.
     const Local_id pointer_temp = builder_.into_temp( use( pointer ), pointer.type, span );
-    const Local_id count_temp   = builder_.into_temp( use( count ), count.type, span );
+
+    if( !has_count )
+    {
+        drop_place( builder_.deref( builder_.place( pointer_temp ) ), element_type, span );
+        return;
+    }
+
+    const Local_id count_temp = builder_.into_temp( use( count ), count.type, span );
 
     const Literal_id zero  = literal_pool_.add_integer( 0 );
     const Literal_id one   = literal_pool_.add_integer( 1 );
@@ -2370,7 +2386,8 @@ void Lowering::lower_var( Node_id id )
                 span
             );
         }
-        else if( is_construction( init ) )
+        // Not when it converts: `box<Shape> s = box<Sq>( … );` builds a `box<Sq>`, which `s` is not.
+        else if( is_construction( init ) && type_of( init ) == type )
         {
             // Constructed in place. Going via a temporary and copying would make two of an
             // owning type where the program said one, and only one of them would be dropped.
@@ -3221,9 +3238,37 @@ Function union_destructor( const Ast& ast, Types& types, Literal_pool& literals,
     return function;
 }
 
-// Every closed owning enum the table holds. Repeated until nothing new appears, because lowering
-// one destructor can intern another: `Option<Option<Buf>>` names `Option<Buf>`.
-void append_enum_destructors( const Ast& ast, Types& types, Literal_pool& literals, std::vector<Function>& functions )
+// A vtable's drop slot: the implementer's whole drop, its `~` and then its fields, which no
+// function of its own does. Declared by nothing; its type argument is the implementer.
+Function drop_function( const Ast& ast, Types& types, Type_id implementer )
+{
+    const Span span = ast.span( types.table().get( implementer ).declaration );
+
+    Builder builder( Node_id {}, types.table().builtin( Type_kind::Void ), span );
+
+    const Local_id self = builder.add_parameter( types.table().pointer_to( implementer ), span, Symbol_id {} );
+
+    drop_place( builder, ast, types, builder.deref( builder.place( self ) ), implementer, span, false );
+    builder.terminate_return( span );
+
+    Function function = builder.finish();
+    function.type_arguments.push_back( implementer );
+
+    return function;
+}
+
+bool implements_anything( const Types& types, Node_id declaration )
+{
+    return std::ranges::any_of(
+        types.conformances().conformances,
+        [&]( const Conformance& conformance ) { return conformance.implementer == declaration; }
+    );
+}
+
+// Every closed owning enum the table holds, each owning union, and each owning implementer's drop
+// function. Repeated until nothing new appears, because lowering one destructor can intern another:
+// `Option<Option<Buf>>` names `Option<Buf>`.
+void append_synthesised_drops( const Ast& ast, Types& types, Literal_pool& literals, std::vector<Function>& functions )
 {
     std::vector<Type_id> done;
 
@@ -3251,6 +3296,16 @@ void append_enum_destructors( const Ast& ast, Types& types, Literal_pool& litera
         if( instance_owns( ast, types.table(), type, types.recorded() ) )
         {
             functions.push_back( union_destructor( ast, types, literals, type ) );
+        }
+    }
+
+    for( const Type_id type : types.table().composite_types() )
+    {
+        if( types.table().is_struct( type ) && !types.table().mentions_parameter( type ) &&
+            implements_anything( types, types.table().get( type ).declaration ) &&
+            instance_owns( ast, types.table(), type, types.recorded() ) )
+        {
+            functions.push_back( drop_function( ast, types, type ) );
         }
     }
 }
@@ -3285,7 +3340,7 @@ std::vector<Function> lower( const Ast& ast, const Resolution& resolution, Types
         functions.push_back( std::move( emitted ) );
     }
 
-    append_enum_destructors( ast, types, literals, functions );
+    append_synthesised_drops( ast, types, literals, functions );
 
     return functions;
 }
@@ -7231,6 +7286,49 @@ TEST_CASE( "lower_casts_an_implementer's_address_to_its_interface", "[ir][lower]
         INFO( text );
         REQUIRE( text.find( "copy _1 as Shape*" ) != std::string::npos );
     }
+}
+
+// A vtable's drop slot needs the whole drop as one function, which an implementer that owns has only
+// if lowering makes it: `Framed` has no `~`, and its `Buf` is dropped by nothing else.
+TEST_CASE( "lower_synthesises_a_drop_function_for_an_owning_implementer", "[ir][lower][interfaces][drop]" )
+{
+    Lowered p( "interface Shape { f64 area() const; };\n"
+               "class Buf { u8[*] b; public Buf() { unsafe { b = alloc<u8>( 1 ); } } ~Buf() { unsafe { free( b ); } } };\n"
+               "class Framed implements Shape { Buf frame; public Framed() { frame = Buf(); } "
+               "public f64 area() const { return 1.0; } };\n"
+               "struct Sq implements Shape { f64 side; f64 area() const { return side; } };\n"
+               "i32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+    REQUIRE( every_function_verifies( p ) );
+
+    const std::string text = p.named( "drop Framed" );
+
+    INFO( text );
+    REQUIRE( text.find( "let _1: Framed*; // parameter" ) != std::string::npos );
+    REQUIRE( text.find( "drop (*_1).frame" ) != std::string::npos );
+
+    // Owning nothing, its vtable's slot calls nothing.
+    REQUIRE( p.named( "drop Sq" ).empty() );
+}
+
+// `box<Circle>` to `box<Shape>` is a `Cast` of the moved box, so the source is not dropped again.
+TEST_CASE( "lower_casts_a_box_to_a_box_of_its_interface", "[ir][lower][interfaces]" )
+{
+    Lowered p(
+        shape_source + "box<Shape> f( move box<Sq> b ) { box<Shape> s = move b; return s; }\n"
+                       "i32 main() { return 0; }"
+    );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+    REQUIRE( every_function_verifies( p ) );
+
+    const std::string text = p.named( "f" );
+
+    INFO( text );
+    REQUIRE( text.find( "move _1 as box<Shape>" ) != std::string::npos );
 }
 
 // `Box<i64>` is first interned by lowering `make<i64>`, after every instance before it was queued.

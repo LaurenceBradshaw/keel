@@ -271,13 +271,17 @@ print( const Function& func, const Ast& ast, const Type_table& types, const Lite
     const bool destructor = func.declaration.is_valid() && ( ast.kind( func.declaration ) == Node_kind::Destructor_decl ||
                                                              ast.kind( func.declaration ) == Node_kind::Enum_decl );
 
-    // A union's destructor is declared by nothing, and named for the union.
-    const bool united = !func.declaration.is_valid() && !func.type_arguments.empty();
+    // Declared by nothing, and named for its type argument: a union's destructor, or an implementer's
+    // drop function, which is not its `~` and so does not print as one.
+    const bool synthesised = !func.declaration.is_valid() && !func.type_arguments.empty();
+    const bool united      = synthesised && types.is_union( func.type_arguments[0] );
 
     std::string out = fmt::format(
         "fn {}{} {{\n",
-        destructor || united ? "~" : "",
-        united                        ? types.name( func.type_arguments[0] )
+        destructor || united ? "~"
+        : synthesised        ? "drop "
+                             : "",
+        synthesised                   ? types.name( func.type_arguments[0] )
         : func.declaration.is_valid() ? printer.name_of( func.declaration )
                                       : "<unnamed>"
     );

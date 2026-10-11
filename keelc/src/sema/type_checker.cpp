@@ -137,6 +137,12 @@ Types Checker::run()
 
         if( ( is_aggregate( kind ) || kind == Node_kind::Enum_decl ) && package.is_valid() )
         {
+            if( package == resolution_.prelude_package() && is_aggregate( kind ) &&
+                interner_.text( ast_.name( decl ) ) == "box" )
+            {
+                types_.table().declare_box( decl );
+            }
+
             types_.table().set_package( decl, interner_.text( package ), package != resolution_.prelude_package() );
         }
     }
@@ -318,6 +324,12 @@ bool may_own(
         }
 
         return false;
+    }
+
+    // Some implementer may own, and only the vtable knows which.
+    if( table.is_interface( instance ) )
+    {
+        return true;
     }
 
     if( !table.is_struct( instance ) && !table.is_enum( instance ) )

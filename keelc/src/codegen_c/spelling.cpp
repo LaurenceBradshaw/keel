@@ -160,6 +160,13 @@ std::string Spelling::thunk( Type_id implementer, Type_id interface, Node_id req
     return fmt::format( "{}__{}", vtable( implementer, interface ), field( requirement ) );
 }
 
+std::string Spelling::drop_function( Type_id implementer ) const
+{
+    return fmt::format(
+        "{}__drop", mangle_struct( package_name( types.table().get( implementer ).declaration ), implementer, types.table() )
+    );
+}
+
 std::string Spelling::field( Node_id declaration ) const
 {
     return mangle_local( interner.text( ast.name( declaration ) ), declaration.v );
@@ -167,10 +174,12 @@ std::string Spelling::field( Node_id declaration ) const
 
 std::string Spelling::function( Node_id declaration, std::span<const Type_id> type_arguments ) const
 {
-    // A union's destructor is declared by nothing, and named for the union.
+    // Declared by nothing, and named for its one type argument: a union's destructor, or an
+    // implementer's drop function.
     if( !declaration.is_valid() )
     {
-        return destructor_of( type_arguments[0] );
+        return types.table().is_union( type_arguments[0] ) ? destructor_of( type_arguments[0] )
+                                                           : drop_function( type_arguments[0] );
     }
 
     // An extern names a symbol someone else defined, so the Keel name is the C name: `kl__malloc__u64`

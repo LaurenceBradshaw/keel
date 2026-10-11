@@ -1,0 +1,37 @@
+error: `Shape` is an interface, so it cannot be held by value
+  --> sema/errors_box.kl:27:19
+   |
+27 | void hold( Holder<Shape>* h ) { }
+   |                   ^^^^^ borrow one as `const ref Shape` or `ref Shape`, or point at one with `Shape*`
+
+error: `Shape` is an interface, so it cannot be held by value
+  --> sema/errors_box.kl:31:29
+   |
+31 |     box<Shape>  built = box<Shape>( Square { 1.0 } );
+   |                             ^^^^^ borrow one as `const ref Shape` or `ref Shape`, or point at one with `Shape*`
+
+error: expected `box<Shape>`, but got `box<Point>`
+  --> sema/errors_box.kl:33:25
+   |
+33 |     box<Shape>  wrong = move point;
+   |                         ^^^^^^^^^^
+
+error: an owning value is transferred, not copied
+  --> sema/errors_box.kl:35:25
+   |
+35 |     box<Shape>  copy  = plain;
+   |                         ^^^^^ write `move plain`
+
+error: cannot borrow `box<Square>` as `ref box<Shape>`
+  --> sema/errors_box.kl:36:31
+   |
+36 |     ref box<Shape> borrowed = plain;
+   |                               ^^^^^ a borrow is the variable itself, so its type must match exactly
+
+error: expected `box<Square>`, but got `box<Shape>`
+  --> sema/errors_box.kl:38:25
+   |
+38 |     box<Square> back  = move shape;
+   |                         ^^^^^^^^^^
+
+6 errors generated

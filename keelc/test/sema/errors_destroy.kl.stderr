@@ -4,11 +4,11 @@ error: `destroy` needs an `unsafe` block
 5 |     destroy( slots, 1 );
   |     ^^^^^^^^^^^^^^^^^^^ the compiler cannot tell which slots hold a value
 
-error: `destroy` needs a `T[*]`, but got `i32*`
-  --> sema/errors_destroy.kl:12:18
+error: a `T*` holds one value, so `destroy` takes no count
+  --> sema/errors_destroy.kl:12:23
    |
 12 |         destroy( one, 1 );
-   |                  ^^^ it ends the values in a run of slots, counted from this pointer
+   |                       ^ write `destroy( p )`
 
 error: `destroy` cannot end a `const i32[*]`, which points to `const`
   --> sema/errors_destroy.kl:20:18

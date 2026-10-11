@@ -28,6 +28,8 @@ struct Spelling
     std::string vtable_type( Type_id interface ) const;         // "struct kl__Shape__vtable"
     std::string vtable( Type_id implementer, Type_id interface ) const;
     std::string thunk( Type_id implementer, Type_id interface, Node_id requirement ) const;
+    // Not `destructor_of`: an implementer's `~` runs its body only, and this drops its fields too.
+    std::string drop_function( Type_id implementer ) const; // "kl__Circle__drop"
     std::string field( Node_id declaration ) const;
     // The declaration alone no longer names a function: one generic is emitted once per set of
     // type arguments, so they are part of the symbol.
