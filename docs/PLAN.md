@@ -1205,7 +1205,7 @@ accessors, which every pass reads through (only `Field_type` and the tests stay 
 `Types_builder::poison`, R24's one namespace spelling, `keel::sema`, R2's single take-and-clear
 discipline for `Expressions::expected_`, R17's `successors()` in `kir.h`, R14's `lower_arm_body`,
 R7's tree queries as `Ast` members, R18's `Lookahead`, R13's `Annotations::resolve` with its long
-cases as members, and R9's `ir/instances`, which owns monomorphisation (`instances_to_emit`,
+cases as members, and R9's `ir/instances`, which owns monomorphisation (`Instance_queue`,
 `bindings_for`). A query that reads only the tree and the nodes it is given is a member of `Ast`; one
 that needs anything more (`parameter_mode_of`, which answers in sema's `Param_mode`, and the
 ownership and binding-type questions) stays in sema. R22 (`const Types&` past the checker) is

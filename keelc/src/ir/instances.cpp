@@ -39,32 +39,67 @@ void queue( std::vector<Instantiation>& pending, const Types& types, Instantiati
     }
 }
 
-// The destructor of each closed instance of a generic aggregate. No call site names one, so
-// nothing else would seed it.
-void queue_destructors( const Ast& ast, const Types& types, std::vector<Instantiation>& pending )
+// A closed instance of a generic aggregate - the only composites whose members need instances.
+// An enum is skipped: its destructor is synthesised by lower(), not declared, and ast.members
+// asserts on one.
+bool is_generic_aggregate( const Ast& ast, const Type& composite )
 {
-    for( const Type_id composite_type_id : types.table().composite_types() )
-    {
-        const Type& composite_type = types.table().get( composite_type_id );
+    return composite.declaration.is_valid() && ast.is_generic( composite.declaration ) &&
+           ast.kind( composite.declaration ) != Node_kind::Enum_decl;
+}
 
-        // An enum is skipped rather than walked: its destructor is synthesised by lower(), not
-        // declared - and ast.members asserts on one.
-        if( !composite_type.declaration.is_valid() || !ast.is_generic( composite_type.declaration ) ||
-            ast.kind( composite_type.declaration ) == Node_kind::Enum_decl )
+// The destructor of one closed instance of a generic aggregate. No call site names one, so
+// nothing else would seed it.
+void queue_destructor( const Ast& ast, const Types& types, Type_id composite, std::vector<Instantiation>& pending )
+{
+    const Type& composite_type = types.table().get( composite );
+
+    if( !is_generic_aggregate( ast, composite_type ) )
+    {
+        return;
+    }
+
+    for( const Node_id decl : ast.members( composite_type.declaration ) )
+    {
+        if( ast.kind( decl ) == Node_kind::Destructor_decl )
+        {
+            queue(
+                pending,
+                types,
+                { .declaration = decl, .arguments = { composite_type.arguments.begin(), composite_type.arguments.end() } }
+            );
+            break;
+        }
+    }
+}
+
+// The methods answering an interface, for one closed instance of a generic implementer: a vtable or
+// a call through a bound reaches them, and neither is a call site the checker recorded.
+void queue_conformances( const Ast& ast, const Types& types, Type_id composite, std::vector<Instantiation>& pending )
+{
+    const Type& composite_type = types.table().get( composite );
+
+    if( !is_generic_aggregate( ast, composite_type ) )
+    {
+        return;
+    }
+
+    for( const Conformance& conformance : types.conformances().conformances )
+    {
+        if( conformance.implementer != composite_type.declaration )
         {
             continue;
         }
 
-        for( const Node_id decl : ast.members( composite_type.declaration ) )
+        for( const Node_id method : conformance.methods )
         {
-            if( ast.kind( decl ) == Node_kind::Destructor_decl )
+            if( method.is_valid() )
             {
                 queue(
                     pending,
                     types,
-                    { .declaration = decl, .arguments = { composite_type.arguments.begin(), composite_type.arguments.end() } }
+                    { .declaration = method, .arguments = { composite_type.arguments.begin(), composite_type.arguments.end() } }
                 );
-                break;
             }
         }
     }
@@ -72,51 +107,64 @@ void queue_destructors( const Ast& ast, const Types& types, std::vector<Instanti
 
 } // namespace
 
-// The checker's list is only the seed. A call site inside a generic writes `g<T>`, which names no
-// instance at all until `T` is known - so the real set is the closure of that list under the
-// generic call graph, and reaching it needs a worklist rather than a pass.
-//
-// It terminates because Generic_recursion::check refused the shape that would not: a cycle whose
-// arguments grow a level each time round. Every other cycle forwards its parameters unchanged, so
-// going round it twice produces an instantiation that is already in the set.
-std::vector<Instantiation> instances_to_emit( const Ast& ast, Types& types )
+Instance_queue::Instance_queue( const Ast& ast, Types& types )
+    : ast_( ast ),
+      types_( types )
 {
-    std::vector<Instantiation> pending;
-
-    for( const Instantiation& seed : types.instantiations() )
+    for( const Instantiation& seed : types_.instantiations() )
     {
-        queue( pending, types, seed );
+        queue( pending_, types_, seed );
     }
 
-    queue_destructors( ast, types, pending );
+    queue_new_composites();
+}
 
-    // Indexed rather than iterated: the loop appends to what it is walking.
-    for( std::size_t at = 0; at < pending.size(); ++at )
+std::optional<Instantiation> Instance_queue::next()
+{
+    queue_new_composites();
+
+    if( at_ == pending_.size() )
     {
-        const Instantiation instance = pending[at];
-        const Bindings      bindings = bindings_for( ast, types, instance );
+        return std::nullopt;
+    }
 
-        // What this instance's body reaches. `g<T>` under `{ T -> i32 }` is `g<i32>`, which no call
-        // site ever wrote and which nothing else would ever emit.
-        for( const Generic_call& edge : types.generic_calls() )
+    // A copy: queueing what it reaches appends to pending_.
+    const Instantiation instance = pending_[at_++];
+    const Bindings      bindings = bindings_for( ast_, types_, instance );
+
+    // What this instance's body reaches. `g<T>` under `{ T -> i32 }` is `g<i32>`, which no call
+    // site ever wrote and which nothing else would ever emit.
+    for( const Generic_call& edge : types_.generic_calls() )
+    {
+        if( edge.from != instance.declaration )
         {
-            if( edge.from != instance.declaration )
-            {
-                continue;
-            }
-
-            Instantiation reached { .declaration = edge.to, .arguments = {} };
-
-            for( const Type_id argument : edge.arguments )
-            {
-                reached.arguments.push_back( types.table().substitute( argument, bindings ) );
-            }
-
-            queue( pending, types, std::move( reached ) );
+            continue;
         }
+
+        Instantiation reached { .declaration = edge.to, .arguments = {} };
+
+        for( const Type_id argument : edge.arguments )
+        {
+            reached.arguments.push_back( types_.table().substitute( argument, bindings ) );
+        }
+
+        queue( pending_, types_, std::move( reached ) );
     }
 
-    return pending;
+    return instance;
+}
+
+// From where the last call stopped: composite_types() is in interning order, so whatever was
+// interned since is at the end.
+void Instance_queue::queue_new_composites()
+{
+    const std::vector<Type_id> composites = types_.table().composite_types();
+
+    for( ; composites_seen_ < composites.size(); ++composites_seen_ )
+    {
+        queue_destructor( ast_, types_, composites[composites_seen_], pending_ );
+        queue_conformances( ast_, types_, composites[composites_seen_], pending_ );
+    }
 }
 
 // Positional, which is what D39's spelling guarantees: the nth type argument binds the nth parameter.
@@ -177,8 +225,12 @@ struct Reached
             return;
         }
 
-        for( const Instantiation& instance : instances_to_emit( ast, types ) )
+        Instance_queue queue( ast, types );
+
+        while( const std::optional<Instantiation> next = queue.next() )
         {
+            const Instantiation& instance = *next;
+
             std::string spelled = ast.kind( instance.declaration ) == Node_kind::Destructor_decl ? "~" : "";
             spelled += interner.text( ast.name( instance.declaration ) );
 
@@ -199,7 +251,7 @@ struct Reached
 
 } // namespace
 
-TEST_CASE( "instances_to_emit_reaches_every_instance_once", "[ir][instances][generic]" )
+TEST_CASE( "instance_queue_reaches_every_instance_once", "[ir][instances][generic]" )
 {
     SECTION( "one per set of type arguments a call site wrote" )
     {
@@ -248,7 +300,7 @@ TEST_CASE( "instances_to_emit_reaches_every_instance_once", "[ir][instances][gen
     }
 }
 
-TEST_CASE( "instances_to_emit_seeds_a_generic_aggregate's_destructor", "[ir][instances][generic][aggregate]" )
+TEST_CASE( "instance_queue_seeds_a_generic_aggregate's_destructor", "[ir][instances][generic][aggregate]" )
 {
     SECTION( "one per closed instance of the aggregate" )
     {
@@ -271,7 +323,7 @@ TEST_CASE( "instances_to_emit_seeds_a_generic_aggregate's_destructor", "[ir][ins
 
 // A generic method's instance carries the receiver's arguments and then its own, which is the
 // order of the parameters in its slot.
-TEST_CASE( "instances_to_emit_gives_a_generic_method_one_instance_per_call", "[ir][instances][generic]" )
+TEST_CASE( "instance_queue_gives_a_generic_method_one_instance_per_call", "[ir][instances][generic]" )
 {
     SECTION( "two of the method's own arguments on one receiver are two instances" )
     {
@@ -319,15 +371,45 @@ TEST_CASE( "bindings_for_binds_parameters_in_order", "[ir][instances][generic]" 
 
     REQUIRE( r.clean() );
 
-    const std::vector<Instantiation> instances = instances_to_emit( r.ast, r.types );
-    REQUIRE( instances.size() == 1 );
+    Instance_queue                     queue( r.ast, r.types );
+    const std::optional<Instantiation> instance = queue.next();
+    REQUIRE( instance.has_value() );
+    REQUIRE_FALSE( queue.next().has_value() );
 
-    const Bindings             bindings   = bindings_for( r.ast, r.types, instances[0] );
-    const std::vector<Node_id> parameters = r.ast.type_parameters( r.ast.type_param_list( instances[0].declaration ) );
+    const Bindings             bindings   = bindings_for( r.ast, r.types, *instance );
+    const std::vector<Node_id> parameters = r.ast.type_parameters( r.ast.type_param_list( instance->declaration ) );
 
     REQUIRE( bindings.size() == 2 );
     REQUIRE( bindings.at( r.types.type_of( parameters[0] ).v ) == r.types.table().integer( 32, true ) );
     REQUIRE( bindings.at( r.types.type_of( parameters[1] ).v ) == r.types.table().builtin( Type_kind::Bool ) );
+}
+
+// A vtable slot reaches a generic implementer's method without a call site the checker recorded.
+TEST_CASE( "instance_queue_reaches_a_generic_implementer's_methods", "[ir][instances][generic][interfaces]" )
+{
+    const std::string shape = "interface Shape { f64 area() const; };\n"
+                              "struct Pair<T> implements Shape where T : Copyable { T a; f64 area() const { return 2.0; } };\n"
+                              "f64 measure( const ref Shape s ) { return s.area(); }\n";
+
+    SECTION( "one per closed instance" )
+    {
+        Reached r(
+            shape + "i32 main() { Pair<i32> p = Pair { 1 }; Pair<bool> q = Pair { true }; "
+                    "f64 x = measure( p ) + measure( q ); return 0; }"
+        );
+
+        REQUIRE( r.clean() );
+        REQUIRE( std::count( r.instances.begin(), r.instances.end(), "area<i32>" ) == 1 );
+        REQUIRE( std::count( r.instances.begin(), r.instances.end(), "area<bool>" ) == 1 );
+    }
+
+    SECTION( "never for the open form" )
+    {
+        Reached r( shape + "i32 main() { return 0; }" );
+
+        REQUIRE( r.clean() );
+        REQUIRE( r.instances.empty() );
+    }
 }
 
 } // namespace keel

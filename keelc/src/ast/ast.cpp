@@ -806,6 +806,18 @@ Node_id Ast::enclosing_aggregate( Node_id member ) const
     return Node_id {};
 }
 
+bool Ast::is_requirement( Node_id method ) const
+{
+    if( !method.is_valid() || kind( method ) != Node_kind::Method_decl )
+    {
+        return false;
+    }
+
+    const Node_id owner = enclosing_aggregate( method );
+
+    return owner.is_valid() && kind( owner ) == Node_kind::Interface_decl;
+}
+
 // `from` is an aggregate rather than the function or receiver the access was written in: asking
 // anything else makes every caller convert, and the conversion is where the two halves drift.
 bool Ast::is_visible_from( Node_id member, Node_id from ) const

@@ -114,6 +114,16 @@ private:
     Operand lower_method_call_on( Node_id id, Node_id method, Operand receiver );
     Operand
     lower_method_call_on( Node_id id, Node_id method, Operand receiver, std::span<const Node_id> arguments, Type_id type );
+    Operand lower_method_call_on(
+        Node_id                  id,
+        Node_id                  method,
+        Operand                  receiver,
+        std::span<const Node_id> arguments,
+        Type_id                  type,
+        const Bindings&          callee_bound,
+        std::vector<Type_id>     type_arguments
+    );
+    Operand lower_interface_call( Node_id id, Node_id requirement );
     Operand lower_operator_call( Node_id id, Node_id method );
     Operand lower_operator_index( Node_id id, Node_id method );
     Operand lower_variant_construction( Node_id id );
@@ -548,6 +558,12 @@ Operand Lowering::converted( Operand operand, Type_id to, Span span )
 
 Operand Lowering::united( Operand operand, Type_id to, Span span )
 {
+    // An implementer's address becomes a `Shape*` where one is wanted, as a member becomes a union.
+    if( operand.type != to && types_.table().is_interface_pointer( to ) && types_.table().is_pointer( operand.type ) )
+    {
+        return copy( builder_.place( builder_.into_temp( cast_to( operand, to ), to, span ) ), to );
+    }
+
     if( operand.type == to || !types_.table().is_union( to ) )
     {
         return operand;
@@ -1648,6 +1664,11 @@ Operand Lowering::lower_method_call( Node_id id )
 
     assert( method.is_valid() && "the checker records the method for every call it accepts" );
 
+    if( ast_.is_requirement( method ) )
+    {
+        return lower_interface_call( id, method );
+    }
+
     const std::span<const Node_id> parameters = ast_.params( method );
 
     // D22 reaches through a pointer, so `q.area()` on a `Point*` calls the method on the pointee -
@@ -1667,6 +1688,52 @@ Operand Lowering::lower_method_call( Node_id id )
     return lower_method_call_on( id, method, receiver );
 }
 
+// A method an interface declares. On an interface the call stays a call of that method, and C
+// reaches the implementer's through the vtable the receiver carries. On a parameter bound by the
+// interface, the instance knows the implementer, so the call is a direct one to its method.
+Operand Lowering::lower_interface_call( Node_id id, Node_id requirement )
+{
+    const Node_id object      = ast_.object( ast_.callee( id ) );
+    const Type_id object_type = type_of( object );
+    const bool    pointer     = types_.table().is_pointer( object_type );
+    const Type_id held        = pointer ? types_.table().get( object_type ).element : object_type;
+    const bool    reads       = ast_.is_const_method( requirement );
+
+    const auto receiver = [&]( Type_id address ) -> Operand
+    {
+        return pointer ? lower_expression( object )
+                       : address_operand(
+                             lower_place( object ),
+                             address,
+                             ast_.span( object ),
+                             reads ? Address_purpose::Read : Address_purpose::Borrow
+                         );
+    };
+
+    if( types_.table().is_interface( held ) )
+    {
+        return lower_method_call_on(
+            id, requirement, receiver( types_.table().pointer_to( held, reads ) ), ast_.arguments( id ), type_of( id ), {}, {}
+        );
+    }
+
+    const Node_id method = types_.conformances().method_for( types_.table().get( held ).declaration, requirement );
+
+    assert( method.is_valid() && "a bound is met only by a type whose `implements` was checked" );
+
+    const std::span<const Type_id> arguments = types_.table().get( held ).arguments;
+
+    return lower_method_call_on(
+        id,
+        method,
+        receiver( types_.table().pointer_to( held, reads ) ),
+        ast_.arguments( id ),
+        type_of( id ),
+        aggregate_bindings( ast_, types_.table(), held, types_.recorded() ),
+        std::vector<Type_id>( arguments.begin(), arguments.end() )
+    );
+}
+
 // The half both call shapes share. What differs is only where the receiver came from - an object
 // written at the call site, or the one the enclosing method was given.
 Operand Lowering::lower_method_call_on( Node_id id, Node_id method, Operand receiver )
@@ -1679,13 +1746,28 @@ Operand Lowering::lower_method_call_on( Node_id id, Node_id method, Operand rece
 Operand
 Lowering::lower_method_call_on( Node_id id, Node_id method, Operand receiver, std::span<const Node_id> arguments, Type_id type )
 {
+    // The receiver's own arguments, not the enclosing function's: `p.first()` on a `Pair<i32>`
+    // reads `T` out of the declaration, and only this instance says what it is.
+    return lower_method_call_on(
+        id, method, receiver, arguments, type, bindings_for_call( id ), type_arguments_for_call( id )
+    );
+}
+
+// With the callee's bindings and type arguments given, for a call whose callee is not the one the
+// checker recorded: an implementer's method reached through a bound.
+Operand Lowering::lower_method_call_on(
+    Node_id                  id,
+    Node_id                  method,
+    Operand                  receiver,
+    std::span<const Node_id> arguments,
+    Type_id                  type,
+    const Bindings&          callee_bound,
+    std::vector<Type_id>     type_arguments
+)
+{
     const Span span = ast_.span( id );
 
     const std::span<const Node_id> parameters = ast_.params( method );
-
-    // The receiver's own arguments, not the enclosing function's: `p.first()` on a `Pair<i32>`
-    // reads `T` out of the declaration, and only this instance says what it is.
-    const Bindings callee_bound = bindings_for_call( id );
 
     std::vector<Operand> operands;
 
@@ -1722,7 +1804,7 @@ Lowering::lower_method_call_on( Node_id id, Node_id method, Operand receiver, st
 
     const Local_id result = call_result(
         id,
-        call( method, first, static_cast<u32>( operands.size() ), result_type, type_arguments_for_call( id ) ),
+        call( method, first, static_cast<u32>( operands.size() ), result_type, std::move( type_arguments ) ),
         result_type,
         span
     );
@@ -3190,13 +3272,15 @@ std::vector<Function> lower( const Ast& ast, const Resolution& resolution, Types
         }
     }
 
-    for( const Instantiation& instance : instances_to_emit( ast, types ) )
+    Instance_queue instances( ast, types );
+
+    while( const std::optional<Instantiation> instance = instances.next() )
     {
-        Lowering lowering( instance.declaration, ast, resolution, types, literals, bindings_for( ast, types, instance ) );
+        Lowering lowering( instance->declaration, ast, resolution, types, literals, bindings_for( ast, types, *instance ) );
 
         Function emitted = lowering.run();
 
-        emitted.type_arguments = instance.arguments;
+        emitted.type_arguments = instance->arguments;
 
         functions.push_back( std::move( emitted ) );
     }
@@ -7024,6 +7108,167 @@ TEST_CASE( "lower_writes_an_owning_element_without_dropping_it", "[ir][lower][ma
     INFO( text );
     REQUIRE( text.find( "drop (*" ) == std::string::npos );
     REQUIRE( every_function_verifies( p ) );
+}
+
+namespace
+{
+
+const std::string shape_source = "interface Shape { f64 area() const; void grow( f64 by ); };\n"
+                                 "struct Sq implements Shape { f64 side; f64 area() const { return side * side; } "
+                                 "void grow( f64 by ) { side = side + by; } };\n";
+
+} // namespace
+
+// The call stays a call of the interface's method, on an address typed at the interface.
+TEST_CASE( "lower_calls_an_interface's_method_on_its_address", "[ir][lower][interfaces]" )
+{
+    SECTION( "`const ref` reads through the borrow" )
+    {
+        Lowered p( shape_source + "f64 f( const ref Shape s ) { return s.area(); }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( every_function_verifies( p ) );
+
+        const std::string text = p.named( "f" );
+
+        INFO( text );
+        REQUIRE( text.find( "let _2: const Shape*;" ) != std::string::npos );
+        REQUIRE( text.find( "_2 = &read (*_1)" ) != std::string::npos );
+        REQUIRE( text.find( "call area(copy _2)" ) != std::string::npos );
+    }
+
+    SECTION( "`ref` borrows for a method that writes" )
+    {
+        Lowered p( shape_source + "void f( ref Shape s ) { s.grow( 1.0 ); }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string text = p.named( "f" );
+
+        INFO( text );
+        REQUIRE( text.find( "_2 = &borrow (*_1)" ) != std::string::npos );
+        REQUIRE( text.find( "call grow(copy _2, const 1)" ) != std::string::npos );
+    }
+
+    SECTION( "a pointer is passed as it stands" )
+    {
+        Lowered p( shape_source + "f64 f( Shape* s ) { return s.area(); }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::string text = p.named( "f" );
+
+        INFO( text );
+        REQUIRE( text.find( "call area(copy _1)" ) != std::string::npos );
+        REQUIRE( text.find( "&" ) == std::string::npos );
+    }
+}
+
+// Through a bound the instance knows the implementer, so the receiver is typed at it and no
+// `Shape*` is made.
+TEST_CASE( "lower_calls_through_a_bound_directly", "[ir][lower][interfaces][generic]" )
+{
+    SECTION( "a plain implementer" )
+    {
+        Lowered p(
+            shape_source + "f64 f<T>( const ref T t ) where T : Shape { return t.area(); }\n"
+                           "i32 main() { Sq q = Sq { 2.0 }; f64 a = f( q ); return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( every_function_verifies( p ) );
+
+        const std::string text = p.named( "f" );
+
+        INFO( text );
+        REQUIRE( text.find( "let _2: const Sq*;" ) != std::string::npos );
+        REQUIRE( text.find( "call area(copy _2)" ) != std::string::npos );
+        REQUIRE( text.find( "Shape" ) == std::string::npos );
+    }
+
+    SECTION( "a generic implementer brings its own arguments" )
+    {
+        Lowered p( "interface Shape { f64 area() const; };\n"
+                   "struct Pair<T> implements Shape where T : Copyable { T a; f64 area() const { return 2.0; } };\n"
+                   "f64 f<T>( const ref T t ) where T : Shape { return t.area(); }\n"
+                   "i32 main() { Pair<i32> q = Pair { 1 }; f64 a = f( q ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( every_function_verifies( p ) );
+
+        const std::string text = p.named( "f" );
+
+        INFO( text );
+        REQUIRE( text.find( "let _2: const Pair<i32>*;" ) != std::string::npos );
+        REQUIRE( text.find( "call area(copy _2)" ) != std::string::npos );
+        REQUIRE( p.named( "area" ).find( "let _1: Pair<i32>*; // parameter this" ) != std::string::npos );
+    }
+}
+
+// Every initialiser, assignment and return casts an implementer's address into the `Shape*`; an
+// argument already did.
+TEST_CASE( "lower_casts_an_implementer's_address_to_its_interface", "[ir][lower][interfaces]" )
+{
+    for( const char* body :
+         { "Shape* f( Sq* q ) { Shape* s = q; return s; }",
+           "Shape* f( Sq* q, Shape* s ) { s = q; return s; }",
+           "Shape* f( Sq* q ) { return q; }",
+           "f64 g( Shape* s ) { return s.area(); }\nf64 f( Sq* q ) { return g( q ); }" } )
+    {
+        Lowered p( shape_source + body + "\ni32 main() { return 0; }" );
+
+        INFO( body << "\n" << p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( every_function_verifies( p ) );
+
+        const std::string text = p.named( "f" );
+
+        INFO( text );
+        REQUIRE( text.find( "copy _1 as Shape*" ) != std::string::npos );
+    }
+}
+
+// `Box<i64>` is first interned by lowering `make<i64>`, after every instance before it was queued.
+TEST_CASE( "lower_reaches_what_lowering_an_instance_interns", "[ir][lower][generic]" )
+{
+    SECTION( "a destructor" )
+    {
+        Lowered p( "class Box<T> where T : Copyable { T v; public Box( T x ) { v = x; } ~Box() { } };\n"
+                   "i32 make<T>( T x ) where T : Copyable { Box<T> b = Box<T>( x ); return 0; }\n"
+                   "i32 main() { return make<i64>( 1 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( every_function_verifies( p ) );
+
+        const std::string text = p.named( "~Box" );
+
+        INFO( text );
+        REQUIRE( text.find( "let _1: Box<i64>*; // parameter this" ) != std::string::npos );
+    }
+
+    SECTION( "an implementer's method" )
+    {
+        Lowered p( "interface Shape { f64 area() const; };\n"
+                   "struct Pair<T> implements Shape where T : Copyable { T a; f64 area() const { return 2.0; } };\n"
+                   "f64 measure( const ref Shape s ) { return s.area(); }\n"
+                   "f64 make<T>( T x ) where T : Copyable { Pair<T> p = Pair { x }; return measure( p ); }\n"
+                   "i32 main() { f64 a = make<i64>( 1 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( every_function_verifies( p ) );
+
+        const std::string text = p.named( "area" );
+
+        INFO( text );
+        REQUIRE( text.find( "let _1: Pair<i64>*; // parameter this" ) != std::string::npos );
+    }
 }
 
 } // namespace keel

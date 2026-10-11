@@ -167,6 +167,7 @@ public:
     bool    has_destructor( Node_id declaration ) const;
     bool    enum_has_payload( Node_id enum_decl ) const; // D7: decides whether the enum is an integer or a tagged struct
     Node_id enclosing_aggregate( Node_id member ) const; // invalid for nodes with no members
+    bool    is_requirement( Node_id method ) const;      // a method an interface declares
 
     // Whether `member` may be named from inside the aggregate `from`: the enclosing_aggregate of the
     // function the access is written in, and invalid for a free function, which sees nothing private.
