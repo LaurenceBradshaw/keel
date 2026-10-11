@@ -806,7 +806,8 @@ void Overloads::check_one_argument_marker( Node_id argument, Param_mode mode, Ty
     // exit - and it wants both sides, so one missing marker does not report twice.
     if( ( mode == Param_mode::Ref || mode == Param_mode::Const_ref || mode == Param_mode::Out ) && given == wanted &&
         !table_.references_error( types_.type_of( argument ) ) && !table_.references_error( expected ) &&
-        types_.type_of( argument ) != expected && table_.holds( types_.type_of( argument ), expected ) )
+        types_.type_of( argument ) != expected && table_.holds( types_.type_of( argument ), expected ) &&
+        !table_.is_interface( expected ) ) // borrowing an implementer as one borrows that very object
     {
         reporter_.error_at(
             ast_.span( argument ),
@@ -3087,6 +3088,64 @@ TEST_CASE( "overloads_refuse_a_static_and_an_instance_method_of_one_signature", 
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
+    }
+}
+
+// The borrow is of the implementer itself, so no copy is made and nothing is reported for one.
+TEST_CASE( "overloads_borrow_an_implementer_as_its_interface", "[sema][interfaces]" )
+{
+    const std::string declared =
+        "interface Shape { f64 area() const; void grow( f64 by ); };\n"
+        "struct Sq implements Shape { f64 s; f64 area() const { return s; } void grow( f64 by ) { s = s + by; } };\n"
+        "struct Plain { i32 n; };\n"
+        "f64 measure( const ref Shape s ) { return s.area(); }\n"
+        "void enlarge( ref Shape s ) { s.grow( 1.0 ); }\n"
+        "f64 through( const Shape* s ) { return s.area(); }\n";
+
+    SECTION( "as an argument, a declaration or a pointer" )
+    {
+        const Typed p(
+            declared + "i32 main() {\n"
+                       "    Sq q = Sq { 2.0 };\n"
+                       "    measure( q );\n"
+                       "    enlarge( ref q );\n"
+                       "    through( &q );\n"
+                       "    const ref Shape held = q;\n"
+                       "    ref Shape changed = q;\n"
+                       "    Shape* p = &q;\n"
+                       "    return 0;\n"
+                       "}"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    struct Case
+    {
+        const char* body;
+        const char* message;
+        bool        once = true;
+    };
+
+    const Case cases[] = {
+        { "measure( p );", "expected `Shape`, but got `Plain`" },
+        { "enlarge( ref p );", "expected `Shape`, but got `Plain`" },
+        { "Shape* s = &p;", "expected `Shape*`, but got `Plain*`" },
+        { "const ref Shape held = p;", "expected `Shape`, but got `Plain`", false }, // also "cannot borrow": known
+    };
+
+    for( const Case& c : cases )
+    {
+        const Typed p( declared + "i32 main() { Plain p = Plain { 1 }; " + c.body + " return 0; }" );
+
+        INFO( c.body << "\n" << p.rendered() );
+        REQUIRE( p.rendered().find( c.message ) != std::string::npos );
+
+        if( c.once )
+        {
+            REQUIRE( p.errors() == 1 );
+        }
     }
 }
 

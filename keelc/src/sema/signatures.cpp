@@ -97,6 +97,14 @@ void Signatures::declare_interfaces()
 
         types_.record( child, table_.interface( child, name ) );
     }
+
+    for( u32 node = 0; node < ast_.node_count(); ++node )
+    {
+        if( ast_.kind( Node_id { node } ) == Node_kind::Bound_name )
+        {
+            annotations_.record_interface_bound( Node_id { node } );
+        }
+    }
 }
 
 // What each aggregate says it implements, once every type exists to be named there by mistake.

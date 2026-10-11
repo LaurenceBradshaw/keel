@@ -606,6 +606,17 @@ bool Annotations::resolve_type_arguments(
     return true;
 }
 
+// A bound naming an interface: its type, recorded on the name, which is where Bounds reads it.
+void Annotations::record_interface_bound( Node_id bound_name )
+{
+    const Node_id decl = resolution_.declaration_of( bound_name );
+
+    if( decl.is_valid() && ast_.kind( decl ) == Node_kind::Interface_decl )
+    {
+        types_.record( bound_name, types_.type_of( decl ) );
+    }
+}
+
 Type_id Annotations::resolve_interface( Node_id annotation )
 {
     const Node_id decl = resolution_.declaration_of( annotation );

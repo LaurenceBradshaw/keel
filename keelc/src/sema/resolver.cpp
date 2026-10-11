@@ -307,6 +307,15 @@ void Resolver::visit( Node_id id )
     case Node_kind::Interface_decl:
         visit_aggregate( id );
         return;
+    // A bound the compiler provides names nothing; one naming an interface is bound to it here, and
+    // the checker reports a name that is neither.
+    case Node_kind::Bound_name:
+        if( const Node_id decl = lookup( ast_.name( id ), id );
+            decl.is_valid() && ast_.kind( decl ) == Node_kind::Interface_decl )
+        {
+            bind( id, decl );
+        }
+        return;
     default:
         for( const Node_id child : ast_.children( id ) )
         {

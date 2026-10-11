@@ -361,7 +361,9 @@ void Statements::visit_var( Node_id id )
                 "it ends with this statement; give it a variable of its own first"
             );
         }
-        else if( types_.type_of( init ) != type && !table_.references_error( types_.type_of( init ) ) )
+        // An implementer borrowed as its interface is still that very object.
+        else if( types_.type_of( init ) != type && !table_.references_error( types_.type_of( init ) ) &&
+                 !( table_.is_interface( type ) && table_.holds( types_.type_of( init ), type ) ) )
         {
             reporter_.error_at(
                 ast_.span( init ),

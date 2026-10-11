@@ -134,6 +134,7 @@ private:
     Argument_shape argument_shape( Node_id argument );
 
     Type_id infer_method_call( Node_id id );
+    Node_id method_owner( Type_id receiver, Symbol_id name ) const;
     Type_id infer_implicit_method_call( Node_id id, Node_id first, Type_id expectation );
     // Which of the methods named like `first` this call means, or none after reporting why. `shapes`
     // holds the arguments selection typed, for check_method_arguments.

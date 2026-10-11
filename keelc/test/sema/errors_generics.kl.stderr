@@ -74,7 +74,7 @@ error: unknown bound `Sortable`
   --> sema/errors_generics.kl:62:40
    |
 62 | void unknown_bound<T>( T a ) where T : Sortable
-   |                                        ^^^^^^^^ the bounds are Copyable, Equatable, Comparable, Numeric, Integral and Floating
+   |                                        ^^^^^^^^ a bound is an interface, or one of Copyable, Equatable, Comparable, Numeric, Integral and Floating
 
 error: `U` is not a type parameter of `wrong_subject`
   --> sema/errors_generics.kl:66:30

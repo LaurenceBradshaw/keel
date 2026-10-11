@@ -649,15 +649,35 @@ Type_id Expressions::infer_method_call( Node_id id )
         return types_.poison( id );
     }
 
-    if( !table_.is_struct( object_type ) )
+    const Node_id owner = method_owner( object_type, ast_.name( callee ) );
+
+    if( !owner.is_valid() )
     {
-        reporter_.error_at( ast_.span( object ), fmt::format( "`{}` has no methods", table_.name( object_type ) ) );
+        reporter_.error_at(
+            ast_.span( object ),
+            fmt::format( "`{}` has no methods", table_.name( object_type ) ),
+            table_.is_parameter( object_type )
+                ? fmt::format(
+                      "a `where` clause naming an interface gives `{}` that interface's methods", table_.name( object_type )
+                  )
+                : std::string {}
+        );
         return types_.poison( id );
     }
 
-    // The aggregate, not the call: find_method searches a declaration's members, and hands back
+    // The declaration, not the call: find_method searches a declaration's members, and hands back
     // the first of however many share the name.
-    const Node_id first = aggregates_.find_method( table_.get( object_type ).declaration, ast_.name( callee ) );
+    const Node_id first = aggregates_.find_method( owner, ast_.name( callee ) );
+
+    if( !first.is_valid() && !table_.is_struct( object_type ) )
+    {
+        reporter_.error_at(
+            ast_.span( callee ),
+            fmt::format( "`{}` has no method `{}`", table_.name( object_type ), interner_.text( ast_.name( callee ) ) )
+        );
+
+        return types_.poison( id );
+    }
 
     if( !first.is_valid() )
     {
@@ -760,6 +780,29 @@ Type_id Expressions::infer_method_call( Node_id id )
     }
 
     return check_method_arguments( id, method, object_type, expectation, shapes );
+}
+
+// Where a receiver's methods are declared: an aggregate's or an interface's own declaration, or for a
+// parameter, the first interface its `where` clause names that declares `name`, else the first it
+// names at all. Invalid when the type has no methods.
+Node_id Expressions::method_owner( Type_id receiver, Symbol_id name ) const
+{
+    if( table_.is_struct( receiver ) || table_.is_interface( receiver ) )
+    {
+        return table_.get( receiver ).declaration;
+    }
+
+    const std::span<const Type_id> interfaces = bounds_.interfaces_of( receiver );
+
+    for( const Type_id interface : interfaces )
+    {
+        if( aggregates_.find_method( table_.get( interface ).declaration, name ).is_valid() )
+        {
+            return table_.get( interface ).declaration;
+        }
+    }
+
+    return interfaces.empty() ? Node_id {} : table_.get( interfaces.front() ).declaration;
 }
 
 // Shared by every call shape - `p.area()`, a bare `area()` inside a method and `T::make()` -
@@ -8897,6 +8940,73 @@ TEST_CASE( "type_checker_lets_a_void_payload_take_no_argument", "[sema][void][pa
         INFO( p.rendered() );
         REQUIRE( p.clean() );
         REQUIRE( p.type_name( p.nth( Node_kind::Try_expr, 0 ) ) == "void" );
+    }
+}
+
+// A call through a borrow, a pointer or a bounded parameter goes to the interface's own requirement.
+TEST_CASE( "expressions_call_a_method_through_an_interface", "[sema][interfaces]" )
+{
+    const std::string declared = "interface Shape { f64 area() const; void grow( f64 by ); };\n"
+                                 "interface Named { i32 id() const; };\n";
+
+    const Typed p(
+        declared + "f64 measure( const ref Shape s ) { return s.area(); }\n"
+                   "void enlarge( ref Shape s ) { s.grow( 1.0 ); }\n"
+                   "f64 through( Shape* s ) { return s.area(); }\n"
+                   "i32 tagged<T>( const ref T t ) where T : Shape & Named { return t.id(); }\n"
+                   "i32 main() { return 0; }"
+    );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const std::span<const Node_id> shape = p.ast().members( p.nth( Node_kind::Interface_decl, 0 ) );
+    const std::span<const Node_id> named = p.ast().members( p.nth( Node_kind::Interface_decl, 1 ) );
+
+    REQUIRE( p.callee( 0 ) == shape[0] );
+    REQUIRE( p.callee( 1 ) == shape[1] );
+    REQUIRE( p.callee( 2 ) == shape[0] );
+    REQUIRE( p.callee( 3 ) == named[0] ); // the interface declaring `id`, not the first named
+    REQUIRE( p.type_name( p.nth( Node_kind::Call_expr, 0 ) ) == "f64" );
+}
+
+TEST_CASE( "expressions_refuse_what_an_interface_does_not_declare", "[sema][interfaces]" )
+{
+    const std::string declared = "interface Shape { f64 area() const; void grow( f64 by ); };\n"
+                                 "struct Sq { f64 s; };\n";
+
+    struct Case
+    {
+        const char* source;
+        const char* message;
+        const char* help;
+    };
+
+    const Case cases[] = {
+        { "f64 f( const ref Shape s ) { return s.perimeter(); }", "`Shape` has no method `perimeter`", "" },
+        { "f64 f<T>( const ref T t ) where T : Shape { return t.perimeter(); }", "`T` has no method `perimeter`", "" },
+        { "f64 f<T>( const ref T t ) { return t.area(); }",
+          "`T` has no methods",
+          "a `where` clause naming an interface gives `T` that interface's methods" },
+        { "f64 f( i32 n ) { return n.area(); }", "`i32` has no methods", "" },
+        { "f64 f( Sq q ) { return q.area(); }", "`Sq` has no method `area`", "" },
+        { "void f( const ref Shape s ) { s.grow( 1.0 ); }", "`s` is `const`", "" },
+    };
+
+    for( const Case& c : cases )
+    {
+        const Typed p( declared + c.source + "\ni32 main() { return 0; }" );
+
+        INFO( c.source << "\n" << p.rendered() );
+        const std::string rendered = p.rendered();
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( rendered.find( c.message ) != std::string::npos );
+        REQUIRE( rendered.find( c.help ) != std::string::npos );
+
+        if( *c.help == '\0' )
+        {
+            REQUIRE( rendered.find( "`where` clause" ) == std::string::npos );
+        }
     }
 }
 

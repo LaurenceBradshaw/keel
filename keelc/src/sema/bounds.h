@@ -93,6 +93,9 @@ public:
     // The bound set recorded for a parameter, or an empty set when it carries no `where` clause.
     Bound_set bounds_for( Type_id parameter ) const;
 
+    // The interfaces a parameter's `where` clause names, in the order written.
+    std::span<const Type_id> interfaces_of( Type_id parameter ) const;
+
     // The narrowest integer a parameter may turn out to be, for the checks that need a width. Zero
     // when no integer is admissible at all.
     u8 narrowest_admissible_width( Type_id parameter ) const;
@@ -122,8 +125,9 @@ private:
     Aggregates&         aggregates_;
     Reporter&           reporter_;
 
-    std::unordered_map<u32, Bound_set> bounds_;   // Type_param_decl -> its closed bound set
-    std::unordered_map<u32, Node_id>   owner_of_; // Type_param_decl -> the declaration that introduced it.
+    std::unordered_map<u32, Bound_set>            bounds_;     // Type_param_decl -> its closed bound set
+    std::unordered_map<u32, std::vector<Type_id>> interfaces_; // Type_param_decl -> the interfaces it names
+    std::unordered_map<u32, Node_id>              owner_of_;   // Type_param_decl -> the declaration that introduced it.
 };
 
 } // namespace keel::sema

@@ -219,6 +219,18 @@ bool Bounds::satisfies( Type_id type, Bound bound ) const
     return false;
 }
 
+std::span<const Type_id> Bounds::interfaces_of( Type_id parameter ) const
+{
+    if( !table_.is_parameter( parameter ) )
+    {
+        return {};
+    }
+
+    const auto found = interfaces_.find( table_.get( parameter ).declaration.v );
+
+    return found == interfaces_.end() ? std::span<const Type_id> {} : std::span<const Type_id>( found->second );
+}
+
 // Reports every unmet bound rather than the first: two are two things to fix, and one per compile is
 // two compiles. What it does *not* report twice is one mistake wearing several names - closure()
 // stored `Integral` as `Integral | Numeric | Comparable | Equatable`, so a struct fails all four.
@@ -226,6 +238,37 @@ bool Bounds::satisfies( Type_id type, Bound bound ) const
 // A span rather than a node, because a deduced type argument has no annotation to underline.
 void Bounds::check_bounds( Node_id parameter, Span at, Type_id argument, std::string_view callee )
 {
+    // An interface is met by a declared `implements`, or by a parameter promising it in turn.
+    if( const auto named = interfaces_.find( parameter.v ); named != interfaces_.end() && !table_.references_error( argument ) )
+    {
+        for( const Type_id interface : named->second )
+        {
+            const std::span<const Type_id> promised = interfaces_of( argument );
+
+            if( table_.implements( argument, interface ) ||
+                std::find( promised.begin(), promised.end(), interface ) != promised.end() )
+            {
+                continue;
+            }
+
+            reporter_.error_at(
+                at,
+                fmt::format(
+                    "`{}` needs a `{}` that implements `{}`, but `{}` does not",
+                    callee,
+                    interner_.text( ast_.name( parameter ) ),
+                    table_.name( interface ),
+                    table_.name( argument )
+                ),
+                table_.is_parameter( argument )
+                    ? fmt::format(
+                          "add `{}` to the `where` clause for `{}`", table_.name( interface ), table_.name( argument )
+                      )
+                    : fmt::format( "declare `{}` with `implements {}`", table_.name( argument ), table_.name( interface ) )
+            );
+        }
+    }
+
     const auto found = bounds_.find( parameter.v );
 
     if( found == bounds_.end() )
@@ -536,6 +579,12 @@ void Bounds::declare_type_parameters( Node_id declaration, Node_id list )
             std::string_view     bound_name = interner_.text( ast_.name( bound_node ) );
             std::optional<Bound> bound      = bound_for_name( bound_name );
 
+            if( !bound && types_.type_of( bound_node ).is_valid() && table_.is_interface( types_.type_of( bound_node ) ) )
+            {
+                interfaces_[it->v].push_back( types_.type_of( bound_node ) );
+                continue;
+            }
+
             if( !bound )
             {
                 // The span is the name, not the clause, and the list comes from the table
@@ -543,7 +592,7 @@ void Bounds::declare_type_parameters( Node_id declaration, Node_id list )
                 reporter_.error_at(
                     ast_.span( bound_node ),
                     fmt::format( "unknown bound `{}`", bound_name ),
-                    fmt::format( "the bounds are {}", known_bound_names() )
+                    fmt::format( "a bound is an interface, or one of {}", known_bound_names() )
                 );
                 continue;
             }
@@ -1307,6 +1356,69 @@ TEST_CASE( "type_checker_checks_a_generic_body_against_its_parameters", "[sema][
 
         INFO( p.rendered() );
         REQUIRE_FALSE( p.clean() );
+    }
+}
+
+// An interface in a `where` clause is met by a declared `implements`, or by a parameter naming it in turn.
+TEST_CASE( "bounds_meet_an_interface_only_by_implements", "[sema][interfaces]" )
+{
+    const std::string declared = "interface Shape { f64 area() const; };\n"
+                                 "interface Named { i32 id() const; };\n"
+                                 "struct Sq implements Shape { f64 s; f64 area() const { return s; } };\n"
+                                 "struct Plain { i32 n; };\n"
+                                 "f64 measure<T>( const ref T t ) where T : Shape { return t.area(); }\n";
+
+    SECTION( "an implementer, or a parameter promising it" )
+    {
+        const Typed p(
+            declared + "f64 outer<U>( const ref U u ) where U : Shape { return measure( u ); }\n"
+                       "i32 main() { Sq q = Sq { 1.0 }; measure( q ); outer( q ); return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    struct Case
+    {
+        const char* source;
+        const char* message;
+        const char* help;
+    };
+
+    const Case cases[] = {
+        { "i32 main() { Plain p = Plain { 1 }; measure( p ); return 0; }",
+          "`measure` needs a `T` that implements `Shape`, but `Plain` does not",
+          "declare `Plain` with `implements Shape`" },
+        { "f64 outer<U>( const ref U u ) where U : Named { return measure( u ); }\ni32 main() { return 0; }",
+          "`measure` needs a `T` that implements `Shape`, but `U` does not",
+          "add `Shape` to the `where` clause for `U`" },
+        { "f64 both<T>( const ref T t ) where T : Shape & Named { return t.area(); }\n"
+          "i32 main() { Sq q = Sq { 1.0 }; both( q ); return 0; }",
+          "`both` needs a `T` that implements `Named`, but `Sq` does not",
+          "declare `Sq` with `implements Named`" },
+        { "f64 odd<T>( const ref T t ) where T : Plain { return 0.0; }\ni32 main() { return 0; }",
+          "unknown bound `Plain`",
+          "a bound is an interface, or one of" },
+    };
+
+    for( const Case& c : cases )
+    {
+        const Typed p( declared + c.source );
+
+        INFO( c.source << "\n" << p.rendered() );
+        const std::string rendered = p.rendered();
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( rendered.find( c.message ) != std::string::npos );
+        REQUIRE( rendered.find( c.help ) != std::string::npos );
+    }
+
+    SECTION( "nothing more from an argument already in error" )
+    {
+        const Typed p( declared + "i32 main() { measure( nope ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.rendered().find( "implements" ) == std::string::npos );
     }
 }
 

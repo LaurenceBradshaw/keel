@@ -1,0 +1,60 @@
+// M9.5: what an interface refuses. Its methods are signatures, never static or generic; an
+// implementer answers each with a public method of the same signature, `const` where the
+// interface's is; an interface is never held by value; and a bound is met only by a declared
+// `implements`. Each mistake is reported once, where it was made.
+interface Shape
+{
+    f64 area() const;
+    void grow( f64 by );
+    i32 make<U>( U u );
+    static i32 count();
+};
+
+interface Named
+{
+    i32 id() const;
+};
+
+struct Plain
+{
+    i32 n;
+};
+
+struct Dot implements Shape, Named, Shape
+{
+    i32 n;
+
+    f64 area() { return 0.0; }
+    void grow( f32 by ) { }
+};
+
+class Hidden implements Named
+{
+    i32 n;
+
+    private i32 id() const { return n; }
+};
+
+struct Wrong implements Plain
+{
+    i32 n;
+};
+
+Shape global_shape;
+
+void by_value( Shape s ) { }
+
+f64 unknown<T>( const ref T t ) where T : Shape { return t.perimeter(); }
+
+f64 unbounded<T>( const ref T t ) { return t.area(); }
+
+f64 bounded<T>( const ref T t ) where T : Shape { return t.area(); }
+
+void read_only( const ref Shape s ) { s.grow( 1.0 ); }
+
+i32 main()
+{
+    Plain p = Plain { 1 };
+    bounded( p );
+    return 0;
+}

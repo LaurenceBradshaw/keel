@@ -642,6 +642,17 @@ bool Type_table::holds( Type_id from, Type_id to ) const
         return !is_union( from ) && has_member( to, from );
     }
 
+    // An implementer reaches its interface only as a borrow, since no `Shape` is ever held by value.
+    if( t.kind == Type_kind::Interface )
+    {
+        return implements( from, to );
+    }
+
+    if( t.kind == Type_kind::Pointer && f.kind == Type_kind::Pointer && is_interface( t.element ) )
+    {
+        return implements( f.element, t.element ) && ( !f.const_element || t.const_element );
+    }
+
     // Adding `const` to the element is safe, and only one level down: `T**` to `const T**` would let a `const T*` be stored
     // where a `T*` is read back.
     if( ( t.kind == Type_kind::Pointer && f.kind == Type_kind::Pointer ) ||
@@ -2810,6 +2821,32 @@ TEST_CASE( "type_table_records_what_implements_an_interface", "[sema][type][inte
         REQUIRE_FALSE( table.implements( i32, shape ) );
         REQUIRE_FALSE( table.implements( Type_id {}, shape ) );
     }
+}
+
+// Only as a borrow or a pointer: the implementer is still the object, so `const` may be added, never dropped.
+TEST_CASE( "type_table_holds_an_implementer_as_its_interface", "[sema][type][interfaces]" )
+{
+    Type_table table;
+
+    const Type_id shape = table.interface( Node_id { 5 }, "Shape" );
+    const Type_id point = table.structure( Node_id { 3 }, {}, "Point" );
+    const Type_id other = table.structure( Node_id { 4 }, {}, "Other" );
+
+    table.declare_implements( Node_id { 3 }, shape );
+
+    REQUIRE( table.holds( point, shape ) );
+    REQUIRE( table.holds( table.pointer_to( point ), table.pointer_to( shape ) ) );
+    REQUIRE( table.holds( table.pointer_to( point ), table.pointer_to( shape, true ) ) );
+    REQUIRE( table.holds( table.pointer_to( point, true ), table.pointer_to( shape, true ) ) );
+
+    REQUIRE_FALSE( table.holds( table.pointer_to( point, true ), table.pointer_to( shape ) ) );
+    REQUIRE_FALSE( table.holds( other, shape ) );
+    REQUIRE_FALSE( table.holds( table.pointer_to( other ), table.pointer_to( shape ) ) );
+    REQUIRE_FALSE( table.holds( shape, point ) );
+    REQUIRE_FALSE( table.holds( table.pointer_to( shape ), table.pointer_to( point ) ) );
+    REQUIRE_FALSE( table.holds( table.pointer_to( table.pointer_to( point ) ), table.pointer_to( table.pointer_to( shape ) ) )
+    );
+    REQUIRE_FALSE( table.holds( table.many_pointer_to( point ), table.pointer_to( shape ) ) );
 }
 
 } // namespace keel

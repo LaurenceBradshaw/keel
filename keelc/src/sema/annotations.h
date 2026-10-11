@@ -51,6 +51,9 @@ public:
         std::span<const Node_id> parameters, Node_id type_args, std::string_view name, std::vector<Type_id>& resolved
     );
 
+    // A `where` bound naming an interface: records that interface's type on the name.
+    void record_interface_bound( Node_id bound_name );
+
     // A type written after `implements`: an interface, or an error once reported.
     Type_id resolve_interface( Node_id annotation );
 
