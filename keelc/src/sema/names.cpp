@@ -65,9 +65,10 @@ private:
     const Interner&       interner_;
 
     std::unordered_set<u32>          top_level_;
-    std::unordered_map<u32, Node_id> called_; // a call's callee, to the callable the checker chose
-    std::unordered_map<u32, Node_id> calls_;  // a call's callee, to the call
-    std::unordered_map<u32, Node_id> owners_; // a type parameter, to the declaration it parameterises
+    std::unordered_map<u32, Node_id> called_;   // a call's callee, to the callable the checker chose
+    std::unordered_map<u32, Node_id> calls_;    // a call's callee, to the call
+    std::unordered_map<u32, Node_id> owners_;   // a type parameter, to the declaration it parameterises
+    std::unordered_map<u32, Node_id> subjects_; // a where clause, to the type parameter it constrains
 };
 
 std::vector<Name> Name_collector::run()
@@ -90,9 +91,28 @@ std::vector<Name> Name_collector::run()
         }
 
         // A method lists its aggregate's parameters too; the aggregate comes after it, and wins.
-        for( const Node_id param : ast_.type_parameters( ast_.type_param_list( id ) ) )
+        const Node_id              list   = ast_.type_param_list( id );
+        const std::vector<Node_id> params = ast_.type_parameters( list );
+
+        for( const Node_id param : params )
         {
             owners_.insert_or_assign( param.v, id );
+        }
+
+        for( const Node_id clause : ast_.where_clauses( list ) )
+        {
+            if( ast_.kind( clause ) != Node_kind::Where_clause )
+            {
+                continue;
+            }
+
+            const auto param =
+                std::ranges::find_if( params, [&]( Node_id p ) { return ast_.name( p ) == ast_.name( clause ); } );
+
+            if( param != params.end() )
+            {
+                subjects_.emplace( clause.v, *param );
+            }
         }
     }
 
@@ -156,6 +176,7 @@ bool Name_collector::declares_here( Node_id id ) const
     case Node_kind::Method_decl:
     case Node_kind::Struct_decl:
     case Node_kind::Class_decl:
+    case Node_kind::Interface_decl:
     case Node_kind::Enum_decl:
     case Node_kind::Variant_decl:
     case Node_kind::Field_decl:
@@ -178,7 +199,13 @@ Node_id Name_collector::referent( Node_id id ) const
         return ast_.name( id ) == Interner::keyword( Keyword::This ) ? Node_id {} : chosen( id, decl );
     case Node_kind::Named_type:
     case Node_kind::Struct_literal:
+    case Node_kind::Bound_name:
         return decl;
+    case Node_kind::Where_clause:
+    {
+        const auto subject = subjects_.find( id.v );
+        return subject != subjects_.end() ? subject->second : Node_id {};
+    }
     case Node_kind::Path_expr:
     {
         if( decl.is_valid() )
@@ -201,6 +228,7 @@ Node_id Name_collector::referent( Node_id id ) const
 }
 
 // `p.x` or `p.area()`, through a pointer as `.` reaches: the object's type says whose member it is.
+// A type parameter has no members, so a call through its bound names what the checker chose.
 Node_id Name_collector::member_after_dot( Node_id id ) const
 {
     Type_id type = types_.type_of( ast_.object( id ) );
@@ -216,7 +244,15 @@ Node_id Name_collector::member_after_dot( Node_id id ) const
     }
 
     const Node_id aggregate = types_.table().get( type ).declaration;
-    return aggregate.is_valid() ? chosen( id, member_named( aggregate, ast_.name( id ) ) ) : Node_id {};
+    const Node_id member    = aggregate.is_valid() ? member_named( aggregate, ast_.name( id ) ) : Node_id {};
+
+    if( member.is_valid() )
+    {
+        return chosen( id, member );
+    }
+
+    const auto call = called_.find( id.v );
+    return call != called_.end() ? call->second : Node_id {};
 }
 
 // A callee found by name is the first of its overload set; the checker's choice replaces it. Only a
@@ -299,6 +335,8 @@ std::optional<Name_kind> Name_collector::declaration_kind( Node_id decl ) const
         return Name_kind::Struct;
     case Node_kind::Class_decl:
         return Name_kind::Class;
+    case Node_kind::Interface_decl:
+        return Name_kind::Interface;
     case Node_kind::Enum_decl:
         return Name_kind::Enum;
     case Node_kind::Variant_decl:
@@ -322,7 +360,7 @@ Node_id Name_collector::member_named( Node_id type, Symbol_id name ) const
             }
         }
     }
-    else if( is_aggregate( ast_.kind( type ) ) )
+    else if( has_members( ast_.kind( type ) ) )
     {
         for( const Node_id member : ast_.members( type ) )
         {
@@ -361,9 +399,10 @@ Span Name_collector::name_span( Node_id id, bool declares ) const
         return ast_.type_name_span( id );
     }
 
-    const std::string_view name = interner_.text( ast_.name( id ) );
-    const Span             node = declares ? ast_.name_span( id ) : ast_.span( id );
-    const std::string_view text = sm_.file( node.file ).text;
+    const std::string_view name        = interner_.text( ast_.name( id ) );
+    const bool             named_apart = declares || ast_.kind( id ) == Node_kind::Where_clause;
+    const Span             node        = named_apart ? ast_.name_span( id ) : ast_.span( id );
+    const std::string_view text        = sm_.file( node.file ).text;
 
     u32 start = node.start;
 
@@ -409,6 +448,8 @@ std::string_view name_kind_name( Name_kind kind )
         return "struct";
     case Name_kind::Class:
         return "class";
+    case Name_kind::Interface:
+        return "interface";
     case Name_kind::Enum:
         return "enum";
     case Name_kind::Variant:
@@ -777,6 +818,37 @@ TEST_CASE( "names_carry_their_declaration's_doc", "[sema][names]" )
     REQUIRE( call != names.end() );
     REQUIRE( call->signature == "i32 twice( i32 v )" );
     REQUIRE( call->doc == "Twice `v`.\n\nExactly." );
+}
+
+// Implemented, as a bound, as a borrow's type, and through each: a call through a bound names the
+// interface's method, as a type parameter has none of its own.
+TEST_CASE( "names_interfaces_and_calls_through_them", "[sema][names][interface]" )
+{
+    constexpr std::string_view source = "interface Shape { f64 area() const; };\n"
+                                        "struct Square implements Shape { f64 side; f64 area() const { return side; } };\n"
+                                        "f64 measure( const ref Shape s ) { return s.area(); }\n"
+                                        "f64 statically<T>( const ref T t ) where T : Shape { return t.area(); }\n";
+
+    const auto at   = [&]( std::string_view text, std::size_t skip = 0 ) { return source.find( text ) + skip; };
+    const u32  area = static_cast<u32>( at( "area" ) );
+
+    SECTION( "by kind" )
+    {
+        const auto names = named( source );
+
+        REQUIRE( std::ranges::count( names, std::string( "Shape:interface" ) ) == 4 );
+        REQUIRE( std::ranges::count( names, std::string( "T:type_parameter" ) ) == 3 );
+    }
+
+    SECTION( "pointing at their declarations" )
+    {
+        const auto names = named( source, true );
+
+        REQUIRE( has( names, fmt::format( "Shape@{}->10", at( ": Shape", 2 ) ) ) );
+        REQUIRE( has( names, fmt::format( "T@{}->{}", at( "where T", 6 ), at( "<T>", 1 ) ) ) );
+        REQUIRE( has( names, fmt::format( "area@{}->{}", at( "s.area", 2 ), area ) ) );
+        REQUIRE( has( names, fmt::format( "area@{}->{}", at( "t.area", 2 ), area ) ) );
+    }
 }
 
 TEST_CASE( "names_struct_literals_by_their_type", "[sema][names]" )

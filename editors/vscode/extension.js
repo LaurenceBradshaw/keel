@@ -18,7 +18,7 @@ const severities = {
     note: vscode.DiagnosticSeverity.Information,
 };
 
-const token_types = [ 'namespace', 'struct', 'class', 'enum', 'enumMember', 'typeParameter', 'parameter', 'variable', 'property', 'function', 'method' ];
+const token_types = [ 'namespace', 'struct', 'class', 'interface', 'enum', 'enumMember', 'typeParameter', 'parameter', 'variable', 'property', 'function', 'method' ];
 const token_modifiers = [ 'global' ];
 const legend = new vscode.SemanticTokensLegend( token_types, token_modifiers );
 
@@ -27,6 +27,7 @@ const tokens_for = {
     package: [ 'namespace', 0 ],
     struct: [ 'struct', 0 ],
     class: [ 'class', 0 ],
+    interface: [ 'interface', 0 ],
     enum: [ 'enum', 0 ],
     variant: [ 'enumMember', 0 ],
     type_parameter: [ 'typeParameter', 0 ],

@@ -65,6 +65,14 @@ std::vector<Declaration> Declaration_collector::run()
                 add( variant, "variant", decl );
             }
             break;
+        case Node_kind::Interface_decl:
+            add( decl, "interface", Node_id {} );
+
+            for( const Node_id method : ast_.members( decl ) )
+            {
+                add( method, "method", decl );
+            }
+            break;
         case Node_kind::Struct_decl:
         case Node_kind::Class_decl:
             add( decl, ast_.kind( decl ) == Node_kind::Struct_decl ? "struct" : "class", Node_id {} );
@@ -242,6 +250,46 @@ TEST_CASE( "declarations_list_members_and_variants_with_their_parent", "[sema][d
             "field private i32 n [Box] ",
             "global i32 counter [] ",
             "function void f() [] ",
+        }
+    );
+}
+
+TEST_CASE( "declarations_list_an_interface_and_its_methods", "[sema][declarations][interface]" )
+{
+    Source_manager sm;
+    Interner       interner;
+    Literal_pool   literals;
+    Diagnostics    diags;
+
+    const File_id file = sm.add_file(
+        "t.kl",
+        "/// Has an area.\n"
+        "interface Shape\n"
+        "{\n"
+        "    f64 area() const;\n"
+        "};\n"
+        "struct Square implements Shape { f64 side; f64 area() const { return side; } };\n"
+    );
+    const Ast        ast        = parse( lex( file, sm, interner, literals, diags ), sm, diags );
+    const Resolution resolution = resolve( ast, sm, interner, diags );
+    const Types      types      = type_check( ast, resolution, literals, sm, interner, diags );
+
+    REQUIRE_FALSE( diags.has_errors() );
+
+    std::vector<std::string> listed;
+    for( const Declaration& decl : collect_declarations( ast, resolution, types, sm, interner ) )
+    {
+        listed.push_back( fmt::format( "{} {} [{}] {}", decl.kind, decl.signature, decl.parent, decl.doc ) );
+    }
+
+    REQUIRE(
+        listed ==
+        std::vector<std::string> {
+            "interface interface Shape [] Has an area.",
+            "method public f64 area() const [Shape] ",
+            "struct struct Square implements Shape [] ",
+            "field public f64 side [Square] ",
+            "method public f64 area() const [Square] ",
         }
     );
 }

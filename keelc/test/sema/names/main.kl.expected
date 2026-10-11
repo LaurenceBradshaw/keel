@@ -22,6 +22,7 @@
 {"kind":"name","refers_to":"parameter","file":"sema/names/main.kl","line":28,"col":16,"end_col":17,"decl_file":"sema/names/main.kl","decl_line":28,"decl_col":16,"decl_end_col":17,"signature":"T a"}
 {"kind":"name","refers_to":"type_parameter","file":"sema/names/main.kl","line":28,"col":19,"end_col":20,"decl_file":"sema/names/main.kl","decl_line":28,"decl_col":10,"decl_end_col":11,"signature":"T","owner":"T larger<T>( T a, T b ) where T : Copyable"}
 {"kind":"name","refers_to":"parameter","file":"sema/names/main.kl","line":28,"col":21,"end_col":22,"decl_file":"sema/names/main.kl","decl_line":28,"decl_col":21,"decl_end_col":22,"signature":"T b"}
+{"kind":"name","refers_to":"type_parameter","file":"sema/names/main.kl","line":28,"col":31,"end_col":32,"decl_file":"sema/names/main.kl","decl_line":28,"decl_col":10,"decl_end_col":11,"signature":"T","owner":"T larger<T>( T a, T b ) where T : Copyable"}
 {"kind":"name","refers_to":"parameter","file":"sema/names/main.kl","line":30,"col":12,"end_col":13,"decl_file":"sema/names/main.kl","decl_line":28,"decl_col":16,"decl_end_col":17,"signature":"T a"}
 {"kind":"name","refers_to":"function","file":"sema/names/main.kl","line":33,"col":5,"end_col":14,"decl_file":"sema/names/main.kl","decl_line":33,"decl_col":5,"decl_end_col":14,"signature":"f64 radius_of( Shape s )"}
 {"kind":"name","refers_to":"enum","file":"sema/names/main.kl","line":33,"col":16,"end_col":21,"decl_file":"sema/names/shapes.kl","decl_line":3,"decl_col":6,"decl_end_col":11,"signature":"enum Shape"}

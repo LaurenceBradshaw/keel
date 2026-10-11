@@ -22,6 +22,8 @@ const std::set<std::string_view> k_keywords = {
     "enum",
     "extern",
     "fn",
+    "implements",
+    "interface",
     "move",
     "operator",
     "out",
@@ -36,7 +38,7 @@ const std::set<std::string_view> k_keywords = {
 
 bool is_type( std::string_view declares )
 {
-    return declares == "struct" || declares == "class" || declares == "enum";
+    return declares == "struct" || declares == "class" || declares == "interface" || declares == "enum";
 }
 
 // The class marking a declaration's name: a constructor or destructor spells its type.
@@ -587,6 +589,29 @@ TEST_CASE( "pages_mark_the_declared_name", "[pages]" )
     REQUIRE( wrap.find( "<h2><span class=\"kind\">function</span> <span class=\"fn\">wrap</span></h2>" ) != std::string::npos );
     REQUIRE( wrap.find( "<span class=\"fn\">operator==</span>( " ) != std::string::npos );
     REQUIRE( wrap.find( "<span class=\"kw\">fn</span>( T ) -&gt; T cb</code>" ) != std::string::npos );
+}
+
+TEST_CASE( "pages_treat_an_interface_as_a_type", "[pages]" )
+{
+    const Package package {
+        "geo",
+        "",
+        { Module {
+            "shapes",
+            { Entry { Group { "Shape", { { "interface", "Shape", "interface Shape", "" } } }, {} },
+              Entry { Group { "Square", { { "struct", "Square", "struct Square implements Shape", "" } } }, {} } },
+        } },
+        {},
+        {},
+    };
+    const std::string shapes = render_pages( package ).at( "shapes.html" );
+
+    REQUIRE(
+        shapes.find( "<h2><span class=\"kind\">interface</span> <span class=\"type\">Shape</span></h2>" ) != std::string::npos
+    );
+    REQUIRE(
+        shapes.find( "<span class=\"kw\">implements</span> <a class=\"type\" href=\"#Shape\">Shape</a>" ) != std::string::npos
+    );
 }
 
 TEST_CASE( "pages_keep_overloads_under_one_anchor", "[pages]" )

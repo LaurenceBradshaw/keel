@@ -62,6 +62,9 @@
                     "class": [
                         "entity.name.type.keel"
                     ],
+                    "interface": [
+                        "entity.name.type.keel"
+                    ],
                     "enum": [
                         "entity.name.type.keel"
                     ],

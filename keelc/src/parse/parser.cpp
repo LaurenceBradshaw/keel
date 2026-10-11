@@ -1009,7 +1009,8 @@ Node_id Parser::parse_where_clause()
 
     cursor_.advance(); // the `where`, which parse_function_decl has already seen
 
-    const Symbol_id subject = expect_name();
+    const Span      subject_span = cursor_.peek().span;
+    const Symbol_id subject      = expect_name();
 
     recovery_.expect( Token_kind::Colon );
 
@@ -1041,7 +1042,9 @@ Node_id Parser::parse_where_clause()
         return error_node( Span::merge( start, cursor_.previous().span ) );
     }
 
-    return ast_.add( Node_kind::Where_clause, Span::merge( start, cursor_.previous().span ), subject.v, bounds );
+    const Node_id node = ast_.add( Node_kind::Where_clause, Span::merge( start, cursor_.previous().span ), subject.v, bounds );
+    ast_.set_name_span( node, subject_span );
+    return node;
 }
 
 Node_id Parser::parse_aggregate_decl()

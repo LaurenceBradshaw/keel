@@ -27,6 +27,7 @@ enum class Name_kind : u8
     Method,
     Struct,
     Class,
+    Interface,
     Enum,
     Variant,
     Type_parameter,

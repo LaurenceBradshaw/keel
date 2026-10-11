@@ -84,13 +84,24 @@ std::string Signature_printer::declaration( Node_id decl ) const
         return fmt::format( "~{}()", text( ast_.name( decl ) ) );
     case Node_kind::Struct_decl:
     case Node_kind::Class_decl:
+    {
+        std::string implemented;
+        for( const Node_id interface : ast_.implemented( decl ) )
+        {
+            implemented += fmt::format( "{}{}", implemented.empty() ? " implements " : ", ", type( interface ) );
+        }
+
         return fmt::format(
-            "{} {}{}{}",
+            "{} {}{}{}{}",
             ast_.kind( decl ) == Node_kind::Struct_decl ? "struct" : "class",
             text( ast_.name( decl ) ),
             type_parameters( ast_.type_param_list( decl ) ),
+            implemented,
             where_clauses( ast_.type_param_list( decl ) )
         );
+    }
+    case Node_kind::Interface_decl:
+        return fmt::format( "interface {}", text( ast_.name( decl ) ) );
     case Node_kind::Enum_decl:
     {
         const Node_id underlying = ast_.underlying_type( decl );
@@ -445,6 +456,22 @@ TEST_CASE( "signatures_print_inferred_locals_by_their_type", "[sema][signature]"
 
     REQUIRE( printed( Node_kind::Var_decl, "k" ) == "f64 k" );
     REQUIRE( printed( Node_kind::Binding_decl, "q" ) == "f64 q" );
+}
+
+// `implements` sits between an aggregate's parameters and its `where` clauses.
+TEST_CASE( "signatures_print_interfaces_and_their_implementers", "[sema][signature][interface]" )
+{
+    const Printed printed(
+        "interface Shape { f64 area() const; };\n"
+        "interface Named { u64 size() const; };\n"
+        "struct Square implements Shape, Named { f64 side; f64 area() const { return side; } "
+        "u64 size() const { return 1; } };\n"
+        "class Pair<T> implements Shape where T : Copyable { T a; public f64 area() const { return 1.0; } };\n"
+    );
+
+    REQUIRE( printed( Node_kind::Interface_decl, "Shape" ) == "interface Shape" );
+    REQUIRE( printed( Node_kind::Struct_decl, "Square" ) == "struct Square implements Shape, Named" );
+    REQUIRE( printed( Node_kind::Class_decl, "Pair" ) == "class Pair<T> implements Shape where T : Copyable" );
 }
 
 // Every parameter the instance binds reads as its argument, and its `where` clause goes with it.
