@@ -50,8 +50,8 @@ i32 main()
 
     for( u64 i = 0; i < shapes.size(); i++ )
     {
-        total = total + ( *shapes[i] ).area();
-        sizes = sizes + ( *shapes[i] ).label_size();
+        total = total + shapes[i].area();
+        sizes = sizes + shapes[i].label_size();
     }
 
     if( total != 9.0 ) { return 1; }

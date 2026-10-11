@@ -35,7 +35,7 @@ class Keeper
 
     void poke()
     {
-        (*p).grow();
+        p.grow();
     }
 };
 

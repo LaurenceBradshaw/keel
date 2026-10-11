@@ -34,7 +34,7 @@ u64 only_a_literal_makes_one()
 u64 no_address()
 {
     const str* p = &"abc";
-    return ( *p ).size;
+    return p.size;
 }
 
 bool no_equality()

@@ -9,12 +9,12 @@ struct Named
 
 u64 size_of( str* s )
 {
-    return ( *s ).size;
+    return s.size;
 }
 
 u64 through( Named* n, fn( str* )->u64 f )
 {
-    return f( &( *n ).name );
+    return f( &n.name );
 }
 
 i32 main()
