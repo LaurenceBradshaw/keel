@@ -288,6 +288,30 @@ Type_id Expressions::infer_call( Node_id id )
 
     if( is_aggregate( ast_.kind( decl ) ) )
     {
+        // An interface argument is reached only by conversion, so the help says how to convert.
+        if( decl == table_.box_declaration() && type_args.is_valid() && ast_.children( type_args ).size() == 1 )
+        {
+            const Node_id argument    = ast_.children( type_args )[0];
+            const Node_id declaration = resolution_.declaration_of( argument );
+
+            if( declaration.is_valid() && ast_.kind( declaration ) == Node_kind::Interface_decl )
+            {
+                reporter_.error_at(
+                    ast_.span( argument ),
+                    fmt::format(
+                        "a `box<{0}>` is made by converting a box of a type that implements `{0}`",
+                        interner_.text( ast_.name( argument ) )
+                    ),
+                    fmt::format(
+                        "box the value as its own type, and it converts where a `box<{}>` is expected",
+                        interner_.text( ast_.name( argument ) )
+                    )
+                );
+
+                return refuse_call( id, shapes );
+            }
+        }
+
         candidates = constructor_candidates( callee, decl );
 
         if( candidates.empty() )
@@ -773,8 +797,10 @@ Type_id Expressions::infer_method_call( Node_id id )
     // so calling one needs a receiver that may be written. That is exactly check_writable's
     // question - asked of the object rather than of an assignment - so a `const` local, a
     // read-only borrow and a pattern binding are all refused here by the rules that already refuse
-    // them elsewhere, each with its own message.
-    if( !ast_.is_const_method( method ) && !places_.check_writable( object, current_function_ ) )
+    // them elsewhere, each with its own message. Through a pointer the pointee is the receiver, and a
+    // non-`const` pointer may write it, however the pointer itself is held.
+    if( !ast_.is_const_method( method ) && !table_.is_pointer( result ) &&
+        !places_.check_writable( object, current_function_ ) )
     {
         return types_.poison( id );
     }
@@ -7428,6 +7454,37 @@ TEST_CASE( "type_checker_enforces_a_const_method", "[sema][method]" )
         INFO( p.rendered() );
         REQUIRE( p.clean() );
     }
+
+    // The receiver is the pointee, so neither a temporary pointer nor a `const` one says anything about it.
+    SECTION( "a mutating method may be called through a pointer, wherever the pointer came from" )
+    {
+        const Typed p(
+            std::string( owning ) + "struct H { B* b; B* get() const { return b; } };\n"
+                                    "i32 main() { B b = B( 1 ); H h = H { &b }; h.get().bump();"
+                                    " B* const q = &b; q.bump(); return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+TEST_CASE( "type_checker_says_how_to_make_a_box_of_an_interface", "[sema][interfaces]" )
+{
+    const Typed p( "interface Shape { f64 area() const; };\n"
+                   "struct Square implements Shape { f64 side; f64 area() const { return side; } };\n"
+                   "i32 main() { box<Shape> s = box<Shape>( Square { 1.0 } ); return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.errors() == 1 );
+    REQUIRE(
+        p.rendered().find( "a `box<Shape>` is made by converting a box of a type that implements `Shape`" ) != std::string::npos
+    );
+    REQUIRE(
+        p.rendered().find( "box the value as its own type, and it converts where a `box<Shape>` is expected" ) !=
+        std::string::npos
+    );
+    REQUIRE( p.rendered().find( "is an interface, so it cannot be held by value" ) == std::string::npos );
 }
 
 // A sibling is callable by bare name: methods join the member scope alongside fields, so

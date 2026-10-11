@@ -1308,11 +1308,15 @@ the `Types` renames (R8) once files stop moving, R16 and R21, and R19's comment 
   `type_checker_reports_an_arm_that_falls_out`.
 - **A receiver's borrow in a move-and-borrow error underlines the whole call** (`h.eat( move h )`),
   since KIR operands carry no span. The `TODO` on `Statement` in `kir.h` is the fix.
-- **A non-`const` call through a pointer a call returned is refused** as *writing to a temporary*:
-  `l.first().grow( 1.0 )` and `b.get().grow( 1.0 )`. The pointee is not the temporary; the pointer
-  is. Binding the pointer first, `Shape* s = b.get(); s.grow( 1.0 );`, is accepted.
-- **`box<Shape>( c )` is refused as holding `Shape` by value**, which is right, but its help suggests
-  a borrow. It wants to say: build a `box<Circle>` and let it convert.
+
+### Tooling
+
+- **keeldoc has no way to group a type's members.** `kl::list`'s methods would read better as
+  *Adding elements*, *Removing elements* and so on than as one alphabetical run. Two spellings: a
+  `/// Section: Adding elements` line that opens a group running to the next one, or a
+  `/// [Adding elements]` tag on each member's doc. A doc's `#` heading already means a section
+  of that doc, so neither may be a heading. Members outside any group stay under today's
+  Constructors and Methods.
 
 ### Language rules not yet stated
 

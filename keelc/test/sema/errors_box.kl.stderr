@@ -4,11 +4,11 @@ error: `Shape` is an interface, so it cannot be held by value
 27 | void hold( Holder<Shape>* h ) { }
    |                   ^^^^^ borrow one as `const ref Shape` or `ref Shape`, or point at one with `Shape*`
 
-error: `Shape` is an interface, so it cannot be held by value
+error: a `box<Shape>` is made by converting a box of a type that implements `Shape`
   --> sema/errors_box.kl:31:29
    |
 31 |     box<Shape>  built = box<Shape>( Square { 1.0 } );
-   |                             ^^^^^ borrow one as `const ref Shape` or `ref Shape`, or point at one with `Shape*`
+   |                             ^^^^^ box the value as its own type, and it converts where a `box<Shape>` is expected
 
 error: expected `box<Shape>`, but got `box<Point>`
   --> sema/errors_box.kl:33:25

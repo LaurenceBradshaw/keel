@@ -59,9 +59,8 @@ i32 main()
 
     for( u64 i = 0; i < shapes.size(); i++ )
     {
-        Shape* shape = shapes[i].get();
-        shape.grow( 1.0 );
-        total = total + shape.area();
+        shapes[i].get().grow( 1.0 );
+        total = total + shapes[i].get().area();
     }
 
     // Squares 0, 2, 4 grown to 1, 3, 5; labels 1, 3, 5 grown to 2, 4, 6.
