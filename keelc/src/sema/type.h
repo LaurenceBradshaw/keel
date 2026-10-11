@@ -40,7 +40,8 @@ enum class Type_kind : u8
     Parameter, // a generic type parameter.
     Function,
     Field,
-    Union, // `A | B`; `arguments` are the members, sorted
+    Union,     // `A | B`; `arguments` are the members, sorted
+    Interface, // `declaration` is the Interface_decl; reached only through a borrow or a pointer
 };
 
 enum class Param_mode : u8
@@ -115,6 +116,9 @@ public:
     // so `T` in one declaration is never `T` in another - the resolver already scoped them apart.
     Type_id parameter( Node_id declaration, std::string_view name );
 
+    // One per Interface_decl. Kept apart from the composites, since no C struct is emitted for one.
+    Type_id interface( Node_id declaration, std::string_view name );
+
     // `T` -> `i32`, `T*` -> `i32*`. Structural, because a parameter can appear inside a type
     // constructor as readily as alone, and `T*` is reachable the moment anyone writes it.
     Type_id substitute( Type_id type, const Bindings& bindings );
@@ -139,6 +143,7 @@ public:
     // of a generic aggregate - `Box<T>` - which a caller wanting only instances filters out with
     // mentions_parameter.
     std::vector<Type_id> composite_types() const;
+    std::vector<Type_id> interface_types() const; // in interning order
     // Every function type interned, in interning order. Separate from composite_types because the
     // one consumer of that list wants types that become a C struct, and a function type becomes a
     // typedef instead.
@@ -201,6 +206,14 @@ public:
     // The member declared by `declaration`, or invalid: how a variant's path finds its instance.
     Type_id member_declared_by( Type_id union_type, Node_id declaration ) const;
     bool    is_union( Type_id id ) const;
+    bool    is_interface( Type_id id ) const;
+    // A `Shape*`, which C carries as the object's address beside the implementer's vtable.
+    bool is_interface_pointer( Type_id id ) const;
+
+    // The relation `implements` declares, recorded before any body is checked. Whether the methods
+    // match is the conformance stage's question; this only says the conversion is written.
+    void declare_implements( Node_id aggregate, Type_id interface );
+    bool implements( Type_id type, Type_id interface ) const; // `type` is an aggregate or an instance of one
 
 private:
     Type_id     add( const Type& type, std::string_view name );
@@ -230,7 +243,9 @@ private:
     };
 
     std::unordered_map<u32, std::vector<Instance>> composites_;
-    std::unordered_map<u32, Type_id>               params_; // Type_param_decl node -> type parameter
+    std::unordered_map<u32, std::vector<Type_id>>  implements_; // aggregate declaration -> what it implements
+    std::unordered_map<u32, Type_id>               params_;     // Type_param_decl node -> type parameter
+    std::unordered_map<u32, Type_id>               interfaces_; // Interface_decl node -> its type
     std::deque<std::string>                        composed_;
 
     // Backs Type::arguments. A deque for the reason composed_ is one: the views handed out have to

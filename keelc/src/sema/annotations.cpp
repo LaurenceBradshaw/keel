@@ -76,9 +76,16 @@ Type_id Annotations::resolve( Node_id annotation, bool outermost )
     case Node_kind::Pointer_type:
     case Node_kind::Many_pointer_type:
     {
-        const Node_id spelled       = ast_.inner_type( annotation );
-        const bool    const_element = ast_.kind( spelled ) == Node_kind::Const_type;
-        const Type_id element       = resolve( const_element ? ast_.inner_type( spelled ) : spelled, false );
+        const Node_id element_node  = ast_.inner_type( annotation );
+        const bool    const_element = ast_.kind( element_node ) == Node_kind::Const_type;
+        const Node_id to_resolve    = const_element ? ast_.inner_type( element_node ) : element_node;
+
+        if( ast_.kind( annotation ) == Node_kind::Pointer_type )
+        {
+            addressed_ = to_resolve;
+        }
+
+        const Type_id element = resolve( to_resolve, false );
 
         if( ast_.kind( annotation ) == Node_kind::Many_pointer_type && table_.is_void( element ) )
         {
@@ -120,6 +127,11 @@ Type_id Annotations::resolve( Node_id annotation, bool outermost )
     {
         const Keyword mode = ast_.keyword( annotation );
 
+        if( mode == Keyword::Ref )
+        {
+            addressed_ = ast_.inner_type( annotation );
+        }
+
         const Type_id inner = resolve( ast_.inner_type( annotation ), false );
 
         // An `out` parameter is assigned without its old value being destroyed, so an owning one
@@ -156,6 +168,29 @@ Type_id Annotations::resolve( Node_id annotation, bool outermost )
 Type_id Annotations::resolve_named( Node_id annotation )
 {
     const Node_id decl = resolution_.declaration_of( annotation );
+
+    if( decl.is_valid() && ast_.kind( decl ) == Node_kind::Interface_decl )
+    {
+        // Every implementer is a different size, so an interface is reached only through an address.
+        if( addressed_ != annotation )
+        {
+            reporter_.error_at(
+                ast_.span( annotation ),
+                fmt::format( "`{}` is an interface, so it cannot be held by value", interner_.text( ast_.name( annotation ) ) ),
+                fmt::format(
+                    "borrow one as `const ref {0}` or `ref {0}`, or point at one with `{0}*`",
+                    interner_.text( ast_.name( annotation ) )
+                )
+            );
+
+            return table_.builtin( Type_kind::Error );
+        }
+        else
+        {
+            addressed_ = {};
+            return types_.type_of( decl );
+        }
+    }
 
     if( decl.is_valid() )
     {
@@ -571,6 +606,29 @@ bool Annotations::resolve_type_arguments(
     return true;
 }
 
+Type_id Annotations::resolve_interface( Node_id annotation )
+{
+    const Node_id decl = resolution_.declaration_of( annotation );
+    if( decl.is_valid() && ast_.kind( decl ) == Node_kind::Interface_decl && ast_.kind( annotation ) == Node_kind::Named_type )
+    {
+        return types_.type_of( decl );
+    }
+
+    const Type_id named = resolve( annotation );
+    if( table_.is_error( named ) )
+    {
+        return named;
+    }
+
+    reporter_.error_at(
+        ast_.span( annotation ),
+        fmt::format( "`{}` is not an interface", table_.name( named ) ),
+        "only an interface can be implemented"
+    );
+
+    return table_.builtin( Type_kind::Error );
+}
+
 bool Annotations::refuse_void( Node_id annotation, Type_id type, std::string_view what, std::string_view does )
 {
     if( table_.is_void( type ) )
@@ -662,6 +720,12 @@ public:
         {
             bounds_.declare_type_parameters( decl, ast_.type_param_list( decl ) );
 
+            if( ast_.kind( decl ) == Node_kind::Interface_decl )
+            {
+                types_.record( decl, types_.table().interface( decl, interner_.text( ast_.name( decl ) ) ) );
+                continue;
+            }
+
             if( !is_aggregate( ast_.kind( decl ) ) )
             {
                 continue;
@@ -717,6 +781,12 @@ public:
     Node_id child( Node_id parent, std::size_t index ) const
     {
         return ast_.children( parent )[index];
+    }
+
+    std::vector<Node_id> implemented( std::size_t index ) const
+    {
+        const std::span<const Node_id> written = ast_.implemented( declaration( index ) );
+        return { written.begin(), written.end() };
     }
 
     std::size_t errors() const
@@ -1491,6 +1561,129 @@ TEST_CASE( "type_checker_resolves_a_many_item_pointer_annotation", "[sema][many]
         INFO( p.rendered() );
         REQUIRE( p.clean() );
         REQUIRE( p.type_name( p.nth( Node_kind::Var_decl, 0 ) ) == "fn( i32[*] ) -> i32[*]" );
+    }
+}
+
+// Every implementer is a different size, so an interface is named only where a `*` or a `ref` wraps it.
+TEST_CASE( "annotations_refuse_an_interface_held_by_value", "[sema][annotation][interfaces]" )
+{
+    const std::string shape = "interface Shape { f64 area(); };\n";
+
+    SECTION( "behind a borrow or a pointer it is the interface" )
+    {
+        const char* cases[] = {
+            "void g( const ref Shape s ) { }",
+            "void g( ref Shape s ) { }",
+            "void g( Shape* s ) { }",
+            "void g( const Shape* s ) { }",
+            "void g( Shape* const s ) { }",
+            "void g( Shape** s ) { }",
+            "void g( fn( const ref Shape ) -> i32 p ) { }",
+        };
+
+        for( const char* c : cases )
+        {
+            Written p( shape + c );
+
+            const Type_id type = p.annotations().resolve( p.parameter_annotation( 1, 0 ) );
+
+            INFO( c << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 0 );
+            REQUIRE_FALSE( p.table().is_error( type ) );
+        }
+
+        Written p( shape + "void g( const ref Shape s, Shape* q ) { }" );
+
+        const Type_id borrowed = p.annotations().resolve( p.parameter_annotation( 1, 0 ) );
+        const Type_id pointer  = p.annotations().resolve( p.parameter_annotation( 1, 1 ) );
+
+        REQUIRE( p.table().is_interface( borrowed ) );
+        REQUIRE( p.table().is_interface_pointer( pointer ) );
+        REQUIRE( p.table().name( pointer ) == "Shape*" );
+    }
+
+    SECTION( "anywhere else it is refused, once" )
+    {
+        const char* cases[] = {
+            "void g( Shape s ) { }",
+            "void g( move Shape s ) { }",
+            "void g( out Shape s ) { }",
+            "void g( Shape[*] s ) { }",
+            "struct Box<T> { T v; };\nvoid g( Box<Shape>* b ) { }",
+            "void g( fn( Shape ) -> i32 p ) { }",
+        };
+
+        for( const char* c : cases )
+        {
+            Written p( shape + c );
+
+            const std::size_t last = std::string_view( c ).starts_with( "struct" ) ? 2 : 1;
+            const Type_id     type = p.annotations().resolve( p.parameter_annotation( last, 0 ) );
+
+            INFO( c << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.table().is_error( type ) );
+            REQUIRE( p.rendered().find( "`Shape` is an interface, so it cannot be held by value" ) != std::string::npos );
+            REQUIRE(
+                p.rendered().find( "borrow one as `const ref Shape` or `ref Shape`, or point at one with `Shape*`" ) !=
+                std::string::npos
+            );
+        }
+    }
+
+    // What a `*` let through is not left behind for the next name.
+    SECTION( "a pointer before it does not excuse the next" )
+    {
+        Written p( shape + "void g( Shape* q, Shape s ) { }" );
+
+        REQUIRE( p.table().is_interface_pointer( p.annotations().resolve( p.parameter_annotation( 1, 0 ) ) ) );
+        REQUIRE( p.table().is_error( p.annotations().resolve( p.parameter_annotation( 1, 1 ) ) ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+    }
+}
+
+TEST_CASE( "annotations_resolve_what_is_implemented", "[sema][annotation][interfaces]" )
+{
+    SECTION( "an interface" )
+    {
+        Written p( "interface Shape { f64 area(); };\nstruct Sq implements Shape { f64 s; };" );
+
+        const Type_id type = p.annotations().resolve_interface( p.implemented( 1 )[0] );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 0 );
+        REQUIRE( p.table().is_interface( type ) );
+        REQUIRE( p.table().name( type ) == "Shape" );
+    }
+
+    SECTION( "anything else is not an interface" )
+    {
+        Written p( "struct Plain { i32 x; };\nstruct Sq implements i32, Plain, Plain* { f64 s; };" );
+
+        for( const Node_id written : p.implemented( 1 ) )
+        {
+            REQUIRE( p.table().is_error( p.annotations().resolve_interface( written ) ) );
+        }
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 3 );
+        REQUIRE( p.rendered().find( "`i32` is not an interface" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`Plain` is not an interface" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`Plain*` is not an interface" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "only an interface can be implemented" ) != std::string::npos );
+    }
+
+    SECTION( "an unknown name says only that" )
+    {
+        Written p( "struct Sq implements Nope { f64 s; };" );
+
+        REQUIRE( p.table().is_error( p.annotations().resolve_interface( p.implemented( 0 )[0] ) ) );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "is not an interface" ) == std::string::npos );
     }
 }
 

@@ -73,6 +73,8 @@ public:
 private:
     // Declared in the order declare() runs them; each definition says what it depends on.
     void declare_structs();
+    void declare_interfaces();
+    void declare_implements();
     void declare_fields();
     void declare_functions();
     void declare_member_functions();
@@ -87,6 +89,7 @@ private:
     // D29's rules, split out because check_struct_ownership cannot run before every field's type is recorded.
     void check_aggregate_members();
     void check_member_kind( Node_id decl, const Member_kind& kind );
+    void check_signatures();
     void check_struct_ownership();
     void check_struct_fields_are_not_owning( Node_id decl );
     void check_operators();

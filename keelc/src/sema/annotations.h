@@ -51,6 +51,9 @@ public:
         std::span<const Node_id> parameters, Node_id type_args, std::string_view name, std::vector<Type_id>& resolved
     );
 
+    // A type written after `implements`: an interface, or an error once reported.
+    Type_id resolve_interface( Node_id annotation );
+
     bool refuse_void( Node_id annotation, Type_id type, std::string_view what, std::string_view does );
     bool refuse_never( Node_id annotation, Type_id type, std::string_view what );
 
@@ -71,6 +74,8 @@ private:
     Type_table&       table_;
     Bounds&           bounds_;
     Reporter&         reporter_;
+
+    Node_id addressed_ {}; // the Named_type a `*` or a `ref` just wrapped: the one place an interface may be named
 };
 
 } // namespace keel::sema

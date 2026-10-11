@@ -222,6 +222,33 @@ Type_id Type_table::parameter( Node_id declaration, std::string_view name )
     return id;
 }
 
+Type_id Type_table::interface( Node_id declaration, std::string_view name )
+{
+    const auto it = interfaces_.find( declaration.v );
+
+    if( it != interfaces_.end() )
+    {
+        return it->second;
+    }
+
+    std::string spelling( name );
+
+    if( !unshown_packages_.contains( declaration.v ) )
+    {
+        const auto package_it = packages_.find( declaration.v );
+        if( package_it != packages_.end() )
+        {
+            spelling = std::string( package_it->second ) + "::" + spelling;
+        }
+    }
+
+    const Type_id id = add( Type { Type_kind::Interface, 0, false, Type_id {}, declaration }, spelling );
+
+    interfaces_.emplace( declaration.v, id );
+
+    return id;
+}
+
 bool Type_table::mentions_parameter( Type_id id ) const
 {
     if( !id.is_valid() )
@@ -570,6 +597,20 @@ std::vector<Type_id> Type_table::composite_types() const
     // Sorted, because the map is unordered and the emitter writes these out in the order it is
     // given: without this the generated C would differ between runs of the same compiler on the
     // same source. Type_id is interning order, which is deterministic for a given program.
+    std::sort( result.begin(), result.end(), []( Type_id a, Type_id b ) { return a.v < b.v; } );
+
+    return result;
+}
+
+std::vector<Type_id> Type_table::interface_types() const
+{
+    std::vector<Type_id> result;
+
+    for( const auto& [declaration, type] : interfaces_ )
+    {
+        result.push_back( type );
+    }
+
     std::sort( result.begin(), result.end(), []( Type_id a, Type_id b ) { return a.v < b.v; } );
 
     return result;
@@ -1020,6 +1061,48 @@ bool Type_table::is_union( Type_id id ) const
 {
     assert( id.is_valid() );
     return get( id ).kind == Type_kind::Union;
+}
+
+bool Type_table::is_interface( Type_id id ) const
+{
+    assert( id.is_valid() );
+    return get( id ).kind == Type_kind::Interface;
+}
+
+bool Type_table::is_interface_pointer( Type_id id ) const
+{
+    if( !id.is_valid() )
+    {
+        return false;
+    }
+
+    return get( id ).kind == Type_kind::Pointer && is_interface( get( id ).element );
+}
+
+void Type_table::declare_implements( Node_id aggregate, Type_id interface )
+{
+    std::vector<Type_id>& implemented = implements_[aggregate.v];
+    if( std::find( implemented.begin(), implemented.end(), interface ) == implemented.end() )
+    {
+        implemented.push_back( interface );
+    }
+}
+
+bool Type_table::implements( Type_id type, Type_id interface ) const
+{
+    if( !type.is_valid() || !is_struct( type ) || !is_interface( interface ) )
+    {
+        return false;
+    }
+
+    const auto it = implements_.find( get( type ).declaration.v );
+    if( it == implements_.end() )
+    {
+        return false;
+    }
+
+    const std::vector<Type_id>& implemented = it->second;
+    return std::find( implemented.begin(), implemented.end(), interface ) != implemented.end();
 }
 
 Type_id Type_table::add( const Type& type, std::string_view name )
@@ -2653,6 +2736,79 @@ TEST_CASE( "type_table_deduces_a_parameter_from_a_concrete_type", "[sema][type][
 
         REQUIRE( table.deduce( i32, i32, bindings ) );
         REQUIRE( bindings.empty() );
+    }
+}
+
+// Apart from the composites, since everything that walks those would take an interface for a struct.
+TEST_CASE( "type_table_keeps_an_interface_apart_from_the_structs", "[sema][type][interfaces]" )
+{
+    Type_table table;
+
+    table.set_package( Node_id { 9 }, "kl" );
+
+    const Type_id point  = table.structure( Node_id { 3 }, {}, "Point" );
+    const Type_id shape  = table.interface( Node_id { 5 }, "Shape" );
+    const Type_id drawn  = table.interface( Node_id { 7 }, "Drawn" );
+    const Type_id kl_cmp = table.interface( Node_id { 9 }, "Ordered" );
+
+    REQUIRE( table.interface( Node_id { 5 }, "Shape" ) == shape );
+    REQUIRE( shape != drawn );
+    REQUIRE( table.get( shape ).kind == Type_kind::Interface );
+    REQUIRE( table.get( shape ).declaration == Node_id { 5 } );
+    REQUIRE( table.name( shape ) == "Shape" );
+    REQUIRE( table.name( kl_cmp ) == "kl::Ordered" );
+
+    REQUIRE( table.is_interface( shape ) );
+    REQUIRE_FALSE( table.is_struct( shape ) );
+    REQUIRE_FALSE( table.is_interface( point ) );
+    REQUIRE_FALSE( table.from_spelling( "Shape" ).is_valid() );
+
+    REQUIRE( table.composite_types() == std::vector<Type_id> { point } );
+    REQUIRE( table.interface_types() == std::vector<Type_id> { shape, drawn, kl_cmp } );
+
+    SECTION( "only a pointer to one is an interface pointer" )
+    {
+        REQUIRE( table.is_interface_pointer( table.pointer_to( shape ) ) );
+        REQUIRE( table.is_interface_pointer( table.pointer_to( shape, true ) ) );
+        REQUIRE_FALSE( table.is_interface_pointer( shape ) );
+        REQUIRE_FALSE( table.is_interface_pointer( table.pointer_to( point ) ) );
+        REQUIRE_FALSE( table.is_interface_pointer( table.pointer_to( table.pointer_to( shape ) ) ) );
+        REQUIRE_FALSE( table.is_interface_pointer( Type_id {} ) );
+    }
+}
+
+// Keyed by declaration, so every instance of a generic implements what the declaration says.
+TEST_CASE( "type_table_records_what_implements_an_interface", "[sema][type][interfaces]" )
+{
+    Type_table table;
+
+    const Type_id i32   = table.integer( 32, true );
+    const Type_id f64   = table.floating( 64 );
+    const Type_id shape = table.interface( Node_id { 5 }, "Shape" );
+    const Type_id drawn = table.interface( Node_id { 7 }, "Drawn" );
+    const Type_id point = table.structure( Node_id { 3 }, {}, "Point" );
+    const Type_id other = table.structure( Node_id { 4 }, {}, "Other" );
+
+    table.declare_implements( Node_id { 3 }, shape );
+    table.declare_implements( Node_id { 3 }, shape );
+    table.declare_implements( Node_id { 11 }, drawn );
+
+    REQUIRE( table.implements( point, shape ) );
+    REQUIRE_FALSE( table.implements( point, drawn ) );
+    REQUIRE_FALSE( table.implements( other, shape ) );
+
+    SECTION( "every instance of a generic" )
+    {
+        REQUIRE( table.implements( table.structure( Node_id { 11 }, std::array { i32 }, "Box" ), drawn ) );
+        REQUIRE( table.implements( table.structure( Node_id { 11 }, std::array { f64 }, "Box" ), drawn ) );
+    }
+
+    SECTION( "and nothing that is not an aggregate" )
+    {
+        REQUIRE_FALSE( table.implements( shape, shape ) );
+        REQUIRE_FALSE( table.implements( table.pointer_to( point ), shape ) );
+        REQUIRE_FALSE( table.implements( i32, shape ) );
+        REQUIRE_FALSE( table.implements( Type_id {}, shape ) );
     }
 }
 

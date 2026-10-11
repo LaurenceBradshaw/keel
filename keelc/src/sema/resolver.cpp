@@ -99,13 +99,13 @@ Resolution Resolver::run()
     for( const Node_id decl : ast_.declarations( ast_.root() ) )
     {
         if( ast_.kind( decl ) == Node_kind::Function_decl || ast_.kind( decl ) == Node_kind::Var_decl ||
-            ast_.kind( decl ) == Node_kind::Enum_decl || is_aggregate( ast_.kind( decl ) ) ||
+            ast_.kind( decl ) == Node_kind::Enum_decl || has_members( ast_.kind( decl ) ) ||
             ( ast_.kind( decl ) == Node_kind::Error && ast_.name( decl ).is_valid() ) )
         {
             const Symbol_id name = ast_.name( decl );
 
             // Otherwise `kl::x` could name a member of the type as well as a declaration of the package.
-            if( ( ast_.kind( decl ) == Node_kind::Enum_decl || is_aggregate( ast_.kind( decl ) ) ) &&
+            if( ( ast_.kind( decl ) == Node_kind::Enum_decl || has_members( ast_.kind( decl ) ) ) &&
                 imports_.is_package( name ) )
             {
                 reporter_.error_at(
@@ -304,6 +304,7 @@ void Resolver::visit( Node_id id )
         return;
     case Node_kind::Class_decl:
     case Node_kind::Struct_decl:
+    case Node_kind::Interface_decl:
         visit_aggregate( id );
         return;
     default:
@@ -434,6 +435,14 @@ void Resolver::visit_aggregate( Node_id id )
     if( !is_builtin_type_name( interner_.text( ast_.name( id ) ) ) )
     {
         scopes_.back().names.emplace( ast_.name( id ), id );
+    }
+
+    if( is_aggregate( ast_.kind( id ) ) )
+    {
+        for( const Node_id interface : ast_.implemented( id ) )
+        {
+            visit( interface );
+        }
     }
 
     const std::unordered_map<u32, Node_id> members = declare_members( id );
@@ -2732,6 +2741,68 @@ TEST_CASE( "resolver_says_nothing_more_about_a_missing_package", "[sema][resolve
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "no module of `kl` that this file imports declares `nothing`" ) != std::string::npos );
     }
+}
+
+// An interface is a type: named after `implements`, as a parameter, and as its own methods' receiver.
+TEST_CASE( "resolver_binds_an_interface", "[sema][resolve][interfaces]" )
+{
+    const Resolved p( "interface Shape { f64 area(); };\n"
+                      "struct Sq implements Shape { f64 s; f64 area() { return s; } };\n"
+                      "f64 measure( const ref Shape s ) { return 0.0; }\n" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const Node_id shape = p.nth( Node_kind::Interface_decl, 0 );
+    std::size_t   named = 0;
+
+    for( std::size_t i = 0; p.nth( Node_kind::Named_type, i ).is_valid(); ++i )
+    {
+        const Node_id use = p.nth( Node_kind::Named_type, i );
+
+        if( p.text( use ) == "Shape" )
+        {
+            REQUIRE( p.declaration_of( use ) == shape );
+            ++named;
+        }
+    }
+
+    // After `implements`, in `measure`, and the synthesised receiver of `area`.
+    REQUIRE( named >= 2 );
+}
+
+// Inside the type parameters' scope, so a generic interface can be given one.
+TEST_CASE( "resolver_sees_type_parameters_after_implements", "[sema][resolve][interfaces][generic]" )
+{
+    const Resolved p( "struct Box<T> implements T { T v; };\n" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.errors() == 0 );
+
+    const Node_id param = p.nth( Node_kind::Type_param_decl, 0 );
+    const Node_id use   = p.nth( Node_kind::Named_type, 0 );
+
+    REQUIRE( p.text( use ) == "T" );
+    REQUIRE( p.declaration_of( use ) == param );
+}
+
+TEST_CASE( "resolver_reports_an_unknown_interface", "[sema][resolve][interfaces]" )
+{
+    const Resolved p( "struct Sq implements Nope { f64 s; };\n" );
+
+    INFO( p.rendered() );
+    REQUIRE_FALSE( p.declaration_of( p.nth( Node_kind::Named_type, 0 ) ).is_valid() );
+}
+
+TEST_CASE( "resolver_refuses_an_interface_named_after_a_package", "[sema][resolve][interfaces][packages]" )
+{
+    const Resolved_program p( {
+        { "main.kl", "interface kl { void f(); };\ni32 main() { return 0; }\n" },
+    } );
+
+    INFO( p.rendered() );
+    REQUIRE( p.errors() == 1 );
+    REQUIRE( p.rendered().find( "`kl` is the name of a package" ) != std::string::npos );
 }
 
 } // namespace keel

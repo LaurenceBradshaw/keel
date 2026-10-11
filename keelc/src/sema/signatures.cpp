@@ -26,16 +26,19 @@ constexpr Member_kind k_member_kinds[] = {
 
 void Signatures::declare()
 {
+    declare_interfaces();
     declare_structs();
 
     // After the struct pass: a payload field may name a struct or a class, and its annotation is
     // resolved here. Before everything else, because a parameter, a field or a global may name an
     // enum in turn.
     declare_enums();
+    declare_implements();
     declare_member_functions();
     declare_fields();
     order_structs();
     check_aggregate_members();
+    check_signatures();
     check_operators();
     check_struct_ownership();
     declare_functions();
@@ -72,6 +75,55 @@ void Signatures::declare_structs()
         const std::string_view name = interner_.text( ast_.name( child ) );
 
         types_.record( child, table_.structure( child, arguments, name ) );
+    }
+}
+
+// First, because anything below may name one.
+void Signatures::declare_interfaces()
+{
+    for( const Node_id child : ast_.declarations( ast_.root() ) )
+    {
+        if( ast_.kind( child ) == Node_kind::Error )
+        {
+            continue;
+        }
+
+        if( ast_.kind( child ) != Node_kind::Interface_decl )
+        {
+            continue;
+        }
+
+        const std::string_view name = interner_.text( ast_.name( child ) );
+
+        types_.record( child, table_.interface( child, name ) );
+    }
+}
+
+// What each aggregate says it implements, once every type exists to be named there by mistake.
+void Signatures::declare_implements()
+{
+    for( const Node_id child : ast_.declarations( ast_.root() ) )
+    {
+        if( ast_.kind( child ) == Node_kind::Error )
+        {
+            continue;
+        }
+
+        if( !is_aggregate( ast_.kind( child ) ) )
+        {
+            continue;
+        }
+
+        for( const Node_id written : ast_.implemented( child ) )
+        {
+            const Type_id interface = annotations_.resolve_interface( written );
+            const Type_id recorded  = types_.record( written, interface );
+
+            if( recorded.is_valid() && table_.is_interface( interface ) )
+            {
+                table_.declare_implements( child, interface );
+            }
+        }
     }
 }
 
@@ -209,7 +261,7 @@ void Signatures::declare_member_functions()
 {
     for( Node_id child : ast_.declarations( ast_.root() ) )
     {
-        if( !is_aggregate( ast_.kind( child ) ) )
+        if( !has_members( ast_.kind( child ) ) )
         {
             continue;
         }
@@ -505,6 +557,54 @@ void Signatures::check_member_kind( Node_id decl, const Member_kind& kind )
                 fmt::format( "`{}{}` does not name the enclosing type", kind.prefix, interner_.text( written ) ),
                 fmt::format( "write `{}{}`", kind.prefix, type_text )
             );
+        }
+    }
+}
+
+// An interface's method is called through a table of the implementers' methods: so it has no body,
+// is not static, and has no type parameters of its own.
+void Signatures::check_signatures()
+{
+    for( const Node_id decl : ast_.declarations( ast_.root() ) )
+    {
+        if( ast_.kind( decl ) != Node_kind::Interface_decl )
+        {
+            continue;
+        }
+
+        for( const Node_id member : ast_.members( decl ) )
+        {
+            if( ast_.kind( member ) != Node_kind::Method_decl )
+            {
+                continue;
+            }
+
+            if( ast_.body( member ).is_valid() )
+            {
+                reporter_.error_at(
+                    ast_.name_span( member ),
+                    fmt::format( "`{}` is a signature, so it cannot have a body", interner_.text( ast_.name( member ) ) ),
+                    "write the body in each type that implements the interface"
+                );
+            }
+
+            if( ast_.is_static_method( member ) )
+            {
+                reporter_.error_at(
+                    ast_.name_span( member ),
+                    "an interface's method cannot be `static`",
+                    "it is called through an object, which a `static` method does not take"
+                );
+            }
+
+            if( ast_.own_type_param_list( member ).is_valid() )
+            {
+                reporter_.error_at(
+                    ast_.span( ast_.own_type_param_list( member ) ),
+                    "an interface's method cannot have type parameters",
+                    "a call through the interface reaches one compiled method, which cannot be every instance"
+                );
+            }
         }
     }
 }
@@ -2081,6 +2181,126 @@ TEST_CASE( "signatures_refuse_a_written_void", "[sema][void]" )
     SECTION( "nor behind a pointer" )
     {
         const Typed p( "struct S { void* p; };\nvoid f( void* p ) { }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
+TEST_CASE( "signatures_type_an_interface_and_what_implements_it", "[sema][interfaces]" )
+{
+    const Typed p(
+        "interface Shape { f64 area(); void scale( f64 by ); };\n"
+        "struct Sq implements Shape { f64 s; f64 area() { return s * s; } void scale( f64 by ) { } };\n"
+        "struct Box<T> implements Shape where T : Copyable { T v; f64 area() { return 0.0; } void scale( f64 by ) { } };\n"
+        "struct Plain { i32 x; };\n"
+        "f64 measure( const ref Shape s, Shape* p ) { return 0.0; }\n"
+        "i32 main() { return 0; }"
+    );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const Node_id interface = p.nth( Node_kind::Interface_decl, 0 );
+    const Node_id square    = p.nth( Node_kind::Struct_decl, 0 );
+    const Node_id plain     = p.nth( Node_kind::Struct_decl, 2 );
+
+    REQUIRE( p.type_name( interface ) == "Shape" );
+
+    const Type_id     shape = p.types().type_of( interface );
+    const Type_table& table = p.types().table();
+
+    REQUIRE( table.is_interface( shape ) );
+    REQUIRE( table.implements( p.types().type_of( square ), shape ) );
+    REQUIRE_FALSE( table.implements( p.types().type_of( plain ), shape ) );
+
+    // On the written entry, which is where the conformance stage reads it.
+    REQUIRE( p.type_name( p.ast().implemented( square )[0] ) == "Shape" );
+
+    // The interface's methods are typed as an aggregate's are, so they can be compared and called.
+    for( const Node_id method : p.ast().members( interface ) )
+    {
+        REQUIRE( p.type_name( method ) != "<none>" );
+    }
+
+    REQUIRE( p.type_name( p.nth( Node_kind::Param_decl, 0 ) ) != "<none>" );
+}
+
+TEST_CASE( "signatures_refuse_an_interface_held_by_value", "[sema][interfaces]" )
+{
+    const char* cases[] = {
+        "Shape g;",
+        "void f( Shape s ) { }",
+        "Shape* f( Shape s ) { return null; }",
+        "struct Holder { Shape s; };",
+        "enum Held { one( Shape s ), none };",
+        "void f( const ref Shape s ) { Shape t = s; }",
+        "struct Box<T> where T : Copyable { T v; };\nvoid f( Box<Shape>* b ) { }",
+    };
+
+    for( const char* c : cases )
+    {
+        const Typed p( std::string( "interface Shape { f64 area(); };\n" ) + c + "\ni32 main() { return 0; }" );
+
+        INFO( c << "\n" << p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`Shape` is an interface, so it cannot be held by value" ) != std::string::npos );
+    }
+}
+
+TEST_CASE( "signatures_refuse_implementing_what_is_not_an_interface", "[sema][interfaces]" )
+{
+    struct Case
+    {
+        const char* source;
+        const char* message;
+    };
+
+    const Case cases[] = {
+        { "struct Sq implements i32 { f64 s; };", "`i32` is not an interface" },
+        { "struct Plain { i32 x; };\nstruct Sq implements Plain { f64 s; };", "`Plain` is not an interface" },
+        { "struct Sq implements Sq { f64 s; };", "`Sq` is not an interface" },
+        { "enum E { a };\nclass Sq implements E { f64 s; };", "`E` is not an interface" },
+        { "struct Sq implements Nope { f64 s; };", "unknown type" },
+    };
+
+    for( const Case& c : cases )
+    {
+        const Typed p( std::string( c.source ) + "\ni32 main() { return 0; }" );
+
+        INFO( c.source << "\n" << p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( c.message ) != std::string::npos );
+    }
+}
+
+// Each one is called through a table of the implementers' methods.
+TEST_CASE( "signatures_check_an_interface_s_methods", "[sema][interfaces]" )
+{
+    struct Case
+    {
+        const char* source;
+        const char* message;
+    };
+
+    const Case cases[] = {
+        { "interface Shape { f64 area() { return 0.0; } };", "`area` is a signature, so it cannot have a body" },
+        { "interface Shape { static f64 area(); };", "an interface's method cannot be `static`" },
+        { "interface Shape { T pick<T>( T a ); };", "an interface's method cannot have type parameters" },
+    };
+
+    for( const Case& c : cases )
+    {
+        const Typed p( std::string( c.source ) + "\ni32 main() { return 0; }" );
+
+        INFO( c.source << "\n" << p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( c.message ) != std::string::npos );
+    }
+
+    SECTION( "a plain signature is none of them" )
+    {
+        const Typed p( "interface Shape { f64 area(); void scale( f64 by ); };\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
