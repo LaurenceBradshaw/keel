@@ -157,6 +157,7 @@ Symbol_id Ast::name( Node_id id ) const
     case Node_kind::Type_param_decl:
     case Node_kind::Where_clause:
     case Node_kind::Bound_name:
+    case Node_kind::Interface_decl:
         return Symbol_id { aux( id ) };
     default:
         assert( false && "this kind's aux is not a name" );
@@ -277,7 +278,7 @@ Node_id Ast::body( Node_id id ) const
 
 Node_id Ast::type_param_list( Node_id id ) const
 {
-    if( is_aggregate( kind( id ) ) || kind( id ) == Node_kind::Enum_decl )
+    if( is_aggregate( kind( id ) ) || kind( id ) == Node_kind::Enum_decl || kind( id ) == Node_kind::Interface_decl )
     {
         return child( id, 0 );
     }
@@ -367,8 +368,14 @@ std::span<const Node_id> Ast::type_args( Node_id id ) const
 
 std::span<const Node_id> Ast::members( Node_id id ) const
 {
-    assert( is_aggregate( kind( id ) ) && "members are a struct's or a class's, not any node's" );
-    return children( id ).subspan( 1 ); // past the Type_param_list slot
+    assert( has_members( kind( id ) ) && "members are a struct's or a class's, not any node's" );
+
+    if( kind( id ) == Node_kind::Interface_decl )
+    {
+        return children( id ).subspan( 1 ); // past the Type_param_list slot
+    }
+
+    return children( id ).subspan( 2 ); // past the Type_param_list slot and the Implements_list slot
 }
 
 std::span<const Node_id> Ast::variants( Node_id id ) const
@@ -387,6 +394,13 @@ std::span<const Node_id> Ast::payload( Node_id variant ) const
 {
     assert( kind( variant ) == Node_kind::Variant_decl );
     return children( variant );
+}
+
+std::span<const Node_id> Ast::implemented( Node_id aggregate ) const
+{
+    assert( has_members( kind( aggregate ) ) && "implements are an aggregate's, not any node's" );
+    const Node_id implements_list = child( aggregate, 1 );
+    return implements_list.is_valid() ? children( implements_list ) : std::span<const Node_id> {};
 }
 
 Node_id Ast::annotation( Node_id decl ) const
@@ -775,7 +789,7 @@ Node_id Ast::enclosing_aggregate( Node_id member ) const
 
     for( const Node_id decl : declarations( root() ) )
     {
-        if( !is_aggregate( kind( decl ) ) )
+        if( !has_members( kind( decl ) ) )
         {
             continue;
         }

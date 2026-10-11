@@ -1,0 +1,27 @@
+/// Anything with an area.
+interface Shape
+{
+    f64 area() const;
+    void grow( f64 by );
+};
+
+interface Named
+{
+    const ref str name() const;
+};
+
+class Circle implements Shape, Named
+{
+    f64 r;
+
+    public f64 area() const { return 3.0 * r * r; }
+    public void grow( f64 by ) { r = r + by; }
+};
+
+struct Square<T> implements Shape where T : Copyable
+{
+    T side;
+
+    f64 area() const { return 0.0; }
+    void grow( f64 by ) { }
+};

@@ -1,0 +1,121 @@
+Source_file                             1:1-28:1
+  Interface_decl                        2:1-6:3     name=Shape
+    <none>                              -
+    Method_decl                         4:5-4:22
+      Named_type                        4:5-4:8     "f64"
+      Param_list                        4:13-4:15
+        Param_decl                      4:5-4:8     name=this
+          Const_type                    4:5-4:8
+            Mode_type                   4:5-4:8     mode=ref
+              Named_type                4:5-4:8     "f64"  name=Shape
+      <none>                            -
+      <none>                            -
+      <none>                            -
+    Method_decl                         5:5-5:25
+      Named_type                        5:5-5:9     "void"
+      Param_list                        5:14-5:24
+        Param_decl                      5:5-5:9     name=this
+          Mode_type                     5:5-5:9     mode=ref
+            Named_type                  5:5-5:9     "void"  name=Shape
+        Param_decl                      5:16-5:22   name=by
+          Named_type                    5:16-5:19   "f64"
+      <none>                            -
+      <none>                            -
+      <none>                            -
+  Interface_decl                        8:1-11:3    name=Named
+    <none>                              -
+    Method_decl                         10:5-10:32
+      Const_type                        10:5-10:18
+        Mode_type                       10:5-10:14  mode=ref
+          Named_type                    10:15-10:18 "str"
+      Param_list                        10:23-10:25
+        Param_decl                      10:5-10:10  name=this
+          Const_type                    10:5-10:10
+            Mode_type                   10:5-10:10  mode=ref
+              Named_type                10:5-10:10  "const"  name=Named
+      <none>                            -
+      <none>                            -
+      <none>                            -
+  Class_decl                            13:1-19:3   name=Circle
+    <none>                              -
+    Implements_list                     13:14-13:37
+      Named_type                        13:25-13:30 "Shape"
+      Named_type                        13:32-13:37 "Named"
+    Field_decl                          15:5-15:11  name=r
+      Named_type                        15:5-15:8   "f64"
+    Method_decl                         17:12-17:52
+      Named_type                        17:12-17:15 "f64"
+      Param_list                        17:20-17:22
+        Param_decl                      17:12-17:15 name=this
+          Const_type                    17:12-17:15
+            Mode_type                   17:12-17:15 mode=ref
+              Named_type                17:12-17:15 "f64"  name=Circle
+      Block                             17:29-17:52
+        Return_stmt                     17:31-17:50
+          Binary_expr                   17:38-17:49 op=*
+            Binary_expr                 17:38-17:45 op=*
+              Float_literal             17:38-17:41 "3.0"
+              Name_expr                 17:44-17:45 "r"
+            Name_expr                   17:48-17:49 "r"
+      <none>                            -
+      <none>                            -
+    Method_decl                         18:12-18:47
+      Named_type                        18:12-18:16 "void"
+      Param_list                        18:21-18:31
+        Param_decl                      18:12-18:16 name=this
+          Mode_type                     18:12-18:16 mode=ref
+            Named_type                  18:12-18:16 "void"  name=Circle
+        Param_decl                      18:23-18:29 name=by
+          Named_type                    18:23-18:26 "f64"
+      Block                             18:32-18:47
+        Assign_stmt                     18:34-18:45 op==
+          Name_expr                     18:34-18:35 "r"
+          Binary_expr                   18:38-18:44 op=+
+            Name_expr                   18:38-18:39 "r"
+            Name_expr                   18:42-18:44 "by"
+      <none>                            -
+      <none>                            -
+  Struct_decl                           21:1-27:3   name=Square
+    Type_param_list                     21:14-21:53
+      Type_param_decl                   21:15-21:16 "T"
+      Where_clause                      21:35-21:53
+        Bound_name                      21:45-21:53 "Copyable"
+    Implements_list                     21:18-21:34
+      Named_type                        21:29-21:34 "Shape"
+    Field_decl                          23:5-23:12  name=side
+      Named_type                        23:5-23:6   "T"
+    Method_decl                         25:5-25:37
+      Named_type                        25:5-25:8   "f64"
+      Param_list                        25:13-25:15
+        Param_decl                      25:5-25:8   name=this
+          Const_type                    25:5-25:8
+            Mode_type                   25:5-25:8   mode=ref
+              Generic_type              25:5-25:8
+                Named_type              25:5-25:8   "f64"  name=Square
+                Type_arg_list           25:5-25:8
+                  Named_type            25:5-25:8   "f64"  name=T
+      Block                             25:22-25:37
+        Return_stmt                     25:24-25:35
+          Float_literal                 25:31-25:34 "0.0"
+      Type_param_list                   21:14-21:53
+        Type_param_decl                 21:15-21:16 "T"
+        Where_clause                    21:35-21:53
+          Bound_name                    21:45-21:53 "Copyable"
+      <none>                            -
+    Method_decl                         26:5-26:28
+      Named_type                        26:5-26:9   "void"
+      Param_list                        26:14-26:24
+        Param_decl                      26:5-26:9   name=this
+          Mode_type                     26:5-26:9   mode=ref
+            Generic_type                26:5-26:9
+              Named_type                26:5-26:9   "void"  name=Square
+              Type_arg_list             26:5-26:9
+                Named_type              26:5-26:9   "void"  name=T
+        Param_decl                      26:16-26:22 name=by
+          Named_type                    26:16-26:19 "f64"
+      Block                             26:25-26:28 "{ }"
+      Type_param_list                   21:14-21:53
+        Type_param_decl                 21:15-21:16 "T"
+        Where_clause                    21:35-21:53
+          Bound_name                    21:45-21:53 "Copyable"
+      <none>                            -

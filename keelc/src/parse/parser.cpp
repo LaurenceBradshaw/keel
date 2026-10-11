@@ -90,6 +90,9 @@ private:
 
     Node_id parse_aggregate_decl();
 
+    Node_id parse_implements();
+    Node_id parse_interface_decl();
+
     // A `public:` or `private:` label, reported and consumed. False, consuming nothing, otherwise.
     bool skip_access_label( bool is_class );
 
@@ -691,6 +694,8 @@ Node_id Parser::parse_declaration( const Declaration_head& head )
         return parse_function_decl( head.commit );
     case Declaration_kind::Variable:
         return parse_var_decl( head.commit );
+    case Declaration_kind::Interface:
+        return parse_interface_decl();
     }
 
     return error_node( cursor_.peek().span );
@@ -838,7 +843,12 @@ Node_id Parser::parse_method_decl( Symbol_id enclosing, Node_id type_params, boo
     );
 
     reach_commit( head.commit );
-    const Node_id body = parse_block();
+    const Node_id body = head.has_body ? parse_block() : Node_id {};
+
+    if( !head.has_body )
+    {
+        recovery_.expect( Token_kind::Semicolon );
+    }
 
     if( !name.is_valid() )
     {
@@ -1051,6 +1061,8 @@ Node_id Parser::parse_aggregate_decl()
 
     Span generic_span = Span::merge( generic_start, cursor_.previous().span );
 
+    const Node_id implements = parse_implements();
+
     parse_where_clauses( generic, generics, generic_span, "write them on the name, as in `T f<T>( T a ) where T : Copyable`" );
 
     const Node_id type_params = generic ? ast_.add( Node_kind::Type_param_list, generic_span, 0, generics ) : Node_id {};
@@ -1147,8 +1159,8 @@ Node_id Parser::parse_aggregate_decl()
         );
     }
 
-    // insert type_params as child 0
-    members.insert( members.begin(), type_params );
+    // insert type_params as child 0, and implements as child 1
+    members.insert( members.begin(), { type_params, implements } );
 
     const Node_id node = ast_.add(
         is_class ? Node_kind::Class_decl : Node_kind::Struct_decl,
@@ -1159,6 +1171,123 @@ Node_id Parser::parse_aggregate_decl()
 
     ast_.set_name_span( node, name_span );
 
+    return node;
+}
+
+Node_id Parser::parse_implements()
+{
+    const Span start = cursor_.peek().span;
+    if( !cursor_.match_keyword( Keyword::Implements ) )
+    {
+        return Node_id {};
+    }
+
+    std::vector<Node_id> implements;
+    do
+    {
+        implements.push_back( parse_type() );
+    } while( cursor_.match( Token_kind::Comma ) );
+
+    return ast_.add( Node_kind::Implements_list, Span::merge( start, cursor_.previous().span ), 0, implements );
+}
+
+Node_id Parser::parse_interface_decl()
+{
+    const Span start = cursor_.peek().span;
+    cursor_.match_keyword( Keyword::Interface );
+    const Span      name_span = cursor_.peek().span;
+    const Symbol_id name      = expect_name();
+
+    if( cursor_.check( Token_kind::Less ) )
+    {
+        const Span                 generic_start  = cursor_.peek().span;
+        const std::vector<Node_id> generic_params = parse_type_params();
+        const Span                 generic_span   = Span::merge( generic_start, cursor_.previous().span );
+        recovery_.error_at( generic_span, "an `interface` cannot be generic yet" );
+    }
+
+    if( !recovery_.expect( Token_kind::L_brace ) )
+    {
+        cursor_.match( Token_kind::Semicolon );
+
+        if( name.is_valid() )
+        {
+            return error_node( Span::merge( start, cursor_.previous().span ), name, name_span );
+        }
+
+        return error_node( Span::merge( start, cursor_.previous().span ) );
+    }
+
+    classes_.push_back( name );
+    std::vector<Node_id> members;
+    members.push_back( Node_id {} );
+    std::optional<u32> reported_line;
+    while( !cursor_.check( Token_kind::R_brace ) && !cursor_.at_end() )
+    {
+        if( skip_access_label( true ) )
+        {
+            continue;
+        }
+
+        Member_chunk chunk = lookahead_.next_member( cursor_.position(), name, Lookahead::Member_site::Interface );
+        if( chunk.dropped() )
+        {
+            if( !reported_line || recovery_.line_of( cursor_.tokens()[chunk.dropped_begin] ) != *reported_line )
+            {
+                recovery_.report_dropped(
+                    chunk.dropped_begin,
+                    chunk.dropped_end,
+                    chunk.failure,
+                    chunk.head ? std::optional<u32>( chunk.head->start ) : std::nullopt,
+                    Hint_place::Member
+                );
+            }
+        }
+
+        cursor_.seek( chunk.dropped_end );
+
+        if( !chunk.head.has_value() )
+        {
+            break;
+        }
+
+        const Node_id member = parse_member( *chunk.head, name, Node_id {}, true );
+
+        if( ast_.broken( member ) )
+        {
+            reported_line = recovery_.line_of( cursor_.previous() );
+        }
+        else
+        {
+            reported_line = std::nullopt;
+        }
+
+        if( ast_.kind( member ) != Node_kind::Method_decl )
+        {
+            if( !ast_.broken( member ) )
+            {
+                recovery_.error_at( ast_.span( member ), "an `interface` holds only method signatures" );
+            }
+        }
+        else
+        {
+            members.push_back( member );
+            attach_doc( member, chunk.head->start );
+        }
+    }
+
+    classes_.pop_back();
+    recovery_.expect( Token_kind::R_brace );
+    recovery_.expect( Token_kind::Semicolon );
+
+    if( !name.is_valid() )
+    {
+        return error_node( Span::merge( start, cursor_.previous().span ) );
+    }
+
+    const Node_id node =
+        ast_.add( Node_kind::Interface_decl, Span::merge( start, cursor_.previous().span ), name.v, { members } );
+    ast_.set_name_span( node, name_span );
     return node;
 }
 
@@ -11866,6 +11995,229 @@ TEST_CASE( "parser_parses_a_static_field_as_a_variable", "[parse][static]" )
 
         REQUIRE( p.has_errors() );
     }
+}
+
+// M9.5. An interface is its methods' signatures, each with the receiver a class's method would have
+// and no body; child 0 is the Type_param_list slot, held invalid until interfaces can be generic.
+TEST_CASE( "parser_parses_an_interface", "[parse][interfaces]" )
+{
+    const Parsed p( "interface Shape\n"
+                    "{\n"
+                    "    f64 area() const;\n"
+                    "    void scale( f64 by );\n"
+                    "};" );
+
+    INFO( p.errors() );
+    REQUIRE_FALSE( p.has_errors() );
+
+    const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Interface_decl );
+
+    REQUIRE( decl.is_valid() );
+    REQUIRE( p.name( decl ) == "Shape" );
+    REQUIRE( p.text( p.ast().name_span( decl ) ) == "Shape" );
+    REQUIRE_FALSE( p.child( decl, 0 ).is_valid() );
+    REQUIRE_FALSE( p.ast().type_param_list( decl ).is_valid() );
+    REQUIRE( p.members( decl ).size() == 2 );
+
+    SECTION( "each member is a bodiless method, public, enclosed by the interface" )
+    {
+        for( const Node_id method : p.members( decl ) )
+        {
+            REQUIRE( p.kind( method ) == Node_kind::Method_decl );
+            REQUIRE_FALSE( p.ast().body( method ).is_valid() );
+            REQUIRE( p.ast().access( method ) == Access::Public );
+            REQUIRE( p.ast().enclosing_aggregate( method ) == decl );
+        }
+
+        REQUIRE( p.text( p.ast().name_span( p.members( decl )[0] ) ) == "area" );
+        REQUIRE( p.text( p.ast().name_span( p.members( decl )[1] ) ) == "scale" );
+    }
+
+    SECTION( "the receiver follows the trailing `const`, as a class's does" )
+    {
+        const Node_id area  = p.child( p.child( p.members( decl )[0], 1 ), 0 );
+        const Node_id scale = p.child( p.child( p.members( decl )[1], 1 ), 0 );
+
+        REQUIRE( p.kind( p.child( area, 0 ) ) == Node_kind::Const_type );
+        REQUIRE( p.kind( p.child( p.child( area, 0 ), 0 ) ) == Node_kind::Mode_type );
+        REQUIRE( p.kind( p.child( scale, 0 ) ) == Node_kind::Mode_type );
+        REQUIRE( p.aux( p.child( scale, 0 ) ) == static_cast<u32>( Keyword::Ref ) );
+        REQUIRE( p.children( p.child( p.members( decl )[1], 1 ) ).size() == 2 );
+    }
+
+    // `members()` is asked of an interface by every pass that walks methods; is_aggregate is not.
+    SECTION( "it has members, but is no aggregate" )
+    {
+        REQUIRE( has_members( Node_kind::Interface_decl ) );
+        REQUIRE( has_members( Node_kind::Class_decl ) );
+        REQUIRE( has_members( Node_kind::Struct_decl ) );
+        REQUIRE_FALSE( has_members( Node_kind::Enum_decl ) );
+        REQUIRE_FALSE( is_aggregate( Node_kind::Interface_decl ) );
+    }
+
+    SECTION( "the dump names it" )
+    {
+        REQUIRE( p.dump().find( "Interface_decl" ) != std::string::npos );
+        REQUIRE( p.dump().find( "name=Shape" ) != std::string::npos );
+    }
+}
+
+TEST_CASE( "parser_reads_an_implements_list", "[parse][interfaces]" )
+{
+    SECTION( "one interface, between the name and the body" )
+    {
+        const Parsed p( "class Circle implements Shape { f64 r; f64 area() const { return r; } };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Class_decl );
+        const Node_id list = p.child( decl, 1 );
+
+        REQUIRE( p.kind( list ) == Node_kind::Implements_list );
+        REQUIRE( p.text( list ) == "implements Shape" );
+        REQUIRE( p.ast().implemented( decl ).size() == 1 );
+        REQUIRE( p.kind( p.ast().implemented( decl )[0] ) == Node_kind::Named_type );
+        REQUIRE( p.text( p.ast().implemented( decl )[0] ) == "Shape" );
+
+        REQUIRE( p.members( decl ).size() == 2 );
+        REQUIRE( p.kind( p.members( decl )[0] ) == Node_kind::Field_decl );
+        REQUIRE( p.kind( p.members( decl )[1] ) == Node_kind::Method_decl );
+        REQUIRE( p.ast().body( p.members( decl )[1] ).is_valid() );
+    }
+
+    SECTION( "several, in order, on a struct as on a class" )
+    {
+        const Parsed p( "struct P implements Shape, Named, kl::Printable { i32 x; };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const std::span<const Node_id> implemented =
+            p.ast().implemented( find_first( p.ast(), p.root(), Node_kind::Struct_decl ) );
+
+        REQUIRE( implemented.size() == 3 );
+        REQUIRE( p.text( implemented[0] ) == "Shape" );
+        REQUIRE( p.text( implemented[1] ) == "Named" );
+        REQUIRE( p.text( implemented[2] ) == "kl::Printable" );
+    }
+
+    SECTION( "after the type parameters and before the `where` clauses" )
+    {
+        const Parsed p( "class Box<T> implements Shape where T : Copyable { T v; f64 area() const { return 0.0; } };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Class_decl );
+
+        REQUIRE( p.ast().type_param_list( decl ).is_valid() );
+        REQUIRE( p.ast().implemented( decl ).size() == 1 );
+        REQUIRE( p.members( decl ).size() == 2 );
+    }
+
+    SECTION( "without one, the slot is invalid and the members are unchanged" )
+    {
+        const Parsed p( "class C { i32 n; i32 get() const { return n; } };" );
+
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Class_decl );
+
+        REQUIRE_FALSE( p.child( decl, 1 ).is_valid() );
+        REQUIRE( p.ast().implemented( decl ).empty() );
+        REQUIRE( p.members( decl ).size() == 2 );
+    }
+
+    SECTION( "the dump shows the list" )
+    {
+        const Parsed p( "class Circle implements Shape { f64 r; };" );
+
+        REQUIRE( p.dump().find( "Implements_list" ) != std::string::npos );
+    }
+}
+
+TEST_CASE( "parser_refuses_what_an_interface_cannot_hold", "[parse][interfaces]" )
+{
+    const auto has = []( const Parsed& p, std::string_view part ) { return p.errors().find( part ) != std::string::npos; };
+
+    SECTION( "type parameters, once, and the interface is still built" )
+    {
+        const Parsed p( "interface Holder<T> { T get() const; };" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( has( p, "cannot be generic yet" ) );
+
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Interface_decl );
+
+        REQUIRE( decl.is_valid() );
+        REQUIRE( p.members( decl ).size() == 1 );
+    }
+
+    SECTION( "a field, once, keeping the methods around it" )
+    {
+        const Parsed p( "interface Shape { f64 area() const; i32 sides; void scale( f64 by ); };" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( has( p, "holds only method signatures" ) );
+
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Interface_decl );
+
+        REQUIRE( p.members( decl ).size() == 2 );
+        REQUIRE( p.kind( p.members( decl )[0] ) == Node_kind::Method_decl );
+        REQUIRE( p.kind( p.members( decl )[1] ) == Node_kind::Method_decl );
+    }
+
+    SECTION( "a class's method still needs its body" )
+    {
+        const Parsed p( "class C implements Shape { i32 n; f64 area() const; };" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( has( p, "no forward declarations" ) );
+    }
+
+    SECTION( "both words are reserved" )
+    {
+        for( const std::string_view source : { "i32 interface = 1;", "i32 implements = 1;" } )
+        {
+            const Parsed p( source );
+
+            INFO( source );
+            REQUIRE( p.has_errors() );
+        }
+    }
+
+    SECTION( "the declarations after one are still read" )
+    {
+        const Parsed p( "interface Shape { f64 area() const; };\ni32 main() { return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.children( p.root() ).size() == 2 );
+        REQUIRE( p.kind( p.child( p.root(), 1 ) ) == Node_kind::Function_decl );
+    }
+}
+
+TEST_CASE( "parser_attaches_doc_comments_to_an_interface", "[parse][docs][interfaces]" )
+{
+    const Parsed p( "/// A shape.\n"
+                    "interface Shape\n"
+                    "{\n"
+                    "    /// Its area.\n"
+                    "    f64 area() const;\n"
+                    "};" );
+
+    INFO( p.errors() );
+    REQUIRE_FALSE( p.has_errors() );
+
+    const Node_id decl   = find_first( p.ast(), p.root(), Node_kind::Interface_decl );
+    const Node_id method = find_first( p.ast(), p.root(), Node_kind::Method_decl );
+
+    REQUIRE( p.ast().doc_span( decl ).is_valid() );
+    REQUIRE( doc_comment( p.text( p.ast().doc_span( decl ) ), "///" ) == "A shape." );
+    REQUIRE( p.ast().doc_span( method ).is_valid() );
+    REQUIRE( doc_comment( p.text( p.ast().doc_span( method ) ), "///" ) == "Its area." );
 }
 
 } // namespace keel

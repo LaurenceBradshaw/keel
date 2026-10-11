@@ -96,8 +96,8 @@ enum class Node_kind : u16
     // children: init (a Var_decl or a statement), condition, update, body; the first three invalid
     // when absent.
     For_stmt,
-    // aux: the name; children: the Type_param_list (invalid when not generic), then the members:
-    // Field_decls, static Var_decls, Method_decls, Constructor_decls and the Destructor_decl.
+    // aux: the name; children: the Type_param_list (invalid when not generic), then the Implements_list (invalid when none),
+    // then the members: Field_decls, static Var_decls, Method_decls, Constructor_decls and the Destructor_decl.
     Struct_decl,
     // As Struct_decl.
     Class_decl,
@@ -164,6 +164,10 @@ enum class Node_kind : u16
     Bound_name,
     // aux: 0. children: the operand.
     Try_expr,
+    // aux: the name; children: the Type_param_list slot, always invalid for now, then the Method_decls.
+    Interface_decl,
+    // children: the interfaces' types, as written after `implements`.
+    Implements_list,
 
     Count
 };
@@ -196,6 +200,11 @@ constexpr bool is_function_like( Node_kind kind )
 {
     return kind == Node_kind::Function_decl || kind == Node_kind::Destructor_decl || kind == Node_kind::Constructor_decl ||
            kind == Node_kind::Method_decl;
+}
+
+constexpr bool has_members( Node_kind kind )
+{
+    return is_aggregate( kind ) || kind == Node_kind::Interface_decl;
 }
 
 struct Node

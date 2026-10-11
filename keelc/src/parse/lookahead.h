@@ -45,8 +45,9 @@ struct Member_head
 {
     Member_kind kind     = Member_kind::Field;
     u32         start    = 0;     // first token, access marker and `static` included
-    u32         commit   = 0;     // the body's `{`, a static's `=`, or where a field's `;` is or should be
+    u32         commit   = 0;     // the body's `{`, a static's `=`, or where a field's or a signature's `;` is or should be
     bool        is_const = false; // a method's trailing `const`, which a `where` clause may follow
+    bool        has_body = true;  // false for an interface's signature
 };
 
 struct Head_scan
@@ -76,6 +77,7 @@ enum class Declaration_kind : u8
     Enum,
     Function,
     Variable,
+    Interface,
 };
 
 // Which parse function a file-scope declaration needs, and where. Nothing is built.
@@ -119,8 +121,14 @@ public:
     // The member head at `at`, where only `enclosing` names a constructor.
     Head_scan own_member_head( u32 at, Symbol_id enclosing );
 
+    enum class Member_site : u8
+    {
+        Aggregate,
+        Interface
+    };
+
     // Starting at `at`: the tokens no member can be read from, then the member after them.
-    Member_chunk next_member( u32 at, Symbol_id enclosing );
+    Member_chunk next_member( u32 at, Symbol_id enclosing, Member_site site = Member_site::Aggregate );
 
     // Where a head is scanned: at a statement's start a statement keyword is not a name.
     enum class Scan_site : u8
@@ -189,7 +197,8 @@ private:
 
     Token_cursor cursor_;
     Scan_failure failure_;
-    Scan_site    site_ = Scan_site::File;
+    Scan_site    site_        = Scan_site::File;
+    Member_site  member_site_ = Member_site::Aggregate;
 };
 
 } // namespace keel

@@ -111,6 +111,7 @@ public:
     std::span<const Node_id> variants( Node_id id ) const;
     Node_id                  underlying_type( Node_id enum_decl ) const;
     std::span<const Node_id> payload( Node_id variant ) const;
+    std::span<const Node_id> implemented( Node_id aggregate ) const;
 
     // Bindings: Param_decl, Var_decl, Field_decl.
     Node_id annotation( Node_id decl ) const;    // invalid for `auto`
@@ -165,7 +166,7 @@ public:
     bool    is_const_method( Node_id method ) const;  // written with a trailing `const`: a `const ref` receiver
     bool    has_destructor( Node_id declaration ) const;
     bool    enum_has_payload( Node_id enum_decl ) const; // D7: decides whether the enum is an integer or a tagged struct
-    Node_id enclosing_aggregate( Node_id member ) const; // invalid for a top-level declaration
+    Node_id enclosing_aggregate( Node_id member ) const; // invalid for nodes with no members
 
     // Whether `member` may be named from inside the aggregate `from`: the enclosing_aggregate of the
     // function the access is written in, and invalid for a free function, which sees nothing private.

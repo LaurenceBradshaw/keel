@@ -23,9 +23,10 @@ Head_scan Lookahead::own_member_head( u32 at, Symbol_id enclosing )
     return scan_head( at, enclosing, Constructor_names::Enclosing_only );
 }
 
-Member_chunk Lookahead::next_member( u32 at, Symbol_id enclosing )
+Member_chunk Lookahead::next_member( u32 at, Symbol_id enclosing, Member_site site )
 {
     cursor_.seek( at );
+    member_site_ = site;
 
     if( cursor_.check( Token_kind::R_brace ) || cursor_.at_end() )
     {
@@ -128,6 +129,10 @@ Declaration_scan Lookahead::declaration_head( u32 at, Scan_site site )
     else if( cursor_.check_keyword( Keyword::Enum ) )
     {
         return make_head( Declaration_kind::Enum, at );
+    }
+    else if( cursor_.check_keyword( Keyword::Interface ) )
+    {
+        return make_head( Declaration_kind::Interface, at );
     }
 
     const bool is_extern = cursor_.match_keyword( Keyword::Extern );
@@ -392,10 +397,14 @@ bool Lookahead::looks_like_type_arguments( u32 at )
 Head_scan Lookahead::scan_head( u32 at, Symbol_id enclosing, Constructor_names names )
 {
     bool is_const  = false;
-    auto make_head = [this, &is_const]( Member_kind kind, u32 start ) -> Head_scan
+    bool has_body  = true;
+    auto make_head = [this, &is_const, &has_body]( Member_kind kind, u32 start ) -> Head_scan
     {
         return Head_scan {
-            .head    = Member_head { .kind = kind, .start = start, .commit = cursor_.position(), .is_const = is_const },
+            .head =
+                Member_head {
+                    .kind = kind, .start = start, .commit = cursor_.position(), .is_const = is_const, .has_body = has_body
+                },
             .failure = Scan_failure {}
         };
     };
@@ -512,6 +521,12 @@ Head_scan Lookahead::scan_head( u32 at, Symbol_id enclosing, Constructor_names n
         {
             // Whether it was a static method or not does not matter to the lookahead; `static` was already consumed.
             // The parser will figure it out.
+            return make_head( Member_kind::Method, start );
+        }
+
+        if( member_site_ == Member_site::Interface && cursor_.check( Token_kind::Semicolon ) )
+        {
+            has_body = false;
             return make_head( Member_kind::Method, start );
         }
 
@@ -1118,9 +1133,9 @@ public:
         return Lookahead( tokens_ ).own_member_head( at, name_ );
     }
 
-    Member_chunk chunk( u32 at = 0 )
+    Member_chunk chunk( u32 at = 0, Lookahead::Member_site site = Lookahead::Member_site::Aggregate )
     {
-        return Lookahead( tokens_ ).next_member( at, name_ );
+        return Lookahead( tokens_ ).next_member( at, name_, site );
     }
 
     Declaration_scan declaration( u32 at = 0 )
@@ -1389,6 +1404,80 @@ TEST_CASE( "lookahead_says_where_and_why_a_head_fails", "[scan]" )
     SECTION( "the class's name before `(` is never a method's" )
     {
         require_failure( "i32 C() { }", "C", Wanted::Name );
+    }
+}
+
+// An interface's methods end at `;`, and nowhere else does a bodiless method scan.
+TEST_CASE( "lookahead_reads_an_interface_s_signatures", "[scan][interfaces]" )
+{
+    const auto interface_chunk = []( Scanned& s ) { return s.chunk( 0, Lookahead::Member_site::Interface ); };
+
+    SECTION( "a signature commits at its `;`, with no body" )
+    {
+        Scanned            s( "f64 area(); }" );
+        const Member_chunk c = interface_chunk( s );
+
+        REQUIRE_FALSE( c.dropped() );
+        REQUIRE( c.head.has_value() );
+        REQUIRE( c.head->kind == Member_kind::Method );
+        REQUIRE( c.head->commit == s.at( ";" ) );
+        REQUIRE_FALSE( c.head->has_body );
+    }
+
+    SECTION( "a trailing `const` is still read" )
+    {
+        Scanned            s( "f64 area() const; }" );
+        const Member_chunk c = interface_chunk( s );
+
+        REQUIRE( c.head.has_value() );
+        REQUIRE( c.head->is_const );
+        REQUIRE_FALSE( c.head->has_body );
+    }
+
+    SECTION( "parameters and a moded return" )
+    {
+        Scanned            s( "const ref Name name( i32 a, ref i32 b ) const; }" );
+        const Member_chunk c = interface_chunk( s );
+
+        REQUIRE( c.head.has_value() );
+        REQUIRE( c.head->kind == Member_kind::Method );
+        REQUIRE_FALSE( c.head->has_body );
+    }
+
+    SECTION( "a method with a body still has one" )
+    {
+        Scanned            s( "f64 area() { } }" );
+        const Member_chunk c = interface_chunk( s );
+
+        REQUIRE( c.head.has_value() );
+        REQUIRE( c.head->kind == Member_kind::Method );
+        REQUIRE( c.head->commit == s.at( "{" ) );
+        REQUIRE( c.head->has_body );
+    }
+
+    SECTION( "a field is still a field, for the parser to refuse" )
+    {
+        Scanned            s( "i32 a; }" );
+        const Member_chunk c = interface_chunk( s );
+
+        REQUIRE( c.head.has_value() );
+        REQUIRE( c.head->kind == Member_kind::Field );
+    }
+
+    SECTION( "in a class or struct, a signature is still no member" )
+    {
+        Scanned s( "f64 area(); }" );
+
+        REQUIRE_FALSE( s.head().head.has_value() );
+        REQUIRE( s.head().failure.at == s.at( ";" ) );
+    }
+
+    SECTION( "a class's members keep their body" )
+    {
+        Scanned s( "f64 area() { } }" );
+
+        REQUIRE( s.chunk().head.has_value() );
+        REQUIRE( s.chunk().head->has_body );
     }
 }
 
@@ -1695,6 +1784,7 @@ TEST_CASE( "lookahead_recognises_each_declaration_head", "[scan]" )
         require_declaration( "struct S { i32 a; };", Declaration_kind::Aggregate, "struct" );
         require_declaration( "class C<T> where T : Copyable { T a; };", Declaration_kind::Aggregate, "class" );
         require_declaration( "enum E { A, B };", Declaration_kind::Enum, "enum" );
+        require_declaration( "interface Shape { f64 area() const; };", Declaration_kind::Interface, "interface" );
         require_declaration( "struct S;", Declaration_kind::Aggregate, "struct" );
     }
 

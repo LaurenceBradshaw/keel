@@ -3183,7 +3183,7 @@ std::vector<Function> lower( const Ast& ast, const Resolution& resolution, Types
     {
         // A generic has no code of its own - it is the template the instantiations below are
         // emitted from, and emitting it directly would try to give `T` a C spelling.
-        if( is_function_like( ast.kind( id ) ) && !ast.is_extern( id ) && !ast.is_generic( id ) )
+        if( is_function_like( ast.kind( id ) ) && ast.body( id ).is_valid() && !ast.is_generic( id ) )
         {
             Lowering lowering( id, ast, resolution, types, literals );
             functions.push_back( lowering.run() );

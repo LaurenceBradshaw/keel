@@ -1,6 +1,7 @@
 Source_file                             1:1-48:1
   Struct_decl                           4:1-37:3    name=a
     <none>                              -
+    <none>                              -
     Field_decl                          6:5-6:11    name=x
       Named_type                        6:5-6:8     "i32"
     Error                               8:5-11:6    "bool operator!=( const ref a other ) const

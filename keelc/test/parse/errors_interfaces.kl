@@ -1,0 +1,19 @@
+interface Holder<T>
+{
+    T get() const;
+};
+
+interface Shape
+{
+    f64 area() const;
+    i32 sides;
+    void grow( f64 by );
+};
+
+class Circle implements Shape
+{
+    f64 r;
+
+    f64 area() const;
+    void grow( f64 by ) { }
+};

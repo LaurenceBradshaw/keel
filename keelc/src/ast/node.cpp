@@ -152,6 +152,10 @@ std::string_view node_kind_name( Node_kind kind )
         return "Bound_name";
     case Node_kind::Try_expr:
         return "Try_expr";
+    case Node_kind::Interface_decl:
+        return "Interface_decl";
+    case Node_kind::Implements_list:
+        return "Implements_list";
 
     case Node_kind::Count:
         break;

@@ -43,6 +43,7 @@ std::string aux_note( const Ast& ast, const Interner& interner, Node_id id, std:
     case Node_kind::Struct_decl:
     case Node_kind::Class_decl:
     case Node_kind::Enum_decl:
+    case Node_kind::Interface_decl:
     case Node_kind::Variant_decl:
     case Node_kind::Path_expr:
     case Node_kind::Destructor_decl:

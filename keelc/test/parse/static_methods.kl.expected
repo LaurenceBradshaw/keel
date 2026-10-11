@@ -1,6 +1,7 @@
 Source_file                             1:1-74:1
   Struct_decl                           8:1-34:3    name=P
     <none>                              -
+    <none>                              -
     Field_decl                          10:5-10:11  name=x
       Named_type                        10:5-10:8   "i32"
     Method_decl                         12:12-15:6
@@ -56,6 +57,7 @@ Source_file                             1:1-74:1
       Type_param_decl                   39:12-39:13 "T"
       Where_clause                      39:15-39:33
         Bound_name                      39:25-39:33 "Copyable"
+    <none>                              -
     Field_decl                          41:5-41:9   name=v
       Named_type                        41:5-41:6   "T"
     Method_decl                         43:12-46:6
@@ -77,6 +79,7 @@ Source_file                             1:1-74:1
           Bound_name                    39:25-39:33 "Copyable"
       <none>                            -
   Class_decl                            51:1-68:3   name=Owned
+    <none>                              -
     <none>                              -
     Field_decl                          53:5-53:11  name=n
       Named_type                        53:5-53:8   "u64"

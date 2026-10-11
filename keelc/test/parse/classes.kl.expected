@@ -1,6 +1,7 @@
 Source_file                             1:1-64:1
   Class_decl                            4:1-13:3    name=Buffer
     <none>                              -
+    <none>                              -
     Field_decl                          6:5-6:13    name=ptr
       Pointer_type                      6:5-6:8
         Named_type                      6:5-6:7     "u8"
@@ -22,9 +23,11 @@ Source_file                             1:1-64:1
       <none>                            -
   Class_decl                            16:1-19:3   name=Handle
     <none>                              -
+    <none>                              -
     Field_decl                          18:5-18:15  name=value
       Named_type                        18:5-18:8   "u64"
   Class_decl                            23:1-30:3   name=Reordered
+    <none>                              -
     <none>                              -
     Destructor_decl                     25:5-27:6   name=Reordered
       <none>                            -
@@ -40,6 +43,7 @@ Source_file                             1:1-64:1
         Named_type                      29:5-29:7   "u8"
   Struct_decl                           34:1-42:3   name=Point
     <none>                              -
+    <none>                              -
     Field_decl                          36:5-36:11  name=x
       Named_type                        36:5-36:8   "f64"
     Field_decl                          37:5-37:11  name=y
@@ -54,6 +58,7 @@ Source_file                             1:1-64:1
     }"
       <none>                            -
   Class_decl                            46:1-53:3   name=Mismatched
+    <none>                              -
     <none>                              -
     Field_decl                          48:5-48:13  name=ptr
       Pointer_type                      48:5-48:8

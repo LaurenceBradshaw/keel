@@ -1,6 +1,7 @@
 Source_file                             1:1-23:1
   Class_decl                            2:1-14:3    name=C
     <none>                              -
+    <none>                              -
     Field_decl                          4:5-4:11    name=n
       Named_type                        4:5-4:8     "i32"
     Constructor_decl                    6:5-9:6

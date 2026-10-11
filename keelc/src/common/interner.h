@@ -82,6 +82,8 @@ enum class Keyword : u32
     Destroy,
     Underscore,
     Panic,
+    Interface,
+    Implements,
 
     Count
 };
