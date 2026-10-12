@@ -75,10 +75,10 @@ void Signatures::declare()
     declare_interfaces();
     declare_structs();
 
-    // After the struct pass: a payload field may name a struct or a class, and its annotation is
-    // resolved here. Before everything else, because a parameter, a field or a global may name an
-    // enum in turn.
+    // After the struct pass: a payload field may name a struct or a class. Before everything else,
+    // because a parameter, a field or a global may name an enum in turn.
     declare_enums();
+    declare_payloads();
     declare_implements();
     declare_member_functions();
     declare_fields();
@@ -596,9 +596,24 @@ void Signatures::declare_enums()
         // comment rather than a rule.
         for( const Node_id variant : ast_.variants( child ) )
         {
-            const Symbol_id variant_name = ast_.name( variant );
-
             types_.record( variant, type );
+        }
+    }
+}
+
+// After every enum's type is recorded, since a payload may name an enum declared after its own.
+void Signatures::declare_payloads()
+{
+    for( const Node_id child : ast_.declarations( ast_.root() ) )
+    {
+        if( ast_.kind( child ) != Node_kind::Enum_decl )
+        {
+            continue;
+        }
+
+        for( const Node_id variant : ast_.variants( child ) )
+        {
+            const Symbol_id variant_name = ast_.name( variant );
 
             // D7: a variant's children are its payload fields, and they are Field_decls - so this
             // is the same recording declare_fields does for a struct.
@@ -1478,6 +1493,29 @@ TEST_CASE( "type_checker_declares_an_enum_before_anything_that_can_name_one", "[
         INFO( p.rendered() );
         REQUIRE( p.clean() );
         REQUIRE( p.type_name( p.nth( Node_kind::Var_decl, 0 ) ) == "Colour" );
+    }
+
+    SECTION( "another enum's payload, declared before it" )
+    {
+        const Typed p( "enum Shape { Dot, Filled( Colour c ) };\n"
+                       "enum Colour { Red, Green };\n"
+                       "i32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Field_decl, 0 ) ) == "Colour" );
+    }
+
+    SECTION( "another enum's payload, through a type argument" )
+    {
+        const Typed p( "enum Shape { Dot, Filled( Wrap<Colour> c ) };\n"
+                       "enum Wrap<T> where T : Copyable { Held( T v ) };\n"
+                       "enum Colour { Red, Green };\n"
+                       "i32 main() { return 0; }\n" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Field_decl, 0 ) ) == "Wrap<Colour>" );
     }
 }
 

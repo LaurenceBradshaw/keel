@@ -84,6 +84,7 @@ private:
     void declare_member_functions();
     void declare_globals();
     void declare_enums();
+    void declare_payloads(); // an enum's variant fields
 
     Node_id bare_type( Node_id annotation ) const; // a parameter's type without `const` or its mode
 

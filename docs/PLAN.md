@@ -1346,14 +1346,6 @@ the `Types` renames (R8) once files stop moving, R16 and R21, and R19's comment 
 
 ### Compiler structure
 
-- **An enum payload naming an enum declared later crashes the compiler.** `enum Shape { Dot,
-  Filled( Colour c ) }` before `enum Colour { … }` asserts in `Type_table::is_void`; through a type
-  argument, `Filled( Wrap<Colour> c )`, it passes sema and asserts in `Spelling::type`.
-  `Signatures::declare_enums` records each enum's type and resolves its payloads in one loop, so a
-  payload reads `type_of` of a later enum before it is recorded. The fix is the split structs already
-  have: one loop for the type parameters, underlying type, `table_.enumeration` and the variants;
-  a second for the payloads and the duplicate-field check. Fields, parameters and returns are
-  unaffected, since they are resolved after `declare_enums`.
 - **A node that carries a name must not be built without one**: if `aux` is a `Symbol_id`, the parser
   guarantees it is valid, so no reader needs a guard.
 - **`can_start_expression()` and `parse_prefix`'s keyword case are two halves of one list**, and

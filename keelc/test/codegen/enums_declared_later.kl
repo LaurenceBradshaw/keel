@@ -1,0 +1,50 @@
+// An enum's payload names an enum declared after it, directly and through a type argument. Exits
+// with the failing check.
+enum Shape
+{
+    Dot,
+    Filled( Colour c ),
+    Wrapped( Wrap<Colour> w ),
+};
+
+enum Wrap<T> where T : Copyable
+{
+    Held( T v ),
+};
+
+enum Colour
+{
+    Red,
+    Green,
+};
+
+i32 main()
+{
+    Shape a = Shape::Filled( Colour::Green );
+    Shape b = Shape::Wrapped( Wrap::Held( Colour::Red ) );
+
+    switch( a )
+    {
+        case Shape::Filled( c ):
+            if( c != Colour::Green ) { return 1; }
+            break;
+        default:
+            return 2;
+    }
+
+    switch( b )
+    {
+        case Shape::Wrapped( w ):
+            switch( w )
+            {
+                case Wrap::Held( v ):
+                    if( v != Colour::Red ) { return 3; }
+                    break;
+            }
+            break;
+        default:
+            return 4;
+    }
+
+    return 0;
+}
