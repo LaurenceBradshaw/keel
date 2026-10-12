@@ -169,6 +169,28 @@ Type_id Annotations::resolve_named( Node_id annotation )
 {
     const Node_id decl = resolution_.declaration_of( annotation );
 
+    // `self` is the enclosing type, and an interface's is its implementer's stand-in.
+    if( !ast_.package( annotation ).is_valid() && interner_.text( ast_.name( annotation ) ) == "self" )
+    {
+        if( !decl.is_valid() )
+        {
+            reporter_.error_at(
+                ast_.span( annotation ),
+                "`self` is written only inside a `struct`, `class`, `enum`, or `interface`",
+                "it names the type it is written in"
+            );
+
+            return table_.builtin( Type_kind::Error );
+        }
+
+        if( ast_.kind( decl ) == Node_kind::Interface_decl )
+        {
+            return table_.self_of( decl );
+        }
+
+        return types_.type_of( decl );
+    }
+
     if( decl.is_valid() && ast_.kind( decl ) == Node_kind::Interface_decl )
     {
         // Every implementer is a different size, so an interface is reached only through an address.
@@ -188,6 +210,24 @@ Type_id Annotations::resolve_named( Node_id annotation )
         else
         {
             addressed_ = {};
+
+            if( const Node_id method = table_.method_naming_self( types_.type_of( decl ) ); method.is_valid() && !receiver_ )
+            {
+                const std::string_view interface = interner_.text( ast_.name( annotation ) );
+
+                reporter_.error_at(
+                    ast_.span( annotation ),
+                    fmt::format(
+                        "`{}` can only bound a type parameter, because its `{}` mentions `self`",
+                        interface,
+                        interner_.text( ast_.name( method ) )
+                    ),
+                    fmt::format( "take a `T` with `where T : {}` instead", interface )
+                );
+
+                return table_.builtin( Type_kind::Error );
+            }
+
             return types_.type_of( decl );
         }
     }
@@ -260,6 +300,15 @@ Type_id Annotations::resolve_generic( Node_id annotation )
 
     if( !base.is_valid() || !type_args.is_valid() )
     {
+        return table_.builtin( Type_kind::Error );
+    }
+
+    if( !ast_.package( base ).is_valid() && interner_.text( ast_.name( base ) ) == "self" )
+    {
+        reporter_.error_at(
+            ast_.span( annotation ), "`self` takes no type arguments", "it already names the type it is written in"
+        );
+
         return table_.builtin( Type_kind::Error );
     }
 
@@ -620,6 +669,15 @@ void Annotations::record_interface_bound( Node_id bound_name )
     {
         types_.record( bound_name, types_.type_of( decl ) );
     }
+}
+
+Type_id Annotations::resolve_receiver( Node_id annotation )
+{
+    receiver_            = true;
+    const Type_id result = resolve( annotation );
+    receiver_            = false;
+
+    return result;
 }
 
 Type_id Annotations::resolve_interface( Node_id annotation )

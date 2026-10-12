@@ -44,6 +44,7 @@ struct Conformance_error
     Type_id             interface {};
     Node_id             requirement {}; // the interface's method
     Node_id             found {};       // the implementer's method of that name, where one exists
+    Type_id             self {};        // the implementer's type, which the requirement's `self` stands for
 };
 
 struct Conformances
@@ -56,7 +57,7 @@ struct Conformances
 };
 
 // Asked of each aggregate's `implements` list once every signature is typed.
-Conformances check_conformances( const Ast& ast, const Type_table& table, std::span<const Type_id> recorded );
+Conformances check_conformances( const Ast& ast, Type_table& table, std::span<const Type_id> recorded );
 
 } // namespace keel
 
@@ -67,7 +68,8 @@ namespace keel::sema
 void report_conformance_errors(
     const Ast&                         ast,
     const Interner&                    interner,
-    const Type_table&                  table,
+    Type_table&                        table,
+    std::span<const Type_id>           recorded,
     std::span<const Conformance_error> errors,
     Reporter&                          reporter
 );

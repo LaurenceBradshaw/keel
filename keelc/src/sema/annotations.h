@@ -57,6 +57,9 @@ public:
     // A type written after `implements`: an interface, or an error once reported.
     Type_id resolve_interface( Node_id annotation );
 
+    // An interface method's receiver: its interface may be named even when bound-only.
+    Type_id resolve_receiver( Node_id annotation );
+
     bool refuse_void( Node_id annotation, Type_id type, std::string_view what, std::string_view does );
     bool refuse_never( Node_id annotation, Type_id type, std::string_view what );
 
@@ -78,7 +81,8 @@ private:
     Bounds&           bounds_;
     Reporter&         reporter_;
 
-    Node_id addressed_ {}; // the Named_type a `*` or a `ref` just wrapped: the one place an interface may be named
+    Node_id addressed_ {};     // the Named_type a `*` or a `ref` just wrapped: the one place an interface may be named
+    bool    receiver_ = false; // resolving an interface method's receiver, which a bound-only interface allows
 };
 
 } // namespace keel::sema

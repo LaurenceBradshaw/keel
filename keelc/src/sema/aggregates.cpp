@@ -312,6 +312,19 @@ Bindings Aggregates::bindings_of( Type_id aggregate ) const
     return aggregate_bindings( ast_, table_, aggregate, types_.recorded() );
 }
 
+Bindings Aggregates::receiver_bindings( Type_id receiver, Node_id method ) const
+{
+    Bindings      bindings = bindings_of( receiver );
+    const Node_id owner    = ast_.enclosing_aggregate( method );
+
+    if( owner.is_valid() && ast_.kind( owner ) == Node_kind::Interface_decl )
+    {
+        bindings.insert_or_assign( table_.self_of( owner ).v, receiver );
+    }
+
+    return bindings;
+}
+
 Type_id Aggregates::field_type( Type_id aggregate, Node_id field )
 {
     return keel::field_type( ast_, table_, aggregate, field, types_.recorded() );

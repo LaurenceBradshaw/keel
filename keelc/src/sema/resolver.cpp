@@ -22,7 +22,8 @@ public:
           sm_( sm ),
           interner_( interner ),
           reporter_( sm, diags ),
-          imports_( imports )
+          imports_( imports ),
+          self_( interner.find( "self" ) )
     {
     }
 
@@ -76,6 +77,8 @@ private:
     std::vector<Node_id> next_overload_;
     std::vector<Node_id> fallbacks_;
     std::vector<Scope>   scopes_;
+
+    const Symbol_id self_; // the name `self` takes in a type, interned only when some file writes it
 
     // The enclosing aggregate's field names, for D19's member clause. Empty outside a member body,
     // so the check it drives costs one lookup per declaration everywhere else.
@@ -229,7 +232,17 @@ void Resolver::visit( Node_id id )
     case Node_kind::Name_expr:
     {
         const Symbol_id name = ast_.name( id );
-        const Node_id   decl = lookup( name, id );
+
+        if( name == self_ )
+        {
+            reporter_.error_at(
+                ast_.span( id ), "`self` names a type, not a value", "the object a method is called on is `this`"
+            );
+            visit( ast_.type_arg_list( id ) );
+            return;
+        }
+
+        const Node_id decl = lookup( name, id );
 
         if( decl.is_valid() )
         {
@@ -276,6 +289,12 @@ void Resolver::visit( Node_id id )
         if( ast_.package( id ).is_valid() )
         {
             bindings_[id.v] = lookup_qualified( ast_.package( id ), id );
+        }
+        else if( name == self_ )
+        {
+            reporter_.error_at(
+                ast_.type_name_span( id ), "`self` names a type, not a value", "build it by the type's own name"
+            );
         }
         else if( const Node_id decl = lookup( name, id ); decl.is_valid() )
         {
@@ -422,6 +441,12 @@ void Resolver::visit_enum( Node_id id )
 
     visit( ast_.underlying_type( id ) );
 
+    // After the underlying type, which is resolved before the enum's own type exists.
+    if( self_.is_valid() )
+    {
+        scopes_.back().names.emplace( self_, id );
+    }
+
     for( const Node_id variant : ast_.variants( id ) )
     {
         for( const Node_id field : ast_.payload( variant ) )
@@ -444,6 +469,12 @@ void Resolver::visit_aggregate( Node_id id )
     if( !is_builtin_type_name( interner_.text( ast_.name( id ) ) ) )
     {
         scopes_.back().names.emplace( ast_.name( id ), id );
+    }
+
+    // `self` is the type's name too, bound in the same scope.
+    if( self_.is_valid() )
+    {
+        scopes_.back().names.emplace( self_, id );
     }
 
     if( is_aggregate( ast_.kind( id ) ) )
@@ -860,6 +891,14 @@ bool Resolver::refuse_builtin_name( Symbol_id name, Node_id decl )
             ast_.name_span( decl ),
             fmt::format( "`{}` is the name of a builtin type", interner_.text( name ) ),
             "a declaration may not take one"
+        );
+        return true;
+    }
+
+    if( name == self_ )
+    {
+        reporter_.error_at(
+            ast_.name_span( decl ), "a declaration may not be named `self`", "`self` names the type it is written in"
         );
         return true;
     }

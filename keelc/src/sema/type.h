@@ -119,6 +119,10 @@ public:
     // One per Interface_decl. Kept apart from the composites, since no C struct is emitted for one.
     Type_id interface( Node_id declaration, std::string_view name );
 
+    // An interface's `self`: a parameter keyed by the interface's own declaration, which a
+    // conformance or a bound substitutes away.
+    Type_id self_of( Node_id interface );
+
     // `T` -> `i32`, `T*` -> `i32*`. Structural, because a parameter can appear inside a type
     // constructor as readily as alone, and `T*` is reachable the moment anyone writes it.
     Type_id substitute( Type_id type, const Bindings& bindings );
@@ -219,6 +223,10 @@ public:
     bool    is_box( Type_id type ) const;
     Node_id box_declaration() const;
 
+    // The first method whose signature mentions `self`, or invalid when the interface may be a type.
+    void    declare_naming_self( Node_id interface, Node_id method );
+    Node_id method_naming_self( Type_id interface ) const;
+
 private:
     Type_id     add( const Type& type, std::string_view name );
     std::string const_spelling( Type_id element, bool const_element ) const;
@@ -253,6 +261,8 @@ private:
     std::deque<std::string>                        composed_;
 
     Node_id box_ {};
+
+    std::unordered_map<u32, Node_id> naming_self_; // Interface_decl node -> its first method naming `self`
 
     // Backs Type::arguments. A deque for the reason composed_ is one: the views handed out have to
     // survive every later insertion.

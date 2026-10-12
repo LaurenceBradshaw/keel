@@ -22,6 +22,52 @@ constexpr Member_kind k_member_kinds[] = {
     { Node_kind::Destructor_decl, "destructor", "~", "use `class` if this type owns a resource", true },
 };
 
+bool names_self( const Ast& ast, const Interner& interner, Node_id annotation )
+{
+    if( !annotation.is_valid() )
+    {
+        return false;
+    }
+
+    if( ast.kind( annotation ) == Node_kind::Named_type && !ast.package( annotation ).is_valid() &&
+        interner.text( ast.name( annotation ) ) == "self" )
+    {
+        return true;
+    }
+
+    for( const Node_id child : ast.children( annotation ) )
+    {
+        if( names_self( ast, interner, child ) )
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// Read from the syntax, since a `ref P` may be resolved before `P`'s own methods are typed.
+Node_id method_naming_self( const Ast& ast, const Interner& interner, Node_id interface )
+{
+    for( const Node_id member : ast.members( interface ) )
+    {
+        if( names_self( ast, interner, ast.return_type( member ) ) )
+        {
+            return member;
+        }
+
+        for( const Node_id param : ast.explicit_params( member ) )
+        {
+            if( names_self( ast, interner, ast.annotation( param ) ) )
+            {
+                return member;
+            }
+        }
+    }
+
+    return Node_id {};
+}
+
 } // namespace
 
 void Signatures::declare()
@@ -96,6 +142,11 @@ void Signatures::declare_interfaces()
         const std::string_view name = interner_.text( ast_.name( child ) );
 
         types_.record( child, table_.interface( child, name ) );
+
+        if( const Node_id method = method_naming_self( ast_, interner_, child ); method.is_valid() )
+        {
+            table_.declare_naming_self( child, method );
+        }
     }
 
     for( u32 node = 0; node < ast_.node_count(); ++node )
@@ -320,8 +371,11 @@ void Signatures::declare_member_functions()
 
             for( Node_id param : ast_.params( member ) )
             {
+                const bool    is_receiver     = ast_.has_receiver( member ) && param == ast_.params( member )[0];
                 const Node_id param_type_node = ast_.annotation( param );
-                const Type_id param_type      = annotations_.resolve( param_type_node );
+                const Type_id param_type      = is_receiver && ast_.kind( child ) == Node_kind::Interface_decl
+                                                    ? annotations_.resolve_receiver( param_type_node )
+                                                    : annotations_.resolve( param_type_node );
                 annotations_.refuse_void( bare_type( param_type_node ), param_type, "parameter", "passes" );
                 annotations_.refuse_never( bare_type( param_type_node ), param_type, "parameter" );
                 types_.record( param, param_type );

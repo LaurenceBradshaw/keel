@@ -857,7 +857,7 @@ Type_id Expressions::check_method_arguments(
     // `first`, and the declaration's `T` means nothing until they are applied. Reading either the
     // parameters or the result without them is how a method returns `T` to a caller expecting i32.
     // A generic method's own arguments are bound beside them.
-    Bindings bindings = aggregates_.bindings_of( receiver );
+    Bindings bindings = aggregates_.receiver_bindings( receiver, method );
 
     const std::vector<Node_id> own = ast_.type_parameters( ast_.own_type_param_list( method ) );
 

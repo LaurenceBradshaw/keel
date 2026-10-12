@@ -628,7 +628,7 @@ std::vector<Node_id> Overloads::viable_methods( Node_id call, Node_id first, Typ
 
     const std::span<const Node_id> arguments = ast_.arguments( call );
     const std::string_view         name      = interner_.text( ast_.name( first ) );
-    const Bindings                 bindings  = aggregates_.bindings_of( receiver );
+    const Bindings                 bindings  = aggregates_.receiver_bindings( receiver, first );
 
     std::vector<Node_id> viable;
 
@@ -658,7 +658,7 @@ Node_id Overloads::select_method(
 )
 {
     const std::string_view name     = interner_.text( ast_.name( first ) );
-    const Bindings         bindings = aggregates_.bindings_of( receiver );
+    const Bindings         bindings = aggregates_.receiver_bindings( receiver, first );
 
     std::vector<Node_id>              matching;
     std::vector<Node_id>              widened;

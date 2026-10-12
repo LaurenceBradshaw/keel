@@ -627,10 +627,17 @@ void Kir_emitter::emit_interface_references()
         return;
     }
 
-    const std::vector<Type_id> interfaces = types_.table().interface_types();
+    bool written = false;
 
-    for( const Type_id interface : interfaces )
+    for( const Type_id interface : types_.table().interface_types() )
     {
+        // A bound-only interface is never a type, so it has neither a reference nor a vtable.
+        if( types_.table().method_naming_self( interface ).is_valid() )
+        {
+            continue;
+        }
+
+        written = true;
         write_line( fmt::format( "{};", spelling_.vtable_type( interface ) ) );
         write_line( fmt::format(
             "{} {{ void* self; const {}* vtable; }};",
@@ -639,7 +646,7 @@ void Kir_emitter::emit_interface_references()
         ) );
     }
 
-    if( !interfaces.empty() )
+    if( written )
     {
         write_line( "" );
     }
@@ -656,6 +663,11 @@ void Kir_emitter::emit_vtable_types()
 
     for( const Type_id interface : types_.table().interface_types() )
     {
+        if( types_.table().method_naming_self( interface ).is_valid() )
+        {
+            continue;
+        }
+
         write_line( spelling_.vtable_type( interface ) );
         write_line( "{" );
         indent_ += 4;

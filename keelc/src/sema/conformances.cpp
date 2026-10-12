@@ -17,14 +17,22 @@ Type_id recorded_type( std::span<const Type_id> recorded, Node_id node )
     return node.v < recorded.size() ? recorded[node.v] : Type_id {};
 }
 
-// The parameters past the receiver, and the return, each with its mode. The receivers differ by
-// construction, `Shape` against `Circle`, and constness is asked separately.
-bool same_signature( const Ast& ast, std::span<const Type_id> recorded, Node_id requirement, Node_id method )
+// The parameters past the receiver, and the return, each with its mode, reading the requirement's
+// `self` as the implementer. The receivers differ by construction, and constness is asked separately.
+bool same_signature(
+    const Ast&               ast,
+    std::span<const Type_id> recorded,
+    Node_id                  requirement,
+    Node_id                  method,
+    Type_table&              table,
+    const Bindings&          self
+)
 {
     const std::span<const Node_id> wanted = ast.explicit_params( requirement );
     const std::span<const Node_id> given  = ast.explicit_params( method );
 
-    if( wanted.size() != given.size() || recorded_type( recorded, requirement ) != recorded_type( recorded, method ) ||
+    if( wanted.size() != given.size() ||
+        table.substitute( recorded_type( recorded, requirement ), self ) != recorded_type( recorded, method ) ||
         ast.is_ref_parameter( requirement ) != ast.is_ref_parameter( method ) )
     {
         return false;
@@ -32,7 +40,7 @@ bool same_signature( const Ast& ast, std::span<const Type_id> recorded, Node_id 
 
     for( std::size_t i = 0; i < wanted.size(); ++i )
     {
-        if( recorded_type( recorded, wanted[i] ) != recorded_type( recorded, given[i] ) ||
+        if( table.substitute( recorded_type( recorded, wanted[i] ), self ) != recorded_type( recorded, given[i] ) ||
             parameter_mode_of( ast, wanted[i] ) != parameter_mode_of( ast, given[i] ) )
         {
             return false;
@@ -44,8 +52,15 @@ bool same_signature( const Ast& ast, std::span<const Type_id> recorded, Node_id 
 
 // Nothing when the implementer answers the requirement with `found`; otherwise the problem with
 // the nearest candidate. An overload of the name that matches wins over one that does not.
-std::optional<Conformance_problem>
-answer( const Ast& ast, std::span<const Type_id> recorded, Node_id implementer, Node_id requirement, Node_id& found )
+std::optional<Conformance_problem> answer(
+    const Ast&               ast,
+    std::span<const Type_id> recorded,
+    Node_id                  implementer,
+    Node_id                  requirement,
+    Node_id&                 found,
+    Type_table&              table,
+    const Bindings&          self
+)
 {
     found = Node_id {};
 
@@ -63,7 +78,7 @@ answer( const Ast& ast, std::span<const Type_id> recorded, Node_id implementer, 
             found = member;
         }
 
-        if( !same_signature( ast, recorded, requirement, member ) )
+        if( !same_signature( ast, recorded, requirement, member, table, self ) )
         {
             nearest = nearest == Conformance_problem::Missing ? Conformance_problem::Mismatched : nearest;
             continue;
@@ -133,7 +148,7 @@ Node_id Conformances::method_for( Node_id implementer, Node_id requirement ) con
     return Node_id {};
 }
 
-Conformances check_conformances( const Ast& ast, const Type_table& table, std::span<const Type_id> recorded )
+Conformances check_conformances( const Ast& ast, Type_table& table, std::span<const Type_id> recorded )
 {
     Conformances result;
 
@@ -164,6 +179,9 @@ Conformances check_conformances( const Ast& ast, const Type_table& table, std::s
                 continue;
             }
 
+            const Bindings self = { { table.self_of( table.get( interface ).declaration ).v, recorded_type( recorded, decl ) }
+            };
+
             Conformance conformance { .implementer = decl, .interface = interface, .requirements = {}, .methods = {} };
 
             for( const Node_id requirement : ast.members( table.get( interface ).declaration ) )
@@ -172,7 +190,8 @@ Conformances check_conformances( const Ast& ast, const Type_table& table, std::s
                 const bool refused = ast.is_static_method( requirement ) || ast.own_type_param_list( requirement ).is_valid();
 
                 Node_id                                  found;
-                const std::optional<Conformance_problem> problem = answer( ast, recorded, decl, requirement, found );
+                const std::optional<Conformance_problem> problem =
+                    answer( ast, recorded, decl, requirement, found, table, self );
 
                 conformance.requirements.push_back( requirement );
                 conformance.methods.push_back( problem ? Node_id {} : found );
@@ -186,6 +205,7 @@ Conformances check_conformances( const Ast& ast, const Type_table& table, std::s
                         .interface   = interface,
                         .requirement = requirement,
                         .found       = found,
+                        .self        = recorded_type( recorded, decl ),
                     } );
                 }
             }
@@ -202,10 +222,50 @@ Conformances check_conformances( const Ast& ast, const Type_table& table, std::s
 namespace keel::sema
 {
 
+namespace
+{
+
+// The requirement as the implementer must write it, with `self` replaced by the implementer's type.
+std::string substituted_requirement(
+    const Ast&               ast,
+    const Interner&          interner,
+    Type_table&              table,
+    std::span<const Type_id> recorded,
+    const Conformance_error& error
+)
+{
+    const Bindings self = { { table.self_of( table.get( error.interface ).declaration ).v, error.self } };
+
+    std::string text = fmt::format(
+        "{}{} {}(",
+        param_spelling( parameter_mode_of( ast, error.requirement ) ),
+        table.name( table.substitute( recorded_type( recorded, error.requirement ), self ) ),
+        interner.text( ast.name( error.requirement ) )
+    );
+
+    const std::span<const Node_id> params = ast.explicit_params( error.requirement );
+    for( std::size_t i = 0; i < params.size(); ++i )
+    {
+        text += fmt::format(
+            "{} {}{} {}",
+            i == 0 ? "" : ",",
+            param_spelling( parameter_mode_of( ast, params[i] ) ),
+            table.name( table.substitute( recorded_type( recorded, params[i] ), self ) ),
+            interner.text( ast.name( params[i] ) )
+        );
+    }
+
+    text += params.empty() ? ")" : " )";
+    return ast.is_const_method( error.requirement ) ? text + " const" : text;
+}
+
+} // namespace
+
 void report_conformance_errors(
     const Ast&                         ast,
     const Interner&                    interner,
-    const Type_table&                  table,
+    Type_table&                        table,
+    std::span<const Type_id>           recorded,
     std::span<const Conformance_error> errors,
     Reporter&                          reporter
 )
@@ -243,14 +303,16 @@ void report_conformance_errors(
             reporter.error_at(
                 error.at,
                 fmt::format( "`{}`'s `{}` does not match the one `{}` declares", type, method, interface ),
-                fmt::format( "`{}` wants `{}`", interface, wanted )
+                fmt::format( "`{}` wants `{}`", interface, substituted_requirement( ast, interner, table, recorded, error ) )
             );
             break;
         case Conformance_problem::Not_const:
             reporter.error_at(
                 error.at,
                 fmt::format( "`{}`'s `{}` must be `const`, as `{}` declares it", type, method, interface ),
-                fmt::format( "a caller holding a `const ref {}` may call it", interface )
+                table.method_naming_self( error.interface ).is_valid()
+                    ? fmt::format( "a `const ref T` with `T : {}` may call it", interface )
+                    : fmt::format( "a caller holding a `const ref {}` may call it", interface )
             );
             break;
         case Conformance_problem::Static:

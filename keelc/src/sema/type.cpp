@@ -249,6 +249,11 @@ Type_id Type_table::interface( Node_id declaration, std::string_view name )
     return id;
 }
 
+Type_id Type_table::self_of( Node_id interface )
+{
+    return parameter( interface, "self" );
+}
+
 bool Type_table::mentions_parameter( Type_id id ) const
 {
     if( !id.is_valid() )
@@ -1119,6 +1124,22 @@ bool Type_table::implements( Type_id type, Type_id interface ) const
 
     const std::vector<Type_id>& implemented = it->second;
     return std::find( implemented.begin(), implemented.end(), interface ) != implemented.end();
+}
+
+void keel::Type_table::declare_naming_self( Node_id interface, Node_id method )
+{
+    naming_self_.emplace( interface.v, method );
+}
+
+Node_id keel::Type_table::method_naming_self( Type_id interface ) const
+{
+    if( !interface.is_valid() || !is_interface( interface ) )
+    {
+        return Node_id {};
+    }
+
+    const auto found = naming_self_.find( get( interface ).declaration.v );
+    return found == naming_self_.end() ? Node_id {} : found->second;
 }
 
 void keel::Type_table::declare_box( Node_id declaration )

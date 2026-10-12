@@ -104,7 +104,7 @@ i32 revived()
 
 // The read happens before the write, so a self-referential assignment is legal. Parenthesised
 // because a marker takes the whole expression to its boundary.
-i32 self()
+i32 reads_before_writing()
 {
     i32 a = 1;
     a = ( move a ) + 1;

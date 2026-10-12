@@ -50,6 +50,10 @@ public:
     // non-generic one, and the identity for the open form, so callers need no branch.
     Bindings bindings_of( Type_id aggregate ) const;
 
+    // bindings_of, plus an interface method's `self` as the receiver, so under `where T : P` a
+    // requirement's `self` is `T`.
+    Bindings receiver_bindings( Type_id receiver, Node_id method ) const;
+
     // A field's type *as seen through this instance*. The declared type of `Box<T>`'s field is `T`,
     // which is true of the template and of no value anyone holds - so every read of a field's type
     // goes through here rather than through the recorded type of the field declaration.

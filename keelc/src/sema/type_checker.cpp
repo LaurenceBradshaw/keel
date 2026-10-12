@@ -151,7 +151,7 @@ Types Checker::run()
 
     // Every signature is typed by here, and nothing below reads the answer before a body does.
     Conformances conformances = check_conformances( ast_, table_, types_.recorded() );
-    report_conformance_errors( ast_, interner_, table_, conformances.errors, reporter_ );
+    report_conformance_errors( ast_, interner_, table_, types_.recorded(), conformances.errors, reporter_ );
 
     statements_.visit( ast_.root() );
 
