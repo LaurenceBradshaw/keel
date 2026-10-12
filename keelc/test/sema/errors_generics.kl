@@ -1,6 +1,6 @@
 // A generic's signature types, so the mistakes here are about the type parameters themselves and
 // about the arguments a call site names - not about the feature being unfinished.
-T id<T>( T a ) where T : Copyable
+T id<T>( T a ) where T : copyable
 {
     return a;
 }
@@ -20,7 +20,7 @@ T empty<>( i32 a )
     return a;
 }
 
-T inline_bound<Comparable T>( T a )
+T inline_bound<comparable T>( T a )
 {
     return a;
 }
@@ -63,21 +63,21 @@ void unknown_bound<T>( T a ) where T : Sortable
 {
 }
 
-void wrong_subject<T>( T a ) where U : Copyable
+void wrong_subject<T>( T a ) where U : copyable
 {
 }
 
-i32 no_type_parameters( i32 a ) where T : Copyable
+i32 no_type_parameters( i32 a ) where T : copyable
 {
     return a;
 }
 
-void twice_over<T>( T a ) where T : Copyable, where T : Comparable
+void twice_over<T>( T a ) where T : copyable, where T : comparable
 {
 }
 
 // Bounds are joined with `&`, because every one of them has to hold.
-void wrong_separator<T>( T a ) where T : Copyable | Comparable
+void wrong_separator<T>( T a ) where T : copyable | comparable
 {
 }
 
@@ -94,14 +94,14 @@ class Owner
 
 enum Suit { Clubs, Hearts };
 
-bool unpromised_operator<T>( T a ) where T : Copyable
+bool unpromised_operator<T>( T a ) where T : copyable
 {
     return a < a;
 }
 
-// Against a bool, because D41 lets a `Comparable` `T` meet a concrete *number* - what is left
+// Against a bool, because D41 lets a `comparable` `T` meet a concrete *number* - what is left
 // is the operand that is not one.
-bool mismatched_operands<T>( T a, bool b ) where T : Copyable & Comparable
+bool mismatched_operands<T>( T a, bool b ) where T : copyable & comparable
 {
     return a < b;
 }
@@ -113,9 +113,9 @@ void breaks_a_bound()
     id<Owner>( o );
 }
 
-// One mistake, not four: `Integral` was stored with everything it implies, and only the bound the
+// One mistake, not four: `integral` was stored with everything it implies, and only the bound the
 // author wrote is a thing they can act on.
-void needs_integral<T>( const ref T a ) where T : Integral
+void needs_integral<T>( const ref T a ) where T : integral
 {
 }
 
@@ -125,11 +125,11 @@ void orders_an_enum()
 }
 
 // A generic forwarding its own `T` is told to widen its clause, not to change its type.
-void needs_comparable<T>( const ref T a ) where T : Comparable
+void needs_comparable<T>( const ref T a ) where T : comparable
 {
 }
 
-void forwards<T>( const ref T a ) where T : Equatable
+void forwards<T>( const ref T a ) where T : equatable
 {
     needs_comparable<T>( a );
 }

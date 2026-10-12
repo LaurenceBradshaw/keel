@@ -34,11 +34,11 @@ error: expected `Box<i32>`, but got `i32`
 86 |     return unbox( a );
    |                   ^
 
-error: `Plain` is not `Comparable`, and `ordered` requires it of `T`
+error: `ordered` needs a `T` that implements `comparable`, but `Plain` does not
   --> sema/errors_inference.kl:93:21
    |
 93 |     return ordered( p );
-   |                     ^ ordering needs a number
+   |                     ^ declare `Plain` with `implements comparable`
 
 error: this call to `which` is ambiguous
    --> sema/errors_inference.kl:111:12

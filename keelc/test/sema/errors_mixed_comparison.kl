@@ -6,16 +6,16 @@ enum Colour
     Green
 };
 
-// What a comparison against a number needs from a `T` is that it *is* one, and only `Numeric`
-// says so. `Equatable` promises equality and `Comparable` promises ordering; both are satisfied by
+// What a comparison against a number needs from a `T` is that it *is* one, and only `numeric`
+// says so. `equatable` promises equality and `comparable` promises ordering; both are satisfied by
 // exactly the numbers today only because D33's operators are not shipped, and a type that orders
-// itself will satisfy `Comparable` without comparing against an `i32`.
-bool equated<T>( T a, i32 x ) where T : Equatable
+// itself will satisfy `comparable` without comparing against an `i32`.
+bool equated<T>( T a, i32 x ) where T : equatable
 {
     return a == x;
 }
 
-bool ordered<T>( T a, i32 x ) where T : Comparable
+bool ordered<T>( T a, i32 x ) where T : comparable
 {
     return a < x;
 }

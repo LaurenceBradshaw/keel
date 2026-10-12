@@ -67,6 +67,7 @@ void check_rvalue( const Function& func, const Rvalue& value, std::string_view w
     {
     case Rvalue_kind::Use:
     case Rvalue_kind::Cast:
+    case Rvalue_kind::Bits:
         operand_at( value.a, "operand" );
         return;
 

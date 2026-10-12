@@ -248,3 +248,34 @@ class box<T>
 
     private T* p_;
 };
+
+/// A type whose values can be tested for equality.
+///
+/// `a != b` comes from `a == b`. Numbers, `bool`, pointers and enums without payloads are
+/// equatable without writing anything.
+interface equatable
+{
+    /// Whether this value equals `other`.
+    bool operator==( const ref self other ) const;
+};
+
+/// A type whose values have an order.
+///
+/// `a < b`, `a <= b`, `a > b` and `a >= b` come from `a <=> b`. Numbers are comparable without
+/// writing anything.
+interface comparable implements equatable
+{
+    /// How this value compares with `other`.
+    ordering operator<=>( const ref self other ) const;
+};
+
+/// A type whose values hash to a `u64`.
+///
+/// Values that are `==` must hash the same, so a type that writes its own `==` writes its own
+/// `hash` too. Numbers, `bool`, pointers and enums without payloads are hashable without writing
+/// anything; a float's hash counts `-0.0` as `0.0`, and panics on a NaN.
+interface hashable implements equatable
+{
+    /// This value's hash.
+    u64 hash() const;
+};

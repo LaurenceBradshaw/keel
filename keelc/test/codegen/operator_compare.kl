@@ -34,7 +34,7 @@ class name
     private u8 first;
 };
 
-class pair<T> where T : Copyable & Comparable
+class pair<T> where T : copyable & comparable
 {
     pair( T a, T b )
     {
@@ -58,7 +58,7 @@ class pair<T> where T : Copyable & Comparable
     private T right;
 };
 
-ordering compare<T>( T a, T b ) where T : Comparable
+ordering compare<T>( T a, T b ) where T : comparable
 {
     return a <=> b;
 }

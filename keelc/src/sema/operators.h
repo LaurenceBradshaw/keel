@@ -43,7 +43,7 @@ struct Conversion_result
 };
 
 // What an operator answers, given operand types the caller has already inferred. A service takes
-// types and spans rather than nodes, so none of these can wander off and check one more thing.
+// `ast_` is read for a help line and an enum's variants, and is never walked.
 // `ast_` is here for one help line and is never walked.
 class Operators
 {

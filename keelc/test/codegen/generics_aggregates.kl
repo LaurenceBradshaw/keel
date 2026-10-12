@@ -7,12 +7,12 @@
 // but a *wrong* field type that happens to be a C type compiles and gives the wrong answer, and
 // only running catches that.
 
-struct Box<T> where T : Copyable
+struct Box<T> where T : copyable
 {
     T v;
 };
 
-struct Pair<A, B> where A : Copyable, where B : Copyable
+struct Pair<A, B> where A : copyable, where B : copyable
 {
     A first;
     B second;
@@ -20,7 +20,7 @@ struct Pair<A, B> where A : Copyable, where B : Copyable
 
 // The instantiation reached only through a field: `Holder<i32>` is named below, `Box<i32>` is what
 // its field becomes, and nothing names that.
-struct Holder<T> where T : Copyable
+struct Holder<T> where T : copyable
 {
     Box<T> inner;
     i32    tag;
@@ -28,7 +28,7 @@ struct Holder<T> where T : Copyable
 
 // A generic list: finite in size because the link is a pointer, and the reason the emitter writes
 // forward declarations at all.
-class Node<T> where T : Copyable
+class Node<T> where T : copyable
 {
     public T        value;
     public Node<T>* next;

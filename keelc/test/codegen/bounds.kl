@@ -1,0 +1,82 @@
+// D40: the prelude's `equatable` and `comparable` as bounds over the types the compiler makes them:
+// a number, `bool`, an enum without payloads and a pointer, each compared directly in its instance.
+// `comparable` brings `equatable`'s `==`, and `numeric` brings `comparable`. Exits with the failing
+// check.
+enum Suit
+{
+    Hearts,
+    Spades,
+};
+
+bool same<T>( const ref T a, const ref T b ) where T : equatable
+{
+    return a == b && !( a != b );
+}
+
+T larger<T>( T a, T b ) where T : comparable & copyable
+{
+    if( a < b )
+    {
+        return b;
+    }
+
+    return a;
+}
+
+bool equal_by_order<T>( T a, T b ) where T : comparable & copyable
+{
+    return a == b && ( a <=> b ) == ordering::equal;
+}
+
+T at_least<T>( T a, T low ) where T : numeric
+{
+    return larger( a, low );
+}
+
+i32 main()
+{
+    i32  a = 1;
+    i32  b = 2;
+    Suit h = Suit::Hearts;
+    Suit s = Suit::Spades;
+    bool t = true;
+    i32* p = &a;
+    i32* q = &b;
+
+    if( !same( a, a ) || same( a, b ) )
+    {
+        return 1;
+    }
+
+    if( !same( h, h ) || same( h, s ) )
+    {
+        return 2;
+    }
+
+    if( !same( t, t ) )
+    {
+        return 3;
+    }
+
+    if( !same( p, p ) || same( p, q ) )
+    {
+        return 4;
+    }
+
+    if( larger<f64>( 1.5, 0.5 ) != 1.5 || larger<u8>( 3, 200 ) != 200 )
+    {
+        return 5;
+    }
+
+    if( !equal_by_order<i32>( 7, 7 ) || equal_by_order<i64>( 7, 8 ) )
+    {
+        return 6;
+    }
+
+    if( at_least<i32>( 0 - 5, 0 ) != 0 || at_least<f32>( 2.5, 1.0 ) != 2.5 )
+    {
+        return 7;
+    }
+
+    return 0;
+}

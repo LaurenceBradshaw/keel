@@ -755,7 +755,7 @@ Node_id Parser::parse_function_decl( std::optional<u32> commit )
     // No early return on a missing name: keep parsing so the body's errors are reported too.
     const Node_id params = parse_param_list();
 
-    parse_where_clauses( generic, generics, generic_span, "write them on the name, as in `T f<T>( T a ) where T : Copyable`" );
+    parse_where_clauses( generic, generics, generic_span, "write them on the name, as in `T f<T>( T a ) where T : copyable`" );
 
     const Node_id type_params = generic ? ast_.add( Node_kind::Type_param_list, generic_span, 0, generics ) : Node_id {};
 
@@ -852,7 +852,7 @@ Node_id Parser::parse_method_decl( Symbol_id enclosing, Node_id type_params, boo
     }
 
     parse_where_clauses(
-        generic, generics, generic_span, "write them on the name, as in `U map<U>( U a ) where U : Copyable`"
+        generic, generics, generic_span, "write them on the name, as in `U map<U>( U a ) where U : copyable`"
     );
 
     reach_commit( head.commit );
@@ -1079,7 +1079,7 @@ Node_id Parser::parse_aggregate_decl()
 
     const Node_id implements = parse_implements();
 
-    parse_where_clauses( generic, generics, generic_span, "write them on the name, as in `T f<T>( T a ) where T : Copyable`" );
+    parse_where_clauses( generic, generics, generic_span, "write them on the name, as in `T f<T>( T a ) where T : copyable`" );
 
     const Node_id type_params = generic ? ast_.add( Node_kind::Type_param_list, generic_span, 0, generics ) : Node_id {};
 
@@ -1222,6 +1222,8 @@ Node_id Parser::parse_interface_decl()
         recovery_.error_at( generic_span, "an `interface` cannot be generic yet" );
     }
 
+    const Node_id implements = parse_implements();
+
     if( !recovery_.expect( Token_kind::L_brace ) )
     {
         cursor_.match( Token_kind::Semicolon );
@@ -1235,9 +1237,9 @@ Node_id Parser::parse_interface_decl()
     }
 
     classes_.push_back( name );
-    std::vector<Node_id> members;
-    members.push_back( Node_id {} );
-    std::optional<u32> reported_line;
+    // the two slots a struct has: no type parameters, then implements
+    std::vector<Node_id> members { Node_id {}, implements };
+    std::optional<u32>   reported_line;
     while( !cursor_.check( Token_kind::R_brace ) && !cursor_.at_end() )
     {
         if( skip_access_label( true ) )
@@ -1585,7 +1587,7 @@ Node_id Parser::parse_enum_decl()
 
     Span generic_span = Span::merge( generic_start, cursor_.previous().span );
 
-    parse_where_clauses( generic, generics, generic_span, "write them on the name, as in `enum Opt<T> where T : Copyable`" );
+    parse_where_clauses( generic, generics, generic_span, "write them on the name, as in `enum Opt<T> where T : copyable`" );
 
     const Node_id type_params = generic ? ast_.add( Node_kind::Type_param_list, generic_span, 0, generics ) : Node_id {};
 
@@ -2190,7 +2192,7 @@ Node_id Parser::parse_type_param()
     const Symbol_id name      = expect_name();
     const Span      name_span = cursor_.previous().span;
 
-    // `<Comparable T>` is C++'s terse form, and it is what a reader of that language writes first.
+    // `<comparable T>` is C++'s terse form, and it is what a reader of that language writes first.
     // Naming it costs one lookahead; without it the stray name derails the parameter list and then
     // the signature after it, which is a dozen diagnostics for one habit.
     if( cursor_.check( Token_kind::Identifier ) )
@@ -6563,9 +6565,9 @@ TEST_CASE( "parser_rejects_a_malformed_type_parameter_list", "[parse][generic]" 
 
     SECTION( "the C++ terse-bound spelling is named once, not cascaded" )
     {
-        // `<Comparable T>` is what a C++ reader writes first. Left unhandled the stray name derails
+        // `<comparable T>` is what a C++ reader writes first. Left unhandled the stray name derails
         // the parameter list and then the signature - a dozen diagnostics for one habit.
-        const Parsed p( "T id<Comparable T>( T a ) { return a; }\ni32 main() { return 0; }" );
+        const Parsed p( "T id<comparable T>( T a ) { return a; }\ni32 main() { return 0; }" );
 
         REQUIRE( p.has_errors() );
         INFO( p.errors() );
@@ -6576,7 +6578,7 @@ TEST_CASE( "parser_rejects_a_malformed_type_parameter_list", "[parse][generic]" 
 
     SECTION( "and the declaration after it still parses" )
     {
-        const Parsed p( "T id<Comparable T>( T a ) { return a; }\ni32 main() { return 0; }" );
+        const Parsed p( "T id<comparable T>( T a ) { return a; }\ni32 main() { return 0; }" );
 
         std::size_t functions = 0;
         for( const Node_id decl : p.children( p.root() ) )
@@ -10326,7 +10328,7 @@ TEST_CASE( "parser_parses_a_generic_enum", "[parse][generic][enum]" )
 
     SECTION( "a where clause joins the list" )
     {
-        const Parsed p( "enum Opt<T> where T : Copyable { None, Some( T v ) };" );
+        const Parsed p( "enum Opt<T> where T : copyable { None, Some( T v ) };" );
 
         INFO( p.errors() );
         REQUIRE_FALSE( p.has_errors() );
@@ -10563,10 +10565,10 @@ TEST_CASE( "parser_parses_a_generic_method", "[parse][generic]" )
 
     SECTION( "on a generic type, the aggregate's parameters and clauses come first" )
     {
-        const Parsed p( "class Box<T> where T : Copyable\n"
+        const Parsed p( "class Box<T> where T : copyable\n"
                         "{\n"
                         "    T v;\n"
-                        "    U map<U, V>( U a, V b ) const where U : Copyable { return a; }\n"
+                        "    U map<U, V>( U a, V b ) const where U : copyable { return a; }\n"
                         "};" );
 
         INFO( p.errors() );
@@ -10586,8 +10588,8 @@ TEST_CASE( "parser_parses_a_generic_method", "[parse][generic]" )
         const std::span<const Node_id> clauses = p.ast().where_clauses( combined );
 
         REQUIRE( clauses.size() == 2 );
-        REQUIRE( p.text( clauses[0] ) == "where T : Copyable" );
-        REQUIRE( p.text( clauses[1] ) == "where U : Copyable" );
+        REQUIRE( p.text( clauses[0] ) == "where T : copyable" );
+        REQUIRE( p.text( clauses[1] ) == "where U : copyable" );
 
         REQUIRE( p.ast().type_parameters( own ).size() == 2 );
         REQUIRE( p.ast().where_clauses( own ).size() == 1 );
@@ -10599,7 +10601,7 @@ TEST_CASE( "parser_parses_a_generic_method", "[parse][generic]" )
     // The receiver is `Box<T>`: the method's own parameters are not the type's.
     SECTION( "the receiver names only the aggregate's parameters, and stays `const`" )
     {
-        const Parsed p( "class Box<T> where T : Copyable { T v; U map<U>( U a ) const where U : Copyable { return a; } };" );
+        const Parsed p( "class Box<T> where T : copyable { T v; U map<U>( U a ) const where U : copyable { return a; } };" );
 
         INFO( p.errors() );
         REQUIRE_FALSE( p.has_errors() );
@@ -10616,7 +10618,7 @@ TEST_CASE( "parser_parses_a_generic_method", "[parse][generic]" )
 
     SECTION( "a method with none of its own has no fifth list" )
     {
-        const Parsed p( "class Box<T> where T : Copyable { T v; T get() const { return v; } };" );
+        const Parsed p( "class Box<T> where T : copyable { T v; T get() const { return v; } };" );
 
         INFO( p.errors() );
         REQUIRE_FALSE( p.has_errors() );
@@ -10629,11 +10631,11 @@ TEST_CASE( "parser_parses_a_generic_method", "[parse][generic]" )
 
     SECTION( "a `where` clause on a method with no parameters of its own is refused" )
     {
-        const Parsed p( "class Box<T> { T v; T get() const where T : Copyable { return v; } };" );
+        const Parsed p( "class Box<T> { T v; T get() const where T : copyable { return v; } };" );
 
         REQUIRE( p.has_errors() );
         REQUIRE( p.errors().find( "a `where` clause needs type parameters" ) != std::string::npos );
-        REQUIRE( p.errors().find( "U map<U>( U a ) where U : Copyable" ) != std::string::npos );
+        REQUIRE( p.errors().find( "U map<U>( U a ) where U : copyable" ) != std::string::npos );
     }
 }
 
@@ -12325,7 +12327,7 @@ TEST_CASE( "parser_reads_an_implements_list", "[parse][interfaces]" )
 
     SECTION( "after the type parameters and before the `where` clauses" )
     {
-        const Parsed p( "class Box<T> implements Shape where T : Copyable { T v; f64 area() const { return 0.0; } };" );
+        const Parsed p( "class Box<T> implements Shape where T : copyable { T v; f64 area() const { return 0.0; } };" );
 
         INFO( p.errors() );
         REQUIRE_FALSE( p.has_errors() );
@@ -12353,6 +12355,60 @@ TEST_CASE( "parser_reads_an_implements_list", "[parse][interfaces]" )
         const Parsed p( "class Circle implements Shape { f64 r; };" );
 
         REQUIRE( p.dump().find( "Implements_list" ) != std::string::npos );
+    }
+}
+
+// D40: `interface comparable implements equatable`, the list in the slot a struct's takes.
+TEST_CASE( "parser_reads_an_interface_refinement", "[parse][interfaces]" )
+{
+    SECTION( "one interface, between the name and the body" )
+    {
+        const Parsed p( "interface Shape implements Named { f64 area() const; };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Interface_decl );
+
+        REQUIRE( p.kind( p.child( decl, 1 ) ) == Node_kind::Implements_list );
+        REQUIRE( p.ast().implemented( decl ).size() == 1 );
+        REQUIRE( p.text( p.ast().implemented( decl )[0] ) == "Named" );
+        REQUIRE( p.members( decl ).size() == 1 );
+        REQUIRE( p.text( p.ast().name_span( p.members( decl )[0] ) ) == "area" );
+    }
+
+    SECTION( "several, in order" )
+    {
+        const Parsed p( "interface Shape implements Named, kl::Printable { f64 area() const; };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const std::span<const Node_id> implemented =
+            p.ast().implemented( find_first( p.ast(), p.root(), Node_kind::Interface_decl ) );
+
+        REQUIRE( implemented.size() == 2 );
+        REQUIRE( p.text( implemented[0] ) == "Named" );
+        REQUIRE( p.text( implemented[1] ) == "kl::Printable" );
+    }
+
+    SECTION( "without one, the slot is invalid and the members are unchanged" )
+    {
+        const Parsed p( "interface Shape { f64 area() const; void grow( f64 by ); };" );
+
+        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Interface_decl );
+
+        REQUIRE_FALSE( p.child( decl, 1 ).is_valid() );
+        REQUIRE( p.ast().implemented( decl ).empty() );
+        REQUIRE( p.members( decl ).size() == 2 );
+    }
+
+    SECTION( "after refused type parameters, the list is still read" )
+    {
+        const Parsed p( "interface Holder<T> implements Named { f64 area() const; };" );
+
+        REQUIRE( p.errors().find( "cannot be generic yet" ) != std::string::npos );
+        REQUIRE( p.ast().implemented( find_first( p.ast(), p.root(), Node_kind::Interface_decl ) ).size() == 1 );
     }
 }
 

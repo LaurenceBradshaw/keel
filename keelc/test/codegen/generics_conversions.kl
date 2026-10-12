@@ -5,35 +5,35 @@
 // Every generic is instantiated at two type arguments that convert differently, because a body
 // checked once and emitted once would pass a fixture that only ever used one.
 
-i32 to_i32<T>( T v ) where T : Copyable & Integral
+i32 to_i32<T>( T v ) where T : copyable & integral
 {
     return wrap<i32>( v );
 }
 
 // The parameter is the target rather than the source, which is the shape the range diagnostic
 // sends authors to when a literal does not fit every admissible type.
-T from_i32<T>( i32 v ) where T : Copyable & Integral
+T from_i32<T>( i32 v ) where T : copyable & integral
 {
     return wrap<T>( v );
 }
 
-// `cast` needs every admissible pair to widen, and `Floating` is the bound where that holds:
-// `Integral` admits `u64`, which fits no integer type at all.
-f64 widen<T>( T v ) where T : Copyable & Floating
+// `cast` needs every admissible pair to widen, and `floating` is the bound where that holds:
+// `integral` admits `u64`, which fits no integer type at all.
+f64 widen<T>( T v ) where T : copyable & floating
 {
     return cast<f64>( v );
 }
 
 // Both ends generic. The product is checked in both directions, and neither type exists until the
 // call site names it.
-U across<T, U>( T v ) where T : Copyable & Integral, where U : Copyable & Integral
+U across<T, U>( T v ) where T : copyable & integral, where U : copyable & integral
 {
     return wrap<U>( v );
 }
 
 // A literal adopting the parameter through `cast`, which is the one shape that already worked:
 // `cast` hands the target to the literal as its expectation rather than converting anything.
-T five<T>() where T : Copyable & Numeric
+T five<T>() where T : copyable & numeric
 {
     return cast<T>( 5 );
 }

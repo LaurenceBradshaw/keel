@@ -13,20 +13,20 @@ error: an operator cannot have type parameters of its own
 error: `T` is already declared in this scope
   --> sema/errors_generic_methods.kl:25:12
    |
-25 |     V over<T, V>( V v ) const where V : Copyable { return v; }
+25 |     V over<T, V>( V v ) const where V : copyable { return v; }
    |            ^ previous declaration is at: sema/errors_generic_methods.kl:3:11
 
 error: `T` is not a type parameter of `bounded`
   --> sema/errors_generic_methods.kl:28:51
    |
-28 |     U bounded<U>( U u ) const where U : Copyable, where T : Numeric { return u; }
+28 |     U bounded<U>( U u ) const where U : copyable, where T : numeric { return u; }
    |                                                   ^^^^^^^^^^^^^^^^^
 
 error: a `where` clause needs type parameters
   --> sema/errors_generic_methods.kl:31:21
    |
-31 |     T plain() const where T : Numeric { return value; }
-   |                     ^^^^^^^^^^^^^^^^^ write them on the name, as in `U map<U>( U a ) where U : Copyable`
+31 |     T plain() const where T : numeric { return value; }
+   |                     ^^^^^^^^^^^^^^^^^ write them on the name, as in `U map<U>( U a ) where U : copyable`
 
 error: `get` is not a generic method
   --> sema/errors_generic_methods.kl:43:13
@@ -46,13 +46,13 @@ error: expected `fn( const ref i32 ) -> i64`, but got `fn( const ref i64 ) -> i6
 47 |     i64 d = b.map( &wide );
    |                    ^^^^^ one signature is never widened into another, so the two have to match exactly
 
-error: `f64` is not `Integral`, and `pick` requires it of `U`
+error: `f64` is not `integral`, and `pick` requires it of `U`
   --> sema/errors_generic_methods.kl:50:20
    |
 50 |     f64 f = b.pick<f64>( 1.0 );
    |                    ^^^ it has to be an integer
 
-error: `f64` is not `Integral`, and `pick` requires it of `U`
+error: `f64` is not `integral`, and `pick` requires it of `U`
   --> sema/errors_generic_methods.kl:51:13
    |
 51 |     f64 e = b.pick( 1.0 );

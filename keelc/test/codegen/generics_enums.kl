@@ -7,7 +7,7 @@
 // spelled from the template does not compile either, but a payload read through the *wrong*
 // instance's layout is valid C that gives the wrong answer - and only running catches that.
 
-struct Box<T> where T : Copyable
+struct Box<T> where T : copyable
 {
     T v;
 };
@@ -20,34 +20,34 @@ enum Colour
     Green
 };
 
-enum Opt<T> where T : Copyable
+enum Opt<T> where T : copyable
 {
     None,
     Some( T v )
 };
 
 // A payload that is itself a generic struct.
-enum Wrap<T> where T : Copyable
+enum Wrap<T> where T : copyable
 {
     Held( Box<T> b )
 };
 
 // ...and a struct holding a generic enum by value, which is the other direction.
-struct Slot<T> where T : Copyable
+struct Slot<T> where T : copyable
 {
     Opt<T> value;
     i32    tag;
 };
 
 // Two payload fields, so their order has to survive being flattened side by side.
-enum Span2<A, B> where A : Copyable, where B : Copyable
+enum Span2<A, B> where A : copyable, where B : copyable
 {
     Both( A first, B second )
 };
 
 // A generic function over a generic enum: the parameter's own instance is what the pattern binds
 // through, and `v` is a `T` only in the template.
-T unwrap<T>( Opt<T> o, T fallback ) where T : Copyable
+T unwrap<T>( Opt<T> o, T fallback ) where T : copyable
 {
     switch( o )
     {

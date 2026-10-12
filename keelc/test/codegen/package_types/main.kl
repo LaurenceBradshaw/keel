@@ -9,7 +9,7 @@ struct Point
 };
 
 // Deduced at both Points, which must be two functions in C.
-T same<T>( T v ) where T : Copyable
+T same<T>( T v ) where T : copyable
 {
     return v;
 }

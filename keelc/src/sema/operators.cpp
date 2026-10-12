@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "sema/operators.h"
+#include "sema/conformances.h"
 
 #include <fmt/format.h>
 
@@ -190,8 +191,10 @@ Binary_result Operators::result_of_binary(
     // compares_by_identity because a parameter is neither a pointer nor an enum, so without this it
     // would fall through to the rule table and be rejected by operand classes that have nothing to
     // say about it.
-    if( const std::optional<Bound> bound = operator_to_bound( op );
-        bound && ( table_.is_parameter( lhs_type ) || table_.is_parameter( rhs_type ) ) )
+    const std::optional<Bound> bound     = operator_to_bound( op );
+    const Type_id              interface = interface_for( table_, op );
+
+    if( ( bound || interface.is_valid() ) && ( table_.is_parameter( lhs_type ) || table_.is_parameter( rhs_type ) ) )
     {
         const Type_id parameter = table_.is_parameter( lhs_type ) ? lhs_type : rhs_type;
         const Type_id other     = parameter == lhs_type ? rhs_type : lhs_type;
@@ -212,22 +215,19 @@ Binary_result Operators::result_of_binary(
             return reject( fmt::format( "`{}` needs both operands to be the same type", token_kind_spelling( op ) ) );
         }
 
-        // `Numeric` and not the operator's own bound, for the mixed case only. What this needs is
-        // not that `T` is orderable but that it is a *number*, which is the one thing `Numeric`
-        // says - and the two are not the same promise even where they admit the same types today.
-        // `Comparable` and `Equatable` are both satisfied by exactly the numbers only because D33's
-        // operators are not shipped; when they are, a type that orders itself satisfies
-        // `Comparable` and still does not compare against an `i32`. Gating on `Numeric` is what
-        // makes this rule survive that, and it is also what keeps the help honest: an author who
-        // wrote `Equatable` wanted equality, and telling them to promise ordering instead would be
-        // asking for the wrong thing twice over.
-        const Bound required = against_a_number ? Bound::Numeric : *bound;
+        // The mixed case needs `numeric`: a type that orders itself through `comparable` still does
+        // not compare with an `i32`.
+        const bool met = against_a_number       ? bounds_.has_bound( parameter, Bound::Numeric )
+                         : interface.is_valid() ? bounds_.promises( parameter, interface )
+                                                : bounds_.has_bound( parameter, *bound );
 
-        if( !bounds_.has_bound( parameter, required ) )
+        if( !met )
         {
+            const std::string_view required = interface.is_valid() ? table_.name( interface ) : name_of_bound( *bound );
+
             return reject(
                 against_a_number ? fmt::format(
-                                       "`{}` must be a number to compare against `{}`; write `where {} : Numeric` on `{}`",
+                                       "`{}` must be a number to compare against `{}`; write `where {} : numeric` on `{}`",
                                        table_.name( parameter ),
                                        table_.name( other ),
                                        table_.name( parameter ),
@@ -236,9 +236,9 @@ Binary_result Operators::result_of_binary(
                                  : fmt::format(
                                        "`{}` needs `{}`; write `where {} : {}` on `{}`",
                                        token_kind_spelling( op ),
-                                       name_of_bound( required ),
+                                       required,
                                        table_.name( parameter ),
-                                       name_of_bound( required ),
+                                       required,
                                        interner_.text( ast_.name( current_function ) )
                                    )
             );
@@ -251,7 +251,7 @@ Binary_result Operators::result_of_binary(
             return { table_.ordering() };
         }
 
-        return { against_a_number || *bound == Bound::Equatable || *bound == Bound::Comparable ? bool_type : lhs_type };
+        return { against_a_number || interface.is_valid() ? bool_type : lhs_type };
     }
 
     // The operator isn't a comparision, and either side is T*: refuse
@@ -337,8 +337,8 @@ Binary_result Operators::result_of_binary(
     // where no one type holds both, lowering compares by cases instead. Arithmetic keeps D5's
     // rule below, because a sum has to land somewhere and `u64 + i64` has nowhere.
     //
-    // Both operands numeric, and not just what the rule accepts: `Comparable` also admits bool,
-    // and `flag == 1` has no answer of this kind.
+    // Both operands numeric, and not just what the rule accepts: `Operands::Comparable` also
+    // admits bool, and `flag == 1` has no answer of this kind.
     if( rule->result == Result::Bool && accepts( table_, Operands::Numeric, lhs_type ) &&
         accepts( table_, Operands::Numeric, rhs_type ) )
     {
@@ -434,6 +434,38 @@ Conversion_result Operators::convert( bool is_cast, Type_id value, Type_id targe
         return {};
     };
 
+    // D28: an enum without payloads converts to its tag, by `cast`, into an integer holding every tag.
+    if( table_.is_enum( value ) )
+    {
+        const Node_id     declaration = table_.get( value ).declaration;
+        const std::string refused =
+            fmt::format( "`{}` cannot convert `{}` to `{}`", name, table_.name( value ), table_.name( target ) );
+
+        if( ast_.enum_has_payload( declaration ) )
+        {
+            return reject( refused, "only an `enum` without payloads converts to its tag" );
+        }
+
+        if( !is_cast )
+        {
+            return reject( refused, "an `enum`'s tag converts with `cast`" );
+        }
+
+        if( !table_.is_integer( target ) )
+        {
+            return reject( refused, "an `enum`'s tag converts only to an integer" );
+        }
+
+        const u64 last = ast_.variants( declaration ).size() - 1;
+
+        if( !table_.fits( last, false, target ) )
+        {
+            return reject( refused, fmt::format( "its last tag is {}, which `{}` cannot hold", last, table_.name( target ) ) );
+        }
+
+        return { target };
+    }
+
     switch( bounds_.conversion_between( value, target, witness ) )
     {
     case Conversion::None:
@@ -449,7 +481,7 @@ Conversion_result Operators::convert( bool is_cast, Type_id value, Type_id targe
         // missing bound rather than a refused pair.
         if( generic.is_valid() && !witness.is_valid() )
         {
-            help = fmt::format( "write `where {} : Numeric` to promise it is a number", table_.name( generic ) );
+            help = fmt::format( "write `where {} : numeric` to promise it is a number", table_.name( generic ) );
         }
         else if( table_.is_float( failed_from ) && table_.is_integer( failed_to ) )
         {
@@ -640,7 +672,7 @@ TEST_CASE( "operators_take_a_shift_from_its_left_operand_only", "[sema][operator
 // shape of this; one case here keeps the unit suite honest about the witness appearing at all.
 TEST_CASE( "operators_name_the_admissible_type_that_refused_a_conversion", "[sema][operator][cast]" )
 {
-    const Typed p( "i32 f<T>( T v ) where T : Copyable & Numeric { return cast<i32>( v ); }\ni32 main() { return 0; }" );
+    const Typed p( "i32 f<T>( T v ) where T : copyable & numeric { return cast<i32>( v ); }\ni32 main() { return 0; }" );
 
     INFO( p.rendered() );
     REQUIRE( p.errors() == 1 );
@@ -759,8 +791,8 @@ TEST_CASE( "type_checker_types_comparisons_as_bool", "[sema][types]" )
         }
     }
 
-    // `Comparable` admits bool, so the operand check alone would let `flag == 1` through to a
-    // rule that has no answer for it. Numeric on both sides is what the new branch tests.
+    // `Operands::Comparable` admits bool, so the operand check alone would let `flag == 1` through
+    // to a rule that has no answer for it. Numeric on both sides is what the new branch tests.
     SECTION( "a bool still compares only against a bool" )
     {
         static const char* rejected[] = {
@@ -970,10 +1002,10 @@ TEST_CASE( "type_checker_checks_operators_on_a_type_parameter", "[sema][generic]
 {
     SECTION( "an operator the clause promised is accepted" )
     {
-        const Typed comparison( "bool f<T>( T a ) where T : Comparable { return a < a; }\ni32 main() { return 0; }" );
-        const Typed equality( "bool f<T>( T a ) where T : Equatable { return a == a; }\ni32 main() { return 0; }" );
-        const Typed arithmetic( "T f<T>( T a ) where T : Numeric { return a + a; }\ni32 main() { return 0; }" );
-        const Typed bitwise( "T f<T>( T a ) where T : Integral { return a & a; }\ni32 main() { return 0; }" );
+        const Typed comparison( "bool f<T>( T a ) where T : comparable { return a < a; }\ni32 main() { return 0; }" );
+        const Typed equality( "bool f<T>( T a ) where T : equatable { return a == a; }\ni32 main() { return 0; }" );
+        const Typed arithmetic( "T f<T>( T a ) where T : numeric { return a + a; }\ni32 main() { return 0; }" );
+        const Typed bitwise( "T f<T>( T a ) where T : integral { return a & a; }\ni32 main() { return 0; }" );
 
         INFO( comparison.rendered() << equality.rendered() << arithmetic.rendered() << bitwise.rendered() );
         REQUIRE( comparison.clean() );
@@ -984,7 +1016,7 @@ TEST_CASE( "type_checker_checks_operators_on_a_type_parameter", "[sema][generic]
 
     SECTION( "a comparison answers `bool`, and arithmetic answers `T`" )
     {
-        const Typed p( "T f<T>( T a ) where T : Numeric { bool b = a < a; T c = a + a; return c; }\n"
+        const Typed p( "T f<T>( T a ) where T : numeric { bool b = a < a; T c = a + a; return c; }\n"
                        "i32 main() { return 0; }" );
 
         INFO( p.rendered() );
@@ -998,20 +1030,20 @@ TEST_CASE( "type_checker_checks_operators_on_a_type_parameter", "[sema][generic]
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "no operator `==` for `T` and `T`" ) != std::string::npos );
-        REQUIRE( p.rendered().find( "`==` needs `Equatable`; write `where T : Equatable` on `f`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`==` needs `equatable`; write `where T : equatable` on `f`" ) != std::string::npos );
     }
 
     SECTION( "implication reaches the operator table" )
     {
-        // `Integral` was stored with `Numeric`, `Comparable` and `Equatable`, so one clause buys all
-        // four operators; `Comparable` does not run downhill to arithmetic.
-        const Typed widest( "bool f<T>( T a ) where T : Integral { return a < a; }\ni32 main() { return 0; }" );
-        const Typed narrow( "T f<T>( T a ) where T : Comparable { return a + a; }\ni32 main() { return 0; }" );
+        // `integral` promises `numeric`, `comparable` and `equatable`, so one clause buys all four
+        // operators; `comparable` does not run downhill to arithmetic.
+        const Typed widest( "bool f<T>( T a ) where T : integral { return a < a; }\ni32 main() { return 0; }" );
+        const Typed narrow( "T f<T>( T a ) where T : comparable { return a + a; }\ni32 main() { return 0; }" );
 
         INFO( widest.rendered() << narrow.rendered() );
         REQUIRE( widest.clean() );
         REQUIRE( narrow.errors() == 1 );
-        REQUIRE( narrow.rendered().find( "`+` needs `Numeric`" ) != std::string::npos );
+        REQUIRE( narrow.rendered().find( "`+` needs `numeric`" ) != std::string::npos );
     }
 
     SECTION( "operands that are not the same type are one diagnostic, not two" )
@@ -1023,7 +1055,7 @@ TEST_CASE( "type_checker_checks_operators_on_a_type_parameter", "[sema][generic]
         // Against a bool, because D41 lets a numeric `T` meet a concrete *number* - this is the
         // mismatch that survives it.
         const Typed unbounded( "bool f<T>( T a ) { bool x = true; return a == x; }\ni32 main() { return 0; }" );
-        const Typed bounded( "i32 f<T>( T a ) where T : Equatable { bool x = true; i32 y = a == x; return y; }\n"
+        const Typed bounded( "i32 f<T>( T a ) where T : equatable { bool x = true; i32 y = a == x; return y; }\n"
                              "i32 main() { return 0; }" );
 
         INFO( unbounded.rendered() << bounded.rendered() );
@@ -1035,28 +1067,28 @@ TEST_CASE( "type_checker_checks_operators_on_a_type_parameter", "[sema][generic]
 
     SECTION( "the help names the parameter whichever side it was on" )
     {
-        // `where i32 : Comparable` is not a thing anyone can write, and the number is on the left
+        // `where i32 : comparable` is not a thing anyone can write, and the number is on the left
         // here - so the help has to read the parameter off the other operand.
         const Typed p( "bool f<T>( T a ) { i32 x = 1; return x < a; }\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE(
-            p.rendered().find( "`T` must be a number to compare against `i32`; write `where T : Numeric` on `f`" ) !=
+            p.rendered().find( "`T` must be a number to compare against `i32`; write `where T : numeric` on `f`" ) !=
             std::string::npos
         );
         REQUIRE( p.rendered().find( "where i32 :" ) == std::string::npos );
     }
 
-    // D41 generalised (§12). The bound is what makes it legal, not the operator - an `Equatable`
+    // D41 generalised (§12). The bound is what makes it legal, not the operator - an `equatable`
     // `T` may be an enum or a pointer, and neither of those compares against a number.
     SECTION( "a numeric `T` compares against a concrete number" )
     {
         static const char* accepted[] = {
-            "bool f<T>( T a ) where T : Numeric { i32 x = 1; return a < x; }",
-            "bool f<T>( T a ) where T : Floating { f64 x = 1.5; return x >= a; }",
-            "bool f<T>( T a ) where T : Integral { u64 x = 1; return a != x; }",
-            "bool f<T>( T a ) where T : Floating { i64 x = 1; return a == x; }",
+            "bool f<T>( T a ) where T : numeric { i32 x = 1; return a < x; }",
+            "bool f<T>( T a ) where T : floating { f64 x = 1.5; return x >= a; }",
+            "bool f<T>( T a ) where T : integral { u64 x = 1; return a != x; }",
+            "bool f<T>( T a ) where T : floating { i64 x = 1; return a == x; }",
         };
 
         for( const char* source : accepted )
@@ -1072,7 +1104,7 @@ TEST_CASE( "type_checker_checks_operators_on_a_type_parameter", "[sema][generic]
 
     SECTION( "but arithmetic against one is still refused" )
     {
-        const Typed p( "T f<T>( T a ) where T : Numeric { i32 x = 1; return a + x; }\ni32 main() { return 0; }" );
+        const Typed p( "T f<T>( T a ) where T : numeric { i32 x = 1; return a + x; }\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() >= 1 );
@@ -1084,7 +1116,7 @@ TEST_CASE( "type_checker_checks_operators_on_a_type_parameter", "[sema][generic]
     // stays refused until something asks for it.
     SECTION( "but not one `T` against another" )
     {
-        const Typed p( "bool f<T, U>( T a, U b ) where T : Numeric, where U : Numeric { return a < b; }\n"
+        const Typed p( "bool f<T, U>( T a, U b ) where T : numeric, where U : numeric { return a < b; }\n"
                        "i32 main() { return 0; }" );
 
         INFO( p.rendered() );
@@ -1092,14 +1124,13 @@ TEST_CASE( "type_checker_checks_operators_on_a_type_parameter", "[sema][generic]
         REQUIRE( p.rendered().find( "needs both operands to be the same type" ) != std::string::npos );
     }
 
-    // The bound has to say `T` is a *number*, and neither of these does. `Comparable` promises
-    // ordering and `Equatable` promises equality; both are satisfied by exactly the numbers only
-    // because D33's operators are not shipped, and neither is the promise this rule needs.
-    SECTION( "and a bound that is not `Numeric` does not buy one" )
+    // The bound has to say `T` is a *number*, and neither of these does: a user type may order
+    // itself and still not compare with an `i32`.
+    SECTION( "and a bound that is not `numeric` does not buy one" )
     {
         static const char* rejected[] = {
-            "bool f<T>( T a ) where T : Equatable { i32 x = 1; return a == x; }",
-            "bool f<T>( T a ) where T : Comparable { i32 x = 1; return a < x; }",
+            "bool f<T>( T a ) where T : equatable { i32 x = 1; return a == x; }",
+            "bool f<T>( T a ) where T : comparable { i32 x = 1; return a < x; }",
         };
 
         for( const char* source : rejected )
@@ -1110,7 +1141,7 @@ TEST_CASE( "type_checker_checks_operators_on_a_type_parameter", "[sema][generic]
             INFO( "source: " << source << "\n" << p.rendered() );
             REQUIRE( p.errors() == 1 );
             REQUIRE(
-                p.rendered().find( "`T` must be a number to compare against `i32`; write `where T : Numeric` on `f`" ) !=
+                p.rendered().find( "`T` must be a number to compare against `i32`; write `where T : numeric` on `f`" ) !=
                 std::string::npos
             );
         }
@@ -1120,7 +1151,7 @@ TEST_CASE( "type_checker_checks_operators_on_a_type_parameter", "[sema][generic]
     {
         // `&&` and `||` want bools and nothing in D40's set makes a `T` one, so the pre-check has
         // nothing to add and says so by declining to answer rather than by asserting.
-        const Typed p( "bool f<T>( T a ) where T : Comparable { return a && a; }\ni32 main() { return 0; }" );
+        const Typed p( "bool f<T>( T a ) where T : comparable { return a && a; }\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
@@ -1336,17 +1367,17 @@ TEST_CASE( "type_checker_types_a_three_way_comparison", "[sema][operator][orderi
         REQUIRE( p.rendered().find( "no operator `<=>` for `i32*` and `i32*`" ) != std::string::npos );
     }
 
-    SECTION( "a type parameter needs `Comparable`, and then answers `ordering`" )
+    SECTION( "a type parameter needs `comparable`, and then answers `ordering`" )
     {
-        const Typed bounded( "ordering f<T>( T a ) where T : Comparable { return a <=> a; }\ni32 main() { return 0; }" );
-        const Typed unbounded( "ordering f<T>( T a ) where T : Equatable { return a <=> a; }\ni32 main() { return 0; }" );
+        const Typed bounded( "ordering f<T>( T a ) where T : comparable { return a <=> a; }\ni32 main() { return 0; }" );
+        const Typed unbounded( "ordering f<T>( T a ) where T : equatable { return a <=> a; }\ni32 main() { return 0; }" );
 
         INFO( bounded.rendered() << unbounded.rendered() );
         REQUIRE( bounded.clean() );
         REQUIRE( bounded.type_name( bounded.nth( Node_kind::Binary_expr, 0 ) ) == "ordering" );
         REQUIRE( unbounded.errors() == 1 );
         REQUIRE(
-            unbounded.rendered().find( "`<=>` needs `Comparable`; write `where T : Comparable` on `f`" ) != std::string::npos
+            unbounded.rendered().find( "`<=>` needs `comparable`; write `where T : comparable` on `f`" ) != std::string::npos
         );
     }
 

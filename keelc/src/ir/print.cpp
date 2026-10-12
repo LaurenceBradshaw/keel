@@ -132,6 +132,9 @@ struct Printer
         case Rvalue_kind::Cast:
             return fmt::format( "{} as {}", operand( value.a ), type_name( value.type ) );
 
+        case Rvalue_kind::Bits:
+            return fmt::format( "bits {}", operand( value.a ) );
+
         case Rvalue_kind::Address_of:
             switch( value.address_purpose )
             {
@@ -250,6 +253,8 @@ struct Printer
                 return "remainder_by_zero";
             case Failure::Unordered:
                 return "unordered";
+            case Failure::Unhashable:
+                return "unhashable";
             }
 
         case Terminator_kind::Unreachable:

@@ -7,7 +7,7 @@ enum Shape
 };
 
 /// A pair of values of one type.
-struct Pair<T> where T : Copyable
+struct Pair<T> where T : copyable
 {
     /// The first value.
     T first;

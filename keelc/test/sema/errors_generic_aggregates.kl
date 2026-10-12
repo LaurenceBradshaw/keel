@@ -2,12 +2,12 @@
 // the arguments a call site names; the mistakes here are made in a type *annotation*, in a field,
 // or in the shape of the declaration itself - three places a call never reaches.
 
-struct Box<T> where T : Copyable
+struct Box<T> where T : copyable
 {
     T v;
 };
 
-struct Counted<T> where T : Integral
+struct Counted<T> where T : integral
 {
     T n;
 };
@@ -20,14 +20,14 @@ struct Plain
 enum Suit { Clubs, Hearts };
 
 // A pointer to itself is finite, and is how a list is written - so this one is silent.
-class Node<T> where T : Copyable
+class Node<T> where T : copyable
 {
     Node<T>* next;
 };
 
 // And a generic holding a *concrete* instantiation of another is ordinary containment:
 // `Holder<i32>` needs `Box<i32>`, and `Box<i32>` needs nothing back.
-struct Holder<T> where T : Copyable
+struct Holder<T> where T : copyable
 {
     Box<i32> b;
 };
@@ -84,26 +84,26 @@ void wrong_field_type()
 
 // A by-value member of its own type has no size. One mistake, so one message: the growing argument
 // below is the more basic half of the same fault and stays quiet about it.
-struct Odd<T> where T : Copyable
+struct Odd<T> where T : copyable
 {
     Odd<T> inner;
 };
 
-struct Deep<T> where T : Copyable
+struct Deep<T> where T : copyable
 {
     Deep<Box<T>> inner;
 };
 
 // The other half. A pointer hides the cycle from the size rule entirely, and this still names an
 // instance set that never finishes - each round builds a type argument out of the last.
-class Grows<T> where T : Copyable
+class Grows<T> where T : copyable
 {
     Grows<Box<T>>* next;
 };
 
 // And the cycle can close through a type *argument* rather than through the type named: `Ring`
 // never names `Ring` - it names `Box`, whose argument does.
-struct Ring<T> where T : Copyable
+struct Ring<T> where T : copyable
 {
     Box<Ring<Box<T>>>* link;
 };
@@ -111,7 +111,7 @@ struct Ring<T> where T : Copyable
 // A method signature is the same edge a field is. The cycle closes through a return type here and
 // through a parameter below, and the two are separate declarations because one message is reported
 // per generic however many ways round it goes.
-class Returns<T> where T : Copyable
+class Returns<T> where T : copyable
 {
     T v;
 
@@ -121,7 +121,7 @@ class Returns<T> where T : Copyable
     }
 };
 
-class Takes<T> where T : Copyable
+class Takes<T> where T : copyable
 {
     T v;
 
@@ -133,7 +133,7 @@ class Takes<T> where T : Copyable
 // And the shape that must stay silent: naming its own generic at the argument it was given is
 // forwarding, not building, so the instance set is whatever was written and stops there. This is
 // what every method of a container looks like.
-class Same<T> where T : Copyable
+class Same<T> where T : copyable
 {
     T v;
 

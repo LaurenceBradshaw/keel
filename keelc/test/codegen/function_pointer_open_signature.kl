@@ -2,20 +2,20 @@
 // the instance exists. A signature that still mentions `T` is interned beside those, and gets no
 // typedef at all - so this has to link, which is what makes it a golden.
 
-T bounded<T>( T a ) where T : Integral
+T bounded<T>( T a ) where T : integral
 {
     return a + a;
 }
 
 // A function-typed parameter written in terms of the enclosing type parameter, called through. No
 // address is taken inside this one: writing the type is enough to intern the open form.
-T through<T>( fn( T ) -> T f, T a ) where T : Integral
+T through<T>( fn( T ) -> T f, T a ) where T : integral
 {
     return f( a );
 }
 
 // The other door: the address of a generic, taken at the enclosing instance's own argument.
-T forwarded<T>( T a ) where T : Integral
+T forwarded<T>( T a ) where T : integral
 {
     fn( T ) -> T p = &bounded<T>;
 

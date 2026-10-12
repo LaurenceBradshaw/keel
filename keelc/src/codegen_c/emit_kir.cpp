@@ -72,6 +72,8 @@ std::string_view failure_prefix( Failure failure )
         return "remainder by zero: ";
     case Failure::Unordered:
         return "NaN has no order: ";
+    case Failure::Unhashable:
+        return "NaN has no hash: ";
     }
 }
 
@@ -1741,6 +1743,14 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
 
         return fmt::format( "( {} ) {}", spelling_.type( rvalue.type ), operand( rvalue.a ) );
 
+    case Rvalue_kind::Bits:
+        return fmt::format(
+            "( ( union {{ {} f; {} u; }} ) {{ .f = {} }} ).u",
+            spelling_.type( rvalue.a.type ),
+            spelling_.type( rvalue.type ),
+            operand( rvalue.a )
+        );
+
     case Rvalue_kind::Address_of:
         // Nothing is there to point at, and nothing reads a `void` through it.
         if( is_void( type_of( rvalue.a.place ) ) )
@@ -2165,7 +2175,7 @@ TEST_CASE( "emit_kir_writes_the_address_of_the_chosen_overload", "[codegen][kir]
 // place a generic reaches C without a call - and the body it names has to be there to be reached.
 TEST_CASE( "emit_kir_writes_the_address_of_a_generic_instance", "[codegen][kir][m7][generic]" )
 {
-    constexpr std::string_view id = "T id<T>( T a ) where T : Copyable { return a; }\n";
+    constexpr std::string_view id = "T id<T>( T a ) where T : copyable { return a; }\n";
 
     SECTION( "the instance, not the declaration" )
     {
@@ -2396,7 +2406,7 @@ TEST_CASE( "emit_kir_spells_a_mode_in_a_function_typedef", "[codegen][kir][m7][m
     // be the by-value one and the C would disagree with itself.
     SECTION( "and substitution carries the mode into an instance" )
     {
-        const Generated g( "T through<T>( fn( ref T ) -> T f, ref T a ) where T : Integral { return f( ref a ); }\n"
+        const Generated g( "T through<T>( fn( ref T ) -> T f, ref T a ) where T : integral { return f( ref a ); }\n"
                            "i32 same32( ref i32 a ) { return a; }\n"
                            "i64 same64( ref i64 a ) { return a; }\n"
                            "i32 main()\n"
@@ -2504,7 +2514,7 @@ TEST_CASE( "emit_kir_writes_no_typedef_for_an_open_signature", "[codegen][kir][m
 {
     SECTION( "a function-typed parameter inside a generic, with no address taken anywhere" )
     {
-        Generated g( "void use<T>( fn( T ) -> T f, T a ) where T : Integral { T r = f( a ); }\n"
+        Generated g( "void use<T>( fn( T ) -> T f, T a ) where T : integral { T r = f( a ); }\n"
                      "i32 twice( i32 a ) { return a + a; }\n"
                      "i32 main() { use<i32>( &twice, 2 ); return 0; }\n" );
 
@@ -2515,8 +2525,8 @@ TEST_CASE( "emit_kir_writes_no_typedef_for_an_open_signature", "[codegen][kir][m
 
     SECTION( "the enclosing instance's own signature, written as `fn( T ) -> T`" )
     {
-        Generated g( "T bounded<T>( T a ) where T : Integral { return a; }\n"
-                     "void use<T>( T a ) where T : Integral { fn( T ) -> T p = &bounded<T>; }\n"
+        Generated g( "T bounded<T>( T a ) where T : integral { return a; }\n"
+                     "void use<T>( T a ) where T : integral { fn( T ) -> T p = &bounded<T>; }\n"
                      "i32 main() { use<i32>( 1 ); return 0; }\n" );
 
         INFO( g.c );
@@ -2526,8 +2536,8 @@ TEST_CASE( "emit_kir_writes_no_typedef_for_an_open_signature", "[codegen][kir][m
 
     SECTION( "one typedef per instance, and the open form is none" )
     {
-        Generated g( "T bounded<T>( T a ) where T : Integral { return a; }\n"
-                     "T use<T>( T a ) where T : Integral { fn( T ) -> T p = &bounded<T>; return p( a ); }\n"
+        Generated g( "T bounded<T>( T a ) where T : integral { return a; }\n"
+                     "T use<T>( T a ) where T : integral { fn( T ) -> T p = &bounded<T>; return p( a ); }\n"
                      "i32 main() { i32 x = use<i32>( 1 ); i64 y = use<i64>( 2 ); return x + 1; }\n" );
 
         INFO( g.c );
@@ -2550,7 +2560,7 @@ TEST_CASE( "emit_kir_writes_no_typedef_for_an_open_signature", "[codegen][kir][m
     // blank line.
     SECTION( "an open signature on its own leaves the section out entirely" )
     {
-        Generated g( "void unused<T>( fn( T ) -> T f, T a ) where T : Integral { T r = f( a ); }\n"
+        Generated g( "void unused<T>( fn( T ) -> T f, T a ) where T : integral { T r = f( a ); }\n"
                      "i32 main() { return 0; }\n" );
 
         INFO( g.c );
@@ -3046,7 +3056,7 @@ TEST_CASE( "emit_kir_substitutes_a_generic_binding_mode", "[codegen][kir][generi
 
     SECTION( "written through" )
     {
-        Generated g( "void set_to<T>( ref T a, T v ) where T : Copyable { a = v; }\n"
+        Generated g( "void set_to<T>( ref T a, T v ) where T : copyable { a = v; }\n"
                      "i32 main() { i32 x = 1; set_to<i32>( ref x, 12 ); return x; }" );
 
         INFO( g.c );
@@ -3055,7 +3065,7 @@ TEST_CASE( "emit_kir_substitutes_a_generic_binding_mode", "[codegen][kir][generi
 
     SECTION( "an `out` parameter" )
     {
-        Generated g( "void init<T>( out T a, T v ) where T : Copyable { a = v; }\n"
+        Generated g( "void init<T>( out T a, T v ) where T : copyable { a = v; }\n"
                      "i32 main() { i32 x; init<i32>( out x, 13 ); return x; }" );
 
         INFO( g.c );
@@ -3080,7 +3090,7 @@ TEST_CASE( "emit_kir_substitutes_a_generic_binding_mode", "[codegen][kir][generi
 // emitted_struct_order answers, because the checker has gone before some of them are even created.
 TEST_CASE( "emit_kir_emits_one_struct_per_instantiation", "[codegen][kir][generic][aggregate]" )
 {
-    const std::string_view box = "struct Box<T> where T : Copyable { T v; };\n";
+    const std::string_view box = "struct Box<T> where T : copyable { T v; };\n";
 
     SECTION( "two type arguments are two C structs" )
     {
@@ -3150,7 +3160,7 @@ TEST_CASE( "emit_kir_emits_one_struct_per_instantiation", "[codegen][kir][generi
         // `Holder<i32>` is what the source names; `Box<i32>` is what its field becomes, and nothing
         // else in the program writes it down. Interned by the order walk itself.
         Generated g(
-            std::string( box ) + "struct Holder<T> where T : Copyable { Box<T> b; };\n"
+            std::string( box ) + "struct Holder<T> where T : copyable { Box<T> b; };\n"
                                  "i32 main() { Holder<i32> h; h.b.v = 1; return 0; }"
         );
 
@@ -3172,7 +3182,7 @@ TEST_CASE( "emit_kir_emits_one_struct_per_instantiation", "[codegen][kir][generi
 
     SECTION( "a generic list, which is what the forward declarations are for" )
     {
-        Generated g( "class Node<T> where T : Copyable { public T v; Node<T>* next; };\n"
+        Generated g( "class Node<T> where T : copyable { public T v; Node<T>* next; };\n"
                      "i32 main() { Node<i32> n; n.v = 1; return 0; }" );
 
         INFO( g.c );
@@ -3211,7 +3221,7 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
         // them - so deriving it without substituting first carries a `T` into the emitter, which
         // has no C spelling for one. Only reachable since a literal could adopt `T`: before that,
         // no generic body could do arithmetic at all.
-        Generated g( "T f<T>( T a ) where T : Copyable & Integral { return a + 1; }\n"
+        Generated g( "T f<T>( T a ) where T : copyable & integral { return a + 1; }\n"
                      "i32 main() { return f<i32>( 6 ); }" );
 
         INFO( g.c );
@@ -3224,7 +3234,7 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
         // `1` is stored as an integer whatever type it ends up with, and the conversion happens
         // where the checker's decision becomes a value. Reading it as a float instead finds an
         // unrelated entry, silently, because the index is usually in range.
-        Generated g( "T f<T>( T a ) where T : Copyable & Floating { return a + 1; }\n"
+        Generated g( "T f<T>( T a ) where T : copyable & floating { return a + 1; }\n"
                      "i32 main() { f64 x = f<f64>( 1.5 ); return 0; }" );
 
         INFO( g.c );
@@ -3232,12 +3242,12 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
         REQUIRE( g.has( "double kl__f__I3f64E__3f64( double" ) );
     }
 
-    SECTION( "a numeric bound carries `Copyable`, so the parameter travels by value" )
+    SECTION( "a numeric bound carries `copyable`, so the parameter travels by value" )
     {
-        // Nothing but a builtin can satisfy `Numeric` today and every builtin copies, so a numeric
+        // Nothing but a builtin can satisfy `numeric` today and every builtin copies, so a numeric
         // parameter need not be borrowed. Visible only here: the checker's answer is a mangled name
         // and a C signature, and `Tp` is what a borrow looks like in both.
-        Generated g( "void f<T>( T a ) where T : Integral { }\ni32 main() { f<i32>( 1 ); return 0; }" );
+        Generated g( "void f<T>( T a ) where T : integral { }\ni32 main() { f<i32>( 1 ); return 0; }" );
 
         INFO( g.c );
         REQUIRE( g.clean() );
@@ -3249,12 +3259,12 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
         REQUIRE_FALSE( g.has( "void kl__f__I3i32E__3i32( int32_t* )" ) );
     }
 
-    SECTION( "a bound that does not carry `Copyable` borrows, and a constant is materialised" )
+    SECTION( "a bound that does not carry `copyable` borrows, and a constant is materialised" )
     {
-        // `Equatable` is deliberately left borrowing - a string compares and owns - so this is the
+        // `equatable` is deliberately left borrowing - a string compares and owns - so this is the
         // shape that has a literal arriving at a by-address parameter. A constant has no address,
         // so it goes into a temporary and that is what travels.
-        Generated g( "void f<T>( T a ) where T : Equatable { }\ni32 main() { f<i32>( 1 ); return 0; }" );
+        Generated g( "void f<T>( T a ) where T : equatable { }\ni32 main() { f<i32>( 1 ); return 0; }" );
 
         INFO( g.c );
         REQUIRE( g.clean() );
@@ -3266,8 +3276,8 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
         // `f<i32>` needs `g<i32>`, and nothing in the source names it: the call inside `f` writes
         // `g<T>`, which is an edge in the generic call graph rather than an instance. The checker's
         // list is a seed, and the set of functions to emit is its closure under that graph.
-        Generated g( "T inner<T>( T a ) where T : Copyable { return a; }\n"
-                     "T outer<T>( T a ) where T : Copyable { return inner<T>( a ); }\n"
+        Generated g( "T inner<T>( T a ) where T : copyable { return a; }\n"
+                     "T outer<T>( T a ) where T : copyable { return inner<T>( a ); }\n"
                      "i32 main() { return outer<i32>( 7 ); }" );
 
         INFO( g.c );
@@ -3283,8 +3293,8 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
     {
         // Two instances of the outer generic reach two different instances of the inner one. A
         // single pass over the checker's list would emit neither.
-        Generated g( "T inner<T>( T a ) where T : Copyable { return a; }\n"
-                     "T outer<T>( T a ) where T : Copyable { return inner<T>( a ); }\n"
+        Generated g( "T inner<T>( T a ) where T : copyable { return a; }\n"
+                     "T outer<T>( T a ) where T : copyable { return inner<T>( a ); }\n"
                      "i32 main() { f64 d = outer<f64>( 1.5 ); return outer<i32>( 7 ); }" );
 
         INFO( g.c );
@@ -3296,9 +3306,9 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
     SECTION( "a generic reached only through another is still emitted" )
     {
         // Three deep, so the worklist has to find something the round before also only discovered.
-        Generated g( "T third<T>( T a ) where T : Copyable { return a; }\n"
-                     "T second<T>( T a ) where T : Copyable { return third<T>( a ); }\n"
-                     "T first<T>( T a ) where T : Copyable { return second<T>( a ); }\n"
+        Generated g( "T third<T>( T a ) where T : copyable { return a; }\n"
+                     "T second<T>( T a ) where T : copyable { return third<T>( a ); }\n"
+                     "T first<T>( T a ) where T : copyable { return second<T>( a ); }\n"
                      "i32 main() { return first<i32>( 7 ); }" );
 
         INFO( g.c );
@@ -3310,8 +3320,8 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
     {
         // The edge exists, but nothing seeds it - so neither end is emitted, and asking the emitter
         // for a C spelling of `T` never arises.
-        Generated g( "void inner<T>( T a ) where T : Copyable { }\n"
-                     "void outer<T>( T a ) where T : Copyable { inner<T>( a ); }\n"
+        Generated g( "void inner<T>( T a ) where T : copyable { }\n"
+                     "void outer<T>( T a ) where T : copyable { inner<T>( a ); }\n"
                      "i32 main() { return 0; }" );
 
         INFO( g.c );
@@ -3324,8 +3334,8 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
     {
         // `f<i32>` needs `g<i32*>`. Legal because nothing leads back: the set is two instances and
         // it closes.
-        Generated g( "void inner<T>( T a ) where T : Copyable { }\n"
-                     "void outer<T>( T a ) where T : Copyable { T* p = &a; inner<T*>( p ); }\n"
+        Generated g( "void inner<T>( T a ) where T : copyable { }\n"
+                     "void outer<T>( T a ) where T : copyable { T* p = &a; inner<T*>( p ); }\n"
                      "i32 main() { i32 x = 1; outer<i32>( x ); return 0; }" );
 
         INFO( g.c );
@@ -3335,8 +3345,8 @@ TEST_CASE( "emit_kir_lets_a_generic_call_other_functions", "[codegen][kir][gener
 
     SECTION( "another generic, at a different type" )
     {
-        Generated g( "T id<T>( T a ) where T : Copyable { return a; }\n"
-                     "i32 relay<T>( T a ) where T : Copyable { return id<i32>( 6 ); }\n"
+        Generated g( "T id<T>( T a ) where T : copyable { return a; }\n"
+                     "i32 relay<T>( T a ) where T : copyable { return id<i32>( 6 ); }\n"
                      "i32 main() { return relay<bool>( true ); }" );
 
         INFO( g.c );
@@ -3353,7 +3363,7 @@ TEST_CASE( "emit_kir_substitutes_through_type_constructors", "[codegen][kir][gen
 {
     SECTION( "a struct type argument" )
     {
-        Generated g( "struct P { i32 v; };\nT id<T>( T a ) where T : Copyable { return a; }\n"
+        Generated g( "struct P { i32 v; };\nT id<T>( T a ) where T : copyable { return a; }\n"
                      "i32 main() { P p = P { 7 }; P q = id<P>( p ); return q.v; }" );
 
         INFO( g.c );
@@ -3363,7 +3373,7 @@ TEST_CASE( "emit_kir_substitutes_through_type_constructors", "[codegen][kir][gen
 
     SECTION( "a pointer type argument" )
     {
-        Generated g( "T id<T>( T a ) where T : Copyable { return a; }\n"
+        Generated g( "T id<T>( T a ) where T : copyable { return a; }\n"
                      "i32 main() { i32 x = 9; i32* p = &x; i32* q = id<i32*>( p ); return *q; }" );
 
         INFO( g.c );
@@ -3373,7 +3383,7 @@ TEST_CASE( "emit_kir_substitutes_through_type_constructors", "[codegen][kir][gen
 
     SECTION( "an enum type argument" )
     {
-        Generated g( "enum E { A, B };\nT id<T>( T a ) where T : Copyable { return a; }\n"
+        Generated g( "enum E { A, B };\nT id<T>( T a ) where T : copyable { return a; }\n"
                      "i32 main() { E e = id<E>( E::B ); switch( e ) { case E::A: return 0; case E::B: return 1; } }" );
 
         INFO( g.c );
@@ -3385,7 +3395,7 @@ TEST_CASE( "emit_kir_emits_one_function_per_instantiation", "[codegen][kir][gene
 {
     SECTION( "two types, two functions, two names" )
     {
-        Generated g( "T id<T>( T a ) where T : Copyable { return a; }\n"
+        Generated g( "T id<T>( T a ) where T : copyable { return a; }\n"
                      "i32 main() { i32 a = id<i32>( 1 ); bool b = id<bool>( true ); return a; }" );
 
         INFO( g.c );
@@ -3396,7 +3406,7 @@ TEST_CASE( "emit_kir_emits_one_function_per_instantiation", "[codegen][kir][gene
 
     SECTION( "each call site names the one it meant" )
     {
-        Generated g( "T id<T>( T a ) where T : Copyable { return a; }\n"
+        Generated g( "T id<T>( T a ) where T : copyable { return a; }\n"
                      "i32 main() { i32 a = id<i32>( 1 ); bool b = id<bool>( true ); return a; }" );
 
         INFO( g.c );
@@ -3406,7 +3416,7 @@ TEST_CASE( "emit_kir_emits_one_function_per_instantiation", "[codegen][kir][gene
 
     SECTION( "the same type twice is one function" )
     {
-        Generated g( "T id<T>( T a ) where T : Copyable { return a; }\ni32 main() { return id<i32>( 3 ) + id<i32>( 4 ); }" );
+        Generated g( "T id<T>( T a ) where T : copyable { return a; }\ni32 main() { return id<i32>( 3 ) + id<i32>( 4 ); }" );
 
         INFO( g.c );
         REQUIRE( g.clean() );
@@ -3427,7 +3437,7 @@ TEST_CASE( "emit_kir_emits_one_function_per_instantiation", "[codegen][kir][gene
     SECTION( "the generic itself is never emitted" )
     {
         // It has no code of its own, and emitting it would ask `T` for a C spelling.
-        Generated g( "T id<T>( T a ) where T : Copyable { return a; }\ni32 main() { return id<i32>( 1 ); }" );
+        Generated g( "T id<T>( T a ) where T : copyable { return a; }\ni32 main() { return id<i32>( 1 ); }" );
 
         INFO( g.c );
         REQUIRE( g.clean() );
@@ -3436,7 +3446,7 @@ TEST_CASE( "emit_kir_emits_one_function_per_instantiation", "[codegen][kir][gene
 
     SECTION( "several parameters" )
     {
-        Generated g( "T pick<T, U>( T a, U b ) where T : Copyable, where U : Copyable { return a; }\n"
+        Generated g( "T pick<T, U>( T a, U b ) where T : copyable, where U : copyable { return a; }\n"
                      "i32 main() { return pick<i32, bool>( 1, true ); }" );
 
         INFO( g.c );
@@ -3448,7 +3458,7 @@ TEST_CASE( "emit_kir_emits_one_function_per_instantiation", "[codegen][kir][gene
     {
         // The declaration still says `T`; only the lowered function knows `i32`. A `Parameter`
         // reaching here trips Spelling::type's assert, so this passing is the proof.
-        Generated g( "T id<T>( T a ) where T : Copyable { return a; }\ni32 main() { return id<i32>( 1 ); }" );
+        Generated g( "T id<T>( T a ) where T : copyable { return a; }\ni32 main() { return id<i32>( 1 ); }" );
 
         INFO( g.c );
         REQUIRE( g.has( "int32_t kl__id__I3i32E__3i32( int32_t );" ) );
@@ -3594,7 +3604,7 @@ TEST_CASE( "emit_kir_tells_a_static_from_a_plain_method", "[codegen][kir][static
 // the symbol referenced and never defined, which `cc` reports rather than keelc.
 TEST_CASE( "emit_kir_emits_a_generic_static_method_instantiation", "[codegen][kir][static][generic]" )
 {
-    Generated g( "struct Box<T> where T : Copyable { T v; static Box<T> of( T x ) { return Box { x }; } };\n"
+    Generated g( "struct Box<T> where T : copyable { T v; static Box<T> of( T x ) { return Box { x }; } };\n"
                  "i32 main() { Box<i32> b = Box<i32>::of( 7 ); return b.v; }" );
 
     INFO( g.c );
@@ -3621,7 +3631,7 @@ TEST_CASE( "emit_kir_writes_a_static_method_address", "[codegen][kir][static]" )
     // The address alone seeds each instance, and each reads its own static storage.
     SECTION( "on a generic instance" )
     {
-        Generated g( "struct Box<T> where T : Copyable\n"
+        Generated g( "struct Box<T> where T : copyable\n"
                      "{\n"
                      "    T v;\n"
                      "    static i32 made = 0;\n"
@@ -3834,7 +3844,7 @@ TEST_CASE( "emit_kir_emits_a_static_field_as_a_global", "[codegen][kir][static]"
 // instance's method is that instance's.
 TEST_CASE( "emit_kir_emits_a_generic_static_field_per_instantiation", "[codegen][kir][static]" )
 {
-    Generated g( "struct Box<T> where T : Copyable\n"
+    Generated g( "struct Box<T> where T : copyable\n"
                  "{\n"
                  "    T v;\n"
                  "    static i32 made = 4;\n"

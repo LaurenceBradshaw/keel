@@ -23,13 +23,13 @@ struct Green
     i32 v;
 };
 
-struct Box<T> where T : Copyable
+struct Box<T> where T : copyable
 {
     T v;
 };
 
 // Two parameters, so a list that lines up by count can still be wrong by order.
-struct Pair<A, B> where A : Copyable where B : Copyable
+struct Pair<A, B> where A : copyable where B : copyable
 {
     A a;
     B b;
@@ -37,7 +37,7 @@ struct Pair<A, B> where A : Copyable where B : Copyable
 
 // A field that is itself a generic instance, so the substitution has to reach inside one rather
 // than replace a bare `T`. `Box<T>` becomes `Box<Red>` here or the whole thing is unchecked.
-struct Outer<T> where T : Copyable
+struct Outer<T> where T : copyable
 {
     Box<T> inner;
 };

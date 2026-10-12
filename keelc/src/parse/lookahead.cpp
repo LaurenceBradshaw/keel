@@ -1300,12 +1300,12 @@ TEST_CASE( "lookahead_recognises_each_member_head", "[scan]" )
     SECTION( "a method may have type parameters, and `where` clauses after its `const`" )
     {
         require_head( "U map<U>( U a ) { }", Member_kind::Method, "{" );
-        require_head( "U map<U, V>( U a ) const where U : Copyable, where V : Copyable { }", Member_kind::Method, "{" );
+        require_head( "U map<U, V>( U a ) const where U : copyable, where V : copyable { }", Member_kind::Method, "{" );
 
-        Scanned s( "U map<U>( U a ) const where U : Copyable { }" );
+        Scanned s( "U map<U>( U a ) const where U : copyable { }" );
         REQUIRE( s.head().head->is_const );
 
-        Scanned plain( "U map<U>( U a ) where U : Copyable { }" );
+        Scanned plain( "U map<U>( U a ) where U : copyable { }" );
         REQUIRE_FALSE( plain.head().head->is_const );
     }
 
@@ -1786,7 +1786,7 @@ TEST_CASE( "lookahead_recognises_each_declaration_head", "[scan]" )
     {
         require_declaration( "import a;", Declaration_kind::Import, "import" );
         require_declaration( "struct S { i32 a; };", Declaration_kind::Aggregate, "struct" );
-        require_declaration( "class C<T> where T : Copyable { T a; };", Declaration_kind::Aggregate, "class" );
+        require_declaration( "class C<T> where T : copyable { T a; };", Declaration_kind::Aggregate, "class" );
         require_declaration( "enum E { A, B };", Declaration_kind::Enum, "enum" );
         require_declaration( "interface Shape { f64 area() const; };", Declaration_kind::Interface, "interface" );
         require_declaration(
@@ -1815,17 +1815,17 @@ TEST_CASE( "lookahead_recognises_each_declaration_head", "[scan]" )
     {
         require_declaration( "T id<T>( T a ) { }", Declaration_kind::Function, "{" );
         require_declaration( "T f<T, U>( T a, U b ) { }", Declaration_kind::Function, "{" );
-        require_declaration( "T f<T>( T a ) where T : Copyable { }", Declaration_kind::Function, "{" );
-        require_declaration( "T f<T>( T a ) where T : Copyable & Equatable { }", Declaration_kind::Function, "{" );
-        require_declaration( "T f<T, U>( T a ) where T : Copyable, where U : Equatable { }", Declaration_kind::Function, "{" );
+        require_declaration( "T f<T>( T a ) where T : copyable { }", Declaration_kind::Function, "{" );
+        require_declaration( "T f<T>( T a ) where T : copyable & equatable { }", Declaration_kind::Function, "{" );
+        require_declaration( "T f<T, U>( T a ) where T : copyable, where U : equatable { }", Declaration_kind::Function, "{" );
     }
 
     SECTION( "including what the parser reads only to refuse" )
     {
         require_declaration( "T f<>() { }", Declaration_kind::Function, "{" );
-        require_declaration( "T f<Comparable T>( T a ) { }", Declaration_kind::Function, "{" );
-        require_declaration( "T f<T>( T a ) where T : Copyable, Equatable { }", Declaration_kind::Function, "{" );
-        require_declaration( "T f<T>( T a ) where T : Copyable | Equatable { }", Declaration_kind::Function, "{" );
+        require_declaration( "T f<comparable T>( T a ) { }", Declaration_kind::Function, "{" );
+        require_declaration( "T f<T>( T a ) where T : copyable, equatable { }", Declaration_kind::Function, "{" );
+        require_declaration( "T f<T>( T a ) where T : copyable | equatable { }", Declaration_kind::Function, "{" );
     }
 
     SECTION( "an extern runs to its `;`, or to a body it should not have" )

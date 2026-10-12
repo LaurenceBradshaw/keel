@@ -1,23 +1,23 @@
 // A by-value cycle can close through a type argument: `Box` holds its `T` by value, so whatever
 // `Box` is given is inside whatever holds the `Box`. Each is one error, and none hangs.
-struct Box<T> where T : Copyable
+struct Box<T> where T : copyable
 {
     T value;
 };
 
-struct Ring<T> where T : Copyable
+struct Ring<T> where T : copyable
 {
     Box<Ring<T>> link;
 };
 
 // The argument grows each time round, so walking instances never meets the same one twice.
-struct Spiral<T> where T : Copyable
+struct Spiral<T> where T : copyable
 {
     Box<Spiral<Box<T>>> link;
 };
 
 // A pointer anywhere along the way ends the containment.
-struct Chain<T> where T : Copyable
+struct Chain<T> where T : copyable
 {
     Box<Chain<T>*> link;
 };

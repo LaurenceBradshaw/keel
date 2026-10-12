@@ -1,0 +1,46 @@
+// D40: the compiler's own hash is no method, so `hash()` is reached only through a `hashable`
+// bound. An enum whose own `equatable` block replaces the compiler's loses the compiler's `hashable`
+// with it, and a bound needing one names the block. `index` stands in for `kl::map`.
+enum Suit
+{
+    Hearts,
+    Spades,
+};
+
+enum Colour
+{
+    Red,
+    Crimson,
+};
+
+implements equatable for Colour
+{
+    bool operator==( const ref Colour other ) const
+    {
+        return cast<u8>( this ) == cast<u8>( other );
+    }
+};
+
+struct index<K> where K : hashable & copyable
+{
+    K key;
+};
+
+void fine( index<Suit> i )
+{
+}
+
+void refused( index<Colour> i )
+{
+}
+
+i32 main()
+{
+    i32  x = 1;
+    Suit s = Suit::Hearts;
+
+    x.hash();
+    s.hash();
+
+    return 0;
+}

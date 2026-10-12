@@ -2,7 +2,7 @@
 // the addresses are the only reason either body is in the C at all - and each has to link, which is
 // what makes this a golden rather than a checker fixture.
 
-T id<T>( T a ) where T : Copyable
+T id<T>( T a ) where T : copyable
 {
     return a;
 }
@@ -10,12 +10,12 @@ T id<T>( T a ) where T : Copyable
 // Integer division truncates and float division does not, so which instance an address named shows
 // up in the answer rather than only in the mangled name: a golden that called `id` both ways would
 // pass even if both addresses were the same symbol.
-T half<T>( T a ) where T : Copyable & Numeric
+T half<T>( T a ) where T : copyable & numeric
 {
     return a / 2;
 }
 
-T doubled<T>( T a ) where T : Integral
+T doubled<T>( T a ) where T : integral
 {
     return a + a;
 }
@@ -23,13 +23,13 @@ T doubled<T>( T a ) where T : Integral
 // A mode has to survive substitution: `fn( ref T ) -> T` is the open signature, and each instance's
 // own is the closed one the typedef is written from. Getting this wrong emits a by-value typedef
 // against a prototype that takes an address, which is a C error rather than a wrong answer.
-T raise<T>( ref T a ) where T : Integral
+T raise<T>( ref T a ) where T : integral
 {
     a = a + 1;
     return a;
 }
 
-T via<T>( fn( ref T ) -> T f, ref T a ) where T : Integral
+T via<T>( fn( ref T ) -> T f, ref T a ) where T : integral
 {
     return f( ref a );
 }

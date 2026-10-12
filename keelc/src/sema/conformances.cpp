@@ -251,6 +251,22 @@ void conform(
         }
     }
 
+    // Only what the interface requires directly: each of those checks its own when the type conforms to it.
+    for( const Type_id refined : table.refinements( interface ) )
+    {
+        if( !table.implements( type, refined ) && !supplies( ast, table, type, refined ) )
+        {
+            result.errors.push_back( {
+                .problem     = Conformance_problem::Unrefined,
+                .at          = ast.span( written ),
+                .implementer = implementer,
+                .interface   = interface,
+                .self        = type,
+                .refined     = refined,
+            } );
+        }
+    }
+
     if( ast.kind( implementer ) == Node_kind::Implements_decl )
     {
         for( const Node_id member : ast.members( implementer ) )
@@ -311,6 +327,59 @@ Conformances check_conformances( const Ast& ast, Type_table& table, std::span<co
     return result;
 }
 
+Type_id interface_for( const Type_table& table, Token_kind op )
+{
+    switch( op )
+    {
+    case Token_kind::Equal_equal:
+    case Token_kind::Bang_equal:
+        return table.prelude_interface( Prelude_interface::Equatable );
+    case Token_kind::Less:
+    case Token_kind::Greater:
+    case Token_kind::Less_equal:
+    case Token_kind::Greater_equal:
+    case Token_kind::Less_equal_greater:
+        return table.prelude_interface( Prelude_interface::Comparable );
+
+    default:
+        return Type_id {};
+    }
+}
+
+// A number gets all three. `bool`, a payload-free enum and a pointer get equality and a hash, but
+// no order. An interface pointer is two words, and gets nothing yet.
+bool supplied_by_kind( const Ast& ast, const Type_table& table, Type_id type, Type_id interface )
+{
+    if( !interface.is_valid() )
+    {
+        return false;
+    }
+
+    const bool number = table.is_integer( type ) || table.is_float( type );
+
+    if( interface == table.prelude_interface( Prelude_interface::Comparable ) )
+    {
+        return number;
+    }
+
+    if( interface != table.prelude_interface( Prelude_interface::Equatable ) &&
+        interface != table.prelude_interface( Prelude_interface::Hashable ) )
+    {
+        return false;
+    }
+
+    return number || type == table.builtin( Type_kind::Bool ) ||
+           ( table.is_enum( type ) && !ast.enum_has_payload( table.get( type ).declaration ) ) ||
+           ( ( table.is_pointer( type ) || table.is_many_pointer( type ) ) && !table.is_interface_pointer( type ) );
+}
+
+// A type's own `==` would disagree with the compiler's hash, so declaring `equatable` drops all three.
+bool supplies( const Ast& ast, const Type_table& table, Type_id type, Type_id interface )
+{
+    return supplied_by_kind( ast, table, type, interface ) && !table.implements( type, interface ) &&
+           !table.implements( type, table.prelude_interface( Prelude_interface::Equatable ) );
+}
+
 } // namespace keel
 
 namespace keel::sema
@@ -368,6 +437,7 @@ void report_conformance_errors(
     {
         const std::string_view type      = table.base_name( error.self );
         const std::string_view interface = table.name( error.interface );
+        const bool             in_block  = ast.kind( error.implementer ) == Node_kind::Implements_decl;
 
         if( error.problem == Conformance_problem::Repeated )
         {
@@ -385,7 +455,18 @@ void report_conformance_errors(
             continue;
         }
 
-        const bool in_block = ast.kind( error.implementer ) == Node_kind::Implements_decl;
+        if( error.problem == Conformance_problem::Unrefined )
+        {
+            const std::string_view refined = table.name( error.refined );
+
+            reporter.error_at(
+                error.at,
+                fmt::format( "`{}` implements `{}` but not `{}`, which `{}` requires", type, interface, refined, interface ),
+                in_block ? fmt::format( "write `implements {} for {}` as well", refined, type )
+                         : fmt::format( "add `{}` to `{}`'s `implements` list", refined, type )
+            );
+            continue;
+        }
 
         const std::string_view method = interner.text( ast.name( error.requirement ) );
 
@@ -437,6 +518,7 @@ void report_conformance_errors(
             break;
         case Conformance_problem::Repeated:
         case Conformance_problem::Unrequested:
+        case Conformance_problem::Unrefined:
             break;
         }
     }
@@ -461,7 +543,7 @@ TEST_CASE( "conformances_record_the_method_answering_each_requirement", "[sema][
         "    i32 id() const { return 1; }\n"
         "    f64 area() const { return s * s; }\n"
         "};\n"
-        "struct Box<T> implements Shape where T : Copyable { T v; f64 area() const { return 0.0; } void grow( f64 by ) { } };\n"
+        "struct Box<T> implements Shape where T : copyable { T v; f64 area() const { return 0.0; } void grow( f64 by ) { } };\n"
         "i32 main() { return 0; }"
     );
 
@@ -678,7 +760,7 @@ TEST_CASE( "conformances_substitute_the_implementer_for_self", "[sema][interface
     SECTION( "a generic implementer answers with its open form" )
     {
         const Typed p(
-            same + "struct B<T> implements Same where T : Copyable { T v;\n"
+            same + "struct B<T> implements Same where T : copyable { T v;\n"
                    "    bool same( const ref B<T> other ) const { return false; }\n"
                    "    B<T> larger( const ref B<T> other ) const { return B { other.v }; }\n"
                    "};\n"

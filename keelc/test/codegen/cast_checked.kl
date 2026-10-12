@@ -1,6 +1,6 @@
 // A narrowing `cast` that fits: each way it can narrow, and a generic whose `u8` instance needs no
 // check and whose `i64` instance does.
-u8 down<T>( T v ) where T : Copyable & Integral
+u8 down<T>( T v ) where T : copyable & integral
 {
     return cast<u8>( v );
 }

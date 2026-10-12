@@ -6,19 +6,19 @@
 // Only the exit code can see most of this. Every generic below answers differently at different
 // type arguments, so a wrong deduction is a wrong number rather than a wrong-looking symbol.
 
-struct Box<T> where T : Copyable
+struct Box<T> where T : copyable
 {
     T v;
 };
 
 // Deduced from the one argument, which is the ordinary case.
-T id<T>( T a ) where T : Copyable
+T id<T>( T a ) where T : copyable
 {
     return a;
 }
 
 // Two positions of one parameter. They have to agree, and here they do.
-i32 both<T>( T a, T b ) where T : Copyable & Equatable
+i32 both<T>( T a, T b ) where T : copyable & equatable
 {
     if( a == b )
     {
@@ -29,39 +29,39 @@ i32 both<T>( T a, T b ) where T : Copyable & Equatable
 }
 
 // Structural, not positional: `T` is reached through a type constructor rather than standing alone.
-T unbox<T>( Box<T> b ) where T : Copyable
+T unbox<T>( Box<T> b ) where T : copyable
 {
     return b.v;
 }
 
 // And two levels down, which is the case a positional rule would miss.
-T unbox_twice<T>( Box<Box<T>> b ) where T : Copyable
+T unbox_twice<T>( Box<Box<T>> b ) where T : copyable
 {
     return b.v.v;
 }
 
 // Through a pointer, the other type constructor substitution walks.
-T through_pointer<T>( T* p ) where T : Copyable
+T through_pointer<T>( T* p ) where T : copyable
 {
     return *p;
 }
 
 // A marker is part of what the call writes, and it does not get in deduction's way: the parameter
 // carries its declared type either way, and the pointer lives on the binding.
-void bumped<T>( ref T a ) where T : Integral
+void bumped<T>( ref T a ) where T : integral
 {
     a = a + wrap<T>( 1 );
 }
 
 // Nothing to deduce from but the expectation - `T` appears only in the result.
-T zeroed<T>() where T : Integral
+T zeroed<T>() where T : integral
 {
     return wrap<T>( 0 );
 }
 
 // Two parameters, one from an argument and one from nowhere else. The list is all-or-nothing, so
 // this works only because both are settled.
-U widened<T, U>( T a ) where T : Integral & Copyable, where U : Integral
+U widened<T, U>( T a ) where T : integral & copyable, where U : integral
 {
     if( a == wrap<T>( 0 ) )
     {
@@ -78,21 +78,21 @@ i32 either( i32 a )
     return 300 + a * 0;
 }
 
-T either<T>( T a ) where T : Copyable
+T either<T>( T a ) where T : copyable
 {
     return a;
 }
 
 // A deduced call from inside a generic is an edge in the call graph like any written one, and
 // monomorphisation is what turns it into an instance.
-T forwards<T>( T a ) where T : Copyable
+T forwards<T>( T a ) where T : copyable
 {
     T held = id( a );
 
     return held;
 }
 
-class Held<T> where T : Copyable
+class Held<T> where T : copyable
 {
     T v;
 

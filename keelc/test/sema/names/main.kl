@@ -25,7 +25,7 @@ class meter
     }
 };
 
-T larger<T>( T a, T b ) where T : Copyable
+T larger<T>( T a, T b ) where T : copyable
 {
     return a;
 }

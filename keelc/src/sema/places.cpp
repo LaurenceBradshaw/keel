@@ -2249,7 +2249,7 @@ TEST_CASE( "type_checker_lets_a_constructor_assign_its_const_field", "[sema][con
              "class C { const i32 n; C() { this.n = 1; } };",
              "class C { public u8[*] const p; C() { unsafe { p = alloc<u8>( 1 ); } } ~C() { unsafe { free( p ); } } };",
              "class C { public const u8[*] const p; C( const u8[*] q ) { p = q; } };",
-             "class Box<T> where T : Copyable { public const T v; Box( T x ) { v = x; } };\n"
+             "class Box<T> where T : copyable { public const T v; Box( T x ) { v = x; } };\n"
              "i32 f() { Box<i32> b = Box<i32>( 1 ); return b.v; }",
              // Read like any field, from any method.
              "class C { const i32 n; C() { n = 1; } i32 get() const { return n; } i32 twice() { return n + this.n; } };",

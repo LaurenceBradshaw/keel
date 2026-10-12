@@ -35,6 +35,7 @@ private:
     std::string parameters( Node_id fn ) const;
     std::string type_parameters( Node_id list ) const;
     std::string where_clauses( Node_id list ) const;
+    std::string implemented( Node_id decl ) const; // " implements A, B", or empty
     std::string type_parameter( Node_id param ) const;
     std::string access( Node_id member ) const;
     Type_id     bound( Node_id param ) const;
@@ -85,23 +86,17 @@ std::string Signature_printer::declaration( Node_id decl ) const
     case Node_kind::Struct_decl:
     case Node_kind::Class_decl:
     {
-        std::string implemented;
-        for( const Node_id interface : ast_.implemented( decl ) )
-        {
-            implemented += fmt::format( "{}{}", implemented.empty() ? " implements " : ", ", type( interface ) );
-        }
-
         return fmt::format(
             "{} {}{}{}{}",
             ast_.kind( decl ) == Node_kind::Struct_decl ? "struct" : "class",
             text( ast_.name( decl ) ),
             type_parameters( ast_.type_param_list( decl ) ),
-            implemented,
+            implemented( decl ),
             where_clauses( ast_.type_param_list( decl ) )
         );
     }
     case Node_kind::Interface_decl:
-        return fmt::format( "interface {}", text( ast_.name( decl ) ) );
+        return fmt::format( "interface {}{}", text( ast_.name( decl ) ), implemented( decl ) );
     case Node_kind::Implements_decl:
         return fmt::format( "implements {} for {}", type( ast_.implemented( decl )[0] ), type( ast_.implementer( decl ) ) );
     case Node_kind::Enum_decl:
@@ -254,7 +249,18 @@ std::string Signature_printer::type_parameters( Node_id list ) const
     return params.empty() ? "" : params + ">";
 }
 
-// ` where T : Copyable & Numeric, where U : Copyable`, for the parameters still unbound.
+// ` where T : copyable & numeric, where U : copyable`, for the parameters still unbound.
+std::string Signature_printer::implemented( Node_id decl ) const
+{
+    std::string implemented;
+    for( const Node_id interface : ast_.implemented( decl ) )
+    {
+        implemented += fmt::format( "{}{}", implemented.empty() ? " implements " : ", ", type( interface ) );
+    }
+
+    return implemented;
+}
+
 std::string Signature_printer::where_clauses( Node_id list ) const
 {
     if( !list.is_valid() )
@@ -399,7 +405,7 @@ TEST_CASE( "signatures_print_functions_as_written", "[sema][signature]" )
     const Printed printed( "i32 add( i32 a, const ref i32 b ) { return a + b; }\n"
                            "void none() {}\n"
                            "extern void kl_rt_write( i32 stream, const u8[*] data, u64 size );\n"
-                           "T larger<T>( T a, T b ) where T : Copyable & Numeric { return a; }\n"
+                           "T larger<T>( T a, T b ) where T : copyable & numeric { return a; }\n"
                            "void take( fn( i32 ) -> bool p, i32* const q, const i32* r ) {}\n" );
 
     REQUIRE( printed( Node_kind::Function_decl, "add" ) == "i32 add( i32 a, const ref i32 b )" );
@@ -408,7 +414,7 @@ TEST_CASE( "signatures_print_functions_as_written", "[sema][signature]" )
         printed( Node_kind::Function_decl, "kl_rt_write" ) ==
         "extern void kl_rt_write( i32 stream, const u8[*] data, u64 size )"
     );
-    REQUIRE( printed( Node_kind::Function_decl, "larger" ) == "T larger<T>( T a, T b ) where T : Copyable & Numeric" );
+    REQUIRE( printed( Node_kind::Function_decl, "larger" ) == "T larger<T>( T a, T b ) where T : copyable & numeric" );
     REQUIRE( printed( Node_kind::Function_decl, "take" ) == "void take( fn( i32 ) -> bool p, i32* const q, const i32* r )" );
     REQUIRE( printed( Node_kind::Param_decl, "b" ) == "const ref i32 b" );
     REQUIRE( printed( Node_kind::Type_param_decl, "T" ) == "T" );
@@ -466,20 +472,22 @@ TEST_CASE( "signatures_print_interfaces_and_their_implementers", "[sema][signatu
     const Printed printed(
         "interface Shape { f64 area() const; };\n"
         "interface Named { u64 size() const; };\n"
+        "interface Solid implements Shape, Named { f64 volume() const; };\n"
         "struct Square implements Shape, Named { f64 side; f64 area() const { return side; } "
         "u64 size() const { return 1; } };\n"
-        "class Pair<T> implements Shape where T : Copyable { T a; public f64 area() const { return 1.0; } };\n"
+        "class Pair<T> implements Shape where T : copyable { T a; public f64 area() const { return 1.0; } };\n"
     );
 
     REQUIRE( printed( Node_kind::Interface_decl, "Shape" ) == "interface Shape" );
+    REQUIRE( printed( Node_kind::Interface_decl, "Solid" ) == "interface Solid implements Shape, Named" );
     REQUIRE( printed( Node_kind::Struct_decl, "Square" ) == "struct Square implements Shape, Named" );
-    REQUIRE( printed( Node_kind::Class_decl, "Pair" ) == "class Pair<T> implements Shape where T : Copyable" );
+    REQUIRE( printed( Node_kind::Class_decl, "Pair" ) == "class Pair<T> implements Shape where T : copyable" );
 }
 
 // Every parameter the instance binds reads as its argument, and its `where` clause goes with it.
 TEST_CASE( "signatures_print_a_member_at_an_instance", "[sema][signature]" )
 {
-    const Printed printed( "struct Pair<A, B> where A : Copyable, where B : Copyable\n"
+    const Printed printed( "struct Pair<A, B> where A : copyable, where B : copyable\n"
                            "{\n"
                            "    A first;\n"
                            "    B* second;\n"
@@ -489,7 +497,7 @@ TEST_CASE( "signatures_print_a_member_at_an_instance", "[sema][signature]" )
 
     const Bindings at = printed.bindings_of( "p" );
 
-    REQUIRE( printed( Node_kind::Struct_decl, "Pair" ) == "struct Pair<A, B> where A : Copyable, where B : Copyable" );
+    REQUIRE( printed( Node_kind::Struct_decl, "Pair" ) == "struct Pair<A, B> where A : copyable, where B : copyable" );
     REQUIRE( printed( Node_kind::Struct_decl, "Pair", at ) == "struct Pair<i32, bool>" );
     REQUIRE( printed( Node_kind::Field_decl, "second", at ) == "public bool* second" );
     REQUIRE( printed( Node_kind::Method_decl, "set", at ) == "public void set( move i32 a, Pair<bool, i32>* other )" );
@@ -499,21 +507,21 @@ TEST_CASE( "signatures_print_a_member_at_an_instance", "[sema][signature]" )
 // stay on the aggregate. At an instance they are still open, since the receiver does not bind them.
 TEST_CASE( "signatures_print_a_generic_method", "[sema][signature][generic]" )
 {
-    const Printed printed( "struct Box<T> where T : Copyable\n"
+    const Printed printed( "struct Box<T> where T : copyable\n"
                            "{\n"
                            "    T value;\n"
-                           "    U map<U>( fn( const ref T ) -> U f ) const where U : Copyable { return f( value ); }\n"
-                           "    static V of<V>( V v ) where V : Copyable { return v; }\n"
+                           "    U map<U>( fn( const ref T ) -> U f ) const where U : copyable { return f( value ); }\n"
+                           "    static V of<V>( V v ) where V : copyable { return v; }\n"
                            "};\n"
                            "void f( Box<i32> b ) {}\n" );
 
     REQUIRE(
-        printed( Node_kind::Method_decl, "map" ) == "public U map<U>( fn( const ref T ) -> U f ) const where U : Copyable"
+        printed( Node_kind::Method_decl, "map" ) == "public U map<U>( fn( const ref T ) -> U f ) const where U : copyable"
     );
-    REQUIRE( printed( Node_kind::Method_decl, "of" ) == "public static V of<V>( V v ) where V : Copyable" );
+    REQUIRE( printed( Node_kind::Method_decl, "of" ) == "public static V of<V>( V v ) where V : copyable" );
     REQUIRE(
         printed( Node_kind::Method_decl, "map", printed.bindings_of( "b" ) ) ==
-        "public U map<U>( fn( const ref i32 ) -> U f ) const where U : Copyable"
+        "public U map<U>( fn( const ref i32 ) -> U f ) const where U : copyable"
     );
 }
 

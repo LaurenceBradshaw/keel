@@ -26,7 +26,7 @@ f64 over( f64 a )
     return a;
 }
 
-T bounded<T>( T a ) where T : Integral
+T bounded<T>( T a ) where T : integral
 {
     return a;
 }

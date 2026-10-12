@@ -37,6 +37,9 @@ functions.</p>
 <li><a href="#result"><code>result</code></a> <span class="kind">enum</span></li>
 <li><a href="#ordering"><code>ordering</code></a> <span class="kind">enum</span></li>
 <li><a href="#box"><code>box</code></a> <span class="kind">class</span></li>
+<li><a href="#equatable"><code>equatable</code></a> <span class="kind">interface</span></li>
+<li><a href="#comparable"><code>comparable</code></a> <span class="kind">interface</span></li>
+<li><a href="#hashable"><code>hashable</code></a> <span class="kind">interface</span></li>
 </ul>
 <section class="entry">
 <h2><span class="kind">primitive</span> <span class="prim">bool</span></h2>
@@ -387,6 +390,61 @@ interface as its type argument.</p>
 <pre class="signature"><a class="anchor" href="#box.get" aria-label="Link to get">#</a><code><span class="kw">public</span> T* <span class="fn">get</span>() <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>The value, where it lives.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">interface</span> <span class="type">equatable</span></h2>
+<div class="group" id="equatable">
+<pre class="signature"><a class="anchor" href="#equatable" aria-label="Link to equatable">#</a><code><span class="kw">interface</span> <span class="type">equatable</span></code></pre>
+<div class="doc">
+<p>A type whose values can be tested for equality.</p>
+<p><code>a != b</code> comes from <code>a == b</code>. Numbers, <code>bool</code>, pointers and enums without payloads are
+equatable without writing anything.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="equatable.operator==">
+<pre class="signature"><a class="anchor" href="#equatable.operator==" aria-label="Link to operator==">#</a><code><span class="kw">public</span> <a class="prim" href="#bool">bool</a> <span class="fn">operator==</span>( <span class="kw">const</span> <span class="kw">ref</span> self other ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether this value equals <code>other</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">interface</span> <span class="type">comparable</span></h2>
+<div class="group" id="comparable">
+<pre class="signature"><a class="anchor" href="#comparable" aria-label="Link to comparable">#</a><code><span class="kw">interface</span> <span class="type">comparable</span> <span class="kw">implements</span> <a class="type" href="#equatable">equatable</a></code></pre>
+<div class="doc">
+<p>A type whose values have an order.</p>
+<p><code>a &lt; b</code>, <code>a &lt;= b</code>, <code>a &gt; b</code> and <code>a &gt;= b</code> come from <code>a &lt;=&gt; b</code>. Numbers are comparable without
+writing anything.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="comparable.operator&lt;=&gt;">
+<pre class="signature"><a class="anchor" href="#comparable.operator&lt;=&gt;" aria-label="Link to operator&lt;=&gt;">#</a><code><span class="kw">public</span> <a class="type" href="#ordering">ordering</a> <span class="fn">operator&lt;=&gt;</span>( <span class="kw">const</span> <span class="kw">ref</span> self other ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>How this value compares with <code>other</code>.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">interface</span> <span class="type">hashable</span></h2>
+<div class="group" id="hashable">
+<pre class="signature"><a class="anchor" href="#hashable" aria-label="Link to hashable">#</a><code><span class="kw">interface</span> <span class="type">hashable</span> <span class="kw">implements</span> <a class="type" href="#equatable">equatable</a></code></pre>
+<div class="doc">
+<p>A type whose values hash to a <code>u64</code>.</p>
+<p>Values that are <code>==</code> must hash the same, so a type that writes its own <code>==</code> writes its own
+<code>hash</code> too. Numbers, <code>bool</code>, pointers and enums without payloads are hashable without writing
+anything; a float's hash counts <code>-0.0</code> as <code>0.0</code>, and panics on a NaN.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="hashable.hash">
+<pre class="signature"><a class="anchor" href="#hashable.hash" aria-label="Link to hash">#</a><code><span class="kw">public</span> <a class="prim" href="#u64">u64</a> <span class="fn">hash</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>This value's hash.</p>
 </div>
 </div>
 </section>

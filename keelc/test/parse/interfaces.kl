@@ -18,7 +18,7 @@ class Circle implements Shape, Named
     public void grow( f64 by ) { r = r + by; }
 };
 
-struct Square<T> implements Shape where T : Copyable
+struct Square<T> implements Shape where T : copyable
 {
     T side;
 

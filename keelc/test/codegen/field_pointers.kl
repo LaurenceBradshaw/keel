@@ -8,7 +8,7 @@ struct Measurement
     i32 id;
 };
 
-struct Box<T> where T : Copyable
+struct Box<T> where T : copyable
 {
     i32 tag;
     T   v;
@@ -19,7 +19,7 @@ f64 sum( field( Measurement ) -> f64 a, field( Measurement ) -> f64 b, field( Me
     return a( m ) + b( m ) + c( m );
 }
 
-U read<C, U>( field( C ) -> U p, const ref C obj ) where U : Copyable
+U read<C, U>( field( C ) -> U p, const ref C obj ) where U : copyable
 {
     return p( obj );
 }

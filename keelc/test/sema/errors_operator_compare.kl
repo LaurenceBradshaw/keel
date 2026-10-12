@@ -61,7 +61,7 @@ enum Colour
     Green
 };
 
-ordering by_bound<T>( T a, T b ) where T : Equatable
+ordering by_bound<T>( T a, T b ) where T : equatable
 {
     return a <=> b;
 }

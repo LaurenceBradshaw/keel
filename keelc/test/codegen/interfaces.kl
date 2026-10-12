@@ -25,7 +25,7 @@ struct Square implements Shape
     void grow( f64 by ) { side = side + by; }
 };
 
-struct Pair<T> implements Shape where T : Copyable
+struct Pair<T> implements Shape where T : copyable
 {
     T a;
     T b;

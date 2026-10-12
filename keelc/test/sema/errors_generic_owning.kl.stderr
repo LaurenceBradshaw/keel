@@ -10,7 +10,7 @@ error: a struct cannot contain `Holder<u64>`, which owns a resource
 37 |     Holder<u64> h;
    |     ^^^^^^^^^^^^^^ a struct is copied freely, so declare `Through` as a class if it owns this
 
-error: `Box<u64>` is not `Copyable`, and `twice` requires it of `T`
+error: `Box<u64>` is not `copyable`, and `twice` requires it of `T`
   --> sema/errors_generic_owning.kl:42:24
    |
 42 |     Box<u64> c = twice<Box<u64>>( Box<u64>( 3 ) );

@@ -7,18 +7,18 @@ class Buf
     ~Buf() { }
 };
 
-struct Box<T> where T : Copyable
+struct Box<T> where T : copyable
 {
     T v;
 };
 
-enum Opt<T> where T : Copyable
+enum Opt<T> where T : copyable
 {
     None,
     Some( T v )
 };
 
-enum Pair<A, B> where A : Copyable where B : Copyable
+enum Pair<A, B> where A : copyable where B : copyable
 {
     Left( A a ),
     Right( B b )
@@ -26,14 +26,14 @@ enum Pair<A, B> where A : Copyable where B : Copyable
 
 // D42: `Bad` reaches `Bad` at a bigger argument each time round, through a payload rather than a
 // call. The edge is recorded from the *enum*, so the cycle closes on the declaration.
-enum Bad<T> where T : Copyable
+enum Bad<T> where T : copyable
 {
     V( Bad<Box<T>> b )
 };
 
 // The same cycle with the growing argument built out of a generic `enum` rather than a struct, so
 // the detector has to count an enum as a construction over the parameter the way it counts a struct.
-enum Worse<T> where T : Copyable
+enum Worse<T> where T : copyable
 {
     V( Worse<Opt<T>> w )
 };

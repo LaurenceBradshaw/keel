@@ -1385,7 +1385,7 @@ TEST_CASE( "type_checker_chooses_between_overloads", "[sema][overload]" )
 
     SECTION( "a generic and a plain one of a name, told apart by what the call writes" )
     {
-        const Typed p( "i32 f( i32 a ) { return 1; }\nbool f<T>( T a ) where T : Copyable { return true; }\n"
+        const Typed p( "i32 f( i32 a ) { return 1; }\nbool f<T>( T a ) where T : copyable { return true; }\n"
                        "i32 main() { bool b = f<bool>( true ); return f( 1 ); }" );
 
         INFO( p.rendered() );
@@ -1540,7 +1540,7 @@ TEST_CASE( "overloads_widen_when_nothing_matches_exactly", "[sema][overload]" )
 
     SECTION( "a generic that fits exactly beats a widening" )
     {
-        const Typed p( "i32 f( i64 a ) { return 1; }\nbool f<T>( T a ) where T : Copyable { return true; }\n"
+        const Typed p( "i32 f( i64 a ) { return 1; }\nbool f<T>( T a ) where T : copyable { return true; }\n"
                        "i32 main() { i32 b = 1; bool r = f( b ); return 0; }" );
 
         INFO( p.rendered() );
@@ -2371,7 +2371,7 @@ TEST_CASE( "overloads_name_the_instance_a_candidate_list_is_about", "[sema][over
 {
     SECTION( "a constructor list takes its types from the expectation" )
     {
-        const Typed p( "class Box<T> where T : Copyable\n"
+        const Typed p( "class Box<T> where T : copyable\n"
                        "{\n"
                        "    T v;\n"
                        "    Box( T a ) { this.v = a; }\n"
@@ -2385,7 +2385,7 @@ TEST_CASE( "overloads_name_the_instance_a_candidate_list_is_about", "[sema][over
 
     SECTION( "a method list takes them from the receiver" )
     {
-        const Typed p( "struct Box<T> where T : Copyable\n"
+        const Typed p( "struct Box<T> where T : copyable\n"
                        "{\n"
                        "    T v;\n"
                        "    i32 pick( T a ) { return 0; }\n"
@@ -2399,7 +2399,7 @@ TEST_CASE( "overloads_name_the_instance_a_candidate_list_is_about", "[sema][over
 
     SECTION( "the no-match list takes them too" )
     {
-        const Typed p( "class Box<T> where T : Copyable\n"
+        const Typed p( "class Box<T> where T : copyable\n"
                        "{\n"
                        "    T v;\n"
                        "    Box( T a, u8 b ) { this.v = a; }\n"
@@ -2414,7 +2414,7 @@ TEST_CASE( "overloads_name_the_instance_a_candidate_list_is_about", "[sema][over
 
     SECTION( "and so does the ambiguity list" )
     {
-        const Typed p( "class Box<T> where T : Copyable\n"
+        const Typed p( "class Box<T> where T : copyable\n"
                        "{\n"
                        "    T v;\n"
                        "    Box( T a, u8 b ) { this.v = a; }\n"
@@ -2430,13 +2430,13 @@ TEST_CASE( "overloads_name_the_instance_a_candidate_list_is_about", "[sema][over
     SECTION( "with no instance to name, the declaration is what the author wrote" )
     {
         // Inside a generic the receiver really is `Box<U>`, so `U` is the honest spelling.
-        const Typed p( "struct Box<T> where T : Copyable\n"
+        const Typed p( "struct Box<T> where T : copyable\n"
                        "{\n"
                        "    T v;\n"
                        "    i32 pick( T a ) { return 0; }\n"
                        "    i32 pick( T a, T b ) { return 0; }\n"
                        "};\n"
-                       "i32 use<U>( Box<U> b ) where U : Copyable { return b.pick( ); }\n"
+                       "i32 use<U>( Box<U> b ) where U : copyable { return b.pick( ); }\n"
                        "i32 main() { return 0; }" );
 
         INFO( p.rendered() );
@@ -2451,7 +2451,7 @@ TEST_CASE( "overloads_choose_a_constructor_by_the_instance", "[sema][overload][g
 {
     SECTION( "a literal that cannot deduce `T` no longer rules every candidate out" )
     {
-        const Typed p( "class Box<T> where T : Copyable\n"
+        const Typed p( "class Box<T> where T : copyable\n"
                        "{\n"
                        "    T v;\n"
                        "    Box( T a, u8 b ) { this.v = a; }\n"
@@ -2465,7 +2465,7 @@ TEST_CASE( "overloads_choose_a_constructor_by_the_instance", "[sema][overload][g
 
     SECTION( "and the one it chose is the one recorded" )
     {
-        Typed p( "class Box<T> where T : Copyable\n"
+        Typed p( "class Box<T> where T : copyable\n"
                  "{\n"
                  "    T v;\n"
                  "    Box( T a, u8 b ) { this.v = a; }\n"
@@ -2508,7 +2508,7 @@ TEST_CASE( "type_checker_chooses_between_methods", "[sema][overload][method]" )
         // `put( T )` on a `S<bool>` is `put( bool )`, so the `bool` argument picks it rather than
         // the `i32` one - which is the receiver's bindings being applied before the types are
         // compared, not after.
-        const Typed p( "class S<T> where T : Copyable { T v; S( T a ) { v = a; } "
+        const Typed p( "class S<T> where T : copyable { T v; S( T a ) { v = a; } "
                        "i32 put( T a ) { return 0; } i32 put( i32 a ) { return 1; } };\n"
                        "i32 main() { S<bool> s = S<bool>( true ); return s.put( true ); }" );
 
@@ -2626,8 +2626,8 @@ TEST_CASE( "type_checker_takes_no_marker_for_a_const_ref", "[sema][constref]" )
 // gone the other way, rather than off a node index.
 TEST_CASE( "type_checker_deduces_type_arguments", "[sema][generic]" )
 {
-    const std::string_view id  = "T id<T>( T a ) where T : Copyable { return a; }\n";
-    const std::string_view box = "struct Box<T> where T : Copyable { T v; };\n";
+    const std::string_view id  = "T id<T>( T a ) where T : copyable { return a; }\n";
+    const std::string_view box = "struct Box<T> where T : copyable { T v; };\n";
 
     SECTION( "from an argument" )
     {
@@ -2645,7 +2645,7 @@ TEST_CASE( "type_checker_deduces_type_arguments", "[sema][generic]" )
     SECTION( "structurally, not positionally" )
     {
         const Typed p(
-            std::string( box ) + "T first<T>( Box<T> b ) where T : Copyable { return b.v; }\n"
+            std::string( box ) + "T first<T>( Box<T> b ) where T : copyable { return b.v; }\n"
                                  "i32 main() { Box<bool> b = Box { true }; bool t = first( b ); return 0; }"
         );
 
@@ -2655,7 +2655,7 @@ TEST_CASE( "type_checker_deduces_type_arguments", "[sema][generic]" )
 
     SECTION( "from the expectation, when the parameter is only in the result" )
     {
-        const Typed p( "T zeroed<T>() where T : Integral { return wrap<T>( 0 ); }\n"
+        const Typed p( "T zeroed<T>() where T : integral { return wrap<T>( 0 ); }\n"
                        "i32 main() { i64 wide = zeroed(); return 0 * wrap<i32>( wide ); }" );
 
         INFO( p.rendered() );
@@ -2684,7 +2684,7 @@ TEST_CASE( "type_checker_deduces_type_arguments", "[sema][generic]" )
     // D26 again: the context that would give a literal its type is the thing being deduced.
     SECTION( "a literal says nothing, and a real argument beside it decides" )
     {
-        const Typed p( "T both<T>( T a, T b ) where T : Copyable { return a; }\n"
+        const Typed p( "T both<T>( T a, T b ) where T : copyable { return a; }\n"
                        "i32 main() { i64 wide = 1; i64 answer = both( wide, 1 ); return 0 * wrap<i32>( answer ); }" );
 
         INFO( p.rendered() );
@@ -2693,7 +2693,7 @@ TEST_CASE( "type_checker_deduces_type_arguments", "[sema][generic]" )
 
     SECTION( "two arguments that disagree name the disagreement" )
     {
-        const Typed p( "T both<T>( T a, T b ) where T : Copyable { return a; }\n"
+        const Typed p( "T both<T>( T a, T b ) where T : copyable { return a; }\n"
                        "i32 main() { i32 n = 1; bool t = true; both( n, t ); return 0; }" );
 
         INFO( p.rendered() );
@@ -2704,7 +2704,7 @@ TEST_CASE( "type_checker_deduces_type_arguments", "[sema][generic]" )
     // the whole call to the explicit form.
     SECTION( "one parameter deduced and one not is still a failure" )
     {
-        const Typed p( "U second<T, U>( T a ) where T : Copyable, where U : Integral { return wrap<U>( 0 ); }\n"
+        const Typed p( "U second<T, U>( T a ) where T : copyable, where U : integral { return wrap<U>( 0 ); }\n"
                        "i32 main() { i32 n = 1; second( n ); return 0; }" );
 
         INFO( p.rendered() );
@@ -2716,7 +2716,7 @@ TEST_CASE( "type_checker_deduces_type_arguments", "[sema][generic]" )
     SECTION( "an argument deduction could not read is still checked" )
     {
         const Typed p(
-            std::string( box ) + "T first<T>( Box<T> b ) where T : Copyable { return b.v; }\n"
+            std::string( box ) + "T first<T>( Box<T> b ) where T : copyable { return b.v; }\n"
                                  "i32 main() { i32 n = 1; return first( n ); }"
         );
 
@@ -2728,18 +2728,18 @@ TEST_CASE( "type_checker_deduces_type_arguments", "[sema][generic]" )
     // it is the argument that chose the type - there is no written annotation to point at.
     SECTION( "a bound still holds, and blames the argument that chose the type" )
     {
-        const Typed p( "struct Plain { i32 v; };\ni32 ordered<T>( T a ) where T : Comparable { return 1; }\n"
+        const Typed p( "struct Plain { i32 v; };\ni32 ordered<T>( T a ) where T : comparable { return 1; }\n"
                        "i32 main() { Plain p = Plain { 1 }; return ordered( p ); }" );
 
         INFO( p.rendered() );
-        REQUIRE( p.rendered().find( "`Plain` is not `Comparable`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "but `Plain` does not" ) != std::string::npos );
     }
 
     // §12's tie-break, unreachable until a call could leave its type arguments unwritten: it is the
     // thing that puts a generic and a non-generic in one candidate set.
     SECTION( "a non-generic candidate beats a generic one" )
     {
-        const Typed p( "bool f( i32 a ) { return true; }\nT f<T>( T a ) where T : Copyable { return a; }\n"
+        const Typed p( "bool f( i32 a ) { return true; }\nT f<T>( T a ) where T : copyable { return a; }\n"
                        "i32 main() { i32 n = 1; bool b = f( n ); i32 m = f<i32>( n ); return m; }" );
 
         INFO( p.rendered() );
@@ -2749,8 +2749,8 @@ TEST_CASE( "type_checker_deduces_type_arguments", "[sema][generic]" )
     SECTION( "and two generics are ambiguous rather than ranked" )
     {
         const Typed p(
-            std::string( box ) + "bool which<T>( T a ) where T : Copyable { return true; }\n"
-                                 "bool which<T>( Box<T> a ) where T : Copyable { return false; }\n"
+            std::string( box ) + "bool which<T>( T a ) where T : copyable { return true; }\n"
+                                 "bool which<T>( Box<T> a ) where T : copyable { return false; }\n"
                                  "i32 main() { Box<i32> b = Box { 1 }; which( b ); return 0; }"
         );
 
@@ -2763,8 +2763,8 @@ TEST_CASE( "type_checker_deduces_type_arguments", "[sema][generic]" )
     // any argument has been typed, so the deduction cannot live inside the choosing.
     SECTION( "a candidate chosen by arity is still deduced" )
     {
-        const Typed p( "T one<T>( T a ) where T : Copyable { return a; }\n"
-                       "T one<T>( T a, T b ) where T : Copyable { return b; }\n"
+        const Typed p( "T one<T>( T a ) where T : copyable { return a; }\n"
+                       "T one<T>( T a, T b ) where T : copyable { return b; }\n"
                        "i32 main() { bool t = true; bool b = one( t, t ); return 0; }" );
 
         INFO( p.rendered() );
@@ -2775,7 +2775,7 @@ TEST_CASE( "type_checker_deduces_type_arguments", "[sema][generic]" )
     // from the expectation exactly as a struct literal's does.
     SECTION( "a constructor takes its instance from the expectation" )
     {
-        const Typed p( "class Held<T> where T : Copyable { T v; Held( T value ) { v = value; } "
+        const Typed p( "class Held<T> where T : copyable { T v; Held( T value ) { v = value; } "
                        "T get() const { return v; } };\n"
                        "i32 main() { Held<bool> h = Held( true ); bool t = h.get(); return 0; }" );
 
@@ -2789,7 +2789,7 @@ TEST_CASE( "type_checker_deduces_type_arguments", "[sema][generic]" )
     SECTION( "an expectation does not reach into an argument" )
     {
         const Typed p(
-            std::string( id ) + "T zeroed<T>() where T : Integral { return wrap<T>( 0 ); }\n"
+            std::string( id ) + "T zeroed<T>() where T : integral { return wrap<T>( 0 ); }\n"
                                 "i32 main() { i64 wide = id( zeroed() ); return 0; }"
         );
 
@@ -2853,7 +2853,7 @@ TEST_CASE( "type_checker_refuses_overloads_nothing_can_tell_apart", "[sema][over
     // some instantiation would make identical is refused here rather than at that instantiation.
     SECTION( "two members a type argument could make identical" )
     {
-        const Typed p( "class S<T> where T : Copyable { T v; S( T a ) { v = a; } "
+        const Typed p( "class S<T> where T : copyable { T v; S( T a ) { v = a; } "
                        "i32 f( T a ) { return 0; } i32 f( i32 a ) { return 1; } };\n"
                        "i32 main() { return 0; }" );
 
@@ -2864,7 +2864,7 @@ TEST_CASE( "type_checker_refuses_overloads_nothing_can_tell_apart", "[sema][over
 
     SECTION( "but two that no argument could" )
     {
-        const Typed p( "class S<T> where T : Copyable { T v; S( T a ) { v = a; } "
+        const Typed p( "class S<T> where T : copyable { T v; S( T a ) { v = a; } "
                        "i32 f( T a ) { return 0; } i32 f( T a, i32 b ) { return b; } };\n"
                        "i32 main() { return 0; }" );
 
@@ -3007,15 +3007,15 @@ TEST_CASE( "overloads_exempt_move_on_a_type_that_owns_nothing", "[sema][overload
 TEST_CASE( "overloads_underline_the_argument_that_chose_the_type", "[sema][generic][bound]" )
 {
     const Typed p( "struct Plain { i32 v; };\n"
-                   "i32 ordered<T>( T a ) where T : Comparable { return 1; }\n"
+                   "i32 ordered<T>( T a ) where T : comparable { return 1; }\n"
                    "i32 breaks( Plain p ) { return ordered( p ); }\n"
                    "i32 main() { return 0; }" );
 
     INFO( p.rendered() );
-    REQUIRE( p.rendered().find( "^ ordering needs a number" ) != std::string::npos );
+    REQUIRE( p.rendered().find( "^ declare `Plain` with" ) != std::string::npos );
 
     // One caret, so it is the argument and not the seven characters of `ordered`.
-    REQUIRE( p.rendered().find( "^^ ordering needs a number" ) == std::string::npos );
+    REQUIRE( p.rendered().find( "^^ declare `Plain` with" ) == std::string::npos );
 }
 
 // PLAN §6.7. A member's parameter 0 is the receiver and the overload check drops it before
@@ -3195,7 +3195,7 @@ TEST_CASE( "overloads_bind_self_to_the_bounded_parameter", "[sema][interfaces][s
             REQUIRE( p.errors() == 1 );
             REQUIRE( p.rendered().find( c.message ) != std::string::npos );
             REQUIRE( p.rendered().find( c.help ) != std::string::npos );
-            REQUIRE( p.rendered().find( "Numeric" ) == std::string::npos );
+            REQUIRE( p.rendered().find( "numeric" ) == std::string::npos );
         }
     }
 }

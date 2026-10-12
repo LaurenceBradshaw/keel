@@ -30,7 +30,7 @@ struct Point
     i32 y;
 };
 
-struct Pair<T> where T : Copyable
+struct Pair<T> where T : copyable
 {
     T first;
     T second;
@@ -97,7 +97,7 @@ class meter
     }
 };
 
-T larger<T>( T a, T b ) where T : Copyable & Comparable
+T larger<T>( T a, T b ) where T : copyable & comparable
 {
     if( a > b )
     {

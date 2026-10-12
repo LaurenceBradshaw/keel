@@ -136,7 +136,7 @@ class Two
 
 // Two overloads of one generic at the same type arguments. Named by their type arguments alone they
 // were one C symbol, which is why the parameters are part of the name too.
-class Holder<T> where T : Copyable & Integral
+class Holder<T> where T : copyable & integral
 {
     T held;
 
@@ -191,7 +191,7 @@ i32 either( i32 a )
     return 300 + a * 0;
 }
 
-i32 either<T>( T a ) where T : Copyable & Integral
+i32 either<T>( T a ) where T : copyable & integral
 {
     return 400 + wrap<i32>( a ) * 0;
 }

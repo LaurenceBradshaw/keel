@@ -6,7 +6,7 @@ interface Hashable
     u64 hash() const;
 };
 
-struct Pair<T> where T : Copyable
+struct Pair<T> where T : copyable
 {
     T a;
 };

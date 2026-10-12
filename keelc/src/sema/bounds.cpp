@@ -3,6 +3,7 @@
 
 #include "sema/bounds.h"
 #include <fmt/format.h>
+#include "sema/conformances.h"
 #include "sema/type_checker.h"
 
 namespace keel::sema
@@ -20,12 +21,10 @@ struct Named_bound
 };
 
 constexpr Named_bound k_bounds[] = {
-    { "Copyable", sema::Bound::Copyable },
-    { "Equatable", sema::Bound::Equatable },
-    { "Comparable", sema::Bound::Comparable },
-    { "Numeric", sema::Bound::Numeric },
-    { "Integral", sema::Bound::Integral },
-    { "Floating", sema::Bound::Floating },
+    { "copyable", sema::Bound::Copyable },
+    { "numeric", sema::Bound::Numeric },
+    { "integral", sema::Bound::Integral },
+    { "floating", sema::Bound::Floating },
 };
 
 // Absent pairs are refused, and the omissions are the point: float to int has no one obvious
@@ -62,8 +61,8 @@ sema::Conversion conversion_for( Type_kind from, Type_kind to )
 }
 
 } // namespace
-// "Copyable, Equatable, ... and Floating", from the table above rather than from a string - so a
-// seventh bound updates every message that lists them without anyone remembering to.
+// "copyable, numeric, integral and floating", from the table above rather than from a string - so a
+// fifth bound updates every message that lists them without anyone remembering to.
 std::string known_bound_names()
 {
     std::string listed;
@@ -102,10 +101,6 @@ std::string_view bound_requirement( Bound bound )
     {
     case Bound::Copyable:
         return "it owns something, itself or through a field, so copying it would own that twice";
-    case Bound::Equatable:
-        return "equality needs a number, a `bool`, an `enum` or a pointer of either kind";
-    case Bound::Comparable:
-        return "ordering needs a number";
     case Bound::Numeric:
         return "it has to be an integer or a float";
     case Bound::Integral:
@@ -136,15 +131,6 @@ std::optional<Bound> operator_to_bound( Token_kind kind )
 {
     switch( kind )
     {
-    case Token_kind::Equal_equal:
-    case Token_kind::Bang_equal:
-        return Bound::Equatable;
-    case Token_kind::Less:
-    case Token_kind::Greater:
-    case Token_kind::Less_equal:
-    case Token_kind::Greater_equal:
-    case Token_kind::Less_equal_greater:
-        return Bound::Comparable;
     case Token_kind::Plus:
     case Token_kind::Minus:
     case Token_kind::Star:
@@ -203,12 +189,6 @@ bool Bounds::satisfies( Type_id type, Bound bound ) const
         );
     }
 
-    // Ordering is deliberately narrower than equality: a pointer and an enum can be told apart but
-    // cannot be ranked.
-    case Bound::Equatable:
-        return table_.is_integer( type ) || table_.is_float( type ) || type == table_.builtin( Type_kind::Bool ) ||
-               table_.is_enum( type ) || table_.is_pointer( type ) || table_.is_many_pointer( type );
-    case Bound::Comparable:
     case Bound::Numeric:
         return table_.is_integer( type ) || table_.is_float( type );
     case Bound::Integral:
@@ -232,9 +212,26 @@ std::span<const Type_id> Bounds::interfaces_of( Type_id parameter ) const
     return found == interfaces_.end() ? std::span<const Type_id> {} : std::span<const Type_id>( found->second );
 }
 
+bool Bounds::promises( Type_id parameter, Type_id interface ) const
+{
+    const std::span<const Type_id> promised = interfaces_of( parameter );
+
+    return std::find( promised.begin(), promised.end(), interface ) != promised.end();
+}
+
+bool Bounds::conforms( Type_id type, Type_id interface ) const
+{
+    if( table_.is_parameter( type ) )
+    {
+        return promises( type, interface );
+    }
+
+    return table_.is_error( type ) || table_.implements( type, interface ) || supplies( ast_, table_, type, interface );
+}
+
 // Reports every unmet bound rather than the first: two are two things to fix, and one per compile is
-// two compiles. What it does *not* report twice is one mistake wearing several names - closure()
-// stored `Integral` as `Integral | Numeric | Comparable | Equatable`, so a struct fails all four.
+// two compiles. What it does *not* report twice is one mistake wearing several names: `integral`
+// promises `numeric`, `comparable` and `equatable` too, so a struct fails all four.
 //
 // A span rather than a node, because a deduced type argument has no annotation to underline.
 void Bounds::check_bounds( Node_id parameter, Span at, Type_id argument, std::string_view callee )
@@ -242,13 +239,38 @@ void Bounds::check_bounds( Node_id parameter, Span at, Type_id argument, std::st
     // An interface is met by a declared `implements`, or by a parameter promising it in turn.
     if( const auto named = interfaces_.find( parameter.v ); named != interfaces_.end() && !table_.references_error( argument ) )
     {
+        const auto found = bounds_.find( parameter.v );
+        const bool not_a_number =
+            found != bounds_.end() && contains( found->second, Bound::Numeric ) && !satisfies( argument, Bound::Numeric );
+        const Type_id comparable = table_.prelude_interface( Prelude_interface::Comparable );
+
+        std::vector<Type_id> failing;
+
         for( const Type_id interface : named->second )
         {
-            const std::span<const Type_id> promised = interfaces_of( argument );
-
-            if( table_.implements( argument, interface ) ||
-                std::find( promised.begin(), promised.end(), interface ) != promised.end() )
+            // What a failing interface or bound requires is the same mistake said again.
+            if( conforms( argument, interface ) ||
+                ( not_a_number && ( interface == comparable || table_.refines( comparable, interface ) ) ) ||
+                std::ranges::any_of( failing, [&]( Type_id failed ) { return table_.refines( failed, interface ); } ) )
             {
+                continue;
+            }
+
+            failing.push_back( interface );
+
+            if( table_.is_parameter( argument ) )
+            {
+                reporter_.error_at(
+                    at,
+                    fmt::format(
+                        "`{}` does not promise `{}`, and `{}` requires it of `{}`",
+                        table_.name( argument ),
+                        table_.name( interface ),
+                        callee,
+                        interner_.text( ast_.name( parameter ) )
+                    ),
+                    forwarded_help( argument, table_.name( interface ) )
+                );
                 continue;
             }
 
@@ -261,10 +283,11 @@ void Bounds::check_bounds( Node_id parameter, Span at, Type_id argument, std::st
                     table_.name( interface ),
                     table_.name( argument )
                 ),
-                table_.is_parameter( argument )
-                    ? fmt::format(
-                          "add `{}` to the `where` clause for `{}`", table_.name( interface ), table_.name( argument )
-                      )
+                table_.is_prelude_interface( interface ) && supplied_by_kind( ast_, table_, argument, interface )
+                    ? dropped_help( argument, interface )
+                : table_.is_prelude_interface( interface ) &&
+                        ( table_.is_builtin( argument ) || table_.is_pointer( argument ) || table_.is_many_pointer( argument ) )
+                    ? fmt::format( "the compiler makes only numbers `{}`", table_.name( interface ) )
                 : table_.is_struct( argument )
                     ? fmt::format( "declare `{}` with `implements {}`", table_.name( argument ), table_.name( interface ) )
                     : fmt::format(
@@ -318,25 +341,7 @@ void Bounds::check_bounds( Node_id parameter, Span at, Type_id argument, std::st
 
         if( forwarded )
         {
-            // An interface's `self` has no owner, and no clause it could take would help.
-            if( ast_.kind( table_.get( argument ).declaration ) == Node_kind::Interface_decl )
-            {
-                help = fmt::format( "an interface cannot promise `{}` of its implementers", known.name );
-            }
-            else
-            {
-                // The declaration to name is the one that introduced *the argument's* parameter: for a
-                // field of a generic aggregate that is the aggregate, and reading the enclosing function
-                // instead aborted on every annotation the signature pass reached.
-                const Node_id owner = owner_of_.at( table_.get( argument ).declaration.v );
-
-                help = fmt::format(
-                    "add `{}` to the `where` clause for `{}` on `{}`",
-                    known.name,
-                    table_.name( argument ),
-                    interner_.text( ast_.name( owner ) )
-                );
-            }
+            help = forwarded_help( argument, known.name );
         }
 
         reporter_.error_at(
@@ -352,6 +357,74 @@ void Bounds::check_bounds( Node_id parameter, Span at, Type_id argument, std::st
             std::move( help )
         );
     }
+}
+
+std::string Bounds::forwarded_help( Type_id parameter, std::string_view promise ) const
+{
+    // An interface's `self` has no owner, and no clause it could take would help.
+    if( ast_.kind( table_.get( parameter ).declaration ) == Node_kind::Interface_decl )
+    {
+        return fmt::format( "an interface cannot promise `{}` of its implementers", promise );
+    }
+
+    // The declaration that introduced the parameter: for a field of a generic aggregate that is the
+    // aggregate, which the signature pass reaches with no enclosing function.
+    const Node_id owner = owner_of_.at( table_.get( parameter ).declaration.v );
+
+    return fmt::format(
+        "add `{}` to the `where` clause for `{}` on `{}`",
+        promise,
+        table_.name( parameter ),
+        interner_.text( ast_.name( owner ) )
+    );
+}
+
+std::string Bounds::dropped_help( Type_id type, Type_id interface ) const
+{
+    const Type_id equatable = table_.prelude_interface( Prelude_interface::Equatable );
+    std::string   place;
+
+    for( const Node_id block : ast_.declarations( ast_.root() ) )
+    {
+        if( ast_.kind( block ) == Node_kind::Implements_decl && types_.type_of( block ) == type &&
+            types_.type_of( ast_.implemented( block )[0] ) == equatable )
+        {
+            place = reporter_.position( ast_.span( ast_.implemented( block )[0] ) );
+        }
+    }
+
+    std::vector<std::string_view> dropped;
+
+    for( const Prelude_interface which :
+         { Prelude_interface::Equatable, Prelude_interface::Comparable, Prelude_interface::Hashable } )
+    {
+        const Type_id each = table_.prelude_interface( which );
+
+        if( supplied_by_kind( ast_, table_, type, each ) && !supplies( ast_, table_, type, each ) )
+        {
+            dropped.push_back( table_.name( each ) );
+        }
+    }
+
+    std::string list;
+
+    for( std::size_t i = 0; i < dropped.size(); ++i )
+    {
+        if( i != 0 )
+        {
+            list += i + 1 == dropped.size() ? " and " : ", ";
+        }
+
+        list += fmt::format( "`{}`", dropped[i] );
+    }
+
+    return fmt::format(
+        "`{0}`'s own `equatable` at {1} drops the compiler's {2}; write `implements {3} for {0}` too",
+        table_.name( type ),
+        place,
+        list,
+        table_.name( interface )
+    );
 }
 
 Bound_set Bounds::bounds_for( Type_id parameter ) const
@@ -410,7 +483,7 @@ Conversion Bounds::conversion_between( Type_id from, Type_id to, Type_id& witnes
     const std::vector<Type_id> tos   = possible_types( to );
 
     // A side that is not enumerable has no set to check against, and a vacuous product answers
-    // `Both` - which would let `cast<f64>` through on a `Copyable` `T` that may be a struct. The
+    // `Both` - which would let `cast<f64>` through on a `copyable` `T` that may be a struct. The
     // caller reports the missing bound; refusing here is what stops the hole existing at all.
     if( froms.empty() || tos.empty() )
     {
@@ -498,7 +571,7 @@ Type_id Bounds::type_the_literal_overflows( Node_id literal, bool negative, Boun
     {
         if( floating_literal )
         {
-            // A float literal only reaches here under `Floating`, whose admissible set is floats.
+            // A float literal only reaches here under `floating`, whose admissible set is floats.
             assert( table_.is_float( candidate ) && "a fractional literal was measured against an integer" );
 
             if( !table_.fits_float( literal_pool_.floating( value ), candidate ) )
@@ -613,7 +686,40 @@ void Bounds::declare_type_parameters( Node_id declaration, Node_id list )
             direct_bounds = closure( direct_bounds | static_cast<Bound_set>( bound.value() ) );
         }
 
+        // A number orders, so `numeric` promises `comparable`, and through it `equatable`.
+        if( const Type_id comparable = table_.prelude_interface( Prelude_interface::Comparable );
+            contains( direct_bounds, Bound::Numeric ) && comparable.is_valid() )
+        {
+            std::vector<Type_id>& named = interfaces_[it->v];
+
+            if( std::find( named.begin(), named.end(), comparable ) == named.end() )
+            {
+                named.push_back( comparable );
+            }
+        }
+
+        if( const auto interfaces = interfaces_.find( it->v ); interfaces != interfaces_.end() )
+        {
+            require_refinements( interfaces->second );
+        }
+
         bounds_.emplace( it->v, direct_bounds );
+    }
+}
+
+// Appends what each interface requires, after the ones written, which stay first for the helps
+// that name one. Walked by index because the vector grows under the walk.
+void Bounds::require_refinements( std::vector<Type_id>& interfaces ) const
+{
+    for( std::size_t i = 0; i < interfaces.size(); ++i )
+    {
+        for( const Type_id refined : table_.refinements( interfaces[i] ) )
+        {
+            if( std::find( interfaces.begin(), interfaces.end(), refined ) == interfaces.end() )
+            {
+                interfaces.push_back( refined );
+            }
+        }
     }
 }
 
@@ -626,28 +732,18 @@ Bound_set Bounds::closure( Bound_set direct )
 
     if( contains( direct, Bound::Numeric ) )
     {
-        direct |= Bound::Comparable;
-
         // The one implication that is a fact about *satisfaction* rather than about the bounds:
-        // D33's operators are not shipped, so only a builtin can satisfy `Numeric` today and every
+        // D33's operators are not shipped, so only a builtin can satisfy `numeric` today and every
         // builtin copies. An arithmetic class that owns a resource would make it false, and the
-        // failure is safe - `Copyable` is in the promised set, so the call site refuses it.
-        //
-        // Deliberately not extended to `Comparable` and `Equatable`: a string orders and compares
-        // and owns its bytes, and keeping those two borrowing is what leaves room for it.
+        // failure is safe - `copyable` is in the promised set, so the call site refuses it.
         direct |= Bound::Copyable;
-    }
-
-    if( contains( direct, Bound::Comparable ) )
-    {
-        direct |= Bound::Equatable;
     }
 
     return direct;
 }
 
-// Every concrete type a value may turn out to be. A parameter without `Numeric` comes back empty and
-// the emptiness is the point: `Copyable` alone admits every struct, which cannot be enumerated. An
+// Every concrete type a value may turn out to be. A parameter without `numeric` comes back empty and
+// the emptiness is the point: `copyable` alone admits every struct, which cannot be enumerated. An
 // empty answer means "not enumerable", never "nothing to check".
 std::vector<Type_id> Bounds::possible_types( Type_id type ) const
 {
@@ -658,7 +754,7 @@ std::vector<Type_id> Bounds::possible_types( Type_id type ) const
 
     const Bound_set bounds = bounds_for( type );
 
-    // `Integral` and `Floating` are stored with `Numeric` in them by closure(), so this one test
+    // `integral` and `floating` are stored with `numeric` in them by closure(), so this one test
     // covers all three.
     return contains( bounds, Bound::Numeric ) ? admissible_numeric_types( bounds ) : std::vector<Type_id> {};
 }
@@ -866,30 +962,26 @@ private:
 
 TEST_CASE( "bounds_close_a_where_clause_over_what_it_implies", "[sema][bound]" )
 {
-    Promises p( "void f<T>( const ref T a ) where T : Integral { }\n"
-                "void g<U>( const ref U a ) where U : Comparable { }\n" );
+    Promises p( "void f<T>( const ref T a ) where T : integral { }\n"
+                "void g<U>( const ref U a ) where U : numeric { }\n" );
 
     const Bound_set integral = p.bounds().bounds_for( p.parameter( 0 ) );
 
     REQUIRE( contains( integral, Bound::Integral ) );
     REQUIRE( contains( integral, Bound::Numeric ) );
-    REQUIRE( contains( integral, Bound::Comparable ) );
-    REQUIRE( contains( integral, Bound::Equatable ) );
     REQUIRE( contains( integral, Bound::Copyable ) );
 
-    // Downhill only. Ordering implies equality and nothing else - `Copyable` in particular is a
-    // fact about numbers, and a type that orders may still own its bytes.
-    const Bound_set comparable = p.bounds().bounds_for( p.parameter( 1 ) );
+    // Downhill only: a number need not be an integer.
+    const Bound_set numeric = p.bounds().bounds_for( p.parameter( 1 ) );
 
-    REQUIRE( contains( comparable, Bound::Equatable ) );
-    REQUIRE( !contains( comparable, Bound::Numeric ) );
-    REQUIRE( !contains( comparable, Bound::Copyable ) );
-    REQUIRE( !contains( comparable, Bound::Integral ) );
+    REQUIRE( contains( numeric, Bound::Copyable ) );
+    REQUIRE( !contains( numeric, Bound::Integral ) );
+    REQUIRE( !contains( numeric, Bound::Floating ) );
 }
 
 TEST_CASE( "bounds_ask_a_parameter_what_it_promises_and_a_type_what_it_delivers", "[sema][bound]" )
 {
-    Promises p( "void f<T>( const ref T a ) where T : Integral { }\n" );
+    Promises p( "void f<T>( const ref T a ) where T : integral { }\n" );
 
     const Type_id parameter = p.parameter( 0 );
 
@@ -920,8 +1012,8 @@ TEST_CASE( "bounds_take_copyable_from_the_structural_answer", "[sema][bound][own
 
 TEST_CASE( "bounds_refuse_a_conversion_on_a_parameter_they_cannot_enumerate", "[sema][bound]" )
 {
-    Promises p( "void f<T>( const ref T a ) where T : Numeric { }\n"
-                "void g<U>( const ref U a ) where U : Copyable { }\n" );
+    Promises p( "void f<T>( const ref T a ) where T : numeric { }\n"
+                "void g<U>( const ref U a ) where U : copyable { }\n" );
 
     Type_id witness;
 
@@ -932,7 +1024,7 @@ TEST_CASE( "bounds_refuse_a_conversion_on_a_parameter_they_cannot_enumerate", "[
     REQUIRE( p.bounds().conversion_between( p.parameter( 0 ), p.table().floating( 64 ), witness ) == Conversion::Cast_only );
     REQUIRE( witness.is_valid() ); // an admissible type decided it, and that is what the help names
 
-    // `Copyable` admits every struct, which admissible_numeric_types cannot enumerate - so the
+    // `copyable` admits every struct, which admissible_numeric_types cannot enumerate - so the
     // product is empty, and an empty product is a refusal rather than a vacuous yes.
     REQUIRE( p.bounds().conversion_between( p.parameter( 1 ), p.table().floating( 64 ), witness ) == Conversion::None );
 
@@ -943,7 +1035,7 @@ TEST_CASE( "bounds_refuse_a_conversion_on_a_parameter_they_cannot_enumerate", "[
 
 TEST_CASE( "bounds_name_an_admissible_type_rather_than_the_parameter", "[sema][bound]" )
 {
-    Promises p( "void f<T>( const ref T a ) where T : Numeric { }\n" );
+    Promises p( "void f<T>( const ref T a ) where T : numeric { }\n" );
 
     REQUIRE( !p.bounds().narrowing_witness( p.table().integer( 32, true ), p.table().integer( 64, true ) ).is_valid() );
     REQUIRE(
@@ -960,8 +1052,8 @@ TEST_CASE( "bounds_name_an_admissible_type_rather_than_the_parameter", "[sema][b
 
 TEST_CASE( "bounds_measure_the_narrowest_integer_a_parameter_may_be", "[sema][bound]" )
 {
-    Promises p( "void f<T>( const ref T a ) where T : Integral { }\n"
-                "void g<U>( const ref U a ) where U : Floating { }\n" );
+    Promises p( "void f<T>( const ref T a ) where T : integral { }\n"
+                "void g<U>( const ref U a ) where U : floating { }\n" );
 
     REQUIRE( p.bounds().narrowest_admissible_width( p.parameter( 0 ) ) == 8 );
     REQUIRE( p.bounds().narrowest_admissible_width( p.parameter( 1 ) ) == 0 ); // no integer is admissible at all
@@ -969,7 +1061,7 @@ TEST_CASE( "bounds_measure_the_narrowest_integer_a_parameter_may_be", "[sema][bo
 
 TEST_CASE( "bounds_reject_a_literal_the_narrowest_admissible_type_will_not_hold", "[sema][bound]" )
 {
-    Promises p( "i32 small = 3;\ni32 large = 300;\nvoid f<T>( const ref T a ) where T : Integral { }\n" );
+    Promises p( "i32 small = 3;\ni32 large = 300;\nvoid f<T>( const ref T a ) where T : integral { }\n" );
 
     const Bound_set integral = p.bounds().bounds_for( p.parameter( 0 ) );
 
@@ -983,7 +1075,7 @@ TEST_CASE( "bounds_reject_a_literal_the_narrowest_admissible_type_will_not_hold"
 
 TEST_CASE( "bounds_report_the_strongest_unmet_bound_and_not_the_ones_it_implies", "[sema][bound]" )
 {
-    Promises p( "struct S { i32 x; };\nvoid f<T>( const ref T a ) where T : Integral { }\n" );
+    Promises p( "struct S { i32 x; };\nvoid f<T>( const ref T a ) where T : integral { }\n" );
 
     const Node_id parameter = p.parameter_decl( 0 );
 
@@ -991,13 +1083,13 @@ TEST_CASE( "bounds_report_the_strongest_unmet_bound_and_not_the_ones_it_implies"
 
     INFO( p.rendered() );
     REQUIRE( p.errors() == 1 ); // a struct fails four of them, and only one is the mistake
-    REQUIRE( p.rendered().find( "not `Integral`" ) != std::string::npos );
-    REQUIRE( p.rendered().find( "Numeric" ) == std::string::npos );
+    REQUIRE( p.rendered().find( "not `integral`" ) != std::string::npos );
+    REQUIRE( p.rendered().find( "numeric" ) == std::string::npos );
 }
 
 TEST_CASE( "bounds_refuse_a_second_where_clause_for_one_parameter", "[sema][bound]" )
 {
-    Promises p( "void f<T>( const ref T a ) where T : Integral where T : Copyable { }\n" );
+    Promises p( "void f<T>( const ref T a ) where T : integral where T : copyable { }\n" );
 
     INFO( p.rendered() );
     REQUIRE( p.errors() == 1 );
@@ -1011,7 +1103,7 @@ TEST_CASE( "bounds_refuse_a_name_that_is_not_a_bound", "[sema][bound]" )
     INFO( p.rendered() );
     REQUIRE( p.errors() == 1 );
     REQUIRE( p.rendered().find( "unknown bound `Printable`" ) != std::string::npos );
-    REQUIRE( p.rendered().find( "Copyable, Equatable" ) != std::string::npos ); // listed from the table, not a string
+    REQUIRE( p.rendered().find( "copyable, numeric" ) != std::string::npos ); // listed from the table, not a string
 }
 
 } // namespace
@@ -1034,12 +1126,12 @@ TEST_CASE( "type_checker_checks_bounds_at_the_call_site", "[sema][generic][bound
 
     SECTION( "each bound, met" )
     {
-        const Typed copyable( call( "Copyable", "i32", "1" ) );
-        const Typed equatable( call( "Equatable", "bool", "true" ) );
-        const Typed comparable( call( "Comparable", "i32", "1" ) );
-        const Typed numeric( call( "Numeric", "f64", "1.0" ) );
-        const Typed integral( call( "Integral", "u8", "1" ) );
-        const Typed floating( call( "Floating", "f64", "1.0" ) );
+        const Typed copyable( call( "copyable", "i32", "1" ) );
+        const Typed equatable( call( "equatable", "bool", "true" ) );
+        const Typed comparable( call( "comparable", "i32", "1" ) );
+        const Typed numeric( call( "numeric", "f64", "1.0" ) );
+        const Typed integral( call( "integral", "u8", "1" ) );
+        const Typed floating( call( "floating", "f64", "1.0" ) );
 
         INFO(
             copyable.rendered() << equatable.rendered() << comparable.rendered() << numeric.rendered() << integral.rendered()
@@ -1053,69 +1145,69 @@ TEST_CASE( "type_checker_checks_bounds_at_the_call_site", "[sema][generic][bound
         REQUIRE( floating.clean() );
     }
 
-    SECTION( "`Copyable` is what a destructor takes away" )
+    SECTION( "`copyable` is what a destructor takes away" )
     {
-        const Typed p( call( "Copyable", "Buffer", "Buffer( 1 )" ) );
+        const Typed p( call( "copyable", "Buffer", "Buffer( 1 )" ) );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "`Buffer` is not `Copyable`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`Buffer` is not `copyable`" ) != std::string::npos );
     }
 
-    SECTION( "an enum and a pointer are `Equatable` but not `Comparable`" )
+    SECTION( "an enum and a pointer are `equatable` but not `comparable`" )
     {
         // The split is D30's: a variant can be told from another, but the declaration order it
         // happens to have is not an ordering anyone wrote down. Ditto two pointers.
-        const Typed equatable( call( "Equatable", "Colour", "Colour::Red" ) );
-        const Typed comparable( call( "Comparable", "Colour", "Colour::Red" ) );
+        const Typed equatable( call( "equatable", "Colour", "Colour::Red" ) );
+        const Typed comparable( call( "comparable", "Colour", "Colour::Red" ) );
 
         INFO( equatable.rendered() << comparable.rendered() );
         REQUIRE( equatable.clean() );
         REQUIRE( comparable.errors() == 1 );
-        REQUIRE( comparable.rendered().find( "`Colour` is not `Comparable`" ) != std::string::npos );
+        REQUIRE( comparable.rendered().find( "but `Colour` does not" ) != std::string::npos );
     }
 
     SECTION( "a bound the argument misses names the bound and what would meet it" )
     {
-        const Typed p( call( "Integral", "f64", "1.0" ) );
+        const Typed p( call( "integral", "f64", "1.0" ) );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "`f64` is not `Integral`, and `f` requires it of `T`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`f64` is not `integral`, and `f` requires it of `T`" ) != std::string::npos );
         REQUIRE( p.rendered().find( "it has to be an integer" ) != std::string::npos );
     }
 
     SECTION( "one mistake is reported once, not once per implied bound" )
     {
-        // closure() stored `Integral` as `Integral | Numeric | Comparable | Equatable`, so a struct
-        // fails all four. Only the one the author wrote is a thing they can act on.
-        const Typed p( call( "Integral", "Buffer", "Buffer( 1 )" ) );
+        // `integral` promises `numeric`, `comparable` and `equatable` too, so a struct fails all four.
+        // Only the one the author wrote is a thing they can act on.
+        const Typed p( call( "integral", "Buffer", "Buffer( 1 )" ) );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "`Integral`" ) != std::string::npos );
-        REQUIRE( p.rendered().find( "`Numeric`" ) == std::string::npos );
-        REQUIRE( p.rendered().find( "`Comparable`" ) == std::string::npos );
-        REQUIRE( p.rendered().find( "`Equatable`" ) == std::string::npos );
+        REQUIRE( p.rendered().find( "`integral`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`numeric`" ) == std::string::npos );
+        REQUIRE( p.rendered().find( "`comparable`" ) == std::string::npos );
+        REQUIRE( p.rendered().find( "`equatable`" ) == std::string::npos );
     }
 
     SECTION( "two unmet bounds that imply nothing of each other are both reported" )
     {
         // Two things to fix is two diagnostics: one per compile would be two compiles.
-        const Typed p( call( "Copyable & Comparable", "Buffer", "Buffer( 1 )" ) );
+        const Typed p( call( "copyable & comparable", "Buffer", "Buffer( 1 )" ) );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 2 );
-        REQUIRE( p.rendered().find( "not `Copyable`" ) != std::string::npos );
-        REQUIRE( p.rendered().find( "not `Comparable`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "not `copyable`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "implements `comparable`" ) != std::string::npos );
     }
 
     SECTION( "an implied bound is met by the one that implies it" )
     {
-        // `where T : Numeric` is enough for a parameter that asks only for `Equatable`, because
-        // closure() put it there when the clause was read.
-        const Typed p( "void needs<T>( const ref T a ) where T : Equatable { }\n"
-                       "void has<T>( const ref T a ) where T : Numeric { needs<T>( a ); }\n"
+        // `where T : numeric` is enough for a parameter that asks only for `equatable`, because
+        // the clause promised it when it was read.
+        const Typed p( "void needs<T>( const ref T a ) where T : equatable { }\n"
+                       "void has<T>( const ref T a ) where T : numeric { needs<T>( a ); }\n"
                        "i32 main() { return 0; }" );
 
         INFO( p.rendered() );
@@ -1124,28 +1216,30 @@ TEST_CASE( "type_checker_checks_bounds_at_the_call_site", "[sema][generic][bound
 
     SECTION( "implication does not run downhill" )
     {
-        const Typed p( "void needs<T>( const ref T a ) where T : Integral { }\n"
-                       "void has<T>( const ref T a ) where T : Numeric { needs<T>( a ); }\n"
+        const Typed p( "void needs<T>( const ref T a ) where T : integral { }\n"
+                       "void has<T>( const ref T a ) where T : numeric { needs<T>( a ); }\n"
                        "i32 main() { return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "does not promise `Integral`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "does not promise `integral`" ) != std::string::npos );
     }
 
     SECTION( "a generic forwarding its own `T` is told to widen its clause, not its type" )
     {
         // The type argument is a parameter, so the fix is a clause away rather than a type away.
         // "it has to be an integer" would be advice about the wrong thing entirely.
-        const Typed p( "void needs<T>( const ref T a ) where T : Comparable { }\n"
-                       "void has<T>( const ref T a ) where T : Equatable { needs<T>( a ); }\n"
+        const Typed p( "void needs<T>( const ref T a ) where T : comparable { }\n"
+                       "void has<T>( const ref T a ) where T : equatable { needs<T>( a ); }\n"
                        "i32 main() { return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "`T` does not promise `Comparable`" ) != std::string::npos );
-        REQUIRE( p.rendered().find( "add `Comparable` to the `where` clause for `T` on `has`" ) != std::string::npos );
-        REQUIRE( p.rendered().find( "ordering needs a number" ) == std::string::npos );
+        REQUIRE(
+            p.rendered().find( "`T` does not promise `comparable`, and `needs` requires it of `T`" ) != std::string::npos
+        );
+        REQUIRE( p.rendered().find( "add `comparable` to the `where` clause for `T` on `has`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "only numbers" ) == std::string::npos );
     }
 
     SECTION( "an unbounded parameter accepts anything" )
@@ -1160,7 +1254,7 @@ TEST_CASE( "type_checker_checks_bounds_at_the_call_site", "[sema][generic][bound
 
     SECTION( "an unknown type argument is reported once and not measured against the bounds" )
     {
-        const Typed p( "void f<T>( const ref T a ) where T : Copyable & Integral { }\n"
+        const Typed p( "void f<T>( const ref T a ) where T : copyable & integral { }\n"
                        "i32 main() { i32 v = 1; f<Nope>( v ); return 0; }" );
 
         INFO( p.rendered() );
@@ -1170,12 +1264,12 @@ TEST_CASE( "type_checker_checks_bounds_at_the_call_site", "[sema][generic][bound
 
     SECTION( "the diagnostic points at the type argument, not at the whole call" )
     {
-        const Typed p( "void f<T, U>( const ref T a, const ref U b ) where U : Integral { }\n"
+        const Typed p( "void f<T, U>( const ref T a, const ref U b ) where U : integral { }\n"
                        "i32 main() { i32 v = 1; f64 w = 1.0; f<i32, f64>( v, w ); return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "`f64` is not `Integral`, and `f` requires it of `U`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`f64` is not `integral`, and `f` requires it of `U`" ) != std::string::npos );
     }
 
     SECTION( "a bound is in hand before the declaration's own annotations are typed" )
@@ -1184,7 +1278,7 @@ TEST_CASE( "type_checker_checks_bounds_at_the_call_site", "[sema][generic][bound
         // clause on the same declaration - which is read ten lines earlier, in the same loop body.
         // Nothing else marks that order as load-bearing, so this pair is what holds it: move the
         // recording after the annotations and the first of these starts reporting.
-        const Typed copyable( "void f<T>( out T a ) where T : Copyable { }\ni32 main() { return 0; }" );
+        const Typed copyable( "void f<T>( out T a ) where T : copyable { }\ni32 main() { return 0; }" );
         const Typed unbounded( "void f<T>( out T a ) { }\ni32 main() { return 0; }" );
 
         INFO( copyable.rendered() << unbounded.rendered() );
@@ -1198,22 +1292,22 @@ TEST_CASE( "type_checker_checks_bounds_at_the_call_site", "[sema][generic][bound
     SECTION( "the value arguments are still checked after a bound fails" )
     {
         // The binding happens anyway: one unmet bound should not hide a wrong argument.
-        const Typed p( "void f<T>( const ref T a ) where T : Integral { }\n"
+        const Typed p( "void f<T>( const ref T a ) where T : integral { }\n"
                        "i32 main() { f64 v = 1.0; f<f64>( nope ); return 0; }" );
 
         INFO( p.rendered() );
-        REQUIRE( p.rendered().find( "not `Integral`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "not `integral`" ) != std::string::npos );
         REQUIRE( p.rendered().find( "nope" ) != std::string::npos );
     }
 }
 
-// `Copyable` is asked of the instance, not the declaration: `Wrap` has no destructor, so only the
+// `copyable` is asked of the instance, not the declaration: `Wrap` has no destructor, so only the
 // argument it holds can make it own, and an open `Wrap<T>` owns unless `T` promises it does not.
 TEST_CASE( "bounds_ask_copyable_of_an_instance", "[sema][generic][bound][owning]" )
 {
     constexpr std::string_view wrap = "class Tracked { public i32 n; Tracked( i32 m ) { n = m; } ~Tracked() { } };\n"
                                       "class Wrap<T> { public T v; Wrap( move T x ) { v = move x; } };\n"
-                                      "T twice<T>( T x ) where T : Copyable { return x; }\n";
+                                      "T twice<T>( T x ) where T : copyable { return x; }\n";
 
     SECTION( "an argument that owns makes the instance owning" )
     {
@@ -1223,7 +1317,7 @@ TEST_CASE( "bounds_ask_copyable_of_an_instance", "[sema][generic][bound][owning]
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "`Wrap<Tracked>` is not `Copyable`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`Wrap<Tracked>` is not `copyable`" ) != std::string::npos );
     }
 
     SECTION( "an argument that does not leaves it copyable" )
@@ -1240,14 +1334,14 @@ TEST_CASE( "bounds_ask_copyable_of_an_instance", "[sema][generic][bound][owning]
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "`Wrap<T>` is not `Copyable`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`Wrap<T>` is not `copyable`" ) != std::string::npos );
     }
 
     SECTION( "unless its argument promises it cannot" )
     {
         const Typed p(
             std::string( wrap ) +
-            "i32 h<T>( Wrap<T> w ) where T : Copyable { twice( w ); return 0; }\ni32 main() { return 0; }\n"
+            "i32 h<T>( Wrap<T> w ) where T : copyable { twice( w ); return 0; }\ni32 main() { return 0; }\n"
         );
 
         INFO( p.rendered() );
@@ -1266,7 +1360,7 @@ TEST_CASE( "bounds_ask_copyable_of_an_instance", "[sema][generic][bound][owning]
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "`Holder` is not `Copyable`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`Holder` is not `copyable`" ) != std::string::npos );
     }
 }
 
@@ -1277,28 +1371,28 @@ TEST_CASE( "bounds_name_the_declaration_that_owns_the_parameter", "[sema][generi
 {
     SECTION( "a field of a generic aggregate names the aggregate" )
     {
-        const Typed p( "struct Box<U> where U : Numeric { U v; };\n"
+        const Typed p( "struct Box<U> where U : numeric { U v; };\n"
                        "struct Pair<T> { Box<T> b; };\n"
                        "i32 main() { return 0; }" );
 
         INFO( p.rendered() );
-        REQUIRE( p.rendered().find( "add `Numeric` to the `where` clause for `T` on `Pair`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "add `numeric` to the `where` clause for `T` on `Pair`" ) != std::string::npos );
     }
 
     SECTION( "a call inside a generic function names the function" )
     {
-        const Typed p( "void has<U>( const ref U a ) where U : Comparable { }\n"
+        const Typed p( "void has<U>( const ref U a ) where U : integral { }\n"
                        "void forwards<T>( const ref T a ) { has( a ); }\n"
                        "i32 main() { return 0; }" );
 
         INFO( p.rendered() );
-        REQUIRE( p.rendered().find( "add `Comparable` to the `where` clause for `T` on `forwards`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "add `integral` to the `where` clause for `T` on `forwards`" ) != std::string::npos );
     }
 
     // An interface's `self` has no `where` clause, and stands for implementers that need not keep the promise.
     SECTION( "an interface's `self` names no declaration" )
     {
-        const Typed p( "struct Holder<T> where T : Copyable { T v; };\n"
+        const Typed p( "struct Holder<T> where T : copyable { T v; };\n"
                        "interface Wrapped { void take( Holder<self>* h ); };\n"
                        "struct P implements Wrapped { i32 v; void take( Holder<P>* h ) { } };\n"
                        "i32 main() { return 0; }" );
@@ -1306,9 +1400,9 @@ TEST_CASE( "bounds_name_the_declaration_that_owns_the_parameter", "[sema][generi
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE(
-            p.rendered().find( "`self` does not promise `Copyable`, and `Holder` requires it of `T`" ) != std::string::npos
+            p.rendered().find( "`self` does not promise `copyable`, and `Holder` requires it of `T`" ) != std::string::npos
         );
-        REQUIRE( p.rendered().find( "an interface cannot promise `Copyable` of its implementers" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "an interface cannot promise `copyable` of its implementers" ) != std::string::npos );
         REQUIRE( p.rendered().find( "`where` clause" ) == std::string::npos );
     }
 }
@@ -1338,7 +1432,7 @@ TEST_CASE( "type_checker_checks_a_generic_body_against_its_parameters", "[sema][
         // The bare parameter of an unbounded `T` is D31's read-only borrow, because `T` may turn
         // out to own something. Returning it by value would hand out a second owner.
         const Typed without( "T id<T>( T a ) { return a; }\ni32 main() { return 0; }" );
-        const Typed with( "T id<T>( T a ) where T : Copyable { return a; }\ni32 main() { return 0; }" );
+        const Typed with( "T id<T>( T a ) where T : copyable { return a; }\ni32 main() { return 0; }" );
 
         INFO( without.rendered() << with.rendered() );
         REQUIRE( without.errors() == 1 );
@@ -1348,7 +1442,7 @@ TEST_CASE( "type_checker_checks_a_generic_body_against_its_parameters", "[sema][
 
     SECTION( "an unknown name is reported at the definition" )
     {
-        const Typed p( "T id<T>( T a ) where T : Copyable { return nonsense; }\ni32 main() { return 0; }" );
+        const Typed p( "T id<T>( T a ) where T : copyable { return nonsense; }\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.rendered().find( "`nonsense` is not declared" ) != std::string::npos );
@@ -1421,8 +1515,8 @@ TEST_CASE( "bounds_meet_an_interface_only_by_implements", "[sema][interfaces]" )
           "`measure` needs a `T` that implements `Shape`, but `Plain` does not",
           "declare `Plain` with `implements Shape`" },
         { "f64 outer<U>( const ref U u ) where U : Named { return measure( u ); }\ni32 main() { return 0; }",
-          "`measure` needs a `T` that implements `Shape`, but `U` does not",
-          "add `Shape` to the `where` clause for `U`" },
+          "`U` does not promise `Shape`, and `measure` requires it of `T`",
+          "add `Shape` to the `where` clause for `U` on `outer`" },
         { "f64 both<T>( const ref T t ) where T : Shape & Named { return t.area(); }\n"
           "i32 main() { Sq q = Sq { 1.0 }; both( q ); return 0; }",
           "`both` needs a `T` that implements `Named`, but `Sq` does not",

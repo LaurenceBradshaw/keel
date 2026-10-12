@@ -1372,8 +1372,8 @@ TEST_CASE( "type_checker_checks_constants_in_a_generic_body", "[sema][generic][b
 {
     SECTION( "division and remainder by a literal zero" )
     {
-        const Typed divide( "T f<T>( T a ) where T : Integral { return a / 0; }\ni32 main() { return 0; }" );
-        const Typed modulo( "T f<T>( T a ) where T : Integral { return a % 0; }\ni32 main() { return 0; }" );
+        const Typed divide( "T f<T>( T a ) where T : integral { return a / 0; }\ni32 main() { return 0; }" );
+        const Typed modulo( "T f<T>( T a ) where T : integral { return a % 0; }\ni32 main() { return 0; }" );
 
         INFO( divide.rendered() << modulo.rendered() );
         REQUIRE( divide.rendered().find( "division by zero" ) != std::string::npos );
@@ -1385,7 +1385,7 @@ TEST_CASE( "type_checker_checks_constants_in_a_generic_body", "[sema][generic][b
         // Reached by the literal's node kind rather than by the type: inside a generic the divisor
         // has adopted `T`, which is neither an integer nor a float, so the type cannot say which
         // pool holds it.
-        const Typed p( "T f<T>( T a ) where T : Floating { return a / 0.0; }\ni32 main() { return 0; }" );
+        const Typed p( "T f<T>( T a ) where T : floating { return a / 0.0; }\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.rendered().find( "division by zero" ) != std::string::npos );
@@ -1393,7 +1393,7 @@ TEST_CASE( "type_checker_checks_constants_in_a_generic_body", "[sema][generic][b
 
     SECTION( "a non-zero divisor is left alone" )
     {
-        const Typed p( "T f<T>( T a ) where T : Integral { return a / 2; }\ni32 main() { return 0; }" );
+        const Typed p( "T f<T>( T a ) where T : integral { return a / 2; }\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
@@ -1401,10 +1401,10 @@ TEST_CASE( "type_checker_checks_constants_in_a_generic_body", "[sema][generic][b
 
     SECTION( "a shift count is held to the narrowest width the bound admits" )
     {
-        // `Integral` admits `i8`, so the count must be in range for eight bits. Same rule as the
+        // `integral` admits `i8`, so the count must be in range for eight bits. Same rule as the
         // literal's value, and answerable for the same reason.
-        const Typed fits( "T f<T>( T a ) where T : Integral { return a << 7; }\ni32 main() { return 0; }" );
-        const Typed over( "T f<T>( T a ) where T : Integral { return a << 8; }\ni32 main() { return 0; }" );
+        const Typed fits( "T f<T>( T a ) where T : integral { return a << 7; }\ni32 main() { return 0; }" );
+        const Typed over( "T f<T>( T a ) where T : integral { return a << 8; }\ni32 main() { return 0; }" );
 
         INFO( fits.rendered() << over.rendered() );
         REQUIRE( fits.clean() );

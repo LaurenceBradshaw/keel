@@ -4,7 +4,7 @@
 // Each check is the mathematical answer, and several are answers C++ gets wrong: it converts both
 // sides to a common type first, and `-1 < 1u` is false there.
 
-bool below<T>( T a, i64 limit ) where T : Numeric
+bool below<T>( T a, i64 limit ) where T : numeric
 {
     return a < limit;
 }

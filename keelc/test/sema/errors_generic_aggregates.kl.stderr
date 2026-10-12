@@ -22,7 +22,7 @@ error: `Box` takes 1 type argument, but 2 were given
 54 |     Box<i32, f64> many;
    |        ^^^^^^^^^^ `Box` declares `T`
 
-error: `f64` is not `Integral`, and `Counted` requires it of `T`
+error: `f64` is not `integral`, and `Counted` requires it of `T`
   --> sema/errors_generic_aggregates.kl:55:13
    |
 55 |     Counted<f64>  unbounded;
@@ -55,13 +55,13 @@ error: expected `i32`, but got `bool`
 error: `Odd` contains itself, so it has no size
   --> sema/errors_generic_aggregates.kl:87:1
    |
-87 | struct Odd<T> where T : Copyable
+87 | struct Odd<T> where T : copyable
    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Odd -> Odd
 
 error: `Deep` contains itself, so it has no size
   --> sema/errors_generic_aggregates.kl:92:1
    |
-92 | struct Deep<T> where T : Copyable
+92 | struct Deep<T> where T : copyable
    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Deep -> Deep
 
 error: `Grows` is instantiated with a bigger type argument each time round

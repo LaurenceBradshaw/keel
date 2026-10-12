@@ -1,0 +1,25 @@
+// A NaN has no hash, as it has no order: `hash()` on one prints the file, the line and the call as
+// written, and aborts.
+f64 quotient( f64 a, f64 b )
+{
+    return a / b;
+}
+
+u64 digest<T>( const ref T v ) where T : hashable
+{
+    return v.hash();
+}
+
+i32 main()
+{
+    f64 nan = quotient( 0.0, 0.0 );
+
+    println( "before" );
+
+    if( digest( nan ) == 0 )
+    {
+        return 1;
+    }
+
+    return 0;
+}

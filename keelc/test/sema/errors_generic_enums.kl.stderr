@@ -28,7 +28,7 @@ error: `Opt` is generic, so its type arguments must be written
 45 |     Opt           bare;
    |     ^^^ as in `Opt<i32>`
 
-error: `Buf` is not `Copyable`, and `Opt` requires it of `T`
+error: `Buf` is not `copyable`, and `Opt` requires it of `T`
   --> sema/errors_generic_enums.kl:46:9
    |
 46 |     Opt<Buf>      unbounded;

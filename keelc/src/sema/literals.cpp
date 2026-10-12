@@ -101,7 +101,7 @@ Type_id Literals::check_literal( Node_id id, Type_id expected )
         // Neither carries a Literal_id - a bool's value is in aux and `nullptr` records nothing - so
         // the range check below reads an invalid id, finds nothing to reject, and would let them
         // adopt `T`. They are refused on kind because no bound admits either: nothing in the set
-        // makes a `T` a bool, and `Equatable` cannot tell a pointer from an `enum`.
+        // makes a `T` a bool, and `equatable` cannot tell a pointer from an `enum`.
         if( ast_.kind( literal ) == Node_kind::Bool_literal || ast_.kind( literal ) == Node_kind::Null_literal )
         {
             reporter_.error_at(
@@ -117,26 +117,29 @@ Type_id Literals::check_literal( Node_id id, Type_id expected )
             return expected;
         }
 
-        // `Numeric` is the promise that says `T` is a number, and it is what licenses treating the
-        // admissible set as numeric at all - every numeric type satisfies `Equatable` too, but so
+        // `numeric` is the promise that says `T` is a number, and it is what licenses treating the
+        // admissible set as numeric at all - every numeric type satisfies `equatable` too, but so
         // do `bool`, every `enum` and every pointer, and a literal is none of those.
         if( !contains( bounds, Bound::Numeric ) )
         {
             // A `T` bound by an interface is meant to receive a `T`, so the fix is the argument, not the clause.
             const std::span<const Type_id> interface_bounds = bounds_.interfaces_of( expected );
-            std::string                    help;
+            const auto                     user_interface   = std::ranges::find_if(
+                interface_bounds, [this]( Type_id interface ) { return !table_.is_prelude_interface( interface ); }
+            );
+            std::string help;
 
-            if( !interface_bounds.empty() )
+            if( user_interface != interface_bounds.end() )
             {
                 help = fmt::format(
                     "`{0}` is a type that implements `{1}`, so pass a `{0}`",
                     table_.name( expected ),
-                    table_.name( interface_bounds[0] )
+                    table_.name( *user_interface )
                 );
             }
             else
             {
-                help = fmt::format( "write `where {} : Numeric` to promise it is a number", table_.name( expected ) );
+                help = fmt::format( "write `where {} : numeric` to promise it is a number", table_.name( expected ) );
             }
 
             reporter_.error_at(
@@ -147,7 +150,7 @@ Type_id Literals::check_literal( Node_id id, Type_id expected )
         }
 
         // An integer literal needs nothing more: every numeric type represents one, which is why
-        // `f64 x = 1;` needs no decimal point. A *float* literal does, because a `Numeric` `T` may
+        // `f64 x = 1;` needs no decimal point. A *float* literal does, because a `numeric` `T` may
         // turn out to be an integer and a fractional value is not one.
         if( floating_literal && !contains( bounds, Bound::Floating ) )
         {
@@ -155,7 +158,7 @@ Type_id Literals::check_literal( Node_id id, Type_id expected )
                 ast_.span( id ),
                 fmt::format( "a fractional literal cannot be a `{}`", table_.name( expected ) ),
                 fmt::format(
-                    "`{}` may be an integer; write `where {} : Floating`", table_.name( expected ), table_.name( expected )
+                    "`{}` may be an integer; write `where {} : floating`", table_.name( expected ), table_.name( expected )
                 )
             );
 
@@ -929,9 +932,9 @@ TEST_CASE( "type_checker_adopts_a_literal_into_a_type_parameter", "[sema][generi
     {
         // Including a floating one: every numeric type represents an integer, which is why
         // `f64 x = 1;` needs no decimal point and why the generic case should not differ.
-        const Typed numeric( body( "Numeric", "a + 1" ) );
-        const Typed integral( body( "Integral", "a + 1" ) );
-        const Typed floating( body( "Floating", "a + 1" ) );
+        const Typed numeric( body( "numeric", "a + 1" ) );
+        const Typed integral( body( "integral", "a + 1" ) );
+        const Typed floating( body( "floating", "a + 1" ) );
 
         INFO( numeric.rendered() << integral.rendered() << floating.rendered() );
         REQUIRE( numeric.clean() );
@@ -939,13 +942,13 @@ TEST_CASE( "type_checker_adopts_a_literal_into_a_type_parameter", "[sema][generi
         REQUIRE( floating.clean() );
     }
 
-    SECTION( "a fractional literal needs `Floating` specifically" )
+    SECTION( "a fractional literal needs `floating` specifically" )
     {
-        // `Numeric` is not enough: the parameter may turn out to be an integer, and `1.5` is not
+        // `numeric` is not enough: the parameter may turn out to be an integer, and `1.5` is not
         // one. The asymmetry with the case above is the whole rule.
-        const Typed floating( body( "Floating", "a + 1.5" ) );
-        const Typed numeric( body( "Numeric", "a + 1.5" ) );
-        const Typed integral( body( "Integral", "a + 1.5" ) );
+        const Typed floating( body( "floating", "a + 1.5" ) );
+        const Typed numeric( body( "numeric", "a + 1.5" ) );
+        const Typed integral( body( "integral", "a + 1.5" ) );
 
         INFO( floating.rendered() << numeric.rendered() << integral.rendered() );
         REQUIRE( floating.clean() );
@@ -956,15 +959,15 @@ TEST_CASE( "type_checker_adopts_a_literal_into_a_type_parameter", "[sema][generi
 
     SECTION( "a parameter with no numeric bound takes no literal at all" )
     {
-        // `Equatable` is the trap: every numeric type satisfies it, but so do `bool`, every `enum`
-        // and every pointer, and a literal is none of those. `Numeric` is the promise that says the
+        // `equatable` is the trap: every numeric type satisfies it, but so do `bool`, every `enum`
+        // and every pointer, and a literal is none of those. `numeric` is the promise that says the
         // parameter is a number, and it is what licenses reading the admissible set as numeric.
-        const Typed equatable( body( "Equatable", "a" ) + "\nbool g<T>( T a ) where T : Equatable { return a == 0; }" );
+        const Typed equatable( body( "equatable", "a" ) + "\nbool g<T>( T a ) where T : equatable { return a == 0; }" );
         const Typed unbounded( "void f<T>( T a ) { T x = 1; }\ni32 main() { return 0; }" );
 
         INFO( equatable.rendered() << unbounded.rendered() );
         REQUIRE( equatable.rendered().find( "a literal cannot be a `T`" ) != std::string::npos );
-        REQUIRE( equatable.rendered().find( "where T : Numeric" ) != std::string::npos );
+        REQUIRE( equatable.rendered().find( "where T : numeric" ) != std::string::npos );
 
         // An unbounded parameter has no entry in the bound table at all, rather than an empty one.
         // Reading that as a broken invariant rather than as "promises nothing" aborted the compiler.
@@ -974,8 +977,8 @@ TEST_CASE( "type_checker_adopts_a_literal_into_a_type_parameter", "[sema][generi
 
     SECTION( "`bool` and `null` never adopt" )
     {
-        const Typed boolean( body( "Numeric", "a" ) + "\nvoid g<T>( T a ) where T : Numeric { T x = true; }" );
-        const Typed pointer( body( "Numeric", "a" ) + "\nvoid g<T>( T a ) where T : Equatable { T x = nullptr; }" );
+        const Typed boolean( body( "numeric", "a" ) + "\nvoid g<T>( T a ) where T : numeric { T x = true; }" );
+        const Typed pointer( body( "numeric", "a" ) + "\nvoid g<T>( T a ) where T : equatable { T x = nullptr; }" );
 
         INFO( boolean.rendered() << pointer.rendered() );
         REQUIRE_FALSE( boolean.clean() );
@@ -984,13 +987,13 @@ TEST_CASE( "type_checker_adopts_a_literal_into_a_type_parameter", "[sema][generi
 
     SECTION( "the value has to fit every type the bound admits" )
     {
-        // `Integral` admits all eight integers, so the window is their intersection: 0..127. That is
+        // `integral` admits all eight integers, so the window is their intersection: 0..127. That is
         // tighter than it looks and it is the price of D11 - the alternative is checking against the
         // instantiation set, where a call site added later breaks a body that compiled yesterday.
-        const Typed zero( body( "Integral", "a + 0" ) );
-        const Typed edge( body( "Integral", "a + 127" ) );
-        const Typed over( body( "Integral", "a + 128" ) );
-        const Typed under( body( "Integral", "a + -1" ) );
+        const Typed zero( body( "integral", "a + 0" ) );
+        const Typed edge( body( "integral", "a + 127" ) );
+        const Typed over( body( "integral", "a + 128" ) );
+        const Typed under( body( "integral", "a + -1" ) );
 
         INFO( zero.rendered() << edge.rendered() << over.rendered() << under.rendered() );
         REQUIRE( zero.clean() );
@@ -1006,9 +1009,9 @@ TEST_CASE( "type_checker_adopts_a_literal_into_a_type_parameter", "[sema][generi
 
     SECTION( "a narrower bound admits a wider value" )
     {
-        // The same literal against a different set: `Floating` admits only f32 and f64, and both
-        // hold 128, so what `Integral` refuses this accepts.
-        const Typed p( body( "Floating", "a + 128" ) );
+        // The same literal against a different set: `floating` admits only f32 and f64, and both
+        // hold 128, so what `integral` refuses this accepts.
+        const Typed p( body( "floating", "a + 128" ) );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
@@ -1018,18 +1021,18 @@ TEST_CASE( "type_checker_adopts_a_literal_into_a_type_parameter", "[sema][generi
     {
         // `300 does not fit in T` would be unactionable - `T` has no range. Naming the admissible
         // type that cannot hold it is the whole reason the helper returns a Type_id and not a bool.
-        const Typed p( body( "Integral", "a + 300" ) );
+        const Typed p( body( "integral", "a + 300" ) );
 
         INFO( p.rendered() );
         REQUIRE( p.rendered().find( "the bounds admit `i8`, which cannot hold it" ) != std::string::npos );
     }
 
-    SECTION( "a fractional literal out of `f32`'s range is refused under `Floating`" )
+    SECTION( "a fractional literal out of `f32`'s range is refused under `floating`" )
     {
         // f64 always fits - the lexer rejected anything strtod could not hold - so f32 is the only
         // admissible type that can reject, and it has to be consulted for the check to mean
         // anything.
-        const Typed p( body( "Floating", "a + 1.0e40" ) );
+        const Typed p( body( "floating", "a + 1.0e40" ) );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
@@ -1038,7 +1041,7 @@ TEST_CASE( "type_checker_adopts_a_literal_into_a_type_parameter", "[sema][generi
 
     SECTION( "`abs` compiles, which is the point of all of it" )
     {
-        const Typed p( "T abs<T>( T a ) where T : Copyable & Numeric { if( a < 0 ) { return 0 - a; } return a; }\n"
+        const Typed p( "T abs<T>( T a ) where T : copyable & numeric { if( a < 0 ) { return 0 - a; } return a; }\n"
                        "i32 main() { return abs<i32>( -7 ); }" );
 
         INFO( p.rendered() );

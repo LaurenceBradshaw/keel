@@ -1,0 +1,43 @@
+error: `Square` implements `Shape` but not `Named`, which `Shape` requires
+  --> sema/errors_refinement.kl:15:26
+   |
+15 | struct Square implements Shape
+   |                          ^^^^^ add `Named` to `Square`'s `implements` list
+
+error: `Tile` implements `Shape` but not `Named`, which `Shape` requires
+  --> sema/errors_refinement.kl:29:12
+   |
+29 | implements Shape for Tile
+   |            ^^^^^ write `implements Named for Tile` as well
+
+error: `Again` cannot require `Loop`, which already requires `Again`
+  --> sema/errors_refinement.kl:39:28
+   |
+39 | interface Again implements Loop
+   |                            ^^^^
+
+error: `Itself` cannot require itself
+  --> sema/errors_refinement.kl:44:29
+   |
+44 | interface Itself implements Itself
+   |                             ^^^^^^
+
+error: `i32` is not an interface
+  --> sema/errors_refinement.kl:49:28
+   |
+49 | interface Sized implements i32
+   |                            ^^^ only an interface can be implemented
+
+error: `Keyed` can only bound a type parameter, because it requires `Same`, whose `same` mentions `self`
+  --> sema/errors_refinement.kl:65:22
+   |
+65 | void hold( const ref Keyed k )
+   |                      ^^^^^ take a `T` with `where T : Keyed` instead
+
+error: expected `Named`, but got `Shape`
+  --> sema/errors_refinement.kl:76:19
+   |
+76 |     return named( s );
+   |                   ^
+
+7 errors generated

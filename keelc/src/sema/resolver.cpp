@@ -482,12 +482,9 @@ void Resolver::visit_aggregate( Node_id id )
         scopes_.back().names.emplace( self_, id );
     }
 
-    if( is_aggregate( ast_.kind( id ) ) )
+    for( const Node_id interface : ast_.implemented( id ) )
     {
-        for( const Node_id interface : ast_.implemented( id ) )
-        {
-            visit( interface );
-        }
+        visit( interface );
     }
 
     const std::unordered_map<u32, Node_id> members = declare_members( id );
@@ -2735,7 +2732,7 @@ TEST_CASE( "resolver_names_a_package's_types_and_globals", "[sema][resolve][pack
         const Resolved_program p( {
             { "main.kl",
               "import kl::geom;\n"
-              "struct Box<T> where T : Copyable { T v; };\n"
+              "struct Box<T> where T : copyable { T v; };\n"
               "kl::Point first( Box<kl::Point> b ) { return b.v; }\n"
               "i32 main() { return 0; }\n" },
             { "kl/geom.kl", "struct Point { i32 x; };\n" },

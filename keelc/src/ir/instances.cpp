@@ -255,7 +255,7 @@ TEST_CASE( "instance_queue_reaches_every_instance_once", "[ir][instances][generi
 {
     SECTION( "one per set of type arguments a call site wrote" )
     {
-        Reached r( "T id<T>( T a ) where T : Copyable { return a; }\n"
+        Reached r( "T id<T>( T a ) where T : copyable { return a; }\n"
                    "i32 main() { i32 a = id<i32>( 1 ); bool b = id<bool>( true ); return a; }" );
 
         REQUIRE( r.clean() );
@@ -264,7 +264,7 @@ TEST_CASE( "instance_queue_reaches_every_instance_once", "[ir][instances][generi
 
     SECTION( "the same arguments twice are one instance" )
     {
-        Reached r( "T id<T>( T a ) where T : Copyable { return a; }\ni32 main() { return id<i32>( 3 ) + id<i32>( 4 ); }" );
+        Reached r( "T id<T>( T a ) where T : copyable { return a; }\ni32 main() { return id<i32>( 3 ) + id<i32>( 4 ); }" );
 
         REQUIRE( r.clean() );
         REQUIRE( r.instances == std::vector<std::string> { "id<i32>" } );
@@ -273,8 +273,8 @@ TEST_CASE( "instance_queue_reaches_every_instance_once", "[ir][instances][generi
     SECTION( "a call inside a generic reaches its instance through the caller's" )
     {
         // `inner<T>` names no instance itself; `outer<i32>` is what makes it `inner<i32>`.
-        Reached r( "T inner<T>( T a ) where T : Copyable { return a; }\n"
-                   "T outer<T>( T a ) where T : Copyable { return inner<T>( a ); }\n"
+        Reached r( "T inner<T>( T a ) where T : copyable { return a; }\n"
+                   "T outer<T>( T a ) where T : copyable { return inner<T>( a ); }\n"
                    "i32 main() { return outer<i32>( 1 ); }" );
 
         REQUIRE( r.clean() );
@@ -293,7 +293,7 @@ TEST_CASE( "instance_queue_reaches_every_instance_once", "[ir][instances][generi
 
     SECTION( "a generic nothing calls has no instance" )
     {
-        Reached r( "T id<T>( T a ) where T : Copyable { return a; }\ni32 main() { return 0; }" );
+        Reached r( "T id<T>( T a ) where T : copyable { return a; }\ni32 main() { return 0; }" );
 
         REQUIRE( r.clean() );
         REQUIRE( r.instances.empty() );
@@ -328,10 +328,10 @@ TEST_CASE( "instance_queue_gives_a_generic_method_one_instance_per_call", "[ir][
     SECTION( "two of the method's own arguments on one receiver are two instances" )
     {
         Reached r(
-            "struct Box<T> where T : Copyable\n"
+            "struct Box<T> where T : copyable\n"
             "{\n"
             "    T v;\n"
-            "    U as<U>( U u ) const where U : Copyable { return u; }\n"
+            "    U as<U>( U u ) const where U : copyable { return u; }\n"
             "};\n"
             "i32 main() { Box<i32> b = Box { 1 }; i64 x = b.as( cast<i64>( 2 ) ); bool y = b.as<bool>( true ); return 0; }"
         );
@@ -342,7 +342,7 @@ TEST_CASE( "instance_queue_gives_a_generic_method_one_instance_per_call", "[ir][
 
     SECTION( "on a type that is not generic, only its own" )
     {
-        Reached r( "struct Plain { i32 n; U as<U>( U u ) const where U : Copyable { return u; } };\n"
+        Reached r( "struct Plain { i32 n; U as<U>( U u ) const where U : copyable { return u; } };\n"
                    "i32 main() { Plain p = Plain { 1 }; return p.as<i32>( 3 ); }" );
 
         REQUIRE( r.clean() );
@@ -351,11 +351,11 @@ TEST_CASE( "instance_queue_gives_a_generic_method_one_instance_per_call", "[ir][
 
     SECTION( "one generic method calling another reaches it through the caller's instance" )
     {
-        Reached r( "struct Box<T> where T : Copyable\n"
+        Reached r( "struct Box<T> where T : copyable\n"
                    "{\n"
                    "    T v;\n"
-                   "    U inner<U>( U u ) const where U : Copyable { return u; }\n"
-                   "    U outer<U>( U u ) const where U : Copyable { return inner<U>( u ); }\n"
+                   "    U inner<U>( U u ) const where U : copyable { return u; }\n"
+                   "    U outer<U>( U u ) const where U : copyable { return inner<U>( u ); }\n"
                    "};\n"
                    "i32 main() { Box<bool> b = Box { true }; return b.outer<i32>( 3 ); }" );
 
@@ -366,7 +366,7 @@ TEST_CASE( "instance_queue_gives_a_generic_method_one_instance_per_call", "[ir][
 
 TEST_CASE( "bindings_for_binds_parameters_in_order", "[ir][instances][generic]" )
 {
-    Reached r( "A first<A, B>( A a, B b ) where A : Copyable { return a; }\n"
+    Reached r( "A first<A, B>( A a, B b ) where A : copyable { return a; }\n"
                "i32 main() { return first<i32, bool>( 1, true ); }" );
 
     REQUIRE( r.clean() );
@@ -388,7 +388,7 @@ TEST_CASE( "bindings_for_binds_parameters_in_order", "[ir][instances][generic]" 
 TEST_CASE( "instance_queue_reaches_a_generic_implementer's_methods", "[ir][instances][generic][interfaces]" )
 {
     const std::string shape = "interface Shape { f64 area() const; };\n"
-                              "struct Pair<T> implements Shape where T : Copyable { T a; f64 area() const { return 2.0; } };\n"
+                              "struct Pair<T> implements Shape where T : copyable { T a; f64 area() const { return 2.0; } };\n"
                               "f64 measure( const ref Shape s ) { return s.area(); }\n";
 
     SECTION( "one per closed instance" )

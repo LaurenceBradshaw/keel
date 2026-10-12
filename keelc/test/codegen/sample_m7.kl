@@ -50,7 +50,7 @@ f64 sum_of( field( Fix ) -> f64 axis, const ref Fix a, const ref Fix b, const re
     return axis( a ) + axis( b ) + axis( c );
 }
 
-U pick<C, U>( field( C ) -> U p, const ref C obj ) where U : Copyable
+U pick<C, U>( field( C ) -> U p, const ref C obj ) where U : copyable
 {
     return p( obj );
 }

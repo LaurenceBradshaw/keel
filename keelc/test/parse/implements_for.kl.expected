@@ -1,6 +1,7 @@
 Source_file                             1:1-17:1
   Interface_decl                        3:1-6:3     name=Hashable
     <none>                              -
+    <none>                              -
     Method_decl                         5:5-5:22
       Named_type                        5:5-5:8     "u64"
       Param_list                        5:13-5:15

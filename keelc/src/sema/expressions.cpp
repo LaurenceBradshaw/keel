@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "sema/expressions.h"
+#include "sema/conformances.h"
 
 #include <fmt/format.h>
 
@@ -858,9 +859,7 @@ Node_id Expressions::method_owner( Type_id receiver, Symbol_id name ) const
     return interfaces.empty() ? Node_id {} : table_.get( interfaces.front() ).declaration;
 }
 
-// A block's method answers its interface and is not the type's, so a direct call is pointed at the
-// interface. Empty when no block for `type` declares `name`.
-std::string Expressions::reached_only_as( Type_id type, Symbol_id name ) const
+Node_id Expressions::block_for( Type_id type, Symbol_id name ) const
 {
     for( const Node_id block : ast_.declarations( ast_.root() ) )
     {
@@ -873,16 +872,47 @@ std::string Expressions::reached_only_as( Type_id type, Symbol_id name ) const
         {
             if( ast_.kind( member ) == Node_kind::Method_decl && ast_.name( member ) == name )
             {
-                return fmt::format(
-                    "`{0}` is reached only as a `{1}`: through a `where T : {1}` parameter, or a `{1}*`",
-                    interner_.text( name ),
-                    table_.name( types_.type_of( ast_.implemented( block )[0] ) )
-                );
+                return block;
             }
         }
     }
 
-    return {};
+    return Node_id {};
+}
+
+// A block's method answers its interface and is not the type's, so a direct call is pointed at the
+// interface. Empty when no block for `type` declares `name`.
+std::string Expressions::reached_only_as( Type_id type, Symbol_id name ) const
+{
+    const Node_id block = block_for( type, name );
+
+    // The compiler's conformance has no method, and no vtable either.
+    if( !block.is_valid() )
+    {
+        for( const Prelude_interface which :
+             { Prelude_interface::Equatable, Prelude_interface::Comparable, Prelude_interface::Hashable } )
+        {
+            const Type_id interface = table_.prelude_interface( which );
+
+            if( interface.is_valid() && aggregates_.find_method( table_.get( interface ).declaration, name ).is_valid() &&
+                supplies( ast_, table_, type, interface ) )
+            {
+                return fmt::format(
+                    "`{0}` is reached only as a `{1}`: through a `where T : {1}` parameter",
+                    interner_.text( name ),
+                    table_.name( interface )
+                );
+            }
+        }
+
+        return {};
+    }
+
+    return fmt::format(
+        "`{0}` is reached only as a `{1}`: through a `where T : {1}` parameter, or a `{1}*`",
+        interner_.text( name ),
+        table_.name( types_.type_of( ast_.implemented( block )[0] ) )
+    );
 }
 
 // Shared by every call shape - `p.area()`, a bare `area()` inside a method and `T::make()` -
@@ -1180,7 +1210,7 @@ Type_id Expressions::infer_binary( Node_id id )
 
         const Type_id known = infer( known_side );
 
-        if( !literal_on_the_left && operator_for( op ).is_valid() && table_.is_struct( known ) )
+        if( !literal_on_the_left && calls_operator( known, op ) )
         {
             return infer_operator_call( id, left, right, operator_for( op ) );
         }
@@ -1211,7 +1241,7 @@ Type_id Expressions::infer_binary( Node_id id )
     {
         lhs_type = infer( left );
 
-        if( operator_for( op ).is_valid() && table_.is_struct( lhs_type ) )
+        if( calls_operator( lhs_type, op ) )
         {
             return infer_operator_call( id, left, right, operator_for( op ) );
         }
@@ -1364,7 +1394,7 @@ Type_id Expressions::function_address( Node_id id, Node_id declaration )
             ),
             table_.is_parameter( type )
                 ? fmt::format(
-                      "add `where {} : Copyable` to `{}`, whose parameter is at {}",
+                      "add `where {} : copyable` to `{}`, whose parameter is at {}",
                       spelt,
                       name,
                       reporter_.position( ast_.span( refused ) )
@@ -1495,7 +1525,7 @@ Type_id Expressions::method_address( Node_id id, Node_id aggregate )
             ),
             table_.is_parameter( type )
                 ? fmt::format(
-                      "add `where {} : Copyable` to `{}`; the parameter of `{}` is at {}",
+                      "add `where {} : copyable` to `{}`; the parameter of `{}` is at {}",
                       spelt,
                       owner,
                       interner_.text( name ),
@@ -1737,7 +1767,7 @@ Type_id Expressions::field_application( Node_id id, Type_id offset )
         reporter_.error_at(
             ast_.span( id ),
             fmt::format( "`{}` reads a `{}` by copying it, which is not known to be copyable", name, table_.name( member ) ),
-            fmt::format( "add `where {} : Copyable`", table_.name( member ) )
+            fmt::format( "add `where {} : copyable`", table_.name( member ) )
         );
 
         return types_.poison( id );
@@ -1862,8 +1892,21 @@ Type_id Expressions::infer_unary( Node_id id )
     return constant_folder_.record_constant( id, result );
 }
 
-// `a == b`, `a < b` or `a <=> b` on an aggregate: a call of the left operand's operator, with the
-// right as its argument.
+bool Expressions::calls_operator( Type_id type, Token_kind op ) const
+{
+    if( !operator_for( op ).is_valid() )
+    {
+        return false;
+    }
+
+    const Type_id interface = interface_for( table_, op );
+
+    return table_.is_struct( type ) ||
+           ( table_.is_enum( type ) && interface.is_valid() && table_.implements( type, interface ) );
+}
+
+// `a == b`, `a < b` or `a <=> b` on an aggregate, or on an enum whose own block declares it: a call
+// of the left operand's operator, with the right as its argument.
 Type_id Expressions::infer_operator_call( Node_id id, Node_id object, Node_id argument, Symbol_id name )
 {
     const Type_id object_type = types_.type_of( object );
@@ -1934,7 +1977,9 @@ Node_id Expressions::find_operator(
     Node_id id, Type_id object_type, Node_id argument, Symbol_id name, std::string_view declaration_text
 )
 {
-    const Node_id declaration = table_.get( object_type ).declaration;
+    // An enum's operator is its block's; a block missing it was reported as a conformance error.
+    const Node_id block       = table_.is_enum( object_type ) ? block_for( object_type, name ) : Node_id {};
+    const Node_id declaration = block.is_valid() ? block : table_.get( object_type ).declaration;
     const Node_id method      = aggregates_.find_method( declaration, name );
 
     if( !method.is_valid() )
@@ -4128,7 +4173,7 @@ TEST_CASE( "type_checker_types_struct_literals", "[sema][types]" )
 TEST_CASE( "expressions_underline_the_part_of_a_literal_that_is_wrong", "[sema][types]" )
 {
     constexpr std::string_view types = "struct P { i32 x; i32 y; }; class C { i32 v; C( i32 a ) { v = a; } }; "
-                                       "class H { i32 v; }; struct B<T> where T : Copyable { T v; };\n";
+                                       "class H { i32 v; }; struct B<T> where T : copyable { T v; };\n";
 
     const auto underlined = [types]( std::string_view main, std::string_view message, std::string_view at, long carets )
     {
@@ -4748,8 +4793,8 @@ TEST_CASE( "type_checker_reports_when_no_overload_has_the_expected_signature", "
 // would travel by value has no function type to give it.
 TEST_CASE( "type_checker_takes_the_address_of_a_generic_instance", "[sema][types][m7][generic]" )
 {
-    constexpr std::string_view generics = "T id<T>( T a ) where T : Copyable { return a; }\n"
-                                          "T twice<T>( T a ) where T : Integral { return a + a; }\n";
+    constexpr std::string_view generics = "T id<T>( T a ) where T : copyable { return a; }\n"
+                                          "T twice<T>( T a ) where T : integral { return a + a; }\n";
 
     SECTION( "the arguments make the signature" )
     {
@@ -4812,7 +4857,7 @@ TEST_CASE( "type_checker_takes_the_address_of_a_generic_instance", "[sema][types
     // whether the type arguments were resolved at all.
     SECTION( "a type argument that names a declaration is resolved" )
     {
-        const Typed p( "struct P { i32 t; };\nT id<T>( T a ) where T : Copyable { return a; }\n"
+        const Typed p( "struct P { i32 t; };\nT id<T>( T a ) where T : copyable { return a; }\n"
                        "i32 main() { fn( P ) -> P p = &id<P>; return 0; }\n" );
 
         INFO( p.rendered() );
@@ -4844,7 +4889,7 @@ TEST_CASE( "type_checker_takes_the_address_of_a_generic_instance", "[sema][types
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "`f64` is not `Integral`, and `twice` requires it of `T`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`f64` is not `integral`, and `twice` requires it of `T`" ) != std::string::npos );
     }
 
     // The substituted parameter is `i32`, which travels by value - but the C the instance is
@@ -4871,7 +4916,7 @@ TEST_CASE( "type_checker_takes_the_address_of_a_generic_instance", "[sema][types
     }
 
     // `Wrap<T>` owns exactly when `T` does, so it is the bare parameter's case one level down;
-    // the help differs because `where Wrap<T> : Copyable` is not a thing anyone can write.
+    // the help differs because `where Wrap<T> : copyable` is not a thing anyone can write.
     SECTION( "a generic aggregate that owns through its argument is refused the same way" )
     {
         constexpr std::string_view wrap = "class Tracked { public i32 n; Tracked( i32 m ) { n = m; } ~Tracked() { } };\n"
@@ -4905,7 +4950,7 @@ TEST_CASE( "type_checker_takes_the_address_of_a_generic_instance", "[sema][types
     // taken silently, so having both is refused until one rule covers them.
     SECTION( "an overloaded name with type arguments is refused" )
     {
-        const Typed p( "T id<T>( T a ) where T : Copyable { return a; }\nf64 id( f64 a ) { return a; }\n"
+        const Typed p( "T id<T>( T a ) where T : copyable { return a; }\nf64 id( f64 a ) { return a; }\n"
                        "i32 main() { fn( i32 ) -> i32 p = &id<i32>; return 0; }\n" );
 
         INFO( p.rendered() );
@@ -4926,7 +4971,7 @@ TEST_CASE( "type_checker_types_the_address_of_a_method", "[sema][types][m7][meth
                                          "    i32 pick( f64 a ) { return 2; }\n"
                                          "};\n";
 
-    constexpr std::string_view box = "struct Box<T> where T : Copyable\n"
+    constexpr std::string_view box = "struct Box<T> where T : copyable\n"
                                      "{\n"
                                      "    T v;\n"
                                      "    T value( T other ) const { return v; }\n"
@@ -5013,7 +5058,7 @@ TEST_CASE( "type_checker_types_the_address_of_a_static_method", "[sema][types][s
                                          "    public static fn() -> i32 inner() { return &C::sealed; }\n"
                                          "};\n";
 
-    constexpr std::string_view box = "struct Box<T> where T : Copyable\n"
+    constexpr std::string_view box = "struct Box<T> where T : copyable\n"
                                      "{\n"
                                      "    T v;\n"
                                      "    static i32 made = 0;\n"
@@ -5114,7 +5159,7 @@ TEST_CASE( "type_checker_refuses_the_address_of_a_method_it_cannot_name", "[sema
                                          "    i32 pick( f64 a ) { return 2; }\n"
                                          "};\n"
                                          "class Vault { i32 v; private i32 hidden() { return 1; } };\n"
-                                         "struct Box<T> where T : Copyable\n"
+                                         "struct Box<T> where T : copyable\n"
                                          "{\n"
                                          "    T v;\n"
                                          "    T value() const { return v; }\n"
@@ -5194,7 +5239,7 @@ TEST_CASE( "type_checker_offers_the_address_of_a_method_named_without_one", "[se
 TEST_CASE( "type_checker_types_the_offset_of_a_field", "[sema][types][m7][field]" )
 {
     constexpr std::string_view types = "struct P { i32 x; f64 y; };\n"
-                                       "struct Box<T> where T : Copyable { T v; };\n";
+                                       "struct Box<T> where T : copyable { T v; };\n";
 
     SECTION( "the aggregate and the field's type" )
     {
@@ -5228,7 +5273,7 @@ TEST_CASE( "type_checker_types_the_offset_of_a_field", "[sema][types][m7][field]
 
     SECTION( "a generic application needs its field type to be copyable" )
     {
-        const Typed p( "U read<C, U>( field( C ) -> U o, const ref C q ) where U : Copyable { return o( q ); }\n"
+        const Typed p( "U read<C, U>( field( C ) -> U o, const ref C q ) where U : copyable { return o( q ); }\n"
                        "i32 main() { return 0; }\n" );
 
         INFO( p.rendered() );
@@ -5241,7 +5286,7 @@ TEST_CASE( "type_checker_refuses_the_offset_of_a_field_it_cannot_read", "[sema][
     constexpr std::string_view types = "class Buffer { public u8* ptr; ~Buffer() { } };\n"
                                        "class Holder { public Buffer buf; public i32 n; i32 secret; };\n"
                                        "struct P { i32 x; };\n"
-                                       "struct Box<T> where T : Copyable { T v; };\n";
+                                       "struct Box<T> where T : copyable { T v; };\n";
 
     struct Case
     {
@@ -6634,7 +6679,7 @@ TEST_CASE( "expressions_clear_the_variant_flag_after_a_construction", "[sema][pa
 TEST_CASE( "expressions_name_the_instance_a_pattern_destructures", "[sema][payload][generic]" )
 {
     const Typed p( "struct Red { i32 v; };\n"
-                   "enum Opt<T> where T : Copyable { None, Some( T v ) };\n"
+                   "enum Opt<T> where T : copyable { None, Some( T v ) };\n"
                    "i32 unwrap( Opt<Red> s ) { switch( s ) { case Opt::Some( v ): return v.v; case Opt::None: return 0; } }\n"
                    "i32 main() { Red r = Red { 1 }; return unwrap( Opt::Some( r ) ); }" );
 
@@ -6647,7 +6692,7 @@ TEST_CASE( "expressions_name_the_instance_a_pattern_destructures", "[sema][paylo
 TEST_CASE( "expressions_take_a_variant_instance_from_the_expectation", "[sema][payload][generic]" )
 {
     const Typed p( "struct Red { i32 v; };\n"
-                   "enum Opt<T> where T : Copyable { None, Some( T v ) };\n"
+                   "enum Opt<T> where T : copyable { None, Some( T v ) };\n"
                    "i32 main() { Opt<Red> none = Opt::None; return 0; }" );
 
     INFO( p.rendered() );
@@ -6740,7 +6785,7 @@ TEST_CASE( "type_checker_types_a_generic_aggregate", "[sema][generic][aggregate]
     {
         // No layout of its own, the way a generic function has no code: what gets ordered and
         // emitted is each instantiation.
-        const Typed p( "struct Box<T> where T : Copyable { T v; };\ni32 main() { return 0; }" );
+        const Typed p( "struct Box<T> where T : copyable { T v; };\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
@@ -6748,8 +6793,8 @@ TEST_CASE( "type_checker_types_a_generic_aggregate", "[sema][generic][aggregate]
 
     SECTION( "a type parameter is in scope inside the declaration and nowhere else" )
     {
-        const Typed inside( "struct Box<T> where T : Copyable { T v; };\ni32 main() { return 0; }" );
-        const Typed outside( "struct Box<T> where T : Copyable { T v; };\n"
+        const Typed inside( "struct Box<T> where T : copyable { T v; };\ni32 main() { return 0; }" );
+        const Typed outside( "struct Box<T> where T : copyable { T v; };\n"
                              "T stray( T a ) { return a; }\n"
                              "i32 main() { return 0; }" );
 
@@ -6760,7 +6805,7 @@ TEST_CASE( "type_checker_types_a_generic_aggregate", "[sema][generic][aggregate]
 
     SECTION( "two instantiations are two types" )
     {
-        const Typed p( "struct Box<T> where T : Copyable { T v; };\n"
+        const Typed p( "struct Box<T> where T : copyable { T v; };\n"
                        "i32 main() { Box<i32> a; Box<f64> b; a = b; return 0; }" );
 
         INFO( p.rendered() );
@@ -6771,9 +6816,9 @@ TEST_CASE( "type_checker_types_a_generic_aggregate", "[sema][generic][aggregate]
     {
         // The declared type of the field is `T`, which is true of the template and of no value
         // anyone holds - so the diagnostic has to name `i32`, which the author wrote.
-        const Typed fits( "struct Box<T> where T : Copyable { T v; };\n"
+        const Typed fits( "struct Box<T> where T : copyable { T v; };\n"
                           "i32 main() { Box<i32> b; b.v = 1; return b.v; }" );
-        const Typed wrong( "struct Box<T> where T : Copyable { T v; };\n"
+        const Typed wrong( "struct Box<T> where T : copyable { T v; };\n"
                            "i32 main() { Box<i32> b; b.v = true; return 0; }" );
 
         INFO( fits.rendered() << wrong.rendered() );
@@ -6784,7 +6829,7 @@ TEST_CASE( "type_checker_types_a_generic_aggregate", "[sema][generic][aggregate]
 
     SECTION( "and a second instantiation takes a different one" )
     {
-        const Typed p( "struct Box<T> where T : Copyable { T v; };\n"
+        const Typed p( "struct Box<T> where T : copyable { T v; };\n"
                        "i32 main() { Box<f64> b; b.v = 1.5; return b.v; }" );
 
         INFO( p.rendered() );
@@ -6795,7 +6840,7 @@ TEST_CASE( "type_checker_types_a_generic_aggregate", "[sema][generic][aggregate]
     {
         // The mirror of a generic call with no type arguments. Inference is a decision of its own
         // and is not taken here, so this names the explicit form rather than guessing.
-        const Typed p( "struct Box<T> where T : Copyable { T v; };\ni32 main() { Box b; return 0; }" );
+        const Typed p( "struct Box<T> where T : copyable { T v; };\ni32 main() { Box b; return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.rendered().find( "`Box` is generic, so its type arguments must be written" ) != std::string::npos );
@@ -6811,8 +6856,8 @@ TEST_CASE( "type_checker_types_a_generic_aggregate", "[sema][generic][aggregate]
 
     SECTION( "the wrong number, through the same helper a call uses" )
     {
-        const Typed many( "struct Box<T> where T : Copyable { T v; };\ni32 main() { Box<i32, f64> b; return 0; }" );
-        const Typed few( "struct Pair<T, U> where T : Copyable, where U : Copyable { T a; U b; };\n"
+        const Typed many( "struct Box<T> where T : copyable { T v; };\ni32 main() { Box<i32, f64> b; return 0; }" );
+        const Typed few( "struct Pair<T, U> where T : copyable, where U : copyable { T a; U b; };\n"
                          "i32 main() { Pair<i32> p; return 0; }" );
 
         INFO( many.rendered() << few.rendered() );
@@ -6822,17 +6867,17 @@ TEST_CASE( "type_checker_types_a_generic_aggregate", "[sema][generic][aggregate]
 
     SECTION( "a bound on the declaration is checked at the annotation" )
     {
-        const Typed p( "struct Box<T> where T : Integral { T v; };\ni32 main() { Box<f64> b; return 0; }" );
+        const Typed p( "struct Box<T> where T : integral { T v; };\ni32 main() { Box<f64> b; return 0; }" );
 
         INFO( p.rendered() );
-        REQUIRE( p.rendered().find( "`f64` is not `Integral`, and `Box` requires it of `T`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`f64` is not `integral`, and `Box` requires it of `T`" ) != std::string::npos );
     }
 
     SECTION( "an unknown type argument is reported once" )
     {
         // And the aggregate is not interned as `Box<<error>>`, which would spell nothing and which
         // every later diagnostic would name.
-        const Typed p( "struct Box<T> where T : Copyable { T v; };\ni32 main() { Box<Nope> b; return 0; }" );
+        const Typed p( "struct Box<T> where T : copyable { T v; };\ni32 main() { Box<Nope> b; return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.rendered().find( "unknown type `Nope`" ) != std::string::npos );
@@ -7234,7 +7279,7 @@ TEST_CASE( "type_checker_passes_an_enum_like_any_other_type", "[sema][enum]" )
 // the caller never wrote.
 TEST_CASE( "type_checker_types_a_generic_call", "[sema][generic]" )
 {
-    const std::string_view id = "T id<T>( T a ) where T : Copyable { return a; }\n";
+    const std::string_view id = "T id<T>( T a ) where T : copyable { return a; }\n";
 
     SECTION( "the call takes the argument's type" )
     {
@@ -7280,7 +7325,7 @@ TEST_CASE( "type_checker_types_a_generic_call", "[sema][generic]" )
 
     SECTION( "several parameters, bound positionally" )
     {
-        const Typed p( "T pick<T, U>( T a, U b ) where T : Copyable { return a; }\n"
+        const Typed p( "T pick<T, U>( T a, U b ) where T : copyable { return a; }\n"
                        "i32 main() { f64 d = 2.0; return pick<i32, f64>( 1, d ); }" );
 
         INFO( p.rendered() );
@@ -7918,8 +7963,8 @@ TEST_CASE( "type_checker_gives_a_class_methods_too", "[sema][method]" )
 // by the other leaves a parameter unsubstituted that a later substitution asserts on.
 TEST_CASE( "expressions_keep_a_free_function_out_of_the_expectation_s_bindings", "[sema][overload][generic]" )
 {
-    const Typed p( "struct Box<T> where T : Copyable { T v; };\n"
-                   "Box<T> make<T>( T a ) where T : Copyable { Box<T> r = Box { a }; return r; }\n"
+    const Typed p( "struct Box<T> where T : copyable { T v; };\n"
+                   "Box<T> make<T>( T a ) where T : copyable { Box<T> r = Box { a }; return r; }\n"
                    "Box<i32> make( bool a ) { Box<i32> r = Box { 0 }; return r; }\n"
                    "i32 main() { i32 x = 7; Box<i32> b = make( x ); return 0; }" );
 
@@ -7929,7 +7974,7 @@ TEST_CASE( "expressions_keep_a_free_function_out_of_the_expectation_s_bindings",
 
 TEST_CASE( "expressions_record_the_instantiation_a_method_call_chose", "[sema][method][generic]" )
 {
-    Typed p( "struct Box<T> where T : Copyable { T v; T get( ) { return this.v; } };\n"
+    Typed p( "struct Box<T> where T : copyable { T v; T get( ) { return this.v; } };\n"
              "i32 main() { Box<i32> b = Box { 7 }; return b.get( ); }" );
 
     INFO( p.rendered() );
@@ -8141,7 +8186,7 @@ TEST_CASE( "type_checker_types_a_generic_static_method", "[sema][static][generic
 {
     SECTION( "the qualifier's type arguments reach the body" )
     {
-        const Typed p( "struct Box<T> where T : Copyable { T v; static Box<T> of( T x ) { return Box { x }; } };\n"
+        const Typed p( "struct Box<T> where T : copyable { T v; static Box<T> of( T x ) { return Box { x }; } };\n"
                        "i32 main() { Box<i32> b = Box<i32>::of( 7 ); return b.v; }" );
 
         INFO( p.rendered() );
@@ -8159,7 +8204,7 @@ TEST_CASE( "type_checker_types_a_generic_static_method", "[sema][static][generic
     // code rather than a diagnostic.
     SECTION( "and the instantiation is recorded" )
     {
-        Typed p( "struct Box<T> where T : Copyable { T v; static Box<T> of( T x ) { return Box { x }; } };\n"
+        Typed p( "struct Box<T> where T : copyable { T v; static Box<T> of( T x ) { return Box { x }; } };\n"
                  "i32 main() { Box<i32> b = Box<i32>::of( 7 ); return b.v; }" );
 
         INFO( p.rendered() );
@@ -8175,7 +8220,7 @@ TEST_CASE( "type_checker_types_a_generic_static_method", "[sema][static][generic
     // free generic function - so the open spelling is not an error by itself.
     SECTION( "and a wrong argument is still refused" )
     {
-        const Typed p( "struct Box<T> where T : Copyable { T v; static Box<T> of( T x ) { return Box { x }; } };\n"
+        const Typed p( "struct Box<T> where T : copyable { T v; static Box<T> of( T x ) { return Box { x }; } };\n"
                        "i32 main() { Box<i32> b = Box<i32>::of( true ); return b.v; }" );
 
         INFO( p.rendered() );
@@ -8753,7 +8798,7 @@ TEST_CASE( "type_checker_instantiates_a_many_item_pointer", "[sema][generic][man
 {
     SECTION( "the element is deduced" )
     {
-        const Typed p( "T first<T>( T[*] p ) where T : Copyable { T r; unsafe { r = p[0]; } return r; }\n"
+        const Typed p( "T first<T>( T[*] p ) where T : copyable { T r; unsafe { r = p[0]; } return r; }\n"
                        "i32 main() { i32[*] m = nullptr; unsafe { m = alloc<i32>( 1 ); m[0] = 7; } i32 r = first( m ); "
                        "unsafe { free( m ); } return r; }" );
 
@@ -8762,9 +8807,9 @@ TEST_CASE( "type_checker_instantiates_a_many_item_pointer", "[sema][generic][man
     }
 
     // `==` and `!=` work on one as on a `T*`, so the bound that promises them is met.
-    SECTION( "it is `Equatable`" )
+    SECTION( "it is `equatable`" )
     {
-        const Typed p( "bool same<T>( T a, T b ) where T : Equatable { return a == b; }\n"
+        const Typed p( "bool same<T>( T a, T b ) where T : equatable { return a == b; }\n"
                        "i32 main() { i32[*] m = nullptr; bool s = same( m, m ); return 0; }" );
 
         INFO( p.rendered() );
@@ -8773,7 +8818,7 @@ TEST_CASE( "type_checker_instantiates_a_many_item_pointer", "[sema][generic][man
 
     SECTION( "a single-item pointer does not deduce it" )
     {
-        const Typed p( "T first<T>( T[*] p ) where T : Copyable { T r; unsafe { r = p[0]; } return r; }\n"
+        const Typed p( "T first<T>( T[*] p ) where T : copyable { T r; unsafe { r = p[0]; } return r; }\n"
                        "i32 main() { i32 v = 1; return first( &v ); }" );
 
         INFO( p.rendered() );
@@ -8782,7 +8827,7 @@ TEST_CASE( "type_checker_instantiates_a_many_item_pointer", "[sema][generic][man
 
     SECTION( "nor the other way round" )
     {
-        const Typed p( "T only<T>( T* p ) where T : Copyable { return *p; }\n"
+        const Typed p( "T only<T>( T* p ) where T : copyable { return *p; }\n"
                        "i32 main() { i32[*] m = nullptr; return only( m ); }" );
 
         INFO( p.rendered() );
@@ -8800,7 +8845,7 @@ TEST_CASE( "type_checker_instantiates_a_many_item_pointer", "[sema][generic][man
 
     // Reading an element copies it, so an unbound `T` may own and the copy is refused - moving out of
     // a slot is `Vector`'s question, not this slice's.
-    SECTION( "reading an element of an open `T` needs `Copyable`" )
+    SECTION( "reading an element of an open `T` needs `copyable`" )
     {
         const Typed p( "T first<T>( T[*] p ) { T r; unsafe { r = p[0]; } return r; }\ni32 main() { return 0; }" );
 
@@ -8907,7 +8952,7 @@ TEST_CASE( "type_checker_types_a_static_field", "[sema][types][static]" )
 // and the qualifier's type is what tells the lowerer.
 TEST_CASE( "type_checker_types_a_generic_static_field", "[sema][types][static]" )
 {
-    constexpr std::string_view types = "struct Box<T> where T : Copyable\n"
+    constexpr std::string_view types = "struct Box<T> where T : copyable\n"
                                        "{\n"
                                        "    T v;\n"
                                        "    static i32 made = 0;\n"
@@ -8951,7 +8996,7 @@ TEST_CASE( "type_checker_types_a_generic_static_field", "[sema][types][static]" 
 // A value whose destination already failed has no instance to be told it lacks.
 TEST_CASE( "type_checker_names_no_instance_where_the_destination_failed", "[sema][generics]" )
 {
-    const std::string types = "struct Box<T> where T : Copyable { T v; };\n"
+    const std::string types = "struct Box<T> where T : copyable { T v; };\n"
                               "class C { public i32* p; C( i32* q ) { p = q; } };\n";
 
     const auto errors = [&]( std::string_view declarations, std::string_view body, std::size_t count )
@@ -8965,7 +9010,7 @@ TEST_CASE( "type_checker_names_no_instance_where_the_destination_failed", "[sema
     SECTION( "a field whose type failed" )
     {
         errors(
-            "struct Outer<T> where T u8 Copyable { Box<T> inner; i32 tag; };", "Outer<i32> a = Outer { Box { 11 }, 2 };", 0
+            "struct Outer<T> where T u8 copyable { Box<T> inner; i32 tag; };", "Outer<i32> a = Outer { Box { 11 }, 2 };", 0
         );
     }
 
@@ -9174,7 +9219,7 @@ TEST_CASE( "type_checker_lets_a_void_payload_take_no_argument", "[sema][void][pa
     SECTION( "a generic body keeps its written count" )
     {
         const Typed p(
-            std::string( prelude ) + "result<T, Bad> lift<T>( T v ) where T : Copyable { return result::ok( v ); }\n"
+            std::string( prelude ) + "result<T, Bad> lift<T>( T v ) where T : copyable { return result::ok( v ); }\n"
                                      "i32 main() { result<void, Bad> r = lift( e() ); return 0; }"
         );
 

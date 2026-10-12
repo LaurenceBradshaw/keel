@@ -1,0 +1,36 @@
+// D28: `cast` answers the tag of an enum without payloads, which is its variant's index, to the
+// underlying type or any integer that holds every tag. A variant written in place converts as a
+// local does. Exits with the failing check.
+enum Suit : u16
+{
+    Hearts,
+    Spades,
+    Clubs,
+};
+
+u8 tag( Suit s )
+{
+    return cast<u8>( s );
+}
+
+i32 main()
+{
+    Suit c = Suit::Clubs;
+
+    if( cast<u16>( c ) != 2 || cast<u8>( c ) != 2 || cast<i64>( c ) != 2 )
+    {
+        return 1;
+    }
+
+    if( tag( Suit::Hearts ) != 0 || tag( Suit::Spades ) != 1 )
+    {
+        return 2;
+    }
+
+    if( cast<i32>( Suit::Spades ) != 1 )
+    {
+        return 3;
+    }
+
+    return 0;
+}

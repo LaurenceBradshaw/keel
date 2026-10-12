@@ -106,12 +106,12 @@ i32 main()
 }
 
 // And only here are they declared.
-struct Box<T> where T : Copyable
+struct Box<T> where T : copyable
 {
     T v;
 };
 
-class Counted<T> where T : Copyable
+class Counted<T> where T : copyable
 {
     public T v;
 

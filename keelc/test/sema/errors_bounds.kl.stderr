@@ -1,0 +1,67 @@
+error: `Ranked` implements `comparable` but not `equatable`, which `comparable` requires
+  --> sema/errors_bounds.kl:14:26
+   |
+14 | struct Ranked implements comparable
+   |                          ^^^^^^^^^^ add `equatable` to `Ranked`'s `implements` list
+
+error: no operator `<` for `T` and `T`
+  --> sema/errors_bounds.kl:53:12
+   |
+53 |     return a < b;
+   |            ^^^^^ `<` needs `comparable`; write `where T : comparable` on `unordered`
+
+error: `T` does not promise `comparable`, and `less` requires it of `T`
+  --> sema/errors_bounds.kl:58:18
+   |
+58 |     return less( a, a );
+   |                  ^ add `comparable` to the `where` clause for `T` on `forwards`
+
+error: unknown bound `Equatable`
+  --> sema/errors_bounds.kl:61:49
+   |
+61 | bool old_spelling<T>( const ref T a ) where T : Equatable
+   |                                                 ^^^^^^^^^ a bound is an interface, or one of copyable, numeric, integral and floating
+
+error: `hashable` can only bound a type parameter, because it requires `equatable`, whose `operator==` mentions `self`
+  --> sema/errors_bounds.kl:66:22
+   |
+66 | void keep( const ref hashable h )
+   |                      ^^^^^^^^ take a `T` with `where T : hashable` instead
+
+error: `same` needs a `T` that implements `equatable`, but `Plain` does not
+  --> sema/errors_bounds.kl:83:11
+   |
+83 |     same( q, q );
+   |           ^ declare `Plain` with `implements equatable`
+
+error: `same` needs a `T` that implements `equatable`, but `Shape` does not
+  --> sema/errors_bounds.kl:84:11
+   |
+84 |     same( s, s );
+   |           ^ write `implements equatable for Shape { ... }`
+
+error: `less` needs a `T` that implements `comparable`, but `Point` does not
+  --> sema/errors_bounds.kl:86:11
+   |
+86 |     less( p, p );
+   |           ^ declare `Point` with `implements comparable`
+
+error: `less` needs a `T` that implements `comparable`, but `Suit` does not
+  --> sema/errors_bounds.kl:87:11
+   |
+87 |     less( h, h );
+   |           ^ write `implements comparable for Suit { ... }`
+
+error: `less` needs a `T` that implements `comparable`, but `bool` does not
+  --> sema/errors_bounds.kl:88:11
+   |
+88 |     less( t, t );
+   |           ^ the compiler makes only numbers `comparable`
+
+error: `less` needs a `T` that implements `comparable`, but `i32*` does not
+  --> sema/errors_bounds.kl:89:11
+   |
+89 |     less( r, r );
+   |           ^ the compiler makes only numbers `comparable`
+
+11 errors generated

@@ -58,7 +58,7 @@ f64 area( Shape s )
 }
 
 // Generics are checked once, at the definition, against their bounds.
-T larger<T>( T a, T b ) where T : Copyable & Comparable
+T larger<T>( T a, T b ) where T : copyable & comparable
 {
     return a < b ? b : a;
 }
@@ -295,7 +295,7 @@ noted in its row.
 
 | Keel | C++ | Why |
 | --- | --- | --- |
-| Type parameters go on the name, bounds in a trailing `where`: `T max<T>( T a, T b ) where T : Comparable`. `template` is an error naming the replacement. | `template<typename T>` on a preceding line. | Both new forms are hard errors in C++, so this is new notation rather than a reinterpretation. |
+| Type parameters go on the name, bounds in a trailing `where`: `T max<T>( T a, T b ) where T : comparable`. `template` is an error naming the replacement. | `template<typename T>` on a preceding line. | Both new forms are hard errors in C++, so this is new notation rather than a reinterpretation. |
 | Bounds come from a closed, compiler-provided set, joined with `&`. | Concepts: open, structural, arbitrarily complex. | A closed set can be checked completely at the definition; an open one cannot. |
 | Generics are checked at the definition, not at the instantiation. | Both, and the interesting errors surface at the expansion. | Errors point at the generic you wrote, not at the expansion you did not. |
 | `void` is a type with one value, and may be a type argument: `result<void, E>` succeeds with `result::ok()`. | `void` is irregular, so `std::expected<void, E>` is a specialisation of its own. | One rule in lowering, "a `void` value takes no storage", instead of a special case in every generic. |

@@ -16,7 +16,7 @@ error: an owning value is transferred, not copied
 55 |     Wrap<Tracked> c = w;
    |                       ^ write `move w`
 
-error: `Wrap<Tracked>` is not `Copyable`, and `twice` requires it of `T`
+error: `Wrap<Tracked>` is not `copyable`, and `twice` requires it of `T`
   --> sema/errors_generic_owning_argument.kl:57:12
    |
 57 |     twice( w );

@@ -9,7 +9,7 @@
 {"kind":"declaration","declares":"enum","name":"Shape","file":"sema/declarations/geo/shapes.kl","line":2,"col":6,"end_col":11,"access":"public","signature":"enum Shape","doc":"A shape in the plane."}
 {"kind":"declaration","declares":"variant","name":"Circle","file":"sema/declarations/geo/shapes.kl","line":5,"col":5,"end_col":11,"access":"public","signature":"Circle( f64 radius )","parent":"Shape","doc":"A circle about the origin."}
 {"kind":"declaration","declares":"variant","name":"Dot","file":"sema/declarations/geo/shapes.kl","line":6,"col":5,"end_col":8,"access":"public","signature":"Dot","parent":"Shape"}
-{"kind":"declaration","declares":"struct","name":"Pair","file":"sema/declarations/geo/shapes.kl","line":10,"col":8,"end_col":12,"access":"public","signature":"struct Pair<T> where T : Copyable","doc":"A pair of values of one type."}
+{"kind":"declaration","declares":"struct","name":"Pair","file":"sema/declarations/geo/shapes.kl","line":10,"col":8,"end_col":12,"access":"public","signature":"struct Pair<T> where T : copyable","doc":"A pair of values of one type."}
 {"kind":"declaration","declares":"field","name":"first","file":"sema/declarations/geo/shapes.kl","line":13,"col":7,"end_col":12,"access":"public","signature":"public T first","parent":"Pair","doc":"The first value."}
 {"kind":"declaration","declares":"field","name":"second","file":"sema/declarations/geo/shapes.kl","line":14,"col":7,"end_col":13,"access":"public","signature":"public T second","parent":"Pair"}
 {"kind":"declaration","declares":"method","name":"left","file":"sema/declarations/geo/shapes.kl","line":17,"col":7,"end_col":11,"access":"public","signature":"public T left() const","parent":"Pair","doc":"The first value, copied."}

@@ -15,17 +15,15 @@
 namespace keel::sema
 {
 
-// D40. Closed because D33 closes the operator set, so what a body can ask of a `T` is finite.
-// One bit each, written out: the operators below mask with these values directly, so an ordinal
-// here would make `Copyable` the empty set and let `Comparable` and `Numeric` overlap.
+// D40. What only the compiler can answer of a `T`; equality, order and hashing are prelude
+// interfaces. One bit each, written out: the operators below mask with these values directly, so an
+// ordinal here would make `copyable` the empty set.
 enum class Bound : u8
 {
-    Copyable   = 1u << 0, // trivially copyable - D29's `struct`, and what D31 needs to permit a copy
-    Equatable  = 1u << 1,
-    Comparable = 1u << 2,
-    Numeric    = 1u << 3,
-    Integral   = 1u << 4,
-    Floating   = 1u << 5,
+    Copyable = 1u << 0, // trivially copyable - D29's `struct`, and what D31 needs to permit a copy
+    Numeric  = 1u << 1,
+    Integral = 1u << 2,
+    Floating = 1u << 3,
 };
 
 using Bound_set = u8;
@@ -93,8 +91,11 @@ public:
     // The bound set recorded for a parameter, or an empty set when it carries no `where` clause.
     Bound_set bounds_for( Type_id parameter ) const;
 
-    // The interfaces a parameter's `where` clause names, in the order written.
+    // The interfaces a parameter's `where` clause names, in the order written, then what they require.
     std::span<const Type_id> interfaces_of( Type_id parameter ) const;
+    bool                     promises( Type_id parameter, Type_id interface ) const;
+    // A parameter's promise, a declared `implements`, or what the compiler supplies.
+    bool conforms( Type_id type, Type_id interface ) const;
 
     // The narrowest integer a parameter may turn out to be, for the checks that need a width. Zero
     // when no integer is admissible at all.
@@ -110,9 +111,16 @@ public:
     void declare_type_parameters( Node_id declaration, Node_id list );
 
 private:
-    // `Integral` promises everything `Numeric` does, and so on. Expanded once at the `where` clause
+    // `integral` promises everything `numeric` does, and so on. Expanded once at the `where` clause
     // rather than walked at each query, which is what makes every later test one mask.
     Bound_set closure( Bound_set direct );
+    // What a clause's interfaces require, closed over, so `where T : Shape` promises `Named` too.
+    void require_refinements( std::vector<Type_id>& interfaces ) const;
+
+    // How a forwarded parameter would keep a promise: a clause on the declaration that owns it.
+    std::string forwarded_help( Type_id parameter, std::string_view promise ) const;
+    // Why a type the compiler would make `interface` is not one: its own `equatable` replaced it.
+    std::string dropped_help( Type_id type, Type_id interface ) const;
 
     std::vector<Type_id> possible_types( Type_id type ) const;
     std::vector<Type_id> admissible_numeric_types( Bound_set bounds ) const;

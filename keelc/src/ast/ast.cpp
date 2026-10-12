@@ -372,11 +372,6 @@ std::span<const Node_id> Ast::members( Node_id id ) const
 {
     assert( has_members( kind( id ) ) && "members are a struct's or a class's, not any node's" );
 
-    if( kind( id ) == Node_kind::Interface_decl )
-    {
-        return children( id ).subspan( 1 ); // past the Type_param_list slot
-    }
-
     if( kind( id ) == Node_kind::Implements_decl )
     {
         return children( id ).subspan( 3 ); // past the Type_param_list slot, the Implements_list and the type

@@ -2,13 +2,13 @@ error: no operator `==` for `T` and `i32`
   --> sema/errors_mixed_comparison.kl:15:12
    |
 15 |     return a == x;
-   |            ^^^^^^ `T` must be a number to compare against `i32`; write `where T : Numeric` on `equated`
+   |            ^^^^^^ `T` must be a number to compare against `i32`; write `where T : numeric` on `equated`
 
 error: no operator `<` for `T` and `i32`
   --> sema/errors_mixed_comparison.kl:20:12
    |
 20 |     return a < x;
-   |            ^^^^^ `T` must be a number to compare against `i32`; write `where T : Numeric` on `ordered`
+   |            ^^^^^ `T` must be a number to compare against `i32`; write `where T : numeric` on `ordered`
 
 error: no operator `+` for `i32` and `u32`
   --> sema/errors_mixed_comparison.kl:35:18

@@ -5,7 +5,7 @@ struct Point
     i32 y;
 };
 
-struct Box<T> where T : Copyable
+struct Box<T> where T : copyable
 {
     T v;
 

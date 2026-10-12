@@ -35,7 +35,7 @@ class Counter
 };
 
 // One variable per instantiation, which a type parameter would make a different type in each.
-struct Box<T> where T : Copyable
+struct Box<T> where T : copyable
 {
     T v;
 

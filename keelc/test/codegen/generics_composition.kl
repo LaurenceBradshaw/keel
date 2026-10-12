@@ -7,25 +7,25 @@
 // Run rather than only compiled: a closure that emits the right functions but leaves a call site
 // mangled against the template it was written as links, and calls the wrong thing.
 
-T identity<T>( T a ) where T : Copyable
+T identity<T>( T a ) where T : copyable
 {
     return a;
 }
 
-T doubled<T>( T a ) where T : Copyable & Numeric
+T doubled<T>( T a ) where T : copyable & numeric
 {
     return identity<T>( a ) + identity<T>( a );
 }
 
 // Three deep, so the worklist has to find something only the round before discovered.
-T quadrupled<T>( T a ) where T : Copyable & Numeric
+T quadrupled<T>( T a ) where T : copyable & numeric
 {
     return doubled<T>( doubled<T>( a ) );
 }
 
 // A cycle that forwards its parameter is ordinary recursion: the instance set is finite because
 // going round it produces nothing new.
-T countdown<T>( T a ) where T : Copyable & Numeric
+T countdown<T>( T a ) where T : copyable & numeric
 {
     if( a < 1 )
     {
@@ -37,12 +37,12 @@ T countdown<T>( T a ) where T : Copyable & Numeric
 
 // Building a type out of the parameter is legal when nothing leads back. `borrowing<i32>` needs
 // `through<i32*>`, and that is where it stops.
-T through<T>( T a ) where T : Copyable
+T through<T>( T a ) where T : copyable
 {
     return a;
 }
 
-i32 borrowing<T>( T a ) where T : Copyable & Integral
+i32 borrowing<T>( T a ) where T : copyable & integral
 {
     T*  p = &a;
     T*  q = through<T*>( p );

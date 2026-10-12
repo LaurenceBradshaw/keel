@@ -4,7 +4,7 @@
 // wrong reads an unrelated value out of the wrong vector, silently, because the index is usually in
 // range. Only running the program catches it.
 
-T abs<T>( T a ) where T : Copyable & Numeric
+T abs<T>( T a ) where T : copyable & numeric
 {
     if( a < 0 )
     {
@@ -16,19 +16,19 @@ T abs<T>( T a ) where T : Copyable & Numeric
 
 // An integer literal in a floating parameter: `1` is in the integer pool and has to be converted
 // where the checker's decision becomes a value, exactly as `f64 x = 1;` is.
-T bump<T>( T a ) where T : Copyable & Floating
+T bump<T>( T a ) where T : copyable & floating
 {
     return a + 1;
 }
 
-T scale<T>( T a ) where T : Copyable & Floating
+T scale<T>( T a ) where T : copyable & floating
 {
     return a * 2.5;
 }
 
-// The narrow end of what `Integral` admits. 100 fits every one of the eight integers, so this is
+// The narrow end of what `integral` admits. 100 fits every one of the eight integers, so this is
 // the same generic at a type that could not hold much more.
-T clamp_low<T>( T a ) where T : Copyable & Integral
+T clamp_low<T>( T a ) where T : copyable & integral
 {
     if( a < 100 )
     {

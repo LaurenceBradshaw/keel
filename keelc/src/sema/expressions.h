@@ -136,7 +136,9 @@ private:
     Type_id     infer_method_call( Node_id id );
     Node_id     method_owner( Type_id receiver, Symbol_id name ) const;
     std::string reached_only_as( Type_id type, Symbol_id name ) const;
-    Type_id     infer_implicit_method_call( Node_id id, Node_id first, Type_id expectation );
+    // The `implements ... for type` block declaring `name`, or invalid.
+    Node_id block_for( Type_id type, Symbol_id name ) const;
+    Type_id infer_implicit_method_call( Node_id id, Node_id first, Type_id expectation );
     // Which of the methods named like `first` this call means, or none after reporting why. `shapes`
     // holds the arguments selection typed, for check_method_arguments.
     Node_id choose_method( Node_id id, Node_id first, Type_id receiver, std::vector<Argument_shape>& shapes );
@@ -163,6 +165,8 @@ private:
     // is a question about places rather than types.
     Type_id infer_binary( Node_id id );
     Type_id infer_unary( Node_id id );
+    // Whether `op` on `type` calls a method: any struct's, or an enum's own block's.
+    bool    calls_operator( Type_id type, Token_kind op ) const;
     Type_id infer_operator_call( Node_id id, Node_id object, Node_id argument, Symbol_id name );
     Type_id infer_index_operator( Node_id id, Type_id object_type );
     Node_id

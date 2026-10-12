@@ -26,7 +26,7 @@ class name
     private u8 first;
 };
 
-class pair<T> where T : Copyable & Equatable
+class pair<T> where T : copyable & equatable
 {
     pair( T a, T b )
     {

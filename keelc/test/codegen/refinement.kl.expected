@@ -1,0 +1,233 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "refinement.kl.prelude.c"
+
+struct kl__Square;
+
+struct kl__Named__vtable;
+struct kl__Named__ref { void* self; const struct kl__Named__vtable* vtable; };
+struct kl__Shape__vtable;
+struct kl__Shape__ref { void* self; const struct kl__Shape__vtable* vtable; };
+
+struct kl__Square
+{
+    double kl_side_22;
+};
+
+struct kl__Named__vtable
+{
+    void ( *drop )( void* );
+    int32_t ( *kl_id_6 )( void* );
+};
+
+struct kl__Shape__vtable
+{
+    void ( *drop )( void* );
+    double ( *kl_area_16 )( void* );
+};
+
+int32_t kl__id__S6Square( struct kl__Square* );
+double kl__area__S6Square( struct kl__Square* );
+int32_t kl__id__S4TileC5Named( int32_t* );
+double kl__area__S4TileC5Shape( int32_t* );
+int32_t kl__main__( void );
+double kl__weigh__I6SquareE__6Square( struct kl__Square* );
+double kl__weigh__I4TileE__4Tile( int32_t* );
+int32_t kl__identify__I6SquareE__6Square( struct kl__Square* );
+int32_t kl__identify__I4TileE__4Tile( int32_t* );
+
+int32_t kl__id__S6Square( struct kl__Square* kl_this_1 )
+{
+    int32_t kl_t0;
+    ( void ) kl_this_1;
+#line 18 "codegen/refinement.kl"
+    kl_t0 = 4;
+    return kl_t0;
+}
+
+double kl__area__S6Square( struct kl__Square* kl_this_1 )
+{
+    double kl_t0;
+    double kl_t2;
+#line 19 "codegen/refinement.kl"
+    kl_t2 = ( *kl_this_1 ).kl_side_22 * ( *kl_this_1 ).kl_side_22;
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+int32_t kl__id__S4TileC5Named( int32_t* kl_this_1 )
+{
+    int32_t kl_t0;
+    bool kl_t2;
+#line 34 "codegen/refinement.kl"
+    kl_t2 = ( *kl_this_1 ) == 0;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 35 "codegen/refinement.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+#line 37 "codegen/refinement.kl"
+    kl_t0 = 2;
+    return kl_t0;
+}
+
+double kl__area__S4TileC5Shape( int32_t* kl_this_1 )
+{
+    double kl_t0;
+    ( void ) kl_this_1;
+#line 44 "codegen/refinement.kl"
+    kl_t0 = 1.0;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__Square kl_s_1;
+    struct kl__Square kl_t2;
+    int32_t kl_w_3;
+    struct kl__Square* kl_t4;
+    double kl_t5;
+    bool kl_t6;
+    int32_t* kl_t7;
+    double kl_t8;
+    bool kl_t9;
+    bool kl_t10;
+    struct kl__Square* kl_t11;
+    int32_t kl_t12;
+    bool kl_t13;
+    int32_t* kl_t14;
+    int32_t kl_t15;
+    bool kl_t16;
+#line 59 "codegen/refinement.kl"
+    kl_t2.kl_side_22 = 2.0;
+    kl_s_1 = kl_t2;
+#line 60 "codegen/refinement.kl"
+    kl_w_3 = 1;
+#line 62 "codegen/refinement.kl"
+    kl_t4 = &kl_s_1;
+    kl_t5 = kl__weigh__I6SquareE__6Square( kl_t4 );
+    kl_t6 = kl_t5 != 32.0;
+    if ( kl_t6 ) goto bb1; else goto bb2;
+    bb1:
+#line 64 "codegen/refinement.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+#line 67 "codegen/refinement.kl"
+    kl_t7 = &kl_w_3;
+    kl_t8 = kl__weigh__I4TileE__4Tile( kl_t7 );
+    kl_t9 = kl_t8 != 4.0;
+    if ( kl_t9 ) goto bb3; else goto bb4;
+    bb3:
+#line 69 "codegen/refinement.kl"
+    kl_t0 = 2;
+    return kl_t0;
+    bb4:
+#line 72 "codegen/refinement.kl"
+    kl_t11 = &kl_s_1;
+    kl_t12 = kl__identify__I6SquareE__6Square( kl_t11 );
+    kl_t13 = kl_t12 != 4;
+    kl_t10 = kl_t13;
+    if ( kl_t10 ) goto bb6; else goto bb5;
+    bb5:
+    kl_t14 = &kl_w_3;
+    kl_t15 = kl__identify__I4TileE__4Tile( kl_t14 );
+    kl_t16 = kl_t15 != 2;
+    kl_t10 = kl_t16;
+    goto bb6;
+    bb6:
+    if ( kl_t10 ) goto bb7; else goto bb8;
+    bb7:
+#line 74 "codegen/refinement.kl"
+    kl_t0 = 3;
+    return kl_t0;
+    bb8:
+#line 77 "codegen/refinement.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+double kl__weigh__I6SquareE__6Square( struct kl__Square* kl_t_1 )
+{
+    double kl_t0;
+    struct kl__Square* kl_t2;
+    double kl_t3;
+    struct kl__Square* kl_t4;
+    int32_t kl_t5;
+    struct kl__Square* kl_t6;
+    int32_t kl_t7;
+    int32_t kl_t8;
+    double kl_t9;
+    double kl_t10;
+#line 54 "codegen/refinement.kl"
+    kl_t2 = &( *kl_t_1 );
+    kl_t3 = kl__area__S6Square( kl_t2 );
+    kl_t4 = &( *kl_t_1 );
+    kl_t5 = kl__id__S6Square( kl_t4 );
+    kl_t6 = &( *kl_t_1 );
+    kl_t7 = kl__identify__I6SquareE__6Square( kl_t6 );
+    kl_t8 = kl_t5 + kl_t7;
+    kl_t9 = ( double ) kl_t8;
+    kl_t10 = kl_t3 * kl_t9;
+    kl_t0 = kl_t10;
+    return kl_t0;
+}
+
+double kl__weigh__I4TileE__4Tile( int32_t* kl_t_1 )
+{
+    double kl_t0;
+    int32_t* kl_t2;
+    double kl_t3;
+    int32_t* kl_t4;
+    int32_t kl_t5;
+    int32_t* kl_t6;
+    int32_t kl_t7;
+    int32_t kl_t8;
+    double kl_t9;
+    double kl_t10;
+#line 54 "codegen/refinement.kl"
+    kl_t2 = &( *kl_t_1 );
+    kl_t3 = kl__area__S4TileC5Shape( kl_t2 );
+    kl_t4 = &( *kl_t_1 );
+    kl_t5 = kl__id__S4TileC5Named( kl_t4 );
+    kl_t6 = &( *kl_t_1 );
+    kl_t7 = kl__identify__I4TileE__4Tile( kl_t6 );
+    kl_t8 = kl_t5 + kl_t7;
+    kl_t9 = ( double ) kl_t8;
+    kl_t10 = kl_t3 * kl_t9;
+    kl_t0 = kl_t10;
+    return kl_t0;
+}
+
+int32_t kl__identify__I6SquareE__6Square( struct kl__Square* kl_u_1 )
+{
+    int32_t kl_t0;
+    struct kl__Square* kl_t2;
+    int32_t kl_t3;
+#line 49 "codegen/refinement.kl"
+    kl_t2 = &( *kl_u_1 );
+    kl_t3 = kl__id__S6Square( kl_t2 );
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+int32_t kl__identify__I4TileE__4Tile( int32_t* kl_u_1 )
+{
+    int32_t kl_t0;
+    int32_t* kl_t2;
+    int32_t kl_t3;
+#line 49 "codegen/refinement.kl"
+    kl_t2 = &( *kl_u_1 );
+    kl_t3 = kl__id__S4TileC5Named( kl_t2 );
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

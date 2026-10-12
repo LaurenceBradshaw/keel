@@ -24,7 +24,7 @@ struct Plain implements Larger
     }
 };
 
-struct Pair<T> implements Larger where T : Copyable & Comparable
+struct Pair<T> implements Larger where T : copyable & comparable
 {
     T first;
     T second;
@@ -41,7 +41,7 @@ struct Pair<T> implements Larger where T : Copyable & Comparable
     }
 };
 
-struct Node<T> where T : Copyable
+struct Node<T> where T : copyable
 {
     T        v;
     Node<T>* next;

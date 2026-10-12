@@ -2,7 +2,7 @@ error: `p` reads a `U` by copying it, which is not known to be copyable
   --> sema/errors_field_pointers.kl:31:12
    |
 31 |     return p( obj );
-   |            ^^^^^^^^ add `where U : Copyable`
+   |            ^^^^^^^^ add `where U : copyable`
 
 error: the aggregate of a field type takes no mode
   --> sema/errors_field_pointers.kl:34:19

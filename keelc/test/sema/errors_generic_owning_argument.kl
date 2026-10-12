@@ -1,6 +1,6 @@
 // A generic class with no destructor owns exactly when its argument does, so each rule about
 // owning types applies to `Wrap<Tracked>` and not to `Wrap<i32>`: a copy needs `move`, no
-// `Copyable` bound admits one, and no struct may contain one. An open `Wrap<T>` may own, so its
+// `copyable` bound admits one, and no struct may contain one. An open `Wrap<T>` may own, so its
 // function's address has no one spelling at an instance that would copy.
 
 class Tracked
@@ -27,7 +27,7 @@ class Wrap<T>
     }
 };
 
-T twice<T>( T x ) where T : Copyable
+T twice<T>( T x ) where T : copyable
 {
     return x;
 }

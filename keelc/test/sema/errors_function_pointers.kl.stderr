@@ -22,7 +22,7 @@ error: `bounded` takes 1 type argument, but 2 were given
 47 |     auto d = &bounded<i32, f64>;
    |                      ^^^^^^^^^^ `bounded` declares `T`
 
-error: `f64` is not `Integral`, and `bounded` requires it of `T`
+error: `f64` is not `integral`, and `bounded` requires it of `T`
   --> sema/errors_function_pointers.kl:48:23
    |
 48 |     auto e = &bounded<f64>;
@@ -44,7 +44,7 @@ error: `unbounded` takes `T`, which is not known to be copyable, so its address 
   --> sema/errors_function_pointers.kl:56:14
    |
 56 |     auto j = &unbounded<i32>;
-   |              ^^^^^^^^^^^^^^^ add `where T : Copyable` to `unbounded`, whose parameter is at sema/errors_function_pointers.kl:34:19
+   |              ^^^^^^^^^^^^^^^ add `where T : copyable` to `unbounded`, whose parameter is at sema/errors_function_pointers.kl:34:19
 
 error: expected `fn( i32 ) -> i32`, but got `fn( u8 ) -> u8`
   --> sema/errors_function_pointers.kl:59:24

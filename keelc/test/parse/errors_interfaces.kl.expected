@@ -1,6 +1,7 @@
 Source_file                             1:1-20:1
   Interface_decl                        1:1-4:3     name=Holder
     <none>                              -
+    <none>                              -
     Method_decl                         3:5-3:19
       Named_type                        3:5-3:6     "T"
       Param_list                        3:10-3:12
@@ -12,6 +13,7 @@ Source_file                             1:1-20:1
       <none>                            -
       <none>                            -
   Interface_decl                        6:1-11:3    name=Shape
+    <none>                              -
     <none>                              -
     Method_decl                         8:5-8:22
       Named_type                        8:5-8:8     "f64"

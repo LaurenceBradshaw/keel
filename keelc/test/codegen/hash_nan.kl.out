@@ -1,0 +1,2 @@
+before
+codegen/hash_nan.kl:10: NaN has no hash: v.hash()

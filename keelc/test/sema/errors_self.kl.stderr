@@ -76,11 +76,11 @@ error: `self` is written only inside an `interface`
 63 | enum Small : self
    |              ^^^^ it names the type that implements the interface
 
-error: `self` does not promise `Copyable`, and `Cell` requires it of `T`
+error: `self` does not promise `copyable`, and `Cell` requires it of `T`
   --> sema/errors_self.kl:76:21
    |
 76 |     void take( Cell<self>* h );
-   |                     ^^^^ an interface cannot promise `Copyable` of its implementers
+   |                     ^^^^ an interface cannot promise `copyable` of its implementers
 
 error: `self` takes no type arguments
   --> sema/errors_self.kl:77:16

@@ -1,0 +1,78 @@
+// D40: an interface requires another. A `where T : Shape` reaches `Named`'s method as well, and
+// passes its `T` on to a `where U : Named`; each instance calls the implementer's method directly,
+// a struct's and a block's alike. Exits with the failing check.
+interface Named
+{
+    i32 id() const;
+};
+
+interface Shape implements Named
+{
+    f64 area() const;
+};
+
+struct Square implements Shape, Named
+{
+    f64 side;
+
+    i32 id() const { return 4; }
+    f64 area() const { return side * side; }
+};
+
+enum Tile
+{
+    Floor,
+    Wall,
+};
+
+implements Named for Tile
+{
+    i32 id() const
+    {
+        switch( this )
+        {
+            case Tile::Floor:
+                return 1;
+            case Tile::Wall:
+                return 2;
+        }
+    }
+};
+
+implements Shape for Tile
+{
+    f64 area() const { return 1.0; }
+};
+
+i32 identify<U>( const ref U u ) where U : Named
+{
+    return u.id();
+}
+
+f64 weigh<T>( const ref T t ) where T : Shape
+{
+    return t.area() * cast<f64>( t.id() + identify( t ) );
+}
+
+i32 main()
+{
+    Square s = Square { 2.0 };
+    Tile   w = Tile::Wall;
+
+    if( weigh( s ) != 32.0 )
+    {
+        return 1;
+    }
+
+    if( weigh( w ) != 4.0 )
+    {
+        return 2;
+    }
+
+    if( identify( s ) != 4 || identify( w ) != 2 )
+    {
+        return 3;
+    }
+
+    return 0;
+}

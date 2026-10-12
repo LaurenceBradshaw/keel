@@ -56,7 +56,7 @@ class Gauge
 };
 
 // One `made` per instantiation.
-class Tally<T> where T : Copyable
+class Tally<T> where T : copyable
 {
     static i32 made = 0;
 

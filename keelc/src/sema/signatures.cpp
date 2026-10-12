@@ -156,6 +156,86 @@ void Signatures::declare_interfaces()
             annotations_.record_interface_bound( Node_id { node } );
         }
     }
+
+    // What each interface requires, once every interface has its type. A cycle is refused at the
+    // name that closes it, so `refines` never recurses forever.
+    for( const Node_id child : ast_.declarations( ast_.root() ) )
+    {
+        if( ast_.kind( child ) != Node_kind::Interface_decl )
+        {
+            continue;
+        }
+
+        const Type_id interface = types_.type_of( child );
+
+        for( const Node_id written : ast_.implemented( child ) )
+        {
+            const Type_id refined = annotations_.resolve_interface( written );
+            types_.record( written, refined );
+
+            if( !table_.is_interface( refined ) )
+            {
+                continue;
+            }
+
+            if( refined == interface )
+            {
+                reporter_.error_at(
+                    ast_.span( written ), fmt::format( "`{}` cannot require itself", table_.name( interface ) )
+                );
+                continue;
+            }
+
+            if( table_.refines( refined, interface ) )
+            {
+                reporter_.error_at(
+                    ast_.span( written ),
+                    fmt::format(
+                        "`{0}` cannot require `{1}`, which already requires `{0}`",
+                        table_.name( interface ),
+                        table_.name( refined )
+                    )
+                );
+                continue;
+            }
+
+            table_.declare_refinement( interface, refined );
+        }
+    }
+
+    // Requiring a bound-only interface makes one bound-only too: what it promises includes the
+    // method naming `self`.
+    for( const Node_id child : ast_.declarations( ast_.root() ) )
+    {
+        if( ast_.kind( child ) != Node_kind::Interface_decl || table_.method_naming_self( types_.type_of( child ) ).is_valid() )
+        {
+            continue;
+        }
+
+        if( const Node_id method = required_naming_self( types_.type_of( child ) ); method.is_valid() )
+        {
+            table_.declare_naming_self( child, method );
+        }
+    }
+}
+
+// Depth-first through what `interface` requires, read from the syntax so declaration order does not matter.
+Node_id Signatures::required_naming_self( Type_id interface ) const
+{
+    for( const Type_id refined : table_.refinements( interface ) )
+    {
+        if( const Node_id method = method_naming_self( ast_, interner_, table_.get( refined ).declaration ); method.is_valid() )
+        {
+            return method;
+        }
+
+        if( const Node_id method = required_naming_self( refined ); method.is_valid() )
+        {
+            return method;
+        }
+    }
+
+    return Node_id {};
 }
 
 // What each aggregate says it implements, once every type exists to be named there by mistake.
@@ -810,7 +890,7 @@ void Signatures::check_struct_fields_are_not_owning( Node_id decl )
 
         // Copyable rather than ownership directly: a field of type `T` has no declaration to
         // look up, and an unbounded one may turn out to own something - which is exactly what a
-        // struct may not contain. The promise that rules it out is `Copyable`.
+        // struct may not contain. The promise that rules it out is `copyable`.
         if( bounds_.satisfies( field_type, Bound::Copyable ) )
         {
             continue;
@@ -830,7 +910,7 @@ void Signatures::check_struct_fields_are_not_owning( Node_id decl )
             ),
             table_.is_parameter( field_type )
                 ? fmt::format(
-                      "a struct is copied freely, so promise it can be: `where {} : Copyable`", table_.name( field_type )
+                      "a struct is copied freely, so promise it can be: `where {} : copyable`", table_.name( field_type )
                   )
                 : fmt::format(
                       "a struct is copied freely, so declare `{}` as a class if it owns this",
@@ -1203,8 +1283,8 @@ TEST_CASE( "type_checker_rejects_recursive_structs", "[sema][types]" )
     // `Box` holds its `T` by value, so a `Ring` in `Box`'s argument is inside `Ring`.
     SECTION( "through a type argument held by value" )
     {
-        const Typed p( "struct Box<T> where T : Copyable { T v; };\n"
-                       "struct Ring<T> where T : Copyable { Box<Ring<T>> link; };\ni32 main() { return 0; }\n" );
+        const Typed p( "struct Box<T> where T : copyable { T v; };\n"
+                       "struct Ring<T> where T : copyable { Box<Ring<T>> link; };\ni32 main() { return 0; }\n" );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
@@ -1214,8 +1294,8 @@ TEST_CASE( "type_checker_rejects_recursive_structs", "[sema][types]" )
 
     SECTION( "and through a generic that holds it only through another" )
     {
-        const Typed p( "struct Box<T> where T : Copyable { T v; };\n"
-                       "struct Wrap<T> where T : Copyable { Box<T> b; };\n"
+        const Typed p( "struct Box<T> where T : copyable { T v; };\n"
+                       "struct Wrap<T> where T : copyable { Box<T> b; };\n"
                        "struct Loop { Wrap<Loop> w; };\ni32 main() { return 0; }\n" );
 
         INFO( p.rendered() );
@@ -1226,8 +1306,8 @@ TEST_CASE( "type_checker_rejects_recursive_structs", "[sema][types]" )
     // `Pair`'s first argument holds nothing of `Loop`; asking about it must not hide the second.
     SECTION( "and through the second of two parameters" )
     {
-        const Typed p( "struct Pair<A, B> where A : Copyable, where B : Copyable { A a; B b; };\n"
-                       "struct Wrap<T> where T : Copyable { Pair<i32, T> p; };\n"
+        const Typed p( "struct Pair<A, B> where A : copyable, where B : copyable { A a; B b; };\n"
+                       "struct Wrap<T> where T : copyable { Pair<i32, T> p; };\n"
                        "struct Loop { Wrap<Loop> w; };\ni32 main() { return 0; }\n" );
 
         INFO( p.rendered() );
@@ -1238,7 +1318,7 @@ TEST_CASE( "type_checker_rejects_recursive_structs", "[sema][types]" )
     // An instance inside its own argument is a finite type, not a return to a struct being expanded.
     SECTION( "but a generic nested in itself is not a cycle" )
     {
-        const Typed p( "struct Box<T> where T : Copyable { T v; };\n"
+        const Typed p( "struct Box<T> where T : copyable { T v; };\n"
                        "struct Nested { Box<Box<i32>> b; };\ni32 main() { return 0; }\n" );
 
         INFO( p.rendered() );
@@ -1248,8 +1328,8 @@ TEST_CASE( "type_checker_rejects_recursive_structs", "[sema][types]" )
     // A tree holding its children through a buffer is the shape `Vector` exists for.
     SECTION( "but an argument held through a pointer is not a cycle" )
     {
-        const Typed p( "struct Many<T> where T : Copyable { T[*] items; };\n"
-                       "struct Hold<T> where T : Copyable { T* one; };\n"
+        const Typed p( "struct Many<T> where T : copyable { T[*] items; };\n"
+                       "struct Hold<T> where T : copyable { T* one; };\n"
                        "struct Tree { Many<Tree> children; Hold<Tree> parent; };\ni32 main() { return 0; }\n" );
 
         INFO( p.rendered() );
@@ -1520,7 +1600,7 @@ TEST_CASE( "type_checker_declares_an_enum_before_anything_that_can_name_one", "[
     SECTION( "another enum's payload, through a type argument" )
     {
         const Typed p( "enum Shape { Dot, Filled( Wrap<Colour> c ) };\n"
-                       "enum Wrap<T> where T : Copyable { Held( T v ) };\n"
+                       "enum Wrap<T> where T : copyable { Held( T v ) };\n"
                        "enum Colour { Red, Green };\n"
                        "i32 main() { return 0; }\n" );
 
@@ -1534,7 +1614,7 @@ TEST_CASE( "type_checker_types_a_generic_signature", "[sema][generic]" )
 {
     SECTION( "the declaration alone is accepted" )
     {
-        const Typed p( "T id<T>( T a ) where T : Copyable { return a; }\ni32 main() { return 0; }" );
+        const Typed p( "T id<T>( T a ) where T : copyable { return a; }\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
@@ -1550,7 +1630,7 @@ TEST_CASE( "type_checker_types_a_generic_signature", "[sema][generic]" )
 
     SECTION( "a broken non-generic beside it is still checked" )
     {
-        const Typed p( "T id<T>( T a ) where T : Copyable { return a; }\n"
+        const Typed p( "T id<T>( T a ) where T : copyable { return a; }\n"
                        "i32 broken() { return true; }\n"
                        "i32 main() { return 0; }" );
 
@@ -1601,16 +1681,16 @@ TEST_CASE( "type_checker_survives_a_nameless_type_parameter_or_clause", "[sema][
     SECTION( "a `where` clause with no subject" )
     {
         REQUIRE( diagnosed( "T f<T>( T a ) where { return a; }" ) );
-        REQUIRE( diagnosed( "T f<T>( T a ) where : Copyable { return a; }" ) );
-        REQUIRE( diagnosed( "T f<T>( T a ) where where T : Copyable { return a; }" ) );
-        REQUIRE( diagnosed( "T f<T>( T a ) where 5 : Copyable { return a; }" ) );
-        REQUIRE( diagnosed( "T f<T>( T a ) where if : Copyable { return a; }" ) );
+        REQUIRE( diagnosed( "T f<T>( T a ) where : copyable { return a; }" ) );
+        REQUIRE( diagnosed( "T f<T>( T a ) where where T : copyable { return a; }" ) );
+        REQUIRE( diagnosed( "T f<T>( T a ) where 5 : copyable { return a; }" ) );
+        REQUIRE( diagnosed( "T f<T>( T a ) where if : copyable { return a; }" ) );
     }
 
     SECTION( "a well-formed one still works" )
     {
         // The guard drops the node rather than the feature.
-        const Typed p( "T f<T>( T a ) where T : Copyable { return a; }\ni32 main() { return f<i32>( 1 ); }" );
+        const Typed p( "T f<T>( T a ) where T : copyable { return a; }\ni32 main() { return f<i32>( 1 ); }" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
@@ -1623,7 +1703,7 @@ TEST_CASE( "type_checker_refuses_a_generic_aggregate_that_contains_itself", "[se
 {
     SECTION( "directly" )
     {
-        const Typed p( "struct Odd<T> where T : Copyable { Odd<T> inner; };\ni32 main() { return 0; }" );
+        const Typed p( "struct Odd<T> where T : copyable { Odd<T> inner; };\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.rendered().find( "`Odd` contains itself" ) != std::string::npos );
@@ -1633,8 +1713,8 @@ TEST_CASE( "type_checker_refuses_a_generic_aggregate_that_contains_itself", "[se
     {
         // Infinite twice over: no size, and no finite set of instantiations either. The size rule
         // catches it first, which is the same answer for a stronger reason.
-        const Typed p( "struct Box<T> where T : Copyable { T v; };\n"
-                       "struct Odd<T> where T : Copyable { Odd<Box<T>> inner; };\n"
+        const Typed p( "struct Box<T> where T : copyable { T v; };\n"
+                       "struct Odd<T> where T : copyable { Odd<Box<T>> inner; };\n"
                        "i32 main() { return 0; }" );
 
         INFO( p.rendered() );
@@ -1646,7 +1726,7 @@ TEST_CASE( "type_checker_refuses_a_generic_aggregate_that_contains_itself", "[se
 
     SECTION( "a pointer to itself is finite, and is how a list is written" )
     {
-        const Typed p( "class Node<T> where T : Copyable { Node<T>* next; };\ni32 main() { return 0; }" );
+        const Typed p( "class Node<T> where T : copyable { Node<T>* next; };\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
@@ -1656,8 +1736,8 @@ TEST_CASE( "type_checker_refuses_a_generic_aggregate_that_contains_itself", "[se
     {
         // A generic holding a *concrete* instantiation of another is a finite thing, unlike the
         // case above: `Holder<i32>` needs `Box<i32>` and `Box<i32>` needs nothing back.
-        const Typed p( "struct Box<T> where T : Copyable { T v; };\n"
-                       "struct Holder<T> where T : Copyable { Box<i32> b; };\n"
+        const Typed p( "struct Box<T> where T : copyable { T v; };\n"
+                       "struct Holder<T> where T : copyable { Box<i32> b; };\n"
                        "i32 main() { return 0; }" );
 
         INFO( p.rendered() );
@@ -1678,7 +1758,7 @@ TEST_CASE( "type_checker_scopes_type_parameters", "[sema][generic]" )
 
     SECTION( "they do not escape the declaration" )
     {
-        const Typed p( "T id<T>( T a ) where T : Copyable { return a; }\nT stray( T a ) { return a; }\ni32 main() { return 0; }"
+        const Typed p( "T id<T>( T a ) where T : copyable { return a; }\nT stray( T a ) { return a; }\ni32 main() { return 0; }"
         );
 
         INFO( p.rendered() );
@@ -1687,8 +1767,8 @@ TEST_CASE( "type_checker_scopes_type_parameters", "[sema][generic]" )
 
     SECTION( "two declarations may reuse the same parameter name" )
     {
-        const Typed p( "T one<T>( T a ) where T : Copyable { return a; }\n"
-                       "T two<T>( T a ) where T : Copyable { return a; }\ni32 main() { return 0; }" );
+        const Typed p( "T one<T>( T a ) where T : copyable { return a; }\n"
+                       "T two<T>( T a ) where T : copyable { return a; }\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
 
@@ -2060,12 +2140,12 @@ TEST_CASE( "type_checker_applies_the_owning_rules_to_a_generic_aggregate", "[sem
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "a struct cannot contain `T`, which may own a resource" ) != std::string::npos );
-        REQUIRE( p.rendered().find( "`where T : Copyable`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`where T : copyable`" ) != std::string::npos );
     }
 
-    SECTION( "the promise that rules it out is `Copyable`" )
+    SECTION( "the promise that rules it out is `copyable`" )
     {
-        const Typed p( "struct Pair<T> where T : Copyable { T a; };\ni32 main() { return 0; }" );
+        const Typed p( "struct Pair<T> where T : copyable { T a; };\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
@@ -2381,9 +2461,9 @@ TEST_CASE( "signatures_refuse_a_written_void", "[sema][void]" )
 
     SECTION( "but not when a type argument made it `void`" )
     {
-        const Typed p( "struct Box<T> where T : Copyable { T v; };\n"
+        const Typed p( "struct Box<T> where T : copyable { T v; };\n"
                        "enum Maybe<T> { some( T v ), none };\n"
-                       "T same<T>( T a ) where T : Copyable { return a; }\n"
+                       "T same<T>( T a ) where T : copyable { return a; }\n"
                        "void e() { }\n"
                        "i32 main() { Box<void> b; Maybe<void> m = Maybe<void>::none; same( e() ); return 0; }" );
 
@@ -2407,7 +2487,7 @@ TEST_CASE( "signatures_type_an_interface_and_what_implements_it", "[sema][interf
     const Typed p(
         "interface Shape { f64 area(); void scale( f64 by ); };\n"
         "struct Sq implements Shape { f64 s; f64 area() { return s * s; } void scale( f64 by ) { } };\n"
-        "struct Box<T> implements Shape where T : Copyable { T v; f64 area() { return 0.0; } void scale( f64 by ) { } };\n"
+        "struct Box<T> implements Shape where T : copyable { T v; f64 area() { return 0.0; } void scale( f64 by ) { } };\n"
         "struct Plain { i32 x; };\n"
         "f64 measure( const ref Shape s, Shape* p ) { return 0.0; }\n"
         "i32 main() { return 0; }"
@@ -2500,7 +2580,7 @@ TEST_CASE( "signatures_declare_an_implements_block", "[sema][interfaces][impleme
         for( const Case& c : cases )
         {
             const Typed p(
-                hashable + "struct Pair<T> where T : Copyable { T a; };\n" + "implements Hashable for " + c.type +
+                hashable + "struct Pair<T> where T : copyable { T a; };\n" + "implements Hashable for " + c.type +
                 " { u64 hash() const { return 1; } };\ni32 main() { return 0; }"
             );
 
@@ -2683,7 +2763,7 @@ TEST_CASE( "signatures_refuse_an_interface_held_by_value", "[sema][interfaces]" 
         "struct Holder { Shape s; };",
         "enum Held { one( Shape s ), none };",
         "void f( const ref Shape s ) { Shape t = s; }",
-        "struct Box<T> where T : Copyable { T v; };\nvoid f( Box<Shape>* b ) { }",
+        "struct Box<T> where T : copyable { T v; };\nvoid f( Box<Shape>* b ) { }",
     };
 
     for( const char* c : cases )

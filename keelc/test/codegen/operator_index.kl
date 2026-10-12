@@ -13,7 +13,7 @@ struct point
     }
 };
 
-class buffer<T> where T : Copyable
+class buffer<T> where T : copyable
 {
     buffer( u64 n )
     {
@@ -88,7 +88,7 @@ i32 total( const ref buffer<i32> values )
     return sum;
 }
 
-T last<T>( const ref buffer<T> values ) where T : Copyable
+T last<T>( const ref buffer<T> values ) where T : copyable
 {
     return values[values.length() - 1];
 }

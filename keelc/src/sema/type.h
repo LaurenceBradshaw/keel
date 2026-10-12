@@ -92,6 +92,14 @@ bool is_builtin_type_name( std::string_view spelling );
 // it travels from the checker's call site through to the lowerer's instantiation.
 using Bindings = std::unordered_map<u32, Type_id>;
 
+// The prelude's three interfaces, which the compiler supplies for some kinds of type.
+enum class Prelude_interface : u8
+{
+    Equatable,
+    Comparable,
+    Hashable,
+};
+
 class Type_table
 {
 public:
@@ -222,12 +230,22 @@ public:
     // A struct, class or enum is looked up by its declaration, so a generic's instances share it.
     bool implements( Type_id type, Type_id interface ) const;
 
+    // What an interface requires through its own `implements`, in written order.
+    void                     declare_refinement( Type_id interface, Type_id refined );
+    std::span<const Type_id> refinements( Type_id interface ) const;
+    // Whether `other` is required by `interface`, directly or through what it requires.
+    bool refines( Type_id interface, Type_id other ) const;
+
     void    declare_box( Node_id declaration );
     bool    is_box( Type_id type ) const;
     Node_id box_declaration() const;
 
     void    declare_ordering( Node_id declaration );
     Type_id ordering() const;
+
+    void    declare_prelude_interface( Prelude_interface which, Node_id declaration );
+    Type_id prelude_interface( Prelude_interface which ) const; // invalid without a prelude
+    bool    is_prelude_interface( Type_id interface ) const;
 
     // The first method whose signature mentions `self`, or invalid when the interface may be a type.
     void    declare_naming_self( Node_id interface, Node_id method );
@@ -263,12 +281,14 @@ private:
     std::unordered_map<u32, std::vector<Instance>> composites_;
     std::unordered_map<u32, std::vector<Type_id>>  implements_; // aggregate declaration -> what it implements
     std::unordered_map<u32, std::vector<Type_id>>  builtin_implements_;
-    std::unordered_map<u32, Type_id>               params_;     // Type_param_decl node -> type parameter
-    std::unordered_map<u32, Type_id>               interfaces_; // Interface_decl node -> its type
+    std::unordered_map<u32, std::vector<Type_id>>  refinements_; // Interface_decl node -> what it requires, as written
+    std::unordered_map<u32, Type_id>               params_;      // Type_param_decl node -> type parameter
+    std::unordered_map<u32, Type_id>               interfaces_;  // Interface_decl node -> its type
     std::deque<std::string>                        composed_;
 
     Node_id box_ {};
     Node_id ordering_ {};
+    Node_id prelude_interfaces_[3] {};
 
     std::unordered_map<u32, Node_id> naming_self_; // Interface_decl node -> its first method naming `self`
 

@@ -145,6 +145,24 @@ Types Checker::run()
         const Node_kind kind    = ast_.kind( decl );
         const Symbol_id package = resolution_.package_of( ast_.span( decl ).file );
 
+        if( kind == Node_kind::Interface_decl && package.is_valid() && package == resolution_.prelude_package() )
+        {
+            const std::string_view name = interner_.text( ast_.name( decl ) );
+
+            if( name == "equatable" )
+            {
+                types_.table().declare_prelude_interface( Prelude_interface::Equatable, decl );
+            }
+            else if( name == "comparable" )
+            {
+                types_.table().declare_prelude_interface( Prelude_interface::Comparable, decl );
+            }
+            else if( name == "hashable" )
+            {
+                types_.table().declare_prelude_interface( Prelude_interface::Hashable, decl );
+            }
+        }
+
         if( ( is_aggregate( kind ) || kind == Node_kind::Enum_decl ) && package.is_valid() )
         {
             if( package == resolution_.prelude_package() && is_aggregate( kind ) &&

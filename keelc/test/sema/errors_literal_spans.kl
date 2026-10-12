@@ -20,7 +20,7 @@ class Hidden
     i32 v;
 };
 
-struct Box<T> where T : Copyable
+struct Box<T> where T : copyable
 {
     T v;
 };

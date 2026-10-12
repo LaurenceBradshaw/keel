@@ -247,7 +247,7 @@ TEST_CASE( "generic_recursion_records_an_edge_only_from_inside_a_generic", "[sem
 {
     SECTION( "a call from a non-generic function is an instantiation and not an edge" )
     {
-        const Typed p( "void g<T>( T a ) where T : Copyable { }\ni32 main() { g<i32>( 1 ); return 0; }" );
+        const Typed p( "void g<T>( T a ) where T : copyable { }\ni32 main() { g<i32>( 1 ); return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
@@ -257,8 +257,8 @@ TEST_CASE( "generic_recursion_records_an_edge_only_from_inside_a_generic", "[sem
 
     SECTION( "the same call from inside a generic is an edge" )
     {
-        const Typed p( "void g<T>( T a ) where T : Copyable { }\n"
-                       "void f<T>( T a ) where T : Copyable { g<T>( a ); }\n"
+        const Typed p( "void g<T>( T a ) where T : copyable { }\n"
+                       "void f<T>( T a ) where T : copyable { g<T>( a ); }\n"
                        "i32 main() { f<i32>( 1 ); return 0; }" );
 
         INFO( p.rendered() );
@@ -271,7 +271,7 @@ TEST_CASE( "type_checker_refuses_a_generic_that_expands_forever", "[sema][generi
 {
     SECTION( "a generic calling itself at its own parameter is ordinary recursion" )
     {
-        const Typed p( "void f<T>( T a ) where T : Copyable { f<T>( a ); }\ni32 main() { return 0; }" );
+        const Typed p( "void f<T>( T a ) where T : copyable { f<T>( a ); }\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
@@ -281,9 +281,9 @@ TEST_CASE( "type_checker_refuses_a_generic_that_expands_forever", "[sema][generi
     {
         // `f<i32>` needs `g<i32>` needs `f<i32>`, which is already emitted. Going round twice
         // produces nothing new, so the set closes.
-        const Typed p( "void g<T>( T a ) where T : Copyable { }\n"
-                       "void f<T>( T a ) where T : Copyable { g<T>( a ); }\n"
-                       "void h<T>( T a ) where T : Copyable { f<T>( a ); g<T>( a ); }\n"
+        const Typed p( "void g<T>( T a ) where T : copyable { }\n"
+                       "void f<T>( T a ) where T : copyable { g<T>( a ); }\n"
+                       "void h<T>( T a ) where T : copyable { f<T>( a ); g<T>( a ); }\n"
                        "i32 main() { return 0; }" );
 
         INFO( p.rendered() );
@@ -293,8 +293,8 @@ TEST_CASE( "type_checker_refuses_a_generic_that_expands_forever", "[sema][generi
     SECTION( "building a type out of the parameter is fine when nothing leads back" )
     {
         // One step deeper and then stop: `f<i32>` needs `g<i32*>` and that is the end of it.
-        const Typed p( "void g<T>( T a ) where T : Copyable { }\n"
-                       "void f<T>( T a ) where T : Copyable { T* p = &a; g<T*>( p ); }\n"
+        const Typed p( "void g<T>( T a ) where T : copyable { }\n"
+                       "void f<T>( T a ) where T : copyable { T* p = &a; g<T*>( p ); }\n"
                        "i32 main() { return 0; }" );
 
         INFO( p.rendered() );
@@ -306,7 +306,7 @@ TEST_CASE( "type_checker_refuses_a_generic_that_expands_forever", "[sema][generi
     // the one construct that expands forever unchecked.
     SECTION( "taking an instance's address is an edge like a call is" )
     {
-        const Typed p( "void f<T>( T a ) where T : Copyable { T* p = &a; fn( T* ) -> void q = &f<T*>; }\n"
+        const Typed p( "void f<T>( T a ) where T : copyable { T* p = &a; fn( T* ) -> void q = &f<T*>; }\n"
                        "i32 main() { return 0; }" );
 
         INFO( p.rendered() );
@@ -318,7 +318,7 @@ TEST_CASE( "type_checker_refuses_a_generic_that_expands_forever", "[sema][generi
     SECTION( "a generic calling itself with a pointer to its own parameter is refused" )
     {
         // `f<i32>`, `f<i32*>`, `f<i32**>` - no set of instances finishes.
-        const Typed p( "void f<T>( T a ) where T : Copyable { T* p = &a; f<T*>( p ); }\ni32 main() { return 0; }" );
+        const Typed p( "void f<T>( T a ) where T : copyable { T* p = &a; f<T*>( p ); }\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
@@ -330,8 +330,8 @@ TEST_CASE( "type_checker_refuses_a_generic_that_expands_forever", "[sema][generi
     SECTION( "the same through a second generic" )
     {
         // The cycle is what matters, not the self-call: `g` grows it and `f` carries it back.
-        const Typed p( "void g<T>( T a ) where T : Copyable { T* p = &a; f<T*>( p ); }\n"
-                       "void f<T>( T a ) where T : Copyable { g<T>( a ); }\n"
+        const Typed p( "void g<T>( T a ) where T : copyable { T* p = &a; f<T*>( p ); }\n"
+                       "void f<T>( T a ) where T : copyable { g<T>( a ); }\n"
                        "i32 main() { return 0; }" );
 
         INFO( p.rendered() );
@@ -348,7 +348,7 @@ TEST_CASE( "type_checker_refuses_a_generic_that_expands_forever", "[sema][generi
     {
         // The graph is over declarations, so `main` naming none of them changes nothing. Reporting
         // only once something asked for an instance would be the deferred check this avoids.
-        const Typed p( "void f<T>( T a ) where T : Copyable { T* p = &a; f<T*>( p ); }\ni32 main() { return 0; }" );
+        const Typed p( "void f<T>( T a ) where T : copyable { T* p = &a; f<T*>( p ); }\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.rendered().find( "bigger type argument" ) != std::string::npos );
@@ -360,14 +360,14 @@ TEST_CASE( "type_checker_refuses_a_generic_that_expands_forever", "[sema][generi
 // that never finishes. D42 is what refuses it, over the field edges record_generic_uses records.
 TEST_CASE( "type_checker_refuses_a_generic_aggregate_that_grows_behind_a_pointer", "[sema][generic][aggregate]" )
 {
-    constexpr std::string_view box = "struct Box<T> where T : Copyable { T v; };\n";
+    constexpr std::string_view box = "struct Box<T> where T : copyable { T v; };\n";
 
     SECTION( "a field growing its own parameter is refused" )
     {
         // Accepted until the field edges existed, and then emitted forever: the struct order
         // interns `Bad<Box<i32>>` to walk it, which interns `Bad<Box<Box<i32>>>`, without end.
         const Typed p(
-            std::string( box ) + "class Bad<T> where T : Copyable { Bad<Box<T>>* next; };\n"
+            std::string( box ) + "class Bad<T> where T : copyable { Bad<Box<T>>* next; };\n"
                                  "i32 main() { return 0; }"
         );
 
@@ -382,8 +382,8 @@ TEST_CASE( "type_checker_refuses_a_generic_aggregate_that_grows_behind_a_pointer
         // Reported at the growing field rather than at the one that closes the cycle - `B` holding
         // an `A<U>*` is the innocent-looking half, and naming it would point at the wrong line.
         const Typed p(
-            std::string( box ) + "class A<T> where T : Copyable { B<Box<T>>* b; };\n"
-                                 "class B<U> where U : Copyable { A<U>* a; };\n"
+            std::string( box ) + "class A<T> where T : copyable { B<Box<T>>* b; };\n"
+                                 "class B<U> where U : copyable { A<U>* a; };\n"
                                  "i32 main() { return 0; }"
         );
 
@@ -397,7 +397,7 @@ TEST_CASE( "type_checker_refuses_a_generic_aggregate_that_grows_behind_a_pointer
         // `Box<A<Box<T>>>` names `Box` at the top and `A` one level in. Only the inner mention
         // closes a cycle, so the arguments have to be walked and not just the type they belong to.
         const Typed p(
-            std::string( box ) + "class A<T> where T : Copyable { Box<A<Box<T>>>* b; };\n"
+            std::string( box ) + "class A<T> where T : copyable { Box<A<Box<T>>>* b; };\n"
                                  "i32 main() { return 0; }"
         );
 
@@ -409,8 +409,8 @@ TEST_CASE( "type_checker_refuses_a_generic_aggregate_that_grows_behind_a_pointer
     {
         // The rule is about growth, not about recursion: these two need `A<i32>` and `B<i32>` and
         // nothing further, however long the cycle runs.
-        const Typed p( "class A<T> where T : Copyable { B<T>* b; };\n"
-                       "class B<U> where U : Copyable { A<U>* a; };\n"
+        const Typed p( "class A<T> where T : copyable { B<T>* b; };\n"
+                       "class B<U> where U : copyable { A<U>* a; };\n"
                        "i32 main() { return 0; }" );
 
         INFO( p.rendered() );
@@ -422,8 +422,8 @@ TEST_CASE( "type_checker_refuses_a_generic_aggregate_that_grows_behind_a_pointer
         // `Vector<T>` storing a `T*` is the first thing a real container writes, and `Box<T*>`
         // needs exactly two instances rather than unboundedly many.
         const Typed p(
-            std::string( box ) + "class Vector<T> where T : Copyable { T* data; };\n"
-                                 "class Wrapper<T> where T : Copyable { Box<T*>* b; };\n"
+            std::string( box ) + "class Vector<T> where T : copyable { T* data; };\n"
+                                 "class Wrapper<T> where T : copyable { Box<T*>* b; };\n"
                                  "i32 main() { return 0; }"
         );
 
@@ -453,14 +453,14 @@ TEST_CASE( "type_checker_refuses_a_generic_aggregate_that_grows_behind_a_pointer
 // its argument against it.
 TEST_CASE( "type_checker_substitutes_a_generic_aggregate", "[sema][generic][aggregate]" )
 {
-    const std::string_view box = "struct Box<T> where T : Copyable { T v; };\n";
+    const std::string_view box = "struct Box<T> where T : copyable { T v; };\n";
 
     SECTION( "a parameter of type `Box<T>` names the instantiation at the call" )
     {
         // The diagnostic has to say `Box<i32>`, which means substitute rebuilt the struct type from
         // its arguments rather than handing back the template.
         const Typed p(
-            std::string( box ) + "void take<T>( Box<T> b ) where T : Copyable { }\n"
+            std::string( box ) + "void take<T>( Box<T> b ) where T : copyable { }\n"
                                  "i32 main() { i32 x = 1; take<i32>( x ); return 0; }"
         );
 
@@ -474,7 +474,7 @@ TEST_CASE( "type_checker_substitutes_a_generic_aggregate", "[sema][generic][aggr
     SECTION( "a field of one is read at the substituted type" )
     {
         const Typed p(
-            std::string( box ) + "T peek<T>( Box<T> b ) where T : Copyable { return b.v; }\n"
+            std::string( box ) + "T peek<T>( Box<T> b ) where T : copyable { return b.v; }\n"
                                  "i32 main() { return 0; }"
         );
 
@@ -485,7 +485,7 @@ TEST_CASE( "type_checker_substitutes_a_generic_aggregate", "[sema][generic][aggr
     SECTION( "and the wrong field type is named against the parameter" )
     {
         const Typed p(
-            std::string( box ) + "bool peek<T>( Box<T> b ) where T : Copyable { return b.v; }\n"
+            std::string( box ) + "bool peek<T>( Box<T> b ) where T : copyable { return b.v; }\n"
                                  "i32 main() { return 0; }"
         );
 
@@ -499,7 +499,7 @@ TEST_CASE( "type_checker_substitutes_a_generic_aggregate", "[sema][generic][aggr
         // `T*` and needed nothing added for this - wraps_a_parameter asks whether the argument
         // *mentions* a parameter without *being* one, which both shapes answer the same way.
         const Typed p(
-            std::string( box ) + "void f<T>( T a ) where T : Copyable { Box<T> b; f<Box<T>>( b ); }\n"
+            std::string( box ) + "void f<T>( T a ) where T : copyable { Box<T> b; f<Box<T>>( b ); }\n"
                                  "i32 main() { return 0; }"
         );
 
@@ -510,8 +510,8 @@ TEST_CASE( "type_checker_substitutes_a_generic_aggregate", "[sema][generic][aggr
     SECTION( "forwarding the parameter itself is still finite" )
     {
         const Typed p(
-            std::string( box ) + "void g<T>( Box<T> b ) where T : Copyable { }\n"
-                                 "void f<T>( Box<T> b ) where T : Copyable { g<T>( b ); }\n"
+            std::string( box ) + "void g<T>( Box<T> b ) where T : copyable { }\n"
+                                 "void f<T>( Box<T> b ) where T : copyable { g<T>( b ); }\n"
                                  "i32 main() { return 0; }"
         );
 

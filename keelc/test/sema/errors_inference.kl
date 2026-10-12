@@ -2,37 +2,37 @@
 // leave open, from the expectation at the call site. These are the calls where that is not enough,
 // and each one has its own message: nothing said what a parameter is, or two things said different.
 
-struct Box<T> where T : Copyable
+struct Box<T> where T : copyable
 {
     T v;
 };
 
-T id<T>( T a ) where T : Copyable
+T id<T>( T a ) where T : copyable
 {
     return a;
 }
 
-T zeroed<T>() where T : Integral
+T zeroed<T>() where T : integral
 {
     return wrap<T>( 0 );
 }
 
-T both<T>( T a, T b ) where T : Copyable
+T both<T>( T a, T b ) where T : copyable
 {
     return a;
 }
 
-T unbox<T>( Box<T> b ) where T : Copyable
+T unbox<T>( Box<T> b ) where T : copyable
 {
     return b.v;
 }
 
-U second<T, U>( T a ) where T : Copyable, where U : Integral
+U second<T, U>( T a ) where T : copyable, where U : integral
 {
     return wrap<U>( 0 );
 }
 
-i32 ordered<T>( T a ) where T : Comparable
+i32 ordered<T>( T a ) where T : comparable
 {
     return 1;
 }
@@ -96,12 +96,12 @@ i32 deduced_breaks_a_bound( Plain p )
 // Two generics that both match: one takes the whole `Box<i32>` as `T`, the other takes what is
 // inside it. Neither is more specific - ranking how well each fits is the thing this refuses - so
 // only the type arguments can say which was meant.
-bool which<T>( T a ) where T : Copyable
+bool which<T>( T a ) where T : copyable
 {
     return true;
 }
 
-bool which<T>( Box<T> a ) where T : Copyable
+bool which<T>( Box<T> a ) where T : copyable
 {
     return false;
 }
@@ -118,13 +118,13 @@ void a_struct_literal_says_nothing()
     unbox( Box { 1 } );
 }
 
-struct Pair<T, U> where T : Copyable, where U : Copyable
+struct Pair<T, U> where T : copyable, where U : copyable
 {
     T a;
     U b;
 };
 
-T twice<T, U>( Pair<T, U> x, Pair<T, U> y ) where T : Copyable, where U : Copyable
+T twice<T, U>( Pair<T, U> x, Pair<T, U> y ) where T : copyable, where U : copyable
 {
     return x.a;
 }
@@ -142,12 +142,12 @@ i32 two_disagreements( Pair<i32, bool> one, Pair<bool, i32> two )
 // saying so twice would be one mistake told twice.
 extern i32 ext( i32 a );
 
-T chosen<T>( T a, i32 b ) where T : Copyable
+T chosen<T>( T a, i32 b ) where T : copyable
 {
     return a;
 }
 
-T chosen<T>( Box<T> a, i32 b ) where T : Copyable
+T chosen<T>( Box<T> a, i32 b ) where T : copyable
 {
     return a.v;
 }

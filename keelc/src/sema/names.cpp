@@ -718,7 +718,7 @@ TEST_CASE( "names_carry_the_signature_their_use_sees", "[sema][names]" )
         "    void again( T* p ) { put( p ); }\n"
         "};\n"
         "enum maybe<T> { some( T value ), none };\n"
-        "T first<T>( T a, T b ) where T : Copyable { return a; }\n"
+        "T first<T>( T a, T b ) where T : copyable { return a; }\n"
         "void f( Box<i32> b, i32* p ) { b.put( p ); i64 n = first( cast<i64>( 1 ), cast<i64>( 2 ) ); "
         "maybe<bool> m = maybe::some( true ); }\n";
 
@@ -755,7 +755,7 @@ TEST_CASE( "names_carry_the_signature_their_use_sees", "[sema][names]" )
 TEST_CASE( "names_name_each_declaration_where_written", "[sema][names]" )
 {
     constexpr std::string_view source = "i32 total = 0;\n"
-                                        "class Box<T> where T : Copyable\n"
+                                        "class Box<T> where T : copyable\n"
                                         "{\n"
                                         "    T item;\n"
                                         "    public static Box<T> of( T v ) { return Box<T>( v ); }\n"
@@ -767,7 +767,7 @@ TEST_CASE( "names_name_each_declaration_where_written", "[sema][names]" )
     const auto at    = [&]( std::string_view text, std::size_t skip = 0 ) { return source.find( text ) + skip; };
 
     REQUIRE( has( names, fmt::format( "total@{}: i32 total", at( "total" ) ) ) );
-    REQUIRE( has( names, fmt::format( "Box@{}: class Box<T> where T : Copyable", at( "Box" ) ) ) );
+    REQUIRE( has( names, fmt::format( "Box@{}: class Box<T> where T : copyable", at( "Box" ) ) ) );
     REQUIRE( has( names, fmt::format( "item@{}: private T item", at( "item" ) ) ) );
     REQUIRE( has( names, fmt::format( "of@{}: public static Box<T> of( T v )", at( "of(" ) ) ) );
     REQUIRE( has( names, fmt::format( "v@{}: T v", at( "T v )", 2 ) ) ) );
@@ -790,7 +790,7 @@ TEST_CASE( "names_name_each_declaration_where_written", "[sema][names]" )
         for( const Name& name : collect_names( ast, resolution, types, sm, interner ) )
         {
             const bool is_type_parameter = name.kind == Name_kind::Type_parameter;
-            REQUIRE( ( name.owner == "class Box<T> where T : Copyable" ) == is_type_parameter );
+            REQUIRE( ( name.owner == "class Box<T> where T : copyable" ) == is_type_parameter );
         }
     }
 }

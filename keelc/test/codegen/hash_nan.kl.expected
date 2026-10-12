@@ -1,0 +1,78 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "hash_nan.kl.prelude.c"
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+double kl__quotient__3f64_3f64( double, double );
+int32_t kl__main__( void );
+uint64_t kl__digest__I3f64E__3f64( double* );
+
+double kl__quotient__3f64_3f64( double kl_a_1, double kl_b_2 )
+{
+    double kl_t0;
+    double kl_t3;
+#line 5 "codegen/hash_nan.kl"
+    kl_t3 = kl_a_1 / kl_b_2;
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    double kl_nan_1;
+    double kl_t2;
+    struct kl_7prelude_str kl_t3;
+    struct kl_7prelude_str* kl_t4;
+    uint8_t* kl_t5;
+    double* kl_t8;
+    uint64_t kl_t9;
+    bool kl_t10;
+#line 15 "codegen/hash_nan.kl"
+    kl_t2 = kl__quotient__3f64_3f64( 0.0, 0.0 );
+    kl_nan_1 = kl_t2;
+#line 17 "codegen/hash_nan.kl"
+    kl_t4 = &kl_t3;
+    kl_t5 = ( uint8_t* ) "before";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 6 );
+    kl_7prelude_println__Q7prelude3str( kl_t3 );
+#line 19 "codegen/hash_nan.kl"
+    kl_t8 = &kl_nan_1;
+    kl_t9 = kl__digest__I3f64E__3f64( kl_t8 );
+    kl_t10 = kl_t9 == 0;
+    if ( kl_t10 ) goto bb1; else goto bb2;
+    bb1:
+#line 21 "codegen/hash_nan.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+#line 24 "codegen/hash_nan.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+uint64_t kl__digest__I3f64E__3f64( double* kl_v_1 )
+{
+    uint64_t kl_t0;
+    bool kl_t2;
+    double kl_t3;
+    uint64_t kl_t4;
+#line 10 "codegen/hash_nan.kl"
+    kl_t2 = ( *kl_v_1 ) == ( *kl_v_1 );
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t3 = ( *kl_v_1 ) + 0.0;
+    kl_t4 = ( ( union { double f; uint64_t u; } ) { .f = kl_t3 } ).u;
+    kl_t0 = kl_t4;
+    return kl_t0;
+    bb2:
+    kl_rt_panic( "codegen/hash_nan.kl", 10, "NaN has no hash: v.hash()" );
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

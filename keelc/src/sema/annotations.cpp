@@ -203,14 +203,22 @@ Type_id Annotations::resolve_named( Node_id annotation )
             if( const Node_id method = table_.method_naming_self( types_.type_of( decl ) ); method.is_valid() && !receiver_ )
             {
                 const std::string_view interface = interner_.text( ast_.name( annotation ) );
+                const Node_id          owner     = ast_.enclosing_aggregate( method );
 
                 reporter_.error_at(
                     ast_.span( annotation ),
-                    fmt::format(
-                        "`{}` can only bound a type parameter, because its `{}` mentions `self`",
-                        interface,
-                        interner_.text( ast_.name( method ) )
-                    ),
+                    owner == decl
+                        ? fmt::format(
+                              "`{}` can only bound a type parameter, because its `{}` mentions `self`",
+                              interface,
+                              interner_.text( ast_.name( method ) )
+                          )
+                        : fmt::format(
+                              "`{}` can only bound a type parameter, because it requires `{}`, whose `{}` mentions `self`",
+                              interface,
+                              interner_.text( ast_.name( owner ) ),
+                              interner_.text( ast_.name( method ) )
+                          ),
                     fmt::format( "take a `T` with `where T : {}` instead", interface )
                 );
 
@@ -1318,7 +1326,7 @@ TEST_CASE( "annotations_take_const_off_the_outermost_and_give_it_to_a_pointer", 
 // without a word, which made `Box<const i32>` a second spelling of `Box<i32>`.
 TEST_CASE( "type_checker_refuses_const_on_a_type_argument", "[sema][const][generic]" )
 {
-    constexpr std::string_view box = "struct Box<T> where T : Copyable { T v; };\n";
+    constexpr std::string_view box = "struct Box<T> where T : copyable { T v; };\n";
 
     SECTION( "on a type" )
     {
@@ -1493,7 +1501,7 @@ TEST_CASE( "type_checker_reports_a_bad_const_element_once", "[sema][const]" )
 
 TEST_CASE( "type_checker_checks_type_arguments", "[sema][generic]" )
 {
-    const std::string_view id = "T id<T>( T a ) where T : Copyable { return a; }\n";
+    const std::string_view id = "T id<T>( T a ) where T : copyable { return a; }\n";
 
     SECTION( "too many" )
     {
@@ -1506,7 +1514,7 @@ TEST_CASE( "type_checker_checks_type_arguments", "[sema][generic]" )
 
     SECTION( "too few" )
     {
-        const Typed p( "T pick<T, U>( T a, U b ) where T : Copyable { return a; }\ni32 main() { return pick<i32>( 1, 2 ); }" );
+        const Typed p( "T pick<T, U>( T a, U b ) where T : copyable { return a; }\ni32 main() { return pick<i32>( 1, 2 ); }" );
 
         INFO( p.rendered() );
         REQUIRE_FALSE( p.clean() );
@@ -1578,7 +1586,7 @@ TEST_CASE( "type_checker_resolves_a_many_item_pointer_annotation", "[sema][many]
         for( const auto& [spelling, name] : cases )
         {
             const Typed p(
-                std::string( "struct P { i32 x; };\nstruct Box<T> where T : Copyable { T v; };\n" ) + "i32 main() { " +
+                std::string( "struct P { i32 x; };\nstruct Box<T> where T : copyable { T v; };\n" ) + "i32 main() { " +
                 spelling + " q = nullptr; return 0; }"
             );
 
@@ -1799,7 +1807,7 @@ TEST_CASE( "annotations_read_self_only_in_an_interface", "[sema][annotation][sel
         };
 
         const Case cases[] = {
-            { "struct Node<T> where T : Copyable { T v; self* next; };", "write `Node<T>`, the type's own name" },
+            { "struct Node<T> where T : copyable { T v; self* next; };", "write `Node<T>`, the type's own name" },
             { "class Buffer { u8* p; self* twin; Buffer() { p = nullptr; twin = nullptr; } };",
               "write `Buffer`, the type's own name" },
             { "enum List { Cons( i32 head, self* rest ), Nil };", "write `List`, the type's own name" },

@@ -1,0 +1,82 @@
+// D40: an interface requires another by naming it after `implements`. Conforming to it needs the
+// other declared as well, since a requirement is not inheritance; a cycle is refused at the name
+// that closes it; one requiring a bound-only interface is bound-only too; and a `ref` to the
+// requiring interface does not become one of the required.
+interface Named
+{
+    i32 id() const;
+};
+
+interface Shape implements Named
+{
+    f64 area() const;
+};
+
+struct Square implements Shape
+{
+    f64 side;
+
+    i32 id() const { return 1; }
+    f64 area() const { return side * side; }
+};
+
+enum Tile
+{
+    Floor,
+    Wall,
+};
+
+implements Shape for Tile
+{
+    f64 area() const { return 1.0; }
+};
+
+interface Loop implements Again
+{
+    void spin() const;
+};
+
+interface Again implements Loop
+{
+    void turn() const;
+};
+
+interface Itself implements Itself
+{
+    void be() const;
+};
+
+interface Sized implements i32
+{
+    u64 size() const;
+};
+
+// What `Keyed` promises includes `same`, which two values behind a `ref Keyed` could not honour.
+interface Same
+{
+    bool same( const ref self other ) const;
+};
+
+interface Keyed implements Same
+{
+    u64 key() const;
+};
+
+void hold( const ref Keyed k )
+{
+}
+
+i32 named( const ref Named n )
+{
+    return n.id();
+}
+
+i32 shaped( const ref Shape s )
+{
+    return named( s );
+}
+
+i32 main()
+{
+    return 0;
+}

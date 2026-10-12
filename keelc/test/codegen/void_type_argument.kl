@@ -1,12 +1,12 @@
 // D51. `void` as a type argument takes no storage: a generic over it compiles with the `void` parts
 // left out, a struct left with no fields keeps one placeholder byte, and `result<void, E>` succeeds
 // with `result::ok()`.
-struct Box<T> where T : Copyable
+struct Box<T> where T : copyable
 {
     T v;
 };
 
-struct Pair<T> where T : Copyable
+struct Pair<T> where T : copyable
 {
     T first;
     i32 second;
@@ -28,7 +28,7 @@ void note()
     println( "note" );
 }
 
-T same<T>( T a ) where T : Copyable
+T same<T>( T a ) where T : copyable
 {
     T held = a;
     return held;
@@ -39,7 +39,7 @@ void look<T>( const ref T a )
     println( "look" );
 }
 
-Box<T> boxed<T>( T v ) where T : Copyable
+Box<T> boxed<T>( T v ) where T : copyable
 {
     return Box { v };
 }

@@ -36,7 +36,7 @@ struct P
 // The type parameter slot holds the *enclosing* aggregate's list, which is how a method of `Box<T>`
 // is generic in T without writing any of its own. A static one is generic the same way and through
 // the same slot - it has no receiver to carry `T` in instead.
-struct Box<T> where T : Copyable
+struct Box<T> where T : copyable
 {
     T v;
 

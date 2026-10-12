@@ -2,19 +2,19 @@ error: `cast` cannot convert `T` to `i32`
   --> sema/errors_generic_conversions.kl:29:12
    |
 29 |     return cast<i32>( v );
-   |            ^^^^^^^^^^^^^^ write `where T : Numeric` to promise it is a number
+   |            ^^^^^^^^^^^^^^ write `where T : numeric` to promise it is a number
 
 error: `cast` cannot convert `T` to `f64`
   --> sema/errors_generic_conversions.kl:37:12
    |
 37 |     return cast<f64>( v );
-   |            ^^^^^^^^^^^^^^ write `where T : Numeric` to promise it is a number
+   |            ^^^^^^^^^^^^^^ write `where T : numeric` to promise it is a number
 
 error: `cast` cannot convert `T` to `i32`
   --> sema/errors_generic_conversions.kl:44:12
    |
 44 |     return cast<i32>( v );
-   |            ^^^^^^^^^^^^^^ write `where T : Numeric` to promise it is a number
+   |            ^^^^^^^^^^^^^^ write `where T : numeric` to promise it is a number
 
 error: `cast` cannot convert `T` to `i32`
   --> sema/errors_generic_conversions.kl:50:12

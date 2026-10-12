@@ -1,6 +1,6 @@
 // A method's own type parameters: what a call writes or leaves to deduction, and the shapes that
 // cannot have them. Each mistake is reported once, at the call or member that made it.
-class Box<T> where T : Copyable
+class Box<T> where T : copyable
 {
     T value;
 
@@ -10,28 +10,28 @@ class Box<T> where T : Copyable
 
     U map<U>( fn( const ref T ) -> U f ) const { return f( value ); }
 
-    U pick<U>( U a ) const where U : Integral { return a; }
+    U pick<U>( U a ) const where U : integral { return a; }
 
-    U make<U>() const where U : Numeric { return cast<U>( 0 ); }
+    U make<U>() const where U : numeric { return cast<U>( 0 ); }
 
     // Overloading one would mean binding `U` before the arguments chose between the two.
-    V convert<V>( V v ) const where V : Copyable { return v; }
+    V convert<V>( V v ) const where V : copyable { return v; }
     i32 convert( i32 v ) const { return v; }
 
     // An operator call writes no type arguments.
     bool operator==<U>( const ref Box<T> other ) const { return true; }
 
     // The aggregate's `T` is already in scope.
-    V over<T, V>( V v ) const where V : Copyable { return v; }
+    V over<T, V>( V v ) const where V : copyable { return v; }
 
     // A clause names the method's own parameters, not the aggregate's.
-    U bounded<U>( U u ) const where U : Copyable, where T : Numeric { return u; }
+    U bounded<U>( U u ) const where U : copyable, where T : numeric { return u; }
 
     // A clause with no parameters of its own to constrain.
-    T plain() const where T : Numeric { return value; }
+    T plain() const where T : numeric { return value; }
 };
 
-T mk<T>() where T : Numeric { return cast<T>( 0 ); }
+T mk<T>() where T : numeric { return cast<T>( 0 ); }
 
 i64 wide( const ref i64 x ) { return x; }
 

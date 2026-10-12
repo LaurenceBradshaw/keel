@@ -7,14 +7,14 @@
 // one. A conversion made against the wrong *instance* - `Box<i32>`'s field where `Box<f64>`'s was
 // meant - is valid C, and 2.5 arrives as 2.0 with nothing to say so.
 
-struct Box<T> where T : Copyable
+struct Box<T> where T : copyable
 {
     T v;
 };
 
 // A field that is itself a generic instance, so the substitution has to reach inside one rather
 // than replace a bare `T`.
-struct Outer<T> where T : Copyable
+struct Outer<T> where T : copyable
 {
     Box<T> inner;
     i32    tag;
@@ -22,7 +22,7 @@ struct Outer<T> where T : Copyable
 
 // A generic body, where the expectation is legitimately the open form: `Box { v }` here is a
 // `Box<T>` until the call site says which one, and monomorphisation resolves it afterwards.
-Box<T> hold<T>( T v ) where T : Copyable
+Box<T> hold<T>( T v ) where T : copyable
 {
     return Box { v };
 }

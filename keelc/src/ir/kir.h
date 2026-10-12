@@ -116,6 +116,7 @@ enum class Rvalue_kind : u8
     Binary,
     Unary,
     Cast,
+    Bits, // a float's bits as the unsigned integer of its width; a is the float
     Call,
     Address_of, // reads a.place; the address is not a copy of what lives there
     Allocate,
@@ -192,12 +193,13 @@ enum class Terminator_kind : u8
 // What a Panic reports.
 enum class Failure : u8
 {
-    Assert,    // span: the condition
-    Message,   // span: the whole `panic( ... )`
-    Cast,      // span: the whole `cast<T>( x )`
-    Division,  // span: the operation
-    Remainder, // span: the operation
-    Unordered, // span: the comparison
+    Assert,     // span: the condition
+    Message,    // span: the whole `panic( ... )`
+    Cast,       // span: the whole `cast<T>( x )`
+    Division,   // span: the operation
+    Remainder,  // span: the operation
+    Unordered,  // span: the comparison
+    Unhashable, // span: the call
 };
 
 struct Terminator
@@ -350,6 +352,11 @@ inline Rvalue unary( Token_kind op, Operand a, Type_id type )
 inline Rvalue cast_to( Operand a, Type_id type )
 {
     return Rvalue { .kind = Rvalue_kind::Cast, .type = type, .a = a };
+}
+
+inline Rvalue bits_of( Operand a, Type_id type )
+{
+    return Rvalue { .kind = Rvalue_kind::Bits, .type = type, .a = a };
 }
 
 inline Rvalue allocate( Type_id type ) // type is the *pointer* type; element comes off it

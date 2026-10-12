@@ -125,7 +125,10 @@ private:
         std::vector<Type_id>     type_arguments
     );
     Operand lower_interface_call( Node_id id, Node_id requirement );
-    Operand lower_operator_call( Node_id id, Node_id method );
+    Operand lower_operator_call( Node_id id, Node_id method, const Bindings& bindings, std::vector<Type_id> type_arguments );
+    // In an instance, the method of `held`'s own conformance that `op` calls, or invalid where the
+    // operator is the compiler's.
+    Node_id bound_operator( Token_kind op, Type_id held ) const;
     Operand lower_operator_index( Node_id id, Node_id method );
     Operand lower_variant_construction( Node_id id );
     Operand lower_try( Node_id id );
@@ -193,6 +196,7 @@ private:
     // A variable shift count is masked to the width; a variable divisor panics at zero, and MIN / -1 wraps.
     Rvalue  checked_arithmetic( Token_kind op, Operand left, Operand right, Type_id type, Span span );
     Operand three_way( Operand left, Operand right, Span span );
+    Operand supplied_hash( Operand value, Span span );
     Operand moved_if_owning( Operand operand );
 
     bool is_move_parameter( Node_id param ) const;
@@ -856,6 +860,43 @@ Operand Lowering::three_way( Operand left, Operand right, Span span )
     return copy( builder_.place( result ), ordering );
 }
 
+// The compiler's hash is the value widened; `kl::map` mixes and seeds it. A float hashes its bits,
+// with `-0.0` made `0.0` so the two that are `==` agree, and a NaN, which is `==` to nothing, panics.
+Operand Lowering::supplied_hash( Operand value, Span span )
+{
+    const Type_table& table = types_.table();
+    const Type_id     u64   = table.integer( 64, false );
+
+    if( !table.is_float( value.type ) )
+    {
+        return converted( value, u64, span );
+    }
+
+    const Type_id boolean = table.builtin( Type_kind::Bool );
+    const Type_id number  = table.get( value.type ).width == 32 ? table.integer( 32, false ) : u64;
+
+    const Block_id pass = builder_.add_block();
+    const Block_id fail = builder_.add_block();
+
+    const Operand ordered = copy(
+        builder_.place( builder_.into_temp( binary( Token_kind::Equal_equal, value, value, boolean ), boolean, span ) ), boolean
+    );
+
+    builder_.terminate_branch( ordered, pass, fail, span );
+    builder_.switch_to( fail );
+    builder_.terminate_panic( span, Failure::Unhashable );
+    builder_.switch_to( pass );
+
+    const Operand zero     = constant( literal_pool_.add_float( 0.0 ), value.type );
+    const Operand positive = copy(
+        builder_.place( builder_.into_temp( binary( Token_kind::Plus, value, zero, value.type ), value.type, span ) ),
+        value.type
+    );
+    const Operand bits = copy( builder_.place( builder_.into_temp( bits_of( positive, number ), number, span ) ), number );
+
+    return converted( bits, u64, span );
+}
+
 Operand Lowering::moved_if_owning( Operand operand )
 {
     if( operand.kind != Operand_kind::Copy || !owns( operand.type ) )
@@ -1382,7 +1423,20 @@ Operand Lowering::lower_binary( Node_id id )
     // `a == b` on an aggregate, where the checker chose the left operand's operator.
     if( const Node_id method = types_.callee_of( id ); method.is_valid() )
     {
-        return lower_operator_call( id, method );
+        return lower_operator_call( id, method, bindings_for_call( id ), type_arguments_for_call( id ) );
+    }
+
+    // Under a bound, at a type whose own conformance answers the operator.
+    if( const Type_id held = type_of( ast_.lhs( id ) ); bound_operator( op, held ).is_valid() )
+    {
+        const std::span<const Type_id> arguments = types_.table().get( held ).arguments;
+
+        return lower_operator_call(
+            id,
+            bound_operator( op, held ),
+            aggregate_bindings( ast_, types_.table(), held, types_.recorded() ),
+            std::vector<Type_id>( arguments.begin(), arguments.end() )
+        );
     }
 
     const Span    span      = ast_.span( id );
@@ -1419,14 +1473,38 @@ Operand Lowering::lower_binary( Node_id id )
     return copy( builder_.place( builder_.into_temp( checked_arithmetic( op, left, right, type, span ), type, span ) ), type );
 }
 
+Node_id Lowering::bound_operator( Token_kind op, Type_id held ) const
+{
+    const Type_table& table = types_.table();
+
+    if( !table.is_struct( held ) && !table.is_enum( held ) )
+    {
+        return Node_id {};
+    }
+
+    const Type_id interface = interface_for( table, op );
+
+    if( !interface.is_valid() )
+    {
+        return Node_id {};
+    }
+
+    // Each prelude bound declares exactly one method.
+    const std::span<const Node_id> members = ast_.members( table.get( interface ).declaration );
+
+    assert( members.size() == 1 );
+
+    return types_.conformances().method_for( table, held, members[0] );
+}
+
 // `a == b` calls `a.operator==( b )`, and `a != b` negates it; `a < b` compares what
 // `a.operator<=>( b )` answers with a variant.
-Operand Lowering::lower_operator_call( Node_id id, Node_id method )
+Operand
+Lowering::lower_operator_call( Node_id id, Node_id method, const Bindings& bindings, std::vector<Type_id> type_arguments )
 {
-    const Span       span     = ast_.span( id );
-    const Node_id    rhs      = ast_.rhs( id );
-    const Token_kind op       = ast_.op( id );
-    const Bindings   bindings = bindings_for_call( id );
+    const Span       span = ast_.span( id );
+    const Node_id    rhs  = ast_.rhs( id );
+    const Token_kind op   = ast_.op( id );
 
     const std::span<const Node_id> parameters = ast_.params( method );
 
@@ -1436,7 +1514,9 @@ Operand Lowering::lower_operator_call( Node_id id, Node_id method )
         span,
         ast_.is_const_method( method ) ? Address_purpose::Read : Address_purpose::Borrow
     );
-    const Operand result = lower_method_call_on( id, method, receiver, { &rhs, 1 }, type_under( method, bindings ) );
+    const Operand result = lower_method_call_on(
+        id, method, receiver, { &rhs, 1 }, type_under( method, bindings ), bindings, std::move( type_arguments )
+    );
 
     if( op == Token_kind::Equal_equal || op == Token_kind::Less_equal_greater )
     {
@@ -1809,9 +1889,10 @@ Operand Lowering::lower_interface_call( Node_id id, Node_id requirement )
 {
     const Node_id object      = ast_.object( ast_.callee( id ) );
     const Type_id object_type = type_of( object );
-    const bool    pointer     = types_.table().is_pointer( object_type );
-    const Type_id held        = pointer ? types_.table().get( object_type ).element : object_type;
-    const bool    reads       = ast_.is_const_method( requirement );
+    // As written: a `T` bound to `i32*` holds the pointer, where a `T*` points at what it holds.
+    const bool    pointer = types_.table().is_pointer( types_.type_of( object ) );
+    const Type_id held    = pointer ? types_.table().get( object_type ).element : object_type;
+    const bool    reads   = ast_.is_const_method( requirement );
 
     const auto receiver = [&]( Type_id address ) -> Operand
     {
@@ -1833,7 +1914,19 @@ Operand Lowering::lower_interface_call( Node_id id, Node_id requirement )
 
     const Node_id method = types_.conformances().method_for( types_.table(), held, requirement );
 
-    assert( method.is_valid() && "a bound is met only by a type whose `implements` was checked" );
+    // No method answers where the compiler's conformance does, and only `hashable`'s `hash` has one.
+    if( !method.is_valid() )
+    {
+        assert(
+            ast_.enclosing_aggregate( requirement ) ==
+                types_.table().get( types_.table().prelude_interface( Prelude_interface::Hashable ) ).declaration &&
+            "a bound is met only by a declared `implements` or the compiler's hash"
+        );
+
+        const Operand value = pointer ? copy( builder_.deref( lower_place( object ) ), held ) : lower_expression( object );
+
+        return supplied_hash( value, ast_.span( id ) );
+    }
 
     const std::span<const Type_id> arguments = types_.table().get( held ).arguments;
 
@@ -3194,7 +3287,7 @@ Operand Lowering::borrowed_argument( Node_id argument, Type_id address )
     const Operand value = lower_expression( argument );
 
     // A constant has no address, and a borrowed parameter travels as one. This is reachable only
-    // through a generic: a bare `T a` borrows unless the `where` clause promises `Copyable`, so
+    // through a generic: a bare `T a` borrows unless the `where` clause promises `copyable`, so
     // `f<i32>( 1 )` hands a literal to a by-address parameter. Materialise it and borrow that - the
     // callee may only read through the borrow, so a temporary living to the end of the statement is
     // exactly long enough, and a type that reaches here has no destructor to run on it.
@@ -4502,7 +4595,7 @@ TEST_CASE( "lower_takes_the_address_of_the_chosen_overload", "[ir][lower][m7]" )
 // same pair a call already carries.
 TEST_CASE( "lower_takes_the_address_of_a_generic_instance", "[ir][lower][m7][generic]" )
 {
-    constexpr std::string_view id = "T id<T>( T a ) where T : Copyable { return a; }\n";
+    constexpr std::string_view id = "T id<T>( T a ) where T : copyable { return a; }\n";
 
     const auto addresses = []( Lowered& p )
     {
@@ -7346,7 +7439,7 @@ TEST_CASE( "lower_calls_through_a_bound_directly", "[ir][lower][interfaces][gene
     SECTION( "a generic implementer brings its own arguments" )
     {
         Lowered p( "interface Shape { f64 area() const; };\n"
-                   "struct Pair<T> implements Shape where T : Copyable { T a; f64 area() const { return 2.0; } };\n"
+                   "struct Pair<T> implements Shape where T : copyable { T a; f64 area() const { return 2.0; } };\n"
                    "f64 f<T>( const ref T t ) where T : Shape { return t.area(); }\n"
                    "i32 main() { Pair<i32> q = Pair { 1 }; f64 a = f( q ); return 0; }" );
 
@@ -7434,8 +7527,8 @@ TEST_CASE( "lower_reaches_what_lowering_an_instance_interns", "[ir][lower][gener
 {
     SECTION( "a destructor" )
     {
-        Lowered p( "class Box<T> where T : Copyable { T v; public Box( T x ) { v = x; } ~Box() { } };\n"
-                   "i32 make<T>( T x ) where T : Copyable { Box<T> b = Box<T>( x ); return 0; }\n"
+        Lowered p( "class Box<T> where T : copyable { T v; public Box( T x ) { v = x; } ~Box() { } };\n"
+                   "i32 make<T>( T x ) where T : copyable { Box<T> b = Box<T>( x ); return 0; }\n"
                    "i32 main() { return make<i64>( 1 ); }" );
 
         INFO( p.rendered() );
@@ -7451,9 +7544,9 @@ TEST_CASE( "lower_reaches_what_lowering_an_instance_interns", "[ir][lower][gener
     SECTION( "an implementer's method" )
     {
         Lowered p( "interface Shape { f64 area() const; };\n"
-                   "struct Pair<T> implements Shape where T : Copyable { T a; f64 area() const { return 2.0; } };\n"
+                   "struct Pair<T> implements Shape where T : copyable { T a; f64 area() const { return 2.0; } };\n"
                    "f64 measure( const ref Shape s ) { return s.area(); }\n"
-                   "f64 make<T>( T x ) where T : Copyable { Pair<T> p = Pair { x }; return measure( p ); }\n"
+                   "f64 make<T>( T x ) where T : copyable { Pair<T> p = Pair { x }; return measure( p ); }\n"
                    "i32 main() { f64 a = make<i64>( 1 ); return 0; }" );
 
         INFO( p.rendered() );

@@ -1155,6 +1155,36 @@ bool Type_table::implements( Type_id type, Type_id interface ) const
     }
 }
 
+void Type_table::declare_refinement( Type_id interface, Type_id refined )
+{
+    refinements_[get( interface ).declaration.v].push_back( refined );
+}
+
+std::span<const Type_id> Type_table::refinements( Type_id interface ) const
+{
+    if( !interface.is_valid() || !is_interface( interface ) )
+    {
+        return {};
+    }
+
+    const auto found = refinements_.find( get( interface ).declaration.v );
+    return found == refinements_.end() ? std::span<const Type_id> {} : std::span<const Type_id> { found->second };
+}
+
+// Recursion is safe: a refinement closing a cycle is refused before it is declared.
+bool Type_table::refines( Type_id interface, Type_id other ) const
+{
+    for( const Type_id refined : refinements( interface ) )
+    {
+        if( refined == other || refines( refined, other ) )
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void Type_table::declare_naming_self( Node_id interface, Node_id method )
 {
     naming_self_.emplace( interface.v, method );
@@ -1205,6 +1235,23 @@ Type_id Type_table::ordering() const
 
     const auto found = composites_.find( ordering_.v );
     return found == composites_.end() ? Type_id {} : found->second[0].type;
+}
+
+void Type_table::declare_prelude_interface( Prelude_interface which, Node_id declaration )
+{
+    prelude_interfaces_[static_cast<u8>( which )] = declaration;
+}
+
+Type_id Type_table::prelude_interface( Prelude_interface which ) const
+{
+    const auto found = interfaces_.find( prelude_interfaces_[static_cast<u8>( which )].v );
+    return found == interfaces_.end() ? Type_id {} : found->second;
+}
+
+bool Type_table::is_prelude_interface( Type_id interface ) const
+{
+    return interface.is_valid() && is_interface( interface ) &&
+           std::ranges::find( prelude_interfaces_, get( interface ).declaration ) != std::end( prelude_interfaces_ );
 }
 
 Type_id Type_table::add( const Type& type, std::string_view name )

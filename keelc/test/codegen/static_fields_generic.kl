@@ -1,6 +1,6 @@
 // A generic type's static field is one variable per instantiation: `Box<i32>` and `Box<f64>` count
 // their own objects, and the exit code is what each saw.
-class Box<T> where T : Copyable
+class Box<T> where T : copyable
 {
     static i32 made = 0;
 

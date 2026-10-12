@@ -1,6 +1,7 @@
 Source_file                             1:1-28:1
   Interface_decl                        2:1-6:3     name=Shape
     <none>                              -
+    <none>                              -
     Method_decl                         4:5-4:22
       Named_type                        4:5-4:8     "f64"
       Param_list                        4:13-4:15
@@ -23,6 +24,7 @@ Source_file                             1:1-28:1
       <none>                            -
       <none>                            -
   Interface_decl                        8:1-11:3    name=Named
+    <none>                              -
     <none>                              -
     Method_decl                         10:5-10:32
       Const_type                        10:5-10:18
@@ -79,7 +81,7 @@ Source_file                             1:1-28:1
     Type_param_list                     21:14-21:53
       Type_param_decl                   21:15-21:16 "T"
       Where_clause                      21:35-21:53
-        Bound_name                      21:45-21:53 "Copyable"
+        Bound_name                      21:45-21:53 "copyable"
     Implements_list                     21:18-21:34
       Named_type                        21:29-21:34 "Shape"
     Field_decl                          23:5-23:12  name=side
@@ -100,7 +102,7 @@ Source_file                             1:1-28:1
       Type_param_list                   21:14-21:53
         Type_param_decl                 21:15-21:16 "T"
         Where_clause                    21:35-21:53
-          Bound_name                    21:45-21:53 "Copyable"
+          Bound_name                    21:45-21:53 "copyable"
       <none>                            -
     Method_decl                         26:5-26:28
       Named_type                        26:5-26:9   "void"
@@ -117,5 +119,5 @@ Source_file                             1:1-28:1
       Type_param_list                   21:14-21:53
         Type_param_decl                 21:15-21:16 "T"
         Where_clause                    21:35-21:53
-          Bound_name                    21:45-21:53 "Copyable"
+          Bound_name                    21:45-21:53 "copyable"
       <none>                            -

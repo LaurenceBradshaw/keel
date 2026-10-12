@@ -54,7 +54,7 @@ Vec of( i32 x, i32 y )
     return Vec { x + 100, y + 100 };
 }
 
-struct Box<T> where T : Copyable
+struct Box<T> where T : copyable
 {
     T v;
 

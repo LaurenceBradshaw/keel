@@ -76,7 +76,7 @@ class Owner
     }
 };
 
-class Holder<T> where T : Copyable
+class Holder<T> where T : copyable
 {
     public const T value;
 

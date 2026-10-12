@@ -1,0 +1,135 @@
+// D40: `hashable` as a bound. A number, `bool`, an enum without payloads and a pointer hash to their
+// value, tag or address widened to `u64`, computed in the instance; a float hashes its bits, with
+// `-0.0` taken as `0.0`. A type with a `hash` of its own has it called, and an enum whose own
+// `equatable` replaces the compiler's writes its own `hash` too. `hashable` brings `==`. Exits with
+// the failing check.
+struct Point implements hashable, equatable
+{
+    i32 x;
+    i32 y;
+
+    bool operator==( const ref Point other ) const
+    {
+        return x == other.x && y == other.y;
+    }
+
+    u64 hash() const
+    {
+        return wrap<u64>( x ) * 31 + wrap<u64>( y );
+    }
+};
+
+enum Suit
+{
+    Hearts,
+    Spades,
+    Clubs,
+};
+
+// Red and Crimson are one colour.
+enum Colour
+{
+    Red,
+    Crimson,
+    Blue,
+};
+
+implements equatable for Colour
+{
+    bool operator==( const ref Colour other ) const
+    {
+        return cast<u8>( this ) == cast<u8>( other ) || cast<u8>( this ) + cast<u8>( other ) == 1;
+    }
+};
+
+implements hashable for Colour
+{
+    u64 hash() const
+    {
+        if( cast<u8>( this ) == 2 )
+        {
+            return 7;
+        }
+
+        return 3;
+    }
+};
+
+u64 digest<T>( const ref T v ) where T : hashable
+{
+    return v.hash();
+}
+
+bool agree<T>( const ref T a, const ref T b ) where T : hashable
+{
+    return a == b && a.hash() == b.hash();
+}
+
+i32 main()
+{
+    i32 minus = 0 - 1;
+    u8  byte  = 200;
+
+    if( digest( minus ) != 18446744073709551615 || digest( byte ) != 200 )
+    {
+        return 1;
+    }
+
+    bool yes  = true;
+    Suit clubs = Suit::Clubs;
+
+    if( digest( yes ) != 1 || digest( clubs ) != 2 )
+    {
+        return 2;
+    }
+
+    // Equal values at two addresses: the address is what hashes.
+    i32  twin = 0 - 1;
+    i32* p    = &minus;
+    i32* q    = &minus;
+    i32* o    = &twin;
+    u8*  r    = &byte;
+
+    if( digest( p ) != digest( q ) || digest( p ) == 0 || digest( p ) == digest( o ) || digest( p ) == digest( r ) )
+    {
+        return 3;
+    }
+
+    f64 one      = 1.0;
+    f64 zero     = 0.0;
+    f64 negative = zero * ( 0.0 - 1.0 );
+    f32 single   = 1.0;
+
+    if( digest( one ) != 4607182418800017408 || digest( single ) != 1065353216 )
+    {
+        return 4;
+    }
+
+    if( digest( zero ) != 0 || digest( negative ) != 0 || !agree( zero, negative ) )
+    {
+        return 5;
+    }
+
+    Point a = Point { 1, 2 };
+
+    if( digest( a ) != 33 || !agree( a, Point { 1, 2 } ) )
+    {
+        return 6;
+    }
+
+    Colour red     = Colour::Red;
+    Colour crimson = Colour::Crimson;
+    Colour blue    = Colour::Blue;
+
+    if( digest( blue ) != 7 || !agree( red, crimson ) || agree( red, blue ) )
+    {
+        return 7;
+    }
+
+    if( !agree( minus, minus ) || agree( byte, cast<u8>( 3 ) ) )
+    {
+        return 8;
+    }
+
+    return 0;
+}

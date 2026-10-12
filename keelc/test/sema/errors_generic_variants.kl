@@ -23,21 +23,21 @@ struct Green
     i32 v;
 };
 
-enum Opt<T> where T : Copyable
+enum Opt<T> where T : copyable
 {
     None,
     Some( T v )
 };
 
 // Two parameters, so a payload that lines up by count can still be wrong by order.
-enum Pair<A, B> where A : Copyable where B : Copyable
+enum Pair<A, B> where A : copyable where B : copyable
 {
     Both( A a, B b )
 };
 
 // A payload that is itself a generic instance, so the substitution has to reach inside one rather
 // than replace a bare `T`. `Opt<T>` becomes `Opt<Red>` here or the whole thing is unchecked.
-enum Nest<T> where T : Copyable
+enum Nest<T> where T : copyable
 {
     Inner( Opt<T> o )
 };

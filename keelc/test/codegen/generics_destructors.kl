@@ -4,7 +4,7 @@
 // a checked claim rather than an inspected one. Run under KEEL_VALGRIND=1 as well.
 i32 live;
 
-class Box<T> where T : Copyable
+class Box<T> where T : copyable
 {
     T value;
 

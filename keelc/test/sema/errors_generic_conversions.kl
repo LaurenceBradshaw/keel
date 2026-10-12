@@ -6,18 +6,18 @@
 // The correct code at the top is as much of the test as the errors: a line about it appearing in
 // stderr means the rule has started refusing conversions that are fine at every instantiation.
 
-i32 fine_wrap<T>( T v ) where T : Copyable & Integral
+i32 fine_wrap<T>( T v ) where T : copyable & integral
 {
     return wrap<i32>( v );
 }
 
 // Narrowing is checked at run time in each instance that needs it.
-i8 fine_narrowing_cast<T>( T v ) where T : Copyable & Integral
+i8 fine_narrowing_cast<T>( T v ) where T : copyable & integral
 {
     return cast<i8>( v );
 }
 
-f64 fine_cast<T>( T v ) where T : Copyable & Floating
+f64 fine_cast<T>( T v ) where T : copyable & floating
 {
     return cast<f64>( v );
 }
@@ -29,36 +29,36 @@ i32 unbounded<T>( ref T v )
     return cast<i32>( v );
 }
 
-// A bound that exists but is not numeric. `Copyable` is every type that is not owning, which is
+// A bound that exists but is not numeric. `copyable` is every type that is not owning, which is
 // most structs - none of which convert to anything. This is the case a vacuous product would let
 // through, because the admissible *numeric* types all convert to `f64` perfectly well.
-f64 not_numeric<T>( T v ) where T : Copyable
+f64 not_numeric<T>( T v ) where T : copyable
 {
     return cast<f64>( v );
 }
 
-// `Equatable` is the same hole wearing a bound the author did write: it admits `bool`, every `enum`
+// `equatable` is the same hole wearing a bound the author did write: it admits `bool`, every `enum`
 // and every pointer alongside the numbers.
-i32 equatable_only<T>( T v ) where T : Copyable & Equatable
+i32 equatable_only<T>( T v ) where T : copyable & equatable
 {
     return cast<i32>( v );
 }
 
-// `Numeric` admits the floats, and float to int is refused for having no one obvious rounding.
-i32 numeric_to_int<T>( T v ) where T : Copyable & Numeric
+// `numeric` admits the floats, and float to int is refused for having no one obvious rounding.
+i32 numeric_to_int<T>( T v ) where T : copyable & numeric
 {
     return cast<i32>( v );
 }
 
 // The parameter as the target rather than the source. The witness is drawn from the admissible set
 // on that side instead.
-T into_integral<T>( f64 v ) where T : Copyable & Integral
+T into_integral<T>( f64 v ) where T : copyable & integral
 {
     return cast<T>( v );
 }
 
 // `wrap` keeps the low bits of an integer, and there are no low bits to keep on the way to a float.
-T wrap_into_float<T>( i32 v ) where T : Copyable & Floating
+T wrap_into_float<T>( i32 v ) where T : copyable & floating
 {
     return wrap<T>( v );
 }

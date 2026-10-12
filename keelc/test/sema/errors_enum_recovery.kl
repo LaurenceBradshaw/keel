@@ -1,5 +1,5 @@
 // A `where` clause with nothing to constrain, on an enum rather than a function.
-enum Unconstrained where T : Copyable
+enum Unconstrained where T : copyable
 {
     Red,
 };

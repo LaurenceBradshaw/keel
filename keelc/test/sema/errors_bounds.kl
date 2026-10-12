@@ -1,0 +1,92 @@
+// D40: `equatable`, `comparable` and `hashable` are prelude interfaces, and the compiler's own
+// bounds are spelled lower case. The compiler makes a number all three, and `bool`, an enum without
+// payloads and a pointer `equatable` and `hashable`; anything else declares what it implements.
+struct Point implements equatable
+{
+    i32 x;
+
+    bool operator==( const ref Point other ) const
+    {
+        return x == other.x;
+    }
+};
+
+struct Ranked implements comparable
+{
+    i32 x;
+
+    ordering operator<=>( const ref Ranked other ) const
+    {
+        return x <=> other.x;
+    }
+};
+
+struct Plain
+{
+    i32 x;
+};
+
+enum Shape
+{
+    Circle( f64 r ),
+    Dot,
+};
+
+enum Suit
+{
+    Hearts,
+    Spades,
+};
+
+bool same<T>( const ref T a, const ref T b ) where T : equatable
+{
+    return a == b;
+}
+
+bool less<T>( const ref T a, const ref T b ) where T : comparable
+{
+    return a < b;
+}
+
+bool unordered<T>( const ref T a, const ref T b ) where T : equatable
+{
+    return a < b;
+}
+
+bool forwards<T>( const ref T a ) where T : equatable
+{
+    return less( a, a );
+}
+
+bool old_spelling<T>( const ref T a ) where T : Equatable
+{
+    return true;
+}
+
+void keep( const ref hashable h )
+{
+}
+
+i32 main()
+{
+    Point p = Point { 1 };
+    Plain q = Plain { 1 };
+    Shape s = Shape::Dot;
+    Suit  h = Suit::Hearts;
+    bool  t = true;
+    i32*  r = nullptr;
+
+    same( p, p );
+    same( h, h );
+    same( t, t );
+    same( r, r );
+    same( q, q );
+    same( s, s );
+
+    less( p, p );
+    less( h, h );
+    less( t, t );
+    less( r, r );
+
+    return 0;
+}

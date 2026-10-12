@@ -109,7 +109,7 @@ i32 sum_by_walking( i32[*] p, u64 n )
     return total;
 }
 
-void fill<T>( T[*] p, u64 n, T v ) where T : Copyable
+void fill<T>( T[*] p, u64 n, T v ) where T : copyable
 {
     unsafe
     {

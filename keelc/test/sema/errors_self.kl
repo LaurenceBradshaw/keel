@@ -66,7 +66,7 @@ enum Small : self
 };
 
 // An implementer need not keep a promise its interface cannot make.
-struct Cell<T> where T : Copyable
+struct Cell<T> where T : copyable
 {
     T v;
 };

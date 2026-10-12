@@ -30,7 +30,7 @@ void effect()
 {
 }
 
-T same<T>( T a ) where T : Copyable
+T same<T>( T a ) where T : copyable
 {
     T held = a;
     return held;

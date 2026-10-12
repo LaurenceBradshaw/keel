@@ -31,19 +31,19 @@ error: a generic needs at least one type parameter
 error: unknown type `T`
   --> sema/errors_generics.kl:23:1
    |
-23 | T inline_bound<Comparable T>( T a )
+23 | T inline_bound<comparable T>( T a )
    | ^
 
 error: a type parameter is a name on its own here
   --> sema/errors_generics.kl:23:27
    |
-23 | T inline_bound<Comparable T>( T a )
+23 | T inline_bound<comparable T>( T a )
    |                           ^ write the bound in a `where` clause after the parameter list
 
 error: unknown type `T`
   --> sema/errors_generics.kl:23:31
    |
-23 | T inline_bound<Comparable T>( T a )
+23 | T inline_bound<comparable T>( T a )
    |                               ^
 
 error: `not_a_generic` is not a generic
@@ -74,37 +74,37 @@ error: unknown bound `Sortable`
   --> sema/errors_generics.kl:62:40
    |
 62 | void unknown_bound<T>( T a ) where T : Sortable
-   |                                        ^^^^^^^^ a bound is an interface, or one of Copyable, Equatable, Comparable, Numeric, Integral and Floating
+   |                                        ^^^^^^^^ a bound is an interface, or one of copyable, numeric, integral and floating
 
 error: `U` is not a type parameter of `wrong_subject`
   --> sema/errors_generics.kl:66:30
    |
-66 | void wrong_subject<T>( T a ) where U : Copyable
+66 | void wrong_subject<T>( T a ) where U : copyable
    |                              ^^^^^^^^^^^^^^^^^^
 
 error: a `where` clause needs type parameters
   --> sema/errors_generics.kl:70:33
    |
-70 | i32 no_type_parameters( i32 a ) where T : Copyable
-   |                                 ^^^^^^^^^^^^^^^^^^ write them on the name, as in `T f<T>( T a ) where T : Copyable`
+70 | i32 no_type_parameters( i32 a ) where T : copyable
+   |                                 ^^^^^^^^^^^^^^^^^^ write them on the name, as in `T f<T>( T a ) where T : copyable`
 
 error: duplicate where clause for type parameter `T`
   --> sema/errors_generics.kl:75:47
    |
-75 | void twice_over<T>( T a ) where T : Copyable, where T : Comparable
+75 | void twice_over<T>( T a ) where T : copyable, where T : comparable
    |                                               ^^^^^^^^^^^^^^^^^^^^
 
 error: bounds are joined with `&`
   --> sema/errors_generics.kl:80:51
    |
-80 | void wrong_separator<T>( T a ) where T : Copyable | Comparable
+80 | void wrong_separator<T>( T a ) where T : copyable | comparable
    |                                                   ^ every one of them has to hold, and `&` says so
 
 error: no operator `<` for `T` and `T`
   --> sema/errors_generics.kl:99:12
    |
 99 |     return a < a;
-   |            ^^^^^ `<` needs `Comparable`; write `where T : Comparable` on `unpromised_operator`
+   |            ^^^^^ `<` needs `comparable`; write `where T : comparable` on `unpromised_operator`
 
 error: no operator `<` for `T` and `bool`
    --> sema/errors_generics.kl:106:12
@@ -112,22 +112,22 @@ error: no operator `<` for `T` and `bool`
 106 |     return a < b;
     |            ^^^^^ `<` needs both operands to be the same type
 
-error: `Owner` is not `Copyable`, and `id` requires it of `T`
+error: `Owner` is not `copyable`, and `id` requires it of `T`
    --> sema/errors_generics.kl:113:8
     |
 113 |     id<Owner>( o );
     |        ^^^^^ it owns something, itself or through a field, so copying it would own that twice
 
-error: `Suit` is not `Integral`, and `needs_integral` requires it of `T`
+error: `Suit` is not `integral`, and `needs_integral` requires it of `T`
    --> sema/errors_generics.kl:124:20
     |
 124 |     needs_integral<Suit>( Suit::Clubs );
     |                    ^^^^ it has to be an integer
 
-error: `T` does not promise `Comparable`, and `needs_comparable` requires it of `T`
+error: `T` does not promise `comparable`, and `needs_comparable` requires it of `T`
    --> sema/errors_generics.kl:134:22
     |
 134 |     needs_comparable<T>( a );
-    |                      ^ add `Comparable` to the `where` clause for `T` on `forwards`
+    |                      ^ add `comparable` to the `where` clause for `T` on `forwards`
 
 22 errors generated

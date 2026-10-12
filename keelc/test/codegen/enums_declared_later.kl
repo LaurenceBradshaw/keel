@@ -7,7 +7,7 @@ enum Shape
     Wrapped( Wrap<Colour> w ),
 };
 
-enum Wrap<T> where T : Copyable
+enum Wrap<T> where T : copyable
 {
     Held( T v ),
 };

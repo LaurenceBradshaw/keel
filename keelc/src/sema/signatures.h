@@ -75,16 +75,17 @@ public:
 
 private:
     // Declared in the order declare() runs them; each definition says what it depends on.
-    void declare_structs();
-    void declare_interfaces();
-    void declare_implements();
-    void declare_block( Node_id block ); // an `implements ... for` block, not a function body
-    void declare_fields();
-    void declare_functions();
-    void declare_member_functions();
-    void declare_globals();
-    void declare_enums();
-    void declare_payloads(); // an enum's variant fields
+    void    declare_structs();
+    void    declare_interfaces();
+    Node_id required_naming_self( Type_id interface ) const;
+    void    declare_implements();
+    void    declare_block( Node_id block ); // an `implements ... for` block, not a function body
+    void    declare_fields();
+    void    declare_functions();
+    void    declare_member_functions();
+    void    declare_globals();
+    void    declare_enums();
+    void    declare_payloads(); // an enum's variant fields
 
     Node_id bare_type( Node_id annotation ) const; // a parameter's type without `const` or its mode
 

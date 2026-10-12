@@ -21,7 +21,7 @@ class Buf
     }
 };
 
-// No bound: holding a `T` and dropping it needs no promise. A `where T : Copyable` would refuse
+// No bound: holding a `T` and dropping it needs no promise. A `where T : copyable` would refuse
 // the argument that makes this fixture interesting.
 class Box<T>
 {

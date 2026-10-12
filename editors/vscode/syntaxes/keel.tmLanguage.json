@@ -233,7 +233,7 @@
                 },
                 {
                     "name": "support.type.bound.keel",
-                    "match": "\\b(?:Copyable|Equatable|Comparable|Numeric|Integral|Floating)\\b"
+                    "match": "\\b(?:copyable|numeric|integral|floating)\\b"
                 },
                 {
                     "match": "(&)\\s*((?:[A-Za-z_]\\w*(?:<[\\w\\s,:*|\\[\\]<>]*>)?::)+)([A-Za-z_]\\w*)",
