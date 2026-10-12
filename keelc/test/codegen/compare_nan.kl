@@ -1,0 +1,25 @@
+// `<` on a NaN answers `false`, as IEEE has it, but `<=>` has no answer to give: it prints the file,
+// the line and the comparison as written, and aborts.
+f64 quotient( f64 a, f64 b )
+{
+    return a / b;
+}
+
+i32 main()
+{
+    f64 nan = quotient( 0.0, 0.0 );
+
+    if( nan < 1.0 || nan > 1.0 || nan == nan )
+    {
+        return 1;
+    }
+
+    println( "before" );
+
+    if( ( nan <=> 1.0 ) == ordering::less )
+    {
+        return 2;
+    }
+
+    return 0;
+}

@@ -226,6 +226,9 @@ public:
     bool    is_box( Type_id type ) const;
     Node_id box_declaration() const;
 
+    void    declare_ordering( Node_id declaration );
+    Type_id ordering() const;
+
     // The first method whose signature mentions `self`, or invalid when the interface may be a type.
     void    declare_naming_self( Node_id interface, Node_id method );
     Node_id method_naming_self( Type_id interface ) const;
@@ -265,6 +268,7 @@ private:
     std::deque<std::string>                        composed_;
 
     Node_id box_ {};
+    Node_id ordering_ {};
 
     std::unordered_map<u32, Node_id> naming_self_; // Interface_decl node -> its first method naming `self`
 

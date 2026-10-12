@@ -1,6 +1,6 @@
-// `operator==` and `operator[]` are the operators a type may declare so far: `!=` comes from `==`,
-// `&&` and `||` never can be, ordering waits for `<=>`, `[` needs its `]`, and an operator outside a
-// type has no left operand.
+// `operator==`, `operator[]` and `operator<=>` are the operators a type may declare so far: `!=`
+// comes from `==` and `<` from `<=>`, `&&` and `||` never can be, `[` needs its `]`, and an operator
+// outside a type has no left operand.
 struct a
 {
     i32 x;

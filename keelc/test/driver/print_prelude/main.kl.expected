@@ -198,6 +198,20 @@ enum result<T, E>
     err( E error )
 };
 
+/// How one value compares with another, as `operator<=>` answers.
+///
+/// `a < b`, `a <= b`, `a > b` and `a >= b` all come from `a <=> b`. On a float, `<=>` panics if
+/// either operand is a NaN, which has no order, while `<` and its kin answer `false`.
+enum ordering
+{
+    /// The left operand comes first.
+    less,
+    /// Neither comes first.
+    equal,
+    /// The right operand comes first.
+    greater
+};
+
 /// One `T` on the heap, owned: dropping the box drops the value and frees its memory.
 ///
 /// A `box<Circle>` goes wherever a `box<Shape>` is wanted when `Circle` implements `Shape`, and the

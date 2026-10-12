@@ -1,0 +1,890 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "operator_compare.kl.prelude.c"
+
+struct kl__version;
+struct kl__name;
+struct kl__pair__I3i32E;
+
+struct kl__version
+{
+    int32_t kl_major_1;
+    int32_t kl_minor_3;
+};
+
+struct kl__name
+{
+    uint8_t kl_first_65;
+};
+
+struct kl__pair__I3i32E
+{
+    int32_t kl_left_129;
+    int32_t kl_right_131;
+};
+
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+static inline bool kl_cmp_lt_i64_u64( int64_t a, uint64_t b )
+{
+    return a < 0 ? true : ( uint64_t ) a < b;
+}
+
+static inline bool kl_cmp_gt_i64_u64( int64_t a, uint64_t b )
+{
+    return a < 0 ? false : ( uint64_t ) a > b;
+}
+
+static inline bool kl_cmp_eq_i64_u64( int64_t a, uint64_t b )
+{
+    return a < 0 ? false : ( uint64_t ) a == b;
+}
+
+int32_t kl__operator_compare__S7version_7version( struct kl__version*, struct kl__version* );
+void kl__name__R4name_2u8__ctor( struct kl__name*, uint8_t );
+int32_t kl__operator_compare__S4name_4name( struct kl__name*, struct kl__name* );
+int32_t kl__rank__Q7prelude8ordering( int32_t );
+bool kl__before__4name_4name( struct kl__name*, struct kl__name* );
+int32_t kl__main__( void );
+void kl__pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( struct kl__pair__I3i32E*, int32_t, int32_t );
+int32_t kl__operator_compare__I3i32E__S4pairI3i32E_4pairI3i32E( struct kl__pair__I3i32E*, struct kl__pair__I3i32E* );
+int32_t kl__compare__I3i32E__3i32_3i32( int32_t*, int32_t* );
+int32_t kl__compare__I3f64E__3f64_3f64( double*, double* );
+
+int32_t kl__operator_compare__S7version_7version( struct kl__version* kl_this_1, struct kl__version* kl_other_2 )
+{
+    int32_t kl_t0;
+    int32_t kl_first_3;
+    int32_t kl_t4;
+    bool kl_t5;
+    bool kl_t6;
+    bool kl_t7;
+    int32_t kl_t8;
+    bool kl_t9;
+    bool kl_t10;
+#line 11 "codegen/operator_compare.kl"
+    kl_t5 = ( *kl_this_1 ).kl_major_1 < ( *kl_other_2 ).kl_major_1;
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t4 = 0;
+    goto bb5;
+    bb2:
+    kl_t6 = ( *kl_this_1 ).kl_major_1 == ( *kl_other_2 ).kl_major_1;
+    if ( kl_t6 ) goto bb3; else goto bb4;
+    bb3:
+    kl_t4 = 1;
+    goto bb5;
+    bb4:
+    kl_t4 = 2;
+    goto bb5;
+    bb5:
+    kl_first_3 = kl_t4;
+#line 13 "codegen/operator_compare.kl"
+    kl_t7 = kl_first_3 != 1;
+    if ( kl_t7 ) goto bb6; else goto bb7;
+    bb6:
+#line 15 "codegen/operator_compare.kl"
+    kl_t0 = kl_first_3;
+    return kl_t0;
+    bb7:
+#line 18 "codegen/operator_compare.kl"
+    kl_t9 = ( *kl_this_1 ).kl_minor_3 < ( *kl_other_2 ).kl_minor_3;
+    if ( kl_t9 ) goto bb8; else goto bb9;
+    bb8:
+    kl_t8 = 0;
+    goto bb12;
+    bb9:
+    kl_t10 = ( *kl_this_1 ).kl_minor_3 == ( *kl_other_2 ).kl_minor_3;
+    if ( kl_t10 ) goto bb10; else goto bb11;
+    bb10:
+    kl_t8 = 1;
+    goto bb12;
+    bb11:
+    kl_t8 = 2;
+    goto bb12;
+    bb12:
+    kl_t0 = kl_t8;
+    return kl_t0;
+}
+
+void kl__name__R4name_2u8__ctor( struct kl__name* kl_this_1, uint8_t kl_c_2 )
+{
+#line 26 "codegen/operator_compare.kl"
+    ( *kl_this_1 ).kl_first_65 = kl_c_2;
+    return;
+}
+
+int32_t kl__operator_compare__S4name_4name( struct kl__name* kl_this_1, struct kl__name* kl_other_2 )
+{
+    int32_t kl_t0;
+    int32_t kl_t3;
+    bool kl_t4;
+    bool kl_t5;
+#line 31 "codegen/operator_compare.kl"
+    kl_t4 = ( *kl_this_1 ).kl_first_65 < ( *kl_other_2 ).kl_first_65;
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t3 = 0;
+    goto bb5;
+    bb2:
+    kl_t5 = ( *kl_this_1 ).kl_first_65 == ( *kl_other_2 ).kl_first_65;
+    if ( kl_t5 ) goto bb3; else goto bb4;
+    bb3:
+    kl_t3 = 1;
+    goto bb5;
+    bb4:
+    kl_t3 = 2;
+    goto bb5;
+    bb5:
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+int32_t kl__rank__Q7prelude8ordering( int32_t kl_o_1 )
+{
+    int32_t kl_t0;
+    bool kl_t2;
+    int32_t kl_t3;
+    bool kl_t4;
+#line 70 "codegen/operator_compare.kl"
+    kl_t2 = kl_o_1 == 0;
+    if ( kl_t2 ) goto bb1; else goto bb4;
+    bb1:
+#line 71 "codegen/operator_compare.kl"
+    kl_t3 = 0 - 1;
+    kl_t0 = kl_t3;
+    return kl_t0;
+    bb2:
+#line 73 "codegen/operator_compare.kl"
+    kl_t0 = 0;
+    return kl_t0;
+    bb3:
+#line 75 "codegen/operator_compare.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb4:
+#line 72 "codegen/operator_compare.kl"
+    kl_t4 = kl_o_1 == 1;
+    if ( kl_t4 ) goto bb2; else goto bb3;
+}
+
+bool kl__before__4name_4name( struct kl__name* kl_a_1, struct kl__name* kl_b_2 )
+{
+    bool kl_t0;
+    struct kl__name* kl_t3;
+    struct kl__name* kl_t4;
+    int32_t kl_t5;
+    bool kl_t6;
+#line 81 "codegen/operator_compare.kl"
+    kl_t3 = &( *kl_a_1 );
+    kl_t4 = &( *kl_b_2 );
+    kl_t5 = kl__operator_compare__S4name_4name( kl_t3, kl_t4 );
+    kl_t6 = kl_t5 == 0;
+    kl_t0 = kl_t6;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_small_1;
+    int32_t kl_t2;
+    uint64_t kl_big_3;
+    uint8_t kl_byte_4;
+    double kl_half_5;
+    bool kl_t6;
+    bool kl_t7;
+    int32_t kl_t8;
+    bool kl_t9;
+    bool kl_t10;
+    int32_t kl_t11;
+    int32_t kl_t12;
+    bool kl_t13;
+    int32_t kl_t14;
+    bool kl_t15;
+    bool kl_t16;
+    int32_t kl_t17;
+    bool kl_t18;
+    int32_t kl_t19;
+    bool kl_t20;
+    bool kl_t21;
+    int32_t kl_t22;
+    bool kl_t23;
+    bool kl_t24;
+    int64_t kl_t25;
+    int32_t kl_t26;
+    bool kl_t27;
+    bool kl_t28;
+    bool kl_t29;
+    int64_t kl_t30;
+    int32_t kl_t31;
+    bool kl_t32;
+    bool kl_t33;
+    bool kl_t34;
+    bool kl_t35;
+    bool kl_t36;
+    int32_t kl_t37;
+    bool kl_t38;
+    bool kl_t39;
+    bool kl_t40;
+    bool kl_t41;
+    bool kl_t42;
+    int32_t kl_t43;
+    bool kl_t44;
+    bool kl_t45;
+    bool kl_t46;
+    struct kl__version kl_a_47;
+    struct kl__version kl_t48;
+    struct kl__version kl_b_49;
+    struct kl__version kl_t50;
+    bool kl_t51;
+    bool kl_t52;
+    struct kl__version* kl_t53;
+    struct kl__version* kl_t54;
+    int32_t kl_t55;
+    bool kl_t56;
+    struct kl__version* kl_t57;
+    struct kl__version* kl_t58;
+    int32_t kl_t59;
+    bool kl_t60;
+    struct kl__version* kl_t61;
+    struct kl__version* kl_t62;
+    int32_t kl_t63;
+    bool kl_t64;
+    bool kl_t65;
+    bool kl_t66;
+    bool kl_t67;
+    bool kl_t68;
+    bool kl_t69;
+    bool kl_t70;
+    struct kl__version* kl_t71;
+    struct kl__version* kl_t72;
+    int32_t kl_t73;
+    bool kl_t74;
+    bool kl_t75;
+    struct kl__version* kl_t76;
+    struct kl__version* kl_t77;
+    int32_t kl_t78;
+    bool kl_t79;
+    bool kl_t80;
+    struct kl__version* kl_t81;
+    struct kl__version* kl_t82;
+    int32_t kl_t83;
+    bool kl_t84;
+    struct kl__version* kl_t85;
+    struct kl__version* kl_t86;
+    int32_t kl_t87;
+    bool kl_t88;
+    struct kl__version* kl_t89;
+    struct kl__version* kl_t90;
+    int32_t kl_t91;
+    bool kl_t92;
+    bool kl_t93;
+    struct kl__version* kl_t94;
+    struct kl__version* kl_t95;
+    int32_t kl_t96;
+    bool kl_t97;
+    bool kl_t98;
+    struct kl__version* kl_t99;
+    struct kl__version* kl_t100;
+    int32_t kl_t101;
+    bool kl_t102;
+    struct kl__name kl_n_103;
+    struct kl__name* kl_t104;
+    bool kl_t106;
+    bool kl_t107;
+    struct kl__name* kl_t108;
+    struct kl__name kl_t109;
+    struct kl__name* kl_t110;
+    struct kl__name* kl_t112;
+    bool kl_t113;
+    bool kl_t114;
+    struct kl__name* kl_t115;
+    struct kl__name kl_t116;
+    struct kl__name* kl_t117;
+    struct kl__name* kl_t119;
+    bool kl_t120;
+    struct kl__name* kl_t121;
+    struct kl__name kl_t122;
+    struct kl__name* kl_t123;
+    struct kl__name* kl_t125;
+    int32_t kl_t126;
+    bool kl_t127;
+    bool kl_t128;
+    struct kl__pair__I3i32E kl_p_129;
+    struct kl__pair__I3i32E* kl_t130;
+    bool kl_t132;
+    bool kl_t133;
+    struct kl__pair__I3i32E* kl_t134;
+    struct kl__pair__I3i32E kl_t135;
+    struct kl__pair__I3i32E* kl_t136;
+    struct kl__pair__I3i32E* kl_t138;
+    int32_t kl_t139;
+    bool kl_t140;
+    struct kl__pair__I3i32E* kl_t141;
+    struct kl__pair__I3i32E kl_t142;
+    struct kl__pair__I3i32E* kl_t143;
+    struct kl__pair__I3i32E* kl_t145;
+    int32_t kl_t146;
+    bool kl_t147;
+    struct kl__pair__I3i32E* kl_t148;
+    struct kl__pair__I3i32E kl_t149;
+    struct kl__pair__I3i32E* kl_t150;
+    struct kl__pair__I3i32E* kl_t152;
+    int32_t kl_t153;
+    bool kl_t154;
+    bool kl_t155;
+    int32_t kl_t156;
+    int32_t* kl_t157;
+    int32_t kl_t158;
+    int32_t* kl_t159;
+    int32_t kl_t160;
+    bool kl_t161;
+    double kl_t162;
+    double* kl_t163;
+    double kl_t164;
+    double* kl_t165;
+    int32_t kl_t166;
+    bool kl_t167;
+#line 86 "codegen/operator_compare.kl"
+    kl_t2 = 0 - 1;
+    kl_small_1 = kl_t2;
+#line 87 "codegen/operator_compare.kl"
+    kl_big_3 = 1;
+#line 88 "codegen/operator_compare.kl"
+    kl_byte_4 = 200;
+#line 89 "codegen/operator_compare.kl"
+    kl_half_5 = 0.5;
+#line 91 "codegen/operator_compare.kl"
+    kl_t9 = kl_small_1 < 3;
+    if ( kl_t9 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t8 = 0;
+    goto bb5;
+    bb2:
+    kl_t10 = kl_small_1 == 3;
+    if ( kl_t10 ) goto bb3; else goto bb4;
+    bb3:
+    kl_t8 = 1;
+    goto bb5;
+    bb4:
+    kl_t8 = 2;
+    goto bb5;
+    bb5:
+    kl_t11 = kl__rank__Q7prelude8ordering( kl_t8 );
+    kl_t12 = 0 - 1;
+    kl_t13 = kl_t11 != kl_t12;
+    kl_t7 = kl_t13;
+    if ( kl_t7 ) goto bb7; else goto bb6;
+    bb6:
+    kl_t15 = 3 < 3;
+    if ( kl_t15 ) goto bb8; else goto bb9;
+    bb7:
+    kl_t6 = kl_t7;
+    if ( kl_t6 ) goto bb14; else goto bb13;
+    bb8:
+    kl_t14 = 0;
+    goto bb12;
+    bb9:
+    kl_t16 = 3 == 3;
+    if ( kl_t16 ) goto bb10; else goto bb11;
+    bb10:
+    kl_t14 = 1;
+    goto bb12;
+    bb11:
+    kl_t14 = 2;
+    goto bb12;
+    bb12:
+    kl_t17 = kl__rank__Q7prelude8ordering( kl_t14 );
+    kl_t18 = kl_t17 != 0;
+    kl_t7 = kl_t18;
+    goto bb7;
+    bb13:
+    kl_t20 = kl_byte_4 < 100;
+    if ( kl_t20 ) goto bb15; else goto bb16;
+    bb14:
+    if ( kl_t6 ) goto bb20; else goto bb21;
+    bb15:
+    kl_t19 = 0;
+    goto bb19;
+    bb16:
+    kl_t21 = kl_byte_4 == 100;
+    if ( kl_t21 ) goto bb17; else goto bb18;
+    bb17:
+    kl_t19 = 1;
+    goto bb19;
+    bb18:
+    kl_t19 = 2;
+    goto bb19;
+    bb19:
+    kl_t22 = kl__rank__Q7prelude8ordering( kl_t19 );
+    kl_t23 = kl_t22 != 1;
+    kl_t6 = kl_t23;
+    goto bb14;
+    bb20:
+#line 93 "codegen/operator_compare.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb21:
+#line 96 "codegen/operator_compare.kl"
+    kl_t25 = ( int64_t ) kl_small_1;
+    kl_t27 = kl_cmp_lt_i64_u64( kl_t25, kl_big_3 );
+    if ( kl_t27 ) goto bb22; else goto bb23;
+    bb22:
+    kl_t26 = 0;
+    goto bb26;
+    bb23:
+    kl_t28 = kl_cmp_eq_i64_u64( kl_t25, kl_big_3 );
+    if ( kl_t28 ) goto bb24; else goto bb25;
+    bb24:
+    kl_t26 = 1;
+    goto bb26;
+    bb25:
+    kl_t26 = 2;
+    goto bb26;
+    bb26:
+    kl_t29 = kl_t26 != 0;
+    kl_t24 = kl_t29;
+    if ( kl_t24 ) goto bb28; else goto bb27;
+    bb27:
+    kl_t30 = ( int64_t ) kl_small_1;
+    kl_t32 = kl_cmp_gt_i64_u64( kl_t30, kl_big_3 );
+    if ( kl_t32 ) goto bb29; else goto bb30;
+    bb28:
+    if ( kl_t24 ) goto bb34; else goto bb35;
+    bb29:
+    kl_t31 = 0;
+    goto bb33;
+    bb30:
+    kl_t33 = kl_cmp_eq_i64_u64( kl_t30, kl_big_3 );
+    if ( kl_t33 ) goto bb31; else goto bb32;
+    bb31:
+    kl_t31 = 1;
+    goto bb33;
+    bb32:
+    kl_t31 = 2;
+    goto bb33;
+    bb33:
+    kl_t34 = kl_t31 != 2;
+    kl_t24 = kl_t34;
+    goto bb28;
+    bb34:
+#line 98 "codegen/operator_compare.kl"
+    kl_t0 = 2;
+    return kl_t0;
+    bb35:
+#line 101 "codegen/operator_compare.kl"
+    kl_t36 = kl_half_5 == kl_half_5;
+    if ( kl_t36 ) goto bb37; else goto bb36;
+    bb36:
+    kl_rt_panic( "codegen/operator_compare.kl", 101, "NaN has no order: half <=> 0.25" );
+    bb37:
+    kl_t38 = kl_half_5 < 0.25;
+    if ( kl_t38 ) goto bb38; else goto bb39;
+    bb38:
+    kl_t37 = 0;
+    goto bb42;
+    bb39:
+    kl_t39 = kl_half_5 == 0.25;
+    if ( kl_t39 ) goto bb40; else goto bb41;
+    bb40:
+    kl_t37 = 1;
+    goto bb42;
+    bb41:
+    kl_t37 = 2;
+    goto bb42;
+    bb42:
+    kl_t40 = kl_t37 != 2;
+    kl_t35 = kl_t40;
+    if ( kl_t35 ) goto bb44; else goto bb43;
+    bb43:
+    kl_t41 = kl_half_5 == kl_half_5;
+    if ( kl_t41 ) goto bb46; else goto bb45;
+    bb44:
+    if ( kl_t35 ) goto bb53; else goto bb54;
+    bb45:
+    kl_rt_panic( "codegen/operator_compare.kl", 101, "NaN has no order: half <=> half" );
+    bb46:
+    kl_t42 = kl_half_5 == kl_half_5;
+    if ( kl_t42 ) goto bb47; else goto bb45;
+    bb47:
+    kl_t44 = kl_half_5 < kl_half_5;
+    if ( kl_t44 ) goto bb48; else goto bb49;
+    bb48:
+    kl_t43 = 0;
+    goto bb52;
+    bb49:
+    kl_t45 = kl_half_5 == kl_half_5;
+    if ( kl_t45 ) goto bb50; else goto bb51;
+    bb50:
+    kl_t43 = 1;
+    goto bb52;
+    bb51:
+    kl_t43 = 2;
+    goto bb52;
+    bb52:
+    kl_t46 = kl_t43 != 1;
+    kl_t35 = kl_t46;
+    goto bb44;
+    bb53:
+#line 103 "codegen/operator_compare.kl"
+    kl_t0 = 3;
+    return kl_t0;
+    bb54:
+#line 106 "codegen/operator_compare.kl"
+    kl_t48.kl_major_1 = 1;
+    kl_t48.kl_minor_3 = 2;
+    kl_a_47 = kl_t48;
+#line 107 "codegen/operator_compare.kl"
+    kl_t50.kl_major_1 = 1;
+    kl_t50.kl_minor_3 = 3;
+    kl_b_49 = kl_t50;
+#line 109 "codegen/operator_compare.kl"
+    kl_t53 = &kl_a_47;
+    kl_t54 = &kl_b_49;
+    kl_t55 = kl__operator_compare__S7version_7version( kl_t53, kl_t54 );
+    kl_t56 = kl_t55 != 0;
+    kl_t52 = kl_t56;
+    if ( kl_t52 ) goto bb56; else goto bb55;
+    bb55:
+    kl_t57 = &kl_b_49;
+    kl_t58 = &kl_a_47;
+    kl_t59 = kl__operator_compare__S7version_7version( kl_t57, kl_t58 );
+    kl_t60 = kl_t59 != 2;
+    kl_t52 = kl_t60;
+    goto bb56;
+    bb56:
+    kl_t51 = kl_t52;
+    if ( kl_t51 ) goto bb58; else goto bb57;
+    bb57:
+    kl_t61 = &kl_a_47;
+    kl_t62 = &kl_a_47;
+    kl_t63 = kl__operator_compare__S7version_7version( kl_t61, kl_t62 );
+    kl_t64 = kl_t63 != 1;
+    kl_t51 = kl_t64;
+    goto bb58;
+    bb58:
+    if ( kl_t51 ) goto bb59; else goto bb60;
+    bb59:
+#line 111 "codegen/operator_compare.kl"
+    kl_t0 = 4;
+    return kl_t0;
+    bb60:
+#line 114 "codegen/operator_compare.kl"
+    kl_t71 = &kl_a_47;
+    kl_t72 = &kl_b_49;
+    kl_t73 = kl__operator_compare__S7version_7version( kl_t71, kl_t72 );
+    kl_t74 = kl_t73 == 0;
+    kl_t75 = !kl_t74;
+    kl_t70 = kl_t75;
+    if ( kl_t70 ) goto bb62; else goto bb61;
+    bb61:
+    kl_t76 = &kl_a_47;
+    kl_t77 = &kl_b_49;
+    kl_t78 = kl__operator_compare__S7version_7version( kl_t76, kl_t77 );
+    kl_t79 = kl_t78 != 2;
+    kl_t80 = !kl_t79;
+    kl_t70 = kl_t80;
+    goto bb62;
+    bb62:
+    kl_t69 = kl_t70;
+    if ( kl_t69 ) goto bb64; else goto bb63;
+    bb63:
+    kl_t81 = &kl_a_47;
+    kl_t82 = &kl_b_49;
+    kl_t83 = kl__operator_compare__S7version_7version( kl_t81, kl_t82 );
+    kl_t84 = kl_t83 == 2;
+    kl_t69 = kl_t84;
+    goto bb64;
+    bb64:
+    kl_t68 = kl_t69;
+    if ( kl_t68 ) goto bb66; else goto bb65;
+    bb65:
+    kl_t85 = &kl_a_47;
+    kl_t86 = &kl_b_49;
+    kl_t87 = kl__operator_compare__S7version_7version( kl_t85, kl_t86 );
+    kl_t88 = kl_t87 != 0;
+    kl_t68 = kl_t88;
+    goto bb66;
+    bb66:
+    kl_t67 = kl_t68;
+    if ( kl_t67 ) goto bb68; else goto bb67;
+    bb67:
+    kl_t89 = &kl_a_47;
+    kl_t90 = &kl_a_47;
+    kl_t91 = kl__operator_compare__S7version_7version( kl_t89, kl_t90 );
+    kl_t92 = kl_t91 != 2;
+    kl_t93 = !kl_t92;
+    kl_t67 = kl_t93;
+    goto bb68;
+    bb68:
+    kl_t66 = kl_t67;
+    if ( kl_t66 ) goto bb70; else goto bb69;
+    bb69:
+    kl_t94 = &kl_a_47;
+    kl_t95 = &kl_a_47;
+    kl_t96 = kl__operator_compare__S7version_7version( kl_t94, kl_t95 );
+    kl_t97 = kl_t96 != 0;
+    kl_t98 = !kl_t97;
+    kl_t66 = kl_t98;
+    goto bb70;
+    bb70:
+    kl_t65 = kl_t66;
+    if ( kl_t65 ) goto bb72; else goto bb71;
+    bb71:
+    kl_t99 = &kl_a_47;
+    kl_t100 = &kl_a_47;
+    kl_t101 = kl__operator_compare__S7version_7version( kl_t99, kl_t100 );
+    kl_t102 = kl_t101 == 0;
+    kl_t65 = kl_t102;
+    goto bb72;
+    bb72:
+    if ( kl_t65 ) goto bb73; else goto bb74;
+    bb73:
+#line 116 "codegen/operator_compare.kl"
+    kl_t0 = 5;
+    return kl_t0;
+    bb74:
+#line 119 "codegen/operator_compare.kl"
+    kl_t104 = &kl_n_103;
+    kl__name__R4name_2u8__ctor( kl_t104, 65 );
+#line 121 "codegen/operator_compare.kl"
+    kl_t108 = &kl_n_103;
+    kl_t110 = &kl_t109;
+    kl__name__R4name_2u8__ctor( kl_t110, 66 );
+    kl_t112 = &kl_t109;
+    kl_t113 = kl__before__4name_4name( kl_t108, kl_t112 );
+    kl_t114 = !kl_t113;
+    kl_t107 = kl_t114;
+    if ( kl_t107 ) goto bb76; else goto bb75;
+    bb75:
+    kl_t115 = &kl_n_103;
+    kl_t117 = &kl_t116;
+    kl__name__R4name_2u8__ctor( kl_t117, 65 );
+    kl_t119 = &kl_t116;
+    kl_t120 = kl__before__4name_4name( kl_t115, kl_t119 );
+    kl_t107 = kl_t120;
+    goto bb76;
+    bb76:
+    kl_t106 = kl_t107;
+    if ( kl_t106 ) goto bb78; else goto bb77;
+    bb77:
+    kl_t121 = &kl_n_103;
+    kl_t123 = &kl_t122;
+    kl__name__R4name_2u8__ctor( kl_t123, 64 );
+    kl_t125 = &kl_t122;
+    kl_t126 = kl__operator_compare__S4name_4name( kl_t121, kl_t125 );
+    kl_t127 = kl_t126 == 2;
+    kl_t128 = !kl_t127;
+    kl_t106 = kl_t128;
+    goto bb78;
+    bb78:
+    if ( kl_t106 ) goto bb79; else goto bb80;
+    bb79:
+#line 123 "codegen/operator_compare.kl"
+    kl_t0 = 6;
+    return kl_t0;
+    bb80:
+#line 126 "codegen/operator_compare.kl"
+    kl_t130 = &kl_p_129;
+    kl__pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( kl_t130, 1, 2 );
+#line 128 "codegen/operator_compare.kl"
+    kl_t134 = &kl_p_129;
+    kl_t136 = &kl_t135;
+    kl__pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( kl_t136, 1, 3 );
+    kl_t138 = &kl_t135;
+    kl_t139 = kl__operator_compare__I3i32E__S4pairI3i32E_4pairI3i32E( kl_t134, kl_t138 );
+    kl_t140 = kl_t139 != 0;
+    kl_t133 = kl_t140;
+    if ( kl_t133 ) goto bb82; else goto bb81;
+    bb81:
+    kl_t141 = &kl_p_129;
+    kl_t143 = &kl_t142;
+    kl__pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( kl_t143, 0, 9 );
+    kl_t145 = &kl_t142;
+    kl_t146 = kl__operator_compare__I3i32E__S4pairI3i32E_4pairI3i32E( kl_t141, kl_t145 );
+    kl_t147 = kl_t146 == 0;
+    kl_t133 = kl_t147;
+    goto bb82;
+    bb82:
+    kl_t132 = kl_t133;
+    if ( kl_t132 ) goto bb84; else goto bb83;
+    bb83:
+    kl_t148 = &kl_p_129;
+    kl_t150 = &kl_t149;
+    kl__pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( kl_t150, 1, 2 );
+    kl_t152 = &kl_t149;
+    kl_t153 = kl__operator_compare__I3i32E__S4pairI3i32E_4pairI3i32E( kl_t148, kl_t152 );
+    kl_t154 = kl_t153 != 1;
+    kl_t132 = kl_t154;
+    goto bb84;
+    bb84:
+    if ( kl_t132 ) goto bb85; else goto bb86;
+    bb85:
+#line 130 "codegen/operator_compare.kl"
+    kl_t0 = 7;
+    return kl_t0;
+    bb86:
+#line 133 "codegen/operator_compare.kl"
+    kl_t156 = 2;
+    kl_t157 = &kl_t156;
+    kl_t158 = 1;
+    kl_t159 = &kl_t158;
+    kl_t160 = kl__compare__I3i32E__3i32_3i32( kl_t157, kl_t159 );
+    kl_t161 = kl_t160 != 2;
+    kl_t155 = kl_t161;
+    if ( kl_t155 ) goto bb88; else goto bb87;
+    bb87:
+    kl_t162 = 0.5;
+    kl_t163 = &kl_t162;
+    kl_t164 = 1.5;
+    kl_t165 = &kl_t164;
+    kl_t166 = kl__compare__I3f64E__3f64_3f64( kl_t163, kl_t165 );
+    kl_t167 = kl_t166 != 0;
+    kl_t155 = kl_t167;
+    goto bb88;
+    bb88:
+    if ( kl_t155 ) goto bb89; else goto bb90;
+    bb89:
+#line 135 "codegen/operator_compare.kl"
+    kl_t0 = 8;
+    return kl_t0;
+    bb90:
+#line 138 "codegen/operator_compare.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+void kl__pair__I3i32E__R4pairI3i32E_3i32_3i32__ctor( struct kl__pair__I3i32E* kl_this_1, int32_t kl_a_2, int32_t kl_b_3 )
+{
+#line 41 "codegen/operator_compare.kl"
+    ( *kl_this_1 ).kl_left_129 = kl_a_2;
+#line 42 "codegen/operator_compare.kl"
+    ( *kl_this_1 ).kl_right_131 = kl_b_3;
+    return;
+}
+
+int32_t kl__operator_compare__I3i32E__S4pairI3i32E_4pairI3i32E( struct kl__pair__I3i32E* kl_this_1, struct kl__pair__I3i32E* kl_other_2 )
+{
+    int32_t kl_t0;
+    int32_t kl_first_3;
+    int32_t kl_t4;
+    bool kl_t5;
+    bool kl_t6;
+    bool kl_t7;
+    int32_t kl_t8;
+    bool kl_t9;
+    bool kl_t10;
+#line 47 "codegen/operator_compare.kl"
+    kl_t5 = ( *kl_this_1 ).kl_left_129 < ( *kl_other_2 ).kl_left_129;
+    if ( kl_t5 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t4 = 0;
+    goto bb5;
+    bb2:
+    kl_t6 = ( *kl_this_1 ).kl_left_129 == ( *kl_other_2 ).kl_left_129;
+    if ( kl_t6 ) goto bb3; else goto bb4;
+    bb3:
+    kl_t4 = 1;
+    goto bb5;
+    bb4:
+    kl_t4 = 2;
+    goto bb5;
+    bb5:
+    kl_first_3 = kl_t4;
+#line 49 "codegen/operator_compare.kl"
+    kl_t7 = kl_first_3 != 1;
+    if ( kl_t7 ) goto bb6; else goto bb7;
+    bb6:
+#line 51 "codegen/operator_compare.kl"
+    kl_t0 = kl_first_3;
+    return kl_t0;
+    bb7:
+#line 54 "codegen/operator_compare.kl"
+    kl_t9 = ( *kl_this_1 ).kl_right_131 < ( *kl_other_2 ).kl_right_131;
+    if ( kl_t9 ) goto bb8; else goto bb9;
+    bb8:
+    kl_t8 = 0;
+    goto bb12;
+    bb9:
+    kl_t10 = ( *kl_this_1 ).kl_right_131 == ( *kl_other_2 ).kl_right_131;
+    if ( kl_t10 ) goto bb10; else goto bb11;
+    bb10:
+    kl_t8 = 1;
+    goto bb12;
+    bb11:
+    kl_t8 = 2;
+    goto bb12;
+    bb12:
+    kl_t0 = kl_t8;
+    return kl_t0;
+}
+
+int32_t kl__compare__I3i32E__3i32_3i32( int32_t* kl_a_1, int32_t* kl_b_2 )
+{
+    int32_t kl_t0;
+    int32_t kl_t3;
+    bool kl_t4;
+    bool kl_t5;
+#line 63 "codegen/operator_compare.kl"
+    kl_t4 = ( *kl_a_1 ) < ( *kl_b_2 );
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t3 = 0;
+    goto bb5;
+    bb2:
+    kl_t5 = ( *kl_a_1 ) == ( *kl_b_2 );
+    if ( kl_t5 ) goto bb3; else goto bb4;
+    bb3:
+    kl_t3 = 1;
+    goto bb5;
+    bb4:
+    kl_t3 = 2;
+    goto bb5;
+    bb5:
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+int32_t kl__compare__I3f64E__3f64_3f64( double* kl_a_1, double* kl_b_2 )
+{
+    int32_t kl_t0;
+    bool kl_t3;
+    bool kl_t4;
+    int32_t kl_t5;
+    bool kl_t6;
+    bool kl_t7;
+#line 63 "codegen/operator_compare.kl"
+    kl_t3 = ( *kl_a_1 ) == ( *kl_a_1 );
+    if ( kl_t3 ) goto bb2; else goto bb1;
+    bb1:
+    kl_rt_panic( "codegen/operator_compare.kl", 63, "NaN has no order: a <=> b" );
+    bb2:
+    kl_t4 = ( *kl_b_2 ) == ( *kl_b_2 );
+    if ( kl_t4 ) goto bb3; else goto bb1;
+    bb3:
+    kl_t6 = ( *kl_a_1 ) < ( *kl_b_2 );
+    if ( kl_t6 ) goto bb4; else goto bb5;
+    bb4:
+    kl_t5 = 0;
+    goto bb8;
+    bb5:
+    kl_t7 = ( *kl_a_1 ) == ( *kl_b_2 );
+    if ( kl_t7 ) goto bb6; else goto bb7;
+    bb6:
+    kl_t5 = 1;
+    goto bb8;
+    bb7:
+    kl_t5 = 2;
+    goto bb8;
+    bb8:
+    kl_t0 = kl_t5;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

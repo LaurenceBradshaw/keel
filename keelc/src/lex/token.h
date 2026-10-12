@@ -56,12 +56,13 @@ enum class Token_kind : u16
     Percent, // %
 
     // --- Comparison ---
-    Equal_equal,   // ==
-    Bang_equal,    // !=
-    Less,          // <  also opens a generic parameter/argument list
-    Greater,       // >
-    Less_equal,    // <=
-    Greater_equal, // >=
+    Equal_equal,        // ==
+    Bang_equal,         // !=
+    Less,               // <  also opens a generic parameter/argument list
+    Greater,            // >
+    Less_equal,         // <=
+    Greater_equal,      // >=
+    Less_equal_greater, // <=>
 
     // --- Logical ---
     Amp_amp,   // &&

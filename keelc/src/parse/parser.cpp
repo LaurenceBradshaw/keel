@@ -232,6 +232,9 @@ u8 binding_power( Token_kind kind )
     case Token_kind::Greater_equal:
         return 70;
 
+    case Token_kind::Less_equal_greater:
+        return 75;
+
     // Looser than `+` and tighter than `<`, as in C. D16 makes the surprising mixes an error
     // rather than changing this, so no valid C++ silently changes meaning.
     case Token_kind::Less_less:
@@ -293,6 +296,7 @@ Operator_class classify( Token_kind kind )
     case Token_kind::Greater:
     case Token_kind::Less_equal:
     case Token_kind::Greater_equal:
+    case Token_kind::Less_equal_greater:
         return Operator_class::Comparison;
 
     case Token_kind::Less_less:
@@ -459,9 +463,12 @@ Symbol_id Parser::expect_operator_name()
         recovery_.error_at(
             span,
             fmt::format( "`{}` cannot be declared", sm_.text( span ) ),
-            "ordering is declared once, as `operator<=>`, which is not supported yet"
+            "ordering is declared once, as `operator<=>`, and `<`, `<=`, `>` and `>=` come from it"
         );
         return Symbol_id {};
+
+    case Token_kind::Less_equal_greater:
+        return Interner::operator_name( Operator_name::Compare );
 
     case Token_kind::L_bracket:
         if( cursor_.previous().kind != Token_kind::R_bracket )
@@ -4346,6 +4353,25 @@ TEST_CASE( "parser_conditional_is_not_a_D16_mix", "[parse]" )
 {
     REQUIRE( shape_of( "a & b ? c : d" ) == "?(&(a,b),c,d)" );
     REQUIRE( shape_of( "a << b ? c : d" ) == "?(<<(a,b),c,d)" );
+}
+
+// `<=>` binds tighter than the other comparisons and looser than a shift, as in C++, and D16 counts
+// it as a comparison.
+TEST_CASE( "parser_reads_the_three_way_comparison", "[parse][ordering]" )
+{
+    REQUIRE( shape_of( "a <=> b" ) == "<=>(a,b)" );
+    REQUIRE( shape_of( "a <=> b == c" ) == "==(<=>(a,b),c)" );
+    REQUIRE( shape_of( "a < b <=> c" ) == "<(a,<=>(b,c))" );
+    REQUIRE( shape_of( "a <=> b + c" ) == "<=>(a,+(b,c))" );
+
+    for( const char* source : { "a <=> b << c", "a & b <=> c" } )
+    {
+        const Parsed p( std::string( "i32 main() { return " ) + source + "; }" );
+
+        INFO( "source: " << source << "\n" << p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "cannot be mixed without parentheses" ) != std::string::npos );
+    }
 }
 
 TEST_CASE( "parser_conditional_has_three_children_and_no_operator", "[parse]" )
@@ -10398,6 +10424,30 @@ TEST_CASE( "parser_names_an_operator_method", "[parse][operator]" )
         REQUIRE( method.is_valid() );
         REQUIRE( Symbol_id { p.aux( method ) } == Interner::operator_name( Operator_name::Index ) );
         REQUIRE( p.children( p.child( method, 1 ) ).size() == 2 ); // the receiver, then `index`
+    }
+
+    SECTION( "`operator<=>` is a method under its reserved name" )
+    {
+        const Parsed p( "struct P { i32 x; ordering operator<=>( const ref P other ) const { return ordering::equal; } };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id   method = find_first( p.ast(), p.root(), Node_kind::Method_decl );
+        const Symbol_id name { p.aux( method ) };
+
+        REQUIRE( Interner::is_operator_name( name ) );
+        REQUIRE( name != Interner::operator_name( Operator_name::Equal_equal ) );
+        REQUIRE( name != Interner::operator_name( Operator_name::Index ) );
+    }
+
+    SECTION( "`operator<` is refused, and points at `operator<=>`" )
+    {
+        const Parsed p( "struct P { i32 x; bool operator<( const ref P other ) const { return true; } };" );
+
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "`operator<` cannot be declared" ) != std::string::npos );
+        REQUIRE( p.errors().find( "`<`, `<=`, `>` and `>=` come from it" ) != std::string::npos );
     }
 
     SECTION( "`operator[` without its `]` is one error" )

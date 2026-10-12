@@ -51,6 +51,9 @@ Interner::Interner()
 
     [[maybe_unused]] const Symbol_id op_index = intern( "operator[]" );
     assert( op_index.v == operator_name( Operator_name::Index ).v && "operator name id out of order" );
+
+    [[maybe_unused]] const Symbol_id op_compare = intern( "operator<=>" );
+    assert( op_compare.v == operator_name( Operator_name::Compare ).v && "operator name id out of order" );
 }
 
 Symbol_id Interner::intern( std::string_view text )
@@ -253,6 +256,12 @@ TEST_CASE( "interner_reserves_operator_names_after_the_keywords", "[common][inte
     REQUIRE( in.intern( "operator[]" ) == index );
     REQUIRE( Interner::is_operator_name( equal_equal ) );
     REQUIRE( Interner::is_operator_name( index ) );
+
+    // After `operator[]`; named by its text here so the test compiles before the name exists.
+    const Symbol_id compare = in.intern( "operator<=>" );
+
+    REQUIRE( compare.v == index.v + 1 );
+    REQUIRE( Interner::is_operator_name( compare ) );
     REQUIRE_FALSE( Interner::is_operator_name( in.intern( "operator" ) ) );
     REQUIRE_FALSE( Interner::is_operator_name( in.intern( "index" ) ) );
 }

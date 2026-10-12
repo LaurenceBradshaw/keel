@@ -14,7 +14,7 @@ error: `operator<` cannot be declared
   --> parse/errors_operator_names.kl:18:10
    |
 18 |     bool operator<( const ref a other ) const
-   |          ^^^^^^^^^ ordering is declared once, as `operator<=>`, which is not supported yet
+   |          ^^^^^^^^^ ordering is declared once, as `operator<=>`, and `<`, `<=`, `>` and `>=` come from it
 
 error: `operator+` cannot be declared yet
   --> parse/errors_operator_names.kl:23:7

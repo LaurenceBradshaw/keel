@@ -35,6 +35,7 @@ functions.</p>
 <li><a href="#println"><code>println</code></a> <span class="kind">function</span></li>
 <li><a href="#eprintln"><code>eprintln</code></a> <span class="kind">function</span></li>
 <li><a href="#result"><code>result</code></a> <span class="kind">enum</span></li>
+<li><a href="#ordering"><code>ordering</code></a> <span class="kind">enum</span></li>
 <li><a href="#box"><code>box</code></a> <span class="kind">class</span></li>
 </ul>
 <section class="entry">
@@ -327,6 +328,36 @@ escapes are decoded, a <code>\0</code> included.</p>
 <pre class="signature"><a class="anchor" href="#result.err" aria-label="Link to err">#</a><code>err( E error )</code></pre>
 <div class="doc">
 <p>Failed, with why.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">enum</span> <span class="type">ordering</span></h2>
+<div class="group" id="ordering">
+<pre class="signature"><a class="anchor" href="#ordering" aria-label="Link to ordering">#</a><code><span class="kw">enum</span> <span class="type">ordering</span></code></pre>
+<div class="doc">
+<p>How one value compares with another, as <code>operator&lt;=&gt;</code> answers.</p>
+<p><code>a &lt; b</code>, <code>a &lt;= b</code>, <code>a &gt; b</code> and <code>a &gt;= b</code> all come from <code>a &lt;=&gt; b</code>. On a float, <code>&lt;=&gt;</code> panics if
+either operand is a NaN, which has no order, while <code>&lt;</code> and its kin answer <code>false</code>.</p>
+</div>
+</div>
+<h3>Variants</h3>
+<div class="group" id="ordering.less">
+<pre class="signature"><a class="anchor" href="#ordering.less" aria-label="Link to less">#</a><code>less</code></pre>
+<div class="doc">
+<p>The left operand comes first.</p>
+</div>
+</div>
+<div class="group" id="ordering.equal">
+<pre class="signature"><a class="anchor" href="#ordering.equal" aria-label="Link to equal">#</a><code>equal</code></pre>
+<div class="doc">
+<p>Neither comes first.</p>
+</div>
+</div>
+<div class="group" id="ordering.greater">
+<pre class="signature"><a class="anchor" href="#ordering.greater" aria-label="Link to greater">#</a><code>greater</code></pre>
+<div class="doc">
+<p>The right operand comes first.</p>
 </div>
 </div>
 </section>

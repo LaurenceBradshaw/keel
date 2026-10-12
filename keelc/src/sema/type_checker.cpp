@@ -153,6 +153,12 @@ Types Checker::run()
                 types_.table().declare_box( decl );
             }
 
+            if( package == resolution_.prelude_package() && kind == Node_kind::Enum_decl &&
+                interner_.text( ast_.name( decl ) ) == "ordering" )
+            {
+                types_.table().declare_ordering( decl );
+            }
+
             types_.table().set_package( decl, interner_.text( package ), package != resolution_.prelude_package() );
         }
     }

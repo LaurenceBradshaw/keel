@@ -28,9 +28,10 @@ enum class Operands : u8
 
 enum class Result : u8
 {
-    Common, // the §6.4 result of the two operands
-    Bool,   // a comparison
-    Left,   // the left operand's type - C++ takes no common type for a shift
+    Common,   // the §6.4 result of the two operands
+    Bool,     // a comparison
+    Left,     // the left operand's type - C++ takes no common type for a shift
+    Ordering, // a three-way comparison
 };
 
 struct Binary_rule
@@ -59,6 +60,7 @@ constexpr Binary_rule binary_rules[] = {
     { Token_kind::Bang_equal, Operands::Comparable, Result::Bool },
     { Token_kind::Amp_amp, Operands::Bool, Result::Bool },
     { Token_kind::Pipe_pipe, Operands::Bool, Result::Bool },
+    { Token_kind::Less_equal_greater, Operands::Numeric, Result::Ordering },
 };
 
 struct Unary_rule
@@ -154,6 +156,7 @@ Result_source Operators::result_source( Token_kind op ) const
     case Result::Left:
         return Result_source::Left_operand;
     case Result::Bool:
+    case Result::Ordering:
         break;
     }
 
@@ -197,8 +200,8 @@ Binary_result Operators::result_of_binary(
         // number compares against a concrete one exactly as two concrete numbers do. No walk over
         // the types the bound admits, unlike a conversion: every one of them compares against
         // every number, so the answer is `bool` without asking which `T` turns out to be.
-        const bool against_a_number =
-            is_comparison( op ) && !table_.is_parameter( other ) && accepts( table_, Operands::Numeric, other );
+        const bool against_a_number = is_comparison( op ) && op != Token_kind::Less_equal_greater &&
+                                      !table_.is_parameter( other ) && accepts( table_, Operands::Numeric, other );
 
         // Inside a generic body there is no conversion between an unknown type and anything else,
         // so the two sides otherwise have to already agree. Returning rather than reporting and
@@ -241,7 +244,13 @@ Binary_result Operators::result_of_binary(
             );
         }
 
-        // A comparison answers `bool` whatever `T` turns out to be; arithmetic answers `T`.
+        // A comparison answers `bool` whatever `T` turns out to be, `<=>` answers `ordering`, and
+        // arithmetic answers `T`.
+        if( op == Token_kind::Less_equal_greater )
+        {
+            return { table_.ordering() };
+        }
+
         return { against_a_number || *bound == Bound::Equatable || *bound == Bound::Comparable ? bool_type : lhs_type };
     }
 
@@ -334,6 +343,12 @@ Binary_result Operators::result_of_binary(
         accepts( table_, Operands::Numeric, rhs_type ) )
     {
         return { bool_type, true };
+    }
+
+    if( rule->result == Result::Ordering && accepts( table_, Operands::Numeric, lhs_type ) &&
+        accepts( table_, Operands::Numeric, rhs_type ) )
+    {
+        return { table_.ordering(), false };
     }
 
     if( rule->result == Result::Left )
@@ -1274,6 +1289,127 @@ TEST_CASE( "type_checker_points_void_pointer_arithmetic_at_bytes", "[sema][types
     REQUIRE( p.rendered().find( "`void*` points at one `void`, so it has no arithmetic" ) != std::string::npos );
     REQUIRE( p.rendered().find( "cast it to a `u8[*]` to offset it by bytes" ) != std::string::npos );
     REQUIRE( p.rendered().find( "void[*]" ) == std::string::npos );
+}
+
+// `<=>` takes what `<` takes and answers the prelude's `ordering`; on an aggregate it calls the
+// left operand's `operator<=>`, and so do `<`, `<=`, `>` and `>=`.
+TEST_CASE( "type_checker_types_a_three_way_comparison", "[sema][operator][ordering]" )
+{
+    SECTION( "two numbers answer `ordering`, mixed signs and literals included" )
+    {
+        const Typed p( "ordering f( i32 a, i64 b ) { return a <=> b; }\n"
+                       "ordering g( i32 a, u64 b ) { return a <=> b; }\n"
+                       "ordering h( u8 a ) { return a <=> 0; }\n"
+                       "ordering k( f64 a ) { return a <=> 1.5; }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        for( std::size_t i = 0; i < 4; ++i )
+        {
+            REQUIRE( p.type_name( p.nth( Node_kind::Binary_expr, i ) ) == "ordering" );
+        }
+    }
+
+    SECTION( "the answer is not an integer" )
+    {
+        const Typed p( "i32 f( i32 a ) { i32 r = a <=> a; return r; }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`ordering`" ) != std::string::npos );
+    }
+
+    SECTION( "a bool, an enum and a pointer have no order" )
+    {
+        const Typed p( "enum Colour { Red, Green };\n"
+                       "ordering f( bool a ) { return a <=> a; }\n"
+                       "ordering g( Colour a ) { return a <=> a; }\n"
+                       "ordering h( i32* a ) { return a <=> a; }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 3 );
+        REQUIRE( p.rendered().find( "no operator `<=>` for `bool` and `bool`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "no operator `<=>` for `Colour` and `Colour`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "no operator `<=>` for `i32*` and `i32*`" ) != std::string::npos );
+    }
+
+    SECTION( "a type parameter needs `Comparable`, and then answers `ordering`" )
+    {
+        const Typed bounded( "ordering f<T>( T a ) where T : Comparable { return a <=> a; }\ni32 main() { return 0; }" );
+        const Typed unbounded( "ordering f<T>( T a ) where T : Equatable { return a <=> a; }\ni32 main() { return 0; }" );
+
+        INFO( bounded.rendered() << unbounded.rendered() );
+        REQUIRE( bounded.clean() );
+        REQUIRE( bounded.type_name( bounded.nth( Node_kind::Binary_expr, 0 ) ) == "ordering" );
+        REQUIRE( unbounded.errors() == 1 );
+        REQUIRE(
+            unbounded.rendered().find( "`<=>` needs `Comparable`; write `where T : Comparable` on `f`" ) != std::string::npos
+        );
+    }
+
+    SECTION( "an aggregate's `operator<=>` answers `<=>` and the four comparisons" )
+    {
+        const Typed p( "struct V { i32 x; ordering operator<=>( const ref V o ) const { return x <=> o.x; } };\n"
+                       "bool f( V a, V b ) { ordering o = a <=> b; return a < b || a <= b || a > b || a >= b; }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        // The method's own `x <=> o.x` is the first, then `a <=> b`.
+        REQUIRE( p.type_name( p.nth( Node_kind::Binary_expr, 1 ) ) == "ordering" );
+
+        std::size_t comparisons = 0;
+
+        // The prelude's nodes follow the program's, and stop the walk.
+        const File_id program = p.ast().span( p.nth( Node_kind::Binary_expr, 0 ) ).file;
+
+        for( std::size_t i = 2;; ++i )
+        {
+            const Node_id comparison = p.nth( Node_kind::Binary_expr, i );
+
+            if( !comparison.is_valid() || p.ast().span( comparison ).file != program )
+            {
+                break;
+            }
+
+            if( p.ast().op( comparison ) != Token_kind::Pipe_pipe )
+            {
+                REQUIRE( p.type_name( comparison ) == "bool" );
+                ++comparisons;
+            }
+        }
+
+        REQUIRE( comparisons == 4 );
+    }
+
+    SECTION( "an aggregate without one names what to declare" )
+    {
+        const Typed p( "struct plain { i32 x; };\n"
+                       "bool f( plain a, plain b ) { return a < b; }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`plain` has no `operator<=>`" ) != std::string::npos );
+        REQUIRE(
+            p.rendered().find( "declare `ordering operator<=>( const ref plain other ) const` in it" ) != std::string::npos
+        );
+    }
+
+    SECTION( "`operator<=>` does not give `==`" )
+    {
+        const Typed p( "struct V { i32 x; ordering operator<=>( const ref V o ) const { return x <=> o.x; } };\n"
+                       "bool f( V a, V b ) { return a == b; }\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`V` has no `operator==`" ) != std::string::npos );
+    }
 }
 
 } // namespace keel

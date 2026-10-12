@@ -896,11 +896,15 @@ void Signatures::check_operators()
             switch( op )
             {
             case Operator_name::Equal_equal:
-                check_equal_operator( member );
+                check_comparison_operator( member, table_.builtin( Type_kind::Bool ) );
                 break;
 
             case Operator_name::Index:
                 check_index_operator( member );
+                break;
+
+            case Operator_name::Compare:
+                check_comparison_operator( member, table_.ordering() );
                 break;
 
             default:
@@ -910,35 +914,42 @@ void Signatures::check_operators()
     }
 }
 
-void Signatures::check_equal_operator( Node_id decl )
+void Signatures::check_comparison_operator( Node_id decl, Type_id result )
 {
     const std::span<const Node_id> params    = ast_.params( decl );
     const Type_id                  receiver  = types_.type_of( params[0] );
     const Type_id                  self_type = table_.is_pointer( receiver ) ? table_.get( receiver ).element : receiver;
 
+    const std::string_view op_name          = interner_.text( ast_.name( decl ) );
+    const std::string_view return_type_name = table_.name( result );
+
     if( params.size() != 2 )
     {
-        reporter_.error_at( ast_.span( ast_.param_list( decl ) ), "`operator==` takes one parameter, the right-hand operand" );
+        reporter_.error_at(
+            ast_.span( ast_.param_list( decl ) ), fmt::format( "`{}` takes one parameter, the right-hand operand", op_name )
+        );
     }
     else if( !table_.is_error( types_.type_of( params[1] ) ) && types_.type_of( params[1] ) != self_type )
     {
         reporter_.error_at(
             ast_.span( params[1] ),
-            fmt::format( "`operator==` on `{0}` must take another `{0}`", table_.name( self_type ) ),
+            fmt::format( "`{0}` on `{1}` must take another `{1}`", op_name, table_.name( self_type ) ),
             fmt::format( "write the parameter as `const ref {}`", table_.name( self_type ) )
         );
     }
 
-    if( !table_.is_error( types_.type_of( decl ) ) && types_.type_of( decl ) != table_.builtin( Type_kind::Bool ) )
+    if( !table_.is_error( types_.type_of( decl ) ) && types_.type_of( decl ) != result )
     {
-        reporter_.error_at( ast_.span( ast_.return_type( decl ) ), "`operator==` must return `bool`" );
+        reporter_.error_at(
+            ast_.span( ast_.return_type( decl ) ), fmt::format( "`{}` must return `{}`", op_name, return_type_name )
+        );
     }
 
     if( !ast_.is_const_method( decl ) )
     {
         reporter_.error_at(
             ast_.name_span( decl ),
-            "`operator==` must be `const`",
+            fmt::format( "`{}` must be `const`", op_name ),
             "write `const` after its parameter list; comparing reads both operands"
         );
     }

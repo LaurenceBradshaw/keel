@@ -98,7 +98,7 @@ private:
     void check_struct_ownership();
     void check_struct_fields_are_not_owning( Node_id decl );
     void check_operators();
-    void check_equal_operator( Node_id decl );
+    void check_comparison_operator( Node_id decl, Type_id result );
     void check_index_operator( Node_id decl );
 
     const Ast&        ast_;

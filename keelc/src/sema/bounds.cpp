@@ -143,6 +143,7 @@ std::optional<Bound> operator_to_bound( Token_kind kind )
     case Token_kind::Greater:
     case Token_kind::Less_equal:
     case Token_kind::Greater_equal:
+    case Token_kind::Less_equal_greater:
         return Bound::Comparable;
     case Token_kind::Plus:
     case Token_kind::Minus:

@@ -248,6 +248,8 @@ struct Printer
                 return "division_by_zero";
             case Failure::Remainder:
                 return "remainder_by_zero";
+            case Failure::Unordered:
+                return "unordered";
             }
 
         case Terminator_kind::Unreachable:

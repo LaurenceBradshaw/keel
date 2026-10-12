@@ -62,17 +62,17 @@ struct kl_2kl_optional__I3u64E
 
 struct kl_7prelude_box__I5ShapeE
 {
-    struct kl__Shape__ref kl_p__2469;
+    struct kl__Shape__ref kl_p__2473;
 };
 
 struct kl_7prelude_box__I6SquareE
 {
-    struct kl__Square* kl_p__2469;
+    struct kl__Square* kl_p__2473;
 };
 
 struct kl_7prelude_box__I8LabelledE
 {
-    struct kl__Labelled* kl_p__2469;
+    struct kl__Labelled* kl_p__2473;
 };
 
 struct kl_2kl_list__IQ7prelude3boxI5ShapeEE
@@ -298,7 +298,7 @@ struct kl_7prelude_box__I5ShapeE kl__make__3u64( uint64_t kl_i_1 )
     kl_t7 = ( double ) kl_i_1;
     kl_t6.kl_side_23 = kl_t7;
     kl_7prelude_box__I6SquareE__RQ7prelude3boxI6SquareE_M6Square__ctor( kl_t5, kl_t6 );
-    kl_t9 = ( struct kl_7prelude_box__I5ShapeE ) { ( struct kl__Shape__ref ) { ( void* ) kl_t4.kl_p__2469, &kl__Square__as_kl__Shape } };
+    kl_t9 = ( struct kl_7prelude_box__I5ShapeE ) { ( struct kl__Shape__ref ) { ( void* ) kl_t4.kl_p__2473, &kl__Square__as_kl__Shape } };
     kl_t17 = false;
     kl_t0 = kl_t9;
     if ( kl_t17 ) kl_7prelude_box__I6SquareE__dtor( &kl_t4 );
@@ -318,7 +318,7 @@ struct kl_7prelude_box__I5ShapeE kl__make__3u64( uint64_t kl_i_1 )
     if ( kl_t19 ) kl_2kl_list__I2u8E__dtor( &kl_t12.kl_label_55.kl_bytes__996 );
     kl_t19 = false;
 #line 46 "list_of_boxes/main.kl"
-    kl_t16 = ( struct kl_7prelude_box__I5ShapeE ) { ( struct kl__Shape__ref ) { ( void* ) kl_labelled_10.kl_p__2469, &kl__Labelled__as_kl__Shape } };
+    kl_t16 = ( struct kl_7prelude_box__I5ShapeE ) { ( struct kl__Shape__ref ) { ( void* ) kl_labelled_10.kl_p__2473, &kl__Labelled__as_kl__Shape } };
     kl_t18 = false;
     kl_t0 = kl_t16;
     if ( kl_t18 ) kl_7prelude_box__I8LabelledE__dtor( &kl_labelled_10 );
@@ -1317,16 +1317,16 @@ void kl_7prelude_box__I6SquareE__RQ7prelude3boxI6SquareE_M6Square__ctor( struct 
     struct kl__Square* kl_t5;
     struct kl__Square* kl_t6;
     struct kl__Square* kl_t7;
-#line 214 "<prelude>"
-    kl_t4 = ( struct kl__Square* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl__Square ), "<prelude>", 214, "out of memory: alloc<T>( 1 )" );
+#line 228 "<prelude>"
+    kl_t4 = ( struct kl__Square* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl__Square ), "<prelude>", 228, "out of memory: alloc<T>( 1 )" );
     kl_slot_3 = kl_t4;
-#line 215 "<prelude>"
+#line 229 "<prelude>"
     kl_t5 = kl_slot_3 + 0;
     ( *kl_t5 ) = kl_value_2;
-#line 216 "<prelude>"
+#line 230 "<prelude>"
     kl_t6 = kl_slot_3 + 0;
     kl_t7 = &( *kl_t6 );
-    ( *kl_this_1 ).kl_p__2469 = kl_t7;
+    ( *kl_this_1 ).kl_p__2473 = kl_t7;
     return;
 }
 
@@ -1338,20 +1338,20 @@ void kl_7prelude_box__I8LabelledE__RQ7prelude3boxI8LabelledE_M8Labelled__ctor( s
     struct kl__Labelled* kl_t6;
     struct kl__Labelled* kl_t7;
     bool kl_t8;
-#line 209 "<prelude>"
+#line 223 "<prelude>"
     kl_t8 = true;
-#line 214 "<prelude>"
-    kl_t4 = ( struct kl__Labelled* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl__Labelled ), "<prelude>", 214, "out of memory: alloc<T>( 1 )" );
+#line 228 "<prelude>"
+    kl_t4 = ( struct kl__Labelled* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl__Labelled ), "<prelude>", 228, "out of memory: alloc<T>( 1 )" );
     kl_slot_3 = kl_t4;
-#line 215 "<prelude>"
+#line 229 "<prelude>"
     kl_t5 = kl_slot_3 + 0;
     ( *kl_t5 ) = kl_value_2;
     kl_t8 = false;
-#line 216 "<prelude>"
+#line 230 "<prelude>"
     kl_t6 = kl_slot_3 + 0;
     kl_t7 = &( *kl_t6 );
-    ( *kl_this_1 ).kl_p__2469 = kl_t7;
-#line 209 "<prelude>"
+    ( *kl_this_1 ).kl_p__2473 = kl_t7;
+#line 223 "<prelude>"
     if ( kl_t8 ) kl_2kl_list__I2u8E__dtor( &kl_value_2.kl_label_55.kl_bytes__996 );
     kl_t8 = false;
     return;
@@ -1420,8 +1420,8 @@ struct kl_7prelude_box__I5ShapeE* kl_2kl_operator_index__IQ7prelude3boxI5ShapeEE
 struct kl__Shape__ref kl_7prelude_get__I5ShapeE__SQ7prelude3boxI5ShapeE( struct kl_7prelude_box__I5ShapeE* kl_this_1 )
 {
     struct kl__Shape__ref kl_t0;
-#line 232 "<prelude>"
-    kl_t0 = ( *kl_this_1 ).kl_p__2469;
+#line 246 "<prelude>"
+    kl_t0 = ( *kl_this_1 ).kl_p__2473;
     return kl_t0;
 }
 
@@ -1648,29 +1648,29 @@ void kl_2kl_list__I2u8E__dtor( struct kl_2kl_list__I2u8E* kl_this_1 )
 void kl_7prelude_box__I5ShapeE__dtor( struct kl_7prelude_box__I5ShapeE* kl_this_1 )
 {
     struct kl__Shape__ref kl_t2;
-#line 224 "<prelude>"
-    kl_t2 = ( *kl_this_1 ).kl_p__2469;
+#line 238 "<prelude>"
+    kl_t2 = ( *kl_this_1 ).kl_p__2473;
     kl_t2.vtable->drop( kl_t2.self );
-#line 225 "<prelude>"
-    kl_rt_free( ( ( *kl_this_1 ).kl_p__2469 ).self );
+#line 239 "<prelude>"
+    kl_rt_free( ( ( *kl_this_1 ).kl_p__2473 ).self );
     return;
 }
 
 void kl_7prelude_box__I6SquareE__dtor( struct kl_7prelude_box__I6SquareE* kl_this_1 )
 {
-#line 225 "<prelude>"
-    kl_rt_free( ( *kl_this_1 ).kl_p__2469 );
+#line 239 "<prelude>"
+    kl_rt_free( ( *kl_this_1 ).kl_p__2473 );
     return;
 }
 
 void kl_7prelude_box__I8LabelledE__dtor( struct kl_7prelude_box__I8LabelledE* kl_this_1 )
 {
     struct kl__Labelled* kl_t2;
-#line 224 "<prelude>"
-    kl_t2 = ( *kl_this_1 ).kl_p__2469;
+#line 238 "<prelude>"
+    kl_t2 = ( *kl_this_1 ).kl_p__2473;
     kl_2kl_list__I2u8E__dtor( &( *kl_t2 ).kl_label_55.kl_bytes__996 );
-#line 225 "<prelude>"
-    kl_rt_free( ( *kl_this_1 ).kl_p__2469 );
+#line 239 "<prelude>"
+    kl_rt_free( ( *kl_this_1 ).kl_p__2473 );
     return;
 }
 

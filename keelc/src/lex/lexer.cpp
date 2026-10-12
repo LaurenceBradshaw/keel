@@ -866,7 +866,12 @@ void Scanner::scan_punctuation( char c, u32 start )
             push( match( '=' ) ? Token_kind::Less_less_equal : Token_kind::Less_less, start );
             return;
         }
-        push( match( '=' ) ? Token_kind::Less_equal : Token_kind::Less, start );
+        if( match( '=' ) )
+        {
+            push( match( '>' ) ? Token_kind::Less_equal_greater : Token_kind::Less_equal, start );
+            return;
+        }
+        push( Token_kind::Less, start );
         return;
 
     case '>':
@@ -1525,6 +1530,21 @@ TEST_CASE( "lexer_operator_sequences", "[lex]" )
     REQUIRE( lexed.count() == 2 );
     REQUIRE( lexed.kind( 0 ) == Token_kind::Less_less );
     REQUIRE( lexed.kind( 1 ) == Token_kind::Less );
+}
+
+TEST_CASE( "lexer_reads_the_three_way_comparison_as_one_token", "[lex][ordering]" )
+{
+    const Lexed lexed( "a<=>b" );
+
+    REQUIRE( lexed.count() == 3 );
+    REQUIRE( token_kind_name( lexed.kind( 1 ) ) == "Less_equal_greater" );
+    REQUIRE( token_kind_spelling( lexed.kind( 1 ) ) == "<=>" );
+
+    const Lexed apart( "a<= >b" );
+
+    REQUIRE( apart.count() == 4 );
+    REQUIRE( apart.kind( 1 ) == Token_kind::Less_equal );
+    REQUIRE( apart.kind( 2 ) == Token_kind::Greater );
 }
 
 TEST_CASE( "lexer_generic_close_is_two_greaters", "[lex]" )

@@ -1,0 +1,98 @@
+// What `operator<=>` must be - a `const` method returning `ordering`, taking one more of its own
+// type, declared once - and what `<=>` and the comparisons need from their operands.
+struct returns_bool
+{
+    i32 x;
+
+    bool operator<=>( const ref returns_bool other ) const
+    {
+        return true;
+    }
+};
+
+struct not_const
+{
+    i32 x;
+
+    ordering operator<=>( const ref not_const other )
+    {
+        return ordering::equal;
+    }
+};
+
+struct other_type
+{
+    i32 x;
+
+    ordering operator<=>( i32 other ) const
+    {
+        return ordering::equal;
+    }
+};
+
+struct two_parameters
+{
+    i32 x;
+
+    ordering operator<=>( const ref two_parameters p, const ref two_parameters q ) const
+    {
+        return ordering::equal;
+    }
+};
+
+struct plain
+{
+    i32 x;
+};
+
+struct version
+{
+    i32 major;
+
+    ordering operator<=>( const ref version other ) const
+    {
+        return major <=> other.major;
+    }
+};
+
+enum Colour
+{
+    Red,
+    Green
+};
+
+ordering by_bound<T>( T a, T b ) where T : Equatable
+{
+    return a <=> b;
+}
+
+i32 main()
+{
+    plain   one = plain { 1 };
+    plain   two = plain { 2 };
+    version v   = version { 1 };
+    version w   = version { 2 };
+
+    if( one < two )
+    {
+        return 1;
+    }
+
+    ordering o = one <=> two;
+
+    if( v == w )
+    {
+        return 2;
+    }
+
+    if( v < 5 )
+    {
+        return 3;
+    }
+
+    i32  n = v <=> w;
+    bool b = true <=> false;
+    bool c = Colour::Red <=> Colour::Green;
+
+    return 0;
+}

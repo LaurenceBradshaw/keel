@@ -336,7 +336,7 @@
                 },
                 {
                     "name": "keyword.operator.comparison.keel",
-                    "match": "==|!=|<=|>=|<|>"
+                    "match": "<=>|==|!=|<=|>=|<|>"
                 },
                 {
                     "name": "keyword.operator.logical.keel",

@@ -81,6 +81,8 @@ std::string_view token_kind_name( Token_kind kind )
         return "Less_equal";
     case Token_kind::Greater_equal:
         return "Greater_equal";
+    case Token_kind::Less_equal_greater:
+        return "Less_equal_greater";
     case Token_kind::Amp_amp:
         return "Amp_amp";
     case Token_kind::Pipe_pipe:
@@ -205,6 +207,8 @@ std::string_view token_kind_spelling( Token_kind kind )
         return "<=";
     case Token_kind::Greater_equal:
         return ">=";
+    case Token_kind::Less_equal_greater:
+        return "<=>";
     case Token_kind::Amp_amp:
         return "&&";
     case Token_kind::Pipe_pipe:
@@ -269,6 +273,7 @@ bool is_comparison( Token_kind kind )
     case Token_kind::Greater_equal:
     case Token_kind::Equal_equal:
     case Token_kind::Bang_equal:
+    case Token_kind::Less_equal_greater:
         return true;
 
     default:

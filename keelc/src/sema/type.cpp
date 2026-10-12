@@ -1155,12 +1155,12 @@ bool Type_table::implements( Type_id type, Type_id interface ) const
     }
 }
 
-void keel::Type_table::declare_naming_self( Node_id interface, Node_id method )
+void Type_table::declare_naming_self( Node_id interface, Node_id method )
 {
     naming_self_.emplace( interface.v, method );
 }
 
-Node_id keel::Type_table::method_naming_self( Type_id interface ) const
+Node_id Type_table::method_naming_self( Type_id interface ) const
 {
     if( !interface.is_valid() || !is_interface( interface ) )
     {
@@ -1171,12 +1171,12 @@ Node_id keel::Type_table::method_naming_self( Type_id interface ) const
     return found == naming_self_.end() ? Node_id {} : found->second;
 }
 
-void keel::Type_table::declare_box( Node_id declaration )
+void Type_table::declare_box( Node_id declaration )
 {
     box_ = declaration;
 }
 
-bool keel::Type_table::is_box( Type_id type ) const
+bool Type_table::is_box( Type_id type ) const
 {
     if( !type.is_valid() || !box_.is_valid() )
     {
@@ -1186,9 +1186,25 @@ bool keel::Type_table::is_box( Type_id type ) const
     return get( type ).declaration == box_;
 }
 
-Node_id keel::Type_table::box_declaration() const
+Node_id Type_table::box_declaration() const
 {
     return box_;
+}
+
+void Type_table::declare_ordering( Node_id declaration )
+{
+    ordering_ = declaration;
+}
+
+Type_id Type_table::ordering() const
+{
+    if( !ordering_.is_valid() )
+    {
+        return Type_id {};
+    }
+
+    const auto found = composites_.find( ordering_.v );
+    return found == composites_.end() ? Type_id {} : found->second[0].type;
 }
 
 Type_id Type_table::add( const Type& type, std::string_view name )

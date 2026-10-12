@@ -192,6 +192,7 @@ private:
     Operand checked_cast( Operand operand, Type_id to, Span span );
     // A variable shift count is masked to the width; a variable divisor panics at zero, and MIN / -1 wraps.
     Rvalue  checked_arithmetic( Token_kind op, Operand left, Operand right, Type_id type, Span span );
+    Operand three_way( Operand left, Operand right, Span span );
     Operand moved_if_owning( Operand operand );
 
     bool is_move_parameter( Node_id param ) const;
@@ -791,6 +792,70 @@ Rvalue Lowering::checked_arithmetic( Token_kind op, Operand left, Operand right,
     return use( copy( builder_.place( result ), type ) );
 }
 
+// `<=>` is two comparisons and a choice of variant, and a NaN has no answer.
+Operand Lowering::three_way( Operand left, Operand right, Span span )
+{
+    const Type_table& table    = types_.table();
+    const Type_id     boolean  = table.builtin( Type_kind::Bool );
+    const Type_id     ordering = table.ordering();
+
+    const auto test = [&]( Token_kind op, Operand a, Operand b ) -> Operand
+    { return copy( builder_.place( builder_.into_temp( binary( op, a, b, boolean ), boolean, span ) ), boolean ); };
+
+    // A float literal is never a NaN.
+    const auto may_be_nan = [&]( Operand side ) { return table.is_float( side.type ) && side.kind != Operand_kind::Constant; };
+
+    if( may_be_nan( left ) || may_be_nan( right ) )
+    {
+        const Block_id fail = builder_.add_block();
+
+        for( const Operand side : { left, right } )
+        {
+            if( !may_be_nan( side ) )
+            {
+                continue;
+            }
+
+            const Block_id pass = builder_.add_block();
+
+            builder_.terminate_branch( test( Token_kind::Equal_equal, side, side ), pass, fail, span );
+            builder_.switch_to( pass );
+        }
+
+        const Block_id pass = builder_.current();
+        builder_.switch_to( fail );
+        builder_.terminate_panic( span, Failure::Unordered );
+        builder_.switch_to( pass );
+    }
+
+    const Local_id result = builder_.add_local( ordering, span );
+
+    const Block_id less     = builder_.add_block();
+    const Block_id not_less = builder_.add_block();
+    const Block_id equal    = builder_.add_block();
+    const Block_id greater  = builder_.add_block();
+    const Block_id join     = builder_.add_block();
+
+    const auto choose = [&]( Block_id block, u64 ordinal )
+    {
+        builder_.switch_to( block );
+        builder_.assign( builder_.place( result ), use( constant( literal_pool_.add_integer( ordinal ), ordering ) ), span );
+        builder_.terminate_goto( join, span );
+    };
+
+    builder_.terminate_branch( test( Token_kind::Less, left, right ), less, not_less, span );
+
+    builder_.switch_to( not_less );
+    builder_.terminate_branch( test( Token_kind::Equal_equal, left, right ), equal, greater, span );
+
+    choose( less, 0 );
+    choose( equal, 1 );
+    choose( greater, 2 );
+
+    builder_.switch_to( join );
+    return copy( builder_.place( result ), ordering );
+}
+
 Operand Lowering::moved_if_owning( Operand operand )
 {
     if( operand.kind != Operand_kind::Copy || !owns( operand.type ) )
@@ -1344,36 +1409,69 @@ Operand Lowering::lower_binary( Node_id id )
                               ? raw_right
                               : converted( raw_right, by_cases ? comparison_width( raw_right.type ) : operation, span );
 
-    // The type the operation *produces*, which for a comparison is bool.
+    // The type the operation *produces*, which for a comparison is bool and for `<=>` is ordering.
     const Type_id type = type_of( id );
 
+    if( op == Token_kind::Less_equal_greater )
+    {
+        return three_way( left, right, span );
+    }
     return copy( builder_.place( builder_.into_temp( checked_arithmetic( op, left, right, type, span ), type, span ) ), type );
 }
 
-// `a == b` calls `a.operator==( b )`, and `a != b` negates it.
+// `a == b` calls `a.operator==( b )`, and `a != b` negates it; `a < b` compares what
+// `a.operator<=>( b )` answers with a variant.
 Operand Lowering::lower_operator_call( Node_id id, Node_id method )
 {
-    const Span    span = ast_.span( id );
-    const Node_id rhs  = ast_.rhs( id );
+    const Span       span     = ast_.span( id );
+    const Node_id    rhs      = ast_.rhs( id );
+    const Token_kind op       = ast_.op( id );
+    const Bindings   bindings = bindings_for_call( id );
 
     const std::span<const Node_id> parameters = ast_.params( method );
 
     const Operand receiver = address_operand(
         lower_place( ast_.lhs( id ) ),
-        binding_type_under( parameters[0], bindings_for_call( id ) ),
+        binding_type_under( parameters[0], bindings ),
         span,
         ast_.is_const_method( method ) ? Address_purpose::Read : Address_purpose::Borrow
     );
-    const Operand result = lower_method_call_on( id, method, receiver, { &rhs, 1 }, type_of( id ) );
+    const Operand result = lower_method_call_on( id, method, receiver, { &rhs, 1 }, type_under( method, bindings ) );
 
-    if( ast_.op( id ) != Token_kind::Bang_equal )
+    if( op == Token_kind::Equal_equal || op == Token_kind::Less_equal_greater )
     {
         return result;
     }
 
-    return copy(
-        builder_.place( builder_.into_temp( unary( Token_kind::Bang, result, result.type ), result.type, span ) ), result.type
-    );
+    if( op == Token_kind::Bang_equal )
+    {
+        return copy(
+            builder_.place( builder_.into_temp( unary( Token_kind::Bang, result, result.type ), result.type, span ) ),
+            result.type
+        );
+    }
+
+    // less = 0, equal = 1, greater = 2.
+    const auto [test, ordinal] = [&]() -> std::pair<Token_kind, u64>
+    {
+        switch( op )
+        {
+        case Token_kind::Less:
+            return { Token_kind::Equal_equal, 0 };
+        case Token_kind::Less_equal:
+            return { Token_kind::Bang_equal, 2 };
+        case Token_kind::Greater:
+            return { Token_kind::Equal_equal, 2 };
+        default:
+            assert( op == Token_kind::Greater_equal && "the checker sends only comparisons to an operator" );
+            return { Token_kind::Bang_equal, 0 };
+        }
+    }();
+
+    const Type_id boolean = types_.table().builtin( Type_kind::Bool );
+    const Operand variant = constant( literal_pool_.add_integer( ordinal ), result.type );
+
+    return copy( builder_.place( builder_.into_temp( binary( test, result, variant, boolean ), boolean, span ) ), boolean );
 }
 
 // `v[i]` calls `v.operator[]( i )`, and the place is what the returned pointer points at.

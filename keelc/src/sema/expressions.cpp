@@ -13,6 +13,31 @@
 namespace keel::sema
 {
 
+namespace
+{
+
+// The method an aggregate declares for `op`, or none.
+Symbol_id operator_for( Token_kind op )
+{
+    switch( op )
+    {
+    case Token_kind::Equal_equal:
+    case Token_kind::Bang_equal:
+        return Interner::operator_name( Operator_name::Equal_equal );
+    case Token_kind::Less:
+    case Token_kind::Less_equal:
+    case Token_kind::Greater:
+    case Token_kind::Greater_equal:
+    case Token_kind::Less_equal_greater:
+        return Interner::operator_name( Operator_name::Compare );
+
+    default:
+        return {};
+    }
+}
+
+} // namespace
+
 Type_id Expressions::infer( Node_id id )
 {
     if( !id.is_valid() )
@@ -1155,10 +1180,9 @@ Type_id Expressions::infer_binary( Node_id id )
 
         const Type_id known = infer( known_side );
 
-        if( !literal_on_the_left && ( op == Token_kind::Equal_equal || op == Token_kind::Bang_equal ) &&
-            table_.is_struct( known ) )
+        if( !literal_on_the_left && operator_for( op ).is_valid() && table_.is_struct( known ) )
         {
-            return infer_operator_call( id, left, right, Interner::operator_name( Operator_name::Equal_equal ) );
+            return infer_operator_call( id, left, right, operator_for( op ) );
         }
 
         // D41: a literal the other operand cannot hold is not a type error, because the comparison
@@ -1187,9 +1211,9 @@ Type_id Expressions::infer_binary( Node_id id )
     {
         lhs_type = infer( left );
 
-        if( ( op == Token_kind::Equal_equal || op == Token_kind::Bang_equal ) && table_.is_struct( lhs_type ) )
+        if( operator_for( op ).is_valid() && table_.is_struct( lhs_type ) )
         {
-            return infer_operator_call( id, left, right, Interner::operator_name( Operator_name::Equal_equal ) );
+            return infer_operator_call( id, left, right, operator_for( op ) );
         }
 
         rhs_type = infer( right );
@@ -1221,6 +1245,12 @@ Type_id Expressions::infer_binary( Node_id id )
         require_unsafe(
             id, "pointer arithmetic needs an `unsafe` block", "nothing checks that the result is inside the allocation"
         );
+    }
+
+    // `<=>` is never folded.
+    if( op == Token_kind::Less_equal_greater )
+    {
+        return types_.record( id, result.type );
     }
 
     // record_constant for every answer, including a generic body's: a division by zero and an
@@ -1832,7 +1862,8 @@ Type_id Expressions::infer_unary( Node_id id )
     return constant_folder_.record_constant( id, result );
 }
 
-// `a == b` on an aggregate: a call of the left operand's operator, with the right as its argument.
+// `a == b`, `a < b` or `a <=> b` on an aggregate: a call of the left operand's operator, with the
+// right as its argument.
 Type_id Expressions::infer_operator_call( Node_id id, Node_id object, Node_id argument, Symbol_id name )
 {
     const Type_id object_type = types_.type_of( object );
@@ -1841,7 +1872,12 @@ Type_id Expressions::infer_operator_call( Node_id id, Node_id object, Node_id ar
         object_type,
         argument,
         name,
-        fmt::format( "bool {}( const ref {} other ) const", interner_.text( name ), table_.name( object_type ) )
+        fmt::format(
+            "{} {}( const ref {} other ) const",
+            name == Interner::operator_name( Operator_name::Equal_equal ) ? "bool" : "ordering",
+            interner_.text( name ),
+            table_.name( object_type )
+        )
     );
 
     if( !method.is_valid() )
@@ -1856,7 +1892,10 @@ Type_id Expressions::infer_operator_call( Node_id id, Node_id object, Node_id ar
     callees_.record( id, method );
     record_method_instantiation( id, method, object_type );
 
-    return types_.record( id, table_.builtin( Type_kind::Bool ) );
+    const Type_id record_type =
+        ast_.op( id ) == Token_kind::Less_equal_greater ? table_.ordering() : table_.builtin( Type_kind::Bool );
+
+    return types_.record( id, record_type );
 }
 
 // `v[i]` on an aggregate: the element its `operator[]` points at.

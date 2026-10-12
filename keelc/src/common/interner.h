@@ -92,6 +92,7 @@ enum class Operator_name : u32
 {
     Equal_equal,
     Index,
+    Compare,
     Count
 };
 

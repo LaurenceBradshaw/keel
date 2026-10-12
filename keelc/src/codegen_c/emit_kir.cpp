@@ -70,6 +70,8 @@ std::string_view failure_prefix( Failure failure )
         return "division by zero: ";
     case Failure::Remainder:
         return "remainder by zero: ";
+    case Failure::Unordered:
+        return "NaN has no order: ";
     }
 }
 
