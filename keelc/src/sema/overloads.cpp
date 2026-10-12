@@ -3149,5 +3149,56 @@ TEST_CASE( "overloads_borrow_an_implementer_as_its_interface", "[sema][interface
     }
 }
 
+// Inside a generic bounded by the interface, `self` in a requirement is the bounded `T`.
+TEST_CASE( "overloads_bind_self_to_the_bounded_parameter", "[sema][interfaces][self]" )
+{
+    const std::string same =
+        "interface Same { bool same( const ref self other ) const; self larger( const ref self other ) const; };\n";
+
+    SECTION( "another `T` is accepted, and `self` comes back as `T`" )
+    {
+        const Typed p(
+            same + "T pick<T>( const ref T a, const ref T b ) where T : Same {\n"
+                   "    if( a.same( b ) ) { return a.larger( b ); }\n"
+                   "    return b.larger( a );\n"
+                   "}\n"
+                   "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Call_expr, 1 ) ) == "T" );
+    }
+
+    SECTION( "anything else is refused, naming `T`" )
+    {
+        struct Case
+        {
+            const char* call;
+            const char* message;
+            const char* help;
+        };
+
+        const Case cases[] = {
+            { "a.same( 1 )", "a literal cannot be a `T`", "`T` is a type that implements `Same`, so pass a `T`" },
+            { "a.same( u )", "expected `T`, but got `U`", "" },
+        };
+
+        for( const Case& c : cases )
+        {
+            const Typed p(
+                same + "bool f<T, U>( const ref T a, const ref U u ) where T : Same, where U : Same { return " + c.call +
+                "; }\ni32 main() { return 0; }"
+            );
+
+            INFO( c.call << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( c.message ) != std::string::npos );
+            REQUIRE( p.rendered().find( c.help ) != std::string::npos );
+            REQUIRE( p.rendered().find( "Numeric" ) == std::string::npos );
+        }
+    }
+}
+
 } // namespace keel
 #endif

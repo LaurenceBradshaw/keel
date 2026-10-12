@@ -122,10 +122,25 @@ Type_id Literals::check_literal( Node_id id, Type_id expected )
         // do `bool`, every `enum` and every pointer, and a literal is none of those.
         if( !contains( bounds, Bound::Numeric ) )
         {
+            // A `T` bound by an interface is meant to receive a `T`, so the fix is the argument, not the clause.
+            const std::span<const Type_id> interface_bounds = bounds_.interfaces_of( expected );
+            std::string                    help;
+
+            if( !interface_bounds.empty() )
+            {
+                help = fmt::format(
+                    "`{0}` is a type that implements `{1}`, so pass a `{0}`",
+                    table_.name( expected ),
+                    table_.name( interface_bounds[0] )
+                );
+            }
+            else
+            {
+                help = fmt::format( "write `where {} : Numeric` to promise it is a number", table_.name( expected ) );
+            }
+
             reporter_.error_at(
-                ast_.span( id ),
-                fmt::format( "a literal cannot be a `{}`", table_.name( expected ) ),
-                fmt::format( "write `where {} : Numeric` to promise it is a number", table_.name( expected ) )
+                ast_.span( id ), fmt::format( "a literal cannot be a `{}`", table_.name( expected ) ), std::move( help )
             );
 
             return expected;

@@ -1857,6 +1857,126 @@ TEST_CASE( "resolver_refuses_a_builtin_type_name", "[sema][resolve]" )
     }
 }
 
+TEST_CASE( "resolver_binds_self_to_the_enclosing_type", "[sema][resolve][self]" )
+{
+    // Every `self` written in type position, in source order.
+    const auto selves = []( const Resolved& p )
+    {
+        std::vector<Node_id> found;
+
+        for( std::size_t i = 0; p.nth( Node_kind::Named_type, i ).is_valid(); ++i )
+        {
+            if( p.text( p.nth( Node_kind::Named_type, i ) ) == "self" )
+            {
+                found.push_back( p.nth( Node_kind::Named_type, i ) );
+            }
+        }
+
+        return found;
+    };
+
+    SECTION( "a struct, a class, an enum payload and an interface" )
+    {
+        struct Case
+        {
+            const char* source;
+            Node_kind   kind;
+        };
+
+        const Case cases[] = {
+            { "struct Node<T> { T v; self* next; };", Node_kind::Struct_decl },
+            { "class Buffer { u8* p; self* twin; ~Buffer() { } };", Node_kind::Class_decl },
+            { "enum List { Cons( i32 head, self* rest ), Nil };", Node_kind::Enum_decl },
+            { "interface Same { bool same( const ref self other ) const; };", Node_kind::Interface_decl },
+        };
+
+        for( const Case& c : cases )
+        {
+            const Resolved p( std::string( c.source ) + "\ni32 main() { return 0; }" );
+
+            INFO( c.source << "\n" << p.rendered() );
+            REQUIRE( p.clean() );
+            REQUIRE( selves( p ).size() == 1 );
+            REQUIRE( p.declaration_of( selves( p )[0] ) == p.nth( c.kind, 0 ) );
+        }
+    }
+
+    SECTION( "each type's `self` is its own" )
+    {
+        const Resolved p( "struct A { self* a; };\nstruct B { self* b; };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.declaration_of( selves( p )[0] ) == p.nth( Node_kind::Struct_decl, 0 ) );
+        REQUIRE( p.declaration_of( selves( p )[1] ) == p.nth( Node_kind::Struct_decl, 1 ) );
+    }
+
+    // The underlying type is resolved before the enum's own type exists.
+    SECTION( "an enum's underlying type does not see it" )
+    {
+        const Resolved p( "enum E : self { A };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( selves( p ).size() == 1 );
+        REQUIRE_FALSE( p.declaration_of( selves( p )[0] ).is_valid() );
+    }
+
+    SECTION( "outside a type it is bound to nothing" )
+    {
+        const Resolved p( "self make() { }\ni32 main() { return 0; }" );
+
+        REQUIRE( selves( p ).size() == 1 );
+        REQUIRE_FALSE( p.declaration_of( selves( p )[0] ).is_valid() );
+    }
+}
+
+TEST_CASE( "resolver_refuses_self_as_a_name", "[sema][resolve][self]" )
+{
+    const auto refused = []( std::string_view source, std::string_view message, std::string_view help )
+    {
+        const Resolved p( source );
+
+        INFO( source << "\n" << p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        CHECK( p.rendered().find( message ) != std::string::npos );
+        CHECK( p.rendered().find( help ) != std::string::npos );
+        CHECK( p.rendered().find( "is not declared" ) == std::string::npos );
+    };
+
+    const std::string_view declared = "a declaration may not be named `self`";
+    const std::string_view value    = "`self` names a type, not a value";
+
+    SECTION( "as a declaration" )
+    {
+        for( const std::string_view source : {
+                 "i32 self() { return 0; }\ni32 main() { return 0; }",
+                 "i32 main() { i32 self = 1; return 0; }",
+                 "i32 f( i32 self ) { return 0; }\ni32 main() { return 0; }",
+                 "struct S { i32 self; };\ni32 main() { return 0; }",
+                 "T id<self, T>( T x ) { return x; }\ni32 main() { return 0; }",
+             } )
+        {
+            refused( source, declared, "`self` names the type it is written in" );
+        }
+    }
+
+    // Inside a type, where `self` is bound, as much as outside one.
+    SECTION( "as a value" )
+    {
+        refused(
+            "struct S { i32 x; i32 get() const { return self.x; } };\ni32 main() { return 0; }",
+            value,
+            "the object a method is called on is `this`"
+        );
+        refused( "i32 main() { return self; }", value, "the object a method is called on is `this`" );
+        refused(
+            "struct S { i32 x; static S make() { return self { 1 }; } };\ni32 main() { return 0; }",
+            value,
+            "build it by the type's own name"
+        );
+    }
+}
+
 // A builtin type's name where a value goes is declared, as a type: saying it is not would be false.
 TEST_CASE( "resolver_says_a_builtin_type_is_not_a_value", "[sema][resolve]" )
 {

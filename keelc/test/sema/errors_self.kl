@@ -1,0 +1,73 @@
+// D55: `self` names the type it is written in, and only there. An interface whose methods mention
+// it can only bound a type parameter. Each mistake is reported once, where it was made.
+interface Same
+{
+    bool same( const ref self other ) const;
+};
+
+// A mismatch quotes the requirement with `self` read as the implementer.
+struct P implements Same
+{
+    i32 v;
+
+    bool same( const ref i32 other ) const { return true; }
+};
+
+// A caller reaches it only through a bound, so the help says so.
+struct Q implements Same
+{
+    i32 v;
+
+    bool same( const ref Q other ) { return true; }
+};
+
+// Held as anything but a bound.
+void borrowed( ref Same s ) { }
+void pointed( Same* s ) { }
+void boxed( box<Same> s ) { }
+
+// Inside a bounded generic, `self` is the `T`.
+bool compare<T>( const ref T a ) where T : Same
+{
+    return a.same( 1 );
+}
+
+// Outside a type there is nothing to name.
+self make() { }
+
+struct Holder
+{
+    self<i32>* p;
+    i32        self;
+};
+
+// A type, not a value: neither the object nor something to build.
+struct Counter
+{
+    i32 n;
+
+    i32 get() const { return self.n; }
+    static Counter make() { return self { 0 }; }
+};
+
+// An enum counts in an integer, never in itself.
+enum Small : self
+{
+    A,
+};
+
+// An implementer need not keep a promise its interface cannot make.
+struct Cell<T> where T : Copyable
+{
+    T v;
+};
+
+interface Wrapped
+{
+    void take( Cell<self>* h );
+};
+
+i32 main()
+{
+    return 0;
+}

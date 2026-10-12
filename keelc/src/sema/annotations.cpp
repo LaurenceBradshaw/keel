@@ -1761,6 +1761,121 @@ TEST_CASE( "annotations_resolve_what_is_implemented", "[sema][annotation][interf
     }
 }
 
+TEST_CASE( "annotations_read_self_as_the_enclosing_type", "[sema][annotation][self]" )
+{
+    SECTION( "in a generic, the open form" )
+    {
+        const Typed p( "struct Node<T> where T : Copyable { T v; self* next; };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Field_decl, 1 ) ) == "Node<T>*" );
+    }
+
+    SECTION( "in an enum payload, the enum" )
+    {
+        const Typed p( "enum List { Cons( i32 head, self* rest ), Nil };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Field_decl, 1 ) ) == "List*" );
+    }
+
+    SECTION( "each refusal is reported once" )
+    {
+        struct Case
+        {
+            const char* source;
+            const char* message;
+        };
+
+        const Case cases[] = {
+            { "self make() { }", "`self` is written only inside a `struct`, `class`, `enum`, or `interface`" },
+            { "void take( self* p ) { }", "`self` is written only inside a `struct`, `class`, `enum`, or `interface`" },
+            { "struct S { self<i32>* p; };", "`self` takes no type arguments" },
+            { "void take( self<i32> p ) { }", "`self` takes no type arguments" },
+        };
+
+        for( const Case& c : cases )
+        {
+            const Typed p( std::string( c.source ) + "\ni32 main() { return 0; }" );
+
+            INFO( c.source << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( c.message ) != std::string::npos );
+        }
+    }
+}
+
+TEST_CASE( "annotations_refuse_a_bound_only_interface", "[sema][annotation][interfaces][self]" )
+{
+    const std::string same = "interface Same { bool same( const ref self other ) const; };\n";
+
+    SECTION( "anywhere but a bound, naming the method" )
+    {
+        for( const char* c : {
+                 "void g( ref Same s ) { }",
+                 "void g( const ref Same s ) { }",
+                 "void g( Same* s ) { }",
+                 "void g( box<Same> s ) { }",
+             } )
+        {
+            const Typed p( same + c + "\ni32 main() { return 0; }" );
+
+            INFO( c << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE(
+                p.rendered().find( "`Same` can only bound a type parameter, because its `same` mentions `self`" ) !=
+                std::string::npos
+            );
+            REQUIRE( p.rendered().find( "take a `T` with `where T : Same` instead" ) != std::string::npos );
+        }
+    }
+
+    // The interface's own methods each take a `ref Same`, which is not the author's to refuse.
+    SECTION( "a bound, an implementer and the interface itself are fine" )
+    {
+        const Typed p(
+            same + "struct P implements Same { i32 v; bool same( const ref P other ) const { return v == other.v; } };\n"
+                   "bool equal<T>( const ref T a, const ref T b ) where T : Same { return a.same( b ); }\n"
+                   "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a return mentioning it counts" )
+    {
+        const Typed p( "interface Grows { self larger() const; };\nvoid g( Grows* s ) { }\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "because its `larger` mentions `self`" ) != std::string::npos );
+    }
+
+    SECTION( "so does one inside a generic" )
+    {
+        const Typed p(
+            "interface Wrapped { void take( box<self> b ); };\nvoid g( const ref Wrapped w ) { }\ni32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "because its `take` mentions `self`" ) != std::string::npos );
+    }
+
+    SECTION( "an interface that does not mention it is held as before" )
+    {
+        const Typed p(
+            "interface Shape { f64 area() const; };\nvoid g( const ref Shape s, Shape* q ) { }\ni32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+}
+
 } // namespace
 } // namespace keel
 #endif

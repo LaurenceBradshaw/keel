@@ -1,0 +1,79 @@
+error: `P`'s `same` does not match the one `Same` declares
+ --> sema/errors_self.kl:9:21
+  |
+9 | struct P implements Same
+  |                     ^^^^ `Same` wants `bool same( const ref P other ) const`
+
+error: `Q`'s `same` must be `const`, as `Same` declares it
+  --> sema/errors_self.kl:17:21
+   |
+17 | struct Q implements Same
+   |                     ^^^^ a `const ref T` with `T : Same` may call it
+
+error: `Same` can only bound a type parameter, because its `same` mentions `self`
+  --> sema/errors_self.kl:25:20
+   |
+25 | void borrowed( ref Same s ) { }
+   |                    ^^^^ take a `T` with `where T : Same` instead
+
+error: `Same` can only bound a type parameter, because its `same` mentions `self`
+  --> sema/errors_self.kl:26:15
+   |
+26 | void pointed( Same* s ) { }
+   |               ^^^^ take a `T` with `where T : Same` instead
+
+error: `Same` can only bound a type parameter, because its `same` mentions `self`
+  --> sema/errors_self.kl:27:17
+   |
+27 | void boxed( box<Same> s ) { }
+   |                 ^^^^ take a `T` with `where T : Same` instead
+
+error: a literal cannot be a `T`
+  --> sema/errors_self.kl:32:20
+   |
+32 |     return a.same( 1 );
+   |                    ^ `T` is a type that implements `Same`, so pass a `T`
+
+error: `self` is written only inside a `struct`, `class`, `enum`, or `interface`
+  --> sema/errors_self.kl:36:1
+   |
+36 | self make() { }
+   | ^^^^ it names the type it is written in
+
+error: `self` takes no type arguments
+  --> sema/errors_self.kl:40:5
+   |
+40 |     self<i32>* p;
+   |     ^^^^^^^^^ it already names the type it is written in
+
+error: a declaration may not be named `self`
+  --> sema/errors_self.kl:41:16
+   |
+41 |     i32        self;
+   |                ^^^^ `self` names the type it is written in
+
+error: `self` names a type, not a value
+  --> sema/errors_self.kl:49:30
+   |
+49 |     i32 get() const { return self.n; }
+   |                              ^^^^ the object a method is called on is `this`
+
+error: `self` names a type, not a value
+  --> sema/errors_self.kl:50:36
+   |
+50 |     static Counter make() { return self { 0 }; }
+   |                                    ^^^^ build it by the type's own name
+
+error: an `enum` must be backed by an integer, but `self` is the enum itself
+  --> sema/errors_self.kl:54:14
+   |
+54 | enum Small : self
+   |              ^^^^
+
+error: `self` does not promise `Copyable`, and `Cell` requires it of `T`
+  --> sema/errors_self.kl:67:21
+   |
+67 |     void take( Cell<self>* h );
+   |                     ^^^^ an interface cannot promise `Copyable` of its implementers
+
+13 errors generated

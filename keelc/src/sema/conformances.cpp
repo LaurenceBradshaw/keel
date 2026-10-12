@@ -547,5 +547,86 @@ TEST_CASE( "conformances_do_not_cascade_from_an_earlier_error", "[sema][interfac
     }
 }
 
+TEST_CASE( "conformances_substitute_the_implementer_for_self", "[sema][interfaces][self]" )
+{
+    const std::string same =
+        "interface Same { bool same( const ref self other ) const; self larger( const ref self other ) const; };\n";
+
+    SECTION( "written as the implementer's name, or as `self`" )
+    {
+        const Typed p(
+            same + "struct P implements Same { i32 v;\n"
+                   "    bool same( const ref P other ) const { return v == other.v; }\n"
+                   "    self larger( const ref self other ) const { return P { v + other.v }; }\n"
+                   "};\n"
+                   "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.types().conformances().conformances.size() == 1 );
+    }
+
+    SECTION( "a generic implementer answers with its open form" )
+    {
+        const Typed p(
+            same + "struct B<T> implements Same where T : Copyable { T v;\n"
+                   "    bool same( const ref B<T> other ) const { return false; }\n"
+                   "    B<T> larger( const ref self other ) const { return B { other.v }; }\n"
+                   "};\n"
+                   "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    SECTION( "a mismatch quotes the requirement as the implementer must write it" )
+    {
+        const Typed p(
+            same + "struct P implements Same { i32 v;\n"
+                   "    bool same( const ref i32 other ) const { return true; }\n"
+                   "    P larger( const ref P other ) const { return P { v }; }\n"
+                   "};\n"
+                   "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`Same` wants `bool same( const ref P other ) const`" ) != std::string::npos );
+
+        const std::vector<Conformance_error>& errors = p.types().conformances().errors;
+        REQUIRE( errors.size() == 1 );
+        REQUIRE( p.types().table().name( errors[0].self ) == "P" );
+    }
+
+    SECTION( "another implementer's type does not answer for `self`" )
+    {
+        const Typed p(
+            same + "struct Q { i32 v; };\n"
+                   "struct P implements Same { i32 v;\n"
+                   "    bool same( const ref Q other ) const { return true; }\n"
+                   "    P larger( const ref P other ) const { return P { v }; }\n"
+                   "};\n"
+                   "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`P`'s `same` does not match the one `Same` declares" ) != std::string::npos );
+    }
+
+    SECTION( "a method that is not `const` points the caller at the bound" )
+    {
+        const Typed p( "interface Same { bool same( const ref self other ) const; };\n"
+                       "struct P implements Same { i32 v; bool same( const ref P other ) { return true; } };\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "a `const ref T` with `T : Same` may call it" ) != std::string::npos );
+    }
+}
+
 } // namespace keel
 #endif

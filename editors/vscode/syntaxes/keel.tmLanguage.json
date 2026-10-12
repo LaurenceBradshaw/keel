@@ -224,6 +224,10 @@
         "types": {
             "patterns": [
                 {
+                    "name": "storage.type.self.keel",
+                    "match": "\\bself\\b"
+                },
+                {
                     "name": "storage.type.built-in.primitive.keel",
                     "match": "\\b(?:[iu](?:8|16|32|64)|f32|f64|bool|void|never)\\b"
                 },

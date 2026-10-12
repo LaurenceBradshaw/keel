@@ -462,8 +462,23 @@ void Signatures::declare_enums()
 
         // The underlying type is invalid when unwritten. i32 by default, which is what
         // C++ gives a plain enum - D30 changed the semantics of the keyword, not its arithmetic.
+        // The enum's own type does not exist yet, so `self` here is caught by name.
         const Node_id annotation = ast_.underlying_type( child );
-        Type_id       underlying = annotation.is_valid() ? annotations_.resolve( annotation ) : table_.integer( 32, true );
+
+        Type_id underlying;
+        if( annotation.is_valid() && ast_.kind( annotation ) == Node_kind::Named_type &&
+            !ast_.package( annotation ).is_valid() && interner_.text( ast_.name( annotation ) ) == "self" )
+        {
+            reporter_.error_at(
+                ast_.span( annotation ), "an `enum` must be backed by an integer, but `self` is the enum itself"
+            );
+
+            underlying = table_.integer( 32, true );
+        }
+        else
+        {
+            underlying = annotation.is_valid() ? annotations_.resolve( annotation ) : table_.integer( 32, true );
+        }
 
         // Only an integer can count variants. Absorbed to i32 so the rest of the pass has a type to
         // record; nothing downstream sees it, because a program with an error never reaches the emitter.
@@ -1307,6 +1322,19 @@ TEST_CASE( "type_checker_checks_an_enum_declaration", "[sema][enum]" )
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "must be backed by an integer" ) != std::string::npos );
+    }
+
+    // Written before the enum's own type exists, so it is said here rather than as `self` outside a type.
+    SECTION( "and is not the enum itself" )
+    {
+        const Typed p( "enum Colour : self { Red };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE(
+            p.rendered().find( "an `enum` must be backed by an integer, but `self` is the enum itself" ) != std::string::npos
+        );
+        REQUIRE( p.rendered().find( "written only inside" ) == std::string::npos );
     }
 
     SECTION( "duplicate variants are refused, once each" )

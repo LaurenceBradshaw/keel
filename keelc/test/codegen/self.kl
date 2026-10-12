@@ -1,0 +1,79 @@
+// D55: `self` names the type it is written in. An interface whose methods mention it is only a bound,
+// so it gets no vtable, and a call through `T : Larger` reaches the implementer's method with `self`
+// read as `T`. A generic implementer answers with its own instance, and a generic's `self*` points at
+// that instance. Exits with the failing check.
+interface Larger
+{
+    bool same( const ref self other ) const;
+    self larger( const ref self other ) const;
+};
+
+struct Plain implements Larger
+{
+    i32 v;
+
+    bool same( const ref Plain other ) const { return v == other.v; }
+
+    self larger( const ref self other ) const
+    {
+        if( v > other.v )
+        {
+            return Plain { v };
+        }
+        return Plain { other.v };
+    }
+};
+
+struct Pair<T> implements Larger where T : Copyable & Comparable
+{
+    T first;
+    T second;
+
+    bool same( const ref self other ) const { return first == other.first && second == other.second; }
+
+    Pair<T> larger( const ref Pair<T> other ) const
+    {
+        if( first < other.first )
+        {
+            return Pair { other.first, other.second };
+        }
+        return Pair { first, second };
+    }
+};
+
+struct Node<T> where T : Copyable
+{
+    T     v;
+    self* next;
+};
+
+T biggest<T>( const ref T a, const ref T b, const ref T c ) where T : Larger
+{
+    return a.larger( b ).larger( c );
+}
+
+bool all_same<T>( const ref T a, const ref T b ) where T : Larger
+{
+    return a.same( b ) && b.same( a );
+}
+
+i32 main()
+{
+    Plain p = biggest( Plain { 3 }, Plain { 9 }, Plain { 4 } );
+    if( p.v != 9 ) { return 1; }
+
+    Pair<i64> q = biggest( Pair { 1, 10 }, Pair { 5, 50 }, Pair { 2, 20 } );
+    if( q.first != 5 || q.second != 50 ) { return 2; }
+
+    Plain     seven = Plain { 7 };
+    Pair<i64> one   = Pair { 1, 2 };
+    Pair<i64> other = Pair { 1, 3 };
+    if( !all_same( seven, seven ) ) { return 3; }
+    if( all_same( one, other ) ) { return 4; }
+
+    Node<i32> tail = Node { 2, nullptr };
+    Node<i32> head = Node { 1, &tail };
+    if( head.next.v != 2 ) { return 5; }
+
+    return 0;
+}

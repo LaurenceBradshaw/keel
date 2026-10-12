@@ -313,17 +313,25 @@ void Bounds::check_bounds( Node_id parameter, Span at, Type_id argument, std::st
 
         if( forwarded )
         {
-            // The declaration to name is the one that introduced *the argument's* parameter: for a
-            // field of a generic aggregate that is the aggregate, and reading the enclosing function
-            // instead aborted on every annotation the signature pass reached.
-            const Node_id owner = owner_of_.at( table_.get( argument ).declaration.v );
+            // An interface's `self` has no owner, and no clause it could take would help.
+            if( ast_.kind( table_.get( argument ).declaration ) == Node_kind::Interface_decl )
+            {
+                help = fmt::format( "an interface cannot promise `{}` of its implementers", known.name );
+            }
+            else
+            {
+                // The declaration to name is the one that introduced *the argument's* parameter: for a
+                // field of a generic aggregate that is the aggregate, and reading the enclosing function
+                // instead aborted on every annotation the signature pass reached.
+                const Node_id owner = owner_of_.at( table_.get( argument ).declaration.v );
 
-            help = fmt::format(
-                "add `{}` to the `where` clause for `{}` on `{}`",
-                known.name,
-                table_.name( argument ),
-                interner_.text( ast_.name( owner ) )
-            );
+                help = fmt::format(
+                    "add `{}` to the `where` clause for `{}` on `{}`",
+                    known.name,
+                    table_.name( argument ),
+                    interner_.text( ast_.name( owner ) )
+                );
+            }
         }
 
         reporter_.error_at(
@@ -1280,6 +1288,23 @@ TEST_CASE( "bounds_name_the_declaration_that_owns_the_parameter", "[sema][generi
 
         INFO( p.rendered() );
         REQUIRE( p.rendered().find( "add `Comparable` to the `where` clause for `T` on `forwards`" ) != std::string::npos );
+    }
+
+    // An interface's `self` has no `where` clause, and stands for implementers that need not keep the promise.
+    SECTION( "an interface's `self` names no declaration" )
+    {
+        const Typed p( "struct Holder<T> where T : Copyable { T v; };\n"
+                       "interface Wrapped { void take( Holder<self>* h ); };\n"
+                       "struct P implements Wrapped { i32 v; void take( Holder<P>* h ) { } };\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE(
+            p.rendered().find( "`self` does not promise `Copyable`, and `Holder` requires it of `T`" ) != std::string::npos
+        );
+        REQUIRE( p.rendered().find( "an interface cannot promise `Copyable` of its implementers" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`where` clause" ) == std::string::npos );
     }
 }
 
