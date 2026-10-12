@@ -168,6 +168,12 @@ void Signatures::declare_implements()
             continue;
         }
 
+        if( ast_.kind( child ) == Node_kind::Implements_decl )
+        {
+            declare_block( child );
+            continue;
+        }
+
         if( !is_aggregate( ast_.kind( child ) ) )
         {
             continue;
@@ -182,6 +188,93 @@ void Signatures::declare_implements()
             {
                 table_.declare_implements( child, interface );
             }
+        }
+    }
+}
+
+// The type after `for`, what a block may be written for, and where it may be written.
+void Signatures::declare_block( Node_id block )
+{
+    const Node_id written   = ast_.implemented( block )[0];
+    const Type_id interface = annotations_.resolve_interface( written );
+    types_.record( written, interface );
+
+    const Type_id type = annotations_.resolve_implementer( ast_.implementer( block ) );
+    if( table_.is_error( type ) )
+    {
+        types_.record( block, type );
+        return;
+    }
+
+    const bool declared = ( table_.is_struct( type ) || table_.is_enum( type ) ) && table_.get( type ).arguments.empty();
+    if( !table_.is_builtin( type ) && !declared )
+    {
+        reporter_.error_at(
+            ast_.name_span( block ),
+            fmt::format( "`{}` cannot implement an interface through a block", table_.name( type ) ),
+            "a block is for a built-in type, or a `struct`, `class` or `enum` with no type parameters"
+        );
+
+        types_.record( block, table_.builtin( Type_kind::Error ) );
+        return;
+    }
+
+    const Node_id declaration = table_.get( type ).declaration;
+
+    // A built-in type belongs to the prelude.
+    const Symbol_id here  = resolution_.package_of( ast_.span( block ).file );
+    const Symbol_id owner = declared ? resolution_.package_of( ast_.span( declaration ).file ) : resolution_.prelude_package();
+
+    // A package's own struct or class says what it implements where it is declared, so a block for
+    // one is only ever the interface's package reaching a type it cannot edit.
+    if( table_.is_struct( type ) && here == owner )
+    {
+        reporter_.error_at(
+            ast_.name_span( block ),
+            fmt::format( "`{}` is declared in this package, so a block cannot be written for it", table_.name( type ) ),
+            fmt::format(
+                "write `implements {}` where `{}` is declared", reporter_.text( ast_.span( written ) ), table_.name( type )
+            )
+        );
+
+        types_.record( block, table_.builtin( Type_kind::Error ) );
+        return;
+    }
+
+    if( table_.is_interface( interface ) )
+    {
+        const Symbol_id issuer = resolution_.package_of( ast_.span( table_.get( interface ).declaration ).file );
+
+        if( here != owner && here != issuer )
+        {
+            reporter_.error_at(
+                ast_.name_span( block ),
+                fmt::format(
+                    "a block for `{0}` must be in the package that declares `{0}` or `{1}`",
+                    table_.name( type ),
+                    table_.name( interface )
+                ),
+                fmt::format(
+                    "two packages could otherwise each make `{}` a `{}`", table_.name( type ), table_.name( interface )
+                )
+            );
+
+            types_.record( block, table_.builtin( Type_kind::Error ) );
+            return;
+        }
+    }
+
+    types_.record( block, type );
+
+    if( table_.is_interface( interface ) )
+    {
+        if( declared )
+        {
+            table_.declare_implements( declaration, interface );
+        }
+        else
+        {
+            table_.declare_implements( type, interface );
         }
     }
 }
@@ -462,23 +555,8 @@ void Signatures::declare_enums()
 
         // The underlying type is invalid when unwritten. i32 by default, which is what
         // C++ gives a plain enum - D30 changed the semantics of the keyword, not its arithmetic.
-        // The enum's own type does not exist yet, so `self` here is caught by name.
         const Node_id annotation = ast_.underlying_type( child );
-
-        Type_id underlying;
-        if( annotation.is_valid() && ast_.kind( annotation ) == Node_kind::Named_type &&
-            !ast_.package( annotation ).is_valid() && interner_.text( ast_.name( annotation ) ) == "self" )
-        {
-            reporter_.error_at(
-                ast_.span( annotation ), "an `enum` must be backed by an integer, but `self` is the enum itself"
-            );
-
-            underlying = table_.integer( 32, true );
-        }
-        else
-        {
-            underlying = annotation.is_valid() ? annotations_.resolve( annotation ) : table_.integer( 32, true );
-        }
+        Type_id       underlying = annotation.is_valid() ? annotations_.resolve( annotation ) : table_.integer( 32, true );
 
         // Only an integer can count variants. Absorbed to i32 so the rest of the pass has a type to
         // record; nothing downstream sees it, because a program with an error never reaches the emitter.
@@ -1324,17 +1402,15 @@ TEST_CASE( "type_checker_checks_an_enum_declaration", "[sema][enum]" )
         REQUIRE( p.rendered().find( "must be backed by an integer" ) != std::string::npos );
     }
 
-    // Written before the enum's own type exists, so it is said here rather than as `self` outside a type.
-    SECTION( "and is not the enum itself" )
+    // As anywhere outside an interface; nothing is said about integers on top.
+    SECTION( "and is not `self`" )
     {
         const Typed p( "enum Colour : self { Red };\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
-        REQUIRE(
-            p.rendered().find( "an `enum` must be backed by an integer, but `self` is the enum itself" ) != std::string::npos
-        );
-        REQUIRE( p.rendered().find( "written only inside" ) == std::string::npos );
+        REQUIRE( p.rendered().find( "`self` is written only inside an `interface`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "backed by an integer" ) == std::string::npos );
     }
 
     SECTION( "duplicate variants are refused, once each" )
@@ -1886,14 +1962,14 @@ TEST_CASE( "type_checker_types_a_destructor_body", "[sema][types][aggregates]" )
         REQUIRE_FALSE( p.clean() );
     }
 
-    // C++ forbids it, and a pointer parameter would otherwise accept it silently.
+    // A class is written through its fields, so its `this` is never assigned whole.
     SECTION( "`this` cannot be assigned" )
     {
         const Typed p( "class Buffer { u8* ptr; ~Buffer() { this = nullptr; } };\ni32 main() { return 0; }" );
 
         INFO( p.rendered() );
-        REQUIRE_FALSE( p.clean() );
         REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`this` cannot be assigned whole in a `class`" ) != std::string::npos );
     }
 
     SECTION( "a destructor returns nothing" )
@@ -2314,6 +2390,239 @@ TEST_CASE( "signatures_type_an_interface_and_what_implements_it", "[sema][interf
     }
 
     REQUIRE( p.type_name( p.nth( Node_kind::Param_decl, 0 ) ) != "<none>" );
+}
+
+// A block is for one named type: a built-in, or an aggregate or enum the block can name whole.
+TEST_CASE( "signatures_declare_an_implements_block", "[sema][interfaces][implements_for]" )
+{
+    const std::string hashable = "interface Hashable { u64 hash() const; };\n";
+
+    // A struct or class is another package's: its own would write `implements` where it is declared.
+    SECTION( "every built-in type, and a type with no type parameters" )
+    {
+        const std::string kl = "struct P { i32 v; };\nclass C { i32 v; public C() { v = 0; } };\nenum E { A, B };\n";
+
+        for( const char* type : { "i8", "u64", "f32", "f64", "bool", "Own", "kl::P", "kl::C", "kl::E" } )
+        {
+            const Typed p(
+                { { "main.kl",
+                    "import kl::kinds;\n" + hashable + "enum Own { A, B };\nimplements Hashable for " + type +
+                        " { u64 hash() const { return 1; } };\ni32 main() { return 0; }\n" },
+                  { "kl/kinds.kl", kl } },
+                prelude_source()
+            );
+
+            INFO( type << "\n" << p.rendered() );
+            REQUIRE( p.clean() );
+            REQUIRE( p.type_name( p.nth( Node_kind::Implements_decl, 0 ) ) == type );
+        }
+    }
+
+    // `self` in a method is refused by name; the receiver is the type itself, never an interface.
+    SECTION( "each method's receiver is the type" )
+    {
+        const Typed p( hashable + "implements Hashable for i32 { u64 hash() const { return 1; } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.type_name( p.nth( Node_kind::Param_decl, 1 ) ) == "i32" );
+    }
+
+    SECTION( "anything else is refused once, at the type" )
+    {
+        const std::string_view help =
+            "a block is for a built-in type, or a `struct`, `class` or `enum` with no type parameters";
+
+        struct Case
+        {
+            const char* type;
+            const char* message;
+        };
+
+        const Case cases[] = {
+            { "i32*", "`i32*` cannot implement an interface through a block" },
+            { "const i32*", "`const i32*` cannot implement an interface through a block" },
+            { "i32[*]", "`i32[*]` cannot implement an interface through a block" },
+            { "fn( i32 ) -> i32", "`fn( i32 ) -> i32` cannot implement an interface through a block" },
+            { "Pair<i32>", "`Pair<i32>` cannot implement an interface through a block" },
+            { "Hashable", "`Hashable` cannot implement an interface through a block" },
+        };
+
+        for( const Case& c : cases )
+        {
+            const Typed p(
+                hashable + "struct Pair<T> where T : Copyable { T a; };\n" + "implements Hashable for " + c.type +
+                " { u64 hash() const { return 1; } };\ni32 main() { return 0; }"
+            );
+
+            INFO( c.type << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( c.message ) != std::string::npos );
+            REQUIRE( p.rendered().find( help ) != std::string::npos );
+            REQUIRE( p.rendered().find( "held by value" ) == std::string::npos );
+            REQUIRE_FALSE( p.types().table().implements(
+                p.types().type_of( p.nth( Node_kind::Implements_decl, 0 ) ),
+                p.types().type_of( p.nth( Node_kind::Interface_decl, 0 ) )
+            ) );
+        }
+    }
+
+    SECTION( "an unknown type, or a non-interface, as anywhere else" )
+    {
+        const char* cases[][2] = {
+            { "implements Hashable for Nope { };", "unknown type `Nope`" },
+            { "implements i32 for u8 { };", "`i32` is not an interface" },
+            { "implements Missing for u8 { };", "unknown type `Missing`" },
+        };
+
+        for( const auto& c : cases )
+        {
+            const Typed p( hashable + c[0] + "\ni32 main() { return 0; }" );
+
+            INFO( c[0] << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( c[1] ) != std::string::npos );
+        }
+    }
+}
+
+// The orphan rule: a block is written where its interface or its type is declared, and a built-in
+// type is the prelude's. So two packages can never both make one type conform to one interface.
+TEST_CASE( "signatures_place_a_block_beside_its_interface_or_its_type", "[sema][interfaces][implements_for][packages]" )
+{
+    const std::string prelude = std::string( prelude_source() ) + "interface Sized { u64 size() const; };\n";
+    const std::string kl      = "interface Measured { f64 measure() const; };\n"
+                                "struct Square { f64 side; };\n"
+                                "implements Measured for f64 { f64 measure() const { return this; } };\n";
+
+    const std::string_view refused = "must be in the package that declares";
+
+    SECTION( "the interface's package, or the type's, may write it" )
+    {
+        const Typed p(
+            { { "main.kl",
+                "import kl::shapes;\n"
+                "enum Size { Small, Large };\n"
+                "interface Named { i32 id() const; };\n"
+                "implements kl::Measured for Size { f64 measure() const { return 1.0; } };\n"
+                "implements Named for kl::Square { i32 id() const { return 1; } };\n"
+                "implements Named for i32 { i32 id() const { return this; } };\n"
+                "implements Sized for Size { u64 size() const { return 1; } };\n"
+                "i32 main() { return 0; }\n" },
+              { "kl/shapes.kl", kl } },
+            prelude
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // Its own struct or class says what it implements where it is declared, so a block for one is
+    // only ever the interface's package reaching a type it cannot edit. An enum has no other way.
+    SECTION( "nor may it write one for a struct or class of its own" )
+    {
+        struct Case
+        {
+            const char* block;
+            const char* message;
+            const char* help;
+        };
+
+        const Case cases[] = {
+            { "implements kl::Measured for Rod { f64 measure() const { return this.length; } };",
+              "`Rod` is declared in this package, so a block cannot be written for it",
+              "write `implements kl::Measured` where `Rod` is declared" },
+            { "implements Sized for Gauge { u64 size() const { return 1; } };",
+              "`Gauge` is declared in this package, so a block cannot be written for it",
+              "write `implements Sized` where `Gauge` is declared" },
+        };
+
+        for( const Case& c : cases )
+        {
+            const Typed p(
+                { { "main.kl",
+                    std::string( "import kl::shapes;\n"
+                                 "struct Rod { f64 length; };\n"
+                                 "class Gauge { i32 v; public Gauge() { v = 0; } };\n" ) +
+                        c.block + "\ni32 main() { return 0; }\n" },
+                  { "kl/shapes.kl", kl } },
+                prelude
+            );
+
+            INFO( c.block << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( c.message ) != std::string::npos );
+            REQUIRE( p.rendered().find( c.help ) != std::string::npos );
+            REQUIRE( p.types().conformances().conformances.size() == 1 ); // kl's own, for f64
+        }
+    }
+
+    // A package is all its files, not the one the type is declared in.
+    SECTION( "even from another of its files" )
+    {
+        const Typed p(
+            { { "main.kl", "import kl::shapes;\nimport kl::more;\ni32 main() { return 0; }\n" },
+              { "kl/shapes.kl", kl },
+              { "kl/more.kl",
+                "import kl::shapes;\nimplements Measured for Square { f64 measure() const { return this.side; } };\n" } },
+            prelude
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`kl::Square` is declared in this package" ) != std::string::npos );
+    }
+
+    SECTION( "a package that declares neither may not" )
+    {
+        struct Case
+        {
+            const char* block;
+            const char* message;
+            const char* help;
+        };
+
+        const Case cases[] = {
+            { "implements kl::Measured for i32 { f64 measure() const { return 1.0; } };",
+              "a block for `i32` must be in the package that declares `i32` or `Measured`",
+              "two packages could otherwise each make `i32` a `Measured`" },
+            { "implements kl::Measured for kl::Square { f64 measure() const { return 1.0; } };",
+              "a block for `kl::Square` must be in the package that declares `kl::Square` or `Measured`",
+              "two packages could otherwise each make `kl::Square` a `Measured`" },
+            { "implements Sized for i32 { u64 size() const { return 1; } };",
+              "a block for `i32` must be in the package that declares `i32` or `Sized`",
+              "two packages could otherwise each make `i32` a `Sized`" },
+        };
+
+        for( const Case& c : cases )
+        {
+            const Typed p(
+                { { "main.kl", std::string( "import kl::shapes;\n" ) + c.block + "\ni32 main() { return 0; }\n" },
+                  { "kl/shapes.kl", kl } },
+                prelude
+            );
+
+            INFO( c.block << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( c.message ) != std::string::npos );
+            REQUIRE( p.rendered().find( c.help ) != std::string::npos );
+            REQUIRE( p.types().conformances().conformances.size() == 1 ); // kl's own, for f64
+        }
+    }
+
+    // Built-in types are the prelude's, so another package needs an interface of its own.
+    SECTION( "nor may a package give a prelude interface to a built-in" )
+    {
+        const Typed p(
+            { { "main.kl", "import kl::shapes;\ni32 main() { return 0; }\n" },
+              { "kl/shapes.kl", kl + "implements Sized for u8 { u64 size() const { return 1; } };\n" } },
+            prelude
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( refused ) != std::string::npos );
+    }
 }
 
 TEST_CASE( "signatures_refuse_an_interface_held_by_value", "[sema][interfaces]" )

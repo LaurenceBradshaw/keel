@@ -1,0 +1,67 @@
+error: `Hashable` has no method `rehash`
+  --> sema/errors_implements_for.kl:18:9
+   |
+18 |     u64 rehash() const { return 2; }
+   |         ^^^^^^ a block holds only the methods of the interface it implements
+
+error: `i64` implements `Hashable` but has no method `hash`
+  --> sema/errors_implements_for.kl:22:12
+   |
+22 | implements Hashable for i64
+   |            ^^^^^^^^ add `u64 hash() const` to the block
+
+error: `bool` already implements `Hashable`
+  --> sema/errors_implements_for.kl:32:12
+   |
+32 | implements Hashable for bool
+   |            ^^^^^^^^
+
+error: `Q` is declared in this package, so a block cannot be written for it
+  --> sema/errors_implements_for.kl:43:25
+   |
+43 | implements Hashable for Q
+   |                         ^ write `implements Hashable` where `Q` is declared
+
+error: `i32*` cannot implement an interface through a block
+  --> sema/errors_implements_for.kl:49:25
+   |
+49 | implements Hashable for i32*
+   |                         ^^^^ a block is for a built-in type, or a `struct`, `class` or `enum` with no type parameters
+
+error: `Pair<i32>` cannot implement an interface through a block
+  --> sema/errors_implements_for.kl:54:25
+   |
+54 | implements Hashable for Pair<i32>
+   |                         ^^^^^^^^^ a block is for a built-in type, or a `struct`, `class` or `enum` with no type parameters
+
+error: `Hashable` cannot implement an interface through a block
+  --> sema/errors_implements_for.kl:59:25
+   |
+59 | implements Hashable for Hashable
+   |                         ^^^^^^^^ a block is for a built-in type, or a `struct`, `class` or `enum` with no type parameters
+
+error: `self` is written only inside an `interface`
+  --> sema/errors_implements_for.kl:69:9
+   |
+69 |         self copy = this;
+   |         ^^^^ write `u8`, the type's own name
+
+error: `i32` is not an interface
+  --> sema/errors_implements_for.kl:75:12
+   |
+75 | implements i32 for u16
+   |            ^^^ only an interface can be implemented
+
+error: `Colour` has no methods
+  --> sema/errors_implements_for.kl:99:5
+   |
+99 |     c.hash();
+   |     ^ `hash` is reached only as a `Hashable`: through a `where T : Hashable` parameter, or a `Hashable*`
+
+error: `i32` has no methods
+   --> sema/errors_implements_for.kl:100:5
+    |
+100 |     x.hash();
+    |     ^ `hash` is reached only as a `Hashable`: through a `where T : Hashable` parameter, or a `Hashable*`
+
+11 errors generated

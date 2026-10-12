@@ -78,6 +78,7 @@ enum class Declaration_kind : u8
     Function,
     Variable,
     Interface,
+    Implements, // `implements Shape for T { ... };`
 };
 
 // Which parse function a file-scope declaration needs, and where. Nothing is built.

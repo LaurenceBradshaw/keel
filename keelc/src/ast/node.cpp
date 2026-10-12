@@ -156,6 +156,8 @@ std::string_view node_kind_name( Node_kind kind )
         return "Interface_decl";
     case Node_kind::Implements_list:
         return "Implements_list";
+    case Node_kind::Implements_decl:
+        return "Implements_decl";
 
     case Node_kind::Count:
         break;

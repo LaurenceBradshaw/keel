@@ -168,6 +168,10 @@ enum class Node_kind : u16
     Interface_decl,
     // children: the interfaces' types, as written after `implements`.
     Implements_list,
+    // `implements Shape for i32 { ... };`. aux: invalid, as it declares no name; children: the
+    // Type_param_list slot, always invalid for now, the Implements_list holding the interface, the
+    // type it is for, then the Method_decls.
+    Implements_decl,
 
     Count
 };
@@ -204,7 +208,7 @@ constexpr bool is_function_like( Node_kind kind )
 
 constexpr bool has_members( Node_kind kind )
 {
-    return is_aggregate( kind ) || kind == Node_kind::Interface_decl;
+    return is_aggregate( kind ) || kind == Node_kind::Interface_decl || kind == Node_kind::Implements_decl;
 }
 
 struct Node

@@ -73,6 +73,18 @@ std::optional<Conformance_problem> answer(
             continue;
         }
 
+        const bool explicit_params_ref_error = std::any_of(
+            ast.explicit_params( member ).begin(),
+            ast.explicit_params( member ).end(),
+            [&]( Node_id param ) { return table.references_error( recorded_type( recorded, param ) ); }
+        );
+
+        if( table.references_error( recorded_type( recorded, member ) ) || explicit_params_ref_error )
+        {
+            found = member;
+            return std::nullopt;
+        }
+
         if( !found.is_valid() )
         {
             found = member;
@@ -112,6 +124,19 @@ std::optional<Conformance_problem> answer(
     return nearest;
 }
 
+// Whether `conformed` stands for `type`: itself, or the generic declaration `type` instantiates.
+bool conforms_as( const Type_table& table, Type_id conformed, Type_id type )
+{
+    if( conformed == type )
+    {
+        return true;
+    }
+
+    const bool declared = table.is_struct( type ) || table.is_enum( type );
+    return declared && ( table.is_struct( conformed ) || table.is_enum( conformed ) ) &&
+           table.get( conformed ).declaration == table.get( type ).declaration;
+}
+
 } // namespace
 
 const Conformance* Conformances::find( Node_id implementer, Type_id interface ) const
@@ -127,11 +152,24 @@ const Conformance* Conformances::find( Node_id implementer, Type_id interface ) 
     return nullptr;
 }
 
-Node_id Conformances::method_for( Node_id implementer, Node_id requirement ) const
+const Conformance* Conformances::of( const Type_table& table, Type_id type, Type_id interface ) const
 {
     for( const Conformance& conformance : conformances )
     {
-        if( conformance.implementer != implementer )
+        if( conformance.interface == interface && conforms_as( table, conformance.type, type ) )
+        {
+            return &conformance;
+        }
+    }
+
+    return nullptr;
+}
+
+Node_id Conformances::method_for( const Type_table& table, Type_id type, Node_id requirement ) const
+{
+    for( const Conformance& conformance : conformances )
+    {
+        if( !conforms_as( table, conformance.type, type ) )
         {
             continue;
         }
@@ -148,12 +186,117 @@ Node_id Conformances::method_for( Node_id implementer, Node_id requirement ) con
     return Node_id {};
 }
 
+namespace
+{
+
+// The conformance `written` declares for `type`, whose methods are `implementer`'s members.
+void conform(
+    const Ast&               ast,
+    Type_table&              table,
+    std::span<const Type_id> recorded,
+    Node_id                  implementer,
+    Node_id                  written,
+    Type_id                  type,
+    Conformances&            result
+)
+{
+    const Type_id interface = recorded_type( recorded, written );
+
+    if( !interface.is_valid() || !table.is_interface( interface ) )
+    {
+        return; // reported where it was resolved
+    }
+
+    if( result.of( table, type, interface ) != nullptr )
+    {
+        result.errors.push_back(
+            { .problem     = Conformance_problem::Repeated,
+              .at          = ast.span( written ),
+              .implementer = implementer,
+              .interface   = interface,
+              .self        = type }
+        );
+        return;
+    }
+
+    const Bindings self = { { table.self_of( table.get( interface ).declaration ).v, type } };
+
+    Conformance conformance {
+        .implementer = implementer, .type = type, .interface = interface, .requirements = {}, .methods = {}
+    };
+
+    for( const Node_id requirement : ast.members( table.get( interface ).declaration ) )
+    {
+        // A static or generic requirement was refused where it was declared; nothing answers one.
+        const bool refused = ast.is_static_method( requirement ) || ast.own_type_param_list( requirement ).is_valid();
+
+        Node_id                                  found;
+        const std::optional<Conformance_problem> problem =
+            answer( ast, recorded, implementer, requirement, found, table, self );
+
+        conformance.requirements.push_back( requirement );
+        conformance.methods.push_back( problem ? Node_id {} : found );
+
+        if( problem && !refused )
+        {
+            result.errors.push_back( {
+                .problem     = *problem,
+                .at          = ast.span( written ),
+                .implementer = implementer,
+                .interface   = interface,
+                .requirement = requirement,
+                .found       = found,
+                .self        = type,
+            } );
+        }
+    }
+
+    if( ast.kind( implementer ) == Node_kind::Implements_decl )
+    {
+        for( const Node_id member : ast.members( implementer ) )
+        {
+            const bool requested = std::ranges::any_of(
+                conformance.requirements, [&]( Node_id requirement ) { return ast.name( requirement ) == ast.name( member ); }
+            );
+
+            if( ast.kind( member ) == Node_kind::Method_decl && !requested )
+            {
+                result.errors.push_back( {
+                    .problem     = Conformance_problem::Unrequested,
+                    .at          = ast.name_span( member ),
+                    .implementer = implementer,
+                    .interface   = interface,
+                    .found       = member,
+                    .self        = type,
+                } );
+            }
+        }
+    }
+
+    result.conformances.push_back( std::move( conformance ) );
+}
+
+} // namespace
+
 Conformances check_conformances( const Ast& ast, Type_table& table, std::span<const Type_id> recorded )
 {
     Conformances result;
 
     for( const Node_id decl : ast.declarations( ast.root() ) )
     {
+        if( ast.kind( decl ) == Node_kind::Implements_decl )
+        {
+            const Type_id type = recorded_type( recorded, decl );
+
+            // A refused block conforms nothing.
+            if( type.is_valid() && !table.is_error( type ) )
+            {
+                conform( ast, table, recorded, decl, ast.implemented( decl )[0], type, result );
+            }
+
+            continue;
+        }
+
         if( !is_aggregate( ast.kind( decl ) ) )
         {
             continue;
@@ -161,56 +304,7 @@ Conformances check_conformances( const Ast& ast, Type_table& table, std::span<co
 
         for( const Node_id written : ast.implemented( decl ) )
         {
-            const Type_id interface = recorded_type( recorded, written );
-
-            if( !interface.is_valid() || !table.is_interface( interface ) )
-            {
-                continue; // reported where it was resolved
-            }
-
-            if( result.find( decl, interface ) != nullptr )
-            {
-                result.errors.push_back(
-                    { .problem     = Conformance_problem::Repeated,
-                      .at          = ast.span( written ),
-                      .implementer = decl,
-                      .interface   = interface }
-                );
-                continue;
-            }
-
-            const Bindings self = { { table.self_of( table.get( interface ).declaration ).v, recorded_type( recorded, decl ) }
-            };
-
-            Conformance conformance { .implementer = decl, .interface = interface, .requirements = {}, .methods = {} };
-
-            for( const Node_id requirement : ast.members( table.get( interface ).declaration ) )
-            {
-                // A static or generic requirement was refused where it was declared; nothing answers one.
-                const bool refused = ast.is_static_method( requirement ) || ast.own_type_param_list( requirement ).is_valid();
-
-                Node_id                                  found;
-                const std::optional<Conformance_problem> problem =
-                    answer( ast, recorded, decl, requirement, found, table, self );
-
-                conformance.requirements.push_back( requirement );
-                conformance.methods.push_back( problem ? Node_id {} : found );
-
-                if( problem && !refused )
-                {
-                    result.errors.push_back( {
-                        .problem     = *problem,
-                        .at          = ast.span( written ),
-                        .implementer = decl,
-                        .interface   = interface,
-                        .requirement = requirement,
-                        .found       = found,
-                        .self        = recorded_type( recorded, decl ),
-                    } );
-                }
-            }
-
-            result.conformances.push_back( std::move( conformance ) );
+            conform( ast, table, recorded, decl, written, recorded_type( recorded, decl ), result );
         }
     }
 
@@ -272,7 +366,7 @@ void report_conformance_errors(
 {
     for( const Conformance_error& error : errors )
     {
-        const std::string_view type      = interner.text( ast.name( error.implementer ) );
+        const std::string_view type      = table.base_name( error.self );
         const std::string_view interface = table.name( error.interface );
 
         if( error.problem == Conformance_problem::Repeated )
@@ -281,14 +375,19 @@ void report_conformance_errors(
             continue;
         }
 
-        const std::string_view method = interner.text( ast.name( error.requirement ) );
-
-        // The requirement as written, without its `;`: what the implementer has to declare.
-        std::string_view wanted = reporter.text( ast.span( error.requirement ) );
-        if( wanted.ends_with( ';' ) )
+        if( error.problem == Conformance_problem::Unrequested )
         {
-            wanted.remove_suffix( 1 );
+            reporter.error_at(
+                error.at,
+                fmt::format( "`{}` has no method `{}`", interface, interner.text( ast.name( error.found ) ) ),
+                "a block holds only the methods of the interface it implements"
+            );
+            continue;
         }
+
+        const bool in_block = ast.kind( error.implementer ) == Node_kind::Implements_decl;
+
+        const std::string_view method = interner.text( ast.name( error.requirement ) );
 
         switch( error.problem )
         {
@@ -296,7 +395,9 @@ void report_conformance_errors(
             reporter.error_at(
                 error.at,
                 fmt::format( "`{}` implements `{}` but has no method `{}`", type, interface, method ),
-                fmt::format( "add `{}` to `{}`", wanted, type )
+                in_block
+                    ? fmt::format( "add `{}` to the block", substituted_requirement( ast, interner, table, recorded, error ) )
+                    : fmt::format( "add `{}` to `{}`", substituted_requirement( ast, interner, table, recorded, error ), type )
             );
             break;
         case Conformance_problem::Mismatched:
@@ -335,6 +436,7 @@ void report_conformance_errors(
             );
             break;
         case Conformance_problem::Repeated:
+        case Conformance_problem::Unrequested:
             break;
         }
     }
@@ -393,10 +495,16 @@ TEST_CASE( "conformances_record_the_method_answering_each_requirement", "[sema][
     REQUIRE( sq_shape->methods[0] == members[4] ); // area
     REQUIRE( sq_shape->methods[1] == members[2] ); // the `grow` that matches, not the first of the name
 
-    REQUIRE( conformances.method_for( square, requirements[1] ) == members[2] );
-    REQUIRE( conformances.method_for( square, ast.members( named_decl )[0] ) == members[3] );
-    REQUIRE( conformances.method_for( box, requirements[0] ) == ast.members( box )[1] );
-    REQUIRE_FALSE( conformances.method_for( square, square ).is_valid() );
+    const Type_table& table    = p.types().table();
+    const Type_id     sq_type  = p.types().type_of( square );
+    const Type_id     box_type = p.types().type_of( box );
+
+    REQUIRE( conformances.of( table, sq_type, shape ) == sq_shape );
+    REQUIRE( conformances.of( table, box_type, named ) == nullptr );
+    REQUIRE( conformances.method_for( table, sq_type, requirements[1] ) == members[2] );
+    REQUIRE( conformances.method_for( table, sq_type, ast.members( named_decl )[0] ) == members[3] );
+    REQUIRE( conformances.method_for( table, box_type, requirements[0] ) == ast.members( box )[1] );
+    REQUIRE_FALSE( conformances.method_for( table, sq_type, square ).is_valid() );
 }
 
 // Each at the interface as written after `implements`, with the requirement quoted in the help.
@@ -552,12 +660,12 @@ TEST_CASE( "conformances_substitute_the_implementer_for_self", "[sema][interface
     const std::string same =
         "interface Same { bool same( const ref self other ) const; self larger( const ref self other ) const; };\n";
 
-    SECTION( "written as the implementer's name, or as `self`" )
+    SECTION( "written as the implementer's name" )
     {
         const Typed p(
             same + "struct P implements Same { i32 v;\n"
                    "    bool same( const ref P other ) const { return v == other.v; }\n"
-                   "    self larger( const ref self other ) const { return P { v + other.v }; }\n"
+                   "    P larger( const ref P other ) const { return P { v + other.v }; }\n"
                    "};\n"
                    "i32 main() { return 0; }"
         );
@@ -572,13 +680,42 @@ TEST_CASE( "conformances_substitute_the_implementer_for_self", "[sema][interface
         const Typed p(
             same + "struct B<T> implements Same where T : Copyable { T v;\n"
                    "    bool same( const ref B<T> other ) const { return false; }\n"
-                   "    B<T> larger( const ref self other ) const { return B { other.v }; }\n"
+                   "    B<T> larger( const ref B<T> other ) const { return B { other.v }; }\n"
                    "};\n"
                    "i32 main() { return 0; }"
         );
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
+    }
+
+    // Refused where it is written, so the conformance does not report the method a second time.
+    SECTION( "the implementer may not write `self`" )
+    {
+        const Typed p(
+            same + "struct P implements Same { i32 v;\n"
+                   "    bool same( const ref self other ) const { return true; }\n"
+                   "    P larger( const ref P other ) const { return P { v }; }\n"
+                   "};\n"
+                   "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "write `P`, the type's own name" ) != std::string::npos );
+        REQUIRE( p.types().conformances().errors.empty() );
+    }
+
+    SECTION( "a missing method's help is the requirement as the implementer must write it" )
+    {
+        const Typed p(
+            same + "struct P implements Same { i32 v; P larger( const ref P other ) const { return P { v }; } };\n"
+                   "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "add `bool same( const ref P other ) const` to `P`" ) != std::string::npos );
     }
 
     SECTION( "a mismatch quotes the requirement as the implementer must write it" )
@@ -625,6 +762,146 @@ TEST_CASE( "conformances_substitute_the_implementer_for_self", "[sema][interface
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "a `const ref T` with `T : Same` may call it" ) != std::string::npos );
+    }
+}
+
+// A block conforms the type after `for`: its methods answer, and the type's own do not.
+TEST_CASE( "conformances_check_an_implements_block", "[sema][interfaces][implements_for]" )
+{
+    const std::string hashable = "interface Hashable { u64 hash() const; };\n";
+
+    // The struct is another package's, since a package's own declares what it implements.
+    SECTION( "a built-in, a struct and an enum, each answered by its block" )
+    {
+        Typed p(
+            { { "main.kl",
+                "import kl::point;\n" + hashable +
+                    "enum Colour { Red, Green };\n"
+                    "implements Hashable for i32 { u64 hash() const { return 1; } };\n"
+                    "implements Hashable for kl::P { u64 hash() const { return wrap<u64>( this.v ); } };\n"
+                    "implements Hashable for Colour { u64 hash() const { return 3; } };\n"
+                    "i32 main() { return 0; }\n" },
+              { "kl/point.kl", "struct P { i32 v; };\n" } },
+            prelude_source()
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const Type_id interface = p.types().type_of( p.nth( Node_kind::Interface_decl, 0 ) );
+        const char*   types[]   = { "i32", "kl::P", "Colour" };
+
+        REQUIRE( p.types().conformances().conformances.size() == 3 );
+
+        for( std::size_t i = 0; i < 3; ++i )
+        {
+            const Node_id block = p.nth( Node_kind::Implements_decl, i );
+
+            INFO( types[i] );
+            REQUIRE( p.type_name( block ) == types[i] ); // the block's node records the type it is for
+            REQUIRE( p.types().table().implements( p.types().type_of( block ), interface ) );
+
+            const Conformance* conformance = p.types().conformances().find( block, interface );
+            REQUIRE( conformance != nullptr );
+            REQUIRE( conformance->methods.size() == 1 );
+            REQUIRE( conformance->methods[0] == p.ast().members( block )[0] );
+        }
+    }
+
+    // `P`'s own `hash` is a method of `P`, not an answer: only an `implements` on `P` makes it one.
+    SECTION( "the type's own method of the name does not answer" )
+    {
+        const Typed p(
+            { { "main.kl", "import kl::point;\n" + hashable + "implements Hashable for kl::P { };\ni32 main() { return 0; }\n"
+              },
+              { "kl/point.kl", "struct P { i32 v; u64 hash() const { return 1; } };\n" } },
+            prelude_source()
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`P` implements `Hashable` but has no method `hash`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "add `u64 hash() const` to the block" ) != std::string::npos );
+    }
+
+    SECTION( "a method the interface does not declare, at its name" )
+    {
+        const Typed p(
+            hashable + "implements Hashable for i32 { u64 hash() const { return 1; } void reset() { } };\n"
+                       "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`Hashable` has no method `reset`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "a block holds only the methods of the interface it implements" ) != std::string::npos );
+        REQUIRE( p.rendered().find( ":2:" ) != std::string::npos ); // at `reset`, on the block's line
+    }
+
+    SECTION( "a mismatch names the type, not the block" )
+    {
+        const Typed p(
+            hashable + "implements Hashable for i32 { u32 hash() const { return 1; } };\n"
+                       "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`i32`'s `hash` does not match the one `Hashable` declares" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`Hashable` wants `u64 hash() const`" ) != std::string::npos );
+    }
+
+    SECTION( "a type conforms once, whichever way it says so" )
+    {
+        const char* sources[] = {
+            "implements Hashable for i32 { u64 hash() const { return 1; } };\n"
+            "implements Hashable for i32 { u64 hash() const { return 2; } };\n",
+            "enum Colour { Red }; implements Hashable for Colour { u64 hash() const { return 1; } };\n"
+            "implements Hashable for Colour { u64 hash() const { return 2; } };\n",
+        };
+
+        for( const char* source : sources )
+        {
+            const Typed p( hashable + source + "i32 main() { return 0; }" );
+
+            INFO( p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( "already implements `Hashable`" ) != std::string::npos );
+            REQUIRE( p.rendered().find( ":3:" ) != std::string::npos ); // at the second
+        }
+    }
+
+    // A struct's own `implements` and a block for it are in two packages, which import each other.
+    SECTION( "a struct's `implements` and the interface's block for it" )
+    {
+        const Typed p(
+            { { "main.kl", "import kl::hash;\ni32 main() { return 0; }\n" },
+              { "kl/hash.kl",
+                "import geo::point;\n"
+                "interface Hashable { u64 hash() const; };\n"
+                "implements Hashable for geo::Q { u64 hash() const { return 2; } };\n" },
+              { "geo/point.kl",
+                "import kl::hash;\nstruct Q implements kl::Hashable { i32 v; u64 hash() const { return 1; } };\n" } },
+            prelude_source()
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`Q` already implements `Hashable`" ) != std::string::npos );
+    }
+
+    // A refused block conforms nothing, so nothing is said about its methods either.
+    SECTION( "a block whose type is refused is not checked" )
+    {
+        const Typed p(
+            hashable + "implements Hashable for i32* { };\n"
+                       "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "cannot implement an interface through a block" ) != std::string::npos );
+        REQUIRE( p.types().conformances().conformances.empty() );
     }
 }
 

@@ -134,6 +134,10 @@ Declaration_scan Lookahead::declaration_head( u32 at, Scan_site site )
     {
         return make_head( Declaration_kind::Interface, at );
     }
+    else if( cursor_.check_keyword( Keyword::Implements ) )
+    {
+        return make_head( Declaration_kind::Implements, at );
+    }
 
     const bool is_extern = cursor_.match_keyword( Keyword::Extern );
 
@@ -1785,6 +1789,9 @@ TEST_CASE( "lookahead_recognises_each_declaration_head", "[scan]" )
         require_declaration( "class C<T> where T : Copyable { T a; };", Declaration_kind::Aggregate, "class" );
         require_declaration( "enum E { A, B };", Declaration_kind::Enum, "enum" );
         require_declaration( "interface Shape { f64 area() const; };", Declaration_kind::Interface, "interface" );
+        require_declaration(
+            "implements Shape for i32 { f64 area() const { return 0.0; } };", Declaration_kind::Implements, "implements"
+        );
         require_declaration( "struct S;", Declaration_kind::Aggregate, "struct" );
     }
 

@@ -1,0 +1,102 @@
+// M9.5: a type declared elsewhere conforms in a block. Each mistake is reported once, where it was
+// made; the package rules, and a block's reach into another package's type, are in
+// sema/implements_for_packages.
+interface Hashable
+{
+    u64 hash() const;
+};
+
+struct Pair<T> where T : Copyable
+{
+    T a;
+};
+
+// A block holds only the interface's methods.
+implements Hashable for u32
+{
+    u64 hash() const { return 1; }
+    u64 rehash() const { return 2; }
+};
+
+// What it leaves out is missing, and the help says where it goes.
+implements Hashable for i64
+{
+};
+
+// A type conforms once.
+implements Hashable for bool
+{
+    u64 hash() const { return 3; }
+};
+
+implements Hashable for bool
+{
+    u64 hash() const { return 4; }
+};
+
+// A struct or class of this package says what it implements where it is declared.
+struct Q
+{
+    i32 v;
+};
+
+implements Hashable for Q
+{
+    u64 hash() const { return 5; }
+};
+
+// Only a built-in type, or a type with no type parameters.
+implements Hashable for i32*
+{
+    u64 hash() const { return 6; }
+};
+
+implements Hashable for Pair<i32>
+{
+    u64 hash() const { return 7; }
+};
+
+implements Hashable for Hashable
+{
+    u64 hash() const { return 8; }
+};
+
+// The type is written by its name, as in any other type's members.
+implements Hashable for u8
+{
+    u64 hash() const
+    {
+        self copy = this;
+        return 9;
+    }
+};
+
+// What is implemented must be an interface.
+implements i32 for u16
+{
+};
+
+// The block's methods are reached only as the interface.
+enum Colour
+{
+    Red,
+};
+
+implements Hashable for Colour
+{
+    u64 hash() const { return 10; }
+};
+
+implements Hashable for i32
+{
+    u64 hash() const { return 11; }
+};
+
+i32 main()
+{
+    Colour c = Colour::Red;
+    i32    x = 1;
+    c.hash();
+    x.hash();
+    return 0;
+}

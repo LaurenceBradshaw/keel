@@ -20,3 +20,7 @@
 {"kind":"declaration","declares":"field","name":"count_","file":"sema/declarations/geo/shapes.kl","line":49,"col":17,"end_col":23,"access":"private","signature":"private u64 count_","parent":"Counter"}
 {"kind":"declaration","declares":"global","name":"drawn","file":"sema/declarations/geo/shapes.kl","line":53,"col":5,"end_col":10,"access":"public","signature":"i32 drawn","doc":"How many shapes have been drawn."}
 {"kind":"declaration","declares":"function","name":"area","file":"sema/declarations/geo/shapes.kl","line":56,"col":5,"end_col":9,"access":"public","signature":"f64 area( Shape s )","doc":"The area of `s`."}
+{"kind":"declaration","declares":"interface","name":"Measured","file":"sema/declarations/geo/shapes.kl","line":68,"col":11,"end_col":19,"access":"public","signature":"interface Measured","doc":"Something with a size."}
+{"kind":"declaration","declares":"method","name":"measure","file":"sema/declarations/geo/shapes.kl","line":71,"col":9,"end_col":16,"access":"public","signature":"public u64 measure() const","parent":"Measured","doc":"How big it is."}
+{"kind":"declaration","declares":"implements","name":"Measured for Shape","file":"sema/declarations/geo/shapes.kl","line":75,"col":25,"end_col":30,"access":"public","signature":"implements Measured for Shape","doc":"A shape measures one."}
+{"kind":"declaration","declares":"method","name":"measure","file":"sema/declarations/geo/shapes.kl","line":78,"col":9,"end_col":16,"access":"public","signature":"public u64 measure() const","parent":"Measured for Shape","doc":"Always one."}

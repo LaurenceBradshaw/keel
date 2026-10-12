@@ -63,3 +63,17 @@ f64 area( Shape s )
             return 0.0;
     }
 }
+
+/// Something with a size.
+interface Measured
+{
+    /// How big it is.
+    u64 measure() const;
+};
+
+/// A shape measures one.
+implements Measured for Shape
+{
+    /// Always one.
+    u64 measure() const { return 1; }
+};

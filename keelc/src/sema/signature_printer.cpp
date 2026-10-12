@@ -102,6 +102,8 @@ std::string Signature_printer::declaration( Node_id decl ) const
     }
     case Node_kind::Interface_decl:
         return fmt::format( "interface {}", text( ast_.name( decl ) ) );
+    case Node_kind::Implements_decl:
+        return fmt::format( "implements {} for {}", type( ast_.implemented( decl )[0] ), type( ast_.implementer( decl ) ) );
     case Node_kind::Enum_decl:
     {
         const Node_id underlying = ast_.underlying_type( decl );

@@ -943,6 +943,12 @@ bool Type_table::is_never( Type_id id ) const
     return get( id ).kind == Type_kind::Never;
 }
 
+bool Type_table::is_builtin( Type_id id ) const
+{
+    assert( id.is_valid() );
+    return id == bool_ || is_integer( id ) || is_float( id );
+}
+
 bool Type_table::is_void( Type_id id ) const
 {
     assert( id.is_valid() );
@@ -1109,21 +1115,44 @@ void Type_table::declare_implements( Node_id aggregate, Type_id interface )
     }
 }
 
+void Type_table::declare_implements( Type_id builtin, Type_id interface )
+{
+    std::vector<Type_id>& implemented = builtin_implements_[builtin.v];
+    if( std::find( implemented.begin(), implemented.end(), interface ) == implemented.end() )
+    {
+        implemented.push_back( interface );
+    }
+}
+
 bool Type_table::implements( Type_id type, Type_id interface ) const
 {
-    if( !type.is_valid() || !is_struct( type ) || !is_interface( interface ) )
+    if( !type.is_valid() || !is_interface( interface ) )
     {
         return false;
     }
 
-    const auto it = implements_.find( get( type ).declaration.v );
-    if( it == implements_.end() )
+    if( is_struct( type ) || is_enum( type ) )
     {
-        return false;
-    }
+        const auto it = implements_.find( get( type ).declaration.v );
+        if( it == implements_.end() )
+        {
+            return false;
+        }
 
-    const std::vector<Type_id>& implemented = it->second;
-    return std::find( implemented.begin(), implemented.end(), interface ) != implemented.end();
+        const std::vector<Type_id>& implemented = it->second;
+        return std::find( implemented.begin(), implemented.end(), interface ) != implemented.end();
+    }
+    else
+    {
+        const auto it = builtin_implements_.find( type.v );
+        if( it == builtin_implements_.end() )
+        {
+            return false;
+        }
+
+        const std::vector<Type_id>& implemented = it->second;
+        return std::find( implemented.begin(), implemented.end(), interface ) != implemented.end();
+    }
 }
 
 void keel::Type_table::declare_naming_self( Node_id interface, Node_id method )

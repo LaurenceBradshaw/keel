@@ -1,0 +1,123 @@
+// M9.5: a type that cannot say what it implements where it is declared conforms in a block: a
+// built-in, an enum and an enum owning a class. Each is reached through a bound, where the instance
+// calls the block's method directly, and through the vtable, as a `Measured*`, a `ref Measured` and
+// a `box<Measured>`, which drops the enum's payload through the vtable. Each `grow` assigns `this`
+// whole, which drops the payload it replaces. Another package's struct and class are in
+// codegen/implements_for_packages. Exits with the failing check.
+interface Measured
+{
+    i64 measure() const;
+    void grow( i64 by );
+};
+
+enum Size
+{
+    Small,
+    Large,
+};
+
+i32 drops = 0;
+
+class Tracked
+{
+    public i64 n;
+
+    public Tracked( i64 v ) { n = v; }
+
+    ~Tracked() { drops = drops + 1; }
+};
+
+enum Held
+{
+    Full( Tracked t ),
+    Empty,
+};
+
+implements Measured for i64
+{
+    i64 measure() const { return this; }
+    void grow( i64 by ) { this = this + by; }
+};
+
+implements Measured for Size
+{
+    i64 measure() const
+    {
+        switch( this )
+        {
+            case Size::Small:
+                return 1;
+            case Size::Large:
+                return 100;
+        }
+    }
+
+    void grow( i64 by ) { this = Size::Large; }
+};
+
+implements Measured for Held
+{
+    i64 measure() const
+    {
+        switch( this )
+        {
+            case Held::Full( t ):
+                return t.n;
+            case Held::Empty:
+                return 0;
+        }
+    }
+
+    void grow( i64 by ) { this = Held::Empty; }
+};
+
+i64 total<T>( const ref T a, const ref T b ) where T : Measured
+{
+    return a.measure() + b.measure();
+}
+
+void grow_twice<T>( ref T v ) where T : Measured
+{
+    v.grow( 1 );
+    v.grow( 1 );
+}
+
+i64 through( const ref Measured m ) { return m.measure(); }
+
+void enlarge( ref Measured m ) { m.grow( 2 ); }
+
+i32 main()
+{
+    i64  n = 3;
+    Size s = Size::Small;
+
+    if( total( n, n ) != 6 ) { return 1; }
+    if( total( s, s ) != 2 ) { return 2; }
+
+    grow_twice( ref n );
+    grow_twice( ref s );
+    if( n != 5 || s != Size::Large ) { return 3; }
+
+    Measured* p = &n;
+    p.grow( 5 );
+    if( p.measure() != 10 || n != 10 ) { return 4; }
+
+    if( through( s ) != 100 ) { return 5; }
+
+    Held h = Held::Full( Tracked( 4 ) );
+    if( through( h ) != 4 ) { return 6; }
+    enlarge( ref h );
+    if( through( h ) != 0 || drops != 1 ) { return 7; }
+
+    box<Measured> b = box<i64>( 7 );
+    b.get().grow( 1 );
+    if( b.get().measure() != 8 ) { return 8; }
+
+    {
+        box<Measured> t = box<Held>( move Held::Full( Tracked( 3 ) ) );
+        if( t.get().measure() != 3 ) { return 9; }
+    }
+    if( drops != 2 ) { return 10; }
+
+    return 0;
+}

@@ -92,6 +92,8 @@ private:
 
     Node_id parse_implements();
     Node_id parse_interface_decl();
+    Node_id parse_implements_decl();
+    Node_id clone_type( Node_id type );
 
     // A `public:` or `private:` label, reported and consumed. False, consuming nothing, otherwise.
     bool skip_access_label( bool is_class );
@@ -182,6 +184,7 @@ private:
     Token_cursor           cursor_;
     Lookahead              lookahead_;
     std::vector<Symbol_id> classes_;
+    Node_id                block_type_; // while in an `implements ... for` block, the type its methods receive
     const Source_manager&  sm_;
     Ast&                   ast_;
     Diagnostics&           diags_;
@@ -532,7 +535,8 @@ Node_id Parser::generic_self( Node_id named, Node_id type_params, Span span )
 // the same nodes a written parameter would be, so nothing downstream learns it was synthesised.
 Node_id Parser::synthesise_receiver( Symbol_id enclosing, Node_id type_params, Span span, bool is_const )
 {
-    const Node_id named = ast_.add( Node_kind::Named_type, span, enclosing.v, {} );
+    const Node_id named =
+        block_type_.is_valid() ? clone_type( block_type_ ) : ast_.add( Node_kind::Named_type, span, enclosing.v, {} );
     const Node_id param = type_params.is_valid() ? generic_self( named, type_params, span ) : named;
     const Node_id mode  = ast_.add( Node_kind::Mode_type, span, static_cast<u32>( Keyword::Ref ), { param } );
     const Node_id type  = is_const ? ast_.add( Node_kind::Const_type, span, 0, { mode } ) : mode;
@@ -696,6 +700,8 @@ Node_id Parser::parse_declaration( const Declaration_head& head )
         return parse_var_decl( head.commit );
     case Declaration_kind::Interface:
         return parse_interface_decl();
+    case Declaration_kind::Implements:
+        return parse_implements_decl();
     }
 
     return error_node( cursor_.peek().span );
@@ -1292,6 +1298,146 @@ Node_id Parser::parse_interface_decl()
         ast_.add( Node_kind::Interface_decl, Span::merge( start, cursor_.previous().span ), name.v, { members } );
     ast_.set_name_span( node, name_span );
     return node;
+}
+
+// A type declared elsewhere conforms here. Every method's receiver is the type after `for`, cloned so
+// each is its own node, as the receiver an aggregate synthesises is.
+Node_id Parser::parse_implements_decl()
+{
+    const Span start = cursor_.peek().span;
+    cursor_.match_keyword( Keyword::Implements );
+
+    const Node_id interface   = parse_type();
+    bool          well_formed = !ast_.broken( interface );
+
+    if( cursor_.check( Token_kind::Comma ) )
+    {
+        const Span comma = cursor_.peek().span;
+        while( cursor_.match( Token_kind::Comma ) )
+        {
+            parse_type();
+        }
+
+        recovery_.error_at(
+            Span::merge( comma, cursor_.previous().span ), "a block implements one interface", "write a block for each"
+        );
+        well_formed = false;
+    }
+
+    Node_id type;
+    if( cursor_.match_keyword( Keyword::For ) )
+    {
+        type = parse_type();
+        well_formed &= !ast_.broken( type );
+    }
+    else
+    {
+        recovery_.error_at(
+            cursor_.peek().span,
+            "expected `for` and the type that implements the interface",
+            fmt::format( "write `implements {} for T {{ ... }}`", sm_.text( ast_.span( interface ) ) )
+        );
+        well_formed = false;
+    }
+
+    if( !recovery_.expect( Token_kind::L_brace ) )
+    {
+        cursor_.match( Token_kind::Semicolon );
+        return error_node( Span::merge( start, cursor_.previous().span ) );
+    }
+
+    // A constructor or destructor is read as one, to be refused as one, only by the type's own name.
+    const Symbol_id enclosing =
+        type.is_valid() && ast_.kind( type ) == Node_kind::Named_type ? ast_.name( type ) : Symbol_id {};
+
+    block_type_ = type;
+    std::vector<Node_id> methods;
+    std::optional<u32>   reported_line;
+    while( !cursor_.check( Token_kind::R_brace ) && !cursor_.at_end() )
+    {
+        if( skip_access_label( true ) )
+        {
+            continue;
+        }
+
+        Member_chunk chunk = lookahead_.next_member( cursor_.position(), enclosing );
+        if( chunk.dropped() )
+        {
+            if( !reported_line || recovery_.line_of( cursor_.tokens()[chunk.dropped_begin] ) != *reported_line )
+            {
+                recovery_.report_dropped(
+                    chunk.dropped_begin,
+                    chunk.dropped_end,
+                    chunk.failure,
+                    chunk.head ? std::optional<u32>( chunk.head->start ) : std::nullopt,
+                    Hint_place::Member
+                );
+            }
+        }
+
+        cursor_.seek( chunk.dropped_end );
+
+        if( !chunk.head.has_value() )
+        {
+            break;
+        }
+
+        const Node_id member = parse_member( *chunk.head, enclosing, Node_id {}, true );
+
+        reported_line = ast_.broken( member ) ? std::optional<u32>( recovery_.line_of( cursor_.previous() ) ) : std::nullopt;
+
+        if( ast_.kind( member ) != Node_kind::Method_decl )
+        {
+            if( !ast_.broken( member ) )
+            {
+                recovery_.error_at(
+                    ast_.span( member ),
+                    "an `implements` block holds only methods",
+                    "the type keeps its fields and constructors where it is declared"
+                );
+            }
+        }
+        else
+        {
+            methods.push_back( member );
+            attach_doc( member, chunk.head->start );
+        }
+    }
+    block_type_ = Node_id {};
+
+    recovery_.expect( Token_kind::R_brace );
+    recovery_.expect( Token_kind::Semicolon );
+
+    if( !well_formed )
+    {
+        return error_node( Span::merge( start, cursor_.previous().span ) );
+    }
+
+    const Node_id list = ast_.add( Node_kind::Implements_list, ast_.span( interface ), 0, { interface } );
+    methods.insert( methods.begin(), { Node_id {}, list, type } );
+
+    const Node_id node =
+        ast_.add( Node_kind::Implements_decl, Span::merge( start, cursor_.previous().span ), Symbol_id {}.v, methods );
+    ast_.set_name_span( node, ast_.span( type ) );
+    return node;
+}
+
+Node_id Parser::clone_type( Node_id type )
+{
+    if( !type.is_valid() )
+    {
+        return type;
+    }
+
+    // Copied out first: each add() invalidates the span children() returns.
+    const std::span<const Node_id> written = ast_.children( type );
+    std::vector<Node_id>           children( written.begin(), written.end() );
+    for( Node_id& child : children )
+    {
+        child = clone_type( child );
+    }
+
+    return ast_.add( ast_.kind( type ), ast_.span( type ), ast_.aux( type ), children );
 }
 
 bool Parser::skip_access_label( bool is_class )
@@ -12221,6 +12367,179 @@ TEST_CASE( "parser_refuses_what_an_interface_cannot_hold", "[parse][interfaces]"
         REQUIRE_FALSE( p.has_errors() );
         REQUIRE( p.children( p.root() ).size() == 2 );
         REQUIRE( p.kind( p.child( p.root(), 1 ) ) == Node_kind::Function_decl );
+    }
+}
+
+TEST_CASE( "parser_parses_an_implements_block", "[parse][interfaces][implements_for]" )
+{
+    const Parsed p( "implements kl::Hashable for i32\n"
+                    "{\n"
+                    "    u64 hash() const { return 1; }\n"
+                    "    void reset() { }\n"
+                    "};\n"
+                    "i32 main() { return 0; }" );
+
+    INFO( p.errors() );
+    REQUIRE_FALSE( p.has_errors() );
+
+    const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Implements_decl );
+
+    REQUIRE( decl.is_valid() );
+    REQUIRE_FALSE( p.ast().name( decl ).is_valid() );
+    REQUIRE_FALSE( p.ast().type_param_list( decl ).is_valid() );
+    REQUIRE( p.text( p.ast().name_span( decl ) ) == "i32" );
+
+    SECTION( "the interface is its one implemented, and the type is its implementer" )
+    {
+        REQUIRE( p.ast().implemented( decl ).size() == 1 );
+        REQUIRE( p.text( p.ast().implemented( decl )[0] ) == "kl::Hashable" );
+        REQUIRE( p.kind( p.ast().implementer( decl ) ) == Node_kind::Named_type );
+        REQUIRE( p.text( p.ast().implementer( decl ) ) == "i32" );
+    }
+
+    SECTION( "each member is a method with a body, enclosed by the block" )
+    {
+        REQUIRE( p.members( decl ).size() == 2 );
+
+        for( const Node_id method : p.members( decl ) )
+        {
+            REQUIRE( p.kind( method ) == Node_kind::Method_decl );
+            REQUIRE( p.ast().body( method ).is_valid() );
+            REQUIRE( p.ast().enclosing_aggregate( method ) == decl );
+            REQUIRE_FALSE( p.ast().is_requirement( method ) );
+        }
+    }
+
+    // A copy, not the node after `for`: each receiver is resolved and recorded on its own.
+    SECTION( "every receiver is the type after `for`, each its own node" )
+    {
+        const Node_id hash  = p.child( p.child( p.members( decl )[0], 1 ), 0 );
+        const Node_id reset = p.child( p.child( p.members( decl )[1], 1 ), 0 );
+
+        REQUIRE( p.kind( p.child( hash, 0 ) ) == Node_kind::Const_type );
+        const Node_id hash_type = p.child( p.child( p.child( hash, 0 ), 0 ), 0 );
+        REQUIRE( p.kind( reset ) == Node_kind::Param_decl );
+        const Node_id reset_type = p.child( p.child( reset, 0 ), 0 );
+
+        for( const Node_id type : { hash_type, reset_type } )
+        {
+            REQUIRE( p.kind( type ) == Node_kind::Named_type );
+            REQUIRE( p.name( type ) == "i32" );
+            REQUIRE( type != p.ast().implementer( decl ) );
+        }
+
+        REQUIRE( hash_type != reset_type );
+    }
+
+    SECTION( "a qualified or generic type is copied whole" )
+    {
+        const Parsed q( "implements Shape for kl::list<i32> { f64 area() const { return 0.0; } };" );
+
+        INFO( q.errors() );
+        REQUIRE_FALSE( q.has_errors() );
+
+        const Node_id block    = find_first( q.ast(), q.root(), Node_kind::Implements_decl );
+        const Node_id receiver = q.child( q.child( q.child( q.child( q.members( block )[0], 1 ), 0 ), 0 ), 0 );
+        const Node_id type     = q.child( receiver, 0 );
+
+        REQUIRE( q.kind( type ) == Node_kind::Generic_type );
+        REQUIRE( q.text( type ) == "kl::list<i32>" );
+        REQUIRE( type != q.ast().implementer( block ) );
+    }
+
+    SECTION( "it has members, but is no aggregate" )
+    {
+        REQUIRE( has_members( Node_kind::Implements_decl ) );
+        REQUIRE_FALSE( is_aggregate( Node_kind::Implements_decl ) );
+    }
+
+    SECTION( "the declarations around it are still read" )
+    {
+        REQUIRE( p.children( p.root() ).size() == 2 );
+        REQUIRE( p.kind( p.child( p.root(), 1 ) ) == Node_kind::Function_decl );
+    }
+
+    SECTION( "the dump names it" )
+    {
+        REQUIRE( p.dump().find( "Implements_decl" ) != std::string::npos );
+    }
+}
+
+TEST_CASE( "parser_refuses_what_an_implements_block_cannot_hold", "[parse][interfaces][implements_for]" )
+{
+    const auto has = []( const Parsed& p, std::string_view part ) { return p.errors().find( part ) != std::string::npos; };
+
+    const auto block_of = []( const Parsed& p ) { return find_first( p.ast(), p.root(), Node_kind::Implements_decl ); };
+
+    SECTION( "a field, a constructor, a destructor or a static variable, once each, keeping the methods" )
+    {
+        const Parsed p( "implements Shape for P {\n"
+                        "    f64 area() const { return 0.0; }\n"
+                        "    i32 sides;\n"
+                        "    P() { }\n"
+                        "    ~P() { }\n"
+                        "    static i32 count = 0;\n"
+                        "    void grow( f64 by ) { }\n"
+                        "};" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 4 );
+        REQUIRE( has( p, "an `implements` block holds only methods" ) );
+        REQUIRE( has( p, "the type keeps its fields and constructors where it is declared" ) );
+        REQUIRE( p.members( block_of( p ) ).size() == 2 );
+    }
+
+    // A block is where the type's methods are written, so a signature with no body is a mistake.
+    SECTION( "a method without a body" )
+    {
+        const Parsed p( "implements Shape for P { f64 area() const; };" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( has( p, "no forward declarations" ) );
+    }
+
+    SECTION( "two interfaces, once, and nothing reaches sema" )
+    {
+        const Parsed p( "implements Shape, Named for P { f64 area() const { return 0.0; } };\ni32 main() { return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( has( p, "a block implements one interface" ) );
+        REQUIRE( has( p, "write a block for each" ) );
+        REQUIRE_FALSE( block_of( p ).is_valid() );
+        REQUIRE( p.kind( p.child( p.root(), 1 ) ) == Node_kind::Function_decl );
+    }
+
+    SECTION( "no `for`, once, with the spelling to write" )
+    {
+        const Parsed p( "implements Shape { f64 area() const { return 0.0; } };\ni32 main() { return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( has( p, "expected `for` and the type that implements the interface" ) );
+        REQUIRE( has( p, "write `implements Shape for T { ... }`" ) );
+        REQUIRE_FALSE( block_of( p ).is_valid() );
+        REQUIRE( p.kind( p.child( p.root(), 1 ) ) == Node_kind::Function_decl );
+    }
+
+    SECTION( "no body, once" )
+    {
+        const Parsed p( "implements Shape for P;\ni32 main() { return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE_FALSE( block_of( p ).is_valid() );
+        REQUIRE( p.kind( p.child( p.root(), 1 ) ) == Node_kind::Function_decl );
+    }
+
+    SECTION( "`implements` still opens a list after a type's name" )
+    {
+        const Parsed p( "struct P implements Shape { f64 r; f64 area() const { return r; } };" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE_FALSE( block_of( p ).is_valid() );
     }
 }
 

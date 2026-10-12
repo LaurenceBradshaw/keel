@@ -9,6 +9,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <algorithm>
 #include <filesystem>
 #include <initializer_list>
 #include <optional>
@@ -16,6 +17,7 @@
 #include <string>
 #include <string_view>
 #include <utility>
+#include <vector>
 
 #include "common/interner.h"
 #include "common/source_manager.h"
@@ -49,14 +51,25 @@ public:
         types_         = type_check( ast_, res, literal_pool_, sm_, interner_, diags_ );
     }
 
-    // A program on disk: `main.kl` and its files beside it, with the package `kl` under `kl/`.
+    // A program on disk: `main.kl` and its files beside it, with a package for each directory, as
+    // `kl` under `kl/`.
     Typed( std::initializer_list<std::pair<const char*, std::string_view>> files, std::string_view prelude )
     {
         dir_.emplace();
 
+        std::vector<Package> packages;
+
         for( const auto& [name, text] : files )
         {
             dir_->write( name, text );
+
+            const std::string_view path = name;
+            const std::string      package( path.substr( 0, path.find( '/' ) ) );
+            if( path.find( '/' ) != std::string_view::npos &&
+                std::ranges::none_of( packages, [&]( const Package& p ) { return p.name == package; } ) )
+            {
+                packages.push_back( { .name = package, .root = dir_->path / package } );
+            }
         }
 
         const std::optional<File_id> input = sm_.load_file( dir_->path / "main.kl" );
@@ -64,12 +77,11 @@ public:
         REQUIRE( input.has_value() );
         file_ = *input;
 
-        const Package kl { .name = "kl", .root = dir_->path / "kl" };
-        Program       loaded = load_program( file_, sm_, interner_, literal_pool_, diags_, std::span( &kl, 1 ), prelude );
-        ast_                 = std::move( loaded.ast );
-        const auto res       = resolve( ast_, sm_, interner_, diags_, loaded.imports );
-        earlier_             = diags_.error_count();
-        types_               = type_check( ast_, res, literal_pool_, sm_, interner_, diags_ );
+        Program loaded = load_program( file_, sm_, interner_, literal_pool_, diags_, packages, prelude );
+        ast_           = std::move( loaded.ast );
+        const auto res = resolve( ast_, sm_, interner_, diags_, loaded.imports );
+        earlier_       = diags_.error_count();
+        types_         = type_check( ast_, res, literal_pool_, sm_, interner_, diags_ );
     }
 
     // Errors from type checking only, so a fixture with a deliberate parse or name error still

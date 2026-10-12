@@ -393,7 +393,7 @@ void Statements::visit_assign( Node_id id )
     // Asked before infer(), which would otherwise absorb it: a literal target types as an error
     // today, so `1 = 2;` passed in silence. Parameters are assignable too - L12 is
     // mutable-by-default, and a parameter is a local.
-    if( !places_.is_assignable( target ) )
+    if( !places_.is_assignable( target ) && !places_.names_this( target ) )
     {
         // A name that does not resolve, or resolves to a type or function, is already reported by
         // infer_name, and a qualified one the resolver could not bind by the resolver. Anything
@@ -401,15 +401,6 @@ void Statements::visit_assign( Node_id id )
         if( ast_.kind( target ) != Node_kind::Name_expr && !resolution_.is_unresolved( target ) )
         {
             reporter_.error_at( ast_.span( target ), "cannot assign to this expression" );
-        }
-
-        // `this` is the exception to the rule above: it resolves, so infer_name says nothing, and
-        // the guard there stays quiet because it is a Name_expr. Nothing else would report it.
-        const Node_id decl = resolution_.declaration_of( target );
-        if( decl.is_valid() && ast_.kind( decl ) == Node_kind::Param_decl &&
-            ast_.name( decl ) == Interner::keyword( Keyword::This ) )
-        {
-            reporter_.error_at( ast_.span( target ), "`this` is immutable" );
         }
 
         expressions_.absorb( target );
@@ -420,6 +411,12 @@ void Statements::visit_assign( Node_id id )
     const Type_id target_type = expressions_.infer( target );
 
     if( table_.is_error( target_type ) )
+    {
+        expressions_.absorb( value );
+        return;
+    }
+
+    if( refuse_whole_this( target, target_type ) )
     {
         expressions_.absorb( value );
         return;
@@ -558,7 +555,7 @@ void Statements::visit_increment( Node_id id )
     const Token_kind op      = ast_.op( id ); // `++` or `--`
     const Node_id    operand = ast_.operand( id );
 
-    if( !places_.is_assignable( operand ) )
+    if( !places_.is_assignable( operand ) && !places_.names_this( operand ) )
     {
         // Same split as visit_assign: infer_name already covers an unresolved name and a function.
         if( ast_.kind( operand ) != Node_kind::Name_expr )
@@ -573,6 +570,11 @@ void Statements::visit_increment( Node_id id )
     const Type_id operand_type = expressions_.infer( operand );
 
     if( table_.is_error( operand_type ) )
+    {
+        return;
+    }
+
+    if( refuse_whole_this( operand, operand_type ) )
     {
         return;
     }
@@ -758,6 +760,24 @@ void Statements::check_kept_address( Node_id value )
         "the address of a temporary cannot be kept",
         "it ends with this statement; give it a variable of its own first"
     );
+}
+
+// An aggregate is written through its fields; only a type with none is replaced whole.
+bool Statements::refuse_whole_this( Node_id target, Type_id type )
+{
+    if( places_.names_this( target ) && table_.is_struct( type ) )
+    {
+        reporter_.error_at(
+            ast_.span( target ),
+            fmt::format(
+                "`this` cannot be assigned whole in a `{}`",
+                ast_.kind( table_.get( type ).declaration ) == Node_kind::Class_decl ? "class" : "struct"
+            ),
+            "write its fields through `this`"
+        );
+        return true;
+    }
+    return false;
 }
 
 } // namespace keel::sema
@@ -958,6 +978,112 @@ TEST_CASE( "type_checker_rejects_assignment_to_a_non_variable", "[sema][types]" 
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
+    }
+}
+
+// `this` is a `ref` binding (D32), so assigning it writes what it refers to. Only a type with no
+// fields needs that: an aggregate is written through its fields.
+TEST_CASE( "type_checker_assigns_this_whole_only_where_it_has_no_fields", "[sema][types][implements_for]" )
+{
+    const std::string grows = "interface Grows { void grow( i64 by ); };\n"
+                              "interface Reads { i64 get() const; };\n";
+
+    SECTION( "a built-in or an enum, by `=`, a compound assignment, `++` and `--` after it" )
+    {
+        const Typed p(
+            grows + "enum Size { Small, Large };\n"
+                    "enum Held { Full( i32 n ), Empty };\n"
+                    "implements Grows for i64 { void grow( i64 by ) { this = this + by; this += by; this++; this--; } };\n"
+                    "implements Grows for f64 { void grow( i64 by ) { this = this * 2.0; } };\n"
+                    "implements Grows for bool { void grow( i64 by ) { this = !this; } };\n"
+                    "implements Grows for Size { void grow( i64 by ) { this = Size::Large; } };\n"
+                    "implements Grows for Held { void grow( i64 by ) { this = Held::Empty; } };\n"
+                    "i32 main() { return 0; }"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // The value is checked against the receiver's type, as any assignment's is.
+    SECTION( "what is assigned must be the receiver's type" )
+    {
+        const Typed p( grows + "implements Grows for i64 { void grow( i64 by ) { this = true; } };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`this` is immutable" ) == std::string::npos );
+    }
+
+    SECTION( "a `const` method cannot, as it cannot write anything of its object" )
+    {
+        for( const char* body : { "this = 1;", "this += 1;", "this++;" } )
+        {
+            const Typed p(
+                grows + "implements Reads for i64 { i64 get() const { " + body + " return this; } };\ni32 main() { return 0; }"
+            );
+
+            INFO( body << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( "a `const` method cannot modify its object" ) != std::string::npos );
+        }
+    }
+
+    // Only assignment and increment take `this` whole: it is still not a place to borrow, or a
+    // callee taking `ref P` could replace a struct the method itself may not.
+    SECTION( "`&this` and `ref this` stay refused" )
+    {
+        struct Case
+        {
+            const char* source;
+            const char* message;
+        };
+
+        const Case cases[] = {
+            { "interface G { void g(); };\nimplements G for i64 { void g() { i64* p = &this; } };",
+              "cannot take the address of this expression" },
+            { "interface G { void g(); };\nvoid bump( ref i64 x ) { }\nimplements G for i64 { void g() { bump( ref this ); } "
+              "};",
+              "`ref` needs a variable to borrow" },
+            { "struct P { i32 v; void g() { P* p = &this; } };", "cannot take the address of this expression" },
+            { "void bump( ref P x ) { }\nstruct P { i32 v; void g() { bump( ref this ); } };",
+              "`ref` needs a variable to borrow" },
+        };
+
+        for( const Case& c : cases )
+        {
+            const Typed p( std::string( c.source ) + "\ni32 main() { return 0; }" );
+
+            INFO( c.source << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( c.message ) != std::string::npos );
+        }
+    }
+
+    SECTION( "a struct or class is written through its fields" )
+    {
+        struct Case
+        {
+            const char* source;
+            const char* message;
+        };
+
+        const Case cases[] = {
+            { "struct P { i32 v; void reset() { this = P { 0 }; } };", "`this` cannot be assigned whole in a `struct`" },
+            { "struct P { i32 v; void reset() { this++; } };", "`this` cannot be assigned whole in a `struct`" },
+            { "class C { i32 v; public C() { v = 0; } void reset() { this = C(); } };",
+              "`this` cannot be assigned whole in a `class`" },
+        };
+
+        for( const Case& c : cases )
+        {
+            const Typed p( std::string( c.source ) + "\ni32 main() { return 0; }" );
+
+            INFO( c.source << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( c.message ) != std::string::npos );
+            REQUIRE( p.rendered().find( "write its fields through `this`" ) != std::string::npos );
+        }
     }
 }
 

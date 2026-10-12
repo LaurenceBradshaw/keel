@@ -77,6 +77,8 @@ private:
     void check_returned_address( Node_id value );
     void check_kept_address( Node_id value );
 
+    bool refuse_whole_this( Node_id target, Type_id type );
+
     const Ast&        ast_;
     const Interner&   interner_;
     const Resolution& resolution_;

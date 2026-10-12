@@ -133,9 +133,10 @@ private:
     // infers it, which is the half `Overloads` may not do - so the walk keeps it.
     Argument_shape argument_shape( Node_id argument );
 
-    Type_id infer_method_call( Node_id id );
-    Node_id method_owner( Type_id receiver, Symbol_id name ) const;
-    Type_id infer_implicit_method_call( Node_id id, Node_id first, Type_id expectation );
+    Type_id     infer_method_call( Node_id id );
+    Node_id     method_owner( Type_id receiver, Symbol_id name ) const;
+    std::string reached_only_as( Type_id type, Symbol_id name ) const;
+    Type_id     infer_implicit_method_call( Node_id id, Node_id first, Type_id expectation );
     // Which of the methods named like `first` this call means, or none after reporting why. `shapes`
     // holds the arguments selection typed, for check_method_arguments.
     Node_id choose_method( Node_id id, Node_id first, Type_id receiver, std::vector<Argument_shape>& shapes );

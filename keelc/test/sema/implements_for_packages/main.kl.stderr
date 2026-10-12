@@ -1,0 +1,19 @@
+error: a block for `i32` must be in the package that declares `i32` or `Measured`
+ --> sema/implements_for_packages/main.kl:7:33
+  |
+7 | implements shapes::Measured for i32
+  |                                 ^^^ two packages could otherwise each make `i32` a `Measured`
+
+error: `Rod` is declared in this package, so a block cannot be written for it
+  --> sema/implements_for_packages/main.kl:30:33
+   |
+30 | implements shapes::Measured for Rod
+   |                                 ^^^ write `implements shapes::Measured` where `Rod` is declared
+
+error: `code` is private to `Secret`
+  --> sema/implements_for_packages/main.kl:49:31
+   |
+49 |     f64 size() const { return this.code; }
+   |                               ^^^^^^^^^ only that type's own members may name it
+
+3 errors generated

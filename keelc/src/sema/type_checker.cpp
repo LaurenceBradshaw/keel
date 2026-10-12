@@ -91,7 +91,17 @@ public:
               reporter_
           ),
           signatures_(
-              ast, interner, types_, aggregates_, bounds_, annotations_, places_, generic_recursion_, overloads_, reporter_
+              ast,
+              interner,
+              resolution_,
+              types_,
+              aggregates_,
+              bounds_,
+              annotations_,
+              places_,
+              generic_recursion_,
+              overloads_,
+              reporter_
           )
     {
     }

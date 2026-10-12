@@ -14,6 +14,8 @@
 <ul class="contents">
 <li><a href="#shape"><code>shape</code></a> <span class="kind">enum</span></li>
 <li><a href="#polygon"><code>polygon</code></a> <span class="kind">class</span></li>
+<li><a href="#sized"><code>sized</code></a> <span class="kind">interface</span></li>
+<li><a href="#sized-for-shape"><code>sized for shape</code></a> <span class="kind">implements</span></li>
 </ul>
 <section class="entry">
 <h2><span class="kind">enum</span> <span class="type">shape</span></h2>
@@ -81,6 +83,38 @@ p.add( 1.0, 2.0 );
 <pre class="signature"><a class="anchor" href="#polygon.operator==" aria-label="Link to operator==">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">operator==</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#polygon">polygon</a> other ) <span class="kw">const</span></code></pre>
 <div class="doc">
 <p>Whether the two have the same corners.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">interface</span> <span class="type">sized</span></h2>
+<div class="group" id="sized">
+<pre class="signature"><a class="anchor" href="#sized" aria-label="Link to sized">#</a><code><span class="kw">interface</span> <span class="type">sized</span></code></pre>
+<div class="doc">
+<p>Something with an area.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="sized.area">
+<pre class="signature"><a class="anchor" href="#sized.area" aria-label="Link to area">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#f64">f64</a> <span class="fn">area</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The area it covers.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">implements</span> <span class="">sized for shape</span></h2>
+<div class="group" id="sized-for-shape">
+<pre class="signature"><a class="anchor" href="#sized-for-shape" aria-label="Link to sized for shape">#</a><code><span class="kw">implements</span> <a class="type" href="#sized">sized</a> <span class="kw">for</span> <a class="type" href="#shape">shape</a></code></pre>
+<div class="doc">
+<p>A shape, measured as a point.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="sized-for-shape.area">
+<pre class="signature"><a class="anchor" href="#sized-for-shape.area" aria-label="Link to area">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#f64">f64</a> <span class="fn">area</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>A dot covers nothing.</p>
 </div>
 </div>
 </section>

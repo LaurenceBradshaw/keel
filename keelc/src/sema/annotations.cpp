@@ -169,26 +169,15 @@ Type_id Annotations::resolve_named( Node_id annotation )
 {
     const Node_id decl = resolution_.declaration_of( annotation );
 
-    // `self` is the enclosing type, and an interface's is its implementer's stand-in.
+    // `self` is an interface's stand-in for its implementer, and refused anywhere else.
     if( !ast_.package( annotation ).is_valid() && interner_.text( ast_.name( annotation ) ) == "self" )
     {
-        if( !decl.is_valid() )
-        {
-            reporter_.error_at(
-                ast_.span( annotation ),
-                "`self` is written only inside a `struct`, `class`, `enum`, or `interface`",
-                "it names the type it is written in"
-            );
-
-            return table_.builtin( Type_kind::Error );
-        }
-
-        if( ast_.kind( decl ) == Node_kind::Interface_decl )
+        if( decl.is_valid() && ast_.kind( decl ) == Node_kind::Interface_decl )
         {
             return table_.self_of( decl );
         }
 
-        return types_.type_of( decl );
+        return refuse_self( annotation, decl );
     }
 
     if( decl.is_valid() && ast_.kind( decl ) == Node_kind::Interface_decl )
@@ -303,16 +292,25 @@ Type_id Annotations::resolve_generic( Node_id annotation )
         return table_.builtin( Type_kind::Error );
     }
 
+    const Node_id decl = resolution_.declaration_of( base );
+
     if( !ast_.package( base ).is_valid() && interner_.text( ast_.name( base ) ) == "self" )
     {
-        reporter_.error_at(
-            ast_.span( annotation ), "`self` takes no type arguments", "it already names the type it is written in"
-        );
+        if( decl.is_valid() && ast_.kind( decl ) == Node_kind::Interface_decl )
+        {
+            reporter_.error_at(
+                ast_.span( annotation ),
+                "`self` takes no type arguments",
+                "it already names the type that implements the interface"
+            );
+        }
+        else
+        {
+            return refuse_self( annotation, decl );
+        }
 
         return table_.builtin( Type_kind::Error );
     }
-
-    const Node_id decl = resolution_.declaration_of( base );
 
     // A qualified base was reported by the resolver, and an error symbol where it failed.
     if( !decl.is_valid() && ( ast_.package( base ).is_valid() || resolution_.is_unresolved( base ) ) )
@@ -703,6 +701,18 @@ Type_id Annotations::resolve_interface( Node_id annotation )
     return table_.builtin( Type_kind::Error );
 }
 
+// The type after `for`. An interface there is refused by the block, not as one held by value.
+Type_id Annotations::resolve_implementer( Node_id annotation )
+{
+    const Node_id decl = resolution_.declaration_of( annotation );
+    if( decl.is_valid() && ast_.kind( decl ) == Node_kind::Interface_decl && ast_.kind( annotation ) == Node_kind::Named_type )
+    {
+        return types_.type_of( decl );
+    }
+
+    return resolve( annotation );
+}
+
 bool Annotations::refuse_void( Node_id annotation, Type_id type, std::string_view what, std::string_view does )
 {
     if( table_.is_void( type ) )
@@ -748,6 +758,20 @@ Span Annotations::const_keyword( Node_id const_type ) const
     {
         return Span { const_type_span.file, const_type_span.end - const_length, const_type_span.end };
     }
+}
+
+// `self` outside an interface, bound by the resolver to the type it is written in when there is one,
+// so the help can name it.
+Type_id Annotations::refuse_self( Node_id annotation, Node_id decl )
+{
+    reporter_.error_at(
+        ast_.span( annotation ),
+        "`self` is written only inside an `interface`",
+        decl.is_valid() ? fmt::format( "write `{}`, the type's own name", table_.name( types_.type_of( decl ) ) )
+                        : std::string( "it names the type that implements the interface" )
+    );
+
+    return table_.builtin( Type_kind::Error );
 }
 
 } // namespace keel::sema
@@ -1761,39 +1785,28 @@ TEST_CASE( "annotations_resolve_what_is_implemented", "[sema][annotation][interf
     }
 }
 
-TEST_CASE( "annotations_read_self_as_the_enclosing_type", "[sema][annotation][self]" )
+TEST_CASE( "annotations_read_self_only_in_an_interface", "[sema][annotation][self]" )
 {
-    SECTION( "in a generic, the open form" )
-    {
-        const Typed p( "struct Node<T> where T : Copyable { T v; self* next; };\ni32 main() { return 0; }" );
+    const std::string_view outside = "`self` is written only inside an `interface`";
 
-        INFO( p.rendered() );
-        REQUIRE( p.clean() );
-        REQUIRE( p.type_name( p.nth( Node_kind::Field_decl, 1 ) ) == "Node<T>*" );
-    }
-
-    SECTION( "in an enum payload, the enum" )
-    {
-        const Typed p( "enum List { Cons( i32 head, self* rest ), Nil };\ni32 main() { return 0; }" );
-
-        INFO( p.rendered() );
-        REQUIRE( p.clean() );
-        REQUIRE( p.type_name( p.nth( Node_kind::Field_decl, 1 ) ) == "List*" );
-    }
-
-    SECTION( "each refusal is reported once" )
+    // Bound by the resolver to the type it is written in, which the help names.
+    SECTION( "in a type, the help names the type" )
     {
         struct Case
         {
             const char* source;
-            const char* message;
+            const char* help;
         };
 
         const Case cases[] = {
-            { "self make() { }", "`self` is written only inside a `struct`, `class`, `enum`, or `interface`" },
-            { "void take( self* p ) { }", "`self` is written only inside a `struct`, `class`, `enum`, or `interface`" },
-            { "struct S { self<i32>* p; };", "`self` takes no type arguments" },
-            { "void take( self<i32> p ) { }", "`self` takes no type arguments" },
+            { "struct Node<T> where T : Copyable { T v; self* next; };", "write `Node<T>`, the type's own name" },
+            { "class Buffer { u8* p; self* twin; Buffer() { p = nullptr; twin = nullptr; } };",
+              "write `Buffer`, the type's own name" },
+            { "enum List { Cons( i32 head, self* rest ), Nil };", "write `List`, the type's own name" },
+            { "struct P { i32 v; bool same( const ref self other ) const { return true; } };", "write `P`, the type's own name"
+            },
+            { "struct P { i32 v; void f() const { self copy = P { 1 }; } };", "write `P`, the type's own name" },
+            { "struct S { self<i32>* p; };", "write `S`, the type's own name" },
         };
 
         for( const Case& c : cases )
@@ -1802,8 +1815,41 @@ TEST_CASE( "annotations_read_self_as_the_enclosing_type", "[sema][annotation][se
 
             INFO( c.source << "\n" << p.rendered() );
             REQUIRE( p.errors() == 1 );
-            REQUIRE( p.rendered().find( c.message ) != std::string::npos );
+            REQUIRE( p.rendered().find( outside ) != std::string::npos );
+            REQUIRE( p.rendered().find( c.help ) != std::string::npos );
         }
+    }
+
+    SECTION( "outside every type, the help says what it names" )
+    {
+        for( const char* source : { "self make() { }", "void take( self* p ) { }", "void take( self<i32> p ) { }" } )
+        {
+            const Typed p( std::string( source ) + "\ni32 main() { return 0; }" );
+
+            INFO( source << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( outside ) != std::string::npos );
+            REQUIRE( p.rendered().find( "it names the type that implements the interface" ) != std::string::npos );
+        }
+    }
+
+    // Only where it is allowed is there a type argument to refuse.
+    SECTION( "in an interface, it takes no type arguments" )
+    {
+        const Typed p( "interface Grows { void take( self<i32>* p ); };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`self` takes no type arguments" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "it already names the type that implements the interface" ) != std::string::npos );
+    }
+
+    SECTION( "in an interface, it is accepted" )
+    {
+        const Typed p( "interface Same { bool same( const ref self other ) const; };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
     }
 }
 

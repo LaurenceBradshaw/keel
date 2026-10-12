@@ -264,7 +264,11 @@ void Bounds::check_bounds( Node_id parameter, Span at, Type_id argument, std::st
                     ? fmt::format(
                           "add `{}` to the `where` clause for `{}`", table_.name( interface ), table_.name( argument )
                       )
-                    : fmt::format( "declare `{}` with `implements {}`", table_.name( argument ), table_.name( interface ) )
+                : table_.is_struct( argument )
+                    ? fmt::format( "declare `{}` with `implements {}`", table_.name( argument ), table_.name( interface ) )
+                    : fmt::format(
+                          "write `implements {1} for {0} {{ ... }}`", table_.name( argument ), table_.name( interface )
+                      )
             );
         }
     }
@@ -1444,6 +1448,44 @@ TEST_CASE( "bounds_meet_an_interface_only_by_implements", "[sema][interfaces]" )
 
         INFO( p.rendered() );
         REQUIRE( p.rendered().find( "implements" ) == std::string::npos );
+    }
+}
+
+// A block conforms its type as an `implements` does, so it meets the bound too.
+TEST_CASE( "bounds_meet_an_interface_by_a_block", "[sema][interfaces][implements_for]" )
+{
+    const std::string declared = "interface Shape { f64 area() const; };\n"
+                                 "enum Colour { Red, Green };\n"
+                                 "enum Tone { Low, High };\n"
+                                 "implements Shape for i32 { f64 area() const { return 1.0; } };\n"
+                                 "implements Shape for Tone { f64 area() const { return 2.0; } };\n"
+                                 "f64 measure<T>( const ref T t ) where T : Shape { return t.area(); }\n";
+
+    SECTION( "a built-in or an enum with a block" )
+    {
+        const Typed p( declared + "i32 main() { i32 x = 1; Tone t = Tone::Low; measure( x ); measure( t ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // Neither can say `implements` where it is declared, so the help writes the block.
+    SECTION( "a built-in or an enum without one is pointed at a block" )
+    {
+        const char* cases[][2] = {
+            { "i32 main() { i64 x = 1; measure( x ); return 0; }", "write `implements Shape for i64 { ... }`" },
+            { "i32 main() { Colour c = Colour::Red; measure( c ); return 0; }", "write `implements Shape for Colour { ... }`" },
+        };
+
+        for( const auto& c : cases )
+        {
+            const Typed p( declared + c[0] );
+
+            INFO( c[0] << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( "needs a `T` that implements `Shape`" ) != std::string::npos );
+            REQUIRE( p.rendered().find( c[1] ) != std::string::npos );
+        }
     }
 }
 

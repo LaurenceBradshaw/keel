@@ -1,0 +1,22 @@
+interface Measured
+{
+    f64 measure() const;
+};
+
+struct Square
+{
+    f64 side;
+};
+
+class Secret
+{
+    f64 code;
+
+    public Secret() { code = 1.0; }
+};
+
+// The package's own interface, for a built-in type.
+implements Measured for f64
+{
+    f64 measure() const { return this; }
+};

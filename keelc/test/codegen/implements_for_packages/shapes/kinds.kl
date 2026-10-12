@@ -1,0 +1,15 @@
+i32 drops = 0;
+
+struct Rod
+{
+    i64 length;
+};
+
+class Tracked
+{
+    public i64 n;
+
+    public Tracked( i64 v ) { n = v; }
+
+    ~Tracked() { drops = drops + 1; }
+};

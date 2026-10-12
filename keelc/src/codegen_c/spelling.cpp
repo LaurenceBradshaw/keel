@@ -233,13 +233,18 @@ std::string Spelling::function( Node_id declaration, std::span<const Type_id> ty
                            owner, std::span( type_arguments ).first( num_type_args ), interner.text( ast.name( owner ) )
                        );
 
+        const Node_id block = ast.enclosing_aggregate( declaration );
+        const Type_id conformed =
+            ast.kind( block ) == Node_kind::Implements_decl ? types.type_of( ast.implemented( block )[0] ) : Type_id {};
+
         return mangle_function(
             package_name( declaration ),
             interner.text( ast.name( declaration ) ),
             std::span( params ).subspan( receiver ? 1 : 0 ),
             types.table(),
             type_arguments,
-            enclosing
+            enclosing,
+            conformed
         );
     }
 
@@ -385,6 +390,12 @@ std::string Spelling::global_definition( Node_id declaration, Type_id owner ) co
 
 std::string Spelling::package_name( Node_id decl ) const
 {
+    // A built-in type belongs to no package's file.
+    if( !decl.is_valid() )
+    {
+        return "";
+    }
+
     Symbol_id package_id = imports.package_of( ast.span( decl ).file );
 
     if( !package_id.is_valid() )

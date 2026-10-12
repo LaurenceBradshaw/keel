@@ -18,8 +18,9 @@ namespace keel
 {
 
 // One declaration a page can document: a top-level one, an aggregate's member or an enum's variant.
-// `span` covers its name, `kind` is what it declares ("method"), and `parent` names the aggregate or
-// enum that holds it, empty at the top level.
+// `span` covers its name, `kind` is what it declares ("method"), and `parent` names the aggregate,
+// enum or block that holds it, empty at the top level. `name` is set only where the span does not
+// spell it: a block, which declares no name, is `Measured for i64`.
 struct Declaration
 {
     Span             span;
@@ -28,6 +29,7 @@ struct Declaration
     std::string      signature;
     std::string      parent;
     std::string      doc;
+    std::string      name {};
 };
 
 // Every declaration in the program's files, in source order, each signature as declared.

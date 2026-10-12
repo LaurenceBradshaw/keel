@@ -1,0 +1,16 @@
+// A type declared elsewhere conforms in a block of its own. Each method's receiver is the type
+// after `for`, a qualified one included.
+interface Hashable
+{
+    u64 hash() const;
+};
+
+implements Hashable for i32
+{
+    u64 hash() const { return 1; }
+};
+
+implements Hashable for kl::string
+{
+    u64 hash() const { return 2; }
+};

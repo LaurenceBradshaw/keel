@@ -1,0 +1,1 @@
+--emit-c --package shapes=codegen/implements_for_packages/shapes

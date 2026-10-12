@@ -21,8 +21,8 @@ struct kl__Pair__I3i64E
 
 struct kl__Node__I3i32E
 {
-    int32_t kl_v_155;
-    struct kl__Node__I3i32E* kl_next_158;
+    int32_t kl_v_158;
+    struct kl__Node__I3i32E* kl_next_164;
 };
 
 bool kl__same__S5Plain_5Plain( struct kl__Plain*, struct kl__Plain* );
@@ -181,16 +181,16 @@ int32_t kl__main__( void )
     return kl_t0;
     bb10:
 #line 74 "codegen/self.kl"
-    kl_t35.kl_v_155 = 2;
-    kl_t35.kl_next_158 = NULL;
+    kl_t35.kl_v_158 = 2;
+    kl_t35.kl_next_164 = NULL;
     kl_tail_34 = kl_t35;
 #line 75 "codegen/self.kl"
     kl_t38 = &kl_tail_34;
-    kl_t37.kl_v_155 = 1;
-    kl_t37.kl_next_158 = kl_t38;
+    kl_t37.kl_v_158 = 1;
+    kl_t37.kl_next_164 = kl_t38;
     kl_head_36 = kl_t37;
 #line 76 "codegen/self.kl"
-    kl_t39 = ( *kl_head_36.kl_next_158 ).kl_v_155 != 2;
+    kl_t39 = ( *kl_head_36.kl_next_164 ).kl_v_158 != 2;
     if ( kl_t39 ) goto bb11; else goto bb12;
     bb11:
     kl_t0 = 5;

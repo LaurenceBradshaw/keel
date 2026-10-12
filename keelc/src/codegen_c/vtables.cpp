@@ -97,8 +97,7 @@ std::vector<Vtable> vtables_needed( const Ast& ast, Types& types, const std::vec
                 continue;
             }
 
-            const Conformance* conformance =
-                types.conformances().find( types.table().get( implementer ).declaration, interface );
+            const Conformance* conformance = types.conformances().of( types.table(), implementer, interface );
 
             if( conformance == nullptr )
             {

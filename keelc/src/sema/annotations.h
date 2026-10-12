@@ -56,6 +56,7 @@ public:
 
     // A type written after `implements`: an interface, or an error once reported.
     Type_id resolve_interface( Node_id annotation );
+    Type_id resolve_implementer( Node_id annotation );
 
     // An interface method's receiver: its interface may be named even when bound-only.
     Type_id resolve_receiver( Node_id annotation );
@@ -72,6 +73,8 @@ private:
     Type_id resolve_union( Node_id annotation );
 
     Span const_keyword( Node_id const_type ) const;
+
+    Type_id refuse_self( Node_id annotation, Node_id decl );
 
     const Ast&        ast_;
     const Interner&   interner_;

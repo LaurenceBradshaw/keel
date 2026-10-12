@@ -1,0 +1,653 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "implements_for.kl.prelude.c"
+
+struct kl__Tracked;
+struct kl__Held;
+struct kl_7prelude_box__I8MeasuredE;
+struct kl_7prelude_box__I4HeldE;
+
+struct kl__Measured__vtable;
+struct kl__Measured__ref { void* self; const struct kl__Measured__vtable* vtable; };
+
+struct kl__Tracked
+{
+    int64_t kl_n_23;
+};
+
+struct kl__Held
+{
+    int32_t tag;
+    struct kl__Tracked kl_t_48;
+};
+
+struct kl_7prelude_box__I8MeasuredE
+{
+    struct kl__Measured__ref kl_p__882;
+};
+
+struct kl_7prelude_box__I4HeldE
+{
+    struct kl__Held* kl_p__882;
+};
+
+struct kl__Measured__vtable
+{
+    void ( *drop )( void* );
+    int64_t ( *kl_measure_6 )( void* );
+    void ( *kl_grow_14 )( void*, int64_t );
+};
+
+int32_t kl_drops_21 = 0;
+
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
+void  kl_rt_free( void* );
+void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+
+void kl__Tracked__R7Tracked_3i64__ctor( struct kl__Tracked*, int64_t );
+void kl__Tracked__dtor( struct kl__Tracked* );
+int64_t kl__measure__S3i64C8Measured( int64_t* );
+void kl__grow__S3i64C8Measured_3i64( int64_t*, int64_t );
+int64_t kl__measure__S4SizeC8Measured( int32_t* );
+void kl__grow__S4SizeC8Measured_3i64( int32_t*, int64_t );
+int64_t kl__measure__S4HeldC8Measured( struct kl__Held* );
+void kl__grow__S4HeldC8Measured_3i64( struct kl__Held*, int64_t );
+int64_t kl__through__8Measured( struct kl__Measured__ref );
+void kl__enlarge__R8Measured( struct kl__Measured__ref );
+int32_t kl__main__( void );
+int64_t kl__total__I3i64E__3i64_3i64( int64_t*, int64_t* );
+int64_t kl__total__I4SizeE__4Size_4Size( int32_t*, int32_t* );
+void kl__grow_twice__I3i64E__R3i64( int64_t* );
+void kl__grow_twice__I4SizeE__R4Size( int32_t* );
+struct kl__Measured__ref kl_7prelude_get__I8MeasuredE__SQ7prelude3boxI8MeasuredE( struct kl_7prelude_box__I8MeasuredE* );
+void kl_7prelude_box__I4HeldE__RQ7prelude3boxI4HeldE_M4Held__ctor( struct kl_7prelude_box__I4HeldE*, struct kl__Held );
+void kl_7prelude_box__I8MeasuredE__dtor( struct kl_7prelude_box__I8MeasuredE* );
+void kl_7prelude_box__I4HeldE__dtor( struct kl_7prelude_box__I4HeldE* );
+void kl__Held__dtor( struct kl__Held* );
+void kl__Held__drop( struct kl__Held* );
+
+static void kl__i64__as_kl__Measured__drop( void* self )
+{
+    ( void ) self;
+}
+
+static int64_t kl__i64__as_kl__Measured__kl_measure_6( void* self )
+{
+    return kl__measure__S3i64C8Measured( ( int64_t* ) self );
+}
+
+static void kl__i64__as_kl__Measured__kl_grow_14( void* self, int64_t p0 )
+{
+    kl__grow__S3i64C8Measured_3i64( ( int64_t* ) self, p0 );
+}
+
+static const struct kl__Measured__vtable kl__i64__as_kl__Measured = { kl__i64__as_kl__Measured__drop, kl__i64__as_kl__Measured__kl_measure_6, kl__i64__as_kl__Measured__kl_grow_14 };
+
+static void kl__Size__as_kl__Measured__drop( void* self )
+{
+    ( void ) self;
+}
+
+static int64_t kl__Size__as_kl__Measured__kl_measure_6( void* self )
+{
+    return kl__measure__S4SizeC8Measured( ( int32_t* ) self );
+}
+
+static void kl__Size__as_kl__Measured__kl_grow_14( void* self, int64_t p0 )
+{
+    kl__grow__S4SizeC8Measured_3i64( ( int32_t* ) self, p0 );
+}
+
+static const struct kl__Measured__vtable kl__Size__as_kl__Measured = { kl__Size__as_kl__Measured__drop, kl__Size__as_kl__Measured__kl_measure_6, kl__Size__as_kl__Measured__kl_grow_14 };
+
+static void kl__Held__as_kl__Measured__drop( void* self )
+{
+    kl__Held__drop( ( struct kl__Held* ) self );
+}
+
+static int64_t kl__Held__as_kl__Measured__kl_measure_6( void* self )
+{
+    return kl__measure__S4HeldC8Measured( ( struct kl__Held* ) self );
+}
+
+static void kl__Held__as_kl__Measured__kl_grow_14( void* self, int64_t p0 )
+{
+    kl__grow__S4HeldC8Measured_3i64( ( struct kl__Held* ) self, p0 );
+}
+
+static const struct kl__Measured__vtable kl__Held__as_kl__Measured = { kl__Held__as_kl__Measured__drop, kl__Held__as_kl__Measured__kl_measure_6, kl__Held__as_kl__Measured__kl_grow_14 };
+
+void kl__Tracked__R7Tracked_3i64__ctor( struct kl__Tracked* kl_this_1, int64_t kl_v_2 )
+{
+#line 25 "codegen/implements_for.kl"
+    ( *kl_this_1 ).kl_n_23 = kl_v_2;
+    return;
+}
+
+void kl__Tracked__dtor( struct kl__Tracked* kl_this_1 )
+{
+    int32_t kl_t2;
+    ( void ) kl_this_1;
+#line 27 "codegen/implements_for.kl"
+    kl_t2 = kl_drops_21 + 1;
+    kl_drops_21 = kl_t2;
+    return;
+}
+
+int64_t kl__measure__S3i64C8Measured( int64_t* kl_this_1 )
+{
+    int64_t kl_t0;
+#line 38 "codegen/implements_for.kl"
+    kl_t0 = ( *kl_this_1 );
+    return kl_t0;
+}
+
+void kl__grow__S3i64C8Measured_3i64( int64_t* kl_this_1, int64_t kl_by_2 )
+{
+    int64_t kl_t3;
+#line 39 "codegen/implements_for.kl"
+    kl_t3 = ( *kl_this_1 ) + kl_by_2;
+    ( *kl_this_1 ) = kl_t3;
+    return;
+}
+
+int64_t kl__measure__S4SizeC8Measured( int32_t* kl_this_1 )
+{
+    int64_t kl_t0;
+    bool kl_t2;
+#line 48 "codegen/implements_for.kl"
+    kl_t2 = ( *kl_this_1 ) == 0;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+#line 49 "codegen/implements_for.kl"
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+#line 51 "codegen/implements_for.kl"
+    kl_t0 = 100;
+    return kl_t0;
+}
+
+void kl__grow__S4SizeC8Measured_3i64( int32_t* kl_this_1, int64_t kl_by_2 )
+{
+    ( void ) kl_by_2;
+#line 55 "codegen/implements_for.kl"
+    ( *kl_this_1 ) = 1;
+    return;
+}
+
+int64_t kl__measure__S4HeldC8Measured( struct kl__Held* kl_this_1 )
+{
+    int64_t kl_t0;
+    bool kl_t2;
+    struct kl__Tracked* kl_t_3;
+#line 64 "codegen/implements_for.kl"
+    kl_t2 = ( *kl_this_1 ).tag == 0;
+    if ( kl_t2 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t_3 = &( *kl_this_1 ).kl_t_48;
+#line 65 "codegen/implements_for.kl"
+    kl_t0 = ( *kl_t_3 ).kl_n_23;
+    return kl_t0;
+    bb2:
+#line 67 "codegen/implements_for.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+void kl__grow__S4HeldC8Measured_3i64( struct kl__Held* kl_this_1, int64_t kl_by_2 )
+{
+    struct kl__Held kl_t3;
+    ( void ) kl_by_2;
+#line 71 "codegen/implements_for.kl"
+    kl_t3.tag = 1;
+    kl__Held__dtor( &( *kl_this_1 ) );
+    ( *kl_this_1 ) = kl_t3;
+    return;
+}
+
+int64_t kl__through__8Measured( struct kl__Measured__ref kl_m_1 )
+{
+    int64_t kl_t0;
+    struct kl__Measured__ref kl_t2;
+    int64_t kl_t3;
+#line 85 "codegen/implements_for.kl"
+    kl_t2 = kl_m_1;
+    kl_t3 = kl_t2.vtable->kl_measure_6( kl_t2.self );
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+void kl__enlarge__R8Measured( struct kl__Measured__ref kl_m_1 )
+{
+    struct kl__Measured__ref kl_t2;
+#line 87 "codegen/implements_for.kl"
+    kl_t2 = kl_m_1;
+    kl_t2.vtable->kl_grow_14( kl_t2.self, 2 );
+    return;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int64_t kl_n_1;
+    int32_t kl_s_2;
+    int64_t* kl_t3;
+    int64_t* kl_t4;
+    int64_t kl_t5;
+    bool kl_t6;
+    int32_t* kl_t7;
+    int32_t* kl_t8;
+    int64_t kl_t9;
+    bool kl_t10;
+    int64_t* kl_t11;
+    int32_t* kl_t13;
+    bool kl_t15;
+    bool kl_t16;
+    bool kl_t17;
+    struct kl__Measured__ref kl_p_18;
+    int64_t* kl_t19;
+    struct kl__Measured__ref kl_t20;
+    bool kl_t22;
+    int64_t kl_t23;
+    bool kl_t24;
+    bool kl_t25;
+    struct kl__Measured__ref kl_t26;
+    int64_t kl_t27;
+    bool kl_t28;
+    struct kl__Held kl_h_29;
+    struct kl__Held kl_t30;
+    struct kl__Tracked kl_t31;
+    struct kl__Tracked* kl_t32;
+    struct kl__Measured__ref kl_t34;
+    int64_t kl_t35;
+    bool kl_t36;
+    struct kl__Measured__ref kl_t37;
+    bool kl_t39;
+    struct kl__Measured__ref kl_t40;
+    int64_t kl_t41;
+    bool kl_t42;
+    bool kl_t43;
+    struct kl_7prelude_box__I8MeasuredE kl_b_44;
+    struct kl_7prelude_box__I3i64E kl_t45;
+    struct kl_7prelude_box__I3i64E* kl_t46;
+    struct kl_7prelude_box__I8MeasuredE kl_t48;
+    struct kl_7prelude_box__I8MeasuredE* kl_t49;
+    struct kl__Measured__ref kl_t50;
+    struct kl_7prelude_box__I8MeasuredE* kl_t52;
+    struct kl__Measured__ref kl_t53;
+    int64_t kl_t54;
+    bool kl_t55;
+    struct kl_7prelude_box__I8MeasuredE kl_t_56;
+    struct kl_7prelude_box__I4HeldE kl_t57;
+    struct kl_7prelude_box__I4HeldE* kl_t58;
+    struct kl__Held kl_t59;
+    struct kl__Tracked kl_t60;
+    struct kl__Tracked* kl_t61;
+    struct kl_7prelude_box__I8MeasuredE kl_t64;
+    struct kl_7prelude_box__I8MeasuredE* kl_t65;
+    struct kl__Measured__ref kl_t66;
+    int64_t kl_t67;
+    bool kl_t68;
+    bool kl_t69;
+    bool kl_t70;
+    bool kl_t71;
+    bool kl_t72;
+    bool kl_t73;
+    bool kl_t74;
+    bool kl_t75;
+#line 107 "codegen/implements_for.kl"
+    kl_t70 = false;
+    kl_t71 = false;
+#line 112 "codegen/implements_for.kl"
+    kl_t72 = false;
+#line 117 "codegen/implements_for.kl"
+    kl_t73 = false;
+    kl_t74 = false;
+    kl_t75 = false;
+#line 91 "codegen/implements_for.kl"
+    kl_n_1 = 3;
+#line 92 "codegen/implements_for.kl"
+    kl_s_2 = 0;
+#line 94 "codegen/implements_for.kl"
+    kl_t3 = &kl_n_1;
+    kl_t4 = &kl_n_1;
+    kl_t5 = kl__total__I3i64E__3i64_3i64( kl_t3, kl_t4 );
+    kl_t6 = kl_t5 != 6;
+    if ( kl_t6 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+#line 95 "codegen/implements_for.kl"
+    kl_t7 = &kl_s_2;
+    kl_t8 = &kl_s_2;
+    kl_t9 = kl__total__I4SizeE__4Size_4Size( kl_t7, kl_t8 );
+    kl_t10 = kl_t9 != 2;
+    if ( kl_t10 ) goto bb3; else goto bb4;
+    bb3:
+    kl_t0 = 2;
+    return kl_t0;
+    bb4:
+#line 97 "codegen/implements_for.kl"
+    kl_t11 = &kl_n_1;
+    kl__grow_twice__I3i64E__R3i64( kl_t11 );
+#line 98 "codegen/implements_for.kl"
+    kl_t13 = &kl_s_2;
+    kl__grow_twice__I4SizeE__R4Size( kl_t13 );
+#line 99 "codegen/implements_for.kl"
+    kl_t16 = kl_n_1 != 5;
+    kl_t15 = kl_t16;
+    if ( kl_t15 ) goto bb6; else goto bb5;
+    bb5:
+    kl_t17 = kl_s_2 != 1;
+    kl_t15 = kl_t17;
+    goto bb6;
+    bb6:
+    if ( kl_t15 ) goto bb7; else goto bb8;
+    bb7:
+    kl_t0 = 3;
+    return kl_t0;
+    bb8:
+#line 101 "codegen/implements_for.kl"
+    kl_t19 = &kl_n_1;
+    kl_t20 = ( struct kl__Measured__ref ) { ( void* ) kl_t19, &kl__i64__as_kl__Measured };
+    kl_p_18 = kl_t20;
+#line 102 "codegen/implements_for.kl"
+    kl_p_18.vtable->kl_grow_14( kl_p_18.self, 5 );
+#line 103 "codegen/implements_for.kl"
+    kl_t23 = kl_p_18.vtable->kl_measure_6( kl_p_18.self );
+    kl_t24 = kl_t23 != 10;
+    kl_t22 = kl_t24;
+    if ( kl_t22 ) goto bb10; else goto bb9;
+    bb9:
+    kl_t25 = kl_n_1 != 10;
+    kl_t22 = kl_t25;
+    goto bb10;
+    bb10:
+    if ( kl_t22 ) goto bb11; else goto bb12;
+    bb11:
+    kl_t0 = 4;
+    return kl_t0;
+    bb12:
+#line 105 "codegen/implements_for.kl"
+    kl_t26 = ( struct kl__Measured__ref ) { ( void* ) &kl_s_2, &kl__Size__as_kl__Measured };
+    kl_t27 = kl__through__8Measured( kl_t26 );
+    kl_t28 = kl_t27 != 100;
+    if ( kl_t28 ) goto bb13; else goto bb14;
+    bb13:
+    kl_t0 = 5;
+    return kl_t0;
+    bb14:
+#line 107 "codegen/implements_for.kl"
+    kl_t71 = false;
+    kl_t32 = &kl_t31;
+    kl_t71 = true;
+    kl__Tracked__R7Tracked_3i64__ctor( kl_t32, 4 );
+    kl_t30.tag = 0;
+    kl_t70 = true;
+    kl_t30.kl_t_48 = kl_t31;
+    kl_t71 = false;
+    kl_t70 = true;
+    kl_h_29 = kl_t30;
+    kl_t70 = false;
+    if ( kl_t70 ) kl__Held__dtor( &kl_t30 );
+    if ( kl_t71 ) kl__Tracked__dtor( &kl_t31 );
+    kl_t71 = false;
+    kl_t70 = false;
+#line 108 "codegen/implements_for.kl"
+    kl_t34 = ( struct kl__Measured__ref ) { ( void* ) &kl_h_29, &kl__Held__as_kl__Measured };
+    kl_t35 = kl__through__8Measured( kl_t34 );
+    kl_t36 = kl_t35 != 4;
+    if ( kl_t36 ) goto bb15; else goto bb16;
+    bb15:
+    kl_t0 = 6;
+    kl__Held__dtor( &kl_h_29 );
+    return kl_t0;
+    bb16:
+#line 109 "codegen/implements_for.kl"
+    kl_t37 = ( struct kl__Measured__ref ) { ( void* ) &kl_h_29, &kl__Held__as_kl__Measured };
+    kl__enlarge__R8Measured( kl_t37 );
+#line 110 "codegen/implements_for.kl"
+    kl_t40 = ( struct kl__Measured__ref ) { ( void* ) &kl_h_29, &kl__Held__as_kl__Measured };
+    kl_t41 = kl__through__8Measured( kl_t40 );
+    kl_t42 = kl_t41 != 0;
+    kl_t39 = kl_t42;
+    if ( kl_t39 ) goto bb18; else goto bb17;
+    bb17:
+    kl_t43 = kl_drops_21 != 1;
+    kl_t39 = kl_t43;
+    goto bb18;
+    bb18:
+    if ( kl_t39 ) goto bb19; else goto bb20;
+    bb19:
+    kl_t0 = 7;
+    kl__Held__dtor( &kl_h_29 );
+    return kl_t0;
+    bb20:
+#line 112 "codegen/implements_for.kl"
+    kl_t72 = false;
+    kl_t46 = &kl_t45;
+    kl_t72 = true;
+    kl_7prelude_box__I3i64E__RQ7prelude3boxI3i64E_M3i64__ctor( kl_t46, 7 );
+    kl_t48 = ( struct kl_7prelude_box__I8MeasuredE ) { ( struct kl__Measured__ref ) { ( void* ) kl_t45.kl_p__882, &kl__i64__as_kl__Measured } };
+    kl_t72 = false;
+    kl_b_44 = kl_t48;
+    if ( kl_t72 ) kl_7prelude_box__I3i64E__dtor( &kl_t45 );
+    kl_t72 = false;
+#line 113 "codegen/implements_for.kl"
+    kl_t49 = &kl_b_44;
+    kl_t50 = kl_7prelude_get__I8MeasuredE__SQ7prelude3boxI8MeasuredE( kl_t49 );
+    kl_t50.vtable->kl_grow_14( kl_t50.self, 1 );
+#line 114 "codegen/implements_for.kl"
+    kl_t52 = &kl_b_44;
+    kl_t53 = kl_7prelude_get__I8MeasuredE__SQ7prelude3boxI8MeasuredE( kl_t52 );
+    kl_t54 = kl_t53.vtable->kl_measure_6( kl_t53.self );
+    kl_t55 = kl_t54 != 8;
+    if ( kl_t55 ) goto bb21; else goto bb22;
+    bb21:
+    kl_t0 = 8;
+    kl_7prelude_box__I8MeasuredE__dtor( &kl_b_44 );
+    kl__Held__dtor( &kl_h_29 );
+    return kl_t0;
+    bb22:
+#line 117 "codegen/implements_for.kl"
+    kl_t73 = false;
+    kl_t58 = &kl_t57;
+    kl_t73 = true;
+    kl_t75 = false;
+    kl_t61 = &kl_t60;
+    kl_t75 = true;
+    kl__Tracked__R7Tracked_3i64__ctor( kl_t61, 3 );
+    kl_t59.tag = 0;
+    kl_t74 = true;
+    kl_t59.kl_t_48 = kl_t60;
+    kl_t75 = false;
+    kl_t74 = true;
+    kl_7prelude_box__I4HeldE__RQ7prelude3boxI4HeldE_M4Held__ctor( kl_t58, kl_t59 );
+    kl_t74 = false;
+    kl_t64 = ( struct kl_7prelude_box__I8MeasuredE ) { ( struct kl__Measured__ref ) { ( void* ) kl_t57.kl_p__882, &kl__Held__as_kl__Measured } };
+    kl_t73 = false;
+    kl_t_56 = kl_t64;
+    if ( kl_t73 ) kl_7prelude_box__I4HeldE__dtor( &kl_t57 );
+    if ( kl_t74 ) kl__Held__dtor( &kl_t59 );
+    if ( kl_t75 ) kl__Tracked__dtor( &kl_t60 );
+    kl_t75 = false;
+    kl_t74 = false;
+    kl_t73 = false;
+#line 118 "codegen/implements_for.kl"
+    kl_t65 = &kl_t_56;
+    kl_t66 = kl_7prelude_get__I8MeasuredE__SQ7prelude3boxI8MeasuredE( kl_t65 );
+    kl_t67 = kl_t66.vtable->kl_measure_6( kl_t66.self );
+    kl_t68 = kl_t67 != 3;
+    if ( kl_t68 ) goto bb23; else goto bb24;
+    bb23:
+    kl_t0 = 9;
+    kl_7prelude_box__I8MeasuredE__dtor( &kl_t_56 );
+    kl_7prelude_box__I8MeasuredE__dtor( &kl_b_44 );
+    kl__Held__dtor( &kl_h_29 );
+    return kl_t0;
+    bb24:
+#line 116 "codegen/implements_for.kl"
+    kl_7prelude_box__I8MeasuredE__dtor( &kl_t_56 );
+#line 120 "codegen/implements_for.kl"
+    kl_t69 = kl_drops_21 != 2;
+    if ( kl_t69 ) goto bb25; else goto bb26;
+    bb25:
+    kl_t0 = 10;
+    kl_7prelude_box__I8MeasuredE__dtor( &kl_b_44 );
+    kl__Held__dtor( &kl_h_29 );
+    return kl_t0;
+    bb26:
+#line 122 "codegen/implements_for.kl"
+    kl_t0 = 0;
+    kl_7prelude_box__I8MeasuredE__dtor( &kl_b_44 );
+    kl__Held__dtor( &kl_h_29 );
+    return kl_t0;
+}
+
+int64_t kl__total__I3i64E__3i64_3i64( int64_t* kl_a_1, int64_t* kl_b_2 )
+{
+    int64_t kl_t0;
+    int64_t* kl_t3;
+    int64_t kl_t4;
+    int64_t* kl_t5;
+    int64_t kl_t6;
+    int64_t kl_t7;
+#line 76 "codegen/implements_for.kl"
+    kl_t3 = &( *kl_a_1 );
+    kl_t4 = kl__measure__S3i64C8Measured( kl_t3 );
+    kl_t5 = &( *kl_b_2 );
+    kl_t6 = kl__measure__S3i64C8Measured( kl_t5 );
+    kl_t7 = kl_t4 + kl_t6;
+    kl_t0 = kl_t7;
+    return kl_t0;
+}
+
+int64_t kl__total__I4SizeE__4Size_4Size( int32_t* kl_a_1, int32_t* kl_b_2 )
+{
+    int64_t kl_t0;
+    int32_t* kl_t3;
+    int64_t kl_t4;
+    int32_t* kl_t5;
+    int64_t kl_t6;
+    int64_t kl_t7;
+#line 76 "codegen/implements_for.kl"
+    kl_t3 = &( *kl_a_1 );
+    kl_t4 = kl__measure__S4SizeC8Measured( kl_t3 );
+    kl_t5 = &( *kl_b_2 );
+    kl_t6 = kl__measure__S4SizeC8Measured( kl_t5 );
+    kl_t7 = kl_t4 + kl_t6;
+    kl_t0 = kl_t7;
+    return kl_t0;
+}
+
+void kl__grow_twice__I3i64E__R3i64( int64_t* kl_v_1 )
+{
+    int64_t* kl_t2;
+    int64_t* kl_t4;
+#line 81 "codegen/implements_for.kl"
+    kl_t2 = &( *kl_v_1 );
+    kl__grow__S3i64C8Measured_3i64( kl_t2, 1 );
+#line 82 "codegen/implements_for.kl"
+    kl_t4 = &( *kl_v_1 );
+    kl__grow__S3i64C8Measured_3i64( kl_t4, 1 );
+    return;
+}
+
+void kl__grow_twice__I4SizeE__R4Size( int32_t* kl_v_1 )
+{
+    int32_t* kl_t2;
+    int32_t* kl_t4;
+#line 81 "codegen/implements_for.kl"
+    kl_t2 = &( *kl_v_1 );
+    kl__grow__S4SizeC8Measured_3i64( kl_t2, 1 );
+#line 82 "codegen/implements_for.kl"
+    kl_t4 = &( *kl_v_1 );
+    kl__grow__S4SizeC8Measured_3i64( kl_t4, 1 );
+    return;
+}
+
+struct kl__Measured__ref kl_7prelude_get__I8MeasuredE__SQ7prelude3boxI8MeasuredE( struct kl_7prelude_box__I8MeasuredE* kl_this_1 )
+{
+    struct kl__Measured__ref kl_t0;
+#line 232 "<prelude>"
+    kl_t0 = ( *kl_this_1 ).kl_p__882;
+    return kl_t0;
+}
+
+void kl_7prelude_box__I4HeldE__RQ7prelude3boxI4HeldE_M4Held__ctor( struct kl_7prelude_box__I4HeldE* kl_this_1, struct kl__Held kl_value_2 )
+{
+    struct kl__Held* kl_slot_3;
+    struct kl__Held* kl_t4;
+    struct kl__Held* kl_t5;
+    struct kl__Held* kl_t6;
+    struct kl__Held* kl_t7;
+    bool kl_t8;
+#line 209 "<prelude>"
+    kl_t8 = true;
+#line 214 "<prelude>"
+    kl_t4 = ( struct kl__Held* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl__Held ), "<prelude>", 214, "out of memory: alloc<T>( 1 )" );
+    kl_slot_3 = kl_t4;
+#line 215 "<prelude>"
+    kl_t5 = kl_slot_3 + 0;
+    ( *kl_t5 ) = kl_value_2;
+    kl_t8 = false;
+#line 216 "<prelude>"
+    kl_t6 = kl_slot_3 + 0;
+    kl_t7 = &( *kl_t6 );
+    ( *kl_this_1 ).kl_p__882 = kl_t7;
+#line 209 "<prelude>"
+    if ( kl_t8 ) kl__Held__dtor( &kl_value_2 );
+    kl_t8 = false;
+    return;
+}
+
+void kl_7prelude_box__I8MeasuredE__dtor( struct kl_7prelude_box__I8MeasuredE* kl_this_1 )
+{
+    struct kl__Measured__ref kl_t2;
+#line 224 "<prelude>"
+    kl_t2 = ( *kl_this_1 ).kl_p__882;
+    kl_t2.vtable->drop( kl_t2.self );
+#line 225 "<prelude>"
+    kl_rt_free( ( ( *kl_this_1 ).kl_p__882 ).self );
+    return;
+}
+
+void kl_7prelude_box__I4HeldE__dtor( struct kl_7prelude_box__I4HeldE* kl_this_1 )
+{
+    struct kl__Held* kl_t2;
+#line 224 "<prelude>"
+    kl_t2 = ( *kl_this_1 ).kl_p__882;
+    kl__Held__dtor( &( *kl_t2 ) );
+#line 225 "<prelude>"
+    kl_rt_free( ( *kl_this_1 ).kl_p__882 );
+    return;
+}
+
+void kl__Held__dtor( struct kl__Held* kl_t1 )
+{
+    bool kl_t2;
+#line 30 "codegen/implements_for.kl"
+    kl_t2 = ( *kl_t1 ).tag == 0;
+    if ( kl_t2 ) goto bb2; else goto bb1;
+    bb1:
+    return;
+    bb2:
+    kl__Tracked__dtor( &( *kl_t1 ).kl_t_48 );
+    goto bb1;
+}
+
+void kl__Held__drop( struct kl__Held* kl_t1 )
+{
+#line 30 "codegen/implements_for.kl"
+    kl__Held__dtor( &( *kl_t1 ) );
+    return;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

@@ -112,6 +112,7 @@ public:
     Node_id                  underlying_type( Node_id enum_decl ) const;
     std::span<const Node_id> payload( Node_id variant ) const;
     std::span<const Node_id> implemented( Node_id aggregate ) const;
+    Node_id                  implementer( Node_id block ) const; // the type an Implements_decl is for
 
     // Bindings: Param_decl, Var_decl, Field_decl.
     Node_id annotation( Node_id decl ) const;    // invalid for `auto`

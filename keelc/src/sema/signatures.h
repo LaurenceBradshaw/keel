@@ -14,6 +14,7 @@
 #include "sema/overloads.h"
 #include "sema/places.h"
 #include "sema/reporter.h"
+#include "sema/resolver.h"
 #include "sema/type.h"
 #include "sema/types_builder.h"
 
@@ -45,6 +46,7 @@ public:
     Signatures(
         const Ast&         ast,
         const Interner&    interner,
+        const Resolution&  resolution,
         Types_builder&     types,
         Aggregates&        aggregates,
         Bounds&            bounds,
@@ -56,6 +58,7 @@ public:
     )
         : ast_( ast ),
           interner_( interner ),
+          resolution_( resolution ),
           types_( types ),
           table_( types.table() ),
           aggregates_( aggregates ),
@@ -75,6 +78,7 @@ private:
     void declare_structs();
     void declare_interfaces();
     void declare_implements();
+    void declare_block( Node_id block ); // an `implements ... for` block, not a function body
     void declare_fields();
     void declare_functions();
     void declare_member_functions();
@@ -96,8 +100,9 @@ private:
     void check_equal_operator( Node_id decl );
     void check_index_operator( Node_id decl );
 
-    const Ast&      ast_;
-    const Interner& interner_;
+    const Ast&        ast_;
+    const Interner&   interner_;
+    const Resolution& resolution_;
 
     Types_builder& types_;
     Type_table&    table_;

@@ -1733,7 +1733,7 @@ Operand Lowering::lower_interface_call( Node_id id, Node_id requirement )
         );
     }
 
-    const Node_id method = types_.conformances().method_for( types_.table().get( held ).declaration, requirement );
+    const Node_id method = types_.conformances().method_for( types_.table(), held, requirement );
 
     assert( method.is_valid() && "a bound is met only by a type whose `implements` was checked" );
 
@@ -3257,16 +3257,17 @@ Function drop_function( const Ast& ast, Types& types, Type_id implementer )
     return function;
 }
 
-bool implements_anything( const Types& types, Node_id declaration )
+bool implements_anything( const Types& types, Type_id type )
 {
     return std::ranges::any_of(
         types.conformances().conformances,
-        [&]( const Conformance& conformance ) { return conformance.implementer == declaration; }
+        [&]( const Conformance& conformance )
+        { return types.conformances().of( types.table(), type, conformance.interface ) != nullptr; }
     );
 }
 
 // Every closed owning enum the table holds, each owning union, and each owning implementer's drop
-// function. Repeated until nothing new appears, because lowering one destructor can intern another:
+// function, struct or enum. Repeated until nothing new appears, because lowering one destructor can intern another:
 // `Option<Option<Buf>>` names `Option<Buf>`.
 void append_synthesised_drops( const Ast& ast, Types& types, Literal_pool& literals, std::vector<Function>& functions )
 {
@@ -3301,9 +3302,8 @@ void append_synthesised_drops( const Ast& ast, Types& types, Literal_pool& liter
 
     for( const Type_id type : types.table().composite_types() )
     {
-        if( types.table().is_struct( type ) && !types.table().mentions_parameter( type ) &&
-            implements_anything( types, types.table().get( type ).declaration ) &&
-            instance_owns( ast, types.table(), type, types.recorded() ) )
+        if( ( types.table().is_struct( type ) || types.table().is_enum( type ) ) && !types.table().mentions_parameter( type ) &&
+            implements_anything( types, type ) && instance_owns( ast, types.table(), type, types.recorded() ) )
         {
             functions.push_back( drop_function( ast, types, type ) );
         }

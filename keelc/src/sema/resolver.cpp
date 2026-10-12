@@ -47,6 +47,7 @@ private:
     void visit_case_arm( Node_id id );
     void visit_enum( Node_id id );
     void visit_aggregate( Node_id id );
+    void visit_block( Node_id id ); // an `implements ... for` block, not a function body
 
     std::unordered_map<u32, Node_id> declare_members( Node_id aggregate );
 
@@ -102,7 +103,8 @@ Resolution Resolver::run()
     for( const Node_id decl : ast_.declarations( ast_.root() ) )
     {
         if( ast_.kind( decl ) == Node_kind::Function_decl || ast_.kind( decl ) == Node_kind::Var_decl ||
-            ast_.kind( decl ) == Node_kind::Enum_decl || has_members( ast_.kind( decl ) ) ||
+            ast_.kind( decl ) == Node_kind::Enum_decl ||
+            ( ast_.kind( decl ) != Node_kind::Implements_decl && has_members( ast_.kind( decl ) ) ) ||
             ( ast_.kind( decl ) == Node_kind::Error && ast_.name( decl ).is_valid() ) )
         {
             const Symbol_id name = ast_.name( decl );
@@ -326,6 +328,9 @@ void Resolver::visit( Node_id id )
     case Node_kind::Interface_decl:
         visit_aggregate( id );
         return;
+    case Node_kind::Implements_decl:
+        visit_block( id );
+        return;
     // A bound the compiler provides names nothing; one naming an interface is bound to it here, and
     // the checker reports a name that is neither.
     case Node_kind::Bound_name:
@@ -516,6 +521,35 @@ void Resolver::visit_aggregate( Node_id id )
     pop_scope();
 
     pop_scope(); // the type parameters
+}
+
+// A block is outside its type, so the type's members are not in scope, and `self` is bound only so
+// its refusal can name the type.
+void Resolver::visit_block( Node_id id )
+{
+    for( const Node_id implemented : ast_.implemented( id ) )
+    {
+        visit( implemented );
+    }
+
+    visit( ast_.implementer( id ) );
+
+    push_scope( Scope_kind::Barrier );
+
+    if( self_.is_valid() )
+    {
+        scopes_.back().names.emplace( self_, id );
+    }
+
+    for( const Node_id member : ast_.members( id ) )
+    {
+        if( is_function_like( ast_.kind( member ) ) )
+        {
+            visit( member );
+        }
+    }
+
+    pop_scope();
 }
 
 // Fields are a member namespace, not a lexical one, so they are deliberately *not* in scopes_ here:
@@ -898,7 +932,9 @@ bool Resolver::refuse_builtin_name( Symbol_id name, Node_id decl )
     if( name == self_ )
     {
         reporter_.error_at(
-            ast_.name_span( decl ), "a declaration may not be named `self`", "`self` names the type it is written in"
+            ast_.name_span( decl ),
+            "a declaration may not be named `self`",
+            "`self` names the type that implements an interface"
         );
         return true;
     }
@@ -1875,7 +1911,8 @@ TEST_CASE( "resolver_binds_self_to_the_enclosing_type", "[sema][resolve][self]" 
         return found;
     };
 
-    SECTION( "a struct, a class, an enum payload and an interface" )
+    // Everywhere but in an interface it is then refused, by a help naming the type it is bound to.
+    SECTION( "a struct, a class, an enum payload, an interface and a block" )
     {
         struct Case
         {
@@ -1888,6 +1925,8 @@ TEST_CASE( "resolver_binds_self_to_the_enclosing_type", "[sema][resolve][self]" 
             { "class Buffer { u8* p; self* twin; ~Buffer() { } };", Node_kind::Class_decl },
             { "enum List { Cons( i32 head, self* rest ), Nil };", Node_kind::Enum_decl },
             { "interface Same { bool same( const ref self other ) const; };", Node_kind::Interface_decl },
+            { "interface Same { u64 hash() const; };\nimplements Same for i32 { u64 hash() const { self c = 1; return 1; } };",
+              Node_kind::Implements_decl },
         };
 
         for( const Case& c : cases )
@@ -1956,7 +1995,7 @@ TEST_CASE( "resolver_refuses_self_as_a_name", "[sema][resolve][self]" )
                  "T id<self, T>( T x ) { return x; }\ni32 main() { return 0; }",
              } )
         {
-            refused( source, declared, "`self` names the type it is written in" );
+            refused( source, declared, "`self` names the type that implements an interface" );
         }
     }
 

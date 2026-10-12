@@ -1,0 +1,64 @@
+// M9.5: another package's struct and class conform in blocks written beside the interface. Each
+// block is outside its type, so it reaches fields through `this`. The class conforms only through
+// its block, which is how the vtable finds its drop function. Exits with the failing check.
+import shapes::kinds;
+
+interface Measured
+{
+    i64 measure() const;
+    void grow( i64 by );
+};
+
+implements Measured for shapes::Rod
+{
+    i64 measure() const { return this.length * 10; }
+    void grow( i64 by ) { this.length = this.length + by; }
+};
+
+implements Measured for shapes::Tracked
+{
+    i64 measure() const { return this.n; }
+    void grow( i64 by ) { this.n = this.n + by; }
+};
+
+i64 total<T>( const ref T a, const ref T b ) where T : Measured
+{
+    return a.measure() + b.measure();
+}
+
+void grow_twice<T>( ref T v ) where T : Measured
+{
+    v.grow( 1 );
+    v.grow( 1 );
+}
+
+i64 through( const ref Measured m ) { return m.measure(); }
+
+void enlarge( ref Measured m ) { m.grow( 2 ); }
+
+i32 main()
+{
+    shapes::Rod r = shapes::Rod { 2 };
+
+    if( total( r, r ) != 40 ) { return 1; }
+
+    grow_twice( ref r );
+    if( r.length != 4 ) { return 2; }
+
+    if( through( r ) != 40 ) { return 3; }
+    enlarge( ref r );
+    if( through( r ) != 60 ) { return 4; }
+
+    Measured* p = &r;
+    p.grow( 1 );
+    if( r.length != 7 ) { return 5; }
+
+    {
+        box<Measured> t = box<shapes::Tracked>( move shapes::Tracked( 3 ) );
+        t.get().grow( 1 );
+        if( t.get().measure() != 4 ) { return 6; }
+    }
+    if( shapes::drops != 1 ) { return 7; }
+
+    return 0;
+}

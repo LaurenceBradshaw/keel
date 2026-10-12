@@ -38,14 +38,17 @@ struct Mangled_parameter
 // argtypes as `S<type>` - inside them rather than beside the name, where a legitimately named free
 // function could spell it - and the receiver is then not among the params, since a member's
 // receiver can never be what tells two members apart. A method `at( i32 ) const` on `Box` is
-// `kl__at__S3Box_3i32`, and the free `at( Box, i32 )` keeps `kl__at__3Box_3i32`.
+// `kl__at__S3Box_3i32`, and the free `at( Box, i32 )` keeps `kl__at__3Box_3i32`. A method written in
+// a block also carries the interface it answers, as `C<interface>` after the `S` tag, so it and the
+// type's own method of that name stay apart.
 std::string mangle_function(
     std::string_view                   module,
     std::string_view                   name,
     std::span<const Mangled_parameter> params,
     const Type_table&                  types,
     std::span<const Type_id>           type_arguments = {},
-    Type_id                            enclosing      = {}
+    Type_id                            enclosing      = {},
+    Type_id                            conformed      = {}
 );
 // `kl_<module>_<Name>`, plus `__I<args>E` when the aggregate is an instantiation. The type rather
 // than a name, because `Box<i32>` and `Box<f64>` are two C structs from one declaration.

@@ -22,6 +22,7 @@ const std::set<std::string_view> k_keywords = {
     "enum",
     "extern",
     "fn",
+    "for",
     "implements",
     "interface",
     "move",
@@ -35,6 +36,14 @@ const std::set<std::string_view> k_keywords = {
     "unsafe",
     "where",
 };
+
+// An id for `name`: a block is `Measured for i64`, and an id holds no space.
+std::string anchor_of( std::string_view name )
+{
+    std::string id = html_escape( name );
+    std::ranges::replace( id, ' ', '-' );
+    return id;
+}
 
 bool is_type( std::string_view declares )
 {
@@ -243,13 +252,13 @@ void Page_writer::group(
     std::string& out, const Group& group, const std::string& id, const std::string& page, std::string_view self
 ) const
 {
-    out += fmt::format( "<div class=\"group\" id=\"{}\">\n", html_escape( id ) );
+    out += fmt::format( "<div class=\"group\" id=\"{}\">\n", anchor_of( id ) );
 
     for( const Declaration& decl : group.overloads )
     {
         out += fmt::format(
             "<pre class=\"signature\"><a class=\"anchor\" href=\"#{}\" aria-label=\"Link to {}\">#</a><code>{}</code></pre>\n",
-            html_escape( id ),
+            anchor_of( id ),
             html_escape( group.name ),
             signature( decl.signature, page, self, decl.declares, group.name )
         );
@@ -308,7 +317,7 @@ std::string Page_writer::index() const
             out += fmt::format(
                 "<dt><a href=\"{}#{}\"><code>{}</code></a> <span class=\"kind\">{}</span></dt>\n<dd>{}</dd>\n",
                 page,
-                html_escape( group.name ),
+                anchor_of( group.name ),
                 html_escape( group.name ),
                 group.declares(),
                 render_summary( group.overloads.front().doc )
@@ -374,7 +383,7 @@ void Page_writer::entries( std::string& out, const std::vector<Entry>& entries, 
         {
             out += fmt::format(
                 "<li><a href=\"#{}\"><code>{}</code></a> <span class=\"kind\">{}</span></li>\n",
-                html_escape( entry.group.name ),
+                anchor_of( entry.group.name ),
                 html_escape( entry.group.name ),
                 entry.group.declares()
             );
@@ -612,6 +621,40 @@ TEST_CASE( "pages_treat_an_interface_as_a_type", "[pages]" )
     REQUIRE(
         shapes.find( "<span class=\"kw\">implements</span> <a class=\"type\" href=\"#Shape\">Shape</a>" ) != std::string::npos
     );
+}
+
+// A block declares no name, so it is known by what it joins, and its methods sit under it.
+TEST_CASE( "pages_give_a_block_an_entry_of_its_own", "[pages]" )
+{
+    const Package package {
+        "geo",
+        "",
+        { Module {
+            "shapes",
+            { Entry { Group { "Shape", { { "interface", "Shape", "interface Shape", "" } } }, {} },
+              Entry {
+                  Group { "Shape for i64", { { "implements", "Shape for i64", "implements Shape for i64", "" } } },
+                  { Section { "Methods", { Group { "area", { { "method", "area", "public f64 area() const", "" } } } } } }
+              } },
+        } },
+        {},
+        {},
+    };
+    const std::string shapes = render_pages( package ).at( "shapes.html" );
+
+    INFO( shapes );
+    REQUIRE(
+        shapes.find( "<h2><span class=\"kind\">implements</span> <span class=\"\">Shape for i64</span></h2>" ) !=
+        std::string::npos
+    );
+    REQUIRE(
+        shapes.find(
+            "<span class=\"kw\">implements</span> <a class=\"type\" href=\"#Shape\">Shape</a> <span class=\"kw\">for</span> "
+            "<span class=\"prim\">i64</span>"
+        ) != std::string::npos
+    );
+    REQUIRE( shapes.find( "<li><a href=\"#Shape-for-i64\">" ) != std::string::npos );
+    REQUIRE( shapes.find( "<div class=\"group\" id=\"Shape-for-i64.area\">" ) != std::string::npos );
 }
 
 TEST_CASE( "pages_keep_overloads_under_one_anchor", "[pages]" )

@@ -47,8 +47,8 @@ bool Places::is_assignable( Node_id id ) const
         return false;
     }
 
-    // C++ forbids it, and `this` is an ordinary parameter here - which is what makes everything
-    // else free, and is exactly why this one case has to be written down.
+    // `this` is not a place to borrow or move from; assigning it whole is the statement's own
+    // question (visit_assign, visit_increment).
     if( ast_.kind( decl ) == Node_kind::Param_decl && ast_.name( decl ) == Interner::keyword( Keyword::This ) )
     {
         return false;
@@ -58,6 +58,14 @@ bool Places::is_assignable( Node_id id ) const
     // check_writable's question, and it answers no - which is the same split `const` uses.
     return ast_.kind( decl ) == Node_kind::Var_decl || ast_.kind( decl ) == Node_kind::Param_decl ||
            ast_.kind( decl ) == Node_kind::Field_decl || ast_.kind( decl ) == Node_kind::Binding_decl;
+}
+
+// A bare `this`, the receiver itself rather than a field reached through it.
+bool Places::names_this( Node_id id ) const
+{
+    const Node_id decl = resolution_.declaration_of( id );
+    return id.is_valid() && ast_.kind( id ) == Node_kind::Name_expr && decl.is_valid() &&
+           ast_.kind( decl ) == Node_kind::Param_decl && ast_.name( decl ) == Interner::keyword( Keyword::This );
 }
 
 // The address is recorded on the annotation exactly when a declaration is a borrow - the same

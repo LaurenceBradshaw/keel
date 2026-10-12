@@ -684,7 +684,7 @@ Type_id Expressions::infer_method_call( Node_id id )
                 ? fmt::format(
                       "a `where` clause naming an interface gives `{}` that interface's methods", table_.name( object_type )
                   )
-                : std::string {}
+                : reached_only_as( object_type, ast_.name( callee ) )
         );
         return types_.poison( id );
     }
@@ -697,7 +697,8 @@ Type_id Expressions::infer_method_call( Node_id id )
     {
         reporter_.error_at(
             ast_.span( callee ),
-            fmt::format( "`{}` has no method `{}`", table_.name( object_type ), interner_.text( ast_.name( callee ) ) )
+            fmt::format( "`{}` has no method `{}`", table_.name( object_type ), interner_.text( ast_.name( callee ) ) ),
+            reached_only_as( object_type, ast_.name( callee ) )
         );
 
         return types_.poison( id );
@@ -736,7 +737,8 @@ Type_id Expressions::infer_method_call( Node_id id )
 
         reporter_.error_at(
             ast_.span( callee ),
-            fmt::format( "`{}` has no method `{}`", table_.name( object_type ), interner_.text( ast_.name( callee ) ) )
+            fmt::format( "`{}` has no method `{}`", table_.name( object_type ), interner_.text( ast_.name( callee ) ) ),
+            reached_only_as( object_type, ast_.name( callee ) )
         );
 
         return types_.poison( id );
@@ -829,6 +831,33 @@ Node_id Expressions::method_owner( Type_id receiver, Symbol_id name ) const
     }
 
     return interfaces.empty() ? Node_id {} : table_.get( interfaces.front() ).declaration;
+}
+
+// A block's method answers its interface and is not the type's, so a direct call is pointed at the
+// interface. Empty when no block for `type` declares `name`.
+std::string Expressions::reached_only_as( Type_id type, Symbol_id name ) const
+{
+    for( const Node_id block : ast_.declarations( ast_.root() ) )
+    {
+        if( ast_.kind( block ) != Node_kind::Implements_decl || types_.type_of( block ) != type )
+        {
+            continue;
+        }
+
+        for( const Node_id member : ast_.members( block ) )
+        {
+            if( ast_.kind( member ) == Node_kind::Method_decl && ast_.name( member ) == name )
+            {
+                return fmt::format(
+                    "`{0}` is reached only as a `{1}`: through a `where T : {1}` parameter, or a `{1}*`",
+                    interner_.text( name ),
+                    table_.name( types_.type_of( ast_.implemented( block )[0] ) )
+                );
+            }
+        }
+    }
+
+    return {};
 }
 
 // Shared by every call shape - `p.area()`, a bare `area()` inside a method and `T::make()` -
@@ -7290,6 +7319,90 @@ TEST_CASE( "type_checker_calls_a_method", "[sema][method]" )
         INFO( p.rendered() );
         REQUIRE_FALSE( p.clean() );
         REQUIRE( p.rendered().find( "expected `i32`, but got `bool`" ) != std::string::npos );
+    }
+}
+
+// A block's methods answer its interface and are not the type's, so a call names the way in.
+TEST_CASE( "type_checker_reaches_a_block_s_method_only_through_its_interface", "[sema][method][implements_for]" )
+{
+    const std::string hashable = "interface Hashable { u64 hash() const; };\n"
+                                 "enum Colour { Red, Green };\n"
+                                 "implements Hashable for i32 { u64 hash() const { return 1; } };\n"
+                                 "implements Hashable for Colour { u64 hash() const { return 2; } };\n";
+
+    const std::string_view help =
+        "`hash` is reached only as a `Hashable`: through a `where T : Hashable` parameter, or a `Hashable*`";
+
+    SECTION( "called on the type, it is refused with the way in" )
+    {
+        struct Case
+        {
+            const char* call;
+            const char* message;
+        };
+
+        const Case cases[] = {
+            { "i32 x = 1; x.hash();", "`i32` has no methods" },
+            { "Colour c = Colour::Red; c.hash();", "`Colour` has no methods" },
+            { "Colour c = Colour::Red; Colour* q = &c; q.hash();", "`Colour` has no methods" },
+        };
+
+        for( const Case& c : cases )
+        {
+            const Typed p( hashable + "i32 main() { " + c.call + " return 0; }" );
+
+            INFO( c.call << "\n" << p.rendered() );
+            REQUIRE( p.errors() == 1 );
+            REQUIRE( p.rendered().find( c.message ) != std::string::npos );
+            REQUIRE( p.rendered().find( help ) != std::string::npos );
+        }
+    }
+
+    // A struct has methods of its own, so it is refused by name: the block is another package's.
+    SECTION( "called on another package's struct, likewise" )
+    {
+        const Typed p(
+            { { "main.kl",
+                "import kl::point;\ninterface Hashable { u64 hash() const; };\n"
+                "implements Hashable for kl::P { u64 hash() const { return 2; } };\n"
+                "i32 main() { kl::P p = kl::P { 1 }; p.hash(); return 0; }\n" },
+              { "kl/point.kl", "struct P { i32 v; };\n" } },
+            prelude_source()
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`kl::P` has no method `hash`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( help ) != std::string::npos );
+    }
+
+    // Without a block that declares the name, nothing points at one.
+    SECTION( "a name no block declares is refused as before" )
+    {
+        const Typed p( hashable + "struct P { i32 v; };\ni32 main() { P p = P { 1 }; p.nope(); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`P` has no method `nope`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "reached only as" ) == std::string::npos );
+    }
+
+    SECTION( "through a bound and through the interface, it is reached" )
+    {
+        const Typed p(
+            hashable + "u64 twice<T>( const ref T v ) where T : Hashable { return v.hash() + v.hash(); }\n"
+                       "u64 through( const ref Hashable h ) { return h.hash(); }\n"
+                       "i32 main() {\n"
+                       "    i32 x = 1;\n"
+                       "    Colour c = Colour::Red;\n"
+                       "    u64 a = twice( x ) + twice( c ) + through( x ) + through( c );\n"
+                       "    Hashable* h = &x;\n"
+                       "    return wrap<i32>( a + h.hash() );\n"
+                       "}"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
     }
 }
 

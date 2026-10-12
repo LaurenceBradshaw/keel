@@ -1,7 +1,7 @@
-// D55: `self` names the type it is written in. An interface whose methods mention it is only a bound,
-// so it gets no vtable, and a call through `T : Larger` reaches the implementer's method with `self`
-// read as `T`. A generic implementer answers with its own instance, and a generic's `self*` points at
-// that instance. Exits with the failing check.
+// D55: in an interface, `self` names the type that implements it. An interface whose methods mention
+// it is only a bound, so it gets no vtable, and a call through `T : Larger` reaches the implementer's
+// method with `self` read as `T`. An implementer writes its own name, a generic one its open form.
+// Exits with the failing check.
 interface Larger
 {
     bool same( const ref self other ) const;
@@ -14,7 +14,7 @@ struct Plain implements Larger
 
     bool same( const ref Plain other ) const { return v == other.v; }
 
-    self larger( const ref self other ) const
+    Plain larger( const ref Plain other ) const
     {
         if( v > other.v )
         {
@@ -29,7 +29,7 @@ struct Pair<T> implements Larger where T : Copyable & Comparable
     T first;
     T second;
 
-    bool same( const ref self other ) const { return first == other.first && second == other.second; }
+    bool same( const ref Pair<T> other ) const { return first == other.first && second == other.second; }
 
     Pair<T> larger( const ref Pair<T> other ) const
     {
@@ -43,8 +43,8 @@ struct Pair<T> implements Larger where T : Copyable & Comparable
 
 struct Node<T> where T : Copyable
 {
-    T     v;
-    self* next;
+    T        v;
+    Node<T>* next;
 };
 
 T biggest<T>( const ref T a, const ref T b, const ref T c ) where T : Larger

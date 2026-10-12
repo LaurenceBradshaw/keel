@@ -70,3 +70,17 @@ class polygon
     private u64 size_;
     private u64 room_;
 };
+
+/// Something with an area.
+interface sized
+{
+    /// The area it covers.
+    f64 area() const;
+};
+
+/// A shape, measured as a point.
+implements sized for shape
+{
+    /// A dot covers nothing.
+    f64 area() const { return 0.0; }
+};

@@ -19,7 +19,8 @@ namespace keel
 // One `implements`: the implementer's method for each of the interface's, in the interface's order.
 struct Conformance
 {
-    Node_id              implementer {}; // the aggregate's declaration
+    Node_id              implementer {}; // the aggregate or the block whose methods answer
+    Type_id              type {};        // what conforms: an aggregate's open form, or a block's type
     Type_id              interface {};
     std::vector<Node_id> requirements {}; // the interface's methods, in declaration order
     std::vector<Node_id> methods {};      // parallel to requirements; invalid where none answers
@@ -33,14 +34,15 @@ enum class Conformance_problem : u8
     Static,     // the implementer's takes no object
     Generic,    // the implementer's has type parameters of its own
     Private,    // the implementer's is hidden from a caller holding the interface
-    Repeated    // the interface is named twice in one `implements`
+    Repeated,   // the type already conforms to the interface
+    Unrequested // a block's method the interface does not declare
 };
 
 struct Conformance_error
 {
     Conformance_problem problem = Conformance_problem::Missing;
-    Span                at {};          // the interface as written after `implements`
-    Node_id             implementer {}; // the aggregate
+    Span                at {};          // the interface as written; an unrequested method's name
+    Node_id             implementer {}; // the aggregate or the block
     Type_id             interface {};
     Node_id             requirement {}; // the interface's method
     Node_id             found {};       // the implementer's method of that name, where one exists
@@ -53,10 +55,12 @@ struct Conformances
     std::vector<Conformance_error> errors;
 
     const Conformance* find( Node_id implementer, Type_id interface ) const;
-    Node_id            method_for( Node_id implementer, Node_id requirement ) const; // invalid where none answers
+    // By the type that conforms, so `Box<i32>` finds `Box<T>`'s.
+    const Conformance* of( const Type_table& table, Type_id type, Type_id interface ) const;
+    Node_id method_for( const Type_table& table, Type_id type, Node_id requirement ) const; // invalid where none answers
 };
 
-// Asked of each aggregate's `implements` list once every signature is typed.
+// Asked of each aggregate's `implements` list, and of each block, once every signature is typed.
 Conformances check_conformances( const Ast& ast, Type_table& table, std::span<const Type_id> recorded );
 
 } // namespace keel

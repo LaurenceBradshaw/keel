@@ -350,7 +350,8 @@ struct Loaned : Compiled
     {
         for( std::size_t f = 0; f < functions.size(); ++f )
         {
-            if( interner.text( ast.name( functions[f].declaration ) ) == under_test )
+            // A synthesised drop function is declared by nothing.
+            if( functions[f].declaration.is_valid() && interner.text( ast.name( functions[f].declaration ) ) == under_test )
             {
                 tested = f;
                 owning = owning_locals( functions[f], ast, types );
@@ -616,6 +617,42 @@ TEST_CASE( "borrow_check_holds_what_a_payload_binding_borrows", "[check][borrow]
          } )
     {
         require_accepted( k_payload, k_payload_locals, body );
+    }
+}
+
+// A block's method on an enum assigns `this` whole, which destroys the payload a binding holds,
+// as assigning the matched local does.
+TEST_CASE( "borrow_check_holds_a_payload_binding_of_this", "[check][borrow][implements_for]" )
+{
+    const auto source = []( std::string_view arm )
+    {
+        return std::string( k_payload ) + "interface Clears { void clear(); };\n" +
+               "implements Clears for H { void clear() { u64 c = 0; switch( this ) { case H::Full( b ): " + std::string( arm ) +
+               " break; case H::Empty: break; } } };\n" + "i32 main() { return 0; }";
+    };
+
+    {
+        const Loaned p( source( "this = H::Empty; c = b.n;" ), "clear" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+
+        const std::vector<Loan_error> errors = p.errors();
+
+        REQUIRE( errors.size() == 1 );
+        REQUIRE( errors[0].conflict == Loan_conflict::Assigned );
+        REQUIRE( p.sm.text( errors[0].at ).find( "this" ) != std::string_view::npos );
+        REQUIRE( p.name_of( errors[0].holder ) == "b" );
+        REQUIRE( p.name_of( errors[0].object ) == "this" );
+    }
+
+    // After the binding's last use.
+    {
+        const Loaned p( source( "c = b.n; this = H::Empty;" ), "clear" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.errors().empty() );
     }
 }
 

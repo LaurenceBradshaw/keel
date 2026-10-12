@@ -170,6 +170,7 @@ public:
     bool is_function( Type_id id ) const;
     bool is_field( Type_id id ) const;
     bool is_never( Type_id id ) const;
+    bool is_builtin( Type_id id ) const; // a number or `bool`: a value type no declaration owns
     // Whether a parameter appears anywhere inside, not only at the top: `T` and `T*` both do, `i32*`
     // does not. What separates a type an instance can be emitted at from one that is still a
     // template, and structural for the same reason substitute() is.
@@ -217,7 +218,9 @@ public:
     // The relation `implements` declares, recorded before any body is checked. Whether the methods
     // match is the conformance stage's question; this only says the conversion is written.
     void declare_implements( Node_id aggregate, Type_id interface );
-    bool implements( Type_id type, Type_id interface ) const; // `type` is an aggregate or an instance of one
+    void declare_implements( Type_id builtin, Type_id interface );
+    // A struct, class or enum is looked up by its declaration, so a generic's instances share it.
+    bool implements( Type_id type, Type_id interface ) const;
 
     void    declare_box( Node_id declaration );
     bool    is_box( Type_id type ) const;
@@ -256,6 +259,7 @@ private:
 
     std::unordered_map<u32, std::vector<Instance>> composites_;
     std::unordered_map<u32, std::vector<Type_id>>  implements_; // aggregate declaration -> what it implements
+    std::unordered_map<u32, std::vector<Type_id>>  builtin_implements_;
     std::unordered_map<u32, Type_id>               params_;     // Type_param_decl node -> type parameter
     std::unordered_map<u32, Type_id>               interfaces_; // Interface_decl node -> its type
     std::deque<std::string>                        composed_;

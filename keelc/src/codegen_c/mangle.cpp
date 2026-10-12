@@ -171,8 +171,10 @@ std::string construct_arg_string( std::span<const Type_id> params, const Type_ta
 
 // The marker leads, and every letter it can be is one no encoded type starts with - a type starts
 // with a digit or with `P`. `S` is the same trick for the type a member belongs to, which leads the
-// whole list.
-std::string construct_arg_string( std::span<const Mangled_parameter> params, const Type_table& types, Type_id enclosing = {} )
+// whole list, and `C` for the interface a block's method answers, which follows it.
+std::string construct_arg_string(
+    std::span<const Mangled_parameter> params, const Type_table& types, Type_id enclosing = {}, Type_id conformed = {}
+)
 {
     std::string encoded;
 
@@ -180,6 +182,12 @@ std::string construct_arg_string( std::span<const Mangled_parameter> params, con
     {
         encoded += 'S';
         encode_type( encoded, enclosing, types );
+    }
+
+    if( conformed.is_valid() )
+    {
+        encoded += 'C';
+        encode_type( encoded, conformed, types );
     }
 
     for( const Mangled_parameter& param : params )
@@ -213,7 +221,8 @@ std::string mangle_function(
     std::span<const Mangled_parameter> params,
     const Type_table&                  types,
     std::span<const Type_id>           type_arguments,
-    Type_id                            enclosing
+    Type_id                            enclosing,
+    Type_id                            conformed
 )
 {
     // An instantiation carries both. The type arguments alone would collide between two overloads
@@ -226,12 +235,12 @@ std::string mangle_function(
             module_slot( module ),
             c_name( name ),
             construct_arg_string( type_arguments, types ),
-            construct_arg_string( params, types, enclosing )
+            construct_arg_string( params, types, enclosing, conformed )
         );
     }
 
     return fmt::format(
-        "kl_{}_{}__{}", module_slot( module ), c_name( name ), construct_arg_string( params, types, enclosing )
+        "kl_{}_{}__{}", module_slot( module ), c_name( name ), construct_arg_string( params, types, enclosing, conformed )
     );
 }
 

@@ -1,0 +1,55 @@
+// M9.5: a block is written in the package that declares its interface or its type, so no two
+// packages can each make one type conform to one interface. A struct or class of its own package
+// says what it implements where it is declared, so a block for one is another package's.
+import shapes::measured;
+
+// Neither is this package's: the interface is `shapes`'s and `i32` is built in.
+implements shapes::Measured for i32
+{
+    f64 measure() const { return 1.0; }
+};
+
+// Its interface is another package's, and its type is this one's enum, which has no other way.
+enum Size
+{
+    Small,
+    Large,
+};
+
+implements shapes::Measured for Size
+{
+    f64 measure() const { return 1.0; }
+};
+
+// This package's struct says so where it is declared.
+struct Rod
+{
+    f64 length;
+};
+
+implements shapes::Measured for Rod
+{
+    f64 measure() const { return this.length; }
+};
+
+// Its interface is this package's, and its type is another's. The block is outside the type: it
+// reaches fields through `this`, and what is private stays private.
+interface Named
+{
+    f64 size() const;
+};
+
+implements Named for shapes::Square
+{
+    f64 size() const { return this.side; }
+};
+
+implements Named for shapes::Secret
+{
+    f64 size() const { return this.code; }
+};
+
+i32 main()
+{
+    return 0;
+}

@@ -1,0 +1,49 @@
+Source_file                             1:1-17:1
+  Interface_decl                        3:1-6:3     name=Hashable
+    <none>                              -
+    Method_decl                         5:5-5:22
+      Named_type                        5:5-5:8     "u64"
+      Param_list                        5:13-5:15
+        Param_decl                      5:5-5:8     name=this
+          Const_type                    5:5-5:8
+            Mode_type                   5:5-5:8     mode=ref
+              Named_type                5:5-5:8     "u64"  name=Hashable
+      <none>                            -
+      <none>                            -
+      <none>                            -
+  Implements_decl                       8:1-11:3
+    <none>                              -
+    Implements_list                     8:12-8:20
+      Named_type                        8:12-8:20   "Hashable"
+    Named_type                          8:25-8:28   "i32"
+    Method_decl                         10:5-10:35
+      Named_type                        10:5-10:8   "u64"
+      Param_list                        10:13-10:15
+        Param_decl                      10:5-10:8   name=this
+          Const_type                    10:5-10:8
+            Mode_type                   10:5-10:8   mode=ref
+              Named_type                8:25-8:28   "i32"
+      Block                             10:22-10:35
+        Return_stmt                     10:24-10:33
+          Int_literal                   10:31-10:32 "1"
+      <none>                            -
+      <none>                            -
+  Implements_decl                       13:1-16:3
+    <none>                              -
+    Implements_list                     13:12-13:20
+      Named_type                        13:12-13:20 "Hashable"
+    Named_type                          13:25-13:35 name=string
+      Name_expr                         13:25-13:27 "kl"
+    Method_decl                         15:5-15:35
+      Named_type                        15:5-15:8   "u64"
+      Param_list                        15:13-15:15
+        Param_decl                      15:5-15:8   name=this
+          Const_type                    15:5-15:8
+            Mode_type                   15:5-15:8   mode=ref
+              Named_type                13:25-13:35 name=string
+                Name_expr               13:25-13:27 "kl"
+      Block                             15:22-15:35
+        Return_stmt                     15:24-15:33
+          Int_literal                   15:31-15:32 "2"
+      <none>                            -
+      <none>                            -

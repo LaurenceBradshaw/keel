@@ -29,7 +29,9 @@ public:
     std::vector<Declaration> run();
 
 private:
-    void add( Node_id decl, std::string_view kind, Node_id parent );
+    void        add( Node_id decl, std::string_view kind, Node_id parent );
+    void        add_block( Node_id block );
+    std::string block_name( Node_id block ) const;
 
     const Ast&            ast_;
     const Resolution&     resolution_;
@@ -67,6 +69,14 @@ std::vector<Declaration> Declaration_collector::run()
             break;
         case Node_kind::Interface_decl:
             add( decl, "interface", Node_id {} );
+
+            for( const Node_id method : ast_.members( decl ) )
+            {
+                add( method, "method", decl );
+            }
+            break;
+        case Node_kind::Implements_decl:
+            add_block( decl );
 
             for( const Node_id method : ast_.members( decl ) )
             {
@@ -128,9 +138,36 @@ void Declaration_collector::add( Node_id decl, std::string_view kind, Node_id pa
           kind,
           ast_.access( decl ),
           print_signature( ast_, resolution_, types_, interner_, decl ),
-          parent.is_valid() ? std::string( interner_.text( ast_.name( parent ) ) ) : std::string {},
+          !parent.is_valid()                                  ? std::string {}
+          : ast_.kind( parent ) == Node_kind::Implements_decl ? block_name( parent )
+                                                              : std::string( interner_.text( ast_.name( parent ) ) ),
           documentation( ast_, sm_, decl ) }
     );
+}
+
+void Declaration_collector::add_block( Node_id block )
+{
+    if( ast_.broken( block ) )
+    {
+        return;
+    }
+
+    declarations_.push_back(
+        { ast_.name_span( block ),
+          "implements",
+          Access::Public,
+          print_signature( ast_, resolution_, types_, interner_, block ),
+          std::string {},
+          documentation( ast_, sm_, block ),
+          block_name( block ) }
+    );
+}
+
+// What a block is known by, since it declares no name: `Measured for i64`.
+std::string Declaration_collector::block_name( Node_id block ) const
+{
+    constexpr std::string_view keyword = "implements ";
+    return print_signature( ast_, resolution_, types_, interner_, block ).substr( keyword.size() );
 }
 
 } // namespace
@@ -170,11 +207,12 @@ void render_declarations_json(
         const Line_col start = sm.line_col( decl.span.file, decl.span.start );
         const Line_col end   = sm.line_col( decl.span.file, decl.span.end );
 
-        out << R"({"kind":"declaration","declares":")" << decl.kind << R"(","name":")" << json_escape( sm.text( decl.span ) )
-            << R"(","file":")" << json_escape( sm.file( decl.span.file ).path ) << R"(","line":)" << start.line << R"(,"col":)"
-            << start.col << R"(,"end_col":)" << end.col << R"(,"access":")"
-            << ( decl.access == Access::Private ? "private" : "public" ) << R"(","signature":")"
-            << json_escape( decl.signature ) << '"';
+        const std::string_view name = decl.name.empty() ? sm.text( decl.span ) : std::string_view( decl.name );
+
+        out << R"({"kind":"declaration","declares":")" << decl.kind << R"(","name":")" << json_escape( name ) << R"(","file":")"
+            << json_escape( sm.file( decl.span.file ).path ) << R"(","line":)" << start.line << R"(,"col":)" << start.col
+            << R"(,"end_col":)" << end.col << R"(,"access":")" << ( decl.access == Access::Private ? "private" : "public" )
+            << R"(","signature":")" << json_escape( decl.signature ) << '"';
 
         if( !decl.parent.empty() )
         {

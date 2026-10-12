@@ -1,5 +1,6 @@
-// D55: `self` names the type it is written in, and only there. An interface whose methods mention
-// it can only bound a type parameter. Each mistake is reported once, where it was made.
+// D55: `self` is written only in an interface, where it names the type that implements it. An
+// interface whose methods mention it can only bound a type parameter. Each mistake is reported once,
+// where it was made.
 interface Same
 {
     bool same( const ref self other ) const;
@@ -32,7 +33,15 @@ bool compare<T>( const ref T a ) where T : Same
     return a.same( 1 );
 }
 
-// Outside a type there is nothing to name.
+// An implementer writes its own name.
+struct R implements Same
+{
+    i32 v;
+
+    bool same( const ref self other ) const { return true; }
+};
+
+// Outside a type there is nothing to name, and inside one the help names it.
 self make() { }
 
 struct Holder
@@ -50,7 +59,7 @@ struct Counter
     static Counter make() { return self { 0 }; }
 };
 
-// An enum counts in an integer, never in itself.
+// Nor is it an enum's integer.
 enum Small : self
 {
     A,
@@ -65,6 +74,7 @@ struct Cell<T> where T : Copyable
 interface Wrapped
 {
     void take( Cell<self>* h );
+    void hold( self<i32>* h );
 };
 
 i32 main()

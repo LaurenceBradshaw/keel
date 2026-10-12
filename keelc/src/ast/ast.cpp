@@ -158,6 +158,7 @@ Symbol_id Ast::name( Node_id id ) const
     case Node_kind::Where_clause:
     case Node_kind::Bound_name:
     case Node_kind::Interface_decl:
+    case Node_kind::Implements_decl:
         return Symbol_id { aux( id ) };
     default:
         assert( false && "this kind's aux is not a name" );
@@ -278,7 +279,8 @@ Node_id Ast::body( Node_id id ) const
 
 Node_id Ast::type_param_list( Node_id id ) const
 {
-    if( is_aggregate( kind( id ) ) || kind( id ) == Node_kind::Enum_decl || kind( id ) == Node_kind::Interface_decl )
+    if( is_aggregate( kind( id ) ) || kind( id ) == Node_kind::Enum_decl || kind( id ) == Node_kind::Interface_decl ||
+        kind( id ) == Node_kind::Implements_decl )
     {
         return child( id, 0 );
     }
@@ -375,6 +377,11 @@ std::span<const Node_id> Ast::members( Node_id id ) const
         return children( id ).subspan( 1 ); // past the Type_param_list slot
     }
 
+    if( kind( id ) == Node_kind::Implements_decl )
+    {
+        return children( id ).subspan( 3 ); // past the Type_param_list slot, the Implements_list and the type
+    }
+
     return children( id ).subspan( 2 ); // past the Type_param_list slot and the Implements_list slot
 }
 
@@ -394,6 +401,12 @@ std::span<const Node_id> Ast::payload( Node_id variant ) const
 {
     assert( kind( variant ) == Node_kind::Variant_decl );
     return children( variant );
+}
+
+Node_id Ast::implementer( Node_id block ) const
+{
+    assert( kind( block ) == Node_kind::Implements_decl );
+    return child( block, 2 );
 }
 
 std::span<const Node_id> Ast::implemented( Node_id aggregate ) const
