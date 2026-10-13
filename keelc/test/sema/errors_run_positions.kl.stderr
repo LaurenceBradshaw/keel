@@ -1,0 +1,103 @@
+error: `u8[]` is a run, so it is reached only through `ref`
+  --> sema/errors_run_positions.kl:15:5
+   |
+15 |     u8[] bytes;
+   |     ^^^^ borrow it as `const ref u8[]`, or point at its elements with `u8[*]`
+
+error: `u8[]` is a run, so it is reached only through `ref`
+  --> sema/errors_run_positions.kl:30:16
+   |
+30 | void by_value( u8[] text )
+   |                ^^^^ borrow it as `const ref u8[]`, or point at its elements with `u8[*]`
+
+error: `u8[]` is a run, so it is reached only through `ref`
+  --> sema/errors_run_positions.kl:34:1
+   |
+34 | u8[] returned_by_value( const ref u8[] text )
+   | ^^^^ borrow it as `const ref u8[]`, or point at its elements with `u8[*]`
+
+error: `u8[]` is a run, so it is reached only through `ref`
+  --> sema/errors_run_positions.kl:41:5
+   |
+41 |     u8[] text;
+   |     ^^^^ borrow it as `const ref u8[]`, or point at its elements with `u8[*]`
+
+error: `u8[]` is a run, so it is reached only through `ref`
+  --> sema/errors_run_positions.kl:44:25
+   |
+44 | void through_a_pointer( u8[]* text )
+   |                         ^^^^ borrow it as `const ref u8[]`, or point at its elements with `u8[*]`
+
+error: `u8[]` is a run, so it is reached only through `ref`
+  --> sema/errors_run_positions.kl:48:30
+   |
+48 | void through_a_many_pointer( u8[][*] texts )
+   |                              ^^^^ borrow it as `const ref u8[]`, or point at its elements with `u8[*]`
+
+error: `u8[]` is a run, so it is reached only through `ref`
+  --> sema/errors_run_positions.kl:52:25
+   |
+52 | void out_parameter( out u8[] text )
+   |                         ^^^^ borrow it as `const ref u8[]`, or point at its elements with `u8[*]`
+
+error: `u8[]` is a run, so it is reached only through `ref`
+  --> sema/errors_run_positions.kl:56:27
+   |
+56 | void move_parameter( move u8[] text )
+   |                           ^^^^ borrow it as `const ref u8[]`, or point at its elements with `u8[*]`
+
+error: `u8[]` is a run, so it is reached only through `ref`
+  --> sema/errors_run_positions.kl:60:31
+   |
+60 | void a_run_of_runs( const ref u8[][] texts )
+   |                               ^^^^ borrow it as `const ref u8[]`, or point at its elements with `u8[*]`
+
+error: `void[]` has no element to hold
+  --> sema/errors_run_positions.kl:64:31
+   |
+64 | void a_run_of_void( const ref void[] nothing )
+   |                               ^^^^^^ name the element's type, as in `u8[]`
+
+error: `never` is only a return type
+  --> sema/errors_run_positions.kl:68:32
+   |
+68 | void a_run_of_never( const ref never[] nothing )
+   |                                ^^^^^^^
+
+error: `Shape` is an interface, so it cannot be held by value
+  --> sema/errors_run_positions.kl:72:33
+   |
+72 | void a_run_of_shapes( const ref Shape[] shapes )
+   |                                 ^^^^^ borrow one as `const ref Shape` or `ref Shape`, or point at one with `Shape*`
+
+error: `u8[]` is a run, so it is reached only through `ref`
+  --> sema/errors_run_positions.kl:76:41
+   |
+76 | void a_by_value_function_parameter( fn( u8[] ) -> u64 measure )
+   |                                         ^^^^ borrow it as `const ref u8[]`, or point at its elements with `u8[*]`
+
+error: `u8[]` is a run, so it is reached only through `ref`
+  --> sema/errors_run_positions.kl:80:40
+   |
+80 | void a_generic_argument( const ref Box<u8[]> box )
+   |                                        ^^^^ borrow it as `const ref u8[]`, or point at its elements with `u8[*]`
+
+error: `u8[]` is a run, so it is reached only through `ref`
+  --> sema/errors_run_positions.kl:90:10
+   |
+90 |     take<u8[]>( text );
+   |          ^^^^ borrow it as `const ref u8[]`, or point at its elements with `u8[*]`
+
+error: `T` cannot be `u8[]`: a run is never a type argument
+  --> sema/errors_run_positions.kl:95:11
+   |
+95 |     take( text );
+   |           ^^^^ take the run as `const ref u8[]`
+
+error: `T` cannot be `u8[]`: a run is never a type argument
+   --> sema/errors_run_positions.kl:109:18
+    |
+109 |     reader.read( text );
+    |                  ^^^^ take the run as `const ref u8[]`
+
+17 errors generated

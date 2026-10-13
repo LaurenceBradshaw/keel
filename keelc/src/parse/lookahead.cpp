@@ -385,6 +385,22 @@ bool Lookahead::looks_like_type_arguments( u32 at )
         case Token_kind::Pipe:
             break;
 
+        case Token_kind::L_bracket:
+            if( cursor_.peek( 1 ).kind == Token_kind::R_bracket )
+            {
+                cursor_.advance(); // `[`
+            }
+            else if( cursor_.peek( 1 ).kind == Token_kind::Star && cursor_.peek( 2 ).kind == Token_kind::R_bracket )
+            {
+                cursor_.advance(); // `[`
+                cursor_.advance(); // `*`
+            }
+            else
+            {
+                return false;
+            }
+            break;
+
         default:
             return false;
         }

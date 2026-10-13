@@ -85,6 +85,7 @@ private:
     Reporter&         reporter_;
 
     Node_id addressed_ {};     // the Named_type a `*` or a `ref` just wrapped: the one place an interface may be named
+    Node_id borrowed_ {};      // the annotation a `ref` just wrapped: the one place a run may be written
     bool    receiver_ = false; // resolving an interface method's receiver, which a bound-only interface allows
 };
 

@@ -35,6 +35,7 @@ enum class Type_kind : u8
     Float,
     Pointer,
     Many_pointer, // T[*]
+    Run,          // T[]
     Struct,       // `declaration` says which one
     Enum,
     Parameter, // a generic type parameter.
@@ -110,6 +111,7 @@ public:
     Type_id floating( u8 width ) const;
     Type_id pointer_to( Type_id element, bool const_element = false ); // interns; same element -> same id
     Type_id many_pointer_to( Type_id element, bool const_element = false );
+    Type_id run_of( Type_id element );
     Type_id function( Type_id return_type, std::span<const Parameter> parameters, Param_mode return_mode = Param_mode::Value );
     Type_id field( Type_id aggregate, Type_id member ); // `field( C ) -> T`: C in arguments, T in element
     Type_id enumeration( Node_id declaration, std::span<const Type_id> arguments, std::string_view name, Type_id underlying );
@@ -156,6 +158,7 @@ public:
     // mentions_parameter.
     std::vector<Type_id> composite_types() const;
     std::vector<Type_id> interface_types() const; // in interning order
+    std::vector<Type_id> run_types() const;       // in interning order
     // Every function type interned, in interning order. Separate from composite_types because the
     // one consumer of that list wants types that become a C struct, and a function type becomes a
     // typedef instead.
@@ -173,6 +176,7 @@ public:
     bool is_enum( Type_id id ) const;
     bool is_pointer( Type_id id ) const;
     bool is_many_pointer( Type_id id ) const;
+    bool is_run( Type_id id ) const;
     bool points_to_const( Type_id id ) const;
     bool is_parameter( Type_id id ) const; // a `T`, before an instantiation substitutes it away
     bool is_function( Type_id id ) const;
@@ -222,6 +226,7 @@ public:
     bool    is_interface( Type_id id ) const;
     // A `Shape*`, which C carries as the object's address beside the implementer's vtable.
     bool is_interface_pointer( Type_id id ) const;
+    bool is_run_pointer( Type_id id ) const; // a `ref T[]` or `const ref T[]`
 
     // The relation `implements` declares, recorded before any body is checked. Whether the methods
     // match is the conformance stage's question; this only says the conversion is written.
@@ -268,6 +273,7 @@ private:
 
     std::unordered_map<u32, Type_id> pointers_;      // element.v * 2 + const -> pointer id
     std::unordered_map<u32, Type_id> many_pointers_; // element.v * 2 + const -> many pointer id
+    std::unordered_map<u32, Type_id> runs_;          // element.v -> run id
     // Struct_decl node -> every instantiation of it. A list scanned linearly rather than a map
     // keyed on the arguments: a program has a handful of instantiations per generic, and hashing a
     // vector of Type_ids to avoid a handful of comparisons is not a trade worth making - the same

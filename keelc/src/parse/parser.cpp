@@ -12031,6 +12031,8 @@ TEST_CASE( "parser_parses_a_run_type", "[parse][run]" )
                  "u8[] g = nullptr;",
                  "void f( u8[*] x ) { for( ref u8[] r = x; i < 10; i++ ) { } }",
                  "T first<T>( const ref T[] r ) { return r[ 0 ]; }",
+                 "void f( const ref u8[] r ) { take<u8[]>( r ); }",
+                 "void f() { auto p = &take<u8[]>; }",
              } )
         {
             const Parsed p( source );
@@ -12039,6 +12041,31 @@ TEST_CASE( "parser_parses_a_run_type", "[parse][run]" )
             REQUIRE_FALSE( p.has_errors() );
             REQUIRE( first_named( p, "Run_type" ).is_valid() );
         }
+    }
+
+    // A call's type arguments are told from a comparison by lookahead, which must step over both suffixes.
+    SECTION( "as a call's type argument, beside `[*]`" )
+    {
+        for( const char* source : {
+                 "void f() { auto p = make<u8[*]>( 4 ); }",
+                 "void f() { auto p = take<u8[][*], u8*>( 4 ); }",
+             } )
+        {
+            const Parsed p( source );
+
+            INFO( source << "\n" << p.errors() );
+            REQUIRE_FALSE( p.has_errors() );
+            REQUIRE( first_named( p, "Type_arg_list" ).is_valid() );
+        }
+    }
+
+    SECTION( "a comparison with an index is still a comparison" )
+    {
+        const Parsed p( "void f() { bool b = a < c[ 0 ] > ( d ); }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE_FALSE( first_named( p, "Type_arg_list" ).is_valid() );
     }
 }
 

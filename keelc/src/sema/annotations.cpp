@@ -119,6 +119,49 @@ Type_id Annotations::resolve( Node_id annotation, bool outermost )
             return table_.many_pointer_to( element, const_element );
         }
     }
+    case Node_kind::Run_type:
+    {
+        const Type_id element = resolve( ast_.inner_type( annotation ), false );
+
+        if( table_.is_error( element ) )
+        {
+            return element;
+        }
+
+        if( table_.is_void( element ) )
+        {
+            reporter_.error_at(
+                ast_.span( annotation ), "`void[]` has no element to hold", "name the element's type, as in `u8[]`"
+            );
+
+            return table_.builtin( Type_kind::Error );
+        }
+
+        if( table_.is_never( element ) )
+        {
+            reporter_.error_at( ast_.span( annotation ), "`never` is only a return type" );
+
+            return table_.builtin( Type_kind::Error );
+        }
+
+        if( borrowed_ != annotation )
+        {
+            reporter_.error_at(
+                ast_.span( annotation ),
+                fmt::format( "`{}` is a run, so it is reached only through `ref`", table_.name( table_.run_of( element ) ) ),
+                fmt::format(
+                    "borrow it as `const ref {}`, or point at its elements with `{}`",
+                    table_.name( table_.run_of( element ) ),
+                    table_.name( table_.many_pointer_to( element ) )
+                )
+            );
+
+            return table_.builtin( Type_kind::Error );
+        }
+
+        borrowed_ = {};
+        return table_.run_of( element );
+    }
 
     // D31/D32: a mode is not a type. It is unwrapped here and nowhere else, so what gets recorded
     // on the declaration is the underlying type and nothing downstream meets the wrapper - anything
@@ -130,6 +173,7 @@ Type_id Annotations::resolve( Node_id annotation, bool outermost )
         if( mode == Keyword::Ref )
         {
             addressed_ = ast_.inner_type( annotation );
+            borrowed_  = ast_.inner_type( annotation );
         }
 
         const Type_id inner = resolve( ast_.inner_type( annotation ), false );

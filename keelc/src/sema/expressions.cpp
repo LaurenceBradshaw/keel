@@ -1007,8 +1007,8 @@ void Expressions::record_method_instantiation( Node_id id, Node_id method, Type_
     record_instance( id, method, std::move( arguments ) );
 }
 
-// A bound is a promise about the type argument however it was arrived at. Underlined at the
-// argument that settled each, or the call where nothing did.
+// A deduced type argument is never a run, and keeps its bounds however it was arrived at.
+// Underlined at the argument that settled each, or the call where nothing did.
 void Expressions::check_deduced_bounds(
     std::span<const Node_id> parameters,
     std::span<const Type_id> resolved,
@@ -1018,12 +1018,23 @@ void Expressions::check_deduced_bounds(
 {
     for( std::size_t i = 0; i < parameters.size() && i < resolved.size(); ++i )
     {
-        bounds_.check_bounds(
-            parameters[i],
-            i < bound_by.size() && bound_by[i].is_valid() ? ast_.span( bound_by[i] ) : site.at,
-            resolved[i],
-            site.name
-        );
+        const Span bound_by_span = i < bound_by.size() && bound_by[i].is_valid() ? ast_.span( bound_by[i] ) : site.at;
+
+        if( resolved[i].is_valid() && table_.is_run( resolved[i] ) )
+        {
+            reporter_.error_at(
+                bound_by_span,
+                fmt::format(
+                    "`{}` cannot be `{}`: a run is never a type argument",
+                    interner_.text( ast_.name( parameters[i] ) ),
+                    table_.name( resolved[i] )
+                ),
+                fmt::format( "take the run as `const ref {}`", table_.name( resolved[i] ) )
+            );
+            continue;
+        }
+
+        bounds_.check_bounds( parameters[i], bound_by_span, resolved[i], site.name );
     }
 }
 

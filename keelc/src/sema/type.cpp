@@ -107,6 +107,22 @@ Type_id Type_table::many_pointer_to( Type_id element, bool const_element )
     return id;
 }
 
+Type_id Type_table::run_of( Type_id element )
+{
+    const u32 key = element.v;
+    // same element -> same run type
+    const auto it = runs_.find( key );
+    if( it != runs_.end() )
+    {
+        return it->second;
+    }
+
+    const std::string spelling = fmt::format( "{}[]", name( element ) );
+    const Type_id     id       = add( { .kind = Type_kind::Run, .element = element }, spelling );
+    runs_.emplace( key, id );
+    return id;
+}
+
 Type_id Type_table::function( Type_id return_type, std::span<const Parameter> parameters, Param_mode return_mode )
 {
     for( const Type_id id : functions_ )
@@ -269,6 +285,7 @@ bool Type_table::mentions_parameter( Type_id id ) const
         return true;
     case Type_kind::Pointer:
     case Type_kind::Many_pointer:
+    case Type_kind::Run:
         return mentions_parameter( described.element );
     case Type_kind::Enum:
     case Type_kind::Struct:
@@ -334,6 +351,10 @@ Type_id Type_table::substitute( Type_id type, const Bindings& bindings )
     case Type_kind::Many_pointer:
     {
         return many_pointer_to( substitute( described.element, bindings ), described.const_element );
+    }
+    case Type_kind::Run:
+    {
+        return run_of( substitute( described.element, bindings ) );
     }
     case Type_kind::Struct:
     case Type_kind::Enum:
@@ -492,6 +513,7 @@ bool Type_table::deduce( Type_id pattern, Type_id actual, Bindings& into ) const
     {
     case Type_kind::Pointer:
     case Type_kind::Many_pointer:
+    case Type_kind::Run:
         return deduce( p.element, a.element, into );
     case Type_kind::Struct:
     case Type_kind::Enum:
@@ -612,6 +634,20 @@ std::vector<Type_id> Type_table::interface_types() const
     std::vector<Type_id> result;
 
     for( const auto& [declaration, type] : interfaces_ )
+    {
+        result.push_back( type );
+    }
+
+    std::sort( result.begin(), result.end(), []( Type_id a, Type_id b ) { return a.v < b.v; } );
+
+    return result;
+}
+
+std::vector<Type_id> Type_table::run_types() const
+{
+    std::vector<Type_id> result;
+
+    for( const auto& [element, type] : runs_ )
     {
         result.push_back( type );
     }
@@ -911,6 +947,12 @@ bool Type_table::is_many_pointer( Type_id id ) const
     return get( id ).kind == Type_kind::Many_pointer;
 }
 
+bool Type_table::is_run( Type_id id ) const
+{
+    assert( id.is_valid() );
+    return get( id ).kind == Type_kind::Run;
+}
+
 // const T* or const T[*]
 bool Type_table::points_to_const( Type_id id ) const
 {
@@ -1104,6 +1146,16 @@ bool Type_table::is_interface_pointer( Type_id id ) const
     }
 
     return get( id ).kind == Type_kind::Pointer && is_interface( get( id ).element );
+}
+
+bool Type_table::is_run_pointer( Type_id id ) const
+{
+    if( !id.is_valid() )
+    {
+        return false;
+    }
+
+    return get( id ).kind == Type_kind::Pointer && is_run( get( id ).element );
 }
 
 void Type_table::declare_implements( Node_id aggregate, Type_id interface )
@@ -3022,6 +3074,142 @@ TEST_CASE( "type_table_holds_a_box_of_an_implementer_as_a_box_of_its_interface",
         table.structure( Node_id { 10 }, std::array { point }, "Holder" ),
         table.structure( Node_id { 10 }, std::array { shape }, "Holder" )
     ) );
+}
+
+TEST_CASE( "type_table_interns_a_run", "[sema][type][run]" )
+{
+    Type_table table;
+
+    const Type_id u8   = table.integer( 8, false );
+    const Type_id i32  = table.integer( 32, true );
+    const Type_id run  = table.run_of( u8 );
+    const Type_id many = table.many_pointer_to( u8 );
+
+    SECTION( "interned once, apart from the many-item pointer" )
+    {
+        REQUIRE( table.run_of( u8 ) == run );
+        REQUIRE( run != many );
+        REQUIRE( table.run_of( i32 ) != run );
+        REQUIRE( table.get( run ).element == u8 );
+        REQUIRE_FALSE( table.get( run ).const_element );
+    }
+
+    SECTION( "spelled as written" )
+    {
+        REQUIRE( table.name( run ) == "u8[]" );
+        REQUIRE( table.name( table.run_of( table.pointer_to( u8 ) ) ) == "u8*[]" );
+    }
+
+    SECTION( "a run is not a pointer" )
+    {
+        REQUIRE( table.is_run( run ) );
+        REQUIRE_FALSE( table.is_run( many ) );
+        REQUIRE_FALSE( table.is_run( u8 ) );
+        REQUIRE_FALSE( table.is_many_pointer( run ) );
+        REQUIRE_FALSE( table.is_pointer( run ) );
+        REQUIRE_FALSE( table.points_to_const( run ) );
+    }
+
+    SECTION( "a borrow of a run is a run pointer" )
+    {
+        REQUIRE( table.is_run_pointer( table.pointer_to( run ) ) );
+        REQUIRE( table.is_run_pointer( table.pointer_to( run, true ) ) );
+        REQUIRE_FALSE( table.is_run_pointer( run ) );
+        REQUIRE_FALSE( table.is_run_pointer( many ) );
+        REQUIRE_FALSE( table.is_run_pointer( table.pointer_to( u8 ) ) );
+        REQUIRE_FALSE( table.is_run_pointer( table.pointer_to( table.pointer_to( run ) ) ) );
+    }
+
+    SECTION( "converts only to itself" )
+    {
+        REQUIRE( table.holds( run, run ) );
+        REQUIRE_FALSE( table.holds( run, table.run_of( i32 ) ) );
+        REQUIRE_FALSE( table.holds( run, many ) );
+        REQUIRE_FALSE( table.holds( many, run ) );
+        REQUIRE_FALSE( table.holds( table.pointer_to( run ), many ) );
+        REQUIRE_FALSE( table.holds( many, table.pointer_to( run ) ) );
+        REQUIRE( table.holds( table.pointer_to( run ), table.pointer_to( run, true ) ) );
+        REQUIRE_FALSE( table.holds( table.pointer_to( run, true ), table.pointer_to( run ) ) );
+    }
+
+    SECTION( "an error inside is found" )
+    {
+        REQUIRE( table.references_error( table.run_of( table.builtin( Type_kind::Error ) ) ) );
+        REQUIRE_FALSE( table.references_error( run ) );
+    }
+}
+
+TEST_CASE( "type_table_lists_the_runs_in_interning_order", "[sema][type][run]" )
+{
+    Type_table table;
+
+    REQUIRE( table.run_types().empty() );
+
+    const Type_id u8  = table.integer( 8, false );
+    const Type_id i32 = table.integer( 32, true );
+
+    const Type_id of_i32 = table.run_of( i32 );
+    table.many_pointer_to( u8 );
+    table.pointer_to( of_i32 );
+    const Type_id of_u8 = table.run_of( u8 );
+    table.run_of( i32 );
+
+    REQUIRE( table.run_types() == std::vector { of_i32, of_u8 } );
+}
+
+TEST_CASE( "type_table_walks_into_a_run", "[sema][type][run][generic]" )
+{
+    Type_table table;
+
+    const Type_id t   = table.parameter( Node_id { 3 }, "T" );
+    const Type_id u8  = table.integer( 8, false );
+    const Type_id i32 = table.integer( 32, true );
+
+    SECTION( "a parameter in the element is mentioned" )
+    {
+        REQUIRE( table.mentions_parameter( table.run_of( t ) ) );
+        REQUIRE( table.mentions_parameter( table.pointer_to( table.run_of( t ), true ) ) );
+        REQUIRE_FALSE( table.mentions_parameter( table.run_of( u8 ) ) );
+    }
+
+    SECTION( "substitution rebuilds the run" )
+    {
+        REQUIRE( table.substitute( table.run_of( t ), { { t.v, u8 } } ) == table.run_of( u8 ) );
+        REQUIRE(
+            table.substitute( table.pointer_to( table.run_of( t ), true ), { { t.v, i32 } } ) ==
+            table.pointer_to( table.run_of( i32 ), true )
+        );
+        REQUIRE(
+            table.substitute( table.run_of( table.pointer_to( t ) ), { { t.v, u8 } } ) == table.run_of( table.pointer_to( u8 ) )
+        );
+    }
+
+    SECTION( "deduction looks through the borrow and the run" )
+    {
+        Bindings bindings;
+
+        REQUIRE( table.deduce( table.pointer_to( table.run_of( t ) ), table.pointer_to( table.run_of( u8 ) ), bindings ) );
+        REQUIRE( bindings.at( t.v ) == u8 );
+    }
+
+    SECTION( "a run deduces nothing from a pointer or an element" )
+    {
+        Bindings bindings;
+
+        REQUIRE_FALSE( table.deduce( table.run_of( t ), table.many_pointer_to( u8 ), bindings ) );
+        REQUIRE_FALSE( table.deduce( table.run_of( t ), u8, bindings ) );
+        REQUIRE_FALSE( table.deduce( table.many_pointer_to( t ), table.run_of( u8 ), bindings ) );
+        REQUIRE( bindings.empty() );
+    }
+
+    // Instantiation refuses this; the table binds a run like any type.
+    SECTION( "a bare parameter binds to a run" )
+    {
+        Bindings bindings;
+
+        REQUIRE( table.deduce( t, table.run_of( u8 ), bindings ) );
+        REQUIRE( bindings.at( t.v ) == table.run_of( u8 ) );
+    }
 }
 
 } // namespace keel

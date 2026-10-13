@@ -39,6 +39,7 @@ void Generic_recursion::record_generic_uses( Node_id from, Type_id type, Span at
     // rather than layout - so the indirection is walked straight through.
     case Type_kind::Pointer:
     case Type_kind::Many_pointer:
+    case Type_kind::Run:
         record_generic_uses( from, described.element, at );
         break;
 
