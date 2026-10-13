@@ -110,6 +110,8 @@ public:
 
     void step_pointer( Node_id statement, Token_kind op, Type_id pointer, Node_id value );
 
+    void refuse_run_value( Node_id at ); // a run is only ever borrowed
+
 private:
     Type_id infer_name( Node_id id );
     Type_id infer_call( Node_id id );
@@ -236,6 +238,9 @@ private:
     // outside one. The `why` is the operation's own reason - what the author is asserting by writing
     // the block - so each caller supplies it.
     void require_unsafe( Node_id id, std::string what, std::string why = {} );
+
+    // D34: a slice's constant bounds run upwards.
+    void refuse_backwards( Node_id range );
 
     bool refuses_many_member( Node_id field_expr, Type_id base_type );
 

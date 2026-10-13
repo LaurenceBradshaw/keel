@@ -233,6 +233,14 @@ void Statements::visit_return( Node_id id )
         {
             // Every part borrows from a parameter.
         }
+        else if( places_.describes_run( part ) )
+        {
+            reporter_.error_at(
+                ast_.span( part ),
+                "`size` and `data` describe the run, so they cannot be returned by reference",
+                "return a copy"
+            );
+        }
         else if( places_.operator_projection( part ).is_valid() )
         {
             reporter_.error_at(
@@ -307,6 +315,13 @@ void Statements::visit_var( Node_id id )
     else if( init.is_valid() )
     {
         type = expressions_.infer( init ); // `auto`: L6's one form of inference
+
+        if( table_.is_run( type ) )
+        {
+            expressions_.refuse_run_value( init );
+            type = table_.builtin( Type_kind::Error );
+        }
+
         places_.check_owning_source( init, type );
         annotations_.refuse_never( init, type, "variable" );
     }
@@ -412,6 +427,13 @@ void Statements::visit_assign( Node_id id )
 
     if( table_.is_error( target_type ) )
     {
+        expressions_.absorb( value );
+        return;
+    }
+
+    if( table_.is_run( target_type ) )
+    {
+        reporter_.error_at( ast_.span( target ), "a run cannot be assigned whole", "assign its elements one at a time" );
         expressions_.absorb( value );
         return;
     }

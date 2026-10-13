@@ -1,0 +1,25 @@
+error: a returned reference must borrow from a parameter
+  --> sema/errors_run_escape.kl:74:12
+   |
+74 |     return local[ 0..1 ];
+   |            ^^^^^^^^^^^^^ anything else here dies when this function returns
+
+error: a returned reference must borrow from a parameter
+  --> sema/errors_run_escape.kl:81:12
+   |
+81 |     return local[ 0 ];
+   |            ^^^^^^^^^^ anything else here dies when this function returns
+
+error: a returned reference must borrow from a parameter
+  --> sema/errors_run_escape.kl:88:20
+   |
+88 |     return passes( local )[ 0..1 ];
+   |                    ^^^^^ anything else here dies when this function returns
+
+error: `size` and `data` describe the run, so they cannot be returned by reference
+  --> sema/errors_run_escape.kl:94:12
+   |
+94 |     return text.size;
+   |            ^^^^^^^^^ return a copy
+
+4 errors generated

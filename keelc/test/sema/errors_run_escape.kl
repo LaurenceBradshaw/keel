@@ -1,0 +1,100 @@
+// §8 for runs. An element or a sub-run of a run parameter borrows what the parameter borrows, so it
+// may be returned. What a `T[*]` points at outlives the call, as the `T*` half of §8 already says, so
+// an element or a sub-run reached through one may be returned too. The accepted cases come first.
+struct Bytes
+{
+    u8[*] data;
+    u64   size;
+
+    const ref u8[] as_text() const
+    {
+        unsafe
+        {
+            return data[ 0..size ];
+        }
+    }
+};
+
+const ref u8[] middle( const ref u8[] text )
+{
+    return text[ 1..3 ];
+}
+
+const ref u8 first( const ref u8[] text )
+{
+    return text[ 0 ];
+}
+
+const ref u8[] tail( ref u8[] text )
+{
+    return text[ 1..text.size ];
+}
+
+const ref u8[] passes( const ref u8[] text )
+{
+    return text;
+}
+
+const ref u8[] through_a_call( const ref u8[] text )
+{
+    return passes( text )[ 0..1 ];
+}
+
+const ref u8[] from_a_many_pointer( u8[*] data, u64 size )
+{
+    unsafe
+    {
+        return data[ 0..size ];
+    }
+}
+
+const ref u8 an_element_of_a_many_pointer( u8[*] data )
+{
+    unsafe
+    {
+        return data[ 0 ];
+    }
+}
+
+const ref u8[] from_a_local_many_pointer( u64 size )
+{
+    unsafe
+    {
+        u8[*] data = alloc<u8>( size );
+
+        return data[ 0..size ];
+    }
+}
+
+// A local binding is not a parameter, however safe its referent happens to be.
+const ref u8[] slices_a_local_binding( const ref u8[] text )
+{
+    const ref u8[] local = text;
+
+    return local[ 0..1 ];
+}
+
+const ref u8 indexes_a_local_binding( const ref u8[] text )
+{
+    const ref u8[] local = text;
+
+    return local[ 0 ];
+}
+
+const ref u8[] passes_a_local_binding( const ref u8[] text )
+{
+    const ref u8[] local = text;
+
+    return passes( local )[ 0..1 ];
+}
+
+// `size` and `data` are the callee's own copy of the run's description.
+const ref u64 returns_the_size( const ref u8[] text )
+{
+    return text.size;
+}
+
+i32 main()
+{
+    return 0;
+}

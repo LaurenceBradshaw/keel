@@ -1839,6 +1839,17 @@ Type_id Expressions::infer_unary( Node_id id )
             return types_.record( id, error );
         }
 
+        if( table_.is_run( operand_type ) )
+        {
+            reporter_.error_at(
+                ast_.span( id ),
+                "a run has no single address",
+                fmt::format( "`{}.data` points at its first element", reporter_.text( ast_.span( ast_.operand( id ) ) ) )
+            );
+
+            return types_.record( id, error );
+        }
+
         // The operand must be somewhere a value lives. `&f()` names the address of a temporary
         // that is about to vanish, and `&1` names nothing at all. Asked after infer() so that
         // errors inside the operand are reported first.
@@ -2286,6 +2297,12 @@ Type_id Expressions::infer_conditional( Node_id id )
 
     const Type_id result = operators_.result_of_conditional( then_type, else_type, ast_.span( id ) );
 
+    if( result.is_valid() && table_.is_run( result ) )
+    {
+        refuse_run_value( id );
+        return types_.poison( id );
+    }
+
     if( result.is_valid() )
     {
         places_.check_owning_source( ast_.then_branch( id ), result );
@@ -2422,33 +2439,75 @@ Type_id Expressions::infer_destroy( Node_id id )
 
 Type_id Expressions::infer_index( Node_id id )
 {
+    // A slice's bounds are typed one by one: the `Range_expr` between them has no type.
+    const Node_id range    = ast_.index( id );
+    const bool    is_range = ast_.kind( range ) == Node_kind::Range_expr;
+    const Type_id lower    = is_range ? infer( ast_.lower( range ) ) : Type_id {};
+    const Type_id upper    = is_range ? infer( ast_.upper( range ) ) : Type_id {};
+
     const Type_id base = infer( ast_.object( id ) );
 
     if( table_.is_struct( base ) )
     {
+        if( is_range )
+        {
+            reporter_.error_at( ast_.span( id ), fmt::format( "`{}` cannot be sliced", table_.name( base ) ) );
+            return types_.poison( id );
+        }
+
         return infer_index_operator( id, base );
     }
 
-    const Type_id index = infer( ast_.index( id ) );
+    const Type_id index = is_range ? Type_id {} : infer( range );
 
-    if( table_.is_error( base ) || table_.is_error( index ) )
+    if( table_.is_error( base ) ||
+        ( is_range ? table_.is_error( lower ) || table_.is_error( upper ) : table_.is_error( index ) ) )
     {
         return types_.poison( id );
     }
 
-    if( table_.is_many_pointer( base ) )
+    // A run knows its length, so only a `T[*]` needs `unsafe`.
+    if( table_.is_many_pointer( base ) || table_.is_run( base ) )
     {
-        require_unsafe( id, "indexing needs an `unsafe` block", "nothing checks that the index is inside the allocation" );
-
-        if( !table_.is_integer( index ) )
+        if( table_.is_many_pointer( base ) && is_range )
         {
+            require_unsafe( id, "slicing needs an `unsafe` block", "nothing checks that the run is inside the allocation" );
+        }
+        else if( table_.is_many_pointer( base ) )
+        {
+            require_unsafe( id, "indexing needs an `unsafe` block", "nothing checks that the index is inside the allocation" );
+        }
+
+        const auto is_integer_index = [&]( Node_id at, Type_id type )
+        {
+            if( table_.is_integer( type ) )
+            {
+                return true;
+            }
+
             reporter_.error_at(
-                ast_.span( ast_.index( id ) ), fmt::format( "an index must be an integer, but got `{}`", table_.name( index ) )
+                ast_.span( at ), fmt::format( "an index must be an integer, but got `{}`", table_.name( type ) )
             );
+            return false;
+        };
+
+        if( !is_range )
+        {
+            return is_integer_index( range, index ) ? types_.record( id, table_.get( base ).element ) : types_.poison( id );
+        }
+
+        // Both, so a slice with two bad bounds reports each.
+        const bool lower_ok = is_integer_index( ast_.lower( range ), lower );
+        const bool upper_ok = is_integer_index( ast_.upper( range ), upper );
+
+        if( !lower_ok || !upper_ok )
+        {
             return types_.poison( id );
         }
 
-        return types_.record( id, table_.get( base ).element );
+        refuse_backwards( range );
+
+        return types_.record( id, table_.is_run( base ) ? base : table_.run_of( table_.get( base ).element ) );
     }
 
     if( table_.is_pointer( base ) )
@@ -2469,6 +2528,38 @@ Type_id Expressions::infer_index( Node_id id )
     reporter_.error_at( ast_.span( id ), fmt::format( "`{}` cannot be indexed", table_.name( base ) ) );
 
     return types_.poison( id );
+}
+
+void Expressions::refuse_run_value( Node_id at )
+{
+    reporter_.error_at( ast_.span( at ), "a run cannot be held by value", "borrow it with `const ref`" );
+}
+
+// Constant bounds only: anything else is checked when the slice runs.
+void Expressions::refuse_backwards( Node_id range )
+{
+    const Folded low  = constant_folder_.fold_integer( ast_.lower( range ) );
+    const Folded high = constant_folder_.fold_integer( ast_.upper( range ) );
+
+    if( !low.constant || !high.constant || low.overflowed || high.overflowed )
+    {
+        return;
+    }
+
+    const auto is_negative = []( const Constant& value ) { return value.negative && value.magnitude != 0; };
+
+    const bool backwards = is_negative( low.value ) != is_negative( high.value ) ? is_negative( high.value )
+                           : is_negative( low.value )                            ? low.value.magnitude < high.value.magnitude
+                                                                                 : low.value.magnitude > high.value.magnitude;
+
+    if( backwards )
+    {
+        reporter_.error_at(
+            ast_.span( range ),
+            fmt::format( "`{}` runs backwards", reporter_.text( ast_.span( range ) ) ),
+            "a range runs upwards; the lower bound comes first"
+        );
+    }
 }
 
 void Expressions::require_unsafe( Node_id id, std::string what, std::string why )
@@ -2736,6 +2827,28 @@ Type_id Expressions::infer_field( Node_id id )
 
     if( refuses_many_member( id, base_type ) )
     {
+        return types_.poison( id );
+    }
+
+    // A run's two fields describe it; `data` is read-only through a read-only borrow.
+    if( table_.is_run( base_type ) )
+    {
+        const std::string_view name = interner_.text( ast_.name( id ) );
+
+        if( name == "size" )
+        {
+            return types_.record( id, table_.integer( 64, false ) );
+        }
+
+        if( name == "data" )
+        {
+            return types_.record(
+                id, table_.many_pointer_to( table_.get( base_type ).element, places_.is_read_only( base, current_function_ ) )
+            );
+        }
+
+        reporter_.error_at( ast_.span( id ), fmt::format( "a run has no field `{}`", name ), "it has `size` and `data`" );
+
         return types_.poison( id );
     }
 
@@ -3187,6 +3300,13 @@ Type_id Expressions::infer_marker( Node_id id )
         return types_.record( id, value );
     }
 
+    // Before the ownership rules below: a run is never owned at all.
+    if( table_.is_run( value ) )
+    {
+        refuse_run_value( operand );
+        return types_.poison( id );
+    }
+
     // A field on its own is refused rather than lumped in with the rest, because the reason is
     // different and so is the fix: moving one would leave the object partly moved, and its own
     // scope exit would then drop a field that has already gone. Tracking that needs per-field drop
@@ -3536,6 +3656,13 @@ Type_id Expressions::check( Node_id id, Type_id expected )
         check_condition( ast_.condition( id ) );
         check( ast_.then_branch( id ), expected );
         check( ast_.else_branch( id ), expected );
+
+        if( table_.is_run( expected ) )
+        {
+            refuse_run_value( id );
+            return types_.poison( id );
+        }
+
         places_.check_owning_source( ast_.then_branch( id ), expected );
         places_.check_owning_source( ast_.else_branch( id ), expected );
         return types_.record( id, expected );

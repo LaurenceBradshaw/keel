@@ -1,0 +1,139 @@
+error: an index must be an integer, but got `bool`
+  --> sema/errors_runs.kl:43:18
+   |
+43 |     u8 a = text[ flag ];
+   |                  ^^^^
+
+error: an index must be an integer, but got `bool`
+  --> sema/errors_runs.kl:44:30
+   |
+44 |     const ref u8[] b = text[ flag..2 ];
+   |                              ^^^^
+
+error: an index must be an integer, but got `f64`
+  --> sema/errors_runs.kl:45:33
+   |
+45 |     const ref u8[] c = text[ 0..1.5 ];
+   |                                 ^^^
+
+error: `3..1` runs backwards
+  --> sema/errors_runs.kl:50:38
+   |
+50 |     const ref u8[] backwards = text[ 3..1 ];
+   |                                      ^^^^ a range runs upwards; the lower bound comes first
+
+error: slicing needs an `unsafe` block
+  --> sema/errors_runs.kl:56:26
+   |
+56 |     const ref u8[] run = raw[ 0..4 ];
+   |                          ^^^^^^^^^^^ nothing checks that the run is inside the allocation
+
+error: an `unsafe` block that does nothing unsafe
+  --> sema/errors_runs.kl:61:5
+   |
+61 |     unsafe
+   |     ^^^^^^ remove `unsafe`
+
+error: `u8*` points at one `u8`, so it cannot be indexed
+  --> sema/errors_runs.kl:69:13
+   |
+69 |     u8  a = one[ 0..1 ][ 0 ];
+   |             ^^^^^^^^^^^ a many-item pointer, `u8[*]`, can be
+
+error: `i32` cannot be indexed
+  --> sema/errors_runs.kl:70:13
+   |
+70 |     i32 b = n[ 0..1 ];
+   |             ^^^^^^^^^
+
+error: `Grid` cannot be sliced
+  --> sema/errors_runs.kl:71:13
+   |
+71 |     i32 c = grid[ 0..1 ];
+   |             ^^^^^^^^^^^^
+
+error: a run has no field `length`
+  --> sema/errors_runs.kl:76:18
+   |
+76 |     u64 length = text.length;
+   |                  ^^^^^^^^^^^ it has `size` and `data`
+
+error: expected `u8[*]`, but got `const u8[*]`
+  --> sema/errors_runs.kl:77:19
+   |
+77 |     u8[*] bytes = text.data;
+   |                   ^^^^^^^^^ a pointer to `const` never converts back to one that writes
+
+error: `text` is `const`
+  --> sema/errors_runs.kl:82:5
+   |
+82 |     text[ 0 ] = 1;
+   |     ^^^^^^^^^ remove `const` to modify it
+
+error: `text` is `const`
+  --> sema/errors_runs.kl:83:5
+   |
+83 |     text[ 0..2 ][ 0 ] = 1;
+   |     ^^^^^^^^^^^^^^^^^ remove `const` to modify it
+
+error: this is reached through a `const u8[*]`, so it cannot be modified
+  --> sema/errors_runs.kl:87:9
+   |
+87 |         text.data[ 0 ]     = 1;
+   |         ^^^^^^^^^^^^^^ a pointer to `const` only reads what it points at
+
+error: this is reached through a `const u8[*]`, so it cannot be modified
+  --> sema/errors_runs.kl:88:9
+   |
+88 |         fixed[ 0..2 ][ 0 ] = 1;
+   |         ^^^^^^^^^^^^^^^^^^ a pointer to `const` only reads what it points at
+
+error: `size` and `data` describe the run, so they cannot be modified
+  --> sema/errors_runs.kl:91:5
+   |
+91 |     other.size = 3;
+   |     ^^^^^^^^^^
+
+error: `size` and `data` describe the run, so they cannot be modified
+  --> sema/errors_runs.kl:92:5
+   |
+92 |     other.data = raw;
+   |     ^^^^^^^^^^
+
+error: a run cannot be held by value
+   --> sema/errors_runs.kl:101:17
+    |
+101 |     auto copy = text;
+    |                 ^^^^ borrow it with `const ref`
+
+error: a run cannot be held by value
+   --> sema/errors_runs.kl:102:14
+    |
+102 |     consume( flag ? text : other );
+    |              ^^^^^^^^^^^^^^^^^^^ borrow it with `const ref`
+
+error: a run cannot be held by value
+   --> sema/errors_runs.kl:103:19
+    |
+103 |     consume( move text );
+    |                   ^^^^ borrow it with `const ref`
+
+error: a run cannot be assigned whole
+   --> sema/errors_runs.kl:104:5
+    |
+104 |     other = text;
+    |     ^^^^^ assign its elements one at a time
+
+error: a run has no single address
+   --> sema/errors_runs.kl:105:20
+    |
+105 |     auto address = &text;
+    |                    ^^^^^ `text.data` points at its first element
+
+error: no operator `==` for `u8[]` and `u8[]`
+   --> sema/errors_runs.kl:106:17
+    |
+106 |     bool same = text == other;
+    |                 ^^^^^^^^^^^^^
+
+23 errors generated

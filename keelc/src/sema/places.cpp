@@ -160,6 +160,13 @@ bool Places::check_writable( Node_id target, Node_id current_function, bool repl
         }
     }
 
+    if( describes_run( target ) )
+    {
+        reporter_.error_at( ast_.span( target ), "`size` and `data` describe the run, so they cannot be modified" );
+
+        return false;
+    }
+
     if( !is_read_only( target, current_function ) )
     {
         return true;
@@ -330,6 +337,13 @@ Node_id Places::through_const_pointer( Node_id place ) const
                 continue;
             }
 
+            // A run's type carries no `const`, so a slice of a `const T[*]` is asked of the pointer beneath.
+            if( is_run_index( place ) )
+            {
+                place = ast_.object( place );
+                continue;
+            }
+
             pointer = ast_.object( place );
         }
 
@@ -464,11 +478,11 @@ Node_id Places::place_root( Node_id id, Node_id current_function ) const
 
 Node_id Places::place_source( Node_id id ) const
 {
-    while( ast_.kind( id ) == Node_kind::Field_expr || is_operator_index( id ) )
+    while( ast_.kind( id ) == Node_kind::Field_expr || is_operator_index( id ) || is_run_index( id ) )
     {
         const Node_id object = ast_.object( id );
 
-        // `v[i]` is rooted in `v`: it may be written exactly when `v` may.
+        // `v[i]` and `r[i]` are rooted in `v` and `r`: each may be written exactly when its object may.
         if( ast_.kind( id ) == Node_kind::Index_expr )
         {
             id = object;
@@ -492,6 +506,23 @@ Node_id Places::place_source( Node_id id ) const
 bool Places::is_operator_index( Node_id id ) const
 {
     return ast_.kind( id ) == Node_kind::Index_expr && callees_.callee_of( id ).is_valid();
+}
+
+bool Places::is_run_index( Node_id id ) const
+{
+    return ast_.kind( id ) == Node_kind::Index_expr && is_run_typed( ast_.object( id ) );
+}
+
+bool Places::describes_run( Node_id place ) const
+{
+    return ast_.kind( place ) == Node_kind::Field_expr && is_run_typed( ast_.object( place ) );
+}
+
+// Untyped until the walk reaches it, so asked of a node rather than of its type.
+bool Places::is_run_typed( Node_id id ) const
+{
+    const Type_id type = types_.type_of( id );
+    return type.is_valid() && table_.is_run( type );
 }
 
 // The `v[i]` a place is reached through, which lasts only as long as its expression.
@@ -580,9 +611,21 @@ Node_id Places::borrowed_temporary( Node_id place ) const
 
 Node_id Places::escaping_part( Node_id value, Node_id current_function ) const
 {
-    if( operator_projection( value ).is_valid() )
+    // A run's `size` and `data` are the callee's own copy of its description.
+    if( operator_projection( value ).is_valid() || describes_run( value ) )
     {
         return value;
+    }
+
+    // The `T*` half of §8: what a `T[*]` points at outlives the call, indexed or sliced.
+    if( ast_.kind( value ) == Node_kind::Index_expr )
+    {
+        const Type_id object = types_.type_of( ast_.object( value ) );
+
+        if( object.is_valid() && table_.is_many_pointer( object ) )
+        {
+            return Node_id {};
+        }
     }
 
     // A returned reference borrows what the call's arguments borrow, so each of them must not escape.

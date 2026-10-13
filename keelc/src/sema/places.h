@@ -61,6 +61,8 @@ public:
     Node_id place_source( Node_id id ) const;
     bool    is_operator_index( Node_id id ) const;
     Node_id operator_projection( Node_id place ) const;
+    bool    is_run_index( Node_id id ) const;     // `r[i]` or `r[a..b]` on a run
+    bool    describes_run( Node_id place ) const; // `r.size` or `r.data`: the run itself, not its elements
 
     // The declaration whose storage ends when `current_function` returns, or invalid.
     Node_id dying_storage( Node_id place, Node_id current_function ) const;
@@ -90,6 +92,7 @@ public:
 private:
     bool                 borrows( Param_mode mode, Type_id type ) const; // travels by address
     std::vector<Node_id> borrowed_arguments( Node_id call ) const;       // the receiver's object first
+    bool                 is_run_typed( Node_id id ) const;
 
     const Ast&        ast_;
     const Interner&   interner_;
