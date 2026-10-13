@@ -1,0 +1,65 @@
+// `kl::string` is a `textual`: it prints, it searches with another string, and a string made from
+// one copies its bytes. `list::as_run` lends the elements. Each check returns its own code.
+import kl::string;
+import kl::list;
+import kl::optional;
+
+i32 sum( const ref i32[] values )
+{
+    i32 total = 0;
+    for( u64 i = 0; i < values.size; i++ )
+    {
+        total = total + values[ i ];
+    }
+
+    return total;
+}
+
+i32 main()
+{
+    kl::string text = kl::string( "hello, world" );
+    kl::string word = kl::string( "world" );
+
+    println( text );
+    print( word );
+    println( "" );
+
+    // A temporary `kl::string` borrowed as a `textual` is dropped after the call.
+    if( !text.ends_with( word ) || !text.starts_with( kl::string( "hello" ) ) || text.starts_with( word ) )
+    {
+        return 1;
+    }
+
+    if( kl::value_or( text.find( word ), 99 ) != 7 )
+    {
+        return 2;
+    }
+
+    // Its own buffer: changing the copy leaves the original as it was.
+    kl::string copy = kl::string( text );
+    copy.push( 33 );
+    println( copy );
+
+    if( copy.size() != 13 || text.size() != 12 )
+    {
+        return 3;
+    }
+
+    const ref u8[] bytes = text.as_text();
+    if( bytes.size != 12 || bytes[ 0 ] != 104 )
+    {
+        return 4;
+    }
+
+    kl::list<i32> values = kl::list<i32>();
+    values.push( 1 );
+    values.push( 2 );
+    values.push( 3 );
+
+    if( sum( values.as_run() ) != 6 || values.as_run()[ 1..3 ].size != 2 )
+    {
+        return 5;
+    }
+
+    return 0;
+}

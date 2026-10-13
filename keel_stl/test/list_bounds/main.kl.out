@@ -1,1 +1,1 @@
-../src/list.kl:180: assertion failed: index < count_
+../src/list.kl:189: assertion failed: index < count_

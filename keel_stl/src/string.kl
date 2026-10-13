@@ -18,24 +18,23 @@ enum parse_error
 /// A growable sequence of bytes that owns its storage.
 ///
 /// The bytes are not checked to be UTF-8, and every index and size counts bytes.
-class string
+class string implements textual
 {
     /// An empty string.
-    string() 
+    string()
     {
         bytes_ = list<u8>();
     }
 
     /// A string holding a copy of the bytes of `text`.
-    string( str text )
+    string( const ref textual text )
     {
-        bytes_ = list<u8>::with_capacity( text.size );
-        for( u64 i = 0; i < text.size; i++ )
+        const ref u8[] bytes = text.as_text();
+
+        bytes_ = list<u8>::with_capacity( bytes.size );
+        for( u64 i = 0; i < bytes.size; i++ )
         {
-            unsafe
-            {
-                bytes_.push( text.data[ i ] );
-            }
+            bytes_.push( bytes[ i ] );
         }
     }
 
@@ -125,6 +124,12 @@ class string
         return result::ok( is_negative ? wrap<i64>( 0 - magnitude ) : cast<i64>( magnitude ) );
     }
 
+    /// The bytes, borrowed. The string cannot change while they are held.
+    public const ref u8[] as_text() const
+    {
+        return bytes_.as_run();
+    }
+
     /// Adds the byte `value` at the end.
     public void push( u8 value )
     {
@@ -198,33 +203,37 @@ class string
     }
 
     /// Whether the string begins with the bytes of `prefix`; every string begins with `""`.
-    public bool starts_with( str prefix ) const
+    public bool starts_with( const ref textual prefix ) const
     {
-        return matches_at( 0, prefix );
+        const ref u8[] text = prefix.as_text();
+        return matches_at( 0, text );
     }
 
     /// Whether the string ends with the bytes of `suffix`; every string ends with `""`.
-    public bool ends_with( str suffix ) const
+    public bool ends_with( const ref textual suffix ) const
     {
-        if( suffix.size > size() )
+        const ref u8[] text = suffix.as_text();
+        if( text.size > size() )
         {
             return false;
         }
 
-        return matches_at( size() - suffix.size, suffix );
+        return matches_at( size() - text.size, text );
     }
 
     /// The index of the first place `needle` occurs, or `none`. `""` is found at 0.
-    public optional<u64> find( str needle ) const
+    public optional<u64> find( const ref textual needle ) const
     {
-        if( needle.size > size() )
+        const ref u8[] text = needle.as_text();
+
+        if( text.size > size() )
         {
             return optional::none;
         }
 
-        for( u64 i = 0; i <= size() - needle.size; i++ )
+        for( u64 i = 0; i <= size() - text.size; i++ )
         {
-            if( matches_at( i, needle ) )
+            if( matches_at( i, text ) )
             {
                 return optional::some( i );
             }
@@ -253,21 +262,18 @@ class string
     }
 
     /// Whether the bytes of `text` occur at index `at`.
-    private bool matches_at( u64 at, str text ) const
+    private bool matches_at( u64 at, const ref u8[] text ) const
     {
         if( at + text.size > size() )
         {
             return false;
         }
 
-        unsafe
+        for( u64 i = 0; i < text.size; i++ )
         {
-            for( u64 i = 0; i < text.size; i++ )
+            if( bytes_[at + i] != text[i] )
             {
-                if( bytes_[at + i] != text.data[i] )
-                {
-                    return false;
-                }
+                return false;
             }
         }
 

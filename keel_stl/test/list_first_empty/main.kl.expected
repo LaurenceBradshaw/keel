@@ -8,9 +8,9 @@ struct kl_2kl_list__I3i32E;
 
 struct kl_2kl_list__I3i32E
 {
-    int32_t* kl_data__884;
-    uint64_t kl_count__886;
-    uint64_t kl_cap__888;
+    int32_t* kl_data__905;
+    uint64_t kl_count__907;
+    uint64_t kl_cap__909;
 };
 
 void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
@@ -53,11 +53,11 @@ int32_t kl__main__( void )
 void kl_2kl_list__I3i32E__RQ2kl4listI3i32E__ctor( struct kl_2kl_list__I3i32E* kl_this_1 )
 {
 #line 15 "../src/list.kl"
-    ( *kl_this_1 ).kl_data__884 = NULL;
+    ( *kl_this_1 ).kl_data__905 = NULL;
 #line 16 "../src/list.kl"
-    ( *kl_this_1 ).kl_count__886 = 0;
+    ( *kl_this_1 ).kl_count__907 = 0;
 #line 17 "../src/list.kl"
-    ( *kl_this_1 ).kl_cap__888 = 0;
+    ( *kl_this_1 ).kl_cap__909 = 0;
     return;
 }
 
@@ -67,28 +67,28 @@ int32_t* kl_2kl_first__I3i32E__SQ2kl4listI3i32E( struct kl_2kl_list__I3i32E* kl_
     bool kl_t2;
     int32_t* kl_t3;
     int32_t* kl_t4;
-#line 150 "../src/list.kl"
-    kl_t2 = ( *kl_this_1 ).kl_count__886 > 0;
+#line 159 "../src/list.kl"
+    kl_t2 = ( *kl_this_1 ).kl_count__907 > 0;
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
-#line 154 "../src/list.kl"
-    kl_t3 = ( *kl_this_1 ).kl_data__884 + 0;
+#line 163 "../src/list.kl"
+    kl_t3 = ( *kl_this_1 ).kl_data__905 + 0;
     kl_t4 = &( *kl_t3 );
     kl_t0 = kl_t4;
     return kl_t0;
     bb2:
-    kl_rt_panic( "../src/list.kl", 150, "assertion failed: count_ > 0" );
+    kl_rt_panic( "../src/list.kl", 159, "assertion failed: count_ > 0" );
 }
 
 void kl_2kl_list__I3i32E__dtor( struct kl_2kl_list__I3i32E* kl_this_1 )
 {
     bool kl_t2;
 #line 37 "../src/list.kl"
-    kl_t2 = ( *kl_this_1 ).kl_data__884 != NULL;
+    kl_t2 = ( *kl_this_1 ).kl_data__905 != NULL;
     if ( kl_t2 ) goto bb1; else goto bb2;
     bb1:
 #line 42 "../src/list.kl"
-    kl_rt_free( ( *kl_this_1 ).kl_data__884 );
+    kl_rt_free( ( *kl_this_1 ).kl_data__905 );
     goto bb2;
     bb2:
     return;

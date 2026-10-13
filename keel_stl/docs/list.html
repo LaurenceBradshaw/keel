@@ -38,6 +38,12 @@ amortised constant time. Dropping the list drops every element.</p>
 <p>An empty list with room for <code>capacity</code> elements before it reallocates.</p>
 </div>
 </div>
+<div class="group" id="list.as_run">
+<pre class="signature"><a class="anchor" href="#list.as_run" aria-label="Link to as_run">#</a><code><span class="kw">public</span> <span class="kw">const</span> <span class="kw">ref</span> T[] <span class="fn">as_run</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The elements borrowed as a read-only run. The list cannot change while the run is held.</p>
+</div>
+</div>
 <div class="group" id="list.push">
 <pre class="signature"><a class="anchor" href="#list.push" aria-label="Link to push">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">push</span>( <span class="kw">move</span> T value )</code></pre>
 <div class="doc">

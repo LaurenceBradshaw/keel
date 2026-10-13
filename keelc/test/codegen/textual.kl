@@ -24,6 +24,12 @@ void show( const ref textual t )
     print( "borrowed " );
 }
 
+// One candidate, so the conditional is checked against `textual`: its arms stay `str`s.
+void one( const ref textual t )
+{
+    println( t );
+}
+
 i32 main()
 {
     str  hello = "hello";
@@ -40,5 +46,6 @@ i32 main()
     show( hello );
     show( name );
     println( "" );
+    one( yes ? "c" : "d" );
     return 0;
 }

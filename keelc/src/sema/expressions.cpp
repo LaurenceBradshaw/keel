@@ -3653,6 +3653,12 @@ Type_id Expressions::check( Node_id id, Type_id expected )
     }
     case Node_kind::Conditional_expr:
     {
+        // Borrowed as an interface: inferred as its arms' own type, which infer_conditional checks.
+        if( table_.is_interface( expected ) )
+        {
+            break;
+        }
+
         check_condition( ast_.condition( id ) );
         check( ast_.then_branch( id ), expected );
         check( ast_.else_branch( id ), expected );

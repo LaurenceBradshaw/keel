@@ -44,6 +44,15 @@ class list<T>
         }
     }
 
+    /// The elements borrowed as a read-only run. The list cannot change while the run is held.
+    public const ref T[] as_run() const
+    {
+        unsafe
+        {
+            return data_[0..count_];
+        }
+    }
+
     /// Adds `value` at the end, growing the storage if it is full.
     public void push( move T value )
     {
