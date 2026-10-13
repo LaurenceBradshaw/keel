@@ -444,7 +444,7 @@ Node_id Ast::inner_type( Node_id id ) const
 {
     assert(
         ( kind( id ) == Node_kind::Pointer_type || kind( id ) == Node_kind::Many_pointer_type ||
-          kind( id ) == Node_kind::Mode_type || kind( id ) == Node_kind::Const_type ) &&
+          kind( id ) == Node_kind::Mode_type || kind( id ) == Node_kind::Const_type || kind( id ) == Node_kind::Run_type ) &&
         "this kind wraps no type"
     );
     return child( id, 0 );

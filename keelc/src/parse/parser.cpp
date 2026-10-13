@@ -2030,9 +2030,11 @@ Node_id Parser::parse_type_term()
 
             if( ast_.kind( type ) == Node_kind::Named_type || ast_.kind( type ) == Node_kind::Generic_type )
             {
-                const bool is_pointer      = cursor_.peek().kind == Token_kind::Star;
-                const bool is_many_pointer = cursor_.peek().kind == Token_kind::L_bracket;
-                const bool not_pointer     = !is_pointer && !is_many_pointer;
+                const bool is_pointer = cursor_.peek().kind == Token_kind::Star;
+                const bool is_many_pointer =
+                    cursor_.peek().kind == Token_kind::L_bracket && cursor_.peek( 1 ).kind == Token_kind::Star;
+                const bool is_run =
+                    cursor_.peek().kind == Token_kind::L_bracket && cursor_.peek( 1 ).kind == Token_kind::R_bracket;
 
                 recovery_.error_at(
                     cursor_.previous().span,
@@ -2040,14 +2042,45 @@ Node_id Parser::parse_type_term()
                     fmt::format(
                         "write `const {}{}`",
                         sm_.text( ast_.span( type ) ),
-                        not_pointer       ? ""
+                        is_run            ? "[]"
+                        : is_pointer      ? "*"
                         : is_many_pointer ? "[*]"
-                                          : "*"
+                                          : ""
                     )
                 );
             }
 
             type = ast_.add( Node_kind::Const_type, Span::merge( start, cursor_.previous().span ), 0, { type } );
+            continue;
+        }
+
+        if( cursor_.check( Token_kind::L_bracket ) && cursor_.peek( 1 ).kind == Token_kind::R_bracket )
+        {
+            const Span run_start = cursor_.peek().span;
+            bool       detatched = !cursor_.peek_is_adjacent();
+            if( detatched )
+            {
+                recovery_.error_at(
+                    run_start,
+                    "`[]` must touch the type it modifies",
+                    fmt::format( "write `{}[]`", sm_.text( ast_.span( type ) ) )
+                );
+            }
+
+            cursor_.advance(); // [
+            bool spaced = !cursor_.peek_is_adjacent();
+            cursor_.advance(); // ]
+
+            if( spaced && !detatched )
+            {
+                recovery_.error_at(
+                    Span::merge( run_start, cursor_.previous().span ),
+                    "`[]` is written without spaces",
+                    fmt::format( "write `{}[]`", sm_.text( ast_.span( type ) ) )
+                );
+            }
+
+            type = ast_.add( Node_kind::Run_type, Span::merge( start, cursor_.previous().span ), 0, { type } );
             continue;
         }
 
@@ -2862,7 +2895,7 @@ Node_id Parser::parse_switch_stmt()
                     continue;
                 }
 
-                // D34: a range is syntax and lives only here, so it is parsed where it is legal
+                // D34: a range is syntax, parsed only here and as an index, where it is legal,
                 // rather than in the expression grammar - which would make `i32 x = 1..5;` parse
                 // and need a diagnostic to un-parse it.
                 if( cursor_.match( Token_kind::Dot_dot ) )
@@ -3109,13 +3142,30 @@ Node_id Parser::parse_postfix( Node_id left, bool increment_follows )
         {
             cursor_.advance();
 
-            const Node_id index = parse_expression( 0 );
+            Node_id range = parse_expression( 0 );
+
+            Node_id upper_bound {};
+            if( cursor_.match( Token_kind::Dot_dot ) )
+            {
+                upper_bound = parse_expression( 0 );
+            }
 
             recovery_.expect( Token_kind::R_bracket );
 
+            if( upper_bound.is_valid() )
+            {
+                range = ast_.add(
+                    Node_kind::Range_expr,
+                    Span::merge( ast_.span( range ), ast_.span( upper_bound ) ),
+                    0,
+                    { range, upper_bound }
+                );
+            }
+
             left = ast_.add(
-                Node_kind::Index_expr, Span::merge( ast_.span( left ), cursor_.previous().span ), 0, { left, index }
+                Node_kind::Index_expr, Span::merge( ast_.span( left ), cursor_.previous().span ), 0, { left, range }
             );
+
             continue;
         }
 
@@ -11799,7 +11849,6 @@ TEST_CASE( "parser_rejects_a_malformed_many_item_pointer_type", "[parse][many]" 
     {
         for( const char* body : {
                  "i32[4] p;",           // a count, which a pointer type has no room for
-                 "i32[] p;",            // nothing between the brackets
                  "i32[* p = nullptr;",  // unterminated
                  "[*]i32 p = nullptr;", // the prefix order, which is Zig's rather than Keel's
              } )
@@ -11930,6 +11979,228 @@ TEST_CASE( "parser_rejects_a_malformed_index", "[parse][many]" )
 
         INFO( p.errors() );
         REQUIRE( p.has_errors() );
+    }
+}
+
+// `T[]` is a suffix like `[*]`, read right to left. Where a run may be written is sema's question,
+// so every position parses here, the ones sema refuses included.
+TEST_CASE( "parser_parses_a_run_type", "[parse][run]" )
+{
+    SECTION( "the shapes" )
+    {
+        const std::pair<const char*, const char*> cases[] = {
+            { "u8[] r = x;", "Run_type(u8)" },
+            { "ref u8[] r = x;", "Mode_type(Run_type(u8))" },
+            { "const ref u8[] r = x;", "Const_type(Mode_type(Run_type(u8)))" },
+            { "ref u8*[] r = x;", "Mode_type(Run_type(Pointer_type(u8)))" },
+            { "ref u8[*][] r = x;", "Mode_type(Run_type(Many_pointer_type(u8)))" },
+            { "u8[]* r = x;", "Pointer_type(Run_type(u8))" },
+            { "u8[][*] r = x;", "Many_pointer_type(Run_type(u8))" },
+            { "u8[][] r = x;", "Run_type(Run_type(u8))" },
+            { "ref list<i32>[] r = x;", "Mode_type(Run_type(Generic_type(list,Type_arg_list(i32))))" },
+            { "list<u8[]> l;", "Generic_type(list,Type_arg_list(Run_type(u8)))" },
+            { "Box<Box<u8[]>> b;", "Generic_type(Box,Type_arg_list(Generic_type(Box,Type_arg_list(Run_type(u8)))))" },
+        };
+
+        for( const auto& [body, expected] : cases )
+        {
+            INFO( body );
+            REQUIRE( declared_type( body ) == expected );
+        }
+    }
+
+    SECTION( "the span covers the suffix" )
+    {
+        const Parsed p( "void f( u8[*] x ) { ref u8[] r = x; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.text( first_named( p, "Run_type" ) ) == "u8[]" );
+    }
+
+    SECTION( "in every type position" )
+    {
+        for( const char* source : {
+                 "void f( ref u8[] r ) { }",
+                 "void f( const ref u8[] r ) { }",
+                 "void f( u8[] r ) { }",
+                 "const ref u8[] f( const ref u8[] r ) { return r; }",
+                 "void f( fn( const ref u8[] ) -> i32 g ) { }",
+                 "struct S { u8[] data; };",
+                 "class C { u8[] data; C() { } ~C() { } };",
+                 "u8[] g = nullptr;",
+                 "void f( u8[*] x ) { for( ref u8[] r = x; i < 10; i++ ) { } }",
+                 "T first<T>( const ref T[] r ) { return r[ 0 ]; }",
+             } )
+        {
+            const Parsed p( source );
+
+            INFO( source << "\n" << p.errors() );
+            REQUIRE_FALSE( p.has_errors() );
+            REQUIRE( first_named( p, "Run_type" ).is_valid() );
+        }
+    }
+}
+
+// The `[*]` rules, applied to `[]`: the suffix touches the type and has nothing inside it.
+TEST_CASE( "parser_rejects_a_malformed_run_type", "[parse][run]" )
+{
+    SECTION( "the suffix must touch the type" )
+    {
+        const Parsed p( "i32 main() { ref u8 [] r = x; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "`[]` must touch the type it modifies" ) != std::string::npos );
+        REQUIRE( p.errors().find( "write `u8[]`" ) != std::string::npos );
+
+        // Recovered as what it meant.
+        REQUIRE( first_named( p, "Run_type" ).is_valid() );
+    }
+
+    SECTION( "and is written without a space inside" )
+    {
+        const Parsed p( "i32 main() { ref u8[ ] r = x; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "`[]` is written without spaces" ) != std::string::npos );
+        REQUIRE( p.errors().find( "write `u8[]`" ) != std::string::npos );
+        REQUIRE( first_named( p, "Run_type" ).is_valid() );
+    }
+
+    SECTION( "both at once is one error" )
+    {
+        const Parsed p( "i32 main() { ref u8 [ ] r = x; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "write `u8[]`" ) != std::string::npos );
+    }
+
+    SECTION( "the hint for a `const` after the type keeps the suffix" )
+    {
+        const Parsed p( "i32 main() { u8 const[] r = x; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "write `const u8[]`" ) != std::string::npos );
+    }
+
+    SECTION( "the other malformed spellings report" )
+    {
+        for( const char* body : {
+                 "ref u8[ r = x;",  // unterminated
+                 "ref []u8 r = x;", // the prefix order
+             } )
+        {
+            const Parsed p( std::string( "i32 main() { " ) + body + " return 0; }" );
+
+            INFO( body << "\n" << p.errors() );
+            REQUIRE( p.has_errors() );
+        }
+    }
+}
+
+// D34: `p[ a..b ]` is an Index_expr whose index is a Range_expr. A range stays syntax: it is
+// parsed only as a `switch` label and as an index, and nowhere else.
+TEST_CASE( "parser_parses_a_slice", "[parse][run]" )
+{
+    SECTION( "the shapes" )
+    {
+        const std::pair<const char*, const char*> cases[] = {
+            { "a[ 0..2 ]", "Index_expr(a,Range_expr(0,2))" },
+            { "a[ b..c ]", "Index_expr(a,Range_expr(b,c))" },
+            { "a[ b + 1..c - 1 ]", "Index_expr(a,Range_expr(Binary_expr(b,1),Binary_expr(c,1)))" },
+            { "a[ b[ 0 ]..b[ 1 ] ]", "Index_expr(a,Range_expr(Index_expr(b,0),Index_expr(b,1)))" },
+            { "a[ 0..2 ][ 1 ]", "Index_expr(Index_expr(a,Range_expr(0,2)),1)" },
+            { "a[ 1..3 ][ 0..1 ]", "Index_expr(Index_expr(a,Range_expr(1,3)),Range_expr(0,1))" },
+            { "a[ 0..2 ].size", "Field_expr(Index_expr(a,Range_expr(0,2)))" },
+            { "&a[ 0..2 ]", "Unary_expr(Index_expr(a,Range_expr(0,2)))" },
+            { "( p + 1 )[ 0..2 ]", "Index_expr(Binary_expr(p,1),Range_expr(0,2))" },
+        };
+
+        for( const auto& [expression, expected] : cases )
+        {
+            INFO( expression );
+            REQUIRE( index_outline( expression ) == expected );
+        }
+    }
+
+    SECTION( "the range's span covers both bounds, and the index's both brackets" )
+    {
+        const Parsed p( "i32 main() { return a[ b + 1..c ]; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.text( parse_expression_of( p ) ) == "a[ b + 1..c ]" );
+        REQUIRE( p.text( first_named( p, "Range_expr" ) ) == "b + 1..c" );
+    }
+
+    SECTION( "a statement opening with a slice is an expression" )
+    {
+        const std::pair<const char*, const char*> cases[] = {
+            { "a[ 0..2 ][ 0 ] = 1;", "Assign_stmt" },
+            { "a[ 0..2 ] = b;", "Assign_stmt" },
+            { "a[ 0..2 ][ 0 ]++;", "Increment_stmt" },
+            { "a[ 0..2 ].get();", "Expr_stmt" },
+            { "u8[] a = x;", "Var_decl" },
+            { "u8[]* a = x;", "Var_decl" },
+            { "list<u8>[] a = x;", "Var_decl" },
+        };
+
+        for( const auto& [body, kind] : cases )
+        {
+            const Parsed p( std::string( "i32 main() { " ) + body + " return 0; }" );
+
+            INFO( body << "\n" << p.errors() );
+            REQUIRE_FALSE( p.has_errors() );
+            REQUIRE( node_kind_name( p.kind( first_statement( p ) ) ) == kind );
+        }
+    }
+
+    // D15, as for an index.
+    SECTION( "a slice read and discarded has no effect" )
+    {
+        const Parsed p( "i32 main() { a[ 0..2 ]; return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "no effect" ) != std::string::npos );
+    }
+}
+
+TEST_CASE( "parser_rejects_a_malformed_slice", "[parse][run]" )
+{
+    for( const char* body : {
+             "u8 v = a[ 0.. ];",      // no upper bound
+             "u8 v = a[ ..2 ];",      // no lower bound
+             "u8 v = a[ 0..2..3 ];",  // a range of a range
+             "u8 v = a[ 0..2, 3 ];",  // a second index
+             "u8 v = a[ 0..2;",       // unterminated
+             "u8 v = a[ ( 0..2 ) ];", // a range in parentheses
+         } )
+    {
+        const Parsed p( std::string( "i32 main() { " ) + body + " return 0; }" );
+
+        INFO( body << "\n" << p.errors() );
+        REQUIRE( p.has_errors() );
+    }
+
+    // Still not an expression: the index's own brackets are what make the range legal.
+    SECTION( "a range outside an index or a label" )
+    {
+        for( const char* body : {
+                 "i32 x = 1..5;",
+                 "f( 1..5 );",
+             } )
+        {
+            const Parsed p( std::string( "i32 main() { " ) + body + " return 0; }" );
+
+            INFO( body << "\n" << p.errors() );
+            REQUIRE( p.has_errors() );
+            REQUIRE_FALSE( first_named( p, "Range_expr" ).is_valid() );
+        }
     }
 }
 

@@ -763,6 +763,13 @@ bool Lookahead::scan_type_term()
             continue;
         }
 
+        if( cursor_.check( Token_kind::L_bracket ) && cursor_.peek( 1 ).kind == Token_kind::R_bracket )
+        {
+            cursor_.advance(); // `[`
+            cursor_.advance(); // `]`
+            continue;
+        }
+
         if( cursor_.match( Token_kind::Star ) || cursor_.match( Token_kind::Amp ) )
         {
             continue;
@@ -863,6 +870,13 @@ bool Lookahead::scan_type_and_name()
                 cursor_.advance();
                 cursor_.advance();
                 cursor_.advance();
+                continue;
+            }
+
+            if( cursor_.check( Token_kind::L_bracket ) && cursor_.peek( 1 ).kind == Token_kind::R_bracket )
+            {
+                cursor_.advance(); // `[`
+                cursor_.advance(); // `]`
                 continue;
             }
 

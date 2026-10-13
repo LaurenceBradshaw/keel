@@ -187,6 +187,8 @@ std::string Signature_printer::type( Node_id annotation ) const
         return type( ast_.inner_type( annotation ) ) + "*";
     case Node_kind::Many_pointer_type:
         return type( ast_.inner_type( annotation ) ) + "[*]";
+    case Node_kind::Run_type:
+        return type( ast_.inner_type( annotation ) ) + "[]";
     case Node_kind::Mode_type:
         return fmt::format(
             "{} {}", text( Interner::keyword( ast_.keyword( annotation ) ) ), type( ast_.inner_type( annotation ) )
@@ -406,7 +408,8 @@ TEST_CASE( "signatures_print_functions_as_written", "[sema][signature]" )
                            "void none() {}\n"
                            "extern void kl_rt_write( i32 stream, const u8[*] data, u64 size );\n"
                            "T larger<T>( T a, T b ) where T : copyable & numeric { return a; }\n"
-                           "void take( fn( i32 ) -> bool p, i32* const q, const i32* r ) {}\n" );
+                           "void take( fn( i32 ) -> bool p, i32* const q, const i32* r ) {}\n"
+                           "void fill( ref i32[] out_run, const ref u8[] text ) {}\n" );
 
     REQUIRE( printed( Node_kind::Function_decl, "add" ) == "i32 add( i32 a, const ref i32 b )" );
     REQUIRE( printed( Node_kind::Function_decl, "none" ) == "void none()" );
@@ -416,6 +419,7 @@ TEST_CASE( "signatures_print_functions_as_written", "[sema][signature]" )
     );
     REQUIRE( printed( Node_kind::Function_decl, "larger" ) == "T larger<T>( T a, T b ) where T : copyable & numeric" );
     REQUIRE( printed( Node_kind::Function_decl, "take" ) == "void take( fn( i32 ) -> bool p, i32* const q, const i32* r )" );
+    REQUIRE( printed( Node_kind::Function_decl, "fill" ) == "void fill( ref i32[] out_run, const ref u8[] text )" );
     REQUIRE( printed( Node_kind::Param_decl, "b" ) == "const ref i32 b" );
     REQUIRE( printed( Node_kind::Type_param_decl, "T" ) == "T" );
 }

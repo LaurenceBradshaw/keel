@@ -30,6 +30,8 @@ std::string_view node_kind_name( Node_kind kind )
         return "Pointer_type";
     case Node_kind::Many_pointer_type:
         return "Many_pointer_type";
+    case Node_kind::Run_type:
+        return "Run_type";
     case Node_kind::Mode_type:
         return "Mode_type";
     case Node_kind::Const_type:

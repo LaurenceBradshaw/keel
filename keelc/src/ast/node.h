@@ -36,6 +36,8 @@ enum class Node_kind : u16
     Pointer_type,
     // `T[*]`; children: the element.
     Many_pointer_type,
+    // `T[]`; children: the element.
+    Run_type,
     // aux: the Keyword (`ref`, `out`, `move`); children: the type.
     Mode_type,
     // children: the type.
@@ -113,7 +115,7 @@ enum class Node_kind : u16
     Field_decl,
     // aux: the field's name; children: the object.
     Field_expr,
-    // `p[i]`; children: the object, then the index.
+    // `p[i]` or `p[a..b]`; children: the object, then the index or a Range_expr.
     Index_expr,
     // aux: the type's name; children: the package Name_expr when written, then the Field_inits.
     Struct_literal,
@@ -132,7 +134,7 @@ enum class Node_kind : u16
     // aux: 1 when `default` labels it; children: the labels (expressions, Range_exprs and
     // Variant_patterns), then the body Block.
     Case_arm,
-    // `1..5`, half-open; children: the two bounds.
+    // `1..5`, half-open: a `case` label or an Index_expr's index; children: the two bounds.
     Range_expr,
     // `Shape::Circle( r )`; children: the Path_expr, then the Binding_decls.
     Variant_pattern,
