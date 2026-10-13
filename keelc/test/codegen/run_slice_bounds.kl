@@ -1,0 +1,25 @@
+// A slice whose start is past its end panics before `b - a` can wrap, even when both bounds lie
+// inside the run.
+u64 length( const ref u8[] text, u64 a, u64 b )
+{
+    return text[ a..b ].size;
+}
+
+i32 main()
+{
+    u8[*] data = nullptr;
+
+    unsafe
+    {
+        data = alloc<u8>( 4 );
+    }
+
+    unsafe
+    {
+        println( length( data[ 0..4 ], 1, 3 ) );
+        println( length( data[ 0..4 ], 3, 2 ) );
+    }
+
+    println( "unreached" );
+    return 0;
+}

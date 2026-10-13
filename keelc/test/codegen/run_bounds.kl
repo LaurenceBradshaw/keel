@@ -1,0 +1,23 @@
+// An index at or past a run's size prints the file, the line and the index as written, and
+// aborts: the exit code is SIGABRT's, and nothing after it runs.
+u8 at( const ref u8[] text, u64 i )
+{
+    return text[ i ];
+}
+
+i32 main()
+{
+    u8[*] data = nullptr;
+
+    unsafe
+    {
+        data      = alloc<u8>( 4 );
+        data[ 3 ] = 9;
+
+        println( at( data[ 0..4 ], 3 ) );
+        println( at( data[ 0..4 ], 4 ) );
+    }
+
+    println( "unreached" );
+    return 0;
+}

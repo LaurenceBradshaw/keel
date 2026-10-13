@@ -285,6 +285,7 @@ private:
 
     void emit_prologue();
     void emit_composite_forwards();
+    void emit_run_references();
     void emit_interface_references();
     void emit_composites();
     void emit_vtable_types();
@@ -394,6 +395,7 @@ std::string Kir_emitter::run()
 {
     emit_prologue();
     emit_composite_forwards();
+    emit_run_references();
     emit_interface_references();
     emit_function_types();
     emit_composites();
@@ -549,6 +551,34 @@ void Kir_emitter::emit_composite_forwards()
     }
 
     write_line( "" );
+}
+
+void Kir_emitter::emit_run_references()
+{
+    bool written = false;
+
+    for( const Type_id run : types_.table().run_types() )
+    {
+        // A run has no declaration: it is the prelude's unless its element names a program type.
+        const bool in_prelude = !mentions_program_type( ast_, types_.table(), imports_, run );
+
+        if( types_.table().mentions_parameter( run ) || in_prelude != ( part_ == C_part::Prelude ) )
+        {
+            continue;
+        }
+
+        written = true;
+        write_line( fmt::format(
+            "{} {{ {}* data; uint64_t size; }};",
+            spelling_.run_reference( run ),
+            spelling_.type( types_.table().get( run ).element )
+        ) );
+    }
+
+    if( written )
+    {
+        write_line( "" );
+    }
 }
 
 void Kir_emitter::emit_composites()
@@ -1760,26 +1790,43 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
             return fmt::format( "( {} ) 0", spelling_.type( rvalue.type ) );
         }
 
-        // `&(*s)` of a `Shape*` is `s` itself: an interface is never a place of its own.
-        if( types_.table().is_interface_pointer( rvalue.type ) )
+        if( types_.table().is_interface_pointer( rvalue.type ) && !types_.table().is_interface( type_of( rvalue.a.place ) ) )
         {
-            const Type_id from = type_of( rvalue.a.place );
+            return interface_reference(
+                types_.table().get( rvalue.type ).element,
+                type_of( rvalue.a.place ),
+                fmt::format( "&{}", place( rvalue.a.place ) )
+            );
+        }
 
-            if( !types_.table().is_interface( from ) )
-            {
-                return interface_reference(
-                    types_.table().get( rvalue.type ).element, from, fmt::format( "&{}", place( rvalue.a.place ) )
-                );
-            }
-
+        // `&(*s)` of a `Shape*` or a `u8[]*` is `s` itself: neither an interface nor a run is a
+        // place of its own.
+        if( types_.table().is_interface_pointer( rvalue.type ) || types_.table().is_run_pointer( rvalue.type ) )
+        {
             Place reference = rvalue.a.place;
-            assert( reference.num_projections > 0 && "an interface is reached only through a pointer" );
+            assert( reference.num_projections > 0 && "an interface or run is reached only through a pointer" );
             reference.num_projections -= 1;
 
             return place( reference );
         }
 
         return fmt::format( "&{}", place( rvalue.a.place ) );
+
+    // The data is cast because it may be a `const T[*]`: Keel, not C, keeps it read-only.
+    case Rvalue_kind::Run_of:
+        return fmt::format(
+            "( {} ) {{ ( {}* ) {}, {} }}",
+            spelling_.type( rvalue.type ),
+            spelling_.type( types_.table().get( types_.table().get( rvalue.type ).element ).element ),
+            operand( rvalue.a ),
+            operand( rvalue.b )
+        );
+
+    case Rvalue_kind::Run_data:
+        return fmt::format( "( {} ).data", operand( rvalue.a ) );
+
+    case Rvalue_kind::Run_size:
+        return fmt::format( "( {} ).size", operand( rvalue.a ) );
 
     case Rvalue_kind::Literal_bytes:
         return fmt::format( "( {} ) {}", spelling_.type( rvalue.type ), c_string( literal_pool_.string( rvalue.a.constant ) ) );

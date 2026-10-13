@@ -93,6 +93,10 @@ std::string Spelling::type( Type_id type ) const
         {
             return interface_reference( described.element );
         }
+        if( types.table().is_run( described.element ) )
+        {
+            return run_reference( described.element );
+        }
 
         return fmt::format( "{}*", this->type( described.element ) );
 
@@ -136,6 +140,11 @@ std::string Spelling::interface_reference( Type_id interface ) const
     return fmt::format(
         "struct {}__ref", mangle_struct( package_name( types.table().get( interface ).declaration ), interface, types.table() )
     );
+}
+
+std::string Spelling::run_reference( Type_id run ) const
+{
+    return fmt::format( "struct {}__ref", mangle_run( run, types.table() ) );
 }
 
 std::string Spelling::vtable_type( Type_id interface ) const

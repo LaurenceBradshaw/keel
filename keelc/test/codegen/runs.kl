@@ -1,0 +1,86 @@
+// A `ref T[]` is a `{ data, size }` struct in C. A run of a number is the prelude's and a run of a
+// program type the program's, so each half writes its own. A slice is a compound literal, and a
+// `const` run's data is cast to the struct's `T*`.
+struct Point
+{
+    i32 x;
+    i32 y;
+};
+
+i32 sum( const ref i32[] values )
+{
+    i32 total = 0;
+    u64 i     = 0;
+
+    while( i < values.size )
+    {
+        total = total + values[ i ];
+        i     = i + 1;
+    }
+
+    return total;
+}
+
+void fill( ref i32[] values, i32 from )
+{
+    u64 i = 0;
+
+    while( i < values.size )
+    {
+        values[ i ] = from;
+        from        = from + 1;
+        i           = i + 1;
+    }
+}
+
+i32 far( ref Point[] points )
+{
+    points[ points.size - 1 ].y = 7;
+    return points[ 0 ].x + points[ points.size - 1 ].y;
+}
+
+const ref i32[] view( const i32[*] data, u64 size )
+{
+    unsafe
+    {
+        return data[ 0..size ];
+    }
+}
+
+i32 main()
+{
+    i32[*] data = nullptr;
+    Point[*] points = nullptr;
+
+    unsafe
+    {
+        data   = alloc<i32>( 6 );
+        points = alloc<Point>( 3 );
+    }
+
+    unsafe
+    {
+        fill( ref data[ 0..6 ], 1 );
+        println( sum( data[ 0..6 ] ) );
+
+        ref i32[] all = data[ 0..6 ];
+        println( sum( all[ 2..5 ] ) );
+        println( all[ 1..5 ][ 1..3 ][ 1 ] );
+        println( all[ 2..4 ].size );
+        println( all[ 3..6 ].data[ 0 ] );
+
+        const i32[*] read_only = data;
+        println( sum( view( read_only, 4 ) ) );
+
+        points[ 0 ].x = 5;
+        println( far( ref points[ 0..3 ] ) );
+    }
+
+    unsafe
+    {
+        free( data );
+        free( points );
+    }
+
+    return 0;
+}

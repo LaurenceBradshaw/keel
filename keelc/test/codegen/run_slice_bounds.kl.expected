@@ -1,0 +1,115 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "run_slice_bounds.kl.prelude.c"
+
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
+void  kl_rt_free( void* );
+void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+uint64_t kl__length__L2u8_3u64_3u64( struct kl__run__L2u8__ref, uint64_t, uint64_t );
+int32_t kl__main__( void );
+
+uint64_t kl__length__L2u8_3u64_3u64( struct kl__run__L2u8__ref kl_text_1, uint64_t kl_a_2, uint64_t kl_b_3 )
+{
+    uint64_t kl_t0;
+    uint64_t kl_t4;
+    uint8_t* kl_t5;
+    bool kl_t6;
+    bool kl_t7;
+    uint8_t* kl_t8;
+    uint64_t kl_t9;
+    struct kl__run__L2u8__ref kl_t10;
+    uint64_t kl_t11;
+#line 5 "codegen/run_slice_bounds.kl"
+    kl_t4 = ( kl_text_1 ).size;
+    kl_t5 = ( kl_text_1 ).data;
+    kl_t6 = kl_a_2 <= kl_b_3;
+    if ( kl_t6 ) goto bb2; else goto bb1;
+    bb1:
+    kl_rt_panic( "codegen/run_slice_bounds.kl", 5, "out of bounds: text[ a..b ]" );
+    bb2:
+    kl_t7 = kl_b_3 <= kl_t4;
+    if ( kl_t7 ) goto bb3; else goto bb1;
+    bb3:
+    kl_t8 = kl_t5 + kl_a_2;
+    kl_t9 = kl_b_3 - kl_a_2;
+    kl_t10 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t8, kl_t9 };
+    kl_t11 = ( kl_t10 ).size;
+    kl_t0 = kl_t11;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    uint8_t* kl_data_1;
+    uint8_t* kl_t2;
+    uint64_t kl_t3;
+    uint64_t kl_t4;
+    bool kl_t5;
+    uint8_t* kl_t6;
+    uint64_t kl_t7;
+    struct kl__run__L2u8__ref kl_t8;
+    struct kl__run__L2u8__ref kl_t9;
+    uint64_t kl_t10;
+    uint64_t kl_t12;
+    uint64_t kl_t13;
+    bool kl_t14;
+    uint8_t* kl_t15;
+    uint64_t kl_t16;
+    struct kl__run__L2u8__ref kl_t17;
+    struct kl__run__L2u8__ref kl_t18;
+    uint64_t kl_t19;
+    struct kl_7prelude_str kl_t21;
+    struct kl_7prelude_str* kl_t22;
+    uint8_t* kl_t23;
+#line 10 "codegen/run_slice_bounds.kl"
+    kl_data_1 = NULL;
+#line 14 "codegen/run_slice_bounds.kl"
+    kl_t2 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) 4, sizeof( uint8_t ), "codegen/run_slice_bounds.kl", 14, "out of memory: alloc<u8>( 4 )" );
+    kl_data_1 = kl_t2;
+#line 19 "codegen/run_slice_bounds.kl"
+    kl_t3 = ( uint64_t ) 0;
+    kl_t4 = ( uint64_t ) 4;
+    kl_t5 = kl_t3 <= kl_t4;
+    if ( kl_t5 ) goto bb2; else goto bb1;
+    bb1:
+    kl_rt_panic( "codegen/run_slice_bounds.kl", 19, "out of bounds: data[ 0..4 ]" );
+    bb2:
+    kl_t6 = kl_data_1 + kl_t3;
+    kl_t7 = kl_t4 - kl_t3;
+    kl_t8 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t6, kl_t7 };
+    kl_t9 = kl_t8;
+    kl_t10 = kl__length__L2u8_3u64_3u64( kl_t9, 1, 3 );
+    kl_7prelude_println__3u64( kl_t10 );
+#line 20 "codegen/run_slice_bounds.kl"
+    kl_t12 = ( uint64_t ) 0;
+    kl_t13 = ( uint64_t ) 4;
+    kl_t14 = kl_t12 <= kl_t13;
+    if ( kl_t14 ) goto bb4; else goto bb3;
+    bb3:
+    kl_rt_panic( "codegen/run_slice_bounds.kl", 20, "out of bounds: data[ 0..4 ]" );
+    bb4:
+    kl_t15 = kl_data_1 + kl_t12;
+    kl_t16 = kl_t13 - kl_t12;
+    kl_t17 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t15, kl_t16 };
+    kl_t18 = kl_t17;
+    kl_t19 = kl__length__L2u8_3u64_3u64( kl_t18, 3, 2 );
+    kl_7prelude_println__3u64( kl_t19 );
+#line 23 "codegen/run_slice_bounds.kl"
+    kl_t22 = &kl_t21;
+    kl_t23 = ( uint8_t* ) "unreached";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t22, kl_t23, 9 );
+    kl_7prelude_println__Q7prelude3str( kl_t21 );
+#line 24 "codegen/run_slice_bounds.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

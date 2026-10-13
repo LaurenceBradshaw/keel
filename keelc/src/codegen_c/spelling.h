@@ -25,7 +25,8 @@ struct Spelling
     // §6.7's interfaces: a `Shape*` is a struct of the object's address and its vtable's, and each
     // implementer seen as one gets a vtable of thunks, one per slot.
     std::string interface_reference( Type_id interface ) const; // "struct kl__Shape__ref"
-    std::string vtable_type( Type_id interface ) const;         // "struct kl__Shape__vtable"
+    std::string run_reference( Type_id run ) const;
+    std::string vtable_type( Type_id interface ) const; // "struct kl__Shape__vtable"
     std::string vtable( Type_id implementer, Type_id interface ) const;
     std::string thunk( Type_id implementer, Type_id interface, Node_id requirement ) const;
     // Not `destructor_of`: an implementer's `~` runs its body only, and this drops its fields too.

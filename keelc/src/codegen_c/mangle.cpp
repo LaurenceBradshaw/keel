@@ -77,6 +77,14 @@ void encode_type( std::string& out, Type_id id, const Type_table& types )
         return;
     }
 
+    // `L` because `S` is the receiver's prefix.
+    if( types.is_run( id ) )
+    {
+        out += 'L';
+        encode_type( out, types.get( id ).element, types );
+        return;
+    }
+
     // `fn( i32 ) -> i32` is `F3i32E3i32`: the parameters between brackets, then the return. Its
     // own name is no identifier, so it cannot go through the length-prefixed path below - and `F`
     // is a letter no encoded type starts with, which is what keeps the scheme injective.
@@ -337,6 +345,13 @@ mangle_static_field( std::string_view name, u32 declaration, std::span<const Typ
     }
 }
 
+std::string mangle_run( Type_id run, const Type_table& types )
+{
+    std::string encoded;
+    encode_type( encoded, run, types );
+    return fmt::format( "kl__run__{}", encoded );
+}
+
 } // namespace keel
 
 #ifdef ENABLE_UNIT_TESTS
@@ -563,6 +578,19 @@ TEST_CASE( "mangle_encodes_every_type_injectively", "[codegen][mangle]" )
         REQUIRE( mangle_function( "", "f", read_only, table ) == "kl__f__PK3i32" );
         REQUIRE( mangle_function( "", "f", many, table ) == "kl__f__NK3i32" );
         REQUIRE( mangle_function( "", "f", read_only, table ) != mangle_function( "", "f", plain, table ) );
+    }
+
+    // `L`, not `S`: `at( const ref Box[], i32 )` would otherwise be `Box`'s method `at( i32 )`.
+    SECTION( "a run is not a receiver" )
+    {
+        const Type_id box = table.structure( Node_id { 3 }, {}, "Box" );
+
+        const Mangled_parameter run[] = { by_value( table.run_of( box ) ), by_value( i32 ) };
+        const Mangled_parameter own[] = { by_value( i32 ) };
+
+        REQUIRE( mangle_function( "", "at", run, table ) == "kl__at__L3Box_3i32" );
+        REQUIRE( mangle_function( "", "at", run, table ) != mangle_function( "", "at", own, table, {}, box ) );
+        REQUIRE( mangle_run( table.run_of( i32 ), table ) == "kl__run__L3i32" );
     }
 
     SECTION( "two parameters cannot be read as one" )

@@ -1,0 +1,486 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "runs.kl.prelude.c"
+
+struct kl__Point;
+
+struct kl__run__L5Point__ref { struct kl__Point* data; uint64_t size; };
+
+struct kl__Point
+{
+    int32_t kl_x_1;
+    int32_t kl_y_3;
+};
+
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
+void  kl_rt_free( void* );
+void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+_Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
+
+int32_t kl__sum__L3i32( struct kl__run__L3i32__ref );
+void kl__fill__RL3i32_3i32( struct kl__run__L3i32__ref, int32_t );
+int32_t kl__far__RL5Point( struct kl__run__L5Point__ref );
+struct kl__run__L3i32__ref kl__view__NK3i32_3u64( int32_t*, uint64_t );
+int32_t kl__main__( void );
+
+int32_t kl__sum__L3i32( struct kl__run__L3i32__ref kl_values_1 )
+{
+    int32_t kl_t0;
+    int32_t kl_total_2;
+    uint64_t kl_i_3;
+    uint64_t kl_t4;
+    bool kl_t5;
+    uint64_t kl_t6;
+    int32_t* kl_t7;
+    bool kl_t8;
+    int32_t* kl_t9;
+    int32_t kl_t10;
+    uint64_t kl_t11;
+#line 12 "codegen/runs.kl"
+    kl_total_2 = 0;
+#line 13 "codegen/runs.kl"
+    kl_i_3 = 0;
+    goto bb1;
+    bb1:
+#line 15 "codegen/runs.kl"
+    kl_t4 = ( kl_values_1 ).size;
+    kl_t5 = kl_i_3 < kl_t4;
+    if ( kl_t5 ) goto bb2; else goto bb3;
+    bb2:
+#line 17 "codegen/runs.kl"
+    kl_t6 = ( kl_values_1 ).size;
+    kl_t7 = ( kl_values_1 ).data;
+    kl_t8 = kl_i_3 < kl_t6;
+    if ( kl_t8 ) goto bb5; else goto bb4;
+    bb3:
+#line 21 "codegen/runs.kl"
+    kl_t0 = kl_total_2;
+    return kl_t0;
+    bb4:
+    kl_rt_panic( "codegen/runs.kl", 17, "out of bounds: values[ i ]" );
+    bb5:
+#line 17 "codegen/runs.kl"
+    kl_t9 = kl_t7 + kl_i_3;
+    kl_t10 = kl_total_2 + ( *kl_t9 );
+    kl_total_2 = kl_t10;
+#line 18 "codegen/runs.kl"
+    kl_t11 = kl_i_3 + 1;
+    kl_i_3 = kl_t11;
+    goto bb1;
+}
+
+void kl__fill__RL3i32_3i32( struct kl__run__L3i32__ref kl_values_1, int32_t kl_from_2 )
+{
+    uint64_t kl_i_3;
+    uint64_t kl_t4;
+    bool kl_t5;
+    uint64_t kl_t6;
+    int32_t* kl_t7;
+    bool kl_t8;
+    int32_t* kl_t9;
+    int32_t kl_t10;
+    uint64_t kl_t11;
+#line 26 "codegen/runs.kl"
+    kl_i_3 = 0;
+    goto bb1;
+    bb1:
+#line 28 "codegen/runs.kl"
+    kl_t4 = ( kl_values_1 ).size;
+    kl_t5 = kl_i_3 < kl_t4;
+    if ( kl_t5 ) goto bb2; else goto bb3;
+    bb2:
+#line 30 "codegen/runs.kl"
+    kl_t6 = ( kl_values_1 ).size;
+    kl_t7 = ( kl_values_1 ).data;
+    kl_t8 = kl_i_3 < kl_t6;
+    if ( kl_t8 ) goto bb5; else goto bb4;
+    bb3:
+    return;
+    bb4:
+    kl_rt_panic( "codegen/runs.kl", 30, "out of bounds: values[ i ]" );
+    bb5:
+    kl_t9 = kl_t7 + kl_i_3;
+    ( *kl_t9 ) = kl_from_2;
+#line 31 "codegen/runs.kl"
+    kl_t10 = kl_from_2 + 1;
+    kl_from_2 = kl_t10;
+#line 32 "codegen/runs.kl"
+    kl_t11 = kl_i_3 + 1;
+    kl_i_3 = kl_t11;
+    goto bb1;
+}
+
+int32_t kl__far__RL5Point( struct kl__run__L5Point__ref kl_points_1 )
+{
+    int32_t kl_t0;
+    uint64_t kl_t2;
+    struct kl__Point* kl_t3;
+    uint64_t kl_t4;
+    uint64_t kl_t5;
+    bool kl_t6;
+    struct kl__Point* kl_t7;
+    uint64_t kl_t8;
+    struct kl__Point* kl_t9;
+    uint64_t kl_t10;
+    bool kl_t11;
+    struct kl__Point* kl_t12;
+    uint64_t kl_t13;
+    struct kl__Point* kl_t14;
+    uint64_t kl_t15;
+    uint64_t kl_t16;
+    bool kl_t17;
+    struct kl__Point* kl_t18;
+    int32_t kl_t19;
+#line 38 "codegen/runs.kl"
+    kl_t2 = ( kl_points_1 ).size;
+    kl_t3 = ( kl_points_1 ).data;
+    kl_t4 = ( kl_points_1 ).size;
+    kl_t5 = kl_t4 - 1;
+    kl_t6 = kl_t5 < kl_t2;
+    if ( kl_t6 ) goto bb2; else goto bb1;
+    bb1:
+    kl_rt_panic( "codegen/runs.kl", 38, "out of bounds: points[ points.size - 1 ]" );
+    bb2:
+    kl_t7 = kl_t3 + kl_t5;
+    ( *kl_t7 ).kl_y_3 = 7;
+#line 39 "codegen/runs.kl"
+    kl_t8 = ( kl_points_1 ).size;
+    kl_t9 = ( kl_points_1 ).data;
+    kl_t10 = ( uint64_t ) 0;
+    kl_t11 = kl_t10 < kl_t8;
+    if ( kl_t11 ) goto bb4; else goto bb3;
+    bb3:
+    kl_rt_panic( "codegen/runs.kl", 39, "out of bounds: points[ 0 ]" );
+    bb4:
+    kl_t12 = kl_t9 + kl_t10;
+    kl_t13 = ( kl_points_1 ).size;
+    kl_t14 = ( kl_points_1 ).data;
+    kl_t15 = ( kl_points_1 ).size;
+    kl_t16 = kl_t15 - 1;
+    kl_t17 = kl_t16 < kl_t13;
+    if ( kl_t17 ) goto bb6; else goto bb5;
+    bb5:
+    kl_rt_panic( "codegen/runs.kl", 39, "out of bounds: points[ points.size - 1 ]" );
+    bb6:
+    kl_t18 = kl_t14 + kl_t16;
+    kl_t19 = ( *kl_t12 ).kl_x_1 + ( *kl_t18 ).kl_y_3;
+    kl_t0 = kl_t19;
+    return kl_t0;
+}
+
+struct kl__run__L3i32__ref kl__view__NK3i32_3u64( int32_t* kl_data_1, uint64_t kl_size_2 )
+{
+    struct kl__run__L3i32__ref kl_t0;
+    uint64_t kl_t3;
+    bool kl_t4;
+    int32_t* kl_t5;
+    uint64_t kl_t6;
+    struct kl__run__L3i32__ref kl_t7;
+#line 46 "codegen/runs.kl"
+    kl_t3 = ( uint64_t ) 0;
+    kl_t4 = kl_t3 <= kl_size_2;
+    if ( kl_t4 ) goto bb2; else goto bb1;
+    bb1:
+    kl_rt_panic( "codegen/runs.kl", 46, "out of bounds: data[ 0..size ]" );
+    bb2:
+    kl_t5 = kl_data_1 + kl_t3;
+    kl_t6 = kl_size_2 - kl_t3;
+    kl_t7 = ( struct kl__run__L3i32__ref ) { ( int32_t* ) kl_t5, kl_t6 };
+    kl_t0 = kl_t7;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t* kl_data_1;
+    struct kl__Point* kl_points_2;
+    int32_t* kl_t3;
+    struct kl__Point* kl_t4;
+    uint64_t kl_t5;
+    uint64_t kl_t6;
+    bool kl_t7;
+    int32_t* kl_t8;
+    uint64_t kl_t9;
+    struct kl__run__L3i32__ref kl_t10;
+    struct kl__run__L3i32__ref kl_t11;
+    uint64_t kl_t13;
+    uint64_t kl_t14;
+    bool kl_t15;
+    int32_t* kl_t16;
+    uint64_t kl_t17;
+    struct kl__run__L3i32__ref kl_t18;
+    struct kl__run__L3i32__ref kl_t19;
+    int32_t kl_t20;
+    int64_t kl_t21;
+    struct kl__run__L3i32__ref kl_all_23;
+    uint64_t kl_t24;
+    uint64_t kl_t25;
+    bool kl_t26;
+    int32_t* kl_t27;
+    uint64_t kl_t28;
+    struct kl__run__L3i32__ref kl_t29;
+    uint64_t kl_t30;
+    int32_t* kl_t31;
+    uint64_t kl_t32;
+    uint64_t kl_t33;
+    bool kl_t34;
+    bool kl_t35;
+    int32_t* kl_t36;
+    uint64_t kl_t37;
+    struct kl__run__L3i32__ref kl_t38;
+    struct kl__run__L3i32__ref kl_t39;
+    int32_t kl_t40;
+    int64_t kl_t41;
+    uint64_t kl_t43;
+    int32_t* kl_t44;
+    uint64_t kl_t45;
+    uint64_t kl_t46;
+    bool kl_t47;
+    bool kl_t48;
+    int32_t* kl_t49;
+    uint64_t kl_t50;
+    struct kl__run__L3i32__ref kl_t51;
+    uint64_t kl_t52;
+    int32_t* kl_t53;
+    uint64_t kl_t54;
+    uint64_t kl_t55;
+    bool kl_t56;
+    bool kl_t57;
+    int32_t* kl_t58;
+    uint64_t kl_t59;
+    struct kl__run__L3i32__ref kl_t60;
+    uint64_t kl_t61;
+    int32_t* kl_t62;
+    uint64_t kl_t63;
+    bool kl_t64;
+    int32_t* kl_t65;
+    int64_t kl_t66;
+    uint64_t kl_t68;
+    int32_t* kl_t69;
+    uint64_t kl_t70;
+    uint64_t kl_t71;
+    bool kl_t72;
+    bool kl_t73;
+    int32_t* kl_t74;
+    uint64_t kl_t75;
+    struct kl__run__L3i32__ref kl_t76;
+    uint64_t kl_t77;
+    uint64_t kl_t79;
+    int32_t* kl_t80;
+    uint64_t kl_t81;
+    uint64_t kl_t82;
+    bool kl_t83;
+    bool kl_t84;
+    int32_t* kl_t85;
+    uint64_t kl_t86;
+    struct kl__run__L3i32__ref kl_t87;
+    int32_t* kl_t88;
+    int32_t* kl_t89;
+    int64_t kl_t90;
+    int32_t* kl_read_only_92;
+    struct kl__run__L3i32__ref kl_t93;
+    struct kl__run__L3i32__ref kl_t94;
+    int32_t kl_t95;
+    int64_t kl_t96;
+    struct kl__Point* kl_t98;
+    uint64_t kl_t99;
+    uint64_t kl_t100;
+    bool kl_t101;
+    struct kl__Point* kl_t102;
+    uint64_t kl_t103;
+    struct kl__run__L5Point__ref kl_t104;
+    struct kl__run__L5Point__ref kl_t105;
+    int32_t kl_t106;
+    int64_t kl_t107;
+#line 52 "codegen/runs.kl"
+    kl_data_1 = NULL;
+#line 53 "codegen/runs.kl"
+    kl_points_2 = NULL;
+#line 57 "codegen/runs.kl"
+    kl_t3 = ( int32_t* ) kl_rt_alloc_many( ( size_t ) 6, sizeof( int32_t ), "codegen/runs.kl", 57, "out of memory: alloc<i32>( 6 )" );
+    kl_data_1 = kl_t3;
+#line 58 "codegen/runs.kl"
+    kl_t4 = ( struct kl__Point* ) kl_rt_alloc_many( ( size_t ) 3, sizeof( struct kl__Point ), "codegen/runs.kl", 58, "out of memory: alloc<Point>( 3 )" );
+    kl_points_2 = kl_t4;
+#line 63 "codegen/runs.kl"
+    kl_t5 = ( uint64_t ) 0;
+    kl_t6 = ( uint64_t ) 6;
+    kl_t7 = kl_t5 <= kl_t6;
+    if ( kl_t7 ) goto bb2; else goto bb1;
+    bb1:
+    kl_rt_panic( "codegen/runs.kl", 63, "out of bounds: data[ 0..6 ]" );
+    bb2:
+    kl_t8 = kl_data_1 + kl_t5;
+    kl_t9 = kl_t6 - kl_t5;
+    kl_t10 = ( struct kl__run__L3i32__ref ) { ( int32_t* ) kl_t8, kl_t9 };
+    kl_t11 = kl_t10;
+    kl__fill__RL3i32_3i32( kl_t11, 1 );
+#line 64 "codegen/runs.kl"
+    kl_t13 = ( uint64_t ) 0;
+    kl_t14 = ( uint64_t ) 6;
+    kl_t15 = kl_t13 <= kl_t14;
+    if ( kl_t15 ) goto bb4; else goto bb3;
+    bb3:
+    kl_rt_panic( "codegen/runs.kl", 64, "out of bounds: data[ 0..6 ]" );
+    bb4:
+    kl_t16 = kl_data_1 + kl_t13;
+    kl_t17 = kl_t14 - kl_t13;
+    kl_t18 = ( struct kl__run__L3i32__ref ) { ( int32_t* ) kl_t16, kl_t17 };
+    kl_t19 = kl_t18;
+    kl_t20 = kl__sum__L3i32( kl_t19 );
+    kl_t21 = ( int64_t ) kl_t20;
+    kl_7prelude_println__3i64( kl_t21 );
+#line 66 "codegen/runs.kl"
+    kl_t24 = ( uint64_t ) 0;
+    kl_t25 = ( uint64_t ) 6;
+    kl_t26 = kl_t24 <= kl_t25;
+    if ( kl_t26 ) goto bb6; else goto bb5;
+    bb5:
+    kl_rt_panic( "codegen/runs.kl", 66, "out of bounds: data[ 0..6 ]" );
+    bb6:
+    kl_t27 = kl_data_1 + kl_t24;
+    kl_t28 = kl_t25 - kl_t24;
+    kl_t29 = ( struct kl__run__L3i32__ref ) { ( int32_t* ) kl_t27, kl_t28 };
+    kl_all_23 = kl_t29;
+#line 67 "codegen/runs.kl"
+    kl_t30 = ( kl_all_23 ).size;
+    kl_t31 = ( kl_all_23 ).data;
+    kl_t32 = ( uint64_t ) 2;
+    kl_t33 = ( uint64_t ) 5;
+    kl_t34 = kl_t32 <= kl_t33;
+    if ( kl_t34 ) goto bb8; else goto bb7;
+    bb7:
+    kl_rt_panic( "codegen/runs.kl", 67, "out of bounds: all[ 2..5 ]" );
+    bb8:
+    kl_t35 = kl_t33 <= kl_t30;
+    if ( kl_t35 ) goto bb9; else goto bb7;
+    bb9:
+    kl_t36 = kl_t31 + kl_t32;
+    kl_t37 = kl_t33 - kl_t32;
+    kl_t38 = ( struct kl__run__L3i32__ref ) { ( int32_t* ) kl_t36, kl_t37 };
+    kl_t39 = kl_t38;
+    kl_t40 = kl__sum__L3i32( kl_t39 );
+    kl_t41 = ( int64_t ) kl_t40;
+    kl_7prelude_println__3i64( kl_t41 );
+#line 68 "codegen/runs.kl"
+    kl_t43 = ( kl_all_23 ).size;
+    kl_t44 = ( kl_all_23 ).data;
+    kl_t45 = ( uint64_t ) 1;
+    kl_t46 = ( uint64_t ) 5;
+    kl_t47 = kl_t45 <= kl_t46;
+    if ( kl_t47 ) goto bb11; else goto bb10;
+    bb10:
+    kl_rt_panic( "codegen/runs.kl", 68, "out of bounds: all[ 1..5 ]" );
+    bb11:
+    kl_t48 = kl_t46 <= kl_t43;
+    if ( kl_t48 ) goto bb12; else goto bb10;
+    bb12:
+    kl_t49 = kl_t44 + kl_t45;
+    kl_t50 = kl_t46 - kl_t45;
+    kl_t51 = ( struct kl__run__L3i32__ref ) { ( int32_t* ) kl_t49, kl_t50 };
+    kl_t52 = ( kl_t51 ).size;
+    kl_t53 = ( kl_t51 ).data;
+    kl_t54 = ( uint64_t ) 1;
+    kl_t55 = ( uint64_t ) 3;
+    kl_t56 = kl_t54 <= kl_t55;
+    if ( kl_t56 ) goto bb14; else goto bb13;
+    bb13:
+    kl_rt_panic( "codegen/runs.kl", 68, "out of bounds: all[ 1..5 ][ 1..3 ]" );
+    bb14:
+    kl_t57 = kl_t55 <= kl_t52;
+    if ( kl_t57 ) goto bb15; else goto bb13;
+    bb15:
+    kl_t58 = kl_t53 + kl_t54;
+    kl_t59 = kl_t55 - kl_t54;
+    kl_t60 = ( struct kl__run__L3i32__ref ) { ( int32_t* ) kl_t58, kl_t59 };
+    kl_t61 = ( kl_t60 ).size;
+    kl_t62 = ( kl_t60 ).data;
+    kl_t63 = ( uint64_t ) 1;
+    kl_t64 = kl_t63 < kl_t61;
+    if ( kl_t64 ) goto bb17; else goto bb16;
+    bb16:
+    kl_rt_panic( "codegen/runs.kl", 68, "out of bounds: all[ 1..5 ][ 1..3 ][ 1 ]" );
+    bb17:
+    kl_t65 = kl_t62 + kl_t63;
+    kl_t66 = ( int64_t ) ( *kl_t65 );
+    kl_7prelude_println__3i64( kl_t66 );
+#line 69 "codegen/runs.kl"
+    kl_t68 = ( kl_all_23 ).size;
+    kl_t69 = ( kl_all_23 ).data;
+    kl_t70 = ( uint64_t ) 2;
+    kl_t71 = ( uint64_t ) 4;
+    kl_t72 = kl_t70 <= kl_t71;
+    if ( kl_t72 ) goto bb19; else goto bb18;
+    bb18:
+    kl_rt_panic( "codegen/runs.kl", 69, "out of bounds: all[ 2..4 ]" );
+    bb19:
+    kl_t73 = kl_t71 <= kl_t68;
+    if ( kl_t73 ) goto bb20; else goto bb18;
+    bb20:
+    kl_t74 = kl_t69 + kl_t70;
+    kl_t75 = kl_t71 - kl_t70;
+    kl_t76 = ( struct kl__run__L3i32__ref ) { ( int32_t* ) kl_t74, kl_t75 };
+    kl_t77 = ( kl_t76 ).size;
+    kl_7prelude_println__3u64( kl_t77 );
+#line 70 "codegen/runs.kl"
+    kl_t79 = ( kl_all_23 ).size;
+    kl_t80 = ( kl_all_23 ).data;
+    kl_t81 = ( uint64_t ) 3;
+    kl_t82 = ( uint64_t ) 6;
+    kl_t83 = kl_t81 <= kl_t82;
+    if ( kl_t83 ) goto bb22; else goto bb21;
+    bb21:
+    kl_rt_panic( "codegen/runs.kl", 70, "out of bounds: all[ 3..6 ]" );
+    bb22:
+    kl_t84 = kl_t82 <= kl_t79;
+    if ( kl_t84 ) goto bb23; else goto bb21;
+    bb23:
+    kl_t85 = kl_t80 + kl_t81;
+    kl_t86 = kl_t82 - kl_t81;
+    kl_t87 = ( struct kl__run__L3i32__ref ) { ( int32_t* ) kl_t85, kl_t86 };
+    kl_t88 = ( kl_t87 ).data;
+    kl_t89 = kl_t88 + 0;
+    kl_t90 = ( int64_t ) ( *kl_t89 );
+    kl_7prelude_println__3i64( kl_t90 );
+#line 72 "codegen/runs.kl"
+    kl_read_only_92 = kl_data_1;
+#line 73 "codegen/runs.kl"
+    kl_t93 = kl__view__NK3i32_3u64( kl_read_only_92, 4 );
+    kl_t94 = kl_t93;
+    kl_t95 = kl__sum__L3i32( kl_t94 );
+    kl_t96 = ( int64_t ) kl_t95;
+    kl_7prelude_println__3i64( kl_t96 );
+#line 75 "codegen/runs.kl"
+    kl_t98 = kl_points_2 + 0;
+    ( *kl_t98 ).kl_x_1 = 5;
+#line 76 "codegen/runs.kl"
+    kl_t99 = ( uint64_t ) 0;
+    kl_t100 = ( uint64_t ) 3;
+    kl_t101 = kl_t99 <= kl_t100;
+    if ( kl_t101 ) goto bb25; else goto bb24;
+    bb24:
+    kl_rt_panic( "codegen/runs.kl", 76, "out of bounds: points[ 0..3 ]" );
+    bb25:
+    kl_t102 = kl_points_2 + kl_t99;
+    kl_t103 = kl_t100 - kl_t99;
+    kl_t104 = ( struct kl__run__L5Point__ref ) { ( struct kl__Point* ) kl_t102, kl_t103 };
+    kl_t105 = kl_t104;
+    kl_t106 = kl__far__RL5Point( kl_t105 );
+    kl_t107 = ( int64_t ) kl_t106;
+    kl_7prelude_println__3i64( kl_t107 );
+#line 81 "codegen/runs.kl"
+    kl_rt_free( kl_data_1 );
+#line 82 "codegen/runs.kl"
+    kl_rt_free( kl_points_2 );
+#line 85 "codegen/runs.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}
