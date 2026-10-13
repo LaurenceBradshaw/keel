@@ -19,15 +19,16 @@ void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__sum__L3i32( struct kl__run__L3i32__ref );
-void kl__fill__RL3i32_3i32( struct kl__run__L3i32__ref, int32_t );
-int32_t kl__far__RL5Point( struct kl__run__L5Point__ref );
+int32_t kl__sum__L3i32( int32_t*, uint64_t );
+void kl__fill__RL3i32_3i32( int32_t*, uint64_t, int32_t );
+int32_t kl__far__RL5Point( struct kl__Point*, uint64_t );
 struct kl__run__L3i32__ref kl__view__NK3i32_3u64( int32_t*, uint64_t );
 int32_t kl__main__( void );
 
-int32_t kl__sum__L3i32( struct kl__run__L3i32__ref kl_values_1 )
+int32_t kl__sum__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
 {
     int32_t kl_t0;
+    struct kl__run__L3i32__ref kl_values_1 = { kl_values_1_data, kl_values_1_size };
     int32_t kl_total_2;
     uint64_t kl_i_3;
     uint64_t kl_t4;
@@ -71,8 +72,9 @@ int32_t kl__sum__L3i32( struct kl__run__L3i32__ref kl_values_1 )
     goto bb1;
 }
 
-void kl__fill__RL3i32_3i32( struct kl__run__L3i32__ref kl_values_1, int32_t kl_from_2 )
+void kl__fill__RL3i32_3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size, int32_t kl_from_2 )
 {
+    struct kl__run__L3i32__ref kl_values_1 = { kl_values_1_data, kl_values_1_size };
     uint64_t kl_i_3;
     uint64_t kl_t4;
     bool kl_t5;
@@ -112,9 +114,10 @@ void kl__fill__RL3i32_3i32( struct kl__run__L3i32__ref kl_values_1, int32_t kl_f
     goto bb1;
 }
 
-int32_t kl__far__RL5Point( struct kl__run__L5Point__ref kl_points_1 )
+int32_t kl__far__RL5Point( struct kl__Point* kl_points_1_data, uint64_t kl_points_1_size )
 {
     int32_t kl_t0;
+    struct kl__run__L5Point__ref kl_points_1 = { kl_points_1_data, kl_points_1_size };
     uint64_t kl_t2;
     struct kl__Point* kl_t3;
     uint64_t kl_t4;
@@ -317,7 +320,7 @@ int32_t kl__main__( void )
     kl_t9 = kl_t6 - kl_t5;
     kl_t10 = ( struct kl__run__L3i32__ref ) { ( int32_t* ) kl_t8, kl_t9 };
     kl_t11 = kl_t10;
-    kl__fill__RL3i32_3i32( kl_t11, 1 );
+    kl__fill__RL3i32_3i32( ( kl_t11 ).data, ( kl_t11 ).size, 1 );
 #line 64 "codegen/runs.kl"
     kl_t13 = ( uint64_t ) 0;
     kl_t14 = ( uint64_t ) 6;
@@ -330,7 +333,7 @@ int32_t kl__main__( void )
     kl_t17 = kl_t14 - kl_t13;
     kl_t18 = ( struct kl__run__L3i32__ref ) { ( int32_t* ) kl_t16, kl_t17 };
     kl_t19 = kl_t18;
-    kl_t20 = kl__sum__L3i32( kl_t19 );
+    kl_t20 = kl__sum__L3i32( ( kl_t19 ).data, ( kl_t19 ).size );
     kl_t21 = ( int64_t ) kl_t20;
     kl_7prelude_println__3i64( kl_t21 );
 #line 66 "codegen/runs.kl"
@@ -362,7 +365,7 @@ int32_t kl__main__( void )
     kl_t37 = kl_t33 - kl_t32;
     kl_t38 = ( struct kl__run__L3i32__ref ) { ( int32_t* ) kl_t36, kl_t37 };
     kl_t39 = kl_t38;
-    kl_t40 = kl__sum__L3i32( kl_t39 );
+    kl_t40 = kl__sum__L3i32( ( kl_t39 ).data, ( kl_t39 ).size );
     kl_t41 = ( int64_t ) kl_t40;
     kl_7prelude_println__3i64( kl_t41 );
 #line 68 "codegen/runs.kl"
@@ -450,7 +453,7 @@ int32_t kl__main__( void )
 #line 73 "codegen/runs.kl"
     kl_t93 = kl__view__NK3i32_3u64( kl_read_only_92, 4 );
     kl_t94 = kl_t93;
-    kl_t95 = kl__sum__L3i32( kl_t94 );
+    kl_t95 = kl__sum__L3i32( ( kl_t94 ).data, ( kl_t94 ).size );
     kl_t96 = ( int64_t ) kl_t95;
     kl_7prelude_println__3i64( kl_t96 );
 #line 75 "codegen/runs.kl"
@@ -468,7 +471,7 @@ int32_t kl__main__( void )
     kl_t103 = kl_t100 - kl_t99;
     kl_t104 = ( struct kl__run__L5Point__ref ) { ( struct kl__Point* ) kl_t102, kl_t103 };
     kl_t105 = kl_t104;
-    kl_t106 = kl__far__RL5Point( kl_t105 );
+    kl_t106 = kl__far__RL5Point( ( kl_t105 ).data, ( kl_t105 ).size );
     kl_t107 = ( int64_t ) kl_t106;
     kl_7prelude_println__3i64( kl_t107 );
 #line 81 "codegen/runs.kl"

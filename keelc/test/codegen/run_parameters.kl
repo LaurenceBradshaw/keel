@@ -1,0 +1,81 @@
+// A borrowed run crosses a C call as two parameters, `data` and `size`, and the callee rebuilds the
+// struct its body names. Through a `fn` value and a vtable too, where a thunk passes both straight on.
+interface Measure
+{
+    i32 total( const ref i32[] values ) const;
+};
+
+class Scaled implements Measure
+{
+    public Scaled( i32 by )
+    {
+        by_ = by;
+    }
+
+    public i32 total( const ref i32[] values ) const
+    {
+        return sum( values ) * by_;
+    }
+
+    private i32 by_;
+};
+
+i32 sum( const ref i32[] values )
+{
+    i32 total = 0;
+
+    for( u64 i = 0; i < values.size; i++ )
+    {
+        total = total + values[ i ];
+    }
+
+    return total;
+}
+
+// Handed on whole and as a slice: both are already a run, and each call splits it again.
+i32 tail_sum( const ref i32[] values )
+{
+    return sum( values ) - sum( values[ 0..1 ] );
+}
+
+i32 through( const ref Measure m, const ref i32[] values )
+{
+    return m.total( values );
+}
+
+i32 main()
+{
+    i32[*] data = nullptr;
+
+    unsafe
+    {
+        data = alloc<i32>( 4 );
+    }
+
+    for( u64 i = 0; i < 4; i++ )
+    {
+        unsafe
+        {
+            data[ i ] = cast<i32>( i ) + 1;
+        }
+    }
+
+    unsafe
+    {
+        const ref i32[] all = data[ 0..4 ];
+
+        println( cast<i64>( sum( all ) ) );
+        println( cast<i64>( tail_sum( all ) ) );
+
+        fn( const ref i32[] ) -> i32 f = &sum;
+        println( cast<i64>( f( all[ 1..3 ] ) ) );
+
+        Scaled s = Scaled( 10 );
+        println( cast<i64>( s.total( all ) ) );
+        println( cast<i64>( through( s, all ) ) );
+
+        free( data );
+    }
+
+    return 0;
+}

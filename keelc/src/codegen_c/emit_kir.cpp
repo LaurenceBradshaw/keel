@@ -509,14 +509,15 @@ void Kir_emitter::emit_function_types()
                                       instance_owns( ast_, types_.table(), described.arguments[i], types_.recorded() ) );
 
             // A borrowed interface travels as its reference, which is one struct rather than a `*`.
-            const Type_id spelled = by_address && types_.table().is_interface( described.arguments[i] )
+            const Type_id spelled = by_address && ( types_.table().is_interface( described.arguments[i] ) ||
+                                                    types_.table().is_run( described.arguments[i] ) )
                                         ? types_.table().pointer_to( described.arguments[i] )
                                         : described.arguments[i];
 
             parameters += fmt::format(
                 "{}{}{}",
                 parameters.empty() ? "" : ", ",
-                spelling_.type( spelled ),
+                spelling_.parameter( spelled, "" ),
                 by_address && spelled == described.arguments[i] ? "*" : ""
             );
         }
@@ -721,7 +722,7 @@ void Kir_emitter::emit_vtable_types()
             {
                 if( !is_void( binding_type( ast_, types_, param ) ) )
                 {
-                    parameters += fmt::format( ", {}", spelling_.type( binding_type( ast_, types_, param ) ) );
+                    parameters += fmt::format( ", {}", spelling_.parameter( binding_type( ast_, types_, param ), "" ) );
                 }
             }
 
@@ -784,8 +785,11 @@ void Kir_emitter::emit_vtables()
 
                 if( !is_void( type ) )
                 {
-                    parameters += fmt::format( ", {} p{}", spelling_.type( type ), p );
-                    arguments += fmt::format( ", p{}", p );
+                    // A run's two halves go straight on, never rebuilt.
+                    const std::string name = fmt::format( "p{}", p );
+                    parameters += fmt::format( ", {}", spelling_.parameter( type, name ) );
+                    arguments += types_.table().is_run_pointer( type ) ? fmt::format( ", {0}_data, {0}_size", name )
+                                                                       : fmt::format( ", {}", name );
                 }
             }
 
@@ -1397,7 +1401,7 @@ void Kir_emitter::emit_function( const Function& function )
         if( !is_void( function.locals[i].type ) )
         {
             params += fmt::format(
-                "{}{} {}", params.empty() ? "" : ", ", spelling_.type( function.locals[i].type ), local_name( i )
+                "{}{}", params.empty() ? "" : ", ", spelling_.parameter( function.locals[i].type, local_name( i ) )
             );
         }
     }
@@ -1422,6 +1426,13 @@ void Kir_emitter::emit_function( const Function& function )
         // the top.
         if( i >= 1 && i <= function.parameter_count )
         {
+            // A run arrives as its two halves; the body names the struct.
+            if( types_.table().is_run_pointer( function.locals[i].type ) )
+            {
+                write_line( fmt::format(
+                    "{0} {1} = {{ {1}_data, {1}_size }};", spelling_.type( function.locals[i].type ), local_name( i )
+                ) );
+            }
             continue;
         }
 
@@ -1499,7 +1510,7 @@ std::string Kir_emitter::prototype( const Function& function ) const
     {
         if( !is_void( function.locals[i].type ) )
         {
-            params += fmt::format( "{}{}", params.empty() ? "" : ", ", spelling_.type( function.locals[i].type ) );
+            params += fmt::format( "{}{}", params.empty() ? "" : ", ", spelling_.parameter( function.locals[i].type, "" ) );
         }
     }
 
@@ -1855,7 +1866,7 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
                 continue;
             }
 
-            args += fmt::format( "{}{}", args.empty() ? "" : ", ", operand( argument ) );
+            args += fmt::format( "{}{}", args.empty() ? "" : ", ", spelling_.argument( argument.type, operand( argument ) ) );
         }
         std::string callee_name =
             rvalue.kind == Rvalue_kind::Call ? spelling_.function( rvalue.callee, rvalue.type_arguments ) : operand( rvalue.a );
@@ -1941,7 +1952,7 @@ std::string Kir_emitter::dynamic_call( const Rvalue& rvalue ) const
 
         if( !is_void( argument ) )
         {
-            args += fmt::format( ", {}", operand( argument ) );
+            args += fmt::format( ", {}", spelling_.argument( argument.type, operand( argument ) ) );
         }
     }
 

@@ -9,12 +9,13 @@ void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-uint8_t kl__at__L2u8_3u64( struct kl__run__L2u8__ref, uint64_t );
+uint8_t kl__at__L2u8_3u64( uint8_t*, uint64_t, uint64_t );
 int32_t kl__main__( void );
 
-uint8_t kl__at__L2u8_3u64( struct kl__run__L2u8__ref kl_text_1, uint64_t kl_i_2 )
+uint8_t kl__at__L2u8_3u64( uint8_t* kl_text_1_data, uint64_t kl_text_1_size, uint64_t kl_i_2 )
 {
     uint8_t kl_t0;
+    struct kl__run__L2u8__ref kl_text_1 = { kl_text_1_data, kl_text_1_size };
     uint64_t kl_t3;
     uint8_t* kl_t4;
     bool kl_t5;
@@ -80,7 +81,7 @@ int32_t kl__main__( void )
     kl_t8 = kl_t5 - kl_t4;
     kl_t9 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t7, kl_t8 };
     kl_t10 = kl_t9;
-    kl_t11 = kl__at__L2u8_3u64( kl_t10, 3 );
+    kl_t11 = kl__at__L2u8_3u64( ( kl_t10 ).data, ( kl_t10 ).size, 3 );
     kl_t12 = ( uint64_t ) kl_t11;
     kl_7prelude_println__3u64( kl_t12 );
 #line 18 "codegen/run_bounds.kl"
@@ -95,7 +96,7 @@ int32_t kl__main__( void )
     kl_t18 = kl_t15 - kl_t14;
     kl_t19 = ( struct kl__run__L2u8__ref ) { ( uint8_t* ) kl_t17, kl_t18 };
     kl_t20 = kl_t19;
-    kl_t21 = kl__at__L2u8_3u64( kl_t20, 4 );
+    kl_t21 = kl__at__L2u8_3u64( ( kl_t20 ).data, ( kl_t20 ).size, 4 );
     kl_t22 = ( uint64_t ) kl_t21;
     kl_7prelude_println__3u64( kl_t22 );
 #line 21 "codegen/run_bounds.kl"

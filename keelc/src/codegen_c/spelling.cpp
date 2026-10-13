@@ -147,6 +147,44 @@ std::string Spelling::run_reference( Type_id run ) const
     return fmt::format( "struct {}__ref", mangle_run( run, types.table() ) );
 }
 
+std::string Spelling::parameter( Type_id type, std::string_view name ) const
+{
+    if( types.table().is_run_pointer( type ) )
+    {
+        const auto element = types.table().get( types.table().get( type ).element ).element;
+        if( !name.empty() )
+        {
+            return fmt::format( "{}* {}_data, uint64_t {}_size", this->type( element ), name, name );
+        }
+        return fmt::format( "{}*, uint64_t", this->type( element ) );
+    }
+
+    if( !name.empty() )
+    {
+        return fmt::format( "{} {}", this->type( type ), name );
+    }
+
+    return fmt::format( "{}", this->type( type ) );
+}
+
+std::string Spelling::argument( Type_id type, std::string_view name ) const
+{
+    if( types.table().is_run_pointer( type ) )
+    {
+        if( !name.empty() )
+        {
+            return fmt::format( "( {} ).data, ( {} ).size", name, name );
+        }
+    }
+
+    if( !name.empty() )
+    {
+        return std::string( name );
+    }
+
+    return "";
+}
+
 std::string Spelling::vtable_type( Type_id interface ) const
 {
     return fmt::format(
@@ -307,7 +345,7 @@ std::string Spelling::parameter_types( Node_id declaration ) const
             rendered += ", ";
         }
 
-        rendered += type( params[i] );
+        rendered += parameter( params[i], "" );
     }
 
     if( rendered.empty() )
@@ -473,6 +511,50 @@ TEST_CASE( "c_string_escapes_every_byte_c_could_misread", "[codegen][spelling]" 
                   "?=" ) == "\"\\077\\077=\""
     ); // a trigraph, which C11 still reads
     REQUIRE( c_string( "\xff" ) == "\"\\377\"" );
+}
+
+// A borrowed run crosses a C call as two parameters, so no ABI passes a struct by hidden pointer.
+TEST_CASE( "a_run_parameter_is_spelled_as_two", "[codegen][spelling]" )
+{
+    const Ast      ast;
+    Types          types;
+    const Interner interner;
+    const Imports  imports;
+    const Spelling spelling { ast, types, interner, imports };
+
+    Type_table&   table = types.table();
+    const Type_id i32   = table.integer( 32, true );
+    const Type_id u8    = table.integer( 8, false );
+    const Type_id run   = table.pointer_to( table.run_of( i32 ) );
+
+    SECTION( "a run pointer is its data and its size" )
+    {
+        REQUIRE( spelling.parameter( run, "kl_values_1" ) == "int32_t* kl_values_1_data, uint64_t kl_values_1_size" );
+        REQUIRE( spelling.parameter( run, "" ) == "int32_t*, uint64_t" );
+    }
+
+    // The struct's `data` is not const either: Keel, not C, keeps a `const ref` read-only.
+    SECTION( "a read-only run is spelled as the struct's field is" )
+    {
+        const Type_id text = table.pointer_to( table.run_of( u8 ), true );
+
+        REQUIRE( spelling.parameter( text, "kl_text_2" ) == "uint8_t* kl_text_2_data, uint64_t kl_text_2_size" );
+    }
+
+    SECTION( "anything else is one parameter" )
+    {
+        REQUIRE( spelling.parameter( i32, "kl_n_3" ) == "int32_t kl_n_3" );
+        REQUIRE( spelling.parameter( i32, "" ) == "int32_t" );
+        REQUIRE( spelling.parameter( table.pointer_to( i32 ), "kl_p_4" ) == "int32_t* kl_p_4" );
+        REQUIRE( spelling.parameter( table.many_pointer_to( i32 ), "" ) == "int32_t*" );
+    }
+
+    SECTION( "a run argument passes both halves" )
+    {
+        REQUIRE( spelling.argument( run, "kl_t5" ) == "( kl_t5 ).data, ( kl_t5 ).size" );
+        REQUIRE( spelling.argument( i32, "kl_t6" ) == "kl_t6" );
+        REQUIRE( spelling.argument( table.pointer_to( i32 ), "&kl_x_7" ) == "&kl_x_7" );
+    }
 }
 
 } // namespace keel

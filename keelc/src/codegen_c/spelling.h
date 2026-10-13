@@ -4,6 +4,7 @@
 #pragma once
 #include <span>
 #include <string>
+#include <string_view>
 #include "ast/ast.h"
 #include "common/imports.h"
 #include "common/interner.h"
@@ -26,6 +27,8 @@ struct Spelling
     // implementer seen as one gets a vtable of thunks, one per slot.
     std::string interface_reference( Type_id interface ) const; // "struct kl__Shape__ref"
     std::string run_reference( Type_id run ) const;
+    std::string parameter( Type_id type, std::string_view name ) const;
+    std::string argument( Type_id type, std::string_view name ) const;
     std::string vtable_type( Type_id interface ) const; // "struct kl__Shape__vtable"
     std::string vtable( Type_id implementer, Type_id interface ) const;
     std::string thunk( Type_id implementer, Type_id interface, Node_id requirement ) const;

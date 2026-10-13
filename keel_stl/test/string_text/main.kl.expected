@@ -54,7 +54,7 @@ void  kl_rt_free( void* );
 void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
-int32_t kl__sum__L3i32( struct kl__run__L3i32__ref );
+int32_t kl__sum__L3i32( int32_t*, uint64_t );
 int32_t kl__main__( void );
 void kl_2kl_string__RQ2kl6string__ctor( struct kl_2kl_string* );
 void kl_2kl_string__RQ2kl6string_7textual__ctor( struct kl_2kl_string*, struct kl_7prelude_textual__ref );
@@ -75,7 +75,7 @@ bool kl_2kl_starts_with__SQ2kl6string_7textual( struct kl_2kl_string*, struct kl
 bool kl_2kl_ends_with__SQ2kl6string_7textual( struct kl_2kl_string*, struct kl_7prelude_textual__ref );
 struct kl_2kl_optional__I3u64E kl_2kl_find__SQ2kl6string_7textual( struct kl_2kl_string*, struct kl_7prelude_textual__ref );
 struct kl_2kl_string kl_2kl_substring__SQ2kl6string_3u64_3u64( struct kl_2kl_string*, uint64_t, uint64_t );
-bool kl_2kl_matches_at__SQ2kl6string_3u64_L2u8( struct kl_2kl_string*, uint64_t, struct kl__run__L2u8__ref );
+bool kl_2kl_matches_at__SQ2kl6string_3u64_L2u8( struct kl_2kl_string*, uint64_t, uint8_t*, uint64_t );
 uint64_t kl_2kl_value_or__I3u64E__MQ2kl8optionalI3u64E_M3u64( struct kl_2kl_optional__I3u64E, uint64_t );
 void kl_2kl_list__I3i32E__RQ2kl4listI3i32E__ctor( struct kl_2kl_list__I3i32E* );
 void kl_2kl_push__I3i32E__SQ2kl4listI3i32E_M3i32( struct kl_2kl_list__I3i32E*, int32_t );
@@ -110,9 +110,10 @@ static struct kl__run__L2u8__ref kl_2kl_string__as_kl_7prelude_textual__kl_as_te
 
 static const struct kl_7prelude_textual__vtable kl_2kl_string__as_kl_7prelude_textual = { kl_2kl_string__as_kl_7prelude_textual__drop, kl_2kl_string__as_kl_7prelude_textual__kl_as_text_2056 };
 
-int32_t kl__sum__L3i32( struct kl__run__L3i32__ref kl_values_1 )
+int32_t kl__sum__L3i32( int32_t* kl_values_1_data, uint64_t kl_values_1_size )
 {
     int32_t kl_t0;
+    struct kl__run__L3i32__ref kl_values_1 = { kl_values_1_data, kl_values_1_size };
     int32_t kl_total_2;
     uint64_t kl_i_3;
     uint64_t kl_t4;
@@ -413,7 +414,7 @@ int32_t kl__main__( void )
     kl_t90 = &kl_values_80;
     kl_t91 = kl_2kl_as_run__I3i32E__SQ2kl4listI3i32E( kl_t90 );
     kl_t92 = kl_t91;
-    kl_t93 = kl__sum__L3i32( kl_t92 );
+    kl_t93 = kl__sum__L3i32( ( kl_t92 ).data, ( kl_t92 ).size );
     kl_t94 = kl_t93 != 6;
     kl_t89 = kl_t94;
     if ( kl_t89 ) goto bb20; else goto bb19;
@@ -1107,7 +1108,7 @@ bool kl_2kl_starts_with__SQ2kl6string_7textual( struct kl_2kl_string* kl_this_1,
 #line 209 "../src/string.kl"
     kl_t6 = &( *kl_this_1 );
     kl_t7 = kl_text_3;
-    kl_t8 = kl_2kl_matches_at__SQ2kl6string_3u64_L2u8( kl_t6, 0, kl_t7 );
+    kl_t8 = kl_2kl_matches_at__SQ2kl6string_3u64_L2u8( kl_t6, 0, ( kl_t7 ).data, ( kl_t7 ).size );
     kl_t0 = kl_t8;
     return kl_t0;
 }
@@ -1151,7 +1152,7 @@ bool kl_2kl_ends_with__SQ2kl6string_7textual( struct kl_2kl_string* kl_this_1, s
     kl_t13 = ( kl_text_3 ).size;
     kl_t14 = kl_t12 - kl_t13;
     kl_t15 = kl_text_3;
-    kl_t16 = kl_2kl_matches_at__SQ2kl6string_3u64_L2u8( kl_t10, kl_t14, kl_t15 );
+    kl_t16 = kl_2kl_matches_at__SQ2kl6string_3u64_L2u8( kl_t10, kl_t14, ( kl_t15 ).data, ( kl_t15 ).size );
     kl_t0 = kl_t16;
     return kl_t0;
 }
@@ -1208,7 +1209,7 @@ struct kl_2kl_optional__I3u64E kl_2kl_find__SQ2kl6string_7textual( struct kl_2kl
 #line 236 "../src/string.kl"
     kl_t17 = &( *kl_this_1 );
     kl_t18 = kl_text_3;
-    kl_t19 = kl_2kl_matches_at__SQ2kl6string_3u64_L2u8( kl_t17, kl_i_11, kl_t18 );
+    kl_t19 = kl_2kl_matches_at__SQ2kl6string_3u64_L2u8( kl_t17, kl_i_11, ( kl_t18 ).data, ( kl_t18 ).size );
     if ( kl_t19 ) goto bb6; else goto bb7;
     bb5:
 #line 242 "../src/string.kl"
@@ -1303,9 +1304,10 @@ struct kl_2kl_string kl_2kl_substring__SQ2kl6string_3u64_3u64( struct kl_2kl_str
     goto bb5;
 }
 
-bool kl_2kl_matches_at__SQ2kl6string_3u64_L2u8( struct kl_2kl_string* kl_this_1, uint64_t kl_at_2, struct kl__run__L2u8__ref kl_text_3 )
+bool kl_2kl_matches_at__SQ2kl6string_3u64_L2u8( struct kl_2kl_string* kl_this_1, uint64_t kl_at_2, uint8_t* kl_text_3_data, uint64_t kl_text_3_size )
 {
     bool kl_t0;
+    struct kl__run__L2u8__ref kl_text_3 = { kl_text_3_data, kl_text_3_size };
     uint64_t kl_t4;
     uint64_t kl_t5;
     struct kl_2kl_string* kl_t6;
