@@ -1968,7 +1968,7 @@ struct kl__owned kl_2kl_unwrap__I5ownedE__MQ2kl8optionalI5ownedE( struct kl_2kl_
     kl_t7 = &kl_t6;
     kl_t8 = ( uint8_t* ) "unwrap on an empty optional";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t7, kl_t8, 27 );
-    kl_rt_panic_message( "../src/optional.kl", 25, kl_t6.kl_data_2243, kl_t6.kl_size_2246 );
+    kl_rt_panic_message( "../src/optional.kl", 25, kl_t6.kl_data_2256, kl_t6.kl_size_2259 );
 }
 
 bool kl_2kl_is_some__I5ownedE__Q2kl8optionalI5ownedE( struct kl_2kl_optional__I5ownedE* kl_o_1 )

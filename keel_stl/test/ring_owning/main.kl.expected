@@ -27,7 +27,7 @@ struct kl_2kl_ring__I5ownedE
 struct kl_7prelude_result__I4void_5ownedE
 {
     int32_t tag;
-    struct kl__owned kl_error_2541;
+    struct kl__owned kl_error_2598;
 };
 
 struct kl_2kl_optional__I5ownedE
@@ -767,7 +767,7 @@ int32_t kl__try_pushes__( void )
 #line 130 "ring_owning/main.kl"
     kl_t13 = kl_t11;
     kl_t44 = false;
-    kl_e_14 = kl_t13.kl_error_2541;
+    kl_e_14 = kl_t13.kl_error_2598;
 #line 131 "ring_owning/main.kl"
     kl_t0 = 7;
     kl__owned__dtor( &kl_e_14 );
@@ -821,7 +821,7 @@ int32_t kl__try_pushes__( void )
 #line 139 "ring_owning/main.kl"
     kl_t23 = kl_t21;
     kl_t48 = false;
-    kl_e_24 = kl_t23.kl_error_2541;
+    kl_e_24 = kl_t23.kl_error_2598;
 #line 140 "ring_owning/main.kl"
     kl_t26 = &kl_e_24;
     kl_t27 = kl__value__S5owned( kl_t26 );
@@ -2215,7 +2215,7 @@ struct kl_7prelude_result__I4void_5ownedE kl_2kl_try_push_front__I5ownedE__SQ2kl
 #line 96 "../src/ring.kl"
     kl_t5.tag = 1;
     kl_t10 = true;
-    kl_t5.kl_error_2541 = kl_value_2;
+    kl_t5.kl_error_2598 = kl_value_2;
     kl_t9 = false;
     kl_t10 = true;
     kl_t0 = kl_t5;
@@ -2267,7 +2267,7 @@ struct kl_7prelude_result__I4void_5ownedE kl_2kl_try_push_back__I5ownedE__SQ2kl4
 #line 84 "../src/ring.kl"
     kl_t5.tag = 1;
     kl_t10 = true;
-    kl_t5.kl_error_2541 = kl_value_2;
+    kl_t5.kl_error_2598 = kl_value_2;
     kl_t9 = false;
     kl_t10 = true;
     kl_t0 = kl_t5;
@@ -2414,7 +2414,7 @@ struct kl__owned kl_2kl_unwrap__I5ownedE__MQ2kl8optionalI5ownedE( struct kl_2kl_
     kl_t7 = &kl_t6;
     kl_t8 = ( uint8_t* ) "unwrap on an empty optional";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t7, kl_t8, 27 );
-    kl_rt_panic_message( "../src/optional.kl", 25, kl_t6.kl_data_2177, kl_t6.kl_size_2180 );
+    kl_rt_panic_message( "../src/optional.kl", 25, kl_t6.kl_data_2190, kl_t6.kl_size_2193 );
 }
 
 struct kl_2kl_optional__I5ownedE kl_2kl_push_front_evict__I5ownedE__SQ2kl4ringI5ownedE_M5owned( struct kl_2kl_ring__I5ownedE* kl_this_1, struct kl__owned kl_value_2 )
@@ -3103,13 +3103,13 @@ void kl_2kl_destroy_live__I3i32E__SQ2kl4ringI3i32E( struct kl_2kl_ring__I3i32E* 
 void kl_7prelude_result__I4void_5ownedE__dtor( struct kl_7prelude_result__I4void_5ownedE* kl_t1 )
 {
     bool kl_t2;
-#line 193 "<prelude>"
+#line 210 "<prelude>"
     kl_t2 = ( *kl_t1 ).tag == 1;
     if ( kl_t2 ) goto bb2; else goto bb1;
     bb1:
     return;
     bb2:
-    kl__owned__dtor( &( *kl_t1 ).kl_error_2541 );
+    kl__owned__dtor( &( *kl_t1 ).kl_error_2598 );
     goto bb1;
 }
 

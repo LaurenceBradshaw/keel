@@ -22,7 +22,7 @@ uint64_t kl__size_of__PQ7prelude3str( struct kl_7prelude_str* kl_s_1 )
 {
     uint64_t kl_t0;
 #line 12 "codegen/prelude_types.kl"
-    kl_t0 = ( *kl_s_1 ).kl_size_49;
+    kl_t0 = ( *kl_s_1 ).kl_size_62;
     return kl_t0;
 }
 

@@ -59,6 +59,7 @@ int32_t kl__main__( void )
     struct kl_7prelude_str kl_t24;
     struct kl_7prelude_str* kl_t25;
     uint8_t* kl_t26;
+    struct kl_7prelude_textual__ref kl_t28;
 #line 10 "codegen/run_bounds.kl"
     kl_data_1 = NULL;
 #line 14 "codegen/run_bounds.kl"
@@ -101,7 +102,8 @@ int32_t kl__main__( void )
     kl_t25 = &kl_t24;
     kl_t26 = ( uint8_t* ) "unreached";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t25, kl_t26, 9 );
-    kl_7prelude_println__Q7prelude3str( kl_t24 );
+    kl_t28 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t24, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_7prelude_println__7textual( kl_t28 );
 #line 22 "codegen/run_bounds.kl"
     kl_t0 = 0;
     return kl_t0;

@@ -1,0 +1,13 @@
+// Only a `textual` is text: anything else reaches no `print`.
+struct Point
+{
+    i32 x;
+};
+
+i32 main()
+{
+    Point p = Point { 1 };
+    println( p );
+    eprint( &p );
+    return 0;
+}

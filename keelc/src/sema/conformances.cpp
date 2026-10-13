@@ -559,7 +559,7 @@ TEST_CASE( "conformances_record_the_method_answering_each_requirement", "[sema][
     const Type_id       shape        = p.types().type_of( shape_decl );
     const Type_id       named        = p.types().type_of( named_decl );
 
-    REQUIRE( conformances.conformances.size() == 3 );
+    REQUIRE( conformances.conformances.size() == 4 ); // and the prelude's `str` as `textual`
     REQUIRE( conformances.errors.empty() );
 
     const Conformance* sq_shape = conformances.find( square, shape );
@@ -706,7 +706,7 @@ TEST_CASE( "conformances_refuse_a_repeated_interface", "[sema][interfaces]" )
     REQUIRE( p.rendered().find( "`Sq` already implements `Shape`" ) != std::string::npos );
 
     const Conformances& conformances = p.types().conformances();
-    REQUIRE( conformances.conformances.size() == 1 );
+    REQUIRE( conformances.conformances.size() == 2 ); // and the prelude's `str` as `textual`
     REQUIRE( conformances.errors[0].at.start == source.find( "Shape {", source.find( "implements" ) ) ); // the second
 }
 
@@ -754,7 +754,7 @@ TEST_CASE( "conformances_substitute_the_implementer_for_self", "[sema][interface
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.types().conformances().conformances.size() == 1 );
+        REQUIRE( p.types().conformances().conformances.size() == 2 ); // and the prelude's `str` as `textual`
     }
 
     SECTION( "a generic implementer answers with its open form" )
@@ -873,7 +873,7 @@ TEST_CASE( "conformances_check_an_implements_block", "[sema][interfaces][impleme
         const Type_id interface = p.types().type_of( p.nth( Node_kind::Interface_decl, 0 ) );
         const char*   types[]   = { "i32", "kl::P", "Colour" };
 
-        REQUIRE( p.types().conformances().conformances.size() == 3 );
+        REQUIRE( p.types().conformances().conformances.size() == 4 ); // and the prelude's `str` as `textual`
 
         for( std::size_t i = 0; i < 3; ++i )
         {
@@ -983,7 +983,7 @@ TEST_CASE( "conformances_check_an_implements_block", "[sema][interfaces][impleme
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "cannot implement an interface through a block" ) != std::string::npos );
-        REQUIRE( p.types().conformances().conformances.empty() );
+        REQUIRE( p.types().conformances().conformances.size() == 1 ); // the prelude's `str` as `textual`
     }
 }
 

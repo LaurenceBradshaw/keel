@@ -29,6 +29,7 @@ functions.</p>
 <li><a href="#f64"><code>f64</code></a> <span class="kind">primitive</span></li>
 <li><a href="#void"><code>void</code></a> <span class="kind">primitive</span></li>
 <li><a href="#never"><code>never</code></a> <span class="kind">primitive</span></li>
+<li><a href="#textual"><code>textual</code></a> <span class="kind">interface</span></li>
 <li><a href="#str"><code>str</code></a> <span class="kind">class</span></li>
 <li><a href="#print"><code>print</code></a> <span class="kind">function</span></li>
 <li><a href="#eprint"><code>eprint</code></a> <span class="kind">function</span></li>
@@ -184,9 +185,22 @@ and nothing else: a function's, an <code>extern</code>'s or a function pointer's
 </div>
 </section>
 <section class="entry">
+<h2><span class="kind">interface</span> <span class="type">textual</span></h2>
+<div class="group" id="textual">
+<pre class="signature"><a class="anchor" href="#textual" aria-label="Link to textual">#</a><code><span class="kw">interface</span> <span class="type">textual</span></code></pre>
+<div class="doc">
+<p>Text that can be read: the type lends its bytes without copying them.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="textual.as_text">
+<pre class="signature"><a class="anchor" href="#textual.as_text" aria-label="Link to as_text">#</a><code><span class="kw">public</span> <span class="kw">const</span> <span class="kw">ref</span> <a class="prim" href="#u8">u8</a>[] <span class="fn">as_text</span>() <span class="kw">const</span></code></pre>
+</div>
+</section>
+<section class="entry">
 <h2><span class="kind">class</span> <span class="type">str</span></h2>
 <div class="group" id="str">
-<pre class="signature"><a class="anchor" href="#str" aria-label="Link to str">#</a><code><span class="kw">class</span> <span class="type">str</span></code></pre>
+<pre class="signature"><a class="anchor" href="#str" aria-label="Link to str">#</a><code><span class="kw">class</span> <span class="type">str</span> <span class="kw">implements</span> <a class="type" href="#textual">textual</a></code></pre>
 <div class="doc">
 <p>Text: a run of bytes and their count.</p>
 <p>A string literal is a <code>str</code>, and only a literal makes one. Its <code>size</code> counts the bytes after
@@ -206,11 +220,18 @@ escapes are decoded, a <code>\0</code> included.</p>
 <p>How many bytes there are.</p>
 </div>
 </div>
+<h3>Methods</h3>
+<div class="group" id="str.as_text">
+<pre class="signature"><a class="anchor" href="#str.as_text" aria-label="Link to as_text">#</a><code><span class="kw">public</span> <span class="kw">const</span> <span class="kw">ref</span> <a class="prim" href="#u8">u8</a>[] <span class="fn">as_text</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Returns the text as a read-only reference to the run of bytes.</p>
+</div>
+</div>
 </section>
 <section class="entry">
 <h2><span class="kind">function</span> <span class="fn">print</span></h2>
 <div class="group" id="print">
-<pre class="signature"><a class="anchor" href="#print" aria-label="Link to print">#</a><code><a class="prim" href="#void">void</a> <span class="fn">print</span>( <a class="type" href="#str">str</a> s )</code></pre>
+<pre class="signature"><a class="anchor" href="#print" aria-label="Link to print">#</a><code><a class="prim" href="#void">void</a> <span class="fn">print</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#textual">textual</a> text )</code></pre>
 <div class="doc">
 <p>Writes text to standard output, ending no line.</p>
 </div>
@@ -236,7 +257,7 @@ escapes are decoded, a <code>\0</code> included.</p>
 <section class="entry">
 <h2><span class="kind">function</span> <span class="fn">eprint</span></h2>
 <div class="group" id="eprint">
-<pre class="signature"><a class="anchor" href="#eprint" aria-label="Link to eprint">#</a><code><a class="prim" href="#void">void</a> <span class="fn">eprint</span>( <a class="type" href="#str">str</a> s )</code></pre>
+<pre class="signature"><a class="anchor" href="#eprint" aria-label="Link to eprint">#</a><code><a class="prim" href="#void">void</a> <span class="fn">eprint</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#textual">textual</a> text )</code></pre>
 <div class="doc">
 <p>Writes text to standard error, ending no line.</p>
 <p>Standard output is flushed first, so what both show stays in order.</p>
@@ -263,7 +284,7 @@ escapes are decoded, a <code>\0</code> included.</p>
 <section class="entry">
 <h2><span class="kind">function</span> <span class="fn">println</span></h2>
 <div class="group" id="println">
-<pre class="signature"><a class="anchor" href="#println" aria-label="Link to println">#</a><code><a class="prim" href="#void">void</a> <span class="fn">println</span>( <a class="type" href="#str">str</a> s )</code></pre>
+<pre class="signature"><a class="anchor" href="#println" aria-label="Link to println">#</a><code><a class="prim" href="#void">void</a> <span class="fn">println</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#textual">textual</a> text )</code></pre>
 <div class="doc">
 <p>Writes text and then a newline, as <code>print</code> does.</p>
 </div>
@@ -288,7 +309,7 @@ escapes are decoded, a <code>\0</code> included.</p>
 <section class="entry">
 <h2><span class="kind">function</span> <span class="fn">eprintln</span></h2>
 <div class="group" id="eprintln">
-<pre class="signature"><a class="anchor" href="#eprintln" aria-label="Link to eprintln">#</a><code><a class="prim" href="#void">void</a> <span class="fn">eprintln</span>( <a class="type" href="#str">str</a> s )</code></pre>
+<pre class="signature"><a class="anchor" href="#eprintln" aria-label="Link to eprintln">#</a><code><a class="prim" href="#void">void</a> <span class="fn">eprintln</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="type" href="#textual">textual</a> text )</code></pre>
 <div class="doc">
 <p>Writes text and then a newline, as <code>eprint</code> does.</p>
 </div>

@@ -575,7 +575,7 @@ struct kl_2kl_pair__I5owned_3u64E kl_2kl_unwrap__IQ2kl4pairI5owned_3u64EE__MQ2kl
     kl_t7 = &kl_t6;
     kl_t8 = ( uint8_t* ) "unwrap on an empty optional";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t7, kl_t8, 27 );
-    kl_rt_panic_message( "../src/optional.kl", 25, kl_t6.kl_data_552, kl_t6.kl_size_555 );
+    kl_rt_panic_message( "../src/optional.kl", 25, kl_t6.kl_data_565, kl_t6.kl_size_568 );
 }
 
 void kl_2kl_optional__IQ2kl4pairI5owned_3u64EE__dtor( struct kl_2kl_optional__IQ2kl4pairI5owned_3u64EE* kl_t1 )

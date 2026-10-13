@@ -32,11 +32,12 @@ int32_t kl__main__( void )
     struct kl_7prelude_str kl_t8;
     struct kl_7prelude_str* kl_t9;
     uint8_t* kl_t10;
-    bool kl_t13;
-    int32_t kl_t14;
-    bool kl_t15;
+    struct kl_7prelude_textual__ref kl_t12;
+    bool kl_t14;
+    int32_t kl_t15;
     bool kl_t16;
     bool kl_t17;
+    bool kl_t18;
 #line 10 "codegen/compare_nan.kl"
     kl_t2 = kl__quotient__3f64_3f64( 0.0, 0.0 );
     kl_nan_1 = kl_t2;
@@ -66,30 +67,31 @@ int32_t kl__main__( void )
     kl_t9 = &kl_t8;
     kl_t10 = ( uint8_t* ) "before";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t9, kl_t10, 6 );
-    kl_7prelude_println__Q7prelude3str( kl_t8 );
+    kl_t12 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t8, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_7prelude_println__7textual( kl_t12 );
 #line 19 "codegen/compare_nan.kl"
-    kl_t13 = kl_nan_1 == kl_nan_1;
-    if ( kl_t13 ) goto bb8; else goto bb7;
+    kl_t14 = kl_nan_1 == kl_nan_1;
+    if ( kl_t14 ) goto bb8; else goto bb7;
     bb7:
     kl_rt_panic( "codegen/compare_nan.kl", 19, "NaN has no order: nan <=> 1.0" );
     bb8:
-    kl_t15 = kl_nan_1 < 1.0;
-    if ( kl_t15 ) goto bb9; else goto bb10;
+    kl_t16 = kl_nan_1 < 1.0;
+    if ( kl_t16 ) goto bb9; else goto bb10;
     bb9:
-    kl_t14 = 0;
+    kl_t15 = 0;
     goto bb13;
     bb10:
-    kl_t16 = kl_nan_1 == 1.0;
-    if ( kl_t16 ) goto bb11; else goto bb12;
+    kl_t17 = kl_nan_1 == 1.0;
+    if ( kl_t17 ) goto bb11; else goto bb12;
     bb11:
-    kl_t14 = 1;
+    kl_t15 = 1;
     goto bb13;
     bb12:
-    kl_t14 = 2;
+    kl_t15 = 2;
     goto bb13;
     bb13:
-    kl_t17 = kl_t14 == 0;
-    if ( kl_t17 ) goto bb14; else goto bb15;
+    kl_t18 = kl_t15 == 0;
+    if ( kl_t18 ) goto bb14; else goto bb15;
     bb14:
 #line 21 "codegen/compare_nan.kl"
     kl_t0 = 2;

@@ -1342,6 +1342,12 @@ the `Types` renames (R8) once files stop moving, R16 and R21, and R19's comment 
 - **`f( 1 + 2 )` against `f( i32 )` and `f( i64 )` picks `f( i32 )`**, because `argument_shape` types
   an arithmetic of literals as its default. A bare literal is ambiguous there; whether a chain of them
   should be too is undecided.
+- **`println( 42 )` is ambiguous between `print( i64 )` and `print( u64 )`** (D26), so the most
+  natural first call fails. Proposed 2026-10-13: rank a literal by `distance()`, as `closest()`
+  ranks a widened argument, so it picks the nearest overload that holds it, and a negative literal
+  never ties with an unsigned overload. That settles the `f( 1 + 2 )` entry above as well.
+  `the_prelude_prints_text_numbers_and_truth` pins the ambiguity today, and `codegen/textual.kl`
+  works around it.
 
 ### Compiler structure
 

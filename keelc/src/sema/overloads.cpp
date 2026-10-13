@@ -298,12 +298,13 @@ bool Overloads::candidate_accepts(
 
 // §6.4's assignment widening, numeric and by value only: a borrow is the caller's variable (D31).
 // An integer reaches a float that holds it, as it does through one candidate; distance() ranks it
-// behind every integer.
+// behind every integer. An implementer also reaches its interface, which a parameter only borrows.
 bool Overloads::widens( Node_id param, Type_id from, Type_id to ) const
 {
     const auto numeric = [&]( Type_id type ) { return table_.is_integer( type ) || table_.is_float( type ); };
 
-    return ast_.parameter_mode( param ) == Keyword::Count && numeric( from ) && numeric( to ) && table_.holds( from, to );
+    return ( ast_.parameter_mode( param ) == Keyword::Count && numeric( from ) && numeric( to ) && table_.holds( from, to ) ) ||
+           ( table_.is_interface( to ) && table_.holds( from, to ) );
 }
 
 // How far `from` travels to reach `to`; smaller is closer, and 0 is exact or not a number.
@@ -2153,7 +2154,7 @@ TEST_CASE( "the_prelude_prints_text_numbers_and_truth", "[sema][overload][prelud
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( takes( p, 0 ) == "str" );
+        REQUIRE( takes( p, 0 ) == "textual" );
         REQUIRE( takes( p, 1 ) == "i64" );
         REQUIRE( takes( p, 2 ) == "u64" );
         REQUIRE( takes( p, 3 ) == "f64" );
@@ -2171,7 +2172,7 @@ TEST_CASE( "the_prelude_prints_text_numbers_and_truth", "[sema][overload][prelud
             INFO( name );
             INFO( p.rendered() );
             REQUIRE( p.clean() );
-            REQUIRE( takes( p, 0 ) == "str" );
+            REQUIRE( takes( p, 0 ) == "textual" );
             REQUIRE( takes( p, 4 ) == "bool" );
         }
     }
@@ -2218,7 +2219,7 @@ TEST_CASE( "the_prelude_prints_text_numbers_and_truth", "[sema][overload][prelud
         INFO( p.rendered() );
         REQUIRE( p.clean() );
         REQUIRE( p.chose( 0 ) == "t:2" );
-        REQUIRE( takes( p, 1 ) == "str" );
+        REQUIRE( takes( p, 1 ) == "textual" );
     }
 
     // The runtime's writers are declared beside them, and calling one is still an `extern` call.

@@ -44,15 +44,17 @@ int32_t kl__main__( void )
     struct kl_7prelude_str kl_t1;
     struct kl_7prelude_str* kl_t2;
     uint8_t* kl_t3;
-    int32_t kl_t6;
+    struct kl_7prelude_textual__ref kl_t5;
+    int32_t kl_t7;
 #line 10 "codegen/division_by_zero.kl"
     kl_t2 = &kl_t1;
     kl_t3 = ( uint8_t* ) "before";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t2, kl_t3, 6 );
-    kl_7prelude_println__Q7prelude3str( kl_t1 );
+    kl_t5 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t1, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_7prelude_println__7textual( kl_t5 );
 #line 11 "codegen/division_by_zero.kl"
-    kl_t6 = kl__divide__3i32_3i32( 7, 0 );
-    kl_t0 = kl_t6;
+    kl_t7 = kl__divide__3i32_3i32( 7, 0 );
+    kl_t0 = kl_t7;
     return kl_t0;
 }
 

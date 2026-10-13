@@ -15,44 +15,52 @@ int32_t kl__main__( void )
     struct kl_7prelude_str kl_t2;
     struct kl_7prelude_str* kl_t3;
     uint8_t* kl_t4;
-    struct kl_7prelude_str kl_t8;
-    struct kl_7prelude_str* kl_t9;
-    uint8_t* kl_t10;
-    struct kl_7prelude_str kl_t13;
-    struct kl_7prelude_str* kl_t14;
-    uint8_t* kl_t15;
-    bool kl_t18;
-    struct kl_7prelude_str kl_t19;
-    struct kl_7prelude_str* kl_t20;
-    uint8_t* kl_t21;
+    struct kl_7prelude_textual__ref kl_t6;
+    struct kl_7prelude_str kl_t9;
+    struct kl_7prelude_str* kl_t10;
+    uint8_t* kl_t11;
+    struct kl_7prelude_textual__ref kl_t13;
+    struct kl_7prelude_str kl_t15;
+    struct kl_7prelude_str* kl_t16;
+    uint8_t* kl_t17;
+    struct kl_7prelude_textual__ref kl_t19;
+    bool kl_t21;
+    struct kl_7prelude_str kl_t22;
+    struct kl_7prelude_str* kl_t23;
+    uint8_t* kl_t24;
+    struct kl_7prelude_textual__ref kl_t26;
 #line 5 "codegen/print_then_assert.kl"
     kl_x_1 = 0;
 #line 7 "codegen/print_then_assert.kl"
     kl_t3 = &kl_t2;
     kl_t4 = ( uint8_t* ) "before ";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t3, kl_t4, 7 );
-    kl_7prelude_print__Q7prelude3str( kl_t2 );
+    kl_t6 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t2, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_7prelude_print__7textual( kl_t6 );
 #line 8 "codegen/print_then_assert.kl"
     kl_7prelude_println__3i64( 42 );
 #line 9 "codegen/print_then_assert.kl"
-    kl_t9 = &kl_t8;
-    kl_t10 = ( uint8_t* ) "to stderr";
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t9, kl_t10, 9 );
-    kl_7prelude_eprintln__Q7prelude3str( kl_t8 );
+    kl_t10 = &kl_t9;
+    kl_t11 = ( uint8_t* ) "to stderr";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t10, kl_t11, 9 );
+    kl_t13 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t9, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_7prelude_eprintln__7textual( kl_t13 );
 #line 10 "codegen/print_then_assert.kl"
-    kl_t14 = &kl_t13;
-    kl_t15 = ( uint8_t* ) "unterminated";
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t14, kl_t15, 12 );
-    kl_7prelude_print__Q7prelude3str( kl_t13 );
+    kl_t16 = &kl_t15;
+    kl_t17 = ( uint8_t* ) "unterminated";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t16, kl_t17, 12 );
+    kl_t19 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t15, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_7prelude_print__7textual( kl_t19 );
 #line 12 "codegen/print_then_assert.kl"
-    kl_t18 = kl_x_1 == 1;
-    if ( kl_t18 ) goto bb1; else goto bb2;
+    kl_t21 = kl_x_1 == 1;
+    if ( kl_t21 ) goto bb1; else goto bb2;
     bb1:
 #line 14 "codegen/print_then_assert.kl"
-    kl_t20 = &kl_t19;
-    kl_t21 = ( uint8_t* ) "never";
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t20, kl_t21, 5 );
-    kl_7prelude_println__Q7prelude3str( kl_t19 );
+    kl_t23 = &kl_t22;
+    kl_t24 = ( uint8_t* ) "never";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t23, kl_t24, 5 );
+    kl_t26 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t22, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_7prelude_println__7textual( kl_t26 );
 #line 15 "codegen/print_then_assert.kl"
     kl_t0 = 0;
     return kl_t0;

@@ -3,11 +3,17 @@
 
 // Declared in every program, which sees them without an import.
 
+/// Text that can be read: the type lends its bytes without copying them.
+interface textual
+{
+    const ref u8[] as_text() const;
+};
+
 /// Text: a run of bytes and their count.
 ///
 /// A string literal is a `str`, and only a literal makes one. Its `size` counts the bytes after
 /// escapes are decoded, a `\0` included.
-class str
+class str implements textual
 {
     /// The first byte.
     public const u8[*] const data;
@@ -19,6 +25,15 @@ class str
         this.data = data;
         this.size = size;
     }
+
+    /// Returns the text as a read-only reference to the run of bytes.
+    public const ref u8[] as_text() const
+    {
+        unsafe
+        {
+            return data[0..size];
+        }
+    }
 };
 
 extern void kl_rt_write( i32 stream, const u8[*] data, u64 size );
@@ -27,11 +42,12 @@ extern void kl_rt_write_u64( i32 stream, u64 value );
 extern void kl_rt_write_f64( i32 stream, f64 value );
 
 /// Writes text to standard output, ending no line.
-void print( str s )
+void print( const ref textual text )
 {
+    const ref u8[] r = text.as_text();
     unsafe
     {
-        kl_rt_write( 1, s.data, s.size );
+        kl_rt_write( 1, r.data, r.size );
     }
 }
 
@@ -73,11 +89,12 @@ void print( bool value )
 /// Writes text to standard error, ending no line.
 ///
 /// Standard output is flushed first, so what both show stays in order.
-void eprint( str s )
+void eprint( const ref textual text )
 {
+    const ref u8[] r = text.as_text();
     unsafe
     {
-        kl_rt_write( 2, s.data, s.size );
+        kl_rt_write( 2, r.data, r.size );
     }
 }
 
@@ -117,9 +134,9 @@ void eprint( bool value )
 }
 
 /// Writes text and then a newline, as `print` does.
-void println( str s )
+void println( const ref textual text )
 {
-    print( s );
+    print( text );
     print( "\n" );
 }
 
@@ -152,9 +169,9 @@ void println( bool value )
 }
 
 /// Writes text and then a newline, as `eprint` does.
-void eprintln( str s )
+void eprintln( const ref textual text )
 {
-    eprint( s );
+    eprint( text );
     eprint( "\n" );
 }
 

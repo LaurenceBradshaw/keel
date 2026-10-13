@@ -16,14 +16,14 @@ struct kl__Counter
 struct kl_7prelude_result__I7Counter_3BadE
 {
     int32_t tag;
-    struct kl__Counter kl_value_509;
-    int32_t kl_error_512;
+    struct kl__Counter kl_value_566;
+    int32_t kl_error_569;
 };
 
 struct kl_7prelude_result__I4void_3BadE
 {
     int32_t tag;
-    int32_t kl_error_512;
+    int32_t kl_error_569;
 };
 
 int32_t kl_drops_2 = 0;
@@ -73,7 +73,7 @@ struct kl_7prelude_result__I7Counter_3BadE kl__make__4bool( bool kl_fail_1 )
 #line 29 "codegen/discards.kl"
     kl_t2.tag = 1;
     kl_t7 = true;
-    kl_t2.kl_error_512 = 0;
+    kl_t2.kl_error_569 = 0;
     kl_t7 = true;
     kl_t0 = kl_t2;
     kl_t7 = false;
@@ -88,7 +88,7 @@ struct kl_7prelude_result__I7Counter_3BadE kl__make__4bool( bool kl_fail_1 )
     kl__Counter__R7Counter_3u64__ctor( kl_t5, 1 );
     kl_t3.tag = 0;
     kl_t8 = true;
-    kl_t3.kl_value_509 = kl_t4;
+    kl_t3.kl_value_566 = kl_t4;
     kl_t9 = false;
     kl_t8 = true;
     kl_t0 = kl_t3;
@@ -107,12 +107,13 @@ struct kl_7prelude_result__I4void_3BadE kl__step__4bool( bool kl_fail_1 )
     struct kl_7prelude_str kl_t3;
     struct kl_7prelude_str* kl_t4;
     uint8_t* kl_t5;
-    struct kl_7prelude_result__I4void_3BadE kl_t8;
+    struct kl_7prelude_textual__ref kl_t7;
+    struct kl_7prelude_result__I4void_3BadE kl_t9;
     if ( kl_fail_1 ) goto bb1; else goto bb2;
     bb1:
 #line 39 "codegen/discards.kl"
     kl_t2.tag = 1;
-    kl_t2.kl_error_512 = 0;
+    kl_t2.kl_error_569 = 0;
     kl_t0 = kl_t2;
     return kl_t0;
     bb2:
@@ -120,10 +121,11 @@ struct kl_7prelude_result__I4void_3BadE kl__step__4bool( bool kl_fail_1 )
     kl_t4 = &kl_t3;
     kl_t5 = ( uint8_t* ) "step";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 4 );
-    kl_7prelude_println__Q7prelude3str( kl_t3 );
+    kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_7prelude_println__7textual( kl_t7 );
 #line 43 "codegen/discards.kl"
-    kl_t8.tag = 0;
-    kl_t0 = kl_t8;
+    kl_t9.tag = 0;
+    kl_t0 = kl_t9;
     return kl_t0;
 }
 
@@ -194,13 +196,13 @@ int32_t kl__main__( void )
 void kl_7prelude_result__I7Counter_3BadE__dtor( struct kl_7prelude_result__I7Counter_3BadE* kl_t1 )
 {
     bool kl_t2;
-#line 193 "<prelude>"
+#line 210 "<prelude>"
     kl_t2 = ( *kl_t1 ).tag == 0;
     if ( kl_t2 ) goto bb2; else goto bb1;
     bb1:
     return;
     bb2:
-    kl__Counter__dtor( &( *kl_t1 ).kl_value_509 );
+    kl__Counter__dtor( &( *kl_t1 ).kl_value_566 );
     goto bb1;
 }
 

@@ -307,6 +307,7 @@ private:
 
     // Whether a top-level declaration belongs to the half being written.
     bool shows( Node_id declaration ) const;
+    bool shows_type( Type_id type ) const;
 
     bool uses_runtime() const;
     // Whether any block ends in `kind`; for Panic, `with_message` picks `panic` from `assert` and `cast`.
@@ -361,7 +362,7 @@ private:
     const Imports&           imports_;
     C_part                   part_;
     std::string_view         include_;
-    std::vector<Vtable>      vtables_; // the program's half only; no interface reaches the prelude yet
+    std::vector<Vtable>      vtables_; // this half's: the prelude's when it owns both the implementer and the interface
 };
 
 Kir_emitter::Kir_emitter(
@@ -387,8 +388,18 @@ Kir_emitter::Kir_emitter(
       imports_( imports ),
       part_( part ),
       include_( include ),
-      vtables_( part == C_part::Program ? vtables_needed( ast, types, functions ) : std::vector<Vtable> {} )
+      vtables_( vtables_needed( ast, types, functions ) )
 {
+    std::erase_if(
+        vtables_,
+        [&]( const Vtable& vtable )
+        {
+            const bool in_prelude = in_prelude_half( ast, types.table(), imports, vtable.implementer ) &&
+                                    in_prelude_half( ast, types.table(), imports, vtable.interface );
+
+            return in_prelude != ( part == C_part::Prelude );
+        }
+    );
 }
 
 std::string Kir_emitter::run()
@@ -658,17 +669,12 @@ void Kir_emitter::emit_composites()
 // vtable needs only to be declared.
 void Kir_emitter::emit_interface_references()
 {
-    if( part_ != C_part::Program )
-    {
-        return;
-    }
-
     bool written = false;
 
     for( const Type_id interface : types_.table().interface_types() )
     {
         // A bound-only interface is never a type, so it has neither a reference nor a vtable.
-        if( types_.table().method_naming_self( interface ).is_valid() )
+        if( types_.table().method_naming_self( interface ).is_valid() || !shows_type( interface ) )
         {
             continue;
         }
@@ -692,14 +698,9 @@ void Kir_emitter::emit_interface_references()
 // may take one by value.
 void Kir_emitter::emit_vtable_types()
 {
-    if( part_ != C_part::Program )
-    {
-        return;
-    }
-
     for( const Type_id interface : types_.table().interface_types() )
     {
-        if( types_.table().method_naming_self( interface ).is_valid() )
+        if( types_.table().method_naming_self( interface ).is_valid() || !shows_type( interface ) )
         {
             continue;
         }
@@ -1547,6 +1548,11 @@ std::string Kir_emitter::local_name( u32 index ) const
 bool Kir_emitter::shows( Node_id declaration ) const
 {
     return in_prelude( ast_, imports_, declaration ) == ( part_ == C_part::Prelude );
+}
+
+bool Kir_emitter::shows_type( Type_id type ) const
+{
+    return in_prelude_half( ast_, types_.table(), imports_, type ) == ( part_ == C_part::Prelude );
 }
 
 // Asked of KIR rather than the tree: the question is whether the C about to be written calls the

@@ -12,7 +12,7 @@ struct kl__Two__I4voidE;
 struct kl_7prelude_result__I4void_3BadE
 {
     int32_t tag;
-    int32_t kl_error_681;
+    int32_t kl_error_738;
 };
 
 struct kl__Box__I4voidE
@@ -46,11 +46,13 @@ void kl__note__( void )
     struct kl_7prelude_str kl_t1;
     struct kl_7prelude_str* kl_t2;
     uint8_t* kl_t3;
+    struct kl_7prelude_textual__ref kl_t5;
 #line 28 "codegen/void_type_argument.kl"
     kl_t2 = &kl_t1;
     kl_t3 = ( uint8_t* ) "note";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t2, kl_t3, 4 );
-    kl_7prelude_println__Q7prelude3str( kl_t1 );
+    kl_t5 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t1, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_7prelude_println__7textual( kl_t5 );
     return;
 }
 
@@ -61,12 +63,13 @@ struct kl_7prelude_result__I4void_3BadE kl__step__4bool( bool kl_fail_1 )
     struct kl_7prelude_str kl_t3;
     struct kl_7prelude_str* kl_t4;
     uint8_t* kl_t5;
-    struct kl_7prelude_result__I4void_3BadE kl_t8;
+    struct kl_7prelude_textual__ref kl_t7;
+    struct kl_7prelude_result__I4void_3BadE kl_t9;
     if ( kl_fail_1 ) goto bb1; else goto bb2;
     bb1:
 #line 51 "codegen/void_type_argument.kl"
     kl_t2.tag = 1;
-    kl_t2.kl_error_681 = 0;
+    kl_t2.kl_error_738 = 0;
     kl_t0 = kl_t2;
     return kl_t0;
     bb2:
@@ -74,10 +77,11 @@ struct kl_7prelude_result__I4void_3BadE kl__step__4bool( bool kl_fail_1 )
     kl_t4 = &kl_t3;
     kl_t5 = ( uint8_t* ) "step";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 4 );
-    kl_7prelude_println__Q7prelude3str( kl_t3 );
+    kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_7prelude_println__7textual( kl_t7 );
 #line 55 "codegen/void_type_argument.kl"
-    kl_t8.tag = 0;
-    kl_t0 = kl_t8;
+    kl_t9.tag = 0;
+    kl_t0 = kl_t9;
     return kl_t0;
 }
 
@@ -89,9 +93,10 @@ struct kl_7prelude_result__I4void_3BadE kl__steps__4bool( bool kl_fail_1 )
     struct kl_7prelude_str kl_t4;
     struct kl_7prelude_str* kl_t5;
     uint8_t* kl_t6;
-    struct kl_7prelude_result__I4void_3BadE kl_t9;
-    int32_t kl_e_10;
-    struct kl_7prelude_result__I4void_3BadE kl_t11;
+    struct kl_7prelude_textual__ref kl_t8;
+    struct kl_7prelude_result__I4void_3BadE kl_t10;
+    int32_t kl_e_11;
+    struct kl_7prelude_result__I4void_3BadE kl_t12;
 #line 60 "codegen/void_type_argument.kl"
     kl_t2 = kl__step__4bool( kl_fail_1 );
 #line 62 "codegen/void_type_argument.kl"
@@ -102,18 +107,19 @@ struct kl_7prelude_result__I4void_3BadE kl__steps__4bool( bool kl_fail_1 )
     kl_t5 = &kl_t4;
     kl_t6 = ( uint8_t* ) "done";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 4 );
-    kl_7prelude_println__Q7prelude3str( kl_t4 );
+    kl_t8 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t4, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_7prelude_println__7textual( kl_t8 );
 #line 64 "codegen/void_type_argument.kl"
-    kl_t9.tag = 0;
-    kl_t0 = kl_t9;
+    kl_t10.tag = 0;
+    kl_t0 = kl_t10;
     return kl_t0;
     bb2:
 #line 65 "codegen/void_type_argument.kl"
-    kl_e_10 = kl_t2.kl_error_681;
+    kl_e_11 = kl_t2.kl_error_738;
 #line 66 "codegen/void_type_argument.kl"
-    kl_t11.tag = 1;
-    kl_t11.kl_error_681 = kl_e_10;
-    kl_t0 = kl_t11;
+    kl_t12.tag = 1;
+    kl_t12.kl_error_738 = kl_e_11;
+    kl_t0 = kl_t12;
     return kl_t0;
 }
 
@@ -124,11 +130,13 @@ int32_t kl__report__Q7prelude6resultI4void_3BadE( struct kl_7prelude_result__I4v
     struct kl_7prelude_str kl_t3;
     struct kl_7prelude_str* kl_t4;
     uint8_t* kl_t5;
-    int32_t kl_e_8;
-    struct kl_7prelude_str kl_t9;
-    struct kl_7prelude_str* kl_t10;
-    uint8_t* kl_t11;
-    ( void ) kl_e_8;
+    struct kl_7prelude_textual__ref kl_t7;
+    int32_t kl_e_9;
+    struct kl_7prelude_str kl_t10;
+    struct kl_7prelude_str* kl_t11;
+    uint8_t* kl_t12;
+    struct kl_7prelude_textual__ref kl_t14;
+    ( void ) kl_e_9;
 #line 74 "codegen/void_type_argument.kl"
     kl_t2 = kl_r_1.tag == 0;
     if ( kl_t2 ) goto bb1; else goto bb2;
@@ -137,18 +145,20 @@ int32_t kl__report__Q7prelude6resultI4void_3BadE( struct kl_7prelude_result__I4v
     kl_t4 = &kl_t3;
     kl_t5 = ( uint8_t* ) "ok";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 2 );
-    kl_7prelude_println__Q7prelude3str( kl_t3 );
+    kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_7prelude_println__7textual( kl_t7 );
 #line 76 "codegen/void_type_argument.kl"
     kl_t0 = 0;
     return kl_t0;
     bb2:
 #line 77 "codegen/void_type_argument.kl"
-    kl_e_8 = kl_r_1.kl_error_681;
+    kl_e_9 = kl_r_1.kl_error_738;
 #line 78 "codegen/void_type_argument.kl"
-    kl_t10 = &kl_t9;
-    kl_t11 = ( uint8_t* ) "err";
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t10, kl_t11, 3 );
-    kl_7prelude_println__Q7prelude3str( kl_t9 );
+    kl_t11 = &kl_t10;
+    kl_t12 = ( uint8_t* ) "err";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t11, kl_t12, 3 );
+    kl_t14 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t10, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_7prelude_println__7textual( kl_t14 );
 #line 79 "codegen/void_type_argument.kl"
     kl_t0 = 1;
     return kl_t0;
@@ -249,12 +259,14 @@ void kl__look__I4voidE__4void( void* kl_a_1 )
     struct kl_7prelude_str kl_t2;
     struct kl_7prelude_str* kl_t3;
     uint8_t* kl_t4;
+    struct kl_7prelude_textual__ref kl_t6;
     ( void ) kl_a_1;
 #line 39 "codegen/void_type_argument.kl"
     kl_t3 = &kl_t2;
     kl_t4 = ( uint8_t* ) "look";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t3, kl_t4, 4 );
-    kl_7prelude_println__Q7prelude3str( kl_t2 );
+    kl_t6 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t2, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_7prelude_println__7textual( kl_t6 );
     return;
 }
 
@@ -263,12 +275,14 @@ void kl__look__I3BoxI4voidEE__3BoxI4voidE( struct kl__Box__I4voidE* kl_a_1 )
     struct kl_7prelude_str kl_t2;
     struct kl_7prelude_str* kl_t3;
     uint8_t* kl_t4;
+    struct kl_7prelude_textual__ref kl_t6;
     ( void ) kl_a_1;
 #line 39 "codegen/void_type_argument.kl"
     kl_t3 = &kl_t2;
     kl_t4 = ( uint8_t* ) "look";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t3, kl_t4, 4 );
-    kl_7prelude_println__Q7prelude3str( kl_t2 );
+    kl_t6 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t2, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_7prelude_println__7textual( kl_t6 );
     return;
 }
 

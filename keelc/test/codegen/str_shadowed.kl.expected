@@ -49,7 +49,7 @@ int32_t kl__main__( void )
     return kl_t0;
     bb2:
 #line 22 "codegen/str_shadowed.kl"
-    kl_t10 = kl_literal_4.kl_size_48 != 3;
+    kl_t10 = kl_literal_4.kl_size_61 != 3;
     if ( kl_t10 ) goto bb3; else goto bb4;
     bb3:
 #line 24 "codegen/str_shadowed.kl"

@@ -31,18 +31,20 @@ void kl__Noisy__dtor( struct kl__Noisy* kl_this_1 )
     struct kl_7prelude_str kl_t2;
     struct kl_7prelude_str* kl_t3;
     uint8_t* kl_t4;
+    struct kl_7prelude_textual__ref kl_t6;
     ( void ) kl_this_1;
 #line 15 "codegen/panic.kl"
     kl_t3 = &kl_t2;
     kl_t4 = ( uint8_t* ) "dropped";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t3, kl_t4, 7 );
-    kl_7prelude_println__Q7prelude3str( kl_t2 );
+    kl_t6 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t2, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_7prelude_println__7textual( kl_t6 );
     return;
 }
 
 _Noreturn void kl__fail__Q7prelude3str( struct kl_7prelude_str kl_why_1 )
 {
-    kl_rt_panic_message( "codegen/panic.kl", 21, kl_why_1.kl_data_59, kl_why_1.kl_size_62 );
+    kl_rt_panic_message( "codegen/panic.kl", 21, kl_why_1.kl_data_72, kl_why_1.kl_size_75 );
 }
 
 int32_t kl__main__( void )
@@ -52,9 +54,10 @@ int32_t kl__main__( void )
     struct kl_7prelude_str kl_t4;
     struct kl_7prelude_str* kl_t5;
     uint8_t* kl_t6;
-    struct kl_7prelude_str kl_t9;
-    struct kl_7prelude_str* kl_t10;
-    uint8_t* kl_t11;
+    struct kl_7prelude_textual__ref kl_t8;
+    struct kl_7prelude_str kl_t10;
+    struct kl_7prelude_str* kl_t11;
+    uint8_t* kl_t12;
 #line 26 "codegen/panic.kl"
     kl_t2 = &kl_n_1;
     kl__Noisy__R5Noisy_3i32__ctor( kl_t2, 1 );
@@ -62,12 +65,13 @@ int32_t kl__main__( void )
     kl_t5 = &kl_t4;
     kl_t6 = ( uint8_t* ) "before";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 6 );
-    kl_7prelude_println__Q7prelude3str( kl_t4 );
+    kl_t8 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t4, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_7prelude_println__7textual( kl_t8 );
 #line 29 "codegen/panic.kl"
-    kl_t10 = &kl_t9;
-    kl_t11 = ( uint8_t* ) "out of cheese";
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t10, kl_t11, 13 );
-    kl__fail__Q7prelude3str( kl_t9 );
+    kl_t11 = &kl_t10;
+    kl_t12 = ( uint8_t* ) "out of cheese";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t11, kl_t12, 13 );
+    kl__fail__Q7prelude3str( kl_t10 );
     kl_rt_unreachable();
 }
 

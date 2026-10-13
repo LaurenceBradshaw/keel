@@ -27,7 +27,7 @@ void kl__line__3i32( int32_t kl_stream_1 )
     kl_t7 = &kl_t6;
     kl_t8 = ( uint8_t* ) "\012";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t7, kl_t8, 1 );
-    kl_rt_write( kl_stream_1, kl_t2.kl_data_322, kl_t6.kl_size_325 );
+    kl_rt_write( kl_stream_1, kl_t2.kl_data_335, kl_t6.kl_size_338 );
     return;
 }
 
@@ -76,7 +76,7 @@ int32_t kl__main__( void )
     kl_t7 = &kl_t6;
     kl_t8 = ( uint8_t* ) "out ";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t7, kl_t8, 4 );
-    kl_rt_write( 1, kl_t2.kl_data_322, kl_t6.kl_size_325 );
+    kl_rt_write( 1, kl_t2.kl_data_335, kl_t6.kl_size_338 );
 #line 23 "codegen/runtime_write.kl"
     kl_t12 = &kl_t11;
     kl_t13 = ( uint8_t* ) "err ";
@@ -84,7 +84,7 @@ int32_t kl__main__( void )
     kl_t16 = &kl_t15;
     kl_t17 = ( uint8_t* ) "err ";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t16, kl_t17, 4 );
-    kl_rt_write( 2, kl_t11.kl_data_322, kl_t15.kl_size_325 );
+    kl_rt_write( 2, kl_t11.kl_data_335, kl_t15.kl_size_338 );
 #line 24 "codegen/runtime_write.kl"
     kl_t21 = &kl_t20;
     kl_t22 = ( uint8_t* ) "out";
@@ -92,14 +92,14 @@ int32_t kl__main__( void )
     kl_t25 = &kl_t24;
     kl_t26 = ( uint8_t* ) "out";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t25, kl_t26, 3 );
-    kl_rt_write( 1, kl_t20.kl_data_322, kl_t24.kl_size_325 );
+    kl_rt_write( 1, kl_t20.kl_data_335, kl_t24.kl_size_338 );
 #line 25 "codegen/runtime_write.kl"
     kl__line__3i32( 1 );
 #line 28 "codegen/runtime_write.kl"
     kl_t31 = &kl_t30;
     kl_t32 = ( uint8_t* ) "abc";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t31, kl_t32, 3 );
-    kl_rt_write( 1, kl_t30.kl_data_322, 2 );
+    kl_rt_write( 1, kl_t30.kl_data_335, 2 );
 #line 29 "codegen/runtime_write.kl"
     kl__line__3i32( 1 );
 #line 31 "codegen/runtime_write.kl"
