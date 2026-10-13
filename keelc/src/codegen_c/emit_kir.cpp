@@ -74,6 +74,8 @@ std::string_view failure_prefix( Failure failure )
         return "NaN has no order: ";
     case Failure::Unhashable:
         return "NaN has no hash: ";
+    case Failure::Bounds:
+        return "out of bounds: ";
     }
 }
 
