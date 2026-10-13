@@ -1,0 +1,36 @@
+// A slice checks `a <= b`, and on a run also `b <= size`, then builds `run( data + a, b - a )` in a
+// temporary that the binding, argument or return takes the address of. A `T[*]` knows no length,
+// so its slice checks the order alone.
+u64 count( const ref u8[] text )
+{
+    return text.size;
+}
+
+u64 middle( const ref u8[] text )
+{
+    const ref u8[] inner = text[ 1..3 ];
+    return inner.size;
+}
+
+u64 passed( const ref u8[] text, u64 a, u64 b )
+{
+    return count( text[ a..b ] );
+}
+
+u8 nested( const ref u8[] text )
+{
+    return text[ 1..4 ][ 0..2 ][ 1 ];
+}
+
+const ref u8[] view( const u8[*] data, u64 size )
+{
+    unsafe
+    {
+        return data[ 0..size ];
+    }
+}
+
+i32 main()
+{
+    return 0;
+}

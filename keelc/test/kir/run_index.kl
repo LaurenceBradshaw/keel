@@ -1,0 +1,33 @@
+// A run knows its length, so an index is checked against `size` before the element is reached:
+// one unsigned compare, which a negative index also fails. `size` and `data` are read off the run
+// pointer the binding holds, and a binding to `size` holds a temporary.
+u8 first( const ref u8[] text )
+{
+    return text[ 0 ];
+}
+
+u8 at( const ref u8[] text, i32 i )
+{
+    return text[ i ];
+}
+
+void clear( ref u8[] bytes, u64 i )
+{
+    bytes[ i ] = 0;
+}
+
+u64 length( const ref u8[] text )
+{
+    const ref u64 n = text.size;
+    return n;
+}
+
+const u8[*] start( const ref u8[] text )
+{
+    return text.data;
+}
+
+i32 main()
+{
+    return 0;
+}

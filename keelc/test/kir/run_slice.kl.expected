@@ -1,0 +1,198 @@
+fn count {
+    let _0: u64; // return slot
+    let _1: u8[]*; // parameter text
+    let _2: u64;
+
+    bb0:
+        _2 = size( copy _1 )
+        _0 = copy _2
+        return
+}
+fn middle {
+    let _0: u64; // return slot
+    let _1: u8[]*; // parameter text
+    let _2: u8[]*; // inner
+    let _3: u64;
+    let _4: u8[*];
+    let _5: u64;
+    let _6: u64;
+    let _7: bool;
+    let _8: bool;
+    let _9: u8[*];
+    let _10: u64;
+    let _11: u8[]*;
+    let _12: u64;
+
+    bb0:
+        storage_live _2
+        _3 = size( copy _1 )
+        _4 = data( copy _1 )
+        _5 = const 1 as u64
+        _6 = const 3 as u64
+        _7 = copy _5 <= copy _6
+        branch copy _7 -> bb2, bb1
+
+    bb1:
+        out_of_bounds
+
+    bb2:
+        _8 = copy _6 <= copy _3
+        branch copy _8 -> bb3, bb1
+
+    bb3:
+        _9 = copy _4 + copy _5
+        _10 = copy _6 - copy _5
+        _11 = run( copy _9, copy _10 )
+        _2 = &read (*_11)
+        _12 = size( copy _2 )
+        _0 = copy _12
+        storage_dead _2
+        return
+}
+fn passed {
+    let _0: u64; // return slot
+    let _1: u8[]*; // parameter text
+    let _2: u64; // parameter a
+    let _3: u64; // parameter b
+    let _4: u64;
+    let _5: u8[*];
+    let _6: bool;
+    let _7: bool;
+    let _8: u8[*];
+    let _9: u64;
+    let _10: u8[]*;
+    let _11: u8[]*;
+    let _12: u64;
+
+    bb0:
+        _4 = size( copy _1 )
+        _5 = data( copy _1 )
+        _6 = copy _2 <= copy _3
+        branch copy _6 -> bb2, bb1
+
+    bb1:
+        out_of_bounds
+
+    bb2:
+        _7 = copy _3 <= copy _4
+        branch copy _7 -> bb3, bb1
+
+    bb3:
+        _8 = copy _5 + copy _2
+        _9 = copy _3 - copy _2
+        _10 = run( copy _8, copy _9 )
+        _11 = &read (*_10)
+        _12 = call count(copy _11)
+        _0 = copy _12
+        return
+}
+fn nested {
+    let _0: u8; // return slot
+    let _1: u8[]*; // parameter text
+    let _2: u64;
+    let _3: u8[*];
+    let _4: u64;
+    let _5: u64;
+    let _6: bool;
+    let _7: bool;
+    let _8: u8[*];
+    let _9: u64;
+    let _10: u8[]*;
+    let _11: u64;
+    let _12: u8[*];
+    let _13: u64;
+    let _14: u64;
+    let _15: bool;
+    let _16: bool;
+    let _17: u8[*];
+    let _18: u64;
+    let _19: u8[]*;
+    let _20: u64;
+    let _21: u8[*];
+    let _22: u64;
+    let _23: bool;
+    let _24: u8[*];
+
+    bb0:
+        _2 = size( copy _1 )
+        _3 = data( copy _1 )
+        _4 = const 1 as u64
+        _5 = const 4 as u64
+        _6 = copy _4 <= copy _5
+        branch copy _6 -> bb2, bb1
+
+    bb1:
+        out_of_bounds
+
+    bb2:
+        _7 = copy _5 <= copy _2
+        branch copy _7 -> bb3, bb1
+
+    bb3:
+        _8 = copy _3 + copy _4
+        _9 = copy _5 - copy _4
+        _10 = run( copy _8, copy _9 )
+        _11 = size( copy _10 )
+        _12 = data( copy _10 )
+        _13 = const 0 as u64
+        _14 = const 2 as u64
+        _15 = copy _13 <= copy _14
+        branch copy _15 -> bb5, bb4
+
+    bb4:
+        out_of_bounds
+
+    bb5:
+        _16 = copy _14 <= copy _11
+        branch copy _16 -> bb6, bb4
+
+    bb6:
+        _17 = copy _12 + copy _13
+        _18 = copy _14 - copy _13
+        _19 = run( copy _17, copy _18 )
+        _20 = size( copy _19 )
+        _21 = data( copy _19 )
+        _22 = const 1 as u64
+        _23 = copy _22 < copy _20
+        branch copy _23 -> bb8, bb7
+
+    bb7:
+        out_of_bounds
+
+    bb8:
+        _24 = copy _21 + copy _22
+        _0 = copy (*_24)
+        return
+}
+fn view {
+    let _0: u8[]*; // return slot
+    let _1: const u8[*]; // parameter data
+    let _2: u64; // parameter size
+    let _3: u64;
+    let _4: bool;
+    let _5: const u8[*];
+    let _6: u64;
+    let _7: u8[]*;
+
+    bb0:
+        _3 = const 0 as u64
+        _4 = copy _3 <= copy _2
+        branch copy _4 -> bb2, bb1
+
+    bb1:
+        out_of_bounds
+
+    bb2:
+        _5 = copy _1 + copy _3
+        _6 = copy _2 - copy _3
+        _7 = run( copy _5, copy _6 )
+        _0 = &read (*_7)
+        return
+}
+fn main {
+    let _0: i32; // return slot
+
+    bb0:
+        _0 = const 0
+        return
+}

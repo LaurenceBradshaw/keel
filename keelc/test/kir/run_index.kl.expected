@@ -1,0 +1,103 @@
+fn first {
+    let _0: u8; // return slot
+    let _1: u8[]*; // parameter text
+    let _2: u64;
+    let _3: u8[*];
+    let _4: u64;
+    let _5: bool;
+    let _6: u8[*];
+
+    bb0:
+        _2 = size( copy _1 )
+        _3 = data( copy _1 )
+        _4 = const 0 as u64
+        _5 = copy _4 < copy _2
+        branch copy _5 -> bb2, bb1
+
+    bb1:
+        out_of_bounds
+
+    bb2:
+        _6 = copy _3 + copy _4
+        _0 = copy (*_6)
+        return
+}
+fn at {
+    let _0: u8; // return slot
+    let _1: u8[]*; // parameter text
+    let _2: i32; // parameter i
+    let _3: u64;
+    let _4: u8[*];
+    let _5: u64;
+    let _6: bool;
+    let _7: u8[*];
+
+    bb0:
+        _3 = size( copy _1 )
+        _4 = data( copy _1 )
+        _5 = copy _2 as u64
+        _6 = copy _5 < copy _3
+        branch copy _6 -> bb2, bb1
+
+    bb1:
+        out_of_bounds
+
+    bb2:
+        _7 = copy _4 + copy _5
+        _0 = copy (*_7)
+        return
+}
+fn clear {
+    let _0: void; // return slot
+    let _1: u8[]*; // parameter bytes
+    let _2: u64; // parameter i
+    let _3: u64;
+    let _4: u8[*];
+    let _5: bool;
+    let _6: u8[*];
+
+    bb0:
+        _3 = size( copy _1 )
+        _4 = data( copy _1 )
+        _5 = copy _2 < copy _3
+        branch copy _5 -> bb2, bb1
+
+    bb1:
+        out_of_bounds
+
+    bb2:
+        _6 = copy _4 + copy _2
+        (*_6) = const 0
+        return
+}
+fn length {
+    let _0: u64; // return slot
+    let _1: u8[]*; // parameter text
+    let _2: u64*; // n
+    let _3: u64;
+
+    bb0:
+        storage_live _2
+        _3 = size( copy _1 )
+        _2 = &read _3
+        _0 = copy (*_2)
+        storage_dead _2
+        return
+}
+fn start {
+    let _0: const u8[*]; // return slot
+    let _1: u8[]*; // parameter text
+    let _2: const u8[*];
+
+    bb0:
+        _2 = data( copy _1 )
+        _0 = copy _2
+        return
+}
+fn main {
+    let _0: i32; // return slot
+
+    bb0:
+        _0 = const 0
+        return
+}

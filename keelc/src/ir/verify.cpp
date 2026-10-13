@@ -68,7 +68,14 @@ void check_rvalue( const Function& func, const Rvalue& value, std::string_view w
     case Rvalue_kind::Use:
     case Rvalue_kind::Cast:
     case Rvalue_kind::Bits:
+    case Rvalue_kind::Run_data:
+    case Rvalue_kind::Run_size:
         operand_at( value.a, "operand" );
+        return;
+
+    case Rvalue_kind::Run_of:
+        operand_at( value.a, "data" );
+        operand_at( value.b, "count" );
         return;
 
     case Rvalue_kind::Unary:

@@ -135,6 +135,15 @@ struct Printer
         case Rvalue_kind::Bits:
             return fmt::format( "bits {}", operand( value.a ) );
 
+        case Rvalue_kind::Run_of:
+            return fmt::format( "run( {}, {} )", operand( value.a ), operand( value.b ) );
+
+        case Rvalue_kind::Run_data:
+            return fmt::format( "data( {} )", operand( value.a ) );
+
+        case Rvalue_kind::Run_size:
+            return fmt::format( "size( {} )", operand( value.a ) );
+
         case Rvalue_kind::Address_of:
             switch( value.address_purpose )
             {
@@ -255,6 +264,8 @@ struct Printer
                 return "unordered";
             case Failure::Unhashable:
                 return "unhashable";
+            case Failure::Bounds:
+                return "out_of_bounds";
             }
 
         case Terminator_kind::Unreachable:

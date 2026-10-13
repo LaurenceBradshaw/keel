@@ -156,6 +156,8 @@ private:
     void lower_while( Node_id id );
     void lower_for( Node_id id );
 
+    Operand temporary( Rvalue value, Type_id type, Span span );
+
     // Where a `fallthrough` in the arm being lowered goes: the next arm's body. Saved and restored
     // around each arm rather than kept in a stack, which is what makes a nested switch's arms
     // restore the outer one's target on the way out.
@@ -198,6 +200,9 @@ private:
     Operand three_way( Operand left, Operand right, Span span );
     Operand supplied_hash( Operand value, Span span );
     Operand moved_if_owning( Operand operand );
+
+    Operand run_pointer( Node_id run );
+    Place   lower_slice_or_run_index( Node_id id );
 
     bool is_move_parameter( Node_id param ) const;
 
@@ -559,7 +564,7 @@ Operand Lowering::converted( Operand operand, Type_id to, Span span )
         return united( operand, to, span );
     }
 
-    return copy( builder_.place( builder_.into_temp( cast_to( operand, to ), to, span ) ), to );
+    return temporary( cast_to( operand, to ), to, span );
 }
 
 Operand Lowering::united( Operand operand, Type_id to, Span span )
@@ -567,7 +572,7 @@ Operand Lowering::united( Operand operand, Type_id to, Span span )
     // An implementer's address becomes a `Shape*` where one is wanted, as a member becomes a union.
     if( operand.type != to && types_.table().is_interface_pointer( to ) && types_.table().is_pointer( operand.type ) )
     {
-        return copy( builder_.place( builder_.into_temp( cast_to( operand, to ), to, span ) ), to );
+        return temporary( cast_to( operand, to ), to, span );
     }
 
     if( operand.type != to && types_.table().is_box( to ) && types_.table().is_box( operand.type ) )
@@ -692,9 +697,7 @@ Operand Lowering::checked_cast( Operand operand, Type_id to, Span span )
     const auto require = [&]( Rvalue condition )
     {
         const Block_id pass = builder_.add_block();
-        builder_.terminate_branch(
-            copy( builder_.place( builder_.into_temp( condition, boolean, span ) ), boolean ), pass, fail, span
-        );
+        builder_.terminate_branch( temporary( condition, boolean, span ), pass, fail, span );
         builder_.switch_to( pass );
     };
 
@@ -722,9 +725,6 @@ Rvalue Lowering::checked_arithmetic( Token_kind op, Operand left, Operand right,
     const Type_table& table   = types_.table();
     const Type_id     boolean = table.builtin( Type_kind::Bool );
 
-    const auto temp = [&]( Rvalue value, Type_id type ) -> Operand
-    { return copy( builder_.place( builder_.into_temp( value, type, span ) ), type ); };
-
     if( !table.is_integer( type ) || right.kind == Operand_kind::Constant ||
         ( op != Token_kind::Slash && op != Token_kind::Percent && op != Token_kind::Less_less &&
           op != Token_kind::Greater_greater ) )
@@ -734,14 +734,15 @@ Rvalue Lowering::checked_arithmetic( Token_kind op, Operand left, Operand right,
 
     if( op == Token_kind::Less_less || op == Token_kind::Greater_greater )
     {
-        Operand masked = temp(
+        Operand masked = temporary(
             binary(
                 Token_kind::Amp,
                 right,
                 constant( literal_pool_.add_integer( table.get( type ).width - 1u ), right.type ),
                 right.type
             ),
-            right.type
+            right.type,
+            span
         );
 
         return binary( op, left, masked, type );
@@ -751,8 +752,10 @@ Rvalue Lowering::checked_arithmetic( Token_kind op, Operand left, Operand right,
     const Block_id pass = builder_.add_block();
 
     builder_.terminate_branch(
-        temp(
-            binary( Token_kind::Bang_equal, right, constant( literal_pool_.add_integer( 0 ), right.type ), boolean ), boolean
+        temporary(
+            binary( Token_kind::Bang_equal, right, constant( literal_pool_.add_integer( 0 ), right.type ), boolean ),
+            boolean,
+            span
         ),
         pass,
         fail,
@@ -768,15 +771,16 @@ Rvalue Lowering::checked_arithmetic( Token_kind op, Operand left, Operand right,
         return binary( op, left, right, type );
     }
 
-    const Operand  minus_one = temp( unary( Token_kind::Minus, constant( literal_pool_.add_integer( 1 ), type ), type ), type );
-    const Local_id result    = builder_.add_local( type, span );
+    const Operand minus_one =
+        temporary( unary( Token_kind::Minus, constant( literal_pool_.add_integer( 1 ), type ), type ), type, span );
+    const Local_id result = builder_.add_local( type, span );
 
     const Block_id negate = builder_.add_block();
     const Block_id divide = builder_.add_block();
     const Block_id join   = builder_.add_block();
 
     builder_.terminate_branch(
-        temp( binary( Token_kind::Equal_equal, right, minus_one, boolean ), boolean ), negate, divide, span
+        temporary( binary( Token_kind::Equal_equal, right, minus_one, boolean ), boolean, span ), negate, divide, span
     );
 
     builder_.switch_to( negate );
@@ -804,7 +808,7 @@ Operand Lowering::three_way( Operand left, Operand right, Span span )
     const Type_id     ordering = table.ordering();
 
     const auto test = [&]( Token_kind op, Operand a, Operand b ) -> Operand
-    { return copy( builder_.place( builder_.into_temp( binary( op, a, b, boolean ), boolean, span ) ), boolean ); };
+    { return temporary( binary( op, a, b, boolean ), boolean, span ); };
 
     // A float literal is never a NaN.
     const auto may_be_nan = [&]( Operand side ) { return table.is_float( side.type ) && side.kind != Operand_kind::Constant; };
@@ -878,9 +882,7 @@ Operand Lowering::supplied_hash( Operand value, Span span )
     const Block_id pass = builder_.add_block();
     const Block_id fail = builder_.add_block();
 
-    const Operand ordered = copy(
-        builder_.place( builder_.into_temp( binary( Token_kind::Equal_equal, value, value, boolean ), boolean, span ) ), boolean
-    );
+    const Operand ordered = temporary( binary( Token_kind::Equal_equal, value, value, boolean ), boolean, span );
 
     builder_.terminate_branch( ordered, pass, fail, span );
     builder_.switch_to( fail );
@@ -888,11 +890,8 @@ Operand Lowering::supplied_hash( Operand value, Span span )
     builder_.switch_to( pass );
 
     const Operand zero     = constant( literal_pool_.add_float( 0.0 ), value.type );
-    const Operand positive = copy(
-        builder_.place( builder_.into_temp( binary( Token_kind::Plus, value, zero, value.type ), value.type, span ) ),
-        value.type
-    );
-    const Operand bits = copy( builder_.place( builder_.into_temp( bits_of( positive, number ), number, span ) ), number );
+    const Operand positive = temporary( binary( Token_kind::Plus, value, zero, value.type ), value.type, span );
+    const Operand bits     = temporary( bits_of( positive, number ), number, span );
 
     return converted( bits, u64, span );
 }
@@ -905,6 +904,88 @@ Operand Lowering::moved_if_owning( Operand operand )
     }
 
     return move( operand.place, operand.type );
+}
+
+Operand Lowering::run_pointer( Node_id run )
+{
+    const Place place = lower_place( run );
+    assert( place.local.is_valid() && place.num_projections == 1 );
+    return copy( builder_.place( place.local ), builder_.type_of( place.local ) );
+}
+
+Place Lowering::lower_slice_or_run_index( Node_id id )
+{
+    const Node_id object   = ast_.object( id );
+    const Node_id range    = ast_.index( id );
+    const bool    is_range = ast_.kind( range ) == Node_kind::Range_expr;
+    const bool    on_run   = types_.table().is_run( type_of( object ) );
+    const Span    span     = ast_.span( id );
+    const Type_id u64      = types_.table().integer( 64, false );
+    const Type_id boolean  = types_.table().builtin( Type_kind::Bool );
+
+    // The object first, then the bounds; a run's data is its start, a `T[*]` is its own.
+    Operand run {};
+    Operand size {};
+    Operand data {};
+
+    if( on_run )
+    {
+        run                           = run_pointer( object );
+        size                          = temporary( run_size( run, u64 ), u64, span );
+        const Type_id element_pointer = types_.table().many_pointer_to( types_.table().get( type_of( object ) ).element );
+        data                          = temporary( run_data( run, element_pointer ), element_pointer, span );
+    }
+    else
+    {
+        data = lower_expression( object );
+    }
+
+    // Unsigned, so a negative bound fails the same compare a too-large one does.
+    const auto bound = [&]( Node_id at ) { return converted( lower_expression( at ), u64, span ); };
+
+    const Operand low  = bound( is_range ? ast_.lower( range ) : range );
+    const Operand high = is_range ? bound( ast_.upper( range ) ) : Operand {};
+
+    const Block_id fail    = builder_.add_block();
+    const auto     require = [&]( Token_kind op, Operand left, Operand right )
+    {
+        const Block_id pass = builder_.add_block();
+        builder_.terminate_branch( temporary( binary( op, left, right, boolean ), boolean, span ), pass, fail, span );
+        builder_.switch_to( pass );
+    };
+
+    if( !is_range )
+    {
+        require( Token_kind::Less, low, size );
+    }
+    else
+    {
+        require( Token_kind::Less_equal, low, high );
+
+        if( on_run )
+        {
+            require( Token_kind::Less_equal, high, size );
+        }
+    }
+
+    const Block_id pass = builder_.current();
+    builder_.switch_to( fail );
+    builder_.terminate_panic( span, Failure::Bounds );
+    builder_.switch_to( pass );
+
+    const Operand start = temporary( binary( Token_kind::Plus, data, low, data.type ), data.type, span );
+
+    if( !is_range )
+    {
+        return builder_.deref( start.place );
+    }
+
+    // `low <= high` holds, so the count cannot wrap. A reference carries no `const` in KIR.
+    const Operand  count    = temporary( binary( Token_kind::Minus, high, low, u64 ), u64, span );
+    const Type_id  run_type = types_.table().pointer_to( type_of( id ) );
+    const Local_id slice    = builder_.into_temp( run_of( start, count, run_type ), run_type, span );
+
+    return builder_.deref( builder_.place( slice ) );
 }
 
 bool Lowering::is_move_parameter( Node_id param ) const
@@ -1391,13 +1472,8 @@ Operand Lowering::lower_string_literal( Node_id id )
     const Local_id local = builder_.add_local( type, span );
 
     const Operand operands[] = {
-        copy(
-            builder_.place( builder_.into_temp(
-                address_of( builder_.place( local ), receiver_type, Address_purpose::Initialise ), receiver_type, span
-            ) ),
-            receiver_type
-        ),
-        copy( builder_.place( builder_.into_temp( literal_bytes( bytes, data_type ), data_type, span ) ), data_type ),
+        temporary( address_of( builder_.place( local ), receiver_type, Address_purpose::Initialise ), receiver_type, span ),
+        temporary( literal_bytes( bytes, data_type ), data_type, span ),
         constant( literal_pool_.add_integer( literal_pool_.string( bytes ).size() ), size_type ),
     };
 
@@ -1470,7 +1546,7 @@ Operand Lowering::lower_binary( Node_id id )
     {
         return three_way( left, right, span );
     }
-    return copy( builder_.place( builder_.into_temp( checked_arithmetic( op, left, right, type, span ), type, span ) ), type );
+    return temporary( checked_arithmetic( op, left, right, type, span ), type, span );
 }
 
 Node_id Lowering::bound_operator( Token_kind op, Type_id held ) const
@@ -1551,7 +1627,7 @@ Lowering::lower_operator_call( Node_id id, Node_id method, const Bindings& bindi
     const Type_id boolean = types_.table().builtin( Type_kind::Bool );
     const Operand variant = constant( literal_pool_.add_integer( ordinal ), result.type );
 
-    return copy( builder_.place( builder_.into_temp( binary( test, result, variant, boolean ), boolean, span ) ), boolean );
+    return temporary( binary( test, result, variant, boolean ), boolean, span );
 }
 
 // `v[i]` calls `v.operator[]( i )`, and the place is what the returned pointer points at.
@@ -1593,27 +1669,25 @@ Operand Lowering::lower_unary( Node_id id )
         {
             const Rvalue address = function_address( types_.callee_of( id ), type, type_arguments_for_call( id ) );
 
-            return copy( builder_.place( builder_.into_temp( address, type, span ) ), type );
+            return temporary( address, type, span );
         }
 
         // Nor is a field: `&C::x` is an offset, which names the field and no object.
         if( types_.table().is_field( type ) )
         {
-            return copy(
-                builder_.place( builder_.into_temp( field_offset( types_.callee_of( id ), type ), type, span ) ), type
-            );
+            return temporary( field_offset( types_.callee_of( id ), type ), type, span );
         }
 
         // A place, not an operand - which is why verify's Address_of case looks at a.place and
         // ignores the operand's kind.
         const Rvalue address = address_of( lower_place( ast_.operand( id ) ), type, Address_purpose::Borrow );
 
-        return copy( builder_.place( builder_.into_temp( address, type, span ) ), type );
+        return temporary( address, type, span );
     }
 
     const Operand a = lower_expression( ast_.operand( id ) );
 
-    return copy( builder_.place( builder_.into_temp( unary( op, a, type ), type, span ) ), type );
+    return temporary( unary( op, a, type ), type, span );
 }
 
 // D7. `Shape::Circle( 1.0 )` builds a value: write the tag, then each payload field. The same shape
@@ -2295,7 +2369,7 @@ Operand Lowering::lower_expression( Node_id id )
         {
             allocation = allocate( type );
         }
-        return copy( builder_.place( builder_.into_temp( allocation, type, ast_.span( id ) ) ), type );
+        return temporary( allocation, type, ast_.span( id ) );
     }
     case Node_kind::Assert_expr:
     {
@@ -2328,7 +2402,7 @@ Operand Lowering::lower_expression( Node_id id )
 
         // Into a void temp, exactly as a void call already lowers: KIR keeps Assign total and the
         // emitter drops a destination it cannot declare.
-        return copy( builder_.place( builder_.into_temp( release( target ), type, ast_.span( id ) ) ), type );
+        return temporary( release( target ), type, ast_.span( id ) );
     }
     case Node_kind::Destroy_expr:
         lower_destroy( id );
@@ -2414,6 +2488,16 @@ Place Lowering::lower_place( Node_id id )
         const Type_id   object_type = type_of( object );
         const Symbol_id name        = ast_.name( id );
 
+        // `size` and `data` are read off the run pointer; the temporary is a place for a binding.
+        if( types_.table().is_run( object_type ) )
+        {
+            const Operand run   = run_pointer( object );
+            const Type_id type  = type_of( id );
+            const Rvalue  value = types_.table().is_many_pointer( type ) ? run_data( run, type ) : run_size( run, type );
+
+            return builder_.place( builder_.into_temp( value, type, ast_.span( id ) ) );
+        }
+
         // D22: `.` reaches through a pointer, so `p.x` is the implicit form of `( *p ).x` and
         // lowers to the same two projections. It takes the pointer's *value* rather than its
         // place - the Star case below is the same shape, written out.
@@ -2455,6 +2539,11 @@ Place Lowering::lower_place( Node_id id )
         if( const Node_id method = types_.callee_of( id ); method.is_valid() )
         {
             return builder_.deref( lower_operator_index( id, method ).place );
+        }
+
+        if( ast_.kind( ast_.index( id ) ) == Node_kind::Range_expr || types_.table().is_run( type_of( ast_.object( id ) ) ) )
+        {
+            return lower_slice_or_run_index( id );
         }
 
         const Operand pointer   = lower_expression( ast_.object( id ) );
@@ -3169,6 +3258,11 @@ void Lowering::lower_for( Node_id id )
     return;
 }
 
+Operand Lowering::temporary( Rvalue value, Type_id type, Span span )
+{
+    return copy( builder_.place( builder_.into_temp( value, type, span ) ), type );
+}
+
 void Lowering::lower_statement( Node_id id )
 {
     // Every statement that builds a temporary drops it before finishing, so by the time the next
@@ -3300,7 +3394,7 @@ Operand Lowering::borrowed_argument( Node_id argument, Type_id address )
 
 Operand Lowering::address_operand( Place place, Type_id type, Span span, Address_purpose purpose )
 {
-    return copy( builder_.place( builder_.into_temp( address_of( place, type, purpose ), type, span ) ), type );
+    return temporary( address_of( place, type, purpose ), type, span );
 }
 
 // D30: `~E( E* self )`, testing the tag against each variant whose payload owns and dropping that

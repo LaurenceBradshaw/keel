@@ -116,7 +116,10 @@ enum class Rvalue_kind : u8
     Binary,
     Unary,
     Cast,
-    Bits, // a float's bits as the unsigned integer of its width; a is the float
+    Bits,     // a float's bits as the unsigned integer of its width; a is the float
+    Run_of,   // `a` is the T[*] data, `b` is the u64 count, and the type is the run pointer
+    Run_data, // `a` is the run pointer, and the type is T[*]
+    Run_size, // `a` is the run pointer, and the type is u64
     Call,
     Address_of, // reads a.place; the address is not a copy of what lives there
     Allocate,
@@ -200,6 +203,7 @@ enum class Failure : u8
     Remainder,  // span: the operation
     Unordered,  // span: the comparison
     Unhashable, // span: the call
+    Bounds,     // span: the index or slice
 };
 
 struct Terminator
@@ -357,6 +361,21 @@ inline Rvalue cast_to( Operand a, Type_id type )
 inline Rvalue bits_of( Operand a, Type_id type )
 {
     return Rvalue { .kind = Rvalue_kind::Bits, .type = type, .a = a };
+}
+
+inline Rvalue run_of( Operand data, Operand count, Type_id type )
+{
+    return Rvalue { .kind = Rvalue_kind::Run_of, .type = type, .a = data, .b = count };
+}
+
+inline Rvalue run_data( Operand run, Type_id type )
+{
+    return Rvalue { .kind = Rvalue_kind::Run_data, .type = type, .a = run };
+}
+
+inline Rvalue run_size( Operand run, Type_id type )
+{
+    return Rvalue { .kind = Rvalue_kind::Run_size, .type = type, .a = run };
 }
 
 inline Rvalue allocate( Type_id type ) // type is the *pointer* type; element comes off it

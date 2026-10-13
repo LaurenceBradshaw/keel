@@ -438,6 +438,14 @@ constexpr std::string_view k_payload = "class B { public u64 n; B( u64 x ) { n =
 
 constexpr std::string_view k_payload_locals = "H h = H::Full( B( 1 ) ); u64 c = 0; ";
 
+constexpr std::string_view k_run = "class R { u8[*] d; u64 n; R() { unsafe { d = alloc<u8>( 4 ); } n = 4; } "
+                                   "~R() { unsafe { free( d ); } } "
+                                   "public const ref u8[] text() const { unsafe { return d[ 0..n ]; } } "
+                                   "public void grow() { n = n + 1; } };\n"
+                                   "void take( move R r ) { }\n";
+
+constexpr std::string_view k_run_locals = "R r = R(); ";
+
 } // namespace
 
 // D54: a direct loan points at its object's own storage, which stays put until its scope ends, so
@@ -653,6 +661,43 @@ TEST_CASE( "borrow_check_holds_a_payload_binding_of_this", "[check][borrow][impl
         INFO( p.rendered() );
         REQUIRE( p.clean() );
         REQUIRE( p.errors().empty() );
+    }
+}
+
+// An address computed from an address borrows what it does, so a sub-run or an element of one
+// freezes what the whole run borrows.
+TEST_CASE( "borrow_check_carries_a_loan_into_a_sub_run", "[check][borrow][textual]" )
+{
+    for( const Refused& refused : {
+             Refused {
+                 "const ref u8[] t = r.text(); const ref u8[] s = t[ 1..3 ]; r.grow(); u8 y = s[ 0 ];",
+                 Loan_conflict::Changed,
+                 "r",
+                 "s",
+                 "r"
+             },
+             Refused { "const ref u8[] s = r.text()[ 1..3 ]; r.grow(); u8 y = s[ 0 ];", Loan_conflict::Changed, "r", "s", "r" },
+             Refused {
+                 "const ref u8[] s = r.text()[ 1..3 ][ 0..1 ]; take( move r ); u8 y = s[ 0 ];",
+                 Loan_conflict::Moved,
+                 "move r",
+                 "s",
+                 "r"
+             },
+             Refused { "const ref u8 e = r.text()[ 1..3 ][ 0 ]; r.grow(); u8 y = e;", Loan_conflict::Changed, "r", "e", "r" },
+         } )
+    {
+        require_refused( k_run, k_run_locals, refused );
+    }
+
+    // Dead before the change, a copy of the size, or a pointer, which says it can dangle.
+    for( const char* body : {
+             "const ref u8[] t = r.text(); const ref u8[] s = t[ 1..3 ]; u8 y = s[ 0 ]; r.grow();",
+             "u64 n = r.text()[ 1..3 ].size; r.grow(); u64 m = n;",
+             "const ref u8[] t = r.text(); const u8[*] p = t[ 1..3 ].data; r.grow(); const u8[*] q = p;",
+         } )
+    {
+        require_accepted( k_run, k_run_locals, body );
     }
 }
 
