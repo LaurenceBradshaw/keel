@@ -204,8 +204,8 @@ Type_id Expressions::infer_name( Node_id id )
 
 // D26: a literal has a value rather than a type, and context is what gives it one - so where the
 // context is the thing being chosen, a literal or arithmetic on literals of one family narrows the
-// set to that family and no further. A struct literal takes its instance from the expectation in the
-// same way, so it says nothing at all.
+// set to that family, and an integer one to the types that hold its value. A struct literal takes its instance from the
+// expectation in the same way, so it says nothing at all.
 Argument_shape Expressions::argument_shape( Node_id argument )
 {
     Argument_shape shape;

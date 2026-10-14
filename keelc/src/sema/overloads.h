@@ -26,13 +26,13 @@ enum class Argument_kind : u8
     Anything
 };
 
-// A kind other than `Typed` carries no type, deliberately: that is where D26's rule that a literal
-// says nothing actually lives, because deduction and selection both read the type and find none.
+// A kind other than `Typed` carries no type, deliberately: deduction reads nothing from a literal
+// (D26). Selection ranks one from its default type, and checks an integer's value where it folds.
 struct Argument_shape
 {
     Argument_kind kind      = Argument_kind::Anything;
     Type_id       type      = {};
-    bool          valued    = false;
+    bool          valued    = false; // whether an integer literal folded to the value below
     u64           magnitude = 0;
     bool          negative  = false;
     Keyword       marker    = Keyword::Count;

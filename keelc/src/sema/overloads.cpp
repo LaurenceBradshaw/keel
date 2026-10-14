@@ -348,8 +348,8 @@ std::vector<Type_id> Overloads::parameter_types( Node_id callable, u32 implicit_
     return result;
 }
 
-// Whether `first` is no further than `second` for any argument and closer for one. A literal says
-// nothing, so it never decides.
+// Whether `first` is no further than `second` for any argument and closer for one. A literal is
+// measured from its default type.
 bool Overloads::beats( std::span<const Type_id> first, std::span<const Type_id> second, std::span<const Argument_shape> shapes )
     const
 {
@@ -398,7 +398,7 @@ bool Overloads::beats( std::span<const Type_id> first, std::span<const Type_id> 
     return closer;
 }
 
-// Every widened candidate nothing beats: one is the choice, several are the ambiguity.
+// Every candidate nothing beats: one is the choice, several are the ambiguity.
 std::vector<Node_id> Overloads::closest(
     std::span<const Node_id> candidates, std::span<const std::vector<Type_id>> targets, std::span<const Argument_shape> shapes
 ) const
@@ -610,10 +610,9 @@ Node_id Overloads::select_overload(
         return Node_id {};
     }
 
-    // More than one matches. A literal is the usual cause: it carries a family rather than a type,
-    // so it cannot choose between two parameters in one family. The other is two widenings each
-    // closer for a different argument. Where every one left is a generic the arguments cannot say
-    // it either - both fit exactly - and only the type arguments can.
+    // More than one matches: two candidates each closer for a different argument. Where every one
+    // left is a generic the arguments cannot say it either - both fit exactly - and only the type
+    // arguments can.
     const bool all_generic = std::all_of(
         matching_candidates.begin(),
         matching_candidates.end(),
@@ -1323,7 +1322,7 @@ TEST_CASE( "type_checker_chooses_between_overloads", "[sema][overload]" )
     }
 
     // D26: a literal has a value rather than a type, and here the context that would give it one is
-    // what is being chosen - so it narrows the set to a family and no further.
+    // what is being chosen - so it narrows the set to a family, and is ranked from its default type.
     SECTION( "a literal carries the family it is written in" )
     {
         const Typed p( "i32 f( i32 a ) { return 1; }\nbool f( f64 a ) { return true; }\n"
