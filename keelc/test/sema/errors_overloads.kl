@@ -47,9 +47,9 @@ i32 main()
     // No candidate takes a `bool`, and nothing widens into or out of one.
     pick( true );
 
-    // A literal carries the family it is written in and no more, so it cannot choose between two
-    // parameters that are both in it.
-    ambiguous( 1 );
+    // A literal reaches only a type that holds its value, so one past the largest `i64` reaches
+    // neither of these.
+    ambiguous( 9223372036854775808 );
 
     // Nor can it choose between two whose difference is one it does not carry.
     ambiguous( fraction );

@@ -1,0 +1,50 @@
+// PLAN §6.7 and D26. A literal argument goes to the closest overload that holds its value: the type
+// it would be with nothing to say, else the narrowest, signed before unsigned. A negative literal
+// never reaches an unsigned one, and arithmetic on literals ranks as a lone literal does.
+
+i32 width( i8 a )
+{
+    return 8;
+}
+
+i32 width( i16 a )
+{
+    return 16;
+}
+
+i32 width( i64 a )
+{
+    return 64;
+}
+
+i32 width( u64 a )
+{
+    return 65;
+}
+
+i32 nearest( i32 a )
+{
+    return 32;
+}
+
+i32 nearest( i8 a )
+{
+    return 8;
+}
+
+i32 main()
+{
+    println( 42 );
+    println( -42 );
+    println( 9223372036854775808 );
+    println( 1 + 2 );
+
+    assert( width( 1 ) == 8 );
+    assert( width( 300 ) == 16 );
+    assert( width( -40000 ) == 64 );
+    assert( width( 9223372036854775808 ) == 65 );
+    assert( width( 100 + 100 ) == 16 );
+    assert( nearest( 1 ) == 32 );
+
+    return 0;
+}

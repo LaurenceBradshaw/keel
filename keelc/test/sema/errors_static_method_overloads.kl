@@ -30,14 +30,14 @@ struct Number
     // A bare call chooses among its siblings by the same rules.
     static i32 bare_ambiguous()
     {
-        return from( 5 );
+        return from( 0.5 );
     }
 };
 
-// A literal fits both, as it does `print`'s family.
+// A float literal reaches neither integer.
 i32 ambiguous()
 {
-    return Number::from( 5 );
+    return Number::from( 0.5 );
 }
 
 i32 matches_none()

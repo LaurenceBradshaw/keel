@@ -30,10 +30,13 @@ enum class Argument_kind : u8
 // says nothing actually lives, because deduction and selection both read the type and find none.
 struct Argument_shape
 {
-    Argument_kind kind     = Argument_kind::Anything;
-    Type_id       type     = {};
-    Keyword       marker   = Keyword::Count;
-    bool          recorded = false; // whether infer() has already run over it
+    Argument_kind kind      = Argument_kind::Anything;
+    Type_id       type      = {};
+    bool          valued    = false;
+    u64           magnitude = 0;
+    bool          negative  = false;
+    Keyword       marker    = Keyword::Count;
+    bool          recorded  = false; // whether infer() has already run over it
 };
 
 // One argument the caller still has to walk. Returned rather than walked here, which is the whole
@@ -168,7 +171,9 @@ private:
     std::vector<Type_id> parameter_types( Node_id callable, u32 implicit_params, const Bindings& bindings );
     bool beats( std::span<const Type_id> first, std::span<const Type_id> second, std::span<const Argument_shape> shapes ) const;
     std::vector<Node_id> closest(
-        std::span<const Node_id> widened, std::span<const std::vector<Type_id>> targets, std::span<const Argument_shape> shapes
+        std::span<const Node_id>              candidates,
+        std::span<const std::vector<Type_id>> targets,
+        std::span<const Argument_shape>       shapes
     ) const;
     std::vector<Node_id> matching(
         const Call_site&                site,

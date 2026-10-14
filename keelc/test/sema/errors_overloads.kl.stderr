@@ -34,11 +34,11 @@ error: no `pick` matches these arguments
 48 |     pick( true );
    |     ^^^^^^^^^^^^ the ones declared take `( i32 )` and `( f64 )`
 
-error: this call to `ambiguous` is ambiguous
+error: no `ambiguous` matches these arguments
   --> sema/errors_overloads.kl:52:5
    |
-52 |     ambiguous( 1 );
-   |     ^^^^^^^^^^^^^^ more than one matches: `( i32 )` and `( i64 )`; write a type the call can be told by
+52 |     ambiguous( 9223372036854775808 );
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the ones declared take `( i32 )` and `( i64 )`
 
 error: no `ambiguous` matches these arguments
   --> sema/errors_overloads.kl:55:5

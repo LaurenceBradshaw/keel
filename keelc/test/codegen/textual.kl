@@ -40,8 +40,7 @@ i32 main()
     println( name );
     println( yes );
     print( yes ? "a" : "b" );
-    i64  n     = 42;
-    println( n );
+    println( 42 );
     eprintln( name );
     show( hello );
     show( name );

@@ -59,7 +59,7 @@ std::vector<Borrow> borrows_of( const Function& func )
                 borrow.place = source;
             }
         }
-        // An address computed from an address - a conversion, `p + i`, a run's data or a sub-run - borrows what it does.
+        // An address computed from an address (a cast, `p + i`, a run's data, a sub-run) borrows what it does.
         // An integer's `+` copies an empty borrow.
         else if( ( value.kind == Rvalue_kind::Use || value.kind == Rvalue_kind::Cast || value.kind == Rvalue_kind::Run_of ||
                    value.kind == Rvalue_kind::Run_data ||

@@ -25,12 +25,12 @@ static void kl__Name__as_kl_7prelude_textual__drop( void* self )
     ( void ) self;
 }
 
-static struct kl__run__L2u8__ref kl__Name__as_kl_7prelude_textual__kl_as_text_152( void* self )
+static struct kl__run__L2u8__ref kl__Name__as_kl_7prelude_textual__kl_as_text_149( void* self )
 {
     return kl__as_text__S4Name( ( struct kl__Name* ) self );
 }
 
-static const struct kl_7prelude_textual__vtable kl__Name__as_kl_7prelude_textual = { kl__Name__as_kl_7prelude_textual__drop, kl__Name__as_kl_7prelude_textual__kl_as_text_152 };
+static const struct kl_7prelude_textual__vtable kl__Name__as_kl_7prelude_textual = { kl__Name__as_kl_7prelude_textual__drop, kl__Name__as_kl_7prelude_textual__kl_as_text_149 };
 
 struct kl__run__L2u8__ref kl__as_text__S4Name( struct kl__Name* kl_this_1 )
 {
@@ -118,28 +118,27 @@ int32_t kl__main__( void )
     struct kl_7prelude_str* kl_t24;
     uint8_t* kl_t25;
     struct kl_7prelude_textual__ref kl_t27;
-    int64_t kl_n_29;
-    struct kl_7prelude_textual__ref kl_t31;
-    struct kl_7prelude_textual__ref kl_t34;
-    struct kl_7prelude_str kl_t36;
-    struct kl_7prelude_str* kl_t37;
-    uint8_t* kl_t38;
-    struct kl_7prelude_textual__ref kl_t40;
+    struct kl_7prelude_textual__ref kl_t30;
+    struct kl_7prelude_textual__ref kl_t33;
+    struct kl_7prelude_str kl_t35;
+    struct kl_7prelude_str* kl_t36;
+    uint8_t* kl_t37;
+    struct kl_7prelude_textual__ref kl_t39;
+    struct kl_7prelude_str kl_t41;
     struct kl_7prelude_str kl_t42;
-    struct kl_7prelude_str kl_t43;
-    struct kl_7prelude_str* kl_t44;
-    uint8_t* kl_t45;
-    struct kl_7prelude_str kl_t47;
-    struct kl_7prelude_str* kl_t48;
-    uint8_t* kl_t49;
-    struct kl_7prelude_textual__ref kl_t51;
+    struct kl_7prelude_str* kl_t43;
+    uint8_t* kl_t44;
+    struct kl_7prelude_str kl_t46;
+    struct kl_7prelude_str* kl_t47;
+    uint8_t* kl_t48;
+    struct kl_7prelude_textual__ref kl_t50;
 #line 35 "codegen/textual.kl"
     kl_t3 = &kl_t2;
     kl_t4 = ( uint8_t* ) "hello";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t3, kl_t4, 5 );
     kl_hello_1 = kl_t2;
 #line 36 "codegen/textual.kl"
-    kl_t7.kl_data_5 = kl_hello_1.kl_data_160;
+    kl_t7.kl_data_5 = kl_hello_1.kl_data_157;
     kl_t7.kl_size_7 = 3;
     kl_name_6 = kl_t7;
 #line 37 "codegen/textual.kl"
@@ -173,41 +172,39 @@ int32_t kl__main__( void )
     kl_t27 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t18, &kl_7prelude_str__as_kl_7prelude_textual };
     kl_7prelude_print__7textual( kl_t27 );
 #line 43 "codegen/textual.kl"
-    kl_n_29 = 42;
+    kl_7prelude_println__3i64( 42 );
 #line 44 "codegen/textual.kl"
-    kl_7prelude_println__3i64( kl_n_29 );
+    kl_t30 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_name_6, &kl__Name__as_kl_7prelude_textual };
+    kl_7prelude_eprintln__7textual( kl_t30 );
 #line 45 "codegen/textual.kl"
-    kl_t31 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_name_6, &kl__Name__as_kl_7prelude_textual };
-    kl_7prelude_eprintln__7textual( kl_t31 );
-#line 46 "codegen/textual.kl"
     kl__show__Q7prelude3str( kl_hello_1 );
+#line 46 "codegen/textual.kl"
+    kl_t33 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_name_6, &kl__Name__as_kl_7prelude_textual };
+    kl__show__7textual( kl_t33 );
 #line 47 "codegen/textual.kl"
-    kl_t34 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_name_6, &kl__Name__as_kl_7prelude_textual };
-    kl__show__7textual( kl_t34 );
-#line 48 "codegen/textual.kl"
-    kl_t37 = &kl_t36;
-    kl_t38 = ( uint8_t* ) "";
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t37, kl_t38, 0 );
-    kl_t40 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t36, &kl_7prelude_str__as_kl_7prelude_textual };
-    kl_7prelude_println__7textual( kl_t40 );
+    kl_t36 = &kl_t35;
+    kl_t37 = ( uint8_t* ) "";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t36, kl_t37, 0 );
+    kl_t39 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t35, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_7prelude_println__7textual( kl_t39 );
     if ( kl_yes_8 ) goto bb4; else goto bb5;
     bb4:
-#line 49 "codegen/textual.kl"
-    kl_t44 = &kl_t43;
-    kl_t45 = ( uint8_t* ) "c";
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t44, kl_t45, 1 );
-    kl_t42 = kl_t43;
+#line 48 "codegen/textual.kl"
+    kl_t43 = &kl_t42;
+    kl_t44 = ( uint8_t* ) "c";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t43, kl_t44, 1 );
+    kl_t41 = kl_t42;
     goto bb6;
     bb5:
-    kl_t48 = &kl_t47;
-    kl_t49 = ( uint8_t* ) "d";
-    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t48, kl_t49, 1 );
-    kl_t42 = kl_t47;
+    kl_t47 = &kl_t46;
+    kl_t48 = ( uint8_t* ) "d";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t47, kl_t48, 1 );
+    kl_t41 = kl_t46;
     goto bb6;
     bb6:
-    kl_t51 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t42, &kl_7prelude_str__as_kl_7prelude_textual };
-    kl__one__7textual( kl_t51 );
-#line 50 "codegen/textual.kl"
+    kl_t50 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t41, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl__one__7textual( kl_t50 );
+#line 49 "codegen/textual.kl"
     kl_t0 = 0;
     return kl_t0;
 }

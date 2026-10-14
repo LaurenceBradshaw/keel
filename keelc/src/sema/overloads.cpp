@@ -275,7 +275,8 @@ bool Overloads::candidate_accepts(
             break;
 
         case Argument_kind::Integer:
-            if( !table_.is_integer( expected ) )
+            if( !table_.is_integer( expected ) ||
+                ( shapes[i].valued && !table_.fits( shapes[i].magnitude, shapes[i].negative, expected ) ) )
             {
                 return false;
             }
@@ -356,14 +357,30 @@ bool Overloads::beats( std::span<const Type_id> first, std::span<const Type_id> 
     u32  i      = 0;
     while( i < shapes.size() && i < first.size() )
     {
-        if( shapes[i].kind != Argument_kind::Typed )
+        Type_id from {};
+        switch( shapes[i].kind )
+        {
+        case Argument_kind::Typed:
+            from = shapes[i].type;
+            break;
+        case Argument_kind::Integer:
+            from = table_.default_integer();
+            break;
+        case Argument_kind::Floating:
+            from = table_.default_float();
+            break;
+        case Argument_kind::Anything:
+            break;
+        }
+
+        if( !from.is_valid() )
         {
             ++i;
             continue;
         }
 
-        u32 near = distance( shapes[i].type, first[i] );
-        u32 far  = distance( shapes[i].type, second[i] );
+        u32 near = distance( from, first[i] );
+        u32 far  = distance( from, second[i] );
 
         if( near > far )
         {
@@ -383,16 +400,16 @@ bool Overloads::beats( std::span<const Type_id> first, std::span<const Type_id> 
 
 // Every widened candidate nothing beats: one is the choice, several are the ambiguity.
 std::vector<Node_id> Overloads::closest(
-    std::span<const Node_id> widened, std::span<const std::vector<Type_id>> targets, std::span<const Argument_shape> shapes
+    std::span<const Node_id> candidates, std::span<const std::vector<Type_id>> targets, std::span<const Argument_shape> shapes
 ) const
 {
     std::vector<Node_id> result;
 
-    for( std::size_t k = 0; k < widened.size(); ++k )
+    for( std::size_t k = 0; k < candidates.size(); ++k )
     {
         bool beaten = false;
 
-        for( std::size_t j = 0; j < widened.size(); ++j )
+        for( std::size_t j = 0; j < candidates.size(); ++j )
         {
             if( j == k )
             {
@@ -408,7 +425,7 @@ std::vector<Node_id> Overloads::closest(
 
         if( !beaten )
         {
-            result.push_back( widened[k] );
+            result.push_back( candidates[k] );
         }
     }
 
@@ -426,6 +443,7 @@ std::vector<Node_id> Overloads::matching(
     const std::size_t                 written = ast_.type_args( site.call ).size();
     std::vector<Node_id>              widened_candidates;
     std::vector<std::vector<Type_id>> targets;
+    std::vector<std::vector<Type_id>> exact_targets;
     std::vector<Node_id>              matching_candidates;
 
     // A construction's type parameters are the aggregate's, and the instance already says what they
@@ -455,6 +473,7 @@ std::vector<Node_id> Overloads::matching(
         if( candidate_accepts( candidate, site.implicit_params, shapes, bindings, false ) )
         {
             matching_candidates.push_back( candidate );
+            exact_targets.push_back( parameter_types( candidate, site.implicit_params, bindings ) );
         }
         else if( candidate_accepts( candidate, site.implicit_params, shapes, bindings, true ) )
         {
@@ -466,6 +485,10 @@ std::vector<Node_id> Overloads::matching(
     if( matching_candidates.empty() )
     {
         matching_candidates = closest( widened_candidates, targets, shapes );
+    }
+    else if( matching_candidates.size() > 1 )
+    {
+        matching_candidates = closest( matching_candidates, exact_targets, shapes );
     }
 
     return matching_candidates;
@@ -664,12 +687,14 @@ Node_id Overloads::select_method(
     std::vector<Node_id>              matching;
     std::vector<Node_id>              widened;
     std::vector<std::vector<Type_id>> targets;
+    std::vector<std::vector<Type_id>> exact_targets;
 
     for( const Node_id candidate : viable )
     {
         if( candidate_accepts( candidate, receiver_params( candidate ), shapes, bindings, false ) )
         {
             matching.push_back( candidate );
+            exact_targets.push_back( parameter_types( candidate, receiver_params( candidate ), bindings ) );
         }
         else if( candidate_accepts( candidate, receiver_params( candidate ), shapes, bindings, true ) )
         {
@@ -681,6 +706,10 @@ Node_id Overloads::select_method(
     if( matching.empty() )
     {
         matching = closest( widened, targets, shapes );
+    }
+    else if( matching.size() > 1 )
+    {
+        matching = closest( matching, exact_targets, shapes );
     }
 
     if( matching.size() == 1 )
@@ -1304,14 +1333,14 @@ TEST_CASE( "type_checker_chooses_between_overloads", "[sema][overload]" )
         REQUIRE( p.clean() );
     }
 
-    SECTION( "and cannot choose between two in one family" )
+    SECTION( "and within it, goes to the type it would be with nothing to say" )
     {
         const Typed p( "i32 f( i32 a ) { return 1; }\nf64 f( i64 a ) { return 2.0; }\n"
                        "i32 main() { f( 1 ); return 0; }" );
 
         INFO( p.rendered() );
-        REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "is ambiguous" ) != std::string::npos );
+        REQUIRE( p.clean() );
+        REQUIRE( p.chose( 0 ) == "t:1" );
     }
 
     // D31's marker is part of what the call writes, so it selects as much as the type does. These
@@ -1530,13 +1559,13 @@ TEST_CASE( "overloads_widen_when_nothing_matches_exactly", "[sema][overload]" )
         REQUIRE( p.rendered().find( "no `f` matches these arguments" ) != std::string::npos );
     }
 
-    SECTION( "a literal is ambiguous before widening is asked" )
+    SECTION( "a literal goes to the signed one of two widths alike" )
     {
         const Typed p( "void f( i64 a ) { }\nvoid f( u64 a ) { }\ni32 main() { f( 5 ); return 0; }" );
 
         INFO( p.rendered() );
-        REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "is ambiguous" ) != std::string::npos );
+        REQUIRE( p.clean() );
+        REQUIRE( p.chose( 0 ) == "t:1" );
     }
 
     SECTION( "a generic that fits exactly beats a widening" )
@@ -1810,9 +1839,9 @@ TEST_CASE( "overloads_keep_the_program's_set_when_it_takes_the_call", "[sema][ov
     SECTION( "and its own ambiguity is reported, not fallen through" )
     {
         const Typed p(
-            "i32 f( i32 n ) { return 1; }\ni32 f( i64 n ) { return 2; }\n"
-            "i32 main() { f( 5 ); return 0; }",
-            "bool f( f64 d ) { return true; }\n"
+            "i32 f( i32 a, i64 b ) { return 1; }\ni32 f( i64 a, i32 b ) { return 2; }\n"
+            "i32 main() { f( 5, 6 ); return 0; }",
+            "bool f( f64 a, f64 b ) { return true; }\n"
         );
 
         INFO( p.rendered() );
@@ -1918,14 +1947,14 @@ TEST_CASE( "overloads_report_a_call_neither_set_takes", "[sema][overload][prelud
     {
         const Typed p(
             "struct Point { i32 x; };\ni32 f( Point p ) { return p.x; }\n"
-            "i32 main() { f( 5 ); return 0; }",
-            "bool f( i32 n ) { return true; }\nbool f( i64 n ) { return false; }\n"
+            "i32 main() { f( 5, 6 ); return 0; }",
+            "bool f( i32 a, i64 b ) { return true; }\nbool f( i64 a, i32 b ) { return false; }\n"
         );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "this call to `f` is ambiguous" ) != std::string::npos );
-        REQUIRE( p.rendered().find( "`( i32 )` and `( i64 )`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`( i32, i64 )` and `( i64, i32 )`" ) != std::string::npos );
         REQUIRE( p.rendered().find( "Point" ) == std::string::npos );
     }
 }
@@ -2106,14 +2135,26 @@ TEST_CASE( "overloads_read_arithmetic_on_literals_as_a_literal", "[sema][overloa
         REQUIRE( p.chose( 0 ) == "t:1" );
     }
 
-    // One mistake, one error: no second one for the `i32` it was never meant to be.
-    SECTION( "and ambiguous between two of its family, as a literal is" )
+    SECTION( "and ranked by its value, as a literal is" )
     {
-        const Typed p( "void f( i64 a ) { }\nvoid f( u64 a ) { }\ni32 main() { f( 3000000000 + 1 ); return 0; }" );
+        const Typed p( "void f( i8 a ) { }\nvoid f( i64 a ) { }\nvoid f( u64 a ) { }\n"
+                       "i32 main() { f( 100 + 100 ); f( 3000000000 + 1 ); f( 9223372036854775807 + 1 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.chose( 0 ) == "t:2" );
+        REQUIRE( p.chose( 1 ) == "t:2" );
+        REQUIRE( p.chose( 2 ) == "t:3" );
+    }
+
+    // One mistake, one error: no second one for the `i32` it was never meant to be.
+    SECTION( "and refused once, when no candidate holds it" )
+    {
+        const Typed p( "void f( i8 a ) { }\nvoid f( u8 a ) { }\ni32 main() { f( 200 + 200 ); return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "this call to `f` is ambiguous" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "no `f` matches these arguments" ) != std::string::npos );
     }
 
     // A namesake in the prelude sends even one candidate through selection, which must not change
@@ -2127,6 +2168,101 @@ TEST_CASE( "overloads_read_arithmetic_on_literals_as_a_literal", "[sema][overloa
         INFO( p.rendered() );
         REQUIRE( p.clean() );
         REQUIRE( p.chose( 0 ) == "t:1" );
+    }
+}
+
+// D26: a literal goes to the closest candidate that holds its value, measured from the type it would
+// be with nothing to say, so it is ranked as a widened argument is rather than left undecided.
+TEST_CASE( "overloads_rank_a_literal_by_distance", "[sema][overload][literal]" )
+{
+    SECTION( "to the narrowest that holds it, signed first" )
+    {
+        const Typed p( "i32 f( u8 a ) { return 1; }\ni32 f( i8 a ) { return 2; }\ni32 f( u64 a ) { return 3; }\n"
+                       "i32 main() { f( 5 ); f( 200 ); f( 70000 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.chose( 0 ) == "t:2" );
+        REQUIRE( p.chose( 1 ) == "t:1" );
+        REQUIRE( p.chose( 2 ) == "t:3" );
+    }
+
+    SECTION( "a negative one never to an unsigned one" )
+    {
+        const Typed p( "i32 f( u8 a ) { return 1; }\ni32 f( i64 a ) { return 2; }\n"
+                       "i32 main() { f( -1 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.chose( 0 ) == "t:2" );
+    }
+
+    SECTION( "a float one to `f64` over `f32`" )
+    {
+        const Typed p( "i32 f( f32 a ) { return 1; }\ni32 f( f64 a ) { return 2; }\n"
+                       "i32 main() { f( 0.5 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.chose( 0 ) == "t:2" );
+    }
+
+    SECTION( "while a typed argument still decides first" )
+    {
+        const Typed p( "i32 f( i16 a, i64 b ) { return 1; }\ni32 f( i64 a, i32 b ) { return 2; }\n"
+                       "i32 main() { i16 x = 1; f( x, 5 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.chose( 0 ) == "t:1" );
+    }
+
+    SECTION( "and two each closer for a different literal are ambiguous" )
+    {
+        const Typed p( "void f( i32 a, i64 b ) { }\nvoid f( i64 a, i32 b ) { }\n"
+                       "i32 main() { f( 1, 2 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "this call to `f` is ambiguous" ) != std::string::npos );
+    }
+
+    SECTION( "as a method's" )
+    {
+        const Typed p( "struct S\n{\n    i32 x;\n    i32 f( i64 a ) const { return 1; }\n"
+                       "    i32 f( u64 a ) const { return 2; }\n};\n"
+                       "i32 main() { S s = S { 0 }; return s.f( 5 ) + s.f( 18446744073709551615 ); }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+    }
+
+    // D45: a set that cannot hold the value has nothing viable, as for a typed argument.
+    SECTION( "the prelude's set takes a literal the program's cannot hold" )
+    {
+        const Typed p(
+            "i32 f( u8 a ) { return 1; }\ni32 main() { f( 300 ); f( 3 ); return 0; }", "bool f( i64 n ) { return true; }\n"
+        );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
+        REQUIRE( p.chose( 0 ) == "<prelude>:1" );
+        REQUIRE( p.chose( 1 ) == "t:1" );
+    }
+
+    // One mistake, one error: a value past every type is reported as it is with one candidate, and
+    // not again as a call nothing matches.
+    SECTION( "one past every type is refused once" )
+    {
+        const Typed p( "void f( i64 a ) { }\nvoid f( u64 a ) { }\n"
+                       "i32 main() { f( 18446744073709551616 ); f( 18446744073709551615 * 2 ); return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 ); // the lexer's error is not counted here
+        REQUIRE( p.rendered().find( "integer literal is too large" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "does not fit in `i64`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "no `f` matches" ) == std::string::npos );
+        REQUIRE( p.rendered().find( "ambiguous" ) == std::string::npos );
     }
 }
 
@@ -2191,14 +2327,15 @@ TEST_CASE( "the_prelude_prints_text_numbers_and_truth", "[sema][overload][prelud
         REQUIRE( takes( p, 4 ) == "f64" );
     }
 
-    SECTION( "an integer literal is ambiguous between the two integers" )
+    SECTION( "an integer literal goes to `i64`, and to `u64` only past it" )
     {
-        const Typed p( "i32 main() { print( 5 ); return 0; }" );
+        const Typed p( "i32 main() { print( 5 ); print( -5 ); print( 9223372036854775808 ); return 0; }" );
 
         INFO( p.rendered() );
-        REQUIRE( p.errors() == 1 );
-        REQUIRE( p.rendered().find( "this call to `print` is ambiguous" ) != std::string::npos );
-        REQUIRE( p.rendered().find( "`( i64 )` and `( u64 )`" ) != std::string::npos );
+        REQUIRE( p.clean() );
+        REQUIRE( takes( p, 0 ) == "i64" );
+        REQUIRE( takes( p, 1 ) == "i64" );
+        REQUIRE( takes( p, 2 ) == "u64" );
     }
 
     SECTION( "and a float literal is not, having one float to go to" )
@@ -2418,14 +2555,14 @@ TEST_CASE( "overloads_name_the_instance_a_candidate_list_is_about", "[sema][over
         const Typed p( "class Box<T> where T : copyable\n"
                        "{\n"
                        "    T v;\n"
-                       "    Box( T a, u8 b ) { this.v = a; }\n"
-                       "    Box( T a, u16 b ) { this.v = a; }\n"
+                       "    Box( T a, u8 b, u16 c ) { this.v = a; }\n"
+                       "    Box( T a, u16 b, u8 c ) { this.v = a; }\n"
                        "};\n"
-                       "i32 main() { Box<i32> b = Box( 1, 2 ); return 0; }" );
+                       "i32 main() { Box<i32> b = Box( 1, 2, 3 ); return 0; }" );
 
         INFO( p.rendered() );
         REQUIRE( p.rendered().find( "this call to `Box` is ambiguous" ) != std::string::npos );
-        REQUIRE( p.rendered().find( "`( i32, u8 )` and `( i32, u16 )`" ) != std::string::npos );
+        REQUIRE( p.rendered().find( "`( i32, u8, u16 )` and `( i32, u16, u8 )`" ) != std::string::npos );
     }
 
     SECTION( "with no instance to name, the declaration is what the author wrote" )

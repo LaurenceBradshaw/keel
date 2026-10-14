@@ -230,6 +230,18 @@ Argument_shape Expressions::argument_shape( Node_id argument )
     if( const std::optional<Argument_kind> family = literal_family( value ) )
     {
         shape.kind = *family;
+
+        if( shape.kind == Argument_kind::Integer )
+        {
+            const Folded literal = constant_folder_.fold_integer( value );
+            if( literal.constant && !literal.overflowed )
+            {
+                shape.valued    = true;
+                shape.magnitude = literal.value.magnitude;
+                shape.negative  = literal.value.negative;
+            }
+        }
+
         return shape;
     }
 
