@@ -1,8 +1,8 @@
-// D40: `hashable` as a bound. A number, `bool`, an enum without payloads and a pointer hash to their
-// value, tag or address widened to `u64`, computed in the instance; a float hashes its bits, with
-// `-0.0` taken as `0.0`. A type with a `hash` of its own has it called, and an enum whose own
-// `equatable` replaces the compiler's writes its own `hash` too. `hashable` brings `==`. Exits with
-// the failing check.
+// D40: `hashable` as a bound. A number, `bool`, an enum without payloads and a pointer feed the
+// hasher their value, tag or address widened to `u64`, computed in the instance; a float feeds its
+// bits, with `-0.0` taken as `0.0`. A type with a `hash` of its own has it called, and an enum whose
+// own `equatable` replaces the compiler's writes its own `hash` too. `hashable` brings `==`. Exits
+// with the failing check.
 struct Point implements hashable, equatable
 {
     i32 x;
@@ -13,9 +13,10 @@ struct Point implements hashable, equatable
         return x == other.x && y == other.y;
     }
 
-    u64 hash() const
+    void hash( ref hasher h ) const
     {
-        return wrap<u64>( x ) * 31 + wrap<u64>( y );
+        h.write( wrap<u64>( x ) );
+        h.write( wrap<u64>( y ) );
     }
 };
 
@@ -44,25 +45,50 @@ implements equatable for Colour
 
 implements hashable for Colour
 {
-    u64 hash() const
+    void hash( ref hasher h ) const
     {
         if( cast<u8>( this ) == 2 )
         {
-            return 7;
+            h.write( 7 );
+            return;
         }
 
-        return 3;
+        h.write( 3 );
     }
 };
 
 u64 digest<T>( const ref T v ) where T : hashable
 {
-    return v.hash();
+    hasher h = hasher( 1, 2 );
+
+    v.hash( ref h );
+
+    return h.finish();
+}
+
+// What a value that feeds one word hashes to, and one that feeds two.
+u64 word( u64 value )
+{
+    hasher h = hasher( 1, 2 );
+
+    h.write( value );
+
+    return h.finish();
+}
+
+u64 words( u64 first, u64 second )
+{
+    hasher h = hasher( 1, 2 );
+
+    h.write( first );
+    h.write( second );
+
+    return h.finish();
 }
 
 bool agree<T>( const ref T a, const ref T b ) where T : hashable
 {
-    return a == b && a.hash() == b.hash();
+    return a == b && digest( a ) == digest( b );
 }
 
 i32 main()
@@ -70,7 +96,7 @@ i32 main()
     i32 minus = 0 - 1;
     u8  byte  = 200;
 
-    if( digest( minus ) != 18446744073709551615 || digest( byte ) != 200 )
+    if( digest( minus ) != word( 18446744073709551615 ) || digest( byte ) != word( 200 ) )
     {
         return 1;
     }
@@ -78,7 +104,7 @@ i32 main()
     bool yes  = true;
     Suit clubs = Suit::Clubs;
 
-    if( digest( yes ) != 1 || digest( clubs ) != 2 )
+    if( digest( yes ) != word( 1 ) || digest( clubs ) != word( 2 ) )
     {
         return 2;
     }
@@ -90,7 +116,7 @@ i32 main()
     i32* o    = &twin;
     u8*  r    = &byte;
 
-    if( digest( p ) != digest( q ) || digest( p ) == 0 || digest( p ) == digest( o ) || digest( p ) == digest( r ) )
+    if( digest( p ) != digest( q ) || digest( p ) == word( 0 ) || digest( p ) == digest( o ) || digest( p ) == digest( r ) )
     {
         return 3;
     }
@@ -100,19 +126,19 @@ i32 main()
     f64 negative = zero * ( 0.0 - 1.0 );
     f32 single   = 1.0;
 
-    if( digest( one ) != 4607182418800017408 || digest( single ) != 1065353216 )
+    if( digest( one ) != word( 4607182418800017408 ) || digest( single ) != word( 1065353216 ) )
     {
         return 4;
     }
 
-    if( digest( zero ) != 0 || digest( negative ) != 0 || !agree( zero, negative ) )
+    if( digest( zero ) != word( 0 ) || digest( negative ) != word( 0 ) || !agree( zero, negative ) )
     {
         return 5;
     }
 
     Point a = Point { 1, 2 };
 
-    if( digest( a ) != 33 || !agree( a, Point { 1, 2 } ) )
+    if( digest( a ) != words( 1, 2 ) || !agree( a, Point { 1, 2 } ) )
     {
         return 6;
     }
@@ -121,7 +147,7 @@ i32 main()
     Colour crimson = Colour::Crimson;
     Colour blue    = Colour::Blue;
 
-    if( digest( blue ) != 7 || !agree( red, crimson ) || agree( red, blue ) )
+    if( digest( blue ) != word( 7 ) || digest( red ) != word( 3 ) || !agree( red, crimson ) || agree( red, blue ) )
     {
         return 7;
     }

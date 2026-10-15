@@ -171,6 +171,12 @@ Types Checker::run()
                 types_.table().declare_box( decl );
             }
 
+            if( package == resolution_.prelude_package() && is_aggregate( kind ) &&
+                interner_.text( ast_.name( decl ) ) == "hasher" )
+            {
+                types_.table().declare_hasher_write( aggregates_.find_method( decl, interner_.find( "write" ) ) );
+            }
+
             if( package == resolution_.prelude_package() && kind == Node_kind::Enum_decl &&
                 interner_.text( ast_.name( decl ) ) == "ordering" )
             {

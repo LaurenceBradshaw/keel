@@ -1,0 +1,48 @@
+// `kl::string` is `hashable`: it feeds its text as `write_bytes` does, so a string hashes as a
+// literal of the same text does, and two strings that are `==` hash the same however they were
+// built. Each check returns its own code.
+import kl::string;
+
+u64 digest<T>( const ref T v ) where T : hashable
+{
+    hasher h = hasher( 3, 4 );
+
+    v.hash( ref h );
+
+    return h.finish();
+}
+
+u64 literal( str text )
+{
+    hasher h = hasher( 3, 4 );
+
+    h.write_bytes( text.as_text() );
+
+    return h.finish();
+}
+
+i32 main()
+{
+    kl::string hello = kl::string( "hello" );
+
+    if( digest( hello ) != literal( "hello" ) )
+    {
+        return 1;
+    }
+
+    kl::string built = kl::string( "hel" );
+
+    built.append( kl::string( "lo" ) );
+
+    if( !( built == hello ) || digest( built ) != digest( hello ) )
+    {
+        return 2;
+    }
+
+    if( digest( kl::string( "" ) ) != literal( "" ) || digest( hello ) == digest( kl::string( "help" ) ) )
+    {
+        return 3;
+    }
+
+    return 0;
+}

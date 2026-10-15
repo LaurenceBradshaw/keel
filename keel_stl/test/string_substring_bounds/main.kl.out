@@ -1,2 +1,2 @@
 cutting
-../src/string.kl:253: assertion failed: count <= size() - start
+../src/string.kl:260: assertion failed: count <= size() - start

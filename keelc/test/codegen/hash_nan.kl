@@ -1,4 +1,4 @@
-// A NaN has no hash, as it has no order: `hash()` on one prints the file, the line and the call as
+// A NaN has no hash, as it has no order: `hash` on one prints the file, the line and the call as
 // written, and aborts.
 f64 quotient( f64 a, f64 b )
 {
@@ -7,7 +7,9 @@ f64 quotient( f64 a, f64 b )
 
 u64 digest<T>( const ref T v ) where T : hashable
 {
-    return v.hash();
+    hasher h = hasher( 1, 2 );
+    v.hash( ref h );
+    return h.finish();
 }
 
 i32 main()

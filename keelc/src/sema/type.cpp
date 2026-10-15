@@ -1289,6 +1289,16 @@ Type_id Type_table::ordering() const
     return found == composites_.end() ? Type_id {} : found->second[0].type;
 }
 
+void Type_table::declare_hasher_write( Node_id method )
+{
+    hasher_write_ = method;
+}
+
+Node_id Type_table::hasher_write() const
+{
+    return hasher_write_;
+}
+
 void Type_table::declare_prelude_interface( Prelude_interface which, Node_id declaration )
 {
     prelude_interfaces_[static_cast<u8>( which )] = declaration;

@@ -15,9 +15,11 @@ struct kl__Point
 _Noreturn void kl_rt_panic( const char*, uint32_t, const char* );
 
 bool kl__operator_eq__S5Point_5Point( struct kl__Point*, struct kl__Point* );
-uint64_t kl__hash__S5Point( struct kl__Point* );
+void kl__hash__S5Point_RQ7prelude6hasher( struct kl__Point*, struct kl_7prelude_hasher* );
 bool kl__operator_eq__S6ColourC9equatable_6Colour( int32_t*, int32_t* );
-uint64_t kl__hash__S6ColourC8hashable( int32_t* );
+void kl__hash__S6ColourC8hashable_RQ7prelude6hasher( int32_t*, struct kl_7prelude_hasher* );
+uint64_t kl__word__3u64( uint64_t );
+uint64_t kl__words__3u64_3u64( uint64_t, uint64_t );
 int32_t kl__main__( void );
 uint64_t kl__digest__I3i32E__3i32( int32_t* );
 uint64_t kl__digest__I2u8E__2u8( uint8_t* );
@@ -54,20 +56,21 @@ bool kl__operator_eq__S5Point_5Point( struct kl__Point* kl_this_1, struct kl__Po
     return kl_t0;
 }
 
-uint64_t kl__hash__S5Point( struct kl__Point* kl_this_1 )
+void kl__hash__S5Point_RQ7prelude6hasher( struct kl__Point* kl_this_1, struct kl_7prelude_hasher* kl_h_2 )
 {
-    uint64_t kl_t0;
-    uint64_t kl_t2;
-    uint64_t kl_t3;
+    struct kl_7prelude_hasher* kl_t3;
     uint64_t kl_t4;
-    uint64_t kl_t5;
+    struct kl_7prelude_hasher* kl_t6;
+    uint64_t kl_t7;
 #line 18 "codegen/hash.kl"
-    kl_t2 = ( uint64_t ) ( *kl_this_1 ).kl_x_4;
-    kl_t3 = kl_t2 * 31;
-    kl_t4 = ( uint64_t ) ( *kl_this_1 ).kl_y_6;
-    kl_t5 = kl_t3 + kl_t4;
-    kl_t0 = kl_t5;
-    return kl_t0;
+    kl_t3 = &( *kl_h_2 );
+    kl_t4 = ( uint64_t ) ( *kl_this_1 ).kl_x_4;
+    kl_7prelude_write__SQ7prelude6hasher_3u64( kl_t3, kl_t4 );
+#line 19 "codegen/hash.kl"
+    kl_t6 = &( *kl_h_2 );
+    kl_t7 = ( uint64_t ) ( *kl_this_1 ).kl_y_6;
+    kl_7prelude_write__SQ7prelude6hasher_3u64( kl_t6, kl_t7 );
+    return;
 }
 
 bool kl__operator_eq__S6ColourC9equatable_6Colour( int32_t* kl_this_1, int32_t* kl_other_2 )
@@ -81,7 +84,7 @@ bool kl__operator_eq__S6ColourC9equatable_6Colour( int32_t* kl_this_1, int32_t* 
     uint8_t kl_t8;
     uint8_t kl_t9;
     bool kl_t10;
-#line 41 "codegen/hash.kl"
+#line 42 "codegen/hash.kl"
     kl_t4 = ( uint8_t ) ( *kl_this_1 );
     kl_t5 = ( uint8_t ) ( *kl_other_2 );
     kl_t6 = kl_t4 == kl_t5;
@@ -99,22 +102,71 @@ bool kl__operator_eq__S6ColourC9equatable_6Colour( int32_t* kl_this_1, int32_t* 
     return kl_t0;
 }
 
-uint64_t kl__hash__S6ColourC8hashable( int32_t* kl_this_1 )
+void kl__hash__S6ColourC8hashable_RQ7prelude6hasher( int32_t* kl_this_1, struct kl_7prelude_hasher* kl_h_2 )
+{
+    uint8_t kl_t3;
+    bool kl_t4;
+    struct kl_7prelude_hasher* kl_t5;
+    struct kl_7prelude_hasher* kl_t7;
+#line 50 "codegen/hash.kl"
+    kl_t3 = ( uint8_t ) ( *kl_this_1 );
+    kl_t4 = kl_t3 == 2;
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+#line 52 "codegen/hash.kl"
+    kl_t5 = &( *kl_h_2 );
+    kl_7prelude_write__SQ7prelude6hasher_3u64( kl_t5, 7 );
+    return;
+    bb2:
+#line 56 "codegen/hash.kl"
+    kl_t7 = &( *kl_h_2 );
+    kl_7prelude_write__SQ7prelude6hasher_3u64( kl_t7, 3 );
+    return;
+}
+
+uint64_t kl__word__3u64( uint64_t kl_value_1 )
 {
     uint64_t kl_t0;
-    uint8_t kl_t2;
-    bool kl_t3;
-#line 49 "codegen/hash.kl"
-    kl_t2 = ( uint8_t ) ( *kl_this_1 );
-    kl_t3 = kl_t2 == 2;
-    if ( kl_t3 ) goto bb1; else goto bb2;
-    bb1:
-#line 51 "codegen/hash.kl"
-    kl_t0 = 7;
+    struct kl_7prelude_hasher kl_h_2;
+    struct kl_7prelude_hasher* kl_t3;
+    struct kl_7prelude_hasher* kl_t5;
+    struct kl_7prelude_hasher* kl_t7;
+    uint64_t kl_t8;
+#line 72 "codegen/hash.kl"
+    kl_t3 = &kl_h_2;
+    kl_7prelude_hasher__RQ7prelude6hasher_3u64_3u64__ctor( kl_t3, 1, 2 );
+#line 74 "codegen/hash.kl"
+    kl_t5 = &kl_h_2;
+    kl_7prelude_write__SQ7prelude6hasher_3u64( kl_t5, kl_value_1 );
+#line 76 "codegen/hash.kl"
+    kl_t7 = &kl_h_2;
+    kl_t8 = kl_7prelude_finish__SQ7prelude6hasher( kl_t7 );
+    kl_t0 = kl_t8;
     return kl_t0;
-    bb2:
-#line 54 "codegen/hash.kl"
-    kl_t0 = 3;
+}
+
+uint64_t kl__words__3u64_3u64( uint64_t kl_first_1, uint64_t kl_second_2 )
+{
+    uint64_t kl_t0;
+    struct kl_7prelude_hasher kl_h_3;
+    struct kl_7prelude_hasher* kl_t4;
+    struct kl_7prelude_hasher* kl_t6;
+    struct kl_7prelude_hasher* kl_t8;
+    struct kl_7prelude_hasher* kl_t10;
+    uint64_t kl_t11;
+#line 81 "codegen/hash.kl"
+    kl_t4 = &kl_h_3;
+    kl_7prelude_hasher__RQ7prelude6hasher_3u64_3u64__ctor( kl_t4, 1, 2 );
+#line 83 "codegen/hash.kl"
+    kl_t6 = &kl_h_3;
+    kl_7prelude_write__SQ7prelude6hasher_3u64( kl_t6, kl_first_1 );
+#line 84 "codegen/hash.kl"
+    kl_t8 = &kl_h_3;
+    kl_7prelude_write__SQ7prelude6hasher_3u64( kl_t8, kl_second_2 );
+#line 86 "codegen/hash.kl"
+    kl_t10 = &kl_h_3;
+    kl_t11 = kl_7prelude_finish__SQ7prelude6hasher( kl_t10 );
+    kl_t0 = kl_t11;
     return kl_t0;
 }
 
@@ -127,356 +179,393 @@ int32_t kl__main__( void )
     bool kl_t4;
     int32_t* kl_t5;
     uint64_t kl_t6;
-    bool kl_t7;
-    uint8_t* kl_t8;
-    uint64_t kl_t9;
-    bool kl_t10;
-    bool kl_yes_11;
-    int32_t kl_clubs_12;
-    bool kl_t13;
-    bool* kl_t14;
-    uint64_t kl_t15;
-    bool kl_t16;
-    int32_t* kl_t17;
+    uint64_t kl_t7;
+    bool kl_t8;
+    uint8_t* kl_t9;
+    uint64_t kl_t10;
+    uint64_t kl_t11;
+    bool kl_t12;
+    bool kl_yes_13;
+    int32_t kl_clubs_14;
+    bool kl_t15;
+    bool* kl_t16;
+    uint64_t kl_t17;
     uint64_t kl_t18;
     bool kl_t19;
-    int32_t kl_twin_20;
-    int32_t kl_t21;
-    int32_t* kl_p_22;
-    int32_t* kl_t23;
-    int32_t* kl_q_24;
-    int32_t* kl_t25;
-    int32_t* kl_o_26;
+    int32_t* kl_t20;
+    uint64_t kl_t21;
+    uint64_t kl_t22;
+    bool kl_t23;
+    int32_t kl_twin_24;
+    int32_t kl_t25;
+    int32_t* kl_p_26;
     int32_t* kl_t27;
-    uint8_t* kl_r_28;
-    uint8_t* kl_t29;
-    bool kl_t30;
-    bool kl_t31;
-    bool kl_t32;
-    int32_t** kl_t33;
-    uint64_t kl_t34;
-    int32_t** kl_t35;
-    uint64_t kl_t36;
-    bool kl_t37;
-    int32_t** kl_t38;
-    uint64_t kl_t39;
-    bool kl_t40;
-    int32_t** kl_t41;
-    uint64_t kl_t42;
-    int32_t** kl_t43;
+    int32_t* kl_q_28;
+    int32_t* kl_t29;
+    int32_t* kl_o_30;
+    int32_t* kl_t31;
+    uint8_t* kl_r_32;
+    uint8_t* kl_t33;
+    bool kl_t34;
+    bool kl_t35;
+    bool kl_t36;
+    int32_t** kl_t37;
+    uint64_t kl_t38;
+    int32_t** kl_t39;
+    uint64_t kl_t40;
+    bool kl_t41;
+    int32_t** kl_t42;
+    uint64_t kl_t43;
     uint64_t kl_t44;
     bool kl_t45;
     int32_t** kl_t46;
     uint64_t kl_t47;
-    uint8_t** kl_t48;
+    int32_t** kl_t48;
     uint64_t kl_t49;
     bool kl_t50;
-    double kl_one_51;
-    double kl_zero_52;
-    double kl_negative_53;
-    double kl_t54;
-    double kl_t55;
-    float kl_single_56;
-    bool kl_t57;
-    double* kl_t58;
-    uint64_t kl_t59;
-    bool kl_t60;
-    float* kl_t61;
-    uint64_t kl_t62;
-    bool kl_t63;
-    bool kl_t64;
-    bool kl_t65;
-    double* kl_t66;
-    uint64_t kl_t67;
-    bool kl_t68;
-    double* kl_t69;
-    uint64_t kl_t70;
+    int32_t** kl_t51;
+    uint64_t kl_t52;
+    uint8_t** kl_t53;
+    uint64_t kl_t54;
+    bool kl_t55;
+    double kl_one_56;
+    double kl_zero_57;
+    double kl_negative_58;
+    double kl_t59;
+    double kl_t60;
+    float kl_single_61;
+    bool kl_t62;
+    double* kl_t63;
+    uint64_t kl_t64;
+    uint64_t kl_t65;
+    bool kl_t66;
+    float* kl_t67;
+    uint64_t kl_t68;
+    uint64_t kl_t69;
+    bool kl_t70;
     bool kl_t71;
-    double* kl_t72;
+    bool kl_t72;
     double* kl_t73;
-    bool kl_t74;
-    bool kl_t75;
-    struct kl__Point kl_a_76;
-    struct kl__Point kl_t77;
-    bool kl_t78;
-    struct kl__Point* kl_t79;
-    uint64_t kl_t80;
-    bool kl_t81;
-    struct kl__Point* kl_t82;
-    struct kl__Point kl_t83;
-    struct kl__Point* kl_t84;
-    bool kl_t85;
-    bool kl_t86;
-    int32_t kl_red_87;
-    int32_t kl_crimson_88;
-    int32_t kl_blue_89;
-    bool kl_t90;
+    uint64_t kl_t74;
+    uint64_t kl_t75;
+    bool kl_t76;
+    double* kl_t77;
+    uint64_t kl_t78;
+    uint64_t kl_t79;
+    bool kl_t80;
+    double* kl_t81;
+    double* kl_t82;
+    bool kl_t83;
+    bool kl_t84;
+    struct kl__Point kl_a_85;
+    struct kl__Point kl_t86;
+    bool kl_t87;
+    struct kl__Point* kl_t88;
+    uint64_t kl_t89;
+    uint64_t kl_t90;
     bool kl_t91;
-    int32_t* kl_t92;
-    uint64_t kl_t93;
-    bool kl_t94;
-    int32_t* kl_t95;
-    int32_t* kl_t96;
-    bool kl_t97;
-    bool kl_t98;
-    int32_t* kl_t99;
-    int32_t* kl_t100;
+    struct kl__Point* kl_t92;
+    struct kl__Point kl_t93;
+    struct kl__Point* kl_t94;
+    bool kl_t95;
+    bool kl_t96;
+    int32_t kl_red_97;
+    int32_t kl_crimson_98;
+    int32_t kl_blue_99;
+    bool kl_t100;
     bool kl_t101;
     bool kl_t102;
     int32_t* kl_t103;
-    int32_t* kl_t104;
-    bool kl_t105;
+    uint64_t kl_t104;
+    uint64_t kl_t105;
     bool kl_t106;
-    uint8_t* kl_t107;
-    uint8_t kl_t108;
-    uint8_t* kl_t109;
+    int32_t* kl_t107;
+    uint64_t kl_t108;
+    uint64_t kl_t109;
     bool kl_t110;
-#line 70 "codegen/hash.kl"
+    int32_t* kl_t111;
+    int32_t* kl_t112;
+    bool kl_t113;
+    bool kl_t114;
+    int32_t* kl_t115;
+    int32_t* kl_t116;
+    bool kl_t117;
+    bool kl_t118;
+    int32_t* kl_t119;
+    int32_t* kl_t120;
+    bool kl_t121;
+    bool kl_t122;
+    uint8_t* kl_t123;
+    uint8_t kl_t124;
+    uint8_t* kl_t125;
+    bool kl_t126;
+#line 96 "codegen/hash.kl"
     kl_t2 = 0 - 1;
     kl_minus_1 = kl_t2;
-#line 71 "codegen/hash.kl"
+#line 97 "codegen/hash.kl"
     kl_byte_3 = 200;
-#line 73 "codegen/hash.kl"
+#line 99 "codegen/hash.kl"
     kl_t5 = &kl_minus_1;
     kl_t6 = kl__digest__I3i32E__3i32( kl_t5 );
-    kl_t7 = kl_t6 != 18446744073709551615ull;
-    kl_t4 = kl_t7;
+    kl_t7 = kl__word__3u64( 18446744073709551615ull );
+    kl_t8 = kl_t6 != kl_t7;
+    kl_t4 = kl_t8;
     if ( kl_t4 ) goto bb2; else goto bb1;
     bb1:
-    kl_t8 = &kl_byte_3;
-    kl_t9 = kl__digest__I2u8E__2u8( kl_t8 );
-    kl_t10 = kl_t9 != 200;
-    kl_t4 = kl_t10;
+    kl_t9 = &kl_byte_3;
+    kl_t10 = kl__digest__I2u8E__2u8( kl_t9 );
+    kl_t11 = kl__word__3u64( 200 );
+    kl_t12 = kl_t10 != kl_t11;
+    kl_t4 = kl_t12;
     goto bb2;
     bb2:
     if ( kl_t4 ) goto bb3; else goto bb4;
     bb3:
-#line 75 "codegen/hash.kl"
+#line 101 "codegen/hash.kl"
     kl_t0 = 1;
     return kl_t0;
     bb4:
-#line 78 "codegen/hash.kl"
-    kl_yes_11 = true;
-#line 79 "codegen/hash.kl"
-    kl_clubs_12 = 2;
-#line 81 "codegen/hash.kl"
-    kl_t14 = &kl_yes_11;
-    kl_t15 = kl__digest__I4boolE__4bool( kl_t14 );
-    kl_t16 = kl_t15 != 1;
-    kl_t13 = kl_t16;
-    if ( kl_t13 ) goto bb6; else goto bb5;
+#line 104 "codegen/hash.kl"
+    kl_yes_13 = true;
+#line 105 "codegen/hash.kl"
+    kl_clubs_14 = 2;
+#line 107 "codegen/hash.kl"
+    kl_t16 = &kl_yes_13;
+    kl_t17 = kl__digest__I4boolE__4bool( kl_t16 );
+    kl_t18 = kl__word__3u64( 1 );
+    kl_t19 = kl_t17 != kl_t18;
+    kl_t15 = kl_t19;
+    if ( kl_t15 ) goto bb6; else goto bb5;
     bb5:
-    kl_t17 = &kl_clubs_12;
-    kl_t18 = kl__digest__I4SuitE__4Suit( kl_t17 );
-    kl_t19 = kl_t18 != 2;
-    kl_t13 = kl_t19;
+    kl_t20 = &kl_clubs_14;
+    kl_t21 = kl__digest__I4SuitE__4Suit( kl_t20 );
+    kl_t22 = kl__word__3u64( 2 );
+    kl_t23 = kl_t21 != kl_t22;
+    kl_t15 = kl_t23;
     goto bb6;
     bb6:
-    if ( kl_t13 ) goto bb7; else goto bb8;
+    if ( kl_t15 ) goto bb7; else goto bb8;
     bb7:
-#line 83 "codegen/hash.kl"
+#line 109 "codegen/hash.kl"
     kl_t0 = 2;
     return kl_t0;
     bb8:
-#line 87 "codegen/hash.kl"
-    kl_t21 = 0 - 1;
-    kl_twin_20 = kl_t21;
-#line 88 "codegen/hash.kl"
-    kl_t23 = &kl_minus_1;
-    kl_p_22 = kl_t23;
-#line 89 "codegen/hash.kl"
-    kl_t25 = &kl_minus_1;
-    kl_q_24 = kl_t25;
-#line 90 "codegen/hash.kl"
-    kl_t27 = &kl_twin_20;
-    kl_o_26 = kl_t27;
-#line 91 "codegen/hash.kl"
-    kl_t29 = &kl_byte_3;
-    kl_r_28 = kl_t29;
-#line 93 "codegen/hash.kl"
-    kl_t33 = &kl_p_22;
-    kl_t34 = kl__digest__IP3i32E__P3i32( kl_t33 );
-    kl_t35 = &kl_q_24;
-    kl_t36 = kl__digest__IP3i32E__P3i32( kl_t35 );
-    kl_t37 = kl_t34 != kl_t36;
-    kl_t32 = kl_t37;
-    if ( kl_t32 ) goto bb10; else goto bb9;
+#line 113 "codegen/hash.kl"
+    kl_t25 = 0 - 1;
+    kl_twin_24 = kl_t25;
+#line 114 "codegen/hash.kl"
+    kl_t27 = &kl_minus_1;
+    kl_p_26 = kl_t27;
+#line 115 "codegen/hash.kl"
+    kl_t29 = &kl_minus_1;
+    kl_q_28 = kl_t29;
+#line 116 "codegen/hash.kl"
+    kl_t31 = &kl_twin_24;
+    kl_o_30 = kl_t31;
+#line 117 "codegen/hash.kl"
+    kl_t33 = &kl_byte_3;
+    kl_r_32 = kl_t33;
+#line 119 "codegen/hash.kl"
+    kl_t37 = &kl_p_26;
+    kl_t38 = kl__digest__IP3i32E__P3i32( kl_t37 );
+    kl_t39 = &kl_q_28;
+    kl_t40 = kl__digest__IP3i32E__P3i32( kl_t39 );
+    kl_t41 = kl_t38 != kl_t40;
+    kl_t36 = kl_t41;
+    if ( kl_t36 ) goto bb10; else goto bb9;
     bb9:
-    kl_t38 = &kl_p_22;
-    kl_t39 = kl__digest__IP3i32E__P3i32( kl_t38 );
-    kl_t40 = kl_t39 == 0;
-    kl_t32 = kl_t40;
+    kl_t42 = &kl_p_26;
+    kl_t43 = kl__digest__IP3i32E__P3i32( kl_t42 );
+    kl_t44 = kl__word__3u64( 0 );
+    kl_t45 = kl_t43 == kl_t44;
+    kl_t36 = kl_t45;
     goto bb10;
     bb10:
-    kl_t31 = kl_t32;
-    if ( kl_t31 ) goto bb12; else goto bb11;
+    kl_t35 = kl_t36;
+    if ( kl_t35 ) goto bb12; else goto bb11;
     bb11:
-    kl_t41 = &kl_p_22;
-    kl_t42 = kl__digest__IP3i32E__P3i32( kl_t41 );
-    kl_t43 = &kl_o_26;
-    kl_t44 = kl__digest__IP3i32E__P3i32( kl_t43 );
-    kl_t45 = kl_t42 == kl_t44;
-    kl_t31 = kl_t45;
+    kl_t46 = &kl_p_26;
+    kl_t47 = kl__digest__IP3i32E__P3i32( kl_t46 );
+    kl_t48 = &kl_o_30;
+    kl_t49 = kl__digest__IP3i32E__P3i32( kl_t48 );
+    kl_t50 = kl_t47 == kl_t49;
+    kl_t35 = kl_t50;
     goto bb12;
     bb12:
-    kl_t30 = kl_t31;
-    if ( kl_t30 ) goto bb14; else goto bb13;
+    kl_t34 = kl_t35;
+    if ( kl_t34 ) goto bb14; else goto bb13;
     bb13:
-    kl_t46 = &kl_p_22;
-    kl_t47 = kl__digest__IP3i32E__P3i32( kl_t46 );
-    kl_t48 = &kl_r_28;
-    kl_t49 = kl__digest__IP2u8E__P2u8( kl_t48 );
-    kl_t50 = kl_t47 == kl_t49;
-    kl_t30 = kl_t50;
+    kl_t51 = &kl_p_26;
+    kl_t52 = kl__digest__IP3i32E__P3i32( kl_t51 );
+    kl_t53 = &kl_r_32;
+    kl_t54 = kl__digest__IP2u8E__P2u8( kl_t53 );
+    kl_t55 = kl_t52 == kl_t54;
+    kl_t34 = kl_t55;
     goto bb14;
     bb14:
-    if ( kl_t30 ) goto bb15; else goto bb16;
+    if ( kl_t34 ) goto bb15; else goto bb16;
     bb15:
-#line 95 "codegen/hash.kl"
+#line 121 "codegen/hash.kl"
     kl_t0 = 3;
     return kl_t0;
     bb16:
-#line 98 "codegen/hash.kl"
-    kl_one_51 = 1.0;
-#line 99 "codegen/hash.kl"
-    kl_zero_52 = 0.0;
-#line 100 "codegen/hash.kl"
-    kl_t54 = 0.0 - 1.0;
-    kl_t55 = kl_zero_52 * kl_t54;
-    kl_negative_53 = kl_t55;
-#line 101 "codegen/hash.kl"
-    kl_single_56 = 1.0;
-#line 103 "codegen/hash.kl"
-    kl_t58 = &kl_one_51;
-    kl_t59 = kl__digest__I3f64E__3f64( kl_t58 );
-    kl_t60 = kl_t59 != 4607182418800017408;
-    kl_t57 = kl_t60;
-    if ( kl_t57 ) goto bb18; else goto bb17;
+#line 124 "codegen/hash.kl"
+    kl_one_56 = 1.0;
+#line 125 "codegen/hash.kl"
+    kl_zero_57 = 0.0;
+#line 126 "codegen/hash.kl"
+    kl_t59 = 0.0 - 1.0;
+    kl_t60 = kl_zero_57 * kl_t59;
+    kl_negative_58 = kl_t60;
+#line 127 "codegen/hash.kl"
+    kl_single_61 = 1.0;
+#line 129 "codegen/hash.kl"
+    kl_t63 = &kl_one_56;
+    kl_t64 = kl__digest__I3f64E__3f64( kl_t63 );
+    kl_t65 = kl__word__3u64( 4607182418800017408 );
+    kl_t66 = kl_t64 != kl_t65;
+    kl_t62 = kl_t66;
+    if ( kl_t62 ) goto bb18; else goto bb17;
     bb17:
-    kl_t61 = &kl_single_56;
-    kl_t62 = kl__digest__I3f32E__3f32( kl_t61 );
-    kl_t63 = kl_t62 != 1065353216;
-    kl_t57 = kl_t63;
+    kl_t67 = &kl_single_61;
+    kl_t68 = kl__digest__I3f32E__3f32( kl_t67 );
+    kl_t69 = kl__word__3u64( 1065353216 );
+    kl_t70 = kl_t68 != kl_t69;
+    kl_t62 = kl_t70;
     goto bb18;
     bb18:
-    if ( kl_t57 ) goto bb19; else goto bb20;
+    if ( kl_t62 ) goto bb19; else goto bb20;
     bb19:
-#line 105 "codegen/hash.kl"
+#line 131 "codegen/hash.kl"
     kl_t0 = 4;
     return kl_t0;
     bb20:
-#line 108 "codegen/hash.kl"
-    kl_t66 = &kl_zero_52;
-    kl_t67 = kl__digest__I3f64E__3f64( kl_t66 );
-    kl_t68 = kl_t67 != 0;
-    kl_t65 = kl_t68;
-    if ( kl_t65 ) goto bb22; else goto bb21;
+#line 134 "codegen/hash.kl"
+    kl_t73 = &kl_zero_57;
+    kl_t74 = kl__digest__I3f64E__3f64( kl_t73 );
+    kl_t75 = kl__word__3u64( 0 );
+    kl_t76 = kl_t74 != kl_t75;
+    kl_t72 = kl_t76;
+    if ( kl_t72 ) goto bb22; else goto bb21;
     bb21:
-    kl_t69 = &kl_negative_53;
-    kl_t70 = kl__digest__I3f64E__3f64( kl_t69 );
-    kl_t71 = kl_t70 != 0;
-    kl_t65 = kl_t71;
+    kl_t77 = &kl_negative_58;
+    kl_t78 = kl__digest__I3f64E__3f64( kl_t77 );
+    kl_t79 = kl__word__3u64( 0 );
+    kl_t80 = kl_t78 != kl_t79;
+    kl_t72 = kl_t80;
     goto bb22;
     bb22:
-    kl_t64 = kl_t65;
-    if ( kl_t64 ) goto bb24; else goto bb23;
+    kl_t71 = kl_t72;
+    if ( kl_t71 ) goto bb24; else goto bb23;
     bb23:
-    kl_t72 = &kl_zero_52;
-    kl_t73 = &kl_negative_53;
-    kl_t74 = kl__agree__I3f64E__3f64_3f64( kl_t72, kl_t73 );
-    kl_t75 = !kl_t74;
-    kl_t64 = kl_t75;
+    kl_t81 = &kl_zero_57;
+    kl_t82 = &kl_negative_58;
+    kl_t83 = kl__agree__I3f64E__3f64_3f64( kl_t81, kl_t82 );
+    kl_t84 = !kl_t83;
+    kl_t71 = kl_t84;
     goto bb24;
     bb24:
-    if ( kl_t64 ) goto bb25; else goto bb26;
+    if ( kl_t71 ) goto bb25; else goto bb26;
     bb25:
-#line 110 "codegen/hash.kl"
+#line 136 "codegen/hash.kl"
     kl_t0 = 5;
     return kl_t0;
     bb26:
-#line 113 "codegen/hash.kl"
-    kl_t77.kl_x_4 = 1;
-    kl_t77.kl_y_6 = 2;
-    kl_a_76 = kl_t77;
-#line 115 "codegen/hash.kl"
-    kl_t79 = &kl_a_76;
-    kl_t80 = kl__digest__I5PointE__5Point( kl_t79 );
-    kl_t81 = kl_t80 != 33;
-    kl_t78 = kl_t81;
-    if ( kl_t78 ) goto bb28; else goto bb27;
+#line 139 "codegen/hash.kl"
+    kl_t86.kl_x_4 = 1;
+    kl_t86.kl_y_6 = 2;
+    kl_a_85 = kl_t86;
+#line 141 "codegen/hash.kl"
+    kl_t88 = &kl_a_85;
+    kl_t89 = kl__digest__I5PointE__5Point( kl_t88 );
+    kl_t90 = kl__words__3u64_3u64( 1, 2 );
+    kl_t91 = kl_t89 != kl_t90;
+    kl_t87 = kl_t91;
+    if ( kl_t87 ) goto bb28; else goto bb27;
     bb27:
-    kl_t82 = &kl_a_76;
-    kl_t83.kl_x_4 = 1;
-    kl_t83.kl_y_6 = 2;
-    kl_t84 = &kl_t83;
-    kl_t85 = kl__agree__I5PointE__5Point_5Point( kl_t82, kl_t84 );
-    kl_t86 = !kl_t85;
-    kl_t78 = kl_t86;
+    kl_t92 = &kl_a_85;
+    kl_t93.kl_x_4 = 1;
+    kl_t93.kl_y_6 = 2;
+    kl_t94 = &kl_t93;
+    kl_t95 = kl__agree__I5PointE__5Point_5Point( kl_t92, kl_t94 );
+    kl_t96 = !kl_t95;
+    kl_t87 = kl_t96;
     goto bb28;
     bb28:
-    if ( kl_t78 ) goto bb29; else goto bb30;
+    if ( kl_t87 ) goto bb29; else goto bb30;
     bb29:
-#line 117 "codegen/hash.kl"
+#line 143 "codegen/hash.kl"
     kl_t0 = 6;
     return kl_t0;
     bb30:
-#line 120 "codegen/hash.kl"
-    kl_red_87 = 0;
-#line 121 "codegen/hash.kl"
-    kl_crimson_88 = 1;
-#line 122 "codegen/hash.kl"
-    kl_blue_89 = 2;
-#line 124 "codegen/hash.kl"
-    kl_t92 = &kl_blue_89;
-    kl_t93 = kl__digest__I6ColourE__6Colour( kl_t92 );
-    kl_t94 = kl_t93 != 7;
-    kl_t91 = kl_t94;
-    if ( kl_t91 ) goto bb32; else goto bb31;
+#line 146 "codegen/hash.kl"
+    kl_red_97 = 0;
+#line 147 "codegen/hash.kl"
+    kl_crimson_98 = 1;
+#line 148 "codegen/hash.kl"
+    kl_blue_99 = 2;
+#line 150 "codegen/hash.kl"
+    kl_t103 = &kl_blue_99;
+    kl_t104 = kl__digest__I6ColourE__6Colour( kl_t103 );
+    kl_t105 = kl__word__3u64( 7 );
+    kl_t106 = kl_t104 != kl_t105;
+    kl_t102 = kl_t106;
+    if ( kl_t102 ) goto bb32; else goto bb31;
     bb31:
-    kl_t95 = &kl_red_87;
-    kl_t96 = &kl_crimson_88;
-    kl_t97 = kl__agree__I6ColourE__6Colour_6Colour( kl_t95, kl_t96 );
-    kl_t98 = !kl_t97;
-    kl_t91 = kl_t98;
+    kl_t107 = &kl_red_97;
+    kl_t108 = kl__digest__I6ColourE__6Colour( kl_t107 );
+    kl_t109 = kl__word__3u64( 3 );
+    kl_t110 = kl_t108 != kl_t109;
+    kl_t102 = kl_t110;
     goto bb32;
     bb32:
-    kl_t90 = kl_t91;
-    if ( kl_t90 ) goto bb34; else goto bb33;
+    kl_t101 = kl_t102;
+    if ( kl_t101 ) goto bb34; else goto bb33;
     bb33:
-    kl_t99 = &kl_red_87;
-    kl_t100 = &kl_blue_89;
-    kl_t101 = kl__agree__I6ColourE__6Colour_6Colour( kl_t99, kl_t100 );
-    kl_t90 = kl_t101;
+    kl_t111 = &kl_red_97;
+    kl_t112 = &kl_crimson_98;
+    kl_t113 = kl__agree__I6ColourE__6Colour_6Colour( kl_t111, kl_t112 );
+    kl_t114 = !kl_t113;
+    kl_t101 = kl_t114;
     goto bb34;
     bb34:
-    if ( kl_t90 ) goto bb35; else goto bb36;
+    kl_t100 = kl_t101;
+    if ( kl_t100 ) goto bb36; else goto bb35;
     bb35:
-#line 126 "codegen/hash.kl"
+    kl_t115 = &kl_red_97;
+    kl_t116 = &kl_blue_99;
+    kl_t117 = kl__agree__I6ColourE__6Colour_6Colour( kl_t115, kl_t116 );
+    kl_t100 = kl_t117;
+    goto bb36;
+    bb36:
+    if ( kl_t100 ) goto bb37; else goto bb38;
+    bb37:
+#line 152 "codegen/hash.kl"
     kl_t0 = 7;
     return kl_t0;
-    bb36:
-#line 129 "codegen/hash.kl"
-    kl_t103 = &kl_minus_1;
-    kl_t104 = &kl_minus_1;
-    kl_t105 = kl__agree__I3i32E__3i32_3i32( kl_t103, kl_t104 );
-    kl_t106 = !kl_t105;
-    kl_t102 = kl_t106;
-    if ( kl_t102 ) goto bb38; else goto bb37;
-    bb37:
-    kl_t107 = &kl_byte_3;
-    kl_t108 = 3;
-    kl_t109 = &kl_t108;
-    kl_t110 = kl__agree__I2u8E__2u8_2u8( kl_t107, kl_t109 );
-    kl_t102 = kl_t110;
-    goto bb38;
     bb38:
-    if ( kl_t102 ) goto bb39; else goto bb40;
+#line 155 "codegen/hash.kl"
+    kl_t119 = &kl_minus_1;
+    kl_t120 = &kl_minus_1;
+    kl_t121 = kl__agree__I3i32E__3i32_3i32( kl_t119, kl_t120 );
+    kl_t122 = !kl_t121;
+    kl_t118 = kl_t122;
+    if ( kl_t118 ) goto bb40; else goto bb39;
     bb39:
-#line 131 "codegen/hash.kl"
+    kl_t123 = &kl_byte_3;
+    kl_t124 = 3;
+    kl_t125 = &kl_t124;
+    kl_t126 = kl__agree__I2u8E__2u8_2u8( kl_t123, kl_t125 );
+    kl_t118 = kl_t126;
+    goto bb40;
+    bb40:
+    if ( kl_t118 ) goto bb41; else goto bb42;
+    bb41:
+#line 157 "codegen/hash.kl"
     kl_t0 = 8;
     return kl_t0;
-    bb40:
-#line 134 "codegen/hash.kl"
+    bb42:
+#line 160 "codegen/hash.kl"
     kl_t0 = 0;
     return kl_t0;
 }
@@ -484,99 +573,203 @@ int32_t kl__main__( void )
 uint64_t kl__digest__I3i32E__3i32( int32_t* kl_v_1 )
 {
     uint64_t kl_t0;
-    uint64_t kl_t2;
-#line 60 "codegen/hash.kl"
-    kl_t2 = ( uint64_t ) ( *kl_v_1 );
-    kl_t0 = kl_t2;
+    struct kl_7prelude_hasher kl_h_2;
+    struct kl_7prelude_hasher* kl_t3;
+    uint64_t kl_t5;
+    struct kl_7prelude_hasher* kl_t6;
+    struct kl_7prelude_hasher* kl_t8;
+    uint64_t kl_t9;
+#line 62 "codegen/hash.kl"
+    kl_t3 = &kl_h_2;
+    kl_7prelude_hasher__RQ7prelude6hasher_3u64_3u64__ctor( kl_t3, 1, 2 );
+#line 64 "codegen/hash.kl"
+    kl_t5 = ( uint64_t ) ( *kl_v_1 );
+    kl_t6 = &kl_h_2;
+    kl_7prelude_write__SQ7prelude6hasher_3u64( kl_t6, kl_t5 );
+#line 66 "codegen/hash.kl"
+    kl_t8 = &kl_h_2;
+    kl_t9 = kl_7prelude_finish__SQ7prelude6hasher( kl_t8 );
+    kl_t0 = kl_t9;
     return kl_t0;
 }
 
 uint64_t kl__digest__I2u8E__2u8( uint8_t* kl_v_1 )
 {
     uint64_t kl_t0;
-    uint64_t kl_t2;
-#line 60 "codegen/hash.kl"
-    kl_t2 = ( uint64_t ) ( *kl_v_1 );
-    kl_t0 = kl_t2;
+    struct kl_7prelude_hasher kl_h_2;
+    struct kl_7prelude_hasher* kl_t3;
+    uint64_t kl_t5;
+    struct kl_7prelude_hasher* kl_t6;
+    struct kl_7prelude_hasher* kl_t8;
+    uint64_t kl_t9;
+#line 62 "codegen/hash.kl"
+    kl_t3 = &kl_h_2;
+    kl_7prelude_hasher__RQ7prelude6hasher_3u64_3u64__ctor( kl_t3, 1, 2 );
+#line 64 "codegen/hash.kl"
+    kl_t5 = ( uint64_t ) ( *kl_v_1 );
+    kl_t6 = &kl_h_2;
+    kl_7prelude_write__SQ7prelude6hasher_3u64( kl_t6, kl_t5 );
+#line 66 "codegen/hash.kl"
+    kl_t8 = &kl_h_2;
+    kl_t9 = kl_7prelude_finish__SQ7prelude6hasher( kl_t8 );
+    kl_t0 = kl_t9;
     return kl_t0;
 }
 
 uint64_t kl__digest__I4boolE__4bool( bool* kl_v_1 )
 {
     uint64_t kl_t0;
-    uint64_t kl_t2;
-#line 60 "codegen/hash.kl"
-    kl_t2 = ( uint64_t ) ( *kl_v_1 );
-    kl_t0 = kl_t2;
+    struct kl_7prelude_hasher kl_h_2;
+    struct kl_7prelude_hasher* kl_t3;
+    uint64_t kl_t5;
+    struct kl_7prelude_hasher* kl_t6;
+    struct kl_7prelude_hasher* kl_t8;
+    uint64_t kl_t9;
+#line 62 "codegen/hash.kl"
+    kl_t3 = &kl_h_2;
+    kl_7prelude_hasher__RQ7prelude6hasher_3u64_3u64__ctor( kl_t3, 1, 2 );
+#line 64 "codegen/hash.kl"
+    kl_t5 = ( uint64_t ) ( *kl_v_1 );
+    kl_t6 = &kl_h_2;
+    kl_7prelude_write__SQ7prelude6hasher_3u64( kl_t6, kl_t5 );
+#line 66 "codegen/hash.kl"
+    kl_t8 = &kl_h_2;
+    kl_t9 = kl_7prelude_finish__SQ7prelude6hasher( kl_t8 );
+    kl_t0 = kl_t9;
     return kl_t0;
 }
 
 uint64_t kl__digest__I4SuitE__4Suit( int32_t* kl_v_1 )
 {
     uint64_t kl_t0;
-    uint64_t kl_t2;
-#line 60 "codegen/hash.kl"
-    kl_t2 = ( uint64_t ) ( *kl_v_1 );
-    kl_t0 = kl_t2;
+    struct kl_7prelude_hasher kl_h_2;
+    struct kl_7prelude_hasher* kl_t3;
+    uint64_t kl_t5;
+    struct kl_7prelude_hasher* kl_t6;
+    struct kl_7prelude_hasher* kl_t8;
+    uint64_t kl_t9;
+#line 62 "codegen/hash.kl"
+    kl_t3 = &kl_h_2;
+    kl_7prelude_hasher__RQ7prelude6hasher_3u64_3u64__ctor( kl_t3, 1, 2 );
+#line 64 "codegen/hash.kl"
+    kl_t5 = ( uint64_t ) ( *kl_v_1 );
+    kl_t6 = &kl_h_2;
+    kl_7prelude_write__SQ7prelude6hasher_3u64( kl_t6, kl_t5 );
+#line 66 "codegen/hash.kl"
+    kl_t8 = &kl_h_2;
+    kl_t9 = kl_7prelude_finish__SQ7prelude6hasher( kl_t8 );
+    kl_t0 = kl_t9;
     return kl_t0;
 }
 
 uint64_t kl__digest__IP3i32E__P3i32( int32_t** kl_v_1 )
 {
     uint64_t kl_t0;
-    uint64_t kl_t2;
-#line 60 "codegen/hash.kl"
-    kl_t2 = ( uint64_t ) ( *kl_v_1 );
-    kl_t0 = kl_t2;
+    struct kl_7prelude_hasher kl_h_2;
+    struct kl_7prelude_hasher* kl_t3;
+    uint64_t kl_t5;
+    struct kl_7prelude_hasher* kl_t6;
+    struct kl_7prelude_hasher* kl_t8;
+    uint64_t kl_t9;
+#line 62 "codegen/hash.kl"
+    kl_t3 = &kl_h_2;
+    kl_7prelude_hasher__RQ7prelude6hasher_3u64_3u64__ctor( kl_t3, 1, 2 );
+#line 64 "codegen/hash.kl"
+    kl_t5 = ( uint64_t ) ( *kl_v_1 );
+    kl_t6 = &kl_h_2;
+    kl_7prelude_write__SQ7prelude6hasher_3u64( kl_t6, kl_t5 );
+#line 66 "codegen/hash.kl"
+    kl_t8 = &kl_h_2;
+    kl_t9 = kl_7prelude_finish__SQ7prelude6hasher( kl_t8 );
+    kl_t0 = kl_t9;
     return kl_t0;
 }
 
 uint64_t kl__digest__IP2u8E__P2u8( uint8_t** kl_v_1 )
 {
     uint64_t kl_t0;
-    uint64_t kl_t2;
-#line 60 "codegen/hash.kl"
-    kl_t2 = ( uint64_t ) ( *kl_v_1 );
-    kl_t0 = kl_t2;
+    struct kl_7prelude_hasher kl_h_2;
+    struct kl_7prelude_hasher* kl_t3;
+    uint64_t kl_t5;
+    struct kl_7prelude_hasher* kl_t6;
+    struct kl_7prelude_hasher* kl_t8;
+    uint64_t kl_t9;
+#line 62 "codegen/hash.kl"
+    kl_t3 = &kl_h_2;
+    kl_7prelude_hasher__RQ7prelude6hasher_3u64_3u64__ctor( kl_t3, 1, 2 );
+#line 64 "codegen/hash.kl"
+    kl_t5 = ( uint64_t ) ( *kl_v_1 );
+    kl_t6 = &kl_h_2;
+    kl_7prelude_write__SQ7prelude6hasher_3u64( kl_t6, kl_t5 );
+#line 66 "codegen/hash.kl"
+    kl_t8 = &kl_h_2;
+    kl_t9 = kl_7prelude_finish__SQ7prelude6hasher( kl_t8 );
+    kl_t0 = kl_t9;
     return kl_t0;
 }
 
 uint64_t kl__digest__I3f64E__3f64( double* kl_v_1 )
 {
     uint64_t kl_t0;
-    bool kl_t2;
-    double kl_t3;
-    uint64_t kl_t4;
-#line 60 "codegen/hash.kl"
-    kl_t2 = ( *kl_v_1 ) == ( *kl_v_1 );
-    if ( kl_t2 ) goto bb1; else goto bb2;
+    struct kl_7prelude_hasher kl_h_2;
+    struct kl_7prelude_hasher* kl_t3;
+    bool kl_t5;
+    double kl_t6;
+    uint64_t kl_t7;
+    struct kl_7prelude_hasher* kl_t8;
+    struct kl_7prelude_hasher* kl_t10;
+    uint64_t kl_t11;
+#line 62 "codegen/hash.kl"
+    kl_t3 = &kl_h_2;
+    kl_7prelude_hasher__RQ7prelude6hasher_3u64_3u64__ctor( kl_t3, 1, 2 );
+#line 64 "codegen/hash.kl"
+    kl_t5 = ( *kl_v_1 ) == ( *kl_v_1 );
+    if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
-    kl_t3 = ( *kl_v_1 ) + 0.0;
-    kl_t4 = ( ( union { double f; uint64_t u; } ) { .f = kl_t3 } ).u;
-    kl_t0 = kl_t4;
+    kl_t6 = ( *kl_v_1 ) + 0.0;
+    kl_t7 = ( ( union { double f; uint64_t u; } ) { .f = kl_t6 } ).u;
+    kl_t8 = &kl_h_2;
+    kl_7prelude_write__SQ7prelude6hasher_3u64( kl_t8, kl_t7 );
+#line 66 "codegen/hash.kl"
+    kl_t10 = &kl_h_2;
+    kl_t11 = kl_7prelude_finish__SQ7prelude6hasher( kl_t10 );
+    kl_t0 = kl_t11;
     return kl_t0;
     bb2:
-    kl_rt_panic( "codegen/hash.kl", 60, "NaN has no hash: v.hash()" );
+    kl_rt_panic( "codegen/hash.kl", 64, "NaN has no hash: v.hash( ref h )" );
 }
 
 uint64_t kl__digest__I3f32E__3f32( float* kl_v_1 )
 {
     uint64_t kl_t0;
-    bool kl_t2;
-    float kl_t3;
-    uint32_t kl_t4;
-    uint64_t kl_t5;
-#line 60 "codegen/hash.kl"
-    kl_t2 = ( *kl_v_1 ) == ( *kl_v_1 );
-    if ( kl_t2 ) goto bb1; else goto bb2;
+    struct kl_7prelude_hasher kl_h_2;
+    struct kl_7prelude_hasher* kl_t3;
+    bool kl_t5;
+    float kl_t6;
+    uint32_t kl_t7;
+    uint64_t kl_t8;
+    struct kl_7prelude_hasher* kl_t9;
+    struct kl_7prelude_hasher* kl_t11;
+    uint64_t kl_t12;
+#line 62 "codegen/hash.kl"
+    kl_t3 = &kl_h_2;
+    kl_7prelude_hasher__RQ7prelude6hasher_3u64_3u64__ctor( kl_t3, 1, 2 );
+#line 64 "codegen/hash.kl"
+    kl_t5 = ( *kl_v_1 ) == ( *kl_v_1 );
+    if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
-    kl_t3 = ( *kl_v_1 ) + 0.0;
-    kl_t4 = ( ( union { float f; uint32_t u; } ) { .f = kl_t3 } ).u;
-    kl_t5 = ( uint64_t ) kl_t4;
-    kl_t0 = kl_t5;
+    kl_t6 = ( *kl_v_1 ) + 0.0;
+    kl_t7 = ( ( union { float f; uint32_t u; } ) { .f = kl_t6 } ).u;
+    kl_t8 = ( uint64_t ) kl_t7;
+    kl_t9 = &kl_h_2;
+    kl_7prelude_write__SQ7prelude6hasher_3u64( kl_t9, kl_t8 );
+#line 66 "codegen/hash.kl"
+    kl_t11 = &kl_h_2;
+    kl_t12 = kl_7prelude_finish__SQ7prelude6hasher( kl_t11 );
+    kl_t0 = kl_t12;
     return kl_t0;
     bb2:
-    kl_rt_panic( "codegen/hash.kl", 60, "NaN has no hash: v.hash()" );
+    kl_rt_panic( "codegen/hash.kl", 64, "NaN has no hash: v.hash( ref h )" );
 }
 
 bool kl__agree__I3f64E__3f64_3f64( double* kl_a_1, double* kl_b_2 )
@@ -584,49 +777,48 @@ bool kl__agree__I3f64E__3f64_3f64( double* kl_a_1, double* kl_b_2 )
     bool kl_t0;
     bool kl_t3;
     bool kl_t4;
-    bool kl_t5;
-    double kl_t6;
-    uint64_t kl_t7;
-    bool kl_t8;
-    double kl_t9;
-    uint64_t kl_t10;
-    bool kl_t11;
-#line 65 "codegen/hash.kl"
+    double* kl_t5;
+    uint64_t kl_t6;
+    double* kl_t7;
+    uint64_t kl_t8;
+    bool kl_t9;
+#line 91 "codegen/hash.kl"
     kl_t4 = ( *kl_a_1 ) == ( *kl_b_2 );
     kl_t3 = kl_t4;
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
-    kl_t5 = ( *kl_a_1 ) == ( *kl_a_1 );
-    if ( kl_t5 ) goto bb3; else goto bb4;
+    kl_t5 = &( *kl_a_1 );
+    kl_t6 = kl__digest__I3f64E__3f64( kl_t5 );
+    kl_t7 = &( *kl_b_2 );
+    kl_t8 = kl__digest__I3f64E__3f64( kl_t7 );
+    kl_t9 = kl_t6 == kl_t8;
+    kl_t3 = kl_t9;
+    goto bb2;
     bb2:
     kl_t0 = kl_t3;
     return kl_t0;
-    bb3:
-    kl_t6 = ( *kl_a_1 ) + 0.0;
-    kl_t7 = ( ( union { double f; uint64_t u; } ) { .f = kl_t6 } ).u;
-    kl_t8 = ( *kl_b_2 ) == ( *kl_b_2 );
-    if ( kl_t8 ) goto bb5; else goto bb6;
-    bb4:
-    kl_rt_panic( "codegen/hash.kl", 65, "NaN has no hash: a.hash()" );
-    bb5:
-    kl_t9 = ( *kl_b_2 ) + 0.0;
-    kl_t10 = ( ( union { double f; uint64_t u; } ) { .f = kl_t9 } ).u;
-    kl_t11 = kl_t7 == kl_t10;
-    kl_t3 = kl_t11;
-    goto bb2;
-    bb6:
-    kl_rt_panic( "codegen/hash.kl", 65, "NaN has no hash: b.hash()" );
 }
 
 uint64_t kl__digest__I5PointE__5Point( struct kl__Point* kl_v_1 )
 {
     uint64_t kl_t0;
-    struct kl__Point* kl_t2;
-    uint64_t kl_t3;
-#line 60 "codegen/hash.kl"
-    kl_t2 = &( *kl_v_1 );
-    kl_t3 = kl__hash__S5Point( kl_t2 );
-    kl_t0 = kl_t3;
+    struct kl_7prelude_hasher kl_h_2;
+    struct kl_7prelude_hasher* kl_t3;
+    struct kl__Point* kl_t5;
+    struct kl_7prelude_hasher* kl_t6;
+    struct kl_7prelude_hasher* kl_t8;
+    uint64_t kl_t9;
+#line 62 "codegen/hash.kl"
+    kl_t3 = &kl_h_2;
+    kl_7prelude_hasher__RQ7prelude6hasher_3u64_3u64__ctor( kl_t3, 1, 2 );
+#line 64 "codegen/hash.kl"
+    kl_t5 = &( *kl_v_1 );
+    kl_t6 = &kl_h_2;
+    kl__hash__S5Point_RQ7prelude6hasher( kl_t5, kl_t6 );
+#line 66 "codegen/hash.kl"
+    kl_t8 = &kl_h_2;
+    kl_t9 = kl_7prelude_finish__SQ7prelude6hasher( kl_t8 );
+    kl_t0 = kl_t9;
     return kl_t0;
 }
 
@@ -642,7 +834,7 @@ bool kl__agree__I5PointE__5Point_5Point( struct kl__Point* kl_a_1, struct kl__Po
     struct kl__Point* kl_t9;
     uint64_t kl_t10;
     bool kl_t11;
-#line 65 "codegen/hash.kl"
+#line 91 "codegen/hash.kl"
     kl_t4 = &( *kl_a_1 );
     kl_t5 = &( *kl_b_2 );
     kl_t6 = kl__operator_eq__S5Point_5Point( kl_t4, kl_t5 );
@@ -650,9 +842,9 @@ bool kl__agree__I5PointE__5Point_5Point( struct kl__Point* kl_a_1, struct kl__Po
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
     kl_t7 = &( *kl_a_1 );
-    kl_t8 = kl__hash__S5Point( kl_t7 );
+    kl_t8 = kl__digest__I5PointE__5Point( kl_t7 );
     kl_t9 = &( *kl_b_2 );
-    kl_t10 = kl__hash__S5Point( kl_t9 );
+    kl_t10 = kl__digest__I5PointE__5Point( kl_t9 );
     kl_t11 = kl_t8 == kl_t10;
     kl_t3 = kl_t11;
     goto bb2;
@@ -664,12 +856,23 @@ bool kl__agree__I5PointE__5Point_5Point( struct kl__Point* kl_a_1, struct kl__Po
 uint64_t kl__digest__I6ColourE__6Colour( int32_t* kl_v_1 )
 {
     uint64_t kl_t0;
-    int32_t* kl_t2;
-    uint64_t kl_t3;
-#line 60 "codegen/hash.kl"
-    kl_t2 = &( *kl_v_1 );
-    kl_t3 = kl__hash__S6ColourC8hashable( kl_t2 );
-    kl_t0 = kl_t3;
+    struct kl_7prelude_hasher kl_h_2;
+    struct kl_7prelude_hasher* kl_t3;
+    int32_t* kl_t5;
+    struct kl_7prelude_hasher* kl_t6;
+    struct kl_7prelude_hasher* kl_t8;
+    uint64_t kl_t9;
+#line 62 "codegen/hash.kl"
+    kl_t3 = &kl_h_2;
+    kl_7prelude_hasher__RQ7prelude6hasher_3u64_3u64__ctor( kl_t3, 1, 2 );
+#line 64 "codegen/hash.kl"
+    kl_t5 = &( *kl_v_1 );
+    kl_t6 = &kl_h_2;
+    kl__hash__S6ColourC8hashable_RQ7prelude6hasher( kl_t5, kl_t6 );
+#line 66 "codegen/hash.kl"
+    kl_t8 = &kl_h_2;
+    kl_t9 = kl_7prelude_finish__SQ7prelude6hasher( kl_t8 );
+    kl_t0 = kl_t9;
     return kl_t0;
 }
 
@@ -685,7 +888,7 @@ bool kl__agree__I6ColourE__6Colour_6Colour( int32_t* kl_a_1, int32_t* kl_b_2 )
     int32_t* kl_t9;
     uint64_t kl_t10;
     bool kl_t11;
-#line 65 "codegen/hash.kl"
+#line 91 "codegen/hash.kl"
     kl_t4 = &( *kl_a_1 );
     kl_t5 = &( *kl_b_2 );
     kl_t6 = kl__operator_eq__S6ColourC9equatable_6Colour( kl_t4, kl_t5 );
@@ -693,9 +896,9 @@ bool kl__agree__I6ColourE__6Colour_6Colour( int32_t* kl_a_1, int32_t* kl_b_2 )
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
     kl_t7 = &( *kl_a_1 );
-    kl_t8 = kl__hash__S6ColourC8hashable( kl_t7 );
+    kl_t8 = kl__digest__I6ColourE__6Colour( kl_t7 );
     kl_t9 = &( *kl_b_2 );
-    kl_t10 = kl__hash__S6ColourC8hashable( kl_t9 );
+    kl_t10 = kl__digest__I6ColourE__6Colour( kl_t9 );
     kl_t11 = kl_t8 == kl_t10;
     kl_t3 = kl_t11;
     goto bb2;
@@ -709,18 +912,22 @@ bool kl__agree__I3i32E__3i32_3i32( int32_t* kl_a_1, int32_t* kl_b_2 )
     bool kl_t0;
     bool kl_t3;
     bool kl_t4;
-    uint64_t kl_t5;
+    int32_t* kl_t5;
     uint64_t kl_t6;
-    bool kl_t7;
-#line 65 "codegen/hash.kl"
+    int32_t* kl_t7;
+    uint64_t kl_t8;
+    bool kl_t9;
+#line 91 "codegen/hash.kl"
     kl_t4 = ( *kl_a_1 ) == ( *kl_b_2 );
     kl_t3 = kl_t4;
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
-    kl_t5 = ( uint64_t ) ( *kl_a_1 );
-    kl_t6 = ( uint64_t ) ( *kl_b_2 );
-    kl_t7 = kl_t5 == kl_t6;
-    kl_t3 = kl_t7;
+    kl_t5 = &( *kl_a_1 );
+    kl_t6 = kl__digest__I3i32E__3i32( kl_t5 );
+    kl_t7 = &( *kl_b_2 );
+    kl_t8 = kl__digest__I3i32E__3i32( kl_t7 );
+    kl_t9 = kl_t6 == kl_t8;
+    kl_t3 = kl_t9;
     goto bb2;
     bb2:
     kl_t0 = kl_t3;
@@ -732,18 +939,22 @@ bool kl__agree__I2u8E__2u8_2u8( uint8_t* kl_a_1, uint8_t* kl_b_2 )
     bool kl_t0;
     bool kl_t3;
     bool kl_t4;
-    uint64_t kl_t5;
+    uint8_t* kl_t5;
     uint64_t kl_t6;
-    bool kl_t7;
-#line 65 "codegen/hash.kl"
+    uint8_t* kl_t7;
+    uint64_t kl_t8;
+    bool kl_t9;
+#line 91 "codegen/hash.kl"
     kl_t4 = ( *kl_a_1 ) == ( *kl_b_2 );
     kl_t3 = kl_t4;
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
-    kl_t5 = ( uint64_t ) ( *kl_a_1 );
-    kl_t6 = ( uint64_t ) ( *kl_b_2 );
-    kl_t7 = kl_t5 == kl_t6;
-    kl_t3 = kl_t7;
+    kl_t5 = &( *kl_a_1 );
+    kl_t6 = kl__digest__I2u8E__2u8( kl_t5 );
+    kl_t7 = &( *kl_b_2 );
+    kl_t8 = kl__digest__I2u8E__2u8( kl_t7 );
+    kl_t9 = kl_t6 == kl_t8;
+    kl_t3 = kl_t9;
     goto bb2;
     bb2:
     kl_t0 = kl_t3;

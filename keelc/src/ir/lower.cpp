@@ -864,8 +864,8 @@ Operand Lowering::three_way( Operand left, Operand right, Span span )
     return copy( builder_.place( result ), ordering );
 }
 
-// The compiler's hash is the value widened; `kl::map` mixes and seeds it. A float hashes its bits,
-// with `-0.0` made `0.0` so the two that are `==` agree, and a NaN, which is `==` to nothing, panics.
+// The word the compiler's hash feeds the hasher: the value widened. A float gives its bits, with
+// `-0.0` made `0.0` so the two that are `==` agree, and a NaN, which is `==` to nothing, panics.
 Operand Lowering::supplied_hash( Operand value, Span span )
 {
     const Type_table& table = types_.table();
@@ -1988,7 +1988,8 @@ Operand Lowering::lower_interface_call( Node_id id, Node_id requirement )
 
     const Node_id method = types_.conformances().method_for( types_.table(), held, requirement );
 
-    // No method answers where the compiler's conformance does, and only `hashable`'s `hash` has one.
+    // No method answers where the compiler's conformance does, and only `hashable`'s `hash` has one:
+    // it is a call of the prelude hasher's `write` with the value's word.
     if( !method.is_valid() )
     {
         assert(
@@ -1999,7 +2000,15 @@ Operand Lowering::lower_interface_call( Node_id id, Node_id requirement )
 
         const Operand value = pointer ? copy( builder_.deref( lower_place( object ) ), held ) : lower_expression( object );
 
-        return supplied_hash( value, ast_.span( id ) );
+        const Operand word   = supplied_hash( value, ast_.span( id ) );
+        const Operand hasher = lower_argument( ast_.arguments( id )[0], ast_.params( requirement )[1], {} );
+        const u32     first  = builder_.add_operands( std::vector<Operand> { hasher, word } );
+
+        const Node_id write = types_.table().hasher_write();
+        assert( write.is_valid() && "the prelude's `hasher` has a `write`" );
+
+        const Local_id result = call_result( id, call( write, first, 2, type_of( id ) ), type_of( id ), ast_.span( id ) );
+        return copy( builder_.place( result ), type_of( id ) );
     }
 
     const std::span<const Type_id> arguments = types_.table().get( held ).arguments;

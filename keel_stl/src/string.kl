@@ -18,7 +18,7 @@ enum parse_error
 /// A growable sequence of bytes that owns its storage.
 ///
 /// The bytes are not checked to be UTF-8, and every index and size counts bytes.
-class string implements textual
+class string implements textual, equatable, hashable
 {
     /// An empty string.
     string()
@@ -200,6 +200,13 @@ class string implements textual
         }
 
         return true;
+    }
+
+    /// Feeds the bytes and their count, as `write_bytes` does, so a string hashes as a literal of
+    /// the same text would.
+    public void hash( ref hasher h ) const
+    {
+        h.write_bytes( as_text() );
     }
 
     /// Whether the string begins with the bytes of `prefix`; every string begins with `""`.

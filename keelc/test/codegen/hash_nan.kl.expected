@@ -32,26 +32,26 @@ int32_t kl__main__( void )
     double* kl_t9;
     uint64_t kl_t10;
     bool kl_t11;
-#line 15 "codegen/hash_nan.kl"
+#line 17 "codegen/hash_nan.kl"
     kl_t2 = kl__quotient__3f64_3f64( 0.0, 0.0 );
     kl_nan_1 = kl_t2;
-#line 17 "codegen/hash_nan.kl"
+#line 19 "codegen/hash_nan.kl"
     kl_t4 = &kl_t3;
     kl_t5 = ( uint8_t* ) "before";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t4, kl_t5, 6 );
     kl_t7 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t3, &kl_7prelude_str__as_kl_7prelude_textual };
     kl_7prelude_println__7textual( kl_t7 );
-#line 19 "codegen/hash_nan.kl"
+#line 21 "codegen/hash_nan.kl"
     kl_t9 = &kl_nan_1;
     kl_t10 = kl__digest__I3f64E__3f64( kl_t9 );
     kl_t11 = kl_t10 == 0;
     if ( kl_t11 ) goto bb1; else goto bb2;
     bb1:
-#line 21 "codegen/hash_nan.kl"
+#line 23 "codegen/hash_nan.kl"
     kl_t0 = 1;
     return kl_t0;
     bb2:
-#line 24 "codegen/hash_nan.kl"
+#line 26 "codegen/hash_nan.kl"
     kl_t0 = 0;
     return kl_t0;
 }
@@ -59,19 +59,32 @@ int32_t kl__main__( void )
 uint64_t kl__digest__I3f64E__3f64( double* kl_v_1 )
 {
     uint64_t kl_t0;
-    bool kl_t2;
-    double kl_t3;
-    uint64_t kl_t4;
+    struct kl_7prelude_hasher kl_h_2;
+    struct kl_7prelude_hasher* kl_t3;
+    bool kl_t5;
+    double kl_t6;
+    uint64_t kl_t7;
+    struct kl_7prelude_hasher* kl_t8;
+    struct kl_7prelude_hasher* kl_t10;
+    uint64_t kl_t11;
 #line 10 "codegen/hash_nan.kl"
-    kl_t2 = ( *kl_v_1 ) == ( *kl_v_1 );
-    if ( kl_t2 ) goto bb1; else goto bb2;
+    kl_t3 = &kl_h_2;
+    kl_7prelude_hasher__RQ7prelude6hasher_3u64_3u64__ctor( kl_t3, 1, 2 );
+#line 11 "codegen/hash_nan.kl"
+    kl_t5 = ( *kl_v_1 ) == ( *kl_v_1 );
+    if ( kl_t5 ) goto bb1; else goto bb2;
     bb1:
-    kl_t3 = ( *kl_v_1 ) + 0.0;
-    kl_t4 = ( ( union { double f; uint64_t u; } ) { .f = kl_t3 } ).u;
-    kl_t0 = kl_t4;
+    kl_t6 = ( *kl_v_1 ) + 0.0;
+    kl_t7 = ( ( union { double f; uint64_t u; } ) { .f = kl_t6 } ).u;
+    kl_t8 = &kl_h_2;
+    kl_7prelude_write__SQ7prelude6hasher_3u64( kl_t8, kl_t7 );
+#line 12 "codegen/hash_nan.kl"
+    kl_t10 = &kl_h_2;
+    kl_t11 = kl_7prelude_finish__SQ7prelude6hasher( kl_t10 );
+    kl_t0 = kl_t11;
     return kl_t0;
     bb2:
-    kl_rt_panic( "codegen/hash_nan.kl", 10, "NaN has no hash: v.hash()" );
+    kl_rt_panic( "codegen/hash_nan.kl", 11, "NaN has no hash: v.hash( ref h )" );
 }
 
 int main( void )

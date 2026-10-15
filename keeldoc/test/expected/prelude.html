@@ -40,6 +40,7 @@ functions.</p>
 <li><a href="#box"><code>box</code></a> <span class="kind">class</span></li>
 <li><a href="#equatable"><code>equatable</code></a> <span class="kind">interface</span></li>
 <li><a href="#comparable"><code>comparable</code></a> <span class="kind">interface</span></li>
+<li><a href="#hasher"><code>hasher</code></a> <span class="kind">class</span></li>
 <li><a href="#hashable"><code>hashable</code></a> <span class="kind">interface</span></li>
 </ul>
 <section class="entry">
@@ -451,21 +452,60 @@ writing anything.</p>
 </div>
 </section>
 <section class="entry">
+<h2><span class="kind">class</span> <span class="type">hasher</span></h2>
+<div class="group" id="hasher">
+<pre class="signature"><a class="anchor" href="#hasher" aria-label="Link to hasher">#</a><code><span class="kw">class</span> <span class="type">hasher</span></code></pre>
+<div class="doc">
+<p>Mixes what a value feeds it into a <code>u64</code>: SipHash-1-3, keyed so that values chosen to collide
+under one key do not collide under another.</p>
+<p>It works in 64-bit words. A word fed with <code>write</code> hashes as its eight little-endian bytes would.</p>
+</div>
+</div>
+<h3>Constructors</h3>
+<div class="group" id="hasher.hasher">
+<pre class="signature"><a class="anchor" href="#hasher.hasher" aria-label="Link to hasher">#</a><code><span class="kw">public</span> <span class="type">hasher</span>( <a class="prim" href="#u64">u64</a> key_low, <a class="prim" href="#u64">u64</a> key_high )</code></pre>
+<div class="doc">
+<p>A hasher keyed by the two halves of a 128-bit key.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="hasher.write">
+<pre class="signature"><a class="anchor" href="#hasher.write" aria-label="Link to write">#</a><code><span class="kw">public</span> <a class="prim" href="#void">void</a> <span class="fn">write</span>( <a class="prim" href="#u64">u64</a> value )</code></pre>
+<div class="doc">
+<p>Feeds one word.</p>
+</div>
+</div>
+<div class="group" id="hasher.write_bytes">
+<pre class="signature"><a class="anchor" href="#hasher.write_bytes" aria-label="Link to write_bytes">#</a><code><span class="kw">public</span> <a class="prim" href="#void">void</a> <span class="fn">write_bytes</span>( <span class="kw">const</span> <span class="kw">ref</span> <a class="prim" href="#u8">u8</a>[] bytes )</code></pre>
+<div class="doc">
+<p>Feeds bytes, zero-padded to a whole word, and then their count, so that no run of bytes fed
+this way is a prefix of another.</p>
+</div>
+</div>
+<div class="group" id="hasher.finish">
+<pre class="signature"><a class="anchor" href="#hasher.finish" aria-label="Link to finish">#</a><code><span class="kw">public</span> <a class="prim" href="#u64">u64</a> <span class="fn">finish</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The hash of everything fed so far. Feeding more afterwards is allowed.</p>
+</div>
+</div>
+</section>
+<section class="entry">
 <h2><span class="kind">interface</span> <span class="type">hashable</span></h2>
 <div class="group" id="hashable">
 <pre class="signature"><a class="anchor" href="#hashable" aria-label="Link to hashable">#</a><code><span class="kw">interface</span> <span class="type">hashable</span> <span class="kw">implements</span> <a class="type" href="#equatable">equatable</a></code></pre>
 <div class="doc">
-<p>A type whose values hash to a <code>u64</code>.</p>
-<p>Values that are <code>==</code> must hash the same, so a type that writes its own <code>==</code> writes its own
+<p>A type whose values can be fed to a <code>hasher</code>.</p>
+<p>Values that are <code>==</code> must feed the same words, so a type that writes its own <code>==</code> writes its own
 <code>hash</code> too. Numbers, <code>bool</code>, pointers and enums without payloads are hashable without writing
-anything; a float's hash counts <code>-0.0</code> as <code>0.0</code>, and panics on a NaN.</p>
+anything, and feed their value, tag or address; a float feeds its bits with <code>-0.0</code> as <code>0.0</code>, and
+panics on a NaN.</p>
 </div>
 </div>
 <h3>Methods</h3>
 <div class="group" id="hashable.hash">
-<pre class="signature"><a class="anchor" href="#hashable.hash" aria-label="Link to hash">#</a><code><span class="kw">public</span> <a class="prim" href="#u64">u64</a> <span class="fn">hash</span>() <span class="kw">const</span></code></pre>
+<pre class="signature"><a class="anchor" href="#hashable.hash" aria-label="Link to hash">#</a><code><span class="kw">public</span> <a class="prim" href="#void">void</a> <span class="fn">hash</span>( <span class="kw">ref</span> <a class="type" href="#hasher">hasher</a> h ) <span class="kw">const</span></code></pre>
 <div class="doc">
-<p>This value's hash.</p>
+<p>Feeds this value to <code>h</code>.</p>
 </div>
 </div>
 </section>

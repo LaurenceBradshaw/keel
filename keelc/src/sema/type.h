@@ -248,6 +248,9 @@ public:
     void    declare_ordering( Node_id declaration );
     Type_id ordering() const;
 
+    void    declare_hasher_write( Node_id method );
+    Node_id hasher_write() const;
+
     void    declare_prelude_interface( Prelude_interface which, Node_id declaration );
     Type_id prelude_interface( Prelude_interface which ) const; // invalid without a prelude
     bool    is_prelude_interface( Type_id interface ) const;
@@ -294,6 +297,7 @@ private:
 
     Node_id box_ {};
     Node_id ordering_ {};
+    Node_id hasher_write_ {};
     Node_id prelude_interfaces_[3] {};
 
     std::unordered_map<u32, Node_id> naming_self_; // Interface_decl node -> its first method naming `self`
