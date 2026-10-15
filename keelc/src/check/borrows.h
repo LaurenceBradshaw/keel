@@ -6,6 +6,7 @@
 #include "common/span.h"
 #include "common/types.h"
 #include "ir/kir.h"
+#include "sema/type.h"
 
 // What each pointer local borrows, shared by the move check's one-call rule and the loans pass.
 
@@ -27,7 +28,7 @@ struct Borrow
 };
 
 // One per local, indexed by Local_id.
-std::vector<Borrow> borrows_of( const Function& func );
+std::vector<Borrow> borrows_of( const Function& func, const Type_table& types );
 
 // One place is a prefix of the other: `p` overlaps `p.b`, and `p.a` does not.
 bool overlaps( const Function& func, const Place& a, const Place& b );

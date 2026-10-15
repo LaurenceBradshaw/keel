@@ -17,5 +17,6 @@ void           kl_rt_write( int32_t, const uint8_t*, uint64_t );
 void           kl_rt_write_i64( int32_t, int64_t );
 void           kl_rt_write_u64( int32_t, uint64_t );
 void           kl_rt_write_f64( int32_t, double );
+void           kl_rt_hash_key( uint64_t* low, uint64_t* high );
 
 #endif // KL_RT_H

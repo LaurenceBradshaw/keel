@@ -262,9 +262,9 @@ std::vector<bool> owning_locals( const Function& func, const Ast& ast, Types& ty
     return owning;
 }
 
-std::vector<Loan_error> check_loans( const Function& func, const std::vector<bool>& owning )
+std::vector<Loan_error> check_loans( const Function& func, const std::vector<bool>& owning, const Type_table& types )
 {
-    const std::vector<Borrow> borrows = borrows_of( func );
+    const std::vector<Borrow> borrows = borrows_of( func, types );
     const std::vector<Live>   live    = live_in( func );
 
     std::vector<Local_id> holders;
@@ -361,7 +361,7 @@ struct Loaned : Compiled
 
     std::vector<Loan_error> errors() const
     {
-        return check_loans( functions[tested], owning );
+        return check_loans( functions[tested], owning, types.table() );
     }
 
     std::size_t       tested = 0;

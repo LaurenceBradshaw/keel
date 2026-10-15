@@ -18,10 +18,32 @@ are written through the package too, <code>kl::list&lt;i32&gt;</code>.</p>
 </div>
 <h2>Modules</h2>
 <section class="module">
+<h3><a href="hash_control.html">hash_control</a></h3>
+<dl class="summaries">
+<dt><a href="hash_control.html#BYTE_ONES"><code>BYTE_ONES</code></a> <span class="kind">global</span></dt>
+<dd></dd>
+<dt><a href="hash_control.html#BYTE_MSB_MASK"><code>BYTE_MSB_MASK</code></a> <span class="kind">global</span></dt>
+<dd></dd>
+<dt><a href="hash_control.html#EMPTY_SLOTS_MASK"><code>EMPTY_SLOTS_MASK</code></a> <span class="kind">global</span></dt>
+<dd></dd>
+<dt><a href="hash_control.html#hash_control"><code>hash_control</code></a> <span class="kind">class</span></dt>
+<dd>The control bytes, counts and key of a hash table, without its keys or values.</dd>
+<dt><a href="hash_control.html#hash_probe"><code>hash_probe</code></a> <span class="kind">class</span></dt>
+<dd>The slots of a <code>hash_control</code> whose tag matches a hash, in probe order.</dd>
+</dl>
+</section>
+<section class="module">
 <h3><a href="list.html">list</a></h3>
 <dl class="summaries">
 <dt><a href="list.html#list"><code>list</code></a> <span class="kind">class</span></dt>
 <dd>A growable array of <code>T</code> that owns its elements and the block holding them.</dd>
+</dl>
+</section>
+<section class="module">
+<h3><a href="map.html">map</a></h3>
+<dl class="summaries">
+<dt><a href="map.html#map"><code>map</code></a> <span class="kind">class</span></dt>
+<dd>A hash table from keys of type <code>K</code> to values of type <code>V</code>, each key held at most once.</dd>
 </dl>
 </section>
 <section class="module">
@@ -53,6 +75,13 @@ are written through the package too, <code>kl::list&lt;i32&gt;</code>.</p>
 <dl class="summaries">
 <dt><a href="ring.html#ring"><code>ring</code></a> <span class="kind">class</span></dt>
 <dd>A fixed-capacity double-ended queue of <code>T</code> that owns its elements and the block holding them.</dd>
+</dl>
+</section>
+<section class="module">
+<h3><a href="set.html">set</a></h3>
+<dl class="summaries">
+<dt><a href="set.html#set"><code>set</code></a> <span class="kind">class</span></dt>
+<dd>A hash table of keys of type <code>K</code>, each held at most once.</dd>
 </dl>
 </section>
 <section class="module">

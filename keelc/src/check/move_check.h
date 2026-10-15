@@ -4,6 +4,7 @@
 #pragma once
 #include <vector>
 #include "ir/kir.h"
+#include "sema/type.h"
 
 namespace keel
 {
@@ -31,6 +32,6 @@ struct Move_error
 
 // PLAN §8. Flow-sensitive, per local, over the CFG. `owning` is check/borrow_check's
 // owning_locals: only an owner can be freed under an argument that aliases it.
-std::vector<Move_error> check_moves( const Function& func, const std::vector<bool>& owning );
+std::vector<Move_error> check_moves( const Function& func, const std::vector<bool>& owning, const Type_table& types );
 
 } // namespace keel

@@ -499,7 +499,7 @@ int32_t kl__main__( void )
     kl_count_102 = kl_t104;
 #line 42 "codegen/division_and_shifts.kl"
     kl_t107 = kl_count_102 & 31;
-    kl_t108 = 1 << kl_t107;
+    kl_t108 = ( int32_t ) 1 << kl_t107;
     kl_t109 = kl_t108 != 2;
     if ( kl_t109 ) goto bb88; else goto bb89;
     bb88:
@@ -573,7 +573,7 @@ int32_t kl__main__( void )
     bb103:
 #line 54 "codegen/division_and_shifts.kl"
     kl_t138 = kl_neg_one_1 & 31;
-    kl_t139 = 1 << kl_t138;
+    kl_t139 = ( int32_t ) 1 << kl_t138;
     kl_t140 = kl_t139 != kl_min32_28;
     if ( kl_t140 ) goto bb104; else goto bb105;
     bb104:

@@ -1,0 +1,65 @@
+// `kl::set`: `insert` says whether the key was new and drops a repeated one, lookups through
+// several growths, removing and putting back, and owning keys dropped exactly once. Each check
+// returns its own code.
+import kl::set;
+import kl::string;
+
+i32 main()
+{
+    kl::set<u64> seen = kl::set<u64>();
+
+    if( !seen.is_empty() || seen.contains( 0 ) || seen.remove( 0 ) )
+    {
+        return 1;
+    }
+
+    for( u64 i = 0; i < 500; i++ )
+    {
+        if( !seen.insert( i * 3 ) )
+        {
+            return 2;
+        }
+    }
+
+    if( seen.insert( 9 ) || seen.size() != 500 || seen.capacity() < 500 )
+    {
+        return 3;
+    }
+
+    for( u64 i = 0; i < 1500; i++ )
+    {
+        if( seen.contains( i ) != ( i % 3 == 0 ) )
+        {
+            return 4;
+        }
+    }
+
+    for( u64 i = 0; i < 1500; i += 6 )
+    {
+        if( !seen.remove( i ) )
+        {
+            return 5;
+        }
+    }
+
+    if( seen.size() != 250 || seen.contains( 6 ) || !seen.contains( 3 ) || !seen.insert( 6 ) )
+    {
+        return 6;
+    }
+
+    kl::set<kl::string> words = kl::set<kl::string>::with_capacity( 4 );
+
+    words.insert( move kl::string( "a" ) );
+    words.insert( move kl::string( "b" ) );
+
+    if( words.insert( move kl::string( "a" ) ) || !words.contains( kl::string( "b" ) ) || words.size() != 2 )
+    {
+        return 7;
+    }
+
+    words.remove( kl::string( "a" ) );
+    words.clear();
+    words.insert( move kl::string( "kept" ) );
+
+    return 0;
+}

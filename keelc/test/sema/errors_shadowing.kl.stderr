@@ -16,4 +16,10 @@ error: `deep` shadows an outer declaration
 21 |             i32 deep = 2;
    |                 ^^^^ previous declaration is at: sema/errors_shadowing.kl:18:5
 
-3 errors generated
+error: `size` shadows a method
+  --> sema/errors_shadowing.kl:37:13
+   |
+37 |         i32 size = 2;
+   |             ^^^^ a local may not take a method's name
+
+4 errors generated

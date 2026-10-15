@@ -1,0 +1,12 @@
+// `operator[]` on a key `kl::map` does not hold aborts, naming the check in the library; `get`
+// is the way to ask without one.
+import kl::map;
+
+i32 main()
+{
+    kl::map<i32, i32> values = kl::map<i32, i32>();
+
+    values.insert( 1, 2 );
+    println( "looking" );
+    return values[ 3 ];
+}

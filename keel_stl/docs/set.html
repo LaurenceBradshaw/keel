@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kl::set</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+</head>
+<body>
+<header><nav><a href="index.html"><img src="logo.svg" alt="">The Keel standard library</a></nav></header>
+<main>
+<h1><span class="kind">module</span> <a class="package" href="index.html">kl</a>::set</h1>
+<section class="entry">
+<h2><span class="kind">class</span> <span class="type">set</span></h2>
+<div class="group" id="set">
+<pre class="signature"><a class="anchor" href="#set" aria-label="Link to set">#</a><code><span class="kw">class</span> <span class="type">set</span>&lt;K&gt; <span class="kw">where</span> K : <a class="type" href="prelude.html#hashable">hashable</a></code></pre>
+<div class="doc">
+<p>A hash table of keys of type <code>K</code>, each held at most once.</p>
+<p><code>kl::map</code> without the values: keys are kept in no particular order, each set hashes under its
+own random key, and <code>insert</code> takes amortised constant time. Dropping the set drops every key.</p>
+</div>
+</div>
+<h3>Constructors</h3>
+<div class="group" id="set.set">
+<pre class="signature"><a class="anchor" href="#set.set" aria-label="Link to set">#</a><code><span class="kw">public</span> <span class="type">set</span>()</code></pre>
+<div class="doc">
+<p>An empty set. Allocates nothing until the first key arrives.</p>
+</div>
+</div>
+<div class="group" id="set.~set">
+<pre class="signature"><a class="anchor" href="#set.~set" aria-label="Link to ~set">#</a><code><span class="type">~set</span>()</code></pre>
+</div>
+<h3>Methods</h3>
+<div class="group" id="set.with_capacity">
+<pre class="signature"><a class="anchor" href="#set.with_capacity" aria-label="Link to with_capacity">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#set">set</a>&lt;K&gt; <span class="fn">with_capacity</span>( <a class="prim" href="prelude.html#u64">u64</a> capacity )</code></pre>
+<div class="doc">
+<p>An empty set with room for <code>capacity</code> keys before it grows.</p>
+</div>
+</div>
+<div class="group" id="set.reserve">
+<pre class="signature"><a class="anchor" href="#set.reserve" aria-label="Link to reserve">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">reserve</span>( <a class="prim" href="prelude.html#u64">u64</a> n )</code></pre>
+<div class="doc">
+<p>Makes room for at least <code>n</code> keys in all, not <code>n</code> more.
+Does nothing if the capacity is already that large.</p>
+</div>
+</div>
+<div class="group" id="set.insert">
+<pre class="signature"><a class="anchor" href="#set.insert" aria-label="Link to insert">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">insert</span>( <span class="kw">move</span> K key )</code></pre>
+<div class="doc">
+<p>Adds <code>key</code>, and returns whether it was new. A key already present is kept, and <code>key</code> is
+dropped.</p>
+</div>
+</div>
+<div class="group" id="set.contains">
+<pre class="signature"><a class="anchor" href="#set.contains" aria-label="Link to contains">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">contains</span>( <span class="kw">const</span> <span class="kw">ref</span> K key ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether the set holds <code>key</code>.</p>
+</div>
+</div>
+<div class="group" id="set.remove">
+<pre class="signature"><a class="anchor" href="#set.remove" aria-label="Link to remove">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">remove</span>( <span class="kw">const</span> <span class="kw">ref</span> K key )</code></pre>
+<div class="doc">
+<p>Removes <code>key</code>, and returns whether the set held it.</p>
+</div>
+</div>
+<div class="group" id="set.size">
+<pre class="signature"><a class="anchor" href="#set.size" aria-label="Link to size">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">size</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The number of keys.</p>
+</div>
+</div>
+<div class="group" id="set.is_empty">
+<pre class="signature"><a class="anchor" href="#set.is_empty" aria-label="Link to is_empty">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">is_empty</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether the set holds no keys.</p>
+</div>
+</div>
+<div class="group" id="set.capacity">
+<pre class="signature"><a class="anchor" href="#set.capacity" aria-label="Link to capacity">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">capacity</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>How many keys fit before the set grows. Removing a key may lower it until the set is rebuilt.</p>
+</div>
+</div>
+<div class="group" id="set.clear">
+<pre class="signature"><a class="anchor" href="#set.clear" aria-label="Link to clear">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">clear</span>()</code></pre>
+<div class="doc">
+<p>Drops every key; the capacity is kept.</p>
+</div>
+</div>
+</section>
+</main>
+<footer>Copyright 2026 Laurence Bradshaw. Licensed under Apache-2.0 WITH LLVM-exception.</footer>
+</body>
+</html>

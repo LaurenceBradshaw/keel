@@ -23,3 +23,20 @@ i32 shadows_from_three_levels_out()
         }
     }
 }
+
+// A local may not take a method's name either: a bare `size()` after it would call the local.
+struct Sized
+{
+    i32 size() const
+    {
+        return 1;
+    }
+
+    i32 doubled() const
+    {
+        i32 size = 2;
+        return size;
+    }
+
+    i32 n;
+};

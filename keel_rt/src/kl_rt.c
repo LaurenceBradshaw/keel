@@ -1,6 +1,7 @@
 // Copyright 2026 Laurence Bradshaw
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#define _DEFAULT_SOURCE
 #include "kl_rt.h"
 #include <inttypes.h>
 #include <math.h>
@@ -9,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 void* kl_rt_alloc( size_t size, const char* file, uint32_t line, const char* message )
 {
@@ -132,4 +134,24 @@ void kl_rt_write_f64( int32_t stream, double value )
     {
         fputs( ".0", out );
     }
+}
+
+void kl_rt_hash_key( uint64_t* low, uint64_t* high )
+{
+    // Not thread-safe; Keel has no threads yet.
+    static uint64_t key[2];
+    static bool     drawn = false;
+
+    if( !drawn )
+    {
+        if( getentropy( key, sizeof key ) != 0 )
+        {
+            kl_rt_panic( __FILE__, __LINE__, "no random bytes for a map's key" );
+        }
+
+        drawn = true;
+    }
+
+    *low  = key[0]++;
+    *high = key[1];
 }

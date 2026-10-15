@@ -1,5 +1,5 @@
-// What `operator[]` must be - a `const` method taking a `u64` and returning a pointer to the
-// element, declared once.
+// What `operator[]` must be - a `const` method taking one index by value or `const ref` and
+// returning a pointer to the element, declared once.
 struct returns_value
 {
     i32 x;
@@ -40,11 +40,11 @@ struct not_const
     }
 };
 
-struct signed_index
+struct ref_index
 {
     i32 x;
 
-    i32* operator[]( i32 index ) const
+    i32* operator[]( ref u64 index ) const
     {
         return nullptr;
     }

@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kl::map</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+</head>
+<body>
+<header><nav><a href="index.html"><img src="logo.svg" alt="">The Keel standard library</a></nav></header>
+<main>
+<h1><span class="kind">module</span> <a class="package" href="index.html">kl</a>::map</h1>
+<section class="entry">
+<h2><span class="kind">class</span> <span class="type">map</span></h2>
+<div class="group" id="map">
+<pre class="signature"><a class="anchor" href="#map" aria-label="Link to map">#</a><code><span class="kw">class</span> <span class="type">map</span>&lt;K, V&gt; <span class="kw">where</span> K : <a class="type" href="prelude.html#hashable">hashable</a></code></pre>
+<div class="doc">
+<p>A hash table from keys of type <code>K</code> to values of type <code>V</code>, each key held at most once.</p>
+<p>Keys are kept in no particular order, and the order changes as the map grows. Each map hashes
+under its own random key, so which keys collide cannot be chosen from outside. A full map
+doubles, so <code>insert</code> takes amortised constant time; <code>with_capacity</code> and <code>reserve</code> make room in
+advance. Dropping the map drops every key and value.</p>
+</div>
+</div>
+<h3>Constructors</h3>
+<div class="group" id="map.map">
+<pre class="signature"><a class="anchor" href="#map.map" aria-label="Link to map">#</a><code><span class="kw">public</span> <span class="type">map</span>()</code></pre>
+<div class="doc">
+<p>An empty map. Allocates nothing until the first key arrives.</p>
+</div>
+</div>
+<div class="group" id="map.~map">
+<pre class="signature"><a class="anchor" href="#map.~map" aria-label="Link to ~map">#</a><code><span class="type">~map</span>()</code></pre>
+</div>
+<h3>Methods</h3>
+<div class="group" id="map.with_capacity">
+<pre class="signature"><a class="anchor" href="#map.with_capacity" aria-label="Link to with_capacity">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#map">map</a>&lt;K, V&gt; <span class="fn">with_capacity</span>( <a class="prim" href="prelude.html#u64">u64</a> capacity )</code></pre>
+<div class="doc">
+<p>An empty map with room for <code>capacity</code> keys before it grows.</p>
+</div>
+</div>
+<div class="group" id="map.reserve">
+<pre class="signature"><a class="anchor" href="#map.reserve" aria-label="Link to reserve">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">reserve</span>( <a class="prim" href="prelude.html#u64">u64</a> n )</code></pre>
+<div class="doc">
+<p>Makes room for at least <code>n</code> keys in all, not <code>n</code> more.
+Does nothing if the capacity is already that large.</p>
+</div>
+</div>
+<div class="group" id="map.insert">
+<pre class="signature"><a class="anchor" href="#map.insert" aria-label="Link to insert">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;V&gt; <span class="fn">insert</span>( <span class="kw">move</span> K key, <span class="kw">move</span> V value )</code></pre>
+<div class="doc">
+<p>Puts <code>value</code> under <code>key</code>, and returns the value that was there, or <code>none</code> if there was none.</p>
+<p>When the key is already present, the map keeps its own key and <code>key</code> is dropped.</p>
+</div>
+</div>
+<div class="group" id="map.get">
+<pre class="signature"><a class="anchor" href="#map.get" aria-label="Link to get">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;V*&gt; <span class="fn">get</span>( <span class="kw">const</span> <span class="kw">ref</span> K key ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>A pointer to the value under <code>key</code>, or <code>none</code> if the map does not hold it.</p>
+</div>
+</div>
+<div class="group" id="map.operator[]">
+<pre class="signature"><a class="anchor" href="#map.operator[]" aria-label="Link to operator[]">#</a><code><span class="kw">public</span> V* <span class="fn">operator[]</span>( <span class="kw">const</span> <span class="kw">ref</span> K key ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>A pointer to the value under <code>key</code>.</p>
+<h4>Panics</h4>
+<p>If the map does not hold <code>key</code>; <code>get</code> answers <code>none</code> instead.</p>
+</div>
+</div>
+<div class="group" id="map.contains">
+<pre class="signature"><a class="anchor" href="#map.contains" aria-label="Link to contains">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">contains</span>( <span class="kw">const</span> <span class="kw">ref</span> K key ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether the map holds <code>key</code>.</p>
+</div>
+</div>
+<div class="group" id="map.remove">
+<pre class="signature"><a class="anchor" href="#map.remove" aria-label="Link to remove">#</a><code><span class="kw">public</span> <a class="type" href="optional.html#optional">optional</a>&lt;V&gt; <span class="fn">remove</span>( <span class="kw">const</span> <span class="kw">ref</span> K key )</code></pre>
+<div class="doc">
+<p>Removes <code>key</code> and returns its value, or <code>none</code> if the map does not hold it.</p>
+</div>
+</div>
+<div class="group" id="map.size">
+<pre class="signature"><a class="anchor" href="#map.size" aria-label="Link to size">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">size</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The number of keys.</p>
+</div>
+</div>
+<div class="group" id="map.is_empty">
+<pre class="signature"><a class="anchor" href="#map.is_empty" aria-label="Link to is_empty">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">is_empty</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether the map holds no keys.</p>
+</div>
+</div>
+<div class="group" id="map.capacity">
+<pre class="signature"><a class="anchor" href="#map.capacity" aria-label="Link to capacity">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">capacity</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>How many keys fit before the map grows. Removing a key may lower it until the map is rebuilt.</p>
+</div>
+</div>
+<div class="group" id="map.clear">
+<pre class="signature"><a class="anchor" href="#map.clear" aria-label="Link to clear">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">clear</span>()</code></pre>
+<div class="doc">
+<p>Drops every key and value; the capacity is kept.</p>
+</div>
+</div>
+</section>
+</main>
+<footer>Copyright 2026 Laurence Bradshaw. Licensed under Apache-2.0 WITH LLVM-exception.</footer>
+</body>
+</html>

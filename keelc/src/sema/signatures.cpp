@@ -1043,10 +1043,13 @@ void Signatures::check_index_operator( Node_id decl )
     {
         reporter_.error_at( ast_.span( ast_.param_list( decl ) ), "`operator[]` takes one parameter, the index" );
     }
-    else if( const Type_id index_type = types_.type_of( params[1] );
-             !table_.is_error( index_type ) && table_.integer( 64, false ) != index_type )
+    else if( ast_.call_marker( params[1] ) != Keyword::Count )
     {
-        reporter_.error_at( ast_.span( params[1] ), "`operator[]` takes a `u64` index", "write the parameter as `u64 index`" );
+        reporter_.error_at(
+            ast_.span( params[1] ),
+            "`operator[]` takes its index by value or `const ref`",
+            "`v[i]` has nowhere to write a `ref`, `out` or `move`"
+        );
     }
 
     const Node_id annotation  = ast_.return_type( decl );

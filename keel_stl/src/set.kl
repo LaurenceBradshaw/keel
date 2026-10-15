@@ -1,0 +1,229 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+import hash_control;
+
+/// A hash table of keys of type `K`, each held at most once.
+///
+/// `kl::map` without the values: keys are kept in no particular order, each set hashes under its
+/// own random key, and `insert` takes amortised constant time. Dropping the set drops every key.
+class set<K> where K : hashable
+{
+    /// An empty set. Allocates nothing until the first key arrives.
+    public set()
+    {
+        control_ = hash_control::fresh();
+        keys_ = nullptr;
+    }
+
+    ~set()
+    {
+        drop_all();
+        if( keys_ != nullptr )
+        {
+            unsafe
+            {
+                free( keys_ );
+            }
+        }
+    }
+
+    /// An empty set with room for `capacity` keys before it grows.
+    public static set<K> with_capacity( u64 capacity )
+    {
+        set<K> result = set<K>();
+        result.reserve( capacity );
+        return result;
+    }
+
+    /// Makes room for at least `n` keys in all, not `n` more.
+    /// Does nothing if the capacity is already that large.
+    public void reserve( u64 n )
+    {
+        if( n > control_.capacity() )
+        {
+            resize( hash_control::slots_for( n ) );
+        }
+    }
+
+    /// Adds `key`, and returns whether it was new. A key already present is kept, and `key` is
+    /// dropped.
+    public bool insert( move K key )
+    {
+        const u64 hash = hash_of( key );
+
+        if( slot_of_hashed( key, hash ) != control_.slots() )
+        {
+            return false;
+        }
+
+        if( control_.needs_growth() )
+        {
+            resize( control_.grown_slots() );
+        }
+
+        const u64 slot = control_.free_slot( hash );
+        control_.occupy( slot, hash );
+
+        unsafe
+        {
+            keys_[slot] = move key;
+        }
+
+        return true;
+    }
+
+    /// Whether the set holds `key`.
+    public bool contains( const ref K key ) const
+    {
+        return slot_of( key ) != control_.slots();
+    }
+
+    /// Removes `key`, and returns whether the set held it.
+    public bool remove( const ref K key )
+    {
+        const u64 slot = slot_of( key );
+
+        if( slot == control_.slots() )
+        {
+            return false;
+        }
+
+        control_.vacate( slot );
+
+        unsafe
+        {
+            destroy( keys_ + slot, 1 );
+        }
+
+        return true;
+    }
+
+    /// The number of keys.
+    public u64 size() const
+    {
+        return control_.size();
+    }
+
+    /// Whether the set holds no keys.
+    public bool is_empty() const
+    {
+        return control_.size() == 0;
+    }
+
+    /// How many keys fit before the set grows. Removing a key may lower it until the set is rebuilt.
+    public u64 capacity() const
+    {
+        return control_.capacity();
+    }
+
+    /// Drops every key; the capacity is kept.
+    public void clear()
+    {
+        drop_all();
+        control_.clear();
+    }
+
+    private u64 hash_of( const ref K key ) const
+    {
+        hasher h = control_.start_hash();
+        key.hash( ref h );
+        return h.finish();
+    }
+
+    // The slot holding `key`, or the slot count if there is none.
+    private u64 slot_of_hashed( const ref K key, u64 hash ) const
+    {
+        const u64 end = control_.slots();
+        if( control_.size() == 0 )
+        {
+            return end;
+        }
+
+        hash_probe probe = control_.probe( hash );
+        u64 slot = probe.next();
+
+        while( slot != end )
+        {
+            unsafe
+            {
+                if( keys_[slot] == key )
+                {
+                    return slot;
+                }
+            }
+
+            slot = probe.next();
+        }
+
+        return end;
+    }
+
+    // As `slot_of_hashed`, without hashing when the set is empty.
+    private u64 slot_of( const ref K key ) const
+    {
+        if( control_.size() == 0 )
+        {
+            return control_.slots();
+        }
+
+        return slot_of_hashed( key, hash_of( key ) );
+    }
+
+    // Moves every key into a table of `slots` slots, under the same key.
+    private void resize( u64 slots )
+    {
+        hash_control fresh = control_.resized( slots );
+
+        K[*] keys;
+
+        unsafe
+        {
+            keys = alloc<K>( slots );
+        }
+
+        for( u64 i = 0; i < control_.slots(); i++ )
+        {
+            if( control_.is_full( i ) )
+            {
+                unsafe
+                {
+                    const u64 hash = hash_of( keys_[i] );
+                    const u64 slot = fresh.free_slot( hash );
+                    fresh.occupy( slot, hash );
+
+                    keys[slot] = move keys_[i]; // the old slots are raw after this
+                }
+            }
+        }
+
+        if( keys_ != nullptr )
+        {
+            unsafe
+            {
+                free( keys_ );
+            }
+        }
+
+        keys_ = keys;
+        control_ = move fresh;
+    }
+
+    private void drop_all()
+    {
+        for( u64 i = 0; i < control_.slots(); i++ )
+        {
+            if( control_.is_full( i ) )
+            {
+                unsafe
+                {
+                    destroy( keys_ + i, 1 );
+                }
+            }
+        }
+    }
+
+    // Slot `i` of `keys_` is live exactly when `control_.is_full( i )`.
+    private hash_control control_;
+    private K[*] keys_;
+};

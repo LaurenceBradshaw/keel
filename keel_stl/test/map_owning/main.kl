@@ -1,0 +1,46 @@
+// `kl::map` with owning keys and values: every key and value it drops - on replacing, removing,
+// growing, clearing and going out of scope - is dropped exactly once, which valgrind checks. A
+// replaced entry keeps its first key and drops the one passed in.
+import kl::map;
+import kl::optional;
+import kl::string;
+
+i32 main()
+{
+    kl::map<kl::string, kl::string> names = kl::map<kl::string, kl::string>();
+
+    for( u64 i = 0; i < 200; i++ )
+    {
+        names.insert( move kl::string::from( i ), move kl::string::from( i * 2 ) );
+    }
+
+    if( names.size() != 200 || !( names[ kl::string( "150" ) ] == kl::string( "300" ) ) )
+    {
+        return 1;
+    }
+
+    kl::string old = kl::unwrap( move names.insert( move kl::string( "10" ), move kl::string( "ten" ) ) );
+
+    if( !( old == kl::string( "20" ) ) || !( names[ kl::string( "10" ) ] == kl::string( "ten" ) ) )
+    {
+        return 2;
+    }
+
+    for( u64 i = 0; i < 100; i++ )
+    {
+        if( kl::is_none( names.remove( kl::string::from( i ) ) ) )
+        {
+            return 3;
+        }
+    }
+
+    if( names.size() != 100 || names.contains( kl::string( "99" ) ) || !names.contains( kl::string( "100" ) ) )
+    {
+        return 4;
+    }
+
+    names.clear();
+    names.insert( move kl::string( "kept" ), move kl::string( "until the end" ) );
+
+    return 0;
+}

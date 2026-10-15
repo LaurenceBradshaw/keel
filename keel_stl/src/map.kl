@@ -1,0 +1,298 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+import hash_control;
+import optional;
+
+/// A hash table from keys of type `K` to values of type `V`, each key held at most once.
+///
+/// Keys are kept in no particular order, and the order changes as the map grows. Each map hashes
+/// under its own random key, so which keys collide cannot be chosen from outside. A full map
+/// doubles, so `insert` takes amortised constant time; `with_capacity` and `reserve` make room in
+/// advance. Dropping the map drops every key and value.
+class map<K, V> where K : hashable
+{
+    /// An empty map. Allocates nothing until the first key arrives.
+    public map()
+    {
+        control_ = hash_control::fresh();
+        keys_ = nullptr;
+        values_ = nullptr;
+    }
+
+    ~map()
+    {
+        drop_all();
+        if( keys_ != nullptr )
+        {
+            unsafe
+            {
+                free( keys_ );
+            }
+        }
+
+        if( values_ != nullptr )
+        {
+            unsafe
+            {
+                free( values_ );
+            }
+        }
+    }
+
+    /// An empty map with room for `capacity` keys before it grows.
+    public static map<K, V> with_capacity( u64 capacity )
+    {
+        map<K, V> result = map<K, V>();
+        result.reserve( capacity );
+        return result;
+    }
+
+    /// Makes room for at least `n` keys in all, not `n` more.
+    /// Does nothing if the capacity is already that large.
+    public void reserve( u64 n )
+    {
+        if( n > control_.capacity() )
+        {
+            resize( hash_control::slots_for( n ) );
+        }
+    }
+
+    /// Puts `value` under `key`, and returns the value that was there, or `none` if there was none.
+    ///
+    /// When the key is already present, the map keeps its own key and `key` is dropped.
+    public optional<V> insert( move K key, move V value )
+    {
+        const u64 hash = hash_of( key );
+        const u64 found = slot_of_hashed( key, hash );
+
+        if( found != control_.slots() )
+        {
+            unsafe
+            {
+                V old = move values_[found];
+                values_[found] = move value;
+                return optional::some( move old );
+            }
+        }
+
+        if( control_.needs_growth() )
+        {
+            resize( control_.grown_slots() );
+        }
+
+        const u64 slot = control_.free_slot( hash );
+        control_.occupy( slot, hash );
+
+        unsafe
+        {
+            keys_[slot] = move key;
+            values_[slot] = move value;
+        }
+
+        return optional::none;
+    }
+
+    /// A pointer to the value under `key`, or `none` if the map does not hold it.
+    public optional<V*> get( const ref K key ) const
+    {
+        const u64 slot = slot_of( key );
+        
+        if( slot == control_.slots() )
+        {
+            return optional::none;
+        }
+
+        unsafe
+        {
+            return optional::some( &values_[slot] );
+        }
+    }
+
+    /// A pointer to the value under `key`.
+    ///
+    /// ### Panics
+    ///
+    /// If the map does not hold `key`; `get` answers `none` instead.
+    public V* operator[]( const ref K key ) const
+    {
+        const u64 slot = slot_of( key );
+        
+        if( slot == control_.slots() )
+        {
+            panic( "no such key in the map" );
+        }
+
+        unsafe
+        {
+            return &values_[slot];
+        }
+    }
+
+    /// Whether the map holds `key`.
+    public bool contains( const ref K key ) const
+    {
+        return slot_of( key ) != control_.slots();
+    }
+
+    /// Removes `key` and returns its value, or `none` if the map does not hold it.
+    public optional<V> remove( const ref K key )
+    {
+        const u64 slot = slot_of( key );
+
+        if( slot == control_.slots() )
+        {
+            return optional::none;
+        }
+
+        control_.vacate( slot );
+
+        unsafe
+        {
+            destroy( keys_ + slot, 1 );
+            return optional::some( move values_[slot] );
+        }
+    }
+
+    /// The number of keys.
+    public u64 size() const
+    {
+        return control_.size();
+    }
+
+    /// Whether the map holds no keys.
+    public bool is_empty() const
+    {
+        return control_.size() == 0;
+    }
+
+    /// How many keys fit before the map grows. Removing a key may lower it until the map is rebuilt.
+    public u64 capacity() const
+    {
+        return control_.capacity();
+    }
+
+    /// Drops every key and value; the capacity is kept.
+    public void clear()
+    {
+        drop_all();
+        control_.clear();
+    }
+
+    private u64 hash_of( const ref K key ) const
+    {
+        hasher h = control_.start_hash();
+        key.hash( ref h );
+        return h.finish();
+    }
+
+    // The slot holding `key`, or the slot count if there is none.
+    private u64 slot_of_hashed( const ref K key, u64 hash ) const
+    {
+        const u64 end = control_.slots();
+        if( control_.size() == 0 )
+        {
+            return end;
+        }
+
+        hash_probe probe = control_.probe( hash );
+        u64 slot = probe.next();
+
+        while( slot != end )
+        {
+            unsafe
+            {
+                if( keys_[slot] == key )
+                {
+                    return slot;
+                }
+            }
+
+            slot = probe.next();
+        }
+
+        return end;
+    }
+
+    // As `slot_of_hashed`, without hashing when the map is empty.
+    private u64 slot_of( const ref K key ) const
+    {
+        if( control_.size() == 0 )
+        {
+            return control_.slots();
+        }
+
+        return slot_of_hashed( key, hash_of( key ) );
+    }
+
+    // Moves every entry into a table of `slots` slots, under the same key.
+    private void resize( u64 slots )
+    {
+        hash_control fresh = control_.resized( slots );
+
+        K[*] keys;
+        V[*] values;
+
+        unsafe
+        {
+            keys = alloc<K>( slots );
+            values = alloc<V>( slots );
+        }
+
+        for( u64 i = 0; i < control_.slots(); i++ )
+        {
+            if( control_.is_full( i ) )
+            {
+                unsafe
+                {
+                    const u64 hash = hash_of( keys_[i] );
+                    const u64 slot = fresh.free_slot( hash );
+                    fresh.occupy( slot, hash );
+
+                    keys[slot] = move keys_[i]; // the old slots are raw after this
+                    values[slot] = move values_[i];
+                }
+            }
+        }
+
+        if( keys_ != nullptr )
+        {
+            unsafe
+            {
+                free( keys_ );
+            }
+        }
+
+        if( values_ != nullptr )
+        {
+            unsafe
+            {
+                free( values_ );
+            }
+        }
+
+        keys_ = keys;
+        values_ = values;
+        control_ = move fresh;
+    }
+
+    private void drop_all()
+    {
+        for( u64 i = 0; i < control_.slots(); i++ )
+        {
+            if( control_.is_full( i ) )
+            {
+                unsafe
+                {
+                    destroy( keys_ + i, 1 );
+                    destroy( values_ + i, 1 );
+                }
+            }
+        }
+    }
+
+    // Slot `i` of both arrays is live exactly when `control_.is_full( i )`.
+    private hash_control control_;
+    private K[*] keys_;
+    private V[*] values_;
+};

@@ -30,7 +30,7 @@ void report_move_errors(
 {
     for( const Function& function : functions )
     {
-        for( const Move_error& error : check_moves( function, owning_locals( function, ast, types ) ) )
+        for( const Move_error& error : check_moves( function, owning_locals( function, ast, types ), types.table() ) )
         {
             const Symbol_id name = function.locals[error.local.v].name;
 
@@ -121,7 +121,7 @@ void report_loan_errors(
 {
     for( const Function& function : functions )
     {
-        for( const Loan_error& error : check_loans( function, owning_locals( function, ast, types ) ) )
+        for( const Loan_error& error : check_loans( function, owning_locals( function, ast, types ), types.table() ) )
         {
             const Symbol_id   name = function.locals[error.object.v].name;
             const std::string object =

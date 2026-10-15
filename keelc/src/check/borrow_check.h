@@ -4,6 +4,7 @@
 #pragma once
 #include <vector>
 #include "ir/kir.h"
+#include "sema/type.h"
 #include "sema/type_checker.h"
 
 namespace keel
@@ -32,6 +33,6 @@ struct Loan_error
 std::vector<bool> owning_locals( const Function& func, const Ast& ast, Types& types );
 
 // D54. Each holder is reported once, at its first conflict.
-std::vector<Loan_error> check_loans( const Function& func, const std::vector<bool>& owning );
+std::vector<Loan_error> check_loans( const Function& func, const std::vector<bool>& owning, const Type_table& types );
 
 } // namespace keel

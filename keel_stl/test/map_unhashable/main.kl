@@ -1,0 +1,19 @@
+// A key must be `hashable`: a type that is only `equatable` is refused where the map is named.
+import kl::map;
+
+struct Point implements equatable
+{
+    bool operator==( const ref Point other ) const
+    {
+        return x == other.x && y == other.y;
+    }
+
+    i32 x;
+    i32 y;
+};
+
+i32 main()
+{
+    kl::map<Point, i32> points = kl::map<Point, i32>();
+    return 0;
+}

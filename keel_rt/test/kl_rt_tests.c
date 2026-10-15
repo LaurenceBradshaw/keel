@@ -121,6 +121,25 @@ static void panic_message( void )
     kl_rt_panic_message( "main.kl", 7, (const uint8_t*) "emptyXYZ", 5 );
 }
 
+// Prints one key, so two children can be compared: each process draws its own.
+static void hash_key( void )
+{
+    uint64_t low  = 0;
+    uint64_t high = 0;
+    kl_rt_hash_key( &low, &high );
+    printf( "%016llx%016llx", (unsigned long long) low, (unsigned long long) high );
+}
+
+// Within one process, each key's low half is one more than the last, and its high half the same.
+static void hash_key_varies( void )
+{
+    uint64_t low[2]  = { 0, 0 };
+    uint64_t high[2] = { 0, 0 };
+    kl_rt_hash_key( &low[0], &high[0] );
+    kl_rt_hash_key( &low[1], &high[1] );
+    printf( "%s", low[1] == low[0] + 1 && high[1] == high[0] ? "varies" : "same" );
+}
+
 int main( void )
 {
     Run r = run( lowest_i64 );
@@ -136,12 +155,26 @@ int main( void )
     check( "panic_message", "stderr", r.err, "main.kl:7: panic: empty\n" );
     check_exit( "panic_message", &r, true );
 
+    const Run first  = run( hash_key );
+    const Run second = run( hash_key );
+    check_exit( "hash_key", &first, false );
+
+    if( strlen( first.out ) != 32 || strcmp( first.out, second.out ) == 0 )
+    {
+        fprintf( stderr, "hash_key: two processes drew \"%s\" and \"%s\"\n", first.out, second.out );
+        failures++;
+    }
+
+    r = run( hash_key_varies );
+    check( "hash_key_varies", "stdout", r.out, "varies" );
+    check_exit( "hash_key_varies", &r, false );
+
     if( failures != 0 )
     {
         fprintf( stderr, "%d check%s failed\n", failures, failures == 1 ? "" : "s" );
         return 1;
     }
 
-    printf( "3 runtime tests passed\n" );
+    printf( "5 runtime tests passed\n" );
     return 0;
 }

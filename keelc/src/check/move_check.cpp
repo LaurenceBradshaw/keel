@@ -355,7 +355,7 @@ Flow entry_flow( const Function& func )
 
 } // namespace
 
-std::vector<Move_error> check_moves( const Function& func, const std::vector<bool>& owning )
+std::vector<Move_error> check_moves( const Function& func, const std::vector<bool>& owning, const Type_table& types )
 {
     const Flow bottom = {
         std::vector<State>( func.locals.size(), State::Uninitialised ), std::vector<Span>( func.locals.size(), Span {} )
@@ -388,7 +388,7 @@ std::vector<Move_error> check_moves( const Function& func, const std::vector<boo
         }
     }
 
-    const std::vector<Borrow> borrows = borrows_of( func );
+    const std::vector<Borrow> borrows = borrows_of( func, types );
 
     // A second walk, each block once, so a block on a back edge reports once.
     std::vector<Move_error> errors;
@@ -433,7 +433,7 @@ struct Checked : Compiled
     // The function under test is the last one lowered, `main`.
     std::vector<Move_error> errors() const
     {
-        return check_moves( functions.back(), owning.back() );
+        return check_moves( functions.back(), owning.back(), types.table() );
     }
 
     std::vector<std::vector<bool>> owning; // per function
@@ -725,7 +725,7 @@ TEST_CASE( "move_check_refuses_aliased_arguments_in_one_call", "[check][move][m9
     constexpr std::string_view k_aliased =
         "class V { public i32 x; V() { x = 0; } ~V() { } public i32* operator[]( u64 i ) const { return nullptr; } "
         "public const ref i32 get() const { return x; } public void grow( const ref i32 e ) { } "
-        "public void absorb( ref V o ) { } };\n"
+        "public void absorb( ref V o ) { } public i32 size() const { return x; } public void resize( i32 n ) { } };\n"
         "class W { public V a; public V b; W() { a = V(); b = V(); } };\n"
         "struct P { i32 a; i32 b; };\n"
         "struct S { i32* q; i32* operator[]( u64 i ) const { return q; } };\n"
@@ -820,11 +820,13 @@ TEST_CASE( "move_check_refuses_aliased_arguments_in_one_call", "[check][move][m9
         REQUIRE( p.text_at( errors[0].use ) == "ref v[0]" );
     }
 
-    // A whole only read, a field beside it, and an element of another field cannot reach the element.
+    // A whole only read, a field beside it, an element of another field, and a number a call returned
+    // cannot reach the element.
     SECTION( "accepted" )
     {
         for( const char* call : {
                  "look( v, ref v[0] );",
+                 "v.resize( v.size() );",
                  "pair( ref w.a, ref w.b[0] );",
                  "elems( ref v[0], ref v[1] );",
                  "outs( out p.a, out p.b );",
@@ -856,7 +858,7 @@ TEST_CASE( "move_check_tracks_parameters", "[check][move]" )
 
     INFO( p.rendered() );
     REQUIRE( p.clean() );
-    REQUIRE( check_moves( p.functions[1], p.owning[1] ).size() == 1 );
+    REQUIRE( check_moves( p.functions[1], p.owning[1], p.types.table() ).size() == 1 );
 }
 
 // A borrow reads the value, so one after a move is a use; only a constructor or an `out` argument

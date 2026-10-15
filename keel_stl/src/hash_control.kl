@@ -1,0 +1,378 @@
+// Copyright 2026 Laurence Bradshaw
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// The shared core of `kl::map` and `kl::set`, a Swiss table. Every slot has one control byte:
+//
+//   0xff        empty
+//   0x80        deleted, a tombstone left where a key was removed
+//   0x00..0x7f  full, holding the key's tag: the top 7 bits of its hash
+//
+// Eight control bytes are packed into one `u64`, a group, with slot `g * 8 + j` in byte `j` of
+// group `g`. A lookup reads one group and tests all eight bytes at once with the word tricks below,
+// so it compares only the keys whose tag matches, about one in 128 of the full slots it passes.
+//
+// A tag match sets a byte's top bit, 0x80, in the answer, and leaves its other bits clear. Such a
+// word of flags is called `matches` below.
+
+// The process's SipHash key, the low half one more on each call, so no two tables share a key.
+extern void kl_rt_hash_key( u64* low, u64* high );
+
+const u64 BYTE_ONES = 0x0101_0101_0101_0101;
+const u64 BYTE_MSB_MASK = 0x8080_8080_8080_8080;
+const u64 EMPTY_SLOTS_MASK = 0xffff_ffff_ffff_ffff;
+
+/// The control bytes, counts and key of a hash table, without its keys or values.
+///
+/// `kl::map` and `kl::set` hold one each beside their own arrays, and a slot of those arrays is live
+/// exactly when `is_full` says so. Use `kl::map` or `kl::set` rather than this directly.
+class hash_control
+{
+    /// A table of `slots` empty slots, 0 or a power of two of at least 8, keyed by the two halves.
+    public hash_control( u64 slots, u64 key_low, u64 key_high )
+    {
+        slots_ = slots;
+        key_low_ = key_low;
+        key_high_ = key_high;
+        count_ = 0;
+        growth_left_ = usable( slots_ );
+        groups_ = nullptr;
+
+        if( slots > 0 )
+        {
+            unsafe
+            {
+                groups_ = alloc<u64>( slots / 8 );
+
+                for( u64 g = 0; g < slots / 8; g++ )
+                {
+                    groups_[g] = EMPTY_SLOTS_MASK;
+                }
+            }
+        }
+    }
+
+    ~hash_control()
+    {
+        if( groups_ != nullptr )
+        {
+            unsafe
+            {
+                free( groups_ );
+            }
+        }
+    }
+
+    /// An empty table with no slots, under a key no other table has.
+    public static hash_control fresh()
+    {
+        u64 low = 0;
+        u64 high = 0;
+        unsafe
+        {
+            kl_rt_hash_key( &low, &high );
+        }
+
+        return hash_control( 0, low, high );
+    }
+
+    /// An empty table of `slots` slots under this one's key, so a hash taken for this one is still valid.
+    public hash_control resized( u64 slots ) const
+    {
+        return hash_control( slots, key_low_, key_high_ );
+    }
+
+    /// A hasher under this table's key, for hashing one key.
+    public hasher start_hash() const
+    {
+        return hasher( key_low_, key_high_ );
+    }
+
+    /// The number of slots, full or not.
+    public u64 slots() const
+    {
+        return slots_;
+    }
+
+    /// The number of full slots.
+    public u64 size() const
+    {
+        return count_;
+    }
+
+    /// How many keys fit before the table must grow. Removing a key may lower it, until the table
+    /// is rebuilt.
+    public u64 capacity() const
+    {
+        return count_ + growth_left_;
+    }
+
+    /// Whether filling one more empty slot needs a rebuild first.
+    public bool needs_growth() const
+    {
+        return growth_left_ == 0;
+    }
+
+    /// The fewest slots that hold `n` keys.
+    public static u64 slots_for( u64 n )
+    {
+        if( n == 0 )
+        {
+            return 0;
+        }
+
+        assert( n <= 0x0700_0000_0000_0000 ); // past this, the doubling overflows
+
+        u64 result = 8;
+        while( usable( result ) < n )
+        {
+            result *= 2;
+        }
+
+        return result;
+    }
+
+    /// The slots to rebuild with when `needs_growth()`: double, unless tombstones rather than keys
+    /// used up the room, when the same size clears them. Without that, churn would double a table
+    /// forever.
+    public u64 grown_slots() const
+    {
+        const u64 limit = usable( slots_ );
+
+        if( count_ + 1 > limit / 2 )
+        {
+            return slots_for( limit + 1 );
+        }
+
+        return slots_for( count_ + 1 );
+    }
+
+    /// Flags each byte of `word` equal to the tag that fills every byte of `tags`.
+    ///
+    /// Bytes above a match may be flagged too, but only full ones, so comparing their keys rejects
+    /// them.
+    public static u64 match_tags( u64 word, u64 tags )
+    {
+        // `x` is zero exactly in the matching bytes. Subtracting 1 from a zero byte borrows and sets
+        // its top bit, and `~x` keeps only the bytes whose top bit was clear, so a byte that was
+        // already 0x80 or more cannot be flagged. A borrow out of a zero byte can carry into the
+        // byte above, flagging it if that byte is 0x01: a tag differing from ours in its lowest
+        // bit, so a full slot.
+        const u64 x = word ^ tags;
+        return ( x - BYTE_ONES ) & ~x & BYTE_MSB_MASK;
+    }
+
+    /// Flags each empty byte of `word`.
+    public static u64 match_empty( u64 word )
+    {
+        // Only 0xff has both bit 7 and bit 6 set; shifting left by one lines each byte's bit 6 up
+        // with its bit 7.
+        return word & ( word << 1 ) & BYTE_MSB_MASK;
+    }
+
+    /// Flags each empty or deleted byte of `word`: those with the top bit set.
+    public static u64 match_free( u64 word )
+    {
+        return word & BYTE_MSB_MASK;
+    }
+
+    /// The index, 0 to 7, of the lowest flagged byte of `matches`, which must not be 0.
+    public static u64 lowest( u64 matches )
+    {
+        // `matches & ( 0 - matches )` keeps only the lowest flag, bit `8k + 7`. Shifting it down by
+        // 7 and subtracting 1 gives 0xff in each of the `k` bytes below it. Keeping one bit of each
+        // and multiplying by 0x0101... adds every byte into the top one, which is then `k`.
+        const u64 below = ( ( matches & ( 0 - matches ) ) >> 7 ) - 1;
+        return ( ( below & BYTE_ONES ) * BYTE_ONES ) >> 56;
+    }
+
+    // The control byte of `slot`: its group is `slot / 8` and its byte `slot % 8`.
+    private u64 byte( u64 slot ) const
+    {
+        unsafe
+        {
+            return ( groups_[slot >> 3] >> ( ( slot & 7 ) * 8 ) ) & 0xff;
+        }
+    }
+
+    // Clears the byte of `slot` in its group, then ors `value` into it.
+    private void set_byte( u64 slot, u64 value )
+    {
+        const u64 shift = ( slot & 7 ) * 8;
+
+        unsafe
+        {
+            groups_[slot >> 3] = ( groups_[slot >> 3] & ~( 0xff << shift ) ) | ( value << shift );
+        }
+    }
+
+    /// Whether `slot` holds a key.
+    public bool is_full( u64 slot ) const
+    {
+        return byte( slot ) < 0x80;
+    }
+
+    /// The slots that may hold a key of this hash, in the order it would have been placed.
+    /// Valid until the table is rebuilt.
+    public hash_probe probe( u64 hash ) const
+    {
+        assert( slots_ > 0 );
+        return hash_probe( groups_, slots_, hash );
+    }
+
+    /// The first empty or deleted slot on `hash`'s probe sequence, where a new key of that hash goes.
+    public u64 free_slot( u64 hash ) const
+    {
+        // The group comes from the hash's low bits; each miss steps 1, then 2, then 3 groups on.
+        // Those triangular steps visit every group once when the count is a power of two, and
+        // `growth_left_` keeps an eighth of the slots empty, so the loop ends.
+        const u64 mask = ( slots_ >> 3 ) - 1;
+        u64 group = hash & mask;
+        u64 stride = 0;
+
+        while( true )
+        {
+            u64 word = 0;
+            unsafe
+            {
+                word = groups_[group];
+            }
+
+            const u64 free_slots = match_free( word );
+
+            if( free_slots != 0 )
+            {
+                return group * 8 + lowest( free_slots );
+            }
+            stride += 1;
+            group = ( group + stride ) & mask;
+        }
+    }
+
+    /// Marks `slot`, which `free_slot` gave, full with the tag of `hash`.
+    public void occupy( u64 slot, u64 hash )
+    {
+        if( byte( slot ) == 0xff ) // reusing a tombstone costs no room
+        {
+            growth_left_ -= 1;
+        }
+
+        set_byte( slot, hash >> 57 );
+        count_ += 1;
+    }
+
+    /// Marks the full `slot` empty, or deleted if a lookup may have passed it.
+    public void vacate( u64 slot )
+    {
+        u64 word = 0;
+        unsafe
+        {
+            word = groups_[slot >> 3];
+        }
+
+        // A lookup stops at the first group holding an empty slot. A group holding one now has
+        // never been full, so no key was placed past it, and the slot can become empty. Otherwise a
+        // tombstone keeps lookups going past this group.
+        if( match_empty( word ) != 0 )
+        {
+            set_byte( slot, 0xff );
+            growth_left_ += 1;
+        }
+        else
+        {
+            set_byte( slot, 0x80 );
+        }
+
+        count_ -= 1;
+    }
+
+    /// Empties every slot, keeping them.
+    public void clear()
+    {
+        for( u64 g = 0; g < slots_ / 8; g++ )
+        {
+            unsafe
+            {
+                groups_[g] = EMPTY_SLOTS_MASK;
+            }
+        }
+
+        count_ = 0;
+        growth_left_ = usable( slots_ );
+    }
+
+    // At most 7/8 of the slots fill, so lookups meet an empty slot soon.
+    private static u64 usable( u64 slots )
+    {
+        return ( slots / 8 ) * 7;
+    }
+
+    private u64[*] groups_;     // one per 8 slots; `nullptr` when there are none
+    private u64 slots_;
+    private u64 count_;         // full slots
+    private u64 growth_left_;   // empty slots that may still fill; tombstones do not give it back
+    private u64 key_low_;
+    private u64 key_high_;
+};
+
+/// The slots of a `hash_control` whose tag matches a hash, in probe order.
+///
+/// It reads the table's groups directly, so it must not outlive a rebuild.
+class hash_probe
+{
+    /// A probe of `groups`, a table of `slots` slots, for `hash`.
+    public hash_probe( u64[*] groups, u64 slots, u64 hash )
+    {
+        groups_ = groups;
+        mask_ = ( slots >> 3 ) - 1;
+        group_ = hash & mask_;
+        stride_ = 0;
+        end_ = slots;
+        tags_ = ( hash >> 57 ) * BYTE_ONES; // the tag in every byte
+
+        unsafe
+        {
+            word_ = groups_[group_];
+        }
+
+        matches_ = hash_control::match_tags( word_, tags_ );
+    }
+
+    /// The next slot whose tag matches, or the slot count once no further slot can hold the key.
+    /// Keeps answering the slot count after that.
+    public u64 next()
+    {
+        while( true )
+        {
+            if( matches_ != 0 )
+            {
+                const u64 slot = group_ * 8 + hash_control::lowest( matches_ );
+                matches_ &= matches_ - 1; // clears the lowest flag
+                return slot;
+            }
+            
+            // A key is never placed past an empty slot on its own sequence.
+            if( hash_control::match_empty( word_ ) != 0 )
+            {
+                return end_;
+            }
+            
+            stride_ += 1;
+            group_ = ( group_ + stride_ ) & mask_;
+            unsafe
+            {
+                word_ = groups_[group_];
+            }
+            
+            matches_ = hash_control::match_tags( word_, tags_ );
+        }
+    }
+
+    private u64[*] groups_;
+    private u64 mask_;      // the group count less one
+    private u64 group_;
+    private u64 stride_;
+    private u64 tags_;      // the tag in every byte
+    private u64 word_;      // `group_`'s control bytes
+    private u64 matches_;   // its matches not yet answered
+    private u64 end_;       // the slot count
+};

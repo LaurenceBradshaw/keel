@@ -1,0 +1,47 @@
+// A constant shifted left by a run-time amount shifts at its own width, not at C's `int`: `0x80`
+// moved into the top bytes of a `u64`, a `1` into bit 40 of an `i64` and bit 31 of a `u32`, and a
+// byte mask cleared at byte 5. Each check returns its own code.
+u64 high_flag( u64 byte )
+{
+    return cast<u64>( 0x80 ) << ( byte * 8 );
+}
+
+i64 bit_i64( i64 n )
+{
+    return cast<i64>( 1 ) << n;
+}
+
+u32 bit_u32( u32 n )
+{
+    return cast<u32>( 1 ) << n;
+}
+
+u64 without_byte( u64 word, u64 shift )
+{
+    return word & ~( 0xff << shift );
+}
+
+i32 main()
+{
+    if( high_flag( 4 ) != 0x0000_0080_0000_0000 || high_flag( 7 ) != 0x8000_0000_0000_0000 )
+    {
+        return 1;
+    }
+
+    if( bit_i64( 40 ) != 0x100_0000_0000 )
+    {
+        return 2;
+    }
+
+    if( bit_u32( 31 ) != 0x8000_0000 )
+    {
+        return 3;
+    }
+
+    if( without_byte( 0xffff_ffff_ffff_ffff, 40 ) != 0xffff_00ff_ffff_ffff )
+    {
+        return 4;
+    }
+
+    return 0;
+}

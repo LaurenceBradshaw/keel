@@ -81,9 +81,9 @@ private:
 
     const Symbol_id self_; // the name `self` takes in a type, interned only when some file writes it
 
-    // The enclosing aggregate's field names, for D19's member clause. Empty outside a member body,
+    // The enclosing aggregate's member names, for D19's member clause. Empty outside a member body,
     // so the check it drives costs one lookup per declaration everywhere else.
-    std::unordered_set<Symbol_id> current_fields_;
+    std::unordered_map<Symbol_id, Node_id> current_members_;
 
     std::unordered_map<Symbol_id, Scope> packages_;
 };
@@ -499,9 +499,9 @@ void Resolver::visit_aggregate( Node_id id )
         // Straight into the scope rather than through declare(): members are not lexical,
         // duplicates were already reported, and declare()'s walk reads a barrier scope's
         // names before noticing it is a barrier - so it would call a field that happens to
-        // share a top-level name a shadow. The set beside it is what D19's member clause reads.
+        // share a top-level name a shadow. The map beside it is what D19's member clause reads.
         scopes_.back().names.emplace( Symbol_id { name }, decl );
-        current_fields_.insert( Symbol_id { name } );
+        current_members_.emplace( Symbol_id { name }, decl );
     }
 
     for( const Node_id member : ast_.members( id ) )
@@ -514,7 +514,7 @@ void Resolver::visit_aggregate( Node_id id )
 
     // clear() rather than restoring an enclosing set, because an aggregate cannot nest inside
     // another. If that ever changes this has to become a save and restore.
-    current_fields_.clear();
+    current_members_.clear();
     pop_scope();
 
     pop_scope(); // the type parameters
@@ -708,12 +708,14 @@ void Resolver::declare( Scope& scope, Symbol_id name, Node_id decl )
     // silent-wrong-value hazard this rule exists to kill. Checked here rather than through the
     // scope walk because the field scope sits below the member body's barrier - it has to, so a
     // parameter wins the lookup - and the walk stops at that barrier.
-    if( ast_.kind( decl ) != Node_kind::Param_decl && current_fields_.contains( name ) )
+    const auto member = current_members_.find( name );
+    if( ast_.kind( decl ) != Node_kind::Param_decl && member != current_members_.end() )
     {
+        const std::string_view what = ast_.kind( member->second ) == Node_kind::Method_decl ? "method" : "field";
         reporter_.error_at(
             ast_.name_span( decl ),
-            fmt::format( "`{}` shadows a field", interner_.text( name ) ),
-            "a local may not take a field's name"
+            fmt::format( "`{}` shadows a {}", interner_.text( name ), what ),
+            fmt::format( "a local may not take a {}'s name", what )
         );
         return;
     }

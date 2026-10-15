@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kl::hash_control</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+</head>
+<body>
+<header><nav><a href="index.html"><img src="logo.svg" alt="">The Keel standard library</a></nav></header>
+<main>
+<h1><span class="kind">module</span> <a class="package" href="index.html">kl</a>::hash_control</h1>
+<ul class="contents">
+<li><a href="#BYTE_ONES"><code>BYTE_ONES</code></a> <span class="kind">global</span></li>
+<li><a href="#BYTE_MSB_MASK"><code>BYTE_MSB_MASK</code></a> <span class="kind">global</span></li>
+<li><a href="#EMPTY_SLOTS_MASK"><code>EMPTY_SLOTS_MASK</code></a> <span class="kind">global</span></li>
+<li><a href="#hash_control"><code>hash_control</code></a> <span class="kind">class</span></li>
+<li><a href="#hash_probe"><code>hash_probe</code></a> <span class="kind">class</span></li>
+</ul>
+<section class="entry">
+<h2><span class="kind">global</span> <span class="">BYTE_ONES</span></h2>
+<div class="group" id="BYTE_ONES">
+<pre class="signature"><a class="anchor" href="#BYTE_ONES" aria-label="Link to BYTE_ONES">#</a><code><span class="kw">const</span> <a class="prim" href="prelude.html#u64">u64</a> BYTE_ONES</code></pre>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">global</span> <span class="">BYTE_MSB_MASK</span></h2>
+<div class="group" id="BYTE_MSB_MASK">
+<pre class="signature"><a class="anchor" href="#BYTE_MSB_MASK" aria-label="Link to BYTE_MSB_MASK">#</a><code><span class="kw">const</span> <a class="prim" href="prelude.html#u64">u64</a> BYTE_MSB_MASK</code></pre>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">global</span> <span class="">EMPTY_SLOTS_MASK</span></h2>
+<div class="group" id="EMPTY_SLOTS_MASK">
+<pre class="signature"><a class="anchor" href="#EMPTY_SLOTS_MASK" aria-label="Link to EMPTY_SLOTS_MASK">#</a><code><span class="kw">const</span> <a class="prim" href="prelude.html#u64">u64</a> EMPTY_SLOTS_MASK</code></pre>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">class</span> <span class="type">hash_control</span></h2>
+<div class="group" id="hash_control">
+<pre class="signature"><a class="anchor" href="#hash_control" aria-label="Link to hash_control">#</a><code><span class="kw">class</span> <span class="type">hash_control</span></code></pre>
+<div class="doc">
+<p>The control bytes, counts and key of a hash table, without its keys or values.</p>
+<p><code>kl::map</code> and <code>kl::set</code> hold one each beside their own arrays, and a slot of those arrays is live
+exactly when <code>is_full</code> says so. Use <code>kl::map</code> or <code>kl::set</code> rather than this directly.</p>
+</div>
+</div>
+<h3>Constructors</h3>
+<div class="group" id="hash_control.hash_control">
+<pre class="signature"><a class="anchor" href="#hash_control.hash_control" aria-label="Link to hash_control">#</a><code><span class="kw">public</span> <span class="type">hash_control</span>( <a class="prim" href="prelude.html#u64">u64</a> slots, <a class="prim" href="prelude.html#u64">u64</a> key_low, <a class="prim" href="prelude.html#u64">u64</a> key_high )</code></pre>
+<div class="doc">
+<p>A table of <code>slots</code> empty slots, 0 or a power of two of at least 8, keyed by the two halves.</p>
+</div>
+</div>
+<div class="group" id="hash_control.~hash_control">
+<pre class="signature"><a class="anchor" href="#hash_control.~hash_control" aria-label="Link to ~hash_control">#</a><code><span class="type">~hash_control</span>()</code></pre>
+</div>
+<h3>Methods</h3>
+<div class="group" id="hash_control.fresh">
+<pre class="signature"><a class="anchor" href="#hash_control.fresh" aria-label="Link to fresh">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#hash_control">hash_control</a> <span class="fn">fresh</span>()</code></pre>
+<div class="doc">
+<p>An empty table with no slots, under a key no other table has.</p>
+</div>
+</div>
+<div class="group" id="hash_control.resized">
+<pre class="signature"><a class="anchor" href="#hash_control.resized" aria-label="Link to resized">#</a><code><span class="kw">public</span> <a class="type" href="#hash_control">hash_control</a> <span class="fn">resized</span>( <a class="prim" href="prelude.html#u64">u64</a> slots ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>An empty table of <code>slots</code> slots under this one's key, so a hash taken for this one is still valid.</p>
+</div>
+</div>
+<div class="group" id="hash_control.start_hash">
+<pre class="signature"><a class="anchor" href="#hash_control.start_hash" aria-label="Link to start_hash">#</a><code><span class="kw">public</span> <a class="type" href="prelude.html#hasher">hasher</a> <span class="fn">start_hash</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>A hasher under this table's key, for hashing one key.</p>
+</div>
+</div>
+<div class="group" id="hash_control.slots">
+<pre class="signature"><a class="anchor" href="#hash_control.slots" aria-label="Link to slots">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">slots</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The number of slots, full or not.</p>
+</div>
+</div>
+<div class="group" id="hash_control.size">
+<pre class="signature"><a class="anchor" href="#hash_control.size" aria-label="Link to size">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">size</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The number of full slots.</p>
+</div>
+</div>
+<div class="group" id="hash_control.capacity">
+<pre class="signature"><a class="anchor" href="#hash_control.capacity" aria-label="Link to capacity">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">capacity</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>How many keys fit before the table must grow. Removing a key may lower it, until the table
+is rebuilt.</p>
+</div>
+</div>
+<div class="group" id="hash_control.needs_growth">
+<pre class="signature"><a class="anchor" href="#hash_control.needs_growth" aria-label="Link to needs_growth">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">needs_growth</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether filling one more empty slot needs a rebuild first.</p>
+</div>
+</div>
+<div class="group" id="hash_control.slots_for">
+<pre class="signature"><a class="anchor" href="#hash_control.slots_for" aria-label="Link to slots_for">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">slots_for</span>( <a class="prim" href="prelude.html#u64">u64</a> n )</code></pre>
+<div class="doc">
+<p>The fewest slots that hold <code>n</code> keys.</p>
+</div>
+</div>
+<div class="group" id="hash_control.grown_slots">
+<pre class="signature"><a class="anchor" href="#hash_control.grown_slots" aria-label="Link to grown_slots">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">grown_slots</span>() <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The slots to rebuild with when <code>needs_growth()</code>: double, unless tombstones rather than keys
+used up the room, when the same size clears them. Without that, churn would double a table
+forever.</p>
+</div>
+</div>
+<div class="group" id="hash_control.match_tags">
+<pre class="signature"><a class="anchor" href="#hash_control.match_tags" aria-label="Link to match_tags">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">match_tags</span>( <a class="prim" href="prelude.html#u64">u64</a> word, <a class="prim" href="prelude.html#u64">u64</a> tags )</code></pre>
+<div class="doc">
+<p>Flags each byte of <code>word</code> equal to the tag that fills every byte of <code>tags</code>.</p>
+<p>Bytes above a match may be flagged too, but only full ones, so comparing their keys rejects
+them.</p>
+</div>
+</div>
+<div class="group" id="hash_control.match_empty">
+<pre class="signature"><a class="anchor" href="#hash_control.match_empty" aria-label="Link to match_empty">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">match_empty</span>( <a class="prim" href="prelude.html#u64">u64</a> word )</code></pre>
+<div class="doc">
+<p>Flags each empty byte of <code>word</code>.</p>
+</div>
+</div>
+<div class="group" id="hash_control.match_free">
+<pre class="signature"><a class="anchor" href="#hash_control.match_free" aria-label="Link to match_free">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">match_free</span>( <a class="prim" href="prelude.html#u64">u64</a> word )</code></pre>
+<div class="doc">
+<p>Flags each empty or deleted byte of <code>word</code>: those with the top bit set.</p>
+</div>
+</div>
+<div class="group" id="hash_control.lowest">
+<pre class="signature"><a class="anchor" href="#hash_control.lowest" aria-label="Link to lowest">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">lowest</span>( <a class="prim" href="prelude.html#u64">u64</a> matches )</code></pre>
+<div class="doc">
+<p>The index, 0 to 7, of the lowest flagged byte of <code>matches</code>, which must not be 0.</p>
+</div>
+</div>
+<div class="group" id="hash_control.is_full">
+<pre class="signature"><a class="anchor" href="#hash_control.is_full" aria-label="Link to is_full">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#bool">bool</a> <span class="fn">is_full</span>( <a class="prim" href="prelude.html#u64">u64</a> slot ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>Whether <code>slot</code> holds a key.</p>
+</div>
+</div>
+<div class="group" id="hash_control.probe">
+<pre class="signature"><a class="anchor" href="#hash_control.probe" aria-label="Link to probe">#</a><code><span class="kw">public</span> <a class="type" href="#hash_probe">hash_probe</a> <span class="fn">probe</span>( <a class="prim" href="prelude.html#u64">u64</a> hash ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The slots that may hold a key of this hash, in the order it would have been placed.
+Valid until the table is rebuilt.</p>
+</div>
+</div>
+<div class="group" id="hash_control.free_slot">
+<pre class="signature"><a class="anchor" href="#hash_control.free_slot" aria-label="Link to free_slot">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">free_slot</span>( <a class="prim" href="prelude.html#u64">u64</a> hash ) <span class="kw">const</span></code></pre>
+<div class="doc">
+<p>The first empty or deleted slot on <code>hash</code>'s probe sequence, where a new key of that hash goes.</p>
+</div>
+</div>
+<div class="group" id="hash_control.occupy">
+<pre class="signature"><a class="anchor" href="#hash_control.occupy" aria-label="Link to occupy">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">occupy</span>( <a class="prim" href="prelude.html#u64">u64</a> slot, <a class="prim" href="prelude.html#u64">u64</a> hash )</code></pre>
+<div class="doc">
+<p>Marks <code>slot</code>, which <code>free_slot</code> gave, full with the tag of <code>hash</code>.</p>
+</div>
+</div>
+<div class="group" id="hash_control.vacate">
+<pre class="signature"><a class="anchor" href="#hash_control.vacate" aria-label="Link to vacate">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">vacate</span>( <a class="prim" href="prelude.html#u64">u64</a> slot )</code></pre>
+<div class="doc">
+<p>Marks the full <code>slot</code> empty, or deleted if a lookup may have passed it.</p>
+</div>
+</div>
+<div class="group" id="hash_control.clear">
+<pre class="signature"><a class="anchor" href="#hash_control.clear" aria-label="Link to clear">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#void">void</a> <span class="fn">clear</span>()</code></pre>
+<div class="doc">
+<p>Empties every slot, keeping them.</p>
+</div>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">class</span> <span class="type">hash_probe</span></h2>
+<div class="group" id="hash_probe">
+<pre class="signature"><a class="anchor" href="#hash_probe" aria-label="Link to hash_probe">#</a><code><span class="kw">class</span> <span class="type">hash_probe</span></code></pre>
+<div class="doc">
+<p>The slots of a <code>hash_control</code> whose tag matches a hash, in probe order.</p>
+<p>It reads the table's groups directly, so it must not outlive a rebuild.</p>
+</div>
+</div>
+<h3>Constructors</h3>
+<div class="group" id="hash_probe.hash_probe">
+<pre class="signature"><a class="anchor" href="#hash_probe.hash_probe" aria-label="Link to hash_probe">#</a><code><span class="kw">public</span> <span class="type">hash_probe</span>( <a class="prim" href="prelude.html#u64">u64</a>[*] groups, <a class="prim" href="prelude.html#u64">u64</a> slots, <a class="prim" href="prelude.html#u64">u64</a> hash )</code></pre>
+<div class="doc">
+<p>A probe of <code>groups</code>, a table of <code>slots</code> slots, for <code>hash</code>.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="hash_probe.next">
+<pre class="signature"><a class="anchor" href="#hash_probe.next" aria-label="Link to next">#</a><code><span class="kw">public</span> <a class="prim" href="prelude.html#u64">u64</a> <span class="fn">next</span>()</code></pre>
+<div class="doc">
+<p>The next slot whose tag matches, or the slot count once no further slot can hold the key.
+Keeps answering the slot count after that.</p>
+</div>
+</div>
+</section>
+</main>
+<footer>Copyright 2026 Laurence Bradshaw. Licensed under Apache-2.0 WITH LLVM-exception.</footer>
+</body>
+</html>

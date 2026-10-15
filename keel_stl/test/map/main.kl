@@ -1,0 +1,125 @@
+// `kl::map` over integer keys: lookups through several growths, replacing a value, removing half
+// the keys and putting them back, writing through `operator[]`, `clear`, and `with_capacity`
+// holding its promise. Each check returns its own code.
+import kl::map;
+import kl::optional;
+
+i32 main()
+{
+    kl::map<i64, i64> squares = kl::map<i64, i64>();
+
+    if( !squares.is_empty() || squares.capacity() != 0 || squares.contains( 3 ) || kl::is_some( squares.get( 3 ) ) )
+    {
+        return 1;
+    }
+
+    for( i64 i = 0; i < 1000; i++ )
+    {
+        if( kl::is_some( squares.insert( i, i * i ) ) )
+        {
+            return 2;
+        }
+    }
+
+    if( squares.size() != 1000 || squares.capacity() < 1000 )
+    {
+        return 3;
+    }
+
+    for( i64 i = 0; i < 1000; i++ )
+    {
+        if( *kl::unwrap( squares.get( i ) ) != i * i || squares[ i ] != i * i )
+        {
+            return 4;
+        }
+    }
+
+    if( squares.contains( -1 ) || squares.contains( 1000 ) || kl::is_some( squares.get( 5000 ) ) )
+    {
+        return 5;
+    }
+
+    if( kl::unwrap( squares.insert( 7, 0 ) ) != 49 || squares[ 7 ] != 0 || squares.size() != 1000 )
+    {
+        return 6;
+    }
+
+    for( i64 i = 1; i < 1000; i += 2 )
+    {
+        if( kl::unwrap( squares.remove( i ) ) != ( i == 7 ? cast<i64>( 0 ) : i * i ) )
+        {
+            return 7;
+        }
+    }
+
+    if( squares.size() != 500 || kl::is_some( squares.remove( 1 ) ) )
+    {
+        return 8;
+    }
+
+    for( i64 i = 0; i < 1000; i++ )
+    {
+        if( squares.contains( i ) != ( i % 2 == 0 ) )
+        {
+            return 9;
+        }
+    }
+
+    // Churn leaves removed slots behind; clearing them must not grow the table while the count
+    // stays where it is.
+    const u64 before = squares.capacity();
+
+    for( i64 i = 1000; i < 6000; i++ )
+    {
+        squares.insert( i, -i );
+        squares.remove( i );
+    }
+
+    if( squares.capacity() >= 2 * before || squares.size() != 500 || squares.contains( 5999 ) || !squares.contains( 998 ) )
+    {
+        return 10;
+    }
+
+    squares[ 4 ] = 5;
+
+    if( *kl::unwrap( squares.get( 4 ) ) != 5 )
+    {
+        return 11;
+    }
+
+    squares.clear();
+
+    if( !squares.is_empty() || squares.contains( 0 ) || squares.capacity() < before )
+    {
+        return 12;
+    }
+
+    squares.insert( 0, 1 );
+
+    if( squares.size() != 1 || squares[ 0 ] != 1 )
+    {
+        return 13;
+    }
+
+    kl::map<u8, bool> sized = kl::map<u8, bool>::with_capacity( 100 );
+    const u64 room = sized.capacity();
+
+    for( u64 i = 0; i < 100; i++ )
+    {
+        sized.insert( cast<u8>( i ), i % 3 == 0 );
+    }
+
+    if( room < 100 || sized.capacity() != room || !sized[ 99 ] || sized[ 98 ] )
+    {
+        return 14;
+    }
+
+    sized.reserve( 10 );
+
+    if( sized.capacity() != room )
+    {
+        return 15;
+    }
+
+    return 0;
+}

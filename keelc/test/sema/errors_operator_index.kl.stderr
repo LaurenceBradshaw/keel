@@ -22,11 +22,11 @@ error: `operator[]` must be `const`
 37 |     i32* operator[]( u64 index )
    |          ^^^^^^^^^^ write `const` after its parameter list; a `const` object is indexed too
 
-error: `operator[]` takes a `u64` index
+error: `operator[]` takes its index by value or `const ref`
   --> sema/errors_operator_index.kl:47:22
    |
-47 |     i32* operator[]( i32 index ) const
-   |                      ^^^^^^^^^ write the parameter as `u64 index`
+47 |     i32* operator[]( ref u64 index ) const
+   |                      ^^^^^^^^^^^^^ `v[i]` has nowhere to write a `ref`, `out` or `move`
 
 error: `operator[]` takes one parameter, the index
   --> sema/errors_operator_index.kl:57:20

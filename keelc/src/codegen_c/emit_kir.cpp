@@ -1756,6 +1756,12 @@ std::string Kir_emitter::rvalue( const Rvalue& rvalue, Span span ) const
             );
         }
 
+        // C shifts at the left operand's type, and a bare constant is an `int`.
+        if( rvalue.op == Token_kind::Less_less && rvalue.a.kind == Operand_kind::Constant )
+        {
+            return fmt::format( "( {} ) {} << {}", spelling_.type( rvalue.a.type ), operand( rvalue.a ), operand( rvalue.b ) );
+        }
+
         return fmt::format( "{} {} {}", operand( rvalue.a ), token_kind_spelling( rvalue.op ), operand( rvalue.b ) );
     }
 
