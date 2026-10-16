@@ -81,7 +81,7 @@ private:
     void    declare_parameters( Node_id list );
     void    declare_bounds( Node_id declaration, Node_id list ); // parameters, then each `where`
     void    declare_type_bounds();
-    Node_id required_naming_self( Type_id interface ) const;
+    Node_id required_bound_only( Type_id interface ) const;
     void    declare_implements();
     void    declare_block( Node_id block ); // an `implements ... for` block, not a function body
     void    declare_fields();

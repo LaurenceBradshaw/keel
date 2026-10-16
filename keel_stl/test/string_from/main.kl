@@ -1,0 +1,33 @@
+// `kl::string` implements the prelude's `from` at `str`, `u64` and `i64`: each is its own static
+// method, called by name or through a bound. Each check returns its own code.
+import kl::string;
+
+T build<T, A>( A value ) where T : from<A>
+{
+    return T::from( value );
+}
+
+i32 main()
+{
+    if( !( kl::string::from( "abc" ) == kl::string( "abc" ) ) )
+    {
+        return 1;
+    }
+
+    if( !( build<kl::string, str>( "hey" ) == kl::string( "hey" ) ) )
+    {
+        return 2;
+    }
+
+    if( !( build<kl::string, u64>( 42 ) == kl::string( "42" ) ) )
+    {
+        return 3;
+    }
+
+    if( !( build<kl::string, i64>( -7 ) == kl::string( "-7" ) ) )
+    {
+        return 4;
+    }
+
+    return 0;
+}

@@ -25,7 +25,7 @@ int32_t kl__main__( void )
     kl_t6 = &kl_t5;
     kl_t7 = ( uint8_t* ) "before\012";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t6, kl_t7, 7 );
-    kl_rt_write( 1, kl_t1.kl_data_47, kl_t5.kl_size_50 );
+    kl_rt_write( 1, kl_t1.kl_data_55, kl_t5.kl_size_58 );
     goto bb1;
     bb1:
     kl_rt_panic( "codegen/runtime_panic_flushes.kl", 11, "assertion failed: false" );

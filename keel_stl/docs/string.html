@@ -46,7 +46,7 @@
 <section class="entry">
 <h2><span class="kind">class</span> <span class="type">string</span></h2>
 <div class="group" id="string">
-<pre class="signature"><a class="anchor" href="#string" aria-label="Link to string">#</a><code><span class="kw">class</span> <span class="type">string</span> <span class="kw">implements</span> <a class="type" href="prelude.html#textual">textual</a>, <a class="type" href="prelude.html#equatable">equatable</a>, <a class="type" href="prelude.html#hashable">hashable</a></code></pre>
+<pre class="signature"><a class="anchor" href="#string" aria-label="Link to string">#</a><code><span class="kw">class</span> <span class="type">string</span> <span class="kw">implements</span> <a class="type" href="prelude.html#textual">textual</a>, <a class="type" href="prelude.html#equatable">equatable</a>, <a class="type" href="prelude.html#hashable">hashable</a>, <a class="type" href="prelude.html#from">from</a>&lt;<a class="type" href="prelude.html#str">str</a>&gt;, <a class="type" href="prelude.html#from">from</a>&lt;<a class="prim" href="prelude.html#u64">u64</a>&gt;, <a class="type" href="prelude.html#from">from</a>&lt;<a class="prim" href="prelude.html#i64">i64</a>&gt;</code></pre>
 <div class="doc">
 <p>A growable sequence of bytes that owns its storage.</p>
 <p>The bytes are not checked to be UTF-8, and every index and size counts bytes.</p>
@@ -71,6 +71,10 @@
 </div>
 </div>
 <div class="group" id="string.from">
+<pre class="signature"><a class="anchor" href="#string.from" aria-label="Link to from">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#string">string</a> <span class="fn">from</span>( <a class="type" href="prelude.html#str">str</a> text )</code></pre>
+<div class="doc">
+<p>A copy of <code>text</code>'s bytes.</p>
+</div>
 <pre class="signature"><a class="anchor" href="#string.from" aria-label="Link to from">#</a><code><span class="kw">public</span> <span class="kw">static</span> <a class="type" href="#string">string</a> <span class="fn">from</span>( <a class="prim" href="prelude.html#u64">u64</a> value )</code></pre>
 <div class="doc">
 <p><code>value</code> written in decimal, with no leading zeros.</p>

@@ -9,6 +9,13 @@ interface textual
     const ref u8[] as_text() const;
 };
 
+/// A type that can be made from a `T`, called as `T::from( value )`. A string literal becomes any
+/// type that implements `from<str>`.
+interface from<T>
+{
+    static self from( T value );
+};
+
 /// Text: a run of bytes and their count.
 ///
 /// A string literal is a `str`, and only a literal makes one. Its `size` counts the bytes after

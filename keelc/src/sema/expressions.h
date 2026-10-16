@@ -176,7 +176,7 @@ private:
     Type_id infer_unary( Node_id id );
     // Whether `op` on `type` calls a method: any struct's, or an enum's own block's.
     bool    calls_operator( Type_id type, Token_kind op ) const;
-    Type_id infer_operator_call( Node_id id, Node_id object, Node_id argument, Symbol_id name );
+    Type_id infer_operator_call( Node_id id, Node_id object, Node_id argument, Symbol_id name, bool argument_typed = false );
     Type_id infer_index_operator( Node_id id, Type_id object_type );
     Node_id
     find_operator( Node_id id, Type_id object_type, Node_id argument, Symbol_id name, std::string_view declaration_text );
@@ -199,8 +199,10 @@ private:
     overload_for_signature( Node_id id, std::string_view name, Node_id first, Type_id signature, const Bindings& bindings );
     Type_id indirect_call( Node_id id, Node_id declaration, Type_id signature );
 
-    Type_id infer_field( Node_id id );
-    Type_id infer_string_literal( Node_id id );
+    Type_id     infer_field( Node_id id );
+    Type_id     infer_string_literal( Node_id id );
+    bool        is_prelude_str( Type_id type ) const;
+    std::string text_hint( Node_id id, Type_id expected, Type_id actual ) const;
 
     // A composite constructor, not a value literal: its type is fixed by its name rather than
     // adopted from context, which is why it has no place in Literals::infer_literal.
@@ -232,6 +234,7 @@ private:
     void    report_private( Node_id at, Node_id member );
     Type_id qualifier_type( Node_id path, Node_id declaration );
     Type_id infer_static_call( Node_id id, Node_id aggregate );
+    Type_id infer_bound_static_call( Node_id id, Node_id parameter );
 
     Type_id infer_conditional( Node_id id );
 

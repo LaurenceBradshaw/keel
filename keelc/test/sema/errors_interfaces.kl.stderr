@@ -4,82 +4,76 @@ error: an interface's method cannot have type parameters
 9 |     i32 make<U>( U u );
   |             ^^^ a call through the interface reaches one compiled method, which cannot be every instance
 
-error: an interface's method cannot be `static`
-  --> sema/errors_interfaces.kl:10:16
-   |
-10 |     static i32 count();
-   |                ^^^^^ it is called through an object, which a `static` method does not take
-
 error: `Dot`'s `area` must be `const`, as `Shape` declares it
-  --> sema/errors_interfaces.kl:23:23
+  --> sema/errors_interfaces.kl:22:23
    |
-23 | struct Dot implements Shape, Named, Shape
+22 | struct Dot implements Shape, Named, Shape
    |                       ^^^^^ a caller holding a `const ref Shape` may call it
 
 error: `Dot`'s `grow` does not match the one `Shape` declares
-  --> sema/errors_interfaces.kl:23:23
+  --> sema/errors_interfaces.kl:22:23
    |
-23 | struct Dot implements Shape, Named, Shape
+22 | struct Dot implements Shape, Named, Shape
    |                       ^^^^^ `Shape` wants `void grow( f64 by )`
 
 error: `Dot` implements `Named` but has no method `id`
-  --> sema/errors_interfaces.kl:23:30
+  --> sema/errors_interfaces.kl:22:30
    |
-23 | struct Dot implements Shape, Named, Shape
+22 | struct Dot implements Shape, Named, Shape
    |                              ^^^^^ add `i32 id() const` to `Dot`
 
 error: `Dot` already implements `Shape`
-  --> sema/errors_interfaces.kl:23:37
+  --> sema/errors_interfaces.kl:22:37
    |
-23 | struct Dot implements Shape, Named, Shape
+22 | struct Dot implements Shape, Named, Shape
    |                                     ^^^^^
 
 error: `Hidden`'s `id` is private, but `Named` makes it callable by anyone
-  --> sema/errors_interfaces.kl:31:25
+  --> sema/errors_interfaces.kl:30:25
    |
-31 | class Hidden implements Named
+30 | class Hidden implements Named
    |                         ^^^^^ make `id` public
 
 error: `Plain` is not an interface
-  --> sema/errors_interfaces.kl:38:25
+  --> sema/errors_interfaces.kl:37:25
    |
-38 | struct Wrong implements Plain
+37 | struct Wrong implements Plain
    |                         ^^^^^ only an interface can be implemented
 
 error: `Shape` is an interface, so it cannot be held by value
-  --> sema/errors_interfaces.kl:43:1
+  --> sema/errors_interfaces.kl:42:1
    |
-43 | Shape global_shape;
+42 | Shape global_shape;
    | ^^^^^ borrow one as `const ref Shape` or `ref Shape`, or point at one with `Shape*`
 
 error: `Shape` is an interface, so it cannot be held by value
-  --> sema/errors_interfaces.kl:45:16
+  --> sema/errors_interfaces.kl:44:16
    |
-45 | void by_value( Shape s ) { }
+44 | void by_value( Shape s ) { }
    |                ^^^^^ borrow one as `const ref Shape` or `ref Shape`, or point at one with `Shape*`
 
 error: `T` has no method `perimeter`
-  --> sema/errors_interfaces.kl:47:58
+  --> sema/errors_interfaces.kl:46:58
    |
-47 | f64 unknown<T>( const ref T t ) where T : Shape { return t.perimeter(); }
+46 | f64 unknown<T>( const ref T t ) where T : Shape { return t.perimeter(); }
    |                                                          ^^^^^^^^^^^
 
 error: `T` has no methods
-  --> sema/errors_interfaces.kl:49:44
+  --> sema/errors_interfaces.kl:48:44
    |
-49 | f64 unbounded<T>( const ref T t ) { return t.area(); }
+48 | f64 unbounded<T>( const ref T t ) { return t.area(); }
    |                                            ^ a `where` clause naming an interface gives `T` that interface's methods
 
 error: `s` is `const`
-  --> sema/errors_interfaces.kl:53:39
+  --> sema/errors_interfaces.kl:52:39
    |
-53 | void read_only( const ref Shape s ) { s.grow( 1.0 ); }
+52 | void read_only( const ref Shape s ) { s.grow( 1.0 ); }
    |                                       ^ remove `const` to modify it
 
 error: `bounded` needs a `T` that implements `Shape`, but `Plain` does not
-  --> sema/errors_interfaces.kl:58:14
+  --> sema/errors_interfaces.kl:57:14
    |
-58 |     bounded( p );
+57 |     bounded( p );
    |              ^ declare `Plain` with `implements Shape`
 
-14 errors generated
+13 errors generated

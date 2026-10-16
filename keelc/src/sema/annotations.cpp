@@ -746,8 +746,8 @@ Type_id Annotations::resolve_interface( Node_id annotation )
     {
         return types_.type_of( decl );
     }
-
     addressed_          = annotation;
+    implemented_        = annotation;
     const Type_id named = resolve( annotation );
     if( table_.is_error( named ) )
     {
@@ -861,28 +861,34 @@ Type_id Annotations::addressed_interface(
 
     addressed_ = {};
 
-    if( const Node_id method = table_.method_naming_self( types_.type_of( decl ) ); method.is_valid() && !receiver_ )
+    if( const Node_id method = table_.bound_only_method( types_.type_of( decl ) );
+        method.is_valid() && !receiver_ && implemented_ != annotation )
     {
-        const Node_id owner = ast_.enclosing_aggregate( method );
+        const Node_id          owner = ast_.enclosing_aggregate( method );
+        const std::string_view why   = ast_.is_static_method( method ) ? "is `static`" : "mentions `self`";
 
         reporter_.error_at(
             ast_.span( annotation ),
             owner == decl ? fmt::format(
-                                "`{}` can only bound a type parameter, because its `{}` mentions `self`",
+                                "`{}` can only bound a type parameter, because its `{}` {}",
                                 spelled,
-                                interner_.text( ast_.name( method ) )
+                                interner_.text( ast_.name( method ) ),
+                                why
                             )
                           : fmt::format(
-                                "`{}` can only bound a type parameter, because it requires `{}`, whose `{}` mentions `self`",
+                                "`{}` can only bound a type parameter, because it requires `{}`, whose `{}` {}",
                                 spelled,
                                 interner_.text( ast_.name( owner ) ),
-                                interner_.text( ast_.name( method ) )
+                                interner_.text( ast_.name( method ) ),
+                                why
                             ),
             fmt::format( "take a `T` with `where T : {}` instead", spelled )
         );
 
         return table_.builtin( Type_kind::Error );
     }
+
+    implemented_ = {};
 
     return interface;
 }
@@ -2022,6 +2028,18 @@ TEST_CASE( "annotations_refuse_a_bound_only_interface", "[sema][annotation][inte
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "because its `take` mentions `self`" ) != std::string::npos );
+    }
+
+    // After `implements` the instance names what is promised, not what is held.
+    SECTION( "a generic one is implemented and required at an instance" )
+    {
+        const Typed p( "interface Eq<T> { bool same( const ref self o, T x ) const; };\n"
+                       "interface Eq2<T> implements Eq<T> { };\n"
+                       "struct P implements Eq<i32> { i32 v; bool same( const ref P o, i32 x ) const { return true; } };\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.clean() );
     }
 
     SECTION( "an interface that does not mention it is held as before" )

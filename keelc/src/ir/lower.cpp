@@ -124,7 +124,16 @@ private:
         const Bindings&          callee_bound,
         std::vector<Type_id>     type_arguments
     );
-    Operand lower_interface_call( Node_id id, Node_id requirement );
+    Operand              lower_interface_call( Node_id id, Node_id requirement );
+    Operand              lower_static_interface_call( Node_id id, Node_id requirement );
+    std::vector<Operand> lower_call_arguments( Node_id id, Node_id callee, const Bindings& callee_bound );
+    Operand              emit_call(
+                     Node_id                  id,
+                     Node_id                  callee,
+                     std::span<const Operand> operands,
+                     const Bindings&          callee_bound,
+                     std::vector<Type_id>     type_arguments
+                 );
     Operand lower_operator_call( Node_id id, Node_id method, const Bindings& bindings, std::vector<Type_id> type_arguments );
     // In an instance, the method of `held`'s own conformance that `op` calls, or invalid where the
     // operator is the compiler's.
@@ -1469,7 +1478,9 @@ Operand Lowering::lower_string_literal( Node_id id )
     const Type_id    size_type     = type_under( parameters[2], {} );
     const Literal_id bytes         = ast_.literal( id );
 
-    const Local_id local = builder_.add_local( type, span );
+    // Built into `str` itself, which an adopted literal then hands to its type's `from`.
+    const Type_id  text  = types_.type_of( ast_.enclosing_aggregate( constructor ) );
+    const Local_id local = builder_.add_local( text, span );
 
     const Operand operands[] = {
         temporary( address_of( builder_.place( local ), receiver_type, Address_purpose::Initialise ), receiver_type, span ),
@@ -1482,7 +1493,24 @@ Operand Lowering::lower_string_literal( Node_id id )
 
     builder_.into_temp( call( constructor, first, 3, none ), none, span );
 
-    return copy( builder_.place( local ), type );
+    if( type == text )
+    {
+        return copy( builder_.place( local ), type );
+    }
+
+    Type_table&   table       = types_.table();
+    const Node_id from        = table.from_declaration();
+    const Node_id requirement = ast_.members( from )[0];
+    const Type_id interface   = table.interface( from, std::array { text }, "from" );
+    const Node_id method      = types_.conformances().method_for( table, type, interface, requirement );
+
+    assert( method.is_valid() && "an adopted literal's type implements `from<str>`" );
+
+    const Bindings                 bound     = aggregate_bindings( ast_, table, type, types_.recorded() );
+    const std::span<const Type_id> arguments = table.get( type ).arguments;
+    const Operand                  operand[] = { copy( builder_.place( local ), text ) };
+
+    return emit_call( id, method, operand, bound, std::vector<Type_id>( arguments.begin(), arguments.end() ) );
 }
 
 Operand Lowering::lower_binary( Node_id id )
@@ -2149,6 +2177,13 @@ Operand Lowering::lower_call( Node_id id )
     // name alone names only the first candidate of an overload set.
     const Node_id callee = types_.callee_of( id );
 
+    // `T::zero()` through a bound: the requirement has no receiver, so the branch below misses it.
+    if( callee.is_valid() && ast_.kind( callee ) == Node_kind::Method_decl &&
+        ast_.kind( ast_.enclosing_aggregate( callee ) ) == Node_kind::Interface_decl )
+    {
+        return lower_static_interface_call( id, callee );
+    }
+
     // A bare `add( by )` inside a method. The receiver is the one this function was given, borrowed
     // again as `&(*this)` as an explicit `this.add( by )` is, so the loans pass sees the call may
     // change it. A static method has none to pass, so it falls through to the ordinary path below,
@@ -2183,6 +2218,34 @@ Operand Lowering::lower_call( Node_id id )
         callee.is_valid() && ( ast_.kind( callee ) == Node_kind::Function_decl || ast_.is_static_method( callee ) ) &&
         "checker should have rejected an unresolved call"
     );
+
+    const Bindings callee_bound = bindings_for_call( id );
+
+    return emit_call(
+        id, callee, lower_call_arguments( id, callee, callee_bound ), callee_bound, type_arguments_for_call( id )
+    );
+}
+
+// The implementer's own static method, under the bindings of the type `T` stands for.
+Operand Lowering::lower_static_interface_call( Node_id id, Node_id requirement )
+{
+    const Node_id path   = ast_.callee( id );
+    const Type_id held   = type_of( ast_.qualifier( path ) );
+    const Node_id method = types_.conformances().method_for( types_.table(), held, type_of( path ), requirement );
+
+    assert( method.is_valid() && "a static requirement is answered by a declared method" );
+
+    const Bindings                 bound     = aggregate_bindings( ast_, types_.table(), held, types_.recorded() );
+    const std::span<const Type_id> arguments = types_.table().get( held ).arguments;
+
+    return emit_call(
+        id, method, lower_call_arguments( id, method, bound ), bound, std::vector<Type_id>( arguments.begin(), arguments.end() )
+    );
+}
+
+// The written arguments, lowered in order and then converted to `callee`'s parameters.
+std::vector<Operand> Lowering::lower_call_arguments( Node_id id, Node_id callee, const Bindings& callee_bound )
+{
     const std::span<const Node_id> arguments = ast_.arguments( id );
 
     // The *parameter* types, from the callee's Param_list. An argument's own type is not the
@@ -2200,8 +2263,6 @@ Operand Lowering::lower_call( Node_id id )
     // The callee's bindings, not this function's. Every type below belongs to the callee's
     // signature, which is written in *its* parameters - so substituting with `bindings_` would ask
     // `main` to bind a `T` it has never heard of.
-    const Bindings callee_bound = bindings_for_call( id );
-
     for( std::size_t i = 0; i < arguments.size(); ++i )
     {
         operands.push_back( lower_argument( arguments[i], parameters[i], callee_bound ) );
@@ -2221,6 +2282,17 @@ Operand Lowering::lower_call( Node_id id )
         }
     }
 
+    return operands;
+}
+
+Operand Lowering::emit_call(
+    Node_id                  id,
+    Node_id                  callee,
+    std::span<const Operand> operands,
+    const Bindings&          callee_bound,
+    std::vector<Type_id>     type_arguments
+)
+{
     const u32 first = builder_.add_operands( operands );
 
     // A void call still assigns, to a local of type void that nothing reads. Keeping Assign
@@ -2235,8 +2307,6 @@ Operand Lowering::lower_call( Node_id id )
     // copy reads `(*_t)`, and a binding takes `&(*_t)`, which is `_t` again.
     const bool    binding     = is_borrowed_binding( ast_, types_, callee );
     const Type_id result_type = binding ? binding_type_under( callee, callee_bound ) : type;
-
-    std::vector<Type_id> type_arguments = type_arguments_for_call( id );
 
     const Local_id result = call_result(
         id,

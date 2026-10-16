@@ -98,6 +98,8 @@ public:
     bool                     promises( Type_id parameter, Type_id interface ) const;
     // A parameter's promise, a declared `implements`, or what the compiler supplies.
     bool conforms( Type_id type, Type_id interface ) const;
+    // Whether a string literal becomes a `type`: only through the prelude's `from<str>`.
+    bool adopts_text( Type_id type, Type_id text ) const;
 
     // The narrowest integer a parameter may turn out to be, for the checks that need a width. Zero
     // when no integer is admissible at all.

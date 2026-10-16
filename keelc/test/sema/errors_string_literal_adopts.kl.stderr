@@ -1,0 +1,43 @@
+error: expected `T`, but got `str`
+  --> sema/errors_string_literal_adopts.kl:41:11
+   |
+41 |     T x = "abc";
+   |           ^^^^^ `where T : from<str>` lets a string literal become one
+
+error: expected `plain`, but got `str`
+  --> sema/errors_string_literal_adopts.kl:47:15
+   |
+47 |     plain p = "abc";
+   |               ^^^^^ a string literal becomes a `plain` only if `plain` implements the prelude's `from<str>`
+
+error: expected `label`, but got `str`
+  --> sema/errors_string_literal_adopts.kl:51:15
+   |
+51 |     label l = text;
+   |               ^^^^ only a string literal becomes a `label`; write `label::from( ... )`
+
+error: expected `number`, but got an integer literal
+  --> sema/errors_string_literal_adopts.kl:54:16
+   |
+54 |     number n = 5;
+   |                ^
+
+error: this call to `both` is ambiguous
+  --> sema/errors_string_literal_adopts.kl:57:5
+   |
+57 |     both( "x" );
+   |     ^^^^^^^^^^^ more than one matches: `( label )` and `( width )`; write a type the call can be told by
+
+error: `edit` may modify this argument
+  --> sema/errors_string_literal_adopts.kl:60:11
+   |
+60 |     edit( "x" );
+   |           ^^^ write `ref`
+
+error: `show` needs a `T` that implements `from<str>`, but `str` does not
+  --> sema/errors_string_literal_adopts.kl:63:15
+   |
+63 |     _ = show( "abc" );
+   |               ^^^^^
+
+7 errors generated

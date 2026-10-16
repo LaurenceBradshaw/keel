@@ -1,0 +1,64 @@
+// A string literal becomes a `kl::string` wherever one is expected, since `kl::string` implements
+// `from<str>`: a local, an argument by value and by `const ref`, a `return`, an assignment, a
+// comparison either way round, an element pushed, and a map's key. Each check returns its own code.
+import kl::string;
+import kl::list;
+import kl::map;
+
+u64 length( kl::string s )
+{
+    return s.size();
+}
+
+u64 peek( const ref kl::string s )
+{
+    return s.size();
+}
+
+kl::string greeting()
+{
+    return "hello";
+}
+
+i32 main()
+{
+    kl::string s = "abc";
+
+    if( s.size() != 3 || length( "four" ) != 4 || peek( "fives" ) != 5 )
+    {
+        return 1;
+    }
+
+    if( !( greeting() == kl::string( "hello" ) ) )
+    {
+        return 2;
+    }
+
+    s = "changed";
+
+    if( !( s == "changed" ) || !( "changed" == s ) || s == "other" )
+    {
+        return 3;
+    }
+
+    kl::list<kl::string> names = kl::list<kl::string>();
+
+    names.push( move "ada" );
+    names.push( move "grace" );
+
+    if( names.size() != 2 || !( names[1] == "grace" ) )
+    {
+        return 4;
+    }
+
+    kl::map<kl::string, i32> ages = kl::map<kl::string, i32>();
+
+    _ = ages.insert( move "ada", 36 );
+
+    if( !ages.contains( "ada" ) || ages.contains( "grace" ) || ages["ada"] != 36 )
+    {
+        return 5;
+    }
+
+    return 0;
+}

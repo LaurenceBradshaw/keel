@@ -29,17 +29,17 @@ struct kl__held
 
 struct kl_7prelude_box__I4sinkI3i64EE
 {
-    struct kl__sink__I3i64E__ref kl_p__893;
+    struct kl__sink__I3i64E__ref kl_p__901;
 };
 
 struct kl_7prelude_box__I4heldE
 {
-    struct kl__held* kl_p__893;
+    struct kl__held* kl_p__901;
 };
 
 struct kl_7prelude_box__I5tallyE
 {
-    struct kl__tally* kl_p__893;
+    struct kl__tally* kl_p__901;
 };
 
 struct kl__sink__I3i64E__vtable
@@ -406,7 +406,7 @@ int32_t kl__main__( void )
     kl__held__R4held__ctor( kl_t36 );
     kl_7prelude_box__I4heldE__RQ7prelude3boxI4heldE_M4held__ctor( kl_t34, kl_t35 );
     kl_t71 = false;
-    kl_t39 = ( struct kl_7prelude_box__I4sinkI3i64EE ) { ( struct kl__sink__I3i64E__ref ) { ( void* ) kl_t33.kl_p__893, &kl__held__as_kl__sink__I3i64E } };
+    kl_t39 = ( struct kl_7prelude_box__I4sinkI3i64EE ) { ( struct kl__sink__I3i64E__ref ) { ( void* ) kl_t33.kl_p__901, &kl__held__as_kl__sink__I3i64E } };
     kl_t70 = false;
     kl_b_32 = kl_t39;
     kl_t69 = true;
@@ -444,7 +444,7 @@ int32_t kl__main__( void )
     kl_t56 = &kl_t55;
     kl__tally__R5tally__ctor( kl_t56 );
     kl_7prelude_box__I5tallyE__RQ7prelude3boxI5tallyE_M5tally__ctor( kl_t54, kl_t55 );
-    kl_t59 = ( struct kl_7prelude_box__I4sinkI3i64EE ) { ( struct kl__sink__I3i64E__ref ) { ( void* ) kl_t53.kl_p__893, &kl__tally__as_kl__sink__I3i64E } };
+    kl_t59 = ( struct kl_7prelude_box__I4sinkI3i64EE ) { ( struct kl__sink__I3i64E__ref ) { ( void* ) kl_t53.kl_p__901, &kl__tally__as_kl__sink__I3i64E } };
     kl_t72 = false;
     if ( kl_t69 ) kl_7prelude_box__I4sinkI3i64EE__dtor( &kl_b_32 );
     kl_b_32 = kl_t59;
@@ -484,20 +484,20 @@ void kl_7prelude_box__I4heldE__RQ7prelude3boxI4heldE_M4held__ctor( struct kl_7pr
     struct kl__held* kl_t6;
     struct kl__held* kl_t7;
     bool kl_t8;
-#line 240 "<prelude>"
+#line 247 "<prelude>"
     kl_t8 = true;
-#line 245 "<prelude>"
-    kl_t4 = ( struct kl__held* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl__held ), "<prelude>", 245, "out of memory: alloc<T>( 1 )" );
+#line 252 "<prelude>"
+    kl_t4 = ( struct kl__held* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl__held ), "<prelude>", 252, "out of memory: alloc<T>( 1 )" );
     kl_slot_3 = kl_t4;
-#line 246 "<prelude>"
+#line 253 "<prelude>"
     kl_t5 = kl_slot_3 + 0;
     ( *kl_t5 ) = kl_value_2;
     kl_t8 = false;
-#line 247 "<prelude>"
+#line 254 "<prelude>"
     kl_t6 = kl_slot_3 + 0;
     kl_t7 = &( *kl_t6 );
-    ( *kl_this_1 ).kl_p__893 = kl_t7;
-#line 240 "<prelude>"
+    ( *kl_this_1 ).kl_p__901 = kl_t7;
+#line 247 "<prelude>"
     if ( kl_t8 ) kl__held__dtor( &kl_value_2 );
     kl_t8 = false;
     return;
@@ -506,8 +506,8 @@ void kl_7prelude_box__I4heldE__RQ7prelude3boxI4heldE_M4held__ctor( struct kl_7pr
 struct kl__sink__I3i64E__ref kl_7prelude_get__I4sinkI3i64EE__SQ7prelude3boxI4sinkI3i64EE( struct kl_7prelude_box__I4sinkI3i64EE* kl_this_1 )
 {
     struct kl__sink__I3i64E__ref kl_t0;
-#line 263 "<prelude>"
-    kl_t0 = ( *kl_this_1 ).kl_p__893;
+#line 270 "<prelude>"
+    kl_t0 = ( *kl_this_1 ).kl_p__901;
     return kl_t0;
 }
 
@@ -518,45 +518,45 @@ void kl_7prelude_box__I5tallyE__RQ7prelude3boxI5tallyE_M5tally__ctor( struct kl_
     struct kl__tally* kl_t5;
     struct kl__tally* kl_t6;
     struct kl__tally* kl_t7;
-#line 245 "<prelude>"
-    kl_t4 = ( struct kl__tally* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl__tally ), "<prelude>", 245, "out of memory: alloc<T>( 1 )" );
+#line 252 "<prelude>"
+    kl_t4 = ( struct kl__tally* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl__tally ), "<prelude>", 252, "out of memory: alloc<T>( 1 )" );
     kl_slot_3 = kl_t4;
-#line 246 "<prelude>"
+#line 253 "<prelude>"
     kl_t5 = kl_slot_3 + 0;
     ( *kl_t5 ) = kl_value_2;
-#line 247 "<prelude>"
+#line 254 "<prelude>"
     kl_t6 = kl_slot_3 + 0;
     kl_t7 = &( *kl_t6 );
-    ( *kl_this_1 ).kl_p__893 = kl_t7;
+    ( *kl_this_1 ).kl_p__901 = kl_t7;
     return;
 }
 
 void kl_7prelude_box__I4sinkI3i64EE__dtor( struct kl_7prelude_box__I4sinkI3i64EE* kl_this_1 )
 {
     struct kl__sink__I3i64E__ref kl_t2;
-#line 255 "<prelude>"
-    kl_t2 = ( *kl_this_1 ).kl_p__893;
+#line 262 "<prelude>"
+    kl_t2 = ( *kl_this_1 ).kl_p__901;
     kl_t2.vtable->drop( kl_t2.self );
-#line 256 "<prelude>"
-    kl_rt_free( ( ( *kl_this_1 ).kl_p__893 ).self );
+#line 263 "<prelude>"
+    kl_rt_free( ( ( *kl_this_1 ).kl_p__901 ).self );
     return;
 }
 
 void kl_7prelude_box__I4heldE__dtor( struct kl_7prelude_box__I4heldE* kl_this_1 )
 {
     struct kl__held* kl_t2;
-#line 255 "<prelude>"
-    kl_t2 = ( *kl_this_1 ).kl_p__893;
+#line 262 "<prelude>"
+    kl_t2 = ( *kl_this_1 ).kl_p__901;
     kl__held__dtor( &( *kl_t2 ) );
-#line 256 "<prelude>"
-    kl_rt_free( ( *kl_this_1 ).kl_p__893 );
+#line 263 "<prelude>"
+    kl_rt_free( ( *kl_this_1 ).kl_p__901 );
     return;
 }
 
 void kl_7prelude_box__I5tallyE__dtor( struct kl_7prelude_box__I5tallyE* kl_this_1 )
 {
-#line 256 "<prelude>"
-    kl_rt_free( ( *kl_this_1 ).kl_p__893 );
+#line 263 "<prelude>"
+    kl_rt_free( ( *kl_this_1 ).kl_p__901 );
     return;
 }
 

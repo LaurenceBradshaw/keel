@@ -1,0 +1,67 @@
+error: `instance_count`'s `count` must be `static`, as `counted` declares it
+  --> sema/errors_static_requirements.kl:18:34
+   |
+18 | struct instance_count implements counted
+   |                                  ^^^^^^^ it is called as `instance_count::count( ... )`, with no object
+
+error: `absent` implements `counted` but has no method `count`
+  --> sema/errors_static_requirements.kl:26:26
+   |
+26 | struct absent implements counted
+   |                          ^^^^^^^ add `static u64 count()` to `absent`
+
+error: `hidden`'s `count` is private, but `counted` makes it callable by anyone
+  --> sema/errors_static_requirements.kl:32:25
+   |
+32 | class hidden implements counted
+   |                         ^^^^^^^ make `count` public
+
+error: `counted` can only bound a type parameter, because its `count` is `static`
+  --> sema/errors_static_requirements.kl:40:18
+   |
+40 | void by_ref( ref counted c ) { }
+   |                  ^^^^^^^ take a `T` with `where T : counted` instead
+
+error: `counted` can only bound a type parameter, because its `count` is `static`
+  --> sema/errors_static_requirements.kl:43:18
+   |
+43 | void by_pointer( counted* c ) { }
+   |                  ^^^^^^^ take a `T` with `where T : counted` instead
+
+error: `tallied` can only bound a type parameter, because it requires `counted`, whose `count` is `static`
+  --> sema/errors_static_requirements.kl:46:25
+   |
+46 | void refined( const ref tallied t ) { }
+   |                         ^^^^^^^ take a `T` with `where T : tallied` instead
+
+error: `count` is a `static` method of `T`, so it takes no object
+  --> sema/errors_static_requirements.kl:51:12
+   |
+51 |     return t.count();
+   |            ^^^^^^^ call it as `T::count( ... )`
+
+error: `T` has no static method `count`
+  --> sema/errors_static_requirements.kl:57:12
+   |
+57 |     return T::count();
+   |            ^^^^^^^^ a `where` clause naming an interface gives `T` that interface's methods
+
+error: `T` has no static method `size`
+  --> sema/errors_static_requirements.kl:63:12
+   |
+63 |     return T::size();
+   |            ^^^^^^^
+
+error: `area` needs an object
+  --> sema/errors_static_requirements.kl:69:12
+   |
+69 |     return T::area();
+   |            ^^^^^^^ call it as `value.area( ... )`
+
+error: `i32` is a builtin type, and has no members
+  --> sema/errors_static_requirements.kl:80:12
+   |
+80 |     return i32::count();
+   |            ^^^
+
+11 errors generated

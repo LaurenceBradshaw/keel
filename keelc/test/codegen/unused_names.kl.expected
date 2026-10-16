@@ -35,8 +35,8 @@ struct kl__Lost
 struct kl_7prelude_result__I3u64_4LostE
 {
     int32_t tag;
-    uint64_t kl_value_684;
-    struct kl__Lost kl_error_687;
+    uint64_t kl_value_692;
+    struct kl__Lost kl_error_695;
 };
 
 void kl__Noisy__R5Noisy_3u64__ctor( struct kl__Noisy*, uint64_t );
@@ -146,7 +146,7 @@ struct kl_7prelude_result__I3u64_4LostE kl__fetch__4bool( bool kl_fine_1 )
 #line 65 "codegen/unused_names.kl"
     kl_t2.tag = 0;
     kl_t8 = true;
-    kl_t2.kl_value_684 = 1;
+    kl_t2.kl_value_692 = 1;
     kl_t8 = true;
     kl_t0 = kl_t2;
     kl_t8 = false;
@@ -166,7 +166,7 @@ struct kl_7prelude_result__I3u64_4LostE kl__fetch__4bool( bool kl_fine_1 )
     kl_t10 = true;
     kl_t3.tag = 1;
     kl_t9 = true;
-    kl_t3.kl_error_687 = kl_t4;
+    kl_t3.kl_error_695 = kl_t4;
     kl_t10 = false;
     kl_t9 = true;
     kl_t0 = kl_t3;
@@ -202,7 +202,7 @@ void kl__borrowed__4bool( bool kl_fine_1 )
     kl_t3 = kl_t2.tag == 0;
     if ( kl_t3 ) goto bb1; else goto bb2;
     bb1:
-    kl_v_4 = kl_t2.kl_value_684;
+    kl_v_4 = kl_t2.kl_value_692;
 #line 77 "codegen/unused_names.kl"
     kl_t6 = &kl_t5;
     kl_t7 = ( uint8_t* ) "ok";
@@ -212,7 +212,7 @@ void kl__borrowed__4bool( bool kl_fine_1 )
     goto bb3;
     bb2:
 #line 79 "codegen/unused_names.kl"
-    kl_e_11 = &kl_t2.kl_error_687;
+    kl_e_11 = &kl_t2.kl_error_695;
 #line 80 "codegen/unused_names.kl"
     kl_t13 = &kl_t12;
     kl_t14 = ( uint8_t* ) "err";
@@ -263,7 +263,7 @@ void kl__consumed__4bool( bool kl_fine_1 )
     bb1:
     kl_t5 = kl_t3;
     kl_t22 = false;
-    kl_v_6 = kl_t5.kl_value_684;
+    kl_v_6 = kl_t5.kl_value_692;
 #line 91 "codegen/unused_names.kl"
     kl_t8 = &kl_t7;
     kl_t9 = ( uint8_t* ) "ok";
@@ -275,7 +275,7 @@ void kl__consumed__4bool( bool kl_fine_1 )
 #line 93 "codegen/unused_names.kl"
     kl_t13 = kl_t3;
     kl_t22 = false;
-    kl_e_14 = kl_t13.kl_error_687;
+    kl_e_14 = kl_t13.kl_error_695;
 #line 94 "codegen/unused_names.kl"
     kl_t16 = &kl_t15;
     kl_t17 = ( uint8_t* ) "err";
@@ -357,13 +357,13 @@ void kl__Lost__dtor( struct kl__Lost* kl_t1 )
 void kl_7prelude_result__I3u64_4LostE__dtor( struct kl_7prelude_result__I3u64_4LostE* kl_t1 )
 {
     bool kl_t2;
-#line 210 "<prelude>"
+#line 217 "<prelude>"
     kl_t2 = ( *kl_t1 ).tag == 1;
     if ( kl_t2 ) goto bb2; else goto bb1;
     bb1:
     return;
     bb2:
-    kl__Lost__dtor( &( *kl_t1 ).kl_error_687 );
+    kl__Lost__dtor( &( *kl_t1 ).kl_error_695 );
     goto bb1;
 }
 

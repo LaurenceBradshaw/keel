@@ -44,7 +44,7 @@ void kl__Noisy__dtor( struct kl__Noisy* kl_this_1 )
 
 _Noreturn void kl__fail__Q7prelude3str( struct kl_7prelude_str kl_why_1 )
 {
-    kl_rt_panic_message( "codegen/panic.kl", 21, kl_why_1.kl_data_72, kl_why_1.kl_size_75 );
+    kl_rt_panic_message( "codegen/panic.kl", 21, kl_why_1.kl_data_80, kl_why_1.kl_size_83 );
 }
 
 int32_t kl__main__( void )

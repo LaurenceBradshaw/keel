@@ -107,9 +107,14 @@ std::optional<Conformance_problem> answer(
 
         found = member;
 
-        if( ast.is_static_method( member ) )
+        if( ast.is_static_method( member ) && !ast.is_static_method( requirement ) )
         {
             return Conformance_problem::Static;
+        }
+
+        if( !ast.is_static_method( member ) && ast.is_static_method( requirement ) )
+        {
+            return Conformance_problem::Not_static;
         }
 
         if( ast.own_type_param_list( member ).is_valid() )
@@ -238,8 +243,8 @@ void conform(
 
     for( const Node_id requirement : ast.members( declaration ) )
     {
-        // A static or generic requirement was refused where it was declared; nothing answers one.
-        const bool refused = ast.is_static_method( requirement ) || ast.own_type_param_list( requirement ).is_valid();
+        // A generic requirement was refused where it was declared; nothing answers one.
+        const bool refused = ast.own_type_param_list( requirement ).is_valid();
 
         Node_id                                  found;
         const std::optional<Conformance_problem> problem =
@@ -411,7 +416,8 @@ std::string substituted_requirement(
     const Bindings self = requirement_bindings( table, error.interface, error.self );
 
     std::string text = fmt::format(
-        "{}{} {}(",
+        "{}{}{} {}(",
+        ast.is_static_method( error.requirement ) ? "static " : "",
         param_spelling( parameter_mode_of( ast, error.requirement ) ),
         table.name( table.substitute( recorded_type( recorded, error.requirement ), self ) ),
         interner.text( ast.name( error.requirement ) )
@@ -509,7 +515,7 @@ void report_conformance_errors(
             reporter.error_at(
                 error.at,
                 fmt::format( "`{}`'s `{}` must be `const`, as `{}` declares it", type, method, interface ),
-                table.method_naming_self( error.interface ).is_valid()
+                table.bound_only_method( error.interface ).is_valid()
                     ? fmt::format( "a `const ref T` with `T : {}` may call it", interface )
                     : fmt::format( "a caller holding a `const ref {}` may call it", interface )
             );
@@ -517,6 +523,13 @@ void report_conformance_errors(
         case Conformance_problem::Static:
             reporter.error_at(
                 error.at, fmt::format( "`{}`'s `{}` is `static`, but `{}` calls it on an object", type, method, interface )
+            );
+            break;
+        case Conformance_problem::Not_static:
+            reporter.error_at(
+                error.at,
+                fmt::format( "`{}`'s `{}` must be `static`, as `{}` declares it", type, method, interface ),
+                fmt::format( "it is called as `{}::{}( ... )`, with no object", type, method )
             );
             break;
         case Conformance_problem::Generic:
@@ -786,11 +799,22 @@ TEST_CASE( "conformances_substitute_a_refinement_per_instance", "[sema][interfac
     REQUIRE( error.implementer == p.nth( Node_kind::Struct_decl, 1 ) );
 }
 
+TEST_CASE( "conformances_quote_a_static_requirement_as_static", "[sema][interfaces]" )
+{
+    const Typed p( "interface Zero { static self zero( i32 n ); };\n"
+                   "struct Sq implements Zero { f64 s; };\n"
+                   "struct Bad implements Zero { f64 s; static Bad zero() { return Bad { 0.0 }; } };\n"
+                   "i32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.rendered().find( "add `static Sq zero( i32 n )` to `Sq`" ) != std::string::npos );
+    REQUIRE( p.rendered().find( "`Zero` wants `static Bad zero( i32 n )`" ) != std::string::npos );
+}
+
 // Each was refused already, so the conformance stage adds nothing to it.
 TEST_CASE( "conformances_do_not_cascade_from_an_earlier_error", "[sema][interfaces]" )
 {
     const char* cases[] = {
-        "interface Shape { static f64 area(); };\nstruct Sq implements Shape { f64 s; };",
         "interface Shape { T pick<T>( T a ); };\nstruct Sq implements Shape { f64 s; };",
         "struct Sq implements i32 { f64 s; };",
         "struct Sq implements Nope { f64 s; };",

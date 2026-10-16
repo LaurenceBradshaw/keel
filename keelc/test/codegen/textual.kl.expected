@@ -138,7 +138,7 @@ int32_t kl__main__( void )
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t3, kl_t4, 5 );
     kl_hello_1 = kl_t2;
 #line 36 "codegen/textual.kl"
-    kl_t7.kl_data_5 = kl_hello_1.kl_data_157;
+    kl_t7.kl_data_5 = kl_hello_1.kl_data_165;
     kl_t7.kl_size_7 = 3;
     kl_name_6 = kl_t7;
 #line 37 "codegen/textual.kl"

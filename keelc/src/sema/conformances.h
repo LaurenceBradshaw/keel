@@ -33,11 +33,12 @@ enum class Conformance_problem : u8
     Mismatched,  // one of the name, with other parameters or another return
     Not_const,   // the interface's is `const` and the implementer's is not
     Static,      // the implementer's takes no object
+    Not_static,  // the requirement takes no object, the implementer's does
     Generic,     // the implementer's has type parameters of its own
     Private,     // the implementer's is hidden from a caller holding the interface
     Repeated,    // the type already conforms to the interface
     Unrequested, // a block's method the interface does not declare
-    Unrefined    // the type does not conform to an interface this one requires
+    Unrefined,   // the type does not conform to an interface this one requires
 };
 
 struct Conformance_error

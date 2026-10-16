@@ -161,6 +161,10 @@ Types Checker::run()
             {
                 types_.table().declare_prelude_interface( Prelude_interface::Hashable, decl );
             }
+            else if( name == "from" )
+            {
+                types_.table().declare_from( decl );
+            }
         }
 
         if( ( is_aggregate( kind ) || kind == Node_kind::Enum_decl ) && package.is_valid() )

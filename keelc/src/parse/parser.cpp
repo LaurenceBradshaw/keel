@@ -12761,6 +12761,20 @@ TEST_CASE( "parser_parses_a_generic_interface", "[parse][interfaces][generic]" )
     REQUIRE( p.child( p.members( decl )[0], 3 ) == list );
 }
 
+// An interface has no constructor, so a method may share its name.
+TEST_CASE( "parser_parses_a_method_named_after_its_interface", "[parse][interfaces]" )
+{
+    const Parsed p( "interface from<T>\n{\n    static self from( T value );\n};" );
+
+    INFO( p.errors() );
+    REQUIRE_FALSE( p.has_errors() );
+
+    const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Interface_decl );
+
+    REQUIRE( p.members( decl ).size() == 1 );
+    REQUIRE( p.kind( p.members( decl )[0] ) == Node_kind::Method_decl );
+}
+
 TEST_CASE( "parser_reads_a_bound's_type_arguments", "[parse][interfaces][generic]" )
 {
     const Parsed p( "void f<T>( ref T s ) where T : sink<i64> & copyable { }" );

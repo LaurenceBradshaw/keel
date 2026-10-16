@@ -30,6 +30,7 @@ functions.</p>
 <li><a href="#void"><code>void</code></a> <span class="kind">primitive</span></li>
 <li><a href="#never"><code>never</code></a> <span class="kind">primitive</span></li>
 <li><a href="#textual"><code>textual</code></a> <span class="kind">interface</span></li>
+<li><a href="#from"><code>from</code></a> <span class="kind">interface</span></li>
 <li><a href="#str"><code>str</code></a> <span class="kind">class</span></li>
 <li><a href="#print"><code>print</code></a> <span class="kind">function</span></li>
 <li><a href="#eprint"><code>eprint</code></a> <span class="kind">function</span></li>
@@ -196,6 +197,20 @@ and nothing else: a function's, an <code>extern</code>'s or a function pointer's
 <h3>Methods</h3>
 <div class="group" id="textual.as_text">
 <pre class="signature"><a class="anchor" href="#textual.as_text" aria-label="Link to as_text">#</a><code><span class="kw">public</span> <span class="kw">const</span> <span class="kw">ref</span> <a class="prim" href="#u8">u8</a>[] <span class="fn">as_text</span>() <span class="kw">const</span></code></pre>
+</div>
+</section>
+<section class="entry">
+<h2><span class="kind">interface</span> <span class="type">from</span></h2>
+<div class="group" id="from">
+<pre class="signature"><a class="anchor" href="#from" aria-label="Link to from">#</a><code><span class="kw">interface</span> <span class="type">from</span>&lt;T&gt;</code></pre>
+<div class="doc">
+<p>A type that can be made from a <code>T</code>, called as <code>T::from( value )</code>. A string literal becomes any
+type that implements <code>from&lt;str&gt;</code>.</p>
+</div>
+</div>
+<h3>Methods</h3>
+<div class="group" id="from.from">
+<pre class="signature"><a class="anchor" href="#from.from" aria-label="Link to from">#</a><code><span class="kw">public</span> <span class="kw">static</span> self <span class="fn">from</span>( T value )</code></pre>
 </div>
 </section>
 <section class="entry">

@@ -1338,20 +1338,20 @@ bool Type_table::refines_declaration( Node_id interface, Node_id other ) const
     return false;
 }
 
-void Type_table::declare_naming_self( Node_id interface, Node_id method )
+void Type_table::declare_bound_only( Node_id interface, Node_id method )
 {
-    naming_self_.emplace( interface.v, method );
+    bound_only_.emplace( interface.v, method );
 }
 
-Node_id Type_table::method_naming_self( Type_id interface ) const
+Node_id Type_table::bound_only_method( Type_id interface ) const
 {
     if( !interface.is_valid() || !is_interface( interface ) )
     {
         return Node_id {};
     }
 
-    const auto found = naming_self_.find( get( interface ).declaration.v );
-    return found == naming_self_.end() ? Node_id {} : found->second;
+    const auto found = bound_only_.find( get( interface ).declaration.v );
+    return found == bound_only_.end() ? Node_id {} : found->second;
 }
 
 void Type_table::declare_box( Node_id declaration )
@@ -1372,6 +1372,16 @@ bool Type_table::is_box( Type_id type ) const
 Node_id Type_table::box_declaration() const
 {
     return box_;
+}
+
+void Type_table::declare_from( Node_id declaration )
+{
+    from_ = declaration;
+}
+
+Node_id Type_table::from_declaration() const
+{
+    return from_;
 }
 
 void Type_table::declare_ordering( Node_id declaration )

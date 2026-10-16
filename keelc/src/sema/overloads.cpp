@@ -241,10 +241,9 @@ bool Overloads::marker_accepts( Node_id param, Keyword given, Type_id expected )
     return about_ownership && bounds_.satisfies( expected, Bound::Copyable );
 }
 
-// Exactly, or with `widen` set, through widens(): §6.7's second tier, asked only when the first
-// found nothing.
+// Exactly, then through widens(), then by a string literal's adoption.
 bool Overloads::candidate_accepts(
-    Node_id callable, u32 implicit_params, std::span<const Argument_shape> shapes, const Bindings& bindings, bool widen
+    Node_id callable, u32 implicit_params, std::span<const Argument_shape> shapes, const Bindings& bindings, Tier tier
 )
 {
     const std::span<const Node_id> params = ast_.params( callable ).subspan( implicit_params );
@@ -268,7 +267,15 @@ bool Overloads::candidate_accepts(
         switch( shapes[i].kind )
         {
         case Argument_kind::Typed:
-            if( shapes[i].type != expected && !( widen && widens( params[i], shapes[i].type, expected ) ) )
+            if( shapes[i].type != expected && !( tier != Tier::Exact && widens( params[i], shapes[i].type, expected ) ) )
+            {
+                return false;
+            }
+            break;
+
+        case Argument_kind::Text:
+            if( shapes[i].type != expected && !( tier != Tier::Exact && widens( params[i], shapes[i].type, expected ) ) &&
+                !( tier == Tier::Adopted && bounds_.adopts_text( expected, shapes[i].type ) ) )
             {
                 return false;
             }
@@ -361,6 +368,7 @@ bool Overloads::beats( std::span<const Type_id> first, std::span<const Type_id> 
         switch( shapes[i].kind )
         {
         case Argument_kind::Typed:
+        case Argument_kind::Text:
             from = shapes[i].type;
             break;
         case Argument_kind::Integer:
@@ -431,7 +439,8 @@ Overloads::closest( std::span<const std::vector<Type_id>> targets, std::span<con
     return result;
 }
 
-// Both tiers over `viable`, reporting nothing: the exact matches, else the closest widenings.
+// Every tier over `viable`, reporting nothing: the exact matches, else the closest widenings, else
+// the closest adoptions.
 std::vector<Node_id> Overloads::matching(
     const Call_site&                site,
     std::span<const Node_id>        viable,
@@ -442,6 +451,8 @@ std::vector<Node_id> Overloads::matching(
     const std::size_t                 written = ast_.type_args( site.call ).size();
     std::vector<Node_id>              widened_candidates;
     std::vector<std::vector<Type_id>> targets;
+    std::vector<Node_id>              adopted_candidates;
+    std::vector<std::vector<Type_id>> adopted_targets;
     std::vector<std::vector<Type_id>> exact_targets;
     std::vector<Node_id>              matching_candidates;
 
@@ -469,15 +480,20 @@ std::vector<Node_id> Overloads::matching(
         Bindings bindings = type_bindings( candidate, infers ? deduced : resolved );
         bindings.insert( from_instance.begin(), from_instance.end() );
 
-        if( candidate_accepts( candidate, site.implicit_params, shapes, bindings, false ) )
+        if( candidate_accepts( candidate, site.implicit_params, shapes, bindings, Tier::Exact ) )
         {
             matching_candidates.push_back( candidate );
             exact_targets.push_back( parameter_types( candidate, site.implicit_params, bindings ) );
         }
-        else if( candidate_accepts( candidate, site.implicit_params, shapes, bindings, true ) )
+        else if( candidate_accepts( candidate, site.implicit_params, shapes, bindings, Tier::Widened ) )
         {
             widened_candidates.push_back( candidate );
             targets.push_back( parameter_types( candidate, site.implicit_params, bindings ) );
+        }
+        else if( candidate_accepts( candidate, site.implicit_params, shapes, bindings, Tier::Adopted ) )
+        {
+            adopted_candidates.push_back( candidate );
+            adopted_targets.push_back( parameter_types( candidate, site.implicit_params, bindings ) );
         }
     }
 
@@ -493,7 +509,8 @@ std::vector<Node_id> Overloads::matching(
 
     if( matching_candidates.empty() )
     {
-        matching_candidates = pick( widened_candidates, targets );
+        matching_candidates =
+            widened_candidates.empty() ? pick( adopted_candidates, adopted_targets ) : pick( widened_candidates, targets );
     }
     else if( matching_candidates.size() > 1 )
     {
@@ -709,21 +726,28 @@ Node_id Overloads::
     std::vector<std::size_t>          matching;
     std::vector<std::size_t>          widened;
     std::vector<std::vector<Type_id>> targets;
+    std::vector<std::size_t>          adopted;
+    std::vector<std::vector<Type_id>> adopted_targets;
     std::vector<std::vector<Type_id>> exact_targets;
 
     for( std::size_t i = 0; i < candidates.size(); ++i )
     {
         const Node_id candidate = candidates[i];
 
-        if( candidate_accepts( candidate, receiver_params( candidate ), shapes, bindings[i], false ) )
+        if( candidate_accepts( candidate, receiver_params( candidate ), shapes, bindings[i], Tier::Exact ) )
         {
             matching.push_back( i );
             exact_targets.push_back( parameter_types( candidate, receiver_params( candidate ), bindings[i] ) );
         }
-        else if( candidate_accepts( candidate, receiver_params( candidate ), shapes, bindings[i], true ) )
+        else if( candidate_accepts( candidate, receiver_params( candidate ), shapes, bindings[i], Tier::Widened ) )
         {
             widened.push_back( i );
             targets.push_back( parameter_types( candidate, receiver_params( candidate ), bindings[i] ) );
+        }
+        else if( candidate_accepts( candidate, receiver_params( candidate ), shapes, bindings[i], Tier::Adopted ) )
+        {
+            adopted.push_back( i );
+            adopted_targets.push_back( parameter_types( candidate, receiver_params( candidate ), bindings[i] ) );
         }
     }
 
@@ -739,7 +763,7 @@ Node_id Overloads::
 
     if( matching.empty() )
     {
-        matching = pick( widened, targets );
+        matching = widened.empty() ? pick( adopted, adopted_targets ) : pick( widened, targets );
     }
     else if( matching.size() > 1 )
     {

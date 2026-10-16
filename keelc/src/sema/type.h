@@ -254,6 +254,9 @@ public:
     bool    is_box( Type_id type ) const;
     Node_id box_declaration() const;
 
+    void    declare_from( Node_id declaration );
+    Node_id from_declaration() const;
+
     void    declare_ordering( Node_id declaration );
     Type_id ordering() const;
 
@@ -265,8 +268,8 @@ public:
     bool    is_prelude_interface( Type_id interface ) const;
 
     // The first method whose signature mentions `self`, or invalid when the interface may be a type.
-    void    declare_naming_self( Node_id interface, Node_id method );
-    Node_id method_naming_self( Type_id interface ) const;
+    void    declare_bound_only( Node_id interface, Node_id method );
+    Node_id bound_only_method( Type_id interface ) const;
 
 private:
     Type_id     add( const Type& type, std::string_view name );
@@ -305,11 +308,12 @@ private:
     std::deque<std::string>                        composed_;
 
     Node_id box_ {};
+    Node_id from_ {};
     Node_id ordering_ {};
     Node_id hasher_write_ {};
     Node_id prelude_interfaces_[3] {};
 
-    std::unordered_map<u32, Node_id> naming_self_; // Interface_decl node -> its first method naming `self`
+    std::unordered_map<u32, Node_id> bound_only_; // Interface_decl node -> its first method naming `self`
 
     // Backs Type::arguments. A deque for the reason composed_ is one: the views handed out have to
     // survive every later insertion.

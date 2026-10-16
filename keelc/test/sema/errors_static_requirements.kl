@@ -1,0 +1,86 @@
+// M9.5: what a `static` requirement refuses. Each refusal is named in the comment above it.
+interface counted
+{
+    static u64 count();
+};
+
+interface tallied implements counted
+{
+    u64 tally() const;
+};
+
+interface Shape
+{
+    f64 area() const;
+};
+
+// `count` must be `static`, as `counted` declares it.
+struct instance_count implements counted
+{
+    i32 v;
+
+    u64 count() { return 0; }
+};
+
+// `absent` has no `count`, which it must declare `static`.
+struct absent implements counted
+{
+    i32 v;
+};
+
+// `count` is private, so it cannot answer `counted`.
+class hidden implements counted
+{
+    i32 v;
+
+    private static u64 count() { return 0; }
+};
+
+// `counted` is a bound only, because its `count` is `static`.
+void by_ref( ref counted c ) { }
+
+// The same, through a pointer.
+void by_pointer( counted* c ) { }
+
+// `tallied` is a bound only too, because it requires `counted`.
+void refined( const ref tallied t ) { }
+
+// A `static` requirement takes no object.
+u64 on_object<T>( const ref T t ) where T : counted
+{
+    return t.count();
+}
+
+// `T` has no `where` clause to give it `count`.
+u64 unbound<T>()
+{
+    return T::count();
+}
+
+// `counted` has no `size`.
+u64 missing<T>() where T : counted
+{
+    return T::size();
+}
+
+// `area` needs an object, which `T::` does not supply.
+f64 no_object<T>() where T : Shape
+{
+    return T::area();
+}
+
+implements counted for i32
+{
+    static u64 count() { return 0; }
+};
+
+// A block's `count` is reached only through a bound.
+u64 direct()
+{
+    return i32::count();
+}
+
+i32 main()
+{
+    return 0;
+}

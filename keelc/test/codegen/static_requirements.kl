@@ -1,0 +1,114 @@
+// M9.5: an interface may require a `static` method, called through a bound as `T::f( ... )`. Each
+// instance calls its implementer's method directly: an in-body one, a generic implementer's, a
+// block's for each of two built-ins, an owning type's, one reached through a refinement, and two
+// instances of one generic interface on one type. Exits with the failing check.
+interface zero
+{
+    static self zero();
+};
+
+interface named<T>
+{
+    static self named( T value );
+};
+
+interface counted_zero implements zero
+{
+    u64 count() const;
+};
+
+struct meter implements zero, named<i32>, named<bool>
+{
+    i32 v;
+
+    static meter zero() { return meter { 0 }; }
+    static meter named( i32 value ) { return meter { value }; }
+    static meter named( bool value ) { return meter { value ? 1 : 2 }; }
+};
+
+struct cell<T> implements zero where T : numeric
+{
+    T v;
+
+    static cell<T> zero() { return cell { 7 }; }
+};
+
+implements zero for i32
+{
+    static i32 zero() { return 11; }
+};
+
+implements zero for i64
+{
+    static i64 zero() { return 12; }
+};
+
+class Owner implements zero, counted_zero
+{
+    u8[*] bytes;
+    u64   n;
+
+    public Owner( u64 size )
+    {
+        unsafe { bytes = alloc<u8>( size ); }
+        n = size;
+    }
+
+    ~Owner() { unsafe { free( bytes ); } }
+
+    public static Owner zero() { return Owner( 3 ); }
+    public u64 count() const { return n; }
+};
+
+T make_zero<T>() where T : zero
+{
+    return T::zero();
+}
+
+T make_named<T, A>( A value ) where T : named<A>
+{
+    return T::named( value );
+}
+
+u64 counted_from_zero<T>() where T : counted_zero
+{
+    T made = T::zero();
+
+    return made.count();
+}
+
+i32 main()
+{
+    if( make_zero<meter>().v != 0 )
+    {
+        return 1;
+    }
+
+    if( make_named<meter, i32>( 5 ).v != 5 || make_named<meter, bool>( false ).v != 2 )
+    {
+        return 2;
+    }
+
+    if( make_zero<cell<u8>>().v != 7 || make_zero<cell<f64>>().v != 7.0 )
+    {
+        return 3;
+    }
+
+    if( make_zero<i32>() != 11 || make_zero<i64>() != 12 )
+    {
+        return 4;
+    }
+
+    if( make_zero<Owner>().count() != 3 || counted_from_zero<Owner>() != 3 )
+    {
+        return 5;
+    }
+
+    // An in-body implementation is still the type's own static method.
+    if( meter::zero().v != 0 )
+    {
+        return 6;
+    }
+
+    return 0;
+}

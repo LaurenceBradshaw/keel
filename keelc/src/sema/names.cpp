@@ -214,8 +214,17 @@ Node_id Name_collector::referent( Node_id id ) const
         }
 
         // `Colour::Red` and `Buffer::of`: the checker binds these, so the type is asked here.
-        const Node_id type = resolution_.declaration_of( ast_.qualifier( id ) );
-        return type.is_valid() ? chosen( id, member_named( type, ast_.name( id ) ) ) : Node_id {};
+        const Node_id type   = resolution_.declaration_of( ast_.qualifier( id ) );
+        const Node_id member = type.is_valid() ? chosen( id, member_named( type, ast_.name( id ) ) ) : Node_id {};
+
+        if( member.is_valid() )
+        {
+            return member;
+        }
+
+        // `T::zero()` names the requirement the checker chose through `T`'s bound.
+        const auto call = called_.find( id.v );
+        return call != called_.end() ? call->second : Node_id {};
     }
     case Node_kind::Field_expr:
         return member_after_dot( id );
@@ -849,6 +858,16 @@ TEST_CASE( "names_interfaces_and_calls_through_them", "[sema][names][interface]"
         REQUIRE( has( names, fmt::format( "area@{}->{}", at( "s.area", 2 ), area ) ) );
         REQUIRE( has( names, fmt::format( "area@{}->{}", at( "t.area", 2 ), area ) ) );
     }
+}
+
+TEST_CASE( "names_a_static_call_through_a_bound", "[sema][names][interface]" )
+{
+    constexpr std::string_view source = "interface zero { static self zero(); };\n"
+                                        "T make<T>() where T : zero { return T::zero(); }\n";
+
+    const auto names = named( source, true );
+
+    REQUIRE( has( names, fmt::format( "zero@{}->{}", source.find( "T::zero" ) + 3, source.find( "zero();" ) ) ) );
 }
 
 TEST_CASE( "names_struct_literals_by_their_type", "[sema][names]" )

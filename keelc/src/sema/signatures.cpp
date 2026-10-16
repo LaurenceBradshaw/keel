@@ -47,10 +47,15 @@ bool names_self( const Ast& ast, const Interner& interner, Node_id annotation )
 }
 
 // Read from the syntax, since a `ref P` may be resolved before `P`'s own methods are typed.
-Node_id method_naming_self( const Ast& ast, const Interner& interner, Node_id interface )
+Node_id bound_only_method( const Ast& ast, const Interner& interner, Node_id interface )
 {
     for( const Node_id member : ast.members( interface ) )
     {
+        if( ast.is_static_method( member ) )
+        {
+            return member;
+        }
+
         if( names_self( ast, interner, ast.return_type( member ) ) )
         {
             return member;
@@ -156,9 +161,9 @@ void Signatures::declare_interfaces()
 
         types_.record( child, table_.interface( child, arguments, name ) );
 
-        if( const Node_id method = method_naming_self( ast_, interner_, child ); method.is_valid() )
+        if( const Node_id method = bound_only_method( ast_, interner_, child ); method.is_valid() )
         {
-            table_.declare_naming_self( child, method );
+            table_.declare_bound_only( child, method );
         }
     }
 }
@@ -254,14 +259,14 @@ void Signatures::declare_interface_requirements()
     // method naming `self`.
     for( const Node_id child : ast_.declarations( ast_.root() ) )
     {
-        if( ast_.kind( child ) != Node_kind::Interface_decl || table_.method_naming_self( types_.type_of( child ) ).is_valid() )
+        if( ast_.kind( child ) != Node_kind::Interface_decl || table_.bound_only_method( types_.type_of( child ) ).is_valid() )
         {
             continue;
         }
 
-        if( const Node_id method = required_naming_self( types_.type_of( child ) ); method.is_valid() )
+        if( const Node_id method = required_bound_only( types_.type_of( child ) ); method.is_valid() )
         {
-            table_.declare_naming_self( child, method );
+            table_.declare_bound_only( child, method );
         }
     }
 }
@@ -279,16 +284,16 @@ void Signatures::declare_type_bounds()
 }
 
 // Depth-first through what `interface` requires, read from the syntax so declaration order does not matter.
-Node_id Signatures::required_naming_self( Type_id interface ) const
+Node_id Signatures::required_bound_only( Type_id interface ) const
 {
     for( const Type_id refined : table_.refinements( interface ) )
     {
-        if( const Node_id method = method_naming_self( ast_, interner_, table_.get( refined ).declaration ); method.is_valid() )
+        if( const Node_id method = bound_only_method( ast_, interner_, table_.get( refined ).declaration ); method.is_valid() )
         {
             return method;
         }
 
-        if( const Node_id method = required_naming_self( refined ); method.is_valid() )
+        if( const Node_id method = required_bound_only( refined ); method.is_valid() )
         {
             return method;
         }
@@ -880,7 +885,7 @@ void Signatures::check_member_kind( Node_id decl, const Member_kind& kind )
 }
 
 // An interface's method is called through a table of the implementers' methods: so it has no body,
-// is not static, and has no type parameters of its own.
+// and has no type parameters of its own.
 void Signatures::check_signatures()
 {
     for( const Node_id decl : ast_.declarations( ast_.root() ) )
@@ -903,15 +908,6 @@ void Signatures::check_signatures()
                     ast_.name_span( member ),
                     fmt::format( "`{}` is a signature, so it cannot have a body", interner_.text( ast_.name( member ) ) ),
                     "write the body in each type that implements the interface"
-                );
-            }
-
-            if( ast_.is_static_method( member ) )
-            {
-                reporter_.error_at(
-                    ast_.name_span( member ),
-                    "an interface's method cannot be `static`",
-                    "it is called through an object, which a `static` method does not take"
                 );
             }
 
@@ -2884,7 +2880,6 @@ TEST_CASE( "signatures_check_an_interface_s_methods", "[sema][interfaces]" )
 
     const Case cases[] = {
         { "interface Shape { f64 area() { return 0.0; } };", "`area` is a signature, so it cannot have a body" },
-        { "interface Shape { static f64 area(); };", "an interface's method cannot be `static`" },
         { "interface Shape { T pick<T>( T a ); };", "an interface's method cannot have type parameters" },
     };
 

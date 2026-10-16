@@ -63,7 +63,7 @@ int32_t kl_2kl_unwrap__I3i32E__MQ2kl8optionalI3i32E( struct kl_2kl_optional__I3i
     kl_t5 = &kl_t4;
     kl_t6 = ( uint8_t* ) "unwrap on an empty optional";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 27 );
-    kl_rt_panic_message( "../src/optional.kl", 25, kl_t4.kl_data_217, kl_t4.kl_size_220 );
+    kl_rt_panic_message( "../src/optional.kl", 25, kl_t4.kl_data_225, kl_t4.kl_size_228 );
 }
 
 int main( void )

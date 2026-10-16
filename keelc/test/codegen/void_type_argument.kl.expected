@@ -12,7 +12,7 @@ struct kl__Two__I4voidE;
 struct kl_7prelude_result__I4void_3BadE
 {
     int32_t tag;
-    int32_t kl_error_738;
+    int32_t kl_error_746;
 };
 
 struct kl__Box__I4voidE
@@ -69,7 +69,7 @@ struct kl_7prelude_result__I4void_3BadE kl__step__4bool( bool kl_fail_1 )
     bb1:
 #line 51 "codegen/void_type_argument.kl"
     kl_t2.tag = 1;
-    kl_t2.kl_error_738 = 0;
+    kl_t2.kl_error_746 = 0;
     kl_t0 = kl_t2;
     return kl_t0;
     bb2:
@@ -115,10 +115,10 @@ struct kl_7prelude_result__I4void_3BadE kl__steps__4bool( bool kl_fail_1 )
     return kl_t0;
     bb2:
 #line 65 "codegen/void_type_argument.kl"
-    kl_e_11 = kl_t2.kl_error_738;
+    kl_e_11 = kl_t2.kl_error_746;
 #line 66 "codegen/void_type_argument.kl"
     kl_t12.tag = 1;
-    kl_t12.kl_error_738 = kl_e_11;
+    kl_t12.kl_error_746 = kl_e_11;
     kl_t0 = kl_t12;
     return kl_t0;
 }
@@ -152,7 +152,7 @@ int32_t kl__report__Q7prelude6resultI4void_3BadE( struct kl_7prelude_result__I4v
     return kl_t0;
     bb2:
 #line 77 "codegen/void_type_argument.kl"
-    kl_e_9 = kl_r_1.kl_error_738;
+    kl_e_9 = kl_r_1.kl_error_746;
 #line 78 "codegen/void_type_argument.kl"
     kl_t11 = &kl_t10;
     kl_t12 = ( uint8_t* ) "err";

@@ -1,0 +1,21 @@
+// M9.5: only the prelude's `from<str>` lets a string literal adopt a type. A program's own `from`
+// shadows the prelude's name and changes nothing about `"abc"`.
+interface from<T>
+{
+    static self from( T value );
+};
+
+struct mine implements from<str>
+{
+    u64 n;
+
+    static mine from( str text ) { return mine { text.size }; }
+};
+
+i32 main()
+{
+    // `mine` implements this program's `from<str>`, not the prelude's.
+    mine m = "abc";
+
+    return 0;
+}

@@ -1,0 +1,109 @@
+// M9.5: a string literal adopts a type that implements the prelude's `from<str>`, becoming
+// `T::from( "..." )` wherever a `T` is expected. `label` owns its bytes, so every adopted
+// temporary must be dropped exactly once. An overload taking `str`, then one taking
+// `const ref textual`, beats one that needs adoption. Exits with the failing check.
+class label implements from<str>
+{
+    u8[*] bytes;
+    u64   length;
+
+    public label( u64 n )
+    {
+        unsafe { bytes = alloc<u8>( n + 1 ); }
+        length = n;
+    }
+
+    ~label() { unsafe { free( bytes ); } }
+
+    public static label from( str text ) { return label( text.size ); }
+    public u64 size() const { return length; }
+    public bool operator==( const ref label other ) const { return length == other.length; }
+};
+
+struct width implements from<str>
+{
+    u64 n;
+
+    static width from( str text ) { return width { text.size }; }
+};
+
+struct framed
+{
+    width w;
+};
+
+class holder
+{
+    label held;
+
+    public holder( move label l ) { held = move l; }
+    public u64 size() const { return held.size(); }
+};
+
+u64 take( label l ) { return l.size(); }
+u64 peek( const ref label l ) { return l.size(); }
+label give() { return "four"; }
+
+i32 pick( str s ) { return 1; }
+i32 pick( label l ) { return 2; }
+
+i32 lend( const ref textual t ) { return 1; }
+i32 lend( label l ) { return 2; }
+
+T made<T>() where T : from<str>
+{
+    T x = "abcde";
+
+    return x;
+}
+
+i32 main()
+{
+    label a = "abc";
+
+    if( a.size() != 3 || take( "ab" ) != 2 || peek( "a" ) != 1 || give().size() != 4 )
+    {
+        return 1;
+    }
+
+    a = "abcdef";
+
+    if( !( a == "xyzxyz" ) || !( "xyzxyz" == a ) || a == "no" )
+    {
+        return 2;
+    }
+
+    framed f = framed { "seven.." };
+
+    if( f.w.n != 7 )
+    {
+        return 3;
+    }
+
+    holder h = holder( move "six..." );
+
+    if( h.size() != 6 )
+    {
+        return 4;
+    }
+
+    if( pick( "x" ) != 1 || lend( "x" ) != 1 )
+    {
+        return 5;
+    }
+
+    if( made<label>().size() != 5 )
+    {
+        return 6;
+    }
+
+    // An escape counts as the byte it decodes to.
+    label escaped = "a\tb";
+
+    if( escaped.size() != 3 )
+    {
+        return 7;
+    }
+
+    return 0;
+}

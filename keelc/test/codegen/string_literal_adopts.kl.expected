@@ -1,0 +1,646 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "string_literal_adopts.kl.prelude.c"
+
+struct kl__label;
+struct kl__width;
+struct kl__framed;
+struct kl__holder;
+
+struct kl__label
+{
+    uint8_t* kl_bytes_7;
+    uint64_t kl_length_9;
+};
+
+struct kl__width
+{
+    uint64_t kl_n_85;
+};
+
+struct kl__framed
+{
+    struct kl__width kl_w_99;
+};
+
+struct kl__holder
+{
+    struct kl__label kl_held_102;
+};
+
+void* kl_rt_alloc( size_t, const char*, uint32_t, const char* );
+void  kl_rt_free( void* );
+void* kl_rt_alloc_many( size_t, size_t, const char*, uint32_t, const char* );
+
+void kl__label__R5label_3u64__ctor( struct kl__label*, uint64_t );
+void kl__label__dtor( struct kl__label* );
+struct kl__label kl__from__S5label_Q7prelude3str( struct kl_7prelude_str );
+uint64_t kl__size__S5label( struct kl__label* );
+bool kl__operator_eq__S5label_5label( struct kl__label*, struct kl__label* );
+struct kl__width kl__from__S5width_Q7prelude3str( struct kl_7prelude_str );
+void kl__holder__R6holder_M5label__ctor( struct kl__holder*, struct kl__label );
+uint64_t kl__size__S6holder( struct kl__holder* );
+uint64_t kl__take__5label( struct kl__label* );
+uint64_t kl__peek__5label( struct kl__label* );
+struct kl__label kl__give__( void );
+int32_t kl__pick__Q7prelude3str( struct kl_7prelude_str );
+int32_t kl__pick__5label( struct kl__label* );
+int32_t kl__lend__7textual( struct kl_7prelude_textual__ref );
+int32_t kl__lend__5label( struct kl__label* );
+int32_t kl__main__( void );
+struct kl__label kl__made__I5labelE__( void );
+void kl__label__drop( struct kl__label* );
+
+void kl__label__R5label_3u64__ctor( struct kl__label* kl_this_1, uint64_t kl_n_2 )
+{
+    uint64_t kl_t3;
+    uint8_t* kl_t4;
+#line 12 "codegen/string_literal_adopts.kl"
+    kl_t3 = kl_n_2 + 1;
+    kl_t4 = ( uint8_t* ) kl_rt_alloc_many( ( size_t ) kl_t3, sizeof( uint8_t ), "codegen/string_literal_adopts.kl", 12, "out of memory: alloc<u8>( n + 1 )" );
+    ( *kl_this_1 ).kl_bytes_7 = kl_t4;
+#line 13 "codegen/string_literal_adopts.kl"
+    ( *kl_this_1 ).kl_length_9 = kl_n_2;
+    return;
+}
+
+void kl__label__dtor( struct kl__label* kl_this_1 )
+{
+#line 16 "codegen/string_literal_adopts.kl"
+    kl_rt_free( ( *kl_this_1 ).kl_bytes_7 );
+    return;
+}
+
+struct kl__label kl__from__S5label_Q7prelude3str( struct kl_7prelude_str kl_text_1 )
+{
+    struct kl__label kl_t0;
+    struct kl__label kl_t2;
+    struct kl__label* kl_t3;
+    bool kl_t5;
+#line 18 "codegen/string_literal_adopts.kl"
+    kl_t5 = false;
+    kl_t5 = false;
+    kl_t3 = &kl_t2;
+    kl_t5 = true;
+    kl__label__R5label_3u64__ctor( kl_t3, kl_text_1.kl_size_374 );
+    kl_t0 = kl_t2;
+    kl_t5 = false;
+    if ( kl_t5 ) kl__label__dtor( &kl_t2 );
+    kl_t5 = false;
+    return kl_t0;
+}
+
+uint64_t kl__size__S5label( struct kl__label* kl_this_1 )
+{
+    uint64_t kl_t0;
+#line 19 "codegen/string_literal_adopts.kl"
+    kl_t0 = ( *kl_this_1 ).kl_length_9;
+    return kl_t0;
+}
+
+bool kl__operator_eq__S5label_5label( struct kl__label* kl_this_1, struct kl__label* kl_other_2 )
+{
+    bool kl_t0;
+    bool kl_t3;
+#line 20 "codegen/string_literal_adopts.kl"
+    kl_t3 = ( *kl_this_1 ).kl_length_9 == ( *kl_other_2 ).kl_length_9;
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+struct kl__width kl__from__S5width_Q7prelude3str( struct kl_7prelude_str kl_text_1 )
+{
+    struct kl__width kl_t0;
+    struct kl__width kl_t2;
+#line 27 "codegen/string_literal_adopts.kl"
+    kl_t2.kl_n_85 = kl_text_1.kl_size_374;
+    kl_t0 = kl_t2;
+    return kl_t0;
+}
+
+void kl__holder__R6holder_M5label__ctor( struct kl__holder* kl_this_1, struct kl__label kl_l_2 )
+{
+    bool kl_t3;
+#line 39 "codegen/string_literal_adopts.kl"
+    kl_t3 = true;
+    ( *kl_this_1 ).kl_held_102 = kl_l_2;
+    kl_t3 = false;
+    if ( kl_t3 ) kl__label__dtor( &kl_l_2 );
+    kl_t3 = false;
+    return;
+}
+
+uint64_t kl__size__S6holder( struct kl__holder* kl_this_1 )
+{
+    uint64_t kl_t0;
+    struct kl__label* kl_t2;
+    uint64_t kl_t3;
+#line 40 "codegen/string_literal_adopts.kl"
+    kl_t2 = &( *kl_this_1 ).kl_held_102;
+    kl_t3 = kl__size__S5label( kl_t2 );
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+uint64_t kl__take__5label( struct kl__label* kl_l_1 )
+{
+    uint64_t kl_t0;
+    struct kl__label* kl_t2;
+    uint64_t kl_t3;
+#line 43 "codegen/string_literal_adopts.kl"
+    kl_t2 = &( *kl_l_1 );
+    kl_t3 = kl__size__S5label( kl_t2 );
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+uint64_t kl__peek__5label( struct kl__label* kl_l_1 )
+{
+    uint64_t kl_t0;
+    struct kl__label* kl_t2;
+    uint64_t kl_t3;
+#line 44 "codegen/string_literal_adopts.kl"
+    kl_t2 = &( *kl_l_1 );
+    kl_t3 = kl__size__S5label( kl_t2 );
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+struct kl__label kl__give__( void )
+{
+    struct kl__label kl_t0;
+    struct kl_7prelude_str kl_t1;
+    struct kl_7prelude_str* kl_t2;
+    uint8_t* kl_t3;
+    struct kl__label kl_t5;
+    bool kl_t6;
+#line 45 "codegen/string_literal_adopts.kl"
+    kl_t6 = false;
+    kl_t2 = &kl_t1;
+    kl_t3 = ( uint8_t* ) "four";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t2, kl_t3, 4 );
+    kl_t5 = kl__from__S5label_Q7prelude3str( kl_t1 );
+    kl_t6 = true;
+    kl_t0 = kl_t5;
+    kl_t6 = false;
+    if ( kl_t6 ) kl__label__dtor( &kl_t5 );
+    kl_t6 = false;
+    return kl_t0;
+}
+
+int32_t kl__pick__Q7prelude3str( struct kl_7prelude_str kl_s_1 )
+{
+    int32_t kl_t0;
+    ( void ) kl_s_1;
+#line 47 "codegen/string_literal_adopts.kl"
+    kl_t0 = 1;
+    return kl_t0;
+}
+
+int32_t kl__pick__5label( struct kl__label* kl_l_1 )
+{
+    int32_t kl_t0;
+    ( void ) kl_l_1;
+#line 48 "codegen/string_literal_adopts.kl"
+    kl_t0 = 2;
+    return kl_t0;
+}
+
+int32_t kl__lend__7textual( struct kl_7prelude_textual__ref kl_t_1 )
+{
+    int32_t kl_t0;
+    ( void ) kl_t_1;
+#line 50 "codegen/string_literal_adopts.kl"
+    kl_t0 = 1;
+    return kl_t0;
+}
+
+int32_t kl__lend__5label( struct kl__label* kl_l_1 )
+{
+    int32_t kl_t0;
+    ( void ) kl_l_1;
+#line 51 "codegen/string_literal_adopts.kl"
+    kl_t0 = 2;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    struct kl__label kl_a_1;
+    struct kl_7prelude_str kl_t2;
+    struct kl_7prelude_str* kl_t3;
+    uint8_t* kl_t4;
+    struct kl__label kl_t6;
+    bool kl_t7;
+    bool kl_t8;
+    bool kl_t9;
+    struct kl__label* kl_t10;
+    uint64_t kl_t11;
+    bool kl_t12;
+    struct kl_7prelude_str kl_t13;
+    struct kl_7prelude_str* kl_t14;
+    uint8_t* kl_t15;
+    struct kl__label kl_t17;
+    struct kl__label* kl_t18;
+    uint64_t kl_t19;
+    bool kl_t20;
+    struct kl_7prelude_str kl_t21;
+    struct kl_7prelude_str* kl_t22;
+    uint8_t* kl_t23;
+    struct kl__label kl_t25;
+    struct kl__label* kl_t26;
+    uint64_t kl_t27;
+    bool kl_t28;
+    struct kl__label kl_t29;
+    struct kl__label* kl_t30;
+    uint64_t kl_t31;
+    bool kl_t32;
+    struct kl_7prelude_str kl_t33;
+    struct kl_7prelude_str* kl_t34;
+    uint8_t* kl_t35;
+    struct kl__label kl_t37;
+    bool kl_t38;
+    bool kl_t39;
+    struct kl__label* kl_t40;
+    struct kl_7prelude_str kl_t41;
+    struct kl_7prelude_str* kl_t42;
+    uint8_t* kl_t43;
+    struct kl__label kl_t45;
+    struct kl__label* kl_t46;
+    bool kl_t47;
+    bool kl_t48;
+    struct kl_7prelude_str kl_t49;
+    struct kl_7prelude_str* kl_t50;
+    uint8_t* kl_t51;
+    struct kl__label kl_t53;
+    struct kl__label* kl_t54;
+    struct kl__label* kl_t55;
+    bool kl_t56;
+    bool kl_t57;
+    struct kl__label* kl_t58;
+    struct kl_7prelude_str kl_t59;
+    struct kl_7prelude_str* kl_t60;
+    uint8_t* kl_t61;
+    struct kl__label kl_t63;
+    struct kl__label* kl_t64;
+    bool kl_t65;
+    struct kl__framed kl_f_66;
+    struct kl__framed kl_t67;
+    struct kl_7prelude_str kl_t68;
+    struct kl_7prelude_str* kl_t69;
+    uint8_t* kl_t70;
+    struct kl__width kl_t72;
+    bool kl_t73;
+    struct kl__holder kl_h_74;
+    struct kl__holder* kl_t75;
+    struct kl_7prelude_str kl_t76;
+    struct kl_7prelude_str* kl_t77;
+    uint8_t* kl_t78;
+    struct kl__label kl_t80;
+    struct kl__holder* kl_t82;
+    uint64_t kl_t83;
+    bool kl_t84;
+    bool kl_t85;
+    struct kl_7prelude_str kl_t86;
+    struct kl_7prelude_str* kl_t87;
+    uint8_t* kl_t88;
+    int32_t kl_t90;
+    bool kl_t91;
+    struct kl_7prelude_str kl_t92;
+    struct kl_7prelude_str* kl_t93;
+    uint8_t* kl_t94;
+    struct kl_7prelude_textual__ref kl_t96;
+    int32_t kl_t97;
+    bool kl_t98;
+    struct kl__label kl_t99;
+    struct kl__label* kl_t100;
+    uint64_t kl_t101;
+    bool kl_t102;
+    struct kl__label kl_escaped_103;
+    struct kl_7prelude_str kl_t104;
+    struct kl_7prelude_str* kl_t105;
+    uint8_t* kl_t106;
+    struct kl__label kl_t108;
+    struct kl__label* kl_t109;
+    uint64_t kl_t110;
+    bool kl_t111;
+    bool kl_t112;
+    bool kl_t113;
+    bool kl_t114;
+    bool kl_t115;
+    bool kl_t116;
+    bool kl_t117;
+    bool kl_t118;
+    bool kl_t119;
+    bool kl_t120;
+    bool kl_t121;
+#line 62 "codegen/string_literal_adopts.kl"
+    kl_t112 = false;
+    kl_t113 = false;
+#line 64 "codegen/string_literal_adopts.kl"
+    kl_t114 = false;
+    kl_t115 = false;
+    kl_t116 = false;
+#line 69 "codegen/string_literal_adopts.kl"
+    kl_t117 = false;
+#line 71 "codegen/string_literal_adopts.kl"
+    kl_t118 = false;
+    kl_t119 = false;
+#line 83 "codegen/string_literal_adopts.kl"
+    kl_t120 = false;
+#line 101 "codegen/string_literal_adopts.kl"
+    kl_t121 = false;
+#line 62 "codegen/string_literal_adopts.kl"
+    kl_t112 = false;
+    kl_t3 = &kl_t2;
+    kl_t4 = ( uint8_t* ) "abc";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t3, kl_t4, 3 );
+    kl_t6 = kl__from__S5label_Q7prelude3str( kl_t2 );
+    kl_t113 = true;
+    kl_a_1 = kl_t6;
+    kl_t113 = false;
+    kl_t112 = true;
+    if ( kl_t113 ) kl__label__dtor( &kl_t6 );
+    kl_t113 = false;
+#line 64 "codegen/string_literal_adopts.kl"
+    kl_t10 = &kl_a_1;
+    kl_t11 = kl__size__S5label( kl_t10 );
+    kl_t12 = kl_t11 != 3;
+    kl_t9 = kl_t12;
+    if ( kl_t9 ) goto bb2; else goto bb1;
+    bb1:
+    kl_t14 = &kl_t13;
+    kl_t15 = ( uint8_t* ) "ab";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t14, kl_t15, 2 );
+    kl_t17 = kl__from__S5label_Q7prelude3str( kl_t13 );
+    kl_t114 = true;
+    kl_t18 = &kl_t17;
+    kl_t19 = kl__take__5label( kl_t18 );
+    kl_t20 = kl_t19 != 2;
+    kl_t9 = kl_t20;
+    goto bb2;
+    bb2:
+    kl_t8 = kl_t9;
+    if ( kl_t8 ) goto bb4; else goto bb3;
+    bb3:
+    kl_t22 = &kl_t21;
+    kl_t23 = ( uint8_t* ) "a";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t22, kl_t23, 1 );
+    kl_t25 = kl__from__S5label_Q7prelude3str( kl_t21 );
+    kl_t115 = true;
+    kl_t26 = &kl_t25;
+    kl_t27 = kl__peek__5label( kl_t26 );
+    kl_t28 = kl_t27 != 1;
+    kl_t8 = kl_t28;
+    goto bb4;
+    bb4:
+    kl_t7 = kl_t8;
+    if ( kl_t7 ) goto bb6; else goto bb5;
+    bb5:
+    kl_t29 = kl__give__(  );
+    kl_t116 = true;
+    kl_t30 = &kl_t29;
+    kl_t31 = kl__size__S5label( kl_t30 );
+    kl_t32 = kl_t31 != 4;
+    kl_t7 = kl_t32;
+    goto bb6;
+    bb6:
+    if ( kl_t116 ) kl__label__dtor( &kl_t29 );
+    if ( kl_t115 ) kl__label__dtor( &kl_t25 );
+    if ( kl_t114 ) kl__label__dtor( &kl_t17 );
+    kl_t114 = false;
+    kl_t115 = false;
+    kl_t116 = false;
+    if ( kl_t7 ) goto bb7; else goto bb8;
+    bb7:
+#line 66 "codegen/string_literal_adopts.kl"
+    kl_t0 = 1;
+    if ( kl_t112 ) kl__label__dtor( &kl_a_1 );
+    kl_t112 = false;
+    return kl_t0;
+    bb8:
+#line 69 "codegen/string_literal_adopts.kl"
+    kl_t34 = &kl_t33;
+    kl_t35 = ( uint8_t* ) "abcdef";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t34, kl_t35, 6 );
+    kl_t37 = kl__from__S5label_Q7prelude3str( kl_t33 );
+    kl_t117 = true;
+    if ( kl_t112 ) kl__label__dtor( &kl_a_1 );
+    kl_a_1 = kl_t37;
+    kl_t117 = false;
+    kl_t112 = true;
+    if ( kl_t117 ) kl__label__dtor( &kl_t37 );
+    kl_t117 = false;
+#line 71 "codegen/string_literal_adopts.kl"
+    kl_t40 = &kl_a_1;
+    kl_t42 = &kl_t41;
+    kl_t43 = ( uint8_t* ) "xyzxyz";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t42, kl_t43, 6 );
+    kl_t45 = kl__from__S5label_Q7prelude3str( kl_t41 );
+    kl_t46 = &kl_t45;
+    kl_t47 = kl__operator_eq__S5label_5label( kl_t40, kl_t46 );
+    kl_t48 = !kl_t47;
+    kl_t39 = kl_t48;
+    if ( kl_t39 ) goto bb10; else goto bb9;
+    bb9:
+    kl_t50 = &kl_t49;
+    kl_t51 = ( uint8_t* ) "xyzxyz";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t50, kl_t51, 6 );
+    kl_t53 = kl__from__S5label_Q7prelude3str( kl_t49 );
+    kl_t118 = true;
+    kl_t54 = &kl_t53;
+    kl_t55 = &kl_a_1;
+    kl_t56 = kl__operator_eq__S5label_5label( kl_t54, kl_t55 );
+    kl_t57 = !kl_t56;
+    kl_t39 = kl_t57;
+    goto bb10;
+    bb10:
+    kl_t38 = kl_t39;
+    if ( kl_t38 ) goto bb12; else goto bb11;
+    bb11:
+    kl_t58 = &kl_a_1;
+    kl_t60 = &kl_t59;
+    kl_t61 = ( uint8_t* ) "no";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t60, kl_t61, 2 );
+    kl_t63 = kl__from__S5label_Q7prelude3str( kl_t59 );
+    kl_t119 = true;
+    kl_t64 = &kl_t63;
+    kl_t65 = kl__operator_eq__S5label_5label( kl_t58, kl_t64 );
+    kl_t38 = kl_t65;
+    goto bb12;
+    bb12:
+    if ( kl_t119 ) kl__label__dtor( &kl_t63 );
+    if ( kl_t118 ) kl__label__dtor( &kl_t53 );
+    kl__label__dtor( &kl_t45 );
+    kl_t118 = false;
+    kl_t119 = false;
+    if ( kl_t38 ) goto bb13; else goto bb14;
+    bb13:
+#line 73 "codegen/string_literal_adopts.kl"
+    kl_t0 = 2;
+    if ( kl_t112 ) kl__label__dtor( &kl_a_1 );
+    kl_t112 = false;
+    return kl_t0;
+    bb14:
+#line 76 "codegen/string_literal_adopts.kl"
+    kl_t69 = &kl_t68;
+    kl_t70 = ( uint8_t* ) "seven..";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t69, kl_t70, 7 );
+    kl_t72 = kl__from__S5width_Q7prelude3str( kl_t68 );
+    kl_t67.kl_w_99 = kl_t72;
+    kl_f_66 = kl_t67;
+#line 78 "codegen/string_literal_adopts.kl"
+    kl_t73 = kl_f_66.kl_w_99.kl_n_85 != 7;
+    if ( kl_t73 ) goto bb15; else goto bb16;
+    bb15:
+#line 80 "codegen/string_literal_adopts.kl"
+    kl_t0 = 3;
+    if ( kl_t112 ) kl__label__dtor( &kl_a_1 );
+    kl_t112 = false;
+    return kl_t0;
+    bb16:
+#line 83 "codegen/string_literal_adopts.kl"
+    kl_t75 = &kl_h_74;
+    kl_t77 = &kl_t76;
+    kl_t78 = ( uint8_t* ) "six...";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t77, kl_t78, 6 );
+    kl_t80 = kl__from__S5label_Q7prelude3str( kl_t76 );
+    kl_t120 = true;
+    kl__holder__R6holder_M5label__ctor( kl_t75, kl_t80 );
+    kl_t120 = false;
+    if ( kl_t120 ) kl__label__dtor( &kl_t80 );
+    kl_t120 = false;
+#line 85 "codegen/string_literal_adopts.kl"
+    kl_t82 = &kl_h_74;
+    kl_t83 = kl__size__S6holder( kl_t82 );
+    kl_t84 = kl_t83 != 6;
+    if ( kl_t84 ) goto bb17; else goto bb18;
+    bb17:
+#line 87 "codegen/string_literal_adopts.kl"
+    kl_t0 = 4;
+    kl__label__dtor( &kl_h_74.kl_held_102 );
+    if ( kl_t112 ) kl__label__dtor( &kl_a_1 );
+    kl_t112 = false;
+    return kl_t0;
+    bb18:
+#line 90 "codegen/string_literal_adopts.kl"
+    kl_t87 = &kl_t86;
+    kl_t88 = ( uint8_t* ) "x";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t87, kl_t88, 1 );
+    kl_t90 = kl__pick__Q7prelude3str( kl_t86 );
+    kl_t91 = kl_t90 != 1;
+    kl_t85 = kl_t91;
+    if ( kl_t85 ) goto bb20; else goto bb19;
+    bb19:
+    kl_t93 = &kl_t92;
+    kl_t94 = ( uint8_t* ) "x";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t93, kl_t94, 1 );
+    kl_t96 = ( struct kl_7prelude_textual__ref ) { ( void* ) &kl_t92, &kl_7prelude_str__as_kl_7prelude_textual };
+    kl_t97 = kl__lend__7textual( kl_t96 );
+    kl_t98 = kl_t97 != 1;
+    kl_t85 = kl_t98;
+    goto bb20;
+    bb20:
+    if ( kl_t85 ) goto bb21; else goto bb22;
+    bb21:
+#line 92 "codegen/string_literal_adopts.kl"
+    kl_t0 = 5;
+    kl__label__dtor( &kl_h_74.kl_held_102 );
+    if ( kl_t112 ) kl__label__dtor( &kl_a_1 );
+    kl_t112 = false;
+    return kl_t0;
+    bb22:
+#line 95 "codegen/string_literal_adopts.kl"
+    kl_t99 = kl__made__I5labelE__(  );
+    kl_t100 = &kl_t99;
+    kl_t101 = kl__size__S5label( kl_t100 );
+    kl_t102 = kl_t101 != 5;
+    kl__label__dtor( &kl_t99 );
+    if ( kl_t102 ) goto bb23; else goto bb24;
+    bb23:
+#line 97 "codegen/string_literal_adopts.kl"
+    kl_t0 = 6;
+    kl__label__dtor( &kl_h_74.kl_held_102 );
+    if ( kl_t112 ) kl__label__dtor( &kl_a_1 );
+    kl_t112 = false;
+    return kl_t0;
+    bb24:
+#line 101 "codegen/string_literal_adopts.kl"
+    kl_t105 = &kl_t104;
+    kl_t106 = ( uint8_t* ) "a\011b";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t105, kl_t106, 3 );
+    kl_t108 = kl__from__S5label_Q7prelude3str( kl_t104 );
+    kl_t121 = true;
+    kl_escaped_103 = kl_t108;
+    kl_t121 = false;
+    if ( kl_t121 ) kl__label__dtor( &kl_t108 );
+    kl_t121 = false;
+#line 103 "codegen/string_literal_adopts.kl"
+    kl_t109 = &kl_escaped_103;
+    kl_t110 = kl__size__S5label( kl_t109 );
+    kl_t111 = kl_t110 != 3;
+    if ( kl_t111 ) goto bb25; else goto bb26;
+    bb25:
+#line 105 "codegen/string_literal_adopts.kl"
+    kl_t0 = 7;
+    kl__label__dtor( &kl_escaped_103 );
+    kl__label__dtor( &kl_h_74.kl_held_102 );
+    if ( kl_t112 ) kl__label__dtor( &kl_a_1 );
+    kl_t112 = false;
+    return kl_t0;
+    bb26:
+#line 108 "codegen/string_literal_adopts.kl"
+    kl_t0 = 0;
+    kl__label__dtor( &kl_escaped_103 );
+    kl__label__dtor( &kl_h_74.kl_held_102 );
+    if ( kl_t112 ) kl__label__dtor( &kl_a_1 );
+    kl_t112 = false;
+    return kl_t0;
+}
+
+struct kl__label kl__made__I5labelE__( void )
+{
+    struct kl__label kl_t0;
+    struct kl__label kl_x_1;
+    struct kl_7prelude_str kl_t2;
+    struct kl_7prelude_str* kl_t3;
+    uint8_t* kl_t4;
+    struct kl__label kl_t6;
+    bool kl_t7;
+    bool kl_t8;
+#line 55 "codegen/string_literal_adopts.kl"
+    kl_t7 = false;
+    kl_t8 = false;
+    kl_t7 = false;
+    kl_t3 = &kl_t2;
+    kl_t4 = ( uint8_t* ) "abcde";
+    kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t3, kl_t4, 5 );
+    kl_t6 = kl__from__S5label_Q7prelude3str( kl_t2 );
+    kl_t8 = true;
+    kl_x_1 = kl_t6;
+    kl_t8 = false;
+    kl_t7 = true;
+    if ( kl_t8 ) kl__label__dtor( &kl_t6 );
+    kl_t8 = false;
+#line 57 "codegen/string_literal_adopts.kl"
+    kl_t0 = kl_x_1;
+    kl_t7 = false;
+    if ( kl_t7 ) kl__label__dtor( &kl_x_1 );
+    kl_t7 = false;
+    return kl_t0;
+}
+
+void kl__label__drop( struct kl__label* kl_t1 )
+{
+#line 5 "codegen/string_literal_adopts.kl"
+    kl__label__dtor( &( *kl_t1 ) );
+    return;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

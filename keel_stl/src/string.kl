@@ -18,7 +18,7 @@ enum parse_error
 /// A growable sequence of bytes that owns its storage.
 ///
 /// The bytes are not checked to be UTF-8, and every index and size counts bytes.
-class string implements textual, equatable, hashable
+class string implements textual, equatable, hashable, from<str>, from<u64>, from<i64>
 {
     /// An empty string.
     string()
@@ -44,6 +44,12 @@ class string implements textual, equatable, hashable
         string result = string();
         result.bytes_ = list<u8>::with_capacity( capacity );
         return result;
+    }
+
+    /// A copy of `text`'s bytes.
+    public static string from( str text )
+    {
+        return string( text );
     }
 
     /// `value` written in decimal, with no leading zeros.

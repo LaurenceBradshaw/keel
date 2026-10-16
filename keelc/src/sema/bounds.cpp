@@ -229,6 +229,18 @@ bool Bounds::conforms( Type_id type, Type_id interface ) const
     return table_.is_error( type ) || table_.implements( type, interface ) || supplies( ast_, table_, type, interface );
 }
 
+bool Bounds::adopts_text( Type_id type, Type_id text ) const
+{
+    const Node_id from = table_.from_declaration();
+
+    if( !from.is_valid() || !type.is_valid() || table_.is_error( type ) || type == text || table_.is_interface( type ) )
+    {
+        return false;
+    }
+
+    return conforms( type, table_.interface( from, std::array { text }, "from" ) );
+}
+
 // Reports every unmet bound rather than the first: two are two things to fix, and one per compile is
 // two compiles. What it does *not* report twice is one mistake wearing several names: `integral`
 // promises `numeric`, `comparable` and `equatable` too, so a struct fails all four.
@@ -290,6 +302,7 @@ void Bounds::check_bounds( Node_id parameter, Span at, Type_id argument, std::st
                 : table_.is_prelude_interface( interface ) &&
                         ( table_.is_builtin( argument ) || table_.is_pointer( argument ) || table_.is_many_pointer( argument ) )
                     ? fmt::format( "the compiler makes only numbers `{}`", table_.name( interface ) )
+                : table_.package( argument ) == "prelude" ? std::string {} // a program cannot redeclare it
                 : table_.is_struct( argument )
                     ? fmt::format( "declare `{}` with `implements {}`", table_.name( argument ), table_.name( interface ) )
                     : fmt::format(

@@ -25,12 +25,12 @@ struct kl__Held
 
 struct kl_7prelude_box__I8MeasuredE
 {
-    struct kl__Measured__ref kl_p__943;
+    struct kl__Measured__ref kl_p__951;
 };
 
 struct kl_7prelude_box__I4HeldE
 {
-    struct kl__Held* kl_p__943;
+    struct kl__Held* kl_p__951;
 };
 
 struct kl__Measured__vtable
@@ -432,7 +432,7 @@ int32_t kl__main__( void )
     kl_t46 = &kl_t45;
     kl_t72 = true;
     kl_7prelude_box__I3i64E__RQ7prelude3boxI3i64E_M3i64__ctor( kl_t46, 7 );
-    kl_t48 = ( struct kl_7prelude_box__I8MeasuredE ) { ( struct kl__Measured__ref ) { ( void* ) kl_t45.kl_p__943, &kl__i64__as_kl__Measured } };
+    kl_t48 = ( struct kl_7prelude_box__I8MeasuredE ) { ( struct kl__Measured__ref ) { ( void* ) kl_t45.kl_p__951, &kl__i64__as_kl__Measured } };
     kl_t72 = false;
     kl_b_44 = kl_t48;
     if ( kl_t72 ) kl_7prelude_box__I3i64E__dtor( &kl_t45 );
@@ -468,7 +468,7 @@ int32_t kl__main__( void )
     kl_t74 = true;
     kl_7prelude_box__I4HeldE__RQ7prelude3boxI4HeldE_M4Held__ctor( kl_t58, kl_t59 );
     kl_t74 = false;
-    kl_t64 = ( struct kl_7prelude_box__I8MeasuredE ) { ( struct kl__Measured__ref ) { ( void* ) kl_t57.kl_p__943, &kl__Held__as_kl__Measured } };
+    kl_t64 = ( struct kl_7prelude_box__I8MeasuredE ) { ( struct kl__Measured__ref ) { ( void* ) kl_t57.kl_p__951, &kl__Held__as_kl__Measured } };
     kl_t73 = false;
     kl_t_56 = kl_t64;
     if ( kl_t73 ) kl_7prelude_box__I4HeldE__dtor( &kl_t57 );
@@ -573,8 +573,8 @@ void kl__grow_twice__I4SizeE__R4Size( int32_t* kl_v_1 )
 struct kl__Measured__ref kl_7prelude_get__I8MeasuredE__SQ7prelude3boxI8MeasuredE( struct kl_7prelude_box__I8MeasuredE* kl_this_1 )
 {
     struct kl__Measured__ref kl_t0;
-#line 263 "<prelude>"
-    kl_t0 = ( *kl_this_1 ).kl_p__943;
+#line 270 "<prelude>"
+    kl_t0 = ( *kl_this_1 ).kl_p__951;
     return kl_t0;
 }
 
@@ -586,20 +586,20 @@ void kl_7prelude_box__I4HeldE__RQ7prelude3boxI4HeldE_M4Held__ctor( struct kl_7pr
     struct kl__Held* kl_t6;
     struct kl__Held* kl_t7;
     bool kl_t8;
-#line 240 "<prelude>"
+#line 247 "<prelude>"
     kl_t8 = true;
-#line 245 "<prelude>"
-    kl_t4 = ( struct kl__Held* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl__Held ), "<prelude>", 245, "out of memory: alloc<T>( 1 )" );
+#line 252 "<prelude>"
+    kl_t4 = ( struct kl__Held* ) kl_rt_alloc_many( ( size_t ) 1, sizeof( struct kl__Held ), "<prelude>", 252, "out of memory: alloc<T>( 1 )" );
     kl_slot_3 = kl_t4;
-#line 246 "<prelude>"
+#line 253 "<prelude>"
     kl_t5 = kl_slot_3 + 0;
     ( *kl_t5 ) = kl_value_2;
     kl_t8 = false;
-#line 247 "<prelude>"
+#line 254 "<prelude>"
     kl_t6 = kl_slot_3 + 0;
     kl_t7 = &( *kl_t6 );
-    ( *kl_this_1 ).kl_p__943 = kl_t7;
-#line 240 "<prelude>"
+    ( *kl_this_1 ).kl_p__951 = kl_t7;
+#line 247 "<prelude>"
     if ( kl_t8 ) kl__Held__dtor( &kl_value_2 );
     kl_t8 = false;
     return;
@@ -608,22 +608,22 @@ void kl_7prelude_box__I4HeldE__RQ7prelude3boxI4HeldE_M4Held__ctor( struct kl_7pr
 void kl_7prelude_box__I8MeasuredE__dtor( struct kl_7prelude_box__I8MeasuredE* kl_this_1 )
 {
     struct kl__Measured__ref kl_t2;
-#line 255 "<prelude>"
-    kl_t2 = ( *kl_this_1 ).kl_p__943;
+#line 262 "<prelude>"
+    kl_t2 = ( *kl_this_1 ).kl_p__951;
     kl_t2.vtable->drop( kl_t2.self );
-#line 256 "<prelude>"
-    kl_rt_free( ( ( *kl_this_1 ).kl_p__943 ).self );
+#line 263 "<prelude>"
+    kl_rt_free( ( ( *kl_this_1 ).kl_p__951 ).self );
     return;
 }
 
 void kl_7prelude_box__I4HeldE__dtor( struct kl_7prelude_box__I4HeldE* kl_this_1 )
 {
     struct kl__Held* kl_t2;
-#line 255 "<prelude>"
-    kl_t2 = ( *kl_this_1 ).kl_p__943;
+#line 262 "<prelude>"
+    kl_t2 = ( *kl_this_1 ).kl_p__951;
     kl__Held__dtor( &( *kl_t2 ) );
-#line 256 "<prelude>"
-    kl_rt_free( ( *kl_this_1 ).kl_p__943 );
+#line 263 "<prelude>"
+    kl_rt_free( ( *kl_this_1 ).kl_p__951 );
     return;
 }
 

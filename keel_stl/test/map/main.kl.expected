@@ -1814,7 +1814,7 @@ int64_t* kl_2kl_unwrap__IP3i64E__MQ2kl8optionalIP3i64E( struct kl_2kl_optional__
     kl_t5 = &kl_t4;
     kl_t6 = ( uint8_t* ) "unwrap on an empty optional";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 27 );
-    kl_rt_panic_message( "../src/optional.kl", 25, kl_t4.kl_data_2277, kl_t4.kl_size_2280 );
+    kl_rt_panic_message( "../src/optional.kl", 25, kl_t4.kl_data_2285, kl_t4.kl_size_2288 );
 }
 
 int64_t* kl_2kl_operator_index__I3i64_3i64E__SQ2kl3mapI3i64_3i64E_3i64( struct kl_2kl_map__I3i64_3i64E* kl_this_1, int64_t* kl_key_2 )
@@ -1847,7 +1847,7 @@ int64_t* kl_2kl_operator_index__I3i64_3i64E__SQ2kl3mapI3i64_3i64E_3i64( struct k
     kl_t11 = &kl_t10;
     kl_t12 = ( uint8_t* ) "no such key in the map";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t11, kl_t12, 22 );
-    kl_rt_panic_message( "../src/map.kl", 123, kl_t10.kl_data_2277, kl_t10.kl_size_2280 );
+    kl_rt_panic_message( "../src/map.kl", 123, kl_t10.kl_data_2285, kl_t10.kl_size_2288 );
     bb2:
 #line 128 "../src/map.kl"
     kl_t14 = ( *kl_this_1 ).kl_values__1458 + kl_slot_3;
@@ -1877,7 +1877,7 @@ int64_t kl_2kl_unwrap__I3i64E__MQ2kl8optionalI3i64E( struct kl_2kl_optional__I3i
     kl_t5 = &kl_t4;
     kl_t6 = ( uint8_t* ) "unwrap on an empty optional";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t5, kl_t6, 27 );
-    kl_rt_panic_message( "../src/optional.kl", 25, kl_t4.kl_data_2277, kl_t4.kl_size_2280 );
+    kl_rt_panic_message( "../src/optional.kl", 25, kl_t4.kl_data_2285, kl_t4.kl_size_2288 );
 }
 
 struct kl_2kl_optional__I3i64E kl_2kl_remove__I3i64_3i64E__SQ2kl3mapI3i64_3i64E_3i64( struct kl_2kl_map__I3i64_3i64E* kl_this_1, int64_t* kl_key_2 )
@@ -2094,7 +2094,7 @@ bool* kl_2kl_operator_index__I2u8_4boolE__SQ2kl3mapI2u8_4boolE_2u8( struct kl_2k
     kl_t11 = &kl_t10;
     kl_t12 = ( uint8_t* ) "no such key in the map";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t11, kl_t12, 22 );
-    kl_rt_panic_message( "../src/map.kl", 123, kl_t10.kl_data_2277, kl_t10.kl_size_2280 );
+    kl_rt_panic_message( "../src/map.kl", 123, kl_t10.kl_data_2285, kl_t10.kl_size_2288 );
     bb2:
 #line 128 "../src/map.kl"
     kl_t14 = ( *kl_this_1 ).kl_values__1458 + kl_slot_3;

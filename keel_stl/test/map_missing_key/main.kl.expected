@@ -926,7 +926,7 @@ int32_t* kl_2kl_operator_index__I3i32_3i32E__SQ2kl3mapI3i32_3i32E_3i32( struct k
     kl_t11 = &kl_t10;
     kl_t12 = ( uint8_t* ) "no such key in the map";
     kl_7prelude_str__RQ7prelude3str_NK2u8_3u64__ctor( kl_t11, kl_t12, 22 );
-    kl_rt_panic_message( "../src/map.kl", 123, kl_t10.kl_data_1824, kl_t10.kl_size_1827 );
+    kl_rt_panic_message( "../src/map.kl", 123, kl_t10.kl_data_1832, kl_t10.kl_size_1835 );
     bb2:
 #line 128 "../src/map.kl"
     kl_t14 = ( *kl_this_1 ).kl_values__831 + kl_slot_3;

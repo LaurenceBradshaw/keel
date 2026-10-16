@@ -274,11 +274,14 @@ std::string Spelling::function( Node_id declaration, std::span<const Type_id> ty
         const bool        receiver      = ast.has_receiver( declaration );
         const Node_id     owner         = receiver ? Node_id {} : ast.enclosing_aggregate( declaration );
         const std::size_t num_type_args = receiver ? 0 : ast.type_parameters( ast.type_param_list( owner ) ).size();
-        const Type_id     enclosing =
+        // A block's static method is tagged with the type the block is for.
+        const Type_id enclosing =
             receiver ? params.front().type
-                         : types.table().structure(
-                           owner, std::span( type_arguments ).first( num_type_args ), interner.text( ast.name( owner ) )
-                       );
+            : ast.kind( owner ) == Node_kind::Implements_decl
+                ? types.type_of( owner )
+                : types.table().structure(
+                      owner, std::span( type_arguments ).first( num_type_args ), interner.text( ast.name( owner ) )
+                  );
 
         const Node_id block = ast.enclosing_aggregate( declaration );
         const Type_id conformed =

@@ -1,0 +1,66 @@
+// M9.5: what a string literal does not adopt. Each refusal is named in the comment above it.
+class label implements from<str>
+{
+    u64 length;
+
+    public label( u64 n ) { length = n; }
+    public static label from( str text ) { return label( text.size ); }
+};
+
+struct width implements from<str>
+{
+    u64 n;
+
+    static width from( str text ) { return width { text.size }; }
+};
+
+struct plain
+{
+    u64 n;
+};
+
+struct number implements from<i64>
+{
+    i64 v;
+
+    static number from( i64 value ) { return number { value }; }
+};
+
+void both( label l ) { }
+void both( width w ) { }
+
+void edit( ref label l ) { }
+
+u64 show<T>( T value ) where T : from<str>
+{
+    return 0;
+}
+
+void unbounded<T>()
+{
+    T x = "abc";
+}
+
+i32 main()
+{
+    // `plain` does not implement `from<str>`.
+    plain p = "abc";
+
+    // Only a literal adopts: a `str` value does not.
+    str text = "abc";
+    label l = text;
+
+    // `from<i64>` lets no literal adopt `number`.
+    number n = 5;
+
+    // Two overloads each need adoption, and neither is closer.
+    both( "x" );
+
+    // A `ref` parameter cannot take the temporary a literal becomes.
+    edit( "x" );
+
+    // `T` is deduced from the literal as `str`, which does not implement `from<str>`.
+    _ = show( "abc" );
+
+    return 0;
+}

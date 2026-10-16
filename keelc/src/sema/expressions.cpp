@@ -227,6 +227,14 @@ Argument_shape Expressions::argument_shape( Node_id argument )
         return shape;
     }
 
+    // Typed against the parameter chosen, where it may adopt that parameter's type.
+    if( ast_.kind( value ) == Node_kind::String_literal && resolution_.declaration_of( value ).is_valid() )
+    {
+        shape.kind = Argument_kind::Text;
+        shape.type = types_.type_of( resolution_.declaration_of( value ) );
+        return shape;
+    }
+
     if( const std::optional<Argument_kind> family = literal_family( value ) )
     {
         shape.kind = *family;
@@ -270,6 +278,11 @@ Type_id Expressions::infer_call( Node_id id )
     if( ast_.kind( callee ) == Node_kind::Path_expr && !resolution_.declaration_of( callee ).is_valid() )
     {
         const Node_id qualifier = qualifier_declaration( callee );
+
+        if( qualifier.is_valid() && ast_.kind( qualifier ) == Node_kind::Type_param_decl )
+        {
+            return infer_bound_static_call( id, qualifier );
+        }
 
         if( qualifier.is_valid() && is_aggregate( ast_.kind( qualifier ) ) )
         {
@@ -1252,7 +1265,10 @@ Type_id Expressions::infer_binary( Node_id id )
 
     // A comparison adopts only a bare literal: D41 answers `n < 0 - 1` rather than refusing it.
     const auto adopts = [&]( Node_id side )
-    { return is_comparison( op ) ? literals_.is_literal_expression( side ) : takes_context( side ); };
+    {
+        return is_comparison( op ) ? literals_.is_literal_expression( side ) || ast_.kind( side ) == Node_kind::String_literal
+                                   : takes_context( side );
+    };
 
     if( adopts( left ) != adopts( right ) )
     {
@@ -1266,6 +1282,13 @@ Type_id Expressions::infer_binary( Node_id id )
         if( !literal_on_the_left && calls_operator( known, op ) )
         {
             return infer_operator_call( id, left, right, operator_for( op ) );
+        }
+
+        // `"a" < s`: the literal adopts and is the object, which keeps the operator's order.
+        if( ast_.kind( literal_side ) == Node_kind::String_literal && calls_operator( known, op ) )
+        {
+            check( left, known );
+            return infer_operator_call( id, left, right, operator_for( op ), true );
         }
 
         // D41: a literal the other operand cannot hold is not a type error, because the comparison
@@ -1971,7 +1994,7 @@ bool Expressions::calls_operator( Type_id type, Token_kind op ) const
 
 // `a == b`, `a < b` or `a <=> b` on an aggregate, or on an enum whose own block declares it: a call
 // of the left operand's operator, with the right as its argument.
-Type_id Expressions::infer_operator_call( Node_id id, Node_id object, Node_id argument, Symbol_id name )
+Type_id Expressions::infer_operator_call( Node_id id, Node_id object, Node_id argument, Symbol_id name, bool argument_typed )
 {
     const Type_id object_type = types_.type_of( object );
     const Node_id method      = find_operator(
@@ -1994,7 +2017,10 @@ Type_id Expressions::infer_operator_call( Node_id id, Node_id object, Node_id ar
 
     const std::span<const Node_id> params = ast_.params( method );
 
-    check( argument, table_.substitute( types_.type_of( params[1] ), aggregates_.bindings_of( object_type ) ) );
+    if( !argument_typed )
+    {
+        check( argument, table_.substitute( types_.type_of( params[1] ), aggregates_.bindings_of( object_type ) ) );
+    }
 
     callees_.record( id, method );
     record_method_instantiation( id, method, object_type );
@@ -2048,7 +2074,10 @@ Node_id Expressions::find_operator(
 
     if( !method.is_valid() )
     {
-        infer( argument );
+        if( !types_.type_of( argument ).is_valid() )
+        {
+            infer( argument );
+        }
 
         // Only a type the author can edit is worth telling them to edit.
         const bool own_package =
@@ -2247,6 +2276,65 @@ Type_id Expressions::infer_static_call( Node_id id, Node_id aggregate )
     callees_.record( id, method );
 
     return check_method_arguments( id, method, instance, expectation, shapes );
+}
+
+Type_id Expressions::infer_bound_static_call( Node_id id, Node_id parameter )
+{
+    const Node_id              path        = ast_.callee( id );
+    const Symbol_id            name        = ast_.name( path );
+    const Type_id              expectation = take_call_expectation();
+    const Type_id              instance    = types_.type_of( parameter );
+    const std::vector<Type_id> owners      = method_owners( instance, name );
+
+    std::vector<Argument_shape> shapes;
+
+    if( owners.empty() )
+    {
+        reporter_.error_at(
+            ast_.span( path ),
+            fmt::format( "`{}` has no static method `{}`", table_.name( instance ), interner_.text( name ) ),
+            fmt::format( "a `where` clause naming an interface gives `{}` that interface's methods", table_.name( instance ) )
+        );
+
+        return refuse_call( id, shapes );
+    }
+
+    const Node_id first = aggregates_.find_method( table_.get( owners.front() ).declaration, name );
+
+    if( !first.is_valid() )
+    {
+        reporter_.error_at(
+            ast_.span( path ), fmt::format( "`{}` has no static method `{}`", table_.name( instance ), interner_.text( name ) )
+        );
+
+        return refuse_call( id, shapes );
+    }
+
+    Type_id       interface;
+    const Node_id method = choose_method( id, first, instance, owners, shapes, interface );
+
+    if( !method.is_valid() )
+    {
+        return refuse_call( id, shapes );
+    }
+
+    if( !ast_.is_static_method( method ) )
+    {
+        reporter_.error_at(
+            ast_.span( path ),
+            fmt::format( "`{}` needs an object", interner_.text( name ) ),
+            fmt::format( "call it as `value.{}( ... )`", interner_.text( name ) )
+        );
+
+        return refuse_call( id, shapes );
+    }
+
+    // Lowering finds the implementer's method from the instance and the interface it went through.
+    callees_.record( id, method );
+    types_.record( path, interface );
+    types_.record( ast_.qualifier( path ), instance );
+
+    return check_method_arguments( id, method, instance, expectation, shapes, interface );
 }
 
 Type_id Expressions::infer_variant_construction( Node_id id )
@@ -2969,7 +3057,21 @@ Type_id Expressions::infer_string_literal( Node_id id )
     const Type_id type        = types_.type_of( decl );
     const Node_id constructor = aggregates_.find_member( decl, Node_kind::Constructor_decl );
     callees_.record( id, constructor );
-    return types_.record( id, type );
+
+    const Type_id wanted = take_expectation();
+    return types_.record( id, bounds_.adopts_text( wanted, type ) ? wanted : type );
+}
+
+bool Expressions::is_prelude_str( Type_id type ) const
+{
+    if( !type.is_valid() || !table_.is_struct( type ) )
+    {
+        return false;
+    }
+
+    const Node_id decl = table_.get( type ).declaration;
+    return interner_.text( ast_.name( decl ) ) == "str" &&
+           resolution_.package_of( ast_.span( decl ).file ) == resolution_.prelude_package();
 }
 
 // Nothing named an instance of a generic declaration, so there is no type here a value can hold.
@@ -3735,12 +3837,40 @@ Type_id Expressions::check( Node_id id, Type_id expected )
         reporter_.error_at(
             ast_.span( id ),
             fmt::format( "expected `{}`, but got `{}`", table_.name( expected ), table_.name( actual ) ),
-            mismatch_hint( table_, expected, actual )
+            text_hint( id, expected, actual )
         );
         return expected;
     }
 
     return expected;
+}
+
+// A `str` where a struct, class or `T` was wanted: only a literal adopts, and only through `from<str>`.
+std::string Expressions::text_hint( Node_id id, Type_id expected, Type_id actual ) const
+{
+    if( is_prelude_str( actual ) && table_.is_parameter( expected ) && ast_.kind( id ) == Node_kind::String_literal )
+    {
+        return fmt::format( "`where {} : from<str>` lets a string literal become one", table_.name( expected ) );
+    }
+
+    if( !is_prelude_str( actual ) || !table_.is_struct( expected ) || table_.name( expected ) == table_.name( actual ) )
+    {
+        return mismatch_hint( table_, expected, actual );
+    }
+
+    const std::string_view name = table_.name( expected );
+
+    if( ast_.kind( id ) == Node_kind::String_literal )
+    {
+        return fmt::format( "a string literal becomes a `{0}` only if `{0}` implements the prelude's `from<str>`", name );
+    }
+
+    if( bounds_.adopts_text( expected, actual ) )
+    {
+        return fmt::format( "only a string literal becomes a `{0}`; write `{0}::from( ... )`", name );
+    }
+
+    return mismatch_hint( table_, expected, actual );
 }
 
 // A literal is skipped: there is nothing inside one to be wrong, and its only complaint is that

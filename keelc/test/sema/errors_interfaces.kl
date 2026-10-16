@@ -1,4 +1,4 @@
-// M9.5: what an interface refuses. Its methods are signatures, never static or generic; an
+// M9.5: what an interface refuses. Its methods are signatures, never generic; an
 // implementer answers each with a public method of the same signature, `const` where the
 // interface's is; an interface is never held by value; and a bound is met only by a declared
 // `implements`. Each mistake is reported once, where it was made.
@@ -7,7 +7,6 @@ interface Shape
     f64 area() const;
     void grow( f64 by );
     i32 make<U>( U u );
-    static i32 count();
 };
 
 interface Named

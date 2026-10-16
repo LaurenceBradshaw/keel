@@ -23,7 +23,16 @@ enum class Argument_kind : u8
     Typed,
     Integer,
     Floating,
+    Text, // a string literal: `str`, or a type it adopts
     Anything
+};
+
+// §6.7's tiers, each asked only when the one before found nothing.
+enum class Tier : u8
+{
+    Exact,
+    Widened,
+    Adopted
 };
 
 // A kind other than `Typed` carries no type, deliberately: deduction reads nothing from a literal
@@ -164,7 +173,7 @@ private:
     std::vector<Argument_shape>
          unmarked( Node_id candidate, u32 implicit_params, std::span<const Argument_shape> shapes ) const;
     bool candidate_accepts(
-        Node_id callable, u32 implicit_params, std::span<const Argument_shape> shapes, const Bindings& bindings, bool widen
+        Node_id callable, u32 implicit_params, std::span<const Argument_shape> shapes, const Bindings& bindings, Tier tier
     );
     bool                 widens( Node_id param, Type_id from, Type_id to ) const;
     u32                  distance( Type_id from, Type_id to ) const;
