@@ -1,0 +1,28 @@
+// M9.5: a block for an instance of a generic interface is written in the package that declares the
+// interface, the type, or one of the instance's type arguments. Two packages that each own one
+// argument may both write the same block, and the second is refused, naming the first.
+import shapes::kinds;
+import left::marks;
+import right::marks;
+
+struct celsius
+{
+    f64 v;
+};
+
+// `celsius` is this package's.
+implements shapes::sink<celsius> for shapes::square
+{
+    void put( celsius value ) { }
+};
+
+// Neither `sink`, `square` nor `i32` is this package's.
+implements shapes::sink<i32> for shapes::square
+{
+    void put( i32 value ) { }
+};
+
+i32 main()
+{
+    return 0;
+}

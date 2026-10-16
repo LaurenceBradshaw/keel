@@ -96,7 +96,13 @@ std::string Signature_printer::declaration( Node_id decl ) const
         );
     }
     case Node_kind::Interface_decl:
-        return fmt::format( "interface {}{}", text( ast_.name( decl ) ), implemented( decl ) );
+        return fmt::format(
+            "interface {}{}{}{}",
+            text( ast_.name( decl ) ),
+            type_parameters( ast_.type_param_list( decl ) ),
+            implemented( decl ),
+            where_clauses( ast_.type_param_list( decl ) )
+        );
     case Node_kind::Implements_decl:
         return fmt::format( "implements {} for {}", type( ast_.implemented( decl )[0] ), type( ast_.implementer( decl ) ) );
     case Node_kind::Enum_decl:
@@ -288,6 +294,14 @@ std::string Signature_printer::where_clauses( Node_id list ) const
         {
             bounds += bounds.empty() ? "" : " & ";
             bounds += text( ast_.name( bound_name ) );
+
+            std::string arguments;
+            for( const Node_id argument : ast_.type_args( bound_name ) )
+            {
+                arguments += arguments.empty() ? "" : ", ";
+                arguments += type( argument );
+            }
+            bounds += arguments.empty() ? "" : fmt::format( "<{}>", arguments );
         }
 
         clauses += fmt::format( "{} where {} : {}", clauses.empty() ? "" : ",", text( ast_.name( clause ) ), bounds );
@@ -486,6 +500,17 @@ TEST_CASE( "signatures_print_interfaces_and_their_implementers", "[sema][signatu
     REQUIRE( printed( Node_kind::Interface_decl, "Solid" ) == "interface Solid implements Shape, Named" );
     REQUIRE( printed( Node_kind::Struct_decl, "Square" ) == "struct Square implements Shape, Named" );
     REQUIRE( printed( Node_kind::Class_decl, "Pair" ) == "class Pair<T> implements Shape where T : copyable" );
+}
+
+TEST_CASE( "signatures_print_a_generic_interface_and_its_instances", "[sema][signature][interface]" )
+{
+    const Printed printed( "interface sink<T> where T : copyable { void put( T value ); };\n"
+                           "interface counted<T> implements sink<T> where T : copyable { u64 count() const; };\n"
+                           "u64 feed<S>( ref S s ) where S : sink<i64> & counted<i64> { return 0; }\n" );
+
+    REQUIRE( printed( Node_kind::Interface_decl, "sink" ) == "interface sink<T> where T : copyable" );
+    REQUIRE( printed( Node_kind::Interface_decl, "counted" ) == "interface counted<T> implements sink<T> where T : copyable" );
+    REQUIRE( printed( Node_kind::Function_decl, "feed" ) == "u64 feed<S>( ref S s ) where S : sink<i64> & counted<i64>" );
 }
 
 // Every parameter the instance binds reads as its argument, and its `where` clause goes with it.

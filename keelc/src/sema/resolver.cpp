@@ -339,6 +339,11 @@ void Resolver::visit( Node_id id )
         {
             bind( id, decl );
         }
+
+        for( const Node_id child : ast_.children( id ) )
+        {
+            visit( child );
+        }
         return;
     default:
         for( const Node_id child : ast_.children( id ) )

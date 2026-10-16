@@ -103,7 +103,7 @@ public:
     std::vector<Node_id>     type_parameters( Node_id list ) const;   // the Type_param_decls; empty for an invalid list
     std::span<const Node_id> where_clauses( Node_id list ) const;
     std::span<const Node_id> bounds( Node_id where_clause ) const;
-    Node_id                  type_arg_list( Node_id id ) const; // Generic_type, Call_expr, Name_expr, Path_expr
+    Node_id                  type_arg_list( Node_id id ) const; // Generic_type, Call_expr, Name_expr, Path_expr, Bound_name
     std::span<const Node_id> type_args( Node_id id ) const;     // empty when no list was written
 
     // Aggregates and enums.

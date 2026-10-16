@@ -14,7 +14,7 @@ error: `bool` already implements `Hashable`
   --> sema/errors_implements_for.kl:32:12
    |
 32 | implements Hashable for bool
-   |            ^^^^^^^^
+   |            ^^^^^^^^ the block at sema/errors_implements_for.kl:27:1 implements it first
 
 error: `Q` is declared in this package, so a block cannot be written for it
   --> sema/errors_implements_for.kl:43:25

@@ -1570,7 +1570,7 @@ Node_id Lowering::bound_operator( Token_kind op, Type_id held ) const
 
     assert( members.size() == 1 );
 
-    return types_.conformances().method_for( table, held, members[0] );
+    return types_.conformances().method_for( table, held, interface, members[0] );
 }
 
 // `a == b` calls `a.operator==( b )`, and `a != b` negates it; `a < b` compares what
@@ -1982,11 +1982,18 @@ Operand Lowering::lower_interface_call( Node_id id, Node_id requirement )
     if( types_.table().is_interface( held ) )
     {
         return lower_method_call_on(
-            id, requirement, receiver( types_.table().pointer_to( held, reads ) ), ast_.arguments( id ), type_of( id ), {}, {}
+            id,
+            requirement,
+            receiver( types_.table().pointer_to( held, reads ) ),
+            ast_.arguments( id ),
+            type_of( id ),
+            types_.table().instance_bindings( held ),
+            {}
         );
     }
 
-    const Node_id method = types_.conformances().method_for( types_.table(), held, requirement );
+    // The instance selection chose, recorded on the callee.
+    const Node_id method = types_.conformances().method_for( types_.table(), held, type_of( ast_.callee( id ) ), requirement );
 
     // No method answers where the compiler's conformance does, and only `hashable`'s `hash` has one:
     // it is a call of the prelude hasher's `write` with the value's word.

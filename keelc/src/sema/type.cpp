@@ -238,31 +238,9 @@ Type_id Type_table::parameter( Node_id declaration, std::string_view name )
     return id;
 }
 
-Type_id Type_table::interface( Node_id declaration, std::string_view name )
+Type_id Type_table::interface( Node_id declaration, std::span<const Type_id> arguments, std::string_view name )
 {
-    const auto it = interfaces_.find( declaration.v );
-
-    if( it != interfaces_.end() )
-    {
-        return it->second;
-    }
-
-    std::string spelling( name );
-
-    if( !unshown_packages_.contains( declaration.v ) )
-    {
-        const auto package_it = packages_.find( declaration.v );
-        if( package_it != packages_.end() )
-        {
-            spelling = std::string( package_it->second ) + "::" + spelling;
-        }
-    }
-
-    const Type_id id = add( Type { Type_kind::Interface, 0, false, Type_id {}, declaration }, spelling );
-
-    interfaces_.emplace( declaration.v, id );
-
-    return id;
+    return composite( Type_kind::Interface, declaration, arguments, name, Type_id {} );
 }
 
 Type_id Type_table::self_of( Node_id interface )
@@ -290,6 +268,7 @@ bool Type_table::mentions_parameter( Type_id id ) const
     case Type_kind::Enum:
     case Type_kind::Struct:
     case Type_kind::Union:
+    case Type_kind::Interface:
         for( Type_id arg : described.arguments )
         {
             if( mentions_parameter( arg ) )
@@ -358,6 +337,7 @@ Type_id Type_table::substitute( Type_id type, const Bindings& bindings )
     }
     case Type_kind::Struct:
     case Type_kind::Enum:
+    case Type_kind::Interface:
     {
         // A non-generic aggregate substitutes to itself, and asking the table to re-intern it would
         // only find it again. Worth the branch because most struct types are this one.
@@ -378,6 +358,10 @@ Type_id Type_table::substitute( Type_id type, const Bindings& bindings )
         if( described.kind == Type_kind::Enum )
         {
             return enumeration( described.declaration, substituted, base_name( type ), described.element );
+        }
+        else if( described.kind == Type_kind::Interface )
+        {
+            return interface( described.declaration, substituted, base_name( type ) );
         }
         else
         {
@@ -517,6 +501,7 @@ bool Type_table::deduce( Type_id pattern, Type_id actual, Bindings& into ) const
         return deduce( p.element, a.element, into );
     case Type_kind::Struct:
     case Type_kind::Enum:
+    case Type_kind::Interface:
         // Two aggregates of one shape are still two types: `Box<T>` deduces nothing from a
         // `Wrap<i32>`, and without this it would deduce `T = i32` from an unrelated declaration.
         if( p.declaration != a.declaration || p.arguments.size() != a.arguments.size() )
@@ -633,9 +618,15 @@ std::vector<Type_id> Type_table::interface_types() const
 {
     std::vector<Type_id> result;
 
-    for( const auto& [declaration, type] : interfaces_ )
+    for( const auto& [declaration, instances] : interfaces_ )
     {
-        result.push_back( type );
+        for( const Instance& instance : instances )
+        {
+            if( !mentions_parameter( instance.type ) )
+            {
+                result.push_back( instance.type );
+            }
+        }
     }
 
     std::sort( result.begin(), result.end(), []( Type_id a, Type_id b ) { return a.v < b.v; } );
@@ -1191,8 +1182,7 @@ bool Type_table::implements( Type_id type, Type_id interface ) const
             return false;
         }
 
-        const std::vector<Type_id>& implemented = it->second;
-        return std::find( implemented.begin(), implemented.end(), interface ) != implemented.end();
+        return std::ranges::any_of( it->second, [&]( Type_id declared ) { return declares_as( declared, type, interface ); } );
     }
     else
     {
@@ -1212,7 +1202,7 @@ void Type_table::declare_refinement( Type_id interface, Type_id refined )
     refinements_[get( interface ).declaration.v].push_back( refined );
 }
 
-std::span<const Type_id> Type_table::refinements( Type_id interface ) const
+std::vector<Type_id> Type_table::refinements( Type_id interface )
 {
     if( !interface.is_valid() || !is_interface( interface ) )
     {
@@ -1220,15 +1210,126 @@ std::span<const Type_id> Type_table::refinements( Type_id interface ) const
     }
 
     const auto found = refinements_.find( get( interface ).declaration.v );
-    return found == refinements_.end() ? std::span<const Type_id> {} : std::span<const Type_id> { found->second };
+    if( found == refinements_.end() )
+    {
+        return {};
+    }
+
+    const Bindings       bindings = instance_bindings( interface );
+    std::vector<Type_id> result;
+
+    for( const Type_id refined : found->second )
+    {
+        result.push_back( substitute( refined, bindings ) );
+    }
+
+    return result;
+}
+
+bool Type_table::declares_as( Type_id declared, Type_id type, Type_id interface ) const
+{
+    return substitutes_to( declared, instance_bindings( type ), interface );
+}
+
+// Whether substitute( pattern, bindings ) would be `actual`, without interning it.
+// ponytail: a function or field type holding a parameter never matches; walk them if one is declared.
+bool Type_table::substitutes_to( Type_id pattern, const Bindings& bindings, Type_id actual ) const
+{
+    if( pattern == actual )
+    {
+        return true;
+    }
+
+    const Type& p = get( pattern );
+    const Type& a = get( actual );
+
+    if( p.kind == Type_kind::Parameter )
+    {
+        const auto bound = bindings.find( pattern.v );
+        return bound != bindings.end() && bound->second == actual;
+    }
+
+    if( p.kind != a.kind )
+    {
+        return false;
+    }
+
+    switch( p.kind )
+    {
+    case Type_kind::Pointer:
+    case Type_kind::Many_pointer:
+    case Type_kind::Run:
+        return p.const_element == a.const_element && substitutes_to( p.element, bindings, a.element );
+    case Type_kind::Struct:
+    case Type_kind::Enum:
+    case Type_kind::Interface:
+        if( p.declaration != a.declaration || p.arguments.size() != a.arguments.size() )
+        {
+            return false;
+        }
+
+        for( std::size_t i = 0; i < p.arguments.size(); ++i )
+        {
+            if( !substitutes_to( p.arguments[i], bindings, a.arguments[i] ) )
+            {
+                return false;
+            }
+        }
+
+        return true;
+    default:
+        return false;
+    }
+}
+
+// The open form is the first instance interned: the signature pass makes each before any is written.
+Bindings Type_table::instance_bindings( Type_id instance ) const
+{
+    Bindings result;
+    if( !( is_interface( instance ) || is_struct( instance ) || is_enum( instance ) ) || get( instance ).arguments.empty() )
+    {
+        return result;
+    }
+
+    const auto&                    instances  = is_interface( instance ) ? interfaces_ : composites_;
+    const Type_id                  open       = instances.at( get( instance ).declaration.v ).front().type;
+    const std::span<const Type_id> parameters = get( open ).arguments;
+
+    for( std::size_t i = 0; i < parameters.size(); ++i )
+    {
+        result.emplace( parameters[i].v, get( instance ).arguments[i] );
+    }
+
+    return result;
 }
 
 // Recursion is safe: a refinement closing a cycle is refused before it is declared.
-bool Type_table::refines( Type_id interface, Type_id other ) const
+bool Type_table::refines( Type_id interface, Type_id other )
 {
     for( const Type_id refined : refinements( interface ) )
     {
         if( refined == other || refines( refined, other ) )
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// By declaration, as written, so it terminates on a cycle `refines` would follow forever.
+bool Type_table::refines_declaration( Node_id interface, Node_id other ) const
+{
+    const auto found = refinements_.find( interface.v );
+    if( found == refinements_.end() )
+    {
+        return false;
+    }
+
+    for( const Type_id refined : found->second )
+    {
+        const Node_id declaration = get( refined ).declaration;
+        if( declaration == other || refines_declaration( declaration, other ) )
         {
             return true;
         }
@@ -1307,7 +1408,7 @@ void Type_table::declare_prelude_interface( Prelude_interface which, Node_id dec
 Type_id Type_table::prelude_interface( Prelude_interface which ) const
 {
     const auto found = interfaces_.find( prelude_interfaces_[static_cast<u8>( which )].v );
-    return found == interfaces_.end() ? Type_id {} : found->second;
+    return found == interfaces_.end() ? Type_id {} : found->second.front().type;
 }
 
 bool Type_table::is_prelude_interface( Type_id interface ) const
@@ -1368,7 +1469,7 @@ Type_id Type_table::composite(
     Type_kind kind, Node_id declaration, std::span<const Type_id> arguments, std::string_view name, Type_id element
 )
 {
-    std::vector<Instance>& instances = composites_[declaration.v];
+    std::vector<Instance>& instances = ( kind == Type_kind::Interface ? interfaces_ : composites_ )[declaration.v];
 
     for( const Instance& seen : instances )
     {
@@ -2958,11 +3059,11 @@ TEST_CASE( "type_table_keeps_an_interface_apart_from_the_structs", "[sema][type]
     table.set_package( Node_id { 9 }, "kl" );
 
     const Type_id point  = table.structure( Node_id { 3 }, {}, "Point" );
-    const Type_id shape  = table.interface( Node_id { 5 }, "Shape" );
-    const Type_id drawn  = table.interface( Node_id { 7 }, "Drawn" );
-    const Type_id kl_cmp = table.interface( Node_id { 9 }, "Ordered" );
+    const Type_id shape  = table.interface( Node_id { 5 }, {}, "Shape" );
+    const Type_id drawn  = table.interface( Node_id { 7 }, {}, "Drawn" );
+    const Type_id kl_cmp = table.interface( Node_id { 9 }, {}, "Ordered" );
 
-    REQUIRE( table.interface( Node_id { 5 }, "Shape" ) == shape );
+    REQUIRE( table.interface( Node_id { 5 }, {}, "Shape" ) == shape );
     REQUIRE( shape != drawn );
     REQUIRE( table.get( shape ).kind == Type_kind::Interface );
     REQUIRE( table.get( shape ).declaration == Node_id { 5 } );
@@ -2989,14 +3090,48 @@ TEST_CASE( "type_table_keeps_an_interface_apart_from_the_structs", "[sema][type]
 }
 
 // Keyed by declaration, so every instance of a generic implements what the declaration says.
+TEST_CASE( "type_table_substitutes_a_refinement_per_instance", "[sema][type][interfaces]" )
+{
+    Type_table table;
+
+    const Type_id i32     = table.integer( 32, true );
+    const Type_id i64     = table.integer( 64, true );
+    const Type_id t       = table.parameter( Node_id { 6 }, "T" );
+    const Type_id u       = table.parameter( Node_id { 8 }, "U" );
+    const Type_id sink    = table.interface( Node_id { 5 }, std::array { t }, "sink" );
+    const Type_id counted = table.interface( Node_id { 7 }, std::array { u }, "counted" );
+    const Type_id shape   = table.interface( Node_id { 9 }, {}, "Shape" );
+
+    table.declare_refinement( counted, table.interface( Node_id { 5 }, std::array { u }, "sink" ) );
+
+    const Type_id counted_i32 = table.interface( Node_id { 7 }, std::array { i32 }, "counted" );
+    const Type_id sink_i32    = table.interface( Node_id { 5 }, std::array { i32 }, "sink" );
+    const Type_id sink_i64    = table.interface( Node_id { 5 }, std::array { i64 }, "sink" );
+
+    REQUIRE( table.instance_bindings( counted_i32 ) == Bindings { { u.v, i32 } } );
+    REQUIRE( table.instance_bindings( shape ).empty() );
+    REQUIRE( table.instance_bindings( sink ) == Bindings { { t.v, t } } ); // the open form binds itself
+
+    REQUIRE( table.refinements( counted_i32 ) == std::vector { sink_i32 } );
+    REQUIRE( table.refines( counted_i32, sink_i32 ) );
+    REQUIRE_FALSE( table.refines( counted_i32, sink_i64 ) );
+
+    SECTION( "by declaration, whatever the arguments" )
+    {
+        REQUIRE( table.refines_declaration( Node_id { 7 }, Node_id { 5 } ) );
+        REQUIRE_FALSE( table.refines_declaration( Node_id { 5 }, Node_id { 7 } ) );
+        REQUIRE_FALSE( table.refines_declaration( Node_id { 9 }, Node_id { 5 } ) );
+    }
+}
+
 TEST_CASE( "type_table_records_what_implements_an_interface", "[sema][type][interfaces]" )
 {
     Type_table table;
 
     const Type_id i32   = table.integer( 32, true );
     const Type_id f64   = table.floating( 64 );
-    const Type_id shape = table.interface( Node_id { 5 }, "Shape" );
-    const Type_id drawn = table.interface( Node_id { 7 }, "Drawn" );
+    const Type_id shape = table.interface( Node_id { 5 }, {}, "Shape" );
+    const Type_id drawn = table.interface( Node_id { 7 }, {}, "Drawn" );
     const Type_id point = table.structure( Node_id { 3 }, {}, "Point" );
     const Type_id other = table.structure( Node_id { 4 }, {}, "Other" );
 
@@ -3023,12 +3158,52 @@ TEST_CASE( "type_table_records_what_implements_an_interface", "[sema][type][inte
     }
 }
 
+// A generic implementer declares in its open form, so each instance implements its own instance.
+TEST_CASE( "type_table_reads_a_generic_implementers_interface_per_instance", "[sema][type][interfaces]" )
+{
+    Type_table table;
+
+    const Type_id i32       = table.integer( 32, true );
+    const Type_id i64       = table.integer( 64, true );
+    const Type_id t         = table.parameter( Node_id { 12 }, "T" );
+    const Type_id sink      = table.interface( Node_id { 5 }, std::array { t }, "sink" );
+    const Type_id last      = table.structure( Node_id { 11 }, std::array { t }, "last" );
+    const Type_id last_i32  = table.structure( Node_id { 11 }, std::array { i32 }, "last" );
+    const Type_id sink_i32  = table.interface( Node_id { 5 }, std::array { i32 }, "sink" );
+    const Type_id sink_i64  = table.interface( Node_id { 5 }, std::array { i64 }, "sink" );
+    const Type_id sink_last = table.interface( Node_id { 5 }, std::array { table.pointer_to( last_i32 ) }, "sink" );
+
+    table.declare_implements( Node_id { 11 }, sink );
+
+    REQUIRE( table.instance_bindings( last_i32 ) == Bindings { { t.v, i32 } } );
+    REQUIRE( table.instance_bindings( table.pointer_to( last_i32 ) ).empty() );
+
+    REQUIRE( table.implements( last_i32, sink_i32 ) );
+    REQUIRE_FALSE( table.implements( last_i32, sink_i64 ) );
+    REQUIRE( table.implements( last, sink ) );
+
+    SECTION( "matched structurally, without interning" )
+    {
+        const Bindings bindings { { t.v, i32 } };
+
+        REQUIRE( table.substitutes_to( table.pointer_to( t ), bindings, table.pointer_to( i32 ) ) );
+        REQUIRE_FALSE( table.substitutes_to( table.pointer_to( t ), bindings, table.pointer_to( i64 ) ) );
+        REQUIRE_FALSE( table.substitutes_to( table.pointer_to( t ), bindings, table.pointer_to( i32, true ) ) );
+        REQUIRE_FALSE( table.substitutes_to( sink, bindings, sink_last ) );
+    }
+
+    SECTION( "an open form has no vtable" )
+    {
+        REQUIRE( table.interface_types() == std::vector { sink_i32, sink_i64, sink_last } );
+    }
+}
+
 // Only as a borrow or a pointer: the implementer is still the object, so `const` may be added, never dropped.
 TEST_CASE( "type_table_holds_an_implementer_as_its_interface", "[sema][type][interfaces]" )
 {
     Type_table table;
 
-    const Type_id shape = table.interface( Node_id { 5 }, "Shape" );
+    const Type_id shape = table.interface( Node_id { 5 }, {}, "Shape" );
     const Type_id point = table.structure( Node_id { 3 }, {}, "Point" );
     const Type_id other = table.structure( Node_id { 4 }, {}, "Other" );
 
@@ -3054,7 +3229,7 @@ TEST_CASE( "type_table_holds_a_box_of_an_implementer_as_a_box_of_its_interface",
 {
     Type_table table;
 
-    const Type_id shape = table.interface( Node_id { 5 }, "Shape" );
+    const Type_id shape = table.interface( Node_id { 5 }, {}, "Shape" );
     const Type_id point = table.structure( Node_id { 3 }, {}, "Point" );
     const Type_id other = table.structure( Node_id { 4 }, {}, "Other" );
 

@@ -1,0 +1,185 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "generic_interface_blocks.kl.prelude.c"
+
+struct kl__sink__I3i64E__vtable;
+struct kl__sink__I3i64E__ref { void* self; const struct kl__sink__I3i64E__vtable* vtable; };
+struct kl__sink__I4boolE__vtable;
+struct kl__sink__I4boolE__ref { void* self; const struct kl__sink__I4boolE__vtable* vtable; };
+
+struct kl__sink__I3i64E__vtable
+{
+    void ( *drop )( void* );
+    void ( *kl_put_12 )( void*, int64_t* );
+    uint64_t ( *kl_count_22 )( void* );
+};
+
+struct kl__sink__I4boolE__vtable
+{
+    void ( *drop )( void* );
+    void ( *kl_put_12 )( void*, bool* );
+    uint64_t ( *kl_count_22 )( void* );
+};
+
+void kl__put__S5lightC4sinkI3i64E_3i64( int32_t*, int64_t );
+uint64_t kl__count__S5lightC4sinkI3i64E( int32_t* );
+void kl__put__S5lightC4sinkI4boolE_4bool( int32_t*, bool );
+uint64_t kl__count__S5lightC4sinkI4boolE( int32_t* );
+uint64_t kl__flags__4sinkI4boolE( struct kl__sink__I4boolE__ref );
+int32_t kl__main__( void );
+uint64_t kl__ints__I5lightE__5light( int32_t* );
+
+static void kl__light__as_kl__sink__I4boolE__drop( void* self )
+{
+    ( void ) self;
+}
+
+static void kl__light__as_kl__sink__I4boolE__kl_put_12( void* self, bool* p0 )
+{
+    kl__put__S5lightC4sinkI4boolE_4bool( ( int32_t* ) self, *p0 );
+}
+
+static uint64_t kl__light__as_kl__sink__I4boolE__kl_count_22( void* self )
+{
+    return kl__count__S5lightC4sinkI4boolE( ( int32_t* ) self );
+}
+
+static const struct kl__sink__I4boolE__vtable kl__light__as_kl__sink__I4boolE = { kl__light__as_kl__sink__I4boolE__drop, kl__light__as_kl__sink__I4boolE__kl_put_12, kl__light__as_kl__sink__I4boolE__kl_count_22 };
+
+static void kl__light__as_kl__sink__I3i64E__drop( void* self )
+{
+    ( void ) self;
+}
+
+static void kl__light__as_kl__sink__I3i64E__kl_put_12( void* self, int64_t* p0 )
+{
+    kl__put__S5lightC4sinkI3i64E_3i64( ( int32_t* ) self, *p0 );
+}
+
+static uint64_t kl__light__as_kl__sink__I3i64E__kl_count_22( void* self )
+{
+    return kl__count__S5lightC4sinkI3i64E( ( int32_t* ) self );
+}
+
+static const struct kl__sink__I3i64E__vtable kl__light__as_kl__sink__I3i64E = { kl__light__as_kl__sink__I3i64E__drop, kl__light__as_kl__sink__I3i64E__kl_put_12, kl__light__as_kl__sink__I3i64E__kl_count_22 };
+
+void kl__put__S5lightC4sinkI3i64E_3i64( int32_t* kl_this_1, int64_t kl_value_2 )
+{
+    ( void ) kl_this_1;
+    ( void ) kl_value_2;
+    return;
+}
+
+uint64_t kl__count__S5lightC4sinkI3i64E( int32_t* kl_this_1 )
+{
+    uint64_t kl_t0;
+    ( void ) kl_this_1;
+#line 19 "codegen/generic_interface_blocks.kl"
+    kl_t0 = 7;
+    return kl_t0;
+}
+
+void kl__put__S5lightC4sinkI4boolE_4bool( int32_t* kl_this_1, bool kl_value_2 )
+{
+    ( void ) kl_this_1;
+    ( void ) kl_value_2;
+    return;
+}
+
+uint64_t kl__count__S5lightC4sinkI4boolE( int32_t* kl_this_1 )
+{
+    uint64_t kl_t0;
+    ( void ) kl_this_1;
+#line 25 "codegen/generic_interface_blocks.kl"
+    kl_t0 = 8;
+    return kl_t0;
+}
+
+uint64_t kl__flags__4sinkI4boolE( struct kl__sink__I4boolE__ref kl_s_1 )
+{
+    uint64_t kl_t0;
+    struct kl__sink__I4boolE__ref kl_t2;
+    uint64_t kl_t3;
+#line 30 "codegen/generic_interface_blocks.kl"
+    kl_t2 = kl_s_1;
+    kl_t3 = kl_t2.vtable->kl_count_22( kl_t2.self );
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+int32_t kl__main__( void )
+{
+    int32_t kl_t0;
+    int32_t kl_l_1;
+    int32_t* kl_t2;
+    uint64_t kl_t3;
+    bool kl_t4;
+    struct kl__sink__I4boolE__ref kl_t5;
+    uint64_t kl_t6;
+    bool kl_t7;
+    struct kl__sink__I3i64E__ref kl_p_8;
+    int32_t* kl_t9;
+    struct kl__sink__I3i64E__ref kl_t10;
+    int64_t kl_t11;
+    int64_t* kl_t12;
+    uint64_t kl_t14;
+    bool kl_t15;
+#line 34 "codegen/generic_interface_blocks.kl"
+    kl_l_1 = 1;
+#line 35 "codegen/generic_interface_blocks.kl"
+    kl_t2 = &kl_l_1;
+    kl_t3 = kl__ints__I5lightE__5light( kl_t2 );
+    kl_t4 = kl_t3 != 7;
+    if ( kl_t4 ) goto bb1; else goto bb2;
+    bb1:
+    kl_t0 = 1;
+    return kl_t0;
+    bb2:
+#line 36 "codegen/generic_interface_blocks.kl"
+    kl_t5 = ( struct kl__sink__I4boolE__ref ) { ( void* ) &kl_l_1, &kl__light__as_kl__sink__I4boolE };
+    kl_t6 = kl__flags__4sinkI4boolE( kl_t5 );
+    kl_t7 = kl_t6 != 8;
+    if ( kl_t7 ) goto bb3; else goto bb4;
+    bb3:
+    kl_t0 = 2;
+    return kl_t0;
+    bb4:
+#line 38 "codegen/generic_interface_blocks.kl"
+    kl_t9 = &kl_l_1;
+    kl_t10 = ( struct kl__sink__I3i64E__ref ) { ( void* ) kl_t9, &kl__light__as_kl__sink__I3i64E };
+    kl_p_8 = kl_t10;
+#line 39 "codegen/generic_interface_blocks.kl"
+    kl_t11 = 1;
+    kl_t12 = &kl_t11;
+    kl_p_8.vtable->kl_put_12( kl_p_8.self, kl_t12 );
+#line 40 "codegen/generic_interface_blocks.kl"
+    kl_t14 = kl_p_8.vtable->kl_count_22( kl_p_8.self );
+    kl_t15 = kl_t14 != 7;
+    if ( kl_t15 ) goto bb5; else goto bb6;
+    bb5:
+    kl_t0 = 3;
+    return kl_t0;
+    bb6:
+#line 42 "codegen/generic_interface_blocks.kl"
+    kl_t0 = 0;
+    return kl_t0;
+}
+
+uint64_t kl__ints__I5lightE__5light( int32_t* kl_s_1 )
+{
+    uint64_t kl_t0;
+    int32_t* kl_t2;
+    uint64_t kl_t3;
+#line 28 "codegen/generic_interface_blocks.kl"
+    kl_t2 = &( *kl_s_1 );
+    kl_t3 = kl__count__S5lightC4sinkI3i64E( kl_t2 );
+    kl_t0 = kl_t3;
+    return kl_t0;
+}
+
+int main( void )
+{
+    return (int) kl__main__();
+}

@@ -714,23 +714,25 @@ void Kir_emitter::emit_vtable_types()
         // spelled `kl_<name>_<id>`, so one called `drop` cannot collide.
         write_line( "void ( *drop )( void* );" );
 
+        // Each slot at this instance: `sink<i64>`'s `put` takes an `i64`.
+        const Bindings bindings = types_.table().instance_bindings( interface );
+        const auto     slot     = [&]( Node_id node )
+        { return types_.table().substitute( binding_type( ast_, types_, node ), bindings ); };
+
         for( const Node_id requirement : ast_.members( types_.table().get( interface ).declaration ) )
         {
             std::string parameters = "void*";
 
             for( const Node_id param : ast_.explicit_params( requirement ) )
             {
-                if( !is_void( binding_type( ast_, types_, param ) ) )
+                if( !is_void( slot( param ) ) )
                 {
-                    parameters += fmt::format( ", {}", spelling_.parameter( binding_type( ast_, types_, param ), "" ) );
+                    parameters += fmt::format( ", {}", spelling_.parameter( slot( param ), "" ) );
                 }
             }
 
             write_line( fmt::format(
-                "{} ( *{} )( {} );",
-                spelling_.type( binding_type( ast_, types_, requirement ) ),
-                spelling_.field( requirement ),
-                parameters
+                "{} ( *{} )( {} );", spelling_.type( slot( requirement ) ), spelling_.field( requirement ), parameters
             ) );
         }
 
@@ -771,24 +773,36 @@ void Kir_emitter::emit_vtables()
 
         slots.push_back( drop );
 
+        const Bindings bindings    = types_.table().instance_bindings( vtable.interface );
+        const auto     at_instance = [&]( Node_id node )
+        { return types_.table().substitute( binding_type( ast_, types_, node ), bindings ); };
+
         for( std::size_t i = 0; i < vtable.requirements.size(); ++i )
         {
             const Node_id requirement = vtable.requirements[i];
-            const Type_id returned    = binding_type( ast_, types_, requirement );
+            const Type_id returned    = at_instance( requirement );
 
             std::string parameters = "void* self";
             std::string arguments  = fmt::format( "( {} ) self", self_type );
 
             for( std::size_t p = 0; p < ast_.explicit_params( requirement ).size(); ++p )
             {
-                const Type_id type = binding_type( ast_, types_, ast_.explicit_params( requirement )[p] );
+                const Type_id type = at_instance( ast_.explicit_params( requirement )[p] );
 
                 if( !is_void( type ) )
                 {
+                    // A bare `T` borrows, where the implementer may take its `copyable` argument by value.
+                    const Type_id taken = types_.table().substitute(
+                        binding_type( ast_, types_, ast_.explicit_params( vtable.methods[i] )[p] ),
+                        types_.table().instance_bindings( vtable.implementer )
+                    );
+                    const bool copied = types_.table().is_pointer( type ) && !types_.table().is_pointer( taken );
+
                     // A run's two halves go straight on, never rebuilt.
                     const std::string name = fmt::format( "p{}", p );
                     parameters += fmt::format( ", {}", spelling_.parameter( type, name ) );
                     arguments += types_.table().is_run_pointer( type ) ? fmt::format( ", {0}_data, {0}_size", name )
+                                 : copied                              ? fmt::format( ", *{}", name )
                                                                        : fmt::format( ", {}", name );
                 }
             }

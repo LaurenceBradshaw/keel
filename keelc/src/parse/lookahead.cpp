@@ -1003,6 +1003,23 @@ bool Lookahead::scan_where_clauses()
                 return fail( Wanted::Name );
             }
 
+            // `sink<i64>`: an interface's instance.
+            if( cursor_.match( Token_kind::Less ) )
+            {
+                do
+                {
+                    if( !scan_type() )
+                    {
+                        return false;
+                    }
+                } while( cursor_.match( Token_kind::Comma ) );
+
+                if( !cursor_.match_generic_close() )
+                {
+                    return fail( Wanted::Token, Token_kind::Greater );
+                }
+            }
+
             if( cursor_.match( Token_kind::Amp ) )
             {
                 separator = true;
@@ -1847,6 +1864,7 @@ TEST_CASE( "lookahead_recognises_each_declaration_head", "[scan]" )
         require_declaration( "T f<T, U>( T a, U b ) { }", Declaration_kind::Function, "{" );
         require_declaration( "T f<T>( T a ) where T : copyable { }", Declaration_kind::Function, "{" );
         require_declaration( "T f<T>( T a ) where T : copyable & equatable { }", Declaration_kind::Function, "{" );
+        require_declaration( "T f<T>( T a ) where T : sink<i64> & both<i64, bool> { }", Declaration_kind::Function, "{" );
         require_declaration( "T f<T, U>( T a ) where T : copyable, where U : equatable { }", Declaration_kind::Function, "{" );
     }
 

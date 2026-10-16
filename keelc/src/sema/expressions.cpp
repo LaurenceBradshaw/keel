@@ -711,9 +711,9 @@ Type_id Expressions::infer_method_call( Node_id id )
         return types_.poison( id );
     }
 
-    const Node_id owner = method_owner( object_type, ast_.name( callee ) );
+    const std::vector<Type_id> owners = method_owners( object_type, ast_.name( callee ) );
 
-    if( !owner.is_valid() )
+    if( owners.empty() )
     {
         reporter_.error_at(
             ast_.span( object ),
@@ -729,7 +729,7 @@ Type_id Expressions::infer_method_call( Node_id id )
 
     // The declaration, not the call: find_method searches a declaration's members, and hands back
     // the first of however many share the name.
-    const Node_id first = aggregates_.find_method( owner, ast_.name( callee ) );
+    const Node_id first = aggregates_.find_method( table_.get( owners.front() ).declaration, ast_.name( callee ) );
 
     if( !first.is_valid() && !table_.is_struct( object_type ) )
     {
@@ -782,9 +782,13 @@ Type_id Expressions::infer_method_call( Node_id id )
         return types_.poison( id );
     }
 
-    std::vector<Argument_shape> shapes;
+    const bool               bound   = !table_.is_struct( object_type ) && !table_.is_interface( object_type );
+    std::span<const Type_id> through = bound ? std::span<const Type_id>( owners ) : std::span<const Type_id> {};
 
-    const Node_id method = choose_method( id, first, object_type, shapes );
+    std::vector<Argument_shape> shapes;
+    Type_id                     interface;
+
+    const Node_id method = choose_method( id, first, object_type, through, shapes, interface );
 
     if( !method.is_valid() )
     {
@@ -818,6 +822,12 @@ Type_id Expressions::infer_method_call( Node_id id )
 
     callees_.record( id, method );
 
+    // Lowering reads which instance the call went through.
+    if( interface.is_valid() )
+    {
+        types_.record( callee, interface );
+    }
+
     if( !ast_.is_const_method( method ) && table_.points_to_const( types_.type_of( object ) ) )
     {
         reporter_.error_at(
@@ -845,30 +855,38 @@ Type_id Expressions::infer_method_call( Node_id id )
         return types_.poison( id );
     }
 
-    return check_method_arguments( id, method, object_type, expectation, shapes );
+    return check_method_arguments( id, method, object_type, expectation, shapes, interface );
 }
 
-// Where a receiver's methods are declared: an aggregate's or an interface's own declaration, or for a
-// parameter, the first interface its `where` clause names that declares `name`, else the first it
-// names at all. Invalid when the type has no methods.
-Node_id Expressions::method_owner( Type_id receiver, Symbol_id name ) const
+// Where a receiver's methods are declared: an aggregate or an interface itself, or for a parameter,
+// every instance its `where` clause names of the first interface declaring `name`, else the first
+// it names at all. Empty when the type has no methods.
+std::vector<Type_id> Expressions::method_owners( Type_id receiver, Symbol_id name ) const
 {
     if( table_.is_struct( receiver ) || table_.is_interface( receiver ) )
     {
-        return table_.get( receiver ).declaration;
+        return { receiver };
     }
 
     const std::span<const Type_id> interfaces = bounds_.interfaces_of( receiver );
 
     for( const Type_id interface : interfaces )
     {
-        if( aggregates_.find_method( table_.get( interface ).declaration, name ).is_valid() )
+        const Node_id declaration = table_.get( interface ).declaration;
+
+        if( aggregates_.find_method( declaration, name ).is_valid() )
         {
-            return table_.get( interface ).declaration;
+            std::vector<Type_id> owners;
+            std::ranges::copy_if(
+                interfaces,
+                std::back_inserter( owners ),
+                [&]( Type_id other ) { return table_.get( other ).declaration == declaration; }
+            );
+            return owners;
         }
     }
 
-    return interfaces.empty() ? Node_id {} : table_.get( interfaces.front() ).declaration;
+    return interfaces.empty() ? std::vector<Type_id> {} : std::vector { interfaces.front() };
 }
 
 Node_id Expressions::block_for( Type_id type, Symbol_id name ) const
@@ -929,9 +947,8 @@ std::string Expressions::reached_only_as( Type_id type, Symbol_id name ) const
 
 // Shared by every call shape - `p.area()`, a bare `area()` inside a method and `T::make()` -
 // because what is checked is the same: the parameters from 1, the receiver having been supplied.
-Type_id Expressions::check_method_arguments(
-    Node_id id, Node_id method, Type_id receiver, Type_id expectation, std::span<const Argument_shape> shapes
-)
+Type_id Expressions::
+    check_method_arguments( Node_id id, Node_id method, Type_id receiver, Type_id expectation, std::span<const Argument_shape> shapes, Type_id interface )
 {
     // One implicit parameter for a method, none for M7's static one. Asked of the signature rather
     // than assumed, because this is the only place a static call's arguments are lined up.
@@ -953,7 +970,7 @@ Type_id Expressions::check_method_arguments(
     // `first`, and the declaration's `T` means nothing until they are applied. Reading either the
     // parameters or the result without them is how a method returns `T` to a caller expecting i32.
     // A generic method's own arguments are bound beside them.
-    Bindings bindings = aggregates_.receiver_bindings( receiver, method );
+    Bindings bindings = aggregates_.receiver_bindings( receiver, method, interface );
 
     const std::vector<Node_id> own = ast_.type_parameters( ast_.own_type_param_list( method ) );
 
@@ -1028,6 +1045,15 @@ void Expressions::check_deduced_bounds(
     const Call_site&         site
 )
 {
+    Bindings bindings;
+    for( std::size_t i = 0; i < parameters.size() && i < resolved.size(); ++i )
+    {
+        if( resolved[i].is_valid() )
+        {
+            bindings.emplace( types_.type_of( parameters[i] ).v, resolved[i] );
+        }
+    }
+
     for( std::size_t i = 0; i < parameters.size() && i < resolved.size(); ++i )
     {
         const Span bound_by_span = i < bound_by.size() && bound_by[i].is_valid() ? ast_.span( bound_by[i] ) : site.at;
@@ -1046,7 +1072,7 @@ void Expressions::check_deduced_bounds(
             continue;
         }
 
-        bounds_.check_bounds( parameters[i], bound_by_span, resolved[i], site.name );
+        bounds_.check_bounds( parameters[i], bound_by_span, resolved[i], site.name, bindings );
     }
 }
 
@@ -1115,7 +1141,8 @@ Type_id Expressions::infer_implicit_method_call( Node_id id, Node_id first, Type
 
     std::vector<Argument_shape> shapes;
 
-    const Node_id method = choose_method( id, first, instance, shapes );
+    Type_id       interface;
+    const Node_id method = choose_method( id, first, instance, {}, shapes, interface );
 
     if( !method.is_valid() )
     {
@@ -1168,22 +1195,25 @@ Type_id Expressions::infer_implicit_method_call( Node_id id, Node_id first, Type
 
 // The overloaded half of a method call, shared by its three spellings: `p.f()`, a bare `f()` and
 // `T::f()`.
-Node_id Expressions::choose_method( Node_id id, Node_id first, Type_id receiver, std::vector<Argument_shape>& shapes )
+Node_id Expressions::
+    choose_method( Node_id id, Node_id first, Type_id receiver, std::span<const Type_id> through, std::vector<Argument_shape>& shapes, Type_id& interface )
 {
-    const std::vector<Node_id> viable = overloads_.viable_methods( id, first, receiver );
-    Node_id                    method {};
+    const std::vector<Node_id> viable =
+        overloads_.viable_methods( id, first, receiver, through.empty() ? Type_id {} : through.front() );
 
-    if( viable.size() == 1 )
+    if( viable.size() == 1 && through.size() <= 1 )
     {
-        method = viable.front();
-    }
-    else if( !viable.empty() )
-    {
-        shape_arguments( id, shapes );
-        method = overloads_.select_method( id, first, receiver, viable, shapes );
+        interface = through.empty() ? Type_id {} : through.front();
+        return viable.front();
     }
 
-    return method;
+    if( viable.empty() )
+    {
+        return Node_id {};
+    }
+
+    shape_arguments( id, shapes );
+    return overloads_.select_method( id, first, receiver, viable, through, shapes, interface );
 }
 
 Type_id Expressions::refuse_call( Node_id id, std::span<const Argument_shape> shapes )
@@ -2184,7 +2214,8 @@ Type_id Expressions::infer_static_call( Node_id id, Node_id aggregate )
         return refuse_call( id, shapes );
     }
 
-    const Node_id method = choose_method( id, first, instance, shapes );
+    Type_id       interface;
+    const Node_id method = choose_method( id, first, instance, {}, shapes, interface );
 
     if( !method.is_valid() )
     {

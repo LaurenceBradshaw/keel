@@ -162,11 +162,11 @@ enum class Node_kind : u16
     Type_param_decl,
     // aux: the parameter it constrains; children: the Bound_names.
     Where_clause,
-    // aux: the bound's name, resolved against D40's fixed set by the checker.
+    // aux: the bound's name; children: its Type_arg_list, when it names an interface's instance.
     Bound_name,
     // aux: 0. children: the operand.
     Try_expr,
-    // aux: the name; children: the Type_param_list slot, always invalid for now, then the Method_decls.
+    // aux: the name; children: the Type_param_list slot, then the Implements_list slot, then the Method_decls.
     Interface_decl,
     // children: the interfaces' types, as written after `implements`.
     Implements_list,

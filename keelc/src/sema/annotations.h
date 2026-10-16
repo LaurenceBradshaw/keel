@@ -75,6 +75,11 @@ private:
     Span const_keyword( Node_id const_type ) const;
 
     Type_id refuse_self( Node_id annotation, Node_id decl );
+    Type_id refuse_bare_generic( Node_id at, std::string_view name );
+    Type_id refuse_not_generic( Node_id at, std::string_view name );
+
+    Type_id
+    addressed_interface( Node_id annotation, Node_id decl, Type_id interface, bool addressed, std::string_view spelled );
 
     const Ast&        ast_;
     const Interner&   interner_;

@@ -47,6 +47,7 @@ std::vector<Node_id> Aggregates::order_structs()
         cycle_reported.insert( cycle_reported.end(), path.begin(), path.end() );
     }
 
+    ordered_ = true;
     return cycle_reported;
 }
 
@@ -312,10 +313,13 @@ Bindings Aggregates::bindings_of( Type_id aggregate ) const
     return aggregate_bindings( ast_, table_, aggregate, types_.recorded() );
 }
 
-Bindings Aggregates::receiver_bindings( Type_id receiver, Node_id method ) const
+Bindings Aggregates::receiver_bindings( Type_id receiver, Node_id method, Type_id interface ) const
 {
-    Bindings      bindings = bindings_of( receiver );
-    const Node_id owner    = ast_.enclosing_aggregate( method );
+    Bindings bindings = bindings_of( receiver );
+    // A dynamic receiver is the instance itself.
+    bindings.merge( table_.instance_bindings( interface.is_valid() ? interface : receiver ) );
+
+    const Node_id owner = ast_.enclosing_aggregate( method );
 
     if( owner.is_valid() && ast_.kind( owner ) == Node_kind::Interface_decl )
     {

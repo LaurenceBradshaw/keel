@@ -1,0 +1,138 @@
+// M9.5: generic interfaces through bounds. One type conforms to `sink` at two arguments, one
+// method answering both; a bound names an instance, two instances at once, or an instance at the
+// generic's own parameter; a refinement is substituted per instance; and a generic implementer
+// conforms at its own parameter. Exits with the failing check.
+interface sink<T>
+{
+    void put( T value );
+    u64 count() const;
+};
+
+interface counted_sink<T> implements sink<T>
+{
+    void reset();
+};
+
+interface matches<K>
+{
+    bool same_as( const ref K key ) const;
+};
+
+class tally implements sink<i64>, sink<bool>
+{
+    i64 sum_;
+    u64 trues_;
+    u64 count_;
+
+    public tally()
+    {
+        sum_ = 0;
+        trues_ = 0;
+        count_ = 0;
+    }
+
+    public void put( i64 value )
+    {
+        sum_ += value;
+        count_ += 1;
+    }
+
+    public void put( bool value )
+    {
+        if( value )
+        {
+            trues_ += 1;
+        }
+        count_ += 1;
+    }
+
+    public u64 count() const { return count_; } // answers both instances
+    public i64 sum() const { return sum_; }
+    public u64 trues() const { return trues_; }
+};
+
+struct last<T> implements counted_sink<T>, sink<T> where T : copyable
+{
+    T   value;
+    u64 n;
+
+    void put( T v )
+    {
+        value = v;
+        n += 1;
+    }
+
+    u64 count() const { return n; }
+    void reset() { n = 0; }
+};
+
+struct exactly implements matches<i32>, matches<i64>
+{
+    i64 v;
+
+    bool same_as( const ref i32 key ) const { return key == v; }
+    bool same_as( const ref i64 key ) const { return key == v; }
+};
+
+void feed<T>( ref T s, i64 a, i64 b ) where T : sink<i64>
+{
+    s.put( a );
+    s.put( b );
+}
+
+void flag<T>( ref T s ) where T : sink<bool>
+{
+    s.put( true );
+}
+
+// A literal ranks as `i64`, the one candidate holding it.
+void both<T>( ref T s ) where T : sink<i64> & sink<bool>
+{
+    s.put( 5 );
+    s.put( false );
+}
+
+// The bound's argument is the generic's other parameter.
+bool any_match<Q, K>( const ref Q query, const ref K a, const ref K b ) where Q : matches<K>
+{
+    return query.same_as( a ) || query.same_as( b );
+}
+
+// `count` comes from `sink<i32>`, which `counted_sink<i32>` requires.
+u64 drain<T>( ref T s ) where T : counted_sink<i32>
+{
+    const u64 seen = s.count();
+    s.reset();
+    return seen;
+}
+
+i32 main()
+{
+    tally t = tally();
+    feed( ref t, 3, 4 );
+    flag( ref t );
+    if( t.sum() != 7 || t.trues() != 1 || t.count() != 3 ) { return 1; }
+
+    both( ref t );
+    if( t.sum() != 12 || t.trues() != 1 || t.count() != 5 ) { return 2; }
+
+    last<i32> l = last { 0, 0 };
+    l.put( 8 );
+    l.put( 9 );
+    if( l.value != 9 ) { return 3; }
+    if( drain( ref l ) != 2 || l.count() != 0 ) { return 4; }
+
+    last<i64> wide = last { 0, 0 };
+    feed( ref wide, 1, 2 );
+    if( wide.value != 2 || wide.count() != 2 ) { return 5; }
+
+    exactly e = exactly { 6 };
+    const i32 small_a = 1;
+    const i32 small_b = 6;
+    const i64 big_a = 7;
+    const i64 big_b = 8;
+    if( !any_match( e, small_a, small_b ) ) { return 6; }
+    if( any_match( e, big_a, big_b ) ) { return 7; }
+
+    return 0;
+}

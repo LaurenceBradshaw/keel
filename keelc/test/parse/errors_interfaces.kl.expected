@@ -1,55 +1,42 @@
-Source_file                             1:1-20:1
-  Interface_decl                        1:1-4:3     name=Holder
+Source_file                             1:1-15:1
+  Interface_decl                        1:1-6:3     name=Shape
     <none>                              -
     <none>                              -
-    Method_decl                         3:5-3:19
-      Named_type                        3:5-3:6     "T"
-      Param_list                        3:10-3:12
-        Param_decl                      3:5-3:6     name=this
-          Const_type                    3:5-3:6
-            Mode_type                   3:5-3:6     mode=ref
-              Named_type                3:5-3:6     "T"  name=Holder
+    Method_decl                         3:5-3:22
+      Named_type                        3:5-3:8     "f64"
+      Param_list                        3:13-3:15
+        Param_decl                      3:5-3:8     name=this
+          Const_type                    3:5-3:8
+            Mode_type                   3:5-3:8     mode=ref
+              Named_type                3:5-3:8     "f64"  name=Shape
       <none>                            -
       <none>                            -
       <none>                            -
-  Interface_decl                        6:1-11:3    name=Shape
+    Method_decl                         5:5-5:25
+      Named_type                        5:5-5:9     "void"
+      Param_list                        5:14-5:24
+        Param_decl                      5:5-5:9     name=this
+          Mode_type                     5:5-5:9     mode=ref
+            Named_type                  5:5-5:9     "void"  name=Shape
+        Param_decl                      5:16-5:22   name=by
+          Named_type                    5:16-5:19   "f64"
+      <none>                            -
+      <none>                            -
+      <none>                            -
+  Class_decl                            8:1-14:3    name=Circle
     <none>                              -
-    <none>                              -
-    Method_decl                         8:5-8:22
-      Named_type                        8:5-8:8     "f64"
-      Param_list                        8:13-8:15
-        Param_decl                      8:5-8:8     name=this
-          Const_type                    8:5-8:8
-            Mode_type                   8:5-8:8     mode=ref
-              Named_type                8:5-8:8     "f64"  name=Shape
-      <none>                            -
-      <none>                            -
-      <none>                            -
-    Method_decl                         10:5-10:25
-      Named_type                        10:5-10:9   "void"
-      Param_list                        10:14-10:24
-        Param_decl                      10:5-10:9   name=this
-          Mode_type                     10:5-10:9   mode=ref
-            Named_type                  10:5-10:9   "void"  name=Shape
-        Param_decl                      10:16-10:22 name=by
-          Named_type                    10:16-10:19 "f64"
-      <none>                            -
-      <none>                            -
-      <none>                            -
-  Class_decl                            13:1-19:3   name=Circle
-    <none>                              -
-    Implements_list                     13:14-13:30
-      Named_type                        13:25-13:30 "Shape"
-    Field_decl                          15:5-15:11  name=r
-      Named_type                        15:5-15:8   "f64"
-    Method_decl                         18:5-18:28
-      Named_type                        18:5-18:9   "void"
-      Param_list                        18:14-18:24
-        Param_decl                      18:5-18:9   name=this
-          Mode_type                     18:5-18:9   mode=ref
-            Named_type                  18:5-18:9   "void"  name=Circle
-        Param_decl                      18:16-18:22 name=by
-          Named_type                    18:16-18:19 "f64"
-      Block                             18:25-18:28 "{ }"
+    Implements_list                     8:14-8:30
+      Named_type                        8:25-8:30   "Shape"
+    Field_decl                          10:5-10:11  name=r
+      Named_type                        10:5-10:8   "f64"
+    Method_decl                         13:5-13:28
+      Named_type                        13:5-13:9   "void"
+      Param_list                        13:14-13:24
+        Param_decl                      13:5-13:9   name=this
+          Mode_type                     13:5-13:9   mode=ref
+            Named_type                  13:5-13:9   "void"  name=Circle
+        Param_decl                      13:16-13:22 name=by
+          Named_type                    13:16-13:19 "f64"
+      Block                             13:25-13:28 "{ }"
       <none>                            -
       <none>                            -

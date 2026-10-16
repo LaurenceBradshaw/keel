@@ -3,6 +3,7 @@
 
 #include "sema/annotations.h"
 #include <fmt/format.h>
+#include <algorithm>
 #include "sema/type_checker.h"
 
 namespace keel::sema
@@ -224,53 +225,22 @@ Type_id Annotations::resolve_named( Node_id annotation )
         return refuse_self( annotation, decl );
     }
 
+    // The mirror of a generic call written without its type arguments: what `Box` names on
+    // its own is the open form, which no value can have. Inference is a decision of its own
+    // and is not taken here, so this names the explicit form rather than guessing.
+    if( decl.is_valid() &&
+        ( is_aggregate( ast_.kind( decl ) ) || ast_.kind( decl ) == Node_kind::Enum_decl ||
+          ast_.kind( decl ) == Node_kind::Interface_decl ) &&
+        ast_.is_generic( decl ) )
+    {
+        return refuse_bare_generic( annotation, interner_.text( ast_.name( annotation ) ) );
+    }
+
     if( decl.is_valid() && ast_.kind( decl ) == Node_kind::Interface_decl )
     {
-        // Every implementer is a different size, so an interface is reached only through an address.
-        if( addressed_ != annotation )
-        {
-            reporter_.error_at(
-                ast_.span( annotation ),
-                fmt::format( "`{}` is an interface, so it cannot be held by value", interner_.text( ast_.name( annotation ) ) ),
-                fmt::format(
-                    "borrow one as `const ref {0}` or `ref {0}`, or point at one with `{0}*`",
-                    interner_.text( ast_.name( annotation ) )
-                )
-            );
-
-            return table_.builtin( Type_kind::Error );
-        }
-        else
-        {
-            addressed_ = {};
-
-            if( const Node_id method = table_.method_naming_self( types_.type_of( decl ) ); method.is_valid() && !receiver_ )
-            {
-                const std::string_view interface = interner_.text( ast_.name( annotation ) );
-                const Node_id          owner     = ast_.enclosing_aggregate( method );
-
-                reporter_.error_at(
-                    ast_.span( annotation ),
-                    owner == decl
-                        ? fmt::format(
-                              "`{}` can only bound a type parameter, because its `{}` mentions `self`",
-                              interface,
-                              interner_.text( ast_.name( method ) )
-                          )
-                        : fmt::format(
-                              "`{}` can only bound a type parameter, because it requires `{}`, whose `{}` mentions `self`",
-                              interface,
-                              interner_.text( ast_.name( owner ) ),
-                              interner_.text( ast_.name( method ) )
-                          ),
-                    fmt::format( "take a `T` with `where T : {}` instead", interface )
-                );
-
-                return table_.builtin( Type_kind::Error );
-            }
-
-            return types_.type_of( decl );
-        }
+        return addressed_interface(
+            annotation, decl, types_.type_of( decl ), addressed_ == annotation, interner_.text( ast_.name( annotation ) )
+        );
     }
 
     if( decl.is_valid() )
@@ -283,22 +253,6 @@ Type_id Annotations::resolve_named( Node_id annotation )
             // Resolved to a function or variable of the same name.
             reporter_.error_at(
                 ast_.span( annotation ), fmt::format( "`{}` is not a type", interner_.text( ast_.name( annotation ) ) )
-            );
-
-            return table_.builtin( Type_kind::Error );
-        }
-
-        // The mirror of a generic call written without its type arguments: what `Box` names on
-        // its own is the open form, which no value can have. Inference is a decision of its own
-        // and is not taken here, so this names the explicit form rather than guessing.
-        if( ( is_aggregate( ast_.kind( decl ) ) || ast_.kind( decl ) == Node_kind::Enum_decl ) && ast_.is_generic( decl ) )
-        {
-            const std::string_view name = interner_.text( ast_.name( annotation ) );
-
-            reporter_.error_at(
-                ast_.span( annotation ),
-                fmt::format( "`{}` is generic, so its type arguments must be written", name ),
-                fmt::format( "as in `{}<i32>`", name )
             );
 
             return table_.builtin( Type_kind::Error );
@@ -336,6 +290,7 @@ Type_id Annotations::resolve_named( Node_id annotation )
 // The mirror of a generic call, asking the same three questions through the same helper.
 Type_id Annotations::resolve_generic( Node_id annotation )
 {
+    const bool    addressed = addressed_ == annotation;
     const Node_id base      = ast_.generic_name( annotation );
     const Node_id type_args = ast_.type_arg_list( annotation );
 
@@ -381,7 +336,8 @@ Type_id Annotations::resolve_generic( Node_id annotation )
 
     const std::string_view name = interner_.text( ast_.name( base ) );
 
-    if( !is_aggregate( ast_.kind( decl ) ) && ast_.kind( decl ) != Node_kind::Enum_decl )
+    if( !is_aggregate( ast_.kind( decl ) ) && ast_.kind( decl ) != Node_kind::Enum_decl &&
+        ast_.kind( decl ) != Node_kind::Interface_decl )
     {
         reporter_.error_at( ast_.span( annotation ), fmt::format( "`{}` is not a generic", name ) );
         return table_.builtin( Type_kind::Error );
@@ -389,13 +345,7 @@ Type_id Annotations::resolve_generic( Node_id annotation )
 
     if( !ast_.is_generic( decl ) )
     {
-        reporter_.error_at(
-            ast_.span( annotation ),
-            fmt::format( "`{}` is not a generic", name ),
-            fmt::format( "it takes no type arguments, so write `{}` on its own", name )
-        );
-
-        return table_.builtin( Type_kind::Error );
+        return refuse_not_generic( annotation, name );
     }
 
     std::vector<Type_id> arguments;
@@ -426,6 +376,11 @@ Type_id Annotations::resolve_generic( Node_id annotation )
         const Node_id written    = ast_.underlying_type( decl );
         Type_id       underlying = written.is_valid() ? resolve( written ) : table_.integer( 32, true );
         instance                 = table_.enumeration( decl, arguments, name, underlying );
+    }
+    else if( ast_.kind( decl ) == Node_kind::Interface_decl )
+    {
+        const Type_id interface = table_.interface( decl, arguments, name );
+        instance                = addressed_interface( annotation, decl, interface, addressed, table_.name( interface ) );
     }
     else
     {
@@ -702,9 +657,15 @@ bool Annotations::resolve_type_arguments(
         }
     }
 
+    Bindings bindings;
     for( std::size_t i = 0; i < parameters.size(); ++i )
     {
-        bounds_.check_bounds( parameters[i], ast_.span( given[i] ), resolved[i], name );
+        bindings.emplace( types_.type_of( parameters[i] ).v, resolved[i] );
+    }
+
+    for( std::size_t i = 0; i < parameters.size(); ++i )
+    {
+        bounds_.check_bounds( parameters[i], ast_.span( given[i] ), resolved[i], name, bindings );
     }
 
     return true;
@@ -715,10 +676,57 @@ void Annotations::record_interface_bound( Node_id bound_name )
 {
     const Node_id decl = resolution_.declaration_of( bound_name );
 
-    if( decl.is_valid() && ast_.kind( decl ) == Node_kind::Interface_decl )
+    if( !decl.is_valid() || ast_.kind( decl ) != Node_kind::Interface_decl )
     {
-        types_.record( bound_name, types_.type_of( decl ) );
+        return;
     }
+
+    const std::string_view name      = interner_.text( ast_.name( bound_name ) );
+    const Node_id          type_args = ast_.type_arg_list( bound_name );
+
+    if( !type_args.is_valid() )
+    {
+        types_.record( bound_name, ast_.is_generic( decl ) ? refuse_bare_generic( bound_name, name ) : types_.type_of( decl ) );
+        return;
+    }
+
+    if( !ast_.is_generic( decl ) )
+    {
+        types_.record( bound_name, refuse_not_generic( bound_name, name ) );
+        return;
+    }
+
+    std::vector<Type_id> arguments;
+    if( !resolve_type_arguments( ast_.type_parameters( ast_.type_param_list( decl ) ), type_args, name, arguments ) ||
+        std::any_of( arguments.begin(), arguments.end(), [&]( Type_id argument ) { return table_.is_error( argument ); } ) )
+    {
+        types_.record( bound_name, table_.builtin( Type_kind::Error ) );
+        return;
+    }
+
+    types_.record( bound_name, table_.interface( decl, arguments, name ) );
+}
+
+Type_id Annotations::refuse_bare_generic( Node_id at, std::string_view name )
+{
+    reporter_.error_at(
+        ast_.span( at ),
+        fmt::format( "`{}` is generic, so its type arguments must be written", name ),
+        fmt::format( "as in `{}<i32>`", name )
+    );
+
+    return table_.builtin( Type_kind::Error );
+}
+
+Type_id Annotations::refuse_not_generic( Node_id at, std::string_view name )
+{
+    reporter_.error_at(
+        ast_.span( at ),
+        fmt::format( "`{}` is not a generic", name ),
+        fmt::format( "it takes no type arguments, so write `{}` on its own", name )
+    );
+
+    return table_.builtin( Type_kind::Error );
 }
 
 Type_id Annotations::resolve_receiver( Node_id annotation )
@@ -733,13 +741,20 @@ Type_id Annotations::resolve_receiver( Node_id annotation )
 Type_id Annotations::resolve_interface( Node_id annotation )
 {
     const Node_id decl = resolution_.declaration_of( annotation );
-    if( decl.is_valid() && ast_.kind( decl ) == Node_kind::Interface_decl && ast_.kind( annotation ) == Node_kind::Named_type )
+    if( decl.is_valid() && ast_.kind( decl ) == Node_kind::Interface_decl && ast_.kind( annotation ) == Node_kind::Named_type &&
+        !ast_.is_generic( decl ) )
     {
         return types_.type_of( decl );
     }
 
+    addressed_          = annotation;
     const Type_id named = resolve( annotation );
     if( table_.is_error( named ) )
+    {
+        return named;
+    }
+
+    if( table_.is_interface( named ) )
     {
         return named;
     }
@@ -757,11 +772,13 @@ Type_id Annotations::resolve_interface( Node_id annotation )
 Type_id Annotations::resolve_implementer( Node_id annotation )
 {
     const Node_id decl = resolution_.declaration_of( annotation );
-    if( decl.is_valid() && ast_.kind( decl ) == Node_kind::Interface_decl && ast_.kind( annotation ) == Node_kind::Named_type )
+    if( decl.is_valid() && ast_.kind( decl ) == Node_kind::Interface_decl && ast_.kind( annotation ) == Node_kind::Named_type &&
+        !ast_.is_generic( decl ) )
     {
         return types_.type_of( decl );
     }
 
+    addressed_ = annotation;
     return resolve( annotation );
 }
 
@@ -826,6 +843,50 @@ Type_id Annotations::refuse_self( Node_id annotation, Node_id decl )
     return table_.builtin( Type_kind::Error );
 }
 
+Type_id Annotations::addressed_interface(
+    Node_id annotation, Node_id decl, Type_id interface, bool addressed, std::string_view spelled
+)
+{
+    // Every implementer is a different size, so an interface is reached only through an address.
+    if( !addressed )
+    {
+        reporter_.error_at(
+            ast_.span( annotation ),
+            fmt::format( "`{}` is an interface, so it cannot be held by value", spelled ),
+            fmt::format( "borrow one as `const ref {0}` or `ref {0}`, or point at one with `{0}*`", spelled )
+        );
+
+        return table_.builtin( Type_kind::Error );
+    }
+
+    addressed_ = {};
+
+    if( const Node_id method = table_.method_naming_self( types_.type_of( decl ) ); method.is_valid() && !receiver_ )
+    {
+        const Node_id owner = ast_.enclosing_aggregate( method );
+
+        reporter_.error_at(
+            ast_.span( annotation ),
+            owner == decl ? fmt::format(
+                                "`{}` can only bound a type parameter, because its `{}` mentions `self`",
+                                spelled,
+                                interner_.text( ast_.name( method ) )
+                            )
+                          : fmt::format(
+                                "`{}` can only bound a type parameter, because it requires `{}`, whose `{}` mentions `self`",
+                                spelled,
+                                interner_.text( ast_.name( owner ) ),
+                                interner_.text( ast_.name( method ) )
+                            ),
+            fmt::format( "take a `T` with `where T : {}` instead", spelled )
+        );
+
+        return table_.builtin( Type_kind::Error );
+    }
+
+    return interface;
+}
+
 } // namespace keel::sema
 #ifdef ENABLE_UNIT_TESTS
 #include <catch2/catch_test_macros.hpp>
@@ -872,7 +933,7 @@ public:
 
             if( ast_.kind( decl ) == Node_kind::Interface_decl )
             {
-                types_.record( decl, types_.table().interface( decl, interner_.text( ast_.name( decl ) ) ) );
+                types_.record( decl, types_.table().interface( decl, {}, interner_.text( ast_.name( decl ) ) ) );
                 continue;
             }
 

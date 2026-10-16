@@ -1,0 +1,43 @@
+// M9.5: a block conforms a type declared elsewhere to one instance of a generic interface, and two
+// blocks conform one type at two arguments. Each block's methods are its own, reached only as that
+// instance, so the two `count`s differ. Exits with the failing check.
+interface sink<T>
+{
+    void put( T value );
+    u64 count() const;
+};
+
+enum light
+{
+    red,
+    green,
+};
+
+implements sink<i64> for light
+{
+    void put( i64 value ) { }
+    u64 count() const { return 7; }
+};
+
+implements sink<bool> for light
+{
+    void put( bool value ) { }
+    u64 count() const { return 8; }
+};
+
+u64 ints<T>( const ref T s ) where T : sink<i64> { return s.count(); }
+
+u64 flags( const ref sink<bool> s ) { return s.count(); }
+
+i32 main()
+{
+    light l = light::green;
+    if( ints( l ) != 7 ) { return 1; }
+    if( flags( l ) != 8 ) { return 2; }
+
+    sink<i64>* p = &l;
+    p.put( 1 );
+    if( p.count() != 7 ) { return 3; }
+
+    return 0;
+}

@@ -126,8 +126,8 @@ public:
     // so `T` in one declaration is never `T` in another - the resolver already scoped them apart.
     Type_id parameter( Node_id declaration, std::string_view name );
 
-    // One per Interface_decl. Kept apart from the composites, since no C struct is emitted for one.
-    Type_id interface( Node_id declaration, std::string_view name );
+    // One per instance of an Interface_decl. Kept apart from the composites, since no C struct is emitted for one.
+    Type_id interface( Node_id declaration, std::span<const Type_id> arguments, std::string_view name );
 
     // An interface's `self`: a parameter keyed by the interface's own declaration, which a
     // conformance or a bound substitutes away.
@@ -157,7 +157,7 @@ public:
     // of a generic aggregate - `Box<T>` - which a caller wanting only instances filters out with
     // mentions_parameter.
     std::vector<Type_id> composite_types() const;
-    std::vector<Type_id> interface_types() const; // in interning order
+    std::vector<Type_id> interface_types() const; // in interning order; no open form, which has no vtable
     std::vector<Type_id> run_types() const;       // in interning order
     // Every function type interned, in interning order. Separate from composite_types because the
     // one consumer of that list wants types that become a C struct, and a function type becomes a
@@ -234,12 +234,21 @@ public:
     void declare_implements( Type_id builtin, Type_id interface );
     // A struct, class or enum is looked up by its declaration, so a generic's instances share it.
     bool implements( Type_id type, Type_id interface ) const;
+    // What `type`'s declaration says it implements, `declared`, is `interface` at this instance: a
+    // generic implementer declares in its open form, as `last<T>` implements `sink<T>`.
+    bool declares_as( Type_id declared, Type_id type, Type_id interface ) const;
+    bool substitutes_to( Type_id pattern, const Bindings& bindings, Type_id actual ) const;
 
     // What an interface requires through its own `implements`, in written order.
-    void                     declare_refinement( Type_id interface, Type_id refined );
-    std::span<const Type_id> refinements( Type_id interface ) const;
+    void                 declare_refinement( Type_id interface, Type_id refined );
+    std::vector<Type_id> refinements( Type_id interface ); // substituted for this instance
+    // The open form's parameters, each bound to this instance's argument, for an interface, struct,
+    // class or enum. Empty for anything else or a non-generic.
+    Bindings instance_bindings( Type_id instance ) const;
     // Whether `other` is required by `interface`, directly or through what it requires.
-    bool refines( Type_id interface, Type_id other ) const;
+    bool refines( Type_id interface, Type_id other );
+    // The same, between Interface_decl nodes, whatever the arguments.
+    bool refines_declaration( Node_id interface, Node_id other ) const;
 
     void    declare_box( Node_id declaration );
     bool    is_box( Type_id type ) const;
@@ -288,11 +297,11 @@ private:
     };
 
     std::unordered_map<u32, std::vector<Instance>> composites_;
+    std::unordered_map<u32, std::vector<Instance>> interfaces_; // Interface_decl node -> its instances
     std::unordered_map<u32, std::vector<Type_id>>  implements_; // aggregate declaration -> what it implements
     std::unordered_map<u32, std::vector<Type_id>>  builtin_implements_;
     std::unordered_map<u32, std::vector<Type_id>>  refinements_; // Interface_decl node -> what it requires, as written
     std::unordered_map<u32, Type_id>               params_;      // Type_param_decl node -> type parameter
-    std::unordered_map<u32, Type_id>               interfaces_;  // Interface_decl node -> its type
     std::deque<std::string>                        composed_;
 
     Node_id box_ {};

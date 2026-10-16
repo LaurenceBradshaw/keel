@@ -36,6 +36,10 @@ public:
     // Whether order_structs proved this declaration, and everything it holds by value, free of a
     // containment cycle. False before order_structs has run.
     bool is_acyclic( Node_id decl ) const;
+    bool is_ordered() const
+    {
+        return ordered_;
+    }
 
     // Whether any struct named in this type, its arguments included, is on a reported cycle.
     bool mentions_a_cycle( Type_id type ) const;
@@ -51,8 +55,9 @@ public:
     Bindings bindings_of( Type_id aggregate ) const;
 
     // bindings_of, plus an interface method's `self` as the receiver, so under `where T : P` a
-    // requirement's `self` is `T`.
-    Bindings receiver_bindings( Type_id receiver, Node_id method ) const;
+    // requirement's `self` is `T`, and the parameters of `interface`, the instance it is reached
+    // through. `interface` is invalid for a receiver that is not a parameter.
+    Bindings receiver_bindings( Type_id receiver, Node_id method, Type_id interface = {} ) const;
 
     // A field's type *as seen through this instance*. The declared type of `Box<T>`'s field is `T`,
     // which is true of the template and of no value anyone holds - so every read of a field's type
@@ -79,6 +84,7 @@ private:
 
     std::vector<Node_id> struct_order_;      // dependencies first
     std::vector<Node_id> containment_order_; // every aggregate, generics too, dependencies first; the proved-acyclic set
+    bool                 ordered_ = false;
 };
 
 } // namespace keel::sema

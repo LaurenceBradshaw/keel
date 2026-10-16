@@ -78,11 +78,16 @@ void Signatures::declare()
     // After the struct pass: a payload field may name a struct or a class. Before everything else,
     // because a parameter, a field or a global may name an enum in turn.
     declare_enums();
+
+    // Once every type exists, since a bound's arguments may name any of them.
+    declare_interface_requirements();
+    declare_type_bounds();
     declare_payloads();
     declare_implements();
     declare_member_functions();
     declare_fields();
     order_structs();
+    bounds_.check_deferred();
     check_aggregate_members();
     check_signatures();
     check_operators();
@@ -109,7 +114,7 @@ void Signatures::declare_structs()
 
         // Before the type below, because the type *is* its parameters: `Box` on its own is
         // `Box<T>`, the open form D11 checks the body against, and `T` has to exist to name it.
-        bounds_.declare_type_parameters( child, ast_.type_param_list( child ) );
+        declare_parameters( ast_.type_param_list( child ) );
 
         std::vector<Type_id> arguments;
 
@@ -140,25 +145,67 @@ void Signatures::declare_interfaces()
         }
 
         const std::string_view name = interner_.text( ast_.name( child ) );
+        const Node_id          list = ast_.type_param_list( child );
+        declare_parameters( list );
 
-        types_.record( child, table_.interface( child, name ) );
+        std::vector<Type_id> arguments;
+        for( const Node_id type_param : ast_.type_parameters( list ) )
+        {
+            arguments.push_back( types_.type_of( type_param ) );
+        }
+
+        types_.record( child, table_.interface( child, arguments, name ) );
 
         if( const Node_id method = method_naming_self( ast_, interner_, child ); method.is_valid() )
         {
             table_.declare_naming_self( child, method );
         }
     }
+}
 
-    for( u32 node = 0; node < ast_.node_count(); ++node )
+void Signatures::declare_parameters( Node_id list )
+{
+    for( const Node_id type_param : ast_.type_parameters( list ) )
     {
-        if( ast_.kind( Node_id { node } ) == Node_kind::Bound_name )
+        types_.record( type_param, table_.parameter( type_param, interner_.text( ast_.name( type_param ) ) ) );
+    }
+}
+
+void Signatures::declare_bounds( Node_id declaration, Node_id list )
+{
+    declare_parameters( list );
+
+    for( const Node_id clause : ast_.where_clauses( list ) )
+    {
+        if( ast_.kind( clause ) != Node_kind::Where_clause )
         {
-            annotations_.record_interface_bound( Node_id { node } );
+            continue;
+        }
+
+        for( const Node_id bound : ast_.bounds( clause ) )
+        {
+            annotations_.record_interface_bound( bound );
         }
     }
 
+    bounds_.declare_type_parameters( declaration, list );
+}
+
+// What each interface's `where` and `implements` name, once every type exists.
+void Signatures::declare_interface_requirements()
+{
+    for( const Node_id child : ast_.declarations( ast_.root() ) )
+    {
+        if( ast_.kind( child ) != Node_kind::Interface_decl )
+        {
+            continue;
+        }
+
+        declare_bounds( child, ast_.type_param_list( child ) );
+    }
+
     // What each interface requires, once every interface has its type. A cycle is refused at the
-    // name that closes it, so `refines` never recurses forever.
+    // name that closes it, by declaration, so `refines` never recurses forever.
     for( const Node_id child : ast_.declarations( ast_.root() ) )
     {
         if( ast_.kind( child ) != Node_kind::Interface_decl )
@@ -178,22 +225,22 @@ void Signatures::declare_interfaces()
                 continue;
             }
 
-            if( refined == interface )
+            if( table_.get( refined ).declaration == child )
             {
                 reporter_.error_at(
-                    ast_.span( written ), fmt::format( "`{}` cannot require itself", table_.name( interface ) )
+                    ast_.span( written ), fmt::format( "`{}` cannot require itself", table_.base_name( interface ) )
                 );
                 continue;
             }
 
-            if( table_.refines( refined, interface ) )
+            if( table_.refines_declaration( table_.get( refined ).declaration, child ) )
             {
                 reporter_.error_at(
                     ast_.span( written ),
                     fmt::format(
                         "`{0}` cannot require `{1}`, which already requires `{0}`",
-                        table_.name( interface ),
-                        table_.name( refined )
+                        table_.base_name( interface ),
+                        table_.base_name( refined )
                     )
                 );
                 continue;
@@ -215,6 +262,18 @@ void Signatures::declare_interfaces()
         if( const Node_id method = required_naming_self( types_.type_of( child ) ); method.is_valid() )
         {
             table_.declare_naming_self( child, method );
+        }
+    }
+}
+
+// After the requirements, so a bound closes over what each interface requires.
+void Signatures::declare_type_bounds()
+{
+    for( const Node_id child : ast_.declarations( ast_.root() ) )
+    {
+        if( is_aggregate( ast_.kind( child ) ) || ast_.kind( child ) == Node_kind::Enum_decl )
+        {
+            declare_bounds( child, ast_.type_param_list( child ) );
         }
     }
 }
@@ -325,14 +384,23 @@ void Signatures::declare_block( Node_id block )
     {
         const Symbol_id issuer = resolution_.package_of( ast_.span( table_.get( interface ).declaration ).file );
 
-        if( here != owner && here != issuer )
+        // ponytail: an argument counts by its own declaration; `sink<celsius*>` does not make `celsius`'s package an owner.
+        const auto owns_argument = [&]( Type_id argument )
+        {
+            const Node_id declared_at = table_.get( argument ).declaration;
+            return declared_at.is_valid() && resolution_.package_of( ast_.span( declared_at ).file ) == here;
+        };
+
+        if( here != owner && here != issuer && std::ranges::none_of( table_.get( interface ).arguments, owns_argument ) )
         {
             reporter_.error_at(
                 ast_.name_span( block ),
                 fmt::format(
-                    "a block for `{0}` must be in the package that declares `{0}` or `{1}`",
+                    "a block for `{0}` must be in the package that declares `{0}`{1}",
                     table_.name( type ),
-                    table_.name( interface )
+                    table_.get( interface ).arguments.empty()
+                        ? fmt::format( " or `{}`", table_.name( interface ) )
+                        : fmt::format( ", `{}` or one of its type arguments", table_.name( interface ) )
                 ),
                 fmt::format(
                     "two packages could otherwise each make `{}` a `{}`", table_.name( type ), table_.name( interface )
@@ -409,7 +477,7 @@ void Signatures::declare_functions()
             continue;
         }
 
-        bounds_.declare_type_parameters( child, ast_.type_param_list( child ) );
+        declare_bounds( child, ast_.type_param_list( child ) );
 
         const Node_id return_type_node = ast_.return_type( child );
         const Type_id return_type      = annotations_.resolve( return_type_node );
@@ -505,7 +573,7 @@ void Signatures::declare_member_functions()
                 continue;
             }
 
-            bounds_.declare_type_parameters( member, ast_.own_type_param_list( member ) );
+            declare_bounds( member, ast_.own_type_param_list( member ) );
 
             // A constructor and a destructor return nothing and have no annotation to read; a
             // method has both. The return type is invalid for the two
@@ -624,7 +692,7 @@ void Signatures::declare_enums()
 
         const std::string_view name = interner_.text( ast_.name( child ) );
 
-        bounds_.declare_type_parameters( child, ast_.type_param_list( child ) );
+        declare_parameters( ast_.type_param_list( child ) );
 
         std::vector<Type_id> arguments;
 
@@ -2838,5 +2906,27 @@ TEST_CASE( "signatures_check_an_interface_s_methods", "[sema][interfaces]" )
     }
 }
 
+TEST_CASE( "signatures_refuse_a_refinement_cycle_through_arguments", "[sema][interfaces][generic_interfaces]" )
+{
+    SECTION( "itself at another argument" )
+    {
+        const Typed p( "interface loop<T> implements loop<i32> { void f( T v ); };\ni32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`loop` cannot require itself" ) != std::string::npos );
+    }
+
+    SECTION( "through another interface" )
+    {
+        const Typed p( "interface a<T> implements b<i32> { void f( T v ); };\n"
+                       "interface b<U> implements a<U> { void g( U v ); };\n"
+                       "i32 main() { return 0; }" );
+
+        INFO( p.rendered() );
+        REQUIRE( p.errors() == 1 );
+        REQUIRE( p.rendered().find( "`b` cannot require `a`, which already requires `b`" ) != std::string::npos );
+    }
+}
 } // namespace keel
 #endif

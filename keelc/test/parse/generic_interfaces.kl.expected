@@ -1,0 +1,156 @@
+Source_file                             1:1-34:1
+  Interface_decl                        3:1-6:3     name=sink
+    Type_param_list                     3:15-3:18
+      Type_param_decl                   3:16-3:17   "T"
+    <none>                              -
+    Method_decl                         5:5-5:25
+      Named_type                        5:5-5:9     "void"
+      Param_list                        5:13-5:24
+        Param_decl                      5:5-5:9     name=this
+          Mode_type                     5:5-5:9     mode=ref
+            Generic_type                5:5-5:9
+              Named_type                5:5-5:9     "void"  name=sink
+              Type_arg_list             5:5-5:9
+                Named_type              5:5-5:9     "void"  name=T
+        Param_decl                      5:15-5:22   name=value
+          Named_type                    5:15-5:16   "T"
+      <none>                            -
+      Type_param_list                   3:15-3:18
+        Type_param_decl                 3:16-3:17   "T"
+      <none>                            -
+  Interface_decl                        8:1-11:3    name=pair_sink
+    Type_param_list                     8:20-8:84
+      Type_param_decl                   8:21-8:22   "A"
+      Type_param_decl                   8:24-8:25   "B"
+      Where_clause                      8:46-8:65
+        Bound_name                      8:56-8:64   "copyable"
+      Where_clause                      8:66-8:84
+        Bound_name                      8:76-8:84   "copyable"
+    Implements_list                     8:27-8:45
+      Generic_type                      8:38-8:45
+        Named_type                      8:38-8:42   "sink"
+        Type_arg_list                   8:42-8:45
+          Named_type                    8:43-8:44   "A"
+    Method_decl                         10:5-10:31
+      Named_type                        10:5-10:9   "void"
+      Param_list                        10:18-10:30
+        Param_decl                      10:5-10:9   name=this
+          Mode_type                     10:5-10:9   mode=ref
+            Generic_type                10:5-10:9
+              Named_type                10:5-10:9   "void"  name=pair_sink
+              Type_arg_list             10:5-10:9
+                Named_type              10:5-10:9   "void"  name=A
+                Named_type              10:5-10:9   "void"  name=B
+        Param_decl                      10:20-10:23 name=a
+          Named_type                    10:20-10:21 "A"
+        Param_decl                      10:25-10:28 name=b
+          Named_type                    10:25-10:26 "B"
+      <none>                            -
+      Type_param_list                   8:20-8:84
+        Type_param_decl                 8:21-8:22   "A"
+        Type_param_decl                 8:24-8:25   "B"
+        Where_clause                    8:46-8:65
+          Bound_name                    8:56-8:64   "copyable"
+        Where_clause                    8:66-8:84
+          Bound_name                    8:76-8:84   "copyable"
+      <none>                            -
+  Class_decl                            13:1-19:3   name=log
+    <none>                              -
+    Implements_list                     13:11-13:43
+      Generic_type                      13:22-13:31
+        Named_type                      13:22-13:26 "sink"
+        Type_arg_list                   13:26-13:31
+          Named_type                    13:27-13:30 "i64"
+      Generic_type                      13:33-13:43
+        Named_type                      13:33-13:37 "sink"
+        Type_arg_list                   13:37-13:43
+          Named_type                    13:38-13:42 "bool"
+    Field_decl                          15:5-15:15  name=total
+      Named_type                        15:5-15:8   "i64"
+    Method_decl                         17:12-17:37
+      Named_type                        17:12-17:16 "void"
+      Param_list                        17:20-17:33
+        Param_decl                      17:12-17:16 name=this
+          Mode_type                     17:12-17:16 mode=ref
+            Named_type                  17:12-17:16 "void"  name=log
+        Param_decl                      17:22-17:31 name=value
+          Named_type                    17:22-17:25 "i64"
+      Block                             17:34-17:37 "{ }"
+      <none>                            -
+      <none>                            -
+    Method_decl                         18:12-18:38
+      Named_type                        18:12-18:16 "void"
+      Param_list                        18:20-18:34
+        Param_decl                      18:12-18:16 name=this
+          Mode_type                     18:12-18:16 mode=ref
+            Named_type                  18:12-18:16 "void"  name=log
+        Param_decl                      18:22-18:32 name=value
+          Named_type                    18:22-18:26 "bool"
+      Block                             18:35-18:38 "{ }"
+      <none>                            -
+      <none>                            -
+  Enum_decl                             21:1-24:3   name=light
+    <none>                              -
+    <none>                              -
+    Variant_decl                        23:5-23:8   "red"  name=red
+  Implements_decl                       26:1-29:3
+    <none>                              -
+    Implements_list                     26:12-26:21
+      Generic_type                      26:12-26:21
+        Named_type                      26:12-26:16 "sink"
+        Type_arg_list                   26:16-26:21
+          Named_type                    26:17-26:20 "i64"
+    Named_type                          26:26-26:31 "light"
+    Method_decl                         28:5-28:30
+      Named_type                        28:5-28:9   "void"
+      Param_list                        28:13-28:26
+        Param_decl                      28:5-28:9   name=this
+          Mode_type                     28:5-28:9   mode=ref
+            Named_type                  26:26-26:31 "light"
+        Param_decl                      28:15-28:24 name=value
+          Named_type                    28:15-28:18 "i64"
+      Block                             28:27-28:30 "{ }"
+      <none>                            -
+      <none>                            -
+  Function_decl                         31:1-31:61  name=feed
+    Named_type                          31:1-31:5   "void"
+    Param_list                          31:13-31:24
+      Param_decl                        31:15-31:22 name=s
+        Mode_type                       31:15-31:18 mode=ref
+          Named_type                    31:19-31:20 "T"
+    Block                               31:58-31:61 "{ }"
+    Type_param_list                     31:10-31:57
+      Type_param_decl                   31:11-31:12 "T"
+      Where_clause                      31:25-31:57
+        Bound_name                      31:35-31:44
+          Type_arg_list                 31:39-31:44
+            Named_type                  31:40-31:43 "i64"
+        Bound_name                      31:47-31:57
+          Type_arg_list                 31:51-31:57
+            Named_type                  31:52-31:56 "bool"
+  Function_decl                         33:1-33:74  name=through
+    Named_type                          33:1-33:5   "void"
+    Param_list                          33:13-33:70
+      Param_decl                        33:15-33:30 name=s
+        Mode_type                       33:15-33:18 mode=ref
+          Generic_type                  33:19-33:28
+            Named_type                  33:19-33:23 "sink"
+            Type_arg_list               33:23-33:28
+              Named_type                33:24-33:27 "i64"
+      Param_decl                        33:32-33:45 name=p
+        Pointer_type                    33:32-33:43
+          Generic_type                  33:32-33:42
+            Named_type                  33:32-33:36 "sink"
+            Type_arg_list               33:36-33:42
+              Named_type                33:37-33:41 "bool"
+      Param_decl                        33:47-33:68 name=b
+        Mode_type                       33:47-33:51 mode=move
+          Generic_type                  33:52-33:66
+            Named_type                  33:52-33:55 "box"
+            Type_arg_list               33:55-33:66
+              Generic_type              33:56-33:66
+                Named_type              33:56-33:60 "sink"
+                Type_arg_list           33:60-33:66
+                  Named_type            33:61-33:64 "i64"
+    Block                               33:71-33:74 "{ }"
+    <none>                              -

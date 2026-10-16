@@ -1,0 +1,13 @@
+import right::marks;
+import shapes::kinds;
+
+struct mark
+{
+    i32 v;
+};
+
+// Allowed here too, since `mark` is this package's, but `right` already wrote the same block.
+implements shapes::both<mark, right::mark> for i32
+{
+    void put( mark a, right::mark b ) { }
+};

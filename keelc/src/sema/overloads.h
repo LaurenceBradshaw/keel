@@ -113,7 +113,7 @@ public:
     // parameters rather than the declaration's `T`. Invalid for a free function, which is named
     // rather than instantiated - the method pair below takes the receiver for the same reason.
     std::vector<Node_id> viable_overloads( const Call_site& site, std::span<const Node_id> candidates );
-    std::vector<Node_id> viable_methods( Node_id call, Node_id first, Type_id receiver );
+    std::vector<Node_id> viable_methods( Node_id call, Node_id first, Type_id receiver, Type_id interface );
 
     Node_id select_overload(
         const Call_site&                site,
@@ -121,9 +121,9 @@ public:
         std::span<const Argument_shape> shapes,
         std::vector<Type_id>&           resolved
     );
-    Node_id select_method(
-        Node_id call, Node_id first, Type_id receiver, std::span<const Node_id> viable, std::span<const Argument_shape> shapes
-    );
+    // Under a bound, each candidate once per instance in `through`, and `interface` is the one chosen.
+    Node_id
+    select_method( Node_id call, Node_id first, Type_id receiver, std::span<const Node_id> viable, std::span<const Type_id> through, std::span<const Argument_shape> shapes, Type_id& interface );
 
     // Everything about the arguments that is the callable's business - arity, types, and D2's
     // markers - reported here; the walking the answers imply is handed back in order.
@@ -170,11 +170,9 @@ private:
     u32                  distance( Type_id from, Type_id to ) const;
     std::vector<Type_id> parameter_types( Node_id callable, u32 implicit_params, const Bindings& bindings );
     bool beats( std::span<const Type_id> first, std::span<const Type_id> second, std::span<const Argument_shape> shapes ) const;
-    std::vector<Node_id> closest(
-        std::span<const Node_id>              candidates,
-        std::span<const std::vector<Type_id>> targets,
-        std::span<const Argument_shape>       shapes
-    ) const;
+    // Indices into `targets`.
+    std::vector<std::size_t>
+                         closest( std::span<const std::vector<Type_id>> targets, std::span<const Argument_shape> shapes ) const;
     std::vector<Node_id> matching(
         const Call_site&                site,
         std::span<const Node_id>        viable,
@@ -194,6 +192,7 @@ private:
     // A set may hold static and instance methods together, so the count is asked per candidate.
     u32         receiver_params( Node_id method ) const;
     std::string candidate_list( std::span<const Node_id> candidates, const Bindings& bindings );
+    std::string candidate_list( std::span<const Node_id> candidates, std::span<const Bindings> bindings ); // one each
 
     bool parameters_collide( Node_id first, Node_id second, bool member );
     void check_overloaded_pair( Node_id first, Node_id second, bool member );

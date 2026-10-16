@@ -1,0 +1,14 @@
+interface sink<T>
+{
+    void put( T value );
+};
+
+interface both<A, B>
+{
+    void put( A a, B b );
+};
+
+struct square
+{
+    f64 side;
+};

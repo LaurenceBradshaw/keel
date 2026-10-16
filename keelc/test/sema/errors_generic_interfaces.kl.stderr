@@ -1,0 +1,73 @@
+error: `self_loop` cannot require itself
+  --> sema/errors_generic_interfaces.kl:18:35
+   |
+18 | interface self_loop<T> implements self_loop<i32>
+   |                                   ^^^^^^^^^^^^^^
+
+error: `loop_b` cannot require `loop_a`, which already requires `loop_b`
+  --> sema/errors_generic_interfaces.kl:29:32
+   |
+29 | interface loop_b<U> implements loop_a<U>
+   |                                ^^^^^^^^^
+
+error: `sink` is generic, so its type arguments must be written
+  --> sema/errors_generic_interfaces.kl:48:24
+   |
+48 | struct bare implements sink
+   |                        ^^^^ as in `sink<i32>`
+
+error: `sink` takes 1 type argument, but 2 were given
+  --> sema/errors_generic_interfaces.kl:54:29
+   |
+54 | struct twice implements sink<i32, i32>
+   |                             ^^^^^^^^^^ `sink` declares `T`
+
+error: `repeated` already implements `sink<i64>`
+  --> sema/errors_generic_interfaces.kl:60:39
+   |
+60 | struct repeated implements sink<i64>, sink<i64>
+   |                                       ^^^^^^^^^
+
+error: `half`'s `put` does not match the one `sink<bool>` declares
+  --> sema/errors_generic_interfaces.kl:68:35
+   |
+68 | struct half implements sink<i64>, sink<bool>
+   |                                   ^^^^^^^^^^ `sink<bool>` wants `void put( bool value )`
+
+error: `unrefined` implements `counted_sink<i32>` but not `sink<i32>`, which `counted_sink<i32>` requires
+  --> sema/errors_generic_interfaces.kl:76:29
+   |
+76 | struct unrefined implements counted_sink<i32>, sink<i64>
+   |                             ^^^^^^^^^^^^^^^^^ add `sink<i32>` to `unrefined`'s `implements` list
+
+error: `Shape` is an interface, so it cannot be held by value
+  --> sema/errors_generic_interfaces.kl:85:33
+   |
+85 | struct by_value implements sink<Shape>
+   |                                 ^^^^^ borrow one as `const ref Shape` or `ref Shape`, or point at one with `Shape*`
+
+error: `Owner` is not `copyable`, and `copy_sink` requires it of `T`
+  --> sema/errors_generic_interfaces.kl:91:36
+   |
+91 | struct owning implements copy_sink<Owner>
+   |                                    ^^^^^ it owns something, itself or through a field, so copying it would own that twice
+
+error: `Owner` is not `copyable`, and `holder` requires it of `T`
+   --> sema/errors_generic_interfaces.kl:106:12
+    |
+106 |     holder<Owner>* h;
+    |            ^^^^^ it owns something, itself or through a field, so copying it would own that twice
+
+error: `wants_bool` needs a `T` that implements `sink<bool>`, but `int_sink` does not
+   --> sema/errors_generic_interfaces.kl:132:17
+    |
+132 |     wants_bool( ref s );
+    |                 ^^^^^ declare `int_sink` with `implements sink<bool>`
+
+error: expected `sink<i32*>`, but got `ptr_sink`
+   --> sema/errors_generic_interfaces.kl:136:20
+    |
+136 |     wants_i32_ptr( ref p );
+    |                    ^^^^^
+
+12 errors generated

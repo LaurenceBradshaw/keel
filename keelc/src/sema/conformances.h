@@ -47,9 +47,9 @@ struct Conformance_error
     Node_id             implementer {}; // the aggregate or the block
     Type_id             interface {};
     Node_id             requirement {}; // the interface's method
-    Node_id             found {};       // the implementer's method of that name, where one exists
-    Type_id             self {};        // the implementer's type, which the requirement's `self` stands for
-    Type_id             refined {};     // Unrefined: the interface required
+    Node_id             found {};   // the implementer's method of that name, where one exists; Repeated: the first implementer
+    Type_id             self {};    // the implementer's type, which the requirement's `self` stands for
+    Type_id             refined {}; // Unrefined: the interface required
 };
 
 struct Conformances
@@ -60,7 +60,8 @@ struct Conformances
     const Conformance* find( Node_id implementer, Type_id interface ) const;
     // By the type that conforms, so `Box<i32>` finds `Box<T>`'s.
     const Conformance* of( const Type_table& table, Type_id type, Type_id interface ) const;
-    Node_id method_for( const Type_table& table, Type_id type, Node_id requirement ) const; // invalid where none answers
+    Node_id            method_for( const Type_table& table, Type_id type, Type_id interface, Node_id requirement )
+        const; // invalid where none answers
 };
 
 // Asked of each aggregate's `implements` list, and of each block, once every signature is typed.

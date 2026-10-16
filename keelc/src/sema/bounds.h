@@ -86,7 +86,9 @@ public:
 
     bool has_bound( Type_id type, Bound bound ) const; // Parameter -> its set; else false
     bool satisfies( Type_id type, Bound bound ) const; // the same question, of a concrete type
-    void check_bounds( Node_id parameter, Span at, Type_id argument, std::string_view callee );
+    void check_bounds( Node_id parameter, Span at, Type_id argument, std::string_view callee, const Bindings& arguments );
+    // The `copyable` checks that came before the struct order, which is what answers them.
+    void check_deferred();
 
     // The bound set recorded for a parameter, or an empty set when it carries no `where` clause.
     Bound_set bounds_for( Type_id parameter ) const;
@@ -122,6 +124,9 @@ private:
     // Why a type the compiler would make `interface` is not one: its own `equatable` replaced it.
     std::string dropped_help( Type_id type, Type_id interface ) const;
 
+    void
+    report_unmet( Node_id parameter, Span at, Type_id argument, std::string_view callee, Bound bound, std::string_view name );
+
     std::vector<Type_id> possible_types( Type_id type ) const;
     std::vector<Type_id> admissible_numeric_types( Bound_set bounds ) const;
 
@@ -136,6 +141,15 @@ private:
     std::unordered_map<u32, Bound_set>            bounds_;     // Type_param_decl -> its closed bound set
     std::unordered_map<u32, std::vector<Type_id>> interfaces_; // Type_param_decl -> the interfaces it names
     std::unordered_map<u32, Node_id>              owner_of_;   // Type_param_decl -> the declaration that introduced it.
+
+    struct Deferred
+    {
+        Node_id     parameter;
+        Span        at;
+        Type_id     argument;
+        std::string callee;
+    };
+    std::vector<Deferred> deferred_;
 };
 
 } // namespace keel::sema

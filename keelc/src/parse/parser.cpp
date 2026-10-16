@@ -1041,7 +1041,30 @@ Node_id Parser::parse_where_clause()
             break;
         }
 
-        bounds.push_back( ast_.add( Node_kind::Bound_name, at, name.v, {} ) );
+        // `sink<i64>`: only types can follow, so `<` opens the arguments here.
+        Node_id arguments {};
+
+        if( cursor_.check( Token_kind::Less ) )
+        {
+            const Span           open = cursor_.advance().span;
+            std::vector<Node_id> types;
+
+            do
+            {
+                types.push_back( parse_type() );
+            } while( cursor_.match( Token_kind::Comma ) );
+
+            recovery_.expect_generic_close();
+            arguments = ast_.add( Node_kind::Type_arg_list, Span::merge( open, cursor_.previous().span ), 0, types );
+        }
+
+        const Span bound_span = Span::merge( at, cursor_.previous().span );
+        bounds.push_back( ast_.add(
+            Node_kind::Bound_name,
+            bound_span,
+            name.v,
+            arguments.is_valid() ? std::vector { arguments } : std::vector<Node_id> {}
+        ) );
     } while( match_bound_separator() );
 
     // The comma before a following `where` is for the reader; `where` is what the loop in
@@ -1214,15 +1237,19 @@ Node_id Parser::parse_interface_decl()
     const Span      name_span = cursor_.peek().span;
     const Symbol_id name      = expect_name();
 
-    if( cursor_.check( Token_kind::Less ) )
-    {
-        const Span                 generic_start  = cursor_.peek().span;
-        const std::vector<Node_id> generic_params = parse_type_params();
-        const Span                 generic_span   = Span::merge( generic_start, cursor_.previous().span );
-        recovery_.error_at( generic_span, "an `interface` cannot be generic yet" );
-    }
+    const Span           generic_start = cursor_.peek().span;
+    const bool           generic       = cursor_.check( Token_kind::Less );
+    std::vector<Node_id> generics      = generic ? parse_type_params() : std::vector<Node_id> {};
+
+    Span generic_span = Span::merge( generic_start, cursor_.previous().span );
 
     const Node_id implements = parse_implements();
+
+    parse_where_clauses(
+        generic, generics, generic_span, "write them on the name, as in `interface sink<T> where T : copyable`"
+    );
+
+    const Node_id type_params = generic ? ast_.add( Node_kind::Type_param_list, generic_span, 0, generics ) : Node_id {};
 
     if( !recovery_.expect( Token_kind::L_brace ) )
     {
@@ -1237,8 +1264,8 @@ Node_id Parser::parse_interface_decl()
     }
 
     classes_.push_back( name );
-    // the two slots a struct has: no type parameters, then implements
-    std::vector<Node_id> members { Node_id {}, implements };
+    // the two slots a struct has: type parameters, then implements
+    std::vector<Node_id> members { type_params, implements };
     std::optional<u32>   reported_line;
     while( !cursor_.check( Token_kind::R_brace ) && !cursor_.at_end() )
     {
@@ -1269,7 +1296,7 @@ Node_id Parser::parse_interface_decl()
             break;
         }
 
-        const Node_id member = parse_member( *chunk.head, name, Node_id {}, true );
+        const Node_id member = parse_member( *chunk.head, name, type_params, true );
 
         if( ast_.broken( member ) )
         {
@@ -12519,7 +12546,7 @@ TEST_CASE( "parser_parses_a_static_field_as_a_variable", "[parse][static]" )
 }
 
 // M9.5. An interface is its methods' signatures, each with the receiver a class's method would have
-// and no body; child 0 is the Type_param_list slot, held invalid until interfaces can be generic.
+// and no body; child 0 is the Type_param_list slot, invalid when the interface is not generic.
 TEST_CASE( "parser_parses_an_interface", "[parse][interfaces]" )
 {
     const Parsed p( "interface Shape\n"
@@ -12701,32 +12728,57 @@ TEST_CASE( "parser_reads_an_interface_refinement", "[parse][interfaces]" )
         REQUIRE( p.members( decl ).size() == 2 );
     }
 
-    SECTION( "after refused type parameters, the list is still read" )
+    SECTION( "after type parameters, the list is still read" )
     {
         const Parsed p( "interface Holder<T> implements Named { f64 area() const; };" );
 
-        REQUIRE( p.errors().find( "cannot be generic yet" ) != std::string::npos );
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
         REQUIRE( p.ast().implemented( find_first( p.ast(), p.root(), Node_kind::Interface_decl ) ).size() == 1 );
     }
+}
+
+// M9.5. A generic interface's list is the slot a struct's is, after the name, with `where` after
+// `implements`; each method carries it, as an aggregate's methods do.
+TEST_CASE( "parser_parses_a_generic_interface", "[parse][interfaces][generic]" )
+{
+    const Parsed p( "interface pair_sink<A, B> implements sink<A> where A : copyable\n"
+                    "{\n"
+                    "    void put( A a, B b );\n"
+                    "};" );
+
+    INFO( p.errors() );
+    REQUIRE_FALSE( p.has_errors() );
+
+    const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Interface_decl );
+    const Node_id list = p.ast().type_param_list( decl );
+
+    REQUIRE( list.is_valid() );
+    REQUIRE( p.ast().type_parameters( list ).size() == 2 );
+    REQUIRE( p.ast().where_clauses( list ).size() == 1 );
+    REQUIRE( p.ast().implemented( decl ).size() == 1 );
+    REQUIRE( p.members( decl ).size() == 1 );
+    REQUIRE( p.child( p.members( decl )[0], 3 ) == list );
+}
+
+TEST_CASE( "parser_reads_a_bound's_type_arguments", "[parse][interfaces][generic]" )
+{
+    const Parsed p( "void f<T>( ref T s ) where T : sink<i64> & copyable { }" );
+
+    INFO( p.errors() );
+    REQUIRE_FALSE( p.has_errors() );
+
+    const Node_id clause = find_first( p.ast(), p.root(), Node_kind::Where_clause );
+    const Node_id sink   = p.child( clause, 0 );
+
+    REQUIRE( p.text( p.ast().span( sink ) ) == "sink<i64>" );
+    REQUIRE( p.kind( p.child( sink, 0 ) ) == Node_kind::Type_arg_list );
+    REQUIRE( p.ast().children( p.child( clause, 1 ) ).empty() );
 }
 
 TEST_CASE( "parser_refuses_what_an_interface_cannot_hold", "[parse][interfaces]" )
 {
     const auto has = []( const Parsed& p, std::string_view part ) { return p.errors().find( part ) != std::string::npos; };
-
-    SECTION( "type parameters, once, and the interface is still built" )
-    {
-        const Parsed p( "interface Holder<T> { T get() const; };" );
-
-        INFO( p.errors() );
-        REQUIRE( p.error_count() == 1 );
-        REQUIRE( has( p, "cannot be generic yet" ) );
-
-        const Node_id decl = find_first( p.ast(), p.root(), Node_kind::Interface_decl );
-
-        REQUIRE( decl.is_valid() );
-        REQUIRE( p.members( decl ).size() == 1 );
-    }
 
     SECTION( "a field, once, keeping the methods around it" )
     {

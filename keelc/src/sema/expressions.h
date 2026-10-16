@@ -135,19 +135,26 @@ private:
     // infers it, which is the half `Overloads` may not do - so the walk keeps it.
     Argument_shape argument_shape( Node_id argument );
 
-    Type_id     infer_method_call( Node_id id );
-    Node_id     method_owner( Type_id receiver, Symbol_id name ) const;
-    std::string reached_only_as( Type_id type, Symbol_id name ) const;
+    Type_id              infer_method_call( Node_id id );
+    std::vector<Type_id> method_owners( Type_id receiver, Symbol_id name ) const;
+    std::string          reached_only_as( Type_id type, Symbol_id name ) const;
     // The `implements ... for type` block declaring `name`, or invalid.
     Node_id block_for( Type_id type, Symbol_id name ) const;
     Type_id infer_implicit_method_call( Node_id id, Node_id first, Type_id expectation );
     // Which of the methods named like `first` this call means, or none after reporting why. `shapes`
-    // holds the arguments selection typed, for check_method_arguments.
-    Node_id choose_method( Node_id id, Node_id first, Type_id receiver, std::vector<Argument_shape>& shapes );
+    // holds the arguments selection typed, for check_method_arguments. `through` holds the instances
+    // a bound reaches the method through, and `interface` the one chosen.
+    Node_id
+    choose_method( Node_id id, Node_id first, Type_id receiver, std::span<const Type_id> through, std::vector<Argument_shape>& shapes, Type_id& interface );
     // A refused call still types its arguments, once each, or a mistake inside one goes unreported.
     Type_id refuse_call( Node_id id, std::span<const Argument_shape> shapes = {} );
     Type_id check_method_arguments(
-        Node_id id, Node_id method, Type_id receiver, Type_id expectation, std::span<const Argument_shape> shapes = {}
+        Node_id                         id,
+        Node_id                         method,
+        Type_id                         receiver,
+        Type_id                         expectation,
+        std::span<const Argument_shape> shapes    = {},
+        Type_id                         interface = {}
     );
     void shape_arguments( Node_id call, std::vector<Argument_shape>& shapes ); // no-op once shaped
     void record_method_instantiation( Node_id id, Node_id method, Type_id receiver, std::span<const Type_id> own = {} );

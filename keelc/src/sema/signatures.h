@@ -77,6 +77,10 @@ private:
     // Declared in the order declare() runs them; each definition says what it depends on.
     void    declare_structs();
     void    declare_interfaces();
+    void    declare_interface_requirements();
+    void    declare_parameters( Node_id list );
+    void    declare_bounds( Node_id declaration, Node_id list ); // parameters, then each `where`
+    void    declare_type_bounds();
     Node_id required_naming_self( Type_id interface ) const;
     void    declare_implements();
     void    declare_block( Node_id block ); // an `implements ... for` block, not a function body

@@ -17,6 +17,15 @@ Type_id recorded_type( std::span<const Type_id> recorded, Node_id node )
     return node.v < recorded.size() ? recorded[node.v] : Type_id {};
 }
 
+// What a requirement of `interface` reads as on `type`: `self` is `type`, and the interface's
+// parameters are the instance's arguments.
+Bindings requirement_bindings( Type_table& table, Type_id interface, Type_id type )
+{
+    Bindings bindings = table.instance_bindings( interface );
+    bindings.emplace( table.self_of( table.get( interface ).declaration ).v, type );
+    return bindings;
+}
+
 // The parameters past the receiver, and the return, each with its mode, reading the requirement's
 // `self` as the implementer. The receivers differ by construction, and constness is asked separately.
 bool same_signature(
@@ -156,7 +165,7 @@ const Conformance* Conformances::of( const Type_table& table, Type_id type, Type
 {
     for( const Conformance& conformance : conformances )
     {
-        if( conformance.interface == interface && conforms_as( table, conformance.type, type ) )
+        if( conforms_as( table, conformance.type, type ) && table.declares_as( conformance.interface, type, interface ) )
         {
             return &conformance;
         }
@@ -165,11 +174,11 @@ const Conformance* Conformances::of( const Type_table& table, Type_id type, Type
     return nullptr;
 }
 
-Node_id Conformances::method_for( const Type_table& table, Type_id type, Node_id requirement ) const
+Node_id Conformances::method_for( const Type_table& table, Type_id type, Type_id interface, Node_id requirement ) const
 {
     for( const Conformance& conformance : conformances )
     {
-        if( !conforms_as( table, conformance.type, type ) )
+        if( !conforms_as( table, conformance.type, type ) || !table.declares_as( conformance.interface, type, interface ) )
         {
             continue;
         }
@@ -207,25 +216,27 @@ void conform(
         return; // reported where it was resolved
     }
 
-    if( result.of( table, type, interface ) != nullptr )
+    if( const Conformance* first = result.of( table, type, interface ) )
     {
         result.errors.push_back(
             { .problem     = Conformance_problem::Repeated,
               .at          = ast.span( written ),
               .implementer = implementer,
               .interface   = interface,
+              .found       = first->implementer,
               .self        = type }
         );
         return;
     }
 
-    const Bindings self = { { table.self_of( table.get( interface ).declaration ).v, type } };
+    const Node_id  declaration = table.get( interface ).declaration;
+    const Bindings self        = requirement_bindings( table, interface, type );
 
     Conformance conformance {
         .implementer = implementer, .type = type, .interface = interface, .requirements = {}, .methods = {}
     };
 
-    for( const Node_id requirement : ast.members( table.get( interface ).declaration ) )
+    for( const Node_id requirement : ast.members( declaration ) )
     {
         // A static or generic requirement was refused where it was declared; nothing answers one.
         const bool refused = ast.is_static_method( requirement ) || ast.own_type_param_list( requirement ).is_valid();
@@ -397,7 +408,7 @@ std::string substituted_requirement(
     const Conformance_error& error
 )
 {
-    const Bindings self = { { table.self_of( table.get( error.interface ).declaration ).v, error.self } };
+    const Bindings self = requirement_bindings( table, error.interface, error.self );
 
     std::string text = fmt::format(
         "{}{} {}(",
@@ -441,7 +452,13 @@ void report_conformance_errors(
 
         if( error.problem == Conformance_problem::Repeated )
         {
-            reporter.error_at( error.at, fmt::format( "`{}` already implements `{}`", type, interface ) );
+            // Two blocks may come from two packages, each owning an argument.
+            const bool blocks = in_block && ast.kind( error.found ) == Node_kind::Implements_decl;
+            reporter.error_at(
+                error.at,
+                fmt::format( "`{}` already implements `{}`", type, interface ),
+                blocks ? fmt::format( "the block at {} implements it first", reporter.position( ast.span( error.found ) ) ) : ""
+            );
             continue;
         }
 
@@ -583,10 +600,10 @@ TEST_CASE( "conformances_record_the_method_answering_each_requirement", "[sema][
 
     REQUIRE( conformances.of( table, sq_type, shape ) == sq_shape );
     REQUIRE( conformances.of( table, box_type, named ) == nullptr );
-    REQUIRE( conformances.method_for( table, sq_type, requirements[1] ) == members[2] );
-    REQUIRE( conformances.method_for( table, sq_type, ast.members( named_decl )[0] ) == members[3] );
-    REQUIRE( conformances.method_for( table, box_type, requirements[0] ) == ast.members( box )[1] );
-    REQUIRE_FALSE( conformances.method_for( table, sq_type, square ).is_valid() );
+    REQUIRE( conformances.method_for( table, sq_type, shape, requirements[1] ) == members[2] );
+    REQUIRE( conformances.method_for( table, sq_type, named, ast.members( named_decl )[0] ) == members[3] );
+    REQUIRE( conformances.method_for( table, box_type, shape, requirements[0] ) == ast.members( box )[1] );
+    REQUIRE_FALSE( conformances.method_for( table, sq_type, shape, square ).is_valid() );
 }
 
 // Each at the interface as written after `implements`, with the requirement quoted in the help.
@@ -708,6 +725,65 @@ TEST_CASE( "conformances_refuse_a_repeated_interface", "[sema][interfaces]" )
     const Conformances& conformances = p.types().conformances();
     REQUIRE( conformances.conformances.size() == 2 ); // and the prelude's `str` as `textual`
     REQUIRE( conformances.errors[0].at.start == source.find( "Shape {", source.find( "implements" ) ) ); // the second
+}
+
+TEST_CASE( "conformances_answer_each_instance_with_its_own_method", "[sema][interfaces][generic_interfaces]" )
+{
+    const Typed p( "interface sink<T> { void put( T value ); u64 count() const; };\n"
+                   "struct log implements sink<i64>, sink<bool> {\n"
+                   "    i32 v;\n"
+                   "    void put( i64 value ) { }\n"
+                   "    void put( bool value ) { }\n"
+                   "    u64 count() const { return 0; }\n"
+                   "};\n"
+                   "i32 main() { return 0; }" );
+
+    INFO( p.rendered() );
+    REQUIRE( p.clean() );
+
+    const Ast&                     ast          = p.ast();
+    const Conformances&            conformances = p.types().conformances();
+    const Type_table&              table        = p.types().table();
+    const Node_id                  log          = p.nth( Node_kind::Struct_decl, 0 );
+    const Type_id                  log_type     = p.types().type_of( log );
+    const Type_id                  sink_i64     = p.types().type_of( ast.implemented( log )[0] );
+    const Type_id                  sink_bool    = p.types().type_of( ast.implemented( log )[1] );
+    const std::span<const Node_id> requirements = ast.members( p.nth( Node_kind::Interface_decl, 0 ) );
+    const std::span<const Node_id> members      = ast.members( log );
+
+    REQUIRE( sink_i64 != sink_bool );
+    REQUIRE( conformances.find( log, sink_i64 ) != nullptr );
+    REQUIRE( conformances.find( log, sink_bool ) != nullptr );
+
+    REQUIRE( conformances.method_for( table, log_type, sink_i64, requirements[0] ) == members[1] );
+    REQUIRE( conformances.method_for( table, log_type, sink_bool, requirements[0] ) == members[2] );
+
+    // A requirement that does not mention `T` is answered by one method for both.
+    REQUIRE( conformances.method_for( table, log_type, sink_i64, requirements[1] ) == members[3] );
+    REQUIRE( conformances.method_for( table, log_type, sink_bool, requirements[1] ) == members[3] );
+}
+
+TEST_CASE( "conformances_substitute_a_refinement_per_instance", "[sema][interfaces][generic_interfaces]" )
+{
+    const Typed p(
+        "interface sink<T> { void put( T value ); };\n"
+        "interface counted<T> implements sink<T> { u64 count() const; };\n"
+        "struct met implements counted<i32>, sink<i32> { i32 v; void put( i32 value ) { } u64 count() const { return 0; } };\n"
+        "struct unmet implements counted<i32>, sink<i64> { i32 v; void put( i64 value ) { } u64 count() const { return 0; } "
+        "};\n"
+        "i32 main() { return 0; }"
+    );
+
+    INFO( p.rendered() );
+    REQUIRE( p.errors() == 1 );
+    REQUIRE(
+        p.rendered().find( "`unmet` implements `counted<i32>` but not `sink<i32>`, which `counted<i32>` requires" ) !=
+        std::string::npos
+    );
+
+    const Conformance_error& error = p.types().conformances().errors[0];
+    REQUIRE( error.problem == Conformance_problem::Unrefined );
+    REQUIRE( error.implementer == p.nth( Node_kind::Struct_decl, 1 ) );
 }
 
 // Each was refused already, so the conformance stage adds nothing to it.

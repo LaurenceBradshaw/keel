@@ -1,0 +1,1 @@
+--check --package shapes=sema/generic_interface_packages/shapes --package left=sema/generic_interface_packages/left --package right=sema/generic_interface_packages/right

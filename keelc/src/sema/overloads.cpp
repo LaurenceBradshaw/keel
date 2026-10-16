@@ -399,17 +399,16 @@ bool Overloads::beats( std::span<const Type_id> first, std::span<const Type_id> 
 }
 
 // Every candidate nothing beats: one is the choice, several are the ambiguity.
-std::vector<Node_id> Overloads::closest(
-    std::span<const Node_id> candidates, std::span<const std::vector<Type_id>> targets, std::span<const Argument_shape> shapes
-) const
+std::vector<std::size_t>
+Overloads::closest( std::span<const std::vector<Type_id>> targets, std::span<const Argument_shape> shapes ) const
 {
-    std::vector<Node_id> result;
+    std::vector<std::size_t> result;
 
-    for( std::size_t k = 0; k < candidates.size(); ++k )
+    for( std::size_t k = 0; k < targets.size(); ++k )
     {
         bool beaten = false;
 
-        for( std::size_t j = 0; j < candidates.size(); ++j )
+        for( std::size_t j = 0; j < targets.size(); ++j )
         {
             if( j == k )
             {
@@ -425,7 +424,7 @@ std::vector<Node_id> Overloads::closest(
 
         if( !beaten )
         {
-            result.push_back( candidates[k] );
+            result.push_back( k );
         }
     }
 
@@ -482,13 +481,23 @@ std::vector<Node_id> Overloads::matching(
         }
     }
 
+    const auto pick = [&]( const std::vector<Node_id>& from, std::span<const std::vector<Type_id>> to )
+    {
+        std::vector<Node_id> picked;
+        for( const std::size_t i : closest( to, shapes ) )
+        {
+            picked.push_back( from[i] );
+        }
+        return picked;
+    };
+
     if( matching_candidates.empty() )
     {
-        matching_candidates = closest( widened_candidates, targets, shapes );
+        matching_candidates = pick( widened_candidates, targets );
     }
     else if( matching_candidates.size() > 1 )
     {
-        matching_candidates = closest( matching_candidates, exact_targets, shapes );
+        matching_candidates = pick( matching_candidates, exact_targets );
     }
 
     return matching_candidates;
@@ -635,7 +644,7 @@ Node_id Overloads::select_overload(
 
 // The same narrowing, made from a receiver's members rather than from a scope. A method call writes
 // no type arguments - the receiver carries them - so arity is the only filter before the types.
-std::vector<Node_id> Overloads::viable_methods( Node_id call, Node_id first, Type_id receiver )
+std::vector<Node_id> Overloads::viable_methods( Node_id call, Node_id first, Type_id receiver, Type_id interface )
 {
     std::vector<Node_id> candidates;
 
@@ -651,7 +660,7 @@ std::vector<Node_id> Overloads::viable_methods( Node_id call, Node_id first, Typ
 
     const std::span<const Node_id> arguments = ast_.arguments( call );
     const std::string_view         name      = interner_.text( ast_.name( first ) );
-    const Bindings                 bindings  = aggregates_.receiver_bindings( receiver, first );
+    const Bindings                 bindings  = aggregates_.receiver_bindings( receiver, first, interface );
 
     std::vector<Node_id> viable;
 
@@ -675,45 +684,72 @@ std::vector<Node_id> Overloads::viable_methods( Node_id call, Node_id first, Typ
     return viable;
 }
 
-// The rest of that choice, over the shapes the caller reduced the arguments to.
-Node_id Overloads::select_method(
-    Node_id call, Node_id first, Type_id receiver, std::span<const Node_id> viable, std::span<const Argument_shape> shapes
-)
+// The rest of that choice, over the shapes the caller reduced the arguments to. Under a bound each
+// candidate is tried once per instance it is reached through, as `put` at `sink<i64>` and `sink<bool>`.
+Node_id Overloads::
+    select_method( Node_id call, Node_id first, Type_id receiver, std::span<const Node_id> viable, std::span<const Type_id> through, std::span<const Argument_shape> shapes, Type_id& interface )
 {
-    const std::string_view name     = interner_.text( ast_.name( first ) );
-    const Bindings         bindings = aggregates_.receiver_bindings( receiver, first );
+    const std::string_view name = interner_.text( ast_.name( first ) );
 
-    std::vector<Node_id>              matching;
-    std::vector<Node_id>              widened;
-    std::vector<std::vector<Type_id>> targets;
-    std::vector<std::vector<Type_id>> exact_targets;
+    std::vector<Node_id>  candidates;
+    std::vector<Type_id>  instances;
+    std::vector<Bindings> bindings;
 
     for( const Node_id candidate : viable )
     {
-        if( candidate_accepts( candidate, receiver_params( candidate ), shapes, bindings, false ) )
+        for( std::size_t i = 0; i < std::max<std::size_t>( through.size(), 1 ); ++i )
         {
-            matching.push_back( candidate );
-            exact_targets.push_back( parameter_types( candidate, receiver_params( candidate ), bindings ) );
-        }
-        else if( candidate_accepts( candidate, receiver_params( candidate ), shapes, bindings, true ) )
-        {
-            widened.push_back( candidate );
-            targets.push_back( parameter_types( candidate, receiver_params( candidate ), bindings ) );
+            const Type_id instance = through.empty() ? Type_id {} : through[i];
+            candidates.push_back( candidate );
+            instances.push_back( instance );
+            bindings.push_back( aggregates_.receiver_bindings( receiver, candidate, instance ) );
         }
     }
 
+    std::vector<std::size_t>          matching;
+    std::vector<std::size_t>          widened;
+    std::vector<std::vector<Type_id>> targets;
+    std::vector<std::vector<Type_id>> exact_targets;
+
+    for( std::size_t i = 0; i < candidates.size(); ++i )
+    {
+        const Node_id candidate = candidates[i];
+
+        if( candidate_accepts( candidate, receiver_params( candidate ), shapes, bindings[i], false ) )
+        {
+            matching.push_back( i );
+            exact_targets.push_back( parameter_types( candidate, receiver_params( candidate ), bindings[i] ) );
+        }
+        else if( candidate_accepts( candidate, receiver_params( candidate ), shapes, bindings[i], true ) )
+        {
+            widened.push_back( i );
+            targets.push_back( parameter_types( candidate, receiver_params( candidate ), bindings[i] ) );
+        }
+    }
+
+    const auto pick = [&]( const std::vector<std::size_t>& from, std::span<const std::vector<Type_id>> to )
+    {
+        std::vector<std::size_t> picked;
+        for( const std::size_t i : closest( to, shapes ) )
+        {
+            picked.push_back( from[i] );
+        }
+        return picked;
+    };
+
     if( matching.empty() )
     {
-        matching = closest( widened, targets, shapes );
+        matching = pick( widened, targets );
     }
     else if( matching.size() > 1 )
     {
-        matching = closest( matching, exact_targets, shapes );
+        matching = pick( matching, exact_targets );
     }
 
     if( matching.size() == 1 )
     {
-        return matching.front();
+        interface = instances[matching.front()];
+        return candidates[matching.front()];
     }
 
     if( matching.empty() )
@@ -721,16 +757,26 @@ Node_id Overloads::select_method(
         reporter_.error_at(
             ast_.span( call ),
             fmt::format( "no `{}` matches these arguments", name ),
-            fmt::format( "the ones declared take {}", candidate_list( viable, bindings ) )
+            fmt::format( "the ones declared take {}", candidate_list( candidates, bindings ) )
         );
 
         return Node_id {};
     }
 
+    std::vector<Node_id>  ambiguous;
+    std::vector<Bindings> ambiguous_bindings;
+    for( const std::size_t i : matching )
+    {
+        ambiguous.push_back( candidates[i] );
+        ambiguous_bindings.push_back( bindings[i] );
+    }
+
     reporter_.error_at(
         ast_.span( call ),
         fmt::format( "this call to `{}` is ambiguous", name ),
-        fmt::format( "more than one matches: {}; write a type the call can be told by", candidate_list( matching, bindings ) )
+        fmt::format(
+            "more than one matches: {}; write a type the call can be told by", candidate_list( ambiguous, ambiguous_bindings )
+        )
     );
 
     return Node_id {};
@@ -1165,6 +1211,11 @@ u32 Overloads::receiver_params( Node_id method ) const
 
 std::string Overloads::candidate_list( std::span<const Node_id> candidates, const Bindings& bindings )
 {
+    return candidate_list( candidates, std::vector<Bindings>( candidates.size(), bindings ) );
+}
+
+std::string Overloads::candidate_list( std::span<const Node_id> candidates, std::span<const Bindings> bindings )
+{
     std::string text;
 
     for( std::size_t i = 0; i < candidates.size(); ++i )
@@ -1174,7 +1225,7 @@ std::string Overloads::candidate_list( std::span<const Node_id> candidates, cons
             text += i + 1 == candidates.size() ? " and " : ", ";
         }
 
-        text += fmt::format( "`{}`", signature_of( candidates[i], bindings ) );
+        text += fmt::format( "`{}`", signature_of( candidates[i], bindings[i] ) );
     }
 
     return text;
@@ -1269,7 +1320,9 @@ void Overloads::refuse_both(
 {
     std::string message = fmt::format( "no `{}` matches these arguments", name );
     std::string help    = fmt::format(
-        "the ones declared take {}; the prelude's take {}", candidate_list( own, {} ), candidate_list( prelude, {} )
+        "the ones declared take {}; the prelude's take {}",
+        candidate_list( own, Bindings {} ),
+        candidate_list( prelude, Bindings {} )
     );
 
     reporter_.error_at( ast_.span( call ), std::move( message ), std::move( help ) );

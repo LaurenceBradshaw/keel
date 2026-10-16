@@ -234,7 +234,7 @@ bool Bounds::conforms( Type_id type, Type_id interface ) const
 // promises `numeric`, `comparable` and `equatable` too, so a struct fails all four.
 //
 // A span rather than a node, because a deduced type argument has no annotation to underline.
-void Bounds::check_bounds( Node_id parameter, Span at, Type_id argument, std::string_view callee )
+void Bounds::check_bounds( Node_id parameter, Span at, Type_id argument, std::string_view callee, const Bindings& arguments )
 {
     // An interface is met by a declared `implements`, or by a parameter promising it in turn.
     if( const auto named = interfaces_.find( parameter.v ); named != interfaces_.end() && !table_.references_error( argument ) )
@@ -246,8 +246,10 @@ void Bounds::check_bounds( Node_id parameter, Span at, Type_id argument, std::st
 
         std::vector<Type_id> failing;
 
-        for( const Type_id interface : named->second )
+        for( const Type_id written : named->second )
         {
+            const Type_id interface = table_.substitute( written, arguments );
+
             // What a failing interface or bound requires is the same mistake said again.
             if( conforms( argument, interface ) ||
                 ( not_a_number && ( interface == comparable || table_.refines( comparable, interface ) ) ) ||
@@ -304,6 +306,14 @@ void Bounds::check_bounds( Node_id parameter, Span at, Type_id argument, std::st
         return; // unbounded: nothing promised, so nothing to check
     }
 
+    // Before the struct order every struct passes `copyable`, so the check waits for it. `numeric`
+    // implies `copyable` and already refuses a struct.
+    if( contains( found->second, Bound::Copyable ) && !contains( found->second, Bound::Numeric ) && !aggregates_.is_ordered() &&
+        aggregates_.mentions_a_cycle( argument ) )
+    {
+        deferred_.push_back( { parameter, at, argument, std::string( callee ) } );
+    }
+
     Bound_set failing = 0;
 
     for( const Named_bound& known : k_bounds )
@@ -328,35 +338,48 @@ void Bounds::check_bounds( Node_id parameter, Span at, Type_id argument, std::st
 
     for( const Named_bound& known : k_bounds )
     {
-        if( !contains( failing & ~implied, known.bound ) )
+        if( contains( failing & ~implied, known.bound ) )
         {
-            continue;
+            report_unmet( parameter, at, argument, callee, known.bound, known.name );
         }
-
-        // A parameter as the type argument is a generic forwarding its own `T`, and the fix is one
-        // clause away rather than one type away. "ordering needs a number" would be the wrong advice.
-        const bool forwarded = table_.is_parameter( argument );
-
-        std::string help = std::string( bound_requirement( known.bound ) );
-
-        if( forwarded )
-        {
-            help = forwarded_help( argument, known.name );
-        }
-
-        reporter_.error_at(
-            at,
-            fmt::format(
-                "`{}` {} `{}`, and `{}` requires it of `{}`",
-                table_.name( argument ),
-                forwarded ? "does not promise" : "is not",
-                known.name,
-                callee,
-                interner_.text( ast_.name( parameter ) )
-            ),
-            std::move( help )
-        );
     }
+}
+
+void Bounds::check_deferred()
+{
+    for( const Deferred& deferred : deferred_ )
+    {
+        if( !satisfies( deferred.argument, Bound::Copyable ) )
+        {
+            report_unmet( deferred.parameter, deferred.at, deferred.argument, deferred.callee, Bound::Copyable, "copyable" );
+        }
+    }
+
+    deferred_.clear();
+}
+
+void Bounds::report_unmet(
+    Node_id parameter, Span at, Type_id argument, std::string_view callee, Bound bound, std::string_view name
+)
+{
+    // A parameter as the type argument is a generic forwarding its own `T`, and the fix is one
+    // clause away rather than one type away. "ordering needs a number" would be the wrong advice.
+    const bool forwarded = table_.is_parameter( argument );
+
+    std::string help = forwarded ? forwarded_help( argument, name ) : std::string( bound_requirement( bound ) );
+
+    reporter_.error_at(
+        at,
+        fmt::format(
+            "`{}` {} `{}`, and `{}` requires it of `{}`",
+            table_.name( argument ),
+            forwarded ? "does not promise" : "is not",
+            name,
+            callee,
+            interner_.text( ast_.name( parameter ) )
+        ),
+        std::move( help )
+    );
 }
 
 std::string Bounds::forwarded_help( Type_id parameter, std::string_view promise ) const
@@ -662,6 +685,12 @@ void Bounds::declare_type_parameters( Node_id declaration, Node_id list )
         Bound_set direct_bounds = 0;
         for( const Node_id bound_node : ast_.bounds( where_clause ) )
         {
+            // Already reported where it was resolved.
+            if( types_.type_of( bound_node ).is_valid() && table_.is_error( types_.type_of( bound_node ) ) )
+            {
+                continue;
+            }
+
             std::string_view     bound_name = interner_.text( ast_.name( bound_node ) );
             std::optional<Bound> bound      = bound_for_name( bound_name );
 
@@ -822,7 +851,7 @@ using namespace sema;
 class Promises
 {
 public:
-    explicit Promises( std::string_view source )
+    explicit Promises( std::string_view source, bool ordered = true )
         : ast_(
               parse( lex( sm_.add_file( "t.kl", std::string( source ) ), sm_, interner_, literal_pool_, diags_ ), sm_, diags_ )
           ),
@@ -861,6 +890,14 @@ public:
             }
         }
 
+        if( ordered )
+        {
+            order();
+        }
+    }
+
+    void order()
+    {
         aggregates_.order_structs();
     }
 
@@ -1079,12 +1116,33 @@ TEST_CASE( "bounds_report_the_strongest_unmet_bound_and_not_the_ones_it_implies"
 
     const Node_id parameter = p.parameter_decl( 0 );
 
-    p.bounds().check_bounds( parameter, p.span( parameter ), p.aggregate( 0 ), "f" );
+    p.bounds().check_bounds( parameter, p.span( parameter ), p.aggregate( 0 ), "f", {} );
 
     INFO( p.rendered() );
     REQUIRE( p.errors() == 1 ); // a struct fails four of them, and only one is the mistake
     REQUIRE( p.rendered().find( "not `integral`" ) != std::string::npos );
     REQUIRE( p.rendered().find( "numeric" ) == std::string::npos );
+}
+
+// Before the order every struct passes `copyable`, so the check waits for it rather than passing.
+TEST_CASE( "bounds_check_copyable_once_the_structs_are_ordered", "[sema][bound]" )
+{
+    Promises p( "class Owner { i32 x; ~Owner() { } };\nvoid f<T>( const ref T a ) where T : copyable { }\n", false );
+
+    const Node_id parameter = p.parameter_decl( 0 );
+
+    p.bounds().check_bounds( parameter, p.span( parameter ), p.aggregate( 0 ), "f", {} );
+    REQUIRE( p.errors() == 0 );
+
+    p.order();
+    p.bounds().check_deferred();
+
+    INFO( p.rendered() );
+    REQUIRE( p.errors() == 1 );
+    REQUIRE( p.rendered().find( "`Owner` is not `copyable`" ) != std::string::npos );
+
+    p.bounds().check_deferred(); // reported once
+    REQUIRE( p.errors() == 1 );
 }
 
 TEST_CASE( "bounds_refuse_a_second_where_clause_for_one_parameter", "[sema][bound]" )

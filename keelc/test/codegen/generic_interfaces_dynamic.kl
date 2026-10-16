@@ -1,0 +1,99 @@
+// M9.5: generic interfaces through a borrow, a pointer and a box. Each instance seen dynamically
+// has its own vtable, so one object reached as `sink<i64>` and as `sink<bool>` goes through two,
+// and `count` sits in both. A `box<sink<i64>>` drops its owning implementer through the vtable.
+// Exits with the failing check.
+interface sink<T>
+{
+    void put( T value );
+    u64 count() const;
+};
+
+class tally implements sink<i64>, sink<bool>
+{
+    i64 sum_;
+    u64 count_;
+
+    public tally()
+    {
+        sum_ = 0;
+        count_ = 0;
+    }
+
+    public void put( i64 value )
+    {
+        sum_ += value;
+        count_ += 1;
+    }
+
+    public void put( bool value ) { count_ += 1; }
+    public u64 count() const { return count_; }
+    public i64 sum() const { return sum_; }
+};
+
+// Owns a heap slot, so only the vtable's drop frees it once boxed.
+class held implements sink<i64>
+{
+    i64[*] slot_;
+    u64    count_;
+
+    public held()
+    {
+        unsafe
+        {
+            slot_ = alloc<i64>( 1 );
+            slot_[0] = 0;
+        }
+        count_ = 0;
+    }
+
+    ~held()
+    {
+        unsafe
+        {
+            free( slot_ );
+        }
+    }
+
+    public void put( i64 value )
+    {
+        unsafe
+        {
+            slot_[0] += value;
+        }
+        count_ += 1;
+    }
+
+    public u64 count() const { return count_; }
+};
+
+void feed( ref sink<i64> s, i64 v ) { s.put( v ); }
+
+void flag( sink<bool>* s ) { s.put( true ); }
+
+u64 counted( const ref sink<i64> s ) { return s.count(); }
+
+u64 counted_flags( const ref sink<bool> s ) { return s.count(); }
+
+i32 main()
+{
+    tally t = tally();
+    feed( ref t, 4 );
+    flag( &t );
+    if( t.sum() != 4 ) { return 1; }
+    if( counted( t ) != 2 || counted_flags( t ) != 2 ) { return 2; }
+
+    sink<i64>* as_int = &t;
+    as_int.put( 6 );
+    if( t.sum() != 10 || t.count() != 3 ) { return 3; }
+
+    box<sink<i64>> b = box<held>( move held() );
+    feed( ref *b.get(), 5 );
+    b.get().put( 2 );
+    if( b.get().count() != 2 ) { return 4; }
+
+    b = box<tally>( tally() );
+    b.get().put( 1 );
+    if( b.get().count() != 1 ) { return 5; }
+
+    return 0;
+}

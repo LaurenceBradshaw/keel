@@ -353,6 +353,7 @@ Node_id Ast::type_arg_list( Node_id id ) const
     case Node_kind::Call_expr:
         return all[2];
     case Node_kind::Name_expr:
+    case Node_kind::Bound_name:
         return all.empty() ? Node_id {} : all[0];
     case Node_kind::Path_expr:
         return all.size() > 1 ? all[1] : Node_id {};

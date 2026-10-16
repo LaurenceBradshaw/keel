@@ -1,0 +1,139 @@
+// M9.5: what a generic interface refuses. Each refusal is named in the comment above it.
+interface sink<T>
+{
+    void put( T value );
+};
+
+interface counted_sink<T> implements sink<T>
+{
+    u64 count() const;
+};
+
+interface copy_sink<T> where T : copyable
+{
+    void take( T value );
+};
+
+// `self_loop` cannot require itself, whatever the arguments.
+interface self_loop<T> implements self_loop<i32>
+{
+    void f( T value );
+};
+
+// `loop_b` cannot require `loop_a`, which already requires `loop_b`.
+interface loop_a<T> implements loop_b<i32>
+{
+    void f( T value );
+};
+
+interface loop_b<U> implements loop_a<U>
+{
+    void g( U value );
+};
+
+interface Shape
+{
+    f64 area() const;
+};
+
+class Owner
+{
+    u8[*] bytes;
+
+    public Owner() { unsafe { bytes = alloc<u8>( 1 ); } }
+    ~Owner() { unsafe { free( bytes ); } }
+};
+
+// `sink` needs one type argument.
+struct bare implements sink
+{
+    i32 v;
+};
+
+// `sink` takes one type argument, not two.
+struct twice implements sink<i32, i32>
+{
+    i32 v;
+};
+
+// `sink<i64>` is written twice.
+struct repeated implements sink<i64>, sink<i64>
+{
+    i32 v;
+
+    void put( i64 value ) { }
+};
+
+// `sink<bool>` has no `put( bool )`; `sink<i64>` is met.
+struct half implements sink<i64>, sink<bool>
+{
+    i32 v;
+
+    void put( i64 value ) { }
+};
+
+// `counted_sink<i32>` requires `sink<i32>`, and this declares only `sink<i64>`.
+struct unrefined implements counted_sink<i32>, sink<i64>
+{
+    i32 v;
+
+    void put( i64 value ) { }
+    u64 count() const { return 0; }
+};
+
+// An interface is never a type argument by value.
+struct by_value implements sink<Shape>
+{
+    i32 v;
+};
+
+// `Owner` is not `copyable`, which `copy_sink`'s parameter requires.
+struct owning implements copy_sink<Owner>
+{
+    i32 v;
+
+    void take( Owner value ) { }
+};
+
+struct holder<T> where T : copyable
+{
+    T v;
+};
+
+// A field's type argument is checked as a parameter's is: `Owner` is not `copyable`.
+struct keeps
+{
+    holder<Owner>* h;
+};
+
+struct int_sink implements sink<i64>
+{
+    i32 v;
+
+    void put( i64 value ) { }
+};
+
+void wants_bool<T>( ref T s ) where T : sink<bool> { }
+
+void wants_i32_ptr( ref sink<i32*> s ) { }
+
+struct ptr_sink implements sink<i64*>
+{
+    i32 v;
+
+    void put( i64* value ) { }
+};
+
+i32 main()
+{
+    int_sink s = int_sink { 0 };
+
+    // `int_sink` is a `sink<i64>`, not a `sink<bool>`.
+    wants_bool( ref s );
+
+    // No variance: a `sink<i64*>` is not a `sink<i32*>`.
+    ptr_sink p = ptr_sink { 0 };
+    wants_i32_ptr( ref p );
+
+    return 0;
+}

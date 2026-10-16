@@ -1,19 +1,13 @@
-error: an `interface` cannot be generic yet
- --> parse/errors_interfaces.kl:1:17
-  |
-1 | interface Holder<T>
-  |                 ^^^
-
 error: an `interface` holds only method signatures
- --> parse/errors_interfaces.kl:9:5
+ --> parse/errors_interfaces.kl:4:5
   |
-9 |     i32 sides;
+4 |     i32 sides;
   |     ^^^^^^^^^^
 
 error: expected `{`, found `;`
-  --> parse/errors_interfaces.kl:17:21
+  --> parse/errors_interfaces.kl:12:21
    |
-17 |     f64 area() const;
+12 |     f64 area() const;
    |                     ^ Keel has no forward declarations: write the definition here
 
-3 errors generated
+2 errors generated

@@ -1,0 +1,33 @@
+// M9.5: an interface takes type parameters, written as on a class: after the name, then
+// `implements`, then `where`. An instance is written wherever an interface is named.
+interface sink<T>
+{
+    void put( T value );
+};
+
+interface pair_sink<A, B> implements sink<A> where A : copyable, where B : copyable
+{
+    void put_both( A a, B b );
+};
+
+class log implements sink<i64>, sink<bool>
+{
+    i64 total;
+
+    public void put( i64 value ) { }
+    public void put( bool value ) { }
+};
+
+enum light
+{
+    red,
+};
+
+implements sink<i64> for light
+{
+    void put( i64 value ) { }
+};
+
+void feed<T>( ref T s ) where T : sink<i64> & sink<bool> { }
+
+void through( ref sink<i64> s, sink<bool>* p, move box<sink<i64>> b ) { }
