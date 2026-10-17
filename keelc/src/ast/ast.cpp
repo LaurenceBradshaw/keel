@@ -748,6 +748,18 @@ bool Ast::is_const_binding( Node_id decl ) const
     return annotation.is_valid() && kind( annotation ) == Node_kind::Const_type;
 }
 
+bool Ast::is_counter( Node_id decl ) const
+{
+    // Only a counting `for` gives a Var_decl a Range_expr; elsewhere a range is a slice or a label.
+    if( !decl.is_valid() || kind( decl ) != Node_kind::Var_decl )
+    {
+        return false;
+    }
+
+    const Node_id init = initialiser( decl );
+    return init.is_valid() && kind( init ) == Node_kind::Range_expr;
+}
+
 bool Ast::is_const_field( Node_id decl ) const
 {
     return decl.is_valid() && kind( decl ) == Node_kind::Field_decl && kind( annotation( decl ) ) == Node_kind::Const_type;

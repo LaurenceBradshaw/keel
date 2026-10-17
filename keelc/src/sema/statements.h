@@ -70,6 +70,7 @@ private:
     void visit_switch( Node_id id );
     void visit_while( Node_id id );
     void visit_for( Node_id id );
+    void visit_count( Node_id id );
     void visit_increment( Node_id id );
     void visit_global( Node_id id );
     void visit_block( Node_id id );

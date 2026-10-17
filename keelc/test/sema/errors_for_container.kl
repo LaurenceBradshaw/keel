@@ -1,0 +1,12 @@
+// D59: a `for` over anything but a range is refused, naming the index form. One error: the body
+// and what follows still parse.
+i32 main()
+{
+    i32[*] xs = nullptr;
+    for( const ref i32 x : xs )
+    {
+        i32 y = 1;
+    }
+
+    return 0;
+}

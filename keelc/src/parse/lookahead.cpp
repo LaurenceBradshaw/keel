@@ -313,6 +313,26 @@ bool Lookahead::looks_like_binding( u32 at )
     return scan_type_and_name();
 }
 
+bool Lookahead::looks_like_counter( u32 at )
+{
+    cursor_.seek( at );
+    site_ = Scan_site::Statement;
+
+    if( cursor_.match_keyword( Keyword::Auto ) )
+    {
+        if( !cursor_.match( Token_kind::Identifier ) )
+        {
+            return false;
+        }
+    }
+    else if( !scan_type_and_name() )
+    {
+        return false;
+    }
+
+    return cursor_.check( Token_kind::Colon );
+}
+
 // From `at`: whether a `)` closes a group opened before it, and a `{` follows.
 bool Lookahead::head_closes( u32 at )
 {

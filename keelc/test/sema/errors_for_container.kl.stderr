@@ -1,0 +1,7 @@
+error: `for` with `:` counts over a range
+ --> sema/errors_for_container.kl:6:28
+  |
+6 |     for( const ref i32 x : xs )
+  |                            ^^ walk it by index: `for( u64 i : 0..xs.size() )`
+
+1 error generated

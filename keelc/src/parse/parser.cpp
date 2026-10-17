@@ -133,6 +133,7 @@ private:
     Node_id parse_return_stmt();
     // A static field passes its commit; top-level and local variables have none.
     Node_id parse_var_decl( std::optional<u32> commit = std::nullopt );
+    Node_id parse_counter();
     Node_id parse_expression_stmt( bool consume_semicolon = true );
     Node_id parse_prefix_increment_stmt( bool consume_semicolon );
 
@@ -2586,6 +2587,49 @@ Node_id Parser::parse_var_decl( std::optional<u32> commit )
     return node;
 }
 
+// A counting `for`'s variable, up to the `)`: a Var_decl whose initialiser is the Range_expr.
+Node_id Parser::parse_counter()
+{
+    const Span start = cursor_.peek().span;
+
+    Node_id type;
+    if( !cursor_.match_keyword( Keyword::Auto ) )
+    {
+        type = parse_type_with_mode();
+    }
+
+    const Symbol_id name      = expect_name();
+    const Span      name_span = cursor_.previous().span;
+
+    recovery_.expect( Token_kind::Colon );
+    const Node_id lower = parse_expression( 0 );
+
+    if( !cursor_.match( Token_kind::Dot_dot ) )
+    {
+        recovery_.error_at(
+            ast_.span( lower ),
+            "`for` with `:` counts over a range",
+            fmt::format( "walk it by index: `for( u64 i : 0..{}.size() )`", sm_.text( ast_.span( lower ) ) )
+        );
+
+        return error_node( Span::merge( start, cursor_.previous().span ) );
+    }
+
+    const Node_id upper = parse_expression( 0 );
+    const Node_id range =
+        ast_.add( Node_kind::Range_expr, Span::merge( ast_.span( lower ), ast_.span( upper ) ), 0, { lower, upper } );
+
+    if( !name.is_valid() )
+    {
+        return error_node( Span::merge( start, cursor_.previous().span ) );
+    }
+
+    const Node_id node =
+        ast_.add( Node_kind::Var_decl, Span::merge( start, cursor_.previous().span ), name.v, { type, range } );
+    ast_.set_name_span( node, name_span );
+    return node;
+}
+
 Node_id Parser::parse_expression_stmt( bool consume_semicolon )
 {
     if( cursor_.check( Token_kind::Plus_plus ) || cursor_.check( Token_kind::Minus_minus ) )
@@ -2771,6 +2815,18 @@ Node_id Parser::parse_for_stmt()
         return error_node( Span::merge( start, cursor_.previous().span ) );
     }
     const u32 condition_start = cursor_.position();
+
+    // D59: `for( u64 i : a..b )`.
+    if( lookahead_.looks_like_counter( cursor_.position() ) )
+    {
+        const Node_id counter = parse_counter();
+        recovery_.close_header( condition_start );
+        const Node_id body = parse_block();
+
+        return ast_.add(
+            Node_kind::For_stmt, Span::merge( start, cursor_.previous().span ), 0, { counter, Node_id {}, Node_id {}, body }
+        );
+    }
 
     // Init. Both parse_var_decl and parse_expression_stmt consume their own `;` which is exactly
     // the first semicolon of the header - so neither needs changing
@@ -7812,6 +7868,60 @@ TEST_CASE( "parser_for_statement", "[parse]" )
     {
         const Parsed p( "i32 main() { for( ; ; ) y++; }" );
         REQUIRE( p.has_errors() );
+    }
+}
+
+// D59: a counting head is a Var_decl initialised by the range, with no condition or update.
+TEST_CASE( "parser_counting_for", "[parse]" )
+{
+    SECTION( "a typed counter" )
+    {
+        const Parsed p( "i32 main() { for( u64 i : 0..xs.size() ) { y = i; } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+
+        const Node_id stmt    = first_statement( p );
+        const Node_id counter = p.child( stmt, 0 );
+        REQUIRE( p.kind( stmt ) == Node_kind::For_stmt );
+        REQUIRE( p.kind( counter ) == Node_kind::Var_decl );
+        REQUIRE( p.ast().is_counter( counter ) );
+        REQUIRE( p.text( p.child( counter, 1 ) ) == "0..xs.size()" );
+        REQUIRE_FALSE( p.child( stmt, 1 ).is_valid() );
+        REQUIRE_FALSE( p.child( stmt, 2 ).is_valid() );
+        REQUIRE( p.text( p.child( stmt, 3 ) ) == "{ y = i; }" );
+    }
+
+    SECTION( "an `auto` counter" )
+    {
+        const Parsed p( "i32 main() { for( auto i : a..b ) { } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE_FALSE( p.has_errors() );
+        REQUIRE( p.ast().is_counter( p.child( first_statement( p ), 0 ) ) );
+        REQUIRE_FALSE( p.child( p.child( first_statement( p ), 0 ), 0 ).is_valid() );
+    }
+
+    SECTION( "a three-part init is not a counter" )
+    {
+        const Parsed p( "i32 main() { for( u64 i = 0; i < 3; i++ ) { } return 0; }" );
+
+        REQUIRE_FALSE( p.ast().is_counter( p.child( first_statement( p ), 0 ) ) );
+    }
+
+    // One error, and the body and what follows the loop are still read.
+    SECTION( "a container after the `:` is refused" )
+    {
+        const Parsed p( "i32 main() { for( const ref i32 x : xs ) { y = 1; } return 0; }" );
+
+        INFO( p.errors() );
+        REQUIRE( p.error_count() == 1 );
+        REQUIRE( p.errors().find( "`for` with `:` counts over a range" ) != std::string::npos );
+        REQUIRE( p.errors().find( "`for( u64 i : 0..xs.size() )`" ) != std::string::npos );
+        REQUIRE( p.text( p.child( first_statement( p ), 3 ) ) == "{ y = 1; }" );
+
+        const Node_id body = p.child( p.child( p.root(), 0 ), 2 );
+        REQUIRE( p.kind( p.child( body, 1 ) ) == Node_kind::Return_stmt );
     }
 }
 

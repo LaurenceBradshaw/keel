@@ -567,11 +567,83 @@ void Statements::visit_while( Node_id id )
 
 void Statements::visit_for( Node_id id )
 {
+    if( ast_.is_counter( ast_.init( id ) ) )
+    {
+        return visit_count( id );
+    }
+
     // `for( ; ; )` leaves the first three invalid. init and update are ordinary statements - a
     // declaration, an assignment, an increment - so they go through visit, not infer.
     visit( ast_.init( id ) );
     expressions_.check_condition( ast_.condition( id ) );
     visit( ast_.update( id ) );
+    loop_depth_ += 1;
+    breakable_depth_ += 1;
+    visit( ast_.body( id ) );
+    loop_depth_ -= 1;
+    breakable_depth_ -= 1;
+}
+
+// D59: `for( u64 i : a..b )`. The bounds are checked against the variable's type, as an
+// initialiser is, so a narrowing bound is D5's error.
+void Statements::visit_count( Node_id id )
+{
+    const Node_id counter    = ast_.init( id );
+    const Node_id range      = ast_.initialiser( counter );
+    const Node_id annotation = ast_.annotation( counter );
+    const Node_id spelled    = ast_.unwrap_const( annotation );
+
+    Type_id type = annotations_.resolve( annotation );
+
+    if( type.is_valid() )
+    {
+        expressions_.check( ast_.lower( range ), type );
+        expressions_.check( ast_.upper( range ), type );
+    }
+    else
+    {
+        type = expressions_.infer( ast_.upper( range ) ); // `auto`: the upper bound's type
+        expressions_.check( ast_.lower( range ), type );
+    }
+
+    if( spelled.is_valid() && ast_.kind( spelled ) == Node_kind::Mode_type )
+    {
+        reporter_.error_at( ast_.span( annotation ), "a counter holds its own count", "write the type on its own" );
+    }
+
+    if( !table_.is_error( type ) && !table_.is_integer( type ) )
+    {
+        reporter_.error_at( ast_.span( range ), "a counting loop counts in an integer type" );
+        type = table_.builtin( Type_kind::Error );
+    }
+
+    const Folded low  = constant_folder_.fold_integer( ast_.lower( range ) );
+    const Folded high = constant_folder_.fold_integer( ast_.upper( range ) );
+
+    if( !table_.is_error( type ) && low.constant && high.constant && !low.overflowed && !high.overflowed )
+    {
+        const auto above = []( Constant a, Constant b )
+        {
+            if( a.negative != b.negative )
+            {
+                return b.negative && ( a.magnitude != 0 || b.magnitude != 0 );
+            }
+
+            return a.negative ? a.magnitude < b.magnitude : a.magnitude > b.magnitude;
+        };
+
+        if( above( low.value, high.value ) )
+        {
+            reporter_.error_at(
+                ast_.span( range ),
+                fmt::format( "`{}` counts nothing", reporter_.text( ast_.span( range ) ) ),
+                "a range runs upwards; the lower bound comes first"
+            );
+        }
+    }
+
+    types_.record( counter, type );
+
     loop_depth_ += 1;
     breakable_depth_ += 1;
     visit( ast_.body( id ) );

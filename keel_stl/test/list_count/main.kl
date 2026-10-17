@@ -1,0 +1,21 @@
+// D59: a list is walked by index. Each check asserts, so the run's exit code says the sum was right.
+import kl::list;
+i32 main()
+{
+    kl::list<i32> xs = kl::list<i32>();
+    for( i32 v : 1..5 )
+    {
+        xs.push( v );
+    }
+    for( u64 i : 0..xs.size() )
+    {
+        xs[i] *= 2;
+    }
+    i64 sum = 0;
+    for( u64 i : 0..xs.size() )
+    {
+        sum += xs[i];
+    }
+    assert( sum == 20 );
+    return 0;
+}

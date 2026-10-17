@@ -233,6 +233,17 @@ bool Places::check_writable( Node_id target, Node_id current_function, bool repl
         return false;
     }
 
+    if( ast_.is_counter( root ) )
+    {
+        reporter_.error_at(
+            ast_.span( target ),
+            fmt::format( "`{}` counts the loop, so it cannot be modified", interner_.text( ast_.name( root ) ) ),
+            "step it yourself with `for( u64 i = a; i < b; i++ )`"
+        );
+
+        return false;
+    }
+
     if( ast_.is_const_binding( root ) )
     {
         // The receiver reads differently from any other const binding: the `const` that made it one
@@ -275,7 +286,7 @@ bool Places::check_writable( Node_id target, Node_id current_function, bool repl
 }
 
 // Whether a place may be read and not written: through a pointer to `const` or a `const` field, from a `const ref` return, or
-// rooted in a `const` binding, a pattern binding or a read-only borrow. A temporary is check_writable's alone.
+// rooted in a `const` binding, a pattern binding, a counter or a read-only borrow. A temporary is check_writable's alone.
 bool Places::is_read_only( Node_id target, Node_id current_function ) const
 {
     if( through_const_pointer( target ).is_valid() || const_field( target ).is_valid() )
@@ -291,7 +302,7 @@ bool Places::is_read_only( Node_id target, Node_id current_function ) const
 
     const Node_id root = place_root( target, current_function );
     if( root.is_valid() && ( ( ast_.kind( root ) == Node_kind::Binding_decl && !owns_binding( root ) ) ||
-                             is_borrow_binding( root ) || ast_.is_const_binding( root ) ) )
+                             is_borrow_binding( root ) || ast_.is_const_binding( root ) || ast_.is_counter( root ) ) )
     {
         return true;
     }

@@ -185,6 +185,7 @@ public:
     Keyword call_marker( Node_id param ) const;   // what a call site writes; `const ref` writes none (D31)
     bool    is_ref_parameter( Node_id param ) const;
     bool    is_const_binding( Node_id decl ) const;
+    bool    is_counter( Node_id decl ) const; // a counting `for`'s variable: a Var_decl initialised by a Range_expr
     bool    is_const_field( Node_id decl ) const;
 
     // `const ref T` is Const_type( Mode_type( T ) ); this steps through the Const_type.

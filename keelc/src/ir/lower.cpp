@@ -3081,8 +3081,30 @@ void Lowering::lower_for( Node_id id )
 
     drops_.push_scope();
 
+    // D59: a counter and its end, each bound evaluated once, lower first. Invalid otherwise.
+    const bool    counts     = ast_.is_counter( init );
+    const Type_id count_type = counts ? type_of( init ) : Type_id {};
+    Local_id      count {};
+    Local_id      end {};
+
+    if( counts )
+    {
+        const Node_id range = ast_.initialiser( init );
+        count               = builder_.add_local( count_type, span, ast_.name( init ) );
+        end                 = builder_.add_local( count_type, span );
+        locals_.emplace( init.v, count );
+
+        drops_.begin_statement();
+        for( const auto& [local, bound] : { std::pair { count, ast_.lower( range ) }, std::pair { end, ast_.upper( range ) } } )
+        {
+            builder_.storage_live( local, span );
+            builder_.assign( builder_.place( local ), use( united( lower_expression( bound ), count_type, span ) ), span );
+            drops_.add_to_scope( local );
+        }
+        drops_.end_statement( span );
+    }
     // The init runs once, in the block being left.
-    if( init.is_valid() )
+    else if( init.is_valid() )
     {
         lower_statement( init );
     }
@@ -3100,7 +3122,22 @@ void Lowering::lower_for( Node_id id )
 
     drops_.end_statement( span );
 
-    if( condition.is_valid() )
+    if( counts )
+    {
+        const Type_id boolean = types_.table().builtin( Type_kind::Bool );
+        const Operand below   = temporary(
+            binary(
+                Token_kind::Less,
+                copy( builder_.place( count ), count_type ),
+                copy( builder_.place( end ), count_type ),
+                boolean
+            ),
+            boolean,
+            span
+        );
+        builder_.terminate_branch( below, body_block, break_target(), span );
+    }
+    else if( condition.is_valid() )
     {
         builder_.terminate_branch( lower_expression( condition ), body_block, break_target(), span );
     }
@@ -3129,7 +3166,17 @@ void Lowering::lower_for( Node_id id )
     {
         builder_.switch_to( latch );
 
-        if( update.is_valid() )
+        // Unchecked: the header held `count < end`, so `count + 1` is at most `end`.
+        if( counts )
+        {
+            const Operand one = constant( literal_pool_.add_integer( 1 ), count_type );
+            builder_.assign(
+                builder_.place( count ),
+                binary( Token_kind::Plus, copy( builder_.place( count ), count_type ), one, count_type ),
+                span
+            );
+        }
+        else if( update.is_valid() )
         {
             lower_statement( update );
         }

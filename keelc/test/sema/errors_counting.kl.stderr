@@ -1,0 +1,55 @@
+error: `i` counts the loop, so it cannot be modified
+  --> sema/errors_counting.kl:13:9
+   |
+13 |         i += 1;
+   |         ^ step it yourself with `for( u64 i = a; i < b; i++ )`
+
+error: `i` counts the loop, so it cannot be modified
+  --> sema/errors_counting.kl:14:9
+   |
+14 |         i++;
+   |         ^ step it yourself with `for( u64 i = a; i < b; i++ )`
+
+error: `i` counts the loop, so it cannot be modified
+  --> sema/errors_counting.kl:15:9
+   |
+15 |         i = 0;
+   |         ^ step it yourself with `for( u64 i = a; i < b; i++ )`
+
+error: `i` counts the loop, so it cannot be modified
+  --> sema/errors_counting.kl:16:21
+   |
+16 |         ref u64 r = i;
+   |                     ^ step it yourself with `for( u64 i = a; i < b; i++ )`
+
+error: `i` counts the loop, so it cannot be modified
+  --> sema/errors_counting.kl:18:19
+   |
+18 |         take( ref i );
+   |                   ^ step it yourself with `for( u64 i = a; i < b; i++ )`
+
+error: expected `i32`, but got `u64`
+  --> sema/errors_counting.kl:21:21
+   |
+21 |     for( i32 i : 0..n )
+   |                     ^
+
+error: a counting loop counts in an integer type
+  --> sema/errors_counting.kl:25:18
+   |
+25 |     for( f64 x : 0.0..1.0 )
+   |                  ^^^^^^^^
+
+error: `5..2` counts nothing
+  --> sema/errors_counting.kl:29:18
+   |
+29 |     for( u64 i : 5..2 )
+   |                  ^^^^ a range runs upwards; the lower bound comes first
+
+error: a counter holds its own count
+  --> sema/errors_counting.kl:37:10
+   |
+37 |     for( ref u64 i : 0..n )
+   |          ^^^ write the type on its own
+
+9 errors generated
