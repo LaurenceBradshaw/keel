@@ -226,7 +226,8 @@ bool Bounds::conforms( Type_id type, Type_id interface ) const
         return promises( type, interface );
     }
 
-    return table_.is_error( type ) || table_.implements( type, interface ) || supplies( ast_, table_, type, interface );
+    return table_.is_error( type ) || types_.conformances().declares( table_, type, interface ) ||
+           types_.conformances().supplies( ast_, table_, type, interface );
 }
 
 bool Bounds::adopts_text( Type_id type, Type_id text ) const
@@ -264,8 +265,11 @@ void Bounds::check_bounds( Node_id parameter, Span at, Type_id argument, std::st
 
             // What a failing interface or bound requires is the same mistake said again.
             if( conforms( argument, interface ) ||
-                ( not_a_number && ( interface == comparable || table_.refines( comparable, interface ) ) ) ||
-                std::ranges::any_of( failing, [&]( Type_id failed ) { return table_.refines( failed, interface ); } ) )
+                ( not_a_number && ( interface == comparable || types_.conformances().refines( table_, comparable, interface ) )
+                ) ||
+                std::ranges::any_of(
+                    failing, [&]( Type_id failed ) { return types_.conformances().refines( table_, failed, interface ); }
+                ) )
             {
                 continue;
             }
@@ -297,7 +301,8 @@ void Bounds::check_bounds( Node_id parameter, Span at, Type_id argument, std::st
                     table_.name( interface ),
                     table_.name( argument )
                 ),
-                table_.is_prelude_interface( interface ) && supplied_by_kind( ast_, table_, argument, interface )
+                table_.is_prelude_interface( interface ) &&
+                        Conformance_model::supplied_by_kind( ast_, table_, argument, interface )
                     ? dropped_help( argument, interface )
                 : table_.is_prelude_interface( interface ) &&
                         ( table_.is_builtin( argument ) || table_.is_pointer( argument ) || table_.is_many_pointer( argument ) )
@@ -420,14 +425,11 @@ std::string Bounds::dropped_help( Type_id type, Type_id interface ) const
     const Type_id equatable = table_.declared( table_.prelude().equatable );
     std::string   place;
 
-    // A scan, not Conformances: a signature's annotation reaches here before those are built.
-    for( const Node_id block : ast_.declarations( ast_.root() ) )
+    // The relation as declared, since a signature's annotation reaches here before methods are matched.
+    if( const Node_id block = types_.conformances().implementer_of( table_, type, equatable );
+        block.is_valid() && ast_.kind( block ) == Node_kind::Implements_decl )
     {
-        if( ast_.kind( block ) == Node_kind::Implements_decl && types_.type_of( block ) == type &&
-            types_.type_of( ast_.implemented( block )[0] ) == equatable )
-        {
-            place = reporter_.position( ast_.span( ast_.implemented( block )[0] ) );
-        }
+        place = reporter_.position( ast_.span( ast_.implemented( block )[0] ) );
     }
 
     std::vector<std::string_view> dropped;
@@ -436,7 +438,8 @@ std::string Bounds::dropped_help( Type_id type, Type_id interface ) const
     {
         const Type_id each = table_.declared( which );
 
-        if( supplied_by_kind( ast_, table_, type, each ) && !supplies( ast_, table_, type, each ) )
+        if( Conformance_model::supplied_by_kind( ast_, table_, type, each ) &&
+            !types_.conformances().supplies( ast_, table_, type, each ) )
         {
             dropped.push_back( table_.name( each ) );
         }
@@ -562,7 +565,7 @@ Type_id Bounds::narrowing_witness( Type_id from, Type_id to ) const
 {
     if( !table_.is_parameter( from ) && !table_.is_parameter( to ) )
     {
-        return table_.holds( from, to ) ? Type_id {} : from;
+        return types_.conformances().holds( table_, from, to ) ? Type_id {} : from;
     }
 
     const std::vector<Type_id> froms = possible_types( from );
@@ -579,7 +582,7 @@ Type_id Bounds::narrowing_witness( Type_id from, Type_id to ) const
     {
         for( const Type_id t : tos )
         {
-            if( !table_.holds( f, t ) )
+            if( !types_.conformances().holds( table_, f, t ) )
             {
                 return table_.is_parameter( from ) ? f : t;
             }
@@ -755,7 +758,7 @@ void Bounds::require_refinements( std::vector<Type_id>& interfaces ) const
 {
     for( std::size_t i = 0; i < interfaces.size(); ++i )
     {
-        for( const Type_id refined : table_.refinements( interfaces[i] ) )
+        for( const Type_id refined : types_.conformances().refinements( table_, interfaces[i] ) )
         {
             if( std::find( interfaces.begin(), interfaces.end(), refined ) == interfaces.end() )
             {

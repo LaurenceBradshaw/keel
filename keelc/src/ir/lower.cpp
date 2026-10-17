@@ -56,6 +56,16 @@ private:
         std::vector<Type_id> type_arguments;
     };
     Instance_target at_instance( Type_id held ) const;
+    // Who answers `requirement` on `held`: the requirement itself, through the vtable an interface
+    // carries; otherwise the implementer's method at `held`'s instance, invalid where the compiler
+    // supplies the conformance.
+    struct Requirement_target
+    {
+        Node_id         method;
+        Instance_target at;
+        bool            through_vtable = false;
+    };
+    Requirement_target requirement_target( Node_id requirement, Type_id held, Type_id interface ) const;
 
     Place   place_for( Node_id declaration, Type_id owner = {} );
     Type_id static_owner( Node_id named, Node_id decl );
@@ -108,14 +118,14 @@ private:
     );
     // In an instance, the method of `held`'s own conformance that `op` calls, or invalid where the
     // operator is the compiler's.
-    Node_id bound_operator( Token_kind op, Type_id held ) const;
-    Operand lower_operator_index( Node_id id, Node_id method );
-    Operand lower_variant_construction( Node_id id );
-    Operand lower_try( Node_id id );
-    Operand lower_empty_variant( Node_id id );
-    void    bind_variant_pattern( Place matched, Type_id matched_type, Node_id label, bool consumes );
-    Place   lower_place( Node_id id );     // names where a value lives
-    void    lower_statement( Node_id id ); // emits, produces nothing
+    Requirement_target bound_operator( Token_kind op, Type_id held ) const;
+    Operand            lower_operator_index( Node_id id, Node_id method );
+    Operand            lower_variant_construction( Node_id id );
+    Operand            lower_try( Node_id id );
+    Operand            lower_empty_variant( Node_id id );
+    void               bind_variant_pattern( Place matched, Type_id matched_type, Node_id label, bool consumes );
+    Place              lower_place( Node_id id );     // names where a value lives
+    void               lower_statement( Node_id id ); // emits, produces nothing
     // `bindings` are the *callee's*: the parameter's type is written in its declaration, so
     // substituting with this function's would ask it to bind a parameter it has never heard of.
     Operand lower_argument( Node_id argument, Node_id parameter, const Bindings& bindings );
@@ -422,6 +432,18 @@ Lowering::Instance_target Lowering::at_instance( Type_id held ) const
         aggregate_bindings( ast_, types_.table(), held, types_.recorded() ),
         std::vector<Type_id>( arguments.begin(), arguments.end() )
     };
+}
+
+Lowering::Requirement_target Lowering::requirement_target( Node_id requirement, Type_id held, Type_id interface ) const
+{
+    const Type_table& table = types_.table();
+
+    if( table.is_interface( held ) )
+    {
+        return { requirement, { table.instance_bindings( held ), {} }, true };
+    }
+
+    return { types_.conformances().method_for( table, held, interface, requirement ), at_instance( held ) };
 }
 
 Place Lowering::place_for( Node_id declaration, Type_id owner )
@@ -1390,18 +1412,15 @@ Operand Lowering::lower_string_literal( Node_id id )
         return copy( builder_.place( local ), type );
     }
 
-    Type_table&   table       = types_.table();
-    const Node_id from        = table.prelude().from;
-    const Node_id requirement = ast_.members( from )[0];
-    const Type_id interface   = table.interface( from, std::array { text }, "from" );
-    const Node_id method      = types_.conformances().method_for( table, type, interface, requirement );
+    const Node_id      from = types_.table().prelude().from;
+    Requirement_target target =
+        requirement_target( ast_.members( from )[0], type, types_.table().interface( from, std::array { text }, "from" ) );
 
-    assert( method.is_valid() && "an adopted literal's type implements `from<str>`" );
+    assert( target.method.is_valid() && "an adopted literal's type implements `from<str>`" );
 
-    Instance_target target    = at_instance( type );
-    const Operand   operand[] = { copy( builder_.place( local ), text ) };
+    const Operand operand[] = { copy( builder_.place( local ), text ) };
 
-    return emit_call( id, method, operand, target.bound, std::move( target.type_arguments ) );
+    return emit_call( id, target.method, operand, target.at.bound, std::move( target.at.type_arguments ) );
 }
 
 Operand Lowering::lower_binary( Node_id id )
@@ -1422,11 +1441,9 @@ Operand Lowering::lower_binary( Node_id id )
     }
 
     // Under a bound, at a type whose own conformance answers the operator.
-    if( const Type_id held = type_of( ast_.lhs( id ) ); bound_operator( op, held ).is_valid() )
+    if( Requirement_target target = bound_operator( op, type_of( ast_.lhs( id ) ) ); target.method.is_valid() )
     {
-        Instance_target target = at_instance( held );
-
-        return lower_operator_call( id, bound_operator( op, held ), target.bound, std::move( target.type_arguments ) );
+        return lower_operator_call( id, target.method, target.at.bound, std::move( target.at.type_arguments ) );
     }
 
     const Span    span      = ast_.span( id );
@@ -1463,20 +1480,14 @@ Operand Lowering::lower_binary( Node_id id )
     return temporary( checked_arithmetic( op, left, right, type, span ), type, span );
 }
 
-Node_id Lowering::bound_operator( Token_kind op, Type_id held ) const
+Lowering::Requirement_target Lowering::bound_operator( Token_kind op, Type_id held ) const
 {
-    const Type_table& table = types_.table();
+    const Type_table& table     = types_.table();
+    const Type_id     interface = Conformance_model::interface_for( table, op );
 
-    if( !table.is_struct( held ) && !table.is_enum( held ) )
+    if( ( !table.is_struct( held ) && !table.is_enum( held ) ) || !interface.is_valid() )
     {
-        return Node_id {};
-    }
-
-    const Type_id interface = interface_for( table, op );
-
-    if( !interface.is_valid() )
-    {
-        return Node_id {};
+        return {};
     }
 
     // Each prelude bound declares exactly one method.
@@ -1484,7 +1495,7 @@ Node_id Lowering::bound_operator( Token_kind op, Type_id held ) const
 
     assert( members.size() == 1 );
 
-    return types_.conformances().method_for( table, held, interface, members[0] );
+    return requirement_target( members[0], held, interface );
 }
 
 Operand Lowering::call_operator(
@@ -1499,13 +1510,14 @@ Operand Lowering::call_operator(
     // A bound's operator: through an interface's vtable, or the instance's implementer called directly.
     if( ast_.is_requirement( method ) )
     {
-        const Node_id operand = ast_.kind( id ) == Node_kind::Binary_expr  ? ast_.lhs( id )
-                                : ast_.kind( id ) == Node_kind::Unary_expr ? ast_.operand( id )
-                                                                           : ast_.target( id );
-        Type_table&   table   = types_.table();
-        const Type_id held    = type_of( operand );
+        const Node_id      operand = ast_.kind( id ) == Node_kind::Binary_expr  ? ast_.lhs( id )
+                                     : ast_.kind( id ) == Node_kind::Unary_expr ? ast_.operand( id )
+                                                                                : ast_.target( id );
+        Type_table&        table   = types_.table();
+        const Type_id      held    = type_of( operand );
+        Requirement_target target  = requirement_target( method, held, table.substitute( types_.through_of( id ), bindings_ ) );
 
-        if( table.is_interface( held ) )
+        if( target.through_vtable )
         {
             const bool    reads    = ast_.is_const_method( method );
             const Operand receiver = address_operand(
@@ -1514,16 +1526,13 @@ Operand Lowering::call_operator(
                 ast_.span( id ),
                 reads ? Address_purpose::Read : Address_purpose::Borrow
             );
-            const Bindings instance = table.instance_bindings( held );
 
-            return lower_method_call_on( id, method, receiver, arguments, type_under( method, instance ), instance, {} );
+            return lower_method_call_on(
+                id, method, receiver, arguments, type_under( method, target.at.bound ), target.at.bound, {}
+            );
         }
 
-        const Node_id implementer =
-            types_.conformances().method_for( table, held, table.substitute( types_.through_of( id ), bindings_ ), method );
-        Instance_target target = at_instance( held );
-
-        return call_operator( id, implementer, object, arguments, target.bound, std::move( target.type_arguments ) );
+        return call_operator( id, target.method, object, arguments, target.at.bound, std::move( target.at.type_arguments ) );
     }
 
     const Operand receiver = address_operand(
@@ -1943,25 +1952,12 @@ Operand Lowering::lower_interface_call( Node_id id, Node_id requirement )
                          );
     };
 
-    if( types_.table().is_interface( held ) )
-    {
-        return lower_method_call_on(
-            id,
-            requirement,
-            receiver( types_.table().pointer_to( held, reads ) ),
-            ast_.arguments( id ),
-            type_of( id ),
-            types_.table().instance_bindings( held ),
-            {}
-        );
-    }
-
     // The instance selection chose, recorded on the callee.
-    const Node_id method = types_.conformances().method_for( types_.table(), held, type_of( ast_.callee( id ) ), requirement );
+    Requirement_target target = requirement_target( requirement, held, type_of( ast_.callee( id ) ) );
 
     // No method answers where the compiler's conformance does, and only `hashable`'s `hash` has one:
     // it is a call of the prelude hasher's `write` with the value's word.
-    if( !method.is_valid() )
+    if( !target.method.is_valid() )
     {
         assert(
             ast_.enclosing_aggregate( requirement ) == types_.table().prelude().hashable &&
@@ -1981,16 +1977,14 @@ Operand Lowering::lower_interface_call( Node_id id, Node_id requirement )
         return copy( builder_.place( result ), type_of( id ) );
     }
 
-    Instance_target target = at_instance( held );
-
     return lower_method_call_on(
         id,
-        method,
+        target.method,
         receiver( types_.table().pointer_to( held, reads ) ),
         ast_.arguments( id ),
         type_of( id ),
-        target.bound,
-        std::move( target.type_arguments )
+        target.at.bound,
+        std::move( target.at.type_arguments )
     );
 }
 
@@ -2116,20 +2110,17 @@ Operand Lowering::lower_call( Node_id id )
 // The implementer's own static method, under the bindings of the type `T` stands for.
 Operand Lowering::lower_static_interface_call( Node_id id, Node_id requirement )
 {
-    const Node_id path   = ast_.callee( id );
-    const Type_id held   = type_of( ast_.qualifier( path ) );
-    const Node_id method = types_.conformances().method_for( types_.table(), held, type_of( path ), requirement );
+    const Node_id      path   = ast_.callee( id );
+    Requirement_target target = requirement_target( requirement, type_of( ast_.qualifier( path ) ), type_of( path ) );
 
-    assert( method.is_valid() && "a static requirement is answered by a declared method" );
-
-    Instance_target target = at_instance( held );
+    assert( target.method.is_valid() && "a static requirement is answered by a declared method" );
 
     return emit_call(
         id,
-        method,
-        lower_call_arguments( ast_.arguments( id ), ast_.params( method ), target.bound ),
-        target.bound,
-        std::move( target.type_arguments )
+        target.method,
+        lower_call_arguments( ast_.arguments( id ), ast_.params( target.method ), target.at.bound ),
+        target.at.bound,
+        std::move( target.at.type_arguments )
     );
 }
 
@@ -3554,7 +3545,7 @@ Function drop_function( const Ast& ast, Types& types, Type_id implementer )
 bool implements_anything( const Types& types, Type_id type )
 {
     return std::ranges::any_of(
-        types.conformances().conformances,
+        types.conformances().all(),
         [&]( const Conformance& conformance )
         { return types.conformances().of( types.table(), type, conformance.interface ) != nullptr; }
     );

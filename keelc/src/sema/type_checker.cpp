@@ -57,7 +57,7 @@ public:
           places_( ast, interner, resolution, types_, bounds_, callees_, reporter_ ),
           generic_recursion_( ast, interner, table_, reporter_ ),
           literals_( ast, literals, types_, bounds_, constant_folder_, reporter_ ),
-          operators_( ast, interner, table_, bounds_, reporter_ ),
+          operators_( ast, interner, table_, types_.conformances(), bounds_, reporter_ ),
           overloads_( ast, interner, resolution, types_, aggregates_, bounds_, annotations_, reporter_ ),
           expressions_(
               ast,
@@ -74,7 +74,6 @@ public:
               literals_,
               operators_,
               overloads_,
-              conformances_,
               reporter_
           ),
           coverage_( ast, interner, types_, aggregates_, constant_folder_, expressions_, reporter_ ),
@@ -131,7 +130,6 @@ private:
     Literals          literals_;
     Operators         operators_;
     Overloads         overloads_;
-    Conformances      conformances_; // empty until every signature is typed
     Expressions       expressions_;
     Coverage          coverage_;
     Statements        statements_;
@@ -157,8 +155,8 @@ Types Checker::run()
     signatures_.declare();
 
     // Every signature is typed by here, and nothing below reads the answer before a body does.
-    conformances_ = check_conformances( ast_, table_, types_.recorded() );
-    report_conformance_errors( ast_, interner_, table_, types_.recorded(), conformances_.errors, reporter_ );
+    types_.conformances().complete( ast_, table_, types_.recorded() );
+    report_conformance_errors( ast_, interner_, table_, types_.recorded(), types_.conformances(), reporter_ );
 
     statements_.visit( ast_.root() );
 
@@ -176,7 +174,7 @@ Types Checker::run()
         generic_recursion_.take_instantiations(),
         overloads_.take_instantiations(),
         generic_recursion_.take_generic_calls(),
-        std::move( conformances_ )
+        types_.take_conformances()
     );
 }
 

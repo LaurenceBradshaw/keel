@@ -3,6 +3,8 @@
 
 #include "sema/conformances.h"
 #include <fmt/format.h>
+#include <algorithm>
+#include <cassert>
 #include <optional>
 #include "sema/type_checker.h"
 
@@ -151,11 +153,233 @@ bool conforms_as( const Type_table& table, Type_id conformed, Type_id type )
            table.get( conformed ).declaration == table.get( type ).declaration;
 }
 
+// What `type`'s declaration says it implements, `declared`, is `interface` at this instance.
+bool declares_as( const Type_table& table, Type_id declared, Type_id type, Type_id interface )
+{
+    return table.substitutes_to( declared, table.instance_bindings( type ), interface );
+}
+
 } // namespace
 
-const Conformance* Conformances::find( Node_id implementer, Type_id interface ) const
+void Conformance_model::declare( const Type_table& table, Node_id implementer, Type_id type, Type_id interface )
 {
-    for( const Conformance& conformance : conformances )
+    const bool aggregate = table.is_struct( type ) || table.is_enum( type );
+
+    std::vector<Declared>& implemented = aggregate ? declared_[table.get( type ).declaration.v] : builtin_[type.v];
+    if( std::ranges::none_of( implemented, [&]( const Declared& each ) { return each.interface == interface; } ) )
+    {
+        implemented.push_back( { implementer, interface } );
+    }
+}
+
+void Conformance_model::declare_refinement( const Type_table& table, Type_id interface, Type_id refined )
+{
+    refinements_[table.get( interface ).declaration.v].push_back( refined );
+}
+
+void Conformance_model::declare_bound_only( Node_id interface, Node_id method )
+{
+    bound_only_.emplace( interface.v, method );
+}
+
+Node_id Conformance_model::implementer_of( const Type_table& table, Type_id type, Type_id interface ) const
+{
+    if( !type.is_valid() || !table.is_interface( interface ) )
+    {
+        return Node_id {};
+    }
+
+    const bool  aggregate = table.is_struct( type ) || table.is_enum( type );
+    const auto& by        = aggregate ? declared_ : builtin_;
+    const auto  found     = by.find( aggregate ? table.get( type ).declaration.v : type.v );
+
+    if( found == by.end() )
+    {
+        return Node_id {};
+    }
+
+    for( const Declared& each : found->second )
+    {
+        if( aggregate ? declares_as( table, each.interface, type, interface ) : each.interface == interface )
+        {
+            return each.implementer;
+        }
+    }
+
+    return Node_id {};
+}
+
+bool Conformance_model::declares( const Type_table& table, Type_id type, Type_id interface ) const
+{
+    return implementer_of( table, type, interface ).is_valid();
+}
+
+// A type's own `==` would disagree with the compiler's hash, so declaring `equatable` drops all three.
+bool Conformance_model::supplies( const Ast& ast, const Type_table& table, Type_id type, Type_id interface ) const
+{
+    return supplied_by_kind( ast, table, type, interface ) && !declares( table, type, interface ) &&
+           !declares( table, type, table.declared( table.prelude().equatable ) );
+}
+
+// A number gets all three. `bool`, a payload-free enum and a pointer get equality and a hash, but
+// no order. An interface pointer is two words, and gets nothing yet.
+bool Conformance_model::supplied_by_kind( const Ast& ast, const Type_table& table, Type_id type, Type_id interface )
+{
+    if( !interface.is_valid() )
+    {
+        return false;
+    }
+
+    const bool number = table.is_integer( type ) || table.is_float( type );
+
+    if( interface == table.declared( table.prelude().comparable ) )
+    {
+        return number;
+    }
+
+    if( interface != table.declared( table.prelude().equatable ) && interface != table.declared( table.prelude().hashable ) )
+    {
+        return false;
+    }
+
+    return number || type == table.builtin( Type_kind::Bool ) ||
+           ( table.is_enum( type ) && !ast.enum_has_payload( table.get( type ).declaration ) ) ||
+           ( ( table.is_pointer( type ) || table.is_many_pointer( type ) ) && !table.is_interface_pointer( type ) );
+}
+
+Type_id Conformance_model::interface_for( const Type_table& table, Token_kind op )
+{
+    switch( op )
+    {
+    case Token_kind::Equal_equal:
+    case Token_kind::Bang_equal:
+        return table.declared( table.prelude().equatable );
+    case Token_kind::Less:
+    case Token_kind::Greater:
+    case Token_kind::Less_equal:
+    case Token_kind::Greater_equal:
+    case Token_kind::Less_equal_greater:
+        return table.declared( table.prelude().comparable );
+
+    default:
+        return Type_id {};
+    }
+}
+
+bool Conformance_model::holds( const Type_table& table, Type_id from, Type_id to ) const
+{
+    if( table.references_error( from ) || table.references_error( to ) || from == to )
+    {
+        return true;
+    }
+
+    const Type& f = table.get( from );
+    const Type& t = table.get( to );
+
+    // An implementer reaches its interface only as a borrow, since no `Shape` is ever held by value.
+    if( t.kind == Type_kind::Interface )
+    {
+        return declares( table, from, to );
+    }
+
+    if( table.is_box( from ) && table.is_box( to ) && table.is_interface( t.arguments[0] ) )
+    {
+        return declares( table, f.arguments[0], t.arguments[0] );
+    }
+
+    if( t.kind == Type_kind::Pointer && f.kind == Type_kind::Pointer && table.is_interface( t.element ) )
+    {
+        return declares( table, f.element, t.element ) && ( !f.const_element || t.const_element );
+    }
+
+    return table.holds( from, to );
+}
+
+std::vector<Type_id> Conformance_model::refinements( Type_table& table, Type_id interface ) const
+{
+    if( !interface.is_valid() || !table.is_interface( interface ) )
+    {
+        return {};
+    }
+
+    const auto found = refinements_.find( table.get( interface ).declaration.v );
+    if( found == refinements_.end() )
+    {
+        return {};
+    }
+
+    const Bindings       bindings = table.instance_bindings( interface );
+    std::vector<Type_id> result;
+
+    for( const Type_id refined : found->second )
+    {
+        result.push_back( table.substitute( refined, bindings ) );
+    }
+
+    return result;
+}
+
+// Recursion is safe: a refinement closing a cycle is refused before it is declared.
+bool Conformance_model::refines( Type_table& table, Type_id interface, Type_id other ) const
+{
+    for( const Type_id refined : refinements( table, interface ) )
+    {
+        if( refined == other || refines( table, refined, other ) )
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// By declaration, as written, so it terminates on a cycle `refines` would follow forever.
+bool Conformance_model::refines_declaration( const Type_table& table, Node_id interface, Node_id other ) const
+{
+    const auto found = refinements_.find( interface.v );
+    if( found == refinements_.end() )
+    {
+        return false;
+    }
+
+    for( const Type_id refined : found->second )
+    {
+        const Node_id declaration = table.get( refined ).declaration;
+        if( declaration == other || refines_declaration( table, declaration, other ) )
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+Node_id Conformance_model::bound_only_method( const Type_table& table, Type_id interface ) const
+{
+    if( !interface.is_valid() || !table.is_interface( interface ) )
+    {
+        return Node_id {};
+    }
+
+    const auto found = bound_only_.find( table.get( interface ).declaration.v );
+    return found == bound_only_.end() ? Node_id {} : found->second;
+}
+
+std::span<const Conformance> Conformance_model::all() const
+{
+    assert( completed_ && "the method map is read only once every signature is typed" );
+    return conformances_;
+}
+
+std::span<const Conformance_error> Conformance_model::errors() const
+{
+    assert( completed_ && "the method map is read only once every signature is typed" );
+    return errors_;
+}
+
+const Conformance* Conformance_model::find( Node_id implementer, Type_id interface ) const
+{
+    for( const Conformance& conformance : all() )
     {
         if( conformance.implementer == implementer && conformance.interface == interface )
         {
@@ -166,11 +390,11 @@ const Conformance* Conformances::find( Node_id implementer, Type_id interface ) 
     return nullptr;
 }
 
-const Conformance* Conformances::of( const Type_table& table, Type_id type, Type_id interface ) const
+const Conformance* Conformance_model::of( const Type_table& table, Type_id type, Type_id interface ) const
 {
-    for( const Conformance& conformance : conformances )
+    for( const Conformance& conformance : all() )
     {
-        if( conforms_as( table, conformance.type, type ) && table.declares_as( conformance.interface, type, interface ) )
+        if( conforms_as( table, conformance.type, type ) && declares_as( table, conformance.interface, type, interface ) )
         {
             return &conformance;
         }
@@ -179,11 +403,11 @@ const Conformance* Conformances::of( const Type_table& table, Type_id type, Type
     return nullptr;
 }
 
-Node_id Conformances::method_for( const Type_table& table, Type_id type, Type_id interface, Node_id requirement ) const
+Node_id Conformance_model::method_for( const Type_table& table, Type_id type, Type_id interface, Node_id requirement ) const
 {
-    for( const Conformance& conformance : conformances )
+    for( const Conformance& conformance : all() )
     {
-        if( !conforms_as( table, conformance.type, type ) || !table.declares_as( conformance.interface, type, interface ) )
+        if( !conforms_as( table, conformance.type, type ) || !declares_as( table, conformance.interface, type, interface ) )
         {
             continue;
         }
@@ -200,9 +424,9 @@ Node_id Conformances::method_for( const Type_table& table, Type_id type, Type_id
     return Node_id {};
 }
 
-Node_id Conformances::block_declaring( const Ast& ast, Type_id type, Symbol_id name ) const
+Node_id Conformance_model::block_declaring( const Ast& ast, Type_id type, Symbol_id name ) const
 {
-    for( const Conformance& conformance : conformances )
+    for( const Conformance& conformance : all() )
     {
         if( ast.kind( conformance.implementer ) != Node_kind::Implements_decl || conformance.type != type )
         {
@@ -221,18 +445,9 @@ Node_id Conformances::block_declaring( const Ast& ast, Type_id type, Symbol_id n
     return Node_id {};
 }
 
-namespace
-{
-
 // The conformance `written` declares for `type`, whose methods are `implementer`'s members.
-void conform(
-    const Ast&               ast,
-    Type_table&              table,
-    std::span<const Type_id> recorded,
-    Node_id                  implementer,
-    Node_id                  written,
-    Type_id                  type,
-    Conformances&            result
+void Conformance_model::conform(
+    const Ast& ast, Type_table& table, std::span<const Type_id> recorded, Node_id implementer, Node_id written, Type_id type
 )
 {
     const Type_id interface = recorded_type( recorded, written );
@@ -242,9 +457,9 @@ void conform(
         return; // reported where it was resolved
     }
 
-    if( const Conformance* first = result.of( table, type, interface ) )
+    if( const Conformance* first = of( table, type, interface ) )
     {
-        result.errors.push_back(
+        errors_.push_back(
             { .problem     = Conformance_problem::Repeated,
               .at          = ast.span( written ),
               .implementer = implementer,
@@ -276,7 +491,7 @@ void conform(
 
         if( problem && !refused )
         {
-            result.errors.push_back( {
+            errors_.push_back( {
                 .problem     = *problem,
                 .at          = ast.span( written ),
                 .implementer = implementer,
@@ -289,11 +504,11 @@ void conform(
     }
 
     // Only what the interface requires directly: each of those checks its own when the type conforms to it.
-    for( const Type_id refined : table.refinements( interface ) )
+    for( const Type_id refined : refinements( table, interface ) )
     {
-        if( !table.implements( type, refined ) && !supplies( ast, table, type, refined ) )
+        if( !declares( table, type, refined ) && !supplies( ast, table, type, refined ) )
         {
-            result.errors.push_back( {
+            errors_.push_back( {
                 .problem     = Conformance_problem::Unrefined,
                 .at          = ast.span( written ),
                 .implementer = implementer,
@@ -314,7 +529,7 @@ void conform(
 
             if( ast.kind( member ) == Node_kind::Method_decl && !requested )
             {
-                result.errors.push_back( {
+                errors_.push_back( {
                     .problem     = Conformance_problem::Unrequested,
                     .at          = ast.name_span( member ),
                     .implementer = implementer,
@@ -326,14 +541,13 @@ void conform(
         }
     }
 
-    result.conformances.push_back( std::move( conformance ) );
+    conformances_.push_back( std::move( conformance ) );
 }
 
-} // namespace
-
-Conformances check_conformances( const Ast& ast, Type_table& table, std::span<const Type_id> recorded )
+void Conformance_model::complete( const Ast& ast, Type_table& table, std::span<const Type_id> recorded )
 {
-    Conformances result;
+    assert( !completed_ && "conformances are completed once" );
+    completed_ = true; // conform's own `of` reads what is built so far
 
     for( const Node_id decl : ast.declarations( ast.root() ) )
     {
@@ -344,7 +558,7 @@ Conformances check_conformances( const Ast& ast, Type_table& table, std::span<co
             // A refused block conforms nothing.
             if( type.is_valid() && !table.is_error( type ) )
             {
-                conform( ast, table, recorded, decl, ast.implemented( decl )[0], type, result );
+                conform( ast, table, recorded, decl, ast.implemented( decl )[0], type );
             }
 
             continue;
@@ -357,63 +571,9 @@ Conformances check_conformances( const Ast& ast, Type_table& table, std::span<co
 
         for( const Node_id written : ast.implemented( decl ) )
         {
-            conform( ast, table, recorded, decl, written, recorded_type( recorded, decl ), result );
+            conform( ast, table, recorded, decl, written, recorded_type( recorded, decl ) );
         }
     }
-
-    return result;
-}
-
-Type_id interface_for( const Type_table& table, Token_kind op )
-{
-    switch( op )
-    {
-    case Token_kind::Equal_equal:
-    case Token_kind::Bang_equal:
-        return table.declared( table.prelude().equatable );
-    case Token_kind::Less:
-    case Token_kind::Greater:
-    case Token_kind::Less_equal:
-    case Token_kind::Greater_equal:
-    case Token_kind::Less_equal_greater:
-        return table.declared( table.prelude().comparable );
-
-    default:
-        return Type_id {};
-    }
-}
-
-// A number gets all three. `bool`, a payload-free enum and a pointer get equality and a hash, but
-// no order. An interface pointer is two words, and gets nothing yet.
-bool supplied_by_kind( const Ast& ast, const Type_table& table, Type_id type, Type_id interface )
-{
-    if( !interface.is_valid() )
-    {
-        return false;
-    }
-
-    const bool number = table.is_integer( type ) || table.is_float( type );
-
-    if( interface == table.declared( table.prelude().comparable ) )
-    {
-        return number;
-    }
-
-    if( interface != table.declared( table.prelude().equatable ) && interface != table.declared( table.prelude().hashable ) )
-    {
-        return false;
-    }
-
-    return number || type == table.builtin( Type_kind::Bool ) ||
-           ( table.is_enum( type ) && !ast.enum_has_payload( table.get( type ).declaration ) ) ||
-           ( ( table.is_pointer( type ) || table.is_many_pointer( type ) ) && !table.is_interface_pointer( type ) );
-}
-
-// A type's own `==` would disagree with the compiler's hash, so declaring `equatable` drops all three.
-bool supplies( const Ast& ast, const Type_table& table, Type_id type, Type_id interface )
-{
-    return supplied_by_kind( ast, table, type, interface ) && !table.implements( type, interface ) &&
-           !table.implements( type, table.declared( table.prelude().equatable ) );
 }
 
 } // namespace keel
@@ -462,15 +622,15 @@ std::string substituted_requirement(
 } // namespace
 
 void report_conformance_errors(
-    const Ast&                         ast,
-    const Interner&                    interner,
-    Type_table&                        table,
-    std::span<const Type_id>           recorded,
-    std::span<const Conformance_error> errors,
-    Reporter&                          reporter
+    const Ast&               ast,
+    const Interner&          interner,
+    Type_table&              table,
+    std::span<const Type_id> recorded,
+    const Conformance_model& model,
+    Reporter&                reporter
 )
 {
-    for( const Conformance_error& error : errors )
+    for( const Conformance_error& error : model.errors() )
     {
         const std::string_view type      = table.base_name( error.self );
         const std::string_view interface = table.name( error.interface );
@@ -535,7 +695,7 @@ void report_conformance_errors(
             reporter.error_at(
                 error.at,
                 fmt::format( "`{}`'s `{}` must be `const`, as `{}` declares it", type, method, interface ),
-                table.bound_only_method( error.interface ).is_valid()
+                model.bound_only_method( table, error.interface ).is_valid()
                     ? fmt::format( "a `const ref T` with `T : {}` may call it", interface )
                     : fmt::format( "a caller holding a `const ref {}` may call it", interface )
             );
@@ -581,6 +741,187 @@ void report_conformance_errors(
 namespace keel
 {
 
+// Keyed by declaration, so every instance of a generic implements what the declaration says.
+TEST_CASE( "conformance_model_substitutes_a_refinement_per_instance", "[sema][type][interfaces]" )
+{
+    Type_table        table;
+    Conformance_model model;
+
+    const Type_id i32     = table.integer( 32, true );
+    const Type_id i64     = table.integer( 64, true );
+    const Type_id t       = table.parameter( Node_id { 6 }, "T" );
+    const Type_id u       = table.parameter( Node_id { 8 }, "U" );
+    const Type_id sink    = table.interface( Node_id { 5 }, std::array { t }, "sink" );
+    const Type_id counted = table.interface( Node_id { 7 }, std::array { u }, "counted" );
+    const Type_id shape   = table.interface( Node_id { 9 }, {}, "Shape" );
+
+    model.declare_refinement( table, counted, table.interface( Node_id { 5 }, std::array { u }, "sink" ) );
+
+    const Type_id counted_i32 = table.interface( Node_id { 7 }, std::array { i32 }, "counted" );
+    const Type_id sink_i32    = table.interface( Node_id { 5 }, std::array { i32 }, "sink" );
+    const Type_id sink_i64    = table.interface( Node_id { 5 }, std::array { i64 }, "sink" );
+
+    REQUIRE( table.instance_bindings( counted_i32 ) == Bindings { { u.v, i32 } } );
+    REQUIRE( table.instance_bindings( shape ).empty() );
+    REQUIRE( table.instance_bindings( sink ) == Bindings { { t.v, t } } ); // the open form binds itself
+
+    REQUIRE( model.refinements( table, counted_i32 ) == std::vector { sink_i32 } );
+    REQUIRE( model.refines( table, counted_i32, sink_i32 ) );
+    REQUIRE_FALSE( model.refines( table, counted_i32, sink_i64 ) );
+
+    SECTION( "by declaration, whatever the arguments" )
+    {
+        REQUIRE( model.refines_declaration( table, Node_id { 7 }, Node_id { 5 } ) );
+        REQUIRE_FALSE( model.refines_declaration( table, Node_id { 5 }, Node_id { 7 } ) );
+        REQUIRE_FALSE( model.refines_declaration( table, Node_id { 9 }, Node_id { 5 } ) );
+    }
+}
+
+TEST_CASE( "conformance_model_records_what_implements_an_interface", "[sema][type][interfaces]" )
+{
+    Type_table        table;
+    Conformance_model model;
+
+    const Type_id i32   = table.integer( 32, true );
+    const Type_id f64   = table.floating( 64 );
+    const Type_id shape = table.interface( Node_id { 5 }, {}, "Shape" );
+    const Type_id drawn = table.interface( Node_id { 7 }, {}, "Drawn" );
+    const Type_id point = table.structure( Node_id { 3 }, {}, "Point" );
+    const Type_id other = table.structure( Node_id { 4 }, {}, "Other" );
+
+    model.declare( table, Node_id { 3 }, point, shape );
+    model.declare( table, Node_id { 3 }, point, shape );
+    model.declare( table, Node_id { 11 }, table.structure( Node_id { 11 }, std::array { i32 }, "Box" ), drawn );
+
+    REQUIRE( model.declares( table, point, shape ) );
+    REQUIRE_FALSE( model.declares( table, point, drawn ) );
+    REQUIRE_FALSE( model.declares( table, other, shape ) );
+
+    SECTION( "every instance of a generic" )
+    {
+        REQUIRE( model.declares( table, table.structure( Node_id { 11 }, std::array { i32 }, "Box" ), drawn ) );
+        REQUIRE( model.declares( table, table.structure( Node_id { 11 }, std::array { f64 }, "Box" ), drawn ) );
+    }
+
+    SECTION( "and nothing that is not an aggregate" )
+    {
+        REQUIRE_FALSE( model.declares( table, shape, shape ) );
+        REQUIRE_FALSE( model.declares( table, table.pointer_to( point ), shape ) );
+        REQUIRE_FALSE( model.declares( table, i32, shape ) );
+        REQUIRE_FALSE( model.declares( table, Type_id {}, shape ) );
+    }
+}
+
+// A generic implementer declares in its open form, so each instance implements its own instance.
+TEST_CASE( "conformance_model_reads_a_generic_implementers_interface_per_instance", "[sema][type][interfaces]" )
+{
+    Type_table        table;
+    Conformance_model model;
+
+    const Type_id i32       = table.integer( 32, true );
+    const Type_id i64       = table.integer( 64, true );
+    const Type_id t         = table.parameter( Node_id { 12 }, "T" );
+    const Type_id sink      = table.interface( Node_id { 5 }, std::array { t }, "sink" );
+    const Type_id last      = table.structure( Node_id { 11 }, std::array { t }, "last" );
+    const Type_id last_i32  = table.structure( Node_id { 11 }, std::array { i32 }, "last" );
+    const Type_id sink_i32  = table.interface( Node_id { 5 }, std::array { i32 }, "sink" );
+    const Type_id sink_i64  = table.interface( Node_id { 5 }, std::array { i64 }, "sink" );
+    const Type_id sink_last = table.interface( Node_id { 5 }, std::array { table.pointer_to( last_i32 ) }, "sink" );
+
+    model.declare( table, Node_id { 11 }, last, sink );
+
+    REQUIRE( table.instance_bindings( last_i32 ) == Bindings { { t.v, i32 } } );
+    REQUIRE( table.instance_bindings( table.pointer_to( last_i32 ) ).empty() );
+
+    REQUIRE( model.declares( table, last_i32, sink_i32 ) );
+    REQUIRE_FALSE( model.declares( table, last_i32, sink_i64 ) );
+    REQUIRE( model.declares( table, last, sink ) );
+
+    SECTION( "matched structurally, without interning" )
+    {
+        const Bindings bindings { { t.v, i32 } };
+
+        REQUIRE( table.substitutes_to( table.pointer_to( t ), bindings, table.pointer_to( i32 ) ) );
+        REQUIRE_FALSE( table.substitutes_to( table.pointer_to( t ), bindings, table.pointer_to( i64 ) ) );
+        REQUIRE_FALSE( table.substitutes_to( table.pointer_to( t ), bindings, table.pointer_to( i32, true ) ) );
+        REQUIRE_FALSE( table.substitutes_to( sink, bindings, sink_last ) );
+    }
+
+    SECTION( "an open form has no vtable" )
+    {
+        REQUIRE( table.interface_types() == std::vector { sink_i32, sink_i64, sink_last } );
+    }
+}
+
+// Only as a borrow or a pointer: the implementer is still the object, so `const` may be added, never dropped.
+TEST_CASE( "conformance_model_holds_an_implementer_as_its_interface", "[sema][type][interfaces]" )
+{
+    Type_table        table;
+    Conformance_model model;
+
+    const Type_id shape = table.interface( Node_id { 5 }, {}, "Shape" );
+    const Type_id point = table.structure( Node_id { 3 }, {}, "Point" );
+    const Type_id other = table.structure( Node_id { 4 }, {}, "Other" );
+
+    model.declare( table, Node_id { 3 }, point, shape );
+
+    REQUIRE( model.holds( table, point, shape ) );
+    REQUIRE( model.holds( table, table.pointer_to( point ), table.pointer_to( shape ) ) );
+    REQUIRE( model.holds( table, table.pointer_to( point ), table.pointer_to( shape, true ) ) );
+    REQUIRE( model.holds( table, table.pointer_to( point, true ), table.pointer_to( shape, true ) ) );
+
+    REQUIRE_FALSE( model.holds( table, table.pointer_to( point, true ), table.pointer_to( shape ) ) );
+    REQUIRE_FALSE( model.holds( table, other, shape ) );
+    REQUIRE_FALSE( model.holds( table, table.pointer_to( other ), table.pointer_to( shape ) ) );
+    REQUIRE_FALSE( model.holds( table, shape, point ) );
+    REQUIRE_FALSE( model.holds( table, table.pointer_to( shape ), table.pointer_to( point ) ) );
+    REQUIRE_FALSE(
+        model.holds( table, table.pointer_to( table.pointer_to( point ) ), table.pointer_to( table.pointer_to( shape ) ) )
+    );
+    REQUIRE_FALSE( model.holds( table, table.many_pointer_to( point ), table.pointer_to( shape ) ) );
+}
+
+// Only the declared box, only towards an interface, and only from an implementer.
+TEST_CASE( "conformance_model_holds_a_box_of_an_implementer_as_a_box_of_its_interface", "[sema][type][interfaces]" )
+{
+    Type_table        table;
+    Conformance_model model;
+
+    const Type_id shape = table.interface( Node_id { 5 }, {}, "Shape" );
+    const Type_id point = table.structure( Node_id { 3 }, {}, "Point" );
+    const Type_id other = table.structure( Node_id { 4 }, {}, "Other" );
+
+    model.declare( table, Node_id { 3 }, point, shape );
+
+    const auto boxed = [&]( Type_id held ) { return table.structure( Node_id { 9 }, std::array { held }, "box" ); };
+
+    SECTION( "before the box is declared, it is any generic" )
+    {
+        REQUIRE_FALSE( table.is_box( boxed( point ) ) );
+        REQUIRE_FALSE( model.holds( table, boxed( point ), boxed( shape ) ) );
+    }
+
+    Prelude_items prelude;
+    prelude.box = Node_id { 9 };
+    table.set_prelude( prelude );
+
+    REQUIRE( table.is_box( boxed( point ) ) );
+    REQUIRE( table.is_box( boxed( shape ) ) );
+    REQUIRE_FALSE( table.is_box( point ) );
+    REQUIRE_FALSE( table.is_box( table.pointer_to( boxed( point ) ) ) );
+
+    REQUIRE( model.holds( table, boxed( point ), boxed( shape ) ) );
+
+    REQUIRE_FALSE( model.holds( table, boxed( other ), boxed( shape ) ) );
+    REQUIRE_FALSE( model.holds( table, boxed( shape ), boxed( point ) ) );
+    REQUIRE_FALSE( model.holds( table, boxed( point ), boxed( other ) ) );
+    REQUIRE_FALSE( model.holds(
+        table,
+        table.structure( Node_id { 10 }, std::array { point }, "Holder" ),
+        table.structure( Node_id { 10 }, std::array { shape }, "Holder" )
+    ) );
+}
+
 TEST_CASE( "conformances_record_the_method_answering_each_requirement", "[sema][interfaces]" )
 {
     const Typed p(
@@ -600,17 +941,17 @@ TEST_CASE( "conformances_record_the_method_answering_each_requirement", "[sema][
     INFO( p.rendered() );
     REQUIRE( p.clean() );
 
-    const Ast&          ast          = p.ast();
-    const Conformances& conformances = p.types().conformances();
-    const Node_id       shape_decl   = p.nth( Node_kind::Interface_decl, 0 );
-    const Node_id       named_decl   = p.nth( Node_kind::Interface_decl, 1 );
-    const Node_id       square       = p.nth( Node_kind::Struct_decl, 0 );
-    const Node_id       box          = p.nth( Node_kind::Struct_decl, 1 );
-    const Type_id       shape        = p.types().type_of( shape_decl );
-    const Type_id       named        = p.types().type_of( named_decl );
+    const Ast&               ast          = p.ast();
+    const Conformance_model& conformances = p.types().conformances();
+    const Node_id            shape_decl   = p.nth( Node_kind::Interface_decl, 0 );
+    const Node_id            named_decl   = p.nth( Node_kind::Interface_decl, 1 );
+    const Node_id            square       = p.nth( Node_kind::Struct_decl, 0 );
+    const Node_id            box          = p.nth( Node_kind::Struct_decl, 1 );
+    const Type_id            shape        = p.types().type_of( shape_decl );
+    const Type_id            named        = p.types().type_of( named_decl );
 
-    REQUIRE( conformances.conformances.size() == 4 ); // and the prelude's `str` as `textual`
-    REQUIRE( conformances.errors.empty() );
+    REQUIRE( conformances.all().size() == 4 ); // and the prelude's `str` as `textual`
+    REQUIRE( conformances.errors().empty() );
 
     const Conformance* sq_shape = conformances.find( square, shape );
     REQUIRE( sq_shape != nullptr );
@@ -700,7 +1041,7 @@ TEST_CASE( "conformances_report_each_problem", "[sema][interfaces]" )
         REQUIRE( p.rendered().find( c.message ) != std::string::npos );
         REQUIRE( p.rendered().find( c.help ) != std::string::npos );
 
-        const std::vector<Conformance_error>& errors = p.types().conformances().errors;
+        const std::span<const Conformance_error> errors = p.types().conformances().errors();
         REQUIRE( errors.size() == 1 );
         REQUIRE( errors[0].problem == c.problem );
         REQUIRE( errors[0].at.start == source.find( "Shape {", source.find( "implements" ) ) );
@@ -755,9 +1096,9 @@ TEST_CASE( "conformances_refuse_a_repeated_interface", "[sema][interfaces]" )
     REQUIRE( p.errors() == 1 );
     REQUIRE( p.rendered().find( "`Sq` already implements `Shape`" ) != std::string::npos );
 
-    const Conformances& conformances = p.types().conformances();
-    REQUIRE( conformances.conformances.size() == 2 ); // and the prelude's `str` as `textual`
-    REQUIRE( conformances.errors[0].at.start == source.find( "Shape {", source.find( "implements" ) ) ); // the second
+    const Conformance_model& conformances = p.types().conformances();
+    REQUIRE( conformances.all().size() == 2 ); // and the prelude's `str` as `textual`
+    REQUIRE( conformances.errors()[0].at.start == source.find( "Shape {", source.find( "implements" ) ) ); // the second
 }
 
 TEST_CASE( "conformances_answer_each_instance_with_its_own_method", "[sema][interfaces][generic_interfaces]" )
@@ -775,7 +1116,7 @@ TEST_CASE( "conformances_answer_each_instance_with_its_own_method", "[sema][inte
     REQUIRE( p.clean() );
 
     const Ast&                     ast          = p.ast();
-    const Conformances&            conformances = p.types().conformances();
+    const Conformance_model&       conformances = p.types().conformances();
     const Type_table&              table        = p.types().table();
     const Node_id                  log          = p.nth( Node_kind::Struct_decl, 0 );
     const Type_id                  log_type     = p.types().type_of( log );
@@ -814,7 +1155,7 @@ TEST_CASE( "conformances_substitute_a_refinement_per_instance", "[sema][interfac
         std::string::npos
     );
 
-    const Conformance_error& error = p.types().conformances().errors[0];
+    const Conformance_error& error = p.types().conformances().errors()[0];
     REQUIRE( error.problem == Conformance_problem::Unrefined );
     REQUIRE( error.implementer == p.nth( Node_kind::Struct_decl, 1 ) );
 }
@@ -853,7 +1194,7 @@ TEST_CASE( "conformances_do_not_cascade_from_an_earlier_error", "[sema][interfac
         }
 
         REQUIRE( reported == 1 ); // the resolver's or the signatures', whichever refused it
-        REQUIRE( p.types().conformances().errors.empty() );
+        REQUIRE( p.types().conformances().errors().empty() );
     }
 }
 
@@ -874,7 +1215,7 @@ TEST_CASE( "conformances_substitute_the_implementer_for_self", "[sema][interface
 
         INFO( p.rendered() );
         REQUIRE( p.clean() );
-        REQUIRE( p.types().conformances().conformances.size() == 2 ); // and the prelude's `str` as `textual`
+        REQUIRE( p.types().conformances().all().size() == 2 ); // and the prelude's `str` as `textual`
     }
 
     SECTION( "a generic implementer answers with its open form" )
@@ -905,7 +1246,7 @@ TEST_CASE( "conformances_substitute_the_implementer_for_self", "[sema][interface
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "write `P`, the type's own name" ) != std::string::npos );
-        REQUIRE( p.types().conformances().errors.empty() );
+        REQUIRE( p.types().conformances().errors().empty() );
     }
 
     SECTION( "a missing method's help is the requirement as the implementer must write it" )
@@ -934,7 +1275,7 @@ TEST_CASE( "conformances_substitute_the_implementer_for_self", "[sema][interface
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "`Same` wants `bool same( const ref P other ) const`" ) != std::string::npos );
 
-        const std::vector<Conformance_error>& errors = p.types().conformances().errors;
+        const std::span<const Conformance_error> errors = p.types().conformances().errors();
         REQUIRE( errors.size() == 1 );
         REQUIRE( p.types().table().name( errors[0].self ) == "P" );
     }
@@ -993,7 +1334,7 @@ TEST_CASE( "conformances_check_an_implements_block", "[sema][interfaces][impleme
         const Type_id interface = p.types().type_of( p.nth( Node_kind::Interface_decl, 0 ) );
         const char*   types[]   = { "i32", "kl::P", "Colour" };
 
-        REQUIRE( p.types().conformances().conformances.size() == 4 ); // and the prelude's `str` as `textual`
+        REQUIRE( p.types().conformances().all().size() == 4 ); // and the prelude's `str` as `textual`
 
         for( std::size_t i = 0; i < 3; ++i )
         {
@@ -1001,7 +1342,7 @@ TEST_CASE( "conformances_check_an_implements_block", "[sema][interfaces][impleme
 
             INFO( types[i] );
             REQUIRE( p.type_name( block ) == types[i] ); // the block's node records the type it is for
-            REQUIRE( p.types().table().implements( p.types().type_of( block ), interface ) );
+            REQUIRE( p.types().conformances().declares( p.types().table(), p.types().type_of( block ), interface ) );
 
             const Conformance* conformance = p.types().conformances().find( block, interface );
             REQUIRE( conformance != nullptr );
@@ -1103,7 +1444,7 @@ TEST_CASE( "conformances_check_an_implements_block", "[sema][interfaces][impleme
         INFO( p.rendered() );
         REQUIRE( p.errors() == 1 );
         REQUIRE( p.rendered().find( "cannot implement an interface through a block" ) != std::string::npos );
-        REQUIRE( p.types().conformances().conformances.size() == 1 ); // the prelude's `str` as `textual`
+        REQUIRE( p.types().conformances().all().size() == 1 ); // the prelude's `str` as `textual`
     }
 }
 

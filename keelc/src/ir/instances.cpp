@@ -84,7 +84,7 @@ void queue_conformances( const Ast& ast, const Types& types, Type_id composite, 
         return;
     }
 
-    for( const Conformance& conformance : types.conformances().conformances )
+    for( const Conformance& conformance : types.conformances().all() )
     {
         if( conformance.implementer != composite_type.declaration )
         {

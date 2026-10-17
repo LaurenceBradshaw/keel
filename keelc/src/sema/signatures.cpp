@@ -163,7 +163,7 @@ void Signatures::declare_interfaces()
 
         if( const Node_id method = bound_only_method( ast_, interner_, child ); method.is_valid() )
         {
-            table_.declare_bound_only( child, method );
+            types_.conformances().declare_bound_only( child, method );
         }
     }
 }
@@ -238,7 +238,7 @@ void Signatures::declare_interface_requirements()
                 continue;
             }
 
-            if( table_.refines_declaration( table_.get( refined ).declaration, child ) )
+            if( types_.conformances().refines_declaration( table_, table_.get( refined ).declaration, child ) )
             {
                 reporter_.error_at(
                     ast_.span( written ),
@@ -251,7 +251,7 @@ void Signatures::declare_interface_requirements()
                 continue;
             }
 
-            table_.declare_refinement( interface, refined );
+            types_.conformances().declare_refinement( table_, interface, refined );
         }
     }
 
@@ -259,14 +259,15 @@ void Signatures::declare_interface_requirements()
     // method naming `self`.
     for( const Node_id child : ast_.declarations( ast_.root() ) )
     {
-        if( ast_.kind( child ) != Node_kind::Interface_decl || table_.bound_only_method( types_.type_of( child ) ).is_valid() )
+        if( ast_.kind( child ) != Node_kind::Interface_decl ||
+            types_.conformances().bound_only_method( table_, types_.type_of( child ) ).is_valid() )
         {
             continue;
         }
 
         if( const Node_id method = required_bound_only( types_.type_of( child ) ); method.is_valid() )
         {
-            table_.declare_bound_only( child, method );
+            types_.conformances().declare_bound_only( child, method );
         }
     }
 }
@@ -286,7 +287,7 @@ void Signatures::declare_type_bounds()
 // Depth-first through what `interface` requires, read from the syntax so declaration order does not matter.
 Node_id Signatures::required_bound_only( Type_id interface ) const
 {
-    for( const Type_id refined : table_.refinements( interface ) )
+    for( const Type_id refined : types_.conformances().refinements( table_, interface ) )
     {
         if( const Node_id method = bound_only_method( ast_, interner_, table_.get( refined ).declaration ); method.is_valid() )
         {
@@ -330,7 +331,7 @@ void Signatures::declare_implements()
 
             if( recorded.is_valid() && table_.is_interface( interface ) )
             {
-                table_.declare_implements( child, interface );
+                types_.conformances().declare( table_, child, types_.type_of( child ), interface );
             }
         }
     }
@@ -421,14 +422,7 @@ void Signatures::declare_block( Node_id block )
 
     if( table_.is_interface( interface ) )
     {
-        if( declared )
-        {
-            table_.declare_implements( declaration, interface );
-        }
-        else
-        {
-            table_.declare_implements( type, interface );
-        }
+        types_.conformances().declare( table_, block, type, interface );
     }
 }
 
@@ -2730,8 +2724,8 @@ TEST_CASE( "signatures_type_an_interface_and_what_implements_it", "[sema][interf
     const Type_table& table = p.types().table();
 
     REQUIRE( table.is_interface( shape ) );
-    REQUIRE( table.implements( p.types().type_of( square ), shape ) );
-    REQUIRE_FALSE( table.implements( p.types().type_of( plain ), shape ) );
+    REQUIRE( p.types().conformances().declares( table, p.types().type_of( square ), shape ) );
+    REQUIRE_FALSE( p.types().conformances().declares( table, p.types().type_of( plain ), shape ) );
 
     // On the written entry, which is where the conformance stage reads it.
     REQUIRE( p.type_name( p.ast().implemented( square )[0] ) == "Shape" );
@@ -2813,7 +2807,8 @@ TEST_CASE( "signatures_declare_an_implements_block", "[sema][interfaces][impleme
             REQUIRE( p.rendered().find( c.message ) != std::string::npos );
             REQUIRE( p.rendered().find( help ) != std::string::npos );
             REQUIRE( p.rendered().find( "held by value" ) == std::string::npos );
-            REQUIRE_FALSE( p.types().table().implements(
+            REQUIRE_FALSE( p.types().conformances().declares(
+                p.types().table(),
                 p.types().type_of( p.nth( Node_kind::Implements_decl, 0 ) ),
                 p.types().type_of( p.nth( Node_kind::Interface_decl, 0 ) )
             ) );
@@ -2906,7 +2901,7 @@ TEST_CASE( "signatures_place_a_block_beside_its_interface_or_its_type", "[sema][
             REQUIRE( p.errors() == 1 );
             REQUIRE( p.rendered().find( c.message ) != std::string::npos );
             REQUIRE( p.rendered().find( c.help ) != std::string::npos );
-            REQUIRE( p.types().conformances().conformances.size() == 2 ); // kl's own, for f64, and the prelude's `str`
+            REQUIRE( p.types().conformances().all().size() == 2 ); // kl's own, for f64, and the prelude's `str`
         }
     }
 
@@ -2959,7 +2954,7 @@ TEST_CASE( "signatures_place_a_block_beside_its_interface_or_its_type", "[sema][
             REQUIRE( p.errors() == 1 );
             REQUIRE( p.rendered().find( c.message ) != std::string::npos );
             REQUIRE( p.rendered().find( c.help ) != std::string::npos );
-            REQUIRE( p.types().conformances().conformances.size() == 2 ); // kl's own, for f64, and the prelude's `str`
+            REQUIRE( p.types().conformances().all().size() == 2 ); // kl's own, for f64, and the prelude's `str`
         }
     }
 

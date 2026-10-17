@@ -6,6 +6,7 @@
 #include <span>
 #include <vector>
 #include "ast/node.h"
+#include "sema/conformances.h"
 #include "sema/type.h"
 
 // The interned types, and the type each node was given.
@@ -13,9 +14,9 @@
 namespace keel::sema
 {
 
-// The two pieces of state every rule class reads. Owned here rather than by any of them, and
-// reachable without naming the checker - which is what lets the rest of the checker be a stack of
-// classes that only ever name the ones below them.
+// The state every rule class reads: the table, each node's type, and what conforms to what. Owned here rather than by any of
+// them, and reachable without naming the checker - which is what lets the rest of the checker be a stack of classes that only
+// ever name the ones below them.
 //
 // `record` is the only way to write a node's type, so forgetting to write one is hard rather than silent.
 class Types_builder
@@ -34,6 +35,17 @@ public:
         return table_;
     }
 
+    // Filled in two phases: Signatures declares the relation, and Checker::run completes it.
+    Conformance_model& conformances()
+    {
+        return conformances_;
+    }
+
+    const Conformance_model& conformances() const
+    {
+        return conformances_;
+    }
+
     // Writes the node's type and returns it, so an infer branch can end in one of these.
     Type_id record( Node_id id, Type_id type );
     Type_id poison( Node_id id ); // records the error type
@@ -48,10 +60,12 @@ public:
     // Handing the run's result to Types. Both leave this object empty; nothing reads it after.
     Type_table           take_table();
     std::vector<Type_id> take_types();
+    Conformance_model    take_conformances();
 
 private:
     Type_table           table_;
     std::vector<Type_id> types_; // sized node_count(), invalid-filled
+    Conformance_model    conformances_;
 };
 
 } // namespace keel::sema

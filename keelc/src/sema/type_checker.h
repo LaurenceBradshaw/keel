@@ -73,7 +73,7 @@ public:
         std::vector<Instantiation>              instantiations,
         std::unordered_map<u32, u32>            instantiation_of,
         std::vector<Generic_call>               generic_calls,
-        Conformances                            conformances
+        Conformance_model                       conformances
     )
         : table_( std::move( table ) ),
           types_( std::move( types ) ),
@@ -167,8 +167,8 @@ public:
         return found == instantiation_of_.end() ? std::nullopt : std::optional<std::size_t>( found->second );
     }
 
-    // Which method answers each interface's, for every `implements` written.
-    const Conformances& conformances() const
+    // Everything `implements` means, completed.
+    const Conformance_model& conformances() const
     {
         return conformances_;
     }
@@ -183,7 +183,7 @@ private:
     std::vector<Instantiation>              instantiations_;
     std::unordered_map<u32, u32>            instantiation_of_;
     std::vector<Generic_call>               generic_calls_;
-    Conformances                            conformances_;
+    Conformance_model                       conformances_;
 };
 
 Types type_check( const Ast&, const Resolution&, const Literal_pool&, const Source_manager&, const Interner&, Diagnostics& );

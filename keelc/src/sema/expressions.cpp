@@ -893,7 +893,7 @@ std::vector<Type_id> Expressions::method_owners( Type_id receiver, Symbol_id nam
 // interface. Empty when no block for `type` declares `name`.
 std::string Expressions::reached_only_as( Type_id type, Symbol_id name ) const
 {
-    const Node_id block = conformances_.block_declaring( ast_, type, name );
+    const Node_id block = types_.conformances().block_declaring( ast_, type, name );
 
     // The compiler's conformance has no method, and no vtable either.
     if( !block.is_valid() )
@@ -903,7 +903,7 @@ std::string Expressions::reached_only_as( Type_id type, Symbol_id name ) const
             const Type_id interface = table_.declared( which );
 
             if( interface.is_valid() && aggregates_.find_method( table_.get( interface ).declaration, name ).is_valid() &&
-                supplies( ast_, table_, type, interface ) )
+                types_.conformances().supplies( ast_, table_, type, interface ) )
             {
                 return fmt::format(
                     "`{0}` is reached only as a `{1}`: through a `where T : {1}` parameter",
@@ -1984,7 +1984,7 @@ bool Expressions::has_operator( Type_id type, Symbol_id name ) const
 
     if( table_.is_enum( type ) )
     {
-        return conformances_.block_declaring( ast_, type, name ).is_valid();
+        return types_.conformances().block_declaring( ast_, type, name ).is_valid();
     }
 
     // A bound's `==` and `<=>` are the prelude's, which result_of_binary answers.
@@ -2206,7 +2206,8 @@ Node_id Expressions::find_operator(
 {
     // An enum's operator is its block's; a block missing it was reported as a conformance error. A
     // parameter's is its bound's, and an implementer missing it was reported the same way.
-    const Node_id block = table_.is_enum( object_type ) ? conformances_.block_declaring( ast_, object_type, name ) : Node_id {};
+    const Node_id block =
+        table_.is_enum( object_type ) ? types_.conformances().block_declaring( ast_, object_type, name ) : Node_id {};
     const std::vector<Type_id> owners      = block.is_valid() ? std::vector<Type_id> {} : method_owners( object_type, name );
     const Node_id              declaration = block.is_valid() ? block : table_.get( owners.front() ).declaration;
 
@@ -4000,7 +4001,7 @@ Type_id Expressions::check( Node_id id, Type_id expected )
         return expected;
     }
 
-    if( !table_.holds( actual, expected ) )
+    if( !types_.conformances().holds( table_, actual, expected ) )
     {
         reporter_.error_at(
             ast_.span( id ),

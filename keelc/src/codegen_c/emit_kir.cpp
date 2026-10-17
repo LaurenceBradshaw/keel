@@ -675,7 +675,7 @@ void Kir_emitter::emit_interface_references()
     for( const Type_id interface : types_.table().interface_types() )
     {
         // A bound-only interface is never a type, so it has neither a reference nor a vtable.
-        if( types_.table().bound_only_method( interface ).is_valid() || !shows_type( interface ) )
+        if( types_.conformances().bound_only_method( types_.table(), interface ).is_valid() || !shows_type( interface ) )
         {
             continue;
         }
@@ -701,7 +701,7 @@ void Kir_emitter::emit_vtable_types()
 {
     for( const Type_id interface : types_.table().interface_types() )
     {
-        if( types_.table().bound_only_method( interface ).is_valid() || !shows_type( interface ) )
+        if( types_.conformances().bound_only_method( types_.table(), interface ).is_valid() || !shows_type( interface ) )
         {
             continue;
         }

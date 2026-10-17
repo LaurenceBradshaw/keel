@@ -192,7 +192,7 @@ Binary_result Operators::result_of_binary(
     // would fall through to the rule table and be rejected by operand classes that have nothing to
     // say about it.
     const std::optional<Bound> bound     = operator_to_bound( op );
-    const Type_id              interface = interface_for( table_, op );
+    const Type_id              interface = Conformance_model::interface_for( table_, op );
 
     if( ( bound || interface.is_valid() ) && ( table_.is_parameter( lhs_type ) || table_.is_parameter( rhs_type ) ) )
     {
@@ -302,7 +302,7 @@ Binary_result Operators::result_of_binary(
         }
 
         // `const` on one side only is still one pointer type to compare.
-        if( !table_.holds( lhs_type, rhs_type ) && !table_.holds( rhs_type, lhs_type ) )
+        if( !conformances_.holds( table_, lhs_type, rhs_type ) && !conformances_.holds( table_, rhs_type, lhs_type ) )
         {
             return reject(
                 table_.is_enum( lhs_type ) || table_.is_enum( rhs_type ) ? "only values of the same `enum` can be compared"
@@ -565,7 +565,7 @@ TEST_CASE( "operators_answer_the_ternary_from_two_types_alone", "[sema][operator
     sema::Types_builder types;
     sema::Aggregates    aggregates( ast, interner, types, reporter );
     sema::Bounds        bounds( ast, interner, pool, types, aggregates, reporter );
-    sema::Operators     operators( ast, interner, types.table(), bounds, reporter );
+    sema::Operators     operators( ast, interner, types.table(), types.conformances(), bounds, reporter );
 
     const Type_id i32 = types.table().integer( 32, true );
     const Type_id i64 = types.table().integer( 64, true );
@@ -597,7 +597,7 @@ TEST_CASE( "operators_refuse_to_negate_an_unsigned_type", "[sema][operator]" )
     sema::Types_builder types;
     sema::Aggregates    aggregates( ast, interner, types, reporter );
     sema::Bounds        bounds( ast, interner, pool, types, aggregates, reporter );
-    sema::Operators     operators( ast, interner, types.table(), bounds, reporter );
+    sema::Operators     operators( ast, interner, types.table(), types.conformances(), bounds, reporter );
 
     // D5: C++ answers 4294967295 for `-u32( 1 )`, which is the silent wrong answer Keel refuses.
     SECTION( "an unsigned operand has no representable negation" )
@@ -642,7 +642,7 @@ TEST_CASE( "operators_take_a_shift_from_its_left_operand_only", "[sema][operator
     sema::Types_builder types;
     sema::Aggregates    aggregates( ast, interner, types, reporter );
     sema::Bounds        bounds( ast, interner, pool, types, aggregates, reporter );
-    sema::Operators     operators( ast, interner, types.table(), bounds, reporter );
+    sema::Operators     operators( ast, interner, types.table(), types.conformances(), bounds, reporter );
 
     const Type_id u8  = types.table().integer( 8, false );
     const Type_id i32 = types.table().integer( 32, true );

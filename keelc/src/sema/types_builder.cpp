@@ -43,6 +43,11 @@ std::vector<Type_id> Types_builder::take_types()
     return std::move( types_ );
 }
 
+Conformance_model Types_builder::take_conformances()
+{
+    return std::move( conformances_ );
+}
+
 } // namespace keel::sema
 
 #ifdef ENABLE_UNIT_TESTS

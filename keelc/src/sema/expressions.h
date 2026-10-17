@@ -35,22 +35,21 @@ class Expressions
 {
 public:
     Expressions(
-        const Ast&          ast,
-        const Interner&     interner,
-        const Resolution&   resolution,
-        Types_builder&      types,
-        Aggregates&         aggregates,
-        Bounds&             bounds,
-        Annotations&        annotations,
-        Constant_folder&    constant_folder,
-        Callees&            callees,
-        Places&             places,
-        Generic_recursion&  generic_recursion,
-        Literals&           literals,
-        Operators&          operators,
-        Overloads&          overloads,
-        const Conformances& conformances,
-        Reporter&           reporter
+        const Ast&         ast,
+        const Interner&    interner,
+        const Resolution&  resolution,
+        Types_builder&     types,
+        Aggregates&        aggregates,
+        Bounds&            bounds,
+        Annotations&       annotations,
+        Constant_folder&   constant_folder,
+        Callees&           callees,
+        Places&            places,
+        Generic_recursion& generic_recursion,
+        Literals&          literals,
+        Operators&         operators,
+        Overloads&         overloads,
+        Reporter&          reporter
     )
         : ast_( ast ),
           interner_( interner ),
@@ -67,7 +66,6 @@ public:
           literals_( literals ),
           operators_( operators ),
           overloads_( overloads ),
-          conformances_( conformances ),
           reporter_( reporter )
     {
     }
@@ -276,23 +274,22 @@ private:
     // The family every literal deciding its type shares, or none: Integer or Floating only.
     std::optional<Argument_kind> literal_family( Node_id id ) const;
 
-    const Ast&          ast_;
-    const Interner&     interner_;
-    const Resolution&   resolution_;
-    Types_builder&      types_;
-    Type_table&         table_;
-    Aggregates&         aggregates_;
-    Bounds&             bounds_;
-    Annotations&        annotations_;
-    Constant_folder&    constant_folder_;
-    Callees&            callees_;
-    Places&             places_;
-    Generic_recursion&  generic_recursion_;
-    Literals&           literals_;
-    Operators&          operators_;
-    Overloads&          overloads_;
-    const Conformances& conformances_; // filled once every signature is typed, before any body
-    Reporter&           reporter_;
+    const Ast&         ast_;
+    const Interner&    interner_;
+    const Resolution&  resolution_;
+    Types_builder&     types_;
+    Type_table&        table_;
+    Aggregates&        aggregates_;
+    Bounds&            bounds_;
+    Annotations&       annotations_;
+    Constant_folder&   constant_folder_;
+    Callees&           callees_;
+    Places&            places_;
+    Generic_recursion& generic_recursion_;
+    Literals&          literals_;
+    Operators&         operators_;
+    Overloads&         overloads_;
+    Reporter&          reporter_;
 
     // Whether a bare variant path here names the variant rather than standing for a value of
     // the enum. True while checking a construction's callee, a pattern's path, and a bare `case`

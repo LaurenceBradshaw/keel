@@ -6,6 +6,7 @@
 #include "common/interner.h"
 #include "lex/token.h"
 #include "sema/bounds.h"
+#include "sema/conformances.h"
 #include "sema/reporter.h"
 
 namespace keel::sema
@@ -48,10 +49,18 @@ struct Conversion_result
 class Operators
 {
 public:
-    Operators( const Ast& ast, const Interner& interner, const Type_table& table, const Bounds& bounds, Reporter& reporter )
+    Operators(
+        const Ast&               ast,
+        const Interner&          interner,
+        const Type_table&        table,
+        const Conformance_model& conformances,
+        const Bounds&            bounds,
+        Reporter&                reporter
+    )
         : ast_( ast ),
           interner_( interner ),
           table_( table ),
+          conformances_( conformances ),
           bounds_( bounds ),
           reporter_( reporter )
     {
@@ -81,11 +90,12 @@ public:
     void refuse_single_pointer_arithmetic( Type_id pointer, Span at );
 
 private:
-    const Ast&        ast_;
-    const Interner&   interner_;
-    const Type_table& table_;
-    const Bounds&     bounds_;
-    Reporter&         reporter_;
+    const Ast&               ast_;
+    const Interner&          interner_;
+    const Type_table&        table_;
+    const Conformance_model& conformances_;
+    const Bounds&            bounds_;
+    Reporter&                reporter_;
 };
 
 } // namespace keel::sema

@@ -861,7 +861,7 @@ Type_id Annotations::addressed_interface(
 
     addressed_ = {};
 
-    if( const Node_id method = table_.bound_only_method( types_.type_of( decl ) );
+    if( const Node_id method = types_.conformances().bound_only_method( table_, types_.type_of( decl ) );
         method.is_valid() && !receiver_ && implemented_ != annotation )
     {
         const Node_id          owner = ast_.enclosing_aggregate( method );

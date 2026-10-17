@@ -3,6 +3,7 @@
 
 #pragma once
 #include <span>
+#include <unordered_map>
 #include <vector>
 #include "ast/ast.h"
 #include "ast/node.h"
@@ -10,9 +11,6 @@
 #include "lex/token.h"
 #include "sema/reporter.h"
 #include "sema/type.h"
-
-// Which method answers each of an interface's, for every `implements` written. Read by the body
-// checks, by lowering for a call through a bound, and by the emitter for each vtable.
 
 namespace keel
 {
@@ -53,30 +51,73 @@ struct Conformance_error
     Type_id             refined {}; // Unrefined: the interface required
 };
 
-struct Conformances
+// Everything `implements` means, filled in two phases. Phase 1, while signatures are declared:
+// the relation as written, what each interface refines, and which interfaces are bounds only.
+// Phase 2, `complete`, once every signature is typed: the method answering each requirement, and
+// the errors in each conformance. Read by the body checks, lowering, and the emitter's vtables.
+class Conformance_model
 {
-    std::vector<Conformance>       conformances;
-    std::vector<Conformance_error> errors;
+public:
+    // Phase 1. `type` is a block's type, or an aggregate's open form; a generic's instances share it.
+    void declare( const Type_table& table, Node_id implementer, Type_id type, Type_id interface );
+    // What an interface requires through its own `implements`, in written order.
+    void declare_refinement( const Type_table& table, Type_id interface, Type_id refined );
+    // The first method whose signature mentions `self`, which makes the interface a bound only.
+    void declare_bound_only( Node_id interface, Node_id method );
 
-    const Conformance* find( Node_id implementer, Type_id interface ) const;
+    // What `type` declares, at this instance: `last<i32>` implements `sink<i32>` through `last<T>`'s `sink<T>`.
+    bool    declares( const Type_table& table, Type_id type, Type_id interface ) const;
+    Node_id implementer_of( const Type_table& table, Type_id type, Type_id interface ) const; // the first, or invalid
+    // supplied_by_kind, unless the type's own `implements` answers for it or for `equatable`.
+    bool supplies( const Ast& ast, const Type_table& table, Type_id type, Type_id interface ) const;
+    // What the compiler makes a type of this kind, whatever the type declares.
+    static bool supplied_by_kind( const Ast& ast, const Type_table& table, Type_id type, Type_id interface );
+    // The prelude interface an operator asks for: `equatable` for `==` and `!=`, `comparable` for the
+    // orderings, and invalid otherwise.
+    static Type_id interface_for( const Type_table& table, Token_kind op );
+    // Type_table::holds, with an implementer reaching its interface as a borrow, a pointer or a box.
+    bool holds( const Type_table& table, Type_id from, Type_id to ) const;
+
+    std::vector<Type_id> refinements( Type_table& table, Type_id interface ) const; // substituted for this instance
+    // Whether `other` is required by `interface`, directly or through what it requires.
+    bool refines( Type_table& table, Type_id interface, Type_id other ) const;
+    // The same, between Interface_decl nodes, whatever the arguments.
+    bool    refines_declaration( const Type_table& table, Node_id interface, Node_id other ) const;
+    Node_id bound_only_method( const Type_table& table, Type_id interface ) const; // invalid when it may be a type
+
+    // Phase 2: asked of each aggregate's `implements` list, and of each block.
+    void complete( const Ast& ast, Type_table& table, std::span<const Type_id> recorded );
+
+    std::span<const Conformance>       all() const;
+    std::span<const Conformance_error> errors() const;
+    const Conformance*                 find( Node_id implementer, Type_id interface ) const;
     // By the type that conforms, so `Box<i32>` finds `Box<T>`'s.
     const Conformance* of( const Type_table& table, Type_id type, Type_id interface ) const;
     Node_id            method_for( const Type_table& table, Type_id type, Type_id interface, Node_id requirement )
         const; // invalid where none answers
     // The `implements ... for type` block declaring `name`, or invalid.
     Node_id block_declaring( const Ast& ast, Type_id type, Symbol_id name ) const;
+
+private:
+    struct Declared
+    {
+        Node_id implementer;
+        Type_id interface; // as written: a generic implementer's names its own parameters
+    };
+
+    void conform(
+        const Ast& ast, Type_table& table, std::span<const Type_id> recorded, Node_id implementer, Node_id written, Type_id type
+    );
+
+    std::unordered_map<u32, std::vector<Declared>> declared_;    // struct or enum declaration -> what it implements
+    std::unordered_map<u32, std::vector<Declared>> builtin_;     // built-in type -> what its blocks implement
+    std::unordered_map<u32, std::vector<Type_id>>  refinements_; // Interface_decl node -> what it requires, as written
+    std::unordered_map<u32, Node_id>               bound_only_;  // Interface_decl node -> the method mentioning `self`
+
+    std::vector<Conformance>       conformances_;
+    std::vector<Conformance_error> errors_;
+    bool                           completed_ = false;
 };
-
-// Asked of each aggregate's `implements` list, and of each block, once every signature is typed.
-Conformances check_conformances( const Ast& ast, Type_table& table, std::span<const Type_id> recorded );
-
-// The prelude interface an operator asks for: `equatable` for `==` and `!=`, `comparable` for the
-// orderings, and invalid otherwise.
-Type_id interface_for( const Type_table& table, Token_kind op );
-// What the compiler makes a type of this kind, whatever the type declares.
-bool supplied_by_kind( const Ast& ast, const Type_table& table, Type_id type, Type_id interface );
-// supplied_by_kind, unless the type's own `implements` answers for it or for `equatable`.
-bool supplies( const Ast& ast, const Type_table& table, Type_id type, Type_id interface );
 
 } // namespace keel
 
@@ -85,12 +126,12 @@ namespace keel::sema
 
 // One error per problem, each at the interface as written after `implements`.
 void report_conformance_errors(
-    const Ast&                         ast,
-    const Interner&                    interner,
-    Type_table&                        table,
-    std::span<const Type_id>           recorded,
-    std::span<const Conformance_error> errors,
-    Reporter&                          reporter
+    const Ast&               ast,
+    const Interner&          interner,
+    Type_table&              table,
+    std::span<const Type_id> recorded,
+    const Conformance_model& model,
+    Reporter&                reporter
 );
 
 } // namespace keel::sema

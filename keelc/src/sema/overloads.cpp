@@ -311,8 +311,9 @@ bool Overloads::widens( Node_id param, Type_id from, Type_id to ) const
 {
     const auto numeric = [&]( Type_id type ) { return table_.is_integer( type ) || table_.is_float( type ); };
 
-    return ( ast_.parameter_mode( param ) == Keyword::Count && numeric( from ) && numeric( to ) && table_.holds( from, to ) ) ||
-           ( table_.is_interface( to ) && table_.holds( from, to ) );
+    return ( ast_.parameter_mode( param ) == Keyword::Count && numeric( from ) && numeric( to ) &&
+             types_.conformances().holds( table_, from, to ) ) ||
+           ( table_.is_interface( to ) && types_.conformances().holds( table_, from, to ) );
 }
 
 // How far `from` travels to reach `to`; smaller is closer, and 0 is exact or not a number.
@@ -854,7 +855,7 @@ std::vector<Argument_work> Overloads::check_call_arguments(
         {
             work.push_back( { arguments[i], expected, true } );
         }
-        else if( !table_.is_error( shapes[i].type ) && !table_.holds( shapes[i].type, expected ) )
+        else if( !table_.is_error( shapes[i].type ) && !types_.conformances().holds( table_, shapes[i].type, expected ) )
         {
             reporter_.error_at(
                 ast_.span( arguments[i] ),
@@ -905,7 +906,7 @@ void Overloads::check_one_argument_marker( Node_id argument, Param_mode mode, Ty
     // exit - and it wants both sides, so one missing marker does not report twice.
     if( ( mode == Param_mode::Ref || mode == Param_mode::Const_ref || mode == Param_mode::Out ) && given == wanted &&
         !table_.references_error( types_.type_of( argument ) ) && !table_.references_error( expected ) &&
-        types_.type_of( argument ) != expected && table_.holds( types_.type_of( argument ), expected ) &&
+        types_.type_of( argument ) != expected && types_.conformances().holds( table_, types_.type_of( argument ), expected ) &&
         !table_.is_interface( expected ) ) // borrowing an implementer as one borrows that very object
     {
         reporter_.error_at(
